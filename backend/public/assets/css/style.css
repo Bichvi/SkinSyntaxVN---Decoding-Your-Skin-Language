@@ -1,0 +1,20 @@
+body {
+    background: #f7faf7;
+}
+
+.card {
+    transition: 0.2s;
+}
+.card:hover {
+    transform: scale(1.03);
+}
+.product-card img {
+            height: 220px;
+            object-fit: contain;
+            background: #fff;
+            padding: 10px;
+        }
+        .navbar-brand
+        {
+            background-color: #198754 !important;
+        }
