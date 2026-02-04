@@ -25,6 +25,11 @@ class SanPham {
         return $st->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Alias cho find()
+    public function findById(int $id) {
+        return $this->find($id);
+    }
+
     /**
      * Menu danh mục kiểu Hasaki:
      * - Nếu danh_muc_day_du bắt đầu bằng "Sức Khỏe - Làm Đẹp -> ..." thì:

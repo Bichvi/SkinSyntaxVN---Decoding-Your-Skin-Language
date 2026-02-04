@@ -6,7 +6,7 @@
     <div class="col-lg-8">
       <h1 class="mb-4">Giỏ Hàng</h1>
 
-      <?php if (empty($_SESSION['gio_hang'] ?? [])): ?>
+      <?php if (empty($items ?? [])): ?>
         <div class="alert alert-info text-center py-5">
           <h5 class="mb-2">Giỏ hàng của bạn trống</h5>
           <p class="mb-3">Hãy thêm sản phẩm yêu thích vào giỏ hàng</p>
@@ -27,20 +27,27 @@
             <tbody>
               <?php 
               $total = 0;
-              foreach (($_SESSION['gio_hang'] ?? []) as $product_id => $qty): 
+              foreach (($items ?? []) as $product_id => $item): 
+                $product = $item['product'];
+                $qty = $item['qty'];
+                $price = floatval($product['gia_goc'] ?? 0);
+                $subtotal = $price * $qty;
+                $total += $subtotal;
               ?>
                 <tr>
                   <td>
-                    <strong>Sản phẩm #<?= h($product_id) ?></strong>
+                    <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($product_id) ?>" class="text-decoration-none text-dark">
+                      <strong><?= h($product['ten_san_pham']) ?></strong>
+                    </a>
                   </td>
                   <td class="text-center">
                     <input type="number" class="form-control form-control-sm" value="<?= (int)$qty ?>" min="1" style="width: 70px;">
                   </td>
                   <td class="text-right">
-                    <span class="price">0 VND</span>
+                    <span class="price"><?= number_format((int)$price, 0, ',', '.') ?> VND</span>
                   </td>
                   <td class="text-right">
-                    <span class="price">0 VND</span>
+                    <span class="price"><?= number_format((int)$subtotal, 0, ',', '.') ?> VND</span>
                   </td>
                   <td class="text-center">
                     <button class="btn btn-sm btn-danger" data-product="<?= h($product_id) ?>">Xóa</button>
@@ -64,7 +71,16 @@
           <hr>
           <div class="d-flex justify-content-between mb-2">
             <span>Tạm tính:</span>
-            <strong id="subtotal">0 VND</strong>
+            <strong id="subtotal"><?php 
+              $total = 0;
+              if (!empty($items ?? [])) {
+                foreach ($items as $item) {
+                  $price = floatval($item['product']['gia_goc'] ?? 0);
+                  $total += $price * $item['qty'];
+                }
+              }
+              echo number_format((int)$total, 0, ',', '.') . ' VND';
+            ?></strong>
           </div>
           <div class="d-flex justify-content-between mb-2">
             <span>Phí vận chuyển:</span>
@@ -73,7 +89,9 @@
           <hr>
           <div class="d-flex justify-content-between mb-3">
             <strong>Tổng cộng:</strong>
-            <strong class="text-brand" id="total">0 VND</strong>
+            <strong class="text-brand" id="total"><?php 
+              echo number_format((int)$total, 0, ',', '.') . ' VND';
+            ?></strong>
           </div>
           <button class="btn btn-brand w-100 disabled" disabled>
             Tiếp tục (Đang phát triển)

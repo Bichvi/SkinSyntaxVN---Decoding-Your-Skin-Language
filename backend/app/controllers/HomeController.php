@@ -38,7 +38,19 @@ class HomeController {
     }
 
     public function giohang() {
-        $this->render('giohang');
+        $items = [];
+        if (!empty($_SESSION['gio_hang'])) {
+            foreach ($_SESSION['gio_hang'] as $product_id => $qty) {
+                $product = $this->model->findById($product_id);
+                if ($product) {
+                    $items[$product_id] = [
+                        'product' => $product,
+                        'qty' => $qty
+                    ];
+                }
+            }
+        }
+        $this->render('giohang', ['items' => $items]);
     }
 
     public function goiy() {

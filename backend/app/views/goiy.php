@@ -111,11 +111,11 @@
         <div class="card-body">
           <h5 class="card-title mb-3">📌 Danh mục phổ biến</h5>
           <div class="d-flex flex-column gap-2">
-            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Bộ+Chăm+Sóc+Da+Mặt" class="btn btn-sm btn-outline-secondary">Chăm sóc da</a>
-            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Làm+Sạch+Da" class="btn btn-sm btn-outline-secondary">Làm sạch da</a>
-            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Dưỡng+Ẩm" class="btn btn-sm btn-outline-secondary">Dưỡng ẩm</a>
-            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Chống+Nắng+Da+Mặt" class="btn btn-sm btn-outline-secondary">Chống nắng</a>
-            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Đặc+Trị" class="btn btn-sm btn-outline-secondary">Đặc trị</a>
+            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm Sóc Da" class="btn btn-sm btn-outline-secondary">Chăm sóc da</a>
+            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Sữa Rửa Mặt" class="btn btn-sm btn-outline-secondary">Sữa rửa mặt</a>
+            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Toner" class="btn btn-sm btn-outline-secondary">Toner</a>
+            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Serum" class="btn btn-sm btn-outline-secondary">Serum</a>
+            <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Kem Dưỡng" class="btn btn-sm btn-outline-secondary">Kem dưỡng</a>
           </div>
         </div>
       </div>
@@ -125,7 +125,7 @@
 
 <style>
   .btn-brand {
-    background-color: #0f6b3e;
+    background-color: #e74c3c;
     color: white;
     border-color: #e74c3c;
   }
