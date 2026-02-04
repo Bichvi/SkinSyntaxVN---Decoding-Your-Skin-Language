@@ -368,3 +368,81 @@ a{ text-decoration:none; color:inherit; }
   white-space:pre-line;
   line-height:1.6;
 }
+/* ===== Mega menu danh mục ===== */
+.mega-menu{
+  width:min(980px, 92vw);
+}
+.mega-menu .col-title{
+  font-weight:900;
+  color:var(--brand-2);
+  margin-bottom:6px;
+  font-size:13px;
+}
+.mega-menu .dropdown-item{
+  padding:.28rem 0;
+  white-space:normal;
+}
+
+/* ===== Detail gallery thumbs ===== */
+.detail-main-img{
+  width:100%;
+  height:440px;
+  object-fit:contain;
+}
+.detail-thumbs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.thumb-btn{
+  width:64px;
+  height:64px;
+  padding:0;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  background:#fff;
+  cursor:pointer;
+}
+.thumb-btn img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.thumb-btn.active{
+  border-color:var(--brand);
+  box-shadow:0 0 0 .2rem rgba(15,107,62,.12);
+}
+.text-preline{
+  white-space:pre-line;
+}
+/* FIX PAGINATION OVERFLOW */
+.pagination{
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+
+.pagination .page-item{
+  flex-shrink: 0;
+}
+
+/* PAGINATION STYLING */
+.pagination .page-link {
+  color: var(--brand);
+  border-color: var(--brand);
+  background-color: #fff;
+}
+
+.pagination .page-link:hover {
+  color: #fff;
+  background-color: var(--brand);
+  border-color: var(--brand);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}

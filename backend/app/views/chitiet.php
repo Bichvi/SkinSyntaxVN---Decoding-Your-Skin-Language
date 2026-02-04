@@ -1,14 +1,14 @@
 <?php
-function split_image_urls($str) {
-    // Split by comma, semicolon, or whitespace, and trim each URL
-    if (!is_string($str) || trim($str) === '') return [];
-    $urls = preg_split('/[\s,;]+/', $str, -1, PREG_SPLIT_NO_EMPTY);
-    return array_map('trim', $urls);
-}
-$imgs = split_image_urls($p['link_hinh_anh'] ?? '');
+$imgs = split_image_urls($p['link_hinh_anh'] ?? '', 10);
 $main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
 ?>
 <div class="container mt-4">
+  <div class="mb-3">
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
+      <i class="fas fa-arrow-left"></i> Quay lại
+    </a>
+  </div>
+
   <div class="row g-3">
     <div class="col-12 col-lg-5">
       <div class="detail-img">
@@ -58,6 +58,28 @@ $main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
           <div><b>Loại da:</b> <?= h($p['loai_da'] ?? '') ?></div>
           <div><b>Đánh giá:</b> <?= h($p['diem_danh_gia'] ?? '') ?> (<?= h($p['so_luong_danh_gia'] ?? '') ?>)</div>
         </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <div style="width: 100px;">
+            <input type="number" class="form-control" value="1" min="1" max="999">
+          </div>
+          <form method="post" class="flex-grow-1">
+            <input type="hidden" name="action" value="add_to_cart">
+            <input type="hidden" name="qty" value="1" class="qty-input">
+            <button type="submit" class="btn btn-brand w-100">
+              <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
+            </button>
+          </form>
+        </div>
+        <script>
+          const qtyInput = document.querySelector('.form-control[type="number"]');
+          const hiddenQty = document.querySelector('input[name="qty"]');
+          if (qtyInput && hiddenQty) {
+            qtyInput.addEventListener('change', () => {
+              hiddenQty.value = qtyInput.value;
+            });
+          }
+        </script>
       </div>
 
       <div class="detail-tabs mt-3">
@@ -66,20 +88,26 @@ $main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
           <div class="text-preline"><?= nl2br_safe($p['mo_ta'] ?? '') ?></div>
         </div>
 
+        <?php if (!empty($p['thanh_phan_chinh'])): ?>
         <div class="box-text mb-3">
           <h5>Thành phần chính</h5>
-          <div class="text-preline"><?= nl2br_safe($p['thanh_phan_chinh'] ?? '') ?></div>
+          <div class="text-preline"><?= nl2br_safe($p['thanh_phan_chinh']) ?></div>
         </div>
+        <?php endif; ?>
 
+        <?php if (!empty($p['thanh_phan_day_du'])): ?>
         <div class="box-text mb-3">
           <h5>Thành phần đầy đủ</h5>
-          <div class="text-preline"><?= nl2br_safe($p['thanh_phan_day_du'] ?? '') ?></div>
+          <div class="text-preline"><?= nl2br_safe($p['thanh_phan_day_du']) ?></div>
         </div>
+        <?php endif; ?>
 
+        <?php if (!empty($p['hdsd'])): ?>
         <div class="box-text">
           <h5>Hướng dẫn sử dụng</h5>
-          <div class="text-preline"><?= nl2br_safe($p['hdsd'] ?? '') ?></div>
+          <div class="text-preline"><?= nl2br_safe($p['hdsd']) ?></div>
         </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>
@@ -89,11 +117,14 @@ $main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
 (function(){
   const main = document.getElementById('mainImage');
   const btns = document.querySelectorAll('.thumb-btn');
+  if (!main || !btns.length) return;
+
   btns.forEach(btn => {
     btn.addEventListener('click', () => {
       const src = btn.getAttribute('data-src');
       if (!src) return;
       main.src = src;
+
       btns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });

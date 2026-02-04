@@ -1,0 +1,22 @@
+# Database configuration (IMPORTANT: Protect your credentials)
+project-root/backend/app/config/db.php
+
+# Python / Flask artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.ipynb_checkpoints/
+
+# AI Data & Vector DB (Avoid pushing large/local data)
+project-root/ai-service-flask/chroma_db/
+project-root/ai-service-flask/data/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# XAMPP / Temp files
+*.log
+tmp/
