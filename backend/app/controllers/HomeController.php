@@ -38,6 +38,24 @@ class HomeController {
     }
 
     public function giohang() {
+        // Xử lý POST requests
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? null;
+            $product_id = $_POST['product_id'] ?? null;
+            
+            if ($action === 'update_qty' && $product_id) {
+                $qty = max(1, (int)($_POST['qty'] ?? 1));
+                $_SESSION['gio_hang'][$product_id] = $qty;
+                http_response_code(200);
+                exit;
+            } elseif ($action === 'delete' && $product_id) {
+                unset($_SESSION['gio_hang'][$product_id]);
+                http_response_code(200);
+                exit;
+            }
+        }
+        
+        // Hiển thị giỏ hàng
         $items = [];
         if (!empty($_SESSION['gio_hang'])) {
             foreach ($_SESSION['gio_hang'] as $product_id => $qty) {

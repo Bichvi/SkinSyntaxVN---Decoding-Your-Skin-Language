@@ -20,3 +20,11 @@ Thumbs.db
 # XAMPP / Temp files
 *.log
 tmp/
+
+.env
+*.env
+__pycache__/
+.venv/
+node_modules/
+chroma_db/
+

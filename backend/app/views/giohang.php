@@ -17,14 +17,15 @@
           <table class="table">
             <thead>
               <tr>
+                <th style="width: 80px;">Hình ảnh</th>
                 <th>Sản phẩm</th>
-                <th class="text-center">Số lượng</th>
-                <th class="text-right">Giá</th>
-                <th class="text-right">Tổng</th>
-                <th class="text-center">Thao tác</th>
+                <th class="text-center" style="width: 120px;">Số lượng</th>
+                <th class="text-right" style="width: 100px;">Giá</th>
+                <th class="text-right" style="width: 120px;">Tổng</th>
+                <th class="text-center" style="width: 80px;">Thao tác</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="cartItems">
               <?php 
               $total = 0;
               foreach (($items ?? []) as $product_id => $item): 
@@ -33,24 +34,45 @@
                 $price = floatval($product['gia_goc'] ?? 0);
                 $subtotal = $price * $qty;
                 $total += $subtotal;
+                // Lấy hình ảnh đầu tiên từ link_hinh_anh
+                $images = !empty($product['link_hinh_anh']) ? explode(' | ', $product['link_hinh_anh']) : [];
+                $image_url = !empty($images[0]) ? trim($images[0]) : '';
               ?>
-                <tr>
+                <tr class="cart-item" data-product-id="<?= h($product_id) ?>" data-price="<?= (int)$price ?>">
+                  <td>
+                    <?php if ($image_url): ?>
+                      <img src="<?= h($image_url) ?>" alt="<?= h($product['ten_san_pham']) ?>" 
+                           style="width: 70px; height: 70px; object-fit: cover; border-radius: 4px;">
+                    <?php else: ?>
+                      <div style="width: 70px; height: 70px; background: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                        <small class="text-muted">Không có ảnh</small>
+                      </div>
+                    <?php endif; ?>
+                  </td>
                   <td>
                     <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($product_id) ?>" class="text-decoration-none text-dark">
                       <strong><?= h($product['ten_san_pham']) ?></strong>
                     </a>
+                    <br>
+                    <small class="text-muted"><?= h($product['thuong_hieu'] ?? 'N/A') ?></small>
                   </td>
                   <td class="text-center">
-                    <input type="number" class="form-control form-control-sm" value="<?= (int)$qty ?>" min="1" style="width: 70px;">
+                    <div class="input-group input-group-sm" style="width: 100px;">
+                      <button class="btn btn-outline-secondary btn-qty-minus" type="button">−</button>
+                      <input type="number" class="form-control text-center qty-input" value="<?= (int)$qty ?>" min="1" max="999">
+                      <button class="btn btn-outline-secondary btn-qty-plus" type="button">+</button>
+                    </div>
                   </td>
                   <td class="text-right">
                     <span class="price"><?= number_format((int)$price, 0, ',', '.') ?> VND</span>
                   </td>
                   <td class="text-right">
-                    <span class="price"><?= number_format((int)$subtotal, 0, ',', '.') ?> VND</span>
+                    <span class="item-total price"><?= number_format((int)$subtotal, 0, ',', '.') ?> VND</span>
                   </td>
                   <td class="text-center">
-                    <button class="btn btn-sm btn-danger" data-product="<?= h($product_id) ?>">Xóa</button>
+                    <button class="btn btn-sm btn-danger btn-delete" type="button" title="Xóa sản phẩm">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
                   </td>
                 </tr>
               <?php endforeach; ?>
@@ -125,4 +147,141 @@
   .text-brand {
     color: #e74c3c;
   }
+  .input-group-sm .btn {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.875rem;
+  }
+  .qty-input {
+    text-align: center !important;
+    font-weight: bold;
+  }
+  .cart-item {
+    transition: background-color 0.2s;
+  }
+  .cart-item:hover {
+    background-color: #f9f9f9;
+  }
+  .btn-delete {
+    padding: 0.375rem 0.75rem;
+  }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Format số tiền
+  function formatPrice(num) {
+    return num.toLocaleString('vi-VN');
+  }
+
+  // Cập nhật tổng giỏ hàng
+  function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.cart-item').forEach(row => {
+      const itemTotal = row.querySelector('.item-total');
+      const text = itemTotal.textContent.replace(/[^\d]/g, '');
+      total += parseInt(text) || 0;
+    });
+    
+    document.getElementById('subtotal').textContent = formatPrice(total) + ' VND';
+    document.getElementById('total').textContent = formatPrice(total) + ' VND';
+  }
+
+  // Cập nhật tổng từng sản phẩm
+  function updateItemTotal(row) {
+    const price = parseInt(row.dataset.price);
+    const qty = parseInt(row.querySelector('.qty-input').value) || 1;
+    const subtotal = price * qty;
+    row.querySelector('.item-total').textContent = formatPrice(subtotal) + ' VND';
+    updateTotal();
+  }
+
+  // Xử lý thay đổi số lượng
+  document.querySelectorAll('.qty-input').forEach(input => {
+    input.addEventListener('change', function() {
+      const row = this.closest('.cart-item');
+      const productId = row.dataset.productId;
+      const newQty = parseInt(this.value) || 1;
+      
+      if (newQty < 1) this.value = 1;
+      if (newQty > 999) this.value = 999;
+      
+      updateItemTotal(row);
+      updateCart(productId, newQty);
+    });
+
+    input.addEventListener('input', function() {
+      if (this.value) {
+        const row = this.closest('.cart-item');
+        updateItemTotal(row);
+      }
+    });
+  });
+
+  // Nút tăng số lượng
+  document.querySelectorAll('.btn-qty-plus').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const input = this.closest('.input-group').querySelector('.qty-input');
+      input.value = Math.min(parseInt(input.value) + 1, 999);
+      input.dispatchEvent(new Event('change'));
+    });
+  });
+
+  // Nút giảm số lượng
+  document.querySelectorAll('.btn-qty-minus').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const input = this.closest('.input-group').querySelector('.qty-input');
+      input.value = Math.max(parseInt(input.value) - 1, 1);
+      input.dispatchEvent(new Event('change'));
+    });
+  });
+
+  // Xóa sản phẩm
+  document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const row = this.closest('.cart-item');
+      const productId = row.dataset.productId;
+      
+      if (confirm('Bạn chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+        deleteFromCart(productId, row);
+      }
+    });
+  });
+
+  // Gửi request cập nhật giỏ hàng lên server
+  function updateCart(productId, qty) {
+    fetch('<?= BASE_URL ?>/index.php?r=giohang', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'action=update_qty&product_id=' + productId + '&qty=' + qty
+    })
+    .catch(err => console.error('Lỗi:', err));
+  }
+
+  // Xóa sản phẩm khỏi giỏ hàng
+  function deleteFromCart(productId, row) {
+    fetch('<?= BASE_URL ?>/index.php?r=giohang', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'action=delete&product_id=' + productId
+    })
+    .then(response => {
+      if (response.ok) {
+        row.style.opacity = '0.5';
+        setTimeout(() => {
+          row.remove();
+          if (document.querySelectorAll('.cart-item').length === 0) {
+            location.reload();
+          } else {
+            updateTotal();
+          }
+        }, 300);
+      }
+    })
+    .catch(err => console.error('Lỗi:', err));
+  }
+});
+</script>
