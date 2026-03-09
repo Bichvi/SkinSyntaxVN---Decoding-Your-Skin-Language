@@ -16,6 +16,14 @@ class TaiKhoan {
         return $row ?: null;
     }
 
+    public function getAccountOverviewByEmail(string $email): ?array {
+        $sql = "SELECT id, ho_ten, email, ngay_tao FROM nguoidung WHERE LOWER(email) = LOWER(:email) LIMIT 1";
+        $st = $this->pdo->prepare($sql);
+        $st->execute([':email' => $email]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public function getKhachHangByEmail(string $email): ?array {
         $sql = "SELECT * FROM khach_hang WHERE LOWER(email) = LOWER(:email) LIMIT 1";
         $st = $this->pdo->prepare($sql);
@@ -237,6 +245,33 @@ class TaiKhoan {
         $ok = $stUpdate->execute([
             ':mat_khau' => $hashMoi,
             ':id' => $nguoiDungId,
+        ]);
+
+        return $ok
+            ? ['ok' => true, 'message' => 'Đổi mật khẩu thành công.']
+            : ['ok' => false, 'message' => 'Không thể đổi mật khẩu.'];
+    }
+
+    public function doiMatKhauByEmail(string $email, string $matKhauHienTai, string $matKhauMoi): array {
+        $sql = "SELECT id, mat_khau FROM nguoidung WHERE LOWER(email) = LOWER(:email) LIMIT 1";
+        $st = $this->pdo->prepare($sql);
+        $st->execute([':email' => $email]);
+        $row = $st->fetch(PDO::FETCH_ASSOC) ?: null;
+
+        if (!$row || empty($row['mat_khau'])) {
+            return ['ok' => false, 'message' => 'Không tìm thấy tài khoản.'];
+        }
+
+        if (!password_verify($matKhauHienTai, (string)$row['mat_khau'])) {
+            return ['ok' => false, 'message' => 'Mật khẩu hiện tại không đúng.'];
+        }
+
+        $hashMoi = password_hash($matKhauMoi, PASSWORD_BCRYPT);
+        $sqlUpdate = "UPDATE nguoidung SET mat_khau = :mat_khau WHERE id = :id";
+        $stUpdate = $this->pdo->prepare($sqlUpdate);
+        $ok = $stUpdate->execute([
+            ':mat_khau' => $hashMoi,
+            ':id' => (int)$row['id'],
         ]);
 
         return $ok

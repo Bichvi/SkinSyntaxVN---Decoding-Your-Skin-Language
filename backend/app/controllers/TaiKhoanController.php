@@ -42,12 +42,26 @@ class TaiKhoanController {
     public function hoso(): void {
         $user = $this->requireLogin();
         $nguoiDungId = (int)($user['id'] ?? 0);
+        $email = trim((string)($user['email'] ?? ''));
 
-        $account = $this->model->getAccountOverview($nguoiDungId);
+        $account = null;
+        if ($nguoiDungId > 0) {
+            $account = $this->model->getAccountOverview($nguoiDungId);
+        }
+
+        if (!$account && $email !== '') {
+            $account = $this->model->getAccountOverviewByEmail($email);
+        }
+
         if (!$account) {
             set_flash('error', 'Không tìm thấy thông tin tài khoản.');
             redirect(BASE_URL . '/index.php?r=home');
         }
+
+        // Đồng bộ session để các request sau dùng đúng id/email mới nhất.
+        $_SESSION['user']['id'] = (int)($account['id'] ?? 0);
+        $_SESSION['user']['email'] = (string)($account['email'] ?? ($user['email'] ?? ''));
+        $_SESSION['user']['ho_ten'] = (string)($account['ho_ten'] ?? ($user['ho_ten'] ?? ''));
 
         $khachHang = $this->model->getKhachHangByEmail((string)$account['email']);
         $orders = [];
@@ -147,7 +161,20 @@ class TaiKhoanController {
             $this->json(['ok' => false, 'message' => 'Xác nhận mật khẩu không khớp.'], 422);
         }
 
-        $result = $this->model->doiMatKhau((int)($user['id'] ?? 0), $matKhauHienTai, $matKhauMoi);
+        $userId = (int)($user['id'] ?? 0);
+        $email = trim((string)($user['email'] ?? ''));
+
+        if ($userId > 0) {
+            $result = $this->model->doiMatKhau($userId, $matKhauHienTai, $matKhauMoi);
+            if (empty($result['ok']) && $email !== '') {
+                $result = $this->model->doiMatKhauByEmail($email, $matKhauHienTai, $matKhauMoi);
+            }
+        } else {
+            $result = ($email !== '')
+                ? $this->model->doiMatKhauByEmail($email, $matKhauHienTai, $matKhauMoi)
+                : ['ok' => false, 'message' => 'Không xác định được tài khoản để đổi mật khẩu.'];
+        }
+
         $status = !empty($result['ok']) ? 200 : 422;
         $this->json($result, $status);
     }
