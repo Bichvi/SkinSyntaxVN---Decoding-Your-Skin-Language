@@ -79,7 +79,7 @@
 
       <form class="d-flex searchbar ms-auto" method="get" action="<?= BASE_URL ?>/index.php">
         <input type="hidden" name="r" value="tatca">
-        <input class="form-control" name="q" placeholder="Tìm sản phẩm, thương hiệu..." value="<?= h($_GET['q'] ?? '') ?>">
+        <input class="form-control" name="q" placeholder="Tìm sản phẩm, thương hiệu, thành phần..." value="<?= h($_GET['q'] ?? '') ?>">
         <button class="btn btn-brand" type="submit">Tìm</button>
       </form>
 

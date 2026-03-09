@@ -124,8 +124,26 @@ class SanPham {
         $params = [];
 
         if ($q !== '') {
-            $where .= " AND (sp.ten_san_pham ILIKE :q OR th.ten_thuong_hieu ILIKE :q) ";
-            $params[':q'] = '%' . $q . '%';
+            $keywordParts = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            if (empty($keywordParts)) {
+                $keywordParts = [$q];
+            }
+
+            // Mỗi từ khóa phải khớp ít nhất 1 cột để kết quả chính xác hơn.
+            foreach ($keywordParts as $i => $part) {
+                $param = ':q' . $i;
+                $where .= " AND (
+                    sp.ten_san_pham ILIKE $param
+                    OR COALESCE(th.ten_thuong_hieu, '') ILIKE $param
+                    OR COALESCE(dm.ten_danh_muc, '') ILIKE $param
+                    OR COALESCE(sp.danh_muc_day_du, '') ILIKE $param
+                    OR COALESCE(sp.loai_da, '') ILIKE $param
+                    OR COALESCE(sp.thanh_phan_chinh, '') ILIKE $param
+                    OR COALESCE(sp.thanh_phan_day_du, '') ILIKE $param
+                    OR COALESCE(sp.mo_ta, '') ILIKE $param
+                ) ";
+                $params[$param] = '%' . $part . '%';
+            }
         }
         if ($cap1Val !== '') {
             $where .= " AND ($cap1) = :cap1 ";

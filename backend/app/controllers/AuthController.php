@@ -41,14 +41,8 @@ class AuthController {
             'email'  => $u['email']
         ];
 
-        $_SESSION['pending_survey'] = [
-            'ho_ten' => $u['ho_ten'],
-            'email' => $u['email'],
-            'source' => 'login',
-        ];
-
-        set_flash('success', 'Đăng nhập thành công. Vui lòng cập nhật khảo sát nhanh để gợi ý chính xác hơn.');
-        header("Location: " . BASE_URL . "/index.php?r=khaosat");
+        set_flash('success', 'Đăng nhập thành công.');
+        header("Location: " . BASE_URL . "/index.php?r=home");
         exit;
     }
 

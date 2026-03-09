@@ -30,7 +30,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
     <?php if ($cap2): ?><input type="hidden" name="cap2" value="<?= h($cap2) ?>"><?php endif; ?>
 
     <div class="col-12 col-md-8">
-      <input class="form-control" name="q" placeholder="Tìm theo tên, thương hiệu..." value="<?= h($q) ?>">
+      <input class="form-control" name="q" placeholder="Tìm tên, thương hiệu, danh mục, thành phần..." value="<?= h($q) ?>">
     </div>
     <div class="col-12 col-md-2 d-grid">
       <button class="btn btn-success">Lọc</button>
@@ -40,32 +40,41 @@ $startPage = max(1, $endPage - $maxVisible + 1);
     </div>
   </form>
 
-  <div class="row g-3">
-    <?php foreach ($items as $p):
-      $img = first_image_url($p['link_hinh_anh'] ?? '');
-    ?>
-      <div class="col-6 col-md-3">
-        <a class="product-card" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= (int)$p['id'] ?>">
-          <div class="product-thumb">
-            <?php if (!empty($p['phan_tram_giam'])): ?>
-              <span class="badge-sale">-<?= h($p['phan_tram_giam']) ?>%</span>
-            <?php endif; ?>
-            <img
-              src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=No+Image') ?>"
-              referrerpolicy="no-referrer"
-              onerror="this.src='https://via.placeholder.com/450x450?text=No+Image';"
-              alt="<?= h($p['ten_san_pham'] ?? '') ?>"
-            >
-          </div>
-          <div class="product-meta">
-            <div class="brand"><?= h($p['thuong_hieu'] ?? '') ?></div>
-            <div class="name"><?= h($p['ten_san_pham'] ?? '') ?></div>
-            <div class="price"><?= vnd($p['gia_ban'] ?? 0) ?></div>
-          </div>
-        </a>
-      </div>
-    <?php endforeach; ?>
-  </div>
+  <?php if (empty($items)): ?>
+    <div class="alert alert-warning">
+      Không tìm thấy sản phẩm phù hợp
+      <?php if ($q !== ''): ?>
+        với từ khóa <b><?= h($q) ?></b>
+      <?php endif; ?>.
+    </div>
+  <?php else: ?>
+    <div class="row g-3">
+      <?php foreach ($items as $p):
+        $img = first_image_url($p['link_hinh_anh'] ?? '');
+      ?>
+        <div class="col-6 col-md-3">
+          <a class="product-card" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= (int)$p['id'] ?>">
+            <div class="product-thumb">
+              <?php if (!empty($p['phan_tram_giam'])): ?>
+                <span class="badge-sale">-<?= h($p['phan_tram_giam']) ?>%</span>
+              <?php endif; ?>
+              <img
+                src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=No+Image') ?>"
+                referrerpolicy="no-referrer"
+                onerror="this.src='https://via.placeholder.com/450x450?text=No+Image';"
+                alt="<?= h($p['ten_san_pham'] ?? '') ?>"
+              >
+            </div>
+            <div class="product-meta">
+              <div class="brand"><?= h($p['thuong_hieu'] ?? '') ?></div>
+              <div class="name"><?= h($p['ten_san_pham'] ?? '') ?></div>
+              <div class="price"><?= vnd($p['gia_ban'] ?? 0) ?></div>
+            </div>
+          </a>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
 
   <nav class="mt-4">
     <ul class="pagination justify-content-center">

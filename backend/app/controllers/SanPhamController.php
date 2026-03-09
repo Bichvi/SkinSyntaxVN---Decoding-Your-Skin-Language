@@ -42,10 +42,10 @@ class SanPhamController {
     public function chitiet() {
         // Xử lý thêm vào giỏ hàng
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add_to_cart') {
-            $id = (int)($_GET['id'] ?? 0);
+            $id = trim((string)($_GET['id'] ?? ''));
             $qty = max(1, (int)($_POST['qty'] ?? 1));
             
-            if ($id > 0) {
+            if ($id !== '') {
                 if (!isset($_SESSION['gio_hang'])) {
                     $_SESSION['gio_hang'] = [];
                 }
@@ -62,12 +62,20 @@ class SanPhamController {
             }
         }
 
-        $id = (int)($_GET['id'] ?? 0);
+        $id = trim((string)($_GET['id'] ?? ''));
+        if ($id === '') {
+            $this->render('404');
+            return;
+        }
+
         $p = $this->model->find($id);
         if (!$p) {
             $this->render('404');
             return;
         }
-        $this->render('chitiet', ['p' => $p]);
+
+        $this->render('chitiet', [
+            'p' => $p,
+        ]);
     }
 }

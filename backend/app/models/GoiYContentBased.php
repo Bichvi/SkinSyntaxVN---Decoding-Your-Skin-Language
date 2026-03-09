@@ -48,10 +48,17 @@ class GoiYContentBased {
 
         $avoidIngredients = $this->splitKeywords($avoidRaw);
 
-        $products = $this->fetchCandidateProducts($limit * 8);
+        [$budgetMin, $budgetMax] = $this->resolveBudgetRange($post, $budget);
+
+        $products = $this->fetchCandidateProducts($limit * 8, $budgetMin, $budgetMax);
         if (!$products) {
             return [];
         }
+
+        $whitelistIds = array_values(array_unique(array_map(
+            fn($p) => (string)($p['ma_san_pham'] ?? ''),
+            $products
+        )));
 
         $scored = [];
         foreach ($products as $product) {
@@ -72,10 +79,27 @@ class GoiYContentBased {
             return $b['score'] <=> $a['score'];
         });
 
+        $scored = array_values(array_filter($scored, function (array $item) use ($whitelistIds) {
+            $id = (string)($item['id'] ?? '');
+            return $id !== '' && in_array($id, $whitelistIds, true);
+        }));
+
         return array_slice($scored, 0, $limit);
     }
 
-    private function fetchCandidateProducts(int $limit): array {
+    private function fetchCandidateProducts(int $limit, ?int $budgetMin = null, ?int $budgetMax = null): array {
+        $where = "WHERE 1=1";
+        $params = [];
+
+        if ($budgetMin !== null) {
+            $where .= " AND sp.gia_ban >= :budget_min";
+            $params[':budget_min'] = $budgetMin;
+        }
+        if ($budgetMax !== null) {
+            $where .= " AND sp.gia_ban <= :budget_max";
+            $params[':budget_max'] = $budgetMax;
+        }
+
         $sql = "SELECT sp.ma_san_pham, sp.ten_san_pham, sp.gia_ban, sp.loai_da, sp.mo_ta,
                        sp.thanh_phan_chinh, sp.thanh_phan_day_du, sp.hdsd, sp.diem_danh_gia,
                        sp.link_hinh_anh, th.ten_thuong_hieu,
@@ -86,13 +110,49 @@ class GoiYContentBased {
                 LEFT JOIN xuat_xu xx ON xx.ma_xuat_xu = sp.ma_xuat_xu
                 LEFT JOIN xuat_xu_thuong_hieu xxt ON xxt.ma_xuat_xu = sp.ma_xuat_xu
                 LEFT JOIN danh_muc dm ON dm.ma_danh_muc = sp.ma_danh_muc
+                $where
                 ORDER BY sp.updated_at DESC NULLS LAST, sp.created_at DESC NULLS LAST
                 LIMIT :limit";
 
         $st = $this->pdo->prepare($sql);
+        foreach ($params as $k => $v) {
+            $st->bindValue($k, $v, PDO::PARAM_INT);
+        }
         $st->bindValue(':limit', max(30, $limit), PDO::PARAM_INT);
         $st->execute();
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private function resolveBudgetRange(array $post, ?int $budget): array {
+        $minRaw = trim((string)($post['budget_min'] ?? ''));
+        $maxRaw = trim((string)($post['budget_max'] ?? ''));
+
+        $budgetMin = null;
+        $budgetMax = null;
+
+        if ($minRaw !== '') {
+            $digits = preg_replace('/[^\d]/', '', $minRaw);
+            if ($digits !== '') {
+                $budgetMin = (int)$digits;
+            }
+        }
+
+        if ($maxRaw !== '') {
+            $digits = preg_replace('/[^\d]/', '', $maxRaw);
+            if ($digits !== '') {
+                $budgetMax = (int)$digits;
+            }
+        }
+
+        if ($budgetMin === null && $budgetMax === null && $budget !== null) {
+            $budgetMax = $budget;
+        }
+
+        if ($budgetMin !== null && $budgetMax !== null && $budgetMin > $budgetMax) {
+            [$budgetMin, $budgetMax] = [$budgetMax, $budgetMin];
+        }
+
+        return [$budgetMin, $budgetMax];
     }
 
     private function scoreOne(array $product, array $profile): array {
