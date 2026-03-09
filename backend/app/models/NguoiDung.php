@@ -9,7 +9,7 @@ class NguoiDung {
     }
 
     public function timTheoEmail(string $email): ?array {
-        $sql = "SELECT * FROM nguoidung WHERE email = :email LIMIT 1";
+        $sql = "SELECT * FROM nguoidung WHERE LOWER(email) = LOWER(:email) LIMIT 1";
         $st = $this->pdo->prepare($sql);
         $st->execute([':email' => $email]);
         $row = $st->fetch(PDO::FETCH_ASSOC);

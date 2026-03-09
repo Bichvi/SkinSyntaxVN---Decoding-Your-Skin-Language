@@ -112,6 +112,16 @@ CREATE TABLE khach_hang (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 9.1 Bảng NGUOIDUNG (Website Account)
+DROP TABLE IF EXISTS nguoidung CASCADE;
+CREATE TABLE nguoidung (
+    id BIGSERIAL PRIMARY KEY,
+    ho_ten VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    mat_khau VARCHAR(255) NOT NULL,
+    ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 10. Bảng NHAN_VIEN (Staff/Employee)
 DROP TABLE IF EXISTS nhan_vien CASCADE;
 CREATE TABLE nhan_vien (
