@@ -140,6 +140,14 @@ class SanPham {
         return $this->find($id);
     }
 
+    public function tangLuotXem(string $id): void {
+        $sql = "UPDATE san_pham
+                SET luot_xem = COALESCE(luot_xem, 0) + 1
+                WHERE ma_san_pham = :id";
+        $st = $this->pdo->prepare($sql);
+        $st->execute([':id' => $id]);
+    }
+
     /**
      * Menu danh mục kiểu Hasaki:
      * - Nếu danh_muc_day_du bắt đầu bằng "Sức Khỏe - Làm Đẹp -> ..." thì:
@@ -295,10 +303,10 @@ class SanPham {
                            sp.gia_ban,
                            sp.link_hinh_anh,
                            COALESCE(th.ten_thuong_hieu, '') AS thuong_hieu,
-                           COALESCE(sp.luot_tim_kiem, 0) AS luot_tim_kiem
+                           COALESCE(sp.luot_xem, 0) AS luot_xem
                     FROM san_pham sp
                     LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
-                    ORDER BY COALESCE(sp.luot_tim_kiem, 0) DESC, sp.ten_san_pham ASC
+                    ORDER BY COALESCE(sp.luot_xem, 0) DESC, sp.ten_san_pham ASC
                     LIMIT :limit";
 
             $st = $this->pdo->prepare($sql);
@@ -306,13 +314,13 @@ class SanPham {
             $st->execute();
             return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
         } catch (Throwable $e) {
-            // Fallback an toàn nếu DB chưa có cột luot_tim_kiem.
+            // Fallback an toàn nếu DB chưa có cột luot_xem.
             $sqlFallback = "SELECT sp.ma_san_pham AS id,
                                    sp.ten_san_pham,
                                    sp.gia_ban,
                                    sp.link_hinh_anh,
                                    COALESCE(th.ten_thuong_hieu, '') AS thuong_hieu,
-                                   COALESCE(sp.so_luong_danh_gia, 0) AS luot_tim_kiem
+                                   COALESCE(sp.so_luong_danh_gia, 0) AS luot_xem
                             FROM san_pham sp
                             LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
                             ORDER BY COALESCE(sp.so_luong_danh_gia, 0) DESC, sp.ten_san_pham ASC

@@ -88,6 +88,10 @@ class SanPhamController {
             return;
         }
 
+        // Mỗi lần truy cập trang chi tiết sẽ tăng 1 lượt xem.
+        $this->model->tangLuotXem($id);
+        $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + 1;
+
         if ($q !== '' && isset($_SESSION['user']['email'])) {
             $tkModel = new TaiKhoan($this->pdo);
             $tkModel->luuLichSuTimKiem($_SESSION['user']['email'], $q);
