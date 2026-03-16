@@ -33,6 +33,14 @@ switch ($r) {
         (new SanPhamController($pdo))->chitiet();
         break;
 
+    case 'live_search':
+        (new SanPhamController($pdo))->liveSearch();
+        break;
+
+    case 'api_smart_search':
+        (new SanPhamController($pdo))->apiSmartSearch();
+        break;
+
     case 'giohang':
         (new HomeController($pdo))->giohang();
         break;

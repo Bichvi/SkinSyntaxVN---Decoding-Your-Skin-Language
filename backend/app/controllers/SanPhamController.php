@@ -1,8 +1,11 @@
 <?php
 // backend/app/controllers/SanPhamController.php
 require_once __DIR__ . '/../models/SanPham.php';
+require_once __DIR__ . '/../models/TaiKhoan.php';
 
 class SanPhamController {
+    private const SEARCH_KEYWORD_MAX_LEN = 250;
+
     private PDO $pdo;
     private SanPham $model;
 
@@ -19,11 +22,20 @@ class SanPhamController {
         require __DIR__ . '/../views/layouts/footer.php';
     }
 
+    private function normalizeKeyword(?string $keyword): string {
+        return mb_substr(trim((string)$keyword), 0, self::SEARCH_KEYWORD_MAX_LEN);
+    }
+
     public function tatca() {
         $page = (int)($_GET['page'] ?? 1);
-        $q    = trim((string)($_GET['q'] ?? ''));
+        $q    = $this->normalizeKeyword($_GET['q'] ?? '');
         $cap1 = trim((string)($_GET['cap1'] ?? ''));
         $cap2 = trim((string)($_GET['cap2'] ?? ''));
+
+        if ($q !== '' && isset($_SESSION['user']['email'])) {
+            $tkModel = new TaiKhoan($this->pdo);
+            $tkModel->luuLichSuTimKiem($_SESSION['user']['email'], $q);
+        }
 
         $perPage = 24;
         $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2);
@@ -40,6 +52,8 @@ class SanPhamController {
     }
 
     public function chitiet() {
+        $q = $this->normalizeKeyword($_GET['q'] ?? '');
+
         // Xử lý thêm vào giỏ hàng
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add_to_cart') {
             $id = trim((string)($_GET['id'] ?? ''));
@@ -74,8 +88,81 @@ class SanPhamController {
             return;
         }
 
+        if ($q !== '' && isset($_SESSION['user']['email'])) {
+            $tkModel = new TaiKhoan($this->pdo);
+            $tkModel->luuLichSuTimKiem($_SESSION['user']['email'], $q);
+        }
+
         $this->render('chitiet', [
             'p' => $p,
         ]);
+    }
+
+    public function liveSearch() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $q = $this->normalizeKeyword($_GET['q'] ?? '');
+        $limit = (int)($_GET['limit'] ?? 8);
+        $limit = max(1, min(20, $limit));
+
+        if (mb_strlen($q) < 2) {
+            echo json_encode([
+                'ok' => true,
+                'items' => []
+            ], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        try {
+            $items = $this->model->searchSuggestions($q, $limit);
+            echo json_encode([
+                'ok' => true,
+                'items' => $items
+            ], JSON_UNESCAPED_UNICODE);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'ok' => false,
+                'items' => [],
+                'message' => 'Không thể tải gợi ý lúc này.'
+            ], JSON_UNESCAPED_UNICODE);
+        }
+    }
+
+    public function apiSmartSearch() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $q = $this->normalizeKeyword($_GET['q'] ?? '');
+
+        try {
+            if ($q === '') {
+                $history = [];
+                if (isset($_SESSION['user']['email'])) {
+                    $tkModel = new TaiKhoan($this->pdo);
+                    $history = $tkModel->getTuKhoaGanDay((string)$_SESSION['user']['email'], 8);
+                }
+
+                $trending = $this->model->getTopTrending(5);
+
+                echo json_encode([
+                    'type' => 'zero_query',
+                    'history' => $history,
+                    'trending' => $trending,
+                ], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            $results = $this->model->searchLive($q, 5);
+            echo json_encode([
+                'type' => 'live_search',
+                'results' => $results,
+            ], JSON_UNESCAPED_UNICODE);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'type' => 'error',
+                'message' => 'Không thể tải dữ liệu tìm kiếm lúc này.'
+            ], JSON_UNESCAPED_UNICODE);
+        }
     }
 }

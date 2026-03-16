@@ -196,6 +196,15 @@ CREATE TABLE lich_su_chat (
     thoi_gian TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 16. Bảng LICH_SU_TIM_KIEM (Search History)
+DROP TABLE IF EXISTS lich_su_tim_kiem CASCADE;
+CREATE TABLE lich_su_tim_kiem (
+    id BIGSERIAL PRIMARY KEY,
+    ma_kh INTEGER NOT NULL REFERENCES khach_hang(ma_kh) ON DELETE CASCADE,
+    tu_khoa TEXT NOT NULL,
+    ngay_tim TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ============================================
 -- INSERT MẶC ĐỊNH
 -- ============================================
@@ -220,6 +229,8 @@ CREATE INDEX idx_chi_tiet_hoa_don ON chi_tiet_hoa_don(ma_hoa_don);
 CREATE INDEX idx_danh_gia_san_pham ON danh_gia(ma_san_pham);
 CREATE INDEX idx_danh_gia_khach_hang ON danh_gia(ma_kh);
 CREATE INDEX idx_lich_su_chat_khach_hang ON lich_su_chat(ma_kh);
+CREATE INDEX idx_lich_su_tim_kiem_khach_hang ON lich_su_tim_kiem(ma_kh);
+CREATE INDEX idx_lich_su_tim_kiem_ngay_tim ON lich_su_tim_kiem(ngay_tim DESC);
 
 -- ============================================
 -- HOÀN THÀNH

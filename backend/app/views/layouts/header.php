@@ -77,9 +77,12 @@
         </li>
       </ul>
 
-      <form class="d-flex searchbar ms-auto" method="get" action="<?= BASE_URL ?>/index.php">
+      <form class="d-flex searchbar ms-auto live-search-form" method="get" action="<?= BASE_URL ?>/index.php" id="liveSearchForm" autocomplete="off" data-live-search-url="<?= BASE_URL ?>/index.php?r=live_search" data-smart-search-url="<?= BASE_URL ?>/index.php?r=api_smart_search">
         <input type="hidden" name="r" value="tatca">
-        <input class="form-control" name="q" placeholder="Tìm sản phẩm, thương hiệu, thành phần..." value="<?= h($_GET['q'] ?? '') ?>">
+        <div class="live-search-box">
+          <input class="form-control" name="q" id="search-input" placeholder="Tìm sản phẩm, thương hiệu, thành phần..." value="<?= h($_GET['q'] ?? '') ?>" aria-label="Tìm kiếm sản phẩm" aria-autocomplete="list" aria-expanded="false" aria-controls="smartSearchDropdown">
+          <div class="smart-search-dropdown" id="smartSearchDropdown" role="listbox" aria-label="Gợi ý sản phẩm" hidden></div>
+        </div>
         <button class="btn btn-brand" type="submit">Tìm</button>
       </form>
 

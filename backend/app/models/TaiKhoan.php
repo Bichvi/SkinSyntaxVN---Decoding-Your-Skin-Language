@@ -278,4 +278,66 @@ class TaiKhoan {
             ? ['ok' => true, 'message' => 'Đổi mật khẩu thành công.']
             : ['ok' => false, 'message' => 'Không thể đổi mật khẩu.'];
     }
+
+
+    // --- CÁC HÀM XỬ LÝ LỊCH SỬ TÌM KIẾM CHO AI ---
+
+    public function luuLichSuTimKiem(string $email, string $tuKhoa): bool {
+        try {
+            $email = trim($email);
+            $tuKhoa = trim($tuKhoa);
+            if ($email === '' || $tuKhoa === '') {
+                return false;
+            }
+
+            $kh = $this->getKhachHangByEmail($email);
+            if (!$kh) {
+                $account = $this->getAccountOverviewByEmail($email);
+                $hoTen = trim((string)($account['ho_ten'] ?? ''));
+                if ($hoTen === '') {
+                    $hoTen = strstr($email, '@', true) ?: $email;
+                }
+
+                $kh = $this->ensureKhachHangByEmail($hoTen, $email);
+            }
+
+            if (!$kh || empty($kh['ma_kh'])) {
+                return false;
+            }
+
+            $sql = "INSERT INTO lich_su_tim_kiem (ma_kh, tu_khoa, ngay_tim) 
+                    VALUES (:ma_kh, :tu_khoa, CURRENT_TIMESTAMP)";
+            $st = $this->pdo->prepare($sql);
+            return $st->execute([
+                ':ma_kh' => $kh['ma_kh'],
+                ':tu_khoa' => $tuKhoa
+            ]);
+        } catch (Throwable $e) {
+            error_log('luuLichSuTimKiem error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getTuKhoaGanDay(string $email, int $limit = 3): array {
+        try {
+            $kh = $this->getKhachHangByEmail($email);
+            if (!$kh) return [];
+
+            // Lấy các từ khóa mới nhất, loại bỏ trùng lặp
+            $sql = "SELECT tu_khoa FROM lich_su_tim_kiem
+                    WHERE ma_kh = :ma_kh
+                    GROUP BY tu_khoa
+                    ORDER BY MAX(ngay_tim) DESC
+                    LIMIT :limit";
+            $st = $this->pdo->prepare($sql);
+            $st->bindValue(':ma_kh', $kh['ma_kh'], PDO::PARAM_INT);
+            $st->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $st->execute();
+            
+            return $st->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        } catch (Throwable $e) {
+            error_log('getTuKhoaGanDay error: ' . $e->getMessage());
+            return [];
+        }
+    }
 }

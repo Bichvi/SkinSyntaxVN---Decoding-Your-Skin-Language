@@ -3,9 +3,94 @@
 
 class SanPham {
     private PDO $pdo;
+    private ?array $sanPhamColumnsCache = null;
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
+    }
+
+    private function normalizeKeywordParts(string $q): array {
+        $parts = preg_split('/\s+/u', trim($q), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        return empty($parts) && trim($q) !== '' ? [trim($q)] : $parts;
+    }
+
+    private function appendKeywordFilters(string &$where, array &$params, string $q, array $columns): void {
+        if (trim($q) === '') {
+            return;
+        }
+
+        $keywordParts = $this->normalizeKeywordParts($q);
+        foreach ($keywordParts as $i => $part) {
+            $param = ':q' . $i;
+            $orParts = [];
+
+            foreach ($columns as $columnExpr) {
+                $orParts[] = $columnExpr . " ILIKE " . $param;
+            }
+
+            $where .= " AND (" . implode(" OR ", $orParts) . ") ";
+            $params[$param] = '%' . $part . '%';
+        }
+    }
+
+    private function getSanPhamColumns(): array {
+        if ($this->sanPhamColumnsCache !== null) {
+            return $this->sanPhamColumnsCache;
+        }
+
+        $sql = "SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = current_schema()
+                  AND table_name = 'san_pham'";
+        $rows = $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+        $cols = [];
+        foreach ($rows as $row) {
+            $name = (string)($row['column_name'] ?? '');
+            if ($name !== '') {
+                $cols[$name] = true;
+            }
+        }
+
+        $this->sanPhamColumnsCache = $cols;
+        return $this->sanPhamColumnsCache;
+    }
+
+    private function buildSearchColumns(): array {
+        $columns = [
+            'sp.ten_san_pham',
+            "COALESCE(th.ten_thuong_hieu, '')",
+            "COALESCE(dm.ten_danh_muc, '')",
+            "COALESCE(sp.danh_muc_day_du, '')"
+        ];
+
+        $available = $this->getSanPhamColumns();
+        $optionalSanPhamCols = ['loai_da', 'thanh_phan_chinh', 'thanh_phan_day_du', 'mo_ta'];
+
+        foreach ($optionalSanPhamCols as $col) {
+            if (isset($available[$col])) {
+                $columns[] = "COALESCE(sp.$col, '')";
+            }
+        }
+
+        return $columns;
+    }
+
+    private function buildSuggestionColumns(): array {
+        $columns = [
+            'sp.ten_san_pham',
+            "COALESCE(th.ten_thuong_hieu, '')",
+            "COALESCE(dm.ten_danh_muc, '')"
+        ];
+
+        $available = $this->getSanPhamColumns();
+        if (isset($available['thanh_phan_chinh'])) {
+            $columns[] = "COALESCE(sp.thanh_phan_chinh, '')";
+        } elseif (isset($available['thanh_phan_day_du'])) {
+            $columns[] = "COALESCE(sp.thanh_phan_day_du, '')";
+        }
+
+        return $columns;
     }
 
     // Lấy sản phẩm mới theo schema hiện tại
@@ -123,28 +208,8 @@ class SanPham {
         $where = " WHERE 1=1 ";
         $params = [];
 
-        if ($q !== '') {
-            $keywordParts = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-            if (empty($keywordParts)) {
-                $keywordParts = [$q];
-            }
+        $this->appendKeywordFilters($where, $params, $q, $this->buildSearchColumns());
 
-            // Mỗi từ khóa phải khớp ít nhất 1 cột để kết quả chính xác hơn.
-            foreach ($keywordParts as $i => $part) {
-                $param = ':q' . $i;
-                $where .= " AND (
-                    sp.ten_san_pham ILIKE $param
-                    OR COALESCE(th.ten_thuong_hieu, '') ILIKE $param
-                    OR COALESCE(dm.ten_danh_muc, '') ILIKE $param
-                    OR COALESCE(sp.danh_muc_day_du, '') ILIKE $param
-                    OR COALESCE(sp.loai_da, '') ILIKE $param
-                    OR COALESCE(sp.thanh_phan_chinh, '') ILIKE $param
-                    OR COALESCE(sp.thanh_phan_day_du, '') ILIKE $param
-                    OR COALESCE(sp.mo_ta, '') ILIKE $param
-                ) ";
-                $params[$param] = '%' . $part . '%';
-            }
-        }
         if ($cap1Val !== '') {
             $where .= " AND ($cap1) = :cap1 ";
             $params[':cap1'] = $cap1Val;
@@ -185,5 +250,104 @@ class SanPham {
         $items = $st2->fetchAll(PDO::FETCH_ASSOC);
 
         return ['items' => $items, 'total' => $total];
+    }
+
+    public function searchSuggestions(string $q, int $limit = 8): array {
+        $limit = max(1, min(20, $limit));
+        $q = trim($q);
+        if ($q === '') {
+            return [];
+        }
+
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        $this->appendKeywordFilters($where, $params, $q, $this->buildSuggestionColumns());
+
+        $sql = "SELECT sp.ma_san_pham AS id,
+                       sp.ten_san_pham,
+                       sp.gia_ban,
+                       sp.link_hinh_anh,
+                       COALESCE(th.ten_thuong_hieu, '') AS thuong_hieu
+                FROM san_pham sp
+                LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
+                LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                " . $where . "
+                ORDER BY sp.ten_san_pham ASC
+                LIMIT :limit";
+
+        $st = $this->pdo->prepare($sql);
+        foreach ($params as $k => $v) {
+            $st->bindValue($k, $v);
+        }
+        $st->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $st->execute();
+
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getTopTrending(int $limit = 5): array {
+        $limit = max(1, min(20, $limit));
+
+        try {
+            $sql = "SELECT sp.ma_san_pham AS id,
+                           sp.ten_san_pham,
+                           sp.gia_ban,
+                           sp.link_hinh_anh,
+                           COALESCE(th.ten_thuong_hieu, '') AS thuong_hieu,
+                           COALESCE(sp.luot_tim_kiem, 0) AS luot_tim_kiem
+                    FROM san_pham sp
+                    LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
+                    ORDER BY COALESCE(sp.luot_tim_kiem, 0) DESC, sp.ten_san_pham ASC
+                    LIMIT :limit";
+
+            $st = $this->pdo->prepare($sql);
+            $st->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $st->execute();
+            return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Throwable $e) {
+            // Fallback an toàn nếu DB chưa có cột luot_tim_kiem.
+            $sqlFallback = "SELECT sp.ma_san_pham AS id,
+                                   sp.ten_san_pham,
+                                   sp.gia_ban,
+                                   sp.link_hinh_anh,
+                                   COALESCE(th.ten_thuong_hieu, '') AS thuong_hieu,
+                                   COALESCE(sp.so_luong_danh_gia, 0) AS luot_tim_kiem
+                            FROM san_pham sp
+                            LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
+                            ORDER BY COALESCE(sp.so_luong_danh_gia, 0) DESC, sp.ten_san_pham ASC
+                            LIMIT :limit";
+
+            $st = $this->pdo->prepare($sqlFallback);
+            $st->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $st->execute();
+            return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        }
+    }
+
+    public function searchLive(string $q, int $limit = 5): array {
+        $limit = max(1, min(20, $limit));
+        $q = trim($q);
+        if ($q === '') {
+            return [];
+        }
+
+        $sql = "SELECT sp.ma_san_pham AS id,
+                       sp.ten_san_pham,
+                       sp.gia_ban,
+                       sp.link_hinh_anh,
+                       COALESCE(th.ten_thuong_hieu, '') AS thuong_hieu
+                FROM san_pham sp
+                LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
+                WHERE sp.ten_san_pham ILIKE :q
+                ORDER BY sp.ten_san_pham ASC
+                LIMIT :limit";
+
+        $st = $this->pdo->prepare($sql);
+        $st->bindValue(':q', '%' . $q . '%', PDO::PARAM_STR);
+        $st->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $st->execute();
+
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 }
