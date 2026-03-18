@@ -16,6 +16,19 @@ class NguoiDung {
         return $row ?: null;
     }
 
+    public function timNhanVienTheoEmail(string $email): ?array {
+        $sql = "SELECT nv.*, vt.ten_vai_tro
+                FROM nhan_vien nv
+                LEFT JOIN vai_tro vt ON vt.ma_vai_tro = nv.ma_vai_tro
+                WHERE LOWER(nv.email) = LOWER(:email)
+                  AND nv.deleted_at IS NULL
+                LIMIT 1";
+        $st = $this->pdo->prepare($sql);
+        $st->execute(['email' => $email]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public function taoMoi(string $hoTen, string $email, string $matKhauPlain): bool {
         $hash = password_hash($matKhauPlain, PASSWORD_BCRYPT);
 

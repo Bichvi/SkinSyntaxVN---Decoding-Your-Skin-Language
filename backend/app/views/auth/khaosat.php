@@ -1,6 +1,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
   body.modal-open {
@@ -20,7 +20,7 @@
     overflow: hidden;
     background: linear-gradient(145deg, #fff9f6 0%, #f4fffb 45%, #f6fbff 100%);
     box-shadow: 0 22px 60px rgba(16, 24, 40, .22);
-    font-family: 'Manrope', sans-serif;
+    font-family: 'Quicksand', sans-serif;
   }
 
   .survey-head {
@@ -53,7 +53,7 @@
 
   .survey-title {
     margin: 6px 0 8px;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Quicksand', sans-serif;
     font-size: 38px;
     font-weight: 700;
     color: #113a35;

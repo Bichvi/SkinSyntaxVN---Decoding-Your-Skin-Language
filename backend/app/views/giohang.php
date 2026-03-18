@@ -167,7 +167,7 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
 
 <style>
   .cart-page {
-    font-family: "Be Vietnam Pro", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    font-family: 'Quicksand', system-ui, sans-serif;
   }
 
   .cart-title {

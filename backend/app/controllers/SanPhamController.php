@@ -2,9 +2,11 @@
 // backend/app/controllers/SanPhamController.php
 require_once __DIR__ . '/../models/SanPham.php';
 require_once __DIR__ . '/../models/TaiKhoan.php';
+require_once __DIR__ . '/../models/QuanTri.php';
 
 class SanPhamController {
     private const SEARCH_KEYWORD_MAX_LEN = 250;
+    private const SEARCH_HISTORY_LIMIT = 8;
 
     private PDO $pdo;
     private SanPham $model;
@@ -26,15 +28,85 @@ class SanPhamController {
         return mb_substr(trim((string)$keyword), 0, self::SEARCH_KEYWORD_MAX_LEN);
     }
 
+    private function saveSearchHistory(string $keyword): void {
+        $keyword = $this->normalizeKeyword($keyword);
+        if ($keyword === '') {
+            return;
+        }
+
+        $sessionHistory = $_SESSION['search_history'] ?? [];
+        if (!is_array($sessionHistory)) {
+            $sessionHistory = [];
+        }
+
+        $normalizedKeyword = mb_strtolower($keyword);
+        $sessionHistory = array_values(array_filter(
+            $sessionHistory,
+            static fn($item) => mb_strtolower(trim((string)$item)) !== $normalizedKeyword
+        ));
+
+        array_unshift($sessionHistory, $keyword);
+        $_SESSION['search_history'] = array_slice($sessionHistory, 0, self::SEARCH_HISTORY_LIMIT);
+
+        if (isset($_SESSION['user']['email'])) {
+            $tkModel = new TaiKhoan($this->pdo);
+            $tkModel->luuLichSuTimKiem((string)$_SESSION['user']['email'], $keyword);
+        }
+    }
+
+    private function getSearchHistory(): array {
+        $history = [];
+
+        $sessionHistory = $_SESSION['search_history'] ?? [];
+        if (is_array($sessionHistory)) {
+            foreach ($sessionHistory as $keyword) {
+                $keyword = $this->normalizeKeyword((string)$keyword);
+                if ($keyword !== '') {
+                    $history[] = $keyword;
+                }
+            }
+        }
+
+        if (isset($_SESSION['user']['email'])) {
+            $tkModel = new TaiKhoan($this->pdo);
+            $history = array_merge(
+                $history,
+                $tkModel->getTuKhoaGanDay((string)$_SESSION['user']['email'], self::SEARCH_HISTORY_LIMIT)
+            );
+        }
+
+        $uniqueHistory = [];
+        $seen = [];
+        foreach ($history as $keyword) {
+            $keyword = $this->normalizeKeyword((string)$keyword);
+            if ($keyword === '') {
+                continue;
+            }
+
+            $normalizedKeyword = mb_strtolower($keyword);
+            if (isset($seen[$normalizedKeyword])) {
+                continue;
+            }
+
+            $seen[$normalizedKeyword] = true;
+            $uniqueHistory[] = $keyword;
+
+            if (count($uniqueHistory) >= self::SEARCH_HISTORY_LIMIT) {
+                break;
+            }
+        }
+
+        return $uniqueHistory;
+    }
+
     public function tatca() {
         $page = (int)($_GET['page'] ?? 1);
         $q    = $this->normalizeKeyword($_GET['q'] ?? '');
         $cap1 = trim((string)($_GET['cap1'] ?? ''));
         $cap2 = trim((string)($_GET['cap2'] ?? ''));
 
-        if ($q !== '' && isset($_SESSION['user']['email'])) {
-            $tkModel = new TaiKhoan($this->pdo);
-            $tkModel->luuLichSuTimKiem($_SESSION['user']['email'], $q);
+        if ($q !== '') {
+            $this->saveSearchHistory($q);
         }
 
         $perPage = 24;
@@ -92,13 +164,13 @@ class SanPhamController {
         $this->model->tangLuotXem($id);
         $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + 1;
 
-        if ($q !== '' && isset($_SESSION['user']['email'])) {
-            $tkModel = new TaiKhoan($this->pdo);
-            $tkModel->luuLichSuTimKiem($_SESSION['user']['email'], $q);
+        if ($q !== '') {
+            $this->saveSearchHistory($q);
         }
 
         $this->render('chitiet', [
             'p' => $p,
+            'reviews' => (new QuanTri($this->pdo))->getProductReviews($id),
         ]);
     }
 
@@ -140,11 +212,7 @@ class SanPhamController {
 
         try {
             if ($q === '') {
-                $history = [];
-                if (isset($_SESSION['user']['email'])) {
-                    $tkModel = new TaiKhoan($this->pdo);
-                    $history = $tkModel->getTuKhoaGanDay((string)$_SESSION['user']['email'], 8);
-                }
+                $history = $this->getSearchHistory();
 
                 $trending = $this->model->getTopTrending(5);
 

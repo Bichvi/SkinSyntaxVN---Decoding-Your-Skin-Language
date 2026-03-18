@@ -6,12 +6,12 @@
     <title>SkinSyntax Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWix+LLJAJ9/2PKZ5QiAj6Ta86w+fsb2TkR4j8sQAtxTnRwE+XzQ+eJg4Q2pQ6J9iA9+6g==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Quicksand', sans-serif;
         }
 
         .admin-sidebar {
@@ -50,6 +50,7 @@
 <?php
 $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
 $currentRoute = $_GET['r'] ?? 'admin_dashboard';
+$currentRole = current_role();
 ?>
 
 <aside class="admin-sidebar position-fixed top-0 start-0 vh-100 bg-white border-end d-flex flex-column">
@@ -58,23 +59,73 @@ $currentRoute = $_GET['r'] ?? 'admin_dashboard';
     </div>
 
     <nav class="py-3">
-        <a href="index.php?r=admin_dashboard" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= $currentRoute === 'admin_dashboard' ? 'menu-active' : '' ?>">
-            <i class="fa-solid fa-chart-line"></i>
-            <span>Dashboard</span>
-        </a>
-        <a href="index.php?r=admin_sp" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'admin_sp') === 0 ? 'menu-active' : '' ?>">
-            <i class="fa-solid fa-box-open"></i>
-            <span>Quản lý Sản phẩm</span>
-        </a>
-        <a href="index.php?r=admin_users" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'admin_users') === 0 ? 'menu-active' : '' ?>">
-            <i class="fa-solid fa-users"></i>
-            <span>Quản lý Người dùng</span>
-        </a>
-        <a href="index.php?r=admin_orders" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'admin_orders') === 0 ? 'menu-active' : '' ?>">
-            <i class="fa-solid fa-file-invoice-dollar"></i>
-            <span>Đơn hàng</span>
-        </a>
-        <a href="index.php?r=logout" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary">
+        <?php if (user_can_access_route('admin_dashboard')): ?>
+            <a href="index.php?r=admin_dashboard" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= $currentRoute === 'admin_dashboard' ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('admin_sp')): ?>
+            <a href="index.php?r=admin_sp" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'admin_sp') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-box-open"></i>
+                <span>Quản lý Sản phẩm</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('admin_categories')): ?>
+            <a href="index.php?r=admin_categories" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'admin_categories') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>Danh mục</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('admin_users')): ?>
+            <a href="index.php?r=admin_users" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'admin_users') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-users"></i>
+                <span>Quản lý Người dùng</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('admin_orders')): ?>
+            <a href="index.php?r=admin_orders" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'admin_orders') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>Đơn hàng</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('admin_reports')): ?>
+            <a href="index.php?r=admin_reports" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'admin_reports') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Báo cáo</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('staff_dashboard')): ?>
+            <a href="index.php?r=staff_dashboard" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'staff_') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-headset"></i>
+                <span>Nhân viên hỗ trợ</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('staff_orders')): ?>
+            <a href="index.php?r=staff_orders" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'staff_orders') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>Xử lý đơn hàng</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('staff_products')): ?>
+            <a href="index.php?r=staff_products" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'staff_products') === 0 || strpos($currentRoute, 'staff_product_') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Cập nhật sản phẩm</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('staff_reviews')): ?>
+            <a href="index.php?r=staff_reviews" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'staff_reviews') === 0 || strpos($currentRoute, 'staff_review_') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-star-half-stroke"></i>
+                <span>Phản hồi đánh giá</span>
+            </a>
+        <?php endif; ?>
+        <?php if (user_can_access_route('staff_chats')): ?>
+            <a href="index.php?r=staff_chats" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary <?= strpos($currentRoute, 'staff_chats') === 0 || strpos($currentRoute, 'staff_chat_') === 0 ? 'menu-active' : '' ?>">
+                <i class="fa-solid fa-comments"></i>
+                <span>Chat hỗ trợ</span>
+            </a>
+        <?php endif; ?>
+        <a href="index.php?r=dangxuat" class="d-flex align-items-center gap-3 px-3 py-2 mx-3 mb-2 rounded-3 text-decoration-none text-secondary">
             <i class="fa-solid fa-right-from-bracket"></i>
             <span>Đăng xuất</span>
         </a>

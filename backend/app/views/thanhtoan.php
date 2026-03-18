@@ -94,7 +94,7 @@ $grandTotal = (int)($grandTotal ?? ($subtotal + $shippingFee));
 
 <style>
   .checkout-page {
-    font-family: "Be Vietnam Pro", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    font-family: 'Quicksand', system-ui, sans-serif;
   }
 
   .address-card {

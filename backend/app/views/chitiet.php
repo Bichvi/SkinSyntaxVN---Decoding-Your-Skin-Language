@@ -1,6 +1,7 @@
 <?php
 $imgs = split_image_urls($p['link_hinh_anh'] ?? '', 10);
 $main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
+$reviews = $reviews ?? [];
 ?>
 <div class="container mt-4">
   <div class="mb-3">
@@ -196,10 +197,62 @@ $main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
 
         <div class="box-text tab-pane-content d-none" data-pane="danh-gia">
           <h5>Đánh giá</h5>
-          <div>
+          <div class="mb-3">
             <b>Điểm đánh giá:</b> <?= h($p['diem_danh_gia'] ?? '') ?>
             (<?= h($p['so_luong_danh_gia'] ?? 0) ?> lượt)
           </div>
+
+          <?php if (is_logged_in()): ?>
+            <form method="post" action="<?= BASE_URL ?>/index.php?r=guidanhgia" class="border rounded-3 p-3 mb-4 bg-light-subtle">
+              <input type="hidden" name="ma_san_pham" value="<?= h($p['ma_san_pham'] ?? $p['id'] ?? '') ?>">
+              <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                  <label class="form-label">Số sao</label>
+                  <select class="form-select" name="so_sao">
+                    <option value="5">5 sao</option>
+                    <option value="4">4 sao</option>
+                    <option value="3">3 sao</option>
+                    <option value="2">2 sao</option>
+                    <option value="1">1 sao</option>
+                  </select>
+                </div>
+                <div class="col-md-7">
+                  <label class="form-label">Nội dung đánh giá</label>
+                  <textarea class="form-control" name="noi_dung" rows="2" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..." required></textarea>
+                </div>
+                <div class="col-md-2 d-grid">
+                  <button type="submit" class="btn btn-brand">Gửi</button>
+                </div>
+              </div>
+            </form>
+          <?php else: ?>
+            <div class="alert alert-info">Đăng nhập để gửi đánh giá sản phẩm.</div>
+          <?php endif; ?>
+
+          <?php if (empty($reviews)): ?>
+            <div class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</div>
+          <?php else: ?>
+            <div class="d-flex flex-column gap-3">
+              <?php foreach ($reviews as $review): ?>
+                <div class="border rounded-3 p-3 bg-white">
+                  <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2">
+                    <div>
+                      <strong><?= h($review['ten_khach_hang'] ?? 'Khách hàng') ?></strong>
+                      <span class="text-warning ms-2"><?= str_repeat('★', max(0, min(5, (int)($review['so_sao'] ?? 0)))) ?></span>
+                    </div>
+                    <div class="small text-muted"><?= h(!empty($review['ngay_danh_gia']) ? date('d/m/Y H:i', strtotime((string)$review['ngay_danh_gia'])) : '') ?></div>
+                  </div>
+                  <div><?= nl2br_safe($review['noi_dung'] ?? '') ?></div>
+                  <?php if (!empty($review['phan_hoi'])): ?>
+                    <div class="mt-3 border-top pt-3">
+                      <div class="small text-muted mb-1">Phản hồi từ nhân viên hỗ trợ</div>
+                      <div class="bg-light rounded-3 p-3"><?= nl2br_safe($review['phan_hoi'] ?? '') ?></div>
+                    </div>
+                  <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>

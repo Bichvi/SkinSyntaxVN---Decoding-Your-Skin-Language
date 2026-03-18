@@ -48,9 +48,23 @@ $q = trim((string)($q ?? ''));
                                 <td class="text-end"><?= vnd($item['gia_ban'] ?? 0) ?></td>
                                 <td>
                                     <?php
-                                    $img = trim((string)($item['link_hinh_anh'] ?? ''));
-                                    if ($img !== '' && !preg_match('/^https?:\/\//i', $img)) {
-                                        $img = BASE_URL . '/uploads/products/' . rawurlencode($img);
+                                    $rawImg = trim((string)($item['link_hinh_anh'] ?? ''));
+                                    $img = '';
+                                    if ($rawImg !== '') {
+                                        $parts = preg_split('/\s*\|\s*/', $rawImg) ?: [];
+                                        foreach ($parts as $part) {
+                                            $part = trim((string)$part);
+                                            if ($part === '') {
+                                                continue;
+                                            }
+                                            if (filter_var($part, FILTER_VALIDATE_URL)) {
+                                                $img = $part;
+                                                break;
+                                            }
+                                            if ($img === '') {
+                                                $img = BASE_URL . '/uploads/products/' . rawurlencode($part);
+                                            }
+                                        }
                                     }
                                     ?>
                                     <?php if ($img !== ''): ?>

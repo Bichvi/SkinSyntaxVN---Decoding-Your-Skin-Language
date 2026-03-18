@@ -1,12 +1,10 @@
-<?php require_once 'layouts/header.php'; ?>
-
 <?php
 $tongSP = (int)($tongSP ?? 0);
 $tongUser = (int)($tongUser ?? 0);
 $doanhThu = (float)($doanhThu ?? 0);
 $donChoXuLy = (int)($donChoXuLy ?? 0);
-$spMoi = is_array($spMoi ?? null) ? $spMoi : [];
-$userMoi = is_array($userMoi ?? null) ? $userMoi : [];
+$spMoi = isset($spMoi) && is_array($spMoi) ? $spMoi : [];
+$userMoi = isset($userMoi) && is_array($userMoi) ? $userMoi : [];
 ?>
 
 <div class="container-fluid p-4">
@@ -88,9 +86,23 @@ $userMoi = is_array($userMoi ?? null) ? $userMoi : [];
                             <?php if (!empty($spMoi)): ?>
                                 <?php foreach ($spMoi as $index => $sp): ?>
                                     <?php
-                                    $img = trim((string)($sp['hinh_anh'] ?? ''));
-                                    if ($img !== '' && !preg_match('/^https?:\/\//i', $img)) {
-                                        $img = BASE_URL . '/uploads/products/' . rawurlencode($img);
+                                    $rawImg = trim((string)($sp['hinh_anh'] ?? ''));
+                                    $img = '';
+                                    if ($rawImg !== '') {
+                                        $parts = preg_split('/\s*\|\s*/', $rawImg) ?: [];
+                                        foreach ($parts as $part) {
+                                            $part = trim((string)$part);
+                                            if ($part === '') {
+                                                continue;
+                                            }
+                                            if (filter_var($part, FILTER_VALIDATE_URL)) {
+                                                $img = $part;
+                                                break;
+                                            }
+                                            if ($img === '') {
+                                                $img = BASE_URL . '/uploads/products/' . rawurlencode($part);
+                                            }
+                                        }
                                     }
                                     $isLast = $index === count($spMoi) - 1;
                                     $status = trim((string)($sp['trang_thai'] ?? ''));
@@ -174,5 +186,3 @@ $userMoi = is_array($userMoi ?? null) ? $userMoi : [];
         </div>
     </div>
 </div>
-
-<?php require_once 'layouts/footer.php'; ?>

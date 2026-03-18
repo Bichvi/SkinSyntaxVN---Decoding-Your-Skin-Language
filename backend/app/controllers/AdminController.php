@@ -13,6 +13,14 @@ class AdminController {
         $this->model = new SanPham($pdo);
     }
 
+    private function denyAccess(): void {
+        http_response_code(403);
+        require __DIR__ . '/../views/admin/layouts/header.php';
+        require __DIR__ . '/../views/admin/403.php';
+        require __DIR__ . '/../views/admin/layouts/footer.php';
+        exit;
+    }
+
     private function checkAdmin(): void {
         $user = $_SESSION['user'] ?? null;
         if (!$user) {
@@ -23,16 +31,15 @@ class AdminController {
         $role = strtolower((string)($user['role'] ?? $user['vai_tro'] ?? $user['quyen'] ?? ''));
         $isAdmin = $role === 'admin' || (int)($user['is_admin'] ?? 0) === 1;
         if (!$isAdmin) {
-            header('Location: index.php');
-            exit;
+            $this->denyAccess();
         }
     }
 
     private function render(string $view, array $data = []): void {
         extract($data);
-        require __DIR__ . '/../views/layouts/header.php';
+        require __DIR__ . '/../views/admin/layouts/header.php';
         require __DIR__ . '/../views/' . $view . '.php';
-        require __DIR__ . '/../views/layouts/footer.php';
+        require __DIR__ . '/../views/admin/layouts/footer.php';
     }
 
     private function collectFormData(array $source): array {
@@ -100,7 +107,7 @@ class AdminController {
         $spMoi = $thongKe->getSanPhamMoi(5);
         $userMoi = $thongKe->getNguoiDungMoi(5);
 
-        require __DIR__ . '/../views/admin/dashboard.php';
+        $this->render('admin/dashboard', compact('tongSP', 'tongUser', 'doanhThu', 'donChoXuLy', 'spMoi', 'userMoi'));
     }
 
     public function create(): void {

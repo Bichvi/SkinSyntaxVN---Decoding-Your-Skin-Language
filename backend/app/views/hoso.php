@@ -87,6 +87,9 @@ $ngayThamGia = $account['ngay_tao'] ?? null;
       <li class="nav-item" role="presentation">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-skin" type="button" role="tab">Hồ sơ Làn da</button>
       </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" href="<?= BASE_URL ?>/index.php?r=lichsuchat">Chat hỗ trợ</a>
+      </li>
     </ul>
 
     <div class="tab-content pt-3">
@@ -195,15 +198,27 @@ $ngayThamGia = $account['ngay_tao'] ?? null;
                   <th>Ngày</th>
                   <th>Tổng tiền</th>
                   <th>Trạng thái</th>
+                  <th class="text-end">Tác vụ</th>
                 </tr>
               </thead>
               <tbody>
                 <?php foreach ($orders as $o): ?>
+                  <?php $orderStatus = strtolower(trim((string)($o['trang_thai'] ?? ''))); ?>
                   <tr>
                     <td>#<?= h($o['ma_hoa_don'] ?? '') ?></td>
                     <td><?= h(!empty($o['ngay_dat']) ? date('d/m/Y H:i', strtotime((string)$o['ngay_dat'])) : '') ?></td>
                     <td><?= vnd($o['tong_tien'] ?? 0) ?></td>
                     <td><span class="badge text-bg-secondary"><?= h($o['trang_thai'] ?? 'moi') ?></span></td>
+                    <td class="text-end">
+                      <?php if (!in_array($orderStatus, ['dang giao', 'hoan thanh', 'da huy'], true)): ?>
+                        <form method="post" action="<?= BASE_URL ?>/index.php?r=huydonhang" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
+                          <input type="hidden" name="ma_hoa_don" value="<?= h($o['ma_hoa_don'] ?? '') ?>">
+                          <button type="submit" class="btn btn-sm btn-outline-danger">Hủy đơn</button>
+                        </form>
+                      <?php else: ?>
+                        <span class="text-muted small">Không khả dụng</span>
+                      <?php endif; ?>
+                    </td>
                   </tr>
                 <?php endforeach; ?>
               </tbody>

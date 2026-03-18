@@ -28,21 +28,46 @@ class AuthController {
         $matkhau = $_POST['mat_khau'] ?? '';
 
         $u = $this->model->timTheoEmail($email);
+        if ($u && password_verify($matkhau, (string)$u['mat_khau'])) {
+            $_SESSION['user'] = [
+                'id' => $u['id'],
+                'ho_ten' => $u['ho_ten'],
+                'email' => $u['email'],
+                'role' => 'khach_hang',
+                'vai_tro' => 'khach_hang',
+            ];
 
-        if (!$u || !password_verify($matkhau, $u['mat_khau'])) {
-            set_flash('error', 'Email hoặc mật khẩu không đúng.');
-            header("Location: " . BASE_URL . "/index.php?r=dangnhap");
+            set_flash('success', 'Đăng nhập thành công.');
+            header("Location: " . BASE_URL . "/index.php?r=home");
             exit;
         }
 
-        $_SESSION['user'] = [
-            'id'     => $u['id'],
-            'ho_ten' => $u['ho_ten'],
-            'email'  => $u['email']
-        ];
+        $staff = $this->model->timNhanVienTheoEmail($email);
+        if ($staff && !empty($staff['mat_khau']) && password_verify($matkhau, (string)$staff['mat_khau'])) {
+            $roleName = strtolower(trim((string)($staff['ten_vai_tro'] ?? 'nhanvien')));
+            if ($roleName === 'nhanvien') {
+                $roleName = 'nhanvien';
+            } elseif ($roleName === 'admin') {
+                $roleName = 'admin';
+            }
 
-        set_flash('success', 'Đăng nhập thành công.');
-        header("Location: " . BASE_URL . "/index.php?r=home");
+            $_SESSION['user'] = [
+                'id' => 'staff-' . (int)$staff['ma_nv'],
+                'ma_nv' => (int)$staff['ma_nv'],
+                'ho_ten' => $staff['ho_ten'],
+                'email' => $staff['email'],
+                'role' => $roleName,
+                'vai_tro' => $roleName,
+            ];
+
+            set_flash('success', 'Đăng nhập thành công.');
+            $target = $roleName === 'admin' ? 'admin_dashboard' : 'staff_dashboard';
+            header("Location: " . BASE_URL . "/index.php?r={$target}");
+            exit;
+        }
+
+        set_flash('error', 'Email hoặc mật khẩu không đúng.');
+        header("Location: " . BASE_URL . "/index.php?r=dangnhap");
         exit;
     }
 

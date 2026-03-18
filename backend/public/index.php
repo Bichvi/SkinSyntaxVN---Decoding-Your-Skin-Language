@@ -12,6 +12,8 @@ require_once __DIR__ . '/../app/controllers/HomeController.php';
 require_once __DIR__ . '/../app/controllers/SanPhamController.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/TaiKhoanController.php';
+require_once __DIR__ . '/../app/controllers/AdminController.php';
+require_once __DIR__ . '/../app/controllers/QuanTriController.php';
 
 $pdo = $pdo ?? null;
 if (!$pdo) {
@@ -111,6 +113,122 @@ switch ($r) {
 
     case 'dangxuat':
         (new AuthController($pdo))->dangxuat();
+        break;
+
+    case 'admin_dashboard':
+        (new QuanTriController($pdo))->adminDashboard();
+        break;
+
+    case 'admin_sp':
+        (new QuanTriController($pdo))->adminProducts();
+        break;
+
+    case 'admin_sp_create':
+        (new QuanTriController($pdo))->adminProductCreate();
+        break;
+
+    case 'admin_sp_edit':
+        (new QuanTriController($pdo))->adminProductEdit();
+        break;
+
+    case 'admin_sp_delete':
+        (new QuanTriController($pdo))->adminProductDelete();
+        break;
+
+    case 'admin_categories':
+        (new QuanTriController($pdo))->adminCategories();
+        break;
+
+    case 'admin_category_save':
+        (new QuanTriController($pdo))->adminCategorySave();
+        break;
+
+    case 'admin_category_delete':
+        (new QuanTriController($pdo))->adminCategoryDelete();
+        break;
+
+    case 'admin_users':
+        (new QuanTriController($pdo))->adminUsers();
+        break;
+
+    case 'admin_customer_save':
+        (new QuanTriController($pdo))->adminCustomerSave();
+        break;
+
+    case 'admin_customer_delete':
+        (new QuanTriController($pdo))->adminCustomerDelete();
+        break;
+
+    case 'admin_staff_save':
+        (new QuanTriController($pdo))->adminStaffSave();
+        break;
+
+    case 'admin_staff_delete':
+        (new QuanTriController($pdo))->adminStaffDelete();
+        break;
+
+    case 'admin_orders':
+        (new QuanTriController($pdo))->adminOrders();
+        break;
+
+    case 'admin_order_status':
+        (new QuanTriController($pdo))->adminOrderStatus();
+        break;
+
+    case 'admin_reports':
+        (new QuanTriController($pdo))->adminReports();
+        break;
+
+    case 'staff_dashboard':
+        (new QuanTriController($pdo))->staffDashboard();
+        break;
+
+    case 'staff_orders':
+        (new QuanTriController($pdo))->staffOrders();
+        break;
+
+    case 'staff_order_status':
+        (new QuanTriController($pdo))->staffOrderStatus();
+        break;
+
+    case 'staff_products':
+        (new QuanTriController($pdo))->staffProducts();
+        break;
+
+    case 'staff_product_edit':
+        (new QuanTriController($pdo))->staffProductEdit();
+        break;
+
+    case 'staff_reviews':
+        (new QuanTriController($pdo))->staffReviews();
+        break;
+
+    case 'staff_review_reply':
+        (new QuanTriController($pdo))->staffReviewReply();
+        break;
+
+    case 'staff_chats':
+        (new QuanTriController($pdo))->staffChats();
+        break;
+
+    case 'staff_chat_send':
+        (new QuanTriController($pdo))->staffChatSend();
+        break;
+
+    case 'lichsuchat':
+        (new QuanTriController($pdo))->customerChat();
+        break;
+
+    case 'chat_send':
+        (new QuanTriController($pdo))->customerChatSend();
+        break;
+
+    case 'guidanhgia':
+        (new QuanTriController($pdo))->customerReviewSave();
+        break;
+
+    case 'huydonhang':
+        (new QuanTriController($pdo))->customerOrderCancel();
         break;
 
     default:

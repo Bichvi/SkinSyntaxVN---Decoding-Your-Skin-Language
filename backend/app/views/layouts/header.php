@@ -2,6 +2,7 @@
 // backend/app/views/layouts/header.php
 $menuCats = $menuCats ?? [];
 $currentUser = current_user();
+$currentRole = strtolower(trim((string)($currentUser['role'] ?? $currentUser['vai_tro'] ?? 'khach_hang')));
 $cartCount = 0;
 foreach (($_SESSION['gio_hang'] ?? []) as $qty) {
   $cartCount += (int)$qty;
@@ -38,7 +39,13 @@ $quickCategories = array_slice(array_keys($menuCats), 0, 6);
       <div class="utility-links utility-links--account">
         <?php if (is_logged_in()): ?>
           <span class="utility-greeting">Xin chào, <?= h($currentUser['ho_ten'] ?? 'User') ?></span>
-          <a href="<?= BASE_URL ?>/index.php?r=hoso">Tài khoản</a>
+          <?php if ($currentRole === 'admin'): ?>
+            <a href="<?= BASE_URL ?>/index.php?r=admin_dashboard">Quản trị</a>
+          <?php elseif ($currentRole === 'nhanvien'): ?>
+            <a href="<?= BASE_URL ?>/index.php?r=staff_dashboard">Khu vực nhân viên</a>
+          <?php else: ?>
+            <a href="<?= BASE_URL ?>/index.php?r=hoso">Tài khoản</a>
+          <?php endif; ?>
           <a href="<?= BASE_URL ?>/index.php?r=dangxuat">Đăng xuất</a>
         <?php else: ?>
           <a href="<?= BASE_URL ?>/index.php?r=dangnhap">Đăng nhập</a>
@@ -77,9 +84,9 @@ $quickCategories = array_slice(array_keys($menuCats), 0, 6);
           </span>
         </a>
 
-        <a href="<?= BASE_URL ?>/index.php?r=hoso" class="header-icon-link" title="Tài khoản">
+        <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="header-icon-link" title="Tài khoản">
           <i class="fas fa-user"></i>
-          <span>Tài khoản</span>
+          <span><?= h($currentRole === 'admin' ? 'Quản trị' : ($currentRole === 'nhanvien' ? 'Nhân viên' : 'Tài khoản')) ?></span>
         </a>
 
         <a href="<?= BASE_URL ?>/index.php?r=giohang" class="header-icon-link header-icon-link--cart" title="Giỏ hàng">
