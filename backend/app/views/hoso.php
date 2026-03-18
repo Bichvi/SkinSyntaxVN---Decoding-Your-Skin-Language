@@ -11,6 +11,59 @@ if (!empty($skinProfile['van_de_da'])) {
   $vanDeDaSaved = array_map('trim', explode(',', (string)$skinProfile['van_de_da']));
 }
 
+$splitProfileValues = static function (?string $raw, array $excludePrefixes = []): array {
+  $text = trim((string)($raw ?? ''));
+  if ($text === '') {
+    return [];
+  }
+
+  $parts = preg_split('/\s*[,|]\s*/u', $text) ?: [];
+  $values = [];
+  foreach ($parts as $part) {
+    $value = trim((string)$part);
+    if ($value === '') {
+      continue;
+    }
+
+    $skip = false;
+    foreach ($excludePrefixes as $prefix) {
+      if (stripos($value, $prefix) === 0) {
+        $skip = true;
+        break;
+      }
+    }
+
+    if (!$skip) {
+      $values[] = $value;
+    }
+  }
+
+  return array_values(array_unique($values));
+};
+
+$renderTagList = static function (array $items, string $emptyText = 'Chưa có dữ liệu'): string {
+  if (empty($items)) {
+    return '<span class="text-muted">' . h($emptyText) . '</span>';
+  }
+
+  $html = [];
+  foreach ($items as $item) {
+    $html[] = '<span class="badge rounded-pill text-bg-light border me-2 mb-2 px-3 py-2">' . h((string)$item) . '</span>';
+  }
+
+  return implode('', $html);
+};
+
+$surveySpecialStates = $splitProfileValues((string)($khachHang['tinh_trang_dac_biet'] ?? ''), ['loaida:']);
+$surveyPriority = $splitProfileValues((string)($khachHang['tieu_chi_uu_tien'] ?? ''));
+$surveyAvoidIngredients = $splitProfileValues((string)($khachHang['thanh_phan_tranh'] ?? ''));
+$surveyExperience = $splitProfileValues((string)($khachHang['kinh_nghiem_skincare'] ?? ''));
+$surveyRoutineSteps = $splitProfileValues((string)($khachHang['so_buoc_skincare'] ?? ''));
+$surveySkinIssues = !empty($vanDeDaSaved) ? $vanDeDaSaved : $splitProfileValues((string)($khachHang['van_de_da'] ?? ''));
+$formattedBudget = !empty($skinProfile['ngan_sach'])
+  ? number_format((int)$skinProfile['ngan_sach'], 0, ',', '.') . 'đ'
+  : 'Chưa có dữ liệu';
+
 $ngayThamGia = $account['ngay_tao'] ?? null;
 ?>
 
@@ -109,7 +162,7 @@ $ngayThamGia = $account['ngay_tao'] ?? null;
                 <form id="changePasswordForm" class="row g-2">
                   <div class="col-12">
                     <label class="form-label">Mật khẩu hiện tại</label>
-                    <input class="form-control" type="password" name="mat_khau_hien_tai" required>
+                    <input class="form-control" type="password" name="mat_khau_hien_tai" placeholder="Có thể bỏ trống khi đã đăng nhập">
                   </div>
                   <div class="col-12">
                     <label class="form-label">Mật khẩu mới</label>
@@ -206,6 +259,94 @@ $ngayThamGia = $account['ngay_tao'] ?? null;
         <div class="alert alert-light border mb-3">
           Hồ sơ làn da được lấy từ dữ liệu khảo sát lúc đăng ký và lưu trực tiếp trong bảng khách hàng.
         </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6 col-xl-3">
+            <div class="profile-stat h-100">
+              <div class="label">Loại da</div>
+              <div class="value"><?= h($skinProfile['loai_da'] ?? 'Chưa có dữ liệu') ?></div>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="profile-stat h-100">
+              <div class="label">Mức độ nhạy cảm</div>
+              <div class="value"><?= h($khachHang['muc_do_nhay_cam'] ?? 'Chưa có dữ liệu') ?></div>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="profile-stat h-100">
+              <div class="label">Mục tiêu chăm sóc</div>
+              <div class="value"><?= h($khachHang['muc_tieu_cham_soc'] ?? 'Chưa có dữ liệu') ?></div>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="profile-stat h-100">
+              <div class="label">Ngân sách trung bình</div>
+              <div class="value"><?= h($formattedBudget) ?></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-lg-6">
+            <div class="border rounded-3 p-3 bg-white h-100">
+              <h6 class="mb-3">Vấn đề da và tình trạng hiện tại</h6>
+              <div class="mb-3">
+                <div class="small text-muted mb-2">Vấn đề da đang gặp phải</div>
+                <?= $renderTagList($surveySkinIssues) ?>
+              </div>
+              <div>
+                <div class="small text-muted mb-2">Tình trạng đặc biệt</div>
+                <?= $renderTagList($surveySpecialStates, 'Chưa ghi nhận tình trạng đặc biệt') ?>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="border rounded-3 p-3 bg-white h-100">
+              <h6 class="mb-3">Ưu tiên khi chọn sản phẩm</h6>
+              <div class="mb-3">
+                <div class="small text-muted mb-2">Tiêu chí ưu tiên</div>
+                <?= $renderTagList($surveyPriority, 'Chưa có tiêu chí ưu tiên') ?>
+              </div>
+              <div>
+                <div class="small text-muted mb-2">Thành phần muốn tránh</div>
+                <?= $renderTagList($surveyAvoidIngredients, 'Không có / Không quan tâm') ?>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="border rounded-3 p-3 bg-white h-100">
+              <h6 class="mb-3">Thói quen skincare</h6>
+              <div class="mb-3">
+                <div class="small text-muted mb-2">Kinh nghiệm skincare</div>
+                <?= $renderTagList($surveyExperience, 'Chưa có dữ liệu kinh nghiệm') ?>
+              </div>
+              <div>
+                <div class="small text-muted mb-2">Số bước skincare thường dùng</div>
+                <?= $renderTagList($surveyRoutineSteps, 'Chưa có dữ liệu số bước') ?>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="border rounded-3 p-3 bg-white h-100">
+              <h6 class="mb-3">Thông tin khảo sát đã lưu</h6>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <div class="small text-muted">Giới tính</div>
+                  <div class="fw-semibold"><?= h($khachHang['gioi_tinh'] ?? 'Chưa có dữ liệu') ?></div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="small text-muted">Năm sinh</div>
+                  <div class="fw-semibold"><?= h($khachHang['nam_sinh'] ?? 'Chưa có dữ liệu') ?></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <form id="skinProfileForm" class="row g-3">
           <div class="col-md-6">
             <label class="form-label">Loại da của bạn là gì?</label>

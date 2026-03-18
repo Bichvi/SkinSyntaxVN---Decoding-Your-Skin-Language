@@ -149,8 +149,8 @@ class TaiKhoanController {
         $matKhauMoi = (string)($_POST['mat_khau_moi'] ?? '');
         $xacNhan = (string)($_POST['xac_nhan_mat_khau'] ?? '');
 
-        if ($matKhauHienTai === '' || $matKhauMoi === '' || $xacNhan === '') {
-            $this->json(['ok' => false, 'message' => 'Vui lòng nhập đầy đủ thông tin mật khẩu.'], 422);
+        if ($matKhauMoi === '' || $xacNhan === '') {
+            $this->json(['ok' => false, 'message' => 'Vui lòng nhập mật khẩu mới và xác nhận mật khẩu.'], 422);
         }
 
         if (strlen($matKhauMoi) < 6) {
@@ -161,18 +161,12 @@ class TaiKhoanController {
             $this->json(['ok' => false, 'message' => 'Xác nhận mật khẩu không khớp.'], 422);
         }
 
-        $userId = (int)($user['id'] ?? 0);
         $email = trim((string)($user['email'] ?? ''));
 
-        if ($userId > 0) {
-            $result = $this->model->doiMatKhau($userId, $matKhauHienTai, $matKhauMoi);
-            if (empty($result['ok']) && $email !== '') {
-                $result = $this->model->doiMatKhauByEmail($email, $matKhauHienTai, $matKhauMoi);
-            }
+        if ($email === '') {
+            $result = ['ok' => false, 'message' => 'Không xác định được tài khoản để đổi mật khẩu.'];
         } else {
-            $result = ($email !== '')
-                ? $this->model->doiMatKhauByEmail($email, $matKhauHienTai, $matKhauMoi)
-                : ['ok' => false, 'message' => 'Không xác định được tài khoản để đổi mật khẩu.'];
+            $result = $this->model->capNhatMatKhauTheoEmail($email, $matKhauMoi);
         }
 
         $status = !empty($result['ok']) ? 200 : 422;

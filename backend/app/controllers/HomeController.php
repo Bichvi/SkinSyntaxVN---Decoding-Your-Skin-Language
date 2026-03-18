@@ -81,7 +81,82 @@ class HomeController {
     }
 
     public function goiy() {
-        $this->render('goiy');
+        $user = current_user() ?? [];
+        $email = trim((string)($user['email'] ?? ''));
+        $profile = $email !== '' ? $this->buildRecommendationProfile($email) : null;
+
+        $this->render('goiy', [
+            'isLoggedIn' => $email !== '',
+            'needsSurvey' => !$this->hasCompletedSurvey($profile),
+            'recommendationProfile' => $profile,
+            'surveyUrl' => BASE_URL . '/index.php?r=khaosat',
+        ]);
+    }
+
+    private function buildRecommendationProfile(string $email): ?array {
+        $taiKhoanModel = new TaiKhoan($this->pdo);
+        $khachHang = $taiKhoanModel->getKhachHangByEmail($email);
+        if (!$khachHang) {
+            return null;
+        }
+
+        $skinProfile = $taiKhoanModel->getSkinProfileByEmail($email) ?? [];
+        $concerns = $this->splitProfileValues($khachHang['van_de_da'] ?? null);
+        $avoidIngredients = $this->splitProfileValues($khachHang['thanh_phan_tranh'] ?? null);
+        $avoidIngredients = array_values(array_filter($avoidIngredients, function (string $item): bool {
+            $normalized = mb_strtolower($item, 'UTF-8');
+            return $normalized !== 'không có / không quan tâm' && $normalized !== 'khong co';
+        }));
+
+        $budget = isset($khachHang['ngan_sach']) && $khachHang['ngan_sach'] !== null
+            ? (int)$khachHang['ngan_sach']
+            : null;
+
+        return [
+            'display_name' => trim((string)($khachHang['ho_ten'] ?? 'bạn')),
+            'gioi_tinh' => trim((string)($khachHang['gioi_tinh'] ?? '')),
+            'nam_sinh' => trim((string)($khachHang['nam_sinh'] ?? '')),
+            'skin_type' => trim((string)($skinProfile['loai_da'] ?? '')),
+            'concerns' => $concerns,
+            'avoid_ingredients' => $avoidIngredients,
+            'budget' => $budget,
+            'budget_label' => $budget !== null && $budget > 0
+                ? number_format($budget, 0, ',', '.') . ' VND'
+                : 'Không giới hạn',
+            'sensitivity' => trim((string)($khachHang['muc_do_nhay_cam'] ?? '')),
+        ];
+    }
+
+    private function hasCompletedSurvey(?array $profile): bool {
+        if (!$profile) {
+            return false;
+        }
+
+        return ($profile['gioi_tinh'] ?? '') !== ''
+            && ($profile['nam_sinh'] ?? '') !== ''
+            && (
+                ($profile['skin_type'] ?? '') !== ''
+                || !empty($profile['concerns'])
+                || !empty($profile['budget'])
+            );
+    }
+
+    private function splitProfileValues(?string $raw): array {
+        $text = trim((string)($raw ?? ''));
+        if ($text === '') {
+            return [];
+        }
+
+        $parts = preg_split('/\s*[,|]\s*/u', $text) ?: [];
+        $values = [];
+        foreach ($parts as $part) {
+            $value = trim((string)$part);
+            if ($value !== '' && stripos($value, 'loaida:') !== 0) {
+                $values[] = $value;
+            }
+        }
+
+        return array_values(array_unique($values));
     }
 
     public function chuandaithanhtoan() {

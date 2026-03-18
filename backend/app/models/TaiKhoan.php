@@ -9,7 +9,14 @@ class TaiKhoan {
     }
 
     public function getAccountOverview(int $nguoiDungId): ?array {
-        $sql = "SELECT id, ho_ten, email, ngay_tao FROM nguoidung WHERE id = :id LIMIT 1";
+        $sql = "SELECT nd.id,
+                       nd.ho_ten,
+                       nd.email,
+                       COALESCE(nd.ngay_tao, kh.created_at) AS ngay_tao
+                FROM nguoidung nd
+                LEFT JOIN khach_hang kh ON LOWER(kh.email) = LOWER(nd.email)
+                WHERE nd.id = :id
+                LIMIT 1";
         $st = $this->pdo->prepare($sql);
         $st->execute([':id' => $nguoiDungId]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
@@ -17,11 +24,43 @@ class TaiKhoan {
     }
 
     public function getAccountOverviewByEmail(string $email): ?array {
-        $sql = "SELECT id, ho_ten, email, ngay_tao FROM nguoidung WHERE LOWER(email) = LOWER(:email) LIMIT 1";
+        $sql = "SELECT nd.id,
+                       nd.ho_ten,
+                       nd.email,
+                       COALESCE(nd.ngay_tao, kh.created_at) AS ngay_tao
+                FROM nguoidung nd
+                LEFT JOIN khach_hang kh ON LOWER(kh.email) = LOWER(nd.email)
+                WHERE LOWER(nd.email) = LOWER(:email)
+                LIMIT 1";
         $st = $this->pdo->prepare($sql);
         $st->execute([':email' => $email]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    private function xacThucMatKhau(string $matKhauNhap, string $matKhauLuu): bool {
+        if ($matKhauLuu === '') {
+            return false;
+        }
+
+        $info = password_get_info($matKhauLuu);
+        if (!empty($info['algo'])) {
+            return password_verify($matKhauNhap, $matKhauLuu);
+        }
+
+        if (hash_equals($matKhauLuu, $matKhauNhap)) {
+            return true;
+        }
+
+        if (preg_match('/^[a-f0-9]{32}$/i', $matKhauLuu) === 1) {
+            return hash_equals(strtolower($matKhauLuu), md5($matKhauNhap));
+        }
+
+        if (preg_match('/^[a-f0-9]{40}$/i', $matKhauLuu) === 1) {
+            return hash_equals(strtolower($matKhauLuu), sha1($matKhauNhap));
+        }
+
+        return false;
     }
 
     public function getKhachHangByEmail(string $email): ?array {
@@ -38,8 +77,14 @@ class TaiKhoan {
             return $kh;
         }
 
-        $sql = "INSERT INTO khach_hang(ho_ten, email, created_at, updated_at)
-                VALUES (:ho_ten, :email, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        $sql = "INSERT INTO khach_hang(ma_kh, ho_ten, email, created_at, updated_at)
+            VALUES (
+                COALESCE((SELECT MAX(ma_kh) FROM khach_hang), 0) + 1,
+                :ho_ten,
+                :email,
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP
+            )";
         $st = $this->pdo->prepare($sql);
         $ok = $st->execute([
             ':ho_ten' => $hoTen,
@@ -235,7 +280,7 @@ class TaiKhoan {
             return ['ok' => false, 'message' => 'Không tìm thấy tài khoản.'];
         }
 
-        if (!password_verify($matKhauHienTai, (string)$hash)) {
+        if (!$this->xacThucMatKhau($matKhauHienTai, (string)$hash)) {
             return ['ok' => false, 'message' => 'Mật khẩu hiện tại không đúng.'];
         }
 
@@ -262,7 +307,7 @@ class TaiKhoan {
             return ['ok' => false, 'message' => 'Không tìm thấy tài khoản.'];
         }
 
-        if (!password_verify($matKhauHienTai, (string)$row['mat_khau'])) {
+        if (!$this->xacThucMatKhau($matKhauHienTai, (string)$row['mat_khau'])) {
             return ['ok' => false, 'message' => 'Mật khẩu hiện tại không đúng.'];
         }
 
@@ -272,6 +317,25 @@ class TaiKhoan {
         $ok = $stUpdate->execute([
             ':mat_khau' => $hashMoi,
             ':id' => (int)$row['id'],
+        ]);
+
+        return $ok
+            ? ['ok' => true, 'message' => 'Đổi mật khẩu thành công.']
+            : ['ok' => false, 'message' => 'Không thể đổi mật khẩu.'];
+    }
+
+    public function capNhatMatKhauTheoEmail(string $email, string $matKhauMoi): array {
+        $email = trim($email);
+        if ($email === '') {
+            return ['ok' => false, 'message' => 'Không xác định được tài khoản.'];
+        }
+
+        $hashMoi = password_hash($matKhauMoi, PASSWORD_BCRYPT);
+        $sql = "UPDATE nguoidung SET mat_khau = :mat_khau WHERE LOWER(email) = LOWER(:email)";
+        $st = $this->pdo->prepare($sql);
+        $ok = $st->execute([
+            ':mat_khau' => $hashMoi,
+            ':email' => $email,
         ]);
 
         return $ok

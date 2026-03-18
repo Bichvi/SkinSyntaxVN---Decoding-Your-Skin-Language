@@ -1,5 +1,13 @@
 <?php
 // backend/app/views/tatca.php
+$total = $total ?? 0;
+$perPage = $perPage ?? 24;
+$page = $page ?? 1;
+$q = $q ?? '';
+$cap1 = $cap1 ?? '';
+$cap2 = $cap2 ?? '';
+$items = $items ?? [];
+
 $totalPages = max(1, (int)ceil($total / $perPage));
 
 // Giới hạn hiển thị 10 trang tối đa, xoay quanh trang hiện tại

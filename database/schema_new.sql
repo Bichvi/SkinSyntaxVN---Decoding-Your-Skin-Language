@@ -84,6 +84,7 @@ CREATE TABLE san_pham (
     thanh_phan_day_du TEXT,
     hdsd TEXT,
     attribute TEXT,
+    luot_xem INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
