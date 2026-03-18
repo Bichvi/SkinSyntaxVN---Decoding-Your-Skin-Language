@@ -29,7 +29,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
     <?php if ($cap1): ?><input type="hidden" name="cap1" value="<?= h($cap1) ?>"><?php endif; ?>
     <?php if ($cap2): ?><input type="hidden" name="cap2" value="<?= h($cap2) ?>"><?php endif; ?>
 
-    <div class="col-12 col-md-8">
+    <!-- <div class="col-12 col-md-8">
       <input class="form-control" name="q" placeholder="Tìm tên, thương hiệu, danh mục, thành phần..." value="<?= h($q) ?>">
     </div>
     <div class="col-12 col-md-2 d-grid">
@@ -37,7 +37,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
     </div>
     <div class="col-12 col-md-2 d-grid">
       <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/index.php?r=tatca">Reset</a>
-    </div>
+    </div> -->
   </form>
 
   <?php if (empty($items)): ?>

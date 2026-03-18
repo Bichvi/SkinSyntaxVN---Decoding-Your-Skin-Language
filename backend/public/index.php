@@ -53,6 +53,22 @@ switch ($r) {
         (new HomeController($pdo))->xulygoiy();
         break;
 
+    case 'chuandaithanhtoan':
+        (new HomeController($pdo))->chuandaithanhtoan();
+        break;
+
+    case 'thanhtoan':
+        (new HomeController($pdo))->thanhtoan();
+        break;
+
+    case 'xulydathang':
+        (new HomeController($pdo))->xulydathang();
+        break;
+
+    case 'camon':
+        (new HomeController($pdo))->camon();
+        break;
+
     case 'hoso':
         (new TaiKhoanController($pdo))->hoso();
         break;
