@@ -4,6 +4,8 @@
 class SanPham {
     private PDO $pdo;
     private ?array $sanPhamColumnsCache = null;
+    private const VI_ACCENTS = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
+    private const VI_ASCII = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd';
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
@@ -12,6 +14,29 @@ class SanPham {
     private function normalizeKeywordParts(string $q): array {
         $parts = preg_split('/\s+/u', trim($q), -1, PREG_SPLIT_NO_EMPTY) ?: [];
         return empty($parts) && trim($q) !== '' ? [trim($q)] : $parts;
+    }
+
+    private function foldKeyword(string $value): string {
+        $value = mb_strtolower(trim($value), 'UTF-8');
+        return strtr($value, [
+            'à' => 'a', 'á' => 'a', 'ạ' => 'a', 'ả' => 'a', 'ã' => 'a',
+            'â' => 'a', 'ầ' => 'a', 'ấ' => 'a', 'ậ' => 'a', 'ẩ' => 'a', 'ẫ' => 'a',
+            'ă' => 'a', 'ằ' => 'a', 'ắ' => 'a', 'ặ' => 'a', 'ẳ' => 'a', 'ẵ' => 'a',
+            'è' => 'e', 'é' => 'e', 'ẹ' => 'e', 'ẻ' => 'e', 'ẽ' => 'e',
+            'ê' => 'e', 'ề' => 'e', 'ế' => 'e', 'ệ' => 'e', 'ể' => 'e', 'ễ' => 'e',
+            'ì' => 'i', 'í' => 'i', 'ị' => 'i', 'ỉ' => 'i', 'ĩ' => 'i',
+            'ò' => 'o', 'ó' => 'o', 'ọ' => 'o', 'ỏ' => 'o', 'õ' => 'o',
+            'ô' => 'o', 'ồ' => 'o', 'ố' => 'o', 'ộ' => 'o', 'ổ' => 'o', 'ỗ' => 'o',
+            'ơ' => 'o', 'ờ' => 'o', 'ớ' => 'o', 'ợ' => 'o', 'ở' => 'o', 'ỡ' => 'o',
+            'ù' => 'u', 'ú' => 'u', 'ụ' => 'u', 'ủ' => 'u', 'ũ' => 'u',
+            'ư' => 'u', 'ừ' => 'u', 'ứ' => 'u', 'ự' => 'u', 'ử' => 'u', 'ữ' => 'u',
+            'ỳ' => 'y', 'ý' => 'y', 'ỵ' => 'y', 'ỷ' => 'y', 'ỹ' => 'y',
+            'đ' => 'd',
+        ]);
+    }
+
+    private function foldSqlExpr(string $expr): string {
+        return "translate(lower($expr), '" . self::VI_ACCENTS . "', '" . self::VI_ASCII . "')";
     }
 
     private function appendKeywordFilters(string &$where, array &$params, string $q, array $columns): void {
@@ -25,11 +50,11 @@ class SanPham {
             $orParts = [];
 
             foreach ($columns as $columnExpr) {
-                $orParts[] = $columnExpr . " ILIKE " . $param;
+                $orParts[] = $this->foldSqlExpr($columnExpr) . " LIKE " . $param;
             }
 
             $where .= " AND (" . implode(" OR ", $orParts) . ") ";
-            $params[$param] = '%' . $part . '%';
+            $params[$param] = '%' . $this->foldKeyword($part) . '%';
         }
     }
 
@@ -340,6 +365,10 @@ class SanPham {
             return [];
         }
 
+        $where = " WHERE 1=1 ";
+        $params = [];
+        $this->appendKeywordFilters($where, $params, $q, $this->buildSuggestionColumns());
+
         $sql = "SELECT sp.ma_san_pham AS id,
                        sp.ten_san_pham,
                        sp.gia_ban,
@@ -347,15 +376,149 @@ class SanPham {
                        COALESCE(th.ten_thuong_hieu, '') AS thuong_hieu
                 FROM san_pham sp
                 LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
-                WHERE sp.ten_san_pham ILIKE :q
+                LEFT JOIN danh_muc dm ON sp.ma_danh_muc = dm.ma_danh_muc
+                " . $where . "
                 ORDER BY sp.ten_san_pham ASC
                 LIMIT :limit";
 
         $st = $this->pdo->prepare($sql);
-        $st->bindValue(':q', '%' . $q . '%', PDO::PARAM_STR);
+        foreach ($params as $k => $v) {
+            $st->bindValue($k, $v);
+        }
         $st->bindValue(':limit', $limit, PDO::PARAM_INT);
         $st->execute();
 
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function adminInsert($data): bool {
+        $maSanPham = trim((string)($data['ma_san_pham'] ?? ''));
+        $tenSanPham = trim((string)($data['ten_san_pham'] ?? ''));
+
+        if ($maSanPham === '' || $tenSanPham === '') {
+            return false;
+        }
+
+        $allowedColumns = [
+            'ma_san_pham',
+            'ten_san_pham',
+            'ma_loai',
+            'ma_thuong_hieu',
+            'ma_nsx',
+            'ma_noi_san_xuat',
+            'ma_xuat_xu',
+            'ma_danh_muc',
+            'gia_ban',
+            'gia_thi_truong',
+            'tien_tiet_kiem',
+            'phan_tram_giam',
+            'diem_danh_gia',
+            'so_luong_danh_gia',
+            'dung_tich',
+            'loai_da',
+            'link_hinh_anh',
+            'mo_ta',
+            'thanh_phan_chinh',
+            'thanh_phan_day_du',
+            'hdsd',
+            'attribute',
+            'danh_muc_day_du',
+        ];
+
+        $fields = [];
+        $placeholders = [];
+        $params = [];
+
+        foreach ($allowedColumns as $column) {
+            if (!array_key_exists($column, $data)) {
+                continue;
+            }
+
+            $value = is_string($data[$column]) ? trim($data[$column]) : $data[$column];
+            if ($value === '') {
+                $value = null;
+            }
+
+            $fields[] = $column;
+            $placeholders[] = ':' . $column;
+            $params[':' . $column] = $value;
+        }
+
+        if (!in_array('ma_san_pham', $fields, true) || !in_array('ten_san_pham', $fields, true)) {
+            return false;
+        }
+
+        $sql = 'INSERT INTO san_pham (' . implode(', ', $fields) . ') VALUES (' . implode(', ', $placeholders) . ')';
+        $st = $this->pdo->prepare($sql);
+        return $st->execute($params);
+    }
+
+    public function adminUpdate($id, $data): bool {
+        $id = trim((string)$id);
+        if ($id === '') {
+            return false;
+        }
+
+        $allowedColumns = [
+            'ten_san_pham',
+            'ma_loai',
+            'ma_thuong_hieu',
+            'ma_nsx',
+            'ma_noi_san_xuat',
+            'ma_xuat_xu',
+            'ma_danh_muc',
+            'gia_ban',
+            'gia_thi_truong',
+            'tien_tiet_kiem',
+            'phan_tram_giam',
+            'diem_danh_gia',
+            'so_luong_danh_gia',
+            'dung_tich',
+            'loai_da',
+            'link_hinh_anh',
+            'mo_ta',
+            'thanh_phan_chinh',
+            'thanh_phan_day_du',
+            'hdsd',
+            'attribute',
+            'danh_muc_day_du',
+        ];
+
+        $setClauses = [];
+        $params = [':id' => $id];
+
+        foreach ($allowedColumns as $column) {
+            if (!array_key_exists($column, $data)) {
+                continue;
+            }
+
+            $value = is_string($data[$column]) ? trim($data[$column]) : $data[$column];
+            if ($value === '') {
+                $value = null;
+            }
+
+            $paramName = ':' . $column;
+            $setClauses[] = $column . ' = ' . $paramName;
+            $params[$paramName] = $value;
+        }
+
+        if (empty($setClauses)) {
+            return false;
+        }
+
+        $sql = 'UPDATE san_pham SET ' . implode(', ', $setClauses) . ' WHERE ma_san_pham = :id';
+        $st = $this->pdo->prepare($sql);
+        return $st->execute($params);
+    }
+
+    public function adminDelete($id): bool {
+        $id = trim((string)$id);
+        if ($id === '') {
+            return false;
+        }
+
+        $sql = 'DELETE FROM san_pham WHERE ma_san_pham = :id';
+        $st = $this->pdo->prepare($sql);
+        return $st->execute([':id' => $id]);
     }
 }

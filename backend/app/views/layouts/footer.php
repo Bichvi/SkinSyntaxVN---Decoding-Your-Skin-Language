@@ -3,8 +3,8 @@
 <script src="<?= BASE_URL ?>/assets/js/smart-search.js"></script>
 <footer class="footer">
   <div class="container text-center py-3">
-    SkinSyntax © 2026 | PHP + PostgreSQL + Flask API
+    SkinSyntax © 2026 | PHP + PostgreSQL + Flask API VN
   </div>
 </footer>
 </body>
-</html>
+</html> 
