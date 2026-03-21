@@ -23,11 +23,12 @@ $messages = $messages ?? [];
 				<?php else: ?>
 					<?php foreach ($messages as $message): ?>
 						<?php $isStaff = !empty($message['ma_nv']); ?>
-						<div class="d-flex <?= $isStaff ? 'justify-content-end' : 'justify-content-start' ?> mb-3">
-							<div class="rounded-4 p-3 <?= $isStaff ? 'bg-primary text-white' : 'bg-white border' ?>" style="max-width: 78%; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);">
-								<div class="small fw-semibold mb-1"><?= h($isStaff ? ($message['ten_nhan_vien'] ?? 'Nhân viên') : ($message['ten_khach_hang'] ?? 'Bạn')) ?></div>
+						<?php $isCustomer = !$isStaff; ?>
+						<div class="d-flex <?= $isCustomer ? 'justify-content-end' : 'justify-content-start' ?> mb-3">
+							<div class="rounded-4 p-3 <?= $isCustomer ? 'bg-primary text-white' : 'bg-white border' ?>" style="max-width: 78%; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);">
+								<div class="small fw-semibold mb-1"><?= h($isCustomer ? 'Bạn' : ($message['ten_nhan_vien'] ?? 'Nhân viên hỗ trợ')) ?></div>
 								<div><?= nl2br_safe($message['noi_dung'] ?? '') ?></div>
-								<div class="small mt-2 <?= $isStaff ? 'text-white-50' : 'text-muted' ?>"><?= h(!empty($message['thoi_gian']) ? date('d/m/Y H:i', strtotime((string)$message['thoi_gian'])) : '') ?></div>
+								<div class="small mt-2 <?= $isCustomer ? 'text-white-50' : 'text-muted' ?>"><?= h(!empty($message['thoi_gian']) ? date('d/m/Y H:i', strtotime((string)$message['thoi_gian'])) : '') ?></div>
 							</div>
 						</div>
 					<?php endforeach; ?>
@@ -38,7 +39,7 @@ $messages = $messages ?? [];
 				<div class="row g-2 align-items-end">
 					<div class="col-md-10">
 						<label class="form-label">Nội dung cần hỗ trợ</label>
-						<textarea class="form-control" name="noi_dung" rows="3" placeholder="Nhập câu hỏi hoặc vấn đề bạn đang gặp..." required></textarea>
+						<textarea class="form-control" name="noi_dung" rows="3" placeholder="Nhập vấn đề bạn đang gặp..." required></textarea>
 					</div>
 					<div class="col-md-2 d-grid">
 						<button type="submit" class="btn btn-brand">Gửi tin nhắn</button>

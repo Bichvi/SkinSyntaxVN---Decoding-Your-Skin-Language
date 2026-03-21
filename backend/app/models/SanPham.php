@@ -81,12 +81,140 @@ class SanPham {
         return $this->sanPhamColumnsCache;
     }
 
+    private function hasSanPhamColumn(string $column): bool {
+        return isset($this->getSanPhamColumns()[$column]);
+    }
+
+    private function firstExistingSanPhamColumn(array $candidates): ?string {
+        foreach ($candidates as $column) {
+            if ($this->hasSanPhamColumn($column)) {
+                return $column;
+            }
+        }
+
+        return null;
+    }
+
+    private function prepareProductColumnData(array $data): array {
+        $prepared = [];
+
+        foreach ($data as $column => $value) {
+            $column = (string)$column;
+            if ($this->hasSanPhamColumn($column)) {
+                $prepared[$column] = $value;
+            }
+        }
+
+        $fieldMap = [
+            'ma_san_pham' => ['ma_san_pham'],
+            'ten_san_pham' => ['ten_san_pham'],
+            'ma_loai' => ['ma_loai'],
+            'ma_thuong_hieu' => ['ma_thuong_hieu'],
+            'ma_nsx' => ['ma_nsx', 'ma_noi_san_xuat'],
+            'ma_noi_san_xuat' => ['ma_noi_san_xuat', 'ma_nsx'],
+            'ma_xuat_xu' => ['ma_xuat_xu'],
+            'ma_danh_muc' => ['ma_danh_muc'],
+            'gia_ban' => ['gia_ban'],
+            'gia_thi_truong' => ['gia_thi_truong'],
+            'tien_tiet_kiem' => ['tien_tiet_kiem'],
+            'phan_tram_giam' => ['phan_tram_giam'],
+            'diem_danh_gia' => ['diem_danh_gia'],
+            'so_luong_danh_gia' => ['so_luong_danh_gia'],
+            'dung_tich' => ['dung_tich'],
+            'loai_da' => ['loai_da'],
+            'link_hinh_anh' => ['link_hinh_anh', 'hinh_anh'],
+            'hinh_anh' => ['hinh_anh', 'link_hinh_anh'],
+            'mo_ta' => ['mo_ta'],
+            'thanh_phan_chinh' => ['thanh_phan_chinh', 'thanh_phan'],
+            'thanh_phan_day_du' => ['thanh_phan_day_du', 'thanh_phan_full'],
+            'thanh_phan' => ['thanh_phan', 'thanh_phan_chinh'],
+            'thanh_phan_full' => ['thanh_phan_full', 'thanh_phan_day_du'],
+            'hdsd' => ['hdsd'],
+            'attribute' => ['attribute'],
+            'danh_muc_day_du' => ['danh_muc_day_du'],
+        ];
+
+        foreach ($fieldMap as $source => $targets) {
+            if (!array_key_exists($source, $data)) {
+                continue;
+            }
+
+            $target = $this->firstExistingSanPhamColumn($targets);
+            if ($target !== null) {
+                $prepared[$target] = $data[$source];
+            }
+        }
+
+        return $prepared;
+    }
+
+    private function enrichDerivedPricingFields(array $data): array {
+        $hasGiaBan = array_key_exists('gia_ban', $data);
+        $hasGiaThiTruong = array_key_exists('gia_thi_truong', $data);
+
+        if (!$hasGiaBan && !$hasGiaThiTruong) {
+            return $data;
+        }
+
+        $giaBanRaw = trim((string)($data['gia_ban'] ?? ''));
+        $giaThiTruongRaw = trim((string)($data['gia_thi_truong'] ?? ''));
+
+        if ($giaBanRaw === '' || $giaThiTruongRaw === '' || !is_numeric($giaBanRaw) || !is_numeric($giaThiTruongRaw)) {
+            $data['phan_tram_giam'] = null;
+            $data['tien_tiet_kiem'] = null;
+            return $data;
+        }
+
+        $giaBan = (float)$giaBanRaw;
+        $giaThiTruong = (float)$giaThiTruongRaw;
+
+        if ($giaBan <= 0 || $giaThiTruong <= 0 || $giaThiTruong <= $giaBan) {
+            $data['phan_tram_giam'] = null;
+            $data['tien_tiet_kiem'] = null;
+            return $data;
+        }
+
+        $tietKiem = $giaThiTruong - $giaBan;
+        $phanTramGiam = (int)round(($tietKiem / $giaThiTruong) * 100);
+
+        $data['tien_tiet_kiem'] = (string)max(0, (int)round($tietKiem));
+        $data['phan_tram_giam'] = (string)max(0, $phanTramGiam);
+
+        return $data;
+    }
+
+    private function normalizeProductRecord(array $product): array {
+        if ((!isset($product['link_hinh_anh']) || trim((string)$product['link_hinh_anh']) === '') && isset($product['hinh_anh'])) {
+            $product['link_hinh_anh'] = $product['hinh_anh'];
+        }
+
+        if ((!isset($product['thanh_phan_chinh']) || trim((string)$product['thanh_phan_chinh']) === '') && isset($product['thanh_phan'])) {
+            $product['thanh_phan_chinh'] = $product['thanh_phan'];
+        }
+
+        if ((!isset($product['thanh_phan_day_du']) || trim((string)$product['thanh_phan_day_du']) === '') && isset($product['thanh_phan_full'])) {
+            $product['thanh_phan_day_du'] = $product['thanh_phan_full'];
+        }
+
+        if ((!isset($product['thuong_hieu']) || trim((string)$product['thuong_hieu']) === '') && isset($product['ten_thuong_hieu'])) {
+            $product['thuong_hieu'] = $product['ten_thuong_hieu'];
+        }
+
+        if ((!isset($product['loai_san_pham']) || trim((string)$product['loai_san_pham']) === '') && isset($product['ten_danh_muc'])) {
+            $product['loai_san_pham'] = $product['ten_danh_muc'];
+        }
+
+        return $product;
+    }
+
     private function buildSearchColumns(): array {
         $columns = [
+            "CAST(sp.ma_san_pham AS TEXT)",
             'sp.ten_san_pham',
             "COALESCE(th.ten_thuong_hieu, '')",
             "COALESCE(dm.ten_danh_muc, '')",
-            "COALESCE(sp.danh_muc_day_du, '')"
+            "COALESCE(sp.danh_muc_day_du, '')",
+            "COALESCE(sp.dung_tich, '')"
         ];
 
         $available = $this->getSanPhamColumns();
@@ -137,14 +265,17 @@ class SanPham {
         $st = $this->pdo->prepare($sql);
         $st->bindValue(':limit', $limit, PDO::PARAM_INT);
         $st->execute();
-        return $st->fetchAll(PDO::FETCH_ASSOC);
+            $items = $st->fetchAll(PDO::FETCH_ASSOC);
+            return array_map(fn(array $item): array => $this->normalizeProductRecord($item), $items);
     }
 
     public function find($id) {
         $sql = "SELECT sp.*, sp.ma_san_pham AS id,
                        th.ten_thuong_hieu AS thuong_hieu,
+                                             th.ten_thuong_hieu,
                        COALESCE(dm.ten_danh_muc, sp.danh_muc_day_du) AS danh_muc_day_du,
                        dm.ten_danh_muc AS loai_san_pham,
+                                             dm.ten_danh_muc,
                   COALESCE(xx.ten_xuat_xu, xxt.ten_xuat_xu) AS xuat_xu_thuong_hieu,
                   COALESCE(nsx.ten_nsx, sp.ma_noi_san_xuat::text) AS noi_san_xuat
                 FROM san_pham sp
@@ -157,7 +288,8 @@ class SanPham {
                 LIMIT 1";
         $st = $this->pdo->prepare($sql);
         $st->execute([':id' => $id]);
-        return $st->fetch(PDO::FETCH_ASSOC);
+        $product = $st->fetch(PDO::FETCH_ASSOC);
+        return $product ? $this->normalizeProductRecord($product) : false;
     }
 
     // Alias cho find()
@@ -391,6 +523,141 @@ class SanPham {
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public function listBrandOptions(): array {
+        try {
+            $sql = "SELECT ma_thuong_hieu, ten_thuong_hieu
+                    FROM thuong_hieu
+                    WHERE COALESCE(TRIM(ten_thuong_hieu), '') <> ''
+                    ORDER BY ten_thuong_hieu ASC, ma_thuong_hieu ASC";
+            $st = $this->pdo->query($sql);
+            return $st ? ($st->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+        } catch (Throwable $e) {
+            return [];
+        }
+    }
+
+    public function listCategoryOptions(): array {
+        try {
+            $sql = "SELECT ma_danh_muc, ten_danh_muc
+                    FROM danh_muc
+                    WHERE COALESCE(TRIM(ten_danh_muc), '') <> ''
+                    ORDER BY ten_danh_muc ASC, ma_danh_muc ASC";
+            $st = $this->pdo->query($sql);
+            return $st ? ($st->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+        } catch (Throwable $e) {
+            return [];
+        }
+    }
+
+    public function getNextProductCode(): string {
+        try {
+            $sql = "SELECT COALESCE(MAX(CASE WHEN ma_san_pham::text ~ '^[0-9]+$' THEN ma_san_pham::bigint END), 0) + 1 AS next_code
+                    FROM san_pham";
+            $value = $this->pdo->query($sql)->fetchColumn();
+            return (string)((int)$value);
+        } catch (Throwable $e) {
+            return (string)time();
+        }
+    }
+
+    public function hasProductCode(string $code, ?string $excludeId = null): bool {
+        $code = trim($code);
+        if ($code === '') {
+            return false;
+        }
+
+        $sql = 'SELECT 1 FROM san_pham WHERE ma_san_pham = :code';
+        $params = [':code' => $code];
+
+        if ($excludeId !== null && trim($excludeId) !== '') {
+            $sql .= ' AND ma_san_pham <> :exclude_id';
+            $params[':exclude_id'] = trim($excludeId);
+        }
+
+        $sql .= ' LIMIT 1';
+        $st = $this->pdo->prepare($sql);
+        $st->execute($params);
+        return (bool)$st->fetchColumn();
+    }
+
+    public function hasProductName(string $name, ?string $excludeId = null): bool {
+        $name = trim($name);
+        if ($name === '') {
+            return false;
+        }
+
+        $sql = 'SELECT 1 FROM san_pham WHERE LOWER(TRIM(ten_san_pham)) = LOWER(TRIM(:name))';
+        $params = [':name' => $name];
+
+        if ($excludeId !== null && trim($excludeId) !== '') {
+            $sql .= ' AND ma_san_pham <> :exclude_id';
+            $params[':exclude_id'] = trim($excludeId);
+        }
+
+        $sql .= ' LIMIT 1';
+        $st = $this->pdo->prepare($sql);
+        $st->execute($params);
+        return (bool)$st->fetchColumn();
+    }
+
+    public function ensureBrandByName(string $name): ?int {
+        $name = trim($name);
+        if ($name === '') {
+            return null;
+        }
+
+        $findSql = "SELECT ma_thuong_hieu
+                    FROM thuong_hieu
+                    WHERE LOWER(TRIM(ten_thuong_hieu)) = LOWER(TRIM(:name))
+                    LIMIT 1";
+        $find = $this->pdo->prepare($findSql);
+        $find->execute([':name' => $name]);
+        $found = $find->fetchColumn();
+        if ($found !== false) {
+            return (int)$found;
+        }
+
+        try {
+            $insert = $this->pdo->prepare("INSERT INTO thuong_hieu (ten_thuong_hieu) VALUES (:name) RETURNING ma_thuong_hieu");
+            $insert->execute([':name' => $name]);
+            $created = $insert->fetchColumn();
+            return $created !== false ? (int)$created : null;
+        } catch (Throwable $e) {
+            $find->execute([':name' => $name]);
+            $found = $find->fetchColumn();
+            return $found !== false ? (int)$found : null;
+        }
+    }
+
+    public function ensureCategoryByName(string $name): ?int {
+        $name = trim($name);
+        if ($name === '') {
+            return null;
+        }
+
+        $findSql = "SELECT ma_danh_muc
+                    FROM danh_muc
+                    WHERE LOWER(TRIM(ten_danh_muc)) = LOWER(TRIM(:name))
+                    LIMIT 1";
+        $find = $this->pdo->prepare($findSql);
+        $find->execute([':name' => $name]);
+        $found = $find->fetchColumn();
+        if ($found !== false) {
+            return (int)$found;
+        }
+
+        try {
+            $insert = $this->pdo->prepare("INSERT INTO danh_muc (ten_danh_muc) VALUES (:name) RETURNING ma_danh_muc");
+            $insert->execute([':name' => $name]);
+            $created = $insert->fetchColumn();
+            return $created !== false ? (int)$created : null;
+        } catch (Throwable $e) {
+            $find->execute([':name' => $name]);
+            $found = $find->fetchColumn();
+            return $found !== false ? (int)$found : null;
+        }
+    }
+
     public function adminInsert($data): bool {
         $maSanPham = trim((string)($data['ma_san_pham'] ?? ''));
         $tenSanPham = trim((string)($data['ten_san_pham'] ?? ''));
@@ -399,42 +666,15 @@ class SanPham {
             return false;
         }
 
-        $allowedColumns = [
-            'ma_san_pham',
-            'ten_san_pham',
-            'ma_loai',
-            'ma_thuong_hieu',
-            'ma_nsx',
-            'ma_noi_san_xuat',
-            'ma_xuat_xu',
-            'ma_danh_muc',
-            'gia_ban',
-            'gia_thi_truong',
-            'tien_tiet_kiem',
-            'phan_tram_giam',
-            'diem_danh_gia',
-            'so_luong_danh_gia',
-            'dung_tich',
-            'loai_da',
-            'link_hinh_anh',
-            'mo_ta',
-            'thanh_phan_chinh',
-            'thanh_phan_day_du',
-            'hdsd',
-            'attribute',
-            'danh_muc_day_du',
-        ];
+        $data = $this->enrichDerivedPricingFields($data);
+        $allowedColumns = $this->prepareProductColumnData($data);
 
         $fields = [];
         $placeholders = [];
         $params = [];
 
-        foreach ($allowedColumns as $column) {
-            if (!array_key_exists($column, $data)) {
-                continue;
-            }
-
-            $value = is_string($data[$column]) ? trim($data[$column]) : $data[$column];
+        foreach ($allowedColumns as $column => $rawValue) {
+            $value = is_string($rawValue) ? trim($rawValue) : $rawValue;
             if ($value === '') {
                 $value = null;
             }
@@ -449,8 +689,13 @@ class SanPham {
         }
 
         $sql = 'INSERT INTO san_pham (' . implode(', ', $fields) . ') VALUES (' . implode(', ', $placeholders) . ')';
-        $st = $this->pdo->prepare($sql);
-        return $st->execute($params);
+
+        try {
+            $st = $this->pdo->prepare($sql);
+            return $st->execute($params);
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     public function adminUpdate($id, $data): bool {
@@ -459,40 +704,14 @@ class SanPham {
             return false;
         }
 
-        $allowedColumns = [
-            'ten_san_pham',
-            'ma_loai',
-            'ma_thuong_hieu',
-            'ma_nsx',
-            'ma_noi_san_xuat',
-            'ma_xuat_xu',
-            'ma_danh_muc',
-            'gia_ban',
-            'gia_thi_truong',
-            'tien_tiet_kiem',
-            'phan_tram_giam',
-            'diem_danh_gia',
-            'so_luong_danh_gia',
-            'dung_tich',
-            'loai_da',
-            'link_hinh_anh',
-            'mo_ta',
-            'thanh_phan_chinh',
-            'thanh_phan_day_du',
-            'hdsd',
-            'attribute',
-            'danh_muc_day_du',
-        ];
+        $data = $this->enrichDerivedPricingFields($data);
+        $allowedColumns = $this->prepareProductColumnData($data);
 
         $setClauses = [];
         $params = [':id' => $id];
 
-        foreach ($allowedColumns as $column) {
-            if (!array_key_exists($column, $data)) {
-                continue;
-            }
-
-            $value = is_string($data[$column]) ? trim($data[$column]) : $data[$column];
+        foreach ($allowedColumns as $column => $rawValue) {
+            $value = is_string($rawValue) ? trim($rawValue) : $rawValue;
             if ($value === '') {
                 $value = null;
             }
@@ -507,8 +726,13 @@ class SanPham {
         }
 
         $sql = 'UPDATE san_pham SET ' . implode(', ', $setClauses) . ' WHERE ma_san_pham = :id';
-        $st = $this->pdo->prepare($sql);
-        return $st->execute($params);
+
+        try {
+            $st = $this->pdo->prepare($sql);
+            return $st->execute($params);
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     public function adminDelete($id): bool {

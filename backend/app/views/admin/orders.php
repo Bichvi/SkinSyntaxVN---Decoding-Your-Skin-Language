@@ -62,8 +62,14 @@ $allowManage = !empty($allowManage);
                                                 <div class="small text-muted"><?= h($order['email'] ?? '') ?></div>
                                             </td>
                                             <td><?= h(!empty($order['ngay_dat']) ? date('d/m/Y H:i', strtotime((string)$order['ngay_dat'])) : '') ?></td>
-                                            <td class="fw-semibold text-danger"><?= vnd($order['tong_tien'] ?? 0) ?></td>
-                                            <td><span class="badge rounded-pill text-bg-secondary"><?= h($order['trang_thai'] ?? 'moi') ?></span></td>
+                                            <td>
+                                                <div class="fw-semibold text-danger"><?= vnd($order['tong_tien'] ?? 0) ?></div>
+                                                <div class="small text-muted"><?= strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod'))) === 'bank_transfer_qr' ? 'QR chuyển khoản' : 'COD' ?></div>
+                                            </td>
+                                            <td>
+                                                <span class="badge rounded-pill text-bg-secondary d-inline-block mb-1"><?= h($order['trang_thai'] ?? 'moi') ?></span>
+                                                <div class="small text-muted"><?= h($order['status_thanh_toan'] ?? 'Chua thanh toan') ?></div>
+                                            </td>
                                             <td class="text-end">
                                                 <a href="index.php?r=<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>&detail=<?= (int)($order['ma_hoa_don'] ?? 0) ?>" class="btn btn-sm btn-outline-primary">Xem</a>
                                             </td>
@@ -93,6 +99,36 @@ $allowManage = !empty($allowManage);
 
                         <div class="small text-muted mb-2">Địa chỉ giao hàng</div>
                         <div class="mb-3"><?= h($orderDetail['dia_chi_giao_hang'] ?? 'Chưa cập nhật') ?></div>
+
+                        <div class="small text-muted mb-2">Thanh toán và ưu đãi</div>
+                        <div class="list-group mb-3">
+                            <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                                <span>Phương thức thanh toán</span>
+                                <strong><?= strtolower(trim((string)($orderDetail['hinh_thuc_thanh_toan'] ?? 'cod'))) === 'bank_transfer_qr' ? 'Chuyển khoản qua QR' : 'COD' ?></strong>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                                <span>Trạng thái thanh toán</span>
+                                <strong><?= h($orderDetail['status_thanh_toan'] ?? 'Chua thanh toan') ?></strong>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                                <span>Tạm tính</span>
+                                <strong><?= vnd($orderDetail['tam_tinh'] ?? (($orderDetail['tong_tien'] ?? 0) - ($orderDetail['phi_van_chuyen'] ?? 0))) ?></strong>
+                            </div>
+                            <?php if ((int)($orderDetail['so_tien_giam'] ?? 0) > 0): ?>
+                                <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                                    <span>Mã giảm giá<?= !empty($orderDetail['ma_giam_gia']) ? ' (' . h($orderDetail['ma_giam_gia']) . ')' : '' ?></span>
+                                    <strong class="text-success">-<?= vnd($orderDetail['so_tien_giam'] ?? 0) ?></strong>
+                                </div>
+                            <?php endif; ?>
+                            <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                                <span>Phí vận chuyển</span>
+                                <strong><?= vnd($orderDetail['phi_van_chuyen'] ?? 0) ?></strong>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                                <span>Tổng thanh toán</span>
+                                <strong class="text-danger"><?= vnd($orderDetail['tong_tien'] ?? 0) ?></strong>
+                            </div>
+                        </div>
 
                         <div class="small text-muted mb-2">Sản phẩm trong đơn</div>
                         <div class="list-group mb-3">

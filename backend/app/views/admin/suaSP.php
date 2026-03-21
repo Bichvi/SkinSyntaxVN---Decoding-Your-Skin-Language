@@ -1,10 +1,37 @@
 <?php
 $product = $product ?? [];
 $error = $error ?? null;
+$brandOptions = $brandOptions ?? [];
+$categoryOptions = $categoryOptions ?? [];
 
-$imagePreview = trim((string)($product['link_hinh_anh'] ?? ''));
-if ($imagePreview !== '' && !preg_match('/^https?:\/\//i', $imagePreview)) {
-	$imagePreview = BASE_URL . '/uploads/products/' . rawurlencode($imagePreview);
+$rawImages = preg_split('/\s*\|\s*/', trim((string)($product['link_hinh_anh'] ?? ''))) ?: [];
+$currentImage = trim((string)($rawImages[0] ?? ''));
+$imagePreview = resolve_image_url($currentImage);
+$selectedBrandId = (string)($product['ma_thuong_hieu'] ?? '');
+$selectedCategoryId = (string)($product['ma_danh_muc'] ?? '');
+$selectedBrandLabel = '';
+$selectedCategoryLabel = '';
+
+foreach ($brandOptions as $option) {
+	if ((string)($option['ma_thuong_hieu'] ?? '') === $selectedBrandId) {
+		$selectedBrandLabel = trim((string)($option['ten_thuong_hieu'] ?? '')) . ' (#' . $selectedBrandId . ')';
+		break;
+	}
+}
+
+foreach ($categoryOptions as $option) {
+	if ((string)($option['ma_danh_muc'] ?? '') === $selectedCategoryId) {
+		$selectedCategoryLabel = trim((string)($option['ten_danh_muc'] ?? '')) . ' (#' . $selectedCategoryId . ')';
+		break;
+	}
+}
+
+if ($selectedBrandLabel === '' && !empty($product['thuong_hieu'])) {
+	$selectedBrandLabel = trim((string)$product['thuong_hieu']) . ($selectedBrandId !== '' ? ' (#' . $selectedBrandId . ')' : '');
+}
+
+if ($selectedCategoryLabel === '' && !empty($product['loai_san_pham'])) {
+	$selectedCategoryLabel = trim((string)$product['loai_san_pham']) . ($selectedCategoryId !== '' ? ' (#' . $selectedCategoryId . ')' : '');
 }
 ?>
 
@@ -33,12 +60,16 @@ if ($imagePreview !== '' && !preg_match('/^https?:\/\//i', $imagePreview)) {
 				</div>
 
 				<div class="col-md-4">
-					<label class="form-label">Mã thương hiệu</label>
-					<input type="number" class="form-control" name="ma_thuong_hieu" value="<?= h($product['ma_thuong_hieu'] ?? '') ?>">
+					<label class="form-label">Thương hiệu</label>
+					<input type="hidden" name="ma_thuong_hieu" value="<?= h($selectedBrandId) ?>">
+					<input type="text" class="form-control" value="<?= h($selectedBrandLabel) ?>" placeholder="Nhập tên thương hiệu để tìm..." list="brand-options" data-lookup-input data-target-hidden="ma_thuong_hieu">
+					<div class="form-text">Gõ tên thương hiệu và chọn từ danh sách gợi ý.</div>
 				</div>
 				<div class="col-md-4">
-					<label class="form-label">Mã danh mục</label>
-					<input type="number" class="form-control" name="ma_danh_muc" value="<?= h($product['ma_danh_muc'] ?? '') ?>">
+					<label class="form-label">Danh mục</label>
+					<input type="hidden" name="ma_danh_muc" value="<?= h($selectedCategoryId) ?>">
+					<input type="text" class="form-control" value="<?= h($selectedCategoryLabel) ?>" placeholder="Nhập tên danh mục để tìm..." list="category-options" data-lookup-input data-target-hidden="ma_danh_muc">
+					<div class="form-text">Chọn đúng danh mục để tự lấy mã.</div>
 				</div>
 				<div class="col-md-4">
 					<label class="form-label">Dung tích</label>
@@ -69,6 +100,7 @@ if ($imagePreview !== '' && !preg_match('/^https?:\/\//i', $imagePreview)) {
 					<?php else: ?>
 						<span class="text-muted small">Không có ảnh</span>
 					<?php endif; ?>
+					<div class="text-muted small mt-2"><?= h($currentImage !== '' ? $currentImage : 'Sản phẩm chưa có ảnh') ?></div>
 				</div>
 
 				<div class="col-12">
@@ -104,3 +136,35 @@ if ($imagePreview !== '' && !preg_match('/^https?:\/\//i', $imagePreview)) {
 		</div>
 	</form>
 </div>
+
+<datalist id="brand-options">
+	<?php foreach ($brandOptions as $option): ?>
+		<option value="<?= h(trim((string)($option['ten_thuong_hieu'] ?? '')) . ' (#' . (string)($option['ma_thuong_hieu'] ?? '') . ')') ?>" data-id="<?= h($option['ma_thuong_hieu'] ?? '') ?>"></option>
+	<?php endforeach; ?>
+</datalist>
+
+<datalist id="category-options">
+	<?php foreach ($categoryOptions as $option): ?>
+		<option value="<?= h(trim((string)($option['ten_danh_muc'] ?? '')) . ' (#' . (string)($option['ma_danh_muc'] ?? '') . ')') ?>" data-id="<?= h($option['ma_danh_muc'] ?? '') ?>"></option>
+	<?php endforeach; ?>
+</datalist>
+
+<script>
+document.querySelectorAll('[data-lookup-input]').forEach(function (input) {
+	var hiddenName = input.getAttribute('data-target-hidden');
+	var hidden = document.querySelector('input[name="' + hiddenName + '"]');
+	var listId = input.getAttribute('list');
+	var options = Array.from(document.querySelectorAll('#' + listId + ' option'));
+
+	function syncHiddenValue() {
+		var matched = options.find(function (option) {
+			return option.value === input.value;
+		});
+
+		hidden.value = matched ? (matched.getAttribute('data-id') || '') : '';
+	}
+
+	input.addEventListener('change', syncHiddenValue);
+	input.addEventListener('blur', syncHiddenValue);
+});
+</script>

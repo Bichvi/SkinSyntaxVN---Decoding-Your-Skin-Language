@@ -47,11 +47,12 @@ $q = trim((string)($q ?? ''));
 
                             <form method="post" action="index.php?r=staff_review_reply" class="row g-2">
                                 <input type="hidden" name="ma_danh_gia" value="<?= h($review['ma_danh_gia'] ?? '') ?>">
+                                <input type="hidden" name="row_ref" value="<?= h($review['row_ref'] ?? '') ?>">
                                 <div class="col-lg-10">
-                                    <textarea class="form-control" name="phan_hoi" rows="2" placeholder="Nhập phản hồi cho khách hàng..."><?= h($review['phan_hoi'] ?? '') ?></textarea>
+                                    <textarea class="form-control" name="phan_hoi" rows="2" placeholder="<?= !empty($review['phan_hoi']) ? 'Nhập phản hồi mới nếu bạn muốn cập nhật...' : 'Nhập phản hồi cho khách hàng...' ?>"></textarea>
                                 </div>
                                 <div class="col-lg-2 d-grid">
-                                    <button type="submit" class="btn btn-primary">Gửi phản hồi</button>
+                                    <button type="submit" class="btn btn-primary"><?= !empty($review['phan_hoi']) ? 'Cập nhật' : 'Gửi phản hồi' ?></button>
                                 </div>
                             </form>
                         </div>

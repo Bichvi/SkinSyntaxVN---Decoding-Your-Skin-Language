@@ -168,9 +168,29 @@ class SanPhamController {
             $this->saveSearchHistory($q);
         }
 
+        $reviewModel = new QuanTri($this->pdo);
+        $reviewPermission = [
+            'has_purchased' => false,
+            'has_reviewed' => false,
+        ];
+
+        if (is_logged_in()) {
+            $user = current_user() ?? [];
+            $email = trim((string)($user['email'] ?? ''));
+            if ($email !== '') {
+                $customer = $reviewModel->getCustomerByEmail($email, trim((string)($user['ho_ten'] ?? '')) ?: 'Khach hang');
+                if ($customer && !empty($customer['ma_kh'])) {
+                    $reviewEligibility = $reviewModel->{'getCustomerReviewEligibility'}((int)$customer['ma_kh'], [$id]);
+                    $reviewPermission = $reviewEligibility[$id] ?? $reviewPermission;
+                }
+            }
+        }
+
         $this->render('chitiet', [
             'p' => $p,
-            'reviews' => (new QuanTri($this->pdo))->getProductReviews($id),
+            'reviews' => $reviewModel->getProductReviews($id),
+            'reviewPermission' => $reviewPermission,
+            'activeTab' => trim((string)($_GET['tab'] ?? '')),
         ]);
     }
 

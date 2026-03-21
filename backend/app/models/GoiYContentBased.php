@@ -3,9 +3,71 @@
 
 class GoiYContentBased {
     private PDO $pdo;
+    private ?array $sanPhamColumnsCache = null;
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
+    }
+
+    private function getSanPhamColumns(): array {
+        if ($this->sanPhamColumnsCache !== null) {
+            return $this->sanPhamColumnsCache;
+        }
+
+        $sql = "SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = current_schema()
+                  AND table_name = 'san_pham'";
+        $rows = $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+        $columns = [];
+        foreach ($rows as $row) {
+            $name = trim((string)($row['column_name'] ?? ''));
+            if ($name !== '') {
+                $columns[$name] = true;
+            }
+        }
+
+        $this->sanPhamColumnsCache = $columns;
+        return $this->sanPhamColumnsCache;
+    }
+
+    private function hasSanPhamColumn(string $column): bool {
+        return isset($this->getSanPhamColumns()[$column]);
+    }
+
+    private function firstExistingSanPhamColumn(array $candidates): ?string {
+        foreach ($candidates as $column) {
+            if ($this->hasSanPhamColumn($column)) {
+                return $column;
+            }
+        }
+
+        return null;
+    }
+
+    private function selectExpr(string $alias, array $candidates, string $fallback = "''"): string {
+        $column = $this->firstExistingSanPhamColumn($candidates);
+        if ($column === null) {
+            return $fallback . ' AS ' . $alias;
+        }
+
+        return 'sp.' . $column . ' AS ' . $alias;
+    }
+
+    private function buildOrderByExpr(): string {
+        $parts = [];
+        foreach (['updated_at', 'created_at'] as $column) {
+            if ($this->hasSanPhamColumn($column)) {
+                $parts[] = 'sp.' . $column . ' DESC NULLS LAST';
+            }
+        }
+
+        if (!$parts) {
+            $parts[] = 'sp.ma_san_pham DESC';
+        }
+
+        return implode(', ', $parts);
     }
 
     public function recommendFromPost(array $post, int $limit = 12): array {
@@ -100,8 +162,13 @@ class GoiYContentBased {
             $params[':budget_max'] = $budgetMax;
         }
 
-        $sql = "SELECT sp.ma_san_pham, sp.ten_san_pham, sp.gia_ban, sp.loai_da, sp.mo_ta,
-                       sp.thanh_phan_chinh, sp.thanh_phan_day_du, sp.hdsd, sp.diem_danh_gia,
+        $sql = "SELECT sp.ma_san_pham, sp.ten_san_pham, sp.gia_ban,
+                   " . $this->selectExpr('loai_da', ['loai_da']) . ",
+                   " . $this->selectExpr('mo_ta', ['mo_ta']) . ",
+                   " . $this->selectExpr('thanh_phan_chinh', ['thanh_phan_chinh', 'thanh_phan']) . ",
+                   " . $this->selectExpr('thanh_phan_day_du', ['thanh_phan_day_du', 'thanh_phan_full']) . ",
+                   " . $this->selectExpr('hdsd', ['hdsd']) . ",
+                   " . $this->selectExpr('diem_danh_gia', ['diem_danh_gia'], '0') . ",
                        sp.link_hinh_anh, th.ten_thuong_hieu,
                        COALESCE(xx.ten_xuat_xu, xxt.ten_xuat_xu) AS xuat_xu,
                        COALESCE(sp.danh_muc_day_du, dm.ten_danh_muc, '') AS danh_muc_day_du
@@ -111,7 +178,7 @@ class GoiYContentBased {
                 LEFT JOIN xuat_xu_thuong_hieu xxt ON xxt.ma_xuat_xu = sp.ma_xuat_xu
                 LEFT JOIN danh_muc dm ON dm.ma_danh_muc = sp.ma_danh_muc
                 $where
-                ORDER BY sp.updated_at DESC NULLS LAST, sp.created_at DESC NULLS LAST
+            ORDER BY " . $this->buildOrderByExpr() . "
                 LIMIT :limit";
 
         $st = $this->pdo->prepare($sql);
@@ -166,6 +233,9 @@ class GoiYContentBased {
         ];
 
         $score = 0.0;
+        $reasons = [];
+        $matchedConcerns = [];
+        $avoidIngredientHits = [];
 
         $haystack = $this->normalizeText(implode(' ', [
             $product['ten_san_pham'] ?? '',
@@ -185,6 +255,7 @@ class GoiYContentBased {
             $matches = $this->countMatches($haystack, $skinTokens);
             if ($matches > 0) {
                 $score += $weights['skin_type'];
+                $reasons[] = 'Phù hợp với loại da ' . trim((string)$profile['skin_type']) . '.';
             }
         }
 
@@ -194,10 +265,12 @@ class GoiYContentBased {
                 $tokens = $this->concernKeywords($concern);
                 if ($this->countMatches($haystack, $tokens) > 0 || $this->countMatches($ingredientText, $tokens) > 0) {
                     $concernHit++;
+                    $matchedConcerns[] = trim((string)$concern);
                 }
             }
             if ($concernHit > 0) {
                 $score += $weights['concerns'] * min(1.0, $concernHit / max(1, count($profile['concerns'])));
+                $reasons[] = 'Hỗ trợ cho vấn đề ' . implode(', ', array_slice($matchedConcerns, 0, 3)) . '.';
             }
         }
 
@@ -206,6 +279,7 @@ class GoiYContentBased {
             $budget = (int)$profile['budget'];
             if ($giaBan <= $budget) {
                 $score += $weights['budget'];
+                $reasons[] = 'Nằm trong ngân sách bạn đặt ra.';
             } else {
                 $overRatio = ($giaBan - $budget) / max(1, $budget);
                 $score += max(0, $weights['budget'] * (1 - min($overRatio, 1)));
@@ -215,6 +289,9 @@ class GoiYContentBased {
         $rating = isset($product['diem_danh_gia']) ? (float)$product['diem_danh_gia'] : 0.0;
         if ($rating > 0) {
             $score += min($weights['rating'], ($rating / 5.0) * $weights['rating']);
+            if ($rating >= 4.0) {
+                $reasons[] = 'Có đánh giá người dùng tích cực.';
+            }
         }
 
         if (!empty($profile['gender']) || !empty($profile['birth_year'])) {
@@ -230,11 +307,18 @@ class GoiYContentBased {
             foreach ($profile['avoid_ingredients'] as $badIng) {
                 if ($badIng !== '' && mb_strpos($ingredientText, $badIng) !== false) {
                     $penalty += 25;
+                    $avoidIngredientHits[] = $badIng;
                 }
             }
         }
 
         $score = max(0, $score - $penalty);
+
+        $keyIngredients = $this->extractKeyIngredients($product);
+        $reasons = array_values(array_unique(array_filter($reasons)));
+        if (empty($reasons)) {
+            $reasons[] = 'Có mức độ tương thích cơ bản với hồ sơ chăm sóc da của bạn.';
+        }
 
         return [
             'id' => $product['ma_san_pham'],
@@ -243,9 +327,40 @@ class GoiYContentBased {
             'thuong_hieu' => $product['ten_thuong_hieu'] ?? null,
             'xuat_xu' => $product['xuat_xu'] ?? null,
             'link_hinh_anh' => $product['link_hinh_anh'] ?? null,
+            'mo_ta' => trim((string)($product['mo_ta'] ?? '')),
+            'danh_muc' => trim((string)($product['danh_muc_day_du'] ?? '')),
+            'thanh_phan_chinh' => trim((string)($product['thanh_phan_chinh'] ?? '')),
+            'thanh_phan_day_du' => trim((string)($product['thanh_phan_day_du'] ?? '')),
+            'key_ingredients' => $keyIngredients,
+            'matched_concerns' => $matchedConcerns,
+            'avoid_ingredient_hits' => $avoidIngredientHits,
+            'reasons' => $reasons,
             'score' => round($score, 3),
             'penalty' => $penalty,
         ];
+    }
+
+    private function extractKeyIngredients(array $product, int $max = 5): array {
+        $raw = trim((string)($product['thanh_phan_chinh'] ?? $product['thanh_phan_day_du'] ?? ''));
+        if ($raw === '') {
+            return [];
+        }
+
+        $parts = preg_split('/[,;|\n\r]+/u', $raw) ?: [];
+        $output = [];
+        foreach ($parts as $part) {
+            $item = trim((string)$part);
+            if ($item === '') {
+                continue;
+            }
+
+            $output[] = $item;
+            if (count($output) >= $max) {
+                break;
+            }
+        }
+
+        return array_values(array_unique($output));
     }
 
     private function splitKeywords(string $raw): array {

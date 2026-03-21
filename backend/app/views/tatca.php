@@ -58,13 +58,15 @@ $startPage = max(1, $endPage - $maxVisible + 1);
   <?php else: ?>
     <div class="row g-3">
       <?php foreach ($items as $p):
-        $img = first_image_url($p['link_hinh_anh'] ?? '');
+        $img = resolve_image_url((string)($p['link_hinh_anh'] ?? ''));
+        $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
+        $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
       ?>
         <div class="col-6 col-md-3">
           <a class="product-card" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= (int)$p['id'] ?>">
             <div class="product-thumb">
-              <?php if (!empty($p['phan_tram_giam'])): ?>
-                <span class="badge-sale">-<?= h($p['phan_tram_giam']) ?>%</span>
+              <?php if ($phanTramGiam !== null): ?>
+                <span class="badge-sale">-<?= h((string)$phanTramGiam) ?>%</span>
               <?php endif; ?>
               <img
                 src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=No+Image') ?>"
@@ -76,7 +78,12 @@ $startPage = max(1, $endPage - $maxVisible + 1);
             <div class="product-meta">
               <div class="brand"><?= h($p['thuong_hieu'] ?? '') ?></div>
               <div class="name"><?= h($p['ten_san_pham'] ?? '') ?></div>
-              <div class="price"><?= vnd($p['gia_ban'] ?? 0) ?></div>
+              <div class="price-wrap price-wrap--inline">
+                <div class="price"><?= vnd($p['gia_ban'] ?? 0) ?></div>
+                <?php if ($giaThiTruong !== '' && (float)$giaThiTruong > 0): ?>
+                  <div class="price-market"><?= vnd($giaThiTruong) ?></div>
+                <?php endif; ?>
+              </div>
             </div>
           </a>
         </div>

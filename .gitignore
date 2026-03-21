@@ -28,3 +28,7 @@ __pycache__/
 node_modules/
 chroma_db/
 
+# Local runtime caches
+ai-service-flask/.cache/
+backend/storage/cache/
+

@@ -2,8 +2,12 @@
 // backend/public/index.php
 session_start();
 
+require_once __DIR__ . '/../app/config/config.php';
+
 $baseUrl = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-define('BASE_URL', $baseUrl === '' ? '' : $baseUrl);
+if (!defined('BASE_URL')) {
+    define('BASE_URL', $baseUrl === '' ? '' : $baseUrl);
+}
 
 require_once __DIR__ . '/../app/config/db.php';
 require_once __DIR__ . '/../app/helpers.php';
@@ -51,6 +55,39 @@ switch ($r) {
         (new HomeController($pdo))->goiy();
         break;
 
+    case 'ai_chat_assistant':
+        $controller = new HomeController($pdo);
+        $controller->{'aiChatAssistant'}();
+        break;
+
+    case 'huong_dan_nhan_otp':
+        (new HomeController($pdo))->otpGuide();
+        break;
+
+    case 'dieu_kien_giao_dich':
+        (new HomeController($pdo))->termsReference();
+        break;
+
+    case 'chinh_sach_bao_mat':
+        (new HomeController($pdo))->privacyReference();
+        break;
+
+    case 'chinh_sach_xu_ly_du_lieu':
+        (new HomeController($pdo))->personalDataReference();
+        break;
+
+    case 'he_thong_cua_hang':
+        (new HomeController($pdo))->storeNetwork();
+        break;
+
+    case 'bao_hanh':
+        (new HomeController($pdo))->warrantyCenter();
+        break;
+
+    case 'ho_tro_khach_hang':
+        (new HomeController($pdo))->customerSupport();
+        break;
+
     case 'xulygoiy':
         (new HomeController($pdo))->xulygoiy();
         break;
@@ -63,12 +100,36 @@ switch ($r) {
         (new HomeController($pdo))->thanhtoan();
         break;
 
+    case 'apdung_voucher':
+        (new HomeController($pdo))->apDungVoucher();
+        break;
+
+    case 'bo_voucher':
+        (new HomeController($pdo))->boVoucher();
+        break;
+
+    case 'apdung_diem':
+        (new HomeController($pdo))->apDungDiem();
+        break;
+
+    case 'bo_diem':
+        (new HomeController($pdo))->boDiem();
+        break;
+
     case 'xulydathang':
         (new HomeController($pdo))->xulydathang();
         break;
 
     case 'camon':
         (new HomeController($pdo))->camon();
+        break;
+
+    case 'payment_autocheck':
+        (new HomeController($pdo))->paymentAutoCheck();
+        break;
+
+    case 'payment_webhook':
+        (new HomeController($pdo))->paymentWebhook();
         break;
 
     case 'hoso':
@@ -93,6 +154,26 @@ switch ($r) {
 
     case 'xulydangnhap':
         (new AuthController($pdo))->xulydangnhap();
+        break;
+
+    case 'quen_mat_khau':
+        (new AuthController($pdo))->quenMatKhau();
+        break;
+
+    case 'gui_lien_ket_dat_lai':
+        (new AuthController($pdo))->guiLienKetDatLai();
+        break;
+
+    case 'dat_lai_mat_khau':
+        (new AuthController($pdo))->datLaiMatKhau();
+        break;
+
+    case 'auth_social':
+        (new AuthController($pdo))->authSocial();
+        break;
+
+    case 'auth_social_callback':
+        (new AuthController($pdo))->authSocialCallback();
         break;
 
     case 'dangky':
@@ -139,12 +220,24 @@ switch ($r) {
         (new QuanTriController($pdo))->adminCategories();
         break;
 
+    case 'admin_vouchers':
+        (new QuanTriController($pdo))->adminVouchers();
+        break;
+
     case 'admin_category_save':
         (new QuanTriController($pdo))->adminCategorySave();
         break;
 
+    case 'admin_voucher_save':
+        (new QuanTriController($pdo))->adminVoucherSave();
+        break;
+
     case 'admin_category_delete':
         (new QuanTriController($pdo))->adminCategoryDelete();
+        break;
+
+    case 'admin_voucher_delete':
+        (new QuanTriController($pdo))->adminVoucherDelete();
         break;
 
     case 'admin_users':
@@ -167,6 +260,10 @@ switch ($r) {
         (new QuanTriController($pdo))->adminStaffDelete();
         break;
 
+    case 'admin_staff_hard_delete':
+        (new QuanTriController($pdo))->adminStaffHardDelete();
+        break;
+
     case 'admin_orders':
         (new QuanTriController($pdo))->adminOrders();
         break;
@@ -177,6 +274,11 @@ switch ($r) {
 
     case 'admin_reports':
         (new QuanTriController($pdo))->adminReports();
+        break;
+
+    case 'admin_notifications_seen':
+        $controller = new QuanTriController($pdo);
+        $controller->{'markNotificationsSeen'}();
         break;
 
     case 'staff_dashboard':
@@ -209,6 +311,11 @@ switch ($r) {
 
     case 'staff_chats':
         (new QuanTriController($pdo))->staffChats();
+        break;
+
+    case 'staff_chat_state':
+        $controller = new QuanTriController($pdo);
+        $controller->{'staffChatState'}();
         break;
 
     case 'staff_chat_send':

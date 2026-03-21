@@ -2,28 +2,74 @@
 $summary = $summary ?? [];
 $revenueByMonth = $revenueByMonth ?? [];
 $topProducts = $topProducts ?? [];
+
+$totalRevenueWindow = 0;
+$totalOrdersWindow = 0;
+$bestMonth = null;
+
+foreach ($revenueByMonth as $row) {
+    $monthRevenue = (int)($row['doanh_thu'] ?? 0);
+    $monthOrders = (int)($row['so_don'] ?? 0);
+    $totalRevenueWindow += $monthRevenue;
+    $totalOrdersWindow += $monthOrders;
+
+    if ($bestMonth === null || $monthRevenue > (int)($bestMonth['doanh_thu'] ?? 0)) {
+        $bestMonth = $row;
+    }
+}
+
+$averageRevenueWindow = !empty($revenueByMonth) ? (int)round($totalRevenueWindow / count($revenueByMonth)) : 0;
+$topProduct = $topProducts[0] ?? null;
 ?>
 
 <div class="container-fluid p-4">
     <div class="mb-4">
         <h1 class="h3 mb-1">Báo cáo và thống kê</h1>
-        <p class="text-muted mb-0">Tổng hợp nhanh tình hình doanh thu, đơn hàng và sản phẩm.</p>
+        <p class="text-muted mb-0">Phân tích doanh thu theo giai đoạn và hiệu suất bán hàng, tách biệt với trang tổng quan hệ thống.</p>
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-4 col-xl-2"><div class="card border-0 shadow-sm rounded-4 p-3"><div class="text-muted small">Sản phẩm</div><div class="fs-4 fw-bold"><?= number_format((int)($summary['tong_san_pham'] ?? 0), 0, ',', '.') ?></div></div></div>
-        <div class="col-md-4 col-xl-2"><div class="card border-0 shadow-sm rounded-4 p-3"><div class="text-muted small">Danh mục</div><div class="fs-4 fw-bold"><?= number_format((int)($summary['tong_danh_muc'] ?? 0), 0, ',', '.') ?></div></div></div>
-        <div class="col-md-4 col-xl-2"><div class="card border-0 shadow-sm rounded-4 p-3"><div class="text-muted small">Khách hàng</div><div class="fs-4 fw-bold"><?= number_format((int)($summary['tong_khach_hang'] ?? 0), 0, ',', '.') ?></div></div></div>
-        <div class="col-md-4 col-xl-2"><div class="card border-0 shadow-sm rounded-4 p-3"><div class="text-muted small">Nhân viên</div><div class="fs-4 fw-bold"><?= number_format((int)($summary['tong_nhan_vien'] ?? 0), 0, ',', '.') ?></div></div></div>
-        <div class="col-md-4 col-xl-2"><div class="card border-0 shadow-sm rounded-4 p-3"><div class="text-muted small">Đơn hàng</div><div class="fs-4 fw-bold"><?= number_format((int)($summary['tong_don_hang'] ?? 0), 0, ',', '.') ?></div></div></div>
-        <div class="col-md-4 col-xl-2"><div class="card border-0 shadow-sm rounded-4 p-3"><div class="text-muted small">Doanh thu</div><div class="fs-5 fw-bold text-danger"><?= vnd($summary['tong_doanh_thu'] ?? 0) ?></div></div></div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                <div class="text-muted small mb-2">Doanh thu trong kỳ báo cáo</div>
+                <div class="fs-4 fw-bold text-danger"><?= vnd($totalRevenueWindow) ?></div>
+                <div class="small text-muted mt-2">Tổng hợp từ <?= number_format(count($revenueByMonth), 0, ',', '.') ?> tháng gần nhất.</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                <div class="text-muted small mb-2">Trung bình doanh thu / tháng</div>
+                <div class="fs-4 fw-bold"><?= vnd($averageRevenueWindow) ?></div>
+                <div class="small text-muted mt-2">Dựa trên doanh thu trong cửa sổ báo cáo hiện tại.</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                <div class="text-muted small mb-2">Tháng doanh thu cao nhất</div>
+                <div class="fs-4 fw-bold"><?= h($bestMonth['thang'] ?? 'Chưa có') ?></div>
+                <div class="small text-muted mt-2"><?= $bestMonth ? vnd($bestMonth['doanh_thu'] ?? 0) . ' / ' . number_format((int)($bestMonth['so_don'] ?? 0), 0, ',', '.') . ' đơn' : 'Chưa có dữ liệu để phân tích.' ?></div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                <div class="text-muted small mb-2">Sản phẩm dẫn đầu</div>
+                <div class="fs-6 fw-bold text-truncate"><?= h($topProduct['ten_san_pham'] ?? 'Chưa có dữ liệu') ?></div>
+                <div class="small text-muted mt-2"><?= $topProduct ? number_format((int)($topProduct['so_don_vi'] ?? 0), 0, ',', '.') . ' lượt bán • ' . vnd($topProduct['doanh_thu'] ?? 0) : 'Chưa có dữ liệu doanh thu theo sản phẩm.' ?></div>
+            </div>
+        </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Doanh thu theo tháng</h5>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Doanh thu theo tháng</h5>
+                            <div class="small text-muted">Theo dõi biến động doanh thu và số lượng đơn theo từng tháng.</div>
+                        </div>
+                        <span class="badge rounded-pill text-bg-light border">Tổng đơn trong kỳ: <?= number_format($totalOrdersWindow, 0, ',', '.') ?></span>
+                    </div>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0">
                             <thead class="table-light"><tr><th>Tháng</th><th>Số đơn</th><th class="text-end">Doanh thu</th></tr></thead>
@@ -48,7 +94,13 @@ $topProducts = $topProducts ?? [];
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Top sản phẩm theo doanh thu</h5>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Top sản phẩm theo doanh thu</h5>
+                            <div class="small text-muted">Tập trung vào sản phẩm kéo doanh thu thay vì lặp lại số liệu tổng quan từ dashboard.</div>
+                        </div>
+                        <span class="badge rounded-pill text-bg-light border">Tổng SP toàn hệ thống: <?= number_format((int)($summary['tong_san_pham'] ?? 0), 0, ',', '.') ?></span>
+                    </div>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0">
                             <thead class="table-light"><tr><th>Sản phẩm</th><th>Số lượng</th><th class="text-end">Doanh thu</th></tr></thead>

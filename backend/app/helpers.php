@@ -26,8 +26,9 @@ function split_image_urls(?string $raw, int $max = 8): array {
     foreach ($parts as $p) {
         $p = trim($p);
         if ($p === '') continue;
-        if (!filter_var($p, FILTER_VALIDATE_URL)) continue;
-        $urls[] = $p;
+        $resolved = resolve_image_url($p);
+        if ($resolved === '') continue;
+        $urls[] = $resolved;
         if (count($urls) >= $max) break;
     }
     return $urls;
@@ -54,7 +55,24 @@ function resolve_image_url(?string $raw): string {
         return $candidate;
     }
 
-    return BASE_URL . '/uploads/products/' . rawurlencode($candidate);
+    $normalized = str_replace('\\', '/', $candidate);
+    $normalized = preg_replace('#^\./+#', '', $normalized) ?: $normalized;
+
+    if (strpos($normalized, 'backend/public/uploads/products/') !== false) {
+        $normalized = substr($normalized, strpos($normalized, 'backend/public/uploads/products/') + strlen('backend/public/uploads/products/'));
+    }
+
+    if (strpos($normalized, 'uploads/products/') !== false) {
+        $normalized = substr($normalized, strpos($normalized, 'uploads/products/') + strlen('uploads/products/'));
+    }
+
+    $normalized = ltrim($normalized, '/');
+
+    if ($normalized === '') {
+        return '';
+    }
+
+    return BASE_URL . '/uploads/products/' . str_replace('%2F', '/', rawurlencode($normalized));
 }
 
 function nl2br_safe(?string $text): string {
@@ -68,6 +86,29 @@ function vnd($value) {
         $value = $num === '' ? 0 : (int)$num;
     }
     return number_format((float)$value, 0, ',', '.') . ' đ';
+}
+
+function product_discount_percent(array $product): ?int {
+    $storedPercent = trim((string)($product['phan_tram_giam'] ?? ''));
+    if ($storedPercent !== '' && is_numeric($storedPercent)) {
+        $percent = (int)round((float)$storedPercent);
+        return $percent > 0 ? $percent : null;
+    }
+
+    $giaBan = trim((string)($product['gia_ban'] ?? ''));
+    $giaThiTruong = trim((string)($product['gia_thi_truong'] ?? ''));
+    if ($giaBan === '' || $giaThiTruong === '' || !is_numeric($giaBan) || !is_numeric($giaThiTruong)) {
+        return null;
+    }
+
+    $giaBanNum = (float)$giaBan;
+    $giaThiTruongNum = (float)$giaThiTruong;
+    if ($giaBanNum <= 0 || $giaThiTruongNum <= 0 || $giaThiTruongNum <= $giaBanNum) {
+        return null;
+    }
+
+    $percent = (int)round((($giaThiTruongNum - $giaBanNum) / $giaThiTruongNum) * 100);
+    return $percent > 0 ? $percent : null;
 }
 
 /**
@@ -111,14 +152,19 @@ function route_access_map(): array {
         'admin_categories' => ['admin'],
         'admin_category_save' => ['admin'],
         'admin_category_delete' => ['admin'],
+        'admin_vouchers' => ['admin'],
+        'admin_voucher_save' => ['admin'],
+        'admin_voucher_delete' => ['admin'],
         'admin_users' => ['admin'],
         'admin_customer_save' => ['admin'],
         'admin_customer_delete' => ['admin'],
         'admin_staff_save' => ['admin'],
         'admin_staff_delete' => ['admin'],
+        'admin_staff_hard_delete' => ['admin'],
         'admin_orders' => ['admin'],
         'admin_order_status' => ['admin'],
         'admin_reports' => ['admin'],
+        'admin_notifications_seen' => ['admin', 'nhanvien'],
         'staff_dashboard' => ['admin', 'nhanvien'],
         'staff_orders' => ['admin', 'nhanvien'],
         'staff_order_status' => ['admin', 'nhanvien'],
@@ -127,11 +173,14 @@ function route_access_map(): array {
         'staff_reviews' => ['admin', 'nhanvien'],
         'staff_review_reply' => ['admin', 'nhanvien'],
         'staff_chats' => ['admin', 'nhanvien'],
+        'staff_chat_state' => ['admin', 'nhanvien'],
         'staff_chat_send' => ['admin', 'nhanvien'],
         'lichsuchat' => ['khach_hang'],
         'chat_send' => ['khach_hang'],
         'guidanhgia' => ['khach_hang'],
         'huydonhang' => ['khach_hang'],
+        'apdung_voucher' => ['khach_hang'],
+        'bo_voucher' => ['khach_hang'],
     ];
 }
 

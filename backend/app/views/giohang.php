@@ -69,8 +69,8 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
                     }
                     $lineTotal = $unitPrice * $qty;
 
-                    $images = !empty($product['link_hinh_anh']) ? explode('|', (string)$product['link_hinh_anh']) : [];
-                    $firstImage = trim((string)($images[0] ?? ''));
+                    $rawImage = (string)($product['link_hinh_anh'] ?? $product['hinh_anh'] ?? '');
+                    $firstImage = resolve_image_url($rawImage);
                   ?>
                   <tr class="cart-item"
                       data-product-id="<?= h($product_id) ?>"

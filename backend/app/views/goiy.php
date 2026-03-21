@@ -59,6 +59,25 @@ $profilePayload = $profile ? [
           <span class="recommend-summary__chip recommend-summary__chip--accent"><?= h((string)($profile['budget_label'] ?? 'Không giới hạn')) ?></span>
         </div>
 
+        <div class="recommend-profile-panel">
+          <div class="recommend-profile-panel__row">
+            <span>Loại da</span>
+            <strong><?= h((string)($profile['skin_type'] ?? 'Chưa có')) ?></strong>
+          </div>
+          <div class="recommend-profile-panel__row">
+            <span>Vấn đề ưu tiên</span>
+            <strong><?= h(!empty($profile['concerns']) ? implode(', ', array_slice($profile['concerns'], 0, 3)) : 'Chưa có') ?></strong>
+          </div>
+          <div class="recommend-profile-panel__row">
+            <span>Thành phần cần tránh</span>
+            <strong><?= h(!empty($profile['avoid_ingredients']) ? implode(', ', array_slice($profile['avoid_ingredients'], 0, 3)) : 'Không có') ?></strong>
+          </div>
+          <div class="recommend-profile-panel__row">
+            <span>Ngân sách</span>
+            <strong><?= h((string)($profile['budget_label'] ?? 'Không giới hạn')) ?></strong>
+          </div>
+        </div>
+
         <button
           type="button"
           id="recommendTrigger"
@@ -127,13 +146,34 @@ $profilePayload = $profile ? [
     return number.toLocaleString('vi-VN') + ' VND';
   };
 
-  const firstImage = (raw) => {
+  const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+  const firstImage = (product) => {
+    if (product && product.image_url) {
+      return product.image_url;
+    }
+
+    const raw = product && product.link_hinh_anh ? product.link_hinh_anh : '';
     if (!raw) {
       return 'https://via.placeholder.com/450x450?text=No+Image';
     }
 
-    const items = String(raw).split(',').map((item) => item.trim()).filter(Boolean);
-    return items[0] || 'https://via.placeholder.com/450x450?text=No+Image';
+    const items = String(raw).split('|').map((item) => item.trim()).filter(Boolean);
+    const first = items[0] || '';
+    if (!first) {
+      return 'https://via.placeholder.com/450x450?text=No+Image';
+    }
+
+    if (/^https?:\/\//i.test(first)) {
+      return first;
+    }
+
+    return '<?= BASE_URL ?>/uploads/products/' + encodeURIComponent(first);
   };
 
   const buildPayload = () => {
@@ -165,7 +205,14 @@ $profilePayload = $profile ? [
         body: buildPayload()
       });
 
-      const payload = await response.json();
+      const rawText = await response.text();
+      let payload;
+      try {
+        payload = JSON.parse(rawText);
+      } catch (parseError) {
+        throw new Error('API gợi ý trả về dữ liệu không hợp lệ. Hãy kiểm tra backend recommendation.');
+      }
+
       if (!response.ok || !payload.ok) {
         throw new Error(payload.message || 'Không thể lấy gợi ý sản phẩm.');
       }
@@ -183,17 +230,24 @@ $profilePayload = $profile ? [
           <div class="recommend-product-card__image-wrap">
             <img
               class="recommend-product-card__image"
-              src="${firstImage(product.link_hinh_anh)}"
-              alt="${product.ten_san_pham || ''}"
+              src="${firstImage(product)}"
+              alt="${escapeHtml(product.ten_san_pham || '')}"
               referrerpolicy="no-referrer"
               onerror="this.src='https://via.placeholder.com/450x450?text=No+Image';"
             >
-            <span class="recommend-product-card__score">Match ${product.score ?? 0}</span>
+            <span class="recommend-product-card__score">Match ${escapeHtml(product.score ?? 0)}</span>
           </div>
           <div class="recommend-product-card__body">
-            <p class="recommend-product-card__brand">${product.thuong_hieu || 'Không rõ thương hiệu'}</p>
-            <h3 class="recommend-product-card__name">${product.ten_san_pham || ''}</h3>
+            <p class="recommend-product-card__brand">${escapeHtml(product.thuong_hieu || 'Không rõ thương hiệu')}</p>
+            <h3 class="recommend-product-card__name">${escapeHtml(product.ten_san_pham || '')}</h3>
             <p class="recommend-product-card__price">${formatVnd(product.gia_ban)}</p>
+            <div class="recommend-product-card__reasons">
+              ${Array.isArray(product.reasons) ? product.reasons.slice(0, 3).map((reason) => `<span class="recommend-product-card__reason">${escapeHtml(reason)}</span>`).join('') : ''}
+            </div>
+            <div class="recommend-product-card__explanation-wrap">
+              <p class="recommend-product-card__explanation">${escapeHtml(product.llm_explanation || '')}</p>
+              <span class="recommend-product-card__explanation-source">${product.explanation_source === 'llm' ? 'Giải thích bởi AI' : 'Giải thích dự phòng'}</span>
+            </div>
             <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=${product.id}" class="recommend-product-card__link">Xem chi tiết</a>
           </div>
         </article>

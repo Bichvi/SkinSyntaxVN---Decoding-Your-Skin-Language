@@ -156,14 +156,43 @@ CREATE TABLE hoa_don (
     ma_hoa_don BIGSERIAL PRIMARY KEY,
     ma_kh INTEGER REFERENCES khach_hang(ma_kh),
     ngay_dat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ten_nguoi_nhan VARCHAR(255),
+    sdt_nguoi_nhan VARCHAR(30),
     tong_tien BIGINT DEFAULT 0,
+    tam_tinh BIGINT DEFAULT 0,
+    so_tien_giam BIGINT DEFAULT 0,
+    ma_giam_gia VARCHAR(50),
+    ma_voucher BIGINT,
+    phi_van_chuyen BIGINT DEFAULT 0,
     trang_thai VARCHAR(50) DEFAULT 'moi',
+    hinh_thuc_thanh_toan VARCHAR(100),
+    status_thanh_toan VARCHAR(50) DEFAULT 'chua_thanh_toan',
     dia_chi_giao_hang TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 13. Bảng CHI_TIET_HOA_DON (Order Detail)
+-- 13. Bảng VOUCHER (Discount Code)
+DROP TABLE IF EXISTS voucher CASCADE;
+CREATE TABLE voucher (
+    ma_voucher BIGSERIAL PRIMARY KEY,
+    ma_code VARCHAR(50) NOT NULL UNIQUE,
+    ten_voucher VARCHAR(255) NOT NULL,
+    mo_ta TEXT,
+    loai_giam VARCHAR(20) NOT NULL DEFAULT 'fixed',
+    gia_tri_giam BIGINT NOT NULL DEFAULT 0,
+    gia_tri_don_toi_thieu BIGINT NOT NULL DEFAULT 0,
+    giam_toi_da BIGINT,
+    so_luong INTEGER,
+    so_luong_da_dung INTEGER NOT NULL DEFAULT 0,
+    ngay_bat_dau TIMESTAMP,
+    ngay_ket_thuc TIMESTAMP,
+    trang_thai VARCHAR(20) NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14. Bảng CHI_TIET_HOA_DON (Order Detail)
 DROP TABLE IF EXISTS chi_tiet_hoa_don CASCADE;
 CREATE TABLE chi_tiet_hoa_don (
     id BIGSERIAL PRIMARY KEY,
@@ -176,7 +205,7 @@ CREATE TABLE chi_tiet_hoa_don (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 14. Bảng DANH_GIA (Rating/Review)
+-- 15. Bảng DANH_GIA (Rating/Review)
 DROP TABLE IF EXISTS danh_gia CASCADE;
 CREATE TABLE danh_gia (
     ma_danh_gia BIGSERIAL PRIMARY KEY,
@@ -187,7 +216,7 @@ CREATE TABLE danh_gia (
     ngay_danh_gia TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 15. Bảng LICH_SU_CHAT (Chat History)
+-- 16. Bảng LICH_SU_CHAT (Chat History)
 DROP TABLE IF EXISTS lich_su_chat CASCADE;
 CREATE TABLE lich_su_chat (
     ma_chat BIGSERIAL PRIMARY KEY,

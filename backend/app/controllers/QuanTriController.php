@@ -3,18 +3,21 @@
 require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/SanPham.php';
 require_once __DIR__ . '/../models/ThongKe.php';
+require_once __DIR__ . '/../models/Voucher.php';
 
 class QuanTriController {
     private PDO $pdo;
     private QuanTri $model;
     private SanPham $sanPhamModel;
     private ThongKe $thongKeModel;
+    private Voucher $voucherModel;
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
         $this->model = new QuanTri($pdo);
         $this->sanPhamModel = new SanPham($pdo);
         $this->thongKeModel = new ThongKe($pdo);
+        $this->voucherModel = new Voucher($pdo);
     }
 
     private function denyAccess(): void {
@@ -43,6 +46,13 @@ class QuanTriController {
         }
 
         $user = current_user() ?? [];
+        $staffId = (int)($user['ma_nv'] ?? 0);
+        if ($staffId > 0 && method_exists($this->model, 'isStaffAccountActive') && !$this->model->{'isStaffAccountActive'}($staffId)) {
+            unset($_SESSION['user'], $_SESSION['admin_notifications_seen']);
+            set_flash('error', 'Tài khoản nhân viên đã bị tạm khóa hoặc ngừng hoạt động.');
+            redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
         $role = current_role();
         if (!in_array($role, $roles, true)) {
             $this->denyAccess();
@@ -52,10 +62,27 @@ class QuanTriController {
     }
 
     private function renderAdmin(string $view, array $data = []): void {
+        $data['notificationCenter'] = $data['notificationCenter'] ?? $this->buildNotificationCenter();
         extract($data);
         require __DIR__ . '/../views/admin/layouts/header.php';
         require __DIR__ . '/../views/admin/' . $view . '.php';
         require __DIR__ . '/../views/admin/layouts/footer.php';
+    }
+
+    private function buildNotificationCenter(): array {
+        $center = $this->model->getNotificationCenterData();
+        $seen = $_SESSION['admin_notifications_seen'] ?? [];
+        $currentOrderMarker = (string)($center['latest_order_marker'] ?? '');
+        $currentChatMarker = (string)($center['latest_chat_marker'] ?? '');
+        $hasNewOrders = $currentOrderMarker !== '' && $currentOrderMarker !== (string)($seen['latest_order_marker'] ?? '');
+        $hasNewChats = $currentChatMarker !== '' && $currentChatMarker !== (string)($seen['latest_chat_marker'] ?? '');
+
+        $center['has_new_orders'] = $hasNewOrders;
+        $center['has_new_chats'] = $hasNewChats;
+        $center['unseen_count'] = ($hasNewOrders ? (int)($center['pending_orders_count'] ?? 0) : 0)
+            + ($hasNewChats ? (int)($center['pending_chats_count'] ?? 0) : 0);
+
+        return $center;
     }
 
     private function renderSite(string $view, array $data = []): void {
@@ -66,12 +93,69 @@ class QuanTriController {
         require __DIR__ . '/../views/layouts/footer.php';
     }
 
+    private function isAjaxRequest(): bool {
+        $requestedWith = strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        $accept = strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? ''));
+        return $requestedWith === 'xmlhttprequest' || str_contains($accept, 'application/json');
+    }
+
+    private function respondJson(array $payload, int $status = 200): void {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    private function buildStaffChatPayload(int $conversationId): array {
+        return [
+            'activeConversationId' => $conversationId,
+            'pendingConversations' => $this->model->listChatConversations(true),
+            'allConversations' => $this->model->listChatConversations(false),
+            'messages' => $conversationId > 0 ? $this->model->getChatMessages($conversationId) : [],
+        ];
+    }
+
     private function redirectBack(string $fallback): void {
         $target = trim((string)($_SERVER['HTTP_REFERER'] ?? ''));
         if ($target === '') {
             $target = BASE_URL . '/index.php?r=' . $fallback;
         }
         redirect($target);
+    }
+
+    private function handleProductUpload(string $inputName = 'hinh_anh'): ?string {
+        if (empty($_FILES[$inputName]) || !is_array($_FILES[$inputName])) {
+            return null;
+        }
+
+        $file = $_FILES[$inputName];
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        $ext = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        if (!in_array($ext, $allowed, true)) {
+            return null;
+        }
+
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/products';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
+        $fileName = uniqid('sp_', true) . '.' . $ext;
+        $target = $uploadDir . '/' . $fileName;
+
+        if (!move_uploaded_file((string)($file['tmp_name'] ?? ''), $target)) {
+            return null;
+        }
+
+        return $fileName;
     }
 
     public function adminDashboard(): void {
@@ -107,12 +191,6 @@ class QuanTriController {
 
     public function adminProductCreate(): void {
         $this->requireRole(['admin']);
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->renderAdmin('themSP', ['product' => [], 'error' => null]);
-            return;
-        }
-
         $controller = new AdminController($this->pdo);
         $controller->create();
     }
@@ -140,6 +218,47 @@ class QuanTriController {
         ]);
     }
 
+    public function adminVouchers(): void {
+        $this->requireRole(['admin']);
+        $q = trim((string)($_GET['q'] ?? ''));
+        $editId = max(0, (int)($_GET['edit'] ?? 0));
+        $this->renderAdmin('vouchers', [
+            'items' => $this->voucherModel->listVouchers($q),
+            'editing' => $editId > 0 ? $this->voucherModel->getVoucherById($editId) : null,
+            'q' => $q,
+        ]);
+    }
+
+    public function adminVoucherSave(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_vouchers');
+        }
+
+        $id = max(0, (int)($_POST['ma_voucher'] ?? 0));
+        $ok = $this->voucherModel->saveVoucher($_POST, $id > 0 ? $id : null);
+        $message = $ok
+            ? 'Đã lưu voucher.'
+            : ((string)($this->voucherModel->getLastErrorMessage() ?? 'Không thể lưu voucher.'));
+        set_flash($ok ? 'success' : 'error', $message);
+        redirect(BASE_URL . '/index.php?r=admin_vouchers');
+    }
+
+    public function adminVoucherDelete(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_vouchers');
+        }
+
+        $id = max(0, (int)($_POST['ma_voucher'] ?? 0));
+        $ok = $id > 0 ? $this->voucherModel->deleteVoucher($id) : false;
+        $message = $ok
+            ? 'Đã xóa voucher.'
+            : ((string)($this->voucherModel->getLastErrorMessage() ?? 'Không thể xóa voucher.'));
+        set_flash($ok ? 'success' : 'error', $message);
+        redirect(BASE_URL . '/index.php?r=admin_vouchers');
+    }
+
     public function adminCategorySave(): void {
         $this->requireRole(['admin']);
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -159,24 +278,30 @@ class QuanTriController {
         }
 
         $id = max(0, (int)($_POST['ma_danh_muc'] ?? 0));
-        $ok = $id > 0 ? $this->model->deleteCategory($id) : false;
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa danh mục.' : 'Không thể xóa danh mục.');
+        $deleteProducts = (int)($_POST['delete_products'] ?? 0) === 1;
+        $ok = $id > 0 ? $this->model->deleteCategory($id, $deleteProducts) : false;
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể xóa danh mục.'))
+            : 'Không thể xóa danh mục.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa danh mục.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_categories');
     }
 
     public function adminUsers(): void {
         $this->requireRole(['admin']);
         $q = trim((string)($_GET['q'] ?? ''));
+        $loaiKh = trim((string)($_GET['loai_kh'] ?? ''));
         $customerEditId = max(0, (int)($_GET['customer_edit'] ?? 0));
         $staffEditId = max(0, (int)($_GET['staff_edit'] ?? 0));
 
         $this->renderAdmin('users', [
-            'customers' => $this->model->listCustomers($q),
+            'customers' => $this->model->listCustomers($q, $loaiKh),
             'staffMembers' => $this->model->listStaff($q),
             'roles' => $this->model->listRoles(),
             'customerEditing' => $customerEditId > 0 ? $this->model->getCustomerById($customerEditId) : null,
             'staffEditing' => $staffEditId > 0 ? $this->model->getStaffById($staffEditId) : null,
             'q' => $q,
+            'loaiKh' => $loaiKh,
         ]);
     }
 
@@ -212,7 +337,10 @@ class QuanTriController {
 
         $id = max(0, (int)($_POST['ma_nv'] ?? 0));
         $ok = $this->model->saveStaff($_POST, $id > 0 ? $id : null);
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu thông tin nhân viên.' : 'Không thể lưu nhân viên.');
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể lưu nhân viên.'))
+            : 'Không thể lưu nhân viên.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu thông tin nhân viên.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_users');
     }
 
@@ -224,7 +352,34 @@ class QuanTriController {
 
         $id = max(0, (int)($_POST['ma_nv'] ?? 0));
         $ok = $id > 0 ? $this->model->deleteStaff($id) : false;
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã ngừng kích hoạt nhân viên.' : 'Không thể cập nhật nhân viên.');
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể cập nhật nhân viên.'))
+            : 'Không thể cập nhật nhân viên.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã ngừng kích hoạt nhân viên.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=admin_users');
+    }
+
+    public function adminStaffHardDelete(): void {
+        $user = $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_users');
+        }
+
+        $id = max(0, (int)($_POST['ma_nv'] ?? 0));
+        $currentStaffId = (int)($user['ma_nv'] ?? 0);
+
+        if ($currentStaffId > 0 && $currentStaffId === $id) {
+            set_flash('error', 'Không thể tự xóa chính tài khoản admin đang đăng nhập.');
+            redirect(BASE_URL . '/index.php?r=admin_users');
+        }
+
+        $ok = $id > 0 && method_exists($this->model, 'hardDeleteStaff')
+            ? $this->model->{'hardDeleteStaff'}($id)
+            : false;
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể xóa nhân viên.'))
+            : 'Không thể xóa nhân viên.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa nhân viên khỏi hệ thống.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_users');
     }
 
@@ -273,7 +428,7 @@ class QuanTriController {
             'summary' => $summary,
             'user' => $user,
             'pendingOrders' => $this->model->listOrders('', 'Cho xu ly'),
-            'conversations' => $this->model->listChatConversations(),
+            'conversations' => $this->model->listChatConversations(true, 20),
             'reviews' => $this->model->listReviews(''),
         ]);
     }
@@ -335,13 +490,23 @@ class QuanTriController {
             redirect(BASE_URL . '/index.php?r=staff_products');
         }
 
+        $brandOptions = $this->sanPhamModel->listBrandOptions();
+        $categoryOptions = $this->sanPhamModel->listCategoryOptions();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->renderAdmin('staff_product_edit', ['product' => $product, 'error' => null]);
+            $this->renderAdmin('staff_product_edit', [
+                'product' => $product,
+                'error' => null,
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+            ]);
             return;
         }
 
         $data = [
             'ten_san_pham' => trim((string)($_POST['ten_san_pham'] ?? '')),
+            'ma_thuong_hieu' => trim((string)($_POST['ma_thuong_hieu'] ?? '')),
+            'ma_danh_muc' => trim((string)($_POST['ma_danh_muc'] ?? '')),
             'gia_ban' => trim((string)($_POST['gia_ban'] ?? '')),
             'dung_tich' => trim((string)($_POST['dung_tich'] ?? '')),
             'loai_da' => trim((string)($_POST['loai_da'] ?? '')),
@@ -352,6 +517,13 @@ class QuanTriController {
             'link_hinh_anh' => trim((string)($_POST['link_hinh_anh'] ?? '')),
         ];
 
+        $uploadedFileName = $this->handleProductUpload('hinh_anh');
+        if ($uploadedFileName !== null) {
+            $data['link_hinh_anh'] = $uploadedFileName;
+        } elseif ($data['link_hinh_anh'] === '') {
+            $data['link_hinh_anh'] = (string)($product['link_hinh_anh'] ?? '');
+        }
+
         $ok = $this->sanPhamModel->adminUpdate($id, $data);
         if ($ok) {
             set_flash('success', 'Đã cập nhật thông tin sản phẩm.');
@@ -361,6 +533,8 @@ class QuanTriController {
         $this->renderAdmin('staff_product_edit', [
             'product' => array_merge($product, $data),
             'error' => 'Không thể cập nhật sản phẩm.',
+            'brandOptions' => $brandOptions,
+            'categoryOptions' => $categoryOptions,
         ]);
     }
 
@@ -380,9 +554,10 @@ class QuanTriController {
         }
 
         $reviewId = max(0, (int)($_POST['ma_danh_gia'] ?? 0));
+        $rowRef = trim((string)($_POST['row_ref'] ?? ''));
         $reply = trim((string)($_POST['phan_hoi'] ?? ''));
         $staffId = (int)($user['ma_nv'] ?? 0);
-        $ok = $this->model->replyReview($reviewId, $staffId, $reply);
+        $ok = $this->model->replyReview($reviewId, $staffId, $reply, $rowRef);
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã phản hồi đánh giá.' : 'Không thể phản hồi đánh giá.');
         redirect(BASE_URL . '/index.php?r=staff_reviews');
     }
@@ -390,10 +565,15 @@ class QuanTriController {
     public function staffChats(): void {
         $this->requireRole(['admin', 'nhanvien']);
         $conversationId = max(0, (int)($_GET['ma_kh'] ?? 0));
-        $this->renderAdmin('chats', [
-            'conversations' => $this->model->listChatConversations(),
-            'activeConversationId' => $conversationId,
-            'messages' => $conversationId > 0 ? $this->model->getChatMessages($conversationId) : [],
+        $this->renderAdmin('chats', $this->buildStaffChatPayload($conversationId));
+    }
+
+    public function staffChatState(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $conversationId = max(0, (int)($_GET['ma_kh'] ?? 0));
+        $this->respondJson([
+            'ok' => true,
+            'data' => $this->buildStaffChatPayload($conversationId),
         ]);
     }
 
@@ -407,29 +587,48 @@ class QuanTriController {
         $content = trim((string)($_POST['noi_dung'] ?? ''));
         $staffId = (int)($user['ma_nv'] ?? 0);
         $ok = $this->model->sendStaffChat($maKh, $staffId, $content);
+
+        if ($this->isAjaxRequest()) {
+            $this->respondJson([
+                'ok' => $ok,
+                'message' => $ok ? 'Đã gửi phản hồi cho khách hàng.' : 'Không thể gửi phản hồi.',
+                'data' => $this->buildStaffChatPayload($maKh),
+            ], $ok ? 200 : 422);
+        }
+
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã gửi phản hồi cho khách hàng.' : 'Không thể gửi phản hồi.');
         redirect(BASE_URL . '/index.php?r=staff_chats&ma_kh=' . $maKh);
     }
 
-    public function customerChat(): void {
-        $user = $this->requireRole(['admin', 'nhanvien', 'khach_hang']);
-        $customer = $this->model->getCustomerByEmail((string)($user['email'] ?? ''), (string)($user['ho_ten'] ?? ''));
-        $maKh = (int)($customer['ma_kh'] ?? 0);
+    public function markNotificationsSeen(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $center = $this->model->getNotificationCenterData();
+        $_SESSION['admin_notifications_seen'] = [
+            'latest_order_marker' => (string)($center['latest_order_marker'] ?? ''),
+            'latest_chat_marker' => (string)($center['latest_chat_marker'] ?? ''),
+            'seen_at' => date('c'),
+        ];
 
-        $this->renderSite('lichsuchat', [
-            'messages' => $maKh > 0 ? $this->model->getChatMessages($maKh) : [],
-        ]);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    public function customerChat(): void {
+        $this->requireRole(['khach_hang']);
+        set_flash('success', 'Khung chat hỗ trợ đã chuyển sang dạng icon nổi ở góc màn hình.');
+        redirect(BASE_URL . '/index.php?r=hoso');
     }
 
     public function customerChatSend(): void {
         $user = $this->requireRole(['khach_hang']);
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(BASE_URL . '/index.php?r=lichsuchat');
+            $this->redirectBack('lichsuchat');
         }
 
         $result = $this->model->sendCustomerChat((string)($user['email'] ?? ''), trim((string)($_POST['noi_dung'] ?? '')));
         set_flash(!empty($result['ok']) ? 'success' : 'error', (string)($result['message'] ?? 'Không thể gửi tin nhắn.'));
-        redirect(BASE_URL . '/index.php?r=lichsuchat');
+        $this->redirectBack('lichsuchat');
     }
 
     public function customerReviewSave(): void {
@@ -443,7 +642,7 @@ class QuanTriController {
         $content = trim((string)($_POST['noi_dung'] ?? ''));
         $result = $this->model->createReview((string)($user['email'] ?? ''), $productId, $stars, $content);
         set_flash(!empty($result['ok']) ? 'success' : 'error', (string)($result['message'] ?? 'Không thể gửi đánh giá.'));
-        redirect(BASE_URL . '/index.php?r=chitiet&id=' . urlencode($productId));
+        redirect(BASE_URL . '/index.php?r=chitiet&id=' . urlencode($productId) . '&tab=danh-gia');
     }
 
     public function customerOrderCancel(): void {

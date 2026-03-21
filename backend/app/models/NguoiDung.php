@@ -6,6 +6,26 @@ class NguoiDung {
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
+        $this->ensureAuthTables();
+    }
+
+    private function ensureAuthTables(): void {
+        $sql = "CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                    id BIGSERIAL PRIMARY KEY,
+                    email VARCHAR(255) NOT NULL,
+                    token_hash VARCHAR(255) NOT NULL,
+                    expires_at TIMESTAMP NOT NULL,
+                    used_at TIMESTAMP NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )";
+
+        try {
+            $this->pdo->exec($sql);
+            $this->pdo->exec('CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_email ON password_reset_tokens (LOWER(email))');
+            $this->pdo->exec('CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_hash ON password_reset_tokens (token_hash)');
+        } catch (Throwable $e) {
+            // Keep auth flow resilient if the DB user cannot alter schema.
+        }
     }
 
     public function timTheoEmail(string $email): ?array {
@@ -21,7 +41,6 @@ class NguoiDung {
                 FROM nhan_vien nv
                 LEFT JOIN vai_tro vt ON vt.ma_vai_tro = nv.ma_vai_tro
                 WHERE LOWER(nv.email) = LOWER(:email)
-                  AND nv.deleted_at IS NULL
                 LIMIT 1";
         $st = $this->pdo->prepare($sql);
         $st->execute(['email' => $email]);
@@ -34,11 +53,89 @@ class NguoiDung {
 
         $sql = "INSERT INTO nguoidung(ho_ten, email, mat_khau) VALUES (:ho_ten, :email, :mat_khau)";
         $st = $this->pdo->prepare($sql);
-        return $st->execute([
+        $ok = $st->execute([
             'ho_ten' => $hoTen,
             'email' => $email,
             'mat_khau' => $hash
         ]);
+
+        if ($ok) {
+            $this->ensureKhachHang($hoTen, $email);
+        }
+
+        return $ok;
+    }
+
+    public function findOrCreateCustomerAccount(string $hoTen, string $email): ?array {
+        $account = $this->timTheoEmail($email);
+        if (!$account) {
+            $created = $this->taoMoi($hoTen, $email, bin2hex(random_bytes(16)));
+            if (!$created) {
+                return null;
+            }
+            $account = $this->timTheoEmail($email);
+        }
+
+        if ($account) {
+            $this->ensureKhachHang($hoTen, $email);
+        }
+
+        return $account ?: null;
+    }
+
+    public function createPasswordResetToken(string $email, int $ttlMinutes = 30): ?string {
+        $account = $this->timTheoEmail($email);
+        if (!$account) {
+            return null;
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $hash = hash('sha256', $token);
+        $expiresAt = date('Y-m-d H:i:s', time() + max(5, $ttlMinutes) * 60);
+
+        $this->pdo->prepare('DELETE FROM password_reset_tokens WHERE LOWER(email) = LOWER(:email) OR expires_at < CURRENT_TIMESTAMP OR used_at IS NOT NULL')
+            ->execute([':email' => $email]);
+
+        $st = $this->pdo->prepare('INSERT INTO password_reset_tokens (email, token_hash, expires_at) VALUES (:email, :token_hash, :expires_at)');
+        $ok = $st->execute([
+            ':email' => $email,
+            ':token_hash' => $hash,
+            ':expires_at' => $expiresAt,
+        ]);
+
+        return $ok ? $token : null;
+    }
+
+    public function validatePasswordResetToken(string $token): ?array {
+        $hash = hash('sha256', trim($token));
+        $st = $this->pdo->prepare('SELECT * FROM password_reset_tokens WHERE token_hash = :token_hash AND used_at IS NULL AND expires_at >= CURRENT_TIMESTAMP ORDER BY id DESC LIMIT 1');
+        $st->execute([':token_hash' => $hash]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function consumePasswordResetToken(int $id): void {
+        $st = $this->pdo->prepare('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = :id');
+        $st->execute([':id' => $id]);
+    }
+
+    public function capNhatMatKhauTheoEmail(string $email, string $matKhauMoi): array {
+        $email = trim($email);
+        if ($email === '') {
+            return ['ok' => false, 'message' => 'Khong xac dinh duoc tai khoan.'];
+        }
+
+        $hashMoi = password_hash($matKhauMoi, PASSWORD_BCRYPT);
+        $sql = 'UPDATE nguoidung SET mat_khau = :mat_khau WHERE LOWER(email) = LOWER(:email)';
+        $st = $this->pdo->prepare($sql);
+        $ok = $st->execute([
+            ':mat_khau' => $hashMoi,
+            ':email' => $email,
+        ]);
+
+        return $ok
+            ? ['ok' => true, 'message' => 'Dat lai mat khau thanh cong.']
+            : ['ok' => false, 'message' => 'Khong the cap nhat mat khau.'];
     }
 
     public function ensureKhachHang(string $hoTen, string $email): bool {

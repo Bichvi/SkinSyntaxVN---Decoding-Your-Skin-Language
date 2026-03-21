@@ -8,6 +8,25 @@ foreach (($_SESSION['gio_hang'] ?? []) as $qty) {
   $cartCount += (int)$qty;
 }
 $quickCategories = array_slice(array_keys($menuCats), 0, 6);
+$googleEnabled = defined('GOOGLE_OAUTH_CLIENT_ID') && defined('GOOGLE_OAUTH_CLIENT_SECRET')
+  && trim((string)GOOGLE_OAUTH_CLIENT_ID) !== ''
+  && trim((string)GOOGLE_OAUTH_CLIENT_SECRET) !== '';
+$facebookEnabled = defined('FACEBOOK_OAUTH_CLIENT_ID') && defined('FACEBOOK_OAUTH_CLIENT_SECRET')
+  && trim((string)FACEBOOK_OAUTH_CLIENT_ID) !== ''
+  && trim((string)FACEBOOK_OAUTH_CLIENT_SECRET) !== '';
+$authModalMode = strtolower(trim((string)($_GET['auth'] ?? '')));
+$signupOld = $_SESSION['signup_old'] ?? [];
+$signupCaptchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
+$signupDayOptions = range(1, 31);
+$signupMonthOptions = range(1, 12);
+$signupCurrentYear = (int)date('Y');
+$signupYearOptions = range($signupCurrentYear, max(1950, $signupCurrentYear - 70));
+$hasSignupOld = !empty($signupOld);
+$socialLinks = [
+  ['label' => 'Facebook', 'icon' => 'fa-facebook-f', 'url' => 'https://www.facebook.com/conmeosuagaugauuu/'],
+  ['label' => 'YouTube', 'icon' => 'fa-youtube', 'url' => 'https://www.youtube.com/@conmeosuagaugauuu'],
+  ['label' => 'Instagram', 'icon' => 'fa-instagram', 'url' => 'https://www.instagram.com/bdefhijkp/'],
+];
 ?>
 <!doctype html>
 <html lang="vi">
@@ -25,16 +44,27 @@ $quickCategories = array_slice(array_keys($menuCats), 0, 6);
 <header class="site-header">
   <div class="promo-strip">
     <div class="container promo-strip__inner">
-      <span><i class="fas fa-truck-fast"></i> Giao diện chăm da thông minh cho routine cá nhân hóa</span>
-      <span><i class="fas fa-shield-heart"></i> Bộ lọc theo loại da, vấn đề da và ngân sách</span>
-      <span><i class="fas fa-sparkles"></i> Gợi ý sản phẩm theo khảo sát chỉ trong vài giây</span>
+      <span><i class="fas fa-shield-heart"></i> Mỹ phẩm chọn theo nhu cầu da, ngân sách và routine</span>
+      <span><i class="fas fa-badge-check"></i> Trải nghiệm mua sắm gọn, rõ và tập trung vào skincare</span>
+      <span><i class="fas fa-sparkles"></i> Gợi ý cá nhân hóa theo khảo sát SkinSyntax</span>
     </div>
   </div>
   <div class="utility-strip">
     <div class="container utility-strip__inner">
       <div class="utility-links">
-        <a href="<?= BASE_URL ?>/index.php?r=tatca">Tra cứu thành phần mỹ phẩm</a>
-        <a href="<?= BASE_URL ?>/index.php?r=goiy">Gợi ý routine AI</a>
+        <span class="utility-contact"><i class="fas fa-headset"></i> Hỗ trợ khách hàng: 1900 0000</span>
+        <a href="<?= BASE_URL ?>/index.php?r=tatca">Tra cứu sản phẩm</a>
+        <a href="<?= BASE_URL ?>/index.php?r=goiy">Routine AI</a>
+        <a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang">Hệ thống cửa hàng</a>
+        <a href="<?= BASE_URL ?>/index.php?r=bao_hanh">Bảo hành</a>
+        <a href="<?= BASE_URL ?>/index.php?r=ho_tro_khach_hang">Hỗ trợ khách hàng</a>
+      </div>
+      <div class="utility-links utility-links--social">
+        <?php foreach ($socialLinks as $social): ?>
+          <a class="utility-social-link" href="<?= h($social['url']) ?>" aria-label="<?= h($social['label']) ?>" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands <?= h($social['icon']) ?>"></i>
+          </a>
+        <?php endforeach; ?>
       </div>
       <div class="utility-links utility-links--account">
         <?php if (is_logged_in()): ?>
@@ -48,8 +78,8 @@ $quickCategories = array_slice(array_keys($menuCats), 0, 6);
           <?php endif; ?>
           <a href="<?= BASE_URL ?>/index.php?r=dangxuat">Đăng xuất</a>
         <?php else: ?>
-          <a href="<?= BASE_URL ?>/index.php?r=dangnhap">Đăng nhập</a>
-          <a href="<?= BASE_URL ?>/index.php?r=dangky">Đăng ký</a>
+          <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">Đăng nhập</a>
+          <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Đăng ký</a>
         <?php endif; ?>
       </div>
     </div>
@@ -84,10 +114,17 @@ $quickCategories = array_slice(array_keys($menuCats), 0, 6);
           </span>
         </a>
 
-        <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="header-icon-link" title="Tài khoản">
-          <i class="fas fa-user"></i>
-          <span><?= h($currentRole === 'admin' ? 'Quản trị' : ($currentRole === 'nhanvien' ? 'Nhân viên' : 'Tài khoản')) ?></span>
-        </a>
+        <?php if (is_logged_in()): ?>
+          <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="header-icon-link" title="Tài khoản">
+            <i class="fas fa-user"></i>
+            <span><?= h($currentRole === 'admin' ? 'Quản trị' : ($currentRole === 'nhanvien' ? 'Nhân viên' : 'Tài khoản')) ?></span>
+          </a>
+        <?php else: ?>
+          <a href="#" class="header-icon-link" title="Đăng nhập" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">
+            <i class="fas fa-user"></i>
+            <span>Đăng nhập</span>
+          </a>
+        <?php endif; ?>
 
         <a href="<?= BASE_URL ?>/index.php?r=giohang" class="header-icon-link header-icon-link--cart" title="Giỏ hàng">
           <i class="fas fa-bag-shopping"></i>
@@ -158,11 +195,750 @@ $quickCategories = array_slice(array_keys($menuCats), 0, 6);
 
       <a class="header-deal-pill" href="<?= BASE_URL ?>/index.php?r=goiy">
         <i class="fas fa-gift"></i>
-        <span>Khảo sát da để mở gợi ý cá nhân</span>
+        <span>Khảo sát da để mở routine cá nhân</span>
       </a>
     </div>
   </div>
 </header>
+
+<?php if (!is_logged_in()): ?>
+  <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content auth-modal-shell border-0 overflow-hidden">
+        <button type="button" class="auth-modal-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="fas fa-xmark"></i>
+        </button>
+        <div class="modal-body p-0">
+          <div class="auth-modal-body">
+                <div class="auth-modal-panel <?= $authModalMode === 'forgot' ? 'd-none' : '' ?>" data-auth-panel="login">
+                  <div class="auth-modal-title">Đăng nhập</div>
+                  <div class="auth-modal-subtitle">Đăng nhập với mạng xã hội hoặc tài khoản email của bạn.</div>
+
+                  <div class="auth-modal-socials">
+                    <a class="auth-social-btn auth-social-btn--facebook <?= $facebookEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= BASE_URL ?>/index.php?r=auth_social&provider=facebook">
+                      <i class="fa-brands fa-facebook-f"></i>
+                      <span>Facebook</span>
+                    </a>
+                    <a class="auth-social-btn <?= $googleEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= BASE_URL ?>/index.php?r=auth_social&provider=google">
+                      <i class="fa-brands fa-google"></i>
+                      <span>Đăng nhập bằng Google</span>
+                    </a>
+                  </div>
+                  <div class="auth-modal-divider"><span>Hoặc đăng nhập với SkinSyntax</span></div>
+
+                  <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangnhap">
+                    <div class="mb-3">
+                      <input class="form-control auth-modal-input" type="email" name="email" placeholder="Nhập email hoặc số điện thoại" required>
+                    </div>
+                    <div class="mb-3 auth-register-field auth-password-field">
+                      <input class="form-control auth-modal-input" type="password" id="authLoginPassword" name="mat_khau" placeholder="Nhập password" required>
+                      <button class="auth-password-toggle" type="button" data-password-toggle data-target="authLoginPassword" aria-label="Hiện hoặc ẩn mật khẩu">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </div>
+                    <div class="auth-modal-row">
+                      <label class="form-check auth-modal-check">
+                        <input class="form-check-input" type="checkbox" name="remember_login" value="1">
+                        <span>Nhớ mật khẩu</span>
+                      </label>
+                      <a href="#" class="auth-modal-link" data-auth-switch="forgot">Quên mật khẩu</a>
+                    </div>
+                    <button class="btn btn-brand auth-modal-submit" type="submit">Đăng nhập</button>
+                  </form>
+
+                  <div class="text-center mt-3 small">
+                    Bạn chưa có tài khoản?
+                    <a class="link-more" href="#" data-auth-switch="register">Đăng ký ngay</a>
+                  </div>
+                </div>
+
+                <div class="auth-modal-panel <?= $authModalMode === 'register' ? '' : 'd-none' ?>" data-auth-panel="register">
+                  <div class="auth-modal-title">Đăng ký tài khoản</div>
+                  <div class="auth-modal-subtitle">Tạo tài khoản SkinSyntax để lưu đơn hàng, routine và nhận gợi ý cá nhân hóa.</div>
+
+                  <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="authRegisterForm" novalidate>
+                    <div class="mb-3 auth-register-field">
+                      <input class="form-control auth-modal-input" type="email" name="email" value="<?= h((string)($signupOld['email'] ?? '')) ?>" placeholder="Nhập email hoặc số điện thoại" required>
+                      <i class="fa-regular fa-envelope auth-register-icon"></i>
+                    </div>
+
+                    <div class="auth-register-inline mb-2">
+                      <input class="form-control auth-modal-input" type="text" id="authRegisterCaptchaInput" placeholder="Nhập captcha" autocomplete="off" required>
+                      <div class="auth-register-captcha" id="authRegisterCaptchaCode" data-captcha="<?= h(strtolower($signupCaptchaSeed)) ?>"><?= h(strtolower($signupCaptchaSeed)) ?></div>
+                    </div>
+
+                    <div class="auth-register-inline auth-register-inline--otp">
+                      <input class="form-control auth-modal-input" type="text" id="authRegisterOtpInput" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" required>
+                      <button class="auth-register-otp-button" id="authRegisterOtpButton" type="button">lấy mã</button>
+                    </div>
+                    <a href="<?= BASE_URL ?>/index.php?r=huong_dan_nhan_otp" class="auth-modal-link auth-register-helper-link">Xem hướng dẫn nhận OTP</a>
+                    <div class="auth-register-note" id="authRegisterOtpHint">OTP demo sẽ được tạo local để mô phỏng trải nghiệm popup.</div>
+
+                    <div class="mb-2 auth-register-field auth-password-field">
+                      <input class="form-control auth-modal-input" type="password" id="authRegisterPassword" name="mat_khau" placeholder="Nhập mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" autocomplete="new-password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$" required>
+                      <button class="auth-password-toggle" type="button" data-password-toggle data-target="authRegisterPassword" aria-label="Hiện hoặc ẩn mật khẩu">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </div>
+                    <div class="auth-register-note auth-register-note--password" id="authRegisterPasswordHint">Mật khẩu phải có chữ in hoa, chữ in thường, số và ký tự đặc biệt.</div>
+
+                    <div class="mb-3 auth-register-field auth-password-field">
+                      <input class="form-control auth-modal-input" type="password" id="authRegisterPasswordConfirm" name="mat_khau2" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" autocomplete="new-password" required>
+                      <button class="auth-password-toggle" type="button" data-password-toggle data-target="authRegisterPasswordConfirm" aria-label="Hiện hoặc ẩn mật khẩu">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </div>
+
+                    <div class="mb-3 auth-register-field">
+                      <input class="form-control auth-modal-input" type="text" name="ho_ten" value="<?= h((string)($signupOld['ho_ten'] ?? '')) ?>" placeholder="Họ tên" required>
+                      <i class="fa-solid fa-user auth-register-icon"></i>
+                    </div>
+
+                    <div class="auth-register-gender">
+                      <label class="form-check auth-register-gender__item">
+                        <input class="form-check-input" type="radio" name="gioi_tinh" value="Khong xac dinh" <?= (($signupOld['gioi_tinh'] ?? '') === 'Khong xac dinh' || empty($signupOld['gioi_tinh'])) ? 'checked' : '' ?>>
+                        <span>Không xác định</span>
+                      </label>
+                      <label class="form-check auth-register-gender__item">
+                        <input class="form-check-input" type="radio" name="gioi_tinh" value="Nam" <?= (($signupOld['gioi_tinh'] ?? '') === 'Nam') ? 'checked' : '' ?>>
+                        <span>Nam</span>
+                      </label>
+                      <label class="form-check auth-register-gender__item">
+                        <input class="form-check-input" type="radio" name="gioi_tinh" value="Nữ" <?= (($signupOld['gioi_tinh'] ?? '') === 'Nữ') ? 'checked' : '' ?>>
+                        <span>Nữ</span>
+                      </label>
+                    </div>
+
+                    <div class="auth-register-birthday">
+                      <select class="form-select auth-modal-input" name="ngay_sinh">
+                        <option value="">Ngày</option>
+                        <?php foreach ($signupDayOptions as $day): ?>
+                          <option value="<?= $day ?>" <?= ((string)($signupOld['ngay_sinh'] ?? '') === (string)$day) ? 'selected' : '' ?>><?= $day ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <select class="form-select auth-modal-input" name="thang_sinh">
+                        <option value="">Tháng</option>
+                        <?php foreach ($signupMonthOptions as $month): ?>
+                          <option value="<?= $month ?>" <?= ((string)($signupOld['thang_sinh'] ?? '') === (string)$month) ? 'selected' : '' ?>><?= $month ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <select class="form-select auth-modal-input" name="nam_sinh">
+                        <option value="">Năm</option>
+                        <?php foreach ($signupYearOptions as $year): ?>
+                          <option value="<?= $year ?>" <?= ((string)($signupOld['nam_sinh'] ?? '') === (string)$year) ? 'selected' : '' ?>><?= $year ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+
+                    <div class="auth-register-checks">
+                      <label class="form-check auth-register-check">
+                        <input class="form-check-input" type="checkbox" name="terms_agree" value="1" <?= (($signupOld['terms_agree'] ?? '') === '1') ? 'checked' : '' ?> required>
+                        <span>Tôi đã đọc và đồng ý với <a href="<?= BASE_URL ?>/index.php?r=dieu_kien_giao_dich" class="auth-modal-link">Điều kiện giao dịch chung</a> và <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_bao_mat" class="auth-modal-link">Chính sách bảo mật thông tin</a></span>
+                      </label>
+                      <label class="form-check auth-register-check">
+                        <input class="form-check-input" type="checkbox" name="email_opt_in" value="1" <?= !isset($signupOld['email_opt_in']) || ($signupOld['email_opt_in'] ?? '') === '1' ? 'checked' : '' ?>>
+                        <span>Nhận thông tin khuyến mãi qua e-mail</span>
+                      </label>
+                      <label class="form-check auth-register-check">
+                        <input class="form-check-input" type="checkbox" name="privacy_consent" value="1" <?= (($signupOld['privacy_consent'] ?? '') === '1') ? 'checked' : '' ?> required>
+                        <span>Tôi đồng ý với <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_xu_ly_du_lieu" class="auth-modal-link">chính sách xử lý dữ liệu cá nhân</a> của SkinSyntax</span>
+                      </label>
+                    </div>
+
+                    <button class="btn btn-brand auth-modal-submit" type="submit">Đăng ký</button>
+                  </form>
+
+                  <div class="text-center mt-3 small">
+                    Bạn đã có tài khoản?
+                    <a class="link-more" href="#" data-auth-switch="login">Đăng nhập</a>
+                  </div>
+                </div>
+
+                <div class="auth-modal-panel <?= $authModalMode === 'forgot' ? '' : 'd-none' ?>" data-auth-panel="forgot">
+                  <div class="auth-modal-title">Quên mật khẩu</div>
+                  <div class="auth-modal-subtitle">Nhập email đã đăng ký. Hệ thống sẽ gửi liên kết đặt lại mật khẩu về hộp thư của bạn.</div>
+                  <form method="post" action="<?= BASE_URL ?>/index.php?r=gui_lien_ket_dat_lai">
+                    <div class="mb-3">
+                      <input class="form-control auth-modal-input" type="email" name="email" placeholder="Nhập email của bạn" required>
+                    </div>
+                    <button class="btn btn-brand auth-modal-submit" type="submit">Gửi liên kết đặt lại</button>
+                  </form>
+                  <div class="text-center mt-3 small">
+                    <a href="#" class="auth-modal-link" data-auth-switch="login">Quay lại đăng nhập</a>
+                  </div>
+                </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .auth-modal-shell {
+      max-width: 620px;
+      margin: 0 auto;
+      border-radius: 28px;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
+    }
+
+    .auth-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.16);
+      color: #fff;
+      z-index: 2;
+    }
+
+    .auth-modal-body {
+      padding: 32px 28px 28px;
+      background: #fff;
+    }
+
+    .auth-modal-title {
+      font-size: 1.95rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+
+    .auth-modal-subtitle {
+      color: #64748b;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    .auth-modal-socials {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .auth-social-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 52px;
+      border-radius: 14px;
+      font-weight: 700;
+      border: 1px solid #d7deea;
+      background: #fff;
+      color: #0f172a;
+    }
+
+    .auth-social-btn--facebook {
+      background: #32539f;
+      border-color: #32539f;
+      color: #fff;
+    }
+
+    .auth-social-btn--disabled {
+      opacity: .68;
+    }
+
+    .auth-config-hint {
+      margin-top: 10px;
+      font-size: 0.86rem;
+      color: #64748b;
+    }
+
+    .auth-modal-divider {
+      position: relative;
+      margin: 20px 0;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .auth-modal-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .auth-modal-divider span {
+      position: relative;
+      background: #fff;
+      padding: 0 12px;
+    }
+
+    .auth-modal-input {
+      border-radius: 999px;
+      min-height: 54px;
+      padding-left: 18px;
+      background: #f8fafc;
+      border-color: #e4e7ec;
+    }
+
+    .auth-modal-input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 .2rem rgba(15,107,62,.12);
+    }
+
+    .auth-modal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .auth-modal-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #334155;
+      font-size: 0.95rem;
+    }
+
+    .auth-modal-link {
+      color: #0f6b3e;
+      font-weight: 700;
+    }
+
+    .auth-modal-submit {
+      width: 100%;
+      min-height: 54px;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .auth-register-field {
+      position: relative;
+    }
+
+    .auth-register-icon {
+      position: absolute;
+      top: 50%;
+      right: 18px;
+      transform: translateY(-50%);
+      color: #64748b;
+      pointer-events: none;
+    }
+
+    .auth-password-field .auth-modal-input {
+      padding-right: 52px;
+    }
+
+    .auth-password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: #475569;
+      z-index: 1;
+    }
+
+    .auth-password-toggle:hover {
+      background: rgba(148, 163, 184, 0.14);
+    }
+
+    .auth-register-inline {
+      display: grid;
+      grid-template-columns: 1fr 118px;
+      gap: 0;
+      margin-bottom: 8px;
+    }
+
+    .auth-register-inline .auth-modal-input {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .auth-register-captcha,
+    .auth-register-otp-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 54px;
+      padding: 0 14px;
+      font-weight: 800;
+    }
+
+    .auth-register-captcha {
+      background: #2f7b54;
+      color: #fff;
+      letter-spacing: .28em;
+      text-transform: lowercase;
+    }
+
+    .auth-register-otp-button {
+      border: 0;
+      background: #d1d5db;
+      color: #475569;
+    }
+
+    .auth-register-helper-link {
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
+    .auth-register-note {
+      margin-bottom: 14px;
+      color: #64748b;
+      font-size: .86rem;
+      line-height: 1.5;
+    }
+
+    .auth-register-note--password {
+      margin-top: 0;
+    }
+
+    .auth-register-note--error {
+      color: #b42318;
+    }
+
+    .auth-register-gender {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-bottom: 16px;
+      color: #334155;
+    }
+
+    .auth-register-gender__item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .96rem;
+    }
+
+    .auth-register-birthday {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .auth-register-birthday .auth-modal-input {
+      border-radius: 14px;
+      padding-right: 14px;
+    }
+
+    .auth-register-checks {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .auth-register-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: #334155;
+      font-size: .92rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 991.98px) {
+      .auth-modal-body {
+        padding: 28px 22px 24px;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .auth-modal-socials {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-modal-title {
+        font-size: 1.6rem;
+      }
+
+      .auth-modal-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .auth-register-inline,
+      .auth-register-birthday {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-register-inline .auth-modal-input {
+        border-radius: 999px;
+      }
+    }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var authModalElement = document.getElementById('authModal');
+      if (!authModalElement || typeof bootstrap === 'undefined') {
+        return;
+      }
+
+      var authModal = new bootstrap.Modal(authModalElement);
+      var panels = authModalElement.querySelectorAll('[data-auth-panel]');
+      var switchers = authModalElement.querySelectorAll('[data-auth-switch]');
+      var triggers = document.querySelectorAll('[data-auth-tab]');
+      var initialMode = <?= json_encode($authModalMode) ?>;
+      var registerForm = document.getElementById('authRegisterForm');
+      var registerCaptchaElement = document.getElementById('authRegisterCaptchaCode');
+      var registerCaptchaInput = document.getElementById('authRegisterCaptchaInput');
+      var registerOtpInput = document.getElementById('authRegisterOtpInput');
+      var registerOtpButton = document.getElementById('authRegisterOtpButton');
+      var registerOtpHint = document.getElementById('authRegisterOtpHint');
+      var registerPasswordInput = document.getElementById('authRegisterPassword');
+      var registerPasswordConfirmInput = document.getElementById('authRegisterPasswordConfirm');
+      var registerPasswordHint = document.getElementById('authRegisterPasswordHint');
+      var passwordToggles = authModalElement.querySelectorAll('[data-password-toggle]');
+      var registerDraftKey = 'skinsyntaxRegisterDraft';
+      var registerPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,32}$/;
+      var generatedRegisterOtp = '';
+      var hasServerRegisterState = <?= $hasSignupOld ? 'true' : 'false' ?>;
+
+      var persistRegisterDraft = function () {
+        if (!registerForm || typeof sessionStorage === 'undefined') {
+          return;
+        }
+
+        var draft = {
+          fields: {},
+          generatedOtp: generatedRegisterOtp,
+          otpHint: registerOtpHint ? registerOtpHint.textContent : '',
+          captcha: registerCaptchaElement ? (registerCaptchaElement.getAttribute('data-captcha') || '') : ''
+        };
+
+        Array.prototype.forEach.call(registerForm.elements, function (field) {
+          if (!field || field.type === 'submit' || field.type === 'button' || field.type === 'fieldset') {
+            return;
+          }
+
+          var fieldKey = field.name || field.id;
+          if (!fieldKey) {
+            return;
+          }
+
+          if (field.type === 'checkbox') {
+            draft.fields[fieldKey] = field.checked ? '1' : '0';
+            return;
+          }
+
+          if (field.type === 'radio') {
+            if (field.checked) {
+              draft.fields[field.name] = field.value;
+            }
+            return;
+          }
+
+          draft.fields[fieldKey] = field.value;
+        });
+
+        sessionStorage.setItem(registerDraftKey, JSON.stringify(draft));
+      };
+
+      var restoreRegisterDraft = function () {
+        if (!registerForm || typeof sessionStorage === 'undefined') {
+          return;
+        }
+
+        var rawDraft = sessionStorage.getItem(registerDraftKey);
+        if (!rawDraft) {
+          return;
+        }
+
+        try {
+          var draft = JSON.parse(rawDraft);
+          var fields = draft.fields || {};
+
+          if (registerCaptchaElement && typeof draft.captcha === 'string' && draft.captcha !== '') {
+            registerCaptchaElement.setAttribute('data-captcha', draft.captcha);
+            registerCaptchaElement.textContent = draft.captcha;
+          }
+
+          if (typeof draft.generatedOtp === 'string') {
+            generatedRegisterOtp = draft.generatedOtp;
+          }
+
+          if (registerOtpHint && typeof draft.otpHint === 'string' && draft.otpHint !== '') {
+            registerOtpHint.textContent = draft.otpHint;
+          }
+
+          Array.prototype.forEach.call(registerForm.elements, function (field) {
+            if (!field || field.type === 'submit' || field.type === 'button' || field.type === 'fieldset') {
+              return;
+            }
+
+            var fieldKey = field.name || field.id;
+            if (!fieldKey || typeof fields[fieldKey] === 'undefined') {
+              return;
+            }
+
+            if (field.type === 'checkbox') {
+              field.checked = fields[fieldKey] === '1';
+              return;
+            }
+
+            if (field.type === 'radio') {
+              field.checked = fields[field.name] === field.value;
+              return;
+            }
+
+            field.value = fields[fieldKey];
+          });
+        } catch (error) {
+          sessionStorage.removeItem(registerDraftKey);
+        }
+      };
+
+      var syncPasswordHint = function () {
+        if (!registerPasswordInput || !registerPasswordHint) {
+          return true;
+        }
+
+        var passwordValue = registerPasswordInput.value || '';
+        var isValid = passwordValue === '' || registerPasswordPattern.test(passwordValue);
+        registerPasswordInput.setCustomValidity(isValid ? '' : 'Mật khẩu chưa đủ mạnh.');
+
+        if (passwordValue === '') {
+          registerPasswordHint.textContent = 'Mật khẩu phải có chữ in hoa, chữ in thường, số và ký tự đặc biệt.';
+          registerPasswordHint.classList.remove('auth-register-note--error');
+          return true;
+        }
+
+        if (!isValid) {
+          registerPasswordHint.textContent = 'Mật khẩu cần 8-32 ký tự và phải có chữ in hoa, chữ in thường, số, ký tự đặc biệt.';
+          registerPasswordHint.classList.add('auth-register-note--error');
+          return false;
+        }
+
+        registerPasswordHint.textContent = 'Mật khẩu đạt yêu cầu bảo mật.';
+        registerPasswordHint.classList.remove('auth-register-note--error');
+        return true;
+      };
+
+      var syncPasswordConfirmation = function () {
+        if (!registerPasswordInput || !registerPasswordConfirmInput) {
+          return true;
+        }
+
+        var matches = registerPasswordConfirmInput.value === '' || registerPasswordInput.value === registerPasswordConfirmInput.value;
+        registerPasswordConfirmInput.setCustomValidity(matches ? '' : 'Mật khẩu nhập lại không khớp.');
+        return matches;
+      };
+
+      var setPanel = function (mode) {
+        panels.forEach(function (panel) {
+          panel.classList.toggle('d-none', panel.getAttribute('data-auth-panel') !== mode);
+        });
+      };
+
+      switchers.forEach(function (link) {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          setPanel(link.getAttribute('data-auth-switch'));
+        });
+      });
+
+      triggers.forEach(function (trigger) {
+        trigger.addEventListener('click', function () {
+          setPanel(trigger.getAttribute('data-auth-tab') || 'login');
+        });
+      });
+
+      passwordToggles.forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+          var targetId = toggle.getAttribute('data-target');
+          var targetInput = targetId ? document.getElementById(targetId) : null;
+          var icon = toggle.querySelector('i');
+
+          if (!targetInput) {
+            return;
+          }
+
+          var nextType = targetInput.getAttribute('type') === 'password' ? 'text' : 'password';
+          targetInput.setAttribute('type', nextType);
+
+          if (icon) {
+            icon.classList.toggle('fa-eye', nextType === 'password');
+            icon.classList.toggle('fa-eye-slash', nextType !== 'password');
+          }
+        });
+      });
+
+      if (registerOtpButton && registerOtpInput && registerOtpHint) {
+        registerOtpButton.addEventListener('click', function () {
+          generatedRegisterOtp = String(Math.floor(100000 + Math.random() * 900000));
+          registerOtpHint.textContent = 'Mã OTP demo của phiên này là: ' + generatedRegisterOtp + '. Nhập mã này để tiếp tục đăng ký.';
+          persistRegisterDraft();
+        });
+      }
+
+      if (registerForm) {
+        registerForm.addEventListener('input', function () {
+          syncPasswordHint();
+          syncPasswordConfirmation();
+          persistRegisterDraft();
+        });
+
+        registerForm.addEventListener('change', function () {
+          syncPasswordHint();
+          syncPasswordConfirmation();
+          persistRegisterDraft();
+        });
+      }
+
+      if (registerForm && registerCaptchaElement && registerCaptchaInput && registerOtpInput && registerOtpHint) {
+        registerForm.addEventListener('submit', function (event) {
+          syncPasswordHint();
+          syncPasswordConfirmation();
+
+          if (!registerForm.reportValidity()) {
+            event.preventDefault();
+            persistRegisterDraft();
+            return;
+          }
+
+          var captchaValue = (registerCaptchaInput.value || '').trim().toLowerCase();
+          var expectedCaptcha = (registerCaptchaElement.getAttribute('data-captcha') || '').trim().toLowerCase();
+          var otpValue = (registerOtpInput.value || '').trim();
+
+          if (captchaValue === '' || captchaValue !== expectedCaptcha) {
+            event.preventDefault();
+            registerOtpHint.textContent = 'Captcha chưa đúng. Vui lòng nhập lại đúng 4 ký tự hiển thị.';
+            registerCaptchaInput.focus();
+            persistRegisterDraft();
+            return;
+          }
+
+          if (generatedRegisterOtp === '' || otpValue !== generatedRegisterOtp) {
+            event.preventDefault();
+            registerOtpHint.textContent = 'Mã OTP chưa đúng hoặc chưa được tạo. Bấm "lấy mã" để nhận OTP demo.';
+            registerOtpInput.focus();
+            persistRegisterDraft();
+            return;
+          }
+
+          persistRegisterDraft();
+        });
+      }
+
+      restoreRegisterDraft();
+      syncPasswordHint();
+      syncPasswordConfirmation();
+
+      if (registerForm && hasServerRegisterState && typeof sessionStorage !== 'undefined' && !sessionStorage.getItem(registerDraftKey)) {
+        persistRegisterDraft();
+      }
+
+      if (initialMode === 'login' || initialMode === 'forgot' || initialMode === 'register') {
+        setPanel(initialMode);
+        authModal.show();
+      }
+    });
+  </script>
+<?php endif; ?>
 
 <div class="container mt-3 flash-stack">
   <?php if ($m = get_flash('success')): ?>

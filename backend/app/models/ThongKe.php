@@ -33,16 +33,70 @@ class ThongKe {
         return $exists;
     }
 
-    private function getUserDateColumn(): ?string {
+    private function hasTable(string $table): bool {
+        $key = $table . '.__table__';
+        if (array_key_exists($key, $this->columnCache)) {
+            return $this->columnCache[$key];
+        }
+
+        $sql = "SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = current_schema()
+                  AND table_name = :table
+                LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':table' => $table]);
+
+        $exists = (bool)$stmt->fetchColumn();
+        $this->columnCache[$key] = $exists;
+        return $exists;
+    }
+
+    private function getUserDateExpr(): ?string {
+        $parts = [];
+
         if ($this->hasColumn('nguoidung', 'ngay_tao')) {
-            return 'ngay_tao';
+            $parts[] = 'nd.ngay_tao';
         }
 
         if ($this->hasColumn('nguoidung', 'created_at')) {
-            return 'created_at';
+            $parts[] = 'nd.created_at';
         }
 
-        return null;
+        if ($this->hasColumn('khach_hang', 'created_at')) {
+            $parts[] = 'kh.created_at';
+        }
+
+        if (empty($parts)) {
+            return null;
+        }
+
+        return 'COALESCE(' . implode(', ', $parts) . ')';
+    }
+
+    private function getUserRoleExpr(): string {
+        if ($this->hasColumn('nguoidung', 'vai_tro')) {
+            return 'nd.vai_tro';
+        }
+
+        if ($this->hasColumn('nguoidung', 'role')) {
+            return 'nd.role';
+        }
+
+        if ($this->hasColumn('nguoidung', 'quyen')) {
+            return 'nd.quyen';
+        }
+
+        return "'khach_hang'";
+    }
+
+    private function getUserJoinClause(): string {
+        if ($this->hasTable('khach_hang') && $this->hasColumn('khach_hang', 'email')) {
+            return 'LEFT JOIN khach_hang kh ON LOWER(kh.email) = LOWER(nd.email)';
+        }
+
+        return '';
     }
 
     private function getProductOrderExpr(): string {
@@ -125,17 +179,29 @@ class ThongKe {
 
     public function getNguoiDungMoi(int $limit = 5): array {
         $limit = max(1, min(50, $limit));
-        $dateColumn = $this->getUserDateColumn();
+        $dateExpr = $this->getUserDateExpr();
+        $roleExpr = $this->getUserRoleExpr();
+        $joinClause = $this->getUserJoinClause();
 
-        if ($dateColumn === null) {
-            $sql = "SELECT id, ho_ten, email, NULL::timestamp AS ngay_dang_ky, vai_tro
-                    FROM nguoidung
-                    ORDER BY id DESC
+        if ($dateExpr === null) {
+            $sql = "SELECT nd.id,
+                           nd.ho_ten,
+                           nd.email,
+                           NULL::timestamp AS ngay_dang_ky,
+                           {$roleExpr} AS vai_tro
+                    FROM nguoidung nd
+                    {$joinClause}
+                    ORDER BY nd.id DESC
                     LIMIT :limit";
         } else {
-            $sql = "SELECT id, ho_ten, email, {$dateColumn} AS ngay_dang_ky, vai_tro
-                    FROM nguoidung
-                    ORDER BY {$dateColumn} DESC NULLS LAST, id DESC
+            $sql = "SELECT nd.id,
+                           nd.ho_ten,
+                           nd.email,
+                           {$dateExpr} AS ngay_dang_ky,
+                           {$roleExpr} AS vai_tro
+                    FROM nguoidung nd
+                    {$joinClause}
+                    ORDER BY {$dateExpr} DESC NULLS LAST, nd.id DESC
                     LIMIT :limit";
         }
 

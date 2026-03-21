@@ -1,143 +1,269 @@
 <?php
-// backend/app/views/home.php
+$latest = isset($latest) && is_array($latest) ? $latest : [];
+$cats = isset($cats) && is_array($cats) ? $cats : [];
+
+$heroProducts = array_slice($latest, 0, 4);
+$newProducts = array_slice($latest, 4, 4);
+if (count($newProducts) < 4) {
+  $newProducts = $latest;
+}
+
+$shortcutCards = [
+  ['icon' => 'fa-wand-magic-sparkles', 'title' => 'Routine AI', 'desc' => 'Nhận gợi ý theo hồ sơ da đã lưu.', 'url' => BASE_URL . '/index.php?r=goiy'],
+  ['icon' => 'fa-pump-soap', 'title' => 'Routine Làm Sạch', 'desc' => 'Mở nhanh nhóm sữa rửa mặt và tẩy trang.', 'url' => BASE_URL . '/index.php?r=tatca&q=' . urlencode('Làm sạch')],
+  ['icon' => 'fa-sun', 'title' => 'Chống Nắng', 'desc' => 'Đi thẳng vào nhóm bảo vệ da mỗi ngày.', 'url' => BASE_URL . '/index.php?r=tatca&q=' . urlencode('Chống nắng')],
+  ['icon' => 'fa-droplet', 'title' => 'Phục Hồi Ẩm', 'desc' => 'Chọn nhanh sản phẩm khóa ẩm, làm dịu.', 'url' => BASE_URL . '/index.php?r=tatca&q=' . urlencode('Dưỡng ẩm')],
+  ['icon' => 'fa-flask-vial', 'title' => 'Đặc Trị', 'desc' => 'Tập trung vào mụn, thâm và bề mặt da.', 'url' => BASE_URL . '/index.php?r=tatca&q=' . urlencode('Đặc trị')],
+];
+
+$brandNames = [];
+foreach ($latest as $item) {
+  $brand = trim((string)($item['thuong_hieu'] ?? ''));
+  if ($brand !== '' && !in_array($brand, $brandNames, true)) {
+    $brandNames[] = $brand;
+  }
+  if (count($brandNames) >= 6) {
+    break;
+  }
+}
+
+$skinSyntaxSignals = [
+  ['number' => 'AI', 'label' => 'Routine & giải thích sản phẩm'],
+  ['number' => '2H', 'label' => 'Từ khám phá sang checkout gọn'],
+  ['number' => '1 hồ sơ', 'label' => 'Đồng bộ khảo sát và lịch sử mua'],
+];
 ?>
-<div class="container mt-4 home-shell">
-  <section class="home-hero-grid">
-    <div class="hero hero--beauty" style="background-image: url('https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=1200&q=80');">
-      <div class="hero-overlay hero-overlay--beauty">
-        <span class="hero-kicker">Beauty e-commerce experience</span>
-        <h1 class="hero-title">Khám phá routine, sản phẩm và dữ liệu làn da trong một trải nghiệm mua sắm mượt hơn</h1>
-        <p class="hero-subtitle">Tìm sản phẩm chăm da theo thương hiệu, loại da, vấn đề da và ngân sách chỉ trong vài bước.</p>
-        <div class="hero-feature-list">
-          <span><i class="fas fa-circle-check"></i> Tìm kiếm nhanh kiểu marketplace</span>
-          <span><i class="fas fa-circle-check"></i> Gợi ý routine dựa trên khảo sát</span>
-          <span><i class="fas fa-circle-check"></i> Hồ sơ làn da đồng bộ với tài khoản</span>
+<div class="container mt-4 home-shell home-shell--marketplace">
+  <section class="market-hero">
+    <div class="market-stage">
+      <article class="market-stage__hero">
+        <div class="market-stage__content">
+          <span class="hero-kicker">SkinSyntax Marketplace</span>
+          <h1 class="market-stage__title">Skinsyntax</h1>
+          <p class="market-stage__subtitle">Khám phá sản phẩm, đi vào danh mục nhanh, xem deal rõ ràng và vẫn giữ trải nghiệm khảo sát da, gợi ý AI, lịch sử chăm da và hồ sơ cá nhân trên cùng một flow.</p>
+          <div class="market-stage__actions">
+            <a class="btn btn-brand btn-lg" href="<?= BASE_URL ?>/index.php?r=goiy">
+              <i class="fas fa-clipboard-list"></i> Làm khảo sát da
+            </a>
+            <a class="btn btn-market-ghost btn-lg" href="<?= BASE_URL ?>/index.php?r=tatca">
+              <i class="fas fa-bag-shopping"></i> Mua sắm ngay
+            </a>
+          </div>
+          <div class="market-stage__signals">
+            <?php foreach ($skinSyntaxSignals as $signal): ?>
+              <div class="market-signal">
+                <strong><?= h($signal['number']) ?></strong>
+                <span><?= h($signal['label']) ?></span>
+              </div>
+            <?php endforeach; ?>
+          </div>
         </div>
-        <div class="hero-buttons">
-          <a class="btn btn-brand btn-lg" href="<?= BASE_URL ?>/index.php?r=goiy">
-            <i class="fas fa-clipboard-list"></i> Làm khảo sát để nhận gợi ý sản phẩm
-          </a>
-          <a class="btn btn-outline-light btn-lg" href="<?= BASE_URL ?>/index.php?r=tatca">
-            <i class="fas fa-search"></i> Khám phá sản phẩm
-          </a>
-        </div>
+      </article>
+
+      <div class="market-banner-grid">
+        <a class="market-banner market-banner--mint" href="<?= BASE_URL ?>/index.php?r=goiy">
+          <span class="market-banner__eyebrow">Skin quiz</span>
+          <strong>Phân tích routine cá nhân</strong>
+          <p>Lấy hồ sơ da làm trung tâm, không chỉ là một trang bán sản phẩm.</p>
+        </a>
+        <a class="market-banner market-banner--sand" href="<?= BASE_URL ?>/index.php?r=thanhtoan">
+          <span class="market-banner__eyebrow">Loyalty</span>
+          <strong>Dùng điểm ngay ở checkout</strong>
+          <p>Kết hợp voucher, điểm tích lũy và thanh toán trong cùng một flow.</p>
+        </a>
+        <a class="market-banner market-banner--ink" href="<?= BASE_URL ?>/index.php?r=hoso">
+          <span class="market-banner__eyebrow">Skin profile</span>
+          <strong>Hồ sơ da đi cùng tài khoản</strong>
+          <p>Theo dõi hạng thành viên, điểm tích lũy và đơn hàng ngay trong hồ sơ.</p>
+        </a>
       </div>
     </div>
 
-    <div class="hero-side-stack">
-      <a class="hero-mini-card hero-mini-card--mint" href="<?= BASE_URL ?>/index.php?r=goiy">
-        <span class="hero-mini-card__icon"><i class="fas fa-wand-magic-sparkles"></i></span>
+    <aside class="market-support-stack">
+      <a class="support-card support-card--highlight" href="<?= BASE_URL ?>/index.php?r=goiy">
+        <span class="support-card__icon"><i class="fas fa-wand-magic-sparkles"></i></span>
         <strong>Routine AI cá nhân</strong>
-        <p>Nhận gợi ý sản phẩm từ dữ liệu khảo sát đã lưu.</p>
+        <p>Khối nổi bật của SkinSyntax, giữ nguyên tinh thần tư vấn da thay vì chỉ sale.</p>
       </a>
-
-      <a class="hero-mini-card hero-mini-card--peach" href="<?= BASE_URL ?>/index.php?r=tatca">
-        <span class="hero-mini-card__icon"><i class="fas fa-vial-circle-check"></i></span>
-        <strong>Tra cứu theo nhu cầu</strong>
-        <p>Lọc danh mục, tìm thương hiệu và xem mô tả sản phẩm rõ ràng.</p>
+      <a class="support-card" href="<?= BASE_URL ?>/index.php?r=tatca&q=serum">
+        <span class="support-card__icon"><i class="fas fa-vial"></i></span>
+        <strong>Serum hot</strong>
+        <p>Đi nhanh vào nhóm điều trị và phục hồi đang được tìm nhiều.</p>
       </a>
+      <a class="support-card" href="<?= BASE_URL ?>/index.php?r=thanhtoan">
+        <span class="support-card__icon"><i class="fas fa-qrcode"></i></span>
+        <strong>Checkout liền mạch</strong>
+        <p>QR chuyển khoản, voucher, điểm thưởng và xác nhận đơn trong cùng flow.</p>
+      </a>
+    </aside>
+  </section>
 
-      <div class="hero-mini-card hero-mini-card--navy">
-        <span class="hero-mini-card__label">Hot categories</span>
-        <div class="hero-mini-tags">
-          <span>Serum</span>
-          <span>Chống nắng</span>
-          <span>Dưỡng ẩm</span>
-          <span>Làm sạch</span>
+  <section class="market-shortcut-strip mt-4">
+    <?php foreach ($shortcutCards as $shortcut): ?>
+      <a class="market-shortcut" href="<?= h($shortcut['url']) ?>">
+        <span class="market-shortcut__icon"><i class="fas <?= h($shortcut['icon']) ?>"></i></span>
+        <div>
+          <strong><?= h($shortcut['title']) ?></strong>
+          <p><?= h($shortcut['desc']) ?></p>
         </div>
-      </div>
-    </div>
+      </a>
+    <?php endforeach; ?>
   </section>
 
-  <section class="home-benefits-row mt-4">
-    <article class="home-benefit-card">
-      <i class="fas fa-bolt"></i>
-      <div>
-        <strong>Tìm nhanh hơn</strong>
-        <p>Thanh search và gợi ý thông minh cho trải nghiệm mua sắm tức thì.</p>
-      </div>
-    </article>
-    <article class="home-benefit-card">
-      <i class="fas fa-user-doctor"></i>
-      <div>
-        <strong>Hồ sơ da rõ ràng</strong>
-        <p>Lưu lại dữ liệu khảo sát để dùng cho gợi ý và so sánh sản phẩm.</p>
-      </div>
-    </article>
-    <article class="home-benefit-card">
-      <i class="fas fa-bag-shopping"></i>
-      <div>
-        <strong>Mua sắm liền mạch</strong>
-        <p>Đi từ khám phá đến giỏ hàng trong cùng một flow trực quan.</p>
-      </div>
-    </article>
+  <section class="market-trust-strip mt-4">
+    <div class="trust-pill"><i class="fas fa-shield-heart"></i> Chính hãng và rõ nguồn gốc</div>
+    <div class="trust-pill"><i class="fas fa-truck-fast"></i> Mua nhanh, checkout gọn</div>
+    <div class="trust-pill"><i class="fas fa-user-doctor"></i> Gợi ý theo hồ sơ da</div>
+    <div class="trust-pill"><i class="fas fa-award"></i> Loyalty tích hợp trong tài khoản</div>
   </section>
 
-  <section class="mt-4 home-category-section">
-    <div class="section-header">
+  <section class="market-section mt-4">
+    <div class="section-header section-header--compact">
       <div>
-        <span class="section-kicker">Danh mục nổi bật</span>
-        <h4 class="section-title mb-0">Đi nhanh vào nhóm sản phẩm bạn quan tâm</h4>
-      </div>
-      <a class="link-more" href="<?= BASE_URL ?>/index.php?r=tatca">Xem toàn bộ</a>
-    </div>
-    <div class="category-promo-grid mt-3">
-      <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Bộ+Chăm+Sóc+Da+Mặt" class="category-promo-card">
-        <strong>Chăm sóc da</strong>
-        <span>Routine trọn bộ cho từng loại da</span>
-      </a>
-      <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Làm+Sạch+Da" class="category-promo-card">
-        <strong>Làm sạch da</strong>
-        <span>Sữa rửa mặt, tẩy trang và làm sạch sâu</span>
-      </a>
-      <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Dưỡng+Ẩm" class="category-promo-card">
-        <strong>Dưỡng ẩm</strong>
-        <span>Khoá ẩm, phục hồi và làm dịu nền da</span>
-      </a>
-      <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Chống+Nắng+Da+Mặt" class="category-promo-card">
-        <strong>Chống nắng</strong>
-        <span>Bảo vệ da mỗi ngày với nhiều texture</span>
-      </a>
-      <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=Chăm+Sóc+Da+Mặt&cap2=Đặc+Trị" class="category-promo-card">
-        <strong>Đặc trị</strong>
-        <span>Tập trung xử lý mụn, thâm và lão hóa</span>
-      </a>
-    </div>
-  </section>
-
-  <section class="mt-4 home-product-section">
-    <div class="section-header">
-      <div>
-        <span class="section-kicker">New arrivals</span>
-        <h4 class="section-title mb-0">Sản phẩm mới cập nhật</h4>
+        <span class="section-kicker">Deal đang lên sóng</span>
+        <h4 class="section-title mb-0">Khối sản phẩm nổi bật theo form marketplace</h4>
       </div>
       <a class="link-more" href="<?= BASE_URL ?>/index.php?r=tatca">Xem tất cả</a>
     </div>
 
-    <div class="row g-3 mt-2">
-      <?php foreach (($latest ?? []) as $p):
-        $img = first_image_url($p['link_hinh_anh']);
+    <div class="market-product-grid mt-3">
+      <?php foreach ($heroProducts as $p):
+        $img = resolve_image_url((string)($p['link_hinh_anh'] ?? ''));
+        $giaBan = (string)($p['gia_ban'] ?? '');
+        $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
+        $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
       ?>
-        <div class="col-6 col-md-3">
-          <a class="product-card product-card--showcase" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= (int)$p['id'] ?>">
-            <div class="product-thumb">
-              <?php if (!empty($p['phan_tram_giam'])): ?>
-                <span class="badge-sale">-<?= h($p['phan_tram_giam']) ?>%</span>
+        <a class="product-card product-card--showcase product-card--market" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= (int)$p['id'] ?>">
+          <div class="product-thumb">
+            <?php if ($phanTramGiam !== null): ?>
+              <span class="badge-sale">-<?= h((string)$phanTramGiam) ?>%</span>
+            <?php endif; ?>
+            <span class="market-card__tag">Đang quan tâm</span>
+            <img src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=No+Image') ?>"
+                 referrerpolicy="no-referrer"
+                 onerror="this.src='https://via.placeholder.com/450x450?text=No+Image';"
+                 alt="<?= h($p['ten_san_pham']) ?>">
+          </div>
+          <div class="product-meta">
+            <div class="brand"><?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
+            <div class="name"><?= h($p['ten_san_pham']) ?></div>
+            <div class="price-wrap">
+              <div class="price"><?= vnd($giaBan) ?></div>
+              <?php if ($giaThiTruong !== '' && (float)$giaThiTruong > 0): ?>
+                <div class="price-market"><?= vnd($giaThiTruong) ?></div>
               <?php endif; ?>
-              <img src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=No+Image') ?>"
-                   referrerpolicy="no-referrer"
-                   onerror="this.src='https://via.placeholder.com/450x450?text=No+Image';"
-                   alt="<?= h($p['ten_san_pham']) ?>">
             </div>
-            <div class="product-meta">
-              <div class="brand"><?= h($p['thuong_hieu'] ?? '') ?></div>
-              <div class="name"><?= h($p['ten_san_pham']) ?></div>
-              <div class="price"><?= vnd($p['gia_ban']) ?></div>
-            </div>
-          </a>
-        </div>
+          </div>
+        </a>
       <?php endforeach; ?>
     </div>
   </section>
+
+  <section class="market-ai-panel mt-4">
+    <div class="market-ai-panel__content">
+      <span class="section-kicker">Giữ chất SkinSyntax</span>
+      <h3>Không biến SkinSyntax thành một bản sao Hasaki. Chúng ta chỉ mượn form mua sắm dễ quét và giữ lõi là intelligence về làn da.</h3>
+      <p>Phần này giữ đúng khác biệt của dự án: phân tích da, recommendation, giải thích sản phẩm, loyalty, lịch sử đơn và hồ sơ cá nhân. Layout nhìn quen với người dùng marketplace nhưng không mất bản sắc sản phẩm.</p>
+      <div class="market-ai-panel__actions">
+        <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=goiy">Mở trang gợi ý</a>
+        <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=hoso">Xem hồ sơ da</a>
+      </div>
+    </div>
+    <div class="market-ai-panel__stack">
+      <div class="ai-note-card">
+        <strong>Phễu 1</strong>
+        <p>Người dùng mới vào thẳng danh mục hoặc deal.</p>
+      </div>
+      <div class="ai-note-card">
+        <strong>Phễu 2</strong>
+        <p>Người dùng cần tư vấn chuyển sang khảo sát và routine AI.</p>
+      </div>
+      <div class="ai-note-card ai-note-card--accent">
+        <strong>Phễu 3</strong>
+        <p>Mua xong vẫn quay lại nhờ điểm thưởng, hồ sơ da và lịch sử cá nhân.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="market-section mt-4">
+    <div class="section-header section-header--compact">
+      <div>
+        <span class="section-kicker">Chủ đề mua sắm</span>
+        <h4 class="section-title mb-0">Khối khám phá nhanh theo nhu cầu</h4>
+      </div>
+      <a class="link-more" href="<?= BASE_URL ?>/index.php?r=tatca">Đi tới catalog</a>
+    </div>
+    <div class="market-cluster-grid mt-3">
+      <a class="market-cluster market-cluster--sage" href="<?= BASE_URL ?>/index.php?r=tatca&q=mụn">
+        <strong>Da mụn</strong>
+        <span>Tập trung làm sạch, phục hồi và giảm thâm.</span>
+      </a>
+      <a class="market-cluster market-cluster--cream" href="<?= BASE_URL ?>/index.php?r=tatca&q=nhạy cảm">
+        <strong>Da nhạy cảm</strong>
+        <span>Ưu tiên nền công thức dịu, ít gây kích ứng.</span>
+      </a>
+      <a class="market-cluster market-cluster--blue" href="<?= BASE_URL ?>/index.php?r=tatca&q=serum">
+        <strong>Serum cần xem</strong>
+        <span>Vitamin C, B5, Hyaluronic Acid và nhiều hơn.</span>
+      </a>
+      <a class="market-cluster market-cluster--rose" href="<?= BASE_URL ?>/index.php?r=tatca&q=chống nắng">
+        <strong>Daily UV</strong>
+        <span>Chống nắng dễ dùng hằng ngày với nhiều texture.</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="market-section mt-4">
+    <div class="section-header section-header--compact">
+      <div>
+        <span class="section-kicker">Mới cập nhật</span>
+        <h4 class="section-title mb-0">Sản phẩm mới đẩy lên đầu trang</h4>
+      </div>
+      <a class="link-more" href="<?= BASE_URL ?>/index.php?r=tatca">Xem catalog</a>
+    </div>
+
+    <div class="market-product-grid mt-3">
+      <?php foreach ($newProducts as $p):
+        $img = resolve_image_url((string)($p['link_hinh_anh'] ?? ''));
+        $giaBan = (string)($p['gia_ban'] ?? '');
+        $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
+        $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
+      ?>
+        <a class="product-card product-card--showcase product-card--market" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= (int)$p['id'] ?>">
+          <div class="product-thumb">
+            <?php if ($phanTramGiam !== null): ?>
+              <span class="badge-sale">-<?= h((string)$phanTramGiam) ?>%</span>
+            <?php endif; ?>
+            <span class="market-card__tag market-card__tag--fresh">Mới lên kệ</span>
+            <img src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=No+Image') ?>"
+                 referrerpolicy="no-referrer"
+                 onerror="this.src='https://via.placeholder.com/450x450?text=No+Image';"
+                 alt="<?= h($p['ten_san_pham']) ?>">
+          </div>
+          <div class="product-meta">
+            <div class="brand"><?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
+            <div class="name"><?= h($p['ten_san_pham']) ?></div>
+            <div class="price-wrap">
+              <div class="price"><?= vnd($giaBan) ?></div>
+              <?php if ($giaThiTruong !== '' && (float)$giaThiTruong > 0): ?>
+                <div class="price-market"><?= vnd($giaThiTruong) ?></div>
+              <?php endif; ?>
+            </div>
+          </div>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </section>
+
+  <?php if (!empty($brandNames)): ?>
+    <section class="market-brand-ribbon mt-4">
+      <div class="market-brand-ribbon__title">Thương hiệu đang xuất hiện nhiều</div>
+      <div class="market-brand-ribbon__chips">
+        <?php foreach ($brandNames as $brand): ?>
+          <a href="<?= BASE_URL ?>/index.php?r=tatca&q=<?= urlencode($brand) ?>"><?= h($brand) ?></a>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
 </div>
 

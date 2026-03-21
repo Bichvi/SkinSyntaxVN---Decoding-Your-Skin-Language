@@ -6,6 +6,22 @@ class TaiKhoan {
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
+        $this->ensureLoyaltyColumns();
+    }
+
+    private function ensureLoyaltyColumns(): void {
+        $ddl = [
+            "ALTER TABLE khach_hang ADD COLUMN IF NOT EXISTS diemtl INTEGER DEFAULT 0",
+            "ALTER TABLE khach_hang ADD COLUMN IF NOT EXISTS loaikh VARCHAR(30) DEFAULT 'Thuong'",
+        ];
+
+        foreach ($ddl as $sql) {
+            try {
+                $this->pdo->exec($sql);
+            } catch (Throwable $e) {
+                // Keep account pages resilient if schema updates are unavailable.
+            }
+        }
     }
 
     public function getAccountOverview(int $nguoiDungId): ?array {
@@ -99,13 +115,70 @@ class TaiKhoan {
     }
 
     public function getOrderHistory(int $maKh): array {
-        $sql = "SELECT ma_hoa_don, ngay_dat, tong_tien, trang_thai
+        $sql = "SELECT ma_hoa_don, ngay_dat, tong_tien, trang_thai, hinh_thuc_thanh_toan, status_thanh_toan,
+                   COALESCE(diem_cong, 0) AS diem_cong,
+                       COALESCE(da_tich_diem, FALSE) AS da_tich_diem,
+                       COALESCE(diem_su_dung, 0) AS diem_su_dung,
+                       COALESCE(tien_giam_diem, 0) AS tien_giam_diem
                 FROM hoa_don
                 WHERE ma_kh = :ma_kh
                 ORDER BY ngay_dat DESC, ma_hoa_don DESC";
         $st = $this->pdo->prepare($sql);
         $st->execute([':ma_kh' => $maKh]);
-        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $orders = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        if (empty($orders)) {
+            return [];
+        }
+
+        $orderIds = array_values(array_filter(array_map(static function (array $order): int {
+            return (int)($order['ma_hoa_don'] ?? 0);
+        }, $orders)));
+
+        if (empty($orderIds)) {
+            return $orders;
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($orderIds as $index => $orderId) {
+            $key = ':order_id_' . $index;
+            $placeholders[] = $key;
+            $params[$key] = $orderId;
+        }
+
+        $detailSql = "SELECT ct.ma_hoa_don,
+                             ct.ma_san_pham,
+                             ct.so_luong,
+                             ct.don_gia,
+                             sp.ten_san_pham,
+                             sp.link_hinh_anh,
+                             COALESCE(th.ten_thuong_hieu, '') AS thuong_hieu
+                      FROM chi_tiet_hoa_don ct
+                      LEFT JOIN san_pham sp ON sp.ma_san_pham = ct.ma_san_pham
+                      LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
+                      WHERE ct.ma_hoa_don IN (" . implode(', ', $placeholders) . ")
+                      ORDER BY ct.ma_hoa_don DESC, ct.id ASC";
+        $detailSt = $this->pdo->prepare($detailSql);
+        $detailSt->execute($params);
+        $details = $detailSt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $detailsByOrder = [];
+        foreach ($details as $detail) {
+            $orderId = (int)($detail['ma_hoa_don'] ?? 0);
+            if ($orderId <= 0) {
+                continue;
+            }
+
+            $detailsByOrder[$orderId][] = $detail;
+        }
+
+        foreach ($orders as &$order) {
+            $orderId = (int)($order['ma_hoa_don'] ?? 0);
+            $order['items'] = $detailsByOrder[$orderId] ?? [];
+        }
+        unset($order);
+
+        return $orders;
     }
 
     public function getCartItems(int $maKh): array {

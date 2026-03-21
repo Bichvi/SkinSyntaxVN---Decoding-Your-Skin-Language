@@ -3,16 +3,19 @@
 
 require_once __DIR__ . '/../models/TaiKhoan.php';
 require_once __DIR__ . '/../models/SanPham.php';
+require_once __DIR__ . '/../models/QuanTri.php';
 
 class TaiKhoanController {
     private PDO $pdo;
     private TaiKhoan $model;
     private SanPham $sanPhamModel;
+    private QuanTri $reviewModel;
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
         $this->model = new TaiKhoan($pdo);
         $this->sanPhamModel = new SanPham($pdo);
+        $this->reviewModel = new QuanTri($pdo);
     }
 
     private function requireLogin(): array {
@@ -37,6 +40,41 @@ class TaiKhoanController {
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($payload, JSON_UNESCAPED_UNICODE);
         exit;
+    }
+
+    private function isOrderEligibleForReview(?string $status): bool {
+        $normalized = strtolower(trim((string)($status ?? '')));
+        return in_array($normalized, ['hoan thanh', 'hoàn thành', 'da giao', 'đã giao'], true);
+    }
+
+    private function buildSessionCartItems(): array {
+        $cart = $_SESSION['gio_hang'] ?? [];
+        if (empty($cart) || !is_array($cart)) {
+            return [];
+        }
+
+        $items = [];
+        foreach ($cart as $productId => $qty) {
+            $productId = trim((string)$productId);
+            if ($productId === '') {
+                continue;
+            }
+
+            $product = $this->sanPhamModel->findById($productId);
+            if (!$product || !is_array($product)) {
+                continue;
+            }
+
+            $items[] = [
+                'ma_san_pham' => (string)($product['ma_san_pham'] ?? $productId),
+                'ten_san_pham' => (string)($product['ten_san_pham'] ?? ''),
+                'gia_ban' => (int)($product['gia_ban'] ?? 0),
+                'link_hinh_anh' => (string)($product['link_hinh_anh'] ?? $product['hinh_anh'] ?? ''),
+                'so_luong' => max(1, (int)$qty),
+            ];
+        }
+
+        return $items;
     }
 
     public function hoso(): void {
@@ -70,7 +108,44 @@ class TaiKhoanController {
         if ($khachHang && !empty($khachHang['ma_kh'])) {
             $maKh = (int)$khachHang['ma_kh'];
             $orders = $this->model->getOrderHistory($maKh);
-            $cartItems = $this->model->getCartItems($maKh);
+            $cartItems = $this->buildSessionCartItems();
+            if (empty($cartItems)) {
+                $cartItems = $this->model->getCartItems($maKh);
+            }
+
+            $productIds = [];
+            foreach ($orders as $order) {
+                foreach (($order['items'] ?? []) as $item) {
+                    $productId = trim((string)($item['ma_san_pham'] ?? ''));
+                    if ($productId !== '') {
+                        $productIds[] = $productId;
+                    }
+                }
+            }
+
+            $eligibilityMap = $this->reviewModel->{'getCustomerReviewEligibility'}($maKh, $productIds);
+            foreach ($orders as &$order) {
+                $orderAllowsReview = $this->isOrderEligibleForReview((string)($order['trang_thai'] ?? ''));
+                foreach (($order['items'] ?? []) as &$item) {
+                    $productId = trim((string)($item['ma_san_pham'] ?? ''));
+                    $eligibility = $eligibilityMap[$productId] ?? ['has_purchased' => false, 'has_reviewed' => false];
+                    $item['detail_url'] = 'index.php?r=chitiet&id=' . rawurlencode($productId) . '&tab=danh-gia';
+                    $item['has_purchased'] = !empty($eligibility['has_purchased']) || ($orderAllowsReview && $productId !== '');
+                    $item['has_reviewed'] = !empty($eligibility['has_reviewed']);
+
+                    $rawImage = trim((string)($item['link_hinh_anh'] ?? ''));
+                    if ($rawImage === '' && $productId !== '') {
+                        $product = $this->sanPhamModel->findById($productId);
+                        if ($product && is_array($product)) {
+                            $rawImage = (string)($product['link_hinh_anh'] ?? $product['hinh_anh'] ?? '');
+                        }
+                    }
+
+                    $item['image_url'] = resolve_image_url($rawImage);
+                }
+                unset($item);
+            }
+            unset($order);
         }
 
         $skinProfile = $this->model->getSkinProfileByEmail((string)$account['email']);
