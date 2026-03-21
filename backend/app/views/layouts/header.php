@@ -215,11 +215,11 @@ $socialLinks = [
                   <div class="auth-modal-subtitle">Đăng nhập với mạng xã hội hoặc tài khoản email của bạn.</div>
 
                   <div class="auth-modal-socials">
-                    <a class="auth-social-btn auth-social-btn--facebook <?= $facebookEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= BASE_URL ?>/index.php?r=auth_social&provider=facebook">
+                    <a class="auth-social-btn auth-social-btn--facebook <?= $facebookEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= $facebookEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=facebook') : '#' ?>" <?= $facebookEnabled ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;" title="Facebook login chua duoc cau hinh"' ?>>
                       <i class="fa-brands fa-facebook-f"></i>
                       <span>Facebook</span>
                     </a>
-                    <a class="auth-social-btn <?= $googleEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= BASE_URL ?>/index.php?r=auth_social&provider=google">
+                    <a class="auth-social-btn <?= $googleEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= $googleEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=google') : '#' ?>" <?= $googleEnabled ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;" title="Google login chua duoc cau hinh"' ?>>
                       <i class="fa-brands fa-google"></i>
                       <span>Đăng nhập bằng Google</span>
                     </a>

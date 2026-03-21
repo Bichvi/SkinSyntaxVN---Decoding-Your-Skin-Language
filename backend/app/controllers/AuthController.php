@@ -5,11 +5,11 @@ require_once __DIR__ . "/../models/NguoiDung.php";
 
 class AuthController {
     private PDO $pdo;
-    private NguoiDung $model;
+    private \NguoiDung $model;
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
-        $this->model = new NguoiDung($pdo);
+        $this->model = new \NguoiDung($pdo);
     }
 
     private function render(string $view, array $data = []) {
@@ -17,6 +17,10 @@ class AuthController {
         require __DIR__ . '/../views/layouts/header.php';
         require __DIR__ . '/../views/' . $view . '.php';
         require __DIR__ . '/../views/layouts/footer.php';
+    }
+
+    private function cfg(string $name, string $default = ''): string {
+        return defined($name) ? (string)constant($name) : $default;
     }
 
     private function appBaseUrl(): string {
@@ -32,8 +36,8 @@ class AuthController {
     }
 
     private function sendHtmlEmail(string $to, string $subject, string $html): bool {
-        $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'SkinSyntax';
-        $fromAddress = defined('MAIL_FROM_ADDRESS') ? MAIL_FROM_ADDRESS : 'no-reply@skinsyntax.local';
+        $fromName = $this->cfg('MAIL_FROM_NAME', 'SkinSyntax');
+        $fromAddress = $this->cfg('MAIL_FROM_ADDRESS', 'no-reply@skinsyntax.local');
         $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
         $headers = [
             'MIME-Version: 1.0',
@@ -125,8 +129,8 @@ class AuthController {
         if ($provider === 'google') {
             return [
                 'provider' => 'google',
-                'client_id' => defined('GOOGLE_OAUTH_CLIENT_ID') ? GOOGLE_OAUTH_CLIENT_ID : '',
-                'client_secret' => defined('GOOGLE_OAUTH_CLIENT_SECRET') ? GOOGLE_OAUTH_CLIENT_SECRET : '',
+                'client_id' => $this->cfg('GOOGLE_OAUTH_CLIENT_ID'),
+                'client_secret' => $this->cfg('GOOGLE_OAUTH_CLIENT_SECRET'),
                 'auth_url' => 'https://accounts.google.com/o/oauth2/v2/auth',
                 'token_url' => 'https://oauth2.googleapis.com/token',
                 'scope' => 'openid email profile',
@@ -136,8 +140,8 @@ class AuthController {
         if ($provider === 'facebook') {
             return [
                 'provider' => 'facebook',
-                'client_id' => defined('FACEBOOK_OAUTH_CLIENT_ID') ? FACEBOOK_OAUTH_CLIENT_ID : '',
-                'client_secret' => defined('FACEBOOK_OAUTH_CLIENT_SECRET') ? FACEBOOK_OAUTH_CLIENT_SECRET : '',
+                'client_id' => $this->cfg('FACEBOOK_OAUTH_CLIENT_ID'),
+                'client_secret' => $this->cfg('FACEBOOK_OAUTH_CLIENT_SECRET'),
                 'auth_url' => 'https://www.facebook.com/v19.0/dialog/oauth',
                 'token_url' => 'https://graph.facebook.com/v19.0/oauth/access_token',
                 'scope' => 'email,public_profile',
