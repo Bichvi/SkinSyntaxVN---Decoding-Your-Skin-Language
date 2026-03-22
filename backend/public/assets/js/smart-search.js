@@ -9,7 +9,7 @@
 
   const apiUrl = form.dataset.smartSearchUrl || "";
   const indexAction = form.getAttribute("action") || "index.php";
-  const DEBOUNCE_MS = 300;
+  const DEBOUNCE_MS = 120;
 
   let debounceTimer = null;
   let abortController = null;
@@ -60,10 +60,10 @@
   }
 
   function buildProductItem(item, keyword) {
-    const id = encodeURIComponent(item.id || "");
+    const id = encodeURIComponent(item.id || item.ma_san_pham || "");
     const q = keyword ? "&q=" + encodeURIComponent(keyword) : "";
     const detailUrl = indexAction + "?r=chitiet&id=" + id + q;
-    const name = escapeHtml(item.ten_san_pham || "");
+    const name = escapeHtml(item.ten_san_pham || item.name || "");
     const brand = escapeHtml(item.thuong_hieu || "");
     const price = escapeHtml(formatPrice(item.gia_ban));
     const img = escapeHtml(getPrimaryImage(item.link_hinh_anh));

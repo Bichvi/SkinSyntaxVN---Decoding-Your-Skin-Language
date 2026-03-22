@@ -115,12 +115,61 @@ class QuanTriController {
         ];
     }
 
+    private function countWords(string $text): int {
+        $trimmed = trim($text);
+        if ($trimmed === '') {
+            return 0;
+        }
+
+        $parts = preg_split('/\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY);
+        return is_array($parts) ? count($parts) : 0;
+    }
+
     private function redirectBack(string $fallback): void {
         $target = trim((string)($_SERVER['HTTP_REFERER'] ?? ''));
         if ($target === '') {
             $target = BASE_URL . '/index.php?r=' . $fallback;
         }
         redirect($target);
+    }
+
+    private function cancellationReasonOptions(): array {
+        return [
+            'Khach_doi_y' => 'Khách đổi ý',
+            'Dat_sai_san_pham' => 'Đặt sai sản phẩm',
+            'Tre_giao_hang' => 'Giao hàng chậm hơn dự kiến',
+            'Khong_lien_he_duoc' => 'Không liên hệ được để xác nhận đơn',
+            'Het_hang' => 'Hết hàng',
+            'Khac' => 'Lý do khác',
+        ];
+    }
+
+    private function isCancelledStatus(string $status): bool {
+        $normalized = strtolower(trim($status));
+        return in_array($normalized, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true);
+    }
+
+    private function extractCancellationReasonFromPost(): array {
+        $options = $this->cancellationReasonOptions();
+        $reasonKey = trim((string)($_POST['ly_do_huy'] ?? ''));
+        $extraNote = trim((string)($_POST['ly_do_huy_bo_sung'] ?? ''));
+
+        if ($reasonKey === '' || !isset($options[$reasonKey])) {
+            return ['ok' => false, 'message' => 'Vui lòng chọn lý do hủy đơn hàng.'];
+        }
+
+        if ($reasonKey === 'Khac' && $extraNote === '') {
+            return ['ok' => false, 'message' => 'Vui lòng nhập lý do cụ thể khi chọn "Lý do khác".'];
+        }
+
+        $reasonText = $options[$reasonKey];
+        if ($reasonKey === 'Khac') {
+            $reasonText .= ': ' . $extraNote;
+        } elseif ($extraNote !== '') {
+            $reasonText .= ' - Ghi chú: ' . $extraNote;
+        }
+
+        return ['ok' => true, 'reason' => $reasonText];
     }
 
     private function handleProductUpload(string $inputName = 'hinh_anh'): ?string {
@@ -177,8 +226,9 @@ class QuanTriController {
         $this->requireRole(['admin']);
         $page = max(1, (int)($_GET['page'] ?? 1));
         $q = trim((string)($_GET['q'] ?? ''));
+        $status = strtolower(trim((string)($_GET['status'] ?? '')));
         $perPage = 20;
-        $res = $this->sanPhamModel->paginate($page, $perPage, $q);
+        $res = $this->sanPhamModel->paginate($page, $perPage, $q, '', '', $status, false);
 
         $this->renderAdmin('danhsachSP', [
             'items' => $res['items'] ?? [],
@@ -186,6 +236,7 @@ class QuanTriController {
             'page' => $page,
             'perPage' => $perPage,
             'q' => $q,
+            'status' => $status,
         ]);
     }
 
@@ -205,6 +256,29 @@ class QuanTriController {
         $this->requireRole(['admin']);
         $controller = new AdminController($this->pdo);
         $controller->delete();
+    }
+
+    public function adminProductVisibility(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_sp');
+        }
+
+        $id = trim((string)($_POST['id'] ?? ''));
+        $status = strtolower(trim((string)($_POST['status'] ?? 'active')));
+        $ok = $this->sanPhamModel->updateProductVisibility($id, $status);
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật trạng thái sản phẩm.')
+            : 'Không thể cập nhật trạng thái sản phẩm.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái hiển thị sản phẩm.' : $errorMessage);
+
+        $query = http_build_query([
+            'r' => 'admin_sp',
+            'q' => trim((string)($_POST['q'] ?? '')),
+            'status' => trim((string)($_POST['status_filter'] ?? '')),
+            'page' => max(1, (int)($_POST['page'] ?? 1)),
+        ]);
+        redirect(BASE_URL . '/index.php?' . $query);
     }
 
     public function adminCategories(): void {
@@ -267,7 +341,10 @@ class QuanTriController {
 
         $id = max(0, (int)($_POST['ma_danh_muc'] ?? 0));
         $ok = $this->model->saveCategory($_POST, $id > 0 ? $id : null);
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu danh mục.' : 'Không thể lưu danh mục.');
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể lưu danh mục.')
+            : 'Không thể lưu danh mục.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu danh mục.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_categories');
     }
 
@@ -396,6 +473,7 @@ class QuanTriController {
             'status' => $status,
             'pageTitle' => 'Quản lý đơn hàng',
             'allowManage' => true,
+            'cancelReasonOptions' => $this->cancellationReasonOptions(),
         ]);
     }
 
@@ -407,8 +485,21 @@ class QuanTriController {
 
         $id = max(0, (int)($_POST['ma_hoa_don'] ?? 0));
         $status = trim((string)($_POST['trang_thai'] ?? ''));
-        $ok = $this->model->updateOrderStatus($id, $status);
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái đơn hàng.' : 'Không thể cập nhật trạng thái đơn hàng.');
+        $cancelReason = '';
+        if ($this->isCancelledStatus($status)) {
+            $payload = $this->extractCancellationReasonFromPost();
+            if (empty($payload['ok'])) {
+                set_flash('error', (string)($payload['message'] ?? 'Vui lòng chọn lý do hủy đơn hàng.'));
+                redirect(BASE_URL . '/index.php?r=admin_orders&detail=' . $id);
+            }
+            $cancelReason = (string)($payload['reason'] ?? '');
+        }
+
+        $ok = $this->model->updateOrderStatus($id, $status, $cancelReason, true);
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật trạng thái đơn hàng.')
+            : 'Không thể cập nhật trạng thái đơn hàng.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái đơn hàng.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_orders');
     }
 
@@ -446,6 +537,7 @@ class QuanTriController {
             'status' => $status,
             'pageTitle' => 'Xử lý đơn hàng',
             'allowManage' => true,
+            'cancelReasonOptions' => $this->cancellationReasonOptions(),
         ]);
     }
 
@@ -457,8 +549,21 @@ class QuanTriController {
 
         $id = max(0, (int)($_POST['ma_hoa_don'] ?? 0));
         $status = trim((string)($_POST['trang_thai'] ?? ''));
-        $ok = $this->model->updateOrderStatus($id, $status);
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái đơn hàng.' : 'Không thể cập nhật trạng thái đơn hàng.');
+        $cancelReason = '';
+        if ($this->isCancelledStatus($status)) {
+            $payload = $this->extractCancellationReasonFromPost();
+            if (empty($payload['ok'])) {
+                set_flash('error', (string)($payload['message'] ?? 'Vui lòng chọn lý do hủy đơn hàng.'));
+                redirect(BASE_URL . '/index.php?r=staff_orders&detail=' . $id);
+            }
+            $cancelReason = (string)($payload['reason'] ?? '');
+        }
+
+        $ok = $this->model->updateOrderStatus($id, $status, $cancelReason, false);
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật trạng thái đơn hàng.')
+            : 'Không thể cập nhật trạng thái đơn hàng.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái đơn hàng.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=staff_orders');
     }
 
@@ -466,15 +571,184 @@ class QuanTriController {
         $this->requireRole(['admin', 'nhanvien']);
         $page = max(1, (int)($_GET['page'] ?? 1));
         $q = trim((string)($_GET['q'] ?? ''));
+        $status = strtolower(trim((string)($_GET['status'] ?? '')));
         $perPage = 20;
-        $res = $this->sanPhamModel->paginate($page, $perPage, $q);
+        $res = $this->sanPhamModel->paginate($page, $perPage, $q, '', '', $status, false);
         $this->renderAdmin('staff_products', [
             'items' => $res['items'] ?? [],
             'total' => $res['total'] ?? 0,
             'page' => $page,
             'perPage' => $perPage,
             'q' => $q,
+            'status' => $status,
         ]);
+    }
+
+    public function staffProductCreate(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+
+        $brandOptions = $this->sanPhamModel->listBrandOptions();
+        $categoryOptions = $this->sanPhamModel->listCategoryOptions();
+        $nextProductCode = $this->sanPhamModel->getNextProductCode();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->renderAdmin('themSP', [
+                'product' => ['ma_san_pham' => $nextProductCode, 'trang_thai' => 'active'],
+                'error' => null,
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        $data = [
+            'ma_san_pham' => trim((string)($_POST['ma_san_pham'] ?? '')),
+            'ten_san_pham' => trim((string)($_POST['ten_san_pham'] ?? '')),
+            'ma_thuong_hieu' => trim((string)($_POST['ma_thuong_hieu'] ?? '')),
+            'ma_danh_muc' => trim((string)($_POST['ma_danh_muc'] ?? '')),
+            'ten_thuong_hieu_input' => trim((string)($_POST['ten_thuong_hieu_input'] ?? '')),
+            'ten_danh_muc_input' => trim((string)($_POST['ten_danh_muc_input'] ?? '')),
+            'gia_ban' => trim((string)($_POST['gia_ban'] ?? '')),
+            'gia_thi_truong' => trim((string)($_POST['gia_thi_truong'] ?? '')),
+            'dung_tich' => trim((string)($_POST['dung_tich'] ?? '')),
+            'loai_da' => trim((string)($_POST['loai_da'] ?? '')),
+            'mo_ta' => trim((string)($_POST['mo_ta'] ?? '')),
+            'thanh_phan_chinh' => trim((string)($_POST['thanh_phan_chinh'] ?? '')),
+            'thanh_phan_day_du' => trim((string)($_POST['thanh_phan_day_du'] ?? '')),
+            'hdsd' => trim((string)($_POST['hdsd'] ?? '')),
+            'link_hinh_anh' => trim((string)($_POST['link_hinh_anh'] ?? '')),
+            'trang_thai' => trim((string)($_POST['trang_thai'] ?? 'active')),
+        ];
+
+        if ($data['ma_san_pham'] === '') {
+            $data['ma_san_pham'] = $nextProductCode;
+        }
+
+        if ($data['ma_thuong_hieu'] === '' && $data['ten_thuong_hieu_input'] !== '') {
+            $brandId = $this->sanPhamModel->ensureBrandByName($data['ten_thuong_hieu_input']);
+            if ($brandId !== null) {
+                $data['ma_thuong_hieu'] = (string)$brandId;
+                $brandOptions = $this->sanPhamModel->listBrandOptions();
+            }
+        }
+
+        if ($data['ma_danh_muc'] === '' && $data['ten_danh_muc_input'] !== '') {
+            $categoryId = $this->sanPhamModel->ensureCategoryByName($data['ten_danh_muc_input']);
+            if ($categoryId !== null) {
+                $data['ma_danh_muc'] = (string)$categoryId;
+                $categoryOptions = $this->sanPhamModel->listCategoryOptions();
+            }
+        }
+
+        if ($data['ma_san_pham'] === '' || $data['ten_san_pham'] === '') {
+            $this->renderAdmin('themSP', [
+                'product' => $data,
+                'error' => 'Mã sản phẩm và tên sản phẩm là bắt buộc.',
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        $giaBan = trim((string)($data['gia_ban'] ?? ''));
+        if ($giaBan === '' || !is_numeric($giaBan) || (float)$giaBan <= 0) {
+            $this->renderAdmin('themSP', [
+                'product' => $data,
+                'error' => 'Giá bán phải lớn hơn 0.',
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        $giaThiTruong = trim((string)($data['gia_thi_truong'] ?? ''));
+        if ($giaThiTruong !== '' && (!is_numeric($giaThiTruong) || (float)$giaThiTruong <= 0)) {
+            $this->renderAdmin('themSP', [
+                'product' => $data,
+                'error' => 'Giá thị trường phải lớn hơn 0 nếu được nhập.',
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        if ($this->sanPhamModel->hasProductCode($data['ma_san_pham'])) {
+            $data['ma_san_pham'] = $this->sanPhamModel->getNextProductCode();
+            $nextProductCode = $data['ma_san_pham'];
+        }
+
+        if ($this->sanPhamModel->hasProductName($data['ten_san_pham'])) {
+            $this->renderAdmin('themSP', [
+                'product' => $data,
+                'error' => 'Tên sản phẩm đã tồn tại. Vui lòng nhập tên khác.',
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        $uploadedFileName = $this->handleProductUpload('hinh_anh');
+        if ($uploadedFileName !== null) {
+            $data['link_hinh_anh'] = $uploadedFileName;
+        }
+
+        $ok = $this->sanPhamModel->adminInsert($data);
+        if ($ok) {
+            set_flash('success', 'Đã thêm sản phẩm thành công.');
+            redirect(BASE_URL . '/index.php?r=staff_products');
+        }
+
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể thêm sản phẩm. Vui lòng thử lại.')
+            : 'Không thể thêm sản phẩm. Vui lòng thử lại.';
+
+        $this->renderAdmin('themSP', [
+            'product' => $data,
+            'error' => $errorMessage,
+            'brandOptions' => $brandOptions,
+            'categoryOptions' => $categoryOptions,
+            'nextProductCode' => $nextProductCode,
+            'formAction' => 'staff_product_create',
+            'backRoute' => 'staff_products',
+        ]);
+    }
+
+    public function staffProductVisibility(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=staff_products');
+        }
+
+        $id = trim((string)($_POST['id'] ?? ''));
+        $status = strtolower(trim((string)($_POST['status'] ?? 'active')));
+        $ok = $this->sanPhamModel->updateProductVisibility($id, $status);
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật trạng thái sản phẩm.')
+            : 'Không thể cập nhật trạng thái sản phẩm.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái hiển thị sản phẩm.' : $errorMessage);
+
+        $query = http_build_query([
+            'r' => 'staff_products',
+            'q' => trim((string)($_POST['q'] ?? '')),
+            'status' => trim((string)($_POST['status_filter'] ?? '')),
+            'page' => max(1, (int)($_POST['page'] ?? 1)),
+        ]);
+        redirect(BASE_URL . '/index.php?' . $query);
     }
 
     public function staffProductEdit(): void {
@@ -515,6 +789,7 @@ class QuanTriController {
             'thanh_phan_day_du' => trim((string)($_POST['thanh_phan_day_du'] ?? '')),
             'hdsd' => trim((string)($_POST['hdsd'] ?? '')),
             'link_hinh_anh' => trim((string)($_POST['link_hinh_anh'] ?? '')),
+            'trang_thai' => trim((string)($_POST['trang_thai'] ?? 'active')),
         ];
 
         $uploadedFileName = $this->handleProductUpload('hinh_anh');
@@ -530,9 +805,13 @@ class QuanTriController {
             redirect(BASE_URL . '/index.php?r=staff_products');
         }
 
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật sản phẩm.')
+            : 'Không thể cập nhật sản phẩm.';
+
         $this->renderAdmin('staff_product_edit', [
             'product' => array_merge($product, $data),
-            'error' => 'Không thể cập nhật sản phẩm.',
+            'error' => $errorMessage,
             'brandOptions' => $brandOptions,
             'categoryOptions' => $categoryOptions,
         ]);
@@ -541,8 +820,37 @@ class QuanTriController {
     public function staffReviews(): void {
         $this->requireRole(['admin', 'nhanvien']);
         $q = trim((string)($_GET['q'] ?? ''));
+        $filters = [
+            'so_sao' => max(0, min(5, (int)($_GET['so_sao'] ?? 0))),
+            'trang_thai_phan_hoi' => trim((string)($_GET['trang_thai_phan_hoi'] ?? '')),
+            'trang_thai_don' => trim((string)($_GET['trang_thai_don'] ?? '')),
+            'khoang_ngay' => trim((string)($_GET['khoang_ngay'] ?? '')),
+            'ma_kh' => trim((string)($_GET['ma_kh'] ?? '')),
+            'ma_van_don' => trim((string)($_GET['ma_van_don'] ?? '')),
+            'sdt_khach_hang' => trim((string)($_GET['sdt_khach_hang'] ?? '')),
+            'limit' => max(10, min(200, (int)($_GET['limit'] ?? 60))),
+        ];
+
+        $reviews = $this->model->listReviews($q, $filters);
+        $selectedReviewId = max(0, (int)($_GET['detail'] ?? 0));
+        $selectedReview = null;
+        foreach ($reviews as $review) {
+            if ((int)($review['ma_danh_gia'] ?? 0) === $selectedReviewId) {
+                $selectedReview = $review;
+                break;
+            }
+        }
+        if ($selectedReview === null && !empty($reviews)) {
+            $selectedReview = $reviews[0];
+            $selectedReviewId = (int)($selectedReview['ma_danh_gia'] ?? 0);
+        }
+
         $this->renderAdmin('reviews', [
-            'reviews' => $this->model->listReviews($q),
+            'reviews' => $reviews,
+            'selectedReview' => $selectedReview,
+            'selectedReviewId' => $selectedReviewId,
+            'filters' => $filters,
+            'filterOptions' => $this->model->getReviewFilterOptions(),
             'q' => $q,
         ]);
     }
@@ -556,10 +864,36 @@ class QuanTriController {
         $reviewId = max(0, (int)($_POST['ma_danh_gia'] ?? 0));
         $rowRef = trim((string)($_POST['row_ref'] ?? ''));
         $reply = trim((string)($_POST['phan_hoi'] ?? ''));
+        $wordCount = $this->countWords($reply);
+
+        if ($wordCount > 1000) {
+            set_flash('error', 'Nội dung phản hồi không được vượt quá 1000 từ.');
+            $returnQuery = trim((string)($_POST['return_query'] ?? ''));
+            if ($returnQuery !== '') {
+                redirect(BASE_URL . '/index.php?r=staff_reviews&' . $returnQuery);
+            }
+            redirect(BASE_URL . '/index.php?r=staff_reviews' . ($reviewId > 0 ? ('&detail=' . $reviewId) : ''));
+        }
+
         $staffId = (int)($user['ma_nv'] ?? 0);
         $ok = $this->model->replyReview($reviewId, $staffId, $reply, $rowRef);
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã phản hồi đánh giá.' : 'Không thể phản hồi đánh giá.');
-        redirect(BASE_URL . '/index.php?r=staff_reviews');
+
+        $returnQuery = trim((string)($_POST['return_query'] ?? ''));
+        if ($returnQuery !== '') {
+            parse_str($returnQuery, $parsed);
+            $allowed = ['q', 'so_sao', 'trang_thai_phan_hoi', 'trang_thai_don', 'khoang_ngay', 'ma_kh', 'ma_van_don', 'sdt_khach_hang', 'limit', 'detail'];
+            $safe = ['r' => 'staff_reviews'];
+            foreach ($allowed as $key) {
+                if (array_key_exists($key, $parsed) && !is_array($parsed[$key])) {
+                    $safe[$key] = (string)$parsed[$key];
+                }
+            }
+            $query = http_build_query($safe);
+            redirect(BASE_URL . '/index.php?' . $query);
+        }
+
+        redirect(BASE_URL . '/index.php?r=staff_reviews' . ($reviewId > 0 ? ('&detail=' . $reviewId) : ''));
     }
 
     public function staffChats(): void {
@@ -667,7 +1001,13 @@ class QuanTriController {
             redirect(BASE_URL . '/index.php?r=hoso');
         }
 
-        $ok = $this->model->updateOrderStatus($orderId, 'Da huy');
+        $payload = $this->extractCancellationReasonFromPost();
+        if (empty($payload['ok'])) {
+            set_flash('error', (string)($payload['message'] ?? 'Vui lòng chọn lý do hủy đơn hàng.'));
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        $ok = $this->model->updateOrderStatus($orderId, 'Da huy', (string)($payload['reason'] ?? ''));
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã hủy đơn hàng.' : 'Không thể hủy đơn hàng.');
         redirect(BASE_URL . '/index.php?r=hoso');
     }

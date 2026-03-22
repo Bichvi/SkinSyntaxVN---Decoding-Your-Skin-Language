@@ -110,7 +110,7 @@ class SanPhamController {
         }
 
         $perPage = 24;
-        $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2);
+        $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true);
 
         $this->render('tatca', [
             'items' => $res['items'],
@@ -154,7 +154,7 @@ class SanPhamController {
             return;
         }
 
-        $p = $this->model->find($id);
+        $p = $this->model->find($id, true);
         if (!$p) {
             $this->render('404');
             return;
@@ -210,7 +210,7 @@ class SanPhamController {
         }
 
         try {
-            $items = $this->model->searchSuggestions($q, $limit);
+            $items = $this->model->searchSuggestions($q, $limit, true);
             echo json_encode([
                 'ok' => true,
                 'items' => $items
@@ -234,7 +234,7 @@ class SanPhamController {
             if ($q === '') {
                 $history = $this->getSearchHistory();
 
-                $trending = $this->model->getTopTrending(5);
+                $trending = $this->model->getTopTrending(5, true);
 
                 echo json_encode([
                     'type' => 'zero_query',
@@ -244,7 +244,7 @@ class SanPhamController {
                 return;
             }
 
-            $results = $this->model->searchLive($q, 5);
+            $results = $this->model->searchLive($q, 5, true);
             echo json_encode([
                 'type' => 'live_search',
                 'results' => $results,

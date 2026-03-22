@@ -4,11 +4,102 @@
 class SanPham {
     private PDO $pdo;
     private ?array $sanPhamColumnsCache = null;
+    private ?string $sanPhamStatusColumnCache = null;
+    private ?string $lastErrorMessage = null;
     private const VI_ACCENTS = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
     private const VI_ASCII = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd';
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
+        $this->ensureProductVisibilityColumn();
+    }
+
+    public function getLastErrorMessage(): ?string {
+        return $this->lastErrorMessage;
+    }
+
+    private function setError(?string $message): void {
+        $this->lastErrorMessage = $message;
+    }
+
+    private function mapProductDbError(Throwable $e): string {
+        $code = (string)($e->getCode() ?? '');
+        $raw = strtolower((string)$e->getMessage());
+
+        if ($code === '23505' || str_contains($raw, 'unique')) {
+            if (str_contains($raw, 'ma_san_pham')) {
+                return 'Mã sản phẩm đã tồn tại. Vui lòng dùng mã khác.';
+            }
+            if (str_contains($raw, 'ten_san_pham')) {
+                return 'Tên sản phẩm đã tồn tại. Vui lòng nhập tên khác.';
+            }
+            return 'Dữ liệu bị trùng khóa duy nhất. Vui lòng kiểm tra lại mã và tên sản phẩm.';
+        }
+
+        if ($code === '23503' || str_contains($raw, 'foreign key')) {
+            return 'Danh mục hoặc thương hiệu không hợp lệ. Vui lòng chọn lại dữ liệu liên kết.';
+        }
+
+        if ($code === '23502' || str_contains($raw, 'not-null')) {
+            return 'Thiếu trường bắt buộc khi lưu sản phẩm. Vui lòng kiểm tra lại dữ liệu.';
+        }
+
+        return 'Không thể lưu sản phẩm lúc này. Vui lòng thử lại.';
+    }
+
+    private function resetSanPhamColumnCache(): void {
+        $this->sanPhamColumnsCache = null;
+        $this->sanPhamStatusColumnCache = null;
+    }
+
+    private function getSanPhamStatusColumn(): ?string {
+        if ($this->sanPhamStatusColumnCache !== null) {
+            return $this->sanPhamStatusColumnCache !== '' ? $this->sanPhamStatusColumnCache : null;
+        }
+
+        $column = $this->firstExistingSanPhamColumn(['trang_thai', 'status']);
+        $this->sanPhamStatusColumnCache = $column ?? '';
+        return $column;
+    }
+
+    private function ensureProductVisibilityColumn(): void {
+        if ($this->firstExistingSanPhamColumn(['trang_thai', 'status']) !== null) {
+            return;
+        }
+
+        try {
+            $this->pdo->exec("ALTER TABLE san_pham ADD COLUMN IF NOT EXISTS trang_thai VARCHAR(20) DEFAULT 'active'");
+            $this->resetSanPhamColumnCache();
+            $statusColumn = $this->getSanPhamStatusColumn();
+            if ($statusColumn !== null) {
+                $this->pdo->exec("UPDATE san_pham SET $statusColumn = 'active' WHERE COALESCE(TRIM($statusColumn), '') = ''");
+            }
+        } catch (Throwable $e) {
+            // Keep app working even when DB user cannot alter schema.
+        }
+    }
+
+    private function normalizeProductVisibilityStatus(?string $status): string {
+        $normalized = strtolower(trim((string)($status ?? '')));
+        if (in_array($normalized, ['inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0'], true)) {
+            return 'inactive';
+        }
+
+        return 'active';
+    }
+
+    private function getVisibilityClause(string $tableAlias = 'sp', bool $visible = true): ?string {
+        $statusColumn = $this->getSanPhamStatusColumn();
+        if ($statusColumn === null) {
+            return null;
+        }
+
+        $expr = "LOWER(TRIM(COALESCE($tableAlias.$statusColumn, 'active')))";
+        $hiddenSet = "('inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0')";
+
+        return $visible
+            ? "$expr NOT IN $hiddenSet"
+            : "$expr IN $hiddenSet";
     }
 
     private function normalizeKeywordParts(string $q): array {
@@ -78,6 +169,7 @@ class SanPham {
         }
 
         $this->sanPhamColumnsCache = $cols;
+        $this->sanPhamStatusColumnCache = null;
         return $this->sanPhamColumnsCache;
     }
 
@@ -132,6 +224,8 @@ class SanPham {
             'hdsd' => ['hdsd'],
             'attribute' => ['attribute'],
             'danh_muc_day_du' => ['danh_muc_day_du'],
+            'trang_thai' => ['trang_thai', 'status'],
+            'status' => ['status', 'trang_thai'],
         ];
 
         foreach ($fieldMap as $source => $targets) {
@@ -204,6 +298,14 @@ class SanPham {
             $product['loai_san_pham'] = $product['ten_danh_muc'];
         }
 
+        $statusColumn = $this->getSanPhamStatusColumn();
+        $rawStatus = $statusColumn !== null
+            ? (string)($product[$statusColumn] ?? 'active')
+            : (string)($product['trang_thai'] ?? $product['status'] ?? 'active');
+        $normalizedStatus = $this->normalizeProductVisibilityStatus($rawStatus);
+        $product['trang_thai'] = $normalizedStatus;
+        $product['status'] = $normalizedStatus;
+
         return $product;
     }
 
@@ -231,6 +333,7 @@ class SanPham {
 
     private function buildSuggestionColumns(): array {
         $columns = [
+            "CAST(sp.ma_san_pham AS TEXT)",
             'sp.ten_san_pham',
             "COALESCE(th.ten_thuong_hieu, '')",
             "COALESCE(dm.ten_danh_muc, '')"
@@ -247,7 +350,15 @@ class SanPham {
     }
 
     // Lấy sản phẩm mới theo schema hiện tại
-    public function latest(int $limit = 8): array {
+    public function latest(int $limit = 8, bool $onlyVisibleOnWebsite = false): array {
+        $visibilityWhere = '';
+        if ($onlyVisibleOnWebsite) {
+            $visibilityClause = $this->getVisibilityClause('sp', true);
+            if ($visibilityClause !== null) {
+                $visibilityWhere = ' WHERE ' . $visibilityClause;
+            }
+        }
+
         $sql = "SELECT sp.*, sp.ma_san_pham AS id,
                        th.ten_thuong_hieu AS thuong_hieu,
                        COALESCE(dm.ten_danh_muc, sp.danh_muc_day_du) AS danh_muc_day_du,
@@ -260,16 +371,25 @@ class SanPham {
                 LEFT JOIN xuat_xu xx ON sp.ma_xuat_xu = xx.ma_xuat_xu
                 LEFT JOIN xuat_xu_thuong_hieu xxt ON sp.ma_xuat_xu = xxt.ma_xuat_xu
               LEFT JOIN noi_san_xuat nsx ON sp.ma_noi_san_xuat = nsx.ma_nsx
+                                $visibilityWhere
                 ORDER BY sp.ngay_tao DESC NULLS LAST, id DESC
                 LIMIT :limit";
         $st = $this->pdo->prepare($sql);
         $st->bindValue(':limit', $limit, PDO::PARAM_INT);
         $st->execute();
-            $items = $st->fetchAll(PDO::FETCH_ASSOC);
-            return array_map(fn(array $item): array => $this->normalizeProductRecord($item), $items);
+        $items = $st->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(fn(array $item): array => $this->normalizeProductRecord($item), $items);
     }
 
-    public function find($id) {
+    public function find($id, bool $onlyVisibleOnWebsite = false) {
+        $visibilitySql = '';
+        if ($onlyVisibleOnWebsite) {
+            $visibilityClause = $this->getVisibilityClause('sp', true);
+            if ($visibilityClause !== null) {
+                $visibilitySql = ' AND ' . $visibilityClause;
+            }
+        }
+
         $sql = "SELECT sp.*, sp.ma_san_pham AS id,
                        th.ten_thuong_hieu AS thuong_hieu,
                                              th.ten_thuong_hieu,
@@ -285,6 +405,7 @@ class SanPham {
                 LEFT JOIN xuat_xu_thuong_hieu xxt ON sp.ma_xuat_xu = xxt.ma_xuat_xu
               LEFT JOIN noi_san_xuat nsx ON sp.ma_noi_san_xuat = nsx.ma_nsx
                 WHERE sp.ma_san_pham = :id
+                                $visibilitySql
                 LIMIT 1";
         $st = $this->pdo->prepare($sql);
         $st->execute([':id' => $id]);
@@ -293,8 +414,8 @@ class SanPham {
     }
 
     // Alias cho find()
-    public function findById($id) {
-        return $this->find($id);
+    public function findById($id, bool $onlyVisibleOnWebsite = false) {
+        return $this->find($id, $onlyVisibleOnWebsite);
     }
 
     public function tangLuotXem(string $id): void {
@@ -363,7 +484,15 @@ class SanPham {
     /**
      * Paginate + lọc theo q + cap1/cap2 (đúng theo menu)
      */
-    public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = ''): array {
+    public function paginate(
+        int $page,
+        int $perPage,
+        string $q = '',
+        string $cap1Val = '',
+        string $cap2Val = '',
+        string $statusFilter = '',
+        bool $onlyVisibleOnWebsite = false
+    ): array {
         $page = max(1, $page);
         $offset = ($page - 1) * $perPage;
 
@@ -382,6 +511,21 @@ class SanPham {
         if ($cap2Val !== '') {
             $where .= " AND ($cap2) = :cap2 ";
             $params[':cap2'] = $cap2Val;
+        }
+
+        if ($onlyVisibleOnWebsite) {
+            $visibilityClause = $this->getVisibilityClause('sp', true);
+            if ($visibilityClause !== null) {
+                $where .= " AND $visibilityClause ";
+            }
+        }
+
+        $statusFilter = strtolower(trim($statusFilter));
+        if (!$onlyVisibleOnWebsite && in_array($statusFilter, ['active', 'inactive'], true)) {
+            $statusClause = $this->getVisibilityClause('sp', $statusFilter === 'active');
+            if ($statusClause !== null) {
+                $where .= " AND $statusClause ";
+            }
         }
 
         $from = " FROM san_pham sp
@@ -413,11 +557,12 @@ class SanPham {
         $st2->bindValue(':offset', $offset, PDO::PARAM_INT);
         $st2->execute();
         $items = $st2->fetchAll(PDO::FETCH_ASSOC);
+        $items = array_map(fn(array $item): array => $this->normalizeProductRecord($item), $items);
 
         return ['items' => $items, 'total' => $total];
     }
 
-    public function searchSuggestions(string $q, int $limit = 8): array {
+    public function searchSuggestions(string $q, int $limit = 8, bool $onlyVisibleOnWebsite = false): array {
         $limit = max(1, min(20, $limit));
         $q = trim($q);
         if ($q === '') {
@@ -428,6 +573,12 @@ class SanPham {
         $params = [];
 
         $this->appendKeywordFilters($where, $params, $q, $this->buildSuggestionColumns());
+        if ($onlyVisibleOnWebsite) {
+            $visibilityClause = $this->getVisibilityClause('sp', true);
+            if ($visibilityClause !== null) {
+                $where .= " AND $visibilityClause ";
+            }
+        }
 
         $sql = "SELECT sp.ma_san_pham AS id,
                        sp.ten_san_pham,
@@ -451,8 +602,15 @@ class SanPham {
         return $st->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getTopTrending(int $limit = 5): array {
+    public function getTopTrending(int $limit = 5, bool $onlyVisibleOnWebsite = false): array {
         $limit = max(1, min(20, $limit));
+        $visibilityWhere = '';
+        if ($onlyVisibleOnWebsite) {
+            $visibilityClause = $this->getVisibilityClause('sp', true);
+            if ($visibilityClause !== null) {
+                $visibilityWhere = ' WHERE ' . $visibilityClause;
+            }
+        }
 
         try {
             $sql = "SELECT sp.ma_san_pham AS id,
@@ -463,6 +621,7 @@ class SanPham {
                            COALESCE(sp.luot_xem, 0) AS luot_xem
                     FROM san_pham sp
                     LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
+                    $visibilityWhere
                     ORDER BY COALESCE(sp.luot_xem, 0) DESC, sp.ten_san_pham ASC
                     LIMIT :limit";
 
@@ -480,6 +639,7 @@ class SanPham {
                                    COALESCE(sp.so_luong_danh_gia, 0) AS luot_xem
                             FROM san_pham sp
                             LEFT JOIN thuong_hieu th ON sp.ma_thuong_hieu = th.ma_thuong_hieu
+                            $visibilityWhere
                             ORDER BY COALESCE(sp.so_luong_danh_gia, 0) DESC, sp.ten_san_pham ASC
                             LIMIT :limit";
 
@@ -490,7 +650,7 @@ class SanPham {
         }
     }
 
-    public function searchLive(string $q, int $limit = 5): array {
+    public function searchLive(string $q, int $limit = 5, bool $onlyVisibleOnWebsite = false): array {
         $limit = max(1, min(20, $limit));
         $q = trim($q);
         if ($q === '') {
@@ -500,6 +660,12 @@ class SanPham {
         $where = " WHERE 1=1 ";
         $params = [];
         $this->appendKeywordFilters($where, $params, $q, $this->buildSuggestionColumns());
+        if ($onlyVisibleOnWebsite) {
+            $visibilityClause = $this->getVisibilityClause('sp', true);
+            if ($visibilityClause !== null) {
+                $where .= " AND $visibilityClause ";
+            }
+        }
 
         $sql = "SELECT sp.ma_san_pham AS id,
                        sp.ten_san_pham,
@@ -659,10 +825,13 @@ class SanPham {
     }
 
     public function adminInsert($data): bool {
+        $this->setError(null);
+
         $maSanPham = trim((string)($data['ma_san_pham'] ?? ''));
         $tenSanPham = trim((string)($data['ten_san_pham'] ?? ''));
 
         if ($maSanPham === '' || $tenSanPham === '') {
+            $this->setError('Mã sản phẩm và tên sản phẩm là bắt buộc.');
             return false;
         }
 
@@ -685,6 +854,7 @@ class SanPham {
         }
 
         if (!in_array('ma_san_pham', $fields, true) || !in_array('ten_san_pham', $fields, true)) {
+            $this->setError('Thiếu trường cột bắt buộc trong bảng sản phẩm.');
             return false;
         }
 
@@ -694,13 +864,17 @@ class SanPham {
             $st = $this->pdo->prepare($sql);
             return $st->execute($params);
         } catch (Throwable $e) {
+            $this->setError($this->mapProductDbError($e));
             return false;
         }
     }
 
     public function adminUpdate($id, $data): bool {
+        $this->setError(null);
+
         $id = trim((string)$id);
         if ($id === '') {
+            $this->setError('Mã sản phẩm không hợp lệ.');
             return false;
         }
 
@@ -722,6 +896,7 @@ class SanPham {
         }
 
         if (empty($setClauses)) {
+            $this->setError('Không có dữ liệu nào để cập nhật.');
             return false;
         }
 
@@ -729,20 +904,97 @@ class SanPham {
 
         try {
             $st = $this->pdo->prepare($sql);
-            return $st->execute($params);
+            $ok = $st->execute($params);
+            if (!$ok) {
+                $this->setError('Không thể cập nhật sản phẩm lúc này.');
+                return false;
+            }
+
+            if ($st->rowCount() === 0) {
+                $this->setError('Không tìm thấy sản phẩm cần cập nhật hoặc dữ liệu không thay đổi.');
+                return false;
+            }
+
+            return true;
         } catch (Throwable $e) {
+            $this->setError($this->mapProductDbError($e));
+            return false;
+        }
+    }
+
+    public function updateProductVisibility($id, string $status): bool {
+        $this->setError(null);
+
+        $id = trim((string)$id);
+        if ($id === '') {
+            $this->setError('Mã sản phẩm không hợp lệ.');
+            return false;
+        }
+
+        $statusColumn = $this->getSanPhamStatusColumn();
+        if ($statusColumn === null) {
+            $this->setError('Bảng sản phẩm chưa hỗ trợ cột trạng thái hiển thị.');
+            return false;
+        }
+
+        $rawStatus = strtolower(trim($status));
+        if (!in_array($rawStatus, ['active', 'inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0'], true)) {
+            $this->setError('Trạng thái hiển thị không hợp lệ.');
+            return false;
+        }
+
+        $normalized = $this->normalizeProductVisibilityStatus($rawStatus);
+        $sql = "UPDATE san_pham SET $statusColumn = :status WHERE ma_san_pham = :id";
+        try {
+            $st = $this->pdo->prepare($sql);
+            $ok = $st->execute([
+                ':status' => $normalized,
+                ':id' => $id,
+            ]);
+            if (!$ok) {
+                $this->setError('Không thể cập nhật trạng thái hiển thị sản phẩm.');
+                return false;
+            }
+
+            if ($st->rowCount() === 0) {
+                $this->setError('Không tìm thấy sản phẩm để cập nhật trạng thái.');
+                return false;
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            $this->setError($this->mapProductDbError($e));
             return false;
         }
     }
 
     public function adminDelete($id): bool {
+        $this->setError(null);
+
         $id = trim((string)$id);
         if ($id === '') {
+            $this->setError('Mã sản phẩm không hợp lệ.');
             return false;
         }
 
         $sql = 'DELETE FROM san_pham WHERE ma_san_pham = :id';
-        $st = $this->pdo->prepare($sql);
-        return $st->execute([':id' => $id]);
+        try {
+            $st = $this->pdo->prepare($sql);
+            $ok = $st->execute([':id' => $id]);
+            if (!$ok) {
+                $this->setError('Không thể xóa sản phẩm lúc này.');
+                return false;
+            }
+
+            if ($st->rowCount() === 0) {
+                $this->setError('Không tìm thấy sản phẩm để xóa.');
+                return false;
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            $this->setError($this->mapProductDbError($e));
+            return false;
+        }
     }
 }

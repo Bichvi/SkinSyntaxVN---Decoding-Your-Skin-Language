@@ -4,12 +4,16 @@ $error = $error ?? null;
 $brandOptions = $brandOptions ?? [];
 $categoryOptions = $categoryOptions ?? [];
 $nextProductCode = (string)($nextProductCode ?? '');
+$formAction = trim((string)($formAction ?? 'admin_sp_create'));
+$backRoute = trim((string)($backRoute ?? 'admin_sp'));
 
 $rawImages = preg_split('/\s*\|\s*/', trim((string)($product['link_hinh_anh'] ?? ''))) ?: [];
 $currentImage = trim((string)($rawImages[0] ?? ''));
 $imagePreview = resolve_image_url($currentImage);
 $selectedBrandId = (string)($product['ma_thuong_hieu'] ?? '');
 $selectedCategoryId = (string)($product['ma_danh_muc'] ?? '');
+$selectedStatus = strtolower(trim((string)($product['trang_thai'] ?? $product['status'] ?? 'active')));
+$selectedStatus = in_array($selectedStatus, ['inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0'], true) ? 'inactive' : 'active';
 $selectedBrandLabel = trim((string)($product['ten_thuong_hieu_input'] ?? ''));
 $selectedCategoryLabel = trim((string)($product['ten_danh_muc_input'] ?? ''));
 
@@ -31,14 +35,14 @@ foreach ($categoryOptions as $option) {
 <div class="container py-4">
 	<div class="d-flex justify-content-between align-items-center mb-3">
 		<h1 class="h3 mb-0">Thêm sản phẩm</h1>
-		<a href="index.php?r=admin_sp" class="btn btn-outline-secondary">Quay lại</a>
+		<a href="index.php?r=<?= h($backRoute) ?>" class="btn btn-outline-secondary">Quay lại</a>
 	</div>
 
 	<?php if (!empty($error)): ?>
 		<div class="alert alert-danger"><?= h($error) ?></div>
 	<?php endif; ?>
 
-	<form method="POST" action="index.php?r=admin_sp_create" enctype="multipart/form-data" class="card border-0 shadow-sm">
+	<form method="POST" action="index.php?r=<?= h($formAction) ?>" enctype="multipart/form-data" class="card border-0 shadow-sm">
 		<div class="card-body">
 			<div class="row g-3">
 				<div class="col-md-4">
@@ -79,6 +83,13 @@ foreach ($categoryOptions as $option) {
 				<div class="col-md-4">
 					<label class="form-label">Loại da</label>
 					<input type="text" class="form-control" name="loai_da" value="<?= h($product['loai_da'] ?? '') ?>">
+				</div>
+				<div class="col-md-4">
+					<label class="form-label">Trạng thái hiển thị</label>
+					<select class="form-select" name="trang_thai">
+						<option value="active" <?= $selectedStatus === 'active' ? 'selected' : '' ?>>Đang hiển thị trên website</option>
+						<option value="inactive" <?= $selectedStatus === 'inactive' ? 'selected' : '' ?>>Tạm ẩn trên website</option>
+					</select>
 				</div>
 
 				<div class="col-12">
@@ -132,7 +143,7 @@ foreach ($categoryOptions as $option) {
 		</div>
 
 		<div class="card-footer bg-white d-flex justify-content-end gap-2">
-			<a href="index.php?r=admin_sp" class="btn btn-light border">Hủy</a>
+			<a href="index.php?r=<?= h($backRoute) ?>" class="btn btn-light border">Hủy</a>
 			<button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
 		</div>
 	</form>

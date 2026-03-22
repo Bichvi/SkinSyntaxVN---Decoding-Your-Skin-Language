@@ -599,6 +599,7 @@ $accountVerificationHint = !empty($account['email'])
               <tbody>
                 <?php foreach ($orders as $o): ?>
                   <?php $orderStatus = strtolower(trim((string)($o['trang_thai'] ?? ''))); ?>
+                  <?php $isCancelledOrder = in_array($orderStatus, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true); ?>
                   <?php $detailCollapseId = 'order-details-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', (string)($o['ma_hoa_don'] ?? '0')); ?>
                   <tr>
                     <td>#<?= h($o['ma_hoa_don'] ?? '') ?></td>
@@ -610,10 +611,15 @@ $accountVerificationHint = !empty($account['email'])
                       <div class="small text-muted"><?= h($o['status_thanh_toan'] ?? 'Chua thanh toan') ?></div>
                     </td>
                     <td>
-                      <?php if (!empty($o['da_tich_diem'])): ?>
+                      <?php if ($isCancelledOrder): ?>
+                        <span class="badge text-bg-danger">Đơn đã hủy</span>
+                      <?php elseif (!empty($o['da_tich_diem'])): ?>
                         <span class="badge text-bg-success">+<?= number_format((int)($o['diem_cong'] ?? 0), 0, ',', '.') ?></span>
                       <?php else: ?>
                         <span class="text-muted small">Chờ hoàn thành</span>
+                      <?php endif; ?>
+                      <?php if ($isCancelledOrder && !empty($o['ly_do_huy'])): ?>
+                        <div class="small text-muted mt-1">Lý do: <?= h((string)($o['ly_do_huy'] ?? '')) ?></div>
                       <?php endif; ?>
                       <?php if ((int)($o['diem_su_dung'] ?? 0) > 0): ?>
                         <div class="small text-muted mt-1">Đã dùng <?= number_format((int)($o['diem_su_dung'] ?? 0), 0, ',', '.') ?> điểm</div>
@@ -632,9 +638,16 @@ $accountVerificationHint = !empty($account['email'])
                       </button>
                     </td>
                     <td class="text-end">
-                      <?php if (!in_array($orderStatus, ['dang giao', 'hoan thanh', 'da huy'], true)): ?>
-                        <form method="post" action="<?= BASE_URL ?>/index.php?r=huydonhang" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
+                      <?php if (!in_array($orderStatus, ['dang giao', 'đang giao', 'hoan thanh', 'hoàn thành'], true) && !$isCancelledOrder): ?>
+                        <form method="post" action="<?= BASE_URL ?>/index.php?r=huydonhang" class="d-inline-flex flex-column gap-2" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
                           <input type="hidden" name="ma_hoa_don" value="<?= h($o['ma_hoa_don'] ?? '') ?>">
+                          <select class="form-select form-select-sm" name="ly_do_huy" required>
+                            <option value="">Chọn lý do hủy đơn</option>
+                            <?php foreach (($cancelReasonOptions ?? []) as $value => $label): ?>
+                              <option value="<?= h((string)$value) ?>"><?= h((string)$label) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                          <textarea class="form-control form-control-sm" name="ly_do_huy_bo_sung" rows="2" placeholder="Ghi chú thêm cho lý do hủy (nếu có)"></textarea>
                           <button type="submit" class="btn btn-sm btn-outline-danger">Hủy đơn</button>
                         </form>
                       <?php else: ?>

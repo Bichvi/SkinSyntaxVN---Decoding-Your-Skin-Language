@@ -37,7 +37,7 @@ $q = trim((string)($q ?? ''));
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    <form class="row g-2 mb-3" method="get" action="index.php">
+                    <form class="row g-2 mb-3" method="get" action="index.php" data-live-filter="true">
                         <input type="hidden" name="r" value="admin_categories">
                         <div class="col-md-9">
                             <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm danh mục theo mã hoặc tên...">

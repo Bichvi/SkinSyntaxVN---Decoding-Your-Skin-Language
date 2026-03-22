@@ -47,6 +47,17 @@ class TaiKhoanController {
         return in_array($normalized, ['hoan thanh', 'hoàn thành', 'da giao', 'đã giao'], true);
     }
 
+    private function cancellationReasonOptions(): array {
+        return [
+            'Khach_doi_y' => 'Khách đổi ý',
+            'Dat_sai_san_pham' => 'Đặt sai sản phẩm',
+            'Tre_giao_hang' => 'Giao hàng chậm hơn dự kiến',
+            'Khong_lien_he_duoc' => 'Không liên hệ được để xác nhận đơn',
+            'Het_hang' => 'Hết hàng',
+            'Khac' => 'Lý do khác',
+        ];
+    }
+
     private function buildSessionCartItems(): array {
         $cart = $_SESSION['gio_hang'] ?? [];
         if (empty($cart) || !is_array($cart)) {
@@ -158,6 +169,7 @@ class TaiKhoanController {
             'cartItems' => $cartItems,
             'skinProfile' => $skinProfile,
             'loaiDaOptions' => $loaiDaOptions,
+            'cancelReasonOptions' => $this->cancellationReasonOptions(),
         ]);
     }
 

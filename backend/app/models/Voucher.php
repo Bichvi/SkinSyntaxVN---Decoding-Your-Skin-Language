@@ -216,6 +216,16 @@ class Voucher {
             return false;
         }
 
+        if (mb_strlen($name) > 255) {
+            $this->lastErrorMessage = 'Tên voucher tối đa 255 ký tự.';
+            return false;
+        }
+
+        if ($description !== '' && mb_strlen($description) > 2000) {
+            $this->lastErrorMessage = 'Mô tả voucher tối đa 2000 ký tự.';
+            return false;
+        }
+
         if (!preg_match('/^[A-Z0-9_-]{3,50}$/', $code)) {
             $this->lastErrorMessage = 'Mã voucher chỉ được chứa chữ in hoa, số, dấu gạch ngang hoặc gạch dưới.';
             return false;
@@ -231,6 +241,11 @@ class Voucher {
             return false;
         }
 
+        if (fmod((float)($data['gia_tri_giam'] ?? 0), 1.0) !== 0.0) {
+            $this->lastErrorMessage = 'Giá trị giảm phải là số nguyên.';
+            return false;
+        }
+
         if ($type === 'percent' && $value > 100) {
             $this->lastErrorMessage = 'Voucher theo phần trăm chỉ được từ 1 đến 100.';
             return false;
@@ -243,6 +258,11 @@ class Voucher {
 
         if ($startAt !== null && $endAt !== null && strtotime($startAt) > strtotime($endAt)) {
             $this->lastErrorMessage = 'Thời gian bắt đầu phải sớm hơn hoặc bằng thời gian kết thúc.';
+            return false;
+        }
+
+        if ($minOrder < 0) {
+            $this->lastErrorMessage = 'Giá trị đơn tối thiểu không hợp lệ.';
             return false;
         }
 
@@ -284,7 +304,12 @@ class Voucher {
 
             $sql = 'UPDATE voucher SET ' . implode(', ', $setClauses) . ' WHERE ma_voucher = :id';
             $st = $this->pdo->prepare($sql);
-            return $st->execute($params);
+            try {
+                return $st->execute($params);
+            } catch (Throwable $e) {
+                $this->lastErrorMessage = $this->mapPersistenceError($e, 'Không thể cập nhật voucher.');
+                return false;
+            }
         }
 
         $fields = array_keys($payload);
@@ -297,7 +322,12 @@ class Voucher {
             $params[':' . $column] = $valueItem;
         }
 
-        return $st->execute($params);
+        try {
+            return $st->execute($params);
+        } catch (Throwable $e) {
+            $this->lastErrorMessage = $this->mapPersistenceError($e, 'Không thể tạo voucher mới.');
+            return false;
+        }
     }
 
     public function deleteVoucher(int $id): bool {
@@ -308,7 +338,22 @@ class Voucher {
         }
 
         $st = $this->pdo->prepare('DELETE FROM voucher WHERE ma_voucher = :id');
-        return $st->execute([':id' => $id]);
+        try {
+            return $st->execute([':id' => $id]);
+        } catch (Throwable $e) {
+            $this->lastErrorMessage = $this->mapPersistenceError($e, 'Không thể xóa voucher.');
+            return false;
+        }
+    }
+
+    private function mapPersistenceError(Throwable $e, string $fallback): string {
+        $message = strtolower(trim((string)$e->getMessage()));
+
+        if (str_contains($message, 'duplicate key') || str_contains($message, 'unique') || str_contains($message, '23505')) {
+            return 'Mã voucher đã tồn tại. Vui lòng dùng mã khác.';
+        }
+
+        return $fallback;
     }
 
     public function validateForCheckout(string $code, int $subtotal): array {

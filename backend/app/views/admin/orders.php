@@ -2,6 +2,7 @@
 $orders = $orders ?? [];
 $orderDetail = $orderDetail ?? null;
 $statusOptions = $statusOptions ?? [];
+$cancelReasonOptions = $cancelReasonOptions ?? [];
 $q = trim((string)($q ?? ''));
 $status = trim((string)($status ?? ''));
 $pageTitle = trim((string)($pageTitle ?? 'Quản lý đơn hàng'));
@@ -16,7 +17,7 @@ $allowManage = !empty($allowManage);
         </div>
     </div>
 
-    <form class="row g-2 mb-4" method="get" action="index.php">
+    <form class="row g-2 mb-4" method="get" action="index.php" data-live-filter="true">
         <input type="hidden" name="r" value="<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>">
         <div class="col-md-6">
             <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm theo mã đơn, tên khách, email...">
@@ -97,6 +98,13 @@ $allowManage = !empty($allowManage);
                             <span class="badge rounded-pill text-bg-secondary"><?= h($orderDetail['trang_thai'] ?? '') ?></span>
                         </div>
 
+                        <?php if (!empty($orderDetail['ly_do_huy'])): ?>
+                            <div class="alert alert-warning py-2 px-3 mb-3">
+                                <div class="small text-uppercase fw-semibold">Lý do hủy đơn</div>
+                                <div><?= h((string)$orderDetail['ly_do_huy']) ?></div>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="small text-muted mb-2">Địa chỉ giao hàng</div>
                         <div class="mb-3"><?= h($orderDetail['dia_chi_giao_hang'] ?? 'Chưa cập nhật') ?></div>
 
@@ -144,18 +152,40 @@ $allowManage = !empty($allowManage);
                         </div>
 
                         <?php if ($allowManage): ?>
-                            <form method="post" action="index.php?r=<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_order_status' : 'admin_order_status') ?>" class="row g-2">
+                            <?php $isStaffOrderPage = strpos($pageTitle, 'Xử lý') === 0; ?>
+                            <form method="post" action="index.php?r=<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_order_status' : 'admin_order_status') ?>" class="row g-2" data-order-status-form>
                                 <input type="hidden" name="ma_hoa_don" value="<?= h($orderDetail['ma_hoa_don'] ?? '') ?>">
                                 <div class="col-md-8">
-                                    <select class="form-select" name="trang_thai">
+                                    <select class="form-select" name="trang_thai" data-order-status-select>
                                         <?php $currentStatus = (string)($orderDetail['trang_thai'] ?? ''); ?>
+                                        <?php $currentStatusNormalized = strtolower(trim($currentStatus)); ?>
+                                        <?php $orderIsCancelled = in_array($currentStatusNormalized, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true); ?>
                                         <?php foreach ($statusOptions as $value => $label): ?>
-                                            <option value="<?= h($value) ?>" <?= $currentStatus === $value ? 'selected' : '' ?>><?= h($label) ?></option>
+                                            <?php $optionIsCancelled = in_array(strtolower(trim((string)$value)), ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true); ?>
+                                            <option value="<?= h($value) ?>" <?= $currentStatus === $value ? 'selected' : '' ?> <?= ($isStaffOrderPage && $orderIsCancelled && !$optionIsCancelled) ? 'disabled' : '' ?>><?= h($label) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-4 d-grid">
-                                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                                    <button type="submit" class="btn btn-primary" <?= ($isStaffOrderPage && !empty($orderIsCancelled)) ? 'disabled' : '' ?>>Cập nhật</button>
+                                </div>
+                                <?php if (!empty($isStaffOrderPage) && !empty($orderIsCancelled)): ?>
+                                    <div class="col-12">
+                                        <div class="small text-danger">Đơn đã hủy nên không thể chuyển sang trạng thái khác.</div>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="col-12 d-none" data-cancel-reason-group>
+                                    <label class="form-label small mb-1">Lý do hủy <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="ly_do_huy" data-cancel-reason-select>
+                                        <option value="">Chọn lý do hủy đơn</option>
+                                        <?php foreach ($cancelReasonOptions as $value => $label): ?>
+                                            <option value="<?= h((string)$value) ?>"><?= h((string)$label) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-12 d-none" data-cancel-note-group>
+                                    <label class="form-label small mb-1">Ghi chú thêm cho lý do hủy</label>
+                                    <textarea class="form-control" rows="2" name="ly_do_huy_bo_sung" data-cancel-note-input placeholder="Nhập thêm lý do (bắt buộc nếu chọn Lý do khác)"></textarea>
                                 </div>
                             </form>
                         <?php endif; ?>
@@ -165,3 +195,41 @@ $allowManage = !empty($allowManage);
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.querySelector('[data-order-status-form]');
+    if (!form) {
+        return;
+    }
+
+    var statusSelect = form.querySelector('[data-order-status-select]');
+    var reasonGroup = form.querySelector('[data-cancel-reason-group]');
+    var noteGroup = form.querySelector('[data-cancel-note-group]');
+    var reasonSelect = form.querySelector('[data-cancel-reason-select]');
+    var noteInput = form.querySelector('[data-cancel-note-input]');
+
+    if (!statusSelect || !reasonGroup || !noteGroup || !reasonSelect || !noteInput) {
+        return;
+    }
+
+    var isCancelled = function (value) {
+        var normalized = (value || '').toString().trim().toLowerCase();
+        return normalized === 'da huy' || normalized === 'đã hủy' || normalized === 'huy';
+    };
+
+    var toggleCancelFields = function () {
+        var cancelled = isCancelled(statusSelect.value);
+        reasonGroup.classList.toggle('d-none', !cancelled);
+        noteGroup.classList.toggle('d-none', !cancelled);
+        reasonSelect.required = cancelled;
+
+        var reasonIsOther = (reasonSelect.value || '') === 'Khac';
+        noteInput.required = cancelled && reasonIsOther;
+    };
+
+    statusSelect.addEventListener('change', toggleCancelFields);
+    reasonSelect.addEventListener('change', toggleCancelFields);
+    toggleCancelFields();
+});
+</script>

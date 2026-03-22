@@ -3,10 +3,12 @@
 
 class TaiKhoan {
     private PDO $pdo;
+    private array $columnCache = [];
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
         $this->ensureLoyaltyColumns();
+        $this->ensureOrderColumns();
     }
 
     private function ensureLoyaltyColumns(): void {
@@ -22,6 +24,44 @@ class TaiKhoan {
                 // Keep account pages resilient if schema updates are unavailable.
             }
         }
+    }
+
+    private function ensureOrderColumns(): void {
+        try {
+            $this->pdo->exec("ALTER TABLE hoa_don ADD COLUMN IF NOT EXISTS ly_do_huy TEXT");
+        } catch (Throwable $e) {
+            // Keep account page resilient if schema updates are unavailable.
+        }
+    }
+
+    private function getColumns(string $table): array {
+        if (isset($this->columnCache[$table])) {
+            return $this->columnCache[$table];
+        }
+
+        $sql = "SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = current_schema()
+                  AND table_name = :table";
+        $st = $this->pdo->prepare($sql);
+        $st->execute([':table' => $table]);
+        $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $columns = [];
+        foreach ($rows as $row) {
+            $name = (string)($row['column_name'] ?? '');
+            if ($name !== '') {
+                $columns[$name] = true;
+            }
+        }
+
+        $this->columnCache[$table] = $columns;
+        return $columns;
+    }
+
+    private function hasColumn(string $table, string $column): bool {
+        $columns = $this->getColumns($table);
+        return isset($columns[$column]);
     }
 
     public function getAccountOverview(int $nguoiDungId): ?array {
@@ -115,12 +155,25 @@ class TaiKhoan {
     }
 
     public function getOrderHistory(int $maKh): array {
-        $sql = "SELECT ma_hoa_don, ngay_dat, tong_tien, trang_thai, hinh_thuc_thanh_toan, status_thanh_toan,
-                   COALESCE(diem_cong, 0) AS diem_cong,
-                       COALESCE(da_tich_diem, FALSE) AS da_tich_diem,
-                       COALESCE(diem_su_dung, 0) AS diem_su_dung,
-                       COALESCE(tien_giam_diem, 0) AS tien_giam_diem
-                FROM hoa_don
+        $selectParts = [
+            'ma_hoa_don',
+            'ngay_dat',
+            'tong_tien',
+            'trang_thai',
+            'hinh_thuc_thanh_toan',
+            'status_thanh_toan',
+            'COALESCE(diem_cong, 0) AS diem_cong',
+            'COALESCE(da_tich_diem, FALSE) AS da_tich_diem',
+            'COALESCE(diem_su_dung, 0) AS diem_su_dung',
+            'COALESCE(tien_giam_diem, 0) AS tien_giam_diem',
+        ];
+
+        if ($this->hasColumn('hoa_don', 'ly_do_huy')) {
+            $selectParts[] = 'COALESCE(ly_do_huy, \'\') AS ly_do_huy';
+        }
+
+        $sql = "SELECT " . implode(', ', $selectParts) . "
+            FROM hoa_don
                 WHERE ma_kh = :ma_kh
                 ORDER BY ngay_dat DESC, ma_hoa_don DESC";
         $st = $this->pdo->prepare($sql);

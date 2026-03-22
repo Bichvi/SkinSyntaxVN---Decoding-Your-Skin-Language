@@ -391,8 +391,8 @@ $staffMenuItems = [
     [
         'route' => 'staff_products',
         'icon' => 'fa-pen-to-square',
-        'label' => 'Cập nhật sản phẩm',
-        'meta' => 'Sửa nội dung và thông tin bán hàng',
+        'label' => 'Quản lý sản phẩm',
+        'meta' => 'Thêm, sửa và ẩn/hiện trên website',
         'active' => strpos($currentRoute, 'staff_products') === 0 || strpos($currentRoute, 'staff_product_') === 0,
     ],
     [

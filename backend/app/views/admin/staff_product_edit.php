@@ -9,6 +9,8 @@ $currentImage = trim((string)($rawImages[0] ?? ''));
 $imagePreview = resolve_image_url($currentImage);
 $selectedBrandId = (string)($product['ma_thuong_hieu'] ?? '');
 $selectedCategoryId = (string)($product['ma_danh_muc'] ?? '');
+$selectedStatus = strtolower(trim((string)($product['trang_thai'] ?? $product['status'] ?? 'active')));
+$selectedStatus = in_array($selectedStatus, ['inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0'], true) ? 'inactive' : 'active';
 $selectedBrandLabel = '';
 $selectedCategoryLabel = '';
 
@@ -37,7 +39,7 @@ if ($selectedCategoryLabel === '' && !empty($product['loai_san_pham'])) {
 
 <div class="container-fluid p-4" style="max-width: 1080px;">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Cập nhật sản phẩm</h1>
+        <h1 class="h3 mb-0">Sửa sản phẩm</h1>
         <a href="index.php?r=staff_products" class="btn btn-outline-secondary">Quay lại</a>
     </div>
 
@@ -71,6 +73,13 @@ if ($selectedCategoryLabel === '' && !empty($product['loai_san_pham'])) {
                 <div class="col-md-4">
                     <label class="form-label">Dung tích</label>
                     <input type="text" class="form-control" name="dung_tich" value="<?= h($product['dung_tich'] ?? '') ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Trạng thái hiển thị</label>
+                    <select class="form-select" name="trang_thai">
+                        <option value="active" <?= $selectedStatus === 'active' ? 'selected' : '' ?>>Đang hiển thị trên website</option>
+                        <option value="inactive" <?= $selectedStatus === 'inactive' ? 'selected' : '' ?>>Tạm ẩn trên website</option>
+                    </select>
                 </div>
                 <div class="col-12">
                     <label class="form-label">Ảnh hiện tại</label>
@@ -123,7 +132,7 @@ if ($selectedCategoryLabel === '' && !empty($product['loai_san_pham'])) {
         </div>
         <div class="card-footer bg-white d-flex justify-content-end gap-2">
             <a href="index.php?r=staff_products" class="btn btn-light border">Hủy</a>
-            <button type="submit" class="btn btn-primary">Lưu cập nhật</button>
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
         </div>
     </form>
 </div>

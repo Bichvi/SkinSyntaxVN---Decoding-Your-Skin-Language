@@ -159,7 +159,7 @@ $loaiKh = trim((string)($loaiKh ?? ''));
         </div>
     </div>
 
-    <form class="row g-2 mb-4" method="get" action="index.php">
+    <form class="row g-2 mb-4" method="get" action="index.php" data-live-filter="true">
         <input type="hidden" name="r" value="admin_users">
         <div class="col-md-6">
             <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm theo tên, email, số điện thoại...">

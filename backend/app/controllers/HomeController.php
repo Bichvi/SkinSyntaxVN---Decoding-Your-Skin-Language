@@ -123,7 +123,7 @@ class HomeController {
     }
 
     public function index() {
-        $latest = $this->model->latest(8);
+        $latest = $this->model->latest(8, true);
         $cats = $this->getHighlightedCategories();
         $this->render('home', ['latest' => $latest, 'cats' => $cats]);
     }
@@ -1069,7 +1069,7 @@ class HomeController {
                 return;
             }
 
-            $detail = $this->model->findById($productId);
+            $detail = $this->model->findById($productId, true);
             if (!$detail || !is_array($detail)) {
                 return;
             }
@@ -1092,7 +1092,7 @@ class HomeController {
                 break;
             }
 
-            foreach ($this->model->searchSuggestions($query, $limit) as $suggestion) {
+            foreach ($this->model->searchSuggestions($query, $limit, true) as $suggestion) {
                 $appendProduct(trim((string)($suggestion['id'] ?? '')));
             }
 
@@ -1100,7 +1100,7 @@ class HomeController {
                 break;
             }
 
-            foreach ($this->model->searchLive($query, $limit)['items'] ?? [] as $item) {
+            foreach ($this->model->searchLive($query, $limit, true) as $item) {
                 $appendProduct(trim((string)($item['ma_san_pham'] ?? $item['id'] ?? '')));
                 if (count($products) >= $limit) {
                     break;
@@ -1109,7 +1109,7 @@ class HomeController {
         }
 
         if (count($products) < $limit) {
-            foreach ($this->model->getTopTrending($limit * 2) as $item) {
+            foreach ($this->model->getTopTrending($limit * 2, true) as $item) {
                 $appendProduct(trim((string)($item['id'] ?? '')));
                 if (count($products) >= $limit) {
                     break;

@@ -77,6 +77,7 @@ class AdminController {
             'thanh_phan_day_du' => trim((string)($source['thanh_phan_day_du'] ?? '')),
             'hdsd' => trim((string)($source['hdsd'] ?? '')),
             'link_hinh_anh' => trim((string)($source['link_hinh_anh'] ?? '')),
+            'trang_thai' => trim((string)($source['trang_thai'] ?? 'active')),
         ];
     }
 
@@ -248,9 +249,13 @@ class AdminController {
             exit;
         }
 
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể thêm sản phẩm. Vui lòng thử lại.')
+            : 'Không thể thêm sản phẩm. Vui lòng thử lại.';
+
         $this->render('admin/themSP', [
             'product' => $data,
-            'error' => 'Không thể thêm sản phẩm. Vui lòng thử lại.',
+            'error' => $errorMessage,
             'brandOptions' => $brandOptions,
             'categoryOptions' => $categoryOptions,
             'nextProductCode' => $nextProductCode,
@@ -344,9 +349,13 @@ class AdminController {
             exit;
         }
 
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật sản phẩm. Vui lòng thử lại.')
+            : 'Không thể cập nhật sản phẩm. Vui lòng thử lại.';
+
         $this->render('admin/suaSP', [
             'product' => array_merge($current, $data),
-            'error' => 'Không thể cập nhật sản phẩm. Vui lòng thử lại.',
+            'error' => $errorMessage,
             'brandOptions' => $brandOptions,
             'categoryOptions' => $categoryOptions,
         ]);
@@ -361,7 +370,11 @@ class AdminController {
             exit;
         }
 
-        $this->model->adminDelete($id);
+        $ok = $this->model->adminDelete($id);
+        $message = $ok
+            ? 'Đã xóa sản phẩm.'
+            : ((string)($this->model->getLastErrorMessage() ?? 'Không thể xóa sản phẩm.'));
+        set_flash($ok ? 'success' : 'error', $message);
         header('Location: index.php?r=admin_sp');
         exit;
     }

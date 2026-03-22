@@ -216,6 +216,10 @@ switch ($r) {
         (new QuanTriController($pdo))->adminProductDelete();
         break;
 
+    case 'admin_sp_visibility':
+        (new QuanTriController($pdo))->adminProductVisibility();
+        break;
+
     case 'admin_categories':
         (new QuanTriController($pdo))->adminCategories();
         break;
@@ -297,8 +301,16 @@ switch ($r) {
         (new QuanTriController($pdo))->staffProducts();
         break;
 
+    case 'staff_product_create':
+        (new QuanTriController($pdo))->staffProductCreate();
+        break;
+
     case 'staff_product_edit':
         (new QuanTriController($pdo))->staffProductEdit();
+        break;
+
+    case 'staff_product_visibility':
+        (new QuanTriController($pdo))->staffProductVisibility();
         break;
 
     case 'staff_reviews':

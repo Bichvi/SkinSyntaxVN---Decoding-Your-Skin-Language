@@ -20,6 +20,7 @@ class QuanTri {
             "ALTER TABLE danh_gia ADD COLUMN IF NOT EXISTS phan_hoi TEXT",
             "ALTER TABLE danh_gia ADD COLUMN IF NOT EXISTS ma_nv_phan_hoi INTEGER REFERENCES nhan_vien(ma_nv)",
             "ALTER TABLE danh_gia ADD COLUMN IF NOT EXISTS ngay_phan_hoi TIMESTAMP",
+            "ALTER TABLE hoa_don ADD COLUMN IF NOT EXISTS ly_do_huy TEXT",
         ];
 
         foreach ($ddl as $sql) {
@@ -569,11 +570,34 @@ class QuanTri {
     }
 
     public function saveCategory(array $data, ?int $id = null): bool {
+        $this->lastErrorMessage = null;
+
         $name = trim((string)($data['ten_danh_muc'] ?? ''));
         $desc = trim((string)($data['mo_ta'] ?? ''));
         $status = trim((string)($data['status'] ?? 'active'));
         if ($name === '') {
+            $this->lastErrorMessage = 'Vui lòng nhập tên danh mục.';
             return false;
+        }
+
+        // Prevent duplicate names before write to avoid SQLSTATE[23505].
+        $duplicateSql = 'SELECT ma_danh_muc FROM danh_muc WHERE LOWER(TRIM(ten_danh_muc)) = LOWER(TRIM(:name))';
+        $duplicateParams = [':name' => $name];
+        if ($id !== null && $id > 0) {
+            $duplicateSql .= ' AND ma_danh_muc <> :id';
+            $duplicateParams[':id'] = $id;
+        }
+        $duplicateSql .= ' LIMIT 1';
+
+        try {
+            $stDuplicate = $this->pdo->prepare($duplicateSql);
+            $stDuplicate->execute($duplicateParams);
+            if ($stDuplicate->fetchColumn() !== false) {
+                $this->lastErrorMessage = 'Tên danh mục đã tồn tại. Vui lòng nhập tên khác.';
+                return false;
+            }
+        } catch (Throwable $e) {
+            // Continue to save path; DB constraints will still protect consistency.
         }
 
         $categoryColumns = $this->getColumns('danh_muc');
@@ -599,19 +623,44 @@ class QuanTri {
             }
 
             $sql = 'UPDATE danh_muc SET ' . implode(', ', $setClauses) . ' WHERE ma_danh_muc = :id';
-            $st = $this->pdo->prepare($sql);
-            return $st->execute($params);
+            try {
+                $st = $this->pdo->prepare($sql);
+                return $st->execute($params);
+            } catch (Throwable $e) {
+                $code = (string)($e->getCode() ?? '');
+                $message = strtolower((string)$e->getMessage());
+                if ($code === '23505' || str_contains($message, 'danh_muc_ten_danh_muc_key')) {
+                    $this->lastErrorMessage = 'Tên danh mục đã tồn tại. Vui lòng nhập tên khác.';
+                    return false;
+                }
+
+                $this->lastErrorMessage = 'Không thể lưu danh mục lúc này.';
+                return false;
+            }
         }
 
         $fields = array_keys($payload);
         $placeholders = array_map(fn(string $field): string => ':' . $field, $fields);
         $sql = 'INSERT INTO danh_muc(' . implode(', ', $fields) . ') VALUES (' . implode(', ', $placeholders) . ')';
-        $st = $this->pdo->prepare($sql);
         $params = [];
         foreach ($payload as $column => $value) {
             $params[':' . $column] = $value;
         }
-        return $st->execute($params);
+
+        try {
+            $st = $this->pdo->prepare($sql);
+            return $st->execute($params);
+        } catch (Throwable $e) {
+            $code = (string)($e->getCode() ?? '');
+            $message = strtolower((string)$e->getMessage());
+            if ($code === '23505' || str_contains($message, 'danh_muc_ten_danh_muc_key')) {
+                $this->lastErrorMessage = 'Tên danh mục đã tồn tại. Vui lòng nhập tên khác.';
+                return false;
+            }
+
+            $this->lastErrorMessage = 'Không thể lưu danh mục lúc này.';
+            return false;
+        }
     }
 
     public function deleteCategory(int $id, bool $deleteProducts = false): bool {
@@ -1142,24 +1191,64 @@ class QuanTri {
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
-    public function updateOrderStatus(int $orderId, string $status): bool {
+    public function updateOrderStatus(int $orderId, string $status, string $cancelReason = '', bool $allowCancelledOverride = false): bool {
+        $this->lastErrorMessage = null;
         $status = trim($status);
         if ($orderId <= 0 || $status === '') {
+            $this->lastErrorMessage = 'Du lieu cap nhat trang thai don hang khong hop le.';
+            return false;
+        }
+
+        $normalized = strtolower($status);
+        $isCancelled = in_array($normalized, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true);
+
+        $currentSt = $this->pdo->prepare('SELECT trang_thai FROM hoa_don WHERE ma_hoa_don = :id LIMIT 1');
+        $currentSt->execute([':id' => $orderId]);
+        $currentStatusRaw = $currentSt->fetchColumn();
+        if ($currentStatusRaw === false || $currentStatusRaw === null) {
+            $this->lastErrorMessage = 'Khong tim thay don hang can cap nhat.';
+            return false;
+        }
+
+        $currentStatus = strtolower(trim((string)$currentStatusRaw));
+        $currentIsCancelled = in_array($currentStatus, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true);
+
+        if (!$allowCancelledOverride && $currentIsCancelled && !$isCancelled) {
+            $this->lastErrorMessage = 'Don hang da huy khong the chuyen sang trang thai khac.';
+            return false;
+        }
+
+        $trimmedCancelReason = trim($cancelReason);
+        if ($isCancelled && !$currentIsCancelled && $trimmedCancelReason === '') {
+            $this->lastErrorMessage = 'Vui long chon ly do huy don hang.';
             return false;
         }
 
         $columns = $this->getColumns('hoa_don');
         $set = ['trang_thai = :status'];
+        $params = [
+            ':status' => $status,
+            ':id' => $orderId,
+        ];
+
+        if (isset($columns['ly_do_huy'])) {
+            if ($isCancelled) {
+                if ($trimmedCancelReason !== '') {
+                    $set[] = 'ly_do_huy = :ly_do_huy';
+                    $params[':ly_do_huy'] = $trimmedCancelReason;
+                }
+            } else {
+                $set[] = 'ly_do_huy = NULL';
+            }
+        }
+
         if (isset($columns['updated_at'])) {
             $set[] = 'updated_at = CURRENT_TIMESTAMP';
         }
 
         $sql = 'UPDATE hoa_don SET ' . implode(', ', $set) . ' WHERE ma_hoa_don = :id';
         $st = $this->pdo->prepare($sql);
-        $ok = $st->execute([
-            ':status' => $status,
-            ':id' => $orderId,
-        ]);
+        $ok = $st->execute($params);
 
         if ($ok) {
             try {
@@ -1183,32 +1272,133 @@ class QuanTri {
         ];
     }
 
-    public function listReviews(string $keyword = ''): array {
+    public function listReviews(string $keyword = '', array $filters = []): array {
         $replyExpr = $this->hasColumn('danh_gia', 'phan_hoi') ? 'dg.phan_hoi' : 'NULL::text';
         $replyDateExpr = $this->hasColumn('danh_gia', 'ngay_phan_hoi') ? 'dg.ngay_phan_hoi' : 'NULL::timestamp';
         $replyStaffExpr = $this->hasColumn('danh_gia', 'ma_nv_phan_hoi') ? 'nv.ho_ten' : 'NULL::text';
         $replyStaffJoin = $this->hasColumn('danh_gia', 'ma_nv_phan_hoi')
             ? 'LEFT JOIN nhan_vien nv ON nv.ma_nv = dg.ma_nv_phan_hoi'
             : 'LEFT JOIN nhan_vien nv ON 1 = 0';
-        $searchColumns = ['sp.ten_san_pham', 'kh.ho_ten', 'dg.noi_dung'];
+        $phoneExpr = $this->hasColumn('khach_hang', 'so_dien_thoai') ? 'COALESCE(kh.so_dien_thoai, \'\')' : "''";
+        $searchColumns = ['sp.ten_san_pham', 'kh.ho_ten', 'dg.noi_dung', $phoneExpr, 'dg.ma_danh_gia', 'latest_order.ma_hoa_don', 'latest_order.trang_thai'];
         if ($this->hasColumn('danh_gia', 'phan_hoi')) {
             $searchColumns[] = 'dg.phan_hoi';
         }
         [$searchSql, $params] = $this->buildSearchClause($searchColumns, $keyword, 'rv');
 
+        $extraWhere = '';
+        $star = max(0, min(5, (int)($filters['so_sao'] ?? 0)));
+        if ($star > 0) {
+            $extraWhere .= ' AND dg.so_sao = :so_sao';
+            $params[':so_sao'] = $star;
+        }
+
+        $replyStatus = strtolower(trim((string)($filters['trang_thai_phan_hoi'] ?? '')));
+        if ($replyStatus === 'pending') {
+            $extraWhere .= ' AND COALESCE(TRIM(' . $replyExpr . '), \'\') = \'\'';
+        } elseif ($replyStatus === 'replied') {
+            $extraWhere .= ' AND COALESCE(TRIM(' . $replyExpr . '), \'\') <> \'\'';
+        }
+
+        $orderStatus = trim((string)($filters['trang_thai_don'] ?? ''));
+        if ($orderStatus !== '') {
+            $extraWhere .= ' AND LOWER(COALESCE(latest_order.trang_thai, \'\')) = LOWER(:trang_thai_don)';
+            $params[':trang_thai_don'] = $orderStatus;
+        }
+
+        $maKh = trim((string)($filters['ma_kh'] ?? ''));
+        $maKhDigits = preg_replace('/\D+/', '', $maKh);
+        if ($maKh !== '' && $maKhDigits !== '') {
+            $extraWhere .= ' AND CAST(dg.ma_kh AS TEXT) = :ma_kh';
+            $params[':ma_kh'] = $maKhDigits;
+        }
+
+        $maVanDon = trim((string)($filters['ma_van_don'] ?? ''));
+        $maVanDonDigits = preg_replace('/\D+/', '', $maVanDon);
+        if ($maVanDon !== '' && $maVanDonDigits !== '') {
+            $extraWhere .= ' AND CAST(latest_order.ma_hoa_don AS TEXT) = :ma_van_don';
+            $params[':ma_van_don'] = $maVanDonDigits;
+        }
+
+        $sdt = trim((string)($filters['sdt_khach_hang'] ?? ''));
+        if ($sdt !== '') {
+            $extraWhere .= ' AND ' . $phoneExpr . ' ILIKE :sdt_khach_hang';
+            $params[':sdt_khach_hang'] = '%' . $sdt . '%';
+        }
+
+        $khoangNgay = strtolower(trim((string)($filters['khoang_ngay'] ?? '')));
+        $dateIntervalMap = [
+            '1d' => '1 day',
+            '3d' => '3 days',
+            '7d' => '7 days',
+            '30d' => '30 days',
+        ];
+        if (isset($dateIntervalMap[$khoangNgay])) {
+            $extraWhere .= " AND dg.ngay_danh_gia >= (CURRENT_TIMESTAMP - INTERVAL '" . $dateIntervalMap[$khoangNgay] . "')";
+        }
+
+        $limit = max(10, min(200, (int)($filters['limit'] ?? 60)));
+
         $sql = "SELECT dg.*, dg.ctid::text AS row_ref, sp.ten_san_pham, kh.ho_ten AS ten_khach_hang,
+                       " . $phoneExpr . " AS sdt_khach_hang,
+                       latest_order.ma_hoa_don AS ma_van_don,
+                       latest_order.trang_thai AS trang_thai_don_hang,
                        $replyExpr AS phan_hoi,
                        $replyDateExpr AS ngay_phan_hoi,
                        $replyStaffExpr AS ten_nhan_vien_phan_hoi
                 FROM danh_gia dg
                 LEFT JOIN san_pham sp ON sp.ma_san_pham = dg.ma_san_pham
                 LEFT JOIN khach_hang kh ON kh.ma_kh = dg.ma_kh
+                LEFT JOIN LATERAL (
+                    SELECT hd.ma_hoa_don, hd.trang_thai
+                    FROM chi_tiet_hoa_don ct
+                    INNER JOIN hoa_don hd ON hd.ma_hoa_don = ct.ma_hoa_don
+                    WHERE hd.ma_kh = dg.ma_kh
+                      AND ct.ma_san_pham = dg.ma_san_pham
+                    ORDER BY COALESCE(hd.ngay_dat, hd.created_at) DESC NULLS LAST, hd.ma_hoa_don DESC
+                    LIMIT 1
+                ) latest_order ON TRUE
                 $replyStaffJoin
-                WHERE 1=1 $searchSql
-                ORDER BY dg.ngay_danh_gia DESC NULLS LAST, dg.ma_danh_gia DESC";
+                WHERE 1=1 $searchSql $extraWhere
+                ORDER BY dg.ngay_danh_gia DESC NULLS LAST, dg.ma_danh_gia DESC
+                LIMIT " . (int)$limit;
         $st = $this->pdo->prepare($sql);
         $st->execute($params);
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function getReviewFilterOptions(): array {
+        $orderStatusOptions = [];
+        try {
+            $sql = "SELECT DISTINCT TRIM(COALESCE(trang_thai, '')) AS trang_thai
+                    FROM hoa_don
+                    WHERE COALESCE(TRIM(trang_thai), '') <> ''
+                    ORDER BY trang_thai ASC";
+            $rows = $this->pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN) ?: [];
+            foreach ($rows as $status) {
+                $status = trim((string)$status);
+                if ($status !== '') {
+                    $orderStatusOptions[$status] = $status;
+                }
+            }
+        } catch (Throwable $e) {
+            $orderStatusOptions = [];
+        }
+
+        return [
+            'so_sao' => [1, 2, 3, 4, 5],
+            'trang_thai_phan_hoi' => [
+                'pending' => 'Chưa phản hồi',
+                'replied' => 'Đã phản hồi',
+            ],
+            'trang_thai_don' => $orderStatusOptions,
+            'khoang_ngay' => [
+                '1d' => '1 ngày gần nhất',
+                '3d' => '3 ngày gần nhất',
+                '7d' => '1 tuần gần nhất',
+                '30d' => '1 tháng gần nhất',
+            ],
+        ];
     }
 
     public function getProductReviews(string $productId): array {
@@ -1398,9 +1588,43 @@ class QuanTri {
         }
 
         $reply = trim($reply);
+        if ($reply === '') {
+            return false;
+        }
+
+        $existingReply = '';
+        try {
+            if ($reviewId > 0) {
+                $existingSt = $this->pdo->prepare('SELECT COALESCE(phan_hoi, \'\') AS phan_hoi FROM danh_gia WHERE ma_danh_gia = :id LIMIT 1');
+                $existingSt->execute([':id' => $reviewId]);
+                $existingReply = trim((string)($existingSt->fetchColumn() ?: ''));
+            } else {
+                $existingSt = $this->pdo->prepare('SELECT COALESCE(phan_hoi, \'\') AS phan_hoi FROM danh_gia WHERE ctid = CAST(:row_ref AS tid) LIMIT 1');
+                $existingSt->execute([':row_ref' => $rowRef]);
+                $existingReply = trim((string)($existingSt->fetchColumn() ?: ''));
+            }
+        } catch (Throwable $e) {
+            $existingReply = '';
+        }
+
+        $staffName = '';
+        if ($staffId > 0) {
+            try {
+                $staffSt = $this->pdo->prepare('SELECT ho_ten FROM nhan_vien WHERE ma_nv = :id LIMIT 1');
+                $staffSt->execute([':id' => $staffId]);
+                $staffName = trim((string)($staffSt->fetchColumn() ?: ''));
+            } catch (Throwable $e) {
+                $staffName = '';
+            }
+        }
+
+        $header = '[' . date('d/m/Y H:i') . ' - ' . ($staffName !== '' ? $staffName : 'Nhan vien') . ']';
+        $newEntry = $header . "\n" . $reply;
+        $finalReply = $existingReply === '' ? $newEntry : ($existingReply . "\n\n--------------------\n" . $newEntry);
+
         $setClauses = ['phan_hoi = :phan_hoi'];
         $params = [
-            ':phan_hoi' => $reply,
+            ':phan_hoi' => $finalReply,
         ];
 
         if ($this->hasColumn('danh_gia', 'ma_nv_phan_hoi')) {
@@ -1432,14 +1656,14 @@ class QuanTri {
                 if ($reviewId > 0) {
                     $fallback = $this->pdo->prepare("UPDATE danh_gia SET phan_hoi = :phan_hoi WHERE ma_danh_gia = :id");
                     return $fallback->execute([
-                        ':phan_hoi' => $reply,
+                        ':phan_hoi' => $finalReply,
                         ':id' => $reviewId,
                     ]);
                 }
 
                 $fallback = $this->pdo->prepare("UPDATE danh_gia SET phan_hoi = :phan_hoi WHERE ctid = CAST(:row_ref AS tid)");
                 return $fallback->execute([
-                    ':phan_hoi' => $reply,
+                    ':phan_hoi' => $finalReply,
                     ':row_ref' => $rowRef,
                 ]);
             } catch (Throwable $inner) {
