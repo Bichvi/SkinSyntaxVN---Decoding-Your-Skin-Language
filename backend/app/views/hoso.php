@@ -598,9 +598,12 @@ $accountVerificationHint = !empty($account['email'])
               </thead>
               <tbody>
                 <?php foreach ($orders as $o): ?>
+                  <?php $paymentMethod = strtolower(trim((string)($o['hinh_thuc_thanh_toan'] ?? 'cod'))); ?>
                   <?php $orderStatus = strtolower(trim((string)($o['trang_thai'] ?? ''))); ?>
+                  <?php $paymentStatus = strtolower(trim((string)($o['status_thanh_toan'] ?? 'chua thanh toan'))); ?>
                   <?php $isCancelledOrder = in_array($orderStatus, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true); ?>
                   <?php $detailCollapseId = 'order-details-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', (string)($o['ma_hoa_don'] ?? '0')); ?>
+                  <?php $canReopenTransferQr = $paymentMethod === 'bank_transfer_qr' && !$isCancelledOrder && !in_array($paymentStatus, ['da thanh toan', 'paid', 'thanh cong'], true); ?>
                   <tr>
                     <td>#<?= h($o['ma_hoa_don'] ?? '') ?></td>
                     <td><?= h(!empty($o['ngay_dat']) ? date('d/m/Y H:i', strtotime((string)$o['ngay_dat'])) : '') ?></td>
@@ -609,6 +612,9 @@ $accountVerificationHint = !empty($account['email'])
                     <td>
                       <div class="small fw-semibold"><?= strtolower(trim((string)($o['hinh_thuc_thanh_toan'] ?? 'cod'))) === 'bank_transfer_qr' ? 'QR chuyển khoản' : 'COD' ?></div>
                       <div class="small text-muted"><?= h($o['status_thanh_toan'] ?? 'Chua thanh toan') ?></div>
+                      <?php if ($canReopenTransferQr): ?>
+                        <a class="btn btn-sm btn-outline-success mt-2" href="<?= BASE_URL ?>/index.php?r=camon&ma_hoa_don=<?= urlencode((string)($o['ma_hoa_don'] ?? '')) ?>">Mở QR chuyển khoản</a>
+                      <?php endif; ?>
                     </td>
                     <td>
                       <?php if ($isCancelledOrder): ?>
@@ -659,6 +665,15 @@ $accountVerificationHint = !empty($account['email'])
                     <td colspan="8" class="p-0 border-0">
                       <div id="<?= h($detailCollapseId) ?>" class="collapse order-detail-panel">
                         <div class="bg-light-subtle px-3 py-3">
+                          <?php if ($canReopenTransferQr): ?>
+                            <div class="alert alert-warning d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                              <div>
+                                <strong>Đơn này đang chờ chuyển khoản.</strong>
+                                <div class="small">Bạn có thể mở lại màn hình QR để thanh toán tiếp theo đúng mã đơn.</div>
+                              </div>
+                              <a class="btn btn-sm btn-success" href="<?= BASE_URL ?>/index.php?r=camon&ma_hoa_don=<?= urlencode((string)($o['ma_hoa_don'] ?? '')) ?>">Xem QR thanh toán</a>
+                            </div>
+                          <?php endif; ?>
                           <?php if (empty($o['items'])): ?>
                             <div class="small text-muted py-2">Đơn hàng này chưa có chi tiết sản phẩm hiển thị.</div>
                           <?php else: ?>

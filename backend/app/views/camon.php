@@ -218,6 +218,7 @@ $autoCheckUrl = trim((string)($autoCheckUrl ?? ''));
       var stopped = false;
       var timerId = null;
       var isChecking = false;
+      var reloadScheduled = false;
 
       var stopPolling = function () {
         stopped = true;
@@ -239,6 +240,30 @@ $autoCheckUrl = trim((string)($autoCheckUrl ?? ''));
         if (messageElement) {
           messageElement.textContent = message;
         }
+      };
+
+      var isPaidStatus = function (status) {
+        var normalized = String(status || '').trim().toLowerCase();
+        return normalized === 'da thanh toan' || normalized === 'paid' || normalized === 'thanh cong';
+      };
+
+      var finalizePaidState = function (message) {
+        if (statusBadge) {
+          statusBadge.classList.add('transfer-status--paid');
+          statusBadge.textContent = 'Da thanh toan';
+        }
+
+        setMessage(message || 'Da xac nhan thanh toan. Dang tai lai trang...');
+        stopPolling();
+
+        if (reloadScheduled) {
+          return;
+        }
+
+        reloadScheduled = true;
+        window.setTimeout(function () {
+          window.location.reload();
+        }, 300);
       };
 
       var runCheck = function () {
@@ -270,15 +295,8 @@ $autoCheckUrl = trim((string)($autoCheckUrl ?? ''));
               statusBadge.textContent = data.payment_status;
             }
 
-            if (data.paid) {
-              if (statusBadge) {
-                statusBadge.classList.add('transfer-status--paid');
-              }
-              setMessage(data.message || 'Đã xác nhận thanh toán. Đang cập nhật giao diện...');
-              stopPolling();
-              window.setTimeout(function () {
-                window.location.reload();
-              }, 1200);
+            if (data.paid || isPaidStatus(data.payment_status)) {
+              finalizePaidState(data.message);
               return;
             }
 
@@ -301,6 +319,20 @@ $autoCheckUrl = trim((string)($autoCheckUrl ?? ''));
           runCheck();
         });
       }
+
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) {
+          runCheck();
+        }
+      });
+
+      window.addEventListener('focus', function () {
+        runCheck();
+      });
+
+      window.addEventListener('pageshow', function () {
+        runCheck();
+      });
 
       runCheck();
       timerId = window.setInterval(runCheck, Math.max(interval, 5000));
