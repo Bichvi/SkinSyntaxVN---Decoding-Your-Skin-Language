@@ -4,10 +4,12 @@ import uuid
 import math
 import os
 from tqdm import tqdm
+from pathlib import Path
 
-# Cấu hình đường dẫn
-CSV_FILE_PATH = r"C:\xampp\htdocs\xoa\SkinSyntaxVN---Decoding-Your-Skin-Language\database\data_clean_final.csv"
-CHROMA_DB_PATH = r"C:\xampp\htdocs\xoa\SkinSyntaxVN---Decoding-Your-Skin-Language\database\chroma_db"
+# Cấu hình đường dẫn động (tự động chạy trên mọi máy tính của cộng sự)
+BASE_DIR = Path(__file__).resolve().parent
+CSV_FILE_PATH = str(BASE_DIR / "data_clean_final.csv")
+CHROMA_DB_PATH = str(BASE_DIR / "chroma_db")
 COLLECTION_NAME = "products"
 
 def main():
