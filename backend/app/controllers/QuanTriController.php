@@ -1,0 +1,1040 @@
+<?php
+
+require_once __DIR__ . '/../models/QuanTri.php';
+require_once __DIR__ . '/../models/SanPham.php';
+require_once __DIR__ . '/../models/ThongKe.php';
+require_once __DIR__ . '/../models/Voucher.php';
+
+class QuanTriController {
+    private  $pdo;
+    private QuanTri $model;
+    private SanPham $sanPhamModel;
+    private ThongKe $thongKeModel;
+    private Voucher $voucherModel;
+
+    public function __construct( $pdo) {
+        $this->pdo = $pdo;
+        $this->model = new QuanTri($pdo);
+        $this->sanPhamModel = new SanPham($pdo);
+        $this->thongKeModel = new ThongKe($pdo);
+        $this->voucherModel = new Voucher($pdo);
+    }
+
+    private function denyAccess(): void {
+        http_response_code(403);
+        $user = current_user() ?? [];
+        $role = current_role();
+
+        if (in_array($role, ['admin', 'nhanvien'], true)) {
+            $this->renderAdmin('403', [
+                'pageTitle' => 'Không có quyền truy cập',
+                'user' => $user,
+            ]);
+            exit;
+        }
+
+        require __DIR__ . '/../views/layouts/header.php';
+        echo '<div class="container py-5"><div class="alert alert-danger">Bạn không có quyền truy cập chức năng này.</div></div>';
+        require __DIR__ . '/../views/layouts/footer.php';
+        exit;
+    }
+
+    private function requireRole(array $roles): array {
+        if (!is_logged_in()) {
+            set_flash('error', 'Vui lòng đăng nhập để truy cập khu vực quản trị.');
+            redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
+        $user = current_user() ?? [];
+        $staffId = (int)($user['ma_nv'] ?? 0);
+        if ($staffId > 0 && method_exists($this->model, 'isStaffAccountActive') && !$this->model->{'isStaffAccountActive'}($staffId)) {
+            unset($_SESSION['user'], $_SESSION['admin_notifications_seen']);
+            set_flash('error', 'Tài khoản nhân viên đã bị tạm khóa hoặc ngừng hoạt động.');
+            redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
+        $role = current_role();
+        if (!in_array($role, $roles, true)) {
+            $this->denyAccess();
+        }
+
+        return $user;
+    }
+
+    private function renderAdmin(string $view, array $data = []): void {
+        $data['notificationCenter'] = $data['notificationCenter'] ?? $this->buildNotificationCenter();
+        extract($data);
+        require __DIR__ . '/../views/admin/layouts/header.php';
+        require __DIR__ . '/../views/admin/' . $view . '.php';
+        require __DIR__ . '/../views/admin/layouts/footer.php';
+    }
+
+    private function buildNotificationCenter(): array {
+        $center = $this->model->getNotificationCenterData();
+        $seen = $_SESSION['admin_notifications_seen'] ?? [];
+        $currentOrderMarker = (string)($center['latest_order_marker'] ?? '');
+        $currentChatMarker = (string)($center['latest_chat_marker'] ?? '');
+        $hasNewOrders = $currentOrderMarker !== '' && $currentOrderMarker !== (string)($seen['latest_order_marker'] ?? '');
+        $hasNewChats = $currentChatMarker !== '' && $currentChatMarker !== (string)($seen['latest_chat_marker'] ?? '');
+
+        $center['has_new_orders'] = $hasNewOrders;
+        $center['has_new_chats'] = $hasNewChats;
+        $center['unseen_count'] = ($hasNewOrders ? (int)($center['pending_orders_count'] ?? 0) : 0)
+            + ($hasNewChats ? (int)($center['pending_chats_count'] ?? 0) : 0);
+
+        return $center;
+    }
+
+    private function renderSite(string $view, array $data = []): void {
+        extract($data);
+        $menuCats = $this->sanPhamModel->menuTree();
+        require __DIR__ . '/../views/layouts/header.php';
+        require __DIR__ . '/../views/' . $view . '.php';
+        require __DIR__ . '/../views/layouts/footer.php';
+    }
+
+    private function isAjaxRequest(): bool {
+        $requestedWith = strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        $accept = strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? ''));
+        return $requestedWith === 'xmlhttprequest' || str_contains($accept, 'application/json');
+    }
+
+    private function respondJson(array $payload, int $status = 200): void {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    private function buildStaffChatPayload(int $conversationId): array {
+        return [
+            'activeConversationId' => $conversationId,
+            'pendingConversations' => $this->model->listChatConversations(true),
+            'allConversations' => $this->model->listChatConversations(false),
+            'messages' => $conversationId > 0 ? $this->model->getChatMessages($conversationId) : [],
+        ];
+    }
+
+    private function countWords(string $text): int {
+        $trimmed = trim($text);
+        if ($trimmed === '') {
+            return 0;
+        }
+
+        $parts = preg_split('/\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY);
+        return is_array($parts) ? count($parts) : 0;
+    }
+
+    private function redirectBack(string $fallback): void {
+        $target = trim((string)($_SERVER['HTTP_REFERER'] ?? ''));
+        if ($target === '') {
+            $target = BASE_URL . '/index.php?r=' . $fallback;
+        }
+        redirect($target);
+    }
+
+    private function cancellationReasonOptions(): array {
+        return [
+            'Khach_doi_y' => 'Khách đổi ý',
+            'Dat_sai_san_pham' => 'Đặt sai sản phẩm',
+            'Tre_giao_hang' => 'Giao hàng chậm hơn dự kiến',
+            'Khong_lien_he_duoc' => 'Không liên hệ được để xác nhận đơn',
+            'Het_hang' => 'Hết hàng',
+            'Khac' => 'Lý do khác',
+        ];
+    }
+
+    private function isCancelledStatus(string $status): bool {
+        $normalized = strtolower(trim($status));
+        return in_array($normalized, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true);
+    }
+
+    private function extractCancellationReasonFromPost(): array {
+        $options = $this->cancellationReasonOptions();
+        $reasonKey = trim((string)($_POST['ly_do_huy'] ?? ''));
+        $extraNote = trim((string)($_POST['ly_do_huy_bo_sung'] ?? ''));
+
+        if ($reasonKey === '' || !isset($options[$reasonKey])) {
+            return ['ok' => false, 'message' => 'Vui lòng chọn lý do hủy đơn hàng.'];
+        }
+
+        if ($reasonKey === 'Khac' && $extraNote === '') {
+            return ['ok' => false, 'message' => 'Vui lòng nhập lý do cụ thể khi chọn "Lý do khác".'];
+        }
+
+        $reasonText = $options[$reasonKey];
+        if ($reasonKey === 'Khac') {
+            $reasonText .= ': ' . $extraNote;
+        } elseif ($extraNote !== '') {
+            $reasonText .= ' - Ghi chú: ' . $extraNote;
+        }
+
+        return ['ok' => true, 'reason' => $reasonText];
+    }
+
+    private function handleProductUpload(string $inputName = 'hinh_anh'): ?string {
+        if (empty($_FILES[$inputName]) || !is_array($_FILES[$inputName])) {
+            return null;
+        }
+
+        $file = $_FILES[$inputName];
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        $ext = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        if (!in_array($ext, $allowed, true)) {
+            return null;
+        }
+
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/products';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
+        $fileName = uniqid('sp_', true) . '.' . $ext;
+        $target = $uploadDir . '/' . $fileName;
+
+        if (!move_uploaded_file((string)($file['tmp_name'] ?? ''), $target)) {
+            return null;
+        }
+
+        return $fileName;
+    }
+
+    public function adminDashboard(): void {
+        $this->requireRole(['admin']);
+
+        $summary = $this->model->getDashboardSummary();
+        $this->renderAdmin('dashboard', [
+            'tongSP' => (int)($summary['tong_san_pham'] ?? 0),
+            'tongUser' => (int)($summary['tong_khach_hang'] ?? 0),
+            'doanhThu' => (float)($summary['tong_doanh_thu'] ?? 0),
+            'donChoXuLy' => (int)($summary['don_cho_xu_ly'] ?? 0),
+            'spMoi' => $this->thongKeModel->getSanPhamMoi(5),
+            'userMoi' => $this->thongKeModel->getNguoiDungMoi(5),
+            'summary' => $summary,
+        ]);
+    }
+
+    public function adminProducts(): void {
+        $this->requireRole(['admin']);
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $q = trim((string)($_GET['q'] ?? ''));
+        $status = strtolower(trim((string)($_GET['status'] ?? '')));
+        $perPage = 20;
+        $res = $this->sanPhamModel->paginate($page, $perPage, $q, '', '', $status, false);
+
+        $this->renderAdmin('danhsachSP', [
+            'items' => $res['items'] ?? [],
+            'total' => $res['total'] ?? 0,
+            'page' => $page,
+            'perPage' => $perPage,
+            'q' => $q,
+            'status' => $status,
+        ]);
+    }
+
+    public function adminProductCreate(): void {
+        $this->requireRole(['admin']);
+        $controller = new AdminController($this->pdo);
+        $controller->create();
+    }
+
+    public function adminProductEdit(): void {
+        $this->requireRole(['admin']);
+        $controller = new AdminController($this->pdo);
+        $controller->edit();
+    }
+
+    public function adminProductDelete(): void {
+        $this->requireRole(['admin']);
+        $controller = new AdminController($this->pdo);
+        $controller->delete();
+    }
+
+    public function adminProductVisibility(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_sp');
+        }
+
+        $id = trim((string)($_POST['id'] ?? ''));
+        $status = strtolower(trim((string)($_POST['status'] ?? 'active')));
+        $ok = $this->sanPhamModel->updateProductVisibility($id, $status);
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật trạng thái sản phẩm.')
+            : 'Không thể cập nhật trạng thái sản phẩm.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái hiển thị sản phẩm.' : $errorMessage);
+
+        $query = http_build_query([
+            'r' => 'admin_sp',
+            'q' => trim((string)($_POST['q'] ?? '')),
+            'status' => trim((string)($_POST['status_filter'] ?? '')),
+            'page' => max(1, (int)($_POST['page'] ?? 1)),
+        ]);
+        redirect(BASE_URL . '/index.php?' . $query);
+    }
+
+    public function adminCategories(): void {
+        $this->requireRole(['admin']);
+        $q = trim((string)($_GET['q'] ?? ''));
+        $editId = max(0, (int)($_GET['edit'] ?? 0));
+        $this->renderAdmin('categories', [
+            'items' => $this->model->listCategories($q),
+            'editing' => $editId > 0 ? $this->model->getCategoryById($editId) : null,
+            'q' => $q,
+        ]);
+    }
+
+    public function adminVouchers(): void {
+        $this->requireRole(['admin']);
+        $q = trim((string)($_GET['q'] ?? ''));
+        $editId = max(0, (int)($_GET['edit'] ?? 0));
+        $this->renderAdmin('vouchers', [
+            'items' => $this->voucherModel->listVouchers($q),
+            'editing' => $editId > 0 ? $this->voucherModel->getVoucherById($editId) : null,
+            'q' => $q,
+        ]);
+    }
+
+    public function adminVoucherSave(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_vouchers');
+        }
+
+        $id = max(0, (int)($_POST['ma_voucher'] ?? 0));
+        $ok = $this->voucherModel->saveVoucher($_POST, $id > 0 ? $id : null);
+        $message = $ok
+            ? 'Đã lưu voucher.'
+            : ((string)($this->voucherModel->getLastErrorMessage() ?? 'Không thể lưu voucher.'));
+        set_flash($ok ? 'success' : 'error', $message);
+        redirect(BASE_URL . '/index.php?r=admin_vouchers');
+    }
+
+    public function adminVoucherDelete(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_vouchers');
+        }
+
+        $id = max(0, (int)($_POST['ma_voucher'] ?? 0));
+        $ok = $id > 0 ? $this->voucherModel->deleteVoucher($id) : false;
+        $message = $ok
+            ? 'Đã xóa voucher.'
+            : ((string)($this->voucherModel->getLastErrorMessage() ?? 'Không thể xóa voucher.'));
+        set_flash($ok ? 'success' : 'error', $message);
+        redirect(BASE_URL . '/index.php?r=admin_vouchers');
+    }
+
+    public function adminCategorySave(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_categories');
+        }
+
+        $id = max(0, (int)($_POST['ma_danh_muc'] ?? 0));
+        $ok = $this->model->saveCategory($_POST, $id > 0 ? $id : null);
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể lưu danh mục.')
+            : 'Không thể lưu danh mục.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu danh mục.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=admin_categories');
+    }
+
+    public function adminCategoryDelete(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_categories');
+        }
+
+        $id = max(0, (int)($_POST['ma_danh_muc'] ?? 0));
+        $deleteProducts = (int)($_POST['delete_products'] ?? 0) === 1;
+        $ok = $id > 0 ? $this->model->deleteCategory($id, $deleteProducts) : false;
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể xóa danh mục.'))
+            : 'Không thể xóa danh mục.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa danh mục.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=admin_categories');
+    }
+
+    public function adminUsers(): void {
+        $this->requireRole(['admin']);
+        $q = trim((string)($_GET['q'] ?? ''));
+        $loaiKh = trim((string)($_GET['loai_kh'] ?? ''));
+        $customerEditId = max(0, (int)($_GET['customer_edit'] ?? 0));
+        $staffEditId = max(0, (int)($_GET['staff_edit'] ?? 0));
+
+        $this->renderAdmin('users', [
+            'customers' => $this->model->listCustomers($q, $loaiKh),
+            'staffMembers' => $this->model->listStaff($q),
+            'roles' => $this->model->listRoles(),
+            'customerEditing' => $customerEditId > 0 ? $this->model->getCustomerById($customerEditId) : null,
+            'staffEditing' => $staffEditId > 0 ? $this->model->getStaffById($staffEditId) : null,
+            'q' => $q,
+            'loaiKh' => $loaiKh,
+        ]);
+    }
+
+    public function adminCustomerSave(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_users');
+        }
+
+        $id = max(0, (int)($_POST['ma_kh'] ?? 0));
+        $ok = $this->model->saveCustomer($_POST, $id > 0 ? $id : null);
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu thông tin khách hàng.' : 'Không thể lưu khách hàng.');
+        redirect(BASE_URL . '/index.php?r=admin_users');
+    }
+
+    public function adminCustomerDelete(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_users');
+        }
+
+        $id = max(0, (int)($_POST['ma_kh'] ?? 0));
+        $ok = $id > 0 ? $this->model->deleteCustomer($id) : false;
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa khách hàng.' : 'Không thể xóa khách hàng.');
+        redirect(BASE_URL . '/index.php?r=admin_users');
+    }
+
+    public function adminStaffSave(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_users');
+        }
+
+        $id = max(0, (int)($_POST['ma_nv'] ?? 0));
+        $ok = $this->model->saveStaff($_POST, $id > 0 ? $id : null);
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể lưu nhân viên.'))
+            : 'Không thể lưu nhân viên.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu thông tin nhân viên.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=admin_users');
+    }
+
+    public function adminStaffDelete(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_users');
+        }
+
+        $id = max(0, (int)($_POST['ma_nv'] ?? 0));
+        $ok = $id > 0 ? $this->model->deleteStaff($id) : false;
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể cập nhật nhân viên.'))
+            : 'Không thể cập nhật nhân viên.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã ngừng kích hoạt nhân viên.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=admin_users');
+    }
+
+    public function adminStaffHardDelete(): void {
+        $user = $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_users');
+        }
+
+        $id = max(0, (int)($_POST['ma_nv'] ?? 0));
+        $currentStaffId = (int)($user['ma_nv'] ?? 0);
+
+        if ($currentStaffId > 0 && $currentStaffId === $id) {
+            set_flash('error', 'Không thể tự xóa chính tài khoản admin đang đăng nhập.');
+            redirect(BASE_URL . '/index.php?r=admin_users');
+        }
+
+        $ok = $id > 0 && method_exists($this->model, 'hardDeleteStaff')
+            ? $this->model->{'hardDeleteStaff'}($id)
+            : false;
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể xóa nhân viên.'))
+            : 'Không thể xóa nhân viên.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa nhân viên khỏi hệ thống.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=admin_users');
+    }
+
+    public function adminOrders(): void {
+        $this->requireRole(['admin']);
+        $q = trim((string)($_GET['q'] ?? ''));
+        $status = trim((string)($_GET['status'] ?? ''));
+        $detailId = max(0, (int)($_GET['detail'] ?? 0));
+        $this->renderAdmin('orders', [
+            'orders' => $this->model->listOrders($q, $status),
+            'orderDetail' => $detailId > 0 ? $this->model->getOrderById($detailId) : null,
+            'statusOptions' => $this->model->getOrderStatusOptions(),
+            'q' => $q,
+            'status' => $status,
+            'pageTitle' => 'Quản lý đơn hàng',
+            'allowManage' => true,
+            'cancelReasonOptions' => $this->cancellationReasonOptions(),
+        ]);
+    }
+
+    public function adminOrderStatus(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_orders');
+        }
+
+        $id = max(0, (int)($_POST['ma_hoa_don'] ?? 0));
+        $status = trim((string)($_POST['trang_thai'] ?? ''));
+        $cancelReason = '';
+        if ($this->isCancelledStatus($status)) {
+            $payload = $this->extractCancellationReasonFromPost();
+            if (empty($payload['ok'])) {
+                set_flash('error', (string)($payload['message'] ?? 'Vui lòng chọn lý do hủy đơn hàng.'));
+                redirect(BASE_URL . '/index.php?r=admin_orders&detail=' . $id);
+            }
+            $cancelReason = (string)($payload['reason'] ?? '');
+        }
+
+        $ok = $this->model->updateOrderStatus($id, $status, $cancelReason, true);
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật trạng thái đơn hàng.')
+            : 'Không thể cập nhật trạng thái đơn hàng.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái đơn hàng.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=admin_orders');
+    }
+
+    public function adminReports(): void {
+        $this->requireRole(['admin']);
+        $this->renderAdmin('reports', [
+            'summary' => $this->model->getDashboardSummary(),
+            'revenueByMonth' => $this->model->getRevenueByMonth(6),
+            'topProducts' => $this->model->getTopProductsByRevenue(8),
+        ]);
+    }
+
+    public function staffDashboard(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        $summary = $this->model->getDashboardSummary();
+        $this->renderAdmin('staff_dashboard', [
+            'summary' => $summary,
+            'user' => $user,
+            'pendingOrders' => $this->model->listOrders('', 'Cho xu ly'),
+            'conversations' => $this->model->listChatConversations(true, 20),
+            'reviews' => $this->model->listReviews(''),
+        ]);
+    }
+
+    public function staffOrders(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $q = trim((string)($_GET['q'] ?? ''));
+        $status = trim((string)($_GET['status'] ?? ''));
+        $detailId = max(0, (int)($_GET['detail'] ?? 0));
+        $this->renderAdmin('orders', [
+            'orders' => $this->model->listOrders($q, $status),
+            'orderDetail' => $detailId > 0 ? $this->model->getOrderById($detailId) : null,
+            'statusOptions' => $this->model->getOrderStatusOptions(),
+            'q' => $q,
+            'status' => $status,
+            'pageTitle' => 'Xử lý đơn hàng',
+            'allowManage' => true,
+            'cancelReasonOptions' => $this->cancellationReasonOptions(),
+        ]);
+    }
+
+    public function staffOrderStatus(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=staff_orders');
+        }
+
+        $id = max(0, (int)($_POST['ma_hoa_don'] ?? 0));
+        $status = trim((string)($_POST['trang_thai'] ?? ''));
+        $cancelReason = '';
+        if ($this->isCancelledStatus($status)) {
+            $payload = $this->extractCancellationReasonFromPost();
+            if (empty($payload['ok'])) {
+                set_flash('error', (string)($payload['message'] ?? 'Vui lòng chọn lý do hủy đơn hàng.'));
+                redirect(BASE_URL . '/index.php?r=staff_orders&detail=' . $id);
+            }
+            $cancelReason = (string)($payload['reason'] ?? '');
+        }
+
+        $ok = $this->model->updateOrderStatus($id, $status, $cancelReason, false);
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật trạng thái đơn hàng.')
+            : 'Không thể cập nhật trạng thái đơn hàng.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái đơn hàng.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=staff_orders');
+    }
+
+    public function staffProducts(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $q = trim((string)($_GET['q'] ?? ''));
+        $status = strtolower(trim((string)($_GET['status'] ?? '')));
+        $perPage = 20;
+        $res = $this->sanPhamModel->paginate($page, $perPage, $q, '', '', $status, false);
+        $this->renderAdmin('staff_products', [
+            'items' => $res['items'] ?? [],
+            'total' => $res['total'] ?? 0,
+            'page' => $page,
+            'perPage' => $perPage,
+            'q' => $q,
+            'status' => $status,
+        ]);
+    }
+
+    public function staffProductCreate(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+
+        $brandOptions = $this->sanPhamModel->listBrandOptions();
+        $categoryOptions = $this->sanPhamModel->listCategoryOptions();
+        $nextProductCode = $this->sanPhamModel->getNextProductCode();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->renderAdmin('themSP', [
+                'product' => ['ma_san_pham' => $nextProductCode, 'trang_thai' => 'active'],
+                'error' => null,
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        $data = [
+            'ma_san_pham' => trim((string)($_POST['ma_san_pham'] ?? '')),
+            'ten_san_pham' => trim((string)($_POST['ten_san_pham'] ?? '')),
+            'ma_thuong_hieu' => trim((string)($_POST['ma_thuong_hieu'] ?? '')),
+            'ma_danh_muc' => trim((string)($_POST['ma_danh_muc'] ?? '')),
+            'ten_thuong_hieu_input' => trim((string)($_POST['ten_thuong_hieu_input'] ?? '')),
+            'ten_danh_muc_input' => trim((string)($_POST['ten_danh_muc_input'] ?? '')),
+            'gia_ban' => trim((string)($_POST['gia_ban'] ?? '')),
+            'gia_thi_truong' => trim((string)($_POST['gia_thi_truong'] ?? '')),
+            'dung_tich' => trim((string)($_POST['dung_tich'] ?? '')),
+            'loai_da' => trim((string)($_POST['loai_da'] ?? '')),
+            'mo_ta' => trim((string)($_POST['mo_ta'] ?? '')),
+            'thanh_phan_chinh' => trim((string)($_POST['thanh_phan_chinh'] ?? '')),
+            'thanh_phan_day_du' => trim((string)($_POST['thanh_phan_day_du'] ?? '')),
+            'hdsd' => trim((string)($_POST['hdsd'] ?? '')),
+            'link_hinh_anh' => trim((string)($_POST['link_hinh_anh'] ?? '')),
+            'trang_thai' => trim((string)($_POST['trang_thai'] ?? 'active')),
+        ];
+
+        if ($data['ma_san_pham'] === '') {
+            $data['ma_san_pham'] = $nextProductCode;
+        }
+
+        if ($data['ma_thuong_hieu'] === '' && $data['ten_thuong_hieu_input'] !== '') {
+            $brandId = $this->sanPhamModel->ensureBrandByName($data['ten_thuong_hieu_input']);
+            if ($brandId !== null) {
+                $data['ma_thuong_hieu'] = (string)$brandId;
+                $brandOptions = $this->sanPhamModel->listBrandOptions();
+            }
+        }
+
+        if ($data['ma_danh_muc'] === '' && $data['ten_danh_muc_input'] !== '') {
+            $categoryId = $this->sanPhamModel->ensureCategoryByName($data['ten_danh_muc_input']);
+            if ($categoryId !== null) {
+                $data['ma_danh_muc'] = (string)$categoryId;
+                $categoryOptions = $this->sanPhamModel->listCategoryOptions();
+            }
+        }
+
+        if ($data['ma_san_pham'] === '' || $data['ten_san_pham'] === '') {
+            $this->renderAdmin('themSP', [
+                'product' => $data,
+                'error' => 'Mã sản phẩm và tên sản phẩm là bắt buộc.',
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        $giaBan = trim((string)($data['gia_ban'] ?? ''));
+        if ($giaBan === '' || !is_numeric($giaBan) || (float)$giaBan <= 0) {
+            $this->renderAdmin('themSP', [
+                'product' => $data,
+                'error' => 'Giá bán phải lớn hơn 0.',
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        $giaThiTruong = trim((string)($data['gia_thi_truong'] ?? ''));
+        if ($giaThiTruong !== '' && (!is_numeric($giaThiTruong) || (float)$giaThiTruong <= 0)) {
+            $this->renderAdmin('themSP', [
+                'product' => $data,
+                'error' => 'Giá thị trường phải lớn hơn 0 nếu được nhập.',
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        if ($this->sanPhamModel->hasProductCode($data['ma_san_pham'])) {
+            $data['ma_san_pham'] = $this->sanPhamModel->getNextProductCode();
+            $nextProductCode = $data['ma_san_pham'];
+        }
+
+        if ($this->sanPhamModel->hasProductName($data['ten_san_pham'])) {
+            $this->renderAdmin('themSP', [
+                'product' => $data,
+                'error' => 'Tên sản phẩm đã tồn tại. Vui lòng nhập tên khác.',
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+                'nextProductCode' => $nextProductCode,
+                'formAction' => 'staff_product_create',
+                'backRoute' => 'staff_products',
+            ]);
+            return;
+        }
+
+        $uploadedFileName = $this->handleProductUpload('hinh_anh');
+        if ($uploadedFileName !== null) {
+            $data['link_hinh_anh'] = $uploadedFileName;
+        }
+
+        $ok = $this->sanPhamModel->adminInsert($data);
+        if ($ok) {
+            set_flash('success', 'Đã thêm sản phẩm thành công.');
+            redirect(BASE_URL . '/index.php?r=staff_products');
+        }
+
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể thêm sản phẩm. Vui lòng thử lại.')
+            : 'Không thể thêm sản phẩm. Vui lòng thử lại.';
+
+        $this->renderAdmin('themSP', [
+            'product' => $data,
+            'error' => $errorMessage,
+            'brandOptions' => $brandOptions,
+            'categoryOptions' => $categoryOptions,
+            'nextProductCode' => $nextProductCode,
+            'formAction' => 'staff_product_create',
+            'backRoute' => 'staff_products',
+        ]);
+    }
+
+    public function staffProductVisibility(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=staff_products');
+        }
+
+        $id = trim((string)($_POST['id'] ?? ''));
+        $status = strtolower(trim((string)($_POST['status'] ?? 'active')));
+        $ok = $this->sanPhamModel->updateProductVisibility($id, $status);
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật trạng thái sản phẩm.')
+            : 'Không thể cập nhật trạng thái sản phẩm.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái hiển thị sản phẩm.' : $errorMessage);
+
+        $query = http_build_query([
+            'r' => 'staff_products',
+            'q' => trim((string)($_POST['q'] ?? '')),
+            'status' => trim((string)($_POST['status_filter'] ?? '')),
+            'page' => max(1, (int)($_POST['page'] ?? 1)),
+        ]);
+        redirect(BASE_URL . '/index.php?' . $query);
+    }
+
+    public function staffProductEdit(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $id = trim((string)($_GET['id'] ?? $_POST['id'] ?? ''));
+        if ($id === '') {
+            redirect(BASE_URL . '/index.php?r=staff_products');
+        }
+
+        $product = $this->sanPhamModel->findById($id);
+        if (!$product) {
+            set_flash('error', 'Không tìm thấy sản phẩm.');
+            redirect(BASE_URL . '/index.php?r=staff_products');
+        }
+
+        $brandOptions = $this->sanPhamModel->listBrandOptions();
+        $categoryOptions = $this->sanPhamModel->listCategoryOptions();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->renderAdmin('staff_product_edit', [
+                'product' => $product,
+                'error' => null,
+                'brandOptions' => $brandOptions,
+                'categoryOptions' => $categoryOptions,
+            ]);
+            return;
+        }
+
+        $data = [
+            'ten_san_pham' => trim((string)($_POST['ten_san_pham'] ?? '')),
+            'ma_thuong_hieu' => trim((string)($_POST['ma_thuong_hieu'] ?? '')),
+            'ma_danh_muc' => trim((string)($_POST['ma_danh_muc'] ?? '')),
+            'gia_ban' => trim((string)($_POST['gia_ban'] ?? '')),
+            'dung_tich' => trim((string)($_POST['dung_tich'] ?? '')),
+            'loai_da' => trim((string)($_POST['loai_da'] ?? '')),
+            'mo_ta' => trim((string)($_POST['mo_ta'] ?? '')),
+            'thanh_phan_chinh' => trim((string)($_POST['thanh_phan_chinh'] ?? '')),
+            'thanh_phan_day_du' => trim((string)($_POST['thanh_phan_day_du'] ?? '')),
+            'hdsd' => trim((string)($_POST['hdsd'] ?? '')),
+            'link_hinh_anh' => trim((string)($_POST['link_hinh_anh'] ?? '')),
+            'trang_thai' => trim((string)($_POST['trang_thai'] ?? 'active')),
+        ];
+
+        $uploadedFileName = $this->handleProductUpload('hinh_anh');
+        if ($uploadedFileName !== null) {
+            $data['link_hinh_anh'] = $uploadedFileName;
+        } elseif ($data['link_hinh_anh'] === '') {
+            $data['link_hinh_anh'] = (string)($product['link_hinh_anh'] ?? '');
+        }
+
+        $ok = $this->sanPhamModel->adminUpdate($id, $data);
+        if ($ok) {
+            set_flash('success', 'Đã cập nhật thông tin sản phẩm.');
+            redirect(BASE_URL . '/index.php?r=staff_products');
+        }
+
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật sản phẩm.')
+            : 'Không thể cập nhật sản phẩm.';
+
+        $this->renderAdmin('staff_product_edit', [
+            'product' => array_merge($product, $data),
+            'error' => $errorMessage,
+            'brandOptions' => $brandOptions,
+            'categoryOptions' => $categoryOptions,
+        ]);
+    }
+
+    public function staffReviews(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $q = trim((string)($_GET['q'] ?? ''));
+        $filters = [
+            'so_sao' => max(0, min(5, (int)($_GET['so_sao'] ?? 0))),
+            'trang_thai_phan_hoi' => trim((string)($_GET['trang_thai_phan_hoi'] ?? '')),
+            'trang_thai_don' => trim((string)($_GET['trang_thai_don'] ?? '')),
+            'khoang_ngay' => trim((string)($_GET['khoang_ngay'] ?? '')),
+            'ma_kh' => trim((string)($_GET['ma_kh'] ?? '')),
+            'ma_van_don' => trim((string)($_GET['ma_van_don'] ?? '')),
+            'sdt_khach_hang' => trim((string)($_GET['sdt_khach_hang'] ?? '')),
+            'limit' => max(10, min(200, (int)($_GET['limit'] ?? 60))),
+        ];
+
+        $reviews = $this->model->listReviews($q, $filters);
+        $selectedReviewId = max(0, (int)($_GET['detail'] ?? 0));
+        $selectedReview = null;
+        foreach ($reviews as $review) {
+            if ((int)($review['ma_danh_gia'] ?? 0) === $selectedReviewId) {
+                $selectedReview = $review;
+                break;
+            }
+        }
+        if ($selectedReview === null && !empty($reviews)) {
+            $selectedReview = $reviews[0];
+            $selectedReviewId = (int)($selectedReview['ma_danh_gia'] ?? 0);
+        }
+
+        $this->renderAdmin('reviews', [
+            'reviews' => $reviews,
+            'selectedReview' => $selectedReview,
+            'selectedReviewId' => $selectedReviewId,
+            'filters' => $filters,
+            'filterOptions' => $this->model->getReviewFilterOptions(),
+            'q' => $q,
+        ]);
+    }
+
+    public function staffReviewReply(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=staff_reviews');
+        }
+
+        $reviewId = max(0, (int)($_POST['ma_danh_gia'] ?? 0));
+        $rowRef = trim((string)($_POST['row_ref'] ?? ''));
+        $reply = trim((string)($_POST['phan_hoi'] ?? ''));
+        $wordCount = $this->countWords($reply);
+
+        if ($wordCount > 1000) {
+            set_flash('error', 'Nội dung phản hồi không được vượt quá 1000 từ.');
+            $returnQuery = trim((string)($_POST['return_query'] ?? ''));
+            if ($returnQuery !== '') {
+                redirect(BASE_URL . '/index.php?r=staff_reviews&' . $returnQuery);
+            }
+            redirect(BASE_URL . '/index.php?r=staff_reviews' . ($reviewId > 0 ? ('&detail=' . $reviewId) : ''));
+        }
+
+        $staffId = (int)($user['ma_nv'] ?? 0);
+        $ok = $this->model->replyReview($reviewId, $staffId, $reply, $rowRef);
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã phản hồi đánh giá.' : 'Không thể phản hồi đánh giá.');
+
+        $returnQuery = trim((string)($_POST['return_query'] ?? ''));
+        if ($returnQuery !== '') {
+            parse_str($returnQuery, $parsed);
+            $allowed = ['q', 'so_sao', 'trang_thai_phan_hoi', 'trang_thai_don', 'khoang_ngay', 'ma_kh', 'ma_van_don', 'sdt_khach_hang', 'limit', 'detail'];
+            $safe = ['r' => 'staff_reviews'];
+            foreach ($allowed as $key) {
+                if (array_key_exists($key, $parsed) && !is_array($parsed[$key])) {
+                    $safe[$key] = (string)$parsed[$key];
+                }
+            }
+            $query = http_build_query($safe);
+            redirect(BASE_URL . '/index.php?' . $query);
+        }
+
+        redirect(BASE_URL . '/index.php?r=staff_reviews' . ($reviewId > 0 ? ('&detail=' . $reviewId) : ''));
+    }
+
+    public function staffChats(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $conversationId = max(0, (int)($_GET['ma_kh'] ?? 0));
+        $this->renderAdmin('chats', $this->buildStaffChatPayload($conversationId));
+    }
+
+    public function staffChatState(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $conversationId = max(0, (int)($_GET['ma_kh'] ?? 0));
+        $this->respondJson([
+            'ok' => true,
+            'data' => $this->buildStaffChatPayload($conversationId),
+        ]);
+    }
+
+    public function staffChatSend(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=staff_chats');
+        }
+
+        $maKh = max(0, (int)($_POST['ma_kh'] ?? 0));
+        $content = trim((string)($_POST['noi_dung'] ?? ''));
+        $staffId = (int)($user['ma_nv'] ?? 0);
+        $ok = $this->model->sendStaffChat($maKh, $staffId, $content);
+
+        if ($this->isAjaxRequest()) {
+            $this->respondJson([
+                'ok' => $ok,
+                'message' => $ok ? 'Đã gửi phản hồi cho khách hàng.' : 'Không thể gửi phản hồi.',
+                'data' => $this->buildStaffChatPayload($maKh),
+            ], $ok ? 200 : 422);
+        }
+
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã gửi phản hồi cho khách hàng.' : 'Không thể gửi phản hồi.');
+        redirect(BASE_URL . '/index.php?r=staff_chats&ma_kh=' . $maKh);
+    }
+
+    public function markNotificationsSeen(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $center = $this->model->getNotificationCenterData();
+        $_SESSION['admin_notifications_seen'] = [
+            'latest_order_marker' => (string)($center['latest_order_marker'] ?? ''),
+            'latest_chat_marker' => (string)($center['latest_chat_marker'] ?? ''),
+            'seen_at' => date('c'),
+        ];
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    public function customerChat(): void {
+        $user = $this->requireRole(['khach_hang']);
+        $email = (string)($user['email'] ?? '');
+        $messages = [];
+        
+        if ($email !== '') {
+            $customer = $this->model->getCustomerByEmail($email, (string)($user['ho_ten'] ?? ''));
+            $customerId = (int)($customer['ma_kh'] ?? 0);
+            if ($customerId > 0) {
+                $messages = $this->model->getChatMessages($customerId);
+            }
+        }
+        
+        $this->renderSite('lichsuchat', [
+            'messages' => $messages,
+            'pageTitle' => 'Chat với nhân viên hỗ trợ',
+        ]);
+    }
+
+    public function customerChatSend(): void {
+        $user = $this->requireRole(['khach_hang']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=lichsuchat');
+        }
+
+        $result = $this->model->sendCustomerChat((string)($user['email'] ?? ''), trim((string)($_POST['noi_dung'] ?? '')));
+        set_flash(!empty($result['ok']) ? 'success' : 'error', (string)($result['message'] ?? 'Không thể gửi tin nhắn.'));
+        redirect(BASE_URL . '/index.php?r=lichsuchat');
+    }
+
+    public function markChatRead(): void {
+        $user = $this->requireRole(['khach_hang']);
+        $customer = $this->model->getCustomerByEmail((string)($user['email'] ?? ''), (string)($user['ho_ten'] ?? ''));
+        $maKh = (int)($customer['ma_kh'] ?? 0);
+        if ($maKh > 0) {
+            $this->model->updateLastChatRead($maKh);
+        }
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    public function customerReviewSave(): void {
+        $user = $this->requireRole(['khach_hang']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirectBack('home');
+        }
+
+        $productId = trim((string)($_POST['ma_san_pham'] ?? ''));
+        $stars = max(1, min(5, (int)($_POST['so_sao'] ?? 5)));
+        $content = trim((string)($_POST['noi_dung'] ?? ''));
+        $result = $this->model->createReview((string)($user['email'] ?? ''), $productId, $stars, $content);
+        set_flash(!empty($result['ok']) ? 'success' : 'error', (string)($result['message'] ?? 'Không thể gửi đánh giá.'));
+        redirect(BASE_URL . '/index.php?r=chitiet&id=' . urlencode($productId) . '&tab=danh-gia');
+    }
+
+    public function customerOrderCancel(): void {
+        $user = $this->requireRole(['khach_hang']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        $orderId = max(0, (int)($_POST['ma_hoa_don'] ?? 0));
+        $detail = $this->model->getOrderById($orderId);
+        $email = strtolower(trim((string)($user['email'] ?? '')));
+        $ownerEmail = strtolower(trim((string)($detail['email'] ?? '')));
+        $currentStatus = strtolower(trim((string)($detail['trang_thai'] ?? '')));
+
+        if (!$detail || $email === '' || $ownerEmail !== $email) {
+            set_flash('error', 'Không thể hủy đơn hàng này.');
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        if (in_array($currentStatus, ['dang giao', 'hoan thanh', 'da huy'], true)) {
+            set_flash('error', 'Đơn hàng đã ở trạng thái không thể hủy.');
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        $payload = $this->extractCancellationReasonFromPost();
+        if (empty($payload['ok'])) {
+            set_flash('error', (string)($payload['message'] ?? 'Vui lòng chọn lý do hủy đơn hàng.'));
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        $ok = $this->model->updateOrderStatus($orderId, 'Da huy', (string)($payload['reason'] ?? ''));
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã hủy đơn hàng.' : 'Không thể hủy đơn hàng.');
+        redirect(BASE_URL . '/index.php?r=hoso');
+    }
+}

@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run PHP server :3000",
+			"type": "shell",
+			"command": "D:\\xampp\\php\\php.exe",
+			"args": [
+				"-S",
+				"localhost:3000",
+				"-t",
+				"."
+			],
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}
