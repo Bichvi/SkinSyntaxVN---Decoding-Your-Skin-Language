@@ -159,31 +159,7 @@ $skinSyntaxSignals = [
     </div>
   </section>
 
-  <section class="market-ai-panel mt-4">
-    <div class="market-ai-panel__content">
-      <span class="section-kicker">Giữ chất SkinSyntax</span>
-      <h3>Không biến SkinSyntax thành một bản sao Hasaki. Chúng ta chỉ mượn form mua sắm dễ quét và giữ lõi là intelligence về làn da.</h3>
-      <p>Phần này giữ đúng khác biệt của dự án: phân tích da, recommendation, giải thích sản phẩm, loyalty, lịch sử đơn và hồ sơ cá nhân. Layout nhìn quen với người dùng marketplace nhưng không mất bản sắc sản phẩm.</p>
-      <div class="market-ai-panel__actions">
-        <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=goiy">Mở trang gợi ý</a>
-        <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=hoso">Xem hồ sơ da</a>
-      </div>
-    </div>
-    <div class="market-ai-panel__stack">
-      <div class="ai-note-card">
-        <strong>Phễu 1</strong>
-        <p>Người dùng mới vào thẳng danh mục hoặc deal.</p>
-      </div>
-      <div class="ai-note-card">
-        <strong>Phễu 2</strong>
-        <p>Người dùng cần tư vấn chuyển sang khảo sát và routine AI.</p>
-      </div>
-      <div class="ai-note-card ai-note-card--accent">
-        <strong>Phễu 3</strong>
-        <p>Mua xong vẫn quay lại nhờ điểm thưởng, hồ sơ da và lịch sử cá nhân.</p>
-      </div>
-    </div>
-  </section>
+
 
   <section class="market-section mt-4">
     <div class="section-header section-header--compact">

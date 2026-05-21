@@ -848,7 +848,7 @@ class HomeController {
             return trim((string)$envValue);
         }
 
-        return 'http://127.0.0.1:5000/api/chat';
+        return 'http://127.0.0.1:5001/api/chat';
     }
 
     private function getAiChatTimeout(): int {
@@ -1146,9 +1146,10 @@ class HomeController {
             return $part !== '';
         }));
 
-        if (count($paragraphs) > 4) {
-            $paragraphs = array_slice($paragraphs, 0, 4);
-        }
+        // Không giới hạn số đoạn văn nữa để AI trả lời chi tiết
+        // if (count($paragraphs) > 4) {
+        //     $paragraphs = array_slice($paragraphs, 0, 4);
+        // }
 
         return trim(implode("\n\n", $paragraphs));
     }
@@ -1544,21 +1545,22 @@ class HomeController {
             return;
         }
 
-        $commonAnswer = $this->buildAiCommonKnowledgeResponse($message, $profile);
-        if ($commonAnswer !== null) {
-            $payload = [
-                'ok' => true,
-                'answer' => $commonAnswer,
-                'conflicts' => [],
-                'products' => [],
-                'fallback' => false,
-                'status_message' => '',
-                'fallback_note' => '',
-            ];
-            $this->storeAiResponsePayload($message, $payload);
-            echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            return;
-        }
+        // ─── TẮT COMMON KNOWLEDGE: Để AI tự trả lời tự nhiên mọi thứ ───
+        // $commonAnswer = $this->buildAiCommonKnowledgeResponse($message, $profile);
+        // if ($commonAnswer !== null) {
+        //     $payload = [
+        //         'ok' => true,
+        //         'answer' => $commonAnswer,
+        //         'conflicts' => [],
+        //         'products' => [],
+        //         'fallback' => false,
+        //         'status_message' => '',
+        //         'fallback_note' => '',
+        //     ];
+        //     $this->storeAiResponsePayload($message, $payload);
+        //     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        //     return;
+        // }
 
         $cartItems = $this->buildAiCartContext();
         $conflicts = $this->detectCartIngredientConflicts($cartItems);
@@ -1584,6 +1586,7 @@ class HomeController {
 
         if ((int)($response['status'] ?? 0) >= 200 && (int)($response['status'] ?? 0) < 300) {
             $decoded = json_decode((string)($response['body'] ?? ''), true);
+            @file_put_contents(__DIR__ . '/debug_raw_flask_response.txt', (string)($response['body'] ?? ''));
             $answer = $this->trimAiAnswer((string)($decoded['answer'] ?? ''));
         } else {
             $decoded = json_decode((string)($response['body'] ?? ''), true);
@@ -1595,6 +1598,9 @@ class HomeController {
             $answer = $this->buildAiAssistantFallback($message, $conflicts, $products);
         } else {
             $answer = $this->trimAiAnswer($answer);
+            if (is_array($decoded) && !empty($decoded['products'])) {
+                $products = $decoded['products'];
+            }
         }
 
         $payload = [
@@ -1612,7 +1618,12 @@ class HomeController {
             $this->storeAiResponsePayload($message, $payload);
         }
 
-        echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $jsonResult = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($jsonResult === false) {
+            echo json_encode(['ok' => false, 'message' => 'JSON encode error: ' . json_last_error_msg()]);
+        } else {
+            echo $jsonResult;
+        }
     }
 
     private function postJsonRequest(string $url, array $payload, int $timeout = 20): array {
