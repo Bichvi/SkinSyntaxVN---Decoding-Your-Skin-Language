@@ -1,8 +1,16 @@
 <?php
 // backend/public/index.php
+ini_set('memory_limit', '256M');
+@set_time_limit(120);
+@ini_set('max_execution_time', '120');
 session_start();
 
 require_once __DIR__ . '/../app/config/config.php';
+
+// Load Composer autoload if present (needed for MongoDB client library)
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
 
 $baseUrl = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 if (!defined('BASE_URL')) {
@@ -180,6 +188,15 @@ switch ($r) {
         (new AuthController($pdo))->dangky();
         break;
 
+    case 'gui_otp_dang_ky':
+        (new AuthController($pdo))->guiOtpDangKy();
+        break;
+
+    case 'gui_captcha_dang_ky':
+        $controller = new AuthController($pdo);
+        $controller->{'guiCaptchaDangKy'}();
+        break;
+
     case 'xulydangky':
         (new AuthController($pdo))->xulydangky();
         break;
@@ -340,6 +357,10 @@ switch ($r) {
 
     case 'chat_send':
         (new QuanTriController($pdo))->customerChatSend();
+        break;
+
+    case 'mark_chat_read':
+        (new QuanTriController($pdo))->markChatRead();
         break;
 
     case 'guidanhgia':

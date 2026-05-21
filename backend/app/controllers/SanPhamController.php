@@ -8,10 +8,10 @@ class SanPhamController {
     private const SEARCH_KEYWORD_MAX_LEN = 250;
     private const SEARCH_HISTORY_LIMIT = 8;
 
-    private PDO $pdo;
+    private $pdo;
     private SanPham $model;
 
-    public function __construct(PDO $pdo) {
+    public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->model = new SanPham($pdo);
     }
@@ -132,6 +132,19 @@ class SanPhamController {
             $qty = max(1, (int)($_POST['qty'] ?? 1));
             
             if ($id !== '') {
+                $product = $this->model->findById($id, true);
+                if (!$product || (method_exists($this->model, 'isProductAvailable') && !$this->model->isProductAvailable($product))) {
+                    set_flash('error', 'San pham da het hang hoac tam ngung ban.');
+                    redirect(BASE_URL . '/index.php?r=chitiet&id=' . urlencode($id));
+                    return;
+                }
+                $stock = method_exists($this->model, 'getProductStock') ? $this->model->getProductStock($product) : null;
+                $currentQty = (int)($_SESSION['gio_hang'][$id] ?? 0);
+                if ($stock !== null && ($currentQty + $qty) > $stock) {
+                    set_flash('error', 'So luong vuot qua ton kho hien co.');
+                    redirect(BASE_URL . '/index.php?r=chitiet&id=' . urlencode($id));
+                    return;
+                }
                 if (!isset($_SESSION['gio_hang'])) {
                     $_SESSION['gio_hang'] = [];
                 }
