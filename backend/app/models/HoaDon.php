@@ -2,155 +2,134 @@
 // backend/app/models/HoaDon.php
 
 class HoaDon {
-    private PDO $pdo;
-    private array $columnCache = [];
+    private $db;
     private const POINT_VALUE_VND = 1000;
     private const VIP_THRESHOLD = 500;
     private const DIAMOND_THRESHOLD = 1500;
 
-    public function __construct(PDO $pdo) {
-        $this->pdo = $pdo;
-        $this->ensureLoyaltyColumns();
+    public function __construct($db) {
+        $this->db = $db;
+        // MongoDB khÃ´ng cáº§n CREATE hay ALTER TABLE Ä‘á»ƒ thÃªm cá»™t má»›i
     }
 
-    private function ensureLoyaltyColumns(): void {
-        $ddl = [
-            "ALTER TABLE khach_hang ADD COLUMN IF NOT EXISTS diemtl INTEGER DEFAULT 0",
-            "ALTER TABLE khach_hang ADD COLUMN IF NOT EXISTS loaikh VARCHAR(30) DEFAULT 'Thuong'",
-            "ALTER TABLE hoa_don ADD COLUMN IF NOT EXISTS diem_cong INTEGER DEFAULT 0",
-            "ALTER TABLE hoa_don ADD COLUMN IF NOT EXISTS da_tich_diem BOOLEAN DEFAULT FALSE",
-            "ALTER TABLE hoa_don ADD COLUMN IF NOT EXISTS diem_su_dung INTEGER DEFAULT 0",
-            "ALTER TABLE hoa_don ADD COLUMN IF NOT EXISTS tien_giam_diem INTEGER DEFAULT 0",
-            "ALTER TABLE hoa_don ADD COLUMN IF NOT EXISTS da_hoan_diem BOOLEAN DEFAULT FALSE",
-        ];
-
-        foreach ($ddl as $sql) {
-            try {
-                $this->pdo->exec($sql);
-            } catch (Throwable $e) {
-                // Keep order flow resilient if DB user cannot alter schema.
-            }
-        }
-
-        try {
-            $this->pdo->exec("UPDATE khach_hang SET diemtl = COALESCE(diemtl, 0) WHERE diemtl IS NULL");
-            $this->pdo->exec("UPDATE khach_hang SET loaikh = COALESCE(NULLIF(TRIM(loaikh), ''), 'Thuong') WHERE loaikh IS NULL OR TRIM(COALESCE(loaikh, '')) = ''");
-            $this->pdo->exec("UPDATE hoa_don SET diem_cong = COALESCE(diem_cong, 0) WHERE diem_cong IS NULL");
-            $this->pdo->exec("UPDATE hoa_don SET da_tich_diem = COALESCE(da_tich_diem, FALSE) WHERE da_tich_diem IS NULL");
-            $this->pdo->exec("UPDATE hoa_don SET diem_su_dung = COALESCE(diem_su_dung, 0) WHERE diem_su_dung IS NULL");
-            $this->pdo->exec("UPDATE hoa_don SET tien_giam_diem = COALESCE(tien_giam_diem, 0) WHERE tien_giam_diem IS NULL");
-            $this->pdo->exec("UPDATE hoa_don SET da_hoan_diem = COALESCE(da_hoan_diem, FALSE) WHERE da_hoan_diem IS NULL");
-        } catch (Throwable $e) {
-            // Ignore normalization failures to avoid blocking checkout.
-        }
-    }
-
-    private function getColumns(string $table): array {
-        if (isset($this->columnCache[$table])) {
-            return $this->columnCache[$table];
-        }
-
-        $sql = "SELECT column_name
-                FROM information_schema.columns
-                WHERE table_schema = current_schema()
-                  AND table_name = :table";
-        $st = $this->pdo->prepare($sql);
-        $st->execute([':table' => $table]);
-        $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
-
-        $columns = [];
-        foreach ($rows as $row) {
-            $name = (string)($row['column_name'] ?? '');
-            if ($name !== '') {
-                $columns[$name] = true;
-            }
-        }
-
-        $this->columnCache[$table] = $columns;
-        return $columns;
-    }
-
-    private function getNextNumericId(string $table, string $column, ?string $preferredSequence = null): int {
-        if ($preferredSequence) {
-            $sqlSequence = 'SELECT to_regclass(:sequence_name)';
-            $stSequence = $this->pdo->prepare($sqlSequence);
-            $stSequence->execute([':sequence_name' => $preferredSequence]);
-            $sequenceName = $stSequence->fetchColumn();
-
-            if ($sequenceName) {
-                $quotedSequence = $this->pdo->quote((string)$sequenceName);
-                $nextId = $this->pdo->query('SELECT nextval(' . $quotedSequence . '::regclass)')->fetchColumn();
-                if ($nextId !== false && $nextId !== null) {
-                    return (int)$nextId;
-                }
-            }
-        }
-
-        $sql = 'SELECT COALESCE(MAX(' . $column . '), 0) + 1 FROM ' . $table;
-        $nextId = $this->pdo->query($sql)->fetchColumn();
-        return max(1, (int)$nextId);
+    // HÃ m tá»± Ä‘á»™ng tÄƒng ID (Giáº£ láº­p Auto-increment cá»§a SQL)
+    private function getNextNumericId(string $collection, string $column): int {
+        $lastDoc = $this->db->{$collection}->findOne([], ['sort' => [$column => -1]]);
+        return $lastDoc ? (int)$lastDoc[$column] + 1 : 1;
     }
 
     private function getOrCreateKhachHangId(string $email, string $defaultName): int {
-        $sqlFind = "SELECT ma_kh FROM khach_hang WHERE LOWER(email) = LOWER(:email) LIMIT 1";
-        $stFind = $this->pdo->prepare($sqlFind);
-        $stFind->execute([':email' => $email]);
-        $maKh = $stFind->fetchColumn();
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+        $kh = $this->db->khach_hang->findOne(['email' => $regex]);
 
-        if ($maKh) {
-            return (int)$maKh;
+        if ($kh) {
+            return (int)$kh['ma_kh'];
         }
 
-        $maKhMoi = $this->getNextNumericId('khach_hang', 'ma_kh', 'khach_hang_ma_kh_seq');
+        $maKhMoi = $this->getNextNumericId('khach_hang', 'ma_kh');
 
-        $sqlInsert = "INSERT INTO khach_hang(ma_kh, ho_ten, email, created_at, updated_at)
-                      VALUES (:ma_kh, :ho_ten, :email, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-        $stInsert = $this->pdo->prepare($sqlInsert);
-        $stInsert->execute([
-            ':ma_kh' => $maKhMoi,
-            ':ho_ten' => ($defaultName !== '' ? $defaultName : 'Khach hang'),
-            ':email' => $email,
+        $this->db->khach_hang->insertOne([
+            'ma_kh' => $maKhMoi,
+            'ho_ten' => $defaultName !== '' ? $defaultName : 'Khach hang',
+            'email' => $email,
+            'diemtl' => 0,
+            'loaikh' => 'Thuong',
+            'created_at' => new \MongoDB\BSON\UTCDateTime(),
+            'updated_at' => new \MongoDB\BSON\UTCDateTime()
         ]);
 
         return $maKhMoi;
     }
 
-            private function hasColumn(string $table, string $column): bool {
-                $columns = $this->getColumns($table);
-                return isset($columns[$column]);
-            }
-
     private function fetchProductPrice(string $productId): int {
-        $sql = "SELECT gia_ban, gia_thi_truong
-                FROM san_pham
-                WHERE ma_san_pham = :id
-                LIMIT 1";
-        $st = $this->pdo->prepare($sql);
-        $st->execute([':id' => $productId]);
-        $row = $st->fetch(PDO::FETCH_ASSOC) ?: null;
+        $product = $this->db->san_pham->findOne(['ma_san_pham' => $productId]);
+        
+        // Fallback thá»­ Ã©p kiá»ƒu int
+        if (!$product && is_numeric($productId)) {
+            $product = $this->db->san_pham->findOne(['ma_san_pham' => (int) $productId]);
+        }
 
-        if (!$row) {
+        if (!$product) {
             throw new RuntimeException('San pham khong ton tai: ' . $productId);
         }
 
-        $giaBan = (int)($row['gia_ban'] ?? 0);
+        $giaBan = (int)($product['gia_ban'] ?? 0);
         if ($giaBan > 0) {
             return $giaBan;
         }
 
-        $giaThiTruong = (int)($row['gia_thi_truong'] ?? 0);
+        $giaThiTruong = (int)($product['gia_thi_truong'] ?? 0);
         return max(0, $giaThiTruong);
+    }
+
+    private function findProductForStock(string $productId): ?array {
+        $filters = [['ma_san_pham' => $productId]];
+        if (is_numeric($productId)) {
+            $filters[] = ['ma_san_pham' => (int)$productId];
+        }
+        foreach ($filters as $filter) {
+            $product = $this->db->san_pham->findOne($filter);
+            if ($product) return (array)$product;
+        }
+        return null;
+    }
+
+    private function productStockField(array $product): ?string {
+        foreach (['so_luong_ton', 'ton_kho', 'stock', 'quantity'] as $field) {
+            if (array_key_exists($field, $product)) return $field;
+        }
+        return null;
+    }
+
+    private function reserveStockForItems(array $items): bool {
+        foreach ($items as $item) {
+            $productId = (string)($item['ma_san_pham'] ?? '');
+            $quantity = max(1, (int)($item['so_luong'] ?? 0));
+            $product = $this->findProductForStock($productId);
+            if (!$product) return false;
+            $field = $this->productStockField($product);
+            if ($field === null) continue;
+            if ((int)($product[$field] ?? 0) < $quantity) return false;
+        }
+
+        foreach ($items as $item) {
+            $productId = (string)($item['ma_san_pham'] ?? '');
+            $quantity = max(1, (int)($item['so_luong'] ?? 0));
+            $product = $this->findProductForStock($productId);
+            $field = $product ? $this->productStockField($product) : null;
+            if ($field === null) continue;
+            $filter = ['ma_san_pham' => $product['ma_san_pham'], $field => ['$gte' => $quantity]];
+            $this->db->san_pham->updateOne($filter, ['$inc' => [$field => -$quantity], '$set' => ['updated_at' => new \MongoDB\BSON\UTCDateTime()]]);
+        }
+        return true;
+    }
+
+    private function restoreStockForItems(array $items): void {
+        foreach ($items as $item) {
+            $productId = (string)($item['ma_san_pham'] ?? '');
+            $quantity = max(1, (int)($item['so_luong'] ?? 0));
+            $product = $this->findProductForStock($productId);
+            $field = $product ? $this->productStockField($product) : null;
+            if ($field === null) continue;
+            $this->db->san_pham->updateOne(['ma_san_pham' => $product['ma_san_pham']], ['$inc' => [$field => $quantity], '$set' => ['updated_at' => new \MongoDB\BSON\UTCDateTime()]]);
+        }
+    }
+
+    public function restoreStockForOrder(int $orderId): void {
+        $order = $this->db->hoa_don->findOne(['ma_hoa_don' => $orderId]);
+        if (!$order || empty($order['da_tru_ton_kho']) || !empty($order['da_hoan_ton_kho'])) return;
+        $items = iterator_to_array($this->db->chi_tiet_hoa_don->find(['ma_hoa_don' => $orderId]));
+        $this->restoreStockForItems($items);
+        $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => ['da_hoan_ton_kho' => true, 'updated_at' => new \MongoDB\BSON\UTCDateTime()]]);
     }
 
     private function normalizeCustomerTier(int $points): string {
         if ($points >= self::DIAMOND_THRESHOLD) {
             return 'Kim Cuong';
         }
-
         if ($points >= self::VIP_THRESHOLD) {
             return 'VIP';
         }
-
         return 'Thuong';
     }
 
@@ -160,15 +139,12 @@ class HoaDon {
         if (isset($order['tam_tinh'])) {
             $baseAmount = max(0, (int)($order['tam_tinh'] ?? 0) - (int)($order['so_tien_giam'] ?? 0));
         }
-
         if ($baseAmount <= 0) {
             $baseAmount = max(0, (int)($order['tong_tien'] ?? 0) - (int)($order['phi_van_chuyen'] ?? 0));
         }
-
         if ($baseAmount > 0) {
             $baseAmount = max(0, $baseAmount - (int)($order['tien_giam_diem'] ?? 0));
         }
-
         if ($baseAmount <= 0) {
             $baseAmount = max(0, (int)($order['tong_tien'] ?? 0));
         }
@@ -177,165 +153,132 @@ class HoaDon {
     }
 
     private function getCustomerAvailablePoints(int $maKh): int {
-        if ($maKh <= 0) {
-            return 0;
-        }
-
-        $st = $this->pdo->prepare('SELECT COALESCE(diemtl, 0) FROM khach_hang WHERE ma_kh = :ma_kh LIMIT 1');
-        $st->execute([':ma_kh' => $maKh]);
-        return max(0, (int)$st->fetchColumn());
+        if ($maKh <= 0) return 0;
+        $kh = $this->db->khach_hang->findOne(['ma_kh' => $maKh]);
+        return $kh ? max(0, (int)($kh['diemtl'] ?? 0)) : 0;
     }
 
     private function syncCustomerLoyaltyByMaKh(int $maKh): void {
-        if ($maKh <= 0) {
-            return;
+        if ($maKh <= 0) return;
+
+        $orders = $this->db->hoa_don->find(['ma_kh' => $maKh]);
+        $totalPoints = 0;
+
+        foreach ($orders as $order) {
+            $daTich = !empty($order['da_tich_diem']) && $order['da_tich_diem'] !== 'false' && $order['da_tich_diem'] !== false;
+            $daHoan = !empty($order['da_hoan_diem']) && $order['da_hoan_diem'] !== 'false' && $order['da_hoan_diem'] !== false;
+            
+            $diemCong = (int)($order['diem_cong'] ?? 0);
+            $diemSuDung = (int)($order['diem_su_dung'] ?? 0);
+
+            if ($daTich) {
+                $totalPoints += $diemCong;
+            }
+            if (!$daHoan) {
+                $totalPoints -= $diemSuDung;
+            }
         }
 
-        $hoaDonColumns = $this->getColumns('hoa_don');
-        $khColumns = $this->getColumns('khach_hang');
-        if (!isset($hoaDonColumns['da_tich_diem'], $hoaDonColumns['diem_cong'], $khColumns['diemtl'], $khColumns['loaikh'])) {
-            return;
-        }
-
-        $usedPointsExpr = isset($hoaDonColumns['diem_su_dung'])
-            ? "CASE WHEN COALESCE(da_hoan_diem, FALSE) = FALSE THEN COALESCE(diem_su_dung, 0) ELSE 0 END"
-            : '0';
-
-        $reviewBonusPoints = 0;
-        if ($this->hasColumn('danh_gia', 'ma_kh')) {
-            $sqlReviewPoints = "SELECT COUNT(*) FROM danh_gia WHERE ma_kh = :ma_kh";
-            $stReviewPoints = $this->pdo->prepare($sqlReviewPoints);
-            $stReviewPoints->execute([':ma_kh' => $maKh]);
-            $reviewBonusPoints = max(0, (int)$stReviewPoints->fetchColumn());
-        }
-
-        $sqlPoints = "SELECT COALESCE(SUM(CASE WHEN COALESCE(da_tich_diem, FALSE) = TRUE THEN COALESCE(diem_cong, 0) ELSE 0 END), 0)
-                            - COALESCE(SUM($usedPointsExpr), 0)
-                      FROM hoa_don
-                      WHERE ma_kh = :ma_kh";
-        $stPoints = $this->pdo->prepare($sqlPoints);
-        $stPoints->execute([':ma_kh' => $maKh]);
-        $totalPoints = max(0, (int)$stPoints->fetchColumn() + $reviewBonusPoints);
+        $reviewBonusPoints = $this->db->danh_gia->countDocuments(['ma_kh' => $maKh]);
+        $totalPoints = max(0, $totalPoints + $reviewBonusPoints);
 
         $tier = $this->normalizeCustomerTier($totalPoints);
-        $sqlUpdate = "UPDATE khach_hang
-                      SET diemtl = :diemtl,
-                          loaikh = :loaikh,
-                          updated_at = CURRENT_TIMESTAMP
-                      WHERE ma_kh = :ma_kh";
-        $stUpdate = $this->pdo->prepare($sqlUpdate);
-        $stUpdate->execute([
-            ':diemtl' => $totalPoints,
-            ':loaikh' => $tier,
-            ':ma_kh' => $maKh,
-        ]);
+        
+        $this->db->khach_hang->updateOne(
+            ['ma_kh' => $maKh],
+            ['$set' => [
+                'diemtl' => $totalPoints,
+                'loaikh' => $tier,
+                'updated_at' => new \MongoDB\BSON\UTCDateTime()
+            ]]
+        );
     }
 
     public function syncLoyaltyForOrder(int $orderId): void {
-        if ($orderId <= 0) {
-            return;
-        }
-
-        $hoaDonColumns = $this->getColumns('hoa_don');
-        if (!isset($hoaDonColumns['da_tich_diem'], $hoaDonColumns['diem_cong'])) {
-            return;
-        }
+        if ($orderId <= 0) return;
 
         $order = $this->getOrderById($orderId);
-        if (!$order) {
-            return;
-        }
+        if (!$order) return;
 
         $maKh = (int)($order['ma_kh'] ?? 0);
-        if ($maKh <= 0) {
-            return;
-        }
+        if ($maKh <= 0) return;
 
         $currentStatus = strtolower(trim((string)($order['trang_thai'] ?? '')));
-        $alreadyAwarded = !empty($order['da_tich_diem']);
+        $alreadyAwarded = !empty($order['da_tich_diem']) && $order['da_tich_diem'] !== 'false';
         $usedPoints = max(0, (int)($order['diem_su_dung'] ?? 0));
-        $alreadyRefunded = !empty($order['da_hoan_diem']);
+        $alreadyRefunded = !empty($order['da_hoan_diem']) && $order['da_hoan_diem'] !== 'false';
         $didChange = false;
 
+        $updateFields = [];
+
         if ($currentStatus === 'da huy' && $usedPoints > 0 && !$alreadyRefunded) {
-            $stRefund = $this->pdo->prepare('UPDATE hoa_don SET da_hoan_diem = TRUE, updated_at = CURRENT_TIMESTAMP WHERE ma_hoa_don = :id');
-            $stRefund->execute([':id' => $orderId]);
+            $updateFields['da_hoan_diem'] = true;
             $didChange = true;
         }
 
         if ($currentStatus !== 'da huy' && $usedPoints > 0 && $alreadyRefunded) {
-            $stUndoRefund = $this->pdo->prepare('UPDATE hoa_don SET da_hoan_diem = FALSE, updated_at = CURRENT_TIMESTAMP WHERE ma_hoa_don = :id');
-            $stUndoRefund->execute([':id' => $orderId]);
+            $updateFields['da_hoan_diem'] = false;
             $didChange = true;
         }
 
         if ($currentStatus === 'hoan thanh' && !$alreadyAwarded) {
             $points = $this->calculateOrderPoints($order);
-            $stAward = $this->pdo->prepare('UPDATE hoa_don SET diem_cong = :diem_cong, da_tich_diem = TRUE, updated_at = CURRENT_TIMESTAMP WHERE ma_hoa_don = :id');
-            $stAward->execute([
-                ':diem_cong' => $points,
-                ':id' => $orderId,
-            ]);
+            $updateFields['diem_cong'] = $points;
+            $updateFields['da_tich_diem'] = true;
             $didChange = true;
         }
 
         if ($currentStatus !== 'hoan thanh' && $alreadyAwarded) {
-            $stRevoke = $this->pdo->prepare('UPDATE hoa_don SET diem_cong = 0, da_tich_diem = FALSE, updated_at = CURRENT_TIMESTAMP WHERE ma_hoa_don = :id');
-            $stRevoke->execute([':id' => $orderId]);
+            $updateFields['diem_cong'] = 0;
+            $updateFields['da_tich_diem'] = false;
             $didChange = true;
         }
 
         if ($didChange) {
+            $updateFields['updated_at'] = new \MongoDB\BSON\UTCDateTime();
+            $this->db->hoa_don->updateOne(
+                ['ma_hoa_don' => $orderId],
+                ['$set' => $updateFields]
+            );
             $this->syncCustomerLoyaltyByMaKh($maKh);
         }
     }
 
     public function getOrderById(int $orderId, ?string $email = null): ?array {
-        if ($orderId <= 0) {
-            return null;
-        }
+        if ($orderId <= 0) return null;
 
-        $sql = "SELECT hd.*, kh.ho_ten, kh.email
-                FROM hoa_don hd
-                LEFT JOIN khach_hang kh ON kh.ma_kh = hd.ma_kh
-                WHERE hd.ma_hoa_don = :id";
-        $params = [':id' => $orderId];
+        $order = $this->db->hoa_don->findOne(['ma_hoa_don' => $orderId]);
+        if (!$order) return null;
+        $order = (array) $order;
+
+        $kh = $this->db->khach_hang->findOne(['ma_kh' => $order['ma_kh']]);
+        if ($kh) {
+            $order['ho_ten'] = $kh['ho_ten'];
+            $order['email'] = $kh['email'];
+        }
 
         if ($email !== null && trim($email) !== '') {
-            $sql .= " AND LOWER(COALESCE(kh.email, '')) = LOWER(:email)";
-            $params[':email'] = trim($email);
+            if (strtolower(trim($email)) !== strtolower(trim($order['email'] ?? ''))) {
+                return null;
+            }
         }
 
-        $sql .= ' LIMIT 1';
-        $st = $this->pdo->prepare($sql);
-        $st->execute($params);
-        $row = $st->fetch(PDO::FETCH_ASSOC) ?: null;
-
-        return $row ?: null;
+        return $order;
     }
 
     public function markPaidByTransfer(int $orderId, int $amount, ?string $transactionReference = null, ?string $transferContent = null): array {
         if ($orderId <= 0) {
-            return [
-                'ok' => false,
-                'message' => 'Ma don hang khong hop le.',
-            ];
+            return ['ok' => false, 'message' => 'Ma don hang khong hop le.'];
         }
 
         $order = $this->getOrderById($orderId);
         if (!$order) {
-            return [
-                'ok' => false,
-                'message' => 'Khong tim thay don hang.',
-            ];
+            return ['ok' => false, 'message' => 'Khong tim thay don hang.'];
         }
 
         $paymentMethod = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod')));
         if ($paymentMethod !== 'bank_transfer_qr') {
-            return [
-                'ok' => false,
-                'message' => 'Don hang khong su dung chuyen khoan QR.',
-            ];
+            return ['ok' => false, 'message' => 'Don hang khong su dung chuyen khoan QR.'];
         }
 
         $paymentStatus = strtolower(trim((string)($order['status_thanh_toan'] ?? '')));
@@ -350,10 +293,7 @@ class HoaDon {
 
         $orderStatus = strtolower(trim((string)($order['trang_thai'] ?? '')));
         if ($orderStatus === 'da huy') {
-            return [
-                'ok' => false,
-                'message' => 'Don hang da huy, khong the doi soat thanh toan.',
-            ];
+            return ['ok' => false, 'message' => 'Don hang da huy, khong the doi soat thanh toan.'];
         }
 
         $expectedAmount = (int)($order['tong_tien'] ?? 0);
@@ -366,51 +306,24 @@ class HoaDon {
             ];
         }
 
-        $hoaDonColumns = $this->getColumns('hoa_don');
-        $ctColumns = $this->getColumns('chi_tiet_hoa_don');
-
-        $this->pdo->beginTransaction();
         try {
-            $setHoaDon = ['status_thanh_toan = :status_thanh_toan'];
-            $params = [
-                ':status_thanh_toan' => 'Da thanh toan',
-                ':id' => $orderId,
+            $updateHoaDon = [
+                'status_thanh_toan' => 'Da thanh toan',
+                'updated_at' => new \MongoDB\BSON\UTCDateTime()
             ];
 
-            if (isset($hoaDonColumns['trang_thai']) && in_array($orderStatus, ['cho xu ly', 'chờ xử lý', 'moi'], true)) {
-                $setHoaDon[] = 'trang_thai = :trang_thai';
-                $params[':trang_thai'] = 'Da xac nhan';
+            if (in_array($orderStatus, ['cho thanh toan', 'cho xu ly', 'moi'], true)) {
+                $updateHoaDon['trang_thai'] = 'Da xac nhan';
             }
 
-            if (isset($hoaDonColumns['updated_at'])) {
-                $setHoaDon[] = 'updated_at = CURRENT_TIMESTAMP';
+            if ($transactionReference !== null && $transactionReference !== '') {
+                $updateHoaDon['ghi_chu_thanh_toan'] = $transactionReference;
+            } elseif ($transferContent !== null && $transferContent !== '') {
+                $updateHoaDon['ghi_chu_thanh_toan'] = $transferContent;
             }
 
-            if ($transactionReference !== null && $transactionReference !== '' && isset($hoaDonColumns['ghi_chu_thanh_toan'])) {
-                $setHoaDon[] = 'ghi_chu_thanh_toan = :ghi_chu_thanh_toan';
-                $params[':ghi_chu_thanh_toan'] = $transactionReference;
-            } elseif ($transferContent !== null && $transferContent !== '' && isset($hoaDonColumns['ghi_chu_thanh_toan'])) {
-                $setHoaDon[] = 'ghi_chu_thanh_toan = :ghi_chu_thanh_toan';
-                $params[':ghi_chu_thanh_toan'] = $transferContent;
-            }
-
-            $sqlHoaDon = 'UPDATE hoa_don SET ' . implode(', ', $setHoaDon) . ' WHERE ma_hoa_don = :id';
-            $stHoaDon = $this->pdo->prepare($sqlHoaDon);
-            $stHoaDon->execute($params);
-
-            if (isset($ctColumns['status_thanh_toan'])) {
-                $setCt = ['status_thanh_toan = :ct_status_thanh_toan'];
-                $paramsCt = [
-                    ':ct_status_thanh_toan' => 'Da thanh toan',
-                    ':id' => $orderId,
-                ];
-
-                $sqlCt = 'UPDATE chi_tiet_hoa_don SET ' . implode(', ', $setCt) . ' WHERE ma_hoa_don = :id';
-                $stCt = $this->pdo->prepare($sqlCt);
-                $stCt->execute($paramsCt);
-            }
-
-            $this->pdo->commit();
+            $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => $updateHoaDon]);
+            $this->db->chi_tiet_hoa_don->updateMany(['ma_hoa_don' => $orderId], ['$set' => ['status_thanh_toan' => 'Da thanh toan']]);
 
             return [
                 'ok' => true,
@@ -418,10 +331,6 @@ class HoaDon {
                 'order_id' => $orderId,
             ];
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-
             return [
                 'ok' => false,
                 'message' => $e->getMessage(),
@@ -450,15 +359,12 @@ class HoaDon {
         }
 
         $maKh = $this->getOrCreateKhachHangId($email, $hoTenMacDinh);
-
         $lineItems = [];
         $subtotal = 0;
 
         foreach ($checkoutItems as $maSanPham => $soLuongRaw) {
             $maSanPham = trim((string)$maSanPham);
-            if ($maSanPham === '') {
-                continue;
-            }
+            if ($maSanPham === '') continue;
 
             $soLuong = max(1, (int)$soLuongRaw);
             $donGia = $this->fetchProductPrice($maSanPham);
@@ -484,10 +390,15 @@ class HoaDon {
         $diemSuDung = min($diemSuDung, $availablePoints, $maxPointsByAmount);
         $tienGiamDiem = min($maxDiscountableAmount, $tienGiamDiemInput > 0 ? $tienGiamDiemInput : ($diemSuDung * self::POINT_VALUE_VND));
         $tongTien = max(0, $tamTinh - $soTienGiam - $tienGiamDiem) + $phiVanChuyen;
-        $maHoaDonMoi = $this->getNextNumericId('hoa_don', 'ma_hoa_don', 'hoa_don_ma_hoa_don_seq');
+        
+        $maHoaDonMoi = $this->getNextNumericId('hoa_don', 'ma_hoa_don');
         $statusThanhToan = $hinhThucThanhToan === 'bank_transfer_qr' ? 'Cho chuyen khoan' : 'Chua thanh toan';
+        $orderStatus = $hinhThucThanhToan === 'bank_transfer_qr' ? 'Cho thanh toan' : 'Cho xu ly';
+        $stockReserved = $this->reserveStockForItems($lineItems);
+        if (!$stockReserved) {
+            throw new RuntimeException('Mot so san pham da het hang hoac khong du so luong ton kho.');
+        }
 
-        $columnsHoaDon = $this->getColumns('hoa_don');
         $dataHoaDon = [
             'ma_hoa_don' => $maHoaDonMoi,
             'ma_kh' => $maKh,
@@ -503,113 +414,83 @@ class HoaDon {
             'hinh_thuc_thanh_toan' => $hinhThucThanhToan,
             'status_thanh_toan' => $statusThanhToan,
             'diem_cong' => 0,
-            'da_tich_diem' => 'false',
+            'da_tich_diem' => false,
             'diem_su_dung' => $diemSuDung,
             'tien_giam_diem' => $tienGiamDiem,
-            'da_hoan_diem' => 'false',
-            'trang_thai' => 'Cho xu ly',
-            'ngay_dat' => date('Y-m-d H:i:s'),
+            'da_hoan_diem' => false,
+            'trang_thai' => $orderStatus,
+            'payment_expires_at' => $hinhThucThanhToan === 'bank_transfer_qr' ? new \MongoDB\BSON\UTCDateTime((time() + 86400) * 1000) : null,
+            'da_tru_ton_kho' => true,
+            'da_hoan_ton_kho' => false,
+            'ngay_dat' => new \MongoDB\BSON\UTCDateTime(),
         ];
 
-        $insertColsHoaDon = [];
-        $insertValuesHoaDon = [];
-        $bindHoaDon = [];
-
-        foreach ($dataHoaDon as $col => $value) {
-            if (!isset($columnsHoaDon[$col])) {
-                continue;
-            }
-            $insertColsHoaDon[] = $col;
-            $insertValuesHoaDon[] = ':' . $col;
-            $bindHoaDon[':' . $col] = $value;
-        }
-
-        if (empty($insertColsHoaDon)) {
-            throw new RuntimeException('Khong tim thay cot hop le de insert hoa_don.');
-        }
-
-        $columnsCt = $this->getColumns('chi_tiet_hoa_don');
-        $columnsVoucher = $this->getColumns('voucher');
-
-        $this->pdo->beginTransaction();
         try {
-            $sqlHoaDon = 'INSERT INTO hoa_don(' . implode(', ', $insertColsHoaDon) . ') VALUES(' . implode(', ', $insertValuesHoaDon) . ')';
-            $stHoaDon = $this->pdo->prepare($sqlHoaDon);
-            $stHoaDon->execute($bindHoaDon);
+            // 1. LÆ°u hÃ³a Ä‘Æ¡n
+            $this->db->hoa_don->insertOne($dataHoaDon);
 
-            $maHoaDon = (int)($bindHoaDon[':ma_hoa_don'] ?? 0);
-            if ($maHoaDon <= 0) {
-                $maHoaDon = (int)($this->pdo->lastInsertId('hoa_don_ma_hoa_don_seq') ?: $this->pdo->lastInsertId());
-            }
-            if ($maHoaDon <= 0) {
-                throw new RuntimeException('Khong lay duoc ma_hoa_don sau khi insert.');
-            }
-
+            // 2. LÆ°u chi tiáº¿t hÃ³a Ä‘Æ¡n
             foreach ($lineItems as $item) {
-                $dataCt = [
-                    'id' => isset($columnsCt['id']) ? $this->getNextNumericId('chi_tiet_hoa_don', 'id', 'chi_tiet_hoa_don_id_seq') : null,
-                    'ma_hoa_don' => (int)$maHoaDon,
+                $idCt = $this->getNextNumericId('chi_tiet_hoa_don', 'id');
+                $this->db->chi_tiet_hoa_don->insertOne([
+                    'id' => $idCt,
+                    'ma_hoa_don' => $maHoaDonMoi,
                     'ma_san_pham' => $item['ma_san_pham'],
                     'so_luong' => $item['so_luong'],
                     'don_gia' => $item['don_gia'],
                     'status_thanh_toan' => $statusThanhToan,
                     'hinh_thuc_thanh_toan' => $hinhThucThanhToan,
-                ];
-
-                $insertColsCt = [];
-                $insertValuesCt = [];
-                $bindCt = [];
-
-                foreach ($dataCt as $col => $value) {
-                    if (!isset($columnsCt[$col]) || $value === null) {
-                        continue;
-                    }
-                    $param = ':' . $col;
-                    $insertColsCt[] = $col;
-                    $insertValuesCt[] = $param;
-                    $bindCt[$param] = $value;
-                }
-
-                if (empty($insertColsCt)) {
-                    throw new RuntimeException('Khong tim thay cot hop le de insert chi_tiet_hoa_don.');
-                }
-
-                $sqlCt = 'INSERT INTO chi_tiet_hoa_don(' . implode(', ', $insertColsCt) . ') VALUES(' . implode(', ', $insertValuesCt) . ')';
-                $stCt = $this->pdo->prepare($sqlCt);
-                $stCt->execute($bindCt);
+                ]);
             }
 
-            if ($maVoucher !== null && $maVoucher > 0 && isset($columnsVoucher['ma_voucher'])) {
-                $setClauses = [];
-                if (isset($columnsVoucher['so_luong_da_dung'])) {
-                    $setClauses[] = 'so_luong_da_dung = COALESCE(so_luong_da_dung, 0) + 1';
-                }
-                if (isset($columnsVoucher['updated_at'])) {
-                    $setClauses[] = 'updated_at = CURRENT_TIMESTAMP';
-                }
-
-                if (!empty($setClauses)) {
-                    $sqlVoucher = 'UPDATE voucher SET ' . implode(', ', $setClauses) . ' WHERE ma_voucher = :ma_voucher';
-                    if (isset($columnsVoucher['so_luong']) && isset($columnsVoucher['so_luong_da_dung'])) {
-                        $sqlVoucher .= ' AND (so_luong IS NULL OR COALESCE(so_luong_da_dung, 0) < so_luong)';
-                    }
-
-                    $stVoucher = $this->pdo->prepare($sqlVoucher);
-                    $stVoucher->execute([':ma_voucher' => $maVoucher]);
-
-                    if ($stVoucher->rowCount() === 0) {
-                        throw new RuntimeException('Voucher khong con hop le de ap dung.');
-                    }
-                }
+            // 3. Cáº­p nháº­t Voucher
+            if ($maVoucher !== null && $maVoucher > 0) {
+                $this->db->voucher->updateOne(
+                    ['ma_voucher' => $maVoucher],
+                    ['$inc' => ['so_luong_da_dung' => 1], '$set' => ['updated_at' => new \MongoDB\BSON\UTCDateTime()]]
+                );
             }
 
+            // 4. Äá»“ng bá»™ Ä‘iá»ƒm Loyalty
             $this->syncCustomerLoyaltyByMaKh($maKh);
 
-            $this->pdo->commit();
-            return (int)$maHoaDon;
+            return $maHoaDonMoi;
+
         } catch (Throwable $e) {
-            $this->pdo->rollBack();
+            $this->restoreStockForItems($lineItems);
             throw $e;
         }
     }
+
+    public function cancelExpiredQrOrders(int $ttlHours = 24): int {
+        $deadline = new \MongoDB\BSON\UTCDateTime((time() - max(1, $ttlHours) * 3600) * 1000);
+        $cursor = $this->db->hoa_don->find([
+            'hinh_thuc_thanh_toan' => 'bank_transfer_qr',
+            'status_thanh_toan' => ['$in' => ['Cho chuyen khoan', 'Chua thanh toan', 'pending']],
+            'trang_thai' => ['$in' => ['Cho thanh toan', 'Cho xu ly', 'Chá» thanh toÃ¡n', 'Chá» xá»­ lÃ½']],
+            'ngay_dat' => ['$lt' => $deadline],
+        ]);
+
+        $count = 0;
+        foreach ($cursor as $order) {
+            $orderId = (int)($order['ma_hoa_don'] ?? 0);
+            if ($orderId <= 0) continue;
+            $items = iterator_to_array($this->db->chi_tiet_hoa_don->find(['ma_hoa_don' => $orderId]));
+            if (!empty($order['da_tru_ton_kho']) && empty($order['da_hoan_ton_kho'])) {
+                $this->restoreStockForItems($items);
+            }
+            $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => [
+                'trang_thai' => 'Da huy',
+                'status_thanh_toan' => 'Qua han thanh toan',
+                'ly_do_huy' => 'Qua han thanh toan QR 24 gio',
+                'cancel_reason' => 'Qua han thanh toan QR 24 gio',
+                'cancelled_at' => new \MongoDB\BSON\UTCDateTime(),
+                'da_hoan_ton_kho' => true,
+                'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+            ]]);
+            $count++;
+        }
+        return $count;
+    }
 }
+

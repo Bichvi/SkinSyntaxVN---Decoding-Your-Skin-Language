@@ -2,63 +2,50 @@
 // backend/app/models/NguoiDung.php
 
 class NguoiDung {
-    private PDO $pdo;
+    private $db;
 
-    public function __construct(PDO $pdo) {
-        $this->pdo = $pdo;
-        $this->ensureAuthTables();
-    }
-
-    private function ensureAuthTables(): void {
-        $sql = "CREATE TABLE IF NOT EXISTS password_reset_tokens (
-                    id BIGSERIAL PRIMARY KEY,
-                    email VARCHAR(255) NOT NULL,
-                    token_hash VARCHAR(255) NOT NULL,
-                    expires_at TIMESTAMP NOT NULL,
-                    used_at TIMESTAMP NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )";
-
-        try {
-            $this->pdo->exec($sql);
-            $this->pdo->exec('CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_email ON password_reset_tokens (LOWER(email))');
-            $this->pdo->exec('CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_hash ON password_reset_tokens (token_hash)');
-        } catch (Throwable $e) {
-            // Keep auth flow resilient if the DB user cannot alter schema.
-        }
+    public function __construct($db) {
+        $this->db = $db;
+        // MongoDB không cần CREATE TABLE (schema-less), nên hàm ensureAuthTables không cần chạy SQL nữa
     }
 
     public function timTheoEmail(string $email): ?array {
-        $sql = "SELECT * FROM nguoidung WHERE LOWER(email) = LOWER(:email) LIMIT 1";
-        $st = $this->pdo->prepare($sql);
-        $st->execute(['email' => $email]);
-        $row = $st->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i'); // So sánh email không phân biệt hoa thường
+        $user = $this->db->nguoidung->findOne(['email' => $regex]);
+        return $user ? (array) $user : null;
     }
 
     public function timNhanVienTheoEmail(string $email): ?array {
-        $sql = "SELECT nv.*, vt.ten_vai_tro
-                FROM nhan_vien nv
-                LEFT JOIN vai_tro vt ON vt.ma_vai_tro = nv.ma_vai_tro
-                WHERE LOWER(nv.email) = LOWER(:email)
-                LIMIT 1";
-        $st = $this->pdo->prepare($sql);
-        $st->execute(['email' => $email]);
-        $row = $st->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+        
+        // MongoDB không có JOIN dễ dàng như SQL, ta tìm nhân viên trước
+        $nhanVien = $this->db->nhan_vien->findOne(['email' => $regex]);
+        
+        if ($nhanVien) {
+            $nhanVien = (array) $nhanVien;
+            // Nếu có ma_vai_tro, tìm tên vai trò bên bảng vai_tro (giả lập LEFT JOIN)
+            if (isset($nhanVien['ma_vai_tro'])) {
+                $vaiTro = $this->db->vai_tro->findOne(['ma_vai_tro' => $nhanVien['ma_vai_tro']]);
+                if ($vaiTro) {
+                    $nhanVien['ten_vai_tro'] = $vaiTro['ten_vai_tro'];
+                }
+            }
+            return $nhanVien;
+        }
+        return null;
     }
 
     public function taoMoi(string $hoTen, string $email, string $matKhauPlain): bool {
         $hash = password_hash($matKhauPlain, PASSWORD_BCRYPT);
 
-        $sql = "INSERT INTO nguoidung(ho_ten, email, mat_khau) VALUES (:ho_ten, :email, :mat_khau)";
-        $st = $this->pdo->prepare($sql);
-        $ok = $st->execute([
+        $result = $this->db->nguoidung->insertOne([
             'ho_ten' => $hoTen,
             'email' => $email,
-            'mat_khau' => $hash
+            'mat_khau' => $hash,
+            'created_at' => new \MongoDB\BSON\UTCDateTime()
         ]);
 
+        $ok = $result->getInsertedCount() > 0;
         if ($ok) {
             $this->ensureKhachHang($hoTen, $email);
         }
@@ -91,32 +78,58 @@ class NguoiDung {
 
         $token = bin2hex(random_bytes(32));
         $hash = hash('sha256', $token);
-        $expiresAt = date('Y-m-d H:i:s', time() + max(5, $ttlMinutes) * 60);
+        $expiresAt = new \MongoDB\BSON\UTCDateTime((time() + max(5, $ttlMinutes) * 60) * 1000);
 
-        $this->pdo->prepare('DELETE FROM password_reset_tokens WHERE LOWER(email) = LOWER(:email) OR expires_at < CURRENT_TIMESTAMP OR used_at IS NOT NULL')
-            ->execute([':email' => $email]);
-
-        $st = $this->pdo->prepare('INSERT INTO password_reset_tokens (email, token_hash, expires_at) VALUES (:email, :token_hash, :expires_at)');
-        $ok = $st->execute([
-            ':email' => $email,
-            ':token_hash' => $hash,
-            ':expires_at' => $expiresAt,
+        // Xóa token cũ
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+        $this->db->password_reset_tokens->deleteMany([
+            '$or' => [
+                ['email' => $regex],
+                ['expires_at' => ['$lt' => new \MongoDB\BSON\UTCDateTime()]],
+                ['used_at' => ['$ne' => null]]
+            ]
         ]);
 
-        return $ok ? $token : null;
+        // TỰ ĐỘNG TĂNG ID ĐỂ KHÔNG BỊ TRÙNG NULL NỮA
+        $lastToken = $this->db->password_reset_tokens->findOne([], ['sort' => ['id' => -1]]);
+        $newId = $lastToken && isset($lastToken['id']) ? (int)$lastToken['id'] + 1 : 1;
+
+        $result = $this->db->password_reset_tokens->insertOne([
+            'id' => $newId,
+            'email' => $email,
+            'token_hash' => $hash,
+            'expires_at' => $expiresAt,
+            'used_at' => null,
+            'created_at' => new \MongoDB\BSON\UTCDateTime()
+        ]);
+
+        return $result->getInsertedCount() > 0 ? $token : null;
     }
 
     public function validatePasswordResetToken(string $token): ?array {
         $hash = hash('sha256', trim($token));
-        $st = $this->pdo->prepare('SELECT * FROM password_reset_tokens WHERE token_hash = :token_hash AND used_at IS NULL AND expires_at >= CURRENT_TIMESTAMP ORDER BY id DESC LIMIT 1');
-        $st->execute([':token_hash' => $hash]);
-        $row = $st->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
+        
+        $options = [
+            'sort' => ['id' => -1], // Sort theo id
+            'limit' => 1
+        ];
+
+        $filter = [
+            'token_hash' => $hash,
+            'used_at' => null,
+            'expires_at' => ['$gte' => new \MongoDB\BSON\UTCDateTime()]
+        ];
+
+        $tokenDoc = $this->db->password_reset_tokens->findOne($filter, $options);
+        return $tokenDoc ? (array) $tokenDoc : null;
     }
 
-    public function consumePasswordResetToken(int $id): void {
-        $st = $this->pdo->prepare('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = :id');
-        $st->execute([':id' => $id]);
+    public function consumePasswordResetToken($id): void {
+        // Cập nhật token theo đúng id tự tăng
+        $this->db->password_reset_tokens->updateOne(
+            ['id' => (int)$id],
+            ['$set' => ['used_at' => new \MongoDB\BSON\UTCDateTime()]]
+        );
     }
 
     public function capNhatMatKhauTheoEmail(string $email, string $matKhauMoi): array {
@@ -126,78 +139,75 @@ class NguoiDung {
         }
 
         $hashMoi = password_hash($matKhauMoi, PASSWORD_BCRYPT);
-        $sql = 'UPDATE nguoidung SET mat_khau = :mat_khau WHERE LOWER(email) = LOWER(:email)';
-        $st = $this->pdo->prepare($sql);
-        $ok = $st->execute([
-            ':mat_khau' => $hashMoi,
-            ':email' => $email,
-        ]);
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
 
-        return $ok
+        $result = $this->db->nguoidung->updateOne(
+            ['email' => $regex],
+            ['$set' => ['mat_khau' => $hashMoi]]
+        );
+
+        return $result->getModifiedCount() > 0
             ? ['ok' => true, 'message' => 'Dat lai mat khau thanh cong.']
             : ['ok' => false, 'message' => 'Khong the cap nhat mat khau.'];
     }
 
     public function ensureKhachHang(string $hoTen, string $email): bool {
-        $sqlFind = "SELECT ma_kh FROM khach_hang WHERE LOWER(email) = LOWER(:email) LIMIT 1";
-        $stFind = $this->pdo->prepare($sqlFind);
-        $stFind->execute(['email' => $email]);
-        $maKh = $stFind->fetchColumn();
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+        $khachHang = $this->db->khach_hang->findOne(['email' => $regex]);
 
-        if ($maKh) {
-            $sqlUpdate = "UPDATE khach_hang
-                          SET ho_ten = COALESCE(NULLIF(:ho_ten, ''), ho_ten),
-                              updated_at = CURRENT_TIMESTAMP
-                          WHERE ma_kh = :ma_kh";
-            $stUpdate = $this->pdo->prepare($sqlUpdate);
-            return $stUpdate->execute([
-                'ho_ten' => $hoTen,
-                'ma_kh' => $maKh,
-            ]);
+        if ($khachHang) {
+            $updateData = ['updated_at' => new \MongoDB\BSON\UTCDateTime()];
+            if (!empty($hoTen)) {
+                $updateData['ho_ten'] = $hoTen;
+            }
+            $result = $this->db->khach_hang->updateOne(
+                ['_id' => $khachHang['_id']],
+                ['$set' => $updateData]
+            );
+            return $result->getMatchedCount() > 0;
         }
 
-        $sqlInsert = "INSERT INTO khach_hang(ma_kh, ho_ten, email, created_at, updated_at)
-                      VALUES (
-                          COALESCE((SELECT MAX(ma_kh) FROM khach_hang), 0) + 1,
-                          :ho_ten,
-                          :email,
-                          CURRENT_TIMESTAMP,
-                          CURRENT_TIMESTAMP
-                      )";
-        $stInsert = $this->pdo->prepare($sqlInsert);
-        return $stInsert->execute([
+        // Auto-increment ma_kh (Mô phỏng MAX(ma_kh) + 1 của SQL)
+        $lastKh = $this->db->khach_hang->findOne([], ['sort' => ['ma_kh' => -1]]);
+        $newMaKh = $lastKh ? (int)$lastKh['ma_kh'] + 1 : 1;
+
+        $result = $this->db->khach_hang->insertOne([
+            'ma_kh' => $newMaKh,
             'ho_ten' => $hoTen,
             'email' => $email,
+            'created_at' => new \MongoDB\BSON\UTCDateTime(),
+            'updated_at' => new \MongoDB\BSON\UTCDateTime()
         ]);
+
+        return $result->getInsertedCount() > 0;
     }
 
     private function layHoacTaoMaLoaiDa(?string $tenLoaiDa): ?int {
         $ten = trim((string)($tenLoaiDa ?? ''));
-        if ($ten === '') {
-            return null;
+        if ($ten === '') return null;
+
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($ten) . '$', 'i');
+        $loaiDa = $this->db->loai_da->findOne(['ten_loai_da' => $regex]);
+
+        if ($loaiDa) {
+            return (int) $loaiDa['ma_loai_da'];
         }
 
-        $sqlFind = "SELECT ma_loai_da FROM loai_da WHERE LOWER(ten_loai_da) = LOWER(:ten) LIMIT 1";
-        $stFind = $this->pdo->prepare($sqlFind);
-        $stFind->execute(['ten' => $ten]);
-        $id = $stFind->fetchColumn();
-        if ($id) {
-            return (int)$id;
-        }
+        // Auto-increment
+        $lastLoai = $this->db->loai_da->findOne([], ['sort' => ['ma_loai_da' => -1]]);
+        $newMa = $lastLoai ? (int)$lastLoai['ma_loai_da'] + 1 : 1;
 
-        $sqlInsert = "INSERT INTO loai_da(ten_loai_da) VALUES (:ten) ON CONFLICT (ten_loai_da) DO NOTHING";
-        $stInsert = $this->pdo->prepare($sqlInsert);
-        $stInsert->execute(['ten' => $ten]);
+        $this->db->loai_da->insertOne([
+            'ma_loai_da' => $newMa,
+            'ten_loai_da' => $ten
+        ]);
 
-        $stFind->execute(['ten' => $ten]);
-        $id = $stFind->fetchColumn();
-        return $id ? (int)$id : null;
+        return $newMa;
     }
+
     public function luuKhaoSatKhachHang(string $hoTen, string $email, array $khaoSat): bool {
-        $sqlFind = "SELECT ma_kh FROM khach_hang WHERE LOWER(email) = LOWER(:email) LIMIT 1";
-        $stFind = $this->pdo->prepare($sqlFind);
-        $stFind->execute(['email' => $email]);
-        $maKh = $stFind->fetchColumn();
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+        $khachHang = $this->db->khach_hang->findOne(['email' => $regex]);
 
         $maLoaiDa = $this->layHoacTaoMaLoaiDa($khaoSat['loai_da'] ?? null);
         $tinhTrangDacBietRaw = trim((string)($khaoSat['tinh_trang_dac_biet'] ?? ''));
@@ -207,8 +217,6 @@ class NguoiDung {
         }
 
         $payload = [
-            'ho_ten' => $hoTen,
-            'email' => $email,
             'gioi_tinh' => $khaoSat['gioi_tinh'] ?? null,
             'nam_sinh' => $khaoSat['nam_sinh'] ?? null,
             'muc_do_nhay_cam' => $khaoSat['muc_do_nhay_cam'] ?? null,
@@ -221,46 +229,30 @@ class NguoiDung {
             'so_buoc_skincare' => $khaoSat['so_buoc_skincare'] ?? null,
             'thanh_phan_tranh' => $khaoSat['thanh_phan_tranh'] ?? null,
             'ngan_sach' => $khaoSat['ngan_sach'] ?? null,
+            'updated_at' => new \MongoDB\BSON\UTCDateTime()
         ];
 
-        if ($maKh) {
-            $sqlUpdate = "UPDATE khach_hang
-                          SET ho_ten = COALESCE(NULLIF(:ho_ten, ''), ho_ten),
-                              gioi_tinh = :gioi_tinh,
-                              nam_sinh = :nam_sinh,
-                              muc_do_nhay_cam = :muc_do_nhay_cam,
-                              van_de_da = :van_de_da,
-                              muc_do_mun = :muc_do_mun,
-                              muc_tieu_cham_soc = :muc_tieu_cham_soc,
-                              tieu_chi_uu_tien = :tieu_chi_uu_tien,
-                              tinh_trang_dac_biet = :tinh_trang_dac_biet,
-                              kinh_nghiem_skincare = :kinh_nghiem_skincare,
-                              so_buoc_skincare = :so_buoc_skincare,
-                              thanh_phan_tranh = :thanh_phan_tranh,
-                              ngan_sach = :ngan_sach,
-                              updated_at = CURRENT_TIMESTAMP
-                          WHERE ma_kh = :ma_kh";
-            $stUpdate = $this->pdo->prepare($sqlUpdate);
-            $updatePayload = $payload;
-            unset($updatePayload['email']);
-            $updatePayload['ma_kh'] = $maKh;
-            return $stUpdate->execute($updatePayload);
+        if (!empty($hoTen)) {
+            $payload['ho_ten'] = $hoTen;
         }
 
-        $sqlInsert = "INSERT INTO khach_hang(
-                          ma_kh, ho_ten, email, gioi_tinh, nam_sinh,
-                          muc_do_nhay_cam, van_de_da, muc_do_mun,
-                          muc_tieu_cham_soc, tieu_chi_uu_tien, tinh_trang_dac_biet,
-                          kinh_nghiem_skincare, so_buoc_skincare, thanh_phan_tranh,
-                          ngan_sach, created_at, updated_at
-                      ) VALUES (
-                          COALESCE((SELECT MAX(ma_kh) FROM khach_hang), 0) + 1, :ho_ten, :email, :gioi_tinh, :nam_sinh,
-                          :muc_do_nhay_cam, :van_de_da, :muc_do_mun,
-                          :muc_tieu_cham_soc, :tieu_chi_uu_tien, :tinh_trang_dac_biet,
-                          :kinh_nghiem_skincare, :so_buoc_skincare, :thanh_phan_tranh,
-                          :ngan_sach, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-                      )";
-        $stInsert = $this->pdo->prepare($sqlInsert);
-        return $stInsert->execute($payload);
+        if ($khachHang) {
+            $result = $this->db->khach_hang->updateOne(
+                ['_id' => $khachHang['_id']],
+                ['$set' => $payload]
+            );
+            return true; // Trả về true luôn để tránh lỗi nếu dữ liệu y hệt không update
+        }
+
+        // Tạo mới nếu chưa có
+        $lastKh = $this->db->khach_hang->findOne([], ['sort' => ['ma_kh' => -1]]);
+        $newMaKh = $lastKh ? (int)$lastKh['ma_kh'] + 1 : 1;
+
+        $payload['ma_kh'] = $newMaKh;
+        $payload['email'] = $email;
+        $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
+
+        $result = $this->db->khach_hang->insertOne($payload);
+        return $result->getInsertedCount() > 0;
     }
 }
