@@ -17,11 +17,15 @@ $facebookEnabled = defined('FACEBOOK_OAUTH_CLIENT_ID') && defined('FACEBOOK_OAUT
 $authModalMode = strtolower(trim((string)($_GET['auth'] ?? '')));
 $signupOld = $_SESSION['signup_old'] ?? [];
 $signupCaptchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
+$_SESSION['signup_captcha'] = strtolower($signupCaptchaSeed);
 $signupDayOptions = range(1, 31);
 $signupMonthOptions = range(1, 12);
 $signupCurrentYear = (int)date('Y');
 $signupYearOptions = range($signupCurrentYear, max(1950, $signupCurrentYear - 70));
 $hasSignupOld = !empty($signupOld);
+$flashSuccessMessage = get_flash('success');
+$flashErrorMessage = get_flash('error');
+$showAuthModalFlash = !is_logged_in() && in_array($authModalMode, ['login', 'register', 'forgot'], true);
 $socialLinks = [
   ['label' => 'Facebook', 'icon' => 'fa-facebook-f', 'url' => 'https://www.facebook.com/conmeosuagaugauuu/'],
   ['label' => 'YouTube', 'icon' => 'fa-youtube', 'url' => 'https://www.youtube.com/@conmeosuagaugauuu'],
@@ -69,13 +73,6 @@ $socialLinks = [
       <div class="utility-links utility-links--account">
         <?php if (is_logged_in()): ?>
           <span class="utility-greeting">Xin chào, <?= h($currentUser['ho_ten'] ?? 'User') ?></span>
-          <?php if ($currentRole === 'admin'): ?>
-            <a href="<?= BASE_URL ?>/index.php?r=admin_dashboard">Quản trị</a>
-          <?php elseif ($currentRole === 'nhanvien'): ?>
-            <a href="<?= BASE_URL ?>/index.php?r=staff_dashboard">Khu vực nhân viên</a>
-          <?php else: ?>
-            <a href="<?= BASE_URL ?>/index.php?r=hoso">Tài khoản</a>
-          <?php endif; ?>
           <a href="<?= BASE_URL ?>/index.php?r=dangxuat">Đăng xuất</a>
         <?php else: ?>
           <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">Đăng nhập</a>
@@ -213,13 +210,18 @@ $socialLinks = [
                 <div class="auth-modal-panel <?= $authModalMode === 'forgot' ? 'd-none' : '' ?>" data-auth-panel="login">
                   <div class="auth-modal-title">Đăng nhập</div>
                   <div class="auth-modal-subtitle">Đăng nhập với mạng xã hội hoặc tài khoản email của bạn.</div>
+                  <?php if ($showAuthModalFlash && $authModalMode === 'login' && ($flashErrorMessage || $flashSuccessMessage)): ?>
+                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert" role="alert">
+                      <?= h($flashErrorMessage ?: $flashSuccessMessage) ?>
+                    </div>
+                  <?php endif; ?>
 
                   <div class="auth-modal-socials">
                     <a class="auth-social-btn auth-social-btn--facebook <?= $facebookEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= $facebookEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=facebook') : '#' ?>" <?= $facebookEnabled ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;" title="Facebook login chua duoc cau hinh"' ?>>
                       <i class="fa-brands fa-facebook-f"></i>
                       <span>Facebook</span>
                     </a>
-                    <a class="auth-social-btn <?= $googleEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= $googleEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=google') : '#' ?>" <?= $googleEnabled ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;" title="Google login chua duoc cau hinh"' ?>>
+                    <a class="auth-social-btn <?= $googleEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= $googleEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=google&oauth_mode=real') : '#' ?>" <?= $googleEnabled ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;" title="Google login chua duoc cau hinh"' ?>>
                       <i class="fa-brands fa-google"></i>
                       <span>Đăng nhập bằng Google</span>
                     </a>
@@ -255,6 +257,11 @@ $socialLinks = [
                 <div class="auth-modal-panel <?= $authModalMode === 'register' ? '' : 'd-none' ?>" data-auth-panel="register">
                   <div class="auth-modal-title">Đăng ký tài khoản</div>
                   <div class="auth-modal-subtitle">Tạo tài khoản SkinSyntax để lưu đơn hàng, routine và nhận gợi ý cá nhân hóa.</div>
+                  <?php if ($showAuthModalFlash && $authModalMode === 'register' && ($flashErrorMessage || $flashSuccessMessage)): ?>
+                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert" role="alert">
+                      <?= h($flashErrorMessage ?: $flashSuccessMessage) ?>
+                    </div>
+                  <?php endif; ?>
 
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="authRegisterForm" novalidate>
                     <div class="mb-3 auth-register-field">
@@ -262,17 +269,22 @@ $socialLinks = [
                       <i class="fa-regular fa-envelope auth-register-icon"></i>
                     </div>
 
-                    <div class="auth-register-inline mb-2">
-                      <input class="form-control auth-modal-input" type="text" id="authRegisterCaptchaInput" placeholder="Nhập captcha" autocomplete="off" required>
+                    <div class="alert alert-danger auth-modal-alert d-none" id="authRegisterFeedback" role="alert"></div>
+
+                    <div class="auth-register-inline auth-register-inline--captcha mb-2">
+                      <input class="form-control auth-modal-input" type="text" id="authRegisterCaptchaInput" name="captcha" placeholder="Nhập captcha" autocomplete="off" required>
                       <div class="auth-register-captcha" id="authRegisterCaptchaCode" data-captcha="<?= h(strtolower($signupCaptchaSeed)) ?>"><?= h(strtolower($signupCaptchaSeed)) ?></div>
+                      <button class="auth-register-captcha-refresh" id="authRegisterCaptchaRefresh" type="button" aria-label="Làm mới captcha">
+                        <i class="fa-solid fa-rotate-right"></i>
+                      </button>
                     </div>
 
                     <div class="auth-register-inline auth-register-inline--otp">
-                      <input class="form-control auth-modal-input" type="text" id="authRegisterOtpInput" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" required>
-                      <button class="auth-register-otp-button" id="authRegisterOtpButton" type="button">lấy mã</button>
+                      <input class="form-control auth-modal-input" type="text" id="authRegisterOtpInput" name="otp" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" required>
+                      <button class="auth-register-otp-button" id="authRegisterOtpButton" type="button">Lấy mã</button>
                     </div>
                     <a href="<?= BASE_URL ?>/index.php?r=huong_dan_nhan_otp" class="auth-modal-link auth-register-helper-link">Xem hướng dẫn nhận OTP</a>
-                    <div class="auth-register-note" id="authRegisterOtpHint">OTP demo sẽ được tạo local để mô phỏng trải nghiệm popup.</div>
+                    <div class="auth-register-note" id="authRegisterOtpHint">Nhập đúng email, captcha rồi bấm Lấy mã. OTP sẽ được gửi tới email của bạn.</div>
 
                     <div class="mb-2 auth-register-field auth-password-field">
                       <input class="form-control auth-modal-input" type="password" id="authRegisterPassword" name="mat_khau" placeholder="Nhập mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" autocomplete="new-password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$" required>
@@ -357,6 +369,11 @@ $socialLinks = [
                 <div class="auth-modal-panel <?= $authModalMode === 'forgot' ? '' : 'd-none' ?>" data-auth-panel="forgot">
                   <div class="auth-modal-title">Quên mật khẩu</div>
                   <div class="auth-modal-subtitle">Nhập email đã đăng ký. Hệ thống sẽ gửi liên kết đặt lại mật khẩu về hộp thư của bạn.</div>
+                  <?php if ($showAuthModalFlash && $authModalMode === 'forgot' && ($flashErrorMessage || $flashSuccessMessage)): ?>
+                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert" role="alert">
+                      <?= h($flashErrorMessage ?: $flashSuccessMessage) ?>
+                    </div>
+                  <?php endif; ?>
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=gui_lien_ket_dat_lai">
                     <div class="mb-3">
                       <input class="form-control auth-modal-input" type="email" name="email" placeholder="Nhập email của bạn" required>
@@ -508,6 +525,11 @@ $socialLinks = [
       font-weight: 800;
     }
 
+    .auth-modal-alert {
+      margin-bottom: 14px;
+      border-radius: 16px;
+    }
+
     .auth-register-field {
       position: relative;
     }
@@ -550,9 +572,17 @@ $socialLinks = [
       margin-bottom: 8px;
     }
 
+    .auth-register-inline--captcha {
+      grid-template-columns: 1fr 118px 54px;
+    }
+
     .auth-register-inline .auth-modal-input {
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
+    }
+
+    .auth-register-inline--captcha .auth-register-captcha {
+      border-right: 1px solid #d7deea;
     }
 
     .auth-register-captcha,
@@ -576,6 +606,19 @@ $socialLinks = [
       border: 0;
       background: #d1d5db;
       color: #475569;
+    }
+
+    .auth-register-captcha-refresh {
+      border: 1px solid #d7deea;
+      border-left: 0;
+      background: #f8fafc;
+      color: #475569;
+    }
+
+    .auth-register-captcha-refresh:disabled,
+    .auth-register-otp-button:disabled {
+      opacity: .72;
+      cursor: not-allowed;
     }
 
     .auth-register-helper-link {
@@ -689,14 +732,112 @@ $socialLinks = [
       var registerOtpInput = document.getElementById('authRegisterOtpInput');
       var registerOtpButton = document.getElementById('authRegisterOtpButton');
       var registerOtpHint = document.getElementById('authRegisterOtpHint');
+      var registerEmailInput = registerForm ? registerForm.querySelector('input[name="email"]') : null;
+      var registerFeedback = document.getElementById('authRegisterFeedback');
+      var registerCaptchaRefreshButton = document.getElementById('authRegisterCaptchaRefresh');
       var registerPasswordInput = document.getElementById('authRegisterPassword');
       var registerPasswordConfirmInput = document.getElementById('authRegisterPasswordConfirm');
       var registerPasswordHint = document.getElementById('authRegisterPasswordHint');
       var passwordToggles = authModalElement.querySelectorAll('[data-password-toggle]');
       var registerDraftKey = 'skinsyntaxRegisterDraft';
       var registerPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,32}$/;
-      var generatedRegisterOtp = '';
       var hasServerRegisterState = <?= $hasSignupOld ? 'true' : 'false' ?>;
+      var signupOtpUrl = <?= json_encode(BASE_URL . '/index.php?r=gui_otp_dang_ky') ?>;
+      var signupCaptchaUrl = <?= json_encode(BASE_URL . '/index.php?r=gui_captcha_dang_ky') ?>;
+      var otpCooldownSeconds = 0;
+      var otpCooldownTimer = null;
+
+      var setRegisterFeedback = function (message, type) {
+        if (!registerFeedback) {
+          return;
+        }
+
+        registerFeedback.textContent = message || '';
+        registerFeedback.classList.remove('d-none', 'alert-success', 'alert-danger');
+        registerFeedback.classList.add(type === 'success' ? 'alert-success' : 'alert-danger');
+
+        if (!message) {
+          registerFeedback.classList.add('d-none');
+        }
+      };
+
+      var updateCaptcha = function (captcha) {
+        if (!registerCaptchaElement || typeof captcha !== 'string' || captcha.trim() === '') {
+          return;
+        }
+
+        var normalizedCaptcha = captcha.trim().toLowerCase();
+        registerCaptchaElement.setAttribute('data-captcha', normalizedCaptcha);
+        registerCaptchaElement.textContent = normalizedCaptcha;
+        if (registerCaptchaInput) {
+          registerCaptchaInput.value = '';
+        }
+      };
+
+      var updateOtpButtonState = function () {
+        if (!registerOtpButton) {
+          return;
+        }
+
+        if (otpCooldownSeconds > 0) {
+          registerOtpButton.disabled = true;
+          registerOtpButton.textContent = otpCooldownSeconds + 's';
+          return;
+        }
+
+        registerOtpButton.disabled = false;
+        registerOtpButton.textContent = 'Lấy mã';
+      };
+
+      var startOtpCooldown = function (seconds) {
+        otpCooldownSeconds = Math.max(0, parseInt(seconds, 10) || 0);
+        updateOtpButtonState();
+
+        if (otpCooldownTimer) {
+          window.clearInterval(otpCooldownTimer);
+          otpCooldownTimer = null;
+        }
+
+        if (otpCooldownSeconds <= 0) {
+          return;
+        }
+
+        otpCooldownTimer = window.setInterval(function () {
+          otpCooldownSeconds -= 1;
+          if (otpCooldownSeconds <= 0) {
+            otpCooldownSeconds = 0;
+            window.clearInterval(otpCooldownTimer);
+            otpCooldownTimer = null;
+          }
+          updateOtpButtonState();
+        }, 1000);
+      };
+
+      var requestSignupCaptcha = function () {
+        if (!registerCaptchaRefreshButton) {
+          return Promise.resolve();
+        }
+
+        registerCaptchaRefreshButton.disabled = true;
+        return window.fetch(signupCaptchaUrl, {
+          credentials: 'same-origin',
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+          .then(function (response) { return response.json(); })
+          .then(function (payload) {
+            if (payload && payload.ok && payload.captcha) {
+              updateCaptcha(payload.captcha);
+            }
+          })
+          .catch(function () {
+            setRegisterFeedback('Không thể làm mới captcha lúc này. Vui lòng thử lại.', 'danger');
+          })
+          .finally(function () {
+            registerCaptchaRefreshButton.disabled = false;
+          });
+      };
 
       var persistRegisterDraft = function () {
         if (!registerForm || typeof sessionStorage === 'undefined') {
@@ -704,14 +845,15 @@ $socialLinks = [
         }
 
         var draft = {
-          fields: {},
-          generatedOtp: generatedRegisterOtp,
-          otpHint: registerOtpHint ? registerOtpHint.textContent : '',
-          captcha: registerCaptchaElement ? (registerCaptchaElement.getAttribute('data-captcha') || '') : ''
+          fields: {}
         };
 
         Array.prototype.forEach.call(registerForm.elements, function (field) {
           if (!field || field.type === 'submit' || field.type === 'button' || field.type === 'fieldset') {
+            return;
+          }
+
+          if (field.type === 'password' || field.name === 'captcha' || field.name === 'otp') {
             return;
           }
 
@@ -751,19 +893,6 @@ $socialLinks = [
         try {
           var draft = JSON.parse(rawDraft);
           var fields = draft.fields || {};
-
-          if (registerCaptchaElement && typeof draft.captcha === 'string' && draft.captcha !== '') {
-            registerCaptchaElement.setAttribute('data-captcha', draft.captcha);
-            registerCaptchaElement.textContent = draft.captcha;
-          }
-
-          if (typeof draft.generatedOtp === 'string') {
-            generatedRegisterOtp = draft.generatedOtp;
-          }
-
-          if (registerOtpHint && typeof draft.otpHint === 'string' && draft.otpHint !== '') {
-            registerOtpHint.textContent = draft.otpHint;
-          }
 
           Array.prototype.forEach.call(registerForm.elements, function (field) {
             if (!field || field.type === 'submit' || field.type === 'button' || field.type === 'fieldset') {
@@ -867,11 +996,87 @@ $socialLinks = [
         });
       });
 
-      if (registerOtpButton && registerOtpInput && registerOtpHint) {
+      if (registerCaptchaRefreshButton) {
+        registerCaptchaRefreshButton.addEventListener('click', function () {
+          setRegisterFeedback('', 'danger');
+          requestSignupCaptcha();
+        });
+      }
+
+      if (registerOtpButton && registerOtpInput && registerOtpHint && registerEmailInput && registerCaptchaInput) {
         registerOtpButton.addEventListener('click', function () {
-          generatedRegisterOtp = String(Math.floor(100000 + Math.random() * 900000));
-          registerOtpHint.textContent = 'Mã OTP demo của phiên này là: ' + generatedRegisterOtp + '. Nhập mã này để tiếp tục đăng ký.';
-          persistRegisterDraft();
+          var emailValue = (registerEmailInput.value || '').trim();
+          var captchaValue = (registerCaptchaInput.value || '').trim();
+
+          setRegisterFeedback('', 'danger');
+
+          if (emailValue === '') {
+            setRegisterFeedback('Vui lòng nhập email trước khi lấy OTP.', 'danger');
+            registerEmailInput.focus();
+            return;
+          }
+
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+            setRegisterFeedback('Email chưa hợp lệ. Vui lòng kiểm tra lại.', 'danger');
+            registerEmailInput.focus();
+            return;
+          }
+
+          if (captchaValue === '') {
+            setRegisterFeedback('Vui lòng nhập captcha trước khi lấy OTP.', 'danger');
+            registerCaptchaInput.focus();
+            return;
+          }
+
+          registerOtpButton.disabled = true;
+          registerOtpButton.textContent = 'Đang gửi...';
+
+          window.fetch(signupOtpUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              email: emailValue,
+              captcha: captchaValue
+            })
+          })
+            .then(function (response) {
+              return response.json().catch(function () {
+                return {};
+              }).then(function (payload) {
+                return { status: response.status, payload: payload };
+              });
+            })
+            .then(function (result) {
+              var payload = result.payload || {};
+
+              if (payload.captcha) {
+                updateCaptcha(payload.captcha);
+              }
+
+              if (payload.ok) {
+                registerOtpHint.textContent = payload.message || 'OTP đã được gửi tới email của bạn.';
+                setRegisterFeedback(payload.message || 'OTP đã được gửi tới email của bạn.', 'success');
+                startOtpCooldown(60);
+                registerOtpInput.focus();
+                persistRegisterDraft();
+                return;
+              }
+
+              setRegisterFeedback(payload.message || 'Không gửi được OTP. Vui lòng thử lại.', 'danger');
+              if (result.status === 429 && payload.retry_after) {
+                startOtpCooldown(payload.retry_after);
+              } else {
+                updateOtpButtonState();
+              }
+            })
+            .catch(function () {
+              setRegisterFeedback('Không thể kết nối tới máy chủ để gửi OTP. Vui lòng thử lại.', 'danger');
+              updateOtpButtonState();
+            });
         });
       }
 
@@ -893,6 +1098,7 @@ $socialLinks = [
         registerForm.addEventListener('submit', function (event) {
           syncPasswordHint();
           syncPasswordConfirmation();
+          setRegisterFeedback('', 'danger');
 
           if (!registerForm.reportValidity()) {
             event.preventDefault();
@@ -900,33 +1106,16 @@ $socialLinks = [
             return;
           }
 
-          var captchaValue = (registerCaptchaInput.value || '').trim().toLowerCase();
-          var expectedCaptcha = (registerCaptchaElement.getAttribute('data-captcha') || '').trim().toLowerCase();
-          var otpValue = (registerOtpInput.value || '').trim();
-
-          if (captchaValue === '' || captchaValue !== expectedCaptcha) {
-            event.preventDefault();
-            registerOtpHint.textContent = 'Captcha chưa đúng. Vui lòng nhập lại đúng 4 ký tự hiển thị.';
-            registerCaptchaInput.focus();
-            persistRegisterDraft();
-            return;
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem(registerDraftKey);
           }
-
-          if (generatedRegisterOtp === '' || otpValue !== generatedRegisterOtp) {
-            event.preventDefault();
-            registerOtpHint.textContent = 'Mã OTP chưa đúng hoặc chưa được tạo. Bấm "lấy mã" để nhận OTP demo.';
-            registerOtpInput.focus();
-            persistRegisterDraft();
-            return;
-          }
-
-          persistRegisterDraft();
         });
       }
 
       restoreRegisterDraft();
       syncPasswordHint();
       syncPasswordConfirmation();
+      updateOtpButtonState();
 
       if (registerForm && hasServerRegisterState && typeof sessionStorage !== 'undefined' && !sessionStorage.getItem(registerDraftKey)) {
         persistRegisterDraft();
@@ -941,11 +1130,11 @@ $socialLinks = [
 <?php endif; ?>
 
 <div class="container mt-3 flash-stack">
-  <?php if ($m = get_flash('success')): ?>
-    <div class="alert alert-success alert-elevated"><?= h($m) ?></div>
+  <?php if (!$showAuthModalFlash && $flashSuccessMessage): ?>
+    <div class="alert alert-success alert-elevated"><?= h($flashSuccessMessage) ?></div>
   <?php endif; ?>
-  <?php if ($m = get_flash('error')): ?>
-    <div class="alert alert-danger alert-elevated"><?= h($m) ?></div>
+  <?php if (!$showAuthModalFlash && $flashErrorMessage): ?>
+    <div class="alert alert-danger alert-elevated"><?= h($flashErrorMessage) ?></div>
   <?php endif; ?>
 </div>
 

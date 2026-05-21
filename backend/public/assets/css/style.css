@@ -1028,6 +1028,46 @@ a{ text-decoration:none; color:inherit; }
   line-height:1.45;
 }
 
+.recommend-query-box{
+  display:block;
+  margin:0 0 22px;
+}
+
+.recommend-query-box__label{
+  display:block;
+  margin-bottom:10px;
+  color:#eefbf6;
+  font-size:13px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+.recommend-query-box__input{
+  width:100%;
+  padding:16px 18px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(5, 28, 20, .28);
+  color:#f8fafc;
+  font-size:15px;
+  line-height:1.65;
+  resize:vertical;
+  min-height:120px;
+}
+
+.recommend-query-box__input::placeholder{
+  color:rgba(226, 232, 240, .72);
+}
+
+.recommend-query-box__hint{
+  display:block;
+  margin-top:8px;
+  color:rgba(235,245,255,.72);
+  font-size:13px;
+  line-height:1.5;
+}
+
 .recommend-results-shell{
   margin-top:28px;
   padding:30px;
@@ -1049,6 +1089,65 @@ a{ text-decoration:none; color:inherit; }
   font-size:30px;
   font-weight:800;
   color:#13212e;
+}
+
+.recommend-results-shell__meta{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+.recommend-meta-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:34px;
+  padding:6px 14px;
+  border-radius:999px;
+  background:#eef2f7;
+  color:#35506b;
+  font-size:12px;
+  font-weight:800;
+}
+
+.recommend-meta-badge--success{
+  background:#e8f7ef;
+  color:#13633a;
+}
+
+.recommend-meta-badge--warm{
+  background:#fff2d7;
+  color:#8c5b00;
+}
+
+.recommend-meta-badge--query{
+  max-width:360px;
+  background:#eef6ff;
+  color:#21405f;
+}
+
+.recommend-advice-panel{
+  margin:0 0 24px;
+  padding:18px 20px;
+  border-radius:22px;
+  background:linear-gradient(135deg, #f3fbf7 0%, #eef6ff 100%);
+  border:1px solid #dbe9e3;
+}
+
+.recommend-advice-panel__label{
+  margin:0 0 8px;
+  color:#0f6b3e;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.recommend-advice-panel__text{
+  margin:0;
+  color:#22384c;
+  font-size:15px;
+  line-height:1.7;
 }
 
 .recommend-loading{
@@ -1253,6 +1352,19 @@ a{ text-decoration:none; color:inherit; }
 
   .recommend-results-shell{
     padding:22px;
+  }
+
+  .recommend-results-shell__head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .recommend-results-shell__meta{
+    justify-content:flex-start;
+  }
+
+  .recommend-meta-badge--query{
+    max-width:100%;
   }
 
   .recommend-results-grid{

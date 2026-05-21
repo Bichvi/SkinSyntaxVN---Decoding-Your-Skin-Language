@@ -78,6 +78,17 @@ $profilePayload = $profile ? [
           </div>
         </div>
 
+        <label class="recommend-query-box" for="recommendQueryText">
+          <span class="recommend-query-box__label">Mô tả nhu cầu chi tiết</span>
+          <textarea
+            id="recommendQueryText"
+            class="recommend-query-box__input"
+            rows="4"
+            placeholder="Ví dụ: Da dầu nhạy cảm, đang có mụn ẩn và thâm nhẹ, muốn serum hoặc kem dưỡng dưới 500.000 VND để dùng buổi tối."
+          ></textarea>
+          <span class="recommend-query-box__hint">Bạn có thể nhập dạng câu tự nhiên để hệ thống hybrid search hiểu rõ hơn nhu cầu hiện tại.</span>
+        </label>
+
         <button
           type="button"
           id="recommendTrigger"
@@ -107,6 +118,12 @@ $profilePayload = $profile ? [
           <span class="recommend-entry__eyebrow">Kết quả gợi ý</span>
           <h2 class="recommend-results-shell__title">Sản phẩm dành cho hồ sơ da của bạn</h2>
         </div>
+        <div class="recommend-results-shell__meta" id="recommendMetaBadges" hidden></div>
+      </div>
+
+      <div class="recommend-advice-panel" id="recommendAdvicePanel" hidden>
+        <p class="recommend-advice-panel__label">Tóm tắt từ AI</p>
+        <p class="recommend-advice-panel__text" id="recommendAdviceText"></p>
       </div>
 
       <div class="recommend-loading" id="recommendLoading" hidden>
@@ -136,6 +153,10 @@ $profilePayload = $profile ? [
   const loading = document.getElementById('recommendLoading');
   const emptyState = document.getElementById('recommendEmpty');
   const container = document.getElementById('productsContainer');
+  const queryInput = document.getElementById('recommendQueryText');
+  const advicePanel = document.getElementById('recommendAdvicePanel');
+  const adviceText = document.getElementById('recommendAdviceText');
+  const metaBadges = document.getElementById('recommendMetaBadges');
   const profile = JSON.parse(trigger.dataset.profile || '{}');
 
   const formatVnd = (value) => {
@@ -183,6 +204,7 @@ $profilePayload = $profile ? [
     formData.append('skin_type', profile.skin_type || '');
     formData.append('avoid_ingredients', profile.avoid_ingredients || '');
     formData.append('budget', profile.budget || '');
+    formData.append('query_text', queryInput ? queryInput.value.trim() : '');
 
     (Array.isArray(profile.concerns) ? profile.concerns : []).forEach((item) => {
       formData.append('concerns[]', item);
@@ -191,12 +213,36 @@ $profilePayload = $profile ? [
     return formData;
   };
 
+  const renderMeta = (payload) => {
+    const badges = [];
+    if (payload.search_mode === 'hybrid') {
+      badges.push('<span class="recommend-meta-badge recommend-meta-badge--success">Hybrid Search</span>');
+    } else {
+      badges.push('<span class="recommend-meta-badge">Fallback SQL</span>');
+    }
+
+    if (payload.cached) {
+      badges.push('<span class="recommend-meta-badge recommend-meta-badge--warm">Cache tương tự</span>');
+    }
+
+    if (payload.query) {
+      badges.push(`<span class="recommend-meta-badge recommend-meta-badge--query">${escapeHtml(payload.query)}</span>`);
+    }
+
+    metaBadges.innerHTML = badges.join('');
+    metaBadges.hidden = badges.length === 0;
+  };
+
   trigger.addEventListener('click', async () => {
     trigger.disabled = true;
     trigger.textContent = 'Đang lấy gợi ý...';
     resultShell.hidden = false;
     loading.hidden = false;
     emptyState.hidden = true;
+    advicePanel.hidden = true;
+    adviceText.textContent = '';
+    metaBadges.hidden = true;
+    metaBadges.innerHTML = '';
     container.innerHTML = '';
 
     try {
@@ -208,7 +254,7 @@ $profilePayload = $profile ? [
       const rawText = await response.text();
       let payload;
       try {
-        payload = JSON.parse(rawText);
+        payload = JSON.parse(rawText.replace(/^\uFEFF+/, '').trim());
       } catch (parseError) {
         throw new Error('API gợi ý trả về dữ liệu không hợp lệ. Hãy kiểm tra backend recommendation.');
       }
@@ -219,6 +265,12 @@ $profilePayload = $profile ? [
 
       const recommendations = Array.isArray(payload.data) ? payload.data : [];
       loading.hidden = true;
+      renderMeta(payload);
+
+      if (payload.advice_text) {
+        adviceText.textContent = payload.advice_text;
+        advicePanel.hidden = false;
+      }
 
       if (recommendations.length === 0) {
         emptyState.hidden = false;
@@ -246,7 +298,7 @@ $profilePayload = $profile ? [
             </div>
             <div class="recommend-product-card__explanation-wrap">
               <p class="recommend-product-card__explanation">${escapeHtml(product.llm_explanation || '')}</p>
-              <span class="recommend-product-card__explanation-source">${product.explanation_source === 'llm' ? 'Giải thích bởi AI' : 'Giải thích dự phòng'}</span>
+              <span class="recommend-product-card__explanation-source">${product.explanation_source === 'llm' ? 'Gợi ý từ AI' : 'Tư vấn từ dữ liệu MongoDB'}</span>
             </div>
             <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=${product.id}" class="recommend-product-card__link">Xem chi tiết</a>
           </div>

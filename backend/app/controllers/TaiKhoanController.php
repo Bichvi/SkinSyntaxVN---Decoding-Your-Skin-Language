@@ -4,18 +4,21 @@
 require_once __DIR__ . '/../models/TaiKhoan.php';
 require_once __DIR__ . '/../models/SanPham.php';
 require_once __DIR__ . '/../models/QuanTri.php';
+require_once __DIR__ . '/../models/HoaDon.php';
 
 class TaiKhoanController {
-    private PDO $pdo;
+    private  $pdo;
     private TaiKhoan $model;
     private SanPham $sanPhamModel;
     private QuanTri $reviewModel;
+    private HoaDon $hoaDonModel;
 
-    public function __construct(PDO $pdo) {
+    public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->model = new TaiKhoan($pdo);
         $this->sanPhamModel = new SanPham($pdo);
         $this->reviewModel = new QuanTri($pdo);
+        $this->hoaDonModel = new HoaDon($pdo);
     }
 
     private function requireLogin(): array {
@@ -90,6 +93,7 @@ class TaiKhoanController {
 
     public function hoso(): void {
         $user = $this->requireLogin();
+        $this->hoaDonModel->cancelExpiredQrOrders(24);
         $nguoiDungId = (int)($user['id'] ?? 0);
         $email = trim((string)($user['email'] ?? ''));
 

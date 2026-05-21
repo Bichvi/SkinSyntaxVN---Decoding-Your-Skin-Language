@@ -6,13 +6,13 @@ require_once __DIR__ . '/../models/ThongKe.php';
 require_once __DIR__ . '/../models/Voucher.php';
 
 class QuanTriController {
-    private PDO $pdo;
+    private  $pdo;
     private QuanTri $model;
     private SanPham $sanPhamModel;
     private ThongKe $thongKeModel;
     private Voucher $voucherModel;
 
-    public function __construct(PDO $pdo) {
+    public function __construct( $pdo) {
         $this->pdo = $pdo;
         $this->model = new QuanTri($pdo);
         $this->sanPhamModel = new SanPham($pdo);
@@ -949,20 +949,46 @@ class QuanTriController {
     }
 
     public function customerChat(): void {
-        $this->requireRole(['khach_hang']);
-        set_flash('success', 'Khung chat hỗ trợ đã chuyển sang dạng icon nổi ở góc màn hình.');
-        redirect(BASE_URL . '/index.php?r=hoso');
+        $user = $this->requireRole(['khach_hang']);
+        $email = (string)($user['email'] ?? '');
+        $messages = [];
+        
+        if ($email !== '') {
+            $customer = $this->model->getCustomerByEmail($email, (string)($user['ho_ten'] ?? ''));
+            $customerId = (int)($customer['ma_kh'] ?? 0);
+            if ($customerId > 0) {
+                $messages = $this->model->getChatMessages($customerId);
+            }
+        }
+        
+        $this->renderSite('lichsuchat', [
+            'messages' => $messages,
+            'pageTitle' => 'Chat với nhân viên hỗ trợ',
+        ]);
     }
 
     public function customerChatSend(): void {
         $user = $this->requireRole(['khach_hang']);
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirectBack('lichsuchat');
+            redirect(BASE_URL . '/index.php?r=lichsuchat');
         }
 
         $result = $this->model->sendCustomerChat((string)($user['email'] ?? ''), trim((string)($_POST['noi_dung'] ?? '')));
         set_flash(!empty($result['ok']) ? 'success' : 'error', (string)($result['message'] ?? 'Không thể gửi tin nhắn.'));
-        $this->redirectBack('lichsuchat');
+        redirect(BASE_URL . '/index.php?r=lichsuchat');
+    }
+
+    public function markChatRead(): void {
+        $user = $this->requireRole(['khach_hang']);
+        $customer = $this->model->getCustomerByEmail((string)($user['email'] ?? ''), (string)($user['ho_ten'] ?? ''));
+        $maKh = (int)($customer['ma_kh'] ?? 0);
+        if ($maKh > 0) {
+            $this->model->updateLastChatRead($maKh);
+        }
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
     }
 
     public function customerReviewSave(): void {

@@ -125,7 +125,7 @@
     <section class="info-hero">
       <span class="info-eyebrow">Hướng dẫn OTP</span>
       <h1>Cách nhận mã OTP trên popup đăng ký</h1>
-      <p>SkinSyntax dùng OTP như một lớp xác thực bổ sung khi người dùng đăng ký, lấy lại tài khoản hoặc thực hiện thao tác cần bảo mật cao. Ở bản demo hiện tại, mã OTP được mô phỏng ngay trên trình duyệt để bạn kiểm thử luồng popup.</p>
+      <p>SkinSyntax dùng OTP như một lớp xác thực bổ sung khi người dùng đăng ký, lấy lại tài khoản hoặc thực hiện thao tác cần bảo mật cao. Ở luồng hiện tại, mã OTP sẽ được gửi về email bạn nhập trong form đăng ký.</p>
     </section>
 
     <div class="info-grid">
@@ -143,7 +143,7 @@
             <div class="otp-step__badge">2</div>
             <div>
               <div class="otp-step__title">Bấm nút lấy mã</div>
-              <p class="otp-step__desc">Ở môi trường demo hiện tại, nút lấy mã sẽ tạo một OTP 6 số ngay trong phiên trình duyệt. Khi triển khai OTP thật, mã có thể được gửi qua email, SMS hoặc kênh xác thực đã cấu hình.</p>
+              <p class="otp-step__desc">Sau khi email và captcha hợp lệ, hệ thống sẽ gửi OTP 6 số tới email của bạn. Nếu gửi nhiều lần liên tiếp, nút lấy mã sẽ bị khóa tạm thời để tránh spam.</p>
             </div>
           </div>
           <div class="otp-step">
@@ -170,7 +170,7 @@
           <li>Nếu nhận mã qua email, hãy kiểm tra thêm thư mục Spam, Junk hoặc Promotions trước khi yêu cầu gửi lại.</li>
           <li>Nếu mạng yếu hoặc gửi lại quá nhiều lần liên tiếp, hệ thống có thể tạm chặn thao tác để bảo vệ tài khoản. Luồng an toàn nên giới hạn khoảng 3 lần gửi lại trong một khoảng thời gian ngắn.</li>
           <li>Không chia sẻ OTP cho bất kỳ ai. Nhân sự vận hành SkinSyntax không được phép yêu cầu bạn đọc mã OTP qua điện thoại, chat hay email.</li>
-          <li>Trên bản demo hiện tại, việc tải lại trang sẽ tạo captcha mới; nếu cần tiếp tục, bạn chỉ việc bấm lấy mã lại trong popup.</li>
+          <li>Nếu captcha sai hoặc đã cũ, hãy bấm nút làm mới captcha trong popup rồi nhập lại trước khi gửi OTP.</li>
         </ul>
 
         <div class="otp-actions">

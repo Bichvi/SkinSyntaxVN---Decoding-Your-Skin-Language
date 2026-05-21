@@ -6,10 +6,10 @@ require_once __DIR__ . '/../models/ThongKe.php';
 require_once __DIR__ . '/../models/QuanTri.php';
 
 class AdminController {
-    private PDO $pdo;
+    private  $pdo;
     private SanPham $model;
 
-    public function __construct(PDO $pdo) {
+    public function __construct( $pdo) {
         $this->pdo = $pdo;
         $this->model = new SanPham($pdo);
     }

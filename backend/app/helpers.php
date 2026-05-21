@@ -180,6 +180,7 @@ function route_access_map(): array {
         'staff_chat_send' => ['admin', 'nhanvien'],
         'lichsuchat' => ['khach_hang'],
         'chat_send' => ['khach_hang'],
+        'mark_chat_read' => ['khach_hang'],
         'guidanhgia' => ['khach_hang'],
         'huydonhang' => ['khach_hang'],
         'apdung_voucher' => ['khach_hang'],

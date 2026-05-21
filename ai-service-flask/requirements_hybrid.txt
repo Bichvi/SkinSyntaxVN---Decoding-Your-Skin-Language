@@ -1,0 +1,27 @@
+# Hybrid Search & RRF + Vietnamese Cross-Encoder Requirements
+# Add these to your existing requirements.txt
+
+# Core dependencies for hybrid search
+sentence-transformers==3.3.0       # For cross-encoder re-ranking
+numpy==1.24.3                      # For numerical operations in RRF
+
+# RAG Evaluation
+ragas==0.1.12                      # RAGAS evaluation metrics
+
+# Optional: Monitoring & Visualization
+wandb==0.15.12                     # Weights & Biases for experiment tracking
+matplotlib==3.7.2                  # For plotting evaluation results
+pandas==2.0.3                      # For data analysis
+
+# Already in your project (add if missing)
+langchain-chroma==0.4.1            # ChromaDB integration
+langchain-huggingface==0.0.49      # HuggingFace embeddings
+chromadb==0.4.24                   # ChromaDB vector store
+
+# Optional: For performance profiling
+py-spy==0.3.14                     # CPU profiling
+memory-profiler==0.61.0            # Memory profiling
+
+# Development/Testing
+pytest==7.4.0                      # For unit tests
+pytest-cov==4.1.0                  # Coverage reporting
