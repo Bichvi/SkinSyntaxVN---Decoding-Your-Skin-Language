@@ -4,12 +4,12 @@
 require_once __DIR__ . "/../models/NguoiDung.php";
 
 class AuthController {
-    private PDO $pdo;
-    private \NguoiDung $model;
+    private $pdo;
+    private NguoiDung $model;
 
-    public function __construct(PDO $pdo) {
+    public function __construct($pdo) {
         $this->pdo = $pdo;
-        $this->model = new \NguoiDung($pdo);
+        $this->model = new NguoiDung($pdo);
     }
 
     private function render(string $view, array $data = []) {
@@ -19,11 +19,12 @@ class AuthController {
         require __DIR__ . '/../views/layouts/footer.php';
     }
 
-    private function cfg(string $name, string $default = ''): string {
-        return defined($name) ? (string)constant($name) : $default;
-    }
-
     private function appBaseUrl(): string {
+        $configuredAppUrl = defined('APP_URL') ? trim((string)APP_URL) : '';
+        if ($configuredAppUrl !== '') {
+            return rtrim($configuredAppUrl, '/');
+        }
+
         $isHttps = !empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off';
         $scheme = $isHttps ? 'https' : 'http';
         $host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
@@ -35,9 +36,33 @@ class AuthController {
         return $this->appBaseUrl() . '/index.php?' . $query;
     }
 
+    private function resolveOAuthRedirectUri(string $provider): string {
+        $constantName = strtoupper(trim($provider)) . '_OAUTH_REDIRECT_URI';
+        if (defined($constantName)) {
+            $configured = trim((string)constant($constantName));
+            if ($configured !== '') {
+                return $configured;
+            }
+        }
+
+        return $this->buildRouteUrl('auth_social_callback', ['provider' => $provider]);
+    }
+
+    private function issueSignupCaptcha(): string {
+        $captcha = strtolower(substr(bin2hex(random_bytes(4)), 0, 4));
+        $_SESSION['signup_captcha'] = $captcha;
+        return $captcha;
+    }
+
+    private function validateSignupCaptcha(string $captcha): bool {
+        $expectedCaptcha = strtolower(trim((string)($_SESSION['signup_captcha'] ?? '')));
+        $captcha = strtolower(trim($captcha));
+        return $captcha !== '' && $expectedCaptcha !== '' && hash_equals($expectedCaptcha, $captcha);
+    }
+
     private function sendHtmlEmail(string $to, string $subject, string $html): bool {
-        $fromName = $this->cfg('MAIL_FROM_NAME', 'SkinSyntax');
-        $fromAddress = $this->cfg('MAIL_FROM_ADDRESS', 'no-reply@skinsyntax.local');
+        $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'SkinSyntax';
+        $fromAddress = defined('MAIL_FROM_ADDRESS') ? MAIL_FROM_ADDRESS : 'no-reply@skinsyntax.local';
         $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
         $headers = [
             'MIME-Version: 1.0',
@@ -92,6 +117,13 @@ class AuthController {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+            $caBundle = 'D:\\xampp\\php\\extras\\ssl\\cacert.pem';
+            if (!is_file($caBundle)) {
+                $caBundle = 'D:\\xampp\\apache\\bin\\curl-ca-bundle.crt';
+            }
+            if (is_file($caBundle)) {
+                curl_setopt($ch, CURLOPT_CAINFO, $caBundle);
+            }
             if (!empty($headers)) {
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             }
@@ -99,6 +131,17 @@ class AuthController {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
             }
             $responseBody = curl_exec($ch);
+            $curlErr = curl_errno($ch);
+            // Retry without SSL verify for trusted OAuth domains on local dev
+            if ($curlErr === 60 || $curlErr === 77) {
+                $trustedHosts = ['accounts.google.com', 'oauth2.googleapis.com', 'www.googleapis.com', 'graph.facebook.com', 'www.facebook.com'];
+                $urlHost = strtolower((string)parse_url($url, PHP_URL_HOST));
+                if (in_array($urlHost, $trustedHosts, true)) {
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                    $responseBody = curl_exec($ch);
+                }
+            }
             $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
             return ['status' => $status, 'body' => (string)$responseBody];
@@ -129,8 +172,8 @@ class AuthController {
         if ($provider === 'google') {
             return [
                 'provider' => 'google',
-                'client_id' => $this->cfg('GOOGLE_OAUTH_CLIENT_ID'),
-                'client_secret' => $this->cfg('GOOGLE_OAUTH_CLIENT_SECRET'),
+                'client_id' => defined('GOOGLE_OAUTH_CLIENT_ID') ? GOOGLE_OAUTH_CLIENT_ID : '',
+                'client_secret' => defined('GOOGLE_OAUTH_CLIENT_SECRET') ? GOOGLE_OAUTH_CLIENT_SECRET : '',
                 'auth_url' => 'https://accounts.google.com/o/oauth2/v2/auth',
                 'token_url' => 'https://oauth2.googleapis.com/token',
                 'scope' => 'openid email profile',
@@ -140,8 +183,8 @@ class AuthController {
         if ($provider === 'facebook') {
             return [
                 'provider' => 'facebook',
-                'client_id' => $this->cfg('FACEBOOK_OAUTH_CLIENT_ID'),
-                'client_secret' => $this->cfg('FACEBOOK_OAUTH_CLIENT_SECRET'),
+                'client_id' => defined('FACEBOOK_OAUTH_CLIENT_ID') ? FACEBOOK_OAUTH_CLIENT_ID : '',
+                'client_secret' => defined('FACEBOOK_OAUTH_CLIENT_SECRET') ? FACEBOOK_OAUTH_CLIENT_SECRET : '',
                 'auth_url' => 'https://www.facebook.com/v19.0/dialog/oauth',
                 'token_url' => 'https://graph.facebook.com/v19.0/oauth/access_token',
                 'scope' => 'email,public_profile',
@@ -164,6 +207,53 @@ class AuthController {
             'role' => 'khach_hang',
             'vai_tro' => 'khach_hang',
         ];
+    }
+
+    private function shouldUseLocalSocialFallback(string $provider): bool {
+        $mode = strtolower(trim((string)($_GET['oauth_mode'] ?? '')));
+        if (in_array($mode, ['real', 'oauth'], true)) {
+            return false;
+        }
+
+        if (in_array($mode, ['local', 'dev'], true)) {
+            return true;
+        }
+
+        if (defined('SOCIAL_LOCAL_FALLBACK')
+            && in_array(strtolower(trim((string)SOCIAL_LOCAL_FALLBACK)), ['1', 'true', 'yes', 'on'], true)) {
+            return true;
+        }
+        return false;
+    }
+
+    private function getLocalSocialIdentity(string $provider): array {
+        $provider = strtolower(trim($provider));
+        if ($provider === 'facebook') {
+            return [
+                'ho_ten' => 'Facebook Local User',
+                'email' => 'facebook.local@skinsyntax.local',
+            ];
+        }
+
+        return [
+            'ho_ten' => 'Google Local User',
+            'email' => 'google.local@skinsyntax.local',
+        ];
+    }
+
+    private function completeLocalSocialLogin(string $provider): void {
+        $identity = $this->getLocalSocialIdentity($provider);
+        $account = $this->model->findOrCreateCustomerAccount($identity['ho_ten'], $identity['email']);
+        if (!$account) {
+            set_flash('error', 'Khong the khoi tao tai khoan dang nhap local cho ' . ucfirst($provider) . '.');
+            header('Location: ' . BASE_URL . '/index.php?auth=login');
+            exit;
+        }
+
+        $this->loginCustomerSession($account);
+        set_flash('success', 'Dang nhap local bang ' . ucfirst($provider) . ' thanh cong.');
+        header('Location: ' . BASE_URL . '/index.php?r=home');
+        exit;
     }
 
     public function dangnhap() {
@@ -331,6 +421,10 @@ class AuthController {
 
     public function authSocial(): void {
         $provider = strtolower(trim((string)($_GET['provider'] ?? '')));
+        if (in_array($provider, ['google', 'facebook'], true) && $this->shouldUseLocalSocialFallback($provider)) {
+            $this->completeLocalSocialLogin($provider);
+        }
+
         $config = $this->getOAuthConfig($provider);
         if (!$config || !$this->socialEnabled($provider)) {
             set_flash('error', 'Dang nhap bang ' . ucfirst($provider) . ' chua duoc cau hinh. Vui long them client ID va secret trong file cau hinh.');
@@ -340,7 +434,7 @@ class AuthController {
 
         $state = bin2hex(random_bytes(16));
         $_SESSION['oauth_state_' . $provider] = $state;
-        $redirectUri = $this->buildRouteUrl('auth_social_callback', ['provider' => $provider]);
+        $redirectUri = $this->resolveOAuthRedirectUri($provider);
 
         if ($provider === 'google') {
             $query = http_build_query([
@@ -383,7 +477,7 @@ class AuthController {
         }
         unset($_SESSION['oauth_state_' . $provider]);
 
-        $redirectUri = $this->buildRouteUrl('auth_social_callback', ['provider' => $provider]);
+        $redirectUri = $this->resolveOAuthRedirectUri($provider);
         if ($provider === 'google') {
             $tokenResponse = $this->httpRequest($config['token_url'], [
                 'method' => 'POST',
@@ -473,16 +567,152 @@ class AuthController {
         return (bool)preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,32}$/', $password);
     }
 
+    private function jsonResponse(array $payload, int $status = 200): void {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    private function buildSignupOtpSession(): array {
+        $data = $_SESSION['signup_email_otp'] ?? [];
+        return is_array($data) ? $data : [];
+    }
+
+    private function generateSignupOtpCode(): string {
+        return (string)random_int(100000, 999999);
+    }
+
+    private function clearSignupOtp(): void {
+        unset($_SESSION['signup_email_otp']);
+    }
+
+    private function sendSignupOtpEmail(string $email, string $otpCode): bool {
+        $subject = 'SkinSyntax - Ma OTP dang ky';
+        $html = '<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2937">'
+            . '<h2 style="margin-bottom:12px">Xac thuc dang ky tai khoan</h2>'
+            . '<p>Chao ban,</p>'
+            . '<p>Day la ma OTP de hoan tat dang ky tai khoan SkinSyntax:</p>'
+            . '<div style="display:inline-block;padding:14px 20px;background:#0f6b3e;color:#fff;border-radius:12px;font-size:28px;font-weight:800;letter-spacing:0.2em">' . h($otpCode) . '</div>'
+            . '<p style="margin-top:16px">Ma co hieu luc trong 10 phut. Vui long khong chia se ma nay cho nguoi khac.</p>'
+            . '</div>';
+
+        return $this->sendHtmlEmail($email, $subject, $html);
+    }
+
+    public function guiCaptchaDangKy(): void {
+        $this->jsonResponse([
+            'ok' => true,
+            'captcha' => $this->issueSignupCaptcha(),
+        ]);
+    }
+
+    public function guiOtpDangKy(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->jsonResponse(['ok' => false, 'message' => 'Method not allowed.'], 405);
+        }
+
+        $raw = file_get_contents('php://input');
+        $data = json_decode((string)$raw, true);
+        if (!is_array($data)) {
+            $data = $_POST;
+        }
+
+        $email = trim((string)($data['email'] ?? ''));
+        $captcha = trim((string)($data['captcha'] ?? ''));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->jsonResponse(['ok' => false, 'message' => 'Vui lòng nhập email hợp lệ để nhận OTP.'], 422);
+        }
+
+        if (!$this->validateSignupCaptcha($captcha)) {
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => 'Captcha không đúng. Vui lòng nhập lại rồi bấm lấy mã.',
+                'captcha' => $this->issueSignupCaptcha(),
+            ], 422);
+        }
+
+        if ($this->model->timTheoEmail($email)) {
+            $this->jsonResponse(['ok' => false, 'message' => 'Email này đã tồn tại trong hệ thống.'], 409);
+        }
+
+        $otpState = $this->buildSignupOtpSession();
+        $lastSentAt = (int)($otpState['sent_at'] ?? 0);
+        if ($lastSentAt > 0 && (time() - $lastSentAt) < 60 && strcasecmp((string)($otpState['email'] ?? ''), $email) === 0) {
+            $remaining = 60 - (time() - $lastSentAt);
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => 'Bạn vừa yêu cầu OTP. Vui lòng chờ ' . max(1, $remaining) . ' giây rồi thử lại.',
+                'retry_after' => max(1, $remaining),
+            ], 429);
+        }
+
+        $otpCode = $this->generateSignupOtpCode();
+        if (!$this->sendSignupOtpEmail($email, $otpCode)) {
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => 'Không gửi được email OTP. Hãy kiểm tra cấu hình mail của PHP/XAMPP rồi thử lại.',
+            ], 500);
+        }
+
+        $_SESSION['signup_email_otp'] = [
+            'email' => $email,
+            'otp_hash' => hash('sha256', $otpCode),
+            'expires_at' => time() + (10 * 60),
+            'sent_at' => time(),
+            'verified' => false,
+        ];
+
+        $this->jsonResponse([
+            'ok' => true,
+            'message' => 'OTP đã được gửi tới email của bạn. Mã có hiệu lực trong 10 phút.',
+        ]);
+    }
+
     public function xulydangky() {
         $hoTen = trim($_POST['ho_ten'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $matkhau = $_POST['mat_khau'] ?? '';
         $matkhau2 = $_POST['mat_khau2'] ?? '';
+        $otp = trim((string)($_POST['otp'] ?? ''));
+        $captcha = strtolower(trim((string)($_POST['captcha'] ?? '')));
 
         $_SESSION['signup_old'] = $this->buildSignupOldInput();
 
         if ($hoTen === '' || $email === '' || $matkhau === '' || $matkhau2 === '') {
             set_flash('error', 'Vui lòng nhập đầy đủ thông tin.');
+            header('Location: ' . BASE_URL . '/index.php?auth=register');
+            exit;
+        }
+
+        if (!$this->validateSignupCaptcha($captcha)) {
+            set_flash('error', 'Captcha không đúng. Vui lòng nhập lại.');
+            header('Location: ' . BASE_URL . '/index.php?auth=register');
+            exit;
+        }
+
+        $otpState = $this->buildSignupOtpSession();
+        if ($otp === '' || empty($otpState)) {
+            set_flash('error', 'Vui lòng nhập mã OTP đã được gửi về email.');
+            header('Location: ' . BASE_URL . '/index.php?auth=register');
+            exit;
+        }
+
+        if (strcasecmp((string)($otpState['email'] ?? ''), $email) !== 0) {
+            set_flash('error', 'OTP hiện tại không khớp với email đăng ký. Vui lòng lấy lại mã mới.');
+            header('Location: ' . BASE_URL . '/index.php?auth=register');
+            exit;
+        }
+
+        if ((int)($otpState['expires_at'] ?? 0) < time()) {
+            $this->clearSignupOtp();
+            set_flash('error', 'OTP đã hết hạn. Vui lòng lấy mã mới.');
+            header('Location: ' . BASE_URL . '/index.php?auth=register');
+            exit;
+        }
+
+        if (!hash_equals((string)($otpState['otp_hash'] ?? ''), hash('sha256', $otp))) {
+            set_flash('error', 'OTP không đúng. Vui lòng kiểm tra lại email của bạn.');
             header('Location: ' . BASE_URL . '/index.php?auth=register');
             exit;
         }
@@ -513,6 +743,8 @@ class AuthController {
 
         $this->model->taoMoi($hoTen, $email, $matkhau);
         unset($_SESSION['signup_old']);
+        unset($_SESSION['signup_captcha']);
+        $this->clearSignupOtp();
 
         $_SESSION['pending_survey'] = [
             'ho_ten' => $hoTen,

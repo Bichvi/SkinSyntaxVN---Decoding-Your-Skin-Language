@@ -1,12 +1,10 @@
 <?php
 $latest = isset($latest) && is_array($latest) ? $latest : [];
 $cats = isset($cats) && is_array($cats) ? $cats : [];
+$homepageSections = isset($homepageSections) && is_array($homepageSections) ? $homepageSections : [];
 
 $heroProducts = array_slice($latest, 0, 4);
-$newProducts = array_slice($latest, 4, 4);
-if (count($newProducts) < 4) {
-  $newProducts = $latest;
-}
+$newProducts = array_slice($latest, 0, 4);
 
 $shortcutCards = [
   ['icon' => 'fa-wand-magic-sparkles', 'title' => 'Routine AI', 'desc' => 'Nhận gợi ý theo hồ sơ da đã lưu.', 'url' => BASE_URL . '/index.php?r=goiy'],
@@ -32,6 +30,30 @@ $skinSyntaxSignals = [
   ['number' => '2H', 'label' => 'Từ khám phá sang checkout gọn'],
   ['number' => '1 hồ sơ', 'label' => 'Đồng bộ khảo sát và lịch sử mua'],
 ];
+$renderHomeProductCard = static function (array $p, string $tag = ''): void {
+  $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
+  $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+  $giaBan = (string)($p['gia_ban'] ?? '');
+  $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
+  $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
+  ?>
+    <a class="product-card product-card--showcase product-card--market" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>">
+      <div class="product-thumb">
+        <?php if ($phanTramGiam !== null): ?><span class="badge-sale">-<?= h((string)$phanTramGiam) ?>%</span><?php endif; ?>
+        <?php if ($tag !== ''): ?><span class="market-card__tag"><?= h($tag) ?></span><?php endif; ?>
+        <img src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=No+Image') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/450x450?text=No+Image';" alt="<?= h($p['ten_san_pham'] ?? '') ?>">
+      </div>
+      <div class="product-meta">
+        <div class="brand"><?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
+        <div class="name"><?= h($p['ten_san_pham'] ?? '') ?></div>
+        <div class="price-wrap">
+          <div class="price"><?= vnd($giaBan) ?></div>
+          <?php if ($giaThiTruong !== '' && is_numeric($giaThiTruong) && (float)$giaThiTruong > (float)$giaBan): ?><div class="price-market"><?= vnd($giaThiTruong) ?></div><?php endif; ?>
+        </div>
+      </div>
+    </a>
+  <?php
+};
 ?>
 <div class="container mt-4 home-shell home-shell--marketplace">
   <section class="market-hero">
@@ -117,6 +139,51 @@ $skinSyntaxSignals = [
     <div class="trust-pill"><i class="fas fa-award"></i> Loyalty tích hợp trong tài khoản</div>
   </section>
 
+  <?php if (!empty($newProducts)): ?>
+    <section class="market-section mt-4">
+      <div class="section-header section-header--compact">
+        <div>
+          <span class="section-kicker">Vừa cập nhật</span>
+          <h4 class="section-title mb-0">Sản phẩm mới!!!</h4>
+        </div>
+        <a class="link-more" href="<?= BASE_URL ?>/index.php?r=tatca">Xem catalog</a>
+      </div>
+      <div class="market-product-grid mt-3">
+        <?php foreach (array_slice($newProducts, 0, 4) as $p): ?>
+          <?php $renderHomeProductCard($p, 'Mới lên kệ'); ?>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
+
+  <?php
+    $homeBlocks = [
+      'flashDeals' => ['kicker' => 'Deal chớp nhoáng', 'title' => 'Flash deals', 'tag' => 'Flash deal', 'url' => BASE_URL . '/index.php?r=tatca&sort=deal'],
+      'bestSellers' => ['kicker' => 'Đang được mua nhiều', 'title' => 'Bán chạy', 'tag' => 'Ban chay', 'url' => BASE_URL . '/index.php?r=tatca&sort=bestseller'],
+      'topSearches' => ['kicker' => 'Nhiều lượt xem', 'title' => 'Top tìm kiếm', 'tag' => 'Top tim kiem', 'url' => BASE_URL . '/index.php?r=tatca&sort=trend'],
+      'forYou' => ['kicker' => 'Gợi ý nhanh', 'title' => 'Dành cho bạn', 'tag' => 'Phu hop', 'url' => BASE_URL . '/index.php?r=goiy'],
+    ];
+  ?>
+  <?php foreach ($homeBlocks as $blockKey => $blockMeta): ?>
+    <?php $blockItems = array_slice(array_values(array_filter($homepageSections[$blockKey] ?? [])), 0, 4); ?>
+    <?php if (!empty($blockItems)): ?>
+      <section class="market-section mt-4">
+        <div class="section-header section-header--compact">
+          <div>
+            <span class="section-kicker"><?= h($blockMeta['kicker']) ?></span>
+            <h4 class="section-title mb-0"><?= h($blockMeta['title']) ?></h4>
+          </div>
+          <a class="link-more" href="<?= h($blockMeta['url']) ?>">Xem tất cả</a>
+        </div>
+        <div class="market-product-grid mt-3">
+          <?php foreach ($blockItems as $p): ?>
+            <?php $renderHomeProductCard($p, (string)$blockMeta['tag']); ?>
+          <?php endforeach; ?>
+        </div>
+      </section>
+    <?php endif; ?>
+  <?php endforeach; ?>
+
   <section class="market-section mt-4">
     <div class="section-header section-header--compact">
       <div>
@@ -159,7 +226,31 @@ $skinSyntaxSignals = [
     </div>
   </section>
 
-
+  <section class="market-ai-panel mt-4">
+    <div class="market-ai-panel__content">
+      <span class="section-kicker">Giữ chất SkinSyntax</span>
+      <h3>Marketplace được thiết kế xung quanh skin science, không chỉ là cửa hàng. Mỗi lựa chọn sản phẩm đều có intelligence về làn da của bạn.</h3>
+      <p>Khác biệt chính: phân tích da thực, recommendation cá nhân, giải thích rõ từng sản phẩm, xây dựng loyalty qua hồ sơ da và lịch sử mua hàng. Interface dễ dùng như marketplace, nhưng lõi là expert knowledge về skincare.</p>
+      <div class="market-ai-panel__actions">
+        <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=goiy">Mở trang gợi ý</a>
+        <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=hoso">Xem hồ sơ da</a>
+      </div>
+    </div>
+    <div class="market-ai-panel__stack">
+      <div class="ai-note-card">
+        <strong>Phễu 1</strong>
+        <p>Người dùng mới khám phá sản phẩm qua danh mục hoặc deal.</p>
+      </div>
+      <div class="ai-note-card">
+        <strong>Phễu 2</strong>
+        <p>Cần tư vấn skin? Chuyển sang khảo sát da và AI routine builder.</p>
+      </div>
+      <div class="ai-note-card ai-note-card--accent">
+        <strong>Phễu 3</strong>
+        <p>Mua xong vẫn quay lại. Follow routine, cập nhật profile da, nhận rewards.</p>
+      </div>
+    </div>
+  </section>
 
   <section class="market-section mt-4">
     <div class="section-header section-header--compact">
@@ -186,48 +277,6 @@ $skinSyntaxSignals = [
         <strong>Daily UV</strong>
         <span>Chống nắng dễ dùng hằng ngày với nhiều texture.</span>
       </a>
-    </div>
-  </section>
-
-  <section class="market-section mt-4">
-    <div class="section-header section-header--compact">
-      <div>
-        <span class="section-kicker">Mới cập nhật</span>
-        <h4 class="section-title mb-0">Sản phẩm mới đẩy lên đầu trang</h4>
-      </div>
-      <a class="link-more" href="<?= BASE_URL ?>/index.php?r=tatca">Xem catalog</a>
-    </div>
-
-    <div class="market-product-grid mt-3">
-      <?php foreach ($newProducts as $p):
-        $img = resolve_image_url((string)($p['link_hinh_anh'] ?? ''));
-        $giaBan = (string)($p['gia_ban'] ?? '');
-        $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
-        $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
-      ?>
-        <a class="product-card product-card--showcase product-card--market" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= (int)$p['id'] ?>">
-          <div class="product-thumb">
-            <?php if ($phanTramGiam !== null): ?>
-              <span class="badge-sale">-<?= h((string)$phanTramGiam) ?>%</span>
-            <?php endif; ?>
-            <span class="market-card__tag market-card__tag--fresh">Mới lên kệ</span>
-            <img src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=No+Image') ?>"
-                 referrerpolicy="no-referrer"
-                 onerror="this.src='https://via.placeholder.com/450x450?text=No+Image';"
-                 alt="<?= h($p['ten_san_pham']) ?>">
-          </div>
-          <div class="product-meta">
-            <div class="brand"><?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
-            <div class="name"><?= h($p['ten_san_pham']) ?></div>
-            <div class="price-wrap">
-              <div class="price"><?= vnd($giaBan) ?></div>
-              <?php if ($giaThiTruong !== '' && (float)$giaThiTruong > 0): ?>
-                <div class="price-market"><?= vnd($giaThiTruong) ?></div>
-              <?php endif; ?>
-            </div>
-          </div>
-        </a>
-      <?php endforeach; ?>
     </div>
   </section>
 

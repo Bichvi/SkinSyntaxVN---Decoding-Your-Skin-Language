@@ -17,16 +17,18 @@ if ($aiChatStorageScope === '') {
 // Lấy hồ sơ da từ khảo sát (nếu đã đăng nhập)
 $aiChatSkinProfile = null;
 $aiChatEmail = trim((string)($aiChatUser['email'] ?? ''));
-if ($aiChatEmail !== '' && $pdo instanceof PDO) {
+if ($aiChatEmail !== '' && $pdo !== null) {
   try {
     if (class_exists('TaiKhoan')) {
         $taiKhoanModel = new TaiKhoan($pdo);
         $skinProfile = $taiKhoanModel->getSkinProfileByEmail($aiChatEmail);
         $khachHang = $taiKhoanModel->getKhachHangByEmail($aiChatEmail);
         
-        if ($skinProfile && !empty($skinProfile['loai_da'])) {
+        // Kiểm tra loại da hợp lệ (không rỗng và không phải "Chưa xác định")
+        $loaiDaRaw = trim((string)($skinProfile['loai_da'] ?? ''));
+        if ($loaiDaRaw !== '' && mb_strtolower($loaiDaRaw, 'UTF-8') !== 'chưa xác định') {
             $aiChatSkinProfile = [
-                'loai_da'   => trim((string)$skinProfile['loai_da']),
+                'loai_da'   => $loaiDaRaw,
                 'van_de_da' => trim((string)($skinProfile['van_de_da'] ?? '')),
                 'ngan_sach' => (int)($skinProfile['ngan_sach'] ?? 0),
                 'thanh_phan_tranh' => trim((string)($khachHang['thanh_phan_tranh'] ?? '')),
@@ -38,7 +40,7 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
   }
 }
 ?>
-<?php if ($pdo instanceof PDO): ?>
+<?php if ($pdo !== null): ?>
   <div class="ai-chat-widget" data-ai-chat-widget>
     <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với AI">
       <span class="ai-chat-widget__trigger-icon" aria-hidden="true">
@@ -54,20 +56,21 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       <header class="ai-chat-widget__panel-head">
         <div class="ai-chat-widget__panel-head-main">
           <div class="ai-chat-widget__panel-avatar" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>
-          <div>
-          <div class="ai-chat-widget__panel-title">SkinSyntax AI Agent</div>
-          <div class="ai-chat-widget__panel-subtitle">Phân tích thành phần, cảnh báo conflict và gợi ý sản phẩm kèm hình ảnh.</div>
-          <div class="ai-chat-widget__status" data-ai-chat-status>Đã kết nối hệ thống tư vấn.</div>
+          <div class="ai-chat-widget__panel-info">
+            <div class="ai-chat-widget__panel-title">SkinSyntax AI Agent</div>
+            <div class="ai-chat-widget__status-compact" data-ai-chat-status>
+               <span class="ai-chat-widget__status-dot"></span> Đã kết nối
+            </div>
           </div>
         </div>
         <div class="ai-chat-widget__panel-actions">
-          <button class="ai-chat-widget__reset" type="button" data-ai-chat-reset aria-label="Xóa lịch sử chat AI" title="Xóa lịch sử chat AI">
+          <button class="ai-chat-widget__action-btn" type="button" data-ai-chat-reset title="Xóa lịch sử">
             <i class="fa-solid fa-trash-can"></i>
           </button>
-          <button class="ai-chat-widget__expand" type="button" data-ai-chat-expand aria-pressed="false" aria-label="Phóng to chat AI">
-            <i class="fa-solid fa-expand"></i>
+          <button class="ai-chat-widget__action-btn ai-chat-widget__action-btn--expand" type="button" data-ai-chat-expand title="Phóng to">
+            <i class="fa-solid fa-expand"></i> <span>Phóng to</span>
           </button>
-          <button class="ai-chat-widget__close" type="button" data-ai-chat-close aria-label="Đóng chat AI">
+          <button class="ai-chat-widget__action-btn ai-chat-widget__action-btn--close" type="button" data-ai-chat-close title="Đóng">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -77,10 +80,17 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Phân tích nhanh giỏ hàng hiện tại và cảnh báo các cặp chất có thể xung đột.">Phân tích giỏ hàng</button>
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Tìm giúp tôi vài sản phẩm phù hợp với da dầu mụn và giải thích ngắn gọn.">Da dầu mụn</button>
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Tóm tắt giúp tôi các nhóm hoạt chất treatment phổ biến và cách dùng an toàn trong routine.">Thành phần</button>
+        
+        <?php if (!empty($_SESSION['user'])): ?>
+          <button type="button" class="ai-chat-widget__quick-chip ai-chat-widget__quick-chip--highlight" 
+                  <?= $aiChatSkinProfile ? 'data-ai-chat-toggle-profile' : 'data-ai-chat-profile-restricted' ?>>
+            ✨ Gợi ý theo hồ sơ da
+          </button>
+        <?php endif; ?>
       </div>
 
 <?php if ($aiChatSkinProfile): ?>
-      <div class="ai-chat-profile-banner" data-ai-profile-banner
+      <div class="ai-chat-profile-banner" data-ai-profile-banner hidden
            data-profile="<?= htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES) ?>">
         <div class="ai-chat-profile-banner__head">
           <span class="ai-chat-profile-banner__icon">✨</span>
@@ -88,8 +98,11 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
             <strong>Gợi ý theo hồ sơ da của bạn</strong>
             <span class="ai-chat-profile-banner__tag"><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES) ?></span>
           </div>
+          <button type="button" class="ai-chat-profile-banner__close" data-ai-chat-toggle-profile aria-label="Đóng gợi ý">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
-        <p class="ai-chat-profile-banner__desc">Chọn loại sản phẩm để AI tìm ngay theo da và ngân sách của bạn:</p>
+        <p class="ai-chat-profile-banner__desc">Bạn muốn tìm sản phẩm nào phù hợp với <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES) ?></strong> và ngân sách của mình?</p>
         <div class="ai-chat-profile-banner__chips">
           <button type="button" class="ai-chat-profile-chip" data-category="Toner / Nước Cân Bằng Da">💧 Toner</button>
           <button type="button" class="ai-chat-profile-chip" data-category="Sữa Rửa Mặt">🧴 Sữa rửa mặt</button>
@@ -103,11 +116,19 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       </div>
 <?php endif; ?>
 
-      <div class="ai-chat-widget__stream" data-ai-chat-stream>
+      <div class="ai-chat-widget__stream" data-ai-chat-stream
+           data-ai-skin-profile="<?= $aiChatSkinProfile ? htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES) : '' ?>"
+           data-ai-greeting-key="aiChatGreeting:<?= $aiChatStorageScope ?>">
         <div class="ai-chat-widget__welcome" data-ai-chat-welcome>
           <div class="ai-chat-widget__welcome-badge">AI Agent</div>
-          <h4>Tư vấn skincare dựa trên dữ liệu thật</h4>
+<?php if ($aiChatSkinProfile): ?>
+          <h4>Xin chào! Mình đã có hồ sơ da của bạn 👋</h4>
+          <p>Loại da: <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES) ?></strong><?php if (!empty($aiChatSkinProfile['thanh_phan_tranh'])): ?> · Tránh: <strong><?= htmlspecialchars($aiChatSkinProfile['thanh_phan_tranh'], ENT_QUOTES) ?></strong><?php endif; ?></p>
+          <p style="margin-top:4px">Chọn loại sản phẩm bên dưới để mình gợi ý ngay, hoặc hỏi bất kỳ điều gì về skincare nhé!</p>
+<?php else: ?>
+          <h4>Tư vấn skincare dựa trên các sản phẩm của SkinSyntax</h4>
           <p>Bạn có thể hỏi về thành phần, sản phẩm phù hợp, routine treatment hoặc yêu cầu quét giỏ hàng để phát hiện các cặp hoạt chất cần tránh. Khi có dữ liệu, phần gợi ý sẽ lấy kèm hình ảnh sản phẩm.</p>
+<?php endif; ?>
         </div>
       </div>
 
@@ -116,7 +137,7 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
           <textarea class="form-control ai-chat-widget__textarea" rows="2" data-ai-chat-input placeholder="Hỏi AI về thành phần, sản phẩm, routine hoặc phân tích giỏ hàng..." required></textarea>
           <button class="btn ai-chat-widget__submit" type="submit" data-ai-chat-submit>Gửi</button>
         </div>
-        <div class="ai-chat-widget__helper">AI ưu tiên dữ liệu thật từ cửa hàng, gồm tên, giá, mô tả và hình ảnh sản phẩm khi hệ thống có sẵn.</div>
+        
       </form>
     </section>
   </div>
@@ -215,12 +236,7 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       transform: translateY(18px) scale(0.96);
       transform-origin: bottom right;
       pointer-events: none;
-      transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .ai-chat-widget.is-expanded .ai-chat-widget__panel {
-      width: min(760px, calc(100vw - 28px));
-      max-height: min(84vh, 760px) !important;
+      transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), width 0.3s ease, max-height 0.3s ease;
     }
 
     .ai-chat-widget__panel[hidden] {
@@ -233,91 +249,177 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       pointer-events: auto;
     }
 
-    .ai-chat-widget__panel-head {
+    /* Phóng to toàn màn hình */
+    .ai-chat-widget.is-expanded {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 2147483647 !important;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(12px);
+      padding: 0;
+      margin: 0;
+      display: block !important;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-widget__panel {
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100vh !important;
+      border-radius: 0;
+      transform: none !important;
+      box-shadow: none;
+      border: 0;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      flex-direction: column;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-widget__panel-head {
+      padding: 24px 32px;
+      background: #fff;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-widget__panel-title {
+      font-size: 22px;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-widget__stream {
+      padding: 30px 40px;
+      max-height: none !important;
+      flex: 1;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-widget__form {
+      padding: 24px 40px;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-profile-banner {
+      margin: 20px 40px;
+      padding: 30px;
+      border-radius: 24px;
+    }
+
+    /* Header Styles */
+    .ai-chat-widget__panel-head {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
       gap: 12px;
-      padding: 16px 18px;
-      background: linear-gradient(135deg, #f4f7f2 0%, #fffdf8 100%);
-      border-bottom: 1px solid #dfe6db;
+      padding: 12px 16px;
+      background: #ffffff;
+      border-bottom: 1px solid #edf2f7;
+      flex-shrink: 0;
     }
 
     .ai-chat-widget__panel-head-main {
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr);
-      gap: 12px;
-      align-items: start;
+      display: flex !important;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
     }
 
     .ai-chat-widget__panel-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 16px;
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
       display: grid;
       place-items: center;
-      background: linear-gradient(135deg, #173a5c 0%, #3e7fc4 100%);
-      color: #f7fbff;
+      background: linear-gradient(135deg, #1a3a3a 0%, #2f6a4f 100%);
+      color: #fff;
       font-size: 18px;
-      box-shadow: 0 12px 20px rgba(28, 79, 130, 0.18);
+    }
+
+    .ai-chat-widget__panel-info {
+      flex: 1;
+      min-width: 0;
     }
 
     .ai-chat-widget__panel-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: #173528;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a202c;
+      margin: 0;
+      line-height: 1.2;
     }
 
-    .ai-chat-widget__panel-subtitle {
-      margin-top: 4px;
-      color: #647468;
-      font-size: 13px;
-      line-height: 1.55;
-    }
-
-    .ai-chat-widget__status {
-      margin-top: 10px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: #edf6ef;
-      color: #25633d;
+    .ai-chat-widget__status-compact {
       font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.03em;
+      color: #718096;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .ai-chat-widget__status::before {
-      content: '';
-      width: 8px;
-      height: 8px;
+    .ai-chat-widget__status-dot {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: currentColor;
-      opacity: 0.85;
+      background: #48bb78;
     }
 
-    .ai-chat-widget__status.is-fallback {
-      background: #fff3df;
-      color: #a15c00;
+    .ai-chat-widget__status-compact.is-fallback .ai-chat-widget__status-dot {
+      background: #f6ad55;
     }
 
     .ai-chat-widget__panel-actions {
-      display: flex;
-      gap: 8px;
-      flex: 0 0 auto;
+      display: flex !important;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
-    .ai-chat-widget__reset,
-    .ai-chat-widget__expand,
-    .ai-chat-widget__close {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: 1px solid #d7e0d3;
+    .ai-chat-widget__action-btn {
+      height: 32px;
+      padding: 0 8px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
       background: #fff;
-      color: #3c5b47;
+      color: #4a5568;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ai-chat-widget__action-btn:hover {
+      background: #f7fafc;
+      border-color: #cbd5e0;
+      color: #2d3748;
+    }
+
+    .ai-chat-widget__action-btn--close {
+      width: 32px;
+      padding: 0;
+    }
+
+    .ai-chat-widget__action-btn i {
+      font-size: 14px;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-widget__panel-head {
+      padding: 16px 24px;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-widget__panel-title {
+      font-size: 18px;
+    }
+
+    .ai-chat-widget__expand:hover {
+      background: #f0f7f2;
+      border-color: #b8d0bf;
+      color: #1a4d32;
     }
 
     .ai-chat-widget__expand[aria-pressed='true'] {
@@ -347,12 +449,127 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       padding: 8px 12px;
       font-size: 12px;
       font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ai-chat-widget__quick-chip:hover {
+      background: #f0f7f2;
+      border-color: #b8d0bf;
+    }
+
+    .ai-chat-widget__quick-chip--highlight {
+      background: linear-gradient(135deg, #2f6a4f 0%, #173528 100%);
+      color: #fff;
+      border: 0;
+      box-shadow: 0 4px 12px rgba(47, 106, 79, 0.2);
+    }
+
+    .ai-chat-widget__quick-chip--highlight:hover {
+      background: linear-gradient(135deg, #3a8161 0%, #1f4635 100%);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(47, 106, 79, 0.3);
+    }
+
+    .ai-chat-profile-banner {
+      margin: 10px 14px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, #f0f7f4 0%, #ffffff 100%);
+      border: 1px solid #d5e5db;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(47, 106, 79, 0.05);
+      position: relative;
+      animation: ai-slide-down 0.3s ease-out;
+      flex-shrink: 0;
+    }
+
+    /* ... existing animation ... */
+
+    .ai-chat-profile-banner__close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 0;
+      background: #e2e8df;
+      color: #1a3a2a;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .ai-chat-profile-banner__close:hover {
+      background: #d5e1d3;
+    }
+
+    .ai-chat-profile-banner__head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .ai-chat-profile-banner__head strong {
+      font-size: 13px;
+      color: #1a202c;
+    }
+
+    .ai-chat-profile-banner__tag {
+      background: #2f6a4f;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .ai-chat-profile-banner__desc {
+      font-size: 12px;
+      color: #4a5568;
+      margin: 0 0 10px;
+      line-height: 1.4;
+    }
+
+    .ai-chat-profile-banner__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .ai-chat-profile-chip {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #2d3748;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ai-chat-profile-chip:hover {
+      background: #f7fafc;
+      border-color: #cbd5e0;
+      transform: translateY(-1px);
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-profile-banner {
+      margin: 16px 24px;
+      padding: 20px;
     }
 
     .ai-chat-widget__stream {
       flex: 1;
-      min-height: 180px;
-      max-height: 280px;
+      min-height: 120px;
       overflow-y: auto;
       padding: 14px;
       display: flex;
@@ -362,7 +579,7 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
     }
 
     .ai-chat-widget.is-expanded .ai-chat-widget__stream {
-      max-height: 500px;
+      min-height: 200px;
     }
 
     .ai-chat-widget__welcome {
@@ -672,6 +889,68 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       color: #143b2a;
     }
 
+    /* Premium Product Action Buttons */
+    .ai-chat-widget__meta-card-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      border: 1px solid #d5e3d9;
+      background: #ffffff;
+      color: #1d4f37;
+      gap: 5px;
+      outline: none;
+    }
+
+    .ai-chat-widget__meta-card-btn:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 12px rgba(29, 107, 70, 0.12);
+    }
+
+    .ai-chat-widget__meta-card-btn--cart {
+      background: linear-gradient(135deg, #208753, #155e37);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 2px 6px rgba(29, 107, 70, 0.2);
+    }
+
+    .ai-chat-widget__meta-card-btn--cart:hover {
+      background: linear-gradient(135deg, #24995e, #1a7042);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(29, 107, 70, 0.3);
+    }
+
+    .ai-chat-widget__meta-card-btn--detail {
+      background: #ffffff;
+      color: #1d6b46;
+      border: 1px solid #cae7d5;
+    }
+
+    .ai-chat-widget__meta-card-btn--detail:hover {
+      background: #f0faf4;
+      border-color: #a4dbba;
+    }
+
+    .ai-chat-widget__meta-card-btn--ask {
+      background: #f0f6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .ai-chat-widget__meta-card-btn--ask:hover {
+      background: #dbeafe;
+      border-color: #93c5fd;
+      color: #1e40af;
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.15);
+    }
+
     .ai-chat-widget__meta-card-pricechip {
       display: inline-flex;
       align-items: center;
@@ -814,16 +1093,31 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       }
 
       .ai-chat-widget.is-expanded .ai-chat-widget__panel {
-        width: 100%;
-        max-height: 88vh !important;
+        width: 100vw;
+        height: 100vh;
+        max-height: 100vh !important;
+      }
+
+      .ai-chat-widget.is-expanded .ai-chat-widget__stream {
+        max-height: none;
+        flex: 1;
+      }
+
+      .ai-chat-widget.is-expanded .ai-chat-widget__panel-head {
+        padding: 16px;
+      }
+
+      .ai-chat-widget.is-expanded .ai-chat-widget__form {
+        padding: 16px;
+      }
+
+      .ai-chat-widget.is-expanded .ai-chat-profile-banner {
+        margin: 12px;
+        padding: 16px;
       }
 
       .ai-chat-widget__stream {
         max-height: 232px;
-      }
-
-      .ai-chat-widget.is-expanded .ai-chat-widget__stream {
-        max-height: 56vh;
       }
 
       .ai-chat-widget__composer {
@@ -859,6 +1153,9 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       var submit = widget.querySelector('[data-ai-chat-submit]');
       var status = widget.querySelector('[data-ai-chat-status]');
       var quickPrompts = widget.querySelectorAll('[data-ai-chat-prompt]');
+      var toggleProfileBtns = widget.querySelectorAll('[data-ai-chat-toggle-profile]');
+      var profileRestrictedBtn = widget.querySelector('[data-ai-chat-profile-restricted]');
+      var profileBanner = widget.querySelector('[data-ai-profile-banner]');
       var storageScope = <?= json_encode($aiChatStorageScope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
       var storageKey = 'aiChatMessagesV4:' + storageScope;
       var closeTimer = null;
@@ -939,9 +1236,11 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
         widget.style.bottom = nextBottom + 'px';
 
         if (panel) {
+          var isExpanded = widget.classList.contains('is-expanded');
           var viewportPadding = isMobile ? 16 : 24;
           var availableHeight = Math.max(300, window.innerHeight - nextBottom - viewportPadding);
-          panel.style.maxHeight = Math.min(isMobile ? 580 : 620, availableHeight) + 'px';
+          var maxHeightLimit = isMobile ? (isExpanded ? 800 : 580) : (isExpanded ? 1200 : 620);
+          panel.style.maxHeight = Math.min(maxHeightLimit, availableHeight) + 'px';
         }
       };
 
@@ -1010,12 +1309,33 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
           var image = detailUrl !== ''
             ? '<a href="' + escapeHtml(detailUrl) + '" class="ai-chat-widget__meta-card-thumb-link">' + imageCore + '</a>'
             : imageCore;
-          var detailAction = detailUrl !== ''
-            ? '<a href="' + escapeHtml(detailUrl) + '" class="ai-chat-widget__meta-card-link">Xem chi tiết</a>'
+            
+          var cartAction = (detailUrl !== '' && product.id)
+            ? '<form action="index.php?r=chitiet&id=' + escapeHtml(product.id) + '" method="POST" style="display:inline-block; margin:0; padding:0;">'
+              + '<input type="hidden" name="action" value="add_to_cart">'
+              + '<input type="hidden" name="qty" value="1">'
+              + '<button type="submit" class="ai-chat-widget__meta-card-btn ai-chat-widget__meta-card-btn--cart">'
+              + '<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ hàng'
+              + '</button>'
+              + '</form>'
             : '';
+            
+          var detailAction = detailUrl !== ''
+            ? '<a href="' + escapeHtml(detailUrl) + '" class="ai-chat-widget__meta-card-btn ai-chat-widget__meta-card-btn--detail">'
+              + '<i class="fa-solid fa-circle-info"></i> Xem chi tiết'
+              + '</a>'
+            : '';
+            
+          var askMoreAction = product.name
+            ? '<button type="button" class="ai-chat-widget__meta-card-btn ai-chat-widget__meta-card-btn--ask" data-ai-ask-more="' + escapeHtml(product.name) + '">'
+              + '<i class="fa-solid fa-comment-dots"></i> Hỏi kỹ hơn'
+              + '</button>'
+            : '';
+            
           var toggleAction = detailUrl !== ''
             ? '<button type="button" class="ai-chat-widget__meta-card-toggle" data-ai-product-link-toggle data-target="' + escapeHtml(linkId) + '">Hiện link</button>'
             : '';
+            
           var linkBlock = detailUrl !== ''
             ? '<div class="ai-chat-widget__meta-card-url" id="' + escapeHtml(linkId) + '" hidden>' + escapeHtml(detailUrl) + '</div>'
             : '';
@@ -1030,7 +1350,7 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
             + titleBlock
             + '<div class="ai-chat-widget__meta-card-subtitle">' + brand + '</div>'
             + '<div class="ai-chat-widget__meta-card-subtitle">' + description + '</div>'
-            + '<div class="ai-chat-widget__meta-card-actions">' + price + detailAction + toggleAction + '</div>'
+            + '<div class="ai-chat-widget__meta-card-actions">' + price + cartAction + detailAction + askMoreAction + toggleAction + '</div>'
             + linkBlock
             + '</div>'
             + '</div>'
@@ -1052,12 +1372,12 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
         }
 
         if (latestAssistant && latestAssistant.fallback) {
-          status.textContent = String(latestAssistant.statusMessage || 'Đang dùng dữ liệu dự phòng do AI service chưa phản hồi.');
+          status.innerHTML = '<span class="ai-chat-widget__status-dot"></span> Dữ liệu dự phòng';
           status.classList.add('is-fallback');
           return;
         }
 
-        status.textContent = 'Đã kết nối hệ thống tư vấn.';
+        status.innerHTML = '<span class="ai-chat-widget__status-dot"></span> Đã kết nối';
         status.classList.remove('is-fallback');
       };
 
@@ -1169,9 +1489,15 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
         var expanded = widget.classList.contains('is-expanded');
         if (expandButton) {
           expandButton.setAttribute('aria-pressed', expanded ? 'true' : 'false');
-          expandButton.innerHTML = expanded
-            ? '<i class="fa-solid fa-compress"></i>'
-            : '<i class="fa-solid fa-expand"></i>';
+          var textSpan = expandButton.querySelector('span');
+          var icon = expandButton.querySelector('i');
+          if (expanded) {
+             if(icon) icon.className = 'fa-solid fa-compress';
+             if(textSpan) textSpan.textContent = 'Thu nhỏ';
+          } else {
+             if(icon) icon.className = 'fa-solid fa-expand';
+             if(textSpan) textSpan.textContent = 'Phóng to';
+          }
         }
         try {
           window.sessionStorage.setItem(expandedStorageKey, expanded ? '1' : '0');
@@ -1205,6 +1531,13 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
         }
         trigger.setAttribute('aria-expanded', 'false');
         widget.classList.remove('is-open');
+
+        // Đảm bảo gỡ bỏ trạng thái phóng to khi đóng widget toàn màn hình
+        if (widget.classList.contains('is-expanded')) {
+          widget.classList.remove('is-expanded');
+          syncExpandedState();
+        }
+
         if (closeTimer) {
           window.clearTimeout(closeTimer);
         }
@@ -1228,6 +1561,15 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
         messages.push({ role: 'assistant', content: '...', typing: true, id: typingId });
         renderMessages();
 
+        var currentProductId = null;
+        try {
+          var urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('r') === 'chitiet') {
+            currentProductId = urlParams.get('id');
+          }
+        } catch (e) {
+        }
+
         fetch('<?= BASE_URL ?>/index.php?r=ai_chat_assistant', {
           method: 'POST',
           headers: {
@@ -1236,6 +1578,7 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
           },
           body: JSON.stringify({
             message: content,
+            current_product_id: currentProductId,
             history: messages.filter(function (item) {
               return !item.typing;
             }).map(function (item) {
@@ -1347,6 +1690,39 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
         });
       });
 
+      toggleProfileBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (profileBanner) {
+            profileBanner.hidden = !profileBanner.hidden;
+            if (!profileBanner.hidden) {
+              profileBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
+        });
+      });
+
+      if (profileRestrictedBtn) {
+        profileRestrictedBtn.addEventListener('click', function () {
+          addMessage({
+            role: 'assistant',
+            content: "Chào bạn! Bạn đã đăng nhập rồi nhưng để mình có thể đưa ra gợi ý sản phẩm phù hợp nhất, bạn hãy dành 1 phút để hoàn thành [khảo sát da tại đây](<?= BASE_URL ?>/index.php?r=khaosat) nhé. Sau khi có hồ sơ da, mình sẽ tư vấn sát nhất nhe!"
+          });
+        });
+      }
+
+      var profileChips = widget.querySelectorAll('.ai-chat-profile-chip');
+      profileChips.forEach(function (button) {
+        button.addEventListener('click', function () {
+          var category = button.getAttribute('data-category') || '';
+          if (category !== '') {
+            if (profileBanner) {
+              profileBanner.hidden = true;
+            }
+            sendMessage('Gợi ý cho tôi một vài sản phẩm phù hợp với da tôi thuộc nhóm: ' + category);
+          }
+        });
+      });
+
       document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && widget.classList.contains('is-open')) {
           closeWidget();
@@ -1359,6 +1735,15 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
           var openUrl = openProduct.getAttribute('data-url') || '';
           if (openUrl !== '') {
             window.location.href = openUrl;
+          }
+          return;
+        }
+
+        var askMore = event.target.closest('[data-ai-ask-more]');
+        if (askMore) {
+          var productName = askMore.getAttribute('data-ai-ask-more') || '';
+          if (productName !== '') {
+            sendMessage('Hãy tư vấn chi tiết hơn về thành phần và cách dùng của sản phẩm: ' + productName);
           }
           return;
         }
@@ -1387,6 +1772,73 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
         syncLayout();
       });
 
+      // ── Auto-greeting (one-time per session) ──────────────────────────────
+      var greetingKey = stream ? (stream.getAttribute('data-ai-greeting-key') || '') : '';
+
+      var buildGreetingMessage = function () {
+        var profileRaw = stream ? stream.getAttribute('data-ai-skin-profile') : '';
+        var profile = null;
+        try { profile = profileRaw ? JSON.parse(profileRaw) : null; } catch (e) {}
+
+        if (!profile || !profile.loai_da) {
+          // Khách chưa có hồ sơ da
+          return 'SkinSyntax AI chào bạn! 👋\n\n'
+            + 'Mình là **Ngọc Vi** — tư vấn viên AI của SkinSyntaxVN. '
+            + 'Bạn có thể hỏi mình về:\n'
+            + '- Thành phần mỹ phẩm & cách phối hợp an toàn\n'
+            + '- Gợi ý sản phẩm phù hợp từng loại da\n'
+            + '- Phân tích giỏ hàng & phát hiện xung đột hoạt chất\n\n'
+            + 'Để mình tư vấn sát hơn, bạn có thể [hoàn thành khảo sát da](<?= BASE_URL ?>/index.php?r=khaosat) nhé!';
+        }
+
+        var loaiDa = profile.loai_da || '';
+        var vande  = profile.van_de_da || '';
+        var tranh  = profile.thanh_phan_tranh || '';
+        var nganSach = parseInt(profile.ngan_sach || 0, 10);
+
+        var lines = [];
+        lines.push('SkinSyntax AI chào bạn! 👋');
+        lines.push('');
+        lines.push('Mình đã ghi nhận tình trạng da của bạn là **' + loaiDa + '**' + (vande ? ' với vấn đề **' + vande + '**' : '') + '.');
+
+        if (tranh) {
+          lines.push('');
+          lines.push('⚠️ **Ưu tiên tránh các thành phần:** ' + tranh + '.');
+          lines.push('Mình sẽ luôn lọc sản phẩm an toàn với danh sách này cho bạn!');
+        }
+
+        if (nganSach > 0) {
+          var fmt = new Intl.NumberFormat('vi-VN').format(nganSach);
+          lines.push('');
+          lines.push('💰 Ngân sách tham khảo của bạn: **' + fmt + ' đ**.');
+        }
+
+        lines.push('');
+        lines.push('Dưới đây là một số gợi ý nhanh — bạn muốn mình tìm sản phẩm nào hôm nay?');
+        lines.push('*(Chọn loại sản phẩm ở nút bên dưới hoặc hỏi tự do nhé!)*');
+
+        return lines.join('\n');
+      };
+
+      var injectGreeting = function () {
+        if (!greetingKey) return;
+        try {
+          if (window.sessionStorage.getItem(greetingKey) === '1') return; // already shown
+          window.sessionStorage.setItem(greetingKey, '1');
+        } catch (e) {}
+
+        var greetText = buildGreetingMessage();
+        messages.push({
+          role: 'assistant',
+          content: greetText,
+          conflicts: [],
+          products: []
+        });
+        // Don't save to message storage so it regenerates fresh each session
+        renderMessages();
+      };
+      // ── End auto-greeting ──────────────────────────────────────────────────
+
       try {
         var stored = window.sessionStorage.getItem(storageKey);
         if (stored) {
@@ -1404,6 +1856,11 @@ if ($aiChatEmail !== '' && $pdo instanceof PDO) {
       syncLayout();
       syncExpandedState();
       renderMessages();
+
+      // Inject greeting after first render if no prior history
+      if (messages.length === 0) {
+        injectGreeting();
+      }
     });
   </script>
 <?php endif; ?>

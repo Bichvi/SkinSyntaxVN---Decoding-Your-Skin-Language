@@ -79,10 +79,22 @@
 </footer>
 <?php
 global $pdo;
-if ($pdo instanceof PDO) {
+if ($pdo !== null) {
   require __DIR__ . '/../components/ai_chat_widget.php';
   require __DIR__ . '/../components/support_chat_widget.php';
 }
 ?>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!document.querySelector('[data-support-chat-widget]')) {
+      document.querySelectorAll('[data-support-chat-toggle]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          event.preventDefault();
+          window.location.href = '<?= BASE_URL ?>/index.php?r=lichsuchat';
+        });
+      });
+    }
+  });
+</script>
 </body>
 </html> 

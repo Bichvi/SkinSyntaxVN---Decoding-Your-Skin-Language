@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Huong dan xoa du lieu nguoi dung | SkinSyntax</title>
+  <style>
+    :root {
+      --bg: #eef3f1;
+      --surface: #ffffff;
+      --surface-soft: #f5faf8;
+      --text: #193029;
+      --muted: #53665f;
+      --line: #d5e3dd;
+      --accent: #2f7d67;
+      --accent-dark: #1f5d4c;
+      --shadow: 0 18px 42px rgba(25, 48, 41, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(47, 125, 103, 0.14), transparent 28%),
+        linear-gradient(180deg, #f9fcfb 0%, var(--bg) 100%);
+      line-height: 1.7;
+    }
+
+    .shell {
+      width: min(980px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 56px;
+    }
+
+    .hero,
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 34px;
+      background: linear-gradient(135deg, #dbefe7 0%, #f7fcfa 100%);
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(47, 125, 103, 0.12);
+      color: var(--accent-dark);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(32px, 5vw, 48px);
+      line-height: 1.1;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .card {
+      padding: 26px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+    }
+
+    .steps,
+    .notes {
+      display: grid;
+      gap: 12px;
+    }
+
+    .step,
+    .note {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+
+    .email-box {
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: #f3fbf7;
+      border: 1px dashed #8ab9aa;
+    }
+
+    .email-box strong,
+    a {
+      color: var(--accent-dark);
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .hero,
+      .card {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <span class="eyebrow">Data Deletion</span>
+      <h1>Huong dan xoa du lieu nguoi dung</h1>
+      <p>Nguoi dung da dang nhap vao SkinSyntax bang Facebook Login hoac tao tai khoan tren he thong co the gui yeu cau xoa du lieu ca nhan theo huong dan duoi day.</p>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <h2>Cach gui yeu cau xoa du lieu</h2>
+        <div class="steps">
+          <div class="step">Buoc 1: Gui email den <strong>vubi8266@gmail.com</strong> voi tieu de: <strong>Yeu cau xoa du lieu nguoi dung</strong>.</div>
+          <div class="step">Buoc 2: Trong noi dung email, vui long cung cap cac thong tin giup xac minh tai khoan, bao gom ho ten, email da dang ky va thong tin tai khoan lien quan neu co.</div>
+          <div class="step">Buoc 3: Neu ban dang nhap bang Facebook, hay neu ro rang ban muon xoa du lieu lien quan den Facebook Login trong he thong SkinSyntax.</div>
+          <div class="step">Buoc 4: SkinSyntax se tiep nhan, doi chieu thong tin va thuc hien xoa du lieu hoac phan hoi ket qua xu ly trong thoi gian phu hop.</div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <h2>Mau thong tin nen gui</h2>
+        <div class="email-box">
+          <p><strong>Ho ten:</strong> Nguyen Van A</p>
+          <p><strong>Email dang ky:</strong> example@gmail.com</p>
+          <p><strong>Noi dung:</strong> Toi muon xoa toan bo du lieu tai khoan va du lieu lien quan den Facebook Login tren SkinSyntax.</p>
+        </div>
+
+        <div class="notes" style="margin-top: 16px;">
+          <div class="note">Neu yeu cau chua du thong tin xac minh, SkinSyntax co the yeu cau bo sung de tranh xoa nham du lieu cua nguoi khac.</div>
+          <div class="note">Mot so du lieu giao dich co the duoc luu trong pham vi can thiet de dap ung nghia vu phap ly, doi soat hoac giai quyet tranh chap neu co.</div>
+        </div>
+
+        <div class="nav-links">
+          <a href="privacy-policy.html">Chinh sach quyen rieng tu</a>
+          <a href="terms-of-service.html">Dieu khoan dich vu</a>
+        </div>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>
