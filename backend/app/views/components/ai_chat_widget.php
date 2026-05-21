@@ -13,6 +13,30 @@ $aiChatStorageScope = trim($aiChatStorageScope, '-');
 if ($aiChatStorageScope === '') {
   $aiChatStorageScope = 'guest';
 }
+
+// Lấy hồ sơ da từ khảo sát (nếu đã đăng nhập)
+$aiChatSkinProfile = null;
+$aiChatEmail = trim((string)($aiChatUser['email'] ?? ''));
+if ($aiChatEmail !== '' && $pdo instanceof PDO) {
+  try {
+    if (class_exists('TaiKhoan')) {
+        $taiKhoanModel = new TaiKhoan($pdo);
+        $skinProfile = $taiKhoanModel->getSkinProfileByEmail($aiChatEmail);
+        $khachHang = $taiKhoanModel->getKhachHangByEmail($aiChatEmail);
+        
+        if ($skinProfile && !empty($skinProfile['loai_da'])) {
+            $aiChatSkinProfile = [
+                'loai_da'   => trim((string)$skinProfile['loai_da']),
+                'van_de_da' => trim((string)($skinProfile['van_de_da'] ?? '')),
+                'ngan_sach' => (int)($skinProfile['ngan_sach'] ?? 0),
+                'thanh_phan_tranh' => trim((string)($khachHang['thanh_phan_tranh'] ?? '')),
+            ];
+        }
+    }
+  } catch (Throwable $e) {
+    $aiChatSkinProfile = null;
+  }
+}
 ?>
 <?php if ($pdo instanceof PDO): ?>
   <div class="ai-chat-widget" data-ai-chat-widget>
@@ -54,6 +78,30 @@ if ($aiChatStorageScope === '') {
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Tìm giúp tôi vài sản phẩm phù hợp với da dầu mụn và giải thích ngắn gọn.">Da dầu mụn</button>
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Tóm tắt giúp tôi các nhóm hoạt chất treatment phổ biến và cách dùng an toàn trong routine.">Thành phần</button>
       </div>
+
+<?php if ($aiChatSkinProfile): ?>
+      <div class="ai-chat-profile-banner" data-ai-profile-banner
+           data-profile="<?= htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES) ?>">
+        <div class="ai-chat-profile-banner__head">
+          <span class="ai-chat-profile-banner__icon">✨</span>
+          <div>
+            <strong>Gợi ý theo hồ sơ da của bạn</strong>
+            <span class="ai-chat-profile-banner__tag"><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES) ?></span>
+          </div>
+        </div>
+        <p class="ai-chat-profile-banner__desc">Chọn loại sản phẩm để AI tìm ngay theo da và ngân sách của bạn:</p>
+        <div class="ai-chat-profile-banner__chips">
+          <button type="button" class="ai-chat-profile-chip" data-category="Toner / Nước Cân Bằng Da">💧 Toner</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Sữa Rửa Mặt">🧴 Sữa rửa mặt</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Tẩy Trang Mặt">🌿 Tẩy trang</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Serum / Tinh Chất">⚗️ Serum</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Kem / Gel / Dầu Dưỡng">🫧 Kem dưỡng</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Chống Nắng Da Mặt">☀️ Chống nắng</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Mặt Nạ Giấy">🎭 Mặt nạ</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Hỗ Trợ Trị Mụn">🔬 Trị mụn</button>
+        </div>
+      </div>
+<?php endif; ?>
 
       <div class="ai-chat-widget__stream" data-ai-chat-stream>
         <div class="ai-chat-widget__welcome" data-ai-chat-welcome>
@@ -539,6 +587,40 @@ if ($aiChatStorageScope === '') {
       border-color: #f3dec0;
     }
 
+    .ai-chat-widget__inline-link {
+      color: #2a6a4c;
+      text-decoration: underline;
+      font-weight: 600;
+      transition: color 0.15s ease;
+    }
+    
+    .ai-chat-widget__inline-link:hover {
+      color: #17422f;
+    }
+
+    .ai-chat-widget__meta-card-title-link {
+      text-decoration: none !important;
+      color: inherit !important;
+      display: block;
+      text-align: left;
+    }
+
+    .ai-chat-widget__meta-card-title-link:hover .ai-chat-widget__meta-card-title {
+      color: #2a6a4c;
+      text-decoration: underline;
+    }
+
+    .ai-chat-widget__meta-card-thumb-link {
+      display: block;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+
+    .ai-chat-widget__meta-card-thumb-link:hover {
+      transform: scale(1.05);
+    }
+
     .ai-chat-widget__meta-card-title {
       color: #1d3526;
       font-weight: 800;
@@ -806,6 +888,8 @@ if ($aiChatStorageScope === '') {
         safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
         // inline code
         safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // links
+        safe = safe.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="ai-chat-widget__inline-link">$1</a>');
         // hr
         safe = safe.replace(/^---$/gm, '<hr>');
         // unordered list items
@@ -924,10 +1008,10 @@ if ($aiChatStorageScope === '') {
             ? '<div class="ai-chat-widget__meta-card-image"><img src="' + escapeHtml(imageUrl) + '" alt="' + title + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + fallbackImage + '\';"></div>'
             : '<div class="ai-chat-widget__meta-card-image"><img src="' + fallbackImage + '" alt="' + title + '" loading="lazy"></div>';
           var image = detailUrl !== ''
-            ? '<button type="button" class="ai-chat-widget__meta-card-open ai-chat-widget__meta-card-thumb-link" data-ai-open-product data-url="' + escapeHtml(detailUrl) + '">' + imageCore + '</button>'
+            ? '<a href="' + escapeHtml(detailUrl) + '" class="ai-chat-widget__meta-card-thumb-link">' + imageCore + '</a>'
             : imageCore;
           var detailAction = detailUrl !== ''
-            ? '<button type="button" class="ai-chat-widget__meta-card-link ai-chat-widget__meta-card-open" data-ai-open-product data-url="' + escapeHtml(detailUrl) + '">Xem chi tiết</button>'
+            ? '<a href="' + escapeHtml(detailUrl) + '" class="ai-chat-widget__meta-card-link">Xem chi tiết</a>'
             : '';
           var toggleAction = detailUrl !== ''
             ? '<button type="button" class="ai-chat-widget__meta-card-toggle" data-ai-product-link-toggle data-target="' + escapeHtml(linkId) + '">Hiện link</button>'
@@ -936,7 +1020,7 @@ if ($aiChatStorageScope === '') {
             ? '<div class="ai-chat-widget__meta-card-url" id="' + escapeHtml(linkId) + '" hidden>' + escapeHtml(detailUrl) + '</div>'
             : '';
           var titleBlock = detailUrl !== ''
-            ? '<button type="button" class="ai-chat-widget__meta-card-open ai-chat-widget__meta-card-title-link" data-ai-open-product data-url="' + escapeHtml(detailUrl) + '"><div class="ai-chat-widget__meta-card-title">' + title + '</div></button>'
+            ? '<a href="' + escapeHtml(detailUrl) + '" class="ai-chat-widget__meta-card-title-link"><div class="ai-chat-widget__meta-card-title">' + title + '</div></a>'
             : '<div class="ai-chat-widget__meta-card-title">' + title + '</div>';
 
           return '<div class="ai-chat-widget__meta-card">'
@@ -1006,6 +1090,7 @@ if ($aiChatStorageScope === '') {
           var isUser = message.role === 'user';
           var meta = '';
           var contentPrefix = '';
+          var contentSuffix = '';
           if (!isUser) {
             if (message.fallback) {
               contentPrefix = '<div class="ai-chat-widget__fallback-note">' + escapeHtml(message.fallbackNote || 'Phản hồi dự phòng từ dữ liệu hệ thống') + '</div>';
@@ -1015,7 +1100,7 @@ if ($aiChatStorageScope === '') {
             var productCards = renderProductCards(message.products || []);
             meta += renderMetaBlock('Conflict Detection', conflictCards);
             if (productCards.length) {
-              contentPrefix += '<div class="ai-chat-widget__product-group">' + productCards.join('') + '</div>';
+              contentSuffix += '<div class="ai-chat-widget__product-group">' + productCards.join('') + '</div>';
             }
           }
 
@@ -1031,6 +1116,7 @@ if ($aiChatStorageScope === '') {
             + '<div class="ai-chat-widget__bubble-author">' + (isUser ? 'Bạn' : 'SkinSyntax AI') + '</div>'
             + contentPrefix
             + '<div class="ai-chat-widget__bubble-text">' + formattedContent + '</div>'
+            + contentSuffix
             + meta
             + '</div>'
             + '</div>'
