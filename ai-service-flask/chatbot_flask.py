@@ -1514,13 +1514,15 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             "mo_ta": p_mota,
             "id": p_id
         }
-        sql_docs.append(MockDocument(page_content=p_name, metadata=metadata, id=doc_id))
+        # Enriched textual representation for accurate cross-encoder evaluation
+        content_text = f"{p_name} {p_brand} {p_thanh_phan} {p_mota}"
+        sql_docs.append(MockDocument(page_content=content_text, metadata=metadata, id=doc_id))
 
-    # Merge ChromaDB documents and SQL documents based on ID or Name
+    # Merge ChromaDB documents and SQL documents based on ID or Name into a unified pool
     seen_ids = set()
     merged_docs = []
     
-    # Add SQL docs first to prioritize
+    # Pool SQL documents
     for doc in sql_docs:
         p_id = doc.id.replace('product_', '') if doc.id else doc.metadata.get("id", "")
         p_name = doc.metadata.get("ten_san_pham", "")
@@ -1529,7 +1531,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             seen_ids.add(key)
             merged_docs.append(doc)
             
-    # Add ChromaDB docs
+    # Pool ChromaDB documents
     for doc in docs:
         p_id = doc.id.replace('product_', '') if hasattr(doc, 'id') and doc.id else doc.metadata.get("id", "")
         p_name = doc.metadata.get("ten_san_pham", "")
@@ -1538,8 +1540,68 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             seen_ids.add(key)
             merged_docs.append(doc)
 
+    # Re-ranking & Deduplication with Current Product Exemption
+    current_doc = None
+    other_docs = []
+    
+    # Identify current product if user is viewing its detail page
+    if current_product_id:
+        curr_id_str = str(current_product_id).strip()
+        for doc in merged_docs:
+            p_id = str(doc.id.replace('product_', '') if doc.id else doc.metadata.get("id", "")).strip()
+            if p_id == curr_id_str:
+                current_doc = doc
+                print(f"[RE-RANK] Exempted current product: {doc.metadata.get('ten_san_pham')} (ID: {p_id}) to Rank 1")
+            else:
+                other_docs.append(doc)
+        
+        # If current_product_id was not found in merged_docs, fallback to all docs
+        if not current_doc:
+            other_docs = merged_docs
+    else:
+        other_docs = merged_docs
+
+    # Run Vietnamese Cross-Encoder reranker on the pooled remaining documents
+    from hybrid_search import RankedDocument
+    
+    if other_docs and pipeline and hasattr(pipeline, 'reranker') and pipeline.reranker:
+        print(f"[RE-RANK] Running cross-encoder re-ranker on {len(other_docs)} items for query: '{rewritten_query}'")
+        ranked_inputs = [
+            RankedDocument(
+                doc_id=doc.id or f"product_{doc.metadata.get('id', '')}",
+                content=doc.page_content,
+                metadata=doc.metadata
+            )
+            for doc in other_docs
+        ]
+        
+        try:
+            # Re-rank the whole pool
+            reranked_outputs = pipeline.reranker.rerank(rewritten_query, ranked_inputs, top_n=len(ranked_inputs))
+            
+            # Map back to MockDocument preserving the new order
+            reranked_docs = []
+            for rd in reranked_outputs:
+                reranked_docs.append(
+                    MockDocument(
+                        page_content=rd.content,
+                        metadata=rd.metadata,
+                        id=rd.doc_id
+                    )
+                )
+            other_docs = reranked_docs
+            print(f"[RE-RANK] Completed. Top item: {other_docs[0].metadata.get('ten_san_pham')} (ID: {other_docs[0].id})")
+        except Exception as e:
+            print(f"[RE-RANK] Error running reranker: {e}. Falling back to default order.")
+    
+    # Reassemble final list: current product always goes first, followed by re-ranked others
+    reassembled_docs = []
+    if current_doc:
+        reassembled_docs.append(current_doc)
+    reassembled_docs.extend(other_docs)
+
     # Limit the merged docs to avoid huge prompt token size and 413 Payload/Request Too Large errors
-    final_merged_docs = merged_docs if yc.is_routine else merged_docs[:int(yc.so_luong_goi_y or 3)]
+    final_merged_docs = reassembled_docs if yc.is_routine else reassembled_docs[:int(yc.so_luong_goi_y or 3)]
 
     # CRITICAL: Log search results
     if final_merged_docs:
