@@ -214,11 +214,10 @@ def get_llms():
 
     from langchain_openai import ChatOpenAI
 
-    # 2. Groq — llama-3.1-8b-instant (Ưu tiên 8B để tránh rate limit TPM 6000 của 70B)
-    # Llama-3.1-8b-instant có giới hạn TPM 30,000 và phản hồi siêu tốc dưới 1 giây.
+    # 2. Groq — llama-3.3-70b-versatile (Ưu tiên 70B cho tiếng Việt xuất sắc và khả năng suy luận/phân loại intent)
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
     if groq_key:
-        for model in ["llama-3.1-8b-instant", "llama3-8b-8192", "llama-3.3-70b-versatile"]:
+        for model in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama3-8b-8192"]:
             try:
                 groq = ChatOpenAI(
                     openai_api_key=groq_key,
@@ -289,6 +288,203 @@ def get_llms():
 
     print(f"[OK] Total LLMs ready: {len(_llms)}")
     return _llms
+
+
+def get_groq_llama_70b():
+    """
+    Trả về một đối tượng LLM được tối ưu hóa cho tiếng Việt và logic phân loại.
+    Ưu tiên Groq llama-3.3-70b-versatile, fallback sang LLM đầu tiên trong danh sách get_llms().
+    """
+    llms = get_llms()
+    # Tìm Groq llama-3.3-70b-versatile
+    for llm in llms:
+        model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
+        if "llama-3.3-70b-versatile" in model_name.lower():
+            return llm
+    # Nếu không tìm thấy, trả về LLM đầu tiên khả dụng
+    if llms:
+        return llms[0]
+    return None
+
+
+def contextualize_query(message: str, history_str: str, llm) -> str:
+    """
+    Sử dụng LLM để viết lại câu hỏi của khách hàng, tích hợp lịch sử trò chuyện để tạo ra một câu hỏi độc lập, đầy đủ nghĩa.
+    Ví dụ:
+      - Lịch sử: "tinh chất retinol là gì"
+      - Khách: "sử dụng thế nào"
+      - Trả về: "hướng dẫn sử dụng tinh chất retinol"
+    """
+    if not history_str or not llm:
+        return message
+        
+    from langchain_core.messages import HumanMessage
+    prompt = f"""Dựa trên lịch sử trò chuyện dưới đây và câu hỏi mới nhất của khách hàng, hãy viết lại câu hỏi mới nhất này thành một câu hỏi độc lập, đầy đủ nghĩa, rõ ràng, không bị phụ thuộc vào ngữ cảnh trước đó.
+Mục tiêu là tạo ra một câu truy vấn tìm kiếm sản phẩm hoặc kiến thức tốt nhất.
+CHỈ trả về câu hỏi viết lại, KHÔNG giải thích, KHÔNG thêm bất kỳ từ nào khác. Nếu không cần viết lại, hãy trả lại câu hỏi gốc.
+
+Lịch sử trò chuyện:
+{history_str}
+
+Câu hỏi mới nhất: {message}
+
+Câu hỏi độc lập viết lại:"""
+    try:
+        response = llm.invoke([HumanMessage(content=prompt)])
+        rewritten = (response.content or "").strip()
+        if rewritten:
+            # Clean up if there are any surrounding quotes
+            rewritten = rewritten.strip('"').strip("'")
+            print(f"[CONTEXTUALIZE] Original: '{message}' -> Rewritten: '{rewritten}'")
+            return rewritten
+    except Exception as e:
+        print(f"[WARN] Contextualize query failed: {e}")
+    return message
+
+
+def classify_intent(query: str, llm) -> tuple[str, str | None]:
+    """
+    Phân loại ý định của câu hỏi đã được viết lại thành 1 trong 3 nhóm:
+      1. PRODUCT_INQUIRY: Hỏi mua, tìm kiếm, tư vấn sản phẩm cụ thể có trong shop.
+      2. COSMETIC_KNOWLEDGE_OUT_OF_DB: Hỏi về kiến thức hoạt chất, thành phần hóa học không có trực tiếp trong database sản phẩm nhưng liên quan đến skincare.
+      3. GENERAL_CONVERSATION: Chào hỏi, chitchat ("chào shop", "ráng đi"), hoặc câu hỏi ngoài ngành hoàn toàn.
+
+    Đồng thời, nếu câu hỏi có chứa thành phần/hoạt chất mỹ phẩm nổi bật, hãy trích xuất hoạt chất đó.
+
+    Trả về tuple: (intent, ingredient)
+    """
+    if not llm:
+        return "PRODUCT_INQUIRY", None
+
+    from langchain_core.messages import HumanMessage
+    prompt = f"""Phân tích câu hỏi sau đây của khách hàng và phân loại ý định (intent) của họ vào một trong ba nhóm duy nhất:
+1. "PRODUCT_INQUIRY": Tìm kiếm sản phẩm, hỏi mua, tư vấn chọn sản phẩm cụ thể mà cửa hàng thường bán (Ví dụ: "tìm kcn cho da dầu", "có sữa rửa mặt nào trị mụn", "giới thiệu sản phẩm").
+2. "COSMETIC_KNOWLEDGE_OUT_OF_DB": Hỏi định nghĩa, cơ chế hoạt động, tác dụng của các hoạt chất mỹ phẩm (Ví dụ: "retinol là gì", "niacinamide có tác dụng gì", "BHA là gì").
+3. "GENERAL_CONVERSATION": Chào hỏi ("chào shop"), chitchat tâm sự ("ráng đi", "cố lên"), hoặc câu hỏi không liên quan đến mỹ phẩm (Ví dụ: "giá vàng hôm nay", "ai là tổng thống").
+
+Đồng thời, trích xuất "ingredient" (hoạt chất mỹ phẩm chính được nhắc tới như "retinol", "niacinamide", "BHA", "AHA", "vitamin C", "hyaluronic acid"...). Nếu không có hoạt chất nào, hãy trả về null.
+
+CHỈ trả về một chuỗi JSON thuần túy có dạng:
+{{
+  "intent": "PRODUCT_INQUIRY" / "COSMETIC_KNOWLEDGE_OUT_OF_DB" / "GENERAL_CONVERSATION",
+  "ingredient": "tên hoạt chất hoặc null"
+}}
+
+Câu hỏi: {query}"""
+    try:
+        response = llm.invoke([HumanMessage(content=prompt)])
+        text = (response.content or "").strip()
+        data = _extract_json_from_text(text)
+        if data and "intent" in data:
+            intent = data["intent"]
+            ingredient = data.get("ingredient")
+            # Normalize intent
+            if intent not in ("PRODUCT_INQUIRY", "COSMETIC_KNOWLEDGE_OUT_OF_DB", "GENERAL_CONVERSATION"):
+                intent = "PRODUCT_INQUIRY"
+            if ingredient and ingredient.lower() in ("null", "none"):
+                ingredient = None
+            print(f"[CLASSIFY] Query: '{query}' -> Intent: {intent} | Ingredient: {ingredient}")
+            return intent, ingredient
+    except Exception as e:
+        print(f"[WARN] Classify intent failed: {e}")
+    
+    # Fallback rule-based if LLM fails
+    query_lower = query.lower()
+    if any(k in query_lower for k in ["chào", "hello", "hi", "cảm ơn", "cám ơn", "tạm biệt", "bye", "ráng đi", "cố lên", "admin", "shop ơi"]):
+        return "GENERAL_CONVERSATION", None
+    if any(k in query_lower for k in ["là gì", "tác dụng của", "công dụng của", "cơ chế của"]) and any(k in query_lower for k in ["retinol", "niacinamide", "bha", "aha", "vitamin c", "hyaluronic", "collagen", "peel"]):
+        # Extract ingredient
+        for ing in ["retinol", "niacinamide", "bha", "aha", "vitamin c", "hyaluronic acid", "collagen"]:
+            if ing in query_lower:
+                return "COSMETIC_KNOWLEDGE_OUT_OF_DB", ing
+        return "COSMETIC_KNOWLEDGE_OUT_OF_DB", None
+    return "PRODUCT_INQUIRY", None
+
+
+GENERAL_CONVERSATION_SYSTEM_PROMPT = """
+╔══════════════════════════════════════════════════════════╗
+║     SKINSYNTAXVN — TƯ VẤN VIÊN THÂN THIỆN SKINSYNTAX     ║
+║            HỖ TRỢ GIẢI ĐÁP & GIỚI THIỆU SHOP             ║
+╚══════════════════════════════════════════════════════════╝
+
+Bạn là Trợ lý AI tư vấn thân thiện của SkinSyntaxVN. 
+Nhiệm vụ của bạn là:
+1. Trả lời câu hỏi chitchat, chào hỏi hoặc câu hỏi ngoài ngành của khách hàng một cách cực kỳ lịch sự, tự nhiên, vui vẻ, mang tính kết nối cao.
+2. Nếu câu hỏi yêu cầu thông tin thực tế từ web (Ví dụ: giá vàng, thời tiết, sự kiện...), hãy dựa vào <thong_tin_web> để trả lời chính xác, ngắn gọn.
+3. Ở cuối câu trả lời, hãy khéo léo giới thiệu các sản phẩm bán chạy/nổi bật tại SkinSyntaxVN để "kéo" khách hàng quan tâm đến việc chăm sóc da hoặc mua sắm (Tuyệt đối không gượng ép).
+
+### LỊCH SỬ TRÒ CHUYỆN (CONVERSATION HISTORY)
+<lich_su_tro_chuyen>
+{history}
+</lich_su_tro_chuyen>
+
+### THÔNG TIN TỪ WEB (Nếu có)
+<thong_tin_web>
+{web_results}
+</thong_tin_web>
+
+### DANH SÁCH SẢN PHẨM NỔI BẬT ĐƯỢC ĐỀ XUẤT (SEARCH RESULTS)
+Dưới đây là danh sách sản phẩm nổi bật thực tế từ cửa hàng để bạn giới thiệu cho khách:
+<san_pham_goi_y>
+{search_results}
+</san_pham_goi_y>
+
+Câu hỏi của khách hàng:
+<cau_hoi_khach>
+{user_question}
+</cau_hoi_khach>
+
+### CHỈ THỊ VĂN PHONG VÀ ĐỊNH DẠNG:
+- Trả lời thân thiện, xưng "mình" hoặc "SkinSyntax" và gọi khách là "bạn".
+- KHÔNG lạm dụng emoji spam, giữ văn phong giống người tư vấn thật.
+- BẮT BUỘC: Khi giới thiệu sản phẩm, hãy COPY NGUYÊN VĂN liên kết Markdown click được từ trường "Tên (dạng link Markdown)" trong <san_pham_goi_y> (Ví dụ: **[Tên sản phẩm](index.php?r=chitiet&id=X)**). KHÔNG tự chế link.
+- KHÔNG dùng danh sách đánh số máy móc. Hãy viết tự nhiên, lồng ghép giá khuyến mãi và tiền tiết kiệm sinh động.
+- Trình bày mạch lạc, ngắn gọn.
+"""
+
+
+COSMETIC_KNOWLEDGE_SYSTEM_PROMPT = """
+╔══════════════════════════════════════════════════════════╗
+║       SKINSYNTAXVN — CHUYÊN GIA HOẠT CHẤT SKINSYNTAX      ║
+║            GIẢI ĐÁP HOẠT CHẤT & GỢI Ý MỸ PHẨM            ║
+╚══════════════════════════════════════════════════════════╝
+
+Bạn là Bác sĩ da liễu ảo / Chuyên gia thành phần mỹ phẩm của SkinSyntaxVN.
+Khách hàng đang hỏi một câu hỏi kiến thức về hoạt chất dưỡng da hoặc thành phần skincare (Ví dụ: retinol, niacinamide, BHA...) vốn không được mô tả chi tiết hoàn toàn trong database sản phẩm nội bộ của shop.
+
+Nhiệm vụ của bạn:
+1. Giải thích cặn kẽ, khoa học nhưng dễ hiểu về hoạt chất này (định nghĩa, công dụng, cách dùng, lưu ý khi kết hợp) dựa vào <thong_tin_web> và kiến thức chuyên sâu của bạn.
+2. Ngay sau đó, nhiệt tình "khoe" với khách rằng SkinSyntaxVN đang có sẵn các sản phẩm cực hot chứa hoạt chất này.
+3. Phân tích chi tiết các sản phẩm đó để khách thấy phù hợp và muốn click mua.
+
+### LỊCH SỬ TRÒ CHUYỆN (CONVERSATION HISTORY)
+<lich_su_tro_chuyen>
+{history}
+</lich_su_tro_chuyen>
+
+### THÔNG TIN TỪ WEB VỀ HOẠT CHẤT
+<thong_tin_web>
+{web_results}
+</thong_tin_web>
+
+### DANH SÁCH SẢN PHẨM CHỨA HOẠT CHẤT THỰC TẾ TRONG HỆ THỐNG
+Dưới đây là các sản phẩm thực tế chứa hoạt chất này có trong hệ thống của shop:
+<san_pham_goi_y>
+{search_results}
+</san_pham_goi_y>
+
+Câu hỏi của khách hàng:
+<cau_hoi_khach>
+{user_question}
+</cau_hoi_khach>
+
+### CHỈ THỊ VĂN PHONG VÀ RÀNG BUỘT TUYỆT ĐỐI:
+- Trả lời cực kỳ thân thiện, chuyên môn sâu nhưng dễ thương.
+- KHÔNG lạm dụng emoji spam (chỉ 1-2 cái tinh tế).
+- BẮT BUỘC: Khi giới thiệu sản phẩm, hãy COPY NGUYÊN VĂN liên kết Markdown click được từ trường "Tên (dạng link Markdown)" trong <san_pham_goi_y> (Ví dụ: **[Tên sản phẩm](index.php?r=chitiet&id=X)**). KHÔNG tự chế link.
+- KHÔNG dùng danh sách đánh số máy móc. Trình bày mỗi sản phẩm dưới dạng các đoạn văn tự nhiên cách nhau 1 dòng trống.
+- Lồng ghép tâm lý giá ưu đãi, tiền tiết kiệm và dặn dò hướng dẫn sử dụng kỹ lượng cho từng sản phẩm.
+"""
 
 
 # ─── Pydantic Schema ─────────────────────────────────────────────────────────
@@ -823,6 +1019,7 @@ Câu hỏi của khách hàng:
 {user_question}
 </cau_hoi_khach>
 
+lưu ý: nếu khách hỏi quá kĩ về sản phẩm, nhãn hàng mà không có trong database thì bạn có thể tra trên internet search rồi trả lời khách hàng, sau đó mồi chèo khách hàng đưa khách hàng 1 vài sản phẩm liên quan được đánh giá cao ở shop mình 
 ### 5. CHỈ THỊ VĂN PHONG VÀ ĐỊNH DẠNG (STYLE & TONE)
 
 Để tạo niềm tin tuyệt đối và mang lại cảm giác chân thật nhất, bạn phải tuân thức nghiêm ngặt các quy tắc viết sau:
@@ -1088,6 +1285,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     llms = get_llms()
     vs = get_vectorstore()
     pipeline = get_hybrid_pipeline()
+    classifier_llm = get_groq_llama_70b()
 
     # 1. Tích hợp Rich Context
     skin_type = None
@@ -1165,29 +1363,31 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         
     rich_context = "\n".join(rich_context_parts) if rich_context_parts else "Không có thông tin hồ sơ bổ sung."
 
-    # 2. Phân tích yêu cầu (Fast rule-based classifier first, then fallback to LLM)
-    yc = rule_based_parse(message)
+    # 2. Câu hỏi độc lập và phân loại ý định (Contextualization & Intent Recognition)
+    rewritten_query = contextualize_query(message, chat_history_str, classifier_llm)
+    intent, ingredient = classify_intent(rewritten_query, classifier_llm)
+
+    # 3. Phân tích yêu cầu có cấu trúc từ rewritten_query
+    yc = rule_based_parse(rewritten_query)
     if yc:
-        print(f"[RULE_BASED] Speed classifier matched: da={yc.loai_da} | sp={yc.loai_san_pham}")
+        print(f"[RULE_BASED] Speed classifier matched on rewritten query: da={yc.loai_da} | sp={yc.loai_san_pham}")
     else:
-        print("[RULE_BASED] No rule matched. Falling back to LLM parse...")
-        yc = parse_yeu_cau(message, llms)
+        print("[RULE_BASED] No rule matched on rewritten query. Falling back to LLM parse...")
+        yc = parse_yeu_cau(rewritten_query, llms)
         
     # Override skin type if provided in user profile context
     if skin_type and skin_type not in ("Unknown", None):
         yc.loai_da = skin_type
 
+    print(f"[PIPELINE] Rewritten: '{rewritten_query}' | Intent: {intent} | Ingredient: {ingredient}")
     print(f"[PARSE] da={yc.loai_da} | sp={yc.loai_san_pham} | routine={yc.is_routine} | "
           f"gia={yc.muc_gia} | query={yc.tu_khoa_ngu_nghia[:60]}")
 
-    # 3. Tìm kiếm ChromaDB (multi-stage fallback - NGẶT NGẶT LUÔN CÓ KẾT QUẢ)
-    query = yc.tu_khoa_ngu_nghia or message
+    # 4. Routing & Retrieval logic based on Intent
     docs = []
     k = min(max(int(yc.so_luong_goi_y or 3), 3), 10)
-    use_web_search = False
     web_results_text = ""
-
-    print(f"[SEARCH] Query: {query[:80]} | k={k}")
+    prompt = None
 
     def ranked_to_docs(ranked_docs: list) -> list:
         docs_local = []
@@ -1201,10 +1401,10 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             )
         return docs_local
 
-    def hybrid_search_with_filter(filter_dict: dict | None, top_n: int) -> list:
+    def hybrid_search_with_filter(filter_dict: dict | None, top_n: int, custom_query: str = None) -> list:
         k_total = max(top_n * 2, 6)
         ranked_docs, _ = pipeline.search(
-            query=query,
+            query=custom_query or rewritten_query,
             k_total=k_total,
             top_n=top_n,
             filters=filter_dict,
@@ -1212,63 +1412,80 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         )
         return ranked_to_docs(ranked_docs)
 
-    use_web_search = _should_use_web_search(message, yc)
-    if use_web_search:
-        print("[WEB] Out-of-domain query detected, using Tavily web search")
-        web_results_text = _format_web_results(_query_web(message))
-        docs = hybrid_search_with_filter(None, top_n=min(k, 3))
+    if intent == "GENERAL_CONVERSATION":
+        print("[ROUTE] GENERAL_CONVERSATION")
+        # Check if we need a web search for general knowledge (e.g. gold prices, general questions)
+        is_simple_chitchat = any(k in rewritten_query.lower() for k in ["chào", "hello", "hi", "cảm ơn", "cám ơn", "tạm biệt", "bye", "ráng đi", "cố lên", "admin", "shop ơi"])
+        if not is_simple_chitchat:
+            print("[WEB] Fetching web search for general knowledge...")
+            web_results_text = _format_web_results(_query_web(rewritten_query))
+        
+        # Retrieve featured/popular products to pitch at the end
+        docs = hybrid_search_with_filter(None, top_n=3, custom_query="sản phẩm nổi bật nhiều lượt đánh giá cao bán chạy")
 
-    if not use_web_search and yc.is_routine:
-        print("[ROUTINE] Skincare routine requested → retrieving step-by-step products")
-        routine_categories = [
-            ("Tẩy Trang Mặt", "Tẩy Trang"),
-            ("Sữa Rửa Mặt", "Sữa Rửa Mặt"),
-            ("Toner / Nước Cân Bằng Da", "Toner"),
-            ("Serum / Tinh Chất", "Serum"),
-            ("Kem / Gel / Dầu Dưỡng", "Kem Dưỡng"),
-            ("Chống Nắng Da Mặt", "Kem Chống Nắng")
-        ]
-        for cat_name, friendly_name in routine_categories:
-            # Stage 1: Filter by skin type + category
-            cat_conds = []
-            if yc.loai_da and yc.loai_da not in ("Unknown", None):
-                cat_conds.append({"loai_da": {"$eq": yc.loai_da}})
-            cat_conds.append({"loai_san_pham": {"$eq": cat_name}})
-            
-            bo_loc_cat = cat_conds[0] if len(cat_conds) == 1 else {"$and": cat_conds}
-            
-            # Use top_n=1 for routine to avoid huge payload size and retrieve the best single matching product
-            cat_docs = hybrid_search_with_filter(bo_loc_cat, top_n=1)
-            if not cat_docs:
-                # Stage 2: Just category
-                cat_docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": cat_name}}, top_n=1)
-            if cat_docs:
-                docs.extend(cat_docs)
-    elif not use_web_search:
-        # Stage 1: Full filter (loai_da + loai_san_pham + gia + xuat_xu)
-        bo_loc = build_filter(yc)
-        if bo_loc:
-            docs = hybrid_search_with_filter(bo_loc, top_n=k)
-            print(f"[SEARCH] Stage 1 (full filter): {len(docs)} docs")
+    elif intent == "COSMETIC_KNOWLEDGE_OUT_OF_DB":
+        print("[ROUTE] COSMETIC_KNOWLEDGE_OUT_OF_DB")
+        # Run Tavily search to fetch the ingredient definition and skincare knowledge
+        web_results_text = _format_web_results(_query_web(rewritten_query))
         
-        # Stage 2: Category only
-        if not docs and yc.loai_san_pham:
-            docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": yc.loai_san_pham}}, top_n=k)
-            print(f"[SEARCH] Stage 2 (category): {len(docs)} docs")
-        
-        # Stage 3: Skin type only
-        if not docs and yc.loai_da and yc.loai_da != "Unknown":
-            docs = hybrid_search_with_filter({"loai_da": {"$eq": yc.loai_da}}, top_n=k)
-            print(f"[SEARCH] Stage 3 (skin type): {len(docs)} docs")
-        
-        # Stage 4: Pure semantic search (NO FILTER)
+        # Search the database for products containing the specific ingredient or matching rewritten_query
+        search_term = ingredient if ingredient else rewritten_query
+        print(f"[SEARCH] Querying DB for ingredient-related products with: '{search_term}'")
+        docs = hybrid_search_with_filter(None, top_n=3, custom_query=search_term)
         if not docs:
-            docs = hybrid_search_with_filter(None, top_n=k)
-            print(f"[SEARCH] Stage 4 (semantic only): {len(docs)} docs")
-    
+            # Fallback to general popular products
+            docs = hybrid_search_with_filter(None, top_n=3, custom_query="sản phẩm nổi bật bán chạy")
+
+    else:  # PRODUCT_INQUIRY
+        print("[ROUTE] PRODUCT_INQUIRY")
+        if yc.is_routine:
+            print("[ROUTINE] Skincare routine requested → retrieving step-by-step products")
+            routine_categories = [
+                ("Tẩy Trang Mặt", "Tẩy Trang"),
+                ("Sữa Rửa Mặt", "Sữa Rửa Mặt"),
+                ("Toner / Nước Cân Bằng Da", "Toner"),
+                ("Serum / Tinh Chất", "Serum"),
+                ("Kem / Gel / Dầu Dưỡng", "Kem Dưỡng"),
+                ("Chống Nắng Da Mặt", "Kem Chống Nắng")
+            ]
+            for cat_name, friendly_name in routine_categories:
+                cat_conds = []
+                if yc.loai_da and yc.loai_da not in ("Unknown", None):
+                    cat_conds.append({"loai_da": {"$eq": yc.loai_da}})
+                cat_conds.append({"loai_san_pham": {"$eq": cat_name}})
+                
+                bo_loc_cat = cat_conds[0] if len(cat_conds) == 1 else {"$and": cat_conds}
+                
+                cat_docs = hybrid_search_with_filter(bo_loc_cat, top_n=1)
+                if not cat_docs:
+                    cat_docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": cat_name}}, top_n=1)
+                if cat_docs:
+                    docs.extend(cat_docs)
+        else:
+            # Stage 1: Full filter (loai_da + loai_san_pham + gia + xuat_xu)
+            bo_loc = build_filter(yc)
+            if bo_loc:
+                docs = hybrid_search_with_filter(bo_loc, top_n=k)
+                print(f"[SEARCH] Stage 1 (full filter): {len(docs)} docs")
+            
+            # Stage 2: Category only
+            if not docs and yc.loai_san_pham:
+                docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": yc.loai_san_pham}}, top_n=k)
+                print(f"[SEARCH] Stage 2 (category): {len(docs)} docs")
+            
+            # Stage 3: Skin type only
+            if not docs and yc.loai_da and yc.loai_da != "Unknown":
+                docs = hybrid_search_with_filter({"loai_da": {"$eq": yc.loai_da}}, top_n=k)
+                print(f"[SEARCH] Stage 3 (skin type): {len(docs)} docs")
+            
+            # Stage 4: Pure semantic search (NO FILTER)
+            if not docs:
+                docs = hybrid_search_with_filter(None, top_n=k)
+                print(f"[SEARCH] Stage 4 (semantic only): {len(docs)} docs")
+
     print(f"[SEARCH] FINAL RESULT: {len(docs)} documents found")
 
-    # 4. Hợp nhất với các sản phẩm lấy từ SQL database của PHP (Hybrid merge)
+    # 5. Hợp nhất với các sản phẩm lấy từ SQL database của PHP (Hybrid merge)
     sql_docs = []
     for item in retrieved_products_sql:
         if not isinstance(item, dict):
@@ -1321,8 +1538,6 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             seen_ids.add(key)
             merged_docs.append(doc)
 
-    # 5. Generate câu trả lời với đầy đủ lịch sử, ngữ cảnh hồ sơ khách hàng, và sản phẩm RAG
-    
     # Limit the merged docs to avoid huge prompt token size and 413 Payload/Request Too Large errors
     final_merged_docs = merged_docs if yc.is_routine else merged_docs[:int(yc.so_luong_goi_y or 3)]
 
@@ -1333,18 +1548,26 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             print(f"  - {doc.metadata.get('ten_san_pham', 'N/A')}")
     else:
         print(f"[WARN] NO PRODUCTS FOUND - will use fallback message")
-    
-    if use_web_search:
-        prompt = WEB_SYSTEM_PROMPT \
-            .replace("{web_results}", web_results_text) \
+
+    # 6. Apply system prompts based on Intent
+    if intent == "GENERAL_CONVERSATION":
+        prompt = GENERAL_CONVERSATION_SYSTEM_PROMPT \
+            .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
+            .replace("{web_results}", web_results_text or "Không có dữ liệu bổ sung.") \
             .replace("{search_results}", format_search_results(final_merged_docs)) \
             .replace("{user_question}", message)
-    else:
+    elif intent == "COSMETIC_KNOWLEDGE_OUT_OF_DB":
+        prompt = COSMETIC_KNOWLEDGE_SYSTEM_PROMPT \
+            .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
+            .replace("{web_results}", web_results_text or "Không có dữ liệu bổ sung.") \
+            .replace("{search_results}", format_search_results(final_merged_docs)) \
+            .replace("{user_question}", message)
+    else:  # PRODUCT_INQUIRY
         prompt = SYSTEM_PROMPT \
             .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
             .replace("{rich_context}", rich_context) \
             .replace("{search_results}", format_search_results(final_merged_docs)) \
-            .replace("{user_question}", message)
+            .replace("{user_question}", rewritten_query)
 
     answer = None
     for llm in llms:
