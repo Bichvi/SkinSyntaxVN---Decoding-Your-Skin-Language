@@ -575,6 +575,36 @@ graph TD
 - **Tái khởi động Flask Service:** Restart tiến trình Python Flask trên cổng `5001`. Toàn bộ 4 LLMs (Gemini 2.5 Flash, Groq 8B, Zhipu GLM, OpenRouter) đều được xác thực và sẵn sàng hoạt động ở trạng thái kết nối hoàn hảo.
 - **Kết quả Kiểm thử:** Chạy thử nghiệm live với kịch bản da dầu mụn viêm sưng đỏ. Phản hồi trả về của AI đính kèm chính xác 3 sản phẩm kiềm dầu thực tế của shop: *Tinh chất bí đao Cocoon*, *Kem dưỡng se khít lỗ chân lông Bioderma*, và *Kem chống nắng Eucerin kiềm dầu* trong văn bản, hoàn toàn trùng khớp 100% với danh sách thẻ sản phẩm hiển thị trong Widget.
 
+---
 
+## 15. Khắc phục lỗi `time` chưa định nghĩa, Lỗi BaseModel Pydantic Cooldown & Đồng bộ hóa Hệ thống Kiểm thử Toàn diện (24/05/2026)
+- **Mục tiêu:** Giải quyết triệt để lỗi kết nối AI Service sập ngầm (HTTP 500) khi xoay vòng API Keys, sửa lỗi phân tích ký tự đặc biệt có dấu tiếng Việt bị lỗi CP1252 trên Windows, và cải tiến giao diện không bị khuất chữ ở UI chat.
 
+---
 
+### 15.1 Khắc phục lỗi thiếu import `time` (NameError)
+- **Sự cố:** Khi bổ sung cơ chế cool-down (đợi 5 phút) để tự động ngắt kết nối các API keys bị cạn kiệt hạn mức (rate-limit / quota), mã nguồn Python của Flask Service có gọi `time.time()` để gán mốc thời gian chờ. Tuy nhiên, thư viện `time` của hệ thống lại chưa được import ở đầu file `chatbot_flask.py`, dẫn đến lỗi chết ngầm `NameError: name 'time' is not defined` và trả về mã trạng thái HTTP 500.
+- **Khắc phục:** Import module `time` thành công ở đầu file [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_flask.py).
+
+---
+
+### 15.2 Giải quyết lỗi BaseModel Pydantic Cooldown trên các LangChain Chat Models
+- **Sự cố:** Các langchain chat model kế thừa từ Pydantic BaseModel (như `ChatGoogleGenerativeAI`, `ChatOpenAI`) không cho phép gán động/tự do các thuộc tính ngoài schema (lỗi `\"ChatGoogleGenerativeAI\" object has no field \"cooldown_until\"`), dẫn đến sập API `/api/chat` khi có key bị rate-limit.
+- **Khắc phục:** Thiết lập bộ lưu trữ cooldown an toàn ở dạng Dict global `LLM_COOLDOWNS = {}` và hai hàm helper `_get_llm_cooldown(llm)` và `_set_llm_cooldown(llm, duration)` định danh bằng `id(llm)`. Giúp loại bỏ hoàn toàn việc gán động vào Pydantic models.
+
+---
+
+### 15.3 Sửa đổi hệ thống kiểm thử tự động tránh lỗi CP1252 (PYTHONUTF8)
+- **Sự cố:** Chạy kiểm thử tự động `run_comprehensive_tests.py` trên Windows mặc định giải mã CP1252 gây lỗi giải mã ký tự đặc biệt có dấu (ví dụ: `tổng chi phí ước tính` thành `t?ng chi ph ??c tnh`), làm rớt các check kiểm thử.
+- **Khắc phục:** Bổ sung cấu hình ép mã hóa UTF-8 môi trường (`os.environ["PYTHONUTF8"] = "1"`) ở đầu file [run_comprehensive_tests.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/run_comprehensive_tests.py).
+
+---
+
+### 15.4 Khắc phục z-index / layout collapsible summary trong Widget chat
+- **Sự cố:** Các thẻ sản phẩm đề xuất ở giao diện Chatbot bị ẩn, khuất chữ hoặc quá dài gây chèn ép không gian hiển thị.
+- **Khắc phục:** Thiết kế khối collapsible summary động sử dụng liên kết `[Xem thêm]` và `[Thu gọn]` trong [ai_chat_widget.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/backend/app/views/components/ai_chat_widget.php). Khi click, mô tả đầy đủ sẽ hiển thị/thu gọn mượt mà.
+
+---
+
+### 15.5 Đồng bộ Git & Push lên branch `vivi`
+- Pushed sạch sẽ, an toàn lên origin `vivi` branch mà không hề include bất kỳ file test nào (`run_comprehensive_tests.py`, `test_report.md`, `scratch/`), tuân thủ nghiêm ngặt chỉ thị của người dùng.
