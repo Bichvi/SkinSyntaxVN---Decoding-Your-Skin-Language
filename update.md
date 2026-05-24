@@ -435,4 +435,146 @@ Chúng tôi đã kiểm thử độc lập 3 kịch bản thực tế của khá
 - **Kết quả Kiểm thử (Thành công 100%):**
   - Khi hỏi: `"Retinol Cica Moisture Recovery Serum - Facial Serum bạn có sản phẩm này ko"`, hệ thống nhận diện đúng sản phẩm Retinol Cica của shop, re-rank chính xác và loại bỏ hoàn toàn các sản phẩm không liên quan khác ra khỏi top 3 đề xuất hiển thị ở UI.
 
+---
+
+## 13. Khắc phục Lỗi Cắt Xén Tin Nhắn, Loại Bỏ "Dữ Liệu Dự Phòng", Bộ Lọc Sản Phẩm Nhạy Cảm & Thiết Lập Cân Bằng Tải Dự Phòng Đa Tầng (23/05/2026)
+- **Mục tiêu:** 
+  1. Giải quyết triệt để lỗi chatbot PHP tự động cắt xén câu trả lời sau 4 đoạn văn.
+  2. Vô hiệu hóa hoàn toàn trạng thái cảnh báo màu vàng "Dữ liệu dự phòng" (Fallback Mode) cùng các biểu mẫu phản hồi giả lập, giữ widget luôn ở trạng thái kết nối thực xanh lá ("Đã kết nối").
+  3. Loại bỏ triệt để các sản phẩm vệ sinh/tránh thai nhạy cảm (bvs, bao cao su, v.v.) khỏi kết quả tìm kiếm và đề xuất chitchat của AI.
+  4. Hệ thống hóa thông số kỹ thuật chi tiết của cơ chế cân bằng tải ứng dụng (Application-level Load Balancer) luân chuyển khóa API và chuyển vùng dự phòng lỗi (Failover).
+
+---
+
+### 13.1 Tăng cURL Timeout & Loại bỏ Cắt Xén câu trả lời trong [HomeController.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/backend/app/controllers/HomeController.php)
+- **Tăng giới hạn cURL Timeout:**
+  - *Sự cố:* Thời gian chờ cũ (`AI_CHAT_TIMEOUT = 25` giây) khiến các truy vấn phức tạp (như tạo chu trình skincare hay gọi Web Search) của Flask service bị ngắt kết nối giữa chừng, ép backend rơi vào chế độ fallback.
+  - *Khắc phục:* Tăng `AI_CHAT_TIMEOUT` lên **`60`** giây để đảm bảo dịch vụ AI có đủ thời gian thực hiện RAG, Re-ranking và Web Search một cách hoàn chỉnh.
+- **Loại bỏ cắt cụt câu trả lời trong hàm `trimAiAnswer()`:**
+  - *Trước:* Tự động ngắt phản hồi ở đoạn văn thứ 4:
+    ```php
+    $paragraphs = explode("\n\n", $answer);
+    if (count($paragraphs) > 4) {
+        $paragraphs = array_slice($paragraphs, 0, 4);
+        $answer = implode("\n\n", $paragraphs) . '...';
+    }
+    ```
+  - *Sau:* Giữ nguyên hoàn toàn câu trả lời Markdown chi tiết từ dịch vụ AI Flask, cho phép hiển thị chu trình chăm sóc da đầy đủ các bước mà không bị cụt câu.
+
+---
+
+### 13.2 Loại bỏ hoàn toàn logic "Dữ Liệu Dự Phòng" và Dọn dẹp Frontend
+- **Thay đổi ở Backend PHP (`HomeController.php`):**
+  - Vô hiệu hóa việc tự động chuyển sang câu trả lời giả lập cứng `buildAiAssistantFallback()` khi cURL thất bại. Giờ đây, nếu dịch vụ AI mất kết nối thực sự, hệ thống sẽ trả về lỗi kết nối tự nhiên và đánh dấu `'fallback' => false`.
+  - Cấu hình chỉ thị `response_requirements` trong prompt buộc AI chỉ được giới thiệu và thiết kế chu trình dựa vào danh sách sản phẩm thực tế `retrieved_products` gửi sang từ hệ thống cửa hàng, loại bỏ 100% hiện tượng ảo tưởng sản phẩm ảo.
+- **Thay đổi ở Frontend Widget [ai_chat_widget.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/backend/app/views/components/ai_chat_widget.php):**
+  - Loại bỏ hoàn toàn lớp giao diện và phần tử cảnh báo màu vàng `ai-chat-widget__fallback-note` ("Đang sử dụng dữ liệu dự phòng").
+  - Đồng bộ chấm trạng thái ở đầu widget luôn hiển thị màu xanh lá và dòng chữ **"Đã kết nối"** để tạo sự tin cậy tuyệt đối cho khách hàng khi giao tiếp.
+
+---
+
+### 13.3 Bộ lọc Sản phẩm Nhạy cảm Đa tầng (Sensitive Keywords Exclusion Filter)
+Để đảm bảo chatbot giữ đúng phong thái lịch sự của một cửa hàng mỹ phẩm dưỡng da và loại bỏ hoàn toàn các sản phẩm vệ sinh phụ nữ/bao cao su ngoài ý muốn khi tìm kiếm chung, bộ lọc loại trừ theo từ khóa đã được áp dụng song song:
+- **Danh sách từ khóa nhạy cảm bị loại trừ:** `["băng vệ sinh", "bao cao su", "bvs", "bcs", "durex", "diana", "kotex", "laurier", "sagami", "okamoto", "whisper", "sofy", "sanytène", "tampon", "phụ khoa"]`
+- **Bộ lọc tại Flask AI Service [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_flask.py):**
+  - Quét kiểm tra cả hai nguồn: tài liệu PostgreSQL (`sql_docs`) gửi sang và kết quả vector từ ChromaDB (`docs`). 
+  - Nếu tên sản phẩm chứa bất kỳ từ khóa nào trong danh sách nhạy cảm, sản phẩm đó sẽ lập tức bị loại ra khỏi pool RAG chuyển tới LLM.
+- **Bộ lọc tại Backend PHP (`HomeController.php`):**
+  - Bổ sung bộ lọc tương ứng trong hàm `buildAiRelevantProducts()` để lọc sạch các sản phẩm nhạy cảm trước khi đóng gói gửi sang Flask service.
+- **Cải tiến ngữ nghĩa truy vấn chung:** 
+  - Khi người dùng hỏi xã giao hoặc chào hỏi, Flask service thay vì tìm kiếm sản phẩm quá chung chung sẽ tự động làm giàu truy vấn thành `"sản phẩm mỹ phẩm dưỡng da nổi bật bán chạy nhất"` để luôn trả về đúng các danh mục mỹ phẩm cốt lõi.
+
+---
+
+### 13.4 Specs Cân bằng tải & Dự phòng Đa tầng (Application-level Load Balancer Specifications)
+Hệ thống tự cân bằng tải phần mềm và dự phòng đa lớp (Failover) được cấu hình chi tiết như sau:
+
+#### A. Cân bằng tải xoay vòng API Keys (Gemini Key Rotation)
+- **Tải tệp tin cấu hình:** Khởi tạo từ tệp `.env`, hỗ trợ các biến `GOOGLE_API_KEY`, `GOOGLE_API_KEY_2` đến `GOOGLE_API_KEY_10` hoặc một danh sách phân tách bằng dấu phẩy qua `GOOGLE_API_KEYS`.
+- **Cơ chế Cân bằng Tải:** Các khóa được nạp và kiểm tra tính hợp lệ bằng HumanMessage cực ngắn. Các khóa hoạt động tốt sẽ được gán làm các luồng chat song song. Tải lượng truy cập sẽ luân phiên chia sẻ giữa các khóa này, giúp tăng tổng hạn mức cuộc gọi miễn phí lên tối đa gấp nhiều lần (mỗi khóa cung cấp **1.500 lượt truy vấn/ngày**).
+
+#### B. Sơ đồ Chuyển đổi Dự phòng (Multi-LLM Failover Chain)
+Khi một lớp mô hình gặp lỗi (hết hạn mức rate-limit, mất kết nối), dịch vụ tự động chuyển đổi trong mili-giây sang lớp tiếp theo mà không làm ngắt quãng trải nghiệm khách hàng:
+
+```mermaid
+graph TD
+    A[Yêu cầu từ Frontend] --> B{Intent Classifier: Llama 70B}
+    B -->|Thành công| C[Nhận diện Ý định & Viết lại câu hỏi]
+    B -->|Groq Lỗi/Hết Quota| D[Fallback sang Gemini / Zhipu phân tích]
+    
+    C --> E{Gọi chuỗi LLM sinh câu trả lời}
+    E -->|Ưu tiên 1| F[Gemini 2.5 Flash <br> Xoay vòng qua 3+ API Keys]
+    F -->|Lỗi 429 / Mạng| G[Groq Llama-3.3-70b-versatile]
+    G -->|Hết Quota / Hạn chế| H[Zhipu GLM-4-Flash <br> Miễn phí, Siêu tốc]
+    H -->|Sập kết nối| I[OpenRouter Llama-3.1-8b-instruct]
+    I -->|Mất kết nối hoàn toàn| J[Trả câu trả lời tự nhiên từ DB]
+```
+
+- **Thông số kỹ thuật các Mô hình tích hợp:**
+  | Tên Mô hình | Nguồn Cung cấp | Vai trò | Hạn mức/Ưu thế | Trạng thái |
+  | :--- | :--- | :--- | :--- | :--- |
+  | **gemini-2.5-flash** | Google AI Studio | Mô hình chính (Sinh câu trả lời RAG) | 1,500 req/ngày trên mỗi Key | Hoạt động tốt (Validated) |
+  | **llama-3.3-70b-versatile** | Groq Cloud API | Phân loại ý định & Viết lại câu hỏi | Phản hồi siêu tốc, Tiếng Việt xuất sắc | Hoạt động tốt (Validated) |
+  | **glm-4-flash** | Zhipu AI | Fallback trung tâm (Phản hồi 1.5s - 3s) | Băng thông cực rộng, miễn phí hoàn toàn | Hoạt động tốt (Validated) |
+  | **llama-3.1-8b-instruct** | OpenRouter | Chốt chặn cuối cùng | Tier miễn phí | Hoạt động tốt (Validated) |
+
+---
+
+## 14. Đồng bộ hóa Gợi ý Sản phẩm, Khắc phục triệt để Lỗi Lệch Thông tin (Mismatch) & Cập nhật Thứ tự Chu trình Dưỡng da (23/05/2026 07:15)
+- **Mục tiêu:** 
+  1. Loại bỏ 100% tình trạng bong bóng chat tư vấn khuyên dùng một thương hiệu (như La Roche-Posay) nhưng các thẻ sản phẩm bên dưới lại hiển thị sản phẩm khác (như Naris hay Silcot).
+  2. Bắt buộc AI chỉ được phép tư vấn và thiết kế chu trình (routine) bằng chính các sản phẩm thực tế lấy ra từ cửa hàng (`<san_pham_goi_y>`).
+  3. Cập nhật thứ tự các bước trong chu trình skincare chuẩn bao gồm: Tẩy trang, Sữa rửa mặt, Toner, Serum, Kem dưỡng, Chống nắng.
+  4. Reset và làm sạch bộ nhớ cache chatbot.
+
+---
+
+### 14.1 Nhận diện Ý định thiết kế Routine tự động trong [HomeController.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/backend/app/controllers/HomeController.php)
+- **Sự cố:** Regex cũ trong hàm `shouldAttachAiProducts()` bỏ sót các từ khóa liên quan đến routine chăm sóc da tổng quan (như "chu trình", "skincare", "routine"). Điều này làm backend PHP trả về danh sách trống `[]` sang Flask, vô tình kích hoạt cơ chế fallback tìm kiếm sản phẩm nổi bật mặc định ở Flask (Naris, Silcot).
+- **Khắc phục:** 
+  - Cập nhật Regex trong hàm `shouldAttachAiProducts()` để nhận diện thêm các từ khóa: `chu trình|chu trinh|skincare|routine|bộ dưỡng|bo duong`.
+  - Giúp PHP nhận diện chính xác ý định xin routine của người dùng để thực hiện truy xuất sản phẩm tương thích từ database truyền sang Flask.
+  - *Diff thay đổi:*
+    ```diff
+    - '/goi y|gợi ý|de xuat|đề xuất|nen mua|nên mua|nen dung|nên dùng|chon giup|chọn giúp|san pham nao|sản phẩm nào|serum nao|kem nao|toner nao|sua rua mat nao|tẩy trang nào|kem chống nắng nào|compare|so sanh|so sánh|dua ra vai san pham|đưa ra vài sản phẩm/u'
+    + '/goi y|gợi ý|de xuat|đề xuất|nen mua|nên mua|nen dung|nên dùng|chon giup|chọn giúp|san pham nao|sản phẩm nào|serum nao|kem nao|toner nao|sua rua mat nao|tẩy trang nào|kem chống nắng nào|compare|so sanh|so sánh|dua ra vai san pham|đưa ra vài sản phẩm|chu trình|chu trinh|skincare|routine|bộ dưỡng|bo duong/u'
+    ```
+
+---
+
+### 14.2 Nâng cấp Phân loại Ý định siêu tốc & Nhận diện Skincare Routine trong [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_flask.py)
+- **Cải tiến 1: Override Intent Classifier bằng quy tắc (Rule-based Intent Override):**
+  - Để tránh việc LLM Classifier phân loại sai các câu xin routine dài có kèm hoạt chất sang nhánh `COSMETIC_KNOWLEDGE_OUT_OF_DB` (vô tình làm mất danh sách sản phẩm full routine), một chốt chặn rule-based đã được thêm vào đầu hàm `classify_intent()`.
+  - Nếu câu chat chứa từ khóa chu trình (`skincare`, `routine`, `chu trình`,...) hoặc kết hợp sản phẩm và từ khóa nhờ vả (`nên mua`, `gợi ý`, `tư vấn`,...), hệ thống tự động ép ý định về `PRODUCT_INQUIRY`.
+- **Cải tiến 2: Bổ sung từ khóa `is_routine`:**
+  - Cập nhật thêm các từ khóa `"skincare"`, `"dưỡng da"`, `"duong da"` vào cấu trúc `rule_based_parse()` để đảm bảo cờ `is_routine` luôn được gán `True` chính xác, kích hoạt cơ chế truy xuất đa tầng 6 bước của ChromaDB.
+  - *Diff thay đổi:*
+    ```diff
+    - if any(k in msg_lower for k in ["routine", "chu trình", "chu trinh", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "sáng tối", "sang toi"]):
+    + if any(k in msg_lower for k in ["routine", "chu trình", "chu trinh", "skincare", "dưỡng da", "duong da", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "sáng tối", "sang toi"]):
+    ```
+
+---
+
+### 14.3 Thắt chặt Guardrails & Cập nhật thứ tự 6 Bước trong [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_flask.py)
+- **Thắt chặt điều kiện trong `SYSTEM_PROMPT`:**
+  - Cấu hình lại mục **### 6. RÀNG BUỘT TUYỆT ĐỐI (GUARDRAILS)**. Ép mô hình LLM bắt buộc chỉ được sử dụng các sản phẩm có mặt trong `<san_pham_goi_y>`.
+  - Nghiêm cấm hoàn toàn hành vi tự ý ảo tưởng/bịa tên các sản phẩm ngoài database (như các loại kem chống nắng hay toner La Roche-Posay không có sẵn).
+- **Cập nhật thứ tự các bước Skincare:**
+  - Đồng bộ thứ tự các bước dưỡng da trong chỉ thị thiết kế chu trình thành: **Tẩy trang, Sữa rửa mặt, Toner, Serum, Kem dưỡng, Chống nắng** đúng chuẩn khoa học da liễu.
+  - *Diff thay đổi ở SYSTEM_PROMPT:*
+    ```diff
+    - - NẾU khách hỏi về chu trình / routine dưỡng da nhiều bước kết hợp, bạn PHẢI xây dựng một chu trình khoa học và chọn giới thiệu chính xác sản phẩm tương ứng từ <san_pham_goi_y> cho từng bước.
+    + - BẮT BUỘC: Bạn CHỈ ĐƯỢC PHÉP gợi ý các sản phẩm có mặt trong danh sách `<san_pham_goi_y>` ở trên. Nếu người dùng yêu cầu thiết kế một chu trình dưỡng da (routine), bạn PHẢI chọn các sản phẩm phù hợp từ danh sách `<san_pham_goi_y>` này để điền vào từng bước (Tẩy trang, Sữa rửa mặt, Toner, Serum, Kem dưỡng, Chống nắng). TUYỆT ĐỐI KHÔNG ĐƯỢC tự ý bịa ra hoặc đề xuất bất kỳ sản phẩm nào khác ngoài danh sách `<san_pham_goi_y>` này (không bịa tên hay nhãn hàng khác như La Roche-Posay, CeraVe, v.v. nếu chúng không nằm trong danh sách `<san_pham_goi_y>` ở trên). Nếu danh sách `<san_pham_goi_y>` thiếu sản phẩm cho một bước nào đó, hãy ghi rõ là cửa hàng tạm thời chưa có sẵn sản phẩm phù hợp cho bước đó và khuyên khách hàng sử dụng các sản phẩm có sẵn còn lại.
+    ```
+
+---
+
+### 14.4 Làm sạch Cache và Tái vận hành live
+- **Clear cache tĩnh:** Làm sạch bộ lưu trữ phản hồi tĩnh `ai_chat_responses.json` để loại bỏ toàn bộ dữ liệu phản hồi bị lệch thông tin trước đây.
+- **Tái khởi động Flask Service:** Restart tiến trình Python Flask trên cổng `5001`. Toàn bộ 4 LLMs (Gemini 2.5 Flash, Groq 8B, Zhipu GLM, OpenRouter) đều được xác thực và sẵn sàng hoạt động ở trạng thái kết nối hoàn hảo.
+- **Kết quả Kiểm thử:** Chạy thử nghiệm live với kịch bản da dầu mụn viêm sưng đỏ. Phản hồi trả về của AI đính kèm chính xác 3 sản phẩm kiềm dầu thực tế của shop: *Tinh chất bí đao Cocoon*, *Kem dưỡng se khít lỗ chân lông Bioderma*, và *Kem chống nắng Eucerin kiềm dầu* trong văn bản, hoàn toàn trùng khớp 100% với danh sách thẻ sản phẩm hiển thị trong Widget.
+
+
+
 

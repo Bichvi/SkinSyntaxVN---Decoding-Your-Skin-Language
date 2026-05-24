@@ -9,7 +9,7 @@ Thứ tự ưu tiên:
   3. OpenRouter llama-3.1 — FREE tier
   4. Zhipu glm-4-flash  — FREE tier
 """
-import os, sys, re, json, signal, random
+import os, sys, re, json, signal, random, time
 from pathlib import Path
 
 os.environ["PYTHONUTF8"] = "1"
@@ -41,6 +41,7 @@ _DEFAULT_CHROMA_PATH = str(
 )
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", _DEFAULT_CHROMA_PATH)
 FLASK_PORT = int(os.getenv("CHATBOT_PORT", 5001))
+
 
 # ── Nhiều Gemini API key xoay vòng ──────────────────────────────────────────
 # Thêm key vào .env theo dạng:
@@ -145,7 +146,13 @@ def _format_web_results(result: dict) -> str:
     return "\n\n".join(blocks)
 
 # ─── LLM lazy init ──────────────────────────────────────────────────────────
-_llms = None
+LLM_COOLDOWNS = {}
+
+def _get_llm_cooldown(llm) -> float:
+    return LLM_COOLDOWNS.get(id(llm), 0.0)
+
+def _set_llm_cooldown(llm, duration=300):
+    LLM_COOLDOWNS[id(llm)] = time.time() + duration
 
 def _test_llm_connection(llm) -> bool:
     """Kiểm tra kết nối và tính hợp lệ của key bằng cách gọi thử một HumanMessage cực ngắn."""
@@ -174,6 +181,7 @@ def _test_llm_connection(llm) -> bool:
         print(f"[WARN] LLM Key validation failed for {model_name}: {err[:200]}")
         return False
 
+_llms = None
 
 def get_llms():
     global _llms
@@ -307,15 +315,16 @@ def get_groq_llama_70b():
     return None
 
 
-def contextualize_query(message: str, history_str: str, llm) -> str:
+def contextualize_query(message: str, history_str: str, llms: list) -> str:
     """
     Sử dụng LLM để viết lại câu hỏi của khách hàng, tích hợp lịch sử trò chuyện để tạo ra một câu hỏi độc lập, đầy đủ nghĩa.
     Ví dụ:
       - Lịch sử: "tinh chất retinol là gì"
       - Khách: "sử dụng thế nào"
       - Trả về: "hướng dẫn sử dụng tinh chất retinol"
+    Thử lần lượt các LLM trong danh sách nếu gặp lỗi (e.g. rate limit).
     """
-    if not history_str or not llm:
+    if not history_str or not llms:
         return message
         
     from langchain_core.messages import HumanMessage
@@ -329,20 +338,29 @@ Lịch sử trò chuyện:
 Câu hỏi mới nhất: {message}
 
 Câu hỏi độc lập viết lại:"""
-    try:
-        response = llm.invoke([HumanMessage(content=prompt)])
-        rewritten = (response.content or "").strip()
-        if rewritten:
-            # Clean up if there are any surrounding quotes
-            rewritten = rewritten.strip('"').strip("'")
-            print(f"[CONTEXTUALIZE] Original: '{message}' -> Rewritten: '{rewritten}'")
-            return rewritten
-    except Exception as e:
-        print(f"[WARN] Contextualize query failed: {e}")
+    current_time = time.time()
+    for llm in llms:
+        if _get_llm_cooldown(llm) > current_time:
+            continue
+        model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
+        try:
+            response = llm.invoke([HumanMessage(content=prompt)])
+            rewritten = (response.content or "").strip()
+            if rewritten:
+                rewritten = rewritten.strip('"').strip("'")
+                print(f"[CONTEXTUALIZE] Original: '{message}' -> Rewritten: '{rewritten}' using {model_name}")
+                return rewritten
+        except Exception as e:
+            err_str = str(e).lower()
+            if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str or "quota" in err_str:
+                _set_llm_cooldown(llm, 300)
+                print(f"[WARN] Contextualize query failed for {model_name} due to rate limits. Putting on 5-min cool-down.")
+            else:
+                print(f"[WARN] Contextualize query failed for {model_name}: {type(e).__name__}: {str(e)[:100]}")
     return message
 
 
-def classify_intent(query: str, llm) -> tuple[str, str | None]:
+def classify_intent(query: str, llms: list) -> tuple[str, str | None]:
     """
     Phân loại ý định của câu hỏi đã được viết lại thành 1 trong 3 nhóm:
       1. PRODUCT_INQUIRY: Hỏi mua, tìm kiếm, tư vấn sản phẩm cụ thể có trong shop.
@@ -351,9 +369,24 @@ def classify_intent(query: str, llm) -> tuple[str, str | None]:
 
     Đồng thời, nếu câu hỏi có chứa thành phần/hoạt chất mỹ phẩm nổi bật, hãy trích xuất hoạt chất đó.
 
+    Thử lần lượt các LLM trong danh sách nếu gặp lỗi (e.g. rate limit).
     Trả về tuple: (intent, ingredient)
     """
-    if not llm:
+    query_lower = query.lower()
+    
+    # Rule-based check to override intent to PRODUCT_INQUIRY for product/routine queries
+    routine_keywords = ["chu trình", "chu trinh", "skincare", "routine", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "bộ dưỡng", "bo duong"]
+    product_keywords = ["sản phẩm", "san pham", "srm", "sữa rửa mặt", "sua rua mat", "tẩy trang", "tay trang", "toner", "nước cân bằng", "nuoc can bang", "serum", "tinh chất", "tinh chat", "kem dưỡng", "kem duong", "gel dưỡng", "gel duong", "chống nắng", "chong nang", "kcn", "sunscreen"]
+    recommend_keywords = ["gợi ý", "goi y", "đề xuất", "de xuat", "nên mua", "nen mua", "nên dùng", "nen dung", "chọn giúp", "chon giup", "tư vấn giúp", "tu van giup"]
+    
+    has_routine = any(k in query_lower for k in routine_keywords)
+    has_prod_and_rec = any(p in query_lower for p in product_keywords) and any(r in query_lower for r in recommend_keywords)
+    
+    if has_routine or has_prod_and_rec:
+        print(f"[CLASSIFY] Overriding to PRODUCT_INQUIRY due to routine/product match in query: '{query}'")
+        return "PRODUCT_INQUIRY", None
+
+    if not llms:
         return "PRODUCT_INQUIRY", None
 
     from langchain_core.messages import HumanMessage
@@ -371,25 +404,35 @@ CHỈ trả về một chuỗi JSON thuần túy có dạng:
 }}
 
 Câu hỏi: {query}"""
-    try:
-        response = llm.invoke([HumanMessage(content=prompt)])
-        text = (response.content or "").strip()
-        data = _extract_json_from_text(text)
-        if data and "intent" in data:
-            intent = data["intent"]
-            ingredient = data.get("ingredient")
-            # Normalize intent
-            if intent not in ("PRODUCT_INQUIRY", "COSMETIC_KNOWLEDGE_OUT_OF_DB", "GENERAL_CONVERSATION"):
-                intent = "PRODUCT_INQUIRY"
-            if ingredient and ingredient.lower() in ("null", "none"):
-                ingredient = None
-            print(f"[CLASSIFY] Query: '{query}' -> Intent: {intent} | Ingredient: {ingredient}")
-            return intent, ingredient
-    except Exception as e:
-        print(f"[WARN] Classify intent failed: {e}")
-    
-    # Fallback rule-based if LLM fails
-    query_lower = query.lower()
+
+    current_time = time.time()
+    for llm in llms:
+        if _get_llm_cooldown(llm) > current_time:
+            continue
+        model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
+        try:
+            response = llm.invoke([HumanMessage(content=prompt)])
+            text = (response.content or "").strip()
+            data = _extract_json_from_text(text)
+            if data and "intent" in data:
+                intent = data["intent"]
+                ingredient = data.get("ingredient")
+                # Normalize intent
+                if intent not in ("PRODUCT_INQUIRY", "COSMETIC_KNOWLEDGE_OUT_OF_DB", "GENERAL_CONVERSATION"):
+                    intent = "PRODUCT_INQUIRY"
+                if ingredient and ingredient.lower() in ("null", "none"):
+                    ingredient = None
+                print(f"[CLASSIFY] Query: '{query}' -> Intent: {intent} | Ingredient: {ingredient} using {model_name}")
+                return intent, ingredient
+        except Exception as e:
+            err_str = str(e).lower()
+            if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str or "quota" in err_str:
+                _set_llm_cooldown(llm, 300)
+                print(f"[WARN] Classify intent failed for {model_name} due to rate limits. Putting on 5-min cool-down.")
+            else:
+                print(f"[WARN] Classify intent failed for {model_name}: {type(e).__name__}: {str(e)[:100]}")
+            
+    # Fallback rule-based if all LLMs fail
     if any(k in query_lower for k in ["chào", "hello", "hi", "cảm ơn", "cám ơn", "tạm biệt", "bye", "ráng đi", "cố lên", "admin", "shop ơi"]):
         return "GENERAL_CONVERSATION", None
     if any(k in query_lower for k in ["là gì", "tác dụng của", "công dụng của", "cơ chế của"]) and any(k in query_lower for k in ["retinol", "niacinamide", "bha", "aha", "vitamin c", "hyaluronic", "collagen", "peel"]):
@@ -525,6 +568,7 @@ class PhanTichYeuCau(BaseModel):
     so_luong_goi_y: int = Field(default=3)
     tu_khoa_ngu_nghia: str = Field(default="")
     is_routine: bool = Field(default=False, description="Set to True ONLY if the customer is asking for a skincare routine, combo, steps, or multi-step routine rather than a single specific product category.")
+    ngan_sach: Optional[int] = Field(default=None, description="The maximum budget limit in VNĐ for the skincare routine or products.")
 
 
 # ─── Parse JSON từ text (dùng cho model không hỗ trợ structured output) ─────
@@ -546,7 +590,8 @@ Trả về JSON với các field (dùng null nếu không có thông tin):
   "buoi_dung": null hoặc "sang" hoặc "toi" hoặc "ca_hai",
   "so_luong_goi_y": 3,
   "tu_khoa_ngu_nghia": "từ khóa mô tả công dụng và thành phần cần tìm",
-  "is_routine": true hoặc false (set true NẾU khách hàng muốn tư vấn một chu trình/routine dưỡng da nhiều bước kết hợp, ngược lại mặc định false)
+  "is_routine": true hoặc false (set true NẾU khách hàng muốn tư vấn một chu trình/routine dưỡng da nhiều bước kết hợp, ngược lại mặc định false),
+  "ngan_sach": null hoặc số nguyên đại diện cho ngân sách của khách bằng VNĐ (Ví dụ: "dưới 800k" -> 800000, "tầm 500k" -> 500000)
 }} """###tạo 1 ví dụ như tui là da dầu muốn xuất sản phẩm gì  =>intent->router(nơi trỏ địa đimẻ đi của chatbot)
 
 
@@ -743,6 +788,13 @@ def _dict_to_yc(d: dict) -> PhanTichYeuCau:
                 v_str = str(v).strip().lower()
                 safe[k] = (v_str in ("true", "1", "yes"))
                 
+        # 8. Sanitize ngan_sach
+        elif k == "ngan_sach":
+            try:
+                safe[k] = int(v) if v is not None else None
+            except (ValueError, TypeError):
+                safe[k] = None
+                
         else:
             safe[k] = v
 
@@ -754,6 +806,38 @@ def _dict_to_yc(d: dict) -> PhanTichYeuCau:
     except Exception as e:
         print(f"[DICT_TO_YC] Validation failed after sanitization: {e}. Fallback empty model.")
         return PhanTichYeuCau(tu_khoa_ngu_nghia=safe.get("tu_khoa_ngu_nghia", ""), so_luong_goi_y=3)
+
+
+def extract_budget_from_text(text: str) -> Optional[int]:
+    if not text:
+        return None
+    text_lower = text.lower()
+    
+    # 1. Matches "triệu" or "tr"
+    m_trieu = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức)\s*(\d+(?:\.\d+)?)\s*(?:triệu|tr)\b', text_lower)
+    if m_trieu:
+        try:
+            return int(float(m_trieu.group(1)) * 1000000)
+        except ValueError:
+            pass
+            
+    # 2. Matches "k"
+    m_k = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức)\s*(\d+)\s*k\b', text_lower)
+    if m_k:
+        try:
+            return int(m_k.group(1)) * 1000
+        except ValueError:
+            pass
+            
+    # 3. Matches raw number with dots like "800.000" or "800000"
+    m_raw = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức)\s*(\d{1,3}(?:\.\d{3})+|\d{5,8})\s*(?:vnđ|đ|vnd)?\b', text_lower)
+    if m_raw:
+        try:
+            return int(m_raw.group(1).replace('.', ''))
+        except ValueError:
+            pass
+            
+    return None
 
 
 def rule_based_parse(message: str) -> Optional[PhanTichYeuCau]:
@@ -816,7 +900,7 @@ def rule_based_parse(message: str) -> Optional[PhanTichYeuCau]:
         loai_san_pham = "Son Dưỡng Môi"
         
     is_routine = False
-    if any(k in msg_lower for k in ["routine", "chu trình", "chu trinh", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "sáng tối", "sang toi"]):
+    if any(k in msg_lower for k in ["routine", "chu trình", "chu trinh", "skincare", "dưỡng da", "duong da", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "sáng tối", "sang toi"]):
         is_routine = True
         
     tinh_trang_da = []
@@ -844,14 +928,17 @@ def rule_based_parse(message: str) -> Optional[PhanTichYeuCau]:
         elif so_luong_goi_y < 1:
             so_luong_goi_y = 3
             
-    if loai_da or loai_san_pham or is_routine:
+    ngan_sach = extract_budget_from_text(message)
+            
+    if loai_da or loai_san_pham or is_routine or ngan_sach:
         return PhanTichYeuCau(
             loai_da=loai_da,
             loai_san_pham=loai_san_pham,
             tinh_trang_da=tinh_trang_da if tinh_trang_da else None,
             so_luong_goi_y=so_luong_goi_y,
             tu_khoa_ngu_nghia=message,
-            is_routine=is_routine
+            is_routine=is_routine,
+            ngan_sach=ngan_sach
         )
     return None
 
@@ -863,7 +950,10 @@ def parse_yeu_cau(message: str, llms: list) -> PhanTichYeuCau:
     """
     from langchain_core.messages import HumanMessage
 
+    current_time = time.time()
     for llm in llms:
+        if _get_llm_cooldown(llm) > current_time:
+            continue
         model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
         # Chỉ thử structured output với Gemini
         if "gemini" in model_name.lower():
@@ -875,7 +965,13 @@ def parse_yeu_cau(message: str, llms: list) -> PhanTichYeuCau:
                     print(f"[PARSE] OK (structured): {model_name}")
                     return yc
             except Exception as e:
-                print(f"[PARSE] Structured output failed ({model_name}): {e}")
+                err_str = str(e).lower()
+                if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str or "quota" in err_str:
+                    _set_llm_cooldown(llm, 300)
+                    print(f"[PARSE] Structured output failed ({model_name}) due to rate limits. Putting on 5-min cool-down.")
+                    continue
+                else:
+                    print(f"[PARSE] Structured output failed ({model_name}): {e}")
 
         # Fallback sang JSON text parse
         try:
@@ -890,10 +986,48 @@ def parse_yeu_cau(message: str, llms: list) -> PhanTichYeuCau:
                     print(f"[PARSE] OK (fallback JSON): {model_name}")
                     return yc
         except Exception as e:
-            print(f"[PARSE] Fallback failed ({model_name}): {e}")
+            err_str = str(e).lower()
+            if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str or "quota" in err_str:
+                _set_llm_cooldown(llm, 300)
+                print(f"[PARSE] Fallback failed ({model_name}) due to rate limits. Putting on 5-min cool-down.")
+            else:
+                print(f"[PARSE] Fallback failed ({model_name}): {e}")
 
     print("[PARSE] All LLMs failed during parse. Returning empty default.")
     return PhanTichYeuCau(tu_khoa_ngu_nghia=message, so_luong_goi_y=3)
+
+
+def get_loai_da_filter_values(loai_da: str) -> list[str]:
+    if not loai_da or loai_da == "Unknown":
+        return []
+    
+    loai_da_lower = loai_da.lower()
+    
+    if "dầu" in loai_da_lower or "nhờn" in loai_da_lower:
+        return [
+            "Da dầu", "Da dầu/Hỗn hợp dầu", "Da hỗn hợp thiên dầu", 
+            "Da hỗn hợp", "Mọi loại da", "Da thường/Mọi loại da", 
+            "Tất cả loại da", "Unknown", "", "Da mụn", "Da dầu mụn"
+        ]
+    elif "khô" in loai_da_lower:
+        return [
+            "Da khô", "Da khô/Hỗn hợp khô", "Da hỗn hợp thiên khô", 
+            "Da hỗn hợp", "Mọi loại da", "Da thường/Mọi loại da", 
+            "Tất cả loại da", "Unknown", ""
+        ]
+    elif "nhạy cảm" in loai_da_lower:
+        return [
+            "Da nhạy cảm", "Mọi loại da", "Da thường/Mọi loại da", 
+            "Tất cả loại da", "Unknown", ""
+        ]
+    elif "mụn" in loai_da_lower:
+        return [
+            "Da mụn", "Da dầu", "Da dầu/Hỗn hợp dầu", "Da dầu mụn",
+            "Mọi loại da", "Da thường/Mọi loại da", "Tất cả loại da", 
+            "Unknown", ""
+        ]
+    
+    return [loai_da, "Mọi loại da", "Da thường/Mọi loại da", "Tất cả loại da", "Unknown", ""]
 
 
 def build_filter(yc: PhanTichYeuCau) -> dict | None:
@@ -902,7 +1036,11 @@ def build_filter(yc: PhanTichYeuCau) -> dict | None:
     """
     conds = []
     if yc.loai_da and yc.loai_da not in ("Unknown", None):
-        conds.append({"loai_da": {"$eq": yc.loai_da}})
+        allowed_types = get_loai_da_filter_values(yc.loai_da)
+        if allowed_types:
+            conds.append({"loai_da": {"$in": allowed_types}})
+        else:
+            conds.append({"loai_da": {"$eq": yc.loai_da}})
     if yc.loai_san_pham:
         conds.append({"loai_san_pham": {"$eq": yc.loai_san_pham}})
     if yc.xuat_xu:
@@ -987,6 +1125,80 @@ def get_fallback_hdsd(category: str) -> str:
     return random.choice(defaults)
 
 
+ROUTINE_SYSTEM_PROMPT = """
+╔══════════════════════════════════════════════════════════╗
+║       SKINSYNTAXVN — BÁC SĨ DA LIỄU ẢO SKINSYNTAX        ║
+║                  PHIÊN BẢN CHU TRÌNH TỐI ƯU HÓA          ║
+╚══════════════════════════════════════════════════════════╝
+
+### 1. VAI TRÒ (ROLE)
+Bạn là Trợ lý AI tư vấn mỹ phẩm chuyên nghiệp của hệ thống SkinSyntaxVN. Bạn có kiến thức chuyên sâu về da liễu và thành phần mỹ phẩm. Nhiệm vụ của bạn là thiết kế một chu trình dưỡng da (skincare routine) khoa học, tối ưu theo ngân sách và nhu cầu của khách hàng. Bạn trả lời cực kỳ thân thiện, chu đáo, tự nhiên giống như một chuyên gia thực tế.
+
+### 2. LỊCH SỬ TRÒ CHUYỆN (CONVERSATION HISTORY)
+<lich_su_tro_chuyen>
+{history}
+</lich_su_tro_chuyen>
+
+### 3. THÔNG TIN NGỮ CẢNH & HỒ SƠ KHÁCH HÀNG (RICH CONTEXT)
+<thong_tin_ngu_canh>
+{rich_context}
+- Tổng chi phí ước tính thực tế của chu trình: {tong_chi_phi_str} VNĐ
+- Ngân sách giới hạn của khách: {ngan_sach_str} VNĐ
+</thong_tin_ngu_canh>
+
+### 4. DANH SÁCH SẢN PHẨM KHUYẾN NGHỊ (SEARCH RESULTS)
+Dưới đây là danh sách sản phẩm THỰC TẾ được truy xuất từ hệ thống, khớp với yêu cầu của khách hàng. Bạn BẮT BUỘC phải dùng các sản phẩm này để xếp vào các bước của chu trình:
+<san_pham_goi_y>
+{search_results}
+</san_pham_goi_y>
+
+Câu hỏi của khách hàng:
+<cau_hoi_khach>
+{user_question}
+</cau_hoi_khach>
+
+### 5. CHỈ THỊ VĂN PHONG VÀ ĐỊNH DẠNG (STYLE & TONE)
+1. XƯNG HÔ THÂN THIỆN:
+- Xưng "mình", "SkinSyntax" hoặc "Bác sĩ da liễu ảo nhà SkinSyntaxVN" và gọi khách hàng là "bạn".
+- Lời văn tự nhiên, chu đáo, có ngữ điệu của chuyên viên tư vấn da liễu thực tế. Không lạm dụng emoji (hạn chế tối đa, tối đa chỉ dùng 1-2 emoji nhẹ nhàng trong toàn bộ bài viết).
+
+2. THIẾT KẾ CHU TRÌNH SKINCARE BẮT BUỘC:
+- Trình bày chu trình rõ ràng theo từng bước (ví dụ: **Bước 1: Tẩy trang**, **Bước 2: Rửa mặt**, **Bước 3: Toner**, **Bước 4: Serum**, **Bước 5: Kem dưỡng**, **Bước 6: Chống nắng** - tùy thuộc vào routine sáng hay tối).
+- Với mỗi bước, gợi ý 1 sản phẩm thích hợp từ danh sách `<san_pham_goi_y>`.
+- BẮT BUỘC: Khi giới thiệu sản phẩm trong từng bước, hãy COPY NGUYÊN VĂN liên kết Markdown click được từ trường "Tên (dạng link Markdown)" trong `<san_pham_goi_y>` (Ví dụ: **[Tên sản phẩm](index.php?r=chitiet&id=X)**). KHÔNG tự chế hay sửa đổi link.
+- BẮT BUỘC: PHẢI nêu rõ cả Thương hiệu (Brand), Xuất xứ (Origin) nếu có, và Giá bán thực tế của sản phẩm lấy từ danh sách `<san_pham_goi_y>` ngay khi giới thiệu (Ví dụ: "**[Tên sản phẩm](link)** - thương hiệu [Thương hiệu] | xuất xứ: [Xuất xứ nếu có] với mức giá ưu đãi chỉ [Giá bán trên hệ thống] VNĐ").
+- BẮT BUỘC: Khi giới thiệu sản phẩm trong từng bước, bạn PHẢI phân tích chi tiết các thành phần nổi bật cụ thể của sản phẩm đó và cơ chế khoa học giúp giải quyết trực tiếp tình trạng da hiện tại của khách (ví dụ: kiềm dầu, ngừa mụn, dưỡng sáng, mờ thâm...). Viết phần phân tích thành phần này thật cặn kẽ, thuyết phục, giàu kiến thức da liễu và có giá trị chuyên môn cao để khách hiểu rõ lý do tại sao nên dùng! Tuy nhiên, hãy trình bày súc tích, cô đọng (khoảng 3-4 câu ngắn gọn cho mỗi sản phẩm) để toàn bộ câu trả lời không bị quá dài và tránh bị ngắt quãng giữa chừng.
+
+3. ĐỊNH DẠNG TỔNG CHI PHÍ BẮT BUỘC:
+- Ở cuối phần trình bày các bước chu trình, bạn PHẢI in ra một dòng tổng kết chi phí thực tế so với ngân sách của khách theo đúng định dạng sau:
+  `Tổng chi phí ước tính: {tong_chi_phi_str} VNĐ (trong ngân sách {ngan_sach_str} VNĐ)`
+- Sử dụng chính xác 2 giá trị `{tong_chi_phi_str}` và `{ngan_sach_str}` được cung cấp trong `<thong_tin_ngu_canh>`. KHÔNG tự ý tính toán sai lệch hay sửa đổi định dạng này.
+
+### 6. RÀNG BUỘT TUYỆT ĐỐI (GUARDRAILS)
+- KHÔNG tự bịa tên sản phẩm, giá bán, link ảnh ngoài `<san_pham_goi_y>`.
+- Chỉ sử dụng các sản phẩm thực tế có trong `<san_pham_goi_y>` để xây dựng chu trình. Nếu thiếu sản phẩm cho một bước nào đó, hãy ghi rõ là cửa hàng tạm thời chưa có sẵn sản phẩm phù hợp cho bước đó và khuyên khách hàng sử dụng các sản phẩm có sẵn còn lại.
+- Dặn dò hướng dẫn sử dụng và patch test nhẹ nhàng ở cuối bài viết.
+
+### 7. ĐỊNH DẠNG ĐẦU RA MẪU (VĂN PHONG TỰ NHIÊN)
+
+Chào bạn nhé! [Lời chào mừng thân thiện, nhắc lại tình trạng da và ngân sách của khách]
+
+Dưới đây là chu trình dưỡng da mình thiết kế riêng cho nền da của bạn để tối ưu hiệu quả và tiết kiệm chi phí nhất:
+
+**Bước 1: Tẩy trang**
+[Mô tả công dụng bước] Mình khuyên bạn nên sử dụng **[Tên sản phẩm](link)** - thương hiệu [Thương hiệu] | xuất xứ: [Xuất xứ nếu có] với mức giá ưu đãi trên hệ thống chỉ [Giá bán trên hệ thống] VNĐ. [Giải thích thành phần nổi bật và sự phù hợp]
+
+**Bước 2: Rửa mặt**
+[Mô tả công dụng bước] Bạn sử dụng tiếp **[Tên sản phẩm](link)** - thương hiệu [Thương hiệu] | xuất xứ: [Xuất xứ nếu có] với mức giá ưu đãi trên hệ thống chỉ [Giá bán trên hệ thống] VNĐ. [Giải thích lý do phù hợp]
+
+[Tiếp tục các bước khác...]
+
+Tổng chi phí ước tính: {tong_chi_phi_str} VNĐ (trong ngân sách {ngan_sach_str} VNĐ)
+
+Một vài lời khuyên thêm từ mình: [Lời khuyên chăm sóc da ngắn gọn]
+Chúc bạn sớm có làn da khỏe đẹp như ý nhé!
+"""
+
 SYSTEM_PROMPT = """
 ╔══════════════════════════════════════════════════════════╗
 ║       SKINSYNTAXVN — BÁC SĨ DA LIỄU ẢO SKINSYNTAX        ║
@@ -1029,10 +1241,11 @@ lưu ý: nếu khách hỏi quá kĩ về sản phẩm, nhãn hàng mà không c
 - Hãy xưng là "mình", "SkinSyntax" hoặc "Bác sĩ da liễu ảo nhà SkinSyntaxVN" và gọi khách hàng là "bạn".
 
 2. KHÔNG COPY NGUYÊN VĂN DANH MỤC KHÔ KHAN:
-- Thay vì liệt kê danh sách thuộc tính một cách máy móc, hãy lồng ghép các trường dữ liệu (Giá, Thành phần, HDSD, mô tả) vào một đoạn hội thoại tự nhiên, có ngữ điệu của một tư vấn viên tại cửa hàng.
+- Thay vì liệt kê danh sách thuộc tính một cách máy móc, hãy lồng ghép các trường dữ liệu (Giá, Thành phần, HDSD, mô tả, xuất xứ, ) vào một đoạn hội thoại tự nhiên, có ngữ điệu của một tư vấn viên tại cửa hàng.
 
 3. TĂNG TRỌNG TÂM VÀO ĐỘT PHÁ THÀNH PHẦN (ỨNG DỤNG DATASHEET):
-- Đọc trường 'Thành phần' để giải thích lý do khoa học tại sao sản phẩm lại xử lý được vấn đề da của khách (Ví dụ: "Em này chứa chiết xuất tơ tằm trắng và gấp đôi Hyaluronic Acid giúp bảo vệ màng ẩm tự nhiên, da sạch hoàn hảo nhưng vẫn ẩm mịn").
+- Hãy đọc thật kỹ trường 'Thành phần chính' hoặc 'Mô tả' trong database để phân tích chi tiết lý do khoa học tại sao sản phẩm này lại giải quyết được đúng tình trạng da của khách hàng (ví dụ: da dầu, mụn, thâm mụn...).
+- BẮT BUỘC: Chỉ rõ thành phần nổi bật cụ thể (ví dụ: Vitamin C, Collagen, BHA, Niacinamide, Tinh chất tổ yến...) và giải thích cặn kẽ cơ chế hoạt động của thành phần đó (ví dụ: "Sản phẩm chứa tinh chất tổ yến và collagen giúp tăng đàn hồi, phục hồi da sau mụn thế nào", "Vitamin C và Illumiscin giúp dưỡng sáng, mờ thâm mụn ra sao..."). Hãy viết phần phân tích thành phần này thật chi tiết, giàu kiến thức chuyên môn da liễu và mang tính thuyết phục cao nhất!
 
 4. THAO TÁC TÂM LÝ GIÁ (PRICE PSYCHOLOGY):
 - Nhấn mạnh yếu tố tiết kiệm để kích thích mua sắm nếu sản phẩm có thông tin giảm giá: "Món này bình thường giá gốc thị trường khoảng {Giá gốc} VNĐ lận, nhưng mua trên hệ thống hiện tại đang được ưu đãi giảm {Phần trăm giảm}%, chỉ còn {Giá} VNĐ thôi, giúp bạn tiết kiệm ngay {Tiền tiết kiệm} VNĐ luôn nhé!".
@@ -1050,10 +1263,11 @@ lưu ý: nếu khách hỏi quá kĩ về sản phẩm, nhãn hàng mà không c
 - KHÔNG đưa ra khuyến nghị y tế thay thế bác sĩ da liễu thật
 - KHÔNG BAO GIỜ dùng danh sách đánh số (1. 2. 3. 4. 5.) để liệt kê sản phẩm. Hãy trình bày mỗi sản phẩm dưới dạng đoạn văn tự nhiên, ngăn cách nhau bằng dòng trống.
 - KHÔNG dùng heading (#, ##, ###) cho từng sản phẩm.
+- BẮT BUỘC: Khi giới thiệu sản phẩm, bạn PHẢI hiển thị đầy đủ các thông tin thực tế bao gồm Thương hiệu, Xuất xứ (nếu có), Giá bán thực tế trên hệ thống, và Số tiền tiết kiệm được (Price Psychology). Tuy nhiên, bạn PHẢI thay thế các từ khóa giữ chỗ mẫu trong ngoặc vuông bằng giá trị thực tế của sản phẩm từ danh sách <san_pham_goi_y> (Ví dụ: Thay "[Thương hiệu]" bằng "Balance Active Formula", thay "[Xuất xứ]" bằng "Anh", thay "[Giá bán trên hệ thống]" bằng "126.000"; tuyệt đối KHÔNG in nguyên văn các từ trong ngoặc vuông như "[Thương hiệu]" hay "[Xuất xứ]" ra màn hình và định dạng phần xuất xứ theo kiểu "xuất xứ: Anh").
 
 - BẮT BUỘC: Mỗi tên sản phẩm PHẢI được trình bày dưới dạng liên kết Markdown click được. Hãy COPY NGUYÊN VĂN giá trị từ trường "Tên (dạng link Markdown)" trong <san_pham_goi_y>. Ví dụ nếu trường đó là: **[Sữa Rửa Mặt ABC 120g](index.php?r=chitiet&id=781)** thì bạn phải ghi ra chính xác như vậy, TUYỆT ĐỐI KHÔNG tự chế link.
 - BẮT BUỘC: Mỗi sản phẩm PHẢI có đủ 3 phần: (a) link tên + giá ưu đãi + tiền tiết kiệm, (b) phân tích thành phần nổi bật + lý do phù hợp, (c) hướng dẫn sử dụng.
-- NẾU khách hỏi về chu trình / routine dưỡng da nhiều bước kết hợp, bạn PHẢI xây dựng một chu trình khoa học và chọn giới thiệu chính xác sản phẩm tương ứng từ <san_pham_goi_y> cho từng bước.
+- BẮT BUỘC: Bạn CHỈ ĐƯỢC PHÉP gợi ý các sản phẩm có mặt trong danh sách `<san_pham_goi_y>` ở trên. Nếu người dùng yêu cầu thiết kế một chu trình dưỡng da (routine), bạn PHẢI chọn các sản phẩm phù hợp từ danh sách `<san_pham_goi_y>` này để điền vào từng bước (Tẩy trang, Sữa rửa mặt, Toner, Serum, Kem dưỡng, Chống nắng). TUYỆT ĐỐI KHÔNG ĐƯỢC tự ý bịa ra hoặc đề xuất bất kỳ sản phẩm nào khác ngoài danh sách `<san_pham_goi_y>` này (không bịa tên hay nhãn hàng khác như La Roche-Posay, CeraVe, v.v. nếu chúng không nằm trong danh sách `<san_pham_goi_y>` ở trên). Nếu danh sách `<san_pham_goi_y>` thiếu sản phẩm cho một bước nào đó, hãy ghi rõ là cửa hàng tạm thời chưa có sẵn sản phẩm phù hợp cho bước đó và khuyên khách hàng sử dụng các sản phẩm có sẵn còn lại.
 - PHẢI ưu tiên cảnh báo thành phần nguy hiểm nếu da khách nhạy cảm/mụn.
 - PHẢI gợi ý patch test nếu khách có da nhạy cảm.
 
@@ -1068,7 +1282,7 @@ Dưới đây là phân tích của mình về nhu cầu của bạn:
 
 Dưới đây là một số sản phẩm phù hợp nhất mà mình lựa chọn kỹ lượng cho bạn từ hệ thống:
 
-[COPY NGUYÊN VĂN link Markdown từ trường "Tên (dạng link Markdown)"] - thương hiệu [Thương hiệu] | [Xuất xứ nếu có]
+[COPY NGUYÊN VĂN link Markdown từ trường "Tên (dạng link Markdown)"] - thương hiệu [Thương hiệu] | xuất xứ: [Xuất xứ nếu có]
 Hiện tại trên hệ thống em này đang được ưu đãi giảm đến [Phần trăm giảm]%, giá gốc [Giá gốc thị trường] VNĐ nay chỉ còn [Giá bán trên hệ thống] VNĐ, giúp bạn tiết kiệm ngay [Tiền tiết kiệm] VNĐ luôn nhé.
 Về thành phần và công dụng, sản phẩm này sở hữu [Thành phần nổi bật], giúp giải quyết trực tiếp vấn đề da của bạn vì [Lý do phù hợp và mô tả kết cấu].
 Khi sử dụng sản phẩm này, [Copy HDSD từ trường "Hướng dẫn sử dụng"].
@@ -1364,8 +1578,8 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     rich_context = "\n".join(rich_context_parts) if rich_context_parts else "Không có thông tin hồ sơ bổ sung."
 
     # 2. Câu hỏi độc lập và phân loại ý định (Contextualization & Intent Recognition)
-    rewritten_query = contextualize_query(message, chat_history_str, classifier_llm)
-    intent, ingredient = classify_intent(rewritten_query, classifier_llm)
+    rewritten_query = contextualize_query(message, chat_history_str, llms)
+    intent, ingredient = classify_intent(rewritten_query, llms)
 
     # 3. Phân tích yêu cầu có cấu trúc từ rewritten_query
     yc = rule_based_parse(rewritten_query)
@@ -1378,6 +1592,20 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     # Override skin type if provided in user profile context
     if skin_type and skin_type not in ("Unknown", None):
         yc.loai_da = skin_type
+
+    # Extract budget from texts as a safe fallback
+    if yc:
+        if yc.ngan_sach is None:
+            yc.ngan_sach = extract_budget_from_text(rewritten_query)
+            if yc.ngan_sach is None:
+                yc.ngan_sach = extract_budget_from_text(message)
+        # Override budget from customer profile context if not parsed in the query
+        profile_budget = profile.get("budget") or profile.get("ngan_sach")
+        if profile_budget and yc.ngan_sach is None:
+            try:
+                yc.ngan_sach = int(profile_budget)
+            except (ValueError, TypeError):
+                pass
 
     print(f"[PIPELINE] Rewritten: '{rewritten_query}' | Intent: {intent} | Ingredient: {ingredient}")
     print(f"[PARSE] da={yc.loai_da} | sp={yc.loai_san_pham} | routine={yc.is_routine} | "
@@ -1421,7 +1649,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             web_results_text = _format_web_results(_query_web(rewritten_query))
         
         # Retrieve featured/popular products to pitch at the end
-        docs = hybrid_search_with_filter(None, top_n=3, custom_query="sản phẩm nổi bật nhiều lượt đánh giá cao bán chạy")
+        docs = hybrid_search_with_filter(None, top_n=3, custom_query="sản phẩm mỹ phẩm dưỡng da nổi bật bán chạy nhất")
 
     elif intent == "COSMETIC_KNOWLEDGE_OUT_OF_DB":
         print("[ROUTE] COSMETIC_KNOWLEDGE_OUT_OF_DB")
@@ -1434,7 +1662,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         docs = hybrid_search_with_filter(None, top_n=3, custom_query=search_term)
         if not docs:
             # Fallback to general popular products
-            docs = hybrid_search_with_filter(None, top_n=3, custom_query="sản phẩm nổi bật bán chạy")
+            docs = hybrid_search_with_filter(None, top_n=3, custom_query="mỹ phẩm dưỡng da nổi bật bán chạy")
 
     else:  # PRODUCT_INQUIRY
         print("[ROUTE] PRODUCT_INQUIRY")
@@ -1448,19 +1676,78 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                 ("Kem / Gel / Dầu Dưỡng", "Kem Dưỡng"),
                 ("Chống Nắng Da Mặt", "Kem Chống Nắng")
             ]
+            
+            # Gather candidates for all categories
+            category_candidates = []
             for cat_name, friendly_name in routine_categories:
                 cat_conds = []
                 if yc.loai_da and yc.loai_da not in ("Unknown", None):
-                    cat_conds.append({"loai_da": {"$eq": yc.loai_da}})
+                    allowed_types = get_loai_da_filter_values(yc.loai_da)
+                    if allowed_types:
+                        cat_conds.append({"loai_da": {"$in": allowed_types}})
+                    else:
+                        cat_conds.append({"loai_da": {"$eq": yc.loai_da}})
                 cat_conds.append({"loai_san_pham": {"$eq": cat_name}})
-                
                 bo_loc_cat = cat_conds[0] if len(cat_conds) == 1 else {"$and": cat_conds}
                 
-                cat_docs = hybrid_search_with_filter(bo_loc_cat, top_n=1)
+                cat_docs = hybrid_search_with_filter(bo_loc_cat, top_n=3)
                 if not cat_docs:
-                    cat_docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": cat_name}}, top_n=1)
+                    cat_docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": cat_name}}, top_n=3)
+                
                 if cat_docs:
-                    docs.extend(cat_docs)
+                    category_candidates.append((cat_name, cat_docs))
+            
+            # Find best combination that fits under budget
+            best_combo = None
+            best_combo_price = 0.0
+            best_combo_score = -999999
+            cheapest_combo = None
+            cheapest_combo_price = 999999999.0
+            
+            def get_price(doc) -> float:
+                try:
+                    return float(doc.metadata.get("gia_ban", 0))
+                except Exception:
+                    return 0.0
+            
+            # Recursively search combinations
+            def search_combos(idx, current_docs, current_price, current_score):
+                nonlocal best_combo, best_combo_price, best_combo_score, cheapest_combo, cheapest_combo_price
+                if idx == len(category_candidates):
+                    # Check cheapest overall
+                    if current_price < cheapest_combo_price:
+                        cheapest_combo = list(current_docs)
+                        cheapest_combo_price = current_price
+                    # Check fits budget
+                    if yc.ngan_sach is not None and current_price <= yc.ngan_sach:
+                        if current_score > best_combo_score:
+                            best_combo = list(current_docs)
+                            best_combo_price = current_price
+                            best_combo_score = current_score
+                    return
+                
+                cat_name, docs_list = category_candidates[idx]
+                for rank_idx, doc in enumerate(docs_list):
+                    p = get_price(doc)
+                    doc_score = 3 - rank_idx
+                    search_combos(idx + 1, current_docs + [doc], current_price + p, current_score + doc_score)
+            
+            if category_candidates:
+                search_combos(0, [], 0.0, 0)
+            
+            # Decide which combo to use
+            selected_routine_docs = []
+            if yc.ngan_sach is not None and best_combo is not None:
+                selected_routine_docs = best_combo
+                print(f"[BUDGET OPTIMIZATION] Found combo under budget {yc.ngan_sach}: total price {best_combo_price}")
+            elif cheapest_combo is not None:
+                selected_routine_docs = cheapest_combo
+                print(f"[BUDGET OPTIMIZATION] No combo fits budget {yc.ngan_sach or 'N/A'}. Using cheapest combo: total price {cheapest_combo_price}")
+            else:
+                selected_routine_docs = []
+            
+            if selected_routine_docs:
+                docs.extend(selected_routine_docs)
         else:
             # Stage 1: Full filter (loai_da + loai_san_pham + gia + xuat_xu)
             bo_loc = build_filter(yc)
@@ -1469,19 +1756,28 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                 print(f"[SEARCH] Stage 1 (full filter): {len(docs)} docs")
             
             # Stage 2: Category only
-            if not docs and yc.loai_san_pham:
-                docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": yc.loai_san_pham}}, top_n=k)
-                print(f"[SEARCH] Stage 2 (category): {len(docs)} docs")
+            if len(docs) < k and yc.loai_san_pham:
+                cat_docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": yc.loai_san_pham}}, top_n=k)
+                for d in cat_docs:
+                    if d.id not in [existing.id for existing in docs]:
+                        docs.append(d)
+                print(f"[SEARCH] Stage 2 (category): total {len(docs)} docs")
             
             # Stage 3: Skin type only
-            if not docs and yc.loai_da and yc.loai_da != "Unknown":
-                docs = hybrid_search_with_filter({"loai_da": {"$eq": yc.loai_da}}, top_n=k)
-                print(f"[SEARCH] Stage 3 (skin type): {len(docs)} docs")
+            if len(docs) < k and yc.loai_da and yc.loai_da != "Unknown":
+                skin_docs = hybrid_search_with_filter({"loai_da": {"$eq": yc.loai_da}}, top_n=k)
+                for d in skin_docs:
+                    if d.id not in [existing.id for existing in docs]:
+                        docs.append(d)
+                print(f"[SEARCH] Stage 3 (skin type): total {len(docs)} docs")
             
             # Stage 4: Pure semantic search (NO FILTER)
-            if not docs:
-                docs = hybrid_search_with_filter(None, top_n=k)
-                print(f"[SEARCH] Stage 4 (semantic only): {len(docs)} docs")
+            if len(docs) < k:
+                sem_docs = hybrid_search_with_filter(None, top_n=k)
+                for d in sem_docs:
+                    if d.id not in [existing.id for existing in docs]:
+                        docs.append(d)
+                print(f"[SEARCH] Stage 4 (semantic only): total {len(docs)} docs")
 
     print(f"[SEARCH] FINAL RESULT: {len(docs)} documents found")
 
@@ -1521,11 +1817,16 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     # Merge ChromaDB documents and SQL documents based on ID or Name into a unified pool
     seen_ids = set()
     merged_docs = []
+    sensitive_keywords = ["băng vệ sinh", "bao cao su", "bvs", "bcs", "durex", "diana", "kotex", "laurier", "sagami", "okamoto", "whisper", "sofy", "sanytène", "tampon", "phụ khoa"]
     
     # Pool SQL documents
     for doc in sql_docs:
         p_id = doc.id.replace('product_', '') if doc.id else doc.metadata.get("id", "")
         p_name = doc.metadata.get("ten_san_pham", "")
+        p_name_lower = p_name.lower()
+        if any(kw in p_name_lower for kw in sensitive_keywords):
+            print(f"[FILTER] Excluded sensitive product from SQL: {p_name}")
+            continue
         key = (p_id, p_name)
         if key not in seen_ids:
             seen_ids.add(key)
@@ -1535,6 +1836,10 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     for doc in docs:
         p_id = doc.id.replace('product_', '') if hasattr(doc, 'id') and doc.id else doc.metadata.get("id", "")
         p_name = doc.metadata.get("ten_san_pham", "")
+        p_name_lower = p_name.lower()
+        if any(kw in p_name_lower for kw in sensitive_keywords):
+            print(f"[FILTER] Excluded sensitive product from ChromaDB: {p_name}")
+            continue
         key = (p_id, p_name)
         if key not in seen_ids:
             seen_ids.add(key)
@@ -1600,6 +1905,29 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         reassembled_docs.append(current_doc)
     reassembled_docs.extend(other_docs)
 
+    # Strictly filter single-product recommendations to fit within the user's specified budget limit
+    if not yc.is_routine and yc.ngan_sach is not None:
+        filtered_docs = []
+        for doc in reassembled_docs:
+            p_price = 0.0
+            try:
+                p_price = float(doc.metadata.get("gia_ban", 0))
+            except Exception:
+                pass
+            if p_price <= yc.ngan_sach:
+                filtered_docs.append(doc)
+        print(f"[BUDGET FILTER] Filtered single products: {len(reassembled_docs)} -> {len(filtered_docs)} under budget {yc.ngan_sach}")
+        if filtered_docs:
+            reassembled_docs = filtered_docs
+        else:
+            print(f"[BUDGET FILTER] No products under budget {yc.ngan_sach}. Sorting by price as fallback.")
+            def doc_price_key(d):
+                try:
+                    return float(d.metadata.get("gia_ban", 0))
+                except Exception:
+                    return 99999999.0
+            reassembled_docs = sorted(reassembled_docs, key=doc_price_key)
+
     # Limit the merged docs to avoid huge prompt token size and 413 Payload/Request Too Large errors
     final_merged_docs = reassembled_docs if yc.is_routine else reassembled_docs[:int(yc.so_luong_goi_y or 3)]
 
@@ -1625,14 +1953,33 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             .replace("{search_results}", format_search_results(final_merged_docs)) \
             .replace("{user_question}", message)
     else:  # PRODUCT_INQUIRY
-        prompt = SYSTEM_PROMPT \
-            .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
-            .replace("{rich_context}", rich_context) \
-            .replace("{search_results}", format_search_results(final_merged_docs)) \
-            .replace("{user_question}", rewritten_query)
+        if yc.is_routine:
+            tong_chi_phi = sum(float(doc.metadata.get("gia_ban", 0)) for doc in final_merged_docs)
+            tong_chi_phi_str = f"{int(tong_chi_phi):,}".replace(",", ".")
+            
+            ngan_sach_str = "Không giới hạn"
+            if yc.ngan_sach:
+                ngan_sach_str = f"{int(yc.ngan_sach):,}".replace(",", ".")
+                
+            prompt = ROUTINE_SYSTEM_PROMPT \
+                .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
+                .replace("{rich_context}", rich_context) \
+                .replace("{search_results}", format_search_results(final_merged_docs)) \
+                .replace("{user_question}", rewritten_query) \
+                .replace("{tong_chi_phi_str}", tong_chi_phi_str) \
+                .replace("{ngan_sach_str}", ngan_sach_str)
+        else:
+            prompt = SYSTEM_PROMPT \
+                .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
+                .replace("{rich_context}", rich_context) \
+                .replace("{search_results}", format_search_results(final_merged_docs)) \
+                .replace("{user_question}", rewritten_query)
 
     answer = None
+    current_time = time.time()
     for llm in llms:
+        if _get_llm_cooldown(llm) > current_time:
+            continue
         model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
         try:
             print(f"[GENERATE] Trying: {model_name}")
@@ -1642,7 +1989,12 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                 print(f"[GENERATE] OK: {model_name}")
                 break
         except Exception as e:
-            print(f"[GENERATE] Failed ({model_name}): {type(e).__name__}: {str(e)[:100]}")
+            err_str = str(e).lower()
+            if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str or "quota" in err_str:
+                _set_llm_cooldown(llm, 300)
+                print(f"[GENERATE] Failed ({model_name}) due to rate limits. Putting on 5-min cool-down.")
+            else:
+                print(f"[GENERATE] Failed ({model_name}): {type(e).__name__}: {str(e)[:100]}")
 
     if not answer:
         print("[FALLBACK] All LLMs failed - using generic response")
