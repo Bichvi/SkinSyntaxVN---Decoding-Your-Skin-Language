@@ -1297,7 +1297,21 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           var title = escapeHtml(product.name || 'Sản phẩm liên quan');
           var brand = escapeHtml(product.brand || 'Chưa rõ thương hiệu');
           var rawSummary = product.summary || product.short_description || product.description || product.ingredients || '';
-          var description = escapeHtml(summarizeText(rawSummary, 120));
+          
+          var fullDescription = escapeHtml(rawSummary);
+          var shortDescription = escapeHtml(summarizeText(rawSummary, 120));
+          
+          var descriptionBlock = '';
+          if (rawSummary.length > 120) {
+              var uniqueId = 'ai-product-desc-' + Math.random().toString(36).substring(2, 9);
+              descriptionBlock = '<div class="ai-chat-widget__meta-card-subtitle" title="Nhấp để xem thêm/thu gọn" style="cursor: pointer;" onclick="var s=document.getElementById(\'' + uniqueId + '-short\'), f=document.getElementById(\'' + uniqueId + '-full\'); if(s.hidden){ s.hidden=false; f.hidden=true; } else { s.hidden=true; f.hidden=false; }">'
+                + '<span id="' + uniqueId + '-short">' + shortDescription + ' <span style="color:#2c6a4a; font-weight:800; font-size:11px; white-space:nowrap;">[Xem thêm]</span></span>'
+                + '<span id="' + uniqueId + '-full" hidden>' + fullDescription + ' <span style="color:#2c6a4a; font-weight:800; font-size:11px; white-space:nowrap;">[Thu gọn]</span></span>'
+                + '</div>';
+          } else {
+              descriptionBlock = '<div class="ai-chat-widget__meta-card-subtitle">' + shortDescription + '</div>';
+          }
+
           var price = product.price ? '<div class="ai-chat-widget__meta-card-pricechip">' + escapeHtml(currencyFormatter.format(product.price) + ' đ') + '</div>' : '';
           var imageUrl = String(product.image_url || '').trim();
           var detailUrl = String(product.detail_url || '').trim();
@@ -1349,7 +1363,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
             + '<div class="ai-chat-widget__meta-card-body">'
             + titleBlock
             + '<div class="ai-chat-widget__meta-card-subtitle">' + brand + '</div>'
-            + '<div class="ai-chat-widget__meta-card-subtitle">' + description + '</div>'
+            + descriptionBlock
             + '<div class="ai-chat-widget__meta-card-actions">' + price + cartAction + detailAction + askMoreAction + toggleAction + '</div>'
             + linkBlock
             + '</div>'
@@ -1360,20 +1374,6 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 
       var updateStatus = function () {
         if (!status) {
-          return;
-        }
-
-        var latestAssistant = null;
-        for (var i = messages.length - 1; i >= 0; i -= 1) {
-          if (messages[i] && messages[i].role === 'assistant' && !messages[i].typing) {
-            latestAssistant = messages[i];
-            break;
-          }
-        }
-
-        if (latestAssistant && latestAssistant.fallback) {
-          status.innerHTML = '<span class="ai-chat-widget__status-dot"></span> Dữ liệu dự phòng';
-          status.classList.add('is-fallback');
           return;
         }
 
@@ -1412,10 +1412,6 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           var contentPrefix = '';
           var contentSuffix = '';
           if (!isUser) {
-            if (message.fallback) {
-              contentPrefix = '<div class="ai-chat-widget__fallback-note">' + escapeHtml(message.fallbackNote || 'Phản hồi dự phòng từ dữ liệu hệ thống') + '</div>';
-            }
-
             var conflictCards = renderConflictCards(message.conflicts || []);
             var productCards = renderProductCards(message.products || []);
             meta += renderMetaBlock('Conflict Detection', conflictCards);
@@ -1626,7 +1622,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
               content: 'Không kết nối được tới AI service. Bạn có thể thử lại hoặc hỏi ngắn gọn hơn.',
               conflicts: [],
               products: [],
-              fallback: true
+              fallback: false
             });
           })
           .finally(function () {
