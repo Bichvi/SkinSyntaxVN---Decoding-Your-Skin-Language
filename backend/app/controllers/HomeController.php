@@ -930,7 +930,7 @@ class HomeController {
             return max(5, (int)$envValue);
         }
 
-        return 25;
+        return 60;
     }
 
     private function normalizeIngredientText(?string $value): string {
@@ -1142,10 +1142,19 @@ class HomeController {
                 return;
             }
 
+            $name = trim((string)($detail['ten_san_pham'] ?? ''));
+            $nameLower = function_exists('mb_strtolower') ? mb_strtolower($name, 'UTF-8') : strtolower($name);
+            $sensitiveKeywords = ["băng vệ sinh", "bao cao su", "bvs", "bcs", "durex", "diana", "kotex", "laurier", "sagami", "okamoto", "whisper", "sofy", "sanytène", "tampon", "phụ khoa"];
+            foreach ($sensitiveKeywords as $kw) {
+                if (str_contains($nameLower, $kw)) {
+                    return; // Skip sensitive product
+                }
+            }
+
             $seen[$productId] = true;
             $products[] = [
                 'id' => (string)($detail['ma_san_pham'] ?? $productId),
-                'name' => trim((string)($detail['ten_san_pham'] ?? '')),
+                'name' => $name,
                 'brand' => trim((string)($detail['thuong_hieu'] ?? '')),
                 'price' => (int)($detail['gia_ban'] ?? 0),
                 'image_url' => resolve_image_url((string)($detail['link_hinh_anh'] ?? $detail['hinh_anh'] ?? '')),
@@ -1227,7 +1236,7 @@ class HomeController {
         }
 
         return preg_match(
-            '/goi y|gợi ý|de xuat|đề xuất|nen mua|nên mua|nen dung|nên dùng|chon giup|chọn giúp|san pham nao|sản phẩm nào|serum nao|kem nao|toner nao|sua rua mat nao|tẩy trang nào|kem chống nắng nào|compare|so sanh|so sánh|dua ra vai san pham|đưa ra vài sản phẩm/u',
+            '/goi y|gợi ý|de xuat|đề xuất|nen mua|nên mua|nen dung|nên dùng|chon giup|chọn giúp|san pham nao|sản phẩm nào|serum nao|kem nao|toner nao|sua rua mat nao|tẩy trang nào|kem chống nắng nào|compare|so sanh|so sánh|dua ra vai san pham|đưa ra vài sản phẩm|chu trình|chu trinh|skincare|routine|bộ dưỡng|bo duong/u',
             $normalized
         ) === 1;
     }
@@ -1244,10 +1253,6 @@ class HomeController {
         $paragraphs = array_values(array_filter(array_map('trim', $paragraphs), static function (string $part): bool {
             return $part !== '';
         }));
-
-        if (count($paragraphs) > 4) {
-            $paragraphs = array_slice($paragraphs, 0, 4);
-        }
 
         return trim(implode("\n\n", $paragraphs));
     }
@@ -1502,11 +1507,11 @@ class HomeController {
             'retrieved_products' => $products,
             'response_requirements' => [
                 'Neu co conflict trong gio hang, phai canh bao som o dau cau tra loi.',
-                'Chi goi y retrieved_products khi nguoi dung dang thuc su xin de xuat, so sanh, chon mua, hoac muon xem san pham cu the.',
-                'Neu nguoi dung chi hoi kien thuc skincare, thanh phan, cach dung, routine, thi tra loi truc tiep va khong tu dong de xuat san pham.',
+                'Tuyet doi chi su dung cac san pham thuc te trong danh sach `retrieved_products` (ket qua tu Hybrid Search & Reranked thuc te cua cua hang) de dua vao routine hoac de xuat, khong duoc tu bia ra san pham khac ngoai cua hang.',
+                'Khi nguoi dung hoi routine skincare, hay dung chinh cac san pham thich hop trong `retrieved_products` de thiet ke mot chu trinh skincare chi tiet cho ho.',
                 'Khong copy nguyen van mo ta san pham dai dong. Neu can nhac san pham, chi tom tat 1 y chinh ngan gon.',
                 'Neu khong du du lieu, noi ro gioi han thay vi doan.',
-                'Tra loi gon, co cau truc, uu tien bullet khi can, toi da khoang 4 doan ngan.',
+                'Tra loi chi tiet, co cau truc, su dung bullet point va chu trinh ro rang, khong gioi han so doan van.',
             ],
         ];
 
@@ -1712,13 +1717,7 @@ class HomeController {
 
         $response = $this->postJsonRequest($endpoint, $payload, $this->getAiChatTimeout());
         $answer = '';
-        $usedFallback = false;
         $decoded = null;
-        $fallbackMeta = [
-            'reason' => '',
-            'status_message' => '',
-            'fallback_note' => '',
-        ];
 
         if ((int)($response['status'] ?? 0) >= 200 && (int)($response['status'] ?? 0) < 300) {
             $decoded = json_decode((string)($response['body'] ?? ''), true);
@@ -1734,9 +1733,7 @@ class HomeController {
         }
 
         if ($answer === '') {
-            $usedFallback = true;
-            $fallbackMeta = $this->resolveAiFallbackMeta($response, is_array($decoded) ? $decoded : null);
-            $answer = $this->buildAiAssistantFallback($message, $conflicts, $products, $profile);
+            $answer = 'Không kết nối được tới AI service. Vui lòng thử lại sau.';
         } else {
             $answer = $this->trimAiAnswer($answer);
         }
@@ -1746,13 +1743,13 @@ class HomeController {
             'answer' => $answer,
             'conflicts' => $conflicts,
             'products' => $products,
-            'fallback' => $usedFallback,
-            'fallback_reason' => $fallbackMeta['reason'],
-            'status_message' => $fallbackMeta['status_message'],
-            'fallback_note' => $fallbackMeta['fallback_note'],
+            'fallback' => false,
+            'fallback_reason' => '',
+            'status_message' => '',
+            'fallback_note' => '',
         ];
 
-        if (!$usedFallback) {
+        if ($answer !== 'Không kết nối được tới AI service. Vui lòng thử lại sau.') {
             $this->storeAiResponsePayload($message, $payload, $currentProductId);
         }
 
