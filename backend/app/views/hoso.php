@@ -789,7 +789,7 @@ $accountVerificationHint = !empty($account['email'])
 
       <div class="tab-pane fade" id="tab-skin" role="tabpanel">
         <div class="alert alert-light border mb-3">
-          Hồ sơ làn da được lấy từ dữ liệu khảo sát lúc đăng ký và lưu trực tiếp trong bảng khách hàng.
+          Hồ sơ làn da được lấy từ dữ liệu khảo sát lúc đăng ký.
         </div>
 
         <div class="row g-3 mb-4">
@@ -818,8 +818,11 @@ $accountVerificationHint = !empty($account['email'])
             </div>
           </div>
         </div>
-
-        <div class="row g-3 mb-4">
+        <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center justify-content-between gap-3 flex-wrap">
+          <div>Muốn cập nhật hồ sơ da? Hãy mở bài khảo sát riêng để dữ liệu gợi ý được lưu đầy đủ.</div>
+          <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=khaosat">Cập nhật khảo sát</a>
+        </div>
+<div class="row g-3 mb-4">
           <div class="col-lg-6">
             <div class="border rounded-3 p-3 bg-white h-100">
               <h6 class="mb-3">Vấn đề da và tình trạng hiện tại</h6>
@@ -878,96 +881,12 @@ $accountVerificationHint = !empty($account['email'])
             </div>
           </div>
         </div>
-
-        <form id="skinProfileForm" class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Loại da của bạn là gì?</label>
-            <select name="loai_da" class="form-select" required>
-              <option value="">-- Chọn loại da --</option>
-              <?php
-                $selectedLoaiDa = trim((string)($skinProfile['loai_da'] ?? ''));
-                $skinTypes = !empty($loaiDaOptions) ? $loaiDaOptions : ['Dầu', 'Khô', 'Hỗn hợp', 'Nhạy cảm'];
-                foreach ($skinTypes as $st):
-              ?>
-                <option value="<?= h($st) ?>" <?= ($selectedLoaiDa === $st ? 'selected' : '') ?>><?= h($st) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Ngân sách mỹ phẩm trung bình</label>
-            <?php $savedBudget = (string)($skinProfile['ngan_sach'] ?? ''); ?>
-            <select name="ngan_sach" class="form-select">
-              <option value="">-- Chọn ngân sách --</option>
-              <option value="200000" <?= ($savedBudget === '200000' ? 'selected' : '') ?>>Dưới 200.000đ</option>
-              <option value="500000" <?= ($savedBudget === '500000' ? 'selected' : '') ?>>200.000đ – 500.000đ</option>
-              <option value="800000" <?= ($savedBudget === '800000' ? 'selected' : '') ?>>Trên 500.000đ</option>
-            </select>
-          </div>
-
-          <div class="col-12">
-            <label class="form-label">Vấn đề da đang gặp phải?</label>
-            <?php $vanDeList = ['Mụn', 'Lão hóa', 'Sạm nám', 'Lỗ chân lông to', 'Da thiếu ẩm']; ?>
-            <div class="row g-2">
-              <?php foreach ($vanDeList as $vd): ?>
-                <div class="col-sm-6 col-lg-4">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="van_de_da[]" value="<?= h($vd) ?>" id="vd_<?= md5($vd) ?>"
-                      <?= in_array($vd, $vanDeDaSaved, true) ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="vd_<?= md5($vd) ?>"><?= h($vd) ?></label>
-                  </div>
-                </div>
-              <?php endforeach; ?>
-            </div>
-          </div>
-
-          <div class="col-12 d-flex align-items-center gap-2 flex-wrap">
-            <button type="submit" class="btn btn-brand">Cập nhật hồ sơ</button>
-            <span id="skinProfileMsg" class="small"></span>
-          </div>
-        </form>
-      </div>
+</div>
     </div>
   </div>
 </div>
 
 <script>
-(function () {
-  const form = document.getElementById('skinProfileForm');
-  const msgEl = document.getElementById('skinProfileMsg');
-  if (!form || !msgEl) return;
-
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    msgEl.textContent = 'Đang lưu...';
-    msgEl.className = 'small text-muted';
-
-    try {
-      const formData = new FormData(form);
-      const res = await fetch('<?= BASE_URL ?>/index.php?r=capnhathosoda', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        msgEl.textContent = data.message || 'Có lỗi xảy ra khi lưu hồ sơ.';
-        msgEl.className = 'small text-danger';
-        return;
-      }
-
-      msgEl.textContent = data.message || 'Đã cập nhật hồ sơ thành công.';
-      msgEl.className = 'small text-success';
-    } catch (err) {
-      msgEl.textContent = 'Kết nối thất bại. Vui lòng thử lại.';
-      msgEl.className = 'small text-danger';
-    }
-  });
-})();
-
 (function () {
   const form = document.getElementById('accountInfoForm');
   const msgEl = document.getElementById('accountInfoMsg');
@@ -1035,3 +954,5 @@ $accountVerificationHint = !empty($account['email'])
   });
 })();
 </script>
+
+

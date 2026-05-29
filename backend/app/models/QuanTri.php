@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/HoaDon.php';
+require_once __DIR__ . '/DanhGia.php';
+require_once __DIR__ . '/SanPham.php';
 
 class QuanTri {
     private $db;
@@ -43,6 +45,174 @@ class QuanTri {
                 'updated_at' => new \MongoDB\BSON\UTCDateTime()
             ]]
         );
+    }
+
+    public function normalizeOrderStatus($status): string {
+        $raw = trim((string)($status ?? ''));
+        $normalized = function_exists('mb_strtolower') ? mb_strtolower($raw, 'UTF-8') : strtolower($raw);
+        $normalized = str_replace(['_', '-'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?: $normalized;
+
+        $map = [
+            'chờ xử lý' => 'pending',
+            'cho xu ly' => 'pending',
+            'chờ thanh toán' => 'pending',
+            'cho thanh toan' => 'pending',
+            'moi' => 'pending',
+            'pending' => 'pending',
+            'đã xác nhận' => 'confirmed',
+            'da xac nhan' => 'confirmed',
+            'confirmed' => 'confirmed',
+            'đang giao' => 'shipping',
+            'dang giao' => 'shipping',
+            'shipping' => 'shipping',
+            'hoàn thành' => 'completed',
+            'hoan thanh' => 'completed',
+            'completed' => 'completed',
+            'đã hủy' => 'cancelled',
+            'da huy' => 'cancelled',
+            'huy' => 'cancelled',
+            'cancelled' => 'cancelled',
+            'canceled' => 'cancelled',
+        ];
+
+        return $map[$normalized] ?? $normalized;
+    }
+
+    private function orderStatusLabel(string $canonical): string {
+        return [
+            'pending' => 'Chờ xử lý',
+            'confirmed' => 'Đã xác nhận',
+            'shipping' => 'Đang giao',
+            'completed' => 'Hoàn thành',
+            'cancelled' => 'Đã hủy',
+        ][$canonical] ?? 'Chờ xử lý';
+    }
+
+    private function normalizePaymentStatus($status): string {
+        $raw = trim((string)($status ?? ''));
+        $normalized = function_exists('mb_strtolower') ? mb_strtolower($raw, 'UTF-8') : strtolower($raw);
+        $normalized = str_replace(['_', '-'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?: $normalized;
+        return in_array($normalized, ['da thanh toan', 'đã thanh toán', 'paid', 'thanh cong', 'completed'], true)
+            ? 'paid'
+            : 'unpaid';
+    }
+
+    private function isRevenueOrder(array $order): bool {
+        if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') !== 'completed') {
+            return false;
+        }
+
+        $method = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod')));
+        if ($method === 'bank_transfer_qr' || str_contains($method, 'qr') || str_contains($method, 'transfer')) {
+            return $this->normalizePaymentStatus($order['status_thanh_toan'] ?? '') === 'paid';
+        }
+
+        return true;
+    }
+
+    private function formatMongoDateForStorage($value): string {
+        if ($value instanceof \MongoDB\BSON\UTCDateTime) {
+            return $value->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('Y-m-d H:i:s');
+        }
+
+        $text = trim((string)($value ?? ''));
+        if ($text === '' || $text === '0') {
+            return '';
+        }
+
+        $timestamp = strtotime($text);
+        if ($timestamp === false || $timestamp <= 0) {
+            return '';
+        }
+
+        return date('Y-m-d H:i:s', $timestamp);
+    }
+
+    public function formatDateTimeSafe($value, string $empty = 'Chưa có ngày'): string {
+        $dateText = $this->formatMongoDateForStorage($value);
+        if ($dateText === '') {
+            return $empty;
+        }
+        $timestamp = strtotime($dateText);
+        return ($timestamp !== false && $timestamp > 0) ? date('d/m/Y H:i', $timestamp) : $empty;
+    }
+
+    private function normalizeProductId($id): string {
+        return trim((string)($id ?? ''));
+    }
+
+    private function productIdCandidates($id): array {
+        $productId = $this->normalizeProductId($id);
+        $ids = [$productId];
+        if ($productId !== '' && is_numeric($productId)) {
+            $ids[] = (int)$productId;
+        }
+        return array_values(array_unique($ids, SORT_REGULAR));
+    }
+
+    public function buildProductIdQuery($id): array {
+        return ['ma_san_pham' => ['$in' => $this->productIdCandidates($id)]];
+    }
+
+    public function getProductBriefById($productId): array {
+        return (new SanPham($this->db))->getProductBriefById($productId);
+    }
+
+    public function createNotification(array $data): void {
+        try {
+            $now = new \MongoDB\BSON\UTCDateTime();
+            $payload = array_merge([
+                'ma_thong_bao' => $this->getNextNumericId('thong_bao', 'ma_thong_bao'),
+                'loai' => 'general',
+                'tieu_de' => 'Thông báo',
+                'noi_dung' => '',
+                'da_doc' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ], $data);
+            if (empty($payload['created_at'])) $payload['created_at'] = $now;
+            if (empty($payload['updated_at'])) $payload['updated_at'] = $now;
+            $this->db->thong_bao->insertOne($payload);
+        } catch (Throwable $e) {
+            error_log('createNotification error: ' . $e->getMessage());
+        }
+    }
+
+    private function recordAdminOrderNotification(int $orderId, string $type, array $order = []): void {
+        if ($orderId <= 0) return;
+
+        $typeLabels = [
+            'new_cod' => 'Đơn hàng mới COD',
+            'new_qr' => 'Đơn hàng mới QR/chuyển khoản',
+            'confirmed' => 'Đơn hàng đã xác nhận',
+            'shipping' => 'Đơn hàng đang giao',
+            'completed' => 'Đơn hàng hoàn thành',
+            'cancelled' => 'Đơn hàng đã hủy',
+        ];
+
+        $now = new \MongoDB\BSON\UTCDateTime();
+        $title = $typeLabels[$type] ?? 'Cập nhật đơn hàng';
+        $payload = [
+            'ma_thong_bao' => $this->getNextNumericId('thong_bao', 'ma_thong_bao'),
+            'loai' => $type,
+            'tieu_de' => $title,
+            'noi_dung' => $title . ' #' . $orderId,
+            'ma_hoa_don' => $orderId,
+            'tong_tien' => (int)($order['tong_tien'] ?? 0),
+            'trang_thai' => (string)($order['trang_thai'] ?? ''),
+            'hinh_thuc_thanh_toan' => (string)($order['hinh_thuc_thanh_toan'] ?? ''),
+            'da_doc' => false,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
+
+        try {
+            $this->db->thong_bao->insertOne($payload);
+        } catch (Throwable $e) {
+            error_log('admin notification error: ' . $e->getMessage());
+        }
     }
 
     private function resolveKhachHangByEmail(string $email, string $defaultName = 'Khach hang'): ?array {
@@ -115,22 +285,19 @@ class QuanTri {
                 ]
             ]),
             'tong_don_hang' => $this->db->hoa_don->countDocuments([]),
-            'don_cho_xu_ly' => $this->db->hoa_don->countDocuments([
-                'trang_thai' => new \MongoDB\BSON\Regex('^(cho xu ly|chờ xử lý|moi)$', 'i')
-            ]),
+            'don_cho_xu_ly' => 0,
             'tong_doanh_thu' => 0,
             'chat_cho_tra_loi' => 0,
             'danh_gia_cho_phan_hoi' => 0,
         ];
-
-        // Tính tổng doanh thu
-        $pipeline = [
-            ['$match' => ['trang_thai' => ['$nin' => [new \MongoDB\BSON\Regex('^(da huy|huy)$', 'i')]]]],
-            ['$group' => ['_id' => null, 'total' => ['$sum' => '$tong_tien']]]
-        ];
-        $revenue = $this->db->hoa_don->aggregate($pipeline)->toArray();
-        if (!empty($revenue)) {
-            $summary['tong_doanh_thu'] = $revenue[0]['total'];
+        foreach ($this->db->hoa_don->find([]) as $orderDoc) {
+            $order = (array)$orderDoc;
+            if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') === 'pending') {
+                $summary['don_cho_xu_ly']++;
+            }
+            if ($this->isRevenueOrder($order)) {
+                $summary['tong_doanh_thu'] += (int)($order['tong_tien'] ?? 0);
+            }
         }
 
         // Đếm tin nhắn chat chờ trả lời
@@ -145,12 +312,12 @@ class QuanTri {
         $chats = $this->db->lich_su_chat->aggregate($pipelineChat)->toArray();
         $summary['chat_cho_tra_loi'] = count($chats);
 
-        // Đếm đánh giá chờ phản hồi
-        $summary['danh_gia_cho_phan_hoi'] = $this->db->danh_gia->countDocuments([
+        // Đếm đánh giá chờ phản hồi trong collection chính.
+        $summary['danh_gia_cho_phan_hoi'] = $this->db->danh_gia_san_pham->countDocuments([
             '$or' => [
-                ['phan_hoi' => null],
-                ['phan_hoi' => ''],
-                ['phan_hoi' => ['$exists' => false]]
+                ['phan_hoi_shop' => null],
+                ['phan_hoi_shop.noi_dung' => ''],
+                ['phan_hoi_shop.noi_dung' => ['$exists' => false]]
             ]
         ]);
 
@@ -161,11 +328,13 @@ class QuanTri {
         $orderLimit = max(1, min(10, $orderLimit));
         $chatLimit = max(1, min(10, $chatLimit));
 
-        $pendingOrdersCount = $this->db->hoa_don->countDocuments([
-            'trang_thai' => new \MongoDB\BSON\Regex('^(cho xu ly|chờ xử lý|moi)$', 'i')
-        ]);
+        $pendingOrdersCount = 0;
+        foreach ($this->db->hoa_don->find([], ['projection' => ['trang_thai' => 1]]) as $orderDoc) {
+            if ($this->normalizeOrderStatus(((array)$orderDoc)['trang_thai'] ?? '') === 'pending') {
+                $pendingOrdersCount++;
+            }
+        }
 
-        // Tính pending chats
         $pipelineChat = [
             ['$sort' => ['thoi_gian' => -1]],
             ['$group' => [
@@ -177,23 +346,49 @@ class QuanTri {
         $chats = $this->db->lich_su_chat->aggregate($pipelineChat)->toArray();
         $pendingChatsCount = count($chats);
 
-        // Lấy danh sách order
-        $orderDocs = $this->db->hoa_don->find(
-            ['trang_thai' => new \MongoDB\BSON\Regex('^(cho xu ly|chờ xử lý|moi)$', 'i')],
-            ['sort' => ['ngay_dat' => -1, 'created_at' => -1], 'limit' => $orderLimit]
-        );
         $orders = [];
-        foreach ($orderDocs as $doc) {
-            $order = (array) $doc;
-            $kh = $this->db->khach_hang->findOne(['ma_kh' => $order['ma_kh']]);
-            if ($kh) {
-                $order['ho_ten'] = $kh['ho_ten'];
-                $order['email'] = $kh['email'];
+        $notificationDocs = $this->db->thong_bao->find(
+            ['ma_hoa_don' => ['$exists' => true]],
+            ['sort' => ['created_at' => -1, 'ma_thong_bao' => -1], 'limit' => $orderLimit]
+        );
+
+        foreach ($notificationDocs as $doc) {
+            $notice = (array)$doc;
+            $orderId = (int)($notice['ma_hoa_don'] ?? 0);
+            $order = $orderId > 0 ? (array)($this->db->hoa_don->findOne(['ma_hoa_don' => $orderId]) ?? []) : [];
+            if (!empty($order['ma_kh'])) {
+                $kh = $this->db->khach_hang->findOne(['ma_kh' => $order['ma_kh']]);
+                if ($kh) {
+                    $order['ho_ten'] = $kh['ho_ten'];
+                    $order['email'] = $kh['email'];
+                }
             }
-            // Chuyển đối tượng ngày tháng của Mongo sang string
-            $dateObj = $order['ngay_dat'] ?? $order['created_at'] ?? null;
-            $order['thoi_gian'] = $dateObj instanceof \MongoDB\BSON\UTCDateTime ? $dateObj->toDateTime()->format('Y-m-d H:i:s') : '';
+            $order['ma_hoa_don'] = $orderId;
+            $order['tieu_de_thong_bao'] = (string)($notice['tieu_de'] ?? 'Thông báo đơn hàng');
+            $order['noi_dung_thong_bao'] = (string)($notice['noi_dung'] ?? '');
+            $order['tong_tien'] = $order['tong_tien'] ?? ($notice['tong_tien'] ?? 0);
+            $order['thoi_gian'] = $this->formatMongoDateForStorage($notice['created_at'] ?? null);
             $orders[] = $order;
+        }
+
+        $reviewNotices = [];
+        foreach ($this->db->thong_bao->find(
+            ['loai' => 'review'],
+            ['sort' => ['created_at' => -1, 'ma_thong_bao' => -1], 'limit' => 5]
+        ) as $doc) {
+            $notice = (array)$doc;
+            $notice['thoi_gian'] = $this->formatMongoDateForStorage($notice['created_at'] ?? null);
+            $reviewNotices[] = $notice;
+        }
+
+        $questionNotices = [];
+        foreach ($this->db->thong_bao->find(
+            ['loai' => ['$in' => ['hoi_dap_moi', 'question']]],
+            ['sort' => ['created_at' => -1, 'ma_thong_bao' => -1], 'limit' => 5]
+        ) as $doc) {
+            $notice = (array)$doc;
+            $notice['thoi_gian'] = $this->formatMongoDateForStorage($notice['created_at'] ?? $notice['ngay_tao'] ?? null);
+            $questionNotices[] = $notice;
         }
 
         $conversations = $this->listChatConversations(true, $chatLimit);
@@ -203,22 +398,109 @@ class QuanTri {
         return [
             'pending_orders_count' => $pendingOrdersCount,
             'pending_chats_count' => $pendingChatsCount,
+            'unread_order_notifications_count' => $this->db->thong_bao->countDocuments([
+                '$and' => [
+                    ['$or' => [
+                        ['ma_hoa_don' => ['$exists' => true]],
+                        ['loai' => 'review'],
+                        ['loai' => ['$in' => ['hoi_dap_moi', 'question']]],
+                    ]],
+                    ['$or' => [['da_doc' => false], ['da_doc' => ['$exists' => false]]]],
+                ],
+            ]),
             'orders' => $orders,
+            'reviews' => $reviewNotices,
+            'questions' => $questionNotices,
             'chats' => $conversations,
             'latest_order_marker' => ($latestOrder['ma_hoa_don'] ?? '') . '|' . ($latestOrder['thoi_gian'] ?? ''),
             'latest_chat_marker' => ($latestChat['ma_kh'] ?? '') . '|' . ($latestChat['cap_nhat_cuoi'] ?? ''),
         ];
     }
 
+    public function markOrderNotificationsRead(): void {
+        try {
+            $this->db->thong_bao->updateMany(
+                ['$or' => [
+                    ['ma_hoa_don' => ['$exists' => true]],
+                    ['loai' => 'review'],
+                    ['loai' => ['$in' => ['hoi_dap_moi', 'question']]],
+                ]],
+                ['$set' => ['da_doc' => true, 'updated_at' => new \MongoDB\BSON\UTCDateTime()]]
+            );
+        } catch (Throwable $e) {
+            error_log('markOrderNotificationsRead error: ' . $e->getMessage());
+        }
+    }
+
     public function getRevenueByMonth(int $limit = 6): array {
-        // Hàm này khá phức tạp trong MongoDB (group by month), nên tui trả về array rỗng để an toàn, 
-        // hoặc viết logic lấy dữ liệu PHP chay
-        // Vì dashboard Admin thường ít dùng chi tiết nếu chưa code chuẩn.
-        return [];
+        $limit = max(1, min(24, $limit));
+        $months = [];
+
+        foreach ($this->db->hoa_don->find([]) as $doc) {
+            $order = (array)$doc;
+            if (!$this->isRevenueOrder($order)) {
+                continue;
+            }
+
+            $dateText = $this->formatMongoDateForStorage($order['ngay_hoan_thanh'] ?? $order['thoi_gian_hoan_thanh'] ?? $order['ngay_dat'] ?? null);
+            if ($dateText === '') {
+                continue;
+            }
+
+            $monthKey = date('Y-m', strtotime($dateText));
+            if (!isset($months[$monthKey])) {
+                $months[$monthKey] = [
+                    'thang' => date('m/Y', strtotime($dateText)),
+                    'so_don' => 0,
+                    'doanh_thu' => 0,
+                ];
+            }
+            $months[$monthKey]['so_don']++;
+            $months[$monthKey]['doanh_thu'] += (int)($order['tong_tien'] ?? 0);
+        }
+
+        krsort($months);
+        return array_slice(array_values($months), 0, $limit);
     }
 
     public function getTopProductsByRevenue(int $limit = 8): array {
-        return [];
+        $limit = max(1, min(30, $limit));
+        $completedOrderIds = [];
+        foreach ($this->db->hoa_don->find([]) as $doc) {
+            $order = (array)$doc;
+            if ($this->isRevenueOrder($order)) {
+                $completedOrderIds[] = $order['ma_hoa_don'];
+            }
+        }
+
+        if (empty($completedOrderIds)) {
+            return [];
+        }
+
+        $items = [];
+        $cursor = $this->db->chi_tiet_hoa_don->find(['ma_hoa_don' => ['$in' => $completedOrderIds]]);
+        foreach ($cursor as $doc) {
+            $row = (array)$doc;
+            $productId = (string)($row['ma_san_pham'] ?? '');
+            if ($productId === '') {
+                continue;
+            }
+            if (!isset($items[$productId])) {
+                $product = $this->db->san_pham->findOne(['ma_san_pham' => $productId]);
+                $items[$productId] = [
+                    'ma_san_pham' => $productId,
+                    'ten_san_pham' => $product['ten_san_pham'] ?? $productId,
+                    'so_don_vi' => 0,
+                    'doanh_thu' => 0,
+                ];
+            }
+            $qty = max(0, (int)($row['so_luong'] ?? 0));
+            $items[$productId]['so_don_vi'] += $qty;
+            $items[$productId]['doanh_thu'] += $qty * (int)($row['don_gia'] ?? 0);
+        }
+
+        usort($items, static fn($a, $b) => (int)$b['doanh_thu'] <=> (int)$a['doanh_thu']);
+        return array_slice(array_values($items), 0, $limit);
     }
 
     public function listCategories(string $keyword = ''): array {
@@ -574,20 +856,8 @@ class QuanTri {
     public function listOrders(string $keyword = '', string $status = ''): array {
         $filter = [];
         $keyword = trim($keyword);
-        if ($keyword !== '') {
-            $regex = new \MongoDB\BSON\Regex(preg_quote($keyword), 'i');
-            $filter['$or'] = [
-                ['ma_hoa_don' => $regex],
-                ['trang_thai' => $regex],
-                ['dia_chi_giao_hang' => $regex]
-            ];
-            // MongoDB không JOIN dễ để search text theo name khách, ta thu hẹp ở client hoặc code thêm
-        }
-
         $status = trim($status);
-        if ($status !== '') {
-            $filter['trang_thai'] = new \MongoDB\BSON\Regex('^' . preg_quote($status) . '$', 'i');
-        }
+        $statusCanonical = $status !== '' ? $this->normalizeOrderStatus($status) : '';
 
         $options = ['sort' => ['ngay_dat' => -1, 'created_at' => -1, 'ma_hoa_don' => -1]];
         $cursor = $this->db->hoa_don->find($filter, $options);
@@ -595,12 +865,35 @@ class QuanTri {
 
         foreach ($cursor as $doc) {
             $order = (array) $doc;
+            $order['trang_thai_normalized'] = $this->normalizeOrderStatus($order['trang_thai'] ?? '');
+            $order['trang_thai_hien_thi'] = $this->orderStatusLabel($order['trang_thai_normalized']);
+            $order['ngay_dat_hien_thi'] = $this->formatMongoDateForStorage($order['ngay_dat'] ?? $order['created_at'] ?? null);
+            if ($statusCanonical !== '' && $order['trang_thai_normalized'] !== $statusCanonical) {
+                continue;
+            }
             
             $kh = $this->db->khach_hang->findOne(['ma_kh' => $order['ma_kh']]);
             if ($kh) {
                 $order['ho_ten'] = $kh['ho_ten'];
                 $order['email'] = $kh['email'];
                 $order['so_dien_thoai'] = $kh['so_dien_thoai'] ?? null;
+            }
+
+            if ($keyword !== '') {
+                $haystack = implode(' ', [
+                    $order['ma_hoa_don'] ?? '',
+                    $order['ho_ten'] ?? '',
+                    $order['email'] ?? '',
+                    $order['so_dien_thoai'] ?? '',
+                    $order['trang_thai'] ?? '',
+                    $order['trang_thai_hien_thi'] ?? '',
+                    $order['hinh_thuc_thanh_toan'] ?? '',
+                    $order['status_thanh_toan'] ?? '',
+                    $order['dia_chi_giao_hang'] ?? '',
+                ]);
+                if (stripos($haystack, $keyword) === false) {
+                    continue;
+                }
             }
 
             $order['so_dong_hang'] = $this->db->chi_tiet_hoa_don->countDocuments(['ma_hoa_don' => $order['ma_hoa_don']]);
@@ -614,6 +907,10 @@ class QuanTri {
         if (!$doc) return null;
 
         $order = (array) $doc;
+        $order['trang_thai_normalized'] = $this->normalizeOrderStatus($order['trang_thai'] ?? '');
+        $order['trang_thai_hien_thi'] = $this->orderStatusLabel($order['trang_thai_normalized']);
+        $order['ngay_dat_hien_thi'] = $this->formatMongoDateForStorage($order['ngay_dat'] ?? $order['created_at'] ?? null);
+        $order['ngay_hoan_thanh_hien_thi'] = $this->formatMongoDateForStorage($order['ngay_hoan_thanh'] ?? $order['thoi_gian_hoan_thanh'] ?? null);
         $kh = $this->db->khach_hang->findOne(['ma_kh' => $order['ma_kh']]);
         if ($kh) {
             $order['ho_ten'] = $kh['ho_ten'];
@@ -631,11 +928,18 @@ class QuanTri {
 
         foreach ($cursor as $doc) {
             $ct = (array) $doc;
-            $sp = $this->db->san_pham->findOne(['ma_san_pham' => $ct['ma_san_pham']]);
-            if ($sp) {
-                $ct['ten_san_pham'] = $sp['ten_san_pham'];
-                $ct['link_hinh_anh'] = $sp['link_hinh_anh'] ?? $sp['hinh_anh'] ?? null;
-            }
+            $productId = (string)($ct['ma_san_pham'] ?? $ct['id_san_pham'] ?? $ct['product_id'] ?? '');
+            $brief = $productId !== '' ? $this->getProductBriefById($productId) : [];
+            $qty = max(1, (int)($ct['so_luong'] ?? $ct['quantity'] ?? 1));
+            $unitPrice = (int)($ct['don_gia'] ?? $ct['gia_ban'] ?? $brief['gia_ban'] ?? 0);
+            $ct['ma_san_pham'] = $productId !== '' ? $productId : (string)($brief['ma_san_pham'] ?? '');
+            $ct['ten_san_pham'] = (string)($ct['ten_san_pham'] ?? $ct['ten_sp'] ?? $brief['ten_san_pham'] ?? $ct['ma_san_pham']);
+            $ct['thuong_hieu'] = (string)($ct['thuong_hieu'] ?? $brief['thuong_hieu'] ?? '');
+            $ct['link_hinh_anh'] = (string)($ct['link_hinh_anh'] ?? $ct['hinh_anh'] ?? $brief['link_hinh_anh'] ?? '');
+            $ct['don_gia'] = $unitPrice;
+            $ct['so_luong'] = $qty;
+            $ct['thanh_tien'] = (int)($ct['thanh_tien'] ?? ($unitPrice * $qty));
+            $ct['product_missing'] = empty($brief);
             $items[] = $ct;
         }
         return $items;
@@ -643,39 +947,53 @@ class QuanTri {
 
     public function updateOrderStatus(int $orderId, string $status, string $cancelReason = '', bool $allowCancelledOverride = false): bool {
         $this->lastErrorMessage = null;
-        $status = trim($status);
-        if ($orderId <= 0 || $status === '') {
-            $this->lastErrorMessage = 'Du lieu cap nhat trang thai don hang khong hop le.';
+        $canonicalStatus = $this->normalizeOrderStatus($status);
+        if ($orderId <= 0 || !in_array($canonicalStatus, ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'], true)) {
+            $this->lastErrorMessage = 'Dữ liệu cập nhật trạng thái đơn hàng không hợp lệ.';
             return false;
         }
 
         $order = $this->db->hoa_don->findOne(['ma_hoa_don' => $orderId]);
         if (!$order) {
-            $this->lastErrorMessage = 'Khong tim thay don hang can cap nhat.';
+            $this->lastErrorMessage = 'Không tìm thấy đơn hàng cần cập nhật.';
             return false;
         }
-
-        $normalized = strtolower($status);
-        $isCancelled = in_array($normalized, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true);
-        
-        $currentStatus = strtolower(trim((string)($order['trang_thai'] ?? '')));
-        $currentIsCancelled = in_array($currentStatus, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true);
+        $orderArray = (array)$order;
+        $currentCanonical = $this->normalizeOrderStatus($orderArray['trang_thai'] ?? '');
+        $isCancelled = $canonicalStatus === 'cancelled';
+        $currentIsCancelled = $currentCanonical === 'cancelled';
 
         if (!$allowCancelledOverride && $currentIsCancelled && !$isCancelled) {
-            $this->lastErrorMessage = 'Don hang da huy khong the chuyen sang trang thai khac.';
+            $this->lastErrorMessage = 'Đơn hàng đã hủy không thể chuyển sang trạng thái khác.';
             return false;
         }
 
         $trimmedCancelReason = trim($cancelReason);
         if ($isCancelled && !$currentIsCancelled && $trimmedCancelReason === '') {
-            $this->lastErrorMessage = 'Vui long chon ly do huy don hang.';
+            $this->lastErrorMessage = 'Vui lòng chọn lý do hủy đơn hàng.';
             return false;
         }
 
+        $displayStatus = $this->orderStatusLabel($canonicalStatus);
+        $now = new \MongoDB\BSON\UTCDateTime();
         $updateData = [
-            'trang_thai' => $status,
-            'updated_at' => new \MongoDB\BSON\UTCDateTime()
+            'trang_thai' => $displayStatus,
+            'trang_thai_normalized' => $canonicalStatus,
+            'updated_at' => $now,
         ];
+
+        if ($canonicalStatus === 'completed') {
+            if (empty($orderArray['ngay_hoan_thanh'])) {
+                $updateData['ngay_hoan_thanh'] = $now;
+            }
+            if (empty($orderArray['thoi_gian_hoan_thanh'])) {
+                $updateData['thoi_gian_hoan_thanh'] = $now;
+            }
+            $paymentMethod = strtolower(trim((string)($orderArray['hinh_thuc_thanh_toan'] ?? 'cod')));
+            if ($paymentMethod === 'cod') {
+                $updateData['status_thanh_toan'] = 'Đã thanh toán';
+            }
+        }
 
         if ($isCancelled && $trimmedCancelReason !== '') {
             $updateData['ly_do_huy'] = $trimmedCancelReason;
@@ -685,99 +1003,179 @@ class QuanTri {
 
         try {
             $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => $updateData]);
+            if (($updateData['status_thanh_toan'] ?? '') === 'Đã thanh toán') {
+                $this->db->chi_tiet_hoa_don->updateMany(['ma_hoa_don' => $orderId], ['$set' => ['status_thanh_toan' => 'Đã thanh toán']]);
+            }
+
             $hoaDonModel = new HoaDon($this->db);
             if ($isCancelled && !$currentIsCancelled && method_exists($hoaDonModel, 'restoreStockForOrder')) {
                 $hoaDonModel->restoreStockForOrder($orderId);
             }
             $hoaDonModel->syncLoyaltyForOrder($orderId);
+
+            $updatedOrder = (array)($this->db->hoa_don->findOne(['ma_hoa_don' => $orderId]) ?? $orderArray);
+            $noticeType = [
+                'confirmed' => 'confirmed',
+                'shipping' => 'shipping',
+                'completed' => 'completed',
+                'cancelled' => 'cancelled',
+            ][$canonicalStatus] ?? '';
+            if ($noticeType !== '' && $canonicalStatus !== $currentCanonical) {
+                $this->recordAdminOrderNotification($orderId, $noticeType, $updatedOrder);
+            }
             return true;
         } catch (Throwable $e) {
+            error_log('updateOrderStatus error: ' . $e->getMessage());
             return false;
         }
     }
 
     public function getOrderStatusOptions(): array {
         return [
-            'Cho xu ly' => 'Chờ xử lý',
-            'Da xac nhan' => 'Đã xác nhận',
-            'Dang giao' => 'Đang giao',
-            'Hoan thanh' => 'Hoàn thành',
-            'Da huy' => 'Đã hủy',
+            'pending' => 'Chờ xử lý',
+            'confirmed' => 'Đã xác nhận',
+            'shipping' => 'Đang giao',
+            'completed' => 'Hoàn thành',
+            'cancelled' => 'Đã hủy',
         ];
     }
 
     public function listReviews(string $keyword = '', array $filters = []): array {
-        $filter = [];
-        
+        $keyword = trim($keyword);
         $star = max(0, min(5, (int)($filters['so_sao'] ?? 0)));
-        if ($star > 0) {
-            $filter['so_sao'] = $star;
-        }
-
         $replyStatus = strtolower(trim((string)($filters['trang_thai_phan_hoi'] ?? '')));
-        if ($replyStatus === 'pending') {
-            $filter['$or'] = [
-                ['phan_hoi' => null],
-                ['phan_hoi' => '']
-            ];
-        } elseif ($replyStatus === 'replied') {
-            $filter['phan_hoi'] = ['$ne' => null, '$ne' => ''];
-        }
+        $maKhDigits = preg_replace('/\D+/', '', trim((string)($filters['ma_kh'] ?? '')));
+        $limit = max(10, min(200, (int)($filters['limit'] ?? 60)));
 
-        $maKh = trim((string)($filters['ma_kh'] ?? ''));
-        $maKhDigits = preg_replace('/\D+/', '', $maKh);
-        if ($maKhDigits !== '') {
-            $filter['ma_kh'] = (int)$maKhDigits;
-        }
+        $filter = ['$or' => [
+            ['trang_thai' => ['$exists' => false]],
+            ['trang_thai' => 'hien_thi'],
+            ['trang_thai' => 'active'],
+        ]];
+        if ($star > 0) $filter['so_sao'] = $star;
+        if ($maKhDigits !== '') $filter['ma_khach_hang'] = (int)$maKhDigits;
 
-        $options = [
-            'sort' => ['ngay_danh_gia' => -1, 'ma_danh_gia' => -1],
-            'limit' => max(10, min(200, (int)($filters['limit'] ?? 60)))
-        ];
-
-        $cursor = $this->db->danh_gia->find($filter, $options);
         $items = [];
-
-        foreach ($cursor as $doc) {
-            $dg = (array) $doc;
-            
-            // Lấy tên KH
-            $kh = $this->db->khach_hang->findOne(['ma_kh' => $dg['ma_kh']]);
-            $dg['ten_khach_hang'] = $kh ? $kh['ho_ten'] : '';
-            $dg['sdt_khach_hang'] = $kh ? ($kh['so_dien_thoai'] ?? '') : '';
-
-            // Lấy SP
-            $sp = $this->db->san_pham->findOne(['ma_san_pham' => $dg['ma_san_pham']]);
-            $dg['ten_san_pham'] = $sp ? $sp['ten_san_pham'] : '';
-
-            // Lấy NV phản hồi
-            if (!empty($dg['ma_nv_phan_hoi'])) {
-                $nv = $this->db->nhan_vien->findOne(['ma_nv' => $dg['ma_nv_phan_hoi']]);
-                $dg['ten_nhan_vien_phan_hoi'] = $nv ? $nv['ho_ten'] : '';
-            }
-
-            // Lấy đơn hàng liên quan (Giả định đơn mới nhất có chứa sản phẩm)
-            $ct = $this->db->chi_tiet_hoa_don->findOne(['ma_san_pham' => $dg['ma_san_pham']], ['sort' => ['ma_hoa_don' => -1]]);
-            if ($ct) {
-                $hd = $this->db->hoa_don->findOne(['ma_hoa_don' => $ct['ma_hoa_don'], 'ma_kh' => $dg['ma_kh']]);
-                if ($hd) {
-                    $dg['ma_van_don'] = $hd['ma_hoa_don'];
-                    $dg['trang_thai_don_hang'] = $hd['trang_thai'];
-                }
-            }
-            
-            $items[] = $dg;
+        foreach ($this->db->danh_gia_san_pham->find($filter, ['sort' => ['ngay_danh_gia' => 1, 'ma_danh_gia' => 1], 'limit' => 300]) as $doc) {
+            $dg = (array)$doc;
+            $dg['_source'] = 'danh_gia_san_pham';
+            $items[] = $this->hydrateReviewForStaff($dg);
         }
-        return $items;
+
+        foreach ($this->db->danh_gia->find([], ['sort' => ['ngay_danh_gia' => 1, 'ma_danh_gia' => 1], 'limit' => 300]) as $doc) {
+            $legacy = (array)$doc;
+            if ($star > 0 && (int)($legacy['so_sao'] ?? 0) !== $star) continue;
+            if ($maKhDigits !== '' && (int)($legacy['ma_kh'] ?? 0) !== (int)$maKhDigits) continue;
+            if ($this->db->danh_gia_san_pham->findOne(['legacy_ma_danh_gia' => (int)($legacy['ma_danh_gia'] ?? 0)])) continue;
+            $legacy['_source'] = 'danh_gia';
+            $items[] = $this->hydrateReviewForStaff($legacy);
+        }
+
+        $items = array_values(array_filter($items, function ($review) use ($keyword, $replyStatus, $filters) {
+            $hasReply = trim((string)($review['phan_hoi'] ?? '')) !== '';
+            if ($replyStatus === 'pending' && $hasReply) return false;
+            if ($replyStatus === 'replied' && !$hasReply) return false;
+
+            $orderStatus = trim((string)($filters['trang_thai_don'] ?? ''));
+            if ($orderStatus !== '' && $this->normalizeOrderStatus($review['trang_thai_don_hang'] ?? '') !== $this->normalizeOrderStatus($orderStatus)) return false;
+
+            $dateRange = trim((string)($filters['khoang_ngay'] ?? ''));
+            if ($dateRange !== '') {
+                $days = ['1d' => 1, '3d' => 3, '7d' => 7, '30d' => 30][$dateRange] ?? 0;
+                $ts = strtotime((string)($review['ngay_danh_gia'] ?? ''));
+                if ($days > 0 && ($ts === false || $ts < strtotime('-' . $days . ' days'))) return false;
+            }
+
+            $maVanDon = preg_replace('/\D+/', '', trim((string)($filters['ma_van_don'] ?? '')));
+            if ($maVanDon !== '' && (string)($review['ma_van_don'] ?? '') !== $maVanDon) return false;
+
+            $phone = trim((string)($filters['sdt_khach_hang'] ?? ''));
+            if ($phone !== '' && stripos((string)($review['sdt_khach_hang'] ?? ''), $phone) === false) return false;
+
+            if ($keyword === '') return true;
+            $haystack = implode(' ', [
+                $review['ma_danh_gia'] ?? '',
+                $review['ma_san_pham'] ?? '',
+                $review['ten_san_pham'] ?? '',
+                $review['thuong_hieu'] ?? '',
+                $review['ten_khach_hang'] ?? '',
+                $review['noi_dung'] ?? '',
+                $review['so_sao'] ?? '',
+                $review['trang_thai_phan_hoi'] ?? '',
+            ]);
+            return stripos($haystack, $keyword) !== false;
+        }));
+
+        usort($items, function ($a, $b) {
+            $aPending = trim((string)($a['phan_hoi'] ?? '')) === '' ? 0 : 1;
+            $bPending = trim((string)($b['phan_hoi'] ?? '')) === '' ? 0 : 1;
+            if ($aPending !== $bPending) return $aPending <=> $bPending;
+            $aBad = (int)($a['so_sao'] ?? 0) <= 2 ? 0 : 1;
+            $bBad = (int)($b['so_sao'] ?? 0) <= 2 ? 0 : 1;
+            if ($aBad !== $bBad) return $aBad <=> $bBad;
+            return strtotime((string)($a['ngay_danh_gia'] ?? '')) <=> strtotime((string)($b['ngay_danh_gia'] ?? ''));
+        });
+
+        return array_slice($items, 0, $limit);
+    }
+
+    private function hydrateReviewForStaff(array $dg): array {
+        $isNew = ($dg['_source'] ?? '') === 'danh_gia_san_pham';
+        $customerId = (int)($dg['ma_khach_hang'] ?? $dg['ma_kh'] ?? 0);
+        $dg['ma_kh'] = $customerId;
+        $kh = $customerId > 0 ? $this->db->khach_hang->findOne(['ma_kh' => $customerId]) : null;
+        $dg['ten_khach_hang'] = $dg['ten_khach_hang'] ?? ($kh['ho_ten'] ?? 'Khách hàng');
+        $dg['email'] = $kh['email'] ?? '';
+        $dg['sdt_khach_hang'] = $kh['so_dien_thoai'] ?? '';
+        $dg['ma_san_pham'] = (string)($dg['ma_san_pham'] ?? '');
+
+        $sp = $this->getProductBriefById($dg['ma_san_pham']);
+        $dg['ten_san_pham'] = $sp['ten_san_pham'] ?? '';
+        $dg['thuong_hieu'] = $sp['thuong_hieu'] ?? '';
+        $dg['link_hinh_anh'] = $sp['link_hinh_anh'] ?? '';
+        $dg['product_missing'] = empty($sp);
+
+        $reply = $isNew ? ($dg['phan_hoi_shop'] ?? null) : null;
+        if (is_object($reply)) $reply = (array)$reply;
+        if ($isNew) {
+            $dg['phan_hoi'] = is_array($reply) ? (string)($reply['noi_dung'] ?? '') : '';
+            $dg['ma_nv_phan_hoi'] = is_array($reply) ? ($reply['ma_nhan_vien'] ?? null) : null;
+            $dg['ngay_phan_hoi'] = is_array($reply) ? ($reply['ngay_phan_hoi'] ?? null) : null;
+        } else {
+            $dg['phan_hoi_shop'] = trim((string)($dg['phan_hoi'] ?? '')) !== '' ? ['noi_dung' => $dg['phan_hoi']] : null;
+        }
+        $dg['trang_thai_phan_hoi'] = trim((string)($dg['phan_hoi'] ?? '')) !== '' ? 'Đã phản hồi' : 'Chưa phản hồi';
+
+        if (!empty($dg['ngay_danh_gia']) && $dg['ngay_danh_gia'] instanceof \MongoDB\BSON\UTCDateTime) {
+            $dg['ngay_danh_gia'] = $dg['ngay_danh_gia']->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('Y-m-d H:i:s');
+        }
+        if (!empty($dg['ngay_phan_hoi']) && $dg['ngay_phan_hoi'] instanceof \MongoDB\BSON\UTCDateTime) {
+            $dg['ngay_phan_hoi'] = $dg['ngay_phan_hoi']->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('Y-m-d H:i:s');
+        }
+
+        if (!empty($dg['ma_nv_phan_hoi'])) {
+            $nv = $this->db->nhan_vien->findOne(['ma_nv' => (int)$dg['ma_nv_phan_hoi']]);
+            $dg['ten_nhan_vien_phan_hoi'] = $nv ? ($nv['ho_ten'] ?? '') : '';
+        }
+
+        $ct = $this->db->chi_tiet_hoa_don->findOne($this->buildProductIdQuery($dg['ma_san_pham']), ['sort' => ['ma_hoa_don' => -1]]);
+        if ($ct) {
+            $hd = $this->db->hoa_don->findOne(['ma_hoa_don' => $ct['ma_hoa_don'], 'ma_kh' => $customerId]);
+            if ($hd) {
+                $dg['ma_van_don'] = $hd['ma_hoa_don'];
+                $dg['trang_thai_don_hang'] = $hd['trang_thai'];
+            }
+        }
+        return $dg;
     }
 
     public function getReviewFilterOptions(): array {
         $orderStatusOptions = [
-            'Cho xu ly' => 'Chờ xử lý',
-            'Da xac nhan' => 'Đã xác nhận',
-            'Dang giao' => 'Đang giao',
-            'Hoan thanh' => 'Hoàn thành',
-            'Da huy' => 'Đã hủy',
+            'pending' => 'Chờ xử lý',
+            'confirmed' => 'Đã xác nhận',
+            'shipping' => 'Đang giao',
+            'completed' => 'Hoàn thành',
+            'cancelled' => 'Đã hủy',
         ];
 
         return [
@@ -805,6 +1203,10 @@ class QuanTri {
             $dg = (array) $doc;
             $kh = $this->db->khach_hang->findOne(['ma_kh' => $dg['ma_kh']]);
             $dg['ten_khach_hang'] = $kh ? $kh['ho_ten'] : '';
+            $dg['da_mua_hang'] = $dg['da_mua_hang'] ?? true;
+            if (!empty($dg['ngay_danh_gia']) && $dg['ngay_danh_gia'] instanceof \MongoDB\BSON\UTCDateTime) {
+                $dg['ngay_danh_gia'] = $dg['ngay_danh_gia']->toDateTime()->format('Y-m-d H:i:s');
+            }
             $items[] = $dg;
         }
         return $items;
@@ -871,46 +1273,18 @@ class QuanTri {
     }
 
     public function createReview(string $customerEmail, string $productId, int $stars, string $content): array {
-        $kh = $this->resolveKhachHangByEmail($customerEmail, 'Khach hang');
-        if (!$kh || empty($kh['ma_kh'])) {
-            return ['ok' => false, 'message' => 'Không xác định được khách hàng để gửi đánh giá.'];
-        }
-
-        $productId = trim($productId);
-        $stars = max(1, min(5, $stars));
-        $content = trim($content);
-        if ($productId === '' || $content === '') {
-            return ['ok' => false, 'message' => 'Nội dung hoặc sản phẩm không được để trống.'];
-        }
-
-        $customerId = (int)$kh['ma_kh'];
-        $eligibility = $this->getCustomerReviewEligibility($customerId, [$productId]);
-        $productEligibility = $eligibility[$productId] ?? ['has_purchased' => false, 'has_reviewed' => false];
-        
-        if (empty($productEligibility['has_purchased'])) {
-            return ['ok' => false, 'message' => 'Bạn chỉ có thể đánh giá sản phẩm đã mua.'];
-        }
-
-        if (!empty($productEligibility['has_reviewed'])) {
-            return ['ok' => false, 'message' => 'Bạn đã đánh giá sản phẩm này rồi.'];
-        }
-
         try {
-            $payload = [
-                'ma_danh_gia' => $this->getNextNumericId('danh_gia', 'ma_danh_gia'),
-                'ma_san_pham' => $productId,
-                'ma_kh' => $customerId,
+            $reviewModel = new DanhGia($this->db);
+            $kh = $reviewModel->resolveCustomerByEmail($customerEmail, 'Khách hàng');
+            if (!$kh || empty($kh['ma_kh'])) {
+                return ['ok' => false, 'message' => 'Không xác định được khách hàng để gửi đánh giá.'];
+            }
+            return $reviewModel->addReview($productId, (int)$kh['ma_kh'], [
                 'so_sao' => $stars,
                 'noi_dung' => $content,
-                'ngay_danh_gia' => new \MongoDB\BSON\UTCDateTime()
-            ];
-            $this->db->danh_gia->insertOne($payload);
-
-            $this->grantReviewRewardPoint($customerId);
-            $this->refreshProductRating($productId);
-
-            return ['ok' => true, 'message' => 'Đã gửi đánh giá sản phẩm. Bạn nhận thêm 1 điểm ưu đãi.'];
+            ]);
         } catch (Throwable $e) {
+            error_log('createReview delegation error: ' . $e->getMessage());
             return ['ok' => false, 'message' => 'Không thể gửi đánh giá lúc này.'];
         }
     }
@@ -918,21 +1292,37 @@ class QuanTri {
     public function replyReview(int $reviewId, int $staffId, string $reply, string $rowRef = ''): bool {
         if ($reviewId <= 0 || trim($reply) === '') return false;
 
-        $review = $this->db->danh_gia->findOne(['ma_danh_gia' => $reviewId]);
-        if (!$review) return false;
-
-        $existingReply = trim((string)($review['phan_hoi'] ?? ''));
         $staffName = '';
         if ($staffId > 0) {
             $staff = $this->db->nhan_vien->findOne(['ma_nv' => $staffId]);
             $staffName = $staff ? $staff['ho_ten'] : '';
         }
 
-        $header = '[' . date('d/m/Y H:i') . ' - ' . ($staffName !== '' ? $staffName : 'Nhan vien') . ']';
-        $newEntry = $header . "\n" . trim($reply);
-        $finalReply = $existingReply === '' ? $newEntry : ($existingReply . "\n\n--------------------\n" . $newEntry);
-
         try {
+            $source = trim((string)$rowRef);
+            $review = $source === 'danh_gia' ? null : $this->db->danh_gia_san_pham->findOne(['ma_danh_gia' => $reviewId]);
+            if ($review) {
+                $this->db->danh_gia_san_pham->updateOne(
+                    ['ma_danh_gia' => $reviewId],
+                    ['$set' => [
+                        'phan_hoi_shop' => [
+                            'noi_dung' => trim($reply),
+                            'ngay_phan_hoi' => new \MongoDB\BSON\UTCDateTime(),
+                            'ma_nhan_vien' => $staffId > 0 ? $staffId : null,
+                            'ten_nhan_vien' => $staffName !== '' ? $staffName : 'SkinSyntax',
+                        ],
+                        'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+                    ]]
+                );
+                return true;
+            }
+
+            $review = $this->db->danh_gia->findOne(['ma_danh_gia' => $reviewId]);
+            if (!$review) return false;
+            $existingReply = trim((string)($review['phan_hoi'] ?? ''));
+            $header = '[' . date('d/m/Y H:i') . ' - ' . ($staffName !== '' ? $staffName : 'Nhân viên') . ']';
+            $newEntry = $header . "\n" . trim($reply);
+            $finalReply = $existingReply === '' ? $newEntry : ($existingReply . "\n\n--------------------\n" . $newEntry);
             $this->db->danh_gia->updateOne(
                 ['ma_danh_gia' => $reviewId],
                 ['$set' => [

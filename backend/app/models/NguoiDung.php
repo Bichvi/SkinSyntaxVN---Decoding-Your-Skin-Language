@@ -35,19 +35,34 @@ class NguoiDung {
         return null;
     }
 
-    public function taoMoi(string $hoTen, string $email, string $matKhauPlain): bool {
+    public function taoMoi(string $hoTen, string $email, string $matKhauPlain, array $consents = []): bool {
         $hash = password_hash($matKhauPlain, PASSWORD_BCRYPT);
+        $privacyConsent = !empty($consents['privacy_consent']);
+        $termsAgree = !empty($consents['terms_agree']);
 
         $result = $this->db->nguoidung->insertOne([
             'ho_ten' => $hoTen,
             'email' => $email,
             'mat_khau' => $hash,
+            'terms_agree' => $termsAgree,
+            'privacy_consent' => $privacyConsent,
+            'recommendation_consent' => $privacyConsent,
             'created_at' => new \MongoDB\BSON\UTCDateTime()
         ]);
 
         $ok = $result->getInsertedCount() > 0;
         if ($ok) {
             $this->ensureKhachHang($hoTen, $email);
+            $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+            $this->db->khach_hang->updateOne(
+                ['email' => $regex],
+                ['$set' => [
+                    'terms_agree' => $termsAgree,
+                    'privacy_consent' => $privacyConsent,
+                    'recommendation_consent' => $privacyConsent,
+                    'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+                ]]
+            );
         }
 
         return $ok;

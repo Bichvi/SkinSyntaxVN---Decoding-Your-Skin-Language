@@ -317,9 +317,22 @@ $pendingOrdersCount = (int)($notificationCenter['pending_orders_count'] ?? 0);
 $pendingChatsCount = (int)($notificationCenter['pending_chats_count'] ?? 0);
 $unseenCount = (int)($notificationCenter['unseen_count'] ?? 0);
 $notificationOrders = $notificationCenter['orders'] ?? [];
+$notificationReviews = $notificationCenter['reviews'] ?? [];
+$notificationQuestions = $notificationCenter['questions'] ?? [];
 $notificationChats = $notificationCenter['chats'] ?? [];
 $orderNotificationRoute = user_can_access_route('admin_orders') ? 'admin_orders' : 'staff_orders';
 $isAdmin = $currentRole === 'admin';
+$formatAdminNoticeDate = static function ($value): string {
+    if ($value instanceof \MongoDB\BSON\UTCDateTime) {
+        return $value->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('d/m H:i');
+    }
+    $text = trim((string)($value ?? ''));
+    if ($text === '' || $text === '0') {
+        return '';
+    }
+    $timestamp = strtotime($text);
+    return ($timestamp !== false && $timestamp > 0) ? date('d/m H:i', $timestamp) : '';
+};
 
 $adminMenuItems = [
     [
@@ -401,6 +414,13 @@ $staffMenuItems = [
         'label' => 'Phản hồi đánh giá',
         'meta' => 'Chăm sóc phản hồi khách hàng',
         'active' => strpos($currentRoute, 'staff_reviews') === 0 || strpos($currentRoute, 'staff_review_') === 0,
+    ],
+    [
+        'route' => 'admin_questions',
+        'icon' => 'fa-circle-question',
+        'label' => 'Hỏi đáp sản phẩm',
+        'meta' => 'Trả lời câu hỏi khách hàng',
+        'active' => strpos($currentRoute, 'admin_question') === 0,
     ],
     [
         'route' => 'staff_chats',
@@ -500,15 +520,54 @@ $staffMenuItems = [
                             <div class="admin-notification-empty">Chưa có đơn hàng mới cần xử lý.</div>
                         <?php else: ?>
                             <?php foreach ($notificationOrders as $order): ?>
-                                <a class="admin-notification-item" href="index.php?r=<?= h($orderNotificationRoute) ?>">
+                                <a class="admin-notification-item" href="index.php?r=<?= h($orderNotificationRoute) ?>&detail=<?= (int)($order['ma_hoa_don'] ?? 0) ?>">
                                     <div class="d-flex justify-content-between gap-3">
                                         <div>
-                                            <div class="fw-semibold">Đơn #<?= h((string)($order['ma_hoa_don'] ?? '')) ?></div>
+                                            <div class="fw-semibold"><?= h((string)($order['tieu_de_thong_bao'] ?? 'Đơn hàng')) ?> #<?= h((string)($order['ma_hoa_don'] ?? '')) ?></div>
                                             <div class="small text-muted"><?= h((string)($order['ho_ten'] ?? $order['email'] ?? 'Khách hàng')) ?></div>
                                         </div>
-                                        <div class="small text-muted text-end"><?= h(!empty($order['thoi_gian']) ? date('d/m H:i', strtotime((string)$order['thoi_gian'])) : '') ?></div>
+                                        <div class="small text-muted text-end"><?= h($formatAdminNoticeDate($order['thoi_gian'] ?? null)) ?></div>
                                     </div>
+                                    <?php if (!empty($order['noi_dung_thong_bao'])): ?><div class="small text-muted mt-1"><?= h((string)$order['noi_dung_thong_bao']) ?></div><?php endif; ?>
                                     <div class="small mt-1 text-success fw-semibold"><?= vnd($order['tong_tien'] ?? 0) ?></div>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+
+                        <div class="admin-notification-section">
+                            <div class="small fw-semibold text-uppercase text-muted">Đánh giá mới</div>
+                        </div>
+                        <?php if (empty($notificationReviews)): ?>
+                            <div class="admin-notification-empty">Chưa có đánh giá mới cần phản hồi.</div>
+                        <?php else: ?>
+                            <?php foreach ($notificationReviews as $notice): ?>
+                                <a class="admin-notification-item" href="index.php?r=staff_reviews&detail=<?= (int)($notice['ma_danh_gia'] ?? 0) ?>">
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <div>
+                                            <div class="fw-semibold"><?= h((string)($notice['tieu_de'] ?? 'Đánh giá mới')) ?></div>
+                                            <div class="small text-muted"><?= h((string)($notice['noi_dung'] ?? '')) ?></div>
+                                        </div>
+                                        <div class="small text-muted text-end"><?= h($formatAdminNoticeDate($notice['thoi_gian'] ?? null)) ?></div>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+
+                        <div class="admin-notification-section">
+                            <div class="small fw-semibold text-uppercase text-muted">Hỏi đáp mới</div>
+                        </div>
+                        <?php if (empty($notificationQuestions)): ?>
+                            <div class="admin-notification-empty">Chưa có câu hỏi sản phẩm mới.</div>
+                        <?php else: ?>
+                            <?php foreach ($notificationQuestions as $notice): ?>
+                                <a class="admin-notification-item" href="<?= h((string)($notice['link'] ?? 'index.php?r=admin_questions')) ?>">
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <div>
+                                            <div class="fw-semibold"><?= h((string)($notice['tieu_de'] ?? 'Hỏi đáp mới')) ?></div>
+                                            <div class="small text-muted"><?= h((string)($notice['noi_dung'] ?? '')) ?></div>
+                                        </div>
+                                        <div class="small text-muted text-end"><?= h($formatAdminNoticeDate($notice['thoi_gian'] ?? null)) ?></div>
+                                    </div>
                                 </a>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -628,3 +687,5 @@ $staffMenuItems = [
         bellButton.addEventListener('click', markSeen, { once: true });
     });
     </script>
+
+

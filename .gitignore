@@ -36,3 +36,4 @@ vendor/
 ai-service-flask/.cache/
 backend/storage/cache/
 
+database/recommendation_index/

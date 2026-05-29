@@ -86,6 +86,98 @@ if ($pdo !== null) {
 ?>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    const showCartToast = function (message, ok) {
+      let toast = document.querySelector('[data-cart-toast]');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.setAttribute('data-cart-toast', 'true');
+        toast.style.position = 'fixed';
+        toast.style.right = '24px';
+        toast.style.bottom = '24px';
+        toast.style.zIndex = '2200';
+        toast.style.maxWidth = '320px';
+        toast.style.padding = '12px 16px';
+        toast.style.borderRadius = '12px';
+        toast.style.boxShadow = '0 16px 38px rgba(15, 23, 42, 0.18)';
+        toast.style.fontWeight = '700';
+        toast.style.transition = 'opacity .2s ease, transform .2s ease';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message || '';
+      toast.style.background = ok ? '#0f8d63' : '#b42318';
+      toast.style.color = '#fff';
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+      window.clearTimeout(toast._timer);
+      toast._timer = window.setTimeout(function () {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+      }, 2600);
+    };
+
+    const updateCartBadge = function (count) {
+      const cartLink = document.querySelector('.header-icon-link--cart');
+      if (!cartLink) return;
+      let badge = cartLink.querySelector('.header-cart-badge');
+      if (count > 0 && !badge) {
+        badge = document.createElement('em');
+        badge.className = 'header-cart-badge';
+        cartLink.appendChild(badge);
+      }
+      if (badge) {
+        badge.textContent = String(count);
+        badge.style.display = count > 0 ? '' : 'none';
+      }
+    };
+
+    document.addEventListener('submit', function (event) {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      if (!form.querySelector('input[name="action"][value="add_to_cart"]')) return;
+
+      event.preventDefault();
+      const button = form.querySelector('button[type="submit"]');
+      if (button && button.disabled) return;
+      if (button) button.disabled = true;
+
+      const data = new FormData(form);
+      const targetUrl = form.getAttribute('action') || form.action || window.location.href;
+      fetch(targetUrl, {
+        method: 'POST',
+        body: data,
+        headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
+      })
+        .then(function (response) {
+          return response.text().then(function (text) {
+            try {
+              const json = JSON.parse(text);
+              if (!response.ok) {
+                console.error('Add cart HTTP error', response.status, json);
+              }
+              return json;
+            } catch (error) {
+              console.error('Add cart invalid JSON response', {
+                status: response.status,
+                responseText: text,
+                error: error
+              });
+              return {ok: false, message: 'Không thể thêm sản phẩm lúc này. Vui lòng thử lại.'};
+            }
+          });
+        })
+        .then(function (json) {
+          showCartToast(json.message || (json.ok ? 'Đã thêm sản phẩm vào giỏ hàng' : 'Không thể thêm sản phẩm'), !!json.ok);
+          if (json.ok && typeof json.cart_count !== 'undefined') updateCartBadge(parseInt(json.cart_count, 10) || 0);
+        })
+        .catch(function (error) {
+          console.error('Add cart request failed', error);
+          showCartToast('Không thể thêm sản phẩm lúc này. Vui lòng thử lại.', false);
+        })
+        .finally(function () {
+          if (button) button.disabled = false;
+        });
+    });
+
     if (!document.querySelector('[data-support-chat-widget]')) {
       document.querySelectorAll('[data-support-chat-toggle]').forEach(function (button) {
         button.addEventListener('click', function (event) {

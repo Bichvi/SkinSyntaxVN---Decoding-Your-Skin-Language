@@ -7,6 +7,14 @@ $q = $q ?? '';
 $cap1 = $cap1 ?? '';
 $cap2 = $cap2 ?? '';
 $items = $items ?? [];
+$pageTitle = trim((string)($pageTitle ?? 'Tất cả sản phẩm'));
+$dbUnavailableMessage = trim((string)($dbUnavailableMessage ?? ''));
+$listRoute = trim((string)($listRoute ?? 'tatca'));
+$listType = trim((string)($listType ?? ''));
+$paginationBase = BASE_URL . '/index.php?r=' . rawurlencode($listRoute);
+if ($listType !== '') {
+  $paginationBase .= '&type=' . urlencode($listType);
+}
 
 $totalPages = max(1, (int)ceil($total / $perPage));
 
@@ -20,7 +28,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
 
   <div class="d-flex justify-content-between align-items-end mb-3">
     <div>
-      <h3 class="mb-1">Tất cả sản phẩm</h3>
+      <h3 class="mb-1"><?= h($pageTitle) ?></h3>
       <div class="text-muted">Tổng: <?= (int)$total ?> sản phẩm</div>
       <?php if (!empty($cap1) || !empty($cap2)): ?>
         <div class="text-muted small">
@@ -48,7 +56,9 @@ $startPage = max(1, $endPage - $maxVisible + 1);
     </div> -->
   </form>
 
-  <?php if (empty($items)): ?>
+  <?php if ($dbUnavailableMessage !== ''): ?>
+    <div class="alert alert-warning"><?= h($dbUnavailableMessage) ?></div>
+  <?php elseif (empty($items)): ?>
     <div class="alert alert-warning">
       Không tìm thấy sản phẩm phù hợp
       <?php if ($q !== ''): ?>
@@ -96,7 +106,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       <!-- Nút trang đầu -->
       <?php if ($page > 1): ?>
         <li class="page-item">
-          <a class="page-link" href="<?= BASE_URL ?>/index.php?r=tatca&page=1&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>">
+          <a class="page-link" href="<?= $paginationBase ?>&page=1&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>">
             « Đầu
           </a>
         </li>
@@ -106,7 +116,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
         <li class="page-item <?= ($i === (int)$page) ? 'active' : '' ?>">
           <a class="page-link"
-             href="<?= BASE_URL ?>/index.php?r=tatca&page=<?= $i ?>&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>">
+             href="<?= $paginationBase ?>&page=<?= $i ?>&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>">
             <?= $i ?>
           </a>
         </li>
@@ -115,7 +125,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       <!-- Nút trang cuối -->
       <?php if ($page < $totalPages): ?>
         <li class="page-item">
-          <a class="page-link" href="<?= BASE_URL ?>/index.php?r=tatca&page=<?= $totalPages ?>&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>">
+          <a class="page-link" href="<?= $paginationBase ?>&page=<?= $totalPages ?>&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>">
             Cuối »
           </a>
         </li>
@@ -124,3 +134,4 @@ $startPage = max(1, $endPage - $maxVisible + 1);
   </nav>
 
 </div>
+

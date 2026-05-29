@@ -32,24 +32,12 @@ class SanPham {
     }
 
     private function availableProductFilter(): array {
-        $stockFields = ['so_luong_ton', 'ton_kho', 'stock', 'quantity'];
-        $missingAllStockFields = [];
-        $positiveStockClauses = [];
-        foreach ($stockFields as $field) {
-            $missingAllStockFields[] = [$field => ['$exists' => false]];
-            $positiveStockClauses[] = [$field => ['$gt' => 0]];
-        }
-
-        return [
-            '$and' => [
-                $this->visibleProductFilter(),
-                ['$or' => array_merge([['$and' => $missingAllStockFields]], $positiveStockClauses)],
-            ],
-        ];
+        // Product discovery still shows out-of-stock products, but UI/backend disables buying them.
+        return $this->visibleProductFilter();
     }
 
     public function getProductStock(array $product): ?int {
-        foreach (['so_luong_ton', 'ton_kho', 'stock', 'quantity'] as $field) {
+        foreach (['so_luong_ton_kho', 'so_luong_ton', 'ton_kho', 'stock', 'quantity'] as $field) {
             if (array_key_exists($field, $product) && $product[$field] !== null && $product[$field] !== '') {
                 return max(0, (int)$product[$field]);
             }
@@ -61,6 +49,9 @@ class SanPham {
         if (!$product) return false;
         $p = (array)$product;
         if ($this->normalizeProductVisibilityStatus((string)($p['trang_thai'] ?? $p['status'] ?? 'active')) !== 'active') {
+            return false;
+        }
+        if (strtolower(trim((string)($p['trang_thai_kho'] ?? ''))) === 'het_hang') {
             return false;
         }
         $stock = $this->getProductStock($p);
@@ -109,9 +100,55 @@ class SanPham {
         $p['status'] = $normalizedStatus;
         $stock = $this->getProductStock($p);
         $p['ton_kho_hien_thi'] = $stock;
+        if ($stock !== null) {
+            $p['so_luong_ton_kho'] = $stock;
+            $p['trang_thai_kho'] = $stock > 0 ? 'con_hang' : 'het_hang';
+        }
         $p['is_available'] = $this->isProductAvailable($p);
 
         return $p;
+    }
+
+    public function buildProductIdQuery($productId): array {
+        $productId = trim((string)($productId ?? ''));
+        $or = [
+            ['ma_san_pham' => $productId],
+            ['id' => $productId],
+        ];
+        if ($productId !== '' && is_numeric($productId)) {
+            $or[] = ['ma_san_pham' => (int)$productId];
+            $or[] = ['id' => (int)$productId];
+        }
+        if ($productId !== '' && preg_match('/^[a-f0-9]{24}$/i', $productId)) {
+            try {
+                $or[] = ['_id' => new \MongoDB\BSON\ObjectId($productId)];
+            } catch (Throwable $e) {
+                // Ignore invalid ObjectId strings; ma_san_pham/id lookup still applies.
+            }
+        }
+        return ['$or' => $or];
+    }
+
+    private function productFlexibleFilter($productId): array {
+        return $this->buildProductIdQuery($productId);
+    }
+
+    public function getProductBriefById($productId): array {
+        $product = $this->db->san_pham->findOne($this->productFlexibleFilter($productId));
+        if (!$product) return [];
+        $p = $this->normalizeProductRecord($product);
+        return [
+            'id' => (string)($p['id'] ?? $p['ma_san_pham'] ?? $productId),
+            'ma_san_pham' => (string)($p['ma_san_pham'] ?? $p['id'] ?? $productId),
+            'ten_san_pham' => (string)($p['ten_san_pham'] ?? ''),
+            'thuong_hieu' => (string)($p['thuong_hieu'] ?? ''),
+            'gia_ban' => (int)($p['gia_ban'] ?? 0),
+            'link_hinh_anh' => (string)($p['link_hinh_anh'] ?? ''),
+            'loai_san_pham' => (string)($p['loai_san_pham'] ?? ''),
+            'danh_muc_day_du' => (string)($p['danh_muc_day_du'] ?? ''),
+            'so_luong_ton_kho' => $p['so_luong_ton_kho'] ?? null,
+            'trang_thai_kho' => (string)($p['trang_thai_kho'] ?? ''),
+        ];
     }
 
     // Helper tạo Regex tìm kiếm không phân biệt hoa thường và hỗ trợ tiếng Việt cơ bản
@@ -140,29 +177,19 @@ class SanPham {
     }
 
     public function find($id, bool $onlyVisibleOnWebsite = false) {
-        $filter = ['ma_san_pham' => $id];
+        $filter = $this->productFlexibleFilter($id);
         
         if ($onlyVisibleOnWebsite) {
-            $filter['trang_thai'] = ['$nin' => ['inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0']];
+            $filter = ['$and' => [$filter, $this->visibleProductFilter()]];
         }
 
-        // Fallback thử ép kiểu int nếu ma_san_pham lưu dưới dạng int trong MongoDB
         $product = $this->db->san_pham->findOne($filter);
-        if (!$product && is_numeric($id)) {
-            $filter['ma_san_pham'] = (int) $id;
-            $product = $this->db->san_pham->findOne($filter);
-        }
 
         if (!$product) {
             return false;
         }
 
-        $normalized = $this->normalizeProductRecord($product);
-        if ($onlyVisibleOnWebsite && !$this->isProductAvailable($normalized)) {
-            return false;
-        }
-
-        return $normalized;
+        return $this->normalizeProductRecord($product);
     }
 
     public function findById($id, bool $onlyVisibleOnWebsite = false) {
@@ -247,7 +274,7 @@ class SanPham {
         return $tree;
     }
 
-    public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false): array {
+    public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false, string $stockStatusFilter = ''): array {
         $page = max(1, $page);
         $skip = ($page - 1) * $perPage;
         
@@ -258,8 +285,14 @@ class SanPham {
             $filter['$or'] = [
                 ['ten_san_pham' => $regex],
                 ['ma_san_pham' => $regex],
-                ['danh_muc_day_du' => $regex]
+                ['thuong_hieu' => $regex],
+                ['danh_muc_day_du' => $regex],
+                ['loai_san_pham' => $regex],
+                ['barcode' => $regex],
             ];
+            if (is_numeric(trim($q))) {
+                $filter['$or'][] = ['ma_san_pham' => (int)trim($q)];
+            }
         }
 
         if ($cap1Val !== '' || $cap2Val !== '') {
@@ -275,6 +308,14 @@ class SanPham {
             } else {
                 $filter['trang_thai'] = ['$in' => ['inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0']];
             }
+        }
+
+        $stockStatusFilter = strtolower(trim($stockStatusFilter));
+        if (in_array($stockStatusFilter, ['con_hang', 'het_hang'], true)) {
+            $stockFilter = $stockStatusFilter === 'con_hang'
+                ? ['$or' => [['so_luong_ton_kho' => ['$gt' => 0]], ['trang_thai_kho' => 'con_hang']]]
+                : ['$or' => [['so_luong_ton_kho' => ['$lte' => 0]], ['trang_thai_kho' => 'het_hang']]];
+            $filter = empty($filter) ? $stockFilter : ['$and' => [$filter, $stockFilter]];
         }
 
         $total = $this->db->san_pham->countDocuments($filter);
@@ -365,18 +406,391 @@ class SanPham {
 
     public function getHomepageProductSections(int $limitEach = 4): array {
         $limitEach = max(4, min(12, $limitEach));
-        $discountFilter = [
-            '$or' => [
-                ['phan_tram_giam' => ['$gt' => 0]],
-                ['gia_thi_truong' => ['$gt' => 0]],
-            ],
-        ];
 
         return [
-            'flashDeals' => $this->findHomepageProducts($discountFilter, ['phan_tram_giam' => -1, 'gia_ban' => 1, 'ma_san_pham' => -1], $limitEach),
+            'flashDeals' => $this->getFlashSaleProducts($limitEach),
             'bestSellers' => $this->findHomepageProducts([], ['so_luong_ban' => -1, 'luot_mua' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1], $limitEach),
             'topSearches' => $this->findHomepageProducts([], ['luot_xem' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1], $limitEach),
             'forYou' => $this->findHomepageProducts([], ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ngay_tao' => -1], $limitEach),
+        ];
+    }
+
+    public function getFlashSaleProducts(int $limit = 8): array {
+        $discountFilter = [
+            '$or' => [
+                ['phan_tram_giam' => ['$gt' => 0]],
+                ['tien_tiet_kiem' => ['$gt' => 0]],
+            ],
+        ];
+
+        return $this->findHomepageProducts(
+            $discountFilter,
+            ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1],
+            max(1, min(24, $limit))
+        );
+    }
+
+    private function normalizeDiscoveryArgs($filters = [], int $limit = 6, ?string $sort = null): array {
+        if (is_int($filters)) {
+            return [[], max(1, min(48, $filters)), $sort];
+        }
+
+        if (!is_array($filters)) {
+            $filters = [];
+        }
+
+        return [$filters, max(1, min(48, $limit)), $sort];
+    }
+
+    public function buildProductFilters(array $request): array {
+        $parts = [$this->availableProductFilter()];
+
+        $keyword = trim((string)($request['keyword'] ?? $request['q'] ?? ''));
+        if ($keyword !== '') {
+            $regex = $this->buildSearchRegex($keyword);
+            $parts[] = ['$or' => [
+                ['ten_san_pham' => $regex],
+                ['thuong_hieu' => $regex],
+                ['danh_muc_day_du' => $regex],
+                ['loai_san_pham' => $regex],
+                ['thanh_phan_sach' => $regex],
+                ['thanh_phan_chinh' => $regex],
+                ['thanh_phan_day_du' => $regex],
+                ['loai_da' => $regex],
+                ['mo_ta' => $regex],
+                ['mo_ta_san_pham' => $regex],
+            ]];
+        }
+
+        $category = trim((string)($request['danh_muc'] ?? $request['category'] ?? ''));
+        if ($category !== '') {
+            $regex = $this->buildSearchRegex($category);
+            $parts[] = ['$or' => [
+                ['danh_muc_day_du' => $regex],
+                ['loai_san_pham' => $regex],
+            ]];
+        }
+
+        $brand = trim((string)($request['thuong_hieu'] ?? $request['brand'] ?? ''));
+        if ($brand !== '') {
+            $regex = $this->exactTextRegex($brand);
+            $brandConditions = [
+                ['thuong_hieu' => $regex],
+                ['ten_thuong_hieu' => $regex],
+            ];
+            $brandDoc = $this->db->thuong_hieu->findOne(['ten_thuong_hieu' => $regex], ['projection' => ['ma_thuong_hieu' => 1]]);
+            if ($brandDoc && isset($brandDoc['ma_thuong_hieu'])) {
+                $brandConditions[] = ['ma_thuong_hieu' => $brandDoc['ma_thuong_hieu']];
+                $brandConditions[] = ['ma_thuong_hieu' => (string)$brandDoc['ma_thuong_hieu']];
+            }
+            $parts[] = ['$or' => $brandConditions];
+        }
+
+        $price = [];
+        $min = preg_replace('/[^\d]/', '', (string)($request['gia_tu'] ?? $request['price_min'] ?? ''));
+        $max = preg_replace('/[^\d]/', '', (string)($request['gia_den'] ?? $request['price_max'] ?? ''));
+        if ($min !== '') $price['$gte'] = (int)$min;
+        if ($max !== '') $price['$lte'] = (int)$max;
+        if (!empty($price)) {
+            $parts[] = ['gia_ban' => $price];
+        }
+
+        return count($parts) === 1 ? $parts[0] : ['$and' => $parts];
+    }
+
+    public function buildProductSort(?string $sort, array $defaultSort): array {
+        $sort = trim((string)$sort);
+        if ($sort === '' || $sort === 'default') {
+            return $defaultSort;
+        }
+
+        $sortMap = [
+            'price_asc' => ['gia_ban' => 1, 'ma_san_pham' => -1],
+            'price_desc' => ['gia_ban' => -1, 'ma_san_pham' => -1],
+            'best_seller' => ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+            'top_rated' => ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+            'discount' => ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1],
+            'newest' => ['ngay_tao' => -1, 'ma_san_pham' => -1],
+            'most_viewed' => ['luot_xem' => -1, 'ma_san_pham' => -1],
+        ];
+
+        return $sortMap[$sort] ?? $defaultSort;
+    }
+
+    private function findDiscoveryProducts(array $baseFilter, array $filters, array $defaultSort, int $limit, ?string $sort = null): array {
+        $filter = $this->buildProductFilters($filters);
+        if (!empty($baseFilter)) {
+            $filter = ['$and' => [$filter, $baseFilter]];
+        }
+
+        $items = [];
+        $cursor = $this->db->san_pham->find($filter, [
+            'sort' => $this->buildProductSort($sort ?? (string)($filters['sort'] ?? ''), $defaultSort),
+            'limit' => max(1, min(48, $limit)),
+        ]);
+        foreach ($cursor as $doc) {
+            $items[] = $this->normalizeProductRecord($doc);
+        }
+        return $items;
+    }
+
+    private function discountDiscoveryFilter(): array {
+        return ['$or' => [
+            ['phan_tram_giam' => ['$gt' => 0]],
+            ['$expr' => ['$gt' => ['$gia_thi_truong', '$gia_ban']]],
+        ]];
+    }
+
+    public function getBestSellerProducts($filters = [], int $limit = 6, ?string $sort = null): array {
+        [$filters, $limit, $sort] = $this->normalizeDiscoveryArgs($filters, $limit, $sort);
+        return $this->findDiscoveryProducts([], $filters, ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1], $limit, $sort);
+    }
+
+    public function getTopRatedProducts($filters = [], int $limit = 6, ?string $sort = null): array {
+        [$filters, $limit, $sort] = $this->normalizeDiscoveryArgs($filters, $limit, $sort);
+        return $this->findDiscoveryProducts([], $filters, ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1], $limit, $sort);
+    }
+
+    public function getHighRatingProducts($filters = [], int $limit = 6, ?string $sort = null): array {
+        return $this->getTopRatedProducts($filters, $limit, $sort);
+    }
+
+    public function getDiscountProducts($filters = [], int $limit = 6, ?string $sort = null): array {
+        [$filters, $limit, $sort] = $this->normalizeDiscoveryArgs($filters, $limit, $sort);
+        return $this->findDiscoveryProducts($this->discountDiscoveryFilter(), $filters, ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1], $limit, $sort);
+    }
+
+    public function getMostViewedProducts($filters = [], int $limit = 6, ?string $sort = null): array {
+        [$filters, $limit, $sort] = $this->normalizeDiscoveryArgs($filters, $limit, $sort);
+        return $this->findDiscoveryProducts([], $filters, ['luot_xem' => -1, 'ma_san_pham' => -1], $limit, $sort);
+    }
+
+    public function getPopularProducts($filters = [], int $limit = 6, ?string $sort = null): array {
+        return $this->getMostViewedProducts($filters, $limit, $sort);
+    }
+
+    public function getNewProducts($filters = [], int $limit = 6, ?string $sort = null): array {
+        [$filters, $limit, $sort] = $this->normalizeDiscoveryArgs($filters, $limit, $sort);
+        return $this->findDiscoveryProducts([], $filters, ['ngay_tao' => -1, 'ma_san_pham' => -1], $limit, $sort);
+    }
+
+    public function getProductsByType(string $type, array $filters = [], int $page = 1, int $perPage = 24): array {
+        $page = max(1, $page);
+        $perPage = max(1, min(60, $perPage));
+        $type = trim($type);
+
+        $baseFilter = $this->availableProductFilter();
+        $sort = ['ma_san_pham' => -1];
+
+        switch ($type) {
+            case 'flash-sale':
+            case 'discount':
+                $baseFilter = ['$and' => [
+                    $baseFilter,
+                    ['$or' => [
+                        ['phan_tram_giam' => ['$gt' => 0]],
+                        ['tien_tiet_kiem' => ['$gt' => 0]],
+                    ]],
+                ]];
+                $sort = ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1];
+                break;
+            case 'best-seller':
+                $sort = ['so_luong_ban' => -1, 'luot_mua' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1];
+                break;
+            case 'high-rating':
+                $sort = ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1];
+                break;
+            case 'popular':
+                $sort = ['so_luong_danh_gia' => -1, 'diem_danh_gia' => -1, 'luot_xem' => -1, 'ma_san_pham' => -1];
+                break;
+            case 'new':
+                $sort = ['ngay_tao' => -1, 'ma_san_pham' => -1];
+                break;
+            default:
+                return $this->paginate($page, $perPage, (string)($filters['q'] ?? ''), (string)($filters['cap1'] ?? ''), (string)($filters['cap2'] ?? ''), '', true);
+        }
+
+        $options = [
+            'sort' => $sort,
+            'skip' => ($page - 1) * $perPage,
+            'limit' => $perPage,
+        ];
+
+        $items = [];
+        $cursor = $this->db->san_pham->find($baseFilter, $options);
+        foreach ($cursor as $doc) {
+            $items[] = $this->normalizeProductRecord($doc);
+        }
+
+        return [
+            'items' => $items,
+            'total' => $this->db->san_pham->countDocuments($baseFilter),
+        ];
+    }
+
+    public function getCollectionProducts(string $type, array $filters = [], int $page = 1, int $perPage = 20, ?string $sort = null): array {
+        $page = max(1, $page);
+        $perPage = max(1, min(60, $perPage));
+        $type = trim($type);
+
+        $baseFilter = [];
+        $defaultSort = ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1];
+
+        switch ($type) {
+            case 'top_rated':
+                $defaultSort = ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1];
+                break;
+            case 'discount':
+                $baseFilter = $this->discountDiscoveryFilter();
+                $defaultSort = ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1];
+                break;
+            case 'most_viewed':
+                $defaultSort = ['luot_xem' => -1, 'ma_san_pham' => -1];
+                break;
+            case 'new':
+                $defaultSort = ['ngay_tao' => -1, 'ma_san_pham' => -1];
+                break;
+            case 'best_seller':
+            default:
+                $type = 'best_seller';
+                break;
+        }
+
+        $filter = $this->buildProductFilters($filters);
+        if (!empty($baseFilter)) {
+            $filter = ['$and' => [$filter, $baseFilter]];
+        }
+
+        $total = $this->db->san_pham->countDocuments($filter);
+        $cursor = $this->db->san_pham->find($filter, [
+            'sort' => $this->buildProductSort($sort ?? (string)($filters['sort'] ?? ''), $defaultSort),
+            'skip' => ($page - 1) * $perPage,
+            'limit' => $perPage,
+        ]);
+
+        $items = [];
+        foreach ($cursor as $doc) {
+            $items[] = $this->normalizeProductRecord($doc);
+        }
+
+        return [
+            'type' => $type,
+            'items' => $items,
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'pages' => (int)max(1, ceil($total / $perPage)),
+        ];
+    }
+
+    public function publicRecommendationDiscovery(array $params, int $limit = 24): array {
+        return $this->searchProducts($params, trim((string)($params['sort'] ?? 'popular')), 1, $limit)['items'];
+    }
+
+    public function searchProducts(array $filters, string $sort = 'popular', int $page = 1, int $limit = 24): array {
+        $page = max(1, $page);
+        $limit = max(4, min(48, $limit));
+        $filterParts = [];
+
+        $keyword = trim((string)($filters['keyword'] ?? $filters['q'] ?? ''));
+        if ($keyword !== '') {
+            $regex = $this->buildSearchRegex($keyword);
+            $brandIds = [];
+            $brandCursor = $this->db->thuong_hieu->find(['ten_thuong_hieu' => $regex], ['projection' => ['ma_thuong_hieu' => 1], 'limit' => 20]);
+            foreach ($brandCursor as $brandDoc) {
+                if (isset($brandDoc['ma_thuong_hieu'])) {
+                    $brandIds[] = $brandDoc['ma_thuong_hieu'];
+                }
+            }
+
+            $filterParts[] = [
+                '$or' => [
+                    ['ten_san_pham' => $regex],
+                    ['thuong_hieu' => $regex],
+                    ['loai_san_pham' => $regex],
+                    ['danh_muc_day_du' => $regex],
+                    ['loai_da' => $regex],
+                    ['thanh_phan' => $regex],
+                    ['thanh_phan_chinh' => $regex],
+                    ['thanh_phan_day_du' => $regex],
+                    ['mo_ta' => $regex],
+                    ['mo_ta_san_pham' => $regex],
+                    ['ma_thuong_hieu' => ['$in' => array_values(array_unique($brandIds))]],
+                ],
+            ];
+        }
+
+        $priceFilter = [];
+        $priceMin = preg_replace('/[^\d]/', '', (string)($filters['price_min'] ?? ''));
+        $priceMax = preg_replace('/[^\d]/', '', (string)($filters['price_max'] ?? ''));
+        if ($priceMin !== '') $priceFilter['$gte'] = (int)$priceMin;
+        if ($priceMax !== '') $priceFilter['$lte'] = (int)$priceMax;
+        if (!empty($priceFilter)) {
+            $filterParts[] = ['gia_ban' => $priceFilter];
+        }
+
+        $category = trim((string)($filters['category'] ?? ''));
+        if ($category !== '') {
+            $categoryRegex = $this->buildSearchRegex($category);
+            $filterParts[] = ['$or' => [
+                ['danh_muc_day_du' => $categoryRegex],
+                ['loai_san_pham' => $categoryRegex],
+            ]];
+        }
+
+        $brand = trim((string)($filters['brand'] ?? ''));
+        if ($brand !== '') {
+            $brandDoc = $this->db->thuong_hieu->findOne(['ten_thuong_hieu' => $this->exactTextRegex($brand)]);
+            if ($brandDoc && isset($brandDoc['ma_thuong_hieu'])) {
+                $filterParts[] = ['$or' => [
+                    ['ma_thuong_hieu' => $brandDoc['ma_thuong_hieu']],
+                    ['thuong_hieu' => $this->exactTextRegex($brand)],
+                ]];
+            } else {
+                $filterParts[] = ['thuong_hieu' => $this->buildSearchRegex($brand)];
+            }
+        }
+
+        $filter = $this->availableProductFilter();
+        if (!empty($filterParts)) {
+            $filter = ['$and' => array_merge([$filter], $filterParts)];
+        }
+
+        $sortKey = trim($sort !== '' ? $sort : (string)($filters['sort'] ?? 'popular'));
+        $sortMap = [
+            'best_seller' => ['so_luong_ban' => -1, 'luot_mua' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+            'top_rated' => ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+            'discount' => ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1],
+            'price_asc' => ['gia_ban' => 1, 'ma_san_pham' => -1],
+            'price_desc' => ['gia_ban' => -1, 'ma_san_pham' => -1],
+            'popular' => ['so_luong_danh_gia' => -1, 'diem_danh_gia' => -1, 'luot_xem' => -1, 'ma_san_pham' => -1],
+        ];
+
+        $cursor = $this->db->san_pham->find($filter, [
+            'sort' => $sortMap[$sortKey] ?? $sortMap['popular'],
+            'skip' => ($page - 1) * $limit,
+            'limit' => $limit,
+        ]);
+
+        $items = [];
+        foreach ($cursor as $doc) {
+            $items[] = $this->normalizeProductRecord($doc);
+        }
+
+        return [
+            'items' => $items,
+            'total' => $this->db->san_pham->countDocuments($filter),
+        ];
+    }
+
+    public function publicRecommendationSections(int $limitEach = 6, array $filters = [], ?string $sort = null): array {
+        $limitEach = max(1, min(16, $limitEach));
+        return [
+            'best_seller' => $this->getBestSellerProducts($filters, $limitEach, $sort),
+            'top_rated' => $this->getTopRatedProducts($filters, $limitEach, $sort),
+            'discount' => $this->getDiscountProducts($filters, $limitEach, $sort),
+            'most_viewed' => $this->getMostViewedProducts($filters, $limitEach, $sort),
+            'new' => $this->getNewProducts($filters, $limitEach, $sort),
         ];
     }
 
@@ -408,9 +822,17 @@ class SanPham {
 
     private function productIdentityFilters(string $code): array {
         $code = trim($code);
-        $filters = [['ma_san_pham' => $code]];
+        $filters = [['ma_san_pham' => $code], ['id' => $code]];
         if (is_numeric($code)) {
             $filters[] = ['ma_san_pham' => (int)$code];
+            $filters[] = ['id' => (int)$code];
+        }
+        if ($code !== '' && preg_match('/^[a-f0-9]{24}$/i', $code)) {
+            try {
+                $filters[] = ['_id' => new \MongoDB\BSON\ObjectId($code)];
+            } catch (Throwable $e) {
+                // Keep flexible product code lookup even when ObjectId parsing fails.
+            }
         }
         return $filters;
     }
@@ -546,6 +968,35 @@ class SanPham {
         return $this->updateProductVisibility($id, 'inactive');
     }
 
+    public function updateInventory(string $id, int $stock): bool {
+        $this->setError(null);
+        $id = trim($id);
+        $stock = max(0, $stock);
+        if ($id === '') {
+            $this->setError('Thieu ma san pham can cap nhat kho.');
+            return false;
+        }
+
+        $payload = [
+            'so_luong_ton_kho' => $stock,
+            'trang_thai_kho' => $stock > 0 ? 'con_hang' : 'het_hang',
+            'da_khoi_tao_kho' => true,
+            'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+
+        try {
+            foreach ($this->productIdentityFilters($id) as $filter) {
+                $result = $this->db->san_pham->updateOne($filter, ['$set' => $payload]);
+                if ($result->getMatchedCount() > 0) return true;
+            }
+            $this->setError('Khong tim thay san pham can cap nhat kho.');
+            return false;
+        } catch (Throwable $e) {
+            $this->setError('Loi cap nhat ton kho: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function listBrandOptions(): array {
         $options = ['sort' => ['ten_thuong_hieu' => 1]];
         $cursor = $this->db->thuong_hieu->find([], $options);
@@ -558,6 +1009,10 @@ class SanPham {
         return $items;
     }
 
+    public function getBrands(): array {
+        return $this->listBrandOptions();
+    }
+
     public function listCategoryOptions(): array {
         $options = ['sort' => ['ten_danh_muc' => 1]];
         $cursor = $this->db->danh_muc->find([], $options);
@@ -568,5 +1023,9 @@ class SanPham {
             }
         }
         return $items;
+    }
+
+    public function getCategories(): array {
+        return $this->listCategoryOptions();
     }
 }

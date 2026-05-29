@@ -741,7 +741,10 @@ class AuthController {
             exit;
         }
 
-        $this->model->taoMoi($hoTen, $email, $matkhau);
+        $this->model->taoMoi($hoTen, $email, $matkhau, [
+            'terms_agree' => isset($_POST['terms_agree']),
+            'privacy_consent' => isset($_POST['privacy_consent']),
+        ]);
         unset($_SESSION['signup_old']);
         unset($_SESSION['signup_captcha']);
         $this->clearSignupOtp();

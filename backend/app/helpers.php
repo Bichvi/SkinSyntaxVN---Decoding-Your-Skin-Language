@@ -1,8 +1,81 @@
 <?php
 // backend/app/helpers.php
 
+function fixMojibake($text) {
+    if (!is_string($text) || $text === '') {
+        return $text;
+    }
+
+    static $generatedMap = null;
+    if ($generatedMap === null) {
+        $generatedMap = [];
+        $chars = preg_split('//u', 'ÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐàáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ·©«»–—‘’“”', -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $toLatin1Text = static function (string $value): string {
+            $windows1252 = [
+                0x80 => '€', 0x82 => '‚', 0x83 => 'ƒ', 0x84 => '„', 0x85 => '…',
+                0x86 => '†', 0x87 => '‡', 0x88 => 'ˆ', 0x89 => '‰', 0x8A => 'Š',
+                0x8B => '‹', 0x8C => 'Œ', 0x8E => 'Ž', 0x91 => '‘', 0x92 => '’',
+                0x93 => '“', 0x94 => '”', 0x95 => '•', 0x96 => '–', 0x97 => '—',
+                0x98 => '˜', 0x99 => '™', 0x9A => 'š', 0x9B => '›', 0x9C => 'œ',
+                0x9E => 'ž', 0x9F => 'Ÿ',
+            ];
+            $bytes = unpack('C*', $value) ?: [];
+            $out = '';
+            foreach ($bytes as $byte) {
+                if (isset($windows1252[(int)$byte])) {
+                    $out .= $windows1252[(int)$byte];
+                    continue;
+                }
+                $out .= function_exists('mb_chr') ? mb_chr((int)$byte, 'UTF-8') : html_entity_decode('&#' . (int)$byte . ';', ENT_NOQUOTES, 'UTF-8');
+            }
+            return $out;
+        };
+        foreach ($chars as $char) {
+            $once = $toLatin1Text($char);
+            $twice = $toLatin1Text($once);
+            $third = $toLatin1Text($twice);
+            $fourth = $toLatin1Text($third);
+            foreach ([$fourth, $third, $twice, $once] as $variant) {
+                $generatedMap[$variant] = $char;
+                // Some files were partly repaired before, leaving mixed fragments such as "ệ".
+                // Add those reduced variants too so code text can be normalized without touching DB data.
+                $reduced = str_replace(
+                    [
+                        "\xC3\x83\xC2\xA1\xC3\x82\xC2\xBB",
+                        "\xC3\x83\xC2\xA1\xC3\x82\xC2\xBA",
+                        "\xC3\x83\xE2\x82\xAC\xC5\xBE",
+                        "\xC3\x83\xE2\x80\xA0",
+                        "\xC3\x83\xE2\x80\xA6",
+                    ],
+                    ['á»', 'áº', 'Ä', 'Æ', 'Å'],
+                    $variant
+                );
+                $generatedMap[$reduced] = $char;
+            }
+        }
+        uksort($generatedMap, static fn($a, $b) => strlen($b) <=> strlen($a));
+    }
+
+    return strtr($text, $generatedMap);
+}
+
 function h($str) {
-    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars(fixMojibake((string)($str ?? '')), ENT_QUOTES, 'UTF-8');
+}
+
+function product_stock_quantity(array $product): ?int {
+    foreach (['so_luong_ton_kho', 'ton_kho_hien_thi', 'so_luong_ton', 'ton_kho', 'stock', 'quantity'] as $field) {
+        if (array_key_exists($field, $product) && $product[$field] !== null && $product[$field] !== '') {
+            return max(0, (int)$product[$field]);
+        }
+    }
+    return null;
+}
+
+function product_is_out_of_stock(array $product): bool {
+    $status = strtolower(trim((string)($product['trang_thai_kho'] ?? '')));
+    $stock = product_stock_quantity($product);
+    return $status === 'het_hang' || ($stock !== null && $stock <= 0);
 }
 
 // Tách chuỗi "url1 | url2 | url3" -> lấy url hợp lệ đầu tiên
@@ -64,6 +137,15 @@ function resolve_image_url(?string $raw): string {
 
     if (strpos($normalized, 'uploads/products/') !== false) {
         $normalized = substr($normalized, strpos($normalized, 'uploads/products/') + strlen('uploads/products/'));
+    }
+
+    if (strpos($normalized, 'backend/public/uploads/reviews/') !== false) {
+        $normalized = substr($normalized, strpos($normalized, 'backend/public/') + strlen('backend/public/'));
+        return BASE_URL . '/' . str_replace('%2F', '/', rawurlencode(ltrim($normalized, '/')));
+    }
+
+    if (strpos($normalized, 'uploads/reviews/') === 0) {
+        return BASE_URL . '/' . str_replace('%2F', '/', rawurlencode(ltrim($normalized, '/')));
     }
 
     $normalized = ltrim($normalized, '/');
@@ -165,6 +247,9 @@ function route_access_map(): array {
         'admin_orders' => ['admin'],
         'admin_order_status' => ['admin'],
         'admin_reports' => ['admin'],
+        'admin_questions' => ['admin', 'nhanvien'],
+        'admin_question_reply' => ['admin', 'nhanvien'],
+        'admin_question_hide' => ['admin', 'nhanvien'],
         'admin_notifications_seen' => ['admin', 'nhanvien'],
         'staff_dashboard' => ['admin', 'nhanvien'],
         'staff_orders' => ['admin', 'nhanvien'],
@@ -182,6 +267,7 @@ function route_access_map(): array {
         'chat_send' => ['khach_hang'],
         'mark_chat_read' => ['khach_hang'],
         'guidanhgia' => ['khach_hang'],
+        'guicauhoi' => ['khach_hang'],
         'huydonhang' => ['khach_hang'],
         'apdung_voucher' => ['khach_hang'],
         'bo_voucher' => ['khach_hang'],

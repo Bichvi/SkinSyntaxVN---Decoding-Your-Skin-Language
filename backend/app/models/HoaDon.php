@@ -3,19 +3,91 @@
 
 class HoaDon {
     private $db;
+    private string $lastStockError = '';
     private const POINT_VALUE_VND = 1000;
     private const VIP_THRESHOLD = 500;
     private const DIAMOND_THRESHOLD = 1500;
 
     public function __construct($db) {
         $this->db = $db;
-        // MongoDB khÃ´ng cáº§n CREATE hay ALTER TABLE Ä‘á»ƒ thÃªm cá»™t má»›i
+        // MongoDB không cần CREATE hay ALTER TABLE để thêm cột mới
     }
 
-    // HÃ m tá»± Ä‘á»™ng tÄƒng ID (Giáº£ láº­p Auto-increment cá»§a SQL)
+    // Hàm tự động tăng ID (Giả lập Auto-increment của SQL)
     private function getNextNumericId(string $collection, string $column): int {
         $lastDoc = $this->db->{$collection}->findOne([], ['sort' => [$column => -1]]);
         return $lastDoc ? (int)$lastDoc[$column] + 1 : 1;
+    }
+
+    private function normalizeOrderStatus($status): string {
+        $raw = trim((string)($status ?? ''));
+        $normalized = function_exists('mb_strtolower') ? mb_strtolower($raw, 'UTF-8') : strtolower($raw);
+        $normalized = str_replace(['_', '-'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?: $normalized;
+        $map = [
+            'chờ xử lý' => 'pending',
+            'cho xu ly' => 'pending',
+            'chờ thanh toán' => 'pending',
+            'cho thanh toan' => 'pending',
+            'moi' => 'pending',
+            'pending' => 'pending',
+            'đã xác nhận' => 'confirmed',
+            'da xac nhan' => 'confirmed',
+            'confirmed' => 'confirmed',
+            'đang giao' => 'shipping',
+            'dang giao' => 'shipping',
+            'shipping' => 'shipping',
+            'hoàn thành' => 'completed',
+            'hoan thanh' => 'completed',
+            'completed' => 'completed',
+            'đã hủy' => 'cancelled',
+            'da huy' => 'cancelled',
+            'huy' => 'cancelled',
+            'cancelled' => 'cancelled',
+            'canceled' => 'cancelled',
+        ];
+        return $map[$normalized] ?? $normalized;
+    }
+
+    private function normalizePaymentStatus($status): string {
+        $raw = trim((string)($status ?? ''));
+        $normalized = function_exists('mb_strtolower') ? mb_strtolower($raw, 'UTF-8') : strtolower($raw);
+        $normalized = str_replace(['_', '-'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?: $normalized;
+        return in_array($normalized, ['da thanh toan', 'đã thanh toán', 'paid', 'thanh cong', 'completed'], true)
+            ? 'paid'
+            : 'unpaid';
+    }
+
+    private function recordAdminOrderNotification(int $orderId, string $type, array $order = []): void {
+        if ($orderId <= 0) return;
+        $labels = [
+            'new_cod' => 'Đơn hàng mới COD',
+            'new_qr' => 'Đơn hàng mới QR/chuyển khoản',
+            'confirmed' => 'Đơn hàng đã xác nhận',
+            'shipping' => 'Đơn hàng đang giao',
+            'completed' => 'Đơn hàng hoàn thành',
+            'cancelled' => 'Đơn hàng đã hủy',
+        ];
+        $now = new \MongoDB\BSON\UTCDateTime();
+        $title = $labels[$type] ?? 'Cập nhật đơn hàng';
+        try {
+            $this->db->thong_bao->insertOne([
+                'ma_thong_bao' => $this->getNextNumericId('thong_bao', 'ma_thong_bao'),
+                'loai' => $type,
+                'tieu_de' => $title,
+                'noi_dung' => $title . ' #' . $orderId,
+                'ma_hoa_don' => $orderId,
+                'tong_tien' => (int)($order['tong_tien'] ?? 0),
+                'trang_thai' => (string)($order['trang_thai'] ?? ''),
+                'hinh_thuc_thanh_toan' => (string)($order['hinh_thuc_thanh_toan'] ?? ''),
+                'da_doc' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        } catch (Throwable $e) {
+            error_log('order notification error: ' . $e->getMessage());
+        }
     }
 
     private function getOrCreateKhachHangId(string $email, string $defaultName): int {
@@ -42,11 +114,11 @@ class HoaDon {
     }
 
     private function fetchProductPrice(string $productId): int {
-        $product = $this->db->san_pham->findOne(['ma_san_pham' => $productId]);
+        $product = $this->db->san_pham->findOne(['$or' => [['ma_san_pham' => $productId], ['id' => $productId]]]);
         
-        // Fallback thá»­ Ã©p kiá»ƒu int
+        // Fallback thử ép kiểu int
         if (!$product && is_numeric($productId)) {
-            $product = $this->db->san_pham->findOne(['ma_san_pham' => (int) $productId]);
+            $product = $this->db->san_pham->findOne(['$or' => [['ma_san_pham' => (int)$productId], ['id' => (int)$productId]]]);
         }
 
         if (!$product) {
@@ -63,9 +135,10 @@ class HoaDon {
     }
 
     private function findProductForStock(string $productId): ?array {
-        $filters = [['ma_san_pham' => $productId]];
+        $filters = [['ma_san_pham' => $productId], ['id' => $productId]];
         if (is_numeric($productId)) {
             $filters[] = ['ma_san_pham' => (int)$productId];
+            $filters[] = ['id' => (int)$productId];
         }
         foreach ($filters as $filter) {
             $product = $this->db->san_pham->findOne($filter);
@@ -75,21 +148,29 @@ class HoaDon {
     }
 
     private function productStockField(array $product): ?string {
-        foreach (['so_luong_ton', 'ton_kho', 'stock', 'quantity'] as $field) {
+        foreach (['so_luong_ton_kho', 'so_luong_ton', 'ton_kho', 'stock', 'quantity'] as $field) {
             if (array_key_exists($field, $product)) return $field;
         }
         return null;
     }
 
     private function reserveStockForItems(array $items): bool {
+        $this->lastStockError = '';
         foreach ($items as $item) {
             $productId = (string)($item['ma_san_pham'] ?? '');
             $quantity = max(1, (int)($item['so_luong'] ?? 0));
             $product = $this->findProductForStock($productId);
-            if (!$product) return false;
+            if (!$product) {
+                $this->lastStockError = 'Không tìm thấy sản phẩm #' . $productId . ' trong kho.';
+                return false;
+            }
             $field = $this->productStockField($product);
             if ($field === null) continue;
-            if ((int)($product[$field] ?? 0) < $quantity) return false;
+            $stock = (int)($product[$field] ?? 0);
+            if ($stock < $quantity) {
+                $this->lastStockError = 'Sản phẩm ' . (string)($product['ten_san_pham'] ?? ('#' . $productId)) . ' chỉ còn ' . $stock . ' sản phẩm trong kho.';
+                return false;
+            }
         }
 
         foreach ($items as $item) {
@@ -98,8 +179,21 @@ class HoaDon {
             $product = $this->findProductForStock($productId);
             $field = $product ? $this->productStockField($product) : null;
             if ($field === null) continue;
-            $filter = ['ma_san_pham' => $product['ma_san_pham'], $field => ['$gte' => $quantity]];
-            $this->db->san_pham->updateOne($filter, ['$inc' => [$field => -$quantity], '$set' => ['updated_at' => new \MongoDB\BSON\UTCDateTime()]]);
+            $filter = ['$and' => [
+                $this->productLookupFilter($productId),
+                [$field => ['$gte' => $quantity]],
+            ]];
+            $before = (int)($product[$field] ?? 0);
+            $after = max(0, $before - $quantity);
+            $set = [
+                $field => $after,
+                'so_luong_ton_kho' => $after,
+                'trang_thai_kho' => $after > 0 ? 'con_hang' : 'het_hang',
+                'da_khoi_tao_kho' => true,
+                'updated_at' => new \MongoDB\BSON\UTCDateTime()
+            ];
+            $this->db->san_pham->updateOne($filter, ['$set' => $set]);
+            $this->notifyLowStock((string)($product['ma_san_pham'] ?? $productId), (string)($product['ten_san_pham'] ?? ''), $after);
         }
         return true;
     }
@@ -111,16 +205,56 @@ class HoaDon {
             $product = $this->findProductForStock($productId);
             $field = $product ? $this->productStockField($product) : null;
             if ($field === null) continue;
-            $this->db->san_pham->updateOne(['ma_san_pham' => $product['ma_san_pham']], ['$inc' => [$field => $quantity], '$set' => ['updated_at' => new \MongoDB\BSON\UTCDateTime()]]);
+            $after = max(0, (int)($product[$field] ?? 0) + $quantity);
+            $set = [
+                $field => $after,
+                'so_luong_ton_kho' => $after,
+                'trang_thai_kho' => $after > 0 ? 'con_hang' : 'het_hang',
+                'da_khoi_tao_kho' => true,
+                'updated_at' => new \MongoDB\BSON\UTCDateTime()
+            ];
+            $this->db->san_pham->updateOne($this->productLookupFilter($productId), ['$set' => $set]);
+        }
+    }
+
+    private function productLookupFilter(string $productId): array {
+        $filters = [['ma_san_pham' => $productId], ['id' => $productId]];
+        if (is_numeric($productId)) {
+            $filters[] = ['ma_san_pham' => (int)$productId];
+            $filters[] = ['id' => (int)$productId];
+        }
+        return ['$or' => $filters];
+    }
+
+    private function notifyLowStock(string $productId, string $productName, int $stock): void {
+        if ($stock > 5) return;
+        $productName = $productName !== '' ? $productName : ('#' . $productId);
+        $title = $stock <= 0 ? 'Sản phẩm hết hàng' : 'Sản phẩm sắp hết hàng';
+        $content = $stock <= 0
+            ? 'Sản phẩm ' . $productName . ' đã hết hàng.'
+            : 'Sản phẩm ' . $productName . ' sắp hết hàng, còn ' . $stock . ' sản phẩm.';
+        try {
+            $this->db->thong_bao->insertOne([
+                'ma_thong_bao' => $this->getNextNumericId('thong_bao', 'ma_thong_bao'),
+                'loai' => $stock <= 0 ? 'inventory_out' : 'inventory_low',
+                'ma_san_pham' => $productId,
+                'tieu_de' => $title,
+                'noi_dung' => $content,
+                'da_doc' => false,
+                'created_at' => new \MongoDB\BSON\UTCDateTime(),
+                'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+            ]);
+        } catch (Throwable $e) {
+            error_log('inventory notification error: ' . $e->getMessage());
         }
     }
 
     public function restoreStockForOrder(int $orderId): void {
         $order = $this->db->hoa_don->findOne(['ma_hoa_don' => $orderId]);
-        if (!$order || empty($order['da_tru_ton_kho']) || !empty($order['da_hoan_ton_kho'])) return;
+        if (!$order || empty($order['da_tru_ton_kho']) || !empty($order['da_hoan_ton_kho']) || !empty($order['da_hoan_kho'])) return;
         $items = iterator_to_array($this->db->chi_tiet_hoa_don->find(['ma_hoa_don' => $orderId]));
         $this->restoreStockForItems($items);
-        $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => ['da_hoan_ton_kho' => true, 'updated_at' => new \MongoDB\BSON\UTCDateTime()]]);
+        $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => ['da_hoan_ton_kho' => true, 'da_hoan_kho' => true, 'updated_at' => new \MongoDB\BSON\UTCDateTime()]]);
     }
 
     private function normalizeCustomerTier(int $points): string {
@@ -203,7 +337,7 @@ class HoaDon {
         $maKh = (int)($order['ma_kh'] ?? 0);
         if ($maKh <= 0) return;
 
-        $currentStatus = strtolower(trim((string)($order['trang_thai'] ?? '')));
+        $currentStatus = $this->normalizeOrderStatus($order['trang_thai'] ?? '');
         $alreadyAwarded = !empty($order['da_tich_diem']) && $order['da_tich_diem'] !== 'false';
         $usedPoints = max(0, (int)($order['diem_su_dung'] ?? 0));
         $alreadyRefunded = !empty($order['da_hoan_diem']) && $order['da_hoan_diem'] !== 'false';
@@ -211,24 +345,24 @@ class HoaDon {
 
         $updateFields = [];
 
-        if ($currentStatus === 'da huy' && $usedPoints > 0 && !$alreadyRefunded) {
+        if ($currentStatus === 'cancelled' && $usedPoints > 0 && !$alreadyRefunded) {
             $updateFields['da_hoan_diem'] = true;
             $didChange = true;
         }
 
-        if ($currentStatus !== 'da huy' && $usedPoints > 0 && $alreadyRefunded) {
+        if ($currentStatus !== 'cancelled' && $usedPoints > 0 && $alreadyRefunded) {
             $updateFields['da_hoan_diem'] = false;
             $didChange = true;
         }
 
-        if ($currentStatus === 'hoan thanh' && !$alreadyAwarded) {
+        if ($currentStatus === 'completed' && !$alreadyAwarded) {
             $points = $this->calculateOrderPoints($order);
             $updateFields['diem_cong'] = $points;
             $updateFields['da_tich_diem'] = true;
             $didChange = true;
         }
 
-        if ($currentStatus !== 'hoan thanh' && $alreadyAwarded) {
+        if ($currentStatus !== 'completed' && $alreadyAwarded) {
             $updateFields['diem_cong'] = 0;
             $updateFields['da_tich_diem'] = false;
             $didChange = true;
@@ -281,8 +415,8 @@ class HoaDon {
             return ['ok' => false, 'message' => 'Don hang khong su dung chuyen khoan QR.'];
         }
 
-        $paymentStatus = strtolower(trim((string)($order['status_thanh_toan'] ?? '')));
-        if (in_array($paymentStatus, ['da thanh toan', 'paid', 'thanh cong'], true)) {
+        $paymentStatus = $this->normalizePaymentStatus($order['status_thanh_toan'] ?? '');
+        if ($paymentStatus === 'paid') {
             return [
                 'ok' => true,
                 'message' => 'Don hang da duoc thanh toan truoc do.',
@@ -291,8 +425,8 @@ class HoaDon {
             ];
         }
 
-        $orderStatus = strtolower(trim((string)($order['trang_thai'] ?? '')));
-        if ($orderStatus === 'da huy') {
+        $orderStatus = $this->normalizeOrderStatus($order['trang_thai'] ?? '');
+        if ($orderStatus === 'cancelled') {
             return ['ok' => false, 'message' => 'Don hang da huy, khong the doi soat thanh toan.'];
         }
 
@@ -308,12 +442,13 @@ class HoaDon {
 
         try {
             $updateHoaDon = [
-                'status_thanh_toan' => 'Da thanh toan',
+                'status_thanh_toan' => 'Đã thanh toán',
                 'updated_at' => new \MongoDB\BSON\UTCDateTime()
             ];
 
-            if (in_array($orderStatus, ['cho thanh toan', 'cho xu ly', 'moi'], true)) {
-                $updateHoaDon['trang_thai'] = 'Da xac nhan';
+            if ($orderStatus === 'pending') {
+                $updateHoaDon['trang_thai'] = 'Đã xác nhận';
+                $updateHoaDon['trang_thai_normalized'] = 'confirmed';
             }
 
             if ($transactionReference !== null && $transactionReference !== '') {
@@ -323,7 +458,11 @@ class HoaDon {
             }
 
             $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => $updateHoaDon]);
-            $this->db->chi_tiet_hoa_don->updateMany(['ma_hoa_don' => $orderId], ['$set' => ['status_thanh_toan' => 'Da thanh toan']]);
+            $this->db->chi_tiet_hoa_don->updateMany(['ma_hoa_don' => $orderId], ['$set' => ['status_thanh_toan' => 'Đã thanh toán']]);
+            if (($updateHoaDon['trang_thai_normalized'] ?? '') === 'confirmed') {
+                $updatedOrder = (array)($this->db->hoa_don->findOne(['ma_hoa_don' => $orderId]) ?? $order);
+                $this->recordAdminOrderNotification($orderId, 'confirmed', $updatedOrder);
+            }
 
             return [
                 'ok' => true,
@@ -392,11 +531,11 @@ class HoaDon {
         $tongTien = max(0, $tamTinh - $soTienGiam - $tienGiamDiem) + $phiVanChuyen;
         
         $maHoaDonMoi = $this->getNextNumericId('hoa_don', 'ma_hoa_don');
-        $statusThanhToan = $hinhThucThanhToan === 'bank_transfer_qr' ? 'Cho chuyen khoan' : 'Chua thanh toan';
-        $orderStatus = $hinhThucThanhToan === 'bank_transfer_qr' ? 'Cho thanh toan' : 'Cho xu ly';
+        $statusThanhToan = $hinhThucThanhToan === 'bank_transfer_qr' ? 'Chờ chuyển khoản' : 'Chưa thanh toán';
+        $orderStatus = 'Chờ xử lý';
         $stockReserved = $this->reserveStockForItems($lineItems);
         if (!$stockReserved) {
-            throw new RuntimeException('Mot so san pham da het hang hoac khong du so luong ton kho.');
+            throw new RuntimeException($this->lastStockError !== '' ? $this->lastStockError : 'Một số sản phẩm đã hết hàng hoặc không đủ số lượng tồn kho.');
         }
 
         $dataHoaDon = [
@@ -419,17 +558,19 @@ class HoaDon {
             'tien_giam_diem' => $tienGiamDiem,
             'da_hoan_diem' => false,
             'trang_thai' => $orderStatus,
+            'trang_thai_normalized' => 'pending',
             'payment_expires_at' => $hinhThucThanhToan === 'bank_transfer_qr' ? new \MongoDB\BSON\UTCDateTime((time() + 86400) * 1000) : null,
             'da_tru_ton_kho' => true,
             'da_hoan_ton_kho' => false,
+            'da_hoan_kho' => false,
             'ngay_dat' => new \MongoDB\BSON\UTCDateTime(),
         ];
 
         try {
-            // 1. LÆ°u hÃ³a Ä‘Æ¡n
+            // 1. Lưu hóa đơn
             $this->db->hoa_don->insertOne($dataHoaDon);
 
-            // 2. LÆ°u chi tiáº¿t hÃ³a Ä‘Æ¡n
+            // 2. Lưu chi tiết hóa đơn
             foreach ($lineItems as $item) {
                 $idCt = $this->getNextNumericId('chi_tiet_hoa_don', 'id');
                 $this->db->chi_tiet_hoa_don->insertOne([
@@ -443,7 +584,7 @@ class HoaDon {
                 ]);
             }
 
-            // 3. Cáº­p nháº­t Voucher
+            // 3. Cập nhật Voucher
             if ($maVoucher !== null && $maVoucher > 0) {
                 $this->db->voucher->updateOne(
                     ['ma_voucher' => $maVoucher],
@@ -451,8 +592,13 @@ class HoaDon {
                 );
             }
 
-            // 4. Äá»“ng bá»™ Ä‘iá»ƒm Loyalty
+            // 4. Đồng bộ điểm Loyalty
             $this->syncCustomerLoyaltyByMaKh($maKh);
+            $this->recordAdminOrderNotification(
+                $maHoaDonMoi,
+                $hinhThucThanhToan === 'bank_transfer_qr' ? 'new_qr' : 'new_cod',
+                $dataHoaDon
+            );
 
             return $maHoaDonMoi;
 
@@ -466,8 +612,8 @@ class HoaDon {
         $deadline = new \MongoDB\BSON\UTCDateTime((time() - max(1, $ttlHours) * 3600) * 1000);
         $cursor = $this->db->hoa_don->find([
             'hinh_thuc_thanh_toan' => 'bank_transfer_qr',
-            'status_thanh_toan' => ['$in' => ['Cho chuyen khoan', 'Chua thanh toan', 'pending']],
-            'trang_thai' => ['$in' => ['Cho thanh toan', 'Cho xu ly', 'Chá» thanh toÃ¡n', 'Chá» xá»­ lÃ½']],
+            'status_thanh_toan' => ['$in' => ['Chờ chuyển khoản', 'Cho chuyen khoan', 'Chưa thanh toán', 'Chua thanh toan', 'pending']],
+            'trang_thai' => ['$in' => ['Chờ xử lý', 'Chờ thanh toán', 'Cho thanh toan', 'Cho xu ly']],
             'ngay_dat' => ['$lt' => $deadline],
         ]);
 
@@ -480,17 +626,18 @@ class HoaDon {
                 $this->restoreStockForItems($items);
             }
             $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => [
-                'trang_thai' => 'Da huy',
-                'status_thanh_toan' => 'Qua han thanh toan',
+                'trang_thai' => 'Đã hủy',
+                'trang_thai_normalized' => 'cancelled',
+                'status_thanh_toan' => 'Quá hạn thanh toán',
                 'ly_do_huy' => 'Qua han thanh toan QR 24 gio',
                 'cancel_reason' => 'Qua han thanh toan QR 24 gio',
                 'cancelled_at' => new \MongoDB\BSON\UTCDateTime(),
                 'da_hoan_ton_kho' => true,
                 'updated_at' => new \MongoDB\BSON\UTCDateTime(),
             ]]);
+            $this->recordAdminOrderNotification($orderId, 'cancelled', (array)$order);
             $count++;
         }
         return $count;
     }
 }
-

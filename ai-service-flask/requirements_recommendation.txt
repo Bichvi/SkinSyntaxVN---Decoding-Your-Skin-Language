@@ -1,0 +1,8 @@
+# Recommendation-only dependencies. These do not replace the chatbot dependencies.
+pymongo>=4.6.0
+llama-index>=0.10.0
+llama-index-core>=0.10.0
+llama-index-embeddings-huggingface>=0.2.0
+llama-index-llms-gemini>=0.1.0
+llama-index-retrievers-bm25>=0.1.0
+sentence-transformers>=3.0.0
