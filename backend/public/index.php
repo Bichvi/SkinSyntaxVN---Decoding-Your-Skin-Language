@@ -20,6 +20,13 @@ if (!defined('BASE_URL')) {
 require_once __DIR__ . '/../app/config/db.php';
 require_once __DIR__ . '/../app/helpers.php';
 
+if (!headers_sent()) {
+    header('Content-Type: text/html; charset=utf-8');
+}
+ob_start(static function ($buffer) {
+    return function_exists('fixMojibake') ? fixMojibake($buffer) : $buffer;
+});
+
 require_once __DIR__ . '/../app/controllers/HomeController.php';
 require_once __DIR__ . '/../app/controllers/SanPhamController.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
@@ -43,8 +50,21 @@ switch ($r) {
         (new SanPhamController($pdo))->tatca();
         break;
 
+    case 'danhsach':
+        (new SanPhamController($pdo))->danhsach();
+        break;
+
     case 'chitiet':
         (new SanPhamController($pdo))->chitiet();
+        break;
+
+    case 'them_gio_hang_ajax':
+        (new SanPhamController($pdo))->addToCartAjax();
+        break;
+
+    case 'themgiohang':
+    case 'them_gio_hang':
+        (new SanPhamController($pdo))->addToCartAjax();
         break;
 
     case 'live_search':
@@ -61,6 +81,34 @@ switch ($r) {
 
     case 'goiy':
         (new HomeController($pdo))->goiy();
+        break;
+
+    case 'product_collection':
+        (new HomeController($pdo))->productCollection();
+        break;
+
+    case 'mongo_health':
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            if (!$pdo || !method_exists($pdo, 'raw')) {
+                throw new RuntimeException('MongoDB adapter is not available.');
+            }
+            $pdo->raw()->command(['ping' => 1])->toArray();
+            echo json_encode([
+                'ok' => true,
+                'service' => 'mongodb',
+                'uri' => defined('MONGO_URI') ? MONGO_URI : 'mongodb://127.0.0.1:27017',
+                'database' => defined('MONGO_DB_NAME') ? MONGO_DB_NAME : 'skinsyntax',
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        } catch (Throwable $e) {
+            error_log('mongo_health error: ' . $e->getMessage());
+            http_response_code(503);
+            echo json_encode([
+                'ok' => false,
+                'service' => 'mongodb',
+                'message' => 'Không kết nối được MongoDB.',
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
         break;
 
     case 'ai_chat_assistant':
@@ -146,6 +194,10 @@ switch ($r) {
 
     case 'capnhathosoda':
         (new TaiKhoanController($pdo))->capNhatHoSoDa();
+        break;
+
+    case 'api_profile_recommendations':
+        (new TaiKhoanController($pdo))->apiProfileRecommendations();
         break;
 
     case 'capnhatthongtin':
@@ -237,6 +289,10 @@ switch ($r) {
         (new QuanTriController($pdo))->adminProductVisibility();
         break;
 
+    case 'admin_sp_stock':
+        (new QuanTriController($pdo))->adminProductStock();
+        break;
+
     case 'admin_categories':
         (new QuanTriController($pdo))->adminCategories();
         break;
@@ -295,6 +351,18 @@ switch ($r) {
 
     case 'admin_reports':
         (new QuanTriController($pdo))->adminReports();
+        break;
+
+    case 'admin_questions':
+        (new QuanTriController($pdo))->adminQuestions();
+        break;
+
+    case 'admin_question_reply':
+        (new QuanTriController($pdo))->adminQuestionReply();
+        break;
+
+    case 'admin_question_hide':
+        (new QuanTriController($pdo))->adminQuestionHide();
         break;
 
     case 'admin_notifications_seen':
@@ -365,6 +433,10 @@ switch ($r) {
 
     case 'guidanhgia':
         (new QuanTriController($pdo))->customerReviewSave();
+        break;
+
+    case 'guicauhoi':
+        (new QuanTriController($pdo))->customerQuestionSave();
         break;
 
     case 'huydonhang':

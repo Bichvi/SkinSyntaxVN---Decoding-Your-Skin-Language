@@ -8,6 +8,57 @@ class ThongKe {
         $this->db = $db;
     }
 
+    private function normalizeOrderStatus($status): string {
+        $raw = trim((string)($status ?? ''));
+        $normalized = function_exists('mb_strtolower') ? mb_strtolower($raw, 'UTF-8') : strtolower($raw);
+        $normalized = str_replace(['_', '-'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?: $normalized;
+        $map = [
+            'chờ xử lý' => 'pending',
+            'cho xu ly' => 'pending',
+            'chờ thanh toán' => 'pending',
+            'cho thanh toan' => 'pending',
+            'moi' => 'pending',
+            'pending' => 'pending',
+            'đã xác nhận' => 'confirmed',
+            'da xac nhan' => 'confirmed',
+            'confirmed' => 'confirmed',
+            'đang giao' => 'shipping',
+            'dang giao' => 'shipping',
+            'shipping' => 'shipping',
+            'hoàn thành' => 'completed',
+            'hoan thanh' => 'completed',
+            'completed' => 'completed',
+            'đã hủy' => 'cancelled',
+            'da huy' => 'cancelled',
+            'huy' => 'cancelled',
+            'cancelled' => 'cancelled',
+            'canceled' => 'cancelled',
+        ];
+        return $map[$normalized] ?? $normalized;
+    }
+
+    private function normalizePaymentStatus($status): string {
+        $raw = trim((string)($status ?? ''));
+        $normalized = function_exists('mb_strtolower') ? mb_strtolower($raw, 'UTF-8') : strtolower($raw);
+        $normalized = str_replace(['_', '-'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?: $normalized;
+        return in_array($normalized, ['da thanh toan', 'đã thanh toán', 'paid', 'thanh cong', 'completed'], true)
+            ? 'paid'
+            : 'unpaid';
+    }
+
+    private function isRevenueOrder(array $order): bool {
+        if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') !== 'completed') {
+            return false;
+        }
+        $method = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod')));
+        if ($method === 'bank_transfer_qr' || str_contains($method, 'qr') || str_contains($method, 'transfer')) {
+            return $this->normalizePaymentStatus($order['status_thanh_toan'] ?? '') === 'paid';
+        }
+        return true;
+    }
+
     public function getTongSanPham(): int {
         return $this->db->san_pham->countDocuments([]);
     }
@@ -18,21 +69,25 @@ class ThongKe {
     }
 
     public function getDoanhThu(): float {
-        $pipeline = [
-            ['$match' => ['trang_thai' => 'Hoàn thành']],
-            ['$group' => [
-                '_id' => null,
-                'total' => ['$sum' => '$tong_tien']
-            ]]
-        ];
-        $result = $this->db->hoa_don->aggregate($pipeline)->toArray();
-        return !empty($result) ? (float)$result[0]['total'] : 0.0;
+        $total = 0.0;
+        foreach ($this->db->hoa_don->find([]) as $doc) {
+            $order = (array)$doc;
+            if ($this->isRevenueOrder($order)) {
+                $total += (float)($order['tong_tien'] ?? 0);
+            }
+        }
+        return $total;
     }
 
     public function getDonChoXuLy(): int {
-        return $this->db->hoa_don->countDocuments(['trang_thai' => 'Chờ xử lý']);
+        $count = 0;
+        foreach ($this->db->hoa_don->find([], ['projection' => ['trang_thai' => 1]]) as $doc) {
+            if ($this->normalizeOrderStatus(((array)$doc)['trang_thai'] ?? '') === 'pending') {
+                $count++;
+            }
+        }
+        return $count;
     }
-
     public function getSanPhamMoi(int $limit = 5): array {
         $limit = max(1, min(50, $limit));
         $options = [
@@ -95,3 +150,4 @@ class ThongKe {
         return $items;
     }
 }
+

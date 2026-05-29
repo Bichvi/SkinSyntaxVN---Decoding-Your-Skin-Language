@@ -37,8 +37,13 @@ try {
         throw new RuntimeException('MongoDB PHP library not found. Install mongodb/mongodb or restore vendor/autoload.php.');
     }
 
-    $client = new MongoDB\Client('mongodb://127.0.0.1:27017');
-    $db = $client->selectDatabase('skinsyntax');
+    $mongoUri = function_exists('ss_env') ? ss_env('MONGO_URI', 'mongodb://127.0.0.1:27017') : (getenv('MONGO_URI') ?: 'mongodb://127.0.0.1:27017');
+    $mongoDbName = function_exists('ss_env') ? ss_env('MONGO_DB_NAME', 'skinsyntax') : (getenv('MONGO_DB_NAME') ?: 'skinsyntax');
+    defined('MONGO_URI') || define('MONGO_URI', $mongoUri);
+    defined('MONGO_DB_NAME') || define('MONGO_DB_NAME', $mongoDbName);
+
+    $client = new MongoDB\Client($mongoUri);
+    $db = $client->selectDatabase($mongoDbName);
     $pdo = new MongoDatabaseCompat($db);
     $mongoClient = $client;
 } catch (Throwable $e) {

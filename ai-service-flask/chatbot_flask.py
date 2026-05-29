@@ -2025,6 +2025,11 @@ app = Flask(__name__)
 CORS(app)
 
 
+@app.get("/health")
+def simple_health():
+    return jsonify({"ok": True, "service": "chatbot-flask", "framework": "LangChain + ChromaDB"})
+
+
 @app.get("/api/health")
 def health():
     print("[DEBUG] /api/health called")
@@ -2115,5 +2120,6 @@ if __name__ == "__main__":
         print(f"[WARN]  Warm-up failed: {e}")
 
     print(f"[INFO]  Primary model: {GEMINI_MODEL} (1500 req/day FREE)")
-    print(f"[INFO]  Health check: http://127.0.0.1:{FLASK_PORT}/api/health")
+    print(f"[INFO]  Health check: http://127.0.0.1:{FLASK_PORT}/health")
+    print(f"[INFO]  Detailed health: http://127.0.0.1:{FLASK_PORT}/api/health")
     app.run(host="0.0.0.0", port=FLASK_PORT, debug=False, use_reloader=False)

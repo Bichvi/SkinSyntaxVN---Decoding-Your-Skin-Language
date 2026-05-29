@@ -4,6 +4,8 @@ require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/SanPham.php';
 require_once __DIR__ . '/../models/ThongKe.php';
 require_once __DIR__ . '/../models/Voucher.php';
+require_once __DIR__ . '/../models/DanhGia.php';
+require_once __DIR__ . '/../models/HoiDap.php';
 
 class QuanTriController {
     private  $pdo;
@@ -79,7 +81,7 @@ class QuanTriController {
 
         $center['has_new_orders'] = $hasNewOrders;
         $center['has_new_chats'] = $hasNewChats;
-        $center['unseen_count'] = ($hasNewOrders ? (int)($center['pending_orders_count'] ?? 0) : 0)
+        $center['unseen_count'] = (int)($center['unread_order_notifications_count'] ?? 0)
             + ($hasNewChats ? (int)($center['pending_chats_count'] ?? 0) : 0);
 
         return $center;
@@ -145,10 +147,9 @@ class QuanTriController {
     }
 
     private function isCancelledStatus(string $status): bool {
-        $normalized = strtolower(trim($status));
-        return in_array($normalized, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true);
+        return method_exists($this->model, 'normalizeOrderStatus')
+            && $this->model->normalizeOrderStatus($status) === 'cancelled';
     }
-
     private function extractCancellationReasonFromPost(): array {
         $options = $this->cancellationReasonOptions();
         $reasonKey = trim((string)($_POST['ly_do_huy'] ?? ''));
@@ -207,6 +208,39 @@ class QuanTriController {
         return $fileName;
     }
 
+    private function handleReviewImageUploads(string $inputName = 'hinh_anh'): array {
+        if (empty($_FILES[$inputName]) || !is_array($_FILES[$inputName])) {
+            return [];
+        }
+
+        $files = $_FILES[$inputName];
+        $names = is_array($files['name'] ?? null) ? $files['name'] : [$files['name'] ?? ''];
+        $tmpNames = is_array($files['tmp_name'] ?? null) ? $files['tmp_name'] : [$files['tmp_name'] ?? ''];
+        $errors = is_array($files['error'] ?? null) ? $files['error'] : [$files['error'] ?? UPLOAD_ERR_NO_FILE];
+        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/reviews';
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0775, true);
+        }
+
+        $paths = [];
+        foreach ($names as $index => $name) {
+            if (($errors[$index] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                continue;
+            }
+            $ext = strtolower(pathinfo((string)$name, PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed, true)) {
+                continue;
+            }
+            $fileName = uniqid('rv_', true) . '.' . $ext;
+            $target = $uploadDir . '/' . $fileName;
+            if (move_uploaded_file((string)($tmpNames[$index] ?? ''), $target)) {
+                $paths[] = 'uploads/reviews/' . $fileName;
+            }
+        }
+        return $paths;
+    }
+
     public function adminDashboard(): void {
         $this->requireRole(['admin']);
 
@@ -227,8 +261,9 @@ class QuanTriController {
         $page = max(1, (int)($_GET['page'] ?? 1));
         $q = trim((string)($_GET['q'] ?? ''));
         $status = strtolower(trim((string)($_GET['status'] ?? '')));
+        $stockStatus = strtolower(trim((string)($_GET['stock_status'] ?? '')));
         $perPage = 20;
-        $res = $this->sanPhamModel->paginate($page, $perPage, $q, '', '', $status, false);
+        $res = $this->sanPhamModel->paginate($page, $perPage, $q, '', '', $status, false, $stockStatus);
 
         $this->renderAdmin('danhsachSP', [
             'items' => $res['items'] ?? [],
@@ -237,6 +272,7 @@ class QuanTriController {
             'perPage' => $perPage,
             'q' => $q,
             'status' => $status,
+            'stockStatus' => $stockStatus,
         ]);
     }
 
@@ -276,6 +312,31 @@ class QuanTriController {
             'r' => 'admin_sp',
             'q' => trim((string)($_POST['q'] ?? '')),
             'status' => trim((string)($_POST['status_filter'] ?? '')),
+            'stock_status' => trim((string)($_POST['stock_status_filter'] ?? '')),
+            'page' => max(1, (int)($_POST['page'] ?? 1)),
+        ]);
+        redirect(BASE_URL . '/index.php?' . $query);
+    }
+
+    public function adminProductStock(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_sp');
+        }
+
+        $id = trim((string)($_POST['id'] ?? ''));
+        $stock = max(0, (int)($_POST['so_luong_ton_kho'] ?? 0));
+        $ok = $id !== '' && $this->sanPhamModel->updateInventory($id, $stock);
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể cập nhật tồn kho sản phẩm.')
+            : 'Không thể cập nhật tồn kho sản phẩm.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật tồn kho sản phẩm.' : $errorMessage);
+
+        $query = http_build_query([
+            'r' => 'admin_sp',
+            'q' => trim((string)($_POST['q'] ?? '')),
+            'status' => trim((string)($_POST['status_filter'] ?? '')),
+            'stock_status' => trim((string)($_POST['stock_status_filter'] ?? '')),
             'page' => max(1, (int)($_POST['page'] ?? 1)),
         ]);
         redirect(BASE_URL . '/index.php?' . $query);
@@ -518,7 +579,7 @@ class QuanTriController {
         $this->renderAdmin('staff_dashboard', [
             'summary' => $summary,
             'user' => $user,
-            'pendingOrders' => $this->model->listOrders('', 'Cho xu ly'),
+            'pendingOrders' => $this->model->listOrders('', 'pending'),
             'conversations' => $this->model->listChatConversations(true, 20),
             'reviews' => $this->model->listReviews(''),
         ]);
@@ -934,9 +995,71 @@ class QuanTriController {
         redirect(BASE_URL . '/index.php?r=staff_chats&ma_kh=' . $maKh);
     }
 
+    public function adminQuestions(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $status = trim((string)($_GET['status'] ?? ''));
+        $q = trim((string)($_GET['q'] ?? ''));
+        $model = new HoiDap($this->pdo);
+        $questions = [];
+        $error = '';
+        try {
+            $questions = $model->listAdminQuestions($status, $q, 150);
+        } catch (Throwable $e) {
+            error_log('admin questions MongoDB error: ' . $e->getMessage());
+            $error = 'Hiện chưa thể tải danh sách hỏi đáp. Vui lòng thử lại sau.';
+        }
+        $this->renderAdmin('questions', [
+            'questions' => $questions,
+            'status' => $status,
+            'q' => $q,
+            'error' => $error,
+        ]);
+    }
+
+    public function adminQuestionReply(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_questions');
+        }
+        $questionId = max(0, (int)($_POST['ma_hoi_dap'] ?? 0));
+        $answer = trim((string)($_POST['tra_loi'] ?? ''));
+        try {
+            $ok = (new HoiDap($this->pdo))->answerQuestion(
+                $questionId,
+                (int)($user['ma_nv'] ?? 0),
+                $answer,
+                (string)($user['ho_ten'] ?? 'SkinSyntax')
+            );
+        } catch (Throwable $e) {
+            error_log('admin question reply error: ' . $e->getMessage());
+            $ok = false;
+        }
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã trả lời câu hỏi.' : 'Không thể trả lời câu hỏi.');
+        redirect(BASE_URL . '/index.php?r=admin_questions');
+    }
+
+    public function adminQuestionHide(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_questions');
+        }
+        $questionId = max(0, (int)($_POST['ma_hoi_dap'] ?? 0));
+        try {
+            $ok = (new HoiDap($this->pdo))->hideQuestion($questionId);
+        } catch (Throwable $e) {
+            error_log('admin question hide error: ' . $e->getMessage());
+            $ok = false;
+        }
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã ẩn câu hỏi.' : 'Không thể ẩn câu hỏi.');
+        redirect(BASE_URL . '/index.php?r=admin_questions');
+    }
+
     public function markNotificationsSeen(): void {
         $this->requireRole(['admin', 'nhanvien']);
         $center = $this->model->getNotificationCenterData();
+        if (method_exists($this->model, 'markOrderNotificationsRead')) {
+            $this->model->markOrderNotificationsRead();
+        }
         $_SESSION['admin_notifications_seen'] = [
             'latest_order_marker' => (string)($center['latest_order_marker'] ?? ''),
             'latest_chat_marker' => (string)($center['latest_chat_marker'] ?? ''),
@@ -1000,9 +1123,42 @@ class QuanTriController {
         $productId = trim((string)($_POST['ma_san_pham'] ?? ''));
         $stars = max(1, min(5, (int)($_POST['so_sao'] ?? 5)));
         $content = trim((string)($_POST['noi_dung'] ?? ''));
-        $result = $this->model->createReview((string)($user['email'] ?? ''), $productId, $stars, $content);
+        try {
+            $reviewModel = new DanhGia($this->pdo);
+            $customer = $reviewModel->resolveCustomerByEmail((string)($user['email'] ?? ''), (string)($user['ho_ten'] ?? 'Khách hàng'));
+            $result = $reviewModel->addReview($productId, (int)($customer['ma_kh'] ?? 0), [
+                'so_sao' => $stars,
+                'noi_dung' => $content,
+                'hinh_anh' => $this->handleReviewImageUploads('hinh_anh'),
+            ]);
+        } catch (Throwable $e) {
+            error_log('customer review MongoDB error: ' . $e->getMessage());
+            $result = ['ok' => false, 'message' => 'Hiện chưa thể gửi đánh giá. Vui lòng thử lại sau.'];
+        }
         set_flash(!empty($result['ok']) ? 'success' : 'error', (string)($result['message'] ?? 'Không thể gửi đánh giá.'));
         redirect(BASE_URL . '/index.php?r=chitiet&id=' . urlencode($productId) . '&tab=danh-gia');
+    }
+
+    public function customerQuestionSave(): void {
+        $user = $this->requireRole(['khach_hang']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirectBack('home');
+        }
+
+        $productId = trim((string)($_POST['ma_san_pham'] ?? ''));
+        try {
+            $questionModel = new HoiDap($this->pdo);
+            $customer = $questionModel->resolveCustomerByEmail((string)($user['email'] ?? ''), (string)($user['ho_ten'] ?? 'Khách hàng'));
+            $result = $questionModel->addQuestion($productId, (int)($customer['ma_kh'] ?? 0), [
+                'cau_hoi' => trim((string)($_POST['cau_hoi'] ?? '')),
+            ]);
+        } catch (Throwable $e) {
+            error_log('customer question MongoDB error: ' . $e->getMessage());
+            $result = ['ok' => false, 'message' => 'Hiện chưa thể gửi câu hỏi. Vui lòng thử lại sau.'];
+        }
+
+        set_flash(!empty($result['ok']) ? 'success' : 'error', (string)($result['message'] ?? 'Không thể gửi câu hỏi.'));
+        redirect(BASE_URL . '/index.php?r=chitiet&id=' . urlencode($productId) . '&tab=hoi-dap');
     }
 
     public function customerOrderCancel(): void {
@@ -1015,14 +1171,16 @@ class QuanTriController {
         $detail = $this->model->getOrderById($orderId);
         $email = strtolower(trim((string)($user['email'] ?? '')));
         $ownerEmail = strtolower(trim((string)($detail['email'] ?? '')));
-        $currentStatus = strtolower(trim((string)($detail['trang_thai'] ?? '')));
+        $currentStatus = method_exists($this->model, 'normalizeOrderStatus')
+            ? $this->model->normalizeOrderStatus($detail['trang_thai'] ?? '')
+            : strtolower(trim((string)($detail['trang_thai'] ?? '')));
 
         if (!$detail || $email === '' || $ownerEmail !== $email) {
             set_flash('error', 'Không thể hủy đơn hàng này.');
             redirect(BASE_URL . '/index.php?r=hoso');
         }
 
-        if (in_array($currentStatus, ['dang giao', 'hoan thanh', 'da huy'], true)) {
+        if (in_array($currentStatus, ['shipping', 'completed', 'cancelled'], true)) {
             set_flash('error', 'Đơn hàng đã ở trạng thái không thể hủy.');
             redirect(BASE_URL . '/index.php?r=hoso');
         }
@@ -1033,7 +1191,7 @@ class QuanTriController {
             redirect(BASE_URL . '/index.php?r=hoso');
         }
 
-        $ok = $this->model->updateOrderStatus($orderId, 'Da huy', (string)($payload['reason'] ?? ''));
+        $ok = $this->model->updateOrderStatus($orderId, 'cancelled', (string)($payload['reason'] ?? ''));
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã hủy đơn hàng.' : 'Không thể hủy đơn hàng.');
         redirect(BASE_URL . '/index.php?r=hoso');
     }

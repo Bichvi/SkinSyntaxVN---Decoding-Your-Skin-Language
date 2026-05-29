@@ -84,46 +84,46 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         <?php if (!empty($_SESSION['user'])): ?>
           <button type="button" class="ai-chat-widget__quick-chip ai-chat-widget__quick-chip--highlight" 
                   <?= $aiChatSkinProfile ? 'data-ai-chat-toggle-profile' : 'data-ai-chat-profile-restricted' ?>>
-            ✨ Gợi ý theo hồ sơ da
+            âœ¨ Gợi ý theo hồ sơ da
           </button>
         <?php endif; ?>
       </div>
 
 <?php if ($aiChatSkinProfile): ?>
       <div class="ai-chat-profile-banner" data-ai-profile-banner hidden
-           data-profile="<?= htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES) ?>">
+           data-profile="<?= htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8') ?>">
         <div class="ai-chat-profile-banner__head">
-          <span class="ai-chat-profile-banner__icon">✨</span>
+          <span class="ai-chat-profile-banner__icon">âœ¨</span>
           <div>
             <strong>Gợi ý theo hồ sơ da của bạn</strong>
-            <span class="ai-chat-profile-banner__tag"><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES) ?></span>
+            <span class="ai-chat-profile-banner__tag"><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES, 'UTF-8') ?></span>
           </div>
           <button type="button" class="ai-chat-profile-banner__close" data-ai-chat-toggle-profile aria-label="Đóng gợi ý">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <p class="ai-chat-profile-banner__desc">Bạn muốn tìm sản phẩm nào phù hợp với <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES) ?></strong> và ngân sách của mình?</p>
+        <p class="ai-chat-profile-banner__desc">Bạn muốn tìm sản phẩm nào phù hợp với <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES, 'UTF-8') ?></strong> và ngân sách của mình?</p>
         <div class="ai-chat-profile-banner__chips">
-          <button type="button" class="ai-chat-profile-chip" data-category="Toner / Nước Cân Bằng Da">💧 Toner</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Sữa Rửa Mặt">🧴 Sữa rửa mặt</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Tẩy Trang Mặt">🌿 Tẩy trang</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Serum / Tinh Chất">⚗️ Serum</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Kem / Gel / Dầu Dưỡng">🫧 Kem dưỡng</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Chống Nắng Da Mặt">☀️ Chống nắng</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Mặt Nạ Giấy">🎭 Mặt nạ</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Hỗ Trợ Trị Mụn">🔬 Trị mụn</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Toner / Nước Cân Bằng Da">ðŸ’§ Toner</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Sữa Rửa Mặt">ðŸ§´ Sữa rửa mặt</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Tẩy Trang Mặt">ðŸŒ¿ Tẩy trang</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Serum / Tinh Chất">âš—ï¸ Serum</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Kem / Gel / Dầu Dưỡng">ðŸ«§ Kem dưỡng</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Chống Nắng Da Mặt">â˜€ï¸ Chống nắng</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Mặt Nạ Giấy">ðŸŽ­ Mặt nạ</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Hỗ Trợ Trị Mụn">ðŸ”¬ Trị mụn</button>
         </div>
       </div>
 <?php endif; ?>
 
       <div class="ai-chat-widget__stream" data-ai-chat-stream
-           data-ai-skin-profile="<?= $aiChatSkinProfile ? htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES) : '' ?>"
+           data-ai-skin-profile="<?= $aiChatSkinProfile ? htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8') : '' ?>"
            data-ai-greeting-key="aiChatGreeting:<?= $aiChatStorageScope ?>">
         <div class="ai-chat-widget__welcome" data-ai-chat-welcome>
           <div class="ai-chat-widget__welcome-badge">AI Agent</div>
 <?php if ($aiChatSkinProfile): ?>
-          <h4>Xin chào! Mình đã có hồ sơ da của bạn 👋</h4>
-          <p>Loại da: <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES) ?></strong><?php if (!empty($aiChatSkinProfile['thanh_phan_tranh'])): ?> · Tránh: <strong><?= htmlspecialchars($aiChatSkinProfile['thanh_phan_tranh'], ENT_QUOTES) ?></strong><?php endif; ?></p>
+          <h4>Xin chào! Mình đã có hồ sơ da của bạn ðŸ‘‹</h4>
+          <p>Loại da: <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES, 'UTF-8') ?></strong><?php if (!empty($aiChatSkinProfile['thanh_phan_tranh'])): ?> · Tránh: <strong><?= htmlspecialchars($aiChatSkinProfile['thanh_phan_tranh'], ENT_QUOTES, 'UTF-8') ?></strong><?php endif; ?></p>
           <p style="margin-top:4px">Chọn loại sản phẩm bên dưới để mình gợi ý ngay, hoặc hỏi bất kỳ điều gì về skincare nhé!</p>
 <?php else: ?>
           <h4>Tư vấn skincare dựa trên các sản phẩm của SkinSyntax</h4>
@@ -1325,8 +1325,11 @@ if ($aiChatEmail !== '' && $pdo !== null) {
             : imageCore;
             
           var cartAction = (detailUrl !== '' && product.id)
-            ? '<form action="index.php?r=chitiet&id=' + escapeHtml(product.id) + '" method="POST" style="display:inline-block; margin:0; padding:0;">'
+            ? '<form action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" method="POST" style="display:inline-block; margin:0; padding:0;">'
               + '<input type="hidden" name="action" value="add_to_cart">'
+              + '<input type="hidden" name="product_id" value="' + escapeHtml(product.id) + '">'
+              + '<input type="hidden" name="ma_san_pham" value="' + escapeHtml(product.id) + '">'
+              + '<input type="hidden" name="quantity" value="1">'
               + '<input type="hidden" name="qty" value="1">'
               + '<button type="submit" class="ai-chat-widget__meta-card-btn ai-chat-widget__meta-card-btn--cart">'
               + '<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ hàng'
@@ -1768,7 +1771,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         syncLayout();
       });
 
-      // ── Auto-greeting (one-time per session) ──────────────────────────────
+      // â”€â”€ Auto-greeting (one-time per session) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       var greetingKey = stream ? (stream.getAttribute('data-ai-greeting-key') || '') : '';
 
       var buildGreetingMessage = function () {
@@ -1778,7 +1781,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 
         if (!profile || !profile.loai_da) {
           // Khách chưa có hồ sơ da
-          return 'SkinSyntax AI chào bạn! 👋\n\n'
+          return 'SkinSyntax AI chào bạn! ðŸ‘‹\n\n'
             + 'Mình là **Ngọc Vi** — tư vấn viên AI của SkinSyntaxVN. '
             + 'Bạn có thể hỏi mình về:\n'
             + '- Thành phần mỹ phẩm & cách phối hợp an toàn\n'
@@ -1793,20 +1796,20 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         var nganSach = parseInt(profile.ngan_sach || 0, 10);
 
         var lines = [];
-        lines.push('SkinSyntax AI chào bạn! 👋');
+        lines.push('SkinSyntax AI chào bạn! ðŸ‘‹');
         lines.push('');
         lines.push('Mình đã ghi nhận tình trạng da của bạn là **' + loaiDa + '**' + (vande ? ' với vấn đề **' + vande + '**' : '') + '.');
 
         if (tranh) {
           lines.push('');
-          lines.push('⚠️ **Ưu tiên tránh các thành phần:** ' + tranh + '.');
+          lines.push('âš ï¸ **Ưu tiên tránh các thành phần:** ' + tranh + '.');
           lines.push('Mình sẽ luôn lọc sản phẩm an toàn với danh sách này cho bạn!');
         }
 
         if (nganSach > 0) {
           var fmt = new Intl.NumberFormat('vi-VN').format(nganSach);
           lines.push('');
-          lines.push('💰 Ngân sách tham khảo của bạn: **' + fmt + ' đ**.');
+          lines.push('ðŸ’° Ngân sách tham khảo của bạn: **' + fmt + ' đ**.');
         }
 
         lines.push('');
@@ -1833,7 +1836,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         // Don't save to message storage so it regenerates fresh each session
         renderMessages();
       };
-      // ── End auto-greeting ──────────────────────────────────────────────────
+      // â”€â”€ End auto-greeting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
       try {
         var stored = window.sessionStorage.getItem(storageKey);

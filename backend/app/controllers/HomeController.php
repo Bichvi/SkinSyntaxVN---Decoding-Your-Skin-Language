@@ -115,20 +115,41 @@ class HomeController {
 
     private function render($view, $data = []) {
         extract($data);
-        // menuCats dÃ¹ng chung layout
-        $menuCats = $this->model->menuTree();
+        // menuCats dùng chung layout. Nếu MongoDB tạm mất kết nối thì không để layout làm sập trang.
+        try {
+            $menuCats = $this->model->menuTree();
+        } catch (Throwable $e) {
+            error_log('layout menu MongoDB error: ' . $e->getMessage());
+            $menuCats = [];
+        }
         require __DIR__ . '/../views/layouts/header.php';
         require __DIR__ . '/../views/' . $view . '.php';
         require __DIR__ . '/../views/layouts/footer.php';
     }
 
     public function index() {
-        $latest = $this->model->latest(12, true);
-        $cats = $this->getHighlightedCategories();
-        $homepageSections = method_exists($this->model, 'getHomepageProductSections')
-            ? $this->model->getHomepageProductSections(4)
-            : [];
-        $this->render('home', ['latest' => $latest, 'cats' => $cats, 'homepageSections' => $homepageSections]);
+        $latest = [];
+        $cats = [];
+        $homepageSections = [];
+        $dbUnavailableMessage = '';
+
+        try {
+            $latest = $this->model->latest(12, true);
+            $cats = $this->getHighlightedCategories();
+            $homepageSections = method_exists($this->model, 'getHomepageProductSections')
+                ? $this->model->getHomepageProductSections(8)
+                : [];
+        } catch (Throwable $e) {
+            error_log('home MongoDB error: ' . $e->getMessage());
+            $dbUnavailableMessage = 'Hiện chưa thể tải dữ liệu sản phẩm. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
+        }
+
+        $this->render('home', [
+            'latest' => $latest,
+            'cats' => $cats,
+            'homepageSections' => $homepageSections,
+            'dbUnavailableMessage' => $dbUnavailableMessage,
+        ]);
     }
 
     public function otpGuide() {
@@ -137,183 +158,183 @@ class HomeController {
 
     public function termsReference() {
         $this->renderPolicyReference([
-            'title' => 'Äiá»u kiá»‡n giao dá»‹ch chung',
-            'eyebrow' => 'Äiá»u khoáº£n SkinSyntax',
-            'summary' => 'Äiá»u kiá»‡n giao dá»‹ch nÃ y do SkinSyntax ban hÃ nh vÃ  Ã¡p dá»¥ng cho toÃ n bá»™ hoáº¡t Ä‘á»™ng Ä‘Äƒng kÃ½ tÃ i khoáº£n, truy cáº­p ná»™i dung, mua sáº¯m, thanh toÃ¡n vÃ  sá»­ dá»¥ng dá»‹ch vá»¥ trÃªn website.',
+            'title' => 'Điều kiện giao dịch chung',
+            'eyebrow' => 'Điều khoản SkinSyntax',
+            'summary' => 'Điều kiện giao dịch này do SkinSyntax ban hành và áp dụng cho toàn bộ hoạt động đăng ký tài khoản, truy cập nội dung, mua sắm, thanh toán và sử dụng dịch vụ trên website.',
             'highlights' => [
-                'NgÆ°á»i dÃ¹ng cam káº¿t cung cáº¥p thÃ´ng tin Ä‘Ãºng sá»± tháº­t khi Ä‘Äƒng kÃ½ tÃ i khoáº£n, Ä‘áº·t hÃ ng, thanh toÃ¡n vÃ  lÃ m kháº£o sÃ¡t da. SkinSyntax cÃ³ quyá»n tá»« chá»‘i xá»­ lÃ½ khi phÃ¡t hiá»‡n thÃ´ng tin sai lá»‡ch hoáº·c cÃ³ dáº¥u hiá»‡u gian láº­n.',
-                'Má»i Ä‘Æ¡n hÃ ng chá»‰ Ä‘Æ°á»£c xÃ¡c nháº­n sau khi SkinSyntax kiá»ƒm tra tÃ¬nh tráº¡ng sáº£n pháº©m, thÃ´ng tin nháº­n hÃ ng, phÆ°Æ¡ng thá»©c thanh toÃ¡n vÃ  cÃ¡c Ä‘iá»u kiá»‡n Ã¡p dá»¥ng cá»§a voucher hoáº·c chÆ°Æ¡ng trÃ¬nh khuyáº¿n mÃ£i.',
-                'GiÃ¡ bÃ¡n, Æ°u Ä‘Ã£i, phÃ­ váº­n chuyá»ƒn vÃ  thá»i gian giao hÃ ng cÃ³ thá»ƒ thay Ä‘á»•i theo tá»«ng thá»i Ä‘iá»ƒm. SkinSyntax sáº½ hiá»ƒn thá»‹ thÃ´ng tin hiá»‡n hÃ nh trÃªn website trÆ°á»›c khi ngÆ°á»i dÃ¹ng hoÃ n táº¥t giao dá»‹ch.',
-                'NgÆ°á»i dÃ¹ng cÃ³ trÃ¡ch nhiá»‡m báº£o máº­t tÃ i khoáº£n, máº­t kháº©u, mÃ£ OTP vÃ  cÃ¡c thiáº¿t bá»‹ Ä‘Äƒng nháº­p. Má»i thao tÃ¡c phÃ¡t sinh tá»« tÃ i khoáº£n Ä‘Ã£ xÃ¡c thá»±c Ä‘Æ°á»£c xem lÃ  do chÃ­nh chá»§ tÃ i khoáº£n thá»±c hiá»‡n, trá»« khi cÃ³ chá»©ng cá»© ngÆ°á»£c láº¡i.',
-                'Ná»™i dung, hÃ¬nh áº£nh, logo, bá»‘ cá»¥c, dá»¯ liá»‡u sáº£n pháº©m vÃ  cÃ¡c tÃ i nguyÃªn hiá»ƒn thá»‹ trÃªn SkinSyntax thuá»™c quyá»n quáº£n lÃ½ cá»§a SkinSyntax hoáº·c Ä‘á»‘i tÃ¡c cáº¥p phÃ©p; khÃ´ng Ä‘Æ°á»£c sao chÃ©p, khai thÃ¡c láº¡i hoáº·c sá»­ dá»¥ng trÃ¡i phÃ©p.',
-                'Khi phÃ¡t sinh khiáº¿u náº¡i, tranh cháº¥p hoáº·c yÃªu cáº§u há»— trá»£, hai bÃªn Æ°u tiÃªn giáº£i quyáº¿t trÃªn tinh tháº§n há»£p tÃ¡c. TrÆ°á»ng há»£p khÃ´ng thá»ƒ tá»± thá»a thuáº­n, váº¥n Ä‘á» sáº½ Ä‘Æ°á»£c xá»­ lÃ½ theo quy Ä‘á»‹nh phÃ¡p luáº­t Viá»‡t Nam.',
+                'Người dùng cam kết cung cấp thông tin đúng sự thật khi đăng ký tài khoản, đặt hàng, thanh toán và làm khảo sát da. SkinSyntax có quyền từ chối xử lý khi phát hiện thông tin sai lệch hoặc có dấu hiệu gian lận.',
+                'Mọi đơn hàng chỉ được xác nhận sau khi SkinSyntax kiểm tra tình trạng sản phẩm, thông tin nhận hàng, phương thức thanh toán và các điều kiện áp dụng của voucher hoặc chương trình khuyến mãi.',
+                'Giá bán, ưu đãi, phí vận chuyển và thời gian giao hàng có thể thay đổi theo từng thời điểm. SkinSyntax sẽ hiển thị thông tin hiện hành trên website trước khi người dùng hoàn tất giao dịch.',
+                'Người dùng có trách nhiệm bảo mật tài khoản, mật khẩu, mã OTP và các thiết bị đăng nhập. Mọi thao tác phát sinh từ tài khoản đã xác thực được xem là do chính chủ tài khoản thực hiện, trừ khi có chứng cứ ngược lại.',
+                'Nội dung, hình ảnh, logo, bố cục, dữ liệu sản phẩm và các tài nguyên hiển thị trên SkinSyntax thuộc quyền quản lý của SkinSyntax hoặc đối tác cấp phép; không được sao chép, khai thác lại hoặc sử dụng trái phép.',
+                'Khi phát sinh khiếu nại, tranh chấp hoặc yêu cầu hỗ trợ, hai bên ưu tiên giải quyết trên tinh thần hợp tác. Trường hợp không thể tự thỏa thuận, vấn đề sẽ được xử lý theo quy định pháp luật Việt Nam.',
             ],
         ]);
     }
 
     public function privacyReference() {
         $this->renderPolicyReference([
-            'title' => 'ChÃ­nh sÃ¡ch báº£o máº­t thÃ´ng tin',
-            'eyebrow' => 'Báº£o máº­t táº¡i SkinSyntax',
-            'summary' => 'SkinSyntax cam káº¿t báº£o vá»‡ thÃ´ng tin cÃ¡ nhÃ¢n, lá»‹ch sá»­ giao dá»‹ch, dá»¯ liá»‡u kháº£o sÃ¡t da vÃ  cÃ¡c dá»¯ liá»‡u ká»¹ thuáº­t phÃ¡t sinh trong quÃ¡ trÃ¬nh ngÆ°á»i dÃ¹ng sá»­ dá»¥ng website.',
+            'title' => 'Chính sách bảo mật thông tin',
+            'eyebrow' => 'Bảo mật tại SkinSyntax',
+            'summary' => 'SkinSyntax cam kết bảo vệ thông tin cá nhân, lịch sử giao dịch, dữ liệu khảo sát da và các dữ liệu kỹ thuật phát sinh trong quá trình người dùng sử dụng website.',
             'highlights' => [
-                'SkinSyntax chá»‰ thu tháº­p nhá»¯ng thÃ´ng tin cáº§n thiáº¿t cho viá»‡c táº¡o tÃ i khoáº£n, xÃ¡c thá»±c OTP, xá»­ lÃ½ Ä‘Æ¡n hÃ ng, chÄƒm sÃ³c khÃ¡ch hÃ ng, cÃ¡ nhÃ¢n hÃ³a gá»£i Ã½ sáº£n pháº©m vÃ  duy trÃ¬ váº­n hÃ nh há»‡ thá»‘ng.',
-                'Dá»¯ liá»‡u cá»§a ngÆ°á»i dÃ¹ng Ä‘Æ°á»£c lÆ°u trá»¯ vá»›i cÃ¡c biá»‡n phÃ¡p kiá»ƒm soÃ¡t truy cáº­p phÃ¹ há»£p. Chá»‰ nhÃ¢n sá»±, bá»™ pháº­n hoáº·c dá»‹ch vá»¥ Ä‘Æ°á»£c á»§y quyá»n má»›i Ä‘Æ°á»£c tiáº¿p cáº­n dá»¯ liá»‡u trong pháº¡m vi cÃ´ng viá»‡c cáº§n thiáº¿t.',
-                'SkinSyntax khÃ´ng bÃ¡n hoáº·c trao Ä‘á»•i thÃ´ng tin cÃ¡ nhÃ¢n cá»§a ngÆ°á»i dÃ¹ng cho bÃªn thá»© ba vÃ¬ má»¥c Ä‘Ã­ch thÆ°Æ¡ng máº¡i Ä‘á»™c láº­p. Viá»‡c chia sáº» chá»‰ diá»…n ra khi cáº§n thiáº¿t Ä‘á»ƒ giao hÃ ng, xá»­ lÃ½ thanh toÃ¡n, gá»­i thÃ´ng bÃ¡o hoáº·c tuÃ¢n thá»§ yÃªu cáº§u phÃ¡p luáº­t.',
-                'NgÆ°á»i dÃ¹ng cÃ³ quyá»n yÃªu cáº§u xem láº¡i, cáº­p nháº­t, chá»‰nh sá»­a hoáº·c háº¡n cháº¿ xá»­ lÃ½ thÃ´ng tin cá»§a mÃ¬nh thÃ´ng qua cÃ¡c kÃªnh há»— trá»£ do SkinSyntax cÃ´ng bá»‘ trÃªn website.',
-                'Trong trÆ°á»ng há»£p phÃ¡t hiá»‡n truy cáº­p trÃ¡i phÃ©p, rÃ² rá»‰ dá»¯ liá»‡u hoáº·c rá»§i ro an toÃ n thÃ´ng tin, SkinSyntax sáº½ Ä‘Ã¡nh giÃ¡ tÃ¡c Ä‘á»™ng, Ã¡p dá»¥ng biá»‡n phÃ¡p kháº¯c phá»¥c phÃ¹ há»£p vÃ  thÃ´ng bÃ¡o cho cÃ¡c bÃªn liÃªn quan khi cáº§n thiáº¿t.',
+                'SkinSyntax chỉ thu thập những thông tin cần thiết cho việc tạo tài khoản, xác thực OTP, xử lý đơn hàng, chăm sóc khách hàng, cá nhân hóa gợi ý sản phẩm và duy trì vận hành hệ thống.',
+                'Dữ liệu của người dùng được lưu trữ với các biện pháp kiểm soát truy cập phù hợp. Chỉ nhân sự, bộ phận hoặc dịch vụ được ủy quyền mới được tiếp cận dữ liệu trong phạm vi công việc cần thiết.',
+                'SkinSyntax không bán hoặc trao đổi thông tin cá nhân của người dùng cho bên thứ ba vì mục đích thương mại độc lập. Việc chia sẻ chỉ diễn ra khi cần thiết để giao hàng, xử lý thanh toán, gửi thông báo hoặc tuân thủ yêu cầu pháp luật.',
+                'Người dùng có quyền yêu cầu xem lại, cập nhật, chỉnh sửa hoặc hạn chế xử lý thông tin của mình thông qua các kênh hỗ trợ do SkinSyntax công bố trên website.',
+                'Trong trường hợp phát hiện truy cập trái phép, rò rỉ dữ liệu hoặc rủi ro an toàn thông tin, SkinSyntax sẽ đánh giá tác động, áp dụng biện pháp khắc phục phù hợp và thông báo cho các bên liên quan khi cần thiết.',
             ],
         ]);
     }
 
     public function personalDataReference() {
         $this->renderPolicyReference([
-            'title' => 'ChÃ­nh sÃ¡ch xá»­ lÃ½ dá»¯ liá»‡u cÃ¡ nhÃ¢n',
-            'eyebrow' => 'Quyá»n riÃªng tÆ° ngÆ°á»i dÃ¹ng',
-            'summary' => 'ChÃ­nh sÃ¡ch nÃ y mÃ´ táº£ cÃ¡ch SkinSyntax tiáº¿p nháº­n, sá»­ dá»¥ng, lÆ°u trá»¯, chia sáº» cÃ³ kiá»ƒm soÃ¡t vÃ  báº£o vá»‡ dá»¯ liá»‡u cÃ¡ nhÃ¢n cá»§a ngÆ°á»i dÃ¹ng trong toÃ n bá»™ vÃ²ng Ä‘á»i dá»‹ch vá»¥.',
+            'title' => 'Chính sách xử lý dữ liệu cá nhân',
+            'eyebrow' => 'Quyền riêng tư người dùng',
+            'summary' => 'Chính sách này mô tả cách SkinSyntax tiếp nhận, sử dụng, lưu trữ, chia sẻ có kiểm soát và bảo vệ dữ liệu cá nhân của người dùng trong toàn bộ vòng đời dịch vụ.',
             'highlights' => [
-                'Dá»¯ liá»‡u cÃ¡ nhÃ¢n cÃ³ thá»ƒ bao gá»“m thÃ´ng tin nháº­n dáº¡ng, thÃ´ng tin liÃªn há»‡, Ä‘á»‹a chá»‰ giao hÃ ng, lá»‹ch sá»­ mua sáº¯m, pháº£n há»“i sáº£n pháº©m, dá»¯ liá»‡u kháº£o sÃ¡t da vÃ  dá»¯ liá»‡u ká»¹ thuáº­t phá»¥c vá»¥ báº£o máº­t há»‡ thá»‘ng.',
-                'SkinSyntax xá»­ lÃ½ dá»¯ liá»‡u cÃ¡ nhÃ¢n trÃªn cÆ¡ sá»Ÿ sá»± Ä‘á»“ng Ã½ cá»§a ngÆ°á»i dÃ¹ng, nhu cáº§u thá»±c hiá»‡n há»£p Ä‘á»“ng mua bÃ¡n, nghÄ©a vá»¥ phÃ¡p lÃ½ hoáº·c lá»£i Ã­ch há»£p phÃ¡p liÃªn quan Ä‘áº¿n báº£o máº­t vÃ  váº­n hÃ nh dá»‹ch vá»¥.',
-                'Dá»¯ liá»‡u Ä‘Æ°á»£c lÆ°u giá»¯ trong thá»i gian cáº§n thiáº¿t Ä‘á»ƒ hoÃ n thÃ nh má»¥c Ä‘Ã­ch thu tháº­p, giáº£i quyáº¿t tranh cháº¥p, há»— trá»£ háº­u mÃ£i vÃ  Ä‘Ã¡p á»©ng yÃªu cáº§u lÆ°u trá»¯ theo quy Ä‘á»‹nh phÃ¡p luáº­t hiá»‡n hÃ nh.',
-                'NgÆ°á»i dÃ¹ng cÃ³ quyá»n Ä‘á»“ng Ã½, tá»« chá»‘i, rÃºt láº¡i sá»± Ä‘á»“ng Ã½, yÃªu cáº§u cung cáº¥p báº£n sao dá»¯ liá»‡u, yÃªu cáº§u chá»‰nh sá»­a hoáº·c Ä‘á» nghá»‹ xÃ³a dá»¯ liá»‡u náº¿u viá»‡c xÃ³a khÃ´ng xung Ä‘á»™t vá»›i nghÄ©a vá»¥ lÆ°u trá»¯ báº¯t buá»™c.',
-                'SkinSyntax cÃ³ thá»ƒ sá»­ dá»¥ng cookie hoáº·c cÃ´ng nghá»‡ tÆ°Æ¡ng Ä‘Æ°Æ¡ng cho chá»©c nÄƒng Ä‘Äƒng nháº­p, ghi nhá»› tÃ¹y chá»n, thá»‘ng kÃª vÃ  tá»‘i Æ°u tráº£i nghiá»‡m; ngÆ°á»i dÃ¹ng cÃ³ thá»ƒ tá»± Ä‘iá»u chá»‰nh báº±ng cÃ i Ä‘áº·t trÃ¬nh duyá»‡t cá»§a mÃ¬nh.',
-                'Khi cÃ³ cáº­p nháº­t quan trá»ng liÃªn quan Ä‘áº¿n pháº¡m vi xá»­ lÃ½ dá»¯ liá»‡u cÃ¡ nhÃ¢n, SkinSyntax sáº½ cÃ´ng bá»‘ phiÃªn báº£n má»›i trÃªn website Ä‘á»ƒ ngÆ°á»i dÃ¹ng chá»§ Ä‘á»™ng theo dÃµi.',
+                'Dữ liệu cá nhân có thể bao gồm thông tin nhận dạng, thông tin liên hệ, địa chỉ giao hàng, lịch sử mua sắm, phản hồi sản phẩm, dữ liệu khảo sát da và dữ liệu kỹ thuật phục vụ bảo mật hệ thống.',
+                'SkinSyntax xử lý dữ liệu cá nhân trên cơ sở sự đồng ý của người dùng, nhu cầu thực hiện hợp đồng mua bán, nghĩa vụ pháp lý hoặc lợi ích hợp pháp liên quan đến bảo mật và vận hành dịch vụ.',
+                'Dữ liệu được lưu giữ trong thời gian cần thiết để hoàn thành mục đích thu thập, giải quyết tranh chấp, hỗ trợ hậu mãi và đáp ứng yêu cầu lưu trữ theo quy định pháp luật hiện hành.',
+                'Người dùng có quyền đồng ý, từ chối, rút lại sự đồng ý, yêu cầu cung cấp bản sao dữ liệu, yêu cầu chỉnh sửa hoặc đề nghị xóa dữ liệu nếu việc xóa không xung đột với nghĩa vụ lưu trữ bắt buộc.',
+                'SkinSyntax có thể sử dụng cookie hoặc công nghệ tương đương cho chức năng đăng nhập, ghi nhớ tùy chọn, thống kê và tối ưu trải nghiệm; người dùng có thể tự điều chỉnh bằng cài đặt trình duyệt của mình.',
+                'Khi có cập nhật quan trọng liên quan đến phạm vi xử lý dữ liệu cá nhân, SkinSyntax sẽ công bố phiên bản mới trên website để người dùng chủ động theo dõi.',
             ],
         ]);
     }
 
     public function storeNetwork(): void {
         $this->render('info/store-network', [
-            'title' => 'Há»‡ thá»‘ng cá»­a hÃ ng SkinSyntax',
-            'eyebrow' => 'Há»‡ thá»‘ng phá»¥c vá»¥',
-            'summary' => 'SkinSyntax Ä‘ang váº­n hÃ nh theo mÃ´ hÃ¬nh online-first: Æ°u tiÃªn tra cá»©u sáº£n pháº©m, tÆ° váº¥n routine, há»— trá»£ Ä‘Æ¡n hÃ ng vÃ  xá»­ lÃ½ sau mua ngay trÃªn website. ThÃ´ng tin Ä‘iá»ƒm há»— trá»£ trá»±c tiáº¿p sáº½ Ä‘Æ°á»£c cáº­p nháº­t theo tá»«ng giai Ä‘oáº¡n má»Ÿ rá»™ng.',
+            'title' => 'Hệ thống cửa hàng SkinSyntax',
+            'eyebrow' => 'Hệ thống phục vụ',
+            'summary' => 'SkinSyntax đang vận hành theo mô hình online-first: ưu tiên tra cứu sản phẩm, tư vấn routine, hỗ trợ đơn hàng và xử lý sau mua ngay trên website. Thông tin điểm hỗ trợ trực tiếp sẽ được cập nhật theo từng giai đoạn mở rộng.',
             'stats' => [
-                ['value' => 'ToÃ n quá»‘c', 'label' => 'Pháº¡m vi phá»¥c vá»¥ qua kÃªnh online'],
-                ['value' => '08:00 - 22:00', 'label' => 'Khung giá» há»— trá»£ khÃ¡ch hÃ ng'],
-                ['value' => '1900 0000', 'label' => 'Hotline tiáº¿p nháº­n nhanh'],
+                ['value' => 'Toàn quốc', 'label' => 'Phạm vi phục vụ qua kênh online'],
+                ['value' => '08:00 - 22:00', 'label' => 'Khung giờ hỗ trợ khách hàng'],
+                ['value' => '1900 0000', 'label' => 'Hotline tiếp nhận nhanh'],
             ],
             'channels' => [
                 [
-                    'title' => 'Mua sáº¯m online táº­p trung',
-                    'text' => 'Tra cá»©u toÃ n bá»™ danh má»¥c, so sÃ¡nh thÃ nh pháº§n, kiá»ƒm tra giÃ¡ bÃ¡n vÃ  Ä‘áº·t hÃ ng trá»±c tiáº¿p trÃªn website SkinSyntax mÃ  khÃ´ng cáº§n chuyá»ƒn kÃªnh.',
+                    'title' => 'Mua sắm online tập trung',
+                    'text' => 'Tra cứu toàn bộ danh mục, so sánh thành phần, kiểm tra giá bán và đặt hàng trực tiếp trên website SkinSyntax mà không cần chuyển kênh.',
                     'icon' => 'fa-solid fa-bag-shopping',
                 ],
                 [
-                    'title' => 'TÆ° váº¥n AI vÃ  chat há»— trá»£',
-                    'text' => 'Báº¡n cÃ³ thá»ƒ há»i AI vá» routine, thÃ nh pháº§n, sáº£n pháº©m phÃ¹ há»£p hoáº·c má»Ÿ khung chat há»— trá»£ Ä‘á»ƒ trao Ä‘á»•i trá»±c tiáº¿p vá»›i bá»™ pháº­n chÄƒm sÃ³c khÃ¡ch hÃ ng.',
+                    'title' => 'Tư vấn AI và chat hỗ trợ',
+                    'text' => 'Bạn có thể hỏi AI về routine, thành phần, sản phẩm phù hợp hoặc mở khung chat hỗ trợ để trao đổi trực tiếp với bộ phận chăm sóc khách hàng.',
                     'icon' => 'fa-solid fa-headset',
                 ],
                 [
-                    'title' => 'Theo dÃµi Ä‘Æ¡n hÃ ng rÃµ tráº¡ng thÃ¡i',
-                    'text' => 'Luá»“ng mua hÃ ng cá»§a SkinSyntax Æ°u tiÃªn tráº¡ng thÃ¡i rÃµ rÃ ng tá»« lÃºc Ä‘áº·t Ä‘Æ¡n, Ã¡p voucher, thanh toÃ¡n Ä‘áº¿n bÆ°á»›c hoÃ n táº¥t vÃ  háº­u mÃ£i.',
+                    'title' => 'Theo dõi đơn hàng rõ trạng thái',
+                    'text' => 'Luồng mua hàng của SkinSyntax ưu tiên trạng thái rõ ràng từ lúc đặt đơn, áp voucher, thanh toán đến bước hoàn tất và hậu mãi.',
                     'icon' => 'fa-solid fa-truck-fast',
                 ],
             ],
             'serviceSteps' => [
-                'BÆ°á»›c 1: TÃ¬m sáº£n pháº©m hoáº·c lÃ m kháº£o sÃ¡t da Ä‘á»ƒ há»‡ thá»‘ng hiá»ƒu nhu cáº§u chÄƒm sÃ³c da cá»§a báº¡n.',
-                'BÆ°á»›c 2: Äáº·t hÃ ng, theo dÃµi Ä‘Æ¡n vÃ  lÆ°u lá»‹ch sá»­ mua sáº¯m ngay trong tÃ i khoáº£n SkinSyntax.',
-                'BÆ°á»›c 3: Khi cáº§n há»— trá»£ sau mua, má»Ÿ chat há»— trá»£ hoáº·c gá»i hotline Ä‘á»ƒ Ä‘Æ°á»£c hÆ°á»›ng dáº«n tiáº¿p tá»¥c.',
+                'Bước 1: Tìm sản phẩm hoặc làm khảo sát da để hệ thống hiểu nhu cầu chăm sóc da của bạn.',
+                'Bước 2: Đặt hàng, theo dõi đơn và lưu lịch sử mua sắm ngay trong tài khoản SkinSyntax.',
+                'Bước 3: Khi cần hỗ trợ sau mua, mở chat hỗ trợ hoặc gọi hotline để được hướng dẫn tiếp tục.',
             ],
             'helpLinks' => [
-                ['label' => 'KhÃ¡m phÃ¡ toÃ n bá»™ sáº£n pháº©m', 'url' => BASE_URL . '/index.php?r=tatca'],
-                ['label' => 'Má»Ÿ gá»£i Ã½ routine AI', 'url' => BASE_URL . '/index.php?r=goiy'],
-                ['label' => 'Trung tÃ¢m há»— trá»£ khÃ¡ch hÃ ng', 'url' => BASE_URL . '/index.php?r=ho_tro_khach_hang'],
+                ['label' => 'Khám phá toàn bộ sản phẩm', 'url' => BASE_URL . '/index.php?r=tatca'],
+                ['label' => 'Mở gợi ý routine AI', 'url' => BASE_URL . '/index.php?r=goiy'],
+                ['label' => 'Trung tâm hỗ trợ khách hàng', 'url' => BASE_URL . '/index.php?r=ho_tro_khach_hang'],
             ],
         ]);
     }
 
     public function warrantyCenter(): void {
         $this->render('info/service-hub', [
-            'title' => 'Báº£o hÃ nh vÃ  há»— trá»£ sau mua',
-            'eyebrow' => 'ChÄƒm sÃ³c sau bÃ¡n',
-            'summary' => 'SkinSyntax tiáº¿p nháº­n yÃªu cáº§u liÃªn quan Ä‘áº¿n lá»—i sáº£n pháº©m, hÆ°á»›ng dáº«n Ä‘á»•i tráº£ há»£p lá»‡, xÃ¡c minh hÃ³a Ä‘Æ¡n vÃ  Ä‘iá»u phá»‘i há»— trá»£ vá»›i nhÃ  cung cáº¥p khi cáº§n.',
+            'title' => 'Bảo hành và hỗ trợ sau mua',
+            'eyebrow' => 'Chăm sóc sau bán',
+            'summary' => 'SkinSyntax tiếp nhận yêu cầu liên quan đến lỗi sản phẩm, hướng dẫn đổi trả hợp lệ, xác minh hóa đơn và điều phối hỗ trợ với nhà cung cấp khi cần.',
             'sections' => [
                 [
-                    'title' => 'Pháº¡m vi tiáº¿p nháº­n',
+                    'title' => 'Phạm vi tiếp nhận',
                     'items' => [
-                        'Sáº£n pháº©m nháº­n sai, thiáº¿u phá»¥ kiá»‡n, lá»—i do váº­n chuyá»ƒn hoáº·c cÃ³ dáº¥u hiá»‡u báº¥t thÆ°á»ng khi má»Ÿ há»™p.',
-                        'Sáº£n pháº©m cÃ³ chÃ­nh sÃ¡ch báº£o hÃ nh riÃªng tá»« nhÃ  phÃ¢n phá»‘i hoáº·c cáº§n xÃ¡c minh tem, mÃ£ lÃ´, hÃ³a Ä‘Æ¡n mua hÃ ng.',
-                        'YÃªu cáº§u kiá»ƒm tra tÃ¬nh tráº¡ng Ä‘Æ¡n hÃ ng sau mua, bá»• sung thÃ´ng tin hoáº·c hÆ°á»›ng dáº«n gá»­i láº¡i sáº£n pháº©m Ä‘á»ƒ Ä‘á»‘i soÃ¡t.',
+                        'Sản phẩm nhận sai, thiếu phụ kiện, lỗi do vận chuyển hoặc có dấu hiệu bất thường khi mở hộp.',
+                        'Sản phẩm có chính sách bảo hành riêng từ nhà phân phối hoặc cần xác minh tem, mã lô, hóa đơn mua hàng.',
+                        'Yêu cầu kiểm tra tình trạng đơn hàng sau mua, bổ sung thông tin hoặc hướng dẫn gửi lại sản phẩm để đối soát.',
                     ],
                 ],
                 [
-                    'title' => 'ThÃ´ng tin cáº§n chuáº©n bá»‹',
+                    'title' => 'Thông tin cần chuẩn bị',
                     'items' => [
-                        'MÃ£ Ä‘Æ¡n hÃ ng hoáº·c sá»‘ Ä‘iá»‡n thoáº¡i dÃ¹ng khi mua sáº¯m.',
-                        'TÃªn sáº£n pháº©m, sá»‘ lÆ°á»£ng gáº·p váº¥n Ä‘á» vÃ  mÃ´ táº£ tÃ¬nh tráº¡ng thá»±c táº¿.',
-                        'HÃ¬nh áº£nh/video lÃºc má»Ÿ kiá»‡n hÃ ng náº¿u cÃ³, Ä‘á»ƒ SkinSyntax rÃºt ngáº¯n thá»i gian xÃ¡c minh.',
+                        'Mã đơn hàng hoặc số điện thoại dùng khi mua sắm.',
+                        'Tên sản phẩm, số lượng gặp vấn đề và mô tả tình trạng thực tế.',
+                        'Hình ảnh/video lúc mở kiện hàng nếu có, để SkinSyntax rút ngắn thời gian xác minh.',
                     ],
                 ],
                 [
-                    'title' => 'Quy trÃ¬nh xá»­ lÃ½',
+                    'title' => 'Quy trình xử lý',
                     'items' => [
-                        'Tiáº¿p nháº­n yÃªu cáº§u qua hotline hoáº·c chat há»— trá»£ vÃ  xÃ¡c nháº­n thÃ´ng tin Ä‘Æ¡n.',
-                        'ÄÃ¡nh giÃ¡ tÃ¬nh tráº¡ng sáº£n pháº©m, kiá»ƒm tra chá»©ng tá»« mua hÃ ng vÃ  hÆ°á»›ng xá»­ lÃ½ phÃ¹ há»£p.',
-                        'Pháº£n há»“i phÆ°Æ¡ng Ã¡n tiáº¿p theo: Ä‘á»•i sáº£n pháº©m, hoÃ n tiá»n, bá»• sung thÃ´ng tin hoáº·c liÃªn há»‡ nhÃ  cung cáº¥p.',
+                        'Tiếp nhận yêu cầu qua hotline hoặc chat hỗ trợ và xác nhận thông tin đơn.',
+                        'Đánh giá tình trạng sản phẩm, kiểm tra chứng từ mua hàng và hướng xử lý phù hợp.',
+                        'Phản hồi phương án tiếp theo: đổi sản phẩm, hoàn tiền, bổ sung thông tin hoặc liên hệ nhà cung cấp.',
                     ],
                 ],
             ],
             'supportCard' => [
-                'title' => 'LiÃªn há»‡ báº£o hÃ nh',
-                'text' => 'Khung giá» Æ°u tiÃªn tiáº¿p nháº­n lÃ  08:00 - 22:00 má»—i ngÃ y. CÃ¡c yÃªu cáº§u cÃ³ Ä‘á»§ mÃ£ Ä‘Æ¡n vÃ  mÃ´ táº£ tÃ¬nh tráº¡ng sáº½ Ä‘Æ°á»£c xá»­ lÃ½ nhanh hÆ¡n.',
+                'title' => 'Liên hệ bảo hành',
+                'text' => 'Khung giờ ưu tiên tiếp nhận là 08:00 - 22:00 mỗi ngày. Các yêu cầu có đủ mã đơn và mô tả tình trạng sẽ được xử lý nhanh hơn.',
                 'bullets' => [
                     'Hotline: 1900 0000',
-                    'KÃªnh nhanh: chat há»— trá»£ trÃªn website',
-                    'Äá»‘i chiáº¿u chÃ­nh sÃ¡ch chung: Ä‘á»•i tráº£, báº£o máº­t, Ä‘iá»u kiá»‡n giao dá»‹ch',
+                    'Kênh nhanh: chat hỗ trợ trên website',
+                    'Đối chiếu chính sách chung: đổi trả, bảo mật, điều kiện giao dịch',
                 ],
             ],
             'actions' => [
-                ['label' => 'Má»Ÿ chat há»— trá»£', 'url' => BASE_URL . '/index.php?r=lichsuchat'],
-                ['label' => 'Xem Ä‘iá»u kiá»‡n giao dá»‹ch', 'url' => BASE_URL . '/index.php?r=dieu_kien_giao_dich'],
-                ['label' => 'ChÃ­nh sÃ¡ch báº£o máº­t', 'url' => BASE_URL . '/index.php?r=chinh_sach_bao_mat'],
+                ['label' => 'Mở chat hỗ trợ', 'url' => BASE_URL . '/index.php?r=lichsuchat'],
+                ['label' => 'Xem điều kiện giao dịch', 'url' => BASE_URL . '/index.php?r=dieu_kien_giao_dich'],
+                ['label' => 'Chính sách bảo mật', 'url' => BASE_URL . '/index.php?r=chinh_sach_bao_mat'],
             ],
         ]);
     }
 
     public function customerSupport(): void {
         $this->render('info/service-hub', [
-            'title' => 'Trung tÃ¢m há»— trá»£ khÃ¡ch hÃ ng',
+            'title' => 'Trung tâm hỗ trợ khách hàng',
             'eyebrow' => 'Customer care',
-            'summary' => 'Trang nÃ y tá»•ng há»£p cÃ¡c kÃªnh há»— trá»£, cÃ¢u há»i thÆ°á»ng gáº·p vÃ  nhá»¯ng Ä‘Æ°á»ng dáº«n quan trá»ng Ä‘á»ƒ báº¡n xá»­ lÃ½ nhanh cÃ¡c tÃ¬nh huá»‘ng trÆ°á»›c, trong vÃ  sau khi mua sáº¯m.',
+            'summary' => 'Trang này tổng hợp các kênh hỗ trợ, câu hỏi thường gặp và những đường dẫn quan trọng để bạn xử lý nhanh các tình huống trước, trong và sau khi mua sắm.',
             'sections' => [
                 [
-                    'title' => 'KÃªnh há»— trá»£ chÃ­nh',
+                    'title' => 'Kênh hỗ trợ chính',
                     'items' => [
-                        'Hotline 1900 0000 Ä‘á»ƒ xá»­ lÃ½ cÃ¡c trÆ°á»ng há»£p cáº§n pháº£n há»“i ngay.',
-                        'Chat há»— trá»£ trÃªn website Ä‘á»ƒ theo dÃµi lá»‹ch sá»­ trao Ä‘á»•i vÃ  cáº­p nháº­t tráº¡ng thÃ¡i xá»­ lÃ½.',
-                        'AI chat Ä‘á»ƒ há»i nhanh vá» routine, thÃ nh pháº§n, xung Ä‘á»™t hoáº¡t cháº¥t vÃ  gá»£i Ã½ sáº£n pháº©m.',
+                        'Hotline 1900 0000 để xử lý các trường hợp cần phản hồi ngay.',
+                        'Chat hỗ trợ trên website để theo dõi lịch sử trao đổi và cập nhật trạng thái xử lý.',
+                        'AI chat để hỏi nhanh về routine, thành phần, xung đột hoạt chất và gợi ý sản phẩm.',
                     ],
                 ],
                 [
-                    'title' => 'NhÃ³m váº¥n Ä‘á» thÆ°á»ng gáº·p',
+                    'title' => 'Nhóm vấn đề thường gặp',
                     'items' => [
-                        'ÄÄƒng kÃ½ tÃ i khoáº£n, xÃ¡c thá»±c OTP, quÃªn máº­t kháº©u vÃ  cáº­p nháº­t há»“ sÆ¡ cÃ¡ nhÃ¢n.',
-                        'Äáº·t hÃ ng, Ã¡p voucher, Ã¡p Ä‘iá»ƒm, chá»n Ä‘á»‹a chá»‰ nháº­n hÃ ng vÃ  thanh toÃ¡n.',
-                        'Theo dÃµi Ä‘Æ¡n, há»§y Ä‘Æ¡n há»£p lá»‡, Ä‘Ã¡nh giÃ¡ sáº£n pháº©m vÃ  há»— trá»£ sau mua.',
+                        'Đăng ký tài khoản, xác thực OTP, quên mật khẩu và cập nhật hồ sơ cá nhân.',
+                        'Đặt hàng, áp voucher, áp điểm, chọn địa chỉ nhận hàng và thanh toán.',
+                        'Theo dõi đơn, hủy đơn hợp lệ, đánh giá sản phẩm và hỗ trợ sau mua.',
                     ],
                 ],
                 [
-                    'title' => 'Äiá»ƒm Ä‘áº¿n nhanh',
+                    'title' => 'Điểm đến nhanh',
                     'items' => [
-                        'HÆ°á»›ng dáº«n nháº­n OTP náº¿u báº¡n chÆ°a láº¥y Ä‘Æ°á»£c mÃ£ xÃ¡c thá»±c.',
-                        'Kháº£o sÃ¡t da vÃ  gá»£i Ã½ routine náº¿u báº¡n muá»‘n cÃ¡ nhÃ¢n hÃ³a tráº£i nghiá»‡m mua sáº¯m.',
-                        'CÃ¡c chÃ­nh sÃ¡ch Ä‘iá»u kiá»‡n giao dá»‹ch, báº£o máº­t vÃ  dá»¯ liá»‡u cÃ¡ nhÃ¢n khi cáº§n tra cá»©u.',
+                        'Hướng dẫn nhận OTP nếu bạn chưa lấy được mã xác thực.',
+                        'Khảo sát da và gợi ý routine nếu bạn muốn cá nhân hóa trải nghiệm mua sắm.',
+                        'Các chính sách điều kiện giao dịch, bảo mật và dữ liệu cá nhân khi cần tra cứu.',
                     ],
                 ],
             ],
             'supportCard' => [
-                'title' => 'Há»— trá»£ theo ngá»¯ cáº£nh',
-                'text' => 'SkinSyntax Æ°u tiÃªn gom tráº£i nghiá»‡m há»— trá»£ ngay trong website Ä‘á»ƒ báº¡n khÃ´ng pháº£i chuyá»ƒn qua nhiá»u kÃªnh riÃªng láº».',
+                'title' => 'Hỗ trợ theo ngữ cảnh',
+                'text' => 'SkinSyntax ưu tiên gom trải nghiệm hỗ trợ ngay trong website để bạn không phải chuyển qua nhiều kênh riêng lẻ.',
                 'bullets' => [
-                    'Tra cá»©u sáº£n pháº©m ngay trong header',
-                    'Má»Ÿ AI chat á»Ÿ gÃ³c mÃ n hÃ¬nh Ä‘á»ƒ há»i nhanh',
-                    'Khi Ä‘Äƒng nháº­p, báº¡n cÃ³ thá»ƒ lÆ°u lá»‹ch sá»­ chat vÃ  Ä‘Æ¡n hÃ ng trong cÃ¹ng má»™t tÃ i khoáº£n',
+                    'Tra cứu sản phẩm ngay trong header',
+                    'Mở AI chat ở góc màn hình để hỏi nhanh',
+                    'Khi đăng nhập, bạn có thể lưu lịch sử chat và đơn hàng trong cùng một tài khoản',
                 ],
             ],
             'actions' => [
-                ['label' => 'Xem hÆ°á»›ng dáº«n OTP', 'url' => BASE_URL . '/index.php?r=huong_dan_nhan_otp'],
-                ['label' => 'Má»Ÿ routine AI', 'url' => BASE_URL . '/index.php?r=goiy'],
-                ['label' => 'ChÃ­nh sÃ¡ch dá»¯ liá»‡u', 'url' => BASE_URL . '/index.php?r=chinh_sach_xu_ly_du_lieu'],
+                ['label' => 'Xem hướng dẫn OTP', 'url' => BASE_URL . '/index.php?r=huong_dan_nhan_otp'],
+                ['label' => 'Mở routine AI', 'url' => BASE_URL . '/index.php?r=goiy'],
+                ['label' => 'Chính sách dữ liệu', 'url' => BASE_URL . '/index.php?r=chinh_sach_xu_ly_du_lieu'],
             ],
         ]);
     }
@@ -323,28 +344,33 @@ class HomeController {
     }
 
     private function getHighlightedCategories(): array {
-        // Pipeline gom nhÃ³m vÃ  Ä‘áº¿m danh má»¥c báº±ng MongoDB
-        $pipeline = [
-            ['$match' => ['danh_muc_day_du' => ['$nin' => [null, '']]]],
-            ['$group' => ['_id' => '$danh_muc_day_du', 'so_luong' => ['$sum' => 1]]],
-            ['$sort' => ['so_luong' => -1]],
-            ['$limit' => 6]
-        ];
-
-        $cursor = $this->pdo->san_pham->aggregate($pipeline);
-        $result = [];
-        
-        foreach ($cursor as $doc) {
-            $result[] = [
-                'danh_muc_day_du' => (string) $doc['_id'],
-                'so_luong' => (int) $doc['so_luong']
+        // Pipeline gom nhóm và đếm danh mục bằng MongoDB
+        try {
+            $pipeline = [
+                ['$match' => ['danh_muc_day_du' => ['$nin' => [null, '']]]],
+                ['$group' => ['_id' => '$danh_muc_day_du', 'so_luong' => ['$sum' => 1]]],
+                ['$sort' => ['so_luong' => -1]],
+                ['$limit' => 6]
             ];
+
+            $cursor = $this->pdo->san_pham->aggregate($pipeline);
+            $result = [];
+
+            foreach ($cursor as $doc) {
+                $result[] = [
+                    'danh_muc_day_du' => (string) $doc['_id'],
+                    'so_luong' => (int) $doc['so_luong']
+                ];
+            }
+            return $result;
+        } catch (Throwable $e) {
+            error_log('highlight categories MongoDB error: ' . $e->getMessage());
+            return [];
         }
-        return $result;
     }
 
     public function giohang() {
-        // Xá»­ lÃ½ POST requests
+        // Xử lý POST requests
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action = $_POST['action'] ?? null;
             $product_id = $_POST['product_id'] ?? null;
@@ -361,7 +387,7 @@ class HomeController {
             }
         }
         
-        // Hiá»ƒn thá»‹ giá» hÃ ng
+        // Hiển thị giỏ hàng
         $items = [];
         if (!empty($_SESSION['gio_hang'])) {
             foreach ($_SESSION['gio_hang'] as $product_id => $qty) {
@@ -387,13 +413,143 @@ class HomeController {
     public function goiy() {
         $user = current_user() ?? [];
         $email = trim((string)($user['email'] ?? ''));
-        $profile = $email !== '' ? $this->buildRecommendationProfile($email) : null;
+        $isLoggedIn = $email !== '';
+        $filters = [
+            'keyword' => trim((string)($_GET['keyword'] ?? '')),
+            'danh_muc' => trim((string)($_GET['danh_muc'] ?? $_GET['category'] ?? '')),
+            'thuong_hieu' => trim((string)($_GET['thuong_hieu'] ?? $_GET['brand'] ?? '')),
+            'gia_tu' => trim((string)($_GET['gia_tu'] ?? $_GET['price_min'] ?? '')),
+            'gia_den' => trim((string)($_GET['gia_den'] ?? $_GET['price_max'] ?? '')),
+            'sort' => trim((string)($_GET['sort'] ?? 'default')),
+        ];
+
+        if (!$isLoggedIn) {
+            $publicData = $this->loadPublicRecommendationData($filters, 'goiy guest');
+
+            $this->render('goiy', [
+                'isLoggedIn' => false,
+                'showPublicDiscovery' => true,
+                'publicFilters' => $filters,
+                'publicProducts' => $publicData['products'],
+                'publicSections' => $publicData['sections'],
+                'brandOptions' => $publicData['brands'],
+                'categoryOptions' => $publicData['categories'],
+                'mongoUnavailableMessage' => $publicData['message'],
+            ]);
+            return;
+        }
+
+        try {
+            $profile = $this->buildRecommendationProfile($email);
+            if (!$this->hasValidSkinProfile($profile)) {
+                $publicData = $this->loadPublicRecommendationData($filters, 'goiy incomplete profile');
+                $this->render('goiy', [
+                    'isLoggedIn' => true,
+                    'showPublicDiscovery' => true,
+                    'needsSurvey' => true,
+                    'recommendationProfile' => $profile,
+                    'surveyUrl' => BASE_URL . '/index.php?r=khaosat',
+                    'skinProfilePromptMessage' => 'Bạn chưa hoàn thành khảo sát hồ sơ da. Hãy cập nhật hồ sơ để nhận gợi ý dành riêng cho bạn.',
+                    'skinProfilePromptMessage' => 'Bạn chưa hoàn thành khảo sát hồ sơ da. Hãy khảo sát để nhận gợi ý dành riêng cho bạn.',
+                    'publicFilters' => $filters,
+                    'publicProducts' => $publicData['products'],
+                    'publicSections' => $publicData['sections'],
+                    'brandOptions' => $publicData['brands'],
+                    'categoryOptions' => $publicData['categories'],
+                    'mongoUnavailableMessage' => $publicData['message'],
+                ]);
+                return;
+            }
+
+            $llamaResult = $this->fetchLlamaIndexRecommendations($profile ?? [], $user);
+            $profileMessage = '';
+        } catch (Throwable $e) {
+            error_log('goiy profile MongoDB error: ' . $e->getMessage());
+            $profile = null;
+            $llamaResult = [
+                'ok' => false,
+                'message' => 'Hiện chưa thể tải hồ sơ gợi ý. Vui lòng kiểm tra MongoDB hoặc thử lại sau.',
+                'answer_text' => '',
+                'products' => [],
+            ];
+            $profileMessage = 'Hiện chưa thể tải hồ sơ gợi ý. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
+        }
 
         $this->render('goiy', [
-            'isLoggedIn' => $email !== '',
-            'needsSurvey' => !$this->hasCompletedSurvey($profile),
+            'isLoggedIn' => true,
+            'needsSurvey' => false,
             'recommendationProfile' => $profile,
             'surveyUrl' => BASE_URL . '/index.php?r=khaosat',
+            'llamaRecommendation' => $llamaResult,
+            'profileUnavailableMessage' => $profileMessage,
+        ]);
+    }
+
+    private function loadPublicRecommendationData(array $filters, string $logContext = 'goiy'): array {
+        $data = [
+            'products' => [],
+            'sections' => [],
+            'brands' => [],
+            'categories' => [],
+            'message' => '',
+        ];
+
+        try {
+            $data['products'] = [];
+            $data['sections'] = $this->model->publicRecommendationSections(6, $filters, trim((string)($filters['sort'] ?? 'default')));
+            $data['brands'] = method_exists($this->model, 'listBrandOptions') ? $this->model->listBrandOptions() : [];
+            $data['categories'] = method_exists($this->model, 'listCategoryOptions') ? $this->model->listCategoryOptions() : [];
+        } catch (Throwable $e) {
+            error_log($logContext . ' MongoDB error: ' . $e->getMessage());
+            $data['message'] = 'Hiện chưa thể tải sản phẩm phổ biến. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
+        }
+
+        return $data;
+    }
+
+    public function productCollection(): void {
+        $type = trim((string)($_GET['type'] ?? 'best_seller'));
+        $allowedTypes = ['best_seller', 'top_rated', 'discount', 'most_viewed', 'new'];
+        $invalidType = !in_array($type, $allowedTypes, true);
+        if ($invalidType) {
+            $type = 'best_seller';
+        }
+
+        $filters = [
+            'keyword' => trim((string)($_GET['keyword'] ?? '')),
+            'danh_muc' => trim((string)($_GET['danh_muc'] ?? $_GET['category'] ?? '')),
+            'thuong_hieu' => trim((string)($_GET['thuong_hieu'] ?? $_GET['brand'] ?? '')),
+            'gia_tu' => trim((string)($_GET['gia_tu'] ?? $_GET['price_min'] ?? '')),
+            'gia_den' => trim((string)($_GET['gia_den'] ?? $_GET['price_max'] ?? '')),
+            'sort' => trim((string)($_GET['sort'] ?? 'default')),
+        ];
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $result = ['type' => $type, 'items' => [], 'total' => 0, 'page' => $page, 'perPage' => 20, 'pages' => 1];
+        $message = $invalidType ? 'Nhóm sản phẩm không hợp lệ, SkinSyntax đang hiển thị sản phẩm bán chạy nhất.' : '';
+
+        try {
+            $result = $this->model->getCollectionProducts($type, $filters, $page, 20, $filters['sort']);
+        } catch (Throwable $e) {
+            error_log('product_collection MongoDB error: ' . $e->getMessage());
+            $message = 'Hiện chưa thể tải danh sách sản phẩm. Vui lòng thử lại sau.';
+        }
+
+        $brands = [];
+        $categories = [];
+        try {
+            $brands = method_exists($this->model, 'listBrandOptions') ? $this->model->listBrandOptions() : [];
+            $categories = method_exists($this->model, 'listCategoryOptions') ? $this->model->listCategoryOptions() : [];
+        } catch (Throwable $e) {
+            error_log('product_collection options MongoDB error: ' . $e->getMessage());
+        }
+
+        $this->render('product_collection', [
+            'collectionType' => $type,
+            'collectionResult' => $result,
+            'publicFilters' => $filters,
+            'brandOptions' => $brands,
+            'categoryOptions' => $categories,
+            'collectionMessage' => $message,
         ]);
     }
 
@@ -409,7 +565,7 @@ class HomeController {
         $avoidIngredients = $this->splitProfileValues($khachHang['thanh_phan_tranh'] ?? null);
         $avoidIngredients = array_values(array_filter($avoidIngredients, function (string $item): bool {
             $normalized = mb_strtolower($item, 'UTF-8');
-            return $normalized !== 'khÃ´ng cÃ³ / khÃ´ng quan tÃ¢m' && $normalized !== 'khong co';
+            return $normalized !== 'không có / không quan tâm' && $normalized !== 'khong co';
         }));
 
         $budget = isset($khachHang['ngan_sach']) && $khachHang['ngan_sach'] !== null
@@ -437,7 +593,7 @@ class HomeController {
 
         return [
             'customer_id' => (int)($khachHang['ma_kh'] ?? 0),
-            'display_name' => trim((string)($khachHang['ho_ten'] ?? 'báº¡n')),
+            'display_name' => trim((string)($khachHang['ho_ten'] ?? 'bạn')),
             'gioi_tinh' => trim((string)($khachHang['gioi_tinh'] ?? '')),
             'nam_sinh' => trim((string)($khachHang['nam_sinh'] ?? '')),
             'skin_type' => trim((string)($skinProfile['loai_da'] ?? '')),
@@ -446,7 +602,7 @@ class HomeController {
             'budget' => $budget,
             'budget_label' => $budget !== null && $budget > 0
                 ? number_format($budget, 0, ',', '.') . ' VND'
-                : 'KhÃ´ng giá»›i háº¡n',
+                : 'Không xác định',
             'sensitivity' => trim((string)($khachHang['muc_do_nhay_cam'] ?? '')),
             'recent_keywords' => array_values(array_filter(array_map('strval', $recentKeywords))),
             'recent_orders' => $recentOrders,
@@ -465,6 +621,22 @@ class HomeController {
                 || !empty($profile['concerns'])
                 || !empty($profile['budget'])
             );
+    }
+
+    private function hasValidSkinProfile(?array $profile): bool {
+        if (!$profile) {
+            return false;
+        }
+
+        $skinType = trim((string)($profile['skin_type'] ?? $profile['loai_da'] ?? ''));
+        $concerns = $profile['concerns'] ?? $profile['van_de_da'] ?? $profile['skin_issues'] ?? [];
+        $goal = trim((string)($profile['muc_tieu_cham_soc_da'] ?? $profile['goal'] ?? ''));
+        $budget = $profile['budget'] ?? $profile['ngan_sach'] ?? null;
+
+        return $skinType !== ''
+            || (is_array($concerns) ? !empty(array_filter($concerns)) : trim((string)$concerns) !== '')
+            || ((int)$budget > 0)
+            || $goal !== '';
     }
 
     private function splitProfileValues(?string $raw): array {
@@ -488,6 +660,7 @@ class HomeController {
     private function buildCheckoutPreview(array $checkoutItems): array {
         $items = [];
         $subtotal = 0;
+        $stockErrors = [];
 
         foreach ($checkoutItems as $productId => $qty) {
             $product = $this->model->findById((string)$productId);
@@ -496,6 +669,12 @@ class HomeController {
             }
 
             $qty = max(1, (int)$qty);
+            $stock = method_exists($this->model, 'getProductStock') ? $this->model->getProductStock($product) : null;
+            $available = method_exists($this->model, 'isProductAvailable') ? $this->model->isProductAvailable($product) : true;
+            if (!$available || ($stock !== null && $qty > $stock)) {
+                $stockErrors[] = 'Sản phẩm ' . (string)($product['ten_san_pham'] ?? ('#' . $productId)) . ' chỉ còn ' . (int)($stock ?? 0) . ' sản phẩm trong kho.';
+                continue;
+            }
             $unitPrice = (int)($product['gia_ban'] ?? 0);
             if ($unitPrice <= 0) {
                 $unitPrice = (int)($product['gia_thi_truong'] ?? 0);
@@ -516,6 +695,7 @@ class HomeController {
         return [
             'items' => $items,
             'subtotal' => $subtotal,
+            'stock_errors' => $stockErrors,
         ];
     }
 
@@ -562,12 +742,12 @@ class HomeController {
         if ($requestedPoints > 0 && $usablePoints <= 0) {
             unset($_SESSION['checkout_points']);
             if ($flashWhenInvalid) {
-                set_flash('error', 'Äiá»ƒm tÃ­ch lÅ©y khÃ´ng cÃ²n Ä‘á»§ Ä‘á»ƒ Ã¡p dá»¥ng cho Ä‘Æ¡n hÃ ng hiá»‡n táº¡i.');
+                set_flash('error', 'Điểm tích lũy không còn đủ để áp dụng cho đơn hàng hiện tại.');
             }
         } elseif ($requestedPoints > 0 && $usablePoints !== $requestedPoints) {
             $_SESSION['checkout_points'] = ['points' => $usablePoints];
             if ($flashWhenInvalid) {
-                set_flash('error', 'Äiá»ƒm Ã¡p dá»¥ng Ä‘Ã£ Ä‘Æ°á»£c Ä‘iá»u chá»‰nh theo sá»‘ dÆ° hiá»‡n cÃ³ hoáº·c giÃ¡ trá»‹ Ä‘Æ¡n hÃ ng.');
+                set_flash('error', 'Điểm áp dụng đã được điều chỉnh theo số dư hiện có hoặc giá trị đơn hàng.');
             }
         }
 
@@ -622,10 +802,10 @@ class HomeController {
     private function getPaymentMethodLabel(string $method): string {
         $method = strtolower(trim($method));
         if ($method === 'bank_transfer_qr') {
-            return 'Chuyá»ƒn khoáº£n qua QR';
+            return 'Chuyển khoản qua QR';
         }
 
-        return 'Thanh toÃ¡n khi nháº­n hÃ ng (COD)';
+        return 'Thanh toán khi nhận hàng (COD)';
     }
 
     private function getSelectedCheckoutPaymentMethod(): string {
@@ -688,7 +868,7 @@ class HomeController {
         $address = implode(', ', $parts);
         $note = trim((string)($receiver['ghi_chu_giao_hang'] ?? ''));
         if ($address !== '' && $note !== '') {
-            $address .= ' | Ghi chÃº: ' . $note;
+            $address .= ' | Ghi chú: ' . $note;
         }
 
         return $address;
@@ -769,7 +949,7 @@ class HomeController {
             if (!$hasDefaultReceiver) {
                 return [
                     'ok' => false,
-                    'message' => 'Äá»‹a chá»‰ máº·c Ä‘á»‹nh chÆ°a Ä‘á»§ thÃ´ng tin. Vui lÃ²ng chá»n Ä‘á»‹a chá»‰ má»›i Ä‘á»ƒ tiáº¿p tá»¥c.',
+                    'message' => 'Địa chỉ mặc định chưa đủ thông tin. Vui lòng chọn địa chỉ mới để tiếp tục.',
                 ];
             }
 
@@ -793,7 +973,7 @@ class HomeController {
         ) {
             return [
                 'ok' => false,
-                'message' => 'Vui lÃ²ng Ä‘iá»n Ä‘áº§y Ä‘á»§ Ä‘á»‹a chá»‰ má»›i, bao gá»“m sá»‘ nhÃ , phÆ°á»ng xÃ£, quáº­n huyá»‡n vÃ  tá»‰nh thÃ nh.',
+                'message' => 'Vui lòng điền đầy đủ địa chỉ mới, bao gồm số nhà, phường xã, quận huyện và tỉnh thành.',
             ];
         }
 
@@ -903,6 +1083,34 @@ class HomeController {
         }
 
         return 25;
+    }
+
+    private function getLlamaIndexRecommendationEndpoint(): string {
+        $configured = defined('AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT') ? (string)AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT : '';
+        if (trim($configured) !== '') {
+            return trim($configured);
+        }
+
+        $envValue = getenv('AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT');
+        if ($envValue !== false && trim((string)$envValue) !== '') {
+            return trim((string)$envValue);
+        }
+
+        return 'http://127.0.0.1:5002/api/recommend/llamaindex';
+    }
+
+    private function getLlamaIndexRecommendationTimeout(): int {
+        $configured = defined('AI_LLAMA_INDEX_RECOMMENDATION_TIMEOUT') ? (int)AI_LLAMA_INDEX_RECOMMENDATION_TIMEOUT : 0;
+        if ($configured > 0) {
+            return $configured;
+        }
+
+        $envValue = getenv('AI_LLAMA_INDEX_RECOMMENDATION_TIMEOUT');
+        if ($envValue !== false && ctype_digit((string)$envValue)) {
+            return max(8, (int)$envValue);
+        }
+
+        return 35;
     }
 
     private function getAiChatEndpoint(): string {
@@ -1198,7 +1406,7 @@ class HomeController {
     }
 
     /**
-     * Chuáº©n hÃ³a sáº£n pháº©m tá»« Flask hybrid RAG (/api/chat) sang format widget chat.
+     * Chuẩn hóa sản phẩm từ Flask hybrid RAG (/api/chat) sang format widget chat.
      *
      * @param array<int, mixed> $rows
      * @return array<int, array<string, mixed>>
@@ -1339,7 +1547,7 @@ class HomeController {
             ]);
         }
 
-        if (preg_match('/aha.*bha|bha.*aha|aha va bha|aha vá»›i bha/u', $normalized)) {
+        if (preg_match('/aha.*bha|bha.*aha|aha va bha|aha với bha/u', $normalized)) {
             return implode("\n", [
                 'AHA và BHA khác nhau ở vùng tác động chính:',
                 '- AHA thiên về bề mặt da, hỗ trợ da xỉn màu, sần và bề mặt không đều.',
@@ -1348,7 +1556,7 @@ class HomeController {
             ]);
         }
 
-        if (preg_match('/kem chong nang|kem chá»‘ng náº¯ng|sunscreen/u', $normalized)) {
+        if (preg_match('/kem chong nang|kem chống nắng|sunscreen/u', $normalized)) {
             return implode("\n", [
                 'Kem chống nắng là bước bảo vệ bắt buộc vào ban ngày:',
                 '- Bôi ở cuối routine sáng.',
@@ -1357,7 +1565,7 @@ class HomeController {
             ]);
         }
 
-        if (preg_match('/tay trang|táº©y trang|double cleansing|lam sach kep|lÃ m sáº¡ch kÃ©p/u', $normalized)) {
+        if (preg_match('/tay trang|tẩy trang|double cleansing|lam sach kep|làm sạch kép/u', $normalized)) {
             return implode("\n", [
                 'Làm sạch kép phù hợp khi bạn có chống nắng đậm, makeup hoặc da dầu dễ bí:',
                 '- Bước 1 là tẩy trang để hòa tan lớp chống nắng, dầu và bụi bẩn bám chặt.',
@@ -1366,7 +1574,7 @@ class HomeController {
             ]);
         }
 
-        if (preg_match('/da nhay cam|da nháº¡y cáº£m|sensitive skin/u', $normalized)) {
+        if (preg_match('/da nhay cam|da nhạy cảm|sensitive skin/u', $normalized)) {
             return implode("\n", [
                 'Da nhạy cảm nên đi theo hướng ít bước nhưng ổn định:',
                 '- Ưu tiên làm sạch dịu, dưỡng phục hồi và chống nắng đều.',
@@ -1375,7 +1583,7 @@ class HomeController {
             ]);
         }
 
-        if (preg_match('/má»¥n áº©n|mun an|má»¥n Ä‘áº§u Ä‘en|mun dau den/u', $normalized)) {
+        if (preg_match('/mụn ẩn|mun an|mụn đầu đen|mun dau den/u', $normalized)) {
             return implode("\n", [
                 'Với bí tắc, mụn ẩn hoặc mụn đầu đen, hướng xử lý thường là làm sạch vừa đủ và giảm tắc nghẽn:',
                 '- BHA là lựa chọn hay gặp vì thiên về lỗ chân lông.',
@@ -1384,7 +1592,7 @@ class HomeController {
             ]);
         }
 
-        if (preg_match('/routine sÃ¡ng|routine sang|buá»•i sÃ¡ng|buoi sang/u', $normalized)) {
+        if (preg_match('/routine sáng|routine sang|buổi sáng|buoi sang/u', $normalized)) {
             return implode("\n", [
                 'Routine sáng cơ bản nên đi theo thứ tự nhẹ và bảo vệ:',
                 '- Sữa rửa mặt dịu nhẹ.',
@@ -1394,7 +1602,7 @@ class HomeController {
             ]);
         }
 
-        if (preg_match('/routine tá»‘i|routine toi|buá»•i tá»‘i|buoi toi/u', $normalized)) {
+        if (preg_match('/routine tối|routine toi|buổi tối|buoi toi/u', $normalized)) {
             return implode("\n", [
                 'Routine tối nên ưu tiên làm sạch và treatment có kiểm soát:',
                 '- Tẩy trang nếu có chống nắng hoặc makeup.',
@@ -1818,6 +2026,58 @@ class HomeController {
         ];
     }
 
+    private function fetchLlamaIndexRecommendations(array $profile, array $sessionUser): array {
+        $unavailable = [
+            'ok' => false,
+            'message' => 'Hiện chưa thể tạo gợi ý cá nhân hóa. Vui lòng thử lại sau.',
+            'answer_text' => '',
+            'products' => [],
+        ];
+
+        $endpoint = $this->getLlamaIndexRecommendationEndpoint();
+        if ($endpoint === '') {
+            return $unavailable;
+        }
+
+        $customerId = (int)($profile['customer_id'] ?? 0);
+        $payload = [
+            'user_id' => $customerId > 0 ? $customerId : (int)($sessionUser['id'] ?? 0),
+            'email' => trim((string)($sessionUser['email'] ?? '')),
+            'session_user_id' => (int)($sessionUser['id'] ?? 0),
+        ];
+
+        $response = $this->postJsonRequest($endpoint, $payload, $this->getLlamaIndexRecommendationTimeout());
+        if ((int)($response['status'] ?? 0) < 200 || (int)($response['status'] ?? 0) >= 300) {
+            return $unavailable;
+        }
+
+        $decoded = json_decode((string)($response['body'] ?? ''), true);
+        if (!is_array($decoded) || empty($decoded['ok']) || (string)($decoded['source'] ?? '') !== 'llamaindex') {
+            return $unavailable;
+        }
+
+        $products = [];
+        foreach (($decoded['products'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $row['id'] = (string)($row['id'] ?? $row['ma_san_pham'] ?? '');
+            $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
+            $products[] = $row;
+        }
+
+        if (empty($products)) {
+            return $unavailable;
+        }
+
+        return [
+            'ok' => true,
+            'source' => 'llamaindex',
+            'answer_text' => trim((string)($decoded['answer_text'] ?? '')),
+            'products' => $products,
+        ];
+    }
+
     private function buildRecommendationFallbackExplanation(array $profile, array $product): string {
         // Hàm này tạo câu giải thích tự nhiên khi AI service không trả được lời giải thích chi tiết.
         // Dữ liệu dùng để viết câu đều lấy từ sản phẩm trong MongoDB và hồ sơ người dùng, không bịa sản phẩm ngoài shop.
@@ -1826,12 +2086,6 @@ class HomeController {
             $text = trim((string)$value);
             if ($text === '') {
                 return '';
-            }
-            if (false && preg_match('/Ã|Â|â|Ä|Æ|áº|á»/u', $text)) {
-                $fixed = @iconv('UTF-8', 'Windows-1252//IGNORE', $text);
-                if (is_string($fixed) && trim($fixed) !== '') {
-                    $text = trim($fixed);
-                }
             }
             return $text;
         };
@@ -1917,7 +2171,7 @@ class HomeController {
             return [
                 'ok' => true,
                 'items' => [],
-                'message' => 'KhÃ´ng cÃ³ sáº£n pháº©m Ä‘á»ƒ giáº£i thÃ­ch.',
+                'message' => 'Không có sản phẩm để giải thích.',
             ];
         }
 
@@ -1957,7 +2211,7 @@ class HomeController {
             return [
                 'ok' => false,
                 'items' => [],
-                'message' => 'AI recommendation endpoint chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh.',
+                'message' => 'AI recommendation endpoint chưa được cấu hình.',
             ];
         }
 
@@ -1966,7 +2220,7 @@ class HomeController {
             return [
                 'ok' => false,
                 'items' => [],
-                'message' => 'KhÃ´ng gá»i Ä‘Æ°á»£c AI recommendation service.',
+                'message' => 'Không gọi được AI recommendation service.',
                 'debug_status' => (int)($response['status'] ?? 0),
                 'debug_error' => (string)($response['error'] ?? ''),
             ];
@@ -1977,7 +2231,7 @@ class HomeController {
             return [
                 'ok' => false,
                 'items' => [],
-                'message' => 'Pháº£n há»“i AI recommendation service khÃ´ng há»£p lá»‡.',
+                'message' => 'Phản hồi AI recommendation service không hợp lệ.',
             ];
         }
 
@@ -2014,7 +2268,7 @@ class HomeController {
                 'items' => [],
                 'summary' => '',
                 'cached' => false,
-                'message' => 'AI hybrid recommendation endpoint chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh.',
+                'message' => 'AI hybrid recommendation endpoint chưa được cấu hình.',
             ];
         }
 
@@ -2025,13 +2279,13 @@ class HomeController {
                 $segments[] = 'Da ' . (string)$profile['skin_type'];
             }
             if (!empty($profile['concerns']) && is_array($profile['concerns'])) {
-                $segments[] = 'quan tÃ¢m ' . implode(', ', array_slice($profile['concerns'], 0, 3));
+                $segments[] = 'quan tâm ' . implode(', ', array_slice($profile['concerns'], 0, 3));
             }
             if (!empty($profile['recent_keywords']) && is_array($profile['recent_keywords'])) {
-                $segments[] = 'Ä‘ang tÃ¬m ' . implode(', ', array_slice($profile['recent_keywords'], 0, 3));
+                $segments[] = 'đang tìm ' . implode(', ', array_slice($profile['recent_keywords'], 0, 3));
             }
             if (!empty($profile['budget_label'])) {
-                $segments[] = 'ngÃ¢n sÃ¡ch ' . (string)$profile['budget_label'];
+                $segments[] = 'ngân sách ' . (string)$profile['budget_label'];
             }
             $queryText = implode('. ', $segments);
         }
@@ -2058,7 +2312,7 @@ class HomeController {
                 'items' => [],
                 'summary' => '',
                 'cached' => false,
-                'message' => 'KhÃ´ng gá»i Ä‘Æ°á»£c AI hybrid recommendation service.',
+                'message' => 'Không gọi được AI hybrid recommendation service.',
                 'debug_status' => (int)($response['status'] ?? 0),
                 'debug_error' => (string)($response['error'] ?? ''),
             ];
@@ -2071,7 +2325,7 @@ class HomeController {
                 'items' => [],
                 'summary' => '',
                 'cached' => false,
-                'message' => 'Pháº£n há»“i AI hybrid recommendation service khÃ´ng há»£p lá»‡.',
+                'message' => 'Phản hồi AI hybrid recommendation service không hợp lệ.',
             ];
         }
 
@@ -2221,7 +2475,7 @@ class HomeController {
         $error = strtolower(trim((string)($response['error'] ?? '')));
 
         if (in_array($status, [401, 403], true)) {
-            return 'SePay tá»« chá»‘i xÃ¡c thá»±c API. HÃ£y kiá»ƒm tra láº¡i API token hoáº·c quyá»n User API trÃªn tÃ i khoáº£n SePay.';
+            return 'SePay từ chối xác thực API. Hãy kiểm tra lại API token hoặc quyền User API trên tài khoản SePay.';
         }
 
         if (
@@ -2234,21 +2488,21 @@ class HomeController {
                 || strpos($error, 'stream_request_failed') !== false
             )
         ) {
-            return 'MÃ¡y chá»§ hiá»‡n khÃ´ng thiáº¿t láº­p Ä‘Æ°á»£c káº¿t ná»‘i báº£o máº­t TLS tá»›i SePay. Náº¿u báº¡n Ä‘ang cháº¡y localhost/XAMPP, hÃ£y Æ°u tiÃªn webhook trÃªn mÃ´i trÆ°á»ng public hoáº·c kiá»ƒm tra tÆ°á»ng lá»­a/chá»©ng chá»‰ outbound.';
+            return 'Máy chủ hiện không thiết lập được kết nối bảo mật TLS tới SePay. Nếu bạn đang chạy localhost/XAMPP, hãy ưu tiên webhook trên môi trường public hoặc kiểm tra tường lửa/chứng chỉ outbound.';
         }
 
         if ($status === 429) {
-            return 'SePay Ä‘ang giá»›i háº¡n táº§n suáº¥t gá»i API. HÃ£y Ä‘á»£i vÃ i giÃ¢y rá»“i thá»­ láº¡i.';
+            return 'SePay đang giới hạn tần suất gọi API. Hãy đợi vài giây rồi thử lại.';
         }
 
-        return 'KhÃ´ng gá»i Ä‘Æ°á»£c SePay API.';
+        return 'Không gọi được SePay API.';
     }
 
     private function fetchSePayTransactionsForOrder(array $order): array {
         if (!$this->isSePayPollingEnabled()) {
             return [
                 'ok' => false,
-                'message' => 'SePay polling chÆ°a Ä‘Æ°á»£c báº­t hoáº·c thiáº¿u cáº¥u hÃ¬nh.',
+                'message' => 'SePay polling chưa được bật hoặc thiếu cấu hình.',
                 'transactions' => [],
             ];
         }
@@ -2283,7 +2537,7 @@ class HomeController {
         if (!is_array($payload)) {
             return [
                 'ok' => false,
-                'message' => 'Pháº£n há»“i SePay API khÃ´ng há»£p lá»‡.',
+                'message' => 'Phản hồi SePay API không hợp lệ.',
                 'transactions' => [],
             ];
         }
@@ -2318,7 +2572,7 @@ class HomeController {
 
         return [
             'ok' => true,
-            'message' => 'ÄÃ£ láº¥y giao dá»‹ch tá»« SePay.',
+            'message' => 'Đã lấy giao dịch từ SePay.',
             'transactions' => $normalized,
         ];
     }
@@ -2452,7 +2706,7 @@ class HomeController {
         }
 
         if (empty($checkoutItems)) {
-            set_flash('error', 'Vui lÃ²ng chá»n sáº£n pháº©m Ä‘á»ƒ thanh toÃ¡n.');
+            set_flash('error', 'Vui lòng chọn sản phẩm để thanh toán.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
@@ -2464,23 +2718,27 @@ class HomeController {
 
     public function thanhtoan() {
         if (!is_logged_in()) {
-            set_flash('error', 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ thanh toÃ¡n.');
+            set_flash('error', 'Vui lòng đăng nhập để thanh toán.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
 
         $checkoutItems = $_SESSION['checkout_items'] ?? [];
         if (empty($checkoutItems) || !is_array($checkoutItems)) {
-            set_flash('error', 'KhÃ´ng cÃ³ sáº£n pháº©m Ä‘á»ƒ thanh toÃ¡n.');
+            set_flash('error', 'Không có sản phẩm để thanh toán.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
         $checkoutPreview = $this->buildCheckoutPreview($checkoutItems);
+        if (!empty($checkoutPreview['stock_errors'])) {
+            set_flash('error', (string)$checkoutPreview['stock_errors'][0]);
+            redirect(BASE_URL . '/index.php?r=giohang');
+        }
         $items = $checkoutPreview['items'];
         $subtotal = (int)($checkoutPreview['subtotal'] ?? 0);
 
         if (empty($items)) {
             unset($_SESSION['checkout_items']);
-            set_flash('error', 'Sáº£n pháº©m trong danh sÃ¡ch thanh toÃ¡n khÃ´ng cÃ²n tá»“n táº¡i.');
+            set_flash('error', 'Sản phẩm trong danh sách thanh toán không còn tồn tại.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
@@ -2541,7 +2799,7 @@ class HomeController {
         }
 
         if (!is_logged_in()) {
-            set_flash('error', 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ Ã¡p dá»¥ng mÃ£ giáº£m giÃ¡.');
+            set_flash('error', 'Vui lòng đăng nhập để áp dụng mã giảm giá.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
 
@@ -2550,14 +2808,14 @@ class HomeController {
 
         $checkoutItems = $_SESSION['checkout_items'] ?? [];
         if (empty($checkoutItems) || !is_array($checkoutItems)) {
-            set_flash('error', 'KhÃ´ng cÃ³ sáº£n pháº©m Ä‘á»ƒ Ã¡p dá»¥ng mÃ£ giáº£m giÃ¡.');
+            set_flash('error', 'Không có sản phẩm để áp dụng mã giảm giá.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
         $preview = $this->buildCheckoutPreview($checkoutItems);
         if (empty($preview['items'])) {
             unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher']);
-            set_flash('error', 'Sáº£n pháº©m trong danh sÃ¡ch thanh toÃ¡n khÃ´ng cÃ²n tá»“n táº¡i.');
+            set_flash('error', 'Sản phẩm trong danh sách thanh toán không còn tồn tại.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
@@ -2565,14 +2823,14 @@ class HomeController {
         $result = $this->voucherModel->validateForCheckout($voucherCode, (int)($preview['subtotal'] ?? 0));
         if (empty($result['ok'])) {
             unset($_SESSION['checkout_voucher']);
-            set_flash('error', (string)($result['message'] ?? 'KhÃ´ng thá»ƒ Ã¡p dá»¥ng mÃ£ giáº£m giÃ¡.'));
+            set_flash('error', (string)($result['message'] ?? 'Không thể áp dụng mã giảm giá.'));
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
 
         $_SESSION['checkout_voucher'] = [
             'code' => (string)($result['voucher']['ma_code'] ?? ''),
         ];
-        set_flash('success', (string)($result['message'] ?? 'Ãp dá»¥ng mÃ£ giáº£m giÃ¡ thÃ nh cÃ´ng.'));
+        set_flash('success', (string)($result['message'] ?? 'Áp dụng mã giảm giá thành công.'));
         redirect(BASE_URL . '/index.php?r=thanhtoan');
     }
 
@@ -2584,7 +2842,7 @@ class HomeController {
         $this->storeCheckoutPaymentMethodFromRequest();
         $this->storeCheckoutReceiverFromRequest($this->getDefaultCheckoutReceiver($this->getCurrentCheckoutCustomer(), current_user() ?? []));
         unset($_SESSION['checkout_voucher']);
-        set_flash('success', 'ÄÃ£ gá»¡ mÃ£ giáº£m giÃ¡ khá»i Ä‘Æ¡n hÃ ng.');
+        set_flash('success', 'Đã gỡ mã giảm giá khỏi đơn hàng.');
         redirect(BASE_URL . '/index.php?r=thanhtoan');
     }
 
@@ -2594,7 +2852,7 @@ class HomeController {
         }
 
         if (!is_logged_in()) {
-            set_flash('error', 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ dÃ¹ng Ä‘iá»ƒm tÃ­ch lÅ©y.');
+            set_flash('error', 'Vui lòng đăng nhập để dùng điểm tích lũy.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
 
@@ -2602,14 +2860,14 @@ class HomeController {
         $this->storeCheckoutReceiverFromRequest($this->getDefaultCheckoutReceiver($this->getCurrentCheckoutCustomer(), current_user() ?? []));
         $checkoutItems = $_SESSION['checkout_items'] ?? [];
         if (empty($checkoutItems) || !is_array($checkoutItems)) {
-            set_flash('error', 'KhÃ´ng cÃ³ sáº£n pháº©m Ä‘á»ƒ Ã¡p dá»¥ng Ä‘iá»ƒm.');
+            set_flash('error', 'Không có sản phẩm để áp dụng điểm.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
         $preview = $this->buildCheckoutPreview($checkoutItems);
         if (empty($preview['items'])) {
             unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher'], $_SESSION['checkout_points']);
-            set_flash('error', 'Sáº£n pháº©m trong danh sÃ¡ch thanh toÃ¡n khÃ´ng cÃ²n tá»“n táº¡i.');
+            set_flash('error', 'Sản phẩm trong danh sách thanh toán không còn tồn tại.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
@@ -2622,25 +2880,25 @@ class HomeController {
 
         if ($availablePoints <= 0) {
             unset($_SESSION['checkout_points']);
-            set_flash('error', 'TÃ i khoáº£n cá»§a báº¡n hiá»‡n chÆ°a cÃ³ Ä‘iá»ƒm tÃ­ch lÅ©y Ä‘á»ƒ sá»­ dá»¥ng.');
+            set_flash('error', 'Tài khoản của bạn hiện chưa có điểm tích lũy để sử dụng.');
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
 
         if ($requestedPoints <= 0) {
             unset($_SESSION['checkout_points']);
-            set_flash('error', 'Vui lÃ²ng nháº­p sá»‘ Ä‘iá»ƒm há»£p lá»‡ Ä‘á»ƒ Ã¡p dá»¥ng.');
+            set_flash('error', 'Vui lòng nhập số điểm hợp lệ để áp dụng.');
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
 
         $usablePoints = min($requestedPoints, $availablePoints, $maxPointsByAmount);
         if ($usablePoints <= 0) {
             unset($_SESSION['checkout_points']);
-            set_flash('error', 'GiÃ¡ trá»‹ Ä‘Æ¡n hÃ ng hiá»‡n táº¡i chÆ°a Ä‘á»§ Ä‘á»ƒ quy Ä‘á»•i Ä‘iá»ƒm thÃ nh giáº£m giÃ¡.');
+            set_flash('error', 'Giá trị đơn hàng hiện tại chưa đủ để quy đổi điểm thành giảm giá.');
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
 
         $_SESSION['checkout_points'] = ['points' => $usablePoints];
-        set_flash('success', 'ÄÃ£ Ã¡p dá»¥ng ' . number_format($usablePoints, 0, ',', '.') . ' Ä‘iá»ƒm cho Ä‘Æ¡n hÃ ng.');
+        set_flash('success', 'Đã áp dụng ' . number_format($usablePoints, 0, ',', '.') . ' điểm cho đơn hàng.');
         redirect(BASE_URL . '/index.php?r=thanhtoan');
     }
 
@@ -2652,7 +2910,7 @@ class HomeController {
         $this->storeCheckoutPaymentMethodFromRequest();
         $this->storeCheckoutReceiverFromRequest($this->getDefaultCheckoutReceiver($this->getCurrentCheckoutCustomer(), current_user() ?? []));
         unset($_SESSION['checkout_points']);
-        set_flash('success', 'ÄÃ£ gá»¡ Ä‘iá»ƒm tÃ­ch lÅ©y khá»i Ä‘Æ¡n hÃ ng.');
+        set_flash('success', 'Đã gỡ điểm tích lũy khỏi đơn hàng.');
         redirect(BASE_URL . '/index.php?r=thanhtoan');
     }
 
@@ -2662,20 +2920,24 @@ class HomeController {
         }
 
         if (!is_logged_in()) {
-            set_flash('error', 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ Ä‘áº·t hÃ ng.');
+            set_flash('error', 'Vui lòng đăng nhập để đặt hàng.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
 
         $checkoutItems = $_SESSION['checkout_items'] ?? [];
         if (empty($checkoutItems) || !is_array($checkoutItems)) {
-            set_flash('error', 'KhÃ´ng cÃ³ sáº£n pháº©m Ä‘á»ƒ Ä‘áº·t hÃ ng.');
+            set_flash('error', 'Không có sản phẩm để đặt hàng.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
         $checkoutPreview = $this->buildCheckoutPreview($checkoutItems);
+        if (!empty($checkoutPreview['stock_errors'])) {
+            set_flash('error', (string)$checkoutPreview['stock_errors'][0]);
+            redirect(BASE_URL . '/index.php?r=giohang');
+        }
         if (empty($checkoutPreview['items'])) {
             unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher']);
-            set_flash('error', 'Sáº£n pháº©m trong danh sÃ¡ch thanh toÃ¡n khÃ´ng cÃ²n tá»“n táº¡i.');
+            set_flash('error', 'Sản phẩm trong danh sách thanh toán không còn tồn tại.');
             redirect(BASE_URL . '/index.php?r=giohang');
         }
 
@@ -2698,7 +2960,7 @@ class HomeController {
         $diaChiGiaoHang = trim((string)($receiverResolution['receiver']['dia_chi_giao_hang'] ?? ''));
 
         if ($tenNguoiNhan === '' || $sdtNguoiNhan === '' || $diaChiGiaoHang === '') {
-            set_flash('error', 'Vui lÃ²ng Ä‘iá»n Ä‘áº§y Ä‘á»§ thÃ´ng tin nháº­n hÃ ng.');
+            set_flash('error', 'Vui lòng điền đầy đủ thông tin nhận hàng.');
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
 
@@ -2707,7 +2969,7 @@ class HomeController {
             $allowedMethods[] = 'bank_transfer_qr';
         }
         if (!in_array($hinhThucThanhToan, $allowedMethods, true)) {
-            set_flash('error', 'PhÆ°Æ¡ng thá»©c thanh toÃ¡n khÃ´ng há»£p lá»‡.');
+            set_flash('error', 'Phương thức thanh toán không hợp lệ.');
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
 
@@ -2717,7 +2979,7 @@ class HomeController {
         $appliedVoucher = $this->getAppliedVoucher($subtotal, false);
         $voucherDiscountAmount = 0;
         if (trim((string)(($_SESSION['checkout_voucher']['code'] ?? ''))) !== '' && $appliedVoucher === null) {
-            set_flash('error', 'MÃ£ giáº£m giÃ¡ khÃ´ng cÃ²n há»£p lá»‡. Vui lÃ²ng kiá»ƒm tra láº¡i Ä‘Æ¡n hÃ ng.');
+            set_flash('error', 'Mã giảm giá không còn hợp lệ. Vui lòng kiểm tra lại đơn hàng.');
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
         if ($appliedVoucher) {
@@ -2761,14 +3023,18 @@ class HomeController {
             unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher'], $_SESSION['checkout_points'], $_SESSION['checkout_payment_method'], $_SESSION['checkout_address_choice'], $_SESSION['checkout_new_receiver']);
 
             if ($hinhThucThanhToan === 'bank_transfer_qr') {
-                set_flash('success', 'ÄÆ¡n hÃ ng Ä‘Ã£ Ä‘Æ°á»£c táº¡o. Vui lÃ²ng quÃ©t QR vÃ  chuyá»ƒn khoáº£n theo Ä‘Ãºng ná»™i dung Ä‘á»ƒ hoÃ n táº¥t thanh toÃ¡n.');
+                set_flash('success', 'Đơn hàng đã được tạo. Vui lòng quét QR và chuyển khoản theo đúng nội dung để hoàn tất thanh toán.');
             } else {
-                set_flash('success', 'Äáº·t hÃ ng thÃ nh cÃ´ng. Cáº£m Æ¡n báº¡n Ä‘Ã£ mua sáº¯m táº¡i SkinSyntax.');
+                set_flash('success', 'Đặt hàng thành công. Cảm ơn bạn đã mua sắm tại SkinSyntax.');
             }
             redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$maHoaDon));
         } catch (Throwable $e) {
             error_log('xulydathang error: ' . $e->getMessage());
-            set_flash('error', 'KhÃ´ng thá»ƒ Ä‘áº·t hÃ ng lÃºc nÃ y. Vui lÃ²ng thá»­ láº¡i.');
+            $message = $e->getMessage();
+            if (stripos($message, 'kho') === false && stripos($message, 'hết hàng') === false) {
+                $message = 'Không thể đặt hàng lúc này. Vui lòng thử lại.';
+            }
+            set_flash('error', $message);
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
     }
@@ -2831,7 +3097,7 @@ class HomeController {
         if (!$this->isSePayPollingEnabled()) {
             $this->jsonResponse([
                 'ok' => false,
-                'message' => 'SePay API polling chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh.',
+                'message' => 'SePay API polling chưa được cấu hình.',
             ], 200);
         }
 
@@ -2839,7 +3105,7 @@ class HomeController {
         if ($orderId <= 0) {
             $this->jsonResponse([
                 'ok' => false,
-                'message' => 'MÃ£ Ä‘Æ¡n hÃ ng khÃ´ng há»£p lá»‡.',
+                'message' => 'Mã đơn hàng không hợp lệ.',
             ], 400);
         }
 
@@ -2852,7 +3118,7 @@ class HomeController {
         if (!$order) {
             $this->jsonResponse([
                 'ok' => false,
-                'message' => 'KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng.',
+                'message' => 'Không tìm thấy đơn hàng.',
             ], 404);
         }
 
@@ -2863,7 +3129,7 @@ class HomeController {
                 'ok' => true,
                 'paid' => strtolower($paymentStatus) === 'da thanh toan',
                 'payment_status' => $paymentStatus,
-                'message' => 'ÄÆ¡n hÃ ng nÃ y khÃ´ng dÃ¹ng chuyá»ƒn khoáº£n QR.',
+                'message' => 'Đơn hàng này không dùng chuyển khoản QR.',
                 'order_id' => $orderId,
             ]);
         }
@@ -2873,7 +3139,7 @@ class HomeController {
                 'ok' => true,
                 'paid' => true,
                 'payment_status' => $paymentStatus,
-                'message' => 'ÄÆ¡n hÃ ng Ä‘Ã£ Ä‘Æ°á»£c thanh toÃ¡n.',
+                'message' => 'Đơn hàng đã được thanh toán.',
                 'order_id' => $orderId,
             ]);
         }
@@ -2884,7 +3150,7 @@ class HomeController {
                 'ok' => false,
                 'paid' => false,
                 'payment_status' => $paymentStatus,
-                'message' => (string)($transactionsResult['message'] ?? 'KhÃ´ng thá»ƒ kiá»ƒm tra giao dá»‹ch SePay.'),
+                'message' => (string)($transactionsResult['message'] ?? 'Không thể kiểm tra giao dịch SePay.'),
                 'order_id' => $orderId,
             ]);
         }
@@ -2919,7 +3185,7 @@ class HomeController {
                     'ok' => true,
                     'paid' => true,
                     'payment_status' => $updatedStatus,
-                    'message' => 'ÄÃ£ nháº­n giao dá»‹ch chuyá»ƒn khoáº£n vÃ  cáº­p nháº­t Ä‘Æ¡n hÃ ng.',
+                    'message' => 'Đã nhận giao dịch chuyển khoản và cập nhật đơn hàng.',
                     'order_id' => $orderId,
                     'matched_transaction' => $matched,
                 ]);
@@ -2930,7 +3196,7 @@ class HomeController {
             'ok' => true,
             'paid' => false,
             'payment_status' => $paymentStatus,
-            'message' => 'ChÆ°a tÃ¬m tháº¥y giao dá»‹ch phÃ¹ há»£p. Há»‡ thá»‘ng sáº½ tiáº¿p tá»¥c kiá»ƒm tra.',
+            'message' => 'Chưa nhận đơn hàng này trong giao dịch chuyển khoản.',
             'order_id' => $orderId,
             'matched_transaction' => $matched,
         ]);
@@ -3031,7 +3297,7 @@ class HomeController {
         if ($gioiTinh === '') {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'message' => 'Vui lÃ²ng chá»n giá»›i tÃ­nh (CÃ¢u 1).'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['ok' => false, 'message' => 'Vui lòng chọn giới tính (Câu 1).'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -3039,7 +3305,7 @@ class HomeController {
         if ($namSinhRaw === '' || !ctype_digit($namSinhRaw)) {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'message' => 'Vui lÃ²ng nháº­p nÄƒm sinh há»£p lá»‡.'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['ok' => false, 'message' => 'Vui lòng nhập năm sinh hợp lệ.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -3049,7 +3315,7 @@ class HomeController {
         if ($year < 1900 || $year > $currentYear) {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'message' => 'NÄƒm sinh khÃ´ng há»£p lá»‡.'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['ok' => false, 'message' => 'Năm sinh không hợp lệ.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -3202,5 +3468,8 @@ class HomeController {
         exit;
     }
 }
+
+
+
 
 

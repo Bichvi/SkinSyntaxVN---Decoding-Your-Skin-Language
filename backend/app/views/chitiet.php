@@ -5,7 +5,22 @@ $main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
 $reviews = $reviews ?? [];
 $reviewPermission = isset($reviewPermission) && is_array($reviewPermission) ? $reviewPermission : ['has_purchased' => false, 'has_reviewed' => false];
 $activeTab = trim((string)($activeTab ?? ''));
+$detailUnavailableMessage = trim((string)($detailUnavailableMessage ?? ''));
+$reviewErrorMessage = trim((string)($reviewErrorMessage ?? ''));
+$questions = $questions ?? [];
+$questionCount = (int)($questionCount ?? count($questions));
+$questionErrorMessage = trim((string)($questionErrorMessage ?? ''));
+$reviewStats = isset($reviewStats) && is_array($reviewStats) ? $reviewStats : [];
+$reviewStats['stars'] = isset($reviewStats['stars']) && is_array($reviewStats['stars']) ? $reviewStats['stars'] : [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
 $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
+$reviewCount = (int)($reviewStats['total'] ?? count($reviews));
+$reviewAverage = (float)($reviewStats['average'] ?? 0);
+$reviewCountDisplay = $reviewCount > 0 ? $reviewCount : (int)($p['so_luong_danh_gia'] ?? 0);
+$userReviewCount = (int)($reviewStats['user_review_count'] ?? count($reviews));
+$crawlReviewCount = (int)($reviewStats['crawl_review_count'] ?? max(0, $reviewCountDisplay - $userReviewCount));
+$activeReviewStar = max(0, min(5, (int)($_GET['review_star'] ?? 0)));
+$activeReviewFilter = trim((string)($_GET['review_filter'] ?? ''));
+$productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
 ?>
 <style>
   .detail-tabs {
@@ -446,6 +461,60 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
     overflow-wrap: anywhere;
   }
 
+  .review-item__badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+  }
+
+  .review-item__badge {
+    border-radius: 999px;
+    background: #e7f5ef;
+    color: #0f7b55;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 4px 8px;
+  }
+
+  .review-item__images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .review-item__images img {
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid #dfe8ef;
+  }
+
+
+  .purchase-policy-card { margin-top: 16px; border: 1px solid #dfece8; border-radius: 20px; background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%); padding: 16px; box-shadow: 0 12px 24px rgba(15, 107, 62, 0.06); }
+  .purchase-policy-card__title { margin: 0 0 12px; font-size: 1rem; font-weight: 800; color: #123044; }
+  .purchase-policy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .purchase-policy-item { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px; border-radius: 14px; background: #ffffff; border: 1px solid #e3eee9; }
+  .purchase-policy-item__icon { width: 34px; height: 34px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: #eaf8f2; color: #0f8d63; }
+  .purchase-policy-item__title { font-weight: 800; color: #1d3447; font-size: 0.9rem; margin-bottom: 2px; }
+  .purchase-policy-item__text { margin: 0; color: #64748b; font-size: 0.82rem; line-height: 1.45; }
+  .review-breakdown { min-width: 260px; flex: 1 1 320px; display: grid; gap: 8px; }
+  .review-breakdown__row { display: grid; grid-template-columns: 48px minmax(0, 1fr) 34px; gap: 8px; align-items: center; color: #475569; font-size: 0.9rem; }
+  .review-breakdown__bar { height: 8px; border-radius: 999px; background: #e7edf4; overflow: hidden; }
+  .review-breakdown__fill { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); }
+  .review-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+  .review-filter-tabs a { border: 1px solid #d8e4ea; border-radius: 999px; padding: 8px 14px; color: #385268; background: #fff; text-decoration: none; font-weight: 700; font-size: 0.92rem; }
+  .review-filter-tabs a.is-active { background: #0f8d63; color: #fff; border-color: #0f8d63; }
+  .review-upload-box { border: 1px dashed #bdd6cc; background: #fbfffd; border-radius: 14px; padding: 12px; }
+  .qa-panel { border-radius: 20px; border: 1px solid #e5edf5; background: #fff; padding: 22px; }
+  .qa-form { display: grid; gap: 10px; margin-bottom: 18px; padding: 16px; border-radius: 16px; background: #f8fbff; border: 1px solid #dde9f4; }
+  .qa-item { border: 1px solid #e5ecef; border-radius: 16px; padding: 16px; background: #fff; }
+  .qa-item + .qa-item { margin-top: 12px; }
+  .qa-item__meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: #64748b; font-size: 0.86rem; margin-bottom: 8px; }
+  .qa-answer { margin-top: 12px; border-radius: 14px; background: #eef8f3; padding: 12px 14px; color: #26453a; line-height: 1.65; }
+
   @media (max-width: 767.98px) {
     #detailTabNav .nav-link {
       font-size: 0.96rem;
@@ -503,6 +572,10 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
   }
 </style>
 <div class="container mt-4">
+  <?php if ($detailUnavailableMessage !== ''): ?>
+    <div class="alert alert-warning border-0 shadow-sm"><?= h($detailUnavailableMessage) ?></div>
+  <?php endif; ?>
+
   <div class="mb-3">
     <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
       <i class="fas fa-arrow-left"></i> Quay lại
@@ -534,6 +607,17 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+
+      <div class="purchase-policy-card">
+        <h6 class="purchase-policy-card__title">Quyền lợi mua hàng</h6>
+        <div class="purchase-policy-grid">
+          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-truck"></i></span><div><div class="purchase-policy-item__title">Miễn phí vận chuyển</div><p class="purchase-policy-item__text">Cho đơn từ 300.000đ hoặc theo chính sách hiện tại.</p></div></div>
+          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-bolt"></i></span><div><div class="purchase-policy-item__title">Giao nhanh 2H</div><p class="purchase-policy-item__text">Nội thành, trễ tặng voucher nếu áp dụng.</p></div></div>
+          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-shield-heart"></i></span><div><div class="purchase-policy-item__title">Cam kết chính hãng</div><p class="purchase-policy-item__text">Đền bù 100% nếu phát hiện hàng giả.</p></div></div>
+          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-rotate-left"></i></span><div><div class="purchase-policy-item__title">Đổi trả 30 ngày</div><p class="purchase-policy-item__text">Hỗ trợ nếu sản phẩm lỗi. <a href="<?= BASE_URL ?>/index.php?r=bao_hanh">Xem thêm</a></p></div></div>
+          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-user-doctor"></i></span><div><div class="purchase-policy-item__title">Tư vấn da miễn phí</div><p class="purchase-policy-item__text">SkinSyntax hỗ trợ chọn sản phẩm phù hợp.</p></div></div>
+        </div>
+      </div>
     </div>
 
     <div class="col-12 col-lg-7">
@@ -562,26 +646,43 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
           <div><b>Loại da:</b> <?= h($p['loai_da'] ?? '') ?></div>
           <div><b>Đánh giá:</b> <?= h($p['diem_danh_gia'] ?? '') ?> (<?= h($p['so_luong_danh_gia'] ?? '') ?>)</div>
         </div>
-
+        <?php
+          $detailStock = $p['so_luong_ton_kho'] ?? $p['ton_kho_hien_thi'] ?? null;
+          $detailStock = $detailStock === null || $detailStock === '' ? null : max(0, (int)$detailStock);
+          $isOutOfStock = $detailStock !== null && $detailStock <= 0;
+        ?>
+        <div class="mt-3 small <?= $isOutOfStock ? 'text-danger' : 'text-success' ?>">
+          <?= $isOutOfStock ? 'Tạm hết hàng' : ('Còn hàng' . ($detailStock !== null ? ' · Còn ' . h((string)$detailStock) . ' sản phẩm trong kho' : '')) ?>
+        </div>
         <div class="mt-4 d-flex gap-2">
           <div style="width: 100px;">
-            <input type="number" class="form-control" value="1" min="1" max="999">
+            <input type="number" class="form-control" value="<?= $isOutOfStock ? 0 : 1 ?>" min="1" max="<?= h((string)($detailStock ?? 999)) ?>" <?= $isOutOfStock ? 'disabled' : '' ?>>
           </div>
-          <form method="post" class="flex-grow-1">
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="flex-grow-1">
             <input type="hidden" name="action" value="add_to_cart">
-            <input type="hidden" name="qty" value="1" class="qty-input">
-            <button type="submit" class="btn btn-brand w-100">
-              <i class="fas fa-shopping-cart"></i> Thêm vào giỏ hàng
+            <input type="hidden" name="product_id" value="<?= h((string)($p['ma_san_pham'] ?? $p['id'] ?? ($_GET['id'] ?? ''))) ?>">
+            <input type="hidden" name="ma_san_pham" value="<?= h((string)($p['ma_san_pham'] ?? $p['id'] ?? ($_GET['id'] ?? ''))) ?>">
+            <input type="hidden" name="quantity" value="<?= $isOutOfStock ? 0 : 1 ?>" class="qty-input">
+            <input type="hidden" name="qty" value="<?= $isOutOfStock ? 0 : 1 ?>" class="qty-input">
+            <button type="submit" class="btn btn-brand w-100" <?= $isOutOfStock ? 'disabled' : '' ?>>
+              <i class="fas fa-shopping-cart"></i> <?= $isOutOfStock ? 'Tạm hết hàng' : 'Thêm vào giỏ hàng' ?>
             </button>
           </form>
         </div>
         <script>
           const qtyInput = document.querySelector('.form-control[type="number"]');
-          const hiddenQty = document.querySelector('input[name="qty"]');
-          if (qtyInput && hiddenQty) {
-            qtyInput.addEventListener('change', () => {
-              hiddenQty.value = qtyInput.value;
-            });
+          const hiddenQtyInputs = document.querySelectorAll('.qty-input');
+          if (qtyInput && hiddenQtyInputs.length) {
+            const syncQty = () => {
+              const max = parseInt(qtyInput.getAttribute('max') || '999', 10);
+              let value = parseInt(qtyInput.value || '1', 10);
+              if (Number.isNaN(value) || value < 1) value = 1;
+              if (value > max) value = max;
+              qtyInput.value = value;
+              hiddenQtyInputs.forEach((hiddenQty) => { hiddenQty.value = qtyInput.value; });
+            };
+            qtyInput.addEventListener('change', syncQty);
+            qtyInput.addEventListener('input', syncQty);
           }
         </script>
       </div>
@@ -714,23 +815,26 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
       <div class="detail-tabs mt-3">
         <ul class="nav nav-tabs" id="detailTabNav" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" type="button" data-tab="mo-ta">Mô tả</button>
+            <button class="nav-link active" id="tab-mo-ta" type="button" data-bs-toggle="tab" data-bs-target="#pane-mo-ta" data-tab="mo-ta" aria-controls="pane-mo-ta">Mô tả</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" type="button" data-tab="thong-so">Thông số</button>
+            <button class="nav-link" id="tab-thong-so" type="button" data-bs-toggle="tab" data-bs-target="#pane-thong-so" data-tab="thong-so" aria-controls="pane-thong-so">Thông số</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" type="button" data-tab="thanh-phan">Thành phần</button>
+            <button class="nav-link" id="tab-thanh-phan" type="button" data-bs-toggle="tab" data-bs-target="#pane-thanh-phan" data-tab="thanh-phan" aria-controls="pane-thanh-phan">Thành phần</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" type="button" data-tab="hdsd">HDSD</button>
+            <button class="nav-link" id="tab-hdsd" type="button" data-bs-toggle="tab" data-bs-target="#pane-hdsd" data-tab="hdsd" aria-controls="pane-hdsd">HDSD</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" type="button" data-tab="danh-gia">Đánh giá</button>
+            <button class="nav-link" id="tab-danh-gia" type="button" data-bs-toggle="tab" data-bs-target="#pane-danh-gia" data-tab="danh-gia" aria-controls="pane-danh-gia">Đánh giá</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-hoi-dap" type="button" data-bs-toggle="tab" data-bs-target="#pane-hoi-dap" data-tab="hoi-dap" aria-controls="pane-hoi-dap">Hỏi đáp</button>
           </li>
         </ul>
 
-        <div class="box-text mb-3 tab-pane-content" data-pane="mo-ta">
+        <div class="box-text mb-3 tab-pane-content" id="pane-mo-ta" data-pane="mo-ta" role="tabpanel" aria-labelledby="tab-mo-ta">
           <div class="detail-content-panel">
             <div class="detail-content-panel__head">
               <div>
@@ -748,7 +852,7 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
           </div>
         </div>
 
-        <div class="box-text mb-3 tab-pane-content d-none" data-pane="thong-so">
+        <div class="box-text mb-3 tab-pane-content d-none" id="pane-thong-so" data-pane="thong-so" role="tabpanel" aria-labelledby="tab-thong-so">
           <h5>Thông số</h5>
           <div class="spec-grid">
             <div><b>Thương Hiệu</b><br><?= h($p['thuong_hieu'] ?? '') ?></div>
@@ -759,7 +863,7 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
           </div>
         </div>
 
-        <div class="box-text mb-3 tab-pane-content d-none" data-pane="thanh-phan">
+        <div class="box-text mb-3 tab-pane-content d-none" id="pane-thanh-phan" data-pane="thanh-phan" role="tabpanel" aria-labelledby="tab-thanh-phan">
           <div class="detail-content-panel">
             <div class="detail-content-panel__head">
               <div>
@@ -792,7 +896,7 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
           </div>
         </div>
 
-        <div class="box-text mb-3 tab-pane-content d-none" data-pane="hdsd">
+        <div class="box-text mb-3 tab-pane-content d-none" id="pane-hdsd" data-pane="hdsd" role="tabpanel" aria-labelledby="tab-hdsd">
           <div class="detail-content-panel">
             <div class="detail-content-panel__head">
               <div>
@@ -810,23 +914,65 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
           </div>
         </div>
 
-        <div class="box-text tab-pane-content d-none" data-pane="danh-gia">
-          <h5>Đánh giá</h5>
+        <div class="box-text tab-pane-content d-none" id="pane-danh-gia" data-pane="danh-gia" role="tabpanel" aria-labelledby="tab-danh-gia">
+          <h5>Đánh giá (<?= h((string)$reviewCountDisplay) ?>)</h5>
           <div class="review-panel">
             <div class="review-summary-card">
               <div>
-                <div class="review-summary-card__label">Điểm đánh giá</div>
+                <div class="review-summary-card__label">Điểm trung bình</div>
                 <div class="review-summary-card__score">
-                  <div class="review-summary-card__score-value"><?= h($p['diem_danh_gia'] ?? '') ?></div>
-                  <div class="review-summary-card__count">(<?= h($p['so_luong_danh_gia'] ?? 0) ?> lượt)</div>
+                  <div class="review-summary-card__score-value"><?= h($reviewAverage > 0 ? (string)$reviewAverage : '0') ?></div>
+                  <span class="review-stars-display" aria-label="<?= h((string)$reviewAverage) ?> sao">
+                    <?php $roundedAverage = (int)round($reviewAverage); for ($star = 1; $star <= 5; $star++): ?>
+                      <i class="fa-solid fa-star <?= $star > $roundedAverage ? 'is-empty' : '' ?>"></i>
+                    <?php endfor; ?>
+                  </span>
+                  <div class="review-summary-card__count"><?= h((string)$reviewCountDisplay) ?> đánh giá</div>
+                  <div class="small text-muted mt-1">
+                    <?= h((string)$crawlReviewCount) ?> đánh giá tổng quan<?= $userReviewCount > 0 ? ' · ' . h((string)$userReviewCount) . ' đánh giá SkinSyntax' : '' ?>
+                  </div>
                 </div>
               </div>
-              <span class="order-status-note">Chia sẻ trải nghiệm thực tế sau khi sử dụng</span>
+              <div class="review-breakdown">
+                <?php $breakdownTotal = max(0, (int)($reviewStats['total'] ?? array_sum(array_map('intval', $reviewStats['stars'])))); ?>
+                <?php for ($star = 5; $star >= 1; $star--): ?>
+                  <?php
+                    $starCount = (int)($reviewStats['stars'][$star] ?? 0);
+                    $percent = $breakdownTotal > 0 ? min(100, round($starCount * 100 / $breakdownTotal, 1)) : 0;
+                    $fillStyle = 'width: ' . $percent . '%;' . ($starCount > 0 && $percent > 0 ? ' min-width: 8px;' : '');
+                  ?>
+                  <div class="review-breakdown__row">
+                    <span><?= $star ?> sao</span>
+                    <span class="review-breakdown__bar"><span class="review-breakdown__fill" style="<?= h($fillStyle) ?>"></span></span>
+                    <span><?= $starCount ?></span>
+                  </div>
+                <?php endfor; ?>
+              </div>
+            </div>
+
+            <div class="review-filter-tabs" aria-label="Lọc đánh giá">
+              <?php $baseReviewUrl = BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($productIdForForms) . '&tab=danh-gia'; ?>
+              <a class="<?= $activeReviewStar === 0 && $activeReviewFilter !== 'images' ? 'is-active' : '' ?>" href="<?= h($baseReviewUrl) ?>">Tất cả</a>
+              <?php for ($star = 5; $star >= 1; $star--): ?>
+                <a class="<?= $activeReviewStar === $star ? 'is-active' : '' ?>" href="<?= h($baseReviewUrl . '&review_star=' . $star) ?>"><?= $star ?> sao</a>
+              <?php endfor; ?>
+              <a class="<?= $activeReviewFilter === 'images' ? 'is-active' : '' ?>" href="<?= h($baseReviewUrl . '&review_filter=images') ?>">Có hình ảnh</a>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <strong>Viết đánh giá</strong>
+              <?php if (!is_logged_in()): ?>
+                <span class="text-muted small">Vui lòng đăng nhập để đánh giá sản phẩm.</span>
+              <?php elseif (empty($reviewPermission['has_purchased'])): ?>
+                <span class="text-muted small">Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua sản phẩm này.</span>
+              <?php elseif (!empty($reviewPermission['has_reviewed'])): ?>
+                <span class="text-success small fw-semibold">Bạn đã đánh giá sản phẩm này rồi.</span>
+              <?php endif; ?>
             </div>
 
             <?php if (is_logged_in() && !empty($reviewPermission['has_purchased']) && empty($reviewPermission['has_reviewed'])): ?>
-              <form method="post" action="<?= BASE_URL ?>/index.php?r=guidanhgia" class="review-form-shell">
-                <input type="hidden" name="ma_san_pham" value="<?= h($p['ma_san_pham'] ?? $p['id'] ?? '') ?>">
+              <form method="post" action="<?= BASE_URL ?>/index.php?r=guidanhgia" class="review-form-shell" enctype="multipart/form-data">
+                <input type="hidden" name="ma_san_pham" value="<?= h($productIdForForms) ?>">
                 <div class="review-form-grid">
                   <div class="review-form-top">
                     <div class="review-form-stars">
@@ -838,27 +984,41 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
                         <?php endfor; ?>
                       </div>
                     </div>
-                    <span class="order-status-note">Đánh giá xong sẽ nhận thêm 1 điểm</span>
+                    <span class="order-status-note">Chỉ đơn Hoàn thành mới được đánh giá</span>
                   </div>
                   <div class="review-form-message">
                     <label class="form-label">Nội dung đánh giá</label>
                     <textarea class="form-control" name="noi_dung" rows="3" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..." required></textarea>
+                  </div>
+                  <div class="review-upload-box">
+                    <label class="form-label fw-semibold">Hình ảnh đánh giá</label>
+                    <input class="form-control" type="file" name="hinh_anh[]" multiple accept="image/*">
+                    <div class="small text-muted mt-1">Có thể chọn nhiều ảnh</div>
                   </div>
                   <div class="d-flex justify-content-end">
                     <button type="submit" class="btn btn-brand px-4">Gửi đánh giá</button>
                   </div>
                 </div>
               </form>
-            <?php elseif (is_logged_in() && !empty($reviewPermission['has_reviewed'])): ?>
-              <div class="alert alert-success">Bạn đã đánh giá sản phẩm này rồi.</div>
-            <?php elseif (is_logged_in()): ?>
+            <?php elseif (!is_logged_in()): ?>
+              <div class="alert alert-info">Vui lòng đăng nhập để đánh giá sản phẩm.</div>
+            <?php elseif (empty($reviewPermission['has_purchased'])): ?>
               <div class="alert alert-info">Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua sản phẩm này.</div>
-            <?php else: ?>
-              <div class="alert alert-info">Đăng nhập để gửi đánh giá sản phẩm.</div>
             <?php endif; ?>
 
-            <?php if (empty($reviews)): ?>
-              <div class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</div>
+            <?php if ($reviewErrorMessage !== ''): ?>
+              <div class="alert alert-warning"><?= h($reviewErrorMessage) ?></div>
+            <?php elseif (empty($reviews)): ?>
+              <?php $emptyStarLabels = [5 => 'Rất hài lòng', 4 => 'Hài lòng', 3 => 'Bình thường', 2 => 'Không hài lòng', 1 => 'Rất không hài lòng']; ?>
+              <?php if ($activeReviewStar >= 1 && $activeReviewStar <= 5): ?>
+                <div class="detail-empty-state">Chưa có đánh giá <?= (int)$activeReviewStar ?> sao cho sản phẩm này<?= isset($emptyStarLabels[$activeReviewStar]) ? ' (' . h($emptyStarLabels[$activeReviewStar]) . ')' : '' ?>.</div>
+              <?php elseif ($activeReviewFilter === 'images'): ?>
+                <div class="detail-empty-state">Chưa có đánh giá kèm hình ảnh cho sản phẩm này.</div>
+              <?php elseif ($crawlReviewCount > 0): ?>
+                <div class="detail-empty-state">Sản phẩm đã có điểm đánh giá tổng quan từ dữ liệu bán hàng, nhưng chưa có đánh giá chi tiết từ người dùng SkinSyntax.</div>
+              <?php else: ?>
+                <div class="detail-empty-state">Sản phẩm này chưa có đánh giá chi tiết. Hãy là người đầu tiên chia sẻ trải nghiệm sau khi mua hàng.</div>
+              <?php endif; ?>
             <?php else: ?>
               <div class="d-flex flex-column gap-3">
                 <?php foreach ($reviews as $review): ?>
@@ -866,25 +1026,63 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
                     <div class="review-item__head">
                       <div class="review-item__author">
                         <div class="review-item__name"><?= h($review['ten_khach_hang'] ?? 'Khách hàng') ?></div>
-                        <?php $reviewStars = max(0, min(5, (int)($review['so_sao'] ?? 0))); ?>
+                        <?php if (!empty($review['da_mua_hang'])): ?><div class="review-item__badges"><span class="review-item__badge">Đã mua hàng</span></div><?php endif; ?>
+                        <?php
+                          $reviewStars = max(0, min(5, (int)($review['so_sao'] ?? 0)));
+                          $starLabels = [5 => 'Rất hài lòng', 4 => 'Hài lòng', 3 => 'Bình thường', 2 => 'Không hài lòng', 1 => 'Rất không hài lòng'];
+                        ?>
                         <span class="review-stars-display" aria-label="<?= $reviewStars ?> sao">
-                          <?php for ($star = 1; $star <= 5; $star++): ?>
-                            <i class="fa-solid fa-star <?= $star > $reviewStars ? 'is-empty' : '' ?>"></i>
-                          <?php endfor; ?>
+                          <?php for ($star = 1; $star <= 5; $star++): ?><i class="fa-solid fa-star <?= $star > $reviewStars ? 'is-empty' : '' ?>"></i><?php endfor; ?>
                         </span>
+                        <?php if ($reviewStars > 0): ?><span class="small fw-semibold text-warning ms-2"><?= h($starLabels[$reviewStars] ?? '') ?></span><?php endif; ?>
                       </div>
                       <div class="review-item__date"><?= h(!empty($review['ngay_danh_gia']) ? date('d/m/Y H:i', strtotime((string)$review['ngay_danh_gia'])) : '') ?></div>
                     </div>
                     <div class="review-item__content"><?= nl2br_safe($review['noi_dung'] ?? '') ?></div>
-                    <?php if (!empty($review['phan_hoi'])): ?>
-                      <div class="review-item__reply">
-                        <div class="small text-muted mb-1">Phản hồi từ nhân viên hỗ trợ</div>
-                        <div class="review-item__reply-box"><?= nl2br_safe($review['phan_hoi'] ?? '') ?></div>
-                      </div>
+                    <?php $reviewImagesRaw = $review['hinh_anh'] ?? []; $reviewImages = is_array($reviewImagesRaw) ? array_values(array_filter(array_map('strval', $reviewImagesRaw))) : split_image_urls((string)$reviewImagesRaw, 6); ?>
+                    <?php if (!empty($reviewImages)): ?>
+                      <div class="review-item__images"><?php foreach ($reviewImages as $reviewImage): ?><img src="<?= h(resolve_image_url($reviewImage)) ?>" alt="Ảnh đánh giá" referrerpolicy="no-referrer" onerror="this.remove();"><?php endforeach; ?></div>
+                    <?php endif; ?>
+                    <?php $shopReply = $review['phan_hoi_shop'] ?? null; if (is_object($shopReply)) $shopReply = (array)$shopReply; ?>
+                    <?php if (!empty($shopReply['noi_dung'])): ?>
+                      <div class="review-item__reply"><div class="small text-muted mb-1">Phản hồi từ SkinSyntax</div><div class="review-item__reply-box"><?= nl2br_safe($shopReply['noi_dung'] ?? '') ?></div></div>
                     <?php endif; ?>
                   </div>
                 <?php endforeach; ?>
               </div>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <div class="box-text tab-pane-content d-none" id="pane-hoi-dap" data-pane="hoi-dap" role="tabpanel" aria-labelledby="tab-hoi-dap">
+          <h5>Hỏi đáp (<?= h((string)$questionCount) ?>)</h5>
+          <div class="qa-panel">
+            <?php if (is_logged_in()): ?>
+              <form method="post" action="<?= BASE_URL ?>/index.php?r=guicauhoi" class="qa-form">
+                <input type="hidden" name="ma_san_pham" value="<?= h($productIdForForms) ?>">
+                <textarea class="form-control" name="cau_hoi" rows="3" placeholder="Bạn có câu hỏi với sản phẩm này? Đặt câu hỏi ngay..." required></textarea>
+                <div class="d-flex justify-content-end"><button class="btn btn-brand px-4" type="submit">Gửi</button></div>
+              </form>
+            <?php else: ?>
+              <div class="alert alert-info">Vui lòng đăng nhập để gửi câu hỏi về sản phẩm.</div>
+            <?php endif; ?>
+
+            <?php if ($questionErrorMessage !== ''): ?>
+              <div class="alert alert-warning"><?= h($questionErrorMessage) ?></div>
+            <?php elseif (empty($questions)): ?>
+              <div class="detail-empty-state">Chưa có câu hỏi nào cho sản phẩm này. Hãy đặt câu hỏi đầu tiên.</div>
+            <?php else: ?>
+              <?php foreach ($questions as $question): ?>
+                <?php $answer = $question['tra_loi'] ?? null; if (is_object($answer)) $answer = (array)$answer; ?>
+                <div class="qa-item">
+                  <div class="qa-item__meta"><strong><?= h((string)($question['ten_khach_hang'] ?? 'Khách hàng')) ?></strong><span><?= h(!empty($question['ngay_hoi']) ? date('d/m/Y H:i', strtotime((string)$question['ngay_hoi'])) : '') ?></span></div>
+                  <div><?= nl2br_safe((string)($question['cau_hoi'] ?? '')) ?></div>
+                  <div class="small text-muted mt-2"><i class="fa-regular fa-thumbs-up"></i> <?= (int)($question['so_luot_thich'] ?? 0) ?> lượt thích</div>
+                  <?php if (is_array($answer) && trim((string)($answer['noi_dung'] ?? '')) !== ''): ?>
+                    <div class="qa-answer"><div class="fw-semibold mb-1">SkinSyntax trả lời</div><?= nl2br_safe((string)$answer['noi_dung']) ?><div class="small text-muted mt-2"><?= h(!empty($answer['ngay_tra_loi']) ? date('d/m/Y H:i', strtotime((string)$answer['ngay_tra_loi'])) : '') ?></div></div>
+                  <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
             <?php endif; ?>
           </div>
         </div>
@@ -919,25 +1117,46 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
   const activateTab = function (target) {
     if (!target) return;
     tabButtons.forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-tab') === target);
+      const isActive = btn.getAttribute('data-tab') === target;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     tabPanes.forEach(pane => {
-      pane.classList.toggle('d-none', pane.getAttribute('data-pane') !== target);
+      const isActive = pane.getAttribute('data-pane') === target;
+      pane.classList.toggle('d-none', !isActive);
+      pane.classList.toggle('active', isActive);
+      pane.classList.toggle('show', isActive);
     });
   };
 
   tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       const target = btn.getAttribute('data-tab');
       activateTab(target);
     });
   });
 
   const params = new URLSearchParams(window.location.search);
-  const initialTab = params.get('tab') || <?= json_encode($activeTab !== '' ? $activeTab : '') ?>;
+  const hashMap = {
+    '#danhgia': 'danh-gia',
+    '#tab-danh-gia': 'danh-gia',
+    '#hoidap': 'hoi-dap',
+    '#tab-hoi-dap': 'hoi-dap'
+  };
+  const hashTab = hashMap[window.location.hash] || '';
+  const initialTab = hashTab || params.get('tab') || <?= json_encode($activeTab !== '' ? $activeTab : '') ?>;
   if (initialTab) {
     activateTab(initialTab);
+    if (hashTab) {
+      const nav = document.getElementById('detailTabNav');
+      if (nav) nav.scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
   }
 })();
 </script>
+
+
+

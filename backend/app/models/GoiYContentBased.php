@@ -642,12 +642,6 @@ class GoiYContentBased {
         // Chuẩn hóa text: chữ thường, bỏ dấu tiếng Việt, gộp khoảng trắng.
         // Nhờ vậy "sữa rửa mặt" và "sua rua mat" được xem là cùng một nhu cầu.
         $text = mb_strtolower(trim($text), 'UTF-8');
-        if (false && preg_match('/Ã|Â|â|Ä|Æ|áº|á»/u', $text)) {
-            $fixed = @iconv('UTF-8', 'Windows-1252//IGNORE', $text);
-            if (is_string($fixed) && $fixed !== '') {
-                $text = mb_strtolower(trim($fixed), 'UTF-8');
-            }
-        }
         $map = [
             'à'=>'a','á'=>'a','ạ'=>'a','ả'=>'a','ã'=>'a','â'=>'a','ầ'=>'a','ấ'=>'a','ậ'=>'a','ẩ'=>'a','ẫ'=>'a','ă'=>'a','ằ'=>'a','ắ'=>'a','ặ'=>'a','ẳ'=>'a','ẵ'=>'a',
             'è'=>'e','é'=>'e','ẹ'=>'e','ẻ'=>'e','ẽ'=>'e','ê'=>'e','ề'=>'e','ế'=>'e','ệ'=>'e','ể'=>'e','ễ'=>'e',

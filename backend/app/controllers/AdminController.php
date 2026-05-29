@@ -54,7 +54,7 @@ class AdminController {
 
         $center['has_new_orders'] = $hasNewOrders;
         $center['has_new_chats'] = $hasNewChats;
-        $center['unseen_count'] = ($hasNewOrders ? (int)($center['pending_orders_count'] ?? 0) : 0)
+        $center['unseen_count'] = (int)($center['unread_order_notifications_count'] ?? 0)
             + ($hasNewChats ? (int)($center['pending_chats_count'] ?? 0) : 0);
 
         return $center;

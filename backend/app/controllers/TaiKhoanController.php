@@ -45,6 +45,101 @@ class TaiKhoanController {
         exit;
     }
 
+    private function hasRecommendationConsent(array $khachHang, array $account = []): bool {
+        // Recommendation may use profile, behavior, cart, and order history only
+        // when the user has consented. Missing consent falls back to guest mode.
+        return !empty($khachHang['recommendation_consent'])
+            || !empty($khachHang['privacy_consent'])
+            || !empty($account['recommendation_consent'])
+            || !empty($account['privacy_consent']);
+    }
+
+    private function fetchProfileRecommendationsFromAi(int $customerId): array {
+        $base = defined('AI_PROFILE_RECOMMENDATION_ENDPOINT_BASE') ? trim((string)AI_PROFILE_RECOMMENDATION_ENDPOINT_BASE) : '';
+        if ($base === '') {
+            return ['ok' => false, 'message' => 'AI profile recommendation endpoint is not configured.'];
+        }
+
+        $url = rtrim($base, '/') . '/' . rawurlencode((string)$customerId) . '?limit=8';
+        $timeout = defined('AI_PROFILE_RECOMMENDATION_TIMEOUT') ? (int)AI_PROFILE_RECOMMENDATION_TIMEOUT : 20;
+
+        if (!function_exists('curl_init')) {
+            return ['ok' => false, 'message' => 'cURL is not available.'];
+        }
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => min(5, $timeout),
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        ]);
+        $body = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($body === false || $status < 200 || $status >= 300) {
+            return ['ok' => false, 'message' => $error ?: 'AI profile recommendation request failed.'];
+        }
+
+        $decoded = json_decode((string)$body, true);
+        if (!is_array($decoded)) {
+            return ['ok' => false, 'message' => 'AI profile recommendation response is invalid.'];
+        }
+
+        return $decoded;
+    }
+
+    public function apiProfileRecommendations(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->json(['ok' => false, 'message' => 'Method not allowed'], 405);
+        }
+
+        $user = $this->requireLogin();
+        $email = trim((string)($user['email'] ?? ''));
+        $account = $email !== '' ? ($this->model->getAccountOverviewByEmail($email) ?? []) : [];
+        $khachHang = $email !== '' ? ($this->model->getKhachHangByEmail($email) ?? []) : [];
+        $customerId = (int)($khachHang['ma_kh'] ?? 0);
+
+        if ($customerId > 0 && $this->hasRecommendationConsent($khachHang, $account)) {
+            $ai = $this->fetchProfileRecommendationsFromAi($customerId);
+            $products = $ai['products'] ?? [];
+            if (is_array($products) && !empty($products)) {
+                foreach ($products as &$item) {
+                    $item['image_url'] = resolve_image_url((string)($item['image_url'] ?? $item['link_hinh_anh'] ?? ''));
+                }
+                unset($item);
+
+                $this->json([
+                    'ok' => true,
+                    'source' => (string)($ai['retrieval_mode'] ?? 'llamaindex_hybrid_rerank'),
+                    'consent' => 'granted',
+                    'summary' => (string)($ai['summary'] ?? ''),
+                    'products' => array_values($products),
+                ]);
+            }
+        }
+
+        // Guest-safe fallback: no profile, no orders, no behavior are sent or used.
+        $fallback = $this->sanPhamModel->getTopTrending(8, true);
+        foreach ($fallback as &$item) {
+            $item['id'] = (string)($item['id'] ?? $item['ma_san_pham'] ?? '');
+            $item['image_url'] = resolve_image_url((string)($item['link_hinh_anh'] ?? $item['hinh_anh'] ?? ''));
+            $item['score'] = 0;
+            $item['reasons'] = ['Guest recommendation: sản phẩm phổ biến trong MongoDB.'];
+        }
+        unset($item);
+
+        $this->json([
+            'ok' => true,
+            'source' => 'mongo_guest_fallback',
+            'consent' => 'missing',
+            'summary' => 'Tự động',
+            'products' => $fallback,
+        ]);
+    }
+
     private function isOrderEligibleForReview(?string $status): bool {
         $normalized = strtolower(trim((string)($status ?? '')));
         return in_array($normalized, ['hoan thanh', 'hoàn thành', 'da giao', 'đã giao'], true);

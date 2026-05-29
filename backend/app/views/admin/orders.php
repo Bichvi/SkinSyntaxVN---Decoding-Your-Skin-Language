@@ -7,6 +7,20 @@ $q = trim((string)($q ?? ''));
 $status = trim((string)($status ?? ''));
 $pageTitle = trim((string)($pageTitle ?? 'Quản lý đơn hàng'));
 $allowManage = !empty($allowManage);
+$formatAdminOrderDate = static function ($value, string $emptyText = 'Chưa có ngày đặt'): string {
+    if ($value instanceof \MongoDB\BSON\UTCDateTime) {
+        return $value->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('d/m/Y H:i');
+    }
+    $text = trim((string)($value ?? ''));
+    if ($text === '' || $text === '0') {
+        return $emptyText;
+    }
+    $timestamp = strtotime($text);
+    if ($timestamp === false || $timestamp <= 0) {
+        return $emptyText;
+    }
+    return date('d/m/Y H:i', $timestamp);
+};
 ?>
 
 <div class="container-fluid p-4">
@@ -62,13 +76,13 @@ $allowManage = !empty($allowManage);
                                                 <div class="fw-semibold"><?= h($order['ho_ten'] ?? 'Khách hàng') ?></div>
                                                 <div class="small text-muted"><?= h($order['email'] ?? '') ?></div>
                                             </td>
-                                            <td><?= h(!empty($order['ngay_dat']) ? date('d/m/Y H:i', strtotime((string)$order['ngay_dat'])) : '') ?></td>
+                                            <td><?= h($formatAdminOrderDate($order['ngay_dat_hien_thi'] ?? ($order['ngay_dat'] ?? null))) ?></td>
                                             <td>
                                                 <div class="fw-semibold text-danger"><?= vnd($order['tong_tien'] ?? 0) ?></div>
                                                 <div class="small text-muted"><?= strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod'))) === 'bank_transfer_qr' ? 'QR chuyển khoản' : 'COD' ?></div>
                                             </td>
                                             <td>
-                                                <span class="badge rounded-pill text-bg-secondary d-inline-block mb-1"><?= h($order['trang_thai'] ?? 'moi') ?></span>
+                                                <span class="badge rounded-pill text-bg-secondary d-inline-block mb-1"><?= h($order['trang_thai_hien_thi'] ?? ($order['trang_thai'] ?? 'Chờ xử lý')) ?></span>
                                                 <div class="small text-muted"><?= h($order['status_thanh_toan'] ?? 'Chua thanh toan') ?></div>
                                             </td>
                                             <td class="text-end">
@@ -95,7 +109,7 @@ $allowManage = !empty($allowManage);
                                 <h5 class="fw-bold mb-1">Đơn hàng #<?= h($orderDetail['ma_hoa_don'] ?? '') ?></h5>
                                 <div class="text-muted"><?= h($orderDetail['ho_ten'] ?? '') ?> · <?= h($orderDetail['email'] ?? '') ?></div>
                             </div>
-                            <span class="badge rounded-pill text-bg-secondary"><?= h($orderDetail['trang_thai'] ?? '') ?></span>
+                            <span class="badge rounded-pill text-bg-secondary"><?= h($orderDetail['trang_thai_hien_thi'] ?? ($orderDetail['trang_thai'] ?? '')) ?></span>
                         </div>
 
                         <?php if (!empty($orderDetail['ly_do_huy'])): ?>
@@ -141,12 +155,29 @@ $allowManage = !empty($allowManage);
                         <div class="small text-muted mb-2">Sản phẩm trong đơn</div>
                         <div class="list-group mb-3">
                             <?php foreach (($orderDetail['items'] ?? []) as $item): ?>
-                                <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
-                                    <div>
-                                        <div class="fw-semibold"><?= h($item['ten_san_pham'] ?? ($item['ma_san_pham'] ?? 'Sản phẩm')) ?></div>
-                                        <div class="small text-muted">SL: <?= (int)($item['so_luong'] ?? 0) ?></div>
+                                <?php
+                                $productId = (string)($item['ma_san_pham'] ?? '');
+                                $qty = max(1, (int)($item['so_luong'] ?? 1));
+                                $unitPrice = (int)($item['don_gia'] ?? 0);
+                                $lineTotal = (int)($item['thanh_tien'] ?? ($unitPrice * $qty));
+                                $productUrl = $productId !== '' ? 'index.php?r=chitiet&id=' . rawurlencode($productId) : '#';
+                                ?>
+                                <div class="list-group-item">
+                                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <img src="<?= h(resolve_image_url($item['link_hinh_anh'] ?? '')) ?>" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:12px;background:#f1f5f9" onerror="this.style.display='none'">
+                                            <div>
+                                                <div class="fw-semibold"><?= h($item['ten_san_pham'] ?? ($productId !== '' ? 'SP #' . $productId : 'San pham')) ?></div>
+                                                <div class="small text-muted">SP #<?= h($productId) ?><?= !empty($item['thuong_hieu']) ? ' · ' . h((string)$item['thuong_hieu']) : '' ?></div>
+                                                <?php if (!empty($item['product_missing'])): ?><div class="small text-warning">Khong tim thay thong tin san pham</div><?php endif; ?>
+                                                <a class="btn btn-sm btn-outline-primary mt-2 <?= $productId === '' ? 'disabled' : '' ?>" href="<?= h($productUrl) ?>" target="_blank">Xem san pham</a>
+                                            </div>
+                                        </div>
+                                        <div class="text-md-end">
+                                            <div class="small text-muted">SL: <?= $qty ?> · Don gia <?= vnd($unitPrice) ?></div>
+                                            <div class="fw-semibold text-danger"><?= vnd($lineTotal) ?></div>
+                                        </div>
                                     </div>
-                                    <div class="fw-semibold text-danger"><?= vnd(((int)($item['don_gia'] ?? 0)) * ((int)($item['so_luong'] ?? 0))) ?></div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -157,11 +188,10 @@ $allowManage = !empty($allowManage);
                                 <input type="hidden" name="ma_hoa_don" value="<?= h($orderDetail['ma_hoa_don'] ?? '') ?>">
                                 <div class="col-md-8">
                                     <select class="form-select" name="trang_thai" data-order-status-select>
-                                        <?php $currentStatus = (string)($orderDetail['trang_thai'] ?? ''); ?>
-                                        <?php $currentStatusNormalized = strtolower(trim($currentStatus)); ?>
-                                        <?php $orderIsCancelled = in_array($currentStatusNormalized, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true); ?>
+                                        <?php $currentStatus = (string)($orderDetail['trang_thai_normalized'] ?? ($orderDetail['trang_thai'] ?? 'pending')); ?>
+                                        <?php $orderIsCancelled = $currentStatus === 'cancelled'; ?>
                                         <?php foreach ($statusOptions as $value => $label): ?>
-                                            <?php $optionIsCancelled = in_array(strtolower(trim((string)$value)), ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true); ?>
+                                            <?php $optionIsCancelled = (string)$value === 'cancelled'; ?>
                                             <option value="<?= h($value) ?>" <?= $currentStatus === $value ? 'selected' : '' ?> <?= ($isStaffOrderPage && $orderIsCancelled && !$optionIsCancelled) ? 'disabled' : '' ?>><?= h($label) ?></option>
                                         <?php endforeach; ?>
                                     </select>
@@ -215,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var isCancelled = function (value) {
         var normalized = (value || '').toString().trim().toLowerCase();
-        return normalized === 'da huy' || normalized === 'đã hủy' || normalized === 'huy';
+        return normalized === 'cancelled';
     };
 
     var toggleCancelFields = function () {
@@ -233,3 +263,5 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleCancelFields();
 });
 </script>
+
+
