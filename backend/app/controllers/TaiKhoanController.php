@@ -5,6 +5,7 @@ require_once __DIR__ . '/../models/TaiKhoan.php';
 require_once __DIR__ . '/../models/SanPham.php';
 require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/HoaDon.php';
+require_once __DIR__ . '/../models/DanhGia.php';
 
 class TaiKhoanController {
     private  $pdo;
@@ -186,6 +187,75 @@ class TaiKhoanController {
         return $items;
     }
 
+    private function handleReorder(int $maKh, string $email, int $orderId): void {
+        if ($maKh <= 0 || $orderId <= 0) {
+            set_flash('error', 'Không thể mua lại đơn hàng này.');
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        $targetOrder = null;
+        foreach ($this->model->getOrderHistory($maKh) as $order) {
+            if ((int)($order['ma_hoa_don'] ?? 0) === $orderId) {
+                $targetOrder = $order;
+                break;
+            }
+        }
+
+        if (!$targetOrder) {
+            error_log('reorder blocked: customer=' . $maKh . ', email=' . $email . ', order=' . $orderId);
+            set_flash('error', 'Không thể mua lại đơn hàng này.');
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        $added = 0;
+        $skipped = 0;
+        $_SESSION['gio_hang'] = is_array($_SESSION['gio_hang'] ?? null) ? $_SESSION['gio_hang'] : [];
+
+        foreach (($targetOrder['items'] ?? []) as $item) {
+            $productId = trim((string)($item['ma_san_pham'] ?? ''));
+            $oldQty = max(1, (int)($item['so_luong'] ?? 1));
+            if ($productId === '') {
+                $skipped++;
+                continue;
+            }
+
+            $product = $this->sanPhamModel->findById($productId, true);
+            if (!$product || !$this->sanPhamModel->isProductAvailable($product)) {
+                $skipped++;
+                continue;
+            }
+
+            $stock = $this->sanPhamModel->getProductStock((array)$product);
+            $stock = $stock === null ? 300 : max(0, (int)$stock);
+            $cartKey = (string)($product['ma_san_pham'] ?? $productId);
+            $currentQty = max(0, (int)($_SESSION['gio_hang'][$cartKey] ?? 0));
+            $canAdd = max(0, $stock - $currentQty);
+            $qtyToAdd = min($oldQty, $canAdd);
+
+            if ($qtyToAdd <= 0) {
+                $skipped++;
+                continue;
+            }
+
+            $_SESSION['gio_hang'][$cartKey] = $currentQty + $qtyToAdd;
+            $added += $qtyToAdd;
+            if ($qtyToAdd < $oldQty) {
+                $skipped++;
+            }
+        }
+
+        if ($added <= 0) {
+            set_flash('error', 'Không có sản phẩm nào trong đơn hàng này còn khả dụng để mua lại.');
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        set_flash('success', 'Đã thêm sản phẩm từ đơn hàng cũ vào giỏ hàng.');
+        if ($skipped > 0) {
+            set_flash('warning', 'Một số sản phẩm không còn khả dụng và chưa được thêm vào giỏ hàng.');
+        }
+        redirect(BASE_URL . '/index.php?r=giohang');
+    }
+
     public function hoso(): void {
         $user = $this->requireLogin();
         $this->hoaDonModel->cancelExpiredQrOrders(24);
@@ -217,6 +287,9 @@ class TaiKhoanController {
 
         if ($khachHang && !empty($khachHang['ma_kh'])) {
             $maKh = (int)$khachHang['ma_kh'];
+            if (isset($_GET['reorder'])) {
+                $this->handleReorder($maKh, (string)$account['email'], max(0, (int)$_GET['reorder']));
+            }
             $orders = $this->model->getOrderHistory($maKh);
             $cartItems = $this->buildSessionCartItems();
             if (empty($cartItems)) {
@@ -234,11 +307,18 @@ class TaiKhoanController {
             }
 
             $eligibilityMap = $this->reviewModel->{'getCustomerReviewEligibility'}($maKh, $productIds);
+            $directReviewModel = new DanhGia($this->pdo);
             foreach ($orders as &$order) {
-                $orderAllowsReview = $this->isOrderEligibleForReview((string)($order['trang_thai'] ?? ''));
+                $order['trang_thai_normalized'] = method_exists($this->reviewModel, 'normalizeOrderStatus')
+                    ? $this->reviewModel->normalizeOrderStatus($order['trang_thai'] ?? '')
+                    : strtolower(trim((string)($order['trang_thai'] ?? '')));
+                $orderAllowsReview = (($order['trang_thai_normalized'] ?? '') === 'completed') || $this->isOrderEligibleForReview((string)($order['trang_thai'] ?? ''));
                 foreach (($order['items'] ?? []) as &$item) {
                     $productId = trim((string)($item['ma_san_pham'] ?? ''));
-                    $eligibility = $eligibilityMap[$productId] ?? ['has_purchased' => false, 'has_reviewed' => false];
+                    $orderItemId = trim((string)($item['ma_chi_tiet_hoa_don'] ?? $item['id_chi_tiet_hoa_don'] ?? $item['idChiTietHoaDon'] ?? $item['order_item_id'] ?? $item['id'] ?? ''));
+                    $eligibility = $productId !== ''
+                        ? $directReviewModel->canUserReviewProduct($maKh, $productId, (string)($order['ma_hoa_don'] ?? ''), $orderItemId)
+                        : ($eligibilityMap[$productId] ?? ['has_purchased' => false, 'has_reviewed' => false]);
                     $item['detail_url'] = 'index.php?r=chitiet&id=' . rawurlencode($productId) . '&tab=danh-gia';
                     $item['has_purchased'] = !empty($eligibility['has_purchased']) || ($orderAllowsReview && $productId !== '');
                     $item['has_reviewed'] = !empty($eligibility['has_reviewed']);

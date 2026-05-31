@@ -112,6 +112,20 @@ $formatAdminOrderDate = static function ($value, string $emptyText = 'Chưa có 
                             <span class="badge rounded-pill text-bg-secondary"><?= h($orderDetail['trang_thai_hien_thi'] ?? ($orderDetail['trang_thai'] ?? '')) ?></span>
                         </div>
 
+                        <?php
+                        $orderRoute = strpos($pageTitle, 'Xá»­ lÃ½') === 0 ? 'staff_orders' : 'admin_orders';
+                        $printStatus = (string)($orderDetail['trang_thai_normalized'] ?? '');
+                        $canPrintOrder = in_array($printStatus, ['confirmed', 'shipping', 'completed'], true);
+                        ?>
+                        <?php if ($canPrintOrder): ?>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <a class="btn btn-sm btn-primary" target="_blank" href="index.php?r=<?= h($orderRoute) ?>&print_invoice=<?= (int)($orderDetail['ma_hoa_don'] ?? 0) ?>">In hóa đơn</a>
+                                <a class="btn btn-sm btn-outline-primary" target="_blank" href="index.php?r=<?= h($orderRoute) ?>&print_delivery=<?= (int)($orderDetail['ma_hoa_don'] ?? 0) ?>">In phiếu giao hàng</a>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-warning py-2 px-3 mb-3">Không thể xuất hóa đơn cho đơn hàng chưa xác nhận hoặc đã bị hủy.</div>
+                        <?php endif; ?>
+
                         <?php if (!empty($orderDetail['ly_do_huy'])): ?>
                             <div class="alert alert-warning py-2 px-3 mb-3">
                                 <div class="small text-uppercase fw-semibold">Lý do hủy đơn</div>

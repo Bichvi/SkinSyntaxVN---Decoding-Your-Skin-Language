@@ -521,8 +521,38 @@ class QuanTriController {
         redirect(BASE_URL . '/index.php?r=admin_users');
     }
 
+    private function handleOrderPrintRequest(string $route): void {
+        $invoiceId = isset($_GET['print_invoice']) ? max(0, (int)$_GET['print_invoice']) : 0;
+        $deliveryId = isset($_GET['print_delivery']) ? max(0, (int)$_GET['print_delivery']) : 0;
+        if ($invoiceId <= 0 && $deliveryId <= 0) {
+            return;
+        }
+
+        $orderId = $invoiceId > 0 ? $invoiceId : $deliveryId;
+        $documentType = $invoiceId > 0 ? 'invoice' : 'delivery';
+        $order = $this->model->getOrderById($orderId);
+        if (!$order) {
+            set_flash('error', 'Không tìm thấy đơn hàng cần in.');
+            redirect(BASE_URL . '/index.php?r=' . $route);
+        }
+
+        $status = (string)($order['trang_thai_normalized'] ?? '');
+        if ($status === '' && method_exists($this->model, 'normalizeOrderStatus')) {
+            $status = $this->model->normalizeOrderStatus($order['trang_thai'] ?? '');
+        }
+
+        if (!in_array($status, ['confirmed', 'shipping', 'completed'], true)) {
+            set_flash('error', 'Không thể xuất hóa đơn cho đơn hàng chưa xác nhận hoặc đã bị hủy.');
+            redirect(BASE_URL . '/index.php?r=' . $route . '&detail=' . $orderId);
+        }
+
+        require __DIR__ . '/../views/admin/order_print.php';
+        exit;
+    }
+
     public function adminOrders(): void {
         $this->requireRole(['admin']);
+        $this->handleOrderPrintRequest('admin_orders');
         $q = trim((string)($_GET['q'] ?? ''));
         $status = trim((string)($_GET['status'] ?? ''));
         $detailId = max(0, (int)($_GET['detail'] ?? 0));
@@ -566,11 +596,246 @@ class QuanTriController {
 
     public function adminReports(): void {
         $this->requireRole(['admin']);
+        $filters = $this->parseReportDateFilters();
+        if (!empty($filters['error'])) {
+            set_flash('error', (string)$filters['error']);
+        }
+
+        if (isset($_GET['export']) && (string)$_GET['export'] === 'excel') {
+            if (!empty($filters['error'])) {
+                redirect(BASE_URL . '/index.php?r=admin_reports');
+            }
+            $this->exportAdminReports($filters['start_date'], $filters['end_date']);
+            return;
+        }
+
         $this->renderAdmin('reports', [
             'summary' => $this->model->getDashboardSummary(),
-            'revenueByMonth' => $this->model->getRevenueByMonth(6),
-            'topProducts' => $this->model->getTopProductsByRevenue(8),
+            'revenueByMonth' => empty($filters['error']) ? $this->model->getRevenueByMonth(120, $filters['start_date'], $filters['end_date']) : [],
+            'topProducts' => empty($filters['error']) ? $this->model->getTopProductsByRevenue(8, $filters['start_date'], $filters['end_date']) : [],
+            'reportStartDate' => $filters['start_date'],
+            'reportEndDate' => $filters['end_date'],
+            'reportError' => $filters['error'],
         ]);
+    }
+
+    private function parseReportDateFilters(): array {
+        $start = trim((string)($_GET['start_date'] ?? ''));
+        $end = trim((string)($_GET['end_date'] ?? ''));
+        $error = '';
+
+        $isDate = static function (string $value): bool {
+            if ($value === '') {
+                return true;
+            }
+            $dt = DateTime::createFromFormat('Y-m-d', $value);
+            return $dt instanceof DateTime && $dt->format('Y-m-d') === $value;
+        };
+
+        if (!$isDate($start) || !$isDate($end)) {
+            $error = 'Ngày lọc báo cáo không hợp lệ.';
+        } elseif ($start !== '' && $end !== '' && strtotime($end) < strtotime($start)) {
+            $error = 'Khoảng thời gian chọn không hợp lệ.';
+        }
+
+        return [
+            'start_date' => $start,
+            'end_date' => $end,
+            'error' => $error,
+        ];
+    }
+
+    private function exportAdminReports(string $startDate = '', string $endDate = ''): void {
+        $revenueByMonth = $this->model->getRevenueByMonth(120, $startDate, $endDate);
+        $topProducts = $this->model->getTopProductsByRevenue(30, $startDate, $endDate);
+
+        $totalRevenue = 0;
+        $totalOrders = 0;
+        $bestMonth = null;
+        foreach ($revenueByMonth as $row) {
+            $totalRevenue += (int)($row['doanh_thu'] ?? 0);
+            $totalOrders += (int)($row['so_don'] ?? 0);
+            if ($bestMonth === null || (int)($row['doanh_thu'] ?? 0) > (int)($bestMonth['doanh_thu'] ?? 0)) {
+                $bestMonth = $row;
+            }
+        }
+
+        $averageRevenue = !empty($revenueByMonth) ? (int)round($totalRevenue / count($revenueByMonth)) : 0;
+        $topProduct = $topProducts[0] ?? [];
+        $overviewRows = [
+            ['Chỉ tiêu', 'Giá trị'],
+            ['Từ ngày', $startDate !== '' ? $startDate : 'Toàn bộ dữ liệu'],
+            ['Đến ngày', $endDate !== '' ? $endDate : 'Toàn bộ dữ liệu'],
+            ['Doanh thu trong kỳ', $totalRevenue],
+            ['Số đơn hợp lệ trong kỳ', $totalOrders],
+            ['Trung bình doanh thu/tháng', $averageRevenue],
+            ['Tháng doanh thu cao nhất', $bestMonth['thang'] ?? 'Chưa có dữ liệu'],
+            ['Doanh thu tháng cao nhất', (int)($bestMonth['doanh_thu'] ?? 0)],
+            ['Sản phẩm dẫn đầu', $topProduct['ten_san_pham'] ?? 'Chưa có dữ liệu'],
+        ];
+        $monthlyRows = [['Tháng', 'Số đơn', 'Doanh thu']];
+        foreach ($revenueByMonth as $row) {
+            $monthlyRows[] = [
+                $row['thang'] ?? '',
+                (int)($row['so_don'] ?? 0),
+                (int)($row['doanh_thu'] ?? 0),
+            ];
+        }
+        $productRows = [['Mã sản phẩm', 'Tên sản phẩm', 'Số lượng bán', 'Doanh thu']];
+        foreach ($topProducts as $row) {
+            $productRows[] = [
+                $row['ma_san_pham'] ?? '',
+                $row['ten_san_pham'] ?? '',
+                (int)($row['so_don_vi'] ?? 0),
+                (int)($row['doanh_thu'] ?? 0),
+            ];
+        }
+
+        $filenameBase = 'bao_cao_doanh_thu_' . date('Ymd_His');
+        if (class_exists('ZipArchive')) {
+            $this->sendXlsxReport($filenameBase . '.xlsx', [
+                'Tong_quan' => $overviewRows,
+                'Doanh_thu_theo_thang' => $monthlyRows,
+                'Top_san_pham' => $productRows,
+            ]);
+            return;
+        }
+
+        $this->sendCsvReport($filenameBase . '.csv', [
+            ['Tong_quan'],
+            ...$overviewRows,
+            [],
+            ['Doanh_thu_theo_thang'],
+            ...$monthlyRows,
+            [],
+            ['Top_san_pham'],
+            ...$productRows,
+        ]);
+    }
+
+    private function sendCsvReport(string $filename, array $rows): void {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        echo "\xEF\xBB\xBF";
+        $out = fopen('php://output', 'w');
+        foreach ($rows as $row) {
+            fputcsv($out, array_map('strval', $row));
+        }
+        fclose($out);
+        exit;
+    }
+
+    private function sendXlsxReport(string $filename, array $sheets): void {
+        $tmp = tempnam(sys_get_temp_dir(), 'skinsyntax_report_');
+        $zip = new ZipArchive();
+        $zip->open($tmp, ZipArchive::OVERWRITE);
+        $zip->addFromString('[Content_Types].xml', $this->xlsxContentTypes(count($sheets)));
+        $zip->addFromString('_rels/.rels', $this->xlsxRootRels());
+        $zip->addFromString('xl/workbook.xml', $this->xlsxWorkbookXml(array_keys($sheets)));
+        $zip->addFromString('xl/_rels/workbook.xml.rels', $this->xlsxWorkbookRels(count($sheets)));
+        $zip->addFromString('xl/styles.xml', $this->xlsxStylesXml());
+        $index = 1;
+        foreach ($sheets as $rows) {
+            $zip->addFromString('xl/worksheets/sheet' . $index . '.xml', $this->xlsxSheetXml($rows));
+            $index++;
+        }
+        $zip->close();
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($tmp));
+        readfile($tmp);
+        @unlink($tmp);
+        exit;
+    }
+
+    private function xlsxContentTypes(int $sheetCount): string {
+        $sheetOverrides = '';
+        for ($i = 1; $i <= $sheetCount; $i++) {
+            $sheetOverrides .= '<Override PartName="/xl/worksheets/sheet' . $i . '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+        }
+        return '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            . '<Default Extension="xml" ContentType="application/xml"/>'
+            . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            . '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+            . $sheetOverrides . '</Types>';
+    }
+
+    private function xlsxRootRels(): string {
+        return '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            . '</Relationships>';
+    }
+
+    private function xlsxWorkbookXml(array $sheetNames): string {
+        $sheets = '';
+        foreach (array_values($sheetNames) as $i => $name) {
+            $sheets .= '<sheet name="' . htmlspecialchars($name, ENT_QUOTES | ENT_XML1, 'UTF-8') . '" sheetId="' . ($i + 1) . '" r:id="rId' . ($i + 1) . '"/>';
+        }
+        return '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+            . $sheets . '</sheets></workbook>';
+    }
+
+    private function xlsxWorkbookRels(int $sheetCount): string {
+        $rels = '';
+        for ($i = 1; $i <= $sheetCount; $i++) {
+            $rels .= '<Relationship Id="rId' . $i . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' . $i . '.xml"/>';
+        }
+        $rels .= '<Relationship Id="rId' . ($sheetCount + 1) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>';
+        return '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' . $rels . '</Relationships>';
+    }
+
+    private function xlsxStylesXml(): string {
+        return '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+            . '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
+            . '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+            . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+            . '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0"/></cellXfs>'
+            . '</styleSheet>';
+    }
+
+    private function xlsxSheetXml(array $rows): string {
+        $xmlRows = '';
+        foreach (array_values($rows) as $rIndex => $row) {
+            $rowNum = $rIndex + 1;
+            $cells = '';
+            foreach (array_values($row) as $cIndex => $value) {
+                $cellRef = $this->xlsxColumnName($cIndex + 1) . $rowNum;
+                $style = $rowNum === 1 ? ' s="1"' : '';
+                if (is_int($value) || is_float($value)) {
+                    $cells .= '<c r="' . $cellRef . '"' . $style . '><v>' . $value . '</v></c>';
+                } else {
+                    $text = htmlspecialchars((string)$value, ENT_QUOTES | ENT_XML1, 'UTF-8');
+                    $cells .= '<c r="' . $cellRef . '" t="inlineStr"' . $style . '><is><t>' . $text . '</t></is></c>';
+                }
+            }
+            $xmlRows .= '<row r="' . $rowNum . '">' . $cells . '</row>';
+        }
+        return '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'
+            . $xmlRows . '</sheetData></worksheet>';
+    }
+
+    private function xlsxColumnName(int $index): string {
+        $name = '';
+        while ($index > 0) {
+            $index--;
+            $name = chr(65 + ($index % 26)) . $name;
+            $index = intdiv($index, 26);
+        }
+        return $name;
     }
 
     public function staffDashboard(): void {
@@ -587,6 +852,7 @@ class QuanTriController {
 
     public function staffOrders(): void {
         $this->requireRole(['admin', 'nhanvien']);
+        $this->handleOrderPrintRequest('staff_orders');
         $q = trim((string)($_GET['q'] ?? ''));
         $status = trim((string)($_GET['status'] ?? ''));
         $detailId = max(0, (int)($_GET['detail'] ?? 0));
@@ -1130,6 +1396,8 @@ class QuanTriController {
                 'so_sao' => $stars,
                 'noi_dung' => $content,
                 'hinh_anh' => $this->handleReviewImageUploads('hinh_anh'),
+                'ma_hoa_don' => trim((string)($_POST['ma_hoa_don'] ?? $_POST['order_id'] ?? '')),
+                'ma_chi_tiet_hoa_don' => trim((string)($_POST['ma_chi_tiet_hoa_don'] ?? $_POST['order_item_id'] ?? '')),
             ]);
         } catch (Throwable $e) {
             error_log('customer review MongoDB error: ' . $e->getMessage());

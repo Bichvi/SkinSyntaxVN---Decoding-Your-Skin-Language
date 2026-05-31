@@ -432,17 +432,42 @@ class QuanTri {
         }
     }
 
-    public function getRevenueByMonth(int $limit = 6): array {
-        $limit = max(1, min(24, $limit));
+    private function getRevenueOrderDate(array $order): string {
+        return $this->formatMongoDateForStorage($order['ngay_hoan_thanh'] ?? $order['thoi_gian_hoan_thanh'] ?? $order['ngay_dat'] ?? $order['created_at'] ?? null);
+    }
+
+    private function isOrderInReportRange(array $order, string $startDate = '', string $endDate = ''): bool {
+        $dateText = $this->getRevenueOrderDate($order);
+        if ($dateText === '') {
+            return false;
+        }
+
+        $timestamp = strtotime($dateText);
+        if ($timestamp === false || $timestamp <= 0) {
+            return false;
+        }
+
+        if ($startDate !== '' && $timestamp < strtotime($startDate . ' 00:00:00')) {
+            return false;
+        }
+        if ($endDate !== '' && $timestamp > strtotime($endDate . ' 23:59:59')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function getRevenueByMonth(int $limit = 6, string $startDate = '', string $endDate = ''): array {
+        $limit = max(1, min(120, $limit));
         $months = [];
 
         foreach ($this->db->hoa_don->find([]) as $doc) {
             $order = (array)$doc;
-            if (!$this->isRevenueOrder($order)) {
+            if (!$this->isRevenueOrder($order) || !$this->isOrderInReportRange($order, $startDate, $endDate)) {
                 continue;
             }
 
-            $dateText = $this->formatMongoDateForStorage($order['ngay_hoan_thanh'] ?? $order['thoi_gian_hoan_thanh'] ?? $order['ngay_dat'] ?? null);
+            $dateText = $this->getRevenueOrderDate($order);
             if ($dateText === '') {
                 continue;
             }
@@ -463,12 +488,12 @@ class QuanTri {
         return array_slice(array_values($months), 0, $limit);
     }
 
-    public function getTopProductsByRevenue(int $limit = 8): array {
+    public function getTopProductsByRevenue(int $limit = 8, string $startDate = '', string $endDate = ''): array {
         $limit = max(1, min(30, $limit));
         $completedOrderIds = [];
         foreach ($this->db->hoa_don->find([]) as $doc) {
             $order = (array)$doc;
-            if ($this->isRevenueOrder($order)) {
+            if ($this->isRevenueOrder($order) && $this->isOrderInReportRange($order, $startDate, $endDate)) {
                 $completedOrderIds[] = $order['ma_hoa_don'];
             }
         }
@@ -486,7 +511,14 @@ class QuanTri {
                 continue;
             }
             if (!isset($items[$productId])) {
-                $product = $this->db->san_pham->findOne(['ma_san_pham' => $productId]);
+                $product = (array)($this->db->san_pham->findOne([
+                    '$or' => [
+                        ['ma_san_pham' => $productId],
+                        ['ma_san_pham' => is_numeric($productId) ? (int)$productId : $productId],
+                        ['id' => $productId],
+                        ['id' => is_numeric($productId) ? (int)$productId : $productId],
+                    ],
+                ]) ?? []);
                 $items[$productId] = [
                     'ma_san_pham' => $productId,
                     'ten_san_pham' => $product['ten_san_pham'] ?? $productId,
@@ -1214,6 +1246,13 @@ class QuanTri {
 
     public function getCustomerReviewEligibility(int $customerId, array $productIds = []): array {
         if ($customerId <= 0 || empty($productIds)) return [];
+
+        $reviewModel = new DanhGia($this->db);
+        $perPurchaseResult = [];
+        foreach (array_unique(array_filter(array_map('strval', $productIds))) as $pid) {
+            $perPurchaseResult[$pid] = $reviewModel->canUserReviewProduct($customerId, $pid);
+        }
+        return $perPurchaseResult;
 
         $result = [];
         foreach ($productIds as $pid) {

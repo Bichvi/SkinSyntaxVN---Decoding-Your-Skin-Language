@@ -29,6 +29,59 @@ class DanhGia {
         ]];
     }
 
+    private function orderItemProductFilter(string $productId): array {
+        $ids = $this->productIdCandidates($productId);
+        return ['$or' => [
+            ['ma_san_pham' => ['$in' => $ids]],
+            ['id_san_pham' => ['$in' => $ids]],
+            ['product_id' => ['$in' => $ids]],
+        ]];
+    }
+
+    private function scalarIdCandidates($value): array {
+        $value = trim((string)($value ?? ''));
+        if ($value === '') return [];
+        $ids = [$value];
+        if (is_numeric($value)) {
+            $ids[] = (int)$value;
+        }
+        return array_values(array_unique($ids, SORT_REGULAR));
+    }
+
+    private function orderItemIdFromDetail(array $detail): string {
+        foreach (['ma_chi_tiet_hoa_don', 'id_chi_tiet_hoa_don', 'idChiTietHoaDon', 'order_item_id', 'id'] as $field) {
+            if (isset($detail[$field]) && trim((string)$detail[$field]) !== '') {
+                return trim((string)$detail[$field]);
+            }
+        }
+        return '';
+    }
+
+    private function orderIdFromReview(array $review): string {
+        foreach (['ma_hoa_don', 'idHoaDon', 'order_id'] as $field) {
+            if (isset($review[$field]) && trim((string)$review[$field]) !== '') {
+                return trim((string)$review[$field]);
+            }
+        }
+        return '';
+    }
+
+    private function orderItemIdFromReview(array $review): string {
+        foreach (['ma_chi_tiet_hoa_don', 'idChiTietHoaDon', 'order_item_id'] as $field) {
+            if (isset($review[$field]) && trim((string)$review[$field]) !== '') {
+                return trim((string)$review[$field]);
+            }
+        }
+        return '';
+    }
+
+    private function reviewPurchaseKey(string $orderId, string $orderItemId, string $productId): string {
+        if ($orderItemId !== '') {
+            return 'item:' . $orderItemId;
+        }
+        return 'order:' . $orderId . '|product:' . $productId;
+    }
+
     private function visibleFilter(string $productId): array {
         return [
             '$and' => [
@@ -252,41 +305,163 @@ class DanhGia {
         ];
     }
 
-    public function canUserReviewProduct(int $customerId, string $productId): array {
-        $productId = trim((string)$productId);
-        $result = ['has_purchased' => false, 'has_reviewed' => false];
-        if ($customerId <= 0 || $productId === '') return $result;
+    private function completedPurchasesForProduct(int $customerId, string $productId): array {
+        $purchases = [];
+        if ($customerId <= 0 || trim($productId) === '') return $purchases;
 
-        $completedOrderIds = [];
-        foreach ($this->db->hoa_don->find(['ma_kh' => $customerId], ['projection' => ['ma_hoa_don' => 1, 'trang_thai' => 1, 'trang_thai_normalized' => 1]]) as $orderDoc) {
+        $orders = [];
+        $orderIds = [];
+        foreach ($this->db->hoa_don->find(
+            ['ma_kh' => $customerId],
+            ['sort' => ['ngay_dat' => 1, 'ma_hoa_don' => 1], 'projection' => ['ma_hoa_don' => 1, 'trang_thai' => 1, 'trang_thai_normalized' => 1, 'ngay_dat' => 1]]
+        ) as $orderDoc) {
             $order = (array)$orderDoc;
             if (($order['trang_thai_normalized'] ?? '') === 'completed' || $this->normalizeOrderStatus($order['trang_thai'] ?? '') === 'completed') {
-                $completedOrderIds[] = $order['ma_hoa_don'];
+                $orderId = trim((string)($order['ma_hoa_don'] ?? ''));
+                if ($orderId !== '') {
+                    $orders[$orderId] = $order;
+                    $orderIds[] = is_numeric($orderId) ? (int)$orderId : $orderId;
+                }
             }
         }
 
-        if (!empty($completedOrderIds)) {
-            $detail = $this->db->chi_tiet_hoa_don->findOne([
-                '$and' => [
-                    ['ma_hoa_don' => ['$in' => $completedOrderIds]],
-                    $this->productFilter($productId),
-                ],
-            ]);
-            $result['has_purchased'] = (bool)$detail;
+        if (empty($orderIds)) return $purchases;
+
+        $cursor = $this->db->chi_tiet_hoa_don->find([
+            '$and' => [
+                ['ma_hoa_don' => ['$in' => $orderIds]],
+                $this->orderItemProductFilter($productId),
+            ],
+        ], ['sort' => ['ma_hoa_don' => 1, 'id' => 1]]);
+
+        foreach ($cursor as $detailDoc) {
+            $detail = (array)$detailDoc;
+            $orderId = trim((string)($detail['ma_hoa_don'] ?? ''));
+            $itemId = $this->orderItemIdFromDetail($detail);
+            $purchaseProductId = trim((string)($detail['ma_san_pham'] ?? $productId));
+            $purchases[] = [
+                'order_id' => $orderId,
+                'ma_hoa_don' => $orderId,
+                'order_item_id' => $itemId,
+                'ma_chi_tiet_hoa_don' => $itemId,
+                'product_id' => $purchaseProductId,
+                'key' => $this->reviewPurchaseKey($orderId, $itemId, $purchaseProductId),
+                'order_date' => $orders[$orderId]['ngay_dat'] ?? null,
+            ];
         }
 
-        $review = $this->db->danh_gia_san_pham->findOne([
+        return $purchases;
+    }
+
+    private function reviewedPurchaseKeys(int $customerId, string $productId, array $purchases): array {
+        $consumed = [];
+        $legacyReviews = 0;
+        $visibleReviewClause = ['$or' => [
+            ['trang_thai' => ['$exists' => false]],
+            ['trang_thai' => 'hien_thi'],
+            ['trang_thai' => 'active'],
+        ]];
+
+        $newFilter = [
             '$and' => [
                 ['ma_khach_hang' => $customerId],
                 $this->productFilter($productId),
-                ['$or' => [
-                    ['trang_thai' => ['$exists' => false]],
-                    ['trang_thai' => 'hien_thi'],
-                    ['trang_thai' => 'active'],
-                ]],
+                $visibleReviewClause,
             ],
-        ]);
-        $result['has_reviewed'] = (bool)$review;
+        ];
+        foreach ($this->db->danh_gia_san_pham->find($newFilter) as $doc) {
+            $review = (array)$doc;
+            $orderId = $this->orderIdFromReview($review);
+            $itemId = $this->orderItemIdFromReview($review);
+            if ($orderId !== '' || $itemId !== '') {
+                $reviewProductId = trim((string)($review['ma_san_pham'] ?? $productId));
+                $consumed[$this->reviewPurchaseKey($orderId, $itemId, $reviewProductId)] = true;
+            } else {
+                $legacyReviews++;
+            }
+        }
+
+        foreach ($this->db->danh_gia->find([
+            '$and' => [
+                ['$or' => [['ma_kh' => $customerId], ['ma_khach_hang' => $customerId]]],
+                $this->productFilter($productId),
+            ],
+        ]) as $doc) {
+            $review = (array)$doc;
+            $orderId = $this->orderIdFromReview($review);
+            $itemId = $this->orderItemIdFromReview($review);
+            if ($orderId !== '' || $itemId !== '') {
+                $reviewProductId = trim((string)($review['ma_san_pham'] ?? $productId));
+                $consumed[$this->reviewPurchaseKey($orderId, $itemId, $reviewProductId)] = true;
+            } else {
+                $legacyReviews++;
+            }
+        }
+
+        // Reviews written before order linkage existed consume the oldest completed purchases first.
+        foreach ($purchases as $purchase) {
+            if ($legacyReviews <= 0) break;
+            $key = (string)($purchase['key'] ?? '');
+            if ($key !== '' && empty($consumed[$key])) {
+                $consumed[$key] = true;
+                $legacyReviews--;
+            }
+        }
+
+        return $consumed;
+    }
+
+    public function canUserReviewProduct(int $customerId, string $productId, $preferredOrderId = null, $preferredOrderItemId = null): array {
+        $productId = trim((string)$productId);
+        $result = [
+            'has_purchased' => false,
+            'has_reviewed' => false,
+            'order_id' => '',
+            'order_item_id' => '',
+            'message' => 'Chỉ đơn Hoàn thành mới được đánh giá.',
+        ];
+        if ($customerId <= 0 || $productId === '') return $result;
+
+        $purchases = $this->completedPurchasesForProduct($customerId, $productId);
+        $result['has_purchased'] = !empty($purchases);
+        if (empty($purchases)) {
+            return $result;
+        }
+
+        $consumed = $this->reviewedPurchaseKeys($customerId, $productId, $purchases);
+        $preferredOrderId = trim((string)($preferredOrderId ?? ''));
+        $preferredOrderItemId = trim((string)($preferredOrderItemId ?? ''));
+        $hasPreferredPurchase = $preferredOrderId !== '' || $preferredOrderItemId !== '';
+        $eligible = null;
+
+        foreach ($purchases as $purchase) {
+            $key = (string)($purchase['key'] ?? '');
+            if ($key === '' || !empty($consumed[$key])) {
+                continue;
+            }
+            $matchesPreferred = ($preferredOrderId === '' || $preferredOrderId === (string)($purchase['order_id'] ?? ''))
+                && ($preferredOrderItemId === '' || $preferredOrderItemId === (string)($purchase['order_item_id'] ?? ''));
+            if ($matchesPreferred) {
+                $eligible = $purchase;
+                break;
+            }
+            if (!$hasPreferredPurchase && $eligible === null) {
+                $eligible = $purchase;
+            }
+        }
+
+        if ($eligible === null) {
+            $result['has_reviewed'] = true;
+            $result['message'] = 'Bạn đã đánh giá tất cả các lần mua của sản phẩm này.';
+            return $result;
+        }
+
+        $result['has_reviewed'] = false;
+        $result['order_id'] = (string)($eligible['order_id'] ?? '');
+        $result['ma_hoa_don'] = $result['order_id'];
+        $result['order_item_id'] = (string)($eligible['order_item_id'] ?? '');
+        $result['ma_chi_tiet_hoa_don'] = $result['order_item_id'];
+        $result['message'] = '';
         return $result;
     }
 
@@ -298,20 +473,30 @@ class DanhGia {
             return ['ok' => false, 'message' => 'Vui lòng nhập đầy đủ nội dung đánh giá.'];
         }
 
-        $eligibility = $this->canUserReviewProduct($customerId, $productId);
+        $preferredOrderId = trim((string)($data['ma_hoa_don'] ?? $data['order_id'] ?? ''));
+        $preferredOrderItemId = trim((string)($data['ma_chi_tiet_hoa_don'] ?? $data['order_item_id'] ?? ''));
+        $eligibility = $this->canUserReviewProduct($customerId, $productId, $preferredOrderId, $preferredOrderItemId);
         if (empty($eligibility['has_purchased'])) {
+            return ['ok' => false, 'message' => 'Chỉ đơn Hoàn thành mới được đánh giá.'];
             return ['ok' => false, 'message' => 'Bạn chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã hoàn thành.'];
         }
         if (!empty($eligibility['has_reviewed'])) {
+            return ['ok' => false, 'message' => 'Bạn đã đánh giá tất cả các lần mua của sản phẩm này.'];
             return ['ok' => false, 'message' => 'Bạn đã đánh giá sản phẩm này rồi.'];
         }
 
         $customer = $this->db->khach_hang->findOne(['ma_kh' => $customerId]);
+        $orderId = trim((string)($eligibility['order_id'] ?? $eligibility['ma_hoa_don'] ?? ''));
+        $orderItemId = trim((string)($eligibility['order_item_id'] ?? $eligibility['ma_chi_tiet_hoa_don'] ?? ''));
         $payload = [
             'ma_danh_gia' => $this->getNextNumericId('danh_gia_san_pham', 'ma_danh_gia'),
             'ma_san_pham' => (string)$productId,
             'ma_khach_hang' => $customerId,
             'ten_khach_hang' => $customer['ho_ten'] ?? 'Khách hàng',
+            'ma_hoa_don' => is_numeric($orderId) ? (int)$orderId : $orderId,
+            'order_id' => is_numeric($orderId) ? (int)$orderId : $orderId,
+            'ma_chi_tiet_hoa_don' => ($orderItemId !== '' && is_numeric($orderItemId)) ? (int)$orderItemId : $orderItemId,
+            'order_item_id' => ($orderItemId !== '' && is_numeric($orderItemId)) ? (int)$orderItemId : $orderItemId,
             'so_sao' => $stars,
             'noi_dung' => $content,
             'hinh_anh' => array_values(array_filter((array)($data['hinh_anh'] ?? []))),
@@ -320,6 +505,19 @@ class DanhGia {
             'phan_hoi_shop' => null,
             'trang_thai' => 'hien_thi',
         ];
+
+        try {
+            $this->db->danh_gia_san_pham->createIndex(
+                ['ma_khach_hang' => 1, 'ma_chi_tiet_hoa_don' => 1, 'ma_san_pham' => 1],
+                ['unique' => true, 'sparse' => true, 'name' => 'uniq_customer_order_item_product_review']
+            );
+            $this->db->danh_gia_san_pham->createIndex(
+                ['ma_khach_hang' => 1, 'ma_hoa_don' => 1, 'ma_san_pham' => 1],
+                ['unique' => true, 'sparse' => true, 'name' => 'uniq_customer_order_product_review']
+            );
+        } catch (Throwable $e) {
+            error_log('review unique index warning: ' . $e->getMessage());
+        }
 
         // Chi tiet review nam trong danh_gia_san_pham; san_pham giu rating crawl goc.
         $this->db->danh_gia_san_pham->insertOne($payload);
