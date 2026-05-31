@@ -2,6 +2,14 @@
 $summary = $summary ?? [];
 $revenueByMonth = $revenueByMonth ?? [];
 $topProducts = $topProducts ?? [];
+$reportStartDate = trim((string)($reportStartDate ?? ''));
+$reportEndDate = trim((string)($reportEndDate ?? ''));
+$reportError = trim((string)($reportError ?? ''));
+$hasDateFilter = $reportStartDate !== '' || $reportEndDate !== '';
+$reportPeriodText = $hasDateFilter
+    ? 'Dữ liệu đang lọc' . ($reportStartDate !== '' ? ' từ ' . date('d/m/Y', strtotime($reportStartDate)) : '')
+        . ($reportEndDate !== '' ? ' đến ' . date('d/m/Y', strtotime($reportEndDate)) : '')
+    : 'Dữ liệu toàn bộ kỳ báo cáo hiện tại';
 
 $totalRevenueWindow = 0;
 $totalOrdersWindow = 0;
@@ -28,12 +36,45 @@ $topProduct = $topProducts[0] ?? null;
         <p class="text-muted mb-0">Phân tích doanh thu theo giai đoạn và hiệu suất bán hàng, tách biệt với trang tổng quan hệ thống.</p>
     </div>
 
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form method="get" action="index.php" class="row g-3 align-items-end">
+                <input type="hidden" name="r" value="admin_reports">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold" for="reportStartDate">Từ ngày</label>
+                    <input type="date" class="form-control" id="reportStartDate" name="start_date" value="<?= h($reportStartDate) ?>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold" for="reportEndDate">Đến ngày</label>
+                    <input type="date" class="form-control" id="reportEndDate" name="end_date" value="<?= h($reportEndDate) ?>">
+                </div>
+                <div class="col-md-6 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fa-solid fa-filter me-1"></i> Lọc báo cáo
+                    </button>
+                    <button type="submit" name="export" value="excel" class="btn btn-outline-success px-4">
+                        <i class="fa-solid fa-file-excel me-1"></i> Xuất Excel
+                    </button>
+                    <?php if ($hasDateFilter): ?>
+                        <a class="btn btn-light border px-4" href="index.php?r=admin_reports">Xóa lọc</a>
+                    <?php endif; ?>
+                </div>
+                <div class="col-12">
+                    <div class="small text-muted"><?= h($reportPeriodText) ?></div>
+                    <?php if ($reportError !== ''): ?>
+                        <div class="alert alert-danger mt-3 mb-0"><?= h($reportError) ?></div>
+                    <?php endif; ?>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="row g-3 mb-4">
         <div class="col-md-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
                 <div class="text-muted small mb-2">Doanh thu trong kỳ báo cáo</div>
                 <div class="fs-4 fw-bold text-danger"><?= vnd($totalRevenueWindow) ?></div>
-                <div class="small text-muted mt-2">Tổng hợp từ <?= number_format(count($revenueByMonth), 0, ',', '.') ?> tháng gần nhất.</div>
+                <div class="small text-muted mt-2"><?= h($reportPeriodText) ?> · <?= number_format($totalOrdersWindow, 0, ',', '.') ?> đơn hợp lệ.</div>
             </div>
         </div>
         <div class="col-md-6 col-xl-3">

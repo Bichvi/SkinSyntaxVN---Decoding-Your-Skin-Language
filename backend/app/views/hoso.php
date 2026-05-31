@@ -604,6 +604,7 @@ $accountVerificationHint = !empty($account['email'])
                   <?php $isCancelledOrder = in_array($orderStatus, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true); ?>
                   <?php $detailCollapseId = 'order-details-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', (string)($o['ma_hoa_don'] ?? '0')); ?>
                   <?php $canReopenTransferQr = $paymentMethod === 'bank_transfer_qr' && !$isCancelledOrder && !in_array($paymentStatus, ['da thanh toan', 'paid', 'thanh cong'], true); ?>
+                  <?php $canReorderOrder = (($o['trang_thai_normalized'] ?? '') === 'completed') || in_array($orderStatus, ['hoan thanh', 'hoÃ n thÃ nh', 'completed'], true); ?>
                   <tr>
                     <td>#<?= h($o['ma_hoa_don'] ?? '') ?></td>
                     <td><?= h(!empty($o['ngay_dat']) ? date('d/m/Y H:i', strtotime((string)$o['ngay_dat'])) : '') ?></td>
@@ -644,6 +645,11 @@ $accountVerificationHint = !empty($account['email'])
                       </button>
                     </td>
                     <td class="text-end">
+                      <?php if ($canReorderOrder): ?>
+                        <form method="post" action="<?= BASE_URL ?>/index.php?r=hoso&reorder=<?= urlencode((string)($o['ma_hoa_don'] ?? '')) ?>" class="d-inline-block mb-2">
+                          <button type="submit" class="btn btn-sm btn-success">Mua lại</button>
+                        </form>
+                      <?php endif; ?>
                       <?php if (!in_array($orderStatus, ['dang giao', 'đang giao', 'hoan thanh', 'hoàn thành'], true) && !$isCancelledOrder): ?>
                         <form method="post" action="<?= BASE_URL ?>/index.php?r=huydonhang" class="d-inline-flex flex-column gap-2" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
                           <input type="hidden" name="ma_hoa_don" value="<?= h($o['ma_hoa_don'] ?? '') ?>">

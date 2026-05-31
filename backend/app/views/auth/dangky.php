@@ -226,7 +226,7 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
 
     <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="registerForm" novalidate>
       <div class="register-field">
-        <input class="form-control" type="email" name="email" value="<?= h((string)($old['email'] ?? '')) ?>" placeholder="Nhập email hoặc số điện thoại" required>
+        <input class="form-control" type="email" name="email" value="<?= h((string)($old['email'] ?? '')) ?>" placeholder="Nhập email" required>
         <i class="fa-regular fa-envelope register-field__icon"></i>
       </div>
 

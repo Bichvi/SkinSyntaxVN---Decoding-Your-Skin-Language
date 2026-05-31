@@ -230,7 +230,7 @@ $socialLinks = [
 
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangnhap">
                     <div class="mb-3">
-                      <input class="form-control auth-modal-input" type="email" name="email" placeholder="Nhập email hoặc số điện thoại" required>
+                      <input class="form-control auth-modal-input" type="email" name="email" placeholder="Nhập email" required>
                     </div>
                     <div class="mb-3 auth-register-field auth-password-field">
                       <input class="form-control auth-modal-input" type="password" id="authLoginPassword" name="mat_khau" placeholder="Nhập password" required>
@@ -265,7 +265,7 @@ $socialLinks = [
 
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="authRegisterForm" novalidate>
                     <div class="mb-3 auth-register-field">
-                      <input class="form-control auth-modal-input" type="email" name="email" value="<?= h((string)($signupOld['email'] ?? '')) ?>" placeholder="Nhập email hoặc số điện thoại" required>
+                      <input class="form-control auth-modal-input" type="email" name="email" value="<?= h((string)($signupOld['email'] ?? '')) ?>" placeholder="Nhập email" required>
                       <i class="fa-regular fa-envelope auth-register-icon"></i>
                     </div>
 

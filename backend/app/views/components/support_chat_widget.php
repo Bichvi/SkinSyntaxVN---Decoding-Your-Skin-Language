@@ -84,7 +84,7 @@ if (is_logged_in() && current_role() === 'khach_hang') {
           <button type="button" class="support-chat-widget__sticker" data-support-chat-sticker="🔥">🔥</button>
         </div>
         <div class="support-chat-widget__form-row">
-          <span>Phản hồi sẽ xuất hiện ngay trong khung chat này.</span>
+          <span>Hãy đợi chúng mình một chút nhé!!!.</span>
         </div>
       </form>
     </section>

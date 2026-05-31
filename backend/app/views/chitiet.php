@@ -973,6 +973,8 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
             <?php if (is_logged_in() && !empty($reviewPermission['has_purchased']) && empty($reviewPermission['has_reviewed'])): ?>
               <form method="post" action="<?= BASE_URL ?>/index.php?r=guidanhgia" class="review-form-shell" enctype="multipart/form-data">
                 <input type="hidden" name="ma_san_pham" value="<?= h($productIdForForms) ?>">
+                <input type="hidden" name="ma_hoa_don" value="<?= h((string)($reviewPermission['ma_hoa_don'] ?? $reviewPermission['order_id'] ?? '')) ?>">
+                <input type="hidden" name="ma_chi_tiet_hoa_don" value="<?= h((string)($reviewPermission['ma_chi_tiet_hoa_don'] ?? $reviewPermission['order_item_id'] ?? '')) ?>">
                 <div class="review-form-grid">
                   <div class="review-form-top">
                     <div class="review-form-stars">
