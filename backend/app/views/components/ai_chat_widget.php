@@ -84,7 +84,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         <?php if (!empty($_SESSION['user'])): ?>
           <button type="button" class="ai-chat-widget__quick-chip ai-chat-widget__quick-chip--highlight" 
                   <?= $aiChatSkinProfile ? 'data-ai-chat-toggle-profile' : 'data-ai-chat-profile-restricted' ?>>
-            âœ¨ Gợi ý theo hồ sơ da
+            Gợi ý theo hồ sơ da
           </button>
         <?php endif; ?>
       </div>
@@ -93,7 +93,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       <div class="ai-chat-profile-banner" data-ai-profile-banner hidden
            data-profile="<?= htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8') ?>">
         <div class="ai-chat-profile-banner__head">
-          <span class="ai-chat-profile-banner__icon">âœ¨</span>
+          <span class="ai-chat-profile-banner__icon">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </span>
           <div>
             <strong>Gợi ý theo hồ sơ da của bạn</strong>
             <span class="ai-chat-profile-banner__tag"><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES, 'UTF-8') ?></span>
@@ -104,14 +106,37 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         </div>
         <p class="ai-chat-profile-banner__desc">Bạn muốn tìm sản phẩm nào phù hợp với <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES, 'UTF-8') ?></strong> và ngân sách của mình?</p>
         <div class="ai-chat-profile-banner__chips">
-          <button type="button" class="ai-chat-profile-chip" data-category="Toner / Nước Cân Bằng Da">ðŸ’§ Toner</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Sữa Rửa Mặt">ðŸ§´ Sữa rửa mặt</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Tẩy Trang Mặt">ðŸŒ¿ Tẩy trang</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Serum / Tinh Chất">âš—ï¸ Serum</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Kem / Gel / Dầu Dưỡng">ðŸ«§ Kem dưỡng</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Chống Nắng Da Mặt">â˜€ï¸ Chống nắng</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Mặt Nạ Giấy">ðŸŽ­ Mặt nạ</button>
-          <button type="button" class="ai-chat-profile-chip" data-category="Hỗ Trợ Trị Mụn">ðŸ”¬ Trị mụn</button>
+          <button type="button" class="ai-chat-profile-chip" data-category="Toner / Nước Cân Bằng Da">
+            <i class="fa-solid fa-droplet"></i> Toner
+          </button>
+
+          <button type="button" class="ai-chat-profile-chip" data-category="Sữa Rửa Mặt">
+            <i class="fa-solid fa-pump-soap"></i> Sữa rửa mặt
+          </button>
+
+          <button type="button" class="ai-chat-profile-chip" data-category="Tẩy Trang Mặt">
+            <i class="fa-solid fa-leaf"></i> Tẩy trang
+          </button>
+
+          <button type="button" class="ai-chat-profile-chip" data-category="Serum / Tinh Chất">
+            <i class="fa-solid fa-flask"></i> Serum
+          </button>
+
+          <button type="button" class="ai-chat-profile-chip" data-category="Kem / Gel / Dầu Dưỡng">
+            <i class="fa-solid fa-jar"></i> Kem dưỡng
+          </button>
+
+          <button type="button" class="ai-chat-profile-chip" data-category="Chống Nắng Da Mặt">
+            <i class="fa-solid fa-sun"></i> Chống nắng
+          </button>
+
+          <button type="button" class="ai-chat-profile-chip" data-category="Mặt Nạ Giấy">
+            <i class="fa-solid fa-face-smile"></i> Mặt nạ
+          </button>
+
+          <button type="button" class="ai-chat-profile-chip" data-category="Hỗ Trợ Trị Mụn">
+            <i class="fa-solid fa-prescription-bottle-medical"></i> Trị mụn
+          </button>
         </div>
       </div>
 <?php endif; ?>
@@ -122,7 +147,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         <div class="ai-chat-widget__welcome" data-ai-chat-welcome>
           <div class="ai-chat-widget__welcome-badge">AI Agent</div>
 <?php if ($aiChatSkinProfile): ?>
-          <h4>Xin chào! Mình đã có hồ sơ da của bạn ðŸ‘‹</h4>
+          <h4>Xin chào! Mình đã có hồ sơ da của bạn</h4>
           <p>Loại da: <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES, 'UTF-8') ?></strong><?php if (!empty($aiChatSkinProfile['thanh_phan_tranh'])): ?> · Tránh: <strong><?= htmlspecialchars($aiChatSkinProfile['thanh_phan_tranh'], ENT_QUOTES, 'UTF-8') ?></strong><?php endif; ?></p>
           <p style="margin-top:4px">Chọn loại sản phẩm bên dưới để mình gợi ý ngay, hoặc hỏi bất kỳ điều gì về skincare nhé!</p>
 <?php else: ?>
@@ -1283,7 +1308,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         var summarizeText = function (value, maxLength) {
           var text = String(value || '').replace(/\s+/g, ' ').trim();
           if (text === '') {
-            return 'Có dữ liệu truy xuất từ cửa hàng.';
+            return 'Phù hợp với yêu cầu của bạn.';
           }
 
           if (text.length <= maxLength) {

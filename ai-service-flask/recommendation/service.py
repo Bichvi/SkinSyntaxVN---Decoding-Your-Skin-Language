@@ -78,7 +78,7 @@ class MongoFallbackSearch:
     def _with_score(product: dict, score: float, reasons: list[str]) -> dict:
         product["score"] = round(score, 3)
         product["reasons"] = reasons
-        product["llm_explanation"] = "Sản phẩm này được trả về từ dữ liệu MongoDB thật và phù hợp với bộ lọc hiện tại."
+        product["llm_explanation"] = "Sản phẩm này phù hợp với bộ lọc hiện tại."
         product["explanation_source"] = "rag"
         return product
 
