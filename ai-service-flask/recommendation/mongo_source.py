@@ -108,7 +108,7 @@ def visible_filter(extra: dict | None = None) -> dict:
 
 # Hàm này xây dựng văn bản sản phẩm được sử dụng làm ngữ cảnh RAG (Retrieval-Augmented Generation) cho hệ thống recommendation,
 # bằng cách kết hợp các trường thông tin quan trọng của sản phẩm như tên, thương hiệu, danh mục, giá cả, loại da, vấn đề da, 
-# thành phần chính, mô t
+# thành phần chính, mô tả
 def build_product_text(product: dict) -> str:
     # Product text is the RAG context. The API only returns MongoDB product records from these docs.
     fields = [
