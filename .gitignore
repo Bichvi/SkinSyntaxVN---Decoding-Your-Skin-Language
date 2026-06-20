@@ -1,0 +1,41 @@
+# Database configuration (IMPORTANT: Protect your credentials)
+project-root/backend/app/config/db.php
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Python / Flask artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.ipynb_checkpoints/
+
+# AI Data & Vector DB (Avoid pushing large/local data)
+project-root/ai-service-flask/chroma_db/
+project-root/ai-service-flask/data/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# XAMPP / Temp files
+*.log
+tmp/
+
+# Example env file is tracked for setup guidance
+!.env.example
+__pycache__/
+.venv/
+node_modules/
+chroma_db/
+
+# Composer vendor directory
+vendor/
+
+# Local runtime caches
+ai-service-flask/.cache/
+backend/storage/cache/
+

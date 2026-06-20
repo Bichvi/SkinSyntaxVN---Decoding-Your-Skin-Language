@@ -1,0 +1,167 @@
+name: skinsyntax
+
+services:
+
+  mongodb:
+    image: mongo:7
+    container_name: skinsyntax-mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: skinsyntax
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "localhost:27017/test", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 15s
+      retries: 5
+      start_period: 40s
+    networks:
+      - skinsyntax-net
+
+  chromadb:
+    image: chromadb/chroma:0.5.20
+    container_name: skinsyntax-chromadb
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skinsyntax-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: skinsyntax-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skinsyntax-net
+
+  ai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai
+    container_name: skinsyntax-ai
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    environment:
+      CHATBOT_PORT: "5001"
+      GUNICORN_WORKERS: "2"
+      GUNICORN_WORKER_CLASS: "gevent"
+      CHROMA_DB_PATH: /app/chroma_data
+      CSV_FILE_PATH: /app/database/data_clean_final.csv
+      MONGO_URI: mongodb://mongodb:27017
+      MONGO_DB: skinsyntax
+      REDIS_URL: redis://redis:6379/0
+      REDIS_CACHE_TTL: "604800"
+      SESSION_CACHE_TTL: "3600"
+    volumes:
+      - chroma_data:/app/chroma_data
+      - ./database:/app/database:ro
+      - ./ai-service-flask:/app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - skinsyntax-net
+
+  php-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    container_name: skinsyntax-php
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: mongodb://mongodb:27017
+      MONGO_DB: skinsyntax
+      FRONTEND_ROOT: /var/www/frontend
+      APP_URL: http://localhost
+      AI_CHAT_ENDPOINT: http://ai-service:5001/api/chat/auto
+      AI_CHAT_STREAM_ENDPOINT: http://ai-service:5001/api/chat/stream
+      AI_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/explain
+      AI_HYBRID_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/langchain-rag
+      AI_CHAT_TIMEOUT: "60"
+      AI_RECOMMENDATION_TIMEOUT: "20"
+      AI_HYBRID_RECOMMENDATION_TIMEOUT: "30"
+      REDIS_URL: redis://redis:6379/0
+      REDIS_CACHE_TTL: "604800"
+      MAIL_DEMO_MODE: "1"
+    volumes:
+      - ./backend:/var/www/html
+      - ./frontend:/var/www/frontend:ro
+      - ./database:/var/www/database:ro
+      - uploads_data:/var/www/html/public/uploads
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - skinsyntax-net
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: skinsyntax-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./backend/public:/var/www/html/public:ro
+      - ./frontend/public/assets:/var/www/html/public/assets:ro
+      - uploads_data:/var/www/html/public/uploads:ro
+    depends_on:
+      - php-backend
+    networks:
+      - skinsyntax-net
+
+volumes:
+  mongo_data:
+    name: skinsyntax-mongo-data
+  chroma_data:
+    name: skinsyntax-chroma-data
+  uploads_data:
+    name: skinsyntax-uploads
+  redis_data:
+    name: skinsyntax-redis-data
+
+networks:
+  skinsyntax-net:
+    name: skinsyntax-network
+    driver: bridge
