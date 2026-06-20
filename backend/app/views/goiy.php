@@ -280,6 +280,39 @@ $renderCard = static function (array $product, string $badgeLabel = '', string $
     text-decoration: line-through;
     font-size: .9rem;
   }
+  .recommend-match {
+    margin-top: 12px;
+    border-radius: 12px;
+    background: #eef8f4;
+    border: 1px solid #d4ebe3;
+    padding: 10px 12px;
+  }
+  .recommend-match__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: #0f5f4c;
+    font-size: .86rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .recommend-match__head strong {
+    color: #0b7a5f;
+    font-size: .95rem;
+  }
+  .recommend-match__bar {
+    height: 7px;
+    border-radius: 999px;
+    background: #d7e6e1;
+    overflow: hidden;
+  }
+  .recommend-match__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #12a36f, #69d7a7);
+  }
   .rcm-product-actions {
     margin-top: auto;
     display: grid;

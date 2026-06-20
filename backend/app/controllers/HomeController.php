@@ -1941,7 +1941,7 @@ class HomeController {
         }
 
         if ($answer === '') {
-            $answer = 'Không kết nối được tới AI service. Vui lòng thử lại sau.';
+            $answer = 'Tôi đề xuất những sản phẩm này';
         } else {
             $answer = $this->trimAiAnswer($answer);
         }
@@ -1957,7 +1957,7 @@ class HomeController {
             'fallback_note' => '',
         ];
 
-        if ($answer !== 'Không kết nối được tới AI service. Vui lòng thử lại sau.') {
+        if ($answer !== 'Tôi đề xuất những sản phẩm này') {
             $this->storeAiResponsePayload($message, $payload, $currentProductId);
         }
 
@@ -2063,6 +2063,12 @@ class HomeController {
             }
             $row['id'] = (string)($row['id'] ?? $row['ma_san_pham'] ?? '');
             $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
+            if (isset($row['match_percent'])) {
+                $row['match_percent'] = max(0, min(100, (int)$row['match_percent']));
+            }
+            if (isset($row['match_label'])) {
+                $row['match_label'] = trim((string)$row['match_label']);
+            }
             $products[] = $row;
         }
 

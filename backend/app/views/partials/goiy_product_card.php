@@ -28,6 +28,9 @@ $stock = function_exists('product_stock_quantity') ? product_stock_quantity($pro
 $sold = (int)($product['so_luong_da_ban'] ?? $product['so_luong_ban'] ?? 0);
 $rating = trim((string)($product['diem_danh_gia'] ?? ''));
 $reviewCount = (int)($product['so_luong_danh_gia'] ?? 0);
+$matchPercentRaw = $product['match_percent'] ?? null;
+$matchPercent = is_numeric($matchPercentRaw) ? max(0, min(100, (int)$matchPercentRaw)) : null;
+$matchLabel = trim((string)($product['match_label'] ?? 'Phù hợp'));
 ?>
 
 <?php if ($cardVariant === 'rcm'): ?>
@@ -46,6 +49,17 @@ $reviewCount = (int)($product['so_luong_danh_gia'] ?? 0);
       <div class="rcm-product-price"><?= h(vnd($salePrice)) ?></div>
       <?php if ((float)$marketPrice > (float)$salePrice): ?>
         <div class="rcm-product-market"><?= h(vnd($marketPrice)) ?></div>
+      <?php endif; ?>
+      <?php if ($matchPercent !== null): ?>
+        <div class="recommend-match">
+          <div class="recommend-match__head">
+            <span><?= h($matchLabel !== '' ? $matchLabel : 'Phù hợp') ?></span>
+            <strong><?= h((string)$matchPercent) ?>%</strong>
+          </div>
+          <div class="recommend-match__bar" aria-label="Độ phù hợp <?= h((string)$matchPercent) ?>%">
+            <span class="recommend-match__fill" style="width: <?= h((string)$matchPercent) ?>%"></span>
+          </div>
+        </div>
       <?php endif; ?>
 
       <div class="rcm-product-actions">
