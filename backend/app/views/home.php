@@ -562,7 +562,7 @@ $renderHomeProductCard = static function (array $p, string $tag = ''): void {
   function pad(value) {
     return String(Math.max(0, value)).padStart(2, '0');
   }
-
+ 
   function tick() {
     var diff = Math.max(0, target.getTime() - Date.now());
     var totalSeconds = Math.floor(diff / 1000);

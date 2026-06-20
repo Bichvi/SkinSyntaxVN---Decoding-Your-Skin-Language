@@ -23,11 +23,16 @@ if _ENV_PATH.exists():
 else:
     load_dotenv(override=True)
 
+_TIKTOKEN_CACHE_DIR = Path(os.getenv("TIKTOKEN_CACHE_DIR") or (_BASE_DIR / ".cache" / "tiktoken")).resolve()
+_TIKTOKEN_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+os.environ.setdefault("TIKTOKEN_CACHE_DIR", str(_TIKTOKEN_CACHE_DIR))
+
 from services.llamaindex_recommend_service import llamaindex_recommend_service
 
 
 HOST = os.getenv("RECOMMENDATION_HOST", "127.0.0.1")
 PORT = int(os.getenv("RECOMMENDATION_PORT", "5002"))
+LLM_PROVIDER = os.getenv("RECOMMENDATION_LLM_PROVIDER", "openai").strip().lower() or "openai"
 UNAVAILABLE_MESSAGE = "Hiện chưa thể tạo gợi ý cá nhân hóa. Vui lòng thử lại sau."
 
 app = Flask(__name__)
@@ -42,6 +47,26 @@ def health():
         "service": "recommendation-flask",
         "framework": "LlamaIndex",
     })
+
+
+@app.get("/ready")
+def ready():
+    """Readiness check cho recommendation service.
+
+    Endpoint này kiểm tra cấu hình runtime nhẹ, không gọi LLM và không rebuild index.
+    """
+    from recommendation.config import RECOMMENDATION_INDEX_DIR
+
+    index_ready = (RECOMMENDATION_INDEX_DIR / "docstore.json").exists()
+    return jsonify({
+        "ok": bool(index_ready),
+        "service": "recommendation-flask",
+        "framework": "LlamaIndex",
+        "index_ready": bool(index_ready),
+        "index_dir": str(RECOMMENDATION_INDEX_DIR),
+        "llm_provider": LLM_PROVIDER,
+        "tiktoken_cache_dir": os.getenv("TIKTOKEN_CACHE_DIR", ""),
+    }), 200 if index_ready else 503
 
 
 @app.get("/")
@@ -85,6 +110,12 @@ def server_error(_):
 
 if __name__ == "__main__":
     print(f"[START] SkinSyntaxVN Recommendation Flask - http://{HOST}:{PORT}")
+    print(f"[INFO]  Python executable: {sys.executable}")
+    print(f"[INFO]  ENV file: {_ENV_PATH if _ENV_PATH.exists() else 'default dotenv search'}")
+    print(f"[INFO]  Recommendation port: {PORT}")
+    print(f"[INFO]  Recommendation LLM provider: {LLM_PROVIDER}")
+    print(f"[INFO]  TIKTOKEN_CACHE_DIR: {os.getenv('TIKTOKEN_CACHE_DIR', '')}")
     print("[INFO]  Health: /health")
+    print("[INFO]  Ready: /ready")
     print("[INFO]  LlamaIndex API: /api/recommend/llamaindex")
     app.run(host=HOST, port=PORT, debug=False, use_reloader=False)

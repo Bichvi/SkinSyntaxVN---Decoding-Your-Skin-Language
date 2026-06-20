@@ -4,6 +4,7 @@ import json
 import math
 import os
 import re
+import sys
 import unicodedata
 from typing import Any
 
@@ -11,12 +12,28 @@ from recommendation.config import EMBED_MODEL_NAME, RECOMMENDATION_INDEX_DIR
 from recommendation.mongo_source import get_database, normalize_product
 
 # Đề xuất cá nhân hóa sử dụng LlamaIndex để truy xuất sản phẩm dựa trên hồ sơ khách hàng và lịch sử tương tác.
-# Nó kết hợp điểm số vector từ LlamaIndex với điểm số BM25 để lọc và xếp hạng sản phẩm, 
-# sau đó sử dụng Gemini để tạo câu trả lời giải thích cho khách hàng.
+# Pipeline này không generate sản phẩm mới: nó chỉ retrieve sản phẩm thật từ MongoDB/index, rerank lại,
+# rồi dùng LLM được cấu hình trong .env để viết phần answer_text giải thích cho khách hàng.
 def _norm(value: Any) -> str:
+    """Chuẩn hóa chuỗi về dạng không dấu, chữ thường để so khớp mềm metadata.
+
+    Hàm này được dùng khi lọc loại da/vấn đề da vì dữ liệu MongoDB có thể
+    khác nhau về dấu tiếng Việt, khoảng trắng hoặc kiểu dữ liệu.
+    """
     text = unicodedata.normalize("NFKD", str(value or "").lower())
     text = "".join(ch for ch in text if not unicodedata.combining(ch))
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _safe_error_message(exc: Exception) -> str:
+    """Rút gọn lỗi provider LLM để log an toàn, không lộ API key."""
+    message = str(exc)
+    for env_name in ("OPENAI_API_KEY", "GOOGLE_API_KEY"):
+        key = os.getenv(env_name, "").strip()
+        if key:
+            message = message.replace(key, "[redacted]")
+    message = re.sub(r"sk-[A-Za-z0-9_\-]{12,}", "sk-[redacted]", message)
+    return f"{exc.__class__.__name__}: {message[:220]}"
 
 # Lớp dịch vụ đề xuất sử dụng LlamaIndex để truy xuất sản phẩm dựa trên hồ sơ khách hàng và lịch sử tương tác.
 class LlamaIndexRecommendService:
@@ -28,9 +45,14 @@ class LlamaIndexRecommendService:
     3. Sử dụng LlamaIndex để truy xuất các sản phẩm phù hợp nhất với truy vấn đã xây dựng.
     4. Kết hợp điểm số vector từ LlamaIndex với điểm số BM25 để lọc và xếp hạng sản phẩm.
     5. Lấy thông tin chi tiết của các sản phẩm từ MongoDB dựa trên danh sách product_ids đã lọc và xếp hạng.
-    6. Sử dụng Gemini để tạo câu trả lời giải thích cho khách hàng dựa trên các sản phẩm đã được chọn.
+    6. Sử dụng LLM được cấu hình trong .env để tạo câu trả lời giải thích cho khách hàng.
     """
     def __init__(self):
+        """Khởi tạo service và cache các tài nguyên nặng.
+
+        MongoDB được mở một lần qua get_database(). LlamaIndex index, metadata và node list
+        được lazy-load để API không build lại index trong mỗi request.
+        """
         self.db = get_database()
         self._index = None
         self._meta = None
@@ -40,6 +62,11 @@ class LlamaIndexRecommendService:
     # Sau đó, nó thiết lập embedding model và llm cho LlamaIndex, tạo storage context từ thư mục chỉ mục, 
     # và tải chỉ mục từ storage. Cuối cùng, nó trả về đối tượng chỉ mục đã tải.
     def _load_index(self):
+        """Load VectorStoreIndex đã persist từ database/recommendation_index.
+
+        Hàm này chỉ đọc index có sẵn, không rebuild index. Nếu docstore.json không tồn tại,
+        API trả lỗi rõ ràng để người vận hành chạy `python -m recommendation.indexer`.
+        """
         if self._index is not None:
             return self._index
         if not (RECOMMENDATION_INDEX_DIR / "docstore.json").exists():
@@ -55,6 +82,11 @@ class LlamaIndexRecommendService:
         return self._index
 
     def _load_index_nodes(self) -> list:
+        """Lấy danh sách node sản phẩm từ docstore của LlamaIndex index.
+
+        BM25Retriever cần cùng tập node đã được persist trong index để hybrid search
+        dùng chung nguồn dữ liệu với vector retriever.
+        """
         if self._index_nodes is not None:
             return self._index_nodes
 
@@ -67,6 +99,11 @@ class LlamaIndexRecommendService:
         return self._index_nodes
 
     def _scores_from_nodes(self, nodes: list) -> dict[str, float]:
+        """Chuyển kết quả retriever của LlamaIndex thành map product_id -> score.
+
+        Retriever trả về node hoặc NodeWithScore tùy phiên bản thư viện. Hàm này đọc metadata
+        product_id và score theo cách linh hoạt để các bước rerank phía sau dùng chung.
+        """
         scores = {}
         for item in nodes:
             node = getattr(item, "node", item)
@@ -77,6 +114,11 @@ class LlamaIndexRecommendService:
         return scores
     # Hàm này tải metadata sản phẩm từ tệp products_meta.json trong thư mục RECOMMENDATION_INDEX_DIR.
     def _load_meta(self) -> dict[str, dict]:
+        """Load metadata sản phẩm được indexer ghi ra products_meta.json.
+
+        Metadata này là phần phụ trợ cho recommendation index. Hàm có cache nội bộ
+        để tránh đọc file lặp lại trong cùng vòng đời Flask service.
+        """
         if self._meta is not None:
             return self._meta
         path = RECOMMENDATION_INDEX_DIR / "products_meta.json"
@@ -88,6 +130,11 @@ class LlamaIndexRecommendService:
     # MongoDB dựa trên ma_kh hoặc email, và trả về thông tin khách hàng và tài khoản liên quan. 
     # Nếu không tìm thấy hồ sơ khách hàng, nó sẽ báo lỗi.
     def _resolve_customer(self, user_id: Any, email: str = "") -> tuple[dict, dict]:
+        """Tìm hồ sơ khách hàng thật từ user_id hoặc email do PHP session gửi sang.
+
+        Website có thể gửi mã từ collection `khach_hang` hoặc `nguoidung`, nên hàm này
+        thử nhiều mapping hợp lệ trước khi báo lỗi. Không tạo hồ sơ giả nếu không tìm thấy.
+        """
         customer = {}
         account = {}
         email = str(email or "").strip()
@@ -133,6 +180,11 @@ class LlamaIndexRecommendService:
     # Hàm này trích xuất loại da của khách hàng từ trường tinh_trang_dac_biet. 
     # Nó tìm kiếm một mẫu loaida:(\d+) trong trường này,
     def _skin_type_from_customer(self, customer: dict) -> str:
+        """Đọc loại da từ trường `tinh_trang_dac_biet` của khách hàng nếu có.
+
+        Một số dữ liệu cũ lưu loại da dưới dạng token `loaida:<id>`, vì vậy hàm này
+        map id đó sang collection `loai_da` để lấy tên loại da dễ hiểu cho implicit query.
+        """
         special = str(customer.get("tinh_trang_dac_biet") or "")
         match = re.search(r"loaida:(\d+)", special)
         if not match:
@@ -142,6 +194,11 @@ class LlamaIndexRecommendService:
     # Hàm này thu thập lịch sử tương tác của khách hàng, bao gồm các sản phẩm đã mua, sản phẩm trong giỏ hàng, 
     # và các tin nhắn chat gần đây.
     def _history(self, customer_id: int) -> dict:
+        """Thu thập tín hiệu hành vi của khách hàng từ MongoDB.
+
+        Dữ liệu gồm sản phẩm đã mua, sản phẩm trong giỏ hàng và các nhu cầu chat gần đây.
+        Các tín hiệu này chỉ dùng để tạo truy vấn ngầm định, không thay đổi dữ liệu nguồn.
+        """
         order_items = []
         cart_items = []
         chat_terms = []
@@ -169,6 +226,11 @@ class LlamaIndexRecommendService:
         return {"orders": order_items, "cart": cart_items, "chat": chat_terms}
     # Hàm này tìm kiếm hồ sơ da của khách hàng trong bộ sưu tập ho_so_da dựa trên ma_kh hoặc email.
     def _skin_profile_doc(self, customer: dict) -> dict:
+        """Tìm hồ sơ da trong collection `ho_so_da` theo mã khách hàng hoặc email.
+
+        Nếu collection không tồn tại hoặc MongoDB lỗi ở phần hồ sơ da, hàm trả dict rỗng
+        để service có thể tiếp tục dùng các tín hiệu khác của khách hàng.
+        """
         customer_id = customer.get("ma_kh")
         email = str(customer.get("email") or "")
         clauses = []
@@ -188,6 +250,11 @@ class LlamaIndexRecommendService:
     # thành một truy vấn mô tả hồ sơ và nhu cầu của khách hàng. Nó cũng xây dựng một bộ lọc để 
     # sử dụng trong quá trình lọc sản phẩm sau này.
     def _implicit_query(self, customer: dict, history: dict) -> tuple[str, dict]:
+        """Tạo truy vấn ngầm định và metadata filter từ hồ sơ khách hàng.
+
+        Người dùng đã đăng nhập không cần nhập câu hỏi. Hàm này gom loại da, vấn đề da,
+        ngân sách, thành phần cần tránh, lịch sử mua, giỏ hàng và chat để tạo query cho RAG.
+        """
         skin_profile = self._skin_profile_doc(customer)
         skin_type = self._skin_type_from_customer(customer)
         if not skin_type:
@@ -223,6 +290,11 @@ class LlamaIndexRecommendService:
         return ". ".join(parts), filters
     # Hàm này sử dụng LlamaIndex để truy xuất các sản phẩm phù hợp nhất với truy vấn đã xây dựng.
     def _vector_scores(self, query: str, top_k: int = 40) -> dict[str, float]:
+        """Chạy VectorIndexRetriever của LlamaIndex để lấy điểm ngữ nghĩa.
+
+        Đây là nhánh semantic search trong hybrid search, giúp tìm sản phẩm liên quan
+        ngay cả khi từ khóa trong profile không trùng chính xác với mô tả sản phẩm.
+        """
         index = self._load_index()
         from llama_index.core.retrievers import VectorIndexRetriever
 
@@ -231,6 +303,11 @@ class LlamaIndexRecommendService:
 
     # BM25Retriever của LlamaIndex dùng cùng node đã persist trong recommendation index.
     def _bm25_scores(self, query: str, top_k: int = 40) -> dict[str, float]:
+        """Chạy BM25Retriever của LlamaIndex để lấy điểm keyword/lexical.
+
+        Đây là nhánh keyword search trong hybrid search, giúp giữ các match chính xác
+        như thương hiệu, thành phần, loại da hoặc vấn đề da.
+        """
         from llama_index.retrievers.bm25 import BM25Retriever
 
         retriever = BM25Retriever.from_defaults(
@@ -240,6 +317,11 @@ class LlamaIndexRecommendService:
         return self._scores_from_nodes(retriever.retrieve(query))
     # Hàm này lấy thông tin chi tiết của các sản phẩm từ MongoDB dựa trên danh sách product_ids.
     def _hydrate(self, product_ids: list[str]) -> dict[str, dict]:
+        """Lấy lại product document thật từ MongoDB theo các product_id đã retrieve.
+
+        Bước này đảm bảo API chỉ trả sản phẩm đang tồn tại trong collection `san_pham`,
+        không trả nội dung bịa từ LLM hoặc metadata cũ.
+        """
         if not product_ids:
             return {}
         ids: list[Any] = list(product_ids)
@@ -254,6 +336,11 @@ class LlamaIndexRecommendService:
         return products
     # Hàm này lọc sản phẩm dựa trên các bộ lọc đã cho, bao gồm ngân sách và loại da.
     def _filter_product(self, product: dict, filters: dict, strict_budget: bool = True, strict_skin: bool = True) -> bool:
+        """Áp dụng metadata filtering sau khi retrieve ứng viên.
+
+        Bộ lọc ưu tiên ngân sách, loại da và trạng thái sản phẩm. Khi lọc quá chặt không
+        còn kết quả, `_rerank` sẽ gọi lại với chế độ mềm hơn.
+        """
         if strict_budget and filters.get("price_max") and int(product.get("gia_ban") or 0) > int(filters["price_max"]):
             return False
         skin_type = _norm(filters.get("skin_type"))
@@ -264,6 +351,11 @@ class LlamaIndexRecommendService:
         return product.get("stock_status") != "hidden"
     # Hàm này kết hợp điểm số vector từ LlamaIndex với điểm số BM25 để lọc và xếp hạng sản phẩm.
     def _rerank(self, query: str, filters: dict, limit: int = 5) -> list[dict]:
+        """Kết hợp vector search + BM25 search, lọc metadata và rerank top sản phẩm.
+
+        Hàm này là lõi retrieval/reranking của recommendation. Nó không gọi LLM và không
+        generate sản phẩm; kết quả cuối cùng luôn được hydrate từ MongoDB.
+        """
         vector_scores = self._vector_scores(query, top_k=60)
         bm25_scores = self._bm25_scores(query, top_k=60)
         candidate_ids = list(dict.fromkeys(
@@ -305,8 +397,87 @@ class LlamaIndexRecommendService:
         if not reranked:
             raise RuntimeError("Không có sản phẩm phù hợp sau metadata filtering.")
         return reranked[:limit]
-    # Hàm này sử dụng Gemini để tạo câu trả lời giải thích cho khách hàng dựa trên các sản phẩm đã được chọn.
-    def _gemini_answer(self, customer: dict, query: str, products: list[dict]) -> str:
+
+    def _match_info_from_rank(self, product: dict, max_score: float) -> tuple[int, str]:
+        """Chuyển `_rank_score` của reranking thành phần trăm phù hợp cho UI.
+
+        Phần trăm này được tính từ điểm retrieval/rerank nội bộ, không lấy từ LLM.
+        Các sản phẩm đã lọt top 5 được giữ tối thiểu 60% để giao diện không tạo cảm giác
+        hệ thống đang đề xuất sản phẩm quá kém phù hợp.
+        """
+        score = product.get("_rank_score")
+        if score in (None, "") or max_score <= 0:
+            return 80, "Phù hợp"
+
+        try:
+            raw_percent = int(round((float(score) / max_score) * 100))
+        except (TypeError, ValueError, ZeroDivisionError):
+            return 80, "Phù hợp"
+
+        match_percent = max(60, min(raw_percent, 100))
+        if raw_percent >= 90:
+            match_label = "Rất phù hợp"
+        elif raw_percent >= 75:
+            match_label = "Phù hợp"
+        else:
+            match_label = "Có thể cân nhắc"
+        return match_percent, match_label
+
+    def _build_answer_prompt(self, customer: dict, query: str, products: list[dict]) -> str:
+        """Tạo prompt chung cho OpenAI/Gemini khi viết answer_text.
+
+        Prompt chỉ chứa hồ sơ ngầm định và danh sách sản phẩm đã retrieve/rerank. LLM được
+        yêu cầu không bịa sản phẩm, không nhắc chi tiết kỹ thuật LlamaIndex/BM25/rerank.
+        """
+        product_lines = []
+        for idx, product in enumerate(products, 1):
+            product_lines.append(
+                f"{idx}. {product.get('ten_san_pham')} | brand={product.get('thuong_hieu')} | "
+                f"price={product.get('gia_ban')} | skin={product.get('loai_da')} | "
+                f"ingredients={product.get('thanh_phan_chinh')}"
+            )
+
+        customer_name = str(customer.get("ho_ten") or customer.get("ten_khach_hang") or "").strip()
+        greeting_hint = f"Tên khách hàng nếu cần xưng hô: {customer_name}" if customer_name else "Không có tên khách hàng rõ ràng."
+        return f"""
+Bạn là chuyên gia tư vấn mỹ phẩm SkinSyntaxVN.
+Chỉ dùng các sản phẩm có trong danh sách. Không bịa sản phẩm, không nhắc sản phẩm ngoài database.
+
+{greeting_hint}
+
+Implicit user profile/query:
+{query}
+
+Retrieved and reranked products:
+{chr(10).join(product_lines)}
+
+Hãy viết answer_text bằng tiếng Việt, 3-5 câu, giải thích vì sao nhóm sản phẩm này phù hợp.
+Không nêu chi tiết kỹ thuật LlamaIndex/BM25/rerank trong câu trả lời cho khách.
+""".strip()
+
+    def _openai_answer(self, prompt: str) -> str:
+        """Gọi OpenAI/ChatGPT để tạo answer_text từ prompt đã chuẩn hóa.
+
+        API key được đọc từ OPENAI_API_KEY và model đọc từ OPENAI_RECOMMENDATION_MODEL,
+        mặc định là gpt-4o-mini. Hàm không log hoặc trả API key ra response.
+        """
+        key = os.getenv("OPENAI_API_KEY", "").strip()
+        if not key:
+            raise RuntimeError("Missing OPENAI_API_KEY for OpenAI answer_text.")
+
+        model_name = os.getenv("OPENAI_RECOMMENDATION_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
+        from llama_index.llms.openai import OpenAI
+
+        llm = OpenAI(model=model_name, api_key=key, temperature=0.25)
+        response = llm.complete(prompt)
+        return str(getattr(response, "text", response)).strip()
+
+    def _gemini_answer(self, prompt: str) -> str:
+        """Gọi Gemini để tạo answer_text khi được cấu hình hoặc khi OpenAI fallback.
+
+        Gemini tiếp tục dùng GOOGLE_API_KEY hoặc phần tử đầu tiên của GOOGLE_API_KEYS như
+        logic hiện tại. Model ưu tiên GEMINI_RECOMMEND_MODEL, sau đó GEMINI_CHAT_MODEL.
+        """
         key = os.getenv("GOOGLE_API_KEY", "").strip()
         if not key:
             plural = os.getenv("GOOGLE_API_KEYS", "").strip()
@@ -320,40 +491,53 @@ class LlamaIndexRecommendService:
         from llama_index.llms.gemini import Gemini
 
         llm = Gemini(model=model_name, api_key=key, temperature=0.25)
-        product_lines = []
-        for idx, product in enumerate(products, 1):
-            product_lines.append(
-                f"{idx}. {product.get('ten_san_pham')} | brand={product.get('thuong_hieu')} | "
-                f"price={product.get('gia_ban')} | skin={product.get('loai_da')} | "
-                f"ingredients={product.get('thanh_phan_chinh')}"
-            )
-
-        prompt = f"""
-Bạn là chuyên gia tư vấn mỹ phẩm SkinSyntaxVN.
-Chỉ dùng các sản phẩm có trong danh sách. Không bịa sản phẩm, không nhắc sản phẩm ngoài database.
-
-Implicit user profile/query:
-{query}
-
-Retrieved and reranked products:
-{chr(10).join(product_lines)}
-
-Hãy viết answer_text bằng tiếng Việt, 3-5 câu, giải thích vì sao nhóm sản phẩm này phù hợp.
-Không nêu chi tiết kỹ thuật LlamaIndex/BM25/rerank trong câu trả lời cho khách.
-"""
         response = llm.complete(prompt)
         return str(getattr(response, "text", response)).strip()
 
+    def _llm_answer(self, customer: dict, query: str, products: list[dict]) -> str:
+        """Chọn LLM tạo answer_text theo .env và fallback an toàn.
+
+        RECOMMENDATION_LLM_PROVIDER mặc định là `openai`. Nếu provider chính lỗi hoặc
+        thiếu key, service thử provider còn lại. Lỗi kỹ thuật chỉ ghi provider, không ghi key.
+        """
+        prompt = self._build_answer_prompt(customer, query, products)
+        provider = os.getenv("RECOMMENDATION_LLM_PROVIDER", "openai").strip().lower() or "openai"
+        providers = ["gemini", "openai"] if provider == "gemini" else ["openai", "gemini"]
+        last_error = None
+
+        for item in providers:
+            try:
+                if item == "openai":
+                    return self._openai_answer(prompt)
+                if item == "gemini":
+                    return self._gemini_answer(prompt)
+            except Exception as exc:
+                last_error = exc
+                print(
+                    f"[WARN] Recommendation answer_text provider failed: {item}: {_safe_error_message(exc)}",
+                    file=sys.stderr,
+                )
+
+        raise RuntimeError(f"Không thể tạo answer_text bằng LLM đã cấu hình: {_safe_error_message(last_error) if last_error else 'unknown error'}")
+
     def recommend(self, user_id: Any, email: str = "") -> dict:
+        """Chạy toàn bộ pipeline recommendation cá nhân hóa cho một khách hàng.
+
+        Hàm này resolve khách hàng, tạo implicit query, chạy hybrid retrieval/reranking,
+        gọi LLM được cấu hình trong .env để viết answer_text, rồi trả JSON chuẩn cho PHP.
+        """
         customer, _account = self._resolve_customer(user_id, email)
         customer_id = int(customer.get("ma_kh") or 0)
         history = self._history(customer_id)
         query, filters = self._implicit_query(customer, history)
         products = self._rerank(query, filters, limit=5)
-        answer_text = self._gemini_answer(customer, query, products)
+        answer_text = self._llm_answer(customer, query, products)
+        rank_scores = [float(product.get("_rank_score") or 0.0) for product in products]
+        max_score = max(rank_scores or [0.0])
 
         output_products = []
         for product in products:
+            match_percent, match_label = self._match_info_from_rank(product, max_score)
             output_products.append({
                 "id": str(product.get("id") or product.get("ma_san_pham") or ""),
                 "ten_san_pham": str(product.get("ten_san_pham") or ""),
@@ -364,6 +548,8 @@ Không nêu chi tiết kỹ thuật LlamaIndex/BM25/rerank trong câu trả lờ
                 "link_hinh_anh": str(product.get("link_hinh_anh") or product.get("image_url") or ""),
                 "diem_danh_gia": float(product.get("diem_danh_gia") or product.get("rating") or 0),
                 "reason": self._reason_for_product(product, filters),
+                "match_percent": match_percent,
+                "match_label": match_label,
             })
 
         return {
@@ -374,6 +560,11 @@ Không nêu chi tiết kỹ thuật LlamaIndex/BM25/rerank trong câu trả lờ
         }
 
     def _reason_for_product(self, product: dict, filters: dict) -> str:
+        """Tạo reason ngắn cho từng product card trong JSON trả về PHP.
+
+        Reason này dựa trên metadata filter và điểm đánh giá, không gọi LLM riêng từng sản phẩm
+        để tránh tăng chi phí và độ trễ API.
+        """
         reasons = []
         if filters.get("skin_type"):
             reasons.append(f"phù hợp với {filters['skin_type']}")

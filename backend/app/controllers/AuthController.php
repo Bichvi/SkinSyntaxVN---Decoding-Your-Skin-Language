@@ -471,7 +471,7 @@ class AuthController {
         $state = trim((string)($_GET['state'] ?? ''));
         $code = trim((string)($_GET['code'] ?? ''));
         if ($state === '' || $code === '' || $state !== (string)($_SESSION['oauth_state_' . $provider] ?? '')) {
-            set_flash('error', 'Phien dang nhap ' . ucfirst($provider) . ' khong hop le.');
+            set_flash('error', 'Phiên đăng nhập ' . ucfirst($provider) . ' không hợp lệ.');
             header('Location: ' . BASE_URL . '/index.php?auth=login');
             exit;
         }
@@ -539,7 +539,7 @@ class AuthController {
         }
 
         $this->loginCustomerSession($account);
-        set_flash('success', 'Dang nhap bang ' . ucfirst($provider) . ' thanh cong.');
+        set_flash('success', 'Đăng nhập bằng ' . ucfirst($provider) . ' thành công.');
         header('Location: ' . BASE_URL . '/index.php?r=home');
         exit;
     }
