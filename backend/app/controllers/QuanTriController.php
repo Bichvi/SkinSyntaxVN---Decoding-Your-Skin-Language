@@ -1509,7 +1509,8 @@ class QuanTriController {
         require_once __DIR__ . '/../models/PhienLive.php';
         $phienLiveModel = new PhienLive($this->pdo);
         $lives = $phienLiveModel->getAllLives();
-        $allProducts = $this->sanPhamModel->all();
+        $paginateRes = $this->sanPhamModel->paginate(1, 500);
+        $allProducts = $paginateRes['items'] ?? [];
 
         foreach ($lives as &$live) {
             if (!empty($live['ma_san_pham_ghim'])) {
