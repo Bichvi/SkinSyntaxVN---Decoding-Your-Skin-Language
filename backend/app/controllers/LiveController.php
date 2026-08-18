@@ -95,25 +95,63 @@ class LiveController {
     public function apiLiveChat(): void {
         header('Content-Type: application/json; charset=utf-8');
         $message = trim((string)($_POST['message'] ?? $_GET['message'] ?? ''));
-        $productId = trim((string)($_POST['product_id'] ?? ''));
+        $productId = trim((string)($_POST['product_id'] ?? $_GET['product_id'] ?? ''));
+        $pinnedPrice = (float)($_POST['pinned_price'] ?? $_GET['pinned_price'] ?? 0);
 
         if ($message === '') {
             echo json_encode(['ok' => false, 'message' => 'Nội dung tin nhắn rỗng']);
             exit;
         }
 
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        $spModel = new SanPham($mongoDb);
+        $pinnedProduct = $productId !== '' ? $spModel->findById($productId) : null;
+
+        $productName = $pinnedProduct ? (string)($pinnedProduct['ten_san_pham'] ?? 'Sản phẩm ghim ưu đãi') : 'Sản phẩm ghim ưu đãi';
+        $productBrand = $pinnedProduct ? (string)($pinnedProduct['thuong_hieu'] ?? 'SkinSyntax') : 'SkinSyntax';
+        $productPrice = $pinnedPrice > 0 ? $pinnedPrice : ($pinnedProduct ? (float)($pinnedProduct['gia_ban'] ?? 0) : 0);
+
         $lowerMsg = mb_strtolower($message);
         $isOrderCommand = (strpos($lowerMsg, 'chốt đơn') !== false || strpos($lowerMsg, 'mua ngay') !== false || strpos($lowerMsg, 'đặt hàng') !== false);
 
         $aiReply = '';
         if ($isOrderCommand) {
-            $aiReply = '🤖 [AI Agent Auto-Checkout]: Đã nhận lệnh chốt đơn của bạn! Sản phẩm đã được thêm vào giỏ hàng ưu đãi Livestream thành công. Bấm "Thanh toán ngay" để hoàn tất!';
-        } else if (strpos($lowerMsg, 'da dầu') !== false || strpos($lowerMsg, 'mụn') !== false) {
-            $aiReply = '🤖 [AI Skin Co-Host - RAG Knowledge]: Qua phân tích thành phần sản phẩm đang ghim (Salicylic Acid 2% & B5), sản phẩm này rất phù hợp cho da dầu mụn giúp kiềm dầu nhẹ và làm dịu mụn sưng đỏ trong 48h!';
-        } else if (strpos($lowerMsg, 'giá') !== false || strpos($lowerMsg, 'sale') !== false) {
-            $aiReply = '🤖 [AI Skin Co-Host]: Trong phiên Livestream hôm nay, sản phẩm đang được ghim ưu đãi độc quyền giảm đến 80%! Khách hàng có thể bấm "⚡ Mua Ngay Trong Live" để nhận giá ưu đãi này.';
+            if (!isset($_SESSION['gio_hang'])) {
+                $_SESSION['gio_hang'] = [];
+            }
+            $pIdStr = (string)($pinnedProduct['ma_san_pham'] ?? $pinnedProduct['id'] ?? $productId);
+            if ($pIdStr !== '') {
+                $found = false;
+                foreach ($_SESSION['gio_hang'] as &$item) {
+                    if ((string)($item['ma_san_pham'] ?? $item['product_id'] ?? '') === $pIdStr) {
+                        $item['so_luong'] = (int)($item['so_luong'] ?? 1) + 1;
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($item);
+                if (!$found) {
+                    $_SESSION['gio_hang'][] = [
+                        'ma_san_pham' => $pIdStr,
+                        'product_id' => $pIdStr,
+                        'ten_san_pham' => $productName,
+                        'gia_ban' => $productPrice,
+                        'link_hinh_anh' => $pinnedProduct['link_hinh_anh'] ?? '',
+                        'so_luong' => 1
+                    ];
+                }
+            }
+
+            $userDisplayName = is_logged_in() ? (current_user()['ho_ten'] ?? 'bạn') : 'khách hàng';
+            $aiReply = '⚡ [AI Agent Auto-Checkout]: Đã nhận lệnh chốt đơn 1x "' . $productName . '" với giá ưu đãi ' . number_format($productPrice) . 'đ cho ' . $userDisplayName . '! Sản phẩm đã được tự động thêm vào giỏ hàng. Bạn có thể bấm vào giỏ hàng ở góc phải để xem đơn!';
+        } else if (strpos($lowerMsg, 'da dầu') !== false || strpos($lowerMsg, 'mụn') !== false || strpos($lowerMsg, 'thành phần') !== false || strpos($lowerMsg, 'hoạt chất') !== false) {
+            $desc = !empty($pinnedProduct['mo_ta']) ? mb_substr(strip_tags($pinnedProduct['mo_ta']), 0, 150) : 'Chiết xuất dịu nhẹ, an toàn chuẩn y khoa.';
+            $aiReply = '🤖 [AI Skin Co-Host - RAG Knowledge]: Qua phân tích thành phần sản phẩm "' . $productName . '" (' . $productBrand . '), sản phẩm giúp chăm sóc tối ưu cho làn da. Chi tiết: ' . $desc;
+        } else if (strpos($lowerMsg, 'giá') !== false || strpos($lowerMsg, 'sale') !== false || strpos($lowerMsg, 'ưu đãi') !== false || strpos($lowerMsg, 'rẻ') !== false) {
+            $aiReply = '🤖 [AI Skin Co-Host]: Sản phẩm "' . $productName . '" đang được ghim ưu đãi độc quyền trong phiên Live này chỉ còn ' . number_format($productPrice) . 'đ! Bạn gõ "chốt đơn" hoặc bấm nút "⚡ MUA NGAY TRONG LIVE" để sở hữu ngay nhé!';
         } else {
-            $aiReply = '🤖 [AI Skin Co-Host]: Cảm ơn câu hỏi của bạn! AI Agent đang phân tích nồng độ hoạt chất và sẽ hỗ trợ tư vấn chi tiết cho bạn ngay trong phiên Live này!';
+            $aiReply = '🤖 [AI Skin Co-Host]: Cảm ơn câu hỏi về "' . $productName . '"! AI Agent tư vấn đang sẵn sàng hỗ trợ thông tin chi tiết và xử lý chốt đơn tự động cho bạn ngay trong phiên Live này!';
         }
 
         echo json_encode([
@@ -121,6 +159,7 @@ class LiveController {
             'user_message' => $message,
             'ai_response' => $aiReply,
             'is_order' => $isOrderCommand,
+            'cart_count' => isset($_SESSION['gio_hang']) ? count($_SESSION['gio_hang']) : 0,
             'timestamp' => date('H:i:s')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
