@@ -120,33 +120,33 @@ $pinnedImg = resolve_image_url((string)($pinnedP['link_hinh_anh'] ?? $pinnedP['i
         <!-- LIVE CHAT MESSAGES BODY -->
         <div class="card-body p-3 overflow-auto flex-grow-1" id="liveChatBox" style="max-height: 380px; min-height: 320px; font-size: 0.85rem; background: #F8FAF8;">
           <div class="chat-msg mb-2 p-2 rounded-3 bg-white border" style="border-color: #E2EADF !important;">
-            <strong class="text-success" style="color: #215427;"><i class="fa-solid fa-shield-halved me-1"></i>Hệ thống SkinSyntax:</strong> Chúc mừng phiên Live Stream đã kết nối máy chủ LiveKit WebRTC Cloud thành công! AI Agent sẵn sàng hỗ trợ tự động chốt đơn và trả lời tư vấn hoạt chất.
+            <strong class="text-success" style="color: #215427;"><i class="fa-solid fa-shield-halved me-1"></i>Hệ thống SkinSyntax:</strong> Chúc mừng phiên Live Stream đã kết nối máy chủ LiveKit WebRTC Cloud thành công! AI Agent sẵn sàng hỗ trợ tự động chốt đơn và tư vấn sản phẩm <strong><?= h($pinnedName) ?></strong>.
           </div>
           <div class="chat-msg mb-2 p-2 rounded-3 bg-white border" style="border-color: #E2EADF !important;">
-            <strong class="text-primary">Thu Trang (Hà Nội):</strong> Sản phẩm kem nền này có kiềm dầu tốt không ạ?
+            <strong class="text-primary">Thu Trang (Hà Nội):</strong> Sản phẩm <?= h($pinnedName) ?> có ưu đãi giá tốt không ạ?
           </div>
           <div class="chat-msg mb-2 p-2.5 rounded-3 text-white" style="background: linear-gradient(135deg, #162F18 0%, #215427 100%);">
-            <strong class="text-warning"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>AI Skin Co-Host (RAG):</strong> Qua phân tích dữ liệu bảng thành phần, sản phẩm chứa Silica & BHA giúp hỗ trợ kiềm dầu lên đến 8-12 tiếng liên tục ạ!
+            <strong style="color: #6EE7B7;"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>AI Skin Co-Host (RAG):</strong> Qua phân tích dữ liệu sản phẩm <strong><?= h($pinnedName) ?></strong> từ hãng <?= h($pinnedBrand) ?>, sản phẩm đang có giá ưu đãi độc quyền <strong><?= vnd($pinnedPrice) ?></strong> ngay trong phiên Live này ạ!
           </div>
           <div class="chat-msg mb-2 p-2 rounded-3 bg-white border" style="border-color: #E2EADF !important;">
-            <strong class="text-danger">Quốc Bảo (TP.HCM):</strong> chốt đơn 1
+            <strong class="text-danger">Quốc Bảo (TP.HCM):</strong> chốt đơn
           </div>
           <div class="chat-msg mb-2 p-2.5 rounded-3 text-white" style="background: linear-gradient(135deg, #162F18 0%, #215427 100%);">
-            <strong class="text-warning"><i class="fa-solid fa-robot me-1"></i>AI Agent Auto-Checkout:</strong> ⚡ Đã tự động chốt đơn 1x [Mini] Kem Nền Lancôme cho anh Quốc Bảo với giá 78.000đ! Vui lòng bấm vào giỏ hàng để xác nhận đơn.
+            <strong style="color: #FCD34D;"><i class="fa-solid fa-robot me-1"></i>AI Agent Auto-Checkout:</strong> ⚡ Đã tự động chốt đơn 1x <?= h($pinnedName) ?> cho anh Quốc Bảo với giá <?= vnd($pinnedPrice) ?>! Vui lòng bấm vào giỏ hàng để xác nhận đơn.
           </div>
         </div>
 
         <!-- LIVE CHAT INPUT FORM -->
         <div class="card-footer p-3 bg-white border-top" style="border-color: #E2EADF !important;">
-          <div class="mb-2 extra-small text-muted" style="font-size: 0.72rem;">
-            💡 Mẹo: Gõ <strong>"chốt đơn"</strong> hoặc câu hỏi về hoạt chất da để thử phản hồi AI Agent!
-          </div>
           <form id="liveChatForm" class="d-flex gap-2">
             <input type="text" id="liveChatInput" class="form-control form-control-sm rounded-pill px-3" placeholder="Nhập tin nhắn hoặc 'chốt đơn'..." required style="border-color: #C5DAC8;">
-            <button type="submit" class="btn btn-sm text-white rounded-pill px-3 fw-bold" style="background: #215427;">
-              <i class="fa-solid fa-paper-plane"></i>
+            <button type="submit" class="btn text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: #215427; border: none;">
+              <i class="fa-solid fa-paper-plane" style="font-size: 0.85rem;"></i>
             </button>
           </form>
+          <div class="extra-small text-muted mt-2" style="font-size: 0.72rem;">
+            💡 <strong>Mẹo:</strong> Gõ <code>"chốt đơn"</code> hoặc hỏi về hoạt chất để thử phản hồi AI Agent!
+          </div>
         </div>
       </div>
     </div>
@@ -259,6 +259,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Call Backend AI Agent API
     const formData = new FormData();
     formData.append('message', text);
+    formData.append('product_id', '<?= h($pinnedId) ?>');
+    formData.append('pinned_price', '<?= (float)$pinnedPrice ?>');
 
     fetch('<?= BASE_URL ?>/index.php?r=api_live_chat', {
       method: 'POST',
@@ -274,7 +276,12 @@ document.addEventListener('DOMContentLoaded', function() {
           aiMsgEl.innerHTML = escapeHtml(data.ai_response);
           chatBox.appendChild(aiMsgEl);
           chatBox.scrollTop = chatBox.scrollHeight;
-        }, 600);
+
+          if (data.is_order) {
+            const badges = document.querySelectorAll('.cart-count-badge, .header-actions__badge');
+            badges.forEach(b => { b.textContent = data.cart_count || '1'; });
+          }
+        }, 400);
       }
     })
     .catch(err => console.log('Live chat AI error', err));
