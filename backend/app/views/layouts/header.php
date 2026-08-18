@@ -181,7 +181,7 @@ $socialLinks = [
         <a class="header-shortcuts__link" href="<?= BASE_URL ?>/index.php?r=home">Trang chủ</a>
         <a class="header-shortcuts__link" href="<?= BASE_URL ?>/index.php?r=tatca">Tất cả sản phẩm</a>
         <a class="header-shortcuts__link fw-bold d-inline-flex align-items-center gap-1" href="<?= BASE_URL ?>/index.php?r=live" style="background: #FFE4E6; color: #E11D48 !important; padding: 4px 12px; border-radius: 999px; font-size: 0.84rem;">
-          <span class="d-inline-block rounded-circle bg-danger" style="width: 7px; height: 7px; animation: badgePulse 1.5s infinite;"></span>
+          <span class="d-inline-block rounded-circle bg-danger" style="width: 7px; height: 7px;"></span>
           <i class="fa-solid fa-video me-1"></i> LiveStream AI
         </a>
         <?php foreach ($quickCategories as $category): ?>

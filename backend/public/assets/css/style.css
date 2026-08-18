@@ -65,25 +65,8 @@ a{ text-decoration:none; color:inherit; }
 }
 
 .site-header.is-scrolled {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  box-shadow: 0 6px 25px rgba(23, 61, 42, 0.08) !important;
-  border-bottom-color: rgba(226, 234, 223, 0.8) !important;
-}
-
-.site-header.is-scrolled .promo-strip {
-  display: none !important;
-}
-
-.site-header.is-scrolled .utility-strip {
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
-}
-
-.site-header.is-scrolled .header-main {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 4px 18px rgba(23, 61, 42, 0.08) !important;
 }
 
 /* TOPBAR nhỏ */
@@ -1459,25 +1442,7 @@ body.site-body{
 }
 
 .promo-strip{
-  background:linear-gradient(90deg, #0d7568 0%, #17a38d 52%, #f58d58 100%);
-  color:#fff;
-}
-
-.promo-strip__inner{
-  min-height:42px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-  font-size:13px;
-  font-weight:700;
-}
-
-.promo-strip__inner span{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  white-space:nowrap;
+  display: none !important;
 }
 
 .utility-strip{
@@ -1487,12 +1452,13 @@ body.site-body{
 }
 
 .utility-strip__inner{
-  min-height:30px;
+  min-height:24px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:14px;
-  font-size:12px;
+  gap:12px;
+  font-size:11px;
+  padding:2px 0;
 }
 
 .utility-links{
@@ -1554,26 +1520,26 @@ body.site-body{
   grid-template-columns:220px minmax(380px, 1fr) auto;
   align-items:center;
   gap:12px;
-  padding:8px 0;
+  padding:4px 0;
 }
 
 .brand-lockup{
   display:inline-flex;
   align-items:center;
-  gap:10px;
+  gap:8px;
 }
 
 .brand-lockup__mark{
-  width:38px;
-  height:38px;
+  width:32px;
+  height:32px;
   display:grid;
   place-items:center;
-  border-radius:12px;
+  border-radius:10px;
   background:linear-gradient(135deg, #162F18 0%, #215427 100%);
   color:#fff;
-  font-size:22px;
+  font-size:18px;
   font-weight:800;
-  box-shadow:0 8px 18px rgba(33, 84, 39, 0.2);
+  box-shadow:0 4px 12px rgba(33, 84, 39, 0.2);
 }
 
 .brand-lockup__copy{
@@ -1583,7 +1549,7 @@ body.site-body{
 
 .brand-lockup__copy strong{
   font-family:'Quicksand', system-ui, sans-serif;
-  font-size:24px;
+  font-size:20px;
   line-height:.95;
   color:#1A2F1A;
   letter-spacing:.01em;
@@ -1761,16 +1727,16 @@ body.site-body{
   grid-template-columns:220px minmax(0, 1fr) auto;
   align-items:center;
   gap:12px;
-  padding:6px 0;
+  padding:3px 0;
 }
 
 .header-catalog__toggle,
 .header-deal-pill{
-  min-height:38px;
+  min-height:32px;
   display:inline-flex;
   align-items:center;
-  gap:8px;
-  padding:0 16px;
+  gap:6px;
+  padding:0 12px;
   border-radius:999px;
   font-weight:700;
   font-size:0.86rem;
