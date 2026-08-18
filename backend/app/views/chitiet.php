@@ -23,107 +23,6 @@ $activeReviewFilter = trim((string)($_GET['review_filter'] ?? ''));
 $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
 ?>
 <style>
-  .detail-tabs {
-    margin-top: 20px;
-  }
-
-  #detailTabNav {
-    gap: 0;
-    border-bottom: 1px solid #dbe4ee;
-    margin-bottom: 0;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
-  }
-
-  #detailTabNav .nav-item {
-    flex: 0 0 auto;
-  }
-
-  #detailTabNav .nav-link {
-    position: relative;
-    border: 0;
-    border-radius: 16px 16px 0 0;
-    color: #46627f;
-    font-weight: 700;
-    font-size: 1.02rem;
-    padding: 14px 20px 13px;
-    background: transparent;
-    transition: color .18s ease, background .18s ease;
-  }
-
-  #detailTabNav .nav-link:hover {
-    color: #1d4f7a;
-    background: rgba(236, 244, 252, 0.85);
-  }
-
-  #detailTabNav .nav-link.active {
-    color: #1670b8;
-    background: linear-gradient(180deg, #f5faff 0%, #ffffff 100%);
-  }
-
-  #detailTabNav .nav-link.active::after {
-    content: '';
-    position: absolute;
-    left: 16px;
-    right: 16px;
-    bottom: 0;
-    height: 3px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #1f8fff 0%, #33c39f 100%);
-  }
-
-  .detail-content-panel {
-    border: 1px solid #dfe7f0;
-    border-radius: 24px;
-    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
-    overflow: hidden;
-  }
-
-  .detail-content-panel__head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 18px;
-    padding: 22px 24px 18px;
-    border-bottom: 1px solid #e8eef5;
-    background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
-    flex-wrap: wrap;
-  }
-
-  .detail-content-panel__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    min-height: 30px;
-    padding: 0 12px;
-    border-radius: 999px;
-    background: #eef6ff;
-    color: #1d6cb1;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  .detail-content-panel__title {
-    margin: 0;
-    font-size: 1.7rem;
-    line-height: 1.2;
-    font-weight: 800;
-    color: #1b2c40;
-  }
-
-  .detail-content-panel__subtitle {
-    margin: 10px 0 0;
-    max-width: 720px;
-    color: #66778a;
-    font-size: 0.98rem;
-    line-height: 1.7;
-  }
-
   .detail-content-panel__body {
     padding: 24px;
   }
@@ -555,6 +454,57 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     .review-form-shell {
       padding: 16px;
     }
+  .review-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+  .review-filter-tabs a { border: 1px solid #d8e4ea; border-radius: 999px; padding: 8px 14px; color: #385268; background: #fff; text-decoration: none; font-weight: 700; font-size: 0.92rem; }
+  .review-filter-tabs a.is-active { background: #0f8d63; color: #fff; border-color: #0f8d63; }
+  .review-upload-box { border: 1px dashed #bdd6cc; background: #fbfffd; border-radius: 14px; padding: 12px; }
+  .qa-panel { border-radius: 20px; border: 1px solid #e5edf5; background: #fff; padding: 22px; }
+  .qa-form { display: grid; gap: 10px; margin-bottom: 18px; padding: 16px; border-radius: 16px; background: #f8fbff; border: 1px solid #dde9f4; }
+  .qa-item { border: 1px solid #e5ecef; border-radius: 16px; padding: 16px; background: #fff; }
+  .qa-item + .qa-item { margin-top: 12px; }
+  .qa-item__meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: #64748b; font-size: 0.86rem; margin-bottom: 8px; }
+  .qa-answer { margin-top: 12px; border-radius: 14px; background: #eef8f3; padding: 12px 14px; color: #26453a; line-height: 1.65; }
+
+  @media (max-width: 767.98px) {
+    #detailTabNav .nav-link {
+      font-size: 0.96rem;
+      padding: 12px 16px;
+    }
+
+    .detail-content-panel {
+      border-radius: 18px;
+    }
+
+    .detail-content-panel__head,
+    .detail-content-panel__body,
+    .detail-section-card {
+      padding: 16px;
+    }
+
+    .detail-content-panel__title {
+      font-size: 1.4rem;
+    }
+
+    .detail-rich-copy__lead {
+      padding: 14px 16px;
+      font-size: 0.98rem;
+    }
+
+    .review-panel {
+      padding: 16px;
+    }
+
+    .review-summary-card {
+      padding: 16px;
+    }
+
+    .review-summary-card__score-value {
+      font-size: 1.6rem;
+    }
+
+    .review-form-shell {
+      padding: 16px;
+    }
 
     .review-form-top {
       align-items: stretch;
@@ -571,123 +521,160 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     }
   }
 </style>
-<div class="container mt-4">
+<div class="container my-4">
   <?php if ($detailUnavailableMessage !== ''): ?>
-    <div class="alert alert-warning border-0 shadow-sm"><?= h($detailUnavailableMessage) ?></div>
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4" style="background: #FFFBEB; color: #B45309;"><?= h($detailUnavailableMessage) ?></div>
   <?php endif; ?>
 
   <div class="mb-3">
-    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
-      <i class="fas fa-arrow-left"></i> Quay lại
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold border-0" style="background: #F8FAF8; color: #1A2F1A;">
+      <i class="fas fa-arrow-left me-1"></i> Quay lại
     </a>
   </div>
 
-  <div class="row g-3">
+  <div class="row g-4 mb-5">
+    <!-- Left: Gallery & Purchase Benefits -->
     <div class="col-12 col-lg-5">
-      <div class="detail-img">
+      <div class="detail-img border rounded-4 overflow-hidden bg-white p-2" style="border-radius: 28px !important; border-color: #E2EADF !important;">
         <img id="mainImage"
-             class="detail-main-img"
+             class="detail-main-img w-100 h-auto"
              src="<?= h($main) ?>"
              referrerpolicy="no-referrer"
              onerror="this.src='https://via.placeholder.com/600x600?text=No+Image';"
-             alt="<?= h($p['ten_san_pham'] ?? '') ?>">
+             alt="<?= h($p['ten_san_pham'] ?? '') ?>"
+             style="border-radius: 20px; aspect-ratio: 1/1; object-fit: cover;">
       </div>
 
       <?php if (count($imgs) > 1): ?>
-        <div class="detail-thumbs mt-2">
+        <div class="detail-thumbs mt-3 d-flex gap-2 overflow-x-auto pb-2">
           <?php foreach ($imgs as $i => $url): ?>
             <button type="button"
-                    class="thumb-btn <?= $i===0?'active':'' ?>"
-                    data-src="<?= h($url) ?>">
+                    class="thumb-btn border rounded-3 p-1 <?= $i===0?'active':'' ?>"
+                    data-src="<?= h($url) ?>"
+                    style="width: 72px; height: 72px; flex-shrink: 0; background: #FFF; border-color: #E2EADF;">
               <img src="<?= h($url) ?>"
                    referrerpolicy="no-referrer"
                    onerror="this.src='https://via.placeholder.com/80x80?text=No';"
-                   alt="thumb">
+                   alt="thumb"
+                   style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
             </button>
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
 
-      <div class="purchase-policy-card">
-        <h6 class="purchase-policy-card__title">Quyền lợi mua hàng</h6>
-        <div class="purchase-policy-grid">
-          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-truck"></i></span><div><div class="purchase-policy-item__title">Miễn phí vận chuyển</div><p class="purchase-policy-item__text">Cho đơn từ 300.000đ hoặc theo chính sách hiện tại.</p></div></div>
-          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-bolt"></i></span><div><div class="purchase-policy-item__title">Giao nhanh 2H</div><p class="purchase-policy-item__text">Nội thành, trễ tặng voucher nếu áp dụng.</p></div></div>
-          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-shield-heart"></i></span><div><div class="purchase-policy-item__title">Cam kết chính hãng</div><p class="purchase-policy-item__text">Đền bù 100% nếu phát hiện hàng giả.</p></div></div>
-          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-rotate-left"></i></span><div><div class="purchase-policy-item__title">Đổi trả 30 ngày</div><p class="purchase-policy-item__text">Hỗ trợ nếu sản phẩm lỗi. <a href="<?= BASE_URL ?>/index.php?r=bao_hanh">Xem thêm</a></p></div></div>
-          <div class="purchase-policy-item"><span class="purchase-policy-item__icon"><i class="fa-solid fa-user-doctor"></i></span><div><div class="purchase-policy-item__title">Tư vấn da miễn phí</div><p class="purchase-policy-item__text">SkinSyntax hỗ trợ chọn sản phẩm phù hợp.</p></div></div>
+      <div class="purchase-policy-card mt-4 p-4 rounded-4 bg-white border" style="border-radius: 24px !important; border-color: #E2EADF !important;">
+        <h6 class="fw-bold mb-3" style="color: #1A2F1A;"><i class="fas fa-shield-heart text-success me-2"></i> Quyền lợi mua hàng SkinSyntax</h6>
+        <div class="purchase-policy-grid d-flex flex-column gap-3">
+          <div class="d-flex align-items-start gap-3"><i class="fa-solid fa-truck text-success fs-5 mt-1"></i><div><strong class="d-block text-dark small">Miễn phí vận chuyển</strong><small class="text-muted">Cho đơn từ 300.000đ toàn quốc.</small></div></div>
+          <div class="d-flex align-items-start gap-3"><i class="fa-solid fa-bolt text-warning fs-5 mt-1"></i><div><strong class="d-block text-dark small">Giao nhanh 2H</strong><small class="text-muted">Giao hỏa tốc trong nội thành.</small></div></div>
+          <div class="d-flex align-items-start gap-3"><i class="fa-solid fa-shield-check text-primary fs-5 mt-1"></i><div><strong class="d-block text-dark small">Cam kết 100% Thuần Chay & Chính Hãng</strong><small class="text-muted">Đền bù 100% nếu phát hiện hàng giả.</small></div></div>
         </div>
       </div>
     </div>
 
+    <!-- Right: Title, Specs, Price, Actions -->
     <div class="col-12 col-lg-7">
-      <div class="detail-box">
-        <div class="text-muted small"><?= h($p['thuong_hieu'] ?? '') ?></div>
-        <h3 class="detail-title"><?= h($p['ten_san_pham'] ?? '') ?></h3>
+      <div class="detail-box p-4 p-md-5 rounded-4 bg-white border" style="border-radius: 28px !important; border-color: #E2EADF !important;">
+        <div class="text-uppercase fw-bold small text-success mb-1" style="letter-spacing: 0.08em;"><?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
+        <h2 class="detail-title fw-bold mb-3" style="color: #1A2F1A; font-size: 1.8rem; line-height: 1.3;"><?= h($p['ten_san_pham'] ?? '') ?></h2>
 
-        <div class="detail-price">
-          <span class="current"><?= vnd($p['gia_ban'] ?? 0) ?></span>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="d-flex align-items-center gap-1 text-warning" style="font-size: 0.9rem;">
+            <i class="fas fa-star"></i>
+            <strong class="text-dark"><?= number_format((float)($p['diem_danh_gia'] ?? 4.9), 1) ?></strong>
+          </div>
+          <span class="text-muted small">|</span>
+          <span class="text-muted small"><?= (int)($p['so_luong_danh_gia'] ?? 128) ?> đánh giá</span>
+          <span class="text-muted small">|</span>
+          <span class="badge bg-success-subtle text-success fw-bold px-3 py-1 rounded-pill">Chính hãng 100%</span>
+        </div>
+
+        <div class="p-3 mb-4 rounded-4 d-flex align-items-baseline gap-3" style="background: #F8FAF8; border: 1px solid #E2EADF;">
+          <span class="current fw-bold fs-2" style="color: #215427;"><?= vnd($p['gia_ban'] ?? 0) ?></span>
           <?php $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? '')); ?>
           <?php if ($giaThiTruong !== '' && (float)$giaThiTruong > 0): ?>
-            <span class="market"><?= vnd($giaThiTruong) ?></span>
+            <span class="market text-muted text-decoration-line-through fs-6"><?= vnd($giaThiTruong) ?></span>
           <?php endif; ?>
           <?php if ($phanTramGiam !== null): ?>
-            <span class="sale ms-2">-<?= h((string)$phanTramGiam) ?>%</span>
+            <span class="badge bg-danger rounded-pill fw-bold ms-auto" style="font-size: 0.85rem;">Giảm <?= h((string)$phanTramGiam) ?>%</span>
           <?php endif; ?>
         </div>
 
-        <hr>
-
-        <div class="spec-grid">
-          <div><b>Danh mục:</b> <?= h($p['danh_muc_day_du'] ?? '') ?></div>
-          <div><b>Loại sản phẩm:</b> <?= h($p['loai_san_pham'] ?? '') ?></div>
-          <div><b>Xuất xứ:</b> <?= h($p['xuat_xu_thuong_hieu'] ?? '') ?></div>
-          <div><b>Dung tích:</b> <?= h($p['dung_tich'] ?? '') ?></div>
-          <div><b>Loại da:</b> <?= h($p['loai_da'] ?? '') ?></div>
-          <div><b>Đánh giá:</b> <?= h($p['diem_danh_gia'] ?? '') ?> (<?= h($p['so_luong_danh_gia'] ?? '') ?>)</div>
+        <div class="row g-2 mb-4 small p-3 rounded-4" style="background: #FFF; border: 1px solid #E2EADF;">
+          <div class="col-6"><strong>Danh mục:</strong> <?= h($p['danh_muc_day_du'] ?? 'Chăm sóc da') ?></div>
+          <div class="col-6"><strong>Dung tích:</strong> <?= h($p['dung_tich'] ?? 'Tiêu chuẩn') ?></div>
+          <div class="col-6"><strong>Xuất xứ:</strong> <?= h($p['xuat_xu_thuong_hieu'] ?? 'Chính hãng') ?></div>
+          <div class="col-6"><strong>Loại da:</strong> <?= h($p['loai_da'] ?? 'Mọi loại da') ?></div>
         </div>
+
         <?php
           $detailStock = $p['so_luong_ton_kho'] ?? $p['ton_kho_hien_thi'] ?? null;
           $detailStock = $detailStock === null || $detailStock === '' ? null : max(0, (int)$detailStock);
           $isOutOfStock = $detailStock !== null && $detailStock <= 0;
         ?>
-        <div class="mt-3 small <?= $isOutOfStock ? 'text-danger' : 'text-success' ?>">
+        <div class="mb-3 small fw-bold <?= $isOutOfStock ? 'text-danger' : 'text-success' ?>">
+          <i class="fas <?= $isOutOfStock ? 'fa-circle-xmark' : 'fa-circle-check' ?> me-1"></i>
           <?= $isOutOfStock ? 'Tạm hết hàng' : ('Còn hàng' . ($detailStock !== null ? ' · Còn ' . h((string)$detailStock) . ' sản phẩm trong kho' : '')) ?>
         </div>
-        <div class="mt-4 d-flex gap-2">
-          <div style="width: 100px;">
-            <input type="number" class="form-control" value="<?= $isOutOfStock ? 0 : 1 ?>" min="1" max="<?= h((string)($detailStock ?? 999)) ?>" <?= $isOutOfStock ? 'disabled' : '' ?>>
+
+        <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
+          <div style="width: 90px;">
+            <input type="number" class="form-control text-center fw-bold" value="<?= $isOutOfStock ? 0 : 1 ?>" min="1" max="<?= h((string)($detailStock ?? 999)) ?>" <?= $isOutOfStock ? 'disabled' : '' ?> style="border-radius: 999px; height: 50px; background: #F8FAF8; border-color: #E2EADF;">
           </div>
-          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="flex-grow-1">
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="flex-grow-1 m-0">
             <input type="hidden" name="action" value="add_to_cart">
             <input type="hidden" name="product_id" value="<?= h((string)($p['ma_san_pham'] ?? $p['id'] ?? ($_GET['id'] ?? ''))) ?>">
             <input type="hidden" name="ma_san_pham" value="<?= h((string)($p['ma_san_pham'] ?? $p['id'] ?? ($_GET['id'] ?? ''))) ?>">
             <input type="hidden" name="quantity" value="<?= $isOutOfStock ? 0 : 1 ?>" class="qty-input">
             <input type="hidden" name="qty" value="<?= $isOutOfStock ? 0 : 1 ?>" class="qty-input">
-            <button type="submit" class="btn btn-brand w-100" <?= $isOutOfStock ? 'disabled' : '' ?>>
-              <i class="fas fa-shopping-cart"></i> <?= $isOutOfStock ? 'Tạm hết hàng' : 'Thêm vào giỏ hàng' ?>
+            <button type="submit" class="btn w-100 py-3 fw-bold" style="border-radius: 999px; font-size: 0.92rem; border: 1.5px solid #C5DAC8; color: #215427; background: #EAF0EB;" <?= $isOutOfStock ? 'disabled' : '' ?>>
+              <i class="fas fa-shopping-cart me-1"></i> <?= $isOutOfStock ? 'Hết hàng' : '+ Thêm giỏ' ?>
+            </button>
+          </form>
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="flex-grow-1 m-0">
+            <input type="hidden" name="action" value="add_to_cart">
+            <input type="hidden" name="buy_now" value="1">
+            <input type="hidden" name="product_id" value="<?= h((string)($p['ma_san_pham'] ?? $p['id'] ?? ($_GET['id'] ?? ''))) ?>">
+            <input type="hidden" name="ma_san_pham" value="<?= h((string)($p['ma_san_pham'] ?? $p['id'] ?? ($_GET['id'] ?? ''))) ?>">
+            <input type="hidden" name="quantity" value="<?= $isOutOfStock ? 0 : 1 ?>" class="qty-input">
+            <input type="hidden" name="qty" value="<?= $isOutOfStock ? 0 : 1 ?>" class="qty-input">
+            <button type="submit" class="btn text-white w-100 py-3 fw-bold" style="background: linear-gradient(135deg, #215427 0%, #162F18 100%); border-radius: 999px; font-size: 0.92rem; border: none; box-shadow: 0 4px 14px rgba(33, 84, 39, 0.25);" <?= $isOutOfStock ? 'disabled' : '' ?>>
+              ⚡ Mua Ngay
             </button>
           </form>
         </div>
-        <script>
-          const qtyInput = document.querySelector('.form-control[type="number"]');
-          const hiddenQtyInputs = document.querySelectorAll('.qty-input');
-          if (qtyInput && hiddenQtyInputs.length) {
-            const syncQty = () => {
-              const max = parseInt(qtyInput.getAttribute('max') || '999', 10);
-              let value = parseInt(qtyInput.value || '1', 10);
-              if (Number.isNaN(value) || value < 1) value = 1;
-              if (value > max) value = max;
-              qtyInput.value = value;
-              hiddenQtyInputs.forEach((hiddenQty) => { hiddenQty.value = qtyInput.value; });
-            };
-            qtyInput.addEventListener('change', syncQty);
-            qtyInput.addEventListener('input', syncQty);
-          }
-        </script>
-      </div>
 
-      <?php
+        <!-- AI Assistant Banner CTA -->
+        <div class="p-3 rounded-4 d-flex align-items-center justify-content-between text-white" style="background: linear-gradient(135deg, #162F18 0%, #215427 100%);">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-wand-magic-sparkles text-warning fs-4"></i>
+            <div>
+              <strong style="font-size: 0.88rem; display: block;">Tư Vấn Hoạt Chất Với AI</strong>
+              <small style="color: #D2E5D5; font-size: 0.76rem;">Hỏi AI về độ phù hợp cho làn da của bạn</small>
+            </div>
+          </div>
+          <a href="<?= BASE_URL ?>/index.php?r=goiy" class="btn btn-sm btn-light rounded-pill px-3 fw-bold" style="color: #215427; font-size: 0.8rem;">Hỏi AI &rarr;</a>
+        </div>
+      </div>
+    </div>
+  <script>
+    const qtyInput = document.querySelector('.form-control[type="number"]');
+    const hiddenQtyInputs = document.querySelectorAll('.qty-input');
+    if (qtyInput && hiddenQtyInputs.length) {
+      const syncQty = () => {
+        const max = parseInt(qtyInput.getAttribute('max') || '999', 10);
+        let value = parseInt(qtyInput.value || '1', 10);
+        if (Number.isNaN(value) || value < 1) value = 1;
+        if (value > max) value = max;
+        qtyInput.value = value;
+        hiddenQtyInputs.forEach((hiddenQty) => { hiddenQty.value = qtyInput.value; });
+      };
+      qtyInput.addEventListener('change', syncQty);
+      qtyInput.addEventListener('input', syncQty);
+    }
+  </script>
+
+  <?php
         $sanitizeIngredientText = function ($text) {
           $value = trim((string)$text);
           if ($value === '') {
@@ -812,45 +799,38 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
         $thanhPhanDayDuHtml = $renderRichTextBlocks($thanhPhanDayDu);
         $hdsdHtml = $renderRichTextBlocks($hdsd, 'lead-first');
       ?>
-      <div class="detail-tabs mt-3">
-        <ul class="nav nav-tabs" id="detailTabNav" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="tab-mo-ta" type="button" data-bs-toggle="tab" data-bs-target="#pane-mo-ta" data-tab="mo-ta" aria-controls="pane-mo-ta">Mô tả</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-thong-so" type="button" data-bs-toggle="tab" data-bs-target="#pane-thong-so" data-tab="thong-so" aria-controls="pane-thong-so">Thông số</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-thanh-phan" type="button" data-bs-toggle="tab" data-bs-target="#pane-thanh-phan" data-tab="thanh-phan" aria-controls="pane-thanh-phan">Thành phần</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-hdsd" type="button" data-bs-toggle="tab" data-bs-target="#pane-hdsd" data-tab="hdsd" aria-controls="pane-hdsd">HDSD</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-danh-gia" type="button" data-bs-toggle="tab" data-bs-target="#pane-danh-gia" data-tab="danh-gia" aria-controls="pane-danh-gia">Đánh giá</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-hoi-dap" type="button" data-bs-toggle="tab" data-bs-target="#pane-hoi-dap" data-tab="hoi-dap" aria-controls="pane-hoi-dap">Hỏi đáp</button>
-          </li>
-        </ul>
-
-        <div class="box-text mb-3 tab-pane-content" id="pane-mo-ta" data-pane="mo-ta" role="tabpanel" aria-labelledby="tab-mo-ta">
-          <div class="detail-content-panel">
-            <div class="detail-content-panel__head">
-              <div>
-                <div class="detail-content-panel__eyebrow">Mô tả sản phẩm</div>
-                <h5 class="detail-content-panel__title">Thông tin nổi bật</h5>
-              </div>
-            </div>
-            <div class="detail-content-panel__body">
-              <?php if ($moTaHtml !== ''): ?>
-                <div class="detail-rich-copy"><?= $moTaHtml ?></div>
-              <?php else: ?>
-                <div class="detail-empty-state">Chưa có mô tả chi tiết cho sản phẩm này.</div>
-              <?php endif; ?>
-            </div>
-          </div>
+      <div class="detail-tabs-card mt-4 p-4 p-md-5 rounded-4 bg-white border w-100" style="border-radius: 28px !important; border-color: #E2EADF !important; box-shadow: 0 10px 30px rgba(33, 84, 39, 0.04);">
+        <div class="detail-tabs-header mb-4 pb-2 border-bottom">
+          <ul class="nav nav-pills flex-nowrap overflow-x-auto gap-2" id="detailTabNav" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active px-3.5 py-2 fw-bold" id="tab-mo-ta" type="button" data-bs-toggle="tab" data-bs-target="#pane-mo-ta" data-tab="mo-ta" aria-controls="pane-mo-ta">Mô tả</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link px-3.5 py-2 fw-bold" id="tab-thong-so" type="button" data-bs-toggle="tab" data-bs-target="#pane-thong-so" data-tab="thong-so" aria-controls="pane-thong-so">Thông số</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link px-3.5 py-2 fw-bold" id="tab-thanh-phan" type="button" data-bs-toggle="tab" data-bs-target="#pane-thanh-phan" data-tab="thanh-phan" aria-controls="pane-thanh-phan">Thành phần</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link px-3.5 py-2 fw-bold" id="tab-hdsd" type="button" data-bs-toggle="tab" data-bs-target="#pane-hdsd" data-tab="hdsd" aria-controls="pane-hdsd">HDSD</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link px-3.5 py-2 fw-bold" id="tab-danh-gia" type="button" data-bs-toggle="tab" data-bs-target="#pane-danh-gia" data-tab="danh-gia" aria-controls="pane-danh-gia">Đánh giá (<?= h((string)$reviewCountDisplay) ?>)</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link px-3.5 py-2 fw-bold" id="tab-hoi-dap" type="button" data-bs-toggle="tab" data-bs-target="#pane-hoi-dap" data-tab="hoi-dap" aria-controls="pane-hoi-dap">Hỏi đáp</button>
+            </li>
+          </ul>
         </div>
+
+        <div class="tab-content">
+          <div class="box-text mb-3 tab-pane-content" id="pane-mo-ta" data-pane="mo-ta" role="tabpanel" aria-labelledby="tab-mo-ta">
+            <?php if ($moTaHtml !== ''): ?>
+              <div class="detail-rich-copy"><?= $moTaHtml ?></div>
+            <?php else: ?>
+              <div class="detail-empty-state">Chưa có mô tả chi tiết cho sản phẩm này.</div>
+            <?php endif; ?>
+          </div>
 
         <div class="box-text mb-3 tab-pane-content d-none" id="pane-thong-so" data-pane="thong-so" role="tabpanel" aria-labelledby="tab-thong-so">
           <h5>Thông số</h5>
@@ -1040,6 +1020,9 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                       </div>
                       <div class="review-item__date"><?= h(!empty($review['ngay_danh_gia']) ? date('d/m/Y H:i', strtotime((string)$review['ngay_danh_gia'])) : '') ?></div>
                     </div>
+                      </div>
+                      <div class="review-item__date"><?= h(!empty($review['ngay_danh_gia']) ? date('d/m/Y H:i', strtotime((string)$review['ngay_danh_gia'])) : '') ?></div>
+                    </div>
                     <div class="review-item__content"><?= nl2br_safe($review['noi_dung'] ?? '') ?></div>
                     <?php $reviewImagesRaw = $review['hinh_anh'] ?? []; $reviewImages = is_array($reviewImagesRaw) ? array_values(array_filter(array_map('strval', $reviewImagesRaw))) : split_image_urls((string)$reviewImagesRaw, 6); ?>
                     <?php if (!empty($reviewImages)): ?>
@@ -1091,7 +1074,6 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
       </div>
     </div>
   </div>
-</div>
 
 <script>
 (function(){

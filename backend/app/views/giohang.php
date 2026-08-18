@@ -173,23 +173,23 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
   .cart-title {
     font-size: clamp(24px, 3vw, 34px);
     font-weight: 800;
-    color: #0f2238;
+    color: #1A2F1A;
   }
 
   .cart-count-pill {
-    padding: 7px 12px;
+    padding: 7px 14px;
     border-radius: 999px;
-    background: #f1f7ff;
-    color: #32506f;
+    background: #EAF0EB;
+    color: #2D5A27;
     font-size: 13px;
     font-weight: 700;
   }
 
   .cart-shell {
     background: #fff;
-    border-radius: 18px;
-    border: 1px solid #e8eef4;
-    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.06);
+    border-radius: 20px;
+    border: 1px solid #E2EADF;
+    box-shadow: 0 10px 30px rgba(45, 90, 39, 0.05);
     overflow: hidden;
   }
 
@@ -197,12 +197,12 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
     width: 18px;
     height: 18px;
     cursor: pointer;
-    border-color: #9fb5c9;
+    border-color: #84A98C;
   }
 
   .cart-check:checked {
-    background-color: #0f6b3e;
-    border-color: #0f6b3e;
+    background-color: #2D5A27;
+    border-color: #2D5A27;
   }
 
   .cart-table-wrap {
@@ -210,19 +210,20 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
   }
 
   .cart-table thead th {
-    border-bottom: 1px solid #edf2f7;
+    border-bottom: 1px solid #E2EADF;
     font-size: 12px;
     letter-spacing: .05em;
     text-transform: uppercase;
-    color: #61758a;
+    color: #5C705E;
     font-weight: 800;
     padding: 14px 16px;
     white-space: nowrap;
+    background: #F9FBF8;
   }
 
   .cart-table tbody td {
     padding: 16px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #F0F4F1;
     vertical-align: middle;
   }
 
@@ -238,10 +239,10 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
   .cart-thumb {
     width: 78px;
     height: 78px;
-    border-radius: 12px;
+    border-radius: 14px;
     object-fit: cover;
-    border: 1px solid #e6edf5;
-    background: #fff;
+    border: 1px solid #E2EADF;
+    background: #F0F4F1;
   }
 
   .cart-thumb--empty {
@@ -249,52 +250,55 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
     align-items: center;
     justify-content: center;
     font-size: 11px;
-    color: #6b7280;
-    background: #f5f7fb;
+    color: #5C705E;
+    background: #F0F4F1;
   }
 
   .cart-product-name {
-    color: #0f2238;
+    color: #1A2F1A;
     font-size: 15px;
     font-weight: 700;
     text-decoration: none;
+    transition: color 0.2s ease;
   }
 
   .cart-product-name:hover {
-    color: #0f6b3e;
+    color: #2D5A27;
   }
 
   .cart-product-meta {
     margin-top: 4px;
-    color: #72879b;
+    color: #5C705E;
     font-size: 13px;
     font-weight: 600;
   }
 
   .qty-control {
     width: 132px;
-    border: 1px solid #dbe4ee;
+    border: 1px solid #E2EADF;
     border-radius: 999px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #fff;
+    background: #F0F4F1;
   }
 
   .qty-btn {
     border: 0;
-    background: #f8fbff;
-    color: #2a3d52;
+    background: #EAF0EB;
+    color: #2D5A27;
     font-weight: 800;
     width: 36px;
     height: 36px;
     line-height: 36px;
     padding: 0;
+    transition: background 0.2s ease;
   }
 
   .qty-btn:hover {
-    background: #eef4fb;
+    background: #2D5A27;
+    color: #FFFFFF;
   }
 
   .qty-btn:disabled {
@@ -307,7 +311,8 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
     width: 56px;
     text-align: center;
     font-weight: 700;
-    color: #1f3348;
+    color: #1A2F1A;
+    background: transparent;
   }
 
   .qty-input:focus {
@@ -316,33 +321,34 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
 
   .cart-price,
   .line-total {
-    color: #0f6b3e;
+    color: #2D5A27;
     font-weight: 800;
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .btn-remove {
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    border: 1px solid #f3d4da;
-    color: #b42318;
+    border: 1px solid #FCA5A5;
+    color: #E11D48;
     background: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s ease;
   }
 
   .btn-remove:hover {
-    background: #fff1f2;
+    background: #FFE4E6;
   }
 
   .cart-summary {
     background: #fff;
-    border-radius: 18px;
-    border: 1px solid #e8eef4;
-    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.06);
-    padding: 18px;
+    border-radius: 20px;
+    border: 1px solid #E2EADF;
+    box-shadow: 0 10px 30px rgba(45, 90, 39, 0.05);
+    padding: 22px;
     position: sticky;
     top: 18px;
   }
@@ -351,28 +357,28 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
     font-size: 20px;
     font-weight: 800;
     margin-bottom: 14px;
-    color: #0f2238;
+    color: #1A2F1A;
   }
 
   .selected-info {
     margin-top: -6px;
     margin-bottom: 12px;
-    color: #4f6478;
+    color: #5C705E;
     font-size: 13px;
     font-weight: 600;
   }
 
   .free-ship-box {
-    background: linear-gradient(120deg, #fef3f2 0%, #ecfeff 100%);
-    border: 1px solid #e6eef9;
+    background: linear-gradient(120deg, #F0F4F1 0%, #EAF0EB 100%);
+    border: 1px solid #E2EADF;
     border-radius: 14px;
-    padding: 12px;
-    margin-bottom: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
   }
 
   .free-ship-text {
     font-size: 13px;
-    color: #324a62;
+    color: #1A2F1A;
     font-weight: 600;
     margin-bottom: 8px;
   }
@@ -380,12 +386,12 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
   .free-ship-progress {
     height: 8px;
     border-radius: 999px;
-    background: #dbe8f7;
+    background: #E2EADF;
   }
 
   .free-ship-progress .progress-bar {
     border-radius: 999px;
-    background: linear-gradient(120deg, #34d399 0%, #60a5fa 100%);
+    background: linear-gradient(120deg, #2D5A27 0%, #4A7C59 100%);
   }
 
   .summary-row {
@@ -394,7 +400,7 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
     align-items: center;
     font-size: 14px;
     font-weight: 600;
-    color: #3b4f63;
+    color: #1A2F1A;
     margin-bottom: 10px;
   }
 

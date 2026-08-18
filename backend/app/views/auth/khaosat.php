@@ -88,7 +88,7 @@
 
   .survey-progress .progress-bar {
     border-radius: 999px;
-    background: linear-gradient(120deg, #f9a8d4 0%, #86efac 45%, #93c5fd 100%);
+    background: linear-gradient(120deg, #2D5A27 0%, #4A7C59 50%, #84A98C 100%);
     transition: width .25s ease;
   }
 

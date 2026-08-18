@@ -2722,10 +2722,24 @@ class HomeController {
         redirect(BASE_URL . '/index.php?r=thanhtoan');
     }
 
+    private function denyAdminCheckout(): bool {
+        $role = current_role();
+        if (in_array($role, ['admin', 'nhanvien'], true)) {
+            set_flash('error', 'Tài khoản Quản trị / Nhân viên không được phép tự đặt hàng hoặc áp dụng voucher mua sắm để đảm bảo tính minh bạch.');
+            redirect(BASE_URL . '/index.php?r=admin_dashboard');
+            return true;
+        }
+        return false;
+    }
+
     public function thanhtoan() {
         if (!is_logged_in()) {
             set_flash('error', 'Vui lòng đăng nhập để thanh toán.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
+        if ($this->denyAdminCheckout()) {
+            return;
         }
 
         $checkoutItems = $_SESSION['checkout_items'] ?? [];
@@ -2801,12 +2815,16 @@ class HomeController {
 
     public function apDungVoucher(): void {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            redirect(BASE_URL . '/index.php?r=thanhtoan#voucher-card-box');
         }
 
         if (!is_logged_in()) {
             set_flash('error', 'Vui lòng đăng nhập để áp dụng mã giảm giá.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
+        if ($this->denyAdminCheckout()) {
+            return;
         }
 
         $this->storeCheckoutPaymentMethodFromRequest();
@@ -2830,36 +2848,40 @@ class HomeController {
         if (empty($result['ok'])) {
             unset($_SESSION['checkout_voucher']);
             set_flash('error', (string)($result['message'] ?? 'Không thể áp dụng mã giảm giá.'));
-            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            redirect(BASE_URL . '/index.php?r=thanhtoan#voucher-card-box');
         }
 
         $_SESSION['checkout_voucher'] = [
             'code' => (string)($result['voucher']['ma_code'] ?? ''),
         ];
         set_flash('success', (string)($result['message'] ?? 'Áp dụng mã giảm giá thành công.'));
-        redirect(BASE_URL . '/index.php?r=thanhtoan');
+        redirect(BASE_URL . '/index.php?r=thanhtoan#voucher-card-box');
     }
 
     public function boVoucher(): void {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            redirect(BASE_URL . '/index.php?r=thanhtoan#voucher-card-box');
         }
 
         $this->storeCheckoutPaymentMethodFromRequest();
         $this->storeCheckoutReceiverFromRequest($this->getDefaultCheckoutReceiver($this->getCurrentCheckoutCustomer(), current_user() ?? []));
         unset($_SESSION['checkout_voucher']);
         set_flash('success', 'Đã gỡ mã giảm giá khỏi đơn hàng.');
-        redirect(BASE_URL . '/index.php?r=thanhtoan');
+        redirect(BASE_URL . '/index.php?r=thanhtoan#voucher-card-box');
     }
 
     public function apDungDiem(): void {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
         }
 
         if (!is_logged_in()) {
             set_flash('error', 'Vui lòng đăng nhập để dùng điểm tích lũy.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
+        if ($this->denyAdminCheckout()) {
+            return;
         }
 
         $this->storeCheckoutPaymentMethodFromRequest();
@@ -2887,37 +2909,37 @@ class HomeController {
         if ($availablePoints <= 0) {
             unset($_SESSION['checkout_points']);
             set_flash('error', 'Tài khoản của bạn hiện chưa có điểm tích lũy để sử dụng.');
-            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
         }
 
         if ($requestedPoints <= 0) {
             unset($_SESSION['checkout_points']);
             set_flash('error', 'Vui lòng nhập số điểm hợp lệ để áp dụng.');
-            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
         }
 
         $usablePoints = min($requestedPoints, $availablePoints, $maxPointsByAmount);
         if ($usablePoints <= 0) {
             unset($_SESSION['checkout_points']);
             set_flash('error', 'Giá trị đơn hàng hiện tại chưa đủ để quy đổi điểm thành giảm giá.');
-            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
         }
 
         $_SESSION['checkout_points'] = ['points' => $usablePoints];
         set_flash('success', 'Đã áp dụng ' . number_format($usablePoints, 0, ',', '.') . ' điểm cho đơn hàng.');
-        redirect(BASE_URL . '/index.php?r=thanhtoan');
+        redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
     }
 
     public function boDiem(): void {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
         }
 
         $this->storeCheckoutPaymentMethodFromRequest();
         $this->storeCheckoutReceiverFromRequest($this->getDefaultCheckoutReceiver($this->getCurrentCheckoutCustomer(), current_user() ?? []));
         unset($_SESSION['checkout_points']);
         set_flash('success', 'Đã gỡ điểm tích lũy khỏi đơn hàng.');
-        redirect(BASE_URL . '/index.php?r=thanhtoan');
+        redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
     }
 
     public function xulydathang() {
@@ -2928,6 +2950,10 @@ class HomeController {
         if (!is_logged_in()) {
             set_flash('error', 'Vui lòng đăng nhập để đặt hàng.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
+        if ($this->denyAdminCheckout()) {
+            return;
         }
 
         $checkoutItems = $_SESSION['checkout_items'] ?? [];

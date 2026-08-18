@@ -189,16 +189,16 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       min-width: 228px;
       max-width: min(70vw, 286px);
       padding: 8px 14px;
-      background: linear-gradient(135deg, #102542 0%, #1c4f82 100%);
-      color: #f8fbff;
-      box-shadow: 0 18px 36px rgba(16, 37, 66, 0.26);
+      background: linear-gradient(135deg, #162F18 0%, #2D5A27 60%, #4A7C59 100%);
+      color: #ffffff;
+      box-shadow: 0 18px 36px rgba(45, 90, 39, 0.28);
       font-weight: 700;
       transition: transform 0.22s ease, box-shadow 0.22s ease;
     }
 
     .ai-chat-widget__trigger:hover {
       transform: translateY(-2px);
-      box-shadow: 0 24px 42px rgba(16, 37, 66, 0.28);
+      box-shadow: 0 24px 42px rgba(45, 90, 39, 0.35);
     }
 
     .ai-chat-widget.is-open .ai-chat-widget__trigger {
@@ -211,7 +211,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       border-radius: 50%;
       display: grid;
       place-items: center;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.14);
       flex: 0 0 auto;
     }
 
@@ -221,10 +221,10 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       border-radius: 50%;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at top, #8cc2ff 0%, #4d78a9 60%, #27435f 100%);
-      color: #eff8ff;
+      background: radial-gradient(circle at top, #84A98C 0%, #4A7C59 60%, #2D5A27 100%);
+      color: #ffffff;
       font-size: 14px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .ai-chat-widget__trigger-text {

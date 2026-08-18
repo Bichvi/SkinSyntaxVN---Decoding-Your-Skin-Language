@@ -130,6 +130,86 @@ if ($pdo !== null) {
       }
     };
 
+    function bounceCartHeader() {
+      const cartIcon = document.querySelector('.header-icon-link--cart');
+      if (cartIcon) {
+        cartIcon.classList.remove('cart-bounce-anim');
+        void cartIcon.offsetWidth;
+        cartIcon.classList.add('cart-bounce-anim');
+      }
+    }
+
+    function animateFlyToCart(form, button) {
+      const cartIcon = document.querySelector('.header-icon-link--cart');
+      if (!cartIcon) return;
+
+      const card = form.closest('.product-card, .goiy-product-card, .rcm-product-card, .flash-product, article') || form.parentElement;
+      let sourceImg = card ? card.querySelector('img') : null;
+
+      const targetRect = cartIcon.getBoundingClientRect();
+      let startX = 0, startY = 0, imgUrl = '';
+
+      if (sourceImg) {
+        const imgRect = sourceImg.getBoundingClientRect();
+        startX = imgRect.left + imgRect.width / 2;
+        startY = imgRect.top + imgRect.height / 2;
+        imgUrl = sourceImg.src;
+      } else if (button) {
+        const btnRect = button.getBoundingClientRect();
+        startX = btnRect.left + btnRect.width / 2;
+        startY = btnRect.top + btnRect.height / 2;
+      } else {
+        return;
+      }
+
+      const flyEl = document.createElement(imgUrl ? 'img' : 'div');
+      if (imgUrl) {
+        flyEl.src = imgUrl;
+      } else {
+        flyEl.innerHTML = '<i class="fa-solid fa-cart-shopping text-white"></i>';
+        flyEl.style.background = 'linear-gradient(135deg, #215427 0%, #162F18 100%)';
+        flyEl.style.display = 'flex';
+        flyEl.style.alignItems = 'center';
+        flyEl.style.justifyContent = 'center';
+      }
+
+      flyEl.className = 'flying-cart-item';
+      flyEl.style.cssText = `
+        position: fixed;
+        top: ${startY - 25}px;
+        left: ${startX - 25}px;
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #215427;
+        box-shadow: 0 8px 24px rgba(33, 84, 39, 0.4);
+        z-index: 99999;
+        pointer-events: none;
+        transition: all 0.75s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        transform: scale(1);
+        opacity: 1;
+      `;
+
+      document.body.appendChild(flyEl);
+
+      requestAnimationFrame(function() {
+        flyEl.style.top = `${targetRect.top + targetRect.height / 2 - 12}px`;
+        flyEl.style.left = `${targetRect.left + targetRect.width / 2 - 12}px`;
+        flyEl.style.width = '24px';
+        flyEl.style.height = '24px';
+        flyEl.style.transform = 'scale(0.2) rotate(360deg)';
+        flyEl.style.opacity = '0.3';
+      });
+
+      setTimeout(function() {
+        if (flyEl && flyEl.parentNode) {
+          flyEl.parentNode.removeChild(flyEl);
+        }
+        bounceCartHeader();
+      }, 760);
+    }
+
     document.addEventListener('submit', function (event) {
       const form = event.target;
       if (!(form instanceof HTMLFormElement)) return;
@@ -138,9 +218,16 @@ if ($pdo !== null) {
       event.preventDefault();
       const button = form.querySelector('button[type="submit"]');
       if (button && button.disabled) return;
-      if (button) button.disabled = true;
 
       const data = new FormData(form);
+      const isBuyNow = data.get('buy_now') === '1' || form.querySelector('input[name="buy_now"][value="1"]');
+
+      if (!isBuyNow) {
+        animateFlyToCart(form, button);
+      }
+
+      if (button) button.disabled = true;
+
       const targetUrl = form.getAttribute('action') || form.action || window.location.href;
       fetch(targetUrl, {
         method: 'POST',
@@ -166,8 +253,15 @@ if ($pdo !== null) {
           });
         })
         .then(function (json) {
+          if (json.ok && (json.redirect_url || isBuyNow)) {
+            window.location.href = json.redirect_url || ('<?= BASE_URL ?>/index.php?r=giohang');
+            return;
+          }
           showCartToast(json.message || (json.ok ? 'Đã thêm sản phẩm vào giỏ hàng' : 'Không thể thêm sản phẩm'), !!json.ok);
-          if (json.ok && typeof json.cart_count !== 'undefined') updateCartBadge(parseInt(json.cart_count, 10) || 0);
+          if (json.ok && typeof json.cart_count !== 'undefined') {
+            updateCartBadge(parseInt(json.cart_count, 10) || 0);
+            bounceCartHeader();
+          }
         })
         .catch(function (error) {
           console.error('Add cart request failed', error);
@@ -188,5 +282,153 @@ if ($pdo !== null) {
     }
   });
 </script>
+
+<?php
+$topSaleProducts = function_exists('get_top_10_sale_products') ? get_top_10_sale_products() : [];
+?>
+
+<!-- DYNAMIC TOP 10 HOT SALE PRODUCTS FLOATING TOAST -->
+<style>
+@keyframes cartBounceAnim {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35) rotate(-10deg); color: #215427; }
+  70% { transform: scale(0.95) rotate(5deg); }
+  100% { transform: scale(1); }
+}
+
+.cart-bounce-anim {
+  animation: cartBounceAnim 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+@keyframes pulseGlowBtn {
+  0% {
+    box-shadow: 0 0 0 0 rgba(33, 84, 39, 0.45), 0 4px 14px rgba(33, 84, 39, 0.25);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(33, 84, 39, 0), 0 6px 20px rgba(33, 84, 39, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(33, 84, 39, 0), 0 4px 14px rgba(33, 84, 39, 0.25);
+  }
+}
+
+@keyframes shimmerSweep {
+  0% { transform: translateX(-150%) rotate(25deg); }
+  100% { transform: translateX(250%) rotate(25deg); }
+}
+
+.btn-buy-now-pulse,
+.btn-product-buy {
+  position: relative !important;
+  overflow: hidden !important;
+  animation: pulseGlowBtn 2.6s infinite ease-in-out !important;
+  transition: transform 0.22s ease, filter 0.22s ease !important;
+}
+
+.btn-buy-now-pulse:hover,
+.btn-product-buy:hover {
+  transform: scale(1.05) translateY(-1px) !important;
+  filter: brightness(1.1) !important;
+}
+
+.btn-buy-now-pulse::after,
+.btn-product-buy::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 80%
+  );
+  transform: rotate(25deg);
+  animation: shimmerSweep 3.2s infinite linear;
+  pointer-events: none;
+}
+</style>
+
+<?php if (!empty($topSaleProducts)): ?>
+<div id="topSalesToast" class="top-sales-toast shadow-lg rounded-4 p-3 d-flex align-items-center gap-3" style="position: fixed; bottom: 24px; left: 24px; z-index: 1040; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(14px); border: 1.5px solid #C5DAC8; box-shadow: 0 16px 36px rgba(33, 84, 39, 0.2); width: 380px; max-width: calc(100vw - 48px); transform: translateY(160px); opacity: 0; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;">
+  <a id="topSalesToastLink" href="#" class="d-block flex-shrink-0 position-relative" style="width: 64px; height: 64px; border-radius: 12px; overflow: hidden; background: #F8FAF8; border: 1px solid #E2EADF;">
+    <img id="topSalesToastImg" src="" alt="Top Sale Product" style="width: 100%; height: 100%; object-fit: cover;">
+    <span id="topSalesToastBadge" class="position-absolute" style="top: 2px; left: 2px; background: linear-gradient(135deg, #E11D48 0%, #F43F5E 100%); color: #FFF; font-weight: 800; font-size: 0.65rem; padding: 2px 6px; border-radius: 999px;">-0%</span>
+  </a>
+  <div class="flex-grow-1 overflow-hidden" style="line-height: 1.3;">
+    <div class="d-flex align-items-center justify-content-between mb-1">
+      <span class="badge rounded-pill" style="background: #EAF0EB; color: #215427; font-size: 0.68rem; font-weight: 800;"><i class="fa-solid fa-fire text-danger me-1"></i>TOP SALE SỐC</span>
+      <span class="text-muted extra-small" style="font-size: 0.7rem;" id="topSalesToastRank">#1 SẢN PHẨM</span>
+    </div>
+    <h6 class="fw-bold text-dark text-truncate mb-1" id="topSalesToastName" style="font-size: 0.85rem;">Tên sản phẩm</h6>
+    <div class="d-flex align-items-baseline gap-2">
+      <strong class="fw-bold" style="color: #215427; font-size: 0.95rem;" id="topSalesToastPrice">0đ</strong>
+      <span class="text-muted text-decoration-line-through extra-small" style="font-size: 0.75rem;" id="topSalesToastMarket">0đ</span>
+    </div>
+  </div>
+  <div class="d-flex flex-column gap-1 ms-1 flex-shrink-0">
+    <button type="button" class="btn-close mb-auto align-self-end" onclick="document.getElementById('topSalesToast').style.transform='translateY(160px)'" style="font-size: 0.65rem;" title="Đóng"></button>
+    <form id="topSalesToastForm" method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0">
+      <input type="hidden" name="action" value="add_to_cart">
+      <input type="hidden" name="buy_now" value="1">
+      <input type="hidden" name="product_id" id="topSalesToastInputId" value="">
+      <input type="hidden" name="quantity" value="1">
+      <button type="submit" class="btn btn-sm text-white fw-bold btn-buy-now-pulse" style="background: linear-gradient(135deg, #215427 0%, #162F18 100%); border-radius: 999px; font-size: 0.72rem; padding: 5px 10px; border: none; white-space: nowrap;">⚡ Mua Ngay</button>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const topSalesData = <?= json_encode($topSaleProducts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+  const toast = document.getElementById('topSalesToast');
+  const imgEl = document.getElementById('topSalesToastImg');
+  const badgeEl = document.getElementById('topSalesToastBadge');
+  const nameEl = document.getElementById('topSalesToastName');
+  const priceEl = document.getElementById('topSalesToastPrice');
+  const marketEl = document.getElementById('topSalesToastMarket');
+  const rankEl = document.getElementById('topSalesToastRank');
+  const linkEl = document.getElementById('topSalesToastLink');
+  const inputId = document.getElementById('topSalesToastInputId');
+
+  if (!toast || !topSalesData || !topSalesData.length) return;
+
+  let index = 0;
+  function formatVnd(amount) {
+    return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+  }
+
+  function showNextSaleProduct() {
+    const item = topSalesData[index % topSalesData.length];
+    if (!item) return;
+
+    imgEl.src = item.image || '';
+    imgEl.alt = item.name || '';
+    badgeEl.textContent = '-' + (item.discount || 0) + '%';
+    nameEl.textContent = item.name || '';
+    priceEl.textContent = formatVnd(item.price || 0);
+    marketEl.textContent = item.market_price > item.price ? formatVnd(item.market_price) : '';
+    rankEl.textContent = '#' + ((index % topSalesData.length) + 1) + ' DEAL HOT';
+    linkEl.href = item.detail_url || '#';
+    inputId.value = item.id || '';
+
+    toast.style.transform = 'translateY(0)';
+    toast.style.opacity = '1';
+
+    setTimeout(() => {
+      toast.style.transform = 'translateY(160px)';
+      toast.style.opacity = '0';
+    }, 6000);
+
+    index++;
+  }
+
+  setTimeout(showNextSaleProduct, 2500);
+  setInterval(showNextSaleProduct, 14000);
+});
+</script>
+<?php endif; ?>
 </body>
-</html> 
+</html>

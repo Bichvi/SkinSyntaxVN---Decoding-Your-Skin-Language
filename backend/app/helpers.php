@@ -211,6 +211,40 @@ function get_flash($key) {
     return $msg;
 }
 
+function get_top_10_sale_products(): array {
+    global $db, $pdo;
+    $mongoDb = $db ?? $pdo;
+    if (!$mongoDb) return [];
+    try {
+        if (!class_exists('SanPham')) {
+            require_once __DIR__ . '/models/SanPham.php';
+        }
+        $spModel = new SanPham($mongoDb);
+        $top10 = $spModel->getDiscountProducts([], 10);
+        $result = [];
+        foreach ($top10 as $item) {
+            $id = (string)($item['ma_san_pham'] ?? $item['id'] ?? '');
+            $salePrice = (float)($item['gia_ban'] ?? 0);
+            $marketPrice = (float)($item['gia_thi_truong'] ?? 0);
+            $discount = $marketPrice > $salePrice ? (int)round((($marketPrice - $salePrice) / $marketPrice) * 100) : 0;
+            $img = resolve_image_url((string)($item['link_hinh_anh'] ?? $item['image_url'] ?? ''));
+            $result[] = [
+                'id' => $id,
+                'name' => (string)($item['ten_san_pham'] ?? ''),
+                'brand' => (string)($item['thuong_hieu'] ?? 'SkinSyntax'),
+                'price' => (int)$salePrice,
+                'market_price' => (int)$marketPrice,
+                'discount' => $discount,
+                'image' => $img !== '' ? $img : 'https://via.placeholder.com/150x150?text=SkinSyntax',
+                'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id)
+            ];
+        }
+        return $result;
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
 function is_logged_in(): bool {
     return !empty($_SESSION['user']);
 }
@@ -221,7 +255,26 @@ function current_user() {
 
 function current_role(): string {
     $user = current_user() ?? [];
-    return strtolower(trim((string)($user['role'] ?? $user['vai_tro'] ?? 'guest')));
+    if (empty($user)) {
+        return 'guest';
+    }
+
+    $rawRole = strtolower(trim((string)($user['role'] ?? $user['vai_tro'] ?? '')));
+    $maVaiTro = (int)($user['ma_vai_tro'] ?? 0);
+
+    if ($rawRole === 'admin' || $maVaiTro === 1 || in_array($rawRole, ['quan_tri', 'quản trị', 'quan tri', 'quantri'], true)) {
+        return 'admin';
+    }
+
+    if ($rawRole === 'nhanvien' || $rawRole === 'staff' || $maVaiTro === 2 || in_array($rawRole, ['nhân viên', 'nhan vien', 'nv'], true)) {
+        return 'nhanvien';
+    }
+
+    if ($rawRole !== '') {
+        return $rawRole;
+    }
+
+    return 'khach_hang';
 }
 
 function route_access_map(): array {
@@ -275,8 +328,7 @@ function route_access_map(): array {
 }
 
 function user_can_access_route(string $route, ?array $user = null): bool {
-    $user = $user ?? (current_user() ?? []);
-    $role = strtolower(trim((string)($user['role'] ?? $user['vai_tro'] ?? 'guest')));
+    $role = current_role();
     $map = route_access_map();
 
     if (!isset($map[$route])) {

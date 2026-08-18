@@ -249,10 +249,15 @@ class SanPhamController {
         $data = $request['data'];
         $id = trim((string)($data['product_id'] ?? $data['ma_san_pham'] ?? $data['id'] ?? $_GET['product_id'] ?? $_GET['ma_san_pham'] ?? $_GET['id'] ?? ''));
         $qty = $this->readRequestedQty($data);
-        $this->respondCartResult(
-            $this->addToCartResult($id, $qty, ['raw_input' => $request['raw'], 'parsed_data' => $data]),
-            BASE_URL . '/index.php?r=tatca'
-        );
+        $isBuyNow = !empty($data['buy_now']) || !empty($_POST['buy_now']) || !empty($_GET['buy_now']) || (isset($data['action']) && $data['action'] === 'buy_now');
+
+        $result = $this->addToCartResult($id, $qty, ['raw_input' => $request['raw'], 'parsed_data' => $data]);
+        if (!empty($result['ok']) && $isBuyNow) {
+            $result['redirect_url'] = BASE_URL . '/index.php?r=giohang';
+        }
+
+        $fallbackUrl = $isBuyNow ? (BASE_URL . '/index.php?r=giohang') : (BASE_URL . '/index.php?r=tatca');
+        $this->respondCartResult($result, $fallbackUrl);
     }
 
     private function normalizeKeyword(?string $keyword): string {
