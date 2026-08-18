@@ -318,8 +318,16 @@ document.addEventListener('DOMContentLoaded', function() {
           chatBox.scrollTop = chatBox.scrollHeight;
 
           if (data.is_order) {
-            const badges = document.querySelectorAll('.cart-count-badge, .header-actions__badge');
-            badges.forEach(b => { b.textContent = data.cart_count || '1'; });
+            let cartLink = document.querySelector('.header-icon-link--cart');
+            let badge = document.querySelector('.header-cart-badge, .cart-count-badge');
+            if (!badge && cartLink) {
+              badge = document.createElement('em');
+              badge.className = 'header-cart-badge';
+              cartLink.appendChild(badge);
+            }
+            if (badge) {
+              badge.textContent = data.cart_count || '1';
+            }
           }
         }, 400);
       }
