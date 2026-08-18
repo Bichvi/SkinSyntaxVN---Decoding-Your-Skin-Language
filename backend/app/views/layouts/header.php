@@ -70,15 +70,12 @@ $socialLinks = [
           </a>
         <?php endforeach; ?>
       </div>
-      <div class="utility-links utility-links--account">
-        <?php if (is_logged_in()): ?>
+      <?php if (is_logged_in()): ?>
+        <div class="utility-links utility-links--account">
           <span class="utility-greeting">Xin chào, <?= h($currentUser['ho_ten'] ?? 'User') ?></span>
           <a href="<?= BASE_URL ?>/index.php?r=dangxuat">Đăng xuất</a>
-        <?php else: ?>
-          <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">Đăng nhập</a>
-          <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Đăng ký</a>
-        <?php endif; ?>
-      </div>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -195,200 +192,392 @@ $socialLinks = [
         <span>Khảo sát da để mở routine cá nhân</span>
       </a>
     </div>
-  </div>
 </header>
+
+<script>
+(function() {
+  const header = document.querySelector('.site-header');
+  if (!header) return;
+  const onScroll = () => {
+    if (window.scrollY > 30) {
+      header.classList.add('is-scrolled');
+    } else {
+      header.classList.remove('is-scrolled');
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
 
 <?php if (!is_logged_in()): ?>
   <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content auth-modal-shell border-0 overflow-hidden">
-        <button type="button" class="auth-modal-close" data-bs-dismiss="modal" aria-label="Close">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content auth-modal-shell border-0 overflow-hidden <?= $authModalMode === 'register' ? 'is-register' : '' ?>" style="max-width: 920px; border-radius: 28px; box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);">
+        <button type="button" class="auth-modal-close" data-bs-dismiss="modal" aria-label="Close" style="z-index: 10; position: absolute; top: 16px; right: 16px; width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.06); border: 0; display: grid; place-items: center; color: #1A2F1A;">
           <i class="fas fa-xmark"></i>
         </button>
         <div class="modal-body p-0">
-          <div class="auth-modal-body">
-                <div class="auth-modal-panel <?= $authModalMode === 'forgot' ? 'd-none' : '' ?>" data-auth-panel="login">
-                  <div class="auth-modal-title">Đăng nhập</div>
-                  <div class="auth-modal-subtitle">Đăng nhập với mạng xã hội hoặc tài khoản email của bạn.</div>
+          <div class="auth-row-container row g-0 align-items-stretch">
+            
+            <!-- Panel Visual Xanh (AsmrProg Toggle Overlay) -->
+            <div class="col-lg-5 d-none d-lg-flex flex-column justify-content-between p-4 text-white auth-visual-panel" style="background: #215427;">
+              
+              <!-- Toggle Content: Đang ở màn Đăng nhập -> Gợi ý Tạo Tài Khoản -->
+              <div class="toggle-panel-content toggle-panel--login flex-column justify-content-between h-100">
+                <div>
+                  <a class="brand-lockup mb-4" href="<?= BASE_URL ?>/index.php" style="display: inline-flex; align-items: center; gap: 10px;">
+                    <span class="brand-lockup__mark" style="background: #FFFFFF; color: #215427; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 20px;">S</span>
+                    <span class="brand-lockup__copy">
+                      <strong style="color: #FFFFFF; font-size: 20px; display: block; line-height: 1;">SkinSyntax<span style="font-size: 14px; opacity: 0.85;">VN</span></strong>
+                      <small style="color: #D2E5D5; display: block; font-size: 10px; letter-spacing: 0.08em; margin-top: 2px;">DECODING YOUR SKIN LANGUAGE</small>
+                    </span>
+                  </a>
+
+                  <div class="mb-3" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); color: #EAF2EC; padding: 6px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;">
+                    <i class="fas fa-wand-magic-sparkles"></i> Trải Nghiệm Skincare Chuẩn Y Khoa
+                  </div>
+
+                  <h3 class="fw-bold mb-3" style="font-size: 1.8rem; line-height: 1.25; color: #FFFFFF;">Chào Mừng Đến Với SkinSyntax</h3>
+                  <p style="font-size: 0.88rem; color: #EAF2EC; opacity: 0.9; line-height: 1.6;">Tạo tài khoản SkinSyntax để lưu đơn hàng, nhận phân tích routine da chuẩn y khoa & ưu đãi dành riêng cho bạn.</p>
+
+                  <button class="btn btn-light w-100 py-3 fw-bold mt-4" data-auth-switch="register" style="border-radius: 999px; color: #215427; background: #FFFFFF; font-size: 0.95rem; border: none;">
+                    Tạo Tài Khoản Mới <i class="fas fa-arrow-right ms-2"></i>
+                  </button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
+                  <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
+                  <span><i class="fas fa-heart me-1"></i> RAG AI Advisor</span>
+                </div>
+              </div>
+
+              <!-- Toggle Content: Đang ở màn Đăng ký -> Gợi ý Đăng Nhập -->
+              <div class="toggle-panel-content toggle-panel--register flex-column justify-content-between h-100">
+                <div>
+                  <a class="brand-lockup mb-4" href="<?= BASE_URL ?>/index.php" style="display: inline-flex; align-items: center; gap: 10px;">
+                    <span class="brand-lockup__mark" style="background: #FFFFFF; color: #215427; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 20px;">S</span>
+                    <span class="brand-lockup__copy">
+                      <strong style="color: #FFFFFF; font-size: 20px; display: block; line-height: 1;">SkinSyntax<span style="font-size: 14px; opacity: 0.85;">VN</span></strong>
+                      <small style="color: #D2E5D5; display: block; font-size: 10px; letter-spacing: 0.08em; margin-top: 2px;">DECODING YOUR SKIN LANGUAGE</small>
+                    </span>
+                  </a>
+
+                  <div class="mb-3" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); color: #EAF2EC; padding: 6px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;">
+                    <i class="fas fa-wand-magic-sparkles"></i> Thành Viên Mới SkinSyntax
+                  </div>
+
+                  <h3 class="fw-bold mb-3" style="font-size: 1.8rem; line-height: 1.25; color: #FFFFFF;">Bạn Đã Có Tài Khoản?</h3>
+                  <p style="font-size: 0.88rem; color: #EAF2EC; opacity: 0.9; line-height: 1.6;">Đăng nhập ngay để theo dõi lịch sử đơn hàng, cập nhật Hồ Sơ Da và mở các gợi ý mỹ phẩm cá nhân hóa từ AI.</p>
+
+                  <button class="btn btn-light w-100 py-3 fw-bold mt-4" data-auth-switch="login" style="border-radius: 999px; color: #215427; background: #FFFFFF; font-size: 0.95rem; border: none;">
+                    Đăng Nhập Ngay <i class="fas fa-arrow-right ms-2"></i>
+                  </button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
+                  <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
+                  <span><i class="fas fa-heart me-1"></i> RAG AI Advisor</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Panel Controls Trắng (Forms Input) -->
+            <div class="col-lg-7 bg-white p-4 p-md-5 auth-forms-panel">
+              <div class="auth-modal-body p-0">
+                
+                <!-- LOGIN FORM -->
+                <div class="auth-modal-panel <?= $authModalMode === 'forgot' || $authModalMode === 'register' ? 'd-none' : '' ?>" data-auth-panel="login">
+                  <h3 class="fw-bold mb-1" style="font-size: 1.8rem; color: #1A2F1A;">Đăng Nhập</h3>
+                  <p style="color: #5C705E; font-size: 0.88rem; margin-bottom: 20px;">Đăng nhập với mạng xã hội hoặc tài khoản email của bạn.</p>
+                  
                   <?php if ($showAuthModalFlash && $authModalMode === 'login' && ($flashErrorMessage || $flashSuccessMessage)): ?>
-                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert" role="alert">
+                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert mb-3" role="alert">
                       <?= h($flashErrorMessage ?: $flashSuccessMessage) ?>
                     </div>
                   <?php endif; ?>
 
-                  <div class="auth-modal-socials">
-                    <a class="auth-social-btn auth-social-btn--facebook <?= $facebookEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= $facebookEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=facebook') : '#' ?>" <?= $facebookEnabled ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;" title="Facebook login chua duoc cau hinh"' ?>>
-                      <i class="fa-brands fa-facebook-f"></i>
-                      <span>Facebook</span>
-                    </a>
-                    <a class="auth-social-btn <?= $googleEnabled ? '' : 'auth-social-btn--disabled' ?>" href="<?= $googleEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=google&oauth_mode=real') : '#' ?>" <?= $googleEnabled ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;" title="Google login chua duoc cau hinh"' ?>>
-                      <i class="fa-brands fa-google"></i>
-                      <span>Đăng nhập bằng Google</span>
-                    </a>
+                  <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-2.5 <?= $googleEnabled ? '' : 'disabled' ?>" href="<?= $googleEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=google&oauth_mode=real') : '#' ?>" style="border-radius: 999px; font-weight: 700; border-color: #E2EADF; color: #1A2F1A; background: #FFF;">
+                        <i class="fa-brands fa-google text-danger"></i>
+                        <span>Google</span>
+                      </a>
+                    </div>
+                    <div class="col-6">
+                      <a class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2.5 <?= $facebookEnabled ? '' : 'disabled' ?>" href="<?= $facebookEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=facebook') : '#' ?>" style="border-radius: 999px; font-weight: 700; background: #3b5998; border: none; color: #fff;">
+                        <i class="fa-brands fa-facebook-f"></i>
+                        <span>Facebook</span>
+                      </a>
+                    </div>
                   </div>
-                  <div class="auth-modal-divider"><span>Hoặc đăng nhập với SkinSyntax</span></div>
+
+                  <div class="position-relative text-center my-4">
+                    <hr style="border-color: #E2EADF;">
+                    <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-uppercase fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">HOẶC ĐĂNG NHẬP VỚI SKINSYNTAX</span>
+                  </div>
 
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangnhap">
                     <div class="mb-3">
-                      <input class="form-control auth-modal-input" type="email" name="email" placeholder="Nhập email" required>
+                      <label class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP EMAIL</label>
+                      <div class="position-relative">
+                        <input class="form-control" type="email" name="email" placeholder="Nhập email" style="border-radius: 999px; padding: 12px 18px 12px 44px; background: #F8FAF8; border-color: #E2EADF;" required>
+                        <i class="fa-regular fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                      </div>
                     </div>
-                    <div class="mb-3 auth-register-field auth-password-field">
-                      <input class="form-control auth-modal-input" type="password" id="authLoginPassword" name="mat_khau" placeholder="Nhập password" required>
-                      <button class="auth-password-toggle" type="button" data-password-toggle data-target="authLoginPassword" aria-label="Hiện hoặc ẩn mật khẩu">
-                        <i class="fa-regular fa-eye"></i>
-                      </button>
-                    </div>
-                    <div class="auth-modal-row">
-                      <label class="form-check auth-modal-check">
-                        <input class="form-check-input" type="checkbox" name="remember_login" value="1">
-                        <span>Nhớ mật khẩu</span>
-                      </label>
-                      <a href="#" class="auth-modal-link" data-auth-switch="forgot">Quên mật khẩu</a>
-                    </div>
-                    <button class="btn btn-brand auth-modal-submit" type="submit">Đăng nhập</button>
-                  </form>
 
-                  <div class="text-center mt-3 small">
-                    Bạn chưa có tài khoản?
-                    <a class="link-more" href="#" data-auth-switch="register">Đăng ký ngay</a>
-                  </div>
+                    <div class="mb-3">
+                      <label class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP PASSWORD</label>
+                      <div class="position-relative">
+                        <input class="form-control" type="password" id="authLoginPassword" name="mat_khau" placeholder="Nhập password" style="border-radius: 999px; padding: 12px 44px; background: #F8FAF8; border-color: #E2EADF;" required>
+                        <i class="fa-solid fa-lock position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <button class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 text-muted p-0 border-0" type="button" data-password-toggle data-target="authLoginPassword" aria-label="Hiện hoặc ẩn mật khẩu">
+                          <i class="fa-regular fa-eye"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                      <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" name="remember_login" value="1" id="rememberLoginModal">
+                        <label class="form-check-label small" for="rememberLoginModal" style="color: #5C705E;">Nhớ mật khẩu</label>
+                      </div>
+                      <a href="#" class="small fw-bold" data-auth-switch="forgot" style="color: #215427; text-decoration: none;">Quên mật khẩu</a>
+                    </div>
+
+                    <button class="btn w-100 py-3 fw-bold" type="submit" style="background: #215427; color: #fff; border-radius: 999px; font-size: 1rem; border: none;">Đăng nhập</button>
+                  </form>
                 </div>
 
+                <!-- REGISTER FORM -->
                 <div class="auth-modal-panel <?= $authModalMode === 'register' ? '' : 'd-none' ?>" data-auth-panel="register">
-                  <div class="auth-modal-title">Đăng ký tài khoản</div>
-                  <div class="auth-modal-subtitle">Tạo tài khoản SkinSyntax để lưu đơn hàng, routine và nhận gợi ý cá nhân hóa.</div>
+                  <h3 class="fw-bold mb-1" style="font-size: 1.8rem; color: #1A2F1A;">Đăng Ký Tài Khoản</h3>
+                  <p style="color: #5C705E; font-size: 0.88rem; margin-bottom: 20px;">Tạo tài khoản SkinSyntax để lưu đơn hàng, routine và nhận gợi ý cá nhân hóa.</p>
+                  
                   <?php if ($showAuthModalFlash && $authModalMode === 'register' && ($flashErrorMessage || $flashSuccessMessage)): ?>
-                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert" role="alert">
+                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert mb-3" role="alert">
                       <?= h($flashErrorMessage ?: $flashSuccessMessage) ?>
                     </div>
                   <?php endif; ?>
 
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="authRegisterForm" novalidate>
-                    <div class="mb-3 auth-register-field">
-                      <input class="form-control auth-modal-input" type="email" name="email" value="<?= h((string)($signupOld['email'] ?? '')) ?>" placeholder="Nhập email" required>
-                      <i class="fa-regular fa-envelope auth-register-icon"></i>
+                    <div class="mb-2">
+                      <input class="form-control" type="email" name="email" value="<?= h((string)($signupOld['email'] ?? '')) ?>" placeholder="Nhập email" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                     </div>
 
-                    <div class="alert alert-danger auth-modal-alert d-none" id="authRegisterFeedback" role="alert"></div>
+                    <div class="alert alert-danger auth-modal-alert d-none mb-2" id="authRegisterFeedback" role="alert"></div>
 
-                    <div class="auth-register-inline auth-register-inline--captcha mb-2">
-                      <input class="form-control auth-modal-input" type="text" id="authRegisterCaptchaInput" name="captcha" placeholder="Nhập captcha" autocomplete="off" required>
-                      <div class="auth-register-captcha" id="authRegisterCaptchaCode" data-captcha="<?= h(strtolower($signupCaptchaSeed)) ?>"><?= h(strtolower($signupCaptchaSeed)) ?></div>
-                      <button class="auth-register-captcha-refresh" id="authRegisterCaptchaRefresh" type="button" aria-label="Làm mới captcha">
+                    <div class="d-flex gap-2 mb-2">
+                      <input class="form-control" type="text" id="authRegisterCaptchaInput" name="captcha" placeholder="Nhập captcha" autocomplete="off" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+                      <div class="d-flex align-items-center justify-content-center text-white fw-bold px-3" id="authRegisterCaptchaCode" data-captcha="<?= h(strtolower($signupCaptchaSeed)) ?>" style="background: #215427; border-radius: 999px; font-family: monospace; letter-spacing: 2px; min-width: 90px;"><?= h(strtolower($signupCaptchaSeed)) ?></div>
+                      <button class="btn btn-outline-secondary px-3" id="authRegisterCaptchaRefresh" type="button" aria-label="Làm mới captcha" style="border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; border-color: #E2EADF;">
                         <i class="fa-solid fa-rotate-right"></i>
                       </button>
                     </div>
 
-                    <div class="auth-register-inline auth-register-inline--otp">
-                      <input class="form-control auth-modal-input" type="text" id="authRegisterOtpInput" name="otp" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" required>
-                      <button class="auth-register-otp-button" id="authRegisterOtpButton" type="button">Lấy mã</button>
+                    <div class="d-flex gap-2 mb-2">
+                      <input class="form-control" type="text" id="authRegisterOtpInput" name="otp" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+                      <button class="btn fw-bold text-white px-4" id="authRegisterOtpButton" type="button" style="background: #215427; border-radius: 999px; white-space: nowrap;">Lấy mã</button>
                     </div>
-                    <a href="<?= BASE_URL ?>/index.php?r=huong_dan_nhan_otp" class="auth-modal-link auth-register-helper-link">Xem hướng dẫn nhận OTP</a>
-                    <div class="auth-register-note" id="authRegisterOtpHint">Nhập đúng email, captcha rồi bấm Lấy mã. OTP sẽ được gửi tới email của bạn.</div>
+                    <div class="auth-register-note mb-2" id="authRegisterOtpHint" style="font-size: 0.78rem; color: #5C705E;">Nhập đúng email, captcha rồi bấm Lấy mã.</div>
 
-                    <div class="mb-2 auth-register-field auth-password-field">
-                      <input class="form-control auth-modal-input" type="password" id="authRegisterPassword" name="mat_khau" placeholder="Nhập mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" autocomplete="new-password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,32}$" required>
-                      <button class="auth-password-toggle" type="button" data-password-toggle data-target="authRegisterPassword" aria-label="Hiện hoặc ẩn mật khẩu">
-                        <i class="fa-regular fa-eye"></i>
-                      </button>
-                    </div>
-                    <div class="auth-register-note auth-register-note--password" id="authRegisterPasswordHint">Mật khẩu phải có chữ in hoa, chữ in thường, số và ký tự đặc biệt.</div>
-
-                    <div class="mb-3 auth-register-field auth-password-field">
-                      <input class="form-control auth-modal-input" type="password" id="authRegisterPasswordConfirm" name="mat_khau2" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" autocomplete="new-password" required>
-                      <button class="auth-password-toggle" type="button" data-password-toggle data-target="authRegisterPasswordConfirm" aria-label="Hiện hoặc ẩn mật khẩu">
-                        <i class="fa-regular fa-eye"></i>
-                      </button>
+                    <div class="row g-2 mb-2">
+                      <div class="col-6">
+                        <input class="form-control" type="password" id="authRegisterPassword" name="mat_khau" placeholder="Mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" autocomplete="new-password" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+                      </div>
+                      <div class="col-6">
+                        <input class="form-control" type="password" id="authRegisterPasswordConfirm" name="mat_khau2" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" autocomplete="new-password" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+                      </div>
                     </div>
 
-                    <div class="mb-3 auth-register-field">
-                      <input class="form-control auth-modal-input" type="text" name="ho_ten" value="<?= h((string)($signupOld['ho_ten'] ?? '')) ?>" placeholder="Họ tên" required>
-                      <i class="fa-solid fa-user auth-register-icon"></i>
+                    <div class="mb-2">
+                      <input class="form-control" type="text" name="ho_ten" value="<?= h((string)($signupOld['ho_ten'] ?? '')) ?>" placeholder="Họ tên" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                     </div>
 
-                    <div class="auth-register-gender">
-                      <label class="form-check auth-register-gender__item">
+                    <div class="d-flex align-items-center gap-3 mb-2 small" style="color: #5C705E;">
+                      <label class="form-check mb-0">
                         <input class="form-check-input" type="radio" name="gioi_tinh" value="Khong xac dinh" <?= (($signupOld['gioi_tinh'] ?? '') === 'Khong xac dinh' || empty($signupOld['gioi_tinh'])) ? 'checked' : '' ?>>
                         <span>Không xác định</span>
                       </label>
-                      <label class="form-check auth-register-gender__item">
+                      <label class="form-check mb-0">
                         <input class="form-check-input" type="radio" name="gioi_tinh" value="Nam" <?= (($signupOld['gioi_tinh'] ?? '') === 'Nam') ? 'checked' : '' ?>>
                         <span>Nam</span>
                       </label>
-                      <label class="form-check auth-register-gender__item">
+                      <label class="form-check mb-0">
                         <input class="form-check-input" type="radio" name="gioi_tinh" value="Nữ" <?= (($signupOld['gioi_tinh'] ?? '') === 'Nữ') ? 'checked' : '' ?>>
                         <span>Nữ</span>
                       </label>
                     </div>
 
-                    <div class="auth-register-birthday">
-                      <select class="form-select auth-modal-input" name="ngay_sinh">
-                        <option value="">Ngày</option>
-                        <?php foreach ($signupDayOptions as $day): ?>
-                          <option value="<?= $day ?>" <?= ((string)($signupOld['ngay_sinh'] ?? '') === (string)$day) ? 'selected' : '' ?>><?= $day ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                      <select class="form-select auth-modal-input" name="thang_sinh">
-                        <option value="">Tháng</option>
-                        <?php foreach ($signupMonthOptions as $month): ?>
-                          <option value="<?= $month ?>" <?= ((string)($signupOld['thang_sinh'] ?? '') === (string)$month) ? 'selected' : '' ?>><?= $month ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                      <select class="form-select auth-modal-input" name="nam_sinh">
-                        <option value="">Năm</option>
-                        <?php foreach ($signupYearOptions as $year): ?>
-                          <option value="<?= $year ?>" <?= ((string)($signupOld['nam_sinh'] ?? '') === (string)$year) ? 'selected' : '' ?>><?= $year ?></option>
-                        <?php endforeach; ?>
-                      </select>
+                    <div class="row g-2 mb-3">
+                      <div class="col-4">
+                        <select class="form-select" name="ngay_sinh" style="border-radius: 999px; padding: 10px 14px; background: #F8FAF8; border-color: #E2EADF; font-size: 0.85rem;">
+                          <option value="">Ngày</option>
+                          <?php foreach ($signupDayOptions as $day): ?>
+                            <option value="<?= $day ?>" <?= ((string)($signupOld['ngay_sinh'] ?? '') === (string)$day) ? 'selected' : '' ?>><?= $day ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+                      <div class="col-4">
+                        <select class="form-select" name="thang_sinh" style="border-radius: 999px; padding: 10px 14px; background: #F8FAF8; border-color: #E2EADF; font-size: 0.85rem;">
+                          <option value="">Tháng</option>
+                          <?php foreach ($signupMonthOptions as $month): ?>
+                            <option value="<?= $month ?>" <?= ((string)($signupOld['thang_sinh'] ?? '') === (string)$month) ? 'selected' : '' ?>><?= $month ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+                      <div class="col-4">
+                        <select class="form-select" name="nam_sinh" style="border-radius: 999px; padding: 10px 14px; background: #F8FAF8; border-color: #E2EADF; font-size: 0.85rem;">
+                          <option value="">Năm</option>
+                          <?php foreach ($signupYearOptions as $year): ?>
+                            <option value="<?= $year ?>" <?= ((string)($signupOld['nam_sinh'] ?? '') === (string)$year) ? 'selected' : '' ?>><?= $year ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
                     </div>
 
-                    <div class="auth-register-checks">
-                      <label class="form-check auth-register-check">
+                    <div class="mb-3 small" style="color: #5C705E;">
+                      <label class="form-check mb-1">
                         <input class="form-check-input" type="checkbox" name="terms_agree" value="1" <?= (($signupOld['terms_agree'] ?? '') === '1') ? 'checked' : '' ?> required>
-                        <span>Tôi đã đọc và đồng ý với <a href="<?= BASE_URL ?>/index.php?r=dieu_kien_giao_dich" class="auth-modal-link">Điều kiện giao dịch chung</a> và <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_bao_mat" class="auth-modal-link">Chính sách bảo mật thông tin</a></span>
+                        <span>Tôi đã đọc và đồng ý với <strong>Điều kiện giao dịch chung</strong> và <strong>Chính sách bảo mật thông tin</strong>.</span>
                       </label>
-                      <label class="form-check auth-register-check">
+                      <label class="form-check mb-1">
                         <input class="form-check-input" type="checkbox" name="email_opt_in" value="1" <?= !isset($signupOld['email_opt_in']) || ($signupOld['email_opt_in'] ?? '') === '1' ? 'checked' : '' ?>>
                         <span>Nhận thông tin khuyến mãi qua e-mail</span>
                       </label>
-                      <label class="form-check auth-register-check">
+                      <label class="form-check mb-0">
                         <input class="form-check-input" type="checkbox" name="privacy_consent" value="1" <?= (($signupOld['privacy_consent'] ?? '') === '1') ? 'checked' : '' ?> required>
-                        <span>Tôi đồng ý với <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_xu_ly_du_lieu" class="auth-modal-link">chính sách xử lý dữ liệu cá nhân</a> của SkinSyntax</span>
+                        <span>Tôi đồng ý với <strong>chính sách xử lý dữ liệu cá nhân</strong> của SkinSyntax.</span>
                       </label>
                     </div>
 
-                    <button class="btn btn-brand auth-modal-submit" type="submit">Đăng ký</button>
+                    <button class="btn w-100 py-3 fw-bold" type="submit" style="background: #215427; color: #fff; border-radius: 999px; font-size: 1rem; border: none;">Đăng ký</button>
                   </form>
-
-                  <div class="text-center mt-3 small">
-                    Bạn đã có tài khoản?
-                    <a class="link-more" href="#" data-auth-switch="login">Đăng nhập</a>
-                  </div>
                 </div>
 
+                <!-- FORGOT PASSWORD FORM -->
                 <div class="auth-modal-panel <?= $authModalMode === 'forgot' ? '' : 'd-none' ?>" data-auth-panel="forgot">
-                  <div class="auth-modal-title">Quên mật khẩu</div>
-                  <div class="auth-modal-subtitle">Nhập email đã đăng ký. Hệ thống sẽ gửi liên kết đặt lại mật khẩu về hộp thư của bạn.</div>
+                  <h3 class="fw-bold mb-1" style="font-size: 1.8rem; color: #1A2F1A;">Quên Mật Khẩu</h3>
+                  <p style="color: #5C705E; font-size: 0.88rem; margin-bottom: 20px;">Nhập email đã đăng ký. Hệ thống sẽ gửi liên kết đặt lại mật khẩu về hộp thư của bạn.</p>
+                  
                   <?php if ($showAuthModalFlash && $authModalMode === 'forgot' && ($flashErrorMessage || $flashSuccessMessage)): ?>
-                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert" role="alert">
+                    <div class="alert alert-<?= $flashErrorMessage ? 'danger' : 'success' ?> auth-modal-alert mb-3" role="alert">
                       <?= h($flashErrorMessage ?: $flashSuccessMessage) ?>
                     </div>
                   <?php endif; ?>
+                  
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=gui_lien_ket_dat_lai">
                     <div class="mb-3">
-                      <input class="form-control auth-modal-input" type="email" name="email" placeholder="Nhập email của bạn" required>
+                      <label class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP EMAIL</label>
+                      <input class="form-control" type="email" name="email" placeholder="Nhập email của bạn" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                     </div>
-                    <button class="btn btn-brand auth-modal-submit" type="submit">Gửi liên kết đặt lại</button>
+                    <button class="btn w-100 py-3 fw-bold" type="submit" style="background: #215427; color: #fff; border-radius: 999px; font-size: 1rem; border: none;">Gửi liên kết đặt lại</button>
                   </form>
                   <div class="text-center mt-3 small">
-                    <a href="#" class="auth-modal-link" data-auth-switch="login">Quay lại đăng nhập</a>
+                    <a href="#" class="fw-bold" data-auth-switch="login" style="color: #215427; text-decoration: none;">Quay lại đăng nhập</a>
                   </div>
                 </div>
+
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <style>
+    /* AsmrProg Modern-Login Silky Smooth Sliding Animation */
+    .auth-row-container {
+      position: relative;
+      overflow: hidden;
+      min-height: 560px;
+    }
+
+    @media (min-width: 992px) {
+      .auth-row-container {
+        display: flex;
+      }
+      
+      .auth-visual-panel {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 41.666667%;
+        height: 100%;
+        z-index: 10;
+        transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.15);
+      }
+
+      .auth-forms-panel {
+        width: 58.333333%;
+        margin-left: 41.666667%;
+        transition: margin-left 0.6s cubic-bezier(0.65, 0, 0.35, 1), transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+        z-index: 1;
+      }
+
+      /* Slide Green Panel to Right, Forms to Left in Register Mode */
+      .auth-modal-shell.is-register .auth-visual-panel {
+        transform: translateX(140%);
+      }
+
+      .auth-modal-shell.is-register .auth-forms-panel {
+        margin-left: 0;
+      }
+    }
+
+    /* Smooth Fade & Slide for Green Panel Text Contents */
+    .toggle-panel-content {
+      transition: opacity 0.45s ease-in-out, transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+
+    .toggle-panel--login {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .toggle-panel--register {
+      opacity: 0;
+      transform: translateX(30px);
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      right: 1.5rem;
+      bottom: 1.5rem;
+      pointer-events: none;
+    }
+
+    .auth-modal-shell.is-register .toggle-panel--login {
+      opacity: 0;
+      transform: translateX(-30px);
+      pointer-events: none;
+    }
+
+    .auth-modal-shell.is-register .toggle-panel--register {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    /* Soft entrance animation for Form Panels */
+    .auth-modal-panel {
+      animation: authFormSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes authFormSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+  </style>
 
   <style>
     .auth-modal-shell {
@@ -957,10 +1146,14 @@ $socialLinks = [
         return matches;
       };
 
+      var authModalShell = authModalElement.querySelector('.auth-modal-shell');
       var setPanel = function (mode) {
         panels.forEach(function (panel) {
           panel.classList.toggle('d-none', panel.getAttribute('data-auth-panel') !== mode);
         });
+        if (authModalShell) {
+          authModalShell.classList.toggle('is-register', mode === 'register');
+        }
       };
 
       switchers.forEach(function (link) {

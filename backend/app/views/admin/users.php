@@ -373,8 +373,9 @@ $loaiKh = trim((string)($loaiKh ?? ''));
                                     <?php foreach ($staffMembers as $item): ?>
                                         <?php
                                         $statusRaw = strtolower(trim((string)($item['trang_thai'] ?? 'active')));
-                                        $statusLabel = $statusRaw === 'active' ? 'Hoạt động' : 'Tạm khóa';
-                                        $statusClass = $statusRaw === 'active' ? 'status-active' : 'status-inactive';
+                                        $isActive = ($statusRaw === 'active');
+                                        $statusLabel = $isActive ? 'Hoạt động' : 'Tạm khóa';
+                                        $statusClass = $isActive ? 'status-active' : 'status-inactive';
                                         ?>
                                         <tr>
                                             <td>
@@ -386,9 +387,13 @@ $loaiKh = trim((string)($loaiKh ?? ''));
                                             <td class="text-end">
                                                 <div class="staff-actions">
                                                     <a href="index.php?r=admin_users&staff_edit=<?= (int)($item['ma_nv'] ?? 0) ?>#staff-form-card" class="btn btn-sm btn-outline-warning">Sửa</a>
-                                                    <form method="post" action="index.php?r=admin_staff_delete" class="d-inline" onsubmit="return confirm('Ngừng kích hoạt nhân viên này?');">
+                                                    <form method="post" action="index.php?r=admin_staff_delete" class="d-inline" onsubmit="return confirm('<?= $isActive ? 'Tạm khóa / Ngừng hoạt động nhân viên này?' : 'Kích hoạt lại tài khoản nhân viên này?' ?>');">
                                                         <input type="hidden" name="ma_nv" value="<?= h($item['ma_nv'] ?? '') ?>">
-                                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Ngừng</button>
+                                                        <?php if ($isActive): ?>
+                                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Bấm để tạm khóa nhân viên">Ngừng</button>
+                                                        <?php else: ?>
+                                                            <button type="submit" class="btn btn-sm btn-outline-success fw-bold" title="Bấm để mở khóa / kích hoạt lại nhân viên">Kích hoạt</button>
+                                                        <?php endif; ?>
                                                     </form>
                                                     <form method="post" action="index.php?r=admin_staff_hard_delete" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa hẳn nhân viên này khỏi hệ thống không? Dữ liệu liên kết sẽ không thể khôi phục.');">
                                                         <input type="hidden" name="ma_nv" value="<?= h($item['ma_nv'] ?? '') ?>">

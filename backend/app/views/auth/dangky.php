@@ -219,113 +219,136 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
   }
 </style>
 
-<div class="auth-wrap">
-  <div class="auth-card register-card shadow-sm">
-    <h2 class="register-title">Đăng ký tài khoản</h2>
-    <p class="register-subtitle">Tạo tài khoản theo giao diện quen thuộc kiểu Hasaki để bắt đầu khảo sát và nhận gợi ý phù hợp.</p>
+<div class="container my-5">
+  <div class="card border-0 shadow-lg overflow-hidden mx-auto" style="max-width: 900px; border-radius: 28px;">
+    <div class="row g-0 align-items-stretch">
+      <!-- Left Panel: Register Form (Screenshot 2) -->
+      <div class="col-lg-7 bg-white p-4 p-md-5">
+        <h3 class="fw-bold mb-1" style="font-size: 1.8rem; color: #1A2F1A;">Đăng Ký Tài Khoản</h3>
+        <p style="color: #5C705E; font-size: 0.88rem; margin-bottom: 20px;">Tạo tài khoản SkinSyntax để lưu đơn hàng, routine và nhận gợi ý cá nhân hóa.</p>
 
-    <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="registerForm" novalidate>
-      <div class="register-field">
-        <input class="form-control" type="email" name="email" value="<?= h((string)($old['email'] ?? '')) ?>" placeholder="Nhập email" required>
-        <i class="fa-regular fa-envelope register-field__icon"></i>
+        <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="registerForm" novalidate>
+          <div class="mb-2">
+            <input class="form-control" type="email" name="email" value="<?= h((string)($old['email'] ?? '')) ?>" placeholder="Nhập email" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+          </div>
+
+          <div class="d-flex gap-2 mb-2">
+            <input class="form-control" type="text" id="captchaInput" placeholder="Nhập captcha" autocomplete="off" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+            <div class="d-flex align-items-center justify-content-center text-white fw-bold px-3" id="captchaCode" data-captcha="<?= h(strtolower($captchaSeed)) ?>" style="background: #215427; border-radius: 999px; font-family: monospace; letter-spacing: 2px; min-width: 90px;"><?= h(strtolower($captchaSeed)) ?></div>
+            <button class="btn btn-outline-secondary px-3" type="button" onclick="location.reload();" style="border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; border-color: #E2EADF;">
+              <i class="fa-solid fa-rotate-right"></i>
+            </button>
+          </div>
+
+          <div class="d-flex gap-2 mb-2">
+            <input class="form-control" type="text" id="otpInput" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+            <button class="btn fw-bold text-white px-4" id="otpButton" type="button" style="background: #215427; border-radius: 999px; white-space: nowrap;">Lấy mã</button>
+          </div>
+          <div class="auth-register-note mb-2" id="otpHint" style="font-size: 0.78rem; color: #5C705E;">Nhập đúng email, captcha rồi bấm Lấy mã.</div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <input class="form-control" type="password" name="mat_khau" placeholder="Mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+            </div>
+            <div class="col-6">
+              <input class="form-control" type="password" name="mat_khau2" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <input class="form-control" type="text" name="ho_ten" value="<?= h((string)($old['ho_ten'] ?? '')) ?>" placeholder="Họ tên" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+          </div>
+
+          <div class="d-flex align-items-center gap-3 mb-2 small" style="color: #5C705E;">
+            <label class="form-check mb-0">
+              <input class="form-check-input" type="radio" name="gioi_tinh" value="Khong xac dinh" <?= (($old['gioi_tinh'] ?? '') === 'Khong xac dinh' || empty($old['gioi_tinh'])) ? 'checked' : '' ?>>
+              <span>Không xác định</span>
+            </label>
+            <label class="form-check mb-0">
+              <input class="form-check-input" type="radio" name="gioi_tinh" value="Nam" <?= (($old['gioi_tinh'] ?? '') === 'Nam') ? 'checked' : '' ?>>
+              <span>Nam</span>
+            </label>
+            <label class="form-check mb-0">
+              <input class="form-check-input" type="radio" name="gioi_tinh" value="Nữ" <?= (($old['gioi_tinh'] ?? '') === 'Nữ') ? 'checked' : '' ?>>
+              <span>Nữ</span>
+            </label>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-4">
+              <select class="form-select" name="ngay_sinh" style="border-radius: 999px; padding: 10px 14px; background: #F8FAF8; border-color: #E2EADF; font-size: 0.85rem;">
+                <option value="">Ngày</option>
+                <?php foreach ($dayOptions as $day): ?>
+                  <option value="<?= $day ?>" <?= ((string)($old['ngay_sinh'] ?? '') === (string)$day) ? 'selected' : '' ?>><?= $day ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-4">
+              <select class="form-select" name="thang_sinh" style="border-radius: 999px; padding: 10px 14px; background: #F8FAF8; border-color: #E2EADF; font-size: 0.85rem;">
+                <option value="">Tháng</option>
+                <?php foreach ($monthOptions as $month): ?>
+                  <option value="<?= $month ?>" <?= ((string)($old['thang_sinh'] ?? '') === (string)$month) ? 'selected' : '' ?>><?= $month ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-4">
+              <select class="form-select" name="nam_sinh" style="border-radius: 999px; padding: 10px 14px; background: #F8FAF8; border-color: #E2EADF; font-size: 0.85rem;">
+                <option value="">Năm</option>
+                <?php foreach ($yearOptions as $year): ?>
+                  <option value="<?= $year ?>" <?= ((string)($old['nam_sinh'] ?? '') === (string)$year) ? 'selected' : '' ?>><?= $year ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3 small" style="color: #5C705E;">
+            <label class="form-check mb-1">
+              <input class="form-check-input" type="checkbox" name="terms_agree" value="1" <?= (($old['terms_agree'] ?? '') === '1') ? 'checked' : '' ?> required>
+              <span>Tôi đã đọc và đồng ý với <strong>Điều kiện giao dịch chung</strong> và <strong>Chính sách bảo mật thông tin</strong>.</span>
+            </label>
+            <label class="form-check mb-1">
+              <input class="form-check-input" type="checkbox" name="email_opt_in" value="1" <?= !isset($old['email_opt_in']) || ($old['email_opt_in'] ?? '') === '1' ? 'checked' : '' ?>>
+              <span>Nhận thông tin khuyến mãi qua e-mail</span>
+            </label>
+            <label class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" name="privacy_consent" value="1" <?= (($old['privacy_consent'] ?? '') === '1') ? 'checked' : '' ?> required>
+              <span>Tôi đồng ý với <strong>chính sách xử lý dữ liệu cá nhân</strong> của SkinSyntax.</span>
+            </label>
+          </div>
+
+          <button class="btn w-100 py-3 fw-bold" type="submit" style="background: #215427; color: #fff; border-radius: 999px; font-size: 1rem; border: none;">Đăng ký</button>
+        </form>
       </div>
 
-      <div class="register-inline">
-        <input class="form-control" type="text" id="captchaInput" placeholder="Nhập captcha" autocomplete="off" required>
-        <div class="register-captcha" id="captchaCode" data-captcha="<?= h(strtolower($captchaSeed)) ?>"><?= h(strtolower($captchaSeed)) ?></div>
-      </div>
+      <!-- Right Panel: Visual Green (Screenshot 2) -->
+      <div class="col-lg-5 d-none d-lg-flex flex-column justify-content-between p-4 text-white" style="background: #215427;">
+        <div>
+          <a class="brand-lockup mb-4" href="<?= BASE_URL ?>/index.php" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none;">
+            <span class="brand-lockup__mark" style="background: #FFFFFF; color: #215427; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 20px;">S</span>
+            <span class="brand-lockup__copy">
+              <strong style="color: #FFFFFF; font-size: 20px; display: block; line-height: 1;">SkinSyntax<span style="font-size: 14px; opacity: 0.85;">VN</span></strong>
+              <small style="color: #D2E5D5; display: block; font-size: 10px; letter-spacing: 0.08em; margin-top: 2px;">DECODING YOUR SKIN LANGUAGE</small>
+            </span>
+          </a>
 
-      <div class="register-otp">
-        <input class="form-control" type="text" id="otpInput" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" required>
-        <button class="register-otp__button" id="otpButton" type="button">lấy mã</button>
-      </div>
-      <a class="register-helper-link" href="#" id="otpHelpLink">Xem hướng dẫn nhận OTP</a>
-      <p class="register-inline-note" id="otpHint">OTP demo sẽ được tạo local để mô phỏng đúng trải nghiệm đăng ký.</p>
+          <div class="mb-3" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); color: #EAF2EC; padding: 6px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;">
+            <i class="fas fa-wand-magic-sparkles"></i> Thành Viên Mới SkinSyntax
+          </div>
 
-      <div class="register-field">
-        <input class="form-control" type="password" name="mat_khau" placeholder="Nhập mật khẩu từ 6 - 32 ký tự" required>
-        <i class="fa-solid fa-lock register-field__icon"></i>
-      </div>
+          <h3 class="fw-bold mb-3" style="font-size: 1.8rem; line-height: 1.25; color: #FFFFFF;">Bạn Đã Có Tài Khoản?</h3>
+          <p style="font-size: 0.88rem; color: #EAF2EC; opacity: 0.9; line-height: 1.6;">Đăng nhập ngay để theo dõi lịch sử đơn hàng, cập nhật Hồ Sơ Da và mở các gợi ý mỹ phẩm cá nhân hóa từ AI.</p>
 
-      <div class="register-field">
-        <input class="form-control" type="password" name="mat_khau2" placeholder="Nhập lại mật khẩu" required>
-        <i class="fa-solid fa-lock register-field__icon"></i>
-      </div>
-
-      <div class="register-field">
-        <input class="form-control" type="text" name="ho_ten" value="<?= h((string)($old['ho_ten'] ?? '')) ?>" placeholder="Họ tên" required>
-        <i class="fa-solid fa-user register-field__icon"></i>
-      </div>
-
-      <div class="register-gender">
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="gioi_tinh" id="genderUnknown" value="Khong xac dinh" <?= (($old['gioi_tinh'] ?? '') === 'Khong xac dinh' || empty($old['gioi_tinh'])) ? 'checked' : '' ?>>
-          <label class="form-check-label" for="genderUnknown">Không xác định</label>
+          <a class="btn btn-light w-100 py-3 fw-bold mt-4" href="<?= BASE_URL ?>/index.php?r=dangnhap" style="border-radius: 999px; color: #215427; background: #FFFFFF; font-size: 0.95rem; text-decoration: none;">
+            Đăng Nhập Ngay <i class="fas fa-arrow-right ms-2"></i>
+          </a>
         </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="gioi_tinh" id="genderMale" value="Nam" <?= (($old['gioi_tinh'] ?? '') === 'Nam') ? 'checked' : '' ?>>
-          <label class="form-check-label" for="genderMale">Nam</label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="gioi_tinh" id="genderFemale" value="Nữ" <?= (($old['gioi_tinh'] ?? '') === 'Nữ') ? 'checked' : '' ?>>
-          <label class="form-check-label" for="genderFemale">Nữ</label>
+
+        <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
+          <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
+          <span><i class="fas fa-heart me-1"></i> RAG AI Advisor</span>
         </div>
       </div>
-
-      <div class="register-birthday">
-        <select class="form-select" name="ngay_sinh">
-          <option value="">Ngày</option>
-          <?php foreach ($dayOptions as $day): ?>
-            <option value="<?= $day ?>" <?= ((string)($old['ngay_sinh'] ?? '') === (string)$day) ? 'selected' : '' ?>><?= $day ?></option>
-          <?php endforeach; ?>
-        </select>
-        <select class="form-select" name="thang_sinh">
-          <option value="">Tháng</option>
-          <?php foreach ($monthOptions as $month): ?>
-            <option value="<?= $month ?>" <?= ((string)($old['thang_sinh'] ?? '') === (string)$month) ? 'selected' : '' ?>><?= $month ?></option>
-          <?php endforeach; ?>
-        </select>
-        <select class="form-select" name="nam_sinh">
-          <option value="">Năm</option>
-          <?php foreach ($yearOptions as $year): ?>
-            <option value="<?= $year ?>" <?= ((string)($old['nam_sinh'] ?? '') === (string)$year) ? 'selected' : '' ?>><?= $year ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-
-      <div class="register-checks">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" value="1" id="termsAgree" name="terms_agree" required>
-          <label class="form-check-label" for="termsAgree">Tôi đã đọc và đồng ý với <a href="#">Điều kiện giao dịch chung</a> và <a href="#">Chính sách bảo mật thông tin</a></label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" value="1" id="emailOptIn" name="email_opt_in" <?= !isset($old['email_opt_in']) || ($old['email_opt_in'] ?? '') === '1' ? 'checked' : '' ?>>
-          <label class="form-check-label" for="emailOptIn">Nhận thông tin khuyến mãi qua e-mail</label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" value="1" id="privacyConsent" name="privacy_consent" <?= !isset($old['privacy_consent']) || ($old['privacy_consent'] ?? '') === '1' ? 'checked' : '' ?> required>
-          <label class="form-check-label" for="privacyConsent">Tôi đồng ý với <a href="#">chính sách xử lý dữ liệu cá nhân</a> của SkinSyntax</label>
-        </div>
-      </div>
-
-      <button class="btn btn-brand w-100 register-submit" type="submit">Đăng ký</button>
-
-      <div class="register-auth-footer">
-        Bạn đã có tài khoản? <a href="<?= BASE_URL ?>/index.php?r=dangnhap">Đăng nhập</a>
-      </div>
-
-      <div class="register-social-label">Hoặc đăng nhập với:</div>
-      <div class="register-social-stack">
-        <a class="register-social-btn register-social-btn--facebook <?= !empty($facebookEnabled) ? '' : 'register-social-btn--disabled' ?>" href="<?= BASE_URL ?>/index.php?r=auth_social&provider=facebook">
-          <i class="fa-brands fa-facebook-f"></i>
-          <span>Facebook</span>
-        </a>
-        <a class="register-social-btn register-social-btn--google <?= !empty($googleEnabled) ? '' : 'register-social-btn--disabled' ?>" href="<?= BASE_URL ?>/index.php?r=auth_social&provider=google">
-          <i class="fa-brands fa-google"></i>
-          <span>Đăng nhập bằng Google</span>
-        </a>
-      </div>
-    </form>
+    </div>
   </div>
 </div>
 
@@ -334,28 +357,20 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
 <script>
 (() => {
   const form = document.getElementById('registerForm');
-  if (!form) {
-    return;
-  }
+  if (!form) return;
 
   const captchaElement = document.getElementById('captchaCode');
   const captchaInput = document.getElementById('captchaInput');
   const otpInput = document.getElementById('otpInput');
   const otpButton = document.getElementById('otpButton');
   const otpHint = document.getElementById('otpHint');
-  const otpHelpLink = document.getElementById('otpHelpLink');
   let generatedOtp = '';
 
   const buildOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
   otpButton.addEventListener('click', () => {
     generatedOtp = buildOtp();
-    otpHint.textContent = 'Mã OTP demo của phiên này là: ' + generatedOtp + '. Nhập mã này để tiếp tục đăng ký.';
-  });
-
-  otpHelpLink.addEventListener('click', (event) => {
-    event.preventDefault();
-    otpHint.textContent = 'Đây là giao diện mô phỏng Hasaki. Bấm "lấy mã" để hệ thống tạo mã OTP demo local cho lần đăng ký này.';
+    otpHint.textContent = 'Mã OTP xác thực của bạn là: ' + generatedOtp;
   });
 
   form.addEventListener('submit', (event) => {
@@ -365,14 +380,14 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
 
     if (captchaValue === '' || captchaValue !== expectedCaptcha) {
       event.preventDefault();
-      otpHint.textContent = 'Captcha chưa đúng. Vui lòng nhập lại đúng 4 ký tự hiển thị.';
+      otpHint.textContent = 'Captcha chưa đúng. Vui lòng nhập lại.';
       captchaInput.focus();
       return;
     }
 
     if (generatedOtp === '' || otpValue !== generatedOtp) {
       event.preventDefault();
-      otpHint.textContent = 'Mã OTP chưa đúng hoặc chưa được tạo. Bấm "lấy mã" để nhận OTP demo.';
+      otpHint.textContent = 'Mã OTP chưa đúng hoặc chưa tạo. Vui lòng bấm Lấy mã.';
       otpInput.focus();
     }
   });

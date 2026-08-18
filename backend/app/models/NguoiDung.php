@@ -36,9 +36,28 @@ class NguoiDung {
     }
 
     public function taoMoi(string $hoTen, string $email, string $matKhauPlain, array $consents = []): bool {
+        $email = trim($email);
         $hash = password_hash($matKhauPlain, PASSWORD_BCRYPT);
         $privacyConsent = !empty($consents['privacy_consent']);
         $termsAgree = !empty($consents['terms_agree']);
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+
+        // PURGE LEFTOVER ACCOUNT, SURVEY, & ORDERS DATA FOR THIS EMAIL TO ENSURE A FRESH START
+        $this->db->nguoidung->deleteMany(['email' => $regex]);
+
+        $oldKhList = iterator_to_array($this->db->khach_hang->find(['email' => $regex]));
+        foreach ($oldKhList as $oldKh) {
+            $oldMaKh = (int)($oldKh['ma_kh'] ?? 0);
+            if ($oldMaKh > 0) {
+                $orderDocs = iterator_to_array($this->db->hoa_don->find(['$or' => [['ma_kh' => $oldMaKh], ['email' => $regex]]]));
+                $orderIds = array_column($orderDocs, 'ma_hoa_don');
+                if (!empty($orderIds)) {
+                    $this->db->chi_tiet_hoa_don->deleteMany(['ma_hoa_don' => ['$in' => $orderIds]]);
+                }
+                $this->db->hoa_don->deleteMany(['$or' => [['ma_kh' => $oldMaKh], ['email' => $regex]]]);
+            }
+        }
+        $this->db->khach_hang->deleteMany(['email' => $regex]);
 
         $result = $this->db->nguoidung->insertOne([
             'ho_ten' => $hoTen,
@@ -53,7 +72,6 @@ class NguoiDung {
         $ok = $result->getInsertedCount() > 0;
         if ($ok) {
             $this->ensureKhachHang($hoTen, $email);
-            $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
             $this->db->khach_hang->updateOne(
                 ['email' => $regex],
                 ['$set' => [

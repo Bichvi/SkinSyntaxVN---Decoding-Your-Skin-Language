@@ -34,47 +34,63 @@ $matchLabel = trim((string)($product['match_label'] ?? 'Phù hợp'));
 ?>
 
 <?php if ($cardVariant === 'rcm'): ?>
-  <article class="rcm-product-card">
-    <a class="rcm-product-image-wrap" href="<?= h($detailUrl) ?>">
-      <img src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/450x450?text=SkinSyntax';">
+  <article class="rcm-product-card product-card card-elevated h-100 d-flex flex-column" style="border-radius: 22px; border: 1px solid #E2EADF; background: #FFF; overflow: hidden; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);">
+    <a class="rcm-product-image-wrap position-relative d-block p-2" href="<?= h($detailUrl) ?>" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 16px;">
+      <img src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/450x450?text=SkinSyntax';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;">
       <?php if ($discount !== null): ?>
-        <span class="rcm-discount-badge">-<?= h((string)$discount) ?>%</span>
+        <span class="rcm-discount-badge position-absolute" style="top: 14px; left: 14px; background: linear-gradient(135deg, #E11D48 0%, #F43F5E 100%); color: #FFF; font-weight: 800; font-size: 0.75rem; padding: 5px 12px; border-radius: 999px; z-index: 3; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);">-<?= h((string)$discount) ?>%</span>
       <?php endif; ?>
-      <span class="rcm-match-badge"><?= h($badgeLabel !== '' ? $badgeLabel : 'PHÙ HỢP') ?></span>
+      <span class="rcm-match-badge position-absolute" style="top: 14px; right: 14px; background: linear-gradient(135deg, #162F18 0%, #215427 100%); color: #FFF; font-size: 0.75rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; z-index: 3; box-shadow: 0 4px 14px rgba(33, 84, 39, 0.28);"><?= h($badgeLabel !== '' ? $badgeLabel : 'PHÙ HỢP') ?></span>
     </a>
 
-    <div class="rcm-product-body">
-      <p class="rcm-product-brand"><?= h($productBrand) ?></p>
-      <h3 class="rcm-product-name"><?= h($productName) ?></h3>
-      <div class="rcm-product-price"><?= h(vnd($salePrice)) ?></div>
+    <div class="rcm-product-body p-3.5 p-3 d-flex flex-column flex-grow-1">
+      <div class="mb-1">
+        <span class="rcm-product-brand text-uppercase fw-extrabold" style="font-size: 0.7rem; color: #215427; background: #EAF0EB; padding: 3px 9px; border-radius: 6px; letter-spacing: 0.05em; font-weight: 800; display: inline-block;"><?= h($productBrand) ?></span>
+      </div>
+      <h3 class="rcm-product-name fw-bold mb-2" style="font-size: 0.95rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em;">
+        <a href="<?= h($detailUrl) ?>" style="color: #1A2F1A; text-decoration: none;"><?= h($productName) ?></a>
+      </h3>
+      <div class="rcm-product-price fw-bold" style="color: #215427; font-size: 1.15rem; font-weight: 800;"><?= h(vnd($salePrice)) ?></div>
       <?php if ((float)$marketPrice > (float)$salePrice): ?>
-        <div class="rcm-product-market"><?= h(vnd($marketPrice)) ?></div>
+        <div class="rcm-product-market text-muted text-decoration-line-through" style="font-size: 0.82rem; color: #94A3B8 !important;"><?= h(vnd($marketPrice)) ?></div>
       <?php endif; ?>
       <?php if ($matchPercent !== null): ?>
-        <div class="recommend-match">
-          <div class="recommend-match__head">
-            <span><?= h($matchLabel !== '' ? $matchLabel : 'Phù hợp') ?></span>
-            <strong><?= h((string)$matchPercent) ?>%</strong>
+        <div class="recommend-match my-2">
+          <div class="recommend-match__head d-flex justify-content-between small mb-1">
+            <span class="text-muted"><?= h($matchLabel !== '' ? $matchLabel : 'Phù hợp') ?></span>
+            <strong style="color: #215427;"><?= h((string)$matchPercent) ?>%</strong>
           </div>
-          <div class="recommend-match__bar" aria-label="Độ phù hợp <?= h((string)$matchPercent) ?>%">
-            <span class="recommend-match__fill" style="width: <?= h((string)$matchPercent) ?>%"></span>
+          <div class="recommend-match__bar" aria-label="Độ phù hợp <?= h((string)$matchPercent) ?>%" style="height: 6px; background: #E2EADF; border-radius: 999px; overflow: hidden;">
+            <span class="recommend-match__fill d-block h-100" style="width: <?= h((string)$matchPercent) ?>%; background: #215427;"></span>
           </div>
         </div>
       <?php endif; ?>
 
-      <div class="rcm-product-actions">
-        <a class="rcm-product-detail" href="<?= h($detailUrl) ?>">Xem chi tiết</a>
+      <div class="rcm-product-actions d-grid gap-1.5 mt-auto" style="grid-template-columns: 1fr 1fr; width: 100%;">
         <?php if ($productId !== ''): ?>
-          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0">
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100" style="width: 100%;">
             <input type="hidden" name="action" value="add_to_cart">
             <input type="hidden" name="product_id" value="<?= h($productId) ?>">
             <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
             <input type="hidden" name="quantity" value="1">
             <input type="hidden" name="qty" value="1">
-            <button class="rcm-product-cart" type="submit" <?= $isOutOfStock ? 'disabled' : '' ?>>
-              <?= $isOutOfStock ? 'Tạm hết hàng' : 'Thêm giỏ hàng' ?>
+            <button class="rcm-product-cart btn btn-sm btn-product-add w-100" type="submit" style="background: #EAF0EB; color: #215427; border: 1px solid #C5DAC8; border-radius: 999px; font-weight: 700; font-size: 0.8rem; padding: 8px 0; display: block; width: 100%;" <?= $isOutOfStock ? 'disabled' : '' ?>>
+              <?= $isOutOfStock ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus me-1"></i> Giỏ hàng' ?>
             </button>
           </form>
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100" style="width: 100%;">
+            <input type="hidden" name="action" value="add_to_cart">
+            <input type="hidden" name="buy_now" value="1">
+            <input type="hidden" name="product_id" value="<?= h($productId) ?>">
+            <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="qty" value="1">
+            <button class="rcm-product-buy btn btn-sm btn-product-buy w-100 text-white" type="submit" style="background: linear-gradient(135deg, #215427 0%, #162F18 100%); border-radius: 999px; font-weight: 800; font-size: 0.8rem; padding: 8px 0; border: none; box-shadow: 0 4px 14px rgba(33, 84, 39, 0.25); display: block; width: 100%;" <?= $isOutOfStock ? 'disabled' : '' ?>>
+              <?= $isOutOfStock ? 'Hết hàng' : '⚡ Mua ngay' ?>
+            </button>
+          </form>
+        <?php else: ?>
+          <a class="rcm-product-detail btn btn-sm btn-product-detail w-100" href="<?= h($detailUrl) ?>" style="border-radius: 999px; font-weight: 700; font-size: 0.84rem; padding: 8px 0; background: #EAF0EB; color: #215427; border: 1px solid #C5DAC8; text-align: center; text-decoration: none; display: block; grid-column: span 2;">Chi tiết sản phẩm</a>
         <?php endif; ?>
       </div>
     </div>
@@ -82,48 +98,64 @@ $matchLabel = trim((string)($product['match_label'] ?? 'Phù hợp'));
   <?php return; ?>
 <?php endif; ?>
 
-<article class="flash-product goiy-product-card">
-  <a class="flash-product__image" href="<?= h($detailUrl) ?>">
-    <img src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/450x450?text=SkinSyntax';">
+<article class="flash-product goiy-product-card product-card card-elevated h-100 d-flex flex-column" style="border-radius: 22px; border: 1px solid #E2EADF; background: #FFF; overflow: hidden; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);">
+  <a class="flash-product__image position-relative d-block p-2" href="<?= h($detailUrl) ?>" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 16px;">
+    <img src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/450x450?text=SkinSyntax';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;">
     <?php if ($discount !== null): ?>
-      <span class="flash-product__badge">-<?= h((string)$discount) ?>%</span>
+      <span class="flash-product__badge position-absolute" style="top: 14px; left: 14px; background: linear-gradient(135deg, #E11D48 0%, #F43F5E 100%); color: #FFF; font-weight: 800; font-size: 0.75rem; padding: 5px 12px; border-radius: 999px; z-index: 3; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);">-<?= h((string)$discount) ?>%</span>
     <?php endif; ?>
     <?php if ($badgeLabel !== ''): ?>
-      <span class="goiy-product-card__group-badge"><?= h($badgeLabel) ?></span>
+      <span class="goiy-product-card__group-badge position-absolute" style="top: 14px; right: 14px; background: linear-gradient(135deg, #162F18 0%, #215427 100%); color: #FFF; font-size: 0.75rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; z-index: 3; box-shadow: 0 4px 14px rgba(33, 84, 39, 0.28);"><?= h($badgeLabel) ?></span>
     <?php endif; ?>
     <?php if ($isOutOfStock): ?>
-      <span class="goiy-product-card__stock-badge">Tạm hết hàng</span>
+      <span class="goiy-product-card__stock-badge position-absolute" style="bottom: 14px; left: 14px; background: rgba(15,23,42,0.78); color: #FFF; font-size: 0.72rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; z-index: 3;">Tạm hết hàng</span>
     <?php endif; ?>
   </a>
 
-  <div class="flash-product__body">
-    <p class="flash-product__brand"><?= h($productBrand) ?></p>
-    <h3 class="flash-product__name"><?= h($productName) ?></h3>
-    <div class="flash-product__price"><?= h(vnd($salePrice)) ?></div>
+  <div class="flash-product__body p-3.5 p-3 d-flex flex-column flex-grow-1">
+    <div class="mb-1">
+      <span class="flash-product__brand text-uppercase fw-extrabold" style="font-size: 0.7rem; color: #215427; background: #EAF0EB; padding: 3px 9px; border-radius: 6px; letter-spacing: 0.05em; font-weight: 800; display: inline-block;"><?= h($productBrand) ?></span>
+    </div>
+    <h3 class="flash-product__name fw-bold mb-2" style="font-size: 0.95rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em;">
+      <a href="<?= h($detailUrl) ?>" style="color: #1A2F1A; text-decoration: none;"><?= h($productName) ?></a>
+    </h3>
+    <div class="flash-product__price fw-bold" style="color: #215427; font-size: 1.15rem; font-weight: 800;"><?= h(vnd($salePrice)) ?></div>
     <?php if ((float)$marketPrice > (float)$salePrice): ?>
-      <div class="flash-product__market"><?= h(vnd($marketPrice)) ?></div>
+      <div class="flash-product__market text-muted text-decoration-line-through" style="font-size: 0.82rem; color: #94A3B8 !important;"><?= h(vnd($marketPrice)) ?></div>
     <?php endif; ?>
-    <div class="goiy-product-card__meta">
+    <div class="goiy-product-card__meta mb-3 mt-1 small" style="color: #5C705E;">
       <?php if ($rating !== ''): ?>
-        <span>★ <?= h($rating) ?><?= $reviewCount > 0 ? ' · ' . h((string)$reviewCount) . ' đánh giá' : '' ?></span>
+        <span class="d-inline-flex align-items-center gap-1 px-2 py-0.5 rounded-pill" style="background: #FFFBEB; color: #D97706; font-weight: 800; border: 1px solid #FEF3C7;"><i class="fas fa-star" style="color:#F59E0B;"></i> <?= h($rating) ?><?= $reviewCount > 0 ? ' · ' . h((string)$reviewCount) . ' đánh giá' : '' ?></span>
       <?php endif; ?>
       <?php if ($sold > 0): ?>
-        <span>Đã bán <?= h((string)$sold) ?></span>
+        <span class="ms-1">· Đã bán <?= h((string)$sold) ?></span>
       <?php endif; ?>
     </div>
-    <div class="flash-product__actions">
-      <a class="flash-product__detail" href="<?= h($detailUrl) ?>">Xem chi tiết</a>
+    <div class="flash-product__actions d-grid gap-1.5 mt-auto" style="grid-template-columns: 1fr 1fr; width: 100%;">
       <?php if ($productId !== ''): ?>
-        <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0">
+        <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100" style="width: 100%;">
           <input type="hidden" name="action" value="add_to_cart">
           <input type="hidden" name="product_id" value="<?= h($productId) ?>">
           <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
           <input type="hidden" name="quantity" value="1">
           <input type="hidden" name="qty" value="1">
-          <button class="flash-product__cart" type="submit" <?= $isOutOfStock ? 'disabled' : '' ?>>
-            <?= $isOutOfStock ? 'Tạm hết hàng' : 'Thêm giỏ hàng' ?>
+          <button class="flash-product__cart btn btn-sm btn-product-add w-100" type="submit" style="background: #EAF0EB; color: #215427; border: 1px solid #C5DAC8; border-radius: 999px; font-weight: 700; font-size: 0.8rem; padding: 8px 0; display: block; width: 100%;" <?= $isOutOfStock ? 'disabled' : '' ?>>
+            <?= $isOutOfStock ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus me-1"></i> Giỏ hàng' ?>
           </button>
         </form>
+        <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100" style="width: 100%;">
+          <input type="hidden" name="action" value="add_to_cart">
+          <input type="hidden" name="buy_now" value="1">
+          <input type="hidden" name="product_id" value="<?= h($productId) ?>">
+          <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
+          <input type="hidden" name="quantity" value="1">
+          <input type="hidden" name="qty" value="1">
+          <button class="flash-product__buy btn btn-sm btn-product-buy w-100 text-white" type="submit" style="background: linear-gradient(135deg, #215427 0%, #162F18 100%); border-radius: 999px; font-weight: 800; font-size: 0.8rem; padding: 8px 0; border: none; box-shadow: 0 4px 14px rgba(33, 84, 39, 0.25); display: block; width: 100%;" <?= $isOutOfStock ? 'disabled' : '' ?>>
+            <?= $isOutOfStock ? 'Hết hàng' : '⚡ Mua ngay' ?>
+          </button>
+        </form>
+      <?php else: ?>
+        <a class="flash-product__detail btn btn-sm btn-product-detail w-100" href="<?= h($detailUrl) ?>" style="border-radius: 999px; font-weight: 700; font-size: 0.84rem; padding: 8px 0; background: #EAF0EB; color: #215427; border: 1px solid #C5DAC8; text-align: center; text-decoration: none; display: block; grid-column: span 2;">Chi tiết sản phẩm</a>
       <?php endif; ?>
     </div>
   </div>

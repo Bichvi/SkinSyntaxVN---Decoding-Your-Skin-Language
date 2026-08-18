@@ -39,6 +39,18 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
     </div>
   </div>
 
+  <?php if (in_array(current_role(), ['admin', 'nhanvien'], true)): ?>
+    <div class="alert alert-warning border-0 rounded-4 p-3 mb-4 shadow-sm" style="background: #FEF3C7; color: #92400E;">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-shield-halved fs-4 text-warning"></i>
+        <div>
+          <h6 class="fw-bold mb-1">Tài khoản Quản trị / Nhân viên (Admin Mode)</h6>
+          <div class="small opacity-90">Tài khoản Admin/Staff bị khóa chức năng đặt hàng và áp dụng Voucher để tránh xung đột lợi ích &amp; đảm bảo tính minh bạch hệ thống. Vui lòng đăng nhập tài khoản Khách hàng để thực hiện mua sắm.</div>
+        </div>
+      </div>
+    </div>
+  <?php endif; ?>
+
   <div class="address-card mb-3">
     <div class="stripe-top"></div>
     <div class="address-content">
@@ -261,11 +273,11 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
         </div>
 
         <div class="col-lg-5">
-          <div class="voucher-card mb-3">
+          <div class="voucher-card mb-3" id="voucher-card-box">
             <div class="voucher-card__title">Mã giảm giá</div>
             <div class="input-group mb-2">
               <input class="form-control" type="text" name="voucher_code" value="<?= h($voucherCode) ?>" placeholder="Nhập mã voucher">
-              <button class="btn btn-outline-brand" type="submit" formaction="<?= BASE_URL ?>/index.php?r=apdung_voucher" formmethod="post" formnovalidate>Áp dụng</button>
+              <button class="btn btn-outline-brand" type="submit" formaction="<?= BASE_URL ?>/index.php?r=apdung_voucher#voucher-card-box" formmethod="post" formnovalidate>Áp dụng</button>
             </div>
             <?php if ($appliedVoucher): ?>
               <div class="voucher-pill-row">
@@ -273,19 +285,19 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
                   <div class="voucher-pill-code"><?= h($appliedVoucher['voucher']['ma_code'] ?? '') ?></div>
                   <div class="voucher-pill-meta"><?= h($appliedVoucher['voucher']['ten_voucher'] ?? 'Voucher đang áp dụng') ?></div>
                 </div>
-                <button class="btn btn-sm btn-light border" type="submit" formaction="<?= BASE_URL ?>/index.php?r=bo_voucher" formmethod="post" formnovalidate>Gỡ mã</button>
+                <button class="btn btn-sm btn-light border" type="submit" formaction="<?= BASE_URL ?>/index.php?r=bo_voucher#voucher-card-box" formmethod="post" formnovalidate>Gỡ mã</button>
               </div>
             <?php else: ?>
               <div class="voucher-note">Mã giảm giá được tính trên giá trị sản phẩm trước phí vận chuyển.</div>
             <?php endif; ?>
           </div>
 
-          <div class="voucher-card mb-3">
+          <div class="voucher-card mb-3" id="points-card-box">
             <div class="voucher-card__title">Dùng điểm tích lũy</div>
             <div class="voucher-note mb-2">Bạn hiện có <strong><?= number_format($availablePoints, 0, ',', '.') ?> điểm</strong>. Quy đổi: 1 điểm = <?= number_format($pointValueVnd, 0, ',', '.') ?>đ.</div>
             <div class="input-group mb-2">
               <input class="form-control" type="number" min="0" max="<?= $maxUsablePoints ?>" step="1" name="points_to_use" value="<?= $pointsToUse > 0 ? $pointsToUse : '' ?>" placeholder="Nhập số điểm muốn dùng">
-              <button class="btn btn-outline-brand" type="submit" formaction="<?= BASE_URL ?>/index.php?r=apdung_diem" formmethod="post" formnovalidate>Đổi điểm</button>
+              <button class="btn btn-outline-brand" type="submit" formaction="<?= BASE_URL ?>/index.php?r=apdung_diem#points-card-box" formmethod="post" formnovalidate>Đổi điểm</button>
             </div>
             <?php if ($pointsToUse > 0): ?>
               <div class="voucher-pill-row">
@@ -293,7 +305,7 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
                   <div class="voucher-pill-code"><?= number_format($pointsToUse, 0, ',', '.') ?> điểm</div>
                   <div class="voucher-pill-meta">Giảm trực tiếp <?= vnd($pointsDiscountAmount) ?> trên giá trị sản phẩm.</div>
                 </div>
-                <button class="btn btn-sm btn-light border" type="submit" formaction="<?= BASE_URL ?>/index.php?r=bo_diem" formmethod="post" formnovalidate>Gỡ điểm</button>
+                <button class="btn btn-sm btn-light border" type="submit" formaction="<?= BASE_URL ?>/index.php?r=bo_diem#points-card-box" formmethod="post" formnovalidate>Gỡ điểm</button>
               </div>
             <?php else: ?>
               <div class="voucher-note">Tối đa có thể dùng cho đơn này: <?= number_format($maxUsablePoints, 0, ',', '.') ?> điểm.</div>
@@ -1746,5 +1758,15 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
     refreshPaymentState();
     refreshAddressState();
     updateAddressMap();
+
+    // Auto Smooth Scroll to Voucher / Points Card if Hash Present
+    if (window.location.hash) {
+      var hashTarget = document.querySelector(window.location.hash);
+      if (hashTarget) {
+        setTimeout(function () {
+          hashTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
   });
 </script>

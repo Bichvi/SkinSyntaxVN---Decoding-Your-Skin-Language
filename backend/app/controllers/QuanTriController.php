@@ -252,6 +252,7 @@ class QuanTriController {
             'donChoXuLy' => (int)($summary['don_cho_xu_ly'] ?? 0),
             'spMoi' => $this->thongKeModel->getSanPhamMoi(5),
             'userMoi' => $this->thongKeModel->getNguoiDungMoi(5),
+            'lowStockProducts' => $this->model->getLowStockProducts(5, 6),
             'summary' => $summary,
         ]);
     }
@@ -493,7 +494,7 @@ class QuanTriController {
         $errorMessage = method_exists($this->model, 'getLastErrorMessage')
             ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể cập nhật nhân viên.'))
             : 'Không thể cập nhật nhân viên.';
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã ngừng kích hoạt nhân viên.' : $errorMessage);
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái hoạt động của nhân viên.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_users');
     }
 
@@ -556,6 +557,12 @@ class QuanTriController {
         $q = trim((string)($_GET['q'] ?? ''));
         $status = trim((string)($_GET['status'] ?? ''));
         $detailId = max(0, (int)($_GET['detail'] ?? 0));
+
+        if (isset($_GET['export']) && in_array((string)$_GET['export'], ['excel', 'csv'], true)) {
+            $this->exportAdminOrders($q, $status);
+            return;
+        }
+
         $this->renderAdmin('orders', [
             'orders' => $this->model->listOrders($q, $status),
             'orderDetail' => $detailId > 0 ? $this->model->getOrderById($detailId) : null,
@@ -566,6 +573,35 @@ class QuanTriController {
             'allowManage' => true,
             'cancelReasonOptions' => $this->cancellationReasonOptions(),
         ]);
+    }
+
+    private function exportAdminOrders(string $q = '', string $status = ''): void {
+        $orders = $this->model->listOrders($q, $status);
+        $rows = [
+            ['Mã đơn', 'Khách hàng', 'Email', 'Số điện thoại', 'Ngày đặt', 'Hình thức thanh toán', 'Trạng thái thanh toán', 'Trạng thái đơn hàng', 'Tổng tiền (VND)', 'Địa chỉ giao hàng']
+        ];
+        foreach ($orders as $order) {
+            $rows[] = [
+                '#' . ($order['ma_hoa_don'] ?? ''),
+                $order['ho_ten'] ?? 'Khách hàng',
+                $order['email'] ?? '',
+                $order['so_dien_thoai'] ?? '',
+                $order['ngay_dat_hien_thi'] ?? ($order['ngay_dat'] ?? ''),
+                strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod'))) === 'bank_transfer_qr' ? 'QR chuyển khoản' : 'COD',
+                $order['status_thanh_toan'] ?? 'Chưa thanh toán',
+                $order['trang_thai_hien_thi'] ?? ($order['trang_thai'] ?? 'Chờ xử lý'),
+                (int)($order['tong_tien'] ?? 0),
+                $order['dia_chi_giao_hang'] ?? '',
+            ];
+        }
+        $filenameBase = 'danh_sach_don_hang_' . date('Ymd_His');
+        if (class_exists('ZipArchive')) {
+            $this->sendXlsxReport($filenameBase . '.xlsx', [
+                'Danh_sach_don_hang' => $rows
+            ]);
+            return;
+        }
+        $this->sendCsvReport($filenameBase . '.csv', $rows);
     }
 
     public function adminOrderStatus(): void {

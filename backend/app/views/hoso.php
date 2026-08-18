@@ -243,7 +243,7 @@ $accountVerificationHint = !empty($account['email'])
     font-size: 1.8rem;
     line-height: 1;
     font-weight: 800;
-    color: #10273d;
+    color: #1A2F1A;
   }
 
   .loyalty-progress-bar {
@@ -251,14 +251,14 @@ $accountVerificationHint = !empty($account['email'])
     overflow: hidden;
     height: 12px;
     border-radius: 999px;
-    background: #dfeaf6;
+    background: #E2EADF;
     margin-top: 10px;
   }
 
   .loyalty-progress-fill {
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #3cc59d 0%, #65b1ff 100%);
+    background: linear-gradient(90deg, #2D5A27 0%, #4A7C59 100%);
   }
 
   .loyalty-progress-scale {

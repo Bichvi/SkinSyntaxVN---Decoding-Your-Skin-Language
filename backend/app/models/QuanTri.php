@@ -215,6 +215,65 @@ class QuanTri {
         }
     }
 
+    public function getLowStockProducts(int $threshold = 5, int $limit = 6): array {
+        $threshold = max(0, $threshold);
+        $limit = max(1, min(20, $limit));
+        $sanPhamModel = new SanPham($this->db);
+
+        $stockFields = ['so_luong_ton_kho', 'so_luong_ton', 'ton_kho', 'stock', 'quantity'];
+        $orFilters = [];
+        foreach ($stockFields as $field) {
+            $orFilters[] = [$field => ['$lte' => $threshold]];
+            $orFilters[] = [$field => ['$lte' => (string)$threshold]];
+        }
+        $orFilters[] = ['trang_thai_kho' => 'het_hang'];
+
+        $filter = ['$or' => $orFilters];
+        $options = [
+            'sort' => ['updated_at' => -1, 'ngay_tao' => -1, 'ma_san_pham' => -1],
+            'limit' => 100
+        ];
+
+        $items = [];
+        $existIds = [];
+        $cursor = $this->db->san_pham->find($filter, $options);
+        foreach ($cursor as $doc) {
+            $p = (array)$doc;
+            $stock = $sanPhamModel->getProductStock($p);
+            if ($stock !== null && $stock <= $threshold) {
+                $brief = $sanPhamModel->getProductBriefById($p['ma_san_pham'] ?? $p['_id'] ?? '');
+                $brief['ton_kho'] = $stock;
+                $items[] = $brief;
+                $existIds[] = (string)($brief['id'] ?? '');
+            }
+            if (count($items) >= $limit) {
+                break;
+            }
+        }
+
+        if (count($items) < $limit) {
+            $allCursor = $this->db->san_pham->find([], [
+                'sort' => ['so_luong_ton_kho' => 1, 'ton_kho' => 1, 'ma_san_pham' => -1],
+                'limit' => 500
+            ]);
+            foreach ($allCursor as $doc) {
+                $p = (array)$doc;
+                $stock = $sanPhamModel->getProductStock($p);
+                if ($stock !== null && $stock <= $threshold) {
+                    $pId = (string)($p['ma_san_pham'] ?? $p['_id'] ?? '');
+                    if (in_array($pId, $existIds, true)) continue;
+                    $brief = $sanPhamModel->getProductBriefById($pId);
+                    $brief['ton_kho'] = $stock;
+                    $items[] = $brief;
+                    $existIds[] = $pId;
+                }
+                if (count($items) >= $limit) break;
+            }
+        }
+
+        return $items;
+    }
+
     private function resolveKhachHangByEmail(string $email, string $defaultName = 'Khach hang'): ?array {
         $email = trim($email);
         if ($email === '') return null;
@@ -725,15 +784,40 @@ class QuanTri {
         $email = trim((string)($customer['email'] ?? ''));
 
         try {
-            $this->db->khach_hang->deleteOne(['ma_kh' => $id]);
+            $regex = $email !== '' ? new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i') : null;
 
-            if ($email !== '') {
-                $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+            // 1. Delete customer document from khach_hang
+            $this->db->khach_hang->deleteMany(['ma_kh' => $id]);
+            if ($regex) {
+                $this->db->khach_hang->deleteMany(['email' => $regex]);
+            }
+
+            // 2. Delete user account from nguoidung (unless staff)
+            if ($regex) {
                 $staff = $this->db->nhan_vien->findOne(['email' => $regex]);
                 if (!$staff) {
-                    $this->db->nguoidung->deleteOne(['email' => $regex]);
+                    $this->db->nguoidung->deleteMany(['email' => $regex]);
                 }
             }
+
+            // 3. Delete or disassociate all orders and order details for this ma_kh and email
+            $orConds = [['ma_kh' => $id]];
+            if ($regex) {
+                $orConds[] = ['email' => $regex];
+            }
+            $orderDocs = iterator_to_array($this->db->hoa_don->find(['$or' => $orConds]));
+            $orderIds = array_column($orderDocs, 'ma_hoa_don');
+            if (!empty($orderIds)) {
+                $this->db->chi_tiet_hoa_don->deleteMany(['ma_hoa_don' => ['$in' => $orderIds]]);
+            }
+            $this->db->hoa_don->deleteMany(['$or' => $orConds]);
+
+            // 4. Clean up search history & chat history
+            if ($regex) {
+                $this->db->lich_su_chat->deleteMany(['$or' => [['email' => $regex], ['ma_kh' => $id]]]);
+                $this->db->lich_su_tim_kiem->deleteMany(['$or' => [['email' => $regex], ['ma_kh' => $id]]]);
+            }
+
             return true;
         } catch (Throwable $e) {
             return false;
@@ -751,10 +835,8 @@ class QuanTri {
     }
 
     public function listStaff(string $keyword = ''): array {
-        $filter = [];
-        $filter['$or'] = [
-            ['deleted_at' => null],
-            ['deleted_at' => ['$exists' => false]]
+        $filter = [
+            'trang_thai' => ['$ne' => 'deleted']
         ];
 
         $keyword = trim($keyword);
@@ -855,10 +937,27 @@ class QuanTri {
 
     public function deleteStaff(int $id): bool {
         $this->lastErrorMessage = null;
+        $nv = $this->getStaffById($id);
+        if (!$nv) {
+            $this->lastErrorMessage = 'Không tìm thấy nhân viên.';
+            return false;
+        }
+
+        $currentStatus = strtolower(trim((string)($nv['trang_thai'] ?? 'active')));
+        $newStatus = ($currentStatus === 'active') ? 'inactive' : 'active';
+
         try {
             $this->db->nhan_vien->updateOne(
                 ['ma_nv' => $id],
-                ['$set' => ['trang_thai' => 'inactive', 'deleted_at' => new \MongoDB\BSON\UTCDateTime(), 'updated_at' => new \MongoDB\BSON\UTCDateTime()]]
+                [
+                    '$set' => [
+                        'trang_thai' => $newStatus,
+                        'updated_at' => new \MongoDB\BSON\UTCDateTime()
+                    ],
+                    '$unset' => [
+                        'deleted_at' => ''
+                    ]
+                ]
             );
             return true;
         } catch (Throwable $e) {
