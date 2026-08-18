@@ -36,6 +36,10 @@ $pinnedBrand = (string)($pinnedP['thuong_hieu'] ?? 'SkinSyntax');
 $pinnedPrice = (float)($currentLive['gia_uu_dai_live'] ?? $pinnedP['gia_ban'] ?? 78000);
 $pinnedMarketPrice = (float)($pinnedP['gia_thi_truong'] ?? 0);
 $pinnedImg = resolve_image_url((string)($pinnedP['link_hinh_anh'] ?? $pinnedP['image_url'] ?? ''));
+
+$liveStatus = $currentLive['status'] ?? 'ended';
+$isLiveActive = ($liveStatus === 'live');
+$isUpcoming = ($liveStatus === 'upcoming');
 ?>
 
 <div class="container py-4">
@@ -51,9 +55,15 @@ $pinnedImg = resolve_image_url((string)($pinnedP['link_hinh_anh'] ?? $pinnedP['i
           <!-- TOP VIDEO OVERLAY INFO -->
           <div class="position-absolute top-0 start-0 w-100 p-3 d-flex align-items-center justify-content-between text-white" style="background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); z-index: 10;">
             <div class="d-flex align-items-center gap-2">
-              <span class="badge bg-danger rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-circle text-white me-1"></i>TRỰC TIẾP</span>
-              <span class="badge bg-dark bg-opacity-75 rounded-pill px-2.5 py-1" style="font-size: 0.75rem;"><i class="fa-solid fa-eye text-warning me-1"></i><span id="liveViewerCount"><?= number_format($currentLive['viewers'] ?? 1420) ?></span> người xem</span>
-              <span class="badge bg-dark bg-opacity-75 rounded-pill px-2.5 py-1 text-info" style="font-size: 0.75rem;"><i class="fa-solid fa-bolt me-1"></i>Latency: 120ms (WebRTC)</span>
+              <?php if ($isLiveActive): ?>
+                <span class="badge bg-danger rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-circle text-white me-1"></i>TRỰC TIẾP</span>
+                <span class="badge bg-dark bg-opacity-75 rounded-pill px-2.5 py-1" style="font-size: 0.75rem;"><i class="fa-solid fa-eye text-warning me-1"></i><span id="liveViewerCount"><?= number_format($currentLive['viewers'] ?? 1420) ?></span> người xem</span>
+                <span class="badge bg-dark bg-opacity-75 rounded-pill px-2.5 py-1 text-info" style="font-size: 0.75rem;"><i class="fa-solid fa-bolt me-1"></i>Latency: 120ms (WebRTC)</span>
+              <?php elseif ($isUpcoming): ?>
+                <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-clock me-1"></i>⏰ SẮP DIỄN RA (LỊCH PHÁT SÓNG)</span>
+              <?php else: ?>
+                <span class="badge bg-secondary rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-flag-checkered me-1"></i>⏹️ PHIÊN LIVE ĐÃ KẾT THÚC</span>
+              <?php endif; ?>
             </div>
             <div class="d-flex align-items-center gap-2">
               <span class="badge bg-success bg-opacity-90 rounded-pill px-2.5 py-1" style="font-size: 0.75rem;" title="Hệ thống đang tự động ghi hình phiên Live"><i class="fa-solid fa-record-vinyl text-danger me-1"></i>Recording Active</span>
@@ -77,8 +87,8 @@ $pinnedImg = resolve_image_url((string)($pinnedP['link_hinh_anh'] ?? $pinnedP['i
       <!-- PINNED LIVE SALE PRODUCT BAR -->
       <div class="card border-0 rounded-4 shadow-sm p-3 mt-3" style="background: #F4F8F4; border: 1.5px solid #C5DAC8 !important;">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <span class="badge bg-danger rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-thumbtack me-1"></i>SẢN PHẨM ĐANG GHIM TRONG LIVE</span>
-          <span class="text-success fw-bold small"><i class="fa-solid fa-tags me-1"></i>Đồng Giá Ưu Đãi Trực Tiếp</span>
+          <span class="badge bg-danger rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-thumbtack me-1"></i>SẢN PHẨM GHIM TRONG LIVE</span>
+          <span class="text-success fw-bold small"><i class="fa-solid fa-tags me-1"></i>Ưu Đãi Khung Giờ Phát Sóng</span>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap">
           <img src="<?= h($pinnedImg !== '' ? $pinnedImg : BASE_URL . '/assets/images/hero_campaign_ai_skin.png') ?>" alt="Pinned Product" class="rounded-3" style="width: 70px; height: 70px; object-fit: cover; border: 1px solid #C5DAC8;">
@@ -93,15 +103,31 @@ $pinnedImg = resolve_image_url((string)($pinnedP['link_hinh_anh'] ?? $pinnedP['i
               <?php endif; ?>
             </div>
           </div>
-          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 ms-auto">
-            <input type="hidden" name="action" value="add_to_cart">
-            <input type="hidden" name="buy_now" value="1">
-            <input type="hidden" name="product_id" value="<?= h($pinnedId) ?>">
-            <input type="hidden" name="quantity" value="1">
-            <button type="submit" class="btn text-white fw-bold px-4 py-2.5 btn-buy-now-pulse rounded-pill" style="background: linear-gradient(135deg, #215427 0%, #162F18 100%); border: none; font-size: 0.9rem;">
-              ⚡ MUA NGAY TRONG LIVE
-            </button>
-          </form>
+          <?php if ($isLiveActive): ?>
+            <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 ms-auto">
+              <input type="hidden" name="action" value="add_to_cart">
+              <input type="hidden" name="buy_now" value="1">
+              <input type="hidden" name="product_id" value="<?= h($pinnedId) ?>">
+              <input type="hidden" name="quantity" value="1">
+              <button type="submit" class="btn text-white fw-bold px-4 py-2.5 btn-buy-now-pulse rounded-pill" style="background: linear-gradient(135deg, #215427 0%, #162F18 100%); border: none; font-size: 0.9rem;">
+                ⚡ MUA NGAY TRONG LIVE
+              </button>
+            </form>
+          <?php elseif ($isUpcoming): ?>
+            <div class="m-0 ms-auto text-end">
+              <button type="button" class="btn btn-secondary disabled rounded-pill px-4 py-2 fw-bold" style="font-size: 0.85rem;" disabled>
+                ⏰ Phiên Live Sắp Diễn Ra
+              </button>
+              <div class="extra-small text-muted mt-1"><i class="fa-solid fa-lock me-1"></i>Chưa đến giờ mở bán Live</div>
+            </div>
+          <?php else: ?>
+            <div class="m-0 ms-auto text-end">
+              <button type="button" class="btn btn-secondary disabled rounded-pill px-4 py-2 fw-bold" style="font-size: 0.85rem;" disabled>
+                ⏹️ Phiên Live Đã Kết Thúc
+              </button>
+              <div class="extra-small text-muted mt-1"><i class="fa-solid fa-lock me-1"></i>Khung giờ ưu đãi đã đóng</div>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -114,35 +140,48 @@ $pinnedImg = resolve_image_url((string)($pinnedP['link_hinh_anh'] ?? $pinnedP['i
             <i class="fa-solid fa-comments text-success fs-5"></i>
             <strong class="text-dark" style="font-size: 0.95rem;">Live Chat & AI Agent</strong>
           </div>
-          <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5 py-1 extra-small fw-bold"><i class="fa-solid fa-robot me-1"></i>AI Co-Host Active</span>
+          <?php if ($isLiveActive): ?>
+            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5 py-1 extra-small fw-bold"><i class="fa-solid fa-robot me-1"></i>AI Co-Host Active</span>
+          <?php else: ?>
+            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2.5 py-1 extra-small fw-bold"><i class="fa-solid fa-lock me-1"></i>Chat Tạm Khóa</span>
+          <?php endif; ?>
         </div>
 
         <!-- LIVE CHAT MESSAGES BODY -->
         <div class="card-body p-3 overflow-auto flex-grow-1" id="liveChatBox" style="max-height: 380px; min-height: 320px; font-size: 0.85rem; background: #F8FAF8;">
           <div class="chat-msg mb-2 p-2 rounded-3 bg-white border" style="border-color: #E2EADF !important;">
-            <strong class="text-success" style="color: #215427;"><i class="fa-solid fa-shield-halved me-1"></i>Hệ thống SkinSyntax:</strong> Chúc mừng phiên Live Stream đã kết nối máy chủ LiveKit WebRTC Cloud thành công! AI Agent sẵn sàng hỗ trợ tự động chốt đơn và tư vấn sản phẩm <strong><?= h($pinnedName) ?></strong>.
+            <strong class="text-success" style="color: #215427;"><i class="fa-solid fa-shield-halved me-1"></i>Hệ thống SkinSyntax:</strong> Chúc mừng phiên Live Stream đã kết nối máy chủ LiveKit WebRTC Cloud thành công! AI Agent sẵn sàng hỗ trợ tư vấn sản phẩm <strong><?= h($pinnedName) ?></strong>.
           </div>
-          <div class="chat-msg mb-2 p-2 rounded-3 bg-white border" style="border-color: #E2EADF !important;">
-            <strong class="text-primary">Thu Trang (Hà Nội):</strong> Sản phẩm <?= h($pinnedName) ?> có ưu đãi giá tốt không ạ?
-          </div>
-          <div class="chat-msg mb-2 p-2.5 rounded-3 text-white" style="background: linear-gradient(135deg, #162F18 0%, #215427 100%);">
-            <strong style="color: #6EE7B7;"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>AI Skin Co-Host (RAG):</strong> Qua phân tích dữ liệu sản phẩm <strong><?= h($pinnedName) ?></strong> từ hãng <?= h($pinnedBrand) ?>, sản phẩm đang có giá ưu đãi độc quyền <strong><?= vnd($pinnedPrice) ?></strong> ngay trong phiên Live này ạ!
-          </div>
-          <div class="chat-msg mb-2 p-2 rounded-3 bg-white border" style="border-color: #E2EADF !important;">
-            <strong class="text-danger">Quốc Bảo (TP.HCM):</strong> chốt đơn
-          </div>
-          <div class="chat-msg mb-2 p-2.5 rounded-3 text-white" style="background: linear-gradient(135deg, #162F18 0%, #215427 100%);">
-            <strong style="color: #FCD34D;"><i class="fa-solid fa-robot me-1"></i>AI Agent Auto-Checkout:</strong> ⚡ Đã tự động chốt đơn 1x <?= h($pinnedName) ?> cho anh Quốc Bảo với giá <?= vnd($pinnedPrice) ?>! Vui lòng bấm vào giỏ hàng để xác nhận đơn.
-          </div>
+          <?php if ($isLiveActive): ?>
+            <div class="chat-msg mb-2 p-2 rounded-3 bg-white border" style="border-color: #E2EADF !important;">
+              <strong class="text-primary">Thu Trang (Hà Nội):</strong> Sản phẩm <?= h($pinnedName) ?> có ưu đãi giá tốt không ạ?
+            </div>
+            <div class="chat-msg mb-2 p-2.5 rounded-3 text-white" style="background: linear-gradient(135deg, #162F18 0%, #215427 100%);">
+              <strong style="color: #6EE7B7;"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>AI Skin Co-Host (RAG):</strong> Qua phân tích dữ liệu sản phẩm <strong><?= h($pinnedName) ?></strong> từ hãng <?= h($pinnedBrand) ?>, sản phẩm đang có giá ưu đãi độc quyền <strong><?= vnd($pinnedPrice) ?></strong> ngay trong phiên Live này ạ!
+            </div>
+          <?php else: ?>
+            <div class="alert alert-warning text-center rounded-3 my-3 p-3 small" style="border: 1px dashed #F59E0B;">
+              <i class="fa-solid fa-lock fs-5 d-block mb-1 text-warning"></i>
+              <strong>Khung Chat Tạm Khóa</strong><br>
+              <?= $isUpcoming ? 'Phiên LiveStream sắp diễn ra theo lịch. Vui lòng quay lại vào khung giờ phát sóng!' : 'Phiên LiveStream đã kết thúc. Cảm ơn bạn đã tham gia!' ?>
+            </div>
+          <?php endif; ?>
         </div>
 
         <!-- LIVE CHAT INPUT FORM -->
         <div class="card-footer p-3 bg-white border-top" style="border-color: #E2EADF !important;">
           <form id="liveChatForm" class="d-flex gap-2">
-            <input type="text" id="liveChatInput" class="form-control form-control-sm rounded-pill px-3" placeholder="Nhập tin nhắn hoặc 'chốt đơn'..." required style="border-color: #C5DAC8;">
-            <button type="submit" class="btn text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: #215427; border: none;">
-              <i class="fa-solid fa-paper-plane" style="font-size: 0.85rem;"></i>
-            </button>
+            <?php if ($isLiveActive): ?>
+              <input type="text" id="liveChatInput" class="form-control form-control-sm rounded-pill px-3" placeholder="Nhập tin nhắn hoặc 'chốt đơn'..." required style="border-color: #C5DAC8;">
+              <button type="submit" class="btn text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: #215427; border: none;">
+                <i class="fa-solid fa-paper-plane" style="font-size: 0.85rem;"></i>
+              </button>
+            <?php else: ?>
+              <input type="text" class="form-control form-control-sm rounded-pill px-3" placeholder="🔒 Phiên Live chưa diễn ra / đã kết thúc. Khung chat bị khóa." disabled style="background: #F1F5F1; cursor: not-allowed;">
+              <button type="button" class="btn btn-secondary rounded-circle d-flex align-items-center justify-content-center" disabled style="width: 36px; height: 36px;">
+                <i class="fa-solid fa-lock" style="font-size: 0.85rem;"></i>
+              </button>
+            <?php endif; ?>
           </form>
           <div class="extra-small text-muted mt-2" style="font-size: 0.72rem;">
             💡 <strong>Mẹo:</strong> Gõ <code>"chốt đơn"</code> hoặc hỏi về hoạt chất để thử phản hồi AI Agent!
@@ -261,6 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append('message', text);
     formData.append('product_id', '<?= h($pinnedId) ?>');
     formData.append('pinned_price', '<?= (float)$pinnedPrice ?>');
+    formData.append('room_id', '<?= h($currentLive['id']) ?>');
 
     fetch('<?= BASE_URL ?>/index.php?r=api_live_chat', {
       method: 'POST',
