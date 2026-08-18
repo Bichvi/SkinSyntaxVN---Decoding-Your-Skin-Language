@@ -28,6 +28,16 @@ require_once __DIR__ . '/layouts/header.php';
   </div>
 </div>
 
+<?php
+$pinnedP = $currentLive['pinned_product'] ?? null;
+$pinnedId = (string)($pinnedP['ma_san_pham'] ?? $pinnedP['id'] ?? '5876');
+$pinnedName = (string)($pinnedP['ten_san_pham'] ?? 'Sản phẩm ghim ưu đãi trong Live');
+$pinnedBrand = (string)($pinnedP['thuong_hieu'] ?? 'SkinSyntax');
+$pinnedPrice = (float)($currentLive['gia_uu_dai_live'] ?? $pinnedP['gia_ban'] ?? 78000);
+$pinnedMarketPrice = (float)($pinnedP['gia_thi_truong'] ?? 0);
+$pinnedImg = resolve_image_url((string)($pinnedP['link_hinh_anh'] ?? $pinnedP['image_url'] ?? ''));
+?>
+
 <div class="container py-4">
   <!-- MAIN INTERACTIVE LIVESTREAM STUDIO -->
   <div class="row g-4 mb-5">
@@ -36,13 +46,13 @@ require_once __DIR__ . '/layouts/header.php';
       <div class="live-player-card card border-0 rounded-4 overflow-hidden shadow-lg bg-dark position-relative" style="aspect-ratio: 16/9; border: 1.5px solid #215427 !important;">
         <!-- Simulated LiveKit WebRTC Video Screen -->
         <div class="live-video-stream w-100 h-100 position-relative d-flex align-items-center justify-content-center" style="background: radial-gradient(circle at center, #1E3A21 0%, #0B190D 100%);">
-          <img src="<?= BASE_URL ?>/assets/images/hero_campaign_ai_skin.png" alt="Live Stream" class="w-100 h-100" style="object-fit: cover; opacity: 0.85;">
+          <img src="<?= h($currentLive['thumbnail'] ?? BASE_URL . '/assets/images/hero_campaign_ai_skin.png') ?>" alt="Live Stream" class="w-100 h-100" style="object-fit: cover; opacity: 0.85;">
 
           <!-- TOP VIDEO OVERLAY INFO -->
           <div class="position-absolute top-0 start-0 w-100 p-3 d-flex align-items-center justify-content-between text-white" style="background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); z-index: 10;">
             <div class="d-flex align-items-center gap-2">
               <span class="badge bg-danger rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-circle text-white me-1"></i>TRỰC TIẾP</span>
-              <span class="badge bg-dark bg-opacity-75 rounded-pill px-2.5 py-1" style="font-size: 0.75rem;"><i class="fa-solid fa-eye text-warning me-1"></i><span id="liveViewerCount">1,420</span> người xem</span>
+              <span class="badge bg-dark bg-opacity-75 rounded-pill px-2.5 py-1" style="font-size: 0.75rem;"><i class="fa-solid fa-eye text-warning me-1"></i><span id="liveViewerCount"><?= number_format($currentLive['viewers'] ?? 1420) ?></span> người xem</span>
               <span class="badge bg-dark bg-opacity-75 rounded-pill px-2.5 py-1 text-info" style="font-size: 0.75rem;"><i class="fa-solid fa-bolt me-1"></i>Latency: 120ms (WebRTC)</span>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -56,17 +66,10 @@ require_once __DIR__ . '/layouts/header.php';
             <div class="d-flex align-items-center gap-2 mb-1">
               <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; border: 2px solid #FFF;">DS</div>
               <div>
-                <strong class="d-block text-white" style="font-size: 0.95rem;">DS. Minh Trang & AI Skin Co-Host</strong>
-                <small class="text-light opacity-75" style="font-size: 0.75rem;">Đang trình bày: Routine Phục Hồi Da Dầu Mụn Với B5 & Salicylic Acid</small>
+                <strong class="d-block text-white" style="font-size: 0.95rem;"><?= h($currentLive['streamer'] ?? 'DS. Minh Trang & AI Skin Co-Host') ?></strong>
+                <small class="text-light opacity-75" style="font-size: 0.75rem;"><?= h($currentLive['title'] ?? 'Routine Phục Hồi Da Dầu Mụn Với B5 & Salicylic Acid') ?></small>
               </div>
             </div>
-          </div>
-
-          <!-- WEBRTC LIVEKIT STATUS INDICATOR -->
-          <div class="position-absolute center text-center p-3 rounded-4" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); max-width: 320px; display: none;" id="livekitConnectingBox">
-            <div class="spinner-border text-success mb-2" role="status"></div>
-            <div class="fw-bold text-white small">Đang kết nối LiveKit WebRTC Cloud...</div>
-            <div class="extra-small text-muted" style="font-size: 0.7rem;">ws_url: wss://skinsyntax-live.livekit.cloud</div>
           </div>
         </div>
       </div>
@@ -78,22 +81,22 @@ require_once __DIR__ . '/layouts/header.php';
           <span class="text-success fw-bold small"><i class="fa-solid fa-tags me-1"></i>Đồng Giá Ưu Đãi Trực Tiếp</span>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap">
-          <img src="<?= h(resolve_image_url($topSaleProducts[0]['link_hinh_anh'] ?? '')) ?>" alt="Pinned Product" class="rounded-3" style="width: 70px; height: 70px; object-fit: cover; border: 1px solid #C5DAC8;">
+          <img src="<?= h($pinnedImg !== '' ? $pinnedImg : BASE_URL . '/assets/images/hero_campaign_ai_skin.png') ?>" alt="Pinned Product" class="rounded-3" style="width: 70px; height: 70px; object-fit: cover; border: 1px solid #C5DAC8;">
           <div class="flex-grow-1" style="min-width: 200px;">
-            <span class="badge bg-success text-white rounded-pill extra-small mb-1" style="font-size: 0.68rem;"><?= h($topSaleProducts[0]['thuong_hieu'] ?? 'SkinSyntax') ?></span>
-            <h6 class="fw-bold text-dark mb-1 text-truncate" style="max-width: 380px; font-size: 0.95rem;"><?= h($topSaleProducts[0]['ten_san_pham'] ?? 'Serum Phục Hồi Da SkinSyntax B5') ?></h6>
+            <span class="badge bg-success text-white rounded-pill extra-small mb-1" style="font-size: 0.68rem;"><?= h($pinnedBrand) ?></span>
+            <h6 class="fw-bold text-dark mb-1 text-truncate" style="max-width: 380px; font-size: 0.95rem;"><?= h($pinnedName) ?></h6>
             <div class="d-flex align-items-baseline gap-2">
-              <span class="fw-extrabold text-success fs-5" style="color: #215427 !important;"><?= vnd($topSaleProducts[0]['gia_ban'] ?? 78000) ?></span>
-              <?php if (!empty($topSaleProducts[0]['gia_thi_truong'])): ?>
-                <span class="text-muted text-decoration-line-through small"><?= vnd($topSaleProducts[0]['gia_thi_truong']) ?></span>
+              <span class="fw-extrabold text-success fs-5" style="color: #215427 !important;"><?= vnd($pinnedPrice) ?></span>
+              <?php if ($pinnedMarketPrice > $pinnedPrice): ?>
+                <span class="text-muted text-decoration-line-through small"><?= vnd($pinnedMarketPrice) ?></span>
+                <span class="badge bg-danger rounded-pill" style="font-size: 0.7rem;">-<?= (int)round((($pinnedMarketPrice - $pinnedPrice)/$pinnedMarketPrice)*100) ?>% OFF</span>
               <?php endif; ?>
-              <span class="badge bg-danger rounded-pill" style="font-size: 0.7rem;">-84% OFF</span>
             </div>
           </div>
           <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 ms-auto">
             <input type="hidden" name="action" value="add_to_cart">
             <input type="hidden" name="buy_now" value="1">
-            <input type="hidden" name="product_id" value="<?= h((string)($topSaleProducts[0]['ma_san_pham'] ?? $topSaleProducts[0]['id'] ?? '5876')) ?>">
+            <input type="hidden" name="product_id" value="<?= h($pinnedId) ?>">
             <input type="hidden" name="quantity" value="1">
             <button type="submit" class="btn text-white fw-bold px-4 py-2.5 btn-buy-now-pulse rounded-pill" style="background: linear-gradient(135deg, #215427 0%, #162F18 100%); border: none; font-size: 0.9rem;">
               ⚡ MUA NGAY TRONG LIVE
@@ -180,8 +183,8 @@ require_once __DIR__ . '/layouts/header.php';
               <p class="text-muted small mb-3 flex-grow-1" style="font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                 <?= h($session['description']) ?>
               </p>
-              <a href="<?= BASE_URL ?>/index.php?r=live" class="btn btn-sm w-100 rounded-pill fw-bold mt-auto" style="background: <?= $session['status'] === 'live' ? 'linear-gradient(135deg, #215427 0%, #162F18 100%)' : '#EAF0EB' ?>; color: <?= $session['status'] === 'live' ? '#FFF' : '#215427' ?>; border: <?= $session['status'] === 'live' ? 'none' : '1px solid #C5DAC8' ?>;">
-                <?= $session['status'] === 'live' ? 'Tham Gia Xem Live & Chat AI' : 'Đăng Ký Nhận Thông Báo' ?>
+              <a href="<?= BASE_URL ?>/index.php?r=live&id=<?= urlencode((string)$session['id']) ?>" class="btn btn-sm w-100 rounded-pill fw-bold mt-auto" style="background: <?= $session['status'] === 'live' ? 'linear-gradient(135deg, #215427 0%, #162F18 100%)' : '#EAF0EB' ?>; color: <?= $session['status'] === 'live' ? '#FFF' : '#215427' ?>; border: <?= $session['status'] === 'live' ? 'none' : '1px solid #C5DAC8' ?>;">
+                <?= $session['status'] === 'live' ? '⚡ Vào Xem LiveStream Này' : '⏰ Xem Chi Tiết Phiên Live' ?>
               </a>
             </div>
           </div>
