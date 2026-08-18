@@ -132,30 +132,13 @@ class LiveController {
 
         $aiReply = '';
         if ($isOrderCommand) {
-            if (!isset($_SESSION['gio_hang'])) {
+            if (!isset($_SESSION['gio_hang']) || !is_array($_SESSION['gio_hang'])) {
                 $_SESSION['gio_hang'] = [];
             }
             $pIdStr = (string)($pinnedProduct['ma_san_pham'] ?? $pinnedProduct['id'] ?? $productId);
             if ($pIdStr !== '') {
-                $found = false;
-                foreach ($_SESSION['gio_hang'] as &$item) {
-                    if ((string)($item['ma_san_pham'] ?? $item['product_id'] ?? '') === $pIdStr) {
-                        $item['so_luong'] = (int)($item['so_luong'] ?? 1) + 1;
-                        $found = true;
-                        break;
-                    }
-                }
-                unset($item);
-                if (!$found) {
-                    $_SESSION['gio_hang'][] = [
-                        'ma_san_pham' => $pIdStr,
-                        'product_id' => $pIdStr,
-                        'ten_san_pham' => $productName,
-                        'gia_ban' => $productPrice,
-                        'link_hinh_anh' => $pinnedProduct['link_hinh_anh'] ?? '',
-                        'so_luong' => 1
-                    ];
-                }
+                $currentQty = (int)($_SESSION['gio_hang'][$pIdStr] ?? 0);
+                $_SESSION['gio_hang'][$pIdStr] = $currentQty + 1;
             }
 
             $userDisplayName = is_logged_in() ? (current_user()['ho_ten'] ?? 'bạn') : 'khách hàng';
@@ -177,12 +160,17 @@ class LiveController {
             $aiReply = '🤖 [AI Skin Co-Host]: Dựa trên thông tin sản phẩm "' . $productName . '" (' . $productBrand . '): ' . $descSnippet . '... Sản phẩm đang có giá ưu đãi sốc ' . number_format($productPrice) . 'đ trong phiên Live. Bạn gõ "chốt đơn" để đặt ngay nhé!';
         }
 
+        $cartCount = 0;
+        foreach (($_SESSION['gio_hang'] ?? []) as $qVal) {
+            $cartCount += (int)$qVal;
+        }
+
         echo json_encode([
             'ok' => true,
             'user_message' => $message,
             'ai_response' => $aiReply,
             'is_order' => $isOrderCommand,
-            'cart_count' => isset($_SESSION['gio_hang']) ? count($_SESSION['gio_hang']) : 0,
+            'cart_count' => $cartCount,
             'timestamp' => date('H:i:s')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
