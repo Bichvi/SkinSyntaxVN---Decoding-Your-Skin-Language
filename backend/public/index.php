@@ -252,6 +252,47 @@ switch ($r) {
         (new AuthController($pdo))->guiOtpDangKy();
         break;
 
+
+    case 'doimatkhau':
+        (new TaiKhoanController($pdo))->doiMatKhau();
+        break;
+
+    case 'dangnhap':
+        (new AuthController($pdo))->dangnhap();
+        break;
+
+    case 'xulydangnhap':
+        (new AuthController($pdo))->xulydangnhap();
+        break;
+
+    case 'quen_mat_khau':
+        (new AuthController($pdo))->quenMatKhau();
+        break;
+
+    case 'gui_lien_ket_dat_lai':
+        (new AuthController($pdo))->guiLienKetDatLai();
+        break;
+
+    case 'dat_lai_mat_khau':
+        (new AuthController($pdo))->datLaiMatKhau();
+        break;
+
+    case 'auth_social':
+        (new AuthController($pdo))->authSocial();
+        break;
+
+    case 'auth_social_callback':
+        (new AuthController($pdo))->authSocialCallback();
+        break;
+
+    case 'dangky':
+        (new AuthController($pdo))->dangky();
+        break;
+
+    case 'gui_otp_dang_ky':
+        (new AuthController($pdo))->guiOtpDangKy();
+        break;
+
     case 'gui_captcha_dang_ky':
         $controller = new AuthController($pdo);
         $controller->{'guiCaptchaDangKy'}();
@@ -287,6 +328,22 @@ switch ($r) {
 
     case 'admin_sp_edit':
         (new QuanTriController($pdo))->adminProductEdit();
+        break;
+
+    case 'admin_lives':
+        (new QuanTriController($pdo))->adminLives();
+        break;
+
+    case 'admin_live_create':
+        (new QuanTriController($pdo))->adminLiveCreate();
+        break;
+
+    case 'admin_live_status':
+        (new QuanTriController($pdo))->adminLiveStatus();
+        break;
+
+    case 'admin_live_delete':
+        (new QuanTriController($pdo))->adminLiveDelete();
         break;
 
     case 'admin_sp_delete':

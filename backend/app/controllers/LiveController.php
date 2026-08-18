@@ -14,38 +14,30 @@ class LiveController {
         $spModel = new SanPham($mongoDb);
         $topSaleProducts = $spModel->getDiscountProducts([], 6);
 
-        $liveSessions = [
-            [
-                'id' => 'room-skin-01',
-                'title' => '🔴 LIVE: Gỡ Rối Routine Phục Hồi Da Dầu Mụn Với AI Skin Agent & Dược Sĩ',
-                'streamer' => 'DS. Minh Trang & AI Co-Host',
-                'viewers' => 1420,
-                'status' => 'live',
-                'thumbnail' => BASE_URL . '/assets/images/hero_campaign_ai_skin.png',
-                'pinned_product' => $topSaleProducts[0] ?? null,
-                'description' => 'Trực tiếp giải đáp thắc mắc làn da, tra cứu thành phần hoạt chất bằng AI RAG và săn deal giảm giá đến 80%!'
-            ],
-            [
-                'id' => 'room-sale-02',
-                'title' => '⚡ FLASH SALE LIVESTREAM: Chốt Đơn Tự Động 24/7 Với LiveKit & LLM AI',
-                'streamer' => 'SkinSyntax Official Stream',
-                'viewers' => 980,
-                'status' => 'live',
-                'thumbnail' => BASE_URL . '/assets/images/hero_campaign_flash_sale.png',
-                'pinned_product' => $topSaleProducts[1] ?? null,
-                'description' => 'Hệ thống tự động hóa đặt hàng thông qua lệnh chốt đơn trong Live Chat. Kết nối LiveKit WebRTC siêu tốc!'
-            ],
-            [
-                'id' => 'room-routine-03',
-                'title' => '⏰ SẮP DỄN RA (20:00): Hướng Dẫn Kết Hợp Niacinamide & BHA Cho Da Nhạy Cảm',
-                'streamer' => 'Beauty Editor Thu Thảo',
-                'viewers' => 0,
-                'status' => 'upcoming',
-                'thumbnail' => BASE_URL . '/assets/images/hero_campaign_personalized.png',
-                'pinned_product' => $topSaleProducts[2] ?? null,
-                'description' => 'Phiên Live chia sẻ kinh nghiệm chọn nồng độ hoạt chất chuẩn y khoa cho người mới bắt đầu.'
-            ]
-        ];
+        require_once __DIR__ . '/../models/PhienLive.php';
+        $phienLiveModel = new PhienLive($mongoDb);
+        $rawLives = $phienLiveModel->getAllLives();
+
+        $liveSessions = [];
+        foreach ($rawLives as $idx => $live) {
+            $p = null;
+            if (!empty($live['ma_san_pham_ghim'])) {
+                $p = $spModel->findById($live['ma_san_pham_ghim']);
+            }
+            if (!$p && !empty($topSaleProducts[$idx])) {
+                $p = $topSaleProducts[$idx];
+            }
+            $liveSessions[] = [
+                'id' => (string)($live['ma_phong'] ?? $live['id'] ?? $idx),
+                'title' => (string)($live['tieu_de'] ?? ''),
+                'streamer' => (string)($live['streamer'] ?? ''),
+                'viewers' => (int)($live['luot_xem'] ?? 0),
+                'status' => in_array($live['trang_thai'], ['danglive', 'live'], true) ? 'live' : ($live['trang_thai'] === 'chuamoi' ? 'upcoming' : 'ended'),
+                'thumbnail' => BASE_URL . '/assets/images/' . ($idx === 1 ? 'hero_campaign_flash_sale.png' : ($idx === 2 ? 'hero_campaign_personalized.png' : 'hero_campaign_ai_skin.png')),
+                'pinned_product' => $p,
+                'description' => 'Khung giờ Live: ' . ($live['khung_gio_bat_dau'] ?? '') . ' - Giá sốc trong Live: ' . number_format($live['gia_uu_dai_live'] ?? 0) . 'đ'
+            ];
+        }
 
         require_once __DIR__ . '/../views/live.php';
     }

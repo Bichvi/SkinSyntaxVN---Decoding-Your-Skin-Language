@@ -1499,4 +1499,85 @@ class QuanTriController {
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã hủy đơn hàng.' : 'Không thể hủy đơn hàng.');
         redirect(BASE_URL . '/index.php?r=hoso');
     }
+
+    public function adminLives(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if (!user_can_access_route('admin_lives')) {
+            $this->denyAccess();
+        }
+
+        require_once __DIR__ . '/../models/PhienLive.php';
+        $phienLiveModel = new PhienLive($this->pdo);
+        $lives = $phienLiveModel->getAllLives();
+        $allProducts = $this->sanPhamModel->all();
+
+        foreach ($lives as &$live) {
+            if (!empty($live['ma_san_pham_ghim'])) {
+                $p = $this->sanPhamModel->findById($live['ma_san_pham_ghim']);
+                if ($p) {
+                    $live['pinned_product'] = $p;
+                }
+            }
+        }
+        unset($live);
+
+        $this->renderAdmin('lives', [
+            'pageTitle' => 'Quản lý Phiên LiveStream AI & Ưu Đãi Khung Giờ',
+            'user' => $user,
+            'lives' => $lives,
+            'allProducts' => $allProducts
+        ]);
+    }
+
+    public function adminLiveCreate(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if (!user_can_access_route('admin_lives')) {
+            $this->denyAccess();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/PhienLive.php';
+            $phienLiveModel = new PhienLive($this->pdo);
+            $ok = $phienLiveModel->taoPhienLive($_POST);
+            set_flash($ok ? 'success' : 'error', $ok ? 'Đã tạo phiên LiveStream mới thành công!' : 'Không thể tạo phiên LiveStream.');
+        }
+
+        redirect(BASE_URL . '/index.php?r=admin_lives');
+    }
+
+    public function adminLiveStatus(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if (!user_can_access_route('admin_lives')) {
+            $this->denyAccess();
+        }
+
+        $id = trim((string)($_GET['id'] ?? ''));
+        $status = trim((string)($_GET['status'] ?? 'danglive'));
+
+        if ($id !== '') {
+            require_once __DIR__ . '/../models/PhienLive.php';
+            $phienLiveModel = new PhienLive($this->pdo);
+            $ok = $phienLiveModel->doiTrangThai($id, $status);
+            set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái phiên Live!' : 'Không thể cập nhật trạng thái.');
+        }
+
+        redirect(BASE_URL . '/index.php?r=admin_lives');
+    }
+
+    public function adminLiveDelete(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if (!user_can_access_route('admin_lives')) {
+            $this->denyAccess();
+        }
+
+        $id = trim((string)($_GET['id'] ?? ''));
+        if ($id !== '') {
+            require_once __DIR__ . '/../models/PhienLive.php';
+            $phienLiveModel = new PhienLive($this->pdo);
+            $ok = $phienLiveModel->xoaPhienLive($id);
+            set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa phiên LiveStream!' : 'Không thể xóa phiên LiveStream.');
+        }
+
+        redirect(BASE_URL . '/index.php?r=admin_lives');
+    }
 }
