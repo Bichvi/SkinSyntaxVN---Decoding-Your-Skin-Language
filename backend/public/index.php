@@ -83,6 +83,18 @@ switch ($r) {
         (new HomeController($pdo))->goiy();
         break;
 
+    case 'live':
+        (new LiveController($pdo))->index();
+        break;
+
+    case 'api_livekit_token':
+        (new LiveController($pdo))->apiLivekitToken();
+        break;
+
+    case 'api_live_chat':
+        (new LiveController($pdo))->apiLiveChat();
+        break;
+
     case 'product_collection':
         (new HomeController($pdo))->productCollection();
         break;
