@@ -28,15 +28,39 @@ class LiveController {
                 $p = $topSaleProducts[$idx];
             }
             $liveSessions[] = [
-                'id' => (string)($live['ma_phong'] ?? $live['id'] ?? $idx),
+                'id' => (string)($live['ma_phong'] ?? $live['id'] ?? ($idx + 1)),
                 'title' => (string)($live['tieu_de'] ?? ''),
                 'streamer' => (string)($live['streamer'] ?? ''),
                 'viewers' => (int)($live['luot_xem'] ?? 0),
                 'status' => in_array($live['trang_thai'], ['danglive', 'live'], true) ? 'live' : ($live['trang_thai'] === 'chuamoi' ? 'upcoming' : 'ended'),
                 'thumbnail' => BASE_URL . '/assets/images/' . ($idx === 1 ? 'hero_campaign_flash_sale.png' : ($idx === 2 ? 'hero_campaign_personalized.png' : 'hero_campaign_ai_skin.png')),
                 'pinned_product' => $p,
+                'gia_uu_dai_live' => (float)($live['gia_uu_dai_live'] ?? ($p['gia_ban'] ?? 0)),
+                'server_livekit_url' => (string)($live['server_livekit_url'] ?? 'wss://skinsyntax-live.livekit.cloud'),
                 'description' => 'Khung giờ Live: ' . ($live['khung_gio_bat_dau'] ?? '') . ' - Giá sốc trong Live: ' . number_format($live['gia_uu_dai_live'] ?? 0) . 'đ'
             ];
+        }
+
+        $selectedId = trim((string)($_GET['id'] ?? $_GET['room_id'] ?? $_GET['room'] ?? ''));
+        $currentLive = null;
+
+        if ($selectedId !== '') {
+            foreach ($liveSessions as $session) {
+                if ((string)$session['id'] === $selectedId) {
+                    $currentLive = $session;
+                    break;
+                }
+            }
+        }
+
+        if (!$currentLive && !empty($liveSessions)) {
+            $currentLive = $liveSessions[0];
+            foreach ($liveSessions as $session) {
+                if ($session['status'] === 'live') {
+                    $currentLive = $session;
+                    break;
+                }
+            }
         }
 
         require_once __DIR__ . '/../views/live.php';
