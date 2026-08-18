@@ -17,11 +17,13 @@ require_once __DIR__ . '/layouts/header.php';
           Nền tảng Livestream Thương Mại Điện Tử thời gian thực dựa trên <strong>LiveKit Cloud / Self-Hosted WebRTC</strong> tích hợp <strong>AI Agent LLM & RAG</strong> tự động tư vấn hoạt chất sản phẩm và xử lý chốt đơn tự động 24/7 trong livestream.
         </p>
       </div>
-      <div class="col-lg-4 text-lg-end">
-        <button type="button" class="btn btn-light rounded-pill px-4 py-2.5 fw-bold shadow-sm" style="color: #215427;" data-bs-toggle="modal" data-bs-target="#createLiveModal">
-          <i class="fa-solid fa-video me-2 text-danger"></i>Tạo Phiên Live Mới
-        </button>
-      </div>
+      <?php if (in_array(current_role(), ['admin', 'nhanvien'], true)): ?>
+        <div class="col-lg-4 text-lg-end">
+          <a href="<?= BASE_URL ?>/index.php?r=admin_lives" class="btn btn-light rounded-pill px-4 py-2.5 fw-bold shadow-sm" style="color: #215427;">
+            <i class="fa-solid fa-gear me-2 text-success"></i>Quản lý Phiên Live (Admin)
+          </a>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
 </div>
