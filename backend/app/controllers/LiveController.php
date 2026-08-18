@@ -105,6 +105,21 @@ class LiveController {
 
         global $db;
         $mongoDb = $db ?? $this->pdo;
+
+        $roomId = trim((string)($_POST['room_id'] ?? $_GET['room_id'] ?? $_POST['id'] ?? $_GET['id'] ?? ''));
+        if ($roomId !== '') {
+            require_once __DIR__ . '/../models/PhienLive.php';
+            $phienLiveModel = new PhienLive($mongoDb);
+            $liveDoc = $phienLiveModel->findById($roomId);
+            if ($liveDoc && !in_array($liveDoc['trang_thai'], ['danglive', 'live'], true)) {
+                echo json_encode([
+                    'ok' => false,
+                    'message' => 'Phiên LiveStream này hiện chưa diễn ra hoặc đã kết thúc. Khung chat và chốt đơn đã tạm khóa.'
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                exit;
+            }
+        }
+
         $spModel = new SanPham($mongoDb);
         $pinnedProduct = $productId !== '' ? $spModel->findById($productId) : null;
 
