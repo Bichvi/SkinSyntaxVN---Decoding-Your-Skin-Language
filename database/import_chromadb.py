@@ -13,9 +13,9 @@ CHROMA_DB_PATH = str(BASE_DIR / "chroma_db")
 COLLECTION_NAME = "products"
 
 def main():
-    print(f"Đang đọc file CSV: {CSV_FILE_PATH}")
+    print(f"📦 Đang đọc file CSV dữ liệu: {CSV_FILE_PATH} (~65MB)... Vui lòng chờ 5 - 15 giây.", flush=True)
     if not os.path.exists(CSV_FILE_PATH):
-        print("Lỗi: Không tìm thấy file CSV!")
+        print("❌ Lỗi: Không tìm thấy file CSV!", flush=True)
         return
 
     # Đọc dữ liệu từ file CSV
@@ -25,7 +25,7 @@ def main():
     df = df.fillna("")
     
     # Kết nối đến ChromaDB
-    print("Đang kết nối đến ChromaDB...")
+    print("🔌 Đang kết nối đến ChromaDB...", flush=True)
     client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     
     # Import embedding_functions của chromadb

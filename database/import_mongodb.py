@@ -51,16 +51,18 @@ def _clean(val) -> str:
 
 
 def main():
-    print(f"CSV file: {CSV_PATH}")
+    print(f"📦 Đang khởi tạo script import MongoDB...", flush=True)
+    print(f"📂 Đang đọc file dữ liệu: {CSV_PATH} (~65MB)... Vui lòng chờ 5 - 15 giây.", flush=True)
     if not CSV_PATH.exists():
-        sys.exit(f"File not found: {CSV_PATH}")
+        sys.exit(f"❌ Không tìm thấy file: {CSV_PATH}")
 
     df = pd.read_csv(CSV_PATH, dtype=str).fillna("")
-    print(f"Loaded {len(df):,} rows")
+    print(f"✅ Đã nạp thành công {len(df):,} dòng dữ liệu từ CSV.", flush=True)
 
-    print(f"Connecting to MongoDB: {MONGO_URI} / db={MONGO_DB}")
+    print(f"🔌 Đang kết nối đến MongoDB ({MONGO_URI})...", flush=True)
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=10_000)
     client.admin.command("ping")
+    print(f"✅ Kết nối MongoDB thành công! Đang tiến hành xử lý...", flush=True)
     db = client[MONGO_DB]
 
     COLLECTIONS = ["san_pham", "thuong_hieu", "danh_muc", "xuat_xu", "noi_san_xuat", "loai_san_pham"]
