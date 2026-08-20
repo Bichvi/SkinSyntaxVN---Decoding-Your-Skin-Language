@@ -16,9 +16,10 @@ class AdminController {
 
     private function denyAccess(): void {
         http_response_code(403);
-        require __DIR__ . '/../views/admin/layouts/header.php';
-        require __DIR__ . '/../views/admin/403.php';
-        require __DIR__ . '/../views/admin/layouts/footer.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/admin/layouts/header.php';
+        require $viewDir . '/admin/403.php';
+        require $viewDir . '/admin/layouts/footer.php';
         exit;
     }
 
@@ -39,9 +40,10 @@ class AdminController {
     private function render(string $view, array $data = []): void {
         $data['notificationCenter'] = $data['notificationCenter'] ?? $this->buildNotificationCenter();
         extract($data);
-        require __DIR__ . '/../views/admin/layouts/header.php';
-        require __DIR__ . '/../views/' . $view . '.php';
-        require __DIR__ . '/../views/admin/layouts/footer.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/admin/layouts/header.php';
+        require $viewDir . '/' . $view . '.php';
+        require $viewDir . '/admin/layouts/footer.php';
     }
 
     private function buildNotificationCenter(): array {

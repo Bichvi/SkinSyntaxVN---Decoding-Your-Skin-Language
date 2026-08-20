@@ -1,0 +1,45 @@
+FROM python:3.11-slim
+
+ENV HF_HOME=/opt/hf_cache \
+    SENTENCE_TRANSFORMERS_HOME=/opt/hf_cache/sentence_transformers \
+    TRANSFORMERS_CACHE=/opt/hf_cache/transformers \
+    CHROMA_DB_PATH=/app/database/chroma_db \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ai-service-flask/requirements.txt .
+
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r requirements.txt
+
+RUN python - <<'EOF'
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+
+EMBEDDING_MODEL = "sentence-transformers/static-similarity-mrl-multilingual-v1"
+RERANKER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+
+print("[BUILD] Downloading embedding model (LangChain HuggingFaceEmbeddings) ...")
+HuggingFaceEmbeddings(
+    model_name=EMBEDDING_MODEL,
+    model_kwargs={"device": "cpu"},
+    encode_kwargs={"normalize_embeddings": True},
+)
+print("[BUILD] Downloading reranker model (LangChain HuggingFaceCrossEncoder) ...")
+HuggingFaceCrossEncoder(model_name=RERANKER_MODEL, model_kwargs={"device": "cpu"})
+print("[BUILD] LangChain models ready.")
+EOF
+
+COPY ai-service-flask/ .
+COPY database/ /app/database/
+
+EXPOSE 5001
+
+CMD ["gunicorn", "--config", "gunicorn_config.py", "chatbot_flask:app"]

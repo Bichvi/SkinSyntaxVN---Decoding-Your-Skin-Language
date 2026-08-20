@@ -1,12 +1,16 @@
 # Database configuration (IMPORTANT: Protect your credentials)
 project-root/backend/app/config/db.php
 
+# Environment files
+.env
+.env.local
+.env.*.local
+
 # Python / Flask artifacts
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
-.env
 .ipynb_checkpoints/
 
 # AI Data & Vector DB (Avoid pushing large/local data)
@@ -21,8 +25,7 @@ Thumbs.db
 *.log
 tmp/
 
-.env
-*.env
+# Example env file is tracked for setup guidance
 !.env.example
 __pycache__/
 .venv/
@@ -36,4 +39,8 @@ vendor/
 ai-service-flask/.cache/
 backend/storage/cache/
 
+# Large AI indices & vector stores
 database/recommendation_index/
+ai-service-flask/chroma_db/
+chroma_db/
+

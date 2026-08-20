@@ -1,0 +1,3190 @@
+[
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "hashlib",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "hashlib",
+        "description": "hashlib",
+        "detail": "hashlib",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Generator",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Generator",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Generator",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Literal",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "create_tool_calling_agent",
+        "importPath": "langchain.agents",
+        "description": "langchain.agents",
+        "isExtraImport": true,
+        "detail": "langchain.agents",
+        "documentation": {}
+    },
+    {
+        "label": "AgentExecutor",
+        "importPath": "langchain.agents",
+        "description": "langchain.agents",
+        "isExtraImport": true,
+        "detail": "langchain.agents",
+        "documentation": {}
+    },
+    {
+        "label": "tool",
+        "importPath": "langchain.tools",
+        "description": "langchain.tools",
+        "isExtraImport": true,
+        "detail": "langchain.tools",
+        "documentation": {}
+    },
+    {
+        "label": "ChatPromptTemplate",
+        "importPath": "langchain_core.prompts",
+        "description": "langchain_core.prompts",
+        "isExtraImport": true,
+        "detail": "langchain_core.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "MessagesPlaceholder",
+        "importPath": "langchain_core.prompts",
+        "description": "langchain_core.prompts",
+        "isExtraImport": true,
+        "detail": "langchain_core.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "ChatPromptTemplate",
+        "importPath": "langchain_core.prompts",
+        "description": "langchain_core.prompts",
+        "isExtraImport": true,
+        "detail": "langchain_core.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "ChatPromptTemplate",
+        "importPath": "langchain_core.prompts",
+        "description": "langchain_core.prompts",
+        "isExtraImport": true,
+        "detail": "langchain_core.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "HumanMessage",
+        "importPath": "langchain_core.messages",
+        "description": "langchain_core.messages",
+        "isExtraImport": true,
+        "detail": "langchain_core.messages",
+        "documentation": {}
+    },
+    {
+        "label": "AIMessage",
+        "importPath": "langchain_core.messages",
+        "description": "langchain_core.messages",
+        "isExtraImport": true,
+        "detail": "langchain_core.messages",
+        "documentation": {}
+    },
+    {
+        "label": "BaseMessage",
+        "importPath": "langchain_core.messages",
+        "description": "langchain_core.messages",
+        "isExtraImport": true,
+        "detail": "langchain_core.messages",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "Flask",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "request",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "jsonify",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "Response",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "stream_with_context",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "get_llms",
+        "importPath": "llm_pool",
+        "description": "llm_pool",
+        "isExtraImport": true,
+        "detail": "llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "OPENAI_MODEL",
+        "importPath": "llm_pool",
+        "description": "llm_pool",
+        "isExtraImport": true,
+        "detail": "llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "get_llms",
+        "importPath": "llm_pool",
+        "description": "llm_pool",
+        "isExtraImport": true,
+        "detail": "llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "get_classifier_llm",
+        "importPath": "llm_pool",
+        "description": "llm_pool",
+        "isExtraImport": true,
+        "detail": "llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "build_str_chain",
+        "importPath": "llm_pool",
+        "description": "llm_pool",
+        "isExtraImport": true,
+        "detail": "llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "build_json_chain",
+        "importPath": "llm_pool",
+        "description": "llm_pool",
+        "isExtraImport": true,
+        "detail": "llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "get_vectorstore",
+        "importPath": "retrieval",
+        "description": "retrieval",
+        "isExtraImport": true,
+        "detail": "retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "get_hybrid_pipeline",
+        "importPath": "retrieval",
+        "description": "retrieval",
+        "isExtraImport": true,
+        "detail": "retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "get_hybrid_pipeline",
+        "importPath": "retrieval",
+        "description": "retrieval",
+        "isExtraImport": true,
+        "detail": "retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "build_filter",
+        "importPath": "retrieval",
+        "description": "retrieval",
+        "isExtraImport": true,
+        "detail": "retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "format_search_results",
+        "importPath": "retrieval",
+        "description": "retrieval",
+        "isExtraImport": true,
+        "detail": "retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "docs_to_products",
+        "importPath": "retrieval",
+        "description": "retrieval",
+        "isExtraImport": true,
+        "detail": "retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "MockDocument",
+        "importPath": "retrieval",
+        "description": "retrieval",
+        "isExtraImport": true,
+        "detail": "retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "xu_ly_cau_hoi",
+        "importPath": "pipeline",
+        "description": "pipeline",
+        "isExtraImport": true,
+        "detail": "pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "xu_ly_cau_hoi_stream",
+        "importPath": "pipeline",
+        "description": "pipeline",
+        "isExtraImport": true,
+        "detail": "pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "cache_stats",
+        "importPath": "session_cache",
+        "description": "session_cache",
+        "isExtraImport": true,
+        "detail": "session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "get_history",
+        "importPath": "session_cache",
+        "description": "session_cache",
+        "isExtraImport": true,
+        "detail": "session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "get_last_products",
+        "importPath": "session_cache",
+        "description": "session_cache",
+        "isExtraImport": true,
+        "detail": "session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "get_session_state",
+        "importPath": "session_cache",
+        "description": "session_cache",
+        "isExtraImport": true,
+        "detail": "session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "save_turn",
+        "importPath": "session_cache",
+        "description": "session_cache",
+        "isExtraImport": true,
+        "detail": "session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "update_session_state",
+        "importPath": "session_cache",
+        "description": "session_cache",
+        "isExtraImport": true,
+        "detail": "session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "cache_stats",
+        "importPath": "response_cache",
+        "description": "response_cache",
+        "isExtraImport": true,
+        "detail": "response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "should_use_agent",
+        "importPath": "router",
+        "description": "router",
+        "isExtraImport": true,
+        "detail": "router",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "asdict",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "field",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "field",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "field",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "math",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "math",
+        "description": "math",
+        "detail": "math",
+        "documentation": {}
+    },
+    {
+        "label": "Document",
+        "importPath": "langchain_core.documents",
+        "description": "langchain_core.documents",
+        "isExtraImport": true,
+        "detail": "langchain_core.documents",
+        "documentation": {}
+    },
+    {
+        "label": "HuggingFaceCrossEncoder",
+        "importPath": "langchain_community.cross_encoders",
+        "description": "langchain_community.cross_encoders",
+        "isExtraImport": true,
+        "detail": "langchain_community.cross_encoders",
+        "documentation": {}
+    },
+    {
+        "label": "CrossEncoderReranker",
+        "importPath": "langchain.retrievers.document_compressors",
+        "description": "langchain.retrievers.document_compressors",
+        "isExtraImport": true,
+        "detail": "langchain.retrievers.document_compressors",
+        "documentation": {}
+    },
+    {
+        "label": "RERANKER_MODEL",
+        "importPath": "model_config",
+        "description": "model_config",
+        "isExtraImport": true,
+        "detail": "model_config",
+        "documentation": {}
+    },
+    {
+        "label": "RERANKER_MODEL_KWARGS",
+        "importPath": "model_config",
+        "description": "model_config",
+        "isExtraImport": true,
+        "detail": "model_config",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_MODEL",
+        "importPath": "model_config",
+        "description": "model_config",
+        "isExtraImport": true,
+        "detail": "model_config",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_ENCODE_KWARGS",
+        "importPath": "model_config",
+        "description": "model_config",
+        "isExtraImport": true,
+        "detail": "model_config",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_MODEL_KWARGS",
+        "importPath": "model_config",
+        "description": "model_config",
+        "isExtraImport": true,
+        "detail": "model_config",
+        "documentation": {}
+    },
+    {
+        "label": "StrOutputParser",
+        "importPath": "langchain_core.output_parsers",
+        "description": "langchain_core.output_parsers",
+        "isExtraImport": true,
+        "detail": "langchain_core.output_parsers",
+        "documentation": {}
+    },
+    {
+        "label": "JsonOutputParser",
+        "importPath": "langchain_core.output_parsers",
+        "description": "langchain_core.output_parsers",
+        "isExtraImport": true,
+        "detail": "langchain_core.output_parsers",
+        "documentation": {}
+    },
+    {
+        "label": "Runnable",
+        "importPath": "langchain_core.runnables",
+        "description": "langchain_core.runnables",
+        "isExtraImport": true,
+        "detail": "langchain_core.runnables",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_and_parse_prompt",
+        "importPath": "prompts",
+        "description": "prompts",
+        "isExtraImport": true,
+        "detail": "prompts",
+        "documentation": {}
+    },
+    {
+        "label": "product_prompt",
+        "importPath": "prompts",
+        "description": "prompts",
+        "isExtraImport": true,
+        "detail": "prompts",
+        "documentation": {}
+    },
+    {
+        "label": "knowledge_prompt",
+        "importPath": "prompts",
+        "description": "prompts",
+        "isExtraImport": true,
+        "detail": "prompts",
+        "documentation": {}
+    },
+    {
+        "label": "general_prompt",
+        "importPath": "prompts",
+        "description": "prompts",
+        "isExtraImport": true,
+        "detail": "prompts",
+        "documentation": {}
+    },
+    {
+        "label": "comparison_prompt",
+        "importPath": "prompts",
+        "description": "prompts",
+        "isExtraImport": true,
+        "detail": "prompts",
+        "documentation": {}
+    },
+    {
+        "label": "PhanTichYeuCau",
+        "importPath": "schemas",
+        "description": "schemas",
+        "isExtraImport": true,
+        "detail": "schemas",
+        "documentation": {}
+    },
+    {
+        "label": "dict_to_yc",
+        "importPath": "schemas",
+        "description": "schemas",
+        "isExtraImport": true,
+        "detail": "schemas",
+        "documentation": {}
+    },
+    {
+        "label": "PhanTichYeuCau",
+        "importPath": "schemas",
+        "description": "schemas",
+        "isExtraImport": true,
+        "detail": "schemas",
+        "documentation": {}
+    },
+    {
+        "label": "RankedDocument",
+        "importPath": "hybrid_search",
+        "description": "hybrid_search",
+        "isExtraImport": true,
+        "detail": "hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "HybridSearchPipeline",
+        "importPath": "hybrid_search",
+        "description": "hybrid_search",
+        "isExtraImport": true,
+        "detail": "hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "BM25Search",
+        "importPath": "hybrid_search",
+        "description": "hybrid_search",
+        "isExtraImport": true,
+        "detail": "hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "get_redis",
+        "importPath": "redis_store",
+        "description": "redis_store",
+        "isExtraImport": true,
+        "detail": "redis_store",
+        "documentation": {}
+    },
+    {
+        "label": "get_redis",
+        "importPath": "redis_store",
+        "description": "redis_store",
+        "isExtraImport": true,
+        "detail": "redis_store",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "Chroma",
+        "importPath": "langchain_chroma",
+        "description": "langchain_chroma",
+        "isExtraImport": true,
+        "detail": "langchain_chroma",
+        "documentation": {}
+    },
+    {
+        "label": "HuggingFaceEmbeddings",
+        "importPath": "langchain_huggingface",
+        "description": "langchain_huggingface",
+        "isExtraImport": true,
+        "detail": "langchain_huggingface",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Lock",
+        "importPath": "threading",
+        "description": "threading",
+        "isExtraImport": true,
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "chromadb",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "chromadb",
+        "description": "chromadb",
+        "detail": "chromadb",
+        "documentation": {}
+    },
+    {
+        "label": "uuid",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "uuid",
+        "description": "uuid",
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "tqdm",
+        "importPath": "tqdm",
+        "description": "tqdm",
+        "isExtraImport": true,
+        "detail": "tqdm",
+        "documentation": {}
+    },
+    {
+        "label": "tqdm",
+        "importPath": "tqdm",
+        "description": "tqdm",
+        "isExtraImport": true,
+        "detail": "tqdm",
+        "documentation": {}
+    },
+    {
+        "label": "csv",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "csv",
+        "description": "csv",
+        "detail": "csv",
+        "documentation": {}
+    },
+    {
+        "label": "webdriver",
+        "importPath": "selenium",
+        "description": "selenium",
+        "isExtraImport": true,
+        "detail": "selenium",
+        "documentation": {}
+    },
+    {
+        "label": "webdriver",
+        "importPath": "selenium",
+        "description": "selenium",
+        "isExtraImport": true,
+        "detail": "selenium",
+        "documentation": {}
+    },
+    {
+        "label": "webdriver",
+        "importPath": "selenium",
+        "description": "selenium",
+        "isExtraImport": true,
+        "detail": "selenium",
+        "documentation": {}
+    },
+    {
+        "label": "Service",
+        "importPath": "selenium.webdriver.chrome.service",
+        "description": "selenium.webdriver.chrome.service",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.chrome.service",
+        "documentation": {}
+    },
+    {
+        "label": "Service",
+        "importPath": "selenium.webdriver.chrome.service",
+        "description": "selenium.webdriver.chrome.service",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.chrome.service",
+        "documentation": {}
+    },
+    {
+        "label": "Service",
+        "importPath": "selenium.webdriver.chrome.service",
+        "description": "selenium.webdriver.chrome.service",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.chrome.service",
+        "documentation": {}
+    },
+    {
+        "label": "By",
+        "importPath": "selenium.webdriver.common.by",
+        "description": "selenium.webdriver.common.by",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.common.by",
+        "documentation": {}
+    },
+    {
+        "label": "By",
+        "importPath": "selenium.webdriver.common.by",
+        "description": "selenium.webdriver.common.by",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.common.by",
+        "documentation": {}
+    },
+    {
+        "label": "By",
+        "importPath": "selenium.webdriver.common.by",
+        "description": "selenium.webdriver.common.by",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.common.by",
+        "documentation": {}
+    },
+    {
+        "label": "ChromeDriverManager",
+        "importPath": "webdriver_manager.chrome",
+        "description": "webdriver_manager.chrome",
+        "isExtraImport": true,
+        "detail": "webdriver_manager.chrome",
+        "documentation": {}
+    },
+    {
+        "label": "ChromeDriverManager",
+        "importPath": "webdriver_manager.chrome",
+        "description": "webdriver_manager.chrome",
+        "isExtraImport": true,
+        "detail": "webdriver_manager.chrome",
+        "documentation": {}
+    },
+    {
+        "label": "ChromeDriverManager",
+        "importPath": "webdriver_manager.chrome",
+        "description": "webdriver_manager.chrome",
+        "isExtraImport": true,
+        "detail": "webdriver_manager.chrome",
+        "documentation": {}
+    },
+    {
+        "label": "BeautifulSoup",
+        "importPath": "bs4",
+        "description": "bs4",
+        "isExtraImport": true,
+        "detail": "bs4",
+        "documentation": {}
+    },
+    {
+        "label": "BeautifulSoup",
+        "importPath": "bs4",
+        "description": "bs4",
+        "isExtraImport": true,
+        "detail": "bs4",
+        "documentation": {}
+    },
+    {
+        "label": "BeautifulSoup",
+        "importPath": "bs4",
+        "description": "bs4",
+        "isExtraImport": true,
+        "detail": "bs4",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "psycopg2",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "psycopg2",
+        "description": "psycopg2",
+        "detail": "psycopg2",
+        "documentation": {}
+    },
+    {
+        "label": "Error",
+        "importPath": "psycopg2",
+        "description": "psycopg2",
+        "isExtraImport": true,
+        "detail": "psycopg2",
+        "documentation": {}
+    },
+    {
+        "label": "matplotlib.pyplot",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "matplotlib.pyplot",
+        "description": "matplotlib.pyplot",
+        "detail": "matplotlib.pyplot",
+        "documentation": {}
+    },
+    {
+        "label": "seaborn",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "seaborn",
+        "description": "seaborn",
+        "detail": "seaborn",
+        "documentation": {}
+    },
+    {
+        "label": "WordCloud",
+        "importPath": "wordcloud",
+        "description": "wordcloud",
+        "isExtraImport": true,
+        "detail": "wordcloud",
+        "documentation": {}
+    },
+    {
+        "label": "WebDriverWait",
+        "importPath": "selenium.webdriver.support.ui",
+        "description": "selenium.webdriver.support.ui",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.support.ui",
+        "documentation": {}
+    },
+    {
+        "label": "expected_conditions",
+        "importPath": "selenium.webdriver.support",
+        "description": "selenium.webdriver.support",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.support",
+        "documentation": {}
+    },
+    {
+        "label": "shutil",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "shutil",
+        "description": "shutil",
+        "detail": "shutil",
+        "documentation": {}
+    },
+    {
+        "label": "io",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "io",
+        "description": "io",
+        "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "tim_san_pham",
+        "kind": 2,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "def tim_san_pham(yeu_cau: str) -> str:\n    \"\"\"\n    Tìm sản phẩm mỹ phẩm từ database SkinSyntaxVN theo yêu cầu.\n    Dùng khi: khách muốn tìm, mua, hoặc được tư vấn sản phẩm cụ thể.\n    Input: mô tả yêu cầu đầy đủ bằng tiếng Việt, bao gồm:\n      - Loại sản phẩm cần tìm (sữa rửa mặt, serum, kcn...)\n      - Loại da (da dầu, da khô, da nhạy cảm...)\n      - Tình trạng da cần cải thiện (mụn, thâm, nhăn...)\n      - Mức giá nếu có (dưới 200k, 200-500k, trên 500k)\n      - Thành phần mong muốn nếu có (vitamin C, BHA, retinol...)",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "kiem_tra_xung_dot",
+        "kind": 2,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "def kiem_tra_xung_dot(hoat_chat_a: str, hoat_chat_b: str) -> str:\n    \"\"\"\n    Kiểm tra 2 hoạt chất mỹ phẩm có kết hợp được với nhau không.\n    Dùng khi: khách hỏi về việc dùng chung 2 sản phẩm/hoạt chất,\n              hoặc muốn biết thứ tự/cách kết hợp an toàn.\n    Input:\n      hoat_chat_a: tên hoạt chất thứ nhất (ví dụ: \"retinol\", \"vitamin C\")\n      hoat_chat_b: tên hoạt chất thứ hai (ví dụ: \"niacinamide\", \"BHA\")\n    Output: đánh giá khả năng tương thích và hướng dẫn cụ thể.\n    Ví dụ:",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "tra_cuu_kien_thuc",
+        "kind": 2,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "def tra_cuu_kien_thuc(ten_hoat_chat_hoac_chu_de: str) -> str:\n    \"\"\"\n    Tra cứu kiến thức chuyên sâu về hoạt chất mỹ phẩm hoặc chủ đề da liễu.\n    Dùng khi: khách hỏi về định nghĩa, công dụng, cơ chế tác động,\n              cách dùng, lưu ý của một hoạt chất hoặc khái niệm da liễu.\n    Input: tên hoạt chất hoặc chủ đề cần tra cứu (tiếng Việt hoặc tiếng Anh).\n    Output: thông tin khoa học, dễ hiểu về hoạt chất/chủ đề đó.\n    Ví dụ input:\n      \"retinol\"\n      \"BHA salicylic acid\"",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "xem_chi_tiet_san_pham",
+        "kind": 2,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "def xem_chi_tiet_san_pham(ten_hoac_id_san_pham: str) -> str:\n    \"\"\"\n    Xem thông tin đầy đủ về một sản phẩm cụ thể theo tên hoặc product ID.\n    Dùng khi: khách hỏi về một sản phẩm cụ thể mà đã biết tên hoặc ID,\n              ví dụ \"sản phẩm này có phù hợp với da mình không?\"\n              hoặc sau khi đã tìm được sản phẩm và muốn biết thêm chi tiết.\n    Input: tên sản phẩm (ví dụ: \"La Roche-Posay Effaclar\") hoặc product ID.\n    Output: thông tin chi tiết: thành phần, loại da phù hợp, giá, cách dùng.\n    Ví dụ input:\n      \"La Roche-Posay Effaclar Gel\"",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "run_agent",
+        "kind": 2,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "def run_agent(message: str, msg_data: dict | None = None) -> dict:\n    from session_cache import get_history, save_turn\n    skin_type         = None\n    avoid_ingredients: list = []\n    cart_conflicts   : list = []\n    history_raw             = []\n    if msg_data:\n        profile          = msg_data.get(\"customer_profile\", {}) or {}\n        skin_type        = profile.get(\"skin_type\") or profile.get(\"loai_da\")\n        avoid_ingredients = profile.get(\"avoid_ingredients\") or []",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nimport os\nimport hashlib\nimport time\nfrom typing import Optional\nfrom langchain.agents import create_tool_calling_agent, AgentExecutor\nfrom langchain.tools import tool\nfrom langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder\nfrom langchain_core.messages import HumanMessage, AIMessage, BaseMessage\n_CONFLICT_TABLE: dict[frozenset, str] = {",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "_WEB_CACHE_TTL",
+        "kind": 5,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "_WEB_CACHE_TTL = 900\ndef _query_web_cached(query: str) -> str:\n    tavily_key = os.getenv(\"TAVILY_API_KEY\", \"\").strip()\n    if not tavily_key:\n        return \"Không có Tavily API key — bỏ qua web search.\"\n    cache_key = hashlib.md5(query.strip().lower().encode()).hexdigest()\n    cached = _WEB_CACHE.get(cache_key)\n    if cached:\n        result, ts = cached\n        if time.monotonic() - ts < _WEB_CACHE_TTL:",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "AGENT_TOOLS",
+        "kind": 5,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "AGENT_TOOLS = [tim_san_pham, kiem_tra_xung_dot, tra_cuu_kien_thuc, xem_chi_tiet_san_pham]\n_AGENT_SYSTEM = \"\"\"\\\nBạn là trợ lý AI tư vấn mỹ phẩm chuyên nghiệp của SkinSyntaxVN, có khả năng sử dụng công cụ để tra cứu thông tin chính xác.\n━━━ TOOLS VÀ KHI NÀO DÙNG ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n· tim_san_pham           → khi cần tìm, gợi ý sản phẩm theo yêu cầu\n· kiem_tra_xung_dot      → khi khách hỏi 2 hoạt chất/sản phẩm có dùng chung được không\n· tra_cuu_kien_thuc      → khi cần thông tin về hoạt chất, kiến thức da liễu\n· xem_chi_tiet_san_pham  → khi cần thông tin đầy đủ về 1 sản phẩm cụ thể\n━━━ NGUYÊN TẮC SỬ DỤNG TOOLS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n· LUÔN dùng tool để lấy dữ liệu thực tế — KHÔNG tự bịa tên sản phẩm, giá, thành phần",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "_AGENT_SYSTEM",
+        "kind": 5,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "_AGENT_SYSTEM = \"\"\"\\\nBạn là trợ lý AI tư vấn mỹ phẩm chuyên nghiệp của SkinSyntaxVN, có khả năng sử dụng công cụ để tra cứu thông tin chính xác.\n━━━ TOOLS VÀ KHI NÀO DÙNG ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n· tim_san_pham           → khi cần tìm, gợi ý sản phẩm theo yêu cầu\n· kiem_tra_xung_dot      → khi khách hỏi 2 hoạt chất/sản phẩm có dùng chung được không\n· tra_cuu_kien_thuc      → khi cần thông tin về hoạt chất, kiến thức da liễu\n· xem_chi_tiet_san_pham  → khi cần thông tin đầy đủ về 1 sản phẩm cụ thể\n━━━ NGUYÊN TẮC SỬ DỤNG TOOLS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n· LUÔN dùng tool để lấy dữ liệu thực tế — KHÔNG tự bịa tên sản phẩm, giá, thành phần\n· Với query phức tạp → gọi nhiều tools theo thứ tự logic",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "_AGENT_HUMAN",
+        "kind": 5,
+        "importPath": "ai-service-flask.agent",
+        "description": "ai-service-flask.agent",
+        "peekOfCode": "_AGENT_HUMAN = \"\"\"\\\n{rich_context}\nCâu hỏi: {input}\\\n\"\"\"\ndef _build_agent_prompt() -> ChatPromptTemplate:\n    return ChatPromptTemplate.from_messages([\n        (\"system\", _AGENT_SYSTEM),\n        MessagesPlaceholder(\"chat_history\", optional=True),\n        (\"human\", _AGENT_HUMAN),\n        MessagesPlaceholder(\"agent_scratchpad\"),",
+        "detail": "ai-service-flask.agent",
+        "documentation": {}
+    },
+    {
+        "label": "stream_agent_sse",
+        "kind": 2,
+        "importPath": "ai-service-flask.agent_stream",
+        "description": "ai-service-flask.agent_stream",
+        "peekOfCode": "def stream_agent_sse(message: str, msg_data: dict | None) -> Generator[str, None, None]:\n    def _sse(payload: dict | str) -> str:\n        if isinstance(payload, str):\n            return f\"data: {payload}\\n\\n\"\n        return f\"data: {json.dumps(payload, ensure_ascii=False)}\\n\\n\"\n    yield _sse({\"type\": \"status\", \"message\": \"Đang xử lý câu hỏi phức tạp...\"})\n    try:\n        from agent import run_agent\n        result = run_agent(message, msg_data)\n        answer = str(result.get(\"answer\") or \"\").strip()",
+        "detail": "ai-service-flask.agent_stream",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.agent_stream",
+        "description": "ai-service-flask.agent_stream",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ndef stream_agent_sse(message: str, msg_data: dict | None) -> Generator[str, None, None]:\n    def _sse(payload: dict | str) -> str:\n        if isinstance(payload, str):\n            return f\"data: {payload}\\n\\n\"\n        return f\"data: {json.dumps(payload, ensure_ascii=False)}\\n\\n\"\n    yield _sse({\"type\": \"status\", \"message\": \"Đang xử lý câu hỏi phức tạp...\"})\n    try:\n        from agent import run_agent\n        result = run_agent(message, msg_data)",
+        "detail": "ai-service-flask.agent_stream",
+        "documentation": {}
+    },
+    {
+        "label": "is_cart_analysis_query",
+        "kind": 2,
+        "importPath": "ai-service-flask.cart_analysis",
+        "description": "ai-service-flask.cart_analysis",
+        "peekOfCode": "def is_cart_analysis_query(message: str) -> bool:\n    m = (message or \"\").strip()\n    if not m:\n        return False\n    if _CART_ANALYSIS_RE.search(m):\n        return True\n    lower = m.lower()\n    has_cart = \"giỏ hàng\" in lower or \"gio hang\" in lower\n    has_signal = any(k in lower for k in (\"xung đột\", \"xung dot\", \"phân tích\", \"phan tich\", \"cảnh báo\", \"canh bao\"))\n    return has_cart and has_signal",
+        "detail": "ai-service-flask.cart_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "build_cart_analysis_answer",
+        "kind": 2,
+        "importPath": "ai-service-flask.cart_analysis",
+        "description": "ai-service-flask.cart_analysis",
+        "peekOfCode": "def build_cart_analysis_answer(\n    cart_items: list,\n    cart_conflicts: list,\n    profile: dict | None = None,\n) -> str:\n    profile = profile or {}\n    if not cart_items:\n        return (\n            \"Giỏ hàng của bạn đang trống.\\n\\n\"\n            \"Thêm sản phẩm vào giỏ rồi mình sẽ phân tích xung đột hoạt chất giúp bạn nhé.\"",
+        "detail": "ai-service-flask.cart_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "stream_cart_analysis_sse",
+        "kind": 2,
+        "importPath": "ai-service-flask.cart_analysis",
+        "description": "ai-service-flask.cart_analysis",
+        "peekOfCode": "def stream_cart_analysis_sse(message: str, msg_data: dict | None) -> Generator[str, None, None]:\n    msg_data = msg_data or {}\n    cart_items = msg_data.get(\"cart_items\") or []\n    cart_conflicts = msg_data.get(\"cart_conflicts\") or []\n    profile = msg_data.get(\"customer_profile\") or {}\n    def _sse(payload: dict | str) -> str:\n        if isinstance(payload, str):\n            return f\"data: {payload}\\n\\n\"\n        return f\"data: {json.dumps(payload, ensure_ascii=False)}\\n\\n\"\n    yield _sse({\"type\": \"status\", \"message\": \"Đang phân tích giỏ hàng...\"})",
+        "detail": "ai-service-flask.cart_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "_CART_ANALYSIS_RE",
+        "kind": 5,
+        "importPath": "ai-service-flask.cart_analysis",
+        "description": "ai-service-flask.cart_analysis",
+        "peekOfCode": "_CART_ANALYSIS_RE = re.compile(\n    r\"phân tích.*giỏ hàng|phan tich.*gio hang|giỏ hàng.*xung|gio hang.*xung|\"\n    r\"cảnh báo.*xung|canh bao.*xung|xung đột.*giỏ|xung dot.*gio|\"\n    r\"routine hiện tại|routine hien tai|phân tích nhanh giỏ hàng|phan tich nhanh gio hang\",\n    re.IGNORECASE,\n)\ndef is_cart_analysis_query(message: str) -> bool:\n    m = (message or \"\").strip()\n    if not m:\n        return False",
+        "detail": "ai-service-flask.cart_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "health",
+        "kind": 2,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "def health():\n    vs_ok, doc_count = False, 0\n    try:\n        vs = get_vectorstore()\n        doc_count = vs._collection.count()\n        vs_ok = True\n    except Exception as exc:\n        logger.warning(\"[HEALTH] Vectorstore error: %s\", exc)\n    llms = get_llms()\n    primary = getattr(llms[0], \"model\", getattr(llms[0], \"model_name\", OPENAI_MODEL)) if llms else OPENAI_MODEL",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "chat_stream",
+        "kind": 2,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "def chat_stream():\n    data = request.get_json(force=True) or {}\n    message, msg_data = _parse_chat_payload(data)\n    if not message:\n        return jsonify({\"ok\": False, \"message\": \"Thiếu nội dung câu hỏi.\"}), 400\n    def generate():\n        try:\n            from cart_analysis import is_cart_analysis_query, stream_cart_analysis_sse\n            if is_cart_analysis_query(message):\n                yield from stream_cart_analysis_sse(message, msg_data)",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "chat_auto",
+        "kind": 2,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "def chat_auto():\n    data = request.get_json(force=True) or {}\n    message, msg_data = _parse_chat_payload(data)\n    if not message:\n        return jsonify({\"ok\": False, \"message\": \"Thiếu nội dung câu hỏi.\"}), 400\n    meta = {\"_routed_by\": \"auto\"}\n    try:\n        from cart_analysis import is_cart_analysis_query, build_cart_analysis_answer\n        if is_cart_analysis_query(message):\n            answer = build_cart_analysis_answer(",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "recommend",
+        "kind": 2,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "def recommend():\n    data = request.get_json(force=True) or {}\n    message, msg_data = _parse_chat_payload(data)\n    if not message:\n        return jsonify({\"ok\": False, \"message\": \"Thiếu nội dung câu hỏi.\"}), 400\n    try:\n        return _run_pipeline(message, msg_data)\n    except Exception as exc:\n        return jsonify({\"ok\": False, \"message\": str(exc)}), 500\n@app.post(\"/api/eval/score\")",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "eval_score",
+        "kind": 2,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "def eval_score():\n    data = request.get_json(force=True) or {}\n    question = str(data.get(\"question\", \"\")).strip()\n    answer = str(data.get(\"answer\", \"\")).strip()\n    context = str(data.get(\"context\", \"\")).strip()\n    if not question or not answer:\n        return jsonify({\"ok\": False, \"message\": \"question and answer are required\"}), 400\n    try:\n        from live_scorer import score_response\n        scores = score_response(question, answer, context)",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "not_found",
+        "kind": 2,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "def not_found(_):\n    return jsonify({\"ok\": False, \"message\": \"Route not found\"}), 404\n@app.errorhandler(500)\ndef server_error(_):\n    return jsonify({\"ok\": False, \"message\": \"Internal error\"}), 500\nif __name__ == \"__main__\":\n    logging.basicConfig(\n        level=logging.INFO,\n        format=\"%(asctime)s [%(levelname)s] %(name)s: %(message)s\",\n        datefmt=\"%H:%M:%S\",",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "server_error",
+        "kind": 2,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "def server_error(_):\n    return jsonify({\"ok\": False, \"message\": \"Internal error\"}), 500\nif __name__ == \"__main__\":\n    logging.basicConfig(\n        level=logging.INFO,\n        format=\"%(asctime)s [%(levelname)s] %(name)s: %(message)s\",\n        datefmt=\"%H:%M:%S\",\n    )\n    logger.info(\"SkinSyntaxVN Chatbot — port %s\", FLASK_PORT)\n    logger.info(\"Primary model: %s\", OPENAI_MODEL)",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nos.environ[\"PYTHONUTF8\"] = \"1\"\nif hasattr(sys.stdout, \"reconfigure\"):\n    sys.stdout.reconfigure(encoding=\"utf-8\")\nfrom dotenv import load_dotenv\n_ENV_PATH = Path(__file__).resolve().parent.parent / \".env\"\nif _ENV_PATH.exists():\n    load_dotenv(_ENV_PATH, override=True)\nelse:\n    load_dotenv(override=True)",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"PYTHONUTF8\"]",
+        "kind": 5,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "os.environ[\"PYTHONUTF8\"] = \"1\"\nif hasattr(sys.stdout, \"reconfigure\"):\n    sys.stdout.reconfigure(encoding=\"utf-8\")\nfrom dotenv import load_dotenv\n_ENV_PATH = Path(__file__).resolve().parent.parent / \".env\"\nif _ENV_PATH.exists():\n    load_dotenv(_ENV_PATH, override=True)\nelse:\n    load_dotenv(override=True)\nfrom flask import Flask, request, jsonify, Response, stream_with_context",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "_ENV_PATH",
+        "kind": 5,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "_ENV_PATH = Path(__file__).resolve().parent.parent / \".env\"\nif _ENV_PATH.exists():\n    load_dotenv(_ENV_PATH, override=True)\nelse:\n    load_dotenv(override=True)\nfrom flask import Flask, request, jsonify, Response, stream_with_context\nfrom llm_pool import get_llms, OPENAI_MODEL\nfrom retrieval import get_vectorstore, get_hybrid_pipeline\nfrom pipeline import xu_ly_cau_hoi, xu_ly_cau_hoi_stream\nfrom session_cache import cache_stats",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "app = Flask(__name__)\nFLASK_PORT = int(os.getenv(\"CHATBOT_PORT\", 5001))\ndef _parse_chat_payload(data: dict) -> tuple[str, dict | None]:\n    message_raw = str(data.get(\"message\", \"\")).strip()\n    if message_raw:\n        try:\n            msg_data = json.loads(message_raw)\n            return str(msg_data.get(\"customer_question\", message_raw)).strip(), msg_data\n        except Exception:\n            return message_raw, data",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "FLASK_PORT",
+        "kind": 5,
+        "importPath": "ai-service-flask.chatbot_flask",
+        "description": "ai-service-flask.chatbot_flask",
+        "peekOfCode": "FLASK_PORT = int(os.getenv(\"CHATBOT_PORT\", 5001))\ndef _parse_chat_payload(data: dict) -> tuple[str, dict | None]:\n    message_raw = str(data.get(\"message\", \"\")).strip()\n    if message_raw:\n        try:\n            msg_data = json.loads(message_raw)\n            return str(msg_data.get(\"customer_question\", message_raw)).strip(), msg_data\n        except Exception:\n            return message_raw, data\n    message = str(data.get(\"customer_question\", data.get(\"message\", \"\"))).strip()",
+        "detail": "ai-service-flask.chatbot_flask",
+        "documentation": {}
+    },
+    {
+        "label": "QueryResult",
+        "kind": 6,
+        "importPath": "ai-service-flask.eval_trulens",
+        "description": "ai-service-flask.eval_trulens",
+        "peekOfCode": "class QueryResult:\n    question:         str\n    expected_intent:  str\n    actual_intent:    str\n    answer:           str\n    products_count:   int\n    latency_ms:       float\n    tags:             list[str]\n    # TruLens scores (None if TruLens is unavailable)\n    answer_relevance: float | None = None",
+        "detail": "ai-service-flask.eval_trulens",
+        "documentation": {}
+    },
+    {
+        "label": "EvalReport",
+        "kind": 6,
+        "importPath": "ai-service-flask.eval_trulens",
+        "description": "ai-service-flask.eval_trulens",
+        "peekOfCode": "class EvalReport:\n    timestamp:            str = field(default_factory=lambda: datetime.now().isoformat())\n    total_queries:        int = 0\n    intent_accuracy:      float = 0.0\n    avg_latency_ms:       float = 0.0\n    avg_answer_relevance: float | None = None\n    avg_groundedness:     float | None = None\n    avg_context_relevance: float | None = None\n    by_intent:            dict = field(default_factory=dict)\n    by_tag:               dict = field(default_factory=dict)",
+        "detail": "ai-service-flask.eval_trulens",
+        "documentation": {}
+    },
+    {
+        "label": "run_evaluation",
+        "kind": 2,
+        "importPath": "ai-service-flask.eval_trulens",
+        "description": "ai-service-flask.eval_trulens",
+        "peekOfCode": "def run_evaluation(n_queries: int = 15, use_trulens: bool = True) -> EvalReport:\n    \"\"\"\n    Run full pipeline evaluation.\n    Args:\n        n_queries  : Number of queries to run (default all 15).\n        use_trulens: Use TruLens LLM judge if available.\n    \"\"\"\n    cases  = TEST_CASES[:n_queries]\n    report = EvalReport(total_queries=len(cases))\n    provider = None",
+        "detail": "ai-service-flask.eval_trulens",
+        "documentation": {}
+    },
+    {
+        "label": "print_report",
+        "kind": 2,
+        "importPath": "ai-service-flask.eval_trulens",
+        "description": "ai-service-flask.eval_trulens",
+        "peekOfCode": "def print_report(report: EvalReport):\n    bar = \"═\" * 72\n    print(f\"\\n{bar}\")\n    print(f\"  SKINSYNTAXVN CHATBOT — EVALUATION RESULTS\")\n    print(f\"  {report.timestamp}\")\n    print(bar)\n    print(f\"\\n  Total queries : {report.total_queries}\")\n    print(f\"  TruLens judge : {'LLM-based' if report.trulens_used else '✗ Offline (TruLens unavailable)'}\")\n    print(f\"\\n  {'─'*38} OVERALL {'─'*23}\")\n    print(f\"  Intent Accuracy     : {report.intent_accuracy:.1%}\")",
+        "detail": "ai-service-flask.eval_trulens",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "ai-service-flask.eval_trulens",
+        "description": "ai-service-flask.eval_trulens",
+        "peekOfCode": "def main():\n    parser = argparse.ArgumentParser(description=\"Evaluate SkinSyntaxVN chatbot with TruLens\")\n    parser.add_argument(\"--n\",          type=int, default=15,          help=\"Number of queries to run (default 15)\")\n    parser.add_argument(\"--no-trulens\", action=\"store_true\",           help=\"Run offline without TruLens LLM judge\")\n    parser.add_argument(\"--output\",     type=str, default=None,        help=\"Save results to JSON file (e.g. report.json)\")\n    parser.add_argument(\"--dashboard\",  action=\"store_true\",           help=\"Open TruLens dashboard after run\")\n    args = parser.parse_args()\n    report = run_evaluation(\n        n_queries=min(args.n, len(TEST_CASES)),\n        use_trulens=not args.no_trulens,",
+        "detail": "ai-service-flask.eval_trulens",
+        "documentation": {}
+    },
+    {
+        "label": "_ENV",
+        "kind": 5,
+        "importPath": "ai-service-flask.eval_trulens",
+        "description": "ai-service-flask.eval_trulens",
+        "peekOfCode": "_ENV = Path(__file__).resolve().parent.parent / \".env\"\nif _ENV.exists():\n    from dotenv import load_dotenv\n    load_dotenv(_ENV, override=True)\ntry:\n    from trulens.core import TruSession, Feedback, Select\n    from trulens.providers.litellm import LiteLLM\n    _TRULENS_OK = True\nexcept ImportError:\n    _TRULENS_OK = False",
+        "detail": "ai-service-flask.eval_trulens",
+        "documentation": {}
+    },
+    {
+        "label": "post_fork",
+        "kind": 2,
+        "importPath": "ai-service-flask.gunicorn_config",
+        "description": "ai-service-flask.gunicorn_config",
+        "peekOfCode": "def post_fork(server, worker):\n    try:\n        from retrieval import get_vectorstore, get_hybrid_pipeline\n        from llm_pool import get_llms\n        from session_cache import expire_old\n        get_vectorstore()\n        get_hybrid_pipeline()\n        get_llms()\n        expire_old()\n        server.log.info(f\"[Worker {worker.pid}] Models pre-warmed successfully\")",
+        "detail": "ai-service-flask.gunicorn_config",
+        "documentation": {}
+    },
+    {
+        "label": "graceful_timeout",
+        "kind": 5,
+        "importPath": "ai-service-flask.gunicorn_config",
+        "description": "ai-service-flask.gunicorn_config",
+        "peekOfCode": "graceful_timeout = 30\nkeepalive        = 5\nworker_class     = os.getenv(\"GUNICORN_WORKER_CLASS\", \"gevent\")\npreload_app      = True\nloglevel  = \"info\"\naccesslog = \"-\"\nerrorlog  = \"-\"\ndef post_fork(server, worker):\n    try:\n        from retrieval import get_vectorstore, get_hybrid_pipeline",
+        "detail": "ai-service-flask.gunicorn_config",
+        "documentation": {}
+    },
+    {
+        "label": "accesslog",
+        "kind": 5,
+        "importPath": "ai-service-flask.gunicorn_config",
+        "description": "ai-service-flask.gunicorn_config",
+        "peekOfCode": "accesslog = \"-\"\nerrorlog  = \"-\"\ndef post_fork(server, worker):\n    try:\n        from retrieval import get_vectorstore, get_hybrid_pipeline\n        from llm_pool import get_llms\n        from session_cache import expire_old\n        get_vectorstore()\n        get_hybrid_pipeline()\n        get_llms()",
+        "detail": "ai-service-flask.gunicorn_config",
+        "documentation": {}
+    },
+    {
+        "label": "RankedDocument",
+        "kind": 6,
+        "importPath": "ai-service-flask.hybrid_search",
+        "description": "ai-service-flask.hybrid_search",
+        "peekOfCode": "class RankedDocument:\n    \"\"\"Represents a ranked document with scores from multiple methods.\"\"\"\n    doc_id: str\n    content: str\n    metadata: Dict[str, Any]\n    semantic_score: Optional[float] = None\n    bm25_score: Optional[float] = None\n    rrf_score: Optional[float] = None\n    rerank_score: Optional[float] = None\n    semantic_rank: Optional[int] = None",
+        "detail": "ai-service-flask.hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "BM25Search",
+        "kind": 6,
+        "importPath": "ai-service-flask.hybrid_search",
+        "description": "ai-service-flask.hybrid_search",
+        "peekOfCode": "class BM25Search:\n    \"\"\"\n    BM25 sparse keyword search.\n    Fallback implementation using simple TF-IDF when ElasticSearch is not available.\n    \"\"\"\n    def __init__(self, documents: Optional[List[Dict[str, Any]]] = None):\n        \"\"\"\n        Initialize BM25 search index.\n        Args:\n            documents: List of documents with 'id', 'content', 'metadata'",
+        "detail": "ai-service-flask.hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "ReciprocalRankFusion",
+        "kind": 6,
+        "importPath": "ai-service-flask.hybrid_search",
+        "description": "ai-service-flask.hybrid_search",
+        "peekOfCode": "class ReciprocalRankFusion:\n    \"\"\"\n    Combine ranking results from multiple retrieval methods using RRF.\n    Formula:\n    RRF(d) = Σ 1/(k + rank(d))\n    where k is a constant (typically 60) and rank is the position in each ranking.\n    With weighted RRF:\n    RRF(d) = α * (semantic_component) + (1-α) * (lexical_component)\n    \"\"\"\n    def __init__(self, k: float = 60.0, alpha: float = 0.5):",
+        "detail": "ai-service-flask.hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "LangChainCrossEncoderReranker",
+        "kind": 6,
+        "importPath": "ai-service-flask.hybrid_search",
+        "description": "ai-service-flask.hybrid_search",
+        "peekOfCode": "class LangChainCrossEncoderReranker:\n    \"\"\"\n    Re-rank documents via LangChain CrossEncoderReranker + HuggingFaceCrossEncoder.\n    Model: cross-encoder/mmarco-mMiniLMv2-L12-H384-v1 (multilingual, Vietnamese-friendly)\n    \"\"\"\n    def __init__(\n        self,\n        model_name: str = RERANKER_MODEL,\n        model_kwargs: Optional[Dict[str, Any]] = None,\n    ):",
+        "detail": "ai-service-flask.hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "HybridSearchPipeline",
+        "kind": 6,
+        "importPath": "ai-service-flask.hybrid_search",
+        "description": "ai-service-flask.hybrid_search",
+        "peekOfCode": "class HybridSearchPipeline:\n    \"\"\"\n    Complete hybrid search pipeline combining:\n    1. Dense semantic search (ChromaDB)\n    2. Sparse BM25 search\n    3. RRF fusion\n    4. Vietnamese cross-encoder re-ranking\n    \"\"\"\n    def __init__(\n        self,",
+        "detail": "ai-service-flask.hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "log_ranking_comparison",
+        "kind": 2,
+        "importPath": "ai-service-flask.hybrid_search",
+        "description": "ai-service-flask.hybrid_search",
+        "peekOfCode": "def log_ranking_comparison(\n    query: str,\n    documents: List[RankedDocument],\n    max_display: int = 10\n):\n    \"\"\"\n    Log ranking changes across stages for debugging/analysis.\n    Useful for understanding why re-ranking changed results.\n    \"\"\"\n    print(f\"\\n{'='*100}\")",
+        "detail": "ai-service-flask.hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.hybrid_search",
+        "description": "ai-service-flask.hybrid_search",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n@dataclass\nclass RankedDocument:\n    \"\"\"Represents a ranked document with scores from multiple methods.\"\"\"\n    doc_id: str\n    content: str\n    metadata: Dict[str, Any]\n    semantic_score: Optional[float] = None\n    bm25_score: Optional[float] = None\n    rrf_score: Optional[float] = None",
+        "detail": "ai-service-flask.hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "VietnameseReranker",
+        "kind": 5,
+        "importPath": "ai-service-flask.hybrid_search",
+        "description": "ai-service-flask.hybrid_search",
+        "peekOfCode": "VietnameseReranker = LangChainCrossEncoderReranker\nclass HybridSearchPipeline:\n    \"\"\"\n    Complete hybrid search pipeline combining:\n    1. Dense semantic search (ChromaDB)\n    2. Sparse BM25 search\n    3. RRF fusion\n    4. Vietnamese cross-encoder re-ranking\n    \"\"\"\n    def __init__(",
+        "detail": "ai-service-flask.hybrid_search",
+        "documentation": {}
+    },
+    {
+        "label": "score_response",
+        "kind": 2,
+        "importPath": "ai-service-flask.live_scorer",
+        "description": "ai-service-flask.live_scorer",
+        "peekOfCode": "def score_response(question: str, answer: str, context: str = \"\") -> dict:\n    out = {\n        \"available\": False,\n        \"provider\": \"none\",\n        \"answer_relevance\": None,\n        \"groundedness\": None,\n        \"context_relevance\": None,\n        \"errors\": [],\n    }\n    providers = _get_providers()",
+        "detail": "ai-service-flask.live_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "_ENV",
+        "kind": 5,
+        "importPath": "ai-service-flask.live_scorer",
+        "description": "ai-service-flask.live_scorer",
+        "peekOfCode": "_ENV = Path(__file__).resolve().parent.parent / \".env\"\nif _ENV.exists():\n    from dotenv import load_dotenv\n    load_dotenv(_ENV, override=True)\nlogger = logging.getLogger(__name__)\n_TRULENS_OK = False\ntry:\n    from trulens.providers.litellm import LiteLLM\n    _TRULENS_OK = True\nexcept ImportError:",
+        "detail": "ai-service-flask.live_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.live_scorer",
+        "description": "ai-service-flask.live_scorer",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n_TRULENS_OK = False\ntry:\n    from trulens.providers.litellm import LiteLLM\n    _TRULENS_OK = True\nexcept ImportError:\n    logger.warning(\"[SCORER] trulens not installed — live scoring disabled\")\ndef _build_provider_list() -> list[tuple[str, object]]:\n    if not _TRULENS_OK:\n        return []",
+        "detail": "ai-service-flask.live_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "_TRULENS_OK",
+        "kind": 5,
+        "importPath": "ai-service-flask.live_scorer",
+        "description": "ai-service-flask.live_scorer",
+        "peekOfCode": "_TRULENS_OK = False\ntry:\n    from trulens.providers.litellm import LiteLLM\n    _TRULENS_OK = True\nexcept ImportError:\n    logger.warning(\"[SCORER] trulens not installed — live scoring disabled\")\ndef _build_provider_list() -> list[tuple[str, object]]:\n    if not _TRULENS_OK:\n        return []\n    providers: list[tuple[str, object]] = []",
+        "detail": "ai-service-flask.live_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "get_llms",
+        "kind": 2,
+        "importPath": "ai-service-flask.llm_pool",
+        "description": "ai-service-flask.llm_pool",
+        "peekOfCode": "def get_llms() -> list:\n    global _llms\n    if _llms is not None:\n        return _llms\n    _llms = []\n    from langchain_openai import ChatOpenAI\n    openai_key = os.getenv(\"OPENAI_API_KEY\", \"\").strip()\n    if openai_key and openai_key.startswith(\"sk-\"):\n        for model in OPENAI_MODELS or [OPENAI_MODEL]:\n            try:",
+        "detail": "ai-service-flask.llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "get_classifier_llm",
+        "kind": 2,
+        "importPath": "ai-service-flask.llm_pool",
+        "description": "ai-service-flask.llm_pool",
+        "peekOfCode": "def get_classifier_llm():\n    llms = get_llms()\n    return llms[0] if llms else None\ndef build_str_chain(prompt: ChatPromptTemplate, llms: list) -> Runnable | None:\n    if not llms:\n        return None\n    chains = [prompt | llm | StrOutputParser() for llm in llms]\n    return chains[0].with_fallbacks(chains[1:], exceptions_to_handle=(Exception,))\ndef build_json_chain(prompt: ChatPromptTemplate, llms: list) -> Runnable | None:\n    if not llms:",
+        "detail": "ai-service-flask.llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "build_str_chain",
+        "kind": 2,
+        "importPath": "ai-service-flask.llm_pool",
+        "description": "ai-service-flask.llm_pool",
+        "peekOfCode": "def build_str_chain(prompt: ChatPromptTemplate, llms: list) -> Runnable | None:\n    if not llms:\n        return None\n    chains = [prompt | llm | StrOutputParser() for llm in llms]\n    return chains[0].with_fallbacks(chains[1:], exceptions_to_handle=(Exception,))\ndef build_json_chain(prompt: ChatPromptTemplate, llms: list) -> Runnable | None:\n    if not llms:\n        return None\n    chains = [prompt | llm | JsonOutputParser() for llm in llms]\n    return chains[0].with_fallbacks(chains[1:], exceptions_to_handle=(Exception,))",
+        "detail": "ai-service-flask.llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "build_json_chain",
+        "kind": 2,
+        "importPath": "ai-service-flask.llm_pool",
+        "description": "ai-service-flask.llm_pool",
+        "peekOfCode": "def build_json_chain(prompt: ChatPromptTemplate, llms: list) -> Runnable | None:\n    if not llms:\n        return None\n    chains = [prompt | llm | JsonOutputParser() for llm in llms]\n    return chains[0].with_fallbacks(chains[1:], exceptions_to_handle=(Exception,))",
+        "detail": "ai-service-flask.llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.llm_pool",
+        "description": "ai-service-flask.llm_pool",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nimport os\nfrom langchain_core.output_parsers import StrOutputParser, JsonOutputParser\nfrom langchain_core.prompts import ChatPromptTemplate\nfrom langchain_core.runnables import Runnable\nOPENAI_MODEL = os.getenv(\"OPENAI_CHAT_MODEL\", \"gpt-4o-mini\").strip()\nOPENAI_MODELS = [\n    m.strip()\n    for m in os.getenv(\n        \"OPENAI_CHAT_MODELS\",",
+        "detail": "ai-service-flask.llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "OPENAI_MODEL",
+        "kind": 5,
+        "importPath": "ai-service-flask.llm_pool",
+        "description": "ai-service-flask.llm_pool",
+        "peekOfCode": "OPENAI_MODEL = os.getenv(\"OPENAI_CHAT_MODEL\", \"gpt-4o-mini\").strip()\nOPENAI_MODELS = [\n    m.strip()\n    for m in os.getenv(\n        \"OPENAI_CHAT_MODELS\",\n        \"gpt-4o-mini,gpt-4o\",\n    ).split(\",\")\n    if m.strip()\n]\n_llms: list | None = None",
+        "detail": "ai-service-flask.llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "OPENAI_MODELS",
+        "kind": 5,
+        "importPath": "ai-service-flask.llm_pool",
+        "description": "ai-service-flask.llm_pool",
+        "peekOfCode": "OPENAI_MODELS = [\n    m.strip()\n    for m in os.getenv(\n        \"OPENAI_CHAT_MODELS\",\n        \"gpt-4o-mini,gpt-4o\",\n    ).split(\",\")\n    if m.strip()\n]\n_llms: list | None = None\ndef get_llms() -> list:",
+        "detail": "ai-service-flask.llm_pool",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_MODEL",
+        "kind": 5,
+        "importPath": "ai-service-flask.model_config",
+        "description": "ai-service-flask.model_config",
+        "peekOfCode": "EMBEDDING_MODEL = \"sentence-transformers/static-similarity-mrl-multilingual-v1\"\nRERANKER_MODEL = \"cross-encoder/mmarco-mMiniLMv2-L12-H384-v1\"\nEMBEDDING_MODEL_KWARGS = {\"device\": \"cpu\"}\nEMBEDDING_ENCODE_KWARGS = {\"normalize_embeddings\": True}\nRERANKER_MODEL_KWARGS = {\"device\": \"cpu\"}",
+        "detail": "ai-service-flask.model_config",
+        "documentation": {}
+    },
+    {
+        "label": "RERANKER_MODEL",
+        "kind": 5,
+        "importPath": "ai-service-flask.model_config",
+        "description": "ai-service-flask.model_config",
+        "peekOfCode": "RERANKER_MODEL = \"cross-encoder/mmarco-mMiniLMv2-L12-H384-v1\"\nEMBEDDING_MODEL_KWARGS = {\"device\": \"cpu\"}\nEMBEDDING_ENCODE_KWARGS = {\"normalize_embeddings\": True}\nRERANKER_MODEL_KWARGS = {\"device\": \"cpu\"}",
+        "detail": "ai-service-flask.model_config",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_MODEL_KWARGS",
+        "kind": 5,
+        "importPath": "ai-service-flask.model_config",
+        "description": "ai-service-flask.model_config",
+        "peekOfCode": "EMBEDDING_MODEL_KWARGS = {\"device\": \"cpu\"}\nEMBEDDING_ENCODE_KWARGS = {\"normalize_embeddings\": True}\nRERANKER_MODEL_KWARGS = {\"device\": \"cpu\"}",
+        "detail": "ai-service-flask.model_config",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_ENCODE_KWARGS",
+        "kind": 5,
+        "importPath": "ai-service-flask.model_config",
+        "description": "ai-service-flask.model_config",
+        "peekOfCode": "EMBEDDING_ENCODE_KWARGS = {\"normalize_embeddings\": True}\nRERANKER_MODEL_KWARGS = {\"device\": \"cpu\"}",
+        "detail": "ai-service-flask.model_config",
+        "documentation": {}
+    },
+    {
+        "label": "RERANKER_MODEL_KWARGS",
+        "kind": 5,
+        "importPath": "ai-service-flask.model_config",
+        "description": "ai-service-flask.model_config",
+        "peekOfCode": "RERANKER_MODEL_KWARGS = {\"device\": \"cpu\"}",
+        "detail": "ai-service-flask.model_config",
+        "documentation": {}
+    },
+    {
+        "label": "xu_ly_cau_hoi",
+        "kind": 2,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "def xu_ly_cau_hoi(message: str, msg_data: dict | None = None) -> dict:\n    from response_cache import get_cached_response, store_response, should_cache_request\n    if should_cache_request(message, msg_data):\n        cached = get_cached_response(message, msg_data)\n        if cached:\n            cached = dict(cached)\n            cached[\"_cached\"] = True\n            return cached\n    ctx = _prepare_pipeline(message, msg_data)\n    if ctx.get(\"skip_llm\"):",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "xu_ly_cau_hoi_stream",
+        "kind": 2,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "def xu_ly_cau_hoi_stream(\n    message: str,\n    msg_data: dict | None = None,\n) -> Generator[str, None, None]:\n    \"\"\"\n    Phiên bản streaming của xu_ly_cau_hoi.\n    Yields chuỗi SSE: \"data: {json}\\\\n\\\\n\"\n    Event types:\n      {\"type\":\"status\",\"message\":\"...\"}  — trạng thái xử lý\n      {\"type\":\"token\",\"delta\":\"...\"}     — từng token của câu trả lời",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nimport hashlib\nimport json\nimport os\nimport re\nimport time\nfrom typing import Optional, Generator\nfrom llm_pool import (\n    get_llms, get_classifier_llm,\n    build_str_chain, build_json_chain,",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_WEB_CACHE_TTL",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_WEB_CACHE_TTL = 900\ndef _extract_budget_vnd(text: str) -> int | None:\n    \"\"\"\n    Trích xuất ngân sách tối đa (VNĐ) từ câu hỏi.\n    Hỗ trợ: \"dưới 800k\", \"tổng 1 triệu\", \"không quá 500.000\", \"1.5tr\"\n    \"\"\"\n    t = text.lower()\n    m = re.search(r'(\\d+(?:[.,]\\d+)?)\\s*(?:triệu|tr\\b)', t)\n    if m:\n        return int(float(m.group(1).replace(',', '.')) * 1_000_000)",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_MORNING_SKIP_CATS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_MORNING_SKIP_CATS = {\"Tẩy Trang Mặt\"}\n_ESSENTIAL_ROUTINE_CATS = (\"Sữa Rửa Mặt\", \"Chống Nắng Da Mặt\")\n_OPTIONAL_ROUTINE_CATS = (\n    \"Kem / Gel / Dầu Dưỡng\",\n    \"Serum / Tinh Chất\",\n    \"Toner / Nước Cân Bằng Da\",\n    \"Tẩy Trang Mặt\",\n)\ndef _is_morning_routine(message: str) -> bool:\n    m = message.lower()",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_ESSENTIAL_ROUTINE_CATS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_ESSENTIAL_ROUTINE_CATS = (\"Sữa Rửa Mặt\", \"Chống Nắng Da Mặt\")\n_OPTIONAL_ROUTINE_CATS = (\n    \"Kem / Gel / Dầu Dưỡng\",\n    \"Serum / Tinh Chất\",\n    \"Toner / Nước Cân Bằng Da\",\n    \"Tẩy Trang Mặt\",\n)\ndef _is_morning_routine(message: str) -> bool:\n    m = message.lower()\n    if any(k in m for k in (\"buổi tối\", \"buoi toi\", \"tối\", \" evening\")):",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_OPTIONAL_ROUTINE_CATS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_OPTIONAL_ROUTINE_CATS = (\n    \"Kem / Gel / Dầu Dưỡng\",\n    \"Serum / Tinh Chất\",\n    \"Toner / Nước Cân Bằng Da\",\n    \"Tẩy Trang Mặt\",\n)\ndef _is_morning_routine(message: str) -> bool:\n    m = message.lower()\n    if any(k in m for k in (\"buổi tối\", \"buoi toi\", \"tối\", \" evening\")):\n        return False",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_CHITCHAT_EXACT",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_CHITCHAT_EXACT = {\n    \"chào\", \"hello\", \"hi\", \"hey\", \"alo\", \"ờ\", \"ok\", \"okay\",\n    \"cảm ơn\", \"cám ơn\", \"cảm ơn bạn\", \"cảm ơn nha\", \"cám ơn nha\",\n    \"tạm biệt\", \"bye\", \"goodbye\", \"hẹn gặp lại\",\n    \"haha\", \"hihi\", \"hehe\",\n}\n_CHITCHAT_PREFIXES = (\n    \"chào\", \"hello\", \"hi \", \"hey \", \"alo\",\n    \"cảm ơn\", \"cám ơn\", \"cảm on\", \"cam on\",\n    \"tạm biệt\", \"tam biet\", \"bye\",",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_CHITCHAT_PREFIXES",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_CHITCHAT_PREFIXES = (\n    \"chào\", \"hello\", \"hi \", \"hey \", \"alo\",\n    \"cảm ơn\", \"cám ơn\", \"cảm on\", \"cam on\",\n    \"tạm biệt\", \"tam biet\", \"bye\",\n    \"ráng lên\", \"cố lên\", \"chúc mừng\",\n)\ndef _is_pure_chitchat(message: str) -> bool:\n    q = message.strip().lower()\n    if len(q) > 60:\n        return False",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "OFF_TOPIC_SUGGESTIONS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "OFF_TOPIC_SUGGESTIONS = (\n    \"Da dầu mụn nên dùng srm gì?\",\n    \"Gợi ý routine buổi sáng cho da dầu\",\n    \"Serum vitamin C giá dưới 300k\",\n    \"Kem chống nắng cho da nhạy cảm\",\n)\n_OFF_TOPIC_PERSONAL = (\n    \"Haha, câu này hơi ngoài chuyên môn của mình rồi — mình chỉ giỏi chuyện chăm da và mỹ phẩm thôi. Bạn kể thêm về làn da đang gặp vấn đề gì, mình tư vấn liền nhé?\",\n    \"Nghe vui đấy! Nhưng mình là trợ lý skincare SkinSyntaxVN, chuyện tình cảm thì hơi quá sức mình rồi. Quay lại chăm da nha — da bạn đang dầu, khô hay mụn?\",\n    \"Mình không phải tư vấn tình yêu, mà là tư vấn routine đấy bạn ơi. Bạn muốn mình gợi ý sản phẩm hay xây chu trình sáng/tối không?\",",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_OFF_TOPIC_PERSONAL",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_OFF_TOPIC_PERSONAL = (\n    \"Haha, câu này hơi ngoài chuyên môn của mình rồi — mình chỉ giỏi chuyện chăm da và mỹ phẩm thôi. Bạn kể thêm về làn da đang gặp vấn đề gì, mình tư vấn liền nhé?\",\n    \"Nghe vui đấy! Nhưng mình là trợ lý skincare SkinSyntaxVN, chuyện tình cảm thì hơi quá sức mình rồi. Quay lại chăm da nha — da bạn đang dầu, khô hay mụn?\",\n    \"Mình không phải tư vấn tình yêu, mà là tư vấn routine đấy bạn ơi. Bạn muốn mình gợi ý sản phẩm hay xây chu trình sáng/tối không?\",\n)\n_OFF_TOPIC_TECH = (\n    \"Điện thoại thì shop mình chưa bán, nhưng serum, kcn, srm thì mình tư vấn cực kỳ nhiệt tình! Bạn đang tìm loại sản phẩm skincare nào?\",\n    \"iPhone thì mình không rành, còn ingredient list trên mặt nạ thì mình đọc được ngay. Bạn cần gợi ý gì cho làn da không?\",\n    \"Món đó nằm ngoài danh mục SkinSyntaxVN rồi bạn ơi. Nếu bạn muốn mua mỹ phẩm chính hãng, mình gợi ý theo loại da và ngân sách nhé!\",\n)",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_OFF_TOPIC_TECH",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_OFF_TOPIC_TECH = (\n    \"Điện thoại thì shop mình chưa bán, nhưng serum, kcn, srm thì mình tư vấn cực kỳ nhiệt tình! Bạn đang tìm loại sản phẩm skincare nào?\",\n    \"iPhone thì mình không rành, còn ingredient list trên mặt nạ thì mình đọc được ngay. Bạn cần gợi ý gì cho làn da không?\",\n    \"Món đó nằm ngoài danh mục SkinSyntaxVN rồi bạn ơi. Nếu bạn muốn mua mỹ phẩm chính hãng, mình gợi ý theo loại da và ngân sách nhé!\",\n)\n_OFF_TOPIC_FINANCE = (\n    \"Giá vàng, coin… mình không theo dõi được đâu bạn ơi. Còn giá serum, kcn trong shop thì mình báo chuẩn lắm — bạn muốn tìm mức giá nào?\",\n    \"Chuyện đầu tư thì quá sức mình rồi! Mình chỉ đầu tư thời gian để tìm sản phẩm phù hợp làn da thôi. Bạn cần gợi ý gì không?\",\n)\n_OFF_TOPIC_SPORTS = (",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_OFF_TOPIC_FINANCE",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_OFF_TOPIC_FINANCE = (\n    \"Giá vàng, coin… mình không theo dõi được đâu bạn ơi. Còn giá serum, kcn trong shop thì mình báo chuẩn lắm — bạn muốn tìm mức giá nào?\",\n    \"Chuyện đầu tư thì quá sức mình rồi! Mình chỉ đầu tư thời gian để tìm sản phẩm phù hợp làn da thôi. Bạn cần gợi ý gì không?\",\n)\n_OFF_TOPIC_SPORTS = (\n    \"Bóng đá thì mình không comment được, còn da đang 'thua' vì mụn thì mình cứu được! Bạn kể tình trạng da mình nghe?\",\n    \"Thời tiết thì mình không dự báo được, nhưng routine mùa nóng/mùa lạnh thì mình có thể gợi ý ngay. Da bạn đang cần hỗ trợ gì?\",\n)\n_OFF_TOPIC_GENERAL = (\n    \"Câu này hơi lạc đề so với chuyên môn mình rồi — mình chỉ hỗ trợ skincare và đơn hàng SkinSyntaxVN thôi. Bạn muốn tư vấn sản phẩm hay routine không?\",",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_OFF_TOPIC_SPORTS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_OFF_TOPIC_SPORTS = (\n    \"Bóng đá thì mình không comment được, còn da đang 'thua' vì mụn thì mình cứu được! Bạn kể tình trạng da mình nghe?\",\n    \"Thời tiết thì mình không dự báo được, nhưng routine mùa nóng/mùa lạnh thì mình có thể gợi ý ngay. Da bạn đang cần hỗ trợ gì?\",\n)\n_OFF_TOPIC_GENERAL = (\n    \"Câu này hơi lạc đề so với chuyên môn mình rồi — mình chỉ hỗ trợ skincare và đơn hàng SkinSyntaxVN thôi. Bạn muốn tư vấn sản phẩm hay routine không?\",\n    \"Mình hiểu bạn đang trò chuyện vui, nhưng mình được thiết kế để tư vấn mỹ phẩm thôi nhé. Thử hỏi kiểu \\\"da dầu mụn nên dùng srm gì\\\" xem!\",\n    \"Oops, hơi ngoài phạm vi mình rồi! Nếu bạn cần gợi ý chăm sóc da, chọn serum, kcn hay xây routine — cứ hỏi mình nha.\",\n    \"SkinSyntaxVN tập trung vào làn da thôi bạn ơi, còn câu này thì mình chưa đủ data để trả lời. Quay sang chuyện da đi — mình sẵn sàng!\",\n    \"Mình không biết câu này lắm, nhưng biết khá nhiều về retinol, BHA và kem chống nắng đấy. Bạn cần tư vấn gì về da không?\",",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_OFF_TOPIC_GENERAL",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_OFF_TOPIC_GENERAL = (\n    \"Câu này hơi lạc đề so với chuyên môn mình rồi — mình chỉ hỗ trợ skincare và đơn hàng SkinSyntaxVN thôi. Bạn muốn tư vấn sản phẩm hay routine không?\",\n    \"Mình hiểu bạn đang trò chuyện vui, nhưng mình được thiết kế để tư vấn mỹ phẩm thôi nhé. Thử hỏi kiểu \\\"da dầu mụn nên dùng srm gì\\\" xem!\",\n    \"Oops, hơi ngoài phạm vi mình rồi! Nếu bạn cần gợi ý chăm sóc da, chọn serum, kcn hay xây routine — cứ hỏi mình nha.\",\n    \"SkinSyntaxVN tập trung vào làn da thôi bạn ơi, còn câu này thì mình chưa đủ data để trả lời. Quay sang chuyện da đi — mình sẵn sàng!\",\n    \"Mình không biết câu này lắm, nhưng biết khá nhiều về retinol, BHA và kem chống nắng đấy. Bạn cần tư vấn gì về da không?\",\n)\ndef _off_topic_category(message: str) -> str:\n    msg = message.strip().lower()\n    if any(k in msg for k in (\"người yêu\", \"nguoi yeu\", \"bạn trai\", \"ban trai\", \"bạn gái\", \"ban gai\",",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_SKINCARE_SHOP_SIGNALS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_SKINCARE_SHOP_SIGNALS = (\n    \"sữa rửa\", \"sua rua\", \"srm\", \"rửa mặt\", \"tẩy trang\", \"tay trang\",\n    \"toner\", \"nước hoa hồng\", \"nuoc hoa hong\", \"serum\", \"tinh chất\", \"tinh chat\",\n    \"kem dưỡng\", \"kem duong\", \"chống nắng\", \"chong nang\", \"kcn\", \"sunscreen\",\n    \"routine\", \"chu trình\", \"chu trinh\", \"mỹ phẩm\", \"my pham\", \"skincare\",\n    \"chăm da\", \"cham da\", \"dưỡng da\", \"duong da\", \"thành phần\", \"thanh phan\",\n    \"hoạt chất\", \"hoat chat\", \"sản phẩm\", \"san pham\", \"gợi ý\", \"goi y\", \"tư vấn\", \"tu van\",\n    \"da dầu\", \"da dau\", \"da khô\", \"da kho\", \"da mụn\", \"da mun\", \"da nhạy cảm\",\n    \"mụn\", \"mun\", \"thâm\", \"tham\", \"retinol\", \"niacinamide\", \"bha\", \"aha\",\n    \"vitamin c\", \"hyaluronic\", \"ceramide\", \"peptide\", \"so sánh\", \"so sanh\",",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_OFF_TOPIC_SIGNALS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_OFF_TOPIC_SIGNALS = (\n    \"người yêu\", \"nguoi yeu\", \"bạn trai\", \"ban trai\", \"bạn gái\", \"ban gai\",\n    \"crush\", \"tình yêu\", \"tinh yeu\", \"kết hôn\", \"ket hon\", \"yêu \", \" yeu \",\n    \"giá vàng\", \"gia vang\", \"bóng đá\", \"bong da\", \"thời tiết\", \"thoi tiet\",\n    \"bitcoin\", \"crypto\", \"cổ phiếu\", \"co phieu\",\n)\n_FOLLOWUP_SIGNALS = (\n    \"cái đó\", \"cai do\", \"cái này\", \"cai nay\", \"cái kia\", \"cai kia\",\n    \"em này\", \"em nay\", \"san pham nay\", \"sản phẩm này\",\n    \"dùng sao\", \"dung sao\", \"giá bao nhiêu\", \"gia bao nhieu\", \"còn hàng\", \"con hang\",",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_FOLLOWUP_SIGNALS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_FOLLOWUP_SIGNALS = (\n    \"cái đó\", \"cai do\", \"cái này\", \"cai nay\", \"cái kia\", \"cai kia\",\n    \"em này\", \"em nay\", \"san pham nay\", \"sản phẩm này\",\n    \"dùng sao\", \"dung sao\", \"giá bao nhiêu\", \"gia bao nhieu\", \"còn hàng\", \"con hang\",\n    \"mua được không\", \"mua duoc khong\",\n    \"trong số\", \"trong so\", \"trong đó\", \"trong do\", \"trong list\", \"trong danh sách\",\n    \"ở trên\", \"o tren\", \"vừa rồi\", \"vua roi\", \"vừa nêu\", \"vua neu\", \"vừa gợi ý\", \"vua goi y\",\n    \"chọn 1\", \"chon 1\", \"chọn một\", \"chon mot\", \"chọn giúp\", \"chon giup\", \"chọn giùm\",\n    \"1 loại\", \"mot loai\", \"một loại\", \"một thôi\", \"mot thoi\", \"1 thôi\",\n    \"loại nào\", \"loai nao\", \"cái nào\", \"cai nao\", \"sp nào\", \"nên lấy\", \"nen lay\",",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_BOT_ASKED_PROFILE_SIGNALS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_BOT_ASKED_PROFILE_SIGNALS = (\n    \"loại da\", \"loai da\", \"tình trạng\", \"tinh trang\", \"vấn đề da\", \"van de da\",\n    \"triệu chứng\", \"trieu chung\", \"mô tả thêm\", \"mo ta them\",\n    \"cho mình biết\", \"cho minh biet\", \"bạn gặp\", \"ban gap\", \"bạn đang\", \"ban dang\",\n    \"cần thêm thông tin\", \"can them thong tin\", \"routine phù hợp\",\n)\n_PROFILE_ANSWER_PREFIXES = (\n    \"dạ\", \"da \", \"vâng\", \"vang\", \"tôi \", \"toi \", \"mình \", \"minh \", \"em \", \"con \",\n)\ndef _is_profile_answer_followup(message: str, history_str: str) -> bool:",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_PROFILE_ANSWER_PREFIXES",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_PROFILE_ANSWER_PREFIXES = (\n    \"dạ\", \"da \", \"vâng\", \"vang\", \"tôi \", \"toi \", \"mình \", \"minh \", \"em \", \"con \",\n)\ndef _is_profile_answer_followup(message: str, history_str: str) -> bool:\n    if not history_str.strip():\n        return False\n    last_bot = \"\"\n    for line in reversed(history_str.split(\"\\n\")):\n        if line.startswith(\"SkinSyntax AI:\"):\n            last_bot = line.lower()",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_COMPARISON_PATTERNS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_COMPARISON_PATTERNS = [\n    r\"so\\s*sánh.{1,40}(với|và|vs)\",\n    r\"(và|vs|hay).{1,40}cái nào (tốt|phù hợp|nên dùng|tốt hơn|tốt hơn không)\",\n    r\"(chọn|dùng|mua).{1,50}(hay|hoặc).{1,50}(nào|tốt hơn|được không)\",\n    r\"khác nhau (thế nào|như thế nào|gì|không)\",\n    r\"(nên|thì) (chọn|mua|dùng).{1,40}hay\",\n    r\"(tốt hơn|kém hơn|khác gì|hơn nhau)\",\n]\ndef _is_comparison_query(message: str) -> bool:\n    q = message.lower()",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_ORDER_KEYWORDS",
+        "kind": 5,
+        "importPath": "ai-service-flask.pipeline",
+        "description": "ai-service-flask.pipeline",
+        "peekOfCode": "_ORDER_KEYWORDS = (\n    \"dat hang\", \"đặt hàng\", \"dat don\", \"đặt đơn\",\n    \"mua ngay\", \"them vao gio\", \"thêm vào giỏ\", \"cho toi\", \"cho mình\",\n    \"lay giup\", \"lấy giúp\", \"order\", \"checkout\", \"thanh toan\", \"thanh toán\",\n)\ndef _is_order_query(message: str) -> bool:\n    q = message.lower()\n    if any(k in q for k in _ORDER_KEYWORDS):\n        return True\n    return bool(re.search(r\"\\b(\\d+)\\s*(chai|tuyp|hop|hộp|cái|cai|sp)\\b\", q))",
+        "detail": "ai-service-flask.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "_ANALYZE_SYSTEM",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_ANALYZE_SYSTEM = \"\"\"\\\nBạn là hệ thống phân tích câu hỏi của SkinSyntaxVN. Nhiệm vụ của bạn là phân tích câu hỏi khách hàng và trả về JSON thuần túy với 3 trường.\nQUY TẮC PHÂN LOẠI INTENT:\n- \"PRODUCT_INQUIRY\"             : Tìm sản phẩm, hỏi mua, tư vấn chọn sản phẩm cụ thể.\n  Ví dụ: \"tìm kcn cho da dầu\", \"srm nào trị mụn tốt\", \"serum vitamin C giá rẻ\"\n- \"COSMETIC_KNOWLEDGE_OUT_OF_DB\": Hỏi định nghĩa, cơ chế, tác dụng của hoạt chất mỹ phẩm.\n  Ví dụ: \"retinol là gì\", \"BHA có tác dụng gì\", \"niacinamide dùng như thế nào\"\n- \"GENERAL_CONVERSATION\"        : Chào hỏi, chitchat, câu hỏi hoàn toàn ngoài ngành mỹ phẩm.\n  Ví dụ: \"chào shop\", \"giá vàng hôm nay\", \"ráng lên nha\"\nFORMAT OUTPUT — CHỈ JSON thuần túy, KHÔNG markdown, KHÔNG giải thích:",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_ANALYZE_HUMAN",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_ANALYZE_HUMAN = \"\"\"\\\n{history_section}Câu hỏi mới nhất của khách hàng: {message}\nHãy thực hiện 3 nhiệm vụ:\n1. rewritten_query: Nếu có lịch sử trò chuyện, viết lại câu hỏi thành câu ĐỘC LẬP, đầy đủ nghĩa để tìm kiếm chính xác (bổ sung tên sản phẩm/chủ đề từ context nếu câu hỏi mơ hồ như \"cái đó\", \"em này\", \"sử dụng thế nào\"). Nếu câu hỏi đã rõ hoặc không có lịch sử, trả lại nguyên văn.\n2. intent: Phân loại vào đúng 1 trong 3 nhóm theo quy tắc trên.\n3. ingredient: Tên hoạt chất mỹ phẩm chính (retinol, niacinamide, BHA, AHA, vitamin C, hyaluronic acid, ceramide, peptide...) hoặc null.\\\n\"\"\"\nanalyze_prompt = ChatPromptTemplate.from_messages([\n    (\"system\", _ANALYZE_SYSTEM),\n    (\"human\",  _ANALYZE_HUMAN),",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_prompt",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "analyze_prompt = ChatPromptTemplate.from_messages([\n    (\"system\", _ANALYZE_SYSTEM),\n    (\"human\",  _ANALYZE_HUMAN),\n])\n_PARSE_SYSTEM = \"\"\"\\\nBạn là hệ thống trích xuất thông tin mỹ phẩm. Phân tích yêu cầu mua mỹ phẩm và trả về JSON thuần túy.\nKHÔNG dùng markdown, KHÔNG giải thích, CHỈ JSON.\\\n\"\"\"\n_PARSE_HUMAN = \"\"\"\\\nYêu cầu: {message}",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_PARSE_SYSTEM",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_PARSE_SYSTEM = \"\"\"\\\nBạn là hệ thống trích xuất thông tin mỹ phẩm. Phân tích yêu cầu mua mỹ phẩm và trả về JSON thuần túy.\nKHÔNG dùng markdown, KHÔNG giải thích, CHỈ JSON.\\\n\"\"\"\n_PARSE_HUMAN = \"\"\"\\\nYêu cầu: {message}\nTrả về JSON với các field sau (dùng null nếu không có thông tin):\n{{\n  \"loai_da\": null hoặc một trong [\"Da dầu/Hỗn hợp dầu\",\"Da thường/Mọi loại da\",\"Da nhạy cảm\",\"Da khô/Hỗn hợp khô\",\"Da khô\",\"Da mụn\",\"Da hỗn hợp thiên dầu\",\"Unknown\"],\n  \"loai_san_pham\": null hoặc tên danh mục chính xác như \"Toner / Nước Cân Bằng Da\", \"Serum / Tinh Chất\", \"Chống Nắng Da Mặt\" v.v.,",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_PARSE_HUMAN",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_PARSE_HUMAN = \"\"\"\\\nYêu cầu: {message}\nTrả về JSON với các field sau (dùng null nếu không có thông tin):\n{{\n  \"loai_da\": null hoặc một trong [\"Da dầu/Hỗn hợp dầu\",\"Da thường/Mọi loại da\",\"Da nhạy cảm\",\"Da khô/Hỗn hợp khô\",\"Da khô\",\"Da mụn\",\"Da hỗn hợp thiên dầu\",\"Unknown\"],\n  \"loai_san_pham\": null hoặc tên danh mục chính xác như \"Toner / Nước Cân Bằng Da\", \"Serum / Tinh Chất\", \"Chống Nắng Da Mặt\" v.v.,\n  \"muc_gia\": null hoặc \"binh_dan\" (dưới 200k) hoặc \"tam_trung\" (200k-500k) hoặc \"cao_cap\" (trên 500k),\n  \"tinh_trang_da\": null hoặc list từ [\"mụn\",\"thâm\",\"nhăn\",\"đỏ kích ứng\",\"bong tróc\",\"lỗ chân lông to\",\"sạm màu\",\"quầng thâm mắt\",\"da bong\"],\n  \"thanh_phan_yeu_cau\": null hoặc list hoạt chất khách muốn có,\n  \"thanh_phan_can_tranh\": null hoặc list thành phần khách muốn tránh,",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "parse_prompt",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "parse_prompt = ChatPromptTemplate.from_messages([\n    (\"system\", _PARSE_SYSTEM),\n    (\"human\",  _PARSE_HUMAN),\n])\n# Used for PRODUCT_INQUIRY intent — skincare product advisory\n_PRODUCT_SYSTEM = \"\"\"\\\nBạn là Trợ lý AI tư vấn mỹ phẩm chuyên nghiệp của SkinSyntaxVN, có kiến thức chuyên sâu về da liễu và thành phần mỹ phẩm. Bạn trả lời cực kỳ thân thiện, chu đáo, tự nhiên giống một chuyên viên tư vấn thật sự.\n### PHONG CÁCH & GIỌNG VĂN\n- Xưng \"mình\" hoặc \"SkinSyntax\", gọi khách là \"bạn\".\n- KHÔNG lạm dụng emoji (tối đa 1-2 emoji nhẹ nhàng cho cả bài). KHÔNG dùng emoji ở đầu mỗi dòng.",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_PRODUCT_SYSTEM",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_PRODUCT_SYSTEM = \"\"\"\\\nBạn là Trợ lý AI tư vấn mỹ phẩm chuyên nghiệp của SkinSyntaxVN, có kiến thức chuyên sâu về da liễu và thành phần mỹ phẩm. Bạn trả lời cực kỳ thân thiện, chu đáo, tự nhiên giống một chuyên viên tư vấn thật sự.\n### PHONG CÁCH & GIỌNG VĂN\n- Xưng \"mình\" hoặc \"SkinSyntax\", gọi khách là \"bạn\".\n- KHÔNG lạm dụng emoji (tối đa 1-2 emoji nhẹ nhàng cho cả bài). KHÔNG dùng emoji ở đầu mỗi dòng.\n- KHÔNG dùng danh sách đánh số (1. 2. 3.) để liệt kê sản phẩm.\n- KHÔNG dùng heading (#, ##) cho từng sản phẩm.\n- Viết từng sản phẩm thành đoạn văn tự nhiên, cách nhau 1 dòng trống.\n### QUY TẮC TƯ VẤN\n- Nếu khách hỏi 1 sản phẩm cụ thể: đi thẳng vào vấn đề, KHÔNG lan man gợi ý thêm danh mục khác.",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_PRODUCT_HUMAN",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_PRODUCT_HUMAN = \"\"\"\\\nLịch sử trò chuyện:\n{history}\nHồ sơ khách hàng & ngữ cảnh:\n{rich_context}\nDanh sách sản phẩm khuyến nghị:\n<san_pham_goi_y>\n{search_results}\n</san_pham_goi_y>\nCâu hỏi của khách hàng: {user_question}\\",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "product_prompt",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "product_prompt = ChatPromptTemplate.from_messages([\n    (\"system\", _PRODUCT_SYSTEM),\n    (\"human\",  _PRODUCT_HUMAN),\n])\n# Used for COSMETIC_KNOWLEDGE_OUT_OF_DB intent — explain ingredients + suggest products\n_KNOWLEDGE_SYSTEM = \"\"\"\\\nBạn là Chuyên gia thành phần mỹ phẩm / Bác sĩ da liễu ảo của SkinSyntaxVN. Khách hàng đang hỏi về kiến thức hoạt chất dưỡng da (retinol, niacinamide, BHA...) không được mô tả chi tiết trong database sản phẩm nội bộ.\n### NHIỆM VỤ\n1. Giải thích hoạt chất một cách khoa học nhưng dễ hiểu: định nghĩa, công dụng thực tế trên da, cách dùng đúng, lưu ý khi kết hợp với hoạt chất khác.\n2. Sau đó, tự nhiên giới thiệu các sản phẩm trong hệ thống SkinSyntaxVN có chứa hoạt chất đó.",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_KNOWLEDGE_SYSTEM",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_KNOWLEDGE_SYSTEM = \"\"\"\\\nBạn là Chuyên gia thành phần mỹ phẩm / Bác sĩ da liễu ảo của SkinSyntaxVN. Khách hàng đang hỏi về kiến thức hoạt chất dưỡng da (retinol, niacinamide, BHA...) không được mô tả chi tiết trong database sản phẩm nội bộ.\n### NHIỆM VỤ\n1. Giải thích hoạt chất một cách khoa học nhưng dễ hiểu: định nghĩa, công dụng thực tế trên da, cách dùng đúng, lưu ý khi kết hợp với hoạt chất khác.\n2. Sau đó, tự nhiên giới thiệu các sản phẩm trong hệ thống SkinSyntaxVN có chứa hoạt chất đó.\n### PHONG CÁCH\n- Xưng \"mình\", gọi khách là \"bạn\". Thân thiện, chuyên môn, dễ thương.\n- \"Dịch\" tên hóa học sang ngôn ngữ cảm giác thực tế (ví dụ: \"AHA giúp da bạn bong lớp sừng chết nhẹ nhàng, lộ ra làn da sáng mịn hơn chứ không gây kích ứng như nhiều người lo\").\n- KHÔNG lạm dụng emoji (1-2 cái max).\n- KHÔNG đánh số sản phẩm. Viết tự nhiên, mỗi sản phẩm 1 đoạn.",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_KNOWLEDGE_HUMAN",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_KNOWLEDGE_HUMAN = \"\"\"\\\nLịch sử trò chuyện:\n{history}\nThông tin từ web về hoạt chất:\n<thong_tin_web>\n{web_results}\n</thong_tin_web>\nSản phẩm chứa hoạt chất này trong hệ thống:\n<san_pham_goi_y>\n{search_results}",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "knowledge_prompt",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "knowledge_prompt = ChatPromptTemplate.from_messages([\n    (\"system\", _KNOWLEDGE_SYSTEM),\n    (\"human\",  _KNOWLEDGE_HUMAN),\n])\n# Used for GENERAL_CONVERSATION intent — chitchat and shop intro\n_GENERAL_SYSTEM = \"\"\"\\\nBạn là Trợ lý AI thân thiện của SkinSyntaxVN, chuyên hỗ trợ giải đáp và kết nối khách hàng.\n### NHIỆM VỤ\n1. Trả lời câu chào hỏi, chitchat hoặc câu hỏi ngoài ngành một cách lịch sự, tự nhiên, vui vẻ.\n2. Nếu câu hỏi cần thông tin thực tế từ web (giá vàng, thời tiết...), dùng <thong_tin_web> để trả lời ngắn gọn, chính xác.",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_GENERAL_SYSTEM",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_GENERAL_SYSTEM = \"\"\"\\\nBạn là Trợ lý AI thân thiện của SkinSyntaxVN, chuyên hỗ trợ giải đáp và kết nối khách hàng.\n### NHIỆM VỤ\n1. Trả lời câu chào hỏi, chitchat hoặc câu hỏi ngoài ngành một cách lịch sự, tự nhiên, vui vẻ.\n2. Nếu câu hỏi cần thông tin thực tế từ web (giá vàng, thời tiết...), dùng <thong_tin_web> để trả lời ngắn gọn, chính xác.\n3. Cuối câu trả lời, khéo léo (không gượng ép) giới thiệu 1-2 sản phẩm nổi bật từ <san_pham_goi_y> để \"dẫn dắt\" khách vào trải nghiệm mua sắm.\n### PHONG CÁCH\n- Xưng \"mình\" hoặc \"SkinSyntax\", gọi khách là \"bạn\".\n- KHÔNG spam emoji. Giọng văn tự nhiên như người thật.\n- BẮT BUỘC: Khi giới thiệu sản phẩm, dùng link Markdown NGUYÊN VĂN từ <san_pham_goi_y>.",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_GENERAL_HUMAN",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_GENERAL_HUMAN = \"\"\"\\\nLịch sử trò chuyện:\n{history}\nThông tin từ web (nếu có):\n<thong_tin_web>\n{web_results}\n</thong_tin_web>\nSản phẩm nổi bật gợi ý:\n<san_pham_goi_y>\n{search_results}",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "general_prompt",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "general_prompt = ChatPromptTemplate.from_messages([\n    (\"system\", _GENERAL_SYSTEM),\n    (\"human\",  _GENERAL_HUMAN),\n])\n# Used when intent = PRODUCT_COMPARISON\n_COMPARISON_SYSTEM = \"\"\"\\\nBạn là chuyên gia tư vấn mỹ phẩm của SkinSyntaxVN. Khách hàng muốn so sánh 2 sản phẩm để quyết định mua.\n### NHIỆM VỤ\nSo sánh 2 sản phẩm một cách khách quan, công bằng, giúp khách chọn đúng theo nhu cầu thực tế.\n### PHONG CÁCH & RÀNG BUỘC",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_COMPARISON_SYSTEM",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_COMPARISON_SYSTEM = \"\"\"\\\nBạn là chuyên gia tư vấn mỹ phẩm của SkinSyntaxVN. Khách hàng muốn so sánh 2 sản phẩm để quyết định mua.\n### NHIỆM VỤ\nSo sánh 2 sản phẩm một cách khách quan, công bằng, giúp khách chọn đúng theo nhu cầu thực tế.\n### PHONG CÁCH & RÀNG BUỘC\n- Xưng \"mình\", gọi khách là \"bạn\". Thân thiện, chuyên môn, không thiên vị.\n- KHÔNG ủng hộ 1 chiều — so sánh trung thực theo từng tiêu chí.\n- KHÔNG lạm dụng emoji (1-2 max). KHÔNG đánh số sản phẩm.\n- BẮT BUỘC: Tên sản phẩm là link Markdown NGUYÊN VĂN từ <san_pham_goi_y>.\n- KHÔNG đề cập giảm giá nếu không có dữ liệu thực.",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_COMPARISON_HUMAN",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_COMPARISON_HUMAN = \"\"\"\\\nLịch sử trò chuyện:\n{history}\nHồ sơ khách hàng & ngữ cảnh:\n{rich_context}\nSản phẩm để so sánh:\n<san_pham_goi_y>\n{search_results}\n</san_pham_goi_y>\nCâu hỏi so sánh của khách: {user_question}\\",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "comparison_prompt",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "comparison_prompt = ChatPromptTemplate.from_messages([\n    (\"system\", _COMPARISON_SYSTEM),\n    (\"human\",  _COMPARISON_HUMAN),\n])\n# Replaces 2 separate LLM calls (analyze_query + parse_yeu_cau) with a single call.\n# Use when: conversation history exists OR rule_based_parse fails to recognize the query.\n# Skip when: simple query with no history (rule_based_parse is sufficient).\n_ANALYZE_PARSE_SYSTEM = \"\"\"\\\nBạn là hệ thống phân tích và trích xuất thông tin câu hỏi mỹ phẩm của SkinSyntaxVN.\nTrả về JSON THUẦN TÚY (không markdown fence, không giải thích thêm).",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_ANALYZE_PARSE_SYSTEM",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_ANALYZE_PARSE_SYSTEM = \"\"\"\\\nBạn là hệ thống phân tích và trích xuất thông tin câu hỏi mỹ phẩm của SkinSyntaxVN.\nTrả về JSON THUẦN TÚY (không markdown fence, không giải thích thêm).\n━━━ INTENT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\"PRODUCT_INQUIRY\"              Tìm/mua/tư vấn sản phẩm cụ thể\n                                VD: \"tìm kcn cho da dầu\", \"srm trị mụn dưới 200k\"\n\"PRODUCT_COMPARISON\"           So sánh 2+ sản phẩm hoặc hỏi chọn cái nào tốt hơn\n                                VD: \"La Roche-Posay vs CeraVe cái nào tốt\", \"chọn A hay B\"\n\"COSMETIC_KNOWLEDGE_OUT_OF_DB\" Hỏi về hoạt chất, kiến thức da liễu\n                                VD: \"retinol là gì\", \"BHA dùng mấy lần/tuần\"",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "_ANALYZE_PARSE_HUMAN",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "_ANALYZE_PARSE_HUMAN = \"\"\"\\\n{history_section}Câu hỏi của khách: {message}\nTrả về JSON với ĐẦY ĐỦ các trường (dùng null nếu không rõ):\n{{\n  \"rewritten_query\":      \"câu hỏi viết lại đầy đủ nghĩa (thêm ngữ cảnh từ history nếu câu mơ hồ) hoặc nguyên văn\",\n  \"intent\":               \"PRODUCT_INQUIRY\",\n  \"ingredient\":           null,\n  \"is_chitchat\":          false,\n  \"loai_da\":              null,\n  \"loai_san_pham\":        null,",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_and_parse_prompt",
+        "kind": 5,
+        "importPath": "ai-service-flask.prompts",
+        "description": "ai-service-flask.prompts",
+        "peekOfCode": "analyze_and_parse_prompt = ChatPromptTemplate.from_messages([\n    (\"system\", _ANALYZE_PARSE_SYSTEM),\n    (\"human\",  _ANALYZE_PARSE_HUMAN),\n])",
+        "detail": "ai-service-flask.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "get_redis",
+        "kind": 2,
+        "importPath": "ai-service-flask.redis_store",
+        "description": "ai-service-flask.redis_store",
+        "peekOfCode": "def get_redis():\n    global _client, _checked\n    if _checked:\n        return _client\n    _checked = True\n    url = (os.getenv(\"REDIS_URL\") or \"\").strip()\n    if not url:\n        return None\n    try:\n        import redis",
+        "detail": "ai-service-flask.redis_store",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.redis_store",
+        "description": "ai-service-flask.redis_store",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n_client = None\n_checked = False\ndef get_redis():\n    global _client, _checked\n    if _checked:\n        return _client\n    _checked = True\n    url = (os.getenv(\"REDIS_URL\") or \"\").strip()\n    if not url:",
+        "detail": "ai-service-flask.redis_store",
+        "documentation": {}
+    },
+    {
+        "label": "_client",
+        "kind": 5,
+        "importPath": "ai-service-flask.redis_store",
+        "description": "ai-service-flask.redis_store",
+        "peekOfCode": "_client = None\n_checked = False\ndef get_redis():\n    global _client, _checked\n    if _checked:\n        return _client\n    _checked = True\n    url = (os.getenv(\"REDIS_URL\") or \"\").strip()\n    if not url:\n        return None",
+        "detail": "ai-service-flask.redis_store",
+        "documentation": {}
+    },
+    {
+        "label": "_checked",
+        "kind": 5,
+        "importPath": "ai-service-flask.redis_store",
+        "description": "ai-service-flask.redis_store",
+        "peekOfCode": "_checked = False\ndef get_redis():\n    global _client, _checked\n    if _checked:\n        return _client\n    _checked = True\n    url = (os.getenv(\"REDIS_URL\") or \"\").strip()\n    if not url:\n        return None\n    try:",
+        "detail": "ai-service-flask.redis_store",
+        "documentation": {}
+    },
+    {
+        "label": "normalize_message",
+        "kind": 2,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "def normalize_message(message: str) -> str:\n    text = (message or \"\").strip().lower()\n    text = re.sub(r\"\\s+\", \" \", text)\n    return text\ndef build_cache_key(message: str, msg_data: dict | None) -> str:\n    profile = (msg_data or {}).get(\"customer_profile\") or {}\n    avoid = profile.get(\"avoid_ingredients\") or []\n    if isinstance(avoid, list):\n        avoid = sorted(str(x).strip().lower() for x in avoid if str(x).strip())\n    else:",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "build_cache_key",
+        "kind": 2,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "def build_cache_key(message: str, msg_data: dict | None) -> str:\n    profile = (msg_data or {}).get(\"customer_profile\") or {}\n    avoid = profile.get(\"avoid_ingredients\") or []\n    if isinstance(avoid, list):\n        avoid = sorted(str(x).strip().lower() for x in avoid if str(x).strip())\n    else:\n        avoid = []\n    product_id = str((msg_data or {}).get(\"current_product_id\") or \"\")\n    skin_type = str(profile.get(\"skin_type\") or profile.get(\"loai_da\") or \"\").strip().lower()\n    budget = str(profile.get(\"budget\") or profile.get(\"ngan_sach\") or 0)",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "should_cache_request",
+        "kind": 2,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "def should_cache_request(message: str, msg_data: dict | None, *, use_agent: bool = False) -> bool:\n    if use_agent:\n        return False\n    if not message.strip():\n        return False\n    data = msg_data or {}\n    if data.get(\"cart_items\"):\n        return False\n    if data.get(\"cart_conflicts\"):\n        return False",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "get_cached_response",
+        "kind": 2,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "def get_cached_response(message: str, msg_data: dict | None) -> dict | None:\n    client = get_redis()\n    if client is None:\n        return None\n    try:\n        raw = client.get(build_cache_key(message, msg_data))\n        if not raw:\n            return None\n        data = json.loads(raw)\n        return data if isinstance(data, dict) else None",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "store_response",
+        "kind": 2,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "def store_response(message: str, msg_data: dict | None, payload: dict) -> None:\n    if not should_cache_request(message, msg_data):\n        return\n    answer = str(payload.get(\"answer\") or \"\").strip()\n    if not answer or payload.get(\"ok\") is False:\n        return\n    client = get_redis()\n    if client is None:\n        return\n    try:",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "cache_stats",
+        "kind": 2,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "def cache_stats() -> dict[str, Any]:\n    client = get_redis()\n    if client is None:\n        return {\"enabled\": False, \"ttl_seconds\": _DEFAULT_TTL}\n    try:\n        client.ping()\n        return {\"enabled\": True, \"ttl_seconds\": _DEFAULT_TTL, \"ping\": True}\n    except Exception:\n        return {\"enabled\": True, \"ttl_seconds\": _DEFAULT_TTL, \"ping\": False}",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n_KEY_PREFIX = \"skinsyntax:chat:resp:\"\n_DEFAULT_TTL = int(os.getenv(\"REDIS_CACHE_TTL\", \"604800\"))\ndef normalize_message(message: str) -> str:\n    text = (message or \"\").strip().lower()\n    text = re.sub(r\"\\s+\", \" \", text)\n    return text\ndef build_cache_key(message: str, msg_data: dict | None) -> str:\n    profile = (msg_data or {}).get(\"customer_profile\") or {}\n    avoid = profile.get(\"avoid_ingredients\") or []",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "_KEY_PREFIX",
+        "kind": 5,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "_KEY_PREFIX = \"skinsyntax:chat:resp:\"\n_DEFAULT_TTL = int(os.getenv(\"REDIS_CACHE_TTL\", \"604800\"))\ndef normalize_message(message: str) -> str:\n    text = (message or \"\").strip().lower()\n    text = re.sub(r\"\\s+\", \" \", text)\n    return text\ndef build_cache_key(message: str, msg_data: dict | None) -> str:\n    profile = (msg_data or {}).get(\"customer_profile\") or {}\n    avoid = profile.get(\"avoid_ingredients\") or []\n    if isinstance(avoid, list):",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "_DEFAULT_TTL",
+        "kind": 5,
+        "importPath": "ai-service-flask.response_cache",
+        "description": "ai-service-flask.response_cache",
+        "peekOfCode": "_DEFAULT_TTL = int(os.getenv(\"REDIS_CACHE_TTL\", \"604800\"))\ndef normalize_message(message: str) -> str:\n    text = (message or \"\").strip().lower()\n    text = re.sub(r\"\\s+\", \" \", text)\n    return text\ndef build_cache_key(message: str, msg_data: dict | None) -> str:\n    profile = (msg_data or {}).get(\"customer_profile\") or {}\n    avoid = profile.get(\"avoid_ingredients\") or []\n    if isinstance(avoid, list):\n        avoid = sorted(str(x).strip().lower() for x in avoid if str(x).strip())",
+        "detail": "ai-service-flask.response_cache",
+        "documentation": {}
+    },
+    {
+        "label": "MockDocument",
+        "kind": 6,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "class MockDocument:\n    \"\"\"Unified wrapper for ChromaDB docs and SQL docs entering the pipeline.\"\"\"\n    page_content: str\n    metadata: dict[str, Any]\n    id: str\ndef get_vectorstore() -> Chroma:\n    global _vectorstore\n    if _vectorstore is None:\n        emb = HuggingFaceEmbeddings(\n            model_name=EMBEDDING_MODEL,",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "get_vectorstore",
+        "kind": 2,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "def get_vectorstore() -> Chroma:\n    global _vectorstore\n    if _vectorstore is None:\n        emb = HuggingFaceEmbeddings(\n            model_name=EMBEDDING_MODEL,\n            model_kwargs=EMBEDDING_MODEL_KWARGS,\n            encode_kwargs=EMBEDDING_ENCODE_KWARGS,\n        )\n        _vectorstore = Chroma(\n            collection_name=\"products\",",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "get_hybrid_pipeline",
+        "kind": 2,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "def get_hybrid_pipeline() -> HybridSearchPipeline:\n    \"\"\"\n    Initialize HybridSearchPipeline with BM25 populated from ChromaDB.\n    BM25 requires real document data for keyword search to work correctly.\n    \"\"\"\n    global _hybrid_pipeline\n    if _hybrid_pipeline is None:\n        vs = get_vectorstore()\n        # Populate BM25 from all documents in ChromaDB\n        bm25_docs: list[dict] = []",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "build_filter",
+        "kind": 2,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "def build_filter(yc: PhanTichYeuCau) -> dict | None:\n    \"\"\"Build ChromaDB $where filter from a PhanTichYeuCau object.\"\"\"\n    conds: list[dict] = []\n    if yc.loai_da and yc.loai_da not in (\"Unknown\", None):\n        conds.append({\"loai_da\": {\"$eq\": yc.loai_da}})\n    if yc.loai_san_pham:\n        conds.append({\"loai_san_pham\": {\"$eq\": yc.loai_san_pham}})\n    if yc.xuat_xu:\n        conds.append({\"xuat_xu_thuong_hieu\": {\"$eq\": yc.xuat_xu}})\n    if not conds:",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "get_fallback_hdsd",
+        "kind": 2,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "def get_fallback_hdsd(category: str) -> str:\n    \"\"\"Return a random usage tip appropriate for the given product category.\"\"\"\n    cat = str(category).lower()\n    for key, tips in _HDSD_TIPS.items():\n        if key in cat:\n            return random.choice(tips)\n    return random.choice(_HDSD_DEFAULTS)\ndef format_search_results(docs: list) -> str:\n    \"\"\"Format a list of product documents into a string for the LLM to consume.\"\"\"\n    if not docs:",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "format_search_results",
+        "kind": 2,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "def format_search_results(docs: list) -> str:\n    \"\"\"Format a list of product documents into a string for the LLM to consume.\"\"\"\n    if not docs:\n        return \"Không tìm thấy sản phẩm phù hợp.\"\n    blocks: list[str] = []\n    for i, doc in enumerate(docs, 1):\n        m = doc.metadata\n        product_id = \"\"\n        if hasattr(doc, \"id\") and doc.id:\n            product_id = doc.id.replace(\"product_\", \"\")",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "resolve_product_id",
+        "kind": 2,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "def resolve_product_id(doc) -> str:\n    \"\"\"Chuẩn hóa mã SP — không trả doc_0 (LangChain fallback).\"\"\"\n    import re\n    meta = getattr(doc, \"metadata\", None) or {}\n    raw = str(getattr(doc, \"id\", None) or \"\").strip()\n    if raw.startswith(\"product_\"):\n        return raw.replace(\"product_\", \"\", 1)\n    for key in (\"ma_san_pham\", \"id\"):\n        val = str(meta.get(key) or \"\").strip()\n        if val and val.lower() not in (\"null\", \"none\", \"\") and not re.match(r\"^doc_\\d+$\", val, re.I):",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "docs_to_products",
+        "kind": 2,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "def docs_to_products(docs: list) -> list[dict]:\n    \"\"\"Convert a list of docs into JSON-serializable dicts for the frontend.\"\"\"\n    products: list[dict] = []\n    for doc in docs:\n        m = doc.metadata\n        name = m.get(\"ten_san_pham\", \"\")\n        if not name:\n            continue\n        product_id = resolve_product_id(doc)\n        try:",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nimport os\nimport random\nfrom dataclasses import dataclass, field\nfrom pathlib import Path\nfrom typing import Any\nfrom langchain_chroma import Chroma\nfrom langchain_huggingface import HuggingFaceEmbeddings\nfrom hybrid_search import HybridSearchPipeline, BM25Search\nfrom schemas import PhanTichYeuCau",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "_DEFAULT_CHROMA_PATH",
+        "kind": 5,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "_DEFAULT_CHROMA_PATH = str(\n    Path(__file__).resolve().parent.parent / \"database\" / \"chroma_db\"\n)\nCHROMA_DB_PATH = os.getenv(\"CHROMA_DB_PATH\", _DEFAULT_CHROMA_PATH)\n_vectorstore: Chroma | None = None\n_hybrid_pipeline: HybridSearchPipeline | None = None\n@dataclass\nclass MockDocument:\n    \"\"\"Unified wrapper for ChromaDB docs and SQL docs entering the pipeline.\"\"\"\n    page_content: str",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "CHROMA_DB_PATH",
+        "kind": 5,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "CHROMA_DB_PATH = os.getenv(\"CHROMA_DB_PATH\", _DEFAULT_CHROMA_PATH)\n_vectorstore: Chroma | None = None\n_hybrid_pipeline: HybridSearchPipeline | None = None\n@dataclass\nclass MockDocument:\n    \"\"\"Unified wrapper for ChromaDB docs and SQL docs entering the pipeline.\"\"\"\n    page_content: str\n    metadata: dict[str, Any]\n    id: str\ndef get_vectorstore() -> Chroma:",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "_HDSD_DEFAULTS",
+        "kind": 5,
+        "importPath": "ai-service-flask.retrieval",
+        "description": "ai-service-flask.retrieval",
+        "peekOfCode": "_HDSD_DEFAULTS = [\n    \"Lấy lượng vừa đủ thoa đều, vỗ nhẹ để dưỡng chất thẩm thấu sâu. Dùng sáng và tối để tối ưu hiệu quả.\",\n    \"Dùng 2 lần/ngày, kiên trì 4-6 tuần mới thấy rõ sự khác biệt.\",\n    \"Luôn làm sạch mặt trước — da sạch hấp thụ dưỡng chất tốt hơn bất kỳ lúc nào.\",\n]\ndef get_fallback_hdsd(category: str) -> str:\n    \"\"\"Return a random usage tip appropriate for the given product category.\"\"\"\n    cat = str(category).lower()\n    for key, tips in _HDSD_TIPS.items():\n        if key in cat:",
+        "detail": "ai-service-flask.retrieval",
+        "documentation": {}
+    },
+    {
+        "label": "should_use_agent",
+        "kind": 2,
+        "importPath": "ai-service-flask.router",
+        "description": "ai-service-flask.router",
+        "peekOfCode": "def should_use_agent(message: str, msg_data: dict | None = None) -> bool:\n    from cart_analysis import is_cart_analysis_query\n    if is_cart_analysis_query(message):\n        return False\n    m = message.lower()\n    detail_keywords = (\n        \"thành phần\", \"ingredient\", \"cách dùng\", \"huong dan\", \"hướng dẫn\",\n        \"chi tiết\", \"mô tả\", \"mo ta\", \"công thức\", \"tư vấn kỹ\", \"tu van ky\",\n    )\n    multi_product_keywords = (",
+        "detail": "ai-service-flask.router",
+        "documentation": {}
+    },
+    {
+        "label": "AGENT_SIGNALS",
+        "kind": 5,
+        "importPath": "ai-service-flask.router",
+        "description": "ai-service-flask.router",
+        "peekOfCode": "AGENT_SIGNALS = (\n    \" và \", \" + \", \" cộng \", \" kèm \",\n    \"dùng chung\", \"kết hợp\", \"xung đột\", \"có dùng được không\", \"dùng được không\",\n    \"có kết hợp\", \"có thể dùng\", \"trộn\",\n    \"routine\", \"chu trình\", \"bộ sản phẩm\", \"bước dưỡng\",\n    \"tổng dưới\", \"tổng không quá\", \"ngân sách tổng\",\n    \"retinol\", \"retinoid\", \"tretinoin\", \"aha\", \"bha\", \"vitamin c\",\n    \"niacinamide\", \"peptide\", \"ceramide\", \"bakuchiol\",\n    \"thành phần\", \"ingredient\", \"công thức\", \"chi tiết sản phẩm\",\n)",
+        "detail": "ai-service-flask.router",
+        "documentation": {}
+    },
+    {
+        "label": "PhanTichYeuCau",
+        "kind": 6,
+        "importPath": "ai-service-flask.schemas",
+        "description": "ai-service-flask.schemas",
+        "peekOfCode": "class PhanTichYeuCau(BaseModel):\n    loai_da: Optional[Literal[\n        \"Da dầu/Hỗn hợp dầu\", \"Da thường/Mọi loại da\", \"Da nhạy cảm\",\n        \"Da khô/Hỗn hợp khô\", \"Da khô\", \"Da mụn\", \"Da hỗn hợp thiên dầu\", \"Unknown\"\n    ]] = Field(default=None)\n    tinh_trang_da: Optional[List[Literal[\n        \"mụn\", \"thâm\", \"nhăn\", \"đỏ kích ứng\", \"bong tróc\",\n        \"lỗ chân lông to\", \"sạm màu\", \"quầng thâm mắt\", \"da bong\"\n    ]]] = Field(default=None)\n    loai_san_pham: Optional[Literal[",
+        "detail": "ai-service-flask.schemas",
+        "documentation": {}
+    },
+    {
+        "label": "dict_to_yc",
+        "kind": 2,
+        "importPath": "ai-service-flask.schemas",
+        "description": "ai-service-flask.schemas",
+        "peekOfCode": "def dict_to_yc(d: dict) -> PhanTichYeuCau:\n    \"\"\"\n    Convert a dict from an LLM JSON response into a PhanTichYeuCau.\n    Normalizes and validates each field to prevent ValidationError.\n    \"\"\"\n    safe: dict = {}\n    allowed_fields = set(PhanTichYeuCau.model_fields.keys())\n    for k, v in d.items():\n        if k not in allowed_fields or v is None:\n            continue",
+        "detail": "ai-service-flask.schemas",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_LOAI_DA",
+        "kind": 5,
+        "importPath": "ai-service-flask.schemas",
+        "description": "ai-service-flask.schemas",
+        "peekOfCode": "ALLOWED_LOAI_DA = {\n    \"Da dầu/Hỗn hợp dầu\", \"Da thường/Mọi loại da\", \"Da nhạy cảm\",\n    \"Da khô/Hỗn hợp khô\", \"Da khô\", \"Da mụn\", \"Da hỗn hợp thiên dầu\", \"Unknown\",\n}\nALLOWED_LOAI_SP = {\n    \"Sữa Rửa Mặt\", \"Tẩy Trang Mặt\", \"Toner / Nước Cân Bằng Da\",\n    \"Serum / Tinh Chất\", \"Kem / Gel / Dầu Dưỡng\", \"Lotion / Sữa Dưỡng\",\n    \"Mặt Nạ Giấy\", \"Mặt Nạ Rửa\", \"Mặt Nạ Ngủ\", \"Chống Nắng Da Mặt\",\n    \"Tẩy Tế Bào Chết Da Mặt\", \"Serum / Kem Dưỡng Mắt\",\n    \"Hỗ Trợ Trị Mụn\", \"Xịt Khoáng\", \"Dưỡng Thể\", \"Sữa Tắm\",",
+        "detail": "ai-service-flask.schemas",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_LOAI_SP",
+        "kind": 5,
+        "importPath": "ai-service-flask.schemas",
+        "description": "ai-service-flask.schemas",
+        "peekOfCode": "ALLOWED_LOAI_SP = {\n    \"Sữa Rửa Mặt\", \"Tẩy Trang Mặt\", \"Toner / Nước Cân Bằng Da\",\n    \"Serum / Tinh Chất\", \"Kem / Gel / Dầu Dưỡng\", \"Lotion / Sữa Dưỡng\",\n    \"Mặt Nạ Giấy\", \"Mặt Nạ Rửa\", \"Mặt Nạ Ngủ\", \"Chống Nắng Da Mặt\",\n    \"Tẩy Tế Bào Chết Da Mặt\", \"Serum / Kem Dưỡng Mắt\",\n    \"Hỗ Trợ Trị Mụn\", \"Xịt Khoáng\", \"Dưỡng Thể\", \"Sữa Tắm\",\n    \"Dầu Gội\", \"Dầu Xả\", \"Mặt Nạ Lột\", \"Bộ Chăm Sóc Da Mặt\",\n    \"Son Dưỡng Môi\", \"Son Kem / Tint\", \"Khử Mùi\",\n    \"Tẩy Tế Bào Chết Body\", \"Mini / Sample\",\n}",
+        "detail": "ai-service-flask.schemas",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_TINH_TRANG_DA",
+        "kind": 5,
+        "importPath": "ai-service-flask.schemas",
+        "description": "ai-service-flask.schemas",
+        "peekOfCode": "ALLOWED_TINH_TRANG_DA = {\n    \"mụn\", \"thâm\", \"nhăn\", \"đỏ kích ứng\", \"bong tróc\",\n    \"lỗ chân lông to\", \"sạm màu\", \"quầng thâm mắt\", \"da bong\",\n}\nALLOWED_XUAT_XU = {\n    \"Hàn Quốc\", \"Nhật Bản\", \"Pháp\", \"Mỹ\", \"Việt Nam\", \"Úc\",\n    \"Đức\", \"Anh\", \"Thái Lan\", \"Singapore\", \"Trung Quốc\", \"Đài Loan\",\n}\nALLOWED_MUC_GIA  = {\"binh_dan\", \"tam_trung\", \"cao_cap\"}\nALLOWED_BUOI_DUNG = {\"sang\", \"toi\", \"ca_hai\"}",
+        "detail": "ai-service-flask.schemas",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_XUAT_XU",
+        "kind": 5,
+        "importPath": "ai-service-flask.schemas",
+        "description": "ai-service-flask.schemas",
+        "peekOfCode": "ALLOWED_XUAT_XU = {\n    \"Hàn Quốc\", \"Nhật Bản\", \"Pháp\", \"Mỹ\", \"Việt Nam\", \"Úc\",\n    \"Đức\", \"Anh\", \"Thái Lan\", \"Singapore\", \"Trung Quốc\", \"Đài Loan\",\n}\nALLOWED_MUC_GIA  = {\"binh_dan\", \"tam_trung\", \"cao_cap\"}\nALLOWED_BUOI_DUNG = {\"sang\", \"toi\", \"ca_hai\"}\nSYNONYMS_SP: dict[str, str] = {\n    \"kem chống nắng\": \"Chống Nắng Da Mặt\", \"chống nắng\": \"Chống Nắng Da Mặt\",\n    \"sunscreen\": \"Chống Nắng Da Mặt\",      \"chong nang\": \"Chống Nắng Da Mặt\",\n    \"kcn\": \"Chống Nắng Da Mặt\",",
+        "detail": "ai-service-flask.schemas",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_BUOI_DUNG",
+        "kind": 5,
+        "importPath": "ai-service-flask.schemas",
+        "description": "ai-service-flask.schemas",
+        "peekOfCode": "ALLOWED_BUOI_DUNG = {\"sang\", \"toi\", \"ca_hai\"}\nSYNONYMS_SP: dict[str, str] = {\n    \"kem chống nắng\": \"Chống Nắng Da Mặt\", \"chống nắng\": \"Chống Nắng Da Mặt\",\n    \"sunscreen\": \"Chống Nắng Da Mặt\",      \"chong nang\": \"Chống Nắng Da Mặt\",\n    \"kcn\": \"Chống Nắng Da Mặt\",\n    \"sữa rửa mặt\": \"Sữa Rửa Mặt\",          \"sua rua mat\": \"Sữa Rửa Mặt\",\n    \"srm\": \"Sữa Rửa Mặt\",\n    \"tẩy trang\": \"Tẩy Trang Mặt\",           \"tay trang\": \"Tẩy Trang Mặt\",\n    \"nước hoa hồng\": \"Toner / Nước Cân Bằng Da\",\n    \"nuoc hoa hong\": \"Toner / Nước Cân Bằng Da\",",
+        "detail": "ai-service-flask.schemas",
+        "documentation": {}
+    },
+    {
+        "label": "session_key",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def session_key(msg_data: dict | None) -> Optional[str]:\n    if not msg_data:\n        return None\n    uid = (\n        msg_data.get(\"user_id\")\n        or msg_data.get(\"session_id\")\n        or msg_data.get(\"customer_id\")\n    )\n    return str(uid).strip() if uid else None\ndef _redis_key(key: str) -> str:",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "get_history",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def get_history(msg_data: dict | None) -> list[dict]:\n    key = session_key(msg_data)\n    if not key:\n        return []\n    entry = _load_entry(key)\n    if not entry:\n        return []\n    return list(entry.get(\"history\") or [])\ndef next_rotating_index(msg_data: dict | None, namespace: str, pool_size: int) -> int:\n    if pool_size <= 0:",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "next_rotating_index",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def next_rotating_index(msg_data: dict | None, namespace: str, pool_size: int) -> int:\n    if pool_size <= 0:\n        return 0\n    key = session_key(msg_data)\n    if not key:\n        return hash(namespace) % pool_size\n    entry = _load_entry(key) or {\"history\": [], \"counters\": {}, \"state\": {}}\n    counters = entry.setdefault(\"counters\", {})\n    last = counters.get(namespace, -1)\n    idx = (last + 1) % pool_size",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "save_turn",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def save_turn(\n    msg_data: dict | None,\n    user_msg: str,\n    bot_msg: str,\n    last_products: list | None = None,\n) -> None:\n    key = session_key(msg_data)\n    if not key:\n        return\n    entry = _load_entry(key) or {\"history\": [], \"counters\": {}, \"state\": {}}",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "get_last_products",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def get_last_products(msg_data: dict | None) -> list[dict]:\n    key = session_key(msg_data)\n    if not key:\n        return []\n    entry = _load_entry(key)\n    if not entry:\n        return []\n    return list(entry.get(\"last_products\") or [])\ndef get_session_state(msg_data: dict | None) -> dict:\n    key = session_key(msg_data)",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "get_session_state",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def get_session_state(msg_data: dict | None) -> dict:\n    key = session_key(msg_data)\n    if not key:\n        return {}\n    entry = _load_entry(key)\n    if not entry:\n        return {}\n    return dict(entry.get(\"state\") or {})\ndef update_session_state(msg_data: dict | None, **fields) -> None:\n    key = session_key(msg_data)",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "update_session_state",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def update_session_state(msg_data: dict | None, **fields) -> None:\n    key = session_key(msg_data)\n    if not key:\n        return\n    patch = {k: v for k, v in fields.items() if v is not None}\n    if not patch:\n        return\n    entry = _load_entry(key) or {\"history\": [], \"counters\": {}, \"state\": {}}\n    state = entry.setdefault(\"state\", {})\n    state.update(patch)",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "expire_old",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def expire_old() -> int:\n    client = get_redis()\n    if client is not None:\n        return 0\n    now = time.monotonic()\n    with _LOCK:\n        expired = [k for k, v in _MEMORY.items() if now - v.get(\"ts\", 0) > _TTL]\n        for k in expired:\n            del _MEMORY[k]\n    return len(expired)",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "cache_stats",
+        "kind": 2,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "def cache_stats() -> dict:\n    client = get_redis()\n    if client is not None:\n        return {\"backend\": \"redis\", \"ttl_seconds\": _TTL}\n    with _LOCK:\n        return {\"backend\": \"memory\", \"active_sessions\": len(_MEMORY), \"ttl_seconds\": _TTL}",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "_SESSION_PREFIX",
+        "kind": 5,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "_SESSION_PREFIX = \"skinsyntax:chat:session:\"\n_TTL = int(__import__(\"os\").getenv(\"SESSION_CACHE_TTL\", \"3600\"))\n_MAX_TURNS = 10\n_MEMORY: dict[str, dict] = {}\n_LOCK = Lock()\ndef session_key(msg_data: dict | None) -> Optional[str]:\n    if not msg_data:\n        return None\n    uid = (\n        msg_data.get(\"user_id\")",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "_TTL",
+        "kind": 5,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "_TTL = int(__import__(\"os\").getenv(\"SESSION_CACHE_TTL\", \"3600\"))\n_MAX_TURNS = 10\n_MEMORY: dict[str, dict] = {}\n_LOCK = Lock()\ndef session_key(msg_data: dict | None) -> Optional[str]:\n    if not msg_data:\n        return None\n    uid = (\n        msg_data.get(\"user_id\")\n        or msg_data.get(\"session_id\")",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "_MAX_TURNS",
+        "kind": 5,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "_MAX_TURNS = 10\n_MEMORY: dict[str, dict] = {}\n_LOCK = Lock()\ndef session_key(msg_data: dict | None) -> Optional[str]:\n    if not msg_data:\n        return None\n    uid = (\n        msg_data.get(\"user_id\")\n        or msg_data.get(\"session_id\")\n        or msg_data.get(\"customer_id\")",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "_LOCK",
+        "kind": 5,
+        "importPath": "ai-service-flask.session_cache",
+        "description": "ai-service-flask.session_cache",
+        "peekOfCode": "_LOCK = Lock()\ndef session_key(msg_data: dict | None) -> Optional[str]:\n    if not msg_data:\n        return None\n    uid = (\n        msg_data.get(\"user_id\")\n        or msg_data.get(\"session_id\")\n        or msg_data.get(\"customer_id\")\n    )\n    return str(uid).strip() if uid else None",
+        "detail": "ai-service-flask.session_cache",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "database.import_chromadb",
+        "description": "database.import_chromadb",
+        "peekOfCode": "def main():\n    if not os.path.exists(CSV_FILE_PATH):\n        print(f\"Không tìm thấy CSV: {CSV_FILE_PATH}\")\n        sys.exit(1)\n    df = pd.read_csv(CSV_FILE_PATH)\n    df = df.fillna(\"\")\n    embeddings = _get_langchain_embeddings()\n    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)\n    collection = client.get_or_create_collection(name=COLLECTION_NAME)\n    batch_size = 500",
+        "detail": "database.import_chromadb",
+        "documentation": {}
+    },
+    {
+        "label": "BASE_DIR",
+        "kind": 5,
+        "importPath": "database.import_chromadb",
+        "description": "database.import_chromadb",
+        "peekOfCode": "BASE_DIR = Path(__file__).resolve().parent\nROOT_DIR = BASE_DIR.parent\nCSV_FILE_PATH = os.getenv(\"CSV_FILE_PATH\", str(BASE_DIR / \"data_clean_final.csv\"))\nCHROMA_DB_PATH = os.getenv(\"CHROMA_DB_PATH\", str(BASE_DIR / \"chroma_db\"))\nCOLLECTION_NAME = \"products\"\nEMBEDDING_MODEL = \"sentence-transformers/static-similarity-mrl-multilingual-v1\"\ndef _get_langchain_embeddings():\n    \"\"\"LangChain HuggingFaceEmbeddings — same stack as ai-service retrieval.py.\"\"\"\n    sys.path.insert(0, str(ROOT_DIR / \"ai-service-flask\"))\n    from langchain_huggingface import HuggingFaceEmbeddings",
+        "detail": "database.import_chromadb",
+        "documentation": {}
+    },
+    {
+        "label": "ROOT_DIR",
+        "kind": 5,
+        "importPath": "database.import_chromadb",
+        "description": "database.import_chromadb",
+        "peekOfCode": "ROOT_DIR = BASE_DIR.parent\nCSV_FILE_PATH = os.getenv(\"CSV_FILE_PATH\", str(BASE_DIR / \"data_clean_final.csv\"))\nCHROMA_DB_PATH = os.getenv(\"CHROMA_DB_PATH\", str(BASE_DIR / \"chroma_db\"))\nCOLLECTION_NAME = \"products\"\nEMBEDDING_MODEL = \"sentence-transformers/static-similarity-mrl-multilingual-v1\"\ndef _get_langchain_embeddings():\n    \"\"\"LangChain HuggingFaceEmbeddings — same stack as ai-service retrieval.py.\"\"\"\n    sys.path.insert(0, str(ROOT_DIR / \"ai-service-flask\"))\n    from langchain_huggingface import HuggingFaceEmbeddings\n    return HuggingFaceEmbeddings(",
+        "detail": "database.import_chromadb",
+        "documentation": {}
+    },
+    {
+        "label": "CSV_FILE_PATH",
+        "kind": 5,
+        "importPath": "database.import_chromadb",
+        "description": "database.import_chromadb",
+        "peekOfCode": "CSV_FILE_PATH = os.getenv(\"CSV_FILE_PATH\", str(BASE_DIR / \"data_clean_final.csv\"))\nCHROMA_DB_PATH = os.getenv(\"CHROMA_DB_PATH\", str(BASE_DIR / \"chroma_db\"))\nCOLLECTION_NAME = \"products\"\nEMBEDDING_MODEL = \"sentence-transformers/static-similarity-mrl-multilingual-v1\"\ndef _get_langchain_embeddings():\n    \"\"\"LangChain HuggingFaceEmbeddings — same stack as ai-service retrieval.py.\"\"\"\n    sys.path.insert(0, str(ROOT_DIR / \"ai-service-flask\"))\n    from langchain_huggingface import HuggingFaceEmbeddings\n    return HuggingFaceEmbeddings(\n        model_name=EMBEDDING_MODEL,",
+        "detail": "database.import_chromadb",
+        "documentation": {}
+    },
+    {
+        "label": "CHROMA_DB_PATH",
+        "kind": 5,
+        "importPath": "database.import_chromadb",
+        "description": "database.import_chromadb",
+        "peekOfCode": "CHROMA_DB_PATH = os.getenv(\"CHROMA_DB_PATH\", str(BASE_DIR / \"chroma_db\"))\nCOLLECTION_NAME = \"products\"\nEMBEDDING_MODEL = \"sentence-transformers/static-similarity-mrl-multilingual-v1\"\ndef _get_langchain_embeddings():\n    \"\"\"LangChain HuggingFaceEmbeddings — same stack as ai-service retrieval.py.\"\"\"\n    sys.path.insert(0, str(ROOT_DIR / \"ai-service-flask\"))\n    from langchain_huggingface import HuggingFaceEmbeddings\n    return HuggingFaceEmbeddings(\n        model_name=EMBEDDING_MODEL,\n        model_kwargs={\"device\": \"cpu\"},",
+        "detail": "database.import_chromadb",
+        "documentation": {}
+    },
+    {
+        "label": "COLLECTION_NAME",
+        "kind": 5,
+        "importPath": "database.import_chromadb",
+        "description": "database.import_chromadb",
+        "peekOfCode": "COLLECTION_NAME = \"products\"\nEMBEDDING_MODEL = \"sentence-transformers/static-similarity-mrl-multilingual-v1\"\ndef _get_langchain_embeddings():\n    \"\"\"LangChain HuggingFaceEmbeddings — same stack as ai-service retrieval.py.\"\"\"\n    sys.path.insert(0, str(ROOT_DIR / \"ai-service-flask\"))\n    from langchain_huggingface import HuggingFaceEmbeddings\n    return HuggingFaceEmbeddings(\n        model_name=EMBEDDING_MODEL,\n        model_kwargs={\"device\": \"cpu\"},\n        encode_kwargs={\"normalize_embeddings\": True},",
+        "detail": "database.import_chromadb",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_MODEL",
+        "kind": 5,
+        "importPath": "database.import_chromadb",
+        "description": "database.import_chromadb",
+        "peekOfCode": "EMBEDDING_MODEL = \"sentence-transformers/static-similarity-mrl-multilingual-v1\"\ndef _get_langchain_embeddings():\n    \"\"\"LangChain HuggingFaceEmbeddings — same stack as ai-service retrieval.py.\"\"\"\n    sys.path.insert(0, str(ROOT_DIR / \"ai-service-flask\"))\n    from langchain_huggingface import HuggingFaceEmbeddings\n    return HuggingFaceEmbeddings(\n        model_name=EMBEDDING_MODEL,\n        model_kwargs={\"device\": \"cpu\"},\n        encode_kwargs={\"normalize_embeddings\": True},\n    )",
+        "detail": "database.import_chromadb",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "database.import_mongodb",
+        "description": "database.import_mongodb",
+        "peekOfCode": "def main():\n    print(f\"CSV file: {CSV_PATH}\")\n    if not CSV_PATH.exists():\n        sys.exit(f\"File not found: {CSV_PATH}\")\n    df = pd.read_csv(CSV_PATH, dtype=str).fillna(\"\")\n    print(f\"Loaded {len(df):,} rows\")\n    print(f\"Connecting to MongoDB: {MONGO_URI} / db={MONGO_DB}\")\n    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=10_000)\n    client.admin.command(\"ping\")\n    db = client[MONGO_DB]",
+        "detail": "database.import_mongodb",
+        "documentation": {}
+    },
+    {
+        "label": "BATCH_SIZE",
+        "kind": 5,
+        "importPath": "database.import_mongodb",
+        "description": "database.import_mongodb",
+        "peekOfCode": "BATCH_SIZE = 500\ndef _safe_int(val, default=0) -> int:\n    try:\n        v = float(str(val).replace(\",\", \"\").strip())\n        return int(v)\n    except (ValueError, TypeError):\n        return default\ndef _safe_float(val) -> float | None:\n    try:\n        v = float(str(val).strip())",
+        "detail": "database.import_mongodb",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "database.patch_chroma_metadata",
+        "description": "database.patch_chroma_metadata",
+        "peekOfCode": "def main():\n    import chromadb\n    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)\n    collection = client.get_or_create_collection(name=COLLECTION_NAME)\n    result = collection.get(include=[\"metadatas\"])\n    ids = result.get(\"ids\") or []\n    metas = result.get(\"metadatas\") or []\n    if not ids:\n        print(\"Collection trống.\")\n        return",
+        "detail": "database.patch_chroma_metadata",
+        "documentation": {}
+    },
+    {
+        "label": "CHROMA_DB_PATH",
+        "kind": 5,
+        "importPath": "database.patch_chroma_metadata",
+        "description": "database.patch_chroma_metadata",
+        "peekOfCode": "CHROMA_DB_PATH = os.getenv(\"CHROMA_DB_PATH\", str(Path(__file__).resolve().parent / \"chroma_db\"))\nCOLLECTION_NAME = \"products\"\ndef main():\n    import chromadb\n    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)\n    collection = client.get_or_create_collection(name=COLLECTION_NAME)\n    result = collection.get(include=[\"metadatas\"])\n    ids = result.get(\"ids\") or []\n    metas = result.get(\"metadatas\") or []\n    if not ids:",
+        "detail": "database.patch_chroma_metadata",
+        "documentation": {}
+    },
+    {
+        "label": "COLLECTION_NAME",
+        "kind": 5,
+        "importPath": "database.patch_chroma_metadata",
+        "description": "database.patch_chroma_metadata",
+        "peekOfCode": "COLLECTION_NAME = \"products\"\ndef main():\n    import chromadb\n    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)\n    collection = client.get_or_create_collection(name=COLLECTION_NAME)\n    result = collection.get(include=[\"metadatas\"])\n    ids = result.get(\"ids\") or []\n    metas = result.get(\"metadatas\") or []\n    if not ids:\n        print(\"Collection trống.\")",
+        "detail": "database.patch_chroma_metadata",
+        "documentation": {}
+    },
+    {
+        "label": "setup_driver",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "def setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    options.add_argument(\"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\")\n    prefs = {\"profile.managed_default_content_settings.images\": 2}\n    options.add_experimental_option(\"prefs\", prefs)\n    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "clean_text_content",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "def clean_text_content(html_element):\n    if not html_element: return \"\"\n    for br in html_element.find_all(\"br\"): br.replace_with(\"\\n\")\n    for p in html_element.find_all(\"p\"): p.insert_after(\"\\n\")\n    for li in html_element.find_all(\"li\"): \n        li.insert_before(\"• \") \n        li.insert_after(\"\\n\")\n    return \"\\n\".join([line.strip() for line in html_element.get_text().split('\\n') if line.strip()])\ndef split_ingredients(text):\n    if not text: return \"\", \"\"",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "split_ingredients",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "def split_ingredients(text):\n    if not text: return \"\", \"\"\n    lower_text = text.lower()\n    idx_main = lower_text.find(\"thành phần chính\")\n    idx_full = lower_text.find(\"thành phần đầy đủ\")\n    if idx_full == -1: idx_full = lower_text.find(\"thành phần chi tiết\")\n    main_ing, full_ing = \"\", \"\"\n    if idx_main != -1 and idx_full != -1:\n        if idx_main < idx_full:\n            main_ing = text[idx_main:idx_full]",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "extract_numbers",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "def extract_numbers(text):\n    if not text: return \"\"\n    return re.sub(r'\\D', '', text) \n# --- HÀM TRÍCH XUẤT DANH MỤC (V9 - MỚI) ---\ndef extract_breadcrumb_v9(soup):\n    full_path = \"\"\n    last_category = \"\"\n    try:\n        # Tìm thẻ <ol> chứa các thẻ <li>\n        # Vì class tailwind hay đổi, ta tìm thẻ ol có chứa thẻ a có text 'Trang chủ'",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "extract_breadcrumb_v9",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "def extract_breadcrumb_v9(soup):\n    full_path = \"\"\n    last_category = \"\"\n    try:\n        # Tìm thẻ <ol> chứa các thẻ <li>\n        # Vì class tailwind hay đổi, ta tìm thẻ ol có chứa thẻ a có text 'Trang chủ'\n        target_ol = None\n        all_ols = soup.find_all('ol')\n        for ol in all_ols:\n            if \"Trang chủ\" in ol.get_text():",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "extract_hasaki_detail",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "def extract_hasaki_detail(driver, url):\n    data = {}\n    data['url_san_pham'] = url\n    try:\n        driver.get(url)\n        driver.execute_script(\"window.scrollTo(0, 500);\")\n        time.sleep(0.3)\n        driver.execute_script(\"window.scrollTo(0, 1500);\")\n        time.sleep(0.3)\n        driver.execute_script(\"window.scrollTo(0, document.body.scrollHeight - 1200);\")",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "append_to_csv",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "def append_to_csv(data_list):\n    file_exists = os.path.isfile(FILE_NAME)\n    field_names = [\n        'ten_san_pham', \n        'danh_muc_day_du',  # Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Tẩy Trang Mặt\n        'loai_san_pham',    # Tẩy Trang Mặt\n        'gia_ban', 'gia_thi_truong', 'tien_tiet_kiem', 'phan_tram_giam',\n        'diem_danh_gia', 'so_luong_danh_gia',\n        'thuong_hieu', 'xuat_xu_thuong_hieu', 'noi_san_xuat', 'dung_tich', 'loai_da',\n        'barcode', 'ma_san_pham', 'link_hinh_anh', ",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "def main():\n    if START_PAGE == 1 and os.path.exists(FILE_NAME): \n        try: os.remove(FILE_NAME)\n        except: pass\n    driver = setup_driver()\n    try:\n        for page in range(START_PAGE, END_PAGE + 1):\n            driver.get(BASE_URL.format(page))\n            print(f\"\\n>>> ĐANG QUÉT TRANG {page}...\")\n            time.sleep(3)",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "FILE_NAME",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "FILE_NAME = 'data_hasaki_v9_complete.csv'\nSTART_PAGE = 1\nEND_PAGE = 112 \nBASE_URL = \"https://hasaki.vn/danh-muc/suc-khoe-lam-dep-c3.html?limit=60&p={}\"\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "START_PAGE",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "START_PAGE = 1\nEND_PAGE = 112 \nBASE_URL = \"https://hasaki.vn/danh-muc/suc-khoe-lam-dep-c3.html?limit=60&p={}\"\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    options.add_argument(\"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\")",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "END_PAGE",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "END_PAGE = 112 \nBASE_URL = \"https://hasaki.vn/danh-muc/suc-khoe-lam-dep-c3.html?limit=60&p={}\"\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    options.add_argument(\"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\")\n    prefs = {\"profile.managed_default_content_settings.images\": 2}",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "BASE_URL",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "description": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "peekOfCode": "BASE_URL = \"https://hasaki.vn/danh-muc/suc-khoe-lam-dep-c3.html?limit=60&p={}\"\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    options.add_argument(\"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\")\n    prefs = {\"profile.managed_default_content_settings.images\": 2}\n    options.add_experimental_option(\"prefs\", prefs)",
+        "detail": "spiders.skinSyntaxVN.cao_hasaki_final",
+        "documentation": {}
+    },
+    {
+        "label": "clean_data_pipeline",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.step1_cleaning",
+        "description": "spiders.skinSyntaxVN.step1_cleaning",
+        "peekOfCode": "def clean_data_pipeline():\n    print(f\"🚀 [ETL] Bắt đầu Chuẩn hóa dữ liệu (Fix lỗi Giá x10 & Trùng thành phần)...\")\n    try:\n        df = pd.read_csv(INPUT_FILE)\n    except FileNotFoundError:\n        print(f\"❌ Lỗi: Không tìm thấy file '{INPUT_FILE}'\")\n        return\n    # 1. LỌC CỘT & XÓA DÒNG RÁC\n    cols_to_keep = [c for c in TARGET_COLUMNS if c in df.columns]\n    df = df[cols_to_keep]",
+        "detail": "spiders.skinSyntaxVN.step1_cleaning",
+        "documentation": {}
+    },
+    {
+        "label": "INPUT_FILE",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step1_cleaning",
+        "description": "spiders.skinSyntaxVN.step1_cleaning",
+        "peekOfCode": "INPUT_FILE = 'data_hasaki_v9_complete.csv'\nOUTPUT_FILE = 'data_clean_final.csv'\nTARGET_COLUMNS = [\n    'ten_san_pham', 'danh_muc_day_du', 'loai_san_pham', \n    'gia_ban', 'gia_thi_truong', \n    'tien_tiet_kiem', 'phan_tram_giam', \n    'diem_danh_gia', 'so_luong_danh_gia', \n    'thuong_hieu', 'xuat_xu_thuong_hieu', 'noi_san_xuat', \n    'dung_tich', 'loai_da', \n    'link_hinh_anh', 'mo_ta', ",
+        "detail": "spiders.skinSyntaxVN.step1_cleaning",
+        "documentation": {}
+    },
+    {
+        "label": "OUTPUT_FILE",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step1_cleaning",
+        "description": "spiders.skinSyntaxVN.step1_cleaning",
+        "peekOfCode": "OUTPUT_FILE = 'data_clean_final.csv'\nTARGET_COLUMNS = [\n    'ten_san_pham', 'danh_muc_day_du', 'loai_san_pham', \n    'gia_ban', 'gia_thi_truong', \n    'tien_tiet_kiem', 'phan_tram_giam', \n    'diem_danh_gia', 'so_luong_danh_gia', \n    'thuong_hieu', 'xuat_xu_thuong_hieu', 'noi_san_xuat', \n    'dung_tich', 'loai_da', \n    'link_hinh_anh', 'mo_ta', \n    'thanh_phan_chinh', 'thanh_phan_day_du', 'hdsd'",
+        "detail": "spiders.skinSyntaxVN.step1_cleaning",
+        "documentation": {}
+    },
+    {
+        "label": "TARGET_COLUMNS",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step1_cleaning",
+        "description": "spiders.skinSyntaxVN.step1_cleaning",
+        "peekOfCode": "TARGET_COLUMNS = [\n    'ten_san_pham', 'danh_muc_day_du', 'loai_san_pham', \n    'gia_ban', 'gia_thi_truong', \n    'tien_tiet_kiem', 'phan_tram_giam', \n    'diem_danh_gia', 'so_luong_danh_gia', \n    'thuong_hieu', 'xuat_xu_thuong_hieu', 'noi_san_xuat', \n    'dung_tich', 'loai_da', \n    'link_hinh_anh', 'mo_ta', \n    'thanh_phan_chinh', 'thanh_phan_day_du', 'hdsd'\n]",
+        "detail": "spiders.skinSyntaxVN.step1_cleaning",
+        "documentation": {}
+    },
+    {
+        "label": "load_data_to_postgres",
+        "kind": 2,
+        "importPath": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "description": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "peekOfCode": "def load_data_to_postgres():\n    print(f\"🚀 [DB LOAD] Bắt đầu nhập liệu vào PostgreSQL...\")\n    conn = None \n    try:\n        # Đọc file CSV, biến NaN thành None để PostgreSQL hiểu là NULL\n        df = pd.read_csv(INPUT_FILE)\n        df = df.where(pd.notnull(df), None)\n    except FileNotFoundError:\n        print(f\"❌ Lỗi: Không tìm thấy file '{INPUT_FILE}'\")\n        return",
+        "detail": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "documentation": {}
+    },
+    {
+        "label": "DB_CONFIG",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "description": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "peekOfCode": "DB_CONFIG = {\n    \"host\": \"localhost\",\n    \"database\": \"skinsyntax\",\n    \"user\": \"postgres\",\n    \"password\": \"123456\" \n}\nINPUT_FILE = 'data_clean_final.csv'\ndef load_data_to_postgres():\n    print(f\"🚀 [DB LOAD] Bắt đầu nhập liệu vào PostgreSQL...\")\n    conn = None ",
+        "detail": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "documentation": {}
+    },
+    {
+        "label": "INPUT_FILE",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "description": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "peekOfCode": "INPUT_FILE = 'data_clean_final.csv'\ndef load_data_to_postgres():\n    print(f\"🚀 [DB LOAD] Bắt đầu nhập liệu vào PostgreSQL...\")\n    conn = None \n    try:\n        # Đọc file CSV, biến NaN thành None để PostgreSQL hiểu là NULL\n        df = pd.read_csv(INPUT_FILE)\n        df = df.where(pd.notnull(df), None)\n    except FileNotFoundError:\n        print(f\"❌ Lỗi: Không tìm thấy file '{INPUT_FILE}'\")",
+        "detail": "spiders.skinSyntaxVN.step2_import_dbPostgresQL",
+        "documentation": {}
+    },
+    {
+        "label": "INPUT_FILE",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "INPUT_FILE = 'data_clean_final.csv'\nFOLDER_IMG = 'eda_final_report' # Lưu tất cả vào thư mục này\nif not os.path.exists(FOLDER_IMG):\n    os.makedirs(FOLDER_IMG)\nprint(\"🚀 Đang tải dữ liệu và chuẩn bị phân tích toàn diện...\")\ntry:\n    df = pd.read_csv(INPUT_FILE)\nexcept FileNotFoundError:\n    print(f\"❌ Lỗi: Không tìm thấy file '{INPUT_FILE}'\")\n    exit()",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "FOLDER_IMG",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "FOLDER_IMG = 'eda_final_report' # Lưu tất cả vào thư mục này\nif not os.path.exists(FOLDER_IMG):\n    os.makedirs(FOLDER_IMG)\nprint(\"🚀 Đang tải dữ liệu và chuẩn bị phân tích toàn diện...\")\ntry:\n    df = pd.read_csv(INPUT_FILE)\nexcept FileNotFoundError:\n    print(f\"❌ Lỗi: Không tìm thấy file '{INPUT_FILE}'\")\n    exit()\n# Cấu hình giao diện chuẩn báo cáo",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "plt.rcParams['figure.figsize']",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "plt.rcParams['figure.figsize'] = (12, 6)\n# ==============================================================================\n# PHẦN 1: TỔNG QUAN THỊ TRƯỜNG (MARKET OVERVIEW)\n# ==============================================================================\nprint(\"\\n📊 PHẦN 1: TỔNG QUAN THỊ TRƯỜNG\")\n# --- 1.1 Top 10 Thương hiệu ---\nprint(\"   -> Vẽ biểu đồ Top 10 Thương hiệu...\")\nplt.figure(figsize=(12, 6))\ntop_brands = df['thuong_hieu'].value_counts().head(10)\nsns.barplot(x=top_brands.values, y=top_brands.index, hue=top_brands.index, legend=False, palette=\"viridis\")",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "top_brands",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "top_brands = df['thuong_hieu'].value_counts().head(10)\nsns.barplot(x=top_brands.values, y=top_brands.index, hue=top_brands.index, legend=False, palette=\"viridis\")\nplt.title('Top 10 Thương Hiệu Phổ Biến Nhất', fontsize=14)\nplt.xlabel('Số lượng sản phẩm')\nplt.savefig(f\"{FOLDER_IMG}/1_top_brands.png\", bbox_inches='tight')\nplt.close()\n# --- 1.2 Tỷ trọng Xuất xứ ---\nprint(\"   -> Vẽ biểu đồ Tỷ trọng Xuất xứ...\")\nplt.figure(figsize=(8, 8))\ntop_origins = df['xuat_xu_thuong_hieu'].value_counts().head(8)",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "top_origins",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "top_origins = df['xuat_xu_thuong_hieu'].value_counts().head(8)\ncolors = sns.color_palette(\"pastel\")[0:8]\nplt.pie(top_origins.values, labels=top_origins.index, autopct='%1.1f%%', startangle=140, colors=colors)\nplt.title('Cơ Cấu Xuất Xứ Sản Phẩm', fontsize=14)\nplt.savefig(f\"{FOLDER_IMG}/2_origin_pie.png\", bbox_inches='tight')\nplt.close()\n# ==============================================================================\n# PHẦN 2: PHÂN TÍCH CHIẾN LƯỢC GIÁ (PRICE STRATEGY)\n# ==============================================================================\nprint(\"\\n📊 PHẦN 2: PHÂN TÍCH CHIẾN LƯỢC GIÁ\")",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "colors",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "colors = sns.color_palette(\"pastel\")[0:8]\nplt.pie(top_origins.values, labels=top_origins.index, autopct='%1.1f%%', startangle=140, colors=colors)\nplt.title('Cơ Cấu Xuất Xứ Sản Phẩm', fontsize=14)\nplt.savefig(f\"{FOLDER_IMG}/2_origin_pie.png\", bbox_inches='tight')\nplt.close()\n# ==============================================================================\n# PHẦN 2: PHÂN TÍCH CHIẾN LƯỢC GIÁ (PRICE STRATEGY)\n# ==============================================================================\nprint(\"\\n📊 PHẦN 2: PHÂN TÍCH CHIẾN LƯỢC GIÁ\")\n# --- 2.1 Phân bố giá & Độ lệch ---",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "df_price",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "df_price = df[df['gia_ban'] <= 3000000] \nsns.histplot(df_price['gia_ban'], kde=True, color=\"salmon\", bins=40)\nplt.title('Phân Bố Giá Bán (Price Distribution)', fontsize=14)\nplt.xlabel('Giá bán (VNĐ)')\nplt.savefig(f\"{FOLDER_IMG}/3_price_distribution.png\", bbox_inches='tight')\nplt.close()\n# Tính toán thống kê để đưa vào báo cáo\nprice_skew = df['gia_ban'].skew()\nmedian_price = df['gia_ban'].median()\nprint(f\"   [INSIGHT] Giá trung vị: {median_price:,.0f} VNĐ\")",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "price_skew",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "price_skew = df['gia_ban'].skew()\nmedian_price = df['gia_ban'].median()\nprint(f\"   [INSIGHT] Giá trung vị: {median_price:,.0f} VNĐ\")\nprint(f\"   [INSIGHT] Độ lệch chuẩn giá (Skewness): {price_skew:.2f}\")\nif price_skew > 1:\n    print(\"      => Lệch PHẢI: Thị trường tập trung vào phân khúc bình dân.\")\n# --- 2.2 Phân khúc giá theo Quốc gia (Boxplot) ---\nprint(\"   -> Vẽ Boxplot so sánh giá các nước...\")\ntop_countries = df['xuat_xu_thuong_hieu'].value_counts().head(5).index\ndf_top_countries = df[df['xuat_xu_thuong_hieu'].isin(top_countries)]",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "median_price",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "median_price = df['gia_ban'].median()\nprint(f\"   [INSIGHT] Giá trung vị: {median_price:,.0f} VNĐ\")\nprint(f\"   [INSIGHT] Độ lệch chuẩn giá (Skewness): {price_skew:.2f}\")\nif price_skew > 1:\n    print(\"      => Lệch PHẢI: Thị trường tập trung vào phân khúc bình dân.\")\n# --- 2.2 Phân khúc giá theo Quốc gia (Boxplot) ---\nprint(\"   -> Vẽ Boxplot so sánh giá các nước...\")\ntop_countries = df['xuat_xu_thuong_hieu'].value_counts().head(5).index\ndf_top_countries = df[df['xuat_xu_thuong_hieu'].isin(top_countries)]\ndf_top_countries = df_top_countries[df_top_countries['gia_ban'] < 3000000] # Bỏ outlier",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "top_countries",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "top_countries = df['xuat_xu_thuong_hieu'].value_counts().head(5).index\ndf_top_countries = df[df['xuat_xu_thuong_hieu'].isin(top_countries)]\ndf_top_countries = df_top_countries[df_top_countries['gia_ban'] < 3000000] # Bỏ outlier\nplt.figure(figsize=(12, 6))\nsns.boxplot(data=df_top_countries, x='xuat_xu_thuong_hieu', y='gia_ban', palette=\"Set2\", hue='xuat_xu_thuong_hieu', legend=False)\nplt.title('Phân Khúc Giá Theo Quốc Gia (Boxplot)', fontsize=14)\nplt.ylabel('Giá bán (VNĐ)')\nplt.savefig(f\"{FOLDER_IMG}/4_price_by_origin_boxplot.png\", bbox_inches='tight')\nplt.close()\n# ==============================================================================",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "df_top_countries",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "df_top_countries = df[df['xuat_xu_thuong_hieu'].isin(top_countries)]\ndf_top_countries = df_top_countries[df_top_countries['gia_ban'] < 3000000] # Bỏ outlier\nplt.figure(figsize=(12, 6))\nsns.boxplot(data=df_top_countries, x='xuat_xu_thuong_hieu', y='gia_ban', palette=\"Set2\", hue='xuat_xu_thuong_hieu', legend=False)\nplt.title('Phân Khúc Giá Theo Quốc Gia (Boxplot)', fontsize=14)\nplt.ylabel('Giá bán (VNĐ)')\nplt.savefig(f\"{FOLDER_IMG}/4_price_by_origin_boxplot.png\", bbox_inches='tight')\nplt.close()\n# ==============================================================================\n# PHẦN 3: PHÂN TÍCH TƯƠNG QUAN & CHẤT LƯỢNG (CORRELATION)",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "df_top_countries",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "df_top_countries = df_top_countries[df_top_countries['gia_ban'] < 3000000] # Bỏ outlier\nplt.figure(figsize=(12, 6))\nsns.boxplot(data=df_top_countries, x='xuat_xu_thuong_hieu', y='gia_ban', palette=\"Set2\", hue='xuat_xu_thuong_hieu', legend=False)\nplt.title('Phân Khúc Giá Theo Quốc Gia (Boxplot)', fontsize=14)\nplt.ylabel('Giá bán (VNĐ)')\nplt.savefig(f\"{FOLDER_IMG}/4_price_by_origin_boxplot.png\", bbox_inches='tight')\nplt.close()\n# ==============================================================================\n# PHẦN 3: PHÂN TÍCH TƯƠNG QUAN & CHẤT LƯỢNG (CORRELATION)\n# ==============================================================================",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "sample_df",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "sample_df = df.sample(n=min(1000, len(df)))\nsns.scatterplot(data=sample_df, x='gia_ban', y='diem_danh_gia', hue='diem_danh_gia', palette='coolwarm')\nplt.title('Tương Quan: Giá Tiền vs Điểm Đánh Giá', fontsize=14)\nplt.xlabel('Giá bán (VNĐ)')\nplt.savefig(f\"{FOLDER_IMG}/5_price_vs_rating_scatter.png\", bbox_inches='tight')\nplt.close()\n# --- 3.2 Heatmap (Ma trận tương quan) ---\nprint(\"   -> Vẽ Heatmap...\")\ncols_corr = ['gia_ban', 'diem_danh_gia', 'so_luong_danh_gia', 'phan_tram_giam', 'tien_tiet_kiem']\ndf_corr = df[cols_corr].corr()",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "cols_corr",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "cols_corr = ['gia_ban', 'diem_danh_gia', 'so_luong_danh_gia', 'phan_tram_giam', 'tien_tiet_kiem']\ndf_corr = df[cols_corr].corr()\nplt.figure(figsize=(10, 8))\nsns.heatmap(df_corr, annot=True, cmap='coolwarm', fmt=\".2f\", linewidths=0.5)\nplt.title('Ma Trận Tương Quan (Correlation Matrix)', fontsize=14)\nplt.savefig(f\"{FOLDER_IMG}/6_correlation_heatmap.png\", bbox_inches='tight')\nplt.close()\ncorrelation_val = df_corr.loc['gia_ban', 'diem_danh_gia']\nprint(f\"   [INSIGHT] Hệ số tương quan Giá - Rating: {correlation_val:.2f}\")\nif abs(correlation_val) < 0.2:",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "df_corr",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "df_corr = df[cols_corr].corr()\nplt.figure(figsize=(10, 8))\nsns.heatmap(df_corr, annot=True, cmap='coolwarm', fmt=\".2f\", linewidths=0.5)\nplt.title('Ma Trận Tương Quan (Correlation Matrix)', fontsize=14)\nplt.savefig(f\"{FOLDER_IMG}/6_correlation_heatmap.png\", bbox_inches='tight')\nplt.close()\ncorrelation_val = df_corr.loc['gia_ban', 'diem_danh_gia']\nprint(f\"   [INSIGHT] Hệ số tương quan Giá - Rating: {correlation_val:.2f}\")\nif abs(correlation_val) < 0.2:\n    print(\"      => Rất thấp. Kết luận: Giá đắt chưa chắc đã tốt (theo rating).\")",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "correlation_val",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "correlation_val = df_corr.loc['gia_ban', 'diem_danh_gia']\nprint(f\"   [INSIGHT] Hệ số tương quan Giá - Rating: {correlation_val:.2f}\")\nif abs(correlation_val) < 0.2:\n    print(\"      => Rất thấp. Kết luận: Giá đắt chưa chắc đã tốt (theo rating).\")\n# ==============================================================================\n# PHẦN 4: PHÂN TÍCH NỘI DUNG SẢN PHẨM (CONTENT)\n# ==============================================================================\nprint(\"\\n📊 PHẦN 4: PHÂN TÍCH THÀNH PHẦN (WORDCLOUD)\")\nprint(\"   -> Vẽ WordCloud...\")\ntext = \" \".join(str(i) for i in df['thanh_phan_clean'].dropna())",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "text",
+        "kind": 5,
+        "importPath": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "description": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "peekOfCode": "text = \" \".join(str(i) for i in df['thanh_phan_clean'].dropna())\nif len(text) > 0:\n    wordcloud = WordCloud(width=1600, height=800, background_color='white', colormap='ocean').generate(text)\n    plt.figure(figsize=(15, 8))\n    plt.imshow(wordcloud, interpolation='bilinear')\n    plt.axis('off')\n    plt.title('Các Hoạt Chất Phổ Biến Nhất Trong Mỹ Phẩm', fontsize=20)\n    plt.savefig(f\"{FOLDER_IMG}/7_ingredient_wordcloud.png\", bbox_inches='tight')\n    plt.close()\nelse:",
+        "detail": "spiders.skinSyntaxVN.step3_eda_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "setup_driver",
+        "kind": 2,
+        "importPath": "spiders.cao_chanhtuoi_final_p_tag",
+        "description": "spiders.cao_chanhtuoi_final_p_tag",
+        "peekOfCode": "def setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    # Chặn ảnh để load nhanh\n    prefs = {\"profile.managed_default_content_settings.images\": 2}\n    options.add_experimental_option(\"prefs\", prefs)\n    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)",
+        "detail": "spiders.cao_chanhtuoi_final_p_tag",
+        "documentation": {}
+    },
+    {
+        "label": "get_product_detail",
+        "kind": 2,
+        "importPath": "spiders.cao_chanhtuoi_final_p_tag",
+        "description": "spiders.cao_chanhtuoi_final_p_tag",
+        "peekOfCode": "def get_product_detail(driver, item_url):\n    # Mở tab mới\n    driver.execute_script(\"window.open('');\")\n    driver.switch_to.window(driver.window_handles[1])\n    data = {}\n    try:\n        driver.get(item_url)\n        # Cuộn để kích hoạt nội dung\n        driver.execute_script(\"window.scrollTo(0, 1000);\")\n        time.sleep(1) ",
+        "detail": "spiders.cao_chanhtuoi_final_p_tag",
+        "documentation": {}
+    },
+    {
+        "label": "append_to_csv",
+        "kind": 2,
+        "importPath": "spiders.cao_chanhtuoi_final_p_tag",
+        "description": "spiders.cao_chanhtuoi_final_p_tag",
+        "peekOfCode": "def append_to_csv(data_list):\n    file_exists = os.path.isfile(FILE_NAME)\n    field_names = ['page', 'title', 'brand', 'category', 'url', 'image_url', \n                   'ingredients', 'quick_analysis', 'safety_score', 'link_shopee', 'link_lazada']\n    with open(FILE_NAME, 'a', newline='', encoding='utf-8-sig') as f:\n        writer = csv.DictWriter(f, fieldnames=field_names)\n        if not file_exists: writer.writeheader()\n        for item in data_list:\n            filtered_item = {k: item.get(k, '') for k in field_names}\n            writer.writerow(filtered_item)",
+        "detail": "spiders.cao_chanhtuoi_final_p_tag",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "spiders.cao_chanhtuoi_final_p_tag",
+        "description": "spiders.cao_chanhtuoi_final_p_tag",
+        "peekOfCode": "def main():\n    driver = setup_driver()\n    if START_PAGE == 1:\n        base_url = 'https://beauty.chanhtuoi.com/san-pham'\n    else:\n        # Nếu start > 1, ta thử vào thẳng trang đó bằng URL query (để tiết kiệm thời gian click)\n        # Dựa trên debug của bạn: data-href=\"...san-pham?page=2\" -> Web này dùng query param ?page= cũng được!\n        base_url = f'https://beauty.chanhtuoi.com/san-pham?page={START_PAGE}'\n    print(f\"--- Đang vào: {base_url} ---\")\n    driver.get(base_url)",
+        "detail": "spiders.cao_chanhtuoi_final_p_tag",
+        "documentation": {}
+    },
+    {
+        "label": "FILE_NAME",
+        "kind": 5,
+        "importPath": "spiders.cao_chanhtuoi_final_p_tag",
+        "description": "spiders.cao_chanhtuoi_final_p_tag",
+        "peekOfCode": "FILE_NAME = 'data_chanhtuoi_full_final.csv'\nSTART_PAGE = 1      # Trang bắt đầu\nEND_PAGE = 500      # Trang kết thúc\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    # Chặn ảnh để load nhanh",
+        "detail": "spiders.cao_chanhtuoi_final_p_tag",
+        "documentation": {}
+    },
+    {
+        "label": "START_PAGE",
+        "kind": 5,
+        "importPath": "spiders.cao_chanhtuoi_final_p_tag",
+        "description": "spiders.cao_chanhtuoi_final_p_tag",
+        "peekOfCode": "START_PAGE = 1      # Trang bắt đầu\nEND_PAGE = 500      # Trang kết thúc\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    # Chặn ảnh để load nhanh\n    prefs = {\"profile.managed_default_content_settings.images\": 2}",
+        "detail": "spiders.cao_chanhtuoi_final_p_tag",
+        "documentation": {}
+    },
+    {
+        "label": "END_PAGE",
+        "kind": 5,
+        "importPath": "spiders.cao_chanhtuoi_final_p_tag",
+        "description": "spiders.cao_chanhtuoi_final_p_tag",
+        "peekOfCode": "END_PAGE = 500      # Trang kết thúc\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    # Chặn ảnh để load nhanh\n    prefs = {\"profile.managed_default_content_settings.images\": 2}\n    options.add_experimental_option(\"prefs\", prefs)",
+        "detail": "spiders.cao_chanhtuoi_final_p_tag",
+        "documentation": {}
+    },
+    {
+        "label": "setup_driver",
+        "kind": 2,
+        "importPath": "spiders.cao_chanhtuoi_keyword_da",
+        "description": "spiders.cao_chanhtuoi_keyword_da",
+        "peekOfCode": "def setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    # Chặn ảnh để load siêu tốc\n    prefs = {\"profile.managed_default_content_settings.images\": 2}\n    options.add_experimental_option(\"prefs\", prefs)\n    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)",
+        "detail": "spiders.cao_chanhtuoi_keyword_da",
+        "documentation": {}
+    },
+    {
+        "label": "get_product_detail",
+        "kind": 2,
+        "importPath": "spiders.cao_chanhtuoi_keyword_da",
+        "description": "spiders.cao_chanhtuoi_keyword_da",
+        "peekOfCode": "def get_product_detail(driver, item_url):\n    driver.execute_script(\"window.open('');\")\n    driver.switch_to.window(driver.window_handles[1])\n    data = {}\n    try:\n        driver.get(item_url)\n        driver.execute_script(\"window.scrollTo(0, 1000);\")\n        time.sleep(1) \n        try:\n            btns = driver.find_elements(By.CSS_SELECTOR, \".ingredient__display-all\")",
+        "detail": "spiders.cao_chanhtuoi_keyword_da",
+        "documentation": {}
+    },
+    {
+        "label": "append_to_csv",
+        "kind": 2,
+        "importPath": "spiders.cao_chanhtuoi_keyword_da",
+        "description": "spiders.cao_chanhtuoi_keyword_da",
+        "peekOfCode": "def append_to_csv(data_list):\n    file_exists = os.path.isfile(FILE_NAME)\n    field_names = ['page', 'title', 'brand', 'category', 'url', 'image_url', \n                   'ingredients', 'quick_analysis', 'safety_score', 'link_shopee', 'link_lazada']\n    with open(FILE_NAME, 'a', newline='', encoding='utf-8-sig') as f:\n        writer = csv.DictWriter(f, fieldnames=field_names)\n        if not file_exists: writer.writeheader()\n        for item in data_list:\n            filtered_item = {k: item.get(k, '') for k in field_names}\n            writer.writerow(filtered_item)",
+        "detail": "spiders.cao_chanhtuoi_keyword_da",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "spiders.cao_chanhtuoi_keyword_da",
+        "description": "spiders.cao_chanhtuoi_keyword_da",
+        "peekOfCode": "def main():\n    driver = setup_driver()\n    try:\n        last_first_product = \"\"\n        for page in range(START_PAGE, END_PAGE + 1):\n            # --- URL CHUẨN XÁC: keyword=da & lang=vi ---\n            # Từ khóa \"da\" (Skin) bao phủ 99% sản phẩm mỹ phẩm\n            url = f'https://beauty.chanhtuoi.com/tim-kiem-san-pham/da?keyword=da&lang=vi&page={page}'\n            print(f\"\\n>>> ĐANG XỬ LÝ TRANG {page}: {url}\")\n            driver.get(url)",
+        "detail": "spiders.cao_chanhtuoi_keyword_da",
+        "documentation": {}
+    },
+    {
+        "label": "FILE_NAME",
+        "kind": 5,
+        "importPath": "spiders.cao_chanhtuoi_keyword_da",
+        "description": "spiders.cao_chanhtuoi_keyword_da",
+        "peekOfCode": "FILE_NAME = 'data_chanhtuoi_tu_khoa_da.csv'\nSTART_PAGE = 322    # Bắt đầu từ trang 188\nEND_PAGE = 1000     # Cào đến 1000 trang (hoặc hết thì tự dừng)\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    # Chặn ảnh để load siêu tốc",
+        "detail": "spiders.cao_chanhtuoi_keyword_da",
+        "documentation": {}
+    },
+    {
+        "label": "START_PAGE",
+        "kind": 5,
+        "importPath": "spiders.cao_chanhtuoi_keyword_da",
+        "description": "spiders.cao_chanhtuoi_keyword_da",
+        "peekOfCode": "START_PAGE = 322    # Bắt đầu từ trang 188\nEND_PAGE = 1000     # Cào đến 1000 trang (hoặc hết thì tự dừng)\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    # Chặn ảnh để load siêu tốc\n    prefs = {\"profile.managed_default_content_settings.images\": 2}",
+        "detail": "spiders.cao_chanhtuoi_keyword_da",
+        "documentation": {}
+    },
+    {
+        "label": "END_PAGE",
+        "kind": 5,
+        "importPath": "spiders.cao_chanhtuoi_keyword_da",
+        "description": "spiders.cao_chanhtuoi_keyword_da",
+        "peekOfCode": "END_PAGE = 1000     # Cào đến 1000 trang (hoặc hết thì tự dừng)\ndef setup_driver():\n    print(\">>> Đang khởi động Chrome...\")\n    options = webdriver.ChromeOptions()\n    options.add_argument('--disable-gpu')\n    options.add_argument('--start-maximized')\n    options.add_argument(\"--disable-notifications\")\n    # Chặn ảnh để load siêu tốc\n    prefs = {\"profile.managed_default_content_settings.images\": 2}\n    options.add_experimental_option(\"prefs\", prefs)",
+        "detail": "spiders.cao_chanhtuoi_keyword_da",
+        "documentation": {}
+    },
+    {
+        "label": "detect_and_read",
+        "kind": 2,
+        "importPath": "spiders.merge_csvs",
+        "description": "spiders.merge_csvs",
+        "peekOfCode": "def detect_and_read(path):\n    # Try common encodings\n    encodings = [\"utf-8-sig\", \"utf-8\", \"cp1252\", \"latin1\"]\n    b = open(path, \"rb\").read()\n    for enc in encodings:\n        try:\n            text = b.decode(enc)\n            return enc, text\n        except Exception:\n            continue",
+        "detail": "spiders.merge_csvs",
+        "documentation": {}
+    },
+    {
+        "label": "merge_csv_files",
+        "kind": 2,
+        "importPath": "spiders.merge_csvs",
+        "description": "spiders.merge_csvs",
+        "peekOfCode": "def merge_csv_files(base_dir, filenames, out_name=\"merged_data_utf8_bom.csv\"):\n    rows = []\n    field_order = []\n    file_row_counts = {}\n    # backup originals\n    for fn in filenames:\n        p = os.path.join(base_dir, fn)\n        if not os.path.exists(p):\n            print(f\"Warning: {p} not found, skipping\")\n            continue",
+        "detail": "spiders.merge_csvs",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "spiders.merge_csvs",
+        "description": "spiders.merge_csvs",
+        "peekOfCode": "def main():\n    base_dir = os.path.dirname(__file__)\n    # files to merge (order preserved)\n    filenames = [\n        \"data_chanhtuoi_full_final.csv\",\n        \"data_chanhtuoi_tu_khoa_da.csv\",\n        \"data_gop.csv\",\n    ]\n    out = merge_csv_files(base_dir, filenames)\n    if out:",
+        "detail": "spiders.merge_csvs",
+        "documentation": {}
+    }
+]

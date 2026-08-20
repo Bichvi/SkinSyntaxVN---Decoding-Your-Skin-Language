@@ -56,11 +56,9 @@ if (!function_exists('ss_load_env')) {
 				$value = substr($value, 1, -1);
 			}
 
-			if (getenv($key) === false) {
-				putenv($key . '=' . $value);
-				$_ENV[$key] = $value;
-				$_SERVER[$key] = $value;
-			}
+			putenv($key . '=' . $value);
+			$_ENV[$key] = $value;
+			$_SERVER[$key] = $value;
 		}
 	}
 }
@@ -113,9 +111,28 @@ defined('AI_RECOMMENDATION_ENDPOINT') || define('AI_RECOMMENDATION_ENDPOINT', ss
 defined('AI_RECOMMENDATION_TIMEOUT') || define('AI_RECOMMENDATION_TIMEOUT', 20);
 defined('AI_HYBRID_RECOMMENDATION_ENDPOINT') || define('AI_HYBRID_RECOMMENDATION_ENDPOINT', ss_env('AI_HYBRID_RECOMMENDATION_ENDPOINT', 'http://127.0.0.1:5001/api/recommend/langchain-rag'));
 defined('AI_HYBRID_RECOMMENDATION_TIMEOUT') || define('AI_HYBRID_RECOMMENDATION_TIMEOUT', 30);
-defined('AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT') || define('AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT', ss_env('AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT', 'http://127.0.0.1:5002/api/recommend/llamaindex'));
+defined('AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT') || define('AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT', ss_env('AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT', 'http://127.0.0.1:5001/api/recommend/profile'));
 defined('AI_LLAMA_INDEX_RECOMMENDATION_TIMEOUT') || define('AI_LLAMA_INDEX_RECOMMENDATION_TIMEOUT', 35);
 defined('AI_PROFILE_RECOMMENDATION_ENDPOINT_BASE') || define('AI_PROFILE_RECOMMENDATION_ENDPOINT_BASE', ss_env('AI_PROFILE_RECOMMENDATION_ENDPOINT_BASE', 'http://127.0.0.1:5001/api/recommend/profile'));
 defined('AI_PROFILE_RECOMMENDATION_TIMEOUT') || define('AI_PROFILE_RECOMMENDATION_TIMEOUT', 20);
-defined('AI_CHAT_ENDPOINT') || define('AI_CHAT_ENDPOINT', ss_env('AI_CHAT_ENDPOINT', 'http://127.0.0.1:5001/api/chat'));
+defined('AI_CHAT_ENDPOINT') || define('AI_CHAT_ENDPOINT', ss_env('AI_CHAT_ENDPOINT', 'http://127.0.0.1:5001/api/chat/auto'));
 defined('AI_CHAT_TIMEOUT') || define('AI_CHAT_TIMEOUT', 60);
+
+defined('LIVEKIT_URL') || define('LIVEKIT_URL', ss_env('LIVEKIT_URL', 'wss://skinsyntax-live.livekit.cloud'));
+defined('LIVEKIT_API_KEY') || define('LIVEKIT_API_KEY', ss_env('LIVEKIT_API_KEY', 'devkey'));
+defined('LIVEKIT_API_SECRET') || define('LIVEKIT_API_SECRET', ss_env('LIVEKIT_API_SECRET', 'secret'));
+
+
+if (!defined('VIEW_DIR')) {
+	$frontendRootEnv = ss_env('FRONTEND_ROOT', '');
+	if ($frontendRootEnv !== '' && is_dir(rtrim($frontendRootEnv, '/\\') . '/views')) {
+		define('VIEW_DIR', rtrim($frontendRootEnv, '/\\') . '/views');
+	} else {
+		$localFrontendViews = dirname(__DIR__, 3) . '/frontend/views';
+		if (is_dir($localFrontendViews)) {
+			define('VIEW_DIR', $localFrontendViews);
+		} else {
+			define('VIEW_DIR', dirname(__DIR__, 2) . '/app/views');
+		}
+	}
+}

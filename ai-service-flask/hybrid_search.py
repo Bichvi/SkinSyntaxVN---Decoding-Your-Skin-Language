@@ -1,22 +1,36 @@
-# -*- coding: utf-8 -*-
 """
-Hybrid Search with RRF (Reciprocal Rank Fusion) & Vietnamese Cross-Encoder Re-ranking
+Hybrid Search with RRF (Reciprocal Rank Fusion) & LangChain Cross-Encoder Re-ranking
 For SkinSyntaxVN RAG Pipeline
 
 Combines:
-1. Dense semantic search (ChromaDB)
-2. Sparse BM25 keyword search (ElasticSearch/BM25 fallback)
+1. Dense semantic search (ChromaDB via LangChain)
+2. Sparse BM25 keyword search
 3. RRF fusion for ranking
-4. Vietnamese mMarco-based cross-encoder re-ranking
+4. LangChain CrossEncoderReranker + HuggingFaceCrossEncoder
 """
 
-import numpy as np
+import math
+import re
 from typing import List, Tuple, Optional, Dict, Any
 from dataclasses import dataclass, field
-from sentence_transformers import CrossEncoder
 import logging
 
+from langchain_core.documents import Document
+
+try:
+    from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+    from langchain.retrievers.document_compressors import CrossEncoderReranker
+    CROSS_ENCODER_AVAILABLE = True
+except Exception as _ce_err:
+    CROSS_ENCODER_AVAILABLE = False
+    HuggingFaceCrossEncoder = None
+    CrossEncoderReranker = None
+
+from model_config import RERANKER_MODEL, RERANKER_MODEL_KWARGS
+
 logger = logging.getLogger(__name__)
+if not CROSS_ENCODER_AVAILABLE:
+    logger.warning("CrossEncoder unavailable (sentence_transformers not installed): falling back to RRF ranking")
 
 
 @dataclass
@@ -58,7 +72,7 @@ class BM25Search:
         """
         self.documents = documents or []
         self.index = {}
-        self.doc_freq = {}  # Document frequency for IDF
+        self.doc_freq = {}  
         self.doc_lengths = {}
         self.avg_doc_length = 0
         
@@ -113,12 +127,10 @@ class BM25Search:
             if token not in self.doc_freq:
                 continue
             
-            # IDF calculation (with log smoothing)
-            idf = np.log(1 + (len(self.documents) - self.doc_freq[token] + 0.5) / 
+            idf = math.log(1 + (len(self.documents) - self.doc_freq[token] + 0.5) /
                         (self.doc_freq[token] + 0.5))
             
-            # Term frequency from query
-            tf = 1  # Binary relevance for query
+            tf = 1  
             
             # BM25 formula
             numerator = tf * (k1 + 1)
@@ -150,7 +162,6 @@ class BM25Search:
             if bm25_score > 0:
                 scores.append((doc_id, bm25_score))
         
-        # Sort by score and return top k
         scores.sort(key=lambda x: x[1], reverse=True)
         return scores[:k]
 
@@ -255,92 +266,96 @@ class ReciprocalRankFusion:
         return [doc for _, _, doc in fused_results]
 
 
-class VietnameseReranker:
+class LangChainCrossEncoderReranker:
     """
-    Vietnamese cross-encoder for precise re-ranking.
-    Uses mMarco model optimized for multilingual retrieval.
-    
-    Model: cross-encoder/mmarco-mMiniLMv2-L12-H384-v1
-    - Optimized for multiple languages including Vietnamese
-    - Lightweight (~130MB)
-    - Fast inference for production use
+    Re-rank documents via LangChain CrossEncoderReranker + HuggingFaceCrossEncoder.
+
+    Model: cross-encoder/mmarco-mMiniLMv2-L12-H384-v1 (multilingual, Vietnamese-friendly)
     """
-    
-    def __init__(self, model_name: str = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1", batch_size: int = 32):
-        """
-        Initialize Vietnamese cross-encoder re-ranker.
-        
-        Args:
-            model_name: Model identifier from HuggingFace
-            batch_size: Batch size for inference
-        """
+
+    def __init__(
+        self,
+        model_name: str = RERANKER_MODEL,
+        model_kwargs: Optional[Dict[str, Any]] = None,
+    ):
         self.model_name = model_name
-        self.batch_size = batch_size
-        self.model = None
-        self._initialize_model()
-    
-    def _initialize_model(self):
-        """Lazy load cross-encoder model."""
-        try:
-            self.model = CrossEncoder(self.model_name)
-            logger.info(f"✓ Loaded Vietnamese re-ranker: {self.model_name}")
-        except Exception as e:
-            logger.error(f"✗ Failed to load re-ranker: {e}")
-            raise
-    
+        self.model_kwargs = model_kwargs or dict(RERANKER_MODEL_KWARGS)
+        if CROSS_ENCODER_AVAILABLE and HuggingFaceCrossEncoder is not None:
+            try:
+                self._cross_encoder = HuggingFaceCrossEncoder(
+                    model_name=model_name,
+                    model_kwargs=self.model_kwargs,
+                )
+                logger.info("Loaded LangChain cross-encoder reranker: %s", model_name)
+            except Exception as exc:
+                self._cross_encoder = None
+                logger.warning("Failed to initialize CrossEncoder: %s — fallback to RRF", exc)
+        else:
+            self._cross_encoder = None
+            logger.info("CrossEncoder disabled — fallback to RRF")
+
     def rerank(
         self,
         query: str,
         documents: List[RankedDocument],
-        top_n: int = 5
+        top_n: int = 5,
     ) -> List[RankedDocument]:
-        """
-        Re-rank documents using cross-encoder.
-        
-        Args:
-            query: Search query
-            documents: List of RankedDocument to re-rank
-            top_n: Return top N documents
-            
-        Returns:
-            Re-ranked documents
-        """
         if not documents:
             return []
-        
-        if not self.model:
-            logger.warning("Re-ranker model not initialized, returning original order")
+
+        if not self._cross_encoder or not CROSS_ENCODER_AVAILABLE:
             return documents[:top_n]
-        
-        # Prepare pairs for cross-encoder
-        pairs = [
-            (query, doc.content)
+
+        doc_map = {doc.doc_id: doc for doc in documents}
+        lc_docs = [
+            Document(
+                page_content=doc.content,
+                metadata={**doc.metadata, "_ranked_doc_id": doc.doc_id},
+            )
             for doc in documents
         ]
-        
+
         try:
-            # Get cross-encoder scores
-            scores = self.model.predict(pairs, batch_size=self.batch_size)
-            
-            # Attach scores to documents
-            for doc, score in zip(documents, scores):
-                doc.rerank_score = float(score)
-            
-            # Sort by re-rank score
-            reranked = sorted(documents, key=lambda x: x.rerank_score, reverse=True)
-            
-            # Log ranking changes
-            if len(documents) >= 3:
+            compressor = CrossEncoderReranker(
+                model=self._cross_encoder,
+                top_n=min(max(top_n, 1), len(lc_docs)),
+            )
+            compressed = compressor.compress_documents(lc_docs, query)
+
+            if not compressed:
+                return documents[:top_n]
+
+            pairs = [(query, doc.page_content) for doc in compressed]
+            scores = self._cross_encoder.score(pairs)
+
+            reranked: List[RankedDocument] = []
+            for lc_doc, score in zip(compressed, scores):
+                doc_id = str(lc_doc.metadata.get("_ranked_doc_id", ""))
+                ranked = doc_map.get(doc_id)
+                if not ranked:
+                    continue
+                ranked.rerank_score = float(score)
+                reranked.append(ranked)
+
+            if len(documents) >= 3 and reranked:
                 original_top = documents[0].doc_id
                 reranked_top = reranked[0].doc_id
                 if original_top != reranked_top:
-                    logger.info(f"Re-ranking changed top result: {original_top[:20]} → {reranked_top[:20]}")
-            
+                    logger.info(
+                        "Re-ranking changed top result: %s → %s",
+                        original_top[:20],
+                        reranked_top[:20],
+                    )
+
             return reranked[:top_n]
-            
+
         except Exception as e:
-            logger.error(f"Re-ranking failed: {e}, returning original order")
+            logger.error("LangChain re-ranking failed: %s, returning original order", e)
             return documents[:top_n]
+
+
+# Backward-compatible alias
+VietnameseReranker = LangChainCrossEncoderReranker
 
 
 class HybridSearchPipeline:
@@ -358,7 +373,7 @@ class HybridSearchPipeline:
         bm25_index: Optional[BM25Search] = None,
         alpha: float = 0.5,
         k_rrf: float = 60.0,
-        reranker_model: str = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+        reranker_model: str = RERANKER_MODEL
     ):
         """
         Initialize hybrid search pipeline.
@@ -368,17 +383,87 @@ class HybridSearchPipeline:
             bm25_index: BM25 search index
             alpha: RRF weighting factor (0.5 = equal, 0.75 = favor semantic)
             k_rrf: RRF constant (default 60)
-            reranker_model: Vietnamese cross-encoder model name
+            reranker_model: LangChain HuggingFace cross-encoder model name
         """
         self.vectorstore = vectorstore
         self.bm25_index = bm25_index or BM25Search()
         self.rrf = ReciprocalRankFusion(k=k_rrf, alpha=alpha)
         
         try:
-            self.reranker = VietnameseReranker(reranker_model)
+            self.reranker = LangChainCrossEncoderReranker(reranker_model)
         except Exception as e:
-            logger.warning(f"Re-ranker initialization failed: {e}, will skip re-ranking")
+            logger.warning(f"LangChain re-ranker initialization failed: {e}, will skip re-ranking")
             self.reranker = None
+
+    @staticmethod
+    def _resolve_doc_id(doc, index: int) -> str:
+        """Chroma/LangChain doc id — luôn ưu tiên product_{ma_san_pham}, không dùng doc_0."""
+        raw_id = str(getattr(doc, "id", None) or "").strip()
+        if raw_id.startswith("product_"):
+            return raw_id
+
+        meta = getattr(doc, "metadata", None) or {}
+        for key in ("ma_san_pham", "id"):
+            val = str(meta.get(key) or "").strip()
+            if val and val.lower() not in ("null", "none", ""):
+                return val if val.startswith("product_") else f"product_{val}"
+
+        if raw_id and not raw_id.startswith("doc_"):
+            return raw_id
+
+        return f"doc_{index}"
+
+    def _semantic_search_with_ids(
+        self,
+        query: str,
+        k: int,
+        filters: Optional[Dict] = None,
+    ) -> List[Tuple[str, Document, float]]:
+        """Query Chroma trực tiếp để giữ đúng id product_{ma_san_pham}."""
+        emb_fn = getattr(self.vectorstore, "_embedding_function", None)
+        collection = getattr(self.vectorstore, "_collection", None)
+        if emb_fn is None or collection is None:
+            semantic_docs = self.vectorstore.similarity_search(query, k=k, filter=filters)
+            return [
+                (self._resolve_doc_id(doc, i), doc, 1.0 - i * 0.01)
+                for i, doc in enumerate(semantic_docs)
+            ]
+
+        query_emb = emb_fn.embed_query(query)
+        kwargs: Dict[str, Any] = {
+            "query_embeddings": [query_emb],
+            "n_results": max(k, 1),
+            "include": ["documents", "metadatas", "distances"],
+        }
+        if filters:
+            kwargs["where"] = filters
+
+        try:
+            res = collection.query(**kwargs)
+        except Exception as exc:
+            logger.warning(f"[SEMANTIC] Chroma query failed: {exc}")
+            semantic_docs = self.vectorstore.similarity_search(query, k=k, filter=filters)
+            return [
+                (self._resolve_doc_id(doc, i), doc, 1.0 - i * 0.01)
+                for i, doc in enumerate(semantic_docs)
+            ]
+
+        ids = (res.get("ids") or [[]])[0]
+        docs = (res.get("documents") or [[]])[0]
+        metas = (res.get("metadatas") or [[]])[0]
+        dists = (res.get("distances") or [[]])[0]
+
+        out: List[Tuple[str, Document, float]] = []
+        for i, doc_id in enumerate(ids):
+            content = docs[i] if i < len(docs) else ""
+            meta = dict(metas[i] if i < len(metas) else {})
+            if not meta.get("ma_san_pham") and str(doc_id).startswith("product_"):
+                meta["ma_san_pham"] = str(doc_id).replace("product_", "", 1)
+                meta["id"] = meta["ma_san_pham"]
+            dist = float(dists[i]) if i < len(dists) else 1.0
+            score = max(0.0, 1.0 - dist)
+            out.append((str(doc_id), Document(page_content=content or "", metadata=meta), score))
+        return out
     
     def search(
         self,
@@ -412,11 +497,8 @@ class HybridSearchPipeline:
         }
         
         # Stage 1: Semantic search
-        semantic_docs = self.vectorstore.similarity_search(query, k=k_total, filter=filters)
-        semantic_results = [
-            (doc.id or f"doc_{i}", getattr(doc, 'score', 1.0 - i*0.01))
-            for i, doc in enumerate(semantic_docs)
-        ]
+        semantic_hits = self._semantic_search_with_ids(query, k_total, filters)
+        semantic_results = [(doc_id, score) for doc_id, _doc, score in semantic_hits]
         metrics["semantic_results"] = len(semantic_results)
         logger.info(f"[SEMANTIC] Found {len(semantic_results)} documents")
         
@@ -427,13 +509,12 @@ class HybridSearchPipeline:
         
         # Create document map
         documents_map = {}
-        for i, doc in enumerate(semantic_docs):
-            doc_id = doc.id or f"doc_{i}"
+        for doc_id, doc, score in semantic_hits:
             ranked_doc = RankedDocument(
                 doc_id=doc_id,
                 content=doc.page_content,
                 metadata=doc.metadata,
-                semantic_score=getattr(doc, 'score', 1.0 - i*0.01)
+                semantic_score=score,
             )
             documents_map[doc_id] = ranked_doc
             

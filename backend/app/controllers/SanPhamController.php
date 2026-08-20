@@ -26,14 +26,10 @@ class SanPhamController {
             error_log('layout menu MongoDB error: ' . $e->getMessage());
             $menuCats = [];
         }
-        require __DIR__ . '/../views/layouts/header.php';
-        require __DIR__ . '/../views/' . $view . '.php';
-        require __DIR__ . '/../views/layouts/footer.php';
-    }
-
-    private function isAjaxRequest(): bool {
-        return strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest'
-            || str_contains((string)($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json');
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/layouts/header.php';
+        require $viewDir . '/' . $view . '.php';
+        require $viewDir . '/layouts/footer.php';
     }
 
     private function cartCount(): int {
@@ -206,26 +202,15 @@ class SanPhamController {
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             return ['ok' => true, 'message' => 'Đã thêm sản phẩm vào giỏ hàng', 'cart_count' => $this->cartCount()];
         } catch (Throwable $e) {
-            error_log('add_to_cart exception: ' . json_encode([
-                'route' => $_GET['r'] ?? '',
-                'method' => $_SERVER['REQUEST_METHOD'] ?? '',
-                'get' => $_GET,
-                'post' => $_POST,
-                'raw_input' => $debugContext['raw_input'] ?? '',
-                'parsed_data' => $debugContext['parsed_data'] ?? [],
-                'product_id' => $id,
-                'cart_product_id' => $cartProductId,
-                'qty' => $qty,
-                'query' => $query,
-                'found' => (bool)$product,
-                'ma_san_pham' => is_array($product) ? ($product['ma_san_pham'] ?? null) : null,
-                'so_luong_ton_kho' => $stock,
-                'trang_thai_kho' => $stockStatus,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-            return ['ok' => false, 'message' => 'Không thể thêm sản phẩm lúc này. Vui lòng thử lại.', 'cart_count' => $this->cartCount()];
+            error_log('add_to_cart exception: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return ['ok' => false, 'message' => 'Không thể thêm sản phẩm: ' . $e->getMessage(), 'cart_count' => $this->cartCount()];
         }
+    }
+
+    private function isAjaxRequest(): bool {
+        $requestedWith = strtolower(trim((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')));
+        $accept = strtolower(trim((string)($_SERVER['HTTP_ACCEPT'] ?? '')));
+        return $requestedWith === 'xmlhttprequest' || strpos($accept, 'application/json') !== false;
     }
 
     private function respondCartResult(array $result, string $fallbackUrl): void {

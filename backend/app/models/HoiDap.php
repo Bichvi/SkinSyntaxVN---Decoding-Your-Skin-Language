@@ -6,8 +6,19 @@ use MongoDB\BSON\UTCDateTime;
 class HoiDap {
     private $db;
 
-    public function __construct($db) {
-        $this->db = $db;
+    public function __construct($db = null) {
+        if ($db === null) {
+            global $db;
+            $this->db = $db;
+        } else if (is_object($db) && method_exists($db, 'raw')) {
+            $this->db = $db->raw();
+        } else {
+            $this->db = $db;
+        }
+        if (!is_object($this->db)) {
+            global $db;
+            $this->db = $db ?? $GLOBALS['db'] ?? null;
+        }
     }
 
     private function getNextNumericId(string $collection, string $column): int {
@@ -36,16 +47,20 @@ class HoiDap {
         $productId = trim((string)$productId);
         if ($productId === '') return [];
 
-        if (class_exists('SanPham')) {
+        $dbInstance = is_object($this->db) ? (method_exists($this->db, 'raw') ? $this->db->raw() : $this->db) : ($GLOBALS['db'] ?? null);
+
+        if (class_exists('SanPham') && is_object($dbInstance)) {
             try {
-                $brief = (new SanPham($this->db))->getProductBriefById($productId);
-                if (!empty($brief)) return $brief;
+                $brief = (new SanPham($dbInstance))->getProductBriefById($productId);
+                if (!empty($brief) && !empty($brief['ten_san_pham'])) return $brief;
             } catch (Throwable $e) {
                 error_log('question product brief lookup error: ' . $e->getMessage());
             }
         }
 
-        $product = $this->db->san_pham->findOne($this->productFilter($productId));
+        if (!is_object($dbInstance)) return [];
+
+        $product = $dbInstance->san_pham->findOne($this->productFilter($productId));
         if (!$product) return [];
         $p = (array)$product;
         return [

@@ -212,11 +212,10 @@ class SanPham {
         ];
 
         try {
-            foreach ($this->productIdentityFilters($id) as $filter) {
-                $result = $this->db->san_pham->updateOne($filter, ['$set' => $payload]);
-                if ($result->getMatchedCount() > 0) {
-                    return true;
-                }
+            $filter = $this->productFlexibleFilter($id);
+            $result = $this->db->san_pham->updateMany($filter, ['$set' => $payload]);
+            if ($result->getMatchedCount() > 0) {
+                return true;
             }
             $this->setError('Khong tim thay san pham can cap nhat.');
             return false;
@@ -236,7 +235,13 @@ class SanPham {
         }
     }
 
+    private static ?array $menuTreeCache = null;
+
     public function menuTree(int $cap2LimitEach = 14): array {
+        if (self::$menuTreeCache !== null) {
+            return self::$menuTreeCache;
+        }
+
         // Trong MongoDB, aggregate để group danh mục
         $pipeline = [
             ['$match' => ['danh_muc_day_du' => ['$ne' => null, '$not' => new \MongoDB\BSON\Regex('^$')]]],
@@ -271,11 +276,14 @@ class SanPham {
                 $tree[$c1][$c2] = ($tree[$c1][$c2] ?? 0) + $count;
             }
         }
+
+        self::$menuTreeCache = $tree;
         return $tree;
     }
 
     public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false, string $stockStatusFilter = ''): array {
         $page = max(1, $page);
+        $perPage = max(1, $perPage);
         $skip = ($page - 1) * $perPage;
         
         $filter = [];
@@ -763,6 +771,8 @@ class SanPham {
             'discount' => ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1],
             'price_asc' => ['gia_ban' => 1, 'ma_san_pham' => -1],
             'price_desc' => ['gia_ban' => -1, 'ma_san_pham' => -1],
+            'newest' => ['ngay_tao' => -1, 'ma_san_pham' => -1],
+            'most_viewed' => ['luot_xem' => -1, 'ma_san_pham' => -1],
             'popular' => ['so_luong_danh_gia' => -1, 'diem_danh_gia' => -1, 'luot_xem' => -1, 'ma_san_pham' => -1],
         ];
 

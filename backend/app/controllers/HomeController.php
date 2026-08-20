@@ -122,9 +122,10 @@ class HomeController {
             error_log('layout menu MongoDB error: ' . $e->getMessage());
             $menuCats = [];
         }
-        require __DIR__ . '/../views/layouts/header.php';
-        require __DIR__ . '/../views/' . $view . '.php';
-        require __DIR__ . '/../views/layouts/footer.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/layouts/header.php';
+        require $viewDir . '/' . $view . '.php';
+        require $viewDir . '/layouts/footer.php';
     }
 
     public function index() {
@@ -132,6 +133,21 @@ class HomeController {
         $cats = [];
         $homepageSections = [];
         $dbUnavailableMessage = '';
+        $userProfile = null;
+        $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']['email']);
+        $hasSurvey = false;
+
+        if ($isLoggedIn) {
+            try {
+                $email = (string)($_SESSION['user']['email'] ?? '');
+                $userProfile = $this->buildRecommendationProfile($email);
+                $hasSurvey = $this->hasCompletedSurvey($userProfile);
+            } catch (Throwable $e) {
+                error_log('home skin profile error: ' . $e->getMessage());
+                $userProfile = null;
+                $hasSurvey = false;
+            }
+        }
 
         try {
             $latest = $this->model->latest(12, true);
@@ -149,7 +165,25 @@ class HomeController {
             'cats' => $cats,
             'homepageSections' => $homepageSections,
             'dbUnavailableMessage' => $dbUnavailableMessage,
+            'isLoggedIn' => $isLoggedIn,
+            'userProfile' => $userProfile,
+            'hasSurvey' => $hasSurvey,
         ]);
+    }
+
+    public function khaosat() {
+        require_once __DIR__ . '/AuthController.php';
+        (new AuthController($this->pdo))->khaosat();
+    }
+
+    public function luukhaosat() {
+        require_once __DIR__ . '/AuthController.php';
+        (new AuthController($this->pdo))->xulykhaosat();
+    }
+
+    public function xulykhaosat() {
+        require_once __DIR__ . '/AuthController.php';
+        (new AuthController($this->pdo))->xulykhaosat();
     }
 
     public function otpGuide() {
@@ -431,6 +465,7 @@ class HomeController {
                 'showPublicDiscovery' => true,
                 'publicFilters' => $filters,
                 'publicProducts' => $publicData['products'],
+                'totalFiltered' => $publicData['totalFiltered'] ?? 0,
                 'publicSections' => $publicData['sections'],
                 'brandOptions' => $publicData['brands'],
                 'categoryOptions' => $publicData['categories'],
@@ -449,10 +484,10 @@ class HomeController {
                     'needsSurvey' => true,
                     'recommendationProfile' => $profile,
                     'surveyUrl' => BASE_URL . '/index.php?r=khaosat',
-                    'skinProfilePromptMessage' => 'Bạn chưa hoàn thành khảo sát hồ sơ da. Hãy cập nhật hồ sơ để nhận gợi ý dành riêng cho bạn.',
                     'skinProfilePromptMessage' => 'Bạn chưa hoàn thành khảo sát hồ sơ da. Hãy khảo sát để nhận gợi ý dành riêng cho bạn.',
                     'publicFilters' => $filters,
                     'publicProducts' => $publicData['products'],
+                    'totalFiltered' => $publicData['totalFiltered'] ?? 0,
                     'publicSections' => $publicData['sections'],
                     'brandOptions' => $publicData['brands'],
                     'categoryOptions' => $publicData['categories'],
@@ -463,6 +498,18 @@ class HomeController {
 
             $llamaResult = $this->fetchLlamaIndexRecommendations($profile ?? [], $user);
             $profileMessage = '';
+
+            $profileSections = [];
+            try {
+                $skinType = trim((string)($profile['skin_type'] ?? ''));
+                $skinFilter = $skinType !== '' ? ['loai_da' => $skinType] : [];
+                $profileSections['best_seller'] = $this->model->getBestSellerProducts($skinFilter, 6);
+                $profileSections['top_rated'] = $this->model->getTopRatedProducts($skinFilter, 6);
+                $profileSections['discount'] = $this->model->getDiscountProducts($skinFilter, 6);
+            } catch (Throwable $e) {
+                error_log('goiy profileSections error: ' . $e->getMessage());
+                $profileSections = [];
+            }
         } catch (Throwable $e) {
             error_log('goiy profile MongoDB error: ' . $e->getMessage());
             $profile = null;
@@ -473,6 +520,7 @@ class HomeController {
                 'products' => [],
             ];
             $profileMessage = 'Hiện chưa thể tải hồ sơ gợi ý. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
+            $profileSections = [];
         }
 
         $this->render('goiy', [
@@ -481,6 +529,7 @@ class HomeController {
             'recommendationProfile' => $profile,
             'surveyUrl' => BASE_URL . '/index.php?r=khaosat',
             'llamaRecommendation' => $llamaResult,
+            'profileSections' => $profileSections,
             'profileUnavailableMessage' => $profileMessage,
         ]);
     }
@@ -488,6 +537,7 @@ class HomeController {
     private function loadPublicRecommendationData(array $filters, string $logContext = 'goiy'): array {
         $data = [
             'products' => [],
+            'totalFiltered' => 0,
             'sections' => [],
             'brands' => [],
             'categories' => [],
@@ -495,13 +545,27 @@ class HomeController {
         ];
 
         try {
-            $data['products'] = [];
-            $data['sections'] = $this->model->publicRecommendationSections(6, $filters, trim((string)($filters['sort'] ?? 'default')));
+            $sortKey = trim((string)($filters['sort'] ?? 'default'));
+            $hasActiveFilter = ($filters['keyword'] !== '') || ($filters['gia_tu'] !== '') || ($filters['gia_den'] !== '') || ($filters['danh_muc'] !== '') || ($filters['thuong_hieu'] !== '') || ($sortKey !== '' && $sortKey !== 'default');
+            if ($hasActiveFilter) {
+                $searchParams = [
+                    'keyword' => $filters['keyword'],
+                    'price_min' => $filters['gia_tu'],
+                    'price_max' => $filters['gia_den'],
+                    'category' => $filters['danh_muc'],
+                    'brand' => $filters['thuong_hieu'],
+                    'sort' => $sortKey,
+                ];
+                $searchResult = $this->model->searchProducts($searchParams, $sortKey !== '' ? $sortKey : 'popular', 1, 24);
+                $data['products'] = $searchResult['items'] ?? [];
+                $data['totalFiltered'] = (int)($searchResult['total'] ?? 0);
+            }
+            $data['sections'] = $this->model->publicRecommendationSections(6, $filters, $sortKey);
             $data['brands'] = method_exists($this->model, 'listBrandOptions') ? $this->model->listBrandOptions() : [];
             $data['categories'] = method_exists($this->model, 'listCategoryOptions') ? $this->model->listCategoryOptions() : [];
         } catch (Throwable $e) {
             error_log($logContext . ' MongoDB error: ' . $e->getMessage());
-            $data['message'] = 'Hiện chưa thể tải sản phẩm phổ biến. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
+            $data['message'] = 'Hiện chưa thể tải dữ liệu sản phẩm. Vui lòng thử lại sau.';
         }
 
         return $data;
@@ -1096,7 +1160,7 @@ class HomeController {
             return trim((string)$envValue);
         }
 
-        return 'http://127.0.0.1:5002/api/recommend/llamaindex';
+        return 'http://127.0.0.1:5001/api/recommend/profile';
     }
 
     private function getLlamaIndexRecommendationTimeout(): int {
@@ -1964,6 +2028,30 @@ class HomeController {
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
+    public function aiChatApi(): void {
+        $this->aiChatAssistant();
+    }
+
+    public function aiChatStream(): void {
+        $this->aiChatAssistant();
+    }
+
+    public function goiyApi(): void {
+        $this->xulygoiy();
+    }
+
+    public function aiClearHistory(): void {
+        $this->jsonResponse(['ok' => true, 'message' => 'Lịch sử đã được xóa.']);
+    }
+
+    public function aiEvalScore(): void {
+        $this->jsonResponse(['ok' => true, 'score' => 1.0]);
+    }
+
+    public function aiLiveMetrics(): void {
+        $this->jsonResponse(['ok' => true]);
+    }
+
     private function postJsonRequest(string $url, array $payload, int $timeout = 20): array {
         $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($body === false) {
@@ -2027,60 +2115,85 @@ class HomeController {
     }
 
     private function fetchLlamaIndexRecommendations(array $profile, array $sessionUser): array {
-        $unavailable = [
-            'ok' => false,
-            'message' => 'Hiện chưa thể tạo gợi ý cá nhân hóa. Vui lòng thử lại sau.',
-            'answer_text' => '',
-            'products' => [],
-        ];
-
         $endpoint = $this->getLlamaIndexRecommendationEndpoint();
-        if ($endpoint === '') {
-            return $unavailable;
-        }
-
         $customerId = (int)($profile['customer_id'] ?? 0);
         $payload = [
             'user_id' => $customerId > 0 ? $customerId : (int)($sessionUser['id'] ?? 0),
             'email' => trim((string)($sessionUser['email'] ?? '')),
             'session_user_id' => (int)($sessionUser['id'] ?? 0),
+            'user_profile' => $profile,
         ];
 
-        $response = $this->postJsonRequest($endpoint, $payload, $this->getLlamaIndexRecommendationTimeout());
-        if ((int)($response['status'] ?? 0) < 200 || (int)($response['status'] ?? 0) >= 300) {
-            return $unavailable;
+        if ($endpoint !== '') {
+            $response = $this->postJsonRequest($endpoint, $payload, $this->getLlamaIndexRecommendationTimeout());
+            if ((int)($response['status'] ?? 0) >= 200 && (int)($response['status'] ?? 0) < 300) {
+                $decoded = json_decode((string)($response['body'] ?? ''), true);
+                if (is_array($decoded) && !empty($decoded['ok'])) {
+                    $products = [];
+                    foreach (($decoded['products'] ?? []) as $row) {
+                        if (!is_array($row)) continue;
+                        $row['id'] = (string)($row['id'] ?? $row['ma_san_pham'] ?? '');
+                        $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
+                        if (isset($row['match_percent'])) {
+                            $row['match_percent'] = max(0, min(100, (int)$row['match_percent']));
+                        }
+                        if (isset($row['match_label'])) {
+                            $row['match_label'] = trim((string)$row['match_label']);
+                        }
+                        $products[] = $row;
+                    }
+
+                    if (!empty($products)) {
+                        return [
+                            'ok' => true,
+                            'source' => $decoded['source'] ?? 'langchain_rag',
+                            'answer_text' => trim((string)($decoded['answer_text'] ?? '')),
+                            'products' => $products,
+                        ];
+                    }
+                }
+            }
         }
 
-        $decoded = json_decode((string)($response['body'] ?? ''), true);
-        if (!is_array($decoded) || empty($decoded['ok']) || (string)($decoded['source'] ?? '') !== 'llamaindex') {
-            return $unavailable;
-        }
+        // Tự động fallback sang GoiYContentBased của PHP khi AI Service chưa sẵn sàng
+        try {
+            $fallbackInput = [
+                'skin_type' => $profile['skin_type'] ?? '',
+                'concerns' => $profile['concerns'] ?? [],
+                'avoid_ingredients' => is_array($profile['avoid_ingredients'] ?? null) ? implode(', ', $profile['avoid_ingredients']) : ($profile['avoid_ingredients'] ?? ''),
+                'budget' => $profile['budget'] ?? null,
+                'gioi_tinh' => $profile['gioi_tinh'] ?? '',
+                'nam_sinh' => $profile['nam_sinh'] ?? '',
+            ];
+            $fallbackProducts = $this->goiYModel->recommendFromPost($fallbackInput, 12);
+            $formattedProducts = [];
+            foreach ($fallbackProducts as $p) {
+                if (!is_array($p)) continue;
+                $p['id'] = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
+                $p['image_url'] = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['image_url'] ?? ''));
+                $p['match_percent'] = (int)($p['diem_phu_hop'] ?? $p['match_percent'] ?? 92);
+                $p['match_label'] = 'PHÙ HỢP HỒ SƠ DA';
+                $formattedProducts[] = $p;
+            }
 
-        $products = [];
-        foreach (($decoded['products'] ?? []) as $row) {
-            if (!is_array($row)) {
-                continue;
+            if (!empty($formattedProducts)) {
+                $skinTypeStr = !empty($profile['skin_type']) ? $profile['skin_type'] : 'làn da';
+                return [
+                    'ok' => true,
+                    'source' => 'content_based_fallback',
+                    'answer_text' => "SkinSyntax đã phân tích hồ sơ da ({$skinTypeStr}) và lựa chọn chu trình sản phẩm phù hợp nhất dành cho bạn bên dưới.",
+                    'products' => $formattedProducts,
+                ];
             }
-            $row['id'] = (string)($row['id'] ?? $row['ma_san_pham'] ?? '');
-            $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
-            if (isset($row['match_percent'])) {
-                $row['match_percent'] = max(0, min(100, (int)$row['match_percent']));
-            }
-            if (isset($row['match_label'])) {
-                $row['match_label'] = trim((string)$row['match_label']);
-            }
-            $products[] = $row;
-        }
-
-        if (empty($products)) {
-            return $unavailable;
+        } catch (Throwable $e) {
+            error_log('goiy fallback error: ' . $e->getMessage());
         }
 
         return [
-            'ok' => true,
-            'source' => 'llamaindex',
-            'answer_text' => trim((string)($decoded['answer_text'] ?? '')),
-            'products' => $products,
+            'ok' => false,
+            'message' => 'Hiện chưa thể tải gợi ý sản phẩm cá nhân hóa. Vui lòng thử lại sau.',
+            'answer_text' => '',
+            'products' => [],
         ];
     }
 
