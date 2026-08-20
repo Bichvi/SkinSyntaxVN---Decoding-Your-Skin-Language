@@ -14,9 +14,10 @@ class AuthController {
 
     private function render(string $view, array $data = []) {
         extract($data);
-        require __DIR__ . '/../views/layouts/header.php';
-        require __DIR__ . '/../views/' . $view . '.php';
-        require __DIR__ . '/../views/layouts/footer.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/layouts/header.php';
+        require $viewDir . '/' . $view . '.php';
+        require $viewDir . '/layouts/footer.php';
     }
 
     private function appBaseUrl(): string {
@@ -478,6 +479,8 @@ class AuthController {
         unset($_SESSION['oauth_state_' . $provider]);
 
         $redirectUri = $this->resolveOAuthRedirectUri($provider);
+        $email = '';
+        $name = '';
         if ($provider === 'google') {
             $tokenResponse = $this->httpRequest($config['token_url'], [
                 'method' => 'POST',
@@ -492,12 +495,35 @@ class AuthController {
             ]);
             $tokenPayload = json_decode((string)($tokenResponse['body'] ?? ''), true) ?: [];
             $accessToken = trim((string)($tokenPayload['access_token'] ?? ''));
-            $profileResponse = $accessToken !== ''
-                ? $this->httpRequest('https://www.googleapis.com/oauth2/v2/userinfo?access_token=' . urlencode($accessToken))
-                : ['status' => 0, 'body' => ''];
-            $profile = json_decode((string)($profileResponse['body'] ?? ''), true) ?: [];
-            $email = trim((string)($profile['email'] ?? ''));
-            $name = trim((string)($profile['name'] ?? ''));
+            $idToken = trim((string)($tokenPayload['id_token'] ?? ''));
+
+            if ($idToken !== '') {
+                $parts = explode('.', $idToken);
+                if (count($parts) >= 2) {
+                    $jwtPayload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true) ?: [];
+                    if (!empty($jwtPayload['email'])) {
+                        $email = trim((string)$jwtPayload['email']);
+                    }
+                    if (!empty($jwtPayload['name'])) {
+                        $name = trim((string)$jwtPayload['name']);
+                    }
+                }
+            }
+
+            if ($email === '' && $accessToken !== '') {
+                $profileResponse = $this->httpRequest('https://www.googleapis.com/oauth2/v3/userinfo', [
+                    'headers' => ['Authorization: Bearer ' . $accessToken],
+                ]);
+                $profile = json_decode((string)($profileResponse['body'] ?? ''), true) ?: [];
+                if (empty($profile['email'])) {
+                    $profileResponse = $this->httpRequest('https://www.googleapis.com/oauth2/v2/userinfo?access_token=' . urlencode($accessToken));
+                    $profile = json_decode((string)($profileResponse['body'] ?? ''), true) ?: [];
+                }
+                $email = trim((string)($profile['email'] ?? ''));
+                if ($name === '') {
+                    $name = trim((string)($profile['name'] ?? ''));
+                }
+            }
         } else {
             $tokenResponse = $this->httpRequest($config['token_url'] . '?' . http_build_query([
                 'client_id' => $config['client_id'],
@@ -519,7 +545,13 @@ class AuthController {
         }
 
         if ($email === '') {
-            set_flash('error', 'Khong lay duoc email tu tai khoan ' . ucfirst($provider) . '. Vui long kiem tra quyen truy cap email.');
+            $extraErr = '';
+            if (!empty($tokenPayload['error_description'])) {
+                $extraErr = ' (' . $tokenPayload['error_description'] . ')';
+            } elseif (!empty($tokenPayload['error'])) {
+                $extraErr = ' (' . $tokenPayload['error'] . ')';
+            }
+            set_flash('error', 'Khong lay duoc email tu tai khoan ' . ucfirst($provider) . $extraErr . '. Vui long kiem tra quyen truy cap email.');
             header('Location: ' . BASE_URL . '/index.php?auth=login');
             exit;
         }
@@ -917,5 +949,9 @@ class AuthController {
         set_flash('success', 'Đã đăng xuất.');
         header("Location: " . BASE_URL . "/index.php?r=home");
         exit;
+    }
+
+    public function logout() {
+        $this->dangxuat();
     }
 }

@@ -1,0 +1,7 @@
+
+-r requirements.txt
+
+trulens
+trulens-apps-langchain
+trulens-providers-litellm>=1.0
+litellm

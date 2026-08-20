@@ -14,12 +14,14 @@ class QuanTriController {
     private ThongKe $thongKeModel;
     private Voucher $voucherModel;
 
-    public function __construct( $pdo) {
+    public function __construct($pdo) {
+        global $db;
+        $mongoDb = $db ?? (is_object($pdo) && method_exists($pdo, 'raw') ? $pdo->raw() : $pdo);
         $this->pdo = $pdo;
-        $this->model = new QuanTri($pdo);
-        $this->sanPhamModel = new SanPham($pdo);
-        $this->thongKeModel = new ThongKe($pdo);
-        $this->voucherModel = new Voucher($pdo);
+        $this->model = new QuanTri($mongoDb);
+        $this->sanPhamModel = new SanPham($mongoDb);
+        $this->thongKeModel = new ThongKe($mongoDb);
+        $this->voucherModel = new Voucher($mongoDb);
     }
 
     private function denyAccess(): void {
@@ -35,9 +37,10 @@ class QuanTriController {
             exit;
         }
 
-        require __DIR__ . '/../views/layouts/header.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/layouts/header.php';
         echo '<div class="container py-5"><div class="alert alert-danger">Bạn không có quyền truy cập chức năng này.</div></div>';
-        require __DIR__ . '/../views/layouts/footer.php';
+        require $viewDir . '/layouts/footer.php';
         exit;
     }
 
@@ -66,9 +69,10 @@ class QuanTriController {
     private function renderAdmin(string $view, array $data = []): void {
         $data['notificationCenter'] = $data['notificationCenter'] ?? $this->buildNotificationCenter();
         extract($data);
-        require __DIR__ . '/../views/admin/layouts/header.php';
-        require __DIR__ . '/../views/admin/' . $view . '.php';
-        require __DIR__ . '/../views/admin/layouts/footer.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/admin/layouts/header.php';
+        require $viewDir . '/admin/' . $view . '.php';
+        require $viewDir . '/admin/layouts/footer.php';
     }
 
     private function buildNotificationCenter(): array {
@@ -90,9 +94,10 @@ class QuanTriController {
     private function renderSite(string $view, array $data = []): void {
         extract($data);
         $menuCats = $this->sanPhamModel->menuTree();
-        require __DIR__ . '/../views/layouts/header.php';
-        require __DIR__ . '/../views/' . $view . '.php';
-        require __DIR__ . '/../views/layouts/footer.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/layouts/header.php';
+        require $viewDir . '/' . $view . '.php';
+        require $viewDir . '/layouts/footer.php';
     }
 
     private function isAjaxRequest(): bool {
@@ -547,7 +552,8 @@ class QuanTriController {
             redirect(BASE_URL . '/index.php?r=' . $route . '&detail=' . $orderId);
         }
 
-        require __DIR__ . '/../views/admin/order_print.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/admin/order_print.php';
         exit;
     }
 
@@ -877,12 +883,20 @@ class QuanTriController {
     public function staffDashboard(): void {
         $user = $this->requireRole(['admin', 'nhanvien']);
         $summary = $this->model->getDashboardSummary();
+        global $db;
+        $hoiDapModel = new HoiDap($db ?? $this->pdo);
+        $questions = [];
+        try {
+            $questions = $hoiDapModel->listAdminQuestions('pending', '', 6);
+        } catch (Throwable $e) {}
+
         $this->renderAdmin('staff_dashboard', [
             'summary' => $summary,
             'user' => $user,
             'pendingOrders' => $this->model->listOrders('', 'pending'),
             'conversations' => $this->model->listChatConversations(true, 20),
             'reviews' => $this->model->listReviews(''),
+            'questions' => $questions,
         ]);
     }
 
@@ -1301,7 +1315,8 @@ class QuanTriController {
         $this->requireRole(['admin', 'nhanvien']);
         $status = trim((string)($_GET['status'] ?? ''));
         $q = trim((string)($_GET['q'] ?? ''));
-        $model = new HoiDap($this->pdo);
+        global $db;
+        $model = new HoiDap($db ?? $this->pdo);
         $questions = [];
         $error = '';
         try {
@@ -1325,8 +1340,9 @@ class QuanTriController {
         }
         $questionId = max(0, (int)($_POST['ma_hoi_dap'] ?? 0));
         $answer = trim((string)($_POST['tra_loi'] ?? ''));
+        global $db;
         try {
-            $ok = (new HoiDap($this->pdo))->answerQuestion(
+            $ok = (new HoiDap($db ?? $this->pdo))->answerQuestion(
                 $questionId,
                 (int)($user['ma_nv'] ?? 0),
                 $answer,
@@ -1346,8 +1362,9 @@ class QuanTriController {
             redirect(BASE_URL . '/index.php?r=admin_questions');
         }
         $questionId = max(0, (int)($_POST['ma_hoi_dap'] ?? 0));
+        global $db;
         try {
-            $ok = (new HoiDap($this->pdo))->hideQuestion($questionId);
+            $ok = (new HoiDap($db ?? $this->pdo))->hideQuestion($questionId);
         } catch (Throwable $e) {
             error_log('admin question hide error: ' . $e->getMessage());
             $ok = false;
@@ -1513,12 +1530,22 @@ class QuanTriController {
         $allProducts = $paginateRes['items'] ?? [];
 
         foreach ($lives as &$live) {
+            $st = (string)($live['trang_thai'] ?? 'chuamoi');
+            if ($st === 'tamdung' || $st === 'paused') {
+                $st = 'ketthuc';
+                $live['trang_thai'] = 'ketthuc';
+            }
             if (!empty($live['ma_san_pham_ghim'])) {
                 $p = $this->sanPhamModel->findById($live['ma_san_pham_ghim']);
                 if ($p) {
                     $live['pinned_product'] = $p;
                 }
             }
+            $live['luot_xem'] = (int)($live['luot_xem'] ?? 0);
+            $live['tong_doanh_thu'] = (float)($live['tong_doanh_thu'] ?? 0);
+            $live['tong_don_hang'] = (int)($live['tong_don_hang'] ?? 0);
+            $live['tong_san_pham_ban'] = (int)($live['tong_san_pham_ban'] ?? 0);
+            $live['created_at'] = (string)($live['created_at'] ?? $live['khung_gio_bat_dau'] ?? date('Y-m-d H:i:s'));
         }
         unset($live);
 
@@ -1546,23 +1573,61 @@ class QuanTriController {
         redirect(BASE_URL . '/index.php?r=admin_lives');
     }
 
+    public function adminLiveEdit(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if (!user_can_access_route('admin_lives')) {
+            $this->denyAccess();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = trim((string)($_POST['live_id'] ?? $_POST['id'] ?? ''));
+            if ($id !== '') {
+                require_once __DIR__ . '/../models/PhienLive.php';
+                $phienLiveModel = new PhienLive($this->pdo);
+                $ok = $phienLiveModel->capNhatPhienLive($id, $_POST);
+                set_flash($ok ? 'success' : 'error', $ok ? "Đã cập nhật thông tin phiên LiveStream #{$id} thành công!" : "Không thể cập nhật phiên LiveStream #{$id}.");
+            }
+        }
+
+        $redirectUrl = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/index.php?r=admin_lives');
+        redirect($redirectUrl);
+    }
+
     public function adminLiveStatus(): void {
         $user = $this->requireRole(['admin', 'nhanvien']);
         if (!user_can_access_route('admin_lives')) {
             $this->denyAccess();
         }
 
-        $id = trim((string)($_GET['id'] ?? ''));
-        $status = trim((string)($_GET['status'] ?? 'danglive'));
+        $id = trim((string)($_GET['id'] ?? $_POST['id'] ?? ''));
+        $status = trim((string)($_GET['status'] ?? $_POST['status'] ?? 'danglive'));
 
         if ($id !== '') {
             require_once __DIR__ . '/../models/PhienLive.php';
             $phienLiveModel = new PhienLive($this->pdo);
+
+            $currentDoc = $phienLiveModel->findById($id);
+            $currentStatus = (string)($currentDoc['trang_thai'] ?? '');
+
+            if ($currentStatus === 'ketthuc' && $status !== 'ketthuc') {
+                set_flash('error', '🚫 Phiên LiveStream này đã KẾT THÚC vĩnh viễn và lưu bản ghi. Không thể khởi động lại!');
+                $redirectUrl = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/index.php?r=admin_lives');
+                redirect($redirectUrl);
+                return;
+            }
+
             $ok = $phienLiveModel->doiTrangThai($id, $status);
-            set_flash($ok ? 'success' : 'error', $ok ? 'Đã cập nhật trạng thái phiên Live!' : 'Không thể cập nhật trạng thái.');
+
+            $msg = 'Đã cập nhật trạng thái phiên Live!';
+            if ($status === 'danglive') $msg = '🔴 Đã phát sóng trực tiếp phiên Live!';
+            elseif ($status === 'tamdung') $msg = '⏸️ Đã tạm dừng phát sóng phiên LiveStream!';
+            elseif ($status === 'ketthuc') $msg = '⏹️ Đã kết thúc vĩnh viễn phiên LiveStream & lưu bản ghi!';
+
+            set_flash($ok ? 'success' : 'error', $ok ? $msg : 'Không thể cập nhật trạng thái.');
         }
 
-        redirect(BASE_URL . '/index.php?r=admin_lives');
+        $redirectUrl = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/index.php?r=admin_lives');
+        redirect($redirectUrl);
     }
 
     public function adminLiveDelete(): void {
@@ -1581,4 +1646,66 @@ class QuanTriController {
 
         redirect(BASE_URL . '/index.php?r=admin_lives');
     }
+
+    public function adminLiveUpdateRecording(): void {
+        $user = $this->requireRole(['admin', 'nhanvien']);
+        if (!user_can_access_route('admin_lives')) {
+            $this->denyAccess();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = trim((string)($_POST['live_id'] ?? ''));
+            $urlBanGhi = trim((string)($_POST['url_ban_ghi'] ?? ''));
+            $tomTat = trim((string)($_POST['tom_tat_phien_live'] ?? ''));
+
+            if ($id !== '') {
+                require_once __DIR__ . '/../models/PhienLive.php';
+                $phienLiveModel = new PhienLive($this->pdo);
+                $ok = $phienLiveModel->capNhatPhienLive($id, [
+                    'url_ban_ghi' => $urlBanGhi,
+                    'tom_tat_phien_live' => $tomTat
+                ]);
+                set_flash($ok ? 'success' : 'error', $ok ? '🎬 Đã cập nhật link video bản ghi & kịch bản AI thành công!' : 'Không thể cập nhật bản ghi.');
+            }
+        }
+
+        $redirectUrl = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/index.php?r=admin_lives');
+        redirect($redirectUrl);
+    }
+
+    // --- Backward compatibility aliases ---
+    public function dashboard(): void { $this->adminDashboard(); }
+    public function danhSachSanPham(): void { $this->adminProducts(); }
+    public function themSanPham(): void { $this->adminProductCreate(); }
+    public function suaSanPham(): void { $this->adminProductEdit(); }
+    public function xoaSanPham(): void { $this->adminProductDelete(); }
+    public function danhSachDonHang(): void { $this->adminOrders(); }
+    public function capNhatTrangThaiDonHang(): void { $this->adminOrderStatus(); }
+    public function inDonHang(): void { $this->adminOrderPrint(); }
+    public function danhSachVoucher(): void { $this->adminVouchers(); }
+    public function themVoucher(): void { $this->adminVoucherSave(); }
+    public function suaVoucher(): void { $this->adminVouchers(); }
+    public function xoaVoucher(): void { $this->adminVoucherDelete(); }
+    public function danhSachDanhMuc(): void { $this->adminCategories(); }
+    public function themDanhMuc(): void { $this->adminCategorySave(); }
+    public function suaDanhMuc(): void { $this->adminCategories(); }
+    public function xoaDanhMuc(): void { $this->adminCategoryDelete(); }
+    public function danhSachNguoiDung(): void { $this->adminUsers(); }
+    public function themNguoiDung(): void { $this->adminCustomerSave(); }
+    public function suaNguoiDung(): void { $this->adminUsers(); }
+    public function xoaNguoiDung(): void { $this->adminCustomerDelete(); }
+    public function danhSachDanhGia(): void { $this->adminReviews(); }
+    public function duyetDanhGia(): void { $this->adminReviewApprove(); }
+    public function anDanhGia(): void { $this->adminReviewHide(); }
+    public function xoaDanhGia(): void { $this->adminReviewDelete(); }
+    public function traLoiDanhGia(): void { $this->adminReviewReply(); }
+    public function baoCaoDoanhThu(): void { $this->adminReports(); }
+    public function staffDanhSachDonHang(): void { $this->staffOrders(); }
+    public function staffCapNhatTrangThaiDonHang(): void { $this->staffOrderStatus(); }
+    public function staffDanhSachSanPham(): void { $this->staffProducts(); }
+    public function staffThemSanPham(): void { $this->staffProductCreate(); }
+    public function staffSuaSanPham(): void { $this->staffProductEdit(); }
+    public function staffXoaSanPham(): void { $this->staffProductDelete(); }
+    public function staffDanhSachDanhGia(): void { $this->staffReviews(); }
+    public function staffTraLoiDanhGia(): void { $this->staffReviewReply(); }
 }

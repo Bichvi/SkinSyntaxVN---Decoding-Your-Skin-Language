@@ -9,8 +9,19 @@ class QuanTri {
     private const VIP_THRESHOLD = 500;
     private const DIAMOND_THRESHOLD = 1500;
 
-    public function __construct($db) {
-        $this->db = $db;
+    public function __construct($db = null) {
+        if ($db === null) {
+            global $db;
+            $this->db = $db;
+        } else if (is_object($db) && method_exists($db, 'raw')) {
+            $this->db = $db->raw();
+        } else {
+            $this->db = $db;
+        }
+        if (!is_object($this->db)) {
+            global $db;
+            $this->db = $db ?? $GLOBALS['db'] ?? null;
+        }
     }
 
     public function getLastErrorMessage(): ?string {

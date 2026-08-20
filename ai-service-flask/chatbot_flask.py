@@ -79,18 +79,22 @@ _hybrid_pipeline = None
 def get_vectorstore():
     global _vectorstore
     if _vectorstore is None:
-        emb = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/static-similarity-mrl-multilingual-v1",
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={"normalize_embeddings": True},
-        )
-        _vectorstore = Chroma(
-            collection_name="products",
-            persist_directory=CHROMA_DB_PATH,
-            embedding_function=emb,
-        )
-        print(f"[OK] ChromaDB loaded — {_vectorstore._collection.count():,} docs")
-    return _vectorstore
+        try:
+            emb = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/static-similarity-mrl-multilingual-v1",
+                model_kwargs={"device": "cpu"},
+                encode_kwargs={"normalize_embeddings": True},
+            )
+            _vectorstore = Chroma(
+                collection_name="products",
+                persist_directory=CHROMA_DB_PATH,
+                embedding_function=emb,
+            )
+            print(f"[OK] ChromaDB loaded — {_vectorstore._collection.count():,} docs")
+        except Exception as e:
+            print(f"[WARN] Vectorstore initialization failed (e.g. disk space / cache): {e}")
+            _vectorstore = False
+    return _vectorstore if _vectorstore is not False else None
 
 
 def get_hybrid_pipeline():
@@ -122,7 +126,17 @@ def _query_web(query: str, max_results: int = 2, topic: str = "general") -> dict
     if not tavily_key:
         return {}
     try:
-        from langchain_tavily import TavilySearch
+        try:
+            from langchain_tavily import TavilySearch
+        except Exception:
+            try:
+                from langchain_community.tools.tavily_search import TavilySearchResults as TavilySearch
+            except Exception:
+                TavilySearch = None
+
+        if TavilySearch is None:
+            return {}
+
         tool = TavilySearch(max_results=max_results, topic=topic)
         return tool.invoke({"query": query})
     except Exception as e:
@@ -220,11 +234,17 @@ def get_llms():
         except Exception as e:
             print(f"[WARN] Gemini key {idx+1} init failed: {e}")
 
-    from langchain_openai import ChatOpenAI
+    try:
+        from langchain_openai import ChatOpenAI
+    except Exception:
+        try:
+            from langchain_community.chat_models import ChatOpenAI
+        except Exception:
+            ChatOpenAI = None
 
     # 2. Groq — llama-3.3-70b-versatile (Ưu tiên 70B cho tiếng Việt xuất sắc và khả năng suy luận/phân loại intent)
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
-    if groq_key:
+    if ChatOpenAI is not None and groq_key:
         for model in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama3-8b-8192"]:
             try:
                 groq = ChatOpenAI(
@@ -248,7 +268,7 @@ def get_llms():
     # 3. Zhipu glm-4-flash (FREE, phản hồi siêu tốc ~1.5 - 3 giây, giới hạn cực cao)
     # Đưa lên trước OpenRouter để tránh nghẽn/timeout
     zhipu_key = os.getenv("ZHIPU_API_KEY", "").strip()
-    if zhipu_key:
+    if ChatOpenAI is not None and zhipu_key:
         try:
             zhipu = ChatOpenAI(
                 openai_api_key=zhipu_key,
@@ -269,7 +289,7 @@ def get_llms():
 
     # 4. OpenRouter — nhiều model free (tốc độ chậm và hay nghẽn hàng đợi, làm fallback cuối cùng)
     or_key = os.getenv("OPENROUTER_API_KEY", "").strip()
-    if or_key:
+    if ChatOpenAI is not None and or_key:
         for or_model in [
             "meta-llama/llama-3.1-8b-instruct",       # bỏ ":free"
             "mistralai/mistral-7b-instruct",
@@ -2061,6 +2081,7 @@ def health():
 
 
 @app.post("/api/chat")
+@app.post("/api/chat/auto")
 def chat():
     data = request.get_json(force=True) or {}
     message_raw = str(data.get("message", "")).strip()
@@ -2096,6 +2117,122 @@ def chat():
         }), 500
 
 
+def fetch_user_profile_from_mongo(email: str = "", user_id=None) -> dict:
+    profile = {}
+    try:
+        from pymongo import MongoClient
+        db_name = os.getenv("MONGO_DB_NAME", "skinsyntax")
+        mongo_uri = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017")
+        db = MongoClient(mongo_uri)[db_name]
+        
+        user_query = {}
+        if email:
+            user_query = {"email": email}
+        elif user_id:
+            try:
+                user_query = {"$or": [{"ma_kh": int(user_id)}, {"ma_kh": str(user_id)}]}
+            except Exception:
+                user_query = {"ma_kh": str(user_id)}
+                
+        if user_query:
+            kh = db.khach_hang.find_one(user_query) or db.tai_khoan.find_one(user_query) or {}
+            if kh:
+                profile["display_name"] = kh.get("ho_ten") or kh.get("ten") or "bạn"
+                profile["skin_type"] = kh.get("loai_da") or ""
+                profile["concerns"] = kh.get("van_de_da") or []
+                profile["avoid_ingredients"] = kh.get("thanh_phan_tranh") or []
+                profile["budget"] = kh.get("ngan_sach")
+                
+                sp = db.skin_profile.find_one({"email": email or kh.get("email")})
+                if sp and sp.get("loai_da"):
+                    profile["skin_type"] = sp.get("loai_da")
+                    if sp.get("tinh_trang_da"):
+                        profile["concerns"] = sp.get("tinh_trang_da")
+    except Exception as e:
+        print(f"[WARN] fetch_user_profile_from_mongo error: {e}")
+        
+    return profile
+
+
+@app.post("/api/recommend/profile")
+@app.post("/api/recommend/llamaindex")
+@app.post("/api/recommend/langchain-rag")
+def recommendation_profile():
+    data = request.get_json(force=True, silent=True) or {}
+    email = str(data.get("email") or "").strip()
+    user_id = data.get("user_id") or data.get("session_user_id")
+    profile = data.get("user_profile") or data.get("recommendation_profile") or {}
+    
+    if not profile and (email or user_id):
+        profile = fetch_user_profile_from_mongo(email=email, user_id=user_id)
+        
+    skin_type = str(profile.get("skin_type") or "da hỗn hợp").strip()
+    concerns = profile.get("concerns") or []
+    if isinstance(concerns, list):
+        concerns_str = ", ".join([str(c).strip() for c in concerns if str(c).strip()])
+    else:
+        concerns_str = str(concerns).strip()
+        
+    avoid = profile.get("avoid_ingredients") or []
+    if isinstance(avoid, list):
+        avoid_str = ", ".join([str(a).strip() for a in avoid if str(a).strip()])
+    else:
+        avoid_str = str(avoid).strip()
+        
+    budget = profile.get("budget")
+    
+    query_parts = [f"Gợi ý chu trình chăm sóc da hoàn chỉnh cho {skin_type}"]
+    if concerns_str:
+        query_parts.append(f"giúp cải thiện {concerns_str}")
+    if avoid_str and avoid_str.lower() not in ["không có", "khong co", "none", "không có / không quan tâm"]:
+        query_parts.append(f"không chứa {avoid_str}")
+    if budget:
+        try:
+            b_val = int(float(str(budget).replace(".", "").replace(",", "")))
+            if b_val > 0:
+                query_parts.append(f"ngân sách khoảng {b_val:,} VNĐ")
+        except Exception:
+            pass
+            
+    query_text = ". ".join(query_parts) + "."
+    
+    msg_data = {
+        "loai_da": skin_type,
+        "tinh_trang_da": concerns_str,
+        "thanh_phan_can_tranh": avoid_str,
+        "customer_question": query_text,
+        "is_routine": True,
+        "user_profile": profile,
+    }
+    
+    try:
+        res = xu_ly_cau_hoi(query_text, msg_data)
+        answer_text = res.get("answer") or ""
+        products = res.get("products") or []
+        
+        for idx, p in enumerate(products):
+            if not isinstance(p, dict):
+                continue
+            if "match_percent" not in p:
+                p["match_percent"] = max(72, 98 - (idx * 3))
+            if "match_label" not in p:
+                p["match_label"] = f"PHÙ HỢP {skin_type.upper()}"
+                
+        return jsonify({
+            "ok": True,
+            "source": "langchain_rag",
+            "answer_text": answer_text,
+            "products": products,
+        })
+    except Exception as e:
+        print(f"[ERROR] /api/recommend/profile error: {e}")
+        return jsonify({
+            "ok": False,
+            "message": "AI RAG Service gặp lỗi trong quá trình tạo gợi ý cá nhân hóa.",
+            "detail": str(e),
+        }), 500
+
+
 @app.errorhandler(404)
 def not_found(_):
     return jsonify({"ok": False, "message": "Route not found"}), 404
@@ -2123,3 +2260,4 @@ if __name__ == "__main__":
     print(f"[INFO]  Health check: http://127.0.0.1:{FLASK_PORT}/health")
     print(f"[INFO]  Detailed health: http://127.0.0.1:{FLASK_PORT}/api/health")
     app.run(host="0.0.0.0", port=FLASK_PORT, debug=False, use_reloader=False)
+

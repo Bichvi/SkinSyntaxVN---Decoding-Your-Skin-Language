@@ -89,7 +89,7 @@ Calculation:
 ┌─────────────────────────────────────────┐
 │ Total Ingredients: 9                    │
 ├─────────────────────────────────────────┤
-│ ✓ Good (không trong danh sách tránh):  │
+│  Good (không trong danh sách tránh):  │
 │   1. Water                              │
 │   2. Glycerin                           │
 │   3. Cetyldimethicone                   │
@@ -108,7 +108,7 @@ Calculation:
 Description:
 "Sản phẩm này phù hợp 78% với da mụn của bạn. 
 ⚠️ Chứa 2 thành phần nên tránh. 
-✓ Chứa 7 thành phần tốt."
+ Chứa 7 thành phần tốt."
 */
 
 -- =========================================

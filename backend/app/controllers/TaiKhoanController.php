@@ -34,9 +34,10 @@ class TaiKhoanController {
     private function render(string $view, array $data = []): void {
         extract($data);
         $menuCats = $this->sanPhamModel->menuTree();
-        require __DIR__ . '/../views/layouts/header.php';
-        require __DIR__ . '/../views/' . $view . '.php';
-        require __DIR__ . '/../views/layouts/footer.php';
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/layouts/header.php';
+        require $viewDir . '/' . $view . '.php';
+        require $viewDir . '/layouts/footer.php';
     }
 
     private function json(array $payload, int $status = 200): void {
