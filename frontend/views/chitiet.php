@@ -1,7 +1,7 @@
 <?php
 $p = $p ?? [];
 $imgs = split_image_urls($p['link_hinh_anh'] ?? '', 10);
-$main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
+$main = $imgs[0] ?? default_placeholder_image();
 $reviews = $reviews ?? [];
 $reviewPermission = isset($reviewPermission) && is_array($reviewPermission) ? $reviewPermission : ['has_purchased' => false, 'has_reviewed' => false];
 $activeTab = trim((string)($activeTab ?? ''));
@@ -540,7 +540,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
              class="detail-main-img w-100 h-auto"
              src="<?= h($main) ?>"
              referrerpolicy="no-referrer"
-             onerror="this.src='https://via.placeholder.com/600x600?text=No+Image';"
+             onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
              alt="<?= h($p['ten_san_pham'] ?? '') ?>"
              style="border-radius: 8px; aspect-ratio: 1/1; object-fit: cover;">
       </div>
@@ -554,7 +554,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                     style="width: 64px; height: 64px; flex-shrink: 0; background: #FFF; border-color: var(--border); border-radius: 6px;">
               <img src="<?= h($url) ?>"
                    referrerpolicy="no-referrer"
-                   onerror="this.src='https://via.placeholder.com/80x80?text=No';"
+                   onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
                    alt="thumb"
                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
             </button>

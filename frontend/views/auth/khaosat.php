@@ -60,6 +60,15 @@
     line-height: 1;
   }
 
+  @media (max-width: 575.98px) {
+    .survey-title {
+      font-size: 24px !important;
+    }
+    .survey-head, .survey-body {
+      padding: 16px !important;
+    }
+  }
+
   .survey-subtitle {
     margin: 0;
     color: #5b6f83;

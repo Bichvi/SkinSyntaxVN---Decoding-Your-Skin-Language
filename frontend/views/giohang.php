@@ -86,7 +86,7 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
                              alt="<?= h($product['ten_san_pham'] ?? 'Sản phẩm') ?>"
                              loading="lazy"
                              referrerpolicy="no-referrer"
-                             onerror="this.onerror=null;this.src='https://via.placeholder.com/92x92?text=No+Image';">
+                             onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';">
                       <?php else: ?>
                         <div class="cart-thumb cart-thumb--empty">No image</div>
                       <?php endif; ?>

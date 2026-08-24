@@ -38,13 +38,15 @@ $socialLinks = [
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SkinSyntax</title>
+  <link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>/assets/images/favicon.svg">
+  <link rel="alternate icon" href="<?= BASE_URL ?>/favicon.ico">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" crossorigin="anonymous">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/fontawesome.min.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
 </head>
 <body class="site-body">
@@ -97,14 +99,16 @@ $socialLinks = [
         <input type="hidden" name="r" value="tatca">
         <div class="live-search-box header-search__box">
           <i class="fas fa-magnifying-glass header-search__icon"></i>
-          <input class="form-control" name="q" id="search-input" placeholder="Tìm sản phẩm, thương hiệu, vấn đề da..." value="<?= h($_GET['q'] ?? '') ?>" aria-label="Tìm kiếm sản phẩm" aria-autocomplete="list" aria-expanded="false" aria-controls="smartSearchDropdown">
+          <label for="search-input" class="visually-hidden">Tìm kiếm sản phẩm</label>
+          <input class="form-control" name="q" id="search-input" placeholder="Tìm sản phẩm, thương hiệu, vấn đề da..." value="<?= h($_GET['q'] ?? '') ?>" autocomplete="off" aria-label="Tìm kiếm sản phẩm" aria-autocomplete="list" aria-expanded="false" aria-controls="smartSearchDropdown">
+          <button class="header-search__icon-btn" type="submit" aria-label="Tìm kiếm"><i class="fas fa-magnifying-glass"></i></button>
           <div class="smart-search-dropdown" id="smartSearchDropdown" role="listbox" aria-label="Gợi ý sản phẩm" hidden></div>
-          </div>
+        </div>
         <button class="btn btn-brand header-search__submit" type="submit">Tìm kiếm</button>
       </form>
 
       <div class="header-actions">
-        <a href="<?= BASE_URL ?>/index.php?r=goiy" class="header-action-card">
+        <a href="<?= BASE_URL ?>/index.php?r=goiy" class="header-action-card" title="Routine AI">
           <i class="fas fa-wand-magic-sparkles"></i>
           <span>
             <strong>Routine AI</strong>
@@ -129,6 +133,10 @@ $socialLinks = [
           <span>Giỏ hàng</span>
           <em class="header-cart-badge" id="headerCartCount" style="<?= $cartCount > 0 ? '' : 'display: none !important;' ?>"><?= $cartCount ?></em>
         </a>
+
+        <button class="mobile-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNavOffcanvas" aria-controls="mobileNavOffcanvas" aria-label="Mở menu hệ thống">
+          <i class="fas fa-bars"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -198,7 +206,115 @@ $socialLinks = [
         <span>Khảo sát da để mở routine cá nhân</span>
       </a>
     </div>
+  </div>
 </header>
+
+<!-- Mobile Navigation Offcanvas Drawer -->
+<div class="offcanvas offcanvas-end mobile-nav-offcanvas" tabindex="-1" id="mobileNavOffcanvas" aria-labelledby="mobileNavOffcanvasLabel">
+  <div class="offcanvas-header border-bottom">
+    <a class="brand-lockup me-auto text-decoration-none" href="<?= BASE_URL ?>/index.php">
+      <span class="brand-lockup__mark">S</span>
+      <span class="brand-lockup__copy">
+        <strong>SkinSyntax</strong>
+        <small>Decoding Your Skin Language</small>
+      </span>
+    </a>
+    <button type="button" class="btn-close text-reset ms-2" data-bs-dismiss="offcanvas" aria-label="Đóng"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+    <!-- User Quick Access Card -->
+    <div class="mobile-nav-user-card p-3 border-bottom bg-light">
+      <?php if (is_logged_in()): ?>
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+          <span class="fw-bold text-dark"><i class="fas fa-user-circle me-1 text-success"></i> Xin chào, <?= h($currentUser['ho_ten'] ?? 'User') ?></span>
+          <a href="<?= BASE_URL ?>/index.php?r=dangxuat" class="btn btn-sm btn-outline-danger py-1 px-2 text-decoration-none">Đăng xuất</a>
+        </div>
+        <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="btn btn-sm btn-brand w-100 py-1.5 text-decoration-none">Vào trang quản lý / Hồ sơ</a>
+      <?php else: ?>
+        <div class="d-grid gap-2 grid-2-cols" style="grid-template-columns: 1fr 1fr;">
+          <a href="#" class="btn btn-brand btn-sm py-2 text-decoration-none" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login" data-bs-dismiss="offcanvas">Đăng nhập</a>
+          <a href="#" class="btn btn-outline-success btn-sm py-2 text-decoration-none" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register" data-bs-dismiss="offcanvas">Đăng ký</a>
+        </div>
+      <?php endif; ?>
+    </div>
+
+    <!-- Routine AI Highlight Card -->
+    <div class="p-3 border-bottom" style="background: linear-gradient(135deg, #EBF2EE 0%, #F4FAF6 100%);">
+      <a href="<?= BASE_URL ?>/index.php?r=goiy" class="d-flex align-items-center justify-content-between text-decoration-none text-dark">
+        <div class="d-flex align-items-center gap-2">
+          <span class="rounded-circle bg-success text-white d-grid place-items-center" style="width: 36px; height: 36px; display: grid;"><i class="fas fa-wand-magic-sparkles"></i></span>
+          <div>
+            <strong class="d-block text-success" style="font-size: 0.95rem;">Routine AI & Khảo sát da</strong>
+            <small class="text-muted">Nhận phác đồ skincare cá nhân</small>
+          </div>
+        </div>
+        <i class="fas fa-chevron-right text-muted"></i>
+      </a>
+    </div>
+
+    <!-- Category Collapsible Navigation -->
+    <div class="p-3 border-bottom">
+      <h6 class="text-uppercase text-muted fw-bold small mb-2" style="letter-spacing: 0.05em;">Danh mục sản phẩm</h6>
+      <div class="accordion accordion-flush" id="mobileCatAccordion">
+        <?php $catIndex = 0; foreach ($menuCats as $c1 => $c2s): $catIndex++; $accordionId = "mobileCat-" . $catIndex; ?>
+          <div class="accordion-item border-0">
+            <h2 class="accordion-header" id="heading-<?= $accordionId ?>">
+              <?php if (!empty($c2s)): ?>
+                <button class="accordion-button collapsed py-2 px-0 fw-semibold text-dark bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?= $accordionId ?>" aria-expanded="false" aria-controls="collapse-<?= $accordionId ?>">
+                  <?= h($c1) ?>
+                </button>
+              <?php else: ?>
+                <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($c1) ?>" class="d-block py-2 text-decoration-none fw-semibold text-dark">
+                  <?= h($c1) ?>
+                </a>
+              <?php endif; ?>
+            </h2>
+            <?php if (!empty($c2s)): ?>
+              <div id="collapse-<?= $accordionId ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?= $accordionId ?>" data-bs-parent="#mobileCatAccordion">
+                <div class="accordion-body py-1 px-2 border-start ms-2 mb-2">
+                  <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($c1) ?>" class="d-block py-1 text-success fw-bold small text-decoration-none">
+                    Xem tất cả <?= h($c1) ?>
+                  </a>
+                  <?php foreach ($c2s as $c2 => $cnt): ?>
+                    <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($c1) ?>&cap2=<?= urlencode($c2) ?>" class="d-block py-1 text-muted small text-decoration-none">
+                      <?= h($c2) ?> <span class="text-secondary">(<?= (int)$cnt ?>)</span>
+                    </a>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Links -->
+    <div class="p-3 border-bottom">
+      <h6 class="text-uppercase text-muted fw-bold small mb-2" style="letter-spacing: 0.05em;">Liên kết hệ thống</h6>
+      <ul class="list-unstyled mb-0 d-grid gap-2.5">
+        <li><a href="<?= BASE_URL ?>/index.php?r=home" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-house text-success"></i> Trang chủ</a></li>
+        <li><a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-layer-group text-success"></i> Tất cả sản phẩm</a></li>
+        <li><a href="<?= BASE_URL ?>/index.php?r=live" class="text-decoration-none text-danger fw-bold d-flex align-items-center gap-2"><i class="fa-solid fa-video"></i> LiveStream AI</a></li>
+        <li><a href="<?= BASE_URL ?>/index.php?r=giohang" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-bag-shopping text-success"></i> Giỏ hàng (<?= $cartCount ?>)</a></li>
+        <li><a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang" class="text-decoration-none text-muted small d-flex align-items-center gap-2"><i class="fas fa-store"></i> Hệ thống cửa hàng</a></li>
+        <li><a href="<?= BASE_URL ?>/index.php?r=bao_hanh" class="text-decoration-none text-muted small d-flex align-items-center gap-2"><i class="fas fa-shield-check"></i> Chính sách bảo hành</a></li>
+        <li><a href="<?= BASE_URL ?>/index.php?r=ho_tro_khach_hang" class="text-decoration-none text-muted small d-flex align-items-center gap-2"><i class="fas fa-headset"></i> Hỗ trợ khách hàng</a></li>
+      </ul>
+    </div>
+
+    <!-- Footer / Social in Offcanvas -->
+    <div class="p-3 bg-light">
+      <div class="text-muted small mb-2"><i class="fas fa-phone me-1 text-success"></i> Hotline: <strong>1900 0000</strong></div>
+      <div class="d-flex gap-3 align-items-center">
+        <?php foreach ($socialLinks as $social): ?>
+          <a class="text-muted fs-5" href="<?= h($social['url']) ?>" aria-label="<?= h($social['label']) ?>" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands <?= h($social['icon']) ?>"></i>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 (function() {
@@ -326,17 +442,17 @@ $socialLinks = [
 
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangnhap">
                     <div class="mb-3">
-                      <label class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP EMAIL</label>
+                      <label for="authLoginEmail" class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP EMAIL</label>
                       <div class="position-relative">
-                        <input class="form-control" type="email" name="email" placeholder="Nhập email" style="border-radius: 999px; padding: 12px 18px 12px 44px; background: #F8FAF8; border-color: #E2EADF;" required>
+                        <input class="form-control" type="email" id="authLoginEmail" name="email" placeholder="Nhập email" autocomplete="email" style="border-radius: 999px; padding: 12px 18px 12px 44px; background: #F8FAF8; border-color: #E2EADF;" required>
                         <i class="fa-regular fa-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                       </div>
                     </div>
 
                     <div class="mb-3">
-                      <label class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP PASSWORD</label>
+                      <label for="authLoginPassword" class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP PASSWORD</label>
                       <div class="position-relative">
-                        <input class="form-control" type="password" id="authLoginPassword" name="mat_khau" placeholder="Nhập password" style="border-radius: 999px; padding: 12px 44px; background: #F8FAF8; border-color: #E2EADF;" required>
+                        <input class="form-control" type="password" id="authLoginPassword" name="mat_khau" placeholder="Nhập password" autocomplete="current-password" style="border-radius: 999px; padding: 12px 44px; background: #F8FAF8; border-color: #E2EADF;" required>
                         <i class="fa-solid fa-lock position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                         <button class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 text-muted p-0 border-0" type="button" data-password-toggle data-target="authLoginPassword" aria-label="Hiện hoặc ẩn mật khẩu">
                           <i class="fa-regular fa-eye"></i>
@@ -369,12 +485,14 @@ $socialLinks = [
 
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="authRegisterForm" novalidate>
                     <div class="mb-2">
-                      <input class="form-control" type="email" name="email" value="<?= h((string)($signupOld['email'] ?? '')) ?>" placeholder="Nhập email" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+                      <label for="authRegisterEmail" class="visually-hidden">Nhập email</label>
+                      <input class="form-control" type="email" id="authRegisterEmail" name="email" value="<?= h((string)($signupOld['email'] ?? '')) ?>" placeholder="Nhập email" autocomplete="email" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                     </div>
 
                     <div class="alert alert-danger auth-modal-alert d-none mb-2" id="authRegisterFeedback" role="alert"></div>
 
                     <div class="d-flex gap-2 mb-2">
+                      <label for="authRegisterCaptchaInput" class="visually-hidden">Nhập captcha</label>
                       <input class="form-control" type="text" id="authRegisterCaptchaInput" name="captcha" placeholder="Nhập captcha" autocomplete="off" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                       <div class="d-flex align-items-center justify-content-center text-white fw-bold px-3" id="authRegisterCaptchaCode" data-captcha="<?= h(strtolower($signupCaptchaSeed)) ?>" style="background: #215427; border-radius: 999px; font-family: monospace; letter-spacing: 2px; min-width: 90px;"><?= h(strtolower($signupCaptchaSeed)) ?></div>
                       <button class="btn btn-outline-secondary px-3" id="authRegisterCaptchaRefresh" type="button" aria-label="Làm mới captcha" style="border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; border-color: #E2EADF;">
@@ -383,6 +501,7 @@ $socialLinks = [
                     </div>
 
                     <div class="d-flex gap-2 mb-2">
+                      <label for="authRegisterOtpInput" class="visually-hidden">Nhập mã xác thực 6 số</label>
                       <input class="form-control" type="text" id="authRegisterOtpInput" name="otp" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                       <button class="btn fw-bold text-white px-4" id="authRegisterOtpButton" type="button" style="background: #215427; border-radius: 999px; white-space: nowrap;">Lấy mã</button>
                     </div>
@@ -390,15 +509,18 @@ $socialLinks = [
 
                     <div class="row g-2 mb-2">
                       <div class="col-6">
+                        <label for="authRegisterPassword" class="visually-hidden">Mật khẩu</label>
                         <input class="form-control" type="password" id="authRegisterPassword" name="mat_khau" placeholder="Mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" autocomplete="new-password" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                       </div>
                       <div class="col-6">
+                        <label for="authRegisterPasswordConfirm" class="visually-hidden">Nhập lại mật khẩu</label>
                         <input class="form-control" type="password" id="authRegisterPasswordConfirm" name="mat_khau2" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" autocomplete="new-password" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                       </div>
                     </div>
 
                     <div class="mb-2">
-                      <input class="form-control" type="text" name="ho_ten" value="<?= h((string)($signupOld['ho_ten'] ?? '')) ?>" placeholder="Họ tên" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+                      <label for="authRegisterFullName" class="visually-hidden">Họ tên</label>
+                      <input class="form-control" type="text" id="authRegisterFullName" name="ho_ten" value="<?= h((string)($signupOld['ho_ten'] ?? '')) ?>" placeholder="Họ tên" autocomplete="name" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                     </div>
 
                     <div class="d-flex align-items-center gap-3 mb-2 small" style="color: #5C705E;">
@@ -475,8 +597,8 @@ $socialLinks = [
                   
                   <form method="post" action="<?= BASE_URL ?>/index.php?r=gui_lien_ket_dat_lai">
                     <div class="mb-3">
-                      <label class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP EMAIL</label>
-                      <input class="form-control" type="email" name="email" placeholder="Nhập email của bạn" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+                      <label for="authForgotEmail" class="form-label text-uppercase fw-bold small mb-1" style="color: #1A2F1A; font-size: 0.76rem; letter-spacing: 0.05em;">NHẬP EMAIL</label>
+                      <input class="form-control" type="email" id="authForgotEmail" name="email" placeholder="Nhập email của bạn" autocomplete="email" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                     </div>
                     <button class="btn w-100 py-3 fw-bold" type="submit" style="background: #215427; color: #fff; border-radius: 999px; font-size: 1rem; border: none;">Gửi liên kết đặt lại</button>
                   </form>

@@ -1,7 +1,7 @@
 <?php
 $p = $p ?? [];
 $imgs = split_image_urls($p['link_hinh_anh'] ?? '', 10);
-$main = $imgs[0] ?? 'https://via.placeholder.com/600x600?text=No+Image';
+$main = $imgs[0] ?? default_placeholder_image();
 $reviews = $reviews ?? [];
 $reviewPermission = isset($reviewPermission) && is_array($reviewPermission) ? $reviewPermission : ['has_purchased' => false, 'has_reviewed' => false];
 $activeTab = trim((string)($activeTab ?? ''));
@@ -516,7 +516,7 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
              class="detail-main-img"
              src="<?= h($main) ?>"
              referrerpolicy="no-referrer"
-             onerror="this.src='https://via.placeholder.com/600x600?text=No+Image';"
+             onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
              alt="<?= h($p['ten_san_pham'] ?? '') ?>">
       </div>
 
@@ -528,7 +528,7 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
                     data-src="<?= h($url) ?>">
               <img src="<?= h($url) ?>"
                    referrerpolicy="no-referrer"
-                   onerror="this.src='https://via.placeholder.com/80x80?text=No';"
+                   onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
                    alt="thumb">
             </button>
           <?php endforeach; ?>

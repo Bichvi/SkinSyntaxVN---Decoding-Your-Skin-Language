@@ -6,6 +6,7 @@ $page = $page ?? 1;
 $q = $q ?? '';
 $cap1 = $cap1 ?? '';
 $cap2 = $cap2 ?? '';
+$sort = $sort ?? ($_GET['sort'] ?? 'default');
 $items = $items ?? [];
 $pageTitle = trim((string)($pageTitle ?? 'Tất cả sản phẩm'));
 $dbUnavailableMessage = trim((string)($dbUnavailableMessage ?? ''));
@@ -14,6 +15,9 @@ $listType = trim((string)($listType ?? ''));
 $paginationBase = BASE_URL . '/index.php?r=' . rawurlencode($listRoute);
 if ($listType !== '') {
   $paginationBase .= '&type=' . urlencode($listType);
+}
+if (!empty($sort) && $sort !== 'default') {
+  $paginationBase .= '&sort=' . urlencode($sort);
 }
 
 $totalPages = max(1, (int)ceil($total / $perPage));
@@ -41,22 +45,39 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       </a>
     </div>
 
-    <form class="row g-2 pt-3 border-top" method="get" action="<?= BASE_URL ?>/index.php">
-      <input type="hidden" name="r" value="tatca">
+    <form class="row g-2 pt-3 border-top align-items-end" method="get" action="<?= BASE_URL ?>/index.php">
+      <input type="hidden" name="r" value="<?= h($listRoute) ?>">
+      <?php if ($listType): ?><input type="hidden" name="type" value="<?= h($listType) ?>"><?php endif; ?>
       <?php if ($cap1): ?><input type="hidden" name="cap1" value="<?= h($cap1) ?>"><?php endif; ?>
       <?php if ($cap2): ?><input type="hidden" name="cap2" value="<?= h($cap2) ?>"><?php endif; ?>
 
-      <div class="col-12 col-md-8">
+      <div class="col-12 col-md-5">
+        <label for="catalogSearchInput" class="form-label small fw-semibold text-muted mb-1">Từ khóa tìm kiếm</label>
         <div class="position-relative">
-          <input class="form-control" name="q" placeholder="Tìm tên sản phẩm, thương hiệu (La Roche-Posay, Paula's Choice...)" value="<?= h($q) ?>" style="border-radius: 6px; padding: 10px 16px 10px 38px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;">
+          <input class="form-control" id="catalogSearchInput" name="q" autocomplete="off" placeholder="Tìm tên sản phẩm, thương hiệu (La Roche-Posay, Paula's Choice...)" value="<?= h($q) ?>" style="border-radius: 6px; padding: 10px 16px 10px 38px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;">
           <i class="fas fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="font-size: 0.85rem;"></i>
         </div>
       </div>
+
+      <div class="col-12 col-md-3">
+        <label for="catalogSortSelect" class="form-label small fw-semibold text-dark mb-1"><i class="fas fa-arrow-down-wide-short me-1 text-success"></i>Sắp xếp</label>
+        <select id="catalogSortSelect" class="form-select" name="sort" onchange="this.form.submit()" style="border-radius: 6px; padding: 10px 16px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem; cursor: pointer; color: #0F172A; font-weight: 500;">
+          <option value="default" <?= in_array($sort, ['default', 'mac_dinh', '']) ? 'selected' : '' ?>>Mặc định</option>
+          <option value="price_asc" <?= in_array($sort, ['price_asc', 'gia_asc', 'gia_tang']) ? 'selected' : '' ?>>Giá tăng dần</option>
+          <option value="price_desc" <?= in_array($sort, ['price_desc', 'gia_desc', 'gia_giam']) ? 'selected' : '' ?>>Giá giảm dần</option>
+          <option value="best_seller" <?= in_array($sort, ['best_seller', 'ban_chay']) ? 'selected' : '' ?>>Bán chạy</option>
+          <option value="top_rated" <?= in_array($sort, ['top_rated', 'high_rating', 'danh_gia_cao']) ? 'selected' : '' ?>>Đánh giá cao</option>
+          <option value="discount" <?= in_array($sort, ['discount', 'discount_desc', 'giam_gia']) ? 'selected' : '' ?>>Giảm giá nhiều</option>
+          <option value="newest" <?= in_array($sort, ['newest', 'moi_nhat']) ? 'selected' : '' ?>>Mới nhất</option>
+          <option value="most_viewed" <?= in_array($sort, ['most_viewed', 'views_desc', 'nhieu_luot_xem']) ? 'selected' : '' ?>>Nhiều lượt xem</option>
+        </select>
+      </div>
+
       <div class="col-6 col-md-2 d-grid">
-        <button class="btn text-white fw-semibold" type="submit" style="background: #183B2B; border-radius: 6px; font-size: 0.88rem;">Lọc sản phẩm</button>
+        <button class="btn text-white fw-semibold" type="submit" style="background: #183B2B; border-radius: 6px; font-size: 0.88rem;"><i class="fas fa-filter me-1"></i> Lọc sản phẩm</button>
       </div>
       <div class="col-6 col-md-2 d-grid">
-        <a class="btn btn-outline-secondary fw-semibold" href="<?= BASE_URL ?>/index.php?r=tatca" style="border-radius: 6px; font-size: 0.88rem;">Xóa bộ lọc</a>
+        <a class="btn btn-outline-secondary fw-semibold" href="<?= BASE_URL ?>/index.php?r=<?= h($listRoute) ?><?= $listType ? '&type=' . urlencode($listType) : '' ?>" style="border-radius: 6px; font-size: 0.88rem;">Xóa bộ lọc</a>
       </div>
     </form>
   </div>
@@ -91,7 +112,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
               <?php endif; ?>
 
               <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 h-100 overflow-hidden" style="border-radius: 8px;">
-                <img src="<?= h($img ?: 'https://via.placeholder.com/450x450?text=SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/450x450?text=SkinSyntax';" alt="<?= h($p['ten_san_pham'] ?? '') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+                <img src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h($p['ten_san_pham'] ?? '') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
               </a>
             </div>
 

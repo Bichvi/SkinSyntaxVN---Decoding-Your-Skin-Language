@@ -288,7 +288,7 @@ class SanPham {
         return $tree;
     }
 
-    public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false, string $stockStatusFilter = ''): array {
+    public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false, string $stockStatusFilter = '', string $sort = 'default'): array {
         $page = max(1, $page);
         $perPage = max(1, $perPage);
         $skip = ($page - 1) * $perPage;
@@ -336,7 +336,7 @@ class SanPham {
         $total = $this->db->san_pham->countDocuments($filter);
         
         $options = [
-            'sort' => ['ma_san_pham' => -1],
+            'sort' => $this->buildProductSort($sort, ['ma_san_pham' => -1]),
             'skip' => $skip,
             'limit' => $perPage
         ];
@@ -515,18 +515,34 @@ class SanPham {
 
     public function buildProductSort(?string $sort, array $defaultSort): array {
         $sort = trim((string)$sort);
-        if ($sort === '' || $sort === 'default') {
+        if ($sort === '' || $sort === 'default' || $sort === 'mac_dinh') {
             return $defaultSort;
         }
 
         $sortMap = [
             'price_asc' => ['gia_ban' => 1, 'ma_san_pham' => -1],
+            'gia_asc' => ['gia_ban' => 1, 'ma_san_pham' => -1],
+
             'price_desc' => ['gia_ban' => -1, 'ma_san_pham' => -1],
+            'gia_desc' => ['gia_ban' => -1, 'ma_san_pham' => -1],
+
             'best_seller' => ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+            'ban_chay' => ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+
             'top_rated' => ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+            'high_rating' => ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+            'danh_gia_cao' => ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+
             'discount' => ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1],
-            'newest' => ['ngay_tao' => -1, 'ma_san_pham' => -1],
+            'discount_desc' => ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1],
+            'giam_gia' => ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1],
+
+            'newest' => ['ngay_tao' => -1, 'created_at' => -1, 'ma_san_pham' => -1],
+            'moi_nhat' => ['ngay_tao' => -1, 'created_at' => -1, 'ma_san_pham' => -1],
+
             'most_viewed' => ['luot_xem' => -1, 'ma_san_pham' => -1],
+            'views_desc' => ['luot_xem' => -1, 'ma_san_pham' => -1],
+            'nhieu_luot_xem' => ['luot_xem' => -1, 'ma_san_pham' => -1],
         ];
 
         return $sortMap[$sort] ?? $defaultSort;

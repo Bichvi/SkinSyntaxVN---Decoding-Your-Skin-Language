@@ -38,8 +38,8 @@ $messages = $messages ?? [];
 			<form method="post" action="<?= BASE_URL ?>/index.php?r=chat_send" class="p-4 border-top bg-white">
 				<div class="row g-2 align-items-end">
 					<div class="col-md-10">
-						<label class="form-label">Nội dung cần hỗ trợ</label>
-						<textarea class="form-control" name="noi_dung" rows="3" placeholder="Nhập vấn đề bạn đang gặp..." required></textarea>
+						<label for="supportChatContentInput" class="form-label">Nội dung cần hỗ trợ</label>
+						<textarea id="supportChatContentInput" class="form-control" name="noi_dung" rows="3" placeholder="Nhập vấn đề bạn đang gặp..." required></textarea>
 					</div>
 					<div class="col-md-2 d-grid">
 						<button type="submit" class="btn btn-brand">Gửi tin nhắn</button>

@@ -15,7 +15,7 @@ if ($detailUrl === '') {
 
 $image = resolve_image_url((string)($product['link_hinh_anh'] ?? $product['image_url'] ?? ''));
 if ($image === '') {
-    $image = 'https://via.placeholder.com/450x450?text=SkinSyntax';
+    $image = default_placeholder_image();
 }
 
 $discountProduct = array_merge($product, [
@@ -37,7 +37,7 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['mo_ta'] ??
 <?php if ($cardVariant === 'rcm'): ?>
   <article class="rcm-product-card product-card h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
     <a class="rcm-product-image-wrap position-relative d-block p-2" href="<?= h($detailUrl) ?>" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 12px 12px 0 0;">
-      <img src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/450x450?text=SkinSyntax';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+      <img src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
       <?php if ($discount !== null): ?>
         <span class="rcm-discount-badge position-absolute" style="top: 12px; left: 12px; background: #E11D48; color: #FFF; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; z-index: 3;">-<?= h((string)$discount) ?>%</span>
       <?php endif; ?>
@@ -134,7 +134,7 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['mo_ta'] ??
           </div>
           
           <div class="p-3" style="background: #FAFAFA; border: 1px solid var(--border); border-radius: 8px;">
-            <div class="fw-semibold small mb-1" style="color: #183B2B;"><i class="fa-solid fa-robot me-1"></i> Phân tích từ RAG AI Engine:</div>
+            <div class="fw-semibold small mb-1" style="color: #183B2B;"><i class="fa-solid fa-robot me-1"></i> Phân tích:</div>
             <div class="small text-dark" style="line-height: 1.6; font-size: 0.84rem;"><?= nl2br(h($explanation)) ?></div>
           </div>
         </div>
@@ -150,7 +150,7 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['mo_ta'] ??
 
 <article class="flash-product goiy-product-card product-card h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease;">
   <a class="flash-product__image position-relative d-block p-2" href="<?= h($detailUrl) ?>" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 12px 12px 0 0;">
-    <img src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/450x450?text=SkinSyntax';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+    <img src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
     <?php if ($discount !== null): ?>
       <span class="flash-product__badge position-absolute" style="top: 12px; left: 12px; background: #E11D48; color: #FFF; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; z-index: 3;">-<?= h((string)$discount) ?>%</span>
     <?php endif; ?>
@@ -249,7 +249,7 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['mo_ta'] ??
         </div>
         
         <div class="p-3 rounded-3" style="background: #F0F4F1; border: 1px solid #C5DAC8;">
-          <div class="fw-bold text-success small mb-1"><i class="fa-solid fa-robot me-1"></i> Phân tích từ RAG AI Engine:</div>
+          <div class="fw-bold text-success small mb-1"><i class="fa-solid fa-robot me-1"></i> Phân tích:</div>
           <div class="small text-dark" style="line-height: 1.6;"><?= nl2br(h($explanation)) ?></div>
         </div>
       </div>

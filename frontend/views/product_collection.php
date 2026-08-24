@@ -70,13 +70,13 @@ $pageUrl = static function (int $targetPage) use ($type, $publicFilters): string
 
       <div class="row g-3 align-items-end">
         <div class="col-12 col-md-3">
-          <label class="form-label text-uppercase fw-bold small text-muted">Từ khóa</label>
-          <input class="form-control" type="search" name="keyword" value="<?= h((string)($publicFilters['keyword'] ?? '')) ?>" placeholder="serum, chống nắng, BHA..." style="border-radius: 999px; background: #FFF; border-color: #E2EADF;">
+          <label for="collectionKeywordInput" class="form-label text-uppercase fw-bold small text-muted">Từ khóa</label>
+          <input id="collectionKeywordInput" class="form-control" type="search" name="keyword" value="<?= h((string)($publicFilters['keyword'] ?? '')) ?>" placeholder="serum, chống nắng, BHA..." style="border-radius: 999px; background: #FFF; border-color: #E2EADF;">
         </div>
 
         <div class="col-6 col-md-2">
-          <label class="form-label text-uppercase fw-bold small text-muted">Danh mục</label>
-          <select class="form-select" name="danh_muc" style="border-radius: 999px; background: #FFF; border-color: #E2EADF; font-size: 0.88rem;">
+          <label for="collectionCategorySelect" class="form-label text-uppercase fw-bold small text-muted">Danh mục</label>
+          <select id="collectionCategorySelect" class="form-select" name="danh_muc" style="border-radius: 999px; background: #FFF; border-color: #E2EADF; font-size: 0.88rem;">
             <option value="">Tất cả danh mục</option>
             <?php foreach ($categoryOptions as $cat): ?>
               <?php $catName = (string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? ''); ?>
@@ -88,8 +88,8 @@ $pageUrl = static function (int $targetPage) use ($type, $publicFilters): string
         </div>
 
         <div class="col-6 col-md-2">
-          <label class="form-label text-uppercase fw-bold small text-muted">Thương hiệu</label>
-          <select class="form-select" name="thuong_hieu" style="border-radius: 999px; background: #FFF; border-color: #E2EADF; font-size: 0.88rem;">
+          <label for="collectionBrandSelect" class="form-label text-uppercase fw-bold small text-muted">Thương hiệu</label>
+          <select id="collectionBrandSelect" class="form-select" name="thuong_hieu" style="border-radius: 999px; background: #FFF; border-color: #E2EADF; font-size: 0.88rem;">
             <option value="">Tất cả thương hiệu</option>
             <?php foreach ($brandOptions as $brand): ?>
               <?php $brandName = (string)($brand['ten_thuong_hieu'] ?? $brand['thuong_hieu'] ?? ''); ?>
@@ -101,8 +101,8 @@ $pageUrl = static function (int $targetPage) use ($type, $publicFilters): string
         </div>
 
         <div class="col-6 col-md-2">
-          <label class="form-label text-uppercase fw-bold small text-muted">Sắp xếp</label>
-          <select class="form-select" name="sort" style="border-radius: 999px; background: #FFF; border-color: #E2EADF; font-size: 0.88rem;">
+          <label for="collectionSortSelect" class="form-label text-uppercase fw-bold small text-muted">Sắp xếp</label>
+          <select id="collectionSortSelect" class="form-select" name="sort" style="border-radius: 999px; background: #FFF; border-color: #E2EADF; font-size: 0.88rem;">
             <?php foreach ($sortOptions as $value => $label): ?>
               <option value="<?= h($value) ?>" <?= (($publicFilters['sort'] ?? 'default') === $value ? 'selected' : '') ?>><?= h($label) ?></option>
             <?php endforeach; ?>

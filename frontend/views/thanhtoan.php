@@ -65,8 +65,8 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
       <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydathang" id="checkoutForm" class="row g-3 mt-1">
         <div class="col-12">
           <div class="address-selector-grid">
-            <label class="address-option-card <?= $addressChoice === 'default' ? 'is-active' : '' ?> <?= $hasDefaultReceiver ? '' : 'is-disabled' ?>" data-address-choice-card="default">
-              <input type="radio" name="address_choice" value="default" <?= $addressChoice === 'default' ? 'checked' : '' ?> <?= $hasDefaultReceiver ? '' : 'disabled' ?>>
+            <label for="addressChoiceDefault" class="address-option-card <?= $addressChoice === 'default' ? 'is-active' : '' ?> <?= $hasDefaultReceiver ? '' : 'is-disabled' ?>" data-address-choice-card="default">
+              <input type="radio" id="addressChoiceDefault" name="address_choice" value="default" <?= $addressChoice === 'default' ? 'checked' : '' ?> <?= $hasDefaultReceiver ? '' : 'disabled' ?>>
               <div class="address-option-card__top">
                 <div>
                   <div class="address-option-card__title">Địa chỉ mặc định</div>
@@ -82,8 +82,8 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
               <?php endif; ?>
             </label>
 
-            <label class="address-option-card <?= $addressChoice === 'new' ? 'is-active' : '' ?>" data-address-choice-card="new">
-              <input type="radio" name="address_choice" value="new" <?= $addressChoice === 'new' ? 'checked' : '' ?>>
+            <label for="addressChoiceNew" class="address-option-card <?= $addressChoice === 'new' ? 'is-active' : '' ?>" data-address-choice-card="new">
+              <input type="radio" id="addressChoiceNew" name="address_choice" value="new" <?= $addressChoice === 'new' ? 'checked' : '' ?>>
               <div class="address-option-card__top">
                 <div>
                   <div class="address-option-card__title">Địa chỉ mới</div>
@@ -113,39 +113,39 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
           <div class="address-detail-panel <?= $addressChoice === 'new' ? '' : 'd-none' ?>" data-address-panel="new">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label">Tên người nhận</label>
-                <input class="form-control" name="ten_nguoi_nhan" value="<?= h($newReceiver['ten_nguoi_nhan'] ?? '') ?>" data-address-required="new">
+                <label for="checkoutReceiverName" class="form-label">Tên người nhận</label>
+                <input class="form-control" id="checkoutReceiverName" name="ten_nguoi_nhan" autocomplete="name" value="<?= h($newReceiver['ten_nguoi_nhan'] ?? '') ?>" data-address-required="new">
               </div>
               <div class="col-md-6">
-                <label class="form-label">Số điện thoại</label>
-                <input class="form-control" name="sdt_nguoi_nhan" value="<?= h($newReceiver['sdt_nguoi_nhan'] ?? '') ?>" data-address-required="new">
+                <label for="checkoutReceiverPhone" class="form-label">Số điện thoại</label>
+                <input class="form-control" id="checkoutReceiverPhone" name="sdt_nguoi_nhan" autocomplete="tel" value="<?= h($newReceiver['sdt_nguoi_nhan'] ?? '') ?>" data-address-required="new">
               </div>
               <div class="col-md-6">
-                <label class="form-label">Tỉnh / Thành phố</label>
-                <input class="form-control" name="tinh_thanh" value="<?= h($newReceiver['tinh_thanh'] ?? '') ?>" placeholder="Ví dụ: TPHCM, Tây Ninh" list="checkoutProvinceList" autocomplete="off" data-address-required="new" data-address-preview-input="city" data-address-field="province">
+                <label for="checkoutReceiverProvince" class="form-label">Tỉnh / Thành phố</label>
+                <input class="form-control" id="checkoutReceiverProvince" name="tinh_thanh" value="<?= h($newReceiver['tinh_thanh'] ?? '') ?>" placeholder="Ví dụ: TPHCM, Tây Ninh" list="checkoutProvinceList" autocomplete="address-level1" data-address-required="new" data-address-preview-input="city" data-address-field="province">
                 <datalist id="checkoutProvinceList"></datalist>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Quận / Huyện</label>
-                <input class="form-control" name="quan_huyen" value="<?= h($newReceiver['quan_huyen'] ?? '') ?>" placeholder="Ví dụ: Gò Vấp, Tân Biên" list="checkoutDistrictList" autocomplete="off" data-address-required="new" data-address-preview-input="district" data-address-field="district">
+                <label for="checkoutReceiverDistrict" class="form-label">Quận / Huyện</label>
+                <input class="form-control" id="checkoutReceiverDistrict" name="quan_huyen" value="<?= h($newReceiver['quan_huyen'] ?? '') ?>" placeholder="Ví dụ: Gò Vấp, Tân Biên" list="checkoutDistrictList" autocomplete="address-level2" data-address-required="new" data-address-preview-input="district" data-address-field="district">
                 <datalist id="checkoutDistrictList"></datalist>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Phường / Xã</label>
-                <input class="form-control" name="phuong_xa" value="<?= h($newReceiver['phuong_xa'] ?? '') ?>" placeholder="Ví dụ: Phường 10, Xã Trường Tây" list="checkoutWardList" autocomplete="off" data-address-required="new" data-address-preview-input="ward" data-address-field="ward">
+                <label for="checkoutReceiverWard" class="form-label">Phường / Xã</label>
+                <input class="form-control" id="checkoutReceiverWard" name="phuong_xa" value="<?= h($newReceiver['phuong_xa'] ?? '') ?>" placeholder="Ví dụ: Phường 10, Xã Trường Tây" list="checkoutWardList" autocomplete="address-level3" data-address-required="new" data-address-preview-input="ward" data-address-field="ward">
                 <datalist id="checkoutWardList"></datalist>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Số nhà, tên đường, tòa nhà</label>
-                <input class="form-control" name="dia_chi_chi_tiet" value="<?= h($newReceiver['dia_chi_chi_tiet'] ?? '') ?>" placeholder="Ví dụ: 123 Nguyễn Oanh, Chung cư A1" data-address-required="new" data-address-preview-input="detail">
+                <label for="checkoutReceiverAddressDetail" class="form-label">Số nhà, tên đường, tòa nhà</label>
+                <input class="form-control" id="checkoutReceiverAddressDetail" name="dia_chi_chi_tiet" autocomplete="street-address" value="<?= h($newReceiver['dia_chi_chi_tiet'] ?? '') ?>" placeholder="Ví dụ: 123 Nguyễn Oanh, Chung cư A1" data-address-required="new" data-address-preview-input="detail">
               </div>
               <div class="col-12">
-                <label class="form-label">Ghi chú giao hàng</label>
-                <textarea class="form-control" name="ghi_chu_giao_hang" rows="2" placeholder="Ví dụ: Gọi trước khi giao, giao giờ hành chính..." data-address-preview-input="note"><?= h($newReceiver['ghi_chu_giao_hang'] ?? '') ?></textarea>
+                <label for="checkoutDeliveryNote" class="form-label">Ghi chú giao hàng</label>
+                <textarea class="form-control" id="checkoutDeliveryNote" name="ghi_chu_giao_hang" rows="2" placeholder="Ví dụ: Gọi trước khi giao, giao giờ hành chính..." data-address-preview-input="note"><?= h($newReceiver['ghi_chu_giao_hang'] ?? '') ?></textarea>
               </div>
               <div class="col-12">
-                <label class="address-save-toggle">
-                  <input type="checkbox" name="save_as_default" value="1" <?= !empty($newReceiver['save_as_default']) ? 'checked' : '' ?>>
+                <label for="saveAsDefaultAddressCheck" class="address-save-toggle">
+                  <input type="checkbox" id="saveAsDefaultAddressCheck" name="save_as_default" value="1" <?= !empty($newReceiver['save_as_default']) ? 'checked' : '' ?>>
                   <span>Lưu địa chỉ này làm mặc định cho lần mua sau</span>
                 </label>
               </div>
@@ -181,7 +181,7 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
         </div>
 
         <div class="col-12">
-          <div class="checkout-table-wrap">
+          <div class="table-responsive checkout-table-wrap">
             <table class="table checkout-table align-middle mb-0">
               <thead>
                 <tr>
@@ -200,7 +200,7 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
                   <tr>
                     <td>
                       <div class="checkout-product">
-                        <img src="<?= h($img ?: 'https://via.placeholder.com/92x92?text=No+Image') ?>" alt="<?= h($p['ten_san_pham'] ?? '') ?>" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/92x92?text=No+Image';">
+                        <img src="<?= h($img ?: default_placeholder_image()) ?>" alt="<?= h($p['ten_san_pham'] ?? '') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';">
                         <div>
                           <div class="name"><?= h($p['ten_san_pham'] ?? '') ?></div>
                           <div class="brand"><?= h($p['thuong_hieu'] ?? '') ?></div>
@@ -220,16 +220,16 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
         <div class="col-lg-7">
           <div class="payment-card mb-3">
             <h5 class="mb-3">Phương thức thanh toán</h5>
-            <label class="payment-option <?= $selectedPaymentMethod === 'cod' ? 'active' : '' ?>">
-              <input type="radio" name="hinh_thuc_thanh_toan" value="cod" <?= $selectedPaymentMethod === 'cod' ? 'checked' : '' ?>>
+            <label for="paymentMethodCod" class="payment-option <?= $selectedPaymentMethod === 'cod' ? 'active' : '' ?>">
+              <input type="radio" id="paymentMethodCod" name="hinh_thuc_thanh_toan" value="cod" <?= $selectedPaymentMethod === 'cod' ? 'checked' : '' ?>>
               <span>
                 <strong>Thanh toán khi nhận hàng (COD)</strong>
                 <small>Thanh toán trực tiếp cho shipper khi đơn giao tới nơi.</small>
               </span>
             </label>
 
-            <label class="payment-option <?= $selectedPaymentMethod === 'vnpay' ? 'active' : '' ?>">
-              <input type="radio" name="hinh_thuc_thanh_toan" value="vnpay" <?= $selectedPaymentMethod === 'vnpay' ? 'checked' : '' ?>>
+            <label for="paymentMethodVnpay" class="payment-option <?= $selectedPaymentMethod === 'vnpay' ? 'active' : '' ?>">
+              <input type="radio" id="paymentMethodVnpay" name="hinh_thuc_thanh_toan" value="vnpay" <?= $selectedPaymentMethod === 'vnpay' ? 'checked' : '' ?>>
               <span>
                 <strong>Thanh toán online VNPAY</strong>
                 <small>Thẻ ATM nội địa, QR Code ngân hàng, Ví điện tử, Thẻ quốc tế Visa/MasterCard.</small>
@@ -248,8 +248,8 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
               </div>
             </div>
 
-            <label class="payment-option <?= $selectedPaymentMethod === 'bank_transfer_qr' ? 'active' : '' ?> <?= !empty($qrTransfer['enabled']) ? '' : 'payment-option--disabled' ?>">
-              <input type="radio" name="hinh_thuc_thanh_toan" value="bank_transfer_qr" <?= $selectedPaymentMethod === 'bank_transfer_qr' ? 'checked' : '' ?> <?= !empty($qrTransfer['enabled']) ? '' : 'disabled' ?>>
+            <label for="paymentMethodBankQr" class="payment-option <?= $selectedPaymentMethod === 'bank_transfer_qr' ? 'active' : '' ?> <?= !empty($qrTransfer['enabled']) ? '' : 'payment-option--disabled' ?>">
+              <input type="radio" id="paymentMethodBankQr" name="hinh_thuc_thanh_toan" value="bank_transfer_qr" <?= $selectedPaymentMethod === 'bank_transfer_qr' ? 'checked' : '' ?> <?= !empty($qrTransfer['enabled']) ? '' : 'disabled' ?>>
               <span>
                 <strong>Chuyển khoản qua QR</strong>
                 <small><?= !empty($qrTransfer['enabled']) ? 'Đặt hàng trước, sau đó quét QR theo đúng mã đơn để hoàn tất thanh toán.' : 'Chưa cấu hình thông tin nhận chuyển khoản trong hệ thống.' ?></small>
@@ -297,7 +297,8 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
           <div class="voucher-card mb-3" id="voucher-card-box">
             <div class="voucher-card__title">Mã giảm giá</div>
             <div class="input-group mb-2">
-              <input class="form-control" type="text" name="voucher_code" value="<?= h($voucherCode) ?>" placeholder="Nhập mã voucher">
+              <label for="checkoutVoucherCode" class="visually-hidden">Mã giảm giá</label>
+              <input class="form-control" type="text" id="checkoutVoucherCode" name="voucher_code" value="<?= h($voucherCode) ?>" placeholder="Nhập mã voucher" autocomplete="off">
               <button class="btn btn-outline-brand" type="submit" formaction="<?= BASE_URL ?>/index.php?r=apdung_voucher#voucher-card-box" formmethod="post" formnovalidate>Áp dụng</button>
             </div>
             <?php if ($appliedVoucher): ?>
@@ -317,7 +318,8 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
             <div class="voucher-card__title">Dùng điểm tích lũy</div>
             <div class="voucher-note mb-2">Bạn hiện có <strong><?= number_format($availablePoints, 0, ',', '.') ?> điểm</strong>. Quy đổi: 1 điểm = <?= number_format($pointValueVnd, 0, ',', '.') ?>đ.</div>
             <div class="input-group mb-2">
-              <input class="form-control" type="number" min="0" max="<?= $maxUsablePoints ?>" step="1" name="points_to_use" value="<?= $pointsToUse > 0 ? $pointsToUse : '' ?>" placeholder="Nhập số điểm muốn dùng">
+              <label for="checkoutPointsToUse" class="visually-hidden">Số điểm muốn dùng</label>
+              <input class="form-control" type="number" id="checkoutPointsToUse" min="0" max="<?= $maxUsablePoints ?>" step="1" name="points_to_use" value="<?= $pointsToUse > 0 ? $pointsToUse : '' ?>" placeholder="Nhập số điểm muốn dùng" autocomplete="off">
               <button class="btn btn-outline-brand" type="submit" formaction="<?= BASE_URL ?>/index.php?r=apdung_diem#points-card-box" formmethod="post" formnovalidate>Đổi điểm</button>
             </div>
             <?php if ($pointsToUse > 0): ?>
