@@ -4,136 +4,135 @@ $pageTitle = 'Quản lý Phiên LiveStream & Giá Ưu Đãi Khung Giờ';
 require_once __DIR__ . '/layouts/header.php';
 ?>
 
-<div class="d-flex align-items-center justify-content-between mb-4">
-  <div>
-    <h2 class="h4 fw-bold text-dark mb-1">
-      <i class="bi bi-camera-video-fill text-success me-2"></i>Quản lý Phiên LiveStream & Ưu Đãi Khung Giờ
-    </h2>
-    <p class="text-muted small mb-0">Quản lý lịch phát sóng LiveStream trực tiếp, đổi sản phẩm ghim ưu đãi, video bản ghi xem lại & tóm tắt kịch bản AI.</p>
-  </div>
-  <button type="button" class="btn btn-primary rounded-pill px-4 py-2 fw-bold" style="background: var(--admin-primary); border: none;" data-bs-toggle="modal" data-bs-target="#adminCreateLiveModal">
-    <i class="bi bi-plus-lg me-1"></i>Tạo Phiên Live Mới
-  </button>
-</div>
-
-<?php if ($msg = get_flash('success')): ?>
-  <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-    <i class="bi bi-check-circle-fill me-2"></i><?= h($msg) ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-<?php endif; ?>
-
-<?php if ($msg = get_flash('error')): ?>
-  <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i><?= h($msg) ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-<?php endif; ?>
-
-<!-- HƯỚNG DẪN TÍNH NĂNG GHIM MÃ VÀ BẢN GHI -->
-<div class="alert alert-info border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center justify-content-between p-3" style="background: #E8F5E9; color: #1B5E20;">
-  <div class="d-flex align-items-center gap-3">
-    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; font-size: 1.2rem;">
-      <i class="bi bi-pin-angle-fill"></i>
-    </div>
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
     <div>
-      <strong class="d-block text-dark" style="font-size: 0.9rem;">Mẹo Quản Lý LiveStream & Ghim Sản Phẩm Linh Hoạt</strong>
-      <small class="text-secondary" style="font-size: 0.8rem;">
-        • Bạn có thể bấm nút <strong>Ghim SP</strong> trên từng phiên Live để thay đổi sản phẩm nổi bật active trong lúc đang phát live.<br>
-        • Phiên Live khi kết thúc có thể đính kèm <strong>Link Video Xem Lại (Recording)</strong> và <strong>Tóm Tắt Tư Vấn AI (Transcript)</strong> cho khách hàng tra cứu.
-      </small>
+      <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-camera-video-fill text-danger me-2"></i>Quản lý Phiên LiveStream & Ưu Đãi Khung Giờ</h1>
+      <p class="text-muted mb-0 small">Quản lý lịch phát sóng LiveStream trực tiếp, đổi sản phẩm ghim ưu đãi, video bản ghi xem lại & kịch bản AI.</p>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm px-3 py-2 fw-semibold text-white" style="background: #183B2B; border: none; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#adminCreateLiveModal">
+      <i class="bi bi-plus-lg me-1"></i>Tạo Phiên Live Mới
+    </button>
+  </div>
+
+  <?php if ($msg = get_flash('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show rounded-3 p-3" role="alert">
+      <i class="bi bi-check-circle-fill me-2"></i><?= h($msg) ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <?php endif; ?>
+
+  <?php if ($msg = get_flash('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 p-3" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i><?= h($msg) ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <?php endif; ?>
+
+  <!-- HƯỚNG DẪN TÍNH NĂNG GHIM MÃ VÀ BẢN GHI -->
+  <div class="admin-card mb-3 p-3" style="background: #EBF2EE !important; border: 1px solid #C8DACF !important; border-radius: 8px !important;">
+    <div class="d-flex align-items-center gap-3">
+      <div class="rounded-3 text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem; background: #183B2B;">
+        <i class="bi bi-pin-angle-fill"></i>
+      </div>
+      <div>
+        <strong class="d-block" style="font-size: 0.88rem; color: #183B2B;">Mẹo Quản Lý LiveStream & Ghim Sản Phẩm Linh Hoạt</strong>
+        <small class="text-muted" style="font-size: 0.78rem;">
+          • Bấm nút <strong>Ghim SP</strong> trên từng phiên Live để đổi sản phẩm nổi bật đang phát live.<br>
+          • Đính kèm <strong>Link Video Xem Lại (Recording)</strong> và <strong>Tóm Tắt Tư Vấn AI</strong> sau khi kết thúc live.
+        </small>
+      </div>
     </div>
   </div>
-</div>
 
-<?php
-  $sessions = $lives ?? $liveSessions ?? [];
-  $totalLiveRooms = count($sessions);
-  $activeRooms = 0;
-  $totalViewsAcc = 0;
-  $totalRevenueAcc = 0;
-  $totalOrdersAcc = 0;
-  $totalUnitsAcc = 0;
+  <?php
+    $sessions = $lives ?? $liveSessions ?? [];
+    $totalLiveRooms = count($sessions);
+    $activeRooms = 0;
+    $totalViewsAcc = 0;
+    $totalRevenueAcc = 0;
+    $totalOrdersAcc = 0;
+    $totalUnitsAcc = 0;
 
-  foreach ($sessions as $ls) {
-      $st = (string)($ls['trang_thai'] ?? $ls['status'] ?? '');
-      if (in_array($st, ['danglive', 'live'], true)) $activeRooms++;
-      $totalViewsAcc += (int)($ls['luot_xem'] ?? 0);
-      $totalRevenueAcc += (float)($ls['tong_doanh_thu'] ?? 0);
-      $totalOrdersAcc += (int)($ls['tong_don_hang'] ?? 0);
-      $totalUnitsAcc += (int)($ls['tong_san_pham_ban'] ?? 0);
-  }
-?>
+    foreach ($sessions as $ls) {
+        $st = (string)($ls['trang_thai'] ?? $ls['status'] ?? '');
+        if (in_array($st, ['danglive', 'live'], true)) $activeRooms++;
+        $totalViewsAcc += (int)($ls['luot_xem'] ?? 0);
+        $totalRevenueAcc += (float)($ls['tong_doanh_thu'] ?? 0);
+        $totalOrdersAcc += (int)($ls['tong_don_hang'] ?? 0);
+        $totalUnitsAcc += (int)($ls['tong_san_pham_ban'] ?? 0);
+    }
+  ?>
 
-<!-- NAVIGATION TABS: DANH SÁCH LIVE VS BÁO CÁO DOANH THU -->
-<div class="d-flex align-items-center gap-2 mb-4 border-bottom pb-3">
-  <button type="button" id="btnTabList" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="switchAdminLiveTab('list')">
-    <i class="bi bi-camera-video-fill me-2"></i>Danh Sách Phiên Live (<?= $totalLiveRooms ?>)
-  </button>
-  <button type="button" id="btnTabReport" class="btn btn-outline-success rounded-pill px-4 py-2 fw-bold" onclick="switchAdminLiveTab('report')">
-    <i class="bi bi-bar-chart-line-fill me-2"></i>Báo Cáo Doanh Thu Ngày / Tháng
-  </button>
-</div>
+  <!-- NAVIGATION TABS: DANH SÁCH LIVE VS BÁO CÁO DOANH THU -->
+  <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-2">
+    <button type="button" id="btnTabList" class="btn btn-sm px-3 py-1.5 fw-semibold text-white" style="background: #183B2B; border-radius: 6px;" onclick="switchAdminLiveTab('list')">
+      <i class="bi bi-camera-video-fill me-1.5"></i>Danh Sách Live (<?= $totalLiveRooms ?>)
+    </button>
+    <button type="button" id="btnTabReport" class="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-semibold" style="border-radius: 6px;" onclick="switchAdminLiveTab('report')">
+      <i class="bi bi-bar-chart-line-fill me-1.5"></i>Báo Cáo Doanh Thu
+    </button>
+  </div>
 
-<div id="liveAdminTabContainer">
-  <!-- TAB 1: DANH SÁCH PHIÊN LIVE -->
-  <div id="live-list-pane" style="display: block;">
+  <div id="liveAdminTabContainer">
+    <!-- TAB 1: DANH SÁCH PHIÊN LIVE -->
+    <div id="live-list-pane" style="display: block;">
 
-    <!-- TỔNG QUAN BÁO CÁO HIỆU QUẢ LIVESTREAM (KPI CARDS) -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="card border-0 rounded-4 shadow-sm p-3 bg-white border-start border-4 border-danger">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <span class="text-muted extra-small text-uppercase fw-bold">Phiên Đang Phát</span>
-              <h3 class="fw-extrabold text-danger mb-0 mt-1" id="kpiActiveRooms"><?= $activeRooms ?> <small class="fs-6 text-muted">/ <?= $totalLiveRooms ?></small></h3>
+      <!-- TỔNG QUAN BÁO CÁO HIỆU QUẢ LIVESTREAM (KPI CARDS) -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="kpi-card h-100">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <span class="kpi-label">Phiên Đang Phát</span>
+                <div class="kpi-value text-danger" id="kpiActiveRooms"><?= $activeRooms ?> <small class="fs-6 text-muted">/ <?= $totalLiveRooms ?></small></div>
+              </div>
+              <div class="kpi-card-icon" style="background: #FFE4E6; color: #E11D48; border: 1px solid #FECDD3;">
+                <i class="bi bi-broadcast fs-5"></i>
+              </div>
             </div>
-            <div class="rounded-circle bg-danger bg-opacity-10 text-danger p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-              <i class="bi bi-broadcast fs-4"></i>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card h-100">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <span class="kpi-label">Tổng Lượt Xem</span>
+                <div class="kpi-value" style="color: #0369A1;" id="kpiTotalViews"><?= number_format($totalViewsAcc) ?> <small class="fs-6 text-muted">lượt</small></div>
+              </div>
+              <div class="kpi-card-icon kpi-products">
+                <i class="bi bi-eye-fill fs-5"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card h-100">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <span class="kpi-label">Tổng Doanh Thu Live</span>
+                <div class="kpi-value" style="color: #183B2B;" id="kpiTotalRevenue"><?= vnd($totalRevenueAcc) ?></div>
+              </div>
+              <div class="kpi-card-icon kpi-revenue">
+                <i class="bi bi-cash-stack fs-5"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card h-100">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <span class="kpi-label">Đơn Hàng / SP Bán</span>
+                <div class="kpi-value" style="color: #B45309;" id="kpiTotalOrders"><?= number_format($totalOrdersAcc) ?> <small class="fs-6 text-muted">(<?= number_format($totalUnitsAcc) ?> SP)</small></div>
+              </div>
+              <div class="kpi-card-icon kpi-orders">
+                <i class="bi bi-bag-check-fill fs-5"></i>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="card border-0 rounded-4 shadow-sm p-3 bg-white border-start border-4 border-primary">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <span class="text-muted extra-small text-uppercase fw-bold">Tổng Lượt Xem (Tích Lũy)</span>
-              <h3 class="fw-extrabold text-primary mb-0 mt-1" id="kpiTotalViews" title="Tổng lượt xem tích lũy từ tất cả các phiên Live"><?= number_format($totalViewsAcc) ?> <small class="fs-6 text-muted">lượt</small></h3>
-            </div>
-            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-              <i class="bi bi-eye-fill fs-4"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card border-0 rounded-4 shadow-sm p-3 bg-white border-start border-4 border-success">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <span class="text-muted extra-small text-uppercase fw-bold">Tổng Doanh Thu Live</span>
-              <h3 class="fw-extrabold text-success mb-0 mt-1" id="kpiTotalRevenue"><?= vnd($totalRevenueAcc) ?></h3>
-            </div>
-            <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-              <i class="bi bi-cash-stack fs-4"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card border-0 rounded-4 shadow-sm p-3 bg-white border-start border-4 border-warning">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <span class="text-muted extra-small text-uppercase fw-bold">Đơn Hàng / SP Bán</span>
-              <h3 class="fw-extrabold text-warning mb-0 mt-1" id="kpiTotalOrders"><?= number_format($totalOrdersAcc) ?> <small class="fs-6 text-muted">(<?= number_format($totalUnitsAcc) ?> SP)</small></h3>
-            </div>
-            <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-              <i class="bi bi-bag-check-fill fs-4"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
 <!-- DANH SÁCH CÁC PHIÊN LIVE -->
 <div class="card border-0 rounded-4 shadow-sm mb-4" style="border: 1px solid var(--admin-border) !important;">
@@ -765,7 +764,7 @@ require_once __DIR__ . '/layouts/header.php';
             </div>
             <div class="col-md-6">
               <label class="form-label fw-bold small">Tên Streamer & Bác Sĩ Đảm Nhận</label>
-              <input type="text" name="streamer" class="form-control" value="DS. Minh Trang & AI Co-Host" required>
+              <input type="text" name="streamer" class="form-control"placeholder ="Nhập tên Streamer hoặc Bác sĩ" required>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-bold small">Máy Chủ LiveStream</label>
@@ -781,22 +780,56 @@ require_once __DIR__ . '/layouts/header.php';
             </div>
             <div class="col-md-8">
               <label class="form-label fw-bold small">Sản Phẩm Ghim Nổi Bật Ban Đầu <span class="text-danger">*</span></label>
-              <select name="ma_san_pham_ghim" class="form-select" required>
+              <div class="input-group mb-1">
+                <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="adminProductFilterInput" class="form-control" placeholder="Gõ tên hoặc mã SP để lọc nhanh...">
+              </div>
+              <select name="ma_san_pham_ghim" id="adminLiveProductSelect" class="form-select" required size="4" style="max-height: 150px; overflow-y: auto;">
+                <option value="" disabled selected>-- Bấm chọn sản phẩm trong danh sách --</option>
                 <?php foreach ($allProducts as $p): ?>
-                  <option value="<?= h($p['ma_san_pham'] ?? $p['id'] ?? '') ?>">
-                    [<?= h($p['ma_san_pham'] ?? '') ?>] <?= h($p['ten_san_pham'] ?? '') ?> - Giá kho: <?= vnd($p['gia_ban'] ?? 0) ?>
+                  <?php
+                    $pId = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
+                    $pName = (string)($p['ten_san_pham'] ?? '');
+                    $pPrice = (float)($p['gia_ban'] ?? 0);
+                    $pStock = (int)($p['so_luong_kho'] ?? $p['so_luong'] ?? $p['ton_kho'] ?? 20);
+                    $searchKey = mb_strtolower($pId . ' ' . $pName, 'UTF-8');
+                  ?>
+                  <option value="<?= h($pId) ?>" data-search="<?= h($searchKey) ?>" data-price="<?= $pPrice ?>" data-stock="<?= $pStock ?>" data-name="<?= h($pName) ?>">
+                    [#<?= h($pId) ?>] <?= h($pName) ?> (Gốc: <?= vnd($pPrice) ?> | Tồn kho: <?= number_format($pStock) ?> SP)
                   </option>
                 <?php endforeach; ?>
               </select>
             </div>
-            <div class="col-md-4">
+
+            <div class="col-md-6">
               <label class="form-label fw-bold small">Giá Ưu Đãi Trong Live (VNĐ) <span class="text-danger">*</span></label>
-              <input type="number" name="gia_uu_dai_live" class="form-control" placeholder="VD: 78000" min="1000" required>
+              <input type="number" name="gia_uu_dai_live" id="adminLivePriceInput" class="form-control" placeholder="VD: 78000" min="1000" required>
             </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Số Lượng Bán Ưu Đãi (Kho Deal) <span class="text-danger">*</span></label>
+              <input type="number" name="so_luong_kho_deal" id="adminLiveStockDealInput" class="form-control" placeholder="VD: 20" value="20" min="1" required>
+            </div>
+
+
+            <!-- DYNAMIC PRODUCT INFO BADGE -->
+            <div class="col-12" id="adminSelectedProductInfoBox" style="display: none;">
+              <div class="p-3 bg-light border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                  <span class="extra-small text-muted d-block">Sản phẩm được chọn:</span>
+                  <strong id="adminSelectedProductNameText" class="text-dark small">--</strong>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1 extra-small">Giá gốc: <strong id="adminSelectedProductPriceText">0 đ</strong></span>
+                  <span class="badge bg-success text-white rounded-pill px-2.5 py-1 extra-small" id="adminSelectedProductStockBadge">📦 Tồn kho: 0 SP</span>
+                </div>
+              </div>
+            </div>
+
             <div class="col-12">
-              <label class="form-label fw-bold small">Link Video Bản Ghi Xem Lại (Tùy chọn cho phiên xem lại)</label>
-              <input type="url" name="url_ban_ghi" class="form-control" placeholder="https://domain.com/recording-video.mp4">
+              <label class="form-label fw-bold small">Link Video Bản Ghi Xem Lại <small class="text-muted fw-normal">(Không bắt buộc - Để trống nếu chưa có. Hệ thống sẽ TỰ ĐỘNG LƯU BẢN GHI khi bạn bấm Kết thúc Live)</small></label>
+              <input type="url" name="url_ban_ghi" class="form-control" placeholder="Để trống nếu chưa có (Hệ thống tự động ghi lại khi phát Live xong)">
             </div>
+
             <div class="col-12">
               <label class="form-label fw-bold small">Kịch Bản & Tóm Tắt Tư Vấn AI (Transcript Summary)</label>
               <textarea name="tom_tat_phien_live" class="form-control" rows="3" placeholder="Tóm tắt lời khuyên skincare, giải đáp câu hỏi và ưu đãi trong phiên..."></textarea>
@@ -812,14 +845,72 @@ require_once __DIR__ . '/layouts/header.php';
         <div class="modal-footer border-top p-3">
           <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
           <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" style="background: var(--admin-primary); border: none;">
-            🚀 Lưu & Khởi Tạo Phiên Live
+            Lưu & Khởi Tạo Phiên Live
           </button>
         </div>
       </form>
     </div>
   </div>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  const adminProductSelect = document.getElementById('adminLiveProductSelect');
+  const adminInfoBox = document.getElementById('adminSelectedProductInfoBox');
+  const adminNameText = document.getElementById('adminSelectedProductNameText');
+  const adminPriceText = document.getElementById('adminSelectedProductPriceText');
+  const adminStockBadge = document.getElementById('adminSelectedProductStockBadge');
+  const adminLivePriceInput = document.getElementById('adminLivePriceInput');
+
+  if (adminProductSelect) {
+    adminProductSelect.addEventListener('change', function() {
+      const opt = this.options[this.selectedIndex];
+      if (opt && opt.value) {
+        const pName = opt.getAttribute('data-name') || opt.text;
+        const price = parseFloat(opt.getAttribute('data-price') || '0');
+        const stock = parseInt(opt.getAttribute('data-stock') || '0', 10);
+
+        if (adminInfoBox) adminInfoBox.style.display = 'block';
+        if (adminNameText) adminNameText.textContent = pName;
+        if (adminPriceText) adminPriceText.textContent = new Intl.NumberFormat('vi-VN').format(price) + ' đ';
+        if (adminStockBadge) {
+          adminStockBadge.textContent = '📦 Tồn kho: ' + new Intl.NumberFormat('vi-VN').format(stock) + ' SP';
+          adminStockBadge.className = 'badge ' + (stock > 0 ? 'bg-success' : 'bg-danger') + ' text-white rounded-pill px-2.5 py-1 extra-small';
+        }
+        if (adminLivePriceInput && (!adminLivePriceInput.value || adminLivePriceInput.value === '0')) {
+          adminLivePriceInput.value = Math.round(price * 0.85);
+        }
+      } else {
+        if (adminInfoBox) adminInfoBox.style.display = 'none';
+      }
+    });
+
+    if (adminProductSelect.value) {
+      adminProductSelect.dispatchEvent(new Event('change'));
+    }
+  }
+
+  // Live filter product list in create live modal
+  const adminFilterInput = document.getElementById('adminProductFilterInput');
+  if (adminFilterInput && adminProductSelect) {
+    adminFilterInput.addEventListener('input', function() {
+      const q = this.value.toLowerCase().trim();
+      const options = adminProductSelect.options;
+      for (let i = 0; i < options.length; i++) {
+        const opt = options[i];
+        if (!opt.value) continue;
+        const searchData = opt.getAttribute('data-search') || '';
+        if (!q || searchData.includes(q)) {
+          opt.style.display = '';
+        } else {
+          opt.style.display = 'none';
+        }
+      }
+    });
+  }
+});
+
+
 function switchAdminLiveTab(tabName) {
+
   const paneList = document.getElementById('live-list-pane');
   const paneReport = document.getElementById('live-report-pane');
   const btnList = document.getElementById('btnTabList');

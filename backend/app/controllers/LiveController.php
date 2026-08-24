@@ -141,10 +141,12 @@ class LiveController {
             }
         }
 
-        $allProducts = $spModel->getDiscountProducts([], 20);
+        $allProducts = $spModel->getAllProducts([], 1000);
         if (empty($allProducts)) {
-            $allProducts = $spModel->getAllProducts([], 20);
+            $allProducts = $spModel->getDiscountProducts([], 1000);
         }
+
+
 
         $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
         require_once $viewDir . '/live.php';
@@ -170,16 +172,26 @@ class LiveController {
             exit;
         }
 
+        $roomName = 'skinsyntax_room_' . ($liveDoc['ma_phong'] ?? $liveDoc['id'] ?? $liveId);
         $status = (string)($liveDoc['trang_thai'] ?? 'danglive');
-        if (in_array($status, ['ended', 'ketthuc', 'cancelled'], true)) {
-            http_response_code(400);
-            echo json_encode(['ok' => false, 'message' => 'Phiên LiveStream này đã kết thúc hoặc bị hủy'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            exit;
-        }
-
-        $roomName = 'skinsyntax_room_' . ($liveDoc['ma_phong'] ?? $liveId);
         $role = current_role();
         $isHostOrAdmin = in_array($role, ['admin', 'nhanvien'], true);
+
+        if (in_array($status, ['ended', 'ketthuc', 'cancelled'], true) && !$isHostOrAdmin) {
+            echo json_encode([
+                'ok' => true,
+                'data' => [
+                    'url' => 'wss://skinsyntax-live.livekit.cloud',
+                    'server_url' => 'wss://skinsyntax-live.livekit.cloud',
+                    'token' => '',
+                    'participant_token' => '',
+                    'roomName' => 'skinsyntax_room_' . ($liveDoc['ma_phong'] ?? $liveId),
+                    'can_publish' => true
+                ],
+                'message' => 'Phiên LiveStream đã kết thúc'
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit;
+        }
 
         $currentUser = current_user() ?? [];
         if (is_logged_in() && !empty($currentUser['ma_nd'])) {
@@ -216,6 +228,56 @@ class LiveController {
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
+
+    public function apiSearchCatalogProducts(): void {
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+
+        $q = trim((string)($_GET['q'] ?? $_POST['q'] ?? ''));
+
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        require_once __DIR__ . '/../models/SanPham.php';
+        $spModel = new SanPham($mongoDb);
+
+        $results = $spModel->paginate(1, 30, $q);
+        $items = $results['items'] ?? [];
+
+        $out = [];
+        foreach ($items as $p) {
+            $pId = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
+            $pName = (string)($p['ten_san_pham'] ?? '');
+            $pPrice = (float)($p['gia_ban'] ?? 0);
+            $pBrand = (string)($p['thuong_hieu'] ?? 'SkinSyntax');
+            $pStock = (int)($p['so_luong_kho'] ?? $p['so_luong'] ?? $p['ton_kho'] ?? 20);
+            $pImg = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+
+            $out[] = [
+                'id' => $pId,
+                'ma_san_pham' => $pId,
+                'ten_san_pham' => $pName,
+                'thuong_hieu' => $pBrand,
+                'name' => $pName,
+                'price' => $pPrice,
+                'gia_ban' => $pPrice,
+                'formatted_price' => function_exists('vnd') ? vnd($pPrice) : number_format($pPrice) . ' đ',
+                'stock' => $pStock,
+                'img' => $pImg,
+                'hinh_anh' => $pImg
+            ];
+        }
+
+        echo json_encode([
+            'ok' => true,
+            'query' => $q,
+            'products' => $out,
+            'items' => $out
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
 
     private function buildLivekitJwtToken(string $apiKey, string $apiSecret, string $room, string $identity, string $name, bool $canPublish = false, int $ttlSeconds = 3600): string {
         $header = json_encode(['alg' => 'HS256', 'typ' => 'JWT']);
@@ -494,25 +556,36 @@ class LiveController {
         }
 
         $role = current_role();
-        if (!in_array($role, ['admin', 'nhanvien'], true)) {
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'message' => 'Bạn không có quyền thực hiện thao tác này']);
-            exit;
-        }
-
         $liveId = trim((string)($_POST['live_id'] ?? $_GET['live_id'] ?? $_POST['id'] ?? $_GET['id'] ?? ''));
         $productId = trim((string)($_POST['product_id'] ?? $_GET['product_id'] ?? $_POST['ma_san_pham'] ?? $_GET['ma_san_pham'] ?? ''));
         $livePrice = isset($_POST['gia_uu_dai_live']) ? (float)$_POST['gia_uu_dai_live'] : (isset($_GET['gia_uu_dai_live']) ? (float)$_GET['gia_uu_dai_live'] : null);
         $durationMinutes = max(5, (int)($_POST['duration_minutes'] ?? $_GET['duration_minutes'] ?? 15));
+        $dealStock = max(1, (int)($_POST['so_luong_kho_deal'] ?? $_GET['so_luong_kho_deal'] ?? 20));
 
-        if ($liveId === '' || $productId === '') {
-            if (!empty($_POST['redirect'])) {
-                set_flash('error', 'Thiếu tham số phiên Live hoặc Mã sản phẩm');
-                header('Location: ' . BASE_URL . '/index.php?r=admin_lives');
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (!empty($_POST['ajax']) || !empty($_GET['ajax']));
+
+        $targetUrl = BASE_URL . '/index.php?r=live' . ($liveId !== '' ? '&id=' . urlencode($liveId) : '');
+
+        if (!in_array($role, ['admin', 'nhanvien'], true)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'message' => 'Bạn không có quyền thực hiện thao tác này'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'message' => 'Thiếu tham số phiên Live hoặc Mã sản phẩm']);
+            set_flash('error', 'Bạn không có quyền thực hiện thao tác này');
+            header('Location: ' . $targetUrl);
+            exit;
+        }
+
+        if ($liveId === '' || $productId === '') {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'message' => 'Thiếu tham số phiên Live hoặc Mã sản phẩm'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+            set_flash('error', 'Thiếu tham số phiên Live hoặc Mã sản phẩm');
+            header('Location: ' . $targetUrl);
             exit;
         }
 
@@ -523,38 +596,98 @@ class LiveController {
 
         $targetLive = $phienLiveModel->getLiveById($liveId);
         $st = (string)($targetLive['trang_thai'] ?? 'danglive');
-        $referer = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/index.php?r=live&id=' . urlencode($liveId));
 
         if ($st === 'ketthuc' || $st === 'ended') {
-            if (!empty($_POST['redirect']) || !empty($_GET['redirect'])) {
-                set_flash('error', 'Phiên LiveStream này đã KẾT THÚC. Không thể ghim sản phẩm mới!');
-                header('Location: ' . $referer);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'message' => 'Phiên LiveStream này đã KẾT THÚC. Không thể ghim sản phẩm mới!'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
+            set_flash('error', 'Phiên LiveStream này đã KẾT THÚC. Không thể ghim sản phẩm mới!');
+            header('Location: ' . $targetUrl);
+            exit;
+        }
+
+        $ok = $phienLiveModel->ghimSanPham($liveId, $productId, $livePrice, $durationMinutes, $dealStock);
+
+        if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'message' => 'Phiên LiveStream này đã KẾT THÚC. Không thể ghim sản phẩm mới!'], JSON_UNESCAPED_UNICODE);
+            echo json_encode([
+                'ok' => $ok,
+                'message' => $ok ? "Đã chọn SP #{$productId} & bật deal {$durationMinutes} phút!" : 'Không thể chọn sản phẩm',
+                'live_id' => $liveId,
+                'pinned_product_id' => $productId,
+                'gia_uu_dai_live' => $livePrice
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;
         }
 
-        $ok = $phienLiveModel->ghimSanPham($liveId, $productId, $livePrice, $durationMinutes);
-
-        if (!empty($_POST['redirect']) || !empty($_GET['redirect'])) {
-            set_flash($ok ? 'success' : 'error', $ok ? "Đã ghim SP #{$productId} & kích hoạt Flash Deal {$durationMinutes} phút!" : 'Không thể ghim sản phẩm');
-            header('Location: ' . $referer);
-            exit;
-        }
-
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'ok' => $ok,
-            'message' => $ok ? "Đã ghim sản phẩm mới & kích hoạt Flash Deal {$durationMinutes} phút!" : 'Không thể ghim sản phẩm',
-            'live_id' => $liveId,
-            'pinned_product_id' => $productId,
-            'gia_uu_dai_live' => $livePrice,
-            'duration_minutes' => $durationMinutes
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        set_flash($ok ? 'success' : 'error', $ok ? "Đã chọn SP #{$productId} & bật deal {$durationMinutes} phút!" : 'Không thể chọn sản phẩm');
+        header('Location: ' . $targetUrl);
         exit;
     }
+
+    public function apiUploadLiveRecording(): void {
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+
+        $role = current_role();
+        if (!in_array($role, ['admin', 'nhanvien'], true)) {
+            echo json_encode(['ok' => false, 'message' => 'Bạn không có quyền thực hiện thao tác này'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $liveId = trim((string)($_POST['live_id'] ?? $_GET['live_id'] ?? ''));
+        if ($liveId === '' || empty($_FILES['video_blob'])) {
+            echo json_encode(['ok' => false, 'message' => 'Thiếu ID phiên Live hoặc file video bản ghi'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $file = $_FILES['video_blob'];
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['ok' => false, 'message' => 'Upload thất bại với mã lỗi ' . $file['error']], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $uploadDir = __DIR__ . '/../../../public/uploads/live_recordings';
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0777, true);
+        }
+
+        $ext = 'webm';
+        if (!empty($file['type']) && str_contains($file['type'], 'mp4')) {
+            $ext = 'mp4';
+        }
+
+        $filename = 'live_rec_' . $liveId . '_' . time() . '.' . $ext;
+        $targetPath = $uploadDir . '/' . $filename;
+
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            $publicUrl = BASE_URL . '/public/uploads/live_recordings/' . $filename;
+
+            global $db;
+            $mongoDb = $db ?? $this->pdo;
+            require_once __DIR__ . '/../models/PhienLive.php';
+            $phienLiveModel = new PhienLive($mongoDb);
+            $phienLiveModel->capNhatPhienLive($liveId, [
+                'url_ban_ghi' => $publicUrl,
+                'trang_thai' => 'ketthuc'
+            ]);
+
+            echo json_encode([
+                'ok' => true,
+                'url' => $publicUrl,
+                'message' => 'Đã tự động lưu bản ghi video Livestream thành công!'
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit;
+        }
+
+        echo json_encode(['ok' => false, 'message' => 'Không thể di chuyển file video đã quay'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
 
     public function adminLiveAddDeal(): void {
         while (ob_get_level() > 0) {
@@ -595,10 +728,12 @@ class LiveController {
             'trang_thai' => 'sap_dien_ra'
         ]);
 
+        $redirectUrl = !empty($_POST['redirect_live']) ? (BASE_URL . '/index.php?r=live&id=' . urlencode($liveId)) : (BASE_URL . '/index.php?r=admin_lives');
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã thêm sản phẩm ưu đãi Flash Deal mới vào phiên Live!' : 'Không thể thêm sản phẩm');
-        header('Location: ' . BASE_URL . '/index.php?r=admin_lives');
+        header('Location: ' . $redirectUrl);
         exit;
     }
+
 
     public function adminLiveDeleteDeal(): void {
         while (ob_get_level() > 0) {

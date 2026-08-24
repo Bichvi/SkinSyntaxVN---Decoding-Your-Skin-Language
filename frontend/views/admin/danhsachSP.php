@@ -35,56 +35,61 @@ if ($totalPages <= 7) {
 }
 ?>
 
-<div class="container py-4">
+<div class="container-fluid px-4 py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-        <h1 class="h3 mb-0">Quản lý sản phẩm</h1>
-        <a href="index.php?r=admin_sp_create" class="btn btn-primary">+ Thêm sản phẩm</a>
+        <div>
+            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Quản lý sản phẩm</h1>
+            <div class="text-muted small">Danh sách và kiểm soát tồn kho toàn bộ ngành hàng mỹ phẩm.</div>
+        </div>
+        <a href="index.php?r=admin_sp_create" class="btn btn-primary btn-sm px-3 py-2 fw-semibold" style="border-radius: 6px; background: #183B2B; border: none;">+ Thêm sản phẩm mới</a>
     </div>
 
-    <form class="row g-2 align-items-end mb-3" method="GET" action="index.php" data-live-filter="true">
-        <input type="hidden" name="r" value="admin_sp">
-        <div class="col-12 col-lg-5">
-            <label class="form-label small text-muted mb-1">Tìm kiếm nhanh sản phẩm</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Nhập mã SP, tên sản phẩm, thương hiệu, danh mục, barcode...">
+    <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
+        <form class="row g-2 align-items-end" method="GET" action="index.php" data-live-filter="true">
+            <input type="hidden" name="r" value="admin_sp">
+            <div class="col-12 col-lg-5">
+                <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Tìm kiếm nhanh sản phẩm</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-color: var(--admin-border);"><i class="fa-solid fa-magnifying-glass text-muted" style="font-size: 0.8rem;"></i></span>
+                    <input type="text" class="form-control border-start-0" name="q" value="<?= h($q) ?>" placeholder="Nhập mã SP, tên sản phẩm, thương hiệu, danh mục..." style="border-color: var(--admin-border); border-radius: 0 6px 6px 0; font-size: 0.85rem;">
+                </div>
             </div>
-        </div>
-        <div class="col-12 col-lg-2">
-            <label class="form-label small text-muted mb-1">Trạng thái</label>
-            <select class="form-select" name="status">
-                <option value="" <?= $status === '' ? 'selected' : '' ?>>Tất cả</option>
-                <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Đang hiển thị</option>
-                <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>>Tạm ẩn</option>
-            </select>
-        </div>
-        <div class="col-12 col-lg-2">
-            <label class="form-label small text-muted mb-1">Tồn kho</label>
-            <select class="form-select" name="stock_status">
-                <option value="" <?= $stockStatus === '' ? 'selected' : '' ?>>Tất cả</option>
-                <option value="con_hang" <?= $stockStatus === 'con_hang' ? 'selected' : '' ?>>Còn hàng</option>
-                <option value="het_hang" <?= $stockStatus === 'het_hang' ? 'selected' : '' ?>>Hết hàng</option>
-            </select>
-        </div>
-        <div class="col-12 col-lg-3 d-grid d-md-flex gap-2">
-            <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
-            <a href="index.php?r=admin_sp" class="btn btn-outline-secondary w-100">Xóa</a>
-        </div>
-    </form>
+            <div class="col-12 col-lg-2">
+                <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Trạng thái hiển thị</label>
+                <select class="form-select" name="status" style="border-color: var(--admin-border); border-radius: 6px; font-size: 0.85rem;">
+                    <option value="" <?= $status === '' ? 'selected' : '' ?>>Tất cả</option>
+                    <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Đang hiển thị</option>
+                    <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>>Tạm ẩn</option>
+                </select>
+            </div>
+            <div class="col-12 col-lg-2">
+                <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Tồn kho</label>
+                <select class="form-select" name="stock_status" style="border-color: var(--admin-border); border-radius: 6px; font-size: 0.85rem;">
+                    <option value="" <?= $stockStatus === '' ? 'selected' : '' ?>>Tất cả</option>
+                    <option value="con_hang" <?= $stockStatus === 'con_hang' ? 'selected' : '' ?>>Còn hàng</option>
+                    <option value="het_hang" <?= $stockStatus === 'het_hang' ? 'selected' : '' ?>>Hết hàng</option>
+                </select>
+            </div>
+            <div class="col-12 col-lg-3 d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-sm text-white fw-semibold w-100" style="background: #183B2B; border-radius: 6px;">Tìm kiếm</button>
+                <a href="index.php?r=admin_sp" class="btn btn-sm btn-outline-secondary fw-semibold w-100" style="border-radius: 6px;">Xóa bộ lọc</a>
+            </div>
+        </form>
+    </div>
 
-    <div class="card border-0 shadow-sm">
+    <div class="admin-card p-0 overflow-hidden mb-3" style="border-radius: 8px !important;">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table class="table admin-table align-middle mb-0">
+                <thead>
                     <tr>
-                        <th>Mã SP</th>
-                        <th>Tên sản phẩm</th>
-                        <th class="text-end">Giá bán</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Tồn kho</th>
-                        <th>Trạng thái kho</th>
-                        <th>Ảnh</th>
-                        <th class="text-end">Thao tác</th>
+                        <th style="width: 100px;">Mã SP</th>
+                        <th style="min-width: 240px;">Sản phẩm</th>
+                        <th class="text-end" style="width: 120px;">Giá bán</th>
+                        <th style="width: 130px;">Hiển thị</th>
+                        <th class="text-end" style="width: 180px;">Cập nhật Kho</th>
+                        <th style="width: 120px;">Trạng thái kho</th>
+                        <th style="width: 70px;">Ảnh</th>
+                        <th class="text-end" style="width: 160px;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -112,10 +117,13 @@ if ($totalPages <= 7) {
                             }
                             ?>
                             <tr>
-                                <td><?= h($productId) ?></td>
-                                <td class="fw-semibold"><?= h($item['ten_san_pham'] ?? '') ?></td>
-                                <td class="text-end"><?= vnd($item['gia_ban'] ?? 0) ?></td>
-                                <td><span class="badge <?= $isHidden ? 'text-bg-secondary' : 'text-bg-success' ?>"><?= $isHidden ? 'Tạm ẩn' : 'Đang hiển thị' ?></span></td>
+                                <td><code class="px-2 py-1 rounded fw-semibold" style="background: #F1F5F9; color: #0F172A; font-size: 0.78rem; border: 1px solid #E2E8F0;"><?= h($productId) ?></code></td>
+                                <td>
+                                    <div class="fw-semibold text-truncate" style="max-width: 260px; color: var(--admin-text); font-size: 0.86rem;"><?= h($item['ten_san_pham'] ?? '') ?></div>
+                                    <div class="small text-muted" style="font-size: 0.76rem;"><?= h($item['thuong_hieu'] ?? 'SkinSyntax') ?></div>
+                                </td>
+                                <td class="text-end fw-semibold tabular-nums" style="color: #183B2B; font-size: 0.88rem;"><?= vnd($item['gia_ban'] ?? 0) ?></td>
+                                <td><span class="status-pill <?= $isHidden ? 'status-pill-cancelled' : 'status-pill-completed' ?>"><?= $isHidden ? 'Tạm ẩn' : 'Hiển thị' ?></span></td>
                                 <td class="text-end">
                                     <form method="POST" action="index.php?r=admin_sp_stock" class="d-inline-flex gap-1 justify-content-end align-items-center">
                                         <input type="hidden" name="id" value="<?= h($productId) ?>">
@@ -123,33 +131,35 @@ if ($totalPages <= 7) {
                                         <input type="hidden" name="status_filter" value="<?= h($status) ?>">
                                         <input type="hidden" name="stock_status_filter" value="<?= h($stockStatus) ?>">
                                         <input type="hidden" name="page" value="<?= (int)$currentPage ?>">
-                                        <input type="number" min="0" name="so_luong_ton_kho" value="<?= $stock ?>" class="form-control form-control-sm text-end" style="width:88px;">
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">Lưu</button>
+                                        <input type="number" min="0" name="so_luong_ton_kho" value="<?= $stock ?>" class="form-control form-control-sm text-end tabular-nums" style="width:78px; border-radius: 4px; font-size: 0.82rem; border-color: var(--admin-border);">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;">Lưu</button>
                                     </form>
                                 </td>
-                                <td><span class="badge <?= $isOutOfStock ? 'text-bg-danger' : 'text-bg-success' ?>"><?= $isOutOfStock ? 'Hết hàng' : 'Còn hàng' ?></span></td>
+                                <td><span class="status-pill <?= $isOutOfStock ? 'status-pill-cancelled' : 'status-pill-completed' ?>"><?= $isOutOfStock ? 'Hết hàng' : 'Còn hàng' ?></span></td>
                                 <td>
                                     <?php if ($img !== ''): ?>
-                                        <img src="<?= h($img) ?>" alt="<?= h($item['ten_san_pham'] ?? '') ?>" style="width:52px;height:52px;object-fit:cover;border-radius:8px;">
+                                        <img src="<?= h($img) ?>" alt="<?= h($item['ten_san_pham'] ?? '') ?>" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--admin-border);">
                                     <?php else: ?>
-                                        <span class="text-muted small">Không có ảnh</span>
+                                        <span class="text-muted small" style="font-size: 0.72rem;">No img</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
-                                    <a href="index.php?r=admin_sp_edit&id=<?= urlencode($productId) ?>" class="btn btn-sm btn-outline-warning">Sửa</a>
-                                    <form method="POST" action="index.php?r=admin_sp_visibility" class="d-inline">
-                                        <input type="hidden" name="id" value="<?= h($productId) ?>">
-                                        <input type="hidden" name="status" value="<?= $isHidden ? 'active' : 'inactive' ?>">
-                                        <input type="hidden" name="q" value="<?= h($q) ?>">
-                                        <input type="hidden" name="status_filter" value="<?= h($status) ?>">
-                                        <input type="hidden" name="stock_status_filter" value="<?= h($stockStatus) ?>">
-                                        <input type="hidden" name="page" value="<?= (int)$currentPage ?>">
-                                        <button type="submit" class="btn btn-sm <?= $isHidden ? 'btn-outline-success' : 'btn-outline-secondary' ?>"><?= $isHidden ? 'Hiện web' : 'Tạm ẩn' ?></button>
-                                    </form>
-                                    <form method="POST" action="index.php?r=admin_sp_delete" class="d-inline" onsubmit="return confirm('Xóa sản phẩm này?');">
-                                        <input type="hidden" name="id" value="<?= h($productId) ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
-                                    </form>
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="index.php?r=admin_sp_edit&id=<?= urlencode($productId) ?>" class="btn btn-sm btn-outline-secondary px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Chỉnh sửa"><i class="bi bi-pencil-square me-1"></i>Sửa</a>
+                                        <form method="POST" action="index.php?r=admin_sp_visibility" class="d-inline">
+                                            <input type="hidden" name="id" value="<?= h($productId) ?>">
+                                            <input type="hidden" name="status" value="<?= $isHidden ? 'active' : 'inactive' ?>">
+                                            <input type="hidden" name="q" value="<?= h($q) ?>">
+                                            <input type="hidden" name="status_filter" value="<?= h($status) ?>">
+                                            <input type="hidden" name="stock_status_filter" value="<?= h($stockStatus) ?>">
+                                            <input type="hidden" name="page" value="<?= (int)$currentPage ?>">
+                                            <button type="submit" class="btn btn-sm <?= $isHidden ? 'btn-outline-success' : 'btn-outline-secondary' ?> px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="<?= $isHidden ? 'Hiện web' : 'Tạm ẩn' ?>"><i class="bi <?= $isHidden ? 'bi-eye me-1' : 'bi-eye-slash me-1' ?>"></i><?= $isHidden ? 'Hiện' : 'Ẩn' ?></button>
+                                        </form>
+                                        <form method="POST" action="index.php?r=admin_sp_delete" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này không?');">
+                                            <input type="hidden" name="id" value="<?= h($productId) ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Xóa"><i class="bi bi-trash me-1"></i>Xóa</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -165,17 +175,17 @@ if ($totalPages <= 7) {
 
     <?php if ($totalPages > 1): ?>
         <nav class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-            <div class="small text-muted">Trang <?= number_format($currentPage, 0, ',', '.') ?> / <?= number_format($totalPages, 0, ',', '.') ?></div>
-            <ul class="pagination pagination-sm mb-0 flex-wrap justify-content-start justify-content-md-end">
-                <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>"><a class="page-link" href="<?= h($pageLink(max(1, $currentPage - 1))) ?>">Trước</a></li>
+            <div class="small text-muted" style="font-size: 0.8rem;">Trang <?= number_format($currentPage, 0, ',', '.') ?> / <?= number_format($totalPages, 0, ',', '.') ?></div>
+            <ul class="pagination pagination-sm mb-0 flex-wrap justify-content-start justify-content-md-end gap-1">
+                <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>"><a class="page-link" href="<?= h($pageLink(max(1, $currentPage - 1))) ?>" style="border-radius: 4px; border-color: var(--admin-border);">«</a></li>
                 <?php foreach ($paginationItems as $item): ?>
                     <?php if (is_string($item)): ?>
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <li class="page-item disabled"><span class="page-link" style="border-radius: 4px;">...</span></li>
                     <?php else: ?>
-                        <li class="page-item <?= $item === $currentPage ? 'active' : '' ?>"><a class="page-link" href="<?= h($pageLink((int)$item)) ?>"><?= $item ?></a></li>
+                        <li class="page-item <?= $item === $currentPage ? 'active' : '' ?>"><a class="page-link" href="<?= h($pageLink((int)$item)) ?>" style="border-radius: 4px; <?= $item === $currentPage ? 'background: #183B2B; border-color: #183B2B; color: #FFF;' : '' ?>"><?= $item ?></a></li>
                     <?php endif; ?>
                 <?php endforeach; ?>
-                <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>"><a class="page-link" href="<?= h($pageLink(min($totalPages, $currentPage + 1))) ?>">Sau</a></li>
+                <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>"><a class="page-link" href="<?= h($pageLink(min($totalPages, $currentPage + 1))) ?>" style="border-radius: 4px; border-color: var(--admin-border);">»</a></li>
             </ul>
         </nav>
     <?php endif; ?>

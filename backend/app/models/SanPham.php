@@ -176,6 +176,13 @@ class SanPham {
         return $items;
     }
 
+
+    public function getAllProducts(array $filters = [], int $limit = 100, ?string $sort = null): array {
+        $res = $this->paginate(1, max(1, $limit), '', '', '', '', false);
+        return $res['items'] ?? [];
+    }
+
+
     public function find($id, bool $onlyVisibleOnWebsite = false) {
         $filter = $this->productFlexibleFilter($id);
         

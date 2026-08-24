@@ -183,22 +183,21 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     .ai-chat-widget__trigger {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      border: 0;
-      border-radius: 999px;
-      min-width: 228px;
-      max-width: min(70vw, 286px);
-      padding: 8px 14px;
-      background: linear-gradient(135deg, #162F18 0%, #2D5A27 60%, #4A7C59 100%);
+      gap: 12px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: 1px solid #C8DACF;
+      background: #183B2B;
       color: #ffffff;
-      box-shadow: 0 18px 36px rgba(45, 90, 39, 0.28);
-      font-weight: 700;
-      transition: transform 0.22s ease, box-shadow 0.22s ease;
+      box-shadow: 0 4px 14px rgba(24, 59, 43, 0.2);
+      cursor: pointer;
+      transition: all 0.22s ease;
+      position: relative;
     }
 
     .ai-chat-widget__trigger:hover {
+      background: #122B1F;
       transform: translateY(-2px);
-      box-shadow: 0 24px 42px rgba(45, 90, 39, 0.35);
     }
 
     .ai-chat-widget.is-open .ai-chat-widget__trigger {
@@ -206,9 +205,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     }
 
     .ai-chat-widget__trigger-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
       display: grid;
       place-items: center;
       background: rgba(255, 255, 255, 0.14);
@@ -216,32 +215,32 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     }
 
     .ai-chat-widget__trigger-avatar {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at top, #84A98C 0%, #4A7C59 60%, #2D5A27 100%);
+      background: #2D6A4F;
       color: #ffffff;
-      font-size: 14px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      font-size: 13px;
     }
 
     .ai-chat-widget__trigger-text {
       display: grid;
       text-align: left;
-      line-height: 1.1;
+      line-height: 1.2;
       min-width: 0;
     }
 
     .ai-chat-widget__trigger-text strong {
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
     }
 
     .ai-chat-widget__trigger-text small {
-      color: rgba(248, 251, 255, 0.76);
+      color: rgba(248, 251, 255, 0.78);
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -250,11 +249,11 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     .ai-chat-widget__panel {
       width: min(360px, calc(100vw - 24px));
       max-height: min(68vh, 520px);
-      border-radius: 22px;
+      border-radius: 12px;
       overflow: hidden;
-      background: #f9fcff;
+      background: #FAFAFA;
       border: 1px solid #dce7f3;
-      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.24);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
       display: flex;
       flex-direction: column;
       opacity: 0;

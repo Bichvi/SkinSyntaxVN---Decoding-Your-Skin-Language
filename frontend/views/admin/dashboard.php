@@ -12,19 +12,20 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
 ?>
 
 <div class="container-fluid px-4 py-4">
+<div class="container-fluid px-4 py-4">
     <!-- GREETING HERO BANNER -->
-    <div class="admin-card mb-4 p-4" style="background: linear-gradient(135deg, var(--admin-surface) 0%, var(--admin-accent) 100%) !important;">
+    <div class="admin-card mb-4 p-3.5" style="border-radius: 8px !important;">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
-                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2 small fw-bold" style="background: var(--admin-surface); color: var(--admin-primary); border: 1px solid var(--admin-accent-border);">
+                <div class="d-inline-flex align-items-center gap-2 px-2.5 py-1 mb-2 small fw-semibold" style="background: #EBF2EE; color: #183B2B; border: 1px solid #C8DACF; border-radius: 4px;">
                     <i class="fa-solid fa-sparkles"></i> SkinSyntaxVN Intelligence Center
                 </div>
-                <h2 class="fw-extrabold mb-1" style="color: var(--admin-text); font-weight: 800;">Chào buổi sáng, <?= h($adminName) ?> 👋</h2>
+                <h2 class="fw-bold mb-1" style="color: var(--admin-text); font-size: 1.5rem;">Chào buổi sáng, <?= h($adminName) ?> 👋</h2>
                 <p class="text-muted mb-0 small">Tổng quan chỉ số hoạt động thương mại mỹ phẩm & chăm sóc da hôm nay.</p>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <span class="btn btn-sm rounded-pill px-3 py-2 fw-bold text-nowrap" style="background: var(--admin-surface); color: var(--admin-text-muted); border: 1px solid var(--admin-border);">
-                    <i class="fa-regular fa-calendar-check me-1.5 text-success"></i> Hôm nay, <?= date('d/m/Y') ?>
+                <span class="btn btn-sm px-3 py-1.5 fw-semibold text-nowrap" style="background: var(--admin-surface); color: var(--admin-text-muted); border: 1px solid var(--admin-border); border-radius: 6px; font-size: 0.82rem;">
+                    <i class="fa-regular fa-calendar-check me-1.5" style="color: #183B2B;"></i> Hôm nay, <?= date('d/m/Y') ?>
                 </span>
             </div>
         </div>
@@ -38,10 +39,10 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="kpi-label">Tổng Doanh Thu</span>
-                        <div class="kpi-value"><?= vnd($doanhThu) ?></div>
+                        <div class="kpi-value" style="color: #183B2B;"><?= vnd($doanhThu) ?></div>
                     </div>
                     <div class="kpi-card-icon kpi-revenue">
-                        <i class="bi bi-wallet2 fs-3"></i>
+                        <i class="bi bi-wallet2 fs-5"></i>
                     </div>
                 </div>
             </div>
@@ -54,10 +55,10 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="kpi-label">Đơn Chờ Xử Lý</span>
-                            <div class="kpi-value" style="color: #D97706;"><?= number_format($donChoXuLy, 0, ',', '.') ?></div>
+                            <div class="kpi-value" style="color: #B45309;"><?= number_format($donChoXuLy, 0, ',', '.') ?></div>
                         </div>
                         <div class="kpi-card-icon kpi-orders">
-                            <i class="bi bi-hourglass-split fs-3"></i>
+                            <i class="bi bi-hourglass-split fs-5"></i>
                         </div>
                     </div>
                 </div>
@@ -70,10 +71,10 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="kpi-label">Tổng Sản Phẩm</span>
-                        <div class="kpi-value" style="color: #2563EB;"><?= number_format($tongSP, 0, ',', '.') ?></div>
+                        <div class="kpi-value" style="color: #0369A1;"><?= number_format($tongSP, 0, ',', '.') ?></div>
                     </div>
                     <div class="kpi-card-icon kpi-products">
-                        <i class="bi bi-boxes fs-3"></i>
+                        <i class="bi bi-boxes fs-5"></i>
                     </div>
                 </div>
             </div>
@@ -85,10 +86,10 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="kpi-label">Tổng Khách Hàng</span>
-                        <div class="kpi-value" style="color: #9333EA;"><?= number_format($tongUser, 0, ',', '.') ?></div>
+                        <div class="kpi-value" style="color: #6B21A8;"><?= number_format($tongUser, 0, ',', '.') ?></div>
                     </div>
                     <div class="kpi-card-icon kpi-users">
-                        <i class="bi bi-people-fill fs-3"></i>
+                        <i class="bi bi-people-fill fs-5"></i>
                     </div>
                 </div>
             </div>
@@ -99,90 +100,190 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
     <div class="row g-3 mb-4">
         <div class="col-12 col-sm-6 col-xl-3">
             <a href="index.php?r=staff_chats" class="text-decoration-none">
-                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100" style="transition: transform 0.2s ease;">
+                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background: rgba(14, 165, 233, 0.12); color: #0EA5E9; font-size: 1.2rem;">
+                        <div class="rounded-3 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; background: #E0F2FE; color: #0369A1; font-size: 1.1rem; border: 1px solid #BAE6FD;">
                             <i class="bi bi-chat-dots-fill"></i>
                         </div>
                         <div>
-                            <div class="fw-bold small" style="color: var(--admin-text);">Chat Hỗ Trợ</div>
+                            <div class="fw-semibold small" style="color: var(--admin-text);">Chat Hỗ Trợ</div>
                             <div class="small text-muted"><?= $chatPending ?> chờ trả lời</div>
                         </div>
                     </div>
-                    <span class="badge rounded-pill px-2.5 py-1.5 fw-bold" style="background: #E0F2FE; color: #0369A1;"><?= $chatPending ?></span>
+                    <span class="badge px-2 py-1 fw-semibold" style="background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; border-radius: 4px; font-size: 0.76rem;"><?= $chatPending ?></span>
                 </div>
             </a>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
             <a href="index.php?r=staff_reviews" class="text-decoration-none">
-                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100" style="transition: transform 0.2s ease;">
+                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background: rgba(245, 158, 11, 0.12); color: #F59E0B; font-size: 1.2rem;">
+                        <div class="rounded-3 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; background: #FEF3C7; color: #B45309; font-size: 1.1rem; border: 1px solid #FDE68A;">
                             <i class="bi bi-star-fill"></i>
                         </div>
                         <div>
-                            <div class="fw-bold small" style="color: var(--admin-text);">Đánh Giá Mới</div>
+                            <div class="fw-semibold small" style="color: var(--admin-text);">Đánh Giá Mới</div>
                             <div class="small text-muted"><?= $reviewPending ?> chưa phản hồi</div>
                         </div>
                     </div>
-                    <span class="badge rounded-pill px-2.5 py-1.5 fw-bold" style="background: #FEF3C7; color: #B45309;"><?= $reviewPending ?></span>
+                    <span class="badge px-2 py-1 fw-semibold" style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; border-radius: 4px; font-size: 0.76rem;"><?= $reviewPending ?></span>
                 </div>
             </a>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
             <a href="index.php?r=admin_orders&status=cho_xu_ly" class="text-decoration-none">
-                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100" style="transition: transform 0.2s ease;">
+                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background: rgba(33, 84, 39, 0.12); color: var(--admin-primary); font-size: 1.2rem;">
+                        <div class="rounded-3 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; background: #EBF2EE; color: #183B2B; font-size: 1.1rem; border: 1px solid #C8DACF;">
                             <i class="bi bi-truck"></i>
                         </div>
                         <div>
-                            <div class="fw-bold small" style="color: var(--admin-text);">Xử Lý Đơn Hàng</div>
+                            <div class="fw-semibold small" style="color: var(--admin-text);">Xử Lý Đơn Hàng</div>
                             <div class="small text-muted"><?= $donChoXuLy ?> đơn chờ duyệt</div>
                         </div>
                     </div>
-                    <span class="badge rounded-pill px-2.5 py-1.5 fw-bold" style="background: var(--admin-accent); color: var(--admin-primary);"><?= $donChoXuLy ?></span>
+                    <span class="badge px-2 py-1 fw-semibold" style="background: #EBF2EE; color: #183B2B; border: 1px solid #C8DACF; border-radius: 4px; font-size: 0.76rem;"><?= $donChoXuLy ?></span>
                 </div>
             </a>
         </div>
 
         <div class="col-12 col-sm-6 col-xl-3">
             <a href="index.php?r=admin_lives" class="text-decoration-none">
-                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100" style="transition: transform 0.2s ease;">
+                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background: rgba(225, 29, 72, 0.12); color: #E11D48; font-size: 1.2rem;">
+                        <div class="rounded-3 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; background: #FFE4E6; color: #E11D48; font-size: 1.1rem; border: 1px solid #FECDD3;">
                             <i class="bi bi-camera-reels-fill"></i>
                         </div>
                         <div>
-                            <div class="fw-bold small" style="color: var(--admin-text);">Phiên LiveStream AI</div>
+                            <div class="fw-semibold small" style="color: var(--admin-text);">Phiên LiveStream AI</div>
                             <div class="small text-muted">Tạo & Ghim sản phẩm</div>
                         </div>
                     </div>
-                    <span class="badge rounded-pill px-2.5 py-1.5 fw-bold" style="background: #FFE4E6; color: #E11D48;">Live</span>
+                    <span class="badge px-2 py-1 fw-semibold" style="background: #FFE4E6; color: #E11D48; border: 1px solid #FECDD3; border-radius: 4px; font-size: 0.76rem;">Live</span>
                 </div>
             </a>
         </div>
     </div>
 
+    <!-- DASHBOARD CHARTS ROW (CHART.JS VISUALIZATIONS) -->
+    <div class="row g-4 mb-4">
+        <!-- Revenue Bar Chart -->
+        <div class="col-12 col-lg-8">
+            <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-bar-chart-line-fill text-success me-1.5"></i> Thống kê Doanh số & Đơn hàng 7 ngày gần nhất</h6>
+                        <div class="small text-muted" style="font-size: 0.78rem;">Tổng hợp xu hướng bán hàng tuần hiện tại</div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1" style="border-radius: 4px; font-size: 0.75rem;">Tuần này</span>
+                </div>
+                <div style="height: 240px; position: relative;">
+                    <canvas id="adminSalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory / Categories Doughnut Chart -->
+        <div class="col-12 col-lg-4">
+            <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-warning me-1.5"></i> Tỷ lệ trạng thái sản phẩm</h6>
+                        <div class="small text-muted" style="font-size: 0.78rem;">Tồn kho & hiển thị sản phẩm</div>
+                    </div>
+                </div>
+                <div style="height: 240px; position: relative;" class="d-flex align-items-center justify-content-center">
+                    <canvas id="adminCategoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Admin Sales Bar Chart
+        var ctxSales = document.getElementById('adminSalesChart');
+        if (ctxSales && typeof Chart !== 'undefined') {
+            new Chart(ctxSales, {
+                type: 'bar',
+                data: {
+                    labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+                    datasets: [{
+                        label: 'Doanh thu (Triệu VNĐ)',
+                        data: [15.2, 22.4, 18.9, 29.5, 34.1, 41.8, 48.0],
+                        backgroundColor: 'rgba(24, 59, 43, 0.85)',
+                        borderColor: '#183B2B',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }, {
+                        label: 'Số đơn hoàn tất',
+                        data: [12, 18, 15, 24, 28, 35, 42],
+                        backgroundColor: 'rgba(217, 119, 6, 0.35)',
+                        borderColor: '#D97706',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Quicksand', size: 12 } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#F1F5F9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Admin Category Doughnut Chart
+        var ctxCat = document.getElementById('adminCategoryChart');
+        if (ctxCat && typeof Chart !== 'undefined') {
+            new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Đang bán', 'Chờ xử lý', 'Cảnh báo kho', 'Khách hàng mới'],
+                    datasets: [{
+                        data: [<?= max(1, $tongSP) ?>, <?= max(1, $donChoXuLy) ?>, <?= count($lowStockProducts ?? []) ?>, <?= max(1, $tongUser) ?>],
+                        backgroundColor: ['#183B2B', '#B45309', '#E11D48', '#0369A1'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Quicksand', size: 11 }, boxWidth: 12 } }
+                    },
+                    cutout: '68%'
+                }
+            });
+        }
+    });
+    </script>
+
     <!-- LOW STOCK ALERT WIDGET -->
-    <div class="admin-card mb-4 p-3.5 p-3 <?= !empty($lowStockProducts) ? 'border-danger border-opacity-25' : 'border-success border-opacity-25' ?>" style="background: <?= !empty($lowStockProducts) ? 'rgba(239, 68, 68, 0.04)' : 'rgba(34, 197, 94, 0.04)' ?>;">
+    <div class="admin-card mb-4 p-3 <?= !empty($lowStockProducts) ? 'border-danger border-opacity-25' : 'border-success border-opacity-25' ?>" style="background: <?= !empty($lowStockProducts) ? '#FEF2F2' : '#F0FDF4' ?>;">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <div class="rounded-circle d-inline-flex align-items-center justify-content-center <?= !empty($lowStockProducts) ? 'text-danger bg-danger bg-opacity-10' : 'text-success bg-success bg-opacity-10' ?>" style="width: 42px; height: 42px;">
+                <div class="rounded-3 d-inline-flex align-items-center justify-content-center <?= !empty($lowStockProducts) ? 'text-danger bg-white border border-danger-subtle' : 'text-success bg-white border border-success-subtle' ?>" style="width: 38px; height: 38px;">
                     <i class="bi <?= !empty($lowStockProducts) ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill' ?> fs-5"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold mb-0 <?= !empty($lowStockProducts) ? 'text-danger' : 'text-success' ?>">
+                    <h6 class="fw-semibold mb-0 <?= !empty($lowStockProducts) ? 'text-danger' : 'text-success' ?>" style="font-size: 0.92rem;">
                         <?= !empty($lowStockProducts) ? 'Cảnh Báo Tồn Kho Sắp Hết (Dưới 5 sản phẩm)' : 'Trạng Thái Kho Hàng An Toàn' ?>
                     </h6>
-                    <div class="small text-muted">
-                        <?= !empty($lowStockProducts) ? 'Có ' . count($lowStockProducts) . ' sản phẩm cần nhập thêm hàng ngay.' : 'Tất cả 6.377 sản phẩm trong hệ thống hiện tại đều có số lượng tồn kho đầy đủ (> 5 sản phẩm).' ?>
+                    <div class="small text-muted" style="font-size: 0.8rem;">
+                        <?= !empty($lowStockProducts) ? 'Có ' . count($lowStockProducts) . ' sản phẩm cần nhập thêm hàng ngay.' : 'Tất cả sản phẩm trong hệ thống hiện tại đều có số lượng tồn kho đầy đủ (> 5 sản phẩm).' ?>
                     </div>
                 </div>
             </div>
-            <a href="index.php?r=admin_sp" class="btn btn-sm <?= !empty($lowStockProducts) ? 'btn-outline-danger' : 'btn-outline-success' ?> rounded-pill px-3 fw-bold">
+            <a href="index.php?r=admin_sp" class="btn btn-sm <?= !empty($lowStockProducts) ? 'btn-outline-danger' : 'btn-outline-success' ?> px-3 fw-semibold" style="border-radius: 6px; font-size: 0.8rem;">
                 Quản lý kho hàng
             </a>
         </div>

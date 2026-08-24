@@ -320,7 +320,12 @@ class SanPhamController {
         return $uniqueHistory;
     }
 
+    public function timkiem() {
+        $this->tatca();
+    }
+
     public function tatca() {
+
         $page = (int)($_GET['page'] ?? 1);
         $q    = $this->normalizeKeyword($_GET['q'] ?? '');
         $cap1 = trim((string)($_GET['cap1'] ?? ''));

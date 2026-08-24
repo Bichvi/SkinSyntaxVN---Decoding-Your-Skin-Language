@@ -221,43 +221,43 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
 
 <div class="auth-page-wrapper d-flex align-items-center justify-content-center py-4 py-md-5" style="min-height: calc(100vh - 180px);">
   <div class="container my-auto">
-    <div class="card border-0 shadow-lg overflow-hidden mx-auto" style="max-width: 900px; border-radius: 28px;">
+    <div class="card border-0 overflow-hidden mx-auto" style="max-width: 860px; border-radius: 12px; border: 1px solid var(--border) !important;">
     <div class="row g-0 align-items-stretch">
-      <!-- Left Panel: Register Form (Screenshot 2) -->
+      <!-- Left Panel: Register Form -->
       <div class="col-lg-7 bg-white p-4 p-md-5">
-        <h3 class="fw-bold mb-1" style="font-size: 1.8rem; color: #1A2F1A;">Đăng Ký Tài Khoản</h3>
-        <p style="color: #5C705E; font-size: 0.88rem; margin-bottom: 20px;">Tạo tài khoản SkinSyntax để lưu đơn hàng, routine và nhận gợi ý cá nhân hóa.</p>
+        <h3 class="fw-bold mb-1" style="font-size: 1.6rem; color: #0F172A;">Đăng Ký Tài Khoản</h3>
+        <p style="color: #64748B; font-size: 0.86rem; margin-bottom: 20px;">Tạo tài khoản SkinSyntax để lưu đơn hàng, routine và nhận gợi ý cá nhân hóa.</p>
 
         <form method="post" action="<?= BASE_URL ?>/index.php?r=xulydangky" id="registerForm" novalidate>
-          <div class="mb-2">
-            <input class="form-control" type="email" name="email" value="<?= h((string)($old['email'] ?? '')) ?>" placeholder="Nhập email" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+          <div class="mb-2.5">
+            <input class="form-control" type="email" name="email" value="<?= h((string)($old['email'] ?? '')) ?>" placeholder="Nhập email" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
           </div>
 
-          <div class="d-flex gap-2 mb-2">
-            <input class="form-control" type="text" id="captchaInput" placeholder="Nhập captcha" autocomplete="off" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
-            <div class="d-flex align-items-center justify-content-center text-white fw-bold px-3" id="captchaCode" data-captcha="<?= h(strtolower($captchaSeed)) ?>" style="background: #215427; border-radius: 999px; font-family: monospace; letter-spacing: 2px; min-width: 90px;"><?= h(strtolower($captchaSeed)) ?></div>
-            <button class="btn btn-outline-secondary px-3" type="button" onclick="location.reload();" style="border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; border-color: #E2EADF;">
+          <div class="d-flex gap-2 mb-2.5">
+            <input class="form-control" type="text" id="captchaInput" placeholder="Nhập captcha" autocomplete="off" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
+            <div class="d-flex align-items-center justify-content-center text-white fw-semibold px-3" id="captchaCode" data-captcha="<?= h(strtolower($captchaSeed)) ?>" style="background: #183B2B; border-radius: 6px; font-family: monospace; letter-spacing: 2px; min-width: 90px; font-size: 0.9rem;"><?= h(strtolower($captchaSeed)) ?></div>
+            <button class="btn btn-outline-secondary px-3" type="button" onclick="location.reload();" style="border-radius: 6px; width: 42px; height: 42px; display: grid; place-items: center; border-color: var(--border);">
               <i class="fa-solid fa-rotate-right"></i>
             </button>
           </div>
 
-          <div class="d-flex gap-2 mb-2">
-            <input class="form-control" type="text" id="otpInput" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
-            <button class="btn fw-bold text-white px-4" id="otpButton" type="button" style="background: #215427; border-radius: 999px; white-space: nowrap;">Lấy mã</button>
+          <div class="d-flex gap-2 mb-2.5">
+            <input class="form-control" type="text" id="otpInput" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
+            <button class="btn fw-semibold text-white px-4" id="otpButton" type="button" style="background: #183B2B; border-radius: 6px; white-space: nowrap; font-size: 0.86rem;">Lấy mã</button>
           </div>
-          <div class="auth-register-note mb-2" id="otpHint" style="font-size: 0.78rem; color: #5C705E;">Nhập đúng email, captcha rồi bấm Lấy mã.</div>
+          <div class="auth-register-note mb-2.5" id="otpHint" style="font-size: 0.76rem; color: #64748B;">Nhập đúng email, captcha rồi bấm Lấy mã.</div>
 
-          <div class="row g-2 mb-2">
+          <div class="row g-2 mb-2.5">
             <div class="col-6">
-              <input class="form-control" type="password" name="mat_khau" placeholder="Mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+              <input class="form-control" type="password" name="mat_khau" placeholder="Mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
             </div>
             <div class="col-6">
-              <input class="form-control" type="password" name="mat_khau2" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+              <input class="form-control" type="password" name="mat_khau2" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
             </div>
           </div>
 
-          <div class="mb-2">
-            <input class="form-control" type="text" name="ho_ten" value="<?= h((string)($old['ho_ten'] ?? '')) ?>" placeholder="Họ tên" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
+          <div class="mb-2.5">
+            <input class="form-control" type="text" name="ho_ten" value="<?= h((string)($old['ho_ten'] ?? '')) ?>" placeholder="Họ tên" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
           </div>
 
           <div class="d-flex align-items-center gap-3 mb-2 small" style="color: #5C705E;">

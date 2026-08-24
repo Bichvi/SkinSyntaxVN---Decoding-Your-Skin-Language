@@ -32,93 +32,91 @@ $topProduct = $topProducts[0] ?? null;
 
 <style>
 .report-hero-card {
-  background: linear-gradient(135deg, var(--admin-surface, #ffffff) 0%, var(--admin-accent, #f0f4f1) 100%) !important;
-  border: 1px solid var(--admin-border, #e2eadf);
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(45, 90, 39, 0.05);
+  background: var(--admin-surface, #ffffff) !important;
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: var(--admin-shadow);
 }
 .report-kpi-card {
   background: var(--admin-surface, #ffffff);
-  border: 1px solid var(--admin-border, #e2eadf);
-  border-radius: 18px;
-  padding: 22px 24px;
-  box-shadow: 0 4px 16px rgba(45, 90, 39, 0.04);
-  transition: all 0.25s ease;
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--admin-shadow);
+  transition: all 0.2s ease;
   height: 100%;
 }
 .report-kpi-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(45, 90, 39, 0.08);
-  border-color: #84A98C;
+  border-color: var(--admin-accent-border);
+  box-shadow: var(--admin-shadow-hover);
 }
 .report-kpi-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   flex-shrink: 0;
 }
 .rank-badge {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: inline-grid;
-  place-items: center;
-  font-weight: 800;
-  font-size: 0.82rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.76rem;
 }
-.rank-1 { background: #FEF3C7; color: #B45309; border: 1px solid #F59E0B; }
-.rank-2 { background: #E0F2FE; color: #0369A1; border: 1px solid #0EA5E9; }
-.rank-3 { background: #DCFCE7; color: #15803D; border: 1px solid #22C55E; }
-.rank-other { background: #F1F5F9; color: #64748B; }
+.rank-1 { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+.rank-2 { background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
+.rank-3 { background: #FFEDD5; color: #C2410C; border: 1px solid #FED7AA; }
+.rank-other { background: #F8FAFC; color: #64748B; border: 1px solid #F1F5F9; }
 </style>
 
 <div class="container-fluid px-4 py-4">
-    <!-- HEADER HERO & FILTER PANEL -->
-    <div class="report-hero-card p-4 mb-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-            <div>
-                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2 small fw-bold" style="background: rgba(33,84,39,0.1); color: #215427;">
-                    <i class="bi bi-graph-up-arrow me-1"></i> Báo Cáo Kinh Doanh & Doanh Thu
-                </div>
-                <h2 class="fw-extrabold mb-1" style="color: var(--admin-text); font-weight: 800;">Báo cáo & Thống kê hệ thống</h2>
-                <p class="text-muted mb-0 small">Phân tích hiệu suất bán hàng, doanh thu theo tháng và top sản phẩm dẫn đầu.</p>
-            </div>
-            <div>
-                <span class="badge rounded-pill px-3 py-2 fw-bold text-success border border-success-subtle bg-success-subtle">
-                    <i class="bi bi-check-circle-fill me-1"></i> Dữ liệu tự động cập nhật
-                </span>
-            </div>
+    <!-- PAGE HEADER -->
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
+        <div>
+            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-success me-2"></i>Báo Cáo Doanh Thu & Hiệu Suất Kinh Doanh</h1>
+            <p class="text-muted mb-0 small">Thống kê doanh số bán hàng, phân tích xu hướng và top sản phẩm chạy nhất.</p>
         </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge px-3 py-2 fw-semibold text-dark border" style="background: var(--admin-surface-subtle); border-radius: 6px; font-size: 0.8rem;">
+                <i class="bi bi-clock me-1 text-success"></i> <?= date('d/m/Y - H:i') ?>
+            </span>
+        </div>
+    </div>
 
-        <form method="get" action="index.php" class="row g-3 align-items-end pt-3" style="border-top: 1px solid var(--admin-border);">
+    <!-- DATE FILTER TOOLBAR -->
+    <div class="report-hero-card p-3 mb-4">
+        <form class="row g-2 align-items-end" method="get" action="index.php">
             <input type="hidden" name="r" value="admin_reports">
             <div class="col-12 col-md-3">
-                <label class="form-label fw-bold small text-muted" for="reportStartDate">TỪ NGÀY</label>
-                <input type="date" class="form-control rounded-3" id="reportStartDate" name="start_date" value="<?= h($reportStartDate) ?>">
+                <label class="form-label fw-semibold small text-muted mb-1" for="reportStartDate" style="font-size: 0.76rem;">TỪ NGÀY</label>
+                <input type="date" class="form-control" id="reportStartDate" name="start_date" value="<?= h($reportStartDate) ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-12 col-md-3">
-                <label class="form-label fw-bold small text-muted" for="reportEndDate">ĐẾN NGÀY</label>
-                <input type="date" class="form-control rounded-3" id="reportEndDate" name="end_date" value="<?= h($reportEndDate) ?>">
+                <label class="form-label fw-semibold small text-muted mb-1" for="reportEndDate" style="font-size: 0.76rem;">ĐẾN NGÀY</label>
+                <input type="date" class="form-control" id="reportEndDate" name="end_date" value="<?= h($reportEndDate) ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-12 col-md-6 d-flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-success px-4 rounded-3 fw-bold">
-                    <i class="bi bi-funnel-fill me-1.5"></i> Lọc Báo Cáo
+                <button type="submit" class="btn text-white px-3 py-1.5 fw-semibold" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">
+                    <i class="bi bi-funnel-fill me-1"></i> Lọc Báo Cáo
                 </button>
-                <button type="submit" name="export" value="excel" class="btn btn-outline-success px-4 rounded-3 fw-bold">
-                    <i class="bi bi-file-earmark-excel-fill me-1.5"></i> Xuất Excel
+                <button type="submit" name="export" value="excel" class="btn btn-outline-success px-3 py-1.5 fw-semibold" style="border-radius: 6px; font-size: 0.85rem;">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Xuất Excel
                 </button>
                 <?php if ($hasDateFilter): ?>
-                    <a class="btn btn-light border px-3 rounded-3 fw-semibold" href="index.php?r=admin_reports">Xóa Lọc</a>
+                    <a class="btn btn-outline-secondary px-3 py-1.5 fw-semibold" href="index.php?r=admin_reports" style="border-radius: 6px; font-size: 0.85rem;">Xóa Lọc</a>
                 <?php endif; ?>
             </div>
-            <div class="col-12">
-                <div class="small text-muted fw-semibold"><i class="bi bi-info-circle-fill me-1 text-primary"></i> <?= h($reportPeriodText) ?></div>
+            <div class="col-12 mt-2">
+                <div class="small text-muted fw-semibold" style="font-size: 0.78rem;"><i class="bi bi-info-circle me-1 text-success"></i> <?= h($reportPeriodText) ?></div>
                 <?php if ($reportError !== ''): ?>
-                    <div class="alert alert-danger mt-2 mb-0 rounded-3"><?= h($reportError) ?></div>
+                    <div class="alert alert-danger mt-2 mb-0 p-2 rounded small"><?= h($reportError) ?></div>
                 <?php endif; ?>
             </div>
         </form>
@@ -130,11 +128,11 @@ $topProduct = $topProducts[0] ?? null;
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="report-kpi-card d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Doanh Thu Kỳ Này</div>
-                    <div class="fs-3 fw-extrabold text-danger my-1" style="font-weight: 800;"><?= vnd($totalRevenueWindow) ?></div>
-                    <div class="small text-muted fw-medium"><?= number_format($totalOrdersWindow) ?> đơn hàng hợp lệ</div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Doanh Thu Kỳ Này</div>
+                    <div class="fs-3 fw-bold text-danger my-1 tabular-nums"><?= vnd($totalRevenueWindow) ?></div>
+                    <div class="small text-muted fw-medium" style="font-size: 0.76rem;"><?= number_format($totalOrdersWindow) ?> đơn hàng hợp lệ</div>
                 </div>
-                <div class="report-kpi-icon" style="background: rgba(225, 29, 72, 0.12); color: #E11D48;">
+                <div class="report-kpi-icon" style="background: #FFE4E6; color: #E11D48; border: 1px solid #FECDD3;">
                     <i class="bi bi-wallet2"></i>
                 </div>
             </div>
@@ -144,11 +142,11 @@ $topProduct = $topProducts[0] ?? null;
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="report-kpi-card d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Trung Bình / Tháng</div>
-                    <div class="fs-3 fw-extrabold text-success my-1" style="font-weight: 800;"><?= vnd($averageRevenueWindow) ?></div>
-                    <div class="small text-muted fw-medium">Hiệu suất trung bình</div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Trung Bình / Tháng</div>
+                    <div class="fs-3 fw-bold text-success my-1 tabular-nums"><?= vnd($averageRevenueWindow) ?></div>
+                    <div class="small text-muted fw-medium" style="font-size: 0.76rem;">Hiệu suất trung bình</div>
                 </div>
-                <div class="report-kpi-icon" style="background: rgba(34, 197, 94, 0.12); color: #22C55E;">
+                <div class="report-kpi-icon" style="background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0;">
                     <i class="bi bi-graph-up-arrow"></i>
                 </div>
             </div>
@@ -158,11 +156,11 @@ $topProduct = $topProducts[0] ?? null;
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="report-kpi-card d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Tháng Đạt Đỉnh</div>
-                    <div class="fs-3 fw-extrabold text-primary my-1" style="font-weight: 800;"><?= h($bestMonth['thang'] ?? 'Chưa có') ?></div>
-                    <div class="small text-muted fw-medium"><?= $bestMonth ? (vnd($bestMonth['doanh_thu'] ?? 0) . ' (' . number_format((int)($bestMonth['so_don'] ?? 0)) . ' đơn)') : 'Chưa có dữ liệu' ?></div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Tháng Đạt Đỉnh</div>
+                    <div class="fs-3 fw-bold text-primary my-1 tabular-nums"><?= h($bestMonth['thang'] ?? 'Chưa có') ?></div>
+                    <div class="small text-muted fw-medium" style="font-size: 0.76rem;"><?= $bestMonth ? (vnd($bestMonth['doanh_thu'] ?? 0) . ' (' . number_format((int)($bestMonth['so_don'] ?? 0)) . ' đơn)') : 'Chưa có dữ liệu' ?></div>
                 </div>
-                <div class="report-kpi-icon" style="background: rgba(14, 165, 233, 0.12); color: #0EA5E9;">
+                <div class="report-kpi-icon" style="background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD;">
                     <i class="bi bi-trophy-fill"></i>
                 </div>
             </div>
@@ -172,18 +170,87 @@ $topProduct = $topProducts[0] ?? null;
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="report-kpi-card d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">SP Bán Chạy Nhất</div>
-                    <div class="fs-6 fw-bold text-dark text-truncate my-1" style="max-width: 170px;" title="<?= h($topProduct['ten_san_pham'] ?? '') ?>">
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">SP Bán Chạy Nhất</div>
+                    <div class="fs-6 fw-bold text-truncate my-1" style="max-width: 160px; color: var(--admin-text);" title="<?= h($topProduct['ten_san_pham'] ?? '') ?>">
                         <?= h($topProduct['ten_san_pham'] ?? 'Chưa có dữ liệu') ?>
                     </div>
-                    <div class="small text-muted fw-medium"><?= $topProduct ? (number_format((int)($topProduct['so_don_vi'] ?? 0)) . ' lượt bán • ' . vnd($topProduct['doanh_thu'] ?? 0)) : 'N/A' ?></div>
+                    <div class="small text-muted fw-medium" style="font-size: 0.74rem;"><?= $topProduct ? (number_format((int)($topProduct['so_don_vi'] ?? 0)) . ' lượt bán • ' . vnd($topProduct['doanh_thu'] ?? 0)) : 'N/A' ?></div>
                 </div>
-                <div class="report-kpi-icon" style="background: rgba(245, 158, 11, 0.12); color: #F59E0B;">
+                <div class="report-kpi-icon" style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A;">
                     <i class="bi bi-award-fill"></i>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- REVENUE CHART CARD -->
+    <div class="admin-card mb-4 p-3.5" style="border-radius: 8px !important;">
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <div>
+                <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-graph-up text-success me-1.5"></i> Biểu đồ Doanh Thu Theo Tháng</h6>
+                <div class="small text-muted" style="font-size: 0.78rem;">Phân tích xu hướng tăng trưởng theo chu kỳ</div>
+            </div>
+        </div>
+        <div style="height: 260px; position: relative;">
+            <canvas id="adminReportsChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var ctxRep = document.getElementById('adminReportsChart');
+        if (ctxRep && typeof Chart !== 'undefined') {
+            <?php
+            $monthsArr = [];
+            $revsArr = [];
+            $ordersArr = [];
+            foreach ($revenueByMonth as $r) {
+                $monthsArr[] = (string)($r['thang'] ?? '');
+                $revsArr[] = (float)round(($r['doanh_thu'] ?? 0) / 1000000, 2);
+                $ordersArr[] = (int)($r['so_don'] ?? 0);
+            }
+            ?>
+            new Chart(ctxRep, {
+                type: 'line',
+                data: {
+                    labels: <?= json_encode($monthsArr, JSON_UNESCAPED_UNICODE) ?>,
+                    datasets: [{
+                        label: 'Doanh Thu (Triệu VNĐ)',
+                        data: <?= json_encode($revsArr) ?>,
+                        borderColor: '#183B2B',
+                        backgroundColor: 'rgba(24, 59, 43, 0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#183B2B'
+                    }, {
+                        label: 'Số Lượng Đơn',
+                        data: <?= json_encode($ordersArr) ?>,
+                        borderColor: '#D97706',
+                        backgroundColor: 'rgba(217, 119, 6, 0.05)',
+                        fill: false,
+                        tension: 0.3,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#D97706'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Quicksand', size: 12 } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#F1F5F9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    });
+    </script>
 
     <!-- TABLES SECTION GRID -->
     <div class="row g-4">

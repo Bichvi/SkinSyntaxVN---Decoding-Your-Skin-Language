@@ -62,42 +62,46 @@ if ($totalPages <= 7) {
     }
 </style>
 
-<div class="container-fluid p-4">
+<div class="container-fluid px-4 py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
         <div>
-            <h1 class="h3 mb-1">Quản lý sản phẩm</h1>
-            <p class="text-muted mb-0">Nhân viên có thể thêm, sửa và tạm ẩn/hiện sản phẩm trên website.</p>
+            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Quản lý sản phẩm (Nhân viên)</h1>
+            <p class="text-muted mb-0 small">Thêm mới, cập nhật thông tin và điều chỉnh ẩn/hiện sản phẩm trên website.</p>
         </div>
-        <a href="index.php?r=staff_product_create" class="btn btn-primary">+ Thêm sản phẩm</a>
+        <a href="index.php?r=staff_product_create" class="btn btn-primary btn-sm px-3 py-2 fw-semibold text-white" style="background: #183B2B; border: none; border-radius: 6px;">
+            <i class="bi bi-plus-lg me-1"></i> Thêm sản phẩm mới
+        </a>
     </div>
 
-    <form class="row g-2 align-items-end mb-3" method="GET" action="index.php" data-live-filter="true">
-        <input type="hidden" name="r" value="staff_products">
-        <div class="col-12 col-lg-6">
-            <label class="form-label small text-muted mb-1">Tìm kiếm nhanh sản phẩm</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Nhập mã SP, tên sản phẩm, thương hiệu, danh mục, loại da...">
+    <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
+        <form class="row g-2 align-items-end" method="GET" action="index.php" data-live-filter="true">
+            <input type="hidden" name="r" value="staff_products">
+            <div class="col-12 col-lg-6">
+                <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.76rem;">Tìm kiếm nhanh sản phẩm</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white" style="border-color: var(--admin-border);"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Nhập mã SP, tên sản phẩm, thương hiệu, danh mục..." style="border-radius: 0 6px 6px 0; border-color: var(--admin-border); font-size: 0.85rem;">
+                </div>
             </div>
-        </div>
-        <div class="col-12 col-lg-2">
-            <label class="form-label small text-muted mb-1">Trạng thái</label>
-            <select class="form-select" name="status">
-                <option value="" <?= $status === '' ? 'selected' : '' ?>>Tất cả</option>
-                <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Đang hiển thị</option>
-                <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>>Tạm ẩn</option>
-            </select>
-        </div>
-        <div class="col-12 col-lg-4 d-grid d-md-flex gap-2">
-            <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
-            <a href="index.php?r=staff_products" class="btn btn-outline-secondary w-100">Xóa lọc</a>
-        </div>
-    </form>
+            <div class="col-12 col-lg-2">
+                <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.76rem;">Trạng thái</label>
+                <select class="form-select" name="status" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                    <option value="" <?= $status === '' ? 'selected' : '' ?>>Tất cả</option>
+                    <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Đang hiển thị</option>
+                    <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>>Tạm ẩn</option>
+                </select>
+            </div>
+            <div class="col-12 col-lg-4 d-grid d-md-flex gap-2">
+                <button type="submit" class="btn text-white fw-semibold w-100" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">Tìm kiếm</button>
+                <a href="index.php?r=staff_products" class="btn btn-outline-secondary fw-semibold w-100" style="border-radius: 6px; font-size: 0.85rem;">Xóa lọc</a>
+            </div>
+        </form>
+    </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
+    <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table class="table admin-table align-middle mb-0">
+                <thead>
                     <tr>
                         <th>Mã SP</th>
                         <th>Tên sản phẩm</th>
@@ -117,27 +121,29 @@ if ($totalPages <= 7) {
                             $isHidden = in_array($rowStatus, ['inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0'], true);
                             ?>
                             <tr>
-                                <td><?= h($item['ma_san_pham'] ?? $item['id'] ?? '') ?></td>
-                                <td class="fw-semibold"><?= h($item['ten_san_pham'] ?? '') ?></td>
-                                <td class="text-end"><?= vnd($item['gia_ban'] ?? 0) ?></td>
-                                <td><?= h($item['loai_da'] ?? 'Chưa cập nhật') ?></td>
+                                <td><code class="fw-bold" style="color: #183B2B;">#<?= h($item['ma_san_pham'] ?? $item['id'] ?? '') ?></code></td>
+                                <td class="fw-semibold" style="color: var(--admin-text); font-size: 0.86rem;"><?= h($item['ten_san_pham'] ?? '') ?></td>
+                                <td class="text-end tabular-nums fw-bold text-success" style="font-size: 0.86rem;"><?= vnd($item['gia_ban'] ?? 0) ?></td>
+                                <td style="font-size: 0.82rem;"><?= h($item['loai_da'] ?? 'Mọi loại da') ?></td>
                                 <td>
-                                    <span class="badge <?= $isHidden ? 'text-bg-secondary' : 'text-bg-success' ?>">
-                                        <?= $isHidden ? 'Tạm ẩn' : 'Đang hiển thị' ?>
+                                    <span class="status-pill <?= $isHidden ? 'status-pill-cancelled' : 'status-pill-completed' ?>">
+                                        <?= $isHidden ? 'Tạm ẩn' : 'Hiển thị' ?>
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <a href="index.php?r=staff_product_edit&id=<?= urlencode((string)($item['ma_san_pham'] ?? $item['id'] ?? '')) ?>" class="btn btn-sm btn-outline-primary">Sửa</a>
-                                    <form method="POST" action="index.php?r=staff_product_visibility" class="d-inline">
-                                        <input type="hidden" name="id" value="<?= h($item['ma_san_pham'] ?? $item['id'] ?? '') ?>">
-                                        <input type="hidden" name="status" value="<?= $isHidden ? 'active' : 'inactive' ?>">
-                                        <input type="hidden" name="q" value="<?= h($q) ?>">
-                                        <input type="hidden" name="status_filter" value="<?= h($status) ?>">
-                                        <input type="hidden" name="page" value="<?= (int)$currentPage ?>">
-                                        <button type="submit" class="btn btn-sm <?= $isHidden ? 'btn-outline-success' : 'btn-outline-secondary' ?>">
-                                            <?= $isHidden ? 'Hiện web' : 'Tạm ẩn' ?>
-                                        </button>
-                                    </form>
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="index.php?r=staff_product_edit&id=<?= urlencode((string)($item['ma_san_pham'] ?? $item['id'] ?? '')) ?>" class="btn btn-sm btn-outline-secondary px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Sửa"><i class="bi bi-pencil-square me-1"></i> Sửa</a>
+                                        <form method="POST" action="index.php?r=staff_product_visibility" class="d-inline">
+                                            <input type="hidden" name="id" value="<?= h($item['ma_san_pham'] ?? $item['id'] ?? '') ?>">
+                                            <input type="hidden" name="status" value="<?= $isHidden ? 'active' : 'inactive' ?>">
+                                            <input type="hidden" name="q" value="<?= h($q) ?>">
+                                            <input type="hidden" name="status_filter" value="<?= h($status) ?>">
+                                            <input type="hidden" name="page" value="<?= (int)$currentPage ?>">
+                                            <button type="submit" class="btn btn-sm <?= $isHidden ? 'btn-outline-success' : 'btn-outline-secondary' ?> px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;">
+                                                <i class="bi <?= $isHidden ? 'bi-eye me-1' : 'bi-eye-slash me-1' ?>"></i><?= $isHidden ? 'Hiện' : 'Ẩn' ?>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
