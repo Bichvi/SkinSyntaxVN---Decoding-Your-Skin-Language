@@ -41,7 +41,7 @@ $liveStatus = $currentLive['status'] ?? 'ended';
 $isLiveActive = ($liveStatus === 'live');
 $isUpcoming = ($liveStatus === 'upcoming');
 ?>
-<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.1.2/dist/livekit-client.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.1.2/dist/livekit-client.umd.min.js" crossorigin="anonymous"></script>
 
 <div class="container py-4">
   <!-- MAIN INTERACTIVE LIVESTREAM STUDIO -->
@@ -137,18 +137,6 @@ $isUpcoming = ($liveStatus === 'upcoming');
           </div>
         </div>
       </div>
-
-      <?php if (!empty($currentLive['tom_tat_phien_live'])): ?>
-        <!-- AI TRANSCRIPT & HIGHLIGHTS RECAP CARD -->
-        <div class="card border-0 rounded-4 shadow-sm p-3 mt-3" style="background: #EBF3EC; border: 1.5px solid #A8C8AB !important;">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-success rounded-pill px-3 py-1.5 fw-bold" style="font-size: 0.78rem;"><i class="fa-solid fa-file-contract me-1"></i>MÔ TẢ</span>
-          </div>
-          <div class="bg-white rounded-3 p-3 text-dark fs-6" style="line-height: 1.6; border: 1px solid #C5DAC8;">
-            <?= nl2br(h($currentLive['tom_tat_phien_live'])) ?>
-          </div>
-        </div>
-      <?php endif; ?>
 
       <!-- PINNED LIVE SALE PRODUCT BAR -->
       <div class="card border-0 rounded-4 shadow-sm p-3 mt-3" style="background: #F4F8F4; border: 1.5px solid #C5DAC8 !important;">
@@ -365,6 +353,18 @@ $isUpcoming = ($liveStatus === 'upcoming');
                 <?php endforeach; ?>
               <?php endif; ?>
             </div>
+          </div>
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($currentLive['tom_tat_phien_live'])): ?>
+        <!-- AI TRANSCRIPT & HIGHLIGHTS RECAP CARD -->
+        <div class="card border-0 rounded-4 shadow-sm p-3 mt-3" style="background: #EBF3EC; border: 1.5px solid #A8C8AB !important;">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-success rounded-pill px-3 py-1.5 fw-bold" style="font-size: 0.78rem;"><i class="fa-solid fa-file-contract me-1"></i>MÔ TẢ</span>
+          </div>
+          <div class="bg-white rounded-3 p-3 text-dark fs-6" style="line-height: 1.6; border: 1px solid #C5DAC8;">
+            <?= nl2br(h($currentLive['tom_tat_phien_live'])) ?>
           </div>
         </div>
       <?php endif; ?>

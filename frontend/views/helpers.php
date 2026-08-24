@@ -107,10 +107,17 @@ function split_image_urls(?string $raw, int $max = 8): array {
     return $urls;
 }
 
+if (!function_exists('default_placeholder_image')) {
+    function default_placeholder_image(): string {
+        $baseUrl = defined('BASE_URL') ? BASE_URL : '.';
+        return $baseUrl . '/assets/images/placeholder.svg';
+    }
+}
+
 function resolve_image_url(?string $raw): string {
     $raw = trim((string)($raw ?? ''));
     if ($raw === '') {
-        return '';
+        return default_placeholder_image();
     }
 
     $remoteUrl = first_image_url($raw);
@@ -235,7 +242,7 @@ function get_top_10_sale_products(): array {
                 'price' => (int)$salePrice,
                 'market_price' => (int)$marketPrice,
                 'discount' => $discount,
-                'image' => $img !== '' ? $img : 'https://via.placeholder.com/150x150?text=SkinSyntax',
+                'image' => $img !== '' ? $img : default_placeholder_image(),
                 'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id)
             ];
         }

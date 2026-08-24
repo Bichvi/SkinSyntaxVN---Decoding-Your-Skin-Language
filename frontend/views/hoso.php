@@ -519,17 +519,17 @@ $accountVerificationHint = !empty($account['email'])
                 <h6 class="mb-3">Cập nhật thông tin tài khoản</h6>
                 <form id="accountInfoForm" class="row g-2">
                   <div class="col-md-6">
-                    <label class="form-label">Họ tên</label>
-                    <input class="form-control" type="text" name="ho_ten" value="<?= h($khachHang['ho_ten'] ?? ($account['ho_ten'] ?? '')) ?>" required>
+                    <label for="profileFullName" class="form-label">Họ tên</label>
+                    <input class="form-control" type="text" id="profileFullName" name="ho_ten" autocomplete="name" value="<?= h($khachHang['ho_ten'] ?? ($account['ho_ten'] ?? '')) ?>" required>
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input class="form-control" type="email" value="<?= h($account['email'] ?? '') ?>" disabled>
+                    <label for="profileEmail" class="form-label">Email</label>
+                    <input class="form-control" type="email" id="profileEmail" autocomplete="email" value="<?= h($account['email'] ?? '') ?>" disabled>
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label">Giới tính</label>
+                    <label for="profileGender" class="form-label">Giới tính</label>
                     <?php $selectedGender = (string)($khachHang['gioi_tinh'] ?? ''); ?>
-                    <select class="form-select" name="gioi_tinh">
+                    <select class="form-select" id="profileGender" name="gioi_tinh">
                       <option value="">-- Chọn giới tính --</option>
                       <option value="Nữ" <?= ($selectedGender === 'Nữ' ? 'selected' : '') ?>>Nữ</option>
                       <option value="Nam" <?= ($selectedGender === 'Nam' ? 'selected' : '') ?>>Nam</option>
@@ -537,16 +537,16 @@ $accountVerificationHint = !empty($account['email'])
                     </select>
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label">Năm sinh</label>
-                    <input class="form-control" type="number" min="1900" max="<?= date('Y') ?>" name="nam_sinh" value="<?= h($khachHang['nam_sinh'] ?? '') ?>">
+                    <label for="profileBirthYear" class="form-label">Năm sinh</label>
+                    <input class="form-control" type="number" id="profileBirthYear" min="1900" max="<?= date('Y') ?>" name="nam_sinh" autocomplete="bday-year" value="<?= h($khachHang['nam_sinh'] ?? '') ?>">
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label">Số điện thoại</label>
-                    <input class="form-control" type="text" name="so_dien_thoai" value="<?= h($khachHang['so_dien_thoai'] ?? '') ?>">
+                    <label for="profilePhone" class="form-label">Số điện thoại</label>
+                    <input class="form-control" type="text" id="profilePhone" name="so_dien_thoai" autocomplete="tel" value="<?= h($khachHang['so_dien_thoai'] ?? '') ?>">
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label">Địa chỉ</label>
-                    <input class="form-control" type="text" name="dia_chi" value="<?= h($khachHang['dia_chi'] ?? '') ?>">
+                    <label for="profileAddress" class="form-label">Địa chỉ</label>
+                    <input class="form-control" type="text" id="profileAddress" name="dia_chi" autocomplete="street-address" value="<?= h($khachHang['dia_chi'] ?? '') ?>">
                   </div>
                   <div class="col-12 d-flex align-items-center gap-2">
                     <button class="btn btn-brand" type="submit">Lưu thông tin</button>
@@ -561,16 +561,16 @@ $accountVerificationHint = !empty($account['email'])
                 <h6 class="mb-3">Đổi mật khẩu</h6>
                 <form id="changePasswordForm" class="row g-2">
                   <div class="col-12">
-                    <label class="form-label">Mật khẩu hiện tại</label>
-                    <input class="form-control" type="password" name="mat_khau_hien_tai" placeholder="Có thể bỏ trống khi đã đăng nhập">
+                    <label for="profileCurrentPassword" class="form-label">Mật khẩu hiện tại</label>
+                    <input class="form-control" type="password" id="profileCurrentPassword" name="mat_khau_hien_tai" autocomplete="current-password" placeholder="Có thể bỏ trống khi đã đăng nhập">
                   </div>
                   <div class="col-12">
-                    <label class="form-label">Mật khẩu mới</label>
-                    <input class="form-control" type="password" name="mat_khau_moi" required>
+                    <label for="profileNewPassword" class="form-label">Mật khẩu mới</label>
+                    <input class="form-control" type="password" id="profileNewPassword" name="mat_khau_moi" autocomplete="new-password" required>
                   </div>
                   <div class="col-12">
-                    <label class="form-label">Xác nhận mật khẩu mới</label>
-                    <input class="form-control" type="password" name="xac_nhan_mat_khau" required>
+                    <label for="profileConfirmPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                    <input class="form-control" type="password" id="profileConfirmPassword" name="xac_nhan_mat_khau" autocomplete="new-password" required>
                   </div>
                   <div class="col-12 d-flex align-items-center gap-2">
                     <button class="btn btn-outline-brand" type="submit">Đổi mật khẩu</button>

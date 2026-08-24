@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <meta charset="utf-8">
 <title>Đăng ký</title>
 <link href="assets/css/style.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="assets/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 

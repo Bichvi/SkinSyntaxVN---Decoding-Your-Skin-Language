@@ -93,9 +93,9 @@ if (is_logged_in() && current_role() === 'khach_hang') {
   <style>
     .support-chat-widget {
       position: fixed;
-      right: 20px;
-      bottom: 22px;
-      z-index: 1085;
+      right: 20px !important;
+      bottom: 20px !important;
+      z-index: 1080;
       display: flex;
       flex-direction: column;
       align-items: flex-end;

@@ -356,13 +356,13 @@ $renderCard = static function (array $product, string $badgeLabel = '', string $
       <section class="goiy-hero mb-4">
         <div class="row align-items-center g-4">
           <div class="col-lg-8">
-            <span class="goiy-eyebrow"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> GỢI Ý CÁ NHÂN HÓA LANGCHAIN RAG</span>
+            <span class="goiy-eyebrow"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> GỢI Ý CÁ NHÂN HÓA </span>
             <h1>Gợi ý dành riêng cho bạn</h1>
-            <p class="mb-3">SkinSyntax RAG AI tự động phân tích hồ sơ làn da và lịch sử tương tác để đưa ra chu trình sản phẩm tối ưu nhất cho bạn.</p>
+            <p class="mb-3">SkinSyntax sẽ tự động phân tích hồ sơ làn da và lịch sử tương tác để đưa ra chu trình sản phẩm tối ưu nhất cho bạn.</p>
 
             <!-- Ô Hỏi AI tư vấn theo nhu cầu của bạn nằm ngay trong khung này -->
             <div class="p-3 rounded-4 mt-2" style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.25);">
-              <label class="form-label fw-bold mb-1.5 text-white" style="font-size: 0.92rem;"><i class="fa-solid fa-comments me-2 text-warning"></i> Hỏi AI tư vấn theo nhu cầu của bạn:</label>
+              <label class="form-label fw-bold mb-1.5 text-white" style="font-size: 0.92rem;"><i class="fa-solid fa-comments me-2 text-warning"></i> Nhu cầu của bạn là gì?</label>
               <form id="aiConsultForm" class="d-flex gap-2">
                 <input type="text" id="aiConsultInput" class="form-control rounded-pill px-4 border-0" placeholder="Nhập ở đây" required style="height: 48px; background: rgba(255, 255, 255, 0.95); font-weight: 600; color: #1A2F1A;">
                 <button type="submit" id="aiConsultBtn" class="btn btn-light rounded-pill px-4 fw-bold text-nowrap" style="height: 48px; color: #215427; background: #FFFFFF; border: none; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
@@ -417,7 +417,7 @@ $renderCard = static function (array $product, string $badgeLabel = '', string $
       <?php else: ?>
         <?php if (!empty($llamaRecommendation['answer_text'])): ?>
           <div class="goiy-advice mb-4" id="aiAdviceContent">
-            <div class="fw-bold mb-2 text-success fs-5"><i class="fa-solid fa-robot me-2"></i> Lời khuyên tư vấn từ AI:</div>
+            <div class="fw-bold mb-2 text-success fs-5"><i class="fa-solid fa-robot me-2"></i> Lời khuyên tư vấn:</div>
             <div class="advice-text"><?= nl2br(h((string)$llamaRecommendation['answer_text'])) ?></div>
           </div>
         <?php endif; ?>

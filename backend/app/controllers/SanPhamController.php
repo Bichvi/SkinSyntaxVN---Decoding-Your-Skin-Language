@@ -330,13 +330,14 @@ class SanPhamController {
         $q    = $this->normalizeKeyword($_GET['q'] ?? '');
         $cap1 = trim((string)($_GET['cap1'] ?? ''));
         $cap2 = trim((string)($_GET['cap2'] ?? ''));
+        $sort = trim((string)($_GET['sort'] ?? 'default'));
 
         if ($q !== '') {
             $this->saveSearchHistory($q);
         }
 
         $perPage = 24;
-        $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true);
+        $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true, '', $sort);
 
         $this->render('tatca', [
             'items' => $res['items'],
@@ -345,7 +346,8 @@ class SanPhamController {
             'perPage' => $perPage,
             'q' => $q,
             'cap1' => $cap1,
-            'cap2' => $cap2
+            'cap2' => $cap2,
+            'sort' => $sort
         ]);
     }
 

@@ -33,9 +33,14 @@
     return new Intl.NumberFormat("vi-VN").format(numeric) + " đ";
   }
 
+  function getPlaceholderImage() {
+    const base = (window.BASE_URL && window.BASE_URL !== '.') ? window.BASE_URL : '.';
+    return base + '/assets/images/placeholder.svg';
+  }
+
   function getPrimaryImage(raw) {
     if (!raw) {
-      return "https://via.placeholder.com/96x96?text=No+Image";
+      return getPlaceholderImage();
     }
 
     const first = String(raw)
@@ -43,7 +48,7 @@
       .map((part) => part.trim())
       .find((part) => part.length > 0);
 
-    return first || "https://via.placeholder.com/96x96?text=No+Image";
+    return first || getPlaceholderImage();
   }
 
   function setExpanded(expanded) {
@@ -78,6 +83,7 @@
         const brand = escapeHtml(item.thuong_hieu || "");
         const price = escapeHtml(formatPrice(item.gia_ban));
         const img = escapeHtml(getPrimaryImage(item.link_hinh_anh));
+        const fallbackImg = getPlaceholderImage();
 
         return (
           '<a class="live-search-item" href="' +
@@ -87,7 +93,7 @@
           img +
           '" alt="' +
           name +
-          '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://via.placeholder.com/96x96?text=No+Image\';">' +
+          '" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + fallbackImg + '\';">' +
           '<span class="live-search-meta">' +
           '<span class="live-search-name">' +
           name +

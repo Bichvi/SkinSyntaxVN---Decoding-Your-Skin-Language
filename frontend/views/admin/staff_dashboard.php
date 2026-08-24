@@ -140,7 +140,7 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                     <div class="d-inline-flex align-items-center gap-2 px-2.5 py-0.5 rounded mb-1 small fw-semibold" style="background: rgba(255,255,255,0.15); color: #EAF2EC; font-size: 0.78rem;">
                         <i class="bi bi-shield-check text-warning me-1"></i> Cổng Làm Việc Nhân Viên
                     </div>
-                    <h2 class="fw-bold mb-0 text-white" style="font-size: 1.4rem;">Xin chào, <?= h($staffName) ?> 👋</h2>
+                    <h2 class="fw-bold mb-0 text-white" style="font-size: 1.4rem;">Xin chào, <?= h($staffName) ?> </h2>
                     <p class="mb-0 small opacity-90 text-white-50" style="font-size: 0.82rem;">
                         Hôm nay bạn có <strong class="text-warning fw-bold"><?= $totalTaskCount ?></strong> công việc cần xử lý & chăm sóc khách hàng.
                     </p>

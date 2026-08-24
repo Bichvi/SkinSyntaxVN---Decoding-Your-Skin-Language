@@ -20,7 +20,7 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
                 <div class="d-inline-flex align-items-center gap-2 px-2.5 py-1 mb-2 small fw-semibold" style="background: #EBF2EE; color: #183B2B; border: 1px solid #C8DACF; border-radius: 4px;">
                     <i class="fa-solid fa-sparkles"></i> SkinSyntaxVN Intelligence Center
                 </div>
-                <h2 class="fw-bold mb-1" style="color: var(--admin-text); font-size: 1.5rem;">Chào buổi sáng, <?= h($adminName) ?> 👋</h2>
+                <h2 class="fw-bold mb-1" style="color: var(--admin-text); font-size: 1.5rem;">Chào buổi sáng, <?= h($adminName) ?></h2>
                 <p class="text-muted mb-0 small">Tổng quan chỉ số hoạt động thương mại mỹ phẩm & chăm sóc da hôm nay.</p>
             </div>
             <div class="d-flex align-items-center gap-2">

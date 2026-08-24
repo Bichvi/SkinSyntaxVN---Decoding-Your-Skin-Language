@@ -1,4 +1,4 @@
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/bootstrap.bundle.min.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/live-search.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/smart-search.js"></script>
 </main>
@@ -91,11 +91,19 @@ if ($pdo !== null) {
       if (!toast) {
         toast = document.createElement('div');
         toast.setAttribute('data-cart-toast', 'true');
+        const isMobileScreen = window.innerWidth < 576;
         toast.style.position = 'fixed';
-        toast.style.right = '24px';
-        toast.style.bottom = '24px';
+        if (isMobileScreen) {
+          toast.style.left = '16px';
+          toast.style.right = '16px';
+          toast.style.bottom = '130px';
+          toast.style.maxWidth = 'calc(100% - 32px)';
+        } else {
+          toast.style.right = '24px';
+          toast.style.bottom = '24px';
+          toast.style.maxWidth = '320px';
+        }
         toast.style.zIndex = '2200';
-        toast.style.maxWidth = '320px';
         toast.style.padding = '12px 16px';
         toast.style.borderRadius = '12px';
         toast.style.boxShadow = '0 16px 38px rgba(15, 23, 42, 0.18)';
