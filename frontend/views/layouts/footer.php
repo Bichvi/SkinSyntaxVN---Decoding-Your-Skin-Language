@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (nameEl) nameEl.textContent = item.name || '';
     if (priceEl) priceEl.textContent = formatVnd(item.price || 0);
     if (marketEl) marketEl.textContent = item.market_price > item.price ? formatVnd(item.market_price) : '';
-    if (rankEl) rankEl.textContent = '#' + (rankIndex + 1) + ' DEAL HOT';
+    if (rankEl) rankEl.textContent = '#' + (rankIndex + 1) + ' DEAL';
     if (linkEl) linkEl.href = item.detail_url || '#';
     if (inputId) inputId.value = item.id || '';
   }

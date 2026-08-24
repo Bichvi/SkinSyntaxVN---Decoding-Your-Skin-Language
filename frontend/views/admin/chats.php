@@ -14,57 +14,58 @@ $initialChatState = [
 ];
 ?>
 
-<div class="container-fluid p-4">
-    <div class="mb-4">
-        <h1 class="h3 mb-1">Hỗ trợ khách hàng qua chat</h1>
-        <p class="text-muted mb-0">Theo dõi lịch sử hội thoại và phản hồi trực tiếp cho khách hàng.</p>
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
+        <div>
+            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Hỗ trợ Khách hàng Trực tiếp (Live Chat)</h1>
+            <p class="text-muted mb-0 small">Tư vấn, giải đáp thắc mắc và chăm sóc khách hàng theo thời gian thực.</p>
+        </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
                 <div class="card-body p-0">
-                    <div class="p-3 border-bottom bg-light-subtle">
-                        <div class="small fw-semibold text-uppercase text-muted">Chat chờ phản hồi</div>
+                    <div class="p-3 border-bottom background-subtle d-flex align-items-center justify-content-between">
+                        <div class="small fw-bold text-uppercase" style="color: var(--admin-text); font-size: 0.76rem; letter-spacing: 0.04em;"><i class="bi bi-clock-history text-warning me-1.5"></i>Chat chờ phản hồi</div>
+                        <span class="badge bg-warning text-dark px-2 py-0.5" style="border-radius: 4px; font-size: 0.72rem;"><?= count($pendingConversations) ?></span>
                     </div>
                     <div class="list-group list-group-flush border-bottom" id="pending-conversations-list">
                         <?php if (empty($pendingConversations)): ?>
-                            <div class="p-3 text-center text-muted small">Không còn chat nào đang chờ hỗ trợ.</div>
+                            <div class="p-3 text-center text-muted small">Không có cuộc trò chuyện nào chờ trả lời.</div>
                         <?php else: ?>
                             <?php foreach ($pendingConversations as $conversation): ?>
                                 <?php $maKh = (int)($conversation['ma_kh'] ?? 0); ?>
-                                <a href="index.php?r=staff_chats&ma_kh=<?= $maKh ?>" class="list-group-item list-group-item-action p-3 <?= $maKh === $activeConversationId ? 'active' : '' ?>">
-                                    <div class="d-flex justify-content-between gap-2">
-                                        <div class="fw-semibold"><?= h($conversation['ho_ten'] ?? 'Khách hàng') ?></div>
-                                        <span class="badge text-bg-danger"><?= h((string)($conversation['tin_chua_phan_hoi'] ?? 0)) ?></span>
+                                <a href="index.php?r=staff_chats&ma_kh=<?= $maKh ?>" class="list-group-item list-group-item-action p-3 border-bottom <?= $maKh === $activeConversationId ? 'bg-light border-start border-3 border-dark' : '' ?>">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div class="fw-semibold small" style="color: var(--admin-text);"><?= h($conversation['ho_ten'] ?? 'Khách hàng') ?></div>
+                                        <span class="status-pill status-pill-pending"><?= h((string)($conversation['tin_chua_phan_hoi'] ?? 1)) ?> Mới</span>
                                     </div>
-                                    <div class="small <?= $maKh === $activeConversationId ? 'text-white-50' : 'text-muted' ?>"><?= h($conversation['email'] ?? '') ?></div>
-                                    <div class="small mt-1 <?= $maKh === $activeConversationId ? 'text-white-50' : 'text-muted' ?>"><?= h($conversation['tin_nhan_moi'] ?? '') ?></div>
+                                    <div class="small text-muted text-truncate" style="font-size: 0.76rem;"><?= h($conversation['tin_nhan_moi'] ?? 'Nội dung tin nhắn...') ?></div>
                                 </a>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
 
-                    <div class="p-3 border-bottom bg-light-subtle">
-                        <div class="small fw-semibold text-uppercase text-muted">Tất cả chat</div>
+                    <div class="p-3 border-bottom background-subtle">
+                        <div class="small fw-bold text-uppercase" style="color: var(--admin-text); font-size: 0.76rem; letter-spacing: 0.04em;"><i class="bi bi-chat-text text-primary me-1.5"></i>Tất cả cuộc hội thoại</div>
                     </div>
                     <div class="list-group list-group-flush" id="all-conversations-list">
                         <?php if (empty($allConversations)): ?>
-                            <div class="p-4 text-center text-muted">Chưa có cuộc hội thoại nào.</div>
+                            <div class="p-4 text-center text-muted small">Chưa có cuộc hội thoại nào.</div>
                         <?php else: ?>
                             <?php foreach ($allConversations as $conversation): ?>
                                 <?php $maKh = (int)($conversation['ma_kh'] ?? 0); ?>
-                                <a href="index.php?r=staff_chats&ma_kh=<?= $maKh ?>" class="list-group-item list-group-item-action p-3 <?= $maKh === $activeConversationId ? 'active' : '' ?>">
-                                    <div class="d-flex justify-content-between gap-2">
-                                        <div class="fw-semibold"><?= h($conversation['ho_ten'] ?? 'Khách hàng') ?></div>
+                                <a href="index.php?r=staff_chats&ma_kh=<?= $maKh ?>" class="list-group-item list-group-item-action p-3 border-bottom <?= $maKh === $activeConversationId ? 'bg-light border-start border-3 border-dark' : '' ?>">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div class="fw-semibold small" style="color: var(--admin-text);"><?= h($conversation['ho_ten'] ?? 'Khách hàng') ?></div>
                                         <?php if (!empty($conversation['dang_cho_phan_hoi'])): ?>
-                                            <span class="badge text-bg-danger">Chờ phản hồi</span>
+                                            <span class="status-pill status-pill-pending">Chờ trả lời</span>
                                         <?php else: ?>
-                                            <span class="badge text-bg-secondary">Đã phản hồi</span>
+                                            <span class="status-pill status-pill-completed">Đã hỗ trợ</span>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="small <?= $maKh === $activeConversationId ? 'text-white-50' : 'text-muted' ?>"><?= h($conversation['email'] ?? '') ?></div>
-                                    <div class="small mt-1 <?= $maKh === $activeConversationId ? 'text-white-50' : 'text-muted' ?>"><?= h($conversation['tin_nhan_moi'] ?? '') ?></div>
+                                    <div class="small text-muted text-truncate" style="font-size: 0.76rem;"><?= h($conversation['tin_nhan_moi'] ?? '') ?></div>
                                 </a>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -74,19 +75,23 @@ $initialChatState = [
         </div>
 
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body p-4 d-flex flex-column" style="min-height: 620px;" id="staff-chat-panel">
+            <div class="admin-card p-3.5 mb-0" style="border-radius: 8px !important; min-height: 600px; display: flex; flex-direction: column;">
+                <div class="d-flex flex-column h-100" id="staff-chat-panel">
                     <?php if ($activeConversationId <= 0): ?>
-                        <div class="m-auto text-center text-muted" id="chat-empty-state">Chọn một khách hàng để xem lịch sử chat.</div>
+                        <div class="m-auto text-center text-muted py-5" id="chat-empty-state">
+                            <i class="bi bi-chat-square-text fs-1 opacity-50 d-block mb-2"></i>
+                            <h6 class="fw-bold">Chưa chọn cuộc hội thoại</h6>
+                            <p class="small text-muted mb-0">Bấm chọn một khách hàng từ danh sách bên trái để bắt đầu chat tư vấn.</p>
+                        </div>
                     <?php else: ?>
-                        <div class="flex-grow-1 overflow-auto mb-3 pe-2" style="max-height: 500px;" id="staff-chat-messages">
+                        <div class="flex-grow-1 overflow-auto mb-3 pe-2" style="max-height: 480px;" id="staff-chat-messages">
                             <?php foreach ($messages as $message): ?>
                                 <?php $isStaff = !empty($message['ma_nv']); ?>
                                 <div class="d-flex <?= $isStaff ? 'justify-content-end' : 'justify-content-start' ?> mb-3">
-                                    <div class="p-3 rounded-4 <?= $isStaff ? 'bg-primary text-white' : 'bg-light' ?>" style="max-width: 78%;">
-                                        <div class="small fw-semibold mb-1"><?= h($isStaff ? ($message['ten_nhan_vien'] ?? 'Nhân viên') : ($message['ten_khach_hang'] ?? 'Khách hàng')) ?></div>
-                                        <div><?= nl2br_safe($message['noi_dung'] ?? '') ?></div>
-                                        <div class="small mt-2 <?= $isStaff ? 'text-white-50' : 'text-muted' ?>"><?= h(!empty($message['thoi_gian']) ? date('d/m/Y H:i', strtotime((string)$message['thoi_gian'])) : '') ?></div>
+                                    <div class="p-3 rounded-3 <?= $isStaff ? 'text-white' : 'bg-light text-dark border' ?>" style="<?= $isStaff ? 'background: #183B2B;' : '' ?> max-width: 78%; border-radius: 8px !important;">
+                                        <div class="small fw-bold mb-1" style="font-size: 0.78rem;"><?= h($isStaff ? ($message['ten_nhan_vien'] ?? 'Nhân viên tư vấn') : ($message['ten_khach_hang'] ?? 'Khách hàng')) ?></div>
+                                        <div style="font-size: 0.86rem;"><?= nl2br_safe($message['noi_dung'] ?? '') ?></div>
+                                        <div class="small mt-1.5 tabular-nums <?= $isStaff ? 'text-white-50' : 'text-muted' ?>" style="font-size: 0.72rem;"><?= h(!empty($message['thoi_gian']) ? date('d/m/Y H:i', strtotime((string)$message['thoi_gian'])) : '') ?></div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -95,10 +100,10 @@ $initialChatState = [
                         <form method="post" action="index.php?r=staff_chat_send" class="row g-2 mt-auto" id="staff-chat-form">
                             <input type="hidden" name="ma_kh" value="<?= $activeConversationId ?>">
                             <div class="col-md-10">
-                                <textarea class="form-control" name="noi_dung" rows="3" placeholder="Nhập phản hồi cho khách hàng..." id="staff-chat-textarea"></textarea>
+                                <textarea class="form-control" name="noi_dung" rows="2" placeholder="Nhập câu trả lời tư vấn khách hàng..." id="staff-chat-textarea" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;"></textarea>
                             </div>
                             <div class="col-md-2 d-grid">
-                                <button type="submit" class="btn btn-primary" id="staff-chat-submit">Gửi</button>
+                                <button type="submit" class="btn text-white fw-semibold" id="staff-chat-submit" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;"><i class="bi bi-send-fill me-1"></i>Gửi</button>
                             </div>
                         </form>
                     <?php endif; ?>
@@ -159,22 +164,20 @@ document.addEventListener('DOMContentLoaded', function () {
         var badge = '';
 
         if (isPending) {
-            badge = '<span class="badge text-bg-danger">' + escapeHtml(conversation.tin_chua_phan_hoi || 0) + '</span>';
+            badge = '<span class="status-pill status-pill-pending">' + escapeHtml(conversation.tin_chua_phan_hoi || 1) + ' Mới</span>';
         } else if (conversation.dang_cho_phan_hoi) {
-            badge = '<span class="badge text-bg-danger">Chờ phản hồi</span>';
+            badge = '<span class="status-pill status-pill-pending">Chờ trả lời</span>';
         } else {
-            badge = '<span class="badge text-bg-secondary">Đã phản hồi</span>';
+            badge = '<span class="status-pill status-pill-completed">Đã hỗ trợ</span>';
         }
 
-        var mutedClass = isActive ? 'text-white-50' : 'text-muted';
         return '' +
-            '<a href="index.php?r=staff_chats&ma_kh=' + maKh + '" class="list-group-item list-group-item-action p-3 ' + (isActive ? 'active' : '') + '">' +
-                '<div class="d-flex justify-content-between gap-2">' +
-                    '<div class="fw-semibold">' + escapeHtml(conversation.ho_ten || 'Khách hàng') + '</div>' +
+            '<a href="index.php?r=staff_chats&ma_kh=' + maKh + '" class="list-group-item list-group-item-action p-3 border-bottom ' + (isActive ? 'bg-light border-start border-3 border-dark' : '') + '">' +
+                '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    '<div class="fw-semibold small" style="color: var(--admin-text);">' + escapeHtml(conversation.ho_ten || 'Khách hàng') + '</div>' +
                     badge +
                 '</div>' +
-                '<div class="small ' + mutedClass + '">' + escapeHtml(conversation.email || '') + '</div>' +
-                '<div class="small mt-1 ' + mutedClass + '">' + escapeHtml(conversation.tin_nhan_moi || '') + '</div>' +
+                '<div class="small text-muted text-truncate" style="font-size: 0.76rem;">' + escapeHtml(conversation.tin_nhan_moi || '') + '</div>' +
             '</a>';
     }
 
@@ -207,10 +210,10 @@ document.addEventListener('DOMContentLoaded', function () {
             var isStaff = !!message.ma_nv;
             return '' +
                 '<div class="d-flex ' + (isStaff ? 'justify-content-end' : 'justify-content-start') + ' mb-3">' +
-                    '<div class="p-3 rounded-4 ' + (isStaff ? 'bg-primary text-white' : 'bg-light') + '" style="max-width: 78%;">' +
-                        '<div class="small fw-semibold mb-1">' + escapeHtml(isStaff ? (message.ten_nhan_vien || 'Nhân viên') : (message.ten_khach_hang || 'Khách hàng')) + '</div>' +
-                        '<div>' + nl2br(message.noi_dung || '') + '</div>' +
-                        '<div class="small mt-2 ' + (isStaff ? 'text-white-50' : 'text-muted') + '">' + escapeHtml(formatDateTime(message.thoi_gian || '')) + '</div>' +
+                    '<div class="p-3 rounded-3 ' + (isStaff ? 'text-white' : 'bg-light text-dark border') + '" style="' + (isStaff ? 'background: #183B2B;' : '') + ' max-width: 78%; border-radius: 8px !important;">' +
+                        '<div class="small fw-bold mb-1" style="font-size: 0.78rem;">' + escapeHtml(isStaff ? (message.ten_nhan_vien || 'Nhân viên tư vấn') : (message.ten_khach_hang || 'Khách hàng')) + '</div>' +
+                        '<div style="font-size: 0.86rem;">' + nl2br(message.noi_dung || '') + '</div>' +
+                        '<div class="small mt-1.5 tabular-nums ' + (isStaff ? 'text-white-50' : 'text-muted') + '" style="font-size: 0.72rem;">' + escapeHtml(formatDateTime(message.thoi_gian || '')) + '</div>' +
                     '</div>' +
                 '</div>';
         }).join('');

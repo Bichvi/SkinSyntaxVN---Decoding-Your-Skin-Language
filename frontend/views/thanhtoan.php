@@ -228,6 +228,26 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
               </span>
             </label>
 
+            <label class="payment-option <?= $selectedPaymentMethod === 'vnpay' ? 'active' : '' ?>">
+              <input type="radio" name="hinh_thuc_thanh_toan" value="vnpay" <?= $selectedPaymentMethod === 'vnpay' ? 'checked' : '' ?>>
+              <span>
+                <strong>Thanh toán online VNPAY</strong>
+                <small>Thẻ ATM nội địa, QR Code ngân hàng, Ví điện tử, Thẻ quốc tế Visa/MasterCard.</small>
+              </span>
+            </label>
+
+            <div class="vnpay-box <?= $selectedPaymentMethod === 'vnpay' ? '' : 'd-none' ?>" data-vnpay-box style="margin-top: 12px; background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 10px; padding: 15px;">
+              <div class="d-flex align-items-center gap-3">
+                <div style="background: #fff; padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; justify-content: center; shrink: 0;">
+                  <span style="font-weight: 800; font-size: 1.15rem; color: #005baa; letter-spacing: -0.5px;">VN<span style="color: #ed1c24;">PAY</span></span>
+                </div>
+                <div>
+                  <strong style="color: #005baa; font-size: 0.95rem; display: block; margin-bottom: 2px;">Bạn sẽ được chuyển đến cổng thanh toán VNPAY an toàn</strong>
+                  <p class="mb-0 small text-muted" style="font-size: 0.85rem;">Sau khi bấm "Đặt hàng", hệ thống sẽ chuyển tới cổng VNPAY để chọn ngân hàng/ví và thanh toán.</p>
+                </div>
+              </div>
+            </div>
+
             <label class="payment-option <?= $selectedPaymentMethod === 'bank_transfer_qr' ? 'active' : '' ?> <?= !empty($qrTransfer['enabled']) ? '' : 'payment-option--disabled' ?>">
               <input type="radio" name="hinh_thuc_thanh_toan" value="bank_transfer_qr" <?= $selectedPaymentMethod === 'bank_transfer_qr' ? 'checked' : '' ?> <?= !empty($qrTransfer['enabled']) ? '' : 'disabled' ?>>
               <span>
@@ -261,6 +281,7 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
               </div>
             <?php endif; ?>
           </div>
+
 
           <div class="checkout-note-card">
             <div class="checkout-note-card__title">Bạn cần gì trước khi đặt hàng?</div>
@@ -338,30 +359,20 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
   }
 
   .checkout-head__actions .btn {
-    min-width: 170px;
+    min-width: 150px;
+    border-radius: 6px;
   }
 
   .address-card {
     background: #fff;
-    border: 1px solid #e9edf4;
-    border-radius: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
   }
 
   .stripe-top {
-    height: 6px;
-    background: repeating-linear-gradient(
-      45deg,
-      #d0011b,
-      #d0011b 12px,
-      #ffffff 12px,
-      #ffffff 24px,
-      #00a0ff 24px,
-      #00a0ff 36px,
-      #ffffff 36px,
-      #ffffff 48px
-    );
+    height: 4px;
+    background: #183B2B;
   }
 
   .address-content {
@@ -369,9 +380,9 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
   }
 
   .address-title {
-    color: #ee4d2d;
-    font-weight: 800;
-    font-size: 18px;
+    color: #183B2B;
+    font-weight: 700;
+    font-size: 16px;
   }
 
   .address-head {
@@ -383,9 +394,10 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
   }
 
   .address-subtitle {
-    color: #64748b;
+    color: #64748B;
     margin-top: 4px;
-    line-height: 1.6;
+    line-height: 1.5;
+    font-size: 0.88rem;
   }
 
   .address-selector-grid {
@@ -912,6 +924,8 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
     var options = form.querySelectorAll('.payment-option');
     var radios = form.querySelectorAll('input[name="hinh_thuc_thanh_toan"]');
     var qrBox = form.querySelector('[data-qr-transfer-box]');
+    var vnpayBox = form.querySelector('[data-vnpay-box]');
+
     var addressRadios = form.querySelectorAll('input[name="address_choice"]');
     var addressCards = form.querySelectorAll('[data-address-choice-card]');
     var addressPanels = form.querySelectorAll('[data-address-panel]');
@@ -1735,6 +1749,10 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
       if (qrBox) {
         qrBox.classList.toggle('d-none', selectedValue !== 'bank_transfer_qr');
       }
+      if (vnpayBox) {
+        vnpayBox.classList.toggle('d-none', selectedValue !== 'vnpay');
+      }
+
     };
 
     radios.forEach(function (radio) {

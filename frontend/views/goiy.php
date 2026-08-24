@@ -62,74 +62,71 @@ $renderCard = static function (array $product, string $badgeLabel = '', string $
 ?>
 
 <style>
-  .goiy-page { background: #F9FBF8; border-radius: 28px; padding: 32px; border: 1px solid #E2EADF; box-shadow: 0 10px 30px rgba(45, 90, 39, 0.04); }
+  .goiy-page { background: #FAFAFA; border-radius: 12px; padding: 24px; border: 1px solid var(--border); }
   .goiy-hero {
-    background: linear-gradient(135deg, #162F18 0%, #2D5A27 60%, #4A7C59 100%);
-    border-radius: 28px;
+    background: #183B2B;
+    border-radius: 12px;
     color: #fff;
-    padding: 36px 42px;
-    box-shadow: 0 20px 45px rgba(45, 90, 39, 0.2);
-    border: 1px solid rgba(226, 234, 223, 0.2);
+    padding: 32px 36px;
+    border: 1px solid var(--border);
   }
   .goiy-eyebrow {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.18);
-    color: #D2E5D5;
-    padding: 6px 14px;
-    font-size: .78rem;
-    font-weight: 700;
-    letter-spacing: .05em;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.14);
+    color: #F1F5F9;
+    padding: 4px 10px;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .04em;
     text-transform: uppercase;
   }
-  .goiy-hero h1 { font-size: clamp(1.8rem, 3.5vw, 2.7rem); font-weight: 800; color: #FFFFFF; margin: 12px 0 8px; }
-  .goiy-hero p { color: #EAF2EC; opacity: 0.92; font-size: 1.02rem; margin: 0; line-height: 1.6; }
+  .goiy-hero h1 { font-size: clamp(1.6rem, 3vw, 2.3rem); font-weight: 700; color: #FFFFFF; margin: 10px 0 8px; letter-spacing: -0.02em; }
+  .goiy-hero p { color: #E2E8F0; font-size: 0.95rem; margin: 0; line-height: 1.6; }
   .goiy-hero-card {
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.18);
-    border-radius: 22px;
-    padding: 24px;
-    backdrop-filter: blur(12px);
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 8px;
+    padding: 20px;
   }
-  .goiy-hero-card h3 { font-size: 1.35rem; line-height: 1.35; margin: 10px 0 0; color: #FFFFFF; font-weight: 700; }
+  .goiy-hero-card h3 { font-size: 1.2rem; line-height: 1.35; margin: 8px 0 0; color: #FFFFFF; font-weight: 700; }
   .goiy-filter {
     background: #fff;
-    border: 1px solid #E2EADF;
-    border-radius: 22px;
-    box-shadow: 0 8px 24px rgba(45, 90, 39, 0.06);
-    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
   }
   .goiy-filter-grid {
     display: grid;
     grid-template-columns: minmax(200px, 1.2fr) repeat(5, minmax(130px, 1fr)) auto auto;
-    gap: 14px;
+    gap: 12px;
     align-items: end;
   }
-  .goiy-filter label { color: #1A2F1A; font-weight: 700; font-size: 0.84rem; margin-bottom: 6px; }
-  .goiy-filter .form-control, .goiy-filter .form-select { height: 46px; border-radius: 12px; border-color: #E2EADF; background: #F0F4F1; font-weight: 600; color: #1A2F1A; }
-  .goiy-filter .form-control:focus, .goiy-filter .form-select:focus { border-color: #2D5A27; box-shadow: 0 0 0 3px rgba(45,90,39,0.12); }
-  .goiy-filter .btn { height: 46px; border-radius: 12px; font-weight: 700; white-space: nowrap; }
+  .goiy-filter label { color: #0F172A; font-weight: 600; font-size: 0.82rem; margin-bottom: 6px; }
+  .goiy-filter .form-control, .goiy-filter .form-select { height: 42px; border-radius: 6px; border-color: var(--border); background: #FAFAFA; font-weight: 500; color: #0F172A; font-size: 0.86rem; }
+  .goiy-filter .form-control:focus, .goiy-filter .form-select:focus { border-color: #183B2B; box-shadow: 0 0 0 2px rgba(24,59,43,0.12); }
+  .goiy-filter .btn { height: 42px; border-radius: 6px; font-weight: 600; white-space: nowrap; font-size: 0.86rem; }
   .price-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
   .price-pill {
-    font-size: 0.82rem;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid #E2EADF;
-    background: #F0F4F1;
-    color: #2D5A27;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #FAFAFA;
+    color: #183B2B;
     text-decoration: none;
     transition: all 0.2s ease;
   }
-  .price-pill:hover, .price-pill.active { background: #2D5A27; color: #FFFFFF; border-color: #2D5A27; }
+  .price-pill:hover, .price-pill.active { background: #183B2B; color: #FFFFFF; border-color: #183B2B; }
   .goiy-survey-alert {
-    background: #F0F4F1;
-    border: 1px solid #84A98C;
-    border-radius: 18px;
-    color: #1A2F1A;
-    padding: 18px 22px;
+    background: #FAFAFA;
+    border: 1px solid #C8DACF;
+    border-radius: 8px;
+    color: #0F172A;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -137,68 +134,57 @@ $renderCard = static function (array $product, string $badgeLabel = '', string $
   }
   .goiy-section {
     background: #fff;
-    border: 1px solid #E2EADF;
-    border-radius: 22px;
-    padding: 24px;
-    box-shadow: 0 8px 24px rgba(45, 90, 39, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
   }
   .goiy-section__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
   }
-  .goiy-section__title { font-size: 1.45rem; font-weight: 800; color: #1A2F1A; margin: 0; }
+  .goiy-section__title { font-size: 1.3rem; font-weight: 700; color: #0F172A; margin: 0; }
   .goiy-section__tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .goiy-section__more {
-    border: 1px solid #E2EADF;
-    border-radius: 999px;
-    padding: 8px 16px;
-    color: #2D5A27;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 14px;
+    color: #0F172A;
     text-decoration: none;
-    font-weight: 700;
-    background: #EAF0EB;
-    font-size: .88rem;
+    font-weight: 600;
+    background: #F1F5F9;
+    font-size: .82rem;
     transition: all 0.2s ease;
   }
-  .goiy-section__more:hover { background: #2D5A27; color: #FFFFFF; }
+  .goiy-section__more:hover { background: #183B2B; color: #FFFFFF; border-color: #183B2B; }
   .goiy-product-grid, .rcm-products-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    gap: 16px;
     align-items: stretch;
   }
   .goiy-empty {
-    border: 1px dashed #84A98C;
-    border-radius: 18px;
-    background: #F9FBF8;
-    color: #5C705E;
-    padding: 28px;
+    border: 1px dashed #C8DACF;
+    border-radius: 8px;
+    background: #FAFAFA;
+    color: #64748B;
+    padding: 24px;
     text-align: center;
-    font-weight: 700;
+    font-weight: 600;
   }
   .profile-summary-box {
     background: #FFFFFF;
-    border: 1px solid #E2EADF;
-    border-radius: 22px;
-    padding: 24px 28px;
-    box-shadow: 0 8px 24px rgba(45, 90, 39, 0.06);
-    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
   }
   .profile-tag {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #EAF0EB;
-    color: #2D5A27;
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-right: 8px;
-    margin-bottom: 8px;
-  }
   .goiy-advice {
     background: linear-gradient(135deg, #F0F4F1 0%, #EAF0EB 100%);
     border: 1px solid #84A98C;

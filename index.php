@@ -63,8 +63,12 @@ require_once $backendRoot . '/app/controllers/TaiKhoanController.php';
 require_once $backendRoot . '/app/controllers/AdminController.php';
 require_once $backendRoot . '/app/controllers/QuanTriController.php';
 require_once $backendRoot . '/app/controllers/LiveController.php';
+if (is_file($backendRoot . '/app/services/VnpayService.php')) {
+    require_once $backendRoot . '/app/services/VnpayService.php';
+}
 
 $r = $_GET['r'] ?? 'home';
+
 
 switch ($r) {
     case 'home':
@@ -106,8 +110,10 @@ switch ($r) {
         break;
 
     case 'dathang':
-        (new HomeController($pdo))->dathang();
+    case 'xulydathang':
+        (new HomeController($pdo))->xulydathang();
         break;
+
 
     case 'capnhat_sl_giohang':
         (new HomeController($pdo))->capnhatSlGiohang();
@@ -121,9 +127,32 @@ switch ($r) {
         (new HomeController($pdo))->camon();
         break;
 
-    case 'timkiem':
-        (new SanPhamController($pdo))->timkiem();
+    case 'vnpay_return':
+        (new HomeController($pdo))->vnpayReturn();
         break;
+
+    case 'vnpay_ipn':
+        (new HomeController($pdo))->vnpayIpn();
+        break;
+
+    case 'vnpay_repay':
+        (new HomeController($pdo))->vnpayRepay();
+        break;
+
+
+
+    case 'timkiem':
+        (new SanPhamController($pdo))->tatca();
+        break;
+
+    case 'live_search':
+        (new SanPhamController($pdo))->liveSearch();
+        break;
+
+    case 'api_smart_search':
+        (new SanPhamController($pdo))->apiSmartSearch();
+        break;
+
 
     case 'goiy':
         (new HomeController($pdo))->goiy();
@@ -295,9 +324,19 @@ switch ($r) {
         (new LiveController($pdo))->apiLiveProducts();
         break;
 
+    case 'api_search_catalog_products':
+        (new LiveController($pdo))->apiSearchCatalogProducts();
+        break;
+
+
     case 'admin_live_pin_product':
         (new LiveController($pdo))->adminLivePinProduct();
         break;
+
+    case 'api_upload_live_recording':
+        (new LiveController($pdo))->apiUploadLiveRecording();
+        break;
+
 
     case 'admin_live_add_deal':
         (new LiveController($pdo))->adminLiveAddDeal();

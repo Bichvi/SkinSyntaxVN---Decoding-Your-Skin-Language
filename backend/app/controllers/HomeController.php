@@ -840,6 +840,162 @@ class HomeController {
         ];
     }
 
+    private function getSupportedBankOptions(int $amount, string $content): array {
+        $config = $this->getQrTransferConfig();
+        $accountNo = $config['account_no'] !== '' ? $config['account_no'] : '0824719703';
+        $accountName = $config['account_name'] !== '' ? $config['account_name'] : 'LAM NGUYEN MY NGOC';
+        $template = $config['template'] !== '' ? $config['template'] : 'compact2';
+
+        $buildUrl = function(string $bankCode) use ($accountNo, $accountName, $template, $amount, $content): string {
+            $base = 'https://img.vietqr.io/image/'
+                . rawurlencode($bankCode)
+                . '-'
+                . rawurlencode($accountNo)
+                . '-'
+                . rawurlencode($template)
+                . '.png';
+            $query = http_build_query([
+                'amount' => max(0, $amount),
+                'addInfo' => $content,
+                'accountName' => $accountName,
+            ]);
+            return $base . '?' . $query;
+        };
+
+        return [
+            [
+                'id' => 'MB',
+                'bin' => '970422',
+                'name' => 'MB Bank (NHTMCP Quân Đội)',
+                'short_name' => 'MB Bank',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'MB',
+                'color' => '#001A9E',
+                'app_scheme' => 'mbmobile://',
+                'qr_url' => $buildUrl('970422'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'VCB',
+                'bin' => '970436',
+                'name' => 'Vietcombank (Ngoại Thương)',
+                'short_name' => 'Vietcombank',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'VCB',
+                'color' => '#005C29',
+                'app_scheme' => 'vietcombank://',
+                'qr_url' => $buildUrl('970436'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'TCB',
+                'bin' => '970407',
+                'name' => 'Techcombank (Kỹ Thương)',
+                'short_name' => 'Techcombank',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'TCB',
+                'color' => '#E20613',
+                'app_scheme' => 'tcb://',
+                'qr_url' => $buildUrl('970407'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'CTG',
+                'bin' => '970415',
+                'name' => 'VietinBank (Công Thương)',
+                'short_name' => 'VietinBank',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'CTG',
+                'color' => '#004899',
+                'app_scheme' => 'vietinbankipays://',
+                'qr_url' => $buildUrl('970415'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'BIDV',
+                'bin' => '970418',
+                'name' => 'BIDV (Đầu tư & Phát triển)',
+                'short_name' => 'BIDV',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'BIDV',
+                'color' => '#006758',
+                'app_scheme' => 'bidvsmartbanking://',
+                'qr_url' => $buildUrl('970418'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'VBA',
+                'bin' => '970405',
+                'name' => 'Agribank (Nông nghiệp)',
+                'short_name' => 'Agribank',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'VBA',
+                'color' => '#8C001A',
+                'app_scheme' => 'agribankemobile://',
+                'qr_url' => $buildUrl('970405'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'VPB',
+                'bin' => '970432',
+                'name' => 'VPBank (Việt Nam Thịnh Vượng)',
+                'short_name' => 'VPBank',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'VPB',
+                'color' => '#00B74F',
+                'app_scheme' => 'vpbankneo://',
+                'qr_url' => $buildUrl('970432'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'TPB',
+                'bin' => '970423',
+                'name' => 'TPBank (Tiên Phong)',
+                'short_name' => 'TPBank',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'TPB',
+                'color' => '#5A2D81',
+                'app_scheme' => 'tpbankmobile://',
+                'qr_url' => $buildUrl('970423'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'ACB',
+                'bin' => '970416',
+                'name' => 'ACB (Á Châu)',
+                'short_name' => 'ACB',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'ACB',
+                'color' => '#0054A6',
+                'app_scheme' => 'acbone://',
+                'qr_url' => $buildUrl('970416'),
+                'is_momo' => false,
+            ],
+            [
+                'id' => 'MOMO',
+                'bin' => '970454',
+                'name' => 'Ví Điện Tử MoMo',
+                'short_name' => 'Ví MoMo',
+                'account_no' => $accountNo,
+                'account_name' => $accountName,
+                'badge' => 'MoMo',
+                'color' => '#A50064',
+                'app_scheme' => 'momo://',
+                'qr_url' => $buildUrl('MOMO'),
+                'is_momo' => true,
+            ],
+        ];
+    }
+
     private function buildVietQrUrl(int $amount, string $content): string {
         $config = $this->getQrTransferConfig();
         if (empty($config['enabled'])) {
@@ -868,13 +1024,16 @@ class HomeController {
         if ($method === 'bank_transfer_qr') {
             return 'Chuyển khoản qua QR';
         }
+        if ($method === 'vnpay') {
+            return 'Thanh toán online qua VNPAY';
+        }
 
         return 'Thanh toán khi nhận hàng (COD)';
     }
 
     private function getSelectedCheckoutPaymentMethod(): string {
         $method = strtolower(trim((string)($_SESSION['checkout_payment_method'] ?? 'cod')));
-        $allowed = ['cod'];
+        $allowed = ['cod', 'vnpay'];
         if ($this->isQrTransferEnabled()) {
             $allowed[] = 'bank_transfer_qr';
         }
@@ -888,9 +1047,14 @@ class HomeController {
             $_SESSION['checkout_payment_method'] = 'bank_transfer_qr';
             return;
         }
+        if ($method === 'vnpay') {
+            $_SESSION['checkout_payment_method'] = 'vnpay';
+            return;
+        }
 
         $_SESSION['checkout_payment_method'] = 'cod';
     }
+
 
     private function getDefaultCheckoutReceiver(?array $customer = null, array $user = []): array {
         $customer = $customer ?? $this->getCurrentCheckoutCustomer() ?? [];
@@ -3109,7 +3273,7 @@ class HomeController {
             redirect(BASE_URL . '/index.php?r=thanhtoan');
         }
 
-        $allowedMethods = ['cod'];
+        $allowedMethods = ['cod', 'vnpay'];
         if ($this->isQrTransferEnabled()) {
             $allowedMethods[] = 'bank_transfer_qr';
         }
@@ -3167,6 +3331,30 @@ class HomeController {
             }
             unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher'], $_SESSION['checkout_points'], $_SESSION['checkout_payment_method'], $_SESSION['checkout_address_choice'], $_SESSION['checkout_new_receiver']);
 
+            if ($hinhThucThanhToan === 'vnpay') {
+                $order = $this->hoaDonModel->getOrderById((int)$maHoaDon);
+                $amount = (int)($order['tong_tien'] ?? 0);
+
+                $vnpayService = new VnpayService();
+                if (!$vnpayService->isConfigured()) {
+                    set_flash('error', 'Cổng thanh toán VNPAY chưa được cấu hình tham số VNPAY_TMN_CODE / VNPAY_HASH_SECRET trong file .env.');
+                    redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$maHoaDon));
+                    return;
+                }
+
+                try {
+                    $ipAddr = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+                    $paymentUrl = $vnpayService->createPaymentUrl((string)$maHoaDon, $amount, 'Thanh toan don hang #' . $maHoaDon, $ipAddr);
+                    redirect($paymentUrl);
+                    return;
+                } catch (Throwable $ve) {
+                    error_log('VNPAY payment URL generation error: ' . $ve->getMessage());
+                    set_flash('error', 'Không thể khởi tạo cổng VNPAY: ' . $ve->getMessage());
+                    redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$maHoaDon));
+                    return;
+                }
+            }
+
             if ($hinhThucThanhToan === 'bank_transfer_qr') {
                 set_flash('success', 'Đơn hàng đã được tạo. Vui lòng quét QR và chuyển khoản theo đúng nội dung để hoàn tất thanh toán.');
             } else {
@@ -3184,6 +3372,136 @@ class HomeController {
         }
     }
 
+    public function vnpayReturn(): void {
+        $queryParams = $_GET;
+        $orderId = max(0, (int)($queryParams['vnp_TxnRef'] ?? 0));
+        $vnpayService = new VnpayService();
+
+        if ($orderId <= 0) {
+            set_flash('error', 'Mã đơn hàng VNPAY không hợp lệ.');
+            redirect(BASE_URL . '/index.php?r=home');
+        }
+
+        if (!$vnpayService->validateResponse($queryParams)) {
+            error_log('VNPAY return checksum validation failed for order #' . $orderId);
+            set_flash('error', 'Chữ ký xác thực VNPAY không hợp lệ (Checksum Failed).');
+            redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
+        }
+
+        $responseCode = trim((string)($queryParams['vnp_ResponseCode'] ?? ''));
+        $transactionNo = trim((string)($queryParams['vnp_TransactionNo'] ?? ''));
+        $payDate = trim((string)($queryParams['vnp_PayDate'] ?? ''));
+        $message = $vnpayService->getResponseCodeMessage($responseCode);
+
+        if ($responseCode === '00') {
+            $res = $this->hoaDonModel->updateVnpayPaymentStatus($orderId, 'paid', $transactionNo, $payDate, $message);
+            if (!empty($res['ok'])) {
+                set_flash('success', 'Thanh toán qua VNPAY thành công. Đơn hàng của bạn đã được xác nhận.');
+            } else {
+                set_flash('info', (string)($res['message'] ?? 'Thanh toán thành công.'));
+            }
+        } else {
+            $status = ($responseCode === '24') ? 'cancelled' : 'failed';
+            $this->hoaDonModel->updateVnpayPaymentStatus($orderId, $status, $transactionNo, $payDate, $message);
+            set_flash('error', 'Thanh toán VNPAY thất bại: ' . $message);
+        }
+
+        redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
+    }
+
+    public function vnpayIpn(): void {
+        $queryParams = $_GET;
+        $vnpayService = new VnpayService();
+
+        if (!$vnpayService->validateResponse($queryParams)) {
+            $this->jsonResponse(['RspCode' => '97', 'Message' => 'Invalid Checksum']);
+        }
+
+        $orderId = max(0, (int)($queryParams['vnp_TxnRef'] ?? 0));
+        $vnpAmount = max(0, (int)($queryParams['vnp_Amount'] ?? 0)) / 100;
+        $responseCode = trim((string)($queryParams['vnp_ResponseCode'] ?? ''));
+        $transactionNo = trim((string)($queryParams['vnp_TransactionNo'] ?? ''));
+        $payDate = trim((string)($queryParams['vnp_PayDate'] ?? ''));
+
+        $order = $this->hoaDonModel->getOrderById($orderId);
+        if (!$order) {
+            $this->jsonResponse(['RspCode' => '01', 'Message' => 'Order Not Found']);
+        }
+
+        $expectedAmount = (int)($order['tong_tien'] ?? 0);
+        if ((int)$vnpAmount !== $expectedAmount) {
+            $this->jsonResponse(['RspCode' => '04', 'Message' => 'Invalid Amount']);
+        }
+
+        $currentPaymentStatus = strtolower(trim((string)($order['payment_status'] ?? ($order['status_thanh_toan'] ?? ''))));
+        if ($currentPaymentStatus === 'paid' || $currentPaymentStatus === 'da thanh toan') {
+            $this->jsonResponse(['RspCode' => '02', 'Message' => 'Order already confirmed']);
+        }
+
+        $message = $vnpayService->getResponseCodeMessage($responseCode);
+        if ($responseCode === '00') {
+            $this->hoaDonModel->updateVnpayPaymentStatus($orderId, 'paid', $transactionNo, $payDate, $message);
+        } else {
+            $status = ($responseCode === '24') ? 'cancelled' : 'failed';
+            $this->hoaDonModel->updateVnpayPaymentStatus($orderId, $status, $transactionNo, $payDate, $message);
+        }
+
+        $this->jsonResponse(['RspCode' => '00', 'Message' => 'Confirm Success']);
+    }
+
+    public function vnpayRepay(): void {
+        if (!is_logged_in()) {
+            set_flash('error', 'Vui lòng đăng nhập để thực hiện thanh toán lại.');
+            redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
+        $orderId = max(0, (int)($_GET['order_id'] ?? 0));
+        if ($orderId <= 0) {
+            set_flash('error', 'Mã đơn hàng không hợp lệ.');
+            redirect(BASE_URL . '/index.php?r=home');
+        }
+
+        $currentUser = current_user() ?? [];
+        $email = trim((string)($currentUser['email'] ?? ''));
+        $order = $this->hoaDonModel->getOrderById($orderId, $email !== '' ? $email : null);
+
+        if (!$order) {
+            set_flash('error', 'Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.');
+            redirect(BASE_URL . '/index.php?r=home');
+        }
+
+        $paymentStatus = strtolower(trim((string)($order['payment_status'] ?? ($order['status_thanh_toan'] ?? ''))));
+        if (in_array($paymentStatus, ['paid', 'da thanh toan', 'đã thanh toán'], true)) {
+            set_flash('info', 'Đơn hàng này đã được thanh toán trước đó.');
+            redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
+        }
+
+        $orderStatus = strtolower(trim((string)($order['trang_thai_normalized'] ?? ($order['trang_thai'] ?? ''))));
+        if (in_array($orderStatus, ['cancelled', 'da huy', 'đã hủy'], true)) {
+            set_flash('error', 'Đơn hàng này đã bị hủy, không thể thanh toán lại.');
+            redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
+        }
+
+        $amount = (int)($order['tong_tien'] ?? 0);
+        if ($amount <= 0) {
+            set_flash('error', 'Số tiền thanh toán không hợp lệ.');
+            redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
+        }
+
+        $vnpayService = new VnpayService();
+        try {
+            $ipAddr = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            $paymentUrl = $vnpayService->createPaymentUrl((string)$orderId, $amount, 'Thanh toan don hang #' . $orderId, $ipAddr);
+            redirect($paymentUrl);
+        } catch (Throwable $ve) {
+            error_log('VNPAY repay URL generation error: ' . $ve->getMessage());
+            set_flash('error', 'Không thể khởi tạo cổng VNPAY: ' . $ve->getMessage());
+            redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
+        }
+    }
+
+
+
     public function camon() {
         $maHoaDon = trim((string)($_GET['ma_hoa_don'] ?? ''));
         $order = null;
@@ -3200,6 +3518,7 @@ class HomeController {
             if ($order && strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? ''))) === 'bank_transfer_qr' && $this->isQrTransferEnabled()) {
                 $content = 'SKIN HD' . (string)($order['ma_hoa_don'] ?? $maHoaDon);
                 $qrConfig = $this->getQrTransferConfig();
+                $supportedBanks = $this->getSupportedBankOptions((int)($order['tong_tien'] ?? 0), $content);
                 $transferData = [
                     'bank_name' => $qrConfig['bank_name'] !== '' ? $qrConfig['bank_name'] : $qrConfig['bank_id'],
                     'account_no' => $qrConfig['account_no'],
@@ -3208,6 +3527,7 @@ class HomeController {
                     'amount' => (int)($order['tong_tien'] ?? 0),
                     'payment_status' => (string)($order['status_thanh_toan'] ?? 'Chua thanh toan'),
                     'qr_url' => $this->buildVietQrUrl((int)($order['tong_tien'] ?? 0), $content),
+                    'supported_banks' => $supportedBanks,
                 ];
                 $autoCheckEnabled = $this->isSePayPollingEnabled()
                     && strtolower(trim((string)($order['status_thanh_toan'] ?? ''))) !== 'da thanh toan';

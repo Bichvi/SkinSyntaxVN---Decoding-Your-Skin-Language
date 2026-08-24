@@ -8,182 +8,182 @@ $startValue = !empty($editing['ngay_bat_dau']) ? date('Y-m-d\TH:i', strtotime((s
 $endValue = !empty($editing['ngay_ket_thuc']) ? date('Y-m-d\TH:i', strtotime((string)$editing['ngay_ket_thuc'])) : '';
 ?>
 
-<div class="container-fluid p-4">
-    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
-            <h1 class="h3 mb-1">Quản lý voucher</h1>
-            <p class="text-muted mb-0">Tạo, cập nhật và xóa mã giảm giá áp dụng ở bước thanh toán.</p>
+            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Quản lý Voucher & Mã giảm giá</h1>
+            <p class="text-muted mb-0 small">Tạo, cập nhật và quản lý điều kiện khuyến mãi áp dụng ở bước thanh toán.</p>
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3"><?= $editing ? 'Cập nhật voucher' : 'Tạo voucher mới' ?></h5>
-                    <form method="post" action="index.php?r=admin_voucher_save" class="row g-3" id="voucherForm" novalidate>
-                        <input type="hidden" name="ma_voucher" value="<?= h($editing['ma_voucher'] ?? '') ?>">
+            <div class="admin-card mb-0 p-3.5" style="border-radius: 8px !important;">
+                <h6 class="fw-bold mb-3" style="color: var(--admin-text);"><?= $editing ? 'Cập nhật voucher' : 'Tạo voucher mới' ?></h6>
+                <form method="post" action="index.php?r=admin_voucher_save" class="row g-2.5 g-2" id="voucherForm" novalidate>
+                    <input type="hidden" name="ma_voucher" value="<?= h($editing['ma_voucher'] ?? '') ?>">
 
-                        <div class="col-12">
-                            <label class="form-label">Mã voucher</label>
-                            <input type="text" class="form-control" name="ma_code" value="<?= h($editing['ma_code'] ?? '') ?>" placeholder="Ví dụ: SKIN10" maxlength="50" required>
-                            <div class="small text-danger mt-1 d-none" data-field-error="ma_code"></div>
-                        </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Mã voucher *</label>
+                        <input type="text" class="form-control text-uppercase" name="ma_code" value="<?= h($editing['ma_code'] ?? '') ?>" placeholder="Ví dụ: SKIN10" maxlength="50" required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem; font-weight: 700;">
+                        <div class="small text-danger mt-1 d-none" data-field-error="ma_code"></div>
+                    </div>
 
-                        <div class="col-12">
-                            <label class="form-label">Tên voucher</label>
-                            <input type="text" class="form-control" name="ten_voucher" value="<?= h($editing['ten_voucher'] ?? '') ?>" placeholder="Ví dụ: Giảm 10% đơn đầu tiên" maxlength="255" required>
-                            <div class="small text-danger mt-1 d-none" data-field-error="ten_voucher"></div>
-                        </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Tên voucher *</label>
+                        <input type="text" class="form-control" name="ten_voucher" value="<?= h($editing['ten_voucher'] ?? '') ?>" placeholder="Ví dụ: Giảm 10% đơn từ 300k" maxlength="255" required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                        <div class="small text-danger mt-1 d-none" data-field-error="ten_voucher"></div>
+                    </div>
 
-                        <div class="col-12">
-                            <label class="form-label">Mô tả</label>
-                            <textarea class="form-control" name="mo_ta" rows="3" placeholder="Mô tả ngắn về điều kiện áp dụng" maxlength="2000"><?= h($editing['mo_ta'] ?? '') ?></textarea>
-                            <div class="small text-danger mt-1 d-none" data-field-error="mo_ta"></div>
-                        </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Mô tả chi tiết</label>
+                        <textarea class="form-control" name="mo_ta" rows="2" placeholder="Mô tả điều kiện áp dụng" maxlength="2000" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;"><?= h($editing['mo_ta'] ?? '') ?></textarea>
+                        <div class="small text-danger mt-1 d-none" data-field-error="mo_ta"></div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Loại giảm</label>
-                            <select class="form-select" name="loai_giam">
-                                <option value="fixed" <?= $isPercent ? '' : 'selected' ?>>Giảm số tiền cố định</option>
-                                <option value="percent" <?= $isPercent ? 'selected' : '' ?>>Giảm theo phần trăm</option>
-                            </select>
-                            <div class="small text-danger mt-1 d-none" data-field-error="loai_giam"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Loại giảm</label>
+                        <select class="form-select" name="loai_giam" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                            <option value="fixed" <?= $isPercent ? '' : 'selected' ?>>Giảm số tiền cố định (VNĐ)</option>
+                            <option value="percent" <?= $isPercent ? 'selected' : '' ?>>Giảm theo phần trăm (%)</option>
+                        </select>
+                        <div class="small text-danger mt-1 d-none" data-field-error="loai_giam"></div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Giá trị giảm</label>
-                            <input type="number" min="1" class="form-control" name="gia_tri_giam" value="<?= h($editing['gia_tri_giam'] ?? '') ?>" required>
-                            <div class="small text-danger mt-1 d-none" data-field-error="gia_tri_giam"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Giá trị giảm *</label>
+                        <input type="number" min="1" class="form-control tabular-nums" name="gia_tri_giam" value="<?= h($editing['gia_tri_giam'] ?? '') ?>" required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                        <div class="small text-danger mt-1 d-none" data-field-error="gia_tri_giam"></div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Đơn tối thiểu</label>
-                            <input type="number" min="0" class="form-control" name="gia_tri_don_toi_thieu" value="<?= h($editing['gia_tri_don_toi_thieu'] ?? '0') ?>">
-                            <div class="small text-danger mt-1 d-none" data-field-error="gia_tri_don_toi_thieu"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Đơn tối thiểu</label>
+                        <input type="number" min="0" class="form-control tabular-nums" name="gia_tri_don_toi_thieu" value="<?= h($editing['gia_tri_don_toi_thieu'] ?? '0') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                        <div class="small text-danger mt-1 d-none" data-field-error="gia_tri_don_toi_thieu"></div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Giảm tối đa</label>
-                            <input type="number" min="0" class="form-control" name="giam_toi_da" value="<?= h($editing['giam_toi_da'] ?? '') ?>" placeholder="Bỏ trống nếu không giới hạn">
-                            <div class="small text-danger mt-1 d-none" data-field-error="giam_toi_da"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Giảm tối đa</label>
+                        <input type="number" min="0" class="form-control tabular-nums" name="giam_toi_da" value="<?= h($editing['giam_toi_da'] ?? '') ?>" placeholder="Không giới hạn" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                        <div class="small text-danger mt-1 d-none" data-field-error="giam_toi_da"></div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Số lượt dùng</label>
-                            <input type="number" min="0" class="form-control" name="so_luong" value="<?= h($editing['so_luong'] ?? '') ?>" placeholder="Bỏ trống nếu không giới hạn" data-used-count="<?= (int)($editing['so_luong_da_dung'] ?? 0) ?>">
-                            <div class="small text-danger mt-1 d-none" data-field-error="so_luong"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Số lượt dùng</label>
+                        <input type="number" min="0" class="form-control tabular-nums" name="so_luong" value="<?= h($editing['so_luong'] ?? '') ?>" placeholder="Không giới hạn" data-used-count="<?= (int)($editing['so_luong_da_dung'] ?? 0) ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                        <div class="small text-danger mt-1 d-none" data-field-error="so_luong"></div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Trạng thái</label>
-                            <select class="form-select" name="trang_thai">
-                                <option value="active" <?= (($editing['trang_thai'] ?? 'active') === 'active') ? 'selected' : '' ?>>Đang hoạt động</option>
-                                <option value="inactive" <?= (($editing['trang_thai'] ?? '') === 'inactive') ? 'selected' : '' ?>>Tạm khóa</option>
-                            </select>
-                            <div class="small text-danger mt-1 d-none" data-field-error="trang_thai"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Trạng thái</label>
+                        <select class="form-select" name="trang_thai" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                            <option value="active" <?= (($editing['trang_thai'] ?? 'active') === 'active') ? 'selected' : '' ?>>Đang hoạt động</option>
+                            <option value="inactive" <?= (($editing['trang_thai'] ?? '') === 'inactive') ? 'selected' : '' ?>>Tạm khóa</option>
+                        </select>
+                        <div class="small text-danger mt-1 d-none" data-field-error="trang_thai"></div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Bắt đầu áp dụng</label>
-                            <input type="datetime-local" class="form-control" name="ngay_bat_dau" value="<?= h($startValue) ?>">
-                            <div class="small text-danger mt-1 d-none" data-field-error="ngay_bat_dau"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Ngày bắt đầu</label>
+                        <input type="datetime-local" class="form-control" name="ngay_bat_dau" value="<?= h($startValue) ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.82rem;">
+                        <div class="small text-danger mt-1 d-none" data-field-error="ngay_bat_dau"></div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Kết thúc áp dụng</label>
-                            <input type="datetime-local" class="form-control" name="ngay_ket_thuc" value="<?= h($endValue) ?>">
-                            <div class="small text-danger mt-1 d-none" data-field-error="ngay_ket_thuc"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Ngày kết thúc</label>
+                        <input type="datetime-local" class="form-control" name="ngay_ket_thuc" value="<?= h($endValue) ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.82rem;">
+                        <div class="small text-danger mt-1 d-none" data-field-error="ngay_ket_thuc"></div>
+                    </div>
 
-                        <div class="col-12 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary"><?= $editing ? 'Lưu cập nhật' : 'Thêm voucher' ?></button>
-                            <?php if ($editing): ?>
-                                <a href="index.php?r=admin_vouchers" class="btn btn-light border">Hủy</a>
-                            <?php endif; ?>
-                        </div>
-                    </form>
-                </div>
+                    <div class="col-12 d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-sm text-white fw-semibold px-3" style="background: #183B2B; border-radius: 6px;"><?= $editing ? 'Lưu cập nhật' : 'Thêm voucher' ?></button>
+                        <?php if ($editing): ?>
+                            <a href="index.php?r=admin_vouchers" class="btn btn-sm btn-outline-secondary px-3" style="border-radius: 6px;">Hủy bỏ</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
             </div>
         </div>
 
         <div class="col-xl-8">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <form class="row g-2 mb-3" method="get" action="index.php" data-live-filter="true">
+            <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
+                <div class="p-3 border-bottom background-subtle">
+                    <form class="row g-2" method="get" action="index.php" data-live-filter="true">
                         <input type="hidden" name="r" value="admin_vouchers">
                         <div class="col-md-9">
-                            <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm theo mã voucher, tên hoặc mô tả...">
+                            <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm voucher theo mã code hoặc tên..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
                         </div>
                         <div class="col-md-3 d-grid">
-                            <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
+                            <button type="submit" class="btn btn-sm text-white fw-semibold" style="background: #183B2B; border-radius: 6px;">Tìm kiếm</button>
                         </div>
                     </form>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table align-middle table-hover mb-0">
-                            <thead class="table-light">
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mã Code</th>
+                                <th>Chi tiết ưu đãi</th>
+                                <th>Điều kiện & Thời gian</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($items)): ?>
                                 <tr>
-                                    <th>Mã</th>
-                                    <th>Ưu đãi</th>
-                                    <th>Điều kiện</th>
-                                    <th>Trạng thái</th>
-                                    <th class="text-end">Thao tác</th>
+                                    <td colspan="5" class="text-center text-muted py-4">Chưa có voucher nào.</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($items)): ?>
+                            <?php else: ?>
+                                <?php foreach ($items as $item): ?>
+                                    <?php
+                                    $valueLabel = ($item['loai_giam'] ?? 'fixed') === 'percent'
+                                        ? ((int)($item['gia_tri_giam'] ?? 0)) . '%'
+                                        : vnd($item['gia_tri_giam'] ?? 0);
+                                    $limitLabel = $item['so_luong'] === null
+                                        ? 'Không giới hạn'
+                                        : ((int)($item['so_luong_da_dung'] ?? 0)) . '/' . (int)$item['so_luong'];
+                                    $isActive = (($item['trang_thai'] ?? 'inactive') === 'active');
+                                    ?>
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">Chưa có voucher nào.</td>
-                                    </tr>
-                                <?php else: ?>
-                                    <?php foreach ($items as $item): ?>
-                                        <?php
-                                        $valueLabel = ($item['loai_giam'] ?? 'fixed') === 'percent'
-                                            ? ((int)($item['gia_tri_giam'] ?? 0)) . '%'
-                                            : vnd($item['gia_tri_giam'] ?? 0);
-                                        $limitLabel = $item['so_luong'] === null
-                                            ? 'Không giới hạn'
-                                            : ((int)($item['so_luong_da_dung'] ?? 0)) . '/' . (int)$item['so_luong'];
-                                        $badgeClass = (($item['trang_thai'] ?? 'inactive') === 'active') ? 'text-bg-success' : 'text-bg-secondary';
-                                        ?>
-                                        <tr>
-                                            <td>
-                                                <div class="fw-semibold text-primary"><?= h($item['ma_code'] ?? '') ?></div>
-                                                <div class="small text-muted">#<?= (int)($item['ma_voucher'] ?? 0) ?></div>
-                                            </td>
-                                            <td>
-                                                <div class="fw-semibold"><?= h($item['ten_voucher'] ?? '') ?></div>
-                                                <div class="small text-muted">Giảm <?= h($valueLabel) ?><?= !empty($item['giam_toi_da']) ? ' · Tối đa ' . h(vnd($item['giam_toi_da'])) : '' ?></div>
-                                                <?php if (!empty($item['mo_ta'])): ?>
-                                                    <div class="small text-muted mt-1"><?= h($item['mo_ta']) ?></div>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <div class="small text-muted">Đơn tối thiểu: <?= vnd($item['gia_tri_don_toi_thieu'] ?? 0) ?></div>
-                                                <div class="small text-muted">Lượt dùng: <?= h($limitLabel) ?></div>
-                                                <div class="small text-muted">
-                                                    <?= !empty($item['ngay_bat_dau']) ? date('d/m/Y H:i', strtotime((string)$item['ngay_bat_dau'])) : 'Ngay lập tức' ?>
-                                                    -
-                                                    <?= !empty($item['ngay_ket_thuc']) ? date('d/m/Y H:i', strtotime((string)$item['ngay_ket_thuc'])) : 'Không giới hạn' ?>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge rounded-pill <?= $badgeClass ?>"><?= (($item['trang_thai'] ?? 'inactive') === 'active') ? 'Đang hoạt động' : 'Tạm khóa' ?></span>
-                                            </td>
-                                            <td class="text-end">
-                                                <a href="index.php?r=admin_vouchers&edit=<?= (int)($item['ma_voucher'] ?? 0) ?>" class="btn btn-sm btn-outline-warning">Sửa</a>
+                                        <td>
+                                            <code class="px-2 py-1 rounded fw-bold text-uppercase" style="background: #EBF2EE; color: #183B2B; font-size: 0.84rem; border: 1px solid #C8DACF;"><?= h($item['ma_code'] ?? '') ?></code>
+                                            <div class="small text-muted mt-1" style="font-size: 0.74rem;">#<?= (int)($item['ma_voucher'] ?? 0) ?></div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold" style="color: var(--admin-text); font-size: 0.86rem;"><?= h($item['ten_voucher'] ?? '') ?></div>
+                                            <div class="small text-muted" style="font-size: 0.78rem;">Giảm <strong class="text-success"><?= h($valueLabel) ?></strong><?= !empty($item['giam_toi_da']) ? ' · Tối đa ' . h(vnd($item['giam_toi_da'])) : '' ?></div>
+                                            <?php if (!empty($item['mo_ta'])): ?>
+                                                <div class="small text-muted mt-1" style="font-size: 0.74rem;"><?= h($item['mo_ta']) ?></div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="small text-muted" style="font-size: 0.76rem;">Đơn tối thiểu: <strong class="tabular-nums"><?= vnd($item['gia_tri_don_toi_thieu'] ?? 0) ?></strong></div>
+                                            <div class="small text-muted" style="font-size: 0.76rem;">Lượt dùng: <span class="tabular-nums"><?= h($limitLabel) ?></span></div>
+                                            <div class="small text-muted" style="font-size: 0.74rem;">
+                                                <?= !empty($item['ngay_bat_dau']) ? date('d/m/Y H:i', strtotime((string)$item['ngay_bat_dau'])) : 'Mở ngay' ?>
+                                                -
+                                                <?= !empty($item['ngay_ket_thuc']) ? date('d/m/Y H:i', strtotime((string)$item['ngay_ket_thuc'])) : 'Vĩnh viễn' ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="status-pill <?= $isActive ? 'status-pill-completed' : 'status-pill-cancelled' ?>"><?= $isActive ? 'Đang hoạt động' : 'Tạm khóa' ?></span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-1">
+                                                <a href="index.php?r=admin_vouchers&edit=<?= (int)($item['ma_voucher'] ?? 0) ?>" class="btn btn-sm btn-outline-secondary px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Sửa"><i class="bi bi-pencil-square me-1"></i> Sửa</a>
                                                 <form method="post" action="index.php?r=admin_voucher_delete" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa voucher này không?');">
                                                     <input type="hidden" name="ma_voucher" value="<?= (int)($item['ma_voucher'] ?? 0) ?>">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Xóa"><i class="bi bi-trash me-1"></i> Xóa</button>
                                                 </form>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

@@ -1,7 +1,10 @@
 <?php
 $autoloadCandidates = [
+    __DIR__ . '/../../vendor/autoload.php',
     __DIR__ . '/../../../vendor/autoload.php',
+    dirname(__DIR__, 3) . '/vendor/autoload.php',
 ];
+
 
 foreach ($autoloadCandidates as $autoloadPath) {
     if (is_file($autoloadPath)) {

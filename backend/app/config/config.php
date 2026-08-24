@@ -68,13 +68,14 @@ ss_load_env($projectEnvPath);
 
 if (!function_exists('ss_env')) {
 	function ss_env(string $key, string $default = ''): string {
-		$value = getenv($key);
-		if ($value === false || $value === null) {
+		$value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+		if ($value === false || $value === null || trim((string)$value) === '') {
 			return $default;
 		}
-		return (string)$value;
+		return trim((string)$value);
 	}
 }
+
 
 $base = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 $base = rtrim($base, '/');
@@ -106,6 +107,12 @@ defined('BANK_TRANSFER_WEBHOOK_SECRET') || define('BANK_TRANSFER_WEBHOOK_SECRET'
 defined('SEPAY_API_TOKEN') || define('SEPAY_API_TOKEN', ss_env('SEPAY_API_TOKEN', 'J61YPTHCHGPKEBZGDMDT2CUKFNSJWRTOTWBMCW7IERNYXRO68GXXBFZB59AZGEIL'));
 defined('SEPAY_ACCOUNT_NUMBER') || define('SEPAY_ACCOUNT_NUMBER', '0824719703');
 defined('SEPAY_POLLING_ENABLED') || define('SEPAY_POLLING_ENABLED', true);
+
+defined('VNPAY_TMN_CODE') || define('VNPAY_TMN_CODE', ss_env('VNPAY_TMN_CODE', ''));
+defined('VNPAY_HASH_SECRET') || define('VNPAY_HASH_SECRET', ss_env('VNPAY_HASH_SECRET', ''));
+defined('VNPAY_URL') || define('VNPAY_URL', ss_env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'));
+defined('VNPAY_RETURN_URL') || define('VNPAY_RETURN_URL', ss_env('VNPAY_RETURN_URL', ''));
+
 
 defined('AI_RECOMMENDATION_ENDPOINT') || define('AI_RECOMMENDATION_ENDPOINT', ss_env('AI_RECOMMENDATION_ENDPOINT', 'http://127.0.0.1:5001/api/recommend/explain'));
 defined('AI_RECOMMENDATION_TIMEOUT') || define('AI_RECOMMENDATION_TIMEOUT', 20);

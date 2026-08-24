@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWix+LLJAJ9/2PKZ5QiAj6Ta86w+fsb2TkR4j8sQAtxTnRwE+XzQ+eJg4Q2pQ6J9iA9+6g==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         (function() {
             var theme = localStorage.getItem('skinsyntax_admin_theme') || 'light';
@@ -226,20 +227,20 @@ foreach ($menuGroups as $group) {
                 <i class="bi bi-list fs-5"></i>
             </button>
             <div class="d-none d-sm-block">
-                <div class="small text-muted fw-bold">Admin / <?= h($pageTitleDisplay) ?></div>
+                <div class="small text-muted fw-bold" style="font-size: 0.72rem;">Admin / <?= h($pageTitleDisplay) ?></div>
                 <h1 class="admin-page-title"><?= h($pageTitleDisplay) ?></h1>
             </div>
             <!-- Header Quick Search Bar -->
             <form class="d-none d-lg-flex align-items-center ms-3" method="get" action="index.php" style="width: 240px;">
                 <input type="hidden" name="r" value="admin_orders">
-                <div class="input-group input-group-sm rounded-pill overflow-hidden border shadow-xs" style="background: var(--admin-card-bg);">
+                <div class="input-group input-group-sm overflow-hidden" style="border: 1px solid var(--admin-border); border-radius: 6px; background: var(--admin-surface);">
                     <span class="input-group-text bg-transparent border-0 pe-1 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-0 bg-transparent ps-1 small" name="q" placeholder="Tìm nhanh đơn..." aria-label="Quick Search">
+                    <input type="text" class="form-control border-0 bg-transparent ps-1 small" name="q" placeholder="Tìm nhanh đơn..." aria-label="Quick Search" style="font-size: 0.82rem;">
                 </div>
             </form>
         </div>
 
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2.5 gap-2">
             <!-- AsmrProg Style Theme Toggler Pill -->
             <div class="theme-toggler" id="themeToggleBtn" title="Chuyển chế độ Sáng/Tối">
                 <span class="theme-option active" id="themeSunOpt"><i class="bi bi-sun-fill"></i></span>
@@ -247,8 +248,8 @@ foreach ($menuGroups as $group) {
             </div>
 
             <!-- Website Link -->
-            <a href="<?= BASE_URL ?>/index.php?r=home" target="_blank" class="btn btn-sm rounded-pill px-3 fw-bold border" style="background: var(--admin-accent); color: var(--admin-primary); border-color: var(--admin-accent-border) !important;" title="Mở trang chủ khách hàng">
-                <i class="bi bi-box-arrow-up-right me-1"></i>
+            <a href="<?= BASE_URL ?>/index.php?r=home" target="_blank" class="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-semibold" style="border-radius: 6px; font-size: 0.8rem;" title="Mở trang chủ khách hàng">
+                <i class="bi bi-box-arrow-up-right me-1.5"></i>
                 <span class="d-none d-md-inline">Xem Website</span>
             </a>
 
@@ -260,7 +261,7 @@ foreach ($menuGroups as $group) {
                         <span class="admin-bell-badge" id="adminNotificationBadge"><?= h((string)($unseenCount > 99 ? '99+' : $unseenCount)) ?></span>
                     <?php endif; ?>
                 </button>
-                <div class="dropdown-menu dropdown-menu-end admin-notification-menu shadow-lg" aria-labelledby="adminNotificationButton">
+                <div class="dropdown-menu dropdown-menu-end admin-notification-menu shadow-sm" aria-labelledby="adminNotificationButton" style="border-radius: 8px; border: 1px solid var(--admin-border);">
                     <div class="admin-notification-header d-flex align-items-center justify-content-between">
                         <div>
                             <div class="fw-bold text-dark">Thông báo hệ thống</div>
@@ -355,24 +356,24 @@ foreach ($menuGroups as $group) {
             <!-- Admin Profile Dropdown -->
             <div class="dropdown">
                 <button type="button" class="btn p-1 d-flex align-items-center gap-2 border-0 bg-transparent" id="adminProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle text-white fw-bold shadow-sm" style="width: 38px; height: 38px; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-dark) 100%); font-size: 1rem;">
+                    <span class="d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 34px; height: 34px; border-radius: 6px; background: #183B2B; font-size: 0.9rem;">
                         <?= htmlspecialchars(mb_substr((string)$adminName, 0, 1), ENT_QUOTES, 'UTF-8') ?>
                     </span>
                     <div class="d-none d-md-flex flex-column text-start">
-                        <span class="fw-bold small lh-1" style="color: var(--admin-text);"><?= htmlspecialchars((string)$adminName, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="badge rounded-pill mt-1" style="font-size: 0.65rem; background: var(--admin-accent); color: var(--admin-primary); border: 1px solid var(--admin-accent-border); width: fit-content;"><?= $isAdmin ? 'Administrator' : 'Staff Support' ?></span>
+                        <span class="fw-semibold small lh-1" style="color: var(--admin-text); font-size: 0.82rem;"><?= htmlspecialchars((string)$adminName, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="badge mt-1" style="font-size: 0.65rem; background: #EBF2EE; color: #183B2B; border: 1px solid #C8DACF; border-radius: 4px; width: fit-content;"><?= $isAdmin ? 'Administrator' : 'Staff Support' ?></span>
                     </div>
-                    <i class="fa-solid fa-chevron-down small text-muted d-none d-md-inline ms-1"></i>
+                    <i class="bi bi-chevron-down small text-muted d-none d-md-inline ms-1" style="font-size: 0.75rem;"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" aria-labelledby="adminProfileDropdown" style="min-width: 200px;">
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border p-2" aria-labelledby="adminProfileDropdown" style="min-width: 200px; border-radius: 8px; border-color: var(--admin-border) !important;">
                     <li class="px-3 py-2 border-bottom mb-1">
-                        <div class="fw-bold text-dark small"><?= htmlspecialchars((string)$adminName, ENT_QUOTES, 'UTF-8') ?></div>
-                        <div class="small text-muted"><?= $isAdmin ? 'Quản trị viên hệ thống' : 'Nhân viên chăm sóc' ?></div>
+                        <div class="fw-semibold text-dark small" style="font-size: 0.84rem;"><?= htmlspecialchars((string)$adminName, ENT_QUOTES, 'UTF-8') ?></div>
+                        <div class="small text-muted" style="font-size: 0.76rem;"><?= $isAdmin ? 'Quản trị viên hệ thống' : 'Nhân viên chăm sóc' ?></div>
                     </li>
-                    <li><a class="dropdown-item rounded-3 py-2 small fw-semibold" href="<?= BASE_URL ?>/index.php?r=hoso"><i class="fa-solid fa-user me-2 text-muted"></i> Hồ sơ cá nhân</a></li>
-                    <li><a class="dropdown-item rounded-3 py-2 small fw-semibold" href="<?= BASE_URL ?>/index.php?r=home" target="_blank"><i class="fa-solid fa-globe me-2 text-muted"></i> Trang chủ thương mại</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item rounded-3 py-2 small fw-bold text-danger" href="index.php?r=dangxuat"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</a></li>
+                    <li><a class="dropdown-item rounded py-1.5 small fw-medium" href="<?= BASE_URL ?>/index.php?r=hoso" style="border-radius: 4px; font-size: 0.82rem;"><i class="bi bi-person me-2 text-muted"></i> Hồ sơ cá nhân</a></li>
+                    <li><a class="dropdown-item rounded py-1.5 small fw-medium" href="<?= BASE_URL ?>/index.php?r=home" target="_blank" style="border-radius: 4px; font-size: 0.82rem;"><i class="bi bi-globe me-2 text-muted"></i> Trang chủ thương mại</a></li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li><a class="dropdown-item rounded py-1.5 small fw-semibold text-danger" href="index.php?r=dangxuat" style="border-radius: 4px; font-size: 0.82rem;"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
                 </ul>
             </div>
         </div>

@@ -54,55 +54,57 @@ foreach ($orders as $oItem) {
 ?>
 
 <div class="container-fluid px-4 py-4">
-    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
-            <h1 class="h3 fw-extrabold mb-1" style="color: var(--admin-text);"><?= h($pageTitle) ?></h1>
+            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);"><?= h($pageTitle) ?></h1>
             <p class="text-muted mb-0 small">Theo dõi, xác nhận, hủy và cập nhật trạng thái đơn hàng mua sắm.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <a href="index.php?r=admin_orders&export=excel<?= $q !== '' ? '&q=' . urlencode($q) : '' ?><?= $status !== '' ? '&status=' . urlencode($status) : '' ?>" class="btn btn-outline-success rounded-pill px-3 fw-bold small" title="Tải toàn bộ danh sách đơn hàng ra file Excel / CSV">
-                <i class="bi bi-file-earmark-excel me-1"></i> Xuất CSV / Excel
+            <a href="index.php?r=admin_orders&export=excel<?= $q !== '' ? '&q=' . urlencode($q) : '' ?><?= $status !== '' ? '&status=' . urlencode($status) : '' ?>" class="btn btn-outline-secondary btn-sm px-3 py-1.5 fw-semibold" style="border-radius: 6px; font-size: 0.82rem;" title="Tải toàn bộ danh sách đơn hàng ra file Excel / CSV">
+                <i class="bi bi-file-earmark-excel me-1 text-success"></i> Xuất CSV / Excel
             </a>
             <?php if ($pendingCountInList > 0): ?>
-                <a href="index.php?r=<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>&status=cho_xu_ly" class="btn btn-warning rounded-pill px-3 fw-bold small">
-                    <i class="bi bi-hourglass-split me-1"></i> Có <?= $pendingCountInList ?> đơn chờ duyệt ngay
+                <a href="index.php?r=<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>&status=cho_xu_ly" class="btn btn-warning btn-sm px-3 py-1.5 fw-semibold" style="border-radius: 6px; font-size: 0.82rem;">
+                    <i class="bi bi-hourglass-split me-1"></i> Có <?= $pendingCountInList ?> đơn chờ duyệt
                 </a>
             <?php endif; ?>
         </div>
     </div>
 
     <?php if ($isFilteringPending): ?>
-        <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center justify-content-between p-3" style="background: #FEF3C7; color: #B45309;">
+        <div class="alert border-0 mb-3 d-flex align-items-center justify-content-between p-3" style="background: #FEF3C7; color: #92400E; border-radius: 6px; border: 1px solid #FDE68A !important;">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-exclamation-triangle-fill fs-5"></i>
                 <div>
-                    <strong>Đang lọc: Danh sách các đơn hàng đang chờ bạn duyệt xử lý</strong>
-                    <div class="small opacity-75">Bấm "Xử lý ngay" ở cột bên phải để xem chi tiết và xác nhận đơn.</div>
+                    <strong style="font-size: 0.88rem;">Đang lọc: Danh sách các đơn hàng đang chờ bạn duyệt xử lý</strong>
+                    <div class="small opacity-75" style="font-size: 0.78rem;">Bấm "Xử lý ngay" ở cột bên phải để xem chi tiết và xác nhận đơn.</div>
                 </div>
             </div>
-            <a href="index.php?r=<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold border text-nowrap">
+            <a href="index.php?r=<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>" class="btn btn-sm btn-warning px-3 fw-semibold text-nowrap" style="border-radius: 6px; font-size: 0.8rem;">
                 Xem tất cả đơn hàng
             </a>
         </div>
     <?php endif; ?>
 
-    <form class="row g-2 mb-4" method="get" action="index.php" data-live-filter="true">
-        <input type="hidden" name="r" value="<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>">
-        <div class="col-md-6">
-            <input type="text" class="form-control rounded-3" name="q" value="<?= h($q) ?>" placeholder="Tìm theo mã đơn, tên khách, email...">
-        </div>
-        <div class="col-md-3">
-            <select class="form-select rounded-3" name="status">
-                <option value="">Tất cả trạng thái</option>
-                <?php foreach ($statusOptions as $value => $label): ?>
-                    <option value="<?= h($value) ?>" <?= ($status === $value || ($status === 'cho_xu_ly' && $value === 'pending')) ? 'selected' : '' ?>><?= h($label) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="col-md-3 d-grid">
-            <button type="submit" class="btn btn-primary rounded-3 fw-bold">Lọc đơn hàng</button>
-        </div>
-    </form>
+    <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
+        <form class="row g-2" method="get" action="index.php" data-live-filter="true">
+            <input type="hidden" name="r" value="<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>">
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm theo mã đơn, tên khách, email..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                    <option value="">Tất cả trạng thái</option>
+                    <?php foreach ($statusOptions as $value => $label): ?>
+                        <option value="<?= h($value) ?>" <?= ($status === $value || ($status === 'cho_xu_ly' && $value === 'pending')) ? 'selected' : '' ?>><?= h($label) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-3 d-grid">
+                <button type="submit" class="btn text-white fw-semibold" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">Lọc đơn hàng</button>
+            </div>
+        </form>
+    </div>
 
     <div class="row g-4">
         <!-- Order List Table (Left 7 Cols) -->

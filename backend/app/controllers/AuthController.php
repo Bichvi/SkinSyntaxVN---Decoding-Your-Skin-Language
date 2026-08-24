@@ -268,6 +268,7 @@ class AuthController {
 
         $staff = $this->model->timNhanVienTheoEmail($email);
         if ($staff && !empty($staff['mat_khau']) && password_verify($matkhau, (string)$staff['mat_khau'])) {
+
             $staffStatus = strtolower(trim((string)($staff['trang_thai'] ?? 'active')));
             $isDeleted = !empty($staff['deleted_at'] ?? null);
             if ($isDeleted || in_array($staffStatus, ['inactive', 'deleted', 'locked', 'disabled', 'tam_khoa'], true)) {

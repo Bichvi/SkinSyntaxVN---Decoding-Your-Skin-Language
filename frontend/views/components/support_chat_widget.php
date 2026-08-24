@@ -105,20 +105,20 @@ if (is_logged_in() && current_role() === 'khach_hang') {
     .support-chat-widget__trigger {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      border: 0;
-      border-radius: 999px;
-      padding: 12px 18px;
-      background: linear-gradient(135deg, #b8e6c3 0%, #d9f5df 100%);
-      color: #14532d;
-      box-shadow: 0 18px 34px rgba(34, 197, 94, 0.22);
-      font-weight: 700;
-      transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+      gap: 10px;
+      border: 1px solid #C8DACF;
+      border-radius: 8px;
+      padding: 10px 16px;
+      background: #EBF2EE;
+      color: #183B2B;
+      box-shadow: 0 4px 14px rgba(24, 59, 43, 0.1);
+      font-weight: 600;
+      transition: all 0.22s ease;
     }
 
     .support-chat-widget__trigger:hover {
       transform: translateY(-2px);
-      box-shadow: 0 22px 40px rgba(34, 197, 94, 0.24);
+      background: #DEEAE3;
     }
 
     .support-chat-widget.is-open .support-chat-widget__trigger {
@@ -126,13 +126,14 @@ if (is_logged_in() && current_role() === 'khach_hang') {
     }
 
     .support-chat-widget__trigger-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
       display: grid;
       place-items: center;
-      background: rgba(20, 83, 45, 0.08);
-      font-size: 18px;
+      background: rgba(24, 59, 43, 0.1);
+      font-size: 16px;
+      color: #183B2B;
     }
 
     .support-chat-widget__trigger-icon i {
@@ -146,23 +147,24 @@ if (is_logged_in() && current_role() === 'khach_hang') {
     .support-chat-widget__trigger-text {
       display: grid;
       text-align: left;
-      line-height: 1.25;
+      line-height: 1.2;
     }
 
     .support-chat-widget__trigger-text small {
-      color: rgba(20, 83, 45, 0.76);
-      font-size: 12px;
-      font-weight: 600;
+      color: #183B2B;
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.8;
     }
 
     .support-chat-widget__panel {
       width: min(460px, calc(100vw - 24px));
       max-height: min(78vh, 760px);
-      border-radius: 24px;
+      border-radius: 12px;
       overflow: hidden;
       background: #fff;
-      box-shadow: 0 28px 60px rgba(15, 23, 42, 0.22);
-      border: 1px solid #e9edf4;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+      border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       opacity: 0;

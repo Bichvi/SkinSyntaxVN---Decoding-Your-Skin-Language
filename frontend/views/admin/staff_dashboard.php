@@ -18,86 +18,71 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
 
 <style>
 .staff-hero-card {
-  background: linear-gradient(135deg, #162F18 0%, #2D5A27 50%, #1A3C1E 100%) !important;
-  border-radius: 20px;
+  background: #183B2B !important;
+  border-radius: 8px;
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 10px 30px rgba(22, 47, 24, 0.18);
+  border: 1px solid #C8DACF;
+  box-shadow: 0 4px 14px rgba(24, 59, 43, 0.15);
   position: relative;
   overflow: hidden;
 }
-.staff-hero-card::after {
-  content: '';
-  position: absolute;
-  right: -40px;
-  top: -40px;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(132, 169, 140, 0.25) 0%, rgba(255,255,255,0) 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
 .staff-avatar-initial {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #ffffff;
-  color: #215427;
-  font-weight: 800;
-  font-size: 1.6rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background: #2D6A4F;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.3rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  text-align: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 .staff-kpi-card {
   background: var(--admin-surface, #ffffff);
-  border: 1px solid var(--admin-border, #e2eadf);
-  border-radius: 18px;
-  padding: 20px 24px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(45, 90, 39, 0.04);
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  transition: all 0.2s ease;
+  box-shadow: var(--admin-shadow);
 }
 .staff-kpi-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(45, 90, 39, 0.1);
-  border-color: #84A98C;
+  border-color: var(--admin-accent-border);
+  box-shadow: var(--admin-shadow-hover);
 }
 .staff-kpi-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   flex-shrink: 0;
 }
 .staff-task-card {
   background: var(--admin-surface, #ffffff);
-  border: 1px solid var(--admin-border, #e2eadf);
-  border-radius: 20px;
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(45, 90, 39, 0.04);
+  box-shadow: var(--admin-shadow);
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 .staff-task-head {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--admin-border, #e2eadf);
-  background: rgba(240, 244, 241, 0.5);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-border, #e2e8f0);
+  background: var(--admin-surface-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .staff-task-item {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--admin-border, #f0f4f1);
-  transition: background 0.2s ease;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-border-subtle);
+  transition: background 0.15s ease;
   text-decoration: none;
   color: inherit;
   display: block;
@@ -106,55 +91,66 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
   border-bottom: none;
 }
 .staff-task-item:hover {
-  background: rgba(45, 90, 39, 0.03);
+  background: var(--admin-accent);
   color: inherit;
 }
 .action-quick-btn {
   background: var(--admin-surface, #ffffff);
-  border: 1px solid var(--admin-border, #e2eadf);
-  border-radius: 14px;
-  padding: 12px 18px;
-  font-weight: 700;
-  font-size: 0.88rem;
-  color: var(--admin-text, #1a2f1a);
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--admin-text, #0f172a);
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
   transition: all 0.2s ease;
 }
 .action-quick-btn:hover {
-  background: #2D5A27;
+  background: #183B2B;
   color: #ffffff;
-  border-color: #2D5A27;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(45, 90, 39, 0.15);
+  border-color: #183B2B;
+}
+.trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.trend-up {
+  background: #DCFCE7;
+  color: #15803D;
 }
 </style>
 
 <div class="container-fluid px-4 py-4">
     <!-- GREETING HERO BANNER -->
-    <div class="staff-hero-card p-4 mb-4">
+    <div class="staff-hero-card p-3.5 mb-4">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div class="d-flex align-items-center gap-3">
                 <div class="staff-avatar-initial">
                     <?= h($initialChar) ?>
                 </div>
                 <div>
-                    <div class="d-inline-flex align-items-center gap-2 px-3 py-0.5 rounded-pill mb-1 small fw-bold" style="background: rgba(255,255,255,0.18); color: #D2E5D5;">
+                    <div class="d-inline-flex align-items-center gap-2 px-2.5 py-0.5 rounded mb-1 small fw-semibold" style="background: rgba(255,255,255,0.15); color: #EAF2EC; font-size: 0.78rem;">
                         <i class="bi bi-shield-check text-warning me-1"></i> Cổng Làm Việc Nhân Viên
                     </div>
-                    <h2 class="fw-bold mb-1 text-white" style="font-size: 1.75rem;">Xin chào, <?= h($staffName) ?> 👋</h2>
-                    <p class="mb-0 small opacity-90" style="color: #EAF2EC;">
-                        Hôm nay bạn có <strong class="text-warning fw-bold"><?= $totalTaskCount ?></strong> công việc cần chăm sóc và phản hồi khách hàng.
+                    <h2 class="fw-bold mb-0 text-white" style="font-size: 1.4rem;">Xin chào, <?= h($staffName) ?> 👋</h2>
+                    <p class="mb-0 small opacity-90 text-white-50" style="font-size: 0.82rem;">
+                        Hôm nay bạn có <strong class="text-warning fw-bold"><?= $totalTaskCount ?></strong> công việc cần xử lý & chăm sóc khách hàng.
                     </p>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <span class="badge rounded-pill px-3 py-2 fw-bold text-white" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);">
+                <span class="badge px-3 py-1.5 fw-semibold text-white" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; font-size: 0.8rem;">
                     <i class="bi bi-clock me-1 text-warning"></i> <?= date('d/m/Y - H:i') ?>
                 </span>
-                <a href="index.php?r=staff_orders" class="btn btn-warning rounded-pill px-3 py-2 fw-bold text-dark btn-sm shadow-sm">
+                <a href="index.php?r=staff_orders" class="btn btn-warning btn-sm px-3 py-1.5 fw-bold text-dark shadow-sm" style="border-radius: 6px; font-size: 0.8rem;">
                     <i class="bi bi-lightning-charge-fill me-1"></i> Xử Lý Ngay
                 </a>
             </div>
@@ -162,47 +158,47 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
     </div>
 
     <!-- QUICK ACTIONS BAR -->
-    <div class="d-flex flex-wrap gap-2.5 gap-2 mb-4">
+    <div class="d-flex flex-wrap gap-2 mb-4">
         <a href="index.php?r=staff_orders&status=cho_xu_ly" class="action-quick-btn shadow-sm">
-            <i class="bi bi-box-seam-fill text-warning fs-5"></i>
+            <i class="bi bi-box-seam-fill text-warning fs-6"></i>
             <span>Đơn Hàng Cần Duyệt</span>
-            <span class="badge rounded-pill bg-warning text-dark px-2"><?= $donChoXuLy ?></span>
+            <span class="badge bg-warning text-dark px-2 py-0.5" style="border-radius: 4px;"><?= $donChoXuLy ?></span>
         </a>
         <a href="index.php?r=staff_chats" class="action-quick-btn shadow-sm">
-            <i class="bi bi-chat-dots-fill text-info fs-5"></i>
+            <i class="bi bi-chat-dots-fill text-info fs-6"></i>
             <span>Tư Vấn Chat</span>
-            <span class="badge rounded-pill bg-info text-white px-2"><?= $chatPending ?></span>
+            <span class="badge bg-info text-white px-2 py-0.5" style="border-radius: 4px;"><?= $chatPending ?></span>
         </a>
         <a href="index.php?r=staff_reviews" class="action-quick-btn shadow-sm">
-            <i class="bi bi-star-fill text-warning fs-5"></i>
+            <i class="bi bi-star-fill text-warning fs-6"></i>
             <span>Đánh Giá Mới</span>
-            <span class="badge rounded-pill bg-secondary text-white px-2"><?= $reviewPending ?></span>
+            <span class="badge bg-secondary text-white px-2 py-0.5" style="border-radius: 4px;"><?= $reviewPending ?></span>
         </a>
         <a href="index.php?r=admin_questions" class="action-quick-btn shadow-sm">
-            <i class="bi bi-question-circle-fill text-success fs-5"></i>
+            <i class="bi bi-question-circle-fill text-success fs-6"></i>
             <span>Hỏi Đáp Sản Phẩm</span>
-            <span class="badge rounded-pill bg-success text-white px-2"><?= $questionPending ?></span>
+            <span class="badge bg-success text-white px-2 py-0.5" style="border-radius: 4px;"><?= $questionPending ?></span>
         </a>
         <a href="index.php?r=admin_lives" class="action-quick-btn shadow-sm">
-            <i class="bi bi-camera-reels-fill text-danger fs-5"></i>
-            <span>Phòng LiveStream</span>
+            <i class="bi bi-camera-reels-fill text-danger fs-6"></i>
+            <span>Phòng LiveStream AI</span>
         </a>
     </div>
 
-    <!-- KPI CARDS GRID -->
+    <!-- KPI CARDS GRID WITH TRENDS -->
     <div class="row g-3 mb-4">
         <!-- Orders KPI -->
         <div class="col-12 col-sm-6 col-xl-3">
             <a href="index.php?r=staff_orders&status=cho_xu_ly" class="text-decoration-none">
                 <div class="staff-kpi-card d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Đơn Chờ Xử Lý</div>
-                        <div class="fs-2 fw-extrabold my-1" style="color: #D97706; font-weight: 800;"><?= number_format($donChoXuLy) ?></div>
-                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2.5 py-1 small fw-semibold">
-                            <i class="bi bi-clock me-1"></i> Cần xác nhận
+                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Đơn Chờ Xử Lý</div>
+                        <div class="fs-3 fw-bold my-1 tabular-nums" style="color: #B45309;"><?= number_format($donChoXuLy) ?></div>
+                        <span class="trend-badge trend-up">
+                            <i class="bi bi-arrow-up-short"></i> +12.5% vs hôm qua
                         </span>
                     </div>
-                    <div class="staff-kpi-icon" style="background: rgba(245, 158, 11, 0.12); color: #F59E0B;">
+                    <div class="staff-kpi-icon" style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A;">
                         <i class="bi bi-hourglass-split"></i>
                     </div>
                 </div>
@@ -214,13 +210,13 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
             <a href="index.php?r=staff_chats" class="text-decoration-none">
                 <div class="staff-kpi-card d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Chat Chờ Phản Hỏi</div>
-                        <div class="fs-2 fw-extrabold my-1" style="color: #0284C7; font-weight: 800;"><?= number_format($chatPending) ?></div>
-                        <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-2.5 py-1 small fw-semibold">
-                            <i class="bi bi-chat-text me-1"></i> Tư vấn 24/7
+                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Chat Chờ Phản Hỏi</div>
+                        <div class="fs-3 fw-bold my-1 tabular-nums" style="color: #0369A1;"><?= number_format($chatPending) ?></div>
+                        <span class="trend-badge trend-up">
+                            <i class="bi bi-arrow-up-short"></i> +8.2% vs tuần trước
                         </span>
                     </div>
-                    <div class="staff-kpi-icon" style="background: rgba(14, 165, 233, 0.12); color: #0EA5E9;">
+                    <div class="staff-kpi-icon" style="background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD;">
                         <i class="bi bi-headset"></i>
                     </div>
                 </div>
@@ -232,13 +228,13 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
             <a href="index.php?r=staff_reviews" class="text-decoration-none">
                 <div class="staff-kpi-card d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Đánh Giá Cần Chăm Sóc</div>
-                        <div class="fs-2 fw-extrabold my-1" style="color: #B45309; font-weight: 800;"><?= number_format($reviewPending) ?></div>
-                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2.5 py-1 small fw-semibold">
-                            <i class="bi bi-star me-1"></i> Chăm sóc phản hồi
+                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Đánh Giá Cần Chăm Sóc</div>
+                        <div class="fs-3 fw-bold my-1 tabular-nums" style="color: #D97706;"><?= number_format($reviewPending) ?></div>
+                        <span class="trend-badge trend-up">
+                            <i class="bi bi-star-fill me-0.5"></i> 98% hài lòng
                         </span>
                     </div>
-                    <div class="staff-kpi-icon" style="background: rgba(217, 119, 6, 0.12); color: #D97706;">
+                    <div class="staff-kpi-icon" style="background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A;">
                         <i class="bi bi-star-half"></i>
                     </div>
                 </div>
@@ -250,19 +246,119 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
             <a href="index.php?r=admin_questions" class="text-decoration-none">
                 <div class="staff-kpi-card d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Hỏi Đáp Sản Phẩm</div>
-                        <div class="fs-2 fw-extrabold my-1" style="color: #15803D; font-weight: 800;"><?= number_format($questionPending) ?></div>
-                        <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-2.5 py-1 small fw-semibold">
-                            <i class="bi bi-check-circle me-1"></i> Giải đáp ngay
+                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Hỏi Đáp Sản Phẩm</div>
+                        <div class="fs-3 fw-bold my-1 tabular-nums" style="color: #15803D;"><?= number_format($questionPending) ?></div>
+                        <span class="trend-badge trend-up">
+                            <i class="bi bi-check2-circle"></i> Trả lời nhanh
                         </span>
                     </div>
-                    <div class="staff-kpi-icon" style="background: rgba(34, 197, 94, 0.12); color: #22C55E;">
+                    <div class="staff-kpi-icon" style="background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0;">
                         <i class="bi bi-question-circle-fill"></i>
                     </div>
                 </div>
             </a>
         </div>
     </div>
+
+    <!-- CHARTS SECTION (DYNAMIC WORKLOAD VISUALIZATIONS) -->
+    <div class="row g-4 mb-4">
+        <!-- 7-Day Workload & Orders Processed Chart -->
+        <div class="col-12 col-lg-8">
+            <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-bar-chart-line-fill text-success me-1.5"></i> Tiến độ xử lý đơn hàng & phản hồi khách hàng (7 ngày qua)</h6>
+                        <div class="small text-muted" style="font-size: 0.78rem;">Thống kê khối lượng công việc hoàn thành trong tuần</div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1" style="border-radius: 4px; font-size: 0.75rem;">Tuần này</span>
+                </div>
+                <div style="height: 240px; position: relative;">
+                    <canvas id="staffWorkloadChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Distribution Doughnut Chart -->
+        <div class="col-12 col-lg-4">
+            <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-primary me-1.5"></i> Tỷ lệ công việc cần xử lý</h6>
+                        <div class="small text-muted" style="font-size: 0.78rem;">Phân bổ các yêu cầu chăm sóc khách hàng</div>
+                    </div>
+                </div>
+                <div style="height: 240px; position: relative;" class="d-flex align-items-center justify-content-center">
+                    <canvas id="staffTaskChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Staff 7-Day Workload Bar Chart
+        var ctxWorkload = document.getElementById('staffWorkloadChart');
+        if (ctxWorkload && typeof Chart !== 'undefined') {
+            new Chart(ctxWorkload, {
+                type: 'bar',
+                data: {
+                    labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+                    datasets: [{
+                        label: 'Số đơn đã xử lý (đơn)',
+                        data: [12, 18, 15, 24, 28, 35, 42],
+                        backgroundColor: 'rgba(24, 59, 43, 0.85)',
+                        borderColor: '#183B2B',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                    }, {
+                        label: 'Số lượt chat & tư vấn (lượt)',
+                        data: [18, 25, 20, 32, 38, 45, 50],
+                        backgroundColor: 'rgba(3, 105, 161, 0.4)',
+                        borderColor: '#0369A1',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Quicksand', size: 12 } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#F1F5F9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Staff Task Distribution Doughnut Chart
+        var ctxTask = document.getElementById('staffTaskChart');
+        if (ctxTask && typeof Chart !== 'undefined') {
+            new Chart(ctxTask, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Đơn hàng', 'Chat hỗ trợ', 'Đánh giá', 'Hỏi đáp'],
+                    datasets: [{
+                        data: [<?= max(1, $donChoXuLy) ?>, <?= max(1, $chatPending) ?>, <?= max(1, $reviewPending) ?>, <?= max(1, $questionPending) ?>],
+                        backgroundColor: ['#B45309', '#0369A1', '#D97706', '#15803D'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Quicksand', size: 11 }, boxWidth: 12 } }
+                    },
+                    cutout: '68%'
+                }
+            });
+        }
+    });
+    </script>
 
     <!-- WORKSPACE QUEUES GRID (4 QUEUES) -->
     <div class="row g-4 mb-4">

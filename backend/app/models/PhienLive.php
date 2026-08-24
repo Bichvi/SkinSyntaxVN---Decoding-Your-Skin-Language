@@ -78,6 +78,11 @@ class PhienLive {
         }
     }
 
+    public function getLiveById($id): ?array {
+        return $this->findById($id);
+    }
+
+
     public function taoPhienLive(array $data): bool {
         try {
             $maPhong = $this->getNextNumericId();
@@ -89,6 +94,7 @@ class PhienLive {
                 'khung_gio_ket_thuc' => trim((string)($data['khung_gio_ket_thuc'] ?? date('Y-m-d H:i', strtotime('+2 hours')))),
                 'ma_san_pham_ghim' => trim((string)($data['ma_san_pham_ghim'] ?? '5876')),
                 'gia_uu_dai_live' => (float)($data['gia_uu_dai_live'] ?? 78000),
+                'so_luong_kho_deal' => (int)($data['so_luong_kho_deal'] ?? 20),
                 'bat_ai_cohost' => !empty($data['bat_ai_cohost']),
                 'server_livekit_url' => trim((string)($data['server_livekit_url'] ?? 'wss://skinsyntax-live.livekit.cloud')),
                 'url_ban_ghi' => trim((string)($data['url_ban_ghi'] ?? '')),
@@ -115,7 +121,9 @@ class PhienLive {
                 'khung_gio_ket_thuc' => trim((string)($data['khung_gio_ket_thuc'] ?? '')),
                 'ma_san_pham_ghim' => trim((string)($data['ma_san_pham_ghim'] ?? '')),
                 'gia_uu_dai_live' => (float)($data['gia_uu_dai_live'] ?? 0),
+                'so_luong_kho_deal' => isset($data['so_luong_kho_deal']) ? (int)$data['so_luong_kho_deal'] : null,
                 'bat_ai_cohost' => !empty($data['bat_ai_cohost']),
+
                 'server_livekit_url' => trim((string)($data['server_livekit_url'] ?? '')),
                 'url_ban_ghi' => trim((string)($data['url_ban_ghi'] ?? '')),
                 'tom_tat_phien_live' => trim((string)($data['tom_tat_phien_live'] ?? '')),
@@ -168,7 +176,7 @@ class PhienLive {
         }
     }
 
-    public function ghimSanPham($id, string $productId, ?float $livePrice = null, int $durationMinutes = 15): bool {
+    public function ghimSanPham($id, string $productId, ?float $livePrice = null, int $durationMinutes = 15, int $dealStock = 20): bool {
         try {
             $nowStr = date('Y-m-d H:i:s');
             $endStr = date('Y-m-d H:i:s', strtotime("+{$durationMinutes} minutes"));
@@ -176,15 +184,50 @@ class PhienLive {
                 'ma_san_pham_ghim' => $productId,
                 'deal_bat_dau' => $nowStr,
                 'deal_ket_thuc' => $endStr,
+                'so_luong_kho_deal' => max(1, $dealStock),
                 'updated_at' => $nowStr
             ];
             if ($livePrice !== null && $livePrice > 0) {
                 $set['gia_uu_dai_live'] = $livePrice;
             }
+
             $res = $this->db->phien_live->updateOne(
                 ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]],
                 ['$set' => $set]
             );
+
+            // Auto sync with danh_sach_deal
+            $doc = $this->findById($id);
+            if ($doc) {
+                $existingDeals = $doc['danh_sach_deal'] ?? [];
+                $exists = false;
+                foreach ($existingDeals as &$d) {
+                    if ((string)($d['ma_san_pham'] ?? '') === (string)$productId) {
+                        $exists = true;
+                        if ($livePrice !== null && $livePrice > 0) {
+                            $d['gia_uu_dai_live'] = $livePrice;
+                        }
+                        $d['so_luong_kho_deal'] = max(1, $dealStock);
+                        break;
+                    }
+                }
+                if ($exists) {
+                    $this->db->phien_live->updateOne(
+                        ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]],
+                        ['$set' => ['danh_sach_deal' => $existingDeals]]
+                    );
+                } else {
+                    $this->themDealSanPham($id, [
+                        'ma_san_pham' => $productId,
+                        'gia_uu_dai_live' => $livePrice ?: (float)($doc['gia_uu_dai_live'] ?? 0),
+                        'so_luong_kho_deal' => max(1, $dealStock),
+                        'khung_gio_bat_dau' => date('H:i'),
+                        'khung_gio_ket_thuc' => date('H:i', strtotime("+{$durationMinutes} minutes")),
+                        'trang_thai' => 'dang_giam_gia'
+                    ]);
+                }
+            }
+
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;

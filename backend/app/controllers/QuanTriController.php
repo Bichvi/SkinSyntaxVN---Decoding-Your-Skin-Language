@@ -1526,8 +1526,9 @@ class QuanTriController {
         require_once __DIR__ . '/../models/PhienLive.php';
         $phienLiveModel = new PhienLive($this->pdo);
         $lives = $phienLiveModel->getAllLives();
-        $paginateRes = $this->sanPhamModel->paginate(1, 500);
+        $paginateRes = $this->sanPhamModel->paginate(1, 2000);
         $allProducts = $paginateRes['items'] ?? [];
+
 
         foreach ($lives as &$live) {
             $st = (string)($live['trang_thai'] ?? 'chuamoi');
@@ -1620,8 +1621,8 @@ class QuanTriController {
 
             $msg = 'Đã cập nhật trạng thái phiên Live!';
             if ($status === 'danglive') $msg = '🔴 Đã phát sóng trực tiếp phiên Live!';
-            elseif ($status === 'tamdung') $msg = '⏸️ Đã tạm dừng phát sóng phiên LiveStream!';
-            elseif ($status === 'ketthuc') $msg = '⏹️ Đã kết thúc vĩnh viễn phiên LiveStream & lưu bản ghi!';
+            elseif ($status === 'tamdung') $msg = '⏸ Đã tạm dừng phát sóng phiên LiveStream!';
+            elseif ($status === 'ketthuc') $msg = '⏹ Đã kết thúc vĩnh viễn phiên LiveStream & lưu bản ghi!';
 
             set_flash($ok ? 'success' : 'error', $ok ? $msg : 'Không thể cập nhật trạng thái.');
         }

@@ -166,30 +166,19 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
 </div>
 
 <style>
-  .cart-page {
-    font-family: 'Quicksand', system-ui, sans-serif;
-  }
-
-  .cart-title {
-    font-size: clamp(24px, 3vw, 34px);
-    font-weight: 800;
-    color: #1A2F1A;
-  }
-
-  .cart-count-pill {
-    padding: 7px 14px;
-    border-radius: 999px;
-    background: #EAF0EB;
-    color: #2D5A27;
+  .c  .cart-count-pill {
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: #EBF2EE;
+    color: #183B2B;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .cart-shell {
     background: #fff;
-    border-radius: 20px;
-    border: 1px solid #E2EADF;
-    box-shadow: 0 10px 30px rgba(45, 90, 39, 0.05);
+    border-radius: 12px;
+    border: 1px solid var(--border);
     overflow: hidden;
   }
 
@@ -197,12 +186,12 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
     width: 18px;
     height: 18px;
     cursor: pointer;
-    border-color: #84A98C;
+    border-color: var(--border);
   }
 
   .cart-check:checked {
-    background-color: #2D5A27;
-    border-color: #2D5A27;
+    background-color: #183B2B;
+    border-color: #183B2B;
   }
 
   .cart-table-wrap {
@@ -210,20 +199,20 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
   }
 
   .cart-table thead th {
-    border-bottom: 1px solid #E2EADF;
+    border-bottom: 1px solid var(--border);
     font-size: 12px;
-    letter-spacing: .05em;
+    letter-spacing: .04em;
     text-transform: uppercase;
-    color: #5C705E;
-    font-weight: 800;
+    color: #64748B;
+    font-weight: 700;
     padding: 14px 16px;
     white-space: nowrap;
-    background: #F9FBF8;
+    background: #FAFAFA;
   }
 
   .cart-table tbody td {
     padding: 16px;
-    border-bottom: 1px solid #F0F4F1;
+    border-bottom: 1px solid #F1F5F9;
     vertical-align: middle;
   }
 
@@ -237,12 +226,12 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
   }
 
   .cart-thumb {
-    width: 78px;
-    height: 78px;
-    border-radius: 14px;
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
     object-fit: cover;
-    border: 1px solid #E2EADF;
-    background: #F0F4F1;
+    border: 1px solid var(--border);
+    background: #FAFAFA;
   }
 
   .cart-thumb--empty {
@@ -250,54 +239,54 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
     align-items: center;
     justify-content: center;
     font-size: 11px;
-    color: #5C705E;
-    background: #F0F4F1;
+    color: #64748B;
+    background: #FAFAFA;
   }
 
   .cart-product-name {
-    color: #1A2F1A;
-    font-size: 15px;
-    font-weight: 700;
+    color: #0F172A;
+    font-size: 14px;
+    font-weight: 600;
     text-decoration: none;
     transition: color 0.2s ease;
   }
 
   .cart-product-name:hover {
-    color: #2D5A27;
+    color: #183B2B;
   }
 
   .cart-product-meta {
     margin-top: 4px;
-    color: #5C705E;
+    color: #64748B;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
   }
 
   .qty-control {
-    width: 132px;
-    border: 1px solid #E2EADF;
-    border-radius: 999px;
+    width: 120px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #F0F4F1;
+    background: #FAFAFA;
   }
 
   .qty-btn {
     border: 0;
-    background: #EAF0EB;
-    color: #2D5A27;
-    font-weight: 800;
-    width: 36px;
-    height: 36px;
-    line-height: 36px;
+    background: #F1F5F9;
+    color: #0F172A;
+    font-weight: 700;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
     padding: 0;
     transition: background 0.2s ease;
   }
 
   .qty-btn:hover {
-    background: #2D5A27;
+    background: #183B2B;
     color: #FFFFFF;
   }
 
@@ -308,10 +297,10 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
 
   .qty-input {
     border: 0;
-    width: 56px;
+    width: 48px;
     text-align: center;
-    font-weight: 700;
-    color: #1A2F1A;
+    font-weight: 600;
+    color: #0F172A;
     background: transparent;
   }
 
@@ -321,16 +310,17 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
 
   .cart-price,
   .line-total {
-    color: #2D5A27;
-    font-weight: 800;
-    font-size: 15px;
+    color: #183B2B;
+    font-weight: 700;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
   }
 
   .btn-remove {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid #FCA5A5;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #FECDD3;
     color: #E11D48;
     background: #fff;
     display: inline-flex;
@@ -341,6 +331,14 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
 
   .btn-remove:hover {
     background: #FFE4E6;
+  }
+
+  .cart-summary {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 20px;
+  }kground: #FFE4E6;
   }
 
   .cart-summary {

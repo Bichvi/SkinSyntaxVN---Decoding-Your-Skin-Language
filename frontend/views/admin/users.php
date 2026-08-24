@@ -10,8 +10,8 @@ $loaiKh = trim((string)($loaiKh ?? ''));
 
 <style>
     .staff-panel {
-        border: 1px solid rgba(15, 107, 62, 0.14);
-        background: linear-gradient(180deg, rgba(15, 107, 62, 0.07), rgba(15, 107, 62, 0.02));
+        border: 1px solid var(--admin-border) !important;
+        background: var(--admin-surface) !important;
     }
 
     .staff-panel .staff-heading {
@@ -22,15 +22,17 @@ $loaiKh = trim((string)($loaiKh ?? ''));
     }
 
     .staff-panel .staff-heading-badge {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(15, 107, 62, 0.12);
-        color: #0f6b3e;
+        background: #EBF2EE;
+        color: #183B2B;
         font-weight: 700;
+        font-size: 0.85rem;
+        border: 1px solid #C8DACF;
     }
 
     .staff-table thead th {
@@ -38,13 +40,14 @@ $loaiKh = trim((string)($loaiKh ?? ''));
     }
 
     .staff-name {
-        font-weight: 700;
-        color: #1f2937;
+        font-weight: 600;
+        color: var(--admin-text);
+        font-size: 0.86rem;
     }
 
     .staff-meta {
-        font-size: 0.85rem;
-        color: #6c757d;
+        font-size: 0.78rem;
+        color: var(--admin-text-muted);
     }
 
     .role-chip,
@@ -52,63 +55,65 @@ $loaiKh = trim((string)($loaiKh ?? ''));
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 999px;
-        padding: 0.42rem 0.8rem;
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 0.01em;
+        border-radius: 4px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.74rem;
+        font-weight: 600;
         white-space: nowrap;
     }
 
     .role-chip {
-        background: rgba(15, 107, 62, 0.12);
-        color: #0f6b3e;
+        background: #EBF2EE;
+        color: #183B2B;
+        border: 1px solid #C8DACF;
     }
 
     .status-chip.status-active {
-        background: rgba(15, 107, 62, 0.14);
-        color: #0f6b3e;
-        min-width: 138px;
+        background: #DCFCE7;
+        color: #15803D;
+        border: 1px solid #BBF7D0;
+    }
+
+    .status-chip.status-inactive {
+        background: #FEF3C7;
+        color: #92400E;
+        border: 1px solid #FDE68A;
     }
 
     .loyalty-chip {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 999px;
-        padding: 0.36rem 0.76rem;
-        font-size: 0.78rem;
-        font-weight: 700;
+        border-radius: 4px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.74rem;
+        font-weight: 600;
         white-space: nowrap;
-        background: rgba(15, 107, 62, 0.1);
-        color: #0f6b3e;
     }
 
     .loyalty-chip--diamond {
-        background: rgba(22, 101, 52, 0.18);
-        color: #14532d;
+        background: #F3E8FF;
+        color: #6B21A8;
+        border: 1px solid #E9D5FF;
     }
 
     .loyalty-chip--vip {
-        background: rgba(15, 107, 62, 0.12);
-        color: #0f6b3e;
+        background: #E0F2FE;
+        color: #0369A1;
+        border: 1px solid #BAE6FD;
     }
 
     .loyalty-chip--regular {
-        background: rgba(107, 114, 128, 0.14);
+        background: #F1F5F9;
         color: #475569;
+        border: 1px solid #CBD5E1;
     }
 
     .loyalty-points {
-        font-size: 0.86rem;
-        color: #475569;
-        margin-top: 0.3rem;
-    }
-
-    .status-chip.status-inactive {
-        background: rgba(143, 169, 150, 0.24);
-        color: #3f5e49;
-        min-width: 138px;
+        font-size: 0.78rem;
+        color: var(--admin-text-muted);
+        margin-top: 0.2rem;
+        font-variant-numeric: tabular-nums;
     }
 
     .staff-actions {
@@ -116,297 +121,282 @@ $loaiKh = trim((string)($loaiKh ?? ''));
         flex-wrap: nowrap;
         justify-content: flex-end;
         align-items: center;
-        gap: 0.45rem;
+        gap: 0.35rem;
         white-space: nowrap;
     }
 
     .staff-actions .btn {
-        min-width: 68px;
-    }
-
-    .staff-table td:nth-child(3),
-    .staff-table td:nth-child(4) {
-        white-space: nowrap;
-    }
-
-    @media (max-width: 1399.98px) {
-        .staff-actions {
-            gap: 0.35rem;
-        }
-
-        .staff-actions .btn {
-            min-width: 62px;
-            padding-left: 0.55rem;
-            padding-right: 0.55rem;
-        }
+        padding: 0.25rem 0.55rem;
+        font-size: 0.78rem;
+        border-radius: 4px;
     }
 
     .staff-form-note {
         margin-top: 0.75rem;
-        padding: 0.75rem 0.9rem;
-        border-radius: 0.9rem;
-        background: rgba(15, 107, 62, 0.08);
-        color: #1f5c3e;
-        font-size: 0.9rem;
+        padding: 0.6rem 0.8rem;
+        border-radius: 6px;
+        background: #EBF2EE;
+        color: #183B2B;
+        font-size: 0.8rem;
+        border: 1px solid #C8DACF;
     }
 </style>
 
-<div class="container-fluid p-4">
-    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
-            <h1 class="h3 mb-1">Khách hàng, nhân viên và phân quyền</h1>
-            <p class="text-muted mb-0">Quản lý thông tin khách hàng, nhân viên và vai trò trong hệ thống.</p>
+            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Khách hàng & Phân quyền hệ thống</h1>
+            <p class="text-muted mb-0 small">Quản lý thông tin khách hàng, tài khoản nhân viên và vai trò truy cập.</p>
         </div>
     </div>
 
-    <form class="row g-2 mb-4" method="get" action="index.php" data-live-filter="true">
-        <input type="hidden" name="r" value="admin_users">
-        <div class="col-md-6">
-            <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm theo tên, email, số điện thoại...">
-        </div>
-        <div class="col-md-3">
-            <select class="form-select" name="loai_kh">
-                <option value="">Tất cả loại KH</option>
-                <option value="Thuong" <?= $loaiKh === 'Thuong' ? 'selected' : '' ?>>Thường</option>
-                <option value="VIP" <?= $loaiKh === 'VIP' ? 'selected' : '' ?>>VIP</option>
-                <option value="Kim Cuong" <?= $loaiKh === 'Kim Cuong' ? 'selected' : '' ?>>Kim Cương</option>
-            </select>
-        </div>
-        <div class="col-md-3 d-grid">
-            <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
-        </div>
-    </form>
+    <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
+        <form class="row g-2" method="get" action="index.php" data-live-filter="true">
+            <input type="hidden" name="r" value="admin_users">
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm theo tên, email, số điện thoại..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="loai_kh" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                    <option value="">Tất cả loại KH</option>
+                    <option value="Thuong" <?= $loaiKh === 'Thuong' ? 'selected' : '' ?>>Thường</option>
+                    <option value="VIP" <?= $loaiKh === 'VIP' ? 'selected' : '' ?>>VIP</option>
+                    <option value="Kim Cuong" <?= $loaiKh === 'Kim Cuong' ? 'selected' : '' ?>>Kim Cương</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-grid">
+                <button type="submit" class="btn text-white fw-semibold" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">Tìm kiếm</button>
+            </div>
+        </form>
+    </div>
 
     <div class="row g-4 mb-4">
+        <!-- Customer Edit Form -->
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100" id="customer-form-card">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3"><?= $customerEditing ? 'Cập nhật khách hàng' : 'Thêm khách hàng' ?></h5>
-                    <form method="post" action="index.php?r=admin_customer_save" class="row g-3">
-                        <input type="hidden" name="ma_kh" value="<?= h($customerEditing['ma_kh'] ?? '') ?>">
-                        <div class="col-md-6">
-                            <label class="form-label">Họ tên</label>
-                            <input type="text" class="form-control" name="ho_ten" value="<?= h($customerEditing['ho_ten'] ?? '') ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" value="<?= h($customerEditing['email'] ?? '') ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">SĐT</label>
-                            <input type="text" class="form-control" name="so_dien_thoai" value="<?= h($customerEditing['so_dien_thoai'] ?? '') ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Giới tính</label>
-                            <input type="text" class="form-control" name="gioi_tinh" value="<?= h($customerEditing['gioi_tinh'] ?? '') ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Năm sinh</label>
-                            <input type="number" class="form-control" name="nam_sinh" value="<?= h($customerEditing['nam_sinh'] ?? '') ?>">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Địa chỉ</label>
-                            <input type="text" class="form-control" name="dia_chi" value="<?= h($customerEditing['dia_chi'] ?? '') ?>">
-                        </div>
-                        <div class="col-12 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Lưu khách hàng</button>
-                            <?php if ($customerEditing): ?>
-                                <a href="index.php?r=admin_users" class="btn btn-light border">Hủy</a>
-                            <?php endif; ?>
-                        </div>
-                    </form>
-                </div>
+            <div class="admin-card mb-0 p-3.5 h-100" id="customer-form-card" style="border-radius: 8px !important;">
+                <h6 class="fw-bold mb-3" style="color: var(--admin-text);"><?= $customerEditing ? 'Cập nhật thông tin khách hàng' : 'Thêm khách hàng mới' ?></h6>
+                <form method="post" action="index.php?r=admin_customer_save" class="row g-2.5 g-2">
+                    <input type="hidden" name="ma_kh" value="<?= h($customerEditing['ma_kh'] ?? '') ?>">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Họ tên *</label>
+                        <input type="text" class="form-control" name="ho_ten" value="<?= h($customerEditing['ho_ten'] ?? '') ?>" required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Email</label>
+                        <input type="email" class="form-control" name="email" value="<?= h($customerEditing['email'] ?? '') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">SĐT</label>
+                        <input type="text" class="form-control" name="so_dien_thoai" value="<?= h($customerEditing['so_dien_thoai'] ?? '') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Giới tính</label>
+                        <input type="text" class="form-control" name="gioi_tinh" value="<?= h($customerEditing['gioi_tinh'] ?? '') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Năm sinh</label>
+                        <input type="number" class="form-control" name="nam_sinh" value="<?= h($customerEditing['nam_sinh'] ?? '') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Địa chỉ giao hàng</label>
+                        <input type="text" class="form-control" name="dia_chi" value="<?= h($customerEditing['dia_chi'] ?? '') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-12 d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-sm text-white fw-semibold px-3" style="background: #183B2B; border-radius: 6px;">Lưu thông tin KH</button>
+                        <?php if ($customerEditing): ?>
+                            <a href="index.php?r=admin_users" class="btn btn-sm btn-outline-secondary px-3" style="border-radius: 6px;">Hủy bỏ</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
             </div>
         </div>
 
+        <!-- Staff Form -->
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 staff-panel" id="staff-form-card">
-                <div class="card-body p-4">
-                    <div class="staff-heading">
-                        <span class="staff-heading-badge">NV</span>
-                        <div>
-                            <h5 class="fw-bold mb-1"><?= $staffEditing ? 'Cập nhật nhân viên' : 'Thêm nhân viên / phân quyền' ?></h5>
-                            <div class="text-muted small">Khu vực dành riêng cho quản trị nhân viên, vai trò và trạng thái hoạt động.</div>
-                        </div>
+            <div class="admin-card mb-0 p-3.5 h-100 staff-panel" id="staff-form-card" style="border-radius: 8px !important;">
+                <div class="staff-heading">
+                    <span class="staff-heading-badge">NV</span>
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><?= $staffEditing ? 'Cập nhật tài khoản nhân viên' : 'Thêm nhân viên / Phân quyền' ?></h6>
+                        <div class="text-muted small" style="font-size: 0.78rem;">Tạo tài khoản quản trị và cấp quyền truy cập hệ thống.</div>
                     </div>
-                    <form method="post" action="index.php?r=admin_staff_save" class="row g-3">
-                        <input type="hidden" name="ma_nv" value="<?= h($staffEditing['ma_nv'] ?? '') ?>">
-                        <div class="col-md-6">
-                            <label class="form-label">Họ tên</label>
-                            <input type="text" class="form-control" name="ho_ten" value="<?= h($staffEditing['ho_ten'] ?? '') ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" value="<?= h($staffEditing['email'] ?? '') ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">SĐT</label>
-                            <input type="text" class="form-control" name="so_dien_thoai" value="<?= h($staffEditing['so_dien_thoai'] ?? '') ?>">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Mật khẩu <?= $staffEditing ? '(bỏ trống để giữ nguyên)' : '' ?></label>
-                            <input type="password" class="form-control" name="mat_khau" <?= $staffEditing ? '' : 'required' ?>>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Vai trò</label>
-                            <?php $selectedRole = (string)($staffEditing['ma_vai_tro'] ?? ''); ?>
-                            <select class="form-select" name="ma_vai_tro" required>
-                                <option value="">-- Chọn vai trò --</option>
-                                <?php foreach ($roles as $role): ?>
-                                    <option value="<?= h($role['ma_vai_tro'] ?? '') ?>" <?= $selectedRole === (string)($role['ma_vai_tro'] ?? '') ? 'selected' : '' ?>>
-                                        <?= h($role['ten_vai_tro'] ?? '') ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Trạng thái</label>
-                            <?php $staffStatus = (string)($staffEditing['trang_thai'] ?? 'active'); ?>
-                            <select class="form-select" name="trang_thai">
-                                <option value="active" <?= $staffStatus === 'active' ? 'selected' : '' ?>>Hoạt động</option>
-                                <option value="inactive" <?= $staffStatus === 'inactive' ? 'selected' : '' ?>>Tạm khóa</option>
-                            </select>
-                        </div>
-                        <div class="col-12 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Lưu nhân viên</button>
-                            <?php if ($staffEditing): ?>
-                                <a href="index.php?r=admin_users" class="btn btn-light border">Hủy</a>
-                            <?php endif; ?>
-                        </div>
-                    </form>
-                    <div class="staff-form-note">
-                        Gợi ý: dùng <strong>Tạm khóa</strong> để chặn đăng nhập, dùng <strong>Xóa</strong> khi muốn loại bỏ hẳn nhân viên khỏi hệ thống.
+                </div>
+                <form method="post" action="index.php?r=admin_staff_save" class="row g-2.5 g-2">
+                    <input type="hidden" name="ma_nv" value="<?= h($staffEditing['ma_nv'] ?? '') ?>">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Họ tên *</label>
+                        <input type="text" class="form-control" name="ho_ten" value="<?= h($staffEditing['ho_ten'] ?? '') ?>" required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Email *</label>
+                        <input type="email" class="form-control" name="email" value="<?= h($staffEditing['email'] ?? '') ?>" required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">SĐT</label>
+                        <input type="text" class="form-control" name="so_dien_thoai" value="<?= h($staffEditing['so_dien_thoai'] ?? '') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Mật khẩu <?= $staffEditing ? '(để trống nếu giữ cũ)' : '*' ?></label>
+                        <input type="password" class="form-control" name="mat_khau" <?= $staffEditing ? '' : 'required' ?> style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Vai trò hệ thống *</label>
+                        <?php $selectedRole = (string)($staffEditing['ma_vai_tro'] ?? ''); ?>
+                        <select class="form-select" name="ma_vai_tro" required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                            <option value="">-- Chọn vai trò --</option>
+                            <?php foreach ($roles as $role): ?>
+                                <option value="<?= h($role['ma_vai_tro'] ?? '') ?>" <?= $selectedRole === (string)($role['ma_vai_tro'] ?? '') ? 'selected' : '' ?>>
+                                    <?= h($role['ten_vai_tro'] ?? '') ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Trạng thái hoạt động</label>
+                        <?php $staffStatus = (string)($staffEditing['trang_thai'] ?? 'active'); ?>
+                        <select class="form-select" name="trang_thai" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                            <option value="active" <?= $staffStatus === 'active' ? 'selected' : '' ?>>Kích hoạt (Hoạt động)</option>
+                            <option value="inactive" <?= $staffStatus === 'inactive' ? 'selected' : '' ?>>Tạm khóa</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-sm text-white fw-semibold px-3" style="background: #183B2B; border-radius: 6px;">Lưu nhân viên</button>
+                        <?php if ($staffEditing): ?>
+                            <a href="index.php?r=admin_users" class="btn btn-sm btn-outline-secondary px-3" style="border-radius: 6px;">Hủy bỏ</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+                <div class="staff-form-note">
+                    <strong>Gợi ý:</strong> Dùng <strong>Tạm khóa</strong> để dừng tạm thời quyền truy cập. Dùng <strong>Xóa</strong> khi loại bỏ hẳn khỏi công ty.
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Data Tables Row -->
     <div class="row g-4">
+        <!-- Customers List Table -->
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Danh sách khách hàng</h5>
-                    <div class="table-responsive">
-                        <table class="table align-middle table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Khách hàng</th>
-                                    <th>Liên hệ</th>
-                                    <th>Hạng thành viên</th>
-                                    <th>Đơn hàng</th>
-                                    <th class="text-end">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($customers)): ?>
-                                    <tr><td colspan="5" class="text-center text-muted py-4">Chưa có khách hàng.</td></tr>
-                                <?php else: ?>
-                                    <?php foreach ($customers as $item): ?>
-                                        <?php
-                                        $loaiKh = trim((string)($item['loaikh'] ?? 'Thuong'));
-                                        $loyaltyClass = 'loyalty-chip--regular';
-                                        if (strcasecmp($loaiKh, 'Kim Cuong') === 0) {
-                                            $loyaltyClass = 'loyalty-chip--diamond';
-                                        } elseif (strcasecmp($loaiKh, 'VIP') === 0) {
-                                            $loyaltyClass = 'loyalty-chip--vip';
-                                        }
-                                        ?>
-                                        <tr>
-                                            <td>
-                                                <div class="fw-semibold"><?= h($item['ho_ten'] ?? '') ?></div>
-                                                <div class="small text-muted">#<?= h($item['ma_kh'] ?? '') ?></div>
-                                            </td>
-                                            <td>
-                                                <div><?= h($item['email'] ?? 'Chưa có email') ?></div>
-                                                <div class="small text-muted"><?= h($item['so_dien_thoai'] ?? 'Chưa có SĐT') ?></div>
-                                            </td>
-                                            <td>
-                                                <span class="loyalty-chip <?= $loyaltyClass ?>"><?= h($loaiKh) ?></span>
-                                                <div class="loyalty-points"><?= number_format((int)($item['diemtl'] ?? 0), 0, ',', '.') ?> điểm</div>
-                                            </td>
-                                            <td>
-                                                <div><?= (int)($item['tong_don'] ?? 0) ?> đơn</div>
-                                                <div class="small text-muted"><?= vnd($item['tong_chi_tieu'] ?? 0) ?></div>
-                                            </td>
-                                            <td class="text-end">
-                                                <a href="index.php?r=admin_users&customer_edit=<?= (int)($item['ma_kh'] ?? 0) ?>#customer-form-card" class="btn btn-sm btn-outline-warning">Sửa</a>
-                                                <form method="post" action="index.php?r=admin_customer_delete" class="d-inline" onsubmit="return confirm('Xóa khách hàng này?');">
+            <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
+                <div class="p-3 border-bottom background-subtle">
+                    <h6 class="fw-bold mb-0" style="color: var(--admin-text);">Danh sách khách hàng</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Khách hàng</th>
+                                <th>Liên hệ</th>
+                                <th>Hạng & Điểm</th>
+                                <th>Tổng đơn</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($customers)): ?>
+                                <tr><td colspan="5" class="text-center text-muted py-4">Chưa có khách hàng.</td></tr>
+                            <?php else: ?>
+                                <?php foreach ($customers as $item): ?>
+                                    <?php
+                                    $loaiKh = trim((string)($item['loaikh'] ?? 'Thuong'));
+                                    $loyaltyClass = 'loyalty-chip--regular';
+                                    if (strcasecmp($loaiKh, 'Kim Cuong') === 0) {
+                                        $loyaltyClass = 'loyalty-chip--diamond';
+                                    } elseif (strcasecmp($loaiKh, 'VIP') === 0) {
+                                        $loyaltyClass = 'loyalty-chip--vip';
+                                    }
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold" style="color: var(--admin-text); font-size: 0.85rem;"><?= h($item['ho_ten'] ?? '') ?></div>
+                                            <div class="small text-muted" style="font-size: 0.76rem;">#<?= h($item['ma_kh'] ?? '') ?></div>
+                                        </td>
+                                        <td>
+                                            <div style="font-size: 0.82rem;"><?= h($item['email'] ?? 'Chưa có email') ?></div>
+                                            <div class="small text-muted" style="font-size: 0.76rem;"><?= h($item['so_dien_thoai'] ?? 'Chưa có SĐT') ?></div>
+                                        </td>
+                                        <td>
+                                            <span class="loyalty-chip <?= $loyaltyClass ?>"><?= h($loaiKh) ?></span>
+                                            <div class="loyalty-points"><?= number_format((int)($item['diemtl'] ?? 0), 0, ',', '.') ?> pts</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold" style="font-size: 0.82rem;"><?= (int)($item['tong_don'] ?? 0) ?> đơn</div>
+                                            <div class="small text-muted tabular-nums" style="font-size: 0.76rem;"><?= vnd($item['tong_chi_tieu'] ?? 0) ?></div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-1">
+                                                <a href="index.php?r=admin_users&customer_edit=<?= (int)($item['ma_kh'] ?? 0) ?>#customer-form-card" class="btn btn-sm btn-outline-secondary px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Sửa"><i class="bi bi-pencil-square me-1"></i>Sửa</a>
+                                                <form method="post" action="index.php?r=admin_customer_delete" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa khách hàng này không?');">
                                                     <input type="hidden" name="ma_kh" value="<?= h($item['ma_kh'] ?? '') ?>">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Xóa"><i class="bi bi-trash me-1"></i>Xóa</button>
                                                 </form>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
+        <!-- Staff List Table -->
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4 staff-panel">
-                <div class="card-body p-4">
-                    <div class="staff-heading">
-                        <span class="staff-heading-badge">QL</span>
-                        <div>
-                            <h5 class="fw-bold mb-1">Danh sách nhân viên và vai trò</h5>
-                            <div class="text-muted small">Phân biệt rõ vai trò, trạng thái và các thao tác quản trị cho từng nhân viên.</div>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table align-middle table-hover mb-0 staff-table">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Nhân viên</th>
-                                    <th>Vai trò</th>
-                                    <th>Trạng thái</th>
-                                    <th class="text-end">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($staffMembers)): ?>
-                                    <tr><td colspan="4" class="text-center text-muted py-4">Chưa có nhân viên.</td></tr>
-                                <?php else: ?>
-                                    <?php foreach ($staffMembers as $item): ?>
-                                        <?php
-                                        $statusRaw = strtolower(trim((string)($item['trang_thai'] ?? 'active')));
-                                        $isActive = ($statusRaw === 'active');
-                                        $statusLabel = $isActive ? 'Hoạt động' : 'Tạm khóa';
-                                        $statusClass = $isActive ? 'status-active' : 'status-inactive';
-                                        ?>
-                                        <tr>
-                                            <td>
-                                                <div class="staff-name"><?= h($item['ho_ten'] ?? '') ?></div>
-                                                <div class="staff-meta">#<?= h($item['ma_nv'] ?? '') ?> · <?= h($item['email'] ?? '') ?></div>
-                                            </td>
-                                            <td><span class="role-chip"><?= h($item['ten_vai_tro'] ?? 'Chưa gán') ?></span></td>
-                                            <td><span class="status-chip <?= $statusClass ?>"><?= h($statusLabel) ?></span></td>
-                                            <td class="text-end">
-                                                <div class="staff-actions">
-                                                    <a href="index.php?r=admin_users&staff_edit=<?= (int)($item['ma_nv'] ?? 0) ?>#staff-form-card" class="btn btn-sm btn-outline-warning">Sửa</a>
-                                                    <form method="post" action="index.php?r=admin_staff_delete" class="d-inline" onsubmit="return confirm('<?= $isActive ? 'Tạm khóa / Ngừng hoạt động nhân viên này?' : 'Kích hoạt lại tài khoản nhân viên này?' ?>');">
-                                                        <input type="hidden" name="ma_nv" value="<?= h($item['ma_nv'] ?? '') ?>">
-                                                        <?php if ($isActive): ?>
-                                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Bấm để tạm khóa nhân viên">Ngừng</button>
-                                                        <?php else: ?>
-                                                            <button type="submit" class="btn btn-sm btn-outline-success fw-bold" title="Bấm để mở khóa / kích hoạt lại nhân viên">Kích hoạt</button>
-                                                        <?php endif; ?>
-                                                    </form>
-                                                    <form method="post" action="index.php?r=admin_staff_hard_delete" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa hẳn nhân viên này khỏi hệ thống không? Dữ liệu liên kết sẽ không thể khôi phục.');">
-                                                        <input type="hidden" name="ma_nv" value="<?= h($item['ma_nv'] ?? '') ?>">
-                                                        <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="admin-card p-0 overflow-hidden mb-0 staff-panel" style="border-radius: 8px !important;">
+                <div class="p-3 border-bottom background-subtle">
+                    <h6 class="fw-bold mb-0" style="color: var(--admin-text);">Danh sách nhân viên & Vai trò</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle mb-0 staff-table">
+                        <thead>
+                            <tr>
+                                <th>Nhân viên</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($staffMembers)): ?>
+                                <tr><td colspan="4" class="text-center text-muted py-4">Chưa có nhân viên.</td></tr>
+                            <?php else: ?>
+                                <?php foreach ($staffMembers as $item): ?>
+                                    <?php
+                                    $statusRaw = strtolower(trim((string)($item['trang_thai'] ?? 'active')));
+                                    $isActive = ($statusRaw === 'active');
+                                    $statusLabel = $isActive ? 'Kích hoạt' : 'Tạm khóa';
+                                    $statusClass = $isActive ? 'status-active' : 'status-inactive';
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <div class="staff-name"><?= h($item['ho_ten'] ?? '') ?></div>
+                                            <div class="staff-meta">#<?= h($item['ma_nv'] ?? '') ?> · <?= h($item['email'] ?? '') ?></div>
+                                        </td>
+                                        <td><span class="role-chip"><?= h($item['ten_vai_tro'] ?? 'Chưa gán') ?></span></td>
+                                        <td><span class="status-chip <?= $statusClass ?>"><?= h($statusLabel) ?></span></td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-1 align-items-center">
+                                                <a href="index.php?r=admin_users&staff_edit=<?= (int)($item['ma_nv'] ?? 0) ?>#staff-form-card" class="btn btn-sm btn-outline-secondary px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Sửa"><i class="bi bi-pencil-square me-1"></i>Sửa</a>
+                                                <form method="post" action="index.php?r=admin_staff_delete" class="d-inline" onsubmit="return confirm('<?= $isActive ? 'Tạm khóa nhân viên này?' : 'Mở khóa tài khoản nhân viên này?' ?>');">
+                                                    <input type="hidden" name="ma_nv" value="<?= h($item['ma_nv'] ?? '') ?>">
+                                                    <?php if ($isActive): ?>
+                                                        <button type="submit" class="btn btn-sm btn-outline-warning px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Tạm khóa">Khóa</button>
+                                                    <?php else: ?>
+                                                        <button type="submit" class="btn btn-sm btn-outline-success px-2 py-0.5 fw-semibold" style="border-radius: 4px; font-size: 0.78rem;" title="Kích hoạt lại">Mở</button>
+                                                    <?php endif; ?>
+                                                </form>
+                                                <form method="post" action="index.php?r=admin_staff_hard_delete" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa hẳn nhân viên này khỏi hệ thống không?');">
+                                                    <input type="hidden" name="ma_nv" value="<?= h($item['ma_nv'] ?? '') ?>">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-0.5" style="border-radius: 4px; font-size: 0.78rem;" title="Xóa vĩnh viễn"><i class="bi bi-trash me-1"></i>Xóa</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

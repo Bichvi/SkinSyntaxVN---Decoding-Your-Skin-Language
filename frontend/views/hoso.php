@@ -141,10 +141,9 @@ $accountVerificationHint = !empty($account['email'])
   .loyalty-progress-card {
     margin-top: 14px;
     padding: 16px;
-    border-radius: 22px;
-    background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
-    border: 1px solid #d8e8f6;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
   }
 
   .loyalty-progress-head {
@@ -157,18 +156,19 @@ $accountVerificationHint = !empty($account['email'])
 
   .loyalty-progress-title {
     font-size: 0.82rem;
-    font-weight: 700;
-    color: #36506c;
+    font-weight: 600;
+    color: #0F172A;
     letter-spacing: 0.01em;
   }
 
   .loyalty-progress-target {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #1f7a53;
-    background: #eef8f1;
-    border-radius: 999px;
-    padding: 7px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #183B2B;
+    background: #EBF2EE;
+    border-radius: 4px;
+    padding: 4px 10px;
+    border: 1px solid #C8DACF;
   }
 
   .loyalty-tier-row {
@@ -183,7 +183,7 @@ $accountVerificationHint = !empty($account['email'])
   .profile-overview-grid {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 18px;
+    gap: 16px;
     align-items: stretch;
   }
 
@@ -202,6 +202,9 @@ $accountVerificationHint = !empty($account['email'])
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #FFFFFF;
   }
 
   .profile-overview-grid > div {
@@ -211,6 +214,7 @@ $accountVerificationHint = !empty($account['email'])
 
   .profile-overview-grid .profile-stat .value {
     word-break: break-word;
+    font-variant-numeric: tabular-nums;
   }
 
   .profile-stat-stack {
@@ -223,42 +227,42 @@ $accountVerificationHint = !empty($account['email'])
     align-items: center;
     justify-content: center;
     width: fit-content;
-    min-height: 34px;
-    padding: 0 12px;
-    border-radius: 999px;
-    background: #eef8f1;
-    color: #1d6b46;
-    border: 1px solid #cae7d5;
-    font-size: 0.82rem;
-    font-weight: 800;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 4px;
+    background: #EBF2EE;
+    color: #183B2B;
+    border: 1px solid #C8DACF;
+    font-size: 0.78rem;
+    font-weight: 600;
   }
 
   .profile-stat-note {
-    color: #64748b;
-    font-size: 0.84rem;
-    line-height: 1.55;
+    color: #64748B;
+    font-size: 0.82rem;
+    line-height: 1.5;
   }
 
   .loyalty-tier-name {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     line-height: 1;
-    font-weight: 800;
-    color: #1A2F1A;
+    font-weight: 700;
+    color: #183B2B;
   }
 
   .loyalty-progress-bar {
     position: relative;
     overflow: hidden;
-    height: 12px;
-    border-radius: 999px;
-    background: #E2EADF;
+    height: 8px;
+    border-radius: 4px;
+    background: #E2E8F0;
     margin-top: 10px;
   }
 
   .loyalty-progress-fill {
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #2D5A27 0%, #4A7C59 100%);
+    background: #183B2B;
   }
 
   .loyalty-progress-scale {
@@ -266,9 +270,9 @@ $accountVerificationHint = !empty($account['email'])
     justify-content: space-between;
     gap: 10px;
     margin-top: 8px;
-    color: #7a8ea5;
-    font-size: 0.76rem;
-    font-weight: 600;
+    color: #64748B;
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 
   .loyalty-progress-meta {
@@ -281,20 +285,21 @@ $accountVerificationHint = !empty($account['email'])
   }
 
   .loyalty-progress-points {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #16324d;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0F172A;
+    font-variant-numeric: tabular-nums;
   }
 
   .loyalty-progress-note {
-    color: #64748b;
-    font-size: 0.84rem;
+    color: #64748B;
+    font-size: 0.82rem;
     line-height: 1.5;
   }
 
   .order-product-list {
     display: grid;
-    gap: 12px;
+    gap: 10px;
   }
 
   .order-product-card {
@@ -303,8 +308,8 @@ $accountVerificationHint = !empty($account['email'])
     gap: 14px;
     align-items: center;
     padding: 12px 14px;
-    border: 1px solid #e5ecef;
-    border-radius: 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
     background: #fff;
   }
 
