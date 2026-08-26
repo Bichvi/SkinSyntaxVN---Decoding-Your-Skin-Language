@@ -762,3 +762,57 @@ THAY ĐỔI TỪ NGÀY 26/8/2026
 - **TC13 (Routine chung - Bypass)**: Hỏi Routine sáng tối gồm những gì -> Bypass, trả về routine mẫu.
 - **TC14 (Sp cụ thể + Cá nhân hóa - Required)**: Hỏi Serum SVR này có hợp với da của mình không -> Nhận diện từ khóa "của mình" -> REQUIRED check profile và mời khảo sát.
 
+
+
+## 17. Tích hợp Lịch sử Trò chuyện (Chat History MongoDB) & Website Header Overlay trên Chatbot Phóng to (27/08/2026)
+- **Mục tiêu:** Lưu trữ lâu dài các cuộc trò chuyện của khách đã đăng nhập trên MongoDB, thiết lập sidebar danh sách phòng chat, lưu phiên làm việc qua sessionStorage khi F5, hiển thị Header gốc của website phía trên chatbot phóng to, và dọn dẹp khôi phục cơ chế tải đồng bộ ổn định.
+- **Chi tiết kỹ thuật:**
+
+### 17.1 Thiết kế Database MongoDB (`chat_conversations`)
+- **Cấu trúc lưu trữ:** Mỗi document đại diện cho một cuộc hội thoại gồm `user_email`, `title`, mảng `messages` (chứa `role`, `content`, `timestamp`, các mã sản phẩm gợi ý `products`, và danh sách cảnh báo `conflicts`), `created_at`, `updated_at`.
+- **Tự động sinh tiêu đề (Lazy-title):** Tiêu đề cuộc trò chuyện được tự động trích xuất thông minh từ 50 ký tự đầu tiên của câu hỏi đầu tiên của người dùng (tự động cắt ở dấu khoảng trắng gần nhất để không làm vỡ từ).
+
+### 17.2 RESTful CRUD Endpoints phía Flask AI Service
+- **[MODIFY] [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_service/chatbot_flask.py):**
+  - **`GET /api/chat/conversations`**: Tải danh sách cuộc trò chuyện của người dùng, tự động loại bỏ mảng `messages` (`{"messages": 0}`) để tối ưu băng thông khi load sidebar.
+  - **`GET /api/chat/conversations/<id>`**: Đọc toàn bộ tin nhắn trong phòng, tích hợp kiểm tra phân quyền sở hữu (`user_email == email`) để trả về `403 Forbidden` nếu truy cập trái phép.
+  - **`POST /api/chat/conversations`**: Tạo thủ công một phòng chat trống.
+  - **`DELETE /api/chat/conversations/<id>`**: Xóa vĩnh viễn phòng chat trong database.
+  - **Cập nhật `/api/chat/auto`**: Khôi phục tối đa 10 tin nhắn gần nhất làm context nạp vào pipeline AI; tự động kích hoạt **Lazy-creation** (chỉ tạo document MongoDB khi người dùng gửi câu hỏi đầu tiên); lưu cặp tin nhắn (User + AI) kèm theo các gợi ý sản phẩm/xung đột vào database.
+
+### 17.3 Bảo mật Session & Proxy Route phía PHP BFF
+- **Bảo mật Email ở Server:** Email người dùng được lấy trực tiếp từ session PHP server (`$_SESSION['user']['email']`) rồi truyền qua Header `X-User-Email` sang Flask. Trình duyệt client hoàn toàn không quyết định email gửi lên để chống giả mạo thông tin tài khoản khác.
+- **[MODIFY] [HomeController.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/backend/app/controllers/HomeController.php):** Viết các hàm proxy cURL chuyển tiếp yêu cầu đến Flask và trả kết quả về client.
+- **[MODIFY] [backend/public/index.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/backend/public/index.php) & [index.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/index.php):** Khai báo đồng bộ các route proxy `ai_chat_get_conversations`, `ai_chat_get_messages`, `ai_chat_create_conversation`, `ai_chat_delete_conversation` trên cả file chạy trong Docker lẫn file chạy XAMPP local.
+- **Cơ chế phân giải Host động (Docker vs XAMPP local):** Trong hàm `getAiBaseUrl()`, tự động map host `127.0.0.1` sang `ai-service` (tên container Flask trong docker-compose) nếu phát hiện file `/.dockerenv` tồn tại. Giải quyết triệt để lỗi mất cấu hình biến môi trường trong PHP-FPM worker và giúp dự án chạy mượt mà trên cả 2 môi trường.
+
+### 17.4 Thiết kế Sidebar và sessionStorage ở Frontend
+- **[MODIFY] [ai_chat_widget.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/frontend/views/components/ai_chat_widget.php):**
+  - **HTML/CSS Sidebar:** Thêm sidebar trái màu Slate 900 rộng 280px khi ở chế độ phóng to (`.is-expanded`). Tự động ẩn sidebar khi thu nhỏ để bảo vệ layout gốc.
+  - **Đồng bộ hóa Session:** Lưu `activeConversationId` vào `sessionStorage` của trình duyệt khi click chọn phòng. Khi tải lại trang (F5), JS tự động đọc cache này để khôi phục đúng phòng chat cũ và tải lại tin nhắn.
+  - **Lazy State:** Bấm "+ Hội thoại mới" hoặc nút Reset dọn sạch màn hình chat về tin nhắn chào mừng, đặt active conversation về `null`. Phòng chat mới chỉ được tạo khi gửi tin nhắn đầu tiên.
+
+### 17.5 Tích hợp Header Website trên Chatbot Phóng to
+- **Nguyên lý hoạt động:** Không clone mã HTML (để tránh xung đột JS/ID). Khi chatbot expanded, JS đo chiều cao thực tế của `.site-header` và đặt thành biến CSS `--site-header-height`.
+- **CSS rules:**
+  - Thiết lập `.site-header` thành `position: fixed !important; z-index: 2147483647 !important; background: #fff;` để nổi lên trên cùng.
+  - Đẩy `.ai-chat-widget.is-expanded` xuống dưới Header một khoảng bằng đúng chiều cao đo được.
+  - Kết quả: Header website xuất hiện đồng bộ ở trên cùng của chatbot phóng to, giữ nguyên các tính năng tương tác (tìm kiếm, xem giỏ hàng, thông tin tài khoản...).
+
+### 17.6 Hủy bỏ và Dọn dẹp cơ chế Streaming/SSE
+- **Quyết định:** Loại bỏ 100% phương án Server-Sent Events (SSE) để ưu tiên độ ổn định, tránh các lỗi ngắt kết nối `RemoteDisconnected` do giới hạn buffering của Gunicorn/Nginx.
+- **Dọn dẹp code:**
+  - Hoàn tất xóa bỏ route `/api/chat/stream` và generator wrapper `make_stream_response` trong `chatbot_flask.py`.
+  - Khôi phục hàm `sendMessage()` trong `ai_chat_widget.php` dùng fetch AJAX JSON đồng bộ.
+  - Hoàn tác proxy `aiChatStream` trong `HomeController.php` để gọi đồng bộ `aiChatAssistant`.
+
+### 17.7 Kết quả Kiểm thử Lịch sử chat (8 Test Cases)
+Đã thực thi thành công bộ test suite kiểm thử và đạt kết quả PASS 100%:
+- **TC01**: Chưa đăng nhập -> API trả về `401 Unauthorized` chặn không cho xem.
+- **TC02**: User A đăng nhập -> Chỉ nhìn thấy danh sách các cuộc hội thoại của A.
+- **TC03**: User A chat -> F5 trang -> Khôi phục chính xác ngữ cảnh phòng cũ thông qua sessionStorage.
+- **TC04**: Mở lại phòng chat cũ -> Tải và hiển thị chính xác các tin nhắn cũ và product cards.
+- **TC05**: Tạo cuộc trò chuyện mới -> Không ảnh hưởng hay làm mất cuộc trò chuyện cũ.
+- **TC06**: Bấm xóa phòng chat -> Sidebar cập nhật biến mất, MongoDB thực hiện delete document.
+- **TC07**: Tiếp tục chat trong phòng cũ -> AI đọc được context 10 tin nhắn trước và tư vấn liền mạch.
+- **TC08**: Đăng xuất A và đăng nhập B -> B tuyệt đối không thể thấy hoặc truy cập chéo lịch sử của A.
