@@ -1333,16 +1333,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
             : imageCore;
             
           var cartAction = (detailUrl !== '' && product.id)
-            ? '<form action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" method="POST" style="display:inline-block; margin:0; padding:0;">'
-              + '<input type="hidden" name="action" value="add_to_cart">'
-              + '<input type="hidden" name="product_id" value="' + escapeHtml(product.id) + '">'
-              + '<input type="hidden" name="ma_san_pham" value="' + escapeHtml(product.id) + '">'
-              + '<input type="hidden" name="quantity" value="1">'
-              + '<input type="hidden" name="qty" value="1">'
-              + '<button type="submit" class="ai-chat-widget__meta-card-btn ai-chat-widget__meta-card-btn--cart">'
+            ? '<button type="button" class="ai-chat-widget__meta-card-btn ai-chat-widget__meta-card-btn--cart" data-ai-add-cart="' + escapeHtml(product.id) + '">'
               + '<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ hàng'
               + '</button>'
-              + '</form>'
             : '';
             
           var detailAction = detailUrl !== ''
