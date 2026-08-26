@@ -1340,6 +1340,33 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         max-width: 100%;
       }
     }
+
+    /* Style integration for global header display above expanded chatbot widget */
+    body.has-expanded-ai-chat {
+      overflow: hidden !important;
+    }
+
+    body.has-expanded-ai-chat .site-header {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 2147483647 !important;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+      background: #fff;
+    }
+
+    body.has-expanded-ai-chat .ai-chat-widget.is-expanded {
+      top: var(--site-header-height, 160px) !important;
+      height: calc(100vh - var(--site-header-height, 160px)) !important;
+      z-index: 2147483646 !important;
+      bottom: auto !important;
+    }
+
+    body.has-expanded-ai-chat .ai-chat-widget.is-expanded .ai-chat-widget__panel {
+      height: 100% !important;
+      max-height: calc(100vh - var(--site-header-height, 160px)) !important;
+    }
   </style>
 
   <script>
@@ -1843,6 +1870,14 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 
       var syncExpandedState = function () {
         var expanded = widget.classList.contains('is-expanded');
+        if (expanded && widget.classList.contains('is-open')) {
+          var header = document.querySelector('.site-header');
+          var headerHeight = header ? header.offsetHeight : 160;
+          document.documentElement.style.setProperty('--site-header-height', headerHeight + 'px');
+          document.body.classList.add('has-expanded-ai-chat');
+        } else {
+          document.body.classList.remove('has-expanded-ai-chat');
+        }
         if (expandButton) {
           expandButton.setAttribute('aria-pressed', expanded ? 'true' : 'false');
           var textSpan = expandButton.querySelector('span');
@@ -1988,6 +2023,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 
             if (payload.conversation_id && activeConversationId !== payload.conversation_id) {
               activeConversationId = payload.conversation_id;
+              try {
+                window.sessionStorage.setItem('aiChatActiveConversationIdV4:' + storageScope, activeConversationId);
+              } catch (e) {}
             }
 
             addMessage({

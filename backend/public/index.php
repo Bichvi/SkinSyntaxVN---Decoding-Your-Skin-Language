@@ -171,6 +171,22 @@ switch ($r) {
         (new HomeController($pdo))->aiChatApi();
         break;
 
+    case 'ai_chat_get_conversations':
+        (new HomeController($pdo))->getConversations();
+        break;
+
+    case 'ai_chat_get_messages':
+        (new HomeController($pdo))->getConversationMessages();
+        break;
+
+    case 'ai_chat_create_conversation':
+        (new HomeController($pdo))->createConversation();
+        break;
+
+    case 'ai_chat_delete_conversation':
+        (new HomeController($pdo))->deleteConversation();
+        break;
+
     case 'ai_chat_stream':
         (new HomeController($pdo))->aiChatStream();
         break;

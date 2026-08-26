@@ -18,7 +18,7 @@ os.environ["PYTHONUTF8"] = "1"
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -2730,7 +2730,6 @@ def chat():
                     result["conversation_id"] = active_conv_id
                 except Exception as ex:
                     print(f"[WARN] Failed to save chat message history: {ex}")
-        
         return jsonify(result)
     except Exception as e:
         print(f"[ERROR] /api/chat: {e}")
@@ -2739,6 +2738,7 @@ def chat():
             "message": "AI service gặp lỗi. Vui lòng thử lại.",
             "detail": str(e),
         }), 500
+
 
 
 def fetch_user_profile_from_mongo(email: str = "", user_id=None) -> dict:

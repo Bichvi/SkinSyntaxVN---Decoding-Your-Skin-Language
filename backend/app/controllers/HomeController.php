@@ -2269,6 +2269,11 @@ class HomeController {
         $scheme = $parsed['scheme'] ?? 'http';
         $host = $parsed['host'] ?? '127.0.0.1';
         $port = $parsed['port'] ?? 5001;
+        
+        if (file_exists('/.dockerenv') && ($host === '127.0.0.1' || $host === 'localhost')) {
+            $host = 'ai-service';
+        }
+        
         return "$scheme://$host:$port";
     }
 
