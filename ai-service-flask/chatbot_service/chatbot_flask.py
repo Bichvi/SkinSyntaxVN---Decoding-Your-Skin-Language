@@ -10,6 +10,8 @@ Thứ tự ưu tiên:
   4. Zhipu glm-4-flash  — FREE tier
 """
 import os, sys, re, json, signal, random, time
+from datetime import datetime
+from bson.objectid import ObjectId
 from pathlib import Path
 
 os.environ["PYTHONUTF8"] = "1"
@@ -1613,6 +1615,81 @@ def filter_docs_by_ingredient(raw_docs: list, target_ingredient: str) -> list:
     return filtered
 
 
+# ─── Conversation History helpers ───────────────────────────────────────────
+from profile_service import get_mongodb_connection
+
+def get_conversation_by_id(conv_id: str, email: str) -> dict | None:
+    try:
+        db = get_mongodb_connection()
+        conv = db.chat_conversations.find_one({"_id": ObjectId(conv_id)})
+        if conv and conv.get("user_email") == email:
+            return conv
+    except Exception as e:
+        print(f"[ERROR] get_conversation_by_id: {e}")
+    return None
+
+def create_new_conversation(email: str, first_message: str) -> str:
+    try:
+        db = get_mongodb_connection()
+        # Trích xuất tiêu đề tự động thông minh (cắt tối đa 50 ký tự không làm nát từ)
+        title = first_message.strip()
+        if len(title) > 50:
+            title = title[:50]
+            last_space = title.rfind(' ')
+            if last_space > 20:
+                title = title[:last_space]
+            title += "..."
+        if not title:
+            title = "Cuộc trò chuyện mới"
+            
+        doc = {
+            "user_email": email,
+            "title": title,
+            "messages": [],
+            "message_count": 0,
+            "last_message_preview": "",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        res = db.chat_conversations.insert_one(doc)
+        return str(res.inserted_id)
+    except Exception as e:
+        print(f"[ERROR] create_new_conversation: {e}")
+        raise e
+
+def save_chat_messages(conv_id: str, email: str, user_text: str, assistant_text: str, products: list = None, conflicts: list = None):
+    try:
+        db = get_mongodb_connection()
+        now = datetime.utcnow()
+        user_msg = {
+            "role": "user",
+            "content": user_text,
+            "timestamp": now
+        }
+        assistant_msg = {
+            "role": "assistant",
+            "content": assistant_text,
+            "timestamp": now,
+            "products": products or [],
+            "conflicts": conflicts or []
+        }
+        
+        preview = assistant_text[:100] + "..." if len(assistant_text) > 100 else assistant_text
+        db.chat_conversations.update_one(
+            {"_id": ObjectId(conv_id), "user_email": email},
+            {
+                "$push": {"messages": {"$each": [user_msg, assistant_msg]}},
+                "$inc": {"message_count": 2},
+                "$set": {
+                    "last_message_preview": preview,
+                    "updated_at": now
+                }
+            }
+        )
+    except Exception as e:
+        print(f"[ERROR] save_chat_messages: {e}")
+
+
 # ─── Main Pipeline ───────────────────────────────────────────────────────────
 def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     import time
@@ -2595,8 +2672,65 @@ def chat():
     if not message:
         return jsonify({"ok": False, "message": "Thiếu nội dung câu hỏi."}), 400
 
+    # Đọc conversation_id và user_email
+    conversation_id = data.get("conversation_id") or (msg_data.get("conversation_id") if isinstance(msg_data, dict) else None)
+    user_email = data.get("user_email") or (msg_data.get("user_email") if isinstance(msg_data, dict) else None)
+    
+    if isinstance(conversation_id, str):
+        conversation_id = conversation_id.strip()
+    if conversation_id in ("", "null", "none", None):
+        conversation_id = None
+        
+    if isinstance(user_email, str):
+        user_email = user_email.strip()
+    if user_email in ("", "null", "none", None):
+        user_email = None
+
+    # Khôi phục context lịch sử chat từ MongoDB nếu có email và conversation_id
+    if user_email and conversation_id:
+        conv = get_conversation_by_id(conversation_id, user_email)
+        if conv:
+            history_messages = conv.get("messages", [])[-10:]
+            history_lines = []
+            for h in history_messages:
+                sender = "Khách hàng" if h.get("role") == "user" else "SkinSyntax AI"
+                history_lines.append(f"{sender}: {h.get('content', '')}")
+            chat_history_str = "\n".join(history_lines)
+            
+            # Đè vào payload để xu_ly_cau_hoi sử dụng
+            if isinstance(msg_data, dict):
+                # Khôi phục mảng lịch sử dưới dạng cấu trúc UI
+                msg_data["conversation_history"] = [
+                    {"sender": h.get("role"), "text": h.get("content")} for h in history_messages
+                ]
+
     try:
         result = xu_ly_cau_hoi(message, msg_data)
+        
+        # Nếu user đã đăng nhập, tiến hành cập nhật hoặc tạo mới cuộc hội thoại trong MongoDB
+        if user_email:
+            active_conv_id = conversation_id
+            # Nếu chưa có conversation_id, tạo mới lazy
+            if not active_conv_id:
+                try:
+                    active_conv_id = create_new_conversation(user_email, message)
+                    print(f"[MONGO] Lazy-created conversation {active_conv_id} for user {user_email}")
+                except Exception as ex:
+                    print(f"[WARN] Failed to lazy-create conversation: {ex}")
+            
+            # Lưu tin nhắn mới
+            if active_conv_id:
+                try:
+                    answer_text = result.get("answer") or ""
+                    products_recommended = [p.get("id") for p in (result.get("products") or []) if isinstance(p, dict) and p.get("id")]
+                    conflicts_found = result.get("conflicts") or []
+                    save_chat_messages(active_conv_id, user_email, message, answer_text, products_recommended, conflicts_found)
+                    
+                    # Đính kèm conversation_id vào response trả về frontend
+                    result["conversation_id"] = active_conv_id
+                except Exception as ex:
+                    print(f"[WARN] Failed to save chat message history: {ex}")
+        
         return jsonify(result)
     except Exception as e:
         print(f"[ERROR] /api/chat: {e}")
@@ -2721,6 +2855,121 @@ def recommendation_profile():
             "message": "AI RAG Service gặp lỗi trong quá trình tạo gợi ý cá nhân hóa.",
             "detail": str(e),
         }), 500
+
+
+@app.get("/api/chat/conversations")
+def get_conversations():
+    email = request.headers.get("X-User-Email")
+    if not email:
+        return jsonify({"ok": False, "message": "Unauthorized"}), 401
+        
+    try:
+        db = get_mongodb_connection()
+        cursor = db.chat_conversations.find(
+            {"user_email": email},
+            {"messages": 0}
+        ).sort("updated_at", -1)
+        
+        conversations = []
+        for doc in cursor:
+            conversations.append({
+                "id": str(doc["_id"]),
+                "title": doc.get("title", "Cuộc trò chuyện mới"),
+                "message_count": doc.get("message_count", 0),
+                "last_message_preview": doc.get("last_message_preview", ""),
+                "created_at": doc["created_at"].isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at")),
+                "updated_at": doc["updated_at"].isoformat() if isinstance(doc.get("updated_at"), datetime) else str(doc.get("updated_at"))
+            })
+        return jsonify({"ok": True, "conversations": conversations})
+    except Exception as e:
+        print(f"[ERROR] GET /api/chat/conversations: {e}")
+        return jsonify({"ok": False, "message": str(e)}), 500
+
+
+@app.get("/api/chat/conversations/<conv_id>")
+def get_conversation(conv_id):
+    email = request.headers.get("X-User-Email")
+    if not email:
+        return jsonify({"ok": False, "message": "Unauthorized"}), 401
+        
+    try:
+        db = get_mongodb_connection()
+        conv = db.chat_conversations.find_one({"_id": ObjectId(conv_id)})
+        if not conv:
+            return jsonify({"ok": False, "message": "Không tìm thấy cuộc hội thoại."}), 404
+            
+        if conv.get("user_email") != email:
+            return jsonify({"ok": False, "message": "Forbidden"}), 403
+            
+        messages = []
+        for m in conv.get("messages", []):
+            messages.append({
+                "role": m.get("role"),
+                "content": m.get("content"),
+                "timestamp": m["timestamp"].isoformat() if isinstance(m.get("timestamp"), datetime) else str(m.get("timestamp")),
+                "products": m.get("products", []),
+                "conflicts": m.get("conflicts", [])
+            })
+            
+        return jsonify({
+            "ok": True,
+            "conversation": {
+                "id": str(conv["_id"]),
+                "title": conv.get("title"),
+                "messages": messages,
+                "created_at": conv["created_at"].isoformat() if isinstance(conv.get("created_at"), datetime) else str(conv.get("created_at")),
+                "updated_at": conv["updated_at"].isoformat() if isinstance(conv.get("updated_at"), datetime) else str(conv.get("updated_at"))
+            }
+        })
+    except Exception as e:
+        print(f"[ERROR] GET /api/chat/conversations/<id>: {e}")
+        return jsonify({"ok": False, "message": str(e)}), 500
+
+
+@app.post("/api/chat/conversations")
+def create_conversation():
+    email = request.headers.get("X-User-Email")
+    if not email:
+        return jsonify({"ok": False, "message": "Unauthorized"}), 401
+        
+    try:
+        db = get_mongodb_connection()
+        doc = {
+            "user_email": email,
+            "title": "Cuộc trò chuyện mới",
+            "messages": [],
+            "message_count": 0,
+            "last_message_preview": "",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        res = db.chat_conversations.insert_one(doc)
+        return jsonify({"ok": True, "conversation_id": str(res.inserted_id)})
+    except Exception as e:
+        print(f"[ERROR] POST /api/chat/conversations: {e}")
+        return jsonify({"ok": False, "message": str(e)}), 500
+
+
+@app.delete("/api/chat/conversations/<conv_id>")
+def delete_conversation(conv_id):
+    email = request.headers.get("X-User-Email")
+    if not email:
+        return jsonify({"ok": False, "message": "Unauthorized"}), 401
+        
+    try:
+        db = get_mongodb_connection()
+        conv = db.chat_conversations.find_one({"_id": ObjectId(conv_id)})
+        if not conv:
+            return jsonify({"ok": False, "message": "Không tìm thấy cuộc hội thoại."}), 404
+            
+        if conv.get("user_email") != email:
+            return jsonify({"ok": False, "message": "Forbidden"}), 403
+            
+        db.chat_conversations.delete_one({"_id": ObjectId(conv_id)})
+        return jsonify({"ok": True, "message": "Đã xóa cuộc hội thoại thành công."})
+    except Exception as e:
+        print(f"[ERROR] DELETE /api/chat/conversations/<id>: {e}")
+        return jsonify({"ok": False, "message": str(e)}), 500
 
 
 @app.errorhandler(404)
