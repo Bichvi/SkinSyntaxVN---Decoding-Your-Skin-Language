@@ -1797,6 +1797,68 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           return;
         }
 
+        var addCartBtn = event.target.closest('[data-ai-add-cart]');
+        if (addCartBtn) {
+          event.preventDefault();
+          var productId = addCartBtn.getAttribute('data-ai-add-cart') || '';
+          
+          addCartBtn.disabled = true;
+          var oldHTML = addCartBtn.innerHTML;
+          addCartBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang thêm...';
+          
+          var formData = new FormData();
+          formData.append('action', 'add_to_cart');
+          formData.append('product_id', productId);
+          formData.append('quantity', '1');
+          
+          fetch('<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(result) {
+            if (result && result.ok) {
+              addCartBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
+              
+              if (typeof updateCartBadge === 'function' && result.cart_count !== undefined) {
+                updateCartBadge(parseInt(result.cart_count, 10) || 0);
+              }
+              if (typeof bounceCartHeader === 'function') {
+                bounceCartHeader();
+              }
+              if (typeof showCartToast === 'function') {
+                showCartToast(result.message || 'Đã thêm sản phẩm vào giỏ hàng', true);
+              }
+              
+              window.setTimeout(function () {
+                addCartBtn.disabled = false;
+                addCartBtn.innerHTML = oldHTML;
+              }, 1500);
+            } else {
+              if (typeof showCartToast === 'function') {
+                showCartToast(result.message || 'Không thể thêm sản phẩm', false);
+              } else {
+                alert(result.message || 'Có lỗi xảy ra.');
+              }
+              addCartBtn.disabled = false;
+              addCartBtn.innerHTML = oldHTML;
+            }
+          })
+          .catch(function(err) {
+            if (typeof showCartToast === 'function') {
+              showCartToast('Không thể kết nối đến máy chủ.', false);
+            } else {
+              alert('Không thể kết nối đến máy chủ.');
+            }
+            addCartBtn.disabled = false;
+            addCartBtn.innerHTML = oldHTML;
+          });
+          return;
+        }
+
         var toggle = event.target.closest('[data-ai-product-link-toggle]');
         if (!toggle) {
           return;
