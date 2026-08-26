@@ -1547,6 +1547,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           syncLayout();
           trigger.setAttribute('aria-expanded', 'true');
           widget.classList.add('is-open');
+          if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
+            widget.classList.add('is-expanded');
+          }
           if (input) {
             input.focus();
           }
@@ -1900,9 +1903,8 @@ if ($aiChatEmail !== '' && $pdo !== null) {
             messages = parsed;
           }
         }
-        if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
-          widget.classList.add('is-expanded');
-        }
+        // Bỏ qua tự động phóng to khi tải trang mới (để tránh mờ màn hình)
+        // Việc phóng to sẽ chỉ được thực thi khi chatbot được mở.
       } catch (error) {
       }
 
