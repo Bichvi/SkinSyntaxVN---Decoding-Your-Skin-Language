@@ -1011,27 +1011,43 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     .ai-chat-widget__typing-bubble {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 12px 18px;
-      border-radius: 20px;
-      background: #fff;
-      border: 1px solid #e2e8df;
-      box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 16px;
+      background: #FFFFFF;
+      border: 1px solid #E2EADF;
+      box-shadow: 0 4px 12px rgba(45, 90, 39, 0.04);
+      max-width: 90%;
     }
 
-    .ai-chat-widget__typing-bubble span {
-      width: 7px;
-      height: 7px;
+    .ai-chat-widget__typing-text {
+      font-size: 13px;
+      color: #5C705E;
+      font-weight: 500;
+      transition: opacity 0.2s ease-in-out;
+      opacity: 1;
+    }
+
+    .ai-chat-widget__typing-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .ai-chat-widget__typing-dots span {
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
-      background: #6b8f7b;
-      animation: ai-chat-blink 1.2s infinite ease-in-out;
+      background: #2D5A27;
+      animation: ai-chat-blink 1.4s infinite ease-in-out;
+      display: inline-block;
     }
 
-    .ai-chat-widget__typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
-    .ai-chat-widget__typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+    .ai-chat-widget__typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .ai-chat-widget__typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
     @keyframes ai-chat-blink {
-      0%, 80%, 100% { transform: scale(0.7); opacity: 0.35; }
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
       40% { transform: scale(1); opacity: 1; }
     }
 
@@ -1177,6 +1193,19 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       var submit = widget.querySelector('[data-ai-chat-submit]');
       var status = widget.querySelector('[data-ai-chat-status]');
       var quickPrompts = widget.querySelectorAll('[data-ai-chat-prompt]');
+
+      var thinkingMessages = [
+        "Đang xem xét thông tin bạn cung cấp",
+        "Đang tìm thông tin liên quan",
+        "Đang đối chiếu thông tin sản phẩm",
+        "Đang kiểm tra thành phần",
+        "Đang xem xét công dụng sản phẩm",
+        "Đang chọn lọc thông tin phù hợp",
+        "Đang tổng hợp thông tin",
+        "Đang hoàn thiện tư vấn cho bạn"
+      ];
+      var loadingInterval = null;
+      var currentLoadingTextIndex = 0;
       var toggleProfileBtns = widget.querySelectorAll('[data-ai-chat-toggle-profile]');
       var profileRestrictedBtn = widget.querySelector('[data-ai-chat-profile-restricted]');
       var profileBanner = widget.querySelector('[data-ai-profile-banner]');
@@ -1405,9 +1434,13 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 
         html = messages.map(function (message) {
           if (message.typing) {
+            var initialText = thinkingMessages[currentLoadingTextIndex] || thinkingMessages[0];
             return '<div class="ai-chat-widget__typing-row">'
               + '<div class="ai-chat-widget__typing-bubble">'
+              + '<span class="ai-chat-widget__typing-text" data-ai-typing-text>' + initialText + '</span>'
+              + '<span class="ai-chat-widget__typing-dots">'
               + '<span></span><span></span><span></span>'
+              + '</span>'
               + '</div></div>';
           }
 
@@ -1587,6 +1620,22 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         messages.push({ role: 'assistant', content: '...', typing: true, id: typingId });
         renderMessages();
 
+        if (loadingInterval) {
+          clearInterval(loadingInterval);
+        }
+        currentLoadingTextIndex = 0;
+        loadingInterval = setInterval(function() {
+          currentLoadingTextIndex = (currentLoadingTextIndex + 1) % thinkingMessages.length;
+          var textEl = widget.querySelector('[data-ai-typing-text]');
+          if (textEl) {
+            textEl.style.opacity = '0';
+            setTimeout(function() {
+              textEl.textContent = thinkingMessages[currentLoadingTextIndex];
+              textEl.style.opacity = '1';
+            }, 200);
+          }
+        }, 2200);
+
         var currentProductId = null;
         try {
           var urlParams = new URLSearchParams(window.location.search);
@@ -1668,6 +1717,10 @@ if ($aiChatEmail !== '' && $pdo !== null) {
             });
           })
           .finally(function () {
+            if (loadingInterval) {
+              clearInterval(loadingInterval);
+              loadingInterval = null;
+            }
             setLoading(false);
           });
       };
