@@ -13,7 +13,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 COPY backend/composer.json backend/composer.lock ./
-RUN composer update --no-dev --optimize-autoloader --no-interaction
+RUN composer update --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 COPY backend/ .
 COPY frontend/ /var/www/frontend

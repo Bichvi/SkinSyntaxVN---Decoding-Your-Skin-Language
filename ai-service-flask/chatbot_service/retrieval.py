@@ -98,6 +98,8 @@ def build_filter(yc: PhanTichYeuCau) -> dict | None:
         conds.append({"loai_da": {"$eq": yc.loai_da}})
     if yc.loai_san_pham:
         conds.append({"loai_san_pham": {"$eq": yc.loai_san_pham}})
+    if yc.thuong_hieu:
+        conds.append({"thuong_hieu": {"$eq": yc.thuong_hieu}})
     if yc.xuat_xu:
         conds.append({"xuat_xu_thuong_hieu": {"$eq": yc.xuat_xu}})
     if not conds:

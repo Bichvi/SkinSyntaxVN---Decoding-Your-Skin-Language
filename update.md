@@ -542,48 +542,148 @@ graph TD
 
 ---
 
-### 14.2 Nâng cấp Phân loại Ý định siêu tốc & Nhận diện Skincare Routine trong [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_flask.py)
-- **Cải tiến 1: Override Intent Classifier bằng quy tắc (Rule-based Intent Override):**
-  - Để tránh việc LLM Classifier phân loại sai các câu xin routine dài có kèm hoạt chất sang nhánh `COSMETIC_KNOWLEDGE_OUT_OF_DB` (vô tình làm mất danh sách sản phẩm full routine), một chốt chặn rule-based đã được thêm vào đầu hàm `classify_intent()`.
-  - Nếu câu chat chứa từ khóa chu trình (`skincare`, `routine`, `chu trình`,...) hoặc kết hợp sản phẩm và từ khóa nhờ vả (`nên mua`, `gợi ý`, `tư vấn`,...), hệ thống tự động ép ý định về `PRODUCT_INQUIRY`.
-- **Cải tiến 2: Bổ sung từ khóa `is_routine`:**
-  - Cập nhật thêm các từ khóa `"skincare"`, `"dưỡng da"`, `"duong da"` vào cấu trúc `rule_based_parse()` để đảm bảo cờ `is_routine` luôn được gán `True` chính xác, kích hoạt cơ chế truy xuất đa tầng 6 bước của ChromaDB.
-  - *Diff thay đổi:*
-    ```diff
-    - if any(k in msg_lower for k in ["routine", "chu trình", "chu trinh", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "sáng tối", "sang toi"]):
-    + if any(k in msg_lower for k in ["routine", "chu trình", "chu trinh", "skincare", "dưỡng da", "duong da", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "sáng tối", "sang toi"]):
-    ```
+### 14.2 Nâng cấp Phân loại Ý định siêu tốc & Nhận diện Skincare ## 16. Nâng cấp Quản lý Trạng thái Hồ sơ Da (Skin Profile State Machine V2) & Tích hợp Intent Router (26/08/2026)
+
+### 16.1 Đặt vấn đề & Mục tiêu Thiết kế (Design Rationale)
+- **Hạn chế của kiến trúc V1:** Ở phiên bản cũ, chatbot hoạt động theo luồng chặn tuyến tính: `User Message -> Check Profile -> Missing -> Block & Mời khảo sát/đăng nhập`. Việc này dẫn đến trải nghiệm người dùng (UX) rất tệ vì bất cứ câu hỏi nào (kể cả chitchat, hỏi kiến thức chung hay hỏi thông tin sản phẩm cụ thể như *"Serum SVR này chứa thành phần gì?"*) cũng bị chatbot chặn lại để đòi khảo sát.
+- **Mục tiêu V2:**
+  - **Cá nhân hóa kết hợp linh hoạt (Intent-Routed Personalized Skincare):** Chatbot tự động phân tích ý định người dùng (Intent) trước khi quyết định có kiểm tra hồ sơ da hay không.
+  - **Giảm Hallucination (Suy diễn sai lệch):** Chatbot không tự ý suy đoán loại da mới từ một câu nói mơ hồ. Loại da chỉ được cập nhật khi có xác nhận rõ ràng của khách hoặc hoàn thành khảo sát 4 câu hỏi.
+  - **Lịch sử hồ sơ có phiên bản (Versioning):** Lưu trữ lịch sử thay đổi để theo dõi sự tiến triển của làn da theo thời gian.
 
 ---
 
-### 14.3 Thắt chặt Guardrails & Cập nhật thứ tự 6 Bước trong [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_flask.py)
-- **Thắt chặt điều kiện trong `SYSTEM_PROMPT`:**
-  - Cấu hình lại mục **### 6. RÀNG BUỘT TUYỆT ĐỐI (GUARDRAILS)**. Ép mô hình LLM bắt buộc chỉ được sử dụng các sản phẩm có mặt trong `<san_pham_goi_y>`.
-  - Nghiêm cấm hoàn toàn hành vi tự ý ảo tưởng/bịa tên các sản phẩm ngoài database (như các loại kem chống nắng hay toner La Roche-Posay không có sẵn).
-- **Cập nhật thứ tự các bước Skincare:**
-  - Đồng bộ thứ tự các bước dưỡng da trong chỉ thị thiết kế chu trình thành: **Tẩy trang, Sữa rửa mặt, Toner, Serum, Kem dưỡng, Chống nắng** đúng chuẩn khoa học da liễu.
-  - *Diff thay đổi ở SYSTEM_PROMPT:*
-    ```diff
-    - - NẾU khách hỏi về chu trình / routine dưỡng da nhiều bước kết hợp, bạn PHẢI xây dựng một chu trình khoa học và chọn giới thiệu chính xác sản phẩm tương ứng từ <san_pham_goi_y> cho từng bước.
-    + - BẮT BUỘC: Bạn CHỈ ĐƯỢC PHÉP gợi ý các sản phẩm có mặt trong danh sách `<san_pham_goi_y>` ở trên. Nếu người dùng yêu cầu thiết kế một chu trình dưỡng da (routine), bạn PHẢI chọn các sản phẩm phù hợp từ danh sách `<san_pham_goi_y>` này để điền vào từng bước (Tẩy trang, Sữa rửa mặt, Toner, Serum, Kem dưỡng, Chống nắng). TUYỆT ĐỐI KHÔNG ĐƯỢC tự ý bịa ra hoặc đề xuất bất kỳ sản phẩm nào khác ngoài danh sách `<san_pham_goi_y>` này (không bịa tên hay nhãn hàng khác như La Roche-Posay, CeraVe, v.v. nếu chúng không nằm trong danh sách `<san_pham_goi_y>` ở trên). Nếu danh sách `<san_pham_goi_y>` thiếu sản phẩm cho một bước nào đó, hãy ghi rõ là cửa hàng tạm thời chưa có sẵn sản phẩm phù hợp cho bước đó và khuyên khách hàng sử dụng các sản phẩm có sẵn còn lại.
-    ```
+### 16.2 Kiến Trúc Hệ Thống Định Tuyến Ý Định (Intent-Based Router)
+Hệ thống phân phối tin nhắn đầu vào dựa trên 3 nhóm ý định chính:
+
+```text
+                                 USER MESSAGE
+                                      │
+                                      ▼
+                              ┌───────────────┐
+                              │ Intent Router │
+                              └───────┬───────┘
+                                      │
+              ┌───────────────────────┼───────────────────────┐
+              ▼                       ▼                       ▼
+      [NHÓM A - BYPASS]       [NHÓM B - BYPASS]       [NHÓM C - REQUIRED]
+    Hỏi sản phẩm cụ thể/      Routine/Tìm kiếm chung    Tư vấn cá nhân hóa da
+    Kiến thức hoạt chất       (Gợi ý chung + Khảo sát)  (Skincare Routines, ...)
+              │                       │                       │
+              ▼                       ▼                       ▼
+         Product RAG             General Search         Profile Gate Check
+              │                       │                       │
+              ▼                       ▼                       ▼
+           ANSWER                  ANSWER            PROFILE STATE MACHINE
+                                                              (Missing, Conflict, ...)
+```
+
+#### Chi tiết Phân loại & Logic Xử lý:
+
+1. **Nhóm A — Bypass Profile Check hoàn toàn (Không cần Profile):**
+   - **Các Intent:** 
+     - `COSMETIC_KNOWLEDGE_OUT_OF_DB`: Hỏi về thành phần hoạt chất (Ví dụ: *"Vitamin C có tác dụng gì?"*).
+     - `GENERAL_CONVERSATION`: Chào hỏi, chitchat (Ví dụ: *"chào shop"*, *"cảm ơn"*).
+     - Hỏi thông tin sử dụng, giá cả của một sản phẩm cụ thể (Ví dụ: *"Serum SVR này dùng thế nào?"*, *"Sản phẩm này chứa cồn không?"*).
+   - **Xử lý:** Đi thẳng vào RAG sản phẩm hoặc trả lời tri thức tổng quát, gán `profile_gate = BYPASSED`, `profile_state = BYPASSED`.
+
+2. **Nhóm B — Bypass Profile Check kèm đề xuất cá nhân hóa (Bypass / General Search):**
+   - **Các Intent:** Tìm kiếm sản phẩm chung chung hoặc hỏi routine mẫu không chỉ định da của họ (Ví dụ: *"Routine skincare sáng tối gồm những gì?"*, *"Tìm giúp mình serum trị mụn"*).
+   - **Xử lý:** Trả về câu trả lời mẫu/general kèm danh sách sản phẩm khớp từ khóa từ database, đồng thời đính kèm một câu mời làm khảo sát nhẹ ở cuối tin nhắn để tối ưu hóa kết quả (không block người dùng).
+
+3. **Nhóm C — Bắt buộc kiểm tra Profile Gate (Required Check):**
+   - **Các Intent:** Yêu cầu xây dựng chu trình, đề xuất sản phẩm có chỉ định đặc tính da hoặc đại từ nhân xưng sở hữu cá nhân (Ví dụ: *"Xây routine riêng cho da mình"*, *"Serum này có hợp với da nhạy cảm của mình không?"*).
+   - **Từ khóa kích hoạt (Personalized Keywords):** `da mình`, `da em`, `da tôi`, `của mình`, `của em`, `của tôi`, `cho mình`, `cho em`.
+   - **Xử lý:** Kích hoạt **Skin Profile State Machine** để đánh giá trạng thái hồ sơ của tài khoản khách hàng. Yếu tố cá nhân hóa này có độ ưu tiên cao nhất, đè lên các bộ lọc sản phẩm cụ thể.
 
 ---
 
-### 14.4 Làm sạch Cache và Tái vận hành live
-- **Clear cache tĩnh:** Làm sạch bộ lưu trữ phản hồi tĩnh `ai_chat_responses.json` để loại bỏ toàn bộ dữ liệu phản hồi bị lệch thông tin trước đây.
-- **Tái khởi động Flask Service:** Restart tiến trình Python Flask trên cổng `5001`. Toàn bộ 4 LLMs (Gemini 2.5 Flash, Groq 8B, Zhipu GLM, OpenRouter) đều được xác thực và sẵn sàng hoạt động ở trạng thái kết nối hoàn hảo.
-- **Kết quả Kiểm thử:** Chạy thử nghiệm live với kịch bản da dầu mụn viêm sưng đỏ. Phản hồi trả về của AI đính kèm chính xác 3 sản phẩm kiềm dầu thực tế của shop: *Tinh chất bí đao Cocoon*, *Kem dưỡng se khít lỗ chân lông Bioderma*, và *Kem chống nắng Eucerin kiềm dầu* trong văn bản, hoàn toàn trùng khớp 100% với danh sách thẻ sản phẩm hiển thị trong Widget.
+### 16.3 Đặc Tả State Machine 6 Trạng Thái Hồ Sơ Da
+Khi rơi vào **Nhóm C**, chatbot sẽ đánh giá hồ sơ da hiện tại của khách hàng trong MongoDB và chuyển trạng thái:
+
+| Mã State | Tên Trạng Thái | Điều kiện Kích Hoạt | Cách Chatbot Xử lý / UI hiển thị |
+| :--- | :--- | :--- | :--- |
+| **P01** | `PROFILE_MISSING` | Tài khoản chưa từng làm khảo sát da (các trường loại da, nhạy cảm... trống). | Mời làm khảo sát da nhanh 4 câu hỏi trực tiếp trong chat (hoặc mời đăng nhập nếu là Khách). |
+| **P02** | `PROFILE_PARTIAL` | Đã có một số thông tin nhưng thiếu các trường quan trọng (Ví dụ: thiếu trường `budget`). | Chatbot hỏi đúng câu hỏi cho trường còn thiếu đó dưới dạng Quick Reply. |
+| **P03** | `PROFILE_NEEDS_CONFIRMATION` | Hồ sơ da được cập nhật từ **8 đến 30 ngày trước**. | Hiển thị tóm tắt thông tin cũ và hỏi xác nhận nhanh: *"Bạn muốn giữ thông tin cũ hay cập nhật nhanh tình trạng da?"* |
+| **P04** | `PROFILE_OUTDATED` | Hồ sơ da đã quá **30 ngày**. | Cảnh báo hồ sơ đã cũ, khuyến khích khảo sát lại bằng nút bấm, nhưng cho phép bypass *"Thông tin vẫn như cũ"* để tiếp tục tư vấn. |
+| **P05** | `CONFLICT_MAJOR` | Phát hiện khách mô tả tình trạng da đối lập hoàn toàn kéo dài so với profile đăng ký (Ví dụ: Profile là **Da dầu** nhưng chat yêu cầu trị da khô bong tróc kéo dài). | Hỏi xác nhận cập nhật trực tiếp: *"Bạn có muốn mình cập nhật loại da từ DA DẦU -> DA KHÔ trong hồ sơ không?"* |
+| **P06** | `CONFLICT_MINOR` | Phát hiện biểu hiện đối lập nhưng có thể do thời tiết tạm thời (Ví dụ: khô ráp vài ngày gần đây). | Hỏi làm rõ: *"Tình trạng này kéo dài thường xuyên hay chỉ bị tạm thời vài ngày gần đây?"* |
 
 ---
 
-## 15. Khắc phục lỗi `time` chưa định nghĩa, Lỗi BaseModel Pydantic Cooldown & Đồng bộ hóa Hệ thống Kiểm thử Toàn diện (24/05/2026)
-- **Mục tiêu:** Giải quyết triệt để lỗi kết nối AI Service sập ngầm (HTTP 500) khi xoay vòng API Keys, sửa lỗi phân tích ký tự đặc biệt có dấu tiếng Việt bị lỗi CP1252 trên Windows, và cải tiến giao diện không bị khuất chữ ở UI chat.
+### 16.4 Cơ Chế Quản Lý Phiên Bản Hồ Sơ Da (Versioning & Collection Schema)
+Để lưu lại vết tiến triển làn da, hệ thống triển khai collection mới trong MongoDB mang tên `skin_profile_history`.
+
+#### Schema cấu trúc của một Snapshot:
+```json
+{
+  "_id": "ObjectId",
+  "email": "22@gmail.com",
+  "skin_type": "Da Dầu",
+  "concerns": ["Mụn"],
+  "sensitivity": "Bình thường",
+  "budget": 250000,
+  "updated_at": "2026-08-26T00:30:00+07:00",
+  "source": "survey" | "conflict_resolution",
+  "version": 5
+}
+```
+- **Quy tắc tăng Version:** Trường `version` là số nguyên tự tăng bắt đầu từ 1. Mỗi khi khách hàng hoàn thành khảo sát 4 câu hỏi hoặc click đồng ý cập nhật loại da mới (từ Conflict Major), hệ thống sẽ đếm tổng số bản ghi cũ của email đó trong `skin_profile_history` và gán `version = count + 1`, sau đó lưu snapshot mới.
 
 ---
 
-### 15.1 Khắc phục lỗi thiếu import `time` (NameError)
-- **Sự cố:** Khi bổ sung cơ chế cool-down (đợi 5 phút) để tự động ngắt kết nối các API keys bị cạn kiệt hạn mức (rate-limit / quota), mã nguồn Python của Flask Service có gọi `time.time()` để gán mốc thời gian chờ. Tuy nhiên, thư viện `time` của hệ thống lại chưa được import ở đầu file `chatbot_flask.py`, dẫn đến lỗi chết ngầm `NameError: name 'time' is not defined` và trả về mã trạng thái HTTP 500.
+### 16.5 Quy Trình Khảo Sát Tối Giản 4 Câu Hỏi (Conversational Survey Flow)
+Chuỗi hội thoại khảo sát được quản lý bởi `survey_service.py` ngay trong bong bóng chat thông qua các câu hỏi trắc nghiệm nhanh:
+1. **Câu 1 (Loại da):** Da dầu / Da khô / Da hỗn hợp / Da thường / *Mình không chắc* (Chống bot tự suy diễn loại da nếu chọn "Không chắc").
+2. **Câu 2 (Vấn đề da):** Mụn / Thâm / Đỏ kích ứng / Khô bong tróc / Lão hóa / Lỗ chân lông.
+3. **Câu 3 (Độ nhạy cảm):** Rất dễ kích ứng / Khá dễ kích ứng / Bình thường.
+4. **Câu 4 (Ngân sách tối đa):** Dưới 300k / Từ 300k - 500k / Từ 500k - 1 triệu / Trên 1 triệu / *Không giới hạn*.
+- **Hoàn tất:** Khi nhận câu trả lời câu 4, chatbot lưu đè profile vào MongoDB khách hàng, ghi snapshot lịch sử và lập tức thực hiện RAG đề xuất sản phẩm phù hợp ngay trong luồng chat.
+
+---
+
+### 16.6 Tích Hợp Kỹ Thuật Quick Reply Buttons (Markdown to Widget Link)
+- **Quy ước Markdown của Bot:** Chatbot trả về các link có tiền tố `quicksend:` như: `[Da dầu](quicksend:Loại da: Da dầu)`.
+- **Frontend Render:** Hàm `formatMarkdown` trong `ai_chat_widget.php` sử dụng regex chuyển đổi các liên kết này thành thẻ `<a>` có class CSS `.ai-chat-quick-btn` (hiển thị dưới dạng các thẻ chip bo tròn viền xanh lục đậm chất y khoa).
+- **Frontend Click Handling:** Lắng nghe sự kiện click document, chặn hành vi chuyển trang mặc định bằng `event.preventDefault()`, trích xuất chuỗi lệnh sau dấu `:` và gọi `sendMessage(quickText)` để tự động gửi tin nhắn phản hồi lên chatbot.
+
+---
+
+### 16.7 Ghi nhận 14 Kịch Bản Kiểm Thử Hoàn Toàn Đạt (Test Cases & Results)
+Bộ test suite tự động `test_state_machine.py` chạy qua 14 kịch bản và cho kết quả đạt chuẩn 100%:
+
+1. **TC01 - Khách chưa đăng nhập + Hỏi chung (Bypass):**
+   - *Input:* `"Serum trị mụn nào tốt?"` (Chưa đăng nhập, không có từ khóa nhân xưng).
+   - *Output:* `profile_gate = BYPASSED`, trả về RAG và đề xuất 3 sản phẩm serum trị mụn.
+2. **TC02 - Đăng nhập nhưng chưa khảo sát + Hỏi routine chung (Bypass):**
+   - *Input:* `"Tư vấn routine trị mụn"` (Đã đăng nhập, routine chung không nhân xưng).
+   - *Output:* `profile_gate = BYPASSED`, đề xuất combo trị mụn chuẩn mà không chặn khảo sát.
+3. **TC03 - Khởi tạo Khảo sát (Required):**
+   - *Input:* Click nút `"Bắt đầu khảo sát da nhanh"`.
+   - *Output:* Hiển thị Câu hỏi 1 (Loại da) kèm các nút Quick Send.
+4. **TC04 đến TC07 - Tiến trình Khảo sát:**
+   - *Input:* Lần lượt trả lời các câu hỏi.
+   - *Output:* Chatbot ghi nhận, đến Câu 4 (Ngân sách dưới 300k) hệ thống lưu MongoDB và trả về sản phẩm.
+5. **TC08 - Major Conflict (Required):**
+   - *Input:* Profile đang là **Da dầu**, hỏi: *"Tư vấn sản phẩm cho mình, da mình dạo này khô ráp bong tróc và nứt nẻ quá"* -> Biểu hiện da khô đối lập.
+   - *Output:* `profile_state = CONFLICT_MAJOR`, chatbot hỏi xác nhận cập nhật profile: *"Bạn có muốn mình cập nhật lại loại da mới vào hồ sơ không?"* kèm 2 nút bấm.
+6. **TC09 - Needs Confirmation (Required):**
+   - *Input:* Profile cập nhật cách đây 15 ngày, hỏi: *"Gợi ý cho mình serum trị mụn tốt"*.
+   - *Output:* `profile_state = PROFILE_NEEDS_CONFIRMATION`, chatbot hiện bảng tóm tắt da cũ và hỏi giữ thông tin hay cập nhật mới.
+7. **TC10 - Outdated Profile (Required):**
+   - *Input:* Profile cập nhật cách đây 45 ngày, hỏi: *"Gợi ý cho mình serum trị mụn tốt"*.
+   - *Output:* `profile_state = PROFILE_OUTDATED`, cảnh báo hồ sơ đã quá 1 tháng và khuyến khích khảo sát lại.
+8. **TC11 - Hỏi hoạt chất (Bypass):**
+   - *Input:* `"Vitamin C có tác dụng gì?"` -> *Output:* `profile_gate = BYPASSED`, trả lời công dụng ngay.
+9. **TC12 - Hỏi thông tin sản phẩm cụ thể (Bypass):**
+   - *Input:* `"Serum SVR này dùng thế nào?"` -> *Output:* `profile_gate = BYPASSED`, gọi RAG và đề xuất cách dùng 3 serum SVR.
+10. **TC13 - Hỏi routine skincare chung (Bypass):**
+    - *Input:* `"Routine skincare sáng tối gồm những gì?"` -> *Output:* `profile_gate = BYPASSED`, trả về routine mẫu 6 bước và sản phẩm cụ thể.
+11. **TC14 - Hỏi sản phẩm cụ thể + cá nhân hóa (Required):**
+    - *Input:* `"Serum SVR này có hợp với da dầu mụn nhạy cảm của mình không?"` (Có chứa từ nhân xưng `"của mình"`).
+    - *Output:* `profile_gate = REQUIRED`, `profile_state = PROFILE_MISSING`, chatbot chặn lại và mời làm khảo sát nhanh vì tài khoản chưa có profile da (ưu tiên cá nhân hóa da cao nhất).
+�n mốc thời gian chờ. Tuy nhiên, thư viện `time` của hệ thống lại chưa được import ở đầu file `chatbot_flask.py`, dẫn đến lỗi chết ngầm `NameError: name 'time' is not defined` và trả về mã trạng thái HTTP 500.
 - **Khắc phục:** Import module `time` thành công ở đầu file [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_flask.py).
 
 ---
@@ -608,3 +708,57 @@ graph TD
 
 ### 15.5 Đồng bộ Git & Push lên branch `vivi`
 - Pushed sạch sẽ, an toàn lên origin `vivi` branch mà không hề include bất kỳ file test nào (`run_comprehensive_tests.py`, `test_report.md`, `scratch/`), tuân thủ nghiêm ngặt chỉ thị của người dùng.
+
+
+
+
+
+
+
+
+
+
+
+################################################
+THAY ĐỔI TỪ NGÀY 26/8/2026
+
+## 16. Nâng cấp Quản lý Trạng thái Hồ sơ Da (Skin Profile State Machine V2) & Tích hợp Intent Router (26/08/2026)
+- **Mục tiêu:** Quản lý thông tin da của khách hàng dưới dạng dữ liệu có phiên bản, phát hiện mâu thuẫn (conflict) loại da, và tích hợp bộ định tuyến Intent Router để loại bỏ việc chatbot chặn hỏi khảo sát bừa bãi khi người dùng hỏi các câu hỏi kiến thức chung hoặc thông tin sản phẩm cụ thể.
+- **Chi tiết kỹ thuật:**
+
+### 16.1 Thiết lập Intent-Based Router (Bypass vs Required Check)
+- **Cơ chế hoạt động:** Phân loại yêu cầu chat của người dùng dựa trên từ khóa cá nhân hóa (`personalized_keywords`) chứa đại từ nhân xưng sở hữu cá nhân như *"của mình"*, *"da mình"*, *"da em"*, *"cho tôi"*...
+- **Bypass Rule:** Bypass hoàn toàn kiểm tra Profile Gate cho:
+  - Các câu hỏi thông tin sản phẩm cụ thể (Ví dụ: *"Serum SVR này dùng thế nào?"*, *"Sản phẩm này chứa hoạt chất gì?"*).
+  - Các câu hỏi kiến thức hoạt chất chung (`COSMETIC_KNOWLEDGE_OUT_OF_DB`) và chitchat (`GENERAL_CONVERSATION`).
+  - Các câu hỏi routine dưỡng da kiến thức chung (Ví dụ: *"Routine skincare sáng tối gồm những gì?"* - không có đại từ nhân xưng).
+- **Required Rule:** Chỉ kích hoạt State Machine và hiển thị các hộp thoại khảo sát/xác nhận khi tin nhắn có yếu tố cá nhân hóa da của riêng họ (chứa các đại từ nhân xưng ở trên). Yếu tố cá nhân hóa này có mức ưu tiên cao nhất, đè lên các từ khóa bypass sản phẩm cụ thể (Ví dụ: *"Serum SVR này có hợp với da của mình không?"* -> **Required**).
+
+### 16.2 Xây dựng Module State Machine & Versioning (Chức năng Backend AI)
+- **[NEW] [profile_state.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_service/profile_state.py):** Module chuyên biệt tính toán tuổi hồ sơ, trích xuất loại da từ hội thoại hiện tại và phân loại trạng thái profile (`PROFILE_MISSING`, `PROFILE_PARTIAL`, `PROFILE_NEEDS_CONFIRMATION`, `PROFILE_OUTDATED`, `CONFLICT_MAJOR`, `CONFLICT_MINOR`).
+- **[NEW] [profile_service.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_service/profile_service.py):** Module thực hiện cập nhật profile khách hàng vào MongoDB, đồng thời lưu trữ lịch sử snapshot và tự động tăng số phiên bản (`version`) lưu vào collection mới `skin_profile_history`.
+- **[NEW] [survey_service.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_service/survey_service.py):** Triển khai kịch bản khảo sát da tối giản 4 câu hỏi (loại da, vấn đề da, độ nhạy cảm, ngân sách) ngay trong chat, hỗ trợ option "Không chắc" để chống bot tự suy diễn bừa bãi.
+- **[MODIFY] [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_service/chatbot_flask.py):** Tích hợp điều phối State Machine ở đầu hàm `xu_ly_cau_hoi`. Làm sạch JSON phản hồi bằng cách trả về `intent_mode` nguyên bản và bổ sung metadata `profile_state`, `profile_gate` hữu ích.
+
+### 16.3 Tích hợp Quick Reply Buttons cho Giao diện Chat Frontend
+- **[MODIFY] [ai_chat_widget.php](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/frontend/views/components/ai_chat_widget.php):**
+  - **Regex render link quicksend:** Cập nhật hàm `formatMarkdown` để bắt các liên kết có dạng `[Nhãn](quicksend:Nội dung)` và chuyển đổi chúng thành các chip/nút bấm bo tròn viền xanh lục đặc trưng.
+  - **Trình bắt sự kiện click:** Bắt sự kiện click thẻ `<a>` có link `quicksend:`, ngăn hành vi chuyển trang và tự động gọi hàm `sendMessage` để gửi tin nhắn lên chatbot, tăng đáng kể trải nghiệm trả lời khảo sát trực tiếp trong khung chat.
+
+### 16.4 Form Admin - Thêm Khách hàng mới có Mật khẩu Bảo mật
+- **[MODIFY] Form Thêm khách hàng ở Admin:** Tích hợp thêm ô nhập mật khẩu trực tiếp hoặc click nút "Generate" để tự động sinh mật khẩu ngẫu nhiên có độ bảo mật cao, mã hóa mật khẩu ở backend PHP BFF trước khi lưu trữ vào MongoDB.
+
+### 16.5 Cải thiện Sự tự nhiên của Chatbot
+- Loại bỏ hoàn toàn các từ ngữ mang nặng tính kỹ thuật như "RAG" trong tất cả câu thoại mời đăng nhập/khảo sát da của chatbot để tăng sự thân thiện và tự nhiên.
+
+### 16.6 Kết quả Kiểm thử Tự động (14 Test Cases)
+Đã triển khai và thực thi thành công bộ test suite [test_state_machine.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/scratch/test_state_machine.py) phủ toàn bộ các trường hợp chuyển đổi trạng thái và logic bypass mới (Đạt kết quả PASS 100% ghi nhận tại [test_results.md](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/test_results.md)).
+- **TC01 đến TC07**: Luồng mời khảo sát của Khách và tiến trình hoàn thành 4 câu hỏi khảo sát nhanh trong chat.
+- **TC08 (Major Conflict)**: Hỏi tư vấn da khô khi profile là da dầu -> Hỏi xác nhận đổi loại da.
+- **TC09 (Needs Confirmation)**: Hồ sơ cũ nhẹ 15 ngày -> Hỏi xác nhận nhanh trước khi tư vấn.
+- **TC10 (Outdated Profile)**: Hồ sơ cũ hơn 30 ngày -> Khuyến khích cập nhật lại profile.
+- **TC11 (Hỏi hoạt chất - Bypass)**: Hỏi tác dụng Vitamin C -> Bypass, trả lời kiến thức ngay.
+- **TC12 (Hỏi sp cụ thể - Bypass)**: Hỏi Serum SVR dùng thế nào -> Bypass, trả về HDSD sản phẩm.
+- **TC13 (Routine chung - Bypass)**: Hỏi Routine sáng tối gồm những gì -> Bypass, trả về routine mẫu.
+- **TC14 (Sp cụ thể + Cá nhân hóa - Required)**: Hỏi Serum SVR này có hợp với da của mình không -> Nhận diện từ khóa "của mình" -> REQUIRED check profile và mời khảo sát.
+

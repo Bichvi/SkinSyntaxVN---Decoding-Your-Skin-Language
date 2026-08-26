@@ -332,15 +332,40 @@ class QuanTri {
         if ($oldEmail !== '') $authDoc = $this->db->nguoidung->findOne(['email' => $regexOld]);
         if (!$authDoc && $newEmail !== '') $authDoc = $this->db->nguoidung->findOne(['email' => $regexNew]);
 
-        if (!$authDoc) return;
+        $matKhau = trim((string)($data['mat_khau'] ?? ''));
+        $hash = null;
+        if ($matKhau !== '') {
+            $hash = password_hash($matKhau, PASSWORD_BCRYPT);
+        }
 
-        $updateData = ['email' => $targetEmail];
-        if ($name !== '') $updateData['ho_ten'] = $name;
+        if ($authDoc) {
+            $updateData = ['email' => $targetEmail];
+            if ($name !== '') $updateData['ho_ten'] = $name;
+            if ($hash !== null) {
+                $updateData['mat_khau'] = $hash;
+            }
 
-        $this->db->nguoidung->updateOne(
-            ['_id' => $authDoc['_id']],
-            ['$set' => $updateData]
-        );
+            $this->db->nguoidung->updateOne(
+                ['_id' => $authDoc['_id']],
+                ['$set' => $updateData]
+            );
+        } else {
+            // Nếu chưa có tài khoản đăng nhập nguoidung cho email này,
+            // và admin có nhập mật khẩu mới, chúng ta sẽ tạo tài khoản nguoidung cho họ
+            if ($hash !== null) {
+                $newUserId = $this->getNextNumericId('nguoidung', 'id');
+                $this->db->nguoidung->insertOne([
+                    'id' => $newUserId,
+                    'ho_ten' => $name,
+                    'email' => $targetEmail,
+                    'mat_khau' => $hash,
+                    'terms_agree' => true,
+                    'privacy_consent' => true,
+                    'recommendation_consent' => true,
+                    'created_at' => new \MongoDB\BSON\UTCDateTime()
+                ]);
+            }
+        }
     }
 
     public function getDashboardSummary(): array {
@@ -780,11 +805,40 @@ class QuanTri {
                 return true;
             }
 
+            // Tạo mới khách hàng
+            // Nếu có nhập email, bắt buộc phải nhập mật khẩu
+            if ($email !== '') {
+                $matKhau = trim((string)($data['mat_khau'] ?? ''));
+                if ($matKhau === '') {
+                    $this->lastErrorMessage = 'Mật khẩu là bắt buộc khi điền email khách hàng.';
+                    return false;
+                }
+            }
+
             $payload['ma_kh'] = $this->getNextNumericId('khach_hang', 'ma_kh');
             $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
             $this->db->khach_hang->insertOne($payload);
+
+            // Tạo tài khoản đăng nhập nguoidung tương ứng nếu có email
+            if ($email !== '') {
+                $matKhau = trim((string)($data['mat_khau'] ?? ''));
+                $hash = password_hash($matKhau, PASSWORD_BCRYPT);
+                $newUserId = $this->getNextNumericId('nguoidung', 'id');
+                
+                $this->db->nguoidung->insertOne([
+                    'id' => $newUserId,
+                    'ho_ten' => $name,
+                    'email' => $email,
+                    'mat_khau' => $hash,
+                    'terms_agree' => true,
+                    'privacy_consent' => true,
+                    'recommendation_consent' => true,
+                    'created_at' => new \MongoDB\BSON\UTCDateTime()
+                ]);
+            }
             return true;
         } catch (Throwable $e) {
+            $this->lastErrorMessage = $e->getMessage();
             return false;
         }
     }
