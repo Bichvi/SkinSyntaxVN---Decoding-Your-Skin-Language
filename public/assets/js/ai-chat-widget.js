@@ -1142,7 +1142,7 @@
             if (result && result.ok) {
               addCartBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
               window.setTimeout(function () {
-                addCartBtn.innerHTML = '<i class="fa-solid fa-cart-plus"></i> Thêm giỏ';
+                addCartBtn.innerHTML = '<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ hàng';
               }, 1500);
               openCartDrawer();
             } else if (result && result.message) {
