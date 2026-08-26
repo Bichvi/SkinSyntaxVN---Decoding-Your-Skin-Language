@@ -442,44 +442,36 @@ Câu hỏi độc lập viết lại:"""
 
 def classify_intent(query: str, llms: list) -> tuple[str, str | None]:
     """
-    Phân loại ý định của câu hỏi đã được viết lại thành 1 trong 3 nhóm:
-      1. PRODUCT_INQUIRY: Hỏi mua, tìm kiếm, tư vấn sản phẩm cụ thể có trong shop.
-      2. COSMETIC_KNOWLEDGE_OUT_OF_DB: Hỏi về kiến thức hoạt chất, thành phần hóa học không có trực tiếp trong database sản phẩm nhưng liên quan đến skincare.
-      3. GENERAL_CONVERSATION: Chào hỏi, chitchat ("chào shop", "ráng đi"), hoặc câu hỏi ngoài ngành hoàn toàn.
+    Phân loại ý định của câu hỏi đã được viết lại thành 1 trong 6 nhóm:
+      1. COSMETIC_KNOWLEDGE: Hỏi định nghĩa, tác dụng, cách dùng của hoạt chất mỹ phẩm chung (Ví dụ: "Niacinamide là gì", "BHA trị mụn thế nào").
+      2. PRODUCT_INFO: Hỏi cách dùng, thành phần, giá cả sản phẩm cụ thể nhưng không cá nhân hóa (Ví dụ: "Serum SVR dùng thế nào").
+      3. PERSONALIZED_PRODUCT: Hỏi xem sản phẩm cụ thể có hợp với da của cá nhân họ không (Ví dụ: "Serum này có hợp da mình không").
+      4. PERSONALIZED: Yêu cầu tư vấn sản phẩm, routine cá nhân hóa dựa trên làn da của họ (Ví dụ: "Da mình dầu mụn dùng serum nào").
+      5. GENERAL_SKINCARE_KNOWLEDGE: Hỏi kiến thức skincare chung, các bước routine mẫu không chỉ định da cá nhân (Ví dụ: "Routine sáng tối gồm những gì").
+      6. GENERAL_CONVERSATION: Chào hỏi, chitchat chắp vá, hoặc câu hỏi ngoài ngành.
 
-    Đồng thời, nếu câu hỏi có chứa thành phần/hoạt chất mỹ phẩm nổi bật, hãy trích xuất hoạt chất đó.
-
-    Thử lần lượt các LLM trong danh sách nếu gặp lỗi (e.g. rate limit).
+    Đồng thời trích xuất "ingredient" (hoạt chất mỹ phẩm chính được nhắc tới).
     Trả về tuple: (intent, ingredient)
     """
     query_lower = query.lower()
     
-    # Rule-based check to override intent to PRODUCT_INQUIRY for product/routine queries
-    routine_keywords = ["chu trình", "chu trinh", "skincare", "routine", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "bộ dưỡng", "bo duong"]
-    product_keywords = ["sản phẩm", "san pham", "srm", "sữa rửa mặt", "sua rua mat", "tẩy trang", "tay trang", "toner", "nước cân bằng", "nuoc can bang", "serum", "tinh chất", "tinh chat", "kem dưỡng", "kem duong", "gel dưỡng", "gel duong", "chống nắng", "chong nang", "kcn", "sunscreen"]
-    recommend_keywords = ["gợi ý", "goi y", "đề xuất", "de xuat", "nên mua", "nen mua", "nên dùng", "nen dung", "chọn giúp", "chon giup", "tư vấn giúp", "tu van giup"]
-    
-    has_routine = any(k in query_lower for k in routine_keywords)
-    has_prod_and_rec = any(p in query_lower for p in product_keywords) and any(r in query_lower for r in recommend_keywords)
-    
-    if has_routine or has_prod_and_rec:
-        print(f"[CLASSIFY] Overriding to PRODUCT_INQUIRY due to routine/product match in query: '{query}'")
-        return "PRODUCT_INQUIRY", None
-
     if not llms:
-        return "PRODUCT_INQUIRY", None
+        return "PERSONALIZED", None
 
     from langchain_core.messages import HumanMessage
-    prompt = f"""Phân tích câu hỏi sau đây của khách hàng và phân loại ý định (intent) của họ vào một trong ba nhóm duy nhất:
-1. "PRODUCT_INQUIRY": Tìm kiếm sản phẩm, hỏi mua, tư vấn chọn sản phẩm cụ thể mà cửa hàng thường bán (Ví dụ: "tìm kcn cho da dầu", "có sữa rửa mặt nào trị mụn", "giới thiệu sản phẩm").
-2. "COSMETIC_KNOWLEDGE_OUT_OF_DB": Hỏi định nghĩa, cơ chế hoạt động, tác dụng của các hoạt chất mỹ phẩm (Ví dụ: "retinol là gì", "niacinamide có tác dụng gì", "BHA là gì").
-3. "GENERAL_CONVERSATION": Chào hỏi ("chào shop"), chitchat tâm sự ("ráng đi", "cố lên"), hoặc câu hỏi không liên quan đến mỹ phẩm (Ví dụ: "giá vàng hôm nay", "ai là tổng thống").
+    prompt = f"""Phân tích câu hỏi sau đây của khách hàng và phân loại ý định (intent) của họ vào một trong các nhóm duy nhất sau:
+1. "COSMETIC_KNOWLEDGE": Hỏi định nghĩa, tác dụng, cơ chế, hoặc cách dùng/lưu ý của hoạt chất mỹ phẩm chung (Ví dụ: "niacinamide là gì", "retinol có tác dụng gì", "vitamin C dùng làm gì", "niacinamide có trị mụn không", "BHA là gì", "tác dụng của Niacinamide").
+2. "PRODUCT_INFO": Hỏi thông tin, cách dùng, thành phần, giá cả của một hoặc một vài sản phẩm cụ thể NHƯNG không có yếu tố cá nhân hóa da của riêng họ (Ví dụ: "Serum SVR này dùng thế nào", "Sản phẩm này có thành phần gì", "Son này dùng thế nào", "Serum này giá bao nhiêu").
+3. "PERSONALIZED_PRODUCT": Hỏi xem một sản phẩm cụ thể có phù hợp với đặc điểm da của cá nhân họ hay không (Ví dụ: "Serum SVR này có hợp với da dầu mụn nhạy cảm của mình không", "Son này có hợp với da mình không", "kem dưỡng Centella có dùng được cho da dầu của em không").
+4. "PERSONALIZED": Yêu cầu tư vấn sản phẩm, routine dưỡng da cá nhân hóa dựa trên làn da của chính họ (Ví dụ: "Da mình dầu mụn nên dùng serum nào", "Routine trị mụn cho da mình", "xây routine sáng tối cho da nhạy cảm của mình", "tư vấn routine cho mình").
+5. "GENERAL_SKINCARE_KNOWLEDGE": Hỏi kiến thức chăm sóc da chung, các bước routine mẫu không chỉ định làn da cá nhân cụ thể của họ (Ví dụ: "Routine skincare sáng tối gồm những gì", "các bước chăm sóc da mụn cơ bản là gì", "có nên dùng toner không").
+6. "GENERAL_CONVERSATION": Chào hỏi ("chào shop"), chitchat tâm sự ("cố lên", "ráng đi"), hoặc câu hỏi ngoài ngành (Ví dụ: "giá vàng hôm nay", "thời tiết thế nào").
 
-Đồng thời, trích xuất "ingredient" (hoạt chất mỹ phẩm chính được nhắc tới như "retinol", "niacinamide", "BHA", "AHA", "vitamin C", "hyaluronic acid"...). Nếu không có hoạt chất nào, hãy trả về null.
+Đồng thời, trích xuất "ingredient" (hoạt chất mỹ phẩm chính được nhắc tới như "retinol", "niacinamide", "BHA", "AHA", "vitamin C", "hyaluronic acid", "collagen", "zinc"...). Nếu không nhắc tới hoạt chất nào, hãy trả về null.
 
 CHỈ trả về một chuỗi JSON thuần túy có dạng:
 {{
-  "intent": "PRODUCT_INQUIRY" / "COSMETIC_KNOWLEDGE_OUT_OF_DB" / "GENERAL_CONVERSATION",
+  "intent": "COSMETIC_KNOWLEDGE" / "PRODUCT_INFO" / "PERSONALIZED_PRODUCT" / "PERSONALIZED" / "GENERAL_SKINCARE_KNOWLEDGE" / "GENERAL_CONVERSATION",
   "ingredient": "tên hoạt chất hoặc null"
 }}
 
@@ -498,8 +490,9 @@ Câu hỏi: {query}"""
                 intent = data["intent"]
                 ingredient = data.get("ingredient")
                 # Normalize intent
-                if intent not in ("PRODUCT_INQUIRY", "COSMETIC_KNOWLEDGE_OUT_OF_DB", "GENERAL_CONVERSATION"):
-                    intent = "PRODUCT_INQUIRY"
+                valid_intents = ("COSMETIC_KNOWLEDGE", "PRODUCT_INFO", "PERSONALIZED_PRODUCT", "PERSONALIZED", "GENERAL_SKINCARE_KNOWLEDGE", "GENERAL_CONVERSATION")
+                if intent not in valid_intents:
+                    intent = "PERSONALIZED"
                 if ingredient and ingredient.lower() in ("null", "none"):
                     ingredient = None
                 print(f"[CLASSIFY] Query: '{query}' -> Intent: {intent} | Ingredient: {ingredient} using {model_name}")
@@ -519,9 +512,9 @@ Câu hỏi: {query}"""
         # Extract ingredient
         for ing in ["retinol", "niacinamide", "bha", "aha", "vitamin c", "hyaluronic acid", "collagen"]:
             if ing in query_lower:
-                return "COSMETIC_KNOWLEDGE_OUT_OF_DB", ing
-        return "COSMETIC_KNOWLEDGE_OUT_OF_DB", None
-    return "PRODUCT_INQUIRY", None
+                return "COSMETIC_KNOWLEDGE", ing
+        return "COSMETIC_KNOWLEDGE", None
+    return "PERSONALIZED", None
 
 
 GENERAL_CONVERSATION_SYSTEM_PROMPT = """
@@ -1265,6 +1258,8 @@ Câu hỏi của khách hàng:
 - KHÔNG tự bịa tên sản phẩm, giá bán, link ảnh ngoài `<san_pham_goi_y>`.
 - Chỉ sử dụng các sản phẩm thực tế có trong `<san_pham_goi_y>` để xây dựng chu trình. Nếu thiếu sản phẩm cho một bước nào đó, hãy ghi rõ là cửa hàng tạm thời chưa có sẵn sản phẩm phù hợp cho bước đó và khuyên khách hàng sử dụng các sản phẩm có sẵn còn lại.
 - Dặn dò hướng dẫn sử dụng và patch test nhẹ nhàng ở cuối bài viết.
+- BẮT BUỘC (Makeup vs Skincare): Nếu trong chu trình có bước liên quan đến trang điểm/makeup (Ví dụ: Son Kem, Son Thỏi, Phấn...), TUYỆT ĐỐI KHÔNG hướng dẫn sử dụng kiểu dưỡng da (không thoa 2 lần/ngày sáng tối, không bảo làm sạch mặt trước để hấp thụ dưỡng chất, không nói sản phẩm thẩm thấu vào da). Chỉ hướng dẫn sử dụng thực tế (ví dụ: thoa lòng môi, thoa đều màu).
+- Tuyệt đối không bịa đặt hoặc tự suy diễn các công dụng điều trị hoặc hoạt chất trị liệu da liễu (như Niacinamide, BHA, Retinol) cho các sản phẩm trang điểm trừ khi database có ghi rõ ràng.
 
 ### 7. ĐỊNH DẠNG ĐẦU RA MẪU (VĂN PHONG TỰ NHIÊN)
 
@@ -1357,6 +1352,10 @@ lưu ý: nếu khách hỏi quá kĩ về sản phẩm, nhãn hàng mà không c
 - BẮT BUỘC: Bạn CHỈ ĐƯỢC PHÉP gợi ý các sản phẩm có mặt trong danh sách `<san_pham_goi_y>` ở trên. Nếu người dùng yêu cầu thiết kế một chu trình dưỡng da (routine), bạn PHẢI chọn các sản phẩm phù hợp từ danh sách `<san_pham_goi_y>` này để điền vào từng bước (Tẩy trang, Sữa rửa mặt, Toner, Serum, Kem dưỡng, Chống nắng). TUYỆT ĐỐI KHÔNG ĐƯỢC tự ý bịa ra hoặc đề xuất bất kỳ sản phẩm nào khác ngoài danh sách `<san_pham_goi_y>` này (không bịa tên hay nhãn hàng khác như La Roche-Posay, CeraVe, v.v. nếu chúng không nằm trong danh sách `<san_pham_goi_y>` ở trên). Nếu danh sách `<san_pham_goi_y>` thiếu sản phẩm cho một bước nào đó, hãy ghi rõ là cửa hàng tạm thời chưa có sẵn sản phẩm phù hợp cho bước đó và khuyên khách hàng sử dụng các sản phẩm có sẵn còn lại.
 - PHẢI ưu tiên cảnh báo thành phần nguy hiểm nếu da khách nhạy cảm/mụn.
 - PHẢI gợi ý patch test nếu khách có da nhạy cảm.
+- BẮT BUỘC (Makeup vs Skincare): Phân loại sản phẩm rõ ràng dựa trên danh mục (loại sản phẩm như Son Kem, Son Thỏi, Phấn Má... thuộc nhóm Trang Điểm/Makeup).
+  + Đối với sản phẩm Makeup: TUYỆT ĐỐI KHÔNG hướng dẫn sử dụng kiểu skincare (không bôi 2 lần/ngày sáng tối, không bảo làm sạch mặt trước để hấp thụ dưỡng chất, không nói sản phẩm thẩm thấu vào da). Chỉ hướng dẫn tô/thoa theo mục đích trang điểm thực tế (ví dụ: thoa lòng môi, thoa đều màu son).
+  + Tuyệt đối không bịa đặt hoặc tự suy diễn các công dụng điều trị hoặc hoạt chất da liễu trị liệu (như Niacinamide, BHA, Retinol) cho các sản phẩm trang điểm trừ khi database có mô tả rõ ràng.
+
 
 ### 7. ĐỊNH DẠNG ĐẦU RA (OUTPUT FORMAT — MARKDOWN TỰ NHIÊN, KHÔ KHAN)
 
@@ -1577,6 +1576,41 @@ class MockDocument:
         self.page_content = page_content
         self.metadata = metadata
         self.id = id
+
+
+def filter_docs_by_ingredient(raw_docs: list, target_ingredient: str) -> list:
+    if not target_ingredient:
+        return []
+    target_ing_lower = target_ingredient.lower()
+    filtered = []
+    for doc in raw_docs:
+        # Kiểm tra xem hoạt chất có nằm trong Tên, Thành phần chính hoặc Mô tả/Document của sản phẩm không
+        content_lower = doc.page_content.lower()
+        meta = doc.metadata or {}
+        ten = str(meta.get("ten_san_pham", "")).lower()
+        thanh_phan = str(meta.get("thanh_phan_chinh", "")).lower()
+        
+        # Hỗ trợ các từ đồng nghĩa thông dụng
+        synonyms = []
+        if target_ing_lower == "niacinamide":
+            synonyms = ["niacinamide", "vitamin b3", "b3"]
+        elif target_ing_lower in ("vitamin c", "vit c", "acid ascorbic", "ascorbic acid"):
+            synonyms = ["vitamin c", "vit c", "ascorbic acid", "l-ascorbic", "ascorbyl"]
+        elif target_ing_lower == "bha":
+            synonyms = ["bha", "salicylic acid", "salicylic"]
+        elif target_ing_lower == "aha":
+            synonyms = ["aha", "glycolic acid", "lactic acid", "glycolic", "lactic"]
+        elif target_ing_lower == "retinol":
+            synonyms = ["retinol", "retinoid", "vitamin a"]
+        elif target_ing_lower == "hyaluronic acid":
+            synonyms = ["hyaluronic acid", "hyaluronic", "ha"]
+        else:
+            synonyms = [target_ing_lower]
+            
+        has_match = any(s in content_lower or s in ten or s in thanh_phan for s in synonyms)
+        if has_match:
+            filtered.append(doc)
+    return filtered
 
 
 # ─── Main Pipeline ───────────────────────────────────────────────────────────
@@ -1822,10 +1856,9 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     has_product_info = any(k in msg_lower for k in product_info_keywords) or (current_product_id is not None)
     
     # THỰC THI LUỒNG BẮT BUỘC TRỌNG YẾU (STATE MACHINE REQUIRED):
-    # - Nếu khách hàng có chỉ định cá nhân hóa da của chính họ (has_personalized = True) thì BẮT BUỘC kiểm tra profile (Required).
-    # - Bất kể câu hỏi có nhắc đến "serum này" (has_product_info = True) thì yếu tố cá nhân hóa da vẫn chiếm ưu tiên cao nhất.
-    # - Nếu không có yếu tố cá nhân hóa da của chính họ, mọi câu hỏi routine kiến thức chung hay sản phẩm cụ thể đều BYPASS.
-    need_profile = (intent == "PRODUCT_INQUIRY") and has_personalized
+    # - Chỉ bắt buộc kiểm tra profile (Required) khi intent là PERSONALIZED hoặc PERSONALIZED_PRODUCT.
+    # - Các ý định hỏi hoạt chất, sản phẩm cụ thể không cá nhân hóa, hoặc routine chung đều được BYPASS.
+    need_profile = intent in ("PERSONALIZED", "PERSONALIZED_PRODUCT")
     
     # Bỏ qua kiểm tra state nếu tin nhắn hiện tại là một quicksend bypass hoặc chitchat đơn giản
     is_bypass = is_keeping_old or "đồng ý cập nhật loại da mới" in message.lower()
@@ -2030,18 +2063,27 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             # Retrieve featured/popular products to pitch at the end for simple chitchat only
             docs = hybrid_search_with_filter(None, top_n=3, custom_query="sản phẩm mỹ phẩm dưỡng da nổi bật bán chạy nhất")
 
-    elif intent == "COSMETIC_KNOWLEDGE_OUT_OF_DB":
-        print("[ROUTE] COSMETIC_KNOWLEDGE_OUT_OF_DB")
+    elif intent == "COSMETIC_KNOWLEDGE":
+        print("[ROUTE] COSMETIC_KNOWLEDGE")
         # Run Tavily search to fetch the ingredient definition and skincare knowledge
         web_results_text = _format_web_results(_query_web(rewritten_query))
         
         # Search the database for products containing the specific ingredient or matching rewritten_query
         search_term = ingredient if ingredient else rewritten_query
         print(f"[SEARCH] Querying DB for ingredient-related products with: '{search_term}'")
-        docs = hybrid_search_with_filter(None, top_n=3, custom_query=search_term)
-        if not docs:
-            # Fallback to general popular products
-            docs = hybrid_search_with_filter(None, top_n=3, custom_query="mỹ phẩm dưỡng da nổi bật bán chạy")
+        
+        # Lấy 15 sản phẩm tiềm năng để lọc
+        raw_docs = hybrid_search_with_filter(None, top_n=15, custom_query=search_term)
+        
+        # Lọc nghiêm ngặt: Chỉ giữ lại các sản phẩm thực sự chứa hoạt chất trong tên/thành phần
+        filtered_docs = filter_docs_by_ingredient(raw_docs, search_term)
+        
+        if filtered_docs:
+            docs = filtered_docs[:3]
+        else:
+            # Tuyệt đối không fallback sang sản phẩm không liên quan (son môi...)
+            print(f"[WARN] No products found containing ingredient '{search_term}' - will not recommend any products.")
+            docs = []
 
     else:  # PRODUCT_INQUIRY
         print("[ROUTE] PRODUCT_INQUIRY")
@@ -2379,7 +2421,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             .replace("{web_results}", web_results_text or "Không có dữ liệu bổ sung.") \
             .replace("{search_results}", format_search_results(final_merged_docs)) \
             .replace("{user_question}", message)
-    elif intent == "COSMETIC_KNOWLEDGE_OUT_OF_DB":
+    elif intent == "COSMETIC_KNOWLEDGE":
         prompt = COSMETIC_KNOWLEDGE_SYSTEM_PROMPT \
             .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
             .replace("{web_results}", web_results_text or "Không có dữ liệu bổ sung.") \
@@ -2468,8 +2510,8 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         "pipeline_mode": "Agent -> Fallback" if is_fallback else "Pipeline",
         "query_type": "complex routine query" if (yc and yc.is_routine) else "simple single-intent query",
         "intent_mode": intent,
-        "profile_state": determine_profile_state(message, profile_data) if (intent == "PRODUCT_INQUIRY" and need_profile) else "BYPASSED",
-        "profile_gate": "REQUIRED" if (intent == "PRODUCT_INQUIRY" and need_profile) else "BYPASSED",
+        "profile_state": determine_profile_state(message, profile_data) if need_profile else "BYPASSED",
+        "profile_gate": "REQUIRED" if need_profile else "BYPASSED",
         "latency": round(time.time() - start_time, 2),
         "eval_scores": {
             "ar": round(ar_score, 2),

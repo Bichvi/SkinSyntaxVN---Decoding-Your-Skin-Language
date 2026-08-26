@@ -683,7 +683,7 @@ Bộ test suite tự động `test_state_machine.py` chạy qua 14 kịch bản 
 11. **TC14 - Hỏi sản phẩm cụ thể + cá nhân hóa (Required):**
     - *Input:* `"Serum SVR này có hợp với da dầu mụn nhạy cảm của mình không?"` (Có chứa từ nhân xưng `"của mình"`).
     - *Output:* `profile_gate = REQUIRED`, `profile_state = PROFILE_MISSING`, chatbot chặn lại và mời làm khảo sát nhanh vì tài khoản chưa có profile da (ưu tiên cá nhân hóa da cao nhất).
-�n mốc thời gian chờ. Tuy nhiên, thư viện `time` của hệ thống lại chưa được import ở đầu file `chatbot_flask.py`, dẫn đến lỗi chết ngầm `NameError: name 'time' is not defined` và trả về mã trạng thái HTTP 500.
+n mốc thời gian chờ. Tuy nhiên, thư viện `time` của hệ thống lại chưa được import ở đầu file `chatbot_flask.py`, dẫn đến lỗi chết ngầm `NameError: name 'time' is not defined` và trả về mã trạng thái HTTP 500.
 - **Khắc phục:** Import module `time` thành công ở đầu file [chatbot_flask.py](file:///c:/xampp/htdocs/CNM/SkinSyntaxVN---Decoding-Your-Skin-Language/ai-service-flask/chatbot_flask.py).
 
 ---
