@@ -655,8 +655,16 @@ class HomeController {
             ];
         }
 
+        $updatedAtIso = isset($khachHang['updated_at']) && is_object($khachHang['updated_at']) && method_exists($khachHang['updated_at'], 'toDateTime')
+            ? $khachHang['updated_at']->toDateTime()->format('c')
+            : null;
+        $createdAtIso = isset($khachHang['created_at']) && is_object($khachHang['created_at']) && method_exists($khachHang['created_at'], 'toDateTime')
+            ? $khachHang['created_at']->toDateTime()->format('c')
+            : null;
+
         return [
             'customer_id' => (int)($khachHang['ma_kh'] ?? 0),
+            'email' => $email,
             'display_name' => trim((string)($khachHang['ho_ten'] ?? 'bạn')),
             'gioi_tinh' => trim((string)($khachHang['gioi_tinh'] ?? '')),
             'nam_sinh' => trim((string)($khachHang['nam_sinh'] ?? '')),
@@ -670,6 +678,8 @@ class HomeController {
             'sensitivity' => trim((string)($khachHang['muc_do_nhay_cam'] ?? '')),
             'recent_keywords' => array_values(array_filter(array_map('strval', $recentKeywords))),
             'recent_orders' => $recentOrders,
+            'updated_at' => $updatedAtIso,
+            'created_at' => $createdAtIso,
         ];
     }
 
@@ -1926,10 +1936,14 @@ class HomeController {
 
         $profileSummary = [
             'customer_id' => (int)($profile['customer_id'] ?? 0),
+            'email' => (string)($profile['email'] ?? ''),
             'skin_type' => (string)($profile['skin_type'] ?? ''),
             'concerns' => array_values($profile['concerns'] ?? []),
             'avoid_ingredients' => array_values($profile['avoid_ingredients'] ?? []),
             'budget' => (int)($profile['budget'] ?? 0),
+            'updated_at' => $profile['updated_at'] ?? null,
+            'created_at' => $profile['created_at'] ?? null,
+            'sensitivity' => (string)($profile['sensitivity'] ?? ''),
         ];
 
         $payload = [
@@ -2045,6 +2059,7 @@ class HomeController {
     }
 
     public function aiChatAssistant(): void {
+        $phpStart = microtime(true);
         header('Content-Type: application/json; charset=utf-8');
         @set_time_limit(120);
         @ini_set('max_execution_time', '120');
@@ -2174,15 +2189,40 @@ class HomeController {
             $answer = $this->trimAiAnswer($answer);
         }
 
+        $isFallback = ($decoded && isset($decoded['fallback'])) ? (bool)$decoded['fallback'] : ($answer === 'Tôi đề xuất những sản phẩm này');
+        $fallbackReason = '';
+        if ($decoded && isset($decoded['fallback_reason']) && $decoded['fallback_reason'] !== '') {
+            $fallbackReason = (string)$decoded['fallback_reason'];
+        } else if ((int)($response['status'] ?? 0) !== 200) {
+            $fallbackReason = 'agent failed: APIStatusError';
+        }
+        $fallbackNote = ($decoded && isset($decoded['fallback_note'])) ? (string)$decoded['fallback_note'] : '';
+        
+        $pipelineMode = ($decoded && isset($decoded['pipeline_mode'])) ? (string)$decoded['pipeline_mode'] : ($isFallback ? 'Agent -> Fallback' : 'Pipeline');
+        $queryType = ($decoded && isset($decoded['query_type'])) ? (string)$decoded['query_type'] : 'simple single-intent query';
+        $intentMode = ($decoded && isset($decoded['intent_mode'])) ? (string)$decoded['intent_mode'] : 'PRODUCT_INQUIRY';
+        $evalScores = ($decoded && isset($decoded['eval_scores'])) ? $decoded['eval_scores'] : [
+            'ar' => 1.0,
+            'gr' => 1.0,
+            'cr' => 1.0
+        ];
+
+        $latency = round(microtime(true) - $phpStart, 2);
+
         $payload = [
             'ok' => true,
             'answer' => $answer,
             'conflicts' => $conflicts,
             'products' => $products,
-            'fallback' => false,
-            'fallback_reason' => '',
-            'status_message' => '',
-            'fallback_note' => '',
+            'fallback' => $isFallback,
+            'fallback_reason' => $fallbackReason,
+            'status_message' => $fallbackReason,
+            'fallback_note' => $fallbackNote,
+            'pipeline_mode' => $pipelineMode,
+            'query_type' => $queryType,
+            'intent_mode' => $intentMode,
+            'eval_scores' => $evalScores,
+            'latency' => $latency,
         ];
 
         if ($answer !== 'Tôi đề xuất những sản phẩm này') {

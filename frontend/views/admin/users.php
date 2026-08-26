@@ -201,6 +201,13 @@ $loaiKh = trim((string)($loaiKh ?? ''));
                         <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Địa chỉ giao hàng</label>
                         <input type="text" class="form-control" name="dia_chi" value="<?= h($customerEditing['dia_chi'] ?? '') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
                     </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Mật khẩu <?= $customerEditing ? '(để trống nếu giữ nguyên)' : '<span class="text-danger">* (bắt buộc nếu nhập Email)</span>' ?></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="customer_mat_khau" name="mat_khau" placeholder="<?= $customerEditing ? 'Nhập mật khẩu mới hoặc tạo ngẫu nhiên' : 'Nhập mật khẩu hoặc tạo ngẫu nhiên' ?>" style="border-radius: 6px 0 0 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                            <button class="btn btn-outline-secondary" type="button" id="btn-generate-customer-pw" style="border-radius: 0 6px 6px 0; font-size: 0.84rem; background: var(--admin-surface); border-color: var(--admin-border); color: var(--admin-text);">Tạo ngẫu nhiên</button>
+                        </div>
+                    </div>
                     <div class="col-12 d-flex gap-2 mt-3">
                         <button type="submit" class="btn btn-sm text-white fw-semibold px-3" style="background: #183B2B; border-radius: 6px;">Lưu thông tin KH</button>
                         <?php if ($customerEditing): ?>
@@ -402,3 +409,21 @@ $loaiKh = trim((string)($loaiKh ?? ''));
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnGen = document.getElementById('btn-generate-customer-pw');
+    const inputPw = document.getElementById('customer_mat_khau');
+    if (btnGen && inputPw) {
+        btnGen.addEventListener('click', function() {
+            // Tạo mật khẩu ngẫu nhiên gồm chữ thường, chữ hoa và số dài 10 ký tự
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let password = '';
+            for (let i = 0; i < 10; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            inputPw.value = password;
+        });
+    }
+});
+</script>

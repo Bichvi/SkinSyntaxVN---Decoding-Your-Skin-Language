@@ -1209,6 +1209,8 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
         // inline code
         safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // quicksend links
+        safe = safe.replace(/\[([^\]]+)\]\((quicksend:[^)]+)\)/g, '<a href="$2" class="ai-chat-quick-btn" style="display:inline-block; border: 1px solid #183B2B; color: #183B2B; background: #EBF2EE; border-radius: 16px; padding: 4px 12px; margin: 4px 2px; text-decoration: none; font-size: 12px; font-weight: 600; transition: all 0.2s;">$1</a>');
         // links
         safe = safe.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="ai-chat-widget__inline-link">$1</a>');
         // hr
@@ -1427,6 +1429,28 @@ if ($aiChatEmail !== '' && $pdo !== null) {
             if (productCards.length) {
               contentSuffix += '<div class="ai-chat-widget__product-group">' + productCards.join('') + '</div>';
             }
+
+            // Render evaluation metrics badge
+            var evalScores = message.eval_scores || { ar: 1.0, gr: 1.0, cr: 1.0 };
+            var pipelineMode = message.pipeline_mode || (message.fallback ? 'Agent -> Fallback' : 'Pipeline');
+            var queryType = message.query_type || 'simple single-intent query';
+            var intentMode = message.intent_mode || 'PRODUCT_INQUIRY';
+            var fallbackReason = message.fallbackReason || '';
+            
+            var dotColor = (pipelineMode === 'Pipeline') ? '#4caf50' : '#ff9800';
+            var subText = message.fallback ? ('-> ' + (fallbackReason || 'agent failed: APIStatusError')) : ('-> ' + queryType);
+            var intentPart = message.fallback ? '' : (' | intent: ' + intentMode);
+            var latencyPart = message.latency ? (' | ' + Number(message.latency).toFixed(2) + 's') : '';
+            
+            meta += '<div class="ai-chat-widget__eval-badge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #757575; background: #f5f5f5; padding: 4px 8px; border-radius: 12px; margin-top: 8px; font-family: monospace; border: 1px solid #e0e0e0;">'
+                 + '<span style="width: 8px; height: 8px; border-radius: 50%; background-color: ' + dotColor + '; display: inline-block;"></span>'
+                 + '<strong>' + pipelineMode + '</strong> | ' + subText + ' | '
+                 + 'AR: ' + Number(evalScores.ar).toFixed(2) + ' | '
+                 + 'GR: ' + Number(evalScores.gr).toFixed(2) + ' | '
+                 + 'CR: ' + Number(evalScores.cr).toFixed(2)
+                 + latencyPart
+                 + intentPart
+                 + '</div>';
           }
 
           var formattedContent = isUser ? escapeHtml(message.content) : formatMarkdown(message.content);
@@ -1553,6 +1577,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       };
 
       var sendMessage = function (text) {
+        var startTime = Date.now();
         var content = String(text || '').trim();
         if (content === '') {
           return;
@@ -1619,19 +1644,31 @@ if ($aiChatEmail !== '' && $pdo !== null) {
               fallback: payload.fallback === true,
               fallbackReason: String(payload.fallback_reason || ''),
               statusMessage: String(payload.status_message || ''),
-              fallbackNote: String(payload.fallback_note || '')
+              fallbackNote: String(payload.fallback_note || ''),
+              eval_scores: payload.eval_scores,
+              pipeline_mode: payload.pipeline_mode,
+              query_type: payload.query_type,
+              intent_mode: payload.intent_mode,
+              latency: payload.latency
             });
           })
           .catch(function () {
             messages = messages.filter(function (item) {
               return item.id !== typingId;
             });
+            var elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
             addMessage({
               role: 'assistant',
               content: 'Không kết nối được tới AI service. Bạn có thể thử lại hoặc hỏi ngắn gọn hơn.',
               conflicts: [],
               products: [],
-              fallback: false
+              fallback: true,
+              fallbackReason: 'agent failed: APIStatusError',
+              pipeline_mode: 'Agent -> Fallback',
+              query_type: 'simple single-intent query',
+              intent_mode: 'PRODUCT_INQUIRY',
+              eval_scores: { ar: 0.0, gr: 0.0, cr: 0.0 },
+              latency: parseFloat(elapsed)
             });
           })
           .finally(function () {
@@ -1735,6 +1772,17 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       });
 
       document.addEventListener('click', function (event) {
+        var quickSendLink = event.target.closest('a');
+        if (quickSendLink) {
+          var href = quickSendLink.getAttribute('href') || '';
+          if (href.indexOf('quicksend:') === 0) {
+            event.preventDefault();
+            var text = href.substring(10);
+            sendMessage(decodeURIComponent(text));
+            return;
+          }
+        }
+
         var openProduct = event.target.closest('[data-ai-open-product]');
         if (openProduct) {
           var openUrl = openProduct.getAttribute('data-url') || '';

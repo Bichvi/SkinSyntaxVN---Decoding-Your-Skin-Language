@@ -5,18 +5,18 @@ ENV HF_HOME=/opt/hf_cache \
     TRANSFORMERS_CACHE=/opt/hf_cache/transformers \
     CHROMA_DB_PATH=/app/database/chroma_db \
     PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app:/app/chatbot_service
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY ai-service-flask/requirements.txt .
 
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+RUN pip install --no-cache-dir torch --extra-index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 
 RUN python - <<'EOF'
@@ -42,4 +42,4 @@ COPY database/ /app/database/
 
 EXPOSE 5001
 
-CMD ["gunicorn", "--config", "gunicorn_config.py", "chatbot_flask:app"]
+CMD ["gunicorn", "--config", "gunicorn_config.py", "chatbot_service.chatbot_flask:app"]

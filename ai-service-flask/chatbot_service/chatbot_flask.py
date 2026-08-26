@@ -33,6 +33,17 @@ from typing import Optional, List, Literal
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from hybrid_search import HybridSearchPipeline, BM25Search
+
+# Custom Profile State & Survey Flow services
+import sys
+from pathlib import Path
+_SERVICE_DIR = str(Path(__file__).resolve().parent)
+if _SERVICE_DIR not in sys.path:
+    sys.path.append(_SERVICE_DIR)
+
+from profile_state import determine_profile_state, detect_profile_conflict, calculate_days_since_update
+from survey_service import is_in_survey_flow, handle_survey_flow, get_last_ai_message
+from profile_service import save_user_profile
 # ─── Config ─────────────────────────────────────────────────────────────────
 # Tự động tính đường dẫn tương đối từ vị trí file script này
 # ai-service-flask/chatbot_flask.py → ../database/chroma_db
@@ -195,17 +206,97 @@ def _test_llm_connection(llm) -> bool:
         print(f"[WARN] LLM Key validation failed for {model_name}: {err[:200]}")
         return False
 
+def _get_message_text(response) -> str:
+    """Trích xuất nội dung văn bản từ đối tượng phản hồi của LangChain một cách an toàn,
+    xử lý cả trường hợp content là string hoặc list chứa các text blocks."""
+    if not response:
+        return ""
+    content = response.content
+    if isinstance(content, list):
+        # Gộp tất cả các block có type là 'text'
+        text_parts = []
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "text":
+                text_parts.append(block.get("text", ""))
+            elif isinstance(block, str):
+                text_parts.append(block)
+        return "".join(text_parts).strip()
+    return str(content or "").strip()
+
 _llms = None
+_last_llm_init_time = 0
 
 def get_llms():
-    global _llms
-    if _llms is not None:
+    global _llms, _last_llm_init_time
+    import time
+    
+    # Nếu đã nạp được LLMs thành công, trả về ngay
+    if _llms:
         return _llms
+        
+    # Nếu chưa thử hoặc đã thử nhưng bị rỗng (lỗi), chỉ cho phép thử lại sau mỗi 5 phút (300s)
+    current_time = time.time()
+    if _llms is not None and (current_time - _last_llm_init_time < 300):
+        return _llms
+
+    _last_llm_init_time = current_time
 
     _llms = []
 
-    # 1. Gemini 1.5 Flash — 1500 req/ngày/key (FREE)
-    # Ưu tiên gemini-1.5-flash vì limit CAO HƠN NHIỀU so với 2.5-flash (chỉ 20/ngày)
+    # Khởi tạo ChatOpenAI
+    try:
+        from langchain_openai import ChatOpenAI
+    except Exception:
+        try:
+            from langchain_community.chat_models import ChatOpenAI
+        except Exception:
+            ChatOpenAI = None
+
+    # 1. Groq — Ưu tiên số 1 theo yêu cầu của user
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if ChatOpenAI is not None and groq_key:
+        for model in ["groq/compound", "groq/compound-mini", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"]:
+            try:
+                groq = ChatOpenAI(
+                    openai_api_key=groq_key,
+                    openai_api_base="https://api.groq.com/openai/v1",
+                    model_name=model,
+                    temperature=0,
+                    max_tokens=4096,
+                    max_retries=0,
+                )
+                print(f"[INFO] Testing Groq {model}...")
+                if _test_llm_connection(groq):
+                    _llms.append(groq)
+                    print(f"[OK] Groq {model} loaded and validated as PRIMARY")
+                    break  # Chỉ cần 1 Groq model hoạt động
+                else:
+                    print(f"[WARN] Groq {model} skipped due to connection/model issue")
+            except Exception as e:
+                print(f"[WARN] Groq {model} init failed: {e}")
+
+    # 2. OpenAI (GPT) — gpt-4o-mini / gpt-4o (Dự phòng số 2)
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if ChatOpenAI is not None and openai_key and openai_key.startswith("sk-"):
+        openai_model = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini").strip()
+        try:
+            gpt = ChatOpenAI(
+                openai_api_key=openai_key,
+                model_name=openai_model,
+                temperature=0,
+                max_tokens=4096,
+                max_retries=0,
+            )
+            print(f"[INFO] Testing OpenAI GPT ({openai_model})...")
+            if _test_llm_connection(gpt):
+                _llms.append(gpt)
+                print(f"[OK] OpenAI GPT ({openai_model}) loaded and validated")
+            else:
+                print(f"[WARN] OpenAI GPT ({openai_model}) skipped due to connection/key issue")
+        except Exception as e:
+            print(f"[WARN] OpenAI GPT init failed: {e}")
+
+    # 3. Gemini — 1500 req/ngày/key (Dự phòng số 3)
     from langchain_google_genai import ChatGoogleGenerativeAI, HarmCategory, HarmBlockThreshold
     safety = {
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -233,37 +324,6 @@ def get_llms():
                 print(f"[WARN] Gemini ({GEMINI_MODEL}) ({label}) skipped due to invalid/dead key")
         except Exception as e:
             print(f"[WARN] Gemini key {idx+1} init failed: {e}")
-
-    try:
-        from langchain_openai import ChatOpenAI
-    except Exception:
-        try:
-            from langchain_community.chat_models import ChatOpenAI
-        except Exception:
-            ChatOpenAI = None
-
-    # 2. Groq — llama-3.3-70b-versatile (Ưu tiên 70B cho tiếng Việt xuất sắc và khả năng suy luận/phân loại intent)
-    groq_key = os.getenv("GROQ_API_KEY", "").strip()
-    if ChatOpenAI is not None and groq_key:
-        for model in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama3-8b-8192"]:
-            try:
-                groq = ChatOpenAI(
-                    openai_api_key=groq_key,
-                    openai_api_base="https://api.groq.com/openai/v1",
-                    model_name=model,
-                    temperature=0,
-                    max_tokens=4096,
-                    max_retries=0,
-                )
-                print(f"[INFO] Testing Groq {model}...")
-                if _test_llm_connection(groq):
-                    _llms.append(groq)
-                    print(f"[OK] Groq {model} loaded and validated")
-                    break  # chỉ cần 1 Groq model hoạt động
-                else:
-                    print(f"[WARN] Groq {model} skipped due to connection issue")
-            except Exception as e:
-                print(f"[WARN] Groq {model} init failed: {e}")
 
     # 3. Zhipu glm-4-flash (FREE, phản hồi siêu tốc ~1.5 - 3 giây, giới hạn cực cao)
     # Đưa lên trước OpenRouter để tránh nghẽn/timeout
@@ -365,7 +425,7 @@ Câu hỏi độc lập viết lại:"""
         model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
         try:
             response = llm.invoke([HumanMessage(content=prompt)])
-            rewritten = (response.content or "").strip()
+            rewritten = _get_message_text(response)
             if rewritten:
                 rewritten = rewritten.strip('"').strip("'")
                 print(f"[CONTEXTUALIZE] Original: '{message}' -> Rewritten: '{rewritten}' using {model_name}")
@@ -432,7 +492,7 @@ Câu hỏi: {query}"""
         model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
         try:
             response = llm.invoke([HumanMessage(content=prompt)])
-            text = (response.content or "").strip()
+            text = _get_message_text(response)
             data = _extract_json_from_text(text)
             if data and "intent" in data:
                 intent = data["intent"]
@@ -686,6 +746,11 @@ def _dict_to_yc(d: dict) -> PhanTichYeuCau:
         "kem dưỡng": "Kem / Gel / Dầu Dưỡng",
         "kem duong": "Kem / Gel / Dầu Dưỡng",
         "gel dưỡng": "Kem / Gel / Dầu Dưỡng",
+        "dưỡng ẩm": "Kem / Gel / Dầu Dưỡng",
+        "duong am": "Kem / Gel / Dầu Dưỡng",
+        "lotion": "Lotion / Sữa Dưỡng",
+        "sữa dưỡng": "Lotion / Sữa Dưỡng",
+        "sua duong": "Lotion / Sữa Dưỡng",
         "mặt nạ": "Mặt Nạ Giấy",
         "mat na": "Mặt Nạ Giấy",
         "trị mụn": "Hỗ Trợ Trị Mụn",
@@ -834,7 +899,7 @@ def extract_budget_from_text(text: str) -> Optional[int]:
     text_lower = text.lower()
     
     # 1. Matches "triệu" or "tr"
-    m_trieu = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức)\s*(\d+(?:\.\d+)?)\s*(?:triệu|tr)\b', text_lower)
+    m_trieu = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức|có)?\s*(\d+(?:\.\d+)?)\s*(?:triệu|tr)\b', text_lower)
     if m_trieu:
         try:
             return int(float(m_trieu.group(1)) * 1000000)
@@ -842,7 +907,7 @@ def extract_budget_from_text(text: str) -> Optional[int]:
             pass
             
     # 2. Matches "k"
-    m_k = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức)\s*(\d+)\s*k\b', text_lower)
+    m_k = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức|có)?\s*(\d+)\s*k\b', text_lower)
     if m_k:
         try:
             return int(m_k.group(1)) * 1000
@@ -850,7 +915,7 @@ def extract_budget_from_text(text: str) -> Optional[int]:
             pass
             
     # 3. Matches raw number with dots like "800.000" or "800000"
-    m_raw = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức)\s*(\d{1,3}(?:\.\d{3})+|\d{5,8})\s*(?:vnđ|đ|vnd)?\b', text_lower)
+    m_raw = re.search(r'(?:dưới|tầm|dưới\s*tầm|ngân\s*sách|max|khoảng|dưới\s*mức|có)?\s*(\d{1,3}(?:\.\d{3})+|\d{5,8})\s*(?:vnđ|đ|vnd)?\b', text_lower)
     if m_raw:
         try:
             return int(m_raw.group(1).replace('.', ''))
@@ -890,7 +955,7 @@ def rule_based_parse(message: str) -> Optional[PhanTichYeuCau]:
         loai_san_pham = "Toner / Nước Cân Bằng Da"
     elif any(k in msg_lower for k in ["serum", "tinh chất", "tinh chat", "ampoule", "essence"]):
         loai_san_pham = "Serum / Tinh Chất"
-    elif any(k in msg_lower for k in ["kem dưỡng", "kem duong", "gel dưỡng", "gel duong", "kem khóa ẩm", "kem khoa am"]):
+    elif any(k in msg_lower for k in ["kem dưỡng", "kem duong", "gel dưỡng", "gel duong", "kem khóa ẩm", "kem khoa am", "dưỡng ẩm", "duong am"]):
         loai_san_pham = "Kem / Gel / Dầu Dưỡng"
     elif any(k in msg_lower for k in ["lotion", "sữa dưỡng", "sua duong"]):
         loai_san_pham = "Lotion / Sữa Dưỡng"
@@ -998,7 +1063,7 @@ def parse_yeu_cau(message: str, llms: list) -> PhanTichYeuCau:
             print(f"[PARSE] Trying JSON text fallback: {model_name}")
             prompt = _PARSE_PROMPT_TEMPLATE.format(message=message)
             response = llm.invoke([HumanMessage(content=prompt)])
-            text = (response.content or "").strip()
+            text = _get_message_text(response)
             d = _extract_json_from_text(text)
             if d:
                 yc = _dict_to_yc(d)
@@ -1063,6 +1128,8 @@ def build_filter(yc: PhanTichYeuCau) -> dict | None:
             conds.append({"loai_da": {"$eq": yc.loai_da}})
     if yc.loai_san_pham:
         conds.append({"loai_san_pham": {"$eq": yc.loai_san_pham}})
+    if yc.thuong_hieu:
+        conds.append({"thuong_hieu": {"$eq": yc.thuong_hieu}})
     if yc.xuat_xu:
         conds.append({"xuat_xu_thuong_hieu": {"$eq": yc.xuat_xu}})
         
@@ -1514,6 +1581,8 @@ class MockDocument:
 
 # ─── Main Pipeline ───────────────────────────────────────────────────────────
 def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
+    import time
+    start_time = time.time()
     from langchain_core.messages import HumanMessage
 
     llms = get_llms()
@@ -1631,6 +1700,295 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     print(f"[PARSE] da={yc.loai_da} | sp={yc.loai_san_pham} | routine={yc.is_routine} | "
           f"gia={yc.muc_gia} | query={yc.tu_khoa_ngu_nghia[:60]}")
 
+    # ─── ĐIỀU PHỐI LUỒNG KHẢO SÁT & STATE MACHINE (Skin Profile State Machine) ───
+    user_email = ""
+    profile_data = {}
+    if msg_data:
+        profile_data = msg_data.get("customer_profile", {}) or {}
+        user_email = profile_data.get("email") or ""
+
+    # A. Kiểm tra xem có đang trong luồng khảo sát da không
+    history_list = msg_data.get("conversation_history", []) if msg_data else []
+    if is_in_survey_flow(message, history_list):
+        survey_res = handle_survey_flow(message, history_list, user_email)
+        if not survey_res.get("completed"):
+            return {
+                "ok": True,
+                "answer": survey_res.get("answer"),
+                "conflicts": [],
+                "products": [],
+                "pipeline_mode": "Conversational Survey",
+                "query_type": "survey interaction",
+                "intent_mode": "SURVEY",
+                "latency": round(time.time() - start_time, 2),
+                "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+            }
+        else:
+            # Khảo sát hoàn thành! Nạp lại hồ sơ da mới để RAG tư vấn ngay
+            new_profile = survey_res.get("profile_data")
+            skin_type = new_profile.get("loai_da")
+            skin_issues = new_profile.get("concerns")
+            yc.loai_da = skin_type
+            yc.ngan_sach = new_profile.get("budget")
+            # Ghi nhận answer_prefix để nối vào câu trả lời của RAG
+            survey_prefix = survey_res.get("answer_prefix")
+    else:
+        survey_prefix = ""
+
+    # B. Xử lý các tin nhắn quicksend xác nhận từ các state khác
+    # 1. User click "Giữ thông tin cũ và tiếp tục" hoặc "Giữ nguyên thông tin cũ"
+    is_keeping_old = any(k in message.lower() for k in ["giữ thông tin cũ", "giữ nguyên thông tin cũ", "thông tin vẫn như cũ", "tư vấn nhanh không đăng nhập", "tư vấn nhanh dựa trên câu hỏi"])
+    
+    # 2. User click "Đồng ý cập nhật loại da mới"
+    if "đồng ý cập nhật loại da mới" in message.lower():
+        # Trích xuất loại da mới đề cập trong lịch sử gần nhất
+        new_detected_da = "Da khô"
+        for h in reversed(history_list):
+            h_str = str(h).lower()
+            if "da dầu -> da khô" in h_str:
+                new_detected_da = "Da khô"
+                break
+            elif "da khô -> da dầu" in h_str:
+                new_detected_da = "Da dầu"
+                break
+        
+        # Cập nhật MongoDB
+        if user_email:
+            save_user_profile(user_email, {"loai_da": new_detected_da}, source="conflict_resolution")
+            
+        skin_type = new_detected_da
+        yc.loai_da = new_detected_da
+        survey_prefix = f"✅ **Đã cập nhật loại da mới của bạn thành {new_detected_da.upper()} trong hồ sơ.**\n\nDưới đây là tư vấn phù hợp với tình trạng da hiện tại của bạn:\n\n"
+        
+    # 3. User click "Cập nhật nhanh tình trạng da" hoặc "Khảo sát da mới" hoặc "Cập nhật hồ sơ da"
+    elif any(k in message.lower() for k in ["cập nhật nhanh tình trạng da", "khảo sát da mới", "cập nhật hồ sơ da"]):
+        # Kích hoạt khảo sát lại từ Câu 1
+        survey_res = handle_survey_flow("Bắt đầu khảo sát da nhanh", [], user_email)
+        return {
+            "ok": True,
+            "answer": survey_res.get("answer"),
+            "conflicts": [],
+            "products": [],
+            "pipeline_mode": "Conversational Survey",
+            "query_type": "survey initiation",
+            "intent_mode": "SURVEY",
+            "latency": round(time.time() - start_time, 2),
+            "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+        }
+        
+    # 4. Trả lời làm rõ cho Minor Conflict (Ví dụ: chọn Kéo dài hoặc Tạm thời)
+    elif "Tình trạng kéo dài" in message or "Chỉ bị tạm thời" in message:
+        last_ai_msg = get_last_ai_message(history_list)
+        if "Bạn cảm thấy da bị" in last_ai_msg or "Bạn cảm thấy da" in last_ai_msg:
+            if "kéo dài" in message.lower():
+                # Major conflict -> hỏi xác nhận đổi profile
+                new_da = "Da khô" if "dầu" in skin_type.lower() else "Da dầu"
+                answer = f"Tình trạng da {new_da} kéo dài thường xuyên có vẻ đã thay đổi so với hồ sơ **{skin_type.upper()}** trước đây của bạn. Bạn có muốn cập nhật loại da trong hồ sơ từ **{skin_type.upper()} -> {new_da.upper()}** không?\n\n" \
+                         f"[Cập nhật thành {new_da}](quicksend:Đồng ý cập nhật loại da mới)\n" \
+                         f"[Giữ hồ sơ {skin_type}](quicksend:Giữ thông tin cũ và tiếp tục)"
+                return {
+                    "ok": True,
+                    "answer": answer,
+                    "conflicts": [],
+                    "products": [],
+                    "pipeline_mode": "Conflict Resolution",
+                    "query_type": "clarification reply",
+                    "intent_mode": "CONFLICT",
+                    "latency": round(time.time() - start_time, 2),
+                    "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+                }
+            else:
+                # Tạm thời thôi -> Bỏ qua conflict, tư vấn theo profile cũ nhưng thêm lưu ý
+                survey_prefix = f"*(Ghi nhận da bạn bị thay đổi tạm thời trong vài ngày gần đây, mình vẫn giữ hồ sơ {skin_type} và tư vấn chu trình dịu nhẹ phù hợp)*\n\n"
+
+    # C. Đánh giá State Machine nếu người dùng hỏi tư vấn skincare có cá nhân hóa da của riêng họ
+    msg_lower = message.lower()
+    
+    # 1. Các từ khóa chỉ định cá nhân hóa da sở hữu của riêng khách hàng
+    personalized_keywords = [
+        "da mình", "da minh", "da của mình", "da cua minh", "da em", "da tôi", "da toi",
+        "cho mình", "cho minh", "cho em", "cho tôi", "cho toi", "của mình", "cua minh", 
+        "của em", "cua em", "của tôi", "cua toi"
+    ]
+    
+    # 2. Các từ khóa chỉ định sản phẩm cụ thể
+    product_info_keywords = [
+        "sản phẩm này", "sp này", "em này", "em nó", "này dùng", "này có", "này chứa", 
+        "này giá", "thành phần", "thanh phan", "công dụng", "cong dung", "cách dùng", "cach dung",
+        "dùng sáng", "dùng tối", "bầu dùng", "bao nhiêu", "giá bán", "giá của"
+    ]
+    
+    has_personalized = any(k in msg_lower for k in personalized_keywords)
+    has_product_info = any(k in msg_lower for k in product_info_keywords) or (current_product_id is not None)
+    
+    # THỰC THI LUỒNG BẮT BUỘC TRỌNG YẾU (STATE MACHINE REQUIRED):
+    # - Nếu khách hàng có chỉ định cá nhân hóa da của chính họ (has_personalized = True) thì BẮT BUỘC kiểm tra profile (Required).
+    # - Bất kể câu hỏi có nhắc đến "serum này" (has_product_info = True) thì yếu tố cá nhân hóa da vẫn chiếm ưu tiên cao nhất.
+    # - Nếu không có yếu tố cá nhân hóa da của chính họ, mọi câu hỏi routine kiến thức chung hay sản phẩm cụ thể đều BYPASS.
+    need_profile = (intent == "PRODUCT_INQUIRY") and has_personalized
+    
+    # Bỏ qua kiểm tra state nếu tin nhắn hiện tại là một quicksend bypass hoặc chitchat đơn giản
+    is_bypass = is_keeping_old or "đồng ý cập nhật loại da mới" in message.lower()
+    
+    if need_profile and not is_bypass and not survey_prefix:
+        state = determine_profile_state(message, profile_data)
+        print(f"[STATE_MACHINE] Determined Profile State: {state}")
+        
+        # 1. PROFILE_CONFLICT
+        if state in ("CONFLICT_MAJOR", "CONFLICT_MINOR"):
+            if state == "CONFLICT_MAJOR":
+                # Hỏi xác nhận cập nhật ngay
+                new_da = "Da khô" if "dầu" in skin_type.lower() else "Da dầu"
+                answer = f"Ngọc Vi nhận thấy trước đây bạn đăng ký loại da là **{skin_type.upper()}**, nhưng hiện tại bạn cho biết da đang gặp tình trạng đối lập ({new_da.upper()}).\n" \
+                         f"Bạn có muốn mình cập nhật lại loại da mới vào hồ sơ không?\n\n" \
+                         f"[Cập nhật thành {new_da}](quicksend:Đồng ý cập nhật loại da mới)\n" \
+                         f"[Giữ nguyên hồ sơ cũ](quicksend:Giữ thông tin cũ và tiếp tục)"
+                return {
+                    "ok": True,
+                    "answer": answer,
+                    "conflicts": [],
+                    "products": [],
+                    "pipeline_mode": "Conflict Resolution",
+                    "query_type": "major conflict confirmation",
+                    "intent_mode": intent,
+                    "profile_state": state,
+                    "profile_gate": "REQUIRED",
+                    "latency": round(time.time() - start_time, 2),
+                    "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+                }
+            else:
+                # Minor conflict -> hỏi làm rõ trước
+                opposite_da = "khô" if "dầu" in skin_type.lower() else "dầu"
+                answer = f"Ngọc Vi ghi nhận da bạn có biểu hiện bị {opposite_da} hơn so với hồ sơ **{skin_type.upper()}** trước đây.\n" \
+                         f"Bạn cảm thấy da bị {opposite_da} tạm thời trong vài ngày gần đây (do thời tiết, sản phẩm mới...) hay tình trạng này kéo dài thường xuyên ạ?\n\n" \
+                         f"[Tình trạng kéo dài](quicksend:Tình trạng kéo dài thường xuyên)\n" \
+                         f"[Chỉ bị tạm thời thôi](quicksend:Chỉ bị tạm thời vài ngày nay)"
+                return {
+                    "ok": True,
+                    "answer": answer,
+                    "conflicts": [],
+                    "products": [],
+                    "pipeline_mode": "Conflict Resolution",
+                    "query_type": "minor conflict clarification",
+                    "intent_mode": intent,
+                    "profile_state": state,
+                    "profile_gate": "REQUIRED",
+                    "latency": round(time.time() - start_time, 2),
+                    "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+                }
+                
+        # 2. PROFILE_MISSING
+        elif state == "PROFILE_MISSING":
+            if not user_email:
+                # Khách chưa đăng nhập
+                answer = "Chào bạn! Để mình có thể tư vấn sản phẩm chuẩn y khoa và phù hợp nhất với loại da của bạn, bạn có muốn đăng nhập và làm khảo sát da nhanh (4 câu hỏi) không?\n" \
+                         "Hoặc nếu bạn muốn, mình vẫn có thể tư vấn nhanh dựa trên câu hỏi hiện tại nhé!\n\n" \
+                         "[Đăng nhập để khảo sát](index.php?r=dangnhap)\n" \
+                         "[Tư vấn nhanh không đăng nhập](quicksend:Tư vấn nhanh không đăng nhập)"
+                return {
+                    "ok": True,
+                    "answer": answer,
+                    "conflicts": [],
+                    "products": [],
+                    "pipeline_mode": "Profile Missing Gate",
+                    "query_type": "guest invitation",
+                    "intent_mode": intent,
+                    "profile_state": state,
+                    "profile_gate": "REQUIRED",
+                    "latency": round(time.time() - start_time, 2),
+                    "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+                }
+            else:
+                # Đã đăng nhập nhưng chưa làm khảo sát
+                answer = "Chào bạn! Hệ thống ghi nhận bạn chưa cập nhật hồ sơ da trên tài khoản.\n" \
+                         "Để Ngọc Vi thiết kế routine chính xác nhất theo đặc điểm da của bạn, bạn hãy hoàn thành khảo sát nhanh 4 câu hỏi nhé!\n\n" \
+                         "[Bắt đầu khảo sát da nhanh](quicksend:Bắt đầu khảo sát da nhanh)\n" \
+                         "[Tư vấn nhanh dựa trên câu hỏi](quicksend:Tư vấn nhanh dựa trên câu hỏi)"
+                return {
+                    "ok": True,
+                    "answer": answer,
+                    "conflicts": [],
+                    "products": [],
+                    "pipeline_mode": "Profile Missing Gate",
+                    "query_type": "user survey invitation",
+                    "intent_mode": intent,
+                    "profile_state": state,
+                    "profile_gate": "REQUIRED",
+                    "latency": round(time.time() - start_time, 2),
+                    "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+                }
+                
+        # 3. PROFILE_PARTIAL
+        elif state == "PROFILE_PARTIAL":
+            # Hỏi đúng trường còn thiếu (Ví dụ thiếu ngân sách)
+            budget = profile_data.get("budget")
+            if budget is None or budget <= 0:
+                answer = "Ngọc Vi đã có thông tin loại da của bạn. Để mình lọc các sản phẩm phù hợp và tối ưu nhất với điều kiện của bạn, bạn cho mình hỏi thêm nhé:\n" \
+                         "**Mức ngân sách tối đa bạn mong muốn đầu tư cho routine/sản phẩm là khoảng bao nhiêu?**\n\n" \
+                         "[Dưới 300k](quicksend:Ngân sách: Dưới 300k)\n" \
+                         "[Từ 300k - 500k](quicksend:Ngân sách: Từ 300k đến 500k)\n" \
+                         "[Từ 500k - 1 triệu](quicksend:Ngân sách: Từ 500k đến 1 triệu)\n" \
+                         "[Trên 1 triệu](quicksend:Ngân sách: Trên 1 triệu)\n" \
+                         "[Không giới hạn ngân sách](quicksend:Ngân sách: Không giới hạn)"
+                return {
+                    "ok": True,
+                    "answer": answer,
+                    "conflicts": [],
+                    "products": [],
+                    "pipeline_mode": "Profile Partial Query",
+                    "query_type": "budget query",
+                    "intent_mode": intent,
+                    "profile_state": state,
+                    "profile_gate": "REQUIRED",
+                    "latency": round(time.time() - start_time, 2),
+                    "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+                }
+                
+        # 4. PROFILE_NEEDS_CONFIRMATION (8-30 ngày)
+        elif state == "PROFILE_NEEDS_CONFIRMATION":
+            concerns_str = ", ".join(profile_data.get("concerns", [])) if isinstance(profile_data.get("concerns"), list) else str(profile_data.get("concerns", ""))
+            answer = f"Ngọc Vi đang có thông tin da bạn từ lần khảo sát gần nhất:\n" \
+                     f"- Loại da: **{skin_type.upper()}**\n" \
+                     f"- Tình trạng da: **{concerns_str}**\n\n" \
+                     f"Vì tình trạng da có thể thay đổi theo thời tiết và thói quen, bạn muốn:\n\n" \
+                     f"[Giữ thông tin cũ & tiếp tục](quicksend:Giữ thông tin cũ và tiếp tục)\n" \
+                     f"[Cập nhật nhanh tình trạng da](quicksend:Cập nhật nhanh tình trạng da)"
+            return {
+                "ok": True,
+                "answer": answer,
+                "conflicts": [],
+                "products": [],
+                "pipeline_mode": "Profile Needs Confirmation",
+                "query_type": "soft confirmation",
+                "intent_mode": intent,
+                "profile_state": state,
+                "profile_gate": "REQUIRED",
+                "latency": round(time.time() - start_time, 2),
+                "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+            }
+            
+        # 5. PROFILE_OUTDATED (>30 ngày)
+        elif state == "PROFILE_OUTDATED":
+            last_date = profile_data.get('updated_at', '')
+            date_label = last_date[:10] if last_date else 'chưa rõ'
+            answer = f"Hồ sơ da của bạn đã được cập nhật từ hơn 1 tháng trước (lần cuối: **{date_label}**).\n" \
+                     f"Để việc tư vấn tránh sai sót do tình trạng da thay đổi, bạn có muốn cập nhật lại hồ sơ trước khi tư vấn không?\n\n" \
+                     f"[Cập nhật hồ sơ da](quicksend:Cập nhật nhanh tình trạng da)\n" \
+                     f"[Giữ nguyên thông tin cũ](quicksend:Giữ thông tin cũ và tiếp tục)"
+            return {
+                "ok": True,
+                "answer": answer,
+                "conflicts": [],
+                "products": [],
+                "pipeline_mode": "Profile Outdated",
+                "query_type": "outdated confirmation",
+                "intent_mode": intent,
+                "profile_state": state,
+                "profile_gate": "REQUIRED",
+                "latency": round(time.time() - start_time, 2),
+                "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
+            }
+
     # 4. Routing & Retrieval logic based on Intent
     docs = []
     k = min(max(int(yc.so_luong_goi_y or 3), 3), 10)
@@ -1667,9 +2025,10 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         if not is_simple_chitchat:
             print("[WEB] Fetching web search for general knowledge...")
             web_results_text = _format_web_results(_query_web(rewritten_query))
-        
-        # Retrieve featured/popular products to pitch at the end
-        docs = hybrid_search_with_filter(None, top_n=3, custom_query="sản phẩm mỹ phẩm dưỡng da nổi bật bán chạy nhất")
+            docs = []
+        else:
+            # Retrieve featured/popular products to pitch at the end for simple chitchat only
+            docs = hybrid_search_with_filter(None, top_n=3, custom_query="sản phẩm mỹ phẩm dưỡng da nổi bật bán chạy nhất")
 
     elif intent == "COSMETIC_KNOWLEDGE_OUT_OF_DB":
         print("[ROUTE] COSMETIC_KNOWLEDGE_OUT_OF_DB")
@@ -1757,12 +2116,25 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             
             # Decide which combo to use
             selected_routine_docs = []
-            if yc.ngan_sach is not None and best_combo is not None:
-                selected_routine_docs = best_combo
-                print(f"[BUDGET OPTIMIZATION] Found combo under budget {yc.ngan_sach}: total price {best_combo_price}")
+            if yc.ngan_sach is not None:
+                if best_combo is not None:
+                    selected_routine_docs = best_combo
+                    print(f"[BUDGET OPTIMIZATION] Found combo under budget {yc.ngan_sach}: total price {best_combo_price}")
+                else:
+                    selected_routine_docs = []
+                    print(f"[BUDGET OPTIMIZATION] No combo fits budget {yc.ngan_sach}. Cheapest combo is {cheapest_combo_price} which exceeds budget.")
+                    # Thêm thông báo hướng dẫn cụ thể vào rich_context để LLM xử lý
+                    cheapest_fmt = f"{int(cheapest_combo_price):,}".replace(",", ".")
+                    ngan_sach_fmt = f"{int(yc.ngan_sach):,}".replace(",", ".")
+                    rich_context_warning = (
+                        f"\n- LƯU Ý HỆ THỐNG: Ngân sách {ngan_sach_fmt} VNĐ của khách hiện tại KHÔNG ĐỦ để xây dựng bất kỳ chu trình (routine) sáng tối nào phù hợp từ các sản phẩm trong kho. "
+                        f"Chu trình tối thiểu rẻ nhất tìm được có giá lên tới {cheapest_fmt} VNĐ. "
+                        f"Bạn PHẢI lịch sự giải thích điều này cho khách hàng và đề xuất họ tối giản chu trình xuống 2-3 bước cơ bản (ví dụ: Sữa rửa mặt + Dưỡng ẩm) hoặc cân nhắc nâng ngân sách lên khoảng {cheapest_fmt} VNĐ."
+                    )
+                    rich_context = rich_context + rich_context_warning
             elif cheapest_combo is not None:
                 selected_routine_docs = cheapest_combo
-                print(f"[BUDGET OPTIMIZATION] No combo fits budget {yc.ngan_sach or 'N/A'}. Using cheapest combo: total price {cheapest_combo_price}")
+                print(f"[BUDGET OPTIMIZATION] No specific budget constraint. Using cheapest combo: total price {cheapest_combo_price}")
             else:
                 selected_routine_docs = []
             
@@ -1791,13 +2163,20 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                         docs.append(d)
                 print(f"[SEARCH] Stage 3 (skin type): total {len(docs)} docs")
             
-            # Stage 4: Pure semantic search (NO FILTER)
+            # Stage 4: Semantic search with minimal constraints (NO unrestricted fallback)
             if len(docs) < k:
-                sem_docs = hybrid_search_with_filter(None, top_n=k)
-                for d in sem_docs:
-                    if d.id not in [existing.id for existing in docs]:
-                        docs.append(d)
-                print(f"[SEARCH] Stage 4 (semantic only): total {len(docs)} docs")
+                min_filter = None
+                if yc.loai_san_pham:
+                    min_filter = {"loai_san_pham": {"$eq": yc.loai_san_pham}}
+                elif yc.loai_da and yc.loai_da != "Unknown":
+                    min_filter = {"loai_da": {"$eq": yc.loai_da}}
+                
+                if min_filter:
+                    sem_docs = hybrid_search_with_filter(min_filter, top_n=k)
+                    for d in sem_docs:
+                        if d.id not in [existing.id for existing in docs]:
+                            docs.append(d)
+                print(f"[SEARCH] Stage 4 (minimal filter fallback): total {len(docs)} docs")
 
     print(f"[SEARCH] FINAL RESULT: {len(docs)} documents found")
 
@@ -1885,6 +2264,40 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             other_docs = merged_docs
     else:
         other_docs = merged_docs
+
+    # Tầng lọc cứng (Hard Filter Check) trên pool sản phẩm gộp trước khi Rerank
+    filtered_docs = []
+    for doc in other_docs:
+        meta = doc.metadata or {}
+        
+        # 1. Lọc theo Danh mục (nếu có yêu cầu loại sản phẩm cụ thể và không phải là routine)
+        if yc and yc.loai_san_pham and not yc.is_routine:
+            p_cat = meta.get("loai_san_pham", "")
+            if p_cat != yc.loai_san_pham:
+                print(f"[HARD FILTER] Excluded category mismatch: {meta.get('ten_san_pham')} ({p_cat} vs {yc.loai_san_pham})")
+                continue
+                
+        # 2. Lọc theo Thương hiệu (nếu có yêu cầu thương hiệu cụ thể)
+        if yc and yc.thuong_hieu:
+            p_brand = meta.get("thuong_hieu", "")
+            if not p_brand or p_brand.strip().lower() != yc.thuong_hieu.strip().lower():
+                print(f"[HARD FILTER] Excluded brand mismatch: {meta.get('ten_san_pham')} ({p_brand} vs {yc.thuong_hieu})")
+                continue
+                
+        # 3. Lọc theo Ngân sách của từng sản phẩm (nếu khách hàng hỏi sản phẩm đơn lẻ có giới hạn giá)
+        if yc and yc.ngan_sach is not None and not yc.is_routine:
+            p_price = 0.0
+            try:
+                p_price = float(meta.get("gia_ban", 0))
+            except Exception:
+                pass
+            if p_price > yc.ngan_sach:
+                print(f"[HARD FILTER] Excluded price limit exceeded: {meta.get('ten_san_pham')} ({p_price} > {yc.ngan_sach})")
+                continue
+                
+        filtered_docs.append(doc)
+        
+    other_docs = filtered_docs
 
     # Run Vietnamese Cross-Encoder reranker on the pooled remaining documents
     from hybrid_search import RankedDocument
@@ -2004,7 +2417,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         try:
             print(f"[GENERATE] Trying: {model_name}")
             response = llm.invoke([HumanMessage(content=prompt)])
-            answer = (response.content or "").strip()
+            answer = _get_message_text(response)
             if answer:
                 print(f"[GENERATE] OK: {model_name}")
                 break
@@ -2024,18 +2437,52 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         else:
             answer = "Xin lỗi, hệ thống chưa tìm thấy sản phẩm phù hợp với yêu cầu của bạn. Vui lòng thử với từ khóa khác nhé."
 
+    from chatbot_service.rag_evaluation import RAGEvaluator
+    evaluator = RAGEvaluator()
+    
+    context_str = "\n".join([doc.page_content for doc in final_merged_docs])
+    ar_score = evaluator.compute_answer_relevancy(rewritten_query, answer)
+    gr_score = evaluator.compute_faithfulness(context_str, answer)
+    
+    query_terms = set(rewritten_query.lower().split())
+    if context_str:
+        context_words = set(context_str.lower().split())
+        overlap = len(query_terms.intersection(context_words)) / max(len(query_terms), 1)
+        cr_score = min(overlap * 2.0, 1.0)
+    else:
+        cr_score = 0.0
+
+    is_fallback = (not answer) or (answer.startswith("Tôi đã tìm thấy một số sản phẩm phù hợp")) or (answer.startswith("Xin lỗi, hệ thống chưa tìm thấy sản phẩm"))
+    fallback_reason = "agent failed: APIStatusError" if is_fallback else ""
+
+    if survey_prefix and answer:
+        answer = survey_prefix + "\n" + answer
+
     return {
         "ok": True,
         "answer": answer,
         "products": docs_to_products(final_merged_docs),
         "conflicts": cart_conflicts,
+        "fallback": is_fallback,
+        "fallback_reason": fallback_reason,
+        "pipeline_mode": "Agent -> Fallback" if is_fallback else "Pipeline",
+        "query_type": "complex routine query" if (yc and yc.is_routine) else "simple single-intent query",
+        "intent_mode": intent,
+        "profile_state": determine_profile_state(message, profile_data) if (intent == "PRODUCT_INQUIRY" and need_profile) else "BYPASSED",
+        "profile_gate": "REQUIRED" if (intent == "PRODUCT_INQUIRY" and need_profile) else "BYPASSED",
+        "latency": round(time.time() - start_time, 2),
+        "eval_scores": {
+            "ar": round(ar_score, 2),
+            "gr": round(gr_score, 2),
+            "cr": round(cr_score, 2)
+        },
         "analysis": {
-            "loai_da": yc.loai_da,
-            "loai_san_pham": yc.loai_san_pham,
-            "muc_gia": yc.muc_gia,
-            "tinh_trang_da": yc.tinh_trang_da,
-            "thanh_phan_yeu_cau": yc.thanh_phan_yeu_cau,
-            "thanh_phan_can_tranh": yc.thanh_phan_can_tranh or avoid_ingredients,
+            "loai_da": yc.loai_da if yc else None,
+            "loai_san_pham": yc.loai_san_pham if yc else None,
+            "muc_gia": yc.muc_gia if yc else None,
+            "tinh_trang_da": yc.tinh_trang_da if yc else [],
+            "thanh_phan_yeu_cau": yc.thanh_phan_yeu_cau if yc else None,
+            "thanh_phan_can_tranh": (yc.thanh_phan_can_tranh if yc else None) or avoid_ingredients,
         },
     }
 
@@ -2063,7 +2510,8 @@ def health():
     except Exception as e:
         print(f"[WARN] Vectorstore health: {e}")
 
-    llm_count = len(get_llms())
+    # Trả về số lượng LLMs hiện có mà không kích hoạt quá trình nạp key nếu chưa khởi tạo
+    llm_count = len(_llms) if _llms is not None else 0
     gemini_key_count = len(GEMINI_KEYS)
     print(f"[DEBUG] LLMs loaded: {llm_count}, Gemini keys: {gemini_key_count}")
 

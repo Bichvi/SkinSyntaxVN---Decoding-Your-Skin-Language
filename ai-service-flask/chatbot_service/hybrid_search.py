@@ -19,7 +19,10 @@ from langchain_core.documents import Document
 
 try:
     from langchain_community.cross_encoders import HuggingFaceCrossEncoder
-    from langchain.retrievers.document_compressors import CrossEncoderReranker
+    try:
+        from langchain.retrievers.document_compressors import CrossEncoderReranker
+    except ImportError:
+        from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
     CROSS_ENCODER_AVAILABLE = True
 except Exception as _ce_err:
     CROSS_ENCODER_AVAILABLE = False
