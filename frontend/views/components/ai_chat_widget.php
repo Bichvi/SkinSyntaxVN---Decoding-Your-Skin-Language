@@ -1634,7 +1634,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
               textEl.style.opacity = '1';
             }, 200);
           }
-        }, 2200);
+        }, 4000);
 
         var currentProductId = null;
         try {
