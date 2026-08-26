@@ -2081,6 +2081,7 @@ class HomeController {
         $message = trim((string)($data['message'] ?? ''));
         $history = is_array($data['history'] ?? null) ? $data['history'] : [];
         $currentProductId = isset($data['current_product_id']) ? trim((string)$data['current_product_id']) : '';
+        $conversationId = isset($data['conversation_id']) ? trim((string)$data['conversation_id']) : '';
 
         if ($message === '') {
             http_response_code(400);
@@ -2164,6 +2165,8 @@ class HomeController {
 
         $payload = [
             'message' => $this->buildAiAssistantPrompt($message, $history, $profile, $cartItems, $conflicts, $products, $currentProductId),
+            'conversation_id' => $conversationId !== '' ? $conversationId : null,
+            'user_email' => $email !== '' ? $email : null,
         ];
 
         $response = $this->postJsonRequest($endpoint, $payload, $this->getAiChatTimeout());
@@ -2225,6 +2228,10 @@ class HomeController {
             'latency' => $latency,
         ];
 
+        if ($decoded && isset($decoded['conversation_id'])) {
+            $payload['conversation_id'] = $decoded['conversation_id'];
+        }
+
         if ($answer !== 'Tôi đề xuất những sản phẩm này') {
             $this->storeAiResponsePayload($message, $payload, $currentProductId);
         }
@@ -2254,6 +2261,136 @@ class HomeController {
 
     public function aiLiveMetrics(): void {
         $this->jsonResponse(['ok' => true]);
+    }
+
+    private function getAiBaseUrl(): string {
+        $endpoint = $this->getAiChatEndpoint();
+        $parsed = parse_url($endpoint);
+        $scheme = $parsed['scheme'] ?? 'http';
+        $host = $parsed['host'] ?? '127.0.0.1';
+        $port = $parsed['port'] ?? 5001;
+        return "$scheme://$host:$port";
+    }
+
+    private function callFlaskService(string $method, string $path, array $payload = [], ?string $email = null): array {
+        $baseUrl = $this->getAiBaseUrl();
+        $url = $baseUrl . $path;
+        
+        $headers = [
+            'Accept: application/json',
+        ];
+        if ($email !== null) {
+            $headers[] = 'X-User-Email: ' . $email;
+        }
+
+        $body = '';
+        if ($method === 'POST' || $method === 'PUT') {
+            $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $headers[] = 'Content-Type: application/json';
+            $headers[] = 'Content-Length: ' . strlen($body);
+        }
+
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            if ($body !== '') {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            }
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            $responseBody = curl_exec($ch);
+            $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            return [
+                'status' => $status,
+                'body' => (string)$responseBody,
+                'error' => $error,
+            ];
+        }
+
+        return [
+            'status' => 0,
+            'body' => '',
+            'error' => 'cURL not available',
+        ];
+    }
+
+    public function getConversations(): void {
+        header('Content-Type: application/json; charset=utf-8');
+        $user = current_user() ?? [];
+        $email = trim((string)($user['email'] ?? ''));
+        if ($email === '') {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'message' => 'Unauthorized'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return;
+        }
+
+        $response = $this->callFlaskService('GET', '/api/chat/conversations', [], $email);
+        http_response_code($response['status'] >= 200 && $response['status'] < 300 ? $response['status'] : 500);
+        echo $response['body'] !== '' ? $response['body'] : json_encode(['ok' => false, 'message' => $response['error']]);
+    }
+
+    public function getConversationMessages(): void {
+        header('Content-Type: application/json; charset=utf-8');
+        $user = current_user() ?? [];
+        $email = trim((string)($user['email'] ?? ''));
+        if ($email === '') {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'message' => 'Unauthorized'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return;
+        }
+
+        $id = trim((string)($_GET['conversation_id'] ?? ''));
+        if ($id === '') {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Thiếu mã cuộc trò chuyện.'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return;
+        }
+
+        $response = $this->callFlaskService('GET', '/api/chat/conversations/' . rawurlencode($id), [], $email);
+        http_response_code($response['status'] >= 200 && $response['status'] < 300 ? $response['status'] : 500);
+        echo $response['body'] !== '' ? $response['body'] : json_encode(['ok' => false, 'message' => $response['error']]);
+    }
+
+    public function createConversation(): void {
+        header('Content-Type: application/json; charset=utf-8');
+        $user = current_user() ?? [];
+        $email = trim((string)($user['email'] ?? ''));
+        if ($email === '') {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'message' => 'Unauthorized'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return;
+        }
+
+        $response = $this->callFlaskService('POST', '/api/chat/conversations', [], $email);
+        http_response_code($response['status'] >= 200 && $response['status'] < 300 ? $response['status'] : 500);
+        echo $response['body'] !== '' ? $response['body'] : json_encode(['ok' => false, 'message' => $response['error']]);
+    }
+
+    public function deleteConversation(): void {
+        header('Content-Type: application/json; charset=utf-8');
+        $user = current_user() ?? [];
+        $email = trim((string)($user['email'] ?? ''));
+        if ($email === '') {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'message' => 'Unauthorized'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return;
+        }
+
+        $id = trim((string)($_GET['conversation_id'] ?? ''));
+        if ($id === '') {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Thiếu mã cuộc trò chuyện.'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return;
+        }
+
+        $response = $this->callFlaskService('DELETE', '/api/chat/conversations/' . rawurlencode($id), [], $email);
+        http_response_code($response['status'] >= 200 && $response['status'] < 300 ? $response['status'] : 500);
+        echo $response['body'] !== '' ? $response['body'] : json_encode(['ok' => false, 'message' => $response['error']]);
     }
 
     private function postJsonRequest(string $url, array $payload, int $timeout = 20): array {

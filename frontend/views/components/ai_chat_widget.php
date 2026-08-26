@@ -53,7 +53,22 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     </button>
 
     <section class="ai-chat-widget__panel" id="aiChatPanel" data-ai-chat-panel hidden>
-      <header class="ai-chat-widget__panel-head">
+      <?php if (!empty($_SESSION['user'])): ?>
+        <aside class="ai-chat-widget__sidebar" data-ai-chat-sidebar>
+          <div class="ai-chat-widget__sidebar-head">
+            <h5>Cuộc hội thoại</h5>
+            <button type="button" class="ai-chat-widget__new-chat-btn" data-ai-new-chat>
+              <i class="fa-solid fa-plus"></i> Hội thoại mới
+            </button>
+          </div>
+          <div class="ai-chat-widget__history-list" data-ai-history-list>
+            <div class="ai-chat-widget__history-loading">Đang tải lịch sử...</div>
+          </div>
+        </aside>
+      <?php endif; ?>
+
+      <div class="ai-chat-widget__main-content">
+        <header class="ai-chat-widget__panel-head">
         <div class="ai-chat-widget__panel-head-main">
           <div class="ai-chat-widget__panel-avatar" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>
           <div class="ai-chat-widget__panel-info">
@@ -164,6 +179,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         </div>
         
       </form>
+      </div>
     </section>
   </div>
 
@@ -263,6 +279,154 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), width 0.3s ease, max-height 0.3s ease;
     }
 
+    /* Sidebar and main-content wrap */
+    .ai-chat-widget__sidebar {
+      display: none;
+      width: 280px;
+      flex-shrink: 0;
+      background: #0f172a;
+      color: #f1f5f9;
+      border-right: 1px solid #1e293b;
+      flex-direction: column;
+    }
+
+    .ai-chat-widget__sidebar-head {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .ai-chat-widget__sidebar-head h5 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #38bdf8;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .ai-chat-widget__new-chat-btn {
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px dashed #334155;
+      background: rgba(51, 65, 85, 0.3);
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ai-chat-widget__new-chat-btn:hover {
+      background: rgba(51, 65, 85, 0.6);
+      color: #fff;
+      border-color: #475569;
+    }
+
+    .ai-chat-widget__history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ai-chat-widget__history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #cbd5e1;
+      min-width: 0;
+      position: relative;
+    }
+
+    .ai-chat-widget__history-item:hover {
+      background: #1e293b;
+      color: #fff;
+    }
+
+    .ai-chat-widget__history-item.is-active {
+      background: #1e293b;
+      color: #38bdf8;
+      font-weight: 500;
+      border-left: 3px solid #38bdf8;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    .ai-chat-widget__history-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .ai-chat-widget__history-title {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ai-chat-widget__history-preview {
+      font-size: 11px;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .ai-chat-widget__history-delete-btn {
+      background: transparent;
+      border: 0;
+      color: #64748b;
+      padding: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+      transition: all 0.2s ease;
+    }
+
+    .ai-chat-widget__history-item:hover .ai-chat-widget__history-delete-btn {
+      display: block;
+    }
+
+    .ai-chat-widget__history-delete-btn:hover {
+      color: #f43f5e;
+      background: rgba(244, 63, 94, 0.1);
+    }
+
+    .ai-chat-widget__history-loading,
+    .ai-chat-widget__history-empty {
+      text-align: center;
+      padding: 24px 12px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .ai-chat-widget__main-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
     .ai-chat-widget__panel[hidden] {
       display: none !important;
     }
@@ -299,9 +463,13 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       box-shadow: none;
       border: 0;
       display: flex;
-      flex-direction: column;
+      flex-direction: row !important;
       opacity: 1 !important;
       pointer-events: auto !important;
+    }
+
+    .ai-chat-widget.is-expanded .ai-chat-widget__sidebar {
+      display: flex;
     }
 
     .ai-chat-widget.is-expanded .ai-chat-widget__panel-head {
@@ -1216,6 +1384,139 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       var defaultBottom = parseFloat(window.getComputedStyle(widget).bottom || '88') || 88;
       var expandedStorageKey = 'aiChatExpandedV4:' + storageScope;
 
+      var activeConversationId = null;
+      var sidebar = widget.querySelector('[data-ai-chat-sidebar]');
+      var historyList = widget.querySelector('[data-ai-history-list]');
+      var newChatBtn = widget.querySelector('[data-ai-new-chat]');
+      var userLoggedIn = <?= json_encode(!empty($_SESSION['user'])) ?>;
+
+      var loadConversations = function () {
+        if (!userLoggedIn || !historyList) return;
+        historyList.innerHTML = '<div class="ai-chat-widget__history-loading">Đang tải lịch sử...</div>';
+        
+        fetch('index.php?r=ai_chat_get_conversations')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.ok && data.conversations) {
+              renderConversationList(data.conversations);
+            } else {
+              historyList.innerHTML = '<div class="ai-chat-widget__history-empty">Không thể tải lịch sử</div>';
+            }
+          })
+          .catch(function() {
+            historyList.innerHTML = '<div class="ai-chat-widget__history-empty">Không thể tải lịch sử</div>';
+          });
+      };
+
+      var renderConversationList = function (conversations) {
+        if (!historyList) return;
+        if (conversations.length === 0) {
+          historyList.innerHTML = '<div class="ai-chat-widget__history-empty">Chưa có cuộc trò chuyện nào</div>';
+          return;
+        }
+        
+        var html = conversations.map(function (c) {
+          var activeClass = (activeConversationId === c.id) ? ' is-active' : '';
+          var title = escapeHtml(c.title);
+          var preview = escapeHtml(c.last_message_preview || 'Chưa có tin nhắn');
+          
+          return '<div class="ai-chat-widget__history-item' + activeClass + '" data-conv-id="' + c.id + '">'
+            + '<div class="ai-chat-widget__history-info">'
+            + '<span class="ai-chat-widget__history-title">' + title + '</span>'
+            + '<span class="ai-chat-widget__history-preview">' + preview + '</span>'
+            + '</div>'
+            + '<button type="button" class="ai-chat-widget__history-delete-btn" data-delete-conv-id="' + c.id + '" title="Xóa">'
+            + '<i class="fa-solid fa-trash-can"></i>'
+            + '</button>'
+            + '</div>';
+        }).join('');
+        
+        historyList.innerHTML = html;
+        
+        var items = historyList.querySelectorAll('.ai-chat-widget__history-item');
+        items.forEach(function (item) {
+          item.addEventListener('click', function (e) {
+            if (e.target.closest('.ai-chat-widget__history-delete-btn')) return;
+            var convId = this.getAttribute('data-conv-id');
+            selectConversation(convId);
+          });
+        });
+        
+        var deleteBtns = historyList.querySelectorAll('.ai-chat-widget__history-delete-btn');
+        deleteBtns.forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var convId = this.getAttribute('data-delete-conv-id');
+            if (confirm('Bạn có chắc chắn muốn xóa cuộc trò chuyện này?')) {
+              deleteConversation(convId);
+            }
+          });
+        });
+      };
+
+      var selectConversation = function (convId) {
+        activeConversationId = convId;
+        try {
+          window.sessionStorage.setItem('aiChatActiveConversationIdV4:' + storageScope, convId);
+        } catch (e) {}
+        
+        var items = historyList.querySelectorAll('.ai-chat-widget__history-item');
+        items.forEach(function (item) {
+          if (item.getAttribute('data-conv-id') === convId) {
+            item.classList.add('is-active');
+          } else {
+            item.classList.remove('is-active');
+          }
+        });
+        
+        stream.innerHTML = '<div style="text-align:center; padding:20px; color:#757575;">Đang tải cuộc trò chuyện...</div>';
+        if (welcome) welcome.hidden = true;
+        
+        fetch('index.php?r=ai_chat_get_messages&conversation_id=' + encodeURIComponent(convId))
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.ok && data.conversation) {
+              messages = data.conversation.messages.map(function(m) {
+                return {
+                  role: m.role,
+                  content: m.content,
+                  products: m.products,
+                  conflicts: m.conflicts
+                };
+              });
+              renderMessages();
+              scrollToBottom();
+            } else {
+              stream.innerHTML = '<div style="text-align:center; padding:20px; color:#f43f5e;">Lỗi tải cuộc trò chuyện</div>';
+            }
+          })
+          .catch(function() {
+            stream.innerHTML = '<div style="text-align:center; padding:20px; color:#f43f5e;">Lỗi kết nối tải cuộc trò chuyện</div>';
+          });
+      };
+
+      var deleteConversation = function (convId) {
+        fetch('index.php?r=ai_chat_delete_conversation&conversation_id=' + encodeURIComponent(convId), {
+          method: 'POST'
+        })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.ok) {
+              if (activeConversationId === convId) {
+                activeConversationId = null;
+                messages = [];
+                renderMessages();
+              }
+              loadConversations();
+            } else {
+              alert('Không thể xóa cuộc trò chuyện: ' + (data.message || 'Lỗi không xác định'));
+            }
+          })
+          .catch(function() {
+            alert('Lỗi kết nối khi xóa cuộc trò chuyện');
+          });
+      };
+
       var escapeHtml = function (value) {
         return String(value || '')
           .replace(/&/g, '&amp;')
@@ -1576,6 +1877,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
             widget.classList.add('is-expanded');
           }
+          if (userLoggedIn) {
+            loadConversations();
+          }
           if (input) {
             input.focus();
           }
@@ -1654,6 +1958,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           body: JSON.stringify({
             message: content,
             current_product_id: currentProductId,
+            conversation_id: activeConversationId,
             history: messages.filter(function (item) {
               return !item.typing;
             }).map(function (item) {
@@ -1681,6 +1986,10 @@ if ($aiChatEmail !== '' && $pdo !== null) {
               return;
             }
 
+            if (payload.conversation_id && activeConversationId !== payload.conversation_id) {
+              activeConversationId = payload.conversation_id;
+            }
+
             addMessage({
               role: 'assistant',
               content: String(payload.answer || '').trim(),
@@ -1696,6 +2005,10 @@ if ($aiChatEmail !== '' && $pdo !== null) {
               intent_mode: payload.intent_mode,
               latency: payload.latency
             });
+
+            if (userLoggedIn) {
+              loadConversations();
+            }
           })
           .catch(function () {
             messages = messages.filter(function (item) {
@@ -1750,10 +2063,29 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         });
       }
 
+      var startNewChat = function () {
+        activeConversationId = null;
+        try {
+          window.sessionStorage.removeItem('aiChatActiveConversationIdV4:' + storageScope);
+        } catch (e) {}
+        messages = [];
+        renderMessages();
+        injectGreeting();
+        
+        if (historyList) {
+          var items = historyList.querySelectorAll('.ai-chat-widget__history-item');
+          items.forEach(function (item) {
+            item.classList.remove('is-active');
+          });
+        }
+      };
+
+      if (newChatBtn) {
+        newChatBtn.addEventListener('click', startNewChat);
+      }
+
       if (resetButton) {
-        resetButton.addEventListener('click', function () {
-          clearMessages();
-        });
+        resetButton.addEventListener('click', startNewChat);
       }
 
       if (form) {
@@ -2004,15 +2336,21 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       // â”€â”€ End auto-greeting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
       try {
-        var stored = window.sessionStorage.getItem(storageKey);
-        if (stored) {
-          var parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            messages = parsed;
+        if (userLoggedIn) {
+          var savedConvId = window.sessionStorage.getItem('aiChatActiveConversationIdV4:' + storageScope);
+          if (savedConvId && savedConvId !== 'null' && savedConvId !== 'undefined') {
+            activeConversationId = savedConvId;
+            selectConversation(savedConvId);
+          }
+        } else {
+          var stored = window.sessionStorage.getItem(storageKey);
+          if (stored) {
+            var parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              messages = parsed;
+            }
           }
         }
-        // Bỏ qua tự động phóng to khi tải trang mới (để tránh mờ màn hình)
-        // Việc phóng to sẽ chỉ được thực thi khi chatbot được mở.
       } catch (error) {
       }
 
