@@ -232,55 +232,11 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           <div class="syna-badge-glow"></div>
           
           <div class="position-relative d-inline-block p-4 rounded-4" style="background: #132E22; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
-            <!-- SYNA Mascot Vector Placeholder (Cute Cream Cat in Dark Green SkinSyntax Outfit & Mint Accents) -->
-            <svg width="150" height="150" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Background Aura -->
-              <circle cx="100" cy="100" r="85" fill="#2D6A4F" fill-opacity="0.35"/>
-              
-              <!-- Cat Tail -->
-              <path d="M145 135 C165 130 170 110 160 100 C155 95 145 105 148 115" stroke="#FFF7EE" stroke-width="10" stroke-linecap="round"/>
-              
-              <!-- Cat Body (Dark Green Outfit) -->
-              <path d="M60 145 C60 115 80 105 100 105 C120 105 140 115 140 145 L140 160 C140 165 135 170 130 170 L70 170 C65 170 60 165 60 160 Z" fill="#183B2B"/>
-              <!-- Collar/Mint Trim -->
-              <path d="M80 106 Q100 120 120 106 Q100 112 80 106 Z" fill="#84A98C"/>
-              <circle cx="100" cy="116" r="4" fill="#C8DACF"/>
-              
-              <!-- Cat Head (Cream White) -->
-              <ellipse cx="100" cy="72" rx="42" ry="36" fill="#FFF7EE"/>
-              
-              <!-- Left Ear -->
-              <path d="M64 54 L52 24 L78 44 Z" fill="#FFF7EE"/>
-              <path d="M66 50 L57 32 L75 44 Z" fill="#F9D7DA"/>
-              
-              <!-- Right Ear -->
-              <path d="M136 54 L148 24 L122 44 Z" fill="#FFF7EE"/>
-              <path d="M134 50 L143 32 L125 44 Z" fill="#F9D7DA"/>
-              
-              <!-- Eyes (Cute Dark Emerald Green) -->
-              <ellipse cx="84" cy="70" rx="6" ry="8" fill="#183B2B"/>
-              <circle cx="86" cy="68" r="2.5" fill="#FFFFFF"/>
-              
-              <ellipse cx="116" cy="70" rx="6" ry="8" fill="#183B2B"/>
-              <circle cx="118" cy="68" r="2.5" fill="#FFFFFF"/>
-              
-              <!-- Pink Nose & Cute Mouth -->
-              <path d="M97 78 L103 78 L100 82 Z" fill="#F497A9"/>
-              <path d="M95 84 Q100 88 105 84" stroke="#7A6858" stroke-width="2" stroke-linecap="round"/>
-              
-              <!-- Soft Pink Cheeks -->
-              <ellipse cx="76" cy="78" rx="5" ry="3" fill="#FFC0CB" opacity="0.6"/>
-              <ellipse cx="124" cy="78" rx="5" ry="3" fill="#FFC0CB" opacity="0.6"/>
-              
-              <!-- Skincare Bottle Asset in Paws -->
-              <rect x="94" y="125" width="12" height="22" rx="3" fill="#84A98C"/>
-              <rect x="97" y="121" width="6" height="4" rx="1" fill="#183B2B"/>
-              <path d="M72 135 Q90 138 94 135" stroke="#FFF7EE" stroke-width="7" stroke-linecap="round"/>
-              <path d="M128 135 Q110 138 106 135" stroke="#FFF7EE" stroke-width="7" stroke-linecap="round"/>
-            </svg>
+            <!-- Official SYNA Mascot Asset (Cream Cat with Dark Green Hoodie, Blue Headset 'S' & Centella Leaf) -->
+            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png" alt="SYNA Mascot - AI Skincare Advisor" style="width: 170px; height: 170px; object-fit: cover; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.25);">
 
-            <div class="mt-2 text-white fw-bold" style="font-size: 0.95rem;">SYNA AI Advisor</div>
-            <div class="small" style="color: #C8DACF; font-size: 0.76rem;">Bác sĩ da liễu AI & Chuyên gia Routine</div>
+            <div class="mt-3 text-white fw-bold" style="font-size: 1.05rem;">SYNA | AI SKINCARE ADVISOR</div>
+            <div class="small" style="color: #C8DACF; font-size: 0.8rem;">Bạn đồng hành Chăm sóc da & Chuyên gia Routine</div>
           </div>
         </div>
       </div>

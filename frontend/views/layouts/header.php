@@ -370,7 +370,7 @@ $socialLinks = [
 
                 <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
                   <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
-                  <span><i class="fas fa-heart me-1"></i> Trợ Lý SkinSyntax</span>
+                  <span><i class="fas fa-sparkles me-1"></i> SYNA | AI Skincare Advisor</span>
                 </div>
               </div>
 
@@ -399,7 +399,7 @@ $socialLinks = [
 
                 <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
                   <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
-                  <span><i class="fas fa-heart me-1"></i> Trợ Lý SkinSyntax</span>
+                  <span><i class="fas fa-sparkles me-1"></i> SYNA | AI Skincare Advisor</span>
                 </div>
               </div>
 

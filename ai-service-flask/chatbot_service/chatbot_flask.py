@@ -14,6 +14,13 @@ from datetime import datetime
 from bson.objectid import ObjectId
 from pathlib import Path
 
+_SERVICE_DIR = str(Path(__file__).resolve().parent)
+if _SERVICE_DIR not in sys.path:
+    sys.path.insert(0, _SERVICE_DIR)
+_APP_DIR = str(Path(__file__).resolve().parent.parent)
+if _APP_DIR not in sys.path:
+    sys.path.insert(0, _APP_DIR)
+
 os.environ["PYTHONUTF8"] = "1"
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -37,12 +44,6 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from hybrid_search import HybridSearchPipeline, BM25Search
 
 # Custom Profile State & Survey Flow services
-import sys
-from pathlib import Path
-_SERVICE_DIR = str(Path(__file__).resolve().parent)
-if _SERVICE_DIR not in sys.path:
-    sys.path.append(_SERVICE_DIR)
-
 from profile_state import determine_profile_state, detect_profile_conflict, calculate_days_since_update
 from survey_service import is_in_survey_flow, handle_survey_flow, get_last_ai_message
 from profile_service import save_user_profile

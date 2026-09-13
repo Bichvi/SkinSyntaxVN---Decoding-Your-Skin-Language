@@ -9,7 +9,7 @@ require_once __DIR__ . '/layouts/header.php';
       <div class="col-lg-8">
         <div class="d-flex align-items-center gap-2 mb-2">
           <span class="badge bg-danger rounded-pill px-3 py-1.5 fw-bold" style="font-size: 0.8rem; animation: pulseGlowBtn 2s infinite;"><i class="fa-solid fa-circle me-1"></i>LIVE STREAM</span>
-          <span class="badge bg-white text-success rounded-pill px-3 py-1.5 fw-bold" style="font-size: 0.8rem;"><i class="fa-solid fa-brain me-1"></i>TRỢ LÝ TƯ VẤN AI 24/7</span>
+          <span class="badge bg-white text-success rounded-pill px-3 py-1.5 fw-bold" style="font-size: 0.8rem;"><i class="fa-solid fa-brain me-1"></i>SYNA AI CO-HOST 24/7</span>
           <span class="badge bg-dark text-light rounded-pill px-3 py-1.5 fw-bold" style="font-size: 0.8rem;"><i class="fa-solid fa-shield-heart me-1"></i>HÀNG CHÍNH HÃNG 100%</span>
         </div>
         <h1 class="fw-extrabold display-6 mb-2" style="font-weight: 800; letter-spacing: -0.02em;">SkinSyntax Live Commerce & Tư Vấn AI</h1>
@@ -721,7 +721,7 @@ function filterLiveSessions(status, btn) {
 
           <div class="form-check form-switch mb-3">
             <input class="form-check-input" type="checkbox" name="bat_ai_cohost" id="aiCoHostSwitch" value="1" checked>
-            <label class="form-check-label fw-bold small" for="aiCoHostSwitch">Bật Trợ Lý Tư Vấn Tự Động (Tự động giải đáp thắc mắc &amp; Chốt đơn)</label>
+            <label class="form-check-label fw-bold small" for="aiCoHostSwitch">Bật SYNA AI Co-Host (Tự động giải đáp thắc mắc &amp; Chốt đơn)</label>
           </div>
 
           <div class="d-flex align-items-center justify-content-end gap-2 mt-4">

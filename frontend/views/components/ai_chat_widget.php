@@ -42,13 +42,15 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 ?>
 <?php if ($pdo !== null): ?>
   <div class="ai-chat-widget" data-ai-chat-widget>
-    <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với AI">
+    <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với Syna (AI Advisor)">
       <span class="ai-chat-widget__trigger-icon" aria-hidden="true">
-        <span class="ai-chat-widget__trigger-avatar"><i class="fa-solid fa-robot"></i></span>
+        <span class="ai-chat-widget__trigger-avatar">
+          <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png" alt="SYNA Mascot" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+        </span>
       </span>
       <span class="ai-chat-widget__trigger-text">
-        <strong>Chat với AI</strong>
-        <small>Gợi ý skincare</small>
+        <strong>Chat với Syna</strong>
+        <small>SYNA | AI Skincare Advisor</small>
       </span>
     </button>
 
@@ -70,9 +72,11 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       <div class="ai-chat-widget__main-content">
         <header class="ai-chat-widget__panel-head">
         <div class="ai-chat-widget__panel-head-main">
-          <div class="ai-chat-widget__panel-avatar" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>
+          <div class="ai-chat-widget__panel-avatar" aria-hidden="true">
+            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png" alt="SYNA Mascot" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+          </div>
           <div class="ai-chat-widget__panel-info">
-            <div class="ai-chat-widget__panel-title">Trợ Lý Tư Vấn SkinSyntax</div>
+            <div class="ai-chat-widget__panel-title">SYNA | AI SKINCARE ADVISOR</div>
             <div class="ai-chat-widget__status-compact" data-ai-chat-status>
                <span class="ai-chat-widget__status-dot"></span> Đã kết nối
             </div>
@@ -160,21 +164,21 @@ if ($aiChatEmail !== '' && $pdo !== null) {
            data-ai-skin-profile="<?= $aiChatSkinProfile ? htmlspecialchars(json_encode($aiChatSkinProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8') : '' ?>"
            data-ai-greeting-key="aiChatGreeting:<?= $aiChatStorageScope ?>">
         <div class="ai-chat-widget__welcome" data-ai-chat-welcome>
-          <div class="ai-chat-widget__welcome-badge">Trợ Lý AI</div>
+          <div class="ai-chat-widget__welcome-badge">SYNA AI Advisor</div>
 <?php if ($aiChatSkinProfile): ?>
-          <h4>Xin chào! Mình đã có hồ sơ da của bạn</h4>
+          <h4>Syna chào bạn nè! Mình đã có hồ sơ da của bạn</h4>
           <p>Loại da: <strong><?= htmlspecialchars($aiChatSkinProfile['loai_da'], ENT_QUOTES, 'UTF-8') ?></strong><?php if (!empty($aiChatSkinProfile['thanh_phan_tranh'])): ?> · Tránh: <strong><?= htmlspecialchars($aiChatSkinProfile['thanh_phan_tranh'], ENT_QUOTES, 'UTF-8') ?></strong><?php endif; ?></p>
-          <p style="margin-top:4px">Chọn loại sản phẩm bên dưới để mình gợi ý ngay, hoặc hỏi bất kỳ điều gì về skincare nhé!</p>
+          <p style="margin-top:4px">Chọn loại sản phẩm bên dưới để Syna gợi ý ngay, hoặc hỏi Syna bất kỳ điều gì về skincare nhé!</p>
 <?php else: ?>
-          <h4>Tư vấn skincare dựa trên các sản phẩm của SkinSyntax</h4>
-          <p>Bạn có thể hỏi về thành phần, sản phẩm phù hợp, routine treatment hoặc yêu cầu quét giỏ hàng để phát hiện các cặp hoạt chất cần tránh. Khi có dữ liệu, phần gợi ý sẽ lấy kèm hình ảnh sản phẩm.</p>
+          <h4>SYNA | AI SKINCARE ADVISOR</h4>
+          <p>Để Syna xem thử nhé! Bạn có thể hỏi Syna về thành phần, sản phẩm phù hợp, routine treatment hoặc nhờ Syna phân tích giỏ hàng để phát hiện các cặp hoạt chất cần tránh. Syna luôn sẵn sàng đồng hành cùng bạn!</p>
 <?php endif; ?>
         </div>
       </div>
 
       <form class="ai-chat-widget__form" data-ai-chat-form>
         <div class="ai-chat-widget__composer">
-          <textarea class="form-control ai-chat-widget__textarea" rows="2" data-ai-chat-input placeholder="Hỏi AI về thành phần, sản phẩm, routine hoặc phân tích giỏ hàng..." required></textarea>
+          <textarea class="form-control ai-chat-widget__textarea" rows="2" data-ai-chat-input placeholder="Hỏi Syna về thành phần, sản phẩm, routine hoặc phân tích giỏ hàng..." required></textarea>
           <button class="btn ai-chat-widget__submit" type="submit" data-ai-chat-submit>Gửi</button>
         </div>
         
@@ -1390,14 +1394,14 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       var quickPrompts = widget.querySelectorAll('[data-ai-chat-prompt]');
 
       var thinkingMessages = [
-        "Đang xem xét thông tin bạn cung cấp",
-        "Đang tìm thông tin liên quan",
-        "Đang đối chiếu thông tin sản phẩm",
-        "Đang kiểm tra thành phần",
-        "Đang xem xét công dụng sản phẩm",
-        "Đang chọn lọc thông tin phù hợp",
-        "Đang tổng hợp thông tin",
-        "Đang hoàn thiện tư vấn cho bạn"
+        "Syna đang xem xét thông tin bạn cung cấp...",
+        "Syna đang tìm sản phẩm phù hợp với làn da của bạn...",
+        "Syna đang đối chiếu thông tin sản phẩm...",
+        "Syna đang kiểm tra thành phần...",
+        "Syna đang xem xét công dụng sản phẩm...",
+        "Syna đang chọn lọc thông tin phù hợp...",
+        "Syna đang tổng hợp tư vấn...",
+        "Syna đang hoàn thiện gợi ý cho bạn nè..."
       ];
       var loadingInterval = null;
       var currentLoadingTextIndex = 0;
@@ -1808,15 +1812,16 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           }
 
           var formattedContent = isUser ? escapeHtml(message.content) : formatMarkdown(message.content);
+          var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png') ?>;
           var avatar = isUser
             ? ''
-            : '<div class="ai-chat-widget__bubble-avatar" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>';
+            : '<div class="ai-chat-widget__bubble-avatar" aria-hidden="true" style="overflow:hidden;border-radius:10px;"><img src="' + mascotImgUrl + '" alt="SYNA Mascot" style="width:100%;height:100%;object-fit:cover;"></div>';
 
           return '<div class="ai-chat-widget__bubble-row ' + (isUser ? 'ai-chat-widget__bubble-row--user' : 'ai-chat-widget__bubble-row--assistant') + '">' 
             + '<div class="ai-chat-widget__bubble-wrap">'
             + avatar
             + '<div class="ai-chat-widget__bubble ' + (isUser ? 'ai-chat-widget__bubble--user' : 'ai-chat-widget__bubble--assistant') + '">' 
-            + '<div class="ai-chat-widget__bubble-author">' + (isUser ? 'Bạn' : 'SkinSyntax AI') + '</div>'
+            + '<div class="ai-chat-widget__bubble-author">' + (isUser ? 'Bạn' : 'SYNA | AI Skincare Advisor') + '</div>'
             + contentPrefix
             + '<div class="ai-chat-widget__bubble-text">' + formattedContent + '</div>'
             + contentSuffix
@@ -2170,7 +2175,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         profileRestrictedBtn.addEventListener('click', function () {
           addMessage({
             role: 'assistant',
-            content: "Chào bạn! Bạn đã đăng nhập rồi nhưng để mình có thể đưa ra gợi ý sản phẩm phù hợp nhất, bạn hãy dành 1 phút để hoàn thành [khảo sát da tại đây](<?= BASE_URL ?>/index.php?r=khaosat) nhé. Sau khi có hồ sơ da, mình sẽ tư vấn sát nhất nhe!"
+            content: "Syna chào bạn nè! Bạn đã đăng nhập rồi nhưng để Syna có thể đưa ra gợi ý sản phẩm phù hợp nhất, bạn hãy dành 1 phút để [hoàn thành khảo sát da tại đây](<?= BASE_URL ?>/index.php?r=khaosat) nhé. Sau khi có hồ sơ da, Syna sẽ tư vấn sát nhất nhe!"
           });
         });
       }
@@ -2310,7 +2315,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         syncLayout();
       });
 
-      // â”€â”€ Auto-greeting (one-time per session) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── Auto-greeting (one-time per session) ─────────────────────────────
       var greetingKey = stream ? (stream.getAttribute('data-ai-greeting-key') || '') : '';
 
       var buildGreetingMessage = function () {
@@ -2320,13 +2325,13 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 
         if (!profile || !profile.loai_da) {
           // Khách chưa có hồ sơ da
-          return 'SkinSyntax AI chào bạn! ðŸ‘‹\n\n'
-            + 'Mình là **Ngọc Vi** — tư vấn viên AI của SkinSyntaxVN. '
-            + 'Bạn có thể hỏi mình về:\n'
+          return 'Syna chào bạn nè! 👋\n\n'
+            + 'Mình là **SYNA** — mascot và là AI Skincare Advisor của SkinSyntaxVN. '
+            + 'Bạn có thể hỏi Syna về:\n'
             + '- Thành phần mỹ phẩm & cách phối hợp an toàn\n'
             + '- Gợi ý sản phẩm phù hợp từng loại da\n'
             + '- Phân tích giỏ hàng & phát hiện xung đột hoạt chất\n\n'
-            + 'Để mình tư vấn sát hơn, bạn có thể [hoàn thành khảo sát da](<?= BASE_URL ?>/index.php?r=khaosat) nhé!';
+            + 'Để Syna tư vấn sát hơn, bạn có thể [hoàn thành khảo sát da tại đây](<?= BASE_URL ?>/index.php?r=khaosat) nhé!';
         }
 
         var loaiDa = profile.loai_da || '';

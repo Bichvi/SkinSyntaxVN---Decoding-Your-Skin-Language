@@ -182,7 +182,10 @@ def _run_pipeline(question: str) -> tuple[dict, float]:
     Call the actual pipeline and measure latency.
     Returns: (result_dict, latency_ms)
     """
-    from chatbot_flask import xu_ly_cau_hoi
+    try:
+        from chatbot_service.chatbot_flask import xu_ly_cau_hoi
+    except ModuleNotFoundError:
+        from chatbot_flask import xu_ly_cau_hoi
     t0 = time.perf_counter()
     result = xu_ly_cau_hoi(question, msg_data=None)
     latency = (time.perf_counter() - t0) * 1000
@@ -500,7 +503,7 @@ def _patch_trulens_instrument() -> None:
     The dashboard still starts fine; this just suppresses the noisy traceback.
     """
     try:
-        import trulens.core.otel.instrument as _instr
+        import trulens.core.otel.instrument as _instr  # type: ignore
 
         _orig_call = _instr.TruWrapper.__call__
 
