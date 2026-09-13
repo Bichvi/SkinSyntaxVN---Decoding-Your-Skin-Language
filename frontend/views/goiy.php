@@ -362,11 +362,11 @@ $renderCard = static function (array $product, string $badgeLabel = '', string $
 
             <!-- Ô Hỏi AI tư vấn theo nhu cầu của bạn nằm ngay trong khung này -->
             <div class="p-3 rounded-4 mt-2" style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.25);">
-              <label class="form-label fw-bold mb-1.5 text-white" style="font-size: 0.92rem;"><i class="fa-solid fa-comments me-2 text-warning"></i> Nhu cầu của bạn là gì?</label>
+              <label class="form-label fw-bold mb-1.5 text-white" style="font-size: 0.92rem;"><i class="fa-solid fa-comments me-2 text-warning"></i> Bạn muốn Syna tư vấn nhu cầu gì hôm nay?</label>
               <form id="aiConsultForm" class="d-flex gap-2">
-                <input type="text" id="aiConsultInput" class="form-control rounded-pill px-4 border-0" placeholder="Nhập ở đây" required style="height: 48px; background: rgba(255, 255, 255, 0.95); font-weight: 600; color: #1A2F1A;">
+                <input type="text" id="aiConsultInput" class="form-control rounded-pill px-4 border-0" placeholder="Ví dụ: Tìm serum mờ thâm cho da dầu mụn..." required style="height: 48px; background: rgba(255, 255, 255, 0.95); font-weight: 600; color: #1A2F1A;">
                 <button type="submit" id="aiConsultBtn" class="btn btn-light rounded-pill px-4 fw-bold text-nowrap" style="height: 48px; color: #215427; background: #FFFFFF; border: none; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
-                  <i class="fa-solid fa-paper-plane me-1"></i> Tư vấn ngay
+                  <i class="fa-solid fa-paper-plane me-1"></i> Hỏi Syna ngay
                 </button>
               </form>
             </div>
@@ -417,7 +417,7 @@ $renderCard = static function (array $product, string $badgeLabel = '', string $
       <?php else: ?>
         <?php if (!empty($llamaRecommendation['answer_text'])): ?>
           <div class="goiy-advice mb-4" id="aiAdviceContent">
-            <div class="fw-bold mb-2 text-success fs-5"><i class="fa-solid fa-robot me-2"></i> Lời khuyên tư vấn:</div>
+            <div class="fw-bold mb-2 text-success fs-5"><i class="fa-solid fa-wand-magic-sparkles me-2"></i> Lời khuyên tư vấn từ SYNA:</div>
             <div class="advice-text"><?= nl2br(h((string)$llamaRecommendation['answer_text'])) ?></div>
           </div>
         <?php endif; ?>

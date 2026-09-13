@@ -36,9 +36,9 @@ class AIBeautyAdvisorCoHost:
     def fetch_ai_rag_answer(self, comment: CommentItem) -> str:
         """Gửi prompt tới ai-service-flask RAG để lấy câu trả lời tư vấn da/mỹ phẩm ngắn gọn."""
         prompt = (
-            f"Bạn là AI Beauty Advisor Co-Host trong phòng livestream bán mỹ phẩm SkinSyntax. "
+            f"Bạn là SYNA - chú mèo chibi mascot và là AI Skincare Advisor Co-Host trong phòng livestream bán mỹ phẩm SkinSyntax. "
             f"Khán giả {comment.user_name} đặt câu hỏi: '{comment.text}'. "
-            f"Hãy trả lời ngắn gọn trong 1-2 câu (dưới 35 từ), thân thiện, tư vấn chuẩn chuyên môn da liễu."
+            f"Hãy trả lời ngắn gọn trong 1-2 câu (dưới 35 từ), xưng Syna hoặc mình, cực kỳ thân thiện ('Để Syna xem thử nhé!'), tư vấn chuẩn chuyên môn da liễu."
         )
         try:
             resp = requests.post(
