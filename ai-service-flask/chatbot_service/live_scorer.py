@@ -15,15 +15,15 @@ logger = logging.getLogger(__name__)
 _TRULENS_OK = False
 LiteLLM = None
 try:
-    from trulens.providers.litellm import LiteLLM
+    from trulens.providers.litellm import LiteLLM  # type: ignore
     _TRULENS_OK = True
 except Exception:
     try:
-        from trulens.providers.litellm.provider import LiteLLM
+        from trulens.providers.litellm.provider import LiteLLM  # type: ignore
         _TRULENS_OK = True
     except Exception:
         try:
-            from trulens_eval.feedback.provider.litellm import LiteLLM
+            from trulens_eval.feedback.provider.litellm import LiteLLM  # type: ignore
             _TRULENS_OK = True
         except Exception:
             _TRULENS_OK = False
