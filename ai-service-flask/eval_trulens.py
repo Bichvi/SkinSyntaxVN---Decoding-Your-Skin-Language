@@ -35,22 +35,42 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 _ENV = Path(__file__).resolve().parent.parent / ".env"
 if _ENV.exists():
     from dotenv import load_dotenv
     load_dotenv(_ENV, override=True)
 
+_TRULENS_OK = False
+TruSession = None
+Feedback = None
+Select = None
+LiteLLM = None
+
 try:
     from trulens.core import TruSession, Feedback, Select
     from trulens.providers.litellm import LiteLLM
     _TRULENS_OK = True
-except ImportError:
-    _TRULENS_OK = False
-    print(
-        "[WARN] TruLens not installed. Run the following then retry:\n"
-        "  pip install trulens trulens-apps-langchain 'trulens-providers-litellm>=1.0'\n"
-        "Continuing in offline mode (no LLM judge).\n"
-    )
+except Exception:
+    try:
+        from trulens.core.session import TruSession
+        from trulens.core.feedback.feedback import Feedback
+        from trulens.core.schema.select import Select
+        from trulens.providers.litellm.provider import LiteLLM
+        _TRULENS_OK = True
+    except Exception:
+        try:
+            from trulens_eval import Tru as TruSession, Feedback, Select
+            from trulens_eval.feedback.provider.litellm import LiteLLM
+            _TRULENS_OK = True
+        except Exception:
+            _TRULENS_OK = False
+            print(
+                "[WARN] TruLens not installed or import error.\n"
+                "Continuing in offline mode (no LLM judge).\n"
+            )
 
 # Each test case has:
 #   question      : real customer question
@@ -69,34 +89,34 @@ TEST_CASES: list[dict] = [
         "tags":           ["product", "kcn", "da_nhay_cam"],
     },
     {
-        "question":       "serum vitamin C giá dưới 300k cho da thường",
+        "question":       "gợi ý chu trình dưỡng da sáng tối cho da hỗn hợp thiên dầu",
         "expected_intent": "PRODUCT_INQUIRY",
-        "tags":           ["product", "serum", "budget"],
+        "tags":           ["routine", "da_hon_hop"],
     },
     {
-        "question":       "gợi ý toner nào cho da khô bong tróc vào mùa lạnh",
+        "question":       "tư vấn routine trị mụn ẩn và thâm mụn dưới 1 triệu",
         "expected_intent": "PRODUCT_INQUIRY",
-        "tags":           ["product", "toner", "da_kho"],
+        "tags":           ["routine", "mun_tham"],
     },
     {
-        "question":       "tư vấn routine dưỡng da buổi sáng cho da dầu mụn",
-        "expected_intent": "PRODUCT_INQUIRY",
-        "tags":           ["product", "routine", "da_dau"],
+        "question":       "Niacinamide và Vitamin C có bị xung đột khi dùng cùng nhau không?",
+        "expected_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+        "tags":           ["ingredient", "conflict"],
     },
     {
-        "question":       "kem dưỡng ẩm Hàn Quốc cho da khô giá tầm trung",
-        "expected_intent": "PRODUCT_INQUIRY",
-        "tags":           ["product", "moisturizer", "korean"],
+        "question":       "BHA và Retinol có thể kết hợp chung một buổi tối được không?",
+        "expected_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+        "tags":           ["ingredient", "conflict"],
     },
     {
-        "question":       "cho mình xem các loại mặt nạ ngủ dưỡng ẩm",
+        "question":       "so sánh serum B5 La Roche-Posay và B5 GoodnDoc",
         "expected_intent": "PRODUCT_INQUIRY",
-        "tags":           ["product", "mat_na"],
+        "tags":           ["comparison", "serum"],
     },
     {
-        "question":       "có sản phẩm nào trị thâm mụn không cần toa bác sĩ không?",
+        "question":       "dựa trên hồ sơ da khô nhạy cảm của mình, đề xuất 2 sản phẩm tốt nhất",
         "expected_intent": "PRODUCT_INQUIRY",
-        "tags":           ["product", "tham_mun"],
+        "tags":           ["profile", "goiy"],
     },
     {
         "question":       "retinol là gì và dùng thế nào cho đúng?",
@@ -104,19 +124,9 @@ TEST_CASES: list[dict] = [
         "tags":           ["knowledge", "retinol"],
     },
     {
-        "question":       "niacinamide và vitamin C có dùng chung được không?",
-        "expected_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
-        "tags":           ["knowledge", "ingredient_combo"],
-    },
-    {
         "question":       "BHA AHA khác nhau thế nào, da mình nên dùng cái nào?",
         "expected_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
         "tags":           ["knowledge", "bha_aha"],
-    },
-    {
-        "question":       "hyaluronic acid giúp ích gì cho da khô?",
-        "expected_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
-        "tags":           ["knowledge", "hyaluronic"],
     },
     {
         "question":       "chào shop ơi, cho hỏi shop mở cửa mấy giờ?",
@@ -127,11 +137,6 @@ TEST_CASES: list[dict] = [
         "question":       "cảm ơn shop đã tư vấn nhiệt tình nha",
         "expected_intent": "GENERAL_CONVERSATION",
         "tags":           ["general", "thankyou"],
-    },
-    {
-        "question":       "mình có thể thanh toán bằng ví điện tử được không?",
-        "expected_intent": "GENERAL_CONVERSATION",
-        "tags":           ["general", "payment"],
     },
 ]
 
@@ -177,7 +182,7 @@ def _run_pipeline(question: str) -> tuple[dict, float]:
     Call the actual pipeline and measure latency.
     Returns: (result_dict, latency_ms)
     """
-    from pipeline import xu_ly_cau_hoi
+    from chatbot_flask import xu_ly_cau_hoi
     t0 = time.perf_counter()
     result = xu_ly_cau_hoi(question, msg_data=None)
     latency = (time.perf_counter() - t0) * 1000
@@ -437,13 +442,22 @@ def print_report(report: EvalReport):
     print(f"\n  Total queries : {report.total_queries}")
     print(f"  TruLens judge : {'LLM-based' if report.trulens_used else '✗ Offline (TruLens unavailable)'}")
 
-    print(f"\n  {'─'*38} OVERALL {'─'*23}")
-    print(f"  Intent Accuracy     : {report.intent_accuracy:.1%}")
-    print(f"  Avg Latency         : {report.avg_latency_ms:.0f} ms")
+    def _fmt(val, fmt_str="{:.3f}"):
+        if val is None:
+            return "N/A"
+        try:
+            return fmt_str.format(val)
+        except Exception:
+            return "N/A"
+
+    intent_acc_str = _fmt(report.intent_accuracy, "{:.1%}")
+    avg_lat_str = f"{report.avg_latency_ms:.0f} ms" if report.avg_latency_ms is not None else "N/A"
+    print(f"  Intent Accuracy     : {intent_acc_str}")
+    print(f"  Avg Latency         : {avg_lat_str}")
     if report.trulens_used:
-        ar = f"{report.avg_answer_relevance:.3f}" if report.avg_answer_relevance is not None else "N/A"
-        gr = f"{report.avg_groundedness:.3f}"      if report.avg_groundedness is not None else "N/A"
-        cr = f"{report.avg_context_relevance:.3f}" if report.avg_context_relevance is not None else "N/A"
+        ar = _fmt(report.avg_answer_relevance)
+        gr = _fmt(report.avg_groundedness)
+        cr = _fmt(report.avg_context_relevance)
         print(f"  Answer Relevance    : {ar}  (LLM judge)")
         print(f"  Groundedness        : {gr}  (LLM judge)")
         print(f"  Context Relevance   : {cr}  (LLM judge)")
@@ -453,12 +467,15 @@ def print_report(report: EvalReport):
         for intent, stats in report.by_intent.items():
             short = intent.replace("COSMETIC_KNOWLEDGE_OUT_OF_DB", "KNOWLEDGE").replace("_", " ")
             print(f"\n  [{short}]  n={stats['count']}")
-            print(f"    Intent Accuracy: {stats['intent_accuracy']:.1%}")
-            print(f"    Avg Latency   : {stats['avg_latency_ms']:.0f} ms")
+            i_acc_str = _fmt(stats.get("intent_accuracy"), "{:.1%}")
+            i_lat = stats.get("avg_latency_ms")
+            i_lat_str = f"{i_lat:.0f} ms" if i_lat is not None else "N/A"
+            print(f"    Intent Accuracy: {i_acc_str}")
+            print(f"    Avg Latency   : {i_lat_str}")
             if stats.get("avg_answer_relevance") is not None:
-                print(f"    Ans Relevance : {stats['avg_answer_relevance']:.3f}")
+                print(f"    Ans Relevance : {_fmt(stats.get('avg_answer_relevance'))}")
             if stats.get("avg_groundedness") is not None:
-                print(f"    Groundedness  : {stats['avg_groundedness']:.3f}")
+                print(f"    Groundedness  : {_fmt(stats.get('avg_groundedness'))}")
 
     print(f"\n{bar}\n")
 

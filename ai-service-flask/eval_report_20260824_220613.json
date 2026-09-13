@@ -1,0 +1,387 @@
+{
+  "timestamp": "2026-08-24T22:05:06.137536",
+  "total_queries": 15,
+  "intent_accuracy": 0.26666666666666666,
+  "avg_latency_ms": 3061.1,
+  "avg_answer_relevance": null,
+  "avg_groundedness": null,
+  "avg_context_relevance": null,
+  "by_intent": {
+    "PRODUCT_INQUIRY": {
+      "count": 4,
+      "intent_accuracy": 1.0,
+      "avg_latency_ms": 2074.6,
+      "avg_answer_relevance": null,
+      "avg_groundedness": null
+    },
+    "GENERAL_CONVERSATION": {
+      "count": 1,
+      "intent_accuracy": 0.0,
+      "avg_latency_ms": 0.4,
+      "avg_answer_relevance": null,
+      "avg_groundedness": null
+    }
+  },
+  "by_tag": {
+    "da_nhay_cam": {
+      "count": 2,
+      "avg_latency_ms": 3685.5,
+      "avg_answer_relevance": null
+    },
+    "bha": {
+      "count": 1,
+      "avg_latency_ms": 12.0,
+      "avg_answer_relevance": null
+    },
+    "greeting": {
+      "count": 1,
+      "avg_latency_ms": 0.4,
+      "avg_answer_relevance": null
+    },
+    "niacinamide": {
+      "count": 1,
+      "avg_latency_ms": 9.7,
+      "avg_answer_relevance": null
+    },
+    "comparison": {
+      "count": 1,
+      "avg_latency_ms": 35.3,
+      "avg_answer_relevance": null
+    },
+    "srm": {
+      "count": 1,
+      "avg_latency_ms": 8242.5,
+      "avg_answer_relevance": null
+    },
+    "da_dau": {
+      "count": 2,
+      "avg_latency_ms": 9001.6,
+      "avg_answer_relevance": null
+    },
+    "general": {
+      "count": 1,
+      "avg_latency_ms": 0.4,
+      "avg_answer_relevance": null
+    },
+    "ingredient_conflict": {
+      "count": 1,
+      "avg_latency_ms": 12.0,
+      "avg_answer_relevance": null
+    },
+    "kcn": {
+      "count": 1,
+      "avg_latency_ms": 19.9,
+      "avg_answer_relevance": null
+    },
+    "cart_analysis": {
+      "count": 1,
+      "avg_latency_ms": 3446.3,
+      "avg_answer_relevance": null
+    },
+    "follow_up": {
+      "count": 1,
+      "avg_latency_ms": 2590.2,
+      "avg_answer_relevance": null
+    },
+    "profile_recommendation": {
+      "count": 1,
+      "avg_latency_ms": 3163.2,
+      "avg_answer_relevance": null
+    },
+    "ingredient": {
+      "count": 1,
+      "avg_latency_ms": 9.7,
+      "avg_answer_relevance": null
+    },
+    "retinol": {
+      "count": 2,
+      "avg_latency_ms": 5625.4,
+      "avg_answer_relevance": null
+    },
+    "ingredient_combo": {
+      "count": 1,
+      "avg_latency_ms": 10.4,
+      "avg_answer_relevance": null
+    },
+    "da_kho": {
+      "count": 1,
+      "avg_latency_ms": 18.3,
+      "avg_answer_relevance": null
+    },
+    "knowledge": {
+      "count": 2,
+      "avg_latency_ms": 5624.6,
+      "avg_answer_relevance": null
+    },
+    "serum": {
+      "count": 1,
+      "avg_latency_ms": 17.7,
+      "avg_answer_relevance": null
+    },
+    "toner": {
+      "count": 2,
+      "avg_latency_ms": 26.8,
+      "avg_answer_relevance": null
+    },
+    "routine": {
+      "count": 2,
+      "avg_latency_ms": 8556.0,
+      "avg_answer_relevance": null
+    },
+    "budget": {
+      "count": 1,
+      "avg_latency_ms": 17.7,
+      "avg_answer_relevance": null
+    },
+    "product": {
+      "count": 4,
+      "avg_latency_ms": 2074.6,
+      "avg_answer_relevance": null
+    }
+  },
+  "results": [
+    {
+      "question": "da mình dầu mụn nhiều, cần sữa rửa mặt nào?",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 8242.5,
+      "tags": [
+        "product",
+        "srm",
+        "da_dau"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "tìm kem chống nắng cho da nhạy cảm, không cồn",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 19.9,
+      "tags": [
+        "product",
+        "kcn",
+        "da_nhay_cam"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "serum vitamin C giá dưới 300k cho da thường",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa thấy sản phẩm phù hợp trong ngân sách dưới 300,000đ. Bạn thử nêu thêm loại da hoặc tăng ngân sách một chút nhé.",
+      "products_count": 0,
+      "latency_ms": 17.7,
+      "tags": [
+        "product",
+        "serum",
+        "budget"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "gợi ý toner nào cho da khô bong tróc vào mùa lạnh",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 18.3,
+      "tags": [
+        "product",
+        "toner",
+        "da_kho"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "tư vấn routine dưỡng da buổi sáng cho da dầu mụn",
+      "expected_intent": "ROUTINE",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn! Để xây dựng một routine dưỡng da buổi sáng cho da dầu mụn, mình sẽ gợi ý các bước và sản phẩm phù hợp giúp kiểm soát dầu thừa và ngăn ngừa mụn hiệu quả.\n\nBắt đầu với bước tẩy trang, bạn có thể sử dụng **[Nước Tẩy Trang Dưỡng Ẩm (200ml)](index.php?r=chitiet&id=1001)** - thương hiệu La Roche-Posay | Pháp. Giá bán: 250.000 VNĐ. Sản phẩm này giúp làm sạch bụi bẩn và lớp trang điểm mà không làm khô da, rất nhẹ nhàng cho làn da nhạy cảm.\n\nTiếp theo, bạn nên rửa mặt với **[Sữa Rửa Mặt Kiểm Soát Dầu (150ml)](index.php?r=chitiet&id=1002)** - thương hiệu Cetaphil | Canada. Giá bán: 280.000 VNĐ. Sữa rửa mặt này giúp loại bỏ dầu thừa và bụi bẩn, đồng thời không làm mất đi độ ẩm tự nhiên của da.\n\nSau khi rửa mặt, bạn có thể sử dụng **[Toner Cân Bằng Dầu (200ml)](index.php?r=chitiet&id=1003)** - thương hiệu Some By Mi | Hàn Quốc. Giá bán: 320.000 VNĐ. Toner này giúp cân bằng độ pH cho da, làm sạch sâu và se khít lỗ chân lông, rất phù hợp cho da dầu mụn.\n\nTiếp theo là bước serum, mình gợi ý **[Serum Chống Mụn (30ml)](index.php?r=chitiet&id=1004)** - thương hiệu The Ordinary | Canada. Giá bán: 450.000 VNĐ. Serum này chứa các thành phần giúp giảm viêm và ngăn ngừa mụn hiệu quả, đồng thời cung cấp độ ẩm cho da.\n\nCuối cùng, đừng quên kem dưỡng ẩm với **[Kem Dưỡng Ẩm Nhẹ (50ml)](index.php?r=chitiet&id=1005)** - thương hiệu Neutrogena | Mỹ. Giá bán: 300.000 VNĐ. Kem này có kết cấu nhẹ, không gây bít tắc lỗ chân lông, giúp da luôn ẩm mượt mà không bị nhờn rít.\n\nCuối cùng, hãy nhớ sử dụng kem chống nắng như **[Kem Chống Nắng Kiểm Soát Dầu (50ml)](index.php?r=chitiet&id=1006)** - thương hiệu Biore | Nhật Bản. Giá bán: 350.000 VNĐ. Sản phẩm này giúp bảo vệ da khỏi tác hại của tia UV và kiểm soát dầu thừa suốt cả ngày.\n\nTổng chi phí ước tính: 1.950.000 VNĐ (trong ngân sách [2.000.000] VNĐ). \n\nChúc bạn có một làn da khỏe mạnh và sáng mịn!",
+      "products_count": 0,
+      "latency_ms": 9760.8,
+      "tags": [
+        "routine",
+        "da_dau"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "bộ routine phục hồi cho da nhạy cảm bị dị ứng",
+      "expected_intent": "ROUTINE",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn! Đối với làn da nhạy cảm và đang bị dị ứng, việc lựa chọn sản phẩm nhẹ nhàng, không gây kích ứng là rất quan trọng. Mình sẽ gợi ý cho bạn một bộ routine phục hồi da an toàn và hiệu quả nhé.\n\nBắt đầu với bước tẩy trang, bạn có thể sử dụng **[Nước Tẩy Trang Dưỡng Ẩm (200ml)](index.php?r=chitiet&id=1001)** - thương hiệu La Roche-Posay | Pháp. Giá bán: 250.000 VNĐ. Sản phẩm này giúp làm sạch nhẹ nhàng mà không làm khô da, rất phù hợp cho làn da nhạy cảm. \n\nTiếp theo, bạn nên dùng **[Sữa Rửa Mặt Dịu Nhẹ (150ml)](index.php?r=chitiet&id=1002)** - thương hiệu Cetaphil | Canada. Giá bán: 280.000 VNĐ. Sữa rửa mặt này không chứa xà phòng, giúp làm sạch mà vẫn giữ ẩm cho da, giúp da không bị căng rát sau khi rửa.\n\nSau khi rửa mặt, bạn có thể sử dụng **[Toner Dưỡng Ẩm (200ml)](index.php?r=chitiet&id=1003)** - thương hiệu Klairs | Hàn Quốc. Giá bán: 350.000 VNĐ. Toner này giúp làm dịu da, cung cấp độ ẩm và cân bằng lại độ pH cho da, rất tốt cho da nhạy cảm.\n\nTiếp theo là bước serum, mình gợi ý **[Serum Phục Hồi Da (30ml)](index.php?r=chitiet&id=1004)** - thương hiệu The Ordinary | Canada. Giá bán: 450.000 VNĐ. Serum này chứa các thành phần giúp làm dịu và phục hồi da, rất phù hợp cho làn da đang bị kích ứng.\n\nCuối cùng, bạn nên dùng **[Kem Dưỡng Ẩm Dịu Nhẹ (50ml)](index.php?r=chitiet&id=1005)** - thương hiệu Avene | Pháp. Giá bán: 400.000 VNĐ. Kem này giúp khóa ẩm và làm dịu da, tạo lớp bảo vệ cho da khỏi các tác nhân bên ngoài.\n\nĐừng quên sử dụng kem chống nắng vào ban ngày để bảo vệ da nhé! \n\nTổng chi phí ước tính: 1.730.000 VNĐ (trong ngân sách [Y] VNĐ). \n\nChúc bạn sớm có làn da khỏe mạnh và dịu nhẹ!",
+      "products_count": 0,
+      "latency_ms": 7351.1,
+      "tags": [
+        "routine",
+        "da_nhay_cam"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "niacinamide có công dụng gì trong mỹ phẩm?",
+      "expected_intent": "INGREDIENT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 9.7,
+      "tags": [
+        "ingredient",
+        "niacinamide"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "dùng BHA cùng lúc với Retinol có bị kích ứng không?",
+      "expected_intent": "INGREDIENT_CONFLICT",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 12.0,
+      "tags": [
+        "ingredient_conflict",
+        "bha",
+        "retinol"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "so sánh giúp mình toner La Roche-Posay và toner Klairs",
+      "expected_intent": "PRODUCT_COMPARISON",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 35.3,
+      "tags": [
+        "comparison",
+        "toner"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "tư vấn sản phẩm phù hợp dựa theo hồ sơ da của mình",
+      "expected_intent": "PROFILE_BASED_RECOMMENDATION",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 3163.2,
+      "tags": [
+        "profile_recommendation"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "phân tích giúp mình các sản phẩm trong giỏ hàng",
+      "expected_intent": "CART_ANALYSIS",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 3446.3,
+      "tags": [
+        "cart_analysis"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "nên mua sản phẩm nào trước trong các loại trên?",
+      "expected_intent": "FOLLOW_UP",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 2590.2,
+      "tags": [
+        "follow_up"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "retinol là gì và dùng thế nào cho đúng?",
+      "expected_intent": "GENERAL_SKINCARE",
+      "actual_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+      "answer": "Chào bạn! Mình rất vui khi được chia sẻ với bạn về retinol, một trong những hoạt chất nổi bật trong chăm sóc da.\n\nRetinol là một dẫn xuất của vitamin A, thuộc nhóm retinoid. Nó được biết đến với khả năng cải thiện nhiều vấn đề về da như mụn, lão hóa và tăng sắc tố. Khi bạn sử dụng retinol, nó sẽ giúp thúc đẩy quá trình tái tạo tế bào da, làm giảm sự xuất hiện của nếp nhăn và cải thiện kết cấu da, mang lại làn da mịn màng và đều màu hơn.\n\nĐể sử dụng retinol một cách hiệu quả, bạn nên bắt đầu từ nồng độ thấp và dùng cách ngày để da có thời gian thích nghi. Thời điểm lý tưởng để sử dụng là vào buổi tối, sau khi đã làm sạch da. Bạn cũng nên tránh kết hợp retinol với các sản phẩm chứa AHA, BHA hay vitamin C trong cùng một thời điểm, vì điều này có thể gây kích ứng cho da. Thay vào đó, bạn có thể sử dụng chúng vào những ngày khác nhau để đạt được hiệu quả tốt nhất.\n\nMặc dù hiện tại mình không có sản phẩm cụ thể nào chứa retinol trong hệ thống SkinSyntaxVN để giới thiệu cho bạn, nhưng nếu bạn có thêm câu hỏi nào khác về các hoạt chất hay sản phẩm khác, đừng ngần ngại hỏi mình nhé!",
+      "products_count": 0,
+      "latency_ms": 11238.8,
+      "tags": [
+        "knowledge",
+        "retinol"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "niacinamide và vitamin C có dùng chung được không?",
+      "expected_intent": "INGREDIENT_CONFLICT",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 10.4,
+      "tags": [
+        "knowledge",
+        "ingredient_combo"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "chào shop ơi, cho hỏi shop mở cửa mấy giờ?",
+      "expected_intent": "GENERAL_CONVERSATION",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn! Mình là trợ lý AI của SkinSyntaxVN. Bạn muốn tìm sản phẩm gì hôm nay ạ?",
+      "products_count": 0,
+      "latency_ms": 0.4,
+      "tags": [
+        "general",
+        "greeting"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    }
+  ],
+  "trulens_used": false
+}

@@ -1,0 +1,398 @@
+{
+  "timestamp": "2026-08-24T22:13:28.437087",
+  "total_queries": 15,
+  "intent_accuracy": 0.2,
+  "avg_latency_ms": 3410.4,
+  "avg_answer_relevance": null,
+  "avg_groundedness": null,
+  "avg_context_relevance": null,
+  "by_intent": {
+    "PRODUCT_INQUIRY": {
+      "count": 2,
+      "intent_accuracy": 1.0,
+      "avg_latency_ms": 3773.8,
+      "avg_answer_relevance": null,
+      "avg_groundedness": null
+    },
+    "COSMETIC_KNOWLEDGE_OUT_OF_DB": {
+      "count": 1,
+      "intent_accuracy": 1.0,
+      "avg_latency_ms": 7193.3,
+      "avg_answer_relevance": null,
+      "avg_groundedness": null
+    },
+    "GENERAL_CONVERSATION": {
+      "count": 2,
+      "intent_accuracy": 0.0,
+      "avg_latency_ms": 0.3,
+      "avg_answer_relevance": null,
+      "avg_groundedness": null
+    }
+  },
+  "by_tag": {
+    "thankyou": {
+      "count": 1,
+      "avg_latency_ms": 0.1,
+      "avg_answer_relevance": null
+    },
+    "da_nhay_cam": {
+      "count": 1,
+      "avg_latency_ms": 13.0,
+      "avg_answer_relevance": null
+    },
+    "routine": {
+      "count": 2,
+      "avg_latency_ms": 5437.9,
+      "avg_answer_relevance": null
+    },
+    "greeting": {
+      "count": 1,
+      "avg_latency_ms": 0.6,
+      "avg_answer_relevance": null
+    },
+    "general": {
+      "count": 2,
+      "avg_latency_ms": 0.3,
+      "avg_answer_relevance": null
+    },
+    "profile": {
+      "count": 1,
+      "avg_latency_ms": 15.7,
+      "avg_answer_relevance": null
+    },
+    "kcn": {
+      "count": 1,
+      "avg_latency_ms": 13.0,
+      "avg_answer_relevance": null
+    },
+    "srm": {
+      "count": 1,
+      "avg_latency_ms": 7534.5,
+      "avg_answer_relevance": null
+    },
+    "ingredient": {
+      "count": 3,
+      "avg_latency_ms": 5238.8,
+      "avg_answer_relevance": null
+    },
+    "bha_aha": {
+      "count": 1,
+      "avg_latency_ms": 6777.2,
+      "avg_answer_relevance": null
+    },
+    "conflict": {
+      "count": 2,
+      "avg_latency_ms": 6599.4,
+      "avg_answer_relevance": null
+    },
+    "analysis": {
+      "count": 1,
+      "avg_latency_ms": 12.1,
+      "avg_answer_relevance": null
+    },
+    "da_dau": {
+      "count": 1,
+      "avg_latency_ms": 7534.5,
+      "avg_answer_relevance": null
+    },
+    "retinol": {
+      "count": 1,
+      "avg_latency_ms": 7193.3,
+      "avg_answer_relevance": null
+    },
+    "knowledge": {
+      "count": 2,
+      "avg_latency_ms": 6985.2,
+      "avg_answer_relevance": null
+    },
+    "mun_tham": {
+      "count": 1,
+      "avg_latency_ms": 6423.5,
+      "avg_answer_relevance": null
+    },
+    "goiy": {
+      "count": 1,
+      "avg_latency_ms": 15.7,
+      "avg_answer_relevance": null
+    },
+    "product": {
+      "count": 2,
+      "avg_latency_ms": 3773.8,
+      "avg_answer_relevance": null
+    },
+    "thanh_phan": {
+      "count": 1,
+      "avg_latency_ms": 2517.7,
+      "avg_answer_relevance": null
+    },
+    "comparison": {
+      "count": 1,
+      "avg_latency_ms": 125.1,
+      "avg_answer_relevance": null
+    },
+    "followup": {
+      "count": 1,
+      "avg_latency_ms": 2892.1,
+      "avg_answer_relevance": null
+    },
+    "da_hon_hop": {
+      "count": 1,
+      "avg_latency_ms": 4452.2,
+      "avg_answer_relevance": null
+    },
+    "cart": {
+      "count": 1,
+      "avg_latency_ms": 12.1,
+      "avg_answer_relevance": null
+    },
+    "serum": {
+      "count": 1,
+      "avg_latency_ms": 125.1,
+      "avg_answer_relevance": null
+    }
+  },
+  "results": [
+    {
+      "question": "da mình dầu mụn nhiều, cần sữa rửa mặt nào?",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 7534.5,
+      "tags": [
+        "product",
+        "srm",
+        "da_dau"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "tìm kem chống nắng cho da nhạy cảm, không cồn",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 13.0,
+      "tags": [
+        "product",
+        "kcn",
+        "da_nhay_cam"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "gợi ý chu trình dưỡng da sáng tối cho da hỗn hợp thiên dầu",
+      "expected_intent": "ROUTINE",
+      "actual_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+      "answer": "Chào bạn! Để xây dựng một chu trình dưỡng da sáng tối cho làn da hỗn hợp thiên dầu, mình sẽ gợi ý các bước và sản phẩm phù hợp nhé.\n\nBắt đầu với bước tẩy trang, bạn nên sử dụng một sản phẩm nhẹ nhàng để loại bỏ bụi bẩn và lớp trang điểm. Tiếp theo, rửa mặt với một sữa rửa mặt dịu nhẹ, giúp làm sạch mà không làm khô da.\n\nSau khi da đã sạch, bạn có thể sử dụng toner để cân bằng độ pH cho da. Tiếp theo, serum sẽ là bước quan trọng để cung cấp các hoạt chất cần thiết cho da, giúp kiểm soát dầu và làm sáng da.\n\nCuối cùng, đừng quên kem dưỡng ẩm để giữ cho da luôn đủ ẩm và mềm mại. Vào buổi sáng, hãy thêm kem chống nắng để bảo vệ da khỏi tác hại của tia UV.\n\nMình rất tiếc vì không có sản phẩm cụ thể nào trong danh sách khuyến nghị để gợi ý cho bạn. Nếu bạn có sản phẩm nào trong tay hoặc cần thêm thông tin, hãy cho mình biết nhé! Chúc bạn có một làn da khỏe đẹp!",
+      "products_count": 0,
+      "latency_ms": 4452.2,
+      "tags": [
+        "routine",
+        "da_hon_hop"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "tư vấn routine trị mụn ẩn và thâm mụn dưới 1 triệu",
+      "expected_intent": "ROUTINE",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn! Để xây dựng một routine trị mụn ẩn và thâm mụn hiệu quả, mình sẽ gợi ý cho bạn các sản phẩm phù hợp với ngân sách dưới 1 triệu VNĐ nhé.\n\nBắt đầu với bước tẩy trang, bạn có thể sử dụng **[Nước Tẩy Trang Dưỡng Ẩm (200ml)](index.php?r=chitiet&id=1001)** - thương hiệu La Roche-Posay | Pháp. Giá bán: 250.000 VNĐ. Sản phẩm này giúp làm sạch bụi bẩn và lớp trang điểm mà không làm khô da, rất nhẹ nhàng cho làn da nhạy cảm.\n\nTiếp theo, bước rửa mặt, mình gợi ý **[Sữa Rửa Mặt Trị Mụn (150ml)](index.php?r=chitiet&id=1002)** - thương hiệu Some By Mi | Hàn Quốc. Giá bán: 300.000 VNĐ. Sữa rửa mặt này chứa AHA, BHA và PHA giúp làm sạch sâu lỗ chân lông, ngăn ngừa mụn và giảm thâm hiệu quả.\n\nSau khi rửa mặt, bạn nên sử dụng toner để cân bằng độ pH cho da. Mình gợi ý **[Toner Cân Bằng Da (200ml)](index.php?r=chitiet&id=1003)** - thương hiệu Klairs | Hàn Quốc. Giá bán: 350.000 VNĐ. Toner này giúp làm dịu da, cung cấp độ ẩm và hỗ trợ làm sáng da, rất phù hợp cho da mụn.\n\nTiếp theo là serum, bạn có thể chọn **[Serum Trị Mụn (30ml)](index.php?r=chitiet&id=1004)** - thương hiệu The Ordinary | Canada. Giá bán: 400.000 VNĐ. Serum này chứa Niacinamide và Zinc giúp kiểm soát dầu, giảm mụn và làm sáng thâm hiệu quả.\n\nCuối cùng, đừng quên kem chống nắng vào buổi sáng. Mình gợi ý **[Kem Chống Nắng (50ml)](index.php?r=chitiet&id=1005)** - thương hiệu Biore | Nhật Bản. Giá bán: 200.000 VNĐ. Kem chống nắng này nhẹ nhàng, không gây bít tắc lỗ chân lông và bảo vệ da khỏi tác hại của tia UV.\n\nTổng chi phí ước tính: 1,000,000 VNĐ (trong ngân sách 1,000,000 VNĐ).\n\nChúc bạn sớm có làn da khỏe mạnh và sạch mụn!",
+      "products_count": 0,
+      "latency_ms": 6423.5,
+      "tags": [
+        "routine",
+        "mun_tham"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "sản phẩm này có chứa thành phần Cồn khô hay Hương liệu không?",
+      "expected_intent": "INGREDIENT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 2517.7,
+      "tags": [
+        "ingredient",
+        "thanh_phan"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "Niacinamide và Vitamin C có bị xung đột khi dùng cùng nhau không?",
+      "expected_intent": "INGREDIENT_CONFLICT",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 11.6,
+      "tags": [
+        "ingredient",
+        "conflict"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "BHA và Retinol có thể kết hợp chung một buổi tối được không?",
+      "expected_intent": "INGREDIENT_CONFLICT",
+      "actual_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+      "answer": "Chào bạn! Mình rất vui khi được chia sẻ với bạn về BHA và Retinol, hai hoạt chất rất nổi tiếng trong việc chăm sóc da.\n\n**BHA (Beta Hydroxy Acid)** là một loại axit có khả năng thẩm thấu sâu vào lỗ chân lông, giúp làm sạch bụi bẩn và bã nhờn, từ đó ngăn ngừa mụn hiệu quả. BHA còn có tác dụng tẩy tế bào chết nhẹ nhàng, giúp da bạn trở nên sáng mịn hơn mà không gây kích ứng như nhiều người lo. \n\n**Retinol**, hay còn gọi là Vitamin A, là một trong những hoạt chất mạnh mẽ nhất trong việc chống lão hóa và cải thiện kết cấu da. Nó giúp kích thích sản xuất collagen, làm giảm nếp nhăn và cải thiện tình trạng da không đều màu.\n\nVề việc kết hợp BHA và Retinol trong cùng một buổi tối, điều này có thể thực hiện được nhưng cần phải cẩn thận. Khi sử dụng chung, bạn có thể gặp hiện tượng \"purging\" (đẩy mụn) do cả hai hoạt chất đều có tác dụng làm sạch và tái tạo da. Để tránh kích ứng, bạn nên bắt đầu bằng cách sử dụng một trong hai hoạt chất vào buổi tối, sau đó từ từ thêm hoạt chất còn lại vào quy trình dưỡng da của mình. Một gợi ý là bạn có thể dùng BHA vào những ngày bạn không sử dụng Retinol, hoặc sử dụng chúng vào những thời điểm khác nhau trong ngày (BHA vào buổi sáng, Retinol vào buổi tối).\n\nMặc dù hiện tại mình không tìm thấy sản phẩm nào trong hệ thống SkinSyntaxVN chứa cả BHA và Retinol, nhưng bạn có thể tìm hiểu thêm về các sản phẩm riêng lẻ chứa từng hoạt chất này để xây dựng quy trình chăm sóc da phù hợp với mình nhé! Nếu bạn cần thêm thông tin về sản phẩm nào, hãy cho mình biết nhé!",
+      "products_count": 0,
+      "latency_ms": 13187.2,
+      "tags": [
+        "ingredient",
+        "conflict"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "so sánh serum B5 La Roche-Posay và B5 GoodnDoc",
+      "expected_intent": "PRODUCT_COMPARISON",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 125.1,
+      "tags": [
+        "comparison",
+        "serum"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "dựa trên hồ sơ da khô nhạy cảm của mình, đề xuất 2 sản phẩm tốt nhất",
+      "expected_intent": "PROFILE_BASED_RECOMMENDATION",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 15.7,
+      "tags": [
+        "profile",
+        "goiy"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "phân tích giỏ hàng của mình xem các sản phẩm có bị kích ứng không",
+      "expected_intent": "CART_ANALYSIS",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 12.1,
+      "tags": [
+        "cart",
+        "analysis"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "vậy sản phẩm nào nên mua đầu tiên trong danh sách trên?",
+      "expected_intent": "FOLLOW_UP",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 2892.1,
+      "tags": [
+        "followup"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "retinol là gì và dùng thế nào cho đúng?",
+      "expected_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+      "actual_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+      "answer": "Chào bạn! Mình rất vui khi được chia sẻ về hoạt chất Retinol với bạn.\n\nRetinol là một dẫn xuất của vitamin A, thuộc nhóm retinoid. Nó được biết đến như một \"ngôi sao\" trong lĩnh vực chăm sóc da nhờ khả năng cải thiện nhiều vấn đề như mụn, lão hóa và tăng sắc tố. Khi thoa lên da, Retinol giúp thúc đẩy quá trình tái tạo tế bào, làm thông thoáng lỗ chân lông và giảm thiểu sự xuất hiện của nếp nhăn. Kết quả là làn da bạn sẽ trở nên mịn màng, đều màu và trẻ trung hơn.\n\nĐể sử dụng Retinol một cách hiệu quả, bạn nên bắt đầu từ nồng độ thấp và thoa cách ngày để da có thời gian thích nghi. Thời điểm lý tưởng để sử dụng là vào buổi tối, sau khi đã làm sạch da. Lưu ý rằng Retinol có thể làm da nhạy cảm hơn với ánh nắng, vì vậy đừng quên sử dụng kem chống nắng vào ban ngày nhé! Ngoài ra, bạn cũng nên tránh kết hợp Retinol với các sản phẩm chứa AHA, BHA hay vitamin C trong cùng một thời điểm, vì điều này có thể gây kích ứng cho da.\n\nMặc dù hiện tại mình không có sản phẩm cụ thể nào chứa Retinol trong hệ thống SkinSyntaxVN để giới thiệu cho bạn, nhưng nếu bạn cần thêm thông tin hay có câu hỏi nào khác, đừng ngần ngại hỏi mình nhé!",
+      "products_count": 0,
+      "latency_ms": 7193.3,
+      "tags": [
+        "knowledge",
+        "retinol"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "BHA AHA khác nhau thế nào, da mình nên dùng cái nào?",
+      "expected_intent": "GENERAL_SKINCARE",
+      "actual_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+      "answer": "Chào bạn! Mình thấy bạn đang quan tâm đến sự khác biệt giữa BHA và AHA, cũng như việc lựa chọn sản phẩm phù hợp cho làn da của mình. Đây là hai loại axit thường được sử dụng trong các sản phẩm chăm sóc da, nhưng chúng có những đặc điểm và công dụng khác nhau.\n\n### Thành phần nổi bật\n- **BHA (Beta Hydroxy Acid)**: Thường là axit salicylic, có khả năng thẩm thấu sâu vào lỗ chân lông, giúp làm sạch bụi bẩn và dầu thừa. BHA rất hiệu quả trong việc điều trị mụn và làm giảm tình trạng viêm.\n- **AHA (Alpha Hydroxy Acid)**: Thường là axit glycolic hoặc axit lactic, AHA hoạt động chủ yếu trên bề mặt da, giúp loại bỏ tế bào chết và cải thiện độ sáng của da. AHA thích hợp cho việc làm sáng da và cải thiện kết cấu da.\n\n### Loại da phù hợp\n- **BHA**: Thích hợp cho da dầu, da mụn hoặc da nhờn, vì khả năng thẩm thấu sâu giúp làm sạch lỗ chân lông và ngăn ngừa mụn.\n- **AHA**: Thích hợp cho da khô, da nhạy cảm hoặc da có dấu hiệu lão hóa, vì AHA giúp cung cấp độ ẩm và làm mềm da.\n\n### Điểm mạnh\n- **BHA**: Giúp kiểm soát dầu, ngăn ngừa mụn và làm sạch lỗ chân lông hiệu quả.\n- **AHA**: Cải thiện độ sáng và kết cấu da, giúp da mềm mại và đều màu hơn.\n\n### Điểm hạn chế\n- **BHA**: Có thể gây khô da nếu sử dụng quá nhiều, cần phải kết hợp với sản phẩm dưỡng ẩm.\n- **AHA**: Có thể làm da nhạy cảm hơn với ánh nắng, nên cần sử dụng kem chống nắng khi dùng sản phẩm chứa AHA.\n\n### Giá tiền\nGiá của các sản phẩm chứa BHA và AHA có thể khác nhau tùy thuộc vào thương hiệu và công thức. Bạn nên xem xét ngân sách của mình khi lựa chọn sản phẩm.\n\n### Kết luận\nNếu bạn có làn da dầu hoặc dễ bị mụn và muốn kiểm soát tình trạng này, bạn nên chọn sản phẩm chứa BHA. Nếu bạn cần cải thiện độ sáng và kết cấu da, đặc biệt là nếu da bạn khô hoặc nhạy cảm, thì sản phẩm chứa AHA sẽ là lựa chọn tốt hơn. Hy vọng thông tin này giúp bạn đưa ra quyết định đúng đắn!",
+      "products_count": 0,
+      "latency_ms": 6777.2,
+      "tags": [
+        "knowledge",
+        "bha_aha"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "chào shop ơi, cho hỏi shop mở cửa mấy giờ?",
+      "expected_intent": "GENERAL_CONVERSATION",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn! Mình là trợ lý AI của SkinSyntaxVN. Bạn muốn tìm sản phẩm gì hôm nay ạ?",
+      "products_count": 0,
+      "latency_ms": 0.6,
+      "tags": [
+        "general",
+        "greeting"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    },
+    {
+      "question": "cảm ơn shop đã tư vấn nhiệt tình nha",
+      "expected_intent": "GENERAL_CONVERSATION",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Không có gì bạn ơi! Nếu cần tư vấn thêm về sản phẩm, mình luôn sẵn sàng nhé.",
+      "products_count": 0,
+      "latency_ms": 0.1,
+      "tags": [
+        "general",
+        "thankyou"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    }
+  ],
+  "trulens_used": false
+}

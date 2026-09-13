@@ -64,7 +64,7 @@ $socialLinks = [
       <div class="utility-links">
         <span class="utility-contact"><i class="fas fa-headset"></i> Hỗ trợ khách hàng: 1900 0000</span>
         <a href="<?= BASE_URL ?>/index.php?r=tatca">Tra cứu sản phẩm</a>
-        <a href="<?= BASE_URL ?>/index.php?r=goiy">Routine AI</a>
+        <a href="<?= BASE_URL ?>/index.php?r=goiy">Gợi ý routine</a>
         <a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang">Hệ thống cửa hàng</a>
         <a href="<?= BASE_URL ?>/index.php?r=bao_hanh">Bảo hành</a>
         <a href="<?= BASE_URL ?>/index.php?r=ho_tro_khach_hang">Hỗ trợ khách hàng</a>
@@ -108,10 +108,10 @@ $socialLinks = [
       </form>
 
       <div class="header-actions">
-        <a href="<?= BASE_URL ?>/index.php?r=goiy" class="header-action-card" title="Routine AI">
+        <a href="<?= BASE_URL ?>/index.php?r=goiy" class="header-action-card" title="Gợi ý routine">
           <i class="fas fa-wand-magic-sparkles"></i>
           <span>
-            <strong>Routine AI</strong>
+            <strong>Gợi ý routine</strong>
             <small>Nhận gợi ý ngay</small>
           </span>
         </a>
@@ -192,7 +192,7 @@ $socialLinks = [
         <a class="header-shortcuts__link" href="<?= BASE_URL ?>/index.php?r=tatca">Tất cả sản phẩm</a>
         <a class="header-shortcuts__link fw-bold d-inline-flex align-items-center gap-1" href="<?= BASE_URL ?>/index.php?r=live" style="background: #FFE4E6; color: #E11D48 !important; padding: 4px 12px; border-radius: 999px; font-size: 0.84rem;">
           <span class="d-inline-block rounded-circle bg-danger" style="width: 7px; height: 7px;"></span>
-          <i class="fa-solid fa-video me-1"></i> LiveStream AI
+          <i class="fa-solid fa-video me-1"></i> Livestream Tư Vấn
         </a>
         <?php foreach ($quickCategories as $category): ?>
           <a class="header-shortcuts__link" href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode((string)$category) ?>">
@@ -244,7 +244,7 @@ $socialLinks = [
         <div class="d-flex align-items-center gap-2">
           <span class="rounded-circle bg-success text-white d-grid place-items-center" style="width: 36px; height: 36px; display: grid;"><i class="fas fa-wand-magic-sparkles"></i></span>
           <div>
-            <strong class="d-block text-success" style="font-size: 0.95rem;">Routine AI & Khảo sát da</strong>
+            <strong class="d-block text-success" style="font-size: 0.95rem;">Routine cá nhân & Khảo sát da</strong>
             <small class="text-muted">Nhận phác đồ skincare cá nhân</small>
           </div>
         </div>
@@ -370,7 +370,7 @@ $socialLinks = [
 
                 <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
                   <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
-                  <span><i class="fas fa-heart me-1"></i> Chuyên Gia Tư Vấn AI</span>
+                  <span><i class="fas fa-heart me-1"></i> Trợ Lý SkinSyntax</span>
                 </div>
               </div>
 
@@ -390,7 +390,7 @@ $socialLinks = [
                   </div>
 
                   <h3 class="fw-bold mb-3" style="font-size: 1.8rem; line-height: 1.25; color: #FFFFFF;">Bạn Đã Có Tài Khoản?</h3>
-                  <p style="font-size: 0.88rem; color: #EAF2EC; opacity: 0.9; line-height: 1.6;">Đăng nhập ngay để theo dõi lịch sử đơn hàng, cập nhật Hồ Sơ Da và mở các gợi ý mỹ phẩm cá nhân hóa từ AI.</p>
+                  <p style="font-size: 0.88rem; color: #EAF2EC; opacity: 0.9; line-height: 1.6;">Đăng nhập ngay để theo dõi lịch sử đơn hàng, cập nhật Hồ Sơ Da và mở các gợi ý mỹ phẩm cá nhân hóa theo làn da.</p>
 
                   <button class="btn btn-light w-100 py-3 fw-bold mt-4" data-auth-switch="login" style="border-radius: 999px; color: #215427; background: #FFFFFF; font-size: 0.95rem; border: none;">
                     Đăng Nhập Ngay <i class="fas fa-arrow-right ms-2"></i>
@@ -399,7 +399,7 @@ $socialLinks = [
 
                 <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
                   <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
-                  <span><i class="fas fa-heart me-1"></i> Chuyên Gia Tư Vấn AI</span>
+                  <span><i class="fas fa-heart me-1"></i> Trợ Lý SkinSyntax</span>
                 </div>
               </div>
 

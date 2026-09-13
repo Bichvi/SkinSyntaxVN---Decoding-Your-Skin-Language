@@ -1,0 +1,194 @@
+[
+  {
+    "case_id": "REC_01_SERUM_UNDER_100K",
+    "group": "Product Filter",
+    "query": "serum dưới 100k",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "category": "Serum / Tinh Chất",
+      "max_price": 100000,
+      "min_price": null
+    }
+  },
+  {
+    "case_id": "REC_02_SUNSCREEN_UNDER_300K",
+    "group": "Product Filter",
+    "query": "kem chống nắng dưới 300k",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "category": "Chống Nắng Da Mặt",
+      "max_price": 300000,
+      "min_price": null
+    }
+  },
+  {
+    "case_id": "REC_03_MASK_UNDER_50K",
+    "group": "Product Filter",
+    "query": "mặt nạ dưới 50k",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "category": "Mặt Nạ Giấy",
+      "max_price": 50000,
+      "min_price": null
+    }
+  },
+  {
+    "case_id": "REC_04_TONER_100K_TO_300K",
+    "group": "Product Filter",
+    "query": "toner từ 100k đến 300k",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "category": "Toner / Nước Cân Bằng Da",
+      "min_price": 100000,
+      "max_price": 300000
+    }
+  },
+  {
+    "case_id": "REC_05_SERUM_OILY_ACNE_500K",
+    "group": "Profile Based",
+    "query": "serum cho da dầu mụn dưới 500k",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "category": "Serum / Tinh Chất",
+      "skin_type": "Da dầu/Hỗn hợp dầu",
+      "max_price": 500000,
+      "min_price": null
+    }
+  },
+  {
+    "case_id": "REC_06_SENSITIVE_NO_FRAGRANCE",
+    "group": "Profile Based",
+    "query": "sản phẩm cho da nhạy cảm tránh hương liệu",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "skin_type": "Da nhạy cảm",
+      "avoid_ingredients": ["Fragrance", "hương liệu"]
+    }
+  },
+  {
+    "case_id": "REC_07_HYDRATING_DRY_SKIN",
+    "group": "Profile Based",
+    "query": "sản phẩm cấp ẩm cho da khô",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "skin_type": "Da khô/Hỗn hợp khô",
+      "concerns": ["Cấp ẩm"]
+    }
+  },
+  {
+    "case_id": "REC_08_MORNING_ROUTINE_800K",
+    "group": "Routine",
+    "query": "routine buổi sáng dưới 800k",
+    "expected": {
+      "intent": "ROUTINE",
+      "is_routine": true,
+      "max_price": 800000
+    }
+  },
+  {
+    "case_id": "REC_09_NIGHT_ROUTINE_1M",
+    "group": "Routine",
+    "query": "routine tối dưới 1 triệu",
+    "expected": {
+      "intent": "ROUTINE",
+      "is_routine": true,
+      "max_price": 1000000
+    }
+  },
+  {
+    "case_id": "REC_10_INGREDIENT_INQUIRY",
+    "group": "Ingredient",
+    "query": "sản phẩm này có thành phần nào?",
+    "expected": {
+      "intent": "INGREDIENT_INQUIRY"
+    }
+  },
+  {
+    "case_id": "REC_11_CONTAINS_NIACINAMIDE",
+    "group": "Ingredient",
+    "query": "sản phẩm có Niacinamide",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY"
+    }
+  },
+  {
+    "case_id": "REC_12_AVOID_SALICYLIC_ACID",
+    "group": "Ingredient",
+    "query": "tránh Salicylic Acid",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "avoid_ingredients": ["Salicylic Acid"]
+    }
+  },
+  {
+    "case_id": "REC_13_BUY_FIRST_RECOMMENDATION",
+    "group": "Context / Follow-up",
+    "query": "chọn 1 loại nên mua trước",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY"
+    }
+  },
+  {
+    "case_id": "REC_14_CHEAPEST_OPTION",
+    "group": "Context / Follow-up",
+    "query": "loại nào rẻ nhất?",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY"
+    }
+  },
+  {
+    "case_id": "REC_15_BETTER_FIT_OPTION",
+    "group": "Context / Follow-up",
+    "query": "loại nào phù hợp hơn?",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY"
+    }
+  },
+  {
+    "case_id": "REC_16_NO_MATCHING_PRODUCTS",
+    "group": "Edge Cases",
+    "query": "serum dưới 10k",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "category": "Serum / Tinh Chất",
+      "max_price": 10000
+    }
+  },
+  {
+    "case_id": "REC_17_MISSING_INGREDIENT_DATA",
+    "group": "Edge Cases",
+    "query": "sản phẩm này có bị dị ứng không?",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY"
+    }
+  },
+  {
+    "case_id": "REC_18_AMBIGUOUS_QUERY",
+    "group": "Edge Cases",
+    "query": "dưỡng da",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY"
+    }
+  },
+  {
+    "case_id": "REC_19_LOW_BUDGET_EXCEEDED",
+    "group": "Edge Cases",
+    "query": "kem dưỡng dưới 5k",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "category": "Kem / Gel / Dầu Dưỡng",
+      "max_price": 5000
+    }
+  },
+  {
+    "case_id": "REC_20_CLEANSER_OILY_150K",
+    "group": "Edge Cases",
+    "query": "sữa rửa mặt cho da dầu dưới 150k",
+    "expected": {
+      "intent": "PRODUCT_INQUIRY",
+      "category": "Sữa Rửa Mặt",
+      "skin_type": "Da dầu/Hỗn hợp dầu",
+      "max_price": 150000
+    }
+  }
+]

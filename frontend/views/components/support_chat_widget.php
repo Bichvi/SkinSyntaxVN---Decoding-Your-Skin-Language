@@ -652,7 +652,7 @@ if (is_logged_in() && current_role() === 'khach_hang') {
           openWidget();
           window.sessionStorage.removeItem(reopenStorageKey);
         }
-        if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
+        if (widget.classList.contains('is-open') && window.sessionStorage.getItem(expandedStorageKey) === '1') {
           widget.classList.add('is-expanded');
         }
       } catch (error) {

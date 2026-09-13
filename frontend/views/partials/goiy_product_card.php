@@ -27,11 +27,22 @@ $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_s
 $sold = (int)($product['so_luong_da_ban'] ?? $product['so_luong_ban'] ?? 0);
 $rating = trim((string)($product['diem_danh_gia'] ?? ''));
 $reviewCount = (int)($product['so_luong_danh_gia'] ?? 0);
-$matchPercentRaw = $product['match_percent'] ?? null;
+$matchPercentRaw = $product['match_percent'] ?? $product['score'] ?? null;
 $matchPercent = is_numeric($matchPercentRaw) ? max(0, min(100, (int)$matchPercentRaw)) : null;
-$matchLabel = trim((string)($product['match_label'] ?? 'Phù hợp'));
+$fitStatus = trim((string)($product['fit_status'] ?? 'chua_tinh'));
+$matchLabel = trim((string)($product['match_label'] ?? ''));
+if ($matchLabel === '') {
+    if ($fitStatus === 'phu_hop') $matchLabel = 'Phù hợp';
+    elseif ($fitStatus === 'co_the_can_nhac') $matchLabel = 'Có thể cân nhắc';
+    elseif ($fitStatus === 'chua_du_du_lieu') $matchLabel = 'Chưa đủ dữ liệu';
+    else $matchLabel = 'Chưa tính độ phù hợp';
+}
+$reasons = is_array($product['reasons'] ?? null) ? $product['reasons'] : [];
+$warnings = is_array($product['warnings'] ?? null) ? $product['warnings'] : [];
+$matchedIngredients = is_array($product['matched_ingredients'] ?? null) ? $product['matched_ingredients'] : [];
 $uniqueModalId = 'explainModal_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $productId) . '_' . mt_rand(1000, 9999);
-$explanation = trim((string)($product['llm_explanation'] ?? $product['mo_ta'] ?? 'Sản phẩm được thuật toán RAG và LangChain phân tích trùng khớp với loại da, nhu cầu cải thiện da và ngân sách của bạn.'));
+$explanation = trim((string)($product['llm_explanation'] ?? $product['reason'] ?? ''));
+$safetyText = trim((string)($product['safety_text'] ?? 'Chưa đủ dữ liệu để đánh giá thành phần cần lưu ý.'));
 ?>
 
 <?php if ($cardVariant === 'rcm'): ?>
@@ -120,6 +131,30 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['mo_ta'] ??
             </div>
           </div>
           <hr class="my-3">
+          <div class="mb-3 small">
+            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-circle-check text-success me-1"></i> Lý do đề xuất:</strong>
+            <?php if (!empty($reasons)): ?>
+              <ul class="list-unstyled mb-0 ms-2">
+                <?php foreach ($reasons as $r): ?>
+                  <li class="mb-1"><i class="fa-solid fa-check me-1 text-success" style="font-size: 0.75rem;"></i> <?= h($r) ?></li>
+                <?php endforeach; ?>
+              </ul>
+            <?php else: ?>
+              <span class="text-muted ms-2">Sản phẩm thuộc nhóm gợi ý phù hợp với thông tin tìm kiếm.</span>
+            <?php endif; ?>
+          </div>
+
+          <?php if (!empty($warnings)): ?>
+            <div class="mb-3 small p-2.5 rounded" style="background: #FFFBEB; border: 1px solid #FDE68A;">
+              <strong class="d-block mb-1 text-warning-emphasis"><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Cần lưu ý:</strong>
+              <ul class="list-unstyled mb-0 ms-2 text-dark">
+                <?php foreach ($warnings as $w): ?>
+                  <li class="mb-0.5"><i class="fa-solid fa-triangle-exclamation text-warning me-1" style="font-size: 0.72rem;"></i> <?= h($w) ?></li>
+                <?php endforeach; ?>
+              </ul>
+            </div>
+          <?php endif; ?>
+
           <div class="mb-2 small">
             <strong><i class="fa-solid fa-droplet me-1" style="color: #183B2B;"></i> Loại da tương thích:</strong>
             <span class="ms-1"><?= h((string)($product['loai_da'] ?? 'Phù hợp đa số loại da')) ?></span>
@@ -130,13 +165,15 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['mo_ta'] ??
           </div>
           <div class="mb-3 small">
             <strong><i class="fa-solid fa-shield-check me-1" style="color: #183B2B;"></i> Độ an toàn:</strong>
-            <span class="ms-1">Không phát hiện thành phần cồn khô hay kích ứng theo hồ sơ da của bạn.</span>
+            <span class="ms-1"><?= h($safetyText) ?></span>
           </div>
           
-          <div class="p-3" style="background: #FAFAFA; border: 1px solid var(--border); border-radius: 8px;">
-            <div class="fw-semibold small mb-1" style="color: #183B2B;"><i class="fa-solid fa-robot me-1"></i> Phân tích:</div>
-            <div class="small text-dark" style="line-height: 1.6; font-size: 0.84rem;"><?= nl2br(h($explanation)) ?></div>
-          </div>
+          <?php if (!empty($explanation)): ?>
+            <details class="mt-2 p-2.5 rounded" style="background: #FAFAFA; border: 1px solid var(--border);">
+              <summary class="fw-semibold small" style="color: #183B2B; cursor: pointer;"><i class="fa-solid fa-circle-info me-1"></i> Xem phân tích chi tiết</summary>
+              <div class="small text-dark mt-2" style="line-height: 1.6; font-size: 0.84rem;"><?= nl2br(h($explanation)) ?></div>
+            </details>
+          <?php endif; ?>
         </div>
         <div class="modal-footer bg-light border-0">
           <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal" style="border-radius: 6px; font-size: 0.8rem;">Đóng</button>
@@ -235,23 +272,49 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['mo_ta'] ??
           </div>
         </div>
         <hr class="my-3">
-        <div class="mb-2">
+        <div class="mb-3 small">
+          <strong class="d-block mb-1 text-success"><i class="fa-solid fa-circle-check me-1"></i> Lý do đề xuất:</strong>
+          <?php if (!empty($reasons)): ?>
+            <ul class="list-unstyled mb-0 ms-2">
+              <?php foreach ($reasons as $r): ?>
+                <li class="mb-1"><i class="fa-solid fa-check me-1 text-success" style="font-size: 0.75rem;"></i> <?= h($r) ?></li>
+              <?php endforeach; ?>
+            </ul>
+          <?php else: ?>
+            <span class="text-muted ms-2">Sản phẩm thuộc nhóm gợi ý phù hợp với thông tin tìm kiếm.</span>
+          <?php endif; ?>
+        </div>
+
+        <?php if (!empty($warnings)): ?>
+          <div class="mb-3 small p-2.5 rounded" style="background: #FFFBEB; border: 1px solid #FDE68A;">
+            <strong class="d-block mb-1 text-warning-emphasis"><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Cần lưu ý:</strong>
+            <ul class="list-unstyled mb-0 ms-2 text-dark">
+              <?php foreach ($warnings as $w): ?>
+                <li class="mb-0.5"><i class="fa-solid fa-triangle-exclamation text-warning me-1" style="font-size: 0.72rem;"></i> <?= h($w) ?></li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+        <?php endif; ?>
+
+        <div class="mb-2 small">
           <strong><i class="fa-solid fa-droplet text-success me-1"></i> Loại da tương thích:</strong>
           <span class="ms-1"><?= h((string)($product['loai_da'] ?? 'Phù hợp đa số loại da')) ?></span>
         </div>
-        <div class="mb-2">
+        <div class="mb-2 small">
           <strong><i class="fa-solid fa-vial text-success me-1"></i> Hoạt chất chính:</strong>
           <span class="ms-1"><?= h((string)($product['thanh_phan_chinh'] ?? $product['thanh_phan'] ?? 'Hoạt chất phục hồi và chăm sóc chuyên sâu')) ?></span>
         </div>
-        <div class="mb-3">
+        <div class="mb-3 small">
           <strong><i class="fa-solid fa-shield-check text-success me-1"></i> Độ an toàn:</strong>
-          <span class="ms-1">Không phát hiện thành phần cồn khô hay kích ứng theo hồ sơ da của bạn.</span>
+          <span class="ms-1"><?= h($safetyText) ?></span>
         </div>
         
-        <div class="p-3 rounded-3" style="background: #F0F4F1; border: 1px solid #C5DAC8;">
-          <div class="fw-bold text-success small mb-1"><i class="fa-solid fa-robot me-1"></i> Phân tích:</div>
-          <div class="small text-dark" style="line-height: 1.6;"><?= nl2br(h($explanation)) ?></div>
-        </div>
+        <?php if (!empty($explanation)): ?>
+          <details class="mt-2 p-2.5 rounded" style="background: #F0F4F1; border: 1px solid #C5DAC8;">
+            <summary class="fw-semibold small text-success" style="cursor: pointer;"><i class="fa-solid fa-circle-info me-1"></i> Xem phân tích chi tiết</summary>
+            <div class="small text-dark mt-2" style="line-height: 1.6; font-size: 0.84rem;"><?= nl2br(h($explanation)) ?></div>
+          </details>
+        <?php endif; ?>
       </div>
       <div class="modal-footer bg-light border-0">
         <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
