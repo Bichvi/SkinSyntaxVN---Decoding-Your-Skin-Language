@@ -1,5 +1,5 @@
 
--r requirements.txt
+-r ../requirements.txt
 
 trulens
 trulens-apps-langchain
