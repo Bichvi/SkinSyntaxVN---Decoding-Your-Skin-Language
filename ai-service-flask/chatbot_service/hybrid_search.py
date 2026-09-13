@@ -21,8 +21,14 @@ try:
     from langchain_community.cross_encoders import HuggingFaceCrossEncoder
     try:
         from langchain.retrievers.document_compressors import CrossEncoderReranker
-    except ImportError:
-        from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
+    except Exception:
+        try:
+            from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
+        except Exception:
+            try:
+                from langchain_community.document_compressors import CrossEncoderReranker
+            except Exception:
+                CrossEncoderReranker = None
     CROSS_ENCODER_AVAILABLE = True
 except Exception as _ce_err:
     CROSS_ENCODER_AVAILABLE = False
@@ -306,7 +312,7 @@ class LangChainCrossEncoderReranker:
         if not documents:
             return []
 
-        if not self._cross_encoder or not CROSS_ENCODER_AVAILABLE:
+        if not self._cross_encoder or not CROSS_ENCODER_AVAILABLE or CrossEncoderReranker is None:
             return documents[:top_n]
 
         doc_map = {doc.doc_id: doc for doc in documents}

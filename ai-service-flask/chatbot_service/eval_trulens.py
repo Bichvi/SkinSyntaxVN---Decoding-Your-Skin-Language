@@ -192,7 +192,19 @@ def _run_pipeline(question: str) -> tuple[dict, float]:
 def _build_feedbacks(provider) -> tuple:
     """Build 3 standard RAG Triad feedback functions from TruLens."""
     import numpy as np
-    from trulens.core import Feedback, Select
+    global Feedback, Select
+    if Feedback is None or Select is None:
+        try:
+            from trulens.core import Feedback, Select
+        except Exception:
+            try:
+                from trulens.core.feedback.feedback import Feedback
+                from trulens.core.schema.select import Select
+            except Exception:
+                try:
+                    from trulens_eval import Feedback, Select
+                except Exception:
+                    return None, None, None
 
     # 1. Answer Relevance — does the answer actually address the question?
     f_answer = (

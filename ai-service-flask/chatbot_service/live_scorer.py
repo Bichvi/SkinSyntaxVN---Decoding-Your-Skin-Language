@@ -13,11 +13,21 @@ if _ENV.exists():
 logger = logging.getLogger(__name__)
 
 _TRULENS_OK = False
+LiteLLM = None
 try:
     from trulens.providers.litellm import LiteLLM
     _TRULENS_OK = True
-except ImportError:
-    logger.warning("[SCORER] trulens not installed — live scoring disabled")
+except Exception:
+    try:
+        from trulens.providers.litellm.provider import LiteLLM
+        _TRULENS_OK = True
+    except Exception:
+        try:
+            from trulens_eval.feedback.provider.litellm import LiteLLM
+            _TRULENS_OK = True
+        except Exception:
+            _TRULENS_OK = False
+            logger.warning("[SCORER] trulens not installed — live scoring disabled")
 
 
 def _build_provider_list() -> list[tuple[str, object]]:

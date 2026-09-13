@@ -345,7 +345,6 @@ def get_llms():
             except Exception as e:
                 print(f"[WARN] Groq {model} init failed: {e}")
 
->>>>>>> edit:ai-service-flask/chatbot_flask.py
     # 3. Zhipu glm-4-flash (FREE, phản hồi siêu tốc ~1.5 - 3 giây, giới hạn cực cao)
     # Đưa lên trước OpenRouter để tránh nghẽn/timeout
     zhipu_key = os.getenv("ZHIPU_API_KEY", "").strip()
