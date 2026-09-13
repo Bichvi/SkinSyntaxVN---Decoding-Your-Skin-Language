@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-08-25T10:36:51.578371",
+  "total_queries": 3,
+  "intent_accuracy": 1.0,
+  "avg_latency_ms": 17469.4,
+  "avg_answer_relevance": null,
+  "avg_groundedness": null,
+  "avg_context_relevance": null,
+  "by_intent": {
+    "PRODUCT_INQUIRY": {
+      "count": 3,
+      "intent_accuracy": 1.0,
+      "avg_latency_ms": 17469.4,
+      "avg_answer_relevance": null,
+      "avg_groundedness": null
+    }
+  },
+  "by_tag": {
+    "srm": {
+      "count": 1,
+      "avg_latency_ms": 30157.2,
+      "avg_answer_relevance": null
+    },
+    "product": {
+      "count": 2,
+      "avg_latency_ms": 26029.6,
+      "avg_answer_relevance": null
+    },
+    "da_nhay_cam": {
+      "count": 1,
+      "avg_latency_ms": 21901.9,
+      "avg_answer_relevance": null
+    },
+    "routine": {
+      "count": 1,
+      "avg_latency_ms": 349.2,
+      "avg_answer_relevance": null
+    },
+    "da_hon_hop": {
+      "count": 1,
+      "avg_latency_ms": 349.2,
+      "avg_answer_relevance": null
+    },
+    "kcn": {
+      "count": 1,
+      "avg_latency_ms": 21901.9,
+      "avg_answer_relevance": null
+    },
+    "da_dau": {
+      "count": 1,
+      "avg_latency_ms": 30157.2,
+      "avg_answer_relevance": null
+    }
+  },
+  "results": [
+    {
+      "question": "da mình dầu mụn nhiều, cần sữa rửa mặt nào?",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn nhé! Mình hiểu bạn đang tìm một loại sữa rửa mặt chuyên biệt để chăm sóc làn da dầu mụn của mình. Với tình trạng da dầu và dễ nổi mụn, việc lựa chọn một sản phẩm làm sạch sâu nhưng vẫn dịu nhẹ, có khả năng kháng viêm và kiểm soát dầu là cực kỳ quan trọng đó.\n\nDưới đây là một sản phẩm mà SkinSyntax tin rằng sẽ rất phù hợp với nhu cầu của bạn:\n\n**[Mini] Sữa Rửa Mặt I'm From Từ Ngải Cứu Sạch Sâu Dịu Nhẹ 30ml](index.php?r=chitiet&id=2107)** - thương hiệu I'm from | xuất xứ: Hàn Quốc\nHiện tại trên hệ thống em này đang được ưu đãi giảm đến 25% luôn đó, giá gốc 65.333 VNĐ nay chỉ còn 49.000 VNĐ thôi, giúp bạn tiết kiệm ngay 16.333 VNĐ luôn nhé.\nVề thành phần và công dụng, sản phẩm này sở hữu đến 60% chiết xuất ngải cứu, một thành phần nổi tiếng với khả năng làm sạch sâu và hỗ trợ ngừa viêm hiệu quả, rất lý tưởng cho làn da mụn. Đặc biệt, em này còn có chiết xuất lá và hoa sầu đâu giúp hạn chế vi khuẩn gây mụn, bảo vệ da khỏi các tác nhân gây mụn. Thêm vào đó, chiết xuất rễ cây nghệ sẽ hỗ trợ kiềm dầu, giúp da bạn luôn cảm thấy thông thoáng và giảm bóng nhờn. Đây là một lựa chọn tuyệt vời để làm sạch sâu đến 99,9% bụi bẩn và cả kem chống nắng mà vẫn giữ được sự dịu nhẹ cho da.\nKhi sử dụng sản phẩm này, bạn có thể rửa sạch rồi tráng lại bằng nước lạnh một vài lần để giúp se khít lỗ chân lông, da sẽ mịn màng hơn đó.\n\nMột vài lời khuyên dưỡng da thêm từ mình là với da dầu mụn, bạn nên rửa mặt 2 lần/ngày vào buổi sáng và tối thôi nhé. Rửa mặt quá nhiều có thể làm mất đi lớp dầu tự nhiên, khiến da dễ bị khô và kích thích tuyến dầu hoạt động mạnh hơn đó.\n\nChúc bạn sớm có làn da sạch mịn, khỏe đẹp như ý nhé!",
+      "products_count": 3,
+      "latency_ms": 30157.2,
+      "tags": [
+        "product",
+        "srm",
+        "da_dau"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "tìm kem chống nắng cho da nhạy cảm, không cồn",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn nhé! Mình hiểu bạn đang tìm kiếm một loại kem chống nắng thật dịu nhẹ, phù hợp cho làn da nhạy cảm và đặc biệt là không chứa cồn để tránh gây kích ứng đúng không nào. Đây là một lựa chọn rất thông minh để bảo vệ da mà vẫn giữ được sự thoải mái đó!\n\nDưới đây là phân tích của mình về nhu cầu của bạn:\nVới làn da nhạy cảm, việc chọn kem chống nắng cần ưu tiên các sản phẩm có công thức lành tính, ít thành phần gây kích ứng và không chứa cồn. Các thành phần làm dịu da như chiết xuất rau má, Panthenol hay Niacinamide cũng là điểm cộng lớn.\n\nDưới đây là một số sản phẩm phù hợp nhất mà mình lựa chọn kỹ lưỡng cho bạn từ hệ thống:\n\n**[Tinh Chất Chống Nắng Bioré UV Dịu Nhẹ SPF50+ PA++++ 60g](index.php?r=chitiet&id=5435)** - thương hiệu Bioré | xuất xứ: Nhật Bản\nHiện tại trên hệ thống em này đang được ưu đãi giảm đến 25% luôn đó, giá gốc thị trường khoảng 334.666 VNĐ lận, nhưng mua trên hệ thống hiện tại chỉ còn 251.000 VNĐ thôi, giúp bạn tiết kiệm ngay 83.666 VNĐ luôn nhé!\nVề thành phần và công dụng, sản phẩm này được thiết kế với công thức dịu nhẹ chuyên biệt dành cho da nhạy cảm, không gây kích ứng. Đây là một điểm cộng cực lớn vì nó đảm bảo da bạn sẽ được bảo vệ tối ưu trước tia UV mà không lo bị mẩn đỏ hay khó chịu. Kết cấu dạng tinh chất cũng giúp sản phẩm thẩm thấu nhanh, không gây bí da hay nặng mặt.\nKhi sử dụng sản phẩm này, bạn nhớ thoa kỹ các vùng da dễ bị bỏ sót như mũi, cổ, tai vì chúng rất dễ bị cháy nắng đó nha.\n\n**[Kem Chống Nắng B.O.M Che Khuyết Điểm SPF50+ PA++++ 50g](index.php?r=chitiet&id=2362)** - thương hiệu B.O.M | xuất xứ: Hàn Quốc\nMón này bình thường giá gốc thị trường khoảng 507.500 VNĐ lận, nhưng mua trên hệ thống hiện tại đang được ưu đãi giảm 20%, chỉ còn 406.000 VNĐ thôi, giúp bạn tiết kiệm ngay 101.500 VNĐ luôn nhé!\nVề thành phần và công dụng, sản phẩm này sở hữu các thành phần nổi bật như Niacinamide, Panthenol và Chiết xuất rau má. Niacinamide (một dạng Vitamin B3) sẽ giúp tái tạo, hiệu chỉnh màu da và làm sáng da. Panthenol thì tăng cường độ ẩm, củng cố hàng rào bảo vệ da, hạn chế tình trạng da thiếu ẩm và bảo vệ da khỏi các tác nhân bên ngoài. Đặc biệt, chiết xuất rau má nổi tiếng với khả năng làm dịu da, giúp giảm viêm và hỗ trợ phục hồi da rất tốt, cực kỳ phù hợp cho làn da nhạy cảm của bạn. Ngoài ra, em này còn có khả năng che khuyết điểm nhẹ nhàng nữa đó.\nKhi sử dụng sản phẩm này, bạn cũng đừng quên thoa kỹ các vùng như mũi, cổ, tai vì đây là những nơi dễ bị cháy nắng nhất nha.\n\nMột vài lời khuyên dưỡng da thêm từ mình: Với làn da nhạy cảm, mình khuyên bạn nên thử sản phẩm lên một vùng da nhỏ (như sau tai hoặc dưới cằm) trước khi thoa toàn mặt để đảm bảo không có phản ứng không mong muốn nhé.\n\nChúc bạn sớm có làn da khỏe đẹp như ý nhé!",
+      "products_count": 3,
+      "latency_ms": 21901.9,
+      "tags": [
+        "product",
+        "kcn",
+        "da_nhay_cam"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "gợi ý chu trình dưỡng da sáng tối cho da hỗn hợp thiên dầu",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Tôi đã tìm thấy một số sản phẩm phù hợp cho bạn. Bạn có thể xem chi tiết từng sản phẩm ở danh sách bên dưới để lựa chọn.",
+      "products_count": 2,
+      "latency_ms": 349.2,
+      "tags": [
+        "routine",
+        "da_hon_hop"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    }
+  ],
+  "trulens_used": false
+}

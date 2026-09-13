@@ -1,0 +1,8 @@
+﻿d:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Scripts\python.exe : 
+CrossEncoder unavailable (sentence_transformers not installed): falling back to RRF ranking
+At line:1 char:1
++ d:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-se ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CrossEncoder un... to RRF ranking:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

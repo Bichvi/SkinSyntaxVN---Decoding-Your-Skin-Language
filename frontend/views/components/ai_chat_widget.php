@@ -273,8 +273,8 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       pointer-events: auto;
     }
 
-    /* Phóng to toàn màn hình */
-    .ai-chat-widget.is-expanded {
+    /* Phóng to toàn màn hình (CHỈ khi khung chat đang MỞ) */
+    .ai-chat-widget.is-open.is-expanded {
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
@@ -290,7 +290,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       display: block !important;
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-widget__panel {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel {
       width: 100% !important;
       height: 100% !important;
       max-height: 100vh !important;
@@ -304,26 +304,26 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       pointer-events: auto !important;
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-widget__panel-head {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel-head {
       padding: 24px 32px;
       background: #fff;
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-widget__panel-title {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel-title {
       font-size: 22px;
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-widget__stream {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-widget__stream {
       padding: 30px 40px;
       max-height: none !important;
       flex: 1;
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-widget__form {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-widget__form {
       padding: 24px 40px;
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-profile-banner {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-profile-banner {
       margin: 20px 40px;
       padding: 30px;
       border-radius: 24px;
@@ -432,11 +432,11 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       font-size: 14px;
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-widget__panel-head {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel-head {
       padding: 16px 24px;
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-widget__panel-title {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel-title {
       font-size: 18px;
     }
 
@@ -586,7 +586,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       transform: translateY(-1px);
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-profile-banner {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-profile-banner {
       margin: 16px 24px;
       padding: 20px;
     }
@@ -602,7 +602,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       background: linear-gradient(180deg, #fbfcf8 0%, #ffffff 100%);
     }
 
-    .ai-chat-widget.is-expanded .ai-chat-widget__stream {
+    .ai-chat-widget.is-open.is-expanded .ai-chat-widget__stream {
       min-height: 200px;
     }
 
@@ -1116,26 +1116,26 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         max-height: min(66vh, 480px);
       }
 
-      .ai-chat-widget.is-expanded .ai-chat-widget__panel {
+      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel {
         width: 100vw;
         height: 100vh;
         max-height: 100vh !important;
       }
 
-      .ai-chat-widget.is-expanded .ai-chat-widget__stream {
+      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__stream {
         max-height: none;
         flex: 1;
       }
 
-      .ai-chat-widget.is-expanded .ai-chat-widget__panel-head {
+      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel-head {
         padding: 16px;
       }
 
-      .ai-chat-widget.is-expanded .ai-chat-widget__form {
+      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__form {
         padding: 16px;
       }
 
-      .ai-chat-widget.is-expanded .ai-chat-profile-banner {
+      .ai-chat-widget.is-open.is-expanded .ai-chat-profile-banner {
         margin: 12px;
         padding: 16px;
       }
@@ -1491,6 +1491,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       };
 
       var syncExpandedState = function () {
+        if (widget.classList.contains('is-expanded') && !widget.classList.contains('is-open')) {
+          widget.classList.remove('is-expanded');
+        }
         var expanded = widget.classList.contains('is-expanded');
         if (expandButton) {
           expandButton.setAttribute('aria-pressed', expanded ? 'true' : 'false');
@@ -1575,7 +1578,8 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         } catch (e) {
         }
 
-        fetch('<?= BASE_URL ?>/index.php?r=ai_chat_assistant', {
+        var chatApiUrl = '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=ai_chat_assistant' : 'index.php?r=ai_chat_assistant' ?>';
+        fetch(chatApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1852,7 +1856,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
             messages = parsed;
           }
         }
-        if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
+        if (widget.classList.contains('is-open') && window.sessionStorage.getItem(expandedStorageKey) === '1') {
           widget.classList.add('is-expanded');
         }
       } catch (error) {

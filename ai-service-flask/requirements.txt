@@ -9,13 +9,14 @@ python-dotenv==1.0.1
 pydantic>=2.0,<3
 
 # Vector store (used by langchain-chroma)
-chromadb==0.5.20
+chromadb>=1.0.0
 
 # LangChain stack (chat, RAG, embeddings, reranker)
 langchain>=0.3.7
 langchain-core>=0.3.28
 langchain-community>=0.3.7
 langchain-openai>=0.2.10
+langchain-google-genai>=2.0.0
 langchain-tavily>=0.0.1
 tavily-python>=0.5.0
 langchain-huggingface>=0.1.2

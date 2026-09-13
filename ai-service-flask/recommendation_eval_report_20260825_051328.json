@@ -1,0 +1,1067 @@
+{
+  "timestamp": "2026-08-25T05:13:28.185061",
+  "total_queries": 20,
+  "deterministic_metrics": {
+    "intent_accuracy_pct": 100.0,
+    "category_accuracy_pct": 100.0,
+    "max_price_accuracy_pct": 90.0,
+    "min_price_accuracy_pct": 80.0,
+    "skin_type_accuracy_pct": 100.0,
+    "overall_filter_accuracy_pct": 90.0,
+    "hard_constraint_pass_rate_pct": 100.0,
+    "routine_budget_pass_rate_pct": 100.0,
+    "grounded_reasons_pct": 100.0,
+    "insufficient_data_count": 0
+  },
+  "retrieval_metrics": {
+    "precision_at_3": "N/A (No Ground Truth IDs in dataset)",
+    "note": "Precision@K reported as N/A unless dataset has ground truth expected_product_ids"
+  },
+  "latency_ms": {
+    "avg_filter_extraction_ms": 0.62,
+    "avg_retrieval_latency_ms": 1042.57,
+    "avg_validation_latency_ms": 717.69,
+    "avg_total_latency_ms": 1761.08
+  },
+  "group_breakdown": {
+    "Product Filter": {
+      "count": 4,
+      "valid_prods": 0,
+      "total_prods": 0
+    },
+    "Profile Based": {
+      "count": 3,
+      "valid_prods": 0,
+      "total_prods": 0
+    },
+    "Routine": {
+      "count": 2,
+      "valid_prods": 0,
+      "total_prods": 0
+    },
+    "Ingredient": {
+      "count": 3,
+      "valid_prods": 0,
+      "total_prods": 0
+    },
+    "Context / Follow-up": {
+      "count": 3,
+      "valid_prods": 0,
+      "total_prods": 0
+    },
+    "Edge Cases": {
+      "count": 5,
+      "valid_prods": 0,
+      "total_prods": 0
+    }
+  },
+  "details": [
+    {
+      "case_id": "REC_01_SERUM_UNDER_100K",
+      "group": "Product Filter",
+      "query": "serum dưới 100k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "max_price": 100000,
+        "min_price": null
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "max_price": 100000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "serum dưới 100k",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": "Serum / Tinh Chất",
+          "min_price": null,
+          "max_price": 100000,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 5.07,
+        "retrieval_ms": 6408.09,
+        "validation_ms": 1027.17,
+        "total_latency_ms": 7440.35
+      }
+    },
+    {
+      "case_id": "REC_02_SUNSCREEN_UNDER_300K",
+      "group": "Product Filter",
+      "query": "kem chống nắng dưới 300k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Chống Nắng Da Mặt",
+        "max_price": 300000,
+        "min_price": null
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Chống Nắng Da Mặt",
+        "max_price": 300000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "kem chống nắng dưới 300k",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": "Chống Nắng Da Mặt",
+          "min_price": null,
+          "max_price": 300000,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 1.01,
+        "retrieval_ms": 1030.65,
+        "validation_ms": 517.7,
+        "total_latency_ms": 1549.39
+      }
+    },
+    {
+      "case_id": "REC_03_MASK_UNDER_50K",
+      "group": "Product Filter",
+      "query": "mặt nạ dưới 50k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Mặt Nạ Giấy",
+        "max_price": 50000,
+        "min_price": null
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Mặt Nạ Giấy",
+        "max_price": 50000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "mặt nạ dưới 50k",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": "Mặt Nạ Giấy",
+          "min_price": null,
+          "max_price": 50000,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.98,
+        "retrieval_ms": 526.86,
+        "validation_ms": 515.24,
+        "total_latency_ms": 1043.09
+      }
+    },
+    {
+      "case_id": "REC_04_TONER_100K_TO_300K",
+      "group": "Product Filter",
+      "query": "toner từ 100k đến 300k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Toner / Nước Cân Bằng Da",
+        "min_price": 100000,
+        "max_price": 300000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Toner / Nước Cân Bằng Da",
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "toner từ 100k đến 300k",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": "Toner / Nước Cân Bằng Da",
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.86,
+        "retrieval_ms": 527.77,
+        "validation_ms": 1024.18,
+        "total_latency_ms": 1552.85
+      }
+    },
+    {
+      "case_id": "REC_05_SERUM_OILY_ACNE_500K",
+      "group": "Profile Based",
+      "query": "serum cho da dầu mụn dưới 500k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "max_price": 500000,
+        "min_price": null
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "max_price": 500000,
+        "min_price": null,
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "concerns": [
+          "mụn"
+        ],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "serum cho da dầu mụn dưới 500k",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": "Serum / Tinh Chất",
+          "min_price": null,
+          "max_price": 500000,
+          "skin_type": "Da dầu/Hỗn hợp dầu",
+          "concerns": [
+            "mụn"
+          ],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.25,
+        "retrieval_ms": 1025.44,
+        "validation_ms": 513.11,
+        "total_latency_ms": 1538.81
+      }
+    },
+    {
+      "case_id": "REC_06_SENSITIVE_NO_FRAGRANCE",
+      "group": "Profile Based",
+      "query": "sản phẩm cho da nhạy cảm tránh hương liệu",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "skin_type": "Da nhạy cảm",
+        "avoid_ingredients": [
+          "Fragrance",
+          "hương liệu"
+        ]
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "Da nhạy cảm",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "sản phẩm cho da nhạy cảm tránh hương liệu",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "Da nhạy cảm",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.51,
+        "retrieval_ms": 1023.58,
+        "validation_ms": 504.61,
+        "total_latency_ms": 1528.72
+      }
+    },
+    {
+      "case_id": "REC_07_HYDRATING_DRY_SKIN",
+      "group": "Profile Based",
+      "query": "sản phẩm cấp ẩm cho da khô",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "skin_type": "Da khô/Hỗn hợp khô",
+        "concerns": [
+          "Cấp ẩm"
+        ]
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "Da khô/Hỗn hợp khô",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "sản phẩm cấp ẩm cho da khô",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "Da khô/Hỗn hợp khô",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.29,
+        "retrieval_ms": 515.88,
+        "validation_ms": 519.14,
+        "total_latency_ms": 1035.33
+      }
+    },
+    {
+      "case_id": "REC_08_MORNING_ROUTINE_800K",
+      "group": "Routine",
+      "query": "routine buổi sáng dưới 800k",
+      "expected": {
+        "intent": "ROUTINE",
+        "is_routine": true,
+        "max_price": 800000
+      },
+      "extracted_filters": {
+        "intent": "ROUTINE",
+        "category": null,
+        "max_price": 800000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": true
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "routine buổi sáng dưới 800k",
+        "parsed_intent": "ROUTINE",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": 800000,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": true
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": false
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.19,
+        "retrieval_ms": 512.94,
+        "validation_ms": 1027.7,
+        "total_latency_ms": 1540.84
+      }
+    },
+    {
+      "case_id": "REC_09_NIGHT_ROUTINE_1M",
+      "group": "Routine",
+      "query": "routine tối dưới 1 triệu",
+      "expected": {
+        "intent": "ROUTINE",
+        "is_routine": true,
+        "max_price": 1000000
+      },
+      "extracted_filters": {
+        "intent": "ROUTINE",
+        "category": null,
+        "max_price": 1000000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": true
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "routine tối dưới 1 triệu",
+        "parsed_intent": "ROUTINE",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": 1000000,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": true
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": false
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.36,
+        "retrieval_ms": 1043.56,
+        "validation_ms": 1028.22,
+        "total_latency_ms": 2072.16
+      }
+    },
+    {
+      "case_id": "REC_10_INGREDIENT_INQUIRY",
+      "group": "Ingredient",
+      "query": "sản phẩm này có thành phần nào?",
+      "expected": {
+        "intent": "INGREDIENT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "INGREDIENT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "sản phẩm này có thành phần nào?",
+        "parsed_intent": "INGREDIENT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.2,
+        "retrieval_ms": 526.31,
+        "validation_ms": 515.91,
+        "total_latency_ms": 1042.43
+      }
+    },
+    {
+      "case_id": "REC_11_CONTAINS_NIACINAMIDE",
+      "group": "Ingredient",
+      "query": "sản phẩm có Niacinamide",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [
+          "sạm màu"
+        ],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "sản phẩm có Niacinamide",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "",
+          "concerns": [
+            "sạm màu"
+          ],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.3,
+        "retrieval_ms": 1036.95,
+        "validation_ms": 512.8,
+        "total_latency_ms": 1550.07
+      }
+    },
+    {
+      "case_id": "REC_12_AVOID_SALICYLIC_ACID",
+      "group": "Ingredient",
+      "query": "tránh Salicylic Acid",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "avoid_ingredients": [
+          "Salicylic Acid"
+        ]
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "tránh Salicylic Acid",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.14,
+        "retrieval_ms": 1024.87,
+        "validation_ms": 1027.64,
+        "total_latency_ms": 2052.65
+      }
+    },
+    {
+      "case_id": "REC_13_BUY_FIRST_RECOMMENDATION",
+      "group": "Context / Follow-up",
+      "query": "chọn 1 loại nên mua trước",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "chọn 1 loại nên mua trước",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.2,
+        "retrieval_ms": 1024.12,
+        "validation_ms": 512.87,
+        "total_latency_ms": 1537.22
+      }
+    },
+    {
+      "case_id": "REC_14_CHEAPEST_OPTION",
+      "group": "Context / Follow-up",
+      "query": "loại nào rẻ nhất?",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "loại nào rẻ nhất?",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.19,
+        "retrieval_ms": 514.92,
+        "validation_ms": 513.18,
+        "total_latency_ms": 1028.31
+      }
+    },
+    {
+      "case_id": "REC_15_BETTER_FIT_OPTION",
+      "group": "Context / Follow-up",
+      "query": "loại nào phù hợp hơn?",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "loại nào phù hợp hơn?",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.27,
+        "retrieval_ms": 514.3,
+        "validation_ms": 1027.06,
+        "total_latency_ms": 1541.65
+      }
+    },
+    {
+      "case_id": "REC_16_NO_MATCHING_PRODUCTS",
+      "group": "Edge Cases",
+      "query": "serum dưới 10k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "max_price": 10000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "max_price": 10000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "serum dưới 10k",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": "Serum / Tinh Chất",
+          "min_price": null,
+          "max_price": 10000,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.22,
+        "retrieval_ms": 1013.74,
+        "validation_ms": 513.57,
+        "total_latency_ms": 1527.55
+      }
+    },
+    {
+      "case_id": "REC_17_MISSING_INGREDIENT_DATA",
+      "group": "Edge Cases",
+      "query": "sản phẩm này có bị dị ứng không?",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "Da nhạy cảm",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "sản phẩm này có bị dị ứng không?",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "Da nhạy cảm",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.34,
+        "retrieval_ms": 1013.78,
+        "validation_ms": 514.3,
+        "total_latency_ms": 1528.44
+      }
+    },
+    {
+      "case_id": "REC_18_AMBIGUOUS_QUERY",
+      "group": "Edge Cases",
+      "query": "dưỡng da",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "dưỡng da",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": null,
+          "min_price": null,
+          "max_price": null,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.14,
+        "retrieval_ms": 523.02,
+        "validation_ms": 1018.39,
+        "total_latency_ms": 1541.55
+      }
+    },
+    {
+      "case_id": "REC_19_LOW_BUDGET_EXCEEDED",
+      "group": "Edge Cases",
+      "query": "kem dưỡng dưới 5k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Kem / Gel / Dầu Dưỡng",
+        "max_price": 5000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Kem / Gel / Dầu Dưỡng",
+        "max_price": 5000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "kem dưỡng dưới 5k",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": "Kem / Gel / Dầu Dưỡng",
+          "min_price": null,
+          "max_price": 5000,
+          "skin_type": "",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.52,
+        "retrieval_ms": 520.8,
+        "validation_ms": 1005.94,
+        "total_latency_ms": 1527.29
+      }
+    },
+    {
+      "case_id": "REC_20_CLEANSER_OILY_150K",
+      "group": "Edge Cases",
+      "query": "sữa rửa mặt cho da dầu dưới 150k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Sữa Rửa Mặt",
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "max_price": 150000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Sữa Rửa Mặt",
+        "max_price": 150000,
+        "min_price": null,
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "concerns": [],
+        "avoid_ingredients": [],
+        "is_routine": false
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "debug_trace": {
+        "query": "sữa rửa mặt cho da dầu dưới 150k",
+        "parsed_intent": "PRODUCT_INQUIRY",
+        "parsed_constraints": {
+          "category": "Sữa Rửa Mặt",
+          "min_price": null,
+          "max_price": 150000,
+          "skin_type": "Da dầu/Hỗn hợp dầu",
+          "concerns": [],
+          "avoid_ingredients": [],
+          "is_routine": false
+        },
+        "dense_candidates_count": 0,
+        "bm25_candidates_count": 0,
+        "rrf_candidates_count": 0,
+        "hydrated_candidates_count": 0,
+        "rejected_candidates": [],
+        "passed_candidates_count": 0,
+        "final_validation_passed": true,
+        "routine_budget_check_passed": true
+      },
+      "timing_ms": {
+        "filter_extraction_ms": 0.45,
+        "retrieval_ms": 523.82,
+        "validation_ms": 515.13,
+        "total_latency_ms": 1039.42
+      }
+    }
+  ]
+}

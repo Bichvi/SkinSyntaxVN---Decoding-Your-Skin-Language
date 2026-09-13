@@ -70,7 +70,7 @@ services:
       CHATBOT_PORT: "5001"
       GUNICORN_WORKERS: "2"
       GUNICORN_WORKER_CLASS: "gevent"
-      CHROMA_DB_PATH: /app/chroma_data
+      CHROMA_DB_PATH: /app/database/chroma_db
       CSV_FILE_PATH: /app/database/data_clean_final.csv
       MONGO_URI: mongodb://mongodb:27017
       MONGO_DB: skinsyntax
@@ -78,7 +78,6 @@ services:
       REDIS_CACHE_TTL: "604800"
       SESSION_CACHE_TTL: "3600"
     volumes:
-      - chroma_data:/app/chroma_data
       - ./database:/app/database:ro
       - ./ai-service-flask:/app
     depends_on:
@@ -150,6 +149,45 @@ services:
     networks:
       - skinsyntax-net
 
+  voice-service:
+    build:
+      context: ./voice-service
+      dockerfile: Dockerfile
+    container_name: skinsyntax-voice
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    environment:
+      TTS_PORT: "5002"
+      NUM_THREADS: "4"
+      PRECISION: "int8"
+    volumes:
+      - vieneu_model_cache:/root/.cache/huggingface
+    networks:
+      - skinsyntax-net
+
+  livekit-voice-agent:
+    build:
+      context: ./livekit-voice-agent
+      dockerfile: Dockerfile
+    container_name: skinsyntax-livekit-agent
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      LIVEKIT_URL: ${LIVEKIT_URL:-ws://localhost:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
+      AI_SERVICE_URL: http://ai-service:5001/api/chat/auto
+      TTS_SERVICE_URL: http://voice-service:5002/api/tts/stream
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - voice-service
+      - ai-service
+      - redis
+    networks:
+      - skinsyntax-net
+
 volumes:
   mongo_data:
     name: skinsyntax-mongo-data
@@ -159,8 +197,11 @@ volumes:
     name: skinsyntax-uploads
   redis_data:
     name: skinsyntax-redis-data
+  vieneu_model_cache:
+    name: skinsyntax-vieneu-model-cache
 
 networks:
   skinsyntax-net:
     name: skinsyntax-network
     driver: bridge
+

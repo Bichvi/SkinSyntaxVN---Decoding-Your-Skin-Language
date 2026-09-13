@@ -39,8 +39,12 @@ from hybrid_search import HybridSearchPipeline, BM25Search
 _DEFAULT_CHROMA_PATH = str(
     Path(__file__).resolve().parent.parent / "database" / "chroma_db"
 )
-CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", _DEFAULT_CHROMA_PATH)
-FLASK_PORT = int(os.getenv("CHATBOT_PORT", 5001))
+_env_chroma = os.getenv("CHROMA_DB_PATH")
+if _env_chroma and os.path.isabs(_env_chroma) and os.path.exists(_env_chroma):
+    CHROMA_DB_PATH = _env_chroma
+else:
+    CHROMA_DB_PATH = _DEFAULT_CHROMA_PATH
+FLASK_PORT = int(os.getenv("CHATBOT_PORT", 5002))
 
 
 # ── Nhiều Gemini API key xoay vòng ──────────────────────────────────────────
@@ -99,13 +103,19 @@ def get_vectorstore():
 
 def get_hybrid_pipeline():
     global _hybrid_pipeline
-    if _hybrid_pipeline is None:
-        _hybrid_pipeline = HybridSearchPipeline(
-            vectorstore=get_vectorstore(),
-            bm25_index=BM25Search(),
-            alpha=0.5,
-        )
-        print("[OK] Hybrid pipeline loaded (RRF + Vietnamese reranker)")
+    vs = get_vectorstore()
+    if _hybrid_pipeline is None or getattr(_hybrid_pipeline, 'vectorstore', None) is None:
+        if vs:
+            _hybrid_pipeline = HybridSearchPipeline(
+                vectorstore=vs,
+                bm25_index=BM25Search(),
+                alpha=0.5,
+            )
+            print("[OK] Hybrid pipeline loaded (RRF + Vietnamese reranker)")
+        else:
+            return None
+    elif vs and _hybrid_pipeline.vectorstore != vs:
+        _hybrid_pipeline.vectorstore = vs
     return _hybrid_pipeline
 
 
@@ -204,8 +214,37 @@ def get_llms():
 
     _llms = []
 
-    # 1. Gemini 1.5 Flash — 1500 req/ngày/key (FREE)
-    # Ưu tiên gemini-1.5-flash vì limit CAO HƠN NHIỀU so với 2.5-flash (chỉ 20/ngày)
+    try:
+        from langchain_openai import ChatOpenAI
+    except Exception:
+        try:
+            from langchain_community.chat_models import ChatOpenAI
+        except Exception:
+            ChatOpenAI = None
+
+    # 0. OpenAI GPT-4o-mini (Key trả phí — tốc độ cao, thông minh, không lo quota)
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if ChatOpenAI is not None and openai_key:
+        for o_model in ["gpt-4o-mini", "gpt-4o"]:
+            try:
+                o_llm = ChatOpenAI(
+                    openai_api_key=openai_key,
+                    model_name=o_model,
+                    temperature=0.2,
+                    max_tokens=4096,
+                    max_retries=1,
+                )
+                print(f"[INFO] Testing OpenAI ({o_model})...")
+                if _test_llm_connection(o_llm):
+                    _llms.append(o_llm)
+                    print(f"[OK] OpenAI ({o_model}) loaded and validated (PRIMARY HIGH-SPEED)")
+                    break
+                else:
+                    print(f"[WARN] OpenAI ({o_model}) validation failed")
+            except Exception as e:
+                print(f"[WARN] OpenAI ({o_model}) init failed: {e}")
+
+    # 1. Gemini Flash — 1500 req/ngày/key (FREE)
     from langchain_google_genai import ChatGoogleGenerativeAI, HarmCategory, HarmBlockThreshold
     safety = {
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -216,23 +255,29 @@ def get_llms():
 
     for idx, key in enumerate(GEMINI_KEYS):
         label = "PRIMARY" if idx == 0 else f"KEY_{idx+1}"
-        try:
-            llm = ChatGoogleGenerativeAI(
-                model=GEMINI_MODEL,
-                temperature=0,
-                max_tokens=4096,
-                max_retries=0,
-                google_api_key=key,
-                safety_settings=safety,
-            )
-            print(f"[INFO] Testing Gemini ({GEMINI_MODEL}) ({label})...")
-            if _test_llm_connection(llm):
-                _llms.append(llm)
-                print(f"[OK] Gemini ({GEMINI_MODEL}) ({label}) loaded and validated")
-            else:
-                print(f"[WARN] Gemini ({GEMINI_MODEL}) ({label}) skipped due to invalid/dead key")
-        except Exception as e:
-            print(f"[WARN] Gemini key {idx+1} init failed: {e}")
+        candidate_models = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash"]
+        if GEMINI_MODEL not in candidate_models:
+            candidate_models.insert(0, GEMINI_MODEL)
+
+        for g_model in candidate_models:
+            try:
+                llm = ChatGoogleGenerativeAI(
+                    model=g_model,
+                    temperature=0,
+                    max_tokens=4096,
+                    max_retries=0,
+                    google_api_key=key,
+                    safety_settings=safety,
+                )
+                print(f"[INFO] Testing Gemini ({g_model}) ({label})...")
+                if _test_llm_connection(llm):
+                    _llms.append(llm)
+                    print(f"[OK] Gemini ({g_model}) ({label}) loaded and validated")
+                    break
+                else:
+                    print(f"[WARN] Gemini ({g_model}) ({label}) failed validation/quota")
+            except Exception as e:
+                print(f"[WARN] Gemini ({g_model}) {label} init failed: {e}")
 
     try:
         from langchain_openai import ChatOpenAI
@@ -242,10 +287,10 @@ def get_llms():
         except Exception:
             ChatOpenAI = None
 
-    # 2. Groq — llama-3.3-70b-versatile (Ưu tiên 70B cho tiếng Việt xuất sắc và khả năng suy luận/phân loại intent)
+    # 2. Groq — Qwen 2.5 27B / GPT-OSS 120B
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
     if ChatOpenAI is not None and groq_key:
-        for model in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama3-8b-8192"]:
+        for model in ["qwen/qwen3.6-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
             try:
                 groq = ChatOpenAI(
                     openai_api_key=groq_key,
@@ -392,12 +437,13 @@ def classify_intent(query: str, llms: list) -> tuple[str, str | None]:
     Thử lần lượt các LLM trong danh sách nếu gặp lỗi (e.g. rate limit).
     Trả về tuple: (intent, ingredient)
     """
-    query_lower = query.lower()
+    import unicodedata
+    query_lower = unicodedata.normalize('NFC', query.lower())
     
     # Rule-based check to override intent to PRODUCT_INQUIRY for product/routine queries
-    routine_keywords = ["chu trình", "chu trinh", "skincare", "routine", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "bộ dưỡng", "bo duong"]
+    routine_keywords = ["chu trình", "chu trinh", "skincare", "routine", "rountine", "routin", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "bộ dưỡng", "bo duong", "dưỡng da", "duong da", "buổi sáng", "buoi sang", "buổi tối", "buoi toi", "sáng tối", "sang toi", "quy trình", "quy trinh", "trọn gói", "set dưỡng"]
     product_keywords = ["sản phẩm", "san pham", "srm", "sữa rửa mặt", "sua rua mat", "tẩy trang", "tay trang", "toner", "nước cân bằng", "nuoc can bang", "serum", "tinh chất", "tinh chat", "kem dưỡng", "kem duong", "gel dưỡng", "gel duong", "chống nắng", "chong nang", "kcn", "sunscreen"]
-    recommend_keywords = ["gợi ý", "goi y", "đề xuất", "de xuat", "nên mua", "nen mua", "nên dùng", "nen dung", "chọn giúp", "chon giup", "tư vấn giúp", "tu van giup"]
+    recommend_keywords = ["gợi ý", "goi y", "đề xuất", "de xuat", "nêu", "tư vấn", "tu van", "nên mua", "nen mua", "nên dùng", "nen dung", "chọn giúp", "chon giup", "tư vấn giúp", "tu van giup"]
     
     has_routine = any(k in query_lower for k in routine_keywords)
     has_prod_and_rec = any(p in query_lower for p in product_keywords) and any(r in query_lower for r in recommend_keywords)
@@ -869,7 +915,7 @@ def rule_based_parse(message: str) -> Optional[PhanTichYeuCau]:
     
     # 1. Nhận diện loai_da
     loai_da = None
-    if any(k in msg_lower for k in ["da dầu", "da dau", "hỗn hợp dầu", "hon hop dau", "nhờn", "nhon", "siêu dầu", "siêu nhờn"]):
+    if any(k in msg_lower for k in ["da dầu", "da dau", "dầu mụn", "dau mun", "hỗn hợp dầu", "hon hop dau", "nhờn", "nhon", "siêu dầu", "siêu nhờn"]):
         loai_da = "Da dầu/Hỗn hợp dầu"
     elif any(k in msg_lower for k in ["nhạy cảm", "nhay cam", "dễ kích ứng", "de kich ung", "kích ứng", "kich ung", "mỏng yếu", "mong yeu"]):
         loai_da = "Da nhạy cảm"
@@ -920,7 +966,7 @@ def rule_based_parse(message: str) -> Optional[PhanTichYeuCau]:
         loai_san_pham = "Son Dưỡng Môi"
         
     is_routine = False
-    if any(k in msg_lower for k in ["routine", "chu trình", "chu trinh", "skincare", "dưỡng da", "duong da", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "sáng tối", "sang toi"]):
+    if any(k in msg_lower for k in ["routine", "rountine", "routin", "chu trình", "chu trinh", "quy trình", "quy trinh", "skincare", "dưỡng da", "duong da", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "sáng tối", "sang toi", "buổi sáng", "buoi sang", "buổi tối", "buoi toi", "trọn gói", "set dưỡng"]):
         is_routine = True
         
     tinh_trang_da = []
@@ -1531,6 +1577,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     chat_history_str = ""
     current_product_id = None
 
+    profile = {}
     if msg_data:
         # Extract profile
         profile = msg_data.get("customer_profile", {}) or {}
@@ -1651,14 +1698,18 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
 
     def hybrid_search_with_filter(filter_dict: dict | None, top_n: int, custom_query: str = None) -> list:
         k_total = max(top_n * 2, 6)
-        ranked_docs, _ = pipeline.search(
-            query=custom_query or rewritten_query,
-            k_total=k_total,
-            top_n=top_n,
-            filters=filter_dict,
-            use_reranker=True,
-        )
-        return ranked_to_docs(ranked_docs)
+        try:
+            ranked_docs, _ = pipeline.search(
+                query=custom_query or rewritten_query,
+                k_total=k_total,
+                top_n=top_n,
+                filters=filter_dict,
+                use_reranker=False,
+            )
+            return ranked_to_docs(ranked_docs)
+        except Exception as e:
+            print(f"[HYBRID SEARCH] error: {e}")
+            return []
 
     if intent == "GENERAL_CONVERSATION":
         print("[ROUTE] GENERAL_CONVERSATION")
@@ -1700,17 +1751,21 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             # Gather candidates for all categories
             category_candidates = []
             for cat_name, friendly_name in routine_categories:
-                cat_conds = []
-                if yc.loai_da and yc.loai_da not in ("Unknown", None):
-                    allowed_types = get_loai_da_filter_values(yc.loai_da)
-                    if allowed_types:
-                        cat_conds.append({"loai_da": {"$in": allowed_types}})
-                    else:
-                        cat_conds.append({"loai_da": {"$eq": yc.loai_da}})
-                cat_conds.append({"loai_san_pham": {"$eq": cat_name}})
-                bo_loc_cat = cat_conds[0] if len(cat_conds) == 1 else {"$and": cat_conds}
-                
-                cat_docs = hybrid_search_with_filter(bo_loc_cat, top_n=3)
+                cat_docs = []
+                try:
+                    if pipeline and getattr(pipeline, 'vectorstore', None):
+                        cat_q = f"{friendly_name} {yc.loai_da or ''}".strip()
+                        cat_ranked_docs, _ = pipeline.search(
+                            query=cat_q,
+                            k_total=10,
+                            top_n=3,
+                            filters={"loai_san_pham": {"$eq": cat_name}},
+                            use_reranker=False
+                        )
+                        cat_docs = ranked_to_docs(cat_ranked_docs)
+                except Exception as ex:
+                    print(f"[ROUTINE SEARCH] Search error for {friendly_name}: {ex}")
+                    cat_docs = []
                 if not cat_docs:
                     cat_docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": cat_name}}, top_n=3)
                 
@@ -1839,18 +1894,19 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     merged_docs = []
     sensitive_keywords = ["băng vệ sinh", "bao cao su", "bvs", "bcs", "durex", "diana", "kotex", "laurier", "sagami", "okamoto", "whisper", "sofy", "sanytène", "tampon", "phụ khoa"]
     
-    # Pool SQL documents
-    for doc in sql_docs:
-        p_id = doc.id.replace('product_', '') if doc.id else doc.metadata.get("id", "")
-        p_name = doc.metadata.get("ten_san_pham", "")
-        p_name_lower = p_name.lower()
-        if any(kw in p_name_lower for kw in sensitive_keywords):
-            print(f"[FILTER] Excluded sensitive product from SQL: {p_name}")
-            continue
-        key = (p_id, p_name)
-        if key not in seen_ids:
-            seen_ids.add(key)
-            merged_docs.append(doc)
+    # Pool SQL documents only for non-routine queries (routine queries use dedicated RAG steps)
+    if not yc.is_routine:
+        for doc in sql_docs:
+            p_id = doc.id.replace('product_', '') if doc.id else doc.metadata.get("id", "")
+            p_name = doc.metadata.get("ten_san_pham", "")
+            p_name_lower = p_name.lower()
+            if any(kw in p_name_lower for kw in sensitive_keywords):
+                print(f"[FILTER] Excluded sensitive product from SQL: {p_name}")
+                continue
+            key = (p_id, p_name)
+            if key not in seen_ids:
+                seen_ids.add(key)
+                merged_docs.append(doc)
             
     # Pool ChromaDB documents
     for doc in docs:
@@ -1949,7 +2005,50 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             reassembled_docs = sorted(reassembled_docs, key=doc_price_key)
 
     # Limit the merged docs to avoid huge prompt token size and 413 Payload/Request Too Large errors
-    final_merged_docs = reassembled_docs if yc.is_routine else reassembled_docs[:int(yc.so_luong_goi_y or 3)]
+    if yc.is_routine:
+        # Select 5 facial skincare routine products (Cleanser, Toner, Serum, Moisturizer, Sunscreen) fitting within budget
+        routine_categories = [
+            ("Sữa Rửa Mặt / Tẩy Trang", ["rửa mặt", "rua mat", "tẩy trang", "tay trang", "srm", "cleanser"]),
+            ("Toner / Nước Cân Bằng", ["toner", "nước cân bằng", "nuoc can bang", "lotion", "nước hoa hồng"]),
+            ("Serum / Tinh Chất", ["serum", "tinh chất", "tinh chat", "ampoule", "essence"]),
+            ("Kem Dưỡng / Gel Dưỡng", ["kem dưỡng", "kem duong", "gel dưỡng", "gel duong", "moisturizer", "cream"]),
+            ("Chống Nắng", ["chống nắng", "chong nang", "kcn", "sunscreen"]),
+        ]
+        excluded_kw = ["tóc", "toc", "che khuyết điểm", "che khuyet diem", "son môi", "phấn", "lăn khử mùi", "dầu gội", "sữa tắm", "dưỡng thể"]
+        candidates_by_step = {step[0]: [] for step in routine_categories}
+        
+        for doc in reassembled_docs:
+            p_content = getattr(doc, "page_content", "") or ""
+            meta_str = str(getattr(doc, "metadata", {}) or {})
+            full_text = f"{p_content} {meta_str}".lower()
+            if any(ex in full_text for ex in excluded_kw):
+                continue
+            for step_name, keywords in routine_categories:
+                if any(kw in full_text for kw in keywords):
+                    candidates_by_step[step_name].append(doc)
+                    break
+
+        selected_routine = []
+        for step_name, step_docs in candidates_by_step.items():
+            if step_docs:
+                selected_routine.append(step_docs[0])
+
+        if len(selected_routine) < 3:
+            selected_routine = [d for d in reassembled_docs if not any(ex in f"{d.metadata.get('ten_san_pham','')} {d.metadata.get('loai_san_pham','')}".lower() for ex in excluded_kw)][:5]
+
+        if yc.ngan_sach and yc.ngan_sach > 0:
+            fitted = []
+            current_total = 0.0
+            for d in selected_routine:
+                price = float(d.metadata.get("gia_ban", 0) or 0)
+                if current_total + price <= yc.ngan_sach or not fitted:
+                    fitted.append(d)
+                    current_total += price
+            selected_routine = fitted
+
+        final_merged_docs = selected_routine or reassembled_docs[:5]
+    else:
+        final_merged_docs = reassembled_docs[:int(yc.so_luong_goi_y or 3)]
 
     # CRITICAL: Log search results
     if final_merged_docs:
@@ -2004,7 +2103,12 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         try:
             print(f"[GENERATE] Trying: {model_name}")
             response = llm.invoke([HumanMessage(content=prompt)])
-            answer = (response.content or "").strip()
+            if isinstance(response.content, list):
+                raw_ans = "".join(part.get("text", "") if isinstance(part, dict) else str(part) for part in response.content)
+            else:
+                raw_ans = str(response.content or "")
+            raw_ans = raw_ans.strip()
+            answer = re.sub(r'<think>.*?</think>', '', raw_ans, flags=re.DOTALL).strip()
             if answer:
                 print(f"[GENERATE] OK: {model_name}")
                 break
@@ -2057,15 +2161,16 @@ def health():
     count = 0
     try:
         vs = get_vectorstore()
-        count = vs._collection.count()
-        vs_ok = True
-        print(f"[DEBUG] Vectorstore loaded with {count} documents")
+        if vs:
+            count = vs._collection.count()
+            vs_ok = True
+            print(f"[DEBUG] Vectorstore loaded with {count} documents")
     except Exception as e:
         print(f"[WARN] Vectorstore health: {e}")
 
-    llm_count = len(get_llms())
     gemini_key_count = len(GEMINI_KEYS)
-    print(f"[DEBUG] LLMs loaded: {llm_count}, Gemini keys: {gemini_key_count}")
+    has_openai = bool(os.getenv("OPENAI_API_KEY", "").strip())
+    has_groq = bool(os.getenv("GROQ_API_KEY", "").strip())
 
     return jsonify({
         "ok": True,
@@ -2073,7 +2178,8 @@ def health():
         "port": FLASK_PORT,
         "model": f"{GEMINI_MODEL} (primary)",
         "gemini_keys": gemini_key_count,
-        "llm_count": llm_count,
+        "openai": has_openai,
+        "groq": has_groq,
         "chromadb": vs_ok,
         "documents": count,
         "note": f"Primary Gemini model: {GEMINI_MODEL}"
@@ -2154,6 +2260,35 @@ def fetch_user_profile_from_mongo(email: str = "", user_id=None) -> dict:
     return profile
 
 
+@app.post("/api/recommend")
+def api_recommend():
+    """Structured Recommendation endpoint using Shared LangChain Core."""
+    data = request.get_json(force=True, silent=True) or {}
+    email = str(data.get("email") or "").strip()
+    user_id = data.get("user_id") or data.get("session_user_id")
+    profile = data.get("user_profile") or data.get("recommendation_profile") or data.get("profile") or {}
+
+    if not profile and (email or user_id):
+        profile = fetch_user_profile_from_mongo(email=email, user_id=user_id)
+
+    payload = dict(data)
+    payload["user_profile"] = profile
+
+    try:
+        import importlib
+        import structured_recommendation
+        importlib.reload(structured_recommendation)
+        res = structured_recommendation.generate_structured_recommendation(payload, limit=6)
+        return jsonify(res)
+    except Exception as e:
+        print(f"[ERROR] /api/recommend error: {e}")
+        return jsonify({
+            "ok": False,
+            "message": "Không thể tạo gợi ý cấu trúc lúc này.",
+            "detail": str(e),
+        }), 500
+
+
 @app.post("/api/recommend/profile")
 @app.post("/api/recommend/llamaindex")
 @app.post("/api/recommend/langchain-rag")
@@ -2213,10 +2348,8 @@ def recommendation_profile():
         for idx, p in enumerate(products):
             if not isinstance(p, dict):
                 continue
-            if "match_percent" not in p:
-                p["match_percent"] = max(72, 98 - (idx * 3))
-            if "match_label" not in p:
-                p["match_label"] = f"PHÙ HỢP {skin_type.upper()}"
+            p["match_percent"] = None
+            p["score"] = None
                 
         return jsonify({
             "ok": True,
@@ -2249,14 +2382,13 @@ if __name__ == "__main__":
     print(f"[INFO]  Gemini keys: {len(GEMINI_KEYS)} key(s) loaded")
     
     # Pre-warm models to avoid timeout on first request on slow machines
-    print("[INFO]  Warming up models (Embeddings & LLMs)...")
+    print("[INFO]  Warming up models (ChromaDB Vectorstore & Hybrid pipeline)...")
     try:
         get_vectorstore()
-        get_llms()
+        get_hybrid_pipeline()
     except Exception as e:
         print(f"[WARN]  Warm-up failed: {e}")
 
-    print(f"[INFO]  Primary model: {GEMINI_MODEL} (1500 req/day FREE)")
     print(f"[INFO]  Health check: http://127.0.0.1:{FLASK_PORT}/health")
     print(f"[INFO]  Detailed health: http://127.0.0.1:{FLASK_PORT}/api/health")
     app.run(host="0.0.0.0", port=FLASK_PORT, debug=False, use_reloader=False)

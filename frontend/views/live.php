@@ -1,5 +1,5 @@
 <?php
-$pageTitle = '🔴 SkinSyntax Live - Sàn Thương Mại Điện Tử Livestream Tích Hợp AI Agent';
+$pageTitle = '🔴 SkinSyntax Live - Livestream Tư Vấn & Trợ Lý Mua Sắm';
 require_once __DIR__ . '/layouts/header.php';
 ?>
 
@@ -498,7 +498,7 @@ $isUpcoming = ($liveStatus === 'upcoming');
             <?php endif; ?>
           </form>
           <div class="extra-small text-muted mt-2" style="font-size: 0.72rem;">
-            💡 <strong>Mẹo:</strong> Gõ <code>"chốt đơn"</code> hoặc hỏi về hoạt chất để thử phản hồi AI Agent!
+            💡 <strong>Mẹo:</strong> Gõ <code>"chốt đơn"</code> hoặc hỏi về hoạt chất để được trợ lý tư vấn ngay!
           </div>
         </div>
       </div>
@@ -721,7 +721,7 @@ function filterLiveSessions(status, btn) {
 
           <div class="form-check form-switch mb-3">
             <input class="form-check-input" type="checkbox" name="bat_ai_cohost" id="aiCoHostSwitch" value="1" checked>
-            <label class="form-check-label fw-bold small" for="aiCoHostSwitch">Bật AI Agent Co-Host (Tự động tư vấn RAG &amp; Chốt đơn khi khán giả gõ 'chốt đơn')</label>
+            <label class="form-check-label fw-bold small" for="aiCoHostSwitch">Bật Trợ Lý Tư Vấn Tự Động (Tự động giải đáp thắc mắc &amp; Chốt đơn)</label>
           </div>
 
           <div class="d-flex align-items-center justify-content-end gap-2 mt-4">

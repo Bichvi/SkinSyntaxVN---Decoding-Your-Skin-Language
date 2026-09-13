@@ -11,7 +11,7 @@
         <h2 class="site-footer__title">Mua mỹ phẩm có định hướng hơn: tìm nhanh, hiểu da rõ và giữ mọi dữ liệu chăm da trong cùng một tài khoản.</h2>
       </div>
       <div class="site-footer__cta-actions">
-        <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=goiy">Nhận gợi ý AI</a>
+        <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=goiy">Nhận gợi ý routine</a>
         <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=tatca">Khám phá sản phẩm</a>
       </div>
     </section>
