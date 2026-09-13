@@ -423,14 +423,21 @@ class HybridSearchPipeline:
         filters: Optional[Dict] = None,
     ) -> List[Tuple[str, Document, float]]:
         """Query Chroma trực tiếp để giữ đúng id product_{ma_san_pham}."""
+        if not self.vectorstore:
+            return []
         emb_fn = getattr(self.vectorstore, "_embedding_function", None)
         collection = getattr(self.vectorstore, "_collection", None)
         if emb_fn is None or collection is None:
-            semantic_docs = self.vectorstore.similarity_search(query, k=k, filter=filters)
-            return [
-                (self._resolve_doc_id(doc, i), doc, 1.0 - i * 0.01)
-                for i, doc in enumerate(semantic_docs)
-            ]
+            if hasattr(self.vectorstore, "similarity_search"):
+                try:
+                    semantic_docs = self.vectorstore.similarity_search(query, k=k, filter=filters)
+                    return [
+                        (self._resolve_doc_id(doc, i), doc, 1.0 - i * 0.01)
+                        for i, doc in enumerate(semantic_docs)
+                    ]
+                except Exception:
+                    pass
+            return []
 
         query_emb = emb_fn.embed_query(query)
         kwargs: Dict[str, Any] = {
@@ -445,11 +452,16 @@ class HybridSearchPipeline:
             res = collection.query(**kwargs)
         except Exception as exc:
             logger.warning(f"[SEMANTIC] Chroma query failed: {exc}")
-            semantic_docs = self.vectorstore.similarity_search(query, k=k, filter=filters)
-            return [
-                (self._resolve_doc_id(doc, i), doc, 1.0 - i * 0.01)
-                for i, doc in enumerate(semantic_docs)
-            ]
+            if hasattr(self.vectorstore, "similarity_search"):
+                try:
+                    semantic_docs = self.vectorstore.similarity_search(query, k=k, filter=filters)
+                    return [
+                        (self._resolve_doc_id(doc, i), doc, 1.0 - i * 0.01)
+                        for i, doc in enumerate(semantic_docs)
+                    ]
+                except Exception:
+                    pass
+            return []
 
         ids = (res.get("ids") or [[]])[0]
         docs = (res.get("documents") or [[]])[0]

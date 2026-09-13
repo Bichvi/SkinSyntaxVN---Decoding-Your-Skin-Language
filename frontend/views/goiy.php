@@ -504,7 +504,8 @@ document.addEventListener('DOMContentLoaded', function () {
     consultBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang tư vấn...';
 
     try {
-      const resp = await fetch('<?= BASE_URL ?>/index.php?r=ai_chat_api', {
+      const chatApiUrl = '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=ai_chat_api' : 'index.php?r=ai_chat_api' ?>';
+      const resp = await fetch(chatApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: q })

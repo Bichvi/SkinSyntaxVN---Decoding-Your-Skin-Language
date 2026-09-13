@@ -440,7 +440,7 @@ require_once __DIR__ . '/layouts/header.php';
               <div class="col-12">
                 <div class="form-check form-switch mt-1">
                   <input class="form-check-input" type="checkbox" name="bat_ai_cohost" id="editAiSwitch_<?= h($live['id']) ?>" value="1" <?= !empty($live['bat_ai_cohost']) ? 'checked' : '' ?>>
-                  <label class="form-check-label fw-bold small" for="editAiSwitch_<?= h($live['id']) ?>">Bật AI Agent Co-Host (Tự động tư vấn RAG & Chốt đơn)</label>
+                  <label class="form-check-label fw-bold small" for="editAiSwitch_<?= h($live['id']) ?>">Bật Trợ Lý Tư Vấn Tự Động (Tự động tư vấn & Chốt đơn)</label>
                 </div>
               </div>
             </div>
@@ -837,7 +837,7 @@ require_once __DIR__ . '/layouts/header.php';
             <div class="col-12">
               <div class="form-check form-switch mt-2">
                 <input class="form-check-input" type="checkbox" name="bat_ai_cohost" id="adminAiSwitch" value="1" checked>
-                <label class="form-check-label fw-bold small" for="adminAiSwitch">Bật AI Agent Co-Host (Tự động tư vấn RAG & Chốt đơn khi khán giả gõ 'chốt đơn')</label>
+                <label class="form-check-label fw-bold small" for="adminAiSwitch">Bật Trợ Lý Tư Vấn Tự Động (Tự động tư vấn & Chốt đơn khi khán giả gõ 'chốt đơn')</label>
               </div>
             </div>
           </div>

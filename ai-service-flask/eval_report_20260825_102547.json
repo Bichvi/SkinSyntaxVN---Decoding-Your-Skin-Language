@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-08-25T10:24:15.777172",
+  "total_queries": 3,
+  "intent_accuracy": 1.0,
+  "avg_latency_ms": 21928.2,
+  "avg_answer_relevance": null,
+  "avg_groundedness": null,
+  "avg_context_relevance": null,
+  "by_intent": {
+    "PRODUCT_INQUIRY": {
+      "count": 3,
+      "intent_accuracy": 1.0,
+      "avg_latency_ms": 21928.2,
+      "avg_answer_relevance": null,
+      "avg_groundedness": null
+    }
+  },
+  "by_tag": {
+    "srm": {
+      "count": 1,
+      "avg_latency_ms": 32278.1,
+      "avg_answer_relevance": null
+    },
+    "routine": {
+      "count": 1,
+      "avg_latency_ms": 15744.7,
+      "avg_answer_relevance": null
+    },
+    "da_hon_hop": {
+      "count": 1,
+      "avg_latency_ms": 15744.7,
+      "avg_answer_relevance": null
+    },
+    "da_dau": {
+      "count": 1,
+      "avg_latency_ms": 32278.1,
+      "avg_answer_relevance": null
+    },
+    "kcn": {
+      "count": 1,
+      "avg_latency_ms": 17761.8,
+      "avg_answer_relevance": null
+    },
+    "product": {
+      "count": 2,
+      "avg_latency_ms": 25019.9,
+      "avg_answer_relevance": null
+    },
+    "da_nhay_cam": {
+      "count": 1,
+      "avg_latency_ms": 17761.8,
+      "avg_answer_relevance": null
+    }
+  },
+  "results": [
+    {
+      "question": "da mình dầu mụn nhiều, cần sữa rửa mặt nào?",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn nhé! Mình hiểu rằng bạn đang tìm kiếm một loại sữa rửa mặt phù hợp cho làn da dầu mụn của mình. Đây là một bước cực kỳ quan trọng trong chu trình chăm sóc da để kiểm soát dầu thừa và hỗ trợ giảm mụn hiệu quả đó.\n\nHiện tại, Bác sĩ da liễu ảo nhà SkinSyntaxVN chưa tìm thấy sản phẩm sữa rửa mặt cụ thể nào trong hệ thống của mình khớp hoàn toàn với yêu cầu của bạn ngay lúc này. Tuy nhiên, mình có thể chia sẻ một vài tiêu chí quan trọng để bạn tham khảo khi lựa chọn sữa rửa mặt cho da dầu mụn nhé:\n\nVới làn da dầu mụn, bạn nên ưu tiên các sản phẩm có những đặc điểm sau:\n*   **Thành phần làm sạch dịu nhẹ**: Tìm kiếm các hoạt chất như Salicylic Acid (BHA) ở nồng độ thấp (khoảng 0.5% - 2%) giúp làm sạch sâu lỗ chân lông, loại bỏ bã nhờn và tế bào chết, ngăn ngừa mụn hình thành. Hoặc các thành phần như Zinc PCA, Niacinamide cũng rất tốt trong việc kiểm soát dầu và kháng viêm, giúp giảm viêm sưng và điều tiết bã nhờn.\n*   **Không chứa xà phòng (Soap-free) và độ pH cân bằng**: Điều này giúp làm sạch da mà không gây khô căng, kích ứng hay phá vỡ hàng rào bảo vệ tự nhiên của da, vốn rất quan trọng để da không bị mất nước và tiết dầu nhiều hơn.\n*   **Kết cấu dạng gel hoặc tạo bọt nhẹ**: Giúp làm sạch hiệu quả mà vẫn giữ được độ ẩm cần thiết cho da, mang lại cảm giác sạch thoáng nhưng vẫn mềm mại sau khi rửa.\n*   **Không chứa cồn, hương liệu và paraben**: Những thành phần này có thể gây kích ứng, đặc biệt với làn da mụn nhạy cảm, làm tình trạng mụn trở nên tồi tệ hơn.\n\nMình khuyên bạn nên rửa mặt 2 lần mỗi ngày vào buổi sáng và tối, kết hợp massage nhẹ nhàng khoảng 30-60 giây rồi rửa sạch lại với nước. Đừng quên thử sản phẩm ở một vùng da nhỏ trước khi dùng cho toàn mặt để đảm bảo da bạn không bị kích ứng nhé.\n\nNếu bạn muốn mình tìm kiếm các sản phẩm khác trong chu trình dưỡng da hoặc có bất kỳ tiêu chí cụ thể nào hơn (ví dụ: mức giá, thương hiệu yêu thích, hoặc các thành phần bạn muốn tránh), hãy cho mình biết nhé. SkinSyntaxVN luôn sẵn lòng hỗ trợ bạn tìm được sản phẩm ưng ý nhất!\n\nChúc bạn sớm có làn da khỏe đẹp như ý nhé!",
+      "products_count": 0,
+      "latency_ms": 32278.1,
+      "tags": [
+        "product",
+        "srm",
+        "da_dau"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "tìm kem chống nắng cho da nhạy cảm, không cồn",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn nhé! Mình hiểu bạn đang tìm một loại kem chống nắng thật dịu nhẹ, không chứa cồn để bảo vệ làn da nhạy cảm của mình đúng không ạ? Đây là một lựa chọn rất thông minh để tránh kích ứng và duy trì hàng rào bảo vệ da khỏe mạnh đó.\n\nHiện tại, mình rất tiếc là hệ thống SkinSyntaxVN chưa có sản phẩm kem chống nắng nào đáp ứng chính xác tất cả các tiêu chí \"da nhạy cảm\" và \"không cồn\" trong kho hàng hiện tại của mình ạ.\n\nTuy nhiên, với kinh nghiệm của mình, khi chọn kem chống nắng cho da nhạy cảm và không cồn, bạn nên ưu tiên những sản phẩm có các đặc điểm sau để đảm bảo an toàn và hiệu quả tối ưu:\n\n*   **Thành phần chống nắng vật lý:** Hãy tìm kiếm kem chống nắng vật lý (mineral sunscreen) với thành phần chính là **Zinc Oxide** và/hoặc **Titanium Dioxide**. Đây là hai hoạt chất chống nắng lành tính, ít gây kích ứng cho da nhạy cảm vì chúng tạo một lớp màng bảo vệ trên bề mặt da, phản xạ tia UV mà không thẩm thấu sâu vào da.\n*   **Tránh các thành phần dễ gây kích ứng:** Tuyệt đối tránh các thành phần như cồn (alcohol), hương liệu (fragrance), paraben, và các chất tạo màu. Những chất này có thể làm khô da, gây mẩn đỏ hoặc ngứa rát cho làn da nhạy cảm.\n*   **Phổ rộng (Broad-Spectrum):** Đảm bảo sản phẩm có nhãn \"Broad-Spectrum\" để bảo vệ da khỏi cả tia UVA (gây lão hóa) và UVB (gây cháy nắng).\n*   **Kết cấu mỏng nhẹ:** Chọn kết cấu kem mỏng nhẹ, dễ tán, không gây bít tắc lỗ chân lông, đặc biệt nếu bạn có xu hướng da dễ nổi mụn.\n\nĐặc biệt, với da nhạy cảm, mình luôn khuyên bạn nên thử sản phẩm ở một vùng da nhỏ (patch test) trên cổ tay hoặc sau tai khoảng 2-3 ngày trước khi dùng cho toàn mặt để đảm bảo không có phản ứng không mong muốn nhé.\n\nSkinSyntaxVN luôn cố gắng cập nhật những sản phẩm chất lượng và phù hợp nhất. Bạn có muốn mình tư vấn thêm về các bước dưỡng da khác cho da nhạy cảm, hoặc mình có thể thông báo cho bạn ngay khi có kem chống nắng mới về hàng không ạ?\n\nChúc bạn sớm tìm được sản phẩm ưng ý và có làn da khỏe đẹp nhé!",
+      "products_count": 0,
+      "latency_ms": 17761.8,
+      "tags": [
+        "product",
+        "kcn",
+        "da_nhay_cam"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "gợi ý chu trình dưỡng da sáng tối cho da hỗn hợp thiên dầu",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Chào bạn nhé! Mình là Bác sĩ da liễu ảo nhà SkinSyntaxVN đây. Mình rất vui được hỗ trợ bạn thiết kế một chu trình dưỡng da sáng tối chuyên biệt cho làn da hỗn hợp thiên dầu của mình.\n\nHiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn các sản phẩm cụ thể trong danh mục để mình gợi ý trực tiếp cho từng bước. Mình rất tiếc vì sự bất tiện này! Tuy nhiên, mình sẽ phác thảo một chu trình chuẩn và mô tả đặc điểm của các loại sản phẩm lý tưởng cho từng bước, giúp bạn dễ dàng lựa chọn khi tìm kiếm sản phẩm phù hợp nhé.\n\nDưới đây là chu trình dưỡng da mình thiết kế riêng cho nền da của bạn để tối ưu hiệu quả:\n\n---\n\n### **CHU TRÌNH DƯỠNG DA BUỔI SÁNG (AM Routine)**\n\nMục tiêu buổi sáng là làm sạch nhẹ nhàng, cấp ẩm, bảo vệ da khỏi tác nhân môi trường và tia UV.\n\n**Bước 1: Rửa mặt**\nMục đích của bước này là loại bỏ dầu thừa, bã nhờn tích tụ qua đêm và các tạp chất mà không làm khô căng da.\n*   **Đặc điểm sản phẩm lý tưởng:** Bạn nên tìm sữa rửa mặt dạng gel hoặc tạo bọt nhẹ, có độ pH cân bằng (khoảng 5.5), không chứa xà phòng và các chất tẩy rửa mạnh. Các thành phần như Salicylic Acid (BHA) ở nồng độ thấp (dưới 1%) hoặc chiết xuất trà xanh có thể giúp kiểm soát dầu và làm sạch sâu lỗ chân lông.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n**Bước 2: Toner/Nước cân bằng**\nBước này giúp cân bằng lại độ pH của da sau khi rửa mặt, cung cấp độ ẩm tức thì và chuẩn bị da tốt hơn cho các bước dưỡng tiếp theo.\n*   **Đặc điểm sản phẩm lý tưởng:** Chọn toner không cồn, có chứa các thành phần cấp ẩm như Hyaluronic Acid, Glycerin hoặc các chiết xuất làm dịu da như rau má, trà xanh. Đối với da hỗn hợp thiên dầu, toner chứa Niacinamide cũng rất tốt để điều tiết bã nhờn và thu nhỏ lỗ chân lông.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n**Bước 3: Serum (Tùy chọn)**\nSerum là bước tập trung giải quyết các vấn đề cụ thể của da.\n*   **Đặc điểm sản phẩm lý tưởng:**\n    *   **Kiểm soát dầu & thu nhỏ lỗ chân lông:** Serum chứa Niacinamide (Vitamin B3) nồng độ 5-10% là lựa chọn tuyệt vời. Niacinamide giúp điều tiết sản xuất bã nhờn, cải thiện hàng rào bảo vệ da và làm đều màu da.\n    *   **Chống oxy hóa & làm sáng da:** Serum Vitamin C (L-Ascorbic Acid hoặc các dẫn xuất ổn định) giúp bảo vệ da khỏi tác hại của gốc tự do, làm sáng da và mờ thâm.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n**Bước 4: Kem dưỡng ẩm**\nDù da thiên dầu, việc cấp ẩm vẫn rất quan trọng để duy trì hàng rào bảo vệ da và ngăn tuyến dầu hoạt động quá mức.\n*   **Đặc điểm sản phẩm lý tưởng:** Ưu tiên kem dưỡng ẩm dạng gel, gel-cream hoặc lotion mỏng nhẹ, không gây bít tắc lỗ chân lông (non-comedogenic) và không chứa dầu (oil-free). Các thành phần như Hyaluronic Acid, Glycerin, Ceramides sẽ giúp cấp ẩm hiệu quả mà không gây nặng mặt.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n**Bước 5: Kem chống nắng**\nĐây là bước quan trọng nhất để bảo vệ da khỏi tác hại của tia UV, ngăn ngừa lão hóa sớm và sạm nám.\n*   **Đặc điểm sản phẩm lý tưởng:** Chọn kem chống nắng phổ rộng (Broad-spectrum) với chỉ số SPF từ 30 trở lên và PA+++/++++. Đối với da hỗn hợp thiên dầu, kem chống nắng có kết cấu mỏng nhẹ, thấm nhanh, không gây bóng nhờn hoặc có khả năng kiềm dầu, nâng tone nhẹ sẽ là lựa chọn lý tưởng.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n---\n\n### **CHU TRÌNH DƯỠNG DA BUỔI TỐI (PM Routine)**\n\nMục tiêu buổi tối là làm sạch sâu, phục hồi và điều trị các vấn đề của da.\n\n**Bước 1: Tẩy trang**\nBước này cực kỳ quan trọng để loại bỏ lớp trang điểm, kem chống nắng và bụi bẩn tích tụ cả ngày.\n*   **Đặc điểm sản phẩm lý tưởng:** Bạn có thể chọn dầu tẩy trang, sáp tẩy trang hoặc nước tẩy trang micellar water. Dầu/sáp tẩy trang rất hiệu quả trong việc hòa tan lớp trang điểm và kem chống nắng cứng đầu mà không cần chà xát mạnh. Nếu dùng nước tẩy trang, hãy đảm bảo lau sạch kỹ.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n**Bước 2: Rửa mặt**\nSau khi tẩy trang, rửa mặt giúp làm sạch hoàn toàn các cặn bẩn còn sót lại, đảm bảo da sạch sâu.\n*   **Đặc điểm sản phẩm lý tưởng:** Tương tự như buổi sáng, sữa rửa mặt dạng gel hoặc tạo bọt nhẹ, độ pH cân bằng là lựa chọn tốt nhất.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n**Bước 3: Toner/Nước cân bằng**\nCân bằng da và chuẩn bị cho các bước điều trị.\n*   **Đặc điểm sản phẩm lý tưởng:** Tương tự như buổi sáng, hoặc bạn có thể cân nhắc toner chứa BHA (Salicylic Acid) nồng độ 1-2% 2-3 lần/tuần để làm sạch sâu lỗ chân lông, kiểm soát dầu và ngăn ngừa mụn ẩn.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n**Bước 4: Serum/Sản phẩm đặc trị**\nĐây là lúc để tập trung điều trị các vấn đề như mụn, thâm, lão hóa.\n*   **Đặc điểm sản phẩm lý tưởng:**\n    *   **Kiểm soát mụn & dầu:** Serum chứa BHA (Salicylic Acid) hoặc Retinoids (Retinol, Tretinoin - cần tham khảo ý kiến bác sĩ) là lựa chọn hiệu quả. BHA giúp tẩy tế bào chết trong lỗ chân lông, còn Retinoids thúc đẩy tái tạo da, giảm mụn và cải thiện kết cấu da.\n    *   **Phục hồi & làm dịu:** Serum chứa Niacinamide, B5 (Panthenol) hoặc chiết xuất rau má giúp phục hồi hàng rào bảo vệ da, làm dịu da sau các bước điều trị.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n**Bước 5: Kem dưỡng ẩm**\nKhóa ẩm và hỗ trợ quá trình phục hồi của da trong khi ngủ.\n*   **Đặc điểm sản phẩm lý tưởng:** Kem dưỡng ẩm buổi tối có thể hơi đặc hơn một chút so với buổi sáng nếu bạn muốn, nhưng vẫn nên là dạng gel-cream hoặc lotion mỏng nhẹ, không gây bít tắc. Các thành phần như Ceramides, Hyaluronic Acid, Squalane sẽ giúp phục hồi và nuôi dưỡng da.\n*   Hiện tại, hệ thống SkinSyntaxVN tạm thời chưa có sẵn sản phẩm phù hợp để gợi ý cho bước này trong danh mục sản phẩm được truy xuất. Mình rất tiếc vì sự bất tiện này!\n\n---\n\nTổng chi phí ước tính: 0 VNĐ (trong ngân sách Không giới hạn VNĐ)\n\n**Một vài lời khuyên thêm từ mình:**\n*   **Thử sản phẩm mới:** Khi bắt đầu sử dụng bất kỳ sản phẩm mới nào, đặc biệt là các sản phẩm đặc trị, bạn hãy thử thoa một lượng nhỏ lên vùng da quai hàm hoặc sau tai (patch test) trong vài ngày để kiểm tra phản ứng của da trước khi dùng cho toàn mặt nhé.\n*   **Lắng nghe làn da:** Mỗi làn da là duy nhất, hãy chú ý đến phản ứng của da bạn với từng sản phẩm để điều chỉnh chu trình cho phù hợp.\n*   **Kiên trì:** Dưỡng da là một quá trình cần sự kiên trì. Bạn sẽ thấy hiệu quả rõ rệt sau vài tuần đến vài tháng sử dụng đều đặn.\n*   **Uống đủ nước và chế độ ăn uống lành mạnh:** Đây cũng là yếu tố quan trọng giúp làn da khỏe đẹp từ bên trong.\n\nChúc bạn sớm tìm được những sản phẩm ưng ý và có làn da khỏe đẹp như ý nhé!",
+      "products_count": 0,
+      "latency_ms": 15744.7,
+      "tags": [
+        "routine",
+        "da_hon_hop"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    }
+  ],
+  "trulens_used": false
+}

@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-08-25T10:21:26.944710",
+  "total_queries": 3,
+  "intent_accuracy": 0.6666666666666666,
+  "avg_latency_ms": 3142.5,
+  "avg_answer_relevance": null,
+  "avg_groundedness": null,
+  "avg_context_relevance": null,
+  "by_intent": {
+    "PRODUCT_INQUIRY": {
+      "count": 3,
+      "intent_accuracy": 0.667,
+      "avg_latency_ms": 3142.5,
+      "avg_answer_relevance": null,
+      "avg_groundedness": null
+    }
+  },
+  "by_tag": {
+    "kcn": {
+      "count": 1,
+      "avg_latency_ms": 15.6,
+      "avg_answer_relevance": null
+    },
+    "routine": {
+      "count": 1,
+      "avg_latency_ms": 4101.6,
+      "avg_answer_relevance": null
+    },
+    "da_dau": {
+      "count": 1,
+      "avg_latency_ms": 5310.3,
+      "avg_answer_relevance": null
+    },
+    "srm": {
+      "count": 1,
+      "avg_latency_ms": 5310.3,
+      "avg_answer_relevance": null
+    },
+    "da_nhay_cam": {
+      "count": 1,
+      "avg_latency_ms": 15.6,
+      "avg_answer_relevance": null
+    },
+    "product": {
+      "count": 2,
+      "avg_latency_ms": 2663.0,
+      "avg_answer_relevance": null
+    },
+    "da_hon_hop": {
+      "count": 1,
+      "avg_latency_ms": 4101.6,
+      "avg_answer_relevance": null
+    }
+  },
+  "results": [
+    {
+      "question": "da mình dầu mụn nhiều, cần sữa rửa mặt nào?",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 5310.3,
+      "tags": [
+        "product",
+        "srm",
+        "da_dau"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "tìm kem chống nắng cho da nhạy cảm, không cồn",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "PRODUCT_INQUIRY",
+      "answer": "Mình chưa tìm thấy sản phẩm phù hợp. Bạn mô tả thêm loại da hoặc nhu cầu nhé.",
+      "products_count": 0,
+      "latency_ms": 15.6,
+      "tags": [
+        "product",
+        "kcn",
+        "da_nhay_cam"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": true
+    },
+    {
+      "question": "gợi ý chu trình dưỡng da sáng tối cho da hỗn hợp thiên dầu",
+      "expected_intent": "PRODUCT_INQUIRY",
+      "actual_intent": "COSMETIC_KNOWLEDGE_OUT_OF_DB",
+      "answer": "Chào bạn! Để xây dựng một chu trình dưỡng da sáng tối cho làn da hỗn hợp thiên dầu, mình sẽ gợi ý các bước và sản phẩm phù hợp nhé.\n\nBắt đầu với bước tẩy trang, bạn nên sử dụng sản phẩm giúp loại bỏ bụi bẩn và lớp trang điểm hiệu quả. Tiếp theo, rửa mặt với một loại sữa rửa mặt dịu nhẹ để làm sạch sâu mà không làm khô da.\n\nSau khi da đã sạch, bạn có thể sử dụng toner để cân bằng độ pH và cung cấp độ ẩm cho da. Tiếp theo, serum sẽ là bước quan trọng để cung cấp các hoạt chất cần thiết cho da, giúp cải thiện tình trạng dầu thừa và làm sáng da.\n\nCuối cùng, đừng quên kem dưỡng ẩm để khóa ẩm và bảo vệ da. Vào buổi sáng, bạn cũng cần thêm kem chống nắng để bảo vệ da khỏi tác hại của tia UV.\n\nMình rất tiếc nhưng hiện tại không có sản phẩm nào phù hợp trong danh sách khuyến nghị. Nếu bạn có thêm thông tin về sản phẩm cụ thể nào mà bạn đang quan tâm, mình sẽ rất vui lòng giúp bạn tìm hiểu thêm! \n\nChúc bạn có một làn da khỏe mạnh và rạng rỡ!",
+      "products_count": 0,
+      "latency_ms": 4101.6,
+      "tags": [
+        "routine",
+        "da_hon_hop"
+      ],
+      "answer_relevance": null,
+      "groundedness": null,
+      "context_relevance": null,
+      "intent_correct": false
+    }
+  ],
+  "trulens_used": false
+}

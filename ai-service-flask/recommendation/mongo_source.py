@@ -8,7 +8,9 @@ from pymongo import MongoClient
 from .config import MONGO_DB_NAME, MONGO_URI
 
 
-def get_database():
+def get_database(timeout_ms: int | None = None):
+    if timeout_ms is not None:
+        return MongoClient(MONGO_URI, serverSelectionTimeoutMS=timeout_ms)[MONGO_DB_NAME]
     return MongoClient(MONGO_URI)[MONGO_DB_NAME]
 
 # Các hàm tiện ích để chuyển đổi và chuẩn hóa dữ liệu sản phẩm từ MongoDB, bao gồm việc trích xuất thông tin, 

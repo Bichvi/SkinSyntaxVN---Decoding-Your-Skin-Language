@@ -1334,7 +1334,7 @@ class HomeController {
             return trim((string)$envValue);
         }
 
-        return 'http://127.0.0.1:5001/api/recommend/profile';
+        return 'http://127.0.0.1:5002/api/recommend';
     }
 
     private function getLlamaIndexRecommendationTimeout(): int {
@@ -1362,7 +1362,7 @@ class HomeController {
             return trim((string)$envValue);
         }
 
-        return 'http://127.0.0.1:5001/api/chat';
+        return 'http://127.0.0.1:5002/api/chat';
     }
 
     private function getAiChatTimeout(): int {
@@ -2421,11 +2421,19 @@ class HomeController {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             curl_setopt($ch, CURLOPT_TIMEOUT, max(3, $timeout));
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            if (defined('CURL_IPRESOLVE_V4')) {
+                curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+            }
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             $responseBody = curl_exec($ch);
             $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
             curl_close($ch);
+
+            if ($status < 200 || $status >= 300) {
+                error_log("[AI_CHAT] postJsonRequest failed for URL: {$url} with status: {$status}, error: {$error}");
+            }
 
             return [
                 'status' => $status,
@@ -2475,24 +2483,26 @@ class HomeController {
             if ((int)($response['status'] ?? 0) >= 200 && (int)($response['status'] ?? 0) < 300) {
                 $decoded = json_decode((string)($response['body'] ?? ''), true);
                 if (is_array($decoded) && !empty($decoded['ok'])) {
+                    $rawProducts = $decoded['recommendations'] ?? $decoded['products'] ?? [];
                     $products = [];
-                    foreach (($decoded['products'] ?? []) as $row) {
+                    foreach ($rawProducts as $row) {
                         if (!is_array($row)) continue;
-                        $row['id'] = (string)($row['id'] ?? $row['ma_san_pham'] ?? '');
+                        $row['id'] = (string)($row['id'] ?? $row['product_id'] ?? $row['ma_san_pham'] ?? '');
                         $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
-                        if (isset($row['match_percent'])) {
-                            $row['match_percent'] = max(0, min(100, (int)$row['match_percent']));
-                        }
-                        if (isset($row['match_label'])) {
-                            $row['match_label'] = trim((string)$row['match_label']);
-                        }
+                        $row['score'] = null;
+                        $row['match_percent'] = null;
+                        $row['fit_status'] = trim((string)($row['fit_status'] ?? 'phu_hop'));
+                        $row['match_label'] = trim((string)($row['match_label'] ?? 'Phù hợp'));
+                        $row['reasons'] = is_array($row['reasons'] ?? null) ? $row['reasons'] : [];
+                        $row['warnings'] = is_array($row['warnings'] ?? null) ? $row['warnings'] : [];
+                        $row['safety_text'] = trim((string)($row['safety_text'] ?? 'Chưa đủ dữ liệu để đánh giá thành phần cần lưu ý.'));
                         $products[] = $row;
                     }
 
                     if (!empty($products)) {
                         return [
                             'ok' => true,
-                            'source' => $decoded['source'] ?? 'langchain_rag',
+                            'source' => $decoded['source'] ?? 'langchain_shared_core',
                             'answer_text' => trim((string)($decoded['answer_text'] ?? '')),
                             'products' => $products,
                         ];
@@ -2517,8 +2527,8 @@ class HomeController {
                 if (!is_array($p)) continue;
                 $p['id'] = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                 $p['image_url'] = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['image_url'] ?? ''));
-                $p['match_percent'] = (int)($p['diem_phu_hop'] ?? $p['match_percent'] ?? 92);
-                $p['match_label'] = 'PHÙ HỢP HỒ SƠ DA';
+                $p['match_percent'] = null;
+                $p['fit_status'] = 'chua_tinh';
                 $formattedProducts[] = $p;
             }
 
