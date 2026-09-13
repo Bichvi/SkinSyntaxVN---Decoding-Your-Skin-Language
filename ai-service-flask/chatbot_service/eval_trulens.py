@@ -50,20 +50,20 @@ Select = None
 LiteLLM = None
 
 try:
-    from trulens.core import TruSession, Feedback, Select
-    from trulens.providers.litellm import LiteLLM
+    from trulens.core import TruSession, Feedback, Select  # type: ignore
+    from trulens.providers.litellm import LiteLLM  # type: ignore
     _TRULENS_OK = True
 except Exception:
     try:
-        from trulens.core.session import TruSession
-        from trulens.core.feedback.feedback import Feedback
-        from trulens.core.schema.select import Select
-        from trulens.providers.litellm.provider import LiteLLM
+        from trulens.core.session import TruSession  # type: ignore
+        from trulens.core.feedback.feedback import Feedback  # type: ignore
+        from trulens.core.schema.select import Select  # type: ignore
+        from trulens.providers.litellm.provider import LiteLLM  # type: ignore
         _TRULENS_OK = True
     except Exception:
         try:
-            from trulens_eval import Tru as TruSession, Feedback, Select
-            from trulens_eval.feedback.provider.litellm import LiteLLM
+            from trulens_eval import Tru as TruSession, Feedback, Select  # type: ignore
+            from trulens_eval.feedback.provider.litellm import LiteLLM  # type: ignore
             _TRULENS_OK = True
         except Exception:
             _TRULENS_OK = False
@@ -195,14 +195,14 @@ def _build_feedbacks(provider) -> tuple:
     global Feedback, Select
     if Feedback is None or Select is None:
         try:
-            from trulens.core import Feedback, Select
+            from trulens.core import Feedback, Select  # type: ignore
         except Exception:
             try:
-                from trulens.core.feedback.feedback import Feedback
-                from trulens.core.schema.select import Select
+                from trulens.core.feedback.feedback import Feedback  # type: ignore
+                from trulens.core.schema.select import Select  # type: ignore
             except Exception:
                 try:
-                    from trulens_eval import Feedback, Select
+                    from trulens_eval import Feedback, Select  # type: ignore
                 except Exception:
                     return None, None, None
 
@@ -545,7 +545,7 @@ def main():
         _patch_trulens_instrument()
         try:
             # New API (trulens >= 1.x)
-            from trulens.dashboard.run import run_dashboard
+            from trulens.dashboard.run import run_dashboard  # type: ignore
             run_dashboard()
         except ImportError:
             # Fallback for older trulens builds
@@ -553,7 +553,7 @@ def main():
                 import warnings
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", DeprecationWarning)
-                    from trulens.core import TruSession
+                    from trulens.core import TruSession  # type: ignore
                     TruSession().run_dashboard()
             except Exception as e:
                 print(f"  [WARN] Dashboard failed: {e}")
