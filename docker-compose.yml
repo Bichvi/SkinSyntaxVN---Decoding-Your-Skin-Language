@@ -68,7 +68,7 @@ services:
       - .env
     environment:
       CHATBOT_PORT: "5001"
-      GUNICORN_WORKERS: "${GUNICORN_WORKERS:-1}"
+      GUNICORN_WORKERS: "${GUNICORN_WORKERS:-2}"
       GUNICORN_WORKER_CLASS: "sync"
       CHROMA_DB_PATH: /app/chroma_data
       CSV_FILE_PATH: /app/database/data_clean_final.csv
