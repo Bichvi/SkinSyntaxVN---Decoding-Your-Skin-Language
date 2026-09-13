@@ -9,7 +9,7 @@ python-dotenv==1.0.1
 pydantic>=2.0,<3
 
 # Vector store (used by langchain-chroma)
-chromadb==0.5.20
+chromadb>=1.0.0
 
 # LangChain stack (chat, RAG, embeddings, reranker)
 langchain>=0.3.7

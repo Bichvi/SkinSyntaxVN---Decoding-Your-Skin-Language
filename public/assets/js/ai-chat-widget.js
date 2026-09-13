@@ -1407,8 +1407,7 @@
             messages = parsed;
           }
         }
-        if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
-          openWidget();
+        if (widget.classList.contains('is-open') && window.sessionStorage.getItem(expandedStorageKey) === '1') {
           widget.classList.add('is-expanded');
         }
       } catch (error) {

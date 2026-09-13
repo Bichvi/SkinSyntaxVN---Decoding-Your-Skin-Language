@@ -1,0 +1,446 @@
+{
+  "timestamp": "2026-08-25T04:25:38.512426",
+  "total_queries": 15,
+  "metrics": {
+    "intent_accuracy_pct": 93.33,
+    "filter_extraction_accuracy_pct": 100.0,
+    "hard_constraint_pass_rate_pct": 100.0,
+    "precision_at_3": 1.0,
+    "grounded_reasons_pct": 100.0,
+    "avg_filter_extraction_ms": 19.63,
+    "avg_retrieval_latency_ms": 531.91,
+    "avg_validation_latency_ms": 1484455.46,
+    "avg_total_latency_ms": 1485021.16
+  },
+  "intent_breakdown": {
+    "PRODUCT_INQUIRY": {
+      "count": 13,
+      "pass_hard_constraints": 0,
+      "total_prods": 0
+    },
+    "ROUTINE": {
+      "count": 1,
+      "pass_hard_constraints": 0,
+      "total_prods": 0
+    },
+    "INGREDIENT_INQUIRY": {
+      "count": 1,
+      "pass_hard_constraints": 0,
+      "total_prods": 0
+    }
+  },
+  "details": [
+    {
+      "case_id": "REC_01_SERUM_UNDER_100K",
+      "query": "serum dưới 100k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "max_price": 100000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "max_price": 100000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 0.36,
+        "retrieval_ms": 4206.14,
+        "validation_ms": 30365.14,
+        "total_latency_ms": 34571.66
+      }
+    },
+    {
+      "case_id": "REC_02_SUNSCREEN_UNDER_300K",
+      "query": "kem chống nắng dưới 300k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Chống Nắng Da Mặt",
+        "max_price": 300000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Chống Nắng Da Mặt",
+        "max_price": 300000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 5.69,
+        "retrieval_ms": 101.73,
+        "validation_ms": 30474.52,
+        "total_latency_ms": 30582.02
+      }
+    },
+    {
+      "case_id": "REC_03_MASK_UNDER_50K",
+      "query": "mặt nạ dưới 50k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Mặt Nạ Giấy",
+        "max_price": 50000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Mặt Nạ Giấy",
+        "max_price": 50000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 0.31,
+        "retrieval_ms": 92.52,
+        "validation_ms": 30346.18,
+        "total_latency_ms": 30439.04
+      }
+    },
+    {
+      "case_id": "REC_04_SERUM_OILY_ACNE_500K",
+      "query": "serum cho da dầu mụn dưới 500k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "max_price": 500000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Serum / Tinh Chất",
+        "max_price": 500000,
+        "min_price": null,
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "concerns": [
+          "mụn"
+        ]
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 6.06,
+        "retrieval_ms": 131.34,
+        "validation_ms": 30393.47,
+        "total_latency_ms": 30531.02
+      }
+    },
+    {
+      "case_id": "REC_05_SENSITIVE_NO_FRAGRANCE",
+      "query": "sản phẩm cho da nhạy cảm tránh hương liệu",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "skin_type": "Da nhạy cảm",
+        "avoid_ingredients": [
+          "Fragrance",
+          "hương liệu"
+        ]
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "Da nhạy cảm",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 42.32,
+        "retrieval_ms": 60.83,
+        "validation_ms": 30354.61,
+        "total_latency_ms": 30457.88
+      }
+    },
+    {
+      "case_id": "REC_06_MORNING_ROUTINE_800K",
+      "query": "routine buổi sáng dưới 800k",
+      "expected": {
+        "intent": "ROUTINE",
+        "max_price": 800000
+      },
+      "extracted_filters": {
+        "intent": "ROUTINE",
+        "category": null,
+        "max_price": 800000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 9.68,
+        "retrieval_ms": 68.28,
+        "validation_ms": 30355.99,
+        "total_latency_ms": 30434.06
+      }
+    },
+    {
+      "case_id": "REC_07_BUY_FIRST_RECOMMENDATION",
+      "query": "chọn 1 sản phẩm nên mua trước",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 0.34,
+        "retrieval_ms": 32.95,
+        "validation_ms": 21842040.06,
+        "total_latency_ms": 21842073.38
+      }
+    },
+    {
+      "case_id": "REC_08_INGREDIENT_INQUIRY",
+      "query": "sản phẩm này có thành phần nào?",
+      "expected": {
+        "intent": "INGREDIENT_INQUIRY"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": null,
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 148.92,
+        "retrieval_ms": 1301.73,
+        "validation_ms": 30154.59,
+        "total_latency_ms": 31605.78
+      }
+    },
+    {
+      "case_id": "REC_09_CLEANSER_DRY_SKIN_200K",
+      "query": "sữa rửa mặt cho da khô dưới 200k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Sữa Rửa Mặt",
+        "skin_type": "Da khô/Hỗn hợp khô",
+        "max_price": 200000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Sữa Rửa Mặt",
+        "max_price": 200000,
+        "min_price": null,
+        "skin_type": "Da khô/Hỗn hợp khô",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 50.96,
+        "retrieval_ms": 1268.68,
+        "validation_ms": 30513.08,
+        "total_latency_ms": 31835.37
+      }
+    },
+    {
+      "case_id": "REC_10_MOISTURIZER_SOOTHING_400K",
+      "query": "kem dưỡng dịu da dưới 400k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Kem / Gel / Dầu Dưỡng",
+        "max_price": 400000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Kem / Gel / Dầu Dưỡng",
+        "max_price": 400000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 7.22,
+        "retrieval_ms": 273.05,
+        "validation_ms": 30010.83,
+        "total_latency_ms": 30291.19
+      }
+    },
+    {
+      "case_id": "REC_11_CLEANSING_WATER_SENSITIVE_250K",
+      "query": "tẩy trang cho da nhạy cảm dưới 250k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Tẩy Trang Mặt",
+        "skin_type": "Da nhạy cảm",
+        "max_price": 250000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Tẩy Trang Mặt",
+        "max_price": 250000,
+        "min_price": null,
+        "skin_type": "Da nhạy cảm",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 0.84,
+        "retrieval_ms": 12.26,
+        "validation_ms": 30053.3,
+        "total_latency_ms": 30066.42
+      }
+    },
+    {
+      "case_id": "REC_12_TONER_OILY_PORES_350K",
+      "query": "toner cho da dầu lỗ chân lông to dưới 350k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Toner / Nước Cân Bằng Da",
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "max_price": 350000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Toner / Nước Cân Bằng Da",
+        "max_price": 350000,
+        "min_price": null,
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "concerns": [
+          "lỗ chân lông to"
+        ]
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 1.45,
+        "retrieval_ms": 20.48,
+        "validation_ms": 30494.28,
+        "total_latency_ms": 30516.27
+      }
+    },
+    {
+      "case_id": "REC_13_EXFOLIATOR_BHA_ACNE",
+      "query": "tẩy tế bào chết BHA cho da mụn",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Tẩy Tế Bào Chết Da Mặt"
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Tẩy Tế Bào Chết Da Mặt",
+        "max_price": null,
+        "min_price": null,
+        "skin_type": "Da mụn",
+        "concerns": [
+          "mụn"
+        ]
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 16.94,
+        "retrieval_ms": 335.15,
+        "validation_ms": 30434.79,
+        "total_latency_ms": 30788.63
+      }
+    },
+    {
+      "case_id": "REC_14_LIP_BALM_150K",
+      "query": "son dưỡng môi dưới 150k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Son Dưỡng Môi",
+        "max_price": 150000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Son Dưỡng Môi",
+        "max_price": 150000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 3.17,
+        "retrieval_ms": 52.36,
+        "validation_ms": 30410.93,
+        "total_latency_ms": 30466.47
+      }
+    },
+    {
+      "case_id": "REC_15_MIST_HYDRATING_300K",
+      "query": "xịt khoáng cấp ẩm dưới 300k",
+      "expected": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Xịt Khoáng",
+        "max_price": 300000
+      },
+      "extracted_filters": {
+        "intent": "PRODUCT_INQUIRY",
+        "category": "Xịt Khoáng",
+        "max_price": 300000,
+        "min_price": null,
+        "skin_type": "",
+        "concerns": []
+      },
+      "recommendations_count": 0,
+      "valid_recommendations_count": 0,
+      "hard_constraint_pass_rate": 1.0,
+      "precision_at_3": 1.0,
+      "timing_ms": {
+        "filter_extraction_ms": 0.26,
+        "retrieval_ms": 21.12,
+        "validation_ms": 30430.17,
+        "total_latency_ms": 30451.58
+      }
+    }
+  ]
+}

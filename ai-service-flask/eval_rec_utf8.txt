@@ -1,0 +1,98 @@
+﻿d:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Scripts\python.exe : 
+CrossEncoder unavailable (sentence_transformers not installed): falling back to RRF ranking
+At line:1 char:1
++ d:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-se ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CrossEncoder un... to RRF ranking:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Traceback (most recent call last):
+
+=======================================================
+ SKINSYNTAX RECOMMENDATION ΓÇö EVALUATION HARNESS RUN
+=======================================================
+
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\eval_recommendation.py", line 
+227, in <module>
+    run_recommendation_evaluation()
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\eval_recommendation.py", line 
+73, in run_recommendation_evaluation
+    response = generate_structured_recommendation(payload, limit=6)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File 
+"D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\structured_recommendation.py", line 
+367, in generate_structured_recommendation
+    for r in fallback_rows:
+             ^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\cursor.py", line 1166, in __next__
+    return self.next()
+           ^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\cursor.py", line 1142, in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\cursor.py", line 1090, in _refresh
+    self._send_message(q)
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\cursor.py", line 985, in _send_message
+    response = client._run_operation(
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\mongo_client.py", line 1956, in _run_operation
+    return self._retryable_read(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\mongo_client.py", line 2076, in _retryable_read
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\mongo_client.py", line 2038, in _retry_internal
+    ).run()
+      ^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\mongo_client.py", line 2811, in run
+    res = self._read() if self._is_read else self._write()
+          ^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\mongo_client.py", line 3027, in _read
+    self._server = self._get_server()
+                   ^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\mongo_client.py", line 2975, in _get_server
+    return self._client._select_server(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\mongo_client.py", line 1851, in _select_server
+    server = topology.select_server(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\topology.py", line 428, in select_server
+    server = self._select_server(
+             ^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\topology.py", line 402, in _select_server
+    servers = self.select_servers(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\topology.py", line 298, in select_servers
+    server_descriptions = self._select_servers_loop(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\xampp\htdocs\fe\SkinSyntaxVN---Decoding-Your-Skin-Language-1\ai-service-flask\.venv\Lib\site-packages\pymong
+o\synchronous\topology.py", line 359, in _select_servers_loop
+    raise ServerSelectionTimeoutError(
+pymongo.errors.ServerSelectionTimeoutError: 127.0.0.1:27017: [WinError 10061] No connection could be made because the 
+target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), 
+Timeout: 30s, Topology Description: <TopologyDescription id: 6a8c5f1630efa10f91ebb0c5, topology_type: Unknown, 
+servers: [<ServerDescription ('127.0.0.1', 27017) server_type: Unknown, rtt: None, 
+error=AutoReconnect('127.0.0.1:27017: [WinError 10061] No connection could be made because the target machine actively 
+refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
