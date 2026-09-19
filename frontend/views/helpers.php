@@ -311,6 +311,7 @@ function route_access_map(): array {
         'admin_live_status' => ['admin', 'nhanvien'],
         'admin_live_delete' => ['admin', 'nhanvien'],
         'admin_live_pin_product' => ['admin', 'nhanvien'],
+        'admin_ai_idol' => ['admin'],
         'admin_reports' => ['admin'],
         'admin_questions' => ['admin', 'nhanvien'],
         'admin_question_reply' => ['admin', 'nhanvien'],

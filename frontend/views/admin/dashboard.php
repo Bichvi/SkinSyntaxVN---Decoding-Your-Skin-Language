@@ -157,11 +157,28 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
                             <i class="bi bi-camera-reels-fill"></i>
                         </div>
                         <div>
-                            <div class="fw-semibold small" style="color: var(--admin-text);">Phiên LiveStream AI</div>
+                            <div class="fw-semibold small" style="color: var(--admin-text);">Quản lý phiên Live</div>
                             <div class="small text-muted">Tạo & Ghim sản phẩm</div>
                         </div>
                     </div>
                     <span class="badge px-2 py-1 fw-semibold" style="background: #FFE4E6; color: #E11D48; border: 1px solid #FECDD3; border-radius: 4px; font-size: 0.76rem;">Live</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <a href="index.php?r=admin_ai_idol" class="text-decoration-none">
+                <div class="admin-card mb-0 p-3 d-flex align-items-center justify-content-between h-100" style="border-color: #B9DCC8; background: linear-gradient(135deg, #F4FBF6 0%, #FFFFFF 100%);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; background: #DDF4E5; color: #17633D; font-size: 1.1rem; border: 1px solid #B9DCC8;">
+                            <i class="bi bi-stars"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold small" style="color: var(--admin-text);">AI Idol Studio</div>
+                            <div class="small text-muted">Tạo Syna, kịch bản & video</div>
+                        </div>
+                    </div>
+                    <span class="badge px-2 py-1 fw-semibold" style="background: #DDF4E5; color: #17633D; border: 1px solid #B9DCC8; border-radius: 4px; font-size: 0.76rem;">Mở Studio</span>
                 </div>
             </a>
         </div>
