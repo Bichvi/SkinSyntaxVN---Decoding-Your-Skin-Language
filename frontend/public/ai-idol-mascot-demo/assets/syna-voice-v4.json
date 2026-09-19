@@ -1,0 +1,48 @@
+{
+  "voice": "Syna · trong trẻo, vui vẻ (Piper local)",
+  "pitchSemitones": 2.5,
+  "processedBeforeTiming": true,
+  "duration": 24.0198,
+  "cues": [
+    {
+      "start": 0.0,
+      "end": 3.7317,
+      "text": "Meo! Xin chào bạn! Mình là Syna, mèo nhỏ của Skin Syntax.",
+      "gesture": "greeting",
+      "expression": "happy",
+      "sticker": "hello"
+    },
+    {
+      "start": 4.1517,
+      "end": 9.1827,
+      "text": "Nhìn nè! Trên đầu mình là cây rau má. Chiếc lá nhỏ mang tinh thần làm dịu, phục hồi và chữa lành.",
+      "gesture": "talking",
+      "expression": "neutral",
+      "sticker": "leaf"
+    },
+    {
+      "start": 9.6027,
+      "end": 14.4202,
+      "text": "Hôm nay, mình cùng bạn tìm hiểu sản phẩm nhé. Cứ từ từ, mình sẽ giải thích từng chút một!",
+      "gesture": "presenting",
+      "expression": "confident",
+      "sticker": "sparkle"
+    },
+    {
+      "start": 14.8402,
+      "end": 19.0575,
+      "text": "Bạn thích Syna nháy mắt, vẫy tay, hay ôm một trái tim? Thử các nút bên cạnh nha!",
+      "gesture": "thinking",
+      "expression": "thinking",
+      "sticker": "question"
+    },
+    {
+      "start": 19.4775,
+      "end": 23.5998,
+      "text": "Gửi bạn một chút vui vẻ nè! Cảm ơn bạn đã ghé chơi. Hẹn gặp lại nhé. Meo!",
+      "gesture": "happy",
+      "expression": "happy",
+      "sticker": "heart"
+    }
+  ]
+}

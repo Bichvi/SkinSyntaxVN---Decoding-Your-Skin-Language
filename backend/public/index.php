@@ -56,6 +56,13 @@ ob_start(static function ($buffer) {
     return function_exists('fixMojibake') ? fixMojibake($buffer) : $buffer;
 });
 
+$r = $_GET['r'] ?? 'home';
+if (in_array($r, ['admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign', 'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign', 'admin_ai_idol_approve_script', 'admin_ai_idol_agent_runs', 'admin_ai_idol_agent_create', 'admin_ai_idol_agent_run', 'admin_ai_idol_agent_confirm', 'admin_ai_idol_agent_retry', 'admin_ai_idol_agent_cancel'], true)) {
+    if (require $backendRoot . '/app/routes/ai_idol.php') {
+        return;
+    }
+}
+
 require_once $backendRoot . '/app/controllers/HomeController.php';
 require_once $backendRoot . '/app/controllers/SanPhamController.php';
 require_once $backendRoot . '/app/controllers/AuthController.php';
@@ -217,6 +224,14 @@ switch ($r) {
 
     case 'khaosat':
         (new AuthController($pdo))->khaosat();
+        break;
+
+    case 'khaosatnhanh':
+        (new TaiKhoanController($pdo))->khaosatNhanh();
+        break;
+
+    case 'xulykhaosatnhanh':
+        (new TaiKhoanController($pdo))->xulyKhaoSatNhanh();
         break;
 
     case 'luukhaosat':

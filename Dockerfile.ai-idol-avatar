@@ -1,0 +1,54 @@
+FROM nvidia/cuda:11.2.2-cudnn8-runtime-ubuntu20.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG SADTALKER_REF=cd4c0465ae0b54a6f85af57f5c65fec9fe23e7f8
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/service \
+    TORCH_HOME=/opt/models \
+    SADTALKER_ROOT=/opt/SadTalker
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       ca-certificates ffmpeg git libgl1 libglib2.0-0 libsndfile1 python3.8 python3-pip wget \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3.8 -m pip install --no-cache-dir "pip<24.1" setuptools==59.5.0 wheel \
+    && python3.8 -m pip install --no-cache-dir \
+       torch==1.9.1+cu111 torchvision==0.10.1+cu111 torchaudio==0.9.1 \
+       --extra-index-url https://download.pytorch.org/whl/cu111
+
+COPY ai-idol-avatar-service/requirements.txt /tmp/requirements.txt
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential patch python3.8-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN python3.8 -m pip install --no-cache-dir -r /tmp/requirements.txt
+RUN mkdir -p /opt/models \
+    && python3.8 -c "from torchvision.models.segmentation import deeplabv3_resnet50; deeplabv3_resnet50(pretrained=True, progress=False)"
+
+RUN git clone https://github.com/OpenTalker/SadTalker.git /opt/SadTalker \
+    && cd /opt/SadTalker \
+    && git checkout "$SADTALKER_REF" \
+    && rm -rf .git \
+    && mkdir -p checkpoints gfpgan/weights \
+    && wget -q \
+       https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/SadTalker_V0.0.2_256.safetensors \
+       -O checkpoints/SadTalker_V0.0.2_256.safetensors \
+    && wget -q \
+       https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/mapping_00109-model.pth.tar \
+       -O checkpoints/mapping_00109-model.pth.tar \
+    && wget -q \
+       https://github.com/xinntao/facexlib/releases/download/v0.1.0/alignment_WFLW_4HG.pth \
+       -O gfpgan/weights/alignment_WFLW_4HG.pth \
+    && wget -q \
+       https://github.com/xinntao/facexlib/releases/download/v0.1.0/detection_Resnet50_Final.pth \
+       -O gfpgan/weights/detection_Resnet50_Final.pth
+
+WORKDIR /service
+COPY ai-idol-avatar-service/app.py ai-idol-avatar-service/sitecustomize.py /service/
+
+EXPOSE 7861
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+    CMD wget -qO- http://localhost:7861/health || exit 1
+CMD ["python3.8", "-m", "gunicorn", "--bind", "0.0.0.0:7861", "--workers", "1", "--threads", "2", "--timeout", "14400", "app:app"]

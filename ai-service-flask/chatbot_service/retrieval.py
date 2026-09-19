@@ -12,6 +12,10 @@ from typing import Any
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from hybrid_search import HybridSearchPipeline, BM25Search
+try:
+    from shared.embedding_provider import get_embedding_function
+except ImportError:  # direct legacy execution from chatbot_service/
+    get_embedding_function = None
 from schemas import PhanTichYeuCau
 from model_config import (
     EMBEDDING_MODEL,
@@ -43,7 +47,7 @@ class MockDocument:
 def get_vectorstore() -> Chroma:
     global _vectorstore
     if _vectorstore is None:
-        emb = HuggingFaceEmbeddings(
+        emb = get_embedding_function() if get_embedding_function else HuggingFaceEmbeddings(
             model_name=EMBEDDING_MODEL,
             model_kwargs=EMBEDDING_MODEL_KWARGS,
             encode_kwargs=EMBEDDING_ENCODE_KWARGS,

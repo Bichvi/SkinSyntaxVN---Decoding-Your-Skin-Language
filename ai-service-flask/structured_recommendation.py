@@ -48,12 +48,31 @@ EXCLUDED_KEYWORDS_BY_CAT: Dict[str, List[str]] = {
     "Toner / Nước Cân Bằng Da": ["mặt nạ", "mat na", "sữa rửa mặt", "sua rua mat", "kem dưỡng"],
 }
 
+# Makeup products frequently contain SPF claims (for example, foundation
+# labelled "chống nắng"). They must not satisfy a facial-skincare category
+# match or fill a routine sunscreen step.
+NON_SKINCARE_KEYWORDS = [
+    "trang diem", "makeup", "foundation", "kem nen", "phan nen",
+    "cushion", "concealer", "son moi", "mascara", "eyeliner",
+    "ma hong", "phan mat", "phan phu", "dau duong toc", "dau goi",
+    "dau xa", "duong toc", "duong the", "body", "sua tam", "khu mui",
+    "lan nach", "trang rang", "kem danh rang", "nuoc suc mieng",
+    "nuoc hoa", "parfum",
+]
+
 
 def _norm(text: Any) -> str:
     """Normalize text for Vietnamese keyword matching."""
     text = unicodedata.normalize("NFKD", str(text or "").lower())
     text = "".join(ch for ch in text if not unicodedata.combining(ch))
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _is_non_skincare_product(product: dict) -> bool:
+    searchable = _norm(" ".join(str(product.get(key) or "") for key in (
+        "ten_san_pham", "loai_san_pham", "danh_muc_day_du", "danh_muc", "mo_ta",
+    )))
+    return any(keyword in searchable for keyword in NON_SKINCARE_KEYWORDS)
 
 
 def preg_split_ingredients(text: str) -> List[str]:
@@ -147,6 +166,9 @@ def validate_recommendation(product: dict, constraints: dict) -> Tuple[bool, Opt
 
     # 1. Category Constraint
     req_cat = constraints.get("category")
+    if (constraints.get("is_routine") or req_cat in EXCLUDED_KEYWORDS_BY_CAT) and _is_non_skincare_product(product):
+        return False, f"category mismatch: non-skincare product for {req_cat or 'skincare routine'}"
+
     if req_cat:
         ex_keywords = EXCLUDED_KEYWORDS_BY_CAT.get(req_cat) or []
         for ex_kw in ex_keywords:

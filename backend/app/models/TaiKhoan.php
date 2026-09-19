@@ -288,6 +288,90 @@ class TaiKhoan {
         }
     }
 
+    public function saveQuickSkinProfileByEmail(string $hoTen, string $email, array $payload): bool {
+        $email = trim($email);
+        if ($email === '') return false;
+
+        $kh = $this->ensureKhachHangByEmail($hoTen, $email);
+        if (!$kh || empty($kh['ma_kh'])) return false;
+
+        $sensitivity = trim((string)($payload['muc_do_nhay_cam'] ?? ''));
+        $goal = trim((string)($payload['muc_tieu_cham_soc'] ?? ''));
+        $issues = $payload['van_de_da'] ?? [];
+        if (!is_array($issues)) {
+            $issues = [$issues];
+        }
+        $issues = array_values(array_filter(array_map('trim', $issues), fn($value) => $value !== ''));
+        $budget = isset($payload['ngan_sach']) ? (int)$payload['ngan_sach'] : 0;
+
+        $now = new \MongoDB\BSON\UTCDateTime();
+        $currentProfile = $this->getSkinProfileByEmail($email) ?? [];
+        $updateData = [
+            'muc_do_nhay_cam' => ($sensitivity !== '' ? $sensitivity : null),
+            'van_de_da' => (!empty($issues) ? implode(', ', $issues) : null),
+            'muc_tieu_cham_soc' => ($goal !== '' ? $goal : null),
+            'ngan_sach' => ($budget > 0 ? $budget : null),
+            'skin_profile_updated_at' => $now,
+            'updated_at' => $now,
+        ];
+        if ($hoTen !== '') $updateData['ho_ten'] = $hoTen;
+
+        try {
+            $result = $this->db->khach_hang->updateOne(['ma_kh' => $kh['ma_kh']], ['$set' => $updateData]);
+            if ($result->getMatchedCount() < 1) {
+                return false;
+            }
+
+            $lastSnapshot = $this->db->skin_profile_history->findOne(
+                ['email' => $email],
+                ['sort' => ['version' => -1]]
+            );
+            $version = ((int)($lastSnapshot['version'] ?? 0)) + 1;
+            $this->db->skin_profile_history->insertOne([
+                'email' => $email,
+                'ma_kh' => (int)$kh['ma_kh'],
+                'skin_type' => $currentProfile['loai_da'] ?? null,
+                'concerns' => $issues,
+                'sensitivity' => $sensitivity !== '' ? $sensitivity : null,
+                'goal' => $goal !== '' ? $goal : null,
+                'budget' => $budget > 0 ? $budget : null,
+                'source' => 'quick_survey',
+                'survey_type' => 'quick',
+                'version' => $version,
+                'updated_at' => $now,
+            ]);
+
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function getLatestQuickSkinProfileUpdate(string $email): ?array {
+        $email = trim($email);
+        if ($email === '') return null;
+
+        try {
+            $snapshot = $this->db->skin_profile_history->findOne(
+                ['email' => $email, 'source' => 'quick_survey'],
+                ['sort' => ['updated_at' => -1, 'version' => -1]]
+            );
+            if (!$snapshot) return null;
+
+            $snapshot = (array)$snapshot;
+            if (($snapshot['updated_at'] ?? null) instanceof \MongoDB\BSON\UTCDateTime) {
+                $snapshot['updated_at_display'] = $snapshot['updated_at']
+                    ->toDateTime()
+                    ->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))
+                    ->format('d/m/Y H:i');
+            }
+
+            return $snapshot;
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
     public function saveThongTinKhachHang(string $email, array $data): bool {
         $hoTen = trim((string)($data['ho_ten'] ?? ''));
         $kh = $this->ensureKhachHangByEmail($hoTen, $email);

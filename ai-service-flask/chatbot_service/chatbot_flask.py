@@ -42,6 +42,7 @@ from typing import Optional, List, Literal
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from hybrid_search import HybridSearchPipeline, BM25Search
+from shared.embedding_provider import get_embedding_function
 
 # Custom Profile State & Survey Flow services
 from profile_state import determine_profile_state, detect_profile_conflict, calculate_days_since_update
@@ -94,15 +95,11 @@ GEMINI_MODEL = os.getenv("GEMINI_CHAT_MODEL", "gemini-2.5-flash").strip()
 _vectorstore = None
 _hybrid_pipeline = None
 
-def get_vectorstore():
+def get_vectorstore(): # tải dữ liệu sản phẩm từ ChromaDB.
     global _vectorstore
     if _vectorstore is None:
         try:
-            emb = HuggingFaceEmbeddings(
-                model_name="sentence-transformers/static-similarity-mrl-multilingual-v1",
-                model_kwargs={"device": "cpu"},
-                encode_kwargs={"normalize_embeddings": True},
-            )
+            emb = get_embedding_function()
             _vectorstore = Chroma(
                 collection_name="products",
                 persist_directory=CHROMA_DB_PATH,
@@ -115,7 +112,7 @@ def get_vectorstore():
     return _vectorstore if _vectorstore is not False else None
 
 
-def get_hybrid_pipeline():
+def get_hybrid_pipeline(): #kết hợp tìm kiếm ngữ nghĩa và keyword.
     global _hybrid_pipeline
     vs = get_vectorstore()
     if _hybrid_pipeline is None or getattr(_hybrid_pipeline, 'vectorstore', None) is None:
@@ -479,18 +476,38 @@ def classify_intent(query: str, llms: list) -> tuple[str, str | None]:
     
     # Rule-based check to override intent to PRODUCT_INQUIRY for product/routine queries
     routine_keywords = ["chu trình", "chu trinh", "skincare", "routine", "rountine", "routin", "các bước", "cac buoc", "combo", "trọn bộ", "tron bo", "bộ dưỡng", "bo duong", "dưỡng da", "duong da", "buổi sáng", "buoi sang", "buổi tối", "buoi toi", "sáng tối", "sang toi", "quy trình", "quy trinh", "trọn gói", "set dưỡng"]
-    product_keywords = ["sản phẩm", "san pham", "srm", "sữa rửa mặt", "sua rua mat", "tẩy trang", "tay trang", "toner", "nước cân bằng", "nuoc can bang", "serum", "tinh chất", "tinh chat", "kem dưỡng", "kem duong", "gel dưỡng", "gel duong", "chống nắng", "chong nang", "kcn", "sunscreen"]
-    recommend_keywords = ["gợi ý", "goi y", "đề xuất", "de xuat", "nêu", "tư vấn", "tu van", "nên mua", "nen mua", "nên dùng", "nen dung", "chọn giúp", "chon giup", "tư vấn giúp", "tu van giup"]
+    product_keywords = ["sản phẩm", "san pham", "sản phảm", "srm", "sữa rửa mặt", "sua rua mat", "tẩy trang", "tay trang", "toner", "nước cân bằng", "nuoc can bang", "serum", "tinh chất", "tinh chat", "kem dưỡng", "kem duong", "gel dưỡng", "gel duong", "chống nắng", "chong nang", "kcn", "sunscreen"]
+    recommend_keywords = [
+        "gợi ý", "goi y", "đề xuất", "de xuat", "nêu", "tư vấn", "tu van",
+        "nên mua", "nen mua", "nên dùng", "nen dung", "chọn giúp", "chon giup",
+        "tư vấn giúp", "tu van giup", "hợp da", "hop da", "phù hợp", "phu hop",
+        "cho tôi", "cho toi", "cho tui", "cho mình", "cho minh", "cho em"
+    ]
     
     has_routine = any(k in query_lower for k in routine_keywords)
     has_prod_and_rec = any(p in query_lower for p in product_keywords) and any(r in query_lower for r in recommend_keywords)
+    ingredient_keywords = [
+        "retinol", "retinoid", "retinal", "vitamin a", "vitamin c", "vit c",
+        "ascorbic", "ascorbyl", "niacinamide", "vitamin b3", "bha",
+        "salicylic", "aha", "glycolic", "lactic", "ceramide", "hyaluronic",
+        "hyaluronic acid", "b5", "panthenol"
+    ]
+    has_ingredient_product_request = (
+        any(k in query_lower for k in ingredient_keywords)
+        and any(k in query_lower for k in product_keywords + [
+            "gợi ý", "goi y", "tìm", "tim", "kiếm", "kiem", "mua", "cho tôi",
+            "cho toi", "cho tui", "cho mình", "cho minh", "cho em", "phù hợp", "phu hop"
+        ])
+        and not any(k in query_lower for k in [
+            "là gì", "la gi", "tác dụng", "tac dung", "công dụng", "cong dung",
+            "cơ chế", "co che", "cách dùng", "cach dung"
+        ])
+        and not re.search(r"\b(?:có nên|co nen|có cần|co can)\b.{0,60}\b(?:mua|dùng|dung|bắt đầu|bat dau)\b", query_lower)
+    )
     
-    if has_routine or has_prod_and_rec:
+    if has_routine or has_prod_and_rec or has_ingredient_product_request:
         print(f"[CLASSIFY] Overriding to PRODUCT_INQUIRY due to routine/product match in query: '{query}'")
         return "PRODUCT_INQUIRY", None
-    if not llms:
-        return "PERSONALIZED", None
-
     from langchain_core.messages import HumanMessage
     prompt = f"""Phân tích câu hỏi sau đây của khách hàng và phân loại ý định (intent) của họ vào một trong các nhóm duy nhất sau:
 1. "COSMETIC_KNOWLEDGE": Hỏi định nghĩa, tác dụng, cơ chế, hoặc cách dùng/lưu ý của hoạt chất mỹ phẩm chung (Ví dụ: "niacinamide là gì", "retinol có tác dụng gì", "vitamin C dùng làm gì", "niacinamide có trị mụn không", "BHA là gì", "tác dụng của Niacinamide").
@@ -543,6 +560,11 @@ Câu hỏi: {query}"""
         return "GENERAL_CONVERSATION", None
     if any(k in query_lower for k in ["là gì", "tác dụng của", "công dụng của", "cơ chế của"]) and any(k in query_lower for k in ["retinol", "niacinamide", "bha", "aha", "vitamin c", "hyaluronic", "collagen", "peel"]):
         # Extract ingredient
+        for ing in ["retinol", "niacinamide", "bha", "aha", "vitamin c", "hyaluronic acid", "collagen"]:
+            if ing in query_lower:
+                return "COSMETIC_KNOWLEDGE", ing
+        return "COSMETIC_KNOWLEDGE", None
+    if re.search(r"\b(?:có nên|co nen|có cần|co can)\b.{0,60}\b(?:mua|dùng|dung|bắt đầu|bat dau)\b", query_lower) and any(k in query_lower for k in ingredient_keywords):
         for ing in ["retinol", "niacinamide", "bha", "aha", "vitamin c", "hyaluronic acid", "collagen"]:
             if ing in query_lower:
                 return "COSMETIC_KNOWLEDGE", ing
@@ -1039,13 +1061,26 @@ def rule_based_parse(message: str) -> Optional[PhanTichYeuCau]:
         elif so_luong_goi_y < 1:
             so_luong_goi_y = 3
             
+    thanh_phan_yeu_cau = []
+    if any(k in msg_lower for k in ["retinol", "retinoid", "retinal", "vitamin a"]):
+        thanh_phan_yeu_cau.append("retinol")
+    if any(k in msg_lower for k in ["vitamin c", "vit c", "ascorbic", "l-ascorbic", "ascorbyl"]):
+        thanh_phan_yeu_cau.append("vitamin c")
+    if "niacinamide" in msg_lower:
+        thanh_phan_yeu_cau.append("niacinamide")
+    if any(k in msg_lower for k in ["bha", "salicylic"]):
+        thanh_phan_yeu_cau.append("bha")
+    if any(k in msg_lower for k in ["aha", "glycolic", "lactic"]):
+        thanh_phan_yeu_cau.append("aha")
+
     ngan_sach = extract_budget_from_text(message)
             
-    if loai_da or loai_san_pham or is_routine or ngan_sach:
+    if loai_da or loai_san_pham or is_routine or ngan_sach or thanh_phan_yeu_cau:
         return PhanTichYeuCau(
             loai_da=loai_da,
             loai_san_pham=loai_san_pham,
             tinh_trang_da=tinh_trang_da if tinh_trang_da else None,
+            thanh_phan_yeu_cau=thanh_phan_yeu_cau if thanh_phan_yeu_cau else None,
             so_luong_goi_y=so_luong_goi_y,
             tu_khoa_ngu_nghia=message,
             is_routine=is_routine,
@@ -1164,17 +1199,6 @@ def build_filter(yc: PhanTichYeuCau) -> dict | None:
     if len(conds) == 1:
         return conds[0]
     return {"$and": conds}
-
-
-def get_product_discount(product_id, name) -> int:
-    """
-    Sinh phẩn trăm giảm giá ngẫu nhiên nhưng ổn định (deterministic) cho mỗi sản phẩm.
-    """
-    try:
-        p_id_int = int(re.sub(r'\D', '', str(product_id)))
-    except ValueError:
-        p_id_int = sum(ord(c) for c in str(name))
-    return ((p_id_int % 4) + 2) * 5  # Returns 10, 15, 20, or 25%
 
 
 def get_fallback_hdsd(category: str) -> str:
@@ -1346,7 +1370,6 @@ Câu hỏi của khách hàng:
 {user_question}
 </cau_hoi_khach>
 
-lưu ý: nếu khách hỏi quá kĩ về sản phẩm, nhãn hàng mà không có trong database thì bạn có thể tra trên internet search rồi trả lời khách hàng, sau đó mồi chèo khách hàng đưa khách hàng 1 vài sản phẩm liên quan được đánh giá cao ở shop mình 
 ### 5. CHỈ THỊ VĂN PHONG VÀ ĐỊNH DẠNG (STYLE & TONE)
 
 Để tạo niềm tin tuyệt đối và mang lại cảm giác chân thật nhất, bạn phải tuân thức nghiêm ngặt các quy tắc viết sau:
@@ -1383,6 +1406,8 @@ lưu ý: nếu khách hỏi quá kĩ về sản phẩm, nhãn hàng mà không c
 - BẮT BUỘC: Mỗi tên sản phẩm PHẢI được trình bày dưới dạng liên kết Markdown click được. Hãy COPY NGUYÊN VĂN giá trị từ trường "Tên (dạng link Markdown)" trong <san_pham_goi_y>. Ví dụ nếu trường đó là: **[Sữa Rửa Mặt ABC 120g](index.php?r=chitiet&id=781)** thì bạn phải ghi ra chính xác như vậy, TUYỆT ĐỐI KHÔNG tự chế link.
 - BẮT BUỘC: Mỗi sản phẩm PHẢI có đủ 3 phần: (a) link tên + giá ưu đãi + tiền tiết kiệm, (b) phân tích thành phần nổi bật + lý do phù hợp, (c) hướng dẫn sử dụng.
 - BẮT BUỘC: Bạn CHỈ ĐƯỢC PHÉP gợi ý các sản phẩm có mặt trong danh sách `<san_pham_goi_y>` ở trên. Nếu người dùng yêu cầu thiết kế một chu trình dưỡng da (routine), bạn PHẢI chọn các sản phẩm phù hợp từ danh sách `<san_pham_goi_y>` này để điền vào từng bước (Tẩy trang, Sữa rửa mặt, Toner, Serum, Kem dưỡng, Chống nắng). TUYỆT ĐỐI KHÔNG ĐƯỢC tự ý bịa ra hoặc đề xuất bất kỳ sản phẩm nào khác ngoài danh sách `<san_pham_goi_y>` này (không bịa tên hay nhãn hàng khác như La Roche-Posay, CeraVe, v.v. nếu chúng không nằm trong danh sách `<san_pham_goi_y>` ở trên). Nếu danh sách `<san_pham_goi_y>` thiếu sản phẩm cho một bước nào đó, hãy ghi rõ là cửa hàng tạm thời chưa có sẵn sản phẩm phù hợp cho bước đó và khuyên khách hàng sử dụng các sản phẩm có sẵn còn lại.
+- Nếu khách hỏi mua retinol nhưng hồ sơ cho thấy da đang mụn viêm, sưng đỏ, bong tróc hoặc rất dễ nhạy cảm, KHÔNG được nói "shop không có retinol". Hãy nói rõ: SkinSyntax có thể có sản phẩm retinol, nhưng ở trạng thái da hiện tại mình chưa khuyên bạn chốt mua ngay; cần phục hồi nền da trước rồi quay lại chọn retinol nhẹ sau.
+- Nếu khách hỏi mua vitamin C/làm sáng nhưng hồ sơ cho thấy da đang mụn viêm, sưng đỏ, bong tróc hoặc rất dễ nhạy cảm, KHÔNG được nói "shop không có vitamin C" một cách hời hợt. Hãy nói rõ: SkinSyntax có thể có sản phẩm vitamin C, nhưng ở trạng thái da hiện tại mình chưa khuyên chốt mua ngay vì dễ châm chích/đỏ rát; cần giảm viêm và phục hồi nền da trước.
 - PHẢI ưu tiên cảnh báo thành phần nguy hiểm nếu da khách nhạy cảm/mụn.
 - PHẢI gợi ý patch test nếu khách có da nhạy cảm.
 - BẮT BUỘC (Makeup vs Skincare): Phân loại sản phẩm rõ ràng dựa trên danh mục (loại sản phẩm như Son Kem, Son Thỏi, Phấn Má... thuộc nhóm Trang Điểm/Makeup).
@@ -1536,21 +1561,35 @@ def format_search_results(docs) -> str:
         mo_ta = m.get('mo_ta', '') or ''
         mo_ta_short = mo_ta[:250] + "..." if len(mo_ta) > 250 else mo_ta
         
-        # Calculate discount
-        discount_pct = get_product_discount(product_id, name)
-        original_price = int(gia_ban / (1 - discount_pct / 100)) if gia_ban > 0 else 0
-        savings = original_price - int(gia_ban) if original_price > 0 else 0
+        # Only show promotion data that is explicitly present in the catalog.
+        # Never infer a list price or discount from the product ID.
+        def as_number(value):
+            try:
+                return float(value or 0)
+            except (TypeError, ValueError):
+                return 0.0
+
+        market_price = as_number(m.get("gia_thi_truong") or m.get("market_price") or m.get("original_price"))
+        original_price = int(market_price) if market_price > gia_ban else 0
+        discount_pct = as_number(m.get("phan_tram_giam") or m.get("discount_percent") or m.get("discount_pct"))
+        savings = as_number(m.get("tien_tiet_kiem") or m.get("savings"))
+        if savings <= 0 and original_price > int(gia_ban):
+            savings = original_price - int(gia_ban)
+        if discount_pct <= 0 and original_price > int(gia_ban):
+            discount_pct = round((1 - gia_ban / original_price) * 100, 2)
         
         # Fallback HDSD
-        hdsd = get_fallback_hdsd(loai_sp)
+        hdsd = str(m.get("hdsd") or m.get("huong_dan_su_dung") or "").strip()
+        if not hdsd:
+            hdsd = "Chưa có hướng dẫn sử dụng từ nhà sản xuất trong dữ liệu hiện tại."
         
         # Pre-format giá dạng có dấu chấm ngăn cách nghìn
         def fmt_price(v):
             return f"{int(v):,}".replace(",", ".")
         
         gia_str = fmt_price(gia_ban) if gia_ban > 0 else "Liên hệ"
-        gia_goc_str = fmt_price(original_price) if original_price > 0 else ""
-        savings_str = fmt_price(savings) if savings > 0 else ""
+        gia_goc_str = fmt_price(original_price) if original_price > 0 else "Chưa có dữ liệu"
+        savings_str = fmt_price(savings) if savings > 0 else "Chưa có dữ liệu"
         
         # Pre-format Markdown link sẵn cho LLM copy trực tiếp
         markdown_link = f"**[{name}]({link})**"
@@ -1564,7 +1603,7 @@ def format_search_results(docs) -> str:
             f"  Loại sản phẩm: {loai_sp}\n"
             f"  Giá bán trên hệ thống: {gia_str} VNĐ\n"
             f"  Giá gốc thị trường: {gia_goc_str} VNĐ\n"
-            f"  Phần trăm giảm: {discount_pct}%\n"
+            f"  Phần trăm giảm: {discount_pct:g}%\n"
             f"  Tiền tiết kiệm: {savings_str} VNĐ\n"
             f"  Thành phần nổi bật: {thanh_phan_short}\n"
             f"  Mô tả ngắn: {mo_ta_short}\n"
@@ -1600,6 +1639,10 @@ def docs_to_products(docs) -> list:
             "image_url": m.get("link_hinh_anh", "") or "",
             "detail_url": f"index.php?r=chitiet&id={product_id}" if product_id else "",
             "summary": (m.get("thanh_phan_chinh", "") or "")[:120],
+            "loai_san_pham": m.get("loai_san_pham", "") or "",
+            "category": m.get("loai_san_pham", "") or "",
+            "loai_da": m.get("loai_da", "") or "",
+            "skin_type": m.get("loai_da", "") or "",
         })
     return products
 
@@ -1617,11 +1660,20 @@ def filter_docs_by_ingredient(raw_docs: list, target_ingredient: str) -> list:
     target_ing_lower = target_ingredient.lower()
     filtered = []
     for doc in raw_docs:
-        # Kiểm tra xem hoạt chất có nằm trong Tên, Thành phần chính hoặc Mô tả/Document của sản phẩm không
-        content_lower = doc.page_content.lower()
+        # Kiểm tra tên và các trường INCI; chỉ dùng indexed text khi catalog thiếu INCI.
         meta = doc.metadata or {}
         ten = str(meta.get("ten_san_pham", "")).lower()
-        thanh_phan = str(meta.get("thanh_phan_chinh", "")).lower()
+        ingredient_fields = [str(meta.get(key, "") or "") for key in (
+            "thanh_phan_full", "thanh_phan_sach", "thanh_phan",
+            "thanh_phan_chinh", "thanh_phan_day_du", "ingredients", "ingredient_list"
+        )]
+        # Prefer explicit INCI fields. Only fall back to indexed text when the
+        # catalog has no ingredient field at all; descriptions can mention an
+        # ingredient without proving it is in the formula.
+        if any(value.strip() for value in ingredient_fields):
+            searchable = " ".join([ten, *ingredient_fields]).lower()
+        else:
+            searchable = " ".join([ten, getattr(doc, "page_content", "") or ""]).lower()
         
         # Hỗ trợ các từ đồng nghĩa thông dụng
         synonyms = []
@@ -1640,10 +1692,255 @@ def filter_docs_by_ingredient(raw_docs: list, target_ingredient: str) -> list:
         else:
             synonyms = [target_ing_lower]
             
-        has_match = any(s in content_lower or s in ten or s in thanh_phan for s in synonyms)
+        has_match = any(s in searchable for s in synonyms)
         if has_match:
             filtered.append(doc)
     return filtered
+
+
+def requested_product_ingredients(yc: PhanTichYeuCau | None, message: str) -> list[str]:
+    """Return active ingredients explicitly requested for product discovery."""
+    values = list(yc.thanh_phan_yeu_cau or []) if yc else []
+    normalized = _norm_vn_text(message)
+    if not values:
+        if any(k in normalized for k in ("niacinamide", "vitamin b3")):
+            values.append("niacinamide")
+        if any(k in normalized for k in ("bha", "salicylic", "salicyl")):
+            values.append("bha")
+        if any(k in normalized for k in ("aha", "glycolic", "lactic")):
+            values.append("aha")
+        if "ceramide" in normalized:
+            values.append("ceramide")
+        if any(k in normalized for k in ("hyaluronic", "hyaluronic acid")):
+            values.append("hyaluronic acid")
+    return list(dict.fromkeys(value.casefold() for value in values if value))
+
+
+def _norm_vn_text(value: str) -> str:
+    text = str(value or "").lower()
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _doc_search_text(doc) -> str:
+    meta = getattr(doc, "metadata", {}) or {}
+    parts = [
+        getattr(doc, "page_content", "") or "",
+        meta.get("ten_san_pham", "") or "",
+        meta.get("loai_san_pham", "") or "",
+        meta.get("loai_da", "") or "",
+        meta.get("thanh_phan_full", "") or "",
+        meta.get("thanh_phan_sach", "") or "",
+        meta.get("thanh_phan", "") or "",
+        meta.get("thanh_phan_chinh", "") or "",
+        meta.get("thanh_phan_day_du", "") or "",
+        meta.get("mo_ta", "") or "",
+    ]
+    return _norm_vn_text(" ".join(str(p) for p in parts))
+
+
+def skin_type_compatible(product_skin: str, requested_skin: str) -> bool:
+    """Reject an explicit contradictory skin type while allowing universal/unknown data."""
+    product = _norm_vn_text(product_skin)
+    requested = _norm_vn_text(requested_skin)
+    if not requested or requested == "unknown":
+        return True
+    if not product or product == "unknown":
+        return True
+    if any(marker in product for marker in ("mọi loại da", "moi loai da", "tất cả loại da", "tat ca loai da")):
+        return True
+    if "dầu" in requested or "nhờn" in requested:
+        return any(marker in product for marker in ("dầu", "nhờn", "mụn"))
+    if "khô" in requested:
+        return "khô" in product
+    if "nhạy cảm" in requested:
+        return "nhạy cảm" in product
+    if "mụn" in requested:
+        return any(marker in product for marker in ("mụn", "dầu", "nhờn"))
+    return requested in product or product in requested
+
+
+def is_retinol_request(text: str) -> bool:
+    normalized = _norm_vn_text(text)
+    return any(k in normalized for k in ["retinol", "retinoid", "retinal", "vitamin a"])
+
+
+def is_vitamin_c_request(text: str) -> bool:
+    normalized = _norm_vn_text(text)
+    return any(k in normalized for k in ["vitamin c", "vit c", "ascorbic", "l-ascorbic", "ascorbyl"])
+
+
+def is_explicit_nonfacial_request(text: str) -> bool:
+    normalized = _norm_vn_text(text)
+    return re.search(
+        r"son|môi|moi|trang điểm|trang diem|makeup|phấn|phan|má hồng|ma hong|kem nền|kem nen|cushion|mascara|dưỡng thể|duong the|body|sữa tắm|sua tam|dầu gội|dau goi|dầu xả|dau xa|tóc|toc|khử mùi|khu mui|lăn nách|lan nach",
+        normalized,
+    ) is not None
+
+
+def is_nonfacial_doc(doc) -> bool:
+    text = _doc_search_text(doc)
+    return re.search(
+        r"son kem|son thỏi|son thoi|son dưỡng môi|son duong moi|má hồng|ma hong|phấn|phan|trang điểm|trang diem|makeup|che khuyết điểm|che khuyet diem|kem nền|kem nen|cushion|mascara|dưỡng thể|duong the|body|sữa tắm|sua tam|dầu gội|dau goi|dầu xả|dau xa|tóc|toc|khử mùi|khu mui|lăn nách|lan nach",
+        text,
+    ) is not None
+
+
+def filter_docs_for_skin_request(docs: list, message: str) -> list:
+    if is_explicit_nonfacial_request(message):
+        return docs
+    return [doc for doc in docs if not is_nonfacial_doc(doc)]
+
+
+def sort_retinol_candidates(docs: list, message: str) -> list:
+    wants_bottle = any(k in _norm_vn_text(message) for k in ["chai", "lọ", "lo", "serum", "tinh chất", "tinh chat"])
+
+    def score(doc) -> int:
+        text = _doc_search_text(doc)
+        value = 0
+        if "serum" in text or "tinh chất" in text or "tinh chat" in text:
+            value += 30
+        if "kem dưỡng" in text or "kem duong" in text:
+            value += 12
+        if "mặt nạ" in text or "mat na" in text:
+            value -= 20 if wants_bottle else 5
+        if "retinol" in text:
+            value += 20
+        if "retinal" in text or "retinoid" in text:
+            value += 8
+        return value
+
+    return sorted(docs, key=score, reverse=True)
+
+
+def _profile_values(profile: dict | None, keys: tuple[str, ...]) -> list[str]:
+    values: list[str] = []
+    seen: set[str] = set()
+    if not profile:
+        return values
+
+    for key in keys:
+        raw_value = profile.get(key)
+        if isinstance(raw_value, (list, tuple, set)):
+            candidates = raw_value
+        elif raw_value:
+            candidates = [raw_value]
+        else:
+            continue
+
+        for item in candidates:
+            value = str(item).strip()
+            normalized = _norm_vn_text(value)
+            if value and normalized not in seen:
+                values.append(value)
+                seen.add(normalized)
+
+    return values
+
+
+def _profile_summary_text(profile: dict, yc: PhanTichYeuCau | None) -> str:
+    pieces = []
+    if profile:
+        pieces.extend(_profile_values(profile, (
+            "skin_type", "loai_da", "skinType", "skinTypeLabel",
+        )))
+        pieces.extend(_profile_values(profile, (
+            "sensitivity", "muc_do_nhay_cam", "do_nhay_cam",
+            "sensitivity_level", "skin_sensitivity",
+        )))
+        pieces.extend(_profile_values(profile, (
+            "concerns", "skin_issues", "tinh_trang_da", "van_de_da",
+            "goal", "goals", "muc_tieu_cham_soc_da", "muc_tieu", "skin_goals",
+        )))
+    if yc:
+        if yc.loai_da:
+            pieces.append(str(yc.loai_da))
+        if yc.tinh_trang_da:
+            pieces.extend(str(item) for item in yc.tinh_trang_da)
+    return _norm_vn_text(" ".join(pieces))
+
+
+def _profile_sentence(profile: dict, yc: PhanTichYeuCau | None) -> str:
+    skin_values = _profile_values(profile, (
+        "skin_type", "loai_da", "skinType", "skinTypeLabel",
+    ))
+    sensitivity_values = _profile_values(profile, (
+        "sensitivity", "muc_do_nhay_cam", "do_nhay_cam",
+        "sensitivity_level", "skin_sensitivity",
+    ))
+    concern_values = _profile_values(profile, (
+        "concerns", "skin_issues", "tinh_trang_da", "van_de_da",
+        "goal", "goals", "muc_tieu_cham_soc_da", "muc_tieu", "skin_goals",
+    ))
+
+    skin_type = skin_values[0] if skin_values else (yc.loai_da if yc else "") or "làn da hiện tại"
+    sensitivity = sensitivity_values[0] if sensitivity_values else ""
+    if not concern_values and yc and yc.tinh_trang_da:
+        concern_values = [str(item) for item in yc.tinh_trang_da if str(item).strip()]
+    concerns = ", ".join(concern_values)
+
+    profile_bits = [f"loại da **{skin_type}**"]
+    if sensitivity:
+        profile_bits.append(f"mức nhạy cảm **{sensitivity}**")
+    if concerns:
+        profile_bits.append(f"mục tiêu/vấn đề đang ưu tiên là **{concerns}**")
+    return ", ".join(profile_bits)
+
+
+def _has_unstable_sensitive_skin(profile: dict, yc: PhanTichYeuCau | None) -> bool:
+    text = _profile_summary_text(profile, yc)
+    if not text:
+        return False
+    risky_markers = [
+        "rất dễ", "rat de", "nhạy cảm", "nhay cam", "dễ kích ứng", "de kich ung",
+        "mụn viêm", "mun viem", "sưng đỏ", "sung do", "đỏ rát", "do rat",
+        "bong tróc", "bong troc", "kích ứng", "kich ung", "mụn bọc", "mụn mủ",
+        "mun boc", "mun mu", "hàng rào", "hang rao",
+    ]
+    return any(marker in text for marker in risky_markers)
+
+
+def should_delay_retinol_for_profile(message: str, profile: dict, yc: PhanTichYeuCau | None) -> bool:
+    if not is_retinol_request(message):
+        return False
+    return _has_unstable_sensitive_skin(profile, yc)
+
+
+def should_delay_vitamin_c_for_profile(message: str, profile: dict, yc: PhanTichYeuCau | None) -> bool:
+    if not is_vitamin_c_request(message):
+        return False
+    return _has_unstable_sensitive_skin(profile, yc)
+
+
+def build_retinol_delay_answer(profile: dict, yc: PhanTichYeuCau | None) -> str:
+    profile_sentence = _profile_sentence(profile, yc)
+
+    return "\n".join([
+        "Chào bạn nhé! Mình hiểu bạn đang muốn tìm một sản phẩm retinol hợp da mình.",
+        "",
+        f"Với hồ sơ hiện tại của bạn: {profile_sentence}, mình **chưa khuyên bạn chốt mua retinol ngay lúc này**. Không phải vì SkinSyntax không có retinol; điểm chính là nền da đang có dấu hiệu dễ nhạy cảm và mụn viêm, nên retinol có thể làm da khô căng, đỏ rát hoặc bùng mụn nặng hơn nếu bắt đầu sai thời điểm.",
+        "",
+        "Retinol thường hợp hơn khi da đã tương đối ổn: mụn viêm không còn bùng nhiều, da không bong rát, hàng rào bảo vệ da không quá yếu. Còn nếu đang sưng đỏ, dễ kích ứng hoặc bong tróc, mình sẽ ưu tiên phục hồi và giảm viêm trước rồi mới chọn retinol nhẹ sau.",
+        "",
+        "Ở giai đoạn này, bạn nên đi theo hướng làm sạch dịu, dưỡng phục hồi và chống nắng đều. Khi da bớt đỏ viêm hơn, bạn hỏi lại mình kiểu “tìm retinol nhẹ cho da dầu mụn” thì mình sẽ lọc các sản phẩm retinol trong shop theo mức dịu, giá và cách dùng an toàn cho bạn.",
+        "",
+        "Nếu bạn vẫn muốn tham khảo sản phẩm ngoài thị trường như The Ordinary hay CeraVe, mình có thể phân tích riêng theo tiêu chí chọn retinol. Còn để bấm mua trực tiếp trên SkinSyntax, mình sẽ chỉ đưa sản phẩm khi nó thật sự hợp với tình trạng da của bạn ở thời điểm đó.",
+    ])
+
+
+def build_vitamin_c_delay_answer(profile: dict, yc: PhanTichYeuCau | None) -> str:
+    profile_sentence = _profile_sentence(profile, yc)
+
+    return "\n".join([
+        "Dạ vâng, mình hiểu bạn đang muốn tìm một sản phẩm vitamin C làm sáng da hợp với da mình.",
+        "",
+        f"Với hồ sơ hiện tại của bạn: {profile_sentence}, mình **chưa khuyên bạn chốt mua vitamin C ngay lúc này**. Không phải vì SkinSyntax không có vitamin C; điểm chính là nền da đang dễ nhạy cảm và có mụn viêm, nên các sản phẩm làm sáng mạnh, nhất là vitamin C dạng acid/pure vitamin C, có thể gây châm chích, đỏ rát hoặc làm da khó ổn định hơn.",
+        "",
+        "Vitamin C hợp hơn khi nền da đã bớt viêm, không còn đỏ rát/bong tróc nhiều và routine chống nắng đã ổn. Lúc đó vitamin C mới phát huy tốt vai trò hỗ trợ sáng da, mờ thâm và đều màu mà ít làm da bị quá tải.",
+        "",
+        "Ở giai đoạn này, mình sẽ ưu tiên cho bạn hướng giảm viêm và phục hồi trước: làm sạch dịu, dưỡng ẩm phục hồi, chống nắng đều và chọn hoạt chất nhẹ hơn nếu cần hỗ trợ thâm sau mụn. Khi da bớt sưng đỏ, bạn hỏi lại mình kiểu “tìm vitamin C dịu cho da dầu mụn” thì mình sẽ lọc các sản phẩm vitamin C trong shop theo mức dịu, giá và độ hợp với da bạn.",
+        "",
+        "Nếu mục tiêu hiện tại là sáng da nhưng vẫn đang mụn viêm, mình có thể chuyển sang gợi ý nhóm phục hồi/làm dịu phù hợp hơn để da ổn trước, rồi mình quay lại vitamin C sau.",
+    ])
 
 
 # ─── Conversation History helpers ───────────────────────────────────────────
@@ -2131,6 +2428,39 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                 "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0}
             }
 
+    def build_safety_gate_payload(answer: str, pipeline_mode: str, query_type: str, intent_mode: str) -> dict:
+        return {
+            "ok": True,
+            "answer": answer,
+            "products": [],
+            "conflicts": cart_conflicts,
+            "fallback": False,
+            "fallback_reason": "",
+            "pipeline_mode": pipeline_mode,
+            "query_type": query_type,
+            "intent_mode": intent_mode,
+            "profile_state": determine_profile_state(message, profile_data) if need_profile else "BYPASSED",
+            "profile_gate": "REQUIRED" if need_profile else "BYPASSED",
+            "latency": round(time.time() - start_time, 2),
+            "eval_scores": {"ar": 1.0, "gr": 1.0, "cr": 1.0},
+            "analysis": {
+                "loai_da": yc.loai_da if yc else None,
+                "loai_san_pham": yc.loai_san_pham if yc else None,
+                "muc_gia": yc.muc_gia if yc else None,
+                "tinh_trang_da": yc.tinh_trang_da if yc else [],
+                "thanh_phan_yeu_cau": yc.thanh_phan_yeu_cau if yc else None,
+                "thanh_phan_can_tranh": (yc.thanh_phan_can_tranh if yc else None) or avoid_ingredients,
+            },
+        }
+
+    if should_delay_retinol_for_profile(f"{message} {rewritten_query}", profile_data or profile, yc):
+        answer = build_retinol_delay_answer(profile_data or profile, yc)
+        return build_safety_gate_payload(answer, "Retinol Safety Gate", "retinol safety advisory", "RETINOL_SAFETY")
+
+    if should_delay_vitamin_c_for_profile(f"{message} {rewritten_query}", profile_data or profile, yc):
+        answer = build_vitamin_c_delay_answer(profile_data or profile, yc)
+        return build_safety_gate_payload(answer, "Vitamin C Safety Gate", "vitamin c safety advisory", "VITAMIN_C_SAFETY")
+
     # 4. Routing & Retrieval logic based on Intent
     docs = []
     k = min(max(int(yc.so_luong_goi_y or 3), 3), 10)
@@ -2231,6 +2561,12 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                     cat_docs = []
                 if not cat_docs:
                     cat_docs = hybrid_search_with_filter({"loai_san_pham": {"$eq": cat_name}}, top_n=3)
+
+                # A catalog item can be tagged as sunscreen merely because its
+                # title contains "chống nắng". Do not let makeup with an SPF
+                # claim enter a skincare routine just because its category tag
+                # matches the sunscreen step.
+                cat_docs = [doc for doc in cat_docs if not is_nonfacial_doc(doc)]
                 
                 if cat_docs:
                     category_candidates.append((cat_name, cat_docs))
@@ -2348,11 +2684,25 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         p_name = item.get("ten_san_pham") or item.get("name") or "Sản phẩm gợi ý"
         p_brand = item.get("thuong_hieu") or item.get("brand") or "Unknown"
         p_price = item.get("gia_ban") or item.get("price") or 0
+        p_market_price = item.get("gia_thi_truong") or item.get("market_price") or item.get("original_price") or 0
+        p_discount_percent = item.get("phan_tram_giam") or item.get("discount_percent") or item.get("discount_pct") or 0
+        p_savings = item.get("tien_tiet_kiem") or item.get("savings") or 0
         p_loai_da = item.get("loai_da") or item.get("skin_type") or "Unknown"
         p_loai_sp = item.get("loai_san_pham") or item.get("category") or "Unknown"
         p_xuat_xu = item.get("xuat_xu_thuong_hieu") or item.get("xuat_xu") or "Unknown"
         p_image = item.get("link_hinh_anh") or item.get("image_url") or ""
-        p_thanh_phan = item.get("thanh_phan_chinh") or item.get("thanh_phan") or item.get("summary") or "N/A"
+        p_thanh_phan = (
+            item.get("thanh_phan_full")
+            or item.get("thanh_phan_day_du")
+            or item.get("thanh_phan_sach")
+            or item.get("thanh_phan")
+            or item.get("thanh_phan_chinh")
+            or item.get("summary")
+            or "N/A"
+        )
+        p_thanh_phan_full = item.get("thanh_phan_full") or item.get("thanh_phan_day_du") or ""
+        p_thanh_phan_sach = item.get("thanh_phan_sach") or ""
+        p_thanh_phan_raw = item.get("thanh_phan") or ""
         p_mota = item.get("mo_ta") or item.get("description") or ""
         
         doc_id = f"product_{p_id}" if p_id else ""
@@ -2360,11 +2710,18 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             "ten_san_pham": p_name,
             "thuong_hieu": p_brand,
             "gia_ban": p_price,
+            "gia_thi_truong": p_market_price,
+            "phan_tram_giam": p_discount_percent,
+            "tien_tiet_kiem": p_savings,
             "loai_da": p_loai_da,
             "loai_san_pham": p_loai_sp,
             "xuat_xu_thuong_hieu": p_xuat_xu,
             "link_hinh_anh": p_image,
             "thanh_phan_chinh": p_thanh_phan,
+            "thanh_phan_day_du": p_thanh_phan_full,
+            "thanh_phan_full": p_thanh_phan_full,
+            "thanh_phan_sach": p_thanh_phan_sach,
+            "thanh_phan": p_thanh_phan_raw,
             "mo_ta": p_mota,
             "id": p_id
         }
@@ -2429,12 +2786,24 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     filtered_docs = []
     for doc in other_docs:
         meta = doc.metadata or {}
+
+        if not is_explicit_nonfacial_request(rewritten_query) and is_nonfacial_doc(doc):
+            print(f"[HARD FILTER] Excluded non-facial/makeup product: {meta.get('ten_san_pham')}")
+            continue
         
         # 1. Lọc theo Danh mục (nếu có yêu cầu loại sản phẩm cụ thể và không phải là routine)
         if yc and yc.loai_san_pham and not yc.is_routine:
             p_cat = meta.get("loai_san_pham", "")
             if p_cat != yc.loai_san_pham:
                 print(f"[HARD FILTER] Excluded category mismatch: {meta.get('ten_san_pham')} ({p_cat} vs {yc.loai_san_pham})")
+                continue
+
+        # SQL products are merged before the final rerank, so apply the same
+        # profile constraint to them as to Chroma results.
+        if yc and yc.loai_da and not yc.is_routine:
+            p_skin = meta.get("loai_da", "")
+            if not skin_type_compatible(str(p_skin), str(yc.loai_da)):
+                print(f"[HARD FILTER] Excluded skin mismatch: {meta.get('ten_san_pham')} ({p_skin} vs {yc.loai_da})")
                 continue
                 
         # 2. Lọc theo Thương hiệu (nếu có yêu cầu thương hiệu cụ thể)
@@ -2493,10 +2862,47 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             print(f"[RE-RANK] Error running reranker: {e}. Falling back to default order.")
     
     # Reassemble final list: current product always goes first, followed by re-ranked others
+    if current_doc and yc.is_routine and is_nonfacial_doc(current_doc):
+        print(f"[ROUTINE FILTER] Excluded current non-skincare product: {current_doc.metadata.get('ten_san_pham')}")
+        current_doc = None
+
     reassembled_docs = []
     if current_doc:
         reassembled_docs.append(current_doc)
     reassembled_docs.extend(other_docs)
+
+    if not yc.is_routine:
+        reassembled_docs = filter_docs_for_skin_request(reassembled_docs, rewritten_query)
+
+    requested_ingredients = requested_product_ingredients(yc, rewritten_query)
+    if requested_ingredients and not yc.is_routine:
+        ingredient_docs = reassembled_docs
+        for requested_ingredient in requested_ingredients:
+            ingredient_docs = filter_docs_by_ingredient(ingredient_docs, requested_ingredient)
+
+        if not ingredient_docs:
+            aliases = {
+                "retinol": "retinol serum retinoid vitamin a",
+                "vitamin c": "vitamin c serum làm sáng thâm ascorbic",
+                "niacinamide": "niacinamide vitamin b3 serum",
+                "bha": "bha salicylic acid serum trị mụn",
+                "aha": "aha glycolic lactic acid serum",
+                "ceramide": "ceramide phục hồi dưỡng ẩm",
+                "hyaluronic acid": "hyaluronic acid ha cấp ẩm",
+            }
+            extra_query = " ".join(aliases.get(ingredient, ingredient) for ingredient in requested_ingredients)
+            extra_docs = hybrid_search_with_filter(None, top_n=15, custom_query=extra_query)
+            extra_docs = filter_docs_for_skin_request(extra_docs, rewritten_query)
+            ingredient_docs = extra_docs
+            for requested_ingredient in requested_ingredients:
+                ingredient_docs = filter_docs_by_ingredient(ingredient_docs, requested_ingredient)
+
+        if ingredient_docs:
+            reassembled_docs = sort_retinol_candidates(ingredient_docs, rewritten_query) if "retinol" in requested_ingredients else ingredient_docs
+            print(f"[INGREDIENT FILTER] Required {requested_ingredients}; kept {len(reassembled_docs)} candidates.")
+        else:
+            reassembled_docs = []
+            print(f"[INGREDIENT FILTER] No candidates found with required ingredients: {requested_ingredients}.")
 
     # Strictly filter single-product recommendations to fit within the user's specified budget limit
     if not yc.is_routine and yc.ngan_sach is not None:
@@ -2534,7 +2940,8 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         excluded_kw = ["tóc", "toc", "che khuyết điểm", "che khuyet diem", "son môi", "phấn", "lăn khử mùi", "dầu gội", "sữa tắm", "dưỡng thể"]
         candidates_by_step = {step[0]: [] for step in routine_categories}
         
-        for doc in reassembled_docs:
+        routine_docs = [doc for doc in reassembled_docs if not is_nonfacial_doc(doc)]
+        for doc in routine_docs:
             p_content = getattr(doc, "page_content", "") or ""
             meta_str = str(getattr(doc, "metadata", {}) or {})
             full_text = f"{p_content} {meta_str}".lower()
@@ -2551,7 +2958,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                 selected_routine.append(step_docs[0])
 
         if len(selected_routine) < 3:
-            selected_routine = [d for d in reassembled_docs if not any(ex in f"{d.metadata.get('ten_san_pham','')} {d.metadata.get('loai_san_pham','')}".lower() for ex in excluded_kw)][:5]
+            selected_routine = [d for d in routine_docs if not any(ex in f"{d.metadata.get('ten_san_pham','')} {d.metadata.get('loai_san_pham','')}".lower() for ex in excluded_kw)][:5]
 
         if yc.ngan_sach and yc.ngan_sach > 0:
             fitted = []
@@ -2563,7 +2970,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                     current_total += price
             selected_routine = fitted
 
-        final_merged_docs = selected_routine or reassembled_docs[:5]
+        final_merged_docs = selected_routine or routine_docs[:5]
     else:
         final_merged_docs = reassembled_docs[:int(yc.so_luong_goi_y or 3)]
 
@@ -2775,23 +3182,31 @@ def chat():
     if user_email in ("", "null", "none", None):
         user_email = None
 
+    if conversation_id and not ObjectId.is_valid(conversation_id):
+        return jsonify({"ok": False, "message": "conversation_id không hợp lệ."}), 400
+
+    if conversation_id and not user_email:
+        return jsonify({"ok": False, "message": "Bạn cần đăng nhập để tiếp tục cuộc hội thoại này."}), 401
+
     # Khôi phục context lịch sử chat từ MongoDB nếu có email và conversation_id
     if user_email and conversation_id:
         conv = get_conversation_by_id(conversation_id, user_email)
-        if conv:
-            history_messages = conv.get("messages", [])[-10:]
-            history_lines = []
-            for h in history_messages:
-                sender = "Khách hàng" if h.get("role") == "user" else "SkinSyntax AI"
-                history_lines.append(f"{sender}: {h.get('content', '')}")
-            chat_history_str = "\n".join(history_lines)
-            
-            # Đè vào payload để xu_ly_cau_hoi sử dụng
-            if isinstance(msg_data, dict):
-                # Khôi phục mảng lịch sử dưới dạng cấu trúc UI
-                msg_data["conversation_history"] = [
-                    {"sender": h.get("role"), "text": h.get("content")} for h in history_messages
-                ]
+        if not conv:
+            return jsonify({"ok": False, "message": "Không tìm thấy cuộc hội thoại của tài khoản này."}), 403
+
+        history_messages = conv.get("messages", [])[-10:]
+        history_lines = []
+        for h in history_messages:
+            sender = "Khách hàng" if h.get("role") == "user" else "SkinSyntax AI"
+            history_lines.append(f"{sender}: {h.get('content', '')}")
+        chat_history_str = "\n".join(history_lines)
+
+        # Đè vào payload để xu_ly_cau_hoi sử dụng
+        if isinstance(msg_data, dict):
+            # Khôi phục mảng lịch sử dưới dạng cấu trúc UI
+            msg_data["conversation_history"] = [
+                {"sender": h.get("role"), "text": h.get("content")} for h in history_messages
+            ]
 
     try:
         result = xu_ly_cau_hoi(message, msg_data)
@@ -2812,6 +3227,20 @@ def chat():
                 try:
                     answer_text = result.get("answer") or ""
                     products_recommended = [p.get("id") for p in (result.get("products") or []) if isinstance(p, dict) and p.get("id")]
+                    # PHP may provide a catalog-grounded routine override.
+                    # Persist exactly what the customer saw, rather than the
+                    # provisional LLM answer/products generated upstream.
+                    catalog_persist_answer = data.get("catalog_persist_answer")
+                    if isinstance(catalog_persist_answer, str) and catalog_persist_answer.strip():
+                        answer_text = catalog_persist_answer.strip()
+
+                    catalog_persist_product_ids = data.get("catalog_persist_product_ids")
+                    if isinstance(catalog_persist_product_ids, list):
+                        products_recommended = [
+                            str(product_id).strip()
+                            for product_id in catalog_persist_product_ids
+                            if str(product_id).strip()
+                        ]
                     conflicts_found = result.get("conflicts") or []
                     save_chat_messages(active_conv_id, user_email, message, answer_text, products_recommended, conflicts_found)
                     
@@ -2939,6 +3368,13 @@ def recommendation_profile():
     query_text = ". ".join(query_parts) + "."
     
     msg_data = {
+        # xu_ly_cau_hoi đọc hồ sơ cá nhân từ customer_profile. Trước đây route
+        # này chỉ truyền user_profile nên loại da, vấn đề da và ngân sách bị mất
+        # trước khi vào bộ phân tích routine.
+        "customer_profile": {
+            **profile,
+            "skin_issues": profile.get("skin_issues") or profile.get("concerns") or [],
+        },
         "loai_da": skin_type,
         "tinh_trang_da": concerns_str,
         "thanh_phan_can_tranh": avoid_str,

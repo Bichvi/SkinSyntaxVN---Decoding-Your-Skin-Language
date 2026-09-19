@@ -340,6 +340,7 @@ class TaiKhoanController {
         }
 
         $skinProfile = $this->model->getSkinProfileByEmail((string)$account['email']);
+        $latestQuickSkinUpdate = $this->model->getLatestQuickSkinProfileUpdate((string)$account['email']);
         $loaiDaOptions = $this->model->getLoaiDaOptions();
 
         $this->render('hoso', [
@@ -348,9 +349,92 @@ class TaiKhoanController {
             'orders' => $orders,
             'cartItems' => $cartItems,
             'skinProfile' => $skinProfile,
+            'latestQuickSkinUpdate' => $latestQuickSkinUpdate,
             'loaiDaOptions' => $loaiDaOptions,
             'cancelReasonOptions' => $this->cancellationReasonOptions(),
         ]);
+    }
+
+    public function khaosatNhanh(): void {
+        $user = $this->requireLogin();
+        $email = trim((string)($user['email'] ?? ''));
+        if ($email === '') {
+            set_flash('error', 'Không xác định được email tài khoản.');
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+
+        $account = $this->model->getAccountOverviewByEmail($email) ?: $user;
+        $khachHang = $this->model->getKhachHangByEmail($email) ?? [];
+        $skinProfile = $this->model->getSkinProfileByEmail($email) ?? [];
+
+        $this->render('auth/khaosatnhanh', [
+            'account' => $account,
+            'khachHang' => $khachHang,
+            'skinProfile' => $skinProfile,
+        ]);
+    }
+
+    public function xulyKhaoSatNhanh(): void {
+        $user = $this->requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=khaosatnhanh');
+        }
+
+        $email = trim((string)($user['email'] ?? ''));
+        $hoTen = trim((string)($user['ho_ten'] ?? ''));
+        $sensitivityOptions = ['Rất dễ', 'Thỉnh thoảng', 'Khỏe mạnh, hiếm khi'];
+        $issueOptions = [
+            'Mụn viêm, sưng đỏ',
+            'Mụn ẩn, mụn đầu đen',
+            'Lỗ chân lông to',
+            'Thâm mụn, sạm nám, tàn nhang',
+            'Lão hóa, nếp nhăn',
+            'Da khô căng, bong tróc',
+        ];
+        $goalOptions = [
+            'Sạch mụn, giảm viêm',
+            'Dưỡng sáng, mờ thâm nám',
+            'Phục hồi màng bảo vệ da, cấp ẩm',
+            'Chống lão hóa, trẻ hóa da',
+        ];
+        $budgetMap = [
+            'duoi_200k' => 200000,
+            '200_500k' => 500000,
+            '500_1000k' => 1000000,
+            'tren_1000k' => 1500000,
+        ];
+
+        $sensitivity = trim((string)($_POST['q1'] ?? ''));
+        $issues = $_POST['q2'] ?? [];
+        $goal = trim((string)($_POST['q3'] ?? ''));
+        $budgetKey = trim((string)($_POST['q4'] ?? ''));
+
+        if (!is_array($issues)) {
+            $issues = [$issues];
+        }
+        $issues = array_values(array_intersect(
+            $issueOptions,
+            array_map(static fn($value) => trim((string)$value), $issues)
+        ));
+
+        if ($email === '' || !in_array($sensitivity, $sensitivityOptions, true) || empty($issues) || !in_array($goal, $goalOptions, true) || !array_key_exists($budgetKey, $budgetMap)) {
+            set_flash('error', 'Vui lòng trả lời đủ 4 câu hỏi của khảo sát nhanh.');
+            redirect(BASE_URL . '/index.php?r=khaosatnhanh');
+        }
+
+        $ok = $this->model->saveQuickSkinProfileByEmail($hoTen, $email, [
+            'muc_do_nhay_cam' => $sensitivity,
+            'van_de_da' => $issues,
+            'muc_tieu_cham_soc' => $goal,
+            'ngan_sach' => $budgetMap[$budgetKey],
+        ]);
+        if (!$ok) {
+            set_flash('error', 'Không thể lưu cập nhật tình trạng da. Vui lòng thử lại.');
+            redirect(BASE_URL . '/index.php?r=khaosatnhanh');
+        }
+
+        set_flash('success', 'Đã cập nhật tình trạng da hiện tại và lưu lại phiên bản hồ sơ mới.');
+        redirect(BASE_URL . '/index.php?r=hoso');
     }
 
     public function capNhatThongTin(): void {

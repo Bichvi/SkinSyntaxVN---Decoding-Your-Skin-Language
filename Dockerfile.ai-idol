@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    HF_HOME=/opt/huggingface
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ffmpeg libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu torch
+
+COPY ai-idol-service/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Cache the tiny multilingual embedding model so campaigns still work after an offline restart.
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/static-similarity-mrl-multilingual-v1', device='cpu')"
+
+RUN mkdir -p /opt/piper \
+    && curl -fL "https://huggingface.co/rhasspy/piper-voices/resolve/main/vi/vi_VN/vais1000/medium/vi_VN-vais1000-medium.onnx?download=true" \
+       -o /opt/piper/vi_VN-vais1000-medium.onnx \
+    && curl -fL "https://huggingface.co/rhasspy/piper-voices/resolve/main/vi/vi_VN/vais1000/medium/vi_VN-vais1000-medium.onnx.json?download=true" \
+       -o /opt/piper/vi_VN-vais1000-medium.onnx.json
+
+WORKDIR /app
+COPY ai-idol-service/ /app/
+
+EXPOSE 5003
+CMD ["gunicorn", "--bind", "0.0.0.0:5003", "--workers", "1", "--threads", "4", "--timeout", "120", "app:app"]

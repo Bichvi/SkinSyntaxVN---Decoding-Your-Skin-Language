@@ -1,0 +1,6 @@
+# This small pinned browser renderer is source dependency, not Composer vendor.
+!vendor/
+!vendor/three.module.min.js
+!vendor/three.core.min.js
+!vendor/LICENSE
+!vendor/README.md

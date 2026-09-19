@@ -1,0 +1,854 @@
+{
+  "version": "2026-09-12",
+  "routing": {
+    "priority": {
+      "otp": 12,
+      "an-toan-tai-khoan": 20
+    },
+    "aliases": {
+      "bao-mat": [
+        "email va so dien thoai",
+        "email dung nhan otp"
+      ],
+      "van-chuyen": [
+        "giao hang",
+        "ship",
+        "cuoc van chuyen"
+      ],
+      "lien-he": [
+        "so hotline",
+        "email cua shop"
+      ],
+      "dat-hang": [
+        "mua nhu the nao",
+        "dat hang can gi"
+      ]
+    }
+  },
+  "contact": {
+    "phone": "0398606281",
+    "email": "cskh@skinsyntax.com",
+    "hours": "Khung giờ có nhân viên trực chưa được công bố. Bạn có thể gửi yêu cầu bất cứ lúc nào; thời điểm gửi không đồng nghĩa với thời điểm có nhân viên phản hồi."
+  },
+  "groups": {
+    "legal": {
+      "title": "Pháp lý & quyền riêng tư",
+      "description": "Điều khoản, dữ liệu cá nhân và quyền của bạn.",
+      "icon": "fa-shield-halved"
+    },
+    "account": {
+      "title": "Tài khoản & bảo mật",
+      "description": "Đăng ký, nhận mã, khôi phục và bảo vệ tài khoản.",
+      "icon": "fa-user-lock"
+    },
+    "orders": {
+      "title": "Đặt hàng & thanh toán",
+      "description": "Từ chọn đúng sản phẩm đến theo dõi đơn hàng.",
+      "icon": "fa-bag-shopping"
+    },
+    "delivery": {
+      "title": "Vận chuyển & đổi trả",
+      "description": "Nhận hàng, phản ánh sự cố và yêu cầu hoàn tiền.",
+      "icon": "fa-truck-fast"
+    },
+    "contact": {
+      "title": "Liên hệ hỗ trợ",
+      "description": "Các kênh tiếp nhận và cách gửi thông tin cần thiết.",
+      "icon": "fa-comments"
+    }
+  },
+  "articles": [
+    {
+      "slug": "dieu-khoan",
+      "group": "legal",
+      "title": "Điều khoản sử dụng",
+      "summary": "Điều kiện khi sử dụng tài khoản, nội dung tư vấn và mua sắm tại SkinSyntax.",
+      "answer": "Bạn có thể xem điều khoản sử dụng tại đường dẫn bên dưới. Khi mua hàng, hãy kiểm tra đúng sản phẩm, số lượng, giá và phí trước khi xác nhận. Tư vấn chăm sóc da trên website không thay thế việc khám, chẩn đoán hay điều trị. Nếu có tranh chấp, bạn vẫn có các quyền được pháp luật bảo vệ.",
+      "triggers": [
+        "dieu khoan",
+        "terms of service",
+        "dieu kien giao dich"
+      ],
+      "questions": [
+        "Tôi xem điều khoản sử dụng ở đâu?"
+      ],
+      "sections": [
+        {
+          "title": "Phạm vi sử dụng",
+          "items": [
+            "Điều khoản áp dụng cho việc truy cập website, đăng ký tài khoản, sử dụng tư vấn và đặt mua sản phẩm do SkinSyntax giới thiệu. Cung cấp thông tin liên hệ và nhận hàng chính xác; không mạo danh, sử dụng tài khoản của người khác hoặc can thiệp trái phép vào hệ thống.",
+            "Nội dung chăm sóc da mang tính tham khảo. Mỹ phẩm không được giới thiệu như thuốc chữa bệnh; việc lựa chọn cần dựa trên nhãn sản phẩm và tình trạng thực tế của người dùng."
+          ]
+        },
+        {
+          "title": "Giao dịch và nội dung",
+          "items": [
+            "Khách tự chọn sản phẩm và kiểm tra giá, số lượng, chi phí, địa chỉ, phương thức thanh toán tại trang thanh toán trước khi xác nhận đơn. Chọn sản phẩm trong chat chưa tạo đơn hàng và chưa thu tiền.",
+            "Nếu phát hiện sai giá, thiếu hàng hoặc thông tin không chính xác, SkinSyntax cần thông báo và thống nhất cách xử lý với khách; không tự thay thế sản phẩm hay tự tăng số tiền phải trả.",
+            "Tôn trọng quyền sở hữu trí tuệ của chủ thể có quyền đối với nội dung, nhãn hiệu và hình ảnh. Việc xuất hiện trên website không mặc nhiên có nghĩa mọi tài nguyên thuộc sở hữu SkinSyntax."
+          ]
+        },
+        {
+          "title": "Quyền và thay đổi điều khoản",
+          "items": [
+            "Khách có thể liên hệ để yêu cầu hỗ trợ, khiếu nại hoặc thực hiện quyền liên quan đến dữ liệu cá nhân. Không điều khoản nào ở đây loại trừ trách nhiệm bắt buộc của bên bán hay các quyền của người tiêu dùng theo pháp luật.",
+            "Nội dung cập nhật được ghi ngày trên trang. Việc xử lý đơn đã giao kết cần theo thỏa thuận áp dụng và quy định pháp luật, không tự động áp dụng bất lợi từ một bản cập nhật sau đó."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "bao-mat",
+      "group": "legal",
+      "title": "Chính sách bảo mật & dữ liệu cá nhân",
+      "summary": "Những dữ liệu website sử dụng, mục đích xử lý và cách gửi yêu cầu về quyền riêng tư.",
+      "answer": "Email được dùng để tạo tài khoản, gửi OTP đăng ký và liên kết khôi phục mật khẩu. OTP đăng ký hiện gửi qua email, không phải SMS. Số điện thoại và địa chỉ phục vụ liên hệ/giao hàng khi bạn cung cấp. Hồ sơ da và nội dung chat có thể được xử lý để tư vấn; đừng gửi OTP, mật khẩu hoặc thông tin thẻ vào chat. Bạn có thể yêu cầu xem, sửa hoặc xóa dữ liệu qua cskh@skinsyntax.com; dữ liệu phải lưu theo pháp luật được xử lý riêng.",
+      "triggers": [
+        "bao mat thong tin",
+        "chinh sach bao mat",
+        "du lieu ca nhan",
+        "privacy",
+        "luu email",
+        "xu ly email",
+        "xu ly so dien thoai",
+        "thu thap du lieu",
+        "ban du lieu",
+        "luu thong tin",
+        "quyen rieng tu"
+      ],
+      "questions": [
+        "Email và số điện thoại của tôi được dùng làm gì?",
+        "Tôi có thể yêu cầu xem hoặc xóa dữ liệu không?"
+      ],
+      "sections": [
+        {
+          "title": "Dữ liệu và mục đích",
+          "items": [
+            "Tài khoản: họ tên, email và thông tin xác thực phục vụ đăng ký, đăng nhập, khôi phục tài khoản. Mật khẩu được xử lý dạng băm; mã OTP đăng ký được đối chiếu qua giá trị băm trong phiên máy chủ.",
+            "OTP đăng ký gồm 6 số, gửi qua email, có hiệu lực 10 phút. Phiên OTP được xóa khi đăng ký hoàn tất hoặc khi phát hiện hết hạn. Thời gian hiệu lực mã không phải cam kết xóa toàn bộ nhật ký gửi thư sau 10 phút.",
+            "Số điện thoại, địa chỉ, đơn hàng và thông tin giao dịch được sử dụng để giao nhận, đối soát thanh toán và hỗ trợ sau mua. Không gửi OTP hoặc thông tin thẻ qua kênh hỗ trợ.",
+            "Hồ sơ da, câu hỏi, lịch sử chat, giỏ hàng và sản phẩm đang xem có thể được sử dụng để cá nhân hóa tư vấn. Chỉ cung cấp thông tin cần thiết; tránh đưa thông tin sức khỏe chi tiết hoặc thông tin riêng của người khác vào chat."
+          ]
+        },
+        {
+          "title": "Bên nhận dữ liệu và lưu giữ",
+          "items": [
+            "Dịch vụ gửi email, thanh toán, giao vận và dịch vụ xử lý tư vấn có thể tiếp nhận phần dữ liệu cần thiết để thực hiện chức năng tương ứng. Việc dùng dịch vụ xử lý tư vấn bên ngoài có thể phát sinh xử lý dữ liệu ngoài hệ thống SkinSyntax. Danh sách nhà cung cấp và địa điểm xử lý cụ thể cần được đơn vị vận hành xác nhận.",
+            "SkinSyntax không sử dụng email hoặc số điện thoại chỉ cung cấp để xác thực OTP làm sự đồng ý mặc định nhận quảng cáo. Việc tiếp thị cần có căn cứ và cơ chế lựa chọn phù hợp.",
+            "Thời hạn lưu giữ theo từng loại dữ liệu, đơn vị kiểm soát dữ liệu và quy trình xử lý yêu cầu đang cần được đơn vị vận hành công bố đầy đủ. Chưa có cam kết xóa tức thì hoặc xóa mọi dữ liệu giao dịch khi đóng tài khoản."
+          ]
+        },
+        {
+          "title": "Yêu cầu của bạn",
+          "items": [
+            "Gửi yêu cầu truy cập, chỉnh sửa, rút lại đồng ý, hạn chế xử lý hoặc xóa dữ liệu tới cskh@skinsyntax.com. Chỉ cung cấp thông tin cần để xác định yêu cầu; bộ phận hỗ trợ sẽ hướng dẫn xác minh, không yêu cầu đọc mật khẩu/OTP trong chat.",
+            "Việc thực hiện quyền được xem xét theo pháp luật và nghĩa vụ lưu giữ liên quan. Khi có yêu cầu giữ lại dữ liệu giao dịch, cần thông báo phạm vi và lý do cho người yêu cầu."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cookie",
+      "group": "legal",
+      "title": "Chính sách cookie & lưu trữ trình duyệt",
+      "summary": "Phiên đăng nhập, giỏ hàng và lịch sử chat trên thiết bị của bạn.",
+      "answer": "Website dùng cookie phiên để duy trì đăng nhập và giỏ hàng, đồng thời có lưu trữ trình duyệt cho trạng thái/lịch sử chat. Bạn có thể xóa dữ liệu website trong cài đặt trình duyệt hoặc xóa cuộc chat bằng nút thùng rác. Chặn cookie phiên có thể làm đăng nhập và giỏ hàng không hoạt động; xóa dữ liệu trên máy không đồng nghĩa xóa lịch sử đã lưu ở máy chủ.",
+      "triggers": [
+        "cookie",
+        "cookies",
+        "luu tru trinh duyet",
+        "xoa lich su chat",
+        "xoa cuoc chat"
+      ],
+      "questions": [
+        "Xóa cookie có làm mất giỏ hàng không?",
+        "Xóa chat trên máy có xóa dữ liệu trên máy chủ không?"
+      ],
+      "sections": [
+        {
+          "title": "Website đang dùng gì?",
+          "items": [
+            "Cookie phiên giúp máy chủ nhận biết phiên đăng nhập, giỏ hàng và trạng thái thanh toán. Dữ liệu lưu trữ trình duyệt giúp khôi phục nội dung chat và các tùy chọn giao diện.",
+            "Tài nguyên hoặc dịch vụ bên ngoài được nhúng trên trang có thể phát sinh kết nối tới bên cung cấp. Không mặc định coi cookie tiếp thị hoặc phân tích là cần thiết; việc triển khai những loại này cần thông báo và lựa chọn phù hợp trước khi sử dụng."
+          ]
+        },
+        {
+          "title": "Cách quản lý",
+          "items": [
+            "Mở cài đặt quyền riêng tư của trình duyệt để xem, chặn hoặc xóa dữ liệu của website. Chặn/xóa cookie phiên có thể khiến bạn phải đăng nhập lại và mất trạng thái giỏ hàng.",
+            "Nút xóa chat và việc xóa dữ liệu trình duyệt có phạm vi khác với yêu cầu xóa dữ liệu tài khoản. Nếu cần xóa dữ liệu đã lưu trên máy chủ, gửi yêu cầu theo Chính sách bảo mật."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "quy-che",
+      "group": "legal",
+      "title": "Quy chế hoạt động website",
+      "summary": "Vai trò bên bán, quy trình giao dịch và cách xử lý sự cố.",
+      "answer": "Luồng hiện có trên website là tìm sản phẩm → khách xác nhận lựa chọn → thanh toán → theo dõi đơn → hỗ trợ sau mua. Chưa có căn cứ để khẳng định SkinSyntax đã đăng ký hoạt động như một sàn nhiều bên bán. Thông tin đơn vị vận hành và hồ sơ pháp lý cần được chủ website hoàn thiện; xem chi tiết tại trang quy chế.",
+      "triggers": [
+        "quy che",
+        "san thuong mai dien tu",
+        "nghi dinh 52",
+        "dang ky bo cong thuong",
+        "thong bao bo cong thuong",
+        "don vi van hanh",
+        "ma so doanh nghiep"
+      ],
+      "questions": [
+        "SkinSyntax hoạt động theo quy trình nào?",
+        "Tôi xem thông tin đơn vị vận hành ở đâu?"
+      ],
+      "sections": [
+        {
+          "title": "Mô hình và phạm vi",
+          "items": [
+            "Tài liệu này mô tả luồng mua sắm hiện có của website SkinSyntax. Chưa xác nhận mô hình sàn giao dịch nhiều bên bán; không sử dụng tài liệu này để khẳng định đã hoàn tất thủ tục thông báo/đăng ký thương mại điện tử.",
+            "Tên pháp lý, mã số doanh nghiệp/thuế, địa chỉ, người đại diện và phạm vi hoạt động cần được đơn vị vận hành bổ sung trước khi dùng làm hồ sơ pháp lý công bố chính thức."
+          ]
+        },
+        {
+          "title": "Quy trình giao dịch",
+          "items": [
+            "Người mua tìm kiếm và xem thông tin sản phẩm; kiểm tra đúng tên, phiên bản, số lượng. Trong chat, phải bấm chọn đúng sản phẩm trước khi chuyển sang trang thanh toán.",
+            "Trang thanh toán cho phép kiểm tra thông tin nhận hàng, giá và phương thức thanh toán. Đơn hàng chỉ được tạo khi khách xác nhận ở bước đặt hàng; chat không tự xác nhận thanh toán.",
+            "Người mua theo dõi đơn trong tài khoản. Thông tin thanh toán phải được hệ thống/kênh thanh toán xác nhận, không căn cứ chỉ vào tin nhắn hay ảnh chụp do người dùng gửi."
+          ]
+        },
+        {
+          "title": "Trách nhiệm và tranh chấp",
+          "items": [
+            "Bên bán chịu trách nhiệm về thông tin hàng hóa, khả năng cung ứng và việc tiếp nhận khiếu nại. Người mua cung cấp thông tin cần thiết chính xác và bảo vệ tài khoản.",
+            "Các yêu cầu khiếu nại được tiếp nhận qua kênh hỗ trợ, xác minh và trao đổi phương án. Người tiêu dùng có quyền sử dụng cơ chế giải quyết tranh chấp theo pháp luật khi không đạt thỏa thuận.",
+            "Căn cứ cần rà soát theo thời điểm công bố: Luật Thương mại điện tử 122/2025/QH15 có hiệu lực từ 01/07/2026, các văn bản hướng dẫn và quy định bảo vệ người tiêu dùng. Không chỉ dựa vào mẫu Nghị định 52/2013 để kết luận đã đủ điều kiện pháp lý."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "khieu-nai",
+      "group": "legal",
+      "title": "Giải quyết khiếu nại & tranh chấp",
+      "summary": "Cách gửi yêu cầu, nhận phản hồi và tiếp tục xử lý khi chưa đạt thỏa thuận.",
+      "answer": "Bạn gửi mã đơn, mô tả vấn đề và ảnh liên quan qua cskh@skinsyntax.com hoặc gọi 0398606281. Mục tiêu phản hồi ban đầu là trong 24 giờ làm việc; đây chưa phải thời hạn giải quyết xong. Mình hướng dẫn trong chat nhưng chưa tự lập phiếu khiếu nại cho bạn. Nếu chưa đạt thỏa thuận, bạn vẫn có quyền yêu cầu cơ quan có thẩm quyền giải quyết.",
+      "triggers": [
+        "khieu nai",
+        "tranh chap",
+        "phan anh",
+        "to cao",
+        "boi thuong"
+      ],
+      "questions": [
+        "Tôi muốn khiếu nại đơn hàng thì liên hệ đâu?",
+        "Bao lâu có phản hồi khiếu nại?"
+      ],
+      "sections": [
+        {
+          "title": "Tiếp nhận và xác minh",
+          "items": [
+            "Gửi mã đơn, thời điểm mua/nhận hàng, mô tả vấn đề và tài liệu liên quan tới email hỗ trợ hoặc hotline. Không gửi OTP, mật khẩu, số thẻ đầy đủ hay giấy tờ cá nhân không cần thiết.",
+            "Mục tiêu phản hồi ban đầu: trong 24 giờ làm việc kể từ khi bộ phận hỗ trợ tiếp nhận. Khung giờ có nhân viên trực chưa được công bố; thời gian xác minh và giải quyết phụ thuộc vụ việc, cần được thông báo riêng.",
+            "Chatbot cung cấp hướng dẫn và đường dẫn, chưa thay thế việc gửi yêu cầu tới bộ phận hỗ trợ và không tự khẳng định đã lập phiếu hay phê duyệt hoàn tiền."
+          ]
+        },
+        {
+          "title": "Phương án xử lý",
+          "items": [
+            "Bộ phận hỗ trợ kiểm tra đơn hàng, chứng cứ và phản hồi phương án phù hợp như bổ sung hàng, đổi hàng hoặc hoàn tiền. Không chuyển khoản theo hướng dẫn từ người tự xưng nhân viên ngoài kênh chính thức.",
+            "Nếu không thống nhất, các bên có thể sử dụng thương lượng, hòa giải hoặc cơ quan có thẩm quyền theo pháp luật. Chính sách này không hạn chế quyền khiếu nại, khởi kiện và quyền bắt buộc khác của người tiêu dùng."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "dang-ky",
+      "group": "account",
+      "title": "Hướng dẫn đăng ký tài khoản",
+      "summary": "Tạo tài khoản bằng email và xác thực mã đăng ký.",
+      "answer": "Bạn mở Đăng ký, nhập họ tên, email, mật khẩu và xác nhận mật khẩu; hoàn thành captcha rồi bấm lấy OTP. Nhập mã 6 số được gửi về email, đọc và đồng ý các điều khoản bắt buộc rồi hoàn tất. Website hiện xác thực đăng ký bằng email, chưa hỗ trợ gửi OTP qua SMS. Nếu email đã tồn tại, dùng Quên mật khẩu.",
+      "triggers": [
+        "dang ky",
+        "tao tai khoan",
+        "lap tai khoan",
+        "register",
+        "signup"
+      ],
+      "questions": [
+        "Đăng ký tài khoản như thế nào?",
+        "Có đăng ký bằng số điện thoại được không?"
+      ],
+      "sections": [
+        {
+          "title": "Các bước",
+          "items": [
+            "Mở Đăng ký từ phần tài khoản. Nhập họ tên, email còn truy cập được, mật khẩu và mật khẩu xác nhận.",
+            "Nhập captcha, bấm lấy mã OTP. Kiểm tra hộp thư email, nhập đúng mã 6 số còn hiệu lực.",
+            "Đọc điều khoản và chính sách dữ liệu, đánh dấu các đồng ý bắt buộc rồi gửi form đăng ký. Hoàn thành thông tin tiếp theo nếu được yêu cầu."
+          ]
+        },
+        {
+          "title": "Khi gặp lỗi",
+          "items": [
+            "Nếu email đã tồn tại, dùng Quên mật khẩu thay vì đăng ký tài khoản trùng. Nếu captcha không hợp lệ, lấy captcha mới rồi thử lại.",
+            "Website hiện dùng email để xác thực đăng ký; số điện thoại liên hệ không đồng nghĩa với tài khoản đăng nhập bằng số điện thoại hoặc OTP qua SMS."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Mở đăng ký",
+        "url": "index.php?auth=register"
+      }
+    },
+    {
+      "slug": "otp",
+      "group": "account",
+      "title": "Hướng dẫn nhận & nhập OTP",
+      "summary": "Mã 6 số qua email, hiệu lực 10 phút; chờ 60 giây trước khi gửi lại.",
+      "answer": "OTP đăng ký là mã 6 số gửi qua email, có hiệu lực 10 phút và dùng cho lần xác thực đó. Bạn nhập đúng email, hoàn thành captcha rồi bấm lấy mã. Nếu chưa nhận được, kiểm tra Spam/Junk/Promotions và địa chỉ email; chờ ít nhất 60 giây trước khi gửi lại cùng email. Dùng mã mới nhất, không chia sẻ OTP cho bất kỳ ai. Hiện chưa gửi OTP qua SMS.",
+      "triggers": [
+        "otp",
+        "ma xac thuc",
+        "ma xac minh",
+        "khong nhan duoc ma",
+        "gui lai ma",
+        "captcha",
+        "sms",
+        "lay ma"
+      ],
+      "questions": [
+        "Không nhận được OTP phải làm sao?",
+        "OTP có hiệu lực bao lâu?",
+        "Bao lâu được gửi lại OTP?"
+      ],
+      "sections": [
+        {
+          "title": "Nhận mã đúng cách",
+          "items": [
+            "Nhập đúng email đăng ký và captcha hiện tại, sau đó bấm lấy mã. Email phải còn hoạt động và do bạn kiểm soát.",
+            "Mở email để lấy OTP 6 số, nhập trong 10 phút. Nếu yêu cầu mã mới, dùng mã mới nhất. Không dùng mã của email khác.",
+            "Hoàn tất các trường đăng ký và đồng ý bắt buộc rồi gửi form. Xác thực hoàn tất thì trạng thái OTP đăng ký được xóa."
+          ]
+        },
+        {
+          "title": "Chưa nhận được hoặc mã bị lỗi",
+          "items": [
+            "Kiểm tra thư mục Spam/Junk/Promotions và địa chỉ email đã nhập. Chờ ít nhất 60 giây trước khi gửi lại mã cho cùng email.",
+            "Captcha sai hoặc không còn hợp lệ: làm mới captcha rồi nhập lại. OTP quá 10 phút: yêu cầu mã mới.",
+            "Không chia sẻ OTP hoặc mật khẩu cho nhân viên, chatbot hay bất kỳ ai. Website hiện gửi OTP đăng ký qua email, chưa có SMS OTP."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "quen-mat-khau",
+      "group": "account",
+      "title": "Quên mật khẩu & khôi phục tài khoản",
+      "summary": "Nhận liên kết đặt lại mật khẩu qua email đã đăng ký.",
+      "answer": "Tại Đăng nhập, bạn chọn Quên mật khẩu và nhập email đã đăng ký. Website gửi liên kết đặt lại mật khẩu có hiệu lực 30 phút; mở liên kết để đặt và xác nhận mật khẩu mới. Luồng này dùng liên kết email, không phải OTP SMS. Nếu mất quyền truy cập email, liên hệ hỗ trợ để được hướng dẫn xác minh; đừng gửi mật khẩu hay OTP trong chat.",
+      "triggers": [
+        "quen mat khau",
+        "khoi phuc tai khoan",
+        "lay lai tai khoan",
+        "reset password",
+        "forgot password",
+        "mat email",
+        "mat quyen truy cap email",
+        "dat lai mat khau",
+        "khong dang nhap duoc"
+      ],
+      "questions": [
+        "Quên mật khẩu thì làm sao?",
+        "Không còn truy cập được email đăng ký thì sao?"
+      ],
+      "sections": [
+        {
+          "title": "Các bước",
+          "items": [
+            "Mở Đăng nhập → Quên mật khẩu. Nhập email đã đăng ký và gửi yêu cầu.",
+            "Mở email nhận được, truy cập liên kết đặt lại trong vòng 30 phút. Kiểm tra Spam/Junk nếu chưa thấy thư.",
+            "Nhập và xác nhận mật khẩu mới, hoàn tất rồi đăng nhập lại. Liên kết đã dùng hoặc hết hạn cần được thay bằng yêu cầu mới."
+          ]
+        },
+        {
+          "title": "Nếu không còn email",
+          "items": [
+            "Liên hệ hỗ trợ để được hướng dẫn kiểm tra quyền sở hữu tài khoản. Chatbot không thể tự bỏ qua xác minh, đổi người nhận mã hay mở khóa tài khoản."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Khôi phục mật khẩu",
+        "url": "index.php?r=quen_mat_khau"
+      }
+    },
+    {
+      "slug": "doi-lien-he",
+      "group": "account",
+      "title": "Đổi email & số điện thoại liên hệ",
+      "summary": "Phân biệt email đăng nhập với thông tin nhận hàng trong hồ sơ.",
+      "answer": "Bạn có thể sửa số điện thoại liên hệ trong Hồ sơ → thông tin cá nhân và lưu lại. Việc này không đổi email đăng nhập. Website chưa có luồng tự đổi email bằng OTP ở cả địa chỉ cũ và mới; nếu cần đổi email, hãy liên hệ cskh@skinsyntax.com để được hướng dẫn xác minh.",
+      "triggers": [
+        "doi email",
+        "thay email",
+        "cap nhat email",
+        "doi so dien thoai",
+        "doi sdt",
+        "sua so dien thoai",
+        "thay so dien thoai",
+        "doi thong tin lien he"
+      ],
+      "questions": [
+        "Tôi muốn đổi email đăng nhập thì làm sao?",
+        "Sửa số điện thoại ở đâu?"
+      ],
+      "sections": [
+        {
+          "title": "Số điện thoại liên hệ",
+          "items": [
+            "Đăng nhập, vào Hồ sơ và chỉnh sửa thông tin cá nhân. Cập nhật số điện thoại liên hệ chính xác rồi lưu.",
+            "Kiểm tra lại thông tin nhận hàng tại mỗi lần thanh toán; thay đổi hồ sơ không tự sửa địa chỉ hay số điện thoại của đơn đã đặt."
+          ]
+        },
+        {
+          "title": "Email đăng nhập",
+          "items": [
+            "Chưa có chức năng tự đổi email kèm hai lượt OTP trên giao diện. Gửi yêu cầu tới email hỗ trợ để được hướng dẫn xác minh và phương án phù hợp.",
+            "Không cung cấp mật khẩu hoặc OTP trong nội dung yêu cầu. Nhân viên hỗ trợ không được yêu cầu bạn đọc mã để chuyển quyền tài khoản."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Mở hồ sơ",
+        "url": "index.php?r=hoso"
+      }
+    },
+    {
+      "slug": "an-toan-tai-khoan",
+      "group": "account",
+      "title": "Bảo vệ tài khoản & cảnh báo lừa đảo",
+      "summary": "Không chia sẻ mã xác thực; kiểm tra địa chỉ website và kênh thanh toán.",
+      "answer": "Không chia sẻ OTP hoặc mật khẩu cho bất kỳ ai, kể cả người tự xưng là nhân viên SkinSyntax. Không chuyển tiền để “xác minh” hay “nhận hoàn tiền” theo link lạ. Kiểm tra đúng website trước khi đăng nhập. Nếu nghi tài khoản bị lộ, dùng chức năng khôi phục để đặt mật khẩu mới và liên hệ hỗ trợ ngay.",
+      "triggers": [
+        "lua dao",
+        "chia se otp",
+        "doc otp",
+        "hoi otp",
+        "bao mat tai khoan",
+        "lo mat khau",
+        "bi hack",
+        "an toan tai khoan",
+        "gia mao",
+        "chuyen tien xac minh"
+      ],
+      "questions": [
+        "Có nên đọc OTP cho nhân viên hỗ trợ không?",
+        "Nghi bị lừa đảo thì phải làm gì?"
+      ],
+      "sections": [
+        {
+          "title": "Nguyên tắc",
+          "items": [
+            "Không chia sẻ OTP, mật khẩu hoặc liên kết khôi phục tài khoản. SkinSyntax không yêu cầu khách đọc những thông tin này qua cuộc gọi, chat hay email.",
+            "Dùng mật khẩu riêng, tránh dùng lại mật khẩu email hoặc mạng xã hội. Kiểm tra địa chỉ website trước khi đăng nhập; đăng xuất khi dùng thiết bị chung."
+          ]
+        },
+        {
+          "title": "Dấu hiệu cần cảnh giác",
+          "items": [
+            "Người lạ yêu cầu OTP để hủy giao dịch, giao hàng hoặc xác minh tài khoản; link giả giao diện SkinSyntax; yêu cầu chuyển tiền trước để nhận hoàn tiền.",
+            "Nếu nghi bị xâm nhập, đặt lại mật khẩu qua email và liên hệ kênh hỗ trợ chính thức. Không tiếp tục giao dịch theo hướng dẫn từ người đáng ngờ."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "xoa-tai-khoan",
+      "group": "account",
+      "title": "Yêu cầu xóa tài khoản",
+      "summary": "Gửi yêu cầu, xác minh quyền sở hữu và xử lý dữ liệu liên quan.",
+      "answer": "Bạn gửi yêu cầu xóa tài khoản tới cskh@skinsyntax.com. Website chưa có nút tự xóa tài khoản. Bộ phận hỗ trợ cần xác minh quyền sở hữu và trao đổi cách xử lý đơn đang thực hiện; một số dữ liệu giao dịch có thể phải lưu theo pháp luật. Mình chưa xóa hay lập yêu cầu thay bạn, và không cần bạn gửi OTP/mật khẩu trong chat.",
+      "triggers": [
+        "xoa tai khoan",
+        "dong tai khoan",
+        "delete account",
+        "xoa du lieu",
+        "rut lai dong y"
+      ],
+      "questions": [
+        "Làm sao xóa tài khoản?",
+        "Xóa tài khoản có xóa hết lịch sử giao dịch không?"
+      ],
+      "sections": [
+        {
+          "title": "Gửi yêu cầu",
+          "items": [
+            "Gửi email cho bộ phận hỗ trợ từ địa chỉ liên quan đến tài khoản, nêu rõ phạm vi yêu cầu xóa. Không gửi mật khẩu hay OTP.",
+            "Bộ phận hỗ trợ hướng dẫn xác minh và thông báo các bước tiếp theo. Chưa có nút tự xóa tài khoản hoặc thời gian xóa cố định được công bố."
+          ]
+        },
+        {
+          "title": "Đơn hàng và dữ liệu cần lưu",
+          "items": [
+            "Trao đổi phương án xử lý đơn đang thực hiện trước khi hoàn tất đóng tài khoản. Không tự động hủy đơn chỉ vì khách hỏi về xóa tài khoản.",
+            "Một số thông tin giao dịch có thể phải lưu cho nghĩa vụ pháp lý, kế toán hoặc giải quyết tranh chấp. Phạm vi, thời gian và căn cứ giữ lại cần được thông báo theo trường hợp."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "dat-hang",
+      "group": "orders",
+      "title": "Hướng dẫn đặt hàng",
+      "summary": "Chọn đúng sản phẩm, kiểm tra số lượng và xác nhận ở trang thanh toán.",
+      "answer": "Bạn tìm sản phẩm → chọn đúng chai/phiên bản → kiểm tra số lượng → đến trang thanh toán → nhập thông tin giao hàng và chọn cách trả tiền → xác nhận đơn. Khi mua qua chat, mình đưa các sản phẩm tìm được để bạn tự chọn rồi bấm Thanh toán. Chọn trong chat chưa tạo đơn. Website cần đăng nhập để thanh toán; bạn vẫn tìm và chọn sản phẩm được khi chưa đăng nhập.",
+      "triggers": [
+        "huong dan dat hang",
+        "cach dat hang",
+        "dat hang nhu the nao",
+        "mua hang nhu the nao",
+        "lam sao dat hang",
+        "chua dang nhap co mua",
+        "mua khong can tai khoan",
+        "cac buoc mua",
+        "mua qua chat"
+      ],
+      "questions": [
+        "Đặt hàng từng bước như thế nào?",
+        "Chưa đăng nhập có thể chọn sản phẩm trong chat không?"
+      ],
+      "sections": [
+        {
+          "title": "Từ tìm sản phẩm đến xác nhận",
+          "items": [
+            "Tìm qua thanh tìm kiếm, danh mục hoặc nói tên sản phẩm muốn mua trong chat. Kiểm tra nhãn, dung tích và phiên bản trên trang chi tiết.",
+            "Với mua qua chat, bấm Chọn sản phẩm này, chỉnh số lượng rồi bấm Thanh toán. Giá và khả năng cung ứng được kiểm tra lại; bạn cần xác nhận lại nếu giá thay đổi.",
+            "Đăng nhập nếu được yêu cầu. Tại trang thanh toán, kiểm tra sản phẩm, số lượng, giá, phí giao hàng, địa chỉ và số điện thoại nhận hàng.",
+            "Chọn phương thức thanh toán đang hiển thị, kiểm tra tổng tiền rồi xác nhận đặt hàng. Theo dõi mã đơn và trạng thái trong tài khoản."
+          ]
+        },
+        {
+          "title": "Tránh nhầm lẫn",
+          "items": [
+            "Tư vấn sản phẩm không đồng nghĩa bảo đảm phù hợp với mọi tình trạng da. Việc hỏi “có nên mua” chỉ yêu cầu tư vấn; không tự thêm hàng hoặc tạo đơn.",
+            "Không cung cấp số thẻ, OTP hay địa chỉ đầy đủ trong chat tư vấn. Thông tin nhận hàng được nhập tại trang thanh toán."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "thanh-toan",
+      "group": "orders",
+      "title": "Phương thức thanh toán",
+      "summary": "COD, VNPAY và chuyển khoản QR theo lựa chọn đang được mở ở bước thanh toán.",
+      "answer": "Bạn chọn phương thức đang hiển thị tại trang thanh toán: COD (trả khi nhận hàng), VNPAY hoặc chuyển khoản QR khi kênh QR được bật. Các ngân hàng/thẻ được chấp nhận xem ngay trên cổng thanh toán. Với QR, dùng đúng số tiền và nội dung mã đơn; ảnh chụp chuyển tiền không tự xác nhận đơn đã thanh toán. Nếu tiền đã trừ mà trạng thái chưa cập nhật, liên hệ hỗ trợ kèm mã đơn, đừng thanh toán lại ngay.",
+      "triggers": [
+        "phuong thuc thanh toan",
+        "cach thanh toan",
+        "thanh toan bang",
+        "cod",
+        "vnpay",
+        "chuyen khoan",
+        "quet qr",
+        "tra tien",
+        "tien da tru",
+        "da thanh toan",
+        "the visa",
+        "the master",
+        "vi dien tu",
+        "thanh toan loi"
+      ],
+      "questions": [
+        "Có thể thanh toán bằng những cách nào?",
+        "Chuyển khoản rồi mà đơn chưa cập nhật thì sao?"
+      ],
+      "sections": [
+        {
+          "title": "Lựa chọn thanh toán",
+          "items": [
+            "COD: thanh toán khi nhận hàng theo tổng tiền đơn đã xác nhận.",
+            "VNPAY: chuyển tới cổng thanh toán, chọn ngân hàng/thẻ được cổng hiển thị cho giao dịch đó. Không mặc định mọi ví hay loại thẻ đều được chấp nhận.",
+            "Chuyển khoản QR: chỉ dùng khi tùy chọn này hiển thị ở trang thanh toán. Quét mã đúng đơn và kiểm tra số tiền, người nhận, nội dung chuyển khoản trước khi xác nhận."
+          ]
+        },
+        {
+          "title": "Kiểm tra trạng thái",
+          "items": [
+            "Đơn online chưa được xác nhận thanh toán không có nghĩa tiền chưa bị trừ. Kiểm tra tài khoản và trạng thái đơn; nếu không khớp, liên hệ hỗ trợ kèm mã đơn và chứng từ đã che thông tin không cần thiết.",
+            "Không tự đánh dấu thanh toán thành công từ tin nhắn hoặc ảnh chụp. Đơn QR chưa thanh toán có thể bị hủy theo cơ chế hết hạn; xem trạng thái đơn trước khi chuyển tiền.",
+            "Nhập thông tin thẻ và xác thực thanh toán chỉ trên kênh thanh toán chính thức. Không gửi thông tin thẻ hoặc mã ngân hàng trong chat."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "hoa-don",
+      "group": "orders",
+      "title": "Hóa đơn & thông tin VAT",
+      "summary": "Liên hệ để xác nhận việc xuất hóa đơn cho giao dịch của bạn.",
+      "answer": "Nếu cần hóa đơn VAT, bạn liên hệ cskh@skinsyntax.com hoặc 0398606281 để xác nhận trước khi mua. Nếu đã đặt hàng, gửi mã đơn và thông tin hóa đơn cần thiết để được hướng dẫn. Trang thanh toán hiện chưa có ô yêu cầu VAT; bộ phận hỗ trợ sẽ xác nhận quy trình và thời gian gửi hóa đơn với bạn.",
+      "triggers": [
+        "hoa don",
+        "vat",
+        "ma so thue",
+        "invoice"
+      ],
+      "questions": [
+        "Có xuất hóa đơn VAT không?",
+        "Quên yêu cầu hóa đơn lúc đặt hàng thì làm sao?"
+      ],
+      "sections": [
+        {
+          "title": "Cách gửi yêu cầu",
+          "items": [
+            "Liên hệ bộ phận hỗ trợ để xác nhận quy trình hóa đơn trước khi mua nếu hóa đơn là điều kiện cần của bạn. Trang thanh toán hiện chưa có ô tự yêu cầu VAT.",
+            "Khi đã có đơn, cung cấp mã đơn cùng tên, mã số thuế, địa chỉ và email nhận hóa đơn theo yêu cầu phù hợp. Tránh đăng thông tin doanh nghiệp/cá nhân không cần thiết trong chat công khai."
+          ]
+        },
+        {
+          "title": "Thông tin cần xác nhận",
+          "items": [
+            "Nghĩa vụ, loại hóa đơn và thời điểm lập hóa đơn thực hiện theo pháp luật áp dụng cho bên bán và giao dịch. Chưa công bố thời hạn nội bộ để yêu cầu bổ sung; không mặc định quá một số ngày là mất quyền về hóa đơn."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "huy-sua-don",
+      "group": "orders",
+      "title": "Hủy đơn & sửa thông tin đơn",
+      "summary": "Kiểm tra thao tác được phép của từng đơn; liên hệ khi cần chỉnh sửa.",
+      "answer": "Bạn vào Hồ sơ → đơn hàng, chọn đúng đơn và kiểm tra nút Hủy đơn nếu trạng thái cho phép. Để sửa địa chỉ, số lượng hoặc sản phẩm của đơn đã đặt, liên hệ hỗ trợ kèm mã đơn. Đơn đang giao cần được kiểm tra trước khi thay đổi. Với đơn đã trả tiền online, việc hoàn tiền được xử lý theo chính sách đổi trả.",
+      "triggers": [
+        "huy don",
+        "sua don",
+        "doi dia chi giao",
+        "sua dia chi giao",
+        "doi so luong don",
+        "cancel order",
+        "huy mua",
+        "khong mua nua"
+      ],
+      "questions": [
+        "Tôi muốn hủy đơn đã đặt thì làm thế nào?",
+        "Đặt xong có đổi địa chỉ giao hàng được không?"
+      ],
+      "sections": [
+        {
+          "title": "Hủy đơn",
+          "items": [
+            "Đăng nhập, mở Hồ sơ và danh sách đơn hàng, chọn đúng đơn. Nếu giao diện cho phép Hủy đơn, thực hiện theo yêu cầu xác nhận/lý do tại đó.",
+            "Nếu không có nút hủy hoặc hàng đang giao, liên hệ hỗ trợ để kiểm tra khả năng xử lý. Không mặc định mọi đơn “Đang xử lý” đều hủy được."
+          ]
+        },
+        {
+          "title": "Sửa thông tin",
+          "items": [
+            "Liên hệ hỗ trợ kèm mã đơn và nội dung cần sửa. Việc sửa hồ sơ cá nhân không tự cập nhật đơn đã đặt.",
+            "Đơn thanh toán online đã hủy cần được xác minh trước khi xử lý hoàn tiền. Chatbot không tự hủy, sửa hoặc xác nhận hoàn tiền bằng một câu trả lời."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Xem đơn trong tài khoản",
+        "url": "index.php?r=hoso"
+      }
+    },
+    {
+      "slug": "theo-doi-don",
+      "group": "orders",
+      "title": "Theo dõi trạng thái đơn hàng",
+      "summary": "Tra cứu trong tài khoản và dùng mã đơn khi cần hỗ trợ.",
+      "answer": "Bạn đăng nhập, mở Hồ sơ → đơn hàng để xem trạng thái của đơn mình. Thường có các bước chờ xác nhận, xử lý, giao hàng, hoàn tất hoặc đã hủy. Mình chưa tra cứu trực tiếp đơn riêng trong cuộc chat này nên không thể khẳng định đơn của bạn đang ở đâu. Nếu trạng thái chậm cập nhật, liên hệ hỗ trợ kèm mã đơn.",
+      "triggers": [
+        "theo doi don",
+        "trang thai don",
+        "don hang cua toi",
+        "don toi",
+        "don cua toi",
+        "don dang o dau",
+        "ma van don",
+        "tracking",
+        "kiem tra don",
+        "tra cuu don"
+      ],
+      "questions": [
+        "Xem đơn hàng của tôi ở đâu?",
+        "Tại sao trạng thái đơn chưa cập nhật?"
+      ],
+      "sections": [
+        {
+          "title": "Cách tra cứu",
+          "items": [
+            "Đăng nhập đúng tài khoản đã đặt hàng, mở Hồ sơ và mục đơn hàng. Chọn đơn để xem chi tiết, thời điểm đặt và trạng thái.",
+            "Các trạng thái hiển thị phản ánh thông tin hệ thống đã nhận; không cam kết theo dõi vị trí shipper theo thời gian thực.",
+            "Nếu không tìm thấy đơn hoặc trạng thái không khớp việc nhận hàng/thanh toán, liên hệ hỗ trợ kèm mã đơn. Chỉ chủ tài khoản được xem dữ liệu đơn riêng."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Mở tài khoản của tôi",
+        "url": "index.php?r=hoso"
+      }
+    },
+    {
+      "slug": "van-chuyen",
+      "group": "delivery",
+      "title": "Chính sách vận chuyển",
+      "summary": "Kiểm tra phí tại thanh toán và xác nhận thời gian giao theo địa chỉ.",
+      "answer": "Phí giao hàng hiện là 30.000 đ/đơn. Để biết thời gian dự kiến và cửa hàng có giao đến địa chỉ của bạn không, bạn liên hệ 0398606281 hoặc cskh@skinsyntax.com. Thông tin theo từng khu vực đang được cập nhật; hãy kiểm tra phí và tổng tiền ở trang thanh toán trước khi xác nhận.",
+      "triggers": [
+        "van chuyen",
+        "phi ship",
+        "freeship",
+        "mien phi ship",
+        "phi giao",
+        "bao lau nhan",
+        "bao lau giao",
+        "khi nao nhan hang",
+        "thoi gian giao",
+        "giao hang toan quoc",
+        "giao den",
+        "ship den",
+        "ship bao nhieu"
+      ],
+      "questions": [
+        "Phí vận chuyển bao nhiêu?",
+        "Bao lâu thì nhận được hàng?",
+        "Có giao tới khu vực của tôi không?"
+      ],
+      "sections": [
+        {
+          "title": "Phí và khu vực",
+          "items": [
+            "Trang thanh toán hiện áp dụng phí vận chuyển 30.000 đ/đơn. Kiểm tra số tiền hiển thị trước khi xác nhận; không mặc định có freeship theo một ngưỡng chi tiêu.",
+            "Khu vực phục vụ, danh sách đối tác vận chuyển và thời gian dự kiến theo địa chỉ cần được bộ phận hỗ trợ xác nhận. Chưa công bố cam kết thời gian giao cho từng tỉnh/thành."
+          ]
+        },
+        {
+          "title": "Khi nhận hàng",
+          "items": [
+            "Kiểm tra bao bì và sản phẩm khi nhận. Nếu phát hiện rách, vỡ hoặc giao sai, ghi nhận tình trạng và liên hệ hỗ trợ sớm.",
+            "Ảnh/video hỗ trợ xác minh nhưng không phải điều kiện duy nhất để được tiếp nhận khiếu nại. Thời tiết, lễ/Tết hoặc điều kiện giao nhận có thể ảnh hưởng tiến độ; cần trao đổi lịch cụ thể khi phát sinh."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "doi-tra",
+      "group": "delivery",
+      "title": "Chính sách đổi trả & hoàn tiền",
+      "summary": "Tiếp nhận trong 7 ngày với hàng lỗi, hỏng do vận chuyển hoặc giao sai.",
+      "answer": "SkinSyntax tiếp nhận đổi trả trong 7 ngày từ khi nhận hàng đối với sản phẩm lỗi, hỏng do vận chuyển hoặc giao sai. Bạn giữ bao bì, nhãn và mã đơn, gửi mô tả cùng ảnh nếu có qua kênh hỗ trợ. Hàng đã dùng thường không áp dụng, trừ lỗi nhà sản xuất hoặc trường hợp theo pháp luật. Sau khi kiểm tra, bộ phận hỗ trợ sẽ xác nhận phương án xử lý, thời gian hoàn tiền và phí gửi trả với bạn.",
+      "triggers": [
+        "doi tra",
+        "hoan tien",
+        "tra hang",
+        "doi hang",
+        "refund",
+        "return policy",
+        "da mo nap",
+        "da su dung co doi",
+        "qua 7 ngay"
+      ],
+      "questions": [
+        "Điều kiện đổi trả là gì?",
+        "Hoàn tiền mất bao lâu?",
+        "Hàng đã mở nắp có được xử lý không?"
+      ],
+      "sections": [
+        {
+          "title": "Phạm vi tiếp nhận",
+          "items": [
+            "Trong 7 ngày kể từ ngày nhận hàng, tiếp nhận yêu cầu đối với hàng lỗi, hư hỏng do vận chuyển hoặc giao sai sản phẩm. Giữ xác nhận đơn/mã đơn để đối chiếu.",
+            "Thông thường sản phẩm cần còn tem, nhãn, bao bì, chưa qua sử dụng; ngoại lệ lỗi nhà sản xuất hoặc quyền theo quy định pháp luật được xem xét theo tình trạng thực tế.",
+            "Yêu cầu quá 7 ngày, hư hỏng do bảo quản/sử dụng hoặc hàng đã dùng không thuộc chính sách đổi trả thông thường; không dùng giới hạn này để loại trừ trách nhiệm pháp luật hay từ chối tiếp nhận mọi phản ánh."
+          ]
+        },
+        {
+          "title": "Quy trình",
+          "items": [
+            "Liên hệ hỗ trợ, nêu mã đơn, vấn đề và thời điểm nhận. Cung cấp ảnh/video nếu có; không yêu cầu bắt buộc phải có video mở hộp mới tiếp nhận.",
+            "Chờ xác minh và thống nhất phương án đổi/hoàn, địa chỉ gửi trả và bên chịu phí trước khi tự gửi hàng. Không gửi về địa chỉ chưa được xác nhận.",
+            "Sau khi kiểm tra đủ điều kiện, bộ phận hỗ trợ xác nhận thời gian xử lý và hình thức hoàn. Online ưu tiên phương thức gốc nếu hỗ trợ; COD có thể hoàn chuyển khoản sau khi xác minh. Thời hạn cụ thể và phí gửi trả chưa được công bố cố định."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "hang-loi",
+      "group": "delivery",
+      "title": "Nhận hàng lỗi, hỏng hoặc giao sai",
+      "summary": "Ghi nhận tình trạng và liên hệ sớm để được xác minh.",
+      "answer": "Bạn giữ sản phẩm, bao bì và mã đơn; chụp ảnh tình trạng lỗi/hỏng hoặc giao sai nếu có thể. Liên hệ 0398606281 hoặc cskh@skinsyntax.com trong 7 ngày từ khi nhận để yêu cầu xử lý. Mục tiêu phản hồi ban đầu là 24 giờ làm việc. Ảnh/video giúp xác minh nhưng không có video mở hộp không đồng nghĩa mất quyền khiếu nại. Mình chưa tự tạo phiếu hoặc duyệt đổi hàng trong chat.",
+      "triggers": [
+        "hang loi",
+        "san pham loi",
+        "bi vo",
+        "bi hong",
+        "be vo",
+        "giao sai",
+        "thieu hang",
+        "hang hong",
+        "video mo hop",
+        "chai bi",
+        "ro ri",
+        "mop meo"
+      ],
+      "questions": [
+        "Nhận chai bị vỡ hoặc giao sai thì làm sao?",
+        "Không có video mở hộp có được khiếu nại không?"
+      ],
+      "sections": [
+        {
+          "title": "Việc cần làm",
+          "items": [
+            "Ghi nhận tình trạng sản phẩm và bao bì ngay khi phát hiện, giữ lại nhãn/mã đơn. Ngừng sử dụng sản phẩm có dấu hiệu hỏng hoặc bất thường.",
+            "Gửi mô tả, mã đơn và ảnh/video nếu có tới hỗ trợ trong 7 ngày từ khi nhận hàng. Mục tiêu phản hồi ban đầu: 24 giờ làm việc; đây chưa phải cam kết giải quyết xong.",
+            "Đợi hướng dẫn xác minh, gửi trả hoặc đổi/hoàn phù hợp. Không có video mở hộp không tự động làm mất quyền được tiếp nhận yêu cầu."
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "lien-he",
+      "group": "contact",
+      "title": "Liên hệ bộ phận hỗ trợ",
+      "summary": "Hotline 0398606281 · cskh@skinsyntax.com",
+      "answer": "Bạn gọi 0398606281 hoặc gửi email tới cskh@skinsyntax.com. Website có khung chat hỗ trợ; chatbot tư vấn không bảo đảm có nhân viên trực ngay. Giờ làm việc chưa được công bố. Với vấn đề đơn hàng, gửi mã đơn và mô tả ngắn gọn, che thông tin thanh toán nhạy cảm. Đừng gửi OTP hoặc mật khẩu.",
+      "triggers": [
+        "lien he",
+        "hotline",
+        "email ho tro",
+        "cham soc khach hang",
+        "cskh",
+        "gap nhan vien",
+        "gio lam viec",
+        "gio ho tro",
+        "so dien thoai cua shop",
+        "chat nguoi that",
+        "kenh ho tro"
+      ],
+      "questions": [
+        "Hotline và email hỗ trợ là gì?",
+        "Nhân viên làm việc trong khung giờ nào?"
+      ],
+      "sections": [
+        {
+          "title": "Kênh tiếp nhận",
+          "items": [
+            "Hotline: 0398606281. Email: cskh@skinsyntax.com. Chat hỗ trợ có trên website; việc mở khung chat không bảo đảm đang có nhân viên trực.",
+            "Giờ hỗ trợ chính thức chưa được công bố. Bạn có thể gửi nội dung để bộ phận hỗ trợ tiếp nhận; không xem phản hồi tự động là xác nhận đã giải quyết."
+          ]
+        },
+        {
+          "title": "Chuẩn bị thông tin",
+          "items": [
+            "Vấn đề đơn hàng: mã đơn, thời điểm mua/nhận, mô tả ngắn và ảnh liên quan. Vấn đề tài khoản: mô tả lỗi, không gửi OTP/mật khẩu.",
+            "Với sự cố cần trao đổi sớm, ưu tiên gọi hotline; nếu chưa kết nối được, gửi email để lưu nội dung yêu cầu."
+          ]
+        }
+      ]
+    }
+  ]
+}

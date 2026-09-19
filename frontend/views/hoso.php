@@ -5,6 +5,7 @@ $cartItems = $cartItems ?? [];
 $skinProfile = $skinProfile ?? [];
 $loaiDaOptions = $loaiDaOptions ?? [];
 $khachHang = $khachHang ?? [];
+$latestQuickSkinUpdate = $latestQuickSkinUpdate ?? null;
 
 $vanDeDaSaved = [];
 if (!empty($skinProfile['van_de_da'])) {
@@ -800,7 +801,7 @@ $accountVerificationHint = !empty($account['email'])
 
       <div class="tab-pane fade" id="tab-skin" role="tabpanel">
         <div class="alert alert-light border mb-3">
-          Hồ sơ làn da được lấy từ dữ liệu khảo sát lúc đăng ký.
+          Hồ sơ làn da được lấy từ dữ liệu khảo sát và các lần cập nhật gần đây của bạn.
         </div>
 
         <div class="row g-3 mb-4">
@@ -830,8 +831,17 @@ $accountVerificationHint = !empty($account['email'])
           </div>
         </div>
         <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center justify-content-between gap-3 flex-wrap">
-          <div>Muốn cập nhật hồ sơ da? Hãy mở bài khảo sát riêng để dữ liệu gợi ý được lưu đầy đủ.</div>
-          <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=khaosat">Cập nhật khảo sát</a>
+          <div>
+            <strong class="d-block mb-1">Chọn cách cập nhật phù hợp với bạn</strong>
+            <span class="small">Khảo sát đầy đủ tạo lại hồ sơ nền; khảo sát nhanh chỉ cập nhật tình trạng da hiện tại trong khoảng 1 phút.</span>
+            <?php if (!empty($latestQuickSkinUpdate['updated_at_display'])): ?>
+              <span class="d-block small mt-1 text-muted">Lần cập nhật nhanh gần nhất: <?= h((string)$latestQuickSkinUpdate['updated_at_display']) ?></span>
+            <?php endif; ?>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=khaosatnhanh"><i class="fa-solid fa-bolt me-1"></i> Cập nhật nhanh</a>
+            <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=khaosat">Khảo sát đầy đủ</a>
+          </div>
         </div>
 <div class="row g-3 mb-4">
           <div class="col-lg-6">

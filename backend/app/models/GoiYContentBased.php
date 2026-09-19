@@ -63,9 +63,12 @@ class GoiYContentBased {
         // Intent này giúp không gợi ý lẫn serum/mặt nạ khi người dùng đã nói rõ loại cần mua.
         $queryIntent = $this->extractQueryProductIntent(trim((string)($post['query_text'] ?? '')));
         $fetchMultiplier = $queryIntent !== '' ? 14 : 8;
+        $isRoutine = filter_var($post['is_routine'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         // Lấy danh sách sản phẩm mẫu từ MongoDB
-        $products = $this->fetchCandidateProducts($limit * $fetchMultiplier, $budgetMin, $budgetMax);
+        $products = $isRoutine
+            ? $this->fetchRoutineCandidateProducts($limit, $budgetMin, $budgetMax)
+            : $this->fetchCandidateProducts($limit * $fetchMultiplier, $budgetMin, $budgetMax);
         if (!$products) {
             return [];
         }
@@ -80,6 +83,12 @@ class GoiYContentBased {
         foreach ($products as $product) {
             // Bỏ sản phẩm hết hàng, bị ẩn, ngừng bán hoặc không còn khả dụng.
             if (!$this->isProductSellable($product)) {
+                continue;
+            }
+            // Đây là nguồn fallback cho trang gợi ý chăm sóc da mặt. Không
+            // để sản phẩm tóc, body, răng miệng hoặc makeup lọt vào chỉ vì
+            // mô tả của chúng có các từ như "phục hồi" hay "dưỡng ẩm".
+            if ($this->isNonFacialSkincareProduct($product)) {
                 continue;
             }
             // Nếu người dùng ghi rõ loại sản phẩm thì lọc cứng theo tên/danh mục trước khi chấm điểm.
@@ -112,11 +121,86 @@ class GoiYContentBased {
             return $id !== '' && in_array($id, $whitelistIds, true);
         }));
 
+        if ($isRoutine) {
+            // Fallback cho routine cần phủ đủ các bước, không thể chỉ lấy top score
+            // vì khi đó một nhóm sản phẩm (thường là serum) có thể chiếm hết kết quả.
+            $routineOrder = ['remover', 'cleanser', 'toner', 'treatment', 'moisturizer', 'sunscreen'];
+            foreach ($concerns as $concern) {
+                if (preg_match('/mun|acne|viem/u', $this->normalizeText((string)$concern))) {
+                    $routineOrder[] = 'spot_treatment';
+                    break;
+                }
+            }
+
+            $routineProducts = [];
+            $usedIds = [];
+            foreach ($routineOrder as $routineStep) {
+                foreach ($scored as $item) {
+                    $id = (string)($item['id'] ?? '');
+                    if ($id === '' || isset($usedIds[$id])) {
+                        continue;
+                    }
+                    if ($this->routineStepForProduct($item) !== $routineStep) {
+                        continue;
+                    }
+                    $routineProducts[] = $item;
+                    $usedIds[$id] = true;
+                    break;
+                }
+            }
+
+            return array_slice($routineProducts, 0, $limit);
+        }
+
         // Chỉ trả về số lượng sản phẩm mà giao diện cần hiển thị.
         return array_slice($scored, 0, $limit);
     }
 
-    private function fetchCandidateProducts(int $limit, ?int $budgetMin = null, ?int $budgetMax = null): array {
+    private function fetchRoutineCandidateProducts(int $limit, ?int $budgetMin = null, ?int $budgetMax = null): array {
+        // Lấy riêng từng nhóm routine để dữ liệu mới nhất của một nhóm không che mất
+        // các bước khác. ID được dò từ collection danh mục, không hard-code theo dữ liệu môi trường.
+        $categoryLeaves = [
+            'remover' => ['tay trang mat'],
+            'cleanser' => ['sua rua mat'],
+            'toner' => ['toner / nuoc can bang da'],
+            'treatment' => ['serum / tinh chat'],
+            'moisturizer' => ['kem / gel / dau duong'],
+            'sunscreen' => ['chong nang da mat'],
+            'spot_treatment' => ['ho tro tri mun'],
+        ];
+        $categoryIdsByStep = array_fill_keys(array_keys($categoryLeaves), []);
+        foreach ($this->db->danh_muc->find([], ['projection' => ['ma_danh_muc' => 1, 'ten_danh_muc' => 1]]) as $categoryDoc) {
+            $categoryName = $this->normalizeText((string)($categoryDoc['ten_danh_muc'] ?? ''));
+            foreach ($categoryLeaves as $step => $leaves) {
+                foreach ($leaves as $leaf) {
+                    if (preg_match('/(?:^|->)\s*' . preg_quote($leaf, '/') . '\s*$/u', $categoryName)) {
+                        $categoryIdsByStep[$step][] = $categoryDoc['ma_danh_muc'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        $perCategory = max(6, (int)ceil(max(1, $limit) / count($categoryLeaves)));
+        $products = [];
+        $seenIds = [];
+        foreach ($categoryIdsByStep as $categoryIds) {
+            if (!$categoryIds) {
+                continue;
+            }
+            foreach ($this->fetchCandidateProducts($perCategory, $budgetMin, $budgetMax, [], $categoryIds) as $product) {
+                $id = (string)($product['ma_san_pham'] ?? '');
+                if ($id === '' || isset($seenIds[$id])) {
+                    continue;
+                }
+                $seenIds[$id] = true;
+                $products[] = $product;
+            }
+        }
+        return $products;
+    }
+
+    private function fetchCandidateProducts(int $limit, ?int $budgetMin = null, ?int $budgetMax = null, array $categories = [], array $categoryIds = []): array {
         // Lấy danh sách sản phẩm từ MongoDB theo khoảng giá, rồi bổ sung thêm brand/xuất xứ/danh mục.
         $filter = [];
         if ($budgetMin !== null || $budgetMax !== null) {
@@ -124,6 +208,12 @@ class GoiYContentBased {
             $filter['gia_ban'] = [];
             if ($budgetMin !== null) $filter['gia_ban']['$gte'] = $budgetMin;
             if ($budgetMax !== null) $filter['gia_ban']['$lte'] = $budgetMax;
+        }
+        if ($categories) {
+            $filter['loai_san_pham'] = ['$in' => array_values(array_unique($categories))];
+        }
+        if ($categoryIds) {
+            $filter['ma_danh_muc'] = ['$in' => array_values(array_unique($categoryIds))];
         }
 
         $options = [
@@ -454,6 +544,8 @@ class GoiYContentBased {
             'link_hinh_anh' => $product['link_hinh_anh'] ?? null,
             'mo_ta' => trim((string)($product['mo_ta'] ?? '')),
             'danh_muc' => trim((string)($product['danh_muc_day_du'] ?? '')),
+            'loai_san_pham' => trim((string)($product['loai_san_pham'] ?? '')),
+            'danh_muc_day_du' => trim((string)($product['danh_muc_day_du'] ?? '')),
             'thanh_phan_chinh' => trim((string)($product['thanh_phan_chinh'] ?? '')),
             'thanh_phan_day_du' => trim((string)($product['thanh_phan_day_du'] ?? '')),
             'key_ingredients' => $keyIngredients,
@@ -579,6 +671,52 @@ class GoiYContentBased {
         }
 
         return true;
+    }
+
+    private function isNonFacialSkincareProduct(array $product): bool {
+        $text = $this->normalizeText(implode(' ', [
+            $product['ten_san_pham'] ?? '',
+            $product['loai_san_pham'] ?? '',
+            $product['danh_muc_day_du'] ?? '',
+        ]));
+
+        return preg_match(
+            '/trang diem|makeup|foundation|kem nen|phan nen|cushion|concealer|son moi|mascara|eyeliner|ma hong|phan mat|phan phu|dau goi|dau xa|dau duong toc|duong toc|\btoc\b|duong the|body|sua tam|khu mui|lan nach|trang rang|kem danh rang|nuoc suc mieng|\bnuoc hoa\b|parfum/u',
+            $text
+        ) === 1;
+    }
+
+    private function routineStepForProduct(array $product): string {
+        $category = $this->normalizeText(implode(' ', [
+            $product['loai_san_pham'] ?? '',
+            $product['danh_muc_day_du'] ?? $product['danh_muc'] ?? '',
+        ]));
+        $name = $this->normalizeText((string)($product['ten_san_pham'] ?? ''));
+        $text = $category . ' ' . $name;
+
+        if (mb_strpos($category, 'tay trang mat') !== false || preg_match('/tay trang|micellar|cleansing water|cleansing oil|cleansing balm/u', $name)) {
+            return 'remover';
+        }
+        if (mb_strpos($category, 'sua rua mat') !== false || preg_match('/sua rua mat|face wash|cleanser|foaming wash|cleansing foam/u', $text)) {
+            return 'cleanser';
+        }
+        if (mb_strpos($category, 'toner') !== false || mb_strpos($category, 'nuoc can bang') !== false || preg_match('/toner|nuoc hoa hong|nuoc can bang/u', $text)) {
+            return 'toner';
+        }
+        if (mb_strpos($category, 'ho tro tri mun') !== false || preg_match('/cham mun|spot treatment/u', $text)) {
+            return 'spot_treatment';
+        }
+        if (mb_strpos($category, 'serum / tinh chat') !== false || preg_match('/serum|tinh chat|essence|ampoule|retinol|tretinoin|bha|aha|niacinamide|salicylic|benzoyl/u', $text)) {
+            return 'treatment';
+        }
+        if (mb_strpos($category, 'chong nang da mat') !== false || preg_match('/chong nang|sunscreen|sunblock|spf/u', $text)) {
+            return 'sunscreen';
+        }
+        if (mb_strpos($category, 'kem / gel / dau duong') !== false || preg_match('/duong am|kem duong|phuc hoi|moisturizer|face cream|gel duong|emulsion/u', $text)) {
+            return 'moisturizer';
+        }
+
+        return 'other';
     }
 
     private function concernKeywords(string $concern): array {

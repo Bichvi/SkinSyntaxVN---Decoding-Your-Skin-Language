@@ -35,7 +35,17 @@ except Exception as _ce_err:
     HuggingFaceCrossEncoder = None
     CrossEncoderReranker = None
 
-from model_config import RERANKER_MODEL, RERANKER_MODEL_KWARGS
+try:
+    # Package import is used by the Flask app and test runner.
+    from .model_config import RERANKER_MODEL, RERANKER_MODEL_KWARGS
+except ImportError:
+    # Keep direct-script execution compatible with the existing container entrypoint.
+    from model_config import RERANKER_MODEL, RERANKER_MODEL_KWARGS
+
+try:
+    from shared.embedding_provider import get_cross_encoder
+except ImportError:  # direct legacy execution from chatbot_service/
+    get_cross_encoder = None
 
 logger = logging.getLogger(__name__)
 if not CROSS_ENCODER_AVAILABLE:
@@ -83,6 +93,7 @@ class BM25Search:
         self.index = {}
         self.doc_freq = {}  
         self.doc_lengths = {}
+        self.term_freqs: Dict[str, Dict[str, int]] = {}
         self.avg_doc_length = 0
         
         if documents:
@@ -99,6 +110,10 @@ class BM25Search:
             tokens = self._tokenize(content)
             
             self.doc_lengths[doc_id] = len(tokens)
+            term_counts: Dict[str, int] = {}
+            for token in tokens:
+                term_counts[token] = term_counts.get(token, 0) + 1
+            self.term_freqs[doc_id] = term_counts
             total_length += len(tokens)
             
             # Count term frequencies
@@ -139,7 +154,12 @@ class BM25Search:
             idf = math.log(1 + (len(self.documents) - self.doc_freq[token] + 0.5) /
                         (self.doc_freq[token] + 0.5))
             
-            tf = 1  
+            tf = self.term_freqs.get(doc_id, {}).get(token, 0)
+            if tf <= 0:
+                # A document contributes only when it actually contains the
+                # query term. The previous constant tf=1 made every indexed
+                # document receive a positive score for every known term.
+                continue
             
             # BM25 formula
             numerator = tf * (k1 + 1)
@@ -291,9 +311,10 @@ class LangChainCrossEncoderReranker:
         self.model_kwargs = model_kwargs or dict(RERANKER_MODEL_KWARGS)
         if CROSS_ENCODER_AVAILABLE and HuggingFaceCrossEncoder is not None:
             try:
-                self._cross_encoder = HuggingFaceCrossEncoder(
-                    model_name=model_name,
-                    model_kwargs=self.model_kwargs,
+                self._cross_encoder = (
+                    get_cross_encoder(model_name)
+                    if get_cross_encoder is not None
+                    else HuggingFaceCrossEncoder(model_name=model_name, model_kwargs=self.model_kwargs)
                 )
                 logger.info("Loaded LangChain cross-encoder reranker: %s", model_name)
             except Exception as exc:
