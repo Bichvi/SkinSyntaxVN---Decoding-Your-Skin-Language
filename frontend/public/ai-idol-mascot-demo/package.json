@@ -1,0 +1,6 @@
+{
+  "name": "skinsyntax-syna-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test tests/motion.test.js tests/presentation.test.js" }
+}

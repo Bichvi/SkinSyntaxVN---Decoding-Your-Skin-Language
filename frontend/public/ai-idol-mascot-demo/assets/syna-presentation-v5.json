@@ -1,0 +1,89 @@
+{
+  "voice": "Syna · trong trẻo, vui vẻ (Piper local)",
+  "pitchSemitones": 2.5,
+  "processedBeforeTiming": true,
+  "presentationDemo": true,
+  "duration": 38.9677,
+  "cues": [
+    {
+      "start": 0.0,
+      "end": 3.3785,
+      "text": "Meo! Chào bạn, mình là Syna. Hôm nay mình có một chiếc bảng nhỏ nè!",
+      "gesture": "greeting",
+      "expression": "happy",
+      "sticker": "hello",
+      "board": null,
+      "lookAtBoard": false
+    },
+    {
+      "start": 3.7985,
+      "end": 8.2773,
+      "text": "Đây là gel dưỡng rau má minh họa. Mình dùng sản phẩm mẫu này để thử cách giới thiệu nhé!",
+      "gesture": "talking",
+      "expression": "neutral",
+      "sticker": null,
+      "board": null,
+      "lookAtBoard": false
+    },
+    {
+      "start": 8.6973,
+      "end": 13.7865,
+      "text": "Nhìn lên bảng cùng mình nha! Ý đầu tiên là chiết xuất rau má. Mình ghi tên ở dòng số một nè.",
+      "gesture": "talking",
+      "expression": "neutral",
+      "sticker": "leaf",
+      "board": "centella",
+      "lookAtBoard": true
+    },
+    {
+      "start": 14.2065,
+      "end": 18.6733,
+      "text": "Mình quay lại với bạn đây. Trên bảng chỉ giữ ý chính, còn mình sẽ kể từng chút một nhé!",
+      "gesture": "talking",
+      "expression": "neutral",
+      "sticker": null,
+      "board": null,
+      "lookAtBoard": false
+    },
+    {
+      "start": 19.0933,
+      "end": 23.7989,
+      "text": "Tiếp theo, bạn nhìn dòng thứ hai nha. Glycerin là tên thành phần tiếp theo trong ví dụ này.",
+      "gesture": "talking",
+      "expression": "neutral",
+      "sticker": null,
+      "board": "glycerin",
+      "lookAtBoard": true
+    },
+    {
+      "start": 24.2189,
+      "end": 28.1049,
+      "text": "Còn dòng thứ ba là Panthenol. Mình chỉ vào đây để bạn dễ theo dõi nhé!",
+      "gesture": "talking",
+      "expression": "neutral",
+      "sticker": null,
+      "board": "panthenol",
+      "lookAtBoard": true
+    },
+    {
+      "start": 28.5249,
+      "end": 33.5178,
+      "text": "Vậy là bảng đã có đủ ba ý rồi. Đây chỉ là nội dung minh họa, chưa phải công thức sản phẩm thật nha!",
+      "gesture": "talking",
+      "expression": "confident",
+      "sticker": "sparkle",
+      "board": "summary",
+      "lookAtBoard": false
+    },
+    {
+      "start": 33.9378,
+      "end": 38.5477,
+      "text": "Bạn thấy cách giới thiệu này dễ theo dõi hơn không? Syna gửi bạn một trái tim nè. Meo!",
+      "gesture": "happy",
+      "expression": "happy",
+      "sticker": "heart",
+      "board": "summary",
+      "lookAtBoard": false
+    }
+  ]
+}

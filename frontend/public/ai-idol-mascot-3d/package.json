@@ -1,0 +1,6 @@
+{
+  "name": "skinsyntax-syna-3d-pilot",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test tests/pilot.test.js" }
+}

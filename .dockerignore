@@ -2,6 +2,12 @@
 .gitignore
 .vscode
 .cursor
+.agents
+.claude
+.codex
+.gitnexus
+.runtime
+report/
 **/__pycache__
 **/*.pyc
 **/.pytest_cache
@@ -31,6 +37,8 @@ settings.py
 
 backend/storage/cache/
 backend/vendor/
+ai-idol-service/storage/
+frontend/public/uploads/
 **/.env
 **/.env.local
 

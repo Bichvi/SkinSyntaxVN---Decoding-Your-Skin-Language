@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    CREWAI_DISABLE_TELEMETRY=true \
+    OTEL_SDK_DISABLED=true
+
+COPY ai-idol-agent-service/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+WORKDIR /app
+COPY ai-idol-agent-service/ /app/
+
+EXPOSE 5013
+CMD ["gunicorn", "--bind", "0.0.0.0:5013", "--workers", "1", "--threads", "2", "--timeout", "240", "app:app"]

@@ -360,6 +360,9 @@ class SanPham {
         $filter['$or'] = [
             ['ten_san_pham' => $regex],
             ['ma_san_pham' => $regex],
+            ['thanh_phan' => $regex],
+            ['thanh_phan_full' => $regex],
+            ['thanh_phan_sach' => $regex],
             ['thanh_phan_chinh' => $regex]
         ];
 
@@ -742,6 +745,8 @@ class SanPham {
                     ['danh_muc_day_du' => $regex],
                     ['loai_da' => $regex],
                     ['thanh_phan' => $regex],
+                    ['thanh_phan_full' => $regex],
+                    ['thanh_phan_sach' => $regex],
                     ['thanh_phan_chinh' => $regex],
                     ['thanh_phan_day_du' => $regex],
                     ['mo_ta' => $regex],

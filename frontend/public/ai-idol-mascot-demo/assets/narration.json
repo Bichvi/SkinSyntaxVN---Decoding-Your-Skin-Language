@@ -1,0 +1,36 @@
+{
+  "voice": "Piper vi_VN-vais1000-medium (local)",
+  "duration": 20.6876,
+  "cues": [
+    {
+      "start": 0.0,
+      "end": 2.8212,
+      "text": "Xin chào! Mình là Luna, linh vật của Skin Syntax.",
+      "gesture": "greeting"
+    },
+    {
+      "start": 3.2412,
+      "end": 7.0261,
+      "text": "Hôm nay, mình cùng bạn khám phá một góc chăm sóc da thật nhẹ nhàng nhé.",
+      "gesture": "talking"
+    },
+    {
+      "start": 7.4461,
+      "end": 12.659,
+      "text": "Đây là khu vực giới thiệu sản phẩm. Hình ảnh, tên và giá sẽ được đặt riêng, rõ ràng và dễ theo dõi.",
+      "gesture": "presenting"
+    },
+    {
+      "start": 13.079,
+      "end": 16.8058,
+      "text": "Bạn có thể thay phông nền, nghe lại lời thoại, rồi duyệt trước khi lên sóng.",
+      "gesture": "explaining"
+    },
+    {
+      "start": 17.2258,
+      "end": 20.2676,
+      "text": "Cảm ơn bạn đã ghé chơi. Hẹn gặp lại trong buổi tiếp theo nhé!",
+      "gesture": "goodbye"
+    }
+  ]
+}

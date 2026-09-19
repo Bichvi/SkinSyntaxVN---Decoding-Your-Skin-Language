@@ -1,5 +1,38 @@
 name: skinsyntax
 
+x-ai-idol-common: &ai-idol-common
+  build:
+    context: .
+    dockerfile: Dockerfile.ai-idol
+  image: skinsyntax-ai-idol:local
+  restart: unless-stopped
+  env_file:
+    - .env
+  environment: &ai-idol-environment
+    MONGO_URI: mongodb://mongodb:27017
+    MONGO_DB: skinsyntax
+    AI_IDOL_REDIS_URL: redis://redis:6379/2
+    AI_IDOL_CHROMA_HOST: chromadb
+    AI_IDOL_CHROMA_PORT: "8000"
+    AI_IDOL_AGENT_ENABLED: "true"
+    AI_IDOL_AGENT_ALLOW_AUTO_PUBLISH: "false"
+    AI_IDOL_SCRIPT_COUNCIL_ENABLED: "true"
+    AI_IDOL_SCRIPT_COUNCIL_URL: http://ai-idol-agent-service:5013
+    AI_IDOL_INTERNAL_TOKEN: "${AI_IDOL_INTERNAL_TOKEN:-}"
+    AI_IDOL_AVATAR_SERVICE_URL: http://host.docker.internal:7861
+    SYNA_RENDER_URL: http://host.docker.internal:7862
+  volumes:
+    - ai_idol_storage:/app/storage
+  depends_on:
+    mongodb:
+      condition: service_healthy
+    chromadb:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  networks:
+    - skinsyntax-net
+
 services:
 
   mongodb:
@@ -97,6 +130,61 @@ services:
     networks:
       - skinsyntax-net
 
+  ai-idol-agent-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-idol-agent
+    image: skinsyntax-ai-idol-agent:local
+    container_name: skinsyntax-ai-idol-agent
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      AI_IDOL_CREW_PORT: "5013"
+      AI_IDOL_GROQ_MODEL: "${AI_IDOL_GROQ_MODEL:-openai/gpt-oss-20b}"
+      AI_IDOL_CREW_REVIEW_MODEL: "${AI_IDOL_CREW_REVIEW_MODEL:-openai/gpt-oss-20b}"
+      AI_IDOL_CREW_MAX_TOKENS: "${AI_IDOL_CREW_MAX_TOKENS:-650}"
+      AI_IDOL_CREW_MAX_RPM: "${AI_IDOL_CREW_MAX_RPM:-4}"
+      AI_IDOL_INTERNAL_TOKEN: "${AI_IDOL_INTERNAL_TOKEN:-}"
+      CREWAI_DISABLE_TELEMETRY: "true"
+      OTEL_SDK_DISABLED: "true"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5013/api/health', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    networks:
+      - skinsyntax-net
+
+  ai-idol-service:
+    <<: *ai-idol-common
+    container_name: skinsyntax-ai-idol
+    ports:
+      - "5003:5003"
+    command: ["gunicorn", "--bind", "0.0.0.0:5003", "--workers", "1", "--threads", "4", "--timeout", "120", "app:app"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/api/health"]
+      interval: 20s
+      timeout: 8s
+      retries: 5
+      start_period: 45s
+
+  ai-idol-worker:
+    <<: *ai-idol-common
+    container_name: skinsyntax-ai-idol-worker
+    command: ["celery", "-A", "celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=1", "--queues=celery,agent,llm,gpu,media"]
+
+  ai-idol-broadcast-worker:
+    <<: *ai-idol-common
+    container_name: skinsyntax-ai-idol-broadcast
+    command: ["celery", "-A", "celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=2", "--queues=broadcast"]
+
+  ai-idol-beat:
+    <<: *ai-idol-common
+    container_name: skinsyntax-ai-idol-beat
+    command: ["celery", "-A", "celery_app:celery_app", "beat", "--loglevel=INFO", "--schedule=/tmp/ai-idol-celerybeat-schedule"]
+
   php-backend:
     build:
       context: .
@@ -117,6 +205,7 @@ services:
       AI_CHAT_TIMEOUT: "60"
       AI_RECOMMENDATION_TIMEOUT: "20"
       AI_HYBRID_RECOMMENDATION_TIMEOUT: "30"
+      AI_IDOL_ENDPOINT: http://ai-idol-service:5003
       REDIS_URL: redis://redis:6379/0
       REDIS_CACHE_TTL: "604800"
       MAIL_DEMO_MODE: "1"
@@ -130,6 +219,8 @@ services:
         condition: service_healthy
       ai-service:
         condition: service_started
+      ai-idol-service:
+        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -200,6 +291,8 @@ volumes:
     name: skinsyntax-redis-data
   vieneu_model_cache:
     name: skinsyntax-vieneu-model-cache
+  ai_idol_storage:
+    name: skinsyntax-ai-idol-storage
 
 networks:
   skinsyntax-net:

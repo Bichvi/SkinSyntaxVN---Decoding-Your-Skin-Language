@@ -1,0 +1,39 @@
+{
+  "support": {
+    "dieu-khoan": ["Cho tôi xem điều khoản sử dụng", "Điều kiện giao dịch chung ở đâu?", "Tôi cần Terms of Service", "Tôi muốn đọc điều khoản trước khi mua"],
+    "bao-mat": ["Chính sách bảo mật của cửa hàng thế nào?", "Email dùng nhận OTP được xử lý email như thế nào?", "Shop có bán dữ liệu cá nhân không?", "Tôi muốn biết quyền riêng tư khi chat"],
+    "cookie": ["Website dùng cookie làm gì?", "Xóa cookies có mất giỏ hàng không?", "Tôi muốn xóa lịch sử chat", "Lưu trữ trình duyệt gồm những gì?"],
+    "quy-che": ["Xem quy chế hoạt động ở đâu?", "Shop có đăng ký Bộ Công Thương không?", "Tên đơn vị vận hành là gì?", "Có quy định theo Nghị định 52 không?"],
+    "khieu-nai": ["Tôi muốn gửi khiếu nại", "Tranh chấp với cửa hàng giải quyết sao?", "Bao lâu có phản hồi khiếu nại?", "Tôi cần phản ánh dịch vụ"],
+    "dang-ky": ["Tạo tài khoản như thế nào?", "Đăng ký bằng điện thoại được không?", "Tôi không biết cách register tài khoản", "Đăng ký báo email đã tồn tại thì sao?"],
+    "otp": ["Không nhận được OTP thì làm sao?", "OTP có hiệu lực mấy phút?", "Bao lâu được gửi lại mã xác thực?", "Captcha sai thì xử lý sao?"],
+    "quen-mat-khau": ["Tôi quên mật khẩu rồi", "Khôi phục tài khoản bằng cách nào?", "Reset password có phải dùng mã SMS không?", "Tôi mất quyền truy cập email đăng ký"],
+    "doi-lien-he": ["Tôi muốn đổi email đăng nhập", "Làm sao đổi số điện thoại?", "Sửa số điện thoại liên hệ ở đâu?", "Đổi email có cần OTP ở hai bên không?"],
+    "an-toan-tai-khoan": ["Nhân viên yêu cầu tôi đọc OTP có đúng không?", "Làm sao bảo mật tài khoản?", "Có dấu hiệu lừa đảo yêu cầu chuyển tiền xác minh", "Tài khoản tôi bị hack phải làm gì?"],
+    "xoa-tai-khoan": ["Tôi muốn xóa tài khoản", "Đóng tài khoản có xóa đơn cũ không?", "Tôi yêu cầu xóa dữ liệu", "Tôi muốn rút lại đồng ý xử lý thông tin"],
+    "dat-hang": ["Hướng dẫn đặt hàng từng bước", "Làm sao đặt hàng trên web?", "Mua qua chat như thế nào?", "Chưa đăng nhập có mua được không?"],
+    "thanh-toan": ["Có những phương thức thanh toán nào?", "Có hỗ trợ COD không?", "VNPAY lỗi mà tiền đã trừ thì sao?", "Chuyển khoản QR rồi mà trạng thái không cập nhật"],
+    "hoa-don": ["Có xuất hóa đơn VAT không?", "Tôi muốn nhập mã số thuế công ty", "Tôi quên lấy invoice lúc đặt hàng", "Xin hóa đơn sau 10 ngày được không?"],
+    "huy-sua-don": ["Tôi muốn hủy đơn hàng đã đặt", "Sửa đơn đã thanh toán thế nào?", "Tôi muốn đổi địa chỉ giao hàng", "Có thể đổi số lượng đơn cũ không?"],
+    "theo-doi-don": ["Tôi muốn kiểm tra đơn hàng", "Đơn của tôi đang ở đâu?", "Làm sao tra cứu đơn?", "Tôi cần mã vận đơn để tracking"],
+    "van-chuyen": ["Phí ship bao nhiêu?", "Có miễn phí ship không?", "Bao lâu nhận được hàng?", "Shop có giao hàng toàn quốc không?"],
+    "doi-tra": ["Điều kiện đổi trả sản phẩm?", "Hoàn tiền mất bao lâu?", "Tôi muốn trả hàng đã mở nắp", "Quá 7 ngày còn được tiếp nhận không?"],
+    "hang-loi": ["Chai của tôi bị vỡ khi giao", "Tôi nhận hàng lỗi phải làm sao?", "Shop giao sai sản phẩm cho tôi", "Không có video mở hộp có được xử lý không?"],
+    "lien-he": ["Hotline của SkinSyntax là gì?", "Email hỗ trợ của shop là gì?", "Giờ làm việc của nhân viên thế nào?", "Tôi muốn chat người thật"]
+  },
+  "purchase": [
+    {"message":"tối mua 1 chai Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn", "required_id":"1077"},
+    {"message":"Đặt cho tôi 2 chai CeraVe Retinol", "required_id":"1077", "quantity":2},
+    {"message":"Mua cho mình serum cerave retinol 30ml", "required_id":"1077"},
+    {"message":"Cho tôi lấy một chai Serum CeraVe Retinol", "required_id":"1077"},
+    {"message":"Tui chốt CeraVe retinol nhé", "required_id":"1077"},
+    {"message":"Mua giúp tôi Serum CeraVe Retino 30ml", "required_id":"1077"},
+    {"message":"Tôi muốn mua serum CeraVe Retinol 999ml", "empty":true},
+    {"message":"Mua cho tôi mỹ phẩm zzzmissingcatalog", "empty":true},
+    {"message":"Tôi muốn mua", "empty":true},
+    {"message":"Đặt tôi 21 chai CeraVe Retinol", "invalid":true}
+  ],
+  "advice": [
+    "Tôi có nên mua retinol không?", "Tôi không muốn mua retinol nữa", "Tôi chưa mua, chỉ hỏi retinol là gì", "So sánh serum CeraVe và SVR", "Tư vấn mua serum cho da nhạy cảm", "Cách dùng retinol cho người mới", "Toner và serum khác nhau thế nào?", "Tôi ko mua, chỉ muốn tìm hiểu", "Chào Ngọc Vi", "Tôi đang bong tróc, có nên mua retinol không?"
+  ]
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="same-origin">
+  <title>Syna 2D — SkinSyntax Studio</title>
+  <link rel="stylesheet" href="./style.css?v=6.1">
+  <script type="module" src="./app.js?v=6.1"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/index.php?r=admin_ai_idol" aria-label="Về AI Idol Studio"><span class="brand-mark" aria-hidden="true">s.</span><span>SkinSyntax <small>STUDIO</small></span></a>
+    <span class="prototype-tag">Phòng thử nhân vật <span> / </span> 01</span>
+    <a class="back-link" href="/index.php?r=admin_ai_idol">Về AI Idol Studio <span aria-hidden="true">↗</span></a>
+  </header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">MỘT CHIẾC BẢNG NHỎ, MỘT CÂU CHUYỆN CHĂM DA</p><h1>Cùng Syna tìm hiểu.</h1><p>Ảnh, tên và giá sản phẩm luôn ở đây. Syna sẽ kể thêm những ý chính trên bảng bên cạnh.</p></div><span class="version">Thuyết trình 2D · v6 <i aria-hidden="true"></i></span></div>
+    <div class="workspace">
+      <section class="preview" aria-label="Sân khấu thử nhân vật">
+        <div class="canvas-wrap"><canvas id="stage" width="1280" height="720" role="img" aria-label="Syna, bé mèo màu kem với tai nghe xanh và lá rau má, chuyển động theo lời thoại"><p>Trình duyệt cần hỗ trợ Canvas để xem nhân vật.</p></canvas><div id="loading" class="loading" role="status">Đang chuẩn bị Syna và lời thoại…</div></div>
+        <div class="transport">
+          <div class="transport-row"><button id="play" class="primary" disabled aria-label="Nghe bản mẫu">▶ <span>Nghe bản mẫu</span></button><button id="restart" class="icon-button" disabled aria-label="Phát lại từ đầu" title="Phát lại từ đầu">↺</button><span id="time" class="time">00:00 / 00:00</span><label class="volume">Âm lượng <input id="volume" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="Âm lượng"></label></div>
+          <input id="seek" class="seek" type="range" min="0" max="1" step="0.01" value="0" disabled aria-label="Vị trí lời thoại">
+          <div class="playback-note"><span id="status" role="status" aria-live="polite">Đang tải bản mẫu</span><span>Syna · trong trẻo, vui vẻ</span></div>
+        </div>
+        <section class="board-companion" aria-labelledby="boardHeading"><h2 id="boardHeading">Gel dưỡng rau má <span class="sample-price">199.000 đ · giá minh họa</span></h2><p>Khung sản phẩm luôn hiển thị. Bảng bên cạnh ghi các thành phần nổi bật và công dụng tham khảo. Đây là mẫu thiết kế, không phải công thức thật.</p><ul id="boardNotes" aria-live="polite" aria-atomic="true"><li>Đang chuẩn bị các ý chính…</li></ul></section>
+        <div id="error" class="error" role="alert" hidden></div>
+        <div class="preview-footer"><p><strong>Bản thử riêng biệt.</strong> Chưa kết nối sản phẩm thật hoặc phát livestream.</p><button id="export" class="secondary" disabled>Tải video WebM ↓</button></div>
+        <p class="export-note" id="exportNote">Xuất video theo thời gian thực. Giữ trang này hiển thị đến khi hoàn tất.</p>
+      </section>
+      <aside class="direction" aria-label="Điều chỉnh bản mẫu">
+        <section class="control-section"><div class="section-title"><h2>Không gian của Syna</h2><span>01</span></div><div class="themes" role="group" aria-label="Chọn phông nền"><button class="theme active" data-theme="garden" aria-pressed="true"><i class="swatch garden"></i>Vườn sớm</button><button class="theme" data-theme="paper" aria-pressed="false"><i class="swatch paper"></i>Giấy kem</button><button class="theme" data-theme="rose" aria-pressed="false"><i class="swatch rose"></i>Hồng dịu</button></div><label class="upload">＋ Dùng ảnh nền của bạn<input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Chọn ảnh nền PNG, JPG hoặc WebP"></label><p class="hint" id="backgroundNote">Ảnh ≤ 8 MB · chỉ xử lý trong trình duyệt.</p></section>
+        <section class="control-section"><div class="section-title"><h2>Biểu cảm &amp; cử chỉ</h2><span>02</span></div><div class="gestures"><button data-gesture="greeting" disabled>Vẫy chào</button><button data-gesture="presenting" disabled>Giới thiệu</button><button data-gesture="happy" disabled>Ôm tim</button></div>
+          <label class="select-label" for="expression">Biểu cảm</label><select id="expression" disabled><option value="auto">Theo lời kể của Syna</option></select>
+          <label class="select-label" for="gestureChoice">Kho hành động · chọn để xem ngay</label><div class="action-row"><select id="gestureChoice" disabled></select><button id="tryGesture" class="secondary" disabled>Xem lại</button></div>
+          <p class="hint" id="gestureStatus" role="status">Theo kịch bản · chọn một hành động để xem ngay</p><button id="returnGesture" class="text-button" disabled>Trở lại kịch bản</button>
+          <label class="motion-toggle"><input id="stickers" type="checkbox" checked> Sticker dễ thương</label><label class="motion-toggle"><input id="reducedMotion" type="checkbox"> Giảm chuyển động</label><p class="hint">Thử động tác sẽ tạm dừng lời thoại. Mỗi động tác kéo dài khoảng 4 giây, rồi về tư thế theo kịch bản. Bấm Nghe tiếp để tiếp tục.</p></section>
+        <section class="control-section script-section"><div class="section-title"><h2>Kịch bản thuyết trình</h2><span>03</span></div><ol id="script" class="script"></ol><p class="hint">Bấm một câu để nghe từ đó. Các đoạn có dấu ↗ sẽ có Syna nhìn và chỉ lên bảng. Ý chính và phụ đề chạy theo cùng lời thoại.</p></section>
+      </aside>
+    </div>
+    <footer class="page-footer"><span>SYNA / AI IDOL STUDIO</span><span>Làm dịu – phục hồi – chữa lành · Chưa thay đổi luồng live hiện tại</span></footer>
+  </main>
+</body>
+</html>

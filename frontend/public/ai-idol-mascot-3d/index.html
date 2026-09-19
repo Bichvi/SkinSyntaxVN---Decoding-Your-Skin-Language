@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="same-origin"><title>Syna 3D — Phòng thử SkinSyntax</title>
+  <link rel="stylesheet" href="./style.css?v=7"><script type="module" src="./app.js?v=10"></script>
+</head>
+<body>
+  <header><a class="brand" href="../ai-idol-mascot-demo/index.html?rev=syna-v6-1"><b>s.</b><span>SkinSyntax<small>CHARACTER STUDIO</small></span></a><a href="../ai-idol-mascot-demo/index.html?rev=syna-v6-1">↖ So sánh với bản 2D</a></header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">MỘT CHÚT CHUYỂN ĐỘNG, MỘT CHÚT GẦN GŨI</p><h1>Syna, ở một góc nhìn mới.</h1><p>Mèo nhỏ 3D, cây rau má quen thuộc. Cùng thử một lời chào nhé.</p></div><span class="badge">Bản thử 3D · 15 giây</span></div>
+    <section class="studio" aria-label="Bản thử Syna 3D">
+      <div class="player">
+        <div class="viewport"><canvas id="stage" width="1280" height="720" role="img" aria-label="Mèo Syna 3D màu kem, lá rau má, áo và tai nghe xanh; khung sản phẩm và bảng thành phần riêng"></canvas><div id="loading" role="status">Đang chuẩn bị Syna 3D…</div></div>
+        <div class="transport"><div class="transport-row"><button id="play" class="primary" disabled>▶ Nghe bản thử</button><button id="restart" class="secondary" disabled aria-label="Phát lại từ đầu">↺</button><span id="time">00:00 / 00:15</span><label class="volume">Âm lượng<input id="volume" type="range" min="0" max="1" step="0.05" value="0.8"></label></div><input id="seek" type="range" min="0" max="15" step="0.01" value="0" disabled aria-label="Tua bản thử"><p id="status" role="status">Đang tải tài nguyên</p></div>
+        <div id="error" class="error" role="alert" hidden></div>
+        <div class="under-player"><p><strong>Giữ riêng bản 2D.</strong> Đây là dáng 3D đầu tiên để duyệt, chưa thay thế luồng livestream.</p><button id="export" class="secondary" disabled>Tải video WebM ↓</button></div><p id="exportNote" class="hint">Xuất góc nhìn chính diện, có giọng nói. Giữ trang hiển thị trong 15 giây.</p>
+        <section class="notes"><h2>Gel dưỡng rau má <span>199.000 đ · giá minh họa</span></h2><p id="boardNote" aria-live="polite">Bảng thành phần sẽ sáng lên khi Syna giới thiệu.</p></section>
+      </div>
+      <aside>
+        <section><p class="eyebrow">01 / GÓC NHÌN</p><h2>Xem trọn dáng Syna</h2><p class="hint">Kiểm tra chính diện, bề ngang và phía sau. Đầu, má và thân đều có độ đầy trong không gian 3D.</p><div class="views"><button data-view="0" aria-pressed="true" disabled>Chính diện</button><button data-view="-35" aria-pressed="false" disabled>Nghiêng trái</button><button data-view="35" aria-pressed="false" disabled>Nghiêng phải</button><button data-view="-90" aria-pressed="false" disabled>Ngang trái 90°</button><button data-view="90" aria-pressed="false" disabled>Ngang phải 90°</button><button data-view="180" aria-pressed="false" disabled>Phía sau</button></div><label class="angle">Xoay nhân vật · <output id="angleValue" for="angle">0°</output><input id="angle" type="range" min="-180" max="180" value="0" step="1" disabled></label><label class="toggle"><input id="reducedMotion" type="checkbox"> Giảm chuyển động</label></section>
+        <section><p class="eyebrow">02 / CÂU CHUYỆN NHỎ</p><h2>15 giây làm quen</h2><ol id="script"></ol><p class="hint">Bấm một đoạn để nghe từ đó. Syna quay đầu thật trong không gian 3D, nhìn bảng rồi trở lại.</p></section>
+        <section><p class="eyebrow">03 / MẪU TẠO HÌNH</p><h2>Rau má trên đầu và áo</h2><p class="hint">Mắt thấp, má đầy, tay chân ngắn. Đây là bản 3D đang được chỉnh theo ảnh mẫu, chưa phải model hoàn thiện.</p><a href="./assets/syna-approved-centella.png" target="_blank" rel="noopener">Xem ảnh mẫu đã duyệt ↗</a><details class="action-atlas"><summary>Kho hành động chuẩn của Syna</summary><figure><img src="./assets/syna-action-atlas.png" alt="Mười trạng thái Syna: chào, nói, suy nghĩ, giới thiệu sản phẩm, chốt đơn, giải thích, lắng nghe, xử lý, vui và tạm biệt"><figcaption>Chào · nói · suy nghĩ · giới thiệu · chốt đơn · giải thích · lắng nghe · xử lý · vui · tạm biệt</figcaption></figure><p class="hint">Đây là ảnh tham chiếu cho biểu cảm và đạo cụ. Bản 3D bên trái vẫn cử động bằng hình học.</p></details><p class="hint">Không chạy AI tạo khuôn mặt hay gọi API trả phí.</p><details><summary>Thông tin kiểm tra</summary><p id="stats" class="hint">Chưa có số đo.</p></details></section>
+      </aside>
+    </section>
+    <footer><span>SYNA / SKINSYNTAX</span><span>Làm dịu – phục hồi – chữa lành.</span></footer>
+  </main>
+</body>
+</html>

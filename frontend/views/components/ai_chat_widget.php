@@ -1557,23 +1557,56 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           .replace(/'/g, '&#39;');
       };
 
+      var normalizeMarkdown = function (value) {
+        var normalized = String(value || '');
+
+        // The model sometimes escapes Markdown punctuation or closes a
+        // product title containing a variant such as "[Mini]" one bracket
+        // too late. Normalize both forms before HTML escaping/parsing.
+        normalized = normalized.replace(/\*\*\[([^\]\r\n]+)\]\s+([^\]\r\n]+)\]\\?\(([^)\r\n]+)\\?\)\*\*/g, '**[[$1] $2]($3)**');
+        normalized = normalized.replace(/\[((?:\[[^\]\r\n]+\]\s*)?[^\]\r\n]+)\]\\?\(([^)\r\n]+)\\?\)/g, '[$1]($2)');
+        normalized = normalized.replace(/\\([\\[\]()_*`#&])/g, '$1');
+        return normalized;
+      };
+
+      var safeMarkdownHref = function (value) {
+        var href = String(value || '').replace(/&amp;/g, '&').trim();
+        if (/^quicksend:\S.*$/i.test(href)) {
+          return escapeHtml(href);
+        }
+        if (/^(?:https?:\/\/|\/|\.\/|\?|#|index\.php(?:\?|$))/i.test(href)) {
+          return escapeHtml(href);
+        }
+        return '#';
+      };
+
       var formatMarkdown = function (text) {
-        var safe = escapeHtml(text);
+        var safe = escapeHtml(normalizeMarkdown(text));
         // headers
         safe = safe.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
         safe = safe.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
         safe = safe.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
         safe = safe.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+
+        // Parse links before bold/italic so labels such as
+        // [**[Mini] Serum...**](index.php?...), which are common in the
+        // catalog, do not get broken by the nested variant brackets.
+        var linkLabelPattern = '((?:\\*\\*|__)?(?:\\[[^\\]]+\\]\\s*)?[^\\]]+)';
+        // quicksend links
+        safe = safe.replace(new RegExp('\\[' + linkLabelPattern + '\\]\\((quicksend:[^)]+)\\)', 'g'), function (_, label, url) {
+          return '<a href="' + safeMarkdownHref(url) + '" class="ai-chat-quick-btn" style="display:inline-block; border: 1px solid #183B2B; color: #183B2B; background: #EBF2EE; border-radius: 16px; padding: 4px 12px; margin: 4px 2px; text-decoration: none; font-size: 12px; font-weight: 600; transition: all 0.2s;">' + label + '</a>';
+        });
+        // links
+        safe = safe.replace(new RegExp('\\[' + linkLabelPattern + '\\]\\(([^)]+)\\)', 'g'), function (_, label, url) {
+          return '<a href="' + safeMarkdownHref(url) + '" class="ai-chat-widget__inline-link">' + label + '</a>';
+        });
+
         // bold + italic
         safe = safe.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
         safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
         // inline code
         safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
-        // quicksend links
-        safe = safe.replace(/\[([^\]]+)\]\((quicksend:[^)]+)\)/g, '<a href="$2" class="ai-chat-quick-btn" style="display:inline-block; border: 1px solid #183B2B; color: #183B2B; background: #EBF2EE; border-radius: 16px; padding: 4px 12px; margin: 4px 2px; text-decoration: none; font-size: 12px; font-weight: 600; transition: all 0.2s;">$1</a>');
-        // links
-        safe = safe.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="ai-chat-widget__inline-link">$1</a>');
         // hr
         safe = safe.replace(/^---$/gm, '<hr>');
         // unordered list items
@@ -1652,7 +1685,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         var summarizeText = function (value, maxLength) {
           var text = String(value || '').replace(/\s+/g, ' ').trim();
           if (text === '') {
-            return 'Phù hợp với yêu cầu của bạn.';
+            return 'Mình sẽ giải thích kỹ hơn nếu bạn muốn so sánh sản phẩm này.';
           }
 
           if (text.length <= maxLength) {
@@ -1788,27 +1821,29 @@ if ($aiChatEmail !== '' && $pdo !== null) {
               contentSuffix += '<div class="ai-chat-widget__product-group">' + productCards.join('') + '</div>';
             }
 
-            // Render evaluation metrics badge
-            var evalScores = message.eval_scores || { ar: 1.0, gr: 1.0, cr: 1.0 };
-            var pipelineMode = message.pipeline_mode || (message.fallback ? 'Agent -> Fallback' : 'Pipeline');
-            var queryType = message.query_type || 'simple single-intent query';
-            var intentMode = message.intent_mode || 'PRODUCT_INQUIRY';
-            var fallbackReason = message.fallbackReason || '';
-            
-            var dotColor = (pipelineMode === 'Pipeline') ? '#4caf50' : '#ff9800';
-            var subText = message.fallback ? ('-> ' + (fallbackReason || 'agent failed: APIStatusError')) : ('-> ' + queryType);
-            var intentPart = message.fallback ? '' : (' | intent: ' + intentMode);
-            var latencyPart = message.latency ? (' | ' + Number(message.latency).toFixed(2) + 's') : '';
-            
-            meta += '<div class="ai-chat-widget__eval-badge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #757575; background: #f5f5f5; padding: 4px 8px; border-radius: 12px; margin-top: 8px; font-family: monospace; border: 1px solid #e0e0e0;">'
-                 + '<span style="width: 8px; height: 8px; border-radius: 50%; background-color: ' + dotColor + '; display: inline-block;"></span>'
-                 + '<strong>' + pipelineMode + '</strong> | ' + subText + ' | '
-                 + 'AR: ' + Number(evalScores.ar).toFixed(2) + ' | '
-                 + 'GR: ' + Number(evalScores.gr).toFixed(2) + ' | '
-                 + 'CR: ' + Number(evalScores.cr).toFixed(2)
-                 + latencyPart
-                 + intentPart
-                 + '</div>';
+            if (window.SKIN_CHAT_DEBUG === true) {
+              // Render evaluation metrics badge only in local debug mode.
+              var evalScores = message.eval_scores || { ar: 1.0, gr: 1.0, cr: 1.0 };
+              var pipelineMode = message.pipeline_mode || (message.fallback ? 'Agent -> Fallback' : 'Pipeline');
+              var queryType = message.query_type || 'simple single-intent query';
+              var intentMode = message.intent_mode || 'PRODUCT_INQUIRY';
+              var fallbackReason = message.fallbackReason || '';
+
+              var dotColor = (pipelineMode === 'Pipeline') ? '#4caf50' : '#ff9800';
+              var subText = message.fallback ? ('-> ' + (fallbackReason || 'agent failed: APIStatusError')) : ('-> ' + queryType);
+              var intentPart = message.fallback ? '' : (' | intent: ' + intentMode);
+              var latencyPart = message.latency ? (' | ' + Number(message.latency).toFixed(2) + 's') : '';
+
+              meta += '<div class="ai-chat-widget__eval-badge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #757575; background: #f5f5f5; padding: 4px 8px; border-radius: 12px; margin-top: 8px; font-family: monospace; border: 1px solid #e0e0e0;">'
+                   + '<span style="width: 8px; height: 8px; border-radius: 50%; background-color: ' + dotColor + '; display: inline-block;"></span>'
+                   + '<strong>' + pipelineMode + '</strong> | ' + subText + ' | '
+                   + 'AR: ' + Number(evalScores.ar).toFixed(2) + ' | '
+                   + 'GR: ' + Number(evalScores.gr).toFixed(2) + ' | '
+                   + 'CR: ' + Number(evalScores.cr).toFixed(2)
+                   + latencyPart
+                   + intentPart
+                   + '</div>';
+            }
           }
 
           var formattedContent = isUser ? escapeHtml(message.content) : formatMarkdown(message.content);
@@ -2340,20 +2375,21 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         var nganSach = parseInt(profile.ngan_sach || 0, 10);
 
         var lines = [];
-        lines.push('SkinSyntax AI chào bạn! ðŸ‘‹');
+        lines.push('SkinSyntax AI chào bạn!');
         lines.push('');
         lines.push('Mình đã ghi nhận tình trạng da của bạn là **' + loaiDa + '**' + (vande ? ' với vấn đề **' + vande + '**' : '') + '.');
 
         if (tranh) {
           lines.push('');
-          lines.push('âš ï¸ **Ưu tiên tránh các thành phần:** ' + tranh + '.');
+          lines.push('**Ưu tiên tránh các thành phần:** ' + tranh + '.');
           lines.push('Mình sẽ luôn lọc sản phẩm an toàn với danh sách này cho bạn!');
         }
 
         if (nganSach > 0) {
           var fmt = new Intl.NumberFormat('vi-VN').format(nganSach);
           lines.push('');
-          lines.push('ðŸ’° Ngân sách tham khảo của bạn: **' + fmt + ' đ**.');
+          lines.push('Ngân sách tối đa cho **1 sản phẩm** theo khảo sát của bạn: **' + fmt + ' đ**.');
+          lines.push('Mình sẽ ưu tiên lọc sản phẩm không vượt mức này, trừ khi bạn yêu cầu khác.');
         }
 
         lines.push('');
@@ -2397,7 +2433,6 @@ if ($aiChatEmail !== '' && $pdo !== null) {
               messages = parsed;
             }
           }
-        }
         }
       } catch (error) {
       }

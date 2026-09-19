@@ -18,6 +18,9 @@ class HomeController {
     private const DIAMOND_THRESHOLD = 1500;
     private const AI_CHAT_CACHE_TTL = 604800;
     private const AI_CHAT_CACHE_MAX_ITEMS = 300;
+    // Bump when retrieval/filtering or answer-grounding rules change so old
+    // answers cannot survive a chatbot fix.
+    private const AI_CHAT_CACHE_VERSION = 'catalog-grounding-v5';
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -39,7 +42,7 @@ class HomeController {
     private function normalizeAiChatCacheKey(string $message, string $currentProductId = ''): string {
         $normalized = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
         $normalized = preg_replace('/\s+/u', ' ', trim($normalized)) ?? trim($normalized);
-        return hash('sha256', $normalized . '|prod:' . $currentProductId);
+        return hash('sha256', self::AI_CHAT_CACHE_VERSION . '|' . $normalized . '|prod:' . $currentProductId);
     }
 
     private function loadAiChatCache(): array {
@@ -1392,6 +1395,11 @@ class HomeController {
 
     private function extractIngredientSource(array $product): string {
         $candidates = [
+            // Mongo catalog uses these canonical fields. Keep the legacy aliases
+            // below for records already normalized by SanPham.
+            $product['thanh_phan_full'] ?? null,
+            $product['thanh_phan_sach'] ?? null,
+            $product['thanh_phan'] ?? null,
             $product['thanh_phan_day_du'] ?? null,
             $product['thanh_phan_chinh'] ?? null,
             $product['thanh_phan_clean'] ?? null,
@@ -1517,9 +1525,395 @@ class HomeController {
         return array_values($unique);
     }
 
+    private function normalizeAiProductText(string $text): string {
+        $text = function_exists('mb_strtolower') ? mb_strtolower($text, 'UTF-8') : strtolower($text);
+        $text = preg_replace('/\s+/u', ' ', trim($text)) ?? trim($text);
+        return $text;
+    }
+
+    private function isExplicitNonFacialAiRequest(string $normalizedMessage): bool {
+        return preg_match(
+            '/son|môi|moi|trang điểm|trang diem|makeup|phấn|phan|má hồng|ma hong|kem nền|kem nen|cushion|mascara|dưỡng thể|duong the|body|sữa tắm|sua tam|dầu gội|dau goi|dầu xả|dau xa|tóc|toc|khử mùi|khu mui|lăn nách|lan nach/u',
+            $normalizedMessage
+        ) === 1;
+    }
+
+    private function isNonFacialAiProduct(array $product): bool {
+        $text = $this->normalizeAiProductText(implode(' ', [
+            (string)($product['name'] ?? $product['ten_san_pham'] ?? ''),
+            (string)($product['category'] ?? $product['loai_san_pham'] ?? $product['danh_muc'] ?? ''),
+        ]));
+
+        return preg_match(
+            '/\bson\b|son kem|son thỏi|son thoi|son dưỡng môi|son duong moi|má hồng|ma hong|phấn|phan|trang điểm|trang diem|makeup|che khuyết điểm|che khuyet diem|kem nền|kem nen|cushion|mascara|dưỡng thể|duong the|body|sữa tắm|sua tam|dầu gội|dau goi|dầu xả|dau xa|tóc|toc|khử mùi|khu mui|lăn nách|lan nach|trắng răng|trang rang|kem đánh răng|kem danh rang|nước súc miệng|nuoc suc mieng|nước hoa|nuoc hoa|parfum/u',
+            $text
+        ) === 1;
+    }
+
+    private function hasRoutineCategoryCoverage(array $products): bool {
+        $required = [
+            'remover' => false,
+            'cleanser' => false,
+            'toner' => false,
+            'treatment' => false,
+            'moisturizer' => false,
+            'sunscreen' => false,
+        ];
+
+        foreach ($products as $product) {
+            if (!is_array($product) || $this->isNonFacialAiProduct($product)) {
+                continue;
+            }
+            $text = $this->normalizeAiProductText(implode(' ', [
+                (string)($product['name'] ?? $product['ten_san_pham'] ?? ''),
+                (string)($product['category'] ?? $product['loai_san_pham'] ?? $product['danh_muc'] ?? ''),
+            ]));
+            if (preg_match('/tẩy trang|tay trang|micellar|cleansing water|cleansing oil|cleansing balm/u', $text)) {
+                $required['remover'] = true;
+            } elseif (preg_match('/sữa rửa mặt|sua rua mat|rửa mặt|rua mat|cleanser|face wash|foaming wash|cleansing foam/u', $text)) {
+                $required['cleanser'] = true;
+            } elseif (preg_match('/toner|nước cân bằng|nuoc can bang|nước hoa hồng|nuoc hoa hong/u', $text)) {
+                $required['toner'] = true;
+            } elseif (preg_match('/serum|tinh chất|tinh chat|essence|ampoule|retinol|tretinoin|bha|aha|niacinamide|salicylic|benzoyl/u', $text)) {
+                $required['treatment'] = true;
+            } elseif (preg_match('/chống nắng|chong nang|kem chống nắng|sunscreen|sunblock|spf/u', $text)) {
+                $required['sunscreen'] = true;
+            } elseif (preg_match('/dưỡng ẩm|duong am|kem dưỡng|kem duong|phục hồi|phuc hoi|moisturizer|face cream|gel dưỡng|gel duong|emulsion/u', $text)) {
+                $required['moisturizer'] = true;
+            }
+        }
+
+        return !in_array(false, $required, true);
+    }
+
+    private function isAiProductDiscoveryRequest(string $message): bool {
+        $normalized = $this->normalizeAiProductText($message);
+        if ($this->isAiProductAdviceQuestion($normalized)) {
+            return false;
+        }
+        $hasProductSignal = preg_match(
+            '/sản phẩm|san pham|sản phảm|chai|lọ|lo|serum|toner|kem dưỡng|kem duong|sữa rửa mặt|sua rua mat|tẩy trang|tay trang|chống nắng|chong nang/u',
+            $normalized
+        ) === 1;
+        $hasRecommendationSignal = preg_match(
+            '/gợi ý|gợi|goi y|tìm|tim|kiếm|kiem|mua|nên mua|nen mua|đề xuất|de xuat|cho tôi|cho toi|cho tui|cho mình|cho minh|cho em|phù hợp|phu hop/u',
+            $normalized
+        ) === 1;
+        return $hasProductSignal && $hasRecommendationSignal;
+    }
+
+    private function isAiRoutineRequest(string $message): bool {
+        $normalized = $this->normalizeAiProductText($message);
+        return preg_match(
+            '/routine|rountine|chu trình|chu trinh|quy trình|quy trinh|skincare|dưỡng da|duong da|các bước|cac buoc|sáng tối|sang toi|buổi sáng|buoi sang|buổi tối|buoi toi|combo dưỡng|combo duong|bộ dưỡng|bo duong/u',
+            $normalized
+        ) === 1;
+    }
+
+    private function detectAiRequestedProductCategory(string $message): string {
+        $normalized = $this->normalizeAiProductText($message);
+        $categories = [
+            'cleanser' => '/sữa rửa mặt|sua rua mat|rửa mặt|rua mat|cleanser|face wash|foaming wash/u',
+            'remover' => '/tẩy trang|tay trang|micellar|cleansing water|cleansing oil|cleansing balm/u',
+            'toner' => '/toner|nước cân bằng|nuoc can bang|nước hoa hồng|nuoc hoa hong/u',
+            'sunscreen' => '/kem chống nắng|kem chong nang|chống nắng|chong nang|sunscreen|sunblock|kcn/u',
+            'moisturizer' => '/kem dưỡng|kem duong|dưỡng ẩm|duong am|moisturizer|face cream|gel dưỡng|gel duong/u',
+            'serum' => '/serum|tinh chất|tinh chat|essence|ampoule/u',
+            'spot_treatment' => '/trị mụn|tri mun|chấm mụn|cham mun|kem mụn|kem mun|spot treatment/u',
+        ];
+
+        foreach ($categories as $category => $pattern) {
+            if (preg_match($pattern, $normalized) === 1) {
+                return $category;
+            }
+        }
+
+        return '';
+    }
+
+    private function aiProductMatchesRequestedCategory(array $product, string $category): bool {
+        if ($category === '') {
+            return true;
+        }
+
+        $name = $this->normalizeAiProductText((string)($product['name'] ?? $product['ten_san_pham'] ?? ''));
+        $productCategory = $this->normalizeAiProductText((string)(
+            $product['category'] ?? $product['loai_san_pham'] ?? $product['danh_muc_day_du'] ?? $product['danh_muc'] ?? ''
+        ));
+        $text = trim($name . ' ' . $productCategory);
+
+        if ($this->isNonFacialAiProduct($product)) {
+            return false;
+        }
+
+        $patterns = [
+            'cleanser' => '/sữa rửa mặt|sua rua mat|rửa mặt|rua mat|cleanser|face wash|foaming wash|cleansing foam/u',
+            'remover' => '/tẩy trang|tay trang|micellar|cleansing water|cleansing oil|cleansing balm/u',
+            'toner' => '/toner|nước cân bằng|nuoc can bang|nước hoa hồng|nuoc hoa hong/u',
+            'sunscreen' => '/chống nắng|chong nang|sunscreen|sunblock|spf/u',
+            'moisturizer' => '/kem dưỡng|kem duong|dưỡng ẩm|duong am|moisturizer|face cream|gel dưỡng|gel duong|emulsion/u',
+            'serum' => '/serum|tinh chất|tinh chat|essence|ampoule/u',
+            'spot_treatment' => '/trị mụn|tri mun|chấm mụn|cham mun|kem mụn|kem mun|spot treatment/u',
+        ];
+
+        if (!isset($patterns[$category])) {
+            return false;
+        }
+
+        // `loai_san_pham` is the catalog's leaf category. When it exists,
+        // trust it over words in a combo title (for example a sunscreen serum
+        // or a skincare set whose name contains several product types).
+        if ($productCategory !== '' && preg_match($patterns[$category], $productCategory) !== 1) {
+            return false;
+        }
+        if ($productCategory === '' && preg_match($patterns[$category], $name) !== 1) {
+            return false;
+        }
+
+        // Không lấy serum chống nắng làm serum điều trị, hay combo nhiều bước
+        // làm sản phẩm đơn lẻ khi người dùng đã chỉ rõ một loại.
+        if ($category === 'serum' && preg_match('/chống nắng|chong nang|sunscreen|sunblock/u', $productCategory) === 1) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isAiProductAdviceQuestion(string $normalizedMessage): bool {
+        $hasAdviceSignal = preg_match(
+            '/\b(?:có nên|co nen|có cần|co can)\b.{0,60}\b(?:mua|dùng|dung|bắt đầu|bat dau)\b/u',
+            $normalizedMessage
+        ) === 1;
+        $hasExplicitSearchSignal = preg_match(
+            '/\b(?:tìm|tim|kiếm|kiem|gợi ý|goi y|đề xuất|de xuat|cho tôi|cho toi|cho tui|cho mình|cho minh|cho em)\b/u',
+            $normalizedMessage
+        ) === 1;
+        return $hasAdviceSignal && !$hasExplicitSearchSignal;
+    }
+
+    private function requestedAiIngredients(string $message): array {
+        $normalized = $this->normalizeAiProductText($message);
+        $requested = [];
+        $groups = [
+            'retinol' => ['retinol', 'retinoid', 'retinal', 'vitamin a'],
+            'vitamin c' => ['vitamin c', 'vit c', 'ascorbic', 'ascorbyl'],
+            'niacinamide' => ['niacinamide', 'vitamin b3'],
+            'bha' => ['bha', 'salicylic acid', 'salicylic'],
+            'aha' => ['aha', 'glycolic acid', 'glycolic', 'lactic acid', 'lactic'],
+            'ceramide' => ['ceramide'],
+            'hyaluronic acid' => ['hyaluronic acid', 'hyaluronic'],
+        ];
+        foreach ($groups as $name => $aliases) {
+            foreach ($aliases as $alias) {
+                if (str_contains($normalized, $alias)) {
+                    $requested[] = $name;
+                    break;
+                }
+            }
+        }
+        return array_values(array_unique($requested));
+    }
+
+    private function hasAiIngredient(array $product, string $ingredient): bool {
+        $product = $this->hydrateAiProductFacts($product);
+        $ingredientFields = [
+            (string)($product['ingredients'] ?? ''),
+            (string)($product['thanh_phan_chinh'] ?? ''),
+            (string)($product['thanh_phan_day_du'] ?? ''),
+            (string)($product['thanh_phan_full'] ?? ''),
+            (string)($product['thanh_phan_sach'] ?? ''),
+            (string)($product['thanh_phan'] ?? ''),
+            (string)($product['ingredient_list'] ?? ''),
+        ];
+        $ingredientText = trim(implode(' ', $ingredientFields));
+        if ($ingredientText === '') {
+            $ingredientText = (string)($product['summary'] ?? '');
+        }
+        $text = $this->normalizeAiProductText(implode(' ', [
+            (string)($product['name'] ?? $product['ten_san_pham'] ?? ''),
+            $ingredientText,
+        ]));
+        $aliases = [
+            'retinol' => ['retinol', 'retinoid', 'retinal', 'vitamin a'],
+            'vitamin c' => ['vitamin c', 'vit c', 'ascorbic', 'ascorbyl'],
+            'niacinamide' => ['niacinamide', 'vitamin b3'],
+            'bha' => ['bha', 'salicylic acid', 'salicylic'],
+            'aha' => ['aha', 'glycolic acid', 'glycolic', 'lactic acid', 'lactic'],
+            'ceramide' => ['ceramide'],
+            'hyaluronic acid' => ['hyaluronic acid', 'hyaluronic'],
+        ];
+        foreach ($aliases[$ingredient] ?? [$ingredient] as $alias) {
+            if (str_contains($text, $alias)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function hydrateAiProductFacts(array $product): array {
+        $productId = trim((string)($product['id'] ?? $product['product_id'] ?? ''));
+        if ($productId === '' || !isset($this->model) || !method_exists($this->model, 'findById')) {
+            return $product;
+        }
+
+        try {
+            $detail = $this->model->findById($productId, true);
+            if (!is_array($detail) || empty($detail)) {
+                return $product;
+            }
+
+            return array_merge($product, [
+                'name' => trim((string)($detail['ten_san_pham'] ?? $product['name'] ?? '')),
+                'category' => trim((string)($detail['loai_san_pham'] ?? $detail['danh_muc_day_du'] ?? $product['category'] ?? '')),
+                'loai_san_pham' => trim((string)($detail['loai_san_pham'] ?? $detail['danh_muc_day_du'] ?? $product['loai_san_pham'] ?? '')),
+                'ingredients' => $this->extractIngredientSource($detail),
+                'thanh_phan' => trim((string)($detail['thanh_phan'] ?? '')),
+                'thanh_phan_full' => trim((string)($detail['thanh_phan_full'] ?? '')),
+                'thanh_phan_sach' => trim((string)($detail['thanh_phan_sach'] ?? '')),
+                'thanh_phan_chinh' => trim((string)($detail['thanh_phan_chinh'] ?? '')),
+                'thanh_phan_day_du' => trim((string)($detail['thanh_phan_day_du'] ?? '')),
+            ]);
+        } catch (Throwable $e) {
+            return $product;
+        }
+    }
+
+    private function isAiRetinolCandidate(array $product): bool {
+        $product = $this->hydrateAiProductFacts($product);
+        $typeText = $this->normalizeAiProductText(implode(' ', [
+            (string)($product['name'] ?? ''),
+            (string)($product['category'] ?? $product['loai_san_pham'] ?? ''),
+        ]));
+        if (preg_match('/sữa rửa mặt|sua rua mat|mặt nạ|mat na|dưỡng thể|duong the|body|tẩy trang|tay trang/u', $typeText) === 1) {
+            return false;
+        }
+
+        $explicitEvidence = $this->normalizeAiProductText(implode(' ', [
+            (string)($product['thanh_phan_full'] ?? ''),
+            (string)($product['thanh_phan_day_du'] ?? ''),
+            (string)($product['thanh_phan_sach'] ?? ''),
+        ]));
+        return preg_match('/\bretinol\b/u', $this->normalizeAiProductText((string)($product['name'] ?? ''))) === 1
+            || preg_match('/\bretinol\b/u', $explicitEvidence) === 1;
+    }
+
+    private function aiProductContainsAvoidedIngredient(array $product, array $avoidIngredients): bool {
+        if (empty($avoidIngredients)) {
+            return false;
+        }
+
+        $product = $this->hydrateAiProductFacts($product);
+        $text = $this->normalizeAiProductText(implode(' ', [
+            (string)($product['ingredients'] ?? ''),
+            (string)($product['thanh_phan_full'] ?? ''),
+            (string)($product['thanh_phan_day_du'] ?? ''),
+            (string)($product['thanh_phan_sach'] ?? ''),
+            (string)($product['thanh_phan'] ?? ''),
+        ]));
+
+        foreach ($avoidIngredients as $avoid) {
+            $normalizedAvoid = $this->normalizeAiProductText((string)$avoid);
+            if ($normalizedAvoid === '' || str_contains($normalizedAvoid, 'không có') || str_contains($normalizedAvoid, 'khong co')) {
+                continue;
+            }
+
+            if (preg_match('/\balcohol\b|ethanol|alcohol denat|isopropyl alcohol/u', $normalizedAvoid)) {
+                if (preg_match('/(?:^|[,;\s])(?:alcohol(?:\s|[,;.\)]|$)|alcohol denat|ethanol\b|sd alcohol|isopropyl alcohol)/u', $text)) {
+                    return true;
+                }
+                continue;
+            }
+
+            $aliases = [$normalizedAvoid];
+            if (str_contains($normalizedAvoid, 'essential oil') || str_contains($normalizedAvoid, 'tinh dau')) {
+                $aliases = ['essential oil', 'lavender oil', 'tea tree oil', 'eucalyptus oil', 'peppermint oil', 'rosemary oil', 'citrus oil', 'lemon oil', 'orange oil', 'ylang ylang'];
+            }
+            foreach ($aliases as $alias) {
+                if ($alias !== '' && str_contains($text, $alias)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function filterAiProductsForProfile(array $products, array $profile): array {
+        $avoidIngredients = is_array($profile['avoid_ingredients'] ?? null) ? $profile['avoid_ingredients'] : [];
+        if (empty($avoidIngredients)) {
+            return array_values($products);
+        }
+
+        return array_values(array_filter($products, function ($product) use ($avoidIngredients): bool {
+            return is_array($product) && !$this->aiProductContainsAvoidedIngredient($product, $avoidIngredients);
+        }));
+    }
+
+    private function hasAmbiguousAiProductFormula(array $product): bool {
+        $text = $this->normalizeAiProductText(implode(' ', [
+            (string)($product['ingredients'] ?? ''),
+            (string)($product['thanh_phan_full'] ?? ''),
+            (string)($product['thanh_phan_sach'] ?? ''),
+            (string)($product['thanh_phan'] ?? ''),
+        ]));
+
+        return preg_match(
+            '/(?:^|\s)[2-9]\.\s+(?:kem|nước|serum|toner|sữa|gel|mặt nạ|dưỡng|tinh chất|dung dịch|combo)\b/u',
+            $text
+        ) === 1;
+    }
+
+    private function filterAiProductsForMessage(string $message, array $products): array {
+        $normalizedMessage = $this->normalizeAiProductText($message);
+        if ($this->isExplicitNonFacialAiRequest($normalizedMessage)) {
+            return array_values($products);
+        }
+
+        $filtered = [];
+        $requestedCategory = $this->isAiProductDiscoveryRequest($message)
+            ? $this->detectAiRequestedProductCategory($message)
+            : '';
+        foreach ($products as $product) {
+            if (!is_array($product) || $this->isNonFacialAiProduct($product)) {
+                continue;
+            }
+            if ($requestedCategory !== '' && !$this->aiProductMatchesRequestedCategory($product, $requestedCategory)) {
+                continue;
+            }
+            $filtered[] = $product;
+        }
+
+        if ($this->isAiProductDiscoveryRequest($message)) {
+            $requiredIngredients = $this->requestedAiIngredients($message);
+            if (!empty($requiredIngredients)) {
+                $filtered = array_values(array_filter($filtered, function (array $product) use ($requiredIngredients): bool {
+                    foreach ($requiredIngredients as $ingredient) {
+                        if (!$this->hasAiIngredient($product, $ingredient)) {
+                            return false;
+                        }
+                        if ($ingredient === 'retinol' && !$this->isAiRetinolCandidate($product)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }));
+            }
+        }
+
+        return array_values($filtered);
+    }
+
     private function buildAiRelevantProducts(string $message, int $limit = 4): array {
         $normalizedMessage = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
         $queries = [$message];
+        $allowNonFacial = $this->isExplicitNonFacialAiRequest($this->normalizeAiProductText($message));
+        $requestedCategory = $this->isAiProductDiscoveryRequest($message)
+            ? $this->detectAiRequestedProductCategory($message)
+            : '';
+        $requestedIngredients = $this->requestedAiIngredients($message);
+        $strictIngredientDiscovery = !$allowNonFacial
+            && $this->isAiProductDiscoveryRequest($message)
+            && !empty($requestedIngredients);
 
         $keywordGroups = [
             ['da dầu mụn', 'mụn', 'acne', 'oil control', 'salicylic acid', 'niacinamide'],
@@ -1578,7 +1972,7 @@ class HomeController {
         $products = [];
         $seen = [];
 
-        $appendProduct = function (string $productId) use (&$products, &$seen, $limit): void {
+        $appendProduct = function (string $productId) use (&$products, &$seen, $limit, $allowNonFacial, $requestedCategory, $strictIngredientDiscovery, $requestedIngredients): void {
             if ($productId === '' || isset($seen[$productId]) || count($products) >= $limit) {
                 return;
             }
@@ -1597,25 +1991,66 @@ class HomeController {
                 }
             }
 
-            $seen[$productId] = true;
-            $products[] = [
+            $category = trim((string)($detail['loai_san_pham'] ?? $detail['danh_muc_day_du'] ?? ''));
+            $skinType = trim((string)($detail['loai_da'] ?? ''));
+            $ingredients = $this->extractIngredientSource($detail);
+            $candidate = [
                 'id' => (string)($detail['ma_san_pham'] ?? $productId),
                 'name' => $name,
                 'brand' => trim((string)($detail['thuong_hieu'] ?? '')),
                 'price' => (int)($detail['gia_ban'] ?? 0),
+                'market_price' => (int)($detail['gia_thi_truong'] ?? 0),
+                'gia_thi_truong' => (int)($detail['gia_thi_truong'] ?? 0),
+                'discount_percent' => (float)($detail['phan_tram_giam'] ?? 0),
+                'phan_tram_giam' => (float)($detail['phan_tram_giam'] ?? 0),
+                'savings' => (int)($detail['tien_tiet_kiem'] ?? 0),
+                'tien_tiet_kiem' => (int)($detail['tien_tiet_kiem'] ?? 0),
                 'image_url' => resolve_image_url((string)($detail['link_hinh_anh'] ?? $detail['hinh_anh'] ?? '')),
                 'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode((string)($detail['ma_san_pham'] ?? $productId)),
                 'description' => trim((string)($detail['mo_ta'] ?? '')),
-                'ingredients' => $this->extractIngredientSource($detail),
+                'ingredients' => $ingredients,
+                'summary' => $ingredients,
+                'category' => $category,
+                'loai_san_pham' => $category,
+                'skin_type' => $skinType,
+                'loai_da' => $skinType,
+                'thanh_phan_chinh' => trim((string)($detail['thanh_phan_chinh'] ?? '')),
+                'thanh_phan_day_du' => trim((string)($detail['thanh_phan_day_du'] ?? '')),
+                'thanh_phan_full' => trim((string)($detail['thanh_phan_full'] ?? '')),
+                'thanh_phan_sach' => trim((string)($detail['thanh_phan_sach'] ?? '')),
+                'thanh_phan' => trim((string)($detail['thanh_phan'] ?? '')),
             ];
+
+            if (!$allowNonFacial && $this->isNonFacialAiProduct($candidate)) {
+                return;
+            }
+
+            if ($requestedCategory !== '' && !$this->aiProductMatchesRequestedCategory($candidate, $requestedCategory)) {
+                return;
+            }
+
+            if ($strictIngredientDiscovery) {
+                foreach ($requestedIngredients as $ingredient) {
+                    if (!$this->hasAiIngredient($candidate, $ingredient) || $this->hasAmbiguousAiProductFormula($candidate)) {
+                        return;
+                    }
+                    if ($ingredient === 'retinol' && !$this->isAiRetinolCandidate($candidate)) {
+                        return;
+                    }
+                }
+            }
+
+            $seen[$productId] = true;
+            $products[] = $candidate;
         };
 
+        $searchLimit = $strictIngredientDiscovery ? max(20, $limit * 4) : $limit;
         foreach (array_unique(array_filter(array_map('trim', $queries))) as $query) {
             if (count($products) >= $limit) {
                 break;
             }
 
-            foreach ($this->model->searchSuggestions($query, $limit, true) as $suggestion) {
+            foreach ($this->model->searchSuggestions($query, $searchLimit, true) as $suggestion) {
                 $appendProduct(trim((string)($suggestion['id'] ?? '')));
             }
 
@@ -1623,10 +2058,23 @@ class HomeController {
                 break;
             }
 
-            foreach ($this->model->searchLive($query, $limit, true) as $item) {
+            foreach ($this->model->searchLive($query, $searchLimit, true) as $item) {
                 $appendProduct(trim((string)($item['ma_san_pham'] ?? $item['id'] ?? '')));
                 if (count($products) >= $limit) {
                     break;
+                }
+            }
+
+            // searchProducts supports the canonical Mongo ingredient fields and
+            // gives strict ingredient requests a larger candidate pool than the
+            // name-sorted autocomplete list.
+            if ($strictIngredientDiscovery && count($products) < $limit && method_exists($this->model, 'searchProducts')) {
+                $discovery = $this->model->searchProducts(['keyword' => $query], 'popular', 1, 48);
+                foreach (($discovery['items'] ?? []) as $item) {
+                    $appendProduct(trim((string)($item['ma_san_pham'] ?? $item['id'] ?? '')));
+                    if (count($products) >= $limit) {
+                        break;
+                    }
                 }
             }
         }
@@ -1640,7 +2088,7 @@ class HomeController {
             }
         }
 
-        return array_slice($products, 0, $limit);
+        return array_slice($this->filterAiProductsForMessage($message, $products), 0, $limit);
     }
 
     /**
@@ -1664,20 +2112,214 @@ class HomeController {
                 'name' => trim((string)($r['ten_san_pham'] ?? $r['name'] ?? '')),
                 'brand' => trim((string)($r['thuong_hieu'] ?? $r['brand'] ?? '')),
                 'price' => (int)($r['gia_ban'] ?? $r['price'] ?? 0),
+                'market_price' => (int)($r['gia_thi_truong'] ?? $r['market_price'] ?? $r['original_price'] ?? 0),
+                'gia_thi_truong' => (int)($r['gia_thi_truong'] ?? $r['market_price'] ?? $r['original_price'] ?? 0),
+                'discount_percent' => (float)($r['phan_tram_giam'] ?? $r['discount_percent'] ?? $r['discount_pct'] ?? 0),
+                'phan_tram_giam' => (float)($r['phan_tram_giam'] ?? $r['discount_percent'] ?? $r['discount_pct'] ?? 0),
+                'savings' => (int)($r['tien_tiet_kiem'] ?? $r['savings'] ?? 0),
+                'tien_tiet_kiem' => (int)($r['tien_tiet_kiem'] ?? $r['savings'] ?? 0),
                 'image_url' => resolve_image_url((string)($r['image_url'] ?? $r['link_hinh_anh'] ?? '')),
                 'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id),
                 'description' => trim((string)($r['llm_explanation'] ?? $r['description'] ?? '')),
-                'ingredients' => '',
+                'ingredients' => trim((string)($r['ingredients'] ?? $r['thanh_phan_full'] ?? $r['thanh_phan_day_du'] ?? '')),
+                'summary' => trim((string)($r['summary'] ?? $r['thanh_phan_chinh'] ?? '')),
+                'thanh_phan_full' => trim((string)($r['thanh_phan_full'] ?? $r['thanh_phan_day_du'] ?? '')),
+                'thanh_phan_sach' => trim((string)($r['thanh_phan_sach'] ?? '')),
+                'thanh_phan' => trim((string)($r['thanh_phan'] ?? '')),
+                'category' => trim((string)($r['loai_san_pham'] ?? $r['category'] ?? '')),
+                'loai_san_pham' => trim((string)($r['loai_san_pham'] ?? $r['category'] ?? '')),
+                'skin_type' => trim((string)($r['loai_da'] ?? $r['skin_type'] ?? '')),
+                'loai_da' => trim((string)($r['loai_da'] ?? $r['skin_type'] ?? '')),
             ];
         }
 
         return $out;
     }
 
+    private function mapContentBasedProductsForChatWidget(array $rows): array {
+        $out = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $id = trim((string)($row['id'] ?? $row['ma_san_pham'] ?? ''));
+            if ($id === '') {
+                continue;
+            }
+
+            $ingredients = trim((string)($row['thanh_phan_day_du'] ?? $row['thanh_phan_chinh'] ?? ''));
+            $out[] = [
+                'id' => $id,
+                'name' => trim((string)($row['ten_san_pham'] ?? '')),
+                'brand' => trim((string)($row['thuong_hieu'] ?? '')),
+                'price' => (int)($row['gia_ban'] ?? 0),
+                'market_price' => (int)($row['gia_thi_truong'] ?? 0),
+                'gia_thi_truong' => (int)($row['gia_thi_truong'] ?? 0),
+                'discount_percent' => (float)($row['phan_tram_giam'] ?? 0),
+                'phan_tram_giam' => (float)($row['phan_tram_giam'] ?? 0),
+                'savings' => (int)($row['tien_tiet_kiem'] ?? 0),
+                'tien_tiet_kiem' => (int)($row['tien_tiet_kiem'] ?? 0),
+                'image_url' => resolve_image_url((string)($row['link_hinh_anh'] ?? '')),
+                'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id),
+                'description' => trim((string)($row['mo_ta'] ?? '')),
+                'ingredients' => $ingredients,
+                'summary' => $ingredients !== '' ? $ingredients : implode(' ', array_slice((array)($row['key_ingredients'] ?? []), 0, 3)),
+                'thanh_phan_full' => trim((string)($row['thanh_phan_day_du'] ?? '')),
+                'thanh_phan_sach' => '',
+                'thanh_phan' => '',
+                'category' => trim((string)($row['danh_muc_day_du'] ?? $row['danh_muc'] ?? $row['loai_san_pham'] ?? '')),
+                'loai_san_pham' => trim((string)($row['loai_san_pham'] ?? $row['danh_muc_day_du'] ?? '')),
+                'skin_type' => '',
+                'loai_da' => '',
+            ];
+        }
+
+        return $out;
+    }
+
+    private function buildAiRoutineChatProducts(string $message, array $profile): array {
+        $concerns = is_array($profile['concerns'] ?? null) ? $profile['concerns'] : [];
+        $normalizedMessage = $this->normalizeAiProductText($message);
+        if (preg_match('/mụn|mun|acne|viêm|viem/u', $normalizedMessage) === 1) {
+            $concerns[] = 'mụn';
+        }
+
+        $hasAcneConcern = preg_match('/mụn|mun|acne|viêm|viem/iu', implode(' ', array_map('strval', $concerns))) === 1;
+
+        $avoidIngredients = $profile['avoid_ingredients'] ?? [];
+        if (is_array($avoidIngredients)) {
+            $avoidIngredients = implode(', ', array_filter(array_map('strval', $avoidIngredients)));
+        }
+
+        try {
+            $rows = $this->goiYModel->recommendFromPost([
+                'is_routine' => true,
+                'skin_type' => trim((string)($profile['skin_type'] ?? '')),
+                'concerns' => array_values(array_unique(array_filter(array_map('strval', $concerns)))),
+                'avoid_ingredients' => (string)$avoidIngredients,
+                'budget' => (string)($profile['budget'] ?? ''),
+            ], $hasAcneConcern ? 7 : 6);
+
+            return $this->mapContentBasedProductsForChatWidget($rows);
+        } catch (Throwable $e) {
+            error_log('AI routine chat catalog fallback error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function aiRoutineChatStep(array $product): string {
+        $text = $this->normalizeAiProductText(implode(' ', [
+            (string)($product['name'] ?? ''),
+            (string)($product['category'] ?? $product['loai_san_pham'] ?? ''),
+        ]));
+
+        if (preg_match('/tẩy trang|tay trang|micellar|cleansing water|cleansing oil|cleansing balm/u', $text) === 1) {
+            return 'remover';
+        }
+        if (preg_match('/sữa rửa mặt|sua rua mat|rửa mặt|rua mat|cleanser|face wash|foaming wash|cleansing foam/u', $text) === 1) {
+            return 'cleanser';
+        }
+        if (preg_match('/toner|nước cân bằng|nuoc can bang|nước hoa hồng|nuoc hoa hong/u', $text) === 1) {
+            return 'toner';
+        }
+        if (preg_match('/trị mụn|tri mun|chấm mụn|cham mun|kem mụn|kem mun|spot treatment/u', $text) === 1) {
+            return 'spot_treatment';
+        }
+        if (preg_match('/chống nắng|chong nang|sunscreen|sunblock|spf/u', $text) === 1) {
+            return 'sunscreen';
+        }
+        if (preg_match('/serum|tinh chất|tinh chat|essence|ampoule|retinol|tretinoin|bha|aha|niacinamide|salicylic|benzoyl/u', $text) === 1) {
+            return 'treatment';
+        }
+        if (preg_match('/kem dưỡng|kem duong|dưỡng ẩm|duong am|moisturizer|face cream|gel dưỡng|gel duong|emulsion|phục hồi|phuc hoi/u', $text) === 1) {
+            return 'moisturizer';
+        }
+
+        return 'other';
+    }
+
+    private function buildAiRoutineChatAnswer(array $profile, array $products): string {
+        $byStep = [];
+        foreach ($products as $product) {
+            $step = $this->aiRoutineChatStep($product);
+            if ($step !== 'other' && !isset($byStep[$step])) {
+                $byStep[$step] = $product;
+            }
+        }
+
+        $formatProduct = static function (?array $product): string {
+            if (!$product) {
+                return 'Chưa có sản phẩm phù hợp trong catalog cho bước này.';
+            }
+            $name = trim((string)($product['name'] ?? 'Sản phẩm phù hợp'));
+            $url = trim((string)($product['detail_url'] ?? ''));
+            return $url !== '' ? '[' . $name . '](' . $url . ')' : $name;
+        };
+
+        $lines = [];
+        $skinType = trim((string)($profile['skin_type'] ?? ''));
+        $lines[] = $skinType !== ''
+            ? 'Mình gợi ý routine sáng/tối tối giản cho ' . $skinType . ', dựa trên sản phẩm đang có trong catalog:'
+            : 'Mình gợi ý routine sáng/tối tối giản dựa trên sản phẩm đang có trong catalog:';
+        $lines[] = '';
+        $lines[] = '**Buổi sáng**';
+        $lines[] = '1. Sữa rửa mặt: ' . $formatProduct($byStep['cleanser'] ?? null);
+        $lines[] = '2. Kem dưỡng: ' . $formatProduct($byStep['moisturizer'] ?? null);
+        $lines[] = '3. Kem chống nắng: ' . $formatProduct($byStep['sunscreen'] ?? null);
+        $lines[] = '';
+        $lines[] = '**Buổi tối**';
+        $lines[] = '1. Tẩy trang: ' . $formatProduct($byStep['remover'] ?? null);
+        $lines[] = '2. Sữa rửa mặt: ' . $formatProduct($byStep['cleanser'] ?? null);
+        $lines[] = '3. Toner: ' . $formatProduct($byStep['toner'] ?? null);
+        $lines[] = '4. Serum/đặc trị: ' . $formatProduct($byStep['treatment'] ?? null);
+        $lines[] = '5. Kem dưỡng: ' . $formatProduct($byStep['moisturizer'] ?? null);
+        if (isset($byStep['spot_treatment'])) {
+            $lines[] = '6. Kem đặc trị mụn (chỉ dùng khi cần): ' . $formatProduct($byStep['spot_treatment']);
+        }
+
+        $total = 0;
+        foreach ($products as $product) {
+            $total += max(0, (int)($product['price'] ?? 0));
+        }
+        $totalLabel = number_format($total, 0, ',', '.');
+        $budget = (int)($profile['budget'] ?? 0);
+        if ($budget > 0) {
+            $budgetLabel = number_format($budget, 0, ',', '.');
+            $budgetNote = $total <= $budget ? 'trong ngân sách ' . $budgetLabel . ' VNĐ' : 'cao hơn ngân sách tham chiếu ' . $budgetLabel . ' VNĐ';
+            $lines[] = '';
+            $lines[] = 'Tổng chi phí ước tính: ' . $totalLabel . ' VNĐ (' . $budgetNote . ').';
+        } else {
+            $lines[] = '';
+            $lines[] = 'Tổng chi phí ước tính: ' . $totalLabel . ' VNĐ.';
+        }
+        $lines[] = '';
+        $lines[] = 'Buổi sáng luôn kết thúc bằng kem chống nắng. Buổi tối không cần dùng tất cả treatment cùng lúc; nếu da châm chích, hãy giảm tần suất và ưu tiên dưỡng ẩm.';
+
+        return implode("\n", $lines);
+    }
+
     private function shouldAttachAiProducts(string $message, array $conflicts = []): bool {
         $normalized = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
 
+        if ($this->isAiProductAdviceQuestion($normalized)) {
+            return false;
+        }
+
         if (!empty($conflicts) && preg_match('/gio hang|giỏ hàng|routine|xung dot|xung đột|ket hop|kết hợp/u', $normalized)) {
+            return true;
+        }
+
+        $hasRecommendationSignal = preg_match(
+            '/goi y|gợi ý|de xuat|đề xuất|nen mua|nên mua|nen dung|nên dùng|chon giup|chọn giúp|tìm|tim|kiem|kiếm|mua|cho tôi|cho toi|cho tui|cho mình|cho minh|cho em|phù hợp|phu hop|san pham nao|sản phẩm nào|serum nao|kem nao|toner nao|sua rua mat nao|tẩy trang nào|kem chống nắng nào|compare|so sanh|so sánh|dua ra vai san pham|đưa ra vài sản phẩm|chu trình|chu trinh|skincare|routine|bộ dưỡng|bo duong/u',
+            $normalized
+        ) === 1;
+        $hasProductOrIngredientSignal = preg_match(
+            '/sản phẩm|san pham|sản phảm|chai|lọ|lo|serum|toner|kem dưỡng|kem duong|sữa rửa mặt|sua rua mat|tẩy trang|tay trang|chống nắng|chong nang|retinol|retinoid|retinal|vitamin a|vitamin c|ascorbic|ascorbyl|niacinamide|vitamin b3|bha|salicylic|aha|glycolic|lactic|ceramide|hyaluronic/u',
+            $normalized
+        ) === 1;
+
+        if ($hasRecommendationSignal && $hasProductOrIngredientSignal) {
             return true;
         }
 
@@ -1701,6 +2343,13 @@ class HomeController {
         }));
 
         return trim(implode("\n\n", $paragraphs));
+    }
+
+    private function aiAnswerDeniesAvailableProducts(string $answer): bool {
+        return preg_match(
+            '/(?:không\s+(?:tìm thấy|tìm được|tìm ra|có)|chưa\s+(?:tìm thấy|tìm được|tìm ra|có))[^.\n]{0,160}(?:sản phẩm|lựa chọn|món|em này)/iu',
+            $answer
+        ) === 1;
     }
 
     private function buildGenericIngredientSafetyGuidance(): string {
@@ -1893,12 +2542,12 @@ class HomeController {
             return 'cart_conflict';
         }
 
-        if (preg_match('/thanh phan|thành phần|ingredient|retinol|vitamin c|aha|bha|niacinamide|ceramide|treatment/u', $normalized)) {
-            return 'ingredient_analysis';
-        }
-
         if ($this->shouldAttachAiProducts($message)) {
             return 'product_recommendation';
+        }
+
+        if (preg_match('/thanh phan|thành phần|ingredient|retinol|vitamin c|aha|bha|niacinamide|ceramide|treatment/u', $normalized)) {
+            return 'ingredient_analysis';
         }
 
         return 'general';
@@ -1959,6 +2608,7 @@ class HomeController {
                 'Neu co conflict trong gio hang, phai canh bao som o dau cau tra loi.',
                 'Tuyet doi chi su dung cac san pham thuc te trong danh sach `retrieved_products` (ket qua tu Hybrid Search & Reranked thuc te cua cua hang) de dua vao routine hoac de xuat, khong duoc tu bia ra san pham khac ngoai cua hang.',
                 'Khi nguoi dung hoi routine skincare, hay dung chinh cac san pham thich hop trong `retrieved_products` de thiet ke mot chu trinh skincare chi tiet cho ho.',
+                'Neu khach hoi retinol ma ho so da dang mun viem, rat de nhay cam, bong troc/do rat, hay noi ro rang shop co the co san pham retinol nhung chua khuyen mua ngay cho tinh trang hien tai; giai thich ly do bang giong tu van tu nhien, khong noi sai la he thong khong co retinol.',
                 'Khong copy nguyen van mo ta san pham dai dong. Neu can nhac san pham, chi tom tat 1 y chinh ngan gon.',
                 'Neu khong du du lieu, noi ro gioi han thay vi doan.',
                 'Tra loi chi tiet, co cau truc, su dung bullet point va chu trinh ro rang, khong gioi han so doan van.',
@@ -2092,6 +2742,7 @@ class HomeController {
         $user = current_user() ?? [];
         $email = trim((string)($user['email'] ?? ''));
         $profile = $email !== '' ? ($this->buildRecommendationProfile($email) ?? []) : [];
+        $isRoutineRequest = $this->isAiRoutineRequest($message);
 
         if ($this->isGreetingMessage($message)) {
             $payload = [
@@ -2128,8 +2779,9 @@ class HomeController {
         $products = [];
         $seenProductIds = [];
 
-        // 1. Fetch current product first if viewing a product detail page
-        if ($currentProductId !== '') {
+        // 1. Fetch current product first if viewing a product detail page.
+        // Routine requests use a dedicated, category-complete catalog query.
+        if (!$isRoutineRequest && $currentProductId !== '') {
             $detail = $this->model->findById($currentProductId, true);
             if ($detail && is_array($detail)) {
                 $formatted = [
@@ -2137,18 +2789,44 @@ class HomeController {
                     'name' => trim((string)($detail['ten_san_pham'] ?? '')),
                     'brand' => trim((string)($detail['thuong_hieu'] ?? '')),
                     'price' => (int)($detail['gia_ban'] ?? 0),
+                    'market_price' => (int)($detail['gia_thi_truong'] ?? 0),
+                    'gia_thi_truong' => (int)($detail['gia_thi_truong'] ?? 0),
+                    'discount_percent' => (float)($detail['phan_tram_giam'] ?? 0),
+                    'phan_tram_giam' => (float)($detail['phan_tram_giam'] ?? 0),
+                    'savings' => (int)($detail['tien_tiet_kiem'] ?? 0),
+                    'tien_tiet_kiem' => (int)($detail['tien_tiet_kiem'] ?? 0),
                     'image_url' => resolve_image_url((string)($detail['link_hinh_anh'] ?? $detail['hinh_anh'] ?? '')),
                     'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode((string)($detail['ma_san_pham'] ?? $currentProductId)),
                     'description' => trim((string)($detail['mo_ta'] ?? '')),
                     'ingredients' => $this->extractIngredientSource($detail),
+                    'summary' => trim((string)($detail['thanh_phan_chinh'] ?? '')),
+                    'category' => trim((string)($detail['loai_san_pham'] ?? $detail['danh_muc_day_du'] ?? '')),
+                    'loai_san_pham' => trim((string)($detail['loai_san_pham'] ?? $detail['danh_muc_day_du'] ?? '')),
+                    'skin_type' => trim((string)($detail['loai_da'] ?? '')),
+                    'loai_da' => trim((string)($detail['loai_da'] ?? '')),
+                    'thanh_phan_chinh' => trim((string)($detail['thanh_phan_chinh'] ?? '')),
+                    'thanh_phan_day_du' => trim((string)($detail['thanh_phan_day_du'] ?? '')),
+                    'thanh_phan_full' => trim((string)($detail['thanh_phan_full'] ?? '')),
+                    'thanh_phan_sach' => trim((string)($detail['thanh_phan_sach'] ?? '')),
+                    'thanh_phan' => trim((string)($detail['thanh_phan'] ?? '')),
                 ];
                 $products[] = $formatted;
                 $seenProductIds[(string)($detail['ma_san_pham'] ?? $currentProductId)] = true;
             }
         }
 
-        // 2. Fetch relevant products if general recommendations or brand mention or currently viewing a product
-        if ($this->shouldAttachAiProducts($message, $conflicts) || $hasBrandMention || $currentProductId !== '') {
+        // 2. Fetch products. A routine must be assembled from one product per
+        // routine step; free-text search would let a popular category hide the
+        // other required steps.
+        if ($isRoutineRequest) {
+            $products = $this->buildAiRoutineChatProducts($message, $profile);
+            foreach ($products as $routineProduct) {
+                $routineId = (string)($routineProduct['id'] ?? '');
+                if ($routineId !== '') {
+                    $seenProductIds[$routineId] = true;
+                }
+            }
+        } elseif ($this->shouldAttachAiProducts($message, $conflicts) || $hasBrandMention || $currentProductId !== '') {
             $relevant = $this->buildAiRelevantProducts($message, 6);
             foreach ($relevant as $rSp) {
                 $rId = (string)($rSp['id'] ?? '');
@@ -2159,7 +2837,10 @@ class HomeController {
             }
         }
 
-        $products = array_slice($products, 0, 5);
+        $products = array_slice($this->filterAiProductsForProfile(
+            $this->filterAiProductsForMessage($message, $products),
+            $profile
+        ), 0, $isRoutineRequest ? 7 : 5);
 
         $endpoint = $this->getAiChatEndpoint();
 
@@ -2168,6 +2849,22 @@ class HomeController {
             'conversation_id' => $conversationId !== '' ? $conversationId : null,
             'user_email' => $email !== '' ? $email : null,
         ];
+
+        // The Flask service persists the message before this controller
+        // returns the catalog-grounded response. Pass the same routine data
+        // through so reopening a saved conversation cannot resurrect an LLM
+        // product list or total that was not shown to the customer.
+        if ($isRoutineRequest) {
+            $routinePersistProductIds = [];
+            foreach ($products as $routineProduct) {
+                $routineProductId = trim((string)($routineProduct['id'] ?? ''));
+                if ($routineProductId !== '' && !in_array($routineProductId, $routinePersistProductIds, true)) {
+                    $routinePersistProductIds[] = $routineProductId;
+                }
+            }
+            $payload['catalog_persist_answer'] = $this->buildAiRoutineChatAnswer($profile, $products);
+            $payload['catalog_persist_product_ids'] = $routinePersistProductIds;
+        }
 
         $response = $this->postJsonRequest($endpoint, $payload, $this->getAiChatTimeout());
         $answer = '';
@@ -2178,7 +2875,9 @@ class HomeController {
             $answer = $this->trimAiAnswer((string)($decoded['answer'] ?? ''));
             if (is_array($decoded) && !empty($decoded['products']) && is_array($decoded['products'])) {
                 $mapped = $this->mapHybridProductsForChatWidget($decoded['products']);
-                if (!empty($mapped)) {
+                $mapped = $this->filterAiProductsForMessage($message, $mapped);
+                $mapped = $this->filterAiProductsForProfile($mapped, $profile);
+                if (!$isRoutineRequest && !empty($mapped)) {
                     $products = $mapped;
                 }
             }
@@ -2186,13 +2885,33 @@ class HomeController {
             $decoded = json_decode((string)($response['body'] ?? ''), true);
         }
 
-        if ($answer === '') {
+        if ($isRoutineRequest) {
+            // The routine text and its total must be generated from the same
+            // catalog rows shown in the cards, never from an LLM estimate.
+            $answer = $this->buildAiRoutineChatAnswer($profile, $products);
+        } elseif ($answer === '') {
             $answer = 'Tôi đề xuất những sản phẩm này';
         } else {
             $answer = $this->trimAiAnswer($answer);
         }
 
-        $isFallback = ($decoded && isset($decoded['fallback'])) ? (bool)$decoded['fallback'] : ($answer === 'Tôi đề xuất những sản phẩm này');
+        // Do not show a denial together with real products returned by the catalog.
+        // This can happen when an LLM follows an old "no result" phrase from history.
+        if (!empty($products) && $this->aiAnswerDeniesAvailableProducts($answer)) {
+            $answer = $this->buildAiAssistantFallback($message, $conflicts, $products, $profile);
+        }
+
+        // For explicit catalog searches, product cards are the source of
+        // truth. Do not let the LLM mention a different product than the rows
+        // returned by MongoDB (for example an unreturned brand or a wrong
+        // product type); the cards already contain the grounded details.
+        if (!$isRoutineRequest && $this->isAiProductDiscoveryRequest($message) && !empty($products)) {
+            $answer = 'Mình đã tìm thấy các sản phẩm đúng nhóm bạn đang tìm trong catalog. Bạn có thể xem thành phần, giá và link chi tiết ở các thẻ bên dưới.';
+        }
+
+        $isFallback = $isRoutineRequest
+            ? false
+            : (($decoded && isset($decoded['fallback'])) ? (bool)$decoded['fallback'] : ($answer === 'Tôi đề xuất những sản phẩm này'));
         $fallbackReason = '';
         if ($decoded && isset($decoded['fallback_reason']) && $decoded['fallback_reason'] !== '') {
             $fallbackReason = (string)$decoded['fallback_reason'];
@@ -2201,9 +2920,15 @@ class HomeController {
         }
         $fallbackNote = ($decoded && isset($decoded['fallback_note'])) ? (string)$decoded['fallback_note'] : '';
         
-        $pipelineMode = ($decoded && isset($decoded['pipeline_mode'])) ? (string)$decoded['pipeline_mode'] : ($isFallback ? 'Agent -> Fallback' : 'Pipeline');
-        $queryType = ($decoded && isset($decoded['query_type'])) ? (string)$decoded['query_type'] : 'simple single-intent query';
-        $intentMode = ($decoded && isset($decoded['intent_mode'])) ? (string)$decoded['intent_mode'] : 'PRODUCT_INQUIRY';
+        $pipelineMode = $isRoutineRequest
+            ? 'Catalog-grounded routine'
+            : (($decoded && isset($decoded['pipeline_mode'])) ? (string)$decoded['pipeline_mode'] : ($isFallback ? 'Agent -> Fallback' : 'Pipeline'));
+        $queryType = $isRoutineRequest
+            ? 'complex routine query'
+            : (($decoded && isset($decoded['query_type'])) ? (string)$decoded['query_type'] : 'simple single-intent query');
+        $intentMode = $isRoutineRequest
+            ? 'PRODUCT_INQUIRY'
+            : (($decoded && isset($decoded['intent_mode'])) ? (string)$decoded['intent_mode'] : 'PRODUCT_INQUIRY');
         $evalScores = ($decoded && isset($decoded['eval_scores'])) ? $decoded['eval_scores'] : [
             'ar' => 1.0,
             'gr' => 1.0,
@@ -2487,6 +3212,7 @@ class HomeController {
                     $products = [];
                     foreach ($rawProducts as $row) {
                         if (!is_array($row)) continue;
+                        if ($this->isNonFacialAiProduct($row)) continue;
                         $row['id'] = (string)($row['id'] ?? $row['product_id'] ?? $row['ma_san_pham'] ?? '');
                         $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
                         $row['score'] = null;
@@ -2499,7 +3225,7 @@ class HomeController {
                         $products[] = $row;
                     }
 
-                    if (!empty($products)) {
+                    if (!empty($products) && $this->hasRoutineCategoryCoverage($products)) {
                         return [
                             'ok' => true,
                             'source' => $decoded['source'] ?? 'langchain_shared_core',
@@ -2520,11 +3246,13 @@ class HomeController {
                 'budget' => $profile['budget'] ?? null,
                 'gioi_tinh' => $profile['gioi_tinh'] ?? '',
                 'nam_sinh' => $profile['nam_sinh'] ?? '',
+                'is_routine' => true,
             ];
             $fallbackProducts = $this->goiYModel->recommendFromPost($fallbackInput, 12);
             $formattedProducts = [];
             foreach ($fallbackProducts as $p) {
                 if (!is_array($p)) continue;
+                if ($this->isNonFacialAiProduct($p)) continue;
                 $p['id'] = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                 $p['image_url'] = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['image_url'] ?? ''));
                 $p['match_percent'] = null;
@@ -4125,6 +4853,11 @@ class HomeController {
         exit;
     }
 }
+
+
+
+
+
 
 
 

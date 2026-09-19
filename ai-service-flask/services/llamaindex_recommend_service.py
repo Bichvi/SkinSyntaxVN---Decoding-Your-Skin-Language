@@ -117,105 +117,105 @@ class LlamaIndexRecommendService:
         """Load metadata sản phẩm được indexer ghi ra products_meta.json.
 
         Metadata này là phần phụ trợ cho recommendation index. Hàm có cache nội bộ
-        để tránh đọc file lặp lại trong cùng vòng đời Flask service.
-        """
-        if self._meta is not None:
+            để tránh đọc file lặp lại trong cùng vòng đời Flask service.
+            """
+            if self._meta is not None:
+                return self._meta
+            path = RECOMMENDATION_INDEX_DIR / "products_meta.json"
+            if not path.exists():
+                raise RuntimeError("Recommendation product metadata is missing.")
+            self._meta = json.loads(path.read_text(encoding="utf-8"))
             return self._meta
-        path = RECOMMENDATION_INDEX_DIR / "products_meta.json"
-        if not path.exists():
-            raise RuntimeError("Recommendation product metadata is missing.")
-        self._meta = json.loads(path.read_text(encoding="utf-8"))
-        return self._meta
-    # Hàm này giải quyết hồ sơ khách hàng dựa trên user_id hoặc email. Nó tìm kiếm khách hàng trong cơ sở dữ liệu 
-    # MongoDB dựa trên ma_kh hoặc email, và trả về thông tin khách hàng và tài khoản liên quan. 
-    # Nếu không tìm thấy hồ sơ khách hàng, nó sẽ báo lỗi.
-    def _resolve_customer(self, user_id: Any, email: str = "") -> tuple[dict, dict]:
-        """Tìm hồ sơ khách hàng thật từ user_id hoặc email do PHP session gửi sang.
+        # Hàm này giải quyết hồ sơ khách hàng dựa trên user_id hoặc email. Nó tìm kiếm khách hàng trong cơ sở dữ liệu 
+        # MongoDB dựa trên ma_kh hoặc email, và trả về thông tin khách hàng và tài khoản liên quan. 
+        # Nếu không tìm thấy hồ sơ khách hàng, nó sẽ báo lỗi.
+        def _resolve_customer(self, user_id: Any, email: str = "") -> tuple[dict, dict]:
+            """Tìm hồ sơ khách hàng thật từ user_id hoặc email do PHP session gửi sang.
 
-        Website có thể gửi mã từ collection `khach_hang` hoặc `nguoidung`, nên hàm này
-        thử nhiều mapping hợp lệ trước khi báo lỗi. Không tạo hồ sơ giả nếu không tìm thấy.
-        """
-        customer = {}
-        account = {}
-        email = str(email or "").strip()
+            Website có thể gửi mã từ collection `khach_hang` hoặc `nguoidung`, nên hàm này
+            thử nhiều mapping hợp lệ trước khi báo lỗi. Không tạo hồ sơ giả nếu không tìm thấy.
+            """
+            customer = {}
+            account = {}
+            email = str(email or "").strip()
 
-        if user_id not in (None, "", 0, "0"):
-            uid = int(user_id) if str(user_id).isdigit() else user_id
-            customer = self.db.khach_hang.find_one({"ma_kh": uid}) or {}
-            account = (
-                self.db.nguoidung.find_one({"id": uid})
-                or self.db.nguoidung.find_one({"ma_nguoi_dung": uid})
-                or self.db.nguoidung.find_one({"_id": uid})
-                or {}
-            )
+            if user_id not in (None, "", 0, "0"):
+                uid = int(user_id) if str(user_id).isdigit() else user_id
+                customer = self.db.khach_hang.find_one({"ma_kh": uid}) or {}
+                account = (
+                    self.db.nguoidung.find_one({"id": uid})
+                    or self.db.nguoidung.find_one({"ma_nguoi_dung": uid})
+                    or self.db.nguoidung.find_one({"_id": uid})
+                    or {}
+                )
 
-        if not customer and email:
-            rx = re.compile("^" + re.escape(email) + "$", re.I)
-            customer = self.db.khach_hang.find_one({"email": rx}) or {}
-            account = self.db.nguoidung.find_one({"email": rx}) or account or {}
+            if not customer and email:
+                rx = re.compile("^" + re.escape(email) + "$", re.I)
+                customer = self.db.khach_hang.find_one({"email": rx}) or {}
+                account = self.db.nguoidung.find_one({"email": rx}) or account or {}
 
-        # PHP session thường gửi id của collection nguoidung, không phải ma_kh.
-        # Nếu đã tìm được account, dùng email account để map sang khach_hang.
-        if not customer and account.get("email"):
-            rx = re.compile("^" + re.escape(str(account.get("email"))) + "$", re.I)
-            customer = self.db.khach_hang.find_one({"email": rx}) or {}
+            # PHP session thường gửi id của collection nguoidung, không phải ma_kh.
+            # Nếu đã tìm được account, dùng email account để map sang khach_hang.
+            if not customer and account.get("email"):
+                rx = re.compile("^" + re.escape(str(account.get("email"))) + "$", re.I)
+                customer = self.db.khach_hang.find_one({"email": rx}) or {}
 
-        # Một số schema lưu mã liên kết user/customer trực tiếp.
-        if not customer and account:
-            for field in ("ma_kh", "customer_id", "khach_hang_id"):
-                if account.get(field) not in (None, "", 0, "0"):
-                    value = account.get(field)
-                    value = int(value) if str(value).isdigit() else value
-                    customer = self.db.khach_hang.find_one({"ma_kh": value}) or {}
-                    if customer:
-                        break
+            # Một số schema lưu mã liên kết user/customer trực tiếp.
+            if not customer and account:
+                for field in ("ma_kh", "customer_id", "khach_hang_id"):
+                    if account.get(field) not in (None, "", 0, "0"):
+                        value = account.get(field)
+                        value = int(value) if str(value).isdigit() else value
+                        customer = self.db.khach_hang.find_one({"ma_kh": value}) or {}
+                        if customer:
+                            break
 
-        if not account and customer.get("email"):
-            rx = re.compile("^" + re.escape(str(customer.get("email"))) + "$", re.I)
-            account = self.db.nguoidung.find_one({"email": rx}) or {}
+            if not account and customer.get("email"):
+                rx = re.compile("^" + re.escape(str(customer.get("email"))) + "$", re.I)
+                account = self.db.nguoidung.find_one({"email": rx}) or {}
 
-        if not customer:
-            raise RuntimeError("Không tìm thấy hồ sơ khách hàng.")
-        return customer, account
-    # Hàm này trích xuất loại da của khách hàng từ trường tinh_trang_dac_biet. 
-    # Nó tìm kiếm một mẫu loaida:(\d+) trong trường này,
-    def _skin_type_from_customer(self, customer: dict) -> str:
-        """Đọc loại da từ trường `tinh_trang_dac_biet` của khách hàng nếu có.
+            if not customer:
+                raise RuntimeError("Không tìm thấy hồ sơ khách hàng.")
+            return customer, account
+        # Hàm này trích xuất loại da của khách hàng từ trường tinh_trang_dac_biet. 
+        # Nó tìm kiếm một mẫu loaida:(\d+) trong trường này,
+        def _skin_type_from_customer(self, customer: dict) -> str:
+            """Đọc loại da từ trường `tinh_trang_dac_biet` của khách hàng nếu có.
 
-        Một số dữ liệu cũ lưu loại da dưới dạng token `loaida:<id>`, vì vậy hàm này
-        map id đó sang collection `loai_da` để lấy tên loại da dễ hiểu cho implicit query.
-        """
-        special = str(customer.get("tinh_trang_dac_biet") or "")
-        match = re.search(r"loaida:(\d+)", special)
-        if not match:
-            return ""
-        row = self.db.loai_da.find_one({"ma_loai_da": int(match.group(1))})
-        return str((row or {}).get("ten_loai_da") or "")
-    # Hàm này thu thập lịch sử tương tác của khách hàng, bao gồm các sản phẩm đã mua, sản phẩm trong giỏ hàng, 
-    # và các tin nhắn chat gần đây.
-    def _history(self, customer_id: int) -> dict:
-        """Thu thập tín hiệu hành vi của khách hàng từ MongoDB.
+            Một số dữ liệu cũ lưu loại da dưới dạng token `loaida:<id>`, vì vậy hàm này
+            map id đó sang collection `loai_da` để lấy tên loại da dễ hiểu cho implicit query.
+            """
+            special = str(customer.get("tinh_trang_dac_biet") or "")
+            match = re.search(r"loaida:(\d+)", special)
+            if not match:
+                return ""
+            row = self.db.loai_da.find_one({"ma_loai_da": int(match.group(1))})
+            return str((row or {}).get("ten_loai_da") or "")
+        # Hàm này thu thập lịch sử tương tác của khách hàng, bao gồm các sản phẩm đã mua, sản phẩm trong giỏ hàng, 
+        # và các tin nhắn chat gần đây.
+        def _history(self, customer_id: int) -> dict:
+            """Thu thập tín hiệu hành vi của khách hàng từ MongoDB.
 
-        Dữ liệu gồm sản phẩm đã mua, sản phẩm trong giỏ hàng và các nhu cầu chat gần đây.
-        Các tín hiệu này chỉ dùng để tạo truy vấn ngầm định, không thay đổi dữ liệu nguồn.
-        """
-        order_items = []
-        cart_items = []
-        chat_terms = []
+            Dữ liệu gồm sản phẩm đã mua, sản phẩm trong giỏ hàng và các nhu cầu chat gần đây.
+            Các tín hiệu này chỉ dùng để tạo truy vấn ngầm định, không thay đổi dữ liệu nguồn.
+            """
+            order_items = []
+            cart_items = []
+            chat_terms = []
 
-        order_ids = []
-        for order in self.db.hoa_don.find({"ma_kh": customer_id}, sort=[("ngay_dat", -1), ("ma_hoa_don", -1)], limit=5):
-            order_ids.append(order.get("ma_hoa_don"))
-        if order_ids:
-            for detail in self.db.chi_tiet_hoa_don.find({"ma_hoa_don": {"$in": order_ids}}, limit=20):
-                product = self.db.san_pham.find_one({"ma_san_pham": detail.get("ma_san_pham")})
+            order_ids = []
+            for order in self.db.hoa_don.find({"ma_kh": customer_id}, sort=[("ngay_dat", -1), ("ma_hoa_don", -1)], limit=5):
+                order_ids.append(order.get("ma_hoa_don"))
+            if order_ids:
+                for detail in self.db.chi_tiet_hoa_don.find({"ma_hoa_don": {"$in": order_ids}}, limit=20):
+                    product = self.db.san_pham.find_one({"ma_san_pham": detail.get("ma_san_pham")})
+                    if product and product.get("ten_san_pham"):
+                        order_items.append(str(product.get("ten_san_pham")))
+
+            for cart in self.db.gio_hang.find({"ma_kh": customer_id}, sort=[("updated_at", -1)], limit=10):
+                product = self.db.san_pham.find_one({"ma_san_pham": cart.get("ma_san_pham")})
                 if product and product.get("ten_san_pham"):
-                    order_items.append(str(product.get("ten_san_pham")))
-
-        for cart in self.db.gio_hang.find({"ma_kh": customer_id}, sort=[("updated_at", -1)], limit=10):
-            product = self.db.san_pham.find_one({"ma_san_pham": cart.get("ma_san_pham")})
-            if product and product.get("ten_san_pham"):
-                cart_items.append(str(product.get("ten_san_pham")))
+                    cart_items.append(str(product.get("ten_san_pham")))
 
         chat_filter = {"$or": [{"ma_kh": customer_id}, {"customer_id": customer_id}, {"user_id": customer_id}]}
         for chat in self.db.lich_su_chat.find(chat_filter, sort=[("created_at", -1)], limit=8):
@@ -447,7 +447,7 @@ Chỉ dùng các sản phẩm có trong danh sách. Không bịa sản phẩm, k
 
 Implicit user profile/query:
 {query}
-
+    
 Retrieved and reranked products:
 {chr(10).join(product_lines)}
 
