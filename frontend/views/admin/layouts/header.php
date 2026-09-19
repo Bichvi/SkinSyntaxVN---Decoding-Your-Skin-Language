@@ -103,9 +103,21 @@ $menuGroups = [
             [
                 'route' => 'admin_lives',
                 'icon' => 'bi bi-camera-reels-fill',
-                'label' => 'Phiên LiveStream AI',
+                'label' => 'Quản lý phiên Live',
                 'meta' => 'Quản lý Live & Ghim SP',
                 'active' => strpos($currentRoute, 'admin_live') === 0,
+            ]
+        ]
+    ],
+    [
+        'title' => 'AI STUDIO',
+        'items' => [
+            [
+                'route' => 'admin_ai_idol',
+                'icon' => 'bi bi-stars',
+                'label' => 'AI Idol Studio',
+                'meta' => 'Syna · Kịch bản · Video',
+                'active' => strpos($currentRoute, 'admin_ai_idol') === 0,
             ]
         ]
     ],
