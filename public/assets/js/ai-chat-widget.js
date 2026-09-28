@@ -87,29 +87,11 @@
         }
       };
 
-      var syncLayout = function (supportState) {
+      var syncLayout = function () {
         var isMobile = window.matchMedia('(max-width: 767.98px)').matches;
-        var fallbackBottom = isMobile ? 84 : defaultBottom;
-        var nextBottom = fallbackBottom;
-
-        if (!isMobile) {
-          var detail = supportState || null;
-          if (!detail) {
-            var supportWidget = document.querySelector('[data-support-chat-widget]');
-            if (supportWidget) {
-              detail = {
-                height: supportWidget.offsetHeight || 0,
-                bottom: parseFloat(window.getComputedStyle(supportWidget).bottom || '22') || 22,
-              };
-            }
-          }
-
-          if (detail && detail.height > 0) {
-            nextBottom = Math.max(defaultBottom, Math.round(detail.bottom + detail.height + 12));
-          }
-        }
-
+        var nextBottom = isMobile ? 16 : 24;
         widget.style.bottom = nextBottom + 'px';
+        widget.style.right = isMobile ? '16px' : '24px';
 
         if (panel) {
           var isExpanded = widget.classList.contains('is-expanded');

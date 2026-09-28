@@ -9,6 +9,46 @@ $userProfile = is_array($userProfile ?? null) ? $userProfile : [];
 $isLoggedIn = (bool)($isLoggedIn ?? false);
 $hasSurvey = (bool)($hasSurvey ?? false);
 
+// Extract user display name for mascot greeting (Priority: nickname -> display_name -> first_name -> preferred_name -> ten -> ho_ten -> 'bạn')
+$sessionUser = is_array($_SESSION['user'] ?? null) ? $_SESSION['user'] : [];
+$displayNameCandidate = trim((string)(
+    $sessionUser['nickname'] ?? 
+    $sessionUser['display_name'] ?? 
+    $sessionUser['first_name'] ?? 
+    $sessionUser['preferred_name'] ?? 
+    $sessionUser['ten'] ?? 
+    $sessionUser['ho_ten'] ?? 
+    $userProfile['ho_ten'] ?? 
+    $sessionUser['name'] ?? ''
+));
+
+$synaGreetingName = 'bạn';
+if ($displayNameCandidate !== '') {
+    $parts = preg_split('/\s+/', $displayNameCandidate);
+    if (count($parts) >= 3) {
+        $synaGreetingName = implode(' ', array_slice($parts, -2));
+    } else {
+        $synaGreetingName = $displayNameCandidate;
+    }
+}
+
+// Build speech bubble sentence sequence
+if ($isLoggedIn && $synaGreetingName !== 'bạn') {
+    $synaSpeechSentences = [
+        "Hi " . $synaGreetingName . ", mừng bạn ghé SYNA nha!",
+        "Hôm nay da bạn thế nào rồi?",
+        "Da đang khô, nổi mụn hay cần phục hồi?",
+        "Làm khảo sát da 1 phút, SYNA tìm vài món hot hit hợp da bạn nhé!"
+    ];
+} else {
+    $synaSpeechSentences = [
+        "Hi bạn, mừng bạn ghé SYNA nha!",
+        "Hôm nay da bạn thế nào rồi?",
+        "Da đang khô, nổi mụn hay cần phục hồi?",
+        "Làm khảo sát da 1 phút, SYNA tìm vài món phù hợp nhé!"
+    ];
+}
+
 // Prepare products for sections (exactly 4 products each for single-row layout)
 $flashSaleProducts = array_slice(array_values(array_filter($homepageSections['flashDeals'] ?? [])), 0, 4);
 if (empty($flashSaleProducts)) {
@@ -74,7 +114,7 @@ $skinConcernCategories = [
     [
         'id' => 'dark_spots',
         'title' => 'Thâm / xỉn màu',
-        'icon' => 'fa-sparkles',
+        'icon' => 'fa-magic',
         'query' => 'thâm',
         'why' => 'Ức chế sắc tố Melanin, dưỡng da sáng mịn',
     ],
@@ -200,63 +240,232 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
   <?php endif; ?>
 
   <!-- 1. HERO SECTION -->
-  <section class="hero-skinsyntax mb-4" style="background: linear-gradient(135deg, #183B2B 0%, #2D6A4F 60%, #11281D 100%) !important; border-radius: 20px; color: #FFFFFF !important; padding: 40px 36px; position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(24, 59, 43, 0.15);">
+  <section class="hero-skinsyntax mb-5" style="background: linear-gradient(120deg, #174C3A 0%, #215F47 58%, #174333 100%) !important; border-radius: 20px; color: #FFFFFF !important; padding: 40px 44px; position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(23, 76, 58, 0.18); min-height: 440px;">
     <div class="row align-items-center">
-      <div class="col-lg-7 col-md-8">
-        <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 mb-3" style="background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">
-          <span style="width: 8px; height: 8px; background: #84A98C; border-radius: 50%;"></span>
-          <span>SkinSyntax AI Skincare Platform</span>
+      <div class="col-lg-7 col-md-7">
+        <div class="hero-skincare-badge mb-3" style="background: rgba(255,255,255,0.14) !important; border: 1px solid rgba(255,255,255,0.28) !important; color: #FFFFFF !important;">
+          <span class="badge-dot" style="background: #84A98C !important;"></span>
+          <span>Skincare cho phiên bản tốt hơn mỗi ngày</span>
         </div>
         
-        <h1 class="fw-bold mb-3" style="color: #FFFFFF !important; font-size: clamp(1.8rem, 4vw, 2.7rem); line-height: 1.2; letter-spacing: -0.02em;">
-          Skincare hiểu làn da của bạn.
+        <h1 class="hero-headline mb-3" style="color: #FFFFFF !important;">
+          Skincare hiểu<br>làn da của bạn.
         </h1>
         
-        <p class="mb-4" style="font-size: 1.02rem; line-height: 1.6; max-width: 580px; color: rgba(255,255,255,0.92) !important;">
+        <p class="hero-description mb-4" style="color: rgba(255,255,255,0.85) !important;">
           Khám phá mỹ phẩm phù hợp dựa trên hồ sơ da, vấn đề da và routine cá nhân của bạn.
         </p>
 
-        <div class="d-flex flex-wrap gap-3">
-          <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn text-white fw-bold px-4 py-2.5 shadow-sm" style="background: #2D6A4F; border-radius: 8px; font-size: 0.92rem; border: none;">
-            <i class="fas fa-search me-1.5"></i> Khám phá sản phẩm
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-4 pb-2">
+          <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn btn-hero-primary" style="background: #FFFFFF !important; color: #174C3A !important; font-weight: 700; font-size: 0.92rem; padding: 11px 24px; border-radius: 10px; border: none; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+            Khám phá sản phẩm
           </a>
-          <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn fw-semibold px-4 py-2.5" style="background: rgba(255,255,255,0.18); color: #FFFFFF !important; border: 1px solid rgba(255,255,255,0.35); border-radius: 8px; font-size: 0.92rem;">
-            <i class="fas fa-clipboard-list me-1.5"></i> Khảo sát da 1 phút
+          <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn btn-hero-secondary" style="background: rgba(255,255,255,0.15) !important; color: #FFFFFF !important; font-weight: 700; font-size: 0.92rem; padding: 11px 24px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.35) !important; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+            Khảo sát da 1 phút
           </a>
+        </div>
+
+        <div class="hero-trust-items row row-cols-1 row-cols-sm-3 g-3 pt-3 border-top" style="border-top-color: rgba(255,255,255,0.2) !important;">
+          <div class="col d-flex align-items-center gap-2.5">
+            <div class="trust-icon-box" style="background: rgba(255,255,255,0.16) !important; color: #FFFFFF !important;">
+              <i class="fas fa-shield-halved"></i>
+            </div>
+            <div>
+              <div class="trust-title" style="color: #FFFFFF !important;">Sản phẩm chính hãng</div>
+              <div class="trust-subtitle" style="color: rgba(255,255,255,0.72) !important;">An tâm mua sắm</div>
+            </div>
+          </div>
+
+          <div class="col d-flex align-items-center gap-2.5">
+            <div class="trust-icon-box" style="background: rgba(255,255,255,0.16) !important; color: #FFFFFF !important;">
+              <i class="fas fa-truck-fast"></i>
+            </div>
+            <div>
+              <div class="trust-title" style="color: #FFFFFF !important;">Giao hàng nhanh</div>
+              <div class="trust-subtitle" style="color: rgba(255,255,255,0.72) !important;">Toàn quốc</div>
+            </div>
+          </div>
+
+          <div class="col d-flex align-items-center gap-2.5">
+            <div class="trust-icon-box" style="background: rgba(255,255,255,0.16) !important; color: #FFFFFF !important;">
+              <i class="fas fa-headset"></i>
+            </div>
+            <div>
+              <div class="trust-title" style="color: #FFFFFF !important;">Hỗ trợ tận tâm</div>
+              <div class="trust-subtitle" style="color: rgba(255,255,255,0.72) !important;">Luôn đồng hành cùng bạn</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- SYNA AI MASCOT COMPONENT PLACEHOLDER -->
-      <div class="col-lg-5 col-md-4 mt-4 mt-md-0 text-center">
-        <div class="syna-mascot-container p-3">
-          <div class="syna-badge-glow"></div>
-          
-          <div class="position-relative d-inline-block p-4 rounded-4" style="background: #132E22; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
-            <!-- Official SYNA Mascot Asset (Cream Cat with Dark Green Hoodie, Blue Headset 'S' & Centella Leaf) -->
-            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png" alt="SYNA Mascot - AI Skincare Advisor" style="width: 170px; height: 170px; object-fit: cover; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.25);">
+      <!-- SYNA INTERACTIVE MASCOT STAGE COMPONENT (STATE-BASED) -->
+      <div class="col-lg-5 col-md-5 mt-4 mt-md-0 text-center d-flex align-items-center justify-content-center">
+        <div class="syna-mascot-stage">
+          <div class="syna-visual-bg"></div>
 
-            <div class="mt-3 text-white fw-bold" style="font-size: 1.05rem;">SYNA | AI SKINCARE ADVISOR</div>
-            <div class="small" style="color: #C8DACF; font-size: 0.8rem;">Bạn đồng hành Chăm sóc da & Chuyên gia Routine</div>
+          <div class="syna-speech-bubble-wrap">
+            <div class="syna-speech-bubble">
+              <span class="syna-typewriter-text" id="synaTypewriterText"></span><span class="syna-typewriter-cursor"></span>
+            </div>
+          </div>
+
+          <div class="syna-mascot-img-wrap">
+            <img src="<?= BASE_URL ?>/assets/images/syna_listening.png" alt="SYNA Mascot" class="syna-mascot-img state-idle" id="synaMascotImg">
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 2. QUICK SHOP BY SKIN CONCERN -->
-  <section class="mb-5">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.15rem;">
-        <i class="fas fa-sliders-h text-success me-2"></i> Tra cứu nhanh theo nhu cầu da
-      </h2>
-      <span class="text-muted small" style="font-size: 0.78rem;">Chọn để xem sản phẩm phù hợp</span>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var textElem = document.getElementById('synaTypewriterText');
+      var mascotImg = document.getElementById('synaMascotImg');
+      if (!textElem || !mascotImg) return;
+
+      var baseUrl = '<?= BASE_URL ?>/assets/images/';
+
+      // 1. BUILD SYNA STATES MAPPING (10 NEW CLEAN MODEL POSES)
+      var synaStates = {
+        idle: baseUrl + 'syna_listening.png',
+        greeting: baseUrl + 'syna_greeting.png',
+        talking1: baseUrl + 'syna_talking_1.png',
+        talking2: baseUrl + 'syna_talking_2.png',
+        thinking: baseUrl + 'syna_thinking.png',
+        listening: baseUrl + 'syna_listening.png',
+        recommend: baseUrl + 'syna_recommend.png',
+        processing: baseUrl + 'syna_processing.png',
+        active: baseUrl + 'syna_active.png',
+        happy: baseUrl + 'syna_happy.png',
+        bye: baseUrl + 'syna_bye.png'
+      };
+
+      // 2. PRELOAD ALL POSE ASSETS (prevents white flash on pose switch)
+      Object.values(synaStates).forEach(function (src) {
+        var img = new Image();
+        img.src = src;
+      });
+
+      // 3. SET INITIAL IDLE IMAGE & BIND ONERROR FALLBACK
+      mascotImg.src = synaStates.idle;
+      mascotImg.onerror = function () {
+        if (!this.dataset.fallbackApplied) {
+          this.dataset.fallbackApplied = '1';
+          this.src = synaStates.idle;
+        }
+      };
+
+      var currentState = 'idle';
+      var talkingInterval = null;
+      var talkingToggle = false;
+
+      // 4. CENTRALIZED STATE MANAGER
+      var setSynaState = function (stateName) {
+        if (!synaStates[stateName] && stateName !== 'talking') return;
+        currentState = stateName;
+
+        // Reset talking loop if switching to non-talking state
+        if (stateName !== 'talking' && talkingInterval) {
+          clearInterval(talkingInterval);
+          talkingInterval = null;
+        }
+
+        var targetSrc = synaStates[stateName];
+
+        if (stateName === 'talking') {
+          if (!talkingInterval) {
+            talkingToggle = false;
+            targetSrc = synaStates.talking1;
+            talkingInterval = setInterval(function () {
+              talkingToggle = !talkingToggle;
+              var talkSrc = talkingToggle ? synaStates.talking2 : synaStates.talking1;
+              mascotImg.src = talkSrc;
+            }, 380);
+          } else {
+            return;
+          }
+        }
+
+        if (targetSrc) {
+          mascotImg.src = targetSrc;
+        }
+
+        // Apply matching CSS motion class
+        mascotImg.className = 'syna-mascot-img state-' + (stateName === 'talking' ? 'talking' : stateName);
+      };
+
+      window.setSynaState = setSynaState;
+
+      // 5. TYPEWRITER SEQUENCE & STATE SYNC
+      var sentences = <?= json_encode($synaSpeechSentences, JSON_UNESCAPED_UNICODE) ?>;
+      var currentSentenceIdx = 0;
+      var currentCharIdx = 0;
+      var timerId = null;
+
+      var sentenceRestStates = ['greeting', 'thinking', 'listening', 'recommend'];
+
+      var typeSentence = function () {
+        if (currentSentenceIdx >= sentences.length) {
+          currentSentenceIdx = 0;
+          setSynaState('idle');
+          timerId = setTimeout(typeSentence, 5000);
+          return;
+        }
+
+        var fullText = sentences[currentSentenceIdx];
+        var targetRestState = sentenceRestStates[currentSentenceIdx] || 'idle';
+
+        if (currentCharIdx === 0) {
+          // Sentence start: set initial rest pose, then start talking animation
+          setSynaState(targetRestState);
+          setTimeout(function () {
+            setSynaState('talking');
+          }, 120);
+        }
+
+        if (currentCharIdx < fullText.length) {
+          textElem.textContent = fullText.substring(0, currentCharIdx + 1);
+          currentCharIdx++;
+          timerId = setTimeout(typeSentence, 45);
+        } else {
+          // Sentence finished typing: return to sentence rest pose
+          currentCharIdx = 0;
+          currentSentenceIdx++;
+          setSynaState(targetRestState);
+          timerId = setTimeout(typeSentence, 2500);
+        }
+      };
+
+      // START TYPEWRITER SEQUENCE AFTER IMAGE INITIALIZATION
+      typeSentence();
+
+      window.addEventListener('beforeunload', function () {
+        if (timerId) clearTimeout(timerId);
+        if (talkingInterval) clearInterval(talkingInterval);
+      });
+    });
+  </script>
+
+  <!-- 2. SKIN CONCERN SECTION (DUY NHẤT 1 SECTION ON HOME PAGE) -->
+  <section class="mb-5 mt-4">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1 mb-3">
+      <div>
+        <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.35rem;">
+          <i class="fas fa-sliders-h text-success me-2"></i> Bạn đang quan tâm điều gì cho làn da?
+        </h2>
+        <span class="text-muted small" style="font-size: 0.82rem;">Chọn nhu cầu để xem sản phẩm phù hợp</span>
+      </div>
+      <a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.82rem;">Xem tất cả nhu cầu &rarr;</a>
     </div>
 
-    <div class="concern-shortcut-bar">
+    <div class="skin-concern-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 14px; width: 100%;">
       <?php foreach ($skinConcernCategories as $item): ?>
-        <a href="<?= BASE_URL ?>/index.php?r=tatca&q=<?= urlencode($item['query']) ?>" class="concern-chip">
-          <i class="fas <?= h($item['icon']) ?>"></i>
-          <span><?= h($item['title']) ?></span>
+        <a href="<?= BASE_URL ?>/index.php?r=tatca&q=<?= urlencode($item['query']) ?>" class="skin-concern-card">
+          <div class="concern-icon-wrapper">
+            <i class="fas <?= h($item['icon']) ?>"></i>
+          </div>
+          <div class="concern-card-title"><?= h($item['title']) ?></div>
+          <div class="concern-card-action">Xem sản phẩm &rarr;</div>
         </a>
       <?php endforeach; ?>
     </div>
@@ -292,7 +501,8 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
         <?php foreach ($forYouProducts as $idx => $p): ?>
           <div class="col-6 col-md-3">
             <?php 
-              $whyFit = $skinConcernCategories[$idx % count($skinConcernCategories)]['why'] ?? 'Phù hợp độ ẩm & chỉ số da';
+              // Render genuine why-fit text if available in DB, otherwise pass empty string to avoid fake reason mismatch
+              $whyFit = trim((string)($p['ly_do_phu_hop'] ?? $p['why_fit'] ?? ''));
               $renderHomeProductCard($p, 'Gợi ý riêng', $whyFit); 
             ?>
           </div>
@@ -358,7 +568,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
     </section>
   <?php endif; ?>
 
-  <!-- 5. SYNA AI LIVESTREAM SECTION (CLEAN HIGH-CONTRAST AUTHENTIC LAYOUT) -->
+  <!-- 5. SYNA AI LIVESTREAM SECTION (GỘP THÀNH 1 SECTION DUY NHẤT) -->
   <section class="mb-5 p-4 text-white" style="background: #183B2B; border-radius: 20px; border: 1px solid #2D6A4F; box-shadow: 0 12px 32px rgba(24, 59, 43, 0.15);">
     <div class="row align-items-center g-4">
       <div class="col-lg-6">
@@ -377,12 +587,12 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
                 <i class="fas fa-play text-white fs-3 ms-1"></i>
               </div>
             </div>
-            <h4 class="fw-bold text-white mb-1" style="font-size: 1.25rem;">SYNA AI Skincare Stream</h4>
+            <h4 class="fw-bold text-white mb-1" style="font-size: 1.25rem;">Livestream tư vấn cùng SYNA</h4>
             <p class="text-white-80 small mb-3" style="max-width: 360px; font-size: 0.84rem; color: rgba(255,255,255,0.85);">
-              Tư vấn quy trình skincare cá nhân hóa &amp; nhận ưu đãi độc quyền trên sóng trực tiếp.
+              Tư vấn routine, giải đáp sản phẩm và khám phá ưu đãi trực tiếp trong phiên live.
             </p>
             <a href="<?= BASE_URL ?>/index.php?r=live" class="btn text-white px-4 py-2 fw-bold" style="border-radius: 999px; font-size: 0.85rem; background: #2D6A4F; border: 1px solid #84A98C;">
-              <i class="fas fa-video me-1.5"></i> Tham gia Livestream ngay
+              <i class="fas fa-video me-1.5"></i> Vào phòng livestream
             </a>
           </div>
         </div>
@@ -391,11 +601,11 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
       <div class="col-lg-6">
         <div class="p-2">
           <div class="d-inline-flex align-items-center gap-1.5 mb-2 text-warning fw-bold small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">
-            <i class="fas fa-broadcast-tower"></i> Tính năng nổi bật
+            <i class="fas fa-broadcast-tower"></i> Phiên Live Trực Tiếp
           </div>
-          <h3 class="fw-bold text-white mb-2" style="font-size: 1.5rem;">SYNA AI Skincare Livestream</h3>
+          <h3 class="fw-bold text-white mb-2" style="font-size: 1.5rem;">Livestream tư vấn cùng SYNA</h3>
           <p class="text-white-80 small mb-3" style="font-size: 0.88rem; line-height: 1.6; color: rgba(255,255,255,0.88);">
-            Kênh tư vấn trực tiếp chuẩn y khoa với SYNA — trợ lý AI phân tích hoạt chất mỹ phẩm, giải đáp thắc mắc routine và đề xuất voucher thực tế theo nhu cầu da của bạn.
+            Tư vấn quy trình chăm sóc da cá nhân hóa, giải đáp thắc mắc thành phần mỹ phẩm và nhận voucher ưu đãi thực tế theo nhu cầu da của bạn.
           </p>
 
           <!-- Featured Product in Live -->
@@ -437,7 +647,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
     </div>
   </section>
 
-  <!-- 6. NEW PRODUCTS (MỸ PHẨM VỪA LÊN KỆ) -->
+  <!-- 6. NEW PRODUCTS (MỸ PHẨM VỪA LÊN KỆ - BEAUTY COSMETICS ONLY) -->
   <?php if (!empty($newProducts)): ?>
     <section class="mb-5">
       <div class="d-flex justify-content-between align-items-end mb-3">
@@ -458,93 +668,79 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
     </section>
   <?php endif; ?>
 
-  <!-- 7. SHOP BY SKIN CONCERN (MUA THEO VẤN ĐỀ DA - 8 Ô CHUẨN 2 HÀNG FULL) -->
-  <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
-    <div class="d-flex justify-content-between align-items-end mb-3">
-      <div>
-        <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">DISCOVERY CATEGORIES</span>
-        <h3 class="fw-bold m-0" style="color: #0F172A; font-size: 1.4rem;">Mua theo vấn đề da</h3>
-      </div>
-    </div>
-
-    <div class="row g-3">
-      <?php foreach ($skinConcernCategories as $concern): ?>
-        <div class="col-6 col-md-4 col-lg-3">
-          <a href="<?= BASE_URL ?>/index.php?r=tatca&q=<?= urlencode($concern['query']) ?>" class="d-block p-3 rounded-3 border text-decoration-none h-100" style="background: #F8FAF8; border-color: #E2E8F0 !important; transition: all 0.2s ease;">
-            <div class="d-flex align-items-center gap-3">
-              <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 44px; height: 44px; background: #EBF2EE; color: #183B2B; font-size: 1.1rem;">
-                <i class="fas <?= h($concern['icon']) ?>"></i>
-              </div>
-              <div>
-                <h4 class="fw-bold mb-0 text-dark" style="font-size: 0.92rem;"><?= h($concern['title']) ?></h4>
-                <small class="text-muted" style="font-size: 0.74rem;">Khám phá sản phẩm &rarr;</small>
-              </div>
-            </div>
-          </a>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  </section>
-
-  <!-- 8. PERSONAL ROUTINE (ROUTINE CỦA BẠN - COMPACT & COMMERCE ORIENTED) -->
+  <!-- 7. PERSONAL ROUTINE (CONDITIONAL BASED ON SURVEY PROFILE) -->
   <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
       <div>
         <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">DAILY SKINCARE REGIMEN</span>
         <h3 class="fw-bold m-0" style="color: #0F172A; font-size: 1.4rem;">Routine của bạn</h3>
       </div>
-      <a href="<?= BASE_URL ?>/index.php?r=goiy" class="btn btn-sm text-white fw-semibold px-3 py-1.5" style="background: #183B2B; border-radius: 6px; font-size: 0.8rem;">
-        Xem routine đầy đủ &rarr;
-      </a>
+      <?php if ($hasSurvey): ?>
+        <a href="<?= BASE_URL ?>/index.php?r=goiy" class="btn btn-sm text-white fw-semibold px-3 py-1.5" style="background: #183B2B; border-radius: 6px; font-size: 0.8rem;">
+          Xem routine đầy đủ &rarr;
+        </a>
+      <?php endif; ?>
     </div>
 
-    <div class="row g-3">
-      <div class="col-6 col-md-3">
-        <a href="<?= BASE_URL ?>/index.php?r=tatca&q=l%C3%A0m+s%E1%BA%A1ch" class="routine-step-pill text-decoration-none">
-          <div class="routine-step-num">01</div>
-          <div>
-            <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 1</div>
-            <div class="fw-bold text-dark" style="font-size: 0.9rem;">Cleanse (Làm sạch)</div>
-          </div>
-        </a>
-      </div>
+    <?php if ($hasSurvey): ?>
+      <div class="row g-3">
+        <div class="col-6 col-md-3">
+          <a href="<?= BASE_URL ?>/index.php?r=tatca&q=l%C3%A0m+s%E1%BA%A1ch" class="routine-step-pill text-decoration-none">
+            <div class="routine-step-num">01</div>
+            <div>
+              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 1</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Cleanse (Làm sạch)</div>
+            </div>
+          </a>
+        </div>
 
-      <div class="col-6 col-md-3">
-        <a href="<?= BASE_URL ?>/index.php?r=tatca&q=serum" class="routine-step-pill text-decoration-none">
-          <div class="routine-step-num">02</div>
-          <div>
-            <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 2</div>
-            <div class="fw-bold text-dark" style="font-size: 0.9rem;">Treat (Đặc trị)</div>
-          </div>
-        </a>
-      </div>
+        <div class="col-6 col-md-3">
+          <a href="<?= BASE_URL ?>/index.php?r=tatca&q=serum" class="routine-step-pill text-decoration-none">
+            <div class="routine-step-num">02</div>
+            <div>
+              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 2</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Treat (Đặc trị)</div>
+            </div>
+          </a>
+        </div>
 
-      <div class="col-6 col-md-3">
-        <a href="<?= BASE_URL ?>/index.php?r=tatca&q=d%C6%B0%E1%BB%A1ng+%E1%BA%A9m" class="routine-step-pill text-decoration-none">
-          <div class="routine-step-num">03</div>
-          <div>
-            <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 3</div>
-            <div class="fw-bold text-dark" style="font-size: 0.9rem;">Hydrate (Dưỡng ẩm)</div>
-          </div>
-        </a>
-      </div>
+        <div class="col-6 col-md-3">
+          <a href="<?= BASE_URL ?>/index.php?r=tatca&q=d%C6%B0%E1%BB%A1ng+%E1%BA%A9m" class="routine-step-pill text-decoration-none">
+            <div class="routine-step-num">03</div>
+            <div>
+              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 3</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Hydrate (Dưỡng ẩm)</div>
+            </div>
+          </a>
+        </div>
 
-      <div class="col-6 col-md-3">
-        <a href="<?= BASE_URL ?>/index.php?r=tatca&q=ch%E1%BB%91ng+n%E1%BA%AFng" class="routine-step-pill text-decoration-none">
-          <div class="routine-step-num">04</div>
-          <div>
-            <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 4</div>
-            <div class="fw-bold text-dark" style="font-size: 0.9rem;">Protect (Bảo vệ)</div>
-          </div>
+        <div class="col-6 col-md-3">
+          <a href="<?= BASE_URL ?>/index.php?r=tatca&q=ch%E1%BB%91ng+n%E1%BA%AFng" class="routine-step-pill text-decoration-none">
+            <div class="routine-step-num">04</div>
+            <div>
+              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 4</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Protect (Bảo vệ)</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    <?php else: ?>
+      <div class="p-4 text-center rounded-3" style="background: #F8FAF8; border: 1px dashed #C8DACF;">
+        <h4 class="fw-bold mb-1" style="font-size: 1.05rem; color: #0F172A;">Khám phá routine dành riêng cho bạn</h4>
+        <p class="text-muted small mx-auto mb-3" style="max-width: 460px; font-size: 0.84rem;">
+          Làm bài khảo sát da 1 phút để SkinSyntax giúp bạn thiết lập quy trình chăm sóc da 4 bước tối ưu.
+        </p>
+        <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn btn-sm text-white fw-bold px-4 py-2" style="background: #183B2B; border-radius: 6px; font-size: 0.84rem;">
+          <i class="fas fa-clipboard-list me-1.5"></i> Làm khảo sát da ngay &rarr;
         </a>
       </div>
-    </div>
+    <?php endif; ?>
   </section>
 
-  <!-- 9. TRUSTED BRANDS -->
+  <!-- 8. TRUSTED BRANDS (THƯƠNG HIỆU NỔI BẬT DƯỢC YÊU THÍCH) -->
   <?php if (!empty($brandNames)): ?>
     <section class="p-4 mb-5 bg-white border text-center" style="border-radius: 12px; border-color: #E2E8F0 !important;">
-      <span class="text-uppercase fw-semibold small text-muted mb-2.5 d-block" style="letter-spacing: 0.05em; font-size: 0.72rem;">THƯƠNG HIỆU Y KHOA ĐƯỢC TIN DÙNG</span>
+      <span class="text-uppercase fw-semibold small text-muted mb-2.5 d-block" style="letter-spacing: 0.05em; font-size: 0.72rem;">THƯƠNG HIỆU NỔI BẬT DƯỢC YÊU THÍCH</span>
       <div class="d-flex flex-wrap justify-content-center gap-2">
         <?php foreach ($brandNames as $brand): ?>
           <a href="<?= BASE_URL ?>/index.php?r=tatca&q=<?= urlencode($brand) ?>" class="btn btn-sm btn-light px-3 py-1.5 fw-semibold" style="background: #F8FAF8; color: #0F172A; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 0.8rem;"><?= h($brand) ?></a>
@@ -552,6 +748,23 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
       </div>
     </section>
   <?php endif; ?>
+
+  <!-- 9. CONCISE FINAL CTA -->
+  <section class="mb-4 p-4 text-center rounded-4 text-white" style="background: linear-gradient(135deg, #183B2B 0%, #2D6A4F 100%);">
+    <h3 class="fw-bold mb-1 text-white" style="font-size: 1.3rem;">Hiểu da hơn, chọn mỹ phẩm dễ hơn.</h3>
+    <p class="text-white-80 small mx-auto mb-3" style="max-width: 480px; font-size: 0.86rem; color: rgba(255,255,255,0.85);">
+      SkinSyntax — Nền tảng mỹ phẩm &amp; tư vấn da cá nhân hóa AI.
+    </p>
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+      <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn btn-light fw-bold px-4 py-2" style="border-radius: 8px; font-size: 0.86rem; color: #183B2B;">
+        <i class="fas fa-search me-1.5"></i> Khám phá sản phẩm
+      </a>
+      <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn text-white fw-bold px-4 py-2" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; font-size: 0.86rem;">
+        <i class="fas fa-clipboard-list me-1.5"></i> Làm khảo sát da
+      </a>
+    </div>
+  </section>
+</div>
 </div>
 
 <script>

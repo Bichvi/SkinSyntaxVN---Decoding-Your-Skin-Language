@@ -28,7 +28,7 @@ $splitProfileValues = static function (?string $raw, array $excludePrefixes = []
 
     $skip = false;
     foreach ($excludePrefixes as $prefix) {
-      if (stripos($value, $prefix) === 0) {
+      if (mb_stripos($value, $prefix) === 0) {
         $skip = true;
         break;
       }
@@ -40,6 +40,111 @@ $splitProfileValues = static function (?string $raw, array $excludePrefixes = []
   }
 
   return array_values(array_unique($values));
+};
+
+$parseConcernsForHoso = static function (?string $rawText) use ($splitProfileValues): array {
+    $text = trim((string)($rawText ?? ''));
+    if ($text === '') {
+        return [];
+    }
+
+    $knownLabels = [
+        'Da khô căng, bong tróc',
+        'Mụn viêm (sưng đỏ, có mủ)',
+        'Mụn ẩn, mụn đầu đen, sợi bã nhờn',
+        'Thâm mụn, tàn nhang, sạm da',
+        'Lão hóa, nếp nhăn, da chảy xệ',
+        'Lỗ chân lông to'
+    ];
+
+    $foundConcerns = [];
+    $remaining = $text;
+
+    foreach ($knownLabels as $label) {
+        if (mb_stripos($remaining, $label) !== false) {
+            $foundConcerns[] = $label;
+            $remaining = str_ireplace($label, '', $remaining);
+        }
+    }
+
+    $canonicalIdMap = [
+        'dry_flaky' => 'Da khô căng, bong tróc',
+        'inflammatory_acne' => 'Mụn viêm (sưng đỏ, có mủ)',
+        'comedonal_acne' => 'Mụn ẩn, mụn đầu đen, sợi bã nhờn',
+        'large_pores' => 'Lỗ chân lông to',
+        'hyperpigmentation' => 'Thâm mụn, tàn nhang, sạm da',
+        'aging' => 'Lão hóa, nếp nhăn, da chảy xệ',
+    ];
+
+    $leftoverParts = preg_split('/\s*[,|]\s*/u', $remaining) ?: [];
+    foreach ($leftoverParts as $part) {
+        $p = trim($part);
+        if ($p === '') continue;
+        if (isset($canonicalIdMap[strtolower($p)])) {
+            $foundConcerns[] = $canonicalIdMap[strtolower($p)];
+        } else {
+            if (mb_stripos($text, 'Da khô căng') !== false && (mb_stripos($p, 'da khô căng') !== false || mb_stripos($p, 'bong tróc') !== false)) {
+                continue;
+            }
+            $foundConcerns[] = $p;
+        }
+    }
+
+    return array_values(array_unique($foundConcerns));
+};
+
+$parsePrioritiesForHoso = static function (?string $rawText): array {
+    $text = trim((string)($rawText ?? ''));
+    $textures = [];
+    $ingredients = [];
+
+    if ($text === '') {
+        return ['textures' => [], 'ingredients' => []];
+    }
+
+    $parts = explode('|', $text);
+    foreach ($parts as $part) {
+        $p = trim($part);
+        if (mb_stripos($p, 'Kết cấu:') === 0) {
+            $sub = trim(mb_substr($p, mb_strlen('Kết cấu:')));
+            if ($sub !== '') {
+                $textures = array_map('trim', explode(',', $sub));
+            }
+        } elseif (mb_stripos($p, 'Hoạt chất:') === 0) {
+            $sub = trim(mb_substr($p, mb_strlen('Hoạt chất:')));
+            if ($sub !== '') {
+                $ingredients = array_map('trim', explode(',', $sub));
+            }
+        } else {
+            if (mb_stripos($p, 'Kết cấu') === false && mb_stripos($p, 'Hoạt chất') === false) {
+                $ingredients[] = $p;
+            }
+        }
+    }
+
+    return [
+        'textures' => array_values(array_unique(array_filter($textures))),
+        'ingredients' => array_values(array_unique(array_filter($ingredients))),
+    ];
+};
+
+$splitSpecialStates = static function (?string $raw): array {
+    $text = trim((string)($raw ?? ''));
+    if ($text === '') return [];
+    $parts = explode('|', $text);
+    $clean = [];
+    foreach ($parts as $part) {
+        $p = trim($part);
+        if ($p === '') continue;
+        if (mb_stripos($p, 'loaida:') === 0
+            || mb_stripos($p, 'khảo sát') !== false
+            || mb_stripos($p, 'xuất xứ') !== false
+            || mb_stripos($p, 'thương hiệu') !== false) {
+            continue;
+        }
+        $clean[] = $p;
+    }
+    return array_values(array_unique($clean));
 };
 
 $renderTagList = static function (array $items, string $emptyText = 'Chưa có dữ liệu'): string {
@@ -55,12 +160,17 @@ $renderTagList = static function (array $items, string $emptyText = 'Chưa có d
   return implode('', $html);
 };
 
-$surveySpecialStates = $splitProfileValues((string)($khachHang['tinh_trang_dac_biet'] ?? ''), ['loaida:']);
-$surveyPriority = $splitProfileValues((string)($khachHang['tieu_chi_uu_tien'] ?? ''));
+$surveySkinIssues = $parseConcernsForHoso(!empty($skinProfile['van_de_da']) ? (string)$skinProfile['van_de_da'] : (string)($khachHang['van_de_da'] ?? ''));
+$surveySpecialStates = $splitSpecialStates((string)($khachHang['tinh_trang_dac_biet'] ?? ''));
+
+$prioritiesParsed = $parsePrioritiesForHoso((string)($khachHang['tieu_chi_uu_tien'] ?? ''));
+$surveyTextures = $prioritiesParsed['textures'];
+$surveyIngredients = $prioritiesParsed['ingredients'];
+
 $surveyAvoidIngredients = $splitProfileValues((string)($khachHang['thanh_phan_tranh'] ?? ''));
-$surveyExperience = $splitProfileValues((string)($khachHang['kinh_nghiem_skincare'] ?? ''));
-$surveyRoutineSteps = $splitProfileValues((string)($khachHang['so_buoc_skincare'] ?? ''));
-$surveySkinIssues = !empty($vanDeDaSaved) ? $vanDeDaSaved : $splitProfileValues((string)($khachHang['van_de_da'] ?? ''));
+$surveyPreferredCountries = $splitProfileValues((string)($khachHang['kinh_nghiem_skincare'] ?? ''));
+$surveyPreferredBrands = $splitProfileValues((string)($khachHang['so_buoc_skincare'] ?? ''));
+
 $formattedBudget = !empty($skinProfile['ngan_sach'])
   ? number_format((int)$skinProfile['ngan_sach'], 0, ',', '.') . 'đ'
   : 'Chưa có dữ liệu';
@@ -427,6 +537,67 @@ $accountVerificationHint = !empty($account['email'])
   }
 </style>
 
+<script>
+window.switchHosoTab = function (targetId, evt) {
+  if (evt) {
+    if (typeof evt.preventDefault === 'function') evt.preventDefault();
+    if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  }
+
+  if (!targetId) return false;
+  var cleanId = targetId.indexOf('#') === 0 ? targetId : '#' + targetId;
+  var cleanPaneId = cleanId.replace('#', '');
+
+  var buttons = document.querySelectorAll('#accountTabs .nav-link');
+  buttons.forEach(function (btn) {
+    var href = btn.getAttribute('href') || btn.getAttribute('onclick') || '';
+    if (href.indexOf(cleanPaneId) !== -1 || btn.id === 'btn-' + cleanPaneId) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+    } else if (href.indexOf('#tab-') !== -1) {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    }
+  });
+
+  var panes = document.querySelectorAll('.tab-content > .tab-pane');
+  panes.forEach(function (pane) {
+    if (pane.id === cleanPaneId) {
+      pane.classList.add('show', 'active');
+      pane.style.display = 'block';
+    } else {
+      pane.classList.remove('show', 'active');
+      pane.style.display = 'none';
+    }
+  });
+
+  return false;
+};
+
+window.openSupportChat = function (evt) {
+  if (evt) {
+    if (typeof evt.preventDefault === 'function') evt.preventDefault();
+    if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  }
+  var widgetPanel = document.querySelector('[data-support-chat-panel]');
+  var triggerBtn = document.querySelector('.support-chat-widget__trigger');
+  if (widgetPanel) {
+    widgetPanel.hidden = false;
+    var widget = widgetPanel.closest('[data-support-chat-widget]');
+    if (widget) widget.classList.add('is-open');
+    var textarea = widgetPanel.querySelector('textarea');
+    if (textarea) textarea.focus();
+    return false;
+  }
+  if (triggerBtn) {
+    triggerBtn.click();
+    return false;
+  }
+  window.location.href = '<?= BASE_URL ?>/index.php?r=lichsuchat';
+  return false;
+};
+</script>
+
 <div class="container mt-4 profile-shell">
   <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
     <h3 class="section-title mb-2 mb-md-0">Tài khoản của tôi</h3>
@@ -434,26 +605,26 @@ $accountVerificationHint = !empty($account['email'])
   </div>
 
   <div class="auth-card">
-    <ul class="nav nav-tabs" id="accountTabs" role="tablist">
+    <ul class="nav nav-tabs" id="accountTabs" role="tablist" style="border-bottom: 2px solid #E2E8F0; position: relative; z-index: 20;">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab">Tổng quan</button>
+        <a class="nav-link active" id="btn-tab-overview" href="#tab-overview" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-overview', event)">Tổng quan</a>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-orders" type="button" role="tab">Lịch sử đơn hàng</button>
+        <a class="nav-link" id="btn-tab-orders" href="#tab-orders" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-orders', event)">Lịch sử đơn hàng</a>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-cart" type="button" role="tab">Giỏ hàng của tôi</button>
+        <a class="nav-link" id="btn-tab-cart" href="#tab-cart" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-cart', event)">Giỏ hàng của tôi</a>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-skin" type="button" role="tab">Hồ sơ Làn da</button>
+        <a class="nav-link" id="btn-tab-skin" href="#tab-skin" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-skin', event)">Hồ sơ Làn da</a>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" type="button" data-support-chat-toggle>Chat hỗ trợ</button>
+        <button class="nav-link" type="button" data-support-chat-toggle style="cursor: pointer; pointer-events: auto;" onclick="return openSupportChat(event)">Chat hỗ trợ</button>
       </li>
     </ul>
 
     <div class="tab-content pt-3">
-      <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+      <div class="tab-pane fade show active" id="tab-overview" role="tabpanel" style="display: block;">
         <div class="profile-overview-grid">
           <div class="profile-overview-grid__wide">
             <div class="profile-stat">
@@ -808,7 +979,58 @@ $accountVerificationHint = !empty($account['email'])
           <div class="col-md-6 col-xl-3">
             <div class="profile-stat h-100">
               <div class="label">Loại da</div>
-              <div class="value"><?= h($skinProfile['loai_da'] ?? 'Chưa có dữ liệu') ?></div>
+              <?php
+                $rawSkinProfileType = trim((string)($skinProfile['loai_da'] ?? ''));
+                $canonicalSkinTypeVal = 'unknown';
+
+                if (class_exists('GoiYContentBased')) {
+                    $tempEngine = new GoiYContentBased(null);
+                    $canonicalSkinTypeVal = $tempEngine->canonicalSkinType($rawSkinProfileType);
+                } else {
+                    $possibleModelPaths = [
+                        __DIR__ . '/../../backend/app/models/GoiYContentBased.php',
+                        __DIR__ . '/../../../backend/app/models/GoiYContentBased.php',
+                        dirname(__DIR__, 3) . '/backend/app/models/GoiYContentBased.php',
+                        dirname(__DIR__, 2) . '/app/models/GoiYContentBased.php'
+                    ];
+                    foreach ($possibleModelPaths as $pmp) {
+                        if (file_exists($pmp)) {
+                            require_once $pmp;
+                            break;
+                        }
+                    }
+                    if (class_exists('GoiYContentBased')) {
+                        $tempEngine = new GoiYContentBased(null);
+                        $canonicalSkinTypeVal = $tempEngine->canonicalSkinType($rawSkinProfileType);
+                    }
+                }
+
+                if ($canonicalSkinTypeVal === 'unknown' && $rawSkinProfileType !== '') {
+                    $sNorm = mb_strtolower($rawSkinProfileType, 'UTF-8');
+                    if (mb_strpos($sNorm, 'dầu') !== false || mb_strpos($sNorm, 'dau') !== false || mb_strpos($sNorm, 'oily') !== false) {
+                        $canonicalSkinTypeVal = 'oily';
+                    } elseif (mb_strpos($sNorm, 'khô') !== false || mb_strpos($sNorm, 'kho') !== false || mb_strpos($sNorm, 'dry') !== false) {
+                        $canonicalSkinTypeVal = 'dry';
+                    } elseif (mb_strpos($sNorm, 'hỗn hợp') !== false || mb_strpos($sNorm, 'hon hop') !== false || mb_strpos($sNorm, 'combination') !== false) {
+                        $canonicalSkinTypeVal = 'combination';
+                    } elseif (mb_strpos($sNorm, 'thường') !== false || mb_strpos($sNorm, 'thuong') !== false || mb_strpos($sNorm, 'normal') !== false) {
+                        $canonicalSkinTypeVal = 'normal';
+                    }
+                }
+
+                $displaySkinTypeHoso = '';
+                if ($canonicalSkinTypeVal === 'oily') $displaySkinTypeHoso = 'Da dầu';
+                elseif ($canonicalSkinTypeVal === 'dry') $displaySkinTypeHoso = 'Da khô';
+                elseif ($canonicalSkinTypeVal === 'combination') $displaySkinTypeHoso = 'Da hỗn hợp';
+                elseif ($canonicalSkinTypeVal === 'normal') $displaySkinTypeHoso = 'Da thường';
+                else $displaySkinTypeHoso = 'Chưa xác định';
+              ?>
+              <div class="value">
+                <?= h($displaySkinTypeHoso) ?>
+                <button type="button" class="badge bg-light text-success border ms-1 fw-normal text-decoration-none btn p-1" data-bs-toggle="modal" data-bs-target="#quickUpdateSkinTypeModal" style="font-size: 0.72rem;">
+                  <i class="fa-solid fa-pen-to-square me-1"></i>Cập nhật loại da
+                </button>
+              </div>
             </div>
           </div>
           <div class="col-md-6 col-xl-3">
@@ -830,6 +1052,7 @@ $accountVerificationHint = !empty($account['email'])
             </div>
           </div>
         </div>
+
         <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center justify-content-between gap-3 flex-wrap">
           <div>
             <strong class="d-block mb-1">Chọn cách cập nhật phù hợp với bạn</strong>
@@ -843,13 +1066,14 @@ $accountVerificationHint = !empty($account['email'])
             <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=khaosat">Khảo sát đầy đủ</a>
           </div>
         </div>
-<div class="row g-3 mb-4">
+
+        <div class="row g-3 mb-4">
           <div class="col-lg-6">
             <div class="border rounded-3 p-3 bg-white h-100">
               <h6 class="mb-3">Vấn đề da và tình trạng hiện tại</h6>
               <div class="mb-3">
                 <div class="small text-muted mb-2">Vấn đề da đang gặp phải</div>
-                <?= $renderTagList($surveySkinIssues) ?>
+                <?= $renderTagList($surveySkinIssues, 'Chưa có dữ liệu vấn đề da') ?>
               </div>
               <div>
                 <div class="small text-muted mb-2">Tình trạng đặc biệt</div>
@@ -862,8 +1086,12 @@ $accountVerificationHint = !empty($account['email'])
             <div class="border rounded-3 p-3 bg-white h-100">
               <h6 class="mb-3">Ưu tiên khi chọn sản phẩm</h6>
               <div class="mb-3">
-                <div class="small text-muted mb-2">Tiêu chí ưu tiên</div>
-                <?= $renderTagList($surveyPriority, 'Chưa có tiêu chí ưu tiên') ?>
+                <div class="small text-muted mb-2">Kết cấu yêu thích</div>
+                <?= $renderTagList($surveyTextures, 'Không chọn / Mọi kết cấu') ?>
+              </div>
+              <div class="mb-3">
+                <div class="small text-muted mb-2">Hoạt chất quan tâm</div>
+                <?= $renderTagList($surveyIngredients, 'Không có / Không quan tâm') ?>
               </div>
               <div>
                 <div class="small text-muted mb-2">Thành phần muốn tránh</div>
@@ -874,14 +1102,14 @@ $accountVerificationHint = !empty($account['email'])
 
           <div class="col-lg-6">
             <div class="border rounded-3 p-3 bg-white h-100">
-              <h6 class="mb-3">Thói quen skincare</h6>
+              <h6 class="mb-3">Xuất xứ & Thương hiệu ưu tiên</h6>
               <div class="mb-3">
-                <div class="small text-muted mb-2">Kinh nghiệm skincare</div>
-                <?= $renderTagList($surveyExperience, 'Chưa có dữ liệu kinh nghiệm') ?>
+                <div class="small text-muted mb-2">Xuất xứ ưu tiên</div>
+                <?= $renderTagList($surveyPreferredCountries, 'Không có / Không quan tâm') ?>
               </div>
               <div>
-                <div class="small text-muted mb-2">Số bước skincare thường dùng</div>
-                <?= $renderTagList($surveyRoutineSteps, 'Chưa có dữ liệu số bước') ?>
+                <div class="small text-muted mb-2">Thương hiệu ưu tiên</div>
+                <?= $renderTagList($surveyPreferredBrands, 'Không có / Không quan tâm') ?>
               </div>
             </div>
           </div>
@@ -903,6 +1131,37 @@ $accountVerificationHint = !empty($account['email'])
           </div>
         </div>
 </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="quickUpdateSkinTypeModal" tabindex="-1" aria-labelledby="quickUpdateSkinTypeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title fs-6 fw-bold" id="quickUpdateSkinTypeModalLabel"><i class="fa-solid fa-droplet me-2 text-success"></i>Cập nhật loại da</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <form id="quickUpdateSkinTypeForm">
+        <div class="modal-body">
+          <p class="text-muted small mb-3">Chỉ cập nhật Loại da của bạn. Các thông tin khảo sát khác (mục tiêu, thành phần tránh, v.v.) sẽ được giữ nguyên không thay đổi.</p>
+          <div class="mb-3">
+            <label for="modalSkinTypeSelect" class="form-label fw-semibold">Chọn loại da chính xác của bạn:</label>
+            <select class="form-select" id="modalSkinTypeSelect" name="loai_da" required>
+              <option value="">-- Chọn loại da --</option>
+              <option value="Da dầu / Hỗn hợp thiên dầu" <?= $canonicalSkinTypeVal === 'oily' ? 'selected' : '' ?>>Da dầu / Hỗn hợp thiên dầu</option>
+              <option value="Da khô / Hỗn hợp thiên khô" <?= $canonicalSkinTypeVal === 'dry' ? 'selected' : '' ?>>Da khô / Hỗn hợp thiên khô</option>
+              <option value="Da hỗn hợp" <?= $canonicalSkinTypeVal === 'combination' ? 'selected' : '' ?>>Da hỗn hợp</option>
+              <option value="Da thường / Không có vấn đề đặc biệt" <?= $canonicalSkinTypeVal === 'normal' ? 'selected' : '' ?>>Da thường / Không có vấn đề đặc biệt</option>
+            </select>
+          </div>
+          <div id="quickUpdateSkinTypeMsg" class="small mt-2"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-brand">Lưu thay đổi</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -974,6 +1233,99 @@ $accountVerificationHint = !empty($account['email'])
     }
   });
 })();
+
+(function () {
+  const form = document.getElementById('quickUpdateSkinTypeForm');
+  const msgEl = document.getElementById('quickUpdateSkinTypeMsg');
+  if (!form || !msgEl) return;
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    msgEl.textContent = 'Đang lưu...';
+    msgEl.className = 'small text-muted';
+
+    try {
+      const targetUrl = 'index.php?r=capnhat_loaida';
+
+      const res = await fetch(targetUrl, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        console.error('Non-JSON response:', jsonErr);
+      }
+
+      if (!res.ok || !data.ok) {
+        msgEl.textContent = data.message || 'Không thể cập nhật loại da. Vui lòng kiểm tra lại trạng thái đăng nhập.';
+        msgEl.className = 'small text-danger';
+        return;
+      }
+
+      msgEl.textContent = data.message || 'Đã cập nhật loại da thành công!';
+      msgEl.className = 'small text-success';
+      setTimeout(function () {
+        window.location.reload();
+      }, 500);
+    } catch (err) {
+      console.error('Submit error:', err);
+      msgEl.textContent = 'Kết nối thất bại. Vui lòng thử lại.';
+      msgEl.className = 'small text-danger';
+    }
+  });
+})();
+
+window.switchHosoTab = function (targetId, evt) {
+  if (evt) {
+    if (typeof evt.preventDefault === 'function') evt.preventDefault();
+    if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  }
+
+  if (!targetId) return false;
+  var cleanId = targetId.indexOf('#') === 0 ? targetId : '#' + targetId;
+  var cleanPaneId = cleanId.replace('#', '');
+
+  var buttons = document.querySelectorAll('#accountTabs .nav-link');
+  buttons.forEach(function (btn) {
+    var btnId = btn.id || '';
+    if (btnId === 'btn-' + cleanPaneId || (btn.getAttribute('onclick') || '').indexOf(cleanPaneId) !== -1) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+    } else if (btn.hasAttribute('onclick')) {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    }
+  });
+
+  var panes = document.querySelectorAll('.tab-content > .tab-pane');
+  panes.forEach(function (pane) {
+    if (pane.id === cleanPaneId) {
+      pane.classList.add('show', 'active');
+      pane.style.display = 'block';
+    } else {
+      pane.classList.remove('show', 'active');
+      pane.style.display = 'none';
+    }
+  });
+
+  return false;
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+  var hash = window.location.hash;
+  var urlParams = new URLSearchParams(window.location.search);
+  var tabParam = urlParams.get('tab');
+
+  if (hash && hash.indexOf('#tab-') === 0) {
+    window.switchHosoTab(hash);
+  } else if (tabParam) {
+    window.switchHosoTab('#tab-' + tabParam);
+  }
+});
 </script>
 
 

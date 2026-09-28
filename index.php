@@ -325,6 +325,10 @@ switch ($r) {
         (new TaiKhoanController($pdo))->capnhatHoso();
         break;
 
+    case 'capnhat_loaida':
+        (new TaiKhoanController($pdo))->capNhatLoaiDa();
+        break;
+
     case 'diachi_macdinh':
         (new TaiKhoanController($pdo))->datDiaChiMacDinh();
         break;

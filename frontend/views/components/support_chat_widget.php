@@ -5,7 +5,18 @@ $supportChatCustomerId = 0;
 
 if (is_logged_in() && current_role() === 'khach_hang') {
   if (!class_exists('QuanTri')) {
-    require_once __DIR__ . '/../../models/QuanTri.php';
+    $quantriPaths = [
+      __DIR__ . '/../../../backend/app/models/QuanTri.php',
+      __DIR__ . '/../../models/QuanTri.php',
+      dirname(__DIR__, 3) . '/backend/app/models/QuanTri.php',
+      dirname(__DIR__, 2) . '/app/models/QuanTri.php'
+    ];
+    foreach ($quantriPaths as $qp) {
+      if (file_exists($qp)) {
+        require_once $qp;
+        break;
+      }
+    }
   }
 
   $supportChatModel = new QuanTri($pdo);
@@ -93,8 +104,8 @@ if (is_logged_in() && current_role() === 'khach_hang') {
   <style>
     .support-chat-widget {
       position: fixed;
-      right: 20px !important;
-      bottom: 20px !important;
+      right: 24px !important;
+      bottom: 88px !important;
       z-index: 1080;
       display: flex;
       flex-direction: column;
@@ -102,13 +113,23 @@ if (is_logged_in() && current_role() === 'khach_hang') {
       gap: 14px;
     }
 
+    @media (max-width: 767.98px) {
+      .support-chat-widget {
+        right: 16px !important;
+        bottom: 74px !important;
+      }
+    }
+
     .support-chat-widget__trigger {
       display: inline-flex;
       align-items: center;
       gap: 10px;
+      width: 200px;
+      height: 52px;
+      box-sizing: border-box;
       border: 1px solid #C8DACF;
-      border-radius: 8px;
-      padding: 10px 16px;
+      border-radius: 999px;
+      padding: 8px 16px;
       background: #EBF2EE;
       color: #183B2B;
       box-shadow: 0 4px 14px rgba(24, 59, 43, 0.1);
@@ -419,10 +440,9 @@ if (is_logged_in() && current_role() === 'khach_hang') {
 
     @media (max-width: 767.98px) {
       .support-chat-widget {
-        right: 12px;
-        bottom: 12px;
-        left: 12px;
-        align-items: stretch;
+        right: 16px;
+        bottom: 74px;
+        align-items: flex-end;
       }
 
       .support-chat-widget__trigger {

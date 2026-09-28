@@ -9,8 +9,9 @@ x-ai-idol-common: &ai-idol-common
   env_file:
     - .env
   environment: &ai-idol-environment
-    MONGO_URI: mongodb://mongodb:27017
-    MONGO_DB: skinsyntax
+    MONGO_URI: ${MONGO_URI}
+    MONGO_DB: ${MONGO_DB:-skinsyntax}
+    MONGO_DB_NAME: ${MONGO_DB_NAME:-skinsyntax}
     AI_IDOL_REDIS_URL: redis://redis:6379/2
     AI_IDOL_CHROMA_HOST: chromadb
     AI_IDOL_CHROMA_PORT: "8000"
@@ -105,8 +106,9 @@ services:
       GUNICORN_WORKER_CLASS: "sync"
       CHROMA_DB_PATH: /app/chroma_data
       CSV_FILE_PATH: /app/database/data_clean_final.csv
-      MONGO_URI: mongodb://mongodb:27017
-      MONGO_DB: skinsyntax
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DB: ${MONGO_DB:-skinsyntax}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-skinsyntax}
       REDIS_URL: redis://redis:6379/0
       REDIS_CACHE_TTL: "604800"
       SESSION_CACHE_TTL: "3600"
@@ -194,8 +196,9 @@ services:
     env_file:
       - .env
     environment:
-      MONGO_URI: mongodb://mongodb:27017
-      MONGO_DB: skinsyntax
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DB: ${MONGO_DB:-skinsyntax}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-skinsyntax}
       FRONTEND_ROOT: /var/www/frontend
       APP_URL: http://localhost
       AI_CHAT_ENDPOINT: http://ai-service:5001/api/chat/auto
@@ -213,6 +216,7 @@ services:
       - ./backend:/var/www/html
       - ./frontend:/var/www/frontend:ro
       - ./database:/var/www/database:ro
+      - ./.env:/var/www/.env:ro
       - uploads_data:/var/www/html/public/uploads
     depends_on:
       mongodb:

@@ -24,6 +24,9 @@ class TaiKhoanController {
 
     private function requireLogin(): array {
         if (!is_logged_in()) {
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                $this->json(['ok' => false, 'message' => 'Vui lòng đăng nhập để thực hiện thao tác này.'], 401);
+            }
             set_flash('error', 'Vui lòng đăng nhập để truy cập trang tài khoản.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
@@ -562,5 +565,32 @@ class TaiKhoanController {
         }
 
         $this->json(['ok' => true, 'message' => 'Đã cập nhật hồ sơ làn da thành công.']);
+    }
+
+    public function capNhatLoaiDa(): void {
+        $user = $this->requireLogin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['ok' => false, 'message' => 'Method not allowed'], 405);
+        }
+
+        $loaiDa = trim((string)($_POST['loai_da'] ?? ''));
+        if ($loaiDa === '') {
+            $this->json(['ok' => false, 'message' => 'Vui lòng chọn loại da.'], 422);
+        }
+
+        $hoTen = trim((string)($user['ho_ten'] ?? ''));
+        $email = trim((string)($user['email'] ?? ''));
+
+        if ($email === '') {
+            $this->json(['ok' => false, 'message' => 'Không xác định được email tài khoản.'], 422);
+        }
+
+        $ok = $this->model->saveSkinTypeOnlyByEmail($hoTen, $email, $loaiDa);
+        if (!$ok) {
+            $this->json(['ok' => false, 'message' => 'Không thể cập nhật loại da.'], 500);
+        }
+
+        $this->json(['ok' => true, 'message' => 'Đã cập nhật loại da thành công.']);
     }
 }

@@ -58,6 +58,70 @@ class SanPham {
         return $stock === null || $stock > 0;
     }
 
+    private static ?array $brandLookupMap = null;
+    private static ?array $categoryLookupMap = null;
+    private static ?array $originLookupMap = null;
+
+    public static function clearLookupCache(): void {
+        self::$brandLookupMap = null;
+        self::$categoryLookupMap = null;
+        self::$originLookupMap = null;
+    }
+
+    private function getBrandName($brandId): string {
+        if ($brandId === null || $brandId === '') {
+            return '';
+        }
+        if (self::$brandLookupMap === null) {
+            self::$brandLookupMap = [];
+            $cursor = $this->db->thuong_hieu->find([], [
+                'projection' => ['ma_thuong_hieu' => 1, 'ten_thuong_hieu' => 1]
+            ]);
+            foreach ($cursor as $doc) {
+                if (isset($doc['ma_thuong_hieu'])) {
+                    self::$brandLookupMap[(string)$doc['ma_thuong_hieu']] = (string)($doc['ten_thuong_hieu'] ?? '');
+                }
+            }
+        }
+        return self::$brandLookupMap[(string)$brandId] ?? '';
+    }
+
+    private function getCategoryName($categoryId): string {
+        if ($categoryId === null || $categoryId === '') {
+            return '';
+        }
+        if (self::$categoryLookupMap === null) {
+            self::$categoryLookupMap = [];
+            $cursor = $this->db->danh_muc->find([], [
+                'projection' => ['ma_danh_muc' => 1, 'ten_danh_muc' => 1]
+            ]);
+            foreach ($cursor as $doc) {
+                if (isset($doc['ma_danh_muc'])) {
+                    self::$categoryLookupMap[(string)$doc['ma_danh_muc']] = (string)($doc['ten_danh_muc'] ?? '');
+                }
+            }
+        }
+        return self::$categoryLookupMap[(string)$categoryId] ?? '';
+    }
+
+    private function getOriginName($originId): string {
+        if ($originId === null || $originId === '') {
+            return '';
+        }
+        if (self::$originLookupMap === null) {
+            self::$originLookupMap = [];
+            $cursor = $this->db->xuat_xu->find([], [
+                'projection' => ['ma_xuat_xu' => 1, 'ten_xuat_xu' => 1]
+            ]);
+            foreach ($cursor as $doc) {
+                if (isset($doc['ma_xuat_xu'])) {
+                    self::$originLookupMap[(string)$doc['ma_xuat_xu']] = (string)($doc['ten_xuat_xu'] ?? '');
+                }
+            }
+        }
+        return self::$originLookupMap[(string)$originId] ?? '';
+    }
+
     private function normalizeProductRecord($product): array {
         if (!$product) return [];
         $p = (array) $product;
@@ -67,23 +131,20 @@ class SanPham {
             $p['id'] = (string) $p['ma_san_pham'];
         }
 
-        // Ghép tên thương hiệu / danh mục từ các collection phụ (Giả lập JOIN)
+        // Ghép tên thương hiệu / danh mục từ các collection phụ (Lookup từ in-memory cache)
         if (isset($p['ma_thuong_hieu'])) {
-            $brand = $this->db->thuong_hieu->findOne(['ma_thuong_hieu' => $p['ma_thuong_hieu']]);
-            $p['thuong_hieu'] = $brand ? $brand['ten_thuong_hieu'] : '';
+            $p['thuong_hieu'] = $this->getBrandName($p['ma_thuong_hieu']);
         }
 
         if (isset($p['ma_danh_muc'])) {
-            $cat = $this->db->danh_muc->findOne(['ma_danh_muc' => $p['ma_danh_muc']]);
-            $p['loai_san_pham'] = $cat ? $cat['ten_danh_muc'] : '';
+            $p['loai_san_pham'] = $this->getCategoryName($p['ma_danh_muc']);
             if (empty($p['danh_muc_day_du'])) {
                 $p['danh_muc_day_du'] = $p['loai_san_pham'];
             }
         }
 
         if (isset($p['ma_xuat_xu'])) {
-            $origin = $this->db->xuat_xu->findOne(['ma_xuat_xu' => $p['ma_xuat_xu']]);
-            $p['xuat_xu_thuong_hieu'] = $origin ? $origin['ten_xuat_xu'] : '';
+            $p['xuat_xu_thuong_hieu'] = $this->getOriginName($p['ma_xuat_xu']);
         }
 
         // Chuẩn hóa một số field hay dùng
@@ -157,10 +218,20 @@ class SanPham {
         return new \MongoDB\BSON\Regex($q, 'i');
     }
 
-    public function latest(int $limit = 8, bool $onlyVisibleOnWebsite = false): array {
+    public function latest(int $limit = 8, bool $onlyVisibleOnWebsite = false, bool $excludeNonBeauty = false): array {
         $filter = [];
         if ($onlyVisibleOnWebsite) {
             $filter = $this->availableProductFilter();
+        }
+
+        if ($excludeNonBeauty) {
+            $nonBeautyRegex = new \MongoDB\BSON\Regex('răng|bàn chải|toothpaste', 'i');
+            $beautyFilter = [
+                'loai_san_pham' => ['$not' => $nonBeautyRegex],
+                'danh_muc_day_du' => ['$not' => $nonBeautyRegex],
+                'ten_san_pham' => ['$not' => $nonBeautyRegex],
+            ];
+            $filter = count($filter) > 0 ? ['$and' => [$filter, $beautyFilter]] : $beautyFilter;
         }
 
         $options = [
@@ -425,11 +496,19 @@ class SanPham {
     public function getHomepageProductSections(int $limitEach = 4): array {
         $limitEach = max(4, min(12, $limitEach));
 
+        $flashDeals = $this->getFlashSaleProducts($limitEach);
+        $forYou = $this->findHomepageProducts([], ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ngay_tao' => -1], $limitEach);
+
+        // Chỉ query bestSellers khi forYou rỗng hoặc không đủ dữ liệu làm fallback
+        $bestSellers = count($forYou) < 4
+            ? $this->findHomepageProducts([], ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1], $limitEach)
+            : [];
+
         return [
-            'flashDeals' => $this->getFlashSaleProducts($limitEach),
-            'bestSellers' => $this->findHomepageProducts([], ['so_luong_ban' => -1, 'luot_mua' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1], $limitEach),
-            'topSearches' => $this->findHomepageProducts([], ['luot_xem' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1], $limitEach),
-            'forYou' => $this->findHomepageProducts([], ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ngay_tao' => -1], $limitEach),
+            'flashDeals' => $flashDeals,
+            'bestSellers' => $bestSellers,
+            'topSearches' => [],
+            'forYou' => $forYou,
         ];
     }
 
@@ -551,21 +630,72 @@ class SanPham {
         return $sortMap[$sort] ?? $defaultSort;
     }
 
+    public function deduplicateProductVariants(array $items, int $maxPerLine = 1): array {
+        if (empty($items)) {
+            return [];
+        }
+
+        $deduped = [];
+        $counts = [];
+
+        foreach ($items as $item) {
+            if (!is_array($item)) continue;
+
+            $groupKey = '';
+            foreach (['parent_product_id', 'product_group', 'ma_dong_san_pham', 'dong_san_pham'] as $field) {
+                if (!empty($item[$field])) {
+                    $groupKey = strtolower(trim((string)$item[$field]));
+                    break;
+                }
+            }
+
+            if ($groupKey === '') {
+                $name = (string)($item['ten_san_pham'] ?? $item['name'] ?? '');
+                $brand = (string)($item['thuong_hieu'] ?? $item['brand'] ?? '');
+                
+                // Strip shade numbers, volume numbers, shade names, etc.
+                $cleanName = preg_replace('/(\b\d{2,4}[a-z]?\b|\b\d+\s*(ml|g|kg|oz)\b|\b(shade|tone|màu)\s*\w+\b|\b(fair|light|medium|deep|honey|neutralizer|nude|ivory)\b)/i', '', $name);
+                $cleanName = preg_replace('/\([^)]*\)/', '', $cleanName);
+                $cleanName = preg_replace('/[^\p{L}\p{N}\s]/u', '', $cleanName);
+                $cleanName = preg_replace('/\s+/', ' ', trim($cleanName));
+
+                $groupKey = strtolower(trim($brand . '_' . $cleanName));
+            }
+
+            if ($groupKey === '') {
+                $deduped[] = $item;
+                continue;
+            }
+
+            $currentCount = $counts[$groupKey] ?? 0;
+            if ($currentCount < $maxPerLine) {
+                $counts[$groupKey] = $currentCount + 1;
+                $deduped[] = $item;
+            }
+        }
+
+        return $deduped;
+    }
+
     private function findDiscoveryProducts(array $baseFilter, array $filters, array $defaultSort, int $limit, ?string $sort = null): array {
         $filter = $this->buildProductFilters($filters);
         if (!empty($baseFilter)) {
             $filter = ['$and' => [$filter, $baseFilter]];
         }
 
-        $items = [];
+        $rawItems = [];
+        // Fetch extra items so deduplication leaves enough diverse items
+        $fetchLimit = max(24, $limit * 4);
         $cursor = $this->db->san_pham->find($filter, [
             'sort' => $this->buildProductSort($sort ?? (string)($filters['sort'] ?? ''), $defaultSort),
-            'limit' => max(1, min(48, $limit)),
+            'limit' => max(1, min(60, $fetchLimit)),
         ]);
         foreach ($cursor as $doc) {
-            $items[] = $this->normalizeProductRecord($doc);
+            $rawItems[] = $this->normalizeProductRecord($doc);
         }
-        return $items;
+
+        $deduped = $this->deduplicateProductVariants($rawItems, 1);
+        return array_slice($deduped, 0, $limit);
     }
 
     private function discountDiscoveryFilter(): array {
@@ -948,6 +1078,9 @@ class SanPham {
         if ($existing && isset($existing['ma_thuong_hieu'])) return (int)$existing['ma_thuong_hieu'];
         $id = $this->nextNumericCode('thuong_hieu', 'ma_thuong_hieu', 1);
         $this->db->thuong_hieu->insertOne(['ma_thuong_hieu' => $id, 'ten_thuong_hieu' => $name, 'created_at' => new \MongoDB\BSON\UTCDateTime(), 'updated_at' => new \MongoDB\BSON\UTCDateTime()]);
+        if (self::$brandLookupMap !== null) {
+            self::$brandLookupMap[(string)$id] = $name;
+        }
         return $id;
     }
 
@@ -959,6 +1092,9 @@ class SanPham {
         if ($existing && isset($existing['ma_danh_muc'])) return (int)$existing['ma_danh_muc'];
         $id = $this->nextNumericCode('danh_muc', 'ma_danh_muc', 1);
         $this->db->danh_muc->insertOne(['ma_danh_muc' => $id, 'ten_danh_muc' => $name, 'danh_muc_day_du' => $name, 'created_at' => new \MongoDB\BSON\UTCDateTime(), 'updated_at' => new \MongoDB\BSON\UTCDateTime()]);
+        if (self::$categoryLookupMap !== null) {
+            self::$categoryLookupMap[(string)$id] = $name;
+        }
         return $id;
     }
 
@@ -1052,14 +1188,60 @@ class SanPham {
     }
 
     public function listCategoryOptions(): array {
-        $options = ['sort' => ['ten_danh_muc' => 1]];
-        $cursor = $this->db->danh_muc->find([], $options);
+        $cursor = $this->db->danh_muc->find([], ['sort' => ['ten_danh_muc' => 1]]);
         $items = [];
+
+        $hierarchyOrder = [
+            'Chăm Sóc Da Mặt', 'cham soc da mat', 'chăm sóc da',
+            'Làm Sạch Da', 'lam sach da', 'làm sạch',
+            'Sữa Rửa Mặt', 'sua rua mat',
+            'Tẩy Trang Mặt', 'tay trang mat', 'tẩy trang',
+            'Dưỡng Ẩm', 'duong am', 'kem dưỡng',
+            'Đặc Trị', 'dac tri', 'serum', 'tinh chất', 'treatment',
+            'Chống Nắng', 'chong nang',
+            'Mặt Nạ', 'mat na',
+            'Trang Điểm', 'trang diem', 'makeup',
+            'Chăm Sóc Cơ Thể', 'cham soc co the',
+            'Chăm Sóc Môi', 'cham soc moi',
+            'Dụng Cụ Làm Đẹp', 'dung cu lam dep'
+        ];
+
+        $rawList = [];
         foreach ($cursor as $doc) {
-            if (!empty($doc['ten_danh_muc'])) {
-                $items[] = (array) $doc;
+            $cat = (array)$doc;
+            $catName = trim((string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? ''));
+            if ($catName === '') continue;
+
+            $catLower = mb_strtolower($catName, 'UTF-8');
+            $matchedOrderIndex = 999;
+
+            foreach ($hierarchyOrder as $idx => $target) {
+                if (mb_strpos($catLower, mb_strtolower($target, 'UTF-8')) !== false) {
+                    $matchedOrderIndex = (int)floor($idx / 3);
+                    break;
+                }
+            }
+
+            if ($matchedOrderIndex < 999) {
+                $rawList[] = [
+                    'doc' => $cat,
+                    'order' => $matchedOrderIndex,
+                    'name' => $catName
+                ];
             }
         }
+
+        usort($rawList, function($a, $b) {
+            if ($a['order'] === $b['order']) {
+                return strcmp($a['name'], $b['name']);
+            }
+            return $a['order'] <=> $b['order'];
+        });
+
+        foreach ($rawList as $entry) {
+            $items[] = $entry['doc'];
+        }
+
         return $items;
     }
 

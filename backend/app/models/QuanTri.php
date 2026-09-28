@@ -637,6 +637,7 @@ class QuanTri {
             $regex = new \MongoDB\BSON\Regex(preg_quote($keyword), 'i');
             $filter['$or'] = [
                 ['ten_danh_muc' => $regex],
+                ['danh_muc_day_du' => $regex],
                 ['mo_ta' => $regex]
             ];
         }
@@ -645,11 +646,43 @@ class QuanTri {
         $cursor = $this->db->danh_muc->find($filter, $options);
         $items = [];
         
+        $hierarchyOrder = [
+            'Chăm Sóc Da Mặt', 'cham soc da mat',
+            'Làm Sạch Da', 'lam sach da',
+            'Sữa Rửa Mặt', 'sua rua mat',
+            'Tẩy Trang Mặt', 'tay trang mat', 'tẩy trang',
+            'Dưỡng Ẩm', 'duong am',
+            'Đặc Trị', 'dac tri',
+            'Trang Điểm', 'trang diem',
+            'Chăm Sóc Cơ Thể', 'cham soc co the'
+        ];
+
         foreach ($cursor as $doc) {
             $cat = (array) $doc;
             $cat['so_san_pham'] = $this->db->san_pham->countDocuments(['ma_danh_muc' => $cat['ma_danh_muc']]);
+            
+            $catName = trim((string)($cat['ten_danh_muc'] ?? ''));
+            $catLower = mb_strtolower($catName, 'UTF-8');
+            $order = 999;
+            foreach ($hierarchyOrder as $idx => $target) {
+                if (mb_strpos($catLower, mb_strtolower($target, 'UTF-8')) !== false) {
+                    $order = (int)floor($idx / 2);
+                    break;
+                }
+            }
+            $cat['hierarchy_order'] = $order;
             $items[] = $cat;
         }
+
+        if ($keyword === '') {
+            usort($items, function($a, $b) {
+                if ($a['hierarchy_order'] === $b['hierarchy_order']) {
+                    return (int)($b['ma_danh_muc'] ?? 0) <=> (int)($a['ma_danh_muc'] ?? 0);
+                }
+                return $a['hierarchy_order'] <=> $b['hierarchy_order'];
+            });
+        }
+
         return $items;
     }
 

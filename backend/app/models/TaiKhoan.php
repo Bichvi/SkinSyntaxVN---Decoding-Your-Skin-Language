@@ -312,10 +312,8 @@ class TaiKhoan {
             'muc_tieu_cham_soc' => ($goal !== '' ? $goal : null),
             'ngan_sach' => ($budget > 0 ? $budget : null),
             'skin_profile_updated_at' => $now,
-            'updated_at' => $now,
+            'updated_at' => $now
         ];
-        if ($hoTen !== '') $updateData['ho_ten'] = $hoTen;
-
         try {
             $result = $this->db->khach_hang->updateOne(['ma_kh' => $kh['ma_kh']], ['$set' => $updateData]);
             if ($result->getMatchedCount() < 1) {
@@ -341,6 +339,29 @@ class TaiKhoan {
                 'updated_at' => $now,
             ]);
 
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function saveSkinTypeOnlyByEmail(string $hoTen, string $email, string $loaiDa): bool {
+        $kh = $this->ensureKhachHangByEmail($hoTen, $email);
+        if (!$kh) return false;
+
+        $maLoaiDa = $this->layHoacTaoMaLoaiDa($loaiDa);
+        if (!$maLoaiDa) return false;
+
+        $tinhTrangDacBietMoi = $this->mergeTinhTrangDacBiet($kh['tinh_trang_dac_biet'] ?? null, $maLoaiDa);
+
+        $updateData = [
+            'tinh_trang_dac_biet' => $tinhTrangDacBietMoi,
+            'updated_at' => new \MongoDB\BSON\UTCDateTime()
+        ];
+        if ($hoTen !== '') $updateData['ho_ten'] = $hoTen;
+
+        try {
+            $this->db->khach_hang->updateOne(['ma_kh' => $kh['ma_kh']], ['$set' => $updateData]);
             return true;
         } catch (Throwable $e) {
             return false;
