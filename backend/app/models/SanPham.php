@@ -61,11 +61,26 @@ class SanPham {
     private static ?array $brandLookupMap = null;
     private static ?array $categoryLookupMap = null;
     private static ?array $originLookupMap = null;
+    private static ?array $simpleRecommenderMemoryCache = null;
 
     public static function clearLookupCache(): void {
         self::$brandLookupMap = null;
         self::$categoryLookupMap = null;
         self::$originLookupMap = null;
+        self::$simpleRecommenderMemoryCache = null;
+    }
+
+    public static function clearSimpleRecommenderCache(): void {
+        self::$simpleRecommenderMemoryCache = null;
+        $cacheFile = dirname(__DIR__) . '/content/simple_recommender_cache.json';
+        if (file_exists($cacheFile)) {
+            @unlink($cacheFile);
+        }
+    }
+
+    public function rebuildSimpleRecommenderCache(): array {
+        self::clearSimpleRecommenderCache();
+        return $this->getSimpleRecommenderProducts(24);
     }
 
     private function getBrandName($brandId): string {
@@ -293,6 +308,7 @@ class SanPham {
             $filter = $this->productFlexibleFilter($id);
             $result = $this->db->san_pham->updateMany($filter, ['$set' => $payload]);
             if ($result->getMatchedCount() > 0) {
+                self::clearSimpleRecommenderCache();
                 return true;
             }
             $this->setError('Khong tim thay san pham can cap nhat.');
@@ -493,11 +509,17 @@ class SanPham {
         return $items;
     }
 
-    public function getHomepageProductSections(int $limitEach = 4): array {
+    public function getHomepageProductSections(int $limitEach = 4, array $recentViewedIds = [], ?array $userProfile = null): array {
         $limitEach = max(4, min(12, $limitEach));
 
         $flashDeals = $this->getFlashSaleProducts($limitEach);
         $forYou = $this->findHomepageProducts([], ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ngay_tao' => -1], $limitEach);
+
+        // Simple Recommender using IMDb Weighted Rating
+        $topRatedWeighted = $this->getSimpleRecommenderProducts($limitEach);
+
+        // Hybrid Recommender V1 (Context Router handles session, profile, or hybrid)
+        $hybridRecs = $this->getHybridRecommendations($recentViewedIds, $userProfile, $limitEach);
 
         // Chỉ query bestSellers khi forYou rỗng hoặc không đủ dữ liệu làm fallback
         $bestSellers = count($forYou) < 4
@@ -509,7 +531,195 @@ class SanPham {
             'bestSellers' => $bestSellers,
             'topSearches' => [],
             'forYou' => $forYou,
+            'topRatedWeighted' => $topRatedWeighted,
+            'contentBased' => $hybridRecs, // Backward-compatible key for view
+            'hybridRecs' => $hybridRecs,
         ];
+    }
+
+    /**
+     * Hybrid Recommender V1: Combines in-session behavior with customer skin profile
+     *
+     * @param array $recentViewedIds Array of viewed ma_san_pham
+     * @param array|null $userProfile Skin profile from customer survey
+     * @param int $limit Max items to return
+     * @return array List of normalized product records with recommender_meta
+     */
+    public function getHybridRecommendations(array $recentViewedIds = [], ?array $userProfile = null, int $limit = 4): array {
+        require_once dirname(__DIR__) . '/services/ContentBasedRecommender.php';
+        $service = new ContentBasedRecommender();
+        $recommendations = $service->recommendHybrid($recentViewedIds, $userProfile, $limit, $this->db);
+
+        if (empty($recommendations)) {
+            return [];
+        }
+
+        $targetIds = array_column($recommendations, 'ma_san_pham');
+        $recMetaMap = [];
+        foreach ($recommendations as $rec) {
+            $recMetaMap[$rec['ma_san_pham']] = $rec;
+        }
+
+        $targetIdsInt = array_map(fn($id) => is_numeric($id) ? (int)$id : $id, $targetIds);
+        $targetIdsStr = array_map(fn($id) => (string)$id, $targetIds);
+        $queryIds = array_values(array_unique(array_merge($targetIdsInt, $targetIdsStr)));
+
+        // Query products from MongoDB by target IDs
+        $cursor = $this->db->san_pham->find([
+            'ma_san_pham' => ['$in' => $queryIds],
+            'trang_thai' => 'active',
+            'gia_ban' => ['$gt' => 0]
+        ]);
+
+        $productMap = [];
+        foreach ($cursor as $doc) {
+            $p = $this->normalizeProductRecord($doc);
+            $pid = (string)($p['ma_san_pham'] ?? '');
+            if ($pid !== '') {
+                $meta = $recMetaMap[$pid] ?? [];
+                $p['recommender_meta'] = [
+                    'algorithm' => 'hybrid_v1',
+                    'source_mode' => $meta['source_mode'] ?? 'hybrid',
+                    'similarity_score' => $meta['similarity'] ?? ($meta['content_score'] ?? 0.0),
+                    'content_score' => $meta['content_score'] ?? 0.0,
+                    'skin_type_match' => $meta['skin_type_match'] ?? 0.0,
+                    'budget_score' => $meta['budget_score'] ?? 1.0,
+                    'final_score' => $meta['final_score'] ?? 0.0,
+                    'source_recent_items' => $meta['source_recent_items'] ?? $recentViewedIds,
+                    'profile_terms_used' => $meta['profile_terms_used'] ?? [],
+                    'ingredient_warning' => $meta['ingredient_warning'] ?? null,
+                    'reason' => $meta['reason'] ?? 'Dành riêng cho bạn',
+                ];
+                $productMap[$pid] = $p;
+            }
+        }
+
+        // Maintain sorted order by final_score descending
+        $ordered = [];
+        foreach ($targetIds as $tid) {
+            if (isset($productMap[$tid])) {
+                $ordered[] = $productMap[$tid];
+            }
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * Backward-compatible Content-Based Recommender wrapper
+     */
+    public function getContentBasedRecommendations(array $recentViewedIds, int $limit = 4): array {
+        return $this->getHybridRecommendations($recentViewedIds, null, $limit);
+    }
+
+    /**
+     * Simple Recommender: IMDb Weighted Rating formula
+     * WR = (v / (v + m)) * R + (m / (v + m)) * C
+     *
+     * @param int $limit Number of top products to return
+     * @param float|null $m Minimum vote threshold (default 21.0, P75)
+     * @param float|null $C Global mean rating (default 4.8890)
+     * @return array Top rated products with recommender_meta
+     */
+    public function getSimpleRecommenderProducts(int $limit = 8, ?float $m = null, ?float $C = null): array {
+        $limit = max(1, min(24, $limit));
+        $isDefaultConfig = ($m === null || abs($m - 21.0) < 0.0001) && ($C === null || abs($C - 4.8890) < 0.0001);
+        $m = $m ?? 21.0;
+        $C = $C ?? 4.8890;
+
+        // 1. In-memory static cache hit (for repeated calls within same request)
+        if ($isDefaultConfig && self::$simpleRecommenderMemoryCache !== null) {
+            return array_slice(self::$simpleRecommenderMemoryCache, 0, $limit);
+        }
+
+        // 2. Application file-level cache hit (TTL: 600s)
+        $cacheFile = dirname(__DIR__) . '/content/simple_recommender_cache.json';
+        if ($isDefaultConfig && file_exists($cacheFile)) {
+            $mtime = filemtime($cacheFile);
+            if ($mtime !== false && (time() - $mtime) < 600) {
+                $cached = json_decode(file_get_contents($cacheFile), true);
+                if (is_array($cached) && !empty($cached)) {
+                    self::$simpleRecommenderMemoryCache = $cached;
+                    return array_slice(self::$simpleRecommenderMemoryCache, 0, $limit);
+                }
+            }
+        }
+
+        // 3. Optimized query with projection (excludes heavy HTML/text fields)
+        $filter = $this->availableProductFilter();
+        $condition = [
+            'so_luong_danh_gia' => ['$gte' => $m],
+            'diem_danh_gia' => ['$gt' => 0],
+            'gia_ban' => ['$gt' => 0]
+        ];
+        $filter = ['$and' => [$filter, $condition]];
+
+        $projection = [
+            'ma_san_pham' => 1,
+            'id' => 1,
+            'ten_san_pham' => 1,
+            'gia_ban' => 1,
+            'gia_thi_truong' => 1,
+            'tien_tiet_kiem' => 1,
+            'phan_tram_giam' => 1,
+            'dung_tich' => 1,
+            'loai_da' => 1,
+            'danh_muc_day_du' => 1,
+            'ma_thuong_hieu' => 1,
+            'ma_danh_muc' => 1,
+            'ma_xuat_xu' => 1,
+            'ma_noi_san_xuat' => 1,
+            'ma_loai_da' => 1,
+            'diem_danh_gia' => 1,
+            'so_luong_danh_gia' => 1,
+            'link_hinh_anh' => 1,
+            'hinh_anh' => 1,
+            'trang_thai' => 1,
+            'trang_thai_kho' => 1,
+            'so_luong_ton_kho' => 1,
+            'so_luong_ton' => 1,
+            'ton_kho' => 1,
+            'so_luong_da_ban' => 1,
+        ];
+
+        $cursor = $this->db->san_pham->find($filter, ['projection' => $projection]);
+        $candidates = [];
+
+        foreach ($cursor as $doc) {
+            $p = $this->normalizeProductRecord($doc);
+            $r = (float)($p['diem_danh_gia'] ?? 0);
+            $v = (int)($p['so_luong_danh_gia'] ?? 0);
+            $wr = ($v + $m > 0) ? (($v / ($v + $m)) * $r + ($m / ($v + $m)) * $C) : 0.0;
+            $p['recommender_meta'] = [
+                'R' => $r,
+                'v' => $v,
+                'C' => $C,
+                'm' => $m,
+                'weighted_rating' => round($wr, 4)
+            ];
+            $candidates[] = $p;
+        }
+
+        usort($candidates, function($a, $b) {
+            $diff = $b['recommender_meta']['weighted_rating'] <=> $a['recommender_meta']['weighted_rating'];
+            if ($diff !== 0) return $diff;
+            $vDiff = $b['recommender_meta']['v'] <=> $a['recommender_meta']['v'];
+            if ($vDiff !== 0) return $vDiff;
+            return strcmp((string)($a['ma_san_pham'] ?? ''), (string)($b['ma_san_pham'] ?? ''));
+        });
+
+        $topCandidates = array_slice($candidates, 0, 24);
+
+        if ($isDefaultConfig && !empty($topCandidates)) {
+            self::$simpleRecommenderMemoryCache = $topCandidates;
+            $dir = dirname($cacheFile);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0777, true);
+            }
+            @file_put_contents($cacheFile, json_encode($topCandidates, JSON_UNESCAPED_UNICODE));
+        }
+
+        return array_slice($topCandidates, 0, $limit);
     }
 
     public function getFlashSaleProducts(int $limit = 8): array {
@@ -1128,7 +1338,10 @@ class SanPham {
             unset($payload['ma_san_pham'], $payload['ngay_tao'], $payload['created_at']);
             foreach ($this->productIdentityFilters($id) as $filter) {
                 $result = $this->db->san_pham->updateOne($filter, ['$set' => $payload]);
-                if ($result->getMatchedCount() > 0) return true;
+                if ($result->getMatchedCount() > 0) {
+                    self::clearSimpleRecommenderCache();
+                    return true;
+                }
             }
             $this->setError('Khong tim thay san pham can cap nhat.');
             return false;

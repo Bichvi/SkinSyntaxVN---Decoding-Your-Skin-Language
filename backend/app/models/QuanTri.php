@@ -758,6 +758,7 @@ class QuanTri {
                         ['$set' => ['ma_san_pham' => null]]
                     );
                     $this->db->san_pham->deleteMany(['ma_san_pham' => ['$in' => $productIds]]);
+                    SanPham::clearSimpleRecommenderCache();
                 }
             }
 
@@ -1505,6 +1506,7 @@ class QuanTri {
                     'so_luong_danh_gia' => $stats[0]['review_count']
                 ]]
             );
+            SanPham::clearSimpleRecommenderCache();
         }
     }
 

@@ -443,6 +443,9 @@ class SanPhamController {
         }
         $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + 1;
 
+        // Lưu vào recent viewed products của session (tối đa 5 sản phẩm)
+        $this->trackRecentViewedProduct((string)($p['ma_san_pham'] ?? $id));
+
         if ($q !== '') {
             $this->saveSearchHistory($q);
         }
@@ -577,6 +580,31 @@ class SanPhamController {
                 'message' => 'Không thể tải dữ liệu tìm kiếm lúc này.'
             ], JSON_UNESCAPED_UNICODE);
         }
+    }
+
+    private function trackRecentViewedProduct(string $productId): void {
+        $productId = trim($productId);
+        if ($productId === '') {
+            return;
+        }
+
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+
+        $list = $_SESSION['recent_viewed_products'] ?? [];
+        if (!is_array($list)) {
+            $list = [];
+        }
+
+        // Loại bỏ sản phẩm nếu đã có để đưa lên đầu danh sách (MRU)
+        $list = array_values(array_filter($list, fn($item) => (string)$item !== $productId));
+
+        // Đưa sản phẩm vừa xem lên đầu danh sách
+        array_unshift($list, $productId);
+
+        // Giới hạn tối đa 5 sản phẩm gần nhất
+        $_SESSION['recent_viewed_products'] = array_slice($list, 0, 5);
     }
 }
 

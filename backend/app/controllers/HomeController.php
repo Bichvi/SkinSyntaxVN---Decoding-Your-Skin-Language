@@ -153,10 +153,13 @@ class HomeController {
         }
 
         try {
+            $recentViewed = is_array($_SESSION['recent_viewed_products'] ?? null)
+                ? $_SESSION['recent_viewed_products']
+                : [];
             $latest = $this->model->latest(12, true, true);
             $cats = $this->getHighlightedCategories();
             $homepageSections = method_exists($this->model, 'getHomepageProductSections')
-                ? $this->model->getHomepageProductSections(8)
+                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile)
                 : [];
         } catch (Throwable $e) {
             error_log('home MongoDB error: ' . $e->getMessage());
