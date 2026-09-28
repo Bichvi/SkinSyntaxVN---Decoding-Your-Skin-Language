@@ -62,6 +62,10 @@ if (empty($forYouProducts)) {
     $forYouProducts = array_slice($latest, 3, 4);
 }
 
+$topRatedWeightedProducts = array_slice(array_values(array_filter($homepageSections['topRatedWeighted'] ?? [])), 0, 4);
+
+$contentBasedProducts = array_slice(array_values(array_filter($homepageSections['contentBased'] ?? [])), 0, 4);
+
 // Brand names
 $brandNames = [];
 foreach ($latest as $item) {
@@ -646,6 +650,64 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
       </div>
     </div>
   </section>
+
+  <!-- 5.5 SIMPLE RECOMMENDER (ĐƯỢC YÊU THÍCH NHẤT - IMDB WEIGHTED RATING) -->
+  <?php if (!empty($topRatedWeightedProducts)): ?>
+    <section class="mb-5">
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+          <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">BẢNG XẾP HẠNG ĐÁNH GIÁ</span>
+          <h3 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Được Yêu Thích Nhất</h3>
+          <span class="text-muted small" style="font-size: 0.82rem;">Những sản phẩm được cộng đồng đánh giá cao</span>
+        </div>
+        <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+      </div>
+
+      <div class="row g-3">
+        <?php foreach ($topRatedWeightedProducts as $p): ?>
+          <div class="col-6 col-md-3">
+            <?php $renderHomeProductCard($p, 'Yêu thích nhất'); ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
+
+  <!-- 5.8 HYBRID / CONTENT-BASED RECOMMENDER -->
+  <?php if (!empty($contentBasedProducts)): ?>
+    <?php
+      $firstMeta = $contentBasedProducts[0]['recommender_meta'] ?? [];
+      $sourceMode = $firstMeta['source_mode'] ?? 'content';
+      $isProfileOrHybrid = in_array($sourceMode, ['profile', 'hybrid'], true);
+      $sectionKicker = $isProfileOrHybrid ? 'CÁ NHÂN HÓA THEO LÀN DA' : 'DÀNH CHO BẠN GẦN ĐÂY';
+      $sectionTitle = $isProfileOrHybrid ? 'Dành Riêng Cho Bạn' : 'Gợi Ý Dựa Trên Sản Phẩm Bạn Đã Xem';
+      $sectionSub = $isProfileOrHybrid 
+          ? 'Gợi ý dựa trên hồ sơ da và sản phẩm bạn quan tâm' 
+          : 'Các sản phẩm có đặc điểm tương tự với những gì bạn vừa quan tâm';
+      $badgeDefault = $isProfileOrHybrid ? 'Dành riêng cho bạn' : 'Gợi ý tương tự';
+    ?>
+    <section class="mb-5">
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+          <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;"><?= htmlspecialchars($sectionKicker) ?></span>
+          <h3 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;"><?= htmlspecialchars($sectionTitle) ?></h3>
+          <span class="text-muted small" style="font-size: 0.82rem;"><?= htmlspecialchars($sectionSub) ?></span>
+        </div>
+        <a href="<?= BASE_URL ?>/index.php?r=tatca" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+      </div>
+
+      <div class="row g-3">
+        <?php foreach ($contentBasedProducts as $p): ?>
+          <div class="col-6 col-md-3">
+            <?php 
+              $pBadge = !empty($p['recommender_meta']['reason']) ? $p['recommender_meta']['reason'] : $badgeDefault;
+              $renderHomeProductCard($p, $pBadge); 
+            ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
 
   <!-- 6. NEW PRODUCTS (MỸ PHẨM VỪA LÊN KỆ - BEAUTY COSMETICS ONLY) -->
   <?php if (!empty($newProducts)): ?>

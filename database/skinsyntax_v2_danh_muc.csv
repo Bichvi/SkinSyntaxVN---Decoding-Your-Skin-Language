@@ -1,0 +1,22 @@
+﻿ma_danh_muc,ma_danh_muc_nguon,ten_danh_muc,slug,parent_id,parent_id_nguon,ten_danh_muc_cha,level,thu_tu_hien_thi
+1,100,Chăm Sóc Da Mặt,cham-soc-da-mat,,,,0,1
+2,110,Làm Sạch Da,lam-sach-da,1,100,Chăm Sóc Da Mặt,1,1
+3,111,Sữa Rửa Mặt,sua-rua-mat,2,110,Làm Sạch Da,2,1
+4,112,Tẩy Trang Mặt,tay-trang-mat,2,110,Làm Sạch Da,2,2
+5,113,Toner / Nước Cân Bằng Da,toner-nuoc-can-bang-da,2,110,Làm Sạch Da,2,3
+6,114,Tẩy Tế Bào Chết Da Mặt,tay-te-bao-chet-da-mat,2,110,Làm Sạch Da,2,4
+7,120,Đặc Trị,dac-tri,1,100,Chăm Sóc Da Mặt,1,2
+8,121,Serum / Tinh Chất,serum-tinh-chat,7,120,Đặc Trị,2,1
+9,122,Hỗ Trợ Trị Mụn,ho-tro-tri-mun,7,120,Đặc Trị,2,2
+10,123,Sản Phẩm Đặc Trị Khác,san-pham-dac-tri-khac,7,120,Đặc Trị,2,3
+11,130,Dưỡng Ẩm,duong-am,1,100,Chăm Sóc Da Mặt,1,3
+12,131,Kem / Gel / Dầu Dưỡng,kem-gel-dau-duong,11,130,Dưỡng Ẩm,2,1
+13,132,Lotion / Sữa Dưỡng,lotion-sua-duong,11,130,Dưỡng Ẩm,2,2
+14,133,Xịt Khoáng,xit-khoang,11,130,Dưỡng Ẩm,2,3
+15,140,Mặt Nạ,mat-na,1,100,Chăm Sóc Da Mặt,1,4
+16,141,Mặt Nạ Rửa,mat-na-rua,15,140,Mặt Nạ,2,1
+17,142,Mặt Nạ Ngủ,mat-na-ngu,15,140,Mặt Nạ,2,2
+18,150,Dưỡng Mắt,duong-mat,1,100,Chăm Sóc Da Mặt,1,5
+19,151,Serum / Kem Dưỡng Mắt,serum-kem-duong-mat,18,150,Dưỡng Mắt,2,1
+20,160,Chống Nắng,chong-nang,1,100,Chăm Sóc Da Mặt,1,6
+21,161,Chống Nắng Da Mặt,chong-nang-da-mat,20,160,Chống Nắng,2,1
