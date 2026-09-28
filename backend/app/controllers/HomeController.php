@@ -153,7 +153,7 @@ class HomeController {
         }
 
         try {
-            $latest = $this->model->latest(12, true);
+            $latest = $this->model->latest(12, true, true);
             $cats = $this->getHighlightedCategories();
             $homepageSections = method_exists($this->model, 'getHomepageProductSections')
                 ? $this->model->getHomepageProductSections(8)
@@ -460,11 +460,14 @@ class HomeController {
             'sort' => trim((string)($_GET['sort'] ?? 'default')),
         ];
 
+        // Case A: Guest user (Not logged in)
         if (!$isLoggedIn) {
             $publicData = $this->loadPublicRecommendationData($filters, 'goiy guest');
 
             $this->render('goiy', [
+                'userState' => 'guest',
                 'isLoggedIn' => false,
+                'hasSurvey' => false,
                 'showPublicDiscovery' => true,
                 'publicFilters' => $filters,
                 'publicProducts' => $publicData['products'],
@@ -479,15 +482,20 @@ class HomeController {
 
         try {
             $profile = $this->buildRecommendationProfile($email);
-            if (!$this->hasValidSkinProfile($profile)) {
+            $hasValidProfile = $this->hasValidSkinProfile($profile);
+
+            // Case B: Logged in but incomplete / no skin profile
+            if (!$hasValidProfile) {
                 $publicData = $this->loadPublicRecommendationData($filters, 'goiy incomplete profile');
                 $this->render('goiy', [
+                    'userState' => 'logged_in_no_profile',
                     'isLoggedIn' => true,
+                    'hasSurvey' => false,
                     'showPublicDiscovery' => true,
                     'needsSurvey' => true,
                     'recommendationProfile' => $profile,
                     'surveyUrl' => BASE_URL . '/index.php?r=khaosat',
-                    'skinProfilePromptMessage' => 'Bạn chưa hoàn thành khảo sát hồ sơ da. Hãy khảo sát để nhận gợi ý dành riêng cho bạn.',
+                    'skinProfilePromptMessage' => 'Hoàn thành khảo sát da để SkinSyntax hiểu làn da của bạn.',
                     'publicFilters' => $filters,
                     'publicProducts' => $publicData['products'],
                     'totalFiltered' => $publicData['totalFiltered'] ?? 0,
@@ -499,20 +507,11 @@ class HomeController {
                 return;
             }
 
+            // Case C: Logged in and HAS skin profile
             $llamaResult = $this->fetchLlamaIndexRecommendations($profile ?? [], $user);
             $profileMessage = '';
 
-            $profileSections = [];
-            try {
-                $skinType = trim((string)($profile['skin_type'] ?? ''));
-                $skinFilter = $skinType !== '' ? ['loai_da' => $skinType] : [];
-                $profileSections['best_seller'] = $this->model->getBestSellerProducts($skinFilter, 6);
-                $profileSections['top_rated'] = $this->model->getTopRatedProducts($skinFilter, 6);
-                $profileSections['discount'] = $this->model->getDiscountProducts($skinFilter, 6);
-            } catch (Throwable $e) {
-                error_log('goiy profileSections error: ' . $e->getMessage());
-                $profileSections = [];
-            }
+            $publicData = $this->loadPublicRecommendationData($filters, 'goiy profile discovery');
         } catch (Throwable $e) {
             error_log('goiy profile MongoDB error: ' . $e->getMessage());
             $profile = null;
@@ -523,16 +522,30 @@ class HomeController {
                 'products' => [],
             ];
             $profileMessage = 'Hiện chưa thể tải hồ sơ gợi ý. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
-            $profileSections = [];
+            $publicData = [
+                'products' => [],
+                'totalFiltered' => 0,
+                'sections' => [],
+                'brands' => [],
+                'categories' => [],
+                'message' => $profileMessage,
+            ];
         }
 
         $this->render('goiy', [
+            'userState' => 'logged_in_with_profile',
             'isLoggedIn' => true,
+            'hasSurvey' => true,
             'needsSurvey' => false,
             'recommendationProfile' => $profile,
             'surveyUrl' => BASE_URL . '/index.php?r=khaosat',
             'llamaRecommendation' => $llamaResult,
-            'profileSections' => $profileSections,
+            'publicSections' => $publicData['sections'] ?? [],
+            'publicFilters' => $filters,
+            'publicProducts' => $publicData['products'] ?? [],
+            'totalFiltered' => $publicData['totalFiltered'] ?? 0,
+            'brandOptions' => $publicData['brands'] ?? [],
+            'categoryOptions' => $publicData['categories'] ?? [],
             'profileUnavailableMessage' => $profileMessage,
         ]);
     }
@@ -620,7 +633,7 @@ class HomeController {
         ]);
     }
 
-    private function buildRecommendationProfile(string $email): ?array {
+    private function buildRecommendationProfile(string $email, string $source = 'account'): ?array {
         $taiKhoanModel = new TaiKhoan($this->pdo);
         $khachHang = $taiKhoanModel->getKhachHangByEmail($email);
         if (!$khachHang) {
@@ -628,7 +641,7 @@ class HomeController {
         }
 
         $skinProfile = $taiKhoanModel->getSkinProfileByEmail($email) ?? [];
-        $concerns = $this->splitProfileValues($khachHang['van_de_da'] ?? null);
+        $concerns = $this->parseConcernsFromRaw($khachHang['van_de_da'] ?? null);
         $avoidIngredients = $this->splitProfileValues($khachHang['thanh_phan_tranh'] ?? null);
         $avoidIngredients = array_values(array_filter($avoidIngredients, function (string $item): bool {
             $normalized = mb_strtolower($item, 'UTF-8');
@@ -638,6 +651,18 @@ class HomeController {
         $budget = isset($khachHang['ngan_sach']) && $khachHang['ngan_sach'] !== null
             ? (int)$khachHang['ngan_sach']
             : null;
+
+        // Phase 1.3: Q6 Goal (muc_tieu_cham_soc) -> canonical field goal
+        $goal = trim((string)($khachHang['muc_tieu_cham_soc'] ?? ''));
+
+        // Phase 1.4: Q7 + Q8 (tieu_chi_uu_tien) -> preferred_textures & desired_ingredients
+        $priorities = $this->parsePrioritiesText($khachHang['tieu_chi_uu_tien'] ?? null);
+
+        // Phase 1.5: Q11 (kinh_nghiem_skincare -> legacy source for preferred_countries)
+        $preferredCountries = $this->splitProfileValues($khachHang['kinh_nghiem_skincare'] ?? null);
+
+        // Phase 1.5: Q12 (so_buoc_skincare -> legacy source for preferred_brands)
+        $preferredBrands = $this->splitProfileValues($khachHang['so_buoc_skincare'] ?? null);
 
         $recentKeywords = $taiKhoanModel->getTuKhoaGanDay($email, 4);
         $orderHistory = $taiKhoanModel->getOrderHistory((int)($khachHang['ma_kh'] ?? 0));
@@ -673,6 +698,13 @@ class HomeController {
             'nam_sinh' => trim((string)($khachHang['nam_sinh'] ?? '')),
             'skin_type' => trim((string)($skinProfile['loai_da'] ?? '')),
             'concerns' => $concerns,
+            'goal' => $goal,
+            'muc_tieu_cham_soc' => $goal,
+            'preferred_textures' => $priorities['preferred_textures'],
+            'desired_ingredients' => $priorities['desired_ingredients'],
+            'preferred_countries' => $preferredCountries, // Legacy field source: kinh_nghiem_skincare
+            'preferred_brands' => $preferredBrands,       // Legacy field source: so_buoc_skincare
+            'profile_source' => $source,                  // Phase 9: "account" | "temporary"
             'avoid_ingredients' => $avoidIngredients,
             'budget' => $budget,
             'budget_label' => $budget !== null && $budget > 0
@@ -683,6 +715,50 @@ class HomeController {
             'recent_orders' => $recentOrders,
             'updated_at' => $updatedAtIso,
             'created_at' => $createdAtIso,
+        ];
+    }
+
+    private function parseConcernsFromRaw(?string $raw): array {
+        $text = trim((string)($raw ?? ''));
+        if ($text === '') {
+            return [];
+        }
+        // Phase 1.1: Protect "Da khô căng, bong tróc" so explosion by comma doesn't split it into two concerns
+        $textProtected = preg_replace('/Da khô căng,\s*bong tróc/iu', 'Da khô căng bong tróc', $text);
+        $parts = preg_split('/\s*[,|]\s*/u', $textProtected) ?: [];
+        $values = [];
+        foreach ($parts as $part) {
+            $v = trim((string)$part);
+            if ($v === 'Da khô căng bong tróc') {
+                $v = 'Da khô căng, bong tróc';
+            }
+            if ($v !== '' && stripos($v, 'loaida:') !== 0) {
+                $values[] = $v;
+            }
+        }
+        return array_values(array_unique($values));
+    }
+
+    private function parsePrioritiesText(?string $raw): array {
+        $textures = [];
+        $ingredients = [];
+        if ($raw === null || trim($raw) === '') {
+            return ['preferred_textures' => [], 'desired_ingredients' => []];
+        }
+        $sections = explode('|', $raw);
+        foreach ($sections as $section) {
+            $section = trim($section);
+            if (mb_stripos($section, 'Kết cấu:') === 0) {
+                $valStr = trim(mb_substr($section, mb_strlen('Kết cấu:')));
+                $textures = array_values(array_filter(array_map('trim', explode(',', $valStr))));
+            } elseif (mb_stripos($section, 'Hoạt chất:') === 0) {
+                $valStr = trim(mb_substr($section, mb_strlen('Hoạt chất:')));
+                $ingredients = array_values(array_filter(array_map('trim', explode(',', $valStr))));
+            }
+        }
+        return [
+            'preferred_textures' => $textures,
+            'desired_ingredients' => $ingredients,
         ];
     }
 
@@ -3215,13 +3291,24 @@ class HomeController {
                         if ($this->isNonFacialAiProduct($row)) continue;
                         $row['id'] = (string)($row['id'] ?? $row['product_id'] ?? $row['ma_san_pham'] ?? '');
                         $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
-                        $row['score'] = null;
-                        $row['match_percent'] = null;
-                        $row['fit_status'] = trim((string)($row['fit_status'] ?? 'phu_hop'));
-                        $row['match_label'] = trim((string)($row['match_label'] ?? 'Phù hợp'));
-                        $row['reasons'] = is_array($row['reasons'] ?? null) ? $row['reasons'] : [];
-                        $row['warnings'] = is_array($row['warnings'] ?? null) ? $row['warnings'] : [];
-                        $row['safety_text'] = trim((string)($row['safety_text'] ?? 'Chưa đủ dữ liệu để đánh giá thành phần cần lưu ý.'));
+                        
+                        // Chạy toàn bộ candidate qua CompatibilityEngine chuẩn hóa của PHP
+                        $compat = $this->goiYModel->evaluateCompatibility($row, $profile);
+                        
+                        $row['retrieval_score'] = (float)($row['retrieval_score'] ?? $row['_rank_score'] ?? $row['score'] ?? 0.0);
+                        $row['raw_compatibility_score'] = $compat['raw_compatibility_score'];
+                        $row['compatibility_score'] = $compat['compatibility_score'];
+                        $row['data_coverage'] = $compat['data_coverage'];
+                        $row['data_status'] = $compat['data_status'];
+                        $row['reasons'] = $compat['reasons'];
+                        $row['personalization_reasons'] = $compat['personalization_reasons'];
+                        $row['warnings'] = $compat['warnings'];
+                        $row['evidence'] = $compat['evidence'];
+
+                        // Gán key tương thích ngược cho template
+                        $row['match_percent'] = $compat['compatibility_score'];
+                        $row['fit_status'] = $compat['data_status'];
+
                         $products[] = $row;
                     }
 
@@ -3247,6 +3334,7 @@ class HomeController {
                 'gioi_tinh' => $profile['gioi_tinh'] ?? '',
                 'nam_sinh' => $profile['nam_sinh'] ?? '',
                 'is_routine' => true,
+                'query_text' => $profile['user_query'] ?? '',
             ];
             $fallbackProducts = $this->goiYModel->recommendFromPost($fallbackInput, 12);
             $formattedProducts = [];
@@ -3255,8 +3343,8 @@ class HomeController {
                 if ($this->isNonFacialAiProduct($p)) continue;
                 $p['id'] = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                 $p['image_url'] = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['image_url'] ?? ''));
-                $p['match_percent'] = null;
-                $p['fit_status'] = 'chua_tinh';
+                $p['match_percent'] = $p['compatibility_score'] ?? null;
+                $p['fit_status'] = $p['data_status'] ?? 'insufficient';
                 $formattedProducts[] = $p;
             }
 

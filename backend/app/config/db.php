@@ -13,6 +13,10 @@ foreach ($autoloadCandidates as $autoloadPath) {
     }
 }
 
+if (!function_exists('ss_env') && is_file(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+}
+
 if (!class_exists('MongoDatabaseCompat')) {
     class MongoDatabaseCompat {
         private \MongoDB\Database $database;
@@ -41,9 +45,14 @@ try {
     }
 
     $mongoUri = function_exists('ss_env') ? ss_env('MONGO_URI', 'mongodb://127.0.0.1:27017') : (getenv('MONGO_URI') ?: 'mongodb://127.0.0.1:27017');
-    $mongoDbName = function_exists('ss_env') ? ss_env('MONGO_DB_NAME', 'skinsyntax') : (getenv('MONGO_DB_NAME') ?: 'skinsyntax');
+    // MONGO_DB_NAME là key chính; fallback sang MONGO_DB nếu không có (tương thích .env cũ)
+    $mongoDbName = function_exists('ss_env')
+        ? ss_env('MONGO_DB_NAME', ss_env('MONGO_DB', 'skinsyntax'))
+        : (getenv('MONGO_DB_NAME') ?: (getenv('MONGO_DB') ?: 'skinsyntax'));
 
-    if (str_contains($mongoUri, '://mongodb:')) {
+    // Chỉ replace Docker hostname khi KHÔNG dùng MongoDB Atlas (mongodb+srv://)
+    // Atlas URI không cần và không được phép bị thay đổi
+    if (!str_starts_with($mongoUri, 'mongodb+srv://') && str_contains($mongoUri, '://mongodb:')) {
         if (PHP_OS_FAMILY === 'Windows' || !file_exists('/.dockerenv')) {
             $mongoUri = str_replace('://mongodb:', '://127.0.0.1:', $mongoUri);
         }
@@ -51,6 +60,7 @@ try {
 
     defined('MONGO_URI') || define('MONGO_URI', $mongoUri);
     defined('MONGO_DB_NAME') || define('MONGO_DB_NAME', $mongoDbName);
+    defined('MONGO_DB') || define('MONGO_DB', $mongoDbName);
 
     $client = new MongoDB\Client($mongoUri);
     $db = $client->selectDatabase($mongoDbName);

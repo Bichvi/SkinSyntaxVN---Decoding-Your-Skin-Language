@@ -27,22 +27,37 @@ $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_s
 $sold = (int)($product['so_luong_da_ban'] ?? $product['so_luong_ban'] ?? 0);
 $rating = trim((string)($product['diem_danh_gia'] ?? ''));
 $reviewCount = (int)($product['so_luong_danh_gia'] ?? 0);
-$matchPercentRaw = $product['match_percent'] ?? $product['score'] ?? null;
-$matchPercent = is_numeric($matchPercentRaw) ? max(0, min(100, (int)$matchPercentRaw)) : null;
-$fitStatus = trim((string)($product['fit_status'] ?? 'chua_tinh'));
-$matchLabel = trim((string)($product['match_label'] ?? ''));
-if ($matchLabel === '') {
-    if ($fitStatus === 'phu_hop') $matchLabel = 'Phù hợp';
-    elseif ($fitStatus === 'co_the_can_nhac') $matchLabel = 'Có thể cân nhắc';
-    elseif ($fitStatus === 'chua_du_du_lieu') $matchLabel = 'Chưa đủ dữ liệu';
-    else $matchLabel = 'Chưa tính độ phù hợp';
-}
+$dataStatus = trim((string)($product['data_status'] ?? 'insufficient'));
+$compatScoreRaw = $product['compatibility_score'] ?? $product['match_percent'] ?? null;
+$compatScore = is_numeric($compatScoreRaw) ? max(0, min(100, (int)$compatScoreRaw)) : null;
+
 $reasons = is_array($product['reasons'] ?? null) ? $product['reasons'] : [];
+$personalizationReasons = is_array($product['personalization_reasons'] ?? null) ? $product['personalization_reasons'] : [];
 $warnings = is_array($product['warnings'] ?? null) ? $product['warnings'] : [];
-$matchedIngredients = is_array($product['matched_ingredients'] ?? null) ? $product['matched_ingredients'] : [];
+
+if ($dataStatus === 'complete' && $compatScore !== null) {
+    $badgeText = $compatScore . '% phù hợp';
+    $subBadgeText = '';
+    $showPercentBar = true;
+    $barColor = '#183B2B';
+    $badgeStyle = 'background: #EBF2EE; color: #183B2B; border: 1px solid #C8DACF;';
+} elseif ($dataStatus === 'partial' && $compatScore !== null) {
+    $badgeText = 'Độ phù hợp ước tính: ' . $compatScore . '%';
+    $coverageVal = (int)($product['compatibility_coverage'] ?? $product['data_coverage'] ?? 0);
+    $subBadgeText = 'Đã đánh giá ' . $coverageVal . '% dữ liệu cần thiết';
+    $showPercentBar = true;
+    $barColor = '#D97706';
+    $badgeStyle = 'background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A;';
+} else {
+    $badgeText = 'Chưa đủ dữ liệu để đánh giá';
+    $subBadgeText = '';
+    $showPercentBar = false;
+    $barColor = '#94A3B8';
+    $badgeStyle = 'background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0;';
+}
+
 $uniqueModalId = 'explainModal_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $productId) . '_' . mt_rand(1000, 9999);
 $explanation = trim((string)($product['llm_explanation'] ?? $product['reason'] ?? ''));
-$safetyText = trim((string)($product['safety_text'] ?? 'Chưa đủ dữ liệu để đánh giá thành phần cần lưu ý.'));
 ?>
 
 <?php if ($cardVariant === 'rcm'): ?>
@@ -52,7 +67,7 @@ $safetyText = trim((string)($product['safety_text'] ?? 'Chưa đủ dữ liệu 
       <?php if ($discount !== null): ?>
         <span class="rcm-discount-badge position-absolute" style="top: 12px; left: 12px; background: #E11D48; color: #FFF; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; z-index: 3;">-<?= h((string)$discount) ?>%</span>
       <?php endif; ?>
-      <span class="rcm-match-badge position-absolute" style="top: 12px; right: 12px; background: #EBF2EE; color: #183B2B; border: 1px solid #C8DACF; font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; z-index: 3;"><?= h($badgeLabel !== '' ? $badgeLabel : 'PHÙ HỢP') ?></span>
+      <span class="rcm-match-badge position-absolute" style="top: 12px; right: 12px; <?= $badgeStyle ?> font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; z-index: 3;"><?= h($badgeText) ?></span>
     </a>
 
     <div class="rcm-product-body p-3 d-flex flex-column flex-grow-1">
@@ -66,15 +81,22 @@ $safetyText = trim((string)($product['safety_text'] ?? 'Chưa đủ dữ liệu 
       <?php if ((float)$marketPrice > (float)$salePrice): ?>
         <div class="rcm-product-market text-muted text-decoration-line-through" style="font-size: 0.8rem; font-variant-numeric: tabular-nums; color: #94A3B8 !important;"><?= h(vnd($marketPrice)) ?></div>
       <?php endif; ?>
-      <?php if ($matchPercent !== null): ?>
+      <?php if ($showPercentBar && $compatScore !== null): ?>
         <div class="recommend-match my-2">
           <div class="recommend-match__head d-flex justify-content-between small mb-1">
-            <span class="text-muted" style="font-size: 0.76rem;"><?= h($matchLabel !== '' ? $matchLabel : 'Phù hợp') ?></span>
-            <strong style="color: #183B2B; font-size: 0.78rem;"><?= h((string)$matchPercent) ?>%</strong>
+            <span class="text-muted" style="font-size: 0.76rem;"><?= h($badgeText) ?></span>
+            <strong style="color: <?= $barColor ?>; font-size: 0.78rem;"><?= h((string)$compatScore) ?>%</strong>
           </div>
-          <div class="recommend-match__bar" aria-label="Độ phù hợp <?= h((string)$matchPercent) ?>%" style="height: 5px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
-            <span class="recommend-match__fill d-block h-100" style="width: <?= h((string)$matchPercent) ?>%; background: #183B2B;"></span>
+          <div class="recommend-match__bar" aria-label="<?= h($badgeText) ?>" style="height: 5px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
+            <span class="recommend-match__fill d-block h-100" style="width: <?= h((string)$compatScore) ?>%; background: <?= $barColor ?>;"></span>
           </div>
+          <?php if ($subBadgeText !== ''): ?>
+            <div class="text-muted text-end mt-0.5" style="font-size: 0.7rem; color: #D97706 !important;"><?= h($subBadgeText) ?></div>
+          <?php endif; ?>
+        </div>
+      <?php else: ?>
+        <div class="recommend-match my-2">
+          <span class="badge py-1 px-2" style="<?= $badgeStyle ?> font-size: 0.74rem; font-weight: 500; border-radius: 4px; width: 100%; text-align: center; display: block;"><?= h($badgeText) ?></span>
         </div>
       <?php endif; ?>
 
@@ -124,15 +146,19 @@ $safetyText = trim((string)($product['safety_text'] ?? 'Chưa đủ dữ liệu 
           <div class="d-flex align-items-center gap-3 mb-3">
             <img src="<?= h($image) ?>" alt="<?= h($productName) ?>" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border);">
             <div>
-              <span class="badge mb-1" style="background: #EBF2EE; color: #183B2B; border-radius: 4px; font-size: 0.72rem; border: 1px solid #C8DACF;"><?= h($matchLabel !== '' ? $matchLabel : 'PHÙ HỢP') ?><?= $matchPercent !== null ? ' - ' . h((string)$matchPercent) . '%' : '' ?></span>
+              <span class="badge mb-1" style="<?= $badgeStyle ?> font-size: 0.72rem; padding: 4px 8px; border-radius: 4px;"><?= h($badgeText) ?></span>
               <div class="fw-bold small text-uppercase" style="color: #183B2B; font-size: 0.7rem;"><?= h($productBrand) ?></div>
               <div class="fw-semibold text-dark" style="font-size: 0.88rem;"><?= h($productName) ?></div>
               <div class="fw-bold fs-6 mt-1 tabular-nums" style="color: #183B2B;"><?= h(vnd($salePrice)) ?></div>
             </div>
           </div>
           <hr class="my-3">
+
+          <hr class="my-3">
+
+          <!-- SECTION 1: PHÙ HỢP VỚI LÀN DA (Skin Type 35%, Concerns 40%, Goal 25%) -->
           <div class="mb-3 small">
-            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-circle-check text-success me-1"></i> Lý do đề xuất:</strong>
+            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-shield-heart text-success me-1"></i> 1. PHÙ HỢP VỚI LÀN DA:</strong>
             <?php if (!empty($reasons)): ?>
               <ul class="list-unstyled mb-0 ms-2">
                 <?php foreach ($reasons as $r): ?>
@@ -140,32 +166,55 @@ $safetyText = trim((string)($product['safety_text'] ?? 'Chưa đủ dữ liệu 
                 <?php endforeach; ?>
               </ul>
             <?php else: ?>
-              <span class="text-muted ms-2">Sản phẩm thuộc nhóm gợi ý phù hợp với thông tin tìm kiếm.</span>
+              <span class="text-muted ms-2" style="font-size: 0.78rem;">Chưa phát hiện bằng chứng hỗ trợ trực tiếp loại da/vấn đề/mục tiêu của bạn trong mô tả.</span>
             <?php endif; ?>
           </div>
 
+          <!-- SECTION 2: PHÙ HỢP VỚI NHU CẦU (Budget, Texture, Ingredients, Brand, Country) -->
+          <div class="mb-3 small">
+            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-user-check text-primary me-1"></i> 2. PHÙ HỢP VỚI NHU CẦU:</strong>
+            <?php if (!empty($personalizationReasons)): ?>
+              <ul class="list-unstyled mb-0 ms-2">
+                <?php foreach ($personalizationReasons as $pr): ?>
+                  <li class="mb-1"><i class="fa-solid fa-circle-check me-1 text-primary" style="font-size: 0.75rem;"></i> <?= h($pr) ?></li>
+                <?php endforeach; ?>
+              </ul>
+            <?php else: ?>
+              <span class="text-muted ms-2" style="font-size: 0.78rem;">Không có tùy chọn cá nhân hóa bổ sung nào khớp.</span>
+            <?php endif; ?>
+          </div>
+
+          <!-- SECTION 3: LƯU Ý (Warnings / Ingredient Conflict / Scope / Data Missing) -->
           <?php if (!empty($warnings)): ?>
             <div class="mb-3 small p-2.5 rounded" style="background: #FFFBEB; border: 1px solid #FDE68A;">
-              <strong class="d-block mb-1 text-warning-emphasis"><i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Cần lưu ý:</strong>
+              <strong class="d-block mb-1 text-warning-emphasis"><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> 3. LƯU Ý:</strong>
               <ul class="list-unstyled mb-0 ms-2 text-dark">
                 <?php foreach ($warnings as $w): ?>
-                  <li class="mb-0.5"><i class="fa-solid fa-triangle-exclamation text-warning me-1" style="font-size: 0.72rem;"></i> <?= h($w) ?></li>
+                  <li class="mb-1"><i class="fa-solid fa-circle-exclamation text-warning me-1" style="font-size: 0.72rem;"></i> <?= h($w) ?></li>
                 <?php endforeach; ?>
               </ul>
             </div>
           <?php endif; ?>
 
+          <!-- SECTION 4: DỮ LIỆU ĐÁNH GIÁ -->
+          <?php
+            $safetyStatus = trim((string)($product['safety_data_status'] ?? 'insufficient'));
+            $coveragePercent = (int)($product['compatibility_coverage'] ?? $product['data_coverage'] ?? 0);
+            $safetyLabel = $safetyStatus === 'complete' ? 'Đầy đủ dữ liệu thành phần' : 'Chưa đủ dữ liệu thành phần kiểm tra safety';
+          ?>
+          <div class="mb-3 p-2.5 rounded text-secondary" style="background: #F8FAF8; border: 1px solid #E2E8F0; font-size: 0.78rem;">
+            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-chart-pie me-1"></i> 4. DỮ LIỆU ĐÁNH GIÁ:</strong>
+            <div>• Độ bao phủ tiêu chí da: <?= h((string)$coveragePercent) ?>% coverage (Baseline: Skin Type 35%, Concerns 40%, Goal 25%)</div>
+            <div>• Trạng thái thành phần an toàn: <?= h($safetyLabel) ?></div>
+          </div>
+
           <div class="mb-2 small">
             <strong><i class="fa-solid fa-droplet me-1" style="color: #183B2B;"></i> Loại da tương thích:</strong>
-            <span class="ms-1"><?= h((string)($product['loai_da'] ?? 'Phù hợp đa số loại da')) ?></span>
+            <span class="ms-1"><?= h(!empty($product['loai_da']) ? $product['loai_da'] : 'Phù hợp đa số loại da') ?></span>
           </div>
           <div class="mb-2 small">
             <strong><i class="fa-solid fa-vial me-1" style="color: #183B2B;"></i> Hoạt chất chính:</strong>
-            <span class="ms-1"><?= h((string)($product['thanh_phan_chinh'] ?? $product['thanh_phan'] ?? 'Hoạt chất phục hồi và chăm sóc chuyên sâu')) ?></span>
-          </div>
-          <div class="mb-3 small">
-            <strong><i class="fa-solid fa-shield-check me-1" style="color: #183B2B;"></i> Độ an toàn:</strong>
-            <span class="ms-1"><?= h($safetyText) ?></span>
+            <span class="ms-1"><?= h(!empty($product['thanh_phan_chinh']) ? $product['thanh_phan_chinh'] : (!empty($product['thanh_phan']) ? $product['thanh_phan'] : 'Chưa có thông tin thành phần chi tiết')) ?></span>
           </div>
           
           <?php if (!empty($explanation)): ?>
@@ -210,18 +259,14 @@ $safetyText = trim((string)($product['safety_text'] ?? 'Chưa đủ dữ liệu 
     <?php if ((float)$marketPrice > (float)$salePrice): ?>
       <div class="flash-product__market text-muted text-decoration-line-through" style="font-size: 0.82rem; color: #94A3B8 !important;"><?= h(vnd($marketPrice)) ?></div>
     <?php endif; ?>
-    <div class="goiy-product-card__meta mb-3 mt-1 small" style="color: #5C705E;">
+    <div class="goiy-product-card__meta mb-3 mt-1 small d-flex align-items-center flex-wrap gap-1" style="font-size: 0.8rem; color: #64748B;">
       <?php if ($rating !== ''): ?>
-        <span class="d-inline-flex align-items-center gap-1 px-2 py-0.5 rounded-pill" style="background: #FFFBEB; color: #D97706; font-weight: 800; border: 1px solid #FEF3C7;"><i class="fas fa-star" style="color:#F59E0B;"></i> <?= h($rating) ?><?= $reviewCount > 0 ? ' · ' . h((string)$reviewCount) . ' đánh giá' : '' ?></span>
+        <span class="fw-semibold" style="color: #D97706;"><i class="fas fa-star me-1" style="color:#F59E0B;"></i><?= h($rating) ?><?= $reviewCount > 0 ? ' · ' . h((string)$reviewCount) . ' đánh giá' : '' ?></span>
       <?php endif; ?>
       <?php if ($sold > 0): ?>
-        <span class="ms-1">· Đã bán <?= h((string)$sold) ?></span>
+        <span class="text-muted">· Đã bán <?= h((string)$sold) ?></span>
       <?php endif; ?>
     </div>
-
-    <button type="button" class="btn btn-sm btn-outline-success rounded-pill w-100 mb-2 py-1 fw-bold" style="font-size: 0.78rem; border-color: #84A98C; color: #215427;" data-bs-toggle="modal" data-bs-target="#<?= $uniqueModalId ?>">
-      <i class="fa-solid fa-circle-question me-1"></i> Vì sao phù hợp?
-    </button>
 
     <div class="flash-product__actions d-grid gap-1.5 mt-auto" style="grid-template-columns: 1fr 1fr; width: 100%;">
       <?php if ($productId !== ''): ?>
@@ -252,6 +297,7 @@ $safetyText = trim((string)($product['safety_text'] ?? 'Chưa đủ dữ liệu 
     </div>
   </div>
 </article>
+<?php return; ?>
 
 <!-- Modal Giải thích độ phù hợp sản phẩm -->
 <div class="modal fade" id="<?= $uniqueModalId ?>" tabindex="-1" aria-hidden="true">

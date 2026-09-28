@@ -401,39 +401,483 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
 ?>
 <link rel="stylesheet" href="<?= h(BASE_URL . '/assets/css/goiy-recommendation.css?v=2') ?>">
 
+<style>
+  /* SkinSyntax Goiy (Catalog / Public Discovery) Styles */
+  .goiy-page {
+    background: #FAFAFA;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #E2EADF;
+  }
+  .goiy-hero {
+    background: #183B2B;
+    border-radius: 16px;
+    color: #FFFFFF;
+    padding: 36px 40px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(24, 59, 43, 0.15);
+  }
+  .goiy-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #F1F5F9;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .goiy-hero h1,
+  .goiy-hero-title {
+    font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+    font-weight: 800;
+    color: #FFFFFF;
+    margin: 12px 0 10px;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+  .goiy-hero p,
+  .goiy-hero-desc {
+    color: #E2E8F0;
+    font-size: 0.96rem;
+    margin: 0;
+    line-height: 1.65;
+    max-width: 680px;
+  }
+  .goiy-hero-actions .btn {
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 9px 22px;
+    transition: all 0.25s ease;
+  }
+  .goiy-hero-actions .btn-light {
+    background: #FFFFFF;
+    color: #183B2B;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+  .goiy-hero-actions .btn-light:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+    transform: translateY(-2px);
+  }
+  .goiy-hero-actions .btn-outline-light {
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    color: #FFFFFF;
+  }
+  .goiy-hero-actions .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #FFFFFF;
+    border-color: #FFFFFF;
+    transform: translateY(-2px);
+  }
+  .goiy-hero-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .goiy-hero-card h3 {
+    font-size: 1.2rem;
+    line-height: 1.4;
+    margin: 10px 0 0;
+    color: #FFFFFF;
+    font-weight: 700;
+  }
+  .goiy-filter {
+    background: #FFFFFF;
+    border: 1px solid #E2EADF;
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  }
+  .goiy-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.2fr) repeat(5, minmax(120px, 1fr)) auto auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .goiy-filter label {
+    color: #0F172A;
+    font-weight: 700;
+    font-size: 0.82rem;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .goiy-filter .form-control,
+  .goiy-filter .form-select {
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    background: #FAFAFA;
+    font-weight: 500;
+    color: #0F172A;
+    font-size: 0.88rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .goiy-filter .form-control:focus,
+  .goiy-filter .form-select:focus {
+    border-color: #183B2B;
+    box-shadow: 0 0 0 3px rgba(24, 59, 43, 0.12);
+    background: #FFFFFF;
+  }
+  .goiy-filter .btn {
+    height: 42px;
+    border-radius: 8px;
+    font-weight: 700;
+    white-space: nowrap;
+    font-size: 0.88rem;
+    padding: 0 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .goiy-filter .btn-brand {
+    background: #183B2B;
+    border-color: #183B2B;
+    color: #FFFFFF;
+  }
+  .goiy-filter .btn-brand:hover {
+    background: #122B20;
+    border-color: #122B20;
+    color: #FFFFFF;
+  }
+  .goiy-filter .btn-outline-secondary {
+    border: 1px solid #D1D5DB;
+    color: #475569;
+    background: #FFFFFF;
+  }
+  .goiy-filter .btn-outline-secondary:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+    border-color: #94A3B8;
+  }
+  .price-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .price-pill {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #E2EADF;
+    background: #FAFAFA;
+    color: #183B2B;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .price-pill:hover,
+  .price-pill.active {
+    background: #183B2B;
+    color: #FFFFFF;
+    border-color: #183B2B;
+  }
+  .goiy-survey-alert {
+    background: #F8FAF8;
+    border: 1px solid #C8DACF;
+    border-radius: 12px;
+    color: #0F172A;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .goiy-section {
+    background: #FFFFFF;
+    border: 1px solid #E2EADF;
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  }
+  .goiy-section__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .goiy-section__title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .goiy-section__tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .goiy-section__more {
+    border: 1px solid #E2EADF;
+    border-radius: 8px;
+    padding: 7px 16px;
+    color: #0F172A;
+    text-decoration: none;
+    font-weight: 700;
+    background: #F8FAF8;
+    font-size: 0.82rem;
+    transition: all 0.2s ease;
+  }
+  .goiy-section__more:hover {
+    background: #183B2B;
+    color: #FFFFFF;
+    border-color: #183B2B;
+  }
+  .goiy-product-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+    align-items: stretch !important;
+  }
+  .goiy-product-grid .goiy-product-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: 1px solid #E2EADF !important;
+    border-radius: 14px !important;
+    background: #FFFFFF !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease !important;
+  }
+  .goiy-product-grid .goiy-product-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 28px rgba(24, 59, 43, 0.08) !important;
+    border-color: #84A98C !important;
+  }
+  .goiy-product-grid .flash-product__image {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    background: #F8FAF8 !important;
+    border-radius: 14px 14px 0 0 !important;
+    overflow: hidden !important;
+    padding: 10px !important;
+  }
+  .goiy-product-grid .flash-product__image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+    transition: transform 0.3s ease !important;
+  }
+  .goiy-product-grid .goiy-product-card:hover .flash-product__image img {
+    transform: scale(1.04) !important;
+  }
+  .goiy-empty {
+    border: 1px dashed #C8DACF;
+    border-radius: 10px;
+    background: #FAFAFA;
+    color: #64748B;
+    padding: 32px 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  @media (max-width: 1399px) {
+    .goiy-filter-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 992px) {
+    .goiy-product-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 16px !important;
+    }
+    .goiy-hero {
+      padding: 28px 24px;
+    }
+  }
+  @media (max-width: 767px) {
+    .goiy-page {
+      padding: 14px;
+      border-radius: 12px;
+    }
+    .goiy-hero {
+      padding: 24px 18px;
+      border-radius: 12px;
+    }
+    .goiy-filter-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .goiy-product-grid {
+      grid-template-columns: 1fr !important;
+      gap: 14px !important;
+    }
+    .goiy-survey-alert,
+    .goiy-section__head {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .goiy-section__tools {
+      justify-content: flex-start;
+    }
+  }
+</style>
+
 <div class="container my-4">
   <?php if ($showPublicDiscovery): ?>
     <div class="goiy-page">
       <section class="goiy-hero mb-4">
         <div class="row align-items-center g-4">
           <div class="col-lg-8">
-            <span class="goiy-eyebrow"><i class="fa-solid fa-compass me-1"></i> Gợi ý & tìm kiếm sản phẩm</span>
-            <h1>Khám phá sản phẩm phù hợp</h1>
-            <p>Lọc sản phẩm theo từ khóa, mức giá, danh mục, thương hiệu và khám phá các dòng sản phẩm tại SkinSyntax.</p>
+            <span class="goiy-eyebrow"><i class="fa-solid fa-compass me-1"></i> Khám phá sản phẩm</span>
+            <h1 class="goiy-hero-title">Khám phá sản phẩm phù hợp</h1>
+            <p class="goiy-hero-desc">Muốn biết sản phẩm nào thực sự phù hợp với làn da của bạn? Đăng nhập hoặc thực hiện khảo sát da nhanh để nhận gợi ý cá nhân hóa.</p>
+            <div class="goiy-hero-actions d-flex flex-wrap gap-2 mt-3">
+              <?php if (!$isLoggedIn): ?>
+                <a href="<?= h(BASE_URL . '/index.php?r=dangnhap') ?>" class="btn btn-light rounded-pill px-4 py-2 fw-bold text-dark d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login" style="font-size: 0.88rem;">
+                  <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Đăng nhập để nhận gợi ý
+                </a>
+              <?php endif; ?>
+              <a class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold d-inline-flex align-items-center" href="<?= h($surveyUrl) ?>" style="font-size: 0.88rem;">
+                <i class="fa-solid fa-clipboard-question me-2"></i> Khảo sát da nhanh
+              </a>
+            </div>
           </div>
-          <div class="col-lg-4"><div class="goiy-hero-card h-100"><span class="goiy-eyebrow"><i class="fa-solid fa-fire me-1"></i> Catalog SkinSyntax</span><h3>Chọn đúng sản phẩm trước khi đưa vào routine.</h3></div></div>
+          <div class="col-lg-4">
+            <div class="goiy-hero-card h-100 d-flex flex-column justify-content-center">
+              <span class="goiy-eyebrow"><i class="fa-solid fa-fire me-1"></i> Xu hướng làm đẹp</span>
+              <h3 class="mt-2 text-white fw-bold">Top sản phẩm bán chạy, đánh giá cao &amp; đang giảm giá</h3>
+            </div>
+          </div>
         </div>
       </section>
 
-      <?php if ($skinProfilePromptMessage !== ''): ?><div class="goiy-survey-alert mb-4"><strong><?= h($skinProfilePromptMessage) ?></strong><a class="btn btn-brand" href="<?= h($surveyUrl) ?>">Khảo sát da</a></div><?php endif; ?>
+      <?php if ($skinProfilePromptMessage !== ''): ?>
+        <div class="goiy-survey-alert mb-4">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-sparkles text-success fs-5"></i>
+            <strong><?= h($skinProfilePromptMessage) ?></strong>
+          </div>
+          <a class="btn btn-brand" href="<?= h($surveyUrl) ?>">Khảo sát ngay</a>
+        </div>
+      <?php endif; ?>
+
       <form class="goiy-filter mb-4" method="get" action="<?= h(BASE_URL . '/index.php') ?>">
         <input type="hidden" name="r" value="goiy">
         <div class="goiy-filter-grid">
-          <div><label class="form-label" for="goiy-keyword">Từ khóa</label><input class="form-control" id="goiy-keyword" type="search" name="keyword" value="<?= h((string)($publicFilters['keyword'] ?? '')) ?>" placeholder="Serum B5, kem chống nắng..."></div>
-          <div><label class="form-label" for="goiy-category">Danh mục</label><select class="form-select" id="goiy-category" name="danh_muc"><option value="">Tất cả danh mục</option><?php foreach ($categoryOptions as $cat): $catName = (string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? ''); if ($catName !== ''): ?><option value="<?= h($catName) ?>" <?= (($publicFilters['danh_muc'] ?? '') === $catName ? 'selected' : '') ?>><?= h($catName) ?></option><?php endif; endforeach; ?></select></div>
-          <div><label class="form-label" for="goiy-brand">Thương hiệu</label><select class="form-select" id="goiy-brand" name="thuong_hieu"><option value="">Tất cả thương hiệu</option><?php foreach ($brandOptions as $brand): $brandName = (string)($brand['ten_thuong_hieu'] ?? $brand['thuong_hieu'] ?? ''); if ($brandName !== ''): ?><option value="<?= h($brandName) ?>" <?= (($publicFilters['thuong_hieu'] ?? '') === $brandName ? 'selected' : '') ?>><?= h($brandName) ?></option><?php endif; endforeach; ?></select></div>
-          <div><label class="form-label" for="goiy-price-min">Giá từ</label><input class="form-control" id="goiy-price-min" type="number" min="0" step="10000" name="gia_tu" value="<?= h((string)($publicFilters['gia_tu'] ?? '')) ?>" placeholder="0"></div>
-          <div><label class="form-label" for="goiy-price-max">Giá đến</label><input class="form-control" id="goiy-price-max" type="number" min="0" step="10000" name="gia_den" value="<?= h((string)($publicFilters['gia_den'] ?? '')) ?>" placeholder="1.000.000"></div>
-          <div><label class="form-label" for="goiy-sort">Sắp xếp</label><select class="form-select" id="goiy-sort" name="sort"><?php foreach ($sortOptions as $value => $label): ?><option value="<?= h($value) ?>" <?= ($currentSort === $value ? 'selected' : '') ?>><?= h($label) ?></option><?php endforeach; ?></select></div>
-          <button class="btn btn-brand" type="submit"><i class="fa-solid fa-filter me-1"></i> Lọc</button><a class="btn btn-outline-secondary" href="<?= h(BASE_URL . '/index.php?r=goiy') ?>">Xóa</a>
+          <div>
+            <label class="form-label" for="goiy-keyword"><i class="fa-solid fa-magnifying-glass me-1"></i> Từ khóa</label>
+            <input class="form-control" id="goiy-keyword" type="search" name="keyword" value="<?= h((string)($publicFilters['keyword'] ?? '')) ?>" placeholder="Serum B5, kem chống nắng...">
+          </div>
+          <div>
+            <label class="form-label" for="goiy-category">Danh mục</label>
+            <select class="form-select" id="goiy-category" name="danh_muc">
+              <option value="">Tất cả danh mục</option>
+              <?php foreach ($categoryOptions as $cat): ?>
+                <?php $catName = (string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? ''); ?>
+                <?php if ($catName !== ''): ?>
+                  <option value="<?= h($catName) ?>" <?= (($publicFilters['danh_muc'] ?? '') === $catName ? 'selected' : '') ?>><?= h($catName) ?></option>
+                <?php endif; ?>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="goiy-brand">Thương hiệu</label>
+            <select class="form-select" id="goiy-brand" name="thuong_hieu">
+              <option value="">Tất cả thương hiệu</option>
+              <?php foreach ($brandOptions as $brand): ?>
+                <?php $brandName = (string)($brand['ten_thuong_hieu'] ?? $brand['thuong_hieu'] ?? ''); ?>
+                <?php if ($brandName !== ''): ?>
+                  <option value="<?= h($brandName) ?>" <?= (($publicFilters['thuong_hieu'] ?? '') === $brandName ? 'selected' : '') ?>><?= h($brandName) ?></option>
+                <?php endif; ?>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="goiy-price-min">Giá từ (VNĐ)</label>
+            <input class="form-control" id="goiy-price-min" type="number" min="0" step="10000" name="gia_tu" value="<?= h((string)($publicFilters['gia_tu'] ?? '')) ?>" placeholder="0">
+          </div>
+          <div>
+            <label class="form-label" for="goiy-price-max">Giá đến (VNĐ)</label>
+            <input class="form-control" id="goiy-price-max" type="number" min="0" step="10000" name="gia_den" value="<?= h((string)($publicFilters['gia_den'] ?? '')) ?>" placeholder="1.000.000">
+          </div>
+          <div>
+            <label class="form-label" for="goiy-sort">Sắp xếp</label>
+            <select class="form-select" id="goiy-sort" name="sort" onchange="this.form.submit()">
+              <?php foreach ($sortOptions as $value => $label): ?>
+                <option value="<?= h($value) ?>" <?= ($currentSort === $value ? 'selected' : '') ?>><?= h($label) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <button class="btn btn-brand" type="submit"><i class="fa-solid fa-filter me-1"></i> Lọc</button>
+          <a class="btn btn-outline-secondary" href="<?= h(BASE_URL . '/index.php?r=goiy') ?>">Xóa</a>
         </div>
-        <div class="price-pills"><span class="small text-muted me-1 align-self-center fw-bold">Mức giá nhanh:</span><?php foreach ($pricePresets as $preset): $isActive = ((string)($publicFilters['gia_tu'] ?? '') === (string)$preset['min']) && ((string)($publicFilters['gia_den'] ?? '') === (string)$preset['max']); $presetUrl = BASE_URL . '/index.php?' . $queryWith(['gia_tu' => $preset['min'], 'gia_den' => $preset['max']]); ?><a class="price-pill <?= $isActive ? 'active' : '' ?>" href="<?= h($presetUrl) ?>"><?= h($preset['label']) ?></a><?php endforeach; ?></div>
+
+        <div class="price-pills">
+          <span class="small text-muted me-1 align-self-center fw-bold">Chọn nhanh mức giá:</span>
+          <?php foreach ($pricePresets as $preset): ?>
+            <?php
+              $isActive = ((string)($publicFilters['gia_tu'] ?? '') === (string)$preset['min']) && ((string)($publicFilters['gia_den'] ?? '') === (string)$preset['max']);
+              $presetUrl = BASE_URL . '/index.php?' . $queryWith(['gia_tu' => $preset['min'], 'gia_den' => $preset['max']]);
+            ?>
+            <a class="price-pill <?= $isActive ? 'active' : '' ?>" href="<?= h($presetUrl) ?>"><?= h($preset['label']) ?></a>
+          <?php endforeach; ?>
+        </div>
       </form>
-      <?php if ($mongoUnavailableMessage !== ''): ?><div class="goiy-empty mb-4"><?= h($mongoUnavailableMessage) ?></div><?php endif; ?>
+
+      <?php if ($mongoUnavailableMessage !== ''): ?>
+        <div class="goiy-empty mb-4"><?= h($mongoUnavailableMessage) ?></div>
+      <?php endif; ?>
+
       <?php if ($hasActiveFilter): ?>
-        <section class="goiy-section mb-4"><div class="goiy-section__head"><h2 class="goiy-section__title">Kết quả lọc (<?= number_format($totalFiltered) ?> sản phẩm)</h2><a class="goiy-section__more" href="<?= h(BASE_URL . '/index.php?r=goiy') ?>">Xóa bộ lọc</a></div><?php if (!$publicProducts): ?><div class="goiy-empty">Không tìm thấy sản phẩm phù hợp. Hãy thử từ khóa hoặc mức giá khác.</div><?php else: ?><div class="goiy-product-grid"><?php foreach ($publicProducts as $product): $renderCard($product, 'LỌC KHỚP'); endforeach; ?></div><?php endif; ?></section>
+        <section class="goiy-section mb-4">
+          <div class="goiy-section__head">
+            <h2 class="goiy-section__title">
+              <i class="fa-solid fa-list-check me-2 text-success"></i>Kết quả lọc &amp; sắp xếp (<?= number_format($totalFiltered) ?> sản phẩm)
+            </h2>
+            <div class="goiy-section__tools">
+              <a class="goiy-section__more" href="<?= h(BASE_URL . '/index.php?r=goiy') ?>">Xóa bộ lọc</a>
+            </div>
+          </div>
+          <?php if (empty($publicProducts)): ?>
+            <div class="goiy-empty">Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại. Hãy thử chọn mức giá hoặc từ khóa khác.</div>
+          <?php else: ?>
+            <div class="goiy-product-grid">
+              <?php foreach ($publicProducts as $product): ?>
+                <?php $renderCard($product, 'LỌC KHỚP'); ?>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+        </section>
       <?php else: ?>
-        <?php foreach ($sections as $key => $meta): $items = is_array($publicSections[$key] ?? null) ? $publicSections[$key] : []; ?><section class="goiy-section mb-4"><div class="goiy-section__head"><h2 class="goiy-section__title"><?= h($meta['title']) ?></h2><a class="goiy-section__more" href="<?= h(BASE_URL . '/index.php?r=product_collection&type=' . rawurlencode($key) . '&' . $queryWith([])) ?>">Xem tất cả</a></div><?php if (!$items): ?><div class="goiy-empty">Chưa có sản phẩm phù hợp trong nhóm này.</div><?php else: ?><div class="goiy-product-grid"><?php foreach ($items as $product): $renderCard($product, $meta['badge']); endforeach; ?></div><?php endif; ?></section><?php endforeach; ?>
+        <?php foreach ($sections as $key => $meta): ?>
+          <?php $items = is_array($publicSections[$key] ?? null) ? $publicSections[$key] : []; ?>
+          <section class="goiy-section mb-4">
+            <div class="goiy-section__head">
+              <h2 class="goiy-section__title"><?= h($meta['title']) ?></h2>
+              <div class="goiy-section__tools">
+                <a class="goiy-section__more" href="<?= h(BASE_URL . '/index.php?r=product_collection&type=' . rawurlencode($key) . '&' . $queryWith([])) ?>">Xem tất cả</a>
+              </div>
+            </div>
+            <?php if (empty($items)): ?>
+              <div class="goiy-empty">Chưa có sản phẩm phù hợp trong nhóm này.</div>
+            <?php else: ?>
+              <div class="goiy-product-grid">
+                <?php foreach ($items as $product): ?>
+                  <?php $renderCard($product, $meta['badge']); ?>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </section>
+        <?php endforeach; ?>
       <?php endif; ?>
     </div>
   <?php else: ?>

@@ -43,14 +43,12 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 <?php if ($pdo !== null): ?>
   <div class="ai-chat-widget" data-ai-chat-widget>
     <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với Syna (AI Advisor)">
-      <span class="ai-chat-widget__trigger-icon" aria-hidden="true">
-        <span class="ai-chat-widget__trigger-avatar">
-          <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png" alt="SYNA Mascot" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
-        </span>
+      <span class="ai-chat-widget__trigger-avatar" aria-hidden="true">
+        <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= time() ?>" alt="SYNA Mascot">
       </span>
       <span class="ai-chat-widget__trigger-text">
         <strong>Chat với Syna</strong>
-        <small>SYNA | AI Skincare Advisor</small>
+        <small>Mình giúp bạn nhé</small>
       </span>
     </button>
 
@@ -73,7 +71,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         <header class="ai-chat-widget__panel-head">
         <div class="ai-chat-widget__panel-head-main">
           <div class="ai-chat-widget__panel-avatar" aria-hidden="true">
-            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png" alt="SYNA Mascot" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= time() ?>" alt="SYNA Mascot" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
           </div>
           <div class="ai-chat-widget__panel-info">
             <div class="ai-chat-widget__panel-title">SYNA | AI SKINCARE ADVISOR</div>
@@ -190,8 +188,8 @@ if ($aiChatEmail !== '' && $pdo !== null) {
   <style>
     .ai-chat-widget {
       position: fixed;
-      right: 16px;
-      bottom: 88px;
+      right: 24px;
+      bottom: 24px;
       z-index: 1084;
       display: flex;
       flex-direction: column;
@@ -203,64 +201,70 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     .ai-chat-widget__trigger {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 18px;
-      border-radius: 8px;
-      border: 1px solid #C8DACF;
+      gap: 10px;
+      width: 200px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
       background: #183B2B;
       color: #ffffff;
-      box-shadow: 0 4px 14px rgba(24, 59, 43, 0.2);
+      box-shadow: 0 8px 20px rgba(24, 59, 43, 0.22);
       cursor: pointer;
-      transition: all 0.22s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
       position: relative;
     }
 
     .ai-chat-widget__trigger:hover {
       background: #122B1F;
+      box-shadow: 0 10px 24px rgba(24, 59, 43, 0.32);
       transform: translateY(-2px);
+    }
+
+    .ai-chat-widget__trigger:hover .ai-chat-widget__trigger-avatar img {
+      transform: scale(1.08) translateY(-1px);
     }
 
     .ai-chat-widget.is-open .ai-chat-widget__trigger {
       display: none;
     }
 
-    .ai-chat-widget__trigger-icon {
+    .ai-chat-widget__trigger-avatar {
       width: 34px;
       height: 34px;
-      border-radius: 6px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #2D6A4F;
+      border: 1px solid rgba(255, 255, 255, 0.3);
       display: grid;
       place-items: center;
-      background: rgba(255, 255, 255, 0.14);
-      flex: 0 0 auto;
     }
 
-    .ai-chat-widget__trigger-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 4px;
-      display: grid;
-      place-items: center;
-      background: #2D6A4F;
-      color: #ffffff;
-      font-size: 13px;
+    .ai-chat-widget__trigger-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s ease;
     }
 
     .ai-chat-widget__trigger-text {
-      display: grid;
+      display: flex;
+      flex-direction: column;
       text-align: left;
-      line-height: 1.2;
+      line-height: 1.25;
       min-width: 0;
     }
 
     .ai-chat-widget__trigger-text strong {
       font-size: 13px;
       font-weight: 600;
+      color: #ffffff;
     }
 
     .ai-chat-widget__trigger-text small {
-      color: rgba(248, 251, 255, 0.78);
-      font-size: 10px;
-      font-weight: 500;
+      color: rgba(248, 251, 255, 0.8);
+      font-size: 11px;
+      font-weight: 400;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1633,9 +1637,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 
       var syncLayout = function () {
         var isMobile = window.matchMedia('(max-width: 767.98px)').matches;
-        var nextBottom = isMobile ? 74 : 84;
+        var nextBottom = isMobile ? 16 : 24;
         widget.style.bottom = nextBottom + 'px';
-        widget.style.right = isMobile ? '16px' : '20px';
+        widget.style.right = isMobile ? '16px' : '24px';
 
         if (panel) {
           var isExpanded = widget.classList.contains('is-expanded');
@@ -1847,7 +1851,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           }
 
           var formattedContent = isUser ? escapeHtml(message.content) : formatMarkdown(message.content);
-          var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png') ?>;
+          var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png?v=' . time()) ?>;
           var avatar = isUser
             ? ''
             : '<div class="ai-chat-widget__bubble-avatar" aria-hidden="true" style="overflow:hidden;border-radius:10px;"><img src="' + mascotImgUrl + '" alt="SYNA Mascot" style="width:100%;height:100%;object-fit:cover;"></div>';
@@ -2436,6 +2440,12 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         }
       } catch (error) {
       }
+
+      window.openSynaChat = function () {
+        if (typeof openWidget === 'function') {
+          openWidget();
+        }
+      };
 
       syncLayout();
       syncExpandedState();

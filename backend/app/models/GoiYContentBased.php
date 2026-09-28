@@ -95,8 +95,8 @@ class GoiYContentBased {
             if ($queryIntent !== '' && !$this->productMatchesQueryIntent($product, $queryIntent)) {
                 continue;
             }
-            // Tính điểm phù hợp dựa trên hồ sơ da, ngân sách, vấn đề da, đánh giá và loại sản phẩm.
-            $scored[] = $this->scoreOne($product, [
+            // Tính điểm retrieval nội bộ và đánh giá độ phù hợp với hồ sơ da
+            $scoredItem = $this->scoreOne($product, [
                 'gender' => $gender,
                 'birth_year' => $birthYear,
                 'skin_type' => mb_strtolower($skinType, 'UTF-8'),
@@ -105,10 +105,18 @@ class GoiYContentBased {
                 'avoid_ingredients' => $avoidIngredients,
                 'query_intent' => $queryIntent,
             ]);
+            $compat = $this->evaluateCompatibility($product, [
+                'skin_type' => $skinType,
+                'concerns' => $concerns,
+                'avoid_ingredients' => $avoidIngredients,
+                'budget' => $budget,
+                'user_query' => trim((string)($post['query_text'] ?? '')),
+            ]);
+            $scoredItem = array_merge($scoredItem, $compat);
+            $scored[] = $scoredItem;
         }
 
         usort($scored, function (array $a, array $b) {
-            // Điểm cao đứng trước; nếu bằng điểm thì sắp theo tên để kết quả ổn định.
             if ($a['score'] === $b['score']) {
                 return strcmp((string)$a['ten_san_pham'], (string)$b['ten_san_pham']);
             }
@@ -116,7 +124,6 @@ class GoiYContentBased {
         });
 
         $scored = array_values(array_filter($scored, function (array $item) use ($whitelistIds) {
-            // Đảm bảo sản phẩm trả về vẫn thuộc tập sản phẩm vừa lấy từ MongoDB.
             $id = (string)($item['id'] ?? '');
             return $id !== '' && in_array($id, $whitelistIds, true);
         }));
@@ -152,8 +159,26 @@ class GoiYContentBased {
             return array_slice($routineProducts, 0, $limit);
         }
 
-        // Chỉ trả về số lượng sản phẩm mà giao diện cần hiển thị.
-        return array_slice($scored, 0, $limit);
+        // Deduplicate product line variants so recommendations do not repeat shades
+        $deduped = [];
+        $lineCounts = [];
+        foreach ($scored as $item) {
+            $name = (string)($item['ten_san_pham'] ?? '');
+            $brand = (string)($item['thuong_hieu'] ?? '');
+            $cleanName = preg_replace('/(\b\d{2,4}[a-z]?\b|\b\d+\s*(ml|g|kg|oz)\b|\b(shade|tone|màu)\s*\w+\b|\b(fair|light|medium|deep|honey|neutralizer|nude|ivory)\b)/i', '', $name);
+            $cleanName = preg_replace('/\([^)]*\)/', '', $cleanName);
+            $cleanName = preg_replace('/[^\p{L}\p{N}\s]/u', '', $cleanName);
+            $cleanName = preg_replace('/\s+/', ' ', trim($cleanName));
+            $groupKey = strtolower(trim($brand . '_' . $cleanName));
+
+            $count = $lineCounts[$groupKey] ?? 0;
+            if ($count < 1) {
+                $lineCounts[$groupKey] = $count + 1;
+                $deduped[] = $item;
+            }
+        }
+
+        return array_slice(!empty($deduped) ? $deduped : $scored, 0, $limit);
     }
 
     private function fetchRoutineCandidateProducts(int $limit, ?int $budgetMin = null, ?int $budgetMax = null): array {
@@ -498,6 +523,18 @@ class GoiYContentBased {
         }
 
         $penalty = 0;
+
+        // SkinSyntax: Prioritize Skincare over Makeup for personalized skin profile recommendations
+        $skincareTokens = ['sữa rửa mặt', 'sua rua mat', 'tẩy trang', 'tay trang', 'toner', 'nước hoa hồng', 'serum', 'tinh chất', 'tinh chat', 'đặc trị', 'dac tri', 'treatment', 'kem dưỡng', 'kem duong', 'dưỡng ẩm', 'duong am', 'chống nắng', 'chong nang', 'mặt nạ', 'mat na', 'dưỡng môi', 'skincare', 'tẩy tế bào chết', 'xịt khoáng'];
+        $makeupTokens = ['concealer', 'che khuyết điểm', 'che khuyet diem', 'foundation', 'kem nền', 'kem nen', 'cushion', 'mascara', 'eyebrow', 'kẻ mày', 'ke may', 'eyeshadow', 'phấn mắt', 'phan mat', 'son môi', 'son moi', 'trang điểm', 'trang diem', 'makeup'];
+
+        if ($this->countMatches($haystack, $skincareTokens) > 0) {
+            $score += 15;
+            $reasons[] = 'Sản phẩm chăm sóc da phù hợp với nhu cầu của làn da bạn.';
+        } elseif ($this->countMatches($haystack, $makeupTokens) > 0 && empty($profile['query_intent'])) {
+            $penalty += 15;
+        }
+
         if (!empty($profile['avoid_ingredients'])) {
             // Nếu sản phẩm có thành phần người dùng muốn tránh thì trừ điểm mạnh.
             foreach ($profile['avoid_ingredients'] as $badIng) {
@@ -791,5 +828,526 @@ class GoiYContentBased {
         $text = strtr($text, $map);
         $text = preg_replace('/\s+/u', ' ', $text);
         return $text ?? '';
+    }
+
+    /**
+     * Compatibility Engine: Đánh giá độ tương thích chuẩn xác giữa Hồ sơ User ↔ Sản phẩm.
+     * Tách biệt 3 nhóm:
+     * Group A: Skin Compatibility (Skin Type: 40, Concerns: 40, Avoid Ingredients: 20) -> tính compatibility_score.
+     * Group B: Personalization (Budget, Query match) -> tạo lý do personalization_reasons, không làm tăng score skin.
+     * Group C: Retrieval Rank -> giữ nội bộ.
+     */
+    /**
+     * Parse legacy Q7 (Texture) and Q8 (Desired Ingredients) from khach_hang.tieu_chi_uu_tien
+     */
+    public function parseLegacyPriorities(?string $rawText): array {
+        $text = trim((string)($rawText ?? ''));
+        $textures = [];
+        $ingredients = [];
+
+        if ($text === '') {
+            return ['textures' => [], 'ingredients' => []];
+        }
+
+        $parts = explode('|', $text);
+        foreach ($parts as $part) {
+            $p = trim($part);
+            if (mb_stripos($p, 'Kết cấu:') === 0) {
+                $sub = trim(mb_substr($p, mb_strlen('Kết cấu:')));
+                if ($sub !== '') {
+                    $textures = array_map('trim', explode(',', $sub));
+                }
+            } elseif (mb_stripos($p, 'Hoạt chất:') === 0) {
+                $sub = trim(mb_substr($p, mb_strlen('Hoạt chất:')));
+                if ($sub !== '') {
+                    $ingredients = array_map('trim', explode(',', $sub));
+                }
+            }
+        }
+
+        return [
+            'textures' => array_values(array_unique(array_filter($textures))),
+            'ingredients' => array_values(array_unique(array_filter($ingredients))),
+        ];
+    }
+
+    /**
+     * Canonical Skin Type Taxonomy
+     */
+    public function canonicalSkinType(?string $raw): string {
+        $s = $this->normalizeText((string)($raw ?? ''));
+        if ($s === '') return 'unknown';
+
+        if (mb_strpos($s, 'da dau') !== false || mb_strpos($s, 'hon hop dau') !== false || mb_strpos($s, 'oily') !== false) {
+            return 'oily';
+        }
+        if (mb_strpos($s, 'da kho') !== false || mb_strpos($s, 'hon hop kho') !== false || mb_strpos($s, 'dry') !== false) {
+            return 'dry';
+        }
+        if (mb_strpos($s, 'hon hop') !== false || mb_strpos($s, 'combination') !== false) {
+            return 'combination';
+        }
+        if (mb_strpos($s, 'thuong') !== false || mb_strpos($s, 'moi loai da') !== false || mb_strpos($s, 'normal') !== false) {
+            return 'normal';
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * Canonical Concerns Taxonomy
+     */
+    public function canonicalConcerns($rawConcerns): array {
+        $items = is_array($rawConcerns) ? $rawConcerns : array_map('trim', explode(',', (string)$rawConcerns));
+        $canonical = [];
+
+        foreach ($items as $item) {
+            $norm = $this->normalizeText((string)$item);
+            if ($norm === '') continue;
+
+            if (mb_strpos($norm, 'kho cang') !== false || mb_strpos($norm, 'bong troc') !== false) {
+                $canonical[] = 'dry_flaky';
+            } elseif (mb_strpos($norm, 'viem') !== false || mb_strpos($norm, 'sung do') !== false) {
+                $canonical[] = 'inflammatory_acne';
+            } elseif (mb_strpos($norm, 'an') !== false || mb_strpos($norm, 'dau den') !== false || mb_strpos($norm, 'mun') !== false) {
+                $canonical[] = 'comedonal_acne';
+            } elseif (mb_strpos($norm, 'lo chan long') !== false) {
+                $canonical[] = 'large_pores';
+            } elseif (mb_strpos($norm, 'tham') !== false || mb_strpos($norm, 'sam') !== false || mb_strpos($norm, 'nam') !== false || mb_strpos($norm, 'tan nhang') !== false) {
+                $canonical[] = 'hyperpigmentation';
+            } elseif (mb_strpos($norm, 'lao hoa') !== false || mb_strpos($norm, 'nep nhan') !== false) {
+                $canonical[] = 'aging';
+            }
+        }
+
+        return array_values(array_unique($canonical));
+    }
+
+    /**
+     * Canonical Goal Taxonomy
+     */
+    public function canonicalGoal(?string $rawGoal): string {
+        $norm = $this->normalizeText((string)($rawGoal ?? ''));
+        if ($norm === '') return '';
+
+        if (mb_strpos($norm, 'sach mun') !== false || mb_strpos($norm, 'giam viem') !== false) {
+            return 'acne_control';
+        }
+        if (mb_strpos($norm, 'duong sang') !== false || mb_strpos($norm, 'mo tham') !== false || mb_strpos($norm, 'nam') !== false) {
+            return 'brightening';
+        }
+        if (mb_strpos($norm, 'phuc hoi') !== false || mb_strpos($norm, 'cap am') !== false || mb_strpos($norm, 'mang bao ve') !== false) {
+            return 'barrier_hydration';
+        }
+        if (mb_strpos($norm, 'lao hoa') !== false || mb_strpos($norm, 'tre hoa') !== false) {
+            return 'anti_aging';
+        }
+
+        return '';
+    }
+
+    /**
+     * Determine Product Scope from Category and Name
+     */
+    public function determineProductScope(string $danhMucFull, string $tenSanPham): string {
+        $cat = mb_strtolower($danhMucFull, 'UTF-8');
+        $name = mb_strtolower($tenSanPham, 'UTF-8');
+        $combined = $cat . ' ' . $name;
+
+        if (mb_strpos($combined, 'tẩy trang mắt') !== false || mb_strpos($combined, 'tẩy trang môi') !== false || mb_strpos($combined, 'eye & lip') !== false) {
+            return 'eye_lip_care';
+        }
+        if (mb_strpos($combined, 'môi') !== false || mb_strpos($combined, 'lip') !== false) {
+            return 'lip_care';
+        }
+        if (mb_strpos($combined, 'mắt') !== false || mb_strpos($combined, 'eye') !== false) {
+            return 'eye_care';
+        }
+        if (mb_strpos($combined, 'trang điểm') !== false || mb_strpos($combined, 'makeup') !== false || mb_strpos($combined, 'cushion') !== false || mb_strpos($combined, 'kem nền') !== false) {
+            return 'makeup';
+        }
+        if (mb_strpos($combined, 'cơ thể') !== false || mb_strpos($combined, 'sữa tắm') !== false || mb_strpos($combined, 'dưỡng thể') !== false || mb_strpos($combined, 'body') !== false) {
+            return 'body_care';
+        }
+        if (mb_strpos($combined, 'tóc') !== false || mb_strpos($combined, 'dầu gội') !== false || mb_strpos($combined, 'hair') !== false) {
+            return 'hair_care';
+        }
+        if (mb_strpos($combined, 'chăm sóc da mặt') !== false || mb_strpos($combined, 'sữa rửa mặt') !== false || mb_strpos($combined, 'serum') !== false || mb_strpos($combined, 'kem dưỡng') !== false || mb_strpos($combined, 'tẩy trang mặt') !== false || mb_strpos($combined, 'chống nắng') !== false || mb_strpos($combined, 'mặt nạ giấy') !== false) {
+            return 'facial_skincare';
+        }
+
+        return 'facial_skincare';
+    }
+
+    /**
+     * Clean product haystack text to prevent false positives from storage text,Hasaki footer, and negations
+     */
+    public function cleanProductHaystack(string $rawText): string {
+        $text = $rawText;
+
+        // Strip Hasaki invoice footer & terms
+        $text = preg_replace('/bảo quản\s*:?[^\n.]*/iu', ' ', $text);
+        $text = preg_replace('/nơi khô ráo[^\n.]*/iu', ' ', $text);
+        $text = preg_replace('/hóa đơn GTGT[^\n.]*/iu', ' ', $text);
+        $text = preg_replace('/khách hàng có lấy hay không[^\n.]*/iu', ' ', $text);
+        $text = preg_replace('/hàng không nguồn gốc[^\n.]*/iu', ' ', $text);
+
+        // Replace negation phrases
+        $text = preg_replace('/không\s+gây\s+khô[a-z\s]*/iu', ' ', $text);
+        $text = preg_replace('/không\s+khô[a-z\s]*/iu', ' ', $text);
+        $text = preg_replace('/không\s+gây\s+kích\s+ứng[a-z\s]*/iu', ' ', $text);
+
+        return $text;
+    }
+
+    /**
+     * Compatibility Engine V2
+     * Scope-aware, Canonical Taxonomies, Goal Matching, Word-Boundary Keyword Parsing, Separate Safety Status
+     */
+    public function evaluateCompatibility(array $product, array $profile): array {
+        $rawSkinType = trim((string)($profile['skin_type'] ?? ''));
+        $userSkinCanonical = $this->canonicalSkinType($rawSkinType);
+
+        $rawConcerns = $profile['concerns'] ?? [];
+        $userConcernsCanonical = $this->canonicalConcerns($rawConcerns);
+
+        $rawGoal = trim((string)($profile['goal'] ?? $profile['muc_tieu_cham_soc'] ?? ''));
+        $userGoalCanonical = $this->canonicalGoal($rawGoal);
+
+        $avoidIngredients = is_array($profile['avoid_ingredients'] ?? null) ? $profile['avoid_ingredients'] : [];
+        if (is_string($profile['avoid_ingredients'] ?? null) && trim($profile['avoid_ingredients']) !== '') {
+            $avoidIngredients = array_map('trim', explode(',', $profile['avoid_ingredients']));
+        }
+
+        $budget = isset($profile['budget']) && (int)$profile['budget'] > 0 ? (int)$profile['budget'] : null;
+        $sensitivity = trim((string)($profile['sensitivity'] ?? ''));
+        $userQuery = trim((string)($profile['user_query'] ?? $profile['query_text'] ?? ''));
+
+        $preferredTextures = is_array($profile['preferred_textures'] ?? null) ? $profile['preferred_textures'] : [];
+        $desiredIngredients = is_array($profile['desired_ingredients'] ?? null) ? $profile['desired_ingredients'] : [];
+        $preferredCountries = is_array($profile['preferred_countries'] ?? null) ? $profile['preferred_countries'] : [];
+        $preferredBrands = is_array($profile['preferred_brands'] ?? null) ? $profile['preferred_brands'] : [];
+
+        $moTa = trim((string)($product['mo_ta'] ?? ''));
+        $tenSanPham = trim((string)($product['ten_san_pham'] ?? ''));
+        $danhMuc = trim((string)($product['danh_muc_day_du'] ?? ''));
+        $loaiDaProduct = trim((string)($product['loai_da'] ?? ''));
+        $congDung = trim((string)($product['cong_dung'] ?? ''));
+        $thanhPhanChinh = trim((string)($product['thanh_phan_chinh'] ?? ''));
+        $thanhPhanDayDu = trim((string)($product['thanh_phan_day_du'] ?? ''));
+
+        // Determine Product Scope
+        $productScope = $this->determineProductScope($danhMuc, $tenSanPham);
+        $isFacialSkincare = ($productScope === 'facial_skincare');
+
+        $cleanedText = $this->cleanProductHaystack(implode(' ', [$tenSanPham, $moTa, $danhMuc, $loaiDaProduct, $congDung]));
+        $normalizedText = $this->normalizeText($cleanedText);
+        $ingredientText = $this->normalizeText(implode(' ', [$thanhPhanChinh, $thanhPhanDayDu]));
+
+        $skinReasons = [];
+        $personalizationReasons = [];
+        $warnings = [];
+
+        $totalPossibleCompatibilityWeight = 100; // Facial Skincare baseline total weight: Skin Type (35) + Concerns (40) + Goal (25)
+        $totalEvaluableCompatibilityWeight = 0;
+        $earnedSkinPoints = 0.0;
+
+        $evidence = [
+            'skin_type' => null,
+            'concerns' => null,
+            'goal' => null,
+            'avoid_ingredients' => null,
+            'scope' => $productScope,
+        ];
+
+        // SCOPE CHECK: Non-facial products do not receive facial compatibility score
+        if (!$isFacialSkincare && $userQuery === '') {
+            $scopeLabel = $productScope === 'lip_care' ? 'Chăm sóc môi' : ($productScope === 'eye_lip_care' ? 'Tẩy trang mắt/môi' : ($productScope === 'eye_care' ? 'Chăm sóc mắt' : 'Trang điểm / Thể'));
+            $warnings[] = "Sản phẩm thuộc nhóm {$scopeLabel}, không tính % độ phù hợp với hồ sơ da mặt.";
+
+            // Evaluate Safety Data Status
+            $hasIngredients = ($ingredientText !== '');
+            $safetyStatus = $hasIngredients ? 'complete' : 'insufficient';
+            if (!$hasIngredients) {
+                $warnings[] = 'Chưa đủ dữ liệu thành phần để kiểm tra các thành phần cần tránh.';
+            }
+
+            return [
+                'retrieval_score' => (float)($product['retrieval_score'] ?? $product['_rank_score'] ?? $product['score'] ?? 0.0),
+                'raw_compatibility_score' => 0,
+                'compatibility_score' => null,
+                'compatibility_coverage' => 0,
+                'data_coverage' => 0,
+                'data_status' => 'scope_mismatch',
+                'safety_data_status' => $safetyStatus,
+                'reasons' => [],
+                'personalization_reasons' => $personalizationReasons,
+                'warnings' => array_values(array_unique($warnings)),
+                'evidence' => $evidence,
+            ];
+        }
+
+        // 1. SKIN TYPE MATCH (Baseline Weight: 35%)
+        if ($userSkinCanonical !== 'unknown') {
+            $hasSkinInfo = false;
+            $isMatch = false;
+            $isAllSkin = false;
+            $isConflict = false;
+
+            if ($userSkinCanonical === 'oily' && (mb_strpos($normalizedText, 'da dau') !== false || mb_strpos($normalizedText, 'kiem dau') !== false || mb_strpos($normalizedText, 'hon hop thien dau') !== false)) {
+                $hasSkinInfo = true; $isMatch = true;
+            } elseif ($userSkinCanonical === 'dry' && (mb_strpos($normalizedText, 'da kho') !== false || mb_strpos($normalizedText, 'cap am') !== false || mb_strpos($normalizedText, 'duong am') !== false || mb_strpos($normalizedText, 'phuc hoi') !== false)) {
+                $hasSkinInfo = true; $isMatch = true;
+            } elseif ($userSkinCanonical === 'combination' && (mb_strpos($normalizedText, 'hon hop') !== false || mb_strpos($normalizedText, 'can bang') !== false)) {
+                $hasSkinInfo = true; $isMatch = true;
+            } elseif ($userSkinCanonical === 'normal' && (mb_strpos($normalizedText, 'da thuong') !== false || mb_strpos($normalizedText, 'moi loai da') !== false)) {
+                $hasSkinInfo = true; $isMatch = true;
+            }
+
+            if (!$isMatch) {
+                if (mb_strpos($normalizedText, 'moi loai da') !== false || mb_strpos($normalizedText, 'tat ca loai da') !== false || mb_strpos($normalizedText, 'moi lan da') !== false) {
+                    $hasSkinInfo = true;
+                    $isAllSkin = true;
+                } elseif ($userSkinCanonical === 'dry' && mb_strpos($normalizedText, 'chi danh cho da dau') !== false) {
+                    $hasSkinInfo = true; $isConflict = true;
+                } elseif ($userSkinCanonical === 'oily' && mb_strpos($normalizedText, 'chi danh cho da kho') !== false) {
+                    $hasSkinInfo = true; $isConflict = true;
+                }
+            }
+
+            if ($hasSkinInfo) {
+                $totalEvaluableCompatibilityWeight += 35;
+                if ($isMatch) {
+                    $earnedSkinPoints += 35.0;
+                    $skinReasons[] = 'Phù hợp với loại da ' . $rawSkinType . ' của bạn.';
+                    $evidence['skin_type'] = ['user' => $userSkinCanonical, 'match' => true, 'score' => 35];
+                } elseif ($isAllSkin) {
+                    $earnedSkinPoints += 28.0; // 80% of 35
+                    $skinReasons[] = 'Phù hợp với mọi loại da, bao gồm loại da của bạn.';
+                    $evidence['skin_type'] = ['user' => $userSkinCanonical, 'match' => 'all_skin', 'score' => 28];
+                } elseif ($isConflict) {
+                    $warnings[] = 'Sản phẩm được thiết kế cho loại da khác, có thể không tối ưu cho da bạn.';
+                    $evidence['skin_type'] = ['user' => $userSkinCanonical, 'match' => false, 'score' => 0];
+                }
+            } else {
+                $warnings[] = 'Chưa tìm thấy thông tin loại da phù hợp của sản phẩm trong mô tả.';
+                $evidence['skin_type'] = ['user' => $userSkinCanonical, 'evaluable' => false];
+            }
+        }
+
+        // 2. CONCERNS MATCH (Baseline Weight: 40%)
+        if (!empty($userConcernsCanonical)) {
+            $matchedCanonical = [];
+
+            foreach ($userConcernsCanonical as $cId) {
+                $hit = false;
+                if ($cId === 'dry_flaky') {
+                    if (preg_match('/\b(bong\s+troc|kho\s+cang|nut\s+ne|da\s+kho\s+cang|kho\s+bong|troc\s+da)\b/iu', $normalizedText)) {
+                        $hit = true;
+                    }
+                } elseif ($cId === 'inflammatory_acne') {
+                    if (preg_match('/\b(mun\s+viem|sung\s+do|giam\s+mun|mun\s+do|mun)\b/iu', $normalizedText)) {
+                        $hit = true;
+                    }
+                } elseif ($cId === 'comedonal_acne') {
+                    if (preg_match('/\b(mun\s+an|mun\s+dau\s+den|lo\s+chan\s+long|giam\s+mun|sach\s+mun|mun)\b/iu', $normalizedText)) {
+                        $hit = true;
+                    }
+                } elseif ($cId === 'large_pores') {
+                    if (preg_match('/\b(lo\s+chan\s+long|se\s+khang|khang\s+khuan)\b/iu', $normalizedText)) {
+                        $hit = true;
+                    }
+                } elseif ($cId === 'hyperpigmentation') {
+                    if (preg_match('/\b(tham\s+mun|sam\s+nam|tan\s+nhang|duong\s+sang|mo\s+tham|mo\s+sam|nam|tham)\b/iu', $normalizedText)) {
+                        $hit = true;
+                    }
+                } elseif ($cId === 'aging') {
+                    if (preg_match('/\b(lao\s+hoa|nep\s+nhan|tre\s+hoa|san\s+chac)\b/iu', $normalizedText)) {
+                        $hit = true;
+                    }
+                }
+
+                if ($hit) {
+                    $matchedCanonical[] = $cId;
+                }
+            }
+
+            if ($normalizedText !== '') {
+                $totalEvaluableCompatibilityWeight += 40;
+                $matchedCount = count($matchedCanonical);
+                $totalUserConcerns = count($userConcernsCanonical);
+                $ratio = $matchedCount / max(1, $totalUserConcerns);
+                $earnedConcerns = 40.0 * $ratio;
+                $earnedSkinPoints += $earnedConcerns;
+
+                if ($matchedCount > 0) {
+                    $skinReasons[] = 'Hỗ trợ ' . $matchedCount . '/' . $totalUserConcerns . ' vấn đề da bạn đang quan tâm.';
+                } else {
+                    $warnings[] = 'Chưa phát hiện bằng chứng mô tả trực tiếp hỗ trợ các vấn đề da của bạn.';
+                }
+
+                $evidence['concerns'] = [
+                    'user' => $userConcernsCanonical,
+                    'matched' => $matchedCanonical,
+                    'match_count' => $matchedCount,
+                    'score' => round($earnedConcerns, 1)
+                ];
+            } else {
+                $warnings[] = 'Mô tả sản phẩm chưa đủ dữ liệu để đánh giá các vấn đề da.';
+                $evidence['concerns'] = ['user' => $userConcernsCanonical, 'evaluable' => false];
+            }
+        }
+
+        // 3. GOAL MATCH (Baseline Weight: 25%)
+        if ($userGoalCanonical !== '') {
+            $goalHit = false;
+
+            if ($userGoalCanonical === 'acne_control' && (mb_strpos($normalizedText, 'sach mun') !== false || mb_strpos($normalizedText, 'giam viem') !== false || mb_strpos($normalizedText, 'ngua mun') !== false)) {
+                $goalHit = true;
+            } elseif ($userGoalCanonical === 'brightening' && (mb_strpos($normalizedText, 'duong sang') !== false || mb_strpos($normalizedText, 'mo tham') !== false || mb_strpos($normalizedText, 'sang da') !== false)) {
+                $goalHit = true;
+            } elseif ($userGoalCanonical === 'barrier_hydration' && (mb_strpos($normalizedText, 'phuc hoi') !== false || mb_strpos($normalizedText, 'cap am') !== false || mb_strpos($normalizedText, 'duong am') !== false)) {
+                $goalHit = true;
+            } elseif ($userGoalCanonical === 'anti_aging' && (mb_strpos($normalizedText, 'lao hoa') !== false || mb_strpos($normalizedText, 'tre hoa') !== false || mb_strpos($normalizedText, 'nep nhan') !== false)) {
+                $goalHit = true;
+            }
+
+            if ($normalizedText !== '') {
+                $totalEvaluableCompatibilityWeight += 25;
+                if ($goalHit) {
+                    $earnedSkinPoints += 25.0;
+                    $skinReasons[] = 'Khớp với mục tiêu chăm sóc da ưu tiên của bạn (' . htmlspecialchars($rawGoal) . ').';
+                    $evidence['goal'] = ['user' => $userGoalCanonical, 'match' => true, 'score' => 25];
+                } else {
+                    $warnings[] = 'Chưa thấy bằng chứng mô tả hỗ trợ trực tiếp cho mục tiêu (' . htmlspecialchars($rawGoal) . ').';
+                    $evidence['goal'] = ['user' => $userGoalCanonical, 'match' => false, 'score' => 0];
+                }
+            } else {
+                $warnings[] = 'Mô tả sản phẩm chưa đủ dữ liệu để đánh giá mục tiêu chăm sóc da.';
+                $evidence['goal'] = ['user' => $userGoalCanonical, 'evaluable' => false];
+            }
+        }
+
+        // 4. SAFETY CONSTRAINT (Avoid Ingredients Check - Independent Safety Status)
+        $cleanAvoid = array_values(array_unique(array_filter(array_map('trim', $avoidIngredients), fn($v) => $v !== '')));
+        $ingredientConflict = false;
+        $hasIngredientData = ($ingredientText !== '');
+
+        if (!empty($cleanAvoid) && $hasIngredientData) {
+            $foundHits = [];
+            foreach ($cleanAvoid as $badIng) {
+                $badNorm = $this->normalizeText($badIng);
+                if ($badNorm !== '' && mb_strpos($ingredientText, $badNorm) !== false) {
+                    $foundHits[] = $badIng;
+                }
+            }
+
+            if (!empty($foundHits)) {
+                $ingredientConflict = true;
+                $warnings[] = 'Sản phẩm có chứa "' . implode(', ', $foundHits) . '", nằm trong danh sách thành phần bạn muốn tránh.';
+                $evidence['avoid_ingredients'] = ['user' => $cleanAvoid, 'found' => $foundHits, 'conflict' => true];
+            } else {
+                $evidence['avoid_ingredients'] = ['user' => $cleanAvoid, 'found' => [], 'conflict' => false];
+            }
+        }
+
+        $safetyDataStatus = $hasIngredientData ? 'complete' : 'insufficient';
+        if (!$hasIngredientData) {
+            $warnings[] = 'Chưa đủ dữ liệu thành phần để kiểm tra các thành phần cần tránh.';
+            $evidence['avoid_ingredients'] = ['user' => $cleanAvoid, 'evaluable' => false];
+        }
+
+        // 5. SENSITIVITY CHECK (Personalization note only, no score impact)
+        $senNorm = $this->normalizeText($sensitivity);
+        if ($senNorm === 'rat de' || $senNorm === 'co' || $senNorm === 'nhay cam') {
+            if (mb_strpos($normalizedText, 'nhay cam') !== false || mb_strpos($normalizedText, 'diu nhe') !== false || mb_strpos($normalizedText, 'lanh tinh') !== false) {
+                $personalizationReasons[] = 'Mô tả sản phẩm có đề cập phù hợp với da nhạy cảm.';
+            } elseif (mb_strpos($ingredientText, 'huong lieu') !== false || mb_strpos($ingredientText, 'paraben') !== false || mb_strpos($ingredientText, 'alcohol') !== false) {
+                $warnings[] = 'Da bạn nhạy cảm: Sản phẩm có chứa hương liệu/cồn/paraben, nên thử nghiệm trước khi dùng.';
+            }
+        }
+
+        // 6. GROUP B: PERSONALIZATION REASONS
+        $price = (int)($product['gia_ban'] ?? 0);
+        if ($budget !== null && $price > 0) {
+            if ($price <= $budget) {
+                $personalizationReasons[] = 'Giá ' . number_format($price, 0, ',', '.') . 'đ nằm trong ngân sách chọn (' . number_format($budget, 0, ',', '.') . 'đ).';
+            } else {
+                $personalizationReasons[] = 'Giá ' . number_format($price, 0, ',', '.') . 'đ (vượt ngân sách ' . number_format($budget, 0, ',', '.') . 'đ).';
+            }
+        }
+
+        if (!empty($preferredTextures)) {
+            foreach ($preferredTextures as $tex) {
+                if ($tex !== '' && mb_strpos($normalizedText, $this->normalizeText($tex)) !== false) {
+                    $personalizationReasons[] = 'Đúng kết cấu ' . htmlspecialchars($tex) . ' bạn ưu tiên.';
+                    break;
+                }
+            }
+        }
+
+        if (!empty($desiredIngredients)) {
+            foreach ($desiredIngredients as $ing) {
+                if ($ing !== '' && mb_strpos($ingredientText, $this->normalizeText($ing)) !== false) {
+                    $personalizationReasons[] = 'Có chứa ' . htmlspecialchars($ing) . ' là hoạt chất bạn quan tâm.';
+                    break;
+                }
+            }
+        }
+
+        if (!empty($preferredBrands)) {
+            $brandName = trim((string)($product['ten_thuong_hieu'] ?? $product['thuong_hieu'] ?? ''));
+            if ($brandName !== '') {
+                foreach ($preferredBrands as $b) {
+                    if ($b !== '' && mb_strpos(mb_strtolower($brandName), mb_strtolower($b)) !== false) {
+                        $personalizationReasons[] = 'Thuộc thương hiệu ' . htmlspecialchars($brandName) . ' bạn ưu tiên.';
+                        break;
+                    }
+                }
+            }
+        }
+
+        $rating = (float)($product['diem_danh_gia'] ?? $product['rating'] ?? 0);
+        if ($rating >= 4.0) {
+            $personalizationReasons[] = 'Được người dùng đánh giá cao (' . number_format($rating, 1) . '/5★).';
+        }
+
+        // 7. COMPATIBILITY SCORE & COVERAGE CALCULATIONS
+        $rawBaseSkinScore = $totalEvaluableCompatibilityWeight > 0 ? ($earnedSkinPoints / $totalEvaluableCompatibilityWeight) * 100.0 : 0.0;
+        $rawCompatibilityScore = $rawBaseSkinScore;
+
+        if ($ingredientConflict) {
+            $rawCompatibilityScore = max(0.0, $rawCompatibilityScore - 30.0);
+        }
+
+        $compatibilityCoverage = $totalPossibleCompatibilityWeight > 0 ? (int)round(($totalEvaluableCompatibilityWeight / $totalPossibleCompatibilityWeight) * 100) : 0;
+
+        $dataStatus = 'insufficient';
+        if ($compatibilityCoverage >= 90) {
+            $dataStatus = 'complete';
+        } elseif ($compatibilityCoverage >= 60) {
+            $dataStatus = 'partial';
+        } else {
+            $dataStatus = 'insufficient';
+        }
+
+        $displayScore = null;
+        if ($dataStatus !== 'insufficient' && $totalEvaluableCompatibilityWeight > 0) {
+            $displayScore = (int)min(100, max(0, round($rawCompatibilityScore)));
+        }
+
+        return [
+            'retrieval_score' => (float)($product['retrieval_score'] ?? $product['_rank_score'] ?? $product['score'] ?? 0.0),
+            'raw_compatibility_score' => (int)round($rawCompatibilityScore),
+            'compatibility_score' => $displayScore,
+            'compatibility_coverage' => $compatibilityCoverage,
+            'data_coverage' => $compatibilityCoverage,
+            'data_status' => $dataStatus,
+            'safety_data_status' => $safetyDataStatus,
+            'reasons' => array_values(array_unique($skinReasons)),
+            'personalization_reasons' => array_values(array_unique($personalizationReasons)),
+            'warnings' => array_values(array_unique($warnings)),
+            'evidence' => $evidence,
+        ];
     }
 }

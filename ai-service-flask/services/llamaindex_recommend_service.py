@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import math
@@ -537,7 +537,6 @@ Không nêu chi tiết kỹ thuật LlamaIndex/BM25/rerank trong câu trả lờ
 
         output_products = []
         for product in products:
-            match_percent, match_label = self._match_info_from_rank(product, max_score)
             output_products.append({
                 "id": str(product.get("id") or product.get("ma_san_pham") or ""),
                 "ten_san_pham": str(product.get("ten_san_pham") or ""),
@@ -547,9 +546,15 @@ Không nêu chi tiết kỹ thuật LlamaIndex/BM25/rerank trong câu trả lờ
                 "thuong_hieu": str(product.get("thuong_hieu") or ""),
                 "link_hinh_anh": str(product.get("link_hinh_anh") or product.get("image_url") or ""),
                 "diem_danh_gia": float(product.get("diem_danh_gia") or product.get("rating") or 0),
+                "mo_ta": str(product.get("mo_ta") or ""),
+                "danh_muc_day_du": str(product.get("danh_muc_day_du") or ""),
+                "loai_da": str(product.get("loai_da") or ""),
+                "thanh_phan_chinh": str(product.get("thanh_phan_chinh") or ""),
+                "thanh_phan_day_du": str(product.get("thanh_phan_day_du") or ""),
                 "reason": self._reason_for_product(product, filters),
-                "match_percent": match_percent,
-                "match_label": match_label,
+                "retrieval_score": float(product.get("_rank_score") or 0.0),
+                "match_percent": None,
+                "match_label": None,
             })
 
         return {
