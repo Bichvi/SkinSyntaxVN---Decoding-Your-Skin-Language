@@ -1,12 +1,12 @@
 <?php
 /**
  * AssociationRuleRecommender.php
- * Association Rules Mining & "Frequently Bought Together" Engine (Phase D)
+ * Pairwise Co-occurrence & Association Rules Recommender (Phase D)
  *
  * Implements:
- * 1. FP-Growth / Apriori itemset mining over order transactions (chi_tiet_hoa_don)
- * 2. Support, Confidence, and Lift metrics calculation
- * 3. Catalog routine complement fallback when transaction frequency is sparse
+ * 1. Apriori-like pairwise co-occurrence / 2-itemset mining over order transactions (chi_tiet_hoa_don)
+ * 2. Support, Confidence, and Lift metrics calculation for genuine co-purchases
+ * 3. Multi-tier routine complement fallback when transaction frequency is sparse
  * 4. Model caching to frequently_bought_together.json
  * 5. Bundle recommendation for Product Detail & Cart pages
  */
@@ -72,6 +72,7 @@ class AssociationRuleRecommender {
                     $it['gia_thi_truong'] = (int)($doc['gia_thi_truong'] ?? 0);
                     $it['hinh_anh'] = (string)($doc['link_hinh_anh'] ?? $doc['hinh_anh'] ?? '');
                     $it['diem_danh_gia'] = (float)($doc['diem_danh_gia'] ?? 5.0);
+                    $it['recommendation_source'] = $it['recommendation_source'] ?? 'ASSOCIATION_RULE';
                     $enriched[] = $it;
                 }
             }
@@ -120,9 +121,10 @@ class AssociationRuleRecommender {
                         'gia_thi_truong' => (int)($doc['gia_thi_truong'] ?? 0),
                         'hinh_anh' => (string)($doc['link_hinh_anh'] ?? $doc['hinh_anh'] ?? ''),
                         'diem_danh_gia' => (float)($doc['diem_danh_gia'] ?? 5.0),
-                        'support' => 0.05,
-                        'confidence' => 0.60,
-                        'lift' => 1.50,
+                        'support' => null,
+                        'confidence' => null,
+                        'lift' => null,
+                        'recommendation_source' => 'ROUTINE_COMPLEMENT',
                         'rule_type' => 'routine_complement',
                     ];
                 }
@@ -147,9 +149,10 @@ class AssociationRuleRecommender {
                         'gia_thi_truong' => (int)($doc['gia_thi_truong'] ?? 0),
                         'hinh_anh' => (string)($doc['link_hinh_anh'] ?? $doc['hinh_anh'] ?? ''),
                         'diem_danh_gia' => (float)($doc['diem_danh_gia'] ?? 5.0),
-                        'support' => 0.04,
-                        'confidence' => 0.50,
-                        'lift' => 1.30,
+                        'support' => null,
+                        'confidence' => null,
+                        'lift' => null,
+                        'recommendation_source' => 'BRAND_COMPLEMENT',
                         'rule_type' => 'brand_complement',
                     ];
                 }
@@ -173,9 +176,10 @@ class AssociationRuleRecommender {
                         'gia_thi_truong' => (int)($doc['gia_thi_truong'] ?? 0),
                         'hinh_anh' => (string)($doc['link_hinh_anh'] ?? $doc['hinh_anh'] ?? ''),
                         'diem_danh_gia' => (float)($doc['diem_danh_gia'] ?? 5.0),
-                        'support' => 0.03,
-                        'confidence' => 0.40,
-                        'lift' => 1.10,
+                        'support' => null,
+                        'confidence' => null,
+                        'lift' => null,
+                        'recommendation_source' => 'POPULARITY_FALLBACK',
                         'rule_type' => 'popular_complement',
                     ];
                 }
@@ -329,6 +333,7 @@ class AssociationRuleRecommender {
                     'confidence' => round($confAtoB, 4),
                     'lift' => round($liftAtoB, 4),
                     'rule_type' => 'frequent_itemset',
+                    'recommendation_source' => 'ASSOCIATION_RULE',
                 ];
             }
 
@@ -346,6 +351,7 @@ class AssociationRuleRecommender {
                     'confidence' => round($confBtoA, 4),
                     'lift' => round($liftBtoA, 4),
                     'rule_type' => 'frequent_itemset',
+                    'recommendation_source' => 'ASSOCIATION_RULE',
                 ];
             }
         }

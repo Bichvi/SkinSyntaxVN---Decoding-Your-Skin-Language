@@ -110,15 +110,15 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 $tuongTacModel = new TuongTac($db);
-$currentSessionId = session_id();
-$testProductId = '999999';
+$currentSessionId = 'test_verify_' . bin2hex(random_bytes(6));
+$testProductId = '1000';
 
 // Test 8: Log view interaction
-InteractionLogger::logView($testProductId, ['referrer' => 'unit_test']);
+InteractionLogger::log('view', $testProductId, null, $currentSessionId);
 assertTest("InteractionLogger::logView executed without error", true);
 
 // Test 9: Log cart interaction
-InteractionLogger::logCart($testProductId, 2);
+InteractionLogger::log('add_to_cart', $testProductId, null, $currentSessionId, ['quantity' => 2]);
 assertTest("InteractionLogger::logCart executed without error", true);
 
 // Test 10: Verify record exists in MongoDB collection tuong_tac_nguoi_dung
@@ -129,9 +129,9 @@ assertTest("tuong_tac_nguoi_dung contains logged records for session", count($fo
 $db->tuong_tac_nguoi_dung->deleteMany(['session_id' => $currentSessionId]);
 
 // -------------------------------------------------------------
-// PHASE C: COLLABORATIVE FILTERING & SVD
+// PHASE C: COLLABORATIVE FILTERING (EXPERIMENTAL)
 // -------------------------------------------------------------
-echo "\n[3/4] Testing Phase C: Collaborative Filtering (kNN & SVD)...\n";
+echo "\n[3/4] Testing Phase C: Collaborative Filtering (kNN & Funk MF)...\n";
 
 $cfRecommender = new CollaborativeFilteringRecommender($db);
 
@@ -147,14 +147,14 @@ $sampleId = (string)($sampleProduct['ma_san_pham'] ?? '1');
 $knnRecs = $cfRecommender->recommendSimilarItems($sampleId, 4);
 assertTest("recommendSimilarItems returns candidates or graceful empty array", is_array($knnRecs));
 
-// Test 13: User CF recommendation (kNN + SVD)
+// Test 13: User CF recommendation (kNN + MF)
 $userRecs = $cfRecommender->recommendForUser(1, [$sampleId], 4);
 assertTest("recommendForUser computes CF recommendations array", is_array($userRecs));
 
 // -------------------------------------------------------------
 // PHASE D: ASSOCIATION RULES & FREQUENTLY BOUGHT TOGETHER
 // -------------------------------------------------------------
-echo "\n[4/4] Testing Phase D: Association Rules Mining (FP-Growth)...\n";
+echo "\n[4/4] Testing Phase D: Association Rules Mining (Pairwise Co-occurrence)...\n";
 
 $assocRecommender = new AssociationRuleRecommender($db);
 

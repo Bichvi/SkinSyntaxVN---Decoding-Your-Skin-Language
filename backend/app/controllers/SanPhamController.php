@@ -338,6 +338,8 @@ class SanPhamController {
 
         if ($q !== '') {
             $this->saveSearchHistory($q);
+            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
+            InteractionLogger::logSearch($q);
         }
 
         $perPage = 24;
@@ -452,6 +454,8 @@ class SanPhamController {
 
         if ($q !== '') {
             $this->saveSearchHistory($q);
+            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
+            InteractionLogger::logSearchClick((string)($p['ma_san_pham'] ?? $id), $q);
         }
 
         $reviewModel = new DanhGia($this->pdo);
