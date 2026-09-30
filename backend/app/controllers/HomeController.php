@@ -456,6 +456,8 @@ class HomeController {
                 exit;
             } elseif ($action === 'delete' && $product_id) {
                 unset($_SESSION['gio_hang'][$product_id]);
+                require_once __DIR__ . '/../services/InteractionLogger.php';
+                InteractionLogger::logCartRemove($product_id);
                 http_response_code(200);
                 exit;
             }
@@ -482,6 +484,21 @@ class HomeController {
             }
         }
         $this->render('giohang', ['items' => $items]);
+    }
+
+    public function xoaGioHang() {
+        $product_id = $_POST['product_id'] ?? $_GET['id'] ?? null;
+        if ($product_id && isset($_SESSION['gio_hang'][$product_id])) {
+            unset($_SESSION['gio_hang'][$product_id]);
+            require_once __DIR__ . '/../services/InteractionLogger.php';
+            InteractionLogger::logCartRemove($product_id);
+        }
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true]);
+            exit;
+        }
+        redirect(BASE_URL . '/index.php?r=giohang');
     }
 
     public function goiy() {

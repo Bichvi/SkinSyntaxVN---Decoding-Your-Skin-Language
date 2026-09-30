@@ -801,7 +801,18 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
       ?>
 
       <?php if (!empty($frequentlyBought)): ?>
-        <!-- Frequently Bought Together / Gợi Ý Mua Kèm (Phase D - Association Rules) -->
+        <?php
+          $hasRealRule = false;
+          foreach ($frequentlyBought as $fbCheck) {
+            if (($fbCheck['recommendation_source'] ?? '') === 'ASSOCIATION_RULE') {
+              $hasRealRule = true;
+              break;
+            }
+          }
+          $sectionTitle = $hasRealRule ? 'Sản phẩm khách hàng thường mua cùng' : 'Gợi ý kết hợp cho routine';
+          $sectionBadge = $hasRealRule ? 'Thường được mua cùng' : 'Gợi ý chu trình';
+        ?>
+        <!-- Frequently Bought Together / Gợi Ý Mua Kèm (Pairwise Co-occurrence & Routine Fallback) -->
         <div class="frequently-bought-card mt-4 mb-2 p-4 rounded-4 bg-white border w-100" style="border-radius: 20px !important; border-color: #E2EADF !important; box-shadow: 0 4px 20px rgba(24, 59, 43, 0.04);">
           <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
             <div>
@@ -809,11 +820,15 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                 <span class="badge px-2.5 py-1 fw-bold text-uppercase" style="background: #E8F5E9; color: #1B5E20; font-size: 0.72rem; letter-spacing: 0.05em; border-radius: 6px;">
                   <i class="fa-solid fa-basket-shopping me-1"></i> Mua Kèm Tiết Kiệm
                 </span>
-                <span class="text-muted small">Thường được mua cùng</span>
+                <span class="text-muted small"><?= $sectionBadge ?></span>
               </div>
-              <h5 class="fw-bold mt-1 mb-0" style="color: #0F172A; font-size: 1.15rem;">Sản phẩm khách hàng thường mua cùng</h5>
+              <h5 class="fw-bold mt-1 mb-0" style="color: #0F172A; font-size: 1.15rem;"><?= $sectionTitle ?></h5>
             </div>
-            <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.78rem;">Thuật toán Association Rules & FP-Growth</span>
+            <?php if ($hasRealRule): ?>
+              <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.78rem;">Phân tích giao dịch mua cùng</span>
+            <?php else: ?>
+              <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.78rem;">Gợi ý theo bước dưỡng</span>
+            <?php endif; ?>
           </div>
 
           <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
@@ -821,7 +836,10 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
               <?php 
                 $fbImg = !empty($fbItem['hinh_anh']) ? $fbItem['hinh_anh'] : default_placeholder_image();
                 $fbUrl = BASE_URL . '/index.php?r=chitiet&id=' . urlencode((string)$fbItem['ma_san_pham']);
-                $fbConf = isset($fbItem['confidence']) ? round($fbItem['confidence'] * 100) : 0;
+                $source = $fbItem['recommendation_source'] ?? '';
+                $isGenuineRule = ($source === 'ASSOCIATION_RULE');
+                $hasConfidence = $isGenuineRule && isset($fbItem['confidence']) && $fbItem['confidence'] !== null && $fbItem['confidence'] > 0;
+                $fbConf = $hasConfidence ? round($fbItem['confidence'] * 100) : null;
               ?>
               <div class="col">
                 <div class="card h-100 border p-2.5 d-flex flex-column justify-content-between position-relative" style="border-radius: 14px; border-color: #EEF2F6 !important; background: #FAFCF9; transition: transform 0.2s, box-shadow 0.2s;">
@@ -834,13 +852,21 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                            onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';">
                     </a>
                     <div class="mb-1">
-                      <?php if ($fbConf > 0): ?>
+                      <?php if ($isGenuineRule && $fbConf !== null): ?>
                         <span class="badge" style="background: #E8F5E9; color: #2E7D32; font-size: 0.68rem; border-radius: 4px;">
                           <?= $fbConf ?>% khách chọn cùng
                         </span>
-                      <?php else: ?>
+                      <?php elseif ($source === 'ROUTINE_COMPLEMENT'): ?>
                         <span class="badge" style="background: #E0F2FE; color: #0369A1; font-size: 0.68rem; border-radius: 4px;">
-                          Combo gợi ý
+                          Gợi ý kết hợp cho routine
+                        </span>
+                      <?php elseif ($source === 'BRAND_COMPLEMENT'): ?>
+                        <span class="badge" style="background: #FEF3C7; color: #92400E; font-size: 0.68rem; border-radius: 4px;">
+                          Cùng thương hiệu
+                        </span>
+                      <?php else: ?>
+                        <span class="badge" style="background: #F1F5F9; color: #475569; font-size: 0.68rem; border-radius: 4px;">
+                          Có thể bạn cũng quan tâm
                         </span>
                       <?php endif; ?>
                     </div>

@@ -1,11 +1,11 @@
 <?php
 /**
  * CollaborativeFilteringRecommender.php
- * Collaborative Filtering Engine (Phase C)
+ * Collaborative Filtering Engine (Phase C - Experimental / Not Wired to Runtime)
  *
  * Implements:
  * 1. Item-Based kNN Collaborative Filtering with Cosine Similarity
- * 2. Regularized Matrix Factorization (Truncated SVD with User & Item Biases)
+ * 2. Regularized Biased Matrix Factorization via SGD (Funk-style Matrix Factorization with User & Item Biases)
  * 3. Seed aggregation from tuong_tac_nguoi_dung, chi_tiet_hoa_don, and danh_gia
  * 4. Model caching to cf_model_cache.json
  * 5. Cold-start graceful fallback to Content-Based / Popularity
@@ -94,7 +94,7 @@ class CollaborativeFilteringRecommender {
         $scores = [];
         $interactedLookup = array_flip(array_map('strval', array_keys($userInteractions)));
 
-        // Score candidates using Item-Item kNN aggregation & SVD score
+        // Score candidates using Item-Item kNN aggregation & Funk MF score
         foreach ($itemSim as $candId => $neighbors) {
             if (isset($interactedLookup[$candId])) {
                 continue; // Do not recommend items the user already interacted with
@@ -112,7 +112,7 @@ class CollaborativeFilteringRecommender {
             }
             $knnScore = $simSum > 0 ? ($weightedSimSum / $simSum) : 0.0;
 
-            // 2. SVD predicted score
+            // 2. Regularized Biased Matrix Factorization (Funk MF) predicted score
             $svdScore = 0.0;
             if ($userFactors !== null && isset($itemFactors[$candId])) {
                 $iBias = (float)($itemBiases[$candId] ?? 0.0);
@@ -123,7 +123,7 @@ class CollaborativeFilteringRecommender {
                 $svdScore = max(0.0, $mu + $userBias + $iBias + $dot);
             }
 
-            // Combine kNN + SVD (70% kNN + 30% SVD when SVD available)
+            // Combine kNN + MF (70% kNN + 30% MF when MF available)
             $combinedScore = $svdScore > 0 ? (0.70 * $knnScore + 0.30 * ($svdScore / 5.0)) : $knnScore;
 
             if ($combinedScore > 0.01) {
@@ -131,6 +131,7 @@ class CollaborativeFilteringRecommender {
                     'ma_san_pham' => (string)$candId,
                     'knn_score' => round($knnScore, 4),
                     'svd_score' => round($svdScore, 4),
+                    'mf_score' => round($svdScore, 4),
                     'cf_score' => round($combinedScore, 4),
                 ];
             }
@@ -289,7 +290,7 @@ class CollaborativeFilteringRecommender {
             }
         }
 
-        // 4. Matrix Factorization (Regularized SVD via SGD)
+        // 4. Regularized Biased Matrix Factorization via SGD (Funk MF)
         $k = self::LATENT_FACTORS;
         $userFactors = [];
         $itemFactors = [];

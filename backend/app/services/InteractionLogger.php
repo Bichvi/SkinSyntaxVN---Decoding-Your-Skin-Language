@@ -22,11 +22,11 @@ class InteractionLogger {
      */
     public static function log(
         string $type,
-        string|int $productId,
+        string|int|null $productId,
         ?int $userId = null,
         ?string $sessionId = null,
         array $metadata = []
-    ): void {
+    ): bool {
         try {
             if ($userId === null && isset($_SESSION['user']['ma_kh'])) {
                 $userId = (int)$_SESSION['user']['ma_kh'];
@@ -34,26 +34,44 @@ class InteractionLogger {
             if ($sessionId === null && session_status() === PHP_SESSION_ACTIVE) {
                 $sessionId = session_id();
             }
-            self::getModel()->logInteraction($type, $productId, $userId, $sessionId, $metadata);
+            if (!isset($metadata['source'])) {
+                $metadata['source'] = 'organic';
+            }
+            return self::getModel()->logInteraction($type, $productId, $userId, $sessionId, $metadata);
         } catch (\Throwable $e) {
             // Fail silently so logging never breaks core user operations
             error_log('InteractionLogger::log error: ' . $e->getMessage());
+            return false;
         }
     }
 
-    public static function logView(string|int $productId, array $metadata = []): void {
-        self::log(TuongTac::TYPE_VIEW, $productId, null, null, $metadata);
+    public static function logView(string|int $productId, array $metadata = []): bool {
+        return self::log(TuongTac::TYPE_VIEW, $productId, null, null, $metadata);
     }
 
-    public static function logCart(string|int $productId, int $qty = 1): void {
-        self::log(TuongTac::TYPE_ADD_TO_CART, $productId, null, null, ['quantity' => $qty]);
+    public static function logSearch(string $query, array $metadata = []): bool {
+        $cleanQuery = trim($query);
+        if ($cleanQuery === '') return false;
+        $meta = array_merge($metadata, ['query' => $cleanQuery]);
+        return self::log(TuongTac::TYPE_SEARCH, null, null, null, $meta);
     }
 
-    public static function logPurchase(string|int $productId, ?int $userId, int $orderId, int $qty = 1): void {
-        self::log(TuongTac::TYPE_PURCHASE, $productId, $userId, null, ['order_id' => $orderId, 'quantity' => $qty]);
+    public static function logSearchClick(string|int $productId, string $query, array $metadata = []): bool {
+        $meta = array_merge($metadata, ['query' => trim($query)]);
+        return self::log(TuongTac::TYPE_SEARCH_CLICK, $productId, null, null, $meta);
     }
 
-    public static function logSearchClick(string|int $productId, string $query): void {
-        self::log(TuongTac::TYPE_SEARCH_CLICK, $productId, null, null, ['query' => $query]);
+    public static function logCart(string|int $productId, int $qty = 1, array $metadata = []): bool {
+        $meta = array_merge($metadata, ['quantity' => max(1, $qty)]);
+        return self::log(TuongTac::TYPE_ADD_TO_CART, $productId, null, null, $meta);
+    }
+
+    public static function logCartRemove(string|int $productId, array $metadata = []): bool {
+        return self::log(TuongTac::TYPE_CART_REMOVE, $productId, null, null, $metadata);
+    }
+
+    public static function logPurchase(string|int $productId, ?int $userId, int $orderId, int $qty = 1, array $metadata = []): bool {
+        $meta = array_merge($metadata, ['order_id' => $orderId, 'quantity' => max(1, $qty)]);
+        return self::log(TuongTac::TYPE_PURCHASE, $productId, $userId, null, $meta);
     }
 }
