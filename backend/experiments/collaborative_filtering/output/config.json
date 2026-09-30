@@ -1,0 +1,13 @@
+{
+    "seed": 42,
+    "num_users": 500,
+    "min_interactions": 8,
+    "target_avg_interactions": 25,
+    "max_interactions": 45,
+    "p_cart_given_view": 0.35,
+    "p_purchase_given_cart": 0.45,
+    "p_rating_given_purchase": 0.4,
+    "p_search_click_ratio": 0.2,
+    "user_id_start": 1000001,
+    "days_history": 60
+}
