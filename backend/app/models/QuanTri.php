@@ -631,56 +631,132 @@ class QuanTri {
     }
 
     public function listCategories(string $keyword = ''): array {
-        $filter = [];
         $keyword = trim($keyword);
-        if ($keyword !== '') {
-            $regex = new \MongoDB\BSON\Regex(preg_quote($keyword), 'i');
-            $filter['$or'] = [
-                ['ten_danh_muc' => $regex],
-                ['danh_muc_day_du' => $regex],
-                ['mo_ta' => $regex]
-            ];
-        }
-
-        $options = ['sort' => ['ma_danh_muc' => -1]];
-        $cursor = $this->db->danh_muc->find($filter, $options);
-        $items = [];
-        
-        $hierarchyOrder = [
-            'Chăm Sóc Da Mặt', 'cham soc da mat',
-            'Làm Sạch Da', 'lam sach da',
-            'Sữa Rửa Mặt', 'sua rua mat',
-            'Tẩy Trang Mặt', 'tay trang mat', 'tẩy trang',
-            'Dưỡng Ẩm', 'duong am',
-            'Đặc Trị', 'dac tri',
-            'Trang Điểm', 'trang diem',
-            'Chăm Sóc Cơ Thể', 'cham soc co the'
-        ];
+        $cursor = $this->db->danh_muc->find([]);
+        $byId = [];
+        $children = [];
+        $roots = [];
 
         foreach ($cursor as $doc) {
-            $cat = (array) $doc;
-            $cat['so_san_pham'] = $this->db->san_pham->countDocuments(['ma_danh_muc' => $cat['ma_danh_muc']]);
-            
-            $catName = trim((string)($cat['ten_danh_muc'] ?? ''));
-            $catLower = mb_strtolower($catName, 'UTF-8');
-            $order = 999;
-            foreach ($hierarchyOrder as $idx => $target) {
-                if (mb_strpos($catLower, mb_strtolower($target, 'UTF-8')) !== false) {
-                    $order = (int)floor($idx / 2);
-                    break;
-                }
+            $cat = (array)$doc;
+            if (!isset($cat['ma_danh_muc']) || !is_numeric($cat['ma_danh_muc'])) {
+                continue;
             }
-            $cat['hierarchy_order'] = $order;
-            $items[] = $cat;
+            $id = (int)$cat['ma_danh_muc'];
+            $cat['ma_danh_muc'] = $id;
+            $cat['ten_danh_muc'] = trim((string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? ''));
+            $cat['parent_id'] = (isset($cat['parent_id']) && $cat['parent_id'] !== null && $cat['parent_id'] !== '' && is_numeric($cat['parent_id']))
+                ? (int)$cat['parent_id']
+                : null;
+            $cat['level'] = isset($cat['level']) && is_numeric($cat['level']) ? (int)$cat['level'] : 1;
+            $cat['thu_tu_hien_thi'] = isset($cat['thu_tu_hien_thi']) && is_numeric($cat['thu_tu_hien_thi']) ? (int)$cat['thu_tu_hien_thi'] : 999;
+            $byId[$id] = $cat;
         }
 
-        if ($keyword === '') {
-            usort($items, function($a, $b) {
-                if ($a['hierarchy_order'] === $b['hierarchy_order']) {
-                    return (int)($b['ma_danh_muc'] ?? 0) <=> (int)($a['ma_danh_muc'] ?? 0);
+        foreach ($byId as $id => $cat) {
+            $pid = $cat['parent_id'];
+            if ($pid !== null && isset($byId[$pid]) && $pid !== $id) {
+                $children[$pid][] = $id;
+            } else {
+                $roots[] = $id;
+            }
+        }
+
+        $sortFn = function (int $a, int $b) use ($byId): int {
+            $orderA = $byId[$a]['thu_tu_hien_thi'] ?? 999;
+            $orderB = $byId[$b]['thu_tu_hien_thi'] ?? 999;
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
+            }
+            return $a <=> $b;
+        };
+
+        usort($roots, $sortFn);
+        foreach ($children as $pid => &$cList) {
+            usort($cList, $sortFn);
+        }
+        unset($cList);
+
+        // Single aggregation for direct product counts
+        $directCounts = [];
+        $countCursor = $this->db->san_pham->aggregate([
+            ['$group' => ['_id' => '$ma_danh_muc', 'so_luong' => ['$sum' => 1]]]
+        ]);
+        foreach ($countCursor as $row) {
+            if ($row['_id'] !== null && $row['_id'] !== '' && is_numeric($row['_id'])) {
+                $cid = (int)$row['_id'];
+                $directCounts[$cid] = ($directCounts[$cid] ?? 0) + (int)$row['so_luong'];
+            }
+        }
+
+        $recursiveCounts = [];
+        $calcRecursive = function (int $nodeId, array $visited = []) use (&$calcRecursive, $children, $directCounts, &$recursiveCounts): int {
+            if (isset($recursiveCounts[$nodeId])) {
+                return $recursiveCounts[$nodeId];
+            }
+            if (isset($visited[$nodeId])) {
+                return 0;
+            }
+            $visited[$nodeId] = true;
+            $sum = $directCounts[$nodeId] ?? 0;
+            foreach ($children[$nodeId] ?? [] as $childId) {
+                $sum += $calcRecursive($childId, $visited);
+            }
+            $recursiveCounts[$nodeId] = $sum;
+            return $sum;
+        };
+
+        foreach (array_keys($byId) as $id) {
+            $calcRecursive($id);
+        }
+
+        $orderedIds = [];
+        $traverse = function (int $nodeId, array $visited = []) use (&$traverse, $children, &$orderedIds): void {
+            if (isset($visited[$nodeId])) return;
+            $visited[$nodeId] = true;
+            $orderedIds[] = $nodeId;
+            foreach ($children[$nodeId] ?? [] as $childId) {
+                $traverse($childId, $visited);
+            }
+        };
+        foreach ($roots as $rootId) {
+            $traverse($rootId);
+        }
+        foreach (array_keys($byId) as $id) {
+            if (!in_array($id, $orderedIds, true)) {
+                $orderedIds[] = $id;
+            }
+        }
+
+        $items = [];
+        foreach ($orderedIds as $id) {
+            $cat = $byId[$id];
+            $pid = $cat['parent_id'];
+            $childList = $children[$id] ?? [];
+            $isLeaf = empty($childList) && (!array_key_exists('is_leaf', $cat) || $cat['is_leaf'] !== false);
+
+            $cat['parent_name'] = ($pid !== null && isset($byId[$pid])) ? $byId[$pid]['ten_danh_muc'] : '';
+            $cat['children_count'] = count($childList);
+            $cat['is_leaf'] = $isLeaf;
+            $cat['direct_product_count'] = $directCounts[$id] ?? 0;
+            $cat['recursive_product_count'] = $recursiveCounts[$id] ?? 0;
+            $cat['so_san_pham'] = $isLeaf ? $cat['direct_product_count'] : $cat['recursive_product_count'];
+
+            if ($keyword !== '') {
+                $haystack = implode(' ', [
+                    '#' . $id,
+                    (string)$id,
+                    $cat['ten_danh_muc'],
+                    $cat['parent_name'],
+                    (string)($cat['full_path'] ?? $cat['danh_muc_day_du'] ?? ''),
+                    (string)($cat['mo_ta'] ?? ''),
+                ]);
+                if (mb_stripos($haystack, $keyword, 0, 'UTF-8') === false) {
+                    continue;
                 }
-                return $a['hierarchy_order'] <=> $b['hierarchy_order'];
-            });
+            }
+
+            $items[] = $cat;
         }
 
         return $items;
@@ -691,11 +767,29 @@ class QuanTri {
         return $doc ? (array) $doc : null;
     }
 
+    private function slugifyCategoryName(string $str): string {
+        $str = mb_strtolower(trim($str), 'UTF-8');
+        $map = [
+            'a' => 'à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ',
+            'e' => 'è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ',
+            'i' => 'ì|í|ị|ỉ|ĩ',
+            'o' => 'ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ',
+            'u' => 'ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ',
+            'y' => 'ỳ|ý|ỵ|ỷ|ỹ',
+            'd' => 'đ',
+        ];
+        foreach ($map as $ascii => $regex) {
+            $str = preg_replace('/(' . $regex . ')/u', $ascii, $str);
+        }
+        $str = preg_replace('/[^a-z0-9]+/', '-', $str);
+        return trim((string)$str, '-');
+    }
+
     public function saveCategory(array $data, ?int $id = null): bool {
         $this->lastErrorMessage = null;
         $name = trim((string)($data['ten_danh_muc'] ?? ''));
         $desc = trim((string)($data['mo_ta'] ?? ''));
-        $status = trim((string)($data['status'] ?? 'active'));
+        $status = trim((string)($data['status'] ?? $data['trang_thai'] ?? 'active'));
 
         if ($name === '') {
             $this->lastErrorMessage = 'Vui lòng nhập tên danh mục.';
@@ -713,10 +807,71 @@ class QuanTri {
             return false;
         }
 
+        $existing = ($id !== null && $id > 0) ? $this->getCategoryById($id) : null;
+        $rawParentId = $data['parent_id'] ?? ($existing['parent_id'] ?? 1001);
+        $parentId = ($rawParentId !== null && $rawParentId !== '' && is_numeric($rawParentId) && (int)$rawParentId > 0)
+            ? (int)$rawParentId
+            : null;
+
+        if ($id !== null && $id > 0 && $parentId === $id) {
+            $this->lastErrorMessage = 'Danh mục không thể chọn chính nó làm danh mục cha.';
+            return false;
+        }
+
+        $level = 1;
+        $fullPath = 'Sức Khỏe - Làm Đẹp -> ' . $name;
+        if ($parentId !== null) {
+            $parentDoc = $this->getCategoryById($parentId);
+            if (!$parentDoc) {
+                $this->lastErrorMessage = 'Danh mục cha không hợp lệ.';
+                return false;
+            }
+            // Prevent cycle if updating existing category
+            if ($id !== null && $id > 0) {
+                $curPid = $parentId;
+                $guard = 0;
+                while ($curPid !== null && $guard < 10) {
+                    if ($curPid === $id) {
+                        $this->lastErrorMessage = 'Không thể chọn danh mục con làm danh mục cha (lỗi vòng lặp phân cấp).';
+                        return false;
+                    }
+                    $pDoc = $this->getCategoryById((int)$curPid);
+                    $curPid = ($pDoc && isset($pDoc['parent_id']) && is_numeric($pDoc['parent_id'])) ? (int)$pDoc['parent_id'] : null;
+                    $guard++;
+                }
+            }
+            // Prevent attaching a child under a leaf category that already holds products directly
+            $parentDirectProducts = $this->db->san_pham->countDocuments(['ma_danh_muc' => $parentId]);
+            if ($parentDirectProducts > 0) {
+                $this->lastErrorMessage = 'Danh mục cha #' . $parentId . ' đang chứa trực tiếp ' . $parentDirectProducts . ' sản phẩm (danh mục lá), không thể thêm danh mục con bên dưới.';
+                return false;
+            }
+
+            $level = (int)($parentDoc['level'] ?? 1) + 1;
+            $parentPath = trim((string)($parentDoc['full_path'] ?? $parentDoc['danh_muc_day_du'] ?? ('Sức Khỏe - Làm Đẹp -> ' . $parentDoc['ten_danh_muc'])));
+            $fullPath = $parentPath . ' -> ' . $name;
+        }
+
+        $hasChildren = ($id !== null && $id > 0)
+            ? ($this->db->danh_muc->countDocuments(['parent_id' => $id]) > 0)
+            : false;
+        $isLeaf = !$hasChildren && ($existing ? (bool)($existing['is_leaf'] ?? true) : true);
+
         $payload = [
             'ten_danh_muc' => $name,
             'mo_ta' => $desc,
-            'status' => $status
+            'status' => $status,
+            'trang_thai' => $status,
+            'parent_id' => $parentId,
+            'level' => $level,
+            'is_leaf' => $isLeaf,
+            'slug' => $this->slugifyCategoryName($name),
+            'full_path' => $fullPath,
+            'danh_muc_day_du' => $fullPath,
+            'thu_tu_hien_thi' => isset($data['thu_tu_hien_thi']) && is_numeric($data['thu_tu_hien_thi'])
+                ? (int)$data['thu_tu_hien_thi']
+                : (int)($existing['thu_tu_hien_thi'] ?? 99),
+            'updated_at' => new \MongoDB\BSON\UTCDateTime(),
         ];
 
         try {
@@ -724,8 +879,11 @@ class QuanTri {
                 $this->db->danh_muc->updateOne(['ma_danh_muc' => $id], ['$set' => $payload]);
             } else {
                 $payload['ma_danh_muc'] = $this->getNextNumericId('danh_muc', 'ma_danh_muc');
+                $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
                 $this->db->danh_muc->insertOne($payload);
             }
+            SanPham::clearLookupCache();
+            SanPham::clearSimpleRecommenderCache();
             return true;
         } catch (Throwable $e) {
             $this->lastErrorMessage = 'Không thể lưu danh mục lúc này.';
@@ -735,34 +893,25 @@ class QuanTri {
 
     public function deleteCategory(int $id, bool $deleteProducts = false): bool {
         $this->lastErrorMessage = null;
-        $referencedCount = $this->db->san_pham->countDocuments(['ma_danh_muc' => $id]);
 
-        if ($referencedCount > 0 && !$deleteProducts) {
-            $this->lastErrorMessage = 'Vui lòng xác nhận xóa danh mục. Toàn bộ ' . number_format($referencedCount, 0, ',', '.') . ' sản phẩm thuộc danh mục này sẽ bị xóa.';
+        // Rule 2: Do NOT allow deleting a parent category if it still has child categories
+        $childCount = $this->db->danh_muc->countDocuments(['parent_id' => $id]);
+        if ($childCount > 0) {
+            $this->lastErrorMessage = 'Không thể xóa danh mục cha khi vẫn còn ' . number_format($childCount, 0, ',', '.') . ' danh mục con trực thuộc.';
+            return false;
+        }
+
+        // Rule 3: Do NOT allow deleting a leaf category if it still has products (no migration target)
+        $referencedCount = $this->db->san_pham->countDocuments(['ma_danh_muc' => ['$in' => [$id, (string)$id]]]);
+        if ($referencedCount > 0) {
+            $this->lastErrorMessage = 'Không thể xóa danh mục lá đang có ' . number_format($referencedCount, 0, ',', '.') . ' sản phẩm. Vui lòng chuyển sản phẩm sang danh mục lá khác trước khi xóa.';
             return false;
         }
 
         try {
-            if ($referencedCount > 0) {
-                $products = $this->db->san_pham->find(['ma_danh_muc' => $id]);
-                $productIds = [];
-                foreach ($products as $p) {
-                    $productIds[] = $p['ma_san_pham'];
-                }
-
-                if (!empty($productIds)) {
-                    $this->db->gio_hang->deleteMany(['ma_san_pham' => ['$in' => $productIds]]);
-                    $this->db->danh_gia->deleteMany(['ma_san_pham' => ['$in' => $productIds]]);
-                    $this->db->chi_tiet_hoa_don->updateMany(
-                        ['ma_san_pham' => ['$in' => $productIds]],
-                        ['$set' => ['ma_san_pham' => null]]
-                    );
-                    $this->db->san_pham->deleteMany(['ma_san_pham' => ['$in' => $productIds]]);
-                    SanPham::clearSimpleRecommenderCache();
-                }
-            }
-
             $this->db->danh_muc->deleteOne(['ma_danh_muc' => $id]);
+            SanPham::clearLookupCache();
+            SanPham::clearSimpleRecommenderCache();
             return true;
         } catch (Throwable $e) {
             $this->lastErrorMessage = 'Không thể xóa danh mục lúc này.';

@@ -187,6 +187,10 @@ class SanPhamController {
 
             $_SESSION['gio_hang'] = $_SESSION['gio_hang'] ?? [];
             $_SESSION['gio_hang'][$cartProductId] = $currentQty + $qty;
+
+            // Phase B: Unified Interaction Logging
+            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
+            InteractionLogger::logCart($cartProductId, (int)$qty);
             error_log('add_to_cart ok: ' . json_encode([
                 'route' => $_GET['r'] ?? '',
                 'method' => $_SERVER['REQUEST_METHOD'] ?? '',
@@ -505,6 +509,15 @@ class SanPhamController {
             $questionErrorMessage = 'Hiện chưa thể tải hỏi đáp sản phẩm. Vui lòng thử lại sau.';
         }
 
+        $frequentlyBought = [];
+        try {
+            require_once dirname(__DIR__) . '/services/AssociationRuleRecommender.php';
+            $assocRecommender = new AssociationRuleRecommender($this->pdo);
+            $frequentlyBought = $assocRecommender->getFrequentlyBoughtTogether((string)($p['ma_san_pham'] ?? $id), 4);
+        } catch (Throwable $e) {
+            error_log('chitiet frequentlyBought error: ' . $e->getMessage());
+        }
+
         $this->render('chitiet', [
             'p' => $p,
             'reviews' => $reviews,
@@ -512,6 +525,7 @@ class SanPhamController {
             'reviewPermission' => $reviewPermission,
             'questions' => $questions,
             'questionCount' => $questionCount,
+            'frequentlyBought' => $frequentlyBought,
             'activeTab' => trim((string)($_GET['tab'] ?? '')),
             'reviewErrorMessage' => $reviewErrorMessage,
             'questionErrorMessage' => $questionErrorMessage,
@@ -605,6 +619,10 @@ class SanPhamController {
 
         // Giới hạn tối đa 5 sản phẩm gần nhất
         $_SESSION['recent_viewed_products'] = array_slice($list, 0, 5);
+
+        // Phase B: Unified Interaction Logging
+        require_once dirname(__DIR__) . '/services/InteractionLogger.php';
+        InteractionLogger::logView($productId);
     }
 }
 

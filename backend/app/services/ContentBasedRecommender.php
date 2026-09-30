@@ -17,26 +17,99 @@ class ContentBasedRecommender {
 
     /**
      * Backward-compatible entrypoint: recommend based purely on recent viewed items
+    // ==============================================================
+    // ONE CONFIG LOCATION: PHASE A ADAPTIVE RECOMMENDER CONFIGURATION
+    // (Engineering Baseline Heuristics - V1)
+    // ==============================================================
+
+    /**
+     * V1 Engineering baseline weights for multi-signal behavior fusion.
+     * Note: Engineering baseline chosen for V1; future evaluation may tune it.
+     */
+    public const BEHAVIOR_WEIGHTS_BASELINE = [
+        'cart'     => 0.35,
+        'view'     => 0.35,
+        'search'   => 0.20,
+        'purchase' => 0.10,
+    ];
+
+    /**
+     * Position decay weights for most recent queries in MRU order [q1_latest, q2_prev, q3_oldest].
+     */
+    public const SEARCH_POSITION_WEIGHTS = [1.0, 0.6, 0.3];
+
+    /**
+     * Engineering baseline heuristic half-life for purchase exponential decay w(t) = exp(-lambda * delta_t).
+     * lambda = ln(2) / PURCHASE_HALF_LIFE_DAYS.
+     * Note: 60 days is an engineering baseline heuristic chosen for V1 (not learned/validated optimal value).
+     */
+    public const PURCHASE_HALF_LIFE_DAYS = 60;
+
+    /**
+     * Frozen hybrid query combination weight: U_query = 0.50 U_behavior + 0.50 V_profile
+     */
+    public const HYBRID_ALPHA = 0.50;
+
+    /**
+     * FinalScore weights for profile & hybrid modes:
+     * 70% Content + 20% Skin Compatibility + 10% Budget
+     */
+    public const SCORING_WEIGHTS_HYBRID = [
+        'content' => 0.70,
+        'skin'    => 0.20,
+        'budget'  => 0.10,
+    ];
+
+    /**
+     * Scoring weights for pure behavior/session content:
+     * 90% Content + 10% Price/Budget match
+     */
+    public const SCORING_WEIGHTS_BEHAVIOR = [
+        'content' => 0.90,
+        'price'   => 0.10,
+    ];
+
+    /**
+     * Order statuses strictly representing valid purchases in SkinSyntaxVN schema.
+     */
+    public const VALID_PURCHASE_STATUSES = [
+        'hoàn thành', 'hoan thanh', 'completed',
+        'đang giao', 'dang giao', 'shipping',
+        'đã xác nhận', 'da xac nhan', 'confirmed',
+    ];
+
+    /**
+     * Backward-compatible entrypoint: recommend based purely on recent viewed items
      */
     public function recommend(array $recentViewedIds, int $limit = 4, $db = null): array {
         return $this->recommendHybrid($recentViewedIds, null, $limit, $db);
     }
 
     /**
-     * Hybrid Recommender V1: Context-Routed recommendation
-     * Handles 4 distinct states:
-     * 1. No profile + No recent items -> [] (caller uses Simple Recommender)
-     * 2. No profile + Recent items -> Pure Content-Based
-     * 3. Profile + No recent items -> Profile-Aware Content-Based
-     * 4. Profile + Recent items -> Hybrid (Session + Profile)
+     * Adaptive Recommender V1 (Phase A): Context-Routed Recommendation
+     *
+     * Handles 6 distinct Context Router modes:
+     * 1. SIMPLE: Cold-start guest / no signals -> [] (caller uses Simple Recommender)
+     * 2. BEHAVIOR_CONTENT: Session signals (search, view, cart) without skin profile
+     * 3. PURCHASE_CONTENT: Valid purchase history without session signals or skin profile
+     * 4. PROFILE_CONTENT: Customer skin profile without session/behavior signals
+     * 5. ADAPTIVE_HYBRID: Combination of behavioral signals and customer skin profile
+     * 6. PARTIAL_PROFILE_FALLBACK: Incomplete/empty profile vector fallback
      *
      * @param array $recentViewedIds List of viewed ma_san_pham
      * @param array|null $skinProfile Customer skin profile
      * @param int $limit Number of recommendations
      * @param MongoDB\Database|null $db Optional db connection
+     * @param array $behaviorSignals Multi-signal behavior payload ['search' => ..., 'view' => ..., 'cart' => ..., 'purchases' => ...]
      * @return array List of recommendation candidates with explainable metadata
      */
-    public function recommendHybrid(array $recentViewedIds, ?array $skinProfile, int $limit = 4, $db = null): array {
+    public function recommendHybrid(
+        array $recentViewedIds,
+        ?array $skinProfile,
+        int $limit = 4,
+        $db = null,
+        array $behaviorSignals = []
+    ): array {
         $index = $this->loadIndex($db);
         if (!$index || empty($index['vectors'])) {
             return [];
@@ -49,9 +122,13 @@ class ContentBasedRecommender {
         $skinTypes = $index['skin_types'] ?? [];
         $filteredDocFreq = $index['filtered_doc_freq'] ?? [];
 
-        // 1. Validate recent viewed items
+        // 1. Gather & validate raw signals
+        $rawViews = !empty($behaviorSignals['view']) && is_array($behaviorSignals['view'])
+            ? $behaviorSignals['view']
+            : $recentViewedIds;
+
         $validRecent = [];
-        foreach ($recentViewedIds as $id) {
+        foreach ($rawViews as $id) {
             $strId = (string)$id;
             if (isset($vectors[$strId]) && !in_array($strId, $validRecent, true)) {
                 $validRecent[] = $strId;
@@ -59,8 +136,81 @@ class ContentBasedRecommender {
         }
         $validRecent = array_slice($validRecent, 0, 5);
 
-        // 2. Validate skin profile
-        $hasProfile = false;
+        // Cart items: normalize to [pid => quantity]
+        $rawCart = $behaviorSignals['cart'] ?? [];
+        $validCart = [];
+        if (is_array($rawCart)) {
+            foreach ($rawCart as $k => $v) {
+                if (is_array($v) && isset($v['ma_san_pham'])) {
+                    $pidStr = (string)$v['ma_san_pham'];
+                    if (isset($vectors[$pidStr])) {
+                        $validCart[$pidStr] = max(1, (int)($v['so_luong'] ?? 1));
+                    }
+                } elseif (is_numeric($k) && is_string($v) && isset($vectors[$v])) {
+                    $validCart[$v] = 1;
+                } else {
+                    $pidStr = (string)$k;
+                    if (isset($vectors[$pidStr])) {
+                        $validCart[$pidStr] = max(1, is_numeric($v) ? (int)$v : 1);
+                    }
+                }
+            }
+        }
+
+        // Search queries
+        $rawSearches = $behaviorSignals['search'] ?? [];
+        $validQueries = [];
+        if (is_array($rawSearches)) {
+            foreach ($rawSearches as $q) {
+                $str = trim((string)$q);
+                if ($str !== '' && !in_array($str, $validQueries, true)) {
+                    $validQueries[] = $str;
+                }
+            }
+        }
+        $validQueries = array_slice($validQueries, 0, 3);
+
+        // Purchases: array of ['ma_san_pham' => ..., 'so_luong' => ..., 'ngay_dat' => ...]
+        $rawPurchases = $behaviorSignals['purchases'] ?? [];
+        $validPurchases = [];
+        if (is_array($rawPurchases)) {
+            foreach ($rawPurchases as $item) {
+                if (is_array($item)) {
+                    $pid = (string)($item['ma_san_pham'] ?? $item['id'] ?? '');
+                    if ($pid !== '' && isset($vectors[$pid])) {
+                        $validPurchases[] = $item;
+                    }
+                } elseif (is_string($item) || is_numeric($item)) {
+                    $pid = (string)$item;
+                    if (isset($vectors[$pid])) {
+                        $validPurchases[] = ['ma_san_pham' => $pid, 'so_luong' => 1];
+                    }
+                }
+            }
+        }
+
+        // 2. Build Behavioral Vectors
+        $searchData = $this->buildSearchQueryVector($validQueries, $filteredDocFreq);
+        $viewData = $this->buildViewQueryVector($validRecent, $vectors, $prices);
+        $cartData = $this->buildCartQueryVector($validCart, $vectors, $prices);
+        $purchaseData = $this->buildPurchaseQueryVector($validPurchases, $vectors, $prices);
+
+        $behaviorData = $this->buildBehaviorQueryVector(
+            $searchData['vector'],
+            $viewData['vector'],
+            $cartData['vector'],
+            $purchaseData['vector'],
+            $viewData['ref_price'],
+            $cartData['ref_price'],
+            $purchaseData['ref_price']
+        );
+
+        $behaviorVec = $behaviorData['vector'];
+        $activeBehaviorSignals = $behaviorData['active_signals'];
+        $refPrice = $behaviorData['ref_price'];
+
+        // 3. Validate Skin Profile
+        $hasProfileMeta = false;
         $profileTermsUsed = [];
         $custSkinType = null;
         $custBudget = null;
@@ -76,91 +226,108 @@ class ContentBasedRecommender {
                 $avoidIngredients = array_map('trim', explode(',', (string)$skinProfile['thanh_phan_tranh']));
             }
 
-            // Check if profile contains at least one meaningful preference
-            if ($custSkinType !== null || !empty($skinProfile['van_de_da']) || !empty($skinProfile['muc_tieu_cham_soc'])) {
-                $hasProfile = true;
+            if ($custSkinType !== null || !empty($skinProfile['van_de_da']) || !empty($skinProfile['muc_tieu_cham_soc']) || $custBudget !== null) {
+                $hasProfileMeta = true;
             }
         }
 
-        // 3. Context Router
-        $hasSession = !empty($validRecent);
-        if (!$hasSession && !$hasProfile) {
-            return []; // Fallback to Simple Recommender
-        }
-
-        $sourceMode = 'simple';
-        if ($hasSession && !$hasProfile) {
-            $sourceMode = 'content';
-        } elseif (!$hasSession && $hasProfile) {
-            $sourceMode = 'profile';
-        } else {
-            $sourceMode = 'hybrid';
-        }
-
-        // 4. Build Session Query Vector
-        $sessionVec = [];
-        $refPrice = 0.0;
-        if ($hasSession) {
-            $weights = $this->getRecencyWeights(count($validRecent));
-            $weightedPriceSum = 0.0;
-            $weightSum = 0.0;
-            foreach ($validRecent as $idx => $pid) {
-                $w = $weights[$idx] ?? 0.1;
-                foreach ($vectors[$pid] as $term => $val) {
-                    $sessionVec[$term] = ($sessionVec[$term] ?? 0.0) + ($w * $val);
-                }
-                if (isset($prices[$pid]) && $prices[$pid] > 0) {
-                    $weightedPriceSum += $w * (float)$prices[$pid];
-                    $weightSum += $w;
-                }
-            }
-            $refPrice = $weightSum > 0 ? ($weightedPriceSum / $weightSum) : 0.0;
-        }
-
-        // 5. Build Profile Query Vector
         $profileVec = [];
-        if ($hasProfile) {
+        if ($hasProfileMeta) {
             $profileQueryData = $this->buildProfileQueryVector($skinProfile, $filteredDocFreq);
             $profileVec = $profileQueryData['vector'];
             $profileTermsUsed = $profileQueryData['terms'];
         }
+        $hasProfileVector = !empty($profileVec);
 
-        // 6. Combine Query Vector
+        // 4. Context Router: Determine algorithm mode and dominant signal
+        $algorithmMode = 'SIMPLE';
+        $dominantSignal = 'SIMPLE';
+        $allActiveSignals = $activeBehaviorSignals;
+        if ($hasProfileVector || $hasProfileMeta) {
+            $allActiveSignals[] = 'profile';
+        }
+
+        if (empty($activeBehaviorSignals) && !$hasProfileMeta && !$hasProfileVector) {
+            $algorithmMode = 'SIMPLE';
+            $dominantSignal = 'SIMPLE';
+        } elseif ($hasProfileMeta && !$hasProfileVector) {
+            $algorithmMode = 'PARTIAL_PROFILE_FALLBACK';
+            $dominantSignal = !empty($behaviorData['dominant_signal']) ? $behaviorData['dominant_signal'] : 'PROFILE';
+        } elseif ($hasProfileVector && empty($activeBehaviorSignals)) {
+            $algorithmMode = 'PROFILE_CONTENT';
+            $dominantSignal = 'PROFILE';
+        } elseif ($hasProfileVector && !empty($activeBehaviorSignals)) {
+            $algorithmMode = 'ADAPTIVE_HYBRID';
+            $dominantSignal = 'HYBRID';
+        } else {
+            // Behavior only
+            if (count($activeBehaviorSignals) === 1 && $activeBehaviorSignals[0] === 'purchase') {
+                $algorithmMode = 'PURCHASE_CONTENT';
+                $dominantSignal = 'PURCHASE';
+            } else {
+                $algorithmMode = 'BEHAVIOR_CONTENT';
+                $dominantSignal = $behaviorData['dominant_signal'];
+            }
+        }
+
+        // If cold-start SIMPLE mode, return empty list (caller falls back to Simple Recommender Top-4)
+        if ($algorithmMode === 'SIMPLE') {
+            return [];
+        }
+
+        // Backward-compatible source_mode string
+        $sourceMode = match ($algorithmMode) {
+            'ADAPTIVE_HYBRID' => 'hybrid',
+            'PROFILE_CONTENT' => 'profile',
+            'PURCHASE_CONTENT', 'BEHAVIOR_CONTENT' => 'content',
+            'PARTIAL_PROFILE_FALLBACK' => (!empty($behaviorVec) ? 'content' : 'profile'),
+            default => 'simple',
+        };
+
+        // 5. Combine Query Vector
         $combinedQuery = [];
-        if ($sourceMode === 'hybrid') {
-            // Selected baseline: 0.50 Session + 0.50 Profile
-            foreach ($sessionVec as $term => $val) {
-                $combinedQuery[$term] = ($combinedQuery[$term] ?? 0.0) + (0.50 * $val);
+        if ($algorithmMode === 'ADAPTIVE_HYBRID') {
+            // Frozen baseline: 0.50 Behavior + 0.50 Profile
+            foreach ($behaviorVec as $term => $val) {
+                $combinedQuery[$term] = ($combinedQuery[$term] ?? 0.0) + (self::HYBRID_ALPHA * $val);
             }
             foreach ($profileVec as $term => $val) {
-                $combinedQuery[$term] = ($combinedQuery[$term] ?? 0.0) + (0.50 * $val);
+                $combinedQuery[$term] = ($combinedQuery[$term] ?? 0.0) + (self::HYBRID_ALPHA * $val);
             }
-        } elseif ($sourceMode === 'content') {
-            $combinedQuery = $sessionVec;
-        } elseif ($sourceMode === 'profile') {
+        } elseif ($algorithmMode === 'PROFILE_CONTENT') {
+            $combinedQuery = $profileVec;
+        } elseif (!empty($behaviorVec)) {
+            $combinedQuery = $behaviorVec;
+        } elseif (!empty($profileVec)) {
             $combinedQuery = $profileVec;
         }
 
-        $qNormSq = 0.0;
-        foreach ($combinedQuery as $val) {
-            $qNormSq += $val * $val;
-        }
-        $qNorm = sqrt($qNormSq);
+        $combinedQuery = $this->l2NormalizeVector($combinedQuery);
+        $qNorm = $this->computeVectorNorm($combinedQuery);
         if ($qNorm <= 0.0) {
             return [];
         }
 
-        // 7. Score Candidates
+        // 6. Score Candidates
         $candidates = [];
         $validRecentLookup = array_flip($validRecent);
+        $cartLookup = array_flip($cartData['cart_ids']);
+
+        $bNorm = $this->computeVectorNorm($behaviorVec);
+        $pNorm = $this->computeVectorNorm($profileVec);
 
         foreach ($vectors as $pid => $vec) {
-            // Strictly exclude viewed products
+            // Strictly exclude viewed products (preserves existing production behavior)
             if (isset($validRecentLookup[$pid])) {
                 continue;
             }
 
-            // Dot product
+            // Exclude current cart SKUs to avoid recommending what is already in cart
+            if (isset($cartLookup[$pid])) {
+                continue;
+            }
+
+            // Dot product with combined query
             $dot = 0.0;
             if (count($combinedQuery) < count($vec)) {
                 foreach ($combinedQuery as $t => $qVal) {
@@ -188,11 +355,43 @@ class ContentBasedRecommender {
                     $priceSim = $refPrice > 0 ? $this->getPriceScore($candPrice, $refPrice) : 1.0;
 
                     // Scoring formula based on mode:
-                    if ($sourceMode === 'content') {
-                        $finalScore = (0.90 * $contentSim) + (0.10 * $priceSim);
+                    if ($algorithmMode === 'ADAPTIVE_HYBRID' || $algorithmMode === 'PROFILE_CONTENT') {
+                        // 70% Content + 20% Skin Compatibility + 10% Budget
+                        $finalScore = (self::SCORING_WEIGHTS_HYBRID['content'] * $contentSim)
+                                    + (self::SCORING_WEIGHTS_HYBRID['skin'] * $skinScore)
+                                    + (self::SCORING_WEIGHTS_HYBRID['budget'] * $budgetScore);
+                    } elseif ($algorithmMode === 'PARTIAL_PROFILE_FALLBACK') {
+                        if ($custSkinType !== null || $custBudget !== null) {
+                            $finalScore = (self::SCORING_WEIGHTS_HYBRID['content'] * $contentSim)
+                                        + (self::SCORING_WEIGHTS_HYBRID['skin'] * $skinScore)
+                                        + (self::SCORING_WEIGHTS_HYBRID['budget'] * $budgetScore);
+                        } else {
+                            $finalScore = (self::SCORING_WEIGHTS_BEHAVIOR['content'] * $contentSim)
+                                        + (self::SCORING_WEIGHTS_BEHAVIOR['price'] * $priceSim);
+                        }
                     } else {
-                        // Profile & Hybrid: 70% Content + 20% Skin Compatibility + 10% Budget
-                        $finalScore = (0.70 * $contentSim) + (0.20 * $skinScore) + (0.10 * $budgetScore);
+                        // Pure behavior/purchase: 90% Content + 10% PriceSim
+                        $finalScore = (self::SCORING_WEIGHTS_BEHAVIOR['content'] * $contentSim)
+                                    + (self::SCORING_WEIGHTS_BEHAVIOR['price'] * $priceSim);
+                    }
+
+                    // Compute individual behavior and profile contributions for explainability
+                    $behaviorContribution = 0.0;
+                    if ($bNorm > 0.0) {
+                        $bDot = 0.0;
+                        foreach ($behaviorVec as $t => $bv) {
+                            if (isset($vec[$t])) $bDot += $bv * $vec[$t];
+                        }
+                        $behaviorContribution = round($bDot / ($bNorm * $docNorm), 4);
+                    }
+
+                    $profileContribution = 0.0;
+                    if ($pNorm > 0.0) {
+                        $pDot = 0.0;
+                        foreach ($profileVec as $t => $pv) {
+                            if (isset($vec[$t])) $pDot += $pv * $vec[$t];
+                        }
+                        $profileContribution = round($pDot / ($pNorm * $docNorm), 4);
                     }
 
                     $candidates[$pid] = [
@@ -201,6 +400,8 @@ class ContentBasedRecommender {
                         'skin_type_match' => round($skinScore, 2),
                         'budget_score' => round($budgetScore, 4),
                         'final_score' => round($finalScore, 4),
+                        'behavior_contribution' => $behaviorContribution,
+                        'profile_contribution' => $profileContribution,
                     ];
                 }
             }
@@ -209,7 +410,7 @@ class ContentBasedRecommender {
         // Sort descending by final_score
         uasort($candidates, fn($a, $b) => $b['final_score'] <=> $a['final_score']);
 
-        // 8. Apply Product Family Diversity Filter & Explainability
+        // 7. Apply Product Family Diversity Filter & Grounded Explainability
         $results = [];
         $seenFamilies = [];
 
@@ -225,11 +426,24 @@ class ContentBasedRecommender {
                 }
             }
 
-            // Build grounded explainable reasons
+            // Build grounded explainable reasons matching active scoring signals
             $reasons = [];
+            if (in_array('search', $activeBehaviorSignals, true)) {
+                $reasons[] = "Dựa trên tìm kiếm gần đây";
+            }
+            if (in_array('view', $activeBehaviorSignals, true)) {
+                $reasons[] = "Tương tự sản phẩm vừa xem";
+            }
+            if (in_array('cart', $activeBehaviorSignals, true)) {
+                $reasons[] = "Phù hợp với giỏ hàng";
+            }
+            if (in_array('purchase', $activeBehaviorSignals, true)) {
+                $reasons[] = "Tương thích lịch sử mua sắm";
+            }
+
             if ($scores['skin_type_match'] >= 1.0) {
-                $reasons[] = "Đúng loại da của bạn";
-            } elseif ($scores['skin_type_match'] >= 0.70) {
+                $reasons[] = "Khớp loại da";
+            } elseif ($scores['skin_type_match'] >= 0.70 && ($hasProfileVector || $custSkinType !== null)) {
                 $reasons[] = "Phù hợp mọi loại da";
             }
 
@@ -237,28 +451,35 @@ class ContentBasedRecommender {
                 $reasons[] = "Trong ngân sách";
             }
 
-            if ($hasSession) {
-                $reasons[] = "Tương tự sản phẩm bạn vừa xem";
+            if (empty($reasons)) {
+                $reasons[] = "Gợi ý cá nhân hóa";
             }
 
-            $reasonTag = !empty($reasons) ? implode(' • ', $reasons) : "Gợi ý cá nhân hóa";
+            $reasonTag = implode(' • ', array_unique($reasons));
 
             $results[] = [
                 'ma_san_pham' => (string)$pid,
+                'algorithm_mode' => $algorithmMode,
                 'source_mode' => $sourceMode,
+                'active_signals' => $allActiveSignals,
+                'dominant_signal' => $dominantSignal,
                 'similarity' => $scores['content_score'],
                 'content_score' => $scores['content_score'],
+                'skin_score' => $scores['skin_type_match'],
                 'skin_type_match' => $scores['skin_type_match'],
                 'budget_score' => $scores['budget_score'],
                 'final_score' => $scores['final_score'],
+                'behavior_contribution' => $scores['behavior_contribution'],
+                'profile_contribution' => $scores['profile_contribution'],
                 'source_recent_items' => $validRecent,
                 'profile_terms_used' => $profileTermsUsed,
+                'reason_tags' => $reasons,
+                'reason' => $reasonTag,
                 'ingredient_warning' => [
                     'has_warning' => false,
                     'avoid_ingredients_requested' => $avoidIngredients,
                     'status' => 'non_medical_limitation'
                 ],
-                'reason' => $reasonTag,
             ];
 
             if (count($results) >= $limit) {
@@ -268,6 +489,278 @@ class ContentBasedRecommender {
 
         return $results;
     }
+
+    /**
+     * Compute L2 Euclidean norm of a sparse vector
+     */
+    public function computeVectorNorm(array $vec): float {
+        $sumSq = 0.0;
+        foreach ($vec as $val) {
+            $sumSq += ((float)$val) * ((float)$val);
+        }
+        return sqrt($sumSq);
+    }
+
+    /**
+     * L2 normalize sparse vector to unit length
+     */
+    public function l2NormalizeVector(array $vec): array {
+        $norm = $this->computeVectorNorm($vec);
+        if ($norm <= 0.0) {
+            return [];
+        }
+        $normalized = [];
+        foreach ($vec as $k => $v) {
+            $normalized[$k] = round($v / $norm, 6);
+        }
+        return $normalized;
+    }
+
+    /**
+     * Build search query vector with MRU position decay
+     * V_search = Normalize(w1*TFIDF(query_latest) + w2*TFIDF(query_previous) + w3*TFIDF(query_oldest))
+     */
+    public function buildSearchQueryVector(array $queries, array $filteredDocFreq): array {
+        $cleanQueries = [];
+        foreach ($queries as $q) {
+            $str = trim((string)$q);
+            if ($str !== '' && !in_array($str, $cleanQueries, true)) {
+                $cleanQueries[] = $str;
+            }
+        }
+        $cleanQueries = array_slice($cleanQueries, 0, 3);
+        if (empty($cleanQueries)) {
+            return ['vector' => [], 'terms' => []];
+        }
+
+        $posWeights = self::SEARCH_POSITION_WEIGHTS;
+        $combined = [];
+        $termsUsed = [];
+
+        foreach ($cleanQueries as $idx => $queryStr) {
+            $w = $posWeights[$idx] ?? 0.1;
+            $tokens = $this->tokenize($queryStr);
+            $counts = array_count_values($tokens);
+            $totalTokens = array_sum($counts);
+            if ($totalTokens <= 0) continue;
+
+            foreach ($counts as $t => $cnt) {
+                if (isset($filteredDocFreq[$t])) {
+                    $tf = $cnt / $totalTokens;
+                    $idf = (float)$filteredDocFreq[$t];
+                    $val = $w * ($tf * $idf);
+                    $combined[$t] = ($combined[$t] ?? 0.0) + $val;
+                    $termsUsed[] = $t;
+                }
+            }
+        }
+
+        $normVec = $this->l2NormalizeVector($combined);
+        return [
+            'vector' => $normVec,
+            'terms' => array_values(array_unique($termsUsed)),
+            'queries_used' => $cleanQueries,
+        ];
+    }
+
+    /**
+     * Build view query vector from recent viewed product IDs (MRU order)
+     */
+    public function buildViewQueryVector(array $validRecentIds, array $vectors, array $prices): array {
+        if (empty($validRecentIds)) {
+            return ['vector' => [], 'ref_price' => 0.0];
+        }
+
+        $weights = $this->getRecencyWeights(count($validRecentIds));
+        $combined = [];
+        $weightedPriceSum = 0.0;
+        $weightSum = 0.0;
+
+        foreach ($validRecentIds as $idx => $pid) {
+            $pidStr = (string)$pid;
+            if (!isset($vectors[$pidStr])) continue;
+            $w = $weights[$idx] ?? 0.1;
+            foreach ($vectors[$pidStr] as $term => $val) {
+                $combined[$term] = ($combined[$term] ?? 0.0) + ($w * $val);
+            }
+            if (isset($prices[$pidStr]) && $prices[$pidStr] > 0) {
+                $weightedPriceSum += $w * (float)$prices[$pidStr];
+                $weightSum += $w;
+            }
+        }
+
+        $normVec = $this->l2NormalizeVector($combined);
+        $refPrice = $weightSum > 0 ? ($weightedPriceSum / $weightSum) : 0.0;
+        return [
+            'vector' => $normVec,
+            'ref_price' => $refPrice,
+        ];
+    }
+
+    /**
+     * Build cart query vector from cart items
+     */
+    public function buildCartQueryVector(array $cartItems, array $vectors, array $prices): array {
+        if (empty($cartItems)) {
+            return ['vector' => [], 'ref_price' => 0.0, 'cart_ids' => []];
+        }
+
+        $combined = [];
+        $weightedPriceSum = 0.0;
+        $totalQty = 0;
+        $validCartIds = [];
+
+        foreach ($cartItems as $pid => $qty) {
+            $pidStr = (string)$pid;
+            if (!isset($vectors[$pidStr])) continue;
+            $validCartIds[] = $pidStr;
+            $q = max(1, min(10, (int)$qty));
+            foreach ($vectors[$pidStr] as $term => $val) {
+                $combined[$term] = ($combined[$term] ?? 0.0) + ($q * $val);
+            }
+            if (isset($prices[$pidStr]) && $prices[$pidStr] > 0) {
+                $weightedPriceSum += $q * (float)$prices[$pidStr];
+                $totalQty += $q;
+            }
+        }
+
+        $normVec = $this->l2NormalizeVector($combined);
+        $refPrice = $totalQty > 0 ? ($weightedPriceSum / $totalQty) : 0.0;
+        return [
+            'vector' => $normVec,
+            'ref_price' => $refPrice,
+            'cart_ids' => $validCartIds,
+        ];
+    }
+
+    /**
+     * Build purchase query vector with exponential time decay w(t) = exp(-lambda * delta_t)
+     * lambda = ln(2) / PURCHASE_HALF_LIFE_DAYS (60 days baseline heuristic)
+     * Fallback weight = 1.0 if timestamp is invalid or missing (no fake timestamps).
+     */
+    public function buildPurchaseQueryVector(array $purchases, array $vectors, array $prices): array {
+        if (empty($purchases)) {
+            return ['vector' => [], 'ref_price' => 0.0];
+        }
+
+        $combined = [];
+        $weightedPriceSum = 0.0;
+        $weightSum = 0.0;
+        $halfLife = self::PURCHASE_HALF_LIFE_DAYS;
+        $lambda = log(2) / $halfLife;
+        $now = time();
+
+        foreach ($purchases as $item) {
+            $pid = (string)($item['ma_san_pham'] ?? $item['id'] ?? '');
+            if ($pid === '' || !isset($vectors[$pid])) continue;
+
+            $qty = max(1, (int)($item['so_luong'] ?? 1));
+
+            // Time decay calculation
+            $decayWeight = 1.0;
+            $dateRaw = $item['ngay_dat'] ?? null;
+            $ts = null;
+
+            if ($dateRaw instanceof \MongoDB\BSON\UTCDateTime) {
+                $ts = (int)($dateRaw->toDateTime()->getTimestamp());
+            } elseif (is_numeric($dateRaw) && $dateRaw > 0) {
+                $ts = (int)$dateRaw;
+            } elseif (is_string($dateRaw) && trim($dateRaw) !== '') {
+                $parsed = strtotime($dateRaw);
+                if ($parsed !== false && $parsed > 0) {
+                    $ts = $parsed;
+                }
+            }
+
+            if ($ts !== null && $ts <= $now) {
+                $deltaDays = max(0.0, ($now - $ts) / 86400.0);
+                $decayWeight = exp(-$lambda * $deltaDays);
+            } else {
+                // Fallback weight = 1.0 if timestamp invalid/missing
+                $decayWeight = 1.0;
+            }
+
+            $effectiveWeight = $decayWeight * $qty;
+            foreach ($vectors[$pid] as $term => $val) {
+                $combined[$term] = ($combined[$term] ?? 0.0) + ($effectiveWeight * $val);
+            }
+
+            if (isset($prices[$pid]) && $prices[$pid] > 0) {
+                $weightedPriceSum += $effectiveWeight * (float)$prices[$pid];
+                $weightSum += $effectiveWeight;
+            }
+        }
+
+        $normVec = $this->l2NormalizeVector($combined);
+        $refPrice = $weightSum > 0 ? ($weightedPriceSum / $weightSum) : 0.0;
+        return [
+            'vector' => $normVec,
+            'ref_price' => $refPrice,
+        ];
+    }
+
+    /**
+     * Multi-signal behavior fusion with self-normalization over active signals
+     */
+    public function buildBehaviorQueryVector(
+        array $searchVec,
+        array $viewVec,
+        array $cartVec,
+        array $purchaseVec,
+        float $refPriceView,
+        float $refPriceCart,
+        float $refPricePurchase
+    ): array {
+        $activeSignals = [];
+        if (!empty($cartVec))     $activeSignals['cart'] = $cartVec;
+        if (!empty($viewVec))     $activeSignals['view'] = $viewVec;
+        if (!empty($searchVec))   $activeSignals['search'] = $searchVec;
+        if (!empty($purchaseVec)) $activeSignals['purchase'] = $purchaseVec;
+
+        if (empty($activeSignals)) {
+            return ['vector' => [], 'active_signals' => [], 'dominant_signal' => '', 'ref_price' => 0.0];
+        }
+
+        $baseline = self::BEHAVIOR_WEIGHTS_BASELINE;
+        $activeWeightSum = 0.0;
+        foreach (array_keys($activeSignals) as $sigKey) {
+            $activeWeightSum += ($baseline[$sigKey] ?? 0.1);
+        }
+
+        $combined = [];
+        $dominantSignal = '';
+        $maxNormalizedWeight = -1.0;
+
+        foreach ($activeSignals as $sigKey => $sigVec) {
+            $normalizedWeight = ($baseline[$sigKey] ?? 0.1) / $activeWeightSum;
+            if ($normalizedWeight > $maxNormalizedWeight) {
+                $maxNormalizedWeight = $normalizedWeight;
+                $dominantSignal = strtoupper($sigKey);
+            }
+            foreach ($sigVec as $term => $val) {
+                $combined[$term] = ($combined[$term] ?? 0.0) + ($normalizedWeight * $val);
+            }
+        }
+
+        // Determine reference price based on dominant signal
+        $refPrice = 0.0;
+        if (isset($activeSignals['cart']) && $refPriceCart > 0) {
+            $refPrice = $refPriceCart;
+        } elseif (isset($activeSignals['view']) && $refPriceView > 0) {
+            $refPrice = $refPriceView;
+        } elseif (isset($activeSignals['purchase']) && $refPricePurchase > 0) {
+            $refPrice = $refPricePurchase;
+        }
+
+        $normVec = $this->l2NormalizeVector($combined);
+        return [
+            'vector' => $normVec,
+            'active_signals' => array_keys($activeSignals),
+            'dominant_signal' => $dominantSignal,
+            'ref_price' => $refPrice,
+        ];
+    }
+
 
     /**
      * Build TF-IDF query vector from skin profile text
