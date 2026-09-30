@@ -1,0 +1,77 @@
+{
+    "seed": 42,
+    "split_info": {
+        "total_users": 500,
+        "evaluated_users": 432,
+        "excluded_users": 68,
+        "train_pairs": 3894
+    },
+    "metrics": {
+        "RANDOM": {
+            "HitRate@5": 0.0069,
+            "Precision@5": 0.0014,
+            "Recall@5": 0.0069,
+            "NDCG@5": 0.0049,
+            "HitRate@10": 0.0069,
+            "Precision@10": 0.0007,
+            "Recall@10": 0.0069,
+            "NDCG@10": 0.0049,
+            "MRR@10": 0.0042
+        },
+        "MOST_POPULAR": {
+            "HitRate@5": 0.0162,
+            "Precision@5": 0.0032,
+            "Recall@5": 0.0162,
+            "NDCG@5": 0.0091,
+            "HitRate@10": 0.0278,
+            "Precision@10": 0.0028,
+            "Recall@10": 0.0278,
+            "NDCG@10": 0.0128,
+            "MRR@10": 0.0083
+        },
+        "ITEM_KNN": {
+            "HitRate@5": 0.0023,
+            "Precision@5": 0.0005,
+            "Recall@5": 0.0023,
+            "NDCG@5": 0.0012,
+            "HitRate@10": 0.0069,
+            "Precision@10": 0.0007,
+            "Recall@10": 0.0069,
+            "NDCG@10": 0.0027,
+            "MRR@10": 0.0014
+        },
+        "MATRIX_FACTORIZATION": {
+            "HitRate@5": 0.0023,
+            "Precision@5": 0.0005,
+            "Recall@5": 0.0023,
+            "NDCG@5": 0.0023,
+            "HitRate@10": 0.0116,
+            "Precision@10": 0.0012,
+            "Recall@10": 0.0116,
+            "NDCG@10": 0.0055,
+            "MRR@10": 0.0037
+        },
+        "HYBRID_W02": {
+            "HitRate@5": 0.0162,
+            "Precision@5": 0.0032,
+            "Recall@5": 0.0162,
+            "NDCG@5": 0.0092,
+            "HitRate@10": 0.0231,
+            "Precision@10": 0.0023,
+            "Recall@10": 0.0231,
+            "NDCG@10": 0.0114,
+            "MRR@10": 0.0078
+        },
+        "HYBRID_W04": {
+            "HitRate@5": 0.0116,
+            "Precision@5": 0.0023,
+            "Recall@5": 0.0116,
+            "NDCG@5": 0.0073,
+            "HitRate@10": 0.0324,
+            "Precision@10": 0.0032,
+            "Recall@10": 0.0324,
+            "NDCG@10": 0.0136,
+            "MRR@10": 0.0082
+        }
+    }
+}

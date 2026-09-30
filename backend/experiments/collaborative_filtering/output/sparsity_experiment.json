@@ -1,0 +1,95 @@
+{
+    "Dataset S (100 users)": {
+        "users": 100,
+        "interactions": 2758,
+        "unique_pairs": 976,
+        "unique_products": 587,
+        "density_pct": 0.3947,
+        "catalog_coverage_pct": 23.74,
+        "evaluated_users": 88,
+        "metrics_summary": {
+            "MOST_POPULAR": {
+                "HR@10": 0.0114,
+                "Recall@10": 0.0114,
+                "NDCG@10": 0.0033
+            },
+            "ITEM_KNN": {
+                "HR@10": 0.0227,
+                "Recall@10": 0.0227,
+                "NDCG@10": 0.0148
+            },
+            "MATRIX_FACTORIZATION": {
+                "HR@10": 0.0114,
+                "Recall@10": 0.0114,
+                "NDCG@10": 0.0114
+            },
+            "HYBRID_W02": {
+                "HR@10": 0,
+                "Recall@10": 0,
+                "NDCG@10": 0
+            }
+        }
+    },
+    "Dataset M (300 users)": {
+        "users": 300,
+        "interactions": 8043,
+        "unique_pairs": 2796,
+        "unique_products": 1124,
+        "density_pct": 0.3769,
+        "catalog_coverage_pct": 45.45,
+        "evaluated_users": 266,
+        "metrics_summary": {
+            "MOST_POPULAR": {
+                "HR@10": 0.0338,
+                "Recall@10": 0.0338,
+                "NDCG@10": 0.0161
+            },
+            "ITEM_KNN": {
+                "HR@10": 0.0038,
+                "Recall@10": 0.0038,
+                "NDCG@10": 0.0012
+            },
+            "MATRIX_FACTORIZATION": {
+                "HR@10": 0.0075,
+                "Recall@10": 0.0075,
+                "NDCG@10": 0.003
+            },
+            "HYBRID_W02": {
+                "HR@10": 0.0338,
+                "Recall@10": 0.0338,
+                "NDCG@10": 0.0165
+            }
+        }
+    },
+    "Dataset L (500 users)": {
+        "users": 500,
+        "interactions": 13281,
+        "unique_pairs": 4613,
+        "unique_products": 1434,
+        "density_pct": 0.3731,
+        "catalog_coverage_pct": 57.99,
+        "evaluated_users": 432,
+        "metrics_summary": {
+            "MOST_POPULAR": {
+                "HR@10": 0.0278,
+                "Recall@10": 0.0278,
+                "NDCG@10": 0.0128
+            },
+            "ITEM_KNN": {
+                "HR@10": 0.0069,
+                "Recall@10": 0.0069,
+                "NDCG@10": 0.0027
+            },
+            "MATRIX_FACTORIZATION": {
+                "HR@10": 0.0116,
+                "Recall@10": 0.0116,
+                "NDCG@10": 0.0055
+            },
+            "HYBRID_W02": {
+                "HR@10": 0.0231,
+                "Recall@10": 0.0231,
+                "NDCG@10": 0.0114
+            }
+        }
+    }
+}

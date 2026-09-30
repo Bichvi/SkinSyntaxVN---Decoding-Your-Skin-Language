@@ -1,0 +1,15 @@
+{
+    "cold_start_user": {
+        "scenario": "Completely new visitor with 0 past interactions",
+        "cf_knn_behavior": "Returns 0 recommendations (no neighbor overlap)",
+        "cf_mf_behavior": "Falls back to global bias mu; lacks personalized latent factor vector p_u",
+        "production_countermeasure": "Phase A Simple Weighted Rating (WR) and Skin Profile Matching gracefully handle cold-start users without error"
+    },
+    "cold_start_item": {
+        "scenario": "Newly added catalog SKU with 0 purchase or view history",
+        "cf_knn_behavior": "Unreachable via item similarity matrix (zero column in co-interaction)",
+        "cf_mf_behavior": "Cannot train item latent vector q_i; relies solely on global bias",
+        "production_countermeasure": "Phase A Content-Based TF-IDF Recommender instantly embeds new SKUs via ingredients, category, and skin suitability features regardless of sales volume"
+    },
+    "hybrid_necessity": "Demonstrates why CF can only serve as a supplemental signal in an Adaptive Hybrid Recommender once organic density reaches critical mass, and why Content-Based & Simple WR remain foundational."
+}
