@@ -45,4 +45,5 @@ ai-service-flask/chroma_db/
 ai-service-flask/chroma_data/
 chroma_db/
 scratch/
+backend/storage/backups/
 

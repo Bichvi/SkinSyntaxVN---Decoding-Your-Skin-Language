@@ -156,10 +156,44 @@ class HomeController {
             $recentViewed = is_array($_SESSION['recent_viewed_products'] ?? null)
                 ? $_SESSION['recent_viewed_products']
                 : [];
+
+            // 1. Search signal (session MRU or logged-in keywords)
+            $searchQueries = is_array($_SESSION['search_history'] ?? null)
+                ? $_SESSION['search_history']
+                : [];
+            if (empty($searchQueries) && $isLoggedIn && !empty($userProfile['recent_keywords'])) {
+                $searchQueries = $userProfile['recent_keywords'];
+            }
+
+            // 2. Cart signal
+            $cartItems = [];
+            if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+                foreach ($_SESSION['gio_hang'] as $k => $v) {
+                    if (is_array($v) && isset($v['ma_san_pham'])) {
+                        $cartItems[(string)$v['ma_san_pham']] = (int)($v['so_luong'] ?? 1);
+                    } else {
+                        $cartItems[(string)$k] = is_numeric($v) ? (int)$v : 1;
+                    }
+                }
+            }
+
+            // 3. Purchases signal (accepted valid order statuses with time decay)
+            $purchaseItems = [];
+            if ($isLoggedIn && !empty($userProfile['customer_id'])) {
+                $purchaseItems = $this->getValidPurchasedProductsForCustomer((int)$userProfile['customer_id']);
+            }
+
+            $behaviorSignals = [
+                'search' => $searchQueries,
+                'view' => $recentViewed,
+                'cart' => $cartItems,
+                'purchases' => $purchaseItems,
+            ];
+
             $latest = $this->model->latest(12, true, true);
             $cats = $this->getHighlightedCategories();
             $homepageSections = method_exists($this->model, 'getHomepageProductSections')
-                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile)
+                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals)
                 : [];
         } catch (Throwable $e) {
             error_log('home MongoDB error: ' . $e->getMessage());
@@ -777,6 +811,66 @@ class HomeController {
                 || !empty($profile['concerns'])
                 || !empty($profile['budget'])
             );
+    }
+
+    /**
+     * Retrieve valid purchased products for a customer with accepted statuses and timestamps
+     * Normalized valid statuses: completed, shipping, confirmed
+     */
+    private function getValidPurchasedProductsForCustomer(int $customerId): array {
+        if ($customerId <= 0) return [];
+        try {
+            global $db;
+            if (!$db) return [];
+
+            require_once dirname(__DIR__) . '/services/ContentBasedRecommender.php';
+            $accepted = ContentBasedRecommender::VALID_PURCHASE_STATUSES;
+
+            $orders = iterator_to_array($db->hoa_don->find([
+                'ma_kh' => $customerId,
+                'trang_thai' => ['$in' => $accepted]
+            ], [
+                'projection' => ['ma_hoa_don' => 1, 'ngay_dat' => 1, 'trang_thai' => 1],
+                'sort' => ['ngay_dat' => -1]
+            ]));
+
+            if (empty($orders)) return [];
+
+            $orderDateMap = [];
+            $orderIds = [];
+            foreach ($orders as $ord) {
+                $hid = (int)($ord['ma_hoa_don'] ?? 0);
+                if ($hid > 0) {
+                    $orderIds[] = $hid;
+                    $orderDateMap[$hid] = $ord['ngay_dat'] ?? null;
+                }
+            }
+
+            if (empty($orderIds)) return [];
+
+            $details = iterator_to_array($db->chi_tiet_hoa_don->find([
+                'ma_hoa_don' => ['$in' => $orderIds]
+            ], [
+                'projection' => ['ma_hoa_don' => 1, 'ma_san_pham' => 1, 'so_luong' => 1]
+            ]));
+
+            $purchasedItems = [];
+            foreach ($details as $dt) {
+                $pid = (string)($dt['ma_san_pham'] ?? '');
+                $hid = (int)($dt['ma_hoa_don'] ?? 0);
+                if ($pid !== '') {
+                    $purchasedItems[] = [
+                        'ma_san_pham' => $pid,
+                        'so_luong' => max(1, (int)($dt['so_luong'] ?? 1)),
+                        'ngay_dat' => $orderDateMap[$hid] ?? null,
+                    ];
+                }
+            }
+            return $purchasedItems;
+        } catch (Throwable $e) {
+            error_log('getValidPurchasedProducts error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     private function hasValidSkinProfile(?array $profile): bool {

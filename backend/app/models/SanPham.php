@@ -62,12 +62,15 @@ class SanPham {
     private static ?array $categoryLookupMap = null;
     private static ?array $originLookupMap = null;
     private static ?array $simpleRecommenderMemoryCache = null;
+    private static ?array $categoryHierarchyCache = null;
 
     public static function clearLookupCache(): void {
         self::$brandLookupMap = null;
         self::$categoryLookupMap = null;
         self::$originLookupMap = null;
         self::$simpleRecommenderMemoryCache = null;
+        self::$menuTreeCache = null;
+        self::$categoryHierarchyCache = null;
     }
 
     public static function clearSimpleRecommenderCache(): void {
@@ -331,43 +334,278 @@ class SanPham {
 
     private static ?array $menuTreeCache = null;
 
+    public function getCanonicalCategoryHierarchy(): array {
+        if (self::$categoryHierarchyCache !== null) {
+            return self::$categoryHierarchyCache;
+        }
+
+        $cursor = $this->db->danh_muc->find([
+            'trang_thai' => ['$nin' => ['inactive', 'hidden', 'disabled', 'off', '0']]
+        ]);
+
+        $byId = [];
+        $children = [];
+        $roots = [];
+
+        foreach ($cursor as $doc) {
+            $cat = (array)$doc;
+            if (!isset($cat['ma_danh_muc']) || !is_numeric($cat['ma_danh_muc'])) {
+                continue;
+            }
+            $id = (int)$cat['ma_danh_muc'];
+            $cat['ma_danh_muc'] = $id;
+            $cat['ten_danh_muc'] = trim((string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? ''));
+            $cat['parent_id'] = (isset($cat['parent_id']) && $cat['parent_id'] !== null && $cat['parent_id'] !== '' && is_numeric($cat['parent_id']))
+                ? (int)$cat['parent_id']
+                : null;
+            $cat['level'] = isset($cat['level']) && is_numeric($cat['level']) ? (int)$cat['level'] : 1;
+            $cat['thu_tu_hien_thi'] = isset($cat['thu_tu_hien_thi']) && is_numeric($cat['thu_tu_hien_thi']) ? (int)$cat['thu_tu_hien_thi'] : 999;
+            $byId[$id] = $cat;
+        }
+
+        foreach ($byId as $id => $cat) {
+            $pid = $cat['parent_id'];
+            if ($pid !== null && isset($byId[$pid]) && $pid !== $id) {
+                $children[$pid][] = $id;
+            } else {
+                $roots[] = $id;
+            }
+        }
+
+        $sortFn = function (int $a, int $b) use ($byId): int {
+            $orderA = $byId[$a]['thu_tu_hien_thi'] ?? 999;
+            $orderB = $byId[$b]['thu_tu_hien_thi'] ?? 999;
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
+            }
+            return $a <=> $b;
+        };
+
+        usort($roots, $sortFn);
+        foreach ($children as $pid => &$cList) {
+            usort($cList, $sortFn);
+        }
+        unset($cList);
+
+        $leafIdsByNode = [];
+        $collectLeaves = function (int $nodeId, array $visited = []) use (&$collectLeaves, $byId, $children, &$leafIdsByNode): array {
+            if (isset($leafIdsByNode[$nodeId])) {
+                return $leafIdsByNode[$nodeId];
+            }
+            if (isset($visited[$nodeId]) || !isset($byId[$nodeId])) {
+                return [];
+            }
+            $visited[$nodeId] = true;
+            $node = $byId[$nodeId];
+            $nodeChildren = $children[$nodeId] ?? [];
+            $leaves = [];
+
+            if (empty($nodeChildren) || !empty($node['is_leaf'])) {
+                if (empty($nodeChildren)) {
+                    $leaves[] = $nodeId;
+                }
+            }
+            foreach ($nodeChildren as $childId) {
+                foreach ($collectLeaves($childId, $visited) as $leafId) {
+                    $leaves[] = $leafId;
+                }
+            }
+            $leaves = array_values(array_unique($leaves));
+            $leafIdsByNode[$nodeId] = $leaves;
+            return $leaves;
+        };
+
+        foreach (array_keys($byId) as $id) {
+            $collectLeaves($id);
+        }
+
+        self::$categoryHierarchyCache = [
+            'by_id' => $byId,
+            'children' => $children,
+            'roots' => $roots,
+            'leaf_ids_by_node' => $leafIdsByNode,
+        ];
+
+        return self::$categoryHierarchyCache;
+    }
+
+    public function isLeafCategory($categoryId): bool {
+        if ($categoryId === null || $categoryId === '' || !is_numeric($categoryId)) {
+            return false;
+        }
+        $id = (int)$categoryId;
+        $hierarchy = $this->getCanonicalCategoryHierarchy();
+        if (!isset($hierarchy['by_id'][$id])) {
+            return false;
+        }
+        $cat = $hierarchy['by_id'][$id];
+        $hasChildren = !empty($hierarchy['children'][$id]);
+        if ($hasChildren) {
+            return false;
+        }
+        if (array_key_exists('is_leaf', $cat) && $cat['is_leaf'] === false) {
+            return false;
+        }
+        return true;
+    }
+
+    private function normalizeCategoryMatchKey(string $val): string {
+        $val = mb_strtolower(trim($val), 'UTF-8');
+        $val = preg_replace('/\s+/', ' ', $val);
+        return $val;
+    }
+
+    public function resolveCategoryLeafIds(string $cap1Val = '', string $cap2Val = ''): array {
+        $hierarchy = $this->getCanonicalCategoryHierarchy();
+        $byId = $hierarchy['by_id'];
+        $leafIdsByNode = $hierarchy['leaf_ids_by_node'];
+
+        $cap1Val = trim($cap1Val);
+        $cap2Val = trim($cap2Val);
+        if ($cap1Val === '' && $cap2Val === '') {
+            return [];
+        }
+
+        $matchesNode = function (array $cat, string $query): bool {
+            $qNorm = $this->normalizeCategoryMatchKey($query);
+            if ($qNorm === '') return false;
+            if (is_numeric($query) && (int)$query === (int)$cat['ma_danh_muc']) {
+                return true;
+            }
+            $nameNorm = $this->normalizeCategoryMatchKey((string)($cat['ten_danh_muc'] ?? ''));
+            if ($nameNorm === $qNorm) {
+                return true;
+            }
+            $slugNorm = $this->normalizeCategoryMatchKey((string)($cat['slug'] ?? ''));
+            if ($slugNorm !== '' && $slugNorm === $qNorm) {
+                return true;
+            }
+            return false;
+        };
+
+        $isDescendantOrSelf = function (int $nodeId, int $ancestorId) use ($byId): bool {
+            $cur = $nodeId;
+            $guard = 0;
+            while ($cur !== null && isset($byId[$cur]) && $guard < 10) {
+                if ($cur === $ancestorId) {
+                    return true;
+                }
+                $cur = $byId[$cur]['parent_id'] ?? null;
+                $guard++;
+            }
+            return false;
+        };
+
+        $matchedCap1Ids = [];
+        if ($cap1Val !== '') {
+            foreach ($byId as $id => $cat) {
+                if ($matchesNode($cat, $cap1Val)) {
+                    $matchedCap1Ids[] = $id;
+                }
+            }
+        }
+
+        $targetNodeIds = [];
+        if ($cap2Val !== '') {
+            foreach ($byId as $id => $cat) {
+                if ($matchesNode($cat, $cap2Val)) {
+                    if (!empty($matchedCap1Ids)) {
+                        foreach ($matchedCap1Ids as $c1Id) {
+                            if ($isDescendantOrSelf($id, $c1Id)) {
+                                $targetNodeIds[] = $id;
+                                break;
+                            }
+                        }
+                    } else {
+                        $targetNodeIds[] = $id;
+                    }
+                }
+            }
+            // Fallback: if cap2Val matched a valid category node even without strict cap1 ancestor
+            if (empty($targetNodeIds)) {
+                foreach ($byId as $id => $cat) {
+                    if ($matchesNode($cat, $cap2Val)) {
+                        $targetNodeIds[] = $id;
+                    }
+                }
+            }
+        } else {
+            $targetNodeIds = $matchedCap1Ids;
+        }
+
+        if (empty($targetNodeIds)) {
+            return [];
+        }
+
+        $leafIds = [];
+        foreach ($targetNodeIds as $nodeId) {
+            foreach ($leafIdsByNode[$nodeId] ?? [] as $leafId) {
+                $leafIds[] = (int)$leafId;
+                $leafIds[] = (string)$leafId;
+            }
+        }
+
+        return array_values(array_unique($leafIds, SORT_REGULAR));
+    }
+
     public function menuTree(int $cap2LimitEach = 14): array {
         if (self::$menuTreeCache !== null) {
             return self::$menuTreeCache;
         }
 
-        // Trong MongoDB, aggregate để group danh mục
-        $pipeline = [
-            ['$match' => ['danh_muc_day_du' => ['$ne' => null, '$not' => new \MongoDB\BSON\Regex('^$')]]],
+        $hierarchy = $this->getCanonicalCategoryHierarchy();
+        $byId = $hierarchy['by_id'];
+        $children = $hierarchy['children'];
+        $roots = $hierarchy['roots'];
+        $leafIdsByNode = $hierarchy['leaf_ids_by_node'];
+
+        // Aggregate direct product counts from san_pham.ma_danh_muc
+        $countPipeline = [
+            ['$match' => $this->availableProductFilter()],
             ['$group' => [
-                '_id' => '$danh_muc_day_du',
+                '_id' => '$ma_danh_muc',
                 'so_luong' => ['$sum' => 1]
-            ]],
-            ['$sort' => ['so_luong' => -1]]
+            ]]
         ];
+        $countCursor = $this->db->san_pham->aggregate($countPipeline);
+        $directCounts = [];
+        foreach ($countCursor as $row) {
+            if ($row['_id'] !== null && $row['_id'] !== '' && is_numeric($row['_id'])) {
+                $cid = (int)$row['_id'];
+                $directCounts[$cid] = ($directCounts[$cid] ?? 0) + (int)$row['so_luong'];
+            }
+        }
 
-        $cursor = $this->db->san_pham->aggregate($pipeline);
         $tree = [];
+        foreach ($roots as $rootId) {
+            $rootCat = $byId[$rootId] ?? null;
+            if (!$rootCat) continue;
+            $c1Name = $rootCat['ten_danh_muc'];
+            if ($c1Name === '') continue;
 
-        foreach ($cursor as $doc) {
-            $fullPath = (string) $doc['_id'];
-            $count = (int) $doc['so_luong'];
+            $level2Ids = $children[$rootId] ?? [];
+            $c2Map = [];
+            foreach ($level2Ids as $l2Id) {
+                if (count($c2Map) >= $cap2LimitEach) {
+                    break;
+                }
+                $l2Cat = $byId[$l2Id] ?? null;
+                if (!$l2Cat) continue;
+                $c2Name = $l2Cat['ten_danh_muc'];
+                if ($c2Name === '') continue;
 
-            // Cắt chuỗi giống hàm cap1Expr / cap2Expr cũ
-            $parts = explode(' -> ', $fullPath);
-            if (strpos($fullPath, 'Sức Khỏe - Làm Đẹp -> ') === 0) {
-                $c1 = trim($parts[1] ?? '');
-                $c2 = trim($parts[2] ?? '');
-            } else {
-                $c1 = trim($parts[0] ?? '');
-                $c2 = trim($parts[1] ?? '');
+                $leaves = $leafIdsByNode[$l2Id] ?? [];
+                $sum = 0;
+                foreach ($leaves as $leafId) {
+                    $sum += $directCounts[$leafId] ?? 0;
+                }
+                if ($sum > 0) {
+                    $c2Map[$c2Name] = $sum;
+                }
             }
 
-            if (!$c1) continue;
-            if (!isset($tree[$c1])) $tree[$c1] = [];
-            
-            if ($c2 && count($tree[$c1]) < $cap2LimitEach) {
-                $tree[$c1][$c2] = ($tree[$c1][$c2] ?? 0) + $count;
+            if (!empty($c2Map)) {
+                $tree[$c1Name] = $c2Map;
             }
         }
 
@@ -398,8 +636,14 @@ class SanPham {
         }
 
         if ($cap1Val !== '' || $cap2Val !== '') {
-            $searchCat = trim($cap1Val . ' -> ' . $cap2Val, ' -> ');
-            $filter['danh_muc_day_du'] = $this->buildSearchRegex($searchCat);
+            $leafIds = $this->resolveCategoryLeafIds($cap1Val, $cap2Val);
+            if (!empty($leafIds)) {
+                $filter['ma_danh_muc'] = ['$in' => $leafIds];
+            } else {
+                // Backward compatibility fallback if unmapped category string is queried
+                $searchCat = trim($cap1Val . ' -> ' . $cap2Val, ' -> ');
+                $filter['danh_muc_day_du'] = $this->buildSearchRegex($searchCat);
+            }
         }
 
         if ($onlyVisibleOnWebsite) {
@@ -509,49 +753,108 @@ class SanPham {
         return $items;
     }
 
-    public function getHomepageProductSections(int $limitEach = 4, array $recentViewedIds = [], ?array $userProfile = null): array {
+    public function getHomepageProductSections(
+        int $limitEach = 4,
+        array $recentViewedIds = [],
+        ?array $userProfile = null,
+        array $behaviorSignals = []
+    ): array {
         $limitEach = max(4, min(12, $limitEach));
 
         $flashDeals = $this->getFlashSaleProducts($limitEach);
-        $forYou = $this->findHomepageProducts([], ['diem_danh_gia' => -1, 'so_luong_danh_gia' => -1, 'ngay_tao' => -1], $limitEach);
 
-        // Simple Recommender using IMDb Weighted Rating
+        // Simple Recommender using IMDb Weighted Rating (Top-24)
         $topRatedWeighted = $this->getSimpleRecommenderProducts($limitEach);
 
-        // Hybrid Recommender V1 (Context Router handles session, profile, or hybrid)
-        $hybridRecs = $this->getHybridRecommendations($recentViewedIds, $userProfile, $limitEach);
+        // Adaptive Recommender V1 (Phase A)
+        $adaptiveRecs = $this->getHybridRecommendations($recentViewedIds, $userProfile, $limitEach, $behaviorSignals);
 
-        // Chỉ query bestSellers khi forYou rỗng hoặc không đủ dữ liệu làm fallback
-        $bestSellers = count($forYou) < 4
-            ? $this->findHomepageProducts([], ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1], $limitEach)
-            : [];
+        // If adaptiveRecs is empty (e.g. cold start guest or simple mode), fallback to Simple Recommender Top-4
+        if (empty($adaptiveRecs)) {
+            $fallbackSimple = $this->getSimpleRecommenderProducts(4);
+            $adaptiveRecs = [];
+            foreach ($fallbackSimple as $p) {
+                $p['recommender_meta'] = [
+                    'algorithm' => 'adaptive_v1',
+                    'algorithm_mode' => 'SIMPLE',
+                    'source_mode' => 'simple',
+                    'active_signals' => [],
+                    'dominant_signal' => 'SIMPLE',
+                    'similarity_score' => 0.0,
+                    'content_score' => 0.0,
+                    'skin_score' => 0.70,
+                    'skin_type_match' => 0.70,
+                    'budget_score' => 1.0,
+                    'final_score' => round((float)($p['diem_danh_gia_weighted'] ?? $p['diem_danh_gia'] ?? 4.8), 4),
+                    'behavior_contribution' => 0.0,
+                    'profile_contribution' => 0.0,
+                    'source_recent_items' => [],
+                    'profile_terms_used' => [],
+                    'reason_tags' => ['Sản phẩm nổi bật được yêu thích'],
+                    'reason' => 'Sản phẩm nổi bật được yêu thích',
+                ];
+                $adaptiveRecs[] = $p;
+            }
+        }
 
         return [
             'flashDeals' => $flashDeals,
-            'bestSellers' => $bestSellers,
+            'bestSellers' => [],
             'topSearches' => [],
-            'forYou' => $forYou,
-            'topRatedWeighted' => $topRatedWeighted,
-            'contentBased' => $hybridRecs, // Backward-compatible key for view
-            'hybridRecs' => $hybridRecs,
+            'forYou' => $adaptiveRecs, // Section 3 single primary Adaptive For-You section
+            'adaptiveForYou' => $adaptiveRecs,
+            'topRatedWeighted' => $topRatedWeighted, // Section 5.5 Simple Recommender
+            'contentBased' => $adaptiveRecs, // Backward compatibility
+            'hybridRecs' => $adaptiveRecs,
         ];
     }
 
     /**
-     * Hybrid Recommender V1: Combines in-session behavior with customer skin profile
+     * Adaptive Recommender V1 (Phase A): Combines in-session behavior with customer skin profile
      *
      * @param array $recentViewedIds Array of viewed ma_san_pham
      * @param array|null $userProfile Skin profile from customer survey
      * @param int $limit Max items to return
+     * @param array $behaviorSignals Multi-signal behavior payload
      * @return array List of normalized product records with recommender_meta
      */
-    public function getHybridRecommendations(array $recentViewedIds = [], ?array $userProfile = null, int $limit = 4): array {
+    public function getHybridRecommendations(
+        array $recentViewedIds = [],
+        ?array $userProfile = null,
+        int $limit = 4,
+        array $behaviorSignals = []
+    ): array {
         require_once dirname(__DIR__) . '/services/ContentBasedRecommender.php';
         $service = new ContentBasedRecommender();
-        $recommendations = $service->recommendHybrid($recentViewedIds, $userProfile, $limit, $this->db);
+        $recommendations = $service->recommendHybrid($recentViewedIds, $userProfile, $limit, $this->db, $behaviorSignals);
 
         if (empty($recommendations)) {
-            return [];
+            $fallback = $this->getSimpleRecommenderProducts($limit);
+            $stamped = [];
+            foreach ($fallback as $p) {
+                $p['recommender_meta'] = [
+                    'algorithm' => 'adaptive_v1',
+                    'algorithm_mode' => 'SIMPLE',
+                    'source_mode' => 'simple',
+                    'active_signals' => [],
+                    'dominant_signal' => 'SIMPLE',
+                    'similarity_score' => 0.0,
+                    'content_score' => 0.0,
+                    'skin_score' => 0.70,
+                    'skin_type_match' => 0.70,
+                    'budget_score' => 1.0,
+                    'final_score' => round((float)($p['diem_danh_gia_weighted'] ?? $p['diem_danh_gia'] ?? 4.8), 4),
+                    'behavior_contribution' => 0.0,
+                    'profile_contribution' => 0.0,
+                    'source_recent_items' => [],
+                    'profile_terms_used' => [],
+                    'reason_tags' => ['Sản phẩm nổi bật được yêu thích'],
+                    'reason' => 'Sản phẩm nổi bật được yêu thích',
+                    'ingredient_warning' => null,
+                ];
+                $stamped[] = $p;
+            }
+            return $stamped;
         }
 
         $targetIds = array_column($recommendations, 'ma_san_pham');
@@ -578,17 +881,24 @@ class SanPham {
             if ($pid !== '') {
                 $meta = $recMetaMap[$pid] ?? [];
                 $p['recommender_meta'] = [
-                    'algorithm' => 'hybrid_v1',
+                    'algorithm' => 'adaptive_v1',
+                    'algorithm_mode' => $meta['algorithm_mode'] ?? 'ADAPTIVE_HYBRID',
                     'source_mode' => $meta['source_mode'] ?? 'hybrid',
+                    'active_signals' => $meta['active_signals'] ?? [],
+                    'dominant_signal' => $meta['dominant_signal'] ?? 'HYBRID',
                     'similarity_score' => $meta['similarity'] ?? ($meta['content_score'] ?? 0.0),
                     'content_score' => $meta['content_score'] ?? 0.0,
+                    'skin_score' => $meta['skin_score'] ?? ($meta['skin_type_match'] ?? 0.0),
                     'skin_type_match' => $meta['skin_type_match'] ?? 0.0,
                     'budget_score' => $meta['budget_score'] ?? 1.0,
                     'final_score' => $meta['final_score'] ?? 0.0,
+                    'behavior_contribution' => $meta['behavior_contribution'] ?? 0.0,
+                    'profile_contribution' => $meta['profile_contribution'] ?? 0.0,
                     'source_recent_items' => $meta['source_recent_items'] ?? $recentViewedIds,
                     'profile_terms_used' => $meta['profile_terms_used'] ?? [],
-                    'ingredient_warning' => $meta['ingredient_warning'] ?? null,
+                    'reason_tags' => $meta['reason_tags'] ?? [],
                     'reason' => $meta['reason'] ?? 'Dành riêng cho bạn',
+                    'ingredient_warning' => $meta['ingredient_warning'] ?? null,
                 ];
                 $productMap[$pid] = $p;
             }
@@ -771,11 +1081,16 @@ class SanPham {
 
         $category = trim((string)($request['danh_muc'] ?? $request['category'] ?? ''));
         if ($category !== '') {
-            $regex = $this->buildSearchRegex($category);
-            $parts[] = ['$or' => [
-                ['danh_muc_day_du' => $regex],
-                ['loai_san_pham' => $regex],
-            ]];
+            $leafIds = $this->resolveCategoryLeafIds('', $category);
+            if (!empty($leafIds)) {
+                $parts[] = ['ma_danh_muc' => ['$in' => $leafIds]];
+            } else {
+                $regex = $this->buildSearchRegex($category);
+                $parts[] = ['$or' => [
+                    ['danh_muc_day_du' => $regex],
+                    ['loai_san_pham' => $regex],
+                ]];
+            }
         }
 
         $brand = trim((string)($request['thuong_hieu'] ?? $request['brand'] ?? ''));
@@ -1107,11 +1422,16 @@ class SanPham {
 
         $category = trim((string)($filters['category'] ?? ''));
         if ($category !== '') {
-            $categoryRegex = $this->buildSearchRegex($category);
-            $filterParts[] = ['$or' => [
-                ['danh_muc_day_du' => $categoryRegex],
-                ['loai_san_pham' => $categoryRegex],
-            ]];
+            $leafIds = $this->resolveCategoryLeafIds('', $category);
+            if (!empty($leafIds)) {
+                $filterParts[] = ['ma_danh_muc' => ['$in' => $leafIds]];
+            } else {
+                $categoryRegex = $this->buildSearchRegex($category);
+                $filterParts[] = ['$or' => [
+                    ['danh_muc_day_du' => $categoryRegex],
+                    ['loai_san_pham' => $categoryRegex],
+                ]];
+            }
         }
 
         $brand = trim((string)($filters['brand'] ?? ''));
@@ -1296,15 +1616,31 @@ class SanPham {
 
     public function ensureCategoryByName(string $name): ?int {
         [$name, $pickedId] = $this->parseLookupLabel($name);
-        if ($pickedId !== null && $pickedId !== '') return (int)$pickedId;
+        if ($pickedId !== null && $pickedId !== '') {
+            $cid = (int)$pickedId;
+            return $this->isLeafCategory($cid) ? $cid : null;
+        }
         if ($name === '') return null;
         $existing = $this->db->danh_muc->findOne(['ten_danh_muc' => $this->exactTextRegex($name)]);
-        if ($existing && isset($existing['ma_danh_muc'])) return (int)$existing['ma_danh_muc'];
-        $id = $this->nextNumericCode('danh_muc', 'ma_danh_muc', 1);
-        $this->db->danh_muc->insertOne(['ma_danh_muc' => $id, 'ten_danh_muc' => $name, 'danh_muc_day_du' => $name, 'created_at' => new \MongoDB\BSON\UTCDateTime(), 'updated_at' => new \MongoDB\BSON\UTCDateTime()]);
-        if (self::$categoryLookupMap !== null) {
-            self::$categoryLookupMap[(string)$id] = $name;
+        if ($existing && isset($existing['ma_danh_muc'])) {
+            $cid = (int)$existing['ma_danh_muc'];
+            return $this->isLeafCategory($cid) ? $cid : null;
         }
+        $id = $this->nextNumericCode('danh_muc', 'ma_danh_muc', 1);
+        $this->db->danh_muc->insertOne([
+            'ma_danh_muc' => $id,
+            'ten_danh_muc' => $name,
+            'danh_muc_day_du' => 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> ' . $name,
+            'full_path' => 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> ' . $name,
+            'parent_id' => 1001,
+            'level' => 2,
+            'is_leaf' => true,
+            'thu_tu_hien_thi' => 99,
+            'trang_thai' => 'active',
+            'created_at' => new \MongoDB\BSON\UTCDateTime(),
+            'updated_at' => new \MongoDB\BSON\UTCDateTime()
+        ]);
+        self::clearLookupCache();
         return $id;
     }
 
@@ -1315,6 +1651,16 @@ class SanPham {
             if ((string)$payload['ma_san_pham'] === '' || (string)$payload['ten_san_pham'] === '') {
                 $this->setError('Thieu ma hoac ten san pham.');
                 return false;
+            }
+            if ((string)$payload['ma_danh_muc'] === '' || !$this->isLeafCategory($payload['ma_danh_muc'])) {
+                $this->setError('San pham chi duoc gan vao danh muc la (leaf category).');
+                return false;
+            }
+            $hierarchy = $this->getCanonicalCategoryHierarchy();
+            $catDoc = $hierarchy['by_id'][(int)$payload['ma_danh_muc']] ?? null;
+            if ($catDoc) {
+                $payload['loai_san_pham'] = (string)($catDoc['ten_danh_muc'] ?? '');
+                $payload['danh_muc_day_du'] = (string)($catDoc['full_path'] ?? $catDoc['danh_muc_day_du'] ?? $catDoc['ten_danh_muc'] ?? '');
             }
             $payload['ngay_tao'] = new \MongoDB\BSON\UTCDateTime();
             $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
@@ -1335,6 +1681,16 @@ class SanPham {
                 return false;
             }
             $payload = $this->normalizeAdminPayload($data, $current);
+            if ((string)$payload['ma_danh_muc'] === '' || !$this->isLeafCategory($payload['ma_danh_muc'])) {
+                $this->setError('San pham chi duoc gan vao danh muc la (leaf category).');
+                return false;
+            }
+            $hierarchy = $this->getCanonicalCategoryHierarchy();
+            $catDoc = $hierarchy['by_id'][(int)$payload['ma_danh_muc']] ?? null;
+            if ($catDoc) {
+                $payload['loai_san_pham'] = (string)($catDoc['ten_danh_muc'] ?? '');
+                $payload['danh_muc_day_du'] = (string)($catDoc['full_path'] ?? $catDoc['danh_muc_day_du'] ?? $catDoc['ten_danh_muc'] ?? '');
+            }
             unset($payload['ma_san_pham'], $payload['ngay_tao'], $payload['created_at']);
             foreach ($this->productIdentityFilters($id) as $filter) {
                 $result = $this->db->san_pham->updateOne($filter, ['$set' => $payload]);
@@ -1400,65 +1756,46 @@ class SanPham {
         return $this->listBrandOptions();
     }
 
-    public function listCategoryOptions(): array {
-        $cursor = $this->db->danh_muc->find([], ['sort' => ['ten_danh_muc' => 1]]);
-        $items = [];
+    public function listCategoryOptions(bool $onlyLeaf = true): array {
+        $hierarchy = $this->getCanonicalCategoryHierarchy();
+        $byId = $hierarchy['by_id'];
+        $children = $hierarchy['children'];
+        $roots = $hierarchy['roots'];
 
-        $hierarchyOrder = [
-            'Chăm Sóc Da Mặt', 'cham soc da mat', 'chăm sóc da',
-            'Làm Sạch Da', 'lam sach da', 'làm sạch',
-            'Sữa Rửa Mặt', 'sua rua mat',
-            'Tẩy Trang Mặt', 'tay trang mat', 'tẩy trang',
-            'Dưỡng Ẩm', 'duong am', 'kem dưỡng',
-            'Đặc Trị', 'dac tri', 'serum', 'tinh chất', 'treatment',
-            'Chống Nắng', 'chong nang',
-            'Mặt Nạ', 'mat na',
-            'Trang Điểm', 'trang diem', 'makeup',
-            'Chăm Sóc Cơ Thể', 'cham soc co the',
-            'Chăm Sóc Môi', 'cham soc moi',
-            'Dụng Cụ Làm Đẹp', 'dung cu lam dep'
-        ];
-
-        $rawList = [];
-        foreach ($cursor as $doc) {
-            $cat = (array)$doc;
-            $catName = trim((string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? ''));
-            if ($catName === '') continue;
-
-            $catLower = mb_strtolower($catName, 'UTF-8');
-            $matchedOrderIndex = 999;
-
-            foreach ($hierarchyOrder as $idx => $target) {
-                if (mb_strpos($catLower, mb_strtolower($target, 'UTF-8')) !== false) {
-                    $matchedOrderIndex = (int)floor($idx / 3);
-                    break;
-                }
+        $orderedIds = [];
+        $traverse = function (int $nodeId, array $visited = []) use (&$traverse, $children, &$orderedIds): void {
+            if (isset($visited[$nodeId])) return;
+            $visited[$nodeId] = true;
+            $orderedIds[] = $nodeId;
+            foreach ($children[$nodeId] ?? [] as $childId) {
+                $traverse($childId, $visited);
             }
-
-            if ($matchedOrderIndex < 999) {
-                $rawList[] = [
-                    'doc' => $cat,
-                    'order' => $matchedOrderIndex,
-                    'name' => $catName
-                ];
+        };
+        foreach ($roots as $rootId) {
+            $traverse($rootId);
+        }
+        foreach (array_keys($byId) as $id) {
+            if (!in_array($id, $orderedIds, true)) {
+                $orderedIds[] = $id;
             }
         }
 
-        usort($rawList, function($a, $b) {
-            if ($a['order'] === $b['order']) {
-                return strcmp($a['name'], $b['name']);
+        $items = [];
+        foreach ($orderedIds as $id) {
+            $cat = $byId[$id] ?? null;
+            if (!$cat) continue;
+            if ($onlyLeaf && !$this->isLeafCategory($id)) {
+                continue;
             }
-            return $a['order'] <=> $b['order'];
-        });
-
-        foreach ($rawList as $entry) {
-            $items[] = $entry['doc'];
+            $pid = $cat['parent_id'] ?? null;
+            $cat['parent_name'] = ($pid !== null && isset($byId[$pid])) ? $byId[$pid]['ten_danh_muc'] : '';
+            $items[] = $cat;
         }
 
         return $items;
     }
 
     public function getCategories(): array {
-        return $this->listCategoryOptions();
+        return $this->listCategoryOptions(true);
     }
 }

@@ -646,6 +646,7 @@ class HoaDon {
             $this->db->hoa_don->insertOne($dataHoaDon);
 
             // 2. Lưu chi tiết hóa đơn
+            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
             foreach ($lineItems as $item) {
                 $idCt = $this->getNextNumericId('chi_tiet_hoa_don', 'id');
                 $this->db->chi_tiet_hoa_don->insertOne([
@@ -657,6 +658,9 @@ class HoaDon {
                     'status_thanh_toan' => $statusThanhToan,
                     'hinh_thuc_thanh_toan' => $hinhThucThanhToan,
                 ]);
+
+                // Phase B: Unified Interaction Logging
+                InteractionLogger::logPurchase($item['ma_san_pham'], $maKhachHang, $maHoaDonMoi, (int)($item['so_luong'] ?? 1));
             }
 
             // 3. Cập nhật Voucher

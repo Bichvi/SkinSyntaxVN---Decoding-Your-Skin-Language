@@ -475,58 +475,102 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
     </div>
   </section>
 
-  <!-- 3. PERSONALIZED PRODUCTS (DÀNH RIÊNG CHO LÀN DA CỦA BẠN) -->
-  <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 pb-3 border-bottom">
-      <div>
-        <div class="d-inline-flex align-items-center gap-1.5 mb-1" style="color: #183B2B; font-weight: 700; font-size: 0.76rem; letter-spacing: 0.05em; text-transform: uppercase;">
-          <i class="fas fa-sparkles text-warning"></i> SkinSyntax Personalization Engine
+  <!-- 3. UNIVERSAL ADAPTIVE FOR-YOU SECTION (PHASE A) -->
+  <?php if (!empty($forYouProducts)): ?>
+    <?php
+      $firstRecMeta = $forYouProducts[0]['recommender_meta'] ?? [];
+      $dominantSignal = strtoupper((string)($firstRecMeta['dominant_signal'] ?? 'SIMPLE'));
+      $algoMode = strtoupper((string)($firstRecMeta['algorithm_mode'] ?? 'SIMPLE'));
+
+      switch ($dominantSignal) {
+          case 'CART':
+              $sectionKicker = 'DỰA TRÊN GIỎ HÀNG CỦA BẠN';
+              $sectionTitle = 'Phù hợp với giỏ hàng của bạn';
+              $sectionSub = 'Gợi ý bổ trợ cho các sản phẩm trong giỏ hàng của bạn';
+              break;
+          case 'VIEW':
+              $sectionKicker = 'DỰA TRÊN SẢN PHẨM VỪA XEM';
+              $sectionTitle = 'Dựa trên sản phẩm bạn vừa xem';
+              $sectionSub = 'Các sản phẩm có đặc điểm tương tự với những gì bạn vừa quan tâm';
+              break;
+          case 'SEARCH':
+              $sectionKicker = 'DỰA TRÊN TÌM KIẾM GẦN ĐÂY';
+              $sectionTitle = 'Dựa trên tìm kiếm gần đây';
+              $sectionSub = 'Các sản phẩm phù hợp với nhu cầu bạn vừa tìm kiếm';
+              break;
+          case 'PURCHASE':
+              $sectionKicker = 'LỊCH SỬ MUA SẮM';
+              $sectionTitle = 'Gợi ý từ lịch sử mua hàng';
+              $sectionSub = 'Sản phẩm tương thích với thói quen chăm sóc da của bạn';
+              break;
+          case 'PROFILE':
+              $sectionKicker = 'HỒ SƠ DA CÁ NHÂN';
+              $sectionTitle = 'Dành riêng cho làn da của bạn';
+              $sectionSub = 'Gợi ý tối ưu theo loại da và nhu cầu trong hồ sơ của bạn';
+              break;
+          case 'HYBRID':
+              $sectionKicker = 'CÁ NHÂN HÓA ĐA TÍN HIỆU';
+              $sectionTitle = 'Dành riêng cho bạn (Hồ sơ da & Hành vi)';
+              $sectionSub = 'Kết hợp hồ sơ da của bạn cùng các sản phẩm bạn đang quan tâm';
+              break;
+          case 'SIMPLE':
+          default:
+              $sectionKicker = 'GỢI Ý HÔM NAY';
+              $sectionTitle = 'Gợi ý dành cho bạn';
+              $sectionSub = 'Khám phá các sản phẩm nổi bật được cộng đồng tin dùng';
+              break;
+      }
+    ?>
+    <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 pb-3 border-bottom">
+        <div>
+          <div class="d-inline-flex align-items-center gap-1.5 mb-1" style="color: #183B2B; font-weight: 700; font-size: 0.76rem; letter-spacing: 0.05em; text-transform: uppercase;">
+            <i class="fas fa-sparkles text-warning"></i> <?= htmlspecialchars($sectionKicker) ?>
+          </div>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;"><?= htmlspecialchars($sectionTitle) ?></h2>
+          <span class="text-muted small" style="font-size: 0.82rem;"><?= htmlspecialchars($sectionSub) ?></span>
         </div>
-        <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Dành riêng cho làn da của bạn</h2>
+
+        <div>
+          <?php if ($hasSurvey && !empty($userProfile)): ?>
+            <span class="personalized-header-badge">
+              <i class="fas fa-user-check"></i>
+              Hồ sơ: <?= h(!empty($userProfile['skin_type']) ? $userProfile['skin_type'] : 'Đã phân tích') ?> 
+              <?= !empty($userProfile['concerns']) ? '• ' . h(implode(', ', array_slice($userProfile['concerns'], 0, 2))) : '' ?>
+            </span>
+          <?php else: ?>
+            <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn btn-sm btn-outline-success fw-semibold" style="border-radius: 6px; font-size: 0.8rem;">
+              <i class="fas fa-clipboard-check me-1"></i> Hoàn thành khảo sát da để tinh chỉnh gợi ý &rarr;
+            </a>
+          <?php endif; ?>
+        </div>
       </div>
 
-      <div>
-        <?php if ($hasSurvey && !empty($userProfile)): ?>
-          <span class="personalized-header-badge">
-            <i class="fas fa-user-check"></i>
-            Hồ sơ: <?= h(!empty($userProfile['skin_type']) ? $userProfile['skin_type'] : 'Đã phân tích') ?> 
-            <?= !empty($userProfile['concerns']) ? '• ' . h(implode(', ', array_slice($userProfile['concerns'], 0, 2))) : '' ?>
-          </span>
-        <?php else: ?>
-          <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn btn-sm btn-outline-success fw-semibold" style="border-radius: 6px; font-size: 0.8rem;">
-            <i class="fas fa-clipboard-check me-1"></i> Làm khảo sát da để nhận gợi ý
-          </a>
-        <?php endif; ?>
-      </div>
-    </div>
-
-    <?php if ($hasSurvey): ?>
       <div class="row g-3">
         <?php foreach ($forYouProducts as $idx => $p): ?>
           <div class="col-6 col-md-3">
             <?php 
-              // Render genuine why-fit text if available in DB, otherwise pass empty string to avoid fake reason mismatch
-              $whyFit = trim((string)($p['ly_do_phu_hop'] ?? $p['why_fit'] ?? ''));
-              $renderHomeProductCard($p, 'Gợi ý riêng', $whyFit); 
+              $pBadge = !empty($p['recommender_meta']['reason']) 
+                  ? $p['recommender_meta']['reason'] 
+                  : (!empty($p['recommender_meta']['reason_tags'][0]) ? $p['recommender_meta']['reason_tags'][0] : 'Gợi ý riêng');
+              $renderHomeProductCard($p, $pBadge); 
             ?>
           </div>
         <?php endforeach; ?>
       </div>
-    <?php else: ?>
-      <div class="p-4 text-center rounded-3" style="background: #F8FAF8; border: 1px dashed #C8DACF;">
-        <div class="d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px; background: #EBF2EE; color: #183B2B; border-radius: 50%; font-size: 1.3rem;">
-          <i class="fas fa-fingerprint"></i>
+
+      <?php if (!$hasSurvey): ?>
+        <div class="mt-3 pt-2 text-center text-md-start border-top d-flex flex-column flex-md-row align-items-center justify-content-between gap-2" style="border-color: #F1F5F9 !important;">
+          <span class="text-muted small" style="font-size: 0.8rem;">
+            <i class="fas fa-info-circle text-success me-1"></i> Gợi ý tự động thích ứng theo tìm kiếm, sản phẩm vừa xem và giỏ hàng của bạn.
+          </span>
+          <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.8rem;">
+            Khảo sát 1 phút để độ chuẩn xác cao hơn &rarr;
+          </a>
         </div>
-        <h3 class="fw-bold mb-1" style="font-size: 1.1rem; color: #0F172A;">Khảo sát da để nhận gợi ý riêng</h3>
-        <p class="text-muted small mx-auto mb-3" style="max-width: 480px; font-size: 0.85rem;">
-          Chỉ mất 1 phút hoàn thành câu hỏi về loại da, tình trạng mụn và ngân sách, SkinSyntax sẽ tính toán mức độ tương thích mỹ phẩm chuẩn xác.
-        </p>
-        <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn text-white fw-bold px-4 py-2" style="background: #183B2B; border-radius: 6px; font-size: 0.86rem;">
-          Bắt đầu bài khảo sát da &rarr;
-        </a>
-      </div>
-    <?php endif; ?>
-  </section>
+      <?php endif; ?>
+    </section>
+  <?php endif; ?>
 
   <!-- 4. FLASH SALE -->
   <?php if (!empty($flashSaleProducts)): ?>
@@ -673,41 +717,6 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
     </section>
   <?php endif; ?>
 
-  <!-- 5.8 HYBRID / CONTENT-BASED RECOMMENDER -->
-  <?php if (!empty($contentBasedProducts)): ?>
-    <?php
-      $firstMeta = $contentBasedProducts[0]['recommender_meta'] ?? [];
-      $sourceMode = $firstMeta['source_mode'] ?? 'content';
-      $isProfileOrHybrid = in_array($sourceMode, ['profile', 'hybrid'], true);
-      $sectionKicker = $isProfileOrHybrid ? 'CÁ NHÂN HÓA THEO LÀN DA' : 'DÀNH CHO BẠN GẦN ĐÂY';
-      $sectionTitle = $isProfileOrHybrid ? 'Dành Riêng Cho Bạn' : 'Gợi Ý Dựa Trên Sản Phẩm Bạn Đã Xem';
-      $sectionSub = $isProfileOrHybrid 
-          ? 'Gợi ý dựa trên hồ sơ da và sản phẩm bạn quan tâm' 
-          : 'Các sản phẩm có đặc điểm tương tự với những gì bạn vừa quan tâm';
-      $badgeDefault = $isProfileOrHybrid ? 'Dành riêng cho bạn' : 'Gợi ý tương tự';
-    ?>
-    <section class="mb-5">
-      <div class="d-flex justify-content-between align-items-end mb-3">
-        <div>
-          <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;"><?= htmlspecialchars($sectionKicker) ?></span>
-          <h3 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;"><?= htmlspecialchars($sectionTitle) ?></h3>
-          <span class="text-muted small" style="font-size: 0.82rem;"><?= htmlspecialchars($sectionSub) ?></span>
-        </div>
-        <a href="<?= BASE_URL ?>/index.php?r=tatca" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
-      </div>
-
-      <div class="row g-3">
-        <?php foreach ($contentBasedProducts as $p): ?>
-          <div class="col-6 col-md-3">
-            <?php 
-              $pBadge = !empty($p['recommender_meta']['reason']) ? $p['recommender_meta']['reason'] : $badgeDefault;
-              $renderHomeProductCard($p, $pBadge); 
-            ?>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    </section>
-  <?php endif; ?>
 
   <!-- 6. NEW PRODUCTS (MỸ PHẨM VỪA LÊN KỆ - BEAUTY COSMETICS ONLY) -->
   <?php if (!empty($newProducts)): ?>
