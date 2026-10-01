@@ -1,0 +1,57 @@
+{
+    "total_evaluated_users": 432,
+    "segments": {
+        "low_popularity_bias": {
+            "users": 157,
+            "results": {
+                "MOST_POPULAR": {
+                    "HR@10": 0.0382,
+                    "NDCG@10": 0.0176
+                },
+                "ITEM_KNN": {
+                    "HR@10": 0.0064,
+                    "NDCG@10": 0.0018
+                },
+                "MATRIX_FACTORIZATION": {
+                    "HR@10": 0,
+                    "NDCG@10": 0
+                }
+            }
+        },
+        "medium_popularity_bias": {
+            "users": 138,
+            "results": {
+                "MOST_POPULAR": {
+                    "HR@10": 0.0145,
+                    "NDCG@10": 0.0044
+                },
+                "ITEM_KNN": {
+                    "HR@10": 0.0145,
+                    "NDCG@10": 0.006
+                },
+                "MATRIX_FACTORIZATION": {
+                    "HR@10": 0.029,
+                    "NDCG@10": 0.0147
+                }
+            }
+        },
+        "high_popularity_bias": {
+            "users": 137,
+            "results": {
+                "MOST_POPULAR": {
+                    "HR@10": 0.0292,
+                    "NDCG@10": 0.016
+                },
+                "ITEM_KNN": {
+                    "HR@10": 0,
+                    "NDCG@10": 0
+                },
+                "MATRIX_FACTORIZATION": {
+                    "HR@10": 0.0073,
+                    "NDCG@10": 0.0024
+                }
+            }
+        }
+    },
+    "analysis": "For users with low popularity preference, the gap between Most Popular and CF narrows; CF provides relatively higher comparative utility for users who do not follow mass trends."
+}
