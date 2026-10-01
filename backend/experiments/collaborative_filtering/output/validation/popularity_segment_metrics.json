@@ -53,5 +53,5 @@
             }
         }
     },
-    "analysis": "For users with low popularity preference, the gap between Most Popular and CF narrows; CF provides relatively higher comparative utility for users who do not follow mass trends."
+    "analysis": "For users with lower popularity bias under synthetic assumptions, the relative gap between Most Popular and CF models decreases."
 }

@@ -399,14 +399,14 @@ foreach ($recoveryMetrics as $m => &$vals) {
 file_put_contents($outputDir . '/history_segment_metrics.json', json_encode([
     'total_evaluated_users' => $numUsersTotal,
     'segments' => $historySegments,
-    'analysis' => 'Users with richer histories (20+ items) exhibit higher MF HitRate and NDCG than users with sparse histories (5-9 items), demonstrating that latent matrix factorization improves as per-user feedback accumulates.'
+    'analysis' => 'MF shows an improvement signal in this synthetic subgroup, but the subgroup size is small and does not establish a stable general trend.'
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 echo "  [OK] Saved history_segment_metrics.json\n";
 
 file_put_contents($outputDir . '/popularity_segment_metrics.json', json_encode([
     'total_evaluated_users' => $numUsersTotal,
     'segments' => $popBiasSegments,
-    'analysis' => 'For users with low popularity preference, the gap between Most Popular and CF narrows; CF provides relatively higher comparative utility for users who do not follow mass trends.'
+    'analysis' => 'For users with lower popularity bias under synthetic assumptions, the relative gap between Most Popular and CF models decreases.'
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 echo "  [OK] Saved popularity_segment_metrics.json\n";
 
@@ -416,7 +416,7 @@ file_put_contents($outputDir . '/preference_recovery.json', json_encode([
     'median_score' => round($medianPrefStrength, 4),
     'strength_segments' => $prefSegments,
     'preference_recovery_metrics' => $recoveryMetrics,
-    'scientific_conclusion' => 'Although Leave-One-Out exact-item HitRate is low across 2,460 candidates, Item-kNN and Matrix Factorization demonstrate significant preference recovery (e.g. matching preferred category and price range) compared to blind guessing.'
+    'scientific_conclusion' => 'Item-kNN shows partial recovery of synthetic category/brand preferences under the generator assumptions.'
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 echo "  [OK] Saved preference_recovery.json\n";
 

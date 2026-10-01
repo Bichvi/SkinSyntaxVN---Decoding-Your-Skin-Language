@@ -1,0 +1,798 @@
+{
+    "scenario": "cf_latent_recovery_v1",
+    "bpr_latent_recovery": {
+        "latent_weight_0.00": {
+            "latent_weight": 0,
+            "mean_metrics": {
+                "RANDOM": {
+                    "Mean_HR@10": 0.0041,
+                    "Mean_NDCG@10": 0.0017
+                },
+                "MOST_POPULAR": {
+                    "Mean_HR@10": 0.0419,
+                    "Mean_NDCG@10": 0.0188
+                },
+                "ITEM_KNN": {
+                    "Mean_HR@10": 0.025,
+                    "Mean_NDCG@10": 0.0109
+                },
+                "MATRIX_FACTORIZATION": {
+                    "Mean_HR@10": 0.0122,
+                    "Mean_NDCG@10": 0.0059
+                },
+                "BPR": {
+                    "Mean_HR@10": 0.0446,
+                    "Mean_NDCG@10": 0.0205
+                }
+            },
+            "per_seed_metrics": {
+                "42": {
+                    "RANDOM": {
+                        "HitRate@5": 0.0061,
+                        "Precision@5": 0.0012,
+                        "Recall@5": 0.0061,
+                        "NDCG@5": 0.0029,
+                        "HitRate@10": 0.0102,
+                        "Precision@10": 0.001,
+                        "Recall@10": 0.0102,
+                        "NDCG@10": 0.0042,
+                        "MRR@10": 0.0024
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0143,
+                        "Precision@5": 0.0029,
+                        "Recall@5": 0.0143,
+                        "NDCG@5": 0.0071,
+                        "HitRate@10": 0.0407,
+                        "Precision@10": 0.0041,
+                        "Recall@10": 0.0407,
+                        "NDCG@10": 0.0156,
+                        "MRR@10": 0.0083
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0061,
+                        "Precision@5": 0.0012,
+                        "Recall@5": 0.0061,
+                        "NDCG@5": 0.0027,
+                        "HitRate@10": 0.0163,
+                        "Precision@10": 0.0016,
+                        "Recall@10": 0.0163,
+                        "NDCG@10": 0.006,
+                        "MRR@10": 0.0029
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0.0081,
+                        "Precision@5": 0.0016,
+                        "Recall@5": 0.0081,
+                        "NDCG@5": 0.0047,
+                        "HitRate@10": 0.0122,
+                        "Precision@10": 0.0012,
+                        "Recall@10": 0.0122,
+                        "NDCG@10": 0.006,
+                        "MRR@10": 0.0041
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0204,
+                        "Precision@5": 0.0041,
+                        "Recall@5": 0.0204,
+                        "NDCG@5": 0.0096,
+                        "HitRate@10": 0.0448,
+                        "Precision@10": 0.0045,
+                        "Recall@10": 0.0448,
+                        "NDCG@10": 0.0174,
+                        "MRR@10": 0.0093
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0224,
+                        "Precision@5": 0.0045,
+                        "Recall@5": 0.0224,
+                        "NDCG@5": 0.0105,
+                        "HitRate@10": 0.0448,
+                        "Precision@10": 0.0045,
+                        "Recall@10": 0.0448,
+                        "NDCG@10": 0.0176,
+                        "MRR@10": 0.0096
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0305,
+                        "Precision@5": 0.0061,
+                        "Recall@5": 0.0305,
+                        "NDCG@5": 0.014,
+                        "HitRate@10": 0.055,
+                        "Precision@10": 0.0055,
+                        "Recall@10": 0.055,
+                        "NDCG@10": 0.0218,
+                        "MRR@10": 0.0119
+                    }
+                },
+                "123": {
+                    "RANDOM": {
+                        "HitRate@5": 0.002,
+                        "Precision@5": 0.0004,
+                        "Recall@5": 0.002,
+                        "NDCG@5": 0.001,
+                        "HitRate@10": 0.002,
+                        "Precision@10": 0.0002,
+                        "Recall@10": 0.002,
+                        "NDCG@10": 0.001,
+                        "MRR@10": 0.0007
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0202,
+                        "Precision@5": 0.004,
+                        "Recall@5": 0.0202,
+                        "NDCG@5": 0.0116,
+                        "HitRate@10": 0.0364,
+                        "Precision@10": 0.0036,
+                        "Recall@10": 0.0364,
+                        "NDCG@10": 0.0169,
+                        "MRR@10": 0.0109
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0162,
+                        "Precision@5": 0.0032,
+                        "Recall@5": 0.0162,
+                        "NDCG@5": 0.0087,
+                        "HitRate@10": 0.0283,
+                        "Precision@10": 0.0028,
+                        "Recall@10": 0.0283,
+                        "NDCG@10": 0.0125,
+                        "MRR@10": 0.0078
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0.0061,
+                        "Precision@5": 0.0012,
+                        "Recall@5": 0.0061,
+                        "NDCG@5": 0.0034,
+                        "HitRate@10": 0.0081,
+                        "Precision@10": 0.0008,
+                        "Recall@10": 0.0081,
+                        "NDCG@10": 0.0041,
+                        "MRR@10": 0.0028
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0182,
+                        "Precision@5": 0.0036,
+                        "Recall@5": 0.0182,
+                        "NDCG@5": 0.0125,
+                        "HitRate@10": 0.0364,
+                        "Precision@10": 0.0036,
+                        "Recall@10": 0.0364,
+                        "NDCG@10": 0.0184,
+                        "MRR@10": 0.013
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0182,
+                        "Precision@5": 0.0036,
+                        "Recall@5": 0.0182,
+                        "NDCG@5": 0.0114,
+                        "HitRate@10": 0.0385,
+                        "Precision@10": 0.0038,
+                        "Recall@10": 0.0385,
+                        "NDCG@10": 0.0179,
+                        "MRR@10": 0.0118
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0243,
+                        "Precision@5": 0.0049,
+                        "Recall@5": 0.0243,
+                        "NDCG@5": 0.0144,
+                        "HitRate@10": 0.0385,
+                        "Precision@10": 0.0038,
+                        "Recall@10": 0.0385,
+                        "NDCG@10": 0.0188,
+                        "MRR@10": 0.0129
+                    }
+                },
+                "2026": {
+                    "RANDOM": {
+                        "HitRate@5": 0,
+                        "Precision@5": 0,
+                        "Recall@5": 0,
+                        "NDCG@5": 0,
+                        "HitRate@10": 0,
+                        "Precision@10": 0,
+                        "Recall@10": 0,
+                        "NDCG@10": 0,
+                        "MRR@10": 0
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0284,
+                        "Precision@5": 0.0057,
+                        "Recall@5": 0.0284,
+                        "NDCG@5": 0.0174,
+                        "HitRate@10": 0.0487,
+                        "Precision@10": 0.0049,
+                        "Recall@10": 0.0487,
+                        "NDCG@10": 0.0238,
+                        "MRR@10": 0.0163
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0101,
+                        "Precision@5": 0.002,
+                        "Recall@5": 0.0101,
+                        "NDCG@5": 0.0076,
+                        "HitRate@10": 0.0304,
+                        "Precision@10": 0.003,
+                        "Recall@10": 0.0304,
+                        "NDCG@10": 0.0141,
+                        "MRR@10": 0.0094
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0.0101,
+                        "Precision@5": 0.002,
+                        "Recall@5": 0.0101,
+                        "NDCG@5": 0.0057,
+                        "HitRate@10": 0.0162,
+                        "Precision@10": 0.0016,
+                        "Recall@10": 0.0162,
+                        "NDCG@10": 0.0077,
+                        "MRR@10": 0.0051
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0345,
+                        "Precision@5": 0.0069,
+                        "Recall@5": 0.0345,
+                        "NDCG@5": 0.0198,
+                        "HitRate@10": 0.0527,
+                        "Precision@10": 0.0053,
+                        "Recall@10": 0.0527,
+                        "NDCG@10": 0.0257,
+                        "MRR@10": 0.0175
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0325,
+                        "Precision@5": 0.0065,
+                        "Recall@5": 0.0325,
+                        "NDCG@5": 0.0193,
+                        "HitRate@10": 0.0487,
+                        "Precision@10": 0.0049,
+                        "Recall@10": 0.0487,
+                        "NDCG@10": 0.0243,
+                        "MRR@10": 0.0169
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0345,
+                        "Precision@5": 0.0069,
+                        "Recall@5": 0.0345,
+                        "NDCG@5": 0.0208,
+                        "HitRate@10": 0.0548,
+                        "Precision@10": 0.0055,
+                        "Recall@10": 0.0548,
+                        "NDCG@10": 0.0271,
+                        "MRR@10": 0.0187
+                    }
+                }
+            }
+        },
+        "latent_weight_0.25": {
+            "latent_weight": 0.25,
+            "mean_metrics": {
+                "RANDOM": {
+                    "Mean_HR@10": 0.0061,
+                    "Mean_NDCG@10": 0.0022
+                },
+                "MOST_POPULAR": {
+                    "Mean_HR@10": 0.0474,
+                    "Mean_NDCG@10": 0.0228
+                },
+                "ITEM_KNN": {
+                    "Mean_HR@10": 0.021,
+                    "Mean_NDCG@10": 0.01
+                },
+                "MATRIX_FACTORIZATION": {
+                    "Mean_HR@10": 0.0081,
+                    "Mean_NDCG@10": 0.0048
+                },
+                "BPR": {
+                    "Mean_HR@10": 0.044,
+                    "Mean_NDCG@10": 0.0206
+                }
+            },
+            "per_seed_metrics": {
+                "42": {
+                    "RANDOM": {
+                        "HitRate@5": 0.002,
+                        "Precision@5": 0.0004,
+                        "Recall@5": 0.002,
+                        "NDCG@5": 0.001,
+                        "HitRate@10": 0.0041,
+                        "Precision@10": 0.0004,
+                        "Recall@10": 0.0041,
+                        "NDCG@10": 0.0016,
+                        "MRR@10": 0.0009
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0326,
+                        "Precision@5": 0.0065,
+                        "Recall@5": 0.0326,
+                        "NDCG@5": 0.0229,
+                        "HitRate@10": 0.0489,
+                        "Precision@10": 0.0049,
+                        "Recall@10": 0.0489,
+                        "NDCG@10": 0.028,
+                        "MRR@10": 0.0217
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0122,
+                        "Precision@5": 0.0024,
+                        "Recall@5": 0.0122,
+                        "NDCG@5": 0.0083,
+                        "HitRate@10": 0.0244,
+                        "Precision@10": 0.0024,
+                        "Recall@10": 0.0244,
+                        "NDCG@10": 0.0123,
+                        "MRR@10": 0.0087
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0,
+                        "Precision@5": 0,
+                        "Recall@5": 0,
+                        "NDCG@5": 0,
+                        "HitRate@10": 0,
+                        "Precision@10": 0,
+                        "Recall@10": 0,
+                        "NDCG@10": 0,
+                        "MRR@10": 0
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0305,
+                        "Precision@5": 0.0061,
+                        "Recall@5": 0.0305,
+                        "NDCG@5": 0.0166,
+                        "HitRate@10": 0.0428,
+                        "Precision@10": 0.0043,
+                        "Recall@10": 0.0428,
+                        "NDCG@10": 0.0206,
+                        "MRR@10": 0.0137
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0326,
+                        "Precision@5": 0.0065,
+                        "Recall@5": 0.0326,
+                        "NDCG@5": 0.0229,
+                        "HitRate@10": 0.055,
+                        "Precision@10": 0.0055,
+                        "Recall@10": 0.055,
+                        "NDCG@10": 0.0299,
+                        "MRR@10": 0.0225
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0346,
+                        "Precision@5": 0.0069,
+                        "Recall@5": 0.0346,
+                        "NDCG@5": 0.0249,
+                        "HitRate@10": 0.0611,
+                        "Precision@10": 0.0061,
+                        "Recall@10": 0.0611,
+                        "NDCG@10": 0.0334,
+                        "MRR@10": 0.0252
+                    }
+                },
+                "123": {
+                    "RANDOM": {
+                        "HitRate@5": 0.002,
+                        "Precision@5": 0.0004,
+                        "Recall@5": 0.002,
+                        "NDCG@5": 0.0009,
+                        "HitRate@10": 0.0081,
+                        "Precision@10": 0.0008,
+                        "Recall@10": 0.0081,
+                        "NDCG@10": 0.0028,
+                        "MRR@10": 0.0013
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0142,
+                        "Precision@5": 0.0028,
+                        "Recall@5": 0.0142,
+                        "NDCG@5": 0.009,
+                        "HitRate@10": 0.0324,
+                        "Precision@10": 0.0032,
+                        "Recall@10": 0.0324,
+                        "NDCG@10": 0.0145,
+                        "MRR@10": 0.0094
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0101,
+                        "Precision@5": 0.002,
+                        "Recall@5": 0.0101,
+                        "NDCG@5": 0.0071,
+                        "HitRate@10": 0.0182,
+                        "Precision@10": 0.0018,
+                        "Recall@10": 0.0182,
+                        "NDCG@10": 0.0097,
+                        "MRR@10": 0.0072
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0.0142,
+                        "Precision@5": 0.0028,
+                        "Recall@5": 0.0142,
+                        "NDCG@5": 0.0086,
+                        "HitRate@10": 0.0142,
+                        "Precision@10": 0.0014,
+                        "Recall@10": 0.0142,
+                        "NDCG@10": 0.0086,
+                        "MRR@10": 0.0069
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0101,
+                        "Precision@5": 0.002,
+                        "Recall@5": 0.0101,
+                        "NDCG@5": 0.0068,
+                        "HitRate@10": 0.0283,
+                        "Precision@10": 0.0028,
+                        "Recall@10": 0.0283,
+                        "NDCG@10": 0.0125,
+                        "MRR@10": 0.0079
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0121,
+                        "Precision@5": 0.0024,
+                        "Recall@5": 0.0121,
+                        "NDCG@5": 0.0083,
+                        "HitRate@10": 0.0385,
+                        "Precision@10": 0.0038,
+                        "Recall@10": 0.0385,
+                        "NDCG@10": 0.0168,
+                        "MRR@10": 0.0106
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0263,
+                        "Precision@5": 0.0053,
+                        "Recall@5": 0.0263,
+                        "NDCG@5": 0.014,
+                        "HitRate@10": 0.0405,
+                        "Precision@10": 0.004,
+                        "Recall@10": 0.0405,
+                        "NDCG@10": 0.0184,
+                        "MRR@10": 0.0118
+                    }
+                },
+                "2026": {
+                    "RANDOM": {
+                        "HitRate@5": 0.002,
+                        "Precision@5": 0.0004,
+                        "Recall@5": 0.002,
+                        "NDCG@5": 0.0009,
+                        "HitRate@10": 0.0061,
+                        "Precision@10": 0.0006,
+                        "Recall@10": 0.0061,
+                        "NDCG@10": 0.0021,
+                        "MRR@10": 0.001
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0284,
+                        "Precision@5": 0.0057,
+                        "Recall@5": 0.0284,
+                        "NDCG@5": 0.015,
+                        "HitRate@10": 0.0609,
+                        "Precision@10": 0.0061,
+                        "Recall@10": 0.0609,
+                        "NDCG@10": 0.0258,
+                        "MRR@10": 0.0153
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0081,
+                        "Precision@5": 0.0016,
+                        "Recall@5": 0.0081,
+                        "NDCG@5": 0.004,
+                        "HitRate@10": 0.0203,
+                        "Precision@10": 0.002,
+                        "Recall@10": 0.0203,
+                        "NDCG@10": 0.0079,
+                        "MRR@10": 0.0043
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0.0081,
+                        "Precision@5": 0.0016,
+                        "Recall@5": 0.0081,
+                        "NDCG@5": 0.0051,
+                        "HitRate@10": 0.0101,
+                        "Precision@10": 0.001,
+                        "Recall@10": 0.0101,
+                        "NDCG@10": 0.0058,
+                        "MRR@10": 0.0044
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0304,
+                        "Precision@5": 0.0061,
+                        "Recall@5": 0.0304,
+                        "NDCG@5": 0.0184,
+                        "HitRate@10": 0.0609,
+                        "Precision@10": 0.0061,
+                        "Recall@10": 0.0609,
+                        "NDCG@10": 0.0287,
+                        "MRR@10": 0.0189
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0345,
+                        "Precision@5": 0.0069,
+                        "Recall@5": 0.0345,
+                        "NDCG@5": 0.0177,
+                        "HitRate@10": 0.0649,
+                        "Precision@10": 0.0065,
+                        "Recall@10": 0.0649,
+                        "NDCG@10": 0.0276,
+                        "MRR@10": 0.0164
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0345,
+                        "Precision@5": 0.0069,
+                        "Recall@5": 0.0345,
+                        "NDCG@5": 0.0184,
+                        "HitRate@10": 0.0669,
+                        "Precision@10": 0.0067,
+                        "Recall@10": 0.0669,
+                        "NDCG@10": 0.0291,
+                        "MRR@10": 0.0176
+                    }
+                }
+            }
+        },
+        "latent_weight_0.50": {
+            "latent_weight": 0.5,
+            "mean_metrics": {
+                "RANDOM": {
+                    "Mean_HR@10": 0.0054,
+                    "Mean_NDCG@10": 0.002
+                },
+                "MOST_POPULAR": {
+                    "Mean_HR@10": 0.0392,
+                    "Mean_NDCG@10": 0.017
+                },
+                "ITEM_KNN": {
+                    "Mean_HR@10": 0.0176,
+                    "Mean_NDCG@10": 0.008
+                },
+                "MATRIX_FACTORIZATION": {
+                    "Mean_HR@10": 0.0095,
+                    "Mean_NDCG@10": 0.0047
+                },
+                "BPR": {
+                    "Mean_HR@10": 0.0359,
+                    "Mean_NDCG@10": 0.0152
+                }
+            },
+            "per_seed_metrics": {
+                "42": {
+                    "RANDOM": {
+                        "HitRate@5": 0.0041,
+                        "Precision@5": 0.0008,
+                        "Recall@5": 0.0041,
+                        "NDCG@5": 0.0016,
+                        "HitRate@10": 0.0081,
+                        "Precision@10": 0.0008,
+                        "Recall@10": 0.0081,
+                        "NDCG@10": 0.0028,
+                        "MRR@10": 0.0012
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0204,
+                        "Precision@5": 0.0041,
+                        "Recall@5": 0.0204,
+                        "NDCG@5": 0.0113,
+                        "HitRate@10": 0.0387,
+                        "Precision@10": 0.0039,
+                        "Recall@10": 0.0387,
+                        "NDCG@10": 0.0171,
+                        "MRR@10": 0.0106
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0143,
+                        "Precision@5": 0.0029,
+                        "Recall@5": 0.0143,
+                        "NDCG@5": 0.008,
+                        "HitRate@10": 0.0244,
+                        "Precision@10": 0.0024,
+                        "Recall@10": 0.0244,
+                        "NDCG@10": 0.0113,
+                        "MRR@10": 0.0073
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0.0041,
+                        "Precision@5": 0.0008,
+                        "Recall@5": 0.0041,
+                        "NDCG@5": 0.0022,
+                        "HitRate@10": 0.0061,
+                        "Precision@10": 0.0006,
+                        "Recall@10": 0.0061,
+                        "NDCG@10": 0.0028,
+                        "MRR@10": 0.0018
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0163,
+                        "Precision@5": 0.0033,
+                        "Recall@5": 0.0163,
+                        "NDCG@5": 0.0092,
+                        "HitRate@10": 0.0326,
+                        "Precision@10": 0.0033,
+                        "Recall@10": 0.0326,
+                        "NDCG@10": 0.0144,
+                        "MRR@10": 0.0089
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0204,
+                        "Precision@5": 0.0041,
+                        "Recall@5": 0.0204,
+                        "NDCG@5": 0.0117,
+                        "HitRate@10": 0.0367,
+                        "Precision@10": 0.0037,
+                        "Recall@10": 0.0367,
+                        "NDCG@10": 0.0169,
+                        "MRR@10": 0.0109
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0224,
+                        "Precision@5": 0.0045,
+                        "Recall@5": 0.0224,
+                        "NDCG@5": 0.0123,
+                        "HitRate@10": 0.0367,
+                        "Precision@10": 0.0037,
+                        "Recall@10": 0.0367,
+                        "NDCG@10": 0.0169,
+                        "MRR@10": 0.0109
+                    }
+                },
+                "123": {
+                    "RANDOM": {
+                        "HitRate@5": 0.002,
+                        "Precision@5": 0.0004,
+                        "Recall@5": 0.002,
+                        "NDCG@5": 0.0013,
+                        "HitRate@10": 0.0061,
+                        "Precision@10": 0.0006,
+                        "Recall@10": 0.0061,
+                        "NDCG@10": 0.0025,
+                        "MRR@10": 0.0015
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0182,
+                        "Precision@5": 0.0036,
+                        "Recall@5": 0.0182,
+                        "NDCG@5": 0.0108,
+                        "HitRate@10": 0.0405,
+                        "Precision@10": 0.004,
+                        "Recall@10": 0.0405,
+                        "NDCG@10": 0.0181,
+                        "MRR@10": 0.0115
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0061,
+                        "Precision@5": 0.0012,
+                        "Recall@5": 0.0061,
+                        "NDCG@5": 0.0031,
+                        "HitRate@10": 0.0061,
+                        "Precision@10": 0.0006,
+                        "Recall@10": 0.0061,
+                        "NDCG@10": 0.0031,
+                        "MRR@10": 0.0021
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0.002,
+                        "Precision@5": 0.0004,
+                        "Recall@5": 0.002,
+                        "NDCG@5": 0.0008,
+                        "HitRate@10": 0.004,
+                        "Precision@10": 0.0004,
+                        "Recall@10": 0.004,
+                        "NDCG@10": 0.0015,
+                        "MRR@10": 0.0007
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0121,
+                        "Precision@5": 0.0024,
+                        "Recall@5": 0.0121,
+                        "NDCG@5": 0.0064,
+                        "HitRate@10": 0.0283,
+                        "Precision@10": 0.0028,
+                        "Recall@10": 0.0283,
+                        "NDCG@10": 0.0116,
+                        "MRR@10": 0.0066
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0182,
+                        "Precision@5": 0.0036,
+                        "Recall@5": 0.0182,
+                        "NDCG@5": 0.0107,
+                        "HitRate@10": 0.0445,
+                        "Precision@10": 0.0045,
+                        "Recall@10": 0.0445,
+                        "NDCG@10": 0.0191,
+                        "MRR@10": 0.0117
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0162,
+                        "Precision@5": 0.0032,
+                        "Recall@5": 0.0162,
+                        "NDCG@5": 0.0107,
+                        "HitRate@10": 0.0466,
+                        "Precision@10": 0.0047,
+                        "Recall@10": 0.0466,
+                        "NDCG@10": 0.0205,
+                        "MRR@10": 0.0129
+                    }
+                },
+                "2026": {
+                    "RANDOM": {
+                        "HitRate@5": 0,
+                        "Precision@5": 0,
+                        "Recall@5": 0,
+                        "NDCG@5": 0,
+                        "HitRate@10": 0.002,
+                        "Precision@10": 0.0002,
+                        "Recall@10": 0.002,
+                        "NDCG@10": 0.0007,
+                        "MRR@10": 0.0003
+                    },
+                    "MOST_POPULAR": {
+                        "HitRate@5": 0.0203,
+                        "Precision@5": 0.0041,
+                        "Recall@5": 0.0203,
+                        "NDCG@5": 0.01,
+                        "HitRate@10": 0.0385,
+                        "Precision@10": 0.0039,
+                        "Recall@10": 0.0385,
+                        "NDCG@10": 0.0158,
+                        "MRR@10": 0.0089
+                    },
+                    "ITEM_KNN": {
+                        "HitRate@5": 0.0101,
+                        "Precision@5": 0.002,
+                        "Recall@5": 0.0101,
+                        "NDCG@5": 0.0059,
+                        "HitRate@10": 0.0223,
+                        "Precision@10": 0.0022,
+                        "Recall@10": 0.0223,
+                        "NDCG@10": 0.0096,
+                        "MRR@10": 0.0059
+                    },
+                    "MATRIX_FACTORIZATION": {
+                        "HitRate@5": 0.0101,
+                        "Precision@5": 0.002,
+                        "Recall@5": 0.0101,
+                        "NDCG@5": 0.0071,
+                        "HitRate@10": 0.0183,
+                        "Precision@10": 0.0018,
+                        "Recall@10": 0.0183,
+                        "NDCG@10": 0.0097,
+                        "MRR@10": 0.0071
+                    },
+                    "BPR": {
+                        "HitRate@5": 0.0243,
+                        "Precision@5": 0.0049,
+                        "Recall@5": 0.0243,
+                        "NDCG@5": 0.0123,
+                        "HitRate@10": 0.0467,
+                        "Precision@10": 0.0047,
+                        "Recall@10": 0.0467,
+                        "NDCG@10": 0.0195,
+                        "MRR@10": 0.0114
+                    },
+                    "HYBRID_W02": {
+                        "HitRate@5": 0.0203,
+                        "Precision@5": 0.0041,
+                        "Recall@5": 0.0203,
+                        "NDCG@5": 0.01,
+                        "HitRate@10": 0.0365,
+                        "Precision@10": 0.0037,
+                        "Recall@10": 0.0365,
+                        "NDCG@10": 0.015,
+                        "MRR@10": 0.0085
+                    },
+                    "HYBRID_W04": {
+                        "HitRate@5": 0.0223,
+                        "Precision@5": 0.0045,
+                        "Recall@5": 0.0223,
+                        "NDCG@5": 0.0116,
+                        "HitRate@10": 0.0365,
+                        "Precision@10": 0.0037,
+                        "Recall@10": 0.0365,
+                        "NDCG@10": 0.0161,
+                        "MRR@10": 0.01
+                    }
+                }
+            }
+        }
+    },
+    "conclusion": "Pairwise BPR shows responsiveness to planted collaborative structure alongside pointwise Funk MF."
+}

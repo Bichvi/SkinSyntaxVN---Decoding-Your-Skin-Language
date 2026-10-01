@@ -53,5 +53,5 @@
             }
         }
     },
-    "analysis": "Users with richer histories (20+ items) exhibit higher MF HitRate and NDCG than users with sparse histories (5-9 items), demonstrating that latent matrix factorization improves as per-user feedback accumulates."
+    "analysis": "MF shows an improvement signal in this synthetic subgroup, but the subgroup size is small and does not establish a stable general trend."
 }

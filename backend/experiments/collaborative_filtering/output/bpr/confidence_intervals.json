@@ -1,0 +1,59 @@
+{
+    "bootstrap_iterations": 1000,
+    "bootstrap_seed": 9999,
+    "models": {
+        "MOST_POPULAR": {
+            "evaluated_users": 432,
+            "HitRate@10": {
+                "point_estimate": 0.0278,
+                "ci_95_lower": 0.0139,
+                "ci_95_upper": 0.044
+            },
+            "NDCG@10": {
+                "point_estimate": 0.0129,
+                "ci_95_lower": 0.006,
+                "ci_95_upper": 0.0216
+            }
+        },
+        "ITEM_KNN": {
+            "evaluated_users": 432,
+            "HitRate@10": {
+                "point_estimate": 0.0069,
+                "ci_95_lower": 0,
+                "ci_95_upper": 0.0162
+            },
+            "NDCG@10": {
+                "point_estimate": 0.0026,
+                "ci_95_lower": 0,
+                "ci_95_upper": 0.0059
+            }
+        },
+        "MATRIX_FACTORIZATION": {
+            "evaluated_users": 432,
+            "HitRate@10": {
+                "point_estimate": 0.0116,
+                "ci_95_lower": 0.0023,
+                "ci_95_upper": 0.0231
+            },
+            "NDCG@10": {
+                "point_estimate": 0.0055,
+                "ci_95_lower": 0.0008,
+                "ci_95_upper": 0.0118
+            }
+        },
+        "BPR": {
+            "evaluated_users": 432,
+            "HitRate@10": {
+                "point_estimate": 0.0324,
+                "ci_95_lower": 0.0162,
+                "ci_95_upper": 0.0509
+            },
+            "NDCG@10": {
+                "point_estimate": 0.0149,
+                "ci_95_lower": 0.0069,
+                "ci_95_upper": 0.0239
+            }
+        }
+    },
+    "statistical_interpretation": "Because confidence intervals overlap substantially between CF models and baselines on small hit-rate values, differences should be interpreted cautiously rather than declaring clear dominance."
+}
