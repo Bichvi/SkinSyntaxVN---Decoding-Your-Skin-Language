@@ -160,11 +160,14 @@ class SyntheticDatasetGenerator {
             $latentFactors[] = round($this->rng->float(-1.0, 1.0), 3);
         }
 
+        $scenario = $this->config['scenario'] ?? self::SCENARIO;
+        $genVersion = ($scenario === 'cf_experiment_v2_corrected') ? '2.0_corrected' : ($this->config['generator_version'] ?? self::GENERATOR_VERSION);
+
         return [
             'user_id' => $userId,
             'source' => self::SOURCE_TAG,
-            'scenario' => self::SCENARIO,
-            'generator_version' => self::GENERATOR_VERSION,
+            'scenario' => $scenario,
+            'generator_version' => $genVersion,
             'seed' => $this->config['seed'],
             'preferred_categories' => array_keys($catsSampled),
             'preferred_brands' => array_keys($brandsSampled),
@@ -181,22 +184,29 @@ class SyntheticDatasetGenerator {
     /**
      * Compute latent affinity between synthetic user profile and a product
      */
-    private function computeAffinity(array $profile, array $prod): float {
+    public function computeAffinity(array $profile, array $prod): float {
         $isExploration = $this->rng->next() < $profile['exploration_tendency'];
         if ($isExploration) {
             // Random exploratory browsing with small noise
             return 0.2 + $this->rng->float(0.0, 0.3);
         }
 
+        $isV2 = (($this->config['scenario'] ?? self::SCENARIO) === 'cf_experiment_v2_corrected');
         $score = 0.05; // Base exploration floor
 
         // Category match
-        if (in_array((string)$prod['ma_danh_muc'], $profile['preferred_categories'], true)) {
+        $catMatch = $isV2
+            ? in_array((string)$prod['ma_danh_muc'], array_map('strval', $profile['preferred_categories']), true)
+            : in_array((string)$prod['ma_danh_muc'], $profile['preferred_categories'], true);
+        if ($catMatch) {
             $score += 0.40;
         }
 
         // Brand match
-        if (in_array((string)$prod['ma_thuong_hieu'], $profile['preferred_brands'], true)) {
+        $brandMatch = $isV2
+            ? in_array((string)$prod['ma_thuong_hieu'], array_map('strval', $profile['preferred_brands']), true)
+            : in_array((string)$prod['ma_thuong_hieu'], $profile['preferred_brands'], true);
+        if ($brandMatch) {
             $score += 0.35;
         }
 
@@ -235,6 +245,9 @@ class SyntheticDatasetGenerator {
         $numUsers = $this->config['num_users'];
         $startId = $this->config['user_id_start'];
         $baseTimestamp = time() - ($this->config['days_history'] * 86400);
+
+        $scenario = $this->config['scenario'] ?? self::SCENARIO;
+        $genVersion = ($scenario === 'cf_experiment_v2_corrected') ? '2.0_corrected' : ($this->config['generator_version'] ?? self::GENERATOR_VERSION);
 
         $users = [];
         $interactions = [];
@@ -358,8 +371,8 @@ class SyntheticDatasetGenerator {
                     'loai_tuong_tac' => $viewType,
                     'trong_so' => $viewWeight,
                     'source' => self::SOURCE_TAG,
-                    'scenario' => self::SCENARIO,
-                    'generator_version' => self::GENERATOR_VERSION,
+                    'scenario' => $scenario,
+                    'generator_version' => $genVersion,
                     'seed' => $this->config['seed'],
                     'metadata' => [
                         'synthetic' => true,
@@ -381,8 +394,8 @@ class SyntheticDatasetGenerator {
                         'loai_tuong_tac' => 'add_to_cart',
                         'trong_so' => 3.0,
                         'source' => self::SOURCE_TAG,
-                        'scenario' => self::SCENARIO,
-                        'generator_version' => self::GENERATOR_VERSION,
+                        'scenario' => $scenario,
+                        'generator_version' => $genVersion,
                         'seed' => $this->config['seed'],
                         'metadata' => ['quantity' => $cartQty, 'synthetic' => true],
                         'created_at' => new \MongoDB\BSON\UTCDateTime($currentTimestamp * 1000),
@@ -401,8 +414,8 @@ class SyntheticDatasetGenerator {
                             'loai_tuong_tac' => 'purchase',
                             'trong_so' => 5.0,
                             'source' => self::SOURCE_TAG,
-                            'scenario' => self::SCENARIO,
-                            'generator_version' => self::GENERATOR_VERSION,
+                            'scenario' => $scenario,
+                            'generator_version' => $genVersion,
                             'seed' => $this->config['seed'],
                             'metadata' => [
                                 'order_id' => $orderId,
@@ -426,8 +439,8 @@ class SyntheticDatasetGenerator {
                                 'loai_tuong_tac' => 'rating',
                                 'trong_so' => (float)$ratingStars,
                                 'source' => self::SOURCE_TAG,
-                                'scenario' => self::SCENARIO,
-                                'generator_version' => self::GENERATOR_VERSION,
+                                'scenario' => $scenario,
+                                'generator_version' => $genVersion,
                                 'seed' => $this->config['seed'],
                                 'metadata' => [
                                     'so_sao' => $ratingStars,

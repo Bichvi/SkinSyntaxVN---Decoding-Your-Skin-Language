@@ -264,11 +264,137 @@ class CollaborativeFilteringEvaluator {
     }
 
     /**
+     * Train Bayesian Personalized Ranking (BPR) via SGD on pairwise implicit preferences
+     *
+     * Formulation:
+     *   Optimization: min -sum_{(u, i, j)} ln sigma(x_uij) + lambda * (||p_u||^2 + ||q_i||^2 + ||q_j||^2 + b_i^2 + b_j^2)
+     *   Prediction:   x_ui = b_i + p_u^T q_i
+     *   Difference:   x_uij = x_ui - x_uj = (b_i - b_j) + p_u^T (q_i - q_j)
+     */
+    public function trainBpr(int $seed = 42, array $config = []): array {
+        $k = $config['k'] ?? $this->kLatent;
+        $gamma = $config['learning_rate'] ?? 0.05;
+        $lambda = $config['regularization'] ?? 0.01;
+        $epochs = $config['epochs'] ?? 25;
+
+        $users = array_keys($this->trainMatrix);
+        $catalogPids = array_map('strval', array_keys($this->catalog));
+        $catalogCount = count($catalogPids);
+
+        // Initialize factors and biases deterministically
+        mt_srand($seed);
+        $userFactors = [];
+        $itemFactors = [];
+        $itemBias = [];
+
+        foreach ($users as $u) {
+            $userFactors[$u] = [];
+            for ($f = 0; $f < $k; $f++) {
+                $userFactors[$u][$f] = (mt_rand(-50, 50) / 1000.0);
+            }
+        }
+
+        foreach ($catalogPids as $p) {
+            $itemBias[$p] = 0.0;
+            $itemFactors[$p] = [];
+            for ($f = 0; $f < $k; $f++) {
+                $itemFactors[$p][$f] = (mt_rand(-50, 50) / 1000.0);
+            }
+        }
+
+        // Map positive observed training items per user
+        $userPositives = [];
+        $trainingPairs = [];
+        foreach ($this->trainMatrix as $u => $pList) {
+            $uStr = (string)$u;
+            foreach ($pList as $p => $r) {
+                $pStr = (string)$p;
+                $userPositives[$uStr][$pStr] = true;
+                $trainingPairs[] = [$uStr, $pStr];
+            }
+        }
+
+        $numPairs = count($trainingPairs);
+        if ($numPairs === 0) {
+            return [];
+        }
+
+        $rng = new DeterministicRandom($seed);
+
+        // SGD Training on BPR Triples
+        for ($epoch = 0; $epoch < $epochs; $epoch++) {
+            for ($idx = 0; $idx < $numPairs; $idx++) {
+                $pair = $trainingPairs[$idx];
+                $u = $pair[0];
+                $i = $pair[1];
+
+                // Negative sampling: sample unseen item j not in user train and not held-out test target
+                $testTarget = isset($this->testSet[$u]) ? (string)$this->testSet[$u] : null;
+                $j = null;
+                for ($tries = 0; $tries < 100; $tries++) {
+                    $candJ = $catalogPids[$rng->int(0, $catalogCount - 1)];
+                    if (!isset($userPositives[$u][$candJ]) && $candJ !== $testTarget) {
+                        $j = $candJ;
+                        break;
+                    }
+                }
+                if ($j === null) continue;
+
+                // Difference calculation
+                $dotDiff = 0.0;
+                for ($f = 0; $f < $k; $f++) {
+                    $dotDiff += $userFactors[$u][$f] * ($itemFactors[$i][$f] - $itemFactors[$j][$f]);
+                }
+                $x_uij = ($itemBias[$i] - $itemBias[$j]) + $dotDiff;
+
+                // Sigmoid derivative: z = 1 / (1 + exp(x_uij)) with numerical clipping
+                if ($x_uij > 30.0) {
+                    $z = exp(-$x_uij);
+                } elseif ($x_uij < -30.0) {
+                    $z = 1.0;
+                } else {
+                    $z = 1.0 / (1.0 + exp($x_uij));
+                }
+
+                // Update biases
+                $itemBias[$i] += $gamma * ($z - $lambda * $itemBias[$i]);
+                $itemBias[$j] += $gamma * (-$z - $lambda * $itemBias[$j]);
+
+                // Update factors
+                for ($f = 0; $f < $k; $f++) {
+                    $uOld = $userFactors[$u][$f];
+                    $iOld = $itemFactors[$i][$f];
+                    $jOld = $itemFactors[$j][$f];
+
+                    $userFactors[$u][$f] += $gamma * ($z * ($iOld - $jOld) - $lambda * $uOld);
+                    $itemFactors[$i][$f] += $gamma * ($z * $uOld - $lambda * $iOld);
+                    $itemFactors[$j][$f] += $gamma * (-$z * $uOld - $lambda * $jOld);
+                }
+            }
+        }
+
+        return [
+            'item_bias' => $itemBias,
+            'user_factors' => $userFactors,
+            'item_factors' => $itemFactors,
+            'config' => [
+                'k' => $k,
+                'learning_rate' => $gamma,
+                'regularization' => $lambda,
+                'epochs' => $epochs,
+                'negative_sampling' => 'uniform_unseen',
+                'seed' => $seed,
+            ]
+        ];
+    }
+
+    /**
      * Evaluate models against unseen candidate pool for all eligible users
      */
-    public function evaluateAll(int $seed = 42): array {
+    public function evaluateAll(int $seed = 42, bool $includeBpr = false, array $bprConfig = []): array {
         $simMatrix = $this->trainItemKnn();
         $mfModel = $this->trainMatrixFactorization($seed);
+        $bprModel = $includeBpr ? $this->trainBpr($seed, $bprConfig) : null;
 
         $catalogPids = array_keys($this->catalog);
 
@@ -279,7 +405,13 @@ class CollaborativeFilteringEvaluator {
             $normPopularity[$p] = $pop / $maxPop;
         }
 
-        $methods = ['RANDOM', 'MOST_POPULAR', 'ITEM_KNN', 'MATRIX_FACTORIZATION', 'HYBRID_W02', 'HYBRID_W04'];
+        $methods = ['RANDOM', 'MOST_POPULAR', 'ITEM_KNN', 'MATRIX_FACTORIZATION'];
+        if ($includeBpr) {
+            $methods[] = 'BPR';
+        }
+        $methods[] = 'HYBRID_W02';
+        $methods[] = 'HYBRID_W04';
+
         $results = [];
         foreach ($methods as $m) {
             $results[$m] = [
@@ -359,7 +491,29 @@ class CollaborativeFilteringEvaluator {
             $recsMf = array_slice(array_keys($mfScores), 0, 10);
             $this->accumulateMetrics($results['MATRIX_FACTORIZATION'], $targetPid, $recsMf);
 
-            // 5. HYBRID W=0.2 (80% Popularity + 20% CF) & HYBRID W=0.4 (60% Popularity + 40% CF)
+            // 5. BPR (Bayesian Personalized Ranking)
+            if ($includeBpr && $bprModel !== null) {
+                $bprScores = [];
+                $uBprFactors = $bprModel['user_factors'][$u] ?? null;
+                $kBpr = $bprModel['config']['k'] ?? $this->kLatent;
+
+                foreach ($candidatePool as $candPid) {
+                    if ($uBprFactors !== null && isset($bprModel['item_factors'][$candPid])) {
+                        $dot = 0.0;
+                        for ($f = 0; $f < $kBpr; $f++) {
+                            $dot += $uBprFactors[$f] * $bprModel['item_factors'][$candPid][$f];
+                        }
+                        $bprScores[$candPid] = ($bprModel['item_bias'][$candPid] ?? 0.0) + $dot;
+                    } else {
+                        $bprScores[$candPid] = ($this->itemPopularity[$candPid] ?? 0.0) * 0.001;
+                    }
+                }
+                arsort($bprScores);
+                $recsBpr = array_slice(array_keys($bprScores), 0, 10);
+                $this->accumulateMetrics($results['BPR'], $targetPid, $recsBpr);
+            }
+
+            // 6. HYBRID W=0.2 (80% Popularity + 20% CF) & HYBRID W=0.4 (60% Popularity + 40% CF)
             // Normalize candidate scores to [0, 1]
             $maxKnn = !empty($knnScores) && max($knnScores) > 0 ? max($knnScores) : 1.0;
             $maxMf = !empty($mfScores) && max($mfScores) > 0 ? max($mfScores) : 1.0;
@@ -429,5 +583,17 @@ class CollaborativeFilteringEvaluator {
             $bucket['ndcg_10'] += (1.0 / log($rank10 + 2, 2));
             $bucket['mrr_10'] += (1.0 / ($rank10 + 1));
         }
+    }
+
+    public function getTrainMatrix(): array {
+        return $this->trainMatrix;
+    }
+
+    public function getTestSet(): array {
+        return $this->testSet;
+    }
+
+    public function getCatalog(): array {
+        return $this->catalog;
     }
 }

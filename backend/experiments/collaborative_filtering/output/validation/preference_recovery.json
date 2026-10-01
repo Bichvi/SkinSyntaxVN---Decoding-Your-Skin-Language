@@ -55,5 +55,5 @@
             "PriceRangeMatch@10": 0.3178
         }
     },
-    "scientific_conclusion": "Although Leave-One-Out exact-item HitRate is low across 2,460 candidates, Item-kNN and Matrix Factorization demonstrate significant preference recovery (e.g. matching preferred category and price range) compared to blind guessing."
+    "scientific_conclusion": "Item-kNN shows partial recovery of synthetic category\/brand preferences under the generator assumptions."
 }

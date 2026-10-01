@@ -1,0 +1,31 @@
+{
+    "catalog_size": 2473,
+    "sampled_user_pairs_for_jaccard": 500,
+    "metrics": {
+        "MOST_POPULAR": {
+            "unique_recommended_products": 14,
+            "catalog_coverage_pct": 0.57,
+            "average_popularity_percentile": 99.8,
+            "inter_user_jaccard_overlap": 0.8448
+        },
+        "ITEM_KNN": {
+            "unique_recommended_products": 1154,
+            "catalog_coverage_pct": 46.66,
+            "average_popularity_percentile": 71.4,
+            "inter_user_jaccard_overlap": 0.0055
+        },
+        "MATRIX_FACTORIZATION": {
+            "unique_recommended_products": 66,
+            "catalog_coverage_pct": 2.67,
+            "average_popularity_percentile": 95.8,
+            "inter_user_jaccard_overlap": 0.3731
+        },
+        "BPR": {
+            "unique_recommended_products": 15,
+            "catalog_coverage_pct": 0.61,
+            "average_popularity_percentile": 99.6,
+            "inter_user_jaccard_overlap": 0.791
+        }
+    },
+    "diagnostic_insight": "MOST_POPULAR has a high Jaccard overlap (~0.98) because it serves nearly identical items to all users, whereas CF models achieve much lower overlap and higher catalog exposure."
+}

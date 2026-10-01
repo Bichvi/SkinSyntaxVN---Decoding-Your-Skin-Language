@@ -1,0 +1,27 @@
+{
+    "total_evaluated_users": 432,
+    "segments": {
+        "low_popularity_bias": {
+            "users": 157,
+            "MOST_POPULAR_HR@10": 0.0382,
+            "ITEM_KNN_HR@10": 0.0064,
+            "FUNK_MF_HR@10": 0,
+            "BPR_HR@10": 0.0446
+        },
+        "medium_popularity_bias": {
+            "users": 138,
+            "MOST_POPULAR_HR@10": 0.0145,
+            "ITEM_KNN_HR@10": 0.0145,
+            "FUNK_MF_HR@10": 0.029,
+            "BPR_HR@10": 0.0072
+        },
+        "high_popularity_bias": {
+            "users": 137,
+            "MOST_POPULAR_HR@10": 0.0292,
+            "ITEM_KNN_HR@10": 0,
+            "FUNK_MF_HR@10": 0.0073,
+            "BPR_HR@10": 0.0438
+        }
+    },
+    "scientific_note": "For users with lower popularity bias under synthetic assumptions, the relative gap between Most Popular and CF models decreases."
+}

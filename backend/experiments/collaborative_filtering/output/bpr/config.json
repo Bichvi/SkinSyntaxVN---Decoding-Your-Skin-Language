@@ -1,0 +1,17 @@
+{
+    "model": "Bayesian_Personalized_Ranking_BPR",
+    "hyperparameters": {
+        "k": 5,
+        "learning_rate": 0.05,
+        "regularization": 0.01,
+        "epochs": 25,
+        "negative_sampling": "uniform_unseen",
+        "initialization": "uniform_[-0.05, 0.05]",
+        "loss": "pairwise_logistic_sigmoid",
+        "scoring_equation": "x_ui = b_i + p_u^T q_i"
+    },
+    "positive_interaction_definition": "All observed user-item pairs in training matrix (r_ui >= 1.0)",
+    "negative_sampling_definition": "Uniform random item from catalog unseen by user in train and excluding held-out target",
+    "evaluation_protocol": "Temporal Leave-One-Out Per-User Holdout over all unseen catalog products (~2,460 candidates)",
+    "disclaimer": "All BPR results are based on controlled synthetic experiments. They evaluate algorithmic behavior under generator assumptions and do not establish recommendation quality for real SkinSyntaxVN users."
+}
