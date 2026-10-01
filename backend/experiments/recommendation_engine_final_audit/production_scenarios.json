@@ -1,0 +1,500 @@
+{
+    "A_cold_start": {
+        "description": "Khách vãng lai mới, không có tín hiệu hành vi hay hồ sơ da",
+        "algorithm_mode": "SIMPLE",
+        "dominant_signal": "SIMPLE",
+        "active_signals": [],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 1000,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+                "gia_ban": 163000,
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "id": 266,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 400ml",
+                "gia_ban": 454000,
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "id": 728,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+                "gia_ban": 295000,
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "id": 4365,
+                "ten_san_pham": "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+                "gia_ban": 129000,
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            }
+        ]
+    },
+    "B_search_only": {
+        "description": "Khách tìm kiếm từ khóa mà chưa click hay xem chi tiết",
+        "algorithm_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "SEARCH",
+        "active_signals": [
+            "search"
+        ],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 3032,
+                "ten_san_pham": "Combo Serum Tia'm Làm Sáng, Phục Hồi Cho Da Dầu Mụn, Nhạy Cảm + Thu Nhỏ Lỗ Chân Lông, Giảm Dầu Nhờn 40mlx2",
+                "gia_ban": 648000,
+                "final_score": 0.487,
+                "reason": "Dựa trên tìm kiếm gần đây",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây"
+                ]
+            },
+            {
+                "id": 957,
+                "ten_san_pham": "Serum Bioderma Sáng Mịn, Mờ Thâm Cho Da Dầu Mụn 30ml",
+                "gia_ban": 528000,
+                "final_score": 0.4806,
+                "reason": "Dựa trên tìm kiếm gần đây",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây"
+                ]
+            },
+            {
+                "id": 493,
+                "ten_san_pham": "Serum Prettyskin B5 Phục Hồi, Dưỡng Sáng Cho Da Dầu 50ml",
+                "gia_ban": 375000,
+                "final_score": 0.4796,
+                "reason": "Dựa trên tìm kiếm gần đây",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây"
+                ]
+            },
+            {
+                "id": 1239,
+                "ten_san_pham": "Serum L'Oreal Niacinamide 2% Kiềm Dầu Ban Đêm 30ml",
+                "gia_ban": 419000,
+                "final_score": 0.4748,
+                "reason": "Dựa trên tìm kiếm gần đây",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây"
+                ]
+            }
+        ]
+    },
+    "C_view_only": {
+        "description": "Khách đã xem 1 sản phẩm serum",
+        "algorithm_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "VIEW",
+        "active_signals": [
+            "view"
+        ],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 728,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+                "gia_ban": 295000,
+                "final_score": 0.8806,
+                "reason": "Tương tự sản phẩm vừa xem",
+                "reason_tags": [
+                    "Tương tự sản phẩm vừa xem"
+                ]
+            },
+            {
+                "id": 3358,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Mụn 75ml",
+                "gia_ban": 228000,
+                "final_score": 0.6215,
+                "reason": "Tương tự sản phẩm vừa xem",
+                "reason_tags": [
+                    "Tương tự sản phẩm vừa xem"
+                ]
+            },
+            {
+                "id": 5639,
+                "ten_san_pham": "[Mua 1 Tặng 1] Eucerin Serum Giảm Thâm Mụn 40ml + Gel Rửa Mặt Cho Da Mụn 75ml",
+                "gia_ban": 584000,
+                "final_score": 0.5603,
+                "reason": "Tương tự sản phẩm vừa xem",
+                "reason_tags": [
+                    "Tương tự sản phẩm vừa xem"
+                ]
+            },
+            {
+                "id": 929,
+                "ten_san_pham": "Kem Dưỡng Eucerin Giúp Làm Giảm Dầu & Mụn 40ml",
+                "gia_ban": 433000,
+                "final_score": 0.5014,
+                "reason": "Tương tự sản phẩm vừa xem",
+                "reason_tags": [
+                    "Tương tự sản phẩm vừa xem"
+                ]
+            }
+        ]
+    },
+    "D_cart_only": {
+        "description": "Khách thêm sản phẩm vào giỏ hàng",
+        "algorithm_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "CART",
+        "active_signals": [
+            "cart"
+        ],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 5952,
+                "ten_san_pham": "Son Dưỡng Laneige Căng Bóng Hương Xoài 10g",
+                "gia_ban": 290000,
+                "final_score": 0.9705,
+                "reason": "Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "id": 5699,
+                "ten_san_pham": "Son Dưỡng Laneige Căng Bóng Hương Việt Quất 10g",
+                "gia_ban": 307000,
+                "final_score": 0.9637,
+                "reason": "Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "id": 1769,
+                "ten_san_pham": "Son Dưỡng Laneige Căng Bóng Hương Kẹo Ngọt 10g",
+                "gia_ban": 334000,
+                "final_score": 0.9424,
+                "reason": "Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "id": 5907,
+                "ten_san_pham": "Son Dưỡng Có Màu Espoir 02 Coral Dew - Cam 4.5g",
+                "gia_ban": 272000,
+                "final_score": 0.5979,
+                "reason": "Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Phù hợp với giỏ hàng"
+                ]
+            }
+        ]
+    },
+    "E_purchase_only": {
+        "description": "Khách hàng có lịch sử mua gần đây (10 ngày trước)",
+        "algorithm_mode": "PURCHASE_CONTENT",
+        "dominant_signal": "PURCHASE",
+        "active_signals": [
+            "purchase"
+        ],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 266,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 400ml",
+                "gia_ban": 454000,
+                "final_score": 1.0001,
+                "reason": "Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "id": 868,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Mụn 400ml",
+                "gia_ban": 492000,
+                "final_score": 0.6145,
+                "reason": "Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "id": 929,
+                "ten_san_pham": "Kem Dưỡng Eucerin Giúp Làm Giảm Dầu & Mụn 40ml",
+                "gia_ban": 433000,
+                "final_score": 0.556,
+                "reason": "Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "id": 5639,
+                "ten_san_pham": "[Mua 1 Tặng 1] Eucerin Serum Giảm Thâm Mụn 40ml + Gel Rửa Mặt Cho Da Mụn 75ml",
+                "gia_ban": 584000,
+                "final_score": 0.5354,
+                "reason": "Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Tương thích lịch sử mua sắm"
+                ]
+            }
+        ]
+    },
+    "F_behavior_combination": {
+        "description": "Khách đa tín hiệu hành vi: tìm kiếm + xem + thêm giỏ + mua hàng",
+        "algorithm_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "CART",
+        "active_signals": [
+            "cart",
+            "view",
+            "search",
+            "purchase"
+        ],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 728,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+                "gia_ban": 295000,
+                "final_score": 0.7631,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng • Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng",
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "id": 5952,
+                "ten_san_pham": "Son Dưỡng Laneige Căng Bóng Hương Xoài 10g",
+                "gia_ban": 290000,
+                "final_score": 0.6073,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng • Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng",
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "id": 5699,
+                "ten_san_pham": "Son Dưỡng Laneige Căng Bóng Hương Việt Quất 10g",
+                "gia_ban": 307000,
+                "final_score": 0.6016,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng • Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng",
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "id": 1769,
+                "ten_san_pham": "Son Dưỡng Laneige Căng Bóng Hương Kẹo Ngọt 10g",
+                "gia_ban": 334000,
+                "final_score": 0.586,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng • Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng",
+                    "Tương thích lịch sử mua sắm"
+                ]
+            }
+        ]
+    },
+    "G_profile_only": {
+        "description": "Khách đã khảo sát hồ sơ da nhưng phiên mới chưa phát sinh hành vi",
+        "algorithm_mode": "PROFILE_CONTENT",
+        "dominant_signal": "PROFILE",
+        "active_signals": [
+            "profile"
+        ],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 1164,
+                "ten_san_pham": "Kem Dưỡng Tia'm Kiềm Dầu, Se Khít Lỗ Chân Lông 60ml",
+                "gia_ban": 379000,
+                "final_score": 0.4767,
+                "reason": "Gợi ý cá nhân hóa",
+                "reason_tags": [
+                    "Gợi ý cá nhân hóa"
+                ]
+            },
+            {
+                "id": 897,
+                "ten_san_pham": "Gel Giảm Mụn Cerave Mờ Thâm, Thu Nhỏ Lỗ Chân Lông 40ml",
+                "gia_ban": 310000,
+                "final_score": 0.4739,
+                "reason": "Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "id": 5000,
+                "ten_san_pham": "Kem Dưỡng B.O.M Sáng Da Ngừa Mụn 50ml",
+                "gia_ban": 225000,
+                "final_score": 0.4724,
+                "reason": "Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "id": 3821,
+                "ten_san_pham": "Dầu Tẩy Trang Celimax Sạch Sâu, Giảm Mụn Đầu Đen 150ml",
+                "gia_ban": 238000,
+                "final_score": 0.4236,
+                "reason": "Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            }
+        ]
+    },
+    "H_profile_and_behavior": {
+        "description": "Khách đầy đủ hồ sơ da và đa tín hiệu hành vi (Adaptive Hybrid)",
+        "algorithm_mode": "ADAPTIVE_HYBRID",
+        "dominant_signal": "HYBRID",
+        "active_signals": [
+            "cart",
+            "view",
+            "search",
+            "purchase",
+            "profile"
+        ],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 728,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+                "gia_ban": 295000,
+                "final_score": 0.5772,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng • Tương thích lịch sử mua sắm • Trong ngân sách",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng",
+                    "Tương thích lịch sử mua sắm",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "id": 3358,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Mụn 75ml",
+                "gia_ban": 228000,
+                "final_score": 0.5014,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng • Tương thích lịch sử mua sắm • Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng",
+                    "Tương thích lịch sử mua sắm",
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "id": 5000,
+                "ten_san_pham": "Kem Dưỡng B.O.M Sáng Da Ngừa Mụn 50ml",
+                "gia_ban": 225000,
+                "final_score": 0.4673,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng • Tương thích lịch sử mua sắm • Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng",
+                    "Tương thích lịch sử mua sắm",
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "id": 897,
+                "ten_san_pham": "Gel Giảm Mụn Cerave Mờ Thâm, Thu Nhỏ Lỗ Chân Lông 40ml",
+                "gia_ban": 310000,
+                "final_score": 0.466,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng • Tương thích lịch sử mua sắm • Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng",
+                    "Tương thích lịch sử mua sắm",
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            }
+        ]
+    },
+    "I_partial_profile": {
+        "description": "Khách có hồ sơ bán phần (chỉ có loại da, không có ngân sách hay vấn đề da)",
+        "algorithm_mode": "PROFILE_CONTENT",
+        "dominant_signal": "PROFILE",
+        "active_signals": [
+            "profile"
+        ],
+        "weights_applied": [],
+        "top_4_recommendations": [
+            {
+                "id": 2297,
+                "ten_san_pham": "Combo Bioderma Nước Tẩy Trang 500ml + Gel Rửa Mặt Cho Da Nhạy Cảm 200ml",
+                "gia_ban": 745000,
+                "final_score": 0.659,
+                "reason": "Khớp loại da",
+                "reason_tags": [
+                    "Khớp loại da"
+                ]
+            },
+            {
+                "id": 559,
+                "ten_san_pham": "Serum Eucerin Phục Hồi Da Nhạy Cảm 30ml",
+                "gia_ban": 548000,
+                "final_score": 0.6386,
+                "reason": "Khớp loại da",
+                "reason_tags": [
+                    "Khớp loại da"
+                ]
+            },
+            {
+                "id": 567,
+                "ten_san_pham": "Gel Rửa Mặt Bioderma Tạo Bọt Cho Da Nhạy Cảm 200ml",
+                "gia_ban": 337000,
+                "final_score": 0.636,
+                "reason": "Khớp loại da",
+                "reason_tags": [
+                    "Khớp loại da"
+                ]
+            },
+            {
+                "id": 91,
+                "ten_san_pham": "Sữa Rửa Mặt Eucerin Dịu Nhẹ Cho Da Nhạy Cảm 400ml",
+                "gia_ban": 247000,
+                "final_score": 0.6343,
+                "reason": "Khớp loại da",
+                "reason_tags": [
+                    "Khớp loại da"
+                ]
+            }
+        ]
+    }
+}
