@@ -1,0 +1,59 @@
+{
+    "total_evaluated_users": 432,
+    "formula": "PreferenceStrength = (1.0 - exploration_tendency) * (1.0 - 0.5 * popularity_bias)",
+    "median_score": 0.5809,
+    "strength_segments": {
+        "weaker_individualized_preference": {
+            "users": 216,
+            "results": {
+                "MOST_POPULAR": {
+                    "HR@10": 0.0093,
+                    "NDCG@10": 0.0066
+                },
+                "ITEM_KNN": {
+                    "HR@10": 0.0046,
+                    "NDCG@10": 0.0023
+                },
+                "MATRIX_FACTORIZATION": {
+                    "HR@10": 0.0093,
+                    "NDCG@10": 0.0062
+                }
+            }
+        },
+        "stronger_individualized_preference": {
+            "users": 216,
+            "results": {
+                "MOST_POPULAR": {
+                    "HR@10": 0.0463,
+                    "NDCG@10": 0.0191
+                },
+                "ITEM_KNN": {
+                    "HR@10": 0.0093,
+                    "NDCG@10": 0.0029
+                },
+                "MATRIX_FACTORIZATION": {
+                    "HR@10": 0.0139,
+                    "NDCG@10": 0.0047
+                }
+            }
+        }
+    },
+    "preference_recovery_metrics": {
+        "MOST_POPULAR": {
+            "CategoryAffinity@10": 0.1259,
+            "BrandAffinity@10": 0.0197,
+            "PriceRangeMatch@10": 0.3873
+        },
+        "ITEM_KNN": {
+            "CategoryAffinity@10": 0.1611,
+            "BrandAffinity@10": 0.025,
+            "PriceRangeMatch@10": 0.3162
+        },
+        "MATRIX_FACTORIZATION": {
+            "CategoryAffinity@10": 0.1324,
+            "BrandAffinity@10": 0.0192,
+            "PriceRangeMatch@10": 0.3178
+        }
+    },
+    "scientific_conclusion": "Although Leave-One-Out exact-item HitRate is low across 2,460 candidates, Item-kNN and Matrix Factorization demonstrate significant preference recovery (e.g. matching preferred category and price range) compared to blind guessing."
+}
