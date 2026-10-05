@@ -1,5 +1,5 @@
 {
-    "audit_timestamp": "2026-10-01T12:43:45+07:00",
+    "audit_timestamp": "2026-10-01T15:58:00+07:00",
     "production_database": "skinsyntax",
     "production": {
         "products_total": 2473,
@@ -11,8 +11,8 @@
         "orders": 29,
         "order_details": 34,
         "ratings": 8,
-        "interaction_log_total": 10,
-        "interaction_log_organic": 8,
+        "interaction_log_total": 17,
+        "interaction_log_organic": 15,
         "interaction_log_legacy": 2,
         "interaction_log_synthetic_in_prod": 0
     },
@@ -21,7 +21,9 @@
         "synthetic_users": 500,
         "synthetic_interactions": 13281,
         "scenarios": [
-            "cf_experiment_v1"
+            "cf_experiment_v1",
+            "cf_experiment_v2_corrected",
+            "cf_latent_recovery_v1"
         ]
     }
 }

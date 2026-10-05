@@ -1,0 +1,6 @@
+Block_Name,Dimensions,Mean_L2_Norm,Std_L2_Norm,Min_L2_Norm,Median_L2_Norm,Max_L2_Norm,Frobenius_Norm
+Taxonomy_Leaf_Only,21,1.0,0.0,1.0,1.0,1.0,49.7293
+Taxonomy_Hierarchical,28,1.4142,0.0,1.4142,1.4142,1.4142,70.3278
+Price_Standardized_Log,1,0.7935,0.6086,0.0012,0.6577,2.5401,49.7293
+Skin_Tags_Binary,3,0.5032,0.5274,0.0,0.0,1.4142,36.2491
+Ingredient_SVD_30D_Ref,30,0.9668,0.179,0.0,1.0,1.0,48.8979

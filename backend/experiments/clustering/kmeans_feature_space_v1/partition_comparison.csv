@@ -1,0 +1,16 @@
+K,Comparison,Config_1,Config_2,Adjusted_Rand_Index,Normalized_Mutual_Info
+6,Config_M vs Config_I,Config_M,Config_I,0.184,0.2424
+6,Config_M vs Config_T,Config_M,Config_T,0.4724,0.5397
+6,Config_M vs Config_MI,Config_M,Config_MI,0.613,0.714
+6,Config_M vs Config_MIT,Config_M,Config_MIT,0.6799,0.7381
+6,Config_MI vs Config_MIT,Config_MI,Config_MIT,0.7576,0.803
+7,Config_M vs Config_I,Config_M,Config_I,0.1581,0.2238
+7,Config_M vs Config_T,Config_M,Config_T,0.4881,0.5642
+7,Config_M vs Config_MI,Config_M,Config_MI,0.6105,0.7099
+7,Config_M vs Config_MIT,Config_M,Config_MIT,0.6377,0.7215
+7,Config_MI vs Config_MIT,Config_MI,Config_MIT,0.8618,0.8809
+8,Config_M vs Config_I,Config_M,Config_I,0.1668,0.2594
+8,Config_M vs Config_T,Config_M,Config_T,0.4836,0.5515
+8,Config_M vs Config_MI,Config_M,Config_MI,0.6622,0.757
+8,Config_M vs Config_MIT,Config_M,Config_MIT,0.6632,0.7608
+8,Config_MI vs Config_MIT,Config_MI,Config_MIT,0.9214,0.9169

@@ -1,0 +1,5 @@
+Experiment,Min_Support,Min_Confidence,Frequent_Itemsets_Count,Total_Rules_Count,Lift_GT_1_Count,Lift_LE_1_Count,Planted_Rules_Recovered
+Experiment A,0.05,0.2,27,43,32,11,5/6
+Experiment B (Baseline),0.1,0.2,15,13,11,2,5/6
+Experiment C,0.15,0.3,13,9,8,1,4/6
+Experiment D,0.2,0.4,9,3,3,0,1/6

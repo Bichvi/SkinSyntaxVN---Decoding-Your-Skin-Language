@@ -1,0 +1,142 @@
+[
+  {
+    "ma_san_pham": 4365,
+    "ten_san_pham": "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+    "role": "CLEANSER",
+    "brand": "Cosrx",
+    "gia_ban": 129000,
+    "loai_da": "Da dầu/Hỗn hợp dầu/Mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "selection_reason": "Standard BHA cleansing gel for oily/acne-prone skin; accessible price point."
+  },
+  {
+    "ma_san_pham": 21,
+    "ten_san_pham": "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+    "role": "CLEANSER",
+    "brand": "La Roche-Posay",
+    "gia_ban": 412000,
+    "loai_da": "Da dầu/Nhạy cảm",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "selection_reason": "Premium dermocosmetic cleanser tailored for oily and sensitive skin."
+  },
+  {
+    "ma_san_pham": 350,
+    "ten_san_pham": "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+    "role": "SERUM",
+    "brand": "Skin1004",
+    "gia_ban": 299000,
+    "loai_da": "Da nhạy cảm/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "selection_reason": "Centella-based soothing serum focusing on barrier repair for sensitive skin."
+  },
+  {
+    "ma_san_pham": 62,
+    "ten_san_pham": "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+    "role": "SERUM",
+    "brand": "L'Oreal",
+    "gia_ban": 289000,
+    "loai_da": "Da khô/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "selection_reason": "Hyaluronic acid humectant serum for moisture replenishment and dry skin."
+  },
+  {
+    "ma_san_pham": 139,
+    "ten_san_pham": "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+    "role": "MOISTURIZER",
+    "brand": "Klairs",
+    "gia_ban": 329000,
+    "loai_da": "Da nhạy cảm/Da kích ứng",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "selection_reason": "Guaiazulene soothing recovery cream for irritated and sensitive skin."
+  },
+  {
+    "ma_san_pham": 318,
+    "ten_san_pham": "Kem Dưỡng Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Thường/Khô 50g",
+    "role": "MOISTURIZER",
+    "brand": "Hada Labo",
+    "gia_ban": 185000,
+    "loai_da": "Da khô/Da thường",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "selection_reason": "Deep hydration occlusion cream for normal-to-dry skin barriers."
+  },
+  {
+    "ma_san_pham": 16,
+    "ten_san_pham": "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",
+    "role": "SUNSCREEN",
+    "brand": "Anessa",
+    "gia_ban": 549000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "selection_reason": "High-end sebum-regulating UV milk for oily skin; top price tier in sample."
+  },
+  {
+    "ma_san_pham": 725,
+    "ten_san_pham": "Sữa Chống Nắng Sunplay Skin Aqua Nắp Xanh Dành Cho Da Dầu 50g",
+    "role": "SUNSCREEN",
+    "brand": "Sunplay Skin Aqua",
+    "gia_ban": 102000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "selection_reason": "Budget daily sun protection milk for oily skin; lowest price tier in sample."
+  },
+  {
+    "ma_san_pham": 112,
+    "ten_san_pham": "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+    "role": "TREATMENT",
+    "brand": "Megaduo",
+    "gia_ban": 105000,
+    "loai_da": "Da mụn/Da dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "selection_reason": "Targeted retinaldehyde/AHA acne spot treatment; budget active."
+  },
+  {
+    "ma_san_pham": 740,
+    "ten_san_pham": "Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml",
+    "role": "TREATMENT",
+    "brand": "Eucerin",
+    "gia_ban": 370000,
+    "loai_da": "Da dầu/Da mụn/Nhạy cảm",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "selection_reason": "Clinical salicylic/glycolic acid complex treatment for acne and blemishes."
+  }
+]

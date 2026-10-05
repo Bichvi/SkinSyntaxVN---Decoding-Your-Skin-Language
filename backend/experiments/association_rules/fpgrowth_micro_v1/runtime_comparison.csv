@@ -1,0 +1,5 @@
+Scope,Algorithm,Iterations,Mean_ms,Median_ms,Min_ms,Max_ms,StdDev_ms
+Role-Level (8 roles),Apriori,30,0.1747,0.1665,0.1593,0.321,0.0294
+Role-Level (8 roles),FP-Growth,30,0.2792,0.2195,0.1688,0.6435,0.123
+SKU-Level (20 SKUs),Apriori,30,0.9465,0.936,0.6579,1.7294,0.2451
+SKU-Level (20 SKUs),FP-Growth,30,0.3328,0.2945,0.2572,0.9879,0.1358

@@ -1,0 +1,22 @@
+leaf_category_id,leaf_category_name,parent_category_id,parent_category_name,total_products,pct_catalog,count_in_1004_subset,count_in_1469_subset
+11,Mặt Nạ Giấy,2001,Mặt Nạ,549,22.2,0,549
+1,Sữa Rửa Mặt,2002,Làm Sạch Da,285,11.52,285,0
+6,Chống Nắng Da Mặt,1001,Chăm Sóc Da Mặt,231,9.34,231,0
+7,Kem / Gel / Dầu Dưỡng,2003,Dưỡng Ẩm,215,8.69,215,0
+3,Bộ Chăm Sóc Da Mặt,1001,Chăm Sóc Da Mặt,211,8.53,0,211
+9,Serum / Tinh Chất,2004,Đặc Trị,207,8.37,207,0
+2,Tẩy Trang Mặt,2002,Làm Sạch Da,195,7.89,0,195
+18,Son Dưỡng Môi,2006,Dưỡng Môi,167,6.75,0,167
+4,Toner / Nước Cân Bằng Da,2002,Làm Sạch Da,94,3.8,0,94
+25,Hỗ Trợ Trị Mụn,2004,Đặc Trị,66,2.67,66,0
+37,Lotion / Sữa Dưỡng,2003,Dưỡng Ẩm,58,2.35,0,58
+19,Mặt Nạ Rửa,2001,Mặt Nạ,50,2.02,0,50
+30,Xịt Khoáng,2003,Dưỡng Ẩm,40,1.62,0,40
+17,Tẩy Tế Bào Chết Da Mặt,2002,Làm Sạch Da,39,1.58,0,39
+53,Mặt Nạ Ngủ,2001,Mặt Nạ,20,0.81,0,20
+38,Serum / Kem Dưỡng Mắt,2005,Dưỡng Mắt,16,0.65,0,16
+29,Mặt Nạ Môi,2006,Dưỡng Môi,11,0.44,0,11
+60,Mặt Nạ Mắt,2005,Dưỡng Mắt,11,0.44,0,11
+73,Tẩy Tế Bào Chết Môi,2006,Dưỡng Môi,3,0.12,0,3
+83,Mặt Nạ Lột,2001,Mặt Nạ,3,0.12,0,3
+105,Sản Phẩm Đặc Trị Khác,2004,Đặc Trị,2,0.08,0,2

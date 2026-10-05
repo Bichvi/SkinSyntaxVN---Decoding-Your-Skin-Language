@@ -1,0 +1,70 @@
+{
+  "inventory_metadata": {
+    "system": "SkinSyntaxVN Recommendation Engine Master Audit",
+    "audit_timestamp": "2026-10-05T09:35:00Z",
+    "canonical_production_database": "skinsyntax (Atlas cluster / production)",
+    "pre_cleanup_local_store": "127.0.0.1:27017 (local raw dataset / backup)"
+  },
+  "production_organic_data": {
+    "san_pham_active_skincare": {
+      "count": 2473,
+      "description": "Canonical production active facial skincare products used by live recommenders and Step 7D research"
+    },
+    "danh_muc_skincare_hierarchy": {
+      "count": 28,
+      "description": "Canonical skincare hierarchical taxonomy tree (21 leaf categories, 7 parent categories, 1 root)"
+    },
+    "thuong_hieu": {
+      "count": 432,
+      "description": "Verified beauty and skincare brands"
+    },
+    "khach_hang_registered": {
+      "count": 19,
+      "description": "Registered customer profiles with survey and skin attributes"
+    },
+    "nguoidung_accounts": {
+      "count": 14,
+      "description": "User authentication accounts (admin, staff, customer)"
+    },
+    "hoa_don_orders": {
+      "count": 28,
+      "description": "Organic and seed customer purchase orders"
+    },
+    "chi_tiet_hoa_don_items": {
+      "count": 33,
+      "description": "Order line items linked to purchase orders"
+    },
+    "danh_gia_reviews": {
+      "count": 18,
+      "description": "Customer ratings and product reviews (10 in danh_gia_san_pham, 8 in danh_gia)"
+    },
+    "lich_su_tim_kiem_queries": {
+      "count": 30,
+      "description": "Recent keyword searches logged by users"
+    },
+    "tuong_tac_nguoi_dung": {
+      "count": 0,
+      "description": "Unified interaction event logging collection (dynamically provisioned on first organic event)"
+    }
+  },
+  "source_and_pre_cleanup_reference_data": {
+    "san_pham_raw_store": {
+      "count": 6377,
+      "description": "Pre-cleanup source dump / local uncurated dataset containing non-skincare items (hair care, body care, makeup, inactive/seed items). NOT live production skincare catalog."
+    },
+    "danh_muc_raw_store": {
+      "count": 125,
+      "description": "Pre-cleanup uncurated category store covering full department store hierarchy prior to skincare taxonomy scoping."
+    }
+  },
+  "synthetic_research_data_isolated": {
+    "association_rules_synthetic_baskets": {
+      "tiers": [30, 100, 300],
+      "description": "Controlled synthetic market basket transactions generated for Apriori and FP-Growth rule stability experiments"
+    },
+    "collaborative_filtering_synthetic_interactions": {
+      "matrix_size": "300 users x 50 items",
+      "description": "Controlled synthetic latent preference matrix generated for Item-kNN, Funk MF, and BPR benchmark experiments"
+    }
+  }
+}

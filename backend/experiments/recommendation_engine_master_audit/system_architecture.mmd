@@ -1,0 +1,85 @@
+graph TB
+    %% Master System Architecture Diagram for SkinSyntaxVN
+
+    subgraph ProductionBoundary ["PHẠM VI PRODUCTION RUNTIME (ĐANG VẬN HÀNH THỰC TẾ)"]
+        direction TB
+
+        subgraph PresentationLayer ["1. TẦNG TRÌNH DIỄN (PRESENTATION / VIEW LAYER)"]
+            V_Home["frontend/views/home.php<br/>- Section 3: Dành Riêng Cho Bạn (Adaptive)<br/>- Section 5.5: Được Yêu Thích Nhất (WR)"]
+            V_Detail["frontend/views/sanpham/chitiet.php<br/>- Gợi ý sản phẩm tương tự (Content-Based)"]
+            V_Badges["Hệ thống nhãn minh bạch (Explainable Reason Badges)"]
+        end
+
+        subgraph ControllerLayer ["2. TẦNG ĐIỀU HƯỚNG & QUẢN LÝ PHIÊN (APPLICATION / CONTROLLER LAYER)"]
+            C_Home["HomeController.php<br/>- index(): Thu thập tín hiệu phiên & Nạp hồ sơ"]
+            C_Prod["SanPhamController.php<br/>- chitiet(), tatca()"]
+            S_Session["PHP $_SESSION Store<br/>- recent_viewed_products, search_history, gio_hang"]
+        end
+
+        subgraph ServiceLayer ["3. TẦNG DỊCH VỤ GỢI Ý PRODUCTION (RECOMMENDATION SERVICE LAYER)"]
+            M_SanPham["SanPham.php Model<br/>- getSimpleRecommenderProducts()<br/>- getHomepageProductSections()<br/>- getHybridRecommendations()"]
+            S_CB["ContentBasedRecommender.php<br/>- Context Router (6 chế độ)<br/>- Multi-Signal Behavior Fusion<br/>- Cosine Similarity & TF-IDF<br/>- Product Family Diversity Filter"]
+            S_Log["InteractionLogger.php & TuongTac.php<br/>- Ghi nhận sự kiện phi chặn"]
+        end
+
+        subgraph DataLayer ["4. TẦNG DỮ LIỆU SẢN XUẤT (PRODUCTION DATA LAYER)"]
+            DB_Mongo[(MongoDB skinsyntax)]
+            Coll_SP["san_pham (N=2,473 hoạt động)"]
+            Coll_DM["danh_muc (28 nút phân cấp)"]
+            Coll_TH["thuong_hieu (432 nhãn hàng)"]
+            Coll_KH["khach_hang & skin_profile"]
+            Coll_HD["hoa_don & chi_tiet_hoa_don"]
+            Coll_DG["danh_gia_san_pham & danh_gia"]
+            Coll_TT["tuong_tac_nguoi_dung"]
+            File_Cache["content/tfidf_cache.json<br/>content/simple_recommender_cache.json"]
+
+            DB_Mongo --- Coll_SP
+            DB_Mongo --- Coll_DM
+            DB_Mongo --- Coll_TH
+            DB_Mongo --- Coll_KH
+            DB_Mongo --- Coll_HD
+            DB_Mongo --- Coll_DG
+            DB_Mongo --- Coll_TT
+            DB_Mongo --- File_Cache
+        end
+    end
+
+    subgraph ResearchBoundary ["PHẠM VI NGHIÊN CỨU NGOẠI TUYẾN (ISOLATED RESEARCH TRACK - KHÔNG NẰM TRONG RUNTIME)"]
+        direction TB
+
+        subgraph ResearchAssoc ["A. NGHIÊN CỨU LUẬT KẾT HỢP (ASSOCIATION RULES)"]
+            Exp_Apriori["Apriori Micro & Scaling (Step 1-4)<br/>- 20 SKU, 30-300 giỏ hàng thử nghiệm<br/>- Tính Support, Confidence, Lift"]
+            Exp_FPGrowth["FP-Growth Scaling Benchmark<br/>- Cây FP-Tree & Khai phá tập mục phổ biến"]
+        end
+
+        subgraph ResearchCF ["B. NGHIÊN CỨU LỌC CỘNG TÁC (COLLABORATIVE FILTERING)"]
+            Exp_ItemKNN["Item-kNN Baseline<br/>- Ma trận tương tác thưa thực tế"]
+            Exp_FunkMF["Funk-style Matrix Factorization<br/>- Dự đoán điểm tiềm ẩn"]
+            Exp_BPR["Bayesian Personalized Ranking (BPR)<br/>- Tối ưu hóa thứ hạng cặp (Pairwise Loss)"]
+        end
+
+        subgraph ResearchCluster ["C. NGHIÊN CỨU PHÂN CỤM DANH MỤC (CLUSTERING)"]
+            Exp_KMeans["K-Means Clustering Research (Step 6A - Step 7E)<br/>- Không gian đặc trưng 62D (Taxonomy + Price + Skin + SVD 30D)<br/>- Phân tích độ nhạy biến thể (ARI=0.5655)<br/>- Đóng băng nghiên cứu: RESEARCH COMPLETE — NOT PRODUCTION VALIDATED"]
+            Exp_ParserV2["Rule-based Ingredient String Parser V2 (Step 7C.1)<br/>- Chuẩn hóa dấu phân cách chuỗi thành phần"]
+        end
+    end
+
+    %% Internal Production Connectors
+    V_Home --> C_Home
+    V_Detail --> C_Prod
+    C_Home --> S_Session
+    C_Home --> M_SanPham
+    M_SanPham --> S_CB
+    C_Prod --> S_Log
+    S_CB --> File_Cache
+    M_SanPham --> Coll_SP
+    M_SanPham --> Coll_DG
+    C_Home --> Coll_KH
+    C_Home --> Coll_HD
+    S_Log --> Coll_TT
+
+    %% Styling
+    classDef prodLayer fill:#f0f9ff,stroke:#0369a1,stroke-width:2px;
+    classDef researchLayer fill:#fffbeb,stroke:#b45309,stroke-width:2px,stroke-dasharray: 5 5;
+    class PresentationLayer,ControllerLayer,ServiceLayer,DataLayer prodLayer;
+    class ResearchAssoc,ResearchCF,ResearchCluster researchLayer;

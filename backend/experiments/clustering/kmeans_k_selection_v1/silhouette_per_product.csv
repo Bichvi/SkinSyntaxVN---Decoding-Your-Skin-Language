@@ -1,0 +1,41 @@
+Product_ID,SKU_ID,Product_Name,Role,Silhouette_K2,Silhouette_K3,Silhouette_K4,Silhouette_K5,Silhouette_K6,Silhouette_K7,Silhouette_K8
+P_4365,4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,0.1236,0.0979,0.0898,0.0861,0.0821,0.0342,-0.0516
+P_21,21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,0.3604,0.1386,0.1139,0.1199,0.2015,0.2658,0.2658
+P_2654,2654,Sữa Rửa Mặt Hazeline Dưỡng Ẩm Sáng Da Yến Mạch & Dâu Tằm 100g,CLEANSER,0.3652,0.3255,0.3278,0.3125,0.2795,0.1039,0.0857
+P_2939,2939,Sữa Rửa Mặt Bioré Cho Nam Hạt Tác Động Kép Sạch Nhờn 100g,CLEANSER,0.4262,0.4194,0.4217,0.4171,0.2999,0.1834,0.2052
+P_255,255,Sữa Rửa Mặt Tia'm Ốc Sên Làm Dịu & Phục Hồi Da 200ml,CLEANSER,0.1945,0.1609,0.1126,0.1585,0.272,0.3051,0.3051
+P_2740,2740,Bọt Rửa Mặt DrCeutics Sạch Sâu Dịu Nhẹ Cho Mọi Loại Da 420g,CLEANSER,0.1631,0.1587,0.0626,0.0702,0.2151,0.1972,0.1972
+P_5537,5537,Sữa Rửa Mặt Nuxe Tạo Bọt Dịu Nhẹ Cho Mọi Loại Da 150ml,CLEANSER,0.3867,0.077,0.0965,0.0858,0.2469,0.3464,0.3464
+P_1315,1315,Sữa Rửa Mặt Vichy Dạng Gel Làm Sạch Sâu & Giảm Nhờn 200ml,CLEANSER,0.3607,0.2034,0.1819,0.1489,0.0999,0.1172,0.1172
+P_350,350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,0.3435,0.1923,0.2385,0.2269,0.247,0.2769,0.2769
+P_62,62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,0.2794,0.1823,0.3011,0.3089,0.2912,0.3193,0.3193
+P_1176,1176,Gel Dưỡng Acnes Giúp Mờ Sẹo & Giảm Thâm Mụn 12g,SERUM,0.3575,0.3034,0.106,0.106,0.1187,0.2062,0.2033
+P_761,761,Serum Balance Active Formula Cấp Nước Dưỡng Ẩm Da 30ml,SERUM,0.1015,-0.0054,0.2273,0.2273,0.2283,-0.1513,-0.1513
+P_2263,2263,Tinh Chất Cocoon Cấp Nước & Cấp Ẩm Sâu Từ Hoa Hồng 30ml,SERUM,0.2018,0.2525,0.4736,0.4805,0.4783,0.46,0.46
+P_755,755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,0.2046,0.2525,0.4741,0.4811,0.4788,0.4615,0.4615
+P_2348,2348,Serum Anessa Dưỡng Da Và Phục Hồi Da Sau Nắng 180ml,SERUM,0.4155,0.1436,0.337,0.3225,0.3225,0.3875,0.3577
+P_4688,4688,Serum Eucerin Dưỡng Cho Da Mụn 40ml,SERUM,0.381,0.1241,0.0751,0.0729,0.0682,0.1324,0.1324
+P_139,139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,0.3756,0.2387,0.2496,0.3253,0.424,0.3892,0.3892
+P_318,318,Kem Dưỡng Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Thường/Khô 50g,MOISTURIZER,0.1044,0.2005,0.1051,0.152,0.2765,0.2801,0.2801
+P_469,469,Sáp Dưỡng Ẩm Vaseline Original Protecting Jelly 50ml,MOISTURIZER,0.3427,0.2871,0.2816,0.2515,0.2249,0.2394,0.2353
+P_1240,1240,Kem Dưỡng Ẩm Nivea Làm Mềm Da 50ml,MOISTURIZER,0.3671,0.3095,0.2955,0.2649,0.2376,0.1967,0.1924
+P_5974,5974,Kem Dưỡng Skintific MSH Niacinamide Dưỡng Sáng Da 30g,MOISTURIZER,0.2276,0.2946,0.2208,0.2858,0.4683,0.4715,0.4715
+P_4457,4457,Kem Dưỡng Beplain Peptide Đậu Xanh Chăm Sóc Lỗ Chân Lông 60ml,MOISTURIZER,0.2325,0.2947,0.2223,0.2873,0.4708,0.4736,0.4736
+P_294,294,Kem Dưỡng Ẩm Cetaphil Dịu Lành Cho Da Nhạy Cảm 453g,MOISTURIZER,0.4078,0.2044,0.2404,0.3004,0.3939,0.351,0.351
+P_5092,5092,Kem Dưỡng Bio-essence Vàng 24K Ngừa Lão Hóa Ban Ngày 40g,MOISTURIZER,0.4175,0.2009,0.214,0.19,0.36,0.36,0.3289
+P_16,16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,0.3971,0.204,0.1768,0.2258,0.2262,0.2262,0.2292
+P_725,725,Sữa Chống Nắng Sunplay Skin Aqua Nắp Xanh Dành Cho Da Dầu 50g,SUNSCREEN,0.2649,0.2524,0.2515,0.0809,0.0725,0.1925,0.3328
+P_3950,3950,Sữa Chống Nắng Bioré Bảo Vệ Hoàn Hảo - Dưỡng Ẩm 25ml,SUNSCREEN,0.4137,0.4099,0.4121,0.343,0.3508,0.2172,-0.2722
+P_1657,1657,Sữa Chống Nắng Sunplay Giải Nhiệt Da 30g,SUNSCREEN,0.327,0.2781,0.2678,0.1998,0.2124,-0.0102,-0.1617
+P_1192,1192,Kem Chống Nắng Decumar Kiềm Dầu Nâng Tông Cho Da Mụn 50g,SUNSCREEN,0.1216,0.0796,0.0606,0.2824,0.2682,0.2682,0.2447
+P_3066,3066,Kem Chống Nắng Judydoll Cấp Ẩm Nâng Tông - 01 Tông Sáng 40g,SUNSCREEN,0.1835,0.1581,0.0784,0.3425,0.3425,0.3451,0.0526
+P_2362,2362,Kem Chống Nắng B.O.M Che Khuyết Điểm SPF50+ PA++++ 50g,SUNSCREEN,0.4063,0.0904,0.1196,0.5253,0.5173,0.5094,0.6099
+P_10,10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",SUNSCREEN,0.4081,0.0874,0.1166,0.5233,0.5152,0.5071,0.6086
+P_112,112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,0.251,0.1789,0.1694,0.1444,0.0324,0.2281,0.1778
+P_740,740,Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml,TREATMENT,0.3452,0.2867,0.2994,0.3598,0.4083,0.3849,0.3849
+P_357,357,Miếng Dán Mụn Derma Angel Dùng Cho Ngày & Đêm 18 Miếng,TREATMENT,0.4501,0.4367,0.4458,0.4402,0.417,0.3659,0.4126
+P_1617,1617,Gel Giảm Mụn Acnes Đầu Trắng Và Đầu Đen 18g,TREATMENT,0.4485,0.4344,0.4433,0.4375,0.4134,0.3693,0.4159
+P_2394,2394,Dung Dịch Jumiso Làm Mềm Mụn Đầu Đen 150ml,TREATMENT,0.2321,0.3411,0.346,0.3745,0.5548,0.5548,0.5287
+P_283,283,Chấm Mụn Neogen Dermalogy Hỗ Trợ Giảm Sưng Viêm 15ml,TREATMENT,0.2519,0.3533,0.3594,0.3882,0.5722,0.5722,0.5563
+P_880,880,"Kem Dưỡng Vichy Giảm Mụn, Phục Hồi Da 50ml",TREATMENT,0.4057,0.4117,0.4243,0.424,0.5879,0.5879,0.5841
+P_964,964,Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml,TREATMENT,0.4066,0.4102,0.4227,0.421,0.5831,0.5831,0.5789

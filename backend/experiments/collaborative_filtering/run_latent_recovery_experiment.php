@@ -39,6 +39,7 @@ class LatentRecoveryGenerator {
     private int $seed;
     private float $latentWeight;
     private array $itemLatentVectors;
+    
 
     public const SCENARIO = 'cf_latent_recovery_v1';
     public const GENERATOR_VERSION = '1.1_latent';

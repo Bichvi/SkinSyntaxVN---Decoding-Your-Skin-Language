@@ -62,7 +62,7 @@ graph TD
 Qua kiểm toán luồng thực thi tĩnh và động, trang chủ SkinSyntaxVN chỉ thực thi **hai lớp thuật toán chính**:
 
 1. **Lớp 1 — Simple Recommender (IMDb Bayesian Weighted Rating):**
-   - **Mục đích:** Giải quyết triệt để bài toán Cold-Start cho khách vãng lai mới và phục vụ mục "Sản phẩm đánh giá cao" (Section 5.5).
+   - **Mục đích:** Giải quyết bài toán Cold-Start cho khách vãng lai mới theo phương pháp thống kê Bayes mượt và phục vụ mục "Sản phẩm đánh giá cao" (Section 5.5).
    - **Vị trí gọi:** `SanPham::getSimpleRecommenderProducts($limit)`.
    - **Trạng thái:** `PRODUCTION`.
 
@@ -93,8 +93,75 @@ Hệ thống production sử dụng chiến lược bộ nhớ đệm hai lớp 
 
 | Loại bộ nhớ đệm | Đường dẫn lưu trữ / Vị trí | Dữ liệu lưu trữ | Thời gian sống (TTL) | Cơ chế hủy đệm (Invalidation) |
 | :--- | :--- | :--- | :---: | :--- |
-| **Simple Recommender File Cache** | `backend/content/simple_recommender_cache.json` | Danh sách Top-24 sản phẩm tính sẵn kèm điểm WR | 3,600 giây (1 giờ) | Tự động hủy khi quá TTL hoặc khi gọi `SanPham::clearSimpleRecommenderCache()` lúc có đánh giá mới |
+| **Simple Recommender File Cache** | `backend/app/content/simple_recommender_cache.json` | Danh sách Top-24 sản phẩm tính sẵn kèm điểm WR | 600 giây (10 phút) | Tự động hủy khi quá TTL hoặc khi gọi `SanPham::clearSimpleRecommenderCache()` lúc có đánh giá mới |
 | **Simple Recommender Memory Cache** | Biến tĩnh `SanPham::$simpleRecommenderMemoryCache` | Dữ liệu Top-24 trong cùng vòng đời request PHP | Vòng đời 1 request | Giải phóng khi kết thúc request HTTP |
-| **TF-IDF Index File Cache** | `backend/content/tfidf_cache.json` | Vector TF-IDF, Norms, Từ điển terms (30 terms/sản phẩm), Giá, Tên | Bền vững (File-based) | Tạo lại bằng script `build_tfidf_cache.php` khi danh mục sản phẩm thay đổi lớn |
+| **TF-IDF Index File Cache** | `backend/app/content/tfidf_cache.json` | Vector TF-IDF, Norms, Từ điển terms (2,977 terms), Giá, Tên | Bền vững (File-based) | Tạo lại bằng script `build_tfidf_cache.php` khi danh mục sản phẩm thay đổi lớn |
 | **TF-IDF In-Memory Cache** | Biến tĩnh `ContentBasedRecommender::$cachedIndex` | Chỉ mục TF-IDF được nạp vào RAM | Vòng đời 1 request | Giải phóng khi kết thúc request HTTP |
 | **Product Lookup Static Cache** | Biến tĩnh trong `SanPham` (`$brandLookupMap`, `$categoryLookupMap`) | Bảng ánh xạ mã danh mục, thương hiệu | Vòng đời 1 request | Hàm `SanPham::clearLookupCache()` |
+
+---
+
+## 5. SƠ ĐỒ KIẾN TRÚC TỔNG THỂ PHỤC VỤ LUẬN VĂN (THESIS ARCHITECTURE DIAGRAM)
+
+```mermaid
+flowchart TD
+    subgraph ProductionRuntime["PRODUCTION RUNTIME PIPELINE (ĐANG HOẠT ĐỘNG TRỰC TIẾP)"]
+        User["Người dùng / Khách truy cập (User)"]
+        Collector["Bộ thu thập Tín hiệu & Hồ sơ (Behavior & Profile Collector)"]
+        User --> Collector
+
+        Collector --> Router{"Bộ chuyển mạch ngữ cảnh<br/>(Adaptive Context Router)"}
+
+        Router -- "Không có tín hiệu<br/>(Cold Start)" --> ColdStart["Simple Recommender<br/>(IMDb Bayesian WR)"]
+        Router -- "Tín hiệu hành vi<br/>(Search/View/Cart/Purchase)" --> BehaviorCB["Behavior-Aware<br/>Content-Based (TF-IDF)"]
+        Router -- "Khảo sát hồ sơ da<br/>(Skin Type, Concerns, Budget)" --> ProfileCB["Profile-Aware<br/>Content-Based (TF-IDF)"]
+        Router -- "Hành vi + Hồ sơ da<br/>(Multi-Signal Fusion)" --> HybridCB["Adaptive Hybrid<br/>(Alpha = 0.50 Query Fusion)"]
+
+        ColdStart --> Filtering["Bộ lọc & Đa dạng hóa (Filtering & Diversity)<br/>• Loại trừ sản phẩm vừa xem (validRecent)<br/>• Loại trừ sản phẩm trong giỏ (cart_ids)<br/>• Lọc trùng họ sản phẩm (Product Family)"]
+        BehaviorCB --> Filtering
+        ProfileCB --> Filtering
+        HybridCB --> Filtering
+
+        Filtering --> Explainability["Module giải thích lý do (Grounded Explainability)<br/>Gán nhãn minh bạch theo tín hiệu thực tế đóng góp"]
+        Explainability --> Homepage["Giao diện Đề xuất Trang chủ (Homepage Recommendations)<br/>• Section 3: 'Dành Riêng Cho Bạn'<br/>• Section 5.5: 'Sản Phẩm Đánh Giá Cao'"]
+    end
+
+    subgraph OfflineResearch["OFFLINE COLLABORATIVE FILTERING RESEARCH (NGHIÊN CỨU NGOẠI TUYẾN CÔ LẬP)"]
+        Dataset["Cơ sở dữ liệu thực nghiệm giả lập<br/>(skinsyntax_cf_dev / 500 users)"]
+        CFModels["Mô hình nghiên cứu Collaborative Filtering<br/>├── Item-Based kNN (Cosine)<br/>├── Pointwise Funk Matrix Factorization<br/>└── Pairwise Bayesian Personalized Ranking (BPR)"]
+        Evaluation["Đánh giá ngoại tuyến (Synthetic Evaluation)<br/>Temporal Leave-One-Out Holdout (HR@10, NDCG@10, Coverage)"]
+
+        Dataset -.-> CFModels
+        CFModels -.-> Evaluation
+    end
+
+    OfflineResearch -.-x|"HOÀN TOÀN KHÔNG KẾT NỐI (DISCONNECTED)"| ProductionRuntime
+
+    style ProductionRuntime fill:#f8fafc,stroke:#3b82f6,stroke-width:2px
+    style OfflineResearch fill:#fffbeb,stroke:#f59e0b,stroke-width:2px,stroke-dasharray: 5 5
+```
+
+---
+
+## 6. SƠ ĐỒ LUỒNG QUYẾT ĐỊNH THUẬT TOÁN (THESIS ALGORITHM DECISION FLOWCHART)
+
+```mermaid
+flowchart TD
+    Start(["Bắt đầu: Yêu cầu gợi ý Homepage"]) --> CheckSignals{"Kiểm tra tín hiệu đầu vào"}
+
+    CheckSignals -- "Không hành vi, Không hồ sơ" --> SimpleBranch["Chế độ SIMPLE<br/>• Xếp hạng theo Bayesian Weighted Rating (WR)<br/>• Fallback Top-4 sản phẩm có điểm WR cao nhất"]
+    
+    CheckSignals -- "Chỉ có tín hiệu hành vi" --> BehaviorBranch["Chế độ BEHAVIOR_CONTENT / PURCHASE_CONTENT<br/>• Hợp nhất vector hành vi U_behavior<br/>• Tái xếp hạng: 0.90 S_Content + 0.10 S_Price"]
+    
+    CheckSignals -- "Chỉ có hồ sơ da" --> ProfileBranch["Chế độ PROFILE_CONTENT<br/>• Vector hồ sơ da V_profile<br/>• Tái xếp hạng: 0.70 S_Content + 0.20 S_Skin + 0.10 S_Budget"]
+    
+    CheckSignals -- "Có cả hành vi & hồ sơ da" --> HybridBranch["Chế độ ADAPTIVE_HYBRID<br/>• Vector hỗn hợp: 0.50 U_behavior + 0.50 V_profile<br/>• Tái xếp hạng: 0.70 S_Content + 0.20 S_Skin + 0.10 S_Budget"]
+
+    SimpleBranch --> DiversityCheck["Lọc trùng họ sản phẩm (Product Family Filter)<br/>Giữ tối đa 1 sản phẩm / dòng họ"]
+    BehaviorBranch --> DiversityCheck
+    ProfileBranch --> DiversityCheck
+    HybridBranch --> DiversityCheck
+
+    DiversityCheck --> ExplainTag["Gán nhãn giải thích tương ứng tín hiệu đóng góp"]
+    ExplainTag --> Output(["Xuất danh sách Top-4 sản phẩm gợi ý"])
+```

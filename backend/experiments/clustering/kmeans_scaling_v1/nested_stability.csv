@@ -1,0 +1,10 @@
+K,Comparison,ARI,NMI
+5,"S40 vs M80 (Restricted to S40, N=40)",0.4147,0.6088
+5,"M80 vs L200 (Restricted to M80, N=80)",0.8795,0.8867
+5,"L200 vs FULL (Restricted to L200, N=200)",0.2348,0.3745
+6,"S40 vs M80 (Restricted to S40, N=40)",0.4207,0.6469
+6,"M80 vs L200 (Restricted to M80, N=80)",0.8155,0.8735
+6,"L200 vs FULL (Restricted to L200, N=200)",0.4526,0.6326
+7,"S40 vs M80 (Restricted to S40, N=40)",0.7056,0.8378
+7,"M80 vs L200 (Restricted to M80, N=80)",0.6048,0.7557
+7,"L200 vs FULL (Restricted to L200, N=200)",0.6682,0.772
