@@ -20,15 +20,25 @@ Trong đó:
   $$\mathbf{m = 21}$$ *(Hằng số phân vị thống kê)*.
 
 ### 1.2. Quy tắc phá vỡ thế hòa (Tie-Breaking Rules)
-Khi nhiều sản phẩm có điểm $\text{WR}$ xấp xỉ nhau, thứ tự sắp xếp được giải quyết theo 4 cấp ưu tiên giảm dần:
+Thứ tự sắp xếp được giải quyết theo 3 cấp ưu tiên chính xác theo hàm `usort` trong `SanPham::getSimpleRecommenderProducts()`:
 1. `weighted_rating` giảm dần ($\text{WR} \downarrow$).
 2. `v` (số lượng đánh giá) giảm dần ($v \downarrow$).
-3. `so_luong_da_ban` giảm dần *(Trường số đếm hiển thị giao diện, không đại diện cho lượng bán thực tế đã kiểm toán)*.
-4. `id` tăng dần ($\text{id} \uparrow$) để đảm bảo kết quả tất định (deterministic).
+3. `ma_san_pham` tăng dần theo thứ tự chuỗi (`strcmp((string)$a['ma_san_pham'], (string)$b['ma_san_pham'])`) để đảm bảo kết quả tất định (deterministic).
+
+> **LƯU Ý HỌC THUẬT:**  
+> Trường `so_luong_da_ban` là trường số đếm hiển thị trên giao diện, **KHÔNG** đại diện cho lượng bán thực tế đã kiểm toán và **KHÔNG** tham gia vào cơ chế phá vỡ thế hòa (tie-breaking) của thuật toán Simple Recommender.
 
 ### 1.3. Điều kiện hợp lệ của sản phẩm (Eligibility Rules)
 - Sản phẩm phải ở trạng thái hiển thị (`trang_thai` $\neq$ inactive, hidden, disabled, 0).
 - Sản phẩm phải có giá bán hợp lệ (`gia_ban` $> 0$).
+- Sản phẩm phải có số lượt đánh giá tối thiểu: $v \ge m = 21$.
+- Sản phẩm phải có điểm đánh giá thực tế: $R > 0$.
+
+### 1.4. Kiến trúc bộ nhớ đệm (Caching & Invalidation)
+- **File Cache:** `backend/app/content/simple_recommender_cache.json`.
+- **TTL (Time-To-Live):** **600 giây (10 phút)** (`(time() - $mtime) < 600`).
+- **Memory Cache:** Biến tĩnh `SanPham::$simpleRecommenderMemoryCache` trong cùng vòng đời request PHP.
+- **Hủy đệm:** Tự động hủy khi quá TTL hoặc gọi `SanPham::clearSimpleRecommenderCache()` khi có đánh giá mới.
 
 ---
 
@@ -60,7 +70,9 @@ Trong đó:
 - **Bộ lọc tần suất tài liệu (Document Frequency Filter):** Chỉ các từ thỏa mãn:
   $$3 \le \text{DF}(t) \le 0.80 \cdot N$$
   mới được đưa vào không gian vector (loại bỏ từ cực hiếm $\text{DF} < 3$ và từ quá phổ biến xuất hiện trên 80% sản phẩm).
-- **Giới hạn số chiều:** Mỗi sản phẩm chỉ giữ lại **Top 30** từ khóa có điểm $\text{TF} \times \text{IDF}$ cao nhất.
+- **Quy mô từ vựng (Vocabulary Size):** Sau khi áp dụng bộ lọc tài liệu, kích thước từ điển từ vựng toàn cục đạt **$|V| = 2,977$ từ khóa**.
+- **Giới hạn số chiều từng sản phẩm:** Mỗi sản phẩm chỉ giữ lại **Top 30** từ khóa có điểm $\text{TF} \times \text{IDF}$ cao nhất để tối ưu hiệu năng tính toán ma trận thưa.
+- **Lưu trữ & Cache:** Toàn bộ ma trận vector được nạp sẵn vào file `backend/app/content/tfidf_cache.json` và lưu trong bộ nhớ RAM (`ContentBasedRecommender::$cachedIndex`) trong suốt vòng đời của request.
 
 ### 2.4. Chuẩn hóa L2 và Độ tương đồng Cosine (Cosine Similarity)
 Vector của sản phẩm $i$ được chuẩn hóa Euclid (L2 normalization):

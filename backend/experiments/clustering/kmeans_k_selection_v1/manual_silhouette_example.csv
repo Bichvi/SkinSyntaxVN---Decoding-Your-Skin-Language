@@ -1,0 +1,40 @@
+Target_Product,Comparison_Product,Comparison_Product_Name,Assigned_Cluster,Cluster_Relation,Euclidean_Distance
+P_4365,P_2654,Sữa Rửa Mặt Hazeline Dưỡng Ẩm Sáng Da Yến Mạch & Dâu Tằm 100g,Cluster_3,Own Cluster (C_own),1.8483
+P_4365,P_2939,Sữa Rửa Mặt Bioré Cho Nam Hạt Tác Động Kép Sạch Nhờn 100g,Cluster_3,Own Cluster (C_own),1.1651
+P_4365,P_1176,Gel Dưỡng Acnes Giúp Mờ Sẹo & Giảm Thâm Mụn 12g,Cluster_3,Own Cluster (C_own),1.9701
+P_4365,P_761,Serum Balance Active Formula Cấp Nước Dưỡng Ẩm Da 30ml,Cluster_3,Own Cluster (C_own),1.7368
+P_4365,P_469,Sáp Dưỡng Ẩm Vaseline Original Protecting Jelly 50ml,Cluster_3,Own Cluster (C_own),2.2906
+P_4365,P_1240,Kem Dưỡng Ẩm Nivea Làm Mềm Da 50ml,Cluster_3,Own Cluster (C_own),2.0125
+P_4365,P_725,Sữa Chống Nắng Sunplay Skin Aqua Nắp Xanh Dành Cho Da Dầu 50g,Cluster_3,Own Cluster (C_own),1.4473
+P_4365,P_3950,Sữa Chống Nắng Bioré Bảo Vệ Hoàn Hảo - Dưỡng Ẩm 25ml,Cluster_3,Own Cluster (C_own),1.6974
+P_4365,P_1657,Sữa Chống Nắng Sunplay Giải Nhiệt Da 30g,Cluster_3,Own Cluster (C_own),1.8532
+P_4365,P_112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",Cluster_3,Own Cluster (C_own),1.4397
+P_4365,P_357,Miếng Dán Mụn Derma Angel Dùng Cho Ngày & Đêm 18 Miếng,Cluster_3,Own Cluster (C_own),1.8019
+P_4365,P_1617,Gel Giảm Mụn Acnes Đầu Trắng Và Đầu Đen 18g,Cluster_3,Own Cluster (C_own),1.7874
+P_4365,P_21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",Cluster_1,Other Cluster 1,1.8204
+P_4365,P_1315,Sữa Rửa Mặt Vichy Dạng Gel Làm Sạch Sâu & Giảm Nhờn 200ml,Cluster_1,Other Cluster 1,1.4954
+P_4365,P_4688,Serum Eucerin Dưỡng Cho Da Mụn 40ml,Cluster_1,Other Cluster 1,2.0839
+P_4365,P_16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),Cluster_1,Other Cluster 1,2.3662
+P_4365,P_1192,Kem Chống Nắng Decumar Kiềm Dầu Nâng Tông Cho Da Mụn 50g,Cluster_1,Other Cluster 1,1.5465
+P_4365,P_740,Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml,Cluster_1,Other Cluster 1,2.2148
+P_4365,P_2394,Dung Dịch Jumiso Làm Mềm Mụn Đầu Đen 150ml,Cluster_1,Other Cluster 1,1.6532
+P_4365,P_283,Chấm Mụn Neogen Dermalogy Hỗ Trợ Giảm Sưng Viêm 15ml,Cluster_1,Other Cluster 1,1.6833
+P_4365,P_880,"Kem Dưỡng Vichy Giảm Mụn, Phục Hồi Da 50ml",Cluster_1,Other Cluster 1,2.2835
+P_4365,P_964,Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml,Cluster_1,Other Cluster 1,2.2976
+P_4365,P_255,Sữa Rửa Mặt Tia'm Ốc Sên Làm Dịu & Phục Hồi Da 200ml,Cluster_2,Other Cluster 2,1.5314
+P_4365,P_2740,Bọt Rửa Mặt DrCeutics Sạch Sâu Dịu Nhẹ Cho Mọi Loại Da 420g,Cluster_2,Other Cluster 2,1.1598
+P_4365,P_5537,Sữa Rửa Mặt Nuxe Tạo Bọt Dịu Nhẹ Cho Mọi Loại Da 150ml,Cluster_2,Other Cluster 2,2.0511
+P_4365,P_350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,Cluster_2,Other Cluster 2,2.2831
+P_4365,P_62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,Cluster_2,Other Cluster 2,2.2619
+P_4365,P_2263,Tinh Chất Cocoon Cấp Nước & Cấp Ẩm Sâu Từ Hoa Hồng 30ml,Cluster_2,Other Cluster 2,1.831
+P_4365,P_755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,Cluster_2,Other Cluster 2,1.8332
+P_4365,P_2348,Serum Anessa Dưỡng Da Và Phục Hồi Da Sau Nắng 180ml,Cluster_2,Other Cluster 2,2.3052
+P_4365,P_139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,Cluster_2,Other Cluster 2,2.3461
+P_4365,P_318,Kem Dưỡng Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Thường/Khô 50g,Cluster_2,Other Cluster 2,2.055
+P_4365,P_5974,Kem Dưỡng Skintific MSH Niacinamide Dưỡng Sáng Da 30g,Cluster_2,Other Cluster 2,1.8416
+P_4365,P_4457,Kem Dưỡng Beplain Peptide Đậu Xanh Chăm Sóc Lỗ Chân Lông 60ml,Cluster_2,Other Cluster 2,1.8459
+P_4365,P_294,Kem Dưỡng Ẩm Cetaphil Dịu Lành Cho Da Nhạy Cảm 453g,Cluster_2,Other Cluster 2,2.5088
+P_4365,P_5092,Kem Dưỡng Bio-essence Vàng 24K Ngừa Lão Hóa Ban Ngày 40g,Cluster_2,Other Cluster 2,2.303
+P_4365,P_3066,Kem Chống Nắng Judydoll Cấp Ẩm Nâng Tông - 01 Tông Sáng 40g,Cluster_2,Other Cluster 2,1.8438
+P_4365,P_2362,Kem Chống Nắng B.O.M Che Khuyết Điểm SPF50+ PA++++ 50g,Cluster_2,Other Cluster 2,2.2925
+P_4365,P_10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",Cluster_2,Other Cluster 2,2.3052

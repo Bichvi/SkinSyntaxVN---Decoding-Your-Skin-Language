@@ -1,0 +1,27 @@
+{
+    "http_endpoints": {
+        "Homepage": {
+            "url": "http:\/\/localhost\/fe\/SkinSyntaxVN---Decoding-Your-Skin-Language-1\/index.php?r=home",
+            "status_line": "HTTP\/1.1 200 OK",
+            "status_code": 200,
+            "is_200": true
+        },
+        "Product Detail": {
+            "url": "http:\/\/localhost\/fe\/SkinSyntaxVN---Decoding-Your-Skin-Language-1\/index.php?r=chitiet&id=1",
+            "status_line": "HTTP\/1.1 200 OK",
+            "status_code": 200,
+            "is_200": true
+        },
+        "Search": {
+            "url": "http:\/\/localhost\/fe\/SkinSyntaxVN---Decoding-Your-Skin-Language-1\/index.php?r=tatca&q=serum",
+            "status_line": "HTTP\/1.1 200 OK",
+            "status_code": 200,
+            "is_200": true
+        }
+    },
+    "simple_params_ok": true,
+    "behavior_weights_ok": true,
+    "hybrid_weights_ok": true,
+    "rerank_weights_ok": true,
+    "no_research_in_prod": true
+}

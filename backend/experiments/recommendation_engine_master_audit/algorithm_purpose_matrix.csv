@@ -1,0 +1,12 @@
+Algorithm,Problem_Solved,Input_Data,Output_Data,Has_Personalization,Requires_User_ID,SkinSyntaxVN_Current_Status
+Simple Weighted Rating,Global popularity and Bayesian-smoothed quality baseline,"san_pham ratings (R, v)",Continuous rating score [1.0-5.0],NO,NO,PRODUCTION ACTIVE (Section 5.5)
+Content-Based TF-IDF,Item-to-item and query-to-item metadata similarity matching,Product text attributes (Config B),Cosine similarity score [0.0-1.0],NO (when item-to-item),NO,PRODUCTION ACTIVE
+Multi-Signal Behavior Fusion,Realtime session intent modeling from user actions,"Session signals (search, view, cart, purchase)",Unified L2 behavior query vector,YES (Session-level),NO,PRODUCTION ACTIVE
+Profile-Aware CB,Dermatological compatibility and skin goal matching,Customer skin survey (skin_profile),Skin score [0.0-1.0] and profile vector,YES (Profile-level),YES (or Survey session),PRODUCTION ACTIVE
+Adaptive Hybrid,Multi-context reranking combining intent and skin profile,Behavior vector + Profile vector,Final rerank score [0.0-1.0] with explainable tags,YES (Deep personalization),OPTIONAL,PRODUCTION ACTIVE (Section 3)
+Apriori,Pairwise market basket co-occurrence and complement discovery,Transaction baskets (item co-occurrences),Association rules with Support Confidence Lift,NO (Basket-level),NO,OFFLINE RESEARCH ONLY (Synthetic)
+FP-Growth,Scalable frequent pattern mining over large itemsets,Transaction itemsets,Frequent patterns and conditional rule trees,NO (Basket-level),NO,OFFLINE RESEARCH ONLY (Synthetic)
+Item-kNN,Collaborative item similarity from co-interaction patterns,User-item implicit/explicit interaction matrix,Predicted rating or neighborhood score,YES,YES,OFFLINE RESEARCH ONLY (Data-insufficient)
+Funk MF,Latent factor collaborative rating recovery,Explicit/Implicit user-item interaction matrix,Predicted continuous user preference score,YES,YES,OFFLINE RESEARCH ONLY (Synthetic)
+BPR,Pairwise ranking optimization from implicit feedback,Triplets (user positive_item negative_item),Ranked list of item preferences,YES,YES,OFFLINE RESEARCH ONLY (Synthetic)
+K-Means Clustering,Unsupervised catalog geometric grouping and segmentation,Multi-block product feature space (Tax+Price+Skin+Ing),Discrete cluster ID [0..K-1] and centroid distance,NO,NO,OFFLINE RESEARCH ONLY (Complete)

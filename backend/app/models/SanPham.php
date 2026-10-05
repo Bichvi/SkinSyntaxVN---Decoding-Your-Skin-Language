@@ -763,9 +763,6 @@ class SanPham {
 
         $flashDeals = $this->getFlashSaleProducts($limitEach);
 
-        // Simple Recommender using IMDb Weighted Rating (Top-24)
-        $topRatedWeighted = $this->getSimpleRecommenderProducts($limitEach);
-
         // Adaptive Recommender V1 (Phase A)
         $adaptiveRecs = $this->getHybridRecommendations($recentViewedIds, $userProfile, $limitEach, $behaviorSignals);
 
@@ -795,6 +792,24 @@ class SanPham {
                 ];
                 $adaptiveRecs[] = $p;
             }
+        }
+
+        // Section 5.5 Simple Recommender using IMDb Weighted Rating (Top-24)
+        // Presentation-level deduplication: avoid duplicating SKUs rendered in forYou
+        $forYouIds = array_map('strval', array_column($adaptiveRecs, 'ma_san_pham'));
+        $simplePool = $this->getSimpleRecommenderProducts(max(16, $limitEach * 4));
+        $topRatedWeighted = [];
+        foreach ($simplePool as $p) {
+            $pid = (string)($p['ma_san_pham'] ?? '');
+            if (!in_array($pid, $forYouIds, true)) {
+                $topRatedWeighted[] = $p;
+                if (count($topRatedWeighted) >= $limitEach) {
+                    break;
+                }
+            }
+        }
+        if (empty($topRatedWeighted)) {
+            $topRatedWeighted = array_slice($simplePool, 0, $limitEach);
         }
 
         return [

@@ -1,0 +1,10 @@
+Metric,Value
+Total_Leaf_Categories,21.0
+Min_Products_per_Leaf,2.0
+Q25_Products_per_Leaf,16.0
+Median_Products_per_Leaf,58.0
+Q75_Products_per_Leaf,207.0
+Max_Products_per_Leaf,549.0
+Gini_Coefficient_Leaves,0.5631
+Shannon_Entropy_Leaves_Bits,3.576
+Max_Possible_Entropy_Bits,4.3923

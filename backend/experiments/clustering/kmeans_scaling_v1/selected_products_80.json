@@ -1,0 +1,1152 @@
+[
+  {
+    "ma_san_pham": 10,
+    "ten_san_pham": "Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",
+    "role": "SUNSCREEN",
+    "brand": "La Roche-Posay",
+    "gia_ban": 412000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active sunscreen from La Roche-Posay (412,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 16,
+    "ten_san_pham": "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",
+    "role": "SUNSCREEN",
+    "brand": "Anessa",
+    "gia_ban": 549000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "selection_reason": "High-end sebum-regulating UV milk for oily skin; top price tier in sample."
+  },
+  {
+    "ma_san_pham": 21,
+    "ten_san_pham": "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+    "role": "CLEANSER",
+    "brand": "La Roche-Posay",
+    "gia_ban": 412000,
+    "loai_da": "Da dầu/Nhạy cảm",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "selection_reason": "Premium dermocosmetic cleanser tailored for oily and sensitive skin."
+  },
+  {
+    "ma_san_pham": 47,
+    "ten_san_pham": "Gel Rửa Mặt SVR Không Chứa Xà Phòng Cho Da Dầu 400ml",
+    "role": "CLEANSER",
+    "brand": "SVR",
+    "gia_ban": 381000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 55,
+    "ten_san_pham": "Kem Chống Nắng Vichy Thoáng Nhẹ Không Bóng Dầu SPF 50 50ml",
+    "role": "SUNSCREEN",
+    "brand": "Vichy",
+    "gia_ban": 396000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 62,
+    "ten_san_pham": "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+    "role": "SERUM",
+    "brand": "L'Oreal",
+    "gia_ban": 289000,
+    "loai_da": "Da khô/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "selection_reason": "Hyaluronic acid humectant serum for moisture replenishment and dry skin."
+  },
+  {
+    "ma_san_pham": 98,
+    "ten_san_pham": "Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da, Ngừa Mụn 28g",
+    "role": "TREATMENT",
+    "brand": "Obagi",
+    "gia_ban": 1462000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 101,
+    "ten_san_pham": "Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml",
+    "role": "SUNSCREEN",
+    "brand": "Beplain",
+    "gia_ban": 278000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 112,
+    "ten_san_pham": "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+    "role": "TREATMENT",
+    "brand": "Megaduo",
+    "gia_ban": 105000,
+    "loai_da": "Da mụn/Da dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "selection_reason": "Targeted retinaldehyde/AHA acne spot treatment; budget active."
+  },
+  {
+    "ma_san_pham": 132,
+    "ten_san_pham": "Kem Dưỡng Ẩm Bioderma Dành Cho Da Mụn, Nhạy Cảm 30ml",
+    "role": "MOISTURIZER",
+    "brand": "Bioderma",
+    "gia_ban": 311000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 139,
+    "ten_san_pham": "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+    "role": "MOISTURIZER",
+    "brand": "Klairs",
+    "gia_ban": 329000,
+    "loai_da": "Da nhạy cảm/Da kích ứng",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "selection_reason": "Guaiazulene soothing recovery cream for irritated and sensitive skin."
+  },
+  {
+    "ma_san_pham": 151,
+    "ten_san_pham": "Kem Dưỡng Hada Labo Sáng Da Chuyên Sâu, Giảm Thâm Sạm 50g",
+    "role": "MOISTURIZER",
+    "brand": "Hada Labo",
+    "gia_ban": 161000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 191,
+    "ten_san_pham": "Serum Klairs Vitamin C Cho Da Nhạy Cảm 35ml",
+    "role": "SERUM",
+    "brand": "Klairs",
+    "gia_ban": 296000,
+    "loai_da": "Da nhạy cảm",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 201,
+    "ten_san_pham": "Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",
+    "role": "TREATMENT",
+    "brand": "Gamma Chemicals",
+    "gia_ban": 125000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 255,
+    "ten_san_pham": "Sữa Rửa Mặt Tia'm Ốc Sên Làm Dịu & Phục Hồi Da 200ml",
+    "role": "CLEANSER",
+    "brand": "TIA'M",
+    "gia_ban": 202000,
+    "loai_da": "Da nhạy cảm",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "confident": true,
+    "selection_reason": "Real active cleanser from TIA'M (202,000 VND) targeting Da nhạy cảm."
+  },
+  {
+    "ma_san_pham": 270,
+    "ten_san_pham": "Tinh Chất La Bonita B5 Hỗ Trợ Phục Hồi, Làm Dịu Da 50ml",
+    "role": "SERUM",
+    "brand": "La Bonita",
+    "gia_ban": 350000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 283,
+    "ten_san_pham": "Chấm Mụn Neogen Dermalogy Hỗ Trợ Giảm Sưng Viêm 15ml",
+    "role": "TREATMENT",
+    "brand": "Neogen Dermalogy",
+    "gia_ban": 259000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active treatment from Neogen Dermalogy (259,000 VND) targeting Da mụn."
+  },
+  {
+    "ma_san_pham": 294,
+    "ten_san_pham": "Kem Dưỡng Ẩm Cetaphil Dịu Lành Cho Da Nhạy Cảm 453g",
+    "role": "MOISTURIZER",
+    "brand": "Cetaphil",
+    "gia_ban": 410000,
+    "loai_da": "Da nhạy cảm",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "confident": true,
+    "selection_reason": "Real active moisturizer from Cetaphil (410,000 VND) targeting Da nhạy cảm."
+  },
+  {
+    "ma_san_pham": 318,
+    "ten_san_pham": "Kem Dưỡng Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Thường/Khô 50g",
+    "role": "MOISTURIZER",
+    "brand": "Hada Labo",
+    "gia_ban": 185000,
+    "loai_da": "Da khô/Da thường",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "selection_reason": "Deep hydration occlusion cream for normal-to-dry skin barriers."
+  },
+  {
+    "ma_san_pham": 343,
+    "ten_san_pham": "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới)",
+    "role": "SUNSCREEN",
+    "brand": "Anessa",
+    "gia_ban": 175000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 350,
+    "ten_san_pham": "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+    "role": "SERUM",
+    "brand": "Skin1004",
+    "gia_ban": 299000,
+    "loai_da": "Da nhạy cảm/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "selection_reason": "Centella-based soothing serum focusing on barrier repair for sensitive skin."
+  },
+  {
+    "ma_san_pham": 357,
+    "ten_san_pham": "Miếng Dán Mụn Derma Angel Dùng Cho Ngày & Đêm 18 Miếng",
+    "role": "TREATMENT",
+    "brand": "Derma Angel",
+    "gia_ban": 55000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active treatment from Derma Angel (55,000 VND) targeting Da mụn."
+  },
+  {
+    "ma_san_pham": 397,
+    "ten_san_pham": "Serum Chống Nắng Anessa Dưỡng Da Nâng Tông 30ml",
+    "role": "SUNSCREEN",
+    "brand": "Anessa",
+    "gia_ban": 518000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 408,
+    "ten_san_pham": "Miếng Dán Mụn Mayan Ultra Thin Spot 20+4 Miếng",
+    "role": "TREATMENT",
+    "brand": "Mayan",
+    "gia_ban": 27000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 456,
+    "ten_san_pham": "Kem Dưỡng Forencos Peptide Sáng Da, Giảm Nhăn Ban Đêm 50ml",
+    "role": "MOISTURIZER",
+    "brand": "Forencos",
+    "gia_ban": 439000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 465,
+    "ten_san_pham": "Combo 2 Sữa Rửa Mặt Cocoon Chiết Xuất Từ Nghệ Hưng Yên 310ml",
+    "role": "CLEANSER",
+    "brand": "Cocoon",
+    "gia_ban": 290000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 469,
+    "ten_san_pham": "Sáp Dưỡng Ẩm Vaseline Original Protecting Jelly 50ml",
+    "role": "MOISTURIZER",
+    "brand": "Vaseline",
+    "gia_ban": 55000,
+    "loai_da": "Da khô/Hỗn hợp khô",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active moisturizer from Vaseline (55,000 VND) targeting Da khô/Hỗn hợp khô."
+  },
+  {
+    "ma_san_pham": 576,
+    "ten_san_pham": "Kem Rửa Mặt Hada Labo Dưỡng Chuyên Biệt Ngừa Lão Hóa 80g",
+    "role": "CLEANSER",
+    "brand": "Hada Labo",
+    "gia_ban": 71000,
+    "loai_da": "Da khô/Hỗn hợp khô",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 577,
+    "ten_san_pham": "[Mini] Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 30ml",
+    "role": "CLEANSER",
+    "brand": "CeraVe",
+    "gia_ban": 23000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 582,
+    "ten_san_pham": "Gel Chấm Mụn Naris Cosmetics Acne Grand 20g",
+    "role": "TREATMENT",
+    "brand": "Naris Cosmetics",
+    "gia_ban": 385000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 725,
+    "ten_san_pham": "Sữa Chống Nắng Sunplay Skin Aqua Nắp Xanh Dành Cho Da Dầu 50g",
+    "role": "SUNSCREEN",
+    "brand": "Sunplay Skin Aqua",
+    "gia_ban": 102000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "selection_reason": "Budget daily sun protection milk for oily skin; lowest price tier in sample."
+  },
+  {
+    "ma_san_pham": 740,
+    "ten_san_pham": "Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml",
+    "role": "TREATMENT",
+    "brand": "Eucerin",
+    "gia_ban": 370000,
+    "loai_da": "Da dầu/Da mụn/Nhạy cảm",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "selection_reason": "Clinical salicylic/glycolic acid complex treatment for acne and blemishes."
+  },
+  {
+    "ma_san_pham": 745,
+    "ten_san_pham": "Ampoule Angel's Liquid Dưỡng Sáng Da, Mờ Thâm Nám 30ml",
+    "role": "SERUM",
+    "brand": "Angel's Liquid",
+    "gia_ban": 398000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 755,
+    "ten_san_pham": "Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g",
+    "role": "SERUM",
+    "brand": "DrCeutics",
+    "gia_ban": 204000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active serum from DrCeutics (204,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 761,
+    "ten_san_pham": "Serum Balance Active Formula Cấp Nước Dưỡng Ẩm Da 30ml",
+    "role": "SERUM",
+    "brand": "Balance Active Formula",
+    "gia_ban": 117000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active serum from Balance Active Formula (117,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 789,
+    "ten_san_pham": "Kem Dưỡng Ẩm Nivea Dưỡng Da Sáng Mịn 30ml",
+    "role": "MOISTURIZER",
+    "brand": "Nivea",
+    "gia_ban": 39000,
+    "loai_da": "Da khô/Hỗn hợp khô",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 811,
+    "ten_san_pham": "Sữa Chống Nắng Acnes Ngăn Ngừa Mụn Cho Da Mụn, Nhạy Cảm 50g",
+    "role": "SUNSCREEN",
+    "brand": "Acnes",
+    "gia_ban": 119000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 812,
+    "ten_san_pham": "Serum Hada Labo Cấp Ẩm Tối Ưu, Phục Hồi Da 30ml",
+    "role": "SERUM",
+    "brand": "Hada Labo",
+    "gia_ban": 234000,
+    "loai_da": "Da khô/Hỗn hợp khô",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 880,
+    "ten_san_pham": "Kem Dưỡng Vichy Giảm Mụn, Phục Hồi Da 50ml",
+    "role": "TREATMENT",
+    "brand": "Vichy",
+    "gia_ban": 507000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active treatment from Vichy (507,000 VND) targeting Da mụn."
+  },
+  {
+    "ma_san_pham": 931,
+    "ten_san_pham": "Serum Naris Nature Dưỡng Sáng Da 30ml",
+    "role": "SERUM",
+    "brand": "Naris Cosmetics",
+    "gia_ban": 545000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 936,
+    "ten_san_pham": "Combo 2 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml",
+    "role": "CLEANSER",
+    "brand": "La Roche-Posay",
+    "gia_ban": 145000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 964,
+    "ten_san_pham": "Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml",
+    "role": "TREATMENT",
+    "brand": "La Roche-Posay",
+    "gia_ban": 514000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active treatment from La Roche-Posay (514,000 VND) targeting Da mụn."
+  },
+  {
+    "ma_san_pham": 1104,
+    "ten_san_pham": "Miếng Dán Mụn Acnes Giúp Giảm Mụn Sưng Viêm 24 Miếng",
+    "role": "TREATMENT",
+    "brand": "Acnes",
+    "gia_ban": 50000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 1176,
+    "ten_san_pham": "Gel Dưỡng Acnes Giúp Mờ Sẹo & Giảm Thâm Mụn 12g",
+    "role": "SERUM",
+    "brand": "Acnes",
+    "gia_ban": 63000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active serum from Acnes (63,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 1192,
+    "ten_san_pham": "Kem Chống Nắng Decumar Kiềm Dầu Nâng Tông Cho Da Mụn 50g",
+    "role": "SUNSCREEN",
+    "brand": "Decumar",
+    "gia_ban": 208000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active sunscreen from Decumar (208,000 VND) targeting Da mụn."
+  },
+  {
+    "ma_san_pham": 1240,
+    "ten_san_pham": "Kem Dưỡng Ẩm Nivea Làm Mềm Da 50ml",
+    "role": "MOISTURIZER",
+    "brand": "Nivea",
+    "gia_ban": 59000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active moisturizer from Nivea (59,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 1315,
+    "ten_san_pham": "Sữa Rửa Mặt Vichy Dạng Gel Làm Sạch Sâu & Giảm Nhờn 200ml",
+    "role": "CLEANSER",
+    "brand": "Vichy",
+    "gia_ban": 404000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active cleanser from Vichy (404,000 VND) targeting Da dầu/Hỗn hợp dầu."
+  },
+  {
+    "ma_san_pham": 1496,
+    "ten_san_pham": "Sữa Rửa Mặt Torriden Tạo Bọt Dưỡng Ẩm Da 150ml",
+    "role": "CLEANSER",
+    "brand": "Torriden",
+    "gia_ban": 194000,
+    "loai_da": "Da khô/Hỗn hợp khô",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 1617,
+    "ten_san_pham": "Gel Giảm Mụn Acnes Đầu Trắng Và Đầu Đen 18g",
+    "role": "TREATMENT",
+    "brand": "Acnes",
+    "gia_ban": 56000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active treatment from Acnes (56,000 VND) targeting Da mụn."
+  },
+  {
+    "ma_san_pham": 1657,
+    "ten_san_pham": "Sữa Chống Nắng Sunplay Giải Nhiệt Da 30g",
+    "role": "SUNSCREEN",
+    "brand": "Sunplay",
+    "gia_ban": 78000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active sunscreen from Sunplay (78,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 1660,
+    "ten_san_pham": "Sữa Rửa Mặt Bio-essence Vàng 24K Ngăn Ngừa Lão Hoá 100g",
+    "role": "CLEANSER",
+    "brand": "Bio-essence",
+    "gia_ban": 103000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 1685,
+    "ten_san_pham": "Combo 2 Serum Paula’s Choice Sáng Da, Giúp Se Lỗ Chân Lông 20ml",
+    "role": "SERUM",
+    "brand": "Paula's Choice",
+    "gia_ban": 2500000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 2187,
+    "ten_san_pham": "Xịt Chống Nắng Naris Cosmetics Nâng Tông Da 80g",
+    "role": "SUNSCREEN",
+    "brand": "Naris Cosmetics",
+    "gia_ban": 340000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 2263,
+    "ten_san_pham": "Tinh Chất Cocoon Cấp Nước & Cấp Ẩm Sâu Từ Hoa Hồng 30ml",
+    "role": "SERUM",
+    "brand": "Cocoon",
+    "gia_ban": 203000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active serum from Cocoon (203,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 2321,
+    "ten_san_pham": "Sữa Rửa Mặt Obagi Làm Sạch Da, Dịu Nhẹ 200ml",
+    "role": "CLEANSER",
+    "brand": "Obagi",
+    "gia_ban": 875000,
+    "loai_da": "Da khô/Hỗn hợp khô",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 2348,
+    "ten_san_pham": "Serum Anessa Dưỡng Da Và Phục Hồi Da Sau Nắng 180ml",
+    "role": "SERUM",
+    "brand": "Anessa",
+    "gia_ban": 412000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active serum from Anessa (412,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 2362,
+    "ten_san_pham": "Kem Chống Nắng B.O.M Che Khuyết Điểm SPF50+ PA++++ 50g",
+    "role": "SUNSCREEN",
+    "brand": "B.O.M",
+    "gia_ban": 406000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active sunscreen from B.O.M (406,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 2394,
+    "ten_san_pham": "Dung Dịch Jumiso Làm Mềm Mụn Đầu Đen 150ml",
+    "role": "TREATMENT",
+    "brand": "Jumiso",
+    "gia_ban": 248000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active treatment from Jumiso (248,000 VND) targeting Da mụn."
+  },
+  {
+    "ma_san_pham": 2654,
+    "ten_san_pham": "Sữa Rửa Mặt Hazeline Dưỡng Ẩm Sáng Da Yến Mạch & Dâu Tằm 100g",
+    "role": "CLEANSER",
+    "brand": "Hazeline",
+    "gia_ban": 52000,
+    "loai_da": "Da khô/Hỗn hợp khô",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active cleanser from Hazeline (52,000 VND) targeting Da khô/Hỗn hợp khô."
+  },
+  {
+    "ma_san_pham": 2707,
+    "ten_san_pham": "Kem Dưỡng Urgo Hỗ Trợ Giảm Viêm, Cấp Ẩm & Phục Hồi Da 50ml",
+    "role": "MOISTURIZER",
+    "brand": "Urgo",
+    "gia_ban": 239000,
+    "loai_da": "Da khô/Hỗn hợp khô",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 1,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 2740,
+    "ten_san_pham": "Bọt Rửa Mặt DrCeutics Sạch Sâu Dịu Nhẹ Cho Mọi Loại Da 420g",
+    "role": "CLEANSER",
+    "brand": "DrCeutics",
+    "gia_ban": 202000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active cleanser from DrCeutics (202,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 2780,
+    "ten_san_pham": "[Mini] Serum 9Wishes Dưỡng Ẩm Căng Bóng Da 8ml",
+    "role": "SERUM",
+    "brand": "9Wishes",
+    "gia_ban": 49000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 2939,
+    "ten_san_pham": "Sữa Rửa Mặt Bioré Cho Nam Hạt Tác Động Kép Sạch Nhờn 100g",
+    "role": "CLEANSER",
+    "brand": "Bioré",
+    "gia_ban": 53000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active cleanser from Bioré (53,000 VND) targeting Da dầu/Hỗn hợp dầu."
+  },
+  {
+    "ma_san_pham": 3038,
+    "ten_san_pham": "Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen (1 Miếng)",
+    "role": "TREATMENT",
+    "brand": "Ciracle",
+    "gia_ban": 15000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 3066,
+    "ten_san_pham": "Kem Chống Nắng Judydoll Cấp Ẩm Nâng Tông - 01 Tông Sáng 40g",
+    "role": "SUNSCREEN",
+    "brand": "Judydoll",
+    "gia_ban": 209000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active sunscreen from Judydoll (209,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 3838,
+    "ten_san_pham": "Combo 3 Miếng Dán Mũi Lột Mụn Bioré Than Hoạt Tính (4 Miếng)",
+    "role": "TREATMENT",
+    "brand": "Bioré",
+    "gia_ban": 80000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 3950,
+    "ten_san_pham": "Sữa Chống Nắng Bioré Bảo Vệ Hoàn Hảo - Dưỡng Ẩm 25ml",
+    "role": "SUNSCREEN",
+    "brand": "Bioré",
+    "gia_ban": 63000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active sunscreen from Bioré (63,000 VND) targeting Da dầu/Hỗn hợp dầu."
+  },
+  {
+    "ma_san_pham": 4365,
+    "ten_san_pham": "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+    "role": "CLEANSER",
+    "brand": "Cosrx",
+    "gia_ban": 129000,
+    "loai_da": "Da dầu/Hỗn hợp dầu/Mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "selection_reason": "Standard BHA cleansing gel for oily/acne-prone skin; accessible price point."
+  },
+  {
+    "ma_san_pham": 4457,
+    "ten_san_pham": "Kem Dưỡng Beplain Peptide Đậu Xanh Chăm Sóc Lỗ Chân Lông 60ml",
+    "role": "MOISTURIZER",
+    "brand": "Beplain",
+    "gia_ban": 210000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active moisturizer from Beplain (210,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 4569,
+    "ten_san_pham": "Combo 6 Kem Chống Nắng Cell Fusion C Nâng Tông Da 50ml",
+    "role": "SUNSCREEN",
+    "brand": "Cell Fusion C",
+    "gia_ban": 2900000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 4655,
+    "ten_san_pham": "Combo 2 Tinh Chất Cocoon Nghệ Hưng Yên x2.2 Sáng Da Chuyên Sâu 30ml",
+    "role": "SERUM",
+    "brand": "Cocoon",
+    "gia_ban": 838000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 4688,
+    "ten_san_pham": "Serum Eucerin Dưỡng Cho Da Mụn 40ml",
+    "role": "SERUM",
+    "brand": "Eucerin",
+    "gia_ban": 415000,
+    "loai_da": "Da mụn",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active serum from Eucerin (415,000 VND) targeting Da mụn."
+  },
+  {
+    "ma_san_pham": 4816,
+    "ten_san_pham": "Kem Dưỡng Ẩm innisfree Nâng Tông Da Hoa Anh Đào 50ml",
+    "role": "MOISTURIZER",
+    "brand": "innisfree",
+    "gia_ban": 361000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 5092,
+    "ten_san_pham": "Kem Dưỡng Bio-essence Vàng 24K Ngừa Lão Hóa Ban Ngày 40g",
+    "role": "MOISTURIZER",
+    "brand": "Bio-essence",
+    "gia_ban": 411000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active moisturizer from Bio-essence (411,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 5139,
+    "ten_san_pham": "Kem Dưỡng Menard Fairlucent Sáng Da, Mờ Thâm 30g",
+    "role": "MOISTURIZER",
+    "brand": "Menard",
+    "gia_ban": 2475000,
+    "loai_da": "Unknown",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": false
+  },
+  {
+    "ma_san_pham": 5537,
+    "ten_san_pham": "Sữa Rửa Mặt Nuxe Tạo Bọt Dịu Nhẹ Cho Mọi Loại Da 150ml",
+    "role": "CLEANSER",
+    "brand": "Nuxe",
+    "gia_ban": 401000,
+    "loai_da": "Da nhạy cảm",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "confident": true,
+    "selection_reason": "Real active cleanser from Nuxe (401,000 VND) targeting Da nhạy cảm."
+  },
+  {
+    "ma_san_pham": 5928,
+    "ten_san_pham": "Kem Dưỡng Paula’s Choice Làm Sáng Da, Ngừa Lão Hóa 50ml",
+    "role": "MOISTURIZER",
+    "brand": "Paula's Choice",
+    "gia_ban": 609000,
+    "loai_da": "Da dầu/Hỗn hợp dầu",
+    "skin_tags": {
+      "oily": 1,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 5936,
+    "ten_san_pham": "[Mini] Gel Chống Nắng Vichy Bảo Vệ Da, Ngừa Thâm Nám 15ml",
+    "role": "SUNSCREEN",
+    "brand": "Vichy",
+    "gia_ban": 59000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true
+  },
+  {
+    "ma_san_pham": 5974,
+    "ten_san_pham": "Kem Dưỡng Skintific MSH Niacinamide Dưỡng Sáng Da 30g",
+    "role": "MOISTURIZER",
+    "brand": "Skintific",
+    "gia_ban": 208000,
+    "loai_da": "Da thường/Mọi loại da",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 0
+    },
+    "confident": true,
+    "selection_reason": "Real active moisturizer from Skintific (208,000 VND) targeting Da thường/Mọi loại da."
+  },
+  {
+    "ma_san_pham": 6324,
+    "ten_san_pham": "Lotion Chấm Mụn Bye Bye Blemish Cho Mụn Trắng, Nhạy Cảm 30ml",
+    "role": "TREATMENT",
+    "brand": "Bye Bye Blemish",
+    "gia_ban": 335000,
+    "loai_da": "Da nhạy cảm",
+    "skin_tags": {
+      "oily": 0,
+      "dry": 0,
+      "sensitive": 1
+    },
+    "confident": true
+  }
+]

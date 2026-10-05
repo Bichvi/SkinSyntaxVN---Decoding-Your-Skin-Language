@@ -1,0 +1,427 @@
+{
+  "total_products_audited": 2473,
+  "collection": "skinsyntax.san_pham",
+  "schema_fields": [
+    {
+      "field": "_id",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "ObjectId"
+      ],
+      "example": "69fcf36444bee9190dd05a7b",
+      "suitable_for_clustering": false,
+      "reason": "Not evaluated / unverified metadata"
+    },
+    {
+      "field": "da_khoi_tao_kho",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "bool"
+      ],
+      "example": "True",
+      "suitable_for_clustering": false,
+      "reason": "Internal inventory initialization flag."
+    },
+    {
+      "field": "da_khoi_tao_so_luong_ban",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "bool"
+      ],
+      "example": "True",
+      "suitable_for_clustering": false,
+      "reason": "Internal seeding flag."
+    },
+    {
+      "field": "danh_muc_day_du",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Hỗ Trợ Trị Mụn",
+      "suitable_for_clustering": true,
+      "reason": "Hierarchical taxonomic breadcrumb; highly suitable for deriving one-hot role/category features."
+    },
+    {
+      "field": "diem_danh_gia",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "float"
+      ],
+      "example": "4.8",
+      "suitable_for_clustering": false,
+      "reason": "Average rating (0-5); noisy engagement proxy, not product characteristic."
+    },
+    {
+      "field": "dung_tich",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "15g",
+      "suitable_for_clustering": false,
+      "reason": "Unstructured capacity string (e.g. 50ml, 150ml, 30g); inconsistent units."
+    },
+    {
+      "field": "gia_ban",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "float",
+        "int"
+      ],
+      "example": "128000",
+      "suitable_for_clustering": true,
+      "reason": "Continuous price in VND; highly suitable after log1p and z-score normalization."
+    },
+    {
+      "field": "gia_thi_truong",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "float",
+        "int"
+      ],
+      "example": "195000",
+      "suitable_for_clustering": false,
+      "reason": "Reference list price; redundant with gia_ban."
+    },
+    {
+      "field": "hdsd",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "Hướng dẫn sử dụng1. Gel Dưỡng Megaduo Plus Gel Giảm Mụn, Mờ Thâm 15g\n• Sau khi rửa sạch và làm khô.\n",
+      "suitable_for_clustering": false,
+      "reason": "Usage instructions text; unsuitable for product clustering."
+    },
+    {
+      "field": "link_hinh_anh",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-gel-duong-megaduo-plus-gel-giam-mun-mo-th",
+      "suitable_for_clustering": false,
+      "reason": "Asset URL; non-numerical."
+    },
+    {
+      "field": "loai_da",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "Da mụn",
+      "suitable_for_clustering": true,
+      "reason": "Skin type suitability string; suitable for multi-hot skin tag encoding (Oily, Dry, Sensitive, etc.)."
+    },
+    {
+      "field": "luot_xem",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "2",
+      "suitable_for_clustering": false,
+      "reason": "View count; popularity proxy, not product formulation."
+    },
+    {
+      "field": "ma_danh_muc",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "25",
+      "suitable_for_clustering": false,
+      "reason": "Arbitrary database integer identifier; Euclidean distance between category IDs is meaningless."
+    },
+    {
+      "field": "ma_loai_da",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "6",
+      "suitable_for_clustering": false,
+      "reason": "Arbitrary integer ID for skin type; redundant with loai_da text."
+    },
+    {
+      "field": "ma_noi_san_xuat",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "2",
+      "suitable_for_clustering": false,
+      "reason": "Manufacturing country integer ID; sparse categorical."
+    },
+    {
+      "field": "ma_san_pham",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "Int64"
+      ],
+      "example": "112",
+      "suitable_for_clustering": false,
+      "reason": "Discrete unique primary key; clustering on IDs has no mathematical semantic meaning."
+    },
+    {
+      "field": "ma_thuong_hieu",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "44",
+      "suitable_for_clustering": false,
+      "reason": "Arbitrary brand ID; unsuitable for direct numerical Euclidean distance."
+    },
+    {
+      "field": "ma_xuat_xu",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "2",
+      "suitable_for_clustering": false,
+      "reason": "Origin country integer ID; sparse categorical."
+    },
+    {
+      "field": "mo_ta",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g là sản phẩm gel dưỡng giảm mụn đến từ thương hiệu Gamma Chem",
+      "suitable_for_clustering": false,
+      "reason": "Unstructured HTML product description; high-dimensional text."
+    },
+    {
+      "field": "ngay_tao",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "datetime"
+      ],
+      "example": "2026-03-09 07:59:56.710000",
+      "suitable_for_clustering": false,
+      "reason": "Creation timestamp; temporal metadata."
+    },
+    {
+      "field": "phan_tram_giam",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "float",
+        "int"
+      ],
+      "example": "34",
+      "suitable_for_clustering": false,
+      "reason": "Promotional discount rate; business metadata, not intrinsic product property."
+    },
+    {
+      "field": "so_luong_da_ban",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "88",
+      "suitable_for_clustering": false,
+      "reason": "CRITICAL: Must NEVER be used as verified sales. Highly skewed synthetic/seeded counter."
+    },
+    {
+      "field": "so_luong_danh_gia",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "88",
+      "suitable_for_clustering": false,
+      "reason": "Review count; engagement volume, not sales or product property."
+    },
+    {
+      "field": "so_luong_ton_kho",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "300",
+      "suitable_for_clustering": false,
+      "reason": "Inventory count; logistics metadata."
+    },
+    {
+      "field": "status",
+      "coverage_percent": 0.04,
+      "non_null_count": 1,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "active",
+      "suitable_for_clustering": false,
+      "reason": "Not evaluated / unverified metadata"
+    },
+    {
+      "field": "ten_san_pham",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+      "suitable_for_clustering": false,
+      "reason": "Freeform textual title; high cardinality, needs NLP embedding or serves as label only."
+    },
+    {
+      "field": "thanh_phan",
+      "coverage_percent": 80.59,
+      "non_null_count": 1993,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "• Retinal 1%: thay đổi tế bào da hiệu quả giúp da căng mịn và mềm mại, kích thích sản xuất collagen,",
+      "suitable_for_clustering": false,
+      "reason": "Key active ingredients summary; useful in advanced stages, but excluded in Step 6A for manual inspectability."
+    },
+    {
+      "field": "thanh_phan_chinh",
+      "coverage_percent": 0.04,
+      "non_null_count": 1,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "• Salicylic Acid: tẩy tế bào chết chuyên sâu và tiêu diệt nhân mụn tận gốc, thông thoáng lỗ chân lôn",
+      "suitable_for_clustering": false,
+      "reason": "Not evaluated / unverified metadata"
+    },
+    {
+      "field": "thanh_phan_day_du",
+      "coverage_percent": 0.0,
+      "non_null_count": 0,
+      "total_docs": 2473,
+      "data_types": [],
+      "example": null,
+      "suitable_for_clustering": false,
+      "reason": "Not evaluated / unverified metadata"
+    },
+    {
+      "field": "thanh_phan_full",
+      "coverage_percent": 94.58,
+      "non_null_count": 2339,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "Acid Glycolic, Acid Salicylic, Pyridoxin Hydroclorid, Zinc Oxide, Nước, Acid Lactic, Centella Asiati",
+      "suitable_for_clustering": false,
+      "reason": "Raw INCI chemical composition; excessive dimensionality for manual Euclidean calculation."
+    },
+    {
+      "field": "thanh_phan_sach",
+      "coverage_percent": 80.59,
+      "non_null_count": 1993,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "retinal 1%, bha, niacinamide 4%",
+      "suitable_for_clustering": false,
+      "reason": "Tokenized ingredient array; high dimensionality (>500 dimensions)."
+    },
+    {
+      "field": "tien_tiet_kiem",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "int"
+      ],
+      "example": "67000",
+      "suitable_for_clustering": false,
+      "reason": "Derived promotional difference; unstable and market-dependent."
+    },
+    {
+      "field": "trang_thai",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "active",
+      "suitable_for_clustering": false,
+      "reason": "System lifecycle status string (active); constant filter."
+    },
+    {
+      "field": "trang_thai_kho",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "str"
+      ],
+      "example": "con_hang",
+      "suitable_for_clustering": false,
+      "reason": "Stock availability status."
+    },
+    {
+      "field": "updated_at",
+      "coverage_percent": 100.0,
+      "non_null_count": 2473,
+      "total_docs": 2473,
+      "data_types": [
+        "datetime"
+      ],
+      "example": "2026-05-28 17:04:13.436000",
+      "suitable_for_clustering": false,
+      "reason": "Timestamp."
+    }
+  ]
+}

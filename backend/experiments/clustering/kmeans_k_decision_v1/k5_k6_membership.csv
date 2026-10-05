@@ -1,0 +1,41 @@
+Product_ID,SKU_ID,Product_Name,Role,Brand,gia_ban,z_price,skin_oily,skin_dry,skin_sensitive,K5_Cluster,K6_Cluster,Cluster_Status
+P_4365,4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Cosrx,129000,-0.5265,1,0,0,K5_C3,K6_C2,Split_Member
+P_21,21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,La Roche-Posay,412000,0.9946,1,0,1,K5_C5,K6_C2,Split_Member
+P_2654,2654,Sữa Rửa Mặt Hazeline Dưỡng Ẩm Sáng Da Yến Mạch & Dâu Tằm 100g,CLEANSER,Hazeline,52000,-1.7166,0,1,0,K5_C3,K6_C3,Split_Member
+P_2939,2939,Sữa Rửa Mặt Bioré Cho Nam Hạt Tác Động Kép Sạch Nhờn 100g,CLEANSER,Bioré,53000,-1.6916,1,0,0,K5_C3,K6_C3,Split_Member
+P_255,255,Sữa Rửa Mặt Tia'm Ốc Sên Làm Dịu & Phục Hồi Da 200ml,CLEANSER,TIA'M,202000,0.061,0,0,1,K5_C2,K6_C2,Split_Member
+P_2740,2740,Bọt Rửa Mặt DrCeutics Sạch Sâu Dịu Nhẹ Cho Mọi Loại Da 420g,CLEANSER,DrCeutics,202000,0.061,0,0,0,K5_C2,K6_C2,Split_Member
+P_5537,5537,Sữa Rửa Mặt Nuxe Tạo Bọt Dịu Nhẹ Cho Mọi Loại Da 150ml,CLEANSER,Nuxe,401000,0.9591,0,0,1,K5_C2,K6_C2,Split_Member
+P_1315,1315,Sữa Rửa Mặt Vichy Dạng Gel Làm Sạch Sâu & Giảm Nhờn 200ml,CLEANSER,Vichy,404000,0.9689,1,0,0,K5_C5,K6_C2,Split_Member
+P_350,350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Skin1004,299000,0.5747,0,0,1,K5_C1,K6_C5,Intact
+P_62,62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,L'Oreal,289000,0.5301,0,1,0,K5_C1,K6_C5,Intact
+P_1176,1176,Gel Dưỡng Acnes Giúp Mờ Sẹo & Giảm Thâm Mụn 12g,SERUM,Acnes,63000,-1.4652,0,0,0,K5_C3,K6_C3,Split_Member
+P_761,761,Serum Balance Active Formula Cấp Nước Dưỡng Ẩm Da 30ml,SERUM,Balance Active Formula,117000,-0.6544,0,0,0,K5_C1,K6_C5,Intact
+P_2263,2263,Tinh Chất Cocoon Cấp Nước & Cấp Ẩm Sâu Từ Hoa Hồng 30ml,SERUM,Cocoon,203000,0.0674,0,0,0,K5_C1,K6_C5,Intact
+P_755,755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,DrCeutics,204000,0.0739,0,0,0,K5_C1,K6_C5,Intact
+P_2348,2348,Serum Anessa Dưỡng Da Và Phục Hồi Da Sau Nắng 180ml,SERUM,Anessa,412000,0.9946,0,0,0,K5_C1,K6_C5,Intact
+P_4688,4688,Serum Eucerin Dưỡng Cho Da Mụn 40ml,SERUM,Eucerin,415000,1.0041,1,0,0,K5_C1,K6_C5,Intact
+P_139,139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Klairs,329000,0.6999,0,0,1,K5_C2,K6_C4,Split_Member
+P_318,318,Kem Dưỡng Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Thường/Khô 50g,MOISTURIZER,Hada Labo,185000,-0.0542,0,1,0,K5_C2,K6_C4,Split_Member
+P_469,469,Sáp Dưỡng Ẩm Vaseline Original Protecting Jelly 50ml,MOISTURIZER,Vaseline,55000,-1.6431,0,1,0,K5_C3,K6_C3,Split_Member
+P_1240,1240,Kem Dưỡng Ẩm Nivea Làm Mềm Da 50ml,MOISTURIZER,Nivea,59000,-1.5512,0,0,0,K5_C3,K6_C3,Split_Member
+P_5974,5974,Kem Dưỡng Skintific MSH Niacinamide Dưỡng Sáng Da 30g,MOISTURIZER,Skintific,208000,0.0993,0,0,0,K5_C2,K6_C4,Split_Member
+P_4457,4457,Kem Dưỡng Beplain Peptide Đậu Xanh Chăm Sóc Lỗ Chân Lông 60ml,MOISTURIZER,Beplain,210000,0.1118,0,0,0,K5_C2,K6_C4,Split_Member
+P_294,294,Kem Dưỡng Ẩm Cetaphil Dịu Lành Cho Da Nhạy Cảm 453g,MOISTURIZER,Cetaphil,410000,0.9882,0,0,1,K5_C2,K6_C4,Split_Member
+P_5092,5092,Kem Dưỡng Bio-essence Vàng 24K Ngừa Lão Hóa Ban Ngày 40g,MOISTURIZER,Bio-essence,411000,0.9914,0,0,0,K5_C2,K6_C4,Split_Member
+P_16,16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Anessa,549000,1.3706,1,0,0,K5_C4,K6_C1,Intact
+P_725,725,Sữa Chống Nắng Sunplay Skin Aqua Nắp Xanh Dành Cho Da Dầu 50g,SUNSCREEN,Sunplay Skin Aqua,102000,-0.8341,1,0,0,K5_C3,K6_C3,Split_Member
+P_3950,3950,Sữa Chống Nắng Bioré Bảo Vệ Hoàn Hảo - Dưỡng Ẩm 25ml,SUNSCREEN,Bioré,63000,-1.4652,1,0,0,K5_C3,K6_C3,Split_Member
+P_1657,1657,Sữa Chống Nắng Sunplay Giải Nhiệt Da 30g,SUNSCREEN,Sunplay,78000,-1.1855,0,0,0,K5_C3,K6_C3,Split_Member
+P_1192,1192,Kem Chống Nắng Decumar Kiềm Dầu Nâng Tông Cho Da Mụn 50g,SUNSCREEN,Decumar,208000,0.0993,1,0,0,K5_C4,K6_C1,Intact
+P_3066,3066,Kem Chống Nắng Judydoll Cấp Ẩm Nâng Tông - 01 Tông Sáng 40g,SUNSCREEN,Judydoll,209000,0.1056,0,0,0,K5_C4,K6_C1,Intact
+P_2362,2362,Kem Chống Nắng B.O.M Che Khuyết Điểm SPF50+ PA++++ 50g,SUNSCREEN,B.O.M,406000,0.9754,0,0,0,K5_C4,K6_C1,Intact
+P_10,10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",SUNSCREEN,La Roche-Posay,412000,0.9946,0,0,0,K5_C4,K6_C1,Intact
+P_112,112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Megaduo,105000,-0.7961,1,0,0,K5_C3,K6_C3,Split_Member
+P_740,740,Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml,TREATMENT,Eucerin,370000,0.8538,1,0,1,K5_C5,K6_C6,Split_Member
+P_357,357,Miếng Dán Mụn Derma Angel Dùng Cho Ngày & Đêm 18 Miếng,TREATMENT,Derma Angel,55000,-1.6431,1,0,0,K5_C3,K6_C3,Split_Member
+P_1617,1617,Gel Giảm Mụn Acnes Đầu Trắng Và Đầu Đen 18g,TREATMENT,Acnes,56000,-1.6195,1,0,0,K5_C3,K6_C3,Split_Member
+P_2394,2394,Dung Dịch Jumiso Làm Mềm Mụn Đầu Đen 150ml,TREATMENT,Jumiso,248000,0.3297,1,0,0,K5_C5,K6_C6,Split_Member
+P_283,283,Chấm Mụn Neogen Dermalogy Hỗ Trợ Giảm Sưng Viêm 15ml,TREATMENT,Neogen Dermalogy,259000,0.3865,1,0,0,K5_C5,K6_C6,Split_Member
+P_880,880,"Kem Dưỡng Vichy Giảm Mụn, Phục Hồi Da 50ml",TREATMENT,Vichy,507000,1.2664,1,0,0,K5_C5,K6_C6,Split_Member
+P_964,964,Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml,TREATMENT,La Roche-Posay,514000,1.2843,1,0,0,K5_C5,K6_C6,Split_Member

@@ -1,0 +1,41 @@
+graph TD
+    %% User Flow and Context Routing Diagram for SkinSyntaxVN
+
+    Start([Người dùng truy cập index.php?r=home]) --> CheckSignals{Kiểm tra tín hiệu người dùng}
+
+    %% Production Branches
+    CheckSignals -- "Không có tín hiệu (Khách mới)" --> ModeSimple[Chế độ SIMPLE<br/>Simple Recommender: IMDb Weighted Rating]
+    CheckSignals -- "Chỉ có hành vi phiên (View / Cart / Search)" --> ModeBehavior[Chế độ BEHAVIOR_CONTENT<br/>Multi-Signal Behavior Fusion + TF-IDF]
+    CheckSignals -- "Chỉ có lịch sử mua hàng" --> ModePurchase[Chế độ PURCHASE_CONTENT<br/>Purchase History Time-Decay + TF-IDF]
+    CheckSignals -- "Chỉ có hồ sơ khảo sát da" --> ModeProfile[Chế độ PROFILE_CONTENT<br/>Profile Term Vector + Skin Compatibility]
+    CheckSignals -- "Có cả hồ sơ da & hành vi phiên" --> ModeHybrid[Chế độ ADAPTIVE_HYBRID<br/>Hybrid Query 0.50 Behavior + 0.50 Profile]
+    CheckSignals -- "Hồ sơ da không sinh được vector" --> ModePartial[Chế độ PARTIAL_PROFILE_FALLBACK<br/>Fallback theo hành vi hoặc ngân sách]
+
+    %% Common Production Processing Pipeline
+    ModeBehavior --> CombineScore[Tính toán Cosine Similarity & Tái xếp hạng FinalScore]
+    ModePurchase --> CombineScore
+    ModeProfile --> CombineScore
+    ModeHybrid --> CombineScore
+    ModePartial --> CombineScore
+
+    CombineScore --> FilterDeduplicate[Bộ lọc tương tác:<br/>Loại bỏ sản phẩm vừa xem & sản phẩm trong giỏ]
+    FilterDeduplicate --> FamilyDiversity[Bộ lọc đa dạng hóa:<br/>Tối đa 1 sản phẩm đại diện cho mỗi dòng biến thể]
+    FamilyDiversity --> ReasonTags[Gắn nhãn giải thích minh bạch:<br/>Reason Tags khớp với tín hiệu đóng góp]
+    ReasonTags --> DisplaySection3[Hiển thị Section 3: Dành Riêng Cho Bạn<br/>Tiêu đề và thông điệp thích ứng theo dominant_signal]
+
+    ModeSimple --> DisplaySection55[Hiển thị Section 5.5: Được Yêu Thích Nhất<br/>Bảng xếp hạng Top-4 Weighted Rating]
+    DisplaySection3 --> End([Giao diện trang chủ hoàn tất])
+    DisplaySection55 --> End
+
+    %% Offline Research Branch (Strictly Isolated)
+    subgraph ResearchTrack ["NHÁNH NGHIÊN CỨU NGOẠI TUYẾN (KHÔNG NỐI VÀO PRODUCTION FINALSCORE)"]
+        direction TB
+        DB_Trans[(Dữ liệu giỏ hàng thử nghiệm)] --> Algo_Assoc[Khai phá luật kết hợp:<br/>Apriori & FP-Growth]
+        DB_Inter[(Ma trận tương tác thử nghiệm)] --> Algo_CF[Lọc cộng tác thử nghiệm:<br/>Item-kNN, Funk MF, BPR]
+        DB_Catalog[(Không gian đặc trưng 62D Catalog)] --> Algo_KMeans[Phân cụm danh mục:<br/>K-Means Clustering Step 6A-7E]
+    end
+
+    classDef prod fill:#e0f2fe,stroke:#0284c7,stroke-width:2px;
+    classDef research fill:#fef3c7,stroke:#d97706,stroke-width:2px,stroke-dasharray: 5 5;
+    class ModeSimple,ModeBehavior,ModePurchase,ModeProfile,ModeHybrid,ModePartial,CombineScore,FilterDeduplicate,FamilyDiversity,ReasonTags,DisplaySection3,DisplaySection55 prod;
+    class Algo_Assoc,Algo_CF,Algo_KMeans research;

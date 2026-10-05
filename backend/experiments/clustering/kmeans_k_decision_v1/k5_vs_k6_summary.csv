@@ -1,0 +1,12 @@
+Metric,K=5,K=6,Comparison_Note
+Within-Cluster Sum of Squares (WCSS),36.9165,31.2252,K=6 reduces WCSS by 5.6913 (15.42%)
+Mean Silhouette Coefficient,0.2799,0.3215,K=6 increases mean silhouette by +0.0416
+Median Silhouette Coefficient,0.2865,0.2956,K=6 median is slightly higher (+0.0091)
+Negative Silhouette Count,0.0,0.0,Both partitions have 0 misallocated boundary items
+Smallest Cluster Size,5.0,5.0,Both have min size = 5 (no singleton/empty clusters)
+Largest Cluster Size,12.0,11.0,Both have max size = 11 or 12
+Overall Role Purity,0.65,0.8,K=5 purity (65.0%) vs K=6 purity (80.0%)
+Subsample Stability (Mean ARI across 100 trials),0.6306,0.641,Evaluates partition stability to sample perturbations
+Subsample Stability (Mean NMI across 100 trials),0.7646,0.7922,Information-theoretic stability under 80% subsampling
+Initialization Stability (Distinct Partitions / 100),97.0,98.0,Lower indicates fewer local minima basins
+Initialization Stability (Mean ARI to Best),0.489,0.5129,Higher indicates restarts converge closer to optimal mode

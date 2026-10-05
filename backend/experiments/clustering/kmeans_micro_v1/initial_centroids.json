@@ -1,0 +1,50 @@
+{
+  "C1": {
+    "product_id": "P_4365",
+    "sku_id": 4365,
+    "name": "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+    "vector": [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -1.0876,
+      1.0,
+      0.0,
+      0.0
+    ]
+  },
+  "C2": {
+    "product_id": "P_350",
+    "sku_id": 350,
+    "name": "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+    "vector": [
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.395,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "C3": {
+    "product_id": "P_16",
+    "sku_id": 16,
+    "name": "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",
+    "vector": [
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      1.4667,
+      1.0,
+      0.0,
+      0.0
+    ]
+  }
+}

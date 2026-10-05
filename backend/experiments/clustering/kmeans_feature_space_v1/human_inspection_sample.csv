@@ -1,0 +1,21 @@
+Product_ID,SKU_ID,Ten_San_Pham_Tieng_Viet,Role_Noi_Bo,Gia_Ban_VND,Cluster_Config_M,Cluster_Config_MI,Cluster_Config_MIT,San_Pham_Gan_Nhat_MI,Cung_Role_Khong,Khoang_Cach_MI
+P_1,1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,357000,C4,C6,C1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml (SKU 11),True,0.2236
+P_13,13,Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml,SUNSCREEN,239000,C5,C5,C3,Kem Chống Nắng Pyunkang Yul Phục Hồi Cho Da Nhạy Cảm 75ml (SKU 4933),True,0.5776
+P_20,20,Sữa Chống Nắng Anessa Cho Da Nhạy Cảm & Trẻ Em 60ml (Mới),SUNSCREEN,432000,C5,C5,C3,Combo 2 Sữa Chống Nắng Anessa Cho Da Nhạy Cảm & Trẻ Em 60ml (Mới) (SKU 218),True,0.3813
+P_21,21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,412000,C4,C6,C1,Combo 8 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml (SKU 1200),True,0.0235
+P_22,22,Serum d'Alba Dạng Xịt Nấm Truffle Trắng Căng Bóng Da 100ml,SERUM,359000,C3,C2,C5,Tinh Chất Sur.Medic+ Huyết Thanh Sáng Da Căng Bóng 32ml (SKU 736),True,0.3052
+P_44,44,Kem Dưỡng Ẩm Neutrogena Cấp Nước Cho Da Dầu 50g,MOISTURIZER,232000,C1,C3,C6,Combo 2 Kem Dưỡng Ẩm Neutrogena Cấp Nước Cho Da Dầu 15g (SKU 2160),True,0.175
+P_50,50,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml,SERUM,379000,C3,C2,C5,[Mini] Combo 2 Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 30ml (SKU 2334),True,0.3407
+P_83,83,Kem Dưỡng CeraVe Cho Da Khô Đến Rất Khô 340g,MOISTURIZER,332000,C1,C3,C6,Kem Dưỡng CeraVe Cho Da Khô Đến Rất Khô 177ml (SKU 1783),True,0.0857
+P_106,106,Kem Dưỡng L'Oreal Sáng Mịn Mờ Thâm Nám Ban Đêm 50ml,MOISTURIZER,269000,C1,C3,C6,Kem Dưỡng L'Oreal Sáng Mịn Mờ Thâm Nám Ban Đêm 50ml (SKU 106),True,0.0
+P_160,160,Kem Dưỡng Bioderma Giúp Se Khít Lỗ Chân Lông 30ml,MOISTURIZER,399000,C1,C3,C6,"Kem Dưỡng Ẩm Bioderma Dành Cho Da Mụn, Nhạy Cảm 30ml (SKU 132)",True,0.3876
+P_210,210,Kem Dưỡng Olay Ban Ngày Sáng Da Chống Tia UV SPF15 50g,MOISTURIZER,160000,C1,C3,C6,Kem Dưỡng Olay Luminous Sáng Da Mờ Thâm Nám Ban Đêm 50g (SKU 48),True,0.064
+P_343,343,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới),SUNSCREEN,175000,C5,C5,C2,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới) (SKU 2956),True,0.5685
+P_497,497,Kem Dưỡng Naris Nature Làm Sáng Da Ban Đêm 50g,MOISTURIZER,435000,C1,C3,C6,Kem Dưỡng Naris Nature Làm Sáng Da Ban Ngày SPF20 PA+ 40g (SKU 2410),True,0.8243
+P_806,806,Serum Garnier Tăng Cường Sáng Da Mờ Thâm 30ml,SERUM,208000,C3,C2,C5,Serum Garnier Tăng Cường Sáng Da Mờ Thâm Ban Đêm 30ml (SKU 1333),True,0.1388
+P_1165,1165,Sữa Chống Nắng Sunplay Dưỡng Da Tạo Nền Sáng Mịn 25g,SUNSCREEN,116000,C5,C4,C2,Sữa Chống Nắng Sunplay Giải Nhiệt Da 30g (SKU 1657),True,0.5633
+P_1633,1633,"Serum Paula’s Choice Sáng Da, Giúp Se Lỗ Chân Lông 20ml",SERUM,1320000,C2,C2,C5,"Combo 2 Serum Paula’s Choice Sáng Da, Giúp Se Lỗ Chân Lông 20ml (SKU 1685)",True,0.1168
+P_2206,2206,Combo 2 Tinh Chất Cocoon Chiết Xuất Từ Nghệ Hưng Yên 30ml,SERUM,344000,C3,C2,C5,Tinh Chất Cocoon Chiết Xuất Từ Nghệ Hưng Yên 30ml (SKU 1826),True,0.3389
+P_2928,2928,[Mini] Combo 2 Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 30ml,CLEANSER,80000,C6,C1,C4,[Mini] Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 30ml (SKU 577),True,0.4241
+P_4422,4422,Combo Anessa Gel Chống Nắng Dưỡng Ẩm & Sữa Chống Nắng Kiềm Dầu 90g+60ml,SUNSCREEN,861000,C2,C5,C3,"Combo Anessa Gel Chống Nắng Dưỡng Ẩm & Sữa Chống Nắng Cho Da Nhạy Cảm, Trẻ Em 90g+60ml (SKU 2682)",True,0.1841
+P_5251,5251,"Sữa Rửa Mặt Elixir 2 Trong 1 Dưỡng Ẩm, Ngừa Lão Hóa 140ml",CLEANSER,406000,C4,C6,C1,"Gel Rửa Mặt Elixir Hỗ Trợ Làm Sạch Sâu, Ngừa Lão Hóa 105g (SKU 3532)",True,0.7218

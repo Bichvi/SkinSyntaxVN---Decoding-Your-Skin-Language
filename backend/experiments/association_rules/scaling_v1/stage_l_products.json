@@ -1,0 +1,722 @@
+{
+  "5": {
+    "ten_san_pham": "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "Bioderma",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 335000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "103": {
+    "ten_san_pham": "Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "L'Oreal",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 167000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "4365": {
+    "ten_san_pham": "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+    "role": "CLEANSER",
+    "brand": "Cosrx",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 129000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "21": {
+    "ten_san_pham": "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+    "role": "CLEANSER",
+    "brand": "La Roche-Posay",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 412000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "728": {
+    "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+    "role": "CLEANSER",
+    "brand": "Eucerin",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 295000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "4": {
+    "ten_san_pham": "Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+    "role": "TONER",
+    "brand": "Klairs",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 201000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "240": {
+    "ten_san_pham": "Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml",
+    "role": "TONER",
+    "brand": "Simple",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 108000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "350": {
+    "ten_san_pham": "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+    "role": "SERUM",
+    "brand": "Skin1004",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 243000,
+    "loai_da": "Da mụn"
+  },
+  "68": {
+    "ten_san_pham": "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml",
+    "role": "SERUM",
+    "brand": "Timeless",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 357000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "62": {
+    "ten_san_pham": "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+    "role": "SERUM",
+    "brand": "L'Oreal",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 290000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "112": {
+    "ten_san_pham": "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+    "role": "TREATMENT",
+    "brand": "Gamma Chemicals",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 128000,
+    "loai_da": "Da mụn"
+  },
+  "740": {
+    "ten_san_pham": "Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml",
+    "role": "TREATMENT",
+    "brand": "Eucerin",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 400000,
+    "loai_da": "Da mụn"
+  },
+  "139": {
+    "ten_san_pham": "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+    "role": "MOISTURIZER",
+    "brand": "Klairs",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 289000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "318": {
+    "ten_san_pham": "Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g",
+    "role": "MOISTURIZER",
+    "brand": "Hada Labo",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 174000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "93": {
+    "ten_san_pham": "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml",
+    "role": "MOISTURIZER",
+    "brand": "Embryolisse",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 245000,
+    "loai_da": "Da khô/Hỗn hợp khô"
+  },
+  "16": {
+    "ten_san_pham": "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",
+    "role": "SUNSCREEN",
+    "brand": "Anessa",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 432000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "10": {
+    "ten_san_pham": "Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",
+    "role": "SUNSCREEN",
+    "brand": "La Roche-Posay",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 412000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "725": {
+    "ten_san_pham": "Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)",
+    "role": "SUNSCREEN",
+    "brand": "Sunplay",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 132000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "188": {
+    "ten_san_pham": "Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml",
+    "role": "MASK",
+    "brand": "Naruko",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 30000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "649": {
+    "ten_san_pham": "Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh)",
+    "role": "MASK",
+    "brand": "Banobagi",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 16000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6376": {
+    "ten_san_pham": "Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + 2 Nước Tẩy Trang Sạch Sâu Cho Da Dầu 95ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "L'Oreal",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 165000,
+    "loai_da": "Da khô/Hỗn hợp khô"
+  },
+  "285": {
+    "ten_san_pham": "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "L'Oreal",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 79000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6203": {
+    "ten_san_pham": "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 95ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "L'Oreal",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 79000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "1000": {
+    "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+    "role": "CLEANSER",
+    "brand": "Eucerin",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 163000.0,
+    "loai_da": "Da mụn"
+  },
+  "1": {
+    "ten_san_pham": "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",
+    "role": "CLEANSER",
+    "brand": "CeraVe",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 357000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "5689": {
+    "ten_san_pham": "[Mini] Nước Thần Lancôme Clarifique Dưỡng Sáng Da 10ml",
+    "role": "TONER",
+    "brand": "Lancôme",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 55000,
+    "loai_da": "Unknown"
+  },
+  "6082": {
+    "ten_san_pham": "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml",
+    "role": "TONER",
+    "brand": "Klairs",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 49000,
+    "loai_da": "Unknown"
+  },
+  "2458": {
+    "ten_san_pham": "Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+    "role": "TONER",
+    "brand": "Klairs",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 650000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "1368": {
+    "ten_san_pham": "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml",
+    "role": "SERUM",
+    "brand": "Eucerin",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 599000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6350": {
+    "ten_san_pham": "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+    "role": "SERUM",
+    "brand": "Elixir",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 1041000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "3038": {
+    "ten_san_pham": "Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen (1 Miếng)",
+    "role": "TREATMENT",
+    "brand": "Ciracle",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 15000,
+    "loai_da": "Da mụn"
+  },
+  "2405": {
+    "ten_san_pham": "Combo 2 Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+    "role": "TREATMENT",
+    "brand": "Gamma Chemicals",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 390000,
+    "loai_da": "Unknown"
+  },
+  "201": {
+    "ten_san_pham": "Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",
+    "role": "TREATMENT",
+    "brand": "Gamma Chemicals",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 125000,
+    "loai_da": "Da mụn"
+  },
+  "4450": {
+    "ten_san_pham": "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g",
+    "role": "MOISTURIZER",
+    "brand": "Klairs",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 308000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "673": {
+    "ten_san_pham": "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g",
+    "role": "MOISTURIZER",
+    "brand": "Klairs",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 99000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "5936": {
+    "ten_san_pham": "[Mini] Gel Chống Nắng Vichy Bảo Vệ Da, Ngừa Thâm Nám 15ml",
+    "role": "SUNSCREEN",
+    "brand": "Vichy",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 59000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "1749": {
+    "ten_san_pham": "Combo 2 Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",
+    "role": "SUNSCREEN",
+    "brand": "La Roche-Posay",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 843000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6302": {
+    "ten_san_pham": "Mặt Nạ Mediheal Hỗ Trợ Dưỡng Ẩm Sâu 20ml",
+    "role": "MASK",
+    "brand": "Mediheal",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 18000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6212": {
+    "ten_san_pham": "Mặt Nạ Emmié 5% Niacinamide Sáng Da Mờ Thâm Dạng Pad 20 Miếng",
+    "role": "MASK",
+    "brand": "Emmié by Happy Skin",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 100000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6165": {
+    "ten_san_pham": "Mặt Nạ Dermal Tinh Chất Dưỡng Sáng Da 23g",
+    "role": "MASK",
+    "brand": "Dermal",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 9000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "92": {
+    "ten_san_pham": "Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "L'Oreal",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 315000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6313": {
+    "ten_san_pham": "Nước Tẩy Trang Nature Republic Từ Khoáng Chất 500ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "Nature Republic",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 174000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "3241": {
+    "ten_san_pham": "Combo Nước Tẩy Trang Garnier Cho Da Dầu Mụn 50ml + 2 Nước Tẩy Trang 50ml (Màu Ngẫu Nhiên)",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "Garnier",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 65000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6204": {
+    "ten_san_pham": "[Mini] Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 95ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "L'Oreal",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 29000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "6202": {
+    "ten_san_pham": "[Mini] Combo 5 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 95ml",
+    "role": "MAKEUP_REMOVAL",
+    "brand": "L'Oreal",
+    "ma_danh_muc": 2,
+    "danh_muc": "Tẩy Trang Mặt",
+    "gia_ban": 139000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "266": {
+    "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 400ml",
+    "role": "CLEANSER",
+    "brand": "Eucerin",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 454000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "1200": {
+    "ten_san_pham": "Combo 8 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml",
+    "role": "CLEANSER",
+    "brand": "La Roche-Posay",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 399000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "46": {
+    "ten_san_pham": "Combo 2 Sữa Rửa Mặt Simple Giúp Da Sạch Thoáng 150ml",
+    "role": "CLEANSER",
+    "brand": "Simple",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 198000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "6274": {
+    "ten_san_pham": "Sữa Rửa Mặt Curél Dạng Bọt Cấp Ẩm Chuyên Sâu Túi 130ml",
+    "role": "CLEANSER",
+    "brand": "Curél",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 216000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "6306": {
+    "ten_san_pham": "Gel Rửa Mặt Freeplus Làm Sạch Dịu Nhẹ Cho Da Dầu 100ml",
+    "role": "CLEANSER",
+    "brand": "Freeplus",
+    "ma_danh_muc": 1,
+    "danh_muc": "Sữa Rửa Mặt",
+    "gia_ban": 426000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "2020": {
+    "ten_san_pham": "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 20ml",
+    "role": "TONER",
+    "brand": "Klairs",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 69000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "265": {
+    "ten_san_pham": "Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml",
+    "role": "TONER",
+    "brand": "Klairs",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 254000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "1157": {
+    "ten_san_pham": "Combo 2 Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml",
+    "role": "TONER",
+    "brand": "Simple",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 218000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "4310": {
+    "ten_san_pham": "Nước Hoa Hồng Some By Mi AHA-BHA-PHA Cho Da Mụn 30ml",
+    "role": "TONER",
+    "brand": "Some By Mi",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 49000,
+    "loai_da": "Da mụn"
+  },
+  "447": {
+    "ten_san_pham": "Nước Hoa Hồng Some By Mi AHA-BHA-PHA Cho Da Mụn 150ml",
+    "role": "TONER",
+    "brand": "Some By Mi",
+    "ma_danh_muc": 4,
+    "danh_muc": "Toner / Nước Cân Bằng Da",
+    "gia_ban": 263000,
+    "loai_da": "Da mụn"
+  },
+  "3103": {
+    "ten_san_pham": "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml (HSD: 30 Tháng)",
+    "role": "SERUM",
+    "brand": "Skin1004",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 302000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "2334": {
+    "ten_san_pham": "[Mini] Combo 2 Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 30ml",
+    "role": "SERUM",
+    "brand": "Skin1004",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 250000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "50": {
+    "ten_san_pham": "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml",
+    "role": "SERUM",
+    "brand": "Skin1004",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 379000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "191": {
+    "ten_san_pham": "Serum Klairs Vitamin C Cho Da Nhạy Cảm 35ml",
+    "role": "SERUM",
+    "brand": "Klairs",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 296000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "1968": {
+    "ten_san_pham": "Combo 2 Serum Balance Active Formula Làm Sáng Da, Mờ Thâm 30ml",
+    "role": "SERUM",
+    "brand": "Balance Active Formula",
+    "ma_danh_muc": 9,
+    "danh_muc": "Serum / Tinh Chất",
+    "gia_ban": 238000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "929": {
+    "ten_san_pham": "Kem Dưỡng Eucerin Giúp Làm Giảm Dầu & Mụn 40ml",
+    "role": "TREATMENT",
+    "brand": "Eucerin",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 433000,
+    "loai_da": "Da mụn"
+  },
+  "2322": {
+    "ten_san_pham": "Miếng Dán Mụn Mayan Ultra Thin Spot Plus 12+8 Miếng",
+    "role": "TREATMENT",
+    "brand": "Mayan",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 27000,
+    "loai_da": "Da mụn"
+  },
+  "408": {
+    "ten_san_pham": "Miếng Dán Mụn Mayan Ultra Thin Spot 20+4 Miếng",
+    "role": "TREATMENT",
+    "brand": "Mayan",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 27000,
+    "loai_da": "Da mụn"
+  },
+  "299": {
+    "ten_san_pham": "Kem Dưỡng Obagi Retinol 0.5% Trẻ Hóa Da, Ngừa Mụn 28g",
+    "role": "TREATMENT",
+    "brand": "Obagi",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 1355000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "98": {
+    "ten_san_pham": "Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da, Ngừa Mụn 28g",
+    "role": "TREATMENT",
+    "brand": "Obagi",
+    "ma_danh_muc": 25,
+    "danh_muc": "Hỗ Trợ Trị Mụn",
+    "gia_ban": 1462000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "506": {
+    "ten_san_pham": "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 30ml",
+    "role": "MOISTURIZER",
+    "brand": "Klairs",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 287000,
+    "loai_da": "Da nhạy cảm"
+  },
+  "1009": {
+    "ten_san_pham": "Gel Dưỡng Ẩm Hada Labo Ngừa Mụn, Làm Dịu Da 50g",
+    "role": "MOISTURIZER",
+    "brand": "Hada Labo",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 199000,
+    "loai_da": "Da mụn"
+  },
+  "428": {
+    "ten_san_pham": "Gel Dưỡng Hada Labo Sáng Da Chuyên Sâu, Giảm Thâm Sạm 50g",
+    "role": "MOISTURIZER",
+    "brand": "Hada Labo",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 176000,
+    "loai_da": "Unknown"
+  },
+  "215": {
+    "ten_san_pham": "Kem Dưỡng Hada Labo Chuyên Biệt Cải Thiện Da Lão Hóa 50g",
+    "role": "MOISTURIZER",
+    "brand": "Hada Labo",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 186000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "151": {
+    "ten_san_pham": "Kem Dưỡng Hada Labo Sáng Da Chuyên Sâu, Giảm Thâm Sạm 50g",
+    "role": "MOISTURIZER",
+    "brand": "Hada Labo",
+    "ma_danh_muc": 7,
+    "danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "gia_ban": 161000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6289": {
+    "ten_san_pham": "Combo 2 Serum Chống Nắng Anessa Dưỡng Da Nâng Tông 30ml",
+    "role": "SUNSCREEN",
+    "brand": "Anessa",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 1440000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "4699": {
+    "ten_san_pham": "Combo 2 Tinh Chất Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Hồng)",
+    "role": "SUNSCREEN",
+    "brand": "Sunplay",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 298000,
+    "loai_da": "Da khô/Hỗn hợp khô"
+  },
+  "4520": {
+    "ten_san_pham": "Combo 2 Tinh Chất Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)",
+    "role": "SUNSCREEN",
+    "brand": "Sunplay",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 254000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "2748": {
+    "ten_san_pham": "Tinh Chất Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Cam)",
+    "role": "SUNSCREEN",
+    "brand": "Sunplay",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 142000,
+    "loai_da": "Da khô/Hỗn hợp khô"
+  },
+  "2493": {
+    "ten_san_pham": "Combo 2 Tinh Chất Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Tím)",
+    "role": "SUNSCREEN",
+    "brand": "Sunplay",
+    "ma_danh_muc": 6,
+    "danh_muc": "Chống Nắng Da Mặt",
+    "gia_ban": 270000,
+    "loai_da": "Da khô/Hỗn hợp khô"
+  },
+  "6358": {
+    "ten_san_pham": "Mặt Nạ Dermal Chiết Xuất Hồng Sâm Làm Săn Chắc Da 23g",
+    "role": "MASK",
+    "brand": "Dermal",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 9000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6343": {
+    "ten_san_pham": "Mặt Nạ Nature Republic Chiết Xuất Tràm Trà Ngừa Mụn 24g",
+    "role": "MASK",
+    "brand": "Nature Republic",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 19000,
+    "loai_da": "Da mụn"
+  },
+  "6329": {
+    "ten_san_pham": "Mặt Nạ Cathy Doll Kiểm Soát Dầu, Ngăn Ngừa Mụn 20g",
+    "role": "MASK",
+    "brand": "Cathy Doll",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 50000,
+    "loai_da": "Da dầu/Hỗn hợp dầu"
+  },
+  "6328": {
+    "ten_san_pham": "Mặt Nạ Cathy Doll Vitamin C Dưỡng Sáng Da 20g",
+    "role": "MASK",
+    "brand": "Cathy Doll",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 50000,
+    "loai_da": "Da thường/Mọi loại da"
+  },
+  "6263": {
+    "ten_san_pham": "Mặt Nạ Purederm Dưỡng Da Chiết Xuất Cà Chua 18g",
+    "role": "MASK",
+    "brand": "Purederm",
+    "ma_danh_muc": 11,
+    "danh_muc": "Mặt Nạ Giấy",
+    "gia_ban": 19000,
+    "loai_da": "Unknown"
+  }
+}

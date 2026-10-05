@@ -1,0 +1,51 @@
+{
+  "generator_version": "scaling-v2",
+  "created_at": "2026-10-03T17:14:02Z",
+  "stages": {
+    "Stage_S": {
+      "code": "S20_B30",
+      "sku_count": 20,
+      "basket_count": 30,
+      "routine_probability": 0.8,
+      "noise_probability": 0.2,
+      "exploration_probability": 0.0,
+      "seed": 42,
+      "status": "frozen_baseline"
+    },
+    "Stage_M": {
+      "code": "M40_B100",
+      "sku_count": 40,
+      "basket_count": 100,
+      "scenario": "association_scale_40sku_100basket_v1",
+      "routine_probability": 0.65,
+      "noise_probability": 0.2,
+      "exploration_probability": 0.15,
+      "size_weights": {
+        "1": 0.15,
+        "2": 0.4,
+        "3": 0.25,
+        "4": 0.15,
+        "5": 0.05
+      },
+      "seed": 43
+    },
+    "Stage_L": {
+      "code": "L80_B300",
+      "sku_count": 80,
+      "basket_count": 300,
+      "scenario": "association_scale_80sku_300basket_v1",
+      "routine_probability": 0.5,
+      "noise_probability": 0.25,
+      "exploration_probability": 0.25,
+      "size_weights": {
+        "1": 0.15,
+        "2": 0.35,
+        "3": 0.25,
+        "4": 0.15,
+        "5": 0.1
+      },
+      "seed": 44
+    }
+  },
+  "design_rationale": "Progressively weakens planted routine probability from 80% (Stage S) to 65% (Stage M) and 50% (Stage L), while increasing SKU universe from 20 to 40 and 80. This tests whether association rules remain stable or attenuate as catalog scale and noise increase."
+}

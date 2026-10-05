@@ -1,0 +1,5 @@
+Representation,Dimension,Explained_Variance_Sum,Silhouette_K6,Non_Zeros,Vocab_Size,Configuration_Status
+I_PARSED_V2,10,0.1336,0.2089,30631,2179,sensitivity_check
+I_PARSED_V2,20,0.2133,0.133,30631,2179,sensitivity_check
+I_PARSED_V2,30,0.2726,0.0814,30631,2179,reference_configuration
+I_PARSED_V2,50,0.3642,0.0681,30631,2179,sensitivity_check

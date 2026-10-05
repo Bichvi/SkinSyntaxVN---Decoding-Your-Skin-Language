@@ -1,0 +1,407 @@
+{
+  "total_vocabulary_size": 2179,
+  "min_df": 2,
+  "max_df": 0.85,
+  "top_terms_by_document_frequency": [
+    {
+      "term": "glycerin",
+      "df": 714
+    },
+    {
+      "term": "butylene_glycol",
+      "df": 490
+    },
+    {
+      "term": "phenoxyethanol",
+      "df": 423
+    },
+    {
+      "term": "disodium_edta",
+      "df": 393
+    },
+    {
+      "term": "niacinamide",
+      "df": 358
+    },
+    {
+      "term": "sodium_hyaluronate",
+      "df": 341
+    },
+    {
+      "term": "xanthan_gum",
+      "df": 324
+    },
+    {
+      "term": "tocopherol",
+      "df": 319
+    },
+    {
+      "term": "citric_acid",
+      "df": 308
+    },
+    {
+      "term": "dimethicone",
+      "df": 289
+    },
+    {
+      "term": "fragrance",
+      "df": 287
+    },
+    {
+      "term": "ethylhexylglycerin",
+      "df": 274
+    },
+    {
+      "term": "1_2_hexanediol",
+      "df": 239
+    },
+    {
+      "term": "carbomer",
+      "df": 222
+    },
+    {
+      "term": "panthenol",
+      "df": 215
+    },
+    {
+      "term": "caprylyl_glycol",
+      "df": 213
+    },
+    {
+      "term": "propanediol",
+      "df": 210
+    },
+    {
+      "term": "sodium_hydroxide",
+      "df": 204
+    },
+    {
+      "term": "stearic_acid",
+      "df": 202
+    },
+    {
+      "term": "silica",
+      "df": 192
+    },
+    {
+      "term": "pentylene_glycol",
+      "df": 187
+    },
+    {
+      "term": "allantoin",
+      "df": 177
+    },
+    {
+      "term": "acrylates/c10_30_alkyl_acrylate_crosspolymer",
+      "df": 173
+    },
+    {
+      "term": "dipropylene_glycol",
+      "df": 172
+    },
+    {
+      "term": "propylene_glycol",
+      "df": 171
+    },
+    {
+      "term": "titanium_dioxide",
+      "df": 167
+    },
+    {
+      "term": "sodium_chloride",
+      "df": 166
+    },
+    {
+      "term": "tocopheryl_acetate",
+      "df": 162
+    },
+    {
+      "term": "sodium_benzoate",
+      "df": 157
+    },
+    {
+      "term": "glyceryl_stearate",
+      "df": 148
+    },
+    {
+      "term": "_2",
+      "df": 146
+    },
+    {
+      "term": "caprylic/capric_triglyceride",
+      "df": 144
+    },
+    {
+      "term": "aluminum_hydroxide",
+      "df": 141
+    },
+    {
+      "term": "cetearyl_alcohol",
+      "df": 137
+    },
+    {
+      "term": "dipotassium_glycyrrhizate",
+      "df": 130
+    },
+    {
+      "term": "betaine",
+      "df": 126
+    },
+    {
+      "term": "_water",
+      "df": 125
+    },
+    {
+      "term": "diethylamino_hydroxybenzoyl_hexyl_benzoate",
+      "df": 123
+    },
+    {
+      "term": "bht",
+      "df": 122
+    },
+    {
+      "term": "triethanolamine",
+      "df": 117
+    },
+    {
+      "term": "salicylic_acid",
+      "df": 115
+    },
+    {
+      "term": "sodium_citrate",
+      "df": 113
+    },
+    {
+      "term": "methylparaben",
+      "df": 109
+    },
+    {
+      "term": "cetyl_alcohol",
+      "df": 109
+    },
+    {
+      "term": "arginine",
+      "df": 109
+    },
+    {
+      "term": "zinc_oxide",
+      "df": 106
+    },
+    {
+      "term": "alcohol",
+      "df": 105
+    },
+    {
+      "term": "bis_ethylhexyloxyphenol_methoxyphenyl_triazine",
+      "df": 104
+    },
+    {
+      "term": "adenosine",
+      "df": 104
+    },
+    {
+      "term": "ethylhexyl_triazone",
+      "df": 100
+    },
+    {
+      "term": "hyaluronic_acid",
+      "df": 96
+    },
+    {
+      "term": "cyclopentasiloxane",
+      "df": 95
+    },
+    {
+      "term": "_3",
+      "df": 91
+    },
+    {
+      "term": "hydrolyzed_hyaluronic_acid",
+      "df": 90
+    },
+    {
+      "term": "ceramide_np",
+      "df": 89
+    },
+    {
+      "term": "triethoxycaprylylsilane",
+      "df": 88
+    },
+    {
+      "term": "sodium_acetylated_hyaluronate",
+      "df": 88
+    },
+    {
+      "term": "potassium_sorbate",
+      "df": 86
+    },
+    {
+      "term": "potassium_hydroxide",
+      "df": 86
+    },
+    {
+      "term": "ethylhexyl_methoxycinnamate",
+      "df": 84
+    },
+    {
+      "term": "water_aqua",
+      "df": 83
+    },
+    {
+      "term": "myristic_acid",
+      "df": 83
+    },
+    {
+      "term": "polysorbate_60",
+      "df": 83
+    },
+    {
+      "term": "camellia_sinensis_leaf_extract",
+      "df": 81
+    },
+    {
+      "term": "decyl_glucoside",
+      "df": 81
+    },
+    {
+      "term": "centella_asiatica_extract",
+      "df": 80
+    },
+    {
+      "term": "caprylyl_methicone",
+      "df": 77
+    },
+    {
+      "term": "palmitic_acid",
+      "df": 76
+    },
+    {
+      "term": "cocamidopropyl_betaine",
+      "df": 76
+    },
+    {
+      "term": "alcohol_denat",
+      "df": 75
+    },
+    {
+      "term": "polysorbate_20",
+      "df": 74
+    },
+    {
+      "term": "linalool",
+      "df": 74
+    },
+    {
+      "term": "c12_15_alkyl_benzoate",
+      "df": 73
+    },
+    {
+      "term": "lauric_acid",
+      "df": 73
+    },
+    {
+      "term": "stearyl_alcohol",
+      "df": 72
+    },
+    {
+      "term": "limonene",
+      "df": 72
+    },
+    {
+      "term": "ethylhexyl_salicylate",
+      "df": 70
+    },
+    {
+      "term": "butyl_methoxydibenzoylmethane",
+      "df": 68
+    },
+    {
+      "term": "sodium_metabisulfite",
+      "df": 68
+    },
+    {
+      "term": "octocrylene",
+      "df": 66
+    },
+    {
+      "term": "peg_8",
+      "df": 66
+    },
+    {
+      "term": "polymethylsilsesquioxane",
+      "df": 66
+    },
+    {
+      "term": "hydroxyacetophenone",
+      "df": 65
+    },
+    {
+      "term": "trisodium_ethylenediamine_disuccinate",
+      "df": 64
+    },
+    {
+      "term": "squalane",
+      "df": 64
+    },
+    {
+      "term": "mica",
+      "df": 64
+    },
+    {
+      "term": "sodium_laureth_sulfate",
+      "df": 63
+    },
+    {
+      "term": "ammonium_acryloyldimethyltaurate/vp_copolymer",
+      "df": 63
+    },
+    {
+      "term": "soluble_collagen",
+      "df": 62
+    },
+    {
+      "term": "hydrated_silica",
+      "df": 62
+    },
+    {
+      "term": "_4",
+      "df": 62
+    },
+    {
+      "term": "isododecane",
+      "df": 61
+    },
+    {
+      "term": "trimethylsiloxysilicate",
+      "df": 61
+    },
+    {
+      "term": "disteardimonium_hectorite",
+      "df": 61
+    },
+    {
+      "term": "behenyl_alcohol",
+      "df": 61
+    },
+    {
+      "term": "ascorbyl_glucoside",
+      "df": 60
+    },
+    {
+      "term": "dimethiconol",
+      "df": 59
+    },
+    {
+      "term": "zinc_pca",
+      "df": 58
+    },
+    {
+      "term": "dimethicone/vinyl_dimethicone_crosspolymer",
+      "df": 58
+    },
+    {
+      "term": "acrylates_copolymer",
+      "df": 58
+    }
+  ]
+}

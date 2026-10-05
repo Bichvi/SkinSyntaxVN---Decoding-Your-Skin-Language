@@ -1,0 +1,121 @@
+Anchor_ID,Anchor_Name,Leaf_Category,Parent_Category,Price_VND,Has_Ingredients,Top10_Jaccard_NoIng_vs_Ing,Same_Leaf_Rate_NoIng,Same_Leaf_Rate_Ing,Same_Parent_Rate_NoIng,Same_Parent_Rate_Ing,Price_ZDiff_NoIng,Price_ZDiff_Ing,Ingredient_Overlap_NoIng,Ingredient_Overlap_Ing,Variant_Family_Rate_NoIng,Variant_Family_Rate_Ing
+P_1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,Sữa Rửa Mặt,Làm Sạch Da,357000.0,True,0.1111,1.0,1.0,1.0,1.0,0.0483,0.4146,0.0525,0.4323,0.0,0.4
+P_40,"Combo 10 Mặt Nạ Caryophy Giảm Mụn, Thâm & Dưỡng Ẩm Da 22g",Mặt Nạ Giấy,Mặt Nạ,229000.0,True,0.25,1.0,1.0,1.0,1.0,0.1259,0.377,0.118,0.337,0.0,0.1
+P_48,Kem Dưỡng Olay Luminous Sáng Da Mờ Thâm Nám Ban Đêm 50g,Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,149000.0,True,0.0526,1.0,1.0,1.0,1.0,0.0916,0.5184,0.1455,0.4491,0.0,0.1
+P_64,Combo Cocoon Nước Tẩy Trang Bí Đao Giảm Dầu 500ml + Sữa Rửa ,Tẩy Trang Mặt,Làm Sạch Da,339000.0,True,0.8182,1.0,1.0,1.0,1.0,0.3626,0.3292,0.1,0.1,0.1,0.1
+P_90,Sữa Rửa Mặt CeraVe Cho Da Thường Đến Khô 236ml,Sữa Rửa Mặt,Làm Sạch Da,261000.0,True,0.1765,1.0,1.0,1.0,1.0,0.2598,0.3674,0.1749,0.4651,0.1,0.2
+P_98,"Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da, Ngừa Mụn 28g",Hỗ Trợ Trị Mụn,Đặc Trị,1462000.0,True,0.6667,1.0,1.0,1.0,1.0,0.8372,0.8638,0.1593,0.1677,0.0,0.0
+P_101,"Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml",Chống Nắng Da Mặt,Chăm Sóc Da Mặt,278000.0,True,0.3333,1.0,1.0,1.0,1.0,0.041,0.1689,0.1736,0.4639,0.0,0.1
+P_121,Kem Rửa Mặt Hada Labo Sạch Sâu Dưỡng Ẩm 80g,Sữa Rửa Mặt,Làm Sạch Da,60000.0,True,0.4286,1.0,1.0,1.0,1.0,0.4209,0.444,0.2573,0.3096,0.1,0.1
+P_151,"Kem Dưỡng Hada Labo Sáng Da Chuyên Sâu, Giảm Thâm Sạm 50g",Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,161000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0557,0.194,0.2546,0.4466,0.0,0.0
+P_167,"Xịt Khoáng Avène Cấp Nước, Làm Dịu & Giảm Kích Ứng 300ml",Xịt Khoáng,Dưỡng Ẩm,288000.0,True,0.3333,1.0,1.0,1.0,1.0,0.1909,0.2701,0.2545,0.5045,0.2,0.2
+P_175,Combo 2 Sữa Rửa Mặt innisfree Dưỡng Ẩm Từ Trà Xanh 150g (Mới,Sữa Rửa Mặt,Làm Sạch Da,366000.0,True,0.25,1.0,1.0,1.0,1.0,0.3079,0.4184,0.1734,0.2311,0.0,0.0
+P_189,Gel Chống Nắng Anessa Dưỡng Ẩm Bảo Vệ Hoàn Hảo 90g (Mới),Chống Nắng Da Mặt,Chăm Sóc Da Mặt,336000.0,True,0.4286,1.0,1.0,1.0,1.0,0.2012,0.3507,0.1084,0.2909,0.0,0.1
+P_198,Mặt Nạ Ngủ Môi Laneige Hương Quả Mọng 20g,Mặt Nạ Môi,Dưỡng Môi,377000.0,True,0.5385,0.4,0.4,1.0,1.0,0.3786,0.4089,0.3445,0.3708,0.3,0.3
+P_221,"Gel Rửa Mặt Simple Thanh Khiết, Giảm Bóng Nhờn 150ml",Sữa Rửa Mặt,Làm Sạch Da,94000.0,True,0.1765,1.0,1.0,1.0,1.0,0.1063,0.2689,0.0677,0.2886,0.0,0.1
+P_224,Combo 2 Dung Dịch Tẩy Da Chết Paula’s Choice 2% BHA 118ml,Tẩy Tế Bào Chết Da Mặt,Làm Sạch Da,1320000.0,True,0.8182,0.8,0.7,1.0,1.0,0.8047,0.7598,0.4149,0.4186,0.4,0.4
+P_225,Gel Rửa Mặt Cocoon Bí Đao Giúp Giảm Dầu & Mụn 310ml,Sữa Rửa Mặt,Làm Sạch Da,175000.0,True,0.0526,1.0,1.0,1.0,1.0,0.0304,0.258,0.0605,0.2947,0.0,0.2
+P_233,Gel Rửa Mặt SVR Không Chứa Xà Phòng Cho Da Dầu Túi 400ml,Sữa Rửa Mặt,Làm Sạch Da,355000.0,True,0.4286,1.0,1.0,1.0,1.0,0.2073,0.3131,0.4265,0.5494,0.0,0.0
+P_328,Combo 10 Mặt Nạ Wonjin Siêu Tinh Chất Phục Hồi 27g,Mặt Nạ Giấy,Mặt Nạ,159000.0,True,0.5385,1.0,1.0,1.0,1.0,0.2074,0.2258,0.0822,0.2744,0.0,0.0
+P_379,Combo Paula's Choice Serum Se Khít Lỗ Chân Lông Tối Ưu 20ml ,Bộ Chăm Sóc Da Mặt,Chăm Sóc Da Mặt,1430000.0,True,0.5385,1.0,1.0,1.0,1.0,0.1435,0.2295,0.0489,0.0487,0.0,0.0
+P_392,Lotion Chấm Mụn Bye Bye Blemish Cho Da Mụn Thâm 30ml,Hỗ Trợ Trị Mụn,Đặc Trị,336000.0,True,0.4286,1.0,1.0,1.0,1.0,0.0545,0.0792,0.2136,0.3102,0.0,0.0
+P_401,Sữa Chống Nắng Sunplay Skin Aqua Dưỡng Da Sáng Mịn 25g,Chống Nắng Da Mặt,Chăm Sóc Da Mặt,92000.0,True,0.5385,1.0,1.0,1.0,1.0,0.0789,0.1585,0.1469,0.3318,0.0,0.2
+P_510,Sữa Chống Nắng La Roche-Posay Cho Da Dầu Mụn 50ml,Chống Nắng Da Mặt,Chăm Sóc Da Mặt,375000.0,True,0.1111,1.0,1.0,1.0,1.0,0.0646,0.2488,0.1273,0.2696,0.0,0.0
+P_515,"Mặt Nạ BNBG Tràm Trà Giúp Thải Độc Da, Giảm Mụn 30ml",Mặt Nạ Giấy,Mặt Nạ,23000.0,True,0.3333,1.0,1.0,1.0,1.0,0.0755,0.2519,0.0896,0.1204,0.0,0.0
+P_535,Mặt Nạ Some By Mi Đất Sét Trà Xanh Thu Nhỏ Lỗ Chân Lông 100g,Mặt Nạ Rửa,Mặt Nạ,232000.0,True,0.8182,1.0,1.0,1.0,1.0,0.2194,0.2211,0.0867,0.0814,0.0,0.0
+P_563,Gel Rửa Mặt Compliment 3 In 1 BHA Ngừa Mụn Kiềm Dầu 200ml,Sữa Rửa Mặt,Làm Sạch Da,73000.0,True,0.4286,1.0,1.0,1.0,1.0,0.0428,0.0927,0.3432,0.3388,0.0,0.0
+P_569,Mặt Nạ Ngủ Môi Care:Nel Chiết Xuất Quả Lựu 5g,Mặt Nạ Môi,Dưỡng Môi,41000.0,True,0.8182,0.9,0.9,1.0,1.0,0.5687,0.5732,0.3276,0.332,0.1,0.1
+P_578,"Mặt Nạ Mắt JMsolution Mật Ong Mờ Quầng Thâm, Nếp Nhăn 90g",Mặt Nạ Mắt,Dưỡng Mắt,149000.0,True,0.5385,0.7,0.8,1.0,1.0,0.3118,0.519,0.1272,0.1447,0.0,0.0
+P_588,Toner Paula’s Choice Điều Chỉnh Lỗ Chân Lông 190ml,Toner / Nước Cân Bằng Da,Làm Sạch Da,549000.0,True,0.4286,1.0,1.0,1.0,1.0,0.163,0.3093,0.0236,0.0192,0.0,0.0
+P_589,Gel Dưỡng SVR Giảm Mụn & Loại Bỏ Dầu Cho Da 40ml,Hỗ Trợ Trị Mụn,Đặc Trị,361000.0,True,0.3333,1.0,1.0,1.0,1.0,0.0551,0.1456,0.0657,0.1166,0.0,0.0
+P_597,Dung Dịch Tẩy Da Chết Paula’s Choice 2% BHA 118ml,Tẩy Tế Bào Chết Da Mặt,Làm Sạch Da,685000.0,True,0.5385,1.0,0.8,1.0,1.0,0.6263,0.5309,0.4,0.4081,0.4,0.4
+P_615,Dung Dịch Tẩy Da Chết DrCeutics 2% BHA Nền Cồn 100ml,Tẩy Tế Bào Chết Da Mặt,Làm Sạch Da,110000.0,True,0.5385,1.0,1.0,1.0,1.0,0.3255,0.2722,0.0495,0.0797,0.0,0.0
+P_650,Toner Ma:nyo Chứa Tinh Chất Dưỡng Ẩm Cho Da 210ml,Toner / Nước Cân Bằng Da,Làm Sạch Da,196000.0,True,0.4286,1.0,1.0,1.0,1.0,0.2248,0.3151,0.1479,0.1967,0.0,0.0
+P_673,[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g,Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,99000.0,True,0.4286,1.0,1.0,1.0,1.0,0.6895,0.6651,0.2343,0.358,0.2,0.3
+P_709,Mặt Nạ Nghệ Hưng Yên Cocoon Giúp Da Rạng Rỡ Mịn Màng 100ml,Mặt Nạ Rửa,Mặt Nạ,239000.0,True,0.8182,1.0,1.0,1.0,1.0,0.2272,0.3011,0.3493,0.3484,0.1,0.1
+P_725,Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương),Chống Nắng Da Mặt,Chăm Sóc Da Mặt,132000.0,True,0.25,1.0,1.0,1.0,1.0,0.0659,0.2755,0.1157,0.2579,0.0,0.1
+P_730,Serum Neutrogena Retinol Ngăn Ngừa Lão Hóa 30ml,Serum / Tinh Chất,Đặc Trị,313000.0,True,0.0526,1.0,1.0,1.0,1.0,0.0234,0.1491,0.0809,0.1098,0.0,0.0
+P_773,Combo 2 Dung Dịch Tẩy Da Chết Paula’s Choice 2% BHA 30ml,Tẩy Tế Bào Chết Da Mặt,Làm Sạch Da,470000.0,True,0.8182,1.0,1.0,1.0,1.0,0.4609,0.4702,0.4,0.4,0.4,0.4
+P_791,Gel Dưỡng Ẩm Nature Republic Chiết Xuất Lô Hội 300ml,Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,121000.0,True,0.1765,1.0,1.0,1.0,1.0,0.1526,0.3208,0.054,0.0906,0.0,0.0
+P_804,"Mặt Nạ Wonjin Nâng Cơ, Trẻ Hóa Da 30g",Mặt Nạ Giấy,Mặt Nạ,25000.0,True,0.0526,1.0,1.0,1.0,1.0,0.0,0.0915,0.0824,0.2763,0.0,0.0
+P_805,Combo Olay Serum & Kem Dưỡng Chiết Xuất Retinol24 Ngừa Lão H,Bộ Chăm Sóc Da Mặt,Chăm Sóc Da Mặt,649000.0,True,0.1111,1.0,1.0,1.0,1.0,0.0379,0.2084,0.064,0.1297,0.0,0.0
+P_815,"Sữa Rửa Mặt Paula's Choice Ngừa Mụn, Se Lỗ Chân Lông 177ml",Sữa Rửa Mặt,Làm Sạch Da,368000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0572,0.1452,0.0707,0.0984,0.0,0.0
+P_845,Miếng Dán Mụn Derma Angel Dùng Cho Ngày 12 Miếng,Hỗ Trợ Trị Mụn,Đặc Trị,37000.0,True,0.4286,1.0,1.0,1.0,1.0,0.243,0.3939,0.2,0.3,0.0,0.0
+P_917,Kem Dưỡng Mắt Kumargic Giảm Quầng Thâm & Bọng Mắt (Mới) 20g,Serum / Kem Dưỡng Mắt,Dưỡng Mắt,130000.0,True,0.8182,1.0,1.0,1.0,1.0,0.6878,0.6881,0.0404,0.0398,0.0,0.0
+P_936,Combo 2 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,Sữa Rửa Mặt,Làm Sạch Da,145000.0,True,0.3333,1.0,1.0,1.0,1.0,0.3351,0.4907,0.2601,0.6859,0.2,0.3
+P_947,Tẩy Da Chết Môi Cocoon Từ Cà Phê Đắk Lắk 5g,Tẩy Tế Bào Chết Môi,Dưỡng Môi,59000.0,True,0.3333,0.2,0.2,1.0,1.0,0.0792,0.1632,0.1202,0.1251,0.1,0.1
+P_957,"Serum Bioderma Sáng Mịn, Mờ Thâm Cho Da Dầu Mụn 30ml",Serum / Tinh Chất,Đặc Trị,528000.0,True,0.4286,1.0,1.0,1.0,1.0,0.2077,0.2989,0.095,0.1024,0.0,0.0
+P_967,"Nước Tẩy Trang Senka Ngừa Mụn, Kiểm Soát Nhờn 230ml",Tẩy Trang Mặt,Làm Sạch Da,80000.0,True,0.1111,1.0,1.0,1.0,1.0,0.1122,0.4232,0.1263,0.2485,0.0,0.1
+P_997,Mặt Nạ Ngủ Laneige Dưỡng Ẩm & Tăng Khả Năng Tự Vệ Da 70ml,Mặt Nạ Ngủ,Mặt Nạ,564000.0,True,0.8182,1.0,1.0,1.0,1.0,0.5081,0.5419,0.2836,0.3741,0.0,0.0
+P_1003,"Xịt Khoáng Avène Cấp Nước, Làm Dịu & Giảm Kích Ứng 50ml",Xịt Khoáng,Dưỡng Ẩm,139000.0,True,0.3333,1.0,1.0,1.0,1.0,0.2988,0.3603,0.2879,0.4879,0.2,0.2
+P_1027,Mặt Nạ Ngủ Môi Care:Nel Chiết Xuất Quả Lựu 23g,Mặt Nạ Môi,Dưỡng Môi,140000.0,True,0.8182,1.0,0.9,1.0,1.0,0.7186,0.6158,0.3286,0.3374,0.1,0.1
+P_1071,"Combo 20 Mặt Nạ Sinh Học Emmié Phục Hồi, Dịu Da 25g",Mặt Nạ Giấy,Mặt Nạ,460000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0992,0.4012,0.1505,0.4876,0.0,0.1
+P_1111,Kem Dưỡng Mắt Eucerin Giúp Giảm Nếp Nhăn 15ml,Serum / Kem Dưỡng Mắt,Dưỡng Mắt,971000.0,True,0.8182,1.0,1.0,1.0,1.0,0.9661,0.97,0.0297,0.0399,0.0,0.0
+P_1190,Miếng Dán Mũi Lột Mụn Lanbena Sạch Mụn Đầu Đen 30g,Mặt Nạ Lột,Mặt Nạ,138000.0,True,0.3333,0.2,0.2,1.0,1.0,0.0744,0.1865,0.0205,0.0208,0.0,0.0
+P_1218,Mặt Nạ Lột Mụn Lanbena Than Tre Loại Bỏ Mụn Đầu Đen 30g,Mặt Nạ Lột,Mặt Nạ,135000.0,True,0.25,0.2,0.2,1.0,1.0,0.078,0.2337,0.0,0.0,0.0,0.0
+P_1291,"Serum Balance Active Formula AHA + BHA Tái Tạo, Sáng Da 30ml",Serum / Tinh Chất,Đặc Trị,199000.0,True,0.25,1.0,1.0,1.0,1.0,0.0599,0.2074,0.0648,0.0935,0.0,0.0
+P_1296,Mặt Nạ Ngủ Môi Care:Nel Chiết Xuất Quả Mọng 5g,Mặt Nạ Môi,Dưỡng Môi,41000.0,True,0.8182,0.9,0.9,1.0,1.0,0.5687,0.5732,0.3276,0.332,0.0,0.0
+P_1347,Kem Chống Nắng Bio-essence Dưỡng Ẩm Da 40ml,Chống Nắng Da Mặt,Chăm Sóc Da Mặt,104000.0,True,0.25,1.0,1.0,1.0,1.0,0.0861,0.1998,0.1027,0.1293,0.0,0.0
+P_1434,Kem Dưỡng Forencos Dầu Marula Nâng Tông Da Ban Ngày 10ml,Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,95000.0,True,0.6667,1.0,1.0,1.0,1.0,0.4376,0.3741,0.3613,0.5455,0.1,0.1
+P_1481,Nước Cân Bằng Cocoon Sen Hậu Giang Làm Dịu Da Nhạy Cảm 500ml,Toner / Nước Cân Bằng Da,Làm Sạch Da,285000.0,True,0.4286,1.0,1.0,1.0,1.0,0.2101,0.2468,0.2394,0.4485,0.1,0.3
+P_1510,"Kem Dưỡng Fixderma Làm Giảm Thâm, Nám, Tàn Nhang 15g",Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,251000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0524,0.1519,0.0835,0.1103,0.0,0.0
+P_1528,Dung Dịch Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Dầu 100ml,Lotion / Sữa Dưỡng,Dưỡng Ẩm,106000.0,True,0.5385,1.0,1.0,1.0,1.0,0.4636,0.5097,0.3513,0.3766,0.1,0.1
+P_1575,Tẩy Tế Bào Chết Môi BareSoul 20g,Tẩy Tế Bào Chết Môi,Dưỡng Môi,125000.0,True,0.1765,0.2,0.2,1.0,1.0,0.1519,0.3073,0.0212,0.0577,0.0,0.0
+P_1597,Son Dưỡng Ẩm Naris Ngừa Nhăn Môi Dạng Thỏi 3g,Son Dưỡng Môi,Dưỡng Môi,349000.0,True,0.3333,1.0,1.0,1.0,1.0,0.0994,0.2204,0.0061,0.0337,0.0,0.0
+P_1646,"Combo La Roche-Posay Gel Rửa Mặt Da Dầu, Nhạy Cảm",Bộ Chăm Sóc Da Mặt,Chăm Sóc Da Mặt,519000.0,True,0.3333,1.0,1.0,1.0,1.0,0.3385,0.3482,0.1542,0.3256,0.0,0.0
+P_1654,Dung Dịch Hada Labo Dưỡng Da Ngừa Lão Hóa 170ml (Mới),Lotion / Sữa Dưỡng,Dưỡng Ẩm,247000.0,True,0.6667,1.0,1.0,1.0,1.0,0.2519,0.3115,0.0928,0.0993,0.0,0.0
+P_1687,"Kem Dưỡng Mắt B.O.M Cấp Ẩm, Hỗ Trợ Mờ Nếp Nhăn 30g",Serum / Kem Dưỡng Mắt,Dưỡng Mắt,312000.0,True,0.6667,1.0,1.0,1.0,1.0,0.133,0.2311,0.0127,0.0136,0.0,0.0
+P_1746,Xịt Khoáng Cocoon Nghệ Hưng Yên Giúp Sáng Da 130ml,Xịt Khoáng,Dưỡng Ẩm,148000.0,True,0.3333,1.0,1.0,1.0,1.0,0.2417,0.4366,0.0,0.1,0.0,0.0
+P_1753,Sữa Chống Nắng Bioderma Phổ Rộng Ráo Mịn - Màu Beige 40ml,Chống Nắng Da Mặt,Chăm Sóc Da Mặt,419000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0494,0.1586,0.0609,0.1241,0.0,0.0
+P_1775,Gel Tẩy Trang Curél Cấp Ẩm Chuyên Sâu 130g,Tẩy Trang Mặt,Làm Sạch Da,299000.0,False,0.8182,1.0,1.0,1.0,1.0,0.079,0.1421,0.0,0.0,0.0,0.0
+P_1815,Sữa Rửa Mặt Hazeline Giảm Mụn Chiết Xuất Nghệ Hoa Cúc 100g,Sữa Rửa Mặt,Làm Sạch Da,52000.0,True,0.0526,1.0,1.0,1.0,1.0,0.1111,0.2881,0.0017,0.1211,0.0,0.0
+P_1878,Mặt Nạ Avander Đất Sét Bùn Non Se Khít Lỗ Chân Lông 110g,Mặt Nạ Rửa,Mặt Nạ,66000.0,True,0.4286,1.0,1.0,1.0,1.0,0.3673,0.1748,0.2246,0.6069,0.0,0.0
+P_1944,"Gel Dưỡng Azderma Hỗ Trợ Giảm Thâm, Cấp Ẩm Sáng Da 20g",Sản Phẩm Đặc Trị Khác,Đặc Trị,161000.0,True,0.25,0.1,0.1,1.0,1.0,0.1916,0.3052,0.0272,0.0535,0.0,0.0
+P_1978,"Combo Serum Tia'm Làm Sáng, Phục Hồi Cho Da Dầu Mụn, Nhạy Cả",Bộ Chăm Sóc Da Mặt,Chăm Sóc Da Mặt,657000.0,True,0.4286,1.0,1.0,1.0,1.0,0.2344,0.2673,0.0421,0.0812,0.0,0.0
+P_2025,"Kem Dưỡng Mắt Naris Cosmetics Sáng Da, Ngừa Nếp Nhăn 20g",Serum / Kem Dưỡng Mắt,Dưỡng Mắt,286000.0,True,0.8182,1.0,1.0,1.0,1.0,0.1396,0.2041,0.0231,0.0255,0.0,0.0
+P_2028,"Dung Dịch Hada Labo Dưỡng Ẩm Tối Ưu Da Thường, Khô 100ml",Lotion / Sữa Dưỡng,Dưỡng Ẩm,97000.0,True,0.4286,1.0,1.0,1.0,1.0,0.5912,0.5769,0.4157,0.4544,0.2,0.2
+P_2069,Xịt Chống Nắng Sunplay Bảo Vệ Đa Chiều SPF50+ PA++++ 60ml,Chống Nắng Da Mặt,Chăm Sóc Da Mặt,168000.0,True,0.4286,1.0,1.0,1.0,1.0,0.0745,0.1843,0.0232,0.0415,0.0,0.0
+P_2122,"Combo 2 Serum Torriden Dưỡng Ẩm Sâu, Sáng Bóng Da 50ml",Serum / Tinh Chất,Đặc Trị,774000.0,True,0.0526,1.0,1.0,1.0,1.0,0.0756,0.3545,0.111,0.2218,0.0,0.0
+P_2131,"Kem Dưỡng The Cafuné Mờ Thâm Nám, Tàn Nhang, Đều Màu Da 28g",Sản Phẩm Đặc Trị Khác,Đặc Trị,194000.0,True,0.0526,0.1,0.1,1.0,1.0,0.065,0.3047,0.0733,0.1148,0.0,0.0
+P_2192,Gel Tẩy Tế Bào Chết Meishoku Detclear Không Mùi 180ml,Tẩy Tế Bào Chết Da Mặt,Làm Sạch Da,250000.0,True,0.3333,1.0,1.0,1.0,1.0,0.173,0.4695,0.139,0.1588,0.0,0.0
+P_2277,"Kem Dưỡng L'Oreal Cấp Ẩm, Kiềm Dầu & Giảm Bóng Nhờn 8H 50ml",Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,329000.0,True,0.25,1.0,1.0,1.0,1.0,0.1074,0.1749,0.0473,0.0941,0.0,0.0
+P_2292,Mặt Nạ Dừa Emmié Thu Nhỏ Lỗ Chân Lông - Thừa Thiên Huế 25g,Mặt Nạ Giấy,Mặt Nạ,26000.0,True,0.5385,1.0,1.0,1.0,1.0,0.0,0.0393,0.7179,0.8312,0.0,0.0
+P_2297,Combo Bioderma Nước Tẩy Trang 500ml + Gel Rửa Mặt Cho Da Nhạ,Bộ Chăm Sóc Da Mặt,Chăm Sóc Da Mặt,745000.0,True,0.6667,1.0,1.0,1.0,1.0,0.133,0.2074,0.0369,0.0438,0.0,0.0
+P_2393,"Combo 10 Mặt Nạ Banobagi Làm Sáng Da, Tẩy Tế Bào Chết 30g",Mặt Nạ Giấy,Mặt Nạ,169000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0228,0.1454,0.381,0.6339,0.0,0.0
+P_2443,Toner Angel's Liquid Giảm Thâm Nám Chuyên Biệt 150ml,Toner / Nước Cân Bằng Da,Làm Sạch Da,564000.0,True,0.5385,1.0,1.0,1.0,1.0,0.1652,0.2711,0.0,0.0,0.0,0.0
+P_2448,Combo 5 Mặt Nạ Nature Republic Chiết Xuất Trà Xanh Săn Chắc ,Mặt Nạ Giấy,Mặt Nạ,70000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0088,0.345,0.3636,0.6073,0.0,0.1
+P_2461,"Sữa Rửa Mặt Decumar Sạch Sâu Dịu Nhẹ, Sáng Da Ngừa Mụn 50g",Sữa Rửa Mặt,Làm Sạch Da,95000.0,True,0.6667,1.0,1.0,1.0,1.0,0.3728,0.2864,0.0,0.0,0.0,0.0
+P_2512,Gel Dưỡng Ẩm Curél Chuyên Sâu Cho Da Lão Hóa 40g,Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,603000.0,True,0.0526,1.0,1.0,1.0,1.0,0.1143,0.3846,0.0307,0.0484,0.0,0.0
+P_2612,Serum VT Cosmetics Reedle Shot 100 Tăng Cường Dưỡng Chất 50m,Serum / Tinh Chất,Đặc Trị,459000.0,True,0.0526,1.0,1.0,1.0,1.0,0.0532,0.3,0.1036,0.2624,0.0,0.0
+P_2641,Nước Tẩy Trang Senka Ngăn Ngừa Mụn 230ml,Tẩy Trang Mặt,Làm Sạch Da,87000.0,True,0.1111,1.0,1.0,1.0,1.0,0.108,0.4011,0.1304,0.2488,0.0,0.0
+P_2666,"Son Dưỡng LipIce Matcha Hương Trà Xanh, Hồng Tự Nhiên 2.4g",Son Dưỡng Môi,Dưỡng Môi,74000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0514,0.0806,0.2663,0.825,0.0,0.0
+P_2676,Mặt Nạ Some By Mi Hyaluronic Acid Dưỡng Ẩm Da 25g,Mặt Nạ Giấy,Mặt Nạ,25000.0,True,0.0526,1.0,1.0,1.0,1.0,0.0,0.2085,0.1866,0.2312,0.0,0.0
+P_2696,Mặt Nạ Mắt Lanbena Vàng 24K Giảm Nếp Nhăn 60 Miếng,Mặt Nạ Mắt,Dưỡng Mắt,125000.0,True,0.8182,1.0,0.9,1.0,1.0,0.5891,0.5235,0.4,0.4,0.0,0.0
+P_2747,Mặt Nạ Mắt Purederm Làm Giảm Quầng Thâm Mắt 4 Miếng,Mặt Nạ Mắt,Dưỡng Mắt,26000.0,True,1.0,1.0,1.0,1.0,1.0,1.0158,1.0158,0.0279,0.0279,0.0,0.0
+P_2889,Combo 10 Mặt Nạ BNBG Dưỡng Ẩm Cho Mọi Loại Da 30ml (Mới),Mặt Nạ Giấy,Mặt Nạ,247000.0,True,0.5385,1.0,1.0,1.0,1.0,0.2736,0.224,0.1148,0.2914,0.0,0.0
+P_2929,Combo 8 Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen,Mặt Nạ Lột,Mặt Nạ,120000.0,True,0.3333,0.2,0.2,1.0,1.0,0.0804,0.1944,0.0359,0.0279,0.0,0.0
+P_3180,Nước Tẩy Trang Cocoon Hoa Hồng Cấp Ẩm Da 140ml,Tẩy Trang Mặt,Làm Sạch Da,137000.0,True,0.8182,1.0,1.0,1.0,1.0,0.1582,0.2054,0.1463,0.2444,0.1,0.2
+P_3300,Combo Kem Dưỡng Neutrogena Cấp Nước Cho Da Dầu 50g+15g,Kem / Gel / Dầu Dưỡng,Dưỡng Ẩm,478000.0,True,0.5385,1.0,1.0,1.0,1.0,0.1419,0.2694,0.1811,0.383,0.0,0.0
+P_3307,Combo Serum Garnier Tăng Cường Sáng Da Mờ Thâm Ngày & Đêm 30,Serum / Tinh Chất,Đặc Trị,475000.0,True,0.0,1.0,1.0,1.0,1.0,0.0468,0.4061,0.0934,0.3089,0.0,0.0
+P_3313,"Mặt Nạ Mắt Lanbena Hyaluronic Acid Dưỡng Ẩm, Làm Dịu 60 Miến",Mặt Nạ Mắt,Dưỡng Mắt,125000.0,True,0.8182,1.0,0.9,1.0,1.0,0.5891,0.5235,0.4,0.4,0.0,0.0
+P_3349,"Bộ Sản Phẩm Garnier Chăm Sóc Da Dầu, Mụn 3 Món",Bộ Chăm Sóc Da Mặt,Chăm Sóc Da Mặt,459000.0,True,0.0,1.0,1.0,1.0,1.0,0.0519,0.3369,0.0844,0.3614,0.0,0.0
+P_3381,Bột Yến Mạch Milaganics Ngăn Ngừa Lão Hóa & Mụn 100g (Túi),Mặt Nạ Rửa,Mặt Nạ,21000.0,True,0.6667,1.0,1.0,1.0,1.0,0.4937,0.3437,0.0,0.0,0.0,0.0
+P_3454,Son Dưỡng LipIce Không Màu Chuyển Kem Mịn Hương Chanh 4.3g,Son Dưỡng Môi,Dưỡng Môi,58000.0,True,0.6667,1.0,1.0,1.0,1.0,0.1154,0.1539,0.4544,0.4663,0.0,0.0
+P_3709,Bộ Sản Phẩm Hada Labo Dưỡng Sáng Da 3 Món,Bộ Chăm Sóc Da Mặt,Chăm Sóc Da Mặt,73000.0,True,0.4286,1.0,1.0,1.0,1.0,0.5206,0.5645,0.1413,0.2156,0.0,0.0
+P_3754,Mặt Nạ Bio-essence Tảo Biển Jeju Dưỡng Da Ẩm Mượt 20ml,Mặt Nạ Giấy,Mặt Nạ,21000.0,True,0.1111,1.0,1.0,1.0,1.0,0.0,0.1359,0.285,0.3216,0.0,0.0
+P_3797,Combo 10 Mặt Nạ Colorkey B3 Dưỡng Sáng Và Tăng Độ Đàn Hồi 30,Mặt Nạ Giấy,Mặt Nạ,129000.0,True,0.1111,1.0,1.0,1.0,1.0,0.0246,0.2098,0.2176,0.3838,0.0,0.0
+P_3806,Son Dưỡng Ma:nyo Giàu Độ Ẩm Từ Dưa Hấu Và Trái Cây 4ml,Son Dưỡng Môi,Dưỡng Môi,127000.0,True,0.0,1.0,1.0,1.0,1.0,0.0222,0.2505,0.0234,0.0504,0.0,0.0
+P_3875,"Combo 2 Mặt Nạ BNBG Placenta Truyền Năng Lượng, Phục Hồi Da ",Mặt Nạ Giấy,Mặt Nạ,48000.0,True,0.1765,1.0,1.0,1.0,1.0,0.4204,0.4512,0.2,0.7,0.2,0.3
+P_3888,Mặt Nạ Purederm Dưỡng Ẩm Vùng Mắt 12g,Mặt Nạ Mắt,Dưỡng Mắt,28000.0,True,1.0,1.0,1.0,1.0,1.0,0.9832,0.9832,0.034,0.034,0.0,0.0
+P_4005,Combo 3 Mặt Nạ Thạch Luvum Quả Yuja Sáng Da Mờ Thâm 33g,Mặt Nạ Giấy,Mặt Nạ,178000.0,True,0.0526,1.0,1.0,1.0,1.0,0.015,0.2303,0.1107,0.5923,0.0,0.2
+P_4188,Son Dưỡng Môi Có Màu BareSoul 10g,Son Dưỡng Môi,Dưỡng Môi,118000.0,True,0.0,1.0,1.0,1.0,1.0,0.0308,0.2016,0.026,0.0528,0.0,0.0
+P_4194,Mặt Nạ Ngủ Skinoxy Giúp Da Mềm Mịn Và Ngăn Ngừa Mụn 25g,Mặt Nạ Ngủ,Mặt Nạ,38000.0,True,0.5385,0.8,0.7,1.0,1.0,0.3907,0.3802,0.2453,0.2626,0.0,0.0
+P_4205,Nước Hoa Hồng Avander Làm Sạch & Dịu Da 150ml,Toner / Nước Cân Bằng Da,Làm Sạch Da,109000.0,True,0.8182,1.0,1.0,1.0,1.0,0.3379,0.3679,0.178,0.1903,0.0,0.0
+P_4317,"Combo 2 Mặt Nạ BNBG Exosome Nâng Cơ, Trẻ Hoá Da 30ml",Mặt Nạ Giấy,Mặt Nạ,45000.0,True,0.1765,1.0,1.0,1.0,1.0,0.0741,0.3511,0.0,0.6,0.0,0.2
+P_4329,Mặt Nạ Đất Sét Avander Ngọc Trai Tươi Trẻ Làn Da 15ml,Mặt Nạ Rửa,Mặt Nạ,13000.0,True,0.8182,1.0,1.0,1.0,1.0,0.2936,0.3394,0.6078,0.7,0.0,0.0
+P_4332,Mặt Nạ Ngủ Skinoxy Giảm Nếp Nhăn Và Cải Thiện Độ Đàn Hồi 25g,Mặt Nạ Ngủ,Mặt Nạ,38000.0,True,0.6667,1.0,0.8,1.0,1.0,0.6445,0.4062,0.2564,0.266,0.0,0.0
+P_4352,Mặt Nạ Mediheal Hỗ Trợ Làm Dịu Da 20ml,Mặt Nạ Giấy,Mặt Nạ,18000.0,True,0.0,1.0,1.0,1.0,1.0,0.0,0.1763,0.1031,0.4066,0.0,0.0
+P_4353,Mặt Nạ Colorkey B3 Dưỡng Sáng Và Tăng Độ Đàn Hồi 30ml,Mặt Nạ Giấy,Mặt Nạ,14000.0,True,0.0526,1.0,1.0,1.0,1.0,0.0251,0.4343,0.1527,0.1944,0.0,0.0
+P_4358,"Combo 2 Mặt Nạ Keyshu Sợi Xơ Rau Má Cấp Ẩm, Ngừa Lão Hóa 30m",Mặt Nạ Giấy,Mặt Nạ,39000.0,True,0.0,1.0,1.0,1.0,1.0,0.0157,0.4198,0.0687,0.6114,0.0,0.2
+P_4422,Combo Anessa Gel Chống Nắng Dưỡng Ẩm & Sữa Chống Nắng Kiềm D,Chống Nắng Da Mặt,Chăm Sóc Da Mặt,861000.0,True,0.3333,1.0,1.0,1.0,1.0,0.1393,0.4271,0.291,0.4506,0.0,0.0
+P_4491,Serum Dưỡng Mắt Axis-Y Thuần Chay Cải Thiện Nếp Nhăn 10ml,Serum / Kem Dưỡng Mắt,Dưỡng Mắt,449000.0,True,0.8182,1.0,1.0,1.0,1.0,0.3441,0.3807,0.054,0.0613,0.0,0.0

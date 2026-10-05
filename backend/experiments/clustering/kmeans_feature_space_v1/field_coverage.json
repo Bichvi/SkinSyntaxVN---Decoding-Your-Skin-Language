@@ -1,0 +1,80 @@
+{
+  "total_audited_products": 1004,
+  "field_counts": {
+    "ten_san_pham": 1004,
+    "brand": 1004,
+    "gia_ban": 1004,
+    "loai_da": 1004,
+    "danh_muc_day_du": 1004,
+    "mo_ta": 1004,
+    "thanh_phan_full": 948,
+    "thanh_phan_sach": 884,
+    "thanh_phan": 884,
+    "any_ingredient": 996
+  },
+  "field_percentages": {
+    "ten_san_pham": 100.0,
+    "brand": 100.0,
+    "gia_ban": 100.0,
+    "loai_da": 100.0,
+    "danh_muc_day_du": 100.0,
+    "mo_ta": 100.0,
+    "thanh_phan_full": 94.42,
+    "thanh_phan_sach": 88.05,
+    "thanh_phan": 88.05,
+    "any_ingredient": 99.2
+  },
+  "missing_all_ingredients_count": 8,
+  "missing_all_ingredients_pct": 0.8,
+  "missing_products_detail": [
+    {
+      "SKU_ID": 2524,
+      "Product_Name": "[HSD 06/2026] Kem Dưỡng Bioderma Hỗ Trợ Phục Hồi, Ngừa Thâm SPF50 30ml",
+      "Role": "MOISTURIZER",
+      "Reason": "Không có dữ liệu thành phần hoặc là sản phẩm combo/mới cập nhật"
+    },
+    {
+      "SKU_ID": 2939,
+      "Product_Name": "Sữa Rửa Mặt Bioré Cho Nam Hạt Tác Động Kép Sạch Nhờn 100g",
+      "Role": "CLEANSER",
+      "Reason": "Không có dữ liệu thành phần hoặc là sản phẩm combo/mới cập nhật"
+    },
+    {
+      "SKU_ID": 3544,
+      "Product_Name": "Combo 2 Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 15ml",
+      "Role": "SERUM",
+      "Reason": "Không có dữ liệu thành phần hoặc là sản phẩm combo/mới cập nhật"
+    },
+    {
+      "SKU_ID": 4225,
+      "Product_Name": "[Mini] Kem Dưỡng Keyshu Sáng Da Dưỡng Ẩm 10ml",
+      "Role": "MOISTURIZER",
+      "Reason": "Không có dữ liệu thành phần hoặc là sản phẩm combo/mới cập nhật"
+    },
+    {
+      "SKU_ID": 4389,
+      "Product_Name": "Combo Cocoon Sữa Chống Nắng + Kem Chống Nắng Bí Đao Quang Phổ Rộng 50mlx2",
+      "Role": "SUNSCREEN",
+      "Reason": "Không có dữ liệu thành phần hoặc là sản phẩm combo/mới cập nhật"
+    },
+    {
+      "SKU_ID": 4635,
+      "Product_Name": "Combo Torriden Serum Dưỡng Ẩm Sâu, Sáng Bóng 50ml + Serum Se Khít Lỗ Chân Lông 30ml",
+      "Role": "SERUM",
+      "Reason": "Không có dữ liệu thành phần hoặc là sản phẩm combo/mới cập nhật"
+    },
+    {
+      "SKU_ID": 4856,
+      "Product_Name": "Sữa Dưỡng d program Dành Cho Da Mụn 11ml",
+      "Role": "SERUM",
+      "Reason": "Không có dữ liệu thành phần hoặc là sản phẩm combo/mới cập nhật"
+    },
+    {
+      "SKU_ID": 5110,
+      "Product_Name": "Kem Chống Nắng Mernard UV Nâng Tông Dưỡng Sáng 65g",
+      "Role": "SUNSCREEN",
+      "Reason": "Không có dữ liệu thành phần hoặc là sản phẩm combo/mới cập nhật"
+    }
+  ],
+  "missing_handling_strategy": "Impute zero-vector in high-dimensional TF-IDF space; benchmark against 996 complete-case subset"
+}

@@ -38,14 +38,14 @@ if ($isLoggedIn && $synaGreetingName !== 'bạn') {
         "Hi " . $synaGreetingName . ", mừng bạn ghé SYNA nha!",
         "Hôm nay da bạn thế nào rồi?",
         "Da đang khô, nổi mụn hay cần phục hồi?",
-        "Làm khảo sát da 1 phút, SYNA tìm vài món hot hit hợp da bạn nhé!"
+        "Khám phá làn da của bạn, SYNA tìm vài món phù hợp nhé!"
     ];
 } else {
     $synaSpeechSentences = [
         "Hi bạn, mừng bạn ghé SYNA nha!",
         "Hôm nay da bạn thế nào rồi?",
         "Da đang khô, nổi mụn hay cần phục hồi?",
-        "Làm khảo sát da 1 phút, SYNA tìm vài món phù hợp nhé!"
+        "Khám phá làn da của bạn, SYNA tìm vài món phù hợp nhé!"
     ];
 }
 
@@ -139,15 +139,23 @@ $skinConcernCategories = [
 ];
 
 // Product card renderer
-$renderHomeProductCard = static function (array $p, string $tag = '', string $whyFitText = '') use ($hasSurvey): void {
+$renderHomeProductCard = static function (array $p, string $tag = '', string $whyFitText = ''): void {
     $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
     $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
     $giaBan = (string)($p['gia_ban'] ?? '');
     $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
     $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
-    $matchScore = isset($p['match_score']) && is_numeric($p['match_score']) ? (int)$p['match_score'] : null;
-    $rating = isset($p['diem_danh_gia']) && (float)$p['diem_danh_gia'] > 0 ? (float)$p['diem_danh_gia'] : 4.9;
+    $rawRating = isset($p['diem_danh_gia']) && is_numeric($p['diem_danh_gia']) ? (float)$p['diem_danh_gia'] : 0.0;
+    $rawReviewCount = isset($p['so_luong_danh_gia']) && is_numeric($p['so_luong_danh_gia']) ? (int)$p['so_luong_danh_gia'] : 0;
+    $hasRealReview = ($rawRating > 0 && $rawReviewCount > 0);
     $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;
+
+    // Grounded recommendation badge from recommender_meta
+    $meta = $p['recommender_meta'] ?? null;
+    $algoMode = strtoupper((string)($meta['algorithm_mode'] ?? ''));
+    $dominantSignal = strtoupper((string)($meta['dominant_signal'] ?? ''));
+    $isPersonalized = !empty($meta) && $algoMode !== 'SIMPLE' && $dominantSignal !== 'SIMPLE';
+    $reasonTags = (array)($meta['reason_tags'] ?? []);
     ?>
     <div class="product-card product-card--editorial h-100 d-flex flex-column">
       <div class="product-thumb position-relative p-2" style="background: #F8FAF8; border-radius: 12px 12px 0 0;">
@@ -157,18 +165,14 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           </span>
         <?php endif; ?>
 
-        <?php if ($matchScore !== null && $matchScore > 0): ?>
-          <span class="badge-match position-absolute" style="top: 10px; right: 10px; background: #EBF2EE; color: #183B2B; border: 1px solid #C8DACF; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; z-index: 3;">
-            <?= $matchScore ?>% MATCH
-          </span>
-        <?php elseif ($tag !== ''): ?>
+        <?php if ($tag !== ''): ?>
           <span class="market-card__tag position-absolute" style="top: 10px; right: 10px; background: #F1F5F9; color: #475569; font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; z-index: 3; border: 1px solid #E2E8F0;">
             <?= h($tag) ?>
           </span>
         <?php endif; ?>
 
         <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 overflow-hidden" style="border-radius: 8px; aspect-ratio: 1/1;">
-          <img class="product-card-img" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h($p['ten_san_pham'] ?? '') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+          <img class="product-card-img" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h(!empty($p['ten_san_pham']) ? $p['ten_san_pham'] : 'Sản phẩm SkinSyntax') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
         </a>
       </div>
 
@@ -179,12 +183,12 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           </span>
 
           <span class="skin-match-status" style="font-size: 0.72rem; color: var(--muted);">
-            <?php if ($matchScore !== null && $matchScore > 0): ?>
-              <span class="text-success fw-semibold"><i class="bi bi-check2-circle"></i> Phù hợp da</span>
-            <?php elseif ($hasSurvey): ?>
-              <span class="text-success fw-semibold" style="font-size: 0.7rem;"><i class="bi bi-shield-check"></i> Đã khảo sát</span>
-            <?php else: ?>
-              <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="text-decoration-none text-muted" style="font-size: 0.7rem;"><i class="bi bi-info-circle"></i> Độ hợp &rarr;</a>
+            <?php if ($isPersonalized && in_array('Khớp loại da', $reasonTags, true)): ?>
+              <span class="text-success fw-semibold"><i class="bi bi-check2-circle"></i> Khớp loại da</span>
+            <?php elseif ($isPersonalized && in_array('Phù hợp mọi loại da', $reasonTags, true)): ?>
+              <span class="text-success fw-semibold"><i class="bi bi-check2-circle"></i> Mọi loại da</span>
+            <?php elseif ($isPersonalized && in_array('Trong ngân sách', $reasonTags, true)): ?>
+              <span class="text-success fw-semibold"><i class="bi bi-tag"></i> Trong ngân sách</span>
             <?php endif; ?>
           </span>
         </div>
@@ -199,12 +203,19 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           </div>
         <?php endif; ?>
 
-        <div class="d-flex align-items-center gap-1 mb-2" style="font-size: 0.76rem;">
-          <span class="d-inline-flex align-items-center gap-1 text-warning font-weight-bold">
-            <i class="fas fa-star" style="color: #F59E0B; font-size: 0.72rem;"></i> <?= number_format($rating, 1) ?>
-          </span>
-          <span class="text-muted small ms-1">(<?= (int)($p['so_luong_danh_gia'] ?? 128) ?>)</span>
-        </div>
+        <?php if ($hasRealReview): ?>
+          <div class="d-flex align-items-center gap-1 mb-2" style="font-size: 0.76rem;">
+            <span class="d-inline-flex align-items-center gap-1 text-warning font-weight-bold">
+              <i class="fas fa-star" style="color: #F59E0B; font-size: 0.72rem;"></i> <?= number_format($rawRating, 1) ?>
+            </span>
+            <span class="text-muted small ms-1">(<?= $rawReviewCount ?>)</span>
+          </div>
+        <?php else: ?>
+          <div class="d-flex align-items-center gap-1 mb-2 text-muted" style="font-size: 0.76rem; color: #94A3B8;">
+            <i class="far fa-star text-muted" style="font-size: 0.72rem;"></i>
+            <span>Chưa có đánh giá</span>
+          </div>
+        <?php endif; ?>
 
         <div class="price-wrap mb-3 mt-auto d-flex align-items-baseline gap-2">
           <div class="price fw-bold" style="color: #183B2B; font-size: 1.05rem; font-variant-numeric: tabular-nums;"><?= vnd($giaBan) ?></div>
@@ -213,16 +224,16 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           <?php endif; ?>
         </div>
 
-        <div class="product-card-actions d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
-          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0">
+        <div class="product-card-actions d-flex flex-column flex-sm-row gap-1 gap-sm-2">
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 flex-fill w-100">
             <input type="hidden" name="action" value="add_to_cart">
             <input type="hidden" name="product_id" value="<?= h($productId) ?>">
             <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
             <input type="hidden" name="quantity" value="1">
             <input type="hidden" name="qty" value="1">
-            <button class="btn btn-sm w-100" type="submit" style="background: #F1F5F9; color: #0F172A; border: 1px solid #E2E8F0; border-radius: 6px; font-weight: 600; font-size: 0.78rem; padding: 7px 0; transition: all 0.2s ease;" <?= $isOutOfStock ? 'disabled' : '' ?>><?= $isOutOfStock ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus me-1"></i> Thêm' ?></button>
+            <button class="btn btn-sm w-100" type="submit" style="background: #F1F5F9; color: #0F172A; border: 1px solid #E2E8F0; border-radius: 6px; font-weight: 600; font-size: 0.78rem; padding: 7px 0; transition: all 0.2s ease;" <?= $isOutOfStock ? 'disabled' : '' ?>><?= $isOutOfStock ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus me-1"></i> <span class="d-none d-sm-inline">Thêm</span><span class="d-sm-none">Thêm vào giỏ</span>' ?></button>
           </form>
-          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0">
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 flex-fill d-none d-sm-block">
             <input type="hidden" name="action" value="add_to_cart">
             <input type="hidden" name="buy_now" value="1">
             <input type="hidden" name="product_id" value="<?= h($productId) ?>">
@@ -265,7 +276,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
             Khám phá sản phẩm
           </a>
           <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn btn-hero-secondary" style="background: rgba(255,255,255,0.15) !important; color: #FFFFFF !important; font-weight: 700; font-size: 0.92rem; padding: 11px 24px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.35) !important; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-            Khảo sát da 1 phút
+            Khám phá làn da của bạn
           </a>
         </div>
 
@@ -482,43 +493,43 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
       $dominantSignal = strtoupper((string)($firstRecMeta['dominant_signal'] ?? 'SIMPLE'));
       $algoMode = strtoupper((string)($firstRecMeta['algorithm_mode'] ?? 'SIMPLE'));
 
-      switch ($dominantSignal) {
-          case 'CART':
-              $sectionKicker = 'DỰA TRÊN GIỎ HÀNG CỦA BẠN';
-              $sectionTitle = 'Phù hợp với giỏ hàng của bạn';
-              $sectionSub = 'Gợi ý bổ trợ cho các sản phẩm trong giỏ hàng của bạn';
-              break;
-          case 'VIEW':
-              $sectionKicker = 'DỰA TRÊN SẢN PHẨM VỪA XEM';
-              $sectionTitle = 'Dựa trên sản phẩm bạn vừa xem';
-              $sectionSub = 'Các sản phẩm có đặc điểm tương tự với những gì bạn vừa quan tâm';
-              break;
-          case 'SEARCH':
-              $sectionKicker = 'DỰA TRÊN TÌM KIẾM GẦN ĐÂY';
-              $sectionTitle = 'Dựa trên tìm kiếm gần đây';
-              $sectionSub = 'Các sản phẩm phù hợp với nhu cầu bạn vừa tìm kiếm';
-              break;
-          case 'PURCHASE':
-              $sectionKicker = 'LỊCH SỬ MUA SẮM';
-              $sectionTitle = 'Gợi ý từ lịch sử mua hàng';
-              $sectionSub = 'Sản phẩm tương thích với thói quen chăm sóc da của bạn';
-              break;
-          case 'PROFILE':
-              $sectionKicker = 'HỒ SƠ DA CÁ NHÂN';
-              $sectionTitle = 'Dành riêng cho làn da của bạn';
-              $sectionSub = 'Gợi ý tối ưu theo loại da và nhu cầu trong hồ sơ của bạn';
-              break;
-          case 'HYBRID':
-              $sectionKicker = 'CÁ NHÂN HÓA ĐA TÍN HIỆU';
-              $sectionTitle = 'Dành riêng cho bạn (Hồ sơ da & Hành vi)';
-              $sectionSub = 'Kết hợp hồ sơ da của bạn cùng các sản phẩm bạn đang quan tâm';
-              break;
-          case 'SIMPLE':
-          default:
-              $sectionKicker = 'GỢI Ý HÔM NAY';
-              $sectionTitle = 'Gợi ý dành cho bạn';
-              $sectionSub = 'Khám phá các sản phẩm nổi bật được cộng đồng tin dùng';
-              break;
+      // Grounded dynamic header mapping based on actual recommender evidence
+      $isPartialProfile = ($algoMode === 'PARTIAL_PROFILE_FALLBACK')
+          || ($algoMode === 'SIMPLE' && $dominantSignal === 'SIMPLE' && $isLoggedIn && !empty($userProfile) && !$hasSurvey);
+
+      if ($isPartialProfile) {
+          $sectionKicker = 'GỢI Ý NỔI BẬT';
+          $sectionTitle = 'Gợi ý nổi bật cho bạn';
+          $sectionSub = 'Khám phá những sản phẩm nổi bật tại SkinSyntax.';
+      } elseif ($algoMode === 'ADAPTIVE_HYBRID' || $dominantSignal === 'HYBRID') {
+          $sectionKicker = 'DÀNH RIÊNG CHO BẠN';
+          $sectionTitle = 'Gợi ý dành riêng cho bạn';
+          $sectionSub = 'Kết hợp thông tin làn da và những sản phẩm bạn đang quan tâm.';
+      } elseif ($algoMode === 'PROFILE_CONTENT' || $dominantSignal === 'PROFILE') {
+          $sectionKicker = 'HỒ SƠ LÀN DA';
+          $sectionTitle = 'Phù hợp với thông tin làn da của bạn';
+          $sectionSub = 'Được gợi ý dựa trên thông tin làn da bạn đã chia sẻ.';
+      } elseif ($algoMode === 'PURCHASE_CONTENT' || $dominantSignal === 'PURCHASE') {
+          $sectionKicker = 'LỊCH SỬ MUA SẮM';
+          $sectionTitle = 'Dựa trên sản phẩm bạn từng mua';
+          $sectionSub = 'Gợi ý dựa trên những sản phẩm bạn từng mua.';
+      } elseif ($dominantSignal === 'CART') {
+          $sectionKicker = 'DỰA TRÊN GIỎ HÀNG';
+          $sectionTitle = 'Có thể bạn cũng quan tâm';
+          $sectionSub = 'Gợi ý dựa trên những sản phẩm bạn đang quan tâm trong giỏ hàng.';
+      } elseif ($dominantSignal === 'VIEW') {
+          $sectionKicker = 'VỪA XEM GẦN ĐÂY';
+          $sectionTitle = 'Dựa trên sản phẩm bạn vừa xem';
+          $sectionSub = 'Khám phá những lựa chọn có đặc điểm tương tự.';
+      } elseif ($dominantSignal === 'SEARCH') {
+          $sectionKicker = 'TÌM KIẾM GẦN ĐÂY';
+          $sectionTitle = 'Có thể bạn đang quan tâm';
+          $sectionSub = 'Gợi ý dựa trên những gì bạn vừa tìm kiếm.';
+      } else {
+          // SIMPLE
+          $sectionKicker = 'GỢI Ý NỔI BẬT';
+          $sectionTitle = 'Sản phẩm nổi bật tại SkinSyntax';
+          $sectionSub = 'Khám phá những lựa chọn được đánh giá cao tại SkinSyntax.';
       }
     ?>
     <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
@@ -540,7 +551,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
             </span>
           <?php else: ?>
             <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn btn-sm btn-outline-success fw-semibold" style="border-radius: 6px; font-size: 0.8rem;">
-              <i class="fas fa-clipboard-check me-1"></i> Hoàn thành khảo sát da để tinh chỉnh gợi ý &rarr;
+              <i class="fas fa-clipboard-check me-1"></i> Hoàn thành khảo sát da để nhận gợi ý cá nhân hóa hơn &rarr;
             </a>
           <?php endif; ?>
         </div>
@@ -550,9 +561,29 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
         <?php foreach ($forYouProducts as $idx => $p): ?>
           <div class="col-6 col-md-3">
             <?php 
-              $pBadge = !empty($p['recommender_meta']['reason']) 
-                  ? $p['recommender_meta']['reason'] 
-                  : (!empty($p['recommender_meta']['reason_tags'][0]) ? $p['recommender_meta']['reason_tags'][0] : 'Gợi ý riêng');
+              $meta = $p['recommender_meta'] ?? [];
+              $pMode = strtoupper((string)($meta['algorithm_mode'] ?? ''));
+              $pSig = strtoupper((string)($meta['dominant_signal'] ?? ''));
+              if ($pMode === 'SIMPLE' && $pSig === 'SIMPLE') {
+                  $pBadge = 'Nổi bật';
+              } else {
+                  $reasonTags = (array)($meta['reason_tags'] ?? []);
+                  if (in_array('Khớp loại da', $reasonTags, true)) {
+                      $pBadge = 'Khớp loại da';
+                  } elseif (in_array('Dựa trên tìm kiếm gần đây', $reasonTags, true)) {
+                      $pBadge = 'Tìm kiếm gần đây';
+                  } elseif (in_array('Tương tự sản phẩm vừa xem', $reasonTags, true)) {
+                      $pBadge = 'Tương tự vừa xem';
+                  } elseif (in_array('Phù hợp với giỏ hàng', $reasonTags, true)) {
+                      $pBadge = 'Dựa trên giỏ hàng';
+                  } elseif (in_array('Tương thích lịch sử mua sắm', $reasonTags, true)) {
+                      $pBadge = 'Lịch sử mua sắm';
+                  } elseif (!empty($reasonTags[0])) {
+                      $pBadge = $reasonTags[0];
+                  } else {
+                      $pBadge = 'Gợi ý cho bạn';
+                  }
+              }
               $renderHomeProductCard($p, $pBadge); 
             ?>
           </div>
@@ -565,7 +596,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
             <i class="fas fa-info-circle text-success me-1"></i> Gợi ý tự động thích ứng theo tìm kiếm, sản phẩm vừa xem và giỏ hàng của bạn.
           </span>
           <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.8rem;">
-            Khảo sát 1 phút để độ chuẩn xác cao hơn &rarr;
+            Hoàn thành khảo sát da &rarr;
           </a>
         </div>
       <?php endif; ?>
@@ -701,7 +732,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
       <div class="d-flex justify-content-between align-items-end mb-3">
         <div>
           <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">BẢNG XẾP HẠNG ĐÁNH GIÁ</span>
-          <h3 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Được Yêu Thích Nhất</h3>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Được Yêu Thích Nhất</h2>
           <span class="text-muted small" style="font-size: 0.82rem;">Những sản phẩm được cộng đồng đánh giá cao</span>
         </div>
         <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
@@ -724,7 +755,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
       <div class="d-flex justify-content-between align-items-end mb-3">
         <div>
           <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">SẢN PHẨM MỚI</span>
-          <h3 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Mỹ Phẩm Vừa Lên Kệ</h3>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Mỹ Phẩm Vừa Lên Kệ</h2>
         </div>
         <a href="<?= BASE_URL ?>/index.php?r=tatca" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
       </div>
@@ -743,8 +774,8 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
   <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
       <div>
-        <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">DAILY SKINCARE REGIMEN</span>
-        <h3 class="fw-bold m-0" style="color: #0F172A; font-size: 1.4rem;">Routine của bạn</h3>
+        <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">QUY TRÌNH CHĂM SÓC DA HẰNG NGÀY</span>
+        <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.4rem;">Routine của bạn</h2>
       </div>
       <?php if ($hasSurvey): ?>
         <a href="<?= BASE_URL ?>/index.php?r=goiy" class="btn btn-sm text-white fw-semibold px-3 py-1.5" style="background: #183B2B; border-radius: 6px; font-size: 0.8rem;">
@@ -759,8 +790,8 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           <a href="<?= BASE_URL ?>/index.php?r=tatca&q=l%C3%A0m+s%E1%BA%A1ch" class="routine-step-pill text-decoration-none">
             <div class="routine-step-num">01</div>
             <div>
-              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 1</div>
-              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Cleanse (Làm sạch)</div>
+              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">BƯỚC 1</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Làm sạch</div>
             </div>
           </a>
         </div>
@@ -769,8 +800,8 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           <a href="<?= BASE_URL ?>/index.php?r=tatca&q=serum" class="routine-step-pill text-decoration-none">
             <div class="routine-step-num">02</div>
             <div>
-              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 2</div>
-              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Treat (Đặc trị)</div>
+              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">BƯỚC 2</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Đặc trị</div>
             </div>
           </a>
         </div>
@@ -779,8 +810,8 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           <a href="<?= BASE_URL ?>/index.php?r=tatca&q=d%C6%B0%E1%BB%A1ng+%E1%BA%A9m" class="routine-step-pill text-decoration-none">
             <div class="routine-step-num">03</div>
             <div>
-              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 3</div>
-              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Hydrate (Dưỡng ẩm)</div>
+              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">BƯỚC 3</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Dưỡng ẩm</div>
             </div>
           </a>
         </div>
@@ -789,20 +820,20 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           <a href="<?= BASE_URL ?>/index.php?r=tatca&q=ch%E1%BB%91ng+n%E1%BA%AFng" class="routine-step-pill text-decoration-none">
             <div class="routine-step-num">04</div>
             <div>
-              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">STEP 4</div>
-              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Protect (Bảo vệ)</div>
+              <div class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">BƯỚC 4</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">Bảo vệ</div>
             </div>
           </a>
         </div>
       </div>
     <?php else: ?>
       <div class="p-4 text-center rounded-3" style="background: #F8FAF8; border: 1px dashed #C8DACF;">
-        <h4 class="fw-bold mb-1" style="font-size: 1.05rem; color: #0F172A;">Khám phá routine dành riêng cho bạn</h4>
+        <h3 class="fw-bold mb-1" style="font-size: 1.05rem; color: #0F172A;">Khám phá routine dành riêng cho bạn</h3>
         <p class="text-muted small mx-auto mb-3" style="max-width: 460px; font-size: 0.84rem;">
-          Làm bài khảo sát da 1 phút để SkinSyntax giúp bạn thiết lập quy trình chăm sóc da 4 bước tối ưu.
+          Hoàn thành khảo sát da để SkinSyntax giúp bạn thiết lập quy trình chăm sóc da 4 bước phù hợp.
         </p>
         <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn btn-sm text-white fw-bold px-4 py-2" style="background: #183B2B; border-radius: 6px; font-size: 0.84rem;">
-          <i class="fas fa-clipboard-list me-1.5"></i> Làm khảo sát da ngay &rarr;
+          <i class="fas fa-clipboard-list me-1.5"></i> Hoàn thành khảo sát da &rarr;
         </a>
       </div>
     <?php endif; ?>
@@ -831,7 +862,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
         <i class="fas fa-search me-1.5"></i> Khám phá sản phẩm
       </a>
       <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn text-white fw-bold px-4 py-2" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; font-size: 0.86rem;">
-        <i class="fas fa-clipboard-list me-1.5"></i> Làm khảo sát da
+        <i class="fas fa-clipboard-list me-1.5"></i> Khám phá làn da của bạn
       </a>
     </div>
   </section>

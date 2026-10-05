@@ -1,0 +1,552 @@
+pattern,context_example,frequency,product_count,category,v1_behavior,v2_behavior
+Caprylic/Capric,"Purified Water (Aqua), Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Peg
+-150 Pentaerythrityl Te",233,176,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Acrylates/C10,"Aqua / Water, Homosalate, Silica, Octocrylene, Ethylhexyl Salicylate, Butyl Methoxydibenzoylmethane, Ethylhexyl Triazone",190,181,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Aqua / Water,"Purified Water (Aqua), Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Peg
+-150 Pentaerythrityl Te",113,102,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+acrylates/c10,"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",85,17,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Dimethicone/Vinyl,"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",79,59,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Peg/Ppg,"Aqua, Hydrogenated Polyisobutene, Dimethicone, Glycerin, Butyrospermum Parkii Butter / Hea Butter, Panthenol, Propanedio",69,44,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Acrylate/Sodium,"Water, Butylene Glycol, Glycerin, 1,2
+-Hexanediol, Hydrogenated Didecene, Allantoin, Trehalose, Hamamelis Virginiana (Wi",62,62,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Acryloyldimethyltaurate/VP,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",59,51,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Aqua/Water,"Aqua/Water, C12
+-15 Alkyl Benzoate, Isododecane, Cyclopentasiloxane, BisEthylhexyloxyphenol Methoxyphenyl Triazine, Buty",47,47,C_ALIAS_SYNONYM,Merged into single token (aqua/water/eau or parfum/fragrance),Canonicalized / alias split to prevent spurious singletons
+acrylates/dimethicone,"hyaluronic acid, vitamin c, vitamin b3, pearl powder. bảng thành phần, 9 polydimethylsiloxyethyl dimethicone, silica, di",45,9,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Aqua/Water/Eau,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",43,41,C_ALIAS_SYNONYM,Merged into single token (aqua/water/eau or parfum/fragrance),Canonicalized / alias split to prevent spurious singletons
+-Caprylate/Caprate,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",41,30,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+acryloyldimethyltaurate/vp,"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",40,8,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Parfum / Fragrance,"Aqua / Water, Sodium Laureth Sulfate, Peg
+-8, Coco
+-Betaine, Hexylene Glycol, Sodium Chloride, Peg
+-120 Methyl Glucose D",40,39,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+-14/7,"Dimethicone, Water (Aqua), Zinc Oxide, Alcohol, Diisopropyl Sebacate, Isododecane, Octocrylene, Ethylhexyl Salicylate, C",38,31,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Phytosteryl/Octyldodecyl,"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",35,22,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Flower/Leaf/Stem,"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",27,25,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Parfum/Fragrance,"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",24,17,C_ALIAS_SYNONYM,Merged into single token (aqua/water/eau or parfum/fragrance),Canonicalized / alias split to prevent spurious singletons
+Parfum / Fragrance.,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",21,21,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Dimethicone/Methicone,"Water, Cyclopentasiloxane, Ethylhexyl Methoxycinnamate, Zinc Oxide, Cyclohexasiloxane, Ethylhexyl Salicylate, Butylene G",21,15,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Methacrylate/Sodium,"Cyclopentasiloxane, Zinc Oxide (nano), Alcohol, Water, Ethylhexyl Methoxycinnamate, Dimethicone, Hydrogenated Polyisobut",21,9,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Leaf/Stem,"Water (Aqua), Dimethicone, Diisopropyl Sebacate, Butylene Glycol, Caprylyl Methicone, Cetyl Ethylhexanoate, Titanium Dio",21,18,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Dimethylacrylamide/Sodium,"Water (Aqua), Dimethicone, Ethylhexyl Methoxycinnamate, Alcohol, Zinc Oxide, Titanium Dioxide, Glycerin, Diisopropyl Seb",19,13,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+PEG/PPG,"Niacinamide, Dimethicone, Disodium EDTA, Lactitol, Sodium Chloride, Ammonium Acryloyldimethyltaurate/VP Copolymer, Nelum",18,14,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Acrylate/Acrylic,"Water, Butylene Glycol, Glycerin, Dipropylene Glycol, 1,2
+-Hexanediol, Panthenol, Sodium Hyaluronate, Hydrolyzed Hyaluro",18,16,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+flower/leaf/stem,"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",17,17,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+77891 / Titanium,"Aqua, Hydrogenated Polyisobutene, Dimethicone, Glycerin, Butyrospermum Parkii Butter / Hea Butter, Panthenol, Propanedio",17,17,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Dimethicone/Polyglycerin,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",16,10,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+peg/ppg,"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",16,8,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+-8/5/3,"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",16,16,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Peg/Ppg/Polybutylene,"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",16,16,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+10/7/dimethicone,"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",16,8,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+UVA/UVB.,"Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",15,6,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Extract / Lemon,"Aqua / Water, Alcohol Denat., Niacinamide, Glycerin, Propanediol, Linalool, Geraniol, Sodium Hydroxide, Salicylic Acid, ",15,15,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Acryloyldimethyltaurate/Vp,"Aqua (Purified Water), Propanediol, Gluconolactone, Niacinamide, Caprylyl Methicone, Cyclopentasiloxane, Methyl Methacry",15,15,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Vp/Eicosene,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",15,11,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Flower/Leaf/Vine,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",15,15,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-17/4,"Dimethicone, Water (Aqua), Zinc Oxide, Ethylhexyl Methoxycinnamate, Zinc Oxide, Alcohol, Caprylyl Methicone, Diisopropyl",14,10,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Caprylic / Capric,"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",14,14,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Acrylate/Hydroxyethylacrylate,"Aqua / Water, Alcohol Denat, Diisopropyl Sebacate, Silica, Isopropyl Myristate, Ethylhexyl Salicylate, Ethylhexyl Triazo",13,10,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Saccharomyces/Coix,"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",13,8,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Flower/Leaf,"Aqua, Cocamidopropyl Betaine, Propylene Glycol, Hydroxypropyl Methylcellulose, Panthenol, Disodium EDTA, Hydroxypropyl C",13,13,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-9/2,"Dimethicone, Water (Aqua), Zinc Oxide, Alcohol, Diisopropyl Sebacate, Isododecane, Octocrylene, Ethylhexyl Salicylate, C",12,11,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dicaprylate/Dicaprate,"Purified Water, Zinc Oxide, Cyclohexasiloxane, Propanediol, Butyloctyl Salicylate, Butylene Glycol Dicaprylate/Dicaprate",12,12,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+[Nano] / Titanium,"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",12,9,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+VP/Eicosene,"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",11,11,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+PVM/MA,"Water, Butylene Glycol, Glycerin, Dipropylene Glycol, 1,2
+-Hexanediol, Panthenol, Sodium Hyaluronate, Hydrolyzed Hyaluro",11,11,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/Peg,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",10,10,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Hdi/Trimethylol,"Aqua/Water, Triethyl Citrate, Cyclopentasiloxane, Dibutyl Adipate, Isododecane, Butyloctyl Salicylate, Ethylhexyl Methox",9,9,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-9/1,"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",9,7,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil / Corn,"Purified Water (Aqua), Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Peg
+-150 Pentaerythrityl Te",9,9,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+-10/1,"Aqua, Hydrogenated Polyisobutene, Dimethicone, Glycerin, Butyrospermum Parkii Butter / Hea Butter, Panthenol, Propanedio",9,9,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Lactobacillus/Soybean,"Water, Propanediol, Dipropylene Glycol, Cyclopentasiloxane, Glycersth
+-26, Tanium Dioxide (CI 77891) Niacinamide Cycl Ch",9,9,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-18/18,"Aqua/Water/Eau, Methyl Methacrylate Crosspolymer, Dipropylene Glycol, Cyclopentasiloxane, Cyclohexasiloxane, Dimethicone",8,6,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Saccharomyces/Viscum,"Water, Propanediol, Dipropylene Glycol, Cyclopentasiloxane, Glycersth
+-26, Tanium Dioxide (CI 77891) Niacinamide Cycl Ch",8,8,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-10/15,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",8,8,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Saccharomyces/Imperata,"Water, Propanediol, Dipropylene Glycol, Cyclopentasiloxane, Glycersth
+-26, Tanium Dioxide (CI 77891) Niacinamide Cycl Ch",8,8,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Diisostearate/Polyhydroxystearate/Sebacate,"Water, Zinc Oxide (CI 77947), Propylheptylcaprylate, Titanium Dioxide (CI 77891), Butyloctyl Salicylate, Caprylyl Methic",7,7,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Lactococcus/Hyaluronic,"Water, Glycerin, Sodium Cocoyl Glycinate, Glycol Distearate, Cocamidopropyl Betaine, Acrylates Copolymer, Potassium Coco",7,7,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Pvm/Ma,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",7,7,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+19140 / Yellow,"Aqua / Water, Sodium Laureth Sulfate, Peg
+-8, Coco
+-Betaine, Hexylene Glycol, Sodium Chloride, Peg
+-120 Methyl Glucose D",7,7,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Butter / Shea,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",7,7,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+(hydration/skin,"Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",7,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Styrene/Acrylates,"Aqua / Water, Homosalate, Silica, Octocrylene, Ethylhexyl Salicylate, Butyl Methoxydibenzoylmethane, Ethylhexyl Triazone",7,7,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylates/Dimethicone,"Water, Cyclopentasiloxane, Methyl Methacrylate Crosspolymer, Ethylhexyl Methoxycinnamate, Zinc Oxide, Talc, Butylene Gly",6,6,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Palmitate/Ethylhexanoate,"Water (Aqua), Alcohol, Dimethicone, Diisopropyl Sebacate, Octocrylene, Ethylhexyl Salicylate, Homosalate, Titanium Dioxi",6,6,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Water/Aqua,"Water/Aqua, Potassium Laureth Phosphate, Cocamidopropyl Betaine, Acrylates/Steareth
+-20 Methacrylate Copolymer, Sodium C",6,6,C_ALIAS_SYNONYM,Merged into single token (aqua/water/eau or parfum/fragrance),Canonicalized / alias split to prevent spurious singletons
+Styrene/Stearyl,"Cyclopentasiloxane, Zinc Oxide (nano), Alcohol, Water, Ethylhexyl Methoxycinnamate, Dimethicone, Hydrogenated Polyisobut",6,6,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Caprylyl/Capryl,"Aqua/Water/Eau, Caprylyl/Capryl Glucoside, Propanediol, Glycerin, Zinc Gluconate, Salicylic Acid, Glycolic Acid, Coco
+-G",6,6,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Extract / Rye,"Aqua / Water, Glycerin, Hydroxyethylpiperazine Ethane Sulfonic Acid, Sodium Hyaluronate, Peg
+-60 Hydrogenated Castor Oil",6,5,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Acrylamide/Sodium,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",6,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Parfum/Fragrance.,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",6,6,C_ALIAS_SYNONYM,Merged into single token (aqua/water/eau or parfum/fragrance),Canonicalized / alias split to prevent spurious singletons
+Acrylates/Palmeth,"Water (Aqua),Juglans Regia (Walnut) Shell Powder,Glycerin,Glyceryl Stearate Se,Cetearyl Alcohol,Cocamidopropyl Betaine,S",6,6,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+42053 / Green,"Aqua / Water, Sodium Laureth Sulfate, Peg
+-8, Coco
+-Betaine, Hexylene Glycol, Sodium Chloride, Peg
+-120 Methyl Glucose D",6,6,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+-Acrylates/Allyl,"Aqua / Water, Dimethicone, Alcohol, Pvp, Isododecane, Trimethylsiloxysilicate, Peg
+-40 Hydrogenated Castor Oil, Butylene",5,5,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+42090 / Blue,"Aqua (Water), Sodium Cocoamphoacetate, Peg
+-40 Glyceryl Cocoate, Peg
+-200 Hydrogenated Glyceryl Palmate, Sodium Coceth S",5,5,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+C/antioxidant),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",5,5,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Butter/[Theobroma,"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",5,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+1/20,"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",5,5,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Starch / Corn,"Alcohol Denat., Diisopropyl Sebacate, Silica, Butyl Methoxydibenzoylmethane, Ci 77891 / Titanium Dioxide, C12
+-15 Alkyl ",5,5,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Leaf/Nut/Stem,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",5,5,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acryloyldimethyltaurate/Beheneth,"Water, Ethanol, Butylene Glycol, Glycerin, Sulfur, Triethanolamine, Salicylic Acid, Ammonium Acryloyldimethyltaurate/Beh",5,5,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+[Nano] / Methylene,"Alcohol Denat., Diisopropyl Sebacate, Silica, Butyl Methoxydibenzoylmethane, Ci 77891 / Titanium Dioxide, C12
+-15 Alkyl ",5,5,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Parfum/[Fragrance],"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",5,5,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Bacillus/Soybean/Folic,"Water, Cetyl Ethylhexanoate, Butylene Glycol, Glycerin, Sodium Hyaluronate, Caprylic/Capric Triglyceride, Centella Asiat",5,5,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Butter/[Butyrospermum,"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",5,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Vp/Eicosyncopolymer,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil/IPDI,"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Glycol/PPG,"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Taurate/Vp,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylates/ C10,"Aqua/Water, Homosalate, Silica, Ethylhexyl Salicylate, Ethylhexyl Triazone, Glycerin, C12
+-15 Alkyl Benzoate, Bis
+-Ethyl",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Methacrylate/Glycol,"Aqua/Water, Homosalate, Silica, Ethylhexyl Salicylate, Ethylhexyl Triazone, Glycerin, C12
+-15 Alkyl Benzoate, Bis
+-Ethyl",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-16/16,"Aqua / Water / Eau, Dimethicone, Niacinamide, Glycerin, Propylene Glycol, Polysilicone
+-11, Silica, Bis
+-Peg/Ppg
+-16/16 ",4,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Extract / Ginger,"Aqua/Water, Homosalate, Silica, Ethylhexyl Salicylate, Ethylhexyl Triazone, Glycerin, C12
+-15 Alkyl Benzoate, Bis
+-Ethyl",4,4,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Styrene/Vp,"Thành phần sản phẩm Sữa Rửa Mặt Naris Nature Charcoal Facial Wash
+• Chiết xuất Than Hoạt Tính: giúp loại bỏ triệt để bụi",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+VP/Eicosine,"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+nâu/tàn,"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+thâm/đốm,"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Starch/Corn,"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil/[Prunus,"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",4,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Bombicola/Glucose/Methyl,"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Water / Aqua,"Water / Aqua / Eau, Glycerin, Myristic Acid, Lauric Acid, Potassium Hydroxide, Stearic Acid, Glyceryl Stearate, Glycol D",4,4,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Caprylic/Capric/Succinic,"Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",4,4,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Y292059/1),"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Z283405/1),"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+D213768/1).,"Aqua / Water, Glycerin, Cetearyl Alcohol, Caprylic/Capric Triglyceride, Cetyl Alcohol, Ceteareth
+-20, Petrolatum, Dimeth",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Fragrance / Parfum,"Water / Aqua / Eau, Glycerin, Myristic Acid, Lauric Acid, Potassium Hydroxide, Stearic Acid, Glyceryl Stearate, Glycol D",4,4,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Ci16035/Red,"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+14700 / Red,"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",4,4,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Acrylates/Methoxy,"Water (Aqua), Alcohol, Dimethicone, Diisopropyl Sebacate, Octocrylene, Ethylhexyl Salicylate, Homosalate, Titanium Dioxi",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylates/Steareth,"Water/Aqua, Potassium Laureth Phosphate, Cocamidopropyl Betaine, Acrylates/Steareth
+-20 Methacrylate Copolymer, Sodium C",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-soothing/antioxidant),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylamides/Dmapa,"Water (Aqua), Alcohol, Dimethicone, Diisopropyl Sebacate, Octocrylene, Ethylhexyl Salicylate, Homosalate, Titanium Dioxi",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acid/Glycolic,"Purified Water, Glycerin, Myristic Acid, Lauric Acid, Potassium Hydroxide, Kaolin, Stearic Acid, Glyceryl Stearate, Laur",4,4,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Butter / Hea,"Aqua, Hydrogenated Polyisobutene, Dimethicone, Glycerin, Butyrospermum Parkii Butter / Hea Butter, Panthenol, Propanedio",4,4,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Extract / Scutellaria,"Aqua / Water, Homosalate, Silica, Octocrylene, Ethylhexyl Salicylate, Butyl Methoxydibenzoylmethane, Ethylhexyl Triazone",3,3,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+-22/Dodecyl,Nước Khoáng Avene (Avene Aqua). Caprylic/Capric Triglyceride. Dầu Khoáng (Paraffinum Liquidum). Glycerin. Hydrogenated V,3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+B166675/2).,"Aqua / Water, Glycerin, Dimethicone, Isohexadecane, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid, Alcohol Denat.,",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Parfum /Fragrance.,"Aqua / Water, Glycerin, Alcohol Denat, Propylene Glycol, Panthenol, Pentylene Glycol, Dimethicone, Peg
+-6 Caprylic/Capri",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Caprylyl/ Capryl,"Aqua / Water,Glycerin, Alcohol, Dipropylene Glycol, Butylene Glycol, Peg/Ppg/Polybutylene Glycol
+-8/5/3 Glycerin, Niacin",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+VP/Hexadecene,"Avobenzone 3%, Homosalate (10%), Octisalate (5%), Octocrylene (2.8%), Oxybenzone 6%, Water, Butyloctyl Salicylate, Styre",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-10 /15,"Aqua/Water, Triethyl Citrate, Cyclopentasiloxane, Dibutyl Adipate, Isododecane, Butyloctyl Salicylate, Ethylhexyl Methox",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Caprolactam/VP/ Dimethylaminoethyl,"Acrylates Copolymer, Alcohol, Vinyl Caprolactam/VP/ Dimethylaminoethyl Methacrylate Copolymer, Salicylic Acid (BHA), Wat",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Bark/Leaf/Twig,"Water, Glycerin, Caprylic/Capric Triglyceride, Butylene Glycol, Cyclopentasiloxane, Polyglyceryl
+-4 Laurate, Polyglycery",3,3,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Trifluoropropyldimethyl/Trimethylsiloxysilicate,"Dimethicone, Water (Aqua), Zinc Oxide, Ethylhexyl Methoxycinnamate, Zinc Oxide, Alcohol, Caprylyl Methicone, Diisopropyl",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+77163 / Bismuth,"Aqua / Water, Glycerin, Dimethicone, Isohexadecane, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid, Alcohol Denat.,",3,3,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+15985 / Yellow,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",3,3,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+17200 / RED33,"Aqua/Water, Homosalate, Silica, Ethylhexyl Salicylate, Ethylhexyl Triazone, Glycerin, C12
+-15 Alkyl Benzoate, Bis
+-Ethyl",3,3,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Parfum /Fragrance,"Aqua/Water, Homosalate, Silica, Ethylhexyl Salicylate, Ethylhexyl Triazone, Glycerin, C12
+-15 Alkyl Benzoate, Bis
+-Ethyl",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-Peg/Ppg,"Aqua / Water / Eau, Dimethicone, Niacinamide, Glycerin, Propylene Glycol, Polysilicone
+-11, Silica, Bis
+-Peg/Ppg
+-16/16 ",3,3,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+TrifluoropropylMethyl/Trimethylsiloxysilicate,"Water (Aqua), Dimethicone, Diisopropyl Sebacate, Butylene Glycol, Caprylyl Methicone, Cetyl Ethylhexanoate, Titanium Dio",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Styrene/ Acrylates,"Aqua/Water, Homosalate, Silica, Ethylhexyl Salicylate, Ethylhexyl Triazone, Glycerin, C12
+-15 Alkyl Benzoate, Bis
+-Ethyl",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Fragrance/Parfum,"Water/Aqua, Butyloctyl Salicylate, Octinoxate/Ethylhexyl Methoxycinnamate, Titanium Dioxide (Nano), Dimethicone, Cetyl E",3,3,C_ALIAS_SYNONYM,Merged into single token (aqua/water/eau or parfum/fragrance),Canonicalized / alias split to prevent spurious singletons
+Styrene/Isoprene,"Thành phần sản phẩm Cellulose Gum, Hydrogenated Rosin, Styrene/Isoprene Copolymer, Mineral Oil, T.X.A, Centella Asiatica",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Saccharomyces/ Xylinum/,"Aqua/Water, Homosalate, Silica, Ethylhexyl Salicylate, Ethylhexyl Triazone, Glycerin, C12
+-15 Alkyl Benzoate, Bis
+-Ethyl",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+hoa/lá/dây,"Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Glycol/Ppg,"Thành phần sản phẩm Water (Aqua),Alcohol,Ethylhexyl Methoxycinnamate,Zinc Oxide,Peg
+-8,Butylene Glycol,Octocrylene,Capry",3,3,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Cholesterol/Lanosterol,"Water, Glycerin, Isopropyl Palmitate, Cetyl Alcohol, Cetearyl Olivate, Sorbitan Olivate, C10
+-30 Cholesterol/Lanosterol ",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Starch / Rice,"Aqua / Water / Eau, Glycerin, Dimethicone, Isocetyl Stearate, Niacinamide, Isopropyl Lauroyl Sarcosinate, Silica, Ammoni",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Extract/Lemon,"Aqua/Water, Homosalate, Propylene Glycol, Niacinamide, Alcohol, Ci 77891/Titanium Dioxide, Dimethicone, Octocrylene, But",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Rylate/Sodium,"Aqua/Water, Rosa Damascena Flower Water, Dicaprylyl Carbonate, Hydroxyethyl Ac Rylate/Sodium Acryloyldimethyl Taurate Co",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylates/stearyl,"Water / Aqua / Eau, Glycerin, Myristic Acid, Lauric Acid, Potassium Hydroxide, Stearic Acid, Glyceryl Stearate, Glycol D",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/Vinyldimethicone,"Centella Asiatica Extract (35.8%), Cyclopentasiloxane, Zinc Oxide, Butyl Octyl Salicylate, Titanium Dioxide, Propanediol",2,2,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Cholesteryl/Octyldodecyl,"Water, Glycerin, Dipropylene Glycol, Dimethicone,Ascorbyl Tetraisopalmitate, Sodium Tocopheryl Phosphate, Coix Lacryma
+-",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+77007 / Ultramarines,"Aqua / Water, Kaolin, Glycerin, Zea Mays Starch / Corn Starch, Ci 77891 / Titanium Dioxide, Decyl Glucoside, Sodium Laur",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Acrylamide / Sodium,"Aqua / Water / Eau, Glycerin, Dimethicone, Isocetyl Stearate, Niacinamide, Isopropyl Lauroyl Sarcosinate, Silica, Ammoni",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Polyacryldimethyltauramide / Ammonium,"Alcohol Denat., Diisopropyl Sebacate, Silica, Butyl Methoxydibenzoylmethane, Ci 77891 / Titanium Dioxide, C12
+-15 Alkyl ",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Caprylic/ Capric,"Nước, Butylene Glycol, Glycerin, Chiết xuất Collagen, Caprylic/ Capric Triglyceride, Niacinamide, 1,2
+-Hexanediol, Cetea",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(Vp/Eicosene),"Lpg, Water, Ethylhexyl Methoxycinnamate, Isododecane, Cyclopentasiloxane, Ethanol, Neopentyl Glycol Diethylhexanoate, Ca",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Silk/Pgpropylmethylsilanediol),"Lpg, Water, Ethylhexyl Methoxycinnamate, Isododecane, Cyclopentasiloxane, Ethanol, Neopentyl Glycol Diethylhexanoate, Ca",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylate/ Sodium,"Silica, C12
+-15 Alkyl Benzoate, Methylene Bis
+-Benzotriazolyl Tetramethylbutylphenol [Nano], Corn Starch Modified, Dieth",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil / Palm,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+extract/skin,"Water (Aqua), Niacinamide (vitamin B3, skin
+-restoring ), Acetyl Glucosamine (skin replenishing/antioxidant), Ascorbyl G",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+replenishing/antioxidant),"Water (Aqua), Niacinamide (vitamin B3, skin
+-restoring ), Acetyl Glucosamine (skin replenishing/antioxidant), Ascorbyl G",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+PVM/ MA,"Aqua, Hydroxyethyl Urea, Urea, Isosorbide, Glycereth
+-26, Glycerin, Betaine, Inositol, Xylitol, Trehalose, Propolis Extr",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Ci15985/Yellow,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Ci77891/Titanium,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylate/C10,"Purified Water, Butylene Glycol, Propanediol, Glycerin, Cetylethylhexanoate, Isostearyl Alcohol, Polydecene, Butylene Gl",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Extract/Pea,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil / Sweet,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Extract / Pea,"Aqua/Water/Eau, Glycerin, Dimethicone, Isohexadecane, Alcohol Denat, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Oil / Soybean,"Aqua / Water / Eau, Glycerin, Isononyl Isononanoate, Panthenol, Niacinamide, Dicaprylyl Carbonate, Pentylene Glycol, Dii",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Phytosteryl/Isostearyl/Cetyl/Stearyl/Behenyl,"Synthetic Fluorphlogopite, Dimethicone, Boron Nitride, Polymethylsilsesquioxane, Dimethicone/Vinyl Dimethicone Crosspoly",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Water/Aqua/Eau,"Water/Aqua/Eau, Propanediol, Glycerin, Alcohol Denat., 1,2
+-Hexanediol, Trehalose, Niacinamide, Betaine, Saccharide Isom",2,2,C_ALIAS_SYNONYM,Merged into single token (aqua/water/eau or parfum/fragrance),Canonicalized / alias split to prevent spurious singletons
+Glucoside/Glucosylceramide,"1. Sữa Rửa Mặt Tẩy Trang Dạng Gel Hương Đào Momopuri Cleansing Gel 150g Triethylhexanoin, Glycerin, Water (Aqua), Peg
+-2",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-20/5,"Water, Butylene Glycol, Isononyl Isononanoate, Glycerin, Niacinamide, Ceramide Eop, Ceramide Ns/Ceramide Ng, Undecylenoy",2,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Metacrylat / Metacrylic,"Water, Methoxycinnamate Ethylhexyl, Ethanol, (Lauryl Metacrylat / Metacrylic Axit Na) Cross Polymer, Alkyl Axit Benzoic ",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+27/03/2023),"Water, Zinc Oxide, Cyclohexasiloxane, Dipropylene Glycol, Butyloctyl Salicylate, Propanediol, Isododecane, Polyglyceryl
+",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/ Vinyl,"Panthenol (Pro Vitamin B5), Tocopheryl Acetate (Vitamin C), Magnesium Ascorbyl Phosphate (Vitamin E), Sodium Hyalurorate",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+glycol/PPG,"Thành phần sản phẩm 1. Sữa Chống Nắng Elixir Reflet Balancing Oshiroi Milk SPF50+ PA++++ Dưỡng Da Kiềm Dầu 35g Water, et",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-enhancing/mattifying,"Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",2,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(dimethylacrylamide/acryloyldimethyltaurate,"Thành phần sản phẩm 1. Sữa Chống Nắng Elixir Reflet Balancing Oshiroi Milk SPF50+ PA++++ Dưỡng Da Kiềm Dầu 35g Water, et",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylates/c10,"Water, Homosalate, Octocrylene, Butyl Methoxydibenzoylmethane, Alkyl (C12
+-15) Benzoate, White Beeswax, Ethylhexyl Triaz",2,2,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Oil / Citrus,"Aqua (Water), Pentylene Glycol, Glycerin, Polysorbate 20, Xanthan Gum, Phenoxyethanol, Mannitol, Sodium Hyaluronate, Dis",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Dilinoleate/Stearate/Hydroxystearate,"Water, Isononyl Isononanoate, Dimethicone, Diethylhexyl Succinate, Zinc Oxide (Nano), Butylene Glycol, Triethylhexyl Tri",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylate/Acryloyldimethyl,"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Isostearate/Polyglyceryl,"Water/Aqua, Butyloctyl Salicylate, Octinoxate/Ethylhexyl Methoxycinnamate, Titanium Dioxide (Nano), Dimethicone, Cetyl E",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(Acrylates / Alkyl,"Water, Methoxycinnamate Ethylhexyl, Ethanol, (Lauryl Metacrylat / Metacrylic Axit Na) Cross Polymer, Alkyl Axit Benzoic ",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Octinoxate/Ethylhexyl,"Water/Aqua, Butyloctyl Salicylate, Octinoxate/Ethylhexyl Methoxycinnamate, Titanium Dioxide (Nano), Dimethicone, Cetyl E",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/Lauryl,"Ethylhexyl Methoxycinnamate, Zinc Oxide, Niacinamide, Prunus Persica (Peach) Leaf Extract, Rubus Idaeus (Raspberry) Frui",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+E/antioxidant),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(Acrylate / Alkyl,"Water, Glycerin, Bg, Behenyl Alcohol, Mineral Oil, Cetanol, Dimethicone, Sorbitan Stearate, Polysorbate 60, Stearic Acid",2,2,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Vp/Hexadecene,"Centella Asiatica Extract (35.8%), Cyclopentasiloxane, Zinc Oxide, Butyl Octyl Salicylate, Titanium Dioxide, Propanediol",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Lactobacillus/Pear,"Water, Glycerin, Hydrogenated Palm Acid, Lauric Acid, Potassium Hydroxide, Myristic Acid, Cocamidopropyl Betaine, Glycer",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+fruit/leaf/stem,"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",2,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Ns/Ceramide,"Aqua,Butylene Glycol,Hydrogenated Polyisobutene,Dimethicone,Glycerin,Propylene Glycol,1,2
+-Hexanediol,Hydroxyacetophenon",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(solvent/texture,"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+agent/hydration),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylate / Acryloyldimethyltaurine,"Thành phần sản phẩm Chứa thành phần dưỡng ẩm: Hyaluronic acid (Sodium Hyaluronate), chiết xuất sữa ong chúa (Royal Jelly",2,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+[N2212/A].,"Coco
+-Caprylate/Caprate, Macadamia Integrifolia Seed Oil, Dicaprylyl Ether, Caprylic/Capric Triglyceride, Prunus Amygdal",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-240/Hdi,"Water (Aqua), Butylene Glycol, Dipropylene Glycol, Glycerin, Alcohol, Pentaerythrityl Tetraethylhexanoate, Tranexamic Ac",2,2,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/methicone,"Water, Alcohol, Ethylhexyl Methoxycinnamate, Lauryl Methacrylate/sodium Methacrylate Crosspolymer, Ethylhexyl Triazone, ",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+16035 / Red,"Aqua / Water / Eau
+• Silica
+• Isopropyl Palmitate
+• Bis
+-Ethylhexyloxyphenol Methoxyphenyl Triazine
+• Ethylhexyl Salicyl",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Leuconostoc/Radish,"Water, Cyclohexasiloxane, Dicaprylyl Carbonate, Glycerin, Methylpropanediol, 1,2
+-Hexanediol, Niacinamide, Hydrogenated ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Late/C10,"Centella Asiatica Extract (77%), Butylene Glycol, Glycerin, Niacinamide, T.X.A, 1,2
+-Hexanediol, Purified Water, Betaine",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Aquacaprylic/Capric,"Aquacaprylic/Capric Triglyceridecetearyl Alcohol, Isohexadecaneniacinamidepentylene Glycol, Butylene Glycolglycerinoctyl",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+-restoring/skin,"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Caprylate/Caprate,"Water, Coco Caprylate/Caprate, Dibutyl Adipate, Synthetic Wax, Butyloctyl Salicylate, Polyvinyldimetic/Methicone Silsesq",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Leaf/Root/Stem,"Water, Cyclohexasiloxane, Dicaprylyl Carbonate, Glycerin, Methylpropanediol, 1,2
+-Hexanediol, Niacinamide, Hydrogenated ",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Leaf/Seed/Skin,"Water, Butylene Glycol, Glycerin, Lauric Acid, Stearic Acid, Myristic Acid, Cocamidopropyl Betaine, Potassium Hydroxide,",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Styrene/VP,"Thành phần sản phẩm Water, Glycerin, Propylene Glycol, Acrylates Copolymer, Potassium Cocoyl Glycinate, Lauryl Glucoside",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/PPG,"Thành phần sản phẩm
+• 5% AHA (Glycolic Acid & Mandelic Acid): tẩy tế bào chết, giảm thiểu tình trạng tắc nghẽn lỗ chân l",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+15510 / Orange,"Aqua / Water / Eau
+• Silica
+• Isopropyl Palmitate
+• Bis
+-Ethylhexyloxyphenol Methoxyphenyl Triazine
+• Ethylhexyl Salicyl",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Parfum/ Fragrance.,"Aqua / Water / Eau
+• Silica
+• Isopropyl Palmitate
+• Bis
+-Ethylhexyloxyphenol Methoxyphenyl Triazine
+• Ethylhexyl Salicyl",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Hydroxyaceaurateomerhenote / VP,"Thành phần sản phẩm Sabdariffa, Butylene Glycol, Nước, Glycerin, Cetyl Ethylhexanoate, Caprylic / Capric Triglyceride, 1",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Acrylate / Acrylic,"Thành phần sản phẩm Sabdariffa, Butylene Glycol, Nước, Glycerin, Cetyl Ethylhexanoate, Caprylic / Capric Triglyceride, 1",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+[N4102/B].,"Thành phần sản phẩm Aqua/Water, Rosa Damascena Flower Water, Sodium Lauroyl Sarcosinate, Pentylene Glycol, Glycerin, Sod",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(Silicones/Slip,"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+B3/Cell,"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+E/Antioxidant),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil/Lubricant),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil/Huile,"Aqua/Water/Eau,Paraffinum Liquidum/Mineral Oil/Huile Minerale,Glycerin,Brassica Campestris (Rapeseed) Seed Oil, Sodium P",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Liquidum/Mineral,"Aqua/Water/Eau,Paraffinum Liquidum/Mineral Oil/Huile Minerale,Glycerin,Brassica Campestris (Rapeseed) Seed Oil, Sodium P",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil/Palm,"Avène Thermal Spring Water, Glycerin, Mineral Oil, Cetearyl Alcohol, Oenothera Biennis Oil, Caprylic/Capric Triglyceride",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/PEG,"Water, Coconut Alkanes, Zinc Oxide, Caprylyl Methicone, Isododecane, Cyclopentasiloxane, Titanium Dioxide, Butylene Glyc",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+ethyltaurate/VP,"Water, Pentylene Glycol, 1,2
+-Hexanediol, Niacinamide, Butylene Glycol, Sodium Hyaluronate, Allantoin, Panthenol, Adeno ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Proteinum/[Whey,"Nước Băng Tan từ dãy núi Alpine và Phức Hợp Thực Vật Dưỡng Sáng Thụy Sĩ. Aqua (Water), Pentylene Glycol, Methylpropanedi",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Lactobacillus /Centella,"Water, Glycerin, Butylene Glycol, 1,2
+-Hexanediol, Niacinamide, Alcohol, Lactobacillus /Centella Asiatica Extract Fermen",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(hydration/chelation),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Sparsa/Saccharina,"Water (Aqua), Butylene Glycol, Dipropylene Glycol, Glycerin, Alcohol, Pentaerythrityl Tetraethylhexanoate, Tranexamic Ac",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Angustata/Ulva,"Water (Aqua), Butylene Glycol, Dipropylene Glycol, Glycerin, Alcohol, Pentaerythrityl Tetraethylhexanoate, Tranexamic Ac",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Linza/Undaria,"Water (Aqua), Butylene Glycol, Dipropylene Glycol, Glycerin, Alcohol, Pentaerythrityl Tetraethylhexanoate, Tranexamic Ac",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Angustata/Undaria,"Water (Aqua), Butylene Glycol, Dipropylene Glycol, Glycerin, Alcohol, Pentaerythrityl Tetraethylhexanoate, Tranexamic Ac",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+C271270/3),"Thành phần sản phẩm Aqua / Water, Glycerin, Myristic Acid, Palmitic Acid, Stearic Acid, Potassium Hydroxide, Lauric Acid",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Z70042997/1),"Aqua/Water, Alcohol Denat., Dilsopropyl Sebacate, Silica, Isopropyl Myristate, Ethylhexyl Salicylate, Bis
+-Ethylexyloxyp",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-replenishing/hydration),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+acid/hydration),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-restoring/hydration),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Serra/Grateloupia,"Water (Aqua), Butylene Glycol, Dipropylene Glycol, Glycerin, Alcohol, Pentaerythrityl Tetraethylhexanoate, Tranexamic Ac",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Flower/ Leaf/,"Water, Kaolin, Lauryl Phosphate/ Polyoxyethylene (1.0) Monoakyl (C12
+-15) Ethers Phosphates/ Ethylhexylglycerin/ Potassi",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Phytosteryl/Behenyl/Octyldodecyl,"Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-replenishing/skin,"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/Ppg,"Aqua (Purified Water), Propanediol, Gluconolactone, Niacinamide, Caprylyl Methicone, Cyclopentasiloxane, Methyl Methacry",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+N70040253/2).,"Aqua / Water / Eau, Glycerin, Coco
+-Betaine, Propanediol, Sodium Cocoyl Glycinate, Peg
+-120 Methyl Glucose Dioleate, Sod",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-conditioning/brightening),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-replenishing/antioxidant),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-restoring/antioxidant),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+[Nano]/Silica,"Aqua/Water, Dimethicone, Simmondsia Chinensis Oil/Jojoba Seed Oil, Hydrogenated Castor Oil Dimer Dilinoleate, Alcohol De",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Oil/Jojoba,"Aqua/Water, Dimethicone, Simmondsia Chinensis Oil/Jojoba Seed Oil, Hydrogenated Castor Oil Dimer Dilinoleate, Alcohol De",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Phosphate/ Polyoxyethylene,"Water, Kaolin, Lauryl Phosphate/ Polyoxyethylene (1.0) Monoakyl (C12
+-15) Ethers Phosphates/ Ethylhexylglycerin/ Potassi",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Phosphates/ Ethylhexylglycerin/,"Water, Kaolin, Lauryl Phosphate/ Polyoxyethylene (1.0) Monoakyl (C12
+-15) Ethers Phosphates/ Ethylhexylglycerin/ Potassi",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Fruit/Leaf/Stem,"Aqua (Water), Glycerin, Caprylic/Capric Triglyceride, Cyclopentasiloxane, Cetyl Alcohol, Glyceryl Stearate, Cetyl Ethylh",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Hydroxide/Dipropylene,"Water, Kaolin, Lauryl Phosphate/ Polyoxyethylene (1.0) Monoakyl (C12
+-15) Ethers Phosphates/ Ethylhexylglycerin/ Potassi",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Water/Kiwi,"Aqua/Water, Homosalate, Propylene Glycol, Niacinamide, Alcohol, Ci 77891/Titanium Dioxide, Dimethicone, Octocrylene, But",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+prylic/Capric,"Water, Butylene Glycol, Glycerin, Centella Asiatica Extract, Beta
+-Glucan, C 14
+-22 Alcohols, C12
+-20 Alkyl Glucoside, V",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Dimethicone/ Methicone,"Aqua/Water/Eau, Glycerin, Methyl Methacrylate Crosspolymer, Dipropylene Glycol, Zinc Gluconate, Coco
+-Caprylate/Caprate,",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Citrate/Lactate/Linoleate/Oleate,"Water, Glycolic Acid, Butylene Glycol, Glycerin, Sodium Hydroxide, 1,2
+-Hexanediol, Xanthan Gum, Gaultheria Procumbens (",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+77891/Titanium,"Aqua/Water, Homosalate, Propylene Glycol, Niacinamide, Alcohol, Ci 77891/Titanium Dioxide, Dimethicone, Octocrylene, But",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Alba / Beeswax,"Aqua/Water, Homosalate, Propylene Glycol, Niacinamide, Alcohol, Ci 77891/Titanium Dioxide, Dimethicone, Octocrylene, But",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Extract/Ginger,"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Nano]/Titanium,"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Perfume / Fragrance.,"Aqua / Water / Eau, Glycerin, Rhamnose, Alcohol Denat., Niacinamide, Dimethicone, Hydroxyethylpiperazine Ethane Sulfonic",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+50+/pa++++,"m, txa, chỉ số chống nắng spf 50+/pa++++, thành phần từ tự nhiên như",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+caprylic/capric,"chiết xuất nhau thai (placenta extract), jobi ma, yuen seed extract, morus alba root extract, sodium pca, malic acid, or",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Caprylic/capric,"Aqua / Water, Sodium Laureth Sulfate, Decyl Glucoside, Glycerin, Sodium Chloride, Coco
+-betaine, Salicylic Acid, Peg
+-15",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Liquidum / Mineral,"Aqua / Water, Butyrospermum Parkii Butter / Shea Butter, Glycerin, Dimethicone, Niacinamide, Paraffinum Liquidum / Miner",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Z70021807/3),"Aqua / Water, Alcohol,Denat., Disopropyl Sebacate, Silica, Isopropyl Myristate, Ethylhexyl Salicylate Bis
+-Ethylhexyloxy",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Eicosadioate/Tetradecanedioate,"Water, Niacinamide, Propanediol, Isopentyldiol, Glycerin, Diglycerin, Pentylene Glycol, Taurine, Lysine HCl, Alanine, Hi",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+INCLUDING / DONT,"Thành phần sản phẩm AQUA / WATER, SODIUM COCOYL GLYCINATE, COCO
+-BETAINE, GLYCERIN, SODIUM CHLORIDE, CI 77891 / TITANIUM",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+ACRYLATES/C10,"Thành phần sản phẩm AQUA / WATER, SODIUM COCOYL GLYCINATE, COCO
+-BETAINE, GLYCERIN, SODIUM CHLORIDE, CI 77891 / TITANIUM",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+PARFUM / FRAGRANCE.,"Thành phần sản phẩm AQUA / WATER, SODIUM COCOYL GLYCINATE, COCO
+-BETAINE, GLYCERIN, SODIUM CHLORIDE, CI 77891 / TITANIUM",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+77891 / TITANIUM,"Thành phần sản phẩm AQUA / WATER, SODIUM COCOYL GLYCINATE, COCO
+-BETAINE, GLYCERIN, SODIUM CHLORIDE, CI 77891 / TITANIUM",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+AQUA / WATER,"Thành phần sản phẩm AQUA / WATER, SODIUM COCOYL GLYCINATE, COCO
+-BETAINE, GLYCERIN, SODIUM CHLORIDE, CI 77891 / TITANIUM",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Y70030183/1).,"Aqua / Water, Alcohol Denat., Glycerin, Dipropylene Glycol, Butylene Glycol, Niacinamide, Peg/Ppg/Polybutylene Glycol
+-8",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Flower/ Leaf,"Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Centella Asiatica Extract (14.51%), Purified Water, Olea Europaea Fr",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-Forming/Water,"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+B5/Water,"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Z70020268/1).,"Aqua/Water, Sodium Laureth Sulfate, Glycerin, Decyl Glucoside, Sodium Chloride, Peg
+-150 Pentaerythrityl Tetrastearate, ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Extract/[Pyrus,"Nước Băng Tan từ dãy núi Alpine và Phức Hợp Thực Vật Dưỡng Sáng Thụy Sĩ. Aqua (Water), Caprylic/Capric Triglyceride, Gyc",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+C/Antioxidant),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(Licorice/Anti,"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-caprylate/caprate,"Water, Icaprylyl Carbonate, Dibutyl Adipate, Propanediol, Titanium Dioxide, Glycerin, Diethylamino Hydroxybenzoyl Hexyl ",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Gluconobacter/Honey,"Aqua, Butylene Glycol, Glycerin, Carica Papaya Fruit Extract, Camellia Sinensis Leaf Extract, Gluconobacter/Honey Fermen",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Saccharomyces/Zinc,"Water (Aqua, Eau), Niacinamide 9,9%, Pentylene Glycol, Xanthan Gum, Saccharomyces/Zinc Ferment, PEG
+-60 Almond Glyceride",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Yeast/Xylinum/Black,"Purified Water, Butylene Glycol, Propanediol, Glycerin, Cetylethylhexanoate, Isostearyl Alcohol, Polydecene, Butylene Gl",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acryloyldimethyltaurate/Vpico,"Purified Water, Butylene Glycol, Propanediol, Glycerin, Cetylethylhexanoate, Isostearyl Alcohol, Polydecene, Butylene Gl",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Leuconostoc/Non,"Purified Water, Butylene Glycol, Propanediol, Glycerin, Cetylethylhexanoate, Isostearyl Alcohol, Polydecene, Butylene Gl",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Lactobacillus/Soymilk,"Water, Glycerin, Myristic Acid, Palmitic Acid, Potassium Hydroxide, Stearic Acid, Glyceryl Stearate, Diglycerin, Cocamid",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Microcrystallina / Microcrystalline,"Aqua / Water, Butyrospermum Parkii Butter / Shea Butter, Glycerin, Dimethicone, Niacinamide, Paraffinum Liquidum / Miner",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Gluconobacter/ Honey,"Aqua, Butylene Glycol, Glycerin, Carica Papaya Fruit Extract, Camellia Sinensis Leaf Extract, Gluconobacter/ Honey Ferme",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Arginine/Lysine,"Water, Glycerin, Niacinamide, Cetearyl Alcohol, Caprylic/Capric Triglyceride, Propanediol, Hydrogenated Coco
+-Glycerides",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Flower/Leaf/Root,"Aqua/Water/Eau, Glycerin, Dicaprylyl Ether, Propylheptyl Caprylate, Butylene Glycol, Glyceryl Stearate Citrate, Glycol P",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acry[1]lates/C10,"Water, Propanediol, Glycerin, Niacinamide, 3
+-O
+-Ethyl Ascorbic Acid, 1,2
+-Hexanediol, Isopropyl Myristate, Betaine, Ery",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+oil/antioxidant),"Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+oil/non,"Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+17200 / Red,"Aqua / Water / Eau, Dimethicone, Niacinamide, Glycerin, Propylene Glycol, Polysilicone
+-11, Silica, Bis
+-Peg/Ppg
+-16/16 ",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Acrylates / C10,"Aqua (Water), Butylene Glycol, Propylene Glycol, Ethylhexyl Methoxycinnamate, Polymethyl Methacrylate, PEG
+-8, Ethylhexy",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Oil / Rapeseed,"Aqua / Water, Butyrospermum Parkii Butter / Shea Butter, Glycerin, Dimethicone, Niacinamide, Paraffinum Liquidum / Miner",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Styrene/Isopropene,"Thành phần sản phẩm Methylcellulose, Glyceryl Rosinate, Hydrogenatad Styrene/Isopropene Copolymer, Paraffinum Liquidium,",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Campestris/Aleurites,"Silica, C12
+-15 Alkyl Benzoate, Methylene Bis
+-Benzotriazolyl Tetramethylbutylphenol [Nano], Corn Starch Modified, Dieth",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+T70014688/1),"Aqua / Nước, Glycerin, Alcohol Denat., Dimethicone, Isononyl Isononanoate, Capryloyl Salicylic Acid, Menthoxypropanediol",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Cera / Rice,"Aqua / Water, Glycerin, Isopropyl Palmitate, Bis
+-Ethylhexyloxyphenol, Methoxyphenyl Triazine, Ethylhexyl Salicylate, Ni",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Acrylate/ Acrylic,"Nước, Butylene Glycol, Glycerin, Chiết xuất Collagen, Caprylic/ Capric Triglyceride, Niacinamide, 1,2
+-Hexanediol, Cetea",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acid/Glycerin,"Avene Thermal Spring Water (Avene Aqua). C12
+-15 Alkyl Benzoate. Dicaprylyl Carbonate. Diethylamino Hydroxybenzoyl Hexyl",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Trimethylpentanediol/Adipic,"Avene Thermal Spring Water (Avene Aqua). C12
+-15 Alkyl Benzoate. Dicaprylyl Carbonate. Diethylamino Hydroxybenzoyl Hexyl",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(astaxanthin/antioxidant),"Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+08/ 2024),"Water, Glycerin, Propanediol, Niacinamide, Butylene Glycol, Alpha
+-arbutin, Caprylic/Capric Triglyceride, Isohexadecane,",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Parfum / Hương,"Aqua / Nước, Glycerin, Alcohol Denat., Dimethicone, Isononyl Isononanoate, Capryloyl Salicylic Acid, Menthoxypropanediol",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Aqua / Nước,"Aqua / Nước, Glycerin, Alcohol Denat., Dimethicone, Isononyl Isononanoate, Capryloyl Salicylic Acid, Menthoxypropanediol",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Lactococcal/Hyaluronic,"Ethanol, Isononyl Isononanoate, Ethylhexyl Methoxysilicate, DPG, Diethylhexyl Succinate, Polysilicone
+-15, Ethylhexyl Tr",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acryloyldimethyltaurate/vp,"Water, Icaprylyl Carbonate, Dibutyl Adipate, Propanediol, Titanium Dioxide, Glycerin, Diethylamino Hydroxybenzoyl Hexyl ",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Ethylene/Propylene,"Dimethicone, Sáp Tổng Hợp, Homosalate, Silica, Isoeicosane, Octocrylene, Phenylpropyldimethylsiloxysilicate, Ethylhexyl ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-Behenyl/Isostearyl/Phytosteryl,"Dimethicone, Sáp Tổng Hợp, Homosalate, Silica, Isoeicosane, Octocrylene, Phenylpropyldimethylsiloxysilicate, Ethylhexyl ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-10/7/Dimethicone,"(bản cũ): Water, Butylene Glycol, Caprylic/Capric Triglyceride, Dimethicone, Triethylhexyl Trimellitate, Pentylene Glyco",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylamide/Ammonium,"Aqua, C12
+-15 Alkyl Benzoate, Alcohol Denat., Distarch Phosphate, Octocrylene, Phenylbenzimidazole Sulfonic Acid, Butyl ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+08/2011.,"Aqua, Glycerin, Myristic Acid, Palmitic Acid, Stearic Acid, Potassium Hydroxide, Lauric Acid, GlycerylStearate, PEG
+-8, ",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-Caprylate/Caprate.,"Avene Thermal Spring Water (Avene Aqua). C12
+-15 Alkyl Benzoate. Dicaprylyl Carbonate. Diethylamino Hydroxybenzoyl Hexyl",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+acrylates/C10,"Water, Ethylhexyl methoxycinnamate, Alcohol, Butylene Glycol, Isopropyl Palmitate, Titanium Dioxide, Bis
+-ethylhexyloxyp",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+AQUA/WATER/EAU,"Thành phần sản phẩm AQUA/WATER/EAU, SODIUM LAURETH SULFATE, LAURYL GLUCOSIDE, PEG
+-200 HYDROGENATED GLYCERYL PALMATE, DI",1,1,C_ALIAS_SYNONYM,Merged into single token (aqua/water/eau or parfum/fragrance),Canonicalized / alias split to prevent spurious singletons
+Bombicola/Glucose/Methylrapeseedate,"Purified Water, Butylene Glycol, Dipropylene Glycol, Glycerin, Niacinamide, 1,2
+-Hexanediol, Sodium Polyacrylate, Phenyl",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-Caprylate / Caprate,"Water, Ethylhexyl Methoxycinnamate, Alcohol Denat., Isopropyl Palmitate, Diethylamino Hydroxybenzoyl Hexyl Benzoate, Bis",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Oil/[Citrus,"Aqua/(Water), Decyl Glucoside, Glycerin, Cellulose Gum, Disodium Cocoyl Glutamate, Polysorbate 20, Phenoxyethanol, Sodiu",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Aqua/(Water),"Aqua/(Water), Decyl Glucoside, Glycerin, Cellulose Gum, Disodium Cocoyl Glutamate, Polysorbate 20, Phenoxyethanol, Sodiu",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(phytosteryl / octyldodecyl),"Water, DPG, glycerin, PEG
+-60 hydrogenated castor oil, carbomer, diphenylsiloxyphenyl trimethicone, BG, niacinamide, pol",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Flower/leaf/stem,"Water, Homosalate, Octocrylene, Butyl Methoxydibenzoylmethane, Alkyl (C12
+-15) Benzoate, White Beeswax, Ethylhexyl Triaz",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+77499 / Iron,Thành phần sản phẩm Kem Chống Nắng Không Nhờn Rít & Giúp Làm Giảm Thâm Nám Vichy Ideal Soleil 3 In 1 Tinted Anti Dark Sp,1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Di(Phytosteryl/2,"T.X.Acid*, Dipotassium Glycyrrhizinate*, Yeast Extract (3), Neem Leaf Extract, Seaweed Extract (4), Seaweed Extract (1),",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+-25/4,"Water, Homosalate, Ethylhexyl Salicylate, Alcohol Denat, Methyl Methacrylate Crosspolymer, Dipropylene Glycol, Butyl Met",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Branch/Fruit/Leaf,"Water, Cocamidopropyl Betaine, Sodium Lauroyl Methyl Isethionate, Polysorbate 20, Styrax Japonicus Branch/Fruit/Leaf Ext",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Methacrylate/sodium,"Water, Alcohol, Ethylhexyl Methoxycinnamate, Lauryl Methacrylate/sodium Methacrylate Crosspolymer, Ethylhexyl Triazone, ",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+Dimethicone/vinyl,"Water, Alcohol, Ethylhexyl Methoxycinnamate, Lauryl Methacrylate/sodium Methacrylate Crosspolymer, Ethylhexyl Triazone, ",1,1,B_COMPOUND_NAME,Preserved unbroken with slash in token,Preserved as atomic compound entity with PRESERVED_COMPOUND flag
+enhancer/hydration),"Thành phần sản phẩm Water (Aqua), Cyclopentasiloxane (texture enhancer/hydration), Octyldodecyl Neopentanoate (texture e",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Polyvinyldimetic/Methicone,"Water, Coco Caprylate/Caprate, Dibutyl Adipate, Synthetic Wax, Butyloctyl Salicylate, Polyvinyldimetic/Methicone Silsesq",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+enhancer/film,"Thành phần sản phẩm Water (Aqua), Cyclopentasiloxane (texture enhancer/hydration), Octyldodecyl Neopentanoate (texture e",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+(hydration/soothing),"Thành phần sản phẩm Water (Aqua), Cyclopentasiloxane (texture enhancer/hydration), Octyldodecyl Neopentanoate (texture e",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+25/4,"Water, Butylene Glycol, Isononyl Isononanoate, Glycerin, Niacinamide, Ceramide Eop, Ceramide Ns/Ceramide Ng, Undecylenoy",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Leaf / Stem,"Water, Glycerin, Bg, Dpg, Squalane, Maltol, Macadamia Nut Fatty Acid Phytosteryl, Hydrogenated Lecithin, Carbomer, Chole",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Aqua / Water/,"Aqua / Water/ Eau, Panthenol ,Glycerin , Alcohol Denat.,Dimethicone , Hydroxyethylpiperazine Ethane Axit Sulfonic , Peg
+",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+acrylate/C10,"Purified water, propanediol, glycerin, 1,2
+-hexanediol, 3
+-O
+-ethyl ascorbic acid (20,000 ppm), betaine, erythritol, but",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+caprylic/ Capric,"Purified water, propanediol, glycerin, 1,2
+-hexanediol, 3
+-O
+-ethyl ascorbic acid (20,000 ppm), betaine, erythritol, but",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+vinyldimethicone/methiconyl,"Purified water, zinc oxide, propylheptyl caprylate, dibutyl adipate, butylene glycol, disiloxane, cyclohexasiloxane, pol",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Acrylate / Steareth,"Nước, Cocoylglycine Kali, Lauryl Betaine, Natri Lauramin Zodiacetate, (Alkyl Acrylate / Steareth
+-20) Copolyme, Kali Hyd",1,1,A_SEPARATOR,Merged into multi-word token because slash lacked comma,Split on whitespace slash as true delimiter
+Aqua /Water,"Aqua /Water / Eau, Glycerin, Cyclohexasiloxane, Alcohol Denat., Pentylene Glycol, Niacinamide, Dimethicone, Glycine Soja",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Parfum/ Fragrance,"Aqua /Water / Eau, Glycerin, Cyclohexasiloxane, Alcohol Denat., Pentylene Glycol, Niacinamide, Dimethicone, Glycine Soja",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN
+Caprylate/Capryl,"Aqua (Water), C12
+-13 Alkyl Lactate, Hydroxyethyl Acrylate/Sodium Acryloyldimethyl Taurate Copolymer, Caprylyl Methicone",1,1,D_UNCERTAIN,Preserved with slash or split haphazardly,Preserved and flagged UNCERTAIN

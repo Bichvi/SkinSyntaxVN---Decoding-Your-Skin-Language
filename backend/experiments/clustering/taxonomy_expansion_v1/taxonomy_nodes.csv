@@ -1,0 +1,29 @@
+category_id,category_name,level,is_leaf,parent_id,parent_name,product_count,breadcrumb
+11,Mặt Nạ Giấy,3,True,2001,Mặt Nạ,549,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Giấy
+1,Sữa Rửa Mặt,3,True,2002,Làm Sạch Da,285,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Sữa Rửa Mặt
+6,Chống Nắng Da Mặt,2,True,1001,Chăm Sóc Da Mặt,231,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Chống Nắng Da Mặt
+7,Kem / Gel / Dầu Dưỡng,3,True,2003,Dưỡng Ẩm,215,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Kem / Gel / Dầu Dưỡng
+3,Bộ Chăm Sóc Da Mặt,2,True,1001,Chăm Sóc Da Mặt,211,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Bộ Chăm Sóc Da Mặt
+9,Serum / Tinh Chất,3,True,2004,Đặc Trị,207,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Serum / Tinh Chất
+2,Tẩy Trang Mặt,3,True,2002,Làm Sạch Da,195,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Tẩy Trang Mặt
+18,Son Dưỡng Môi,3,True,2006,Dưỡng Môi,167,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Son Dưỡng Môi
+4,Toner / Nước Cân Bằng Da,3,True,2002,Làm Sạch Da,94,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Toner / Nước Cân Bằng Da
+25,Hỗ Trợ Trị Mụn,3,True,2004,Đặc Trị,66,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Hỗ Trợ Trị Mụn
+37,Lotion / Sữa Dưỡng,3,True,2003,Dưỡng Ẩm,58,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Lotion / Sữa Dưỡng
+19,Mặt Nạ Rửa,3,True,2001,Mặt Nạ,50,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Rửa
+30,Xịt Khoáng,3,True,2003,Dưỡng Ẩm,40,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Xịt Khoáng
+17,Tẩy Tế Bào Chết Da Mặt,3,True,2002,Làm Sạch Da,39,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Tẩy Tế Bào Chết Da Mặt
+53,Mặt Nạ Ngủ,3,True,2001,Mặt Nạ,20,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Ngủ
+38,Serum / Kem Dưỡng Mắt,3,True,2005,Dưỡng Mắt,16,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt -> Serum / Kem Dưỡng Mắt
+60,Mặt Nạ Mắt,3,True,2005,Dưỡng Mắt,11,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt -> Mặt Nạ Mắt
+29,Mặt Nạ Môi,3,True,2006,Dưỡng Môi,11,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Mặt Nạ Môi
+73,Tẩy Tế Bào Chết Môi,3,True,2006,Dưỡng Môi,3,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Tẩy Tế Bào Chết Môi
+83,Mặt Nạ Lột,3,True,2001,Mặt Nạ,3,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Lột
+105,Sản Phẩm Đặc Trị Khác,3,True,2004,Đặc Trị,2,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Sản Phẩm Đặc Trị Khác
+1001,Chăm Sóc Da Mặt,1,False,,ROOT,0,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt
+2001,Mặt Nạ,2,False,1001,Chăm Sóc Da Mặt,0,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ
+2002,Làm Sạch Da,2,False,1001,Chăm Sóc Da Mặt,0,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da
+2003,Dưỡng Ẩm,2,False,1001,Chăm Sóc Da Mặt,0,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm
+2004,Đặc Trị,2,False,1001,Chăm Sóc Da Mặt,0,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị
+2005,Dưỡng Mắt,2,False,1001,Chăm Sóc Da Mặt,0,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt
+2006,Dưỡng Môi,2,False,1001,Chăm Sóc Da Mặt,0,Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi

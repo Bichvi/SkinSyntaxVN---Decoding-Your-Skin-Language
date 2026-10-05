@@ -1,0 +1,4 @@
+Stage,N_Baskets,N_SKUs,Frequent_Itemsets_Count,Total_Rules_Count,Unique_Antecedent_SKUs,Unique_Consequent_SKUs
+S20_B30,30,20,30,18,13,12
+M40_B100,100,40,94,50,33,25
+L80_B300,300,80,206,21,15,18

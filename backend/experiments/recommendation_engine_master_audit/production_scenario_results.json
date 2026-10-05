@@ -1,0 +1,552 @@
+{
+    "A_cold_start": {
+        "scenario_key": "A_cold_start",
+        "scenario_name": "Cold Start (Chưa đăng nhập, chưa có hành vi)",
+        "resolved_algorithm_mode": "SIMPLE",
+        "dominant_signal": "SIMPLE",
+        "active_signals": [],
+        "top_4_products": [
+            {
+                "ma_san_pham": 1000,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+                "gia_ban": 163000,
+                "algorithm_mode": "SIMPLE",
+                "dominant_signal": "SIMPLE",
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "ma_san_pham": 266,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 400ml",
+                "gia_ban": 454000,
+                "algorithm_mode": "SIMPLE",
+                "dominant_signal": "SIMPLE",
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "ma_san_pham": 728,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+                "gia_ban": 295000,
+                "algorithm_mode": "SIMPLE",
+                "dominant_signal": "SIMPLE",
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "ma_san_pham": 4365,
+                "ten_san_pham": "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+                "gia_ban": 129000,
+                "algorithm_mode": "SIMPLE",
+                "dominant_signal": "SIMPLE",
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            }
+        ]
+    },
+    "B_search_only": {
+        "scenario_key": "B_search_only",
+        "scenario_name": "Search Only (Chưa đăng nhập, chỉ có từ khóa tìm kiếm)",
+        "resolved_algorithm_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "SEARCH",
+        "active_signals": [
+            "search"
+        ],
+        "top_4_products": [
+            {
+                "ma_san_pham": 6350,
+                "ten_san_pham": "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+                "gia_ban": 1041000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "SEARCH",
+                "final_score": 0.5355,
+                "reason": "Dựa trên tìm kiếm gần đây",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây"
+                ]
+            },
+            {
+                "ma_san_pham": 2350,
+                "ten_san_pham": "Serum Acnes Chuyên Biệt Cho Da Mụn 20ml",
+                "gia_ban": 88000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "SEARCH",
+                "final_score": 0.5061,
+                "reason": "Dựa trên tìm kiếm gần đây",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây"
+                ]
+            },
+            {
+                "ma_san_pham": 5788,
+                "ten_san_pham": "Serum Cosmedica Hyaluronic Acid Cấp Nước Cho Da 60ml",
+                "gia_ban": 279000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "SEARCH",
+                "final_score": 0.4941,
+                "reason": "Dựa trên tìm kiếm gần đây",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây"
+                ]
+            },
+            {
+                "ma_san_pham": 2780,
+                "ten_san_pham": "[Mini] Serum 9Wishes Dưỡng Ẩm Căng Bóng Da 8ml",
+                "gia_ban": 49000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "SEARCH",
+                "final_score": 0.4851,
+                "reason": "Dựa trên tìm kiếm gần đây",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây"
+                ]
+            }
+        ]
+    },
+    "C_view_only": {
+        "scenario_key": "C_view_only",
+        "scenario_name": "View Only (Chưa đăng nhập, chỉ vừa xem sản phẩm)",
+        "resolved_algorithm_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "VIEW",
+        "active_signals": [
+            "view"
+        ],
+        "top_4_products": [
+            {
+                "ma_san_pham": 11,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml",
+                "gia_ban": 272000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "VIEW",
+                "final_score": 0.943,
+                "reason": "Tương tự sản phẩm vừa xem",
+                "reason_tags": [
+                    "Tương tự sản phẩm vừa xem"
+                ]
+            },
+            {
+                "ma_san_pham": 36,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Cho Da Thường Đến Khô 473ml",
+                "gia_ban": 351000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "VIEW",
+                "final_score": 0.9256,
+                "reason": "Tương tự sản phẩm vừa xem",
+                "reason_tags": [
+                    "Tương tự sản phẩm vừa xem"
+                ]
+            },
+            {
+                "ma_san_pham": 152,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Làm Sạch & Tẩy Tế Bào Chết Dịu Nhẹ 236ml",
+                "gia_ban": 295000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "VIEW",
+                "final_score": 0.8806,
+                "reason": "Tương tự sản phẩm vừa xem",
+                "reason_tags": [
+                    "Tương tự sản phẩm vừa xem"
+                ]
+            },
+            {
+                "ma_san_pham": 3331,
+                "ten_san_pham": "Combo CeraVe Sữa Rửa Mặt Cho Da Dầu 473ml + Sữa Dưỡng Ẩm Cho Da Khô 30ml",
+                "gia_ban": 466000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "VIEW",
+                "final_score": 0.7854,
+                "reason": "Tương tự sản phẩm vừa xem",
+                "reason_tags": [
+                    "Tương tự sản phẩm vừa xem"
+                ]
+            }
+        ]
+    },
+    "D_cart_only": {
+        "scenario_key": "D_cart_only",
+        "scenario_name": "Cart Only (Chưa đăng nhập, đã thêm vào giỏ hàng)",
+        "resolved_algorithm_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "CART",
+        "active_signals": [
+            "cart"
+        ],
+        "top_4_products": [
+            {
+                "ma_san_pham": 11,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml",
+                "gia_ban": 272000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "CART",
+                "final_score": 0.943,
+                "reason": "Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "ma_san_pham": 36,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Cho Da Thường Đến Khô 473ml",
+                "gia_ban": 351000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "CART",
+                "final_score": 0.9256,
+                "reason": "Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "ma_san_pham": 152,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Làm Sạch & Tẩy Tế Bào Chết Dịu Nhẹ 236ml",
+                "gia_ban": 295000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "CART",
+                "final_score": 0.8806,
+                "reason": "Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "ma_san_pham": 3331,
+                "ten_san_pham": "Combo CeraVe Sữa Rửa Mặt Cho Da Dầu 473ml + Sữa Dưỡng Ẩm Cho Da Khô 30ml",
+                "gia_ban": 466000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "CART",
+                "final_score": 0.7854,
+                "reason": "Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Phù hợp với giỏ hàng"
+                ]
+            }
+        ]
+    },
+    "E_purchase_only": {
+        "scenario_key": "E_purchase_only",
+        "scenario_name": "Purchase Only (Đã đăng nhập, chỉ có lịch sử mua hàng)",
+        "resolved_algorithm_mode": "PURCHASE_CONTENT",
+        "dominant_signal": "PURCHASE",
+        "active_signals": [
+            "purchase"
+        ],
+        "top_4_products": [
+            {
+                "ma_san_pham": 1,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",
+                "gia_ban": 357000,
+                "algorithm_mode": "PURCHASE_CONTENT",
+                "dominant_signal": "PURCHASE",
+                "final_score": 1.0001,
+                "reason": "Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "ma_san_pham": 36,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Cho Da Thường Đến Khô 473ml",
+                "gia_ban": 351000,
+                "algorithm_mode": "PURCHASE_CONTENT",
+                "dominant_signal": "PURCHASE",
+                "final_score": 0.9256,
+                "reason": "Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "ma_san_pham": 152,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Làm Sạch & Tẩy Tế Bào Chết Dịu Nhẹ 236ml",
+                "gia_ban": 295000,
+                "algorithm_mode": "PURCHASE_CONTENT",
+                "dominant_signal": "PURCHASE",
+                "final_score": 0.8806,
+                "reason": "Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Tương thích lịch sử mua sắm"
+                ]
+            },
+            {
+                "ma_san_pham": 3331,
+                "ten_san_pham": "Combo CeraVe Sữa Rửa Mặt Cho Da Dầu 473ml + Sữa Dưỡng Ẩm Cho Da Khô 30ml",
+                "gia_ban": 466000,
+                "algorithm_mode": "PURCHASE_CONTENT",
+                "dominant_signal": "PURCHASE",
+                "final_score": 0.7854,
+                "reason": "Tương thích lịch sử mua sắm",
+                "reason_tags": [
+                    "Tương thích lịch sử mua sắm"
+                ]
+            }
+        ]
+    },
+    "F_mixed_behavior": {
+        "scenario_key": "F_mixed_behavior",
+        "scenario_name": "Mixed Behavior (Hỗn hợp: Xem, Giỏ hàng, Tìm kiếm)",
+        "resolved_algorithm_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "CART",
+        "active_signals": [
+            "cart",
+            "view",
+            "search"
+        ],
+        "top_4_products": [
+            {
+                "ma_san_pham": 11,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml",
+                "gia_ban": 272000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "CART",
+                "final_score": 0.9481,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "ma_san_pham": 36,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Cho Da Thường Đến Khô 473ml",
+                "gia_ban": 351000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "CART",
+                "final_score": 0.9264,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "ma_san_pham": 152,
+                "ten_san_pham": "Sữa Rửa Mặt CeraVe Làm Sạch & Tẩy Tế Bào Chết Dịu Nhẹ 236ml",
+                "gia_ban": 295000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "CART",
+                "final_score": 0.9081,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng"
+                ]
+            },
+            {
+                "ma_san_pham": 5349,
+                "ten_san_pham": "Combo CeraVe Sữa Rửa Mặt Sạch Sâu Cho Da Thường Đến Da Dầu 236ml + Sữa Dưỡng Ẩm 30ml",
+                "gia_ban": 340000,
+                "algorithm_mode": "BEHAVIOR_CONTENT",
+                "dominant_signal": "CART",
+                "final_score": 0.7667,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp với giỏ hàng",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp với giỏ hàng"
+                ]
+            }
+        ]
+    },
+    "G_profile_only": {
+        "scenario_key": "G_profile_only",
+        "scenario_name": "Profile Only (Có khảo sát da, chưa có hành vi phiên)",
+        "resolved_algorithm_mode": "PROFILE_CONTENT",
+        "dominant_signal": "PROFILE",
+        "active_signals": [
+            "profile"
+        ],
+        "top_4_products": [
+            {
+                "ma_san_pham": 4819,
+                "ten_san_pham": "Dầu Tẩy Trang B.O.M Thuần Chay Từ 12 Loại Dầu Thực Vật 200ml",
+                "gia_ban": 547000,
+                "algorithm_mode": "PROFILE_CONTENT",
+                "dominant_signal": "PROFILE",
+                "final_score": 0.4572,
+                "reason": "Phù hợp mọi loại da",
+                "reason_tags": [
+                    "Phù hợp mọi loại da"
+                ]
+            },
+            {
+                "ma_san_pham": 3711,
+                "ten_san_pham": "Combo Garnier Serum Chống Nắng 12H Kiềm Dầu 30ml + Nước Tẩy Trang Cho Da Dầu Mụn 50ml",
+                "gia_ban": 145000,
+                "algorithm_mode": "PROFILE_CONTENT",
+                "dominant_signal": "PROFILE",
+                "final_score": 0.4493,
+                "reason": "Trong ngân sách",
+                "reason_tags": [
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "ma_san_pham": 1725,
+                "ten_san_pham": "Nước Cân Bằng Cocoon Bí Đao Giảm Dầu & Mụn 140ml",
+                "gia_ban": 148000,
+                "algorithm_mode": "PROFILE_CONTENT",
+                "dominant_signal": "PROFILE",
+                "final_score": 0.4445,
+                "reason": "Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "ma_san_pham": 4382,
+                "ten_san_pham": "Combo Garnier Nước Tẩy Trang Da Dầu Mụn 400ml + Serum Chống Nắng Kiềm Dầu & Giảm Mụn 30ml",
+                "gia_ban": 339000,
+                "algorithm_mode": "PROFILE_CONTENT",
+                "dominant_signal": "PROFILE",
+                "final_score": 0.4407,
+                "reason": "Gợi ý cá nhân hóa",
+                "reason_tags": [
+                    "Gợi ý cá nhân hóa"
+                ]
+            }
+        ]
+    },
+    "H_profile_and_behavior": {
+        "scenario_key": "H_profile_and_behavior",
+        "scenario_name": "Profile + Behavior (Có khảo sát da và có hành vi phiên)",
+        "resolved_algorithm_mode": "ADAPTIVE_HYBRID",
+        "dominant_signal": "HYBRID",
+        "active_signals": [
+            "view",
+            "search",
+            "profile"
+        ],
+        "top_4_products": [
+            {
+                "ma_san_pham": 2928,
+                "ten_san_pham": "[Mini] Combo 2 Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 30ml",
+                "gia_ban": 80000,
+                "algorithm_mode": "ADAPTIVE_HYBRID",
+                "dominant_signal": "HYBRID",
+                "final_score": 0.6168,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "ma_san_pham": 3531,
+                "ten_san_pham": "Combo CeraVe Sữa Rửa Mặt Cho Da Dầu 88ml + Sữa Dưỡng Ẩm Cho Da Khô 30ml",
+                "gia_ban": 186000,
+                "algorithm_mode": "ADAPTIVE_HYBRID",
+                "dominant_signal": "HYBRID",
+                "final_score": 0.6041,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp mọi loại da • Trong ngân sách",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp mọi loại da",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "ma_san_pham": 1395,
+                "ten_san_pham": "Sữa Rửa Mặt Derladie Tràm Trà Sạch Sâu, Kiềm Dầu 150ml",
+                "gia_ban": 134000,
+                "algorithm_mode": "ADAPTIVE_HYBRID",
+                "dominant_signal": "HYBRID",
+                "final_score": 0.5436,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Trong ngân sách",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Trong ngân sách"
+                ]
+            },
+            {
+                "ma_san_pham": 5349,
+                "ten_san_pham": "Combo CeraVe Sữa Rửa Mặt Sạch Sâu Cho Da Thường Đến Da Dầu 236ml + Sữa Dưỡng Ẩm 30ml",
+                "gia_ban": 340000,
+                "algorithm_mode": "ADAPTIVE_HYBRID",
+                "dominant_signal": "HYBRID",
+                "final_score": 0.5362,
+                "reason": "Dựa trên tìm kiếm gần đây • Tương tự sản phẩm vừa xem • Phù hợp mọi loại da",
+                "reason_tags": [
+                    "Dựa trên tìm kiếm gần đây",
+                    "Tương tự sản phẩm vừa xem",
+                    "Phù hợp mọi loại da"
+                ]
+            }
+        ]
+    },
+    "I_partial_profile": {
+        "scenario_key": "I_partial_profile",
+        "scenario_name": "Partial Profile (Chỉ có ngân sách, không có loại da hay từ khóa)",
+        "resolved_algorithm_mode": "SIMPLE",
+        "dominant_signal": "SIMPLE",
+        "active_signals": [],
+        "top_4_products": [
+            {
+                "ma_san_pham": 1000,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+                "gia_ban": 163000,
+                "algorithm_mode": "SIMPLE",
+                "dominant_signal": "SIMPLE",
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "ma_san_pham": 266,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 400ml",
+                "gia_ban": 454000,
+                "algorithm_mode": "SIMPLE",
+                "dominant_signal": "SIMPLE",
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "ma_san_pham": 728,
+                "ten_san_pham": "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+                "gia_ban": 295000,
+                "algorithm_mode": "SIMPLE",
+                "dominant_signal": "SIMPLE",
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            },
+            {
+                "ma_san_pham": 4365,
+                "ten_san_pham": "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+                "gia_ban": 129000,
+                "algorithm_mode": "SIMPLE",
+                "dominant_signal": "SIMPLE",
+                "final_score": 5,
+                "reason": "Sản phẩm nổi bật được yêu thích",
+                "reason_tags": [
+                    "Sản phẩm nổi bật được yêu thích"
+                ]
+            }
+        ]
+    }
+}

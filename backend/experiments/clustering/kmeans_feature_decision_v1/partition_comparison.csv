@@ -1,0 +1,19 @@
+K,Comparison,Config_1,Config_2,Adjusted_Rand_Index,Normalized_Mutual_Info
+5,Config_M vs Config_MI_WORD,Config_M,Config_MI_WORD,0.899,0.8984
+5,Config_M vs Config_MI_INGREDIENT,Config_M,Config_MI_INGREDIENT,0.9099,0.9087
+5,Config_MI_WORD vs Config_MI_INGREDIENT,Config_MI_WORD,Config_MI_INGREDIENT,0.9788,0.9703
+6,Config_M vs Config_MI_WORD,Config_M,Config_MI_WORD,0.6085,0.7077
+6,Config_M vs Config_MI_INGREDIENT,Config_M,Config_MI_INGREDIENT,0.6088,0.7126
+6,Config_MI_WORD vs Config_MI_INGREDIENT,Config_MI_WORD,Config_MI_INGREDIENT,0.9806,0.9731
+7,Config_M vs Config_MI_WORD,Config_M,Config_MI_WORD,0.6598,0.7404
+7,Config_M vs Config_MI_INGREDIENT,Config_M,Config_MI_INGREDIENT,0.6501,0.7406
+7,Config_MI_WORD vs Config_MI_INGREDIENT,Config_MI_WORD,Config_MI_INGREDIENT,0.9196,0.9241
+8,Config_M vs Config_MI_WORD,Config_M,Config_MI_WORD,0.6593,0.7467
+8,Config_M vs Config_MI_INGREDIENT,Config_M,Config_MI_INGREDIENT,0.6586,0.7548
+8,Config_MI_WORD vs Config_MI_INGREDIENT,Config_MI_WORD,Config_MI_INGREDIENT,0.9371,0.93
+9,Config_M vs Config_MI_WORD,Config_M,Config_MI_WORD,0.7631,0.8316
+9,Config_M vs Config_MI_INGREDIENT,Config_M,Config_MI_INGREDIENT,0.7307,0.8177
+9,Config_MI_WORD vs Config_MI_INGREDIENT,Config_MI_WORD,Config_MI_INGREDIENT,0.8282,0.8782
+10,Config_M vs Config_MI_WORD,Config_M,Config_MI_WORD,0.7124,0.7977
+10,Config_M vs Config_MI_INGREDIENT,Config_M,Config_MI_INGREDIENT,0.7009,0.8067
+10,Config_MI_WORD vs Config_MI_INGREDIENT,Config_MI_WORD,Config_MI_INGREDIENT,0.785,0.8671

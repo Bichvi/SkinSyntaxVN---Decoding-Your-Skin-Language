@@ -1,0 +1,201 @@
+Anchor_SKU,Anchor_Name,Anchor_Role,Config,Rank,Neighbor_SKU,Neighbor_Name,Neighbor_Role,Same_Role,Distance,Price_Diff_VND
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_M,1,675,Serum Senka Dưỡng Ẩm Chuyên Sâu Và Ngừa Lão Hóa 30ml,SERUM,True,0.0042,1000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_M,2,2185,Serum Acnes Vitamin C Làm Mờ Sẹo & Vết Thâm 15ml,SERUM,True,0.0083,2000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_M,3,6098,Dưỡng Chất Pond's Ngăn Ngừa Lão Hóa Chuyên Sâu 30ml,SERUM,True,0.0084,2000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_M,4,5687,Serum Neutrogena Niacinamide Cấp Ẩm Sáng Da 30ml,SERUM,True,0.0084,2000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_M,5,934,"Serum Tia'm Căng Bóng, Trẻ Hoá Da 40ml",SERUM,True,0.0288,7000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_I,1,715,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 15ml,SERUM,True,0.0,113000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_I,2,505,"Serum Melano CC Dưỡng Sáng Da, Ngừa Thâm Nám 20ml",SERUM,True,0.6133,73000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_I,3,743,Serum Eucerin Cấp Ẩm & Ngăn Ngừa Lão Hóa 30ml,SERUM,True,0.6432,440000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_I,4,38,"Serum L'Oreal Sáng Da, Mờ Thâm Mụn & Nám 30ml (Mới)",SERUM,True,0.6545,13000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_I,5,1378,Serum L'Oreal Dưỡng Sáng Và Mờ Thâm Nám 15ml,SERUM,True,0.6545,54000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MI,1,715,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 15ml,SERUM,True,0.565,113000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MI,2,38,"Serum L'Oreal Sáng Da, Mờ Thâm Mụn & Nám 30ml (Mới)",SERUM,True,0.6568,13000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MI,3,1378,Serum L'Oreal Dưỡng Sáng Và Mờ Thâm Nám 15ml,SERUM,True,0.6995,54000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MI,4,505,"Serum Melano CC Dưỡng Sáng Da, Ngừa Thâm Nám 20ml",SERUM,True,0.704,73000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MI,5,4600,Serum Shimbi Method Dạng Xịt Tẩy Tế Bào Chết 60ml,SERUM,True,0.7082,23000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MIT,1,715,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 15ml,SERUM,True,0.5651,113000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MIT,2,1239,Serum L'Oreal Niacinamide 2% Kiềm Dầu Ban Đêm 30ml,SERUM,True,0.9371,129000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MIT,3,3544,Combo 2 Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 15ml,SERUM,True,1.0708,75000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MIT,4,38,"Serum L'Oreal Sáng Da, Mờ Thâm Mụn & Nám 30ml (Mới)",SERUM,True,1.1238,13000
+62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Config_MIT,5,1378,Serum L'Oreal Dưỡng Sáng Và Mờ Thâm Nám 15ml,SERUM,True,1.1447,54000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_M,1,1747,Serum Tẩy Tế Bào Chết Care:Nel Giảm Mụn Đầu Đen 30ml,SERUM,True,0.0772,16000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_M,2,619,"Serum Torriden Làm Dịu, Giảm Mẩn Đỏ Cho Da Mụn 50ml",SERUM,True,0.1049,22000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_M,3,5181,Serum B.O.M Just One Chiết Xuất Diếp Cá Cho Da Mụn 30ml,SERUM,True,0.1203,23000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_M,4,82,"Serum Garnier Giảm Mụn Mờ Thâm Cho Da Dầu, Mụn 30ml",SERUM,True,0.1708,32000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_M,5,288,"Serum Tia'm Làm Sáng, Phục Hồi Cho Da Dầu Mụn, Nhạy Cảm 40ml",SERUM,True,0.1758,38000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_I,1,50,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml,SERUM,True,0.0,136000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_I,2,2334,[Mini] Combo 2 Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 30ml,SERUM,True,0.0,7000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_I,3,350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,True,0.0,0
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_I,4,1555,"Combo 2 Tinh Chất La Bonita B5 Hỗ Trợ Phục Hồi, Làm Dịu Da 50ml",SERUM,True,0.6345,347000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_I,5,270,"Tinh Chất La Bonita B5 Hỗ Trợ Phục Hồi, Làm Dịu Da 50ml",SERUM,True,0.6345,107000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MI,1,3103,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml (HSD: 30 Tháng),SERUM,True,0.7953,59000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MI,2,2334,[Mini] Combo 2 Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 30ml,SERUM,True,1.0001,7000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MI,3,144,Serum Caryophy Giảm Mụn Mờ Thâm Se Lỗ Chân Lông 30ml,SERUM,True,1.0291,51000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MI,4,5181,Serum B.O.M Just One Chiết Xuất Diếp Cá Cho Da Mụn 30ml,SERUM,True,1.0325,23000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MI,5,50,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml,SERUM,True,1.0372,136000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MIT,1,3103,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml (HSD: 30 Tháng),SERUM,True,0.7954,59000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MIT,2,2334,[Mini] Combo 2 Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 30ml,SERUM,True,1.0002,7000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MIT,3,50,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml,SERUM,True,1.0372,136000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MIT,4,270,"Tinh Chất La Bonita B5 Hỗ Trợ Phục Hồi, Làm Dịu Da 50ml",SERUM,True,1.2958,107000
+350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Config_MIT,5,281,Serum Skin1004 Rau Má Dưỡng Sáng & Làm Dịu Da 100ml,SERUM,True,1.3758,195000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_M,1,2263,Tinh Chất Cocoon Cấp Nước & Cấp Ẩm Sâu Từ Hoa Hồng 30ml,SERUM,True,0.006,1000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_M,2,6315,Serum Pond's Dưỡng Sáng Mịn Và Làm Mờ Thâm Da 30g,SERUM,True,0.0235,4000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_M,3,806,Serum Garnier Tăng Cường Sáng Da Mờ Thâm 30ml,SERUM,True,0.0235,4000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_M,4,3466,"[Mini] Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 18ml",SERUM,True,0.024,4000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_M,5,4722,Serum Garnier Tăng Cường Sáng Da Mờ Thâm 1.5mlx12,SERUM,True,0.0301,5000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_I,1,249,"Serum Klairs Cấp Ẩm Cho Da Khô, Nhạy Cảm 80ml",SERUM,True,0.452,82000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_I,2,1402,Serum Axis-Y Dưỡng Sáng & Giảm Thâm 50ml,SERUM,True,0.4658,159000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_I,3,450,Sữa Rửa Mặt Naruko Dạng Bùn Tràm Trà 120ml,CLEANSER,False,0.4712,9000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_I,4,191,Serum Klairs Vitamin C Cho Da Nhạy Cảm 35ml,SERUM,True,0.4793,92000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_I,5,736,Tinh Chất Sur.Medic+ Huyết Thanh Sáng Da Căng Bóng 32ml,SERUM,True,0.4868,179000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MI,1,6011,"Serum Naruko Tràm Trà Giảm Sẹo, Thâm Rỗ Sau Mụn 10ml",SERUM,True,0.5217,26000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MI,2,176,"Serum oh!oh! Dưỡng Sáng Da, Giảm Thâm Nám 10ml",SERUM,True,0.6737,44000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MI,3,1429,Tinh Chất Torriden Vitamin C Sáng Mịn Da 30ml,SERUM,True,0.7429,115000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MI,4,146,"Serum So'Natural Tái Tạo Da Sinh Học, Mờ Thâm Sáng Da 35ml",SERUM,True,0.7806,119000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MI,5,1402,Serum Axis-Y Dưỡng Sáng & Giảm Thâm 50ml,SERUM,True,0.8025,159000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MIT,1,176,"Serum oh!oh! Dưỡng Sáng Da, Giảm Thâm Nám 10ml",SERUM,True,0.811,44000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MIT,2,1402,Serum Axis-Y Dưỡng Sáng & Giảm Thâm 50ml,SERUM,True,0.9097,159000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MIT,3,146,"Serum So'Natural Tái Tạo Da Sinh Học, Mờ Thâm Sáng Da 35ml",SERUM,True,0.9308,119000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MIT,4,288,"Serum Tia'm Làm Sáng, Phục Hồi Cho Da Dầu Mụn, Nhạy Cảm 40ml",SERUM,True,1.0426,77000
+755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,Config_MIT,5,3712,"Serum Shimbi Method Dưỡng Sáng, Se Khít Lỗ Chân Lông 30ml",SERUM,True,1.0506,52000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_M,1,12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,True,0.0,0
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_M,2,139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,True,0.0125,3000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_M,3,258,"Kem Dưỡng Avène Làm Lành Da Nội Sinh, Ngừa Nhiễm Khuẩn 40ml",MOISTURIZER,True,0.0167,4000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_M,4,506,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 30ml,MOISTURIZER,True,0.0209,5000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_M,5,1479,Sữa Dưỡng Ẩm Cetaphil Dịu Lành Cho Da Nhạy Cảm 237ml,MOISTURIZER,True,0.0251,6000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_I,1,153,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 15ml,MOISTURIZER,True,0.0,93000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_I,2,17,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 100ml,MOISTURIZER,True,0.0,230000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_I,3,2004,Combo 2 Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,True,0.0,588000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_I,4,2136,Kem Dưỡng Curél Cấp Ẩm Sáng Mịn 40g,MOISTURIZER,True,0.8258,247000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_I,5,466,Kem Dưỡng Ẩm Nivea Dưỡng Da Sáng Mịn 60ml,MOISTURIZER,True,0.8353,215000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MI,1,153,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 15ml,MOISTURIZER,True,0.3234,93000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MI,2,17,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 100ml,MOISTURIZER,True,0.4277,230000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MI,3,258,"Kem Dưỡng Avène Làm Lành Da Nội Sinh, Ngừa Nhiễm Khuẩn 40ml",MOISTURIZER,True,0.8959,4000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MI,4,1039,"Kem Dưỡng Avène Hỗ Trợ Làm Lành Da, Ngừa Nhiễm Khuẩn 15ml",MOISTURIZER,True,0.9372,81000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MI,5,1121,"Kem Dưỡng Avène Làm Lành Da Nội Sinh, Ngừa Nhiễm Khuẩn 100ml",MOISTURIZER,True,0.9505,148000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MIT,1,153,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 15ml,MOISTURIZER,True,0.3235,93000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MIT,2,17,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 100ml,MOISTURIZER,True,0.4277,230000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MIT,3,2004,Combo 2 Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,True,1.066,588000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MIT,4,1390,Kem Dưỡng La Roche-Posay Làm Dịu Da Cho Trẻ Em 75ml,MOISTURIZER,True,1.0681,57000
+12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,Config_MIT,5,989,Kem Dưỡng A-Derma Làm Dịu & Phục Hồi Da Kích Ứng 50ml,MOISTURIZER,True,1.3209,80000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_M,1,258,"Kem Dưỡng Avène Làm Lành Da Nội Sinh, Ngừa Nhiễm Khuẩn 40ml",MOISTURIZER,True,0.0042,1000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_M,2,506,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 30ml,MOISTURIZER,True,0.0084,2000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_M,3,1205,Kem Dưỡng Ẩm Cetaphil Dịu Lành Cho Da Nhạy Cảm 100g,MOISTURIZER,True,0.0125,3000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_M,4,12,Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml,MOISTURIZER,True,0.0125,3000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_M,5,1479,Sữa Dưỡng Ẩm Cetaphil Dịu Lành Cho Da Nhạy Cảm 237ml,MOISTURIZER,True,0.0126,3000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_I,1,139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,True,0.0,0
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_I,2,673,[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g,MOISTURIZER,True,0.0,190000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_I,3,506,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 30ml,MOISTURIZER,True,0.0,2000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_I,4,409,"Serum Tia'm HA Cấp Nước, Hỗ Trợ Căng Bóng Da 40ml",SERUM,False,0.6644,9000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_I,5,438,"Serum Prettyskin B5 Phục Hồi, Dưỡng Sáng Da 50ml",SERUM,False,0.6745,86000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MI,1,506,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 30ml,MOISTURIZER,True,0.0059,2000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MI,2,4450,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g,MOISTURIZER,True,0.0533,19000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MI,3,673,[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g,MOISTURIZER,True,0.7716,190000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MI,4,130,Kem Dưỡng GoodnDoc Rau Má Dưỡng Ẩm Phục Hồi Da 50ml,MOISTURIZER,True,0.8239,129000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MI,5,648,"Kem Dưỡng Skin1004 Rau Má Dưỡng Ẩm, Phục Hồi Da 75g",MOISTURIZER,True,0.8428,40000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MIT,1,506,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 30ml,MOISTURIZER,True,0.011,2000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MIT,2,4450,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g,MOISTURIZER,True,0.0544,19000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MIT,3,673,[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g,MOISTURIZER,True,0.7717,190000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MIT,4,130,Kem Dưỡng GoodnDoc Rau Má Dưỡng Ẩm Phục Hồi Da 50ml,MOISTURIZER,True,0.9115,129000
+139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Config_MIT,5,579,Kem Dưỡng Caryophy Cấp Ẩm Và Phục Hồi Da 50ml,MOISTURIZER,True,0.9197,35000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_M,1,1315,Sữa Rửa Mặt Vichy Dạng Gel Làm Sạch Sâu & Giảm Nhờn 200ml,CLEANSER,True,0.0238,8000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_M,2,1869,"Gel Rửa Mặt Avène Làm Sạch Da, Giảm Nhờn Mụn 200ml",CLEANSER,True,0.0347,12000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_M,3,165,Gel Rửa Mặt Bioderma Dành Cho Da Dầu & Hỗn Hợp 500ml,CLEANSER,True,0.0375,13000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_M,4,1200,Combo 8 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.0388,13000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_M,5,6306,Gel Rửa Mặt Freeplus Làm Sạch Dịu Nhẹ Cho Da Dầu 100ml,CLEANSER,True,0.0404,14000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_I,1,936,Combo 2 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.0,267000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_I,2,223,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 200ml",CLEANSER,True,0.0,62000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_I,3,472,Combo 4 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.0,193000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_I,4,21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,True,0.0,0
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_I,5,18,Combo 3 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.0,263000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MI,1,1200,Combo 8 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.0235,13000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MI,2,223,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 200ml",CLEANSER,True,0.1239,62000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MI,3,2455,"Túi Refill Gel Rửa Mặt La Roche-Posay Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,True,0.1723,122000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MI,4,1315,Sữa Rửa Mặt Vichy Dạng Gel Làm Sạch Sâu & Giảm Nhờn 200ml,CLEANSER,True,0.4417,8000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MI,5,472,Combo 4 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.5115,193000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MIT,1,1200,Combo 8 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.0242,13000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MIT,2,223,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 200ml",CLEANSER,True,0.1239,62000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MIT,3,2455,"Túi Refill Gel Rửa Mặt La Roche-Posay Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,True,0.1725,122000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MIT,4,472,Combo 4 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.5116,193000
+21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Config_MIT,5,18,Combo 3 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,CLEANSER,True,0.798,263000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_M,1,1211,"Kem Chống Nắng Bioderma Dành Cho Da Dầu, Mụn SPF30 40ml",SUNSCREEN,True,0.0112,4000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_M,2,1266,Kem Chống Nắng Eucerin Kiềm Dầu (Có Màu) 50ml,SUNSCREEN,True,0.025,9000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_M,3,135,Combo Kem Chống Nắng Dr.G Dưỡng Sáng Da 50ml+20ml,SUNSCREEN,True,0.0662,23000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_M,4,55,Kem Chống Nắng Vichy Thoáng Nhẹ Không Bóng Dầu SPF 50 50ml,SUNSCREEN,True,0.1053,36000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_M,5,4867,Combo 2 Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Hồng),SUNSCREEN,True,0.1053,36000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_I,1,180,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,True,0.0,404000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_I,2,2293,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml+20ml (Bản Mới),SUNSCREEN,True,0.0,316000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_I,3,2956,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới),SUNSCREEN,True,0.0,82000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_I,4,343,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới),SUNSCREEN,True,0.0,257000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_I,5,16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,True,0.0,0
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MI,1,2956,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới),SUNSCREEN,True,0.1576,82000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MI,2,2293,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml+20ml (Bản Mới),SUNSCREEN,True,0.3153,316000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MI,3,180,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,True,0.3631,404000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MI,4,4479,Combo 3 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml+20mlx2 (Bản Mới),SUNSCREEN,True,0.3931,470000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MI,5,343,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới),SUNSCREEN,True,0.7179,257000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MIT,1,2956,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới),SUNSCREEN,True,0.1577,82000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MIT,2,2293,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml+20ml (Bản Mới),SUNSCREEN,True,0.3153,316000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MIT,3,180,Combo 2 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,True,0.3631,404000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MIT,4,4479,Combo 3 Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml+20mlx2 (Bản Mới),SUNSCREEN,True,0.3933,470000
+16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Config_MIT,5,343,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 20ml (Mới),SUNSCREEN,True,0.7179,257000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_M,1,233,Gel Rửa Mặt SVR Không Chứa Xà Phòng Cho Da Dầu Túi 400ml,CLEANSER,True,0.0068,2000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_M,2,4451,"Sữa Rửa Mặt Laboratorios Babé Dịu Êm Cho Da Dầu, Mụn 200ml",CLEANSER,True,0.0136,4000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_M,3,190,Sữa Rửa Mặt Cerave Cho Da Dầu Mụn 473ml,CLEANSER,True,0.0202,6000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_M,4,223,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 200ml",CLEANSER,True,0.024,7000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_M,5,1625,Sữa Rửa Mặt Naris Acne Grand Cho Da Dầu Mụn 100g,CLEANSER,True,0.0274,8000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_I,1,152,Sữa Rửa Mặt CeraVe Làm Sạch & Tẩy Tế Bào Chết Dịu Nhẹ 236ml,CLEANSER,True,0.0,62000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_I,2,90,Sữa Rửa Mặt CeraVe Cho Da Thường Đến Khô 236ml,CLEANSER,True,0.0,96000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_I,3,11,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml,CLEANSER,True,0.0,85000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_I,4,228,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 88ml,CLEANSER,True,0.0,212000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_I,5,36,Sữa Rửa Mặt CeraVe Cho Da Thường Đến Khô 473ml,CLEANSER,True,0.0,6000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MI,1,11,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml,CLEANSER,True,0.2236,85000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MI,2,1348,[Mini] Combo 10 Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 30ml,CLEANSER,True,0.6086,128000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MI,3,228,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 88ml,CLEANSER,True,0.7154,212000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MI,4,3331,Combo CeraVe Sữa Rửa Mặt Cho Da Dầu 473ml + Sữa Dưỡng Ẩm Cho Da Khô 30ml,CLEANSER,True,0.7834,109000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MI,5,6306,Gel Rửa Mặt Freeplus Làm Sạch Dịu Nhẹ Cho Da Dầu 100ml,CLEANSER,True,0.8951,69000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MIT,1,11,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml,CLEANSER,True,0.2236,85000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MIT,2,1348,[Mini] Combo 10 Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 30ml,CLEANSER,True,0.6253,128000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MIT,3,228,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 88ml,CLEANSER,True,0.7154,212000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MIT,4,3331,Combo CeraVe Sữa Rửa Mặt Cho Da Dầu 473ml + Sữa Dưỡng Ẩm Cho Da Khô 30ml,CLEANSER,True,0.8058,109000
+1,Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml,CLEANSER,Config_MIT,5,36,Sữa Rửa Mặt CeraVe Cho Da Thường Đến Khô 473ml,CLEANSER,True,0.9595,6000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_M,1,1465,Sữa Rửa Mặt St.Ives Tẩy Tế Bào Chết Cà Phê & Dừa 170g,CLEANSER,True,0.0094,1000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_M,2,1884,Sữa Rửa Mặt St.Ives Tẩy Tế Bào Chết Trái Mơ Tươi Mát 170g,CLEANSER,True,0.0189,2000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_M,3,1141,Sữa Rửa Mặt Cocoon Chiết Xuất Từ Nghệ Hưng Yên 140ml,CLEANSER,True,0.0461,5000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_M,4,434,"Combo 2 Kem Rửa Mặt Hada Labo Sạch Sâu, Dưỡng Sáng Da 80g",CLEANSER,True,0.0478,5000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_M,5,643,Sữa Rửa Mặt L'Oreal Cấp Ẩm Và Căng Mịn Da 100ml,CLEANSER,True,0.0774,8000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_I,1,2394,Dung Dịch Jumiso Làm Mềm Mụn Đầu Đen 150ml,TREATMENT,False,0.4282,119000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_I,2,6011,"Serum Naruko Tràm Trà Giảm Sẹo, Thâm Rỗ Sau Mụn 10ml",SERUM,False,0.4642,101000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_I,3,339,"Serum Derladie Niacinamide 20% Giảm Mụn, Mờ Thâm Đỏ 30ml",SERUM,False,0.48,170000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_I,4,1921,Dung Dịch Chấm Mụn Cocoon Bí Đao Làm Giảm Mụn (Mới) 5ml,TREATMENT,False,0.527,26000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_I,5,755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,False,0.5447,75000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MI,1,6194,"[Mini] Sữa Rửa Mặt Klairs Dưỡng Ẩm, Dịu Nhẹ, Sạch Sâu 20ml",CLEANSER,True,0.8115,80000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MI,2,2530,Sữa Rửa Mặt Milaganics Tràm Trà Nano Nghệ Ngừa Mụn 135ml,CLEANSER,True,0.844,64000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MI,3,4120,Sữa Rửa Mặt The Cafuné Chiết Xuất Gừng Làm Sạch Sâu 120ml,CLEANSER,True,0.8518,49000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MI,4,2107,[Mini] Sữa Rửa Mặt I'm From Từ Ngải Cứu Sạch Sâu Dịu Nhẹ 30ml,CLEANSER,True,0.8543,80000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MI,5,225,Gel Rửa Mặt Cocoon Bí Đao Giúp Giảm Dầu & Mụn 310ml,CLEANSER,True,0.901,46000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MIT,1,2107,[Mini] Sữa Rửa Mặt I'm From Từ Ngải Cứu Sạch Sâu Dịu Nhẹ 30ml,CLEANSER,True,0.9094,80000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MIT,2,2182,Gel Rửa Mặt Emmié Dịu Nhẹ & Cấp Ẩm Sâu 180ml,CLEANSER,True,1.0109,50000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MIT,3,796,Gel Rửa Mặt I'm from Từ Ngải Cứu Sạch Sâu Dịu Nhẹ 150ml,CLEANSER,True,1.0309,119000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MIT,4,1862,Sữa Rửa Mặt Azderma Dạng Gel Dịu Nhẹ Cho Da Dầu Mụn 60ml,CLEANSER,True,1.0596,58000
+4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Config_MIT,5,2530,Sữa Rửa Mặt Milaganics Tràm Trà Nano Nghệ Ngừa Mụn 135ml,CLEANSER,True,1.1069,64000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_M,1,201,"Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",TREATMENT,True,0.0287,3000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_M,2,1152,Kem Dưỡng Acnes Giảm Mụn Chuyên Sâu 20g,TREATMENT,True,0.0644,7000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_M,3,1122,Gel Chấm Mụn The Cafuné Mờ Thâm 20g,TREATMENT,True,0.0998,11000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_M,4,4190,Combo Miếng Dán Mụn Acnes Giúp Giảm Mụn Sưng Viêm 2x24 Miếng,TREATMENT,True,0.1191,12000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_M,5,1764,"Gel Dưỡng Azderma Hỗ Trợ Giảm Mụn, Mờ Thâm 15g",TREATMENT,True,0.1592,18000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_I,1,201,"Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",TREATMENT,True,0.0,3000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_I,2,2405,"Combo 2 Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,True,0.0,262000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_I,3,2602,"Chấm Mụn Lanbena Hỗ Trợ Giảm Mụn, Xẹp Mụn Trứng Cá 10ml",TREATMENT,True,0.6098,36000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_I,4,1122,Gel Chấm Mụn The Cafuné Mờ Thâm 20g,TREATMENT,True,0.6299,11000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_I,5,5823,Sữa Rửa Mặt Vichy Từ Đất Sét Và Đá Khoáng Núi Lửa 125ml,CLEANSER,False,0.668,304000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MI,1,201,"Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",TREATMENT,True,0.0151,3000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MI,2,1122,Gel Chấm Mụn The Cafuné Mờ Thâm 20g,TREATMENT,True,0.6323,11000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MI,3,2602,"Chấm Mụn Lanbena Hỗ Trợ Giảm Mụn, Xẹp Mụn Trứng Cá 10ml",TREATMENT,True,0.634,36000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MI,4,1764,"Gel Dưỡng Azderma Hỗ Trợ Giảm Mụn, Mờ Thâm 15g",TREATMENT,True,0.8274,18000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MI,5,370,Gel Giảm Mụn Alcom Derma Forte Advanced 15g,TREATMENT,True,0.8599,20000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MIT,1,201,"Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",TREATMENT,True,0.0152,3000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MIT,2,1122,Gel Chấm Mụn The Cafuné Mờ Thâm 20g,TREATMENT,True,0.8039,11000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MIT,3,370,Gel Giảm Mụn Alcom Derma Forte Advanced 15g,TREATMENT,True,0.9205,20000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MIT,4,1764,"Gel Dưỡng Azderma Hỗ Trợ Giảm Mụn, Mờ Thâm 15g",TREATMENT,True,0.9412,18000
+112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Config_MIT,5,2602,"Chấm Mụn Lanbena Hỗ Trợ Giảm Mụn, Xẹp Mụn Trứng Cá 10ml",TREATMENT,True,0.9643,36000

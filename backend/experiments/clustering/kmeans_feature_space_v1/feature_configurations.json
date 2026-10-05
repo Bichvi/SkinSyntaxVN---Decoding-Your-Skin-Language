@@ -1,0 +1,52 @@
+{
+  "Config_M": {
+    "name": "Metadata Baseline",
+    "dimensions": 9,
+    "components": [
+      "5 Roles (one-hot)",
+      "1 Standardized Log-Price",
+      "3 Skin Tags (multi-hot)"
+    ]
+  },
+  "Config_I": {
+    "name": "Ingredient Only",
+    "dimensions": 30,
+    "components": [
+      "TruncatedSVD(30) on Ingredient TF-IDF",
+      "L2 normalized"
+    ]
+  },
+  "Config_T": {
+    "name": "Product Text Only",
+    "dimensions": 30,
+    "components": [
+      "TruncatedSVD(30) on Name+Description TF-IDF",
+      "L2 normalized"
+    ]
+  },
+  "Config_MI_DIRECT": {
+    "name": "Metadata + Ingredient (Direct Concat)",
+    "dimensions": 39,
+    "components": [
+      "Unnormalized Metadata (9 dims)",
+      "L2 Ingredient SVD (30 dims)"
+    ]
+  },
+  "Config_MI": {
+    "name": "Metadata + Ingredient (Block-Normalized)",
+    "dimensions": 39,
+    "components": [
+      "L2 Metadata Block (9 dims)",
+      "L2 Ingredient Block (30 dims)"
+    ]
+  },
+  "Config_MIT": {
+    "name": "Metadata + Ingredient + Text (Block-Normalized)",
+    "dimensions": 69,
+    "components": [
+      "L2 Metadata Block (9 dims)",
+      "L2 Ingredient Block (30 dims)",
+      "L2 Text Block (30 dims)"
+    ]
+  }
+}

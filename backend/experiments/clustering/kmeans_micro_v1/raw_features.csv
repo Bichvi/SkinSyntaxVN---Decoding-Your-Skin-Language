@@ -1,0 +1,11 @@
+Product_ID,SKU_ID,Product_Name,Role,Brand,Price_VND,Skin_Type_Raw,Tag_Oily,Tag_Dry,Tag_Sensitive
+P_4365,4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Cosrx,129000,Da dầu/Hỗn hợp dầu/Mụn,1,0,0
+P_21,21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,La Roche-Posay,412000,Da dầu/Nhạy cảm,1,0,1
+P_350,350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Skin1004,299000,Da nhạy cảm/Mọi loại da,0,0,1
+P_62,62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,L'Oreal,289000,Da khô/Mọi loại da,0,1,0
+P_139,139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Klairs,329000,Da nhạy cảm/Da kích ứng,0,0,1
+P_318,318,Kem Dưỡng Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Thường/Khô 50g,MOISTURIZER,Hada Labo,185000,Da khô/Da thường,0,1,0
+P_16,16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Anessa,549000,Da dầu/Hỗn hợp dầu,1,0,0
+P_725,725,Sữa Chống Nắng Sunplay Skin Aqua Nắp Xanh Dành Cho Da Dầu 50g,SUNSCREEN,Sunplay Skin Aqua,102000,Da dầu/Hỗn hợp dầu,1,0,0
+P_112,112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Megaduo,105000,Da mụn/Da dầu,1,0,0
+P_740,740,Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml,TREATMENT,Eucerin,370000,Da dầu/Da mụn/Nhạy cảm,1,0,1

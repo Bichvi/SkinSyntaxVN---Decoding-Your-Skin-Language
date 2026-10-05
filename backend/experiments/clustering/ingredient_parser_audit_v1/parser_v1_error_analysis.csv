@@ -1,0 +1,5 @@
+Status,Count_in_Gold_Sample,Percentage,V1_Root_Cause
+PLAUSIBLE_COMPLETE_TERM,191,76.4,Valid multi-token cosmetic entity
+UNCERTAIN,44,17.6,Punctuation or crawl noise
+PARSER_MERGE_ERROR,14,5.6,Unsplit alias slashes or (and) blend deletion
+PARSER_SPLIT_ERROR,1,0.4,"Blind comma split on IUPAC numeric names (1,2-hexanediol)"

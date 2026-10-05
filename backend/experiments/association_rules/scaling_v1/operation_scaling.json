@@ -1,0 +1,92 @@
+{
+  "Stage_S": {
+    "baskets": 30,
+    "roles": 8,
+    "skus": 20,
+    "role_level": {
+      "apriori": {
+        "C1": 8,
+        "C2": 28,
+        "C3": 0,
+        "frequent_itemsets": 15,
+        "rules": 13
+      },
+      "fpgrowth": {
+        "fp_tree_nodes_count": 30,
+        "header_table_entries": 8,
+        "conditional_pattern_bases_count": 15,
+        "conditional_trees_count": 7,
+        "recursive_mining_calls": 8
+      }
+    },
+    "sku_level": {
+      "apriori_frequent_itemsets": 30,
+      "apriori_rules": 18,
+      "fpgrowth": {
+        "fp_tree_nodes_count": 49,
+        "header_table_entries": 20,
+        "conditional_pattern_bases_count": 30,
+        "conditional_trees_count": 9,
+        "recursive_mining_calls": 10
+      }
+    }
+  },
+  "Stage_M": {
+    "baskets": 100,
+    "roles": 8,
+    "skus": 40,
+    "role_level": {
+      "apriori": {
+        "frequent_itemsets": 24,
+        "rules": 35
+      },
+      "fpgrowth": {
+        "fp_tree_nodes_count": 62,
+        "header_table_entries": 8,
+        "conditional_pattern_bases_count": 24,
+        "conditional_trees_count": 8,
+        "recursive_mining_calls": 9
+      }
+    },
+    "sku_level": {
+      "apriori_frequent_itemsets": 94,
+      "apriori_rules": 50,
+      "fpgrowth": {
+        "fp_tree_nodes_count": 180,
+        "header_table_entries": 39,
+        "conditional_pattern_bases_count": 94,
+        "conditional_trees_count": 32,
+        "recursive_mining_calls": 33
+      }
+    }
+  },
+  "Stage_L": {
+    "baskets": 300,
+    "roles": 8,
+    "skus": 80,
+    "role_level": {
+      "apriori": {
+        "frequent_itemsets": 24,
+        "rules": 32
+      },
+      "fpgrowth": {
+        "fp_tree_nodes_count": 125,
+        "header_table_entries": 8,
+        "conditional_pattern_bases_count": 24,
+        "conditional_trees_count": 7,
+        "recursive_mining_calls": 8
+      }
+    },
+    "sku_level": {
+      "apriori_frequent_itemsets": 206,
+      "apriori_rules": 21,
+      "fpgrowth": {
+        "fp_tree_nodes_count": 529,
+        "header_table_entries": 80,
+        "conditional_pattern_bases_count": 206,
+        "conditional_trees_count": 64,
+        "recursive_mining_calls": 65
+      }
+    }
+  }
+}

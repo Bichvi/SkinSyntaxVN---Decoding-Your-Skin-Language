@@ -1,0 +1,5 @@
+Dimension,Explained_Variance_Ratio_Sum,Silhouette_K6,ARI_to_Previous_Dimension,Reconstruction_Frobenius_Norm
+10,0.1314,0.2317,1.0,28.61
+20,0.2051,0.1207,0.4089,27.37
+30,0.2608,0.1026,0.5408,26.39
+50,0.3505,0.0726,0.4835,24.74
