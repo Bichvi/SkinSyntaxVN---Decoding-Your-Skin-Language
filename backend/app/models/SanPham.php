@@ -7,6 +7,36 @@ class SanPham {
     private const VI_ACCENTS = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
     private const VI_ASCII = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd';
 
+    public const CARD_PROJECTION = [
+        'ma_san_pham' => 1,
+        'id' => 1,
+        'ten_san_pham' => 1,
+        'gia_ban' => 1,
+        'gia_thi_truong' => 1,
+        'tien_tiet_kiem' => 1,
+        'phan_tram_giam' => 1,
+        'dung_tich' => 1,
+        'loai_da' => 1,
+        'danh_muc_day_du' => 1,
+        'loai_san_pham' => 1,
+        'ma_thuong_hieu' => 1,
+        'ma_danh_muc' => 1,
+        'ma_xuat_xu' => 1,
+        'ma_noi_san_xuat' => 1,
+        'ma_loai_da' => 1,
+        'diem_danh_gia' => 1,
+        'so_luong_danh_gia' => 1,
+        'link_hinh_anh' => 1,
+        'hinh_anh' => 1,
+        'trang_thai' => 1,
+        'trang_thai_kho' => 1,
+        'so_luong_ton_kho' => 1,
+        'so_luong_ton' => 1,
+        'ton_kho' => 1,
+        'so_luong_da_ban' => 1,
+        'ngay_tao' => 1,
+    ];
+
     public function __construct($db) {
         $this->db = $db;
     }
@@ -254,7 +284,8 @@ class SanPham {
 
         $options = [
             'sort' => ['ngay_tao' => -1, 'ma_san_pham' => -1],
-            'limit' => $limit
+            'limit' => $limit,
+            'projection' => self::CARD_PROJECTION,
         ];
 
         $cursor = $this->db->san_pham->find($filter, $options);
@@ -584,28 +615,64 @@ class SanPham {
             if ($c1Name === '') continue;
 
             $level2Ids = $children[$rootId] ?? [];
-            $c2Map = [];
+            $groups = [];
+            $rootSum = 0;
+            $legacyFlat = [];
+
             foreach ($level2Ids as $l2Id) {
-                if (count($c2Map) >= $cap2LimitEach) {
-                    break;
-                }
                 $l2Cat = $byId[$l2Id] ?? null;
                 if (!$l2Cat) continue;
                 $c2Name = $l2Cat['ten_danh_muc'];
                 if ($c2Name === '') continue;
 
+                $isLeaf = !empty($l2Cat['is_leaf']) || empty($children[$l2Id]);
                 $leaves = $leafIdsByNode[$l2Id] ?? [];
-                $sum = 0;
+                $recSum = 0;
                 foreach ($leaves as $leafId) {
-                    $sum += $directCounts[$leafId] ?? 0;
+                    $recSum += $directCounts[$leafId] ?? 0;
                 }
-                if ($sum > 0) {
-                    $c2Map[$c2Name] = $sum;
+
+                $childItems = [];
+                if (!$isLeaf && !empty($children[$l2Id])) {
+                    foreach ($children[$l2Id] as $l3Id) {
+                        if (count($childItems) >= $cap2LimitEach) {
+                            break;
+                        }
+                        $l3Cat = $byId[$l3Id] ?? null;
+                        if (!$l3Cat) continue;
+                        $childCount = $directCounts[$l3Id] ?? 0;
+                        $childItems[] = [
+                            'id' => (int)$l3Id,
+                            'name' => $l3Cat['ten_danh_muc'],
+                            'slug' => (string)($l3Cat['slug'] ?? ''),
+                            'is_leaf' => true,
+                            'count' => (int)$childCount
+                        ];
+                    }
                 }
+
+                $groupData = [
+                    'id' => (int)$l2Id,
+                    'name' => $c2Name,
+                    'slug' => (string)($l2Cat['slug'] ?? ''),
+                    'is_leaf' => $isLeaf,
+                    'direct_count' => (int)($directCounts[$l2Id] ?? 0),
+                    'recursive_count' => (int)$recSum,
+                    'children' => $childItems
+                ];
+
+                $groups[] = $groupData;
+                $rootSum += $recSum;
+                $legacyFlat[$c2Name] = (int)$recSum;
             }
 
-            if (!empty($c2Map)) {
-                $tree[$c1Name] = $c2Map;
+            if (!empty($groups) || $rootSum > 0) {
+                $tree[$c1Name] = array_merge([
+                    'root_id' => (int)$rootId,
+                    'root_name' => $c1Name,
+                    'total_count' => (int)$rootSum,
+                    'groups' => $groups,
+                ], $legacyFlat);
             }
         }
 
@@ -745,7 +812,12 @@ class SanPham {
             $filter = ['$and' => [$filter, $extraFilter]];
         }
 
-        $cursor = $this->db->san_pham->find($filter, ['sort' => $sort, 'limit' => $limit]);
+        $options = [
+            'sort' => $sort,
+            'limit' => $limit,
+            'projection' => self::CARD_PROJECTION,
+        ];
+        $cursor = $this->db->san_pham->find($filter, $options);
         $items = [];
         foreach ($cursor as $doc) {
             $items[] = $this->normalizeProductRecord($doc);
@@ -957,55 +1029,32 @@ class SanPham {
             return array_slice(self::$simpleRecommenderMemoryCache, 0, $limit);
         }
 
-        // 2. Application file-level cache hit (TTL: 600s)
+        // 2. Application file-level cache hit (TTL: 86400s / 24h with stale fallback)
         $cacheFile = dirname(__DIR__) . '/content/simple_recommender_cache.json';
+        $fallbackCached = null;
         if ($isDefaultConfig && file_exists($cacheFile)) {
-            $mtime = filemtime($cacheFile);
-            if ($mtime !== false && (time() - $mtime) < 600) {
-                $cached = json_decode(file_get_contents($cacheFile), true);
-                if (is_array($cached) && !empty($cached)) {
+            $cached = json_decode((string)@file_get_contents($cacheFile), true);
+            if (is_array($cached) && !empty($cached)) {
+                $fallbackCached = $cached;
+                $mtime = filemtime($cacheFile);
+                if ($mtime !== false && (time() - $mtime) < 86400) {
                     self::$simpleRecommenderMemoryCache = $cached;
                     return array_slice(self::$simpleRecommenderMemoryCache, 0, $limit);
                 }
             }
         }
 
-        // 3. Optimized query with projection (excludes heavy HTML/text fields)
-        $filter = $this->availableProductFilter();
-        $condition = [
-            'so_luong_danh_gia' => ['$gte' => $m],
-            'diem_danh_gia' => ['$gt' => 0],
-            'gia_ban' => ['$gt' => 0]
-        ];
-        $filter = ['$and' => [$filter, $condition]];
+        try {
+            // 3. Optimized query with projection (excludes heavy HTML/text fields)
+            $filter = $this->availableProductFilter();
+            $condition = [
+                'so_luong_danh_gia' => ['$gte' => $m],
+                'diem_danh_gia' => ['$gt' => 0],
+                'gia_ban' => ['$gt' => 0]
+            ];
+            $filter = ['$and' => [$filter, $condition]];
 
-        $projection = [
-            'ma_san_pham' => 1,
-            'id' => 1,
-            'ten_san_pham' => 1,
-            'gia_ban' => 1,
-            'gia_thi_truong' => 1,
-            'tien_tiet_kiem' => 1,
-            'phan_tram_giam' => 1,
-            'dung_tich' => 1,
-            'loai_da' => 1,
-            'danh_muc_day_du' => 1,
-            'ma_thuong_hieu' => 1,
-            'ma_danh_muc' => 1,
-            'ma_xuat_xu' => 1,
-            'ma_noi_san_xuat' => 1,
-            'ma_loai_da' => 1,
-            'diem_danh_gia' => 1,
-            'so_luong_danh_gia' => 1,
-            'link_hinh_anh' => 1,
-            'hinh_anh' => 1,
-            'trang_thai' => 1,
-            'trang_thai_kho' => 1,
-            'so_luong_ton_kho' => 1,
-            'so_luong_ton' => 1,
-            'ton_kho' => 1,
-            'so_luong_da_ban' => 1,
-        ];
+            $projection = self::CARD_PROJECTION;
 
         $cursor = $this->db->san_pham->find($filter, ['projection' => $projection]);
         $candidates = [];
@@ -1045,6 +1094,14 @@ class SanPham {
         }
 
         return array_slice($topCandidates, 0, $limit);
+        } catch (Throwable $e) {
+            error_log('getSimpleRecommenderProducts error: ' . $e->getMessage());
+            if ($fallbackCached !== null) {
+                self::$simpleRecommenderMemoryCache = $fallbackCached;
+                return array_slice($fallbackCached, 0, $limit);
+            }
+            throw $e;
+        }
     }
 
     public function getFlashSaleProducts(int $limit = 8): array {
@@ -1226,10 +1283,12 @@ class SanPham {
         $rawItems = [];
         // Fetch extra items so deduplication leaves enough diverse items
         $fetchLimit = max(24, $limit * 4);
-        $cursor = $this->db->san_pham->find($filter, [
+        $options = [
             'sort' => $this->buildProductSort($sort ?? (string)($filters['sort'] ?? ''), $defaultSort),
             'limit' => max(1, min(60, $fetchLimit)),
-        ]);
+            'projection' => self::CARD_PROJECTION,
+        ];
+        $cursor = $this->db->san_pham->find($filter, $options);
         foreach ($cursor as $doc) {
             $rawItems[] = $this->normalizeProductRecord($doc);
         }
@@ -1241,7 +1300,7 @@ class SanPham {
     private function discountDiscoveryFilter(): array {
         return ['$or' => [
             ['phan_tram_giam' => ['$gt' => 0]],
-            ['$expr' => ['$gt' => ['$gia_thi_truong', '$gia_ban']]],
+            ['tien_tiet_kiem' => ['$gt' => 0]],
         ]];
     }
 

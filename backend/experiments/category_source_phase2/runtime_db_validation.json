@@ -1,0 +1,95 @@
+{
+    "timestamp": "2026-10-07T15:58:56+07:00",
+    "tests": {
+        "test_A_db_runtime": {
+            "pass": true,
+            "db_mode": "atlas",
+            "db_name": "skinsyntax",
+            "uri_scheme": "mongodb+srv:\/\/"
+        },
+        "test_B_counts": {
+            "pass": true,
+            "san_pham_count": 2473,
+            "danh_muc_count": 28
+        },
+        "test_C_taxonomy": {
+            "pass": true,
+            "roots": 1,
+            "parents": 7,
+            "leaves": 21
+        },
+        "test_D_admin": {
+            "pass": true,
+            "admin_items_count": 28,
+            "root_title": "Chăm Sóc Da Mặt",
+            "root_recursive": 2473
+        },
+        "test_EF_menu_tree": {
+            "pass": true,
+            "group_count": 8,
+            "sum_recursive": 2473,
+            "actual_counts": {
+                "Mặt Nạ": 622,
+                "Làm Sạch Da": 613,
+                "Chống Nắng Da Mặt": 231,
+                "Dưỡng Ẩm": 313,
+                "Bộ Chăm Sóc Da Mặt": 211,
+                "Đặc Trị": 275,
+                "Dưỡng Mắt": 27,
+                "Dưỡng Môi": 181
+            },
+            "expected_counts": {
+                "Mặt Nạ": 622,
+                "Làm Sạch Da": 613,
+                "Chống Nắng Da Mặt": 231,
+                "Dưỡng Ẩm": 313,
+                "Bộ Chăm Sóc Da Mặt": 211,
+                "Đặc Trị": 275,
+                "Dưỡng Mắt": 27,
+                "Dưỡng Môi": 181
+            }
+        },
+        "test_G_filtering": {
+            "pass": true,
+            "verified_cases": 6,
+            "total_cases": 6
+        },
+        "test_H_header_render": {
+            "pass": true,
+            "html_size_bytes": 109395,
+            "contains_highlight_card": true,
+            "contains_level2_groups": true,
+            "contains_level3_leaves": true
+        },
+        "test_I_http": {
+            "pass": true,
+            "results": {
+                "\/index.php?r=home": {
+                    "status_code": 200,
+                    "pass": true,
+                    "response_length": 323094
+                },
+                "\/index.php?r=admin_categories": {
+                    "status_code": 302,
+                    "pass": true,
+                    "response_length": 0
+                },
+                "\/index.php?r=tatca": {
+                    "status_code": 200,
+                    "pass": true,
+                    "response_length": 329365
+                },
+                "\/index.php?r=tatca&cap1=L%C3%A0m+S%E1%BA%A1ch+Da": {
+                    "status_code": 200,
+                    "pass": true,
+                    "response_length": 330603
+                },
+                "\/index.php?r=chitiet&id=1000": {
+                    "status_code": 200,
+                    "pass": true,
+                    "response_length": 285026
+                }
+            }
+        }
+    }
+}

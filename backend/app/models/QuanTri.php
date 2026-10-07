@@ -242,7 +242,8 @@ class QuanTri {
         $filter = ['$or' => $orFilters];
         $options = [
             'sort' => ['updated_at' => -1, 'ngay_tao' => -1, 'ma_san_pham' => -1],
-            'limit' => 100
+            'limit' => 50,
+            'projection' => SanPham::CARD_PROJECTION,
         ];
 
         $items = [];
@@ -252,10 +253,21 @@ class QuanTri {
             $p = (array)$doc;
             $stock = $sanPhamModel->getProductStock($p);
             if ($stock !== null && $stock <= $threshold) {
-                $brief = $sanPhamModel->getProductBriefById($p['ma_san_pham'] ?? $p['_id'] ?? '');
-                $brief['ton_kho'] = $stock;
-                $items[] = $brief;
-                $existIds[] = (string)($brief['id'] ?? '');
+                $pId = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
+                $items[] = [
+                    'id' => $pId,
+                    'ma_san_pham' => $pId,
+                    'ten_san_pham' => (string)($p['ten_san_pham'] ?? ''),
+                    'thuong_hieu' => (string)($p['thuong_hieu'] ?? ''),
+                    'gia_ban' => (int)($p['gia_ban'] ?? 0),
+                    'link_hinh_anh' => (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''),
+                    'loai_san_pham' => (string)($p['loai_san_pham'] ?? ''),
+                    'danh_muc_day_du' => (string)($p['danh_muc_day_du'] ?? ''),
+                    'so_luong_ton_kho' => $stock,
+                    'trang_thai_kho' => $stock > 0 ? 'con_hang' : 'het_hang',
+                    'ton_kho' => $stock,
+                ];
+                $existIds[] = $pId;
             }
             if (count($items) >= $limit) {
                 break;
@@ -265,17 +277,28 @@ class QuanTri {
         if (count($items) < $limit) {
             $allCursor = $this->db->san_pham->find([], [
                 'sort' => ['so_luong_ton_kho' => 1, 'ton_kho' => 1, 'ma_san_pham' => -1],
-                'limit' => 500
+                'limit' => 60,
+                'projection' => SanPham::CARD_PROJECTION,
             ]);
             foreach ($allCursor as $doc) {
                 $p = (array)$doc;
                 $stock = $sanPhamModel->getProductStock($p);
                 if ($stock !== null && $stock <= $threshold) {
-                    $pId = (string)($p['ma_san_pham'] ?? $p['_id'] ?? '');
+                    $pId = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                     if (in_array($pId, $existIds, true)) continue;
-                    $brief = $sanPhamModel->getProductBriefById($pId);
-                    $brief['ton_kho'] = $stock;
-                    $items[] = $brief;
+                    $items[] = [
+                        'id' => $pId,
+                        'ma_san_pham' => $pId,
+                        'ten_san_pham' => (string)($p['ten_san_pham'] ?? ''),
+                        'thuong_hieu' => (string)($p['thuong_hieu'] ?? ''),
+                        'gia_ban' => (int)($p['gia_ban'] ?? 0),
+                        'link_hinh_anh' => (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''),
+                        'loai_san_pham' => (string)($p['loai_san_pham'] ?? ''),
+                        'danh_muc_day_du' => (string)($p['danh_muc_day_du'] ?? ''),
+                        'so_luong_ton_kho' => $stock,
+                        'trang_thai_kho' => $stock > 0 ? 'con_hang' : 'het_hang',
+                        'ton_kho' => $stock,
+                    ];
                     $existIds[] = $pId;
                 }
                 if (count($items) >= $limit) break;
@@ -385,7 +408,7 @@ class QuanTri {
             'chat_cho_tra_loi' => 0,
             'danh_gia_cho_phan_hoi' => 0,
         ];
-        foreach ($this->db->hoa_don->find([]) as $orderDoc) {
+        foreach ($this->db->hoa_don->find([], ['projection' => ['trang_thai' => 1, 'tong_tien' => 1]]) as $orderDoc) {
             $order = (array)$orderDoc;
             if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') === 'pending') {
                 $summary['don_cho_xu_ly']++;

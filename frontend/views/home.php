@@ -224,23 +224,27 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           <?php endif; ?>
         </div>
 
-        <div class="product-card-actions d-flex flex-column flex-sm-row gap-1 gap-sm-2">
-          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 flex-fill w-100">
+        <div class="product-card-actions d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100">
             <input type="hidden" name="action" value="add_to_cart">
             <input type="hidden" name="product_id" value="<?= h($productId) ?>">
             <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
             <input type="hidden" name="quantity" value="1">
             <input type="hidden" name="qty" value="1">
-            <button class="btn btn-sm w-100" type="submit" style="background: #F1F5F9; color: #0F172A; border: 1px solid #E2E8F0; border-radius: 6px; font-weight: 600; font-size: 0.78rem; padding: 7px 0; transition: all 0.2s ease;" <?= $isOutOfStock ? 'disabled' : '' ?>><?= $isOutOfStock ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus me-1"></i> <span class="d-none d-sm-inline">Thêm</span><span class="d-sm-none">Thêm vào giỏ</span>' ?></button>
+            <button class="btn btn-sm w-100 text-nowrap d-inline-flex align-items-center justify-content-center" type="submit" style="background: #F1F5F9; color: #183B2B; border: 1px solid #CBD5E1; border-radius: 8px; font-weight: 600; font-size: 0.78rem; height: 38px; padding: 0 4px; transition: all 0.2s ease;" <?= $isOutOfStock ? 'disabled' : '' ?> title="Thêm vào giỏ">
+              <?= $isOutOfStock ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus me-1" style="font-size: 0.74rem;"></i> <span>Thêm vào giỏ</span>' ?>
+            </button>
           </form>
-          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 flex-fill d-none d-sm-block">
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100">
             <input type="hidden" name="action" value="add_to_cart">
             <input type="hidden" name="buy_now" value="1">
             <input type="hidden" name="product_id" value="<?= h($productId) ?>">
             <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
             <input type="hidden" name="quantity" value="1">
             <input type="hidden" name="qty" value="1">
-            <button class="btn btn-sm w-100 text-white" type="submit" style="background: #183B2B; border-radius: 6px; font-weight: 600; font-size: 0.78rem; padding: 7px 0; border: none; transition: background 0.2s ease;" <?= $isOutOfStock ? 'disabled' : '' ?>><?= $isOutOfStock ? 'Hết hàng' : 'Mua ngay' ?></button>
+            <button class="btn btn-sm w-100 text-white text-nowrap d-inline-flex align-items-center justify-content-center" type="submit" style="background: #183B2B; border-radius: 8px; font-weight: 600; font-size: 0.78rem; height: 38px; padding: 0 4px; border: none; transition: background 0.2s ease;" <?= $isOutOfStock ? 'disabled' : '' ?> title="Mua ngay">
+              <?= $isOutOfStock ? 'Hết hàng' : '<span>Mua ngay</span>' ?>
+            </button>
           </form>
         </div>
       </div>

@@ -334,7 +334,12 @@ class SanPhamController {
         $q    = $this->normalizeKeyword($_GET['q'] ?? '');
         $cap1 = trim((string)($_GET['cap1'] ?? ''));
         $cap2 = trim((string)($_GET['cap2'] ?? ''));
+        $maDm = trim((string)($_GET['ma_danh_muc'] ?? $_GET['category_id'] ?? ''));
         $sort = trim((string)($_GET['sort'] ?? 'default'));
+
+        if ($maDm !== '' && $cap1 === '' && $cap2 === '') {
+            $cap2 = $maDm;
+        }
 
         if ($q !== '') {
             $this->saveSearchHistory($q);
