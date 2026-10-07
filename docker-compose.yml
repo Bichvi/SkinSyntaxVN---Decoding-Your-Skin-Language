@@ -199,6 +199,8 @@ services:
       MONGO_URI: ${MONGO_URI}
       MONGO_DB: ${MONGO_DB:-skinsyntax}
       MONGO_DB_NAME: ${MONGO_DB_NAME:-skinsyntax}
+      DB_MODE: ${DB_MODE:-atlas}
+      DOCKER_USE_ATLAS: "1"
       FRONTEND_ROOT: /var/www/frontend
       APP_URL: http://localhost
       AI_CHAT_ENDPOINT: http://ai-service:5001/api/chat/auto

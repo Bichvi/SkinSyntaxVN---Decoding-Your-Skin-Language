@@ -1,0 +1,41 @@
+{
+    "audit_timestamp": "2026-10-07T15:37:50+07:00",
+    "environment_settings": {
+        "DB_MODE": "not_set",
+        "MONGO_DB_NAME": "skinsyntax",
+        "DOCKER_USE_ATLAS": "not_set",
+        "primary_uri_scheme": "mongodb+srv:\/\/",
+        "docker_running": false,
+        "fallback_mechanism_active": true,
+        "docker_hijack_rule_active": true,
+        "actual_runtime_source_in_docker": "mongodb:\/\/mongodb:27017 (Local MongoDB Container)"
+    },
+    "comparison": {
+        "LOCAL_MONGODB": {
+            "host": "mongodb:27017 (host 127.0.0.1:27018)",
+            "database": "skinsyntax",
+            "san_pham_count": 6377,
+            "san_pham_active": 6376,
+            "san_pham_distinct_ma_danh_muc": 125,
+            "san_pham_orphan_count": 0,
+            "danh_muc_count_total": 125,
+            "danh_muc_parent_nodes": 0,
+            "danh_muc_leaf_nodes": 125,
+            "danh_muc_with_parent": 0,
+            "danh_muc_root_nodes": 125
+        },
+        "ATLAS_MONGODB": {
+            "host": "skinsyntaxvn-db.3edac4m.mongodb.net (MongoDB Atlas Cluster)",
+            "database": "skinsyntax",
+            "san_pham_count": 2473,
+            "san_pham_active": 2473,
+            "san_pham_distinct_ma_danh_muc": 21,
+            "san_pham_orphan_count": 0,
+            "danh_muc_count_total": 28,
+            "danh_muc_parent_nodes": 7,
+            "danh_muc_leaf_nodes": 21,
+            "danh_muc_with_parent": 27,
+            "danh_muc_root_nodes": 1
+        }
+    }
+}

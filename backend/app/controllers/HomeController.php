@@ -417,7 +417,30 @@ class HomeController {
         $this->render('info/policy-reference', $data);
     }
 
+    private static ?array $highlightedCategoriesCache = null;
+
+    /**
+     * @deprecated Legacy category aggregation on san_pham.danh_muc_day_du string.
+     * Retained for backward compatibility. Storefront mega menu and admin pages
+     * strictly read from canonical collection `danh_muc` via SanPham::menuTree().
+     */
     private function getHighlightedCategories(): array {
+        if (self::$highlightedCategoriesCache !== null) {
+            return self::$highlightedCategoriesCache;
+        }
+
+        $cacheFile = dirname(__DIR__, 2) . '/storage/cache/highlighted_categories.json';
+        if (file_exists($cacheFile)) {
+            $mtime = filemtime($cacheFile);
+            if ($mtime !== false && (time() - $mtime) < 3600) {
+                $cached = json_decode((string)@file_get_contents($cacheFile), true);
+                if (is_array($cached) && !empty($cached)) {
+                    self::$highlightedCategoriesCache = $cached;
+                    return $cached;
+                }
+            }
+        }
+
         // Pipeline gom nhóm và đếm danh mục bằng MongoDB
         try {
             $pipeline = [
@@ -436,6 +459,16 @@ class HomeController {
                     'so_luong' => (int) $doc['so_luong']
                 ];
             }
+
+            if (!empty($result)) {
+                self::$highlightedCategoriesCache = $result;
+                $dir = dirname($cacheFile);
+                if (!is_dir($dir)) {
+                    @mkdir($dir, 0777, true);
+                }
+                @file_put_contents($cacheFile, json_encode($result, JSON_UNESCAPED_UNICODE));
+            }
+
             return $result;
         } catch (Throwable $e) {
             error_log('highlight categories MongoDB error: ' . $e->getMessage());
