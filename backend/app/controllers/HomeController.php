@@ -386,23 +386,25 @@ class HomeController {
     private function getHighlightedCategories(): array {
         // Pipeline gom nhóm và đếm danh mục bằng MongoDB
         try {
-            $pipeline = [
-                ['$match' => ['danh_muc_day_du' => ['$nin' => [null, '']]]],
-                ['$group' => ['_id' => '$danh_muc_day_du', 'so_luong' => ['$sum' => 1]]],
-                ['$sort' => ['so_luong' => -1]],
-                ['$limit' => 6]
-            ];
-
-            $cursor = $this->pdo->san_pham->aggregate($pipeline);
-            $result = [];
-
-            foreach ($cursor as $doc) {
-                $result[] = [
-                    'danh_muc_day_du' => (string) $doc['_id'],
-                    'so_luong' => (int) $doc['so_luong']
+            return ProductQueryCache::remember('highlightedCategories', 600, function (): array {
+                $pipeline = [
+                    ['$match' => ['danh_muc_day_du' => ['$nin' => [null, '']]]],
+                    ['$group' => ['_id' => '$danh_muc_day_du', 'so_luong' => ['$sum' => 1]]],
+                    ['$sort' => ['so_luong' => -1]],
+                    ['$limit' => 6]
                 ];
-            }
-            return $result;
+
+                $cursor = $this->pdo->san_pham->aggregate($pipeline);
+                $result = [];
+
+                foreach ($cursor as $doc) {
+                    $result[] = [
+                        'danh_muc_day_du' => (string) $doc['_id'],
+                        'so_luong' => (int) $doc['so_luong']
+                    ];
+                }
+                return $result;
+            });
         } catch (Throwable $e) {
             error_log('highlight categories MongoDB error: ' . $e->getMessage());
             return [];

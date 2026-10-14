@@ -1,7 +1,11 @@
 <?php
 // backend/app/models/SanPham.php
+require_once __DIR__ . '/../services/ProductQueryCache.php';
 
 class SanPham {
+    // Trang danh sách không dùng 3 trường nặng này; chitiet/admin đọc đầy đủ qua findById.
+    private const LISTING_PROJECTION = ['mo_ta' => 0, 'thanh_phan_full' => 0, 'hdsd' => 0];
+
     private $db;
     private ?string $lastErrorMessage = null;
     private const VI_ACCENTS = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
@@ -62,12 +66,23 @@ class SanPham {
     private static ?array $categoryLookupMap = null;
     private static ?array $originLookupMap = null;
     private static ?array $simpleRecommenderMemoryCache = null;
+    // collection => true khi map đã được nạp trực tiếp từ DB trong request này (không phải từ file cache)
+    private static array $lookupLoadedFromDb = [];
+
+    // collection => [tên static property giữ map, field mã, field tên]
+    private const LOOKUP_SOURCES = [
+        'thuong_hieu' => ['brandLookupMap', 'ma_thuong_hieu', 'ten_thuong_hieu'],
+        'danh_muc' => ['categoryLookupMap', 'ma_danh_muc', 'ten_danh_muc'],
+        'xuat_xu' => ['originLookupMap', 'ma_xuat_xu', 'ten_xuat_xu'],
+    ];
 
     public static function clearLookupCache(): void {
         self::$brandLookupMap = null;
         self::$categoryLookupMap = null;
         self::$originLookupMap = null;
+        self::$lookupLoadedFromDb = [];
         self::$simpleRecommenderMemoryCache = null;
+        ProductQueryCache::flush();
     }
 
     public static function clearSimpleRecommenderCache(): void {
@@ -76,6 +91,7 @@ class SanPham {
         if (file_exists($cacheFile)) {
             @unlink($cacheFile);
         }
+        ProductQueryCache::flush();
     }
 
     public function rebuildSimpleRecommenderCache(): array {
@@ -83,58 +99,60 @@ class SanPham {
         return $this->getSimpleRecommenderProducts(24);
     }
 
-    private function getBrandName($brandId): string {
-        if ($brandId === null || $brandId === '') {
-            return '';
-        }
-        if (self::$brandLookupMap === null) {
-            self::$brandLookupMap = [];
-            $cursor = $this->db->thuong_hieu->find([], [
-                'projection' => ['ma_thuong_hieu' => 1, 'ten_thuong_hieu' => 1]
-            ]);
-            foreach ($cursor as $doc) {
-                if (isset($doc['ma_thuong_hieu'])) {
-                    self::$brandLookupMap[(string)$doc['ma_thuong_hieu']] = (string)($doc['ten_thuong_hieu'] ?? '');
-                }
+    private function loadLookupMap(string $collection, string $idField, string $nameField): array {
+        $map = [];
+        $cursor = $this->db->{$collection}->find([], [
+            'projection' => [$idField => 1, $nameField => 1]
+        ]);
+        foreach ($cursor as $doc) {
+            if (isset($doc[$idField])) {
+                $map[(string)$doc[$idField]] = (string)($doc[$nameField] ?? '');
             }
         }
-        return self::$brandLookupMap[(string)$brandId] ?? '';
+        return $map;
+    }
+
+    // Tra tên theo mã từ map thương hiệu/danh mục/xuất xứ: map lấy từ file cache (TTL 10 phút),
+    // nếu mã chưa có trong map thì nạp lại từ DB đúng 1 lần/request để mục mới thêm hiện ngay.
+    private function lookupName(string $collection, $id): string {
+        if ($id === null || $id === '') {
+            return '';
+        }
+        [$prop, $idField, $nameField] = self::LOOKUP_SOURCES[$collection];
+        $key = (string)$id;
+
+        if (self::${$prop} === null) {
+            // Như cũ: gán [] trước để lỗi DB không bị thử lại nhiều lần trong cùng request
+            self::${$prop} = [];
+            self::$lookupLoadedFromDb[$collection] = true;
+            $fromDb = false;
+            self::${$prop} = ProductQueryCache::remember('lookup:' . $collection, 600, function () use ($collection, $idField, $nameField, &$fromDb): array {
+                $fromDb = true;
+                return $this->loadLookupMap($collection, $idField, $nameField);
+            });
+            self::$lookupLoadedFromDb[$collection] = $fromDb;
+        }
+
+        $map = self::${$prop};
+        if (!array_key_exists($key, $map) && !(self::$lookupLoadedFromDb[$collection] ?? false)) {
+            self::$lookupLoadedFromDb[$collection] = true;
+            $map = $this->loadLookupMap($collection, $idField, $nameField);
+            self::${$prop} = $map;
+            ProductQueryCache::put('lookup:' . $collection, $map);
+        }
+        return $map[$key] ?? '';
+    }
+
+    private function getBrandName($brandId): string {
+        return $this->lookupName('thuong_hieu', $brandId);
     }
 
     private function getCategoryName($categoryId): string {
-        if ($categoryId === null || $categoryId === '') {
-            return '';
-        }
-        if (self::$categoryLookupMap === null) {
-            self::$categoryLookupMap = [];
-            $cursor = $this->db->danh_muc->find([], [
-                'projection' => ['ma_danh_muc' => 1, 'ten_danh_muc' => 1]
-            ]);
-            foreach ($cursor as $doc) {
-                if (isset($doc['ma_danh_muc'])) {
-                    self::$categoryLookupMap[(string)$doc['ma_danh_muc']] = (string)($doc['ten_danh_muc'] ?? '');
-                }
-            }
-        }
-        return self::$categoryLookupMap[(string)$categoryId] ?? '';
+        return $this->lookupName('danh_muc', $categoryId);
     }
 
     private function getOriginName($originId): string {
-        if ($originId === null || $originId === '') {
-            return '';
-        }
-        if (self::$originLookupMap === null) {
-            self::$originLookupMap = [];
-            $cursor = $this->db->xuat_xu->find([], [
-                'projection' => ['ma_xuat_xu' => 1, 'ten_xuat_xu' => 1]
-            ]);
-            foreach ($cursor as $doc) {
-                if (isset($doc['ma_xuat_xu'])) {
-                    self::$originLookupMap[(string)$doc['ma_xuat_xu']] = (string)($doc['ten_xuat_xu'] ?? '');
-                }
-            }
-        }
-        return self::$originLookupMap[(string)$originId] ?? '';
+        return $this->lookupName('xuat_xu', $originId);
     }
 
     private function normalizeProductRecord($product): array {
@@ -234,32 +252,36 @@ class SanPham {
     }
 
     public function latest(int $limit = 8, bool $onlyVisibleOnWebsite = false, bool $excludeNonBeauty = false): array {
-        $filter = [];
-        if ($onlyVisibleOnWebsite) {
-            $filter = $this->availableProductFilter();
-        }
+        $cacheKey = 'latest:' . md5(serialize([$limit, $onlyVisibleOnWebsite, $excludeNonBeauty]));
+        return ProductQueryCache::remember($cacheKey, 120, function () use ($limit, $onlyVisibleOnWebsite, $excludeNonBeauty): array {
+            $filter = [];
+            if ($onlyVisibleOnWebsite) {
+                $filter = $this->availableProductFilter();
+            }
 
-        if ($excludeNonBeauty) {
-            $nonBeautyRegex = new \MongoDB\BSON\Regex('răng|bàn chải|toothpaste', 'i');
-            $beautyFilter = [
-                'loai_san_pham' => ['$not' => $nonBeautyRegex],
-                'danh_muc_day_du' => ['$not' => $nonBeautyRegex],
-                'ten_san_pham' => ['$not' => $nonBeautyRegex],
+            if ($excludeNonBeauty) {
+                $nonBeautyRegex = new \MongoDB\BSON\Regex('răng|bàn chải|toothpaste', 'i');
+                $beautyFilter = [
+                    'loai_san_pham' => ['$not' => $nonBeautyRegex],
+                    'danh_muc_day_du' => ['$not' => $nonBeautyRegex],
+                    'ten_san_pham' => ['$not' => $nonBeautyRegex],
+                ];
+                $filter = count($filter) > 0 ? ['$and' => [$filter, $beautyFilter]] : $beautyFilter;
+            }
+
+            $options = [
+                'sort' => ['ngay_tao' => -1, 'ma_san_pham' => -1],
+                'limit' => $limit,
+                'projection' => self::LISTING_PROJECTION,
             ];
-            $filter = count($filter) > 0 ? ['$and' => [$filter, $beautyFilter]] : $beautyFilter;
-        }
 
-        $options = [
-            'sort' => ['ngay_tao' => -1, 'ma_san_pham' => -1],
-            'limit' => $limit
-        ];
-
-        $cursor = $this->db->san_pham->find($filter, $options);
-        $items = [];
-        foreach ($cursor as $doc) {
-            $items[] = $this->normalizeProductRecord($doc);
-        }
-        return $items;
+            $cursor = $this->db->san_pham->find($filter, $options);
+            $items = [];
+            foreach ($cursor as $doc) {
+                $items[] = $this->normalizeProductRecord($doc);
+            }
+            return $items;
+        });
     }
 
 
@@ -336,40 +358,44 @@ class SanPham {
             return self::$menuTreeCache;
         }
 
-        // Trong MongoDB, aggregate để group danh mục
-        $pipeline = [
-            ['$match' => ['danh_muc_day_du' => ['$ne' => null, '$not' => new \MongoDB\BSON\Regex('^$')]]],
-            ['$group' => [
-                '_id' => '$danh_muc_day_du',
-                'so_luong' => ['$sum' => 1]
-            ]],
-            ['$sort' => ['so_luong' => -1]]
-        ];
+        $tree = ProductQueryCache::remember('menuTree:' . $cap2LimitEach, 600, function () use ($cap2LimitEach): array {
+            // Trong MongoDB, aggregate để group danh mục
+            $pipeline = [
+                ['$match' => ['danh_muc_day_du' => ['$ne' => null, '$not' => new \MongoDB\BSON\Regex('^$')]]],
+                ['$group' => [
+                    '_id' => '$danh_muc_day_du',
+                    'so_luong' => ['$sum' => 1]
+                ]],
+                ['$sort' => ['so_luong' => -1]]
+            ];
 
-        $cursor = $this->db->san_pham->aggregate($pipeline);
-        $tree = [];
+            $cursor = $this->db->san_pham->aggregate($pipeline);
+            $tree = [];
 
-        foreach ($cursor as $doc) {
-            $fullPath = (string) $doc['_id'];
-            $count = (int) $doc['so_luong'];
+            foreach ($cursor as $doc) {
+                $fullPath = (string) $doc['_id'];
+                $count = (int) $doc['so_luong'];
 
-            // Cắt chuỗi giống hàm cap1Expr / cap2Expr cũ
-            $parts = explode(' -> ', $fullPath);
-            if (strpos($fullPath, 'Sức Khỏe - Làm Đẹp -> ') === 0) {
-                $c1 = trim($parts[1] ?? '');
-                $c2 = trim($parts[2] ?? '');
-            } else {
-                $c1 = trim($parts[0] ?? '');
-                $c2 = trim($parts[1] ?? '');
+                // Cắt chuỗi giống hàm cap1Expr / cap2Expr cũ
+                $parts = explode(' -> ', $fullPath);
+                if (strpos($fullPath, 'Sức Khỏe - Làm Đẹp -> ') === 0) {
+                    $c1 = trim($parts[1] ?? '');
+                    $c2 = trim($parts[2] ?? '');
+                } else {
+                    $c1 = trim($parts[0] ?? '');
+                    $c2 = trim($parts[1] ?? '');
+                }
+
+                if (!$c1) continue;
+                if (!isset($tree[$c1])) $tree[$c1] = [];
+
+                if ($c2 && count($tree[$c1]) < $cap2LimitEach) {
+                    $tree[$c1][$c2] = ($tree[$c1][$c2] ?? 0) + $count;
+                }
             }
 
-            if (!$c1) continue;
-            if (!isset($tree[$c1])) $tree[$c1] = [];
-            
-            if ($c2 && count($tree[$c1]) < $cap2LimitEach) {
-                $tree[$c1][$c2] = ($tree[$c1][$c2] ?? 0) + $count;
-            }
-        }
+            return $tree;
+        });
 
         self::$menuTreeCache = $tree;
         return $tree;
@@ -501,12 +527,19 @@ class SanPham {
             $filter = ['$and' => [$filter, $extraFilter]];
         }
 
-        $cursor = $this->db->san_pham->find($filter, ['sort' => $sort, 'limit' => $limit]);
-        $items = [];
-        foreach ($cursor as $doc) {
-            $items[] = $this->normalizeProductRecord($doc);
-        }
-        return $items;
+        $cacheKey = 'homepageProducts:' . md5(serialize([$extraFilter, $sort, $limit]));
+        return ProductQueryCache::remember($cacheKey, 120, function () use ($filter, $sort, $limit): array {
+            $cursor = $this->db->san_pham->find($filter, [
+                'sort' => $sort,
+                'limit' => $limit,
+                'projection' => self::LISTING_PROJECTION,
+            ]);
+            $items = [];
+            foreach ($cursor as $doc) {
+                $items[] = $this->normalizeProductRecord($doc);
+            }
+            return $items;
+        });
     }
 
     public function getHomepageProductSections(int $limitEach = 4, array $recentViewedIds = [], ?array $userProfile = null): array {
@@ -899,6 +932,7 @@ class SanPham {
         $cursor = $this->db->san_pham->find($filter, [
             'sort' => $this->buildProductSort($sort ?? (string)($filters['sort'] ?? ''), $defaultSort),
             'limit' => max(1, min(60, $fetchLimit)),
+            'projection' => self::LISTING_PROJECTION,
         ]);
         foreach ($cursor as $doc) {
             $rawItems[] = $this->normalizeProductRecord($doc);
@@ -1040,6 +1074,7 @@ class SanPham {
             'sort' => $this->buildProductSort($sort ?? (string)($filters['sort'] ?? ''), $defaultSort),
             'skip' => ($page - 1) * $perPage,
             'limit' => $perPage,
+            'projection' => self::LISTING_PROJECTION,
         ]);
 
         $items = [];
