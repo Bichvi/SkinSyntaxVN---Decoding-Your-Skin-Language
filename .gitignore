@@ -38,6 +38,7 @@ vendor/
 # Local runtime caches
 ai-service-flask/.cache/
 backend/storage/cache/
+.runtime/
 
 # Large AI indices & vector stores
 database/recommendation_index/
@@ -49,3 +50,13 @@ backend/storage/backups/
 .runtime/
 celerybeat-schedule*
 
+# AI Idol background music (licensed assets, not committed)
+ai-idol-service/assets/music/*
+!ai-idol-service/assets/music/README.md
+
+# Báo cáo và tài khoản test pb-fixture (chứa mật khẩu dạng rõ, không commit)
+.runtime/pb-fixture/
+
+# Local product-video preview media
+frontend/public/e2e-media/
+scripts/e2e/real-videos.json

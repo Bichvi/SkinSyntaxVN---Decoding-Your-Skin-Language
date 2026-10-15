@@ -1,0 +1,81 @@
+﻿context,rank_position,ma_san_pham,ten_san_pham,regular_price,flash_price,discount_percent,composite_score,reason_tag,ranking_mode
+A_Guest,1,16,"Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",432000,237600,45,0.8206,"Giảm sâu 45%",BASELINE
+A_Guest,2,14,"Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 500ml",335000,201000,40,0.727,"Giảm sâu 40%",BASELINE
+A_Guest,3,5,"Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",335000,217750,35,0.627,"Giảm sâu 35%",BASELINE
+A_Guest,4,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",145000,79750,45,0.6,"Giảm sâu 45%",BASELINE
+A_Guest,5,6,"Sữa Rửa Mặt Cetaphil Dịu Lành Cho Da Nhạy Cảm 500ml (Mới)",305000,183000,40,0.558,"Giảm sâu 40%",BASELINE
+A_Guest,6,12,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml",292000,204400,30,0.5219,"Được đánh giá tốt",BASELINE
+A_Guest,7,2,"Combo 2 Nước Tẩy Trang Bí Đao Cocoon Làm Sạch & Giảm Dầu 500ml",338000,270400,20,0.5,"Được đánh giá tốt",BASELINE
+A_Guest,8,11,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml",272000,204000,25,0.4251,"Được đánh giá tốt",BASELINE
+A_Guest,9,13,"Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml",239000,155350,35,0.4182,"Giảm sâu 35%",BASELINE
+A_Guest,10,3,"Combo Cocoon Nước Cân Bằng Sen Hậu Giang 310ml + Nước Tẩy Trang Bí Đao 500ml",243000,182250,25,0.4127,"Giảm 25%",BASELINE
+A_Guest,11,18,"Combo 3 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml",149000,119200,20,0.3258,"Được đánh giá tốt",BASELINE
+A_Guest,12,10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",412000,329600,20,0.3178,"Được đánh giá tốt",BASELINE
+A_Guest,13,4,"Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",201000,140700,30,0.3127,"Được đánh giá tốt",BASELINE
+A_Guest,14,9,"Combo Cocoon Nước Tẩy Trang Bí Đao 500ml + Gel Rửa Mặt Bí Đao 310ml",269000,228650,15,0.27,"Giảm 15%",BASELINE
+A_Guest,15,1,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",357000,303450,15,0.2251,"Được đánh giá tốt",BASELINE
+A_Guest,16,17,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 100ml",522000,443700,15,0.2219,"Được đánh giá tốt",BASELINE
+B_Cleanser_Search,1,11,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml",272000,204000,25,0.6983,"Theo tìm kiếm gần đây",BEHAVIOR
+B_Cleanser_Search,2,1,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",357000,303450,15,0.6126,"Theo tìm kiếm gần đây",BEHAVIOR
+B_Cleanser_Search,3,6,"Sữa Rửa Mặt Cetaphil Dịu Lành Cho Da Nhạy Cảm 500ml (Mới)",305000,183000,40,0.5122,"Theo tìm kiếm gần đây",BEHAVIOR
+B_Cleanser_Search,4,16,"Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",432000,237600,45,0.489,"Giảm sâu 45%",BEHAVIOR
+B_Cleanser_Search,5,14,"Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 500ml",335000,201000,40,0.3968,"Giảm sâu 40%",BEHAVIOR
+B_Cleanser_Search,6,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",145000,79750,45,0.3526,"Giảm sâu 45%",BEHAVIOR
+B_Cleanser_Search,7,5,"Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",335000,217750,35,0.3183,"Giảm sâu 35%",BEHAVIOR
+B_Cleanser_Search,8,2,"Combo 2 Nước Tẩy Trang Bí Đao Cocoon Làm Sạch & Giảm Dầu 500ml",338000,270400,20,0.3139,"Được đánh giá tốt",BEHAVIOR
+B_Cleanser_Search,9,18,"Combo 3 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml",149000,119200,20,0.3004,"Được đánh giá tốt",BEHAVIOR
+B_Cleanser_Search,10,12,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml",292000,204400,30,0.2773,"Được đánh giá tốt",BEHAVIOR
+B_Cleanser_Search,11,13,"Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml",239000,155350,35,0.2091,"Giảm sâu 35%",BEHAVIOR
+B_Cleanser_Search,12,3,"Combo Cocoon Nước Cân Bằng Sen Hậu Giang 310ml + Nước Tẩy Trang Bí Đao 500ml",243000,182250,25,0.2064,"Giảm 25%",BEHAVIOR
+B_Cleanser_Search,13,9,"Combo Cocoon Nước Tẩy Trang Bí Đao 500ml + Gel Rửa Mặt Bí Đao 310ml",269000,228650,15,0.1842,"Giảm 15%",BEHAVIOR
+B_Cleanser_Search,14,4,"Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",201000,140700,30,0.1819,"Được đánh giá tốt",BEHAVIOR
+B_Cleanser_Search,15,10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",412000,329600,20,0.1589,"Được đánh giá tốt",BEHAVIOR
+B_Cleanser_Search,16,17,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 100ml",522000,443700,15,0.1273,"Được đánh giá tốt",BEHAVIOR
+C_Dry_Skin_Profile,1,3,"Combo Cocoon Nước Cân Bằng Sen Hậu Giang 310ml + Nước Tẩy Trang Bí Đao 500ml",243000,182250,25,0.7064,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,2,10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",412000,329600,20,0.6589,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,3,16,"Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",432000,237600,45,0.4291,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,4,14,"Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 500ml",335000,201000,40,0.3823,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,5,6,"Sữa Rửa Mặt Cetaphil Dịu Lành Cho Da Nhạy Cảm 500ml (Mới)",305000,183000,40,0.3366,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,6,5,"Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",335000,217750,35,0.3323,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,7,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",145000,79750,45,0.3188,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,8,12,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml",292000,204400,30,0.2798,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,9,2,"Combo 2 Nước Tẩy Trang Bí Đao Cocoon Làm Sạch & Giảm Dầu 500ml",338000,270400,20,0.2688,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,10,11,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml",272000,204000,25,0.2314,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,11,13,"Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml",239000,155350,35,0.2279,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,12,18,"Combo 3 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml",149000,119200,20,0.1817,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,13,4,"Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",201000,140700,30,0.1751,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,14,9,"Combo Cocoon Nước Tẩy Trang Bí Đao 500ml + Gel Rửa Mặt Bí Đao 310ml",269000,228650,15,0.1538,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,15,1,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",357000,303450,15,0.1314,"Trong ngân sách của bạn",PROFILE
+C_Dry_Skin_Profile,16,17,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 100ml",522000,443700,15,0.111,"Được đánh giá tốt",PROFILE
+D_Acne_Hybrid,1,3,"Combo Cocoon Nước Cân Bằng Sen Hậu Giang 310ml + Nước Tẩy Trang Bí Đao 500ml",243000,182250,25,0.7064,"Tương tự sản phẩm bạn vừa xem",HYBRID
+D_Acne_Hybrid,2,2,"Combo 2 Nước Tẩy Trang Bí Đao Cocoon Làm Sạch & Giảm Dầu 500ml",338000,270400,20,0.6958,"Tương tự sản phẩm bạn vừa xem",HYBRID
+D_Acne_Hybrid,3,14,"Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 500ml",335000,201000,40,0.5174,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,4,16,"Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",432000,237600,45,0.4916,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,5,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",145000,79750,45,0.4787,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,6,5,"Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",335000,217750,35,0.424,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,7,9,"Combo Cocoon Nước Tẩy Trang Bí Đao 500ml + Gel Rửa Mặt Bí Đao 310ml",269000,228650,15,0.4008,"Tương tự sản phẩm bạn vừa xem",HYBRID
+D_Acne_Hybrid,8,10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",412000,329600,20,0.3341,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,9,6,"Sữa Rửa Mặt Cetaphil Dịu Lành Cho Da Nhạy Cảm 500ml (Mới)",305000,183000,40,0.3086,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,10,11,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml",272000,204000,25,0.2968,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,11,12,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml",292000,204400,30,0.2763,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,12,18,"Combo 3 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml",149000,119200,20,0.2592,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,13,13,"Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml",239000,155350,35,0.2541,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,14,1,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",357000,303450,15,0.1968,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,15,4,"Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",201000,140700,30,0.1838,"Trong ngân sách của bạn",HYBRID
+D_Acne_Hybrid,16,17,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 100ml",522000,443700,15,0.111,"Được đánh giá tốt",HYBRID
+E_Cart_Signal,1,3,"Combo Cocoon Nước Cân Bằng Sen Hậu Giang 310ml + Nước Tẩy Trang Bí Đao 500ml",243000,182250,25,0.7064,"Giảm 25%",BEHAVIOR
+E_Cart_Signal,2,4,"Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",201000,140700,30,0.6563,"Tương tự sản phẩm bạn vừa xem",BEHAVIOR
+E_Cart_Signal,3,2,"Combo 2 Nước Tẩy Trang Bí Đao Cocoon Làm Sạch & Giảm Dầu 500ml",338000,270400,20,0.6431,"Được đánh giá tốt",BEHAVIOR
+E_Cart_Signal,4,14,"Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 500ml",335000,201000,40,0.489,"Giảm sâu 40%",BEHAVIOR
+E_Cart_Signal,5,5,"Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",335000,217750,35,0.4705,"Giảm sâu 35%",BEHAVIOR
+E_Cart_Signal,6,9,"Combo Cocoon Nước Tẩy Trang Bí Đao 500ml + Gel Rửa Mặt Bí Đao 310ml",269000,228650,15,0.4239,"Giảm 15%",BEHAVIOR
+E_Cart_Signal,7,16,"Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",432000,237600,45,0.4161,"Giảm sâu 45%",BEHAVIOR
+E_Cart_Signal,8,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",145000,79750,45,0.3925,"Giảm sâu 45%",BEHAVIOR
+E_Cart_Signal,9,6,"Sữa Rửa Mặt Cetaphil Dịu Lành Cho Da Nhạy Cảm 500ml (Mới)",305000,183000,40,0.3703,"Giảm sâu 40%",BEHAVIOR
+E_Cart_Signal,10,13,"Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml",239000,155350,35,0.3231,"Giảm sâu 35%",BEHAVIOR
+E_Cart_Signal,11,12,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml",292000,204400,30,0.2682,"Được đánh giá tốt",BEHAVIOR
+E_Cart_Signal,12,11,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 236ml",272000,204000,25,0.2321,"Được đánh giá tốt",BEHAVIOR
+E_Cart_Signal,13,18,"Combo 3 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml",149000,119200,20,0.2046,"Được đánh giá tốt",BEHAVIOR
+E_Cart_Signal,14,10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",412000,329600,20,0.1589,"Được đánh giá tốt",BEHAVIOR
+E_Cart_Signal,15,1,"Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",357000,303450,15,0.1321,"Được đánh giá tốt",BEHAVIOR
+E_Cart_Signal,16,17,"Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 100ml",522000,443700,15,0.1182,"Được đánh giá tốt",BEHAVIOR

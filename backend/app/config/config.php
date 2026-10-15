@@ -86,6 +86,11 @@ if (!defined('BASE_URL')) {
 defined('APP_URL') || define('APP_URL', ss_env('APP_URL', ''));
 defined('SOCIAL_LOCAL_FALLBACK') || define('SOCIAL_LOCAL_FALLBACK', ss_env('SOCIAL_LOCAL_FALLBACK', '0'));
 
+defined('CACHE_DRIVER') || define('CACHE_DRIVER', ss_env('CACHE_DRIVER', 'valkey'));
+defined('VALKEY_URL') || define('VALKEY_URL', ss_env('VALKEY_URL', ''));
+defined('CACHE_PREFIX') || define('CACHE_PREFIX', ss_env('CACHE_PREFIX', 'skinsyntax:'));
+defined('CACHE_DEFAULT_TTL') || define('CACHE_DEFAULT_TTL', (int)ss_env('CACHE_DEFAULT_TTL', '300'));
+
 defined('MAIL_FROM_ADDRESS') || define('MAIL_FROM_ADDRESS', ss_env('MAIL_FROM_ADDRESS', 'lamngoc562004@gmail.com'));
 defined('MAIL_FROM_NAME') || define('MAIL_FROM_NAME', ss_env('MAIL_FROM_NAME', 'SkinSyntax'));
 

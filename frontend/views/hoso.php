@@ -6,6 +6,7 @@ $skinProfile = $skinProfile ?? [];
 $loaiDaOptions = $loaiDaOptions ?? [];
 $khachHang = $khachHang ?? [];
 $latestQuickSkinUpdate = $latestQuickSkinUpdate ?? null;
+$customerVouchers = $customerVouchers ?? [];
 
 $vanDeDaSaved = [];
 if (!empty($skinProfile['van_de_da'])) {
@@ -878,6 +879,11 @@ window.openSupportChat = function (evt) {
         <a class="nav-link" id="btn-tab-skin" href="#tab-skin" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-skin', event)">Hồ sơ Làn da</a>
       </li>
       <li class="nav-item" role="presentation">
+        <a class="nav-link" id="btn-tab-vouchers" href="#tab-vouchers" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-vouchers', event)">
+          <i class="fas fa-ticket-alt text-success me-1"></i>Ví Voucher <span class="badge bg-success rounded-pill ms-1" style="font-size: 0.72rem;"><?= count($customerVouchers) ?></span>
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
         <button class="nav-link" type="button" data-support-chat-toggle style="cursor: pointer; pointer-events: auto;" onclick="return openSupportChat(event)">Chat hỗ trợ</button>
       </li>
     </ul>
@@ -1423,6 +1429,107 @@ window.openSupportChat = function (evt) {
           </div>
         </div>
 </div>
+
+      <!-- TAB VÍ VOUCHER -->
+      <div class="tab-pane fade" id="tab-vouchers" role="tabpanel" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="fas fa-wallet text-success me-2"></i>Ví Voucher của tôi
+          </h5>
+          <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 fw-semibold" style="font-size: 0.82rem;">
+            <?= count($customerVouchers) ?> voucher
+          </span>
+        </div>
+
+        <?php if (empty($customerVouchers)): ?>
+          <div class="text-center py-5 bg-white rounded-3 border" style="border-color: #E2E8F0;">
+            <div class="mb-3">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-success" style="width: 64px; height: 64px; font-size: 1.8rem;">
+                <i class="fas fa-ticket-alt"></i>
+              </span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">Bạn chưa có voucher nào trong ví</h6>
+            <p class="text-muted small mb-3" style="max-width: 420px; margin: 0 auto;">
+              Hãy xem video tư vấn Syna 3D tại các trang chi tiết sản phẩm để hoàn thành thử thách và nhận voucher ưu đãi độc quyền!
+            </p>
+            <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn btn-outline-brand btn-sm px-4 fw-semibold rounded-pill">
+              Khám phá sản phẩm có video
+            </a>
+          </div>
+        <?php else: ?>
+          <div class="row g-3">
+            <?php foreach ($customerVouchers as $cv): ?>
+              <?php
+                $cvStatus = strtoupper((string)($cv['status'] ?? 'AVAILABLE'));
+                $isAvailable = ($cvStatus === 'AVAILABLE');
+                $isUsed = ($cvStatus === 'USED');
+                $isExpired = ($cvStatus === 'EXPIRED');
+
+                $statusBadgeClass = $isAvailable ? 'bg-success text-white' : ($isUsed ? 'bg-secondary text-white' : 'bg-danger text-white');
+                $statusText = $isAvailable ? 'Khả dụng' : ($isUsed ? 'Đã sử dụng' : 'Hết hạn');
+
+                $discountDisplay = ($cv['discount_type'] ?? '') === 'percentage'
+                  ? 'Giảm ' . (float)$cv['discount_value'] . '%'
+                  : 'Giảm ' . number_format((float)$cv['discount_value'], 0, ',', '.') . 'đ';
+              ?>
+              <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border rounded-3 shadow-sm overflow-hidden" style="border-color: #E2E8F0 !important; background: #ffffff;">
+                  <div class="card-header bg-light border-bottom d-flex justify-content-between align-items-center py-2 px-3">
+                    <span class="badge <?= $statusBadgeClass ?> px-2 py-1 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.03em;">
+                      <?= $statusText ?>
+                    </span>
+                    <small class="text-muted" style="font-size: 0.72rem;">
+                      Nhận: <?= h($cv['claimed_at'] ?? $cv['created_at'] ?? '') ?>
+                    </small>
+                  </div>
+                  <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div>
+                      <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">
+                        <?= h($cv['campaign_name'] ?? 'Voucher thưởng Syna 3D') ?>
+                      </h6>
+                      <div class="fs-5 fw-bold text-success mb-2">
+                        <?= $discountDisplay ?>
+                        <?php if (!empty($cv['max_discount_amount'])): ?>
+                          <span class="small text-muted fw-normal" style="font-size: 0.78rem;">
+                            (Tối đa <?= number_format((float)$cv['max_discount_amount'], 0, ',', '.') ?>đ)
+                          </span>
+                        <?php endif; ?>
+                      </div>
+
+                      <div class="p-2 rounded bg-light border mb-2 d-flex justify-content-between align-items-center">
+                        <span class="font-monospace fw-bold text-dark user-select-all" style="font-size: 0.95rem; letter-spacing: 0.05em;">
+                          <?= h($cv['voucher_code'] ?? '') ?>
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-success py-0.5 px-2" style="font-size: 0.72rem;" onclick="navigator.clipboard.writeText('<?= h($cv['voucher_code'] ?? '') ?>'); this.textContent = 'Đã chép!'; setTimeout(() => this.innerHTML = '<i class=\'fas fa-copy\'></i> Chép', 1500);">
+                          <i class="fas fa-copy"></i> Chép
+                        </button>
+                      </div>
+
+                      <ul class="list-unstyled small text-muted mb-0" style="font-size: 0.78rem; line-height: 1.6;">
+                        <?php if (!empty($cv['min_order_amount'])): ?>
+                          <li><i class="fas fa-shopping-bag me-1 text-secondary"></i> Đơn tối thiểu: <?= number_format((float)$cv['min_order_amount'], 0, ',', '.') ?>đ</li>
+                        <?php endif; ?>
+                        <?php if (!empty($cv['end_date'])): ?>
+                          <li><i class="fas fa-clock me-1 text-secondary"></i> Hạn dùng: <?= h($cv['end_date']) ?></li>
+                        <?php endif; ?>
+                        <li><i class="fas fa-tv me-1 text-secondary"></i> Nguồn gốc: Xem video Syna 3D</li>
+                      </ul>
+                    </div>
+
+                    <?php if ($isAvailable): ?>
+                      <div class="mt-3 pt-2 border-top">
+                        <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn btn-outline-success btn-sm w-100 fw-semibold" style="font-size: 0.8rem; border-radius: 6px;">
+                          Dùng ngay tại cửa hàng
+                        </a>
+                      </div>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
   </div>
 </div>

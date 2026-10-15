@@ -78,8 +78,7 @@ $socialLinks = [
 </head>
 <body class="site-body">
 
-<header class="site-header">
-  <!-- TIER 1: UTILITY BAR -->
+<!-- TIER 1: UTILITY BAR -->
   <div class="utility-strip">
     <div class="header-container utility-strip__inner">
       <div class="utility-links">
@@ -112,7 +111,8 @@ $socialLinks = [
     </div>
   </div>
 
-  <!-- TIER 2: MAIN ACTION HEADER -->
+  <!-- TIER 2: MAIN ACTION HEADER (STICKY) -->
+  <header class="site-header">
   <div class="header-main">
     <div class="header-container header-main__inner">
       <!-- Logo -->
@@ -197,6 +197,7 @@ $socialLinks = [
       </div>
     </div>
   </div>
+  </header>
 
   <!-- TIER 3: CATEGORY + TRUST BAR -->
   <div class="header-nav-shell">
@@ -296,7 +297,6 @@ $socialLinks = [
       </div>
     </div>
   </div>
-</header>
 
 <!-- Mobile Navigation Offcanvas Drawer -->
 <div class="offcanvas offcanvas-end mobile-nav-offcanvas" tabindex="-1" id="mobileNavOffcanvas" aria-labelledby="mobileNavOffcanvasLabel">
@@ -305,8 +305,7 @@ $socialLinks = [
       <span class="brand-lockup__mark">S</span>
       <span class="brand-lockup__copy">
         <strong>SkinSyntax</strong>
-        <small>Decoding Your Skin Language</small>
-      </span>
+        </span>
     </a>
     <button type="button" class="btn-close text-reset ms-2" data-bs-dismiss="offcanvas" aria-label="Đóng"></button>
   </div>
@@ -412,22 +411,6 @@ $socialLinks = [
     </div>
   </div>
 </div>
-
-<script>
-(function() {
-  const header = document.querySelector('.site-header');
-  if (!header) return;
-  const onScroll = () => {
-    if (window.scrollY > 30) {
-      header.classList.add('is-scrolled');
-    } else {
-      header.classList.remove('is-scrolled');
-    }
-  };
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
-})();
-</script>
 
 <?php if (!is_logged_in()): ?>
   <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">

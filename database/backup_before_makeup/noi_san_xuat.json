@@ -1,0 +1,310 @@
+[
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc13"
+    },
+    "ma_nsx": 11,
+    "ten_nsx": "Poland",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 11
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc14"
+    },
+    "ma_nsx": 12,
+    "ten_nsx": "United States",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 12
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc15"
+    },
+    "ma_nsx": 13,
+    "ten_nsx": "Germany",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 13
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc16"
+    },
+    "ma_nsx": 14,
+    "ten_nsx": "United Kingdom",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 14
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc17"
+    },
+    "ma_nsx": 15,
+    "ten_nsx": "Taiwan",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 15
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc18"
+    },
+    "ma_nsx": 16,
+    "ten_nsx": "Malaysia",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 16
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc19"
+    },
+    "ma_nsx": 17,
+    "ten_nsx": "Australia",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 17
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc1a"
+    },
+    "ma_nsx": 18,
+    "ten_nsx": "Hungary",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 18
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc1b"
+    },
+    "ma_nsx": 1,
+    "ten_nsx": "Unknown",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 1
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc1c"
+    },
+    "ma_nsx": 2,
+    "ten_nsx": "Vietnam",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 2
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc1d"
+    },
+    "ma_nsx": 3,
+    "ten_nsx": "Korea",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 3
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc1e"
+    },
+    "ma_nsx": 4,
+    "ten_nsx": "China",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 4
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc1f"
+    },
+    "ma_nsx": 5,
+    "ten_nsx": "France",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 5
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc20"
+    },
+    "ma_nsx": 6,
+    "ten_nsx": "Japan",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 6
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc21"
+    },
+    "ma_nsx": 7,
+    "ten_nsx": "Spain",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 7
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc22"
+    },
+    "ma_nsx": 8,
+    "ten_nsx": "Indonesia",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 8
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc23"
+    },
+    "ma_nsx": 9,
+    "ten_nsx": "Canada",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 9
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc24"
+    },
+    "ma_nsx": 10,
+    "ten_nsx": "Thailand",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 10
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc25"
+    },
+    "ma_nsx": 20,
+    "ten_nsx": "Switzerland",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 20
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc26"
+    },
+    "ma_nsx": 21,
+    "ten_nsx": "Italy",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 21
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc27"
+    },
+    "ma_nsx": 23,
+    "ten_nsx": "Russia",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 23
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc28"
+    },
+    "ma_nsx": 25,
+    "ten_nsx": "India",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "ma_noi_san_xuat": 25
+  }
+]

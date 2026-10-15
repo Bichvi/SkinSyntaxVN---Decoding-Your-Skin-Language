@@ -1,0 +1,7 @@
+trigger_condition,evidence_source,recommended_tag,disallowed_claims,user_state
+"personal_relevance > 0.40 && active_signals includes search","Search MRU query tokens match TF-IDF vector","Theo tìm kiếm gần đây","AI chọn cho bạn, Khuyên dùng 100%","STATE B, STATE D"
+"personal_relevance > 0.40 && active_signals includes view","Product category/ingredients similar to viewed SKU","Tương tự sản phẩm bạn vừa xem","Sản phẩm tương thích sinh học","STATE B, STATE D"
+"skin_score >= 1.0 && profile skin_type provided","Candidate loai_da exactly matches survey skin_type","Phù hợp loại da của bạn","Chuẩn y khoa, Trị dứt điểm mụn","STATE C, STATE D, STATE E"
+"discount_percent >= 35","Campaign flash price represents >= 35% discount","Giảm sâu đến {discount_percent}%","Rẻ nhất thị trường","ALL STATES"
+"so_luong_danh_gia >= 21 && diem_danh_gia >= 4.8","Candidate satisfies Simple Recommender P75 threshold","Được đánh giá tốt","Bán chạy nhất, Hàng nghìn người mua","ALL STATES (fallback for Guest)"
+"budget_score >= 1.0 && profile budget provided","Flash price is within customer survey budget","Trong ngân sách của bạn","Tiết kiệm tối đa","STATE C, STATE D"

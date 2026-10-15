@@ -13,6 +13,7 @@ $questionErrorMessage = trim((string)($questionErrorMessage ?? ''));
 $reviewStats = isset($reviewStats) && is_array($reviewStats) ? $reviewStats : [];
 $reviewStats['stars'] = isset($reviewStats['stars']) && is_array($reviewStats['stars']) ? $reviewStats['stars'] : [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
 $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
+$giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
 $reviewCount = (int)($reviewStats['total'] ?? count($reviews));
 $reviewAverage = (float)($reviewStats['average'] ?? 0);
 $reviewCountDisplay = $reviewCount > 0 ? $reviewCount : (int)($p['so_luong_danh_gia'] ?? 0);
@@ -520,6 +521,98 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
       font-size: 1rem;
     }
   }
+
+  /* Syna 3D Product Video Showcase */
+  .syna-video-showcase-card {
+    border-radius: 24px !important;
+    border: 1px solid #dce8db !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbf8 100%);
+    box-shadow: 0 8px 28px rgba(24, 59, 43, 0.05);
+  }
+  .syna-video-viewport {
+    position: relative;
+    width: 100%;
+    max-width: 860px;
+    aspect-ratio: 16 / 9;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #09130e;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  }
+  .syna-video-viewport video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #000;
+  }
+  .syna-video-cover-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, rgba(8, 20, 15, 0.3) 0%, rgba(8, 20, 15, 0.72) 100%);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.25s ease, visibility 0.25s;
+    z-index: 5;
+  }
+  .syna-video-cover-overlay.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .syna-video-play-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #185334;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .syna-video-cover-overlay:hover .syna-video-play-btn {
+    transform: scale(1.08);
+    background: #236f47;
+  }
+  .syna-video-loading-state,
+  .syna-video-error-state {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 24px;
+    text-align: center;
+    background: rgba(8, 20, 15, 0.92);
+    color: #fff;
+    z-index: 6;
+  }
+  .syna-video-loading-state.is-active,
+  .syna-video-error-state.is-active {
+    display: flex;
+  }
+  .syna-video-playlist-item {
+    cursor: pointer;
+    border: 1px solid #e1ebe0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    background: #fff;
+    transition: all 0.2s ease;
+  }
+  .syna-video-playlist-item:hover,
+  .syna-video-playlist-item.is-active {
+    border-color: #185334;
+    background: #edf6ee;
+  }
 </style>
 <div class="container my-4">
   <?php if ($detailUnavailableMessage !== ''): ?>
@@ -589,22 +682,59 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
           <span class="badge fw-semibold px-2.5 py-1" style="background: #EBF2EE; color: #183B2B; border-radius: 4px; font-size: 0.74rem;">Chính hãng 100%</span>
         </div>
 
-        <div class="p-3 mb-4 d-flex align-items-baseline gap-3 border" style="background: #FAFAFA; border-radius: 8px; border-color: var(--border) !important;">
-          <span class="current fw-bold fs-3 tabular-nums" style="color: #183B2B;"><?= vnd($p['gia_ban'] ?? 0) ?></span>
-          <?php $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? '')); ?>
-          <?php if ($giaThiTruong !== '' && (float)$giaThiTruong > 0): ?>
-            <span class="market text-muted text-decoration-line-through fs-6 tabular-nums"><?= vnd($giaThiTruong) ?></span>
+        <?php
+          $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
+          $effectivePricing = function_exists('get_effective_product_price')
+              ? get_effective_product_price($productIdForForms, $p)
+              : [
+                  'is_flash_sale' => false,
+                  'effective_price' => (int)($p['gia_ban'] ?? 0),
+                  'regular_price' => (int)($p['gia_ban'] ?? 0),
+                  'discount_percent' => $phanTramGiam,
+              ];
+          $isFlashSaleActive = !empty($effectivePricing['is_flash_sale']);
+          $displayPrice = $isFlashSaleActive ? (int)$effectivePricing['effective_price'] : (int)($p['gia_ban'] ?? 0);
+          $displayStruckPrice = $isFlashSaleActive
+              ? (int)$effectivePricing['regular_price']
+              : ((float)$giaThiTruong > 0 ? (int)$giaThiTruong : 0);
+          $displayDiscountPercent = $isFlashSaleActive
+              ? (int)$effectivePricing['discount_percent']
+              : $phanTramGiam;
+        ?>
+        <div class="p-3 mb-4 border" style="background: <?= $isFlashSaleActive ? '#FFF5F5' : '#FAFAFA' ?>; border-radius: 8px; border-color: <?= $isFlashSaleActive ? '#FECACA' : 'var(--border)' ?> !important;">
+          <?php if ($isFlashSaleActive): ?>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge" style="background: #DC2626; color: #FFF; font-size: 0.76rem; font-weight: 700; padding: 4px 8px; border-radius: 4px;">
+                <i class="fas fa-bolt text-warning me-1"></i> FLASH SALE: <?= h($effectivePricing['campaign_name']) ?>
+              </span>
+              <?php if (!empty($effectivePricing['valid_until'])): ?>
+                <span class="text-danger small fw-semibold" style="font-size: 0.78rem;">
+                  <i class="far fa-clock me-1"></i> Ưu đãi có hạn
+                </span>
+              <?php endif; ?>
+            </div>
           <?php endif; ?>
-          <?php if ($phanTramGiam !== null): ?>
-            <span class="badge bg-danger fw-semibold ms-auto" style="font-size: 0.78rem; border-radius: 4px;">Giảm <?= h((string)$phanTramGiam) ?>%</span>
-          <?php endif; ?>
+          <div class="d-flex align-items-baseline gap-3">
+            <span class="current fw-bold fs-3 tabular-nums" style="color: <?= $isFlashSaleActive ? '#DC2626' : '#183B2B' ?>;"><?= vnd($displayPrice) ?></span>
+            <?php if ($displayStruckPrice > $displayPrice): ?>
+              <span class="market text-muted text-decoration-line-through fs-6 tabular-nums"><?= vnd($displayStruckPrice) ?></span>
+            <?php endif; ?>
+            <?php if ($displayDiscountPercent !== null && $displayDiscountPercent > 0): ?>
+              <span class="badge bg-danger fw-semibold ms-auto" style="font-size: 0.78rem; border-radius: 4px;">Giảm <?= h((string)$displayDiscountPercent) ?>%</span>
+            <?php endif; ?>
+          </div>
         </div>
 
         <div class="row g-2 mb-4 small p-3 border" style="background: #FFF; border-radius: 8px; border-color: var(--border) !important;">
           <div class="col-6"><strong>Danh mục:</strong> <?= h($p['danh_muc_day_du'] ?? 'Chăm sóc da') ?></div>
           <div class="col-6"><strong>Dung tích:</strong> <?= h($p['dung_tich'] ?? 'Tiêu chuẩn') ?></div>
           <div class="col-6"><strong>Xuất xứ:</strong> <?= h($p['xuat_xu_thuong_hieu'] ?? 'Chính hãng') ?></div>
-          <div class="col-6"><strong>Loại da:</strong> <?= h($p['loai_da'] ?? 'Mọi loại da') ?></div>
+          <?php
+            $rawLoaiDa = trim((string)($p['loai_da'] ?? ''));
+            $isLoaiDaNa = ($rawLoaiDa === '' || mb_strtolower($rawLoaiDa, 'UTF-8') === 'unknown' || mb_strtolower($rawLoaiDa, 'UTF-8') === 'khong ap dung' || mb_strtolower($rawLoaiDa, 'UTF-8') === 'không áp dụng');
+            $displayLoaiDa = $isLoaiDaNa ? 'Không áp dụng' : $rawLoaiDa;
+          ?>
+          <div class="col-6"><strong>Loại da:</strong> <?= h($displayLoaiDa) ?></div>
         </div>
 
         <?php
@@ -800,6 +930,652 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
         $hdsdHtml = $renderRichTextBlocks($hdsd, 'lead-first');
       ?>
 
+      <?php if (!empty($productVideos)): ?>
+        <?php
+          $primaryVid = $productVideos[0];
+          $currentPid = (string)($p['ma_san_pham'] ?? $id);
+          $initialStreamUrl = BASE_URL . '/index.php?r=product_video_stream&id=' . urlencode($primaryVid['id']) . '&product_id=' . urlencode($currentPid);
+        ?>
+        <!-- Syna 3D Product Video Showcase -->
+        <div class="syna-video-showcase-card mt-4 mb-3 p-4 rounded-4 bg-white border w-100" id="synaVideoShowcase">
+          <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge px-2.5 py-1 fw-bold text-uppercase" style="background: #eaf5ea; color: #185334; border: 1px solid #cce3cb; font-size: 0.74rem; letter-spacing: 0.04em; border-radius: 6px;">
+                  <i class="fas fa-play-circle me-1"></i> Video AI Thuyết Minh
+                </span>
+                <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.74rem;">
+                  <i class="fas fa-shield-alt text-success me-1"></i> Syna 3D · Đã kiểm duyệt
+                </span>
+              </div>
+              <h5 class="fw-bold mb-0" id="synaVideoTitle" style="color: #0F172A; font-size: 1.15rem;">
+                <?= h($primaryVid['title'] ?? 'Video giới thiệu & tư vấn sản phẩm') ?>
+              </h5>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small" id="synaVideoMetaInfo">
+                Độ phân giải: <?= h($primaryVid['resolution'] ?? '1280x720') ?> · <?= round((float)($primaryVid['duration'] ?? 0)) ?>s
+              </span>
+            </div>
+          </div>
+
+          <div class="syna-video-viewport" id="synaVideoViewport">
+            <!-- HTML5 Video Player -->
+            <video id="synaVideoPlayer"
+                   playsinline
+                   controls
+                   preload="metadata"
+                   poster="<?= h($main) ?>"
+                   src="<?= h($initialStreamUrl) ?>">
+              Trình duyệt của bạn không hỗ trợ thẻ video HTML5.
+            </video>
+
+            <!-- Video Cover Overlay (Prevents unexpected sound autoplay & provides clean CTA) -->
+            <div class="syna-video-cover-overlay" id="synaVideoOverlay">
+              <div class="syna-video-play-btn mb-2">
+                <i class="fas fa-play ps-1"></i>
+              </div>
+              <span class="fw-bold fs-6">Xem Syna 3D tư vấn sản phẩm</span>
+              <small class="text-white-50 mt-1">Bấm để phát video có âm thanh thuyết minh</small>
+            </div>
+
+            <!-- Loading Spinner State -->
+            <div class="syna-video-loading-state" id="synaVideoLoading">
+              <div class="spinner-border text-light mb-2" role="status" style="width: 2.2rem; height: 2.2rem;"></div>
+              <span class="small">Đang tải video thuyết minh...</span>
+            </div>
+
+            <!-- Error State Fallback -->
+            <div class="syna-video-error-state" id="synaVideoError">
+              <i class="fas fa-exclamation-triangle text-warning fs-3 mb-2"></i>
+              <p class="mb-2 fw-semibold" id="synaVideoErrorMsg">Không thể phát video tại thời điểm này.</p>
+              <button type="button" class="btn btn-sm btn-outline-light px-3" id="synaVideoRetryBtn">
+                <i class="fas fa-redo me-1"></i> Thử lại
+              </button>
+            </div>
+          </div>
+
+          <?php
+            $primaryReward = $primaryVid['reward_campaign'] ?? null;
+          ?>
+          <!-- Watch-to-Reward Campaign Card -->
+          <div class="syna-reward-card mt-3 p-3 rounded-3 border <?= empty($primaryReward) ? 'd-none' : '' ?>"
+               id="synaRewardCard"
+               data-campaign-id="<?= h($primaryReward['campaign_id'] ?? '') ?>"
+               data-publication-id="<?= h($primaryVid['id'] ?? '') ?>"
+               data-video-id="<?= h($primaryVid['video_id'] ?? '') ?>"
+               data-duration="<?= (float)($primaryVid['duration'] ?? 0) ?>"
+               style="background: linear-gradient(135deg, #f7faf8 0%, #edf6f0 100%); border-color: #d1e7d8 !important;">
+            
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="syna-reward-icon-badge d-inline-flex align-items-center justify-content-center text-white"
+                      style="width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #185334, #27ae60); font-size: 0.85rem;">
+                  <i class="fas fa-gift"></i>
+                </span>
+                <div>
+                  <span class="fw-bold small text-dark d-block" id="synaRewardCampaignName">
+                    <?= h($primaryReward['campaign_name'] ?? 'Ưu đãi xem video Syna 3D') ?>
+                  </span>
+                  <small class="text-success fw-semibold" id="synaRewardOfferText">
+                    <?php if (!empty($primaryReward)): ?>
+                      <?php if (($primaryReward['discount_type'] ?? '') === 'percentage'): ?>
+                        Giảm <?= (float)$primaryReward['discount_value'] ?>%<?= !empty($primaryReward['max_discount_amount']) ? ' (tối đa ' . number_format((float)$primaryReward['max_discount_amount']) . 'đ)' : '' ?>
+                      <?php else: ?>
+                        Giảm <?= number_format((float)$primaryReward['discount_value']) ?>đ
+                      <?php endif; ?>
+                      <?= !empty($primaryReward['min_order_amount']) ? ' cho đơn từ ' . number_format((float)$primaryReward['min_order_amount']) . 'đ' : '' ?>
+                    <?php endif; ?>
+                  </small>
+                </div>
+              </div>
+              <div id="synaRewardBadgeContainer">
+                <span class="badge px-2.5 py-1 fw-semibold text-uppercase" id="synaRewardBadge"
+                      style="font-size: 0.72rem; letter-spacing: 0.03em; border-radius: 6px; background: #e2e8f0; color: #475569;">
+                  <i class="fas fa-lock me-1"></i> Chưa mở khóa
+                </span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="syna-reward-progress-track rounded-pill overflow-hidden my-2" 
+                 style="height: 10px; background: #e2e8f0; position: relative;">
+              <div class="syna-reward-progress-bar rounded-pill" id="synaRewardProgressBar" 
+                   style="height: 100%; width: 0%; background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%); transition: width 0.4s ease;"></div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 text-muted" style="font-size: 0.78rem;">
+              <span id="synaRewardStatusText" class="fw-medium text-secondary">
+                Xem hết video để mở khóa ưu đãi
+              </span>
+              <span id="synaRewardProgressTime" class="fw-semibold text-dark">
+                0:00 / <?= gmdate((float)($primaryVid['duration'] ?? 0) >= 3600 ? "H:i:s" : "i:s", (int)round((float)($primaryVid['duration'] ?? 0))) ?> (0%)
+              </span>
+            </div>
+
+            <!-- Action Area: Claim Reward Button, Guest Login prompt, Claimed Voucher Box -->
+            <div id="synaRewardActionArea" class="mt-2.5 pt-2 border-top d-none" style="border-color: rgba(0,0,0,0.08) !important;">
+              <!-- State 1: Eligible & Logged-in -> Claim Button -->
+              <div id="synaRewardClaimBtnContainer" class="d-none">
+                <button type="button" id="synaRewardClaimBtn" class="btn btn-success btn-sm w-100 fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2" style="border-radius: 8px;">
+                  <i class="fas fa-gift"></i> Nhận Voucher Ưu Đãi Ngay
+                </button>
+              </div>
+
+              <!-- State 2: Eligible & Guest -> Require Login -->
+              <div id="synaRewardGuestLoginContainer" class="d-none text-center p-2 rounded" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                <span class="small text-muted d-block mb-1.5" style="font-size: 0.78rem;">
+                  <i class="fas fa-check-circle text-success me-1"></i> Bạn đã xem đủ thời lượng video! Đăng nhập để nhận voucher vào ví tài khoản.
+                </span>
+                <a href="<?= BASE_URL ?>/index.php?r=dangnhap" class="btn btn-outline-success btn-sm fw-bold px-3" style="font-size: 0.78rem; border-radius: 6px;">
+                  <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập nhận Voucher
+                </a>
+              </div>
+
+              <!-- State 3: Already Claimed / Successfully Claimed -> Display Voucher Details -->
+              <div id="synaRewardClaimedBox" class="d-none p-2.5 rounded text-start" style="background: #ecfdf5; border: 1px solid #a7f3d0;">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <span class="badge bg-success text-white fw-bold" style="font-size: 0.72rem;">
+                    <i class="fas fa-check-circle me-1"></i> Đã nhận voucher
+                  </span>
+                  <span class="small text-muted" id="synaClaimedDate" style="font-size: 0.72rem;"></span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between gap-2 mt-1.5 p-1.5 bg-white rounded border border-success-subtle">
+                  <span class="fw-bold text-success font-monospace" id="synaClaimedVoucherCode" style="font-size: 0.95rem; letter-spacing: 0.05em;">---</span>
+                  <button type="button" id="synaCopyVoucherBtn" class="btn btn-sm btn-outline-success py-0.5 px-2" style="font-size: 0.75rem;">
+                    <i class="fas fa-copy"></i> Sao chép
+                  </button>
+                </div>
+                <div class="mt-2 d-flex justify-content-between align-items-center small" style="font-size: 0.78rem;">
+                  <span class="text-secondary" id="synaClaimedDetailsText">Đã lưu vào ví voucher của bạn</span>
+                  <a href="<?= BASE_URL ?>/index.php?r=hoso#tab-vouchers" class="text-success fw-bold text-decoration-none">
+                    Xem trong Ví <i class="fas fa-arrow-right ms-1"></i>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Alert Box for Error / Rejection message -->
+              <div id="synaRewardErrorAlert" class="d-none alert alert-warning p-2 small mt-2 mb-0 rounded" style="font-size: 0.76rem;">
+                <i class="fas fa-exclamation-triangle me-1"></i> <span id="synaRewardErrorMsg"></span>
+              </div>
+            </div>
+          </div>
+
+          <?php if (count($productVideos) > 1): ?>
+            <!-- Playlist Selector for Products with Multiple Videos -->
+            <div class="mt-3 pt-3 border-top">
+              <small class="text-muted fw-semibold d-block mb-2">Chọn video tư vấn khác của sản phẩm:</small>
+              <div class="d-flex flex-wrap gap-2" id="synaVideoPlaylist">
+                <?php foreach ($productVideos as $idx => $vItem): ?>
+                  <?php
+                    $vStreamUrl = BASE_URL . '/index.php?r=product_video_stream&id=' . urlencode($vItem['id']) . '&product_id=' . urlencode($currentPid);
+                    $vRewardJson = !empty($vItem['reward_campaign']) ? json_encode($vItem['reward_campaign'], JSON_UNESCAPED_UNICODE) : '';
+                  ?>
+                  <div class="syna-video-playlist-item <?= $idx === 0 ? 'is-active' : '' ?>"
+                       data-video-src="<?= h($vStreamUrl) ?>"
+                       data-video-id="<?= h($vItem['video_id'] ?? '') ?>"
+                       data-publication-id="<?= h($vItem['id'] ?? '') ?>"
+                       data-duration="<?= (float)($vItem['duration'] ?? 0) ?>"
+                       data-reward-campaign="<?= h($vRewardJson) ?>"
+                       data-video-title="<?= h($vItem['title'] ?? 'Video ' . ($idx + 1)) ?>"
+                       data-video-meta="Độ phân giải: <?= h($vItem['resolution'] ?? '1280x720') ?> · <?= round((float)($vItem['duration'] ?? 0)) ?>s">
+                    <i class="fas fa-film me-1 text-success"></i>
+                    <span class="small fw-semibold"><?= h($vItem['title'] ?? ('Video #' . ($idx + 1))) ?></span>
+                    <small class="text-muted ms-1">(<?= round((float)($vItem['duration'] ?? 0)) ?>s)</small>
+                    <?php if (!empty($vItem['reward_campaign'])): ?>
+                      <span class="badge bg-warning-subtle text-warning-emphasis border ms-1" style="font-size: 0.65rem;">
+                        <i class="fas fa-gift"></i> Voucher
+                      </span>
+                    <?php endif; ?>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          <?php endif; ?>
+        </div>
+
+        <script>
+          (() => {
+            const player = document.getElementById('synaVideoPlayer');
+            const overlay = document.getElementById('synaVideoOverlay');
+            const loading = document.getElementById('synaVideoLoading');
+            const errorBox = document.getElementById('synaVideoError');
+            const retryBtn = document.getElementById('synaVideoRetryBtn');
+            const titleEl = document.getElementById('synaVideoTitle');
+            const metaEl = document.getElementById('synaVideoMetaInfo');
+
+            // Reward UI Elements
+            const rewardCard = document.getElementById('synaRewardCard');
+            const rewardCampaignName = document.getElementById('synaRewardCampaignName');
+            const rewardOfferText = document.getElementById('synaRewardOfferText');
+            const rewardBadge = document.getElementById('synaRewardBadge');
+            const rewardProgressBar = document.getElementById('synaRewardProgressBar');
+            const rewardStatusText = document.getElementById('synaRewardStatusText');
+            const rewardProgressTime = document.getElementById('synaRewardProgressTime');
+
+            // Action Area Elements
+            const rewardActionArea = document.getElementById('synaRewardActionArea');
+            const claimBtnContainer = document.getElementById('synaRewardClaimBtnContainer');
+            const claimBtn = document.getElementById('synaRewardClaimBtn');
+            const guestLoginContainer = document.getElementById('synaRewardGuestLoginContainer');
+            const claimedBox = document.getElementById('synaRewardClaimedBox');
+            const claimedDate = document.getElementById('synaClaimedDate');
+            const claimedVoucherCode = document.getElementById('synaClaimedVoucherCode');
+            const copyVoucherBtn = document.getElementById('synaCopyVoucherBtn');
+            const claimedDetailsText = document.getElementById('synaClaimedDetailsText');
+            const errorAlert = document.getElementById('synaRewardErrorAlert');
+            const errorMsg = document.getElementById('synaRewardErrorMsg');
+
+            const isUserLoggedIn = <?= is_logged_in() ? 'true' : 'false' ?>;
+
+            if (!player) return;
+
+            let currentWatchSessionId = null;
+            let heartbeatTimer = null;
+            let currentPubId = rewardCard ? rewardCard.dataset.publicationId : '';
+            let currentVideoId = rewardCard ? rewardCard.dataset.videoId : '';
+            let currentCampId = rewardCard ? rewardCard.dataset.campaignId : '';
+            let videoDuration = rewardCard ? parseFloat(rewardCard.dataset.duration || '0') : 0;
+            let isEligible = false;
+            let isSessionStarting = false;
+            let isClaiming = false;
+
+            function formatTime(seconds) {
+              const sec = Math.max(0, Math.floor(seconds || 0));
+              const m = Math.floor(sec / 60);
+              const s = sec % 60;
+              return `${m}:${s < 10 ? '0' : ''}${s}`;
+            }
+
+            function updateRewardUI(data) {
+              if (!rewardCard) return;
+
+              const percent = Math.min(100, Math.max(0, parseFloat(data.watched_coverage_percent || 0)));
+              const watchedSec = parseFloat(data.watched_seconds || 0);
+              const totalSec = videoDuration > 0 ? videoDuration : parseFloat(data.video_duration || 0);
+
+              if (rewardProgressBar) {
+                rewardProgressBar.style.width = `${percent}%`;
+              }
+              if (rewardProgressTime) {
+                rewardProgressTime.textContent = `${formatTime(watchedSec)} / ${formatTime(totalSec)} (${Math.round(percent)}%)`;
+              }
+
+              // Case 1: Already Claimed / Rewarded
+              if (data.watch_state === 'REWARDED' || data.is_rewarded || data.reward_voucher_code) {
+                isEligible = true;
+                if (rewardBadge) {
+                  rewardBadge.className = 'badge px-2.5 py-1 fw-bold text-uppercase';
+                  rewardBadge.style.cssText = 'font-size: 0.72rem; letter-spacing: 0.03em; border-radius: 6px; background: #198754; color: #ffffff;';
+                  rewardBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i> Đã nhận voucher';
+                }
+                if (rewardStatusText) {
+                  rewardStatusText.className = 'fw-bold text-success';
+                  rewardStatusText.textContent = 'Bạn đã nhận thành công voucher ưu đãi của video này!';
+                }
+                if (rewardProgressBar) {
+                  rewardProgressBar.style.width = '100%';
+                  rewardProgressBar.style.background = 'linear-gradient(90deg, #198754 0%, #20c997 100%)';
+                }
+
+                if (rewardActionArea) rewardActionArea.classList.remove('d-none');
+                if (claimedBox) claimedBox.classList.remove('d-none');
+                if (claimBtnContainer) claimBtnContainer.classList.add('d-none');
+                if (guestLoginContainer) guestLoginContainer.classList.add('d-none');
+                if (errorAlert) errorAlert.classList.add('d-none');
+
+                const vCode = data.reward_voucher_code || (data.voucher && data.voucher.voucher_code) || '';
+                if (claimedVoucherCode && vCode) claimedVoucherCode.textContent = vCode;
+                if (claimedDate && data.reward_claimed_at) claimedDate.textContent = 'Ngày nhận: ' + data.reward_claimed_at;
+                return;
+              }
+
+              // Case 2: Eligible to Claim
+              if (data.is_eligible || data.watch_state === 'ELIGIBLE') {
+                isEligible = true;
+                if (rewardBadge) {
+                  rewardBadge.className = 'badge px-2.5 py-1 fw-bold text-uppercase';
+                  rewardBadge.style.cssText = 'font-size: 0.72rem; letter-spacing: 0.03em; border-radius: 6px; background: #198754; color: #ffffff;';
+                  rewardBadge.innerHTML = '<i class="fas fa-gift me-1"></i> Đủ điều kiện nhận voucher';
+                }
+                if (rewardStatusText) {
+                  rewardStatusText.className = 'fw-bold text-success';
+                  rewardStatusText.textContent = 'Đã đủ điều kiện nhận voucher!';
+                }
+                if (rewardProgressBar) {
+                  rewardProgressBar.style.background = 'linear-gradient(90deg, #198754 0%, #20c997 100%)';
+                }
+
+                if (rewardActionArea) rewardActionArea.classList.remove('d-none');
+                if (claimedBox) claimedBox.classList.add('d-none');
+
+                if (isUserLoggedIn) {
+                  if (claimBtnContainer) claimBtnContainer.classList.remove('d-none');
+                  if (guestLoginContainer) guestLoginContainer.classList.add('d-none');
+                } else {
+                  if (claimBtnContainer) claimBtnContainer.classList.add('d-none');
+                  if (guestLoginContainer) guestLoginContainer.classList.remove('d-none');
+                }
+              } else if (data.watch_state === 'EXPIRED' || data.code === 'CAMPAIGN_EXPIRED') {
+                if (rewardBadge) {
+                  rewardBadge.className = 'badge px-2.5 py-1 fw-semibold text-uppercase bg-danger text-white';
+                  rewardBadge.style.cssText = 'font-size: 0.72rem; letter-spacing: 0.03em; border-radius: 6px;';
+                  rewardBadge.innerHTML = '<i class="fas fa-clock me-1"></i> Đã kết thúc';
+                }
+                if (rewardStatusText) {
+                  rewardStatusText.className = 'fw-medium text-danger';
+                  rewardStatusText.textContent = 'Chiến dịch ưu đãi đã kết thúc hoặc hết hạn.';
+                }
+                if (rewardActionArea) rewardActionArea.classList.remove('d-none');
+                if (claimBtnContainer) claimBtnContainer.classList.add('d-none');
+                if (guestLoginContainer) guestLoginContainer.classList.add('d-none');
+                if (errorAlert) {
+                  errorAlert.classList.remove('d-none');
+                  if (errorMsg) errorMsg.textContent = 'Chiến dịch ưu đãi đã kết thúc hoặc tạm dừng.';
+                }
+              } else {
+                if (percent > 0) {
+                  if (rewardBadge && !isEligible) {
+                    rewardBadge.className = 'badge px-2.5 py-1 fw-semibold text-uppercase';
+                    rewardBadge.style.cssText = 'font-size: 0.72rem; letter-spacing: 0.03em; border-radius: 6px; background: #e0f2fe; color: #0284c7;';
+                    rewardBadge.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Đang xem (${Math.round(percent)}%)`;
+                  }
+                }
+                if (rewardStatusText && !isEligible) {
+                  rewardStatusText.className = 'fw-medium text-secondary';
+                  rewardStatusText.textContent = 'Xem hết video để mở khóa ưu đãi';
+                }
+              }
+            }
+
+            // Claim Reward Handler with strict double-click prevention
+            if (claimBtn) {
+              claimBtn.addEventListener('click', async () => {
+                if (isClaiming || claimBtn.disabled || !currentWatchSessionId) return;
+                isClaiming = true;
+                claimBtn.disabled = true;
+                const originalHtml = claimBtn.innerHTML;
+                claimBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang xử lý cấp voucher...';
+                if (errorAlert) errorAlert.classList.add('d-none');
+
+                try {
+                  const res = await fetch('<?= BASE_URL ?>/index.php?r=video_watch_claim_reward', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ watch_session_id: currentWatchSessionId })
+                  });
+                  const data = await res.json();
+
+                  if (data.ok && data.voucher) {
+                    // Success! Display claimed voucher immediately
+                    if (claimBtnContainer) claimBtnContainer.classList.add('d-none');
+                    if (claimedBox) claimedBox.classList.remove('d-none');
+                    if (claimedVoucherCode) claimedVoucherCode.textContent = data.voucher.voucher_code || '';
+                    if (claimedDate) claimedDate.textContent = 'Ngày nhận: ' + (data.voucher.claimed_at || 'Vừa xong');
+                    if (rewardBadge) {
+                      rewardBadge.className = 'badge px-2.5 py-1 fw-bold text-uppercase';
+                      rewardBadge.style.cssText = 'font-size: 0.72rem; letter-spacing: 0.03em; border-radius: 6px; background: #198754; color: #ffffff;';
+                      rewardBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i> Đã nhận voucher';
+                    }
+                    if (rewardStatusText) {
+                      rewardStatusText.className = 'fw-bold text-success';
+                      rewardStatusText.textContent = data.message || 'Chúc mừng bạn đã nhận voucher thành công!';
+                    }
+                  } else {
+                    if (errorAlert) {
+                      errorAlert.classList.remove('d-none');
+                      if (errorMsg) errorMsg.textContent = data.message || 'Không thể nhận voucher lúc này.';
+                    }
+                    // If user already claimed, render the existing voucher
+                    if (data.code === 'USER_LIMIT_REACHED' && data.voucher) {
+                      if (claimBtnContainer) claimBtnContainer.classList.add('d-none');
+                      if (claimedBox) claimedBox.classList.remove('d-none');
+                      if (claimedVoucherCode) claimedVoucherCode.textContent = data.voucher.voucher_code || '';
+                    } else {
+                      claimBtn.disabled = false;
+                      claimBtn.innerHTML = originalHtml;
+                    }
+                  }
+                } catch (err) {
+                  if (errorAlert) {
+                    errorAlert.classList.remove('d-none');
+                    if (errorMsg) errorMsg.textContent = 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.';
+                  }
+                  claimBtn.disabled = false;
+                  claimBtn.innerHTML = originalHtml;
+                } finally {
+                  isClaiming = false;
+                }
+              });
+            }
+
+            // Copy voucher code helper
+            if (copyVoucherBtn) {
+              copyVoucherBtn.addEventListener('click', () => {
+                const code = claimedVoucherCode ? claimedVoucherCode.textContent.trim() : '';
+                if (!code || code === '---') return;
+                navigator.clipboard.writeText(code).then(() => {
+                  const orig = copyVoucherBtn.innerHTML;
+                  copyVoucherBtn.innerHTML = '<i class="fas fa-check"></i> Đã chép!';
+                  setTimeout(() => { copyVoucherBtn.innerHTML = orig; }, 2000);
+                });
+              });
+            }
+
+            async function startWatchSession() {
+              if (!currentCampId || !currentPubId || isSessionStarting) return;
+              isSessionStarting = true;
+              try {
+                const res = await fetch('<?= BASE_URL ?>/index.php?r=video_watch_start', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    publication_id: currentPubId,
+                    video_id: currentVideoId,
+                    campaign_id: currentCampId
+                  })
+                });
+                const data = await res.json();
+                if (data.ok && data.session) {
+                  currentWatchSessionId = data.session.watch_session_id;
+                  if (data.session.video_duration > 0) {
+                    videoDuration = data.session.video_duration;
+                  }
+                  updateRewardUI(data.session);
+                }
+              } catch (e) {
+                // Silently handle network errors
+              } finally {
+                isSessionStarting = false;
+              }
+            }
+
+            async function sendHeartbeat(isPaused = false) {
+              if (!currentWatchSessionId) {
+                await startWatchSession();
+                if (!currentWatchSessionId) return;
+              }
+
+              try {
+                const res = await fetch('<?= BASE_URL ?>/index.php?r=video_watch_heartbeat', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    watch_session_id: currentWatchSessionId,
+                    current_time: player.currentTime || 0,
+                    playback_rate: player.playbackRate || 1.0,
+                    is_paused: isPaused
+                  })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                  updateRewardUI(data);
+                } else if (data.code === 'CAMPAIGN_EXPIRED') {
+                  updateRewardUI(data);
+                }
+              } catch (e) {
+                // Ignore transient network errors
+              }
+            }
+
+            async function verifyCompletion() {
+              if (!currentWatchSessionId) return;
+              try {
+                const res = await fetch('<?= BASE_URL ?>/index.php?r=video_watch_complete', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    watch_session_id: currentWatchSessionId
+                  })
+                });
+                const data = await res.json();
+                if (data.ok && data.is_eligible) {
+                  updateRewardUI(data);
+                }
+              } catch (e) {}
+            }
+
+            function startHeartbeatInterval() {
+              if (heartbeatTimer) clearInterval(heartbeatTimer);
+              heartbeatTimer = setInterval(() => {
+                if (!player.paused && !player.seeking) {
+                  sendHeartbeat(false);
+                }
+              }, 4000);
+            }
+
+            function stopHeartbeatInterval() {
+              if (heartbeatTimer) {
+                clearInterval(heartbeatTimer);
+                heartbeatTimer = null;
+              }
+            }
+
+            // Overlay click initiates playback with sound safely
+            if (overlay) {
+              overlay.addEventListener('click', () => {
+                overlay.classList.add('is-hidden');
+                player.play().catch(() => {});
+              });
+            }
+
+            // Buffering / Loading states
+            player.addEventListener('waiting', () => {
+              if (loading) loading.classList.add('is-active');
+            });
+            player.addEventListener('playing', () => {
+              if (loading) loading.classList.remove('is-active');
+              if (errorBox) errorBox.classList.remove('is-active');
+              if (overlay) overlay.classList.add('is-hidden');
+              startHeartbeatInterval();
+              sendHeartbeat(false);
+            });
+            player.addEventListener('pause', () => {
+              stopHeartbeatInterval();
+              sendHeartbeat(true);
+            });
+            player.addEventListener('ended', async () => {
+              stopHeartbeatInterval();
+              await sendHeartbeat(true);
+              await verifyCompletion();
+            });
+            player.addEventListener('canplay', () => {
+              if (loading) loading.classList.remove('is-active');
+            });
+
+            // Error handling state
+            player.addEventListener('error', () => {
+              if (loading) loading.classList.remove('is-active');
+              if (errorBox) errorBox.classList.add('is-active');
+              stopHeartbeatInterval();
+            });
+
+            if (retryBtn) {
+              retryBtn.addEventListener('click', () => {
+                if (errorBox) errorBox.classList.remove('is-active');
+                if (loading) loading.classList.add('is-active');
+                const src = player.src;
+                player.src = '';
+                player.src = src;
+                player.load();
+                player.play().catch(() => {});
+              });
+            }
+
+            // Initial session start if reward card present
+            if (rewardCard && currentCampId) {
+              startWatchSession();
+            }
+
+            // Playlist switching
+            const playlistItems = document.querySelectorAll('.syna-video-playlist-item');
+            playlistItems.forEach(item => {
+              item.addEventListener('click', () => {
+                playlistItems.forEach(i => i.classList.remove('is-active'));
+                item.classList.add('is-active');
+                const newSrc = item.dataset.videoSrc;
+                const newTitle = item.dataset.videoTitle;
+                const newMeta = item.dataset.videoMeta;
+
+                if (titleEl && newTitle) titleEl.textContent = newTitle;
+                if (metaEl && newMeta) metaEl.textContent = newMeta;
+
+                // Stop tracking for previous video
+                stopHeartbeatInterval();
+                currentWatchSessionId = null;
+                isEligible = false;
+
+                // Check reward campaign for new item
+                const rawReward = item.dataset.rewardCampaign;
+                if (rawReward && rawReward.trim() !== '') {
+                  try {
+                    const rewardData = JSON.parse(rawReward);
+                    currentCampId = rewardData.campaign_id || '';
+                    currentPubId = item.dataset.publicationId || '';
+                    currentVideoId = item.dataset.videoId || '';
+                    videoDuration = parseFloat(item.dataset.duration || '0');
+
+                    if (rewardCard) {
+                      rewardCard.classList.remove('d-none');
+                      if (rewardCampaignName) rewardCampaignName.textContent = rewardData.campaign_name || 'Ưu đãi xem video';
+                      if (rewardOfferText) {
+                        if (rewardData.discount_type === 'percentage') {
+                          rewardOfferText.textContent = `Giảm ${rewardData.discount_value}%` + (rewardData.max_discount_amount ? ` (tối đa ${Number(rewardData.max_discount_amount).toLocaleString()}đ)` : '');
+                        } else {
+                          rewardOfferText.textContent = `Giảm ${Number(rewardData.discount_value).toLocaleString()}đ`;
+                        }
+                        if (rewardData.min_order_amount) {
+                          rewardOfferText.textContent += ` cho đơn từ ${Number(rewardData.min_order_amount).toLocaleString()}đ`;
+                        }
+                      }
+                      // Reset UI
+                      updateRewardUI({
+                        watched_coverage_percent: 0,
+                        watched_seconds: 0,
+                        video_duration: videoDuration,
+                        watch_state: 'IN_PROGRESS',
+                        is_eligible: false
+                      });
+                      startWatchSession();
+                    }
+                  } catch (e) {
+                    if (rewardCard) rewardCard.classList.add('d-none');
+                  }
+                } else {
+                  if (rewardCard) rewardCard.classList.add('d-none');
+                }
+
+                if (overlay) overlay.classList.remove('is-hidden');
+                if (errorBox) errorBox.classList.remove('is-active');
+                player.pause();
+                player.src = newSrc;
+                player.load();
+              });
+            });
+          })();
+        </script>
+      <?php endif; ?>
+
       <?php if (!empty($frequentlyBought)): ?>
         <?php
           $hasRealRule = false;
@@ -935,7 +1711,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
             <div><b>Thương Hiệu</b><br><?= h($p['thuong_hieu'] ?? '') ?></div>
             <div><b>Xuất xứ thương hiệu</b><br><?= h($p['xuat_xu_thuong_hieu'] ?? '') ?></div>
             <div><b>Nơi sản xuất</b><br><?= h($p['noi_san_xuat'] ?? '') ?></div>
-            <div><b>Loại da</b><br><?= h($p['loai_da'] ?? '') ?></div>
+            <div><b>Loại da</b><br><?= h($displayLoaiDa ?? ($p['loai_da'] ?? 'Không áp dụng')) ?></div>
             <div><b>Dung Tích</b><br><?= h($p['dung_tich'] ?? '') ?></div>
           </div>
         </div>

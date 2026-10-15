@@ -102,6 +102,13 @@ $menuGroups = [
                 'active' => strpos($currentRoute, 'admin_voucher') === 0 || strpos($currentRoute, 'admin_vouchers') === 0,
             ],
             [
+                'route' => 'admin_flash_sales',
+                'icon' => 'bi bi-lightning-charge-fill',
+                'label' => 'Flash Sale',
+                'meta' => 'Chiến dịch & Giá sốc',
+                'active' => strpos($currentRoute, 'admin_flash_sale') === 0,
+            ],
+            [
                 'route' => $isAdmin ? 'admin_orders' : 'staff_orders',
                 'icon' => 'bi bi-receipt-cutoff',
                 'label' => 'Đơn hàng',

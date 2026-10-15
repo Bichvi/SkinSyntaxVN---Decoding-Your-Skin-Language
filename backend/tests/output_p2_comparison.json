@@ -1,0 +1,61 @@
+{
+    "Homepage": {
+        "cache_hit": {
+            "http_p50_ms": 2578.71,
+            "http_p95_ms": 2899.65,
+            "http_avg_ms": 2506,
+            "mongo_queries": 2,
+            "mongo_time_ms": 891.77
+        },
+        "cache_miss": {
+            "internal_time_ms": 1293.78,
+            "mongo_queries": 8,
+            "mongo_time_ms": 765.7
+        }
+    },
+    "Category": {
+        "cache_hit": {
+            "http_p50_ms": 1232.29,
+            "http_p95_ms": 1509.09,
+            "http_avg_ms": 1183.44,
+            "mongo_queries": 0,
+            "mongo_time_ms": 0
+        },
+        "cache_miss": {
+            "internal_time_ms": 3097.58,
+            "mongo_queries": 2,
+            "mongo_time_ms": 2688.56
+        }
+    },
+    "Product Detail": {
+        "cache_hit": {
+            "http_p50_ms": 717.04,
+            "http_p95_ms": 1040.3,
+            "http_avg_ms": 774.54,
+            "mongo_queries": 1,
+            "mongo_time_ms": 66.48
+        },
+        "cache_miss": {
+            "internal_time_ms": 174.6,
+            "mongo_queries": 1,
+            "mongo_time_ms": 69.66
+        }
+    },
+    "fallback_outage": {
+        "Homepage": {
+            "fallback_success": true,
+            "duration_ms": 1090.14,
+            "mongo_queries": 4
+        },
+        "Category": {
+            "fallback_success": true,
+            "duration_ms": 978.49,
+            "mongo_queries": 2
+        },
+        "Product Detail": {
+            "fallback_success": true,
+            "duration_ms": 219.92,
+            "mongo_queries": 1
+        }
+    }
+}

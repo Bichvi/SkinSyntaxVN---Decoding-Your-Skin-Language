@@ -125,7 +125,12 @@ if ($totalPages <= 7) {
                                 <td><code class="fw-bold" style="color: #183B2B;">#<?= h($item['ma_san_pham'] ?? $item['id'] ?? '') ?></code></td>
                                 <td class="fw-semibold" style="color: var(--admin-text); font-size: 0.86rem;"><?= h($item['ten_san_pham'] ?? '') ?></td>
                                 <td class="text-end tabular-nums fw-bold text-success" style="font-size: 0.86rem;"><?= vnd($item['gia_ban'] ?? 0) ?></td>
-                                <td style="font-size: 0.82rem;"><?= h($item['loai_da'] ?? 'Mọi loại da') ?></td>
+                                <?php
+                                    $rawLoaiDa = trim((string)($item['loai_da'] ?? ''));
+                                    $isLoaiDaNa = ($rawLoaiDa === '' || mb_strtolower($rawLoaiDa, 'UTF-8') === 'unknown' || mb_strtolower($rawLoaiDa, 'UTF-8') === 'khong ap dung' || mb_strtolower($rawLoaiDa, 'UTF-8') === 'không áp dụng');
+                                    $displayLoaiDa = $isLoaiDaNa ? 'Không áp dụng' : $rawLoaiDa;
+                                ?>
+                                <td style="font-size: 0.82rem;"><?= h($displayLoaiDa) ?></td>
                                 <td>
                                     <span class="status-pill <?= $isHidden ? 'status-pill-cancelled' : 'status-pill-completed' ?>">
                                         <?= $isHidden ? 'Tạm ẩn' : 'Hiển thị' ?>
