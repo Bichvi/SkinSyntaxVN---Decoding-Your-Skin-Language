@@ -140,5 +140,20 @@ class AgentRunViewTests(unittest.TestCase):
         self.assertEqual([item["product_page"]["ready"] for item in data["campaign_segments"]], [False, True])
 
 
+class PendingExternalPlatformsTests(unittest.TestCase):
+    def test_campaign_pending_external_platforms_is_exposed(self):
+        run_id, cid = oid(), oid()
+        db = FakeDb(ai_idol_campaigns=Collection([
+            {"_id": cid, "status": "SCHEDULED", "platforms": ["internal"], "pending_external_platforms": ["youtube"]}]))
+        data = agent_runs._serialize_with_campaign({"_id": run_id, "status": "CAMPAIGN_CREATED", "campaign_id": str(cid)}, db)
+        self.assertEqual(data["campaign_pending_external_platforms"], ["youtube"])
+
+    def test_campaign_without_pending_platforms_defaults_to_empty_list(self):
+        run_id, cid = oid(), oid()
+        db = FakeDb(ai_idol_campaigns=Collection([{"_id": cid, "status": "SCHEDULED"}]))
+        data = agent_runs._serialize_with_campaign({"_id": run_id, "status": "CAMPAIGN_CREATED", "campaign_id": str(cid)}, db)
+        self.assertEqual(data["campaign_pending_external_platforms"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
