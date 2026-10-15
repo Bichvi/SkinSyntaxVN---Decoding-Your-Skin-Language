@@ -131,6 +131,13 @@ class ProductVideo {
     }
 
     /**
+     * Lấy bản ghi xuất bản theo ID bản ghi (cả nháp và đã xuất bản). Dùng cho getRewardCampaign của admin.
+     */
+    public function getPublicationById(string $publicationId): ?array {
+        return $this->getVideoByIdForAdmin($publicationId);
+    }
+
+    /**
      * Tìm bản ghi xuất bản theo video_id của AI Idol.
      */
     public function getPublicationByVideoId(string $videoId): ?array {
