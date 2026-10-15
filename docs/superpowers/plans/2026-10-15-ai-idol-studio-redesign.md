@@ -13,8 +13,77 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-15-ai-idol-studio-redesign-design.md`. Đọc spec trước. "§5.1" trong plan trỏ về mục của spec. Plan này **thay** spec ở 3 điểm, ghi rõ tại Task 2, 3 và 4.
 
+## Cập nhật 15/10 chiều — tích hợp nhánh `rcm_index` (đọc trước)
+
+Spec §11 (D9–D14) là căn cứ của phần này.
+
+**Trạng thái:**
+
+| Task | Trạng thái |
+|---|---|
+| 1, 2, 3 | Xong, đã qua review, có trong commit `9c04f59` |
+| 4 | Code xong (`9c04f59`). Còn 2 lỗi Important chưa sửa (xem "Vòng sửa" trong Task 4) |
+| 0, 5, 6, 6b, 7–12, 12b, 13 | Chưa làm |
+
+**Thứ tự mới:** Task 0 → Task 4 (vòng sửa) → 5 → 6 → 6b → 7 → 8 → 9 → 10 → 11 → 12 → 12b → 13.
+
+**Thay đổi so với bản cũ:**
+- Thêm Task 0: merge `origin/rcm_index`, giữ nguyên AI Idol Studio.
+- Thêm Task 6b: tự xuất bản vào `ai_product_videos`.
+- Thêm Task 12b: trang quản lý xuất bản và voucher riêng.
+- Task 4, 7, 9, 12, 13 có bổ sung, đánh dấu **[rcm]**.
+
+**Nhóm file Studio — bất khả xâm phạm khi merge** (luôn giữ bản `syna`, bỏ thay đổi của `rcm_index`):
+- `frontend/views/admin/ai_idol/**`
+- `frontend/public/assets/js/ai-idol-studio.js`, `frontend/public/assets/css/ai-idol-studio.css`
+- `ai-idol-service/**`, `ai-idol-agent-service/**`
+- `frontend/public/ai-idol-mascot-3d/**`, `scripts/ai-idol-mascot/**`, `scripts/start-ai-idol-syna.ps1`
+
+---
+
+### Task 0: Merge `origin/rcm_index`, giữ nguyên AI Idol Studio
+
+**Files:** 13 file conflict, các file Studio ở trên, và các file `syna` còn kẹt trong `stash@{0}`.
+
+- [ ] **Step 1: Chuẩn bị (an toàn).**
+  - Cây làm việc phải sạch; nếu không, dừng lại hỏi.
+  - `git fetch origin rcm_index`
+  - Tạo nhánh dự phòng: `git branch backup/syna-before-rcm-merge`
+- [ ] **Step 2:** `git merge --no-commit --no-ff origin/rcm_index`.
+- [ ] **Step 3: Giải conflict theo bảng.** Mọi file Studio, kể cả file tự merge không báo conflict, đều lấy bản `syna`: `git checkout --ours -- <file>` cho từng file trong nhóm Studio mà `rcm_index` đã đổi. Danh sách đó lấy bằng `git diff --name-only $(git merge-base HEAD origin/rcm_index) origin/rcm_index` giao với nhóm Studio.
+
+| File | Cách giải |
+|---|---|
+| Nhóm Studio (gồm `campaigns.py`, `ai-idol-studio.js`, view Studio, `render.js`, `scene.js`, `syna-render-server.cjs`, `start-ai-idol-syna.ps1`) | Bản `syna` (ours) |
+| `AdminAiIdolController.php` | Giữ cả hai: mọi method của `syna`, cộng `getCsrfToken`, `verifyCsrf` và 7 method mới của `rcm_index` (không đổi method có sẵn của `syna`) |
+| `routes/ai_idol.php`, `backend/public/index.php`, `frontend/public/index.php`, `index.php` (gốc) | Hợp nhất danh sách route/case của cả hai |
+| `.env.example` | Giữ cả hai khối (AI Idol của `syna` và Valkey của `rcm_index`) |
+| `HomeController.php`, `SanPham.php`, `GoiYContentBased.php`, `admin/layouts/header.php` | Không thuộc Studio: giữ tính năng của cả HEAD và `rcm_index`. Hunk nào mâu thuẫn thật thì dừng lại hỏi người dùng |
+
+- [ ] **Step 4: Khôi phục sửa đổi riêng của `syna` còn trong stash.**
+  - Với từng file trong `stash@{0}` khác HEAD, xem `git diff $(git rev-parse stash@{0}^1) stash@{0} -- <file>` và phân loại từng hunk thành 2 nhóm:
+    - (a) sửa đổi riêng của `syna`;
+    - (b) bản cũ của file `rcm_index` mà merge đã thay.
+  - Áp lại tay nhóm (a): `docker-compose.yml` (service `ai-idol-control-worker`, chia hàng đợi, mount nhạc, Chroma), `LiveController.php` và `SanPhamController.php` (`ProductEventTracker`), `.gitignore`.
+  - **Không** áp phần gắn video trang sản phẩm cũ (`partials/product_video.php` trong `chitiet.php`, nạp `ProductVideoClient` trong `SanPhamController.php`), theo D10.
+  - Ghi bảng phân loại vào report.
+- [ ] **Step 5: Kiểm tra.**
+  - `php -l` mọi file PHP đã giải conflict.
+  - `php backend/tests/admin_usecase_contract_test.php`.
+  - Toàn bộ suite Python (mốc 608 OK).
+  - `node --check` các file JS bị đụng.
+  - `composer install` trong container `php-backend` (vì `rcm_index` thêm `predis/predis`).
+  - Không còn dấu `<<<<<<<` nào: `git diff --check`, `rg "^<<<<<<<"`.
+- [ ] **Step 6: Không commit.** Báo cáo `git status` và bảng giải conflict cho người dùng. Người dùng tự commit merge, hoặc yêu cầu rõ thì mới commit.
+
+**Lưu ý:** việc xóa nhạc mp3 và `real-videos.json` khỏi lịch sử git (đã push lên `origin/syna_backup_15_15`) là quyết định của người dùng; task này chỉ khôi phục `.gitignore`.
+
+---
+
 ## Global Constraints
 
+- **[rcm] CSRF:** mọi route POST mới gọi `verifyCsrf($input)` có sẵn trong `AdminAiIdolController`. JS gửi header `X-CSRF-Token: window.AI_IDOL_CSRF`. View Studio phải in `window.AI_IDOL_CSRF` (lấy từ `AdminAiIdolController::getCsrfToken()`).
+- **[rcm] Studio bất khả xâm phạm:** không task nào được đưa code của `rcm_index` vào nhóm file Studio. Ngược lại, plan không sửa tính năng flash sale, voucher hay recommender.
 - **Ngôn ngữ:** mọi chữ hiển thị và thông điệp lỗi bằng tiếng Việt. Tên biến, hàm, khóa JSON bằng tiếng Anh.
 - **GitNexus trước khi sửa** (AGENTS.md):
   - Trước khi sửa mỗi hàm hoặc class có sẵn, chạy `node .gitnexus/run.cjs impact "<symbol>" --direction upstream --repo .`.
@@ -323,6 +392,20 @@ Nếu một brief mẫu bị bộ phân loại hiện có hiểu khác dự ki�
 - [ ] **Step 5: Chạy test, phải PASS** — `IDOL_TEST tests.test_autopilot_service tests.test_agent tests.test_agent_run_view tests.test_command_query_service tests.test_campaigns`.
 - [ ] **Step 6: Checkpoint** — `git diff --check` trên các file của task.
 
+**Vòng sửa (sau review Opus, chưa làm):**
+1. **`METRICS_FALLBACK`.**
+   - Áp dụng khi cả 3 điều kiện cùng đúng, chỉ trong autopilot:
+     - plan xếp hạng theo chỉ số bán hàng có kỳ (`units`, `revenue_low_conversion`, `views_no_orders`, `cart`, `discount_slow`, `growth` với `window_days` khác rỗng);
+     - `"sales_snapshot"` có trong `missing_data`;
+     - số sản phẩm tìm được nhỏ hơn `limit`.
+   - Khi đó chạy lại `execute_query({**plan, "rank_by": "units", "window_days": None}, ...)` và ghi `METRICS_FALLBACK` "Chưa có số liệu {n} ngày cho tiêu chí {nhãn}; xếp theo doanh số toàn kỳ thay thế."
+   - Thiếu dữ liệu loại khác thì dùng mã riêng (ví dụ `DATA_GAPS`), không dùng `METRICS_FALLBACK`.
+   - Test: "Livestream 5 kem chống nắng bán chạy" khi không có snapshot thì tạo được chương trình 5 SP; có snapshot đầy đủ thì không fallback.
+2. **Ngày có mà giờ không có** (ví dụ "ngày 20/10/2026"):
+   - Tìm giờ vàng bắt đầu từ `max(earliest, 00:00 ngày đó)`, message nói rõ đã giữ ngày.
+   - Ngày đã qua thì xếp như hôm nay và nói rõ.
+   - Test cả hai trường hợp.
+
 ---
 
 ### Task 5: Bỏ qua sản phẩm trượt kiểm duyệt (sửa F4)
@@ -380,7 +463,54 @@ Nếu một brief mẫu bị bộ phân loại hiện có hiểu khác dự ki�
 
 ---
 
+### Task 6b: Tự xuất bản video lên trang sản phẩm qua `ai_product_videos` (D10, D12)
+
+**Files:**
+- Create: `ai-idol-service/core/publications.py`, `ai-idol-service/tests/test_publications.py`
+- Modify:
+  - `ai-idol-service/tasks.py`: gọi sau khi video `product_video` READY và sau khi `live_and_product` có `product_page_file_path`;
+  - `ai-idol-service/app.py`: route `GET /api/ai-idol/videos/<id>`;
+  - `backend/app/controllers/SanPhamController.php`: `streamProductVideo`.
+
+**Interfaces:**
+- Consumes: `append_decisions` (Task 5).
+- Produces:
+  - `auto_publish_video(video_id: str) -> dict | None`.
+    - **Điều kiện:** chỉ khi video có `purpose ∈ {product_video, live_and_product}`, có `product_page_file_path` hoặc `media.video_url`, và không `hidden_from_product_page`.
+    - **Ghi bản ghi:** upsert theo `video_id` vào `ai_product_videos`, đúng **schema của `ProductVideo::publishVideo`** (đọc file đó để lấy đủ trường). Gồm `video_id, campaign_id, segment_id, title, duration, format, resolution, avatar_mode, associated_product_ids: [product_id], is_published: True, display_priority: 10, created_at, updated_at`, cộng `source: "auto"`.
+    - **Không ghi đè:** nếu đã có bản ghi cho `video_id` thì không đổi gì (admin đã gỡ thì vẫn gỡ).
+    - **Xóa cache:** sau khi tạo, xóa key Valkey `${CACHE_PREFIX}product:videos:*` qua `VALKEY_URL` (dùng thư viện `redis` có sẵn trong image). Không có `VALKEY_URL` hoặc lỗi thì log cảnh báo, không ném lỗi (cache tự hết hạn sau 1800 giây).
+    - **Ghi quyết định:** append decision `PRODUCT_PAGE_PUBLISHED` done "Đã đăng video lên trang sản phẩm …" vào run, theo `configuration.agent_run_id`.
+  - Flask `GET /api/ai-idol/videos/<id>?rendition=product_page`:
+    - phát `product_page_file_path`;
+    - file local không còn mà có `media.video_url` thì trả 302 tới URL đó;
+    - `live_only` thì 404;
+    - không có tham số thì giữ hành vi cũ.
+  - `SanPhamController::streamProductVideo`:
+    - gọi Flask kèm `?rendition=product_page`;
+    - Flask trả 302 tới URL bắt đầu bằng `R2_PUBLIC_BASE_URL` thì chuyển hướng trình duyệt tới đó;
+    - URL khác thì 404.
+
+- [ ] **Step 1: Test thất bại**, gồm:
+  - `test_publications.py` (FakeDb):
+    - đủ điều kiện → tạo bản ghi đúng schema;
+    - `live_only` hoặc video bị ẩn → không tạo;
+    - gọi 2 lần → 1 bản ghi;
+    - bản ghi admin đã gỡ → giữ nguyên;
+    - xóa cache gọi đúng pattern;
+    - Valkey lỗi → không ném lỗi.
+  - Test route Flask cho 3 nhánh của `rendition`.
+- [ ] **Step 2: Chạy, phải FAIL.**
+- [ ] **Step 3: Impact** cho các hàm sửa trong `tasks.py`, `api_get_video_file` và `streamProductVideo`.
+- [ ] **Step 4: Cài đặt.**
+- [ ] **Step 5: Chạy test, phải PASS**: `IDOL_TEST tests.test_publications` và toàn bộ suite; `php -l` cho `SanPhamController.php`.
+- [ ] **Step 6: Checkpoint.**
+
+---
+
 ### Task 7: PHP proxy cho 2 API mới
+
+**[rcm]** Cả `queryProducts` và `approvePlatform` gọi `verifyCsrf($input)`. Test tĩnh kiểm điều này.
 
 **Files:**
 - Modify: `backend/app/controllers/AdminAiIdolController.php`, `backend/app/routes/ai_idol.php`, `backend/public/index.php`, `frontend/public/index.php`
@@ -479,6 +609,12 @@ Chuỗi cố định cho `describeIntent`:
 
 ### Task 9: Khung trang mới và `studio-core.js`
 
+**[rcm]**
+- View in `window.AI_IDOL_CSRF = <?= json_encode(AdminAiIdolController::getCsrfToken()) ?>`. Controller `index()` truyền token sẵn thì dùng biến đó.
+- `StudioCore.api()` tự thêm header `X-CSRF-Token` cho mọi request không phải GET.
+- Thêm `StudioCore.decisionsMarkup(decisions) -> html` (theo ruling ở ledger): map icon theo level, kèm chữ cho screen reader.
+- Studio vẫn **2 tab** (Tự động, Thủ công) và bảng Hoạt động; không có tab xuất bản (D11).
+
 **Files:**
 - Modify: `frontend/views/admin/ai_idol/index.php` (viết lại phần khung), `frontend/public/assets/css/ai-idol-studio.css`
 - Create: `frontend/public/assets/js/studio-core.js`
@@ -562,6 +698,11 @@ Nội dung theo spec §4.2, kèm các quyết định:
 
 ### Task 12: Bảng Hoạt động
 
+**[rcm]**
+- Trạng thái trang sản phẩm của từng video lấy theo bản ghi `ai_product_videos`: "Đã đăng trang SP" hoặc "Chưa đăng".
+- Video READY có link "Quản lý xuất bản" mở trang của Task 12b.
+- Nút "Ẩn khỏi trang SP" kiểu cũ (`video_visibility`) bị bỏ khỏi Studio; việc ẩn/hiện làm ở trang của Task 12b.
+
 **Files:**
 - Modify: `frontend/views/admin/ai_idol/index.php` (nội dung `#activityPanel`), `frontend/public/assets/css/ai-idol-studio.css` (khối Hoạt động; xóa CSS cũ không còn selector nào dùng)
 - Create: `frontend/public/assets/js/studio-activity.js`
@@ -587,7 +728,41 @@ Nội dung theo spec §4.4, kèm các quyết định:
 
 ---
 
+### Task 12b: Trang "Video trang sản phẩm & voucher" (D11)
+
+**[rcm]** Port tab "Xuất bản" của `rcm_index` thành **trang admin riêng**, không nằm trong Studio.
+
+**Files:**
+- Create: `frontend/views/admin/product_videos.php`, `frontend/public/assets/js/admin-product-videos.js`, `frontend/public/assets/css/admin-product-videos.css`
+- Modify:
+  - `backend/app/controllers/AdminAiIdolController.php`: thêm method `productVideosPage()`;
+  - `backend/app/routes/ai_idol.php` và hai danh sách route ở `backend/public/index.php`, `frontend/public/index.php`: thêm route `admin_ai_product_videos` (GET);
+  - `frontend/views/admin/layouts/header.php`: thêm link menu "Video trang sản phẩm".
+- Nguồn để port:
+  - `git show origin/rcm_index:frontend/views/admin/ai_idol/index.php` (phần `#pubFlow`, `#pubModal`, `#rewardModal`);
+  - `git show origin/rcm_index:frontend/public/assets/js/ai-idol-studio.js` (các hàm của tab publication và reward);
+  - `git show origin/rcm_index:frontend/public/assets/css/ai-idol-studio.css` (style `pub*`, `reward*`).
+
+**Yêu cầu:**
+- Giữ nguyên hành vi và các route `rcm_index` đang dùng: `admin_ai_idol_product_videos`, `search_products`, `publish_video`, `toggle_publish`, `reward_campaign`, `save_reward_campaign`, `toggle_reward_campaign`, kèm CSRF.
+- Mỗi video có thêm badge "Tự động" khi bản ghi có `source: "auto"`.
+- Trang nhận `?video_id=<id>` để mở sẵn modal xuất bản cho video đó.
+- Trong Task 12, chi tiết video READY ở bảng Hoạt động có link "Quản lý xuất bản" trỏ tới `index.php?r=admin_ai_product_videos&video_id=<id>`.
+- Studio không nạp bất kỳ file nào của trang này.
+
+- [ ] **Step 1: Cài đặt.**
+- [ ] **Step 2: Kiểm tra:** `php -l`; `node --check`; `php backend/tests/admin_usecase_contract_test.php`. Nếu test của `rcm_index` (`backend/tests/test_manageable_videos.php`, `test_admin_csrf_rbac.php`) chạy được không cần DB thật thì chạy.
+- [ ] **Step 3: Checkpoint.**
+
+---
+
 ### Task 13: E2E, dọn dẹp và kiểm tra toàn bộ
+
+**[rcm]** E2E thêm 2 kịch bản:
+1. Mở `admin_ai_product_videos`: danh sách video tải được; mở modal xuất bản không có console error.
+2. Một chương trình video sản phẩm sau khi READY có bản ghi `source: "auto"` và video phát được trên trang chi tiết của sản phẩm đó. Kịch bản này chỉ chạy khi có video READY thật; nếu không có thì ghi `NOT RUN` kèm lý do.
+
+Build lại cả image `ai-idol-agent-service`. Restart `php-backend` nếu cần nạp `vendor/` mới.
 
 **Files:**
 - Create: `scripts/e2e/ai-idol-studio.e2e.cjs`
