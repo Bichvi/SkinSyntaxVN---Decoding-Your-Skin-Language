@@ -12,6 +12,7 @@ from config import (
     CAMPAIGN_MAX_PRODUCTS,
     ESTIMATED_MINUTES_PER_PRODUCT,
     MIN_LEAD_MINUTES,
+    RTMP_TARGETS,
     TIMEZONE,
 )
 from core.agent_runs import append_decisions
@@ -425,6 +426,64 @@ def reschedule_campaign(campaign_id: str, scheduled_at) -> dict:
     if not claimed:
         raise CampaignConflict(f"Chương trình đang ở trạng thái {campaign.get('status')}, không thể đổi lịch.")
     return {"status": claimed["status"], "scheduled_at": new_time.isoformat()}
+
+
+# Statuses before airtime: a channel can still be added to the broadcast.
+APPROVABLE_STATUSES = ("VALIDATING", "GENERATING", "AWAITING_APPROVAL", "NEEDS_ATTENTION", "SCHEDULED")
+PLATFORM_LABELS = {"youtube": "YouTube", "facebook": "Facebook"}
+NOT_PENDING_MESSAGE = "Kênh này không chờ cho phép."
+
+
+def _approval_state(campaign: dict) -> dict:
+    return {
+        "platforms": list(campaign.get("platforms") or []),
+        "pending_external_platforms": list(campaign.get("pending_external_platforms") or []),
+    }
+
+
+def approve_external_platform(campaign_id: str, platform: str, by: str) -> dict:
+    """Let an autopilot campaign stream to ``platform`` (youtube/facebook): pending -> platforms, once.
+
+    Idempotent: a channel already in ``platforms`` returns the current state without writing.
+    """
+    platform = str(platform or "").strip().lower()
+    label = PLATFORM_LABELS.get(platform, platform)
+    db = get_db()
+    campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
+    if not campaign:
+        raise CampaignNotFound("Campaign not found")
+    if platform in (campaign.get("platforms") or []):
+        return _approval_state(campaign)
+    if platform not in (campaign.get("pending_external_platforms") or []):
+        raise ValueError(NOT_PENDING_MESSAGE)
+    if platform not in RTMP_TARGETS:
+        raise ValueError(f"Chưa cấu hình RTMP cho {label}.")
+    conflict = "Chương trình đã lên sóng hoặc kết thúc; không thể thêm kênh."
+    if campaign.get("status") not in APPROVABLE_STATUSES:
+        raise CampaignConflict(conflict)
+
+    now = utcnow()
+    claimed = db.ai_idol_campaigns.find_one_and_update(
+        {"_id": campaign["_id"], "status": {"$in": list(APPROVABLE_STATUSES)},
+         "pending_external_platforms": platform},
+        {"$addToSet": {"platforms": platform},
+         "$pull": {"pending_external_platforms": platform},
+         "$push": {"platform_approvals": {"platform": platform, "by": str(by or "").strip()[:120] or "admin", "at": now}},
+         "$set": {"updated_at": now}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not claimed:  # lost a race: someone approved it, or the programme went on air meanwhile
+        current = db.ai_idol_campaigns.find_one({"_id": campaign["_id"]}) or {}
+        if platform in (current.get("platforms") or []):
+            return _approval_state(current)
+        if current.get("status") not in APPROVABLE_STATUSES:
+            raise CampaignConflict(conflict)
+        raise ValueError(NOT_PENDING_MESSAGE)
+    append_decisions(
+        (claimed.get("configuration") or {}).get("agent_run_id"),
+        [make_decision("PLATFORM_APPROVED", "done", f"Đã cho phép phát {label}.")],
+    )
+    return _approval_state(claimed)
 
 
 def resume_ready_campaign(campaign_id: str) -> bool:
