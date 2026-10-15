@@ -1,0 +1,89 @@
+{
+  "audit_metadata": {
+    "project": "SkinSyntaxVN",
+    "phase": "Phase 1 Forensic Audit",
+    "timestamp": "2026-10-07T23:30:00+07:00",
+    "database": "skinsyntax",
+    "environment": "MongoDB Atlas Canonical",
+    "verified_db_integrity": true
+  },
+  "catalog_metrics": {
+    "total_products": 2473,
+    "active_products": 2473,
+    "inactive_or_hidden_products": 0,
+    "products_with_valid_price": 2473,
+    "products_with_zero_or_null_price": 0,
+    "products_with_negative_price": 0,
+    "products_with_market_price": 2473,
+    "products_with_market_price_greater_than_sale_price": 2361,
+    "products_with_stored_discount_percent_gt_0": 2351,
+    "products_with_stored_savings_amount_gt_0": 2361,
+    "products_eligible_for_apparent_discount": 2361,
+    "products_with_rating_gt_0": 1788,
+    "products_with_reviews_gt_0": 1788,
+    "products_without_reviews": 685,
+    "products_with_skin_attributes": 2473,
+    "products_with_image_asset": 2473
+  },
+  "order_metrics": {
+    "total_orders": 29,
+    "total_order_items": 34,
+    "total_units_sold": 62,
+    "distinct_products_in_real_orders": 16,
+    "catalog_order_coverage_percentage": 0.65,
+    "distinct_customers_with_orders": 10,
+    "order_status_distribution": {
+      "hoan_thanh_or_completed": 13,
+      "da_huy_or_cancelled": 7,
+      "da_xac_nhan_or_confirmed": 3,
+      "cho_xu_ly_or_pending": 4,
+      "dang_giao_or_shipping": 2
+    },
+    "payment_status_distribution": {
+      "da_thanh_toan_or_paid": 6,
+      "chua_thanh_toan_or_unpaid": 18,
+      "cho_chuyen_khoan": 3,
+      "qua_han_thanh_toan": 2
+    },
+    "synthetic_proxy_discrepancy": {
+      "so_luong_da_ban_gt_0_count": 2473,
+      "typical_synthetic_value": 298,
+      "real_orders_for_typical_synthetic_items": 0,
+      "historical_rule_applied": "so_luong_da_ban is synthetic crawl data and NOT real sales truth"
+    }
+  },
+  "customer_profile_metrics": {
+    "total_customer_accounts": 20,
+    "total_auth_users": 15,
+    "customers_with_skin_type_encoded": 9,
+    "customers_with_skin_type_percentage": 45.0,
+    "customers_with_skin_concerns": 9,
+    "customers_with_skin_concerns_percentage": 45.0,
+    "customers_with_budget_specified": 8,
+    "customers_with_budget_percentage": 40.0,
+    "customers_with_order_history": 10,
+    "customers_with_order_history_percentage": 50.0
+  },
+  "interaction_logging_metrics": {
+    "total_interactions_logged": 51,
+    "distinct_products_interacted": 14,
+    "distinct_customers_interacted": 1,
+    "distinct_sessions_interacted": 33,
+    "interaction_breakdown_by_type": {
+      "view": 30,
+      "search": 14,
+      "search_click": 4,
+      "add_to_cart": 2,
+      "cart_remove": 1,
+      "purchase": 0
+    },
+    "interaction_coverage_percentage": 0.57
+  },
+  "feasibility_assessment": {
+    "content_based_relevance_feasible": true,
+    "skin_profile_personalization_feasible": true,
+    "session_behavior_personalization_feasible": true,
+    "real_sales_popularity_ranking_feasible": false,
+    "recommendation": "Use production content-based relevance, skin compatibility, and discount strength for deal ranking. Do NOT use purchase popularity or best-seller tags due to severe sparsity (0.65% coverage)."
+  }
+}

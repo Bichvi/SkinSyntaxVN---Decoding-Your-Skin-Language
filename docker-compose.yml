@@ -24,6 +24,7 @@ x-ai-idol-common: &ai-idol-common
     SYNA_RENDER_URL: http://host.docker.internal:7862
   volumes:
     - ai_idol_storage:/app/storage
+    - ./ai-idol-service/assets/music:/app/assets/music:ro
   depends_on:
     mongodb:
       condition: service_healthy
@@ -104,7 +105,10 @@ services:
       CHATBOT_PORT: "5001"
       GUNICORN_WORKERS: "${GUNICORN_WORKERS:-2}"
       GUNICORN_WORKER_CLASS: "sync"
-      CHROMA_DB_PATH: /app/chroma_data
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: "8000"
+      # Local fallback for non-Docker runs; Docker uses the Chroma service above.
+      CHROMA_DB_PATH: /app/database/chroma_db
       CSV_FILE_PATH: /app/database/data_clean_final.csv
       MONGO_URI: ${MONGO_URI}
       MONGO_DB: ${MONGO_DB:-skinsyntax}
@@ -175,7 +179,12 @@ services:
   ai-idol-worker:
     <<: *ai-idol-common
     container_name: skinsyntax-ai-idol-worker
-    command: ["celery", "-A", "celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=1", "--queues=celery,agent,llm,gpu,media"]
+    command: ["celery", "-A", "celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=1", "--queues=media,celery"]
+
+  ai-idol-control-worker:
+    <<: *ai-idol-common
+    container_name: skinsyntax-ai-idol-control
+    command: ["celery", "-A", "celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=2", "--queues=control,agent"]
 
   ai-idol-broadcast-worker:
     <<: *ai-idol-common
@@ -207,18 +216,28 @@ services:
       AI_CHAT_STREAM_ENDPOINT: http://ai-service:5001/api/chat/stream
       AI_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/explain
       AI_HYBRID_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/langchain-rag
+      # Trước đây thiếu biến này nên PHP gọi 127.0.0.1:5002 (không tồn tại trong container).
+      AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/profile
+      # Trang goiy dùng engine PHP; bật "1" để chờ thêm AI RAG (~10s/lần, có cache session).
+      AI_GOIY_SYNC_AI: "${AI_GOIY_SYNC_AI:-0}"
       AI_CHAT_TIMEOUT: "60"
       AI_RECOMMENDATION_TIMEOUT: "20"
       AI_HYBRID_RECOMMENDATION_TIMEOUT: "30"
       AI_IDOL_ENDPOINT: http://ai-idol-service:5003
       REDIS_URL: redis://redis:6379/0
       REDIS_CACHE_TTL: "604800"
+      CACHE_DRIVER: ${CACHE_DRIVER:-valkey}
+      VALKEY_URL: ${VALKEY_URL:-}
+      CACHE_PREFIX: ${CACHE_PREFIX:-skinsyntax:}
+      CACHE_DEFAULT_TTL: ${CACHE_DEFAULT_TTL:-300}
       MAIL_DEMO_MODE: "1"
     volumes:
       - ./backend:/var/www/html
       - ./frontend:/var/www/frontend:ro
       - ./database:/var/www/database:ro
       - ./.env:/var/www/.env:ro
+      # Pool PHP-FPM lớn hơn (xem docker/php/zz-skinsyntax-fpm.conf); Dockerfile.php cũng COPY file này vào image.
+      - ./docker/php/zz-skinsyntax-fpm.conf:/usr/local/etc/php-fpm.d/zz-skinsyntax-fpm.conf:ro
       - uploads_data:/var/www/html/public/uploads
     depends_on:
       mongodb:

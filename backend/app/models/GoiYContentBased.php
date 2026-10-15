@@ -258,8 +258,28 @@ class GoiYContentBased {
         if ($categories) {
             $filter['loai_san_pham'] = ['$in' => array_values(array_unique($categories))];
         }
-        if ($categoryIds) {
-            $filter['ma_danh_muc'] = ['$in' => array_values(array_unique($categoryIds))];
+        $skincareLeaves = $this->getSkincareCategoryLeafIds();
+        if (empty($skincareLeaves)) {
+            // Nếu không thể phân giải danh mục skincare hợp lệ từ database, không được fallback thành truy vấn không giới hạn
+            return [];
+        }
+
+        if (!empty($categoryIds)) {
+            // BẢO VỆ CANDIDATE POOL CHO SKINCARE:
+            // Mọi $categoryIds đầu vào đều phải được giới hạn (giao) trong tập danh mục skincare hợp lệ.
+            $validCategoryIds = array_values(array_intersect(
+                array_map('intval', $categoryIds),
+                $skincareLeaves
+            ));
+            if (empty($validCategoryIds)) {
+                // Nếu giao danh mục rỗng (ví dụ đầu vào là danh mục makeup hoặc ngoài skincare),
+                // TUYỆT ĐỐI không fallback thành truy vấn không giới hạn mà trả về rỗng ngay lập tức.
+                return [];
+            }
+            $filter['ma_danh_muc'] = ['$in' => $validCategoryIds];
+        } else {
+            // Khi không chỉ định categoryIds cụ thể, mặc định giới hạn trong toàn bộ danh mục lá của Chăm Sóc Da Mặt.
+            $filter['ma_danh_muc'] = ['$in' => $skincareLeaves];
         }
 
         $options = $exactLimit
@@ -372,6 +392,104 @@ class GoiYContentBased {
         $cleanName = preg_replace('/[^\p{L}\p{N}\s]/u', '', $cleanName);
         $cleanName = preg_replace('/\s+/', ' ', trim($cleanName));
         return strtolower(trim($brand . '_' . $cleanName));
+    }
+
+    /**
+     * Lấy động danh sách mã danh mục lá (leaf IDs) thuộc nhánh Chăm Sóc Da Mặt từ MongoDB danh_muc.
+     * Cơ chế này dựa trên cây danh mục (category tree) trong MongoDB, đảm bảo:
+     * 1. Không hardcode ma_danh_muc <= 21 làm quy tắc nghiệp vụ.
+     * 2. Tự động nhận diện khi có danh mục skincare mới được thêm vào.
+     * 3. Ngăn chặn triệt để sản phẩm Makeup (nhánh Trang Điểm) chiếm slot candidate.
+     */
+    public function getSkincareCategoryLeafIds(): array {
+        static $cachedLeaves = null;
+        if ($cachedLeaves !== null) {
+            return $cachedLeaves;
+        }
+
+        try {
+            $cursor = $this->db->danh_muc->find([
+                'trang_thai' => ['$nin' => ['inactive', 'hidden', 'disabled', 'off', '0']]
+            ]);
+
+            $byId = [];
+            $children = [];
+            $skincareRootId = null;
+
+            foreach ($cursor as $doc) {
+                $cat = (array)$doc;
+                if (!isset($cat['ma_danh_muc']) || !is_numeric($cat['ma_danh_muc'])) {
+                    continue;
+                }
+                $id = (int)$cat['ma_danh_muc'];
+                $nameNorm = $this->normalizeText((string)($cat['ten_danh_muc'] ?? ''));
+                $slugNorm = trim((string)($cat['slug'] ?? ''));
+                $pid = (isset($cat['parent_id']) && is_numeric($cat['parent_id'])) ? (int)$cat['parent_id'] : null;
+
+                $byId[$id] = [
+                    'id' => $id,
+                    'parent_id' => $pid,
+                    'name' => $nameNorm,
+                    'slug' => $slugNorm
+                ];
+
+                if ($pid === null && ($slugNorm === 'cham-soc-da-mat' || mb_strpos($nameNorm, 'cham soc da mat') !== false)) {
+                    $skincareRootId = $id;
+                }
+            }
+
+            if ($skincareRootId === null) {
+                foreach ($byId as $id => $cat) {
+                    if ($cat['parent_id'] === null && mb_strpos($cat['name'], 'da mat') !== false) {
+                        $skincareRootId = $id;
+                        break;
+                    }
+                }
+            }
+
+            if ($skincareRootId === null) {
+                $cachedLeaves = [];
+                return $cachedLeaves;
+            }
+
+            foreach ($byId as $id => $cat) {
+                $pid = $cat['parent_id'];
+                if ($pid !== null && isset($byId[$pid]) && $pid !== $id) {
+                    $children[$pid][] = $id;
+                }
+            }
+
+            $leaves = [];
+            $stack = [$skincareRootId];
+            $visited = [];
+
+            while (!empty($stack)) {
+                $curId = array_pop($stack);
+                if (isset($visited[$curId])) {
+                    continue;
+                }
+                $visited[$curId] = true;
+
+                $childIds = $children[$curId] ?? [];
+                if (empty($childIds)) {
+                    if ($curId !== $skincareRootId) {
+                        $leaves[] = $curId;
+                    }
+                } else {
+                    foreach ($childIds as $cid) {
+                        $stack[] = $cid;
+                    }
+                }
+            }
+
+            sort($leaves);
+            $cachedLeaves = array_values(array_unique($leaves));
+        } catch (Throwable $e) {
+            error_log('GoiYContentBased getSkincareCategoryLeafIds error: ' . $e->getMessage());
+            $cachedLeaves = [];
+        }
+
+        return $cachedLeaves;
     }
 
     private function resolveBudgetRange(array $post, ?int $budget): array {
@@ -691,6 +809,9 @@ class GoiYContentBased {
 
         return [
             'id' => $product['ma_san_pham'],
+            'ma_san_pham' => $product['ma_san_pham'],
+            'ma_danh_muc' => $product['ma_danh_muc'] ?? null,
+            'loai_da' => $product['loai_da'] ?? null,
             'ten_san_pham' => $product['ten_san_pham'],
             'gia_ban' => $product['gia_ban'],
             'thuong_hieu' => $product['ten_thuong_hieu'] ?? null,

@@ -1,0 +1,6 @@
+context_key,context_name,top4_minmax,top4_percentile,top4_raw,top4_lexicographic,jaccard_minmax_vs_percentile,jaccard_minmax_vs_raw,jaccard_minmax_vs_lex
+Context_A_Guest,"Guest (Cold Start)","34,612,103,60","766,612,652,759","34,612,103,60","34,612,103,60",0.1429,1,1
+Context_B_Cleanser_Behavior,"Behavior Only (Cleanser Search & View)","612,34,103,7","612,652,34,103","612,34,103,652","7,612,33,652",0.6,0.6,0.3333
+Context_C_Dry_Skin_Profile,"Profile Only (Dry Skin & Hydration)","34,766,29,92","766,759,463,485","34,766,29,60","34,766,29,92",0.1429,0.6,1
+Context_D_Oily_Acne_Hybrid,"Hybrid (Oily Acne Profile + Serum Behavior)","34,29,766,92","34,766,29,463","34,766,29,92","29,34,92,124",0.6,1,0.6
+Context_E_Cart_Signal,"Profile + Cart Signal (Cart Item Present)","34,766,29,92","34,92,766,463","34,766,29,612","92,124,29,34",0.6,0.6,0.6

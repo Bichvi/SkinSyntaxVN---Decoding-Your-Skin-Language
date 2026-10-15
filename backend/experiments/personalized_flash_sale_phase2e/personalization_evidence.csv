@@ -1,0 +1,5 @@
+Context,"Ranking Mode",Top1,Top2,Top3,Top4,Reason,"Overlap vs Guest",Jaccard@4
+"Guest (Baseline)",BASELINE,1772,54,728,62,"Giảm sâu 50%",4,1
+"Context A (Cleanser Behavior)",BEHAVIOR,728,1000,4365,266,"Tương tự sản phẩm bạn vừa xem",1,0.1429
+"Context B (Profile Only: Oily/350k)",PROFILE,62,2328,4365,1027,"Trong ngân sách của bạn",1,0.1429
+"Context C (Hybrid: Profile+Behavior)",HYBRID,728,1000,266,4365,"Tương tự sản phẩm bạn vừa xem",1,0.1429

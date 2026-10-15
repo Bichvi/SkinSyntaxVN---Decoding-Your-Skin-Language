@@ -20,6 +20,13 @@ $idolRoutes = [
     'admin_ai_idol_reschedule_campaign' => ['POST', 'rescheduleCampaign'],
     'admin_ai_idol_products' => ['GET', 'getProducts'],
     'admin_ai_idol_video_visibility' => ['POST', 'videoVisibility'],
+    'admin_ai_idol_product_videos' => ['GET', 'listProductVideos'],
+    'admin_ai_idol_search_products' => ['GET', 'searchProducts'],
+    'admin_ai_idol_publish_video' => ['POST', 'publishProductVideo'],
+    'admin_ai_idol_toggle_publish' => ['POST', 'togglePublishProductVideo'],
+    'admin_ai_idol_reward_campaign' => ['GET', 'getRewardCampaign'],
+    'admin_ai_idol_save_reward_campaign' => ['POST', 'saveRewardCampaign'],
+    'admin_ai_idol_toggle_reward_campaign' => ['POST', 'toggleRewardCampaign'],
 ];
 if (!isset($idolRoutes[$r])) {
     return false;

@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../services/ProductEventTracker.php';
+
 class LiveController {
     private $pdo;
 
@@ -353,6 +355,7 @@ class LiveController {
             if ($pIdStr !== '') {
                 $currentQty = (int)($_SESSION['gio_hang'][$pIdStr] ?? 0);
                 $_SESSION['gio_hang'][$pIdStr] = $currentQty + 1;
+                ProductEventTracker::record($mongoDb, 'add_to_cart', $pIdStr);
             }
 
             $userDisplayName = is_logged_in() ? (current_user()['ho_ten'] ?? 'bạn') : 'khách hàng';
@@ -809,6 +812,7 @@ class LiveController {
         }
 
         $_SESSION['gio_hang'][$productId] = (int)($_SESSION['gio_hang'][$productId] ?? 0) + $qty;
+        ProductEventTracker::record($mongoDb, 'add_to_cart', $productId);
 
         $cartCount = 0;
         foreach ($_SESSION['gio_hang'] as $q) {

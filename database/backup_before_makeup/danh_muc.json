@@ -1,0 +1,380 @@
+[
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5e5"
+    },
+    "ma_danh_muc": 1,
+    "ten_danh_muc": "Chăm Sóc Da Mặt",
+    "slug": "cham-soc-da-mat",
+    "parent_id": null,
+    "level": 0,
+    "thu_tu_hien_thi": 1,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5e6"
+    },
+    "ma_danh_muc": 2,
+    "ten_danh_muc": "Làm Sạch Da",
+    "slug": "lam-sach-da",
+    "parent_id": 1,
+    "level": 1,
+    "thu_tu_hien_thi": 1,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5e7"
+    },
+    "ma_danh_muc": 3,
+    "ten_danh_muc": "Sữa Rửa Mặt",
+    "slug": "sua-rua-mat",
+    "parent_id": 2,
+    "level": 2,
+    "thu_tu_hien_thi": 1,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5e8"
+    },
+    "ma_danh_muc": 4,
+    "ten_danh_muc": "Tẩy Trang Mặt",
+    "slug": "tay-trang-mat",
+    "parent_id": 2,
+    "level": 2,
+    "thu_tu_hien_thi": 2,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5e9"
+    },
+    "ma_danh_muc": 5,
+    "ten_danh_muc": "Toner / Nước Cân Bằng Da",
+    "slug": "toner-nuoc-can-bang-da",
+    "parent_id": 2,
+    "level": 2,
+    "thu_tu_hien_thi": 3,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5ea"
+    },
+    "ma_danh_muc": 6,
+    "ten_danh_muc": "Tẩy Tế Bào Chết Da Mặt",
+    "slug": "tay-te-bao-chet-da-mat",
+    "parent_id": 2,
+    "level": 2,
+    "thu_tu_hien_thi": 4,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5eb"
+    },
+    "ma_danh_muc": 7,
+    "ten_danh_muc": "Đặc Trị",
+    "slug": "dac-tri",
+    "parent_id": 1,
+    "level": 1,
+    "thu_tu_hien_thi": 2,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5ec"
+    },
+    "ma_danh_muc": 8,
+    "ten_danh_muc": "Serum / Tinh Chất",
+    "slug": "serum-tinh-chat",
+    "parent_id": 7,
+    "level": 2,
+    "thu_tu_hien_thi": 1,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5ed"
+    },
+    "ma_danh_muc": 9,
+    "ten_danh_muc": "Hỗ Trợ Trị Mụn",
+    "slug": "ho-tro-tri-mun",
+    "parent_id": 7,
+    "level": 2,
+    "thu_tu_hien_thi": 2,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5ee"
+    },
+    "ma_danh_muc": 10,
+    "ten_danh_muc": "Sản Phẩm Đặc Trị Khác",
+    "slug": "san-pham-dac-tri-khac",
+    "parent_id": 7,
+    "level": 2,
+    "thu_tu_hien_thi": 3,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5ef"
+    },
+    "ma_danh_muc": 11,
+    "ten_danh_muc": "Dưỡng Ẩm",
+    "slug": "duong-am",
+    "parent_id": 1,
+    "level": 1,
+    "thu_tu_hien_thi": 3,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f0"
+    },
+    "ma_danh_muc": 12,
+    "ten_danh_muc": "Kem / Gel / Dầu Dưỡng",
+    "slug": "kem-gel-dau-duong",
+    "parent_id": 11,
+    "level": 2,
+    "thu_tu_hien_thi": 1,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f1"
+    },
+    "ma_danh_muc": 13,
+    "ten_danh_muc": "Lotion / Sữa Dưỡng",
+    "slug": "lotion-sua-duong",
+    "parent_id": 11,
+    "level": 2,
+    "thu_tu_hien_thi": 2,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f2"
+    },
+    "ma_danh_muc": 14,
+    "ten_danh_muc": "Xịt Khoáng",
+    "slug": "xit-khoang",
+    "parent_id": 11,
+    "level": 2,
+    "thu_tu_hien_thi": 3,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f3"
+    },
+    "ma_danh_muc": 15,
+    "ten_danh_muc": "Mặt Nạ",
+    "slug": "mat-na",
+    "parent_id": 1,
+    "level": 1,
+    "thu_tu_hien_thi": 4,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f4"
+    },
+    "ma_danh_muc": 16,
+    "ten_danh_muc": "Mặt Nạ Rửa",
+    "slug": "mat-na-rua",
+    "parent_id": 15,
+    "level": 2,
+    "thu_tu_hien_thi": 1,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f5"
+    },
+    "ma_danh_muc": 17,
+    "ten_danh_muc": "Mặt Nạ Ngủ",
+    "slug": "mat-na-ngu",
+    "parent_id": 15,
+    "level": 2,
+    "thu_tu_hien_thi": 2,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f6"
+    },
+    "ma_danh_muc": 18,
+    "ten_danh_muc": "Dưỡng Mắt",
+    "slug": "duong-mat",
+    "parent_id": 1,
+    "level": 1,
+    "thu_tu_hien_thi": 5,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f7"
+    },
+    "ma_danh_muc": 19,
+    "ten_danh_muc": "Serum / Kem Dưỡng Mắt",
+    "slug": "serum-kem-duong-mat",
+    "parent_id": 18,
+    "level": 2,
+    "thu_tu_hien_thi": 1,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f8"
+    },
+    "ma_danh_muc": 20,
+    "ten_danh_muc": "Chống Nắng",
+    "slug": "chong-nang",
+    "parent_id": 1,
+    "level": 1,
+    "thu_tu_hien_thi": 6,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3ab68c7e34f6ccd5f9"
+    },
+    "ma_danh_muc": 21,
+    "ten_danh_muc": "Chống Nắng Da Mặt",
+    "slug": "chong-nang-da-mat",
+    "parent_id": 20,
+    "level": 2,
+    "thu_tu_hien_thi": 1,
+    "trang_thai": "active",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  }
+]

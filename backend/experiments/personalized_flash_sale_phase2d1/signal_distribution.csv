@@ -1,0 +1,7 @@
+signal_name,theoretical_range,observed_min,observed_max,observed_mean,observed_std,zero_rate,reusable_source
+"PersonalRelevance (Hybrid)","[0.0, 1.0]",0,0.8842,0.3521,0.2415,"0.00 (in active context)",ContentBasedRecommender::recommendHybrid
+DiscountStrength,"[0, 100]",10,50,29.5,12.8,0.00,"FlashSaleCampaign items flash_price vs regular_price"
+"Simple Weighted Rating","[1.0, 5.0]",4.8512,4.9621,4.9125,0.0312,0.00,"SanPham::getSimpleRecommenderProducts (m=21, C=4.8890)"
+"Skin Compatibility","[0.0, 1.0]",0,1,0.55,0.35,"0.25 (incompatible skin)",ContentBasedRecommender::computeSkinTypeScore
+"Budget Score","[0.10, 1.0]",0.42,1,0.88,0.18,0.00,ContentBasedRecommender::computeBudgetScore
+"Purchase Popularity","[0, inf)",0,0,0,0,0.99+,"UNAVAILABLE / INSUFFICIENT COVERAGE"
