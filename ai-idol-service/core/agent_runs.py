@@ -57,7 +57,8 @@ def _serialize_with_campaign(document: dict[str, Any], db) -> dict[str, Any]:
         campaign = db.ai_idol_campaigns.find_one(
             {"_id": object_id(str(campaign_id))},
             {"status": 1, "progress": 1, "error_message": 1, "master_video_path": 1, "scheduled_at": 1,
-             "platforms": 1, "preflight": 1, "started_at": 1, "ends_at": 1, "purpose": 1},
+             "platforms": 1, "preflight": 1, "started_at": 1, "ends_at": 1, "purpose": 1,
+             "pending_external_platforms": 1},
         )
     except ValueError:
         campaign = None
@@ -69,6 +70,7 @@ def _serialize_with_campaign(document: dict[str, Any], db) -> dict[str, Any]:
         result["master_video_ready"] = bool(campaign.get("master_video_path"))
         result["campaign_scheduled_at"] = serialize(campaign.get("scheduled_at"))
         result["campaign_platforms"] = list(campaign.get("platforms") or [])
+        result["campaign_pending_external_platforms"] = list(campaign.get("pending_external_platforms") or [])
         result["campaign_started_at"] = serialize(campaign.get("started_at"))
         result["campaign_ends_at"] = serialize(campaign.get("ends_at"))
         result["campaign_preflight"] = _redacted(serialize(campaign.get("preflight") or {}))

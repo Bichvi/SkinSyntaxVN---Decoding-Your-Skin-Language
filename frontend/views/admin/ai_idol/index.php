@@ -97,7 +97,25 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                 <button type="button" class="flow-tab is-active" id="autoFlowTab" role="tab" aria-selected="true" aria-controls="autoFlow" tabindex="0" data-studio-flow="auto"><i class="bi bi-stars" aria-hidden="true"></i><span><strong>Tự động</strong><small>Giao việc cho Syna bằng một câu</small></span></button>
                 <button type="button" class="flow-tab" id="manualFlowTab" role="tab" aria-selected="false" aria-controls="manualFlow" tabindex="-1" data-studio-flow="manual"><i class="bi bi-sliders" aria-hidden="true"></i><span><strong>Thủ công</strong><small>Tự chọn từng bước</small></span></button>
             </div>
-            <section class="studio-flow-panel" id="autoFlow" role="tabpanel" aria-labelledby="autoFlowTab"></section>
+            <section class="studio-flow-panel" id="autoFlow" role="tabpanel" aria-labelledby="autoFlowTab">
+                <form class="studio-panel au" id="autoForm" novalidate>
+                    <div class="panel-heading"><div><span class="studio-eyebrow">TỰ ĐỘNG</span><h2>Giao việc cho Syna</h2></div></div>
+                    <div class="au-body">
+                        <div class="idol-field">
+                            <label for="autoBrief">Bạn muốn làm gì? <span class="au-count" id="autoBriefCount" aria-hidden="true">0 / 4000</span></label>
+                            <textarea id="autoBrief" rows="5" maxlength="4000" aria-describedby="autoBriefHint autoMessage" placeholder="Ví dụ: Làm video sản phẩm cho 5 kem chống nắng bán chạy nhất trong 30 ngày qua."></textarea>
+                            <p class="au-hint" id="autoBriefHint">Ghi sản phẩm (tên, mã, hoặc điều kiện như bán chạy 30 ngày, hạn 17–19 tháng), mục đích (video sản phẩm / livestream), giờ phát và giọng dẫn nếu muốn. Thiếu gì Syna sẽ tự quyết và ghi rõ.</p>
+                        </div>
+                        <div class="au-chips" id="autoChips" role="group" aria-label="Mẫu gợi ý"></div>
+                        <div class="studio-message" id="autoMessage" role="alert" hidden></div>
+                        <div class="au-actions">
+                            <button type="button" class="idol-btn secondary" id="autoUndo" hidden><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Khôi phục lệnh trước</button>
+                            <button type="submit" class="idol-btn primary" id="autoSubmit"><i class="bi bi-send" aria-hidden="true"></i> Giao cho Syna</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="studio-panel au-card" id="autoCard" role="region" aria-label="Syna đã quyết định" aria-live="polite" hidden></div>
+            </section>
             <section class="studio-flow-panel" id="manualFlow" role="tabpanel" aria-labelledby="manualFlowTab" hidden>
                 <div class="studio-panel wz">
                     <div class="panel-heading"><div><span class="studio-eyebrow">THỦ CÔNG</span><h2>Tạo chương trình từng bước</h2></div><span class="step-counter" id="manualStepCounter">Bước 1 / 4</span></div>
