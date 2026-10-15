@@ -5,6 +5,20 @@ require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/SanPham.php';
 
 class AdminAiIdolController {
+    // Allowed values of the structured product query (mirror FILTER_ENUMS in ai-idol-service/agents/structured_query.py).
+    public const PRODUCT_QUERY_ENUMS = [
+        'expiry' => ['', 'expiry_17_19', 'expiry_max_18'],
+        'stock' => ['', 'stock_high', 'stock_low', 'out_of_stock'],
+        'sales' => ['', 'best_30', 'best_7', 'best_all', 'revenue_low_conversion', 'views_no_orders', 'cart',
+            'discount_slow', 'growth_7'],
+        'warehouse_mode' => ['', 'warehouse', 'batch'],
+    ];
+    public const PRODUCT_QUERY_TEXT_MAX = 80;
+    public const PRODUCT_QUERY_LIMIT_MAX = 100;
+    // Flask treats category_ids [] as "no filter" and rejects negative ids, so a selected category that expands to
+    // nothing is sent as this id: a valid category id that no product has, hence "match nothing".
+    public const NO_MATCH_CATEGORY_ID = 2147483647;
+
     private $pdo;
     private $sanPhamModel;
     private $flaskUrl;
@@ -566,6 +580,42 @@ class AdminAiIdolController {
         ];
     }
 
+    /**
+     * Expand the category picker (L1/L2/L3, most specific wins) into the ma_danh_muc ids it covers.
+     * null = no category filter.
+     */
+    private function expandCategoryIds(string $catL1, string $catL2, string $catL3): ?array {
+        if ($catL3 !== '') {
+            return [(int)$catL3];
+        }
+        if ($catL2 !== '') {
+            $l2Id = (int)$catL2;
+            $subCats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l2Id], ['projection' => ['ma_danh_muc' => 1]]));
+            $catIds = [$l2Id];
+            foreach ($subCats as $sc) {
+                $catIds[] = (int)$sc['ma_danh_muc'];
+            }
+            return $catIds;
+        }
+        if ($catL1 !== '' && $catL1 !== 'all') {
+            $l1Id = ($catL1 === 'face') ? 1001 : (is_numeric($catL1) ? (int)$catL1 : null);
+            if ($l1Id) {
+                $l2Cats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l1Id], ['projection' => ['ma_danh_muc' => 1]]));
+                $allIds = [$l1Id];
+                foreach ($l2Cats as $l2) {
+                    $l2Id = (int)$l2['ma_danh_muc'];
+                    $allIds[] = $l2Id;
+                    $l3Cats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l2Id], ['projection' => ['ma_danh_muc' => 1]]));
+                    foreach ($l3Cats as $l3) {
+                        $allIds[] = (int)$l3['ma_danh_muc'];
+                    }
+                }
+                return array_values(array_unique($allIds));
+            }
+        }
+        return null;
+    }
+
     public function getProducts(): void {
         $this->checkAdmin();
         header('Content-Type: application/json; charset=utf-8');
@@ -584,31 +634,9 @@ class AdminAiIdolController {
             'trang_thai' => ['$nin' => ['inactive', 'hidden', 'disabled', '0', 'an', 'ngung ban']]
         ];
 
-        if ($catL3 !== '') {
-            $filter['ma_danh_muc'] = (int)$catL3;
-        } elseif ($catL2 !== '') {
-            $l2Id = (int)$catL2;
-            $subCats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l2Id], ['projection' => ['ma_danh_muc' => 1]]));
-            $catIds = [$l2Id];
-            foreach ($subCats as $sc) {
-                $catIds[] = (int)$sc['ma_danh_muc'];
-            }
-            $filter['ma_danh_muc'] = ['$in' => $catIds];
-        } elseif ($catL1 !== '' && $catL1 !== 'all') {
-            $l1Id = ($catL1 === 'face') ? 1001 : (is_numeric($catL1) ? (int)$catL1 : null);
-            if ($l1Id) {
-                $l2Cats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l1Id], ['projection' => ['ma_danh_muc' => 1]]));
-                $allIds = [$l1Id];
-                foreach ($l2Cats as $l2) {
-                    $l2Id = (int)$l2['ma_danh_muc'];
-                    $allIds[] = $l2Id;
-                    $l3Cats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l2Id], ['projection' => ['ma_danh_muc' => 1]]));
-                    foreach ($l3Cats as $l3) {
-                        $allIds[] = (int)$l3['ma_danh_muc'];
-                    }
-                }
-                $filter['ma_danh_muc'] = ['$in' => array_values(array_unique($allIds))];
-            }
+        $categoryIds = $this->expandCategoryIds($catL1, $catL2, $catL3);
+        if ($categoryIds !== null) {
+            $filter['ma_danh_muc'] = ['$in' => $categoryIds];
         }
 
         if ($inventory !== '') {
@@ -726,6 +754,191 @@ class AdminAiIdolController {
             'products' => $products,
             'sync_hash' => $syncHash
         ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Validate the manual-mode filter form and return exactly the keys the structured query uses.
+     * Text is trimmed and cut to PRODUCT_QUERY_TEXT_MAX characters, flags become bool, limit is clamped to 1..100
+     * (100 when absent). A value outside its enum, or of the wrong kind, throws InvalidArgumentException.
+     * Unknown keys (csrf, ...) are dropped.
+     */
+    public static function normalizeProductQuery(array $input): array {
+        $query = [];
+        foreach (['cat_l1', 'cat_l2', 'cat_l3'] as $key) {
+            $query[$key] = self::normalizeQueryText($input[$key] ?? null, $key);
+        }
+        foreach (['expiry', 'stock', 'sales', 'warehouse_mode'] as $key) {
+            $query[$key] = self::normalizeQueryEnum($input[$key] ?? null, $key);
+        }
+        foreach (['scope_code', 'brand', 'q'] as $key) {
+            $query[$key] = self::normalizeQueryText($input[$key] ?? null, $key);
+        }
+        foreach (['brand_cap', 'enough_stock'] as $key) {
+            $query[$key] = self::normalizeQueryFlag($input[$key] ?? null, $key);
+        }
+        $query['limit'] = self::normalizeQueryLimit($input['limit'] ?? null);
+        return $query;
+    }
+
+    private static function invalidQueryFilter(string $key): InvalidArgumentException {
+        return new InvalidArgumentException('Bộ lọc không hợp lệ: ' . $key);
+    }
+
+    private static function normalizeQueryText($value, string $key): string {
+        if ($value === null) {
+            return '';
+        }
+        if (is_int($value) || is_float($value)) {
+            $value = (string)$value;
+        }
+        if (!is_string($value) || !mb_check_encoding($value, 'UTF-8')) {
+            throw self::invalidQueryFilter($key);
+        }
+        return trim(mb_substr(trim($value), 0, self::PRODUCT_QUERY_TEXT_MAX));
+    }
+
+    private static function normalizeQueryEnum($value, string $key): string {
+        if ($value === null) {
+            return '';
+        }
+        if (!is_string($value) || !in_array(trim($value), self::PRODUCT_QUERY_ENUMS[$key], true)) {
+            throw self::invalidQueryFilter($key);
+        }
+        return trim($value);
+    }
+
+    private static function normalizeQueryFlag($value, string $key): bool {
+        if ($value === null || is_bool($value)) {
+            return (bool)$value;
+        }
+        if (is_int($value) || is_float($value)) {
+            if ($value == 0 || $value == 1) {
+                return (bool)$value;
+            }
+        } elseif (is_string($value)) {
+            $text = strtolower(trim($value));
+            if (in_array($text, ['1', 'true', 'on', 'yes'], true)) {
+                return true;
+            }
+            if (in_array($text, ['0', 'false', 'off', 'no', ''], true)) {
+                return false;
+            }
+        }
+        throw self::invalidQueryFilter($key);
+    }
+
+    private static function normalizeQueryLimit($value): int {
+        if (is_string($value)) {
+            $value = trim($value);
+        }
+        if ($value === null || $value === '') {
+            return self::PRODUCT_QUERY_LIMIT_MAX;
+        }
+        if (is_bool($value) || !is_numeric($value) || (is_float($value) && is_nan($value))) {
+            throw self::invalidQueryFilter('limit');
+        }
+        $number = $value + 0;
+        if ($number >= self::PRODUCT_QUERY_LIMIT_MAX) {
+            return self::PRODUCT_QUERY_LIMIT_MAX;
+        }
+        return $number < 1 ? 1 : (int)$number;
+    }
+
+    /**
+     * Body for Flask POST /api/ai-idol/products/query: the normalized filters with the cat_* picker replaced by
+     * category_ids. No category selected = no key; a selected category that expands to no usable id = the
+     * NO_MATCH_CATEGORY_ID sentinel (never [], which Flask reads as "no filter").
+     */
+    private function buildProductQueryPayload(array $query): array {
+        $catL1 = (string)($query['cat_l1'] ?? '');
+        $catL2 = (string)($query['cat_l2'] ?? '');
+        $catL3 = (string)($query['cat_l3'] ?? '');
+        $payload = $query;
+        unset($payload['cat_l1'], $payload['cat_l2'], $payload['cat_l3']);
+
+        $categorySelected = $catL3 !== '' || $catL2 !== '' || ($catL1 !== '' && $catL1 !== 'all');
+        if ($categorySelected) {
+            $ids = array_values(array_filter(
+                $this->expandCategoryIds($catL1, $catL2, $catL3) ?? [],
+                static fn(int $id): bool => $id > 0
+            ));
+            $payload['category_ids'] = $ids !== [] ? $ids : [self::NO_MATCH_CATEGORY_ID];
+        }
+        return $payload;
+    }
+
+    /**
+     * Replace every product's image_raw by image = resolve_image_url(image_raw). Anything that is not a JSON
+     * body with a products list (a 400/500 error from Flask, a non-JSON gateway page) is returned untouched.
+     * Objects are kept as objects so empty {} members survive the round trip.
+     */
+    private function mapQueryProductImages(string $body): string {
+        $data = json_decode($body);
+        if (!is_object($data) || !isset($data->products) || !is_array($data->products)) {
+            return $body;
+        }
+        foreach ($data->products as $product) {
+            if (!is_object($product)) {
+                continue;
+            }
+            $raw = isset($product->image_raw) && is_string($product->image_raw) ? $product->image_raw : '';
+            unset($product->image_raw);
+            $product->image = function_exists('resolve_image_url') ? resolve_image_url($raw) : $raw;
+        }
+        $encoded = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
+        return $encoded === false ? $body : $encoded;
+    }
+
+    // Manual-mode product list: structured filters -> Flask, same ranking as the Agent. Flask's status and body pass through.
+    public function queryProducts(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            $input = null;
+        }
+        $this->verifyCsrf($input);
+        if ($input === null) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Dữ liệu bộ lọc không hợp lệ.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        try {
+            $query = self::normalizeProductQuery($input);
+        } catch (InvalidArgumentException $e) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        echo $this->mapQueryProductImages(
+            $this->callFlaskAPI('POST', '/api/ai-idol/products/query', $this->buildProductQueryPayload($query))
+        );
+        exit;
+    }
+
+    // Approve one external broadcast platform (youtube/facebook) of a campaign; Flask validates platform and state.
+    public function approvePlatform(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            $input = null;
+        }
+        $this->verifyCsrf($input);
+        $campaignId = is_string($_GET['campaign_id'] ?? null) ? trim($_GET['campaign_id']) : '';
+        $platform = is_string($input['platform'] ?? null) ? trim($input['platform']) : '';
+        if ($campaignId === '' || $platform === '') {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Thiếu mã chiến dịch hoặc kênh phát cần duyệt.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $user = $_SESSION['user'] ?? [];
+        echo $this->callFlaskAPI(
+            'POST',
+            '/api/ai-idol/campaigns/' . rawurlencode($campaignId) . '/platforms/approve',
+            ['platform' => $platform, 'by' => (string)($user['ma_kh'] ?? $user['email'] ?? 'admin')]
+        );
         exit;
     }
 
