@@ -178,6 +178,31 @@ class CampaignDetailTests(unittest.TestCase):
         self.assertTrue(page["hidden"])
 
 
+class CampaignPublicationTests(unittest.TestCase):
+    def test_segments_carry_their_ai_product_videos_record_or_none(self):
+        db = FakeDb()
+        campaign_id = ObjectId()
+        published, unpublished, missing = video(), video(), video()
+        for doc in (published, unpublished, missing):
+            db.ai_idol_videos.insert_one(doc)
+        db.ai_idol_campaigns.insert_one({"_id": campaign_id, "name": "x"})
+        for position, doc in enumerate((published, unpublished, missing)):
+            db.ai_idol_segments.insert_one({"campaign_id": str(campaign_id), "position": position, "video_id": str(doc["_id"])})
+        db.ai_idol_segments.insert_one({"campaign_id": str(campaign_id), "position": 3, "status": "SKIPPED"})
+        first = db.ai_product_videos.insert_one(
+            {"video_id": str(published["_id"]), "is_published": True, "source": "auto"}).inserted_id
+        db.ai_product_videos.insert_one({"video_id": str(unpublished["_id"]), "is_published": False})
+        db.ai_product_videos.insert_one({"video_id": "someone-else", "is_published": True})
+        with patch.object(campaigns, "get_db", return_value=db),                 patch.object(product_videos, "get_db", return_value=db):
+            result = campaigns.get_campaign(str(campaign_id))
+        found = [segment["publication"] for segment in result["segments"]]
+        self.assertEqual(found[0], {"publication_id": str(first), "is_published": True, "source": "auto"})
+        self.assertEqual(found[1]["is_published"], False)
+        self.assertIsNone(found[1]["source"])
+        self.assertIsNone(found[2])
+        self.assertIsNone(found[3])  # no video at all
+
+
 class RouteTests(unittest.TestCase):
     def setUp(self):
         with patch("core.state_machine.ensure_indexes"):

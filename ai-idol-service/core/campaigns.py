@@ -628,6 +628,19 @@ def get_campaign(campaign_id: str) -> dict | None:
             video = None
         if video:
             segment["product_page"] = product_page_state(video)
+    # Publication state lives in ai_product_videos (spec D10): one query for the whole campaign.
+    video_ids = [str(segment["video_id"]) for segment in segments if segment.get("video_id")]
+    publications = {}
+    if video_ids:
+        for record in db.ai_product_videos.find({"video_id": {"$in": video_ids}}, {"video_id": 1, "is_published": 1, "source": 1}):
+            publications.setdefault(str(record.get("video_id")), {
+                "publication_id": str(record["_id"]),
+                "is_published": bool(record.get("is_published")),
+                "source": record.get("source"),
+            })
+    for segment in segments:
+        video_id = segment.get("video_id")
+        segment["publication"] = publications.get(str(video_id)) if video_id else None
     campaign["segments"] = segments
     campaign["broadcasts"] = list(db.ai_idol_broadcasts.find({"campaign_id": campaign_id}))
     return serialize(campaign)

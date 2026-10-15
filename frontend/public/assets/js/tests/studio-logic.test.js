@@ -395,3 +395,13 @@ test('createLatestGate: only the newest token is current', () => {
   gate.next();
   assert.equal(other.isCurrent(t), true);
 });
+
+test('progressSteps: a finished run without a campaign has nothing active', () => {
+  ['COMPLETED', 'RESULTS_READY', 'EMPTY_RESULTS', 'DATA_UNAVAILABLE', 'CANCELLED', 'CAMPAIGN_CANCELLED'].forEach((status) => {
+    const steps = L.progressSteps(runItem(status));
+    assert.ok(!steps.some((step) => step.state === 'active'), status);
+    assert.equal(steps[0].state, 'done', status);
+    assert.ok(steps.slice(1).every((step) => step.state === 'todo'), status);
+  });
+  assert.equal(L.progressSteps(runItem('INTERPRETING'))[0].state, 'active'); // still working
+});

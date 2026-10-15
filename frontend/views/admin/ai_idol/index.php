@@ -267,7 +267,22 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                 </div>
             </section>
         </div>
-        <aside class="studio-activity" id="activityPanel" aria-label="Hoạt động"></aside>
+        <aside class="studio-activity" id="activityPanel" aria-label="Hoạt động">
+            <section class="studio-panel act">
+                <div class="panel-heading"><div><span class="studio-eyebrow">HOẠT ĐỘNG</span><h2>Việc Syna đang làm</h2></div><button type="button" class="icon-button" id="activityRefresh" aria-label="Làm mới hoạt động" title="Làm mới"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button></div>
+                <div class="act-filters" role="group" aria-label="Lọc hoạt động">
+                    <button type="button" class="act-filter is-active" data-act-filter="all" aria-pressed="true">Tất cả <span class="act-count">0</span></button>
+                    <button type="button" class="act-filter" data-act-filter="needs_you" aria-pressed="false">Cần bạn <span class="act-count">0</span></button>
+                    <button type="button" class="act-filter" data-act-filter="scheduled" aria-pressed="false">Đã lên lịch <span class="act-count">0</span></button>
+                </div>
+                <div class="visually-hidden" id="activityLive" role="status" aria-live="polite"></div>
+                <div class="act-list" id="activityList" aria-busy="true"><p class="act-empty">Đang tải hoạt động…</p></div>
+                <div class="detail act-detail" id="activityDetail" role="region" aria-labelledby="actDetailTitle" tabindex="-1" hidden>
+                    <div id="activityDetailBody"></div>
+                    <div class="studio-message" id="activityDetailMessage" role="alert" hidden></div>
+                </div>
+            </section>
+        </aside>
     </div>
 </main>
 <script>

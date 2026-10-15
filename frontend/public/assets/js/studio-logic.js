@@ -70,6 +70,8 @@
     live_and_product: STEP_ORDER,
   });
 
+  // A run that ended without a campaign: nothing is moving any more.
+  const RUN_FINISHED = Object.freeze(['COMPLETED', 'RESULTS_READY', 'EMPTY_RESULTS', 'DATA_UNAVAILABLE', 'CANCELLED', 'CAMPAIGN_CANCELLED']);
   const RUN_NEEDS_YOU = Object.freeze(['NEEDS_INPUT', 'FAILED', 'NEEDS_ATTENTION']);
   const CAMPAIGN_NEEDS_YOU = Object.freeze(['AWAITING_APPROVAL', 'NEEDS_ATTENTION', 'FAILED']);
   // A pending external channel can still be approved while the show has not started.
@@ -222,6 +224,7 @@
     const at = (key, state) => ({ index: STEP_ORDER.indexOf(key), state });
     if (status === 'CANCELLED') return at('select', 'done');
     if (!campaign) {
+      if (RUN_FINISHED.includes(status)) return at('select', 'done');
       // A run that has not produced a campaign yet is still at the first step.
       return at('select', RUN_NEEDS_YOU.includes(status) ? 'blocked' : 'active');
     }
