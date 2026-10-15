@@ -2,6 +2,7 @@
 // Explicit AI Idol routes only. All handlers keep AdminAiIdolController's auth guard.
 $idolRoutes = [
     'admin_ai_idol' => ['GET', 'index'],
+    'admin_ai_product_videos' => ['GET', 'productVideosPage'],
     'admin_ai_idol_campaigns' => ['GET', 'listCampaigns'],
     'admin_ai_idol_campaign' => ['GET', 'getCampaign'],
     'admin_ai_idol_stream_campaign' => ['GET', 'streamCampaignVideo'],

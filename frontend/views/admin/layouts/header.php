@@ -133,6 +133,13 @@ $menuGroups = [
                 'label' => 'AI Idol Studio',
                 'meta' => 'Syna · Kịch bản · Video',
                 'active' => strpos($currentRoute, 'admin_ai_idol') === 0,
+            ],
+            [
+                'route' => 'admin_ai_product_videos',
+                'icon' => 'bi bi-film',
+                'label' => 'Video trang sản phẩm',
+                'meta' => 'Xuất bản · Voucher xem video',
+                'active' => $currentRoute === 'admin_ai_product_videos',
             ]
         ]
     ],
