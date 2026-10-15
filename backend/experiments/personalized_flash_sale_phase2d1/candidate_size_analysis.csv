@@ -1,0 +1,26 @@
+candidate_size,context_key,context_name,p_min,p_max,p_mean,p_std,p_zero_rate,d_min,d_max,d_mean,wr_min,wr_max,wr_mean
+4,Context_A_Guest,"Guest (Cold Start)",0,0,0,0,1,15,50,30,4.8059,4.8059,4.8059
+4,Context_B_Cleanser_Behavior,"Behavior Only (Cleanser Search & View)",0.8206,0.8637,0.8401,0.0182,0,15,50,30,4.8059,4.8059,4.8059
+4,Context_C_Dry_Skin_Profile,"Profile Only (Dry Skin & Hydration)",0.1,0.24,0.17,0.0808,0,15,50,30,4.8059,4.8059,4.8059
+4,Context_D_Oily_Acne_Hybrid,"Hybrid (Oily Acne Profile + Serum Behavior)",0.579,0.7041,0.6416,0.0722,0,15,50,30,4.8059,4.8059,4.8059
+4,Context_E_Cart_Signal,"Profile + Cart Signal (Cart Item Present)",0.6745,0.777,0.7257,0.0591,0,15,50,30,4.8059,4.8059,4.8059
+8,Context_A_Guest,"Guest (Cold Start)",0,0,0,0,1,15,50,32.5,4.8059,4.8059,4.8059
+8,Context_B_Cleanser_Behavior,"Behavior Only (Cleanser Search & View)",0.7738,0.8637,0.8185,0.0304,0,15,50,32.5,4.8059,4.8059,4.8059
+8,Context_C_Dry_Skin_Profile,"Profile Only (Dry Skin & Hydration)",0.1,0.24,0.1742,0.0653,0,15,50,32.5,4.8059,4.8059,4.8059
+8,Context_D_Oily_Acne_Hybrid,"Hybrid (Oily Acne Profile + Serum Behavior)",0.5338,0.7041,0.616,0.0748,0,15,50,32.5,4.8059,4.8059,4.8059
+8,Context_E_Cart_Signal,"Profile + Cart Signal (Cart Item Present)",0.6103,0.7779,0.6924,0.0744,0,15,50,32.5,4.8059,4.8059,4.8059
+12,Context_A_Guest,"Guest (Cold Start)",0,0,0,0,1,10,50,28.33,4.8059,4.8059,4.8059
+12,Context_B_Cleanser_Behavior,"Behavior Only (Cleanser Search & View)",0.7621,0.8637,0.8147,0.0295,0,10,50,28.33,4.8059,4.8059,4.8059
+12,Context_C_Dry_Skin_Profile,"Profile Only (Dry Skin & Hydration)",0.1,0.24,0.1961,0.0613,0,10,50,28.33,4.8059,4.8059,4.8059
+12,Context_D_Oily_Acne_Hybrid,"Hybrid (Oily Acne Profile + Serum Behavior)",0.5338,0.7041,0.6416,0.0707,0,10,50,28.33,4.8059,4.8059,4.8059
+12,Context_E_Cart_Signal,"Profile + Cart Signal (Cart Item Present)",0.6103,0.7779,0.7188,0.0711,0,10,50,28.33,4.8059,4.8059,4.8059
+16,Context_A_Guest,"Guest (Cold Start)",0,0,0,0,1,10,50,30.31,4.8059,4.8059,4.8059
+16,Context_B_Cleanser_Behavior,"Behavior Only (Cleanser Search & View)",0.7621,0.8637,0.8159,0.0286,0,10,50,30.31,4.8059,4.8059,4.8059
+16,Context_C_Dry_Skin_Profile,"Profile Only (Dry Skin & Hydration)",0.1,0.24,0.1934,0.0609,0,10,50,30.31,4.8059,4.8059,4.8059
+16,Context_D_Oily_Acne_Hybrid,"Hybrid (Oily Acne Profile + Serum Behavior)",0.5338,0.7041,0.6428,0.0651,0,10,50,30.31,4.8059,4.8059,4.8059
+16,Context_E_Cart_Signal,"Profile + Cart Signal (Cart Item Present)",0.6103,0.7779,0.7206,0.0648,0,10,50,30.31,4.8059,4.8059,4.8059
+20,Context_A_Guest,"Guest (Cold Start)",0,0,0,0,1,10,50,30,4.8059,4.8059,4.8059
+20,Context_B_Cleanser_Behavior,"Behavior Only (Cleanser Search & View)",0.7621,0.8637,0.8137,0.0276,0,10,50,30,4.8059,4.8059,4.8059
+20,Context_C_Dry_Skin_Profile,"Profile Only (Dry Skin & Hydration)",0.1,0.24,0.1947,0.0572,0,10,50,30,4.8059,4.8059,4.8059
+20,Context_D_Oily_Acne_Hybrid,"Hybrid (Oily Acne Profile + Serum Behavior)",0.5338,0.7041,0.6456,0.0615,0,10,50,30,4.8059,4.8059,4.8059
+20,Context_E_Cart_Signal,"Profile + Cart Signal (Cart Item Present)",0.6103,0.7779,0.7227,0.0609,0,10,50,30,4.8059,4.8059,4.8059

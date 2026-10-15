@@ -1,0 +1,135 @@
+{
+    "Homepage": {
+        "url": "http:\/\/nginx\/index.php?r=home",
+        "http_stats": {
+            "min": 2191.63,
+            "max": 6166.06,
+            "avg": 3156.43,
+            "p50": 2503.51,
+            "p95": 6166.06
+        },
+        "http_codes": [
+            200
+        ],
+        "error_rate": "0%",
+        "internal_time_ms": 5981.86,
+        "mongo_queries": 11,
+        "mongo_time_ms": 938.18,
+        "collection_breakdown": {
+            "san_pham": {
+                "find": 4,
+                "aggregate": 1
+            },
+            "thuong_hieu": {
+                "find": 1
+            },
+            "danh_muc": {
+                "find": 2
+            },
+            "xuat_xu": {
+                "find": 1
+            },
+            "flash_sale_campaigns": {
+                "find": 1
+            }
+        },
+        "peak_memory_mb": 22
+    },
+    "Category (TatCa)": {
+        "url": "http:\/\/nginx\/index.php?r=tatca",
+        "http_stats": {
+            "min": 1282.15,
+            "max": 2814,
+            "avg": 1936.98,
+            "p50": 1964.97,
+            "p95": 2814
+        },
+        "http_codes": [
+            200
+        ],
+        "error_rate": "0%",
+        "internal_time_ms": 454.08,
+        "mongo_queries": 2,
+        "mongo_time_ms": 312.88,
+        "collection_breakdown": {
+            "san_pham": {
+                "aggregate": 1,
+                "find": 1
+            }
+        },
+        "peak_memory_mb": 22
+    },
+    "Product Detail": {
+        "url": "http:\/\/nginx\/index.php?r=chitiet&id=111",
+        "http_stats": {
+            "min": 404.43,
+            "max": 614.78,
+            "avg": 493.25,
+            "p50": 446.63,
+            "p95": 614.78
+        },
+        "http_codes": [
+            200
+        ],
+        "error_rate": "0%",
+        "internal_time_ms": 222.31,
+        "mongo_queries": 1,
+        "mongo_time_ms": 57.71,
+        "collection_breakdown": {
+            "san_pham": {
+                "find": 1
+            }
+        },
+        "peak_memory_mb": 22
+    },
+    "Search": {
+        "url": "http:\/\/nginx\/index.php?r=timkiem&keyword=serum",
+        "http_stats": {
+            "min": 1096.17,
+            "max": 2305.38,
+            "avg": 1798.63,
+            "p50": 1894.64,
+            "p95": 2305.38
+        },
+        "http_codes": [
+            200
+        ],
+        "error_rate": "0%",
+        "internal_time_ms": 489.43,
+        "mongo_queries": 2,
+        "mongo_time_ms": 323.15,
+        "collection_breakdown": {
+            "san_pham": {
+                "aggregate": 1,
+                "find": 1
+            }
+        },
+        "peak_memory_mb": 22
+    },
+    "Recommendation": {
+        "url": "http:\/\/nginx\/index.php?r=goiy",
+        "http_stats": {
+            "min": 1686.01,
+            "max": 2623.99,
+            "avg": 2016.28,
+            "p50": 1956.64,
+            "p95": 2623.99
+        },
+        "http_codes": [
+            200
+        ],
+        "error_rate": "0%",
+        "internal_time_ms": 2000.33,
+        "mongo_queries": 7,
+        "mongo_time_ms": 614.49,
+        "collection_breakdown": {
+            "san_pham": {
+                "find": 5
+            },
+            "thuong_hieu": {
+                "find": 1
+            }
+        },
+        "peak_memory_mb": 22
+    }
+}

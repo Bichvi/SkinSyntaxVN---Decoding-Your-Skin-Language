@@ -49,10 +49,13 @@ if ($isLoggedIn && $synaGreetingName !== 'bạn') {
     ];
 }
 
-// Prepare products for sections (exactly 4 products each for single-row layout)
-$flashSaleProducts = array_slice(array_values(array_filter($homepageSections['flashDeals'] ?? [])), 0, 4);
-if (empty($flashSaleProducts)) {
-    $flashSaleProducts = array_slice($latest, 0, 4);
+// Prepare products for sections (Phase 2D.2: Real campaign-driven Flash Sale with Personalized Deal Ranking)
+$flashSaleCampaign = $primaryFlashCampaign ?? null;
+$flashSaleMeta = $flashSalePersonalizedMeta ?? ['is_personalized' => false, 'ranking_mode' => 'BASELINE', 'user_state' => 'STATE_A'];
+$flashSaleProducts = [];
+if (!empty($flashSaleCampaign) && !empty($flashSaleCampaign['hydrated_items'])) {
+    // Phase 2E Carousel Extension: Retain full ranked candidate set from active campaign
+    $flashSaleProducts = $flashSaleCampaign['hydrated_items'];
 }
 
 $newProducts = array_slice($latest, 0, 4);
@@ -221,6 +224,107 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
           <div class="price fw-bold" style="color: #183B2B; font-size: 1.05rem; font-variant-numeric: tabular-nums;"><?= vnd($giaBan) ?></div>
           <?php if ($giaThiTruong !== '' && is_numeric($giaThiTruong) && (float)$giaThiTruong > (float)$giaBan): ?>
             <div class="price-market text-muted text-decoration-line-through" style="font-size: 0.8rem; font-variant-numeric: tabular-nums; color: #94A3B8 !important;"><?= vnd($giaThiTruong) ?></div>
+          <?php endif; ?>
+        </div>
+
+        <div class="product-card-actions d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100">
+            <input type="hidden" name="action" value="add_to_cart">
+            <input type="hidden" name="product_id" value="<?= h($productId) ?>">
+            <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="qty" value="1">
+            <button class="btn btn-sm w-100 text-nowrap d-inline-flex align-items-center justify-content-center" type="submit" style="background: #F1F5F9; color: #183B2B; border: 1px solid #CBD5E1; border-radius: 8px; font-weight: 600; font-size: 0.78rem; height: 38px; padding: 0 4px; transition: all 0.2s ease;" <?= $isOutOfStock ? 'disabled' : '' ?> title="Thêm vào giỏ">
+              <?= $isOutOfStock ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus me-1" style="font-size: 0.74rem;"></i> <span>Thêm vào giỏ</span>' ?>
+            </button>
+          </form>
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100">
+            <input type="hidden" name="action" value="add_to_cart">
+            <input type="hidden" name="buy_now" value="1">
+            <input type="hidden" name="product_id" value="<?= h($productId) ?>">
+            <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="qty" value="1">
+            <button class="btn btn-sm w-100 text-white text-nowrap d-inline-flex align-items-center justify-content-center" type="submit" style="background: #183B2B; border-radius: 8px; font-weight: 600; font-size: 0.78rem; height: 38px; padding: 0 4px; border: none; transition: background 0.2s ease;" <?= $isOutOfStock ? 'disabled' : '' ?> title="Mua ngay">
+              <?= $isOutOfStock ? 'Hết hàng' : '<span>Mua ngay</span>' ?>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <?php
+};
+
+// Dedicated Flash Sale Card Renderer (Real campaign pricing & discount badge)
+$renderFlashSaleProductCard = static function (array $p): void {
+    $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
+    $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+    $flashPrice = (int)($p['flash_price'] ?? $p['effective_price'] ?? 0);
+    $regularPrice = (int)($p['regular_price'] ?? $p['gia_ban'] ?? 0);
+    $discountPct = (int)($p['discount_percent'] ?? $p['phan_tram_giam'] ?? 0);
+    $rawRating = (float)($p['diem_danh_gia'] ?? 0.0);
+    $rawReviewCount = (int)($p['so_luong_danh_gia'] ?? 0);
+    $hasGoodRating = ($rawRating >= 4.5 && $rawReviewCount >= 5);
+    $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p['raw_product'] ?? $p) : false;
+    ?>
+    <div class="product-card product-card--editorial h-100 d-flex flex-column" style="background: #FFFFFF; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
+      <div class="product-thumb position-relative p-2" style="background: #F8FAF8; border-radius: 12px 12px 0 0;">
+        <?php if ($discountPct > 0): ?>
+          <span class="badge-sale position-absolute" style="top: 10px; left: 10px; background: #DC2626; color: #FFFFFF; font-weight: 700; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; z-index: 3;">
+            -<?= $discountPct ?>%
+          </span>
+        <?php endif; ?>
+
+        <span class="position-absolute" style="top: 10px; right: 10px; background: #FEF3C7; color: #92400E; font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; z-index: 3; border: 1px solid #FDE68A;">
+          <i class="fas fa-bolt text-warning me-1"></i>Flash Deal
+        </span>
+
+        <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 overflow-hidden" style="border-radius: 8px; aspect-ratio: 1/1;">
+          <img class="product-card-img" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h(!empty($p['ten_san_pham']) ? $p['ten_san_pham'] : 'Sản phẩm Flash Sale') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+        </a>
+      </div>
+
+      <div class="product-meta p-3 d-flex flex-column flex-grow-1" style="background: #FFFFFF;">
+        <div class="mb-1 d-flex align-items-center justify-content-between">
+          <span class="brand text-uppercase" style="font-size: 0.68rem; color: #183B2B; background: #EBF2EE; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.04em; font-weight: 700;">
+            <?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?>
+          </span>
+
+          <?php 
+            $reasonTag = trim((string)($p['flash_sale_reason_tag'] ?? ''));
+            if ($reasonTag === '' && $hasGoodRating) {
+                $reasonTag = 'Được đánh giá tốt';
+            }
+          ?>
+          <?php if ($reasonTag !== ''): ?>
+            <span class="badge" style="background: #ECFDF5; color: #047857; font-size: 0.68rem; font-weight: 600; border: 1px solid #A7F3D0;" title="Lý do gợi ý">
+              <i class="fas fa-sparkles me-1 text-warning"></i><?= h($reasonTag) ?>
+            </span>
+          <?php endif; ?>
+        </div>
+
+        <a class="name fw-semibold mb-1 text-decoration-none" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" style="color: #0F172A; font-size: 0.88rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.4em;">
+          <?= h($p['ten_san_pham'] ?? '') ?>
+        </a>
+
+        <?php if ($rawRating > 0 && $rawReviewCount > 0): ?>
+          <div class="d-flex align-items-center gap-1 mb-2" style="font-size: 0.76rem;">
+            <span class="d-inline-flex align-items-center gap-1 text-warning font-weight-bold">
+              <i class="fas fa-star" style="color: #F59E0B; font-size: 0.72rem;"></i> <?= number_format($rawRating, 1) ?>
+            </span>
+            <span class="text-muted small ms-1">(<?= $rawReviewCount ?>)</span>
+          </div>
+        <?php else: ?>
+          <div class="d-flex align-items-center gap-1 mb-2 text-muted" style="font-size: 0.76rem; color: #94A3B8;">
+            <i class="far fa-star text-muted" style="font-size: 0.72rem;"></i>
+            <span>Chưa có đánh giá</span>
+          </div>
+        <?php endif; ?>
+
+        <div class="price-wrap mb-3 mt-auto d-flex align-items-baseline gap-2">
+          <div class="price fw-bold" style="color: #DC2626; font-size: 1.15rem; font-variant-numeric: tabular-nums;"><?= vnd($flashPrice) ?></div>
+          <?php if ($regularPrice > $flashPrice): ?>
+            <div class="price-market text-muted text-decoration-line-through" style="font-size: 0.82rem; font-variant-numeric: tabular-nums; color: #94A3B8 !important;"><?= vnd($regularPrice) ?></div>
           <?php endif; ?>
         </div>
 
@@ -607,46 +711,85 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
     </section>
   <?php endif; ?>
 
-  <!-- 4. FLASH SALE -->
-  <?php if (!empty($flashSaleProducts)): ?>
-    <section class="mb-5 p-4 text-white" style="background: #183B2B; border-radius: 16px; border: 1px solid #2D6A4F;" data-flash-sale-countdown>
+  <!-- 4. FLASH SALE (Personalized Carousel UX Extension: All valid campaign products) -->
+  <?php if (!empty($flashSaleCampaign) && !empty($flashSaleProducts)): ?>
+    <section class="mb-5 p-4 text-white position-relative" style="background: #183B2B; border-radius: 16px; border: 1px solid #2D6A4F;" data-flash-sale-countdown data-flash-sale-carousel data-end-timestamp="<?= (int)($flashSaleCampaign['end_at_ts'] ?? 0) ?>">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-          <span class="text-uppercase fw-semibold small text-white-50" style="letter-spacing: 0.05em; font-size: 0.72rem;">ƯU ĐẤI CHỚP NHOÁNG</span>
-          <h2 class="fw-bold m-0 text-white" style="font-size: 1.5rem;"><i class="fas fa-bolt text-warning me-2"></i> Flash Sale Mỹ Phẩm</h2>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="text-uppercase fw-semibold small text-white-50" style="letter-spacing: 0.05em; font-size: 0.72rem;">ƯU ĐẤI CHỚP NHOÁNG</span>
+            <?php if (!empty($flashSaleMeta['is_personalized'])): ?>
+              <span class="badge" style="background: rgba(254, 240, 138, 0.2); color: #FEF08A; border: 1px solid rgba(254, 240, 138, 0.4); font-size: 0.68rem; font-weight: 600;">
+                <i class="fas fa-sparkles me-1"></i>Dành cho bạn
+              </span>
+            <?php endif; ?>
+          </div>
+          <h2 class="fw-bold m-0 text-white" style="font-size: 1.5rem;"><i class="fas fa-bolt text-warning me-2"></i> <?= h($flashSaleCampaign['ten_campaign']) ?></h2>
+          <?php if (!empty($flashSaleMeta['is_personalized'])): ?>
+            <p class="text-white-50 small mb-0 mt-1" style="font-size: 0.8rem; max-width: 520px;">
+              <i class="fas fa-sliders me-1 text-warning"></i>Gợi ý được sắp xếp theo nhu cầu và hoạt động gần đây của bạn.
+            </p>
+          <?php elseif (!empty($flashSaleCampaign['mo_ta'])): ?>
+            <p class="text-white-50 small mb-0 mt-1" style="font-size: 0.82rem; max-width: 520px;"><?= h($flashSaleCampaign['mo_ta']) ?></p>
+          <?php endif; ?>
         </div>
 
+        <!-- Countdown Timer -->
         <div class="d-flex align-items-center gap-2" aria-label="Thời gian còn lại">
-          <div class="text-center px-3 py-1.5" style="background: rgba(255,255,255,0.14); border-radius: 6px; min-width: 46px;">
+          <span class="text-white-50 fw-semibold small text-uppercase me-1" style="font-size: 0.72rem; letter-spacing: 0.04em;">Kết thúc sau</span>
+          <div class="text-center px-2.5 py-1.5" data-flash-day-box style="background: rgba(255,255,255,0.14); border-radius: 6px; min-width: 44px; display: none;">
             <strong class="d-block text-white fs-5 fw-bold tabular-nums" data-flash-days>00</strong>
             <small class="text-white-50 text-uppercase" style="font-size: 0.6rem;">Ngày</small>
           </div>
-          <span class="text-white fw-bold fs-5">:</span>
-          <div class="text-center px-3 py-1.5" style="background: rgba(255,255,255,0.14); border-radius: 6px; min-width: 46px;">
+          <span class="text-white fw-bold fs-5" data-flash-day-separator style="display: none;">:</span>
+          <div class="text-center px-2.5 py-1.5" style="background: rgba(255,255,255,0.14); border-radius: 6px; min-width: 44px;">
             <strong class="d-block text-white fs-5 fw-bold tabular-nums" data-flash-hours>00</strong>
             <small class="text-white-50 text-uppercase" style="font-size: 0.6rem;">Giờ</small>
           </div>
           <span class="text-white fw-bold fs-5">:</span>
-          <div class="text-center px-3 py-1.5" style="background: rgba(255,255,255,0.14); border-radius: 6px; min-width: 46px;">
+          <div class="text-center px-2.5 py-1.5" style="background: rgba(255,255,255,0.14); border-radius: 6px; min-width: 44px;">
             <strong class="d-block text-white fs-5 fw-bold tabular-nums" data-flash-minutes>00</strong>
             <small class="text-white-50 text-uppercase" style="font-size: 0.6rem;">Phút</small>
           </div>
           <span class="text-white fw-bold fs-5">:</span>
-          <div class="text-center px-3 py-1.5" style="background: rgba(255,255,255,0.14); border-radius: 6px; min-width: 46px;">
+          <div class="text-center px-2.5 py-1.5" style="background: rgba(255,255,255,0.14); border-radius: 6px; min-width: 44px;">
             <strong class="d-block text-white fs-5 fw-bold tabular-nums" data-flash-seconds>00</strong>
             <small class="text-white-50 text-uppercase" style="font-size: 0.6rem;">Giây</small>
           </div>
+          <span class="badge bg-danger ms-2 py-1.5 px-2" data-flash-status style="display: none; font-size: 0.75rem;">Đã kết thúc</span>
         </div>
 
-        <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn btn-light px-3.5 py-2 fw-semibold" style="color: #183B2B; border-radius: 6px; font-size: 0.84rem; background: #FFF; border: none;">Xem tất cả deal &rarr;</a>
+        <!-- Carousel Navigation & View All Link -->
+        <div class="d-flex align-items-center gap-2">
+          <!-- Page indicator & total count -->
+          <div class="d-flex align-items-center gap-1 text-white-50 small me-1" style="font-size: 0.82rem; font-variant-numeric: tabular-nums;">
+            <span>Trang</span> <strong class="text-white" id="flashCarouselCurrentPage">1</strong>/<span class="text-white" id="flashCarouselTotalPages">1</span>
+            <span class="text-white-50 ms-1">(<span id="flashCarouselTotalCount"><?= count($flashSaleProducts) ?></span> SP)</span>
+          </div>
+
+          <!-- Carousel Prev / Next Controls -->
+          <div class="btn-group" role="group" aria-label="Điều hướng danh sách Flash Sale">
+            <button type="button" class="btn btn-sm btn-outline-light flash-carousel-nav-btn" id="btnFlashPrev" aria-label="Trang trước" title="Trang trước" disabled style="border-radius: 8px 0 0 8px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-color: rgba(255,255,255,0.35);">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-light flash-carousel-nav-btn" id="btnFlashNext" aria-label="Trang sau" title="Trang sau" style="border-radius: 0 8px 8px 0; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-color: rgba(255,255,255,0.35);">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <a href="<?= BASE_URL ?>/index.php?r=flash_sale" class="btn btn-light px-3.5 py-2 fw-semibold text-nowrap ms-1" style="color: #183B2B; border-radius: 8px; font-size: 0.84rem; background: #FFF; border: none;">Xem tất cả deal &rarr;</a>
+        </div>
       </div>
 
-      <div class="row g-3">
-        <?php foreach ($flashSaleProducts as $p): ?>
-          <div class="col-6 col-md-3">
-            <?php $renderHomeProductCard($p, 'Flash Sale'); ?>
-          </div>
-        <?php endforeach; ?>
+      <!-- Carousel Viewport & Responsive Grid -->
+      <div class="flash-sale-carousel-viewport position-relative" id="flashSaleCarouselViewport" tabindex="0" role="region" aria-label="Băng chuyền sản phẩm Flash Sale" style="outline: none;">
+        <div class="flash-sale-grid" id="flashSaleGrid">
+          <?php foreach ($flashSaleProducts as $idx => $p): ?>
+            <div class="flash-sale-item <?= $idx >= 8 ? 'd-none' : '' ?>" data-flash-index="<?= $idx ?>">
+              <?php $renderFlashSaleProductCard($p); ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
       </div>
     </section>
   <?php endif; ?>
@@ -874,35 +1017,300 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
 </div>
 
 <script>
-// Flash Sale Countdown Timer Script
+// Real Flash Sale Server-Driven Countdown Timer Script (Phase 2C)
 document.addEventListener('DOMContentLoaded', function () {
   var root = document.querySelector('[data-flash-sale-countdown]');
-  if (root) {
-    var dayEl = root.querySelector('[data-flash-days]');
-    var hourEl = root.querySelector('[data-flash-hours]');
-    var minuteEl = root.querySelector('[data-flash-minutes]');
-    var secondEl = root.querySelector('[data-flash-seconds]');
-    var target = new Date();
-    target.setHours(23, 59, 59, 999);
+  if (!root) return;
 
-    var pad = function (val) { return String(Math.max(0, val)).padStart(2, '0'); };
+  var endTs = parseInt(root.getAttribute('data-end-timestamp') || '0', 10);
+  if (!endTs) return;
 
-    var tick = function () {
-      var diff = Math.max(0, target.getTime() - Date.now());
-      var totalSeconds = Math.floor(diff / 1000);
-      var days = Math.floor(totalSeconds / 86400);
-      var hours = Math.floor((totalSeconds % 86400) / 3600);
-      var minutes = Math.floor((totalSeconds % 3600) / 60);
-      var seconds = totalSeconds % 60;
+  var dayEl = root.querySelector('[data-flash-days]');
+  var dayBox = root.querySelector('[data-flash-day-box]');
+  var daySep = root.querySelector('[data-flash-day-separator]');
+  var hourEl = root.querySelector('[data-flash-hours]');
+  var minuteEl = root.querySelector('[data-flash-minutes]');
+  var secondEl = root.querySelector('[data-flash-seconds]');
+  var statusEl = root.querySelector('[data-flash-status]');
 
-      if (dayEl) dayEl.textContent = pad(days);
-      if (hourEl) hourEl.textContent = pad(hours);
-      if (minuteEl) minuteEl.textContent = pad(minutes);
-      if (secondEl) secondEl.textContent = pad(seconds);
-    };
+  var pad = function (val) { return String(Math.max(0, val)).padStart(2, '0'); };
+  var hasReloaded = false;
 
-    tick();
-    setInterval(tick, 1000);
+  var tick = function () {
+    var nowSec = Math.floor(Date.now() / 1000);
+    var remaining = Math.max(0, endTs - nowSec);
+
+    if (remaining <= 0) {
+      if (dayEl) dayEl.textContent = '00';
+      if (hourEl) hourEl.textContent = '00';
+      if (minuteEl) minuteEl.textContent = '00';
+      if (secondEl) secondEl.textContent = '00';
+      if (statusEl) statusEl.style.display = 'inline-block';
+
+      if (!hasReloaded) {
+        hasReloaded = true;
+        setTimeout(function () {
+          var reloadKey = 'ss_flash_ended_' + endTs;
+          if (!sessionStorage.getItem(reloadKey)) {
+            sessionStorage.setItem(reloadKey, '1');
+            window.location.reload();
+          }
+        }, 2000);
+      }
+      return;
+    }
+
+    var days = Math.floor(remaining / 86400);
+    var hours = Math.floor((remaining % 86400) / 3600);
+    var minutes = Math.floor((remaining % 3600) / 60);
+    var seconds = remaining % 60;
+
+    if (dayEl) dayEl.textContent = pad(days);
+    if (dayBox && daySep) {
+      if (days > 0) {
+        dayBox.style.display = 'inline-block';
+        daySep.style.display = 'inline-block';
+      } else {
+        dayBox.style.display = 'none';
+        daySep.style.display = 'none';
+      }
+    }
+    if (hourEl) hourEl.textContent = pad(hours);
+    if (minuteEl) minuteEl.textContent = pad(minutes);
+    if (secondEl) secondEl.textContent = pad(seconds);
+  };
+
+  tick();
+  var intervalId = setInterval(function () {
+    var nowSec = Math.floor(Date.now() / 1000);
+    if (endTs - nowSec <= 0) {
+      clearInterval(intervalId);
+      tick();
+    } else {
+      tick();
+    }
+  }, 1000);
+});
+
+// Flash Sale Personalized Carousel UX Extension Navigation
+document.addEventListener('DOMContentLoaded', function () {
+  var root = document.querySelector('[data-flash-sale-carousel]');
+  if (!root) return;
+
+  var items = Array.prototype.slice.call(root.querySelectorAll('.flash-sale-item'));
+  var totalItems = items.length;
+  if (totalItems === 0) return;
+
+  var btnPrev = document.getElementById('btnFlashPrev');
+  var btnNext = document.getElementById('btnFlashNext');
+  var curPageEl = document.getElementById('flashCarouselCurrentPage');
+  var totalPagesEl = document.getElementById('flashCarouselTotalPages');
+  var totalCountEl = document.getElementById('flashCarouselTotalCount');
+  var viewport = document.getElementById('flashSaleCarouselViewport');
+
+  if (totalCountEl) totalCountEl.textContent = totalItems;
+
+  var currentPage = 0;
+
+  var getPageSize = function () {
+    var w = window.innerWidth;
+    if (w >= 1200) return 8; // Desktop >= 1200px: 4 cols x 2 rows
+    if (w >= 768) return 4;  // Tablet 768-1199px: 2 cols x 2 rows
+    return 2;                // Mobile < 768px: 2 cols x 1 row
+  };
+
+  var getTotalPages = function (pageSize) {
+    return Math.max(1, Math.ceil(totalItems / pageSize));
+  };
+
+  var renderCarousel = function (targetPage, animate) {
+    var pageSize = getPageSize();
+    var totalPages = getTotalPages(pageSize);
+
+    currentPage = Math.max(0, Math.min(targetPage, totalPages - 1));
+
+    var startIndex = currentPage * pageSize;
+    var endIndex = Math.min(startIndex + pageSize, totalItems);
+
+    for (var i = 0; i < totalItems; i++) {
+      var item = items[i];
+      if (i >= startIndex && i < endIndex) {
+        item.classList.remove('d-none');
+        if (animate) {
+          item.classList.remove('flash-card-entering');
+          void item.offsetWidth;
+          item.classList.add('flash-card-entering');
+        }
+      } else {
+        item.classList.add('d-none');
+        item.classList.remove('flash-card-entering');
+      }
+    }
+
+    if (curPageEl) curPageEl.textContent = (currentPage + 1);
+    if (totalPagesEl) totalPagesEl.textContent = totalPages;
+
+    if (btnPrev) {
+      btnPrev.disabled = (currentPage <= 0);
+      btnPrev.setAttribute('aria-disabled', currentPage <= 0 ? 'true' : 'false');
+    }
+    if (btnNext) {
+      btnNext.disabled = (currentPage >= totalPages - 1);
+      btnNext.setAttribute('aria-disabled', currentPage >= totalPages - 1 ? 'true' : 'false');
+    }
+  };
+
+  // Initial render
+  renderCarousel(0, false);
+
+  if (btnPrev) {
+    btnPrev.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (currentPage > 0) {
+        renderCarousel(currentPage - 1, true);
+      }
+    });
   }
+
+  if (btnNext) {
+    btnNext.addEventListener('click', function (e) {
+      e.preventDefault();
+      var pageSize = getPageSize();
+      var totalPages = getTotalPages(pageSize);
+      if (currentPage < totalPages - 1) {
+        renderCarousel(currentPage + 1, true);
+      }
+    });
+  }
+
+  // Keyboard navigation on carousel viewport
+  if (viewport) {
+    viewport.addEventListener('keydown', function (e) {
+      var pageSize = getPageSize();
+      var totalPages = getTotalPages(pageSize);
+      if (e.key === 'ArrowLeft') {
+        if (currentPage > 0) {
+          e.preventDefault();
+          renderCarousel(currentPage - 1, true);
+        }
+      } else if (e.key === 'ArrowRight') {
+        if (currentPage < totalPages - 1) {
+          e.preventDefault();
+          renderCarousel(currentPage + 1, true);
+        }
+      }
+    });
+  }
+
+  // Mobile swipe support
+  if (viewport) {
+    var touchStartX = 0;
+    var touchStartY = 0;
+    viewport.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    viewport.addEventListener('touchend', function (e) {
+      if (e.changedTouches.length === 1) {
+        var deltaX = e.changedTouches[0].clientX - touchStartX;
+        var deltaY = e.changedTouches[0].clientY - touchStartY;
+        if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+          var pageSize = getPageSize();
+          var totalPages = getTotalPages(pageSize);
+          if (deltaX < 0 && currentPage < totalPages - 1) {
+            renderCarousel(currentPage + 1, true);
+          } else if (deltaX > 0 && currentPage > 0) {
+            renderCarousel(currentPage - 1, true);
+          }
+        }
+      }
+    }, { passive: true });
+  }
+
+  // Window resize handler: recalculate page count and clamp active page
+  var lastWidth = window.innerWidth;
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      var newWidth = window.innerWidth;
+      if (newWidth !== lastWidth) {
+        lastWidth = newWidth;
+        renderCarousel(currentPage, false);
+      }
+    }, 100);
+  });
 });
 </script>
+
+<style>
+/* Flash Sale Personalized Carousel Styles */
+.flash-sale-carousel-viewport {
+  position: relative;
+  width: 100%;
+  outline: none;
+}
+.flash-sale-carousel-viewport:focus-visible {
+  outline: 2px solid rgba(254, 240, 138, 0.7);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+.flash-sale-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+.flash-sale-item {
+  width: 100%;
+  display: block;
+}
+.flash-sale-item.d-none {
+  display: none !important;
+}
+.flash-sale-item.flash-card-entering {
+  animation: flashCardFadeIn 0.22s ease-out forwards;
+}
+@keyframes flashCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.flash-carousel-nav-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  transition: all 0.2s ease;
+}
+.flash-carousel-nav-btn:hover:not(:disabled) {
+  background: #FFFFFF;
+  color: #183B2B;
+  border-color: #FFFFFF;
+}
+.flash-carousel-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+@media (max-width: 1199.98px) {
+  .flash-sale-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+@media (max-width: 767.98px) {
+  .flash-sale-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+</style>

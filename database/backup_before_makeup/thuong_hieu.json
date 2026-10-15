@@ -1,0 +1,2030 @@
+[
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb65"
+    },
+    "ma_thuong_hieu": 279,
+    "ten_thuong_hieu": "Avander",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb66"
+    },
+    "ma_thuong_hieu": 285,
+    "ten_thuong_hieu": "Scarz",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb67"
+    },
+    "ma_thuong_hieu": 1,
+    "ten_thuong_hieu": "CeraVe",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb68"
+    },
+    "ma_thuong_hieu": 2,
+    "ten_thuong_hieu": "Cocoon",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb69"
+    },
+    "ma_thuong_hieu": 3,
+    "ten_thuong_hieu": "Klairs",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb6a"
+    },
+    "ma_thuong_hieu": 4,
+    "ten_thuong_hieu": "Bioderma",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb6b"
+    },
+    "ma_thuong_hieu": 5,
+    "ten_thuong_hieu": "Cetaphil",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb6c"
+    },
+    "ma_thuong_hieu": 6,
+    "ten_thuong_hieu": "L'Oreal",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb6d"
+    },
+    "ma_thuong_hieu": 7,
+    "ten_thuong_hieu": "La Roche-Posay",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb6e"
+    },
+    "ma_thuong_hieu": 8,
+    "ten_thuong_hieu": "Skin1004",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb6f"
+    },
+    "ma_thuong_hieu": 10,
+    "ten_thuong_hieu": "Anessa",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb70"
+    },
+    "ma_thuong_hieu": 11,
+    "ten_thuong_hieu": "d'Alba",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb71"
+    },
+    "ma_thuong_hieu": 12,
+    "ten_thuong_hieu": "Martiderm",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb72"
+    },
+    "ma_thuong_hieu": 14,
+    "ten_thuong_hieu": "Garnier",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb73"
+    },
+    "ma_thuong_hieu": 15,
+    "ten_thuong_hieu": "Embryolisse",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb74"
+    },
+    "ma_thuong_hieu": 16,
+    "ten_thuong_hieu": "Caryophy",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb75"
+    },
+    "ma_thuong_hieu": 65,
+    "ten_thuong_hieu": "Some By Mi",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb76"
+    },
+    "ma_thuong_hieu": 66,
+    "ten_thuong_hieu": "Cell Fusion C",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb77"
+    },
+    "ma_thuong_hieu": 67,
+    "ten_thuong_hieu": "Naruko",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb78"
+    },
+    "ma_thuong_hieu": 68,
+    "ten_thuong_hieu": "Isis Pharma",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb79"
+    },
+    "ma_thuong_hieu": 71,
+    "ten_thuong_hieu": "Aperire",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb7a"
+    },
+    "ma_thuong_hieu": 72,
+    "ten_thuong_hieu": "Balance Active Formula",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb7b"
+    },
+    "ma_thuong_hieu": 75,
+    "ten_thuong_hieu": "Sur.Medic+",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb7c"
+    },
+    "ma_thuong_hieu": 77,
+    "ten_thuong_hieu": "Emmié by Happy Skin",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb7d"
+    },
+    "ma_thuong_hieu": 79,
+    "ten_thuong_hieu": "9Wishes",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb7e"
+    },
+    "ma_thuong_hieu": 80,
+    "ten_thuong_hieu": "Neogen Dermalogy",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb7f"
+    },
+    "ma_thuong_hieu": 308,
+    "ten_thuong_hieu": "VT Cosmetics",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb80"
+    },
+    "ma_thuong_hieu": 310,
+    "ten_thuong_hieu": "Urgo",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb81"
+    },
+    "ma_thuong_hieu": 311,
+    "ten_thuong_hieu": "S:kin Heritage",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb82"
+    },
+    "ma_thuong_hieu": 314,
+    "ten_thuong_hieu": "Ya Samaya",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb83"
+    },
+    "ma_thuong_hieu": 17,
+    "ten_thuong_hieu": "Vichy",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb84"
+    },
+    "ma_thuong_hieu": 18,
+    "ten_thuong_hieu": "Neutrogena",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb85"
+    },
+    "ma_thuong_hieu": 19,
+    "ten_thuong_hieu": "Simple",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb86"
+    },
+    "ma_thuong_hieu": 20,
+    "ten_thuong_hieu": "SVR",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb87"
+    },
+    "ma_thuong_hieu": 21,
+    "ten_thuong_hieu": "Olay",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb88"
+    },
+    "ma_thuong_hieu": 22,
+    "ten_thuong_hieu": "Beplain",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb89"
+    },
+    "ma_thuong_hieu": 24,
+    "ten_thuong_hieu": "Torriden",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb8a"
+    },
+    "ma_thuong_hieu": 26,
+    "ten_thuong_hieu": "oh!oh!",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb8b"
+    },
+    "ma_thuong_hieu": 27,
+    "ten_thuong_hieu": "Timeless",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb8c"
+    },
+    "ma_thuong_hieu": 29,
+    "ten_thuong_hieu": "Paula's Choice",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb8d"
+    },
+    "ma_thuong_hieu": 30,
+    "ten_thuong_hieu": "DHC",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb8e"
+    },
+    "ma_thuong_hieu": 99,
+    "ten_thuong_hieu": "Derladie",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb8f"
+    },
+    "ma_thuong_hieu": 100,
+    "ten_thuong_hieu": "Derma Angel",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb90"
+    },
+    "ma_thuong_hieu": 101,
+    "ten_thuong_hieu": "Bioré",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb91"
+    },
+    "ma_thuong_hieu": 104,
+    "ten_thuong_hieu": "Ducray",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb92"
+    },
+    "ma_thuong_hieu": 105,
+    "ten_thuong_hieu": "Forencos",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb93"
+    },
+    "ma_thuong_hieu": 110,
+    "ten_thuong_hieu": "Bye Bye Blemish",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb94"
+    },
+    "ma_thuong_hieu": 112,
+    "ten_thuong_hieu": "Mayan",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb95"
+    },
+    "ma_thuong_hieu": 150,
+    "ten_thuong_hieu": "DrCeutics",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb96"
+    },
+    "ma_thuong_hieu": 151,
+    "ten_thuong_hieu": "Bielenda",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb97"
+    },
+    "ma_thuong_hieu": 154,
+    "ten_thuong_hieu": "Clinicos",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb98"
+    },
+    "ma_thuong_hieu": 155,
+    "ten_thuong_hieu": "Acnes",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb99"
+    },
+    "ma_thuong_hieu": 157,
+    "ten_thuong_hieu": "Ma:nyo",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb9a"
+    },
+    "ma_thuong_hieu": 114,
+    "ten_thuong_hieu": "Swiss Image",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb9b"
+    },
+    "ma_thuong_hieu": 117,
+    "ten_thuong_hieu": "Heliocare",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb9c"
+    },
+    "ma_thuong_hieu": 118,
+    "ten_thuong_hieu": "Prettyskin",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb9d"
+    },
+    "ma_thuong_hieu": 122,
+    "ten_thuong_hieu": "I'm from",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb9e"
+    },
+    "ma_thuong_hieu": 126,
+    "ten_thuong_hieu": "Curél",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdb9f"
+    },
+    "ma_thuong_hieu": 81,
+    "ten_thuong_hieu": "Bio-essence",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba0"
+    },
+    "ma_thuong_hieu": 82,
+    "ten_thuong_hieu": "TIA'M",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba1"
+    },
+    "ma_thuong_hieu": 85,
+    "ten_thuong_hieu": "La Bonita",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba2"
+    },
+    "ma_thuong_hieu": 87,
+    "ten_thuong_hieu": "JMsolution",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba3"
+    },
+    "ma_thuong_hieu": 88,
+    "ten_thuong_hieu": "Banila Co",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba4"
+    },
+    "ma_thuong_hieu": 91,
+    "ten_thuong_hieu": "Judydoll",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba5"
+    },
+    "ma_thuong_hieu": 94,
+    "ten_thuong_hieu": "Nuxe",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba6"
+    },
+    "ma_thuong_hieu": 33,
+    "ten_thuong_hieu": "Sunplay",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba7"
+    },
+    "ma_thuong_hieu": 34,
+    "ten_thuong_hieu": "GoodnDoc",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba8"
+    },
+    "ma_thuong_hieu": 36,
+    "ten_thuong_hieu": "Vaseline",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdba9"
+    },
+    "ma_thuong_hieu": 38,
+    "ten_thuong_hieu": "Eucerin",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbaa"
+    },
+    "ma_thuong_hieu": 39,
+    "ten_thuong_hieu": "Hatomugi",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbab"
+    },
+    "ma_thuong_hieu": 40,
+    "ten_thuong_hieu": "Nivea",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbac"
+    },
+    "ma_thuong_hieu": 42,
+    "ten_thuong_hieu": "Obagi",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbad"
+    },
+    "ma_thuong_hieu": 44,
+    "ten_thuong_hieu": "Gamma Chemicals",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbae"
+    },
+    "ma_thuong_hieu": 46,
+    "ten_thuong_hieu": "Rosette",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbaf"
+    },
+    "ma_thuong_hieu": 129,
+    "ten_thuong_hieu": "A-Derma",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb0"
+    },
+    "ma_thuong_hieu": 130,
+    "ten_thuong_hieu": "Melano CC",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb1"
+    },
+    "ma_thuong_hieu": 132,
+    "ten_thuong_hieu": "Chinoshio",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb2"
+    },
+    "ma_thuong_hieu": 135,
+    "ten_thuong_hieu": "Eveline",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb3"
+    },
+    "ma_thuong_hieu": 139,
+    "ten_thuong_hieu": "Senka",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb4"
+    },
+    "ma_thuong_hieu": 140,
+    "ten_thuong_hieu": "St.Ives",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb5"
+    },
+    "ma_thuong_hieu": 141,
+    "ten_thuong_hieu": "MEISHOKU",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb6"
+    },
+    "ma_thuong_hieu": 143,
+    "ten_thuong_hieu": "Compliment",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb7"
+    },
+    "ma_thuong_hieu": 144,
+    "ten_thuong_hieu": "Care:Nel",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb8"
+    },
+    "ma_thuong_hieu": 177,
+    "ten_thuong_hieu": "Lanbena",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbb9"
+    },
+    "ma_thuong_hieu": 178,
+    "ten_thuong_hieu": "Medicube",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbba"
+    },
+    "ma_thuong_hieu": 182,
+    "ten_thuong_hieu": "Decumar",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbbb"
+    },
+    "ma_thuong_hieu": 183,
+    "ten_thuong_hieu": "Kosé",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbbc"
+    },
+    "ma_thuong_hieu": 188,
+    "ten_thuong_hieu": "Fixderma",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbbd"
+    },
+    "ma_thuong_hieu": 191,
+    "ten_thuong_hieu": "Naturie",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbbe"
+    },
+    "ma_thuong_hieu": 49,
+    "ten_thuong_hieu": "Hada Labo",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbbf"
+    },
+    "ma_thuong_hieu": 50,
+    "ten_thuong_hieu": "Laneige",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc0"
+    },
+    "ma_thuong_hieu": 51,
+    "ten_thuong_hieu": "Uriage",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc1"
+    },
+    "ma_thuong_hieu": 52,
+    "ten_thuong_hieu": "Dr.G",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc2"
+    },
+    "ma_thuong_hieu": 53,
+    "ten_thuong_hieu": "Evoluderm",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc3"
+    },
+    "ma_thuong_hieu": 54,
+    "ten_thuong_hieu": "Angel's Liquid",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc4"
+    },
+    "ma_thuong_hieu": 55,
+    "ten_thuong_hieu": "Chacott",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc5"
+    },
+    "ma_thuong_hieu": 56,
+    "ten_thuong_hieu": "Tenamyd",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc6"
+    },
+    "ma_thuong_hieu": 57,
+    "ten_thuong_hieu": "So'Natural",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc7"
+    },
+    "ma_thuong_hieu": 59,
+    "ten_thuong_hieu": "Naris Cosmetics",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc8"
+    },
+    "ma_thuong_hieu": 60,
+    "ten_thuong_hieu": "Colorkey",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbc9"
+    },
+    "ma_thuong_hieu": 61,
+    "ten_thuong_hieu": "Avène",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbca"
+    },
+    "ma_thuong_hieu": 63,
+    "ten_thuong_hieu": "innisfree",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbcb"
+    },
+    "ma_thuong_hieu": 290,
+    "ten_thuong_hieu": "Ciracle",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbcc"
+    },
+    "ma_thuong_hieu": 297,
+    "ten_thuong_hieu": "OXY",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbcd"
+    },
+    "ma_thuong_hieu": 299,
+    "ten_thuong_hieu": "Evian",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbce"
+    },
+    "ma_thuong_hieu": 300,
+    "ten_thuong_hieu": "Cosrx",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbcf"
+    },
+    "ma_thuong_hieu": 241,
+    "ten_thuong_hieu": "Round Lab",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd0"
+    },
+    "ma_thuong_hieu": 242,
+    "ten_thuong_hieu": "Axis-Y",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd1"
+    },
+    "ma_thuong_hieu": 245,
+    "ten_thuong_hieu": "Jumiso",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd2"
+    },
+    "ma_thuong_hieu": 265,
+    "ten_thuong_hieu": "HASI",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd3"
+    },
+    "ma_thuong_hieu": 266,
+    "ten_thuong_hieu": "Dermatix",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd4"
+    },
+    "ma_thuong_hieu": 269,
+    "ten_thuong_hieu": "Azderma",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd5"
+    },
+    "ma_thuong_hieu": 270,
+    "ten_thuong_hieu": "Frankly",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd6"
+    },
+    "ma_thuong_hieu": 162,
+    "ten_thuong_hieu": "dProgram",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd7"
+    },
+    "ma_thuong_hieu": 163,
+    "ten_thuong_hieu": "B.O.M",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd8"
+    },
+    "ma_thuong_hieu": 164,
+    "ten_thuong_hieu": "Pekah",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbd9"
+    },
+    "ma_thuong_hieu": 165,
+    "ten_thuong_hieu": "On: The Body",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbda"
+    },
+    "ma_thuong_hieu": 168,
+    "ten_thuong_hieu": "Milaganics",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbdb"
+    },
+    "ma_thuong_hieu": 170,
+    "ten_thuong_hieu": "The SAEM",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbdc"
+    },
+    "ma_thuong_hieu": 173,
+    "ten_thuong_hieu": "Elixir",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbdd"
+    },
+    "ma_thuong_hieu": 174,
+    "ten_thuong_hieu": "Nature Republic",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbde"
+    },
+    "ma_thuong_hieu": 175,
+    "ten_thuong_hieu": "Pyunkang Yul",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbdf"
+    },
+    "ma_thuong_hieu": 214,
+    "ten_thuong_hieu": "The Lab",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe0"
+    },
+    "ma_thuong_hieu": 218,
+    "ten_thuong_hieu": "Arrahan",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe1"
+    },
+    "ma_thuong_hieu": 204,
+    "ten_thuong_hieu": "australis",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe2"
+    },
+    "ma_thuong_hieu": 205,
+    "ten_thuong_hieu": "Dermablock",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe3"
+    },
+    "ma_thuong_hieu": 207,
+    "ten_thuong_hieu": "Unknown",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe4"
+    },
+    "ma_thuong_hieu": 208,
+    "ten_thuong_hieu": "The Cafuné",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe5"
+    },
+    "ma_thuong_hieu": 232,
+    "ten_thuong_hieu": "Pond's",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe6"
+    },
+    "ma_thuong_hieu": 234,
+    "ten_thuong_hieu": "Shimbi",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe7"
+    },
+    "ma_thuong_hieu": 235,
+    "ten_thuong_hieu": "Abib",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe8"
+    },
+    "ma_thuong_hieu": 238,
+    "ten_thuong_hieu": "Purederm",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbe9"
+    },
+    "ma_thuong_hieu": 352,
+    "ten_thuong_hieu": "Skinpres.T",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbea"
+    },
+    "ma_thuong_hieu": 388,
+    "ten_thuong_hieu": "Momopuri",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbeb"
+    },
+    "ma_thuong_hieu": 392,
+    "ten_thuong_hieu": "Dr HER Paris",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbec"
+    },
+    "ma_thuong_hieu": 338,
+    "ten_thuong_hieu": "Skintific",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbed"
+    },
+    "ma_thuong_hieu": 346,
+    "ten_thuong_hieu": "Skinoxy",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbee"
+    },
+    "ma_thuong_hieu": 328,
+    "ten_thuong_hieu": "Celimax",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbef"
+    },
+    "ma_thuong_hieu": 335,
+    "ten_thuong_hieu": "Huxley",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf0"
+    },
+    "ma_thuong_hieu": 324,
+    "ten_thuong_hieu": "Happy Event",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf1"
+    },
+    "ma_thuong_hieu": 422,
+    "ten_thuong_hieu": "Cosmedica",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf2"
+    },
+    "ma_thuong_hieu": 406,
+    "ten_thuong_hieu": "Altruist",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf3"
+    },
+    "ma_thuong_hieu": 407,
+    "ten_thuong_hieu": "Vegick",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf4"
+    },
+    "ma_thuong_hieu": 405,
+    "ten_thuong_hieu": "By Wishtrend",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf5"
+    },
+    "ma_thuong_hieu": 361,
+    "ten_thuong_hieu": "Laboratorios Babé",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf6"
+    },
+    "ma_thuong_hieu": 366,
+    "ten_thuong_hieu": "Cathy Doll",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf7"
+    },
+    "ma_thuong_hieu": 367,
+    "ten_thuong_hieu": "Freeplus",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf8"
+    },
+    "ma_thuong_hieu": 372,
+    "ten_thuong_hieu": "Teenilicious",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbf9"
+    },
+    "ma_thuong_hieu": 373,
+    "ten_thuong_hieu": "S.O.N",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbfa"
+    },
+    "ma_thuong_hieu": 378,
+    "ten_thuong_hieu": "Banana Boat",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbfb"
+    },
+    "ma_thuong_hieu": 379,
+    "ten_thuong_hieu": "Eau Thermale Jonzac",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbfc"
+    },
+    "ma_thuong_hieu": 382,
+    "ten_thuong_hieu": "Byphasse",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbfd"
+    },
+    "ma_thuong_hieu": 383,
+    "ten_thuong_hieu": "Hyaestic",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbfe"
+    },
+    "ma_thuong_hieu": 385,
+    "ten_thuong_hieu": "SkinCeuticals",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdbff"
+    },
+    "ma_thuong_hieu": 424,
+    "ten_thuong_hieu": "Topicrem",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc00"
+    },
+    "ma_thuong_hieu": 429,
+    "ten_thuong_hieu": "Clean & Clear",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  }
+]

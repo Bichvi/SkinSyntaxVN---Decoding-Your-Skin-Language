@@ -120,13 +120,10 @@ class HoaDon {
             throw new RuntimeException('Sản phẩm không tồn tại: #' . $productId);
         }
 
-        $giaBan = (int)($product['gia_ban'] ?? 0);
-        if ($giaBan > 0) {
-            return $giaBan;
-        }
-
-        $giaThiTruong = (int)($product['gia_thi_truong'] ?? 0);
-        return max(0, $giaThiTruong);
+        require_once __DIR__ . '/FlashSaleCampaign.php';
+        $campaignModel = new FlashSaleCampaign($this->db);
+        $pricing = $campaignModel->resolveEffectivePrice($productId, null, $product);
+        return (int)$pricing['effective_price'];
     }
 
     private function findProductForStock(string $productId): ?array {
@@ -660,7 +657,7 @@ class HoaDon {
                 ]);
 
                 // Phase B: Unified Interaction Logging
-                InteractionLogger::logPurchase($item['ma_san_pham'], $maKhachHang, $maHoaDonMoi, (int)($item['so_luong'] ?? 1));
+                InteractionLogger::logPurchase($item['ma_san_pham'], $maKh, $maHoaDonMoi, (int)($item['so_luong'] ?? 1));
             }
 
             // 3. Cập nhật Voucher

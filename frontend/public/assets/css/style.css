@@ -60,13 +60,13 @@ a{ text-decoration:none; color:inherit; }
   z-index: 1040;
   background: #FFFFFF;
   border-bottom: 1px solid #E2EADF;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px rgba(33, 84, 39, 0.03);
+  box-shadow: 0 4px 18px rgba(23, 61, 42, 0.08);
+  transition: box-shadow 0.2s ease;
 }
 
-.site-header.is-scrolled {
-  background: #FFFFFF !important;
-  box-shadow: 0 4px 18px rgba(23, 61, 42, 0.08) !important;
+.site-header .header-main {
+  border-bottom: none;
+  box-shadow: none;
 }
 
 /* TOPBAR nhỏ */
@@ -3485,7 +3485,7 @@ body.site-body{
 /* 1. GLOBAL OVERFLOW & FLUID TYPOGRAPHY RESET */
 html, body {
   max-width: 100vw !important;
-  overflow-x: hidden !important;
+  overflow-x: clip !important;
   position: relative;
 }
 

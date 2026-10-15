@@ -325,6 +325,14 @@ function route_access_map(): array {
         'admin_vouchers' => ['admin'],
         'admin_voucher_save' => ['admin'],
         'admin_voucher_delete' => ['admin'],
+        'admin_flash_sales' => ['admin'],
+        'admin_flash_sale_create' => ['admin'],
+        'admin_flash_sale_edit' => ['admin'],
+        'admin_flash_sale_save' => ['admin'],
+        'admin_flash_sale_toggle' => ['admin'],
+        'admin_flash_sale_delete' => ['admin'],
+        'admin_flash_sale_detail' => ['admin'],
+        'api_admin_flash_sale_search_products' => ['admin'],
         'admin_users' => ['admin'],
         'admin_customer_save' => ['admin'],
         'admin_customer_delete' => ['admin'],
@@ -381,4 +389,44 @@ function user_can_access_route(string $route, ?array $user = null): bool {
 function redirect($url) {
     header('Location: ' . $url);
     exit;
+}
+
+function get_effective_product_price($productId, ?array $product = null, ?int $nowTimestamp = null): array {
+    global $db, $pdo;
+    if (!class_exists('FlashSaleCampaign')) {
+        $candidates = [
+            dirname(__DIR__, 2) . '/backend/app/models/FlashSaleCampaign.php',
+            dirname(__DIR__, 2) . '/app/models/FlashSaleCampaign.php',
+            '/var/www/html/app/models/FlashSaleCampaign.php',
+            (defined('BACKEND_PATH') ? BACKEND_PATH . '/app/models/FlashSaleCampaign.php' : ''),
+        ];
+        foreach ($candidates as $file) {
+            if ($file !== '' && is_file($file)) {
+                require_once $file;
+                break;
+            }
+        }
+    }
+    if (!class_exists('FlashSaleCampaign')) {
+        return [
+            'product_id' => $productId,
+            'regular_price' => (int)($product['gia_ban'] ?? 0),
+            'effective_price' => (int)($product['gia_ban'] ?? 0),
+            'is_flash_sale' => false,
+            'discount_percent' => 0,
+        ];
+    }
+    $dbInstance = $db ?? ($GLOBALS['db'] ?? ($pdo ?? ($GLOBALS['pdo'] ?? null)));
+    if ($dbInstance instanceof MongoDatabaseCompat) {
+        $dbInstance = $dbInstance->raw();
+    }
+    static $campaignModel = null;
+    if ($campaignModel === null || $nowTimestamp !== null) {
+        $model = new FlashSaleCampaign($dbInstance);
+        if ($nowTimestamp === null) {
+            $campaignModel = $model;
+        }
+        return $model->resolveEffectivePrice($productId, $nowTimestamp, $product);
+    }
+    return $campaignModel->resolveEffectivePrice($productId, $nowTimestamp, $product);
 }

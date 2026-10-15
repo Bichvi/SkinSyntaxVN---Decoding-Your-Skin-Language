@@ -18,11 +18,18 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
         <div class="studio-stat"><i class="bi bi-calendar2-check" aria-hidden="true"></i><strong id="scheduledCount">—</strong><span>Đã lên lịch</span></div>
         <div class="studio-sync" id="syncStatus" role="status"><span class="sync-dot"></span> Đang kết nối</div>
     </div>
-    <div class="studio-flow-switch" role="tablist" aria-label="Chọn cách tạo chương trình">
-        <button type="button" class="flow-tab is-active" id="manualFlowTab" role="tab" aria-selected="true" aria-controls="manualFlow" data-studio-flow="manual"><i class="bi bi-sliders" aria-hidden="true"></i><span><strong>Wizard thủ công</strong><small>Chủ động chọn từng thiết lập</small></span></button>
-        <button type="button" class="flow-tab" id="agentFlowTab" role="tab" aria-selected="false" aria-controls="agentFlow" data-studio-flow="agent"><i class="bi bi-stars" aria-hidden="true"></i><span><strong>Agent tự động</strong><small>Mô tả một lần, Agent tự lập kế hoạch</small></span></button>
+    <?php
+    $activeFlow = $_GET['flow'] ?? $_GET['tab'] ?? 'manual';
+    if (!in_array($activeFlow, ['manual', 'agent', 'publication'], true)) {
+        $activeFlow = 'manual';
+    }
+    ?>
+    <div class="studio-flow-switch" role="tablist" aria-label="Chọn chế độ làm việc">
+        <button type="button" class="flow-tab <?= $activeFlow === 'manual' ? 'is-active' : '' ?>" id="manualFlowTab" role="tab" aria-selected="<?= $activeFlow === 'manual' ? 'true' : 'false' ?>" aria-controls="manualFlow" data-studio-flow="manual"><i class="bi bi-sliders" aria-hidden="true"></i><span><strong>Wizard thủ công</strong><small>Chủ động chọn từng thiết lập</small></span></button>
+        <button type="button" class="flow-tab <?= $activeFlow === 'agent' ? 'is-active' : '' ?>" id="agentFlowTab" role="tab" aria-selected="<?= $activeFlow === 'agent' ? 'true' : 'false' ?>" aria-controls="agentFlow" data-studio-flow="agent"><i class="bi bi-stars" aria-hidden="true"></i><span><strong>Agent tự động</strong><small>Mô tả một lần, Agent tự lập kế hoạch</small></span></button>
+        <button type="button" class="flow-tab <?= $activeFlow === 'publication' ? 'is-active' : '' ?>" id="pubFlowTab" role="tab" aria-selected="<?= $activeFlow === 'publication' ? 'true' : 'false' ?>" aria-controls="pubFlow" data-studio-flow="publication"><i class="bi bi-film" aria-hidden="true"></i><span><strong>Xuất bản sản phẩm</strong><small>Video đã tạo → Lên web</small></span></button>
     </div>
-    <section class="agent-flow" id="agentFlow" role="tabpanel" aria-labelledby="agentFlowTab" hidden>
+    <section class="agent-flow" id="agentFlow" role="tabpanel" aria-labelledby="agentFlowTab" <?= $activeFlow !== 'agent' ? 'hidden' : '' ?>>
         <div class="agent-compose studio-panel">
             <div class="panel-heading"><div><span class="studio-eyebrow">SYNA AGENT</span><h2>Giao việc bằng một câu</h2></div><span class="small-tag">BETA AN TOÀN</span></div>
             <form id="agentForm" class="agent-form" novalidate>
@@ -45,7 +52,7 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
             <div class="agent-run-detail" id="agentRunDetail" hidden></div>
         </div>
     </section>
-    <div class="studio-workspace" id="manualFlow" role="tabpanel" aria-labelledby="manualFlowTab">
+    <div class="studio-workspace" id="manualFlow" role="tabpanel" aria-labelledby="manualFlowTab" <?= $activeFlow !== 'manual' ? 'hidden' : '' ?>>
         <div class="studio-setup">
             <section class="studio-panel" aria-labelledby="setupTitle">
                 <div class="panel-heading"><div><span class="studio-eyebrow">CHUẨN BỊ</span><h2 id="setupTitle">Tạo chương trình mới</h2></div><span class="step-counter" id="stepCounter">Bước 1 / 3</span></div>
@@ -114,7 +121,7 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
                     <section class="step-panel" id="stepPanel3" role="tabpanel" aria-labelledby="stepTab3" hidden>
                         <div class="step-intro"><h3>Hẹn giờ cho buổi live của bạn.</h3><p>Chừa thời gian để duyệt kịch bản và tạo video trước giờ phát.</p></div>
                         <div class="schedule-summary"><i class="bi bi-bag-check" aria-hidden="true"></i><div><strong id="summaryProducts">Chưa chọn sản phẩm</strong><span id="summaryPreparation">Quay lại Nội dung để chọn sản phẩm.</span></div></div>
-                        <div class="idol-row"><div class="idol-field"><label for="scheduledAt">Ngày & giờ phát</label><input id="scheduledAt" type="datetime-local" class="idol-input" required></div><div class="idol-field"><label for="durationMinutes">Thời lượng <span class="field-optional">phút</span></label><input id="durationMinutes" type="number" min="1" max="720" value="60" class="idol-input" required></div></div>
+                        <div class="idol-row"><div class="idol-field"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><label for="scheduledAt" style="margin-bottom:0;">Ngày &amp; giờ phát</label><button type="button" id="btnEarliestSchedule" class="small-tag" style="background:rgba(217,119,6,0.12);color:var(--brand);border:1px solid rgba(217,119,6,0.3);cursor:pointer;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;" title="Bấm để đặt mốc giờ sớm nhất hợp lệ">Sớm nhất (+<span id="leadMinutesBadge">8</span>p)</button></div><input id="scheduledAt" type="datetime-local" class="idol-input" required><p class="idol-note" id="scheduleLeadNote" style="margin-top:6px;font-size:11px;">Cần tối thiểu <strong id="leadMinutesText">8 phút</strong> chuẩn bị video trước giờ phát.</p></div><div class="idol-field"><label for="durationMinutes">Thời lượng <span class="field-optional">phút</span></label><input id="durationMinutes" type="number" min="1" max="720" value="60" class="idol-input" required></div></div>
                         <div class="idol-field"><label>Nơi phát chương trình</label><div class="platforms">
                             <label class="platform"><input type="checkbox" name="platform" value="internal" checked><i class="bi bi-display" aria-hidden="true"></i><span>Xem nội bộ</span></label>
                             <label class="platform"><input type="checkbox" name="platform" value="youtube"><i class="bi bi-youtube" aria-hidden="true"></i><span>YouTube</span></label>
@@ -135,5 +142,331 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
             <div class="library-idle" id="libraryIdle"><div class="idle-frame" aria-hidden="true"><i class="bi bi-play-circle"></i></div><h3>Một không gian cho câu chuyện của bạn.</h3><p>Chọn chương trình để xem video, duyệt kịch bản<br>và theo dõi tiến độ tại đây.</p></div>
         </section>
     </div>
+
+    <!-- Phase V1.1: Panel Quản lý Xuất bản Video Lên Sản Phẩm -->
+    <section class="studio-publication-panel" id="pubFlow" role="tabpanel" aria-labelledby="pubFlowTab" <?= $activeFlow !== 'publication' ? 'hidden' : '' ?>>
+        <div class="panel-heading">
+            <div>
+                <span class="studio-eyebrow"><i class="bi bi-shop me-1"></i> XUẤT BẢN THƯƠNG MẠI</span>
+                <h2>Video đã tạo → Xuất bản lên sản phẩm</h2>
+                <p class="idol-note" style="margin-top: 4px;">Quản lý gắn video thuyết minh AI Idol đã kết xuất vào các trang chi tiết sản phẩm SkinSyntaxVN.</p>
+            </div>
+            <button type="button" class="icon-button" id="refreshPubVideos" aria-label="Làm mới danh sách video" title="Làm mới danh sách"><i class="bi bi-arrow-clockwise"></i></button>
+        </div>
+        <div class="publication-toolbar">
+            <div class="pub-filter-group" role="group" aria-label="Lọc video xuất bản">
+                <button type="button" class="pub-filter-btn is-active" data-pub-filter="all">Tất cả video <span id="pubCountAll">(0)</span></button>
+                <button type="button" class="pub-filter-btn" data-pub-filter="published">Đã xuất bản <span id="pubCountPublished">(0)</span></button>
+                <button type="button" class="pub-filter-btn" data-pub-filter="unpublished">Chưa xuất bản <span id="pubCountUnpublished">(0)</span></button>
+            </div>
+            <div class="studio-search" style="max-width: 300px; width: 100%;">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="pubSearchInput" class="idol-input" type="search" placeholder="Tìm video hoặc chiến dịch..." autocomplete="off">
+            </div>
+        </div>
+        <div id="pubVideoMessage" class="studio-message m-3" role="alert" hidden></div>
+        <div class="publication-grid" id="pubVideoGrid" aria-label="Danh sách video xuất bản">
+            <div class="studio-loading" role="status"><span></span><span></span><span></span><p>Đang tải danh sách video…</p></div>
+        </div>
+    </section>
+
+    <!-- Modal Quản Lý Xuất Bản Video Sản Phẩm -->
+    <div class="pub-modal-backdrop" id="pubModalBackdrop" hidden>
+        <div class="pub-modal" id="pubModal" role="dialog" aria-modal="true" aria-labelledby="pubModalTitle">
+            <div class="pub-modal-header">
+                <div>
+                    <span class="studio-eyebrow"><i class="bi bi-sliders me-1"></i> THIẾT LẬP XUẤT BẢN</span>
+                    <h3 id="pubModalTitle">Quản lý xuất bản video lên sản phẩm</h3>
+                </div>
+                <button type="button" class="pub-modal-close" id="closePubModalBtn" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="pub-modal-body">
+                <div id="pubModalAlert" class="studio-message" role="alert" hidden></div>
+
+                <!-- Video Info Banner -->
+                <div class="pub-video-summary">
+                    <div class="pub-video-poster-box">
+                        <img id="pubModalPoster" src="<?= BASE_URL ?>/favicon.ico" alt="" class="pub-video-poster">
+                        <span id="pubModalDurationBadge" class="pub-duration-badge">00:00</span>
+                    </div>
+                    <div class="pub-video-meta">
+                        <div class="pub-video-meta-top">
+                            <span class="pub-campaign-tag" id="pubModalCampaignName">Chương trình AI Idol</span>
+                            <span id="pubModalStatusBadge" class="pub-badge-status published">Đã xuất bản</span>
+                            <span id="pubModalRenderStatusBadge" class="pub-badge-status unready" hidden>Chưa render</span>
+                        </div>
+                        <div class="idol-field" style="margin-top: 6px; margin-bottom: 0;">
+                            <label for="pubModalVideoTitle" style="font-size: 11.5px; margin-bottom: 4px;">Tiêu đề video hiển thị trên PDP</label>
+                            <input type="text" id="pubModalVideoTitle" class="idol-input" placeholder="Tiêu đề video..." maxlength="200">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Display Priority -->
+                <div class="idol-field">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <label for="pubModalPriority" style="margin-bottom: 0;">Độ ưu tiên hiển thị (Display Priority)</label>
+                        <small class="text-muted" style="font-size: 11px;">Số càng lớn thì video xếp càng trước trên trang sản phẩm</small>
+                    </div>
+                    <input type="number" id="pubModalPriority" class="idol-input" min="1" max="1000" value="10" style="max-width: 140px; margin-top: 6px;">
+                </div>
+
+                <!-- Product Association Section -->
+                <div class="pub-products-section">
+                    <div class="field-heading">
+                        <label style="font-weight: 650; margin-bottom: 0;">Sản phẩm liên kết hiển thị video</label>
+                        <span class="selection-count" id="pubModalSelectedCount">0 đã chọn</span>
+                    </div>
+                    <p class="idol-note" style="margin-top: 2px;">Video sẽ xuất hiện trên trang chi tiết của tất cả sản phẩm được chọn bên dưới.</p>
+
+                    <!-- Search Toolbar -->
+                    <div class="pub-search-bar mt-2">
+                        <div class="studio-search" style="flex: 1;">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                            <input id="pubModalProductSearch" data-alias="pubProductSearchInput" class="idol-input" type="search" placeholder="Tìm tên hoặc mã sản phẩm trong kho..." autocomplete="off">
+                        </div>
+                        <button type="button" class="text-button" id="pubModalSelectAllVisible">Chọn tất cả</button>
+                        <button type="button" class="text-button" id="pubModalClearAll">Bỏ chọn hết</button>
+                    </div>
+
+                    <!-- Selected Chips Container -->
+                    <div id="pubModalSelectedChips" data-alias="pubSelectedChips" class="selected-chips mt-2" hidden></div>
+
+                    <!-- Primary Product Selector -->
+                    <div class="idol-field mt-2" id="pubModalPrimaryWrap">
+                        <label for="pubModalPrimaryProduct" style="font-size: 11.5px;">Sản phẩm chính (Primary Product)</label>
+                        <select id="pubModalPrimaryProduct" data-alias="pubPrimarySelect" class="idol-select"></select>
+                    </div>
+
+                    <!-- Product Checklist -->
+                    <div class="pub-product-list mt-2" id="pubModalProductList" role="group" aria-label="Danh sách sản phẩm">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="pub-modal-footer">
+                <button type="button" class="idol-btn danger-outline" id="pubModalUnpublishBtn" data-alias="pubUnpublishBtn" hidden>
+                    <i class="bi bi-eye-slash me-1"></i> Hủy xuất bản
+                </button>
+                <div style="flex: 1;"></div>
+                <button type="button" class="idol-btn secondary" id="pubModalCloseBtn">Đóng</button>
+                <button type="button" class="idol-btn primary" id="pubModalSubmitBtn" data-alias="pubSubmitPublishBtn">
+                    <i class="bi bi-cloud-arrow-up me-1"></i> Xuất bản lên trang sản phẩm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cấu hình Voucher Xem Video (Watch-to-Reward Campaign) -->
+    <div class="pub-modal-backdrop" id="rewardModalBackdrop" hidden>
+        <div class="pub-modal reward-modal" id="rewardModal" role="dialog" aria-modal="true" aria-labelledby="rewardModalTitle" style="max-width: 680px;">
+            <div class="pub-modal-header">
+                <div>
+                    <span class="studio-eyebrow"><i class="bi bi-gift me-1"></i> WATCH-TO-REWARD</span>
+                    <h3 id="rewardModalTitle">Cấu hình voucher xem video</h3>
+                </div>
+                <button type="button" class="pub-modal-close" id="closeRewardModalBtn" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="pub-modal-body">
+                <div id="rewardModalAlert" class="studio-message" role="alert" hidden></div>
+
+                <!-- Video Summary Card -->
+                <div class="pub-video-summary">
+                    <div class="pub-video-poster-box">
+                        <img id="rewardModalPoster" src="<?= BASE_URL ?>/favicon.ico" alt="" class="pub-video-poster">
+                        <span id="rewardModalDurationBadge" class="pub-duration-badge">00:00</span>
+                    </div>
+                    <div class="pub-video-meta">
+                        <div class="pub-video-meta-top">
+                            <span class="pub-campaign-tag" id="rewardModalCampaignName">Chương trình AI Idol</span>
+                            <span id="rewardModalVideoStatusBadge" class="pub-badge-status published">Đã xuất bản</span>
+                        </div>
+                        <h4 id="rewardModalVideoTitle" style="font-size: 14px; font-weight: 650; margin: 6px 0 2px; color: var(--text);">Tiêu đề video</h4>
+                        <div style="font-size: 11.5px; color: var(--muted);" id="rewardModalVideoSub">Mã video: <code id="rewardModalVideoId">—</code></div>
+                    </div>
+                </div>
+
+                <!-- Real Statistics Panel (Only shown when real campaign & data exists) -->
+                <div id="rewardStatsCard" class="reward-stats-card mt-3" hidden>
+                    <div class="reward-stats-header">
+                        <span class="studio-eyebrow" style="font-size: 10px;"><i class="bi bi-graph-up me-1"></i> DỮ LIỆU PHÁT HÀNH THỰC TẾ</span>
+                        <span id="rewardStatsStatusBadge" class="pub-badge-status published">Đang hoạt động</span>
+                    </div>
+                    <div class="reward-stats-grid">
+                        <div class="reward-stat-box">
+                            <span class="reward-stat-label">Đã phát</span>
+                            <strong class="reward-stat-val" id="rewardStatIssuedCount">0</strong>
+                            <small class="text-muted">voucher</small>
+                        </div>
+                        <div class="reward-stat-box">
+                            <span class="reward-stat-label">Tổng hạn ngạch</span>
+                            <strong class="reward-stat-val" id="rewardStatTotalQuota">0</strong>
+                            <small class="text-muted">voucher</small>
+                        </div>
+                        <div class="reward-stat-box">
+                            <span class="reward-stat-label">Còn lại</span>
+                            <strong class="reward-stat-val" id="rewardStatRemaining">0</strong>
+                            <small class="text-muted">voucher</small>
+                        </div>
+                        <div class="reward-stat-box">
+                            <span class="reward-stat-label">Giới hạn/User</span>
+                            <strong class="reward-stat-val" id="rewardStatUserLimit">1</strong>
+                            <small class="text-muted">lần</small>
+                        </div>
+                    </div>
+                    <div class="reward-stat-meta mt-2" id="rewardStatTimestamps" style="font-size: 11px; color: var(--muted);"></div>
+                </div>
+
+                <!-- Form Fields -->
+                <form id="rewardCampaignForm" class="mt-3" novalidate>
+                    <input type="hidden" id="rewardCampaignId" value="">
+                    <input type="hidden" id="rewardVideoId" value="">
+                    <input type="hidden" id="rewardPublicationId" value="">
+
+                    <!-- Campaign Name -->
+                    <div class="idol-field">
+                        <label for="rewardNameInput">Tên chiến dịch ưu đãi</label>
+                        <input type="text" id="rewardNameInput" class="idol-input" placeholder="Ví dụ: Voucher xem video Syna 3D - Giảm 15%" maxlength="150" required>
+                    </div>
+
+                    <!-- Discount Type & Value Grid -->
+                    <div class="idol-row">
+                        <div class="idol-field" style="flex: 1;">
+                            <label for="rewardDiscountTypeSelect">Loại giảm giá</label>
+                            <select id="rewardDiscountTypeSelect" class="idol-select">
+                                <option value="percentage">Phần trăm (%)</option>
+                                <option value="fixed">Số tiền cố định (VNĐ)</option>
+                            </select>
+                        </div>
+                        <div class="idol-field" style="flex: 1;">
+                            <label for="rewardDiscountValueInput" id="rewardDiscountValueLabel">Mức giảm (%)</label>
+                            <input type="number" id="rewardDiscountValueInput" class="idol-input" min="1" max="100" value="10" required>
+                            <small class="text-muted" id="rewardDiscountValueHelp" style="font-size: 10.5px;">Nhập từ 1 đến 100%</small>
+                        </div>
+                    </div>
+
+                    <!-- Max Discount (for percent) & Min Order Amount -->
+                    <div class="idol-row">
+                        <div class="idol-field" style="flex: 1;" id="rewardMaxDiscountWrap">
+                            <label for="rewardMaxDiscountInput">Mức giảm tối đa (VNĐ) <span class="field-optional">Tùy chọn</span></label>
+                            <input type="number" id="rewardMaxDiscountInput" class="idol-input" min="0" step="5000" placeholder="Để trống nếu không giới hạn">
+                            <small class="text-muted" style="font-size: 10.5px;">Áp dụng cho giảm phần trăm</small>
+                        </div>
+                        <div class="idol-field" style="flex: 1;">
+                            <label for="rewardMinOrderInput">Đơn hàng tối thiểu (VNĐ)</label>
+                            <input type="number" id="rewardMinOrderInput" class="idol-input" min="0" step="10000" value="0">
+                            <small class="text-muted" style="font-size: 10.5px;">0 = không yêu cầu đơn tối thiểu</small>
+                        </div>
+                    </div>
+
+                    <!-- Dates Grid -->
+                    <div class="idol-row">
+                        <div class="idol-field" style="flex: 1;">
+                            <label for="rewardStartDateInput">Ngày bắt đầu</label>
+                            <input type="datetime-local" id="rewardStartDateInput" class="idol-input" required>
+                        </div>
+                        <div class="idol-field" style="flex: 1;">
+                            <label for="rewardEndDateInput">Ngày kết thúc</label>
+                            <input type="datetime-local" id="rewardEndDateInput" class="idol-input" required>
+                        </div>
+                    </div>
+
+                    <!-- Quota & User Limit Grid -->
+                    <div class="idol-row">
+                        <div class="idol-field" style="flex: 1;">
+                            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                                <label for="rewardTotalQuotaInput" style="margin-bottom:0;">Tổng hạn ngạch phát hành</label>
+                                <small class="text-muted" id="rewardQuotaHelp" style="font-size: 10.5px;">Tối thiểu 1</small>
+                            </div>
+                            <input type="number" id="rewardTotalQuotaInput" class="idol-input" min="1" max="100000" value="100" required style="margin-top:4px;">
+                        </div>
+                        <div class="idol-field" style="flex: 1;">
+                            <label for="rewardUserLimitInput">Giới hạn nhận / khách hàng</label>
+                            <input type="number" id="rewardUserLimitInput" class="idol-input" min="1" max="10" value="1" required>
+                            <small class="text-muted" style="font-size: 10.5px;">Mặc định mỗi khách nhận 1 lần</small>
+                        </div>
+                    </div>
+
+                    <!-- Stacking Policies -->
+                    <div class="idol-field">
+                        <label style="font-weight: 650; margin-bottom: 6px;">Chính sách cộng dồn ưu đãi</label>
+                        <div class="reward-policy-box">
+                            <label class="reward-checkbox-row">
+                                <input type="checkbox" id="rewardStackFlashSale">
+                                <span>
+                                    <strong>Cho phép áp dụng chung với Flash Sale</strong>
+                                    <small class="d-block text-muted">Mặc định tắt. Khi bật, khách hàng có thể dùng voucher này cho sản phẩm đang trong phiên Flash Sale.</small>
+                                </span>
+                            </label>
+                            <label class="reward-checkbox-row mt-2">
+                                <input type="checkbox" id="rewardStackOther">
+                                <span>
+                                    <strong>Cho phép cộng dồn với voucher khuyến mãi khác</strong>
+                                    <small class="d-block text-muted">Mặc định tắt. Không khuyến khích để tránh chồng chéo chiết khấu.</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Active Switch -->
+                    <div class="idol-field">
+                        <label class="reward-checkbox-row active-toggle-row">
+                            <input type="checkbox" id="rewardIsActive" checked>
+                            <span>
+                                <strong>Kích hoạt chiến dịch ngay</strong>
+                                <small class="d-block text-muted">Mỗi video chỉ được có tối đa 1 chiến dịch voucher ở trạng thái kích hoạt.</small>
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Applicable Products Section -->
+                    <div class="pub-products-section mt-3">
+                        <div class="field-heading">
+                            <label style="font-weight: 650; margin-bottom: 0;">Sản phẩm áp dụng voucher</label>
+                            <span class="selection-count" id="rewardSelectedProductCount">0 đã chọn</span>
+                        </div>
+                        <p class="idol-note" style="margin-top: 2px;">Voucher thưởng sẽ chỉ có hiệu lực cho các sản phẩm được chọn bên dưới khi thanh toán.</p>
+
+                        <div class="pub-search-bar mt-2">
+                            <div class="studio-search" style="flex: 1;">
+                                <i class="bi bi-search" aria-hidden="true"></i>
+                                <input id="rewardProductSearchInput" class="idol-input" type="search" placeholder="Tìm sản phẩm áp dụng..." autocomplete="off">
+                            </div>
+                            <button type="button" class="text-button" id="rewardSelectAllLinked">Chọn các sản phẩm của video</button>
+                            <button type="button" class="text-button" id="rewardClearAllProducts">Bỏ chọn hết</button>
+                        </div>
+
+                        <!-- Selected Chips -->
+                        <div id="rewardSelectedChips" class="selected-chips mt-2" hidden></div>
+
+                        <!-- Product List -->
+                        <div class="pub-product-list mt-2" id="rewardProductList" role="group" aria-label="Danh sách sản phẩm áp dụng"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="pub-modal-footer">
+                <button type="button" class="idol-btn danger-outline" id="rewardToggleActiveBtn" hidden>
+                    <i class="bi bi-pause-circle me-1"></i> Tắt chiến dịch
+                </button>
+                <div style="flex: 1;"></div>
+                <button type="button" class="idol-btn secondary" id="closeRewardModalFooterBtn">Đóng</button>
+                <button type="button" class="idol-btn primary" id="rewardModalSubmitBtn">
+                    <i class="bi bi-check2-circle me-1"></i> Lưu cấu hình voucher
+                </button>
+            </div>
+        </div>
+    </div>
 </main>
+<script>
+    window.AI_IDOL_CSRF = <?= json_encode($csrfToken ?? '') ?>;
+    window.AI_IDOL_PRODUCTS = <?= json_encode(array_values(array_map(static function($p) use ($studioEscape) {
+        $rawImage = explode('|', (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''))[0];
+        return [
+            'id' => (string)($p['ma_san_pham'] ?? $p['id'] ?? ''),
+            'name' => (string)($p['ten_san_pham'] ?? 'Sản phẩm chưa đặt tên'),
+            'image' => resolve_image_url(trim($rawImage)),
+            'price' => (float)($p['gia_ban'] ?? 0)
+        ];
+    }, $products)), JSON_UNESCAPED_UNICODE) ?>;
+</script>
 <script src="<?= BASE_URL ?>/assets/js/ai-idol-studio.js?v=<?= filemtime($studioAssets . '/js/ai-idol-studio.js') ?>" defer></script>

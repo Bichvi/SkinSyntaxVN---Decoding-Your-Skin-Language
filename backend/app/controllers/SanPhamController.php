@@ -348,11 +348,31 @@ class SanPhamController {
         }
 
         $perPage = 24;
-        $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true, '', $sort);
+        $filterKey = 'catalog:tatca:' . md5(json_encode([
+            'p' => $page,
+            'per' => $perPage,
+            'q' => $q,
+            'c1' => $cap1,
+            'c2' => $cap2,
+            'sort' => $sort,
+            'v' => 1
+        ]));
+
+        $res = null;
+        if (class_exists('CacheService')) {
+            $res = CacheService::getInstance()->get($filterKey);
+        }
+
+        if (!is_array($res) || !isset($res['items'])) {
+            $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true, '', $sort);
+            if (class_exists('CacheService') && is_array($res) && isset($res['items'])) {
+                CacheService::getInstance()->set($filterKey, $res, 300);
+            }
+        }
 
         $this->render('tatca', [
-            'items' => $res['items'],
-            'total' => $res['total'],
+            'items' => $res['items'] ?? [],
+            'total' => $res['total'] ?? 0,
             'page' => $page,
             'perPage' => $perPage,
             'q' => $q,
@@ -427,6 +447,9 @@ class SanPhamController {
             return;
         }
 
+        // Phase P2.1 Decision: Read single product directly from MongoDB Atlas indexed find()
+        // Single indexed lookup in Atlas takes ~50ms, avoiding remote TLS latency hop and ensuring 100% fresh pricing/inventory.
+        $p = null;
         try {
             $p = $this->model->find($id, true);
         } catch (Throwable $e) {
@@ -518,13 +541,59 @@ class SanPhamController {
             $questionErrorMessage = 'Hiện chưa thể tải hỏi đáp sản phẩm. Vui lòng thử lại sau.';
         }
 
-        $frequentlyBought = [];
-        try {
-            require_once dirname(__DIR__) . '/services/AssociationRuleRecommender.php';
-            $assocRecommender = new AssociationRuleRecommender($this->pdo);
-            $frequentlyBought = $assocRecommender->getFrequentlyBoughtTogether((string)($p['ma_san_pham'] ?? $id), 4);
-        } catch (Throwable $e) {
-            error_log('chitiet frequentlyBought error: ' . $e->getMessage());
+        $prodKeySuffix = (string)($p['ma_san_pham'] ?? $id);
+        $freqKey = 'product:freq_bought:' . $prodKeySuffix;
+        $videoKey = 'product:videos:' . $prodKeySuffix;
+        $menuKey = 'menu:tree:14';
+        $cachedBatch = [];
+        if (class_exists('CacheService')) {
+            // Bundle freq_bought, videos, and layout menu into 1 single Valkey roundtrip
+            $cachedBatch = CacheService::getInstance()->mget([$freqKey, $videoKey, $menuKey]);
+            if (!empty($cachedBatch[$menuKey]) && is_array($cachedBatch[$menuKey])) {
+                if (method_exists('SanPham', 'setMenuTreeCache')) {
+                    SanPham::setMenuTreeCache($cachedBatch[$menuKey]);
+                }
+            }
+        }
+
+        $frequentlyBought = null;
+        if (isset($cachedBatch[$freqKey]) && is_array($cachedBatch[$freqKey])) {
+            $frequentlyBought = $cachedBatch[$freqKey];
+        } else {
+            try {
+                require_once dirname(__DIR__) . '/services/AssociationRuleRecommender.php';
+                $assocRecommender = new AssociationRuleRecommender($this->pdo);
+                $frequentlyBought = $assocRecommender->getFrequentlyBoughtTogether($prodKeySuffix, 4);
+                if (class_exists('CacheService') && is_array($frequentlyBought)) {
+                    CacheService::getInstance()->set($freqKey, $frequentlyBought, 3600);
+                }
+            } catch (Throwable $e) {
+                error_log('chitiet frequentlyBought error: ' . $e->getMessage());
+                $frequentlyBought = [];
+            }
+        }
+
+        $productVideos = null;
+        if (isset($cachedBatch[$videoKey]) && is_array($cachedBatch[$videoKey])) {
+            $productVideos = $cachedBatch[$videoKey];
+        } else {
+            try {
+                require_once __DIR__ . '/../models/ProductVideo.php';
+                require_once __DIR__ . '/../models/VideoRewardCampaign.php';
+                $productVideoModel = new ProductVideo($this->pdo);
+                $rewardCampaignModel = new VideoRewardCampaign($this->pdo);
+                $productVideos = $productVideoModel->getPublishedVideosByProductId($prodKeySuffix);
+                foreach ($productVideos as &$pv) {
+                    $pv['reward_campaign'] = $rewardCampaignModel->getActiveCampaignForVideo((string)($pv['video_id'] ?? ''), (string)($pv['id'] ?? ''));
+                }
+                unset($pv);
+                if (class_exists('CacheService') && is_array($productVideos)) {
+                    CacheService::getInstance()->set($videoKey, $productVideos, 1800);
+                }
+            } catch (Throwable $e) {
+                error_log('chitiet productVideos error: ' . $e->getMessage());
+                $productVideos = [];
+            }
         }
 
         $this->render('chitiet', [
@@ -535,6 +604,7 @@ class SanPhamController {
             'questions' => $questions,
             'questionCount' => $questionCount,
             'frequentlyBought' => $frequentlyBought,
+            'productVideos' => $productVideos,
             'activeTab' => trim((string)($_GET['tab'] ?? '')),
             'reviewErrorMessage' => $reviewErrorMessage,
             'questionErrorMessage' => $questionErrorMessage,
@@ -632,6 +702,94 @@ class SanPhamController {
         // Phase B: Unified Interaction Logging
         require_once dirname(__DIR__) . '/services/InteractionLogger.php';
         InteractionLogger::logView($productId);
+    }
+
+    /**
+     * Public secure streaming proxy for published AI product videos.
+     * Prevents path traversal, blocks unpublished drafts, supports byte ranges.
+     */
+    public function streamProductVideo(): void {
+        $pubId = trim((string)($_GET['id'] ?? $_GET['publication_id'] ?? ''));
+        $productId = trim((string)($_GET['product_id'] ?? ''));
+
+        // Path traversal and format safety: ObjectId must be exactly 24 hex characters
+        if (!preg_match('/^[a-f0-9]{24}$/i', $pubId)) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo 'Video not found or invalid identifier.';
+            exit;
+        }
+
+        require_once __DIR__ . '/../models/ProductVideo.php';
+        $model = new ProductVideo($this->pdo);
+        $publication = $model->getPublishedVideoById($pubId);
+
+        // Security: Unpublished drafts or missing records return 404
+        if (!$publication || empty($publication['is_published'])) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo 'Video not found or unavailable.';
+            exit;
+        }
+
+        // Product association check if product_id is specified
+        if ($productId !== '' && !in_array($productId, (array)($publication['associated_product_ids'] ?? []), true)) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo 'Video not associated with requested product.';
+            exit;
+        }
+
+        $videoId = trim((string)($publication['video_id'] ?? ''));
+        if (!preg_match('/^[a-f0-9]{24}$/i', $videoId)) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo 'Source video identifier invalid.';
+            exit;
+        }
+
+        // Unlock session to allow parallel requests and video seeking
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        $flaskUrl = rtrim((string)(getenv('AI_IDOL_ENDPOINT') ?: 'http://ai-idol-service:5003'), '/');
+        $endpoint = $flaskUrl . '/api/ai-idol/videos/' . rawurlencode($videoId);
+
+        $ch = curl_init($endpoint);
+        $requestHeaders = [];
+        if (!empty($_SERVER['HTTP_RANGE'])) {
+            $requestHeaders[] = 'Range: ' . $_SERVER['HTTP_RANGE'];
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_HTTPHEADER => $requestHeaders,
+            CURLOPT_HEADERFUNCTION => static function ($curl, string $line): int {
+                $length = strlen($line);
+                if (preg_match('#^HTTP/\\S+\\s+(\\d+)#i', trim($line), $match)) {
+                    http_response_code((int)$match[1]);
+                } elseif (preg_match('/^(Content-Type|Content-Length|Content-Range|Accept-Ranges|Cache-Control):/i', $line)) {
+                    header(trim($line), true);
+                }
+                return $length;
+            },
+            CURLOPT_WRITEFUNCTION => static function ($curl, string $chunk): int {
+                echo $chunk;
+                flush();
+                return strlen($chunk);
+            },
+        ]);
+
+        $ok = curl_exec($ch);
+        if ($ok === false && !headers_sent()) {
+            http_response_code(502);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo 'Cannot stream video source.';
+        }
+        curl_close($ch);
+        exit;
     }
 }
 

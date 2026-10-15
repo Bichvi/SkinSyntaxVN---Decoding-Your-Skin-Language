@@ -11,7 +11,7 @@ const root = path.resolve(__dirname, '../..');
 const assets = path.join(root, 'frontend/public/ai-idol-mascot-3d');
 const temporary = path.join(root, '.runtime/syna-render');
 const ffmpeg = process.env.SYNA_FFMPEG || path.join(root, '.runtime/bin/ffmpeg.exe');
-const ffprobe = process.env.SYNA_FFPROBE || 'ffprobe.exe';
+const ffprobe = process.env.SYNA_FFPROBE || path.join(root, '.runtime/bin/ffprobe.exe');
 const port = 7862, sessions = new Map();
 let busy = false;
 const MAX_BYTES = 64 * 1024 * 1024;
@@ -69,14 +69,20 @@ async function render(payload, req, res) {
     }
     await fs.writeFile(path.join(folder, 'manifest.json'), JSON.stringify(manifest));
     sessions.set(id, folder);
-    if (cancelled) throw new Error('Render cancelled');
+    console.log('[SERVER] Launching chrome for job', id);
     browser = await chromium.launch({ channel: 'chrome', headless: true });
     timer = setTimeout(abort, 14 * 60 * 1000);
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('pageerror', err => console.error('PAGE ERROR:', err));
+    page.on('requestfailed', req => console.log('REQ FAILED:', req.url(), req.failure()?.errorText));
+    page.on('response', response => console.log('RES:', response.status(), response.url()));
     // Block any external asset loading by the page. Job data are never interpreted as URLs.
     await page.route('**/*', route => new URL(route.request().url()).origin === `http://127.0.0.1:${port}` ? route.continue() : route.abort());
+    console.log('[SERVER] Navigating to render.html...');
     await page.goto(`http://127.0.0.1:${port}/render.html?job=${id}`);
-    await page.waitForFunction(() => document.body.dataset.ready || document.body.dataset.error, null, { timeout: 60000 });
+    console.log('[SERVER] Waiting for dataset.ready or dataset.error...');
+    await page.waitForFunction(() => document.body.dataset.ready || document.body.dataset.error, null, { timeout: 120000 });
     const error = await page.evaluate(() => document.body.dataset.error);
     if (error) throw new Error(error);
     encoder = spawn(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'image2pipe', '-framerate', '25', '-vcodec', 'mjpeg', '-i', 'pipe:0',
@@ -135,9 +141,12 @@ const server = http.createServer(async (req, res) => {
       file = path.join(assets, relative);
     }
     const data = await fs.readFile(file);
-    const type = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.json': 'application/json', '.wav': 'audio/wav' }[path.extname(file)] || 'application/octet-stream';
+    const type = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.json': 'application/json', '.wav': 'audio/wav', '.img': 'image/jpeg' }[path.extname(file)] || 'application/octet-stream';
     res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(data);
-  } catch (error) { send(res, error.code === 'ENOENT' ? 404 : 422, { error: error.code === 'ENOENT' ? 'Not found' : error.message }); }
+  } catch (error) {
+    console.error('Syna server error:', error);
+    send(res, error.code === 'ENOENT' ? 404 : 422, { error: error.code === 'ENOENT' ? `Not found: ${error.message || error.code}` : error.message });
+  }
 });
 server.requestTimeout = 16 * 60 * 1000;
-server.listen(port, '127.0.0.1', () => process.stdout.write('Syna renderer listening on 127.0.0.1:7862\n'));
+server.listen(port, '0.0.0.0', () => process.stdout.write('Syna renderer listening on 0.0.0.0:7862\n'));

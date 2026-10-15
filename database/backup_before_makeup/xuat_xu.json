@@ -1,0 +1,236 @@
+[
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc01"
+    },
+    "ma_xuat_xu": 1,
+    "ten_xuat_xu": "Mỹ",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc02"
+    },
+    "ma_xuat_xu": 2,
+    "ten_xuat_xu": "Việt Nam",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc03"
+    },
+    "ma_xuat_xu": 3,
+    "ten_xuat_xu": "Hàn Quốc",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc04"
+    },
+    "ma_xuat_xu": 4,
+    "ten_xuat_xu": "Pháp",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc05"
+    },
+    "ma_xuat_xu": 5,
+    "ten_xuat_xu": "Canada",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc06"
+    },
+    "ma_xuat_xu": 6,
+    "ten_xuat_xu": "Nhật Bản",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc07"
+    },
+    "ma_xuat_xu": 7,
+    "ten_xuat_xu": "Tây Ban Nha",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc08"
+    },
+    "ma_xuat_xu": 8,
+    "ten_xuat_xu": "Anh",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc09"
+    },
+    "ma_xuat_xu": 9,
+    "ten_xuat_xu": "Ðức",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc0a"
+    },
+    "ma_xuat_xu": 11,
+    "ten_xuat_xu": "Trung Quốc",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc0b"
+    },
+    "ma_xuat_xu": 12,
+    "ten_xuat_xu": "Đài Loan",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc0c"
+    },
+    "ma_xuat_xu": 15,
+    "ten_xuat_xu": "Thái Lan",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc0d"
+    },
+    "ma_xuat_xu": 16,
+    "ten_xuat_xu": "Singapore",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc0e"
+    },
+    "ma_xuat_xu": 17,
+    "ten_xuat_xu": "Úc",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc0f"
+    },
+    "ma_xuat_xu": 18,
+    "ten_xuat_xu": "Thụy Sĩ",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc10"
+    },
+    "ma_xuat_xu": 19,
+    "ten_xuat_xu": "Ba Lan",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc11"
+    },
+    "ma_xuat_xu": 20,
+    "ten_xuat_xu": "Nga",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc12"
+    },
+    "ma_xuat_xu": 22,
+    "ten_xuat_xu": "Unknown",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  }
+]

@@ -190,24 +190,154 @@ class HomeController {
                 'purchases' => $purchaseItems,
             ];
 
-            $latest = $this->model->latest(12, true, true);
-            $cats = $this->getHighlightedCategories();
+            // Phase P2.1 Optimization: Retrieve all public homepage lookups in 1 single Valkey roundtrip
+            $publicData = $this->getHomepagePublicData();
+            $latest = $publicData['latest'] ?? [];
+            $cats = $publicData['cats'] ?? [];
+            $preloadedFlashDeals = $publicData['flash_deals'] ?? [];
+            $primaryFlashCampaign = $publicData['primary_campaign'] ?? null;
+
             $homepageSections = method_exists($this->model, 'getHomepageProductSections')
-                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals)
+                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals, $preloadedFlashDeals)
                 : [];
+
+            require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+            $flashSaleModel = new FlashSaleCampaign($this->pdo);
+
+            // Phase 2D.2: Personalized Deal Ranking for Homepage Flash Sale Top 4
+            $flashSalePersonalizedMeta = [
+                'is_personalized' => false,
+                'ranking_mode'    => 'BASELINE',
+                'user_state'      => 'STATE_A',
+            ];
+            if ($primaryFlashCampaign && !empty($primaryFlashCampaign['hydrated_items'])) {
+                $userContext = [
+                    'profile'  => $userProfile,
+                    'behavior' => $behaviorSignals,
+                ];
+                $rankResult = $flashSaleModel->rankCampaignCandidates($primaryFlashCampaign['hydrated_items'], $userContext);
+                $primaryFlashCampaign['hydrated_items'] = $rankResult['ranked_items'];
+                $flashSalePersonalizedMeta = [
+                    'is_personalized' => $rankResult['is_personalized'],
+                    'ranking_mode'    => $rankResult['ranking_mode'],
+                    'user_state'      => $rankResult['user_state'],
+                ];
+            }
         } catch (Throwable $e) {
             error_log('home MongoDB error: ' . $e->getMessage());
             $dbUnavailableMessage = 'Hiện chưa thể tải dữ liệu sản phẩm. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
+            $primaryFlashCampaign = null;
+            $flashSalePersonalizedMeta = [
+                'is_personalized' => false,
+                'ranking_mode'    => 'BASELINE',
+                'user_state'      => 'STATE_A',
+            ];
         }
 
         $this->render('home', [
             'latest' => $latest,
             'cats' => $cats,
             'homepageSections' => $homepageSections,
+            'primaryFlashCampaign' => $primaryFlashCampaign,
+            'flashSalePersonalizedMeta' => $flashSalePersonalizedMeta,
             'dbUnavailableMessage' => $dbUnavailableMessage,
             'isLoggedIn' => $isLoggedIn,
             'userProfile' => $userProfile,
             'hasSurvey' => $hasSurvey,
+        ]);
+    }
+
+    public function flashSale(): void {
+        require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+        $flashSaleModel = new FlashSaleCampaign($this->pdo);
+
+        // Resolve user context for All Deals page
+        $isLoggedIn = !empty($_SESSION['user']);
+        $userProfile = null;
+        if ($isLoggedIn) {
+            try {
+                $email = (string)($_SESSION['user']['email'] ?? '');
+                $userProfile = $this->buildRecommendationProfile($email);
+            } catch (Throwable $e) {
+                $userProfile = null;
+            }
+        }
+        $recentViewed = is_array($_SESSION['recent_viewed_products'] ?? null) ? $_SESSION['recent_viewed_products'] : [];
+        $searchQueries = is_array($_SESSION['search_history'] ?? null) ? $_SESSION['search_history'] : [];
+        if (empty($searchQueries) && $isLoggedIn && !empty($userProfile['recent_keywords'])) {
+            $searchQueries = $userProfile['recent_keywords'];
+        }
+        $cartItems = [];
+        if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+            foreach ($_SESSION['gio_hang'] as $k => $v) {
+                if (is_array($v) && isset($v['ma_san_pham'])) {
+                    $cartItems[(string)$v['ma_san_pham']] = (int)($v['so_luong'] ?? 1);
+                } else {
+                    $cartItems[(string)$k] = is_numeric($v) ? (int)$v : 1;
+                }
+            }
+        }
+        $purchaseItems = [];
+        if ($isLoggedIn && !empty($userProfile['customer_id'])) {
+            $purchaseItems = $this->getValidPurchasedProductsForCustomer((int)$userProfile['customer_id']);
+        }
+        $behaviorSignals = [
+            'search'    => $searchQueries,
+            'view'      => $recentViewed,
+            'cart'      => $cartItems,
+            'purchases' => $purchaseItems,
+        ];
+        $userContext = [
+            'profile'  => $userProfile,
+            'behavior' => $behaviorSignals,
+        ];
+
+        // Determine if user has usable personalization context
+        $hasUsableContext = (!empty($userProfile['skin_type']) || !empty($searchQueries) || !empty($recentViewed) || !empty($cartItems));
+
+        // Available sorts
+        $allowedSorts = ['featured', 'for_you', 'discount', 'rating', 'price_asc', 'price_desc'];
+        $sort = trim((string)($_GET['sort'] ?? ''));
+
+        // Default sort policy: "for_you" if personalized context exists and sort not explicitly specified, else "featured"
+        if ($sort === '') {
+            $sort = $hasUsableContext ? 'for_you' : 'featured';
+        } elseif (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'featured';
+        }
+
+        $activeCampaign = $flashSaleModel->getPrimaryActiveCampaign();
+        $upcomingCampaign = null;
+        $isPersonalizedRanking = false;
+        $rankingMode = 'BASELINE';
+
+        if ($activeCampaign && !empty($activeCampaign['hydrated_items'])) {
+            $deals = $activeCampaign['hydrated_items'];
+            if ($sort === 'for_you' && $hasUsableContext) {
+                // Personalized "Dành cho bạn" sort
+                $rankResult = $flashSaleModel->rankCampaignCandidates($deals, $userContext);
+                $deals = $rankResult['ranked_items'];
+                $isPersonalizedRanking = $rankResult['is_personalized'];
+                $rankingMode = $rankResult['ranking_mode'];
+            } else {
+                // Explicit user-selected sorts or baseline featured
+                $effectiveSort = ($sort === 'for_you') ? 'featured' : $sort;
+                $flashSaleModel->sortCampaignDeals($deals, $effectiveSort);
+            }
+        } else {
+            $deals = [];
+            $upcomingCampaign = $flashSaleModel->getUpcomingCampaign();
+        }
+
+        $this->render('flash_sale', [
+            'campaign'              => $activeCampaign,
+            'upcomingCampaign'      => $upcomingCampaign,
+            'deals'                 => $deals,
+            'currentSort'           => $sort,
+            'totalDeals'            => count($deals),
+            'hasUsableContext'      => $hasUsableContext,
+            'isPersonalizedRanking' => $isPersonalizedRanking,
+            'rankingMode'           => $rankingMode,
         ]);
     }
 
@@ -420,6 +550,46 @@ class HomeController {
     private static ?array $highlightedCategoriesCache = null;
 
     /**
+     * Phase P2.1 Consolidated Public Homepage Lookups.
+     * Bundles menu_tree, latest, cats, flash_deals, and primary_campaign into 1 Valkey key.
+     */
+    public function getHomepagePublicData(): array {
+        $cacheKey = 'home:composite_public';
+        if (class_exists('CacheService')) {
+            $cached = CacheService::getInstance()->get($cacheKey);
+            if (is_array($cached) && isset($cached['latest'], $cached['cats'], $cached['flash_deals'])) {
+                if (!empty($cached['menu_tree']) && method_exists('SanPham', 'setMenuTreeCache')) {
+                    SanPham::setMenuTreeCache($cached['menu_tree']);
+                }
+                return $cached;
+            }
+        }
+
+        require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+        $flashSaleModel = new FlashSaleCampaign($this->pdo);
+
+        $menuTree = $this->model->menuTree();
+        $latest = $this->model->latest(12, true, true);
+        $cats = $this->getHighlightedCategories();
+        $flashDeals = $this->model->getFlashSaleProducts(8);
+        $primaryCampaign = $flashSaleModel->getPrimaryActiveCampaign();
+
+        $composite = [
+            'menu_tree' => $menuTree,
+            'latest' => $latest,
+            'cats' => $cats,
+            'flash_deals' => $flashDeals,
+            'primary_campaign' => $primaryCampaign,
+        ];
+
+        if (class_exists('CacheService')) {
+            CacheService::getInstance()->set($cacheKey, $composite, 300);
+        }
+
+        return $composite;
+    }
+
+    /**
      * @deprecated Legacy category aggregation on san_pham.danh_muc_day_du string.
      * Retained for backward compatibility. Storefront mega menu and admin pages
      * strictly read from canonical collection `danh_muc` via SanPham::menuTree().
@@ -427,6 +597,14 @@ class HomeController {
     private function getHighlightedCategories(): array {
         if (self::$highlightedCategoriesCache !== null) {
             return self::$highlightedCategoriesCache;
+        }
+
+        if (class_exists('CacheService')) {
+            $cached = CacheService::getInstance()->get('home:highlighted_categories');
+            if (is_array($cached) && !empty($cached)) {
+                self::$highlightedCategoriesCache = $cached;
+                return $cached;
+            }
         }
 
         $cacheFile = dirname(__DIR__, 2) . '/storage/cache/highlighted_categories.json';
@@ -467,6 +645,9 @@ class HomeController {
                     @mkdir($dir, 0777, true);
                 }
                 @file_put_contents($cacheFile, json_encode($result, JSON_UNESCAPED_UNICODE));
+                if (class_exists('CacheService')) {
+                    CacheService::getInstance()->set('home:highlighted_categories', $result, 3600);
+                }
             }
 
             return $result;
@@ -499,6 +680,9 @@ class HomeController {
         // Hiển thị giỏ hàng
         $items = [];
         if (!empty($_SESSION['gio_hang'])) {
+            require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+            $campaignModel = new FlashSaleCampaign($this->pdo);
+
             foreach ($_SESSION['gio_hang'] as $product_id => $qty) {
                 $product = $this->model->findById($product_id, true);
                 if ($product && (!method_exists($this->model, 'isProductAvailable') || $this->model->isProductAvailable($product))) {
@@ -507,9 +691,12 @@ class HomeController {
                         $_SESSION['gio_hang'][$product_id] = $stock;
                         $qty = $stock;
                     }
+                    $pricing = $campaignModel->resolveEffectivePrice((string)$product_id, null, $product);
                     $items[$product_id] = [
                         'product' => $product,
-                        'qty' => $qty
+                        'qty' => $qty,
+                        'pricing' => $pricing,
+                        'unit_price' => (int)$pricing['effective_price'],
                     ];
                 } else {
                     unset($_SESSION['gio_hang'][$product_id]);
@@ -975,10 +1162,10 @@ class HomeController {
                 $stockErrors[] = 'Sản phẩm ' . (string)($product['ten_san_pham'] ?? ('#' . $productId)) . ' chỉ còn ' . (int)($stock ?? 0) . ' sản phẩm trong kho.';
                 continue;
             }
-            $unitPrice = (int)($product['gia_ban'] ?? 0);
-            if ($unitPrice <= 0) {
-                $unitPrice = (int)($product['gia_thi_truong'] ?? 0);
-            }
+            require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+            $campaignModel = new FlashSaleCampaign($this->pdo);
+            $pricing = $campaignModel->resolveEffectivePrice((string)$productId, null, $product);
+            $unitPrice = (int)$pricing['effective_price'];
 
             $lineTotal = $unitPrice * $qty;
             $subtotal += $lineTotal;
@@ -989,6 +1176,7 @@ class HomeController {
                 'qty' => $qty,
                 'unit_price' => $unitPrice,
                 'line_total' => $lineTotal,
+                'pricing' => $pricing,
             ];
         }
 
@@ -4187,6 +4375,7 @@ class HomeController {
         }
         $items = $checkoutPreview['items'];
         $subtotal = (int)($checkoutPreview['subtotal'] ?? 0);
+        $_SESSION['checkout_preview_subtotal'] = $subtotal;
 
         if (empty($items)) {
             unset($_SESSION['checkout_items']);
@@ -4407,6 +4596,13 @@ class HomeController {
 
         $subtotal = (int)($checkoutPreview['subtotal'] ?? 0);
 
+        if (isset($_SESSION['checkout_preview_subtotal']) && (int)$_SESSION['checkout_preview_subtotal'] !== $subtotal) {
+            $_SESSION['checkout_preview_subtotal'] = $subtotal;
+            set_flash('error', 'Một số sản phẩm ưu đãi Flash Sale vừa cập nhật giá hoặc hết hạn. Vui lòng xác nhận lại tổng tiền trước khi đặt hàng.');
+            redirect(BASE_URL . '/index.php?r=thanhtoan');
+            return;
+        }
+
         $hinhThucThanhToan = strtolower(trim((string)($_POST['hinh_thuc_thanh_toan'] ?? 'cod')));
 
         $user = current_user() ?? [];
@@ -4484,7 +4680,7 @@ class HomeController {
             foreach ($checkoutItems as $idSp => $_qty) {
                 unset($_SESSION['gio_hang'][$idSp]);
             }
-            unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher'], $_SESSION['checkout_points'], $_SESSION['checkout_payment_method'], $_SESSION['checkout_address_choice'], $_SESSION['checkout_new_receiver']);
+            unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher'], $_SESSION['checkout_points'], $_SESSION['checkout_payment_method'], $_SESSION['checkout_address_choice'], $_SESSION['checkout_new_receiver'], $_SESSION['checkout_preview_subtotal']);
 
             if ($hinhThucThanhToan === 'vnpay') {
                 $order = $this->hoaDonModel->getOrderById((int)$maHoaDon);

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Homepage Flash Sale (Desktop 1440x900)",
+    "pass": true
+  },
+  {
+    "name": "All Deals Page (Desktop 1440x900)",
+    "pass": true
+  },
+  {
+    "name": "All Deals Sort (discount_percent DESC)",
+    "pass": true
+  },
+  {
+    "name": "Product Detail Flash Pricing Consistency",
+    "pass": true
+  },
+  {
+    "name": "Cart Effective Price Consistency",
+    "pass": true
+  },
+  {
+    "name": "Mobile Responsiveness (375x812)",
+    "pass": true
+  },
+  {
+    "name": "Honest Empty State (when 0 active campaigns)",
+    "pass": true
+  }
+]

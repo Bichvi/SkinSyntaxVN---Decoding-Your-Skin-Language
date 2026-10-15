@@ -346,11 +346,17 @@ class TaiKhoanController {
         $latestQuickSkinUpdate = $this->model->getLatestQuickSkinProfileUpdate((string)$account['email']);
         $loaiDaOptions = $this->model->getLoaiDaOptions();
 
+        require_once __DIR__ . '/../models/CustomerVoucher.php';
+        $customerVoucherModel = new CustomerVoucher($this->pdo);
+        $customerIdStr = (string)($khachHang['ma_kh'] ?? $account['id'] ?? $user['id'] ?? '');
+        $customerVouchers = $customerIdStr !== '' ? $customerVoucherModel->getCustomerVouchers($customerIdStr) : [];
+
         $this->render('hoso', [
             'account' => $account,
             'khachHang' => $khachHang,
             'orders' => $orders,
             'cartItems' => $cartItems,
+            'customerVouchers' => $customerVouchers,
             'skinProfile' => $skinProfile,
             'latestQuickSkinUpdate' => $latestQuickSkinUpdate,
             'loaiDaOptions' => $loaiDaOptions,
