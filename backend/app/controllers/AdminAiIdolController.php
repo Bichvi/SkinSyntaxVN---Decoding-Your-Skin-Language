@@ -54,6 +54,37 @@ class AdminAiIdolController {
         return (new QuanTri($this->pdo))->getNotificationCenterData();
     }
 
+    public static function getCsrfToken(): string {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (empty($_SESSION['admin_ai_idol_csrf'])) {
+            $_SESSION['admin_ai_idol_csrf'] = bin2hex(random_bytes(32));
+        }
+        return (string)$_SESSION['admin_ai_idol_csrf'];
+    }
+
+    private function verifyCsrf(?array $input = null): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $expected = (string)($_SESSION['admin_ai_idol_csrf'] ?? '');
+        if ($expected === '') {
+            $_SESSION['admin_ai_idol_csrf'] = bin2hex(random_bytes(32));
+            return;
+        }
+        $token = (string)($input['csrf'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
+        if (!hash_equals($expected, $token)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => false,
+                'message' => 'Lỗi bảo mật CSRF: Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng tải lại trang.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    }
+
     // 1. Render AI Idol Studio Page
     public function index(): void {
         $this->checkAdmin();
@@ -72,6 +103,7 @@ class AdminAiIdolController {
 
         $this->render('admin/ai_idol/index', [
             'products' => $products,
+            'csrfToken' => self::getCsrfToken(),
             'title' => 'AI Idol Studio & Video Generator'
         ]);
     }
@@ -366,6 +398,240 @@ class AdminAiIdolController {
             echo json_encode(['ok' => false, 'message' => 'Không thể tải video AI Idol.']);
         }
         curl_close($ch);
+        exit;
+    }
+
+    public function listProductVideos(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        require_once __DIR__ . '/../models/ProductVideo.php';
+        require_once __DIR__ . '/../models/VideoRewardCampaign.php';
+        $model = new ProductVideo($this->pdo);
+        $rewardModel = new VideoRewardCampaign($this->pdo);
+        $campaignId = trim((string)($_GET['campaign_id'] ?? ''));
+        $productId = trim((string)($_GET['product_id'] ?? ''));
+        $filter = [];
+        if ($campaignId !== '') $filter['campaign_id'] = $campaignId;
+        if ($productId !== '') $filter['product_id'] = $productId;
+        $items = $model->listPublications($filter, 100);
+        $videos = $model->getManageableVideos();
+
+        $rewardCampaigns = $rewardModel->listCampaigns([], 200);
+        $rewardByVid = [];
+        foreach ($rewardCampaigns as $rc) {
+            $vid = $rc['video_id'];
+            if ($vid !== '') {
+                $rewardByVid[$vid] = $rc;
+            }
+        }
+        foreach ($videos as &$v) {
+            $vid = (string)($v['video_id'] ?? '');
+            $v['reward_campaign'] = $rewardByVid[$vid] ?? null;
+        }
+        unset($v);
+
+        echo json_encode([
+            'ok' => true,
+            'videos' => $videos,
+            'publications' => $items,
+            'reward_campaigns' => $rewardCampaigns
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function searchProducts(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        $q = trim((string)($_GET['q'] ?? ''));
+        try {
+            $filter = [];
+            if ($q !== '') {
+                $orConditions = [
+                    ['ten_san_pham' => new MongoDB\BSON\Regex(preg_quote($q, '/'), 'i')],
+                    ['ma_san_pham' => $q],
+                ];
+                if (is_numeric($q)) {
+                    $orConditions[] = ['ma_san_pham' => (int)$q];
+                }
+                $filter = ['$or' => $orConditions];
+            }
+            $cursor = $this->pdo->san_pham->find($filter, [
+                'limit' => 50,
+                'sort' => ['ma_san_pham' => -1]
+            ]);
+            $items = [];
+            foreach ($cursor as $doc) {
+                $rawImg = explode('|', (string)($doc['link_hinh_anh'] ?? $doc['hinh_anh'] ?? ''))[0];
+                $pid = (string)($doc['ma_san_pham'] ?? $doc['_id']);
+                $items[] = [
+                    'id' => $pid,
+                    'name' => (string)($doc['ten_san_pham'] ?? 'Sản phẩm ' . $pid),
+                    'price' => (float)($doc['gia_ban'] ?? 0),
+                    'image' => trim($rawImg)
+                ];
+            }
+            echo json_encode(['ok' => true, 'products' => $items], JSON_UNESCAPED_UNICODE);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'message' => 'Lỗi tìm kiếm sản phẩm: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function publishProductVideo(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Dữ liệu không hợp lệ.']);
+            exit;
+        }
+        $this->verifyCsrf($input);
+        require_once __DIR__ . '/../models/ProductVideo.php';
+        $model = new ProductVideo($this->pdo);
+        $result = $model->publishVideo($input);
+        if (empty($result['ok'])) {
+            http_response_code(400);
+        }
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function togglePublishProductVideo(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            $input = [];
+        }
+        $this->verifyCsrf($input);
+        $publicationId = trim((string)($input['publication_id'] ?? $_GET['publication_id'] ?? ''));
+        $isPublished = (bool)($input['is_published'] ?? true);
+        require_once __DIR__ . '/../models/ProductVideo.php';
+        $model = new ProductVideo($this->pdo);
+
+        if ($publicationId === '') {
+            $videoId = trim((string)($input['video_id'] ?? ''));
+            if ($videoId !== '') {
+                $pub = $model->getPublicationByVideoId($videoId);
+                if ($pub) {
+                    $publicationId = $pub['id'];
+                }
+            }
+        }
+
+        if ($publicationId === '') {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Thiếu mã publication_id hoặc video chưa từng được xuất bản.']);
+            exit;
+        }
+        $result = $model->setPublishedStatus($publicationId, $isPublished);
+        if (empty($result['ok'])) {
+            http_response_code(400);
+        }
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Lấy cấu hình chiến dịch voucher cho một video hoặc publication
+     */
+    public function getRewardCampaign(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        require_once __DIR__ . '/../models/ProductVideo.php';
+        require_once __DIR__ . '/../models/VideoRewardCampaign.php';
+
+        $videoId = trim((string)($_GET['video_id'] ?? ''));
+        $publicationId = trim((string)($_GET['publication_id'] ?? ''));
+        $campaignId = trim((string)($_GET['campaign_id'] ?? ''));
+
+        $rewardModel = new VideoRewardCampaign($this->pdo);
+        $pubModel = new ProductVideo($this->pdo);
+
+        $campaign = null;
+        if ($campaignId !== '') {
+            $campaign = $rewardModel->getCampaignById($campaignId);
+        } elseif ($videoId !== '') {
+            $campaign = $rewardModel->getCampaignByVideoId($videoId);
+        } elseif ($publicationId !== '') {
+            $campaign = $rewardModel->getCampaignByPublicationId($publicationId);
+        }
+
+        $publication = null;
+        if ($publicationId !== '') {
+            $publication = $pubModel->getPublicationById($publicationId);
+        } elseif ($videoId !== '') {
+            $publication = $pubModel->getPublicationByVideoId($videoId);
+        } elseif ($campaign && !empty($campaign['publication_id'])) {
+            $publication = $pubModel->getPublicationById($campaign['publication_id']);
+        }
+
+        echo json_encode([
+            'ok' => true,
+            'campaign' => $campaign,
+            'publication' => $publication,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Tạo mới hoặc cập nhật cấu hình chiến dịch voucher xem video
+     */
+    public function saveRewardCampaign(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Dữ liệu không hợp lệ.']);
+            exit;
+        }
+
+        $this->verifyCsrf($input);
+
+        require_once __DIR__ . '/../models/VideoRewardCampaign.php';
+        $rewardModel = new VideoRewardCampaign($this->pdo);
+        $result = $rewardModel->saveCampaign($input);
+
+        if (empty($result['ok'])) {
+            http_response_code(400);
+        }
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Bật / tắt kích hoạt chiến dịch voucher xem video
+     */
+    public function toggleRewardCampaign(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            $input = [];
+        }
+
+        $this->verifyCsrf($input);
+
+        $campaignId = trim((string)($input['campaign_id'] ?? $_GET['campaign_id'] ?? ''));
+        $isActive = (bool)($input['is_active'] ?? true);
+
+        if ($campaignId === '') {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Thiếu mã chiến dịch (campaign_id).']);
+            exit;
+        }
+
+        require_once __DIR__ . '/../models/VideoRewardCampaign.php';
+        $rewardModel = new VideoRewardCampaign($this->pdo);
+        $result = $rewardModel->toggleActive($campaignId, $isActive);
+
+        if (empty($result['ok'])) {
+            http_response_code(400);
+        }
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
         exit;
     }
 }

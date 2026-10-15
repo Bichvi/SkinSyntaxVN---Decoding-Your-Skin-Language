@@ -28,9 +28,8 @@ export class PilotScene {
     // Prepare face, blink and skinning shader variants before speech starts.
     for (const pose of poses) {
       this.syna.update(pose);
-      await this.renderer.compileAsync(this.scene, this.camera);
+      try { this.renderer.compile(this.scene, this.camera); } catch (e) { /* ignore */ }
       this.draw(pose);
-      await new Promise(requestAnimationFrame);
     }
     if (this.renderer.getContext().isContextLost()) throw new Error('Mất kết nối đồ họa khi chuẩn bị Syna.');
   }

@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/ThongKe.php';
 require_once __DIR__ . '/../models/Voucher.php';
 require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../models/HoiDap.php';
+require_once __DIR__ . '/../models/FlashSaleCampaign.php';
 
 class QuanTriController {
     private  $pdo;
@@ -13,6 +14,7 @@ class QuanTriController {
     private SanPham $sanPhamModel;
     private ThongKe $thongKeModel;
     private Voucher $voucherModel;
+    private FlashSaleCampaign $flashSaleModel;
 
     public function __construct($pdo) {
         global $db;
@@ -22,6 +24,7 @@ class QuanTriController {
         $this->sanPhamModel = new SanPham($mongoDb);
         $this->thongKeModel = new ThongKe($mongoDb);
         $this->voucherModel = new Voucher($mongoDb);
+        $this->flashSaleModel = new FlashSaleCampaign($mongoDb);
     }
 
     private function denyAccess(): void {
@@ -411,6 +414,11 @@ class QuanTriController {
         $errorMessage = method_exists($this->model, 'getLastErrorMessage')
             ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể lưu danh mục.')
             : 'Không thể lưu danh mục.';
+        if ($ok && class_exists('CacheService')) {
+            CacheService::getInstance()->deleteByPattern('menu:*');
+            CacheService::getInstance()->deleteByPattern('home:*');
+            CacheService::getInstance()->deleteByPattern('catalog:*');
+        }
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu danh mục.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_categories');
     }
@@ -424,6 +432,11 @@ class QuanTriController {
         $id = max(0, (int)($_POST['ma_danh_muc'] ?? 0));
         $deleteProducts = (int)($_POST['delete_products'] ?? 0) === 1;
         $ok = $id > 0 ? $this->model->deleteCategory($id, $deleteProducts) : false;
+        if ($ok && class_exists('CacheService')) {
+            CacheService::getInstance()->deleteByPattern('menu:*');
+            CacheService::getInstance()->deleteByPattern('home:*');
+            CacheService::getInstance()->deleteByPattern('catalog:*');
+        }
         $errorMessage = method_exists($this->model, 'getLastErrorMessage')
             ? (($this->model->{'getLastErrorMessage'}() ?: 'Không thể xóa danh mục.'))
             : 'Không thể xóa danh mục.';
@@ -1709,4 +1722,264 @@ class QuanTriController {
     public function staffXoaSanPham(): void { $this->staffProductDelete(); }
     public function staffDanhSachDanhGia(): void { $this->staffReviews(); }
     public function staffTraLoiDanhGia(): void { $this->staffReviewReply(); }
+
+    // =========================================================================
+    // FLASH SALE CAMPAIGN MANAGEMENT (PHASE 2B)
+    // =========================================================================
+
+    public function adminFlashSales(): void {
+        $this->requireRole(['admin']);
+        $now = time();
+        $campaigns = $this->flashSaleModel->listCampaigns([], ['sort' => ['start_at' => -1, 'ma_campaign' => -1]], $now);
+
+        $this->renderAdmin('flash_sales', [
+            'pageTitle' => 'Quản lý Flash Sale',
+            'campaigns' => $campaigns,
+            'now' => $now,
+        ]);
+    }
+
+    public function adminFlashSaleCreate(): void {
+        $this->requireRole(['admin']);
+        $now = time();
+
+        $defaultStart = date('Y-m-d\TH:i', $now + 3600);
+        $defaultEnd = date('Y-m-d\TH:i', $now + 14400);
+
+        $this->renderAdmin('flash_sale_form', [
+            'pageTitle' => 'Tạo chiến dịch Flash Sale mới',
+            'editing' => null,
+            'defaultStart' => $defaultStart,
+            'defaultEnd' => $defaultEnd,
+            'items' => [],
+        ]);
+    }
+
+    public function adminFlashSaleEdit(): void {
+        $this->requireRole(['admin']);
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            set_flash('error', 'Mã chiến dịch không hợp lệ.');
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        }
+
+        $now = time();
+        $campaign = $this->flashSaleModel->getCampaignById($id, $now);
+        if (!$campaign) {
+            set_flash('error', 'Không tìm thấy chiến dịch Flash Sale.');
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        }
+
+        // Enrich items with catalog info
+        $enrichedItems = [];
+        foreach ($campaign['items'] as $it) {
+            $pid = (string)$it['ma_san_pham'];
+            $doc = $this->flashSaleModel->findProductInCatalog($pid);
+            $regPrice = (int)($doc['gia_ban'] ?? $it['regular_price'] ?? 0);
+            if ($regPrice <= 0 && !empty($doc['gia_thi_truong'])) {
+                $regPrice = (int)$doc['gia_thi_truong'];
+            }
+            $img = (string)($doc['link_hinh_anh'] ?? $doc['hinh_anh'] ?? '');
+            if (function_exists('resolve_image_url')) {
+                $img = resolve_image_url($img);
+            }
+
+            $flashPrice = (int)$it['flash_price'];
+            $pct = $regPrice > 0 ? (int)round((($regPrice - $flashPrice) / $regPrice) * 100) : 0;
+
+            $enrichedItems[] = [
+                'ma_san_pham' => $pid,
+                'ten_san_pham' => (string)($doc['ten_san_pham'] ?? ('Sản phẩm #' . $pid)),
+                'danh_muc' => (string)($doc['danh_muc_day_du'] ?? $doc['loai_san_pham'] ?? 'Mỹ phẩm'),
+                'thuong_hieu' => (string)($doc['thuong_hieu'] ?? 'SkinSyntax'),
+                'hinh_anh' => $img,
+                'regular_price' => $regPrice,
+                'flash_price' => $flashPrice,
+                'phan_tram_giam' => $pct,
+            ];
+        }
+
+        $this->renderAdmin('flash_sale_form', [
+            'pageTitle' => 'Chỉnh sửa chiến dịch: ' . $campaign['ten_campaign'],
+            'editing' => $campaign,
+            'items' => $enrichedItems,
+            'now' => $now,
+        ]);
+    }
+
+    public function adminFlashSaleSave(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        }
+
+        $campaignId = isset($_POST['ma_campaign']) && is_numeric($_POST['ma_campaign']) && (int)$_POST['ma_campaign'] > 0
+            ? (int)$_POST['ma_campaign']
+            : null;
+
+        $name = trim((string)($_POST['ten_campaign'] ?? ''));
+        $description = trim((string)($_POST['mo_ta'] ?? ''));
+        $startAt = trim((string)($_POST['start_at'] ?? ''));
+        $endAt = trim((string)($_POST['end_at'] ?? ''));
+        $isActive = isset($_POST['is_active']);
+
+        $rawItems = is_array($_POST['items'] ?? null) ? $_POST['items'] : [];
+        $items = [];
+        foreach ($rawItems as $it) {
+            if (!is_array($it)) continue;
+            $pid = trim((string)($it['ma_san_pham'] ?? $it['product_id'] ?? ''));
+            if ($pid === '') continue;
+
+            $rawPrice = (string)($it['flash_price'] ?? $it['gia_flash'] ?? '0');
+            $cleanPrice = (int)preg_replace('/[^\d]/', '', $rawPrice);
+
+            $items[] = [
+                'ma_san_pham' => $pid,
+                'flash_price' => $cleanPrice,
+            ];
+        }
+
+        $payload = [
+            'ten_campaign' => $name,
+            'mo_ta' => $description,
+            'start_at' => $startAt,
+            'end_at' => $endAt,
+            'is_active' => $isActive,
+            'items' => $items,
+        ];
+
+        $savedId = $this->flashSaleModel->saveCampaign($payload, $campaignId);
+        if ($savedId) {
+            set_flash('success', $campaignId ? 'Cập nhật chiến dịch Flash Sale thành công.' : 'Tạo mới chiến dịch Flash Sale thành công.');
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        } else {
+            $err = $this->flashSaleModel->getLastErrorMessage() ?: 'Lỗi lưu chiến dịch Flash Sale.';
+            set_flash('error', $err);
+            if ($campaignId) {
+                redirect(BASE_URL . '/index.php?r=admin_flash_sale_edit&id=' . $campaignId);
+            } else {
+                redirect(BASE_URL . '/index.php?r=admin_flash_sale_create');
+            }
+        }
+    }
+
+    public function adminFlashSaleToggle(): void {
+        $this->requireRole(['admin']);
+        $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($id <= 0) {
+            set_flash('error', 'Mã chiến dịch không hợp lệ.');
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        }
+
+        $newState = $this->flashSaleModel->toggleCampaign($id);
+        if ($newState === null) {
+            set_flash('error', 'Không tìm thấy chiến dịch để thay đổi trạng thái.');
+        } else {
+            $msg = $newState ? 'Đã bật kích hoạt chiến dịch Flash Sale.' : 'Đã tắt chiến dịch Flash Sale thành công.';
+            set_flash('success', $msg);
+        }
+        redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+    }
+
+    public function adminFlashSaleDelete(): void {
+        $this->requireRole(['admin']);
+        $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+        if ($id <= 0) {
+            set_flash('error', 'Mã chiến dịch không hợp lệ.');
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        }
+
+        $now = time();
+        $check = $this->flashSaleModel->canDeleteCampaign($id, $now);
+        if (!$check['can_delete']) {
+            set_flash('error', $check['reason']);
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        }
+
+        $ok = $this->flashSaleModel->deleteCampaign($id);
+        if ($ok) {
+            set_flash('success', 'Đã xóa chiến dịch Flash Sale #' . $id . ' thành công.');
+        } else {
+            set_flash('error', 'Không thể xóa chiến dịch: ' . ($this->flashSaleModel->getLastErrorMessage() ?: 'Lỗi hệ thống.'));
+        }
+        redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+    }
+
+    public function adminFlashSaleDetail(): void {
+        $this->requireRole(['admin']);
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            set_flash('error', 'Mã chiến dịch không hợp lệ.');
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        }
+
+        $now = time();
+        $campaign = $this->flashSaleModel->getCampaignById($id, $now);
+        if (!$campaign) {
+            set_flash('error', 'Không tìm thấy chiến dịch Flash Sale.');
+            redirect(BASE_URL . '/index.php?r=admin_flash_sales');
+        }
+
+        // Enrich items with catalog info
+        $enrichedItems = [];
+        foreach ($campaign['items'] as $it) {
+            $pid = (string)$it['ma_san_pham'];
+            $doc = $this->flashSaleModel->findProductInCatalog($pid);
+            $regPrice = (int)($doc['gia_ban'] ?? $it['regular_price'] ?? 0);
+            if ($regPrice <= 0 && !empty($doc['gia_thi_truong'])) {
+                $regPrice = (int)$doc['gia_thi_truong'];
+            }
+            $img = (string)($doc['link_hinh_anh'] ?? $doc['hinh_anh'] ?? '');
+            if (function_exists('resolve_image_url')) {
+                $img = resolve_image_url($img);
+            }
+
+            $flashPrice = (int)$it['flash_price'];
+            $pct = $regPrice > 0 ? (int)round((($regPrice - $flashPrice) / $regPrice) * 100) : 0;
+
+            $enrichedItems[] = [
+                'ma_san_pham' => $pid,
+                'ten_san_pham' => (string)($doc['ten_san_pham'] ?? ('Sản phẩm #' . $pid)),
+                'danh_muc' => (string)($doc['danh_muc_day_du'] ?? $doc['loai_san_pham'] ?? 'Mỹ phẩm'),
+                'thuong_hieu' => (string)($doc['thuong_hieu'] ?? 'SkinSyntax'),
+                'hinh_anh' => $img,
+                'regular_price' => $regPrice,
+                'flash_price' => $flashPrice,
+                'phan_tram_giam' => $pct,
+                'savings_amount' => max(0, $regPrice - $flashPrice),
+            ];
+        }
+
+        $this->renderAdmin('flash_sale_detail', [
+            'pageTitle' => 'Chi tiết chiến dịch: ' . $campaign['ten_campaign'],
+            'campaign' => $campaign,
+            'items' => $enrichedItems,
+            'now' => $now,
+        ]);
+    }
+
+    public function apiAdminFlashSaleSearchProducts(): void {
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!is_logged_in() || current_role() !== 'admin') {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'message' => 'Không có quyền truy cập chức năng này.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $q = trim((string)($_GET['q'] ?? ''));
+        $limit = max(1, min(50, (int)($_GET['limit'] ?? 25)));
+
+        $items = $this->flashSaleModel->searchProductsForSelector($q, $limit);
+
+        echo json_encode([
+            'ok' => true,
+            'items' => $items,
+            'total' => count($items)
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
 }

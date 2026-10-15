@@ -1,0 +1,81 @@
+context_key,rank_position,ma_san_pham,ten_san_pham,thuong_hieu,loai_da,flash_price,discount_percent,weighted_rating,personal_relevance,combined_score
+Context_A_Guest,1,34,"Combo 2 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",149500,50,4.8059,0,0.65
+Context_A_Guest,2,612,"Combo 3 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",229500,50,4.8059,0,0.65
+Context_A_Guest,3,103,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",,"Da dầu/Hỗn hợp dầu",91850,45,4.8059,0,0.6125
+Context_A_Guest,4,60,"Combo 2 Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",172200,40,4.8059,0,0.575
+Context_A_Guest,5,766,"[Mini] Combo 5 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",83400,40,4.8059,0,0.575
+Context_A_Guest,6,29,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",122200,35,4.8059,0,0.5375
+Context_A_Guest,7,652,"Combo Nước Tẩy Trang L'Oreal Làm Sạch Cho Da Dầu 400ml + Căng Mịn Da 95ml",,Unknown,116350,35,4.8059,0,0.5375
+Context_A_Guest,8,92,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",220500,30,4.8059,0,0.5
+Context_A_Guest,9,463,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml+95ml",,"Da thường/Mọi loại da",125300,30,4.8059,0,0.5
+Context_A_Guest,10,52,"Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",106500,25,4.8059,0,0.4625
+Context_A_Guest,11,285,"[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",59250,25,4.8059,0,0.4625
+Context_A_Guest,12,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",116000,20,4.8059,0,0.425
+Context_A_Guest,13,759,"Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",130400,20,4.8059,0,0.425
+Context_A_Guest,14,33,"Combo 2 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",243950,15,4.8059,0,0.3875
+Context_A_Guest,15,485,"Combo L'Oreal Nước Tẩy Trang Tươi Mát Da 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",136850,15,4.8059,0,0.3875
+Context_A_Guest,16,124,"Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",159300,10,4.8059,0,0.35
+Context_B_Cleanser_Behavior,1,612,"Combo 3 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",229500,50,4.8059,0.8468,0.8168
+Context_B_Cleanser_Behavior,2,34,"Combo 2 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",149500,50,4.8059,0.8332,0.7499
+Context_B_Cleanser_Behavior,3,103,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",,"Da dầu/Hỗn hợp dầu",91850,45,4.8059,0.8291,0.6922
+Context_B_Cleanser_Behavior,4,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",116000,20,4.8059,0.8637,0.675
+Context_B_Cleanser_Behavior,5,652,"Combo Nước Tẩy Trang L'Oreal Làm Sạch Cho Da Dầu 400ml + Căng Mịn Da 95ml",,Unknown,116350,35,4.8059,0.8337,0.6399
+Context_B_Cleanser_Behavior,6,29,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",122200,35,4.8059,0.8206,0.5754
+Context_B_Cleanser_Behavior,7,33,"Combo 2 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",243950,15,4.8059,0.843,0.5356
+Context_B_Cleanser_Behavior,8,463,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml+95ml",,"Da thường/Mọi loại da",125300,30,4.8059,0.8171,0.5207
+Context_B_Cleanser_Behavior,9,759,"Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",130400,20,4.8059,0.8192,0.456
+Context_B_Cleanser_Behavior,10,485,"Combo L'Oreal Nước Tẩy Trang Tươi Mát Da 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",136850,15,4.8059,0.8235,0.4397
+Context_B_Cleanser_Behavior,11,92,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",220500,30,4.8059,0.8003,0.438
+Context_B_Cleanser_Behavior,12,60,"Combo 2 Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",172200,40,4.8059,0.7845,0.4352
+Context_B_Cleanser_Behavior,13,124,"Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",159300,10,4.8059,0.8254,0.4115
+Context_B_Cleanser_Behavior,14,766,"[Mini] Combo 5 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",83400,40,4.8059,0.7787,0.4067
+Context_B_Cleanser_Behavior,15,52,"Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",106500,25,4.8059,0.7738,0.2701
+Context_B_Cleanser_Behavior,16,285,"[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",59250,25,4.8059,0.7621,0.2125
+Context_C_Dry_Skin_Profile,1,34,"Combo 2 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",149500,50,4.8059,0.24,0.9
+Context_C_Dry_Skin_Profile,2,766,"[Mini] Combo 5 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",83400,40,4.8059,0.24,0.825
+Context_C_Dry_Skin_Profile,3,29,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",122200,35,4.8059,0.24,0.7875
+Context_C_Dry_Skin_Profile,4,92,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",220500,30,4.8059,0.24,0.75
+Context_C_Dry_Skin_Profile,5,463,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml+95ml",,"Da thường/Mọi loại da",125300,30,4.8059,0.24,0.75
+Context_C_Dry_Skin_Profile,6,285,"[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",59250,25,4.8059,0.24,0.7125
+Context_C_Dry_Skin_Profile,7,759,"Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",130400,20,4.8059,0.24,0.675
+Context_C_Dry_Skin_Profile,8,485,"Combo L'Oreal Nước Tẩy Trang Tươi Mát Da 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",136850,15,4.8059,0.24,0.6375
+Context_C_Dry_Skin_Profile,9,60,"Combo 2 Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",172200,40,4.8059,0.1868,0.635
+Context_C_Dry_Skin_Profile,10,124,"Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",159300,10,4.8059,0.24,0.6
+Context_C_Dry_Skin_Profile,11,52,"Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",106500,25,4.8059,0.1869,0.5229
+Context_C_Dry_Skin_Profile,12,652,"Combo Nước Tẩy Trang L'Oreal Làm Sạch Cho Da Dầu 400ml + Căng Mịn Da 95ml",,Unknown,116350,35,4.8059,0.16,0.5018
+Context_C_Dry_Skin_Profile,13,612,"Combo 3 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",229500,50,4.8059,0.1,0.4
+Context_C_Dry_Skin_Profile,14,103,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",,"Da dầu/Hỗn hợp dầu",91850,45,4.8059,0.1,0.3625
+Context_C_Dry_Skin_Profile,15,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",116000,20,4.8059,0.1,0.175
+Context_C_Dry_Skin_Profile,16,33,"Combo 2 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",243950,15,4.8059,0.1,0.1375
+Context_D_Oily_Acne_Hybrid,1,34,"Combo 2 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",149500,50,4.8059,0.704,0.8997
+Context_D_Oily_Acne_Hybrid,2,29,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",122200,35,4.8059,0.7041,0.7875
+Context_D_Oily_Acne_Hybrid,3,766,"[Mini] Combo 5 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",83400,40,4.8059,0.6872,0.7754
+Context_D_Oily_Acne_Hybrid,4,92,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",220500,30,4.8059,0.6996,0.7368
+Context_D_Oily_Acne_Hybrid,5,463,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml+95ml",,"Da thường/Mọi loại da",125300,30,4.8059,0.6926,0.7162
+Context_D_Oily_Acne_Hybrid,6,285,"[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",59250,25,4.8059,0.6872,0.6629
+Context_D_Oily_Acne_Hybrid,7,759,"Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",130400,20,4.8059,0.6917,0.6386
+Context_D_Oily_Acne_Hybrid,8,485,"Combo L'Oreal Nước Tẩy Trang Tươi Mát Da 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",136850,15,4.8059,0.6916,0.6008
+Context_D_Oily_Acne_Hybrid,9,124,"Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",159300,10,4.8059,0.6995,0.5865
+Context_D_Oily_Acne_Hybrid,10,652,"Combo Nước Tẩy Trang L'Oreal Làm Sạch Cho Da Dầu 400ml + Căng Mịn Da 95ml",,Unknown,116350,35,4.8059,0.6277,0.5632
+Context_D_Oily_Acne_Hybrid,11,103,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",,"Da dầu/Hỗn hợp dầu",91850,45,4.8059,0.5944,0.5404
+Context_D_Oily_Acne_Hybrid,12,612,"Combo 3 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",229500,50,4.8059,0.579,0.5327
+Context_D_Oily_Acne_Hybrid,13,60,"Combo 2 Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",172200,40,4.8059,0.5338,0.325
+Context_D_Oily_Acne_Hybrid,14,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",116000,20,4.8059,0.5791,0.308
+Context_D_Oily_Acne_Hybrid,15,33,"Combo 2 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",243950,15,4.8059,0.579,0.2702
+Context_D_Oily_Acne_Hybrid,16,52,"Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",106500,25,4.8059,0.5339,0.2128
+Context_E_Cart_Signal,1,34,"Combo 2 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",149500,50,4.8059,0.7769,0.897
+Context_E_Cart_Signal,2,766,"[Mini] Combo 5 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",83400,40,4.8059,0.766,0.7895
+Context_E_Cart_Signal,3,29,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Trang Điểm 400ml",,"Da thường/Mọi loại da",122200,35,4.8059,0.777,0.7848
+Context_E_Cart_Signal,4,92,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",220500,30,4.8059,0.7779,0.75
+Context_E_Cart_Signal,5,463,"Combo 2 Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml+95ml",,"Da thường/Mọi loại da",125300,30,4.8059,0.7724,0.7336
+Context_E_Cart_Signal,6,285,"[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",,"Da thường/Mọi loại da",59250,25,4.8059,0.766,0.677
+Context_E_Cart_Signal,7,759,"Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",130400,20,4.8059,0.7704,0.6526
+Context_E_Cart_Signal,8,485,"Combo L'Oreal Nước Tẩy Trang Tươi Mát Da 400ml + Nước Tẩy Trang Căng Mịn Da 95ml",,"Da thường/Mọi loại da",136850,15,4.8059,0.7703,0.6148
+Context_E_Cart_Signal,9,124,"Nước Tẩy Trang L'Oreal Căng Mịn Da 400ml",,"Da thường/Mọi loại da",159300,10,4.8059,0.7778,0.5997
+Context_E_Cart_Signal,10,612,"Combo 3 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",229500,50,4.8059,0.6745,0.5915
+Context_E_Cart_Signal,11,652,"Combo Nước Tẩy Trang L'Oreal Làm Sạch Cho Da Dầu 400ml + Căng Mịn Da 95ml",,Unknown,116350,35,4.8059,0.6927,0.5333
+Context_E_Cart_Signal,12,103,"Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",,"Da dầu/Hỗn hợp dầu",91850,45,4.8059,0.6374,0.4433
+Context_E_Cart_Signal,13,7,"Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",116000,20,4.8059,0.6745,0.3665
+Context_E_Cart_Signal,14,33,"Combo 2 Nước Tẩy Trang L'Oreal Tươi Mát Cho Da Dầu, Hỗn Hợp 400ml",,"Da dầu/Hỗn hợp dầu",243950,15,4.8059,0.6745,0.329
+Context_E_Cart_Signal,15,60,"Combo 2 Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",172200,40,4.8059,0.6103,0.325
+Context_E_Cart_Signal,16,52,"Nước Tẩy Trang L'Oreal Dưỡng Ẩm Cho Da Thường, Khô 400ml",,"Da khô/Hỗn hợp khô",106500,25,4.8059,0.6103,0.2125

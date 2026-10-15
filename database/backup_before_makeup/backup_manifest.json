@@ -1,0 +1,37 @@
+{
+  "timestamp": "20261015_095107",
+  "database": "skinsyntax_v2",
+  "mongo_uri": "mongodb://127.0.0.1:27018",
+  "collections": {
+    "san_pham": {
+      "count": 1387,
+      "file": "san_pham.json",
+      "bytes": 15452758
+    },
+    "danh_muc": {
+      "count": 21,
+      "file": "danh_muc.json",
+      "bytes": 8631
+    },
+    "thuong_hieu": {
+      "count": 156,
+      "file": "thuong_hieu.json",
+      "bytes": 43980
+    },
+    "xuat_xu": {
+      "count": 18,
+      "file": "xuat_xu.json",
+      "bytes": 4902
+    },
+    "loai_da": {
+      "count": 5,
+      "file": "loai_da.json",
+      "bytes": 1424
+    },
+    "noi_san_xuat": {
+      "count": 22,
+      "file": "noi_san_xuat.json",
+      "bytes": 6415
+    }
+  }
+}

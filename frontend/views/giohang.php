@@ -14,9 +14,18 @@ $total = 0;
 foreach ($items as $item) {
   $product = $item['product'] ?? [];
   $qty = (int)($item['qty'] ?? 1);
-  $unitPrice = (float)($product['gia_ban'] ?? 0);
+  $unitPrice = isset($item['unit_price']) && (float)$item['unit_price'] > 0
+    ? (float)$item['unit_price']
+    : (isset($item['pricing']['effective_price']) ? (float)$item['pricing']['effective_price'] : 0);
+  if ($unitPrice <= 0 && function_exists('get_effective_product_price')) {
+    $eff = get_effective_product_price($item['product']['ma_san_pham'] ?? ($item['product']['id'] ?? ''), $product);
+    $unitPrice = (float)$eff['effective_price'];
+  }
   if ($unitPrice <= 0) {
-    $unitPrice = (float)($product['gia_goc'] ?? 0);
+    $unitPrice = (float)($product['gia_ban'] ?? 0);
+    if ($unitPrice <= 0) {
+      $unitPrice = (float)($product['gia_goc'] ?? 0);
+    }
   }
   $total += $unitPrice * max(1, $qty);
 }
@@ -63,9 +72,18 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
                   <?php
                     $product = $item['product'] ?? [];
                     $qty = max(1, (int)($item['qty'] ?? 1));
-                    $unitPrice = (float)($product['gia_ban'] ?? 0);
+                    $unitPrice = isset($item['unit_price']) && (float)$item['unit_price'] > 0
+                      ? (float)$item['unit_price']
+                      : (isset($item['pricing']['effective_price']) ? (float)$item['pricing']['effective_price'] : 0);
+                    if ($unitPrice <= 0 && function_exists('get_effective_product_price')) {
+                      $eff = get_effective_product_price($product_id, $product);
+                      $unitPrice = (float)$eff['effective_price'];
+                    }
                     if ($unitPrice <= 0) {
-                      $unitPrice = (float)($product['gia_goc'] ?? 0);
+                      $unitPrice = (float)($product['gia_ban'] ?? 0);
+                      if ($unitPrice <= 0) {
+                        $unitPrice = (float)($product['gia_goc'] ?? 0);
+                      }
                     }
                     $lineTotal = $unitPrice * $qty;
 

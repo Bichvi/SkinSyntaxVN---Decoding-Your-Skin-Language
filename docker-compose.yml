@@ -213,6 +213,10 @@ services:
       AI_IDOL_ENDPOINT: http://ai-idol-service:5003
       REDIS_URL: redis://redis:6379/0
       REDIS_CACHE_TTL: "604800"
+      CACHE_DRIVER: ${CACHE_DRIVER:-valkey}
+      VALKEY_URL: ${VALKEY_URL:-}
+      CACHE_PREFIX: ${CACHE_PREFIX:-skinsyntax:}
+      CACHE_DEFAULT_TTL: ${CACHE_DEFAULT_TTL:-300}
       MAIL_DEMO_MODE: "1"
     volumes:
       - ./backend:/var/www/html

@@ -38,6 +38,7 @@ vendor/
 # Local runtime caches
 ai-service-flask/.cache/
 backend/storage/cache/
+.runtime/
 
 # Large AI indices & vector stores
 database/recommendation_index/

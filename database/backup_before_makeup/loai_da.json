@@ -1,0 +1,67 @@
+[
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc29"
+    },
+    "ma_loai_da": 1,
+    "ten_loai_da": "Da dầu/Hỗn hợp dầu",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc2a"
+    },
+    "ma_loai_da": 2,
+    "ten_loai_da": "Da thường/Mọi loại da",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc2b"
+    },
+    "ma_loai_da": 3,
+    "ten_loai_da": "Da nhạy cảm",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc2c"
+    },
+    "ma_loai_da": 5,
+    "ten_loai_da": "Da khô/Hỗn hợp khô",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6aaf7d3cb68c7e34f6ccdc2d"
+    },
+    "ma_loai_da": 6,
+    "ten_loai_da": "Da mụn",
+    "created_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    },
+    "updated_at": {
+      "$date": "2026-09-20T06:29:14.651Z"
+    }
+  }
+]

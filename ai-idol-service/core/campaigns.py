@@ -50,10 +50,14 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
     preparation_minutes = max(MIN_LEAD_MINUTES, len(product_ids) * ESTIMATED_MINUTES_PER_PRODUCT)
     minimum_schedule = utcnow() + dt.timedelta(minutes=preparation_minutes)
     if scheduled_at < minimum_schedule:
-        raise ValueError(
-            f"Schedule needs at least {preparation_minutes:g} minutes to prepare "
-            f"{len(product_ids)} product(s)"
-        )
+        if payload.get("auto_adjust_schedule") or (minimum_schedule - scheduled_at).total_seconds() <= 120:
+            scheduled_at = minimum_schedule + dt.timedelta(minutes=1)
+            scheduled_at = scheduled_at.replace(second=0, microsecond=0)
+        else:
+            raise ValueError(
+                f"Lịch phát cần cách thời điểm hiện tại tối thiểu {preparation_minutes:g} phút "
+                f"để chuẩn bị kịch bản và kết xuất video cho {len(product_ids)} sản phẩm."
+            )
     platforms = [str(item).lower() for item in payload.get("platforms", ["internal"])]
     platforms = list(dict.fromkeys(item for item in platforms if item in ALLOWED_PLATFORMS))
     if not platforms:
@@ -218,6 +222,7 @@ def get_campaign(campaign_id: str) -> dict | None:
             job = db.ai_idol_jobs.find_one({"_id": object_id(job_id)}, {
                 "status": 1, "current_stage": 1, "script_status": 1,
                 "artifacts.script_text": 1,
+                "created_at": 1, "updated_at": 1,
             })
         except ValueError:
             job = None
@@ -226,6 +231,8 @@ def get_campaign(campaign_id: str) -> dict | None:
             segment["current_stage"] = job.get("current_stage")
             segment["script_status"] = job.get("script_status")
             segment["script_text"] = (job.get("artifacts") or {}).get("script_text", "")
+            segment["job_created_at"] = job.get("created_at")
+            segment["job_updated_at"] = job.get("updated_at")
     campaign["segments"] = segments
     campaign["broadcasts"] = list(db.ai_idol_broadcasts.find({"campaign_id": campaign_id}))
     return serialize(campaign)

@@ -1,0 +1,6 @@
+context_key,context_name,top1_sku,top4_skus,overlap_with_guest,jaccard_with_guest,differentiation_from_guest
+Context_A_Guest,"Guest (Cold Start)",34,"34,612,103,60",4,1,IDENTICAL
+Context_B_Cleanser_Behavior,"Behavior Only (Cleanser Search & View)",612,"612,34,103,7",3,0.6,YES
+Context_C_Dry_Skin_Profile,"Profile Only (Dry Skin & Hydration)",34,"34,766,29,92",1,0.1429,YES
+Context_D_Oily_Acne_Hybrid,"Hybrid (Oily Acne Profile + Serum Behavior)",34,"34,29,766,92",1,0.1429,YES
+Context_E_Cart_Signal,"Profile + Cart Signal (Cart Item Present)",34,"34,766,29,92",1,0.1429,YES

@@ -8,8 +8,10 @@ try {
     if ($health.renderer -eq 'syna-native-v4') { Write-Output 'Syna renderer already running.'; exit 0 }
 } catch { }
 if (-not (Test-Path -LiteralPath (Join-Path $PlaywrightModules 'playwright'))) { throw 'Playwright not found. Pass -PlaywrightModules with the existing node_modules directory.' }
-if (-not (Test-Path -LiteralPath (Join-Path $projectRoot '.runtime\bin\ffmpeg.exe'))) { throw 'Existing FFmpeg runtime not found.' }
 $env:NODE_PATH = $PlaywrightModules
+$env:SYNA_FFPROBE = (Join-Path $projectRoot '.runtime\bin\ffprobe.exe')
+$env:SYNA_FFMPEG = (Join-Path $projectRoot '.runtime\bin\ffmpeg.exe')
+$env:PATH = (Join-Path $projectRoot '.runtime\bin') + ';' + $env:PATH
 $entry = Join-Path $PSScriptRoot 'ai-idol-mascot\syna-render-server.cjs'
 $process = Start-Process -FilePath (Get-Command node.exe).Source -ArgumentList @('"' + $entry + '"') -WorkingDirectory $projectRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $logRoot 'syna-renderer.log') -RedirectStandardError (Join-Path $logRoot 'syna-renderer-error.log')
 for ($attempt = 0; $attempt -lt 15; $attempt++) {

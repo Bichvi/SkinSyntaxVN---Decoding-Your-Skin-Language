@@ -38,6 +38,9 @@ if (!defined('BASE_URL')) {
 }
 
 require_once $backendRoot . '/app/config/db.php';
+if (is_file($backendRoot . '/app/services/CacheService.php')) {
+    require_once $backendRoot . '/app/services/CacheService.php';
+}
 
 $helpersFile = defined('VIEW_DIR') && is_file(VIEW_DIR . '/helpers.php')
     ? VIEW_DIR . '/helpers.php'
@@ -57,7 +60,15 @@ ob_start(static function ($buffer) {
 });
 
 $r = $_GET['r'] ?? 'home';
-if (in_array($r, ['admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign', 'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign', 'admin_ai_idol_approve_script', 'admin_ai_idol_agent_runs', 'admin_ai_idol_agent_create', 'admin_ai_idol_agent_run', 'admin_ai_idol_agent_confirm', 'admin_ai_idol_agent_retry', 'admin_ai_idol_agent_cancel'], true)) {
+if (in_array($r, [
+    'admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign',
+    'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign',
+    'admin_ai_idol_approve_script', 'admin_ai_idol_agent_runs', 'admin_ai_idol_agent_create',
+    'admin_ai_idol_agent_run', 'admin_ai_idol_agent_confirm', 'admin_ai_idol_agent_retry',
+    'admin_ai_idol_agent_cancel', 'admin_ai_idol_product_videos', 'admin_ai_idol_search_products',
+    'admin_ai_idol_publish_video', 'admin_ai_idol_toggle_publish',
+    'admin_ai_idol_reward_campaign', 'admin_ai_idol_save_reward_campaign', 'admin_ai_idol_toggle_reward_campaign'
+], true)) {
     if (require $backendRoot . '/app/routes/ai_idol.php') {
         return;
     }
@@ -82,6 +93,10 @@ switch ($r) {
         (new HomeController($pdo))->index();
         break;
 
+    case 'flash_sale':
+        (new HomeController($pdo))->flashSale();
+        break;
+
     case 'tatca':
         (new SanPhamController($pdo))->tatca();
         break;
@@ -96,6 +111,40 @@ switch ($r) {
 
     case 'chitiet':
         (new SanPhamController($pdo))->chitiet();
+        break;
+
+    case 'product_video_stream':
+        (new SanPhamController($pdo))->streamProductVideo();
+        break;
+
+    case 'video_watch_start':
+        require_once $backendRoot . '/app/controllers/VideoWatchController.php';
+        (new VideoWatchController($pdo))->start();
+        break;
+
+    case 'video_watch_heartbeat':
+        require_once $backendRoot . '/app/controllers/VideoWatchController.php';
+        (new VideoWatchController($pdo))->heartbeat();
+        break;
+
+    case 'video_watch_status':
+        require_once $backendRoot . '/app/controllers/VideoWatchController.php';
+        (new VideoWatchController($pdo))->status();
+        break;
+
+    case 'video_watch_complete':
+        require_once $backendRoot . '/app/controllers/VideoWatchController.php';
+        (new VideoWatchController($pdo))->complete();
+        break;
+
+    case 'video_watch_claim_reward':
+        require_once $backendRoot . '/app/controllers/VideoWatchController.php';
+        (new VideoWatchController($pdo))->claimReward();
+        break;
+
+    case 'customer_vouchers':
+        require_once $backendRoot . '/app/controllers/VideoWatchController.php';
+        (new VideoWatchController($pdo))->customerVouchers();
         break;
 
     case 'them_gio_hang_ajax':
@@ -327,6 +376,10 @@ switch ($r) {
         (new TaiKhoanController($pdo))->capnhatHoso();
         break;
 
+    case 'capnhat_loaida':
+        (new TaiKhoanController($pdo))->capNhatLoaiDa();
+        break;
+
     case 'diachi_macdinh':
         (new TaiKhoanController($pdo))->datDiaChiMacDinh();
         break;
@@ -444,6 +497,38 @@ switch ($r) {
 
     case 'admin_order_print':
         (new QuanTriController($pdo))->adminOrderPrint();
+        break;
+
+    case 'admin_flash_sales':
+        (new QuanTriController($pdo))->adminFlashSales();
+        break;
+
+    case 'admin_flash_sale_create':
+        (new QuanTriController($pdo))->adminFlashSaleCreate();
+        break;
+
+    case 'admin_flash_sale_edit':
+        (new QuanTriController($pdo))->adminFlashSaleEdit();
+        break;
+
+    case 'admin_flash_sale_save':
+        (new QuanTriController($pdo))->adminFlashSaleSave();
+        break;
+
+    case 'admin_flash_sale_toggle':
+        (new QuanTriController($pdo))->adminFlashSaleToggle();
+        break;
+
+    case 'admin_flash_sale_delete':
+        (new QuanTriController($pdo))->adminFlashSaleDelete();
+        break;
+
+    case 'admin_flash_sale_detail':
+        (new QuanTriController($pdo))->adminFlashSaleDetail();
+        break;
+
+    case 'api_admin_flash_sale_search_products':
+        (new QuanTriController($pdo))->apiAdminFlashSaleSearchProducts();
         break;
 
     case 'admin_vouchers':

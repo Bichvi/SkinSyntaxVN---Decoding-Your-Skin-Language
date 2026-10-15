@@ -37,6 +37,12 @@ class SanPham {
         'ngay_tao' => 1,
     ];
 
+    public static ?array $menuTreeCache = null;
+
+    public static function setMenuTreeCache(?array $tree): void {
+        self::$menuTreeCache = $tree;
+    }
+
     public function __construct($db) {
         $this->db = $db;
     }
@@ -108,6 +114,25 @@ class SanPham {
         $cacheFile = dirname(__DIR__) . '/content/simple_recommender_cache.json';
         if (file_exists($cacheFile)) {
             @unlink($cacheFile);
+        }
+    }
+
+    public static function invalidateProductCache($productId = null): void {
+        self::$menuTreeCache = null;
+        self::clearSimpleRecommenderCache();
+        if (!class_exists('CacheService') && is_file(dirname(__DIR__) . '/services/CacheService.php')) {
+            require_once dirname(__DIR__) . '/services/CacheService.php';
+        }
+        if (class_exists('CacheService')) {
+            $cache = CacheService::getInstance();
+            if ($productId !== null && $productId !== '') {
+                $cache->delete('product:detail:' . $productId);
+                $cache->delete('product:freq_bought:' . $productId);
+                $cache->delete('product:videos:' . $productId);
+            }
+            $cache->deleteByPattern('home:*');
+            $cache->deleteByPattern('catalog:*');
+            $cache->deleteByPattern('menu:*');
         }
     }
 
@@ -267,6 +292,14 @@ class SanPham {
     }
 
     public function latest(int $limit = 8, bool $onlyVisibleOnWebsite = false, bool $excludeNonBeauty = false): array {
+        $cacheKey = 'home:latest:' . $limit . ':' . ($onlyVisibleOnWebsite ? '1' : '0') . ':' . ($excludeNonBeauty ? '1' : '0');
+        if (class_exists('CacheService')) {
+            $cached = CacheService::getInstance()->get($cacheKey);
+            if (is_array($cached) && !empty($cached)) {
+                return $cached;
+            }
+        }
+
         $filter = [];
         if ($onlyVisibleOnWebsite) {
             $filter = $this->availableProductFilter();
@@ -293,6 +326,11 @@ class SanPham {
         foreach ($cursor as $doc) {
             $items[] = $this->normalizeProductRecord($doc);
         }
+
+        if (class_exists('CacheService') && !empty($items)) {
+            CacheService::getInstance()->set($cacheKey, $items, 600);
+        }
+
         return $items;
     }
 
@@ -342,7 +380,7 @@ class SanPham {
             $filter = $this->productFlexibleFilter($id);
             $result = $this->db->san_pham->updateMany($filter, ['$set' => $payload]);
             if ($result->getMatchedCount() > 0) {
-                self::clearSimpleRecommenderCache();
+                self::invalidateProductCache($id);
                 return true;
             }
             $this->setError('Khong tim thay san pham can cap nhat.');
@@ -362,8 +400,6 @@ class SanPham {
             $this->db->san_pham->updateOne(['ma_san_pham' => (int) $id], $update);
         }
     }
-
-    private static ?array $menuTreeCache = null;
 
     public function getCanonicalCategoryHierarchy(): array {
         if (self::$categoryHierarchyCache !== null) {
@@ -584,6 +620,15 @@ class SanPham {
             return self::$menuTreeCache;
         }
 
+        $cacheKey = 'menu:tree:' . $cap2LimitEach;
+        if (class_exists('CacheService')) {
+            $cached = CacheService::getInstance()->get($cacheKey);
+            if (is_array($cached) && !empty($cached)) {
+                self::$menuTreeCache = $cached;
+                return $cached;
+            }
+        }
+
         $hierarchy = $this->getCanonicalCategoryHierarchy();
         $byId = $hierarchy['by_id'];
         $children = $hierarchy['children'];
@@ -677,6 +722,9 @@ class SanPham {
         }
 
         self::$menuTreeCache = $tree;
+        if (class_exists('CacheService') && !empty($tree)) {
+            CacheService::getInstance()->set($cacheKey, $tree, 3600);
+        }
         return $tree;
     }
 
@@ -829,11 +877,12 @@ class SanPham {
         int $limitEach = 4,
         array $recentViewedIds = [],
         ?array $userProfile = null,
-        array $behaviorSignals = []
+        array $behaviorSignals = [],
+        ?array $preloadedFlashDeals = null
     ): array {
         $limitEach = max(4, min(12, $limitEach));
 
-        $flashDeals = $this->getFlashSaleProducts($limitEach);
+        $flashDeals = ($preloadedFlashDeals !== null) ? $preloadedFlashDeals : $this->getFlashSaleProducts($limitEach);
 
         // Adaptive Recommender V1 (Phase A)
         $adaptiveRecs = $this->getHybridRecommendations($recentViewedIds, $userProfile, $limitEach, $behaviorSignals);
@@ -1105,6 +1154,14 @@ class SanPham {
     }
 
     public function getFlashSaleProducts(int $limit = 8): array {
+        $cacheKey = 'home:flash_deals:' . $limit;
+        if (class_exists('CacheService')) {
+            $cached = CacheService::getInstance()->get($cacheKey);
+            if (is_array($cached) && !empty($cached)) {
+                return $cached;
+            }
+        }
+
         $discountFilter = [
             '$or' => [
                 ['phan_tram_giam' => ['$gt' => 0]],
@@ -1112,11 +1169,17 @@ class SanPham {
             ],
         ];
 
-        return $this->findHomepageProducts(
+        $items = $this->findHomepageProducts(
             $discountFilter,
             ['phan_tram_giam' => -1, 'tien_tiet_kiem' => -1, 'ma_san_pham' => -1],
             max(1, min(24, $limit))
         );
+
+        if (class_exists('CacheService') && !empty($items)) {
+            CacheService::getInstance()->set($cacheKey, $items, 180);
+        }
+
+        return $items;
     }
 
     private function normalizeDiscoveryArgs($filters = [], int $limit = 6, ?string $sort = null): array {
@@ -1739,6 +1802,7 @@ class SanPham {
             $payload['ngay_tao'] = new \MongoDB\BSON\UTCDateTime();
             $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
             $this->db->san_pham->insertOne($payload);
+            self::invalidateProductCache();
             return true;
         } catch (Throwable $e) {
             $this->setError('Loi them san pham: ' . $e->getMessage());
@@ -1769,7 +1833,7 @@ class SanPham {
             foreach ($this->productIdentityFilters($id) as $filter) {
                 $result = $this->db->san_pham->updateOne($filter, ['$set' => $payload]);
                 if ($result->getMatchedCount() > 0) {
-                    self::clearSimpleRecommenderCache();
+                    self::invalidateProductCache($id);
                     return true;
                 }
             }
@@ -1804,7 +1868,10 @@ class SanPham {
         try {
             foreach ($this->productIdentityFilters($id) as $filter) {
                 $result = $this->db->san_pham->updateOne($filter, ['$set' => $payload]);
-                if ($result->getMatchedCount() > 0) return true;
+                if ($result->getMatchedCount() > 0) {
+                    self::invalidateProductCache($id);
+                    return true;
+                }
             }
             $this->setError('Khong tim thay san pham can cap nhat kho.');
             return false;
