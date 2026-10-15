@@ -2,7 +2,9 @@
 
 Supports the operators the service uses: equality, $in, $nin, $ne, $lt, $lte, $gt, $gte, $regex, $exists,
 delete_one/delete_many and insert_many(ordered=...),
-$set, $inc, $unset, $push($each/$slice), upsert+$setOnInsert, bulk_write(UpdateOne), sort/limit and the find_one_and_update/update_many helpers.
+$set, $inc, $unset, $push($each/$slice), $addToSet and $pull (single-value forms), upsert+$setOnInsert,
+bulk_write(UpdateOne), sort/limit and the find_one_and_update/update_many helpers.
+Like Mongo, an equality filter on an array field matches when the array contains the value.
 """
 from __future__ import annotations
 
@@ -35,6 +37,8 @@ def _match_value(actual, condition):
             if op == "$exists" and (actual is not None) != bool(expected):
                 return False
         return True
+    if isinstance(actual, list) and not isinstance(condition, (list, dict)):
+        return condition in actual
     return actual == condition
 
 
@@ -103,6 +107,11 @@ class Collection:
             else:
                 items = items + [value]
             _set(doc, key, items)
+        for key, value in update.get("$addToSet", {}).items():
+            items = list(_get(doc, key) or [])
+            _set(doc, key, items if value in items else items + [value])
+        for key, value in update.get("$pull", {}).items():
+            _set(doc, key, [item for item in (_get(doc, key) or []) if item != value])
 
     def update_one(self, query, update, **kwargs):
         self.writes.append(("update_one", query, update))

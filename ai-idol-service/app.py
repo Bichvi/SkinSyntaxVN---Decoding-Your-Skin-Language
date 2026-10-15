@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, send_file
 from agents.service import ConflictError, cancel_agent_run, confirm_agent_run
 from agents.structured_query import FilterError, run_structured_query
 from config import AGENT_ENABLED, AVATARS_DIR, BACKGROUNDS_DIR, PORT, logger
-from core.campaigns import CampaignConflict, CampaignNotFound, cancel_campaign, create_campaign, get_campaign, list_campaigns, reschedule_campaign, retry_campaign
+from core.campaigns import CampaignConflict, CampaignNotFound, approve_external_platform, cancel_campaign, create_campaign, get_campaign, list_campaigns, reschedule_campaign, retry_campaign
 from core.agent_runs import create_agent_run, get_agent_run, list_agent_runs, update_agent_run
 from core.state_machine import create_job, ensure_indexes, get_job, get_db, object_id, utcnow
 from core.pipeline import start_pipeline_thread
@@ -230,6 +230,20 @@ def api_reschedule_campaign(campaign_id):
     try:
         payload = request.get_json(silent=True) or {}
         return jsonify({"ok": True, **reschedule_campaign(campaign_id, payload.get("scheduled_at"))})
+    except CampaignNotFound as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 404
+    except CampaignConflict as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+
+
+@app.route("/api/ai-idol/campaigns/<campaign_id>/platforms/approve", methods=["POST"])
+def api_approve_campaign_platform(campaign_id):
+    try:
+        payload = request.get_json(silent=True) or {}
+        data = approve_external_platform(campaign_id, str(payload.get("platform") or ""), str(payload.get("by") or ""))
+        return jsonify({"ok": True, "data": data})
     except CampaignNotFound as exc:
         return jsonify({"ok": False, "message": str(exc)}), 404
     except CampaignConflict as exc:
