@@ -13,7 +13,8 @@ if SERVICE_DIR not in sys.path:
 
 import core.agent_runs as agent_runs
 import core.campaigns as campaigns
-from agents.service import _earliest_start, _safe_schedule, _stock_levels, process_agent_run
+from agents.command_query import METRIC_LABELS
+from agents.service import _autopilot_schedule, _earliest_start, _safe_schedule, _stock_levels, process_agent_run
 from tests.fakes import FakeDb
 from tests.test_agent import AgentRunHarness, FakeProductDb
 
@@ -33,6 +34,12 @@ RETINOL = row(777, "Serum Retinol 0.5%", stock=12, category="Chăm sóc da mặt
 SUNSCREENS = [row(100 + index, f"Kem Chống Nắng Alpha {index}", sold=50 - index) for index in range(8)]
 
 
+def snapshot(code, units, window=30):
+    """A complete sales snapshot as of NOW's day, the only kind execute_query ranks on."""
+    return {"product_id": str(code), "window_days": window, "as_of": "2026-10-15",
+            "coverage_complete": True, "units_sold": units}
+
+
 class AutopilotHarness(AgentRunHarness):
     """The shared run harness, switched to autopilot and pinned to NOW."""
 
@@ -41,8 +48,8 @@ class AutopilotHarness(AgentRunHarness):
         if mode is not None:
             self.run["mode"] = mode
 
-    def execute(self, catalog, **kwargs):
-        pinned = functools.partial(process_agent_run, now=NOW)
+    def execute(self, catalog, *, snapshots=None, **kwargs):
+        pinned = functools.partial(process_agent_run, now=NOW, snapshots=snapshots)
         with patch("tests.test_agent.process_agent_run", new=pinned):
             return super().execute(catalog, **kwargs)
 
@@ -207,8 +214,83 @@ class AutopilotProductTests(unittest.TestCase):
         harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy nhất toàn kỳ")
         run = harness.execute(catalog)
         self.assertEqual(len(harness.payload["product_ids"]), 3)
-        self.assertEqual(decision(run, "METRICS_FALLBACK")["level"], "adjusted")
+        gaps = decision(run, "DATA_GAPS")
+        self.assertEqual(gaps["level"], "adjusted")
+        self.assertIn("doanh số toàn kỳ", gaps["message"])
         self.assertIn("COUNT_SHORT", codes(run))
+        # No ranking was replaced, so no fallback may be claimed.
+        self.assertNotIn("METRICS_FALLBACK", codes(run))
+
+
+class AutopilotMetricsFallbackTests(unittest.TestCase):
+    """A windowed ranking with no snapshots to rank on falls back to lifetime sales (spec 5.1)."""
+
+    LIFETIME_TOP_5 = ["100", "101", "102", "103", "104"]
+
+    def check_fallback(self, brief, label=METRIC_LABELS["units"]):
+        harness = AutopilotHarness(brief)
+        run = harness.execute(SUNSCREENS)
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        self.assertEqual(harness.payload["product_ids"], self.LIFETIME_TOP_5)
+        fallback = decision(run, "METRICS_FALLBACK")
+        self.assertEqual(fallback["level"], "adjusted")
+        self.assertIn("30 ngày", fallback["message"])
+        self.assertIn(label, fallback["message"])
+        self.assertIn("toàn kỳ", fallback["message"])
+        self.assertNotIn("NO_PRODUCTS", codes(run))
+        self.assertNotIn("COUNT_SHORT", codes(run))
+        self.assertIsNone(run["plan"]["query_result"]["query"]["window_days"])
+        self.assertEqual(run["plan"]["query_result"]["query"]["rank_by"], "units")
+        return harness, run
+
+    def test_livestream_prompt_without_snapshots_ranks_by_lifetime_sales(self):
+        harness, _ = self.check_fallback("Livestream 5 kem chống nắng bán chạy")
+        self.assertEqual(harness.payload["purpose"], "live_and_product")
+
+    def test_filter_prompt_without_snapshots_ranks_by_lifetime_sales(self):
+        self.check_fallback("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
+
+    def test_the_message_names_the_ranking_that_was_replaced(self):
+        self.check_fallback("Lọc 5 kem chống nắng thêm giỏ nhiều trong 30 ngày qua", METRIC_LABELS["cart"])
+
+    def test_complete_snapshots_need_no_fallback(self):
+        snapshots = [snapshot(100 + index, index + 1) for index in range(8)]  # the reverse of lifetime order
+        harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
+        run = harness.execute(SUNSCREENS, snapshots=snapshots)
+        self.assertEqual(harness.payload["product_ids"], ["107", "106", "105", "104", "103"])
+        self.assertFalse({"METRICS_FALLBACK", "DATA_GAPS", "COUNT_SHORT"} & set(codes(run)))
+        self.assertEqual(run["plan"]["query_result"]["query"]["window_days"], 30)
+
+    def test_partial_snapshots_that_leave_the_list_short_fall_back(self):
+        harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
+        run = harness.execute(SUNSCREENS, snapshots=[snapshot(105, 9), snapshot(106, 8), snapshot(107, 7)])
+        self.assertEqual(harness.payload["product_ids"], self.LIFETIME_TOP_5)
+        self.assertIn("METRICS_FALLBACK", codes(run))
+
+    def test_enough_ranked_products_keep_the_period_ranking(self):
+        snapshots = [snapshot(100 + index, index + 1) for index in range(6)]  # 2 of 8 have no snapshot
+        harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
+        run = harness.execute(SUNSCREENS, snapshots=snapshots)
+        self.assertEqual(harness.payload["product_ids"], ["105", "104", "103", "102", "101"])
+        self.assertNotIn("METRICS_FALLBACK", codes(run))
+        self.assertIn("số liệu bán hàng 30 ngày", decision(run, "DATA_GAPS")["message"])
+
+    def test_a_fallback_that_finds_no_more_keeps_the_period_result(self):
+        no_lifetime = [{k: v for k, v in item.items() if k != "so_luong_da_ban"} for item in SUNSCREENS]
+        harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
+        run = harness.execute(no_lifetime, snapshots=[snapshot(100, 9), snapshot(101, 8), snapshot(102, 7)])
+        self.assertEqual(harness.payload["product_ids"], ["100", "101", "102"])
+        self.assertEqual(codes(run).count("COUNT_SHORT"), 1)
+        self.assertNotIn("METRICS_FALLBACK", codes(run))
+        self.assertIn("DATA_GAPS", codes(run))
+
+    def test_nothing_to_rank_on_still_stops(self):
+        no_lifetime = [{k: v for k, v in item.items() if k != "so_luong_da_ban"} for item in SUNSCREENS]
+        harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
+        run = harness.execute(no_lifetime)
+        harness.create.assert_not_called()
+        self.assertEqual(run["decisions"][-1]["code"], "NO_PRODUCTS")
+        self.assertNotIn("METRICS_FALLBACK", codes(run))
 
 
 class AutopilotScheduleTests(unittest.TestCase):
@@ -234,6 +316,43 @@ class AutopilotScheduleTests(unittest.TestCase):
         self.assertEqual(run["status"], "CAMPAIGN_CREATED")
         self.assertEqual(harness.payload["scheduled_at"], "2026-10-15T10:00:00+07:00")
         self.assertEqual(decision(run, "SLOT_MOVED")["level"], "adjusted")
+
+    def test_a_date_without_an_hour_keeps_the_day_and_picks_the_slot(self):
+        harness = AutopilotHarness("Livestream sản phẩm mã 995 ngày 20/10/2026")
+        run = harness.execute([VICHY])
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        self.assertEqual(harness.payload["scheduled_at"], "2026-10-20T12:00:00+07:00")
+        picked = decision(run, "SLOT_PICKED")
+        self.assertEqual(picked["level"], "adjusted")
+        self.assertEqual(picked["message"], "Prompt có ngày 20/10 nhưng không có giờ; chọn giờ vàng 12:00 20/10.")
+
+    def test_a_date_with_an_unreadable_hour_keeps_the_day_too(self):
+        harness = AutopilotHarness("Livestream sản phẩm mã 995 ngày 20/10/2026 lúc 25h")
+        run = harness.execute([VICHY])
+        self.assertEqual(harness.payload["scheduled_at"], "2026-10-20T12:00:00+07:00")
+        self.assertIn("ngày 20/10 nhưng không đọc được giờ", decision(run, "SLOT_PICKED")["message"])
+
+    def test_tomorrow_without_an_hour_is_tomorrow(self):
+        harness = AutopilotHarness("Livestream sản phẩm mã 995 ngày mai")
+        run = harness.execute([VICHY])
+        self.assertEqual(harness.payload["scheduled_at"], "2026-10-16T12:00:00+07:00")
+        self.assertIn("ngày 16/10", decision(run, "SLOT_PICKED")["message"])
+
+    def test_a_past_date_without_an_hour_uses_the_earliest_slot_and_says_so(self):
+        harness = AutopilotHarness("Livestream sản phẩm mã 995 ngày 10/10/2026")
+        run = harness.execute([VICHY])
+        self.assertEqual(harness.payload["scheduled_at"], "2026-10-15T12:00:00+07:00")
+        message = decision(run, "SLOT_PICKED")["message"]
+        self.assertIn("Ngày 10/10", message)
+        self.assertIn("đã qua", message)
+        self.assertIn("12:00 15/10", message)
+
+    def test_today_with_every_slot_gone_moves_to_the_next_day_and_says_so(self):
+        late = dt.datetime(2026, 10, 15, 21, 0, tzinfo=TZ)
+        when, picked = _autopilot_schedule("", 1, late, False, day=dt.date(2026, 10, 15))
+        self.assertEqual(when, dt.datetime(2026, 10, 16, 12, 0, tzinfo=TZ))
+        self.assertIn("Ngày 15/10 không còn khung giờ vàng", picked["message"])
+        self.assertIn("12:00 16/10", picked["message"])
 
     def test_reachable_time_is_kept(self):
         harness = AutopilotHarness("Livestream sản phẩm mã 995 lúc 20h ngày 16/10/2026")

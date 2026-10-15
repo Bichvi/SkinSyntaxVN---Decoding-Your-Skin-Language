@@ -12,6 +12,7 @@ from agents.autopilot import (
     count_shortfall,
     drop_out_of_stock,
     make_decision,
+    next_prime_slot,
     parse_slots,
     query_questions_decision,
     resolve_schedule,
@@ -20,6 +21,7 @@ from agents.autopilot import (
 from agents.intent_classifier import CREATE_CAMPAIGN, PRODUCT_SEARCH, classify_intent
 from agents.intent_parser import clean_product_id, fallback_parse, infer_purpose, normalize_text, parse_agent_brief
 from agents.command_query import (
+    METRIC_LABELS,
     STOCK_FIELDS,
     build_query_plan,
     business_query_requested,
@@ -270,19 +272,74 @@ def _missing_data_message(query_plan: dict[str, Any], missing_data: dict[str, An
     return f"Một số sản phẩm thiếu {', '.join(labels)}; xếp hạng chỉ áp dụng trên các sản phẩm đủ số liệu."
 
 
+# Rankings that read a per-period sales snapshot (window_days set); lifetime sales are the fallback for all of them.
+_WINDOWED_RANKS = frozenset({"units", "revenue_low_conversion", "views_no_orders", "cart", "discount_slow", "growth"})
+_LIFETIME_PERIOD = "Kỳ thống kê: toàn kỳ theo số bán trong catalog (không suy ra 30 ngày)"
+
+
+def _lifetime_sales_fallback(
+    query_plan: dict[str, Any],
+    query_result: dict[str, Any],
+    products: list[dict[str, Any]],
+    batches: list[dict[str, Any]] | None,
+    brief_text: str,
+) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    """Without snapshots for the period, rank by lifetime sales instead: (new query result, decision), else None.
+
+    Only when the windowed ranking left the list short because snapshots are missing, and only when
+    the lifetime ranking finds more products than the period one did.
+    """
+    rank, window = query_plan["rank_by"], query_plan.get("window_days")
+    if (
+        rank not in _WINDOWED_RANKS or not window
+        or "sales_snapshot" not in query_result["missing_data"]
+        or len(query_result["selected"]) >= query_plan["limit"]
+    ):
+        return None
+    fallback_plan = {
+        **query_plan, "rank_by": "units", "window_days": None,
+        "summary": [
+            f"Xếp hạng: {METRIC_LABELS['units']}" if str(line).startswith("Xếp hạng:") else line
+            for line in query_plan.get("summary") or []
+        ],
+        "assumptions": [
+            *(item for item in query_plan.get("assumptions") or [] if not str(item).startswith("Kỳ thống kê:")),
+            _LIFETIME_PERIOD,
+        ],
+    }
+    fallback = execute_query(fallback_plan, products, batches=batches, snapshots=[], brief=brief_text)
+    if len(fallback["selected"]) <= len(query_result["selected"]):
+        return None
+    message = f"Chưa có số liệu {window} ngày cho tiêu chí “{METRIC_LABELS[rank]}”; xếp theo doanh số toàn kỳ thay thế."
+    return fallback, make_decision("METRICS_FALLBACK", "adjusted", message)
+
+
 def _autopilot_query_outcome(
-    query_plan: dict[str, Any], query_result: dict[str, Any], decisions: list[dict[str, Any]],
-) -> dict[str, Any] | None:
-    """Autopilot makes what it found: a short or incomplete result is explained, only an empty one stops it."""
+    query_plan: dict[str, Any],
+    query_result: dict[str, Any],
+    decisions: list[dict[str, Any]],
+    products: list[dict[str, Any]],
+    batches: list[dict[str, Any]] | None,
+    brief_text: str,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Autopilot makes what it found: (query result to use, stop decision if it found nothing at all).
+
+    A short or incomplete result is explained rather than stopping; missing period figures fall back to lifetime sales.
+    """
+    replaced = _lifetime_sales_fallback(query_plan, query_result, products, batches, brief_text)
+    if replaced:
+        query_result, fallback_decision = replaced
+        decisions.append(fallback_decision)
     shortfall = count_shortfall(query_plan["limit"], len(query_result["selected"]))
     if shortfall and shortfall["level"] == "stopped":
-        return shortfall
+        return query_result, shortfall
     if shortfall:
         decisions.append(shortfall)
     if query_result["missing_data"]:
+        # Nothing was replaced for these gaps: say so plainly, never as a fallback.
         decisions.append(make_decision(
-            "METRICS_FALLBACK", "adjusted", _missing_data_message(query_plan, query_result["missing_data"])))
-    return None
+            "DATA_GAPS", "adjusted", _missing_data_message(query_plan, query_result["missing_data"])))
+    return query_result, None
 
 
 def _without_constraint_mismatches(
@@ -349,10 +406,50 @@ def _autopilot_pick(
     return selected, None, warnings
 
 
-def _autopilot_schedule(
-    value: str | None, product_count: int, now: dt.datetime, unreadable: bool,
+_EXPLICIT_DATE = re.compile(r"\b(\d{1,2})/(\d{1,2})/(20\d{2})\b")
+_TOMORROW = re.compile(r"\b(?:ngay|toi|sang) mai\b")
+_HOUR_TOKEN = re.compile(r"\b\d{1,2}(?:h\b|h\d|\s*gio\b|:\d{2})")
+
+
+def _requested_day(text: str, now: dt.datetime) -> dt.date | None:
+    """The day a prompt asks for without an hour: dd/mm/yyyy, or tomorrow ("ngày/tối/sáng mai"). ``text`` is accent-stripped."""
+    match = _EXPLICIT_DATE.search(text)
+    if match:
+        day, month, year = map(int, match.groups())
+        try:
+            return dt.date(year, month, day)
+        except ValueError:
+            return None
+    if _TOMORROW.search(text):
+        return _local_today(now) + dt.timedelta(days=1)
+    return None
+
+
+def _schedule_on_day(
+    day: dt.date, earliest: dt.datetime, slots: list[dt.time], tz: ZoneInfo, unreadable: bool,
 ) -> tuple[dt.datetime, dict[str, Any]]:
-    """The broadcast time: the requested one if it is still reachable, else the nearest golden slot / earliest start."""
+    """The first golden slot on ``day`` that leaves enough preparation time; a day already gone starts at ``earliest``."""
+    if earliest.tzinfo is None:
+        earliest = earliest.replace(tzinfo=tz)
+    when = next_prime_slot(max(earliest, dt.datetime.combine(day, dt.time(0, 0), tzinfo=tz)), slots, tz)
+    shown, clock = f"{day:%d/%m}", f"{when:%H:%M %d/%m}"
+    if day < earliest.astimezone(tz).date():
+        message = f"Ngày {shown} trong prompt đã qua; chọn giờ vàng {clock}."
+    elif when.date() == day:
+        missing = "không đọc được giờ" if unreadable else "không có giờ"
+        message = f"Prompt có ngày {shown} nhưng {missing}; chọn giờ vàng {clock}."
+    else:
+        message = f"Ngày {shown} không còn khung giờ vàng đủ thời gian chuẩn bị; chọn giờ vàng {clock}."
+    return when, make_decision("SLOT_PICKED", "adjusted", message)
+
+
+def _autopilot_schedule(
+    value: str | None, product_count: int, now: dt.datetime, unreadable: bool, day: dt.date | None = None,
+) -> tuple[dt.datetime, dict[str, Any]]:
+    """The broadcast time: the requested one if it is still reachable, else the nearest golden slot / earliest start.
+
+    ``day`` is a date the prompt gave without a usable hour: the slot is searched on that day, not from now.
+    """
     tz = ZoneInfo(TIMEZONE)
     requested = None
     if value:
@@ -360,8 +457,10 @@ def _autopilot_schedule(
             requested = parse_schedule(value).astimezone(tz)
         except (TypeError, ValueError):
             unreadable = True
-    return resolve_schedule(
-        requested, _earliest_start(product_count, now), parse_slots(AUTOPILOT_SLOTS), tz, unreadable=unreadable)
+    earliest = _earliest_start(product_count, now)
+    if requested is None and day is not None:
+        return _schedule_on_day(day, earliest, parse_slots(AUTOPILOT_SLOTS), tz, unreadable)
+    return resolve_schedule(requested, earliest, parse_slots(AUTOPILOT_SLOTS), tz, unreadable=unreadable)
 
 
 def _autopilot_styles(brief_text: str, purpose: str) -> tuple[list[str], list[dict[str, Any]]]:
@@ -475,7 +574,10 @@ def process_agent_run(
             is_query_only = classification.intent == PRODUCT_SEARCH
             enough = len(query_result["selected"]) == query_plan["limit"]
             if autopilot:
-                empty = _autopilot_query_outcome(query_plan, query_result, decisions)
+                query_result, empty = _autopilot_query_outcome(
+                    query_plan, query_result, decisions, products, batches, run["brief"])
+                plan.update(query_result=query_result, resolved_products=query_result["selected"],
+                            warnings=query_result["warnings"])
                 if empty:
                     return _autopilot_stop(run_id, decisions, empty, plan, query_result["warnings"])
             elif is_query_only or not query_result["complete"] or not enough:
@@ -552,6 +654,10 @@ def process_agent_run(
                          **_needs_fields(query_result["selected"] if query_result else [], [], [], {}, ["schedule"])},
             })
             return get_agent_run(run_id) or {}
+        # A date with no usable hour (dd/mm/yyyy, "ngày mai") is still the day the admin asked for.
+        requested_day = _requested_day(text, schedule_now) if autopilot and not brief.scheduled_at else None
+        if requested_day is not None and not _HOUR_TOKEN.search(clock_text):
+            unreadable_clock = False  # the date alone tripped explicit_clock; there is no hour to be unreadable
         if autopilot:
             brief.autonomy_policy = "auto_preview"  # whatever the overrides say, autopilot never waits for a review
         update_agent_run(run_id, {
@@ -689,7 +795,7 @@ def process_agent_run(
             return get_agent_run(run_id) or {}
         if autopilot and live:
             scheduled_at, schedule_decision = _autopilot_schedule(
-                brief.scheduled_at, len(selected), schedule_now, unreadable_clock)
+                brief.scheduled_at, len(selected), schedule_now, unreadable_clock, requested_day)
             decisions.append(schedule_decision)
         else:
             scheduled_at = _safe_schedule(brief.scheduled_at, len(selected)) if live else None
