@@ -7,12 +7,14 @@ from zoneinfo import ZoneInfo
 
 from pymongo import ReturnDocument
 
+from agents.autopilot import make_decision
 from config import (
     CAMPAIGN_MAX_PRODUCTS,
     ESTIMATED_MINUTES_PER_PRODUCT,
     MIN_LEAD_MINUTES,
     TIMEZONE,
 )
+from core.agent_runs import append_decisions
 from core.narration import normalize_styles
 from core.product_videos import product_page_state
 from core.purpose import (
@@ -27,6 +29,14 @@ ALLOWED_PLATFORMS = {"internal", "youtube", "facebook", "preview"}
 # Channels that need an admin's go-ahead before a campaign may stream to them.
 EXTERNAL_PLATFORMS = ("youtube", "facebook")
 GENERATION_PHASE_STATUSES = ("VALIDATING", "GENERATING", "AWAITING_APPROVAL", "NEEDS_ATTENTION")
+# Segment statuses that need no more work: a clip that is made, a product dropped on purpose, a stopped one.
+DONE_SEGMENT_STATUSES = ["READY", "SKIPPED", "CANCELLED"]
+# The stage whose failure means "the script was rejected" (core.pipeline fails the job there after 3 revisions).
+SCRIPT_REJECTED_STAGE = "VALIDATING_SCRIPT"
+# Set on the job by core.pipeline right before it fails the job for a rejected script.
+SCRIPT_REJECTED_STATUS = "REJECTED_BY_VALIDATOR"
+ALL_SCRIPTS_REJECTED_MESSAGE = "Tất cả kịch bản đều trượt kiểm duyệt"
+SKIP_REASON_LIMIT = 200
 
 
 class CampaignNotFound(LookupError):
@@ -132,7 +142,7 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
         "configuration": configuration,
         "idempotency_key": idempotency_key,
         "status": "VALIDATING",
-        "progress": {"total": len(product_ids), "ready": 0, "failed": 0},
+        "progress": {"total": len(product_ids), "ready": 0, "failed": 0, "skipped": 0},
         "master_video_path": None,
         "error_message": None,
         "created_by": created_by,
@@ -164,8 +174,11 @@ def prepare_campaign(campaign_id: str) -> list[str]:
     if not campaign:
         raise ValueError("Campaign not found")
 
-    job_ids, ready_job_ids, errors = [], [], []
+    job_ids, ready_job_ids, errors, skipped = [], [], [], 0
     for segment in db.ai_idol_segments.find({"campaign_id": campaign_id}).sort("position", 1):
+        if segment.get("status") == "SKIPPED":
+            skipped += 1  # dropped on purpose (rejected script): never generate it again
+            continue
         if segment.get("job_id"):
             existing = db.ai_idol_jobs.find_one({"_id": object_id(str(segment["job_id"]))}, {"status": 1})
             if existing and existing.get("status") == "READY":
@@ -207,50 +220,89 @@ def prepare_campaign(campaign_id: str) -> list[str]:
         "updated_at": utcnow(),
     }
     if not job_ids and not ready_job_ids:
-        # Every segment failed to start: say why instead of a blank NEEDS_ATTENTION.
-        values["error_message"] = ("Không tạo được video nào. " + "; ".join(errors))[:2000]
+        # Every segment failed to start (or was skipped): say why instead of a blank NEEDS_ATTENTION.
+        if skipped and not errors:
+            values["error_message"] = ALL_SCRIPTS_REJECTED_MESSAGE
+        else:
+            values["error_message"] = ("Không tạo được video nào. " + "; ".join(errors))[:2000]
     db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id)}, {"$set": values})
     return job_ids
 
 
+def _skip_decision(job: dict) -> dict:
+    """Explain, in Vietnamese, why autopilot dropped a product whose script failed moderation."""
+    snapshot = job.get("product_snapshot") or {}
+    name = str(snapshot.get("name") or "").strip()
+    label = name if name and name != "UNKNOWN" else str(job.get("product_id") or "?")
+    reason = " ".join(str(job.get("error_message") or "").split())
+    if len(reason) > SKIP_REASON_LIMIT:
+        reason = reason[:SKIP_REASON_LIMIT - 1] + "…"
+    message = f"Bỏ {label}: kịch bản trượt kiểm duyệt sau 3 lần tự sửa"
+    if reason:
+        message += f" — {reason}"
+    return make_decision("SCRIPT_SKIPPED", "adjusted", message)
+
+
 def update_campaign_from_job(job_id: str) -> str | None:
+    """Sync a segment and its campaign with a job; returns the campaign id once it may move on to assembly."""
     db = get_db()
     job = db.ai_idol_jobs.find_one({"_id": object_id(job_id)})
     if not job or not job.get("campaign_id"):
         return None
     campaign_id = str(job["campaign_id"])
     job_status = job.get("status")
+    run_id = None
     if job_status == "READY":
         segment_status = "READY"
     elif job_status == "AWAITING_APPROVAL":
         segment_status = "AWAITING_APPROVAL"
     elif job_status == "FAILED":
         segment_status = "FAILED"
+        # script_status is stamped only when the validator rejected the draft; a watchdog timeout in the same
+        # stage is a technical failure and must stay FAILED.
+        if job.get("failed_stage") == SCRIPT_REJECTED_STAGE and job.get("script_status") == SCRIPT_REJECTED_STATUS:
+            # Only autopilot drops a product; a manual programme keeps the failure for its staff to fix.
+            owner = db.ai_idol_campaigns.find_one(
+                {"_id": object_id(campaign_id)},
+                {"configuration.agent_mode": 1, "configuration.agent_run_id": 1},
+            )
+            configuration = (owner or {}).get("configuration") or {}
+            if configuration.get("agent_mode") == "autopilot":
+                segment_status = "SKIPPED"
+                run_id = configuration.get("agent_run_id")
     else:
         segment_status = "GENERATING"
-    # A cancelled segment stays cancelled even if its job finishes afterwards.
-    db.ai_idol_segments.update_one({"job_id": job_id, "status": {"$ne": "CANCELLED"}}, {"$set": {
+    # A cancelled segment stays cancelled even if its job finishes afterwards. A skipped one is only
+    # (re)skipped once, so a repeated callback neither rewrites it nor repeats the decision.
+    open_segment = {"$nin": ["CANCELLED", "SKIPPED"]} if segment_status == "SKIPPED" else {"$ne": "CANCELLED"}
+    changed = db.ai_idol_segments.update_one({"job_id": job_id, "status": open_segment}, {"$set": {
         "status": segment_status,
         "video_id": job.get("video_id"),
         "video_path": job.get("final_video_path"),
         "error_message": job.get("error_message"),
         "updated_at": utcnow(),
     }})
+    if segment_status == "SKIPPED" and changed.modified_count:
+        append_decisions(run_id, [_skip_decision(job)])
 
-    ready = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "READY"})
-    failed = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "FAILED"})
+    # In-flight counts first: a concurrent callback moves segments in-flight -> READY/FAILED/SKIPPED, so counting
+    # the settled ones afterwards can never pair a stale "0 ready" with a fresh "0 generating".
     generating = db.ai_idol_segments.count_documents({
         "campaign_id": campaign_id, "status": {"$in": ["QUEUED", "GENERATING"]},
     })
     awaiting_approval = db.ai_idol_segments.count_documents({
         "campaign_id": campaign_id, "status": "AWAITING_APPROVAL",
     })
+    ready = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "READY"})
+    failed = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "FAILED"})
+    skipped = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "SKIPPED"})
     db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id)}, {"$set": {
-        "progress.ready": ready, "progress.failed": failed, "updated_at": utcnow(),
+        "progress.ready": ready, "progress.failed": failed, "progress.skipped": skipped, "updated_at": utcnow(),
     }})
     # Conditional on a generation-phase status so a cancelled/scheduled/live
     # campaign is never pulled back by a late job callback.
     open_states = {"$in": list(GENERATION_PHASE_STATUSES)}
+    all_skipped = ready == 0 and skipped > 0  # nothing usable is left to assemble or publish
     if generating == 0 and failed:
         db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id), "status": open_states}, {"$set": {
             "status": "NEEDS_ATTENTION", "updated_at": utcnow(),
@@ -259,7 +311,11 @@ def update_campaign_from_job(job_id: str) -> str | None:
         db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id), "status": open_states}, {"$set": {
             "status": "AWAITING_APPROVAL", "updated_at": utcnow(),
         }})
-    return campaign_id if generating == 0 and awaiting_approval == 0 and failed == 0 else None
+    elif generating == 0 and all_skipped:
+        db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id), "status": open_states}, {"$set": {
+            "status": "NEEDS_ATTENTION", "error_message": ALL_SCRIPTS_REJECTED_MESSAGE, "updated_at": utcnow(),
+        }})
+    return campaign_id if generating == 0 and awaiting_approval == 0 and failed == 0 and not all_skipped else None
 
 
 def mark_product_videos_ready(campaign_id: str, from_status: str = "GENERATING") -> bool:
@@ -311,13 +367,13 @@ def cancel_campaign(campaign_id: str) -> dict:
         if current.get("status") in {"STARTING", "LIVE"}:
             raise CampaignConflict("Chương trình đang lên sóng nên không thể hủy. Hãy dừng phiên live ở nơi phát.")
         raise CampaignConflict(f"Chương trình đang ở trạng thái {current.get('status')}, không thể hủy.")
-    # Segments that are not finished stop; finished videos are kept.
+    # Segments that are not finished stop; finished videos and skipped products are kept as they are.
     pending = list(db.ai_idol_segments.find({
-        "campaign_id": campaign_id, "status": {"$nin": ["READY", "CANCELLED"]},
+        "campaign_id": campaign_id, "status": {"$nin": DONE_SEGMENT_STATUSES},
     }))
     for segment in pending:
         db.ai_idol_segments.update_one(
-            {"_id": segment["_id"], "status": {"$nin": ["READY", "CANCELLED"]}},
+            {"_id": segment["_id"], "status": {"$nin": DONE_SEGMENT_STATUSES}},
             {"$set": {"status": "CANCELLED", "updated_at": now}},
         )
         if segment.get("job_id"):
@@ -358,7 +414,7 @@ def reschedule_campaign(campaign_id: str, scheduled_at) -> dict:
     ready = (
         campaign.get("status") == "NEEDS_ATTENTION"
         and bool(master) and os.path.isfile(master)
-        and db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": {"$nin": ["READY", "CANCELLED"]}}) == 0
+        and db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": {"$nin": DONE_SEGMENT_STATUSES}}) == 0
     )
     if ready:  # a finished programme that only missed its slot goes straight back on the schedule
         values.update({"status": "SCHEDULED", "error_message": None})
@@ -372,11 +428,12 @@ def reschedule_campaign(campaign_id: str, scheduled_at) -> dict:
 
 
 def resume_ready_campaign(campaign_id: str) -> bool:
-    """Claim for assembly when every segment is already READY (nothing left to render)."""
+    """Claim for assembly when every segment is READY or skipped, with at least one READY (nothing left to render)."""
     db = get_db()
     total = db.ai_idol_segments.count_documents({"campaign_id": campaign_id})
     ready = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "READY"})
-    return bool(total and total == ready and claim_campaign_for_assembly(campaign_id))
+    skipped = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "SKIPPED"})
+    return bool(ready and total == ready + skipped and claim_campaign_for_assembly(campaign_id))
 
 
 def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, enqueue_assemble=None) -> dict:
@@ -384,7 +441,8 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
 
     1. FAILED segment with a job      -> reset the job, queue it again.
     2. FAILED segment without a job   -> queue campaign preparation.
-    3. every segment READY, no master -> NEEDS_ATTENTION -> ASSEMBLING, queue assembly.
+    3. every segment READY or SKIPPED (at least one READY), no master -> NEEDS_ATTENTION -> ASSEMBLING, queue assembly.
+       SKIPPED segments (autopilot dropped them) are never retried.
     4. master fine, preflight failed  -> CampaignConflict with instructions.
     """
     if enqueue_job is None or enqueue_prepare is None or enqueue_assemble is None:
@@ -439,7 +497,11 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
             result["prepare_queued"] = True
         return result
 
-    all_ready = bool(segments) and all(segment.get("status") == "READY" for segment in segments)
+    # Skipped products are finished-and-unused; they never block, but a campaign needs one real clip.
+    all_ready = (
+        any(segment.get("status") == "READY" for segment in segments)
+        and all(segment.get("status") in ("READY", "SKIPPED") for segment in segments)
+    )
     master = str(campaign.get("master_video_path") or "")
     master_ok = bool(master) and os.path.isfile(master)
     if all_ready and status == "NEEDS_ATTENTION" and not has_broadcast(purpose_of(campaign)):
@@ -464,6 +526,11 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
             "Video chương trình đã ghép xong; lỗi nằm ở bước kiểm tra phát sóng: "
             + "; ".join(str(item) for item in problems)
             + ". Hãy cấu hình nơi phát hoặc chọn phát nội bộ rồi tạo lại lịch."
+        )
+    if segments and all(segment.get("status") == "SKIPPED" for segment in segments):
+        raise CampaignConflict(
+            "Tất cả kịch bản đều trượt kiểm duyệt nên không có phần nào để tạo lại. "
+            "Hãy tạo chương trình mới với yêu cầu khác."
         )
     raise CampaignConflict("Không có phần nào bị lỗi để tạo lại. Các phần còn lại đang được xử lý.")
 

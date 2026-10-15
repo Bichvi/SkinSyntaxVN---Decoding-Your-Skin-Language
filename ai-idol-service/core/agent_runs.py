@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 from typing import Any
 
+from agents.autopilot import make_decision
 from core.product_videos import product_page_state
 from core.purpose import purpose_of
 from core.redact import redact_secrets
@@ -182,6 +184,35 @@ def update_agent_run(run_id: str, values: dict[str, Any]) -> None:
             "$slice": -STAGE_HISTORY_LIMIT,
         }}
     get_db().ai_idol_agent_runs.update_one({"_id": object_id(run_id)}, update)
+
+
+def _decision_moment(value: Any) -> dt.datetime | None:
+    """The ``at`` a decision already carries (ISO-8601), or None to stamp it now."""
+    try:
+        return dt.datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def append_decisions(run_id: str, items: list[dict[str, Any]]) -> None:
+    """Add explained autopilot decisions to a run's timeline (one ``$push``, order kept).
+
+    Every item goes through ``make_decision`` again, so the message is redacted and ``at`` is always set.
+    A blank, malformed or unknown ``run_id`` is ignored: a decision must never fail the work it describes.
+    """
+    if not run_id or not items:
+        return
+    try:
+        run_oid = object_id(str(run_id))
+    except ValueError:
+        return
+    decisions = [
+        make_decision(item.get("code", ""), item.get("level", ""), item.get("message", ""),
+                      now=_decision_moment(item.get("at")))
+        for item in items if isinstance(item, dict)
+    ]
+    if decisions:
+        get_db().ai_idol_agent_runs.update_one({"_id": run_oid}, {"$push": {"decisions": {"$each": decisions}}})
 
 
 def mark_agent_failed(run_id: str, stage: str, error: Exception | str) -> None:
