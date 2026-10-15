@@ -50,6 +50,10 @@ class PublisherTestCase(unittest.TestCase):
         probe = patch.object(media_publisher, "probe_duration", return_value=30.0)
         probe.start()
         self.addCleanup(probe.stop)
+        # Listing a clip on its product page has its own tests (test_publications); here it must not reach a real database.
+        page = patch.object(media_publisher, "auto_publish_video")
+        page.start()
+        self.addCleanup(page.stop)
         media_publisher._warned_unconfigured = False
 
     def fake_poster(self, video_path, out_path, duration):

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../services/ProductEventTracker.php';
 class SanPhamController {
     private const SEARCH_KEYWORD_MAX_LEN = 250;
     private const SEARCH_HISTORY_LIMIT = 8;
+    private const VIDEO_REDIRECT_STATUSES = [301, 302, 303, 307, 308];
 
     private $pdo;
     private SanPham $model;
@@ -764,7 +765,9 @@ class SanPhamController {
         }
 
         $flaskUrl = rtrim((string)(getenv('AI_IDOL_ENDPOINT') ?: 'http://ai-idol-service:5003'), '/');
-        $endpoint = $flaskUrl . '/api/ai-idol/videos/' . rawurlencode($videoId);
+        // Product pages always play the price-free clip, never the full render (spec D12).
+        $endpoint = $flaskUrl . '/api/ai-idol/videos/' . rawurlencode($videoId) . '?rendition=product_page';
+        $r2Base = function_exists('ss_env') ? ss_env('R2_PUBLIC_BASE_URL', '') : (string)(getenv('R2_PUBLIC_BASE_URL') ?: '');
 
         $ch = curl_init($endpoint);
         $requestHeaders = [];
@@ -772,22 +775,36 @@ class SanPhamController {
             $requestHeaders[] = 'Range: ' . $_SERVER['HTTP_RANGE'];
         }
 
+        // Flask answers with a redirect once the local copy was moved to R2. It is never passed through
+        // blindly: the status, headers and body of a redirect stay here until its target is validated.
+        $upstream = ['status' => 0, 'location' => ''];
+        $isRedirect = static fn(array $state): bool => in_array($state['status'], self::VIDEO_REDIRECT_STATUSES, true);
+
         curl_setopt_array($ch, [
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_TIMEOUT => 0,
             CURLOPT_HTTPHEADER => $requestHeaders,
-            CURLOPT_HEADERFUNCTION => static function ($curl, string $line): int {
+            CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$upstream, $isRedirect): int {
                 $length = strlen($line);
                 if (preg_match('#^HTTP/\\S+\\s+(\\d+)#i', trim($line), $match)) {
-                    http_response_code((int)$match[1]);
+                    $upstream = ['status' => (int)$match[1], 'location' => ''];
+                    if (!$isRedirect($upstream)) {
+                        http_response_code($upstream['status']);
+                    }
+                } elseif ($isRedirect($upstream)) {
+                    if (preg_match('/^Location:\\s*(.+)$/i', trim($line), $match)) {
+                        $upstream['location'] = trim($match[1]);
+                    }
                 } elseif (preg_match('/^(Content-Type|Content-Length|Content-Range|Accept-Ranges|Cache-Control):/i', $line)) {
                     header(trim($line), true);
                 }
                 return $length;
             },
-            CURLOPT_WRITEFUNCTION => static function ($curl, string $chunk): int {
-                echo $chunk;
-                flush();
+            CURLOPT_WRITEFUNCTION => static function ($curl, string $chunk) use (&$upstream, $isRedirect): int {
+                if (!$isRedirect($upstream)) {
+                    echo $chunk;
+                    flush();
+                }
                 return strlen($chunk);
             },
         ]);
@@ -797,9 +814,32 @@ class SanPhamController {
             http_response_code(502);
             header('Content-Type: text/plain; charset=utf-8');
             echo 'Cannot stream video source.';
+        } elseif ($ok !== false && $isRedirect($upstream) && !headers_sent()) {
+            $target = self::productVideoRedirectTarget($upstream['location'], $r2Base);
+            if ($target === null) {
+                http_response_code(404);
+                header('Content-Type: text/plain; charset=utf-8');
+                echo 'Video not found or unavailable.';
+            } else {
+                header('Location: ' . $target, true, 302);
+            }
         }
         curl_close($ch);
         exit;
+    }
+
+    /**
+     * The only redirect the product-video proxy hands to a browser: a file on the public R2 bucket.
+     * Anything else (another host, a lookalike host such as "<base>.evil.com", a header-injection attempt,
+     * or R2 not configured) is rejected so the stream can never bounce visitors elsewhere.
+     */
+    public static function productVideoRedirectTarget(string $location, string $r2PublicBase): ?string {
+        $base = rtrim(trim($r2PublicBase), '/');
+        $location = trim($location);
+        if ($base === '' || $location === '' || preg_match('/[\\x00-\\x20\\x7f]/', $location)) {
+            return null;
+        }
+        return strncmp($location, $base . '/', strlen($base) + 1) === 0 ? $location : null;
     }
 }
 

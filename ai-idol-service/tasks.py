@@ -11,6 +11,7 @@ from core.purpose import PRODUCT_VIDEO, purpose_of
 from config import BROADCAST_LATE_GRACE_MINUTES
 from core.health import check_syna
 from core.product_metrics import run_due_snapshots
+from core.publications import auto_publish_video
 from core.state_machine import fail_job, get_db, object_id, utcnow
 from core.watchdog import reap_stale_work, resume_waiting_renders
 from engines.broadcast_engine import broadcast_campaign, finalize_live_campaigns, preflight_campaign
@@ -78,6 +79,8 @@ def generate_job_task(self, job_id: str):
         done = db.ai_idol_jobs.find_one({"_id": object_id(job_id)}, {"purpose": 1, "video_id": 1})
         if done and purpose_of(done) == PRODUCT_VIDEO and done.get("video_id"):
             publish_product_video_task.delay(str(done["video_id"]))
+            # The clip is price-free and on disk right now: list it on its product page (best effort, never raises).
+            auto_publish_video(str(done["video_id"]))
     return success
 
 
