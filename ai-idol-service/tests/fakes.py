@@ -116,15 +116,17 @@ class Collection:
     def update_one(self, query, update, **kwargs):
         self.writes.append(("update_one", query, update))
         doc = self.find_one(query)
+        upserted_id = None
         if doc is None:
             if not kwargs.get("upsert"):
-                return SimpleNamespace(modified_count=0, matched_count=0)
+                return SimpleNamespace(modified_count=0, matched_count=0, upserted_id=None)
             doc = {key: value for key, value in query.items() if not isinstance(value, dict)}
             self.docs.append(doc)
+            upserted_id = ObjectId()  # like pymongo's UpdateResult; the stored document keeps its own shape
             for key, value in update.get("$setOnInsert", {}).items():
                 _set(doc, key, value)
         self._apply(doc, update)
-        return SimpleNamespace(modified_count=1, matched_count=1)
+        return SimpleNamespace(modified_count=1, matched_count=1, upserted_id=upserted_id)
 
     def update_many(self, query, update, **kwargs):
         self.writes.append(("update_many", query, update))

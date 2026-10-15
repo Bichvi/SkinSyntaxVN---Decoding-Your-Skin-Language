@@ -12,6 +12,7 @@ import secrets
 import subprocess
 
 from config import logger
+from core.publications import auto_publish_video
 from core.purpose import LIVE_AND_PRODUCT, PRODUCT_VIDEO, publishes_to_product_page, purpose_of
 from core.redact import redact_secrets
 from core.state_machine import get_db, object_id, utcnow
@@ -176,7 +177,13 @@ def publish_campaign_videos(campaign_id: str, *, client=None) -> int:
     if not campaign_publishable(campaign, list(db.ai_idol_broadcasts.find({"campaign_id": campaign_id}))):
         return 0
     videos = list(db.ai_idol_videos.find({"campaign_id": campaign_id, "product_page_file_path": {"$ne": None}}))
-    published = sum(1 for video in videos if publish_video(str(video["_id"]), client=client))
+    published = 0
+    for video in videos:
+        video_id = str(video["_id"])
+        published += int(publish_video(video_id, client=client))
+        # The show is over and the price-free cut exists, uploaded or still local: list it on its
+        # product page either way (best effort, never raises).
+        auto_publish_video(video_id)
     if videos and published == len(videos):
         # Every product-page clip is on R2 and the show is over: the long-form media can go.
         for video in videos:

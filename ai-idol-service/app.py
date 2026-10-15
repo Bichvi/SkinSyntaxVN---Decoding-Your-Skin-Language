@@ -1,6 +1,6 @@
 import os
 import uuid
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, redirect, request, jsonify, send_file
 from agents.service import ConflictError, cancel_agent_run, confirm_agent_run
 from agents.structured_query import FilterError, run_structured_query
 from config import AGENT_ENABLED, AVATARS_DIR, BACKGROUNDS_DIR, PORT, logger
@@ -11,7 +11,7 @@ from core.pipeline import start_pipeline_thread
 from core.health import dependency_status
 from core.product_videos import list_product_videos, set_video_visibility
 from core.script_text import sanitize_external_retailer_mentions
-from core.purpose import purpose_of
+from core.purpose import publishes_to_product_page, purpose_of
 from engines.script_validator import check_blacklist, check_purpose_rules
 from tasks import prepare_campaign_task, generate_job_task, process_agent_run_task
 
@@ -556,14 +556,35 @@ def api_set_video_visibility(video_id):
         return jsonify({"ok": False, "message": str(exc)}), 400
 
 
+PRODUCT_PAGE_RENDITION = "product_page"
+
+
+def _product_page_rendition(video):
+    """The price-free clip for storefront product pages (spec D12): never the full render, never a livestream-only video."""
+    if not publishes_to_product_page(purpose_of(video)):
+        return jsonify({"ok": False, "message": "Video này không có bản cho trang sản phẩm"}), 404
+    page_path = video.get("product_page_file_path")
+    if page_path and os.path.isfile(page_path):
+        return send_file(page_path, mimetype="video/mp4", conditional=True)
+    uploaded_url = (video.get("media") or {}).get("video_url")
+    if uploaded_url:  # the local copy was cleaned up after the R2 upload
+        return redirect(uploaded_url, code=302)
+    return jsonify({"ok": False, "message": "Video cho trang sản phẩm chưa sẵn sàng"}), 404
+
+
 @app.route("/api/ai-idol/videos/<video_id>", methods=["GET"])
 def api_get_video_file(video_id):
+    rendition = (request.args.get("rendition") or "").strip()
+    if rendition not in ("", PRODUCT_PAGE_RENDITION):
+        return jsonify({"ok": False, "message": "Unsupported rendition"}), 400
     try:
         db = get_db()
         video = db.ai_idol_videos.find_one({"_id": object_id(video_id)})
         if not video:
             return jsonify({"ok": False, "message": "Video not found"}), 404
-            
+        if rendition == PRODUCT_PAGE_RENDITION:
+            return _product_page_rendition(video)
+
         file_path = video.get("file_path")
         if not os.path.exists(file_path):
             return jsonify({"ok": False, "message": f"Video file not found at {file_path}"}), 404
