@@ -1,6 +1,6 @@
 """Ma trận case của Prompt Builder và kiểm chứng offline bằng engine thật.
 
-``compose_brief`` là bản port của ``buildAgentPrompt()`` (frontend/public/assets/js/ai-idol-studio.js) cùng các
+``compose_brief`` là bản port của ``buildAgentPrompt()`` (đã gỡ; logic nay ở frontend/public/assets/js/studio-logic.js) cùng các
 ``data-fragment`` của frontend/views/admin/ai_idol/index.php. Mỗi case chạy ``build_query_plan`` -> ``execute_query``
 trên dữ liệu sinh trong bộ nhớ, rồi đối chiếu với một oracle độc lập (duyệt lô/đơn trực tiếp, không gọi lại engine).
 """
