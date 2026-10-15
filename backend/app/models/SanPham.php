@@ -122,6 +122,7 @@ class SanPham {
         self::$menuTreeCache = null;
         self::$categoryHierarchyCache = null;
         ProductQueryCache::flush();
+        self::purgeValkeyCatalogKeys();
     }
 
     public static function clearSimpleRecommenderCache(): void {
@@ -146,9 +147,28 @@ class SanPham {
                 $cache->delete('product:freq_bought:' . $productId);
                 $cache->delete('product:videos:' . $productId);
             }
+        }
+        self::purgeValkeyCatalogKeys();
+    }
+
+    /**
+     * Xóa các khóa Valkey (lớp cache ngoài) của trang chủ, danh mục và menu. Bỏ qua mọi lỗi:
+     * cache chỉ là tối ưu. Không gọi từ clearSimpleRecommenderCache để tránh đệ quy với invalidateProductCache.
+     */
+    private static function purgeValkeyCatalogKeys(): void {
+        try {
+            if (!class_exists('CacheService') && is_file(dirname(__DIR__) . '/services/CacheService.php')) {
+                require_once dirname(__DIR__) . '/services/CacheService.php';
+            }
+            if (!class_exists('CacheService')) {
+                return;
+            }
+            $cache = CacheService::getInstance();
             $cache->deleteByPattern('home:*');
             $cache->deleteByPattern('catalog:*');
             $cache->deleteByPattern('menu:*');
+        } catch (\Throwable $e) {
+            error_log('purgeValkeyCatalogKeys error: ' . $e->getMessage());
         }
     }
 

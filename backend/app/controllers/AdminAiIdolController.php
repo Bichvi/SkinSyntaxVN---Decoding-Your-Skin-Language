@@ -70,11 +70,13 @@ class AdminAiIdolController {
         }
         $expected = (string)($_SESSION['admin_ai_idol_csrf'] ?? '');
         if ($expected === '') {
+            // Fail-closed: phiên chưa có token thì tạo sẵn cho lần tải trang kế tiếp nhưng vẫn từ chối request này.
             $_SESSION['admin_ai_idol_csrf'] = bin2hex(random_bytes(32));
-            return;
+            $token = '';
+        } else {
+            $token = (string)($input['csrf'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
         }
-        $token = (string)($input['csrf'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
-        if (!hash_equals($expected, $token)) {
+        if ($expected === '' || !hash_equals($expected, $token)) {
             http_response_code(403);
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode([
