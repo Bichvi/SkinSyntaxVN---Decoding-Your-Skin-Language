@@ -5,7 +5,7 @@
  *     node scripts/e2e/product-video.e2e.cjs
  *
  * Fixtures: scripts/e2e/seed-product-video-fixture.py (products 5689, 1000, 93, 1005 carry videos).
- * Optional env: E2E_BASE_URL, E2E_LIVE=1 (after seeding --live), E2E_ADMIN_EMAIL + E2E_ADMIN_PASSWORD.
+ * Optional env: E2E_BASE_URL, E2E_LIVE=1 (after seeding --live).
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -71,14 +71,6 @@ async function findProductWithoutVideo(page) {
   const id = ids.find((value) => !VIDEO_IDS.has(value));
   assert.ok(id, 'no product link without fixture video found on the home page');
   return id;
-}
-
-async function login(context) {
-  // The login form lives in the header auth modal (POST r=xulydangnhap, fields email / mat_khau).
-  const response = await context.request.post(`${BASE}/index.php?r=xulydangnhap`, {
-    form: { email: process.env.E2E_ADMIN_EMAIL, mat_khau: process.env.E2E_ADMIN_PASSWORD },
-  });
-  assert.ok(response.ok(), `login request HTTP ${response.status()}`);
 }
 
 async function main() {
@@ -235,33 +227,10 @@ async function main() {
       skip('live (set E2E_LIVE=1 after seeding --live)');
     }
 
-    /* ---------------- Studio (gated) ---------------- */
-    if (process.env.E2E_ADMIN_EMAIL && process.env.E2E_ADMIN_PASSWORD) {
-      const adminCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-      watch(adminCtx, 'studio');
-      const ap = await adminCtx.newPage();
-      await check('10. Studio: default product_video purpose locks sale styles; live_and_product unlocks them', async () => {
-        await login(adminCtx);
-        await ap.goto(`${BASE}/index.php?r=admin_ai_idol`, { waitUntil: 'load', timeout: 90000 });
-        assert.match(ap.url(), /r=admin_ai_idol/, 'not on the studio page (login failed?)');
-        const sale = ap.locator('input[name=agentStyle][value="tập trung chốt sale"]');
-        const price = ap.locator('input[name=agentStyle][value="nhấn mạnh giá và ưu đãi"]');
-        await sale.waitFor({ state: 'attached', timeout: 10000 });
-        assert.equal(await ap.locator('input[name=agentPurpose][value=product_video]').isChecked(), true, 'product_video not default');
-        assert.equal(await ap.locator('#agentLiveFields').isHidden(), true, '#agentLiveFields should be hidden');
-        assert.equal(await sale.isDisabled(), true, 'sale style should be disabled');
-        assert.equal(await price.isDisabled(), true, 'price style should be disabled');
-        await shot(ap, '10-studio-product-video.png');
-        await ap.locator('input[name=agentPurpose][value=live_and_product]').check({ force: true });
-        await ap.locator('#agentLiveFields').waitFor({ state: 'visible', timeout: 5000 });
-        assert.equal(await sale.isDisabled(), false, 'sale style should be enabled');
-        assert.equal(await price.isDisabled(), false, 'price style should be enabled');
-        await shot(ap, '10-studio-live-and-product.png');
-      });
-      await adminCtx.close();
-    } else {
-      skip('studio (set E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD)');
-    }
+    /* ---------------- Studio (moved) ---------------- */
+    // The Studio check that used #agentPurpose / #agentLiveFields / name=agentStyle belonged to the old single-form
+    // Studio. The redesigned Studio (Tự động / Thủ công tabs) is covered by scripts/e2e/ai-idol-studio.e2e.cjs.
+    skip('studio: see scripts/e2e/ai-idol-studio.e2e.cjs (needs E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD)');
   } finally {
     await browser.close();
   }
