@@ -25,7 +25,7 @@ class SynaTests(unittest.TestCase):
         snapshot = {'name': 'Vichy', 'ingredients': '• 4% Niacinamide: thông tin', 'price': 1126000}
         timing = [{'start': 16, 'end': 22, 'text': 'Niacinamide là một thành phần của sản phẩm.'}]
         m = build_manifest(snapshot, timing[0]['text'], 23, timing, {'format': '16:9'})
-        self.assertEqual(m['product'], {'name': 'Vichy', 'price': 1126000})
+        self.assertEqual(m['product'], {'name': 'Vichy', 'price': 1126000, 'price_from': 0.0})
         self.assertEqual(m['cues'][0]['start'], 16)
         self.assertEqual(m['cues'][0]['ingredient'], 0)
         self.assertNotIn('Centella', str(m))

@@ -151,10 +151,10 @@ $loaiKh = trim((string)($loaiKh ?? ''));
     </div>
 
     <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
-        <form class="row g-2" method="get" action="index.php" data-live-filter="true">
+        <form class="row g-2" method="get" action="index.php" data-live-filter="true" data-live-target="#userResults">
             <input type="hidden" name="r" value="admin_users">
             <div class="col-md-6">
-                <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm theo tên, email, số điện thoại..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                <input type="text" class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Tìm theo tên, email, số điện thoại..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-md-3">
                 <select class="form-select" name="loai_kh" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
@@ -281,7 +281,7 @@ $loaiKh = trim((string)($loaiKh ?? ''));
     </div>
 
     <!-- Data Tables Row -->
-    <div class="row g-4">
+    <div class="row g-4 live-region" id="userResults" aria-live="polite">
         <!-- Customers List Table -->
         <div class="col-lg-6">
             <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">

@@ -27,7 +27,7 @@
   };
   var formatMoney = function (value) {
     var amount = Number(value || 0);
-    return amount > 0 ? money.format(Math.round(amount)) + 'đ' : '—';
+    return amount > 0 ? money.format(Math.round(amount)) + ' đ' : '—';
   };
   var stepsFor = function (session) {
     return Array.isArray(data[session]) ? data[session] : [];
@@ -60,6 +60,10 @@
       image.setAttribute('data-fallback-used', 'true');
       image.src = fallback;
     });
+    // Ảnh có thể đã lỗi trước khi script (defer) gắn listener.
+    if (image.complete && image.naturalWidth === 0 && image.getAttribute('src')) {
+      image.dispatchEvent(new Event('error'));
+    }
   };
   root.querySelectorAll('img[data-fallback-image]').forEach(safeImageFallback);
 
@@ -88,6 +92,135 @@
       list.hidden = values.length === 0;
     }
     if (empty) empty.hidden = values.length > 0;
+  };
+  // Hộp "Vì sao Syna chọn cho bạn" (Tình trạng -> Vấn đề -> Giải pháp). Markup phải giống hệt
+  // phần server render trong partials/recommendation_step_card.php; chỉ dùng textContent, không innerHTML.
+  var cleanText = function (value) {
+    return typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
+  };
+  var createEl = function (tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null && text !== '') node.textContent = text;
+    return node;
+  };
+  var createIcon = function (iconClass) {
+    var icon = createEl('i', 'fa-solid ' + iconClass);
+    icon.setAttribute('aria-hidden', 'true');
+    return icon;
+  };
+  var createFitRow = function (label) {
+    var row = createEl('div', 'fit-explain__row');
+    row.appendChild(createEl('span', 'fit-explain__label', label));
+    return row;
+  };
+  var fitParts = function (fit) {
+    if (!fit || typeof fit !== 'object') return null;
+    var skin = fit.skin && typeof fit.skin === 'object' ? fit.skin : {};
+    var parts = {
+      skinLabel: cleanText(skin.label),
+      sensitivity: cleanText(skin.sensitivity),
+      note: cleanText(skin.note),
+      concerns: (Array.isArray(fit.concerns) ? fit.concerns : []).filter(function (concern) {
+        return concern && typeof concern === 'object' && cleanText(concern.label) !== '';
+      }),
+      goal: fit.goal && typeof fit.goal === 'object' && fit.goal.matched === true && cleanText(fit.goal.label) !== '' ? cleanText(fit.goal.label) : '',
+      solution: cleanText(fit.solution),
+      actives: (Array.isArray(fit.actives) ? fit.actives : []).filter(function (active) {
+        return active && typeof active === 'object' && cleanText(active.name) !== '';
+      }).slice(0, 2),
+      caution: cleanText(fit.caution)
+    };
+    var hasContent = parts.skinLabel !== '' || parts.concerns.length > 0 || parts.solution !== '' || parts.actives.length > 0;
+    return hasContent ? parts : null;
+  };
+  var buildFit = function (box, parts) {
+    var row;
+    if (parts.skinLabel) {
+      row = createFitRow('Tình trạng');
+      var skinText = createEl('p', 'fit-explain__text');
+      skinText.appendChild(createEl('b', '', parts.skinLabel));
+      if (parts.sensitivity) skinText.appendChild(document.createTextNode(' · ' + parts.sensitivity));
+      if (parts.note) {
+        skinText.appendChild(document.createTextNode(' '));
+        skinText.appendChild(createEl('span', 'fit-explain__note', parts.note));
+      }
+      row.appendChild(skinText);
+      box.appendChild(row);
+    }
+    if (parts.concerns.length) {
+      row = createFitRow('Vấn đề');
+      var concernList = createEl('ul', 'fit-explain__concerns');
+      parts.concerns.forEach(function (concern) {
+        var label = cleanText(concern.label);
+        var item;
+        if (concern.matched === true) {
+          item = createEl('li', 'is-matched');
+          item.appendChild(createIcon('fa-check'));
+          item.appendChild(document.createTextNode(' ' + label));
+        } else {
+          item = createEl('li', 'is-pending', label);
+          item.title = 'Sản phẩm này chưa nhắm trực tiếp vấn đề này';
+          var handledBy = cleanText(concern.handled_by);
+          if (handledBy) item.appendChild(createEl('small', '', ' · bước ' + handledBy + ' đảm nhận'));
+        }
+        concernList.appendChild(item);
+      });
+      row.appendChild(concernList);
+      box.appendChild(row);
+    }
+    if (parts.solution || parts.actives.length) {
+      row = createFitRow('Giải pháp');
+      var solutionBox = createEl('div', 'fit-explain__text');
+      if (parts.solution) solutionBox.appendChild(createEl('p', '', parts.solution));
+      if (parts.actives.length) {
+        var activeList = createEl('ul', 'fit-explain__actives');
+        parts.actives.forEach(function (active) {
+          var item = createEl('li');
+          item.appendChild(createEl('b', '', cleanText(active.name)));
+          var benefit = cleanText(active.benefit);
+          if (benefit) item.appendChild(document.createTextNode(' — ' + benefit));
+          activeList.appendChild(item);
+        });
+        solutionBox.appendChild(activeList);
+      }
+      row.appendChild(solutionBox);
+      box.appendChild(row);
+    }
+    if (parts.goal) {
+      var goal = createEl('p', 'fit-explain__goal');
+      goal.appendChild(createIcon('fa-bullseye'));
+      goal.appendChild(document.createTextNode(' Đúng mục tiêu: ' + parts.goal));
+      box.appendChild(goal);
+    }
+    if (parts.caution) {
+      var caution = createEl('p', 'fit-explain__caution');
+      caution.appendChild(createIcon('fa-circle-info'));
+      caution.appendChild(document.createTextNode(' ' + parts.caution));
+      box.appendChild(caution);
+    }
+  };
+  var renderFit = function (card, fit, why) {
+    var fitBox = card.querySelector('[data-product-fit]');
+    var whyList = card.querySelector('[data-product-why]');
+    var parts = fitParts(fit);
+    if (fitBox) {
+      fitBox.replaceChildren();
+      if (parts) buildFit(fitBox, parts);
+      fitBox.hidden = !parts;
+    }
+    if (whyList) {
+      // Không có fit_explanation (cache cũ / thiếu dữ liệu): rơi về danh sách lý do cũ.
+      if (!parts) {
+        whyList.replaceChildren();
+        (Array.isArray(why) ? why : []).slice(0, 3).forEach(function (reason) {
+          var item = document.createElement('li');
+          item.textContent = reason;
+          whyList.appendChild(item);
+        });
+      }
+      whyList.hidden = Boolean(parts) || !whyList.children.length;
+    }
   };
   var applyProductToCard = function (card, product) {
     if (!product) return;
@@ -124,6 +257,7 @@
     var scoreContainer = card.querySelector('.step-card__score');
     if (scoreContainer) scoreContainer.setAttribute('aria-label', 'Độ phù hợp ' + (rawScore !== null && rawScore !== undefined && rawScore !== '' ? scoreDisplay : fitLabel));
     setIngredients(card, product.key_ingredients || product.matched_ingredients || []);
+    renderFit(card, product.fit, product.why);
     var input = card.querySelector('[data-product-id-input]');
     if (input) input.value = productId;
     var legacyInput = card.querySelector('[data-product-ma-id-input]');
@@ -171,7 +305,7 @@
       layer.hidden = !card;
       if (!card) return;
       layer.dataset.layerStep = card.dataset.stepKey;
-      var label = layer.querySelector('text');
+      var label = layer.querySelector('[data-layer-label]') || layer.querySelector('text');
       var stepName = card.querySelector('.step-card__step-name');
       if (label && stepName) label.textContent = stepName.textContent.split('/')[0].trim();
       layer.setAttribute('aria-label', stepName ? stepName.textContent : 'Bước routine');
@@ -251,21 +385,51 @@
       button.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
   });
+  // Đổi chỗ: sản phẩm đang hiển thị chuyển xuống ô lựa chọn vừa bấm, nên người dùng
+  // luôn có thể đổi lại mà không mất sản phẩm gợi ý ban đầu.
+  var renderAlternative = function (button, product) {
+    button.dataset.product = JSON.stringify(product);
+    button.setAttribute('aria-label', 'Đổi sang ' + (product.name || 'sản phẩm khác'));
+    var image = button.querySelector('[data-alternative-image]');
+    var name = button.querySelector('[data-alternative-name]');
+    var price = button.querySelector('[data-alternative-price]');
+    var score = button.querySelector('[data-alternative-score]');
+    if (image && product.image) image.src = product.image;
+    if (name) name.textContent = product.name || '';
+    if (price) price.textContent = formatMoney(product.price);
+    if (score) {
+      var hasScore = product.match_score !== null && product.match_score !== undefined && Number.isFinite(Number(product.match_score));
+      score.textContent = hasScore ? Math.round(Number(product.match_score)) + '%' : '';
+      score.hidden = !hasScore;
+    }
+  };
+  // Thời điểm mỗi sản phẩm được đưa lên làm sản phẩm chính (theo id) để luân phiên chọn sản phẩm lâu chưa hiện.
+  var lastShownAt = new Map();
+  var swapWithAlternative = function (card, button) {
+    if (!card || !button) return false;
+    try {
+      var next = JSON.parse(button.dataset.product || '{}');
+      var currentElement = card.querySelector('[data-current-product]');
+      var current = currentElement ? JSON.parse(currentElement.textContent || '{}') : null;
+      applyProductToCard(card, next);
+      if (currentElement) currentElement.textContent = JSON.stringify(next);
+      if (current && current.id) renderAlternative(button, current);
+      if (next && next.id) lastShownAt.set(String(next.id), Date.now());
+      updateComboTotal();
+      activateStep(card.dataset.stepKey, false);
+      return true;
+    } catch (error) {
+      console.error('Alternative product data is invalid.', error);
+      return false;
+    }
+  };
   root.querySelectorAll('[data-alternative]').forEach(function (button) {
     button.addEventListener('click', function () {
       var card = button.closest('[data-step-card]');
       if (!card) return;
-      try {
-        applyProductToCard(card, JSON.parse(button.dataset.product || '{}'));
-        var panel = card.querySelector('[data-alternatives-panel]');
-        var toggle = card.querySelector('[data-alternatives-toggle]');
-        if (panel) panel.hidden = true;
-        if (toggle) toggle.setAttribute('aria-expanded', 'false');
-        updateComboTotal();
-        activateStep(card.dataset.stepKey, false);
-      } catch (error) {
-        console.error('Alternative product data is invalid.', error);
-      }
+      // Người dùng đã tự chọn: luân phiên tự động không đổi thẻ này nữa.
+      card.dataset.userPicked = 'true';
+      swapWithAlternative(card, button);
     });
   });
   root.querySelectorAll('[data-step-card]').forEach(function (card) {
@@ -493,4 +657,221 @@
   updateComboTotal();
   buildIngredientMap();
   window.addEventListener('resize', buildIngredientMap, { passive: true });
+
+  // ---- Luân phiên gợi ý ----
+  // Sau mỗi chu kỳ (mặc định 3 phút), sản phẩm chính của từng bước tự đổi sang một lựa chọn có độ phù hợp
+  // tương đương. Không đổi thẻ đang được trỏ chuột / focus, thẻ người dùng đã tự chọn, thẻ đang bị lọc ẩn,
+  // và đếm ngược dừng khi tab bị ẩn để không dồn lượt đổi.
+  var ROTATE_STORAGE_KEY = 'skinsyntax.goiy.rotate';
+  var ROTATE_MIN_SCORE = 60;
+  var ROTATE_SCORE_GAP = 15;
+  var rotateMs = Number(root.dataset.rotateInterval);
+  if (!(rotateMs >= 1000)) rotateMs = 180000;
+  var rotationControl = root.querySelector('[data-rotation-control]');
+  var rotationStatus = root.querySelector('[data-rotation-status]');
+  var rotationToggle = root.querySelector('[data-rotation-toggle]');
+  var rotationToast = root.querySelector('[data-rotation-toast]');
+  var rotationToastText = root.querySelector('[data-rotation-toast-text]');
+  var rotationUndo = root.querySelector('[data-rotation-undo]');
+  // Đưa toast ra body để z-index không bị giới hạn trong stacking context của workspace
+  // (nếu không, popup "Top sale" ở footer che mất nút Hoàn tác).
+  if (rotationToast && rotationToast.parentNode !== document.body) document.body.appendChild(rotationToast);
+  var rotation = { enabled: true, remainingMs: rotateMs, timer: null, toastTimer: null, lastRun: null };
+
+  var readRotatePref = function () {
+    try {
+      var value = window.localStorage.getItem(ROTATE_STORAGE_KEY);
+      return value === 'on' || value === 'off' ? value : null;
+    } catch (error) {
+      return null;
+    }
+  };
+  var writeRotatePref = function (value) {
+    try {
+      window.localStorage.setItem(ROTATE_STORAGE_KEY, value);
+    } catch (error) {
+      // localStorage có thể bị chặn (chế độ riêng tư); bỏ qua, trạng thái chỉ giữ trong phiên.
+    }
+  };
+  var prefersReducedMotion = function () {
+    try {
+      return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    } catch (error) {
+      return false;
+    }
+  };
+
+  var parseButtonProduct = function (button) {
+    try {
+      var product = JSON.parse(button.dataset.product || '{}');
+      return product && typeof product === 'object' ? product : null;
+    } catch (error) {
+      return null;
+    }
+  };
+  var scoreOf = function (product) {
+    if (!product || product.match_score === null || product.match_score === undefined || product.match_score === '') return null;
+    var value = Number(product.match_score);
+    return Number.isFinite(value) ? value : null;
+  };
+
+  // Ngưỡng "tương đương" của từng thẻ: điểm cao nhất trong sản phẩm chính + các lựa chọn trừ 15 (tối thiểu 60).
+  var initRotationPool = function (card) {
+    var scores = [];
+    var currentElement = card.querySelector('[data-current-product]');
+    var current = null;
+    try {
+      current = currentElement ? JSON.parse(currentElement.textContent || '{}') : null;
+    } catch (error) {
+      current = null;
+    }
+    var currentScore = scoreOf(current);
+    if (currentScore !== null) scores.push(currentScore);
+    if (current && current.id) lastShownAt.set(String(current.id), Date.now());
+    card.querySelectorAll('[data-alternative]').forEach(function (button) {
+      var score = scoreOf(parseButtonProduct(button));
+      if (score !== null) scores.push(score);
+    });
+    var topScore = scores.length ? Math.max.apply(null, scores) : 0;
+    card.dataset.rotateThreshold = String(Math.max(ROTATE_MIN_SCORE, topScore - ROTATE_SCORE_GAP));
+  };
+
+  // Nút thay thế đủ điều kiện, ưu tiên sản phẩm lâu chưa hiện nhất, hoà thì chọn điểm cao hơn.
+  var nextRotationButton = function (card) {
+    var threshold = Number(card.dataset.rotateThreshold || ROTATE_MIN_SCORE);
+    var best = null;
+    var bestShown = 0;
+    var bestScore = 0;
+    card.querySelectorAll('[data-alternative]').forEach(function (button) {
+      var product = parseButtonProduct(button);
+      var score = scoreOf(product);
+      if (!product || !product.id || score === null || score < threshold) return;
+      var shown = lastShownAt.get(String(product.id)) || 0;
+      if (!best || shown < bestShown || (shown === bestShown && score > bestScore)) {
+        best = button;
+        bestShown = shown;
+        bestScore = score;
+      }
+    });
+    return best;
+  };
+  var isCardBusy = function (card) {
+    return card.matches(':hover')
+      || card.contains(document.activeElement)
+      || card.dataset.userPicked === 'true'
+      || card.classList.contains('is-filtered-out');
+  };
+
+  var formatCountdown = function (ms) {
+    var seconds = Math.max(0, Math.ceil(ms / 1000));
+    var rest = seconds % 60;
+    return Math.floor(seconds / 60) + ':' + (rest < 10 ? '0' : '') + rest;
+  };
+  var updateRotationUi = function () {
+    if (rotationStatus) {
+      rotationStatus.textContent = rotation.enabled
+        ? 'Gợi ý luân phiên sau ' + formatCountdown(rotation.remainingMs)
+        : 'Đã tạm dừng tự đổi gợi ý';
+    }
+    if (rotationToggle) {
+      rotationToggle.textContent = rotation.enabled ? 'Tạm dừng' : 'Bật tự đổi';
+      rotationToggle.setAttribute('aria-pressed', rotation.enabled ? 'false' : 'true');
+    }
+  };
+
+  var hideRotationToast = function () {
+    window.clearTimeout(rotation.toastTimer);
+    rotation.toastTimer = null;
+    rotation.lastRun = null;
+    if (rotationToast) rotationToast.hidden = true;
+  };
+  var showRotationToast = function (count) {
+    if (!rotationToast || !rotationToastText) return;
+    rotationToastText.textContent = 'Syna vừa làm mới ' + count + ' gợi ý có độ phù hợp tương đương.';
+    rotationToast.hidden = false;
+    window.clearTimeout(rotation.toastTimer);
+    rotation.toastTimer = window.setTimeout(hideRotationToast, 8000);
+  };
+  var undoRotation = function () {
+    var run = rotation.lastRun;
+    if (run) {
+      run.records.slice().reverse().forEach(function (record) {
+        // Thẻ người dùng đã tự chọn sau lượt luân phiên thì giữ nguyên lựa chọn của họ.
+        if (record.card.dataset.userPicked !== 'true') swapWithAlternative(record.card, record.button);
+      });
+    }
+    hideRotationToast();
+  };
+
+  var rotateTick = function () {
+    var targets = [];
+    currentCards().forEach(function (card) {
+      if (isCardBusy(card)) return;
+      var button = nextRotationButton(card);
+      if (button) targets.push({ card: card, button: button });
+    });
+    if (!targets.length) return;
+    // Lượt mới thay thế lượt cũ: bản ghi hoàn tác của lượt trước bị xoá cùng toast.
+    hideRotationToast();
+    var run = { records: [], pending: targets.length };
+    rotation.lastRun = run;
+    var finishOne = function () {
+      run.pending -= 1;
+      if (run.pending === 0 && rotation.lastRun === run) {
+        if (run.records.length) showRotationToast(run.records.length);
+        else rotation.lastRun = null;
+      }
+    };
+    targets.forEach(function (target, index) {
+      window.setTimeout(function () {
+        var card = target.card;
+        card.classList.add('is-rotating');
+        window.setTimeout(function () {
+          card.classList.remove('is-rotating');
+          // Người dùng có thể vừa trỏ chuột/chọn thẻ trong lúc hiệu ứng chạy: kiểm tra lại trước khi đổi.
+          if (!isCardBusy(card) && swapWithAlternative(card, target.button)) {
+            run.records.push({ card: card, button: target.button });
+            card.classList.add('is-rotated');
+            window.setTimeout(function () { card.classList.remove('is-rotated'); }, 1600);
+          }
+          finishOne();
+        }, 250);
+      }, index * 120);
+    });
+  };
+
+  var setRotationEnabled = function (enabled, shouldPersist) {
+    rotation.enabled = enabled;
+    if (shouldPersist) writeRotatePref(enabled ? 'on' : 'off');
+    updateRotationUi();
+  };
+
+  allCards().forEach(initRotationPool);
+  var hasRotatableCard = allCards().some(function (card) { return nextRotationButton(card) !== null; });
+  if (hasRotatableCard && rotationControl) {
+    var storedPref = readRotatePref();
+    rotation.enabled = storedPref ? storedPref === 'on' : !prefersReducedMotion();
+    rotationControl.hidden = false;
+    updateRotationUi();
+    if (rotationToggle) {
+      rotationToggle.addEventListener('click', function () { setRotationEnabled(!rotation.enabled, true); });
+    }
+    if (rotationUndo) rotationUndo.addEventListener('click', undoRotation);
+    // Một timer 1 giây: chỉ trừ thời gian khi đang bật và tab đang hiển thị (không dồn lượt đổi khi quay lại).
+    rotation.timer = window.setInterval(function () {
+      if (!rotation.enabled || document.hidden) return;
+      rotation.remainingMs -= 1000;
+      if (rotation.remainingMs <= 0) {
+        rotateTick();
+        rotation.remainingMs = rotateMs;
+      }
+      updateRotationUi();
+    }, 1000);
+  }
+  // Hook cho QA: chạy ngay một lượt luân phiên và đặt lại đồng hồ đếm ngược.
+  root.addEventListener('goiy:rotate-now', function () {
+    rotateTick();
+    rotation.remainingMs = rotateMs;
+    if (rotationControl && !rotationControl.hidden) updateRotationUi();
+  });
 }());

@@ -45,12 +45,29 @@ $resolveAdminItemImg = static function (array $item): string {
 
 $isFilteringPending = ($status === 'cho_xu_ly' || $status === 'pending');
 $pendingCountInList = 0;
-foreach ($orders as $oItem) {
-    $stN = trim((string)($oItem['trang_thai_normalized'] ?? ''));
-    if ($stN === 'pending' || $stN === 'cho_xu_ly') {
-        $pendingCountInList++;
+if (isset($pendingCount)) {
+    // Controller đã đếm trên toàn bộ danh sách đã lọc (không chỉ trang hiện tại).
+    $pendingCountInList = (int)$pendingCount;
+} else {
+    foreach ($orders as $oItem) {
+        $stN = trim((string)($oItem['trang_thai_normalized'] ?? ''));
+        if ($stN === 'pending' || $stN === 'cho_xu_ly') {
+            $pendingCountInList++;
+        }
     }
 }
+$orderTotal = isset($orderTotal) ? (int)$orderTotal : count($orders);
+$orderPages = max(1, (int)($orderPages ?? 1));
+$orderPage = min($orderPages, max(1, (int)($orderPage ?? 1)));
+$orderListRoute = strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders';
+$orderPageUrl = static function (int $page) use ($orderListRoute, $q, $status, $orderDetail): string {
+    $url = 'index.php?r=' . $orderListRoute;
+    if ($q !== '') $url .= '&q=' . urlencode($q);
+    if ($status !== '') $url .= '&status=' . urlencode($status);
+    if ($orderDetail) $url .= '&detail=' . (int)($orderDetail['ma_hoa_don'] ?? 0);
+    if ($page > 1) $url .= '&page=' . $page;
+    return $url;
+};
 ?>
 
 <div class="container-fluid px-4 py-4">
@@ -59,7 +76,7 @@ foreach ($orders as $oItem) {
             <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);"><?= h($pageTitle) ?></h1>
             <p class="text-muted mb-0 small">Theo dõi, xác nhận, hủy và cập nhật trạng thái đơn hàng mua sắm.</p>
         </div>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2" id="orderToolbar">
             <a href="index.php?r=admin_orders&export=excel<?= $q !== '' ? '&q=' . urlencode($q) : '' ?><?= $status !== '' ? '&status=' . urlencode($status) : '' ?>" class="btn btn-outline-secondary btn-sm px-3 py-1.5 fw-semibold" style="border-radius: 6px; font-size: 0.82rem;" title="Tải toàn bộ danh sách đơn hàng ra file Excel / CSV">
                 <i class="bi bi-file-earmark-excel me-1 text-success"></i> Xuất CSV / Excel
             </a>
@@ -71,6 +88,7 @@ foreach ($orders as $oItem) {
         </div>
     </div>
 
+    <div id="orderPendingNotice">
     <?php if ($isFilteringPending): ?>
         <div class="alert border-0 mb-3 d-flex align-items-center justify-content-between p-3" style="background: #FEF3C7; color: #92400E; border-radius: 6px; border: 1px solid #FDE68A !important;">
             <div class="d-flex align-items-center gap-2">
@@ -85,12 +103,13 @@ foreach ($orders as $oItem) {
             </a>
         </div>
     <?php endif; ?>
+    </div>
 
     <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
-        <form class="row g-2" method="get" action="index.php" data-live-filter="true">
+        <form class="row g-2" method="get" action="index.php" data-live-filter="true" data-live-target="#orderListPanel" data-live-also="#orderDetailPanel,#orderToolbar,#orderPendingNotice" data-live-reset="page">
             <input type="hidden" name="r" value="<?= h(strpos($pageTitle, 'Xử lý') === 0 ? 'staff_orders' : 'admin_orders') ?>">
             <div class="col-md-6">
-                <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm theo mã đơn, tên khách, email..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                <input type="text" class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Tìm theo mã đơn, tên khách, email..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-md-3">
                 <select class="form-select" name="status" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
@@ -108,7 +127,7 @@ foreach ($orders as $oItem) {
 
     <div class="row g-4">
         <!-- Order List Table (Left 7 Cols) -->
-        <div class="col-xl-7">
+        <div class="col-xl-7 live-region" id="orderListPanel" aria-live="polite">
             <div class="admin-card mb-0 p-0 overflow-hidden">
                 <div class="table-responsive">
                     <table class="table admin-table align-middle mb-0">
@@ -176,11 +195,26 @@ foreach ($orders as $oItem) {
                         </tbody>
                     </table>
                 </div>
+                <?php if ($orderPages > 1): ?>
+                    <nav class="d-flex align-items-center justify-content-between gap-2 px-3 py-2 border-top small" aria-label="Phân trang đơn hàng">
+                        <?php if ($orderPage > 1): ?>
+                            <a class="btn btn-sm btn-outline-secondary" href="<?= h($orderPageUrl($orderPage - 1)) ?>">&lsaquo; Trước</a>
+                        <?php else: ?>
+                            <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">&lsaquo; Trước</span>
+                        <?php endif; ?>
+                        <span class="text-muted">Trang <?= $orderPage ?>/<?= $orderPages ?> &middot; <?= $orderTotal ?> đơn</span>
+                        <?php if ($orderPage < $orderPages): ?>
+                            <a class="btn btn-sm btn-outline-secondary" href="<?= h($orderPageUrl($orderPage + 1)) ?>">Sau &rsaquo;</a>
+                        <?php else: ?>
+                            <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">Sau &rsaquo;</span>
+                        <?php endif; ?>
+                    </nav>
+                <?php endif; ?>
             </div>
         </div>
 
         <!-- Order Detail Panel (Right 5 Cols) -->
-        <div class="col-xl-5">
+        <div class="col-xl-5 live-region" id="orderDetailPanel" aria-live="polite">
             <div class="admin-card h-100 mb-0">
                 <?php if (!$orderDetail): ?>
                     <div class="text-center text-muted py-5 d-flex flex-column align-items-center justify-content-center h-100">

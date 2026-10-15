@@ -6,6 +6,8 @@ require_once __DIR__ . '/../models/SanPham.php';
 require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/HoaDon.php';
 require_once __DIR__ . '/../models/DanhGia.php';
+require_once __DIR__ . '/../services/ProductEventTracker.php';
+require_once __DIR__ . '/../services/OrderTabs.php';
 
 class TaiKhoanController {
     private  $pdo;
@@ -34,10 +36,22 @@ class TaiKhoanController {
         return current_user() ?? [];
     }
 
+    /** Request do live-filter.js gửi (gõ tìm kiếm): chỉ cần vùng kết quả, không cần layout. */
+    private function isLiveFilterRequest(): bool {
+        return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'live-filter';
+    }
+
     private function render(string $view, array $data = []): void {
         extract($data);
-        $menuCats = $this->sanPhamModel->menuTree();
         $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        if ($this->isLiveFilterRequest()) {
+            // live-filter.js chỉ lấy các vùng có id từ response; bỏ header/footer/menu để trả lời nhanh.
+            header('Vary: X-Requested-With');
+            header('Cache-Control: no-store');
+            require $viewDir . '/' . $view . '.php';
+            return;
+        }
+        $menuCats = $this->sanPhamModel->menuTree();
         require $viewDir . '/layouts/header.php';
         require $viewDir . '/' . $view . '.php';
         require $viewDir . '/layouts/footer.php';
@@ -242,6 +256,7 @@ class TaiKhoanController {
             }
 
             $_SESSION['gio_hang'][$cartKey] = $currentQty + $qtyToAdd;
+            ProductEventTracker::record($this->pdo, 'add_to_cart', $cartKey);
             $added += $qtyToAdd;
             if ($qtyToAdd < $oldQty) {
                 $skipped++;
@@ -288,6 +303,11 @@ class TaiKhoanController {
         $khachHang = $this->model->getKhachHangByEmail((string)$account['email']);
         $orders = [];
         $cartItems = [];
+        $orderTab = OrderTabs::normalizeTab($_GET['don'] ?? 'all');
+        $orderQuery = mb_substr(trim((string)($_GET['q_don'] ?? '')), 0, 80);
+        $orderCounts = OrderTabs::counts([]);
+        $orderPage = ['page' => 1, 'pages' => 1, 'matched' => 0];
+        $reviewSentCount = 0;
 
         if ($khachHang && !empty($khachHang['ma_kh'])) {
             $maKh = (int)$khachHang['ma_kh'];
@@ -295,34 +315,43 @@ class TaiKhoanController {
                 $this->handleReorder($maKh, (string)$account['email'], max(0, (int)$_GET['reorder']));
             }
             $orders = $this->model->getOrderHistory($maKh);
-            $cartItems = $this->buildSessionCartItems();
-            if (empty($cartItems)) {
-                $cartItems = $this->model->getCartItems($maKh);
-            }
-
-            $productIds = [];
-            foreach ($orders as $order) {
-                foreach (($order['items'] ?? []) as $item) {
-                    $productId = trim((string)($item['ma_san_pham'] ?? ''));
-                    if ($productId !== '') {
-                        $productIds[] = $productId;
-                    }
+            // Đếm theo tab trên toàn bộ đơn, rồi chỉ làm giàu dữ liệu (ảnh, quyền đánh giá) cho 10 đơn của trang đang xem.
+            $orderCounts = OrderTabs::counts($orders);
+            $matchedOrders = OrderTabs::filter($orders, $orderTab, $orderQuery);
+            $paged = OrderTabs::paginate($matchedOrders, (int)($_GET['trang_don'] ?? 1), 10);
+            $orders = $paged['items'];
+            $orderPage = ['page' => $paged['page'], 'pages' => $paged['pages'], 'matched' => count($matchedOrders)];
+            if (!$this->isLiveFilterRequest()) {  // tổng quan/giỏ hàng không nằm trong vùng live search cập nhật
+                // Tổng quan cần số đánh giá của mọi đơn, không chỉ trang đang xem.
+                $reviewSentCount = (int)$this->pdo->danh_gia_san_pham->countDocuments(['ma_khach_hang' => $maKh]);
+                $cartItems = $this->buildSessionCartItems();
+                if (empty($cartItems)) {
+                    $cartItems = $this->model->getCartItems($maKh);
                 }
             }
 
-            $eligibilityMap = $this->reviewModel->{'getCustomerReviewEligibility'}($maKh, $productIds);
-            $directReviewModel = new DanhGia($this->pdo);
-            foreach ($orders as &$order) {
-                $order['trang_thai_normalized'] = method_exists($this->reviewModel, 'normalizeOrderStatus')
-                    ? $this->reviewModel->normalizeOrderStatus($order['trang_thai'] ?? '')
-                    : strtolower(trim((string)($order['trang_thai'] ?? '')));
+            // Quyền đánh giá theo từng dòng đơn, tính một lượt cho cả trang (canUserReviewProductsBatch, cùng kết quả với
+            // canUserReviewProduct gọi từng dòng). Map tổng hợp cũ chỉ được tra bằng mã rỗng nên luôn trả mặc định; đã bỏ.
+            $reviewRequests = [];
+            foreach ($orders as $orderIndex => $order) {
+                foreach (($order['items'] ?? []) as $itemIndex => $item) {
+                    $reviewRequests["$orderIndex:$itemIndex"] = [
+                        'product_id' => trim((string)($item['ma_san_pham'] ?? '')),
+                        'order_id' => (string)($order['ma_hoa_don'] ?? ''),
+                        'order_item_id' => trim((string)($item['ma_chi_tiet_hoa_don'] ?? $item['id_chi_tiet_hoa_don'] ?? $item['idChiTietHoaDon'] ?? $item['order_item_id'] ?? $item['id'] ?? '')),
+                    ];
+                }
+            }
+            $reviewEligibility = (new DanhGia($this->pdo))->canUserReviewProductsBatch($maKh, $reviewRequests);
+            foreach ($orders as $orderIndex => &$order) {
+                $order['trang_thai_normalized'] = OrderTabs::orderStatus($order);
+                $order['order_tab'] = OrderTabs::tabOf($order);
+                $order['order_actions'] = OrderTabs::actions($order);
+                $order['payment_state'] = OrderTabs::paymentState($order);
                 $orderAllowsReview = (($order['trang_thai_normalized'] ?? '') === 'completed') || $this->isOrderEligibleForReview((string)($order['trang_thai'] ?? ''));
-                foreach (($order['items'] ?? []) as &$item) {
+                foreach (($order['items'] ?? []) as $itemIndex => &$item) {
                     $productId = trim((string)($item['ma_san_pham'] ?? ''));
-                    $orderItemId = trim((string)($item['ma_chi_tiet_hoa_don'] ?? $item['id_chi_tiet_hoa_don'] ?? $item['idChiTietHoaDon'] ?? $item['order_item_id'] ?? $item['id'] ?? ''));
-                    $eligibility = $productId !== ''
-                        ? $directReviewModel->canUserReviewProduct($maKh, $productId, (string)($order['ma_hoa_don'] ?? ''), $orderItemId)
-                        : ($eligibilityMap[$productId] ?? ['has_purchased' => false, 'has_reviewed' => false]);
+                    $eligibility = $reviewEligibility["$orderIndex:$itemIndex"] ?? ['has_purchased' => false, 'has_reviewed' => false];
                     $item['detail_url'] = 'index.php?r=chitiet&id=' . rawurlencode($productId) . '&tab=danh-gia';
                     $item['has_purchased'] = !empty($eligibility['has_purchased']) || ($orderAllowsReview && $productId !== '');
                     $item['has_reviewed'] = !empty($eligibility['has_reviewed']);
@@ -342,14 +371,21 @@ class TaiKhoanController {
             unset($order);
         }
 
-        $skinProfile = $this->model->getSkinProfileByEmail((string)$account['email']);
-        $latestQuickSkinUpdate = $this->model->getLatestQuickSkinProfileUpdate((string)$account['email']);
-        $loaiDaOptions = $this->model->getLoaiDaOptions();
+        // Live search chỉ cập nhật vùng đơn hàng; hồ sơ da/giỏ hàng không hiển thị lại nên không cần tải.
+        $liveOnlyOrders = $this->isLiveFilterRequest();
+        $skinProfile = $liveOnlyOrders ? null : $this->model->getSkinProfileByEmail((string)$account['email']);
+        $latestQuickSkinUpdate = $liveOnlyOrders ? null : $this->model->getLatestQuickSkinProfileUpdate((string)$account['email']);
+        $loaiDaOptions = $liveOnlyOrders ? [] : $this->model->getLoaiDaOptions();
 
         $this->render('hoso', [
             'account' => $account,
             'khachHang' => $khachHang,
             'orders' => $orders,
+            'orderTab' => $orderTab,
+            'orderQuery' => $orderQuery,
+            'orderCounts' => $orderCounts,
+            'orderPage' => $orderPage,
+            'reviewSentCount' => $reviewSentCount,
             'cartItems' => $cartItems,
             'skinProfile' => $skinProfile,
             'latestQuickSkinUpdate' => $latestQuickSkinUpdate,

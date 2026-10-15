@@ -1,0 +1,18 @@
+{
+  "cached": true,
+  "openCount": 48765,
+  "halfCount": 25329,
+  "closedCount": 3383,
+  "finite": true,
+  "largestShoulderOffset": 0,
+  "maxChestLift": 0.014350000188212697,
+  "shoulderEmbed": 0.052407945744309584,
+  "hasDrawstrings": true,
+  "sleeveBridges": true,
+  "paintedEyes": [
+    "syna-left-painted-eye",
+    "syna-right-painted-eye"
+  ],
+  "armLength": 0.58,
+  "eyeY": -0.105
+}

@@ -1,0 +1,106 @@
+{
+  "passed": 20,
+  "total": 20,
+  "results": [
+    {
+      "slug": "dieu-khoan",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "bao-mat",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "cookie",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "quy-che",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "khieu-nai",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "dang-ky",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "otp",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "quen-mat-khau",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "doi-lien-he",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "an-toan-tai-khoan",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "xoa-tai-khoan",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "dat-hang",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "thanh-toan",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "hoa-don",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "huy-sua-don",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "theo-doi-don",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "van-chuyen",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "doi-tra",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "hang-loi",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "slug": "lien-he",
+      "status": "PASS",
+      "failures": []
+    }
+  ]
+}

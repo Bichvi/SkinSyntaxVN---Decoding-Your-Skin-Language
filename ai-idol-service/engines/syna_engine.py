@@ -4,21 +4,33 @@ from __future__ import annotations
 import base64
 import hashlib
 import html
+import io
 import json
 import os
 from pathlib import Path
 import re
 import tempfile
 import unicodedata
+import wave
 
 import requests
 
 from config import BACKGROUNDS_DIR, OUTPUT_DIR, TEMP_DIR
+from engines.audio_mixer import lead_in_seconds
+from engines.body_clip import price_from_for
 from engines.avatar_engine import _asset_path
 from engines.program_composer import probe_duration
 from engines.video_composer import build_subtitle_cues, download_product_image
 
 RENDER_VERSION = "syna-native-v4"
+
+
+class RendererUnavailable(RuntimeError):
+    """The Syna renderer is down, unreachable or the wrong version.
+
+    Raised only for health/connection failures. The pipeline parks the job as
+    WAITING_RENDERER instead of failing it; real render errors stay RuntimeError.
+    """
 
 
 def ingredient_titles(value) -> list[str]:
@@ -44,7 +56,27 @@ def _normalized(value: str) -> str:
                    if unicodedata.category(char) != "Mn")
 
 
-def build_manifest(snapshot: dict, script: str, duration: float, timings: list, configuration: dict) -> dict:
+def padded_wav_bytes(path: str, intro: float, outro: float) -> bytes:
+    """The voice WAV with silent lead-in/tail, so Syna can greet and wave goodbye."""
+    with wave.open(path, "rb") as source:
+        params = source.getparams()
+        frames = source.readframes(params.nframes)
+    frame_size = params.nchannels * params.sampwidth
+    silence = lambda seconds: bytes(frame_size * int(round(seconds * params.framerate)))
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as target:
+        target.setparams(params)
+        target.writeframes(silence(intro) + frames + silence(outro))
+    return buffer.getvalue()
+
+
+def shift_timings(timings: list, seconds: float) -> list:
+    return [dict(item, start=float(item.get("start", 0)) + seconds, end=float(item.get("end", 0)) + seconds)
+            for item in timings]
+
+
+def build_manifest(snapshot: dict, script: str, duration: float, timings: list, configuration: dict,
+                   speech: tuple[float, float] | None = None, purpose: str = "live_only") -> dict:
     if configuration.get("format", "16:9") != "16:9":
         raise ValueError("Syna hiện hỗ trợ khung ngang 16:9. Hãy chọn lại khung hình.")
     if not 0 < duration <= 180:
@@ -65,21 +97,32 @@ def build_manifest(snapshot: dict, script: str, duration: float, timings: list, 
                 break
         cues.append({"start": start, "end": min(duration, end), "text": text, "ingredient": active})
     price = snapshot.get("sale_price") or snapshot.get("price") or 0
-    return {"version": RENDER_VERSION, "format": "16:9", "duration": duration,
-            "product": {"name": str(snapshot.get("name") or "Sản phẩm")[:500], "price": max(0, int(price))},
-            "ingredients": ingredients, "cues": cues}
+    manifest = {"version": RENDER_VERSION, "format": "16:9", "duration": duration,
+                "product": {"name": str(snapshot.get("name") or "Sản phẩm")[:500], "price": max(0, int(price)),
+                            # Timings are already on the video timeline (lead-in included).
+                            "price_from": price_from_for(purpose, timings, 0.0)},
+                "ingredients": ingredients, "cues": cues}
+    if speech:
+        # Speech window inside the padded audio: Syna greets before it and waves goodbye after.
+        manifest["speech"] = {"start": round(speech[0], 3), "end": round(min(duration, speech[1]), 3)}
+    return manifest
 
 
-def render_syna_video(job_id: str, audio_path: str, script: str, snapshot: dict, configuration: dict) -> str:
+def render_syna_video(job_id: str, audio_path: str, script: str, snapshot: dict, configuration: dict,
+                      purpose: str = "live_only") -> str:
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", job_id):
         raise ValueError("Invalid render job identifier")
     audio = Path(audio_path)
     if audio.stat().st_size > 24 * 1024 * 1024:
         raise ValueError("Âm thanh quá lớn cho Syna. Hãy rút gọn kịch bản.")
-    duration = probe_duration(str(audio))
+    speech_seconds = probe_duration(str(audio))
     with open(str(audio) + ".timings.json", encoding="utf-8") as handle:
         timings = json.load(handle)
-    manifest = build_manifest(snapshot, script, duration, timings, configuration)
+    intro, outro = lead_in_seconds(job_id, configuration)
+    duration = round(speech_seconds + intro + outro, 3)
+    manifest = build_manifest(snapshot, script, duration, shift_timings(timings, intro), configuration,
+                              speech=(intro, intro + speech_seconds) if intro or outro else None,
+                              purpose=purpose)
     audio_bytes = audio.read_bytes()
     signature = hashlib.sha256(audio_bytes + json.dumps(
         [manifest, snapshot.get("image"), configuration.get("background_asset")],
@@ -92,10 +135,11 @@ def render_syna_video(job_id: str, audio_path: str, script: str, snapshot: dict,
         health = requests.get(url + "/health", timeout=5)
         health.raise_for_status()
         if health.json().get("renderer") != RENDER_VERSION:
-            raise RuntimeError("Phiên bản renderer Syna không khớp. Khởi động lại dịch vụ Syna.")
+            raise RendererUnavailable("Phiên bản renderer Syna không khớp. Khởi động lại dịch vụ Syna.")
     except (requests.RequestException, ValueError) as exc:
-        raise RuntimeError("Syna chưa sẵn sàng. Chạy scripts/start-ai-idol-syna.ps1 trên máy này, rồi chọn tạo lại phần bị lỗi.") from exc
-    payload = {"manifest": manifest, "audio": base64.b64encode(audio_bytes).decode("ascii")}
+        raise RendererUnavailable("Syna chưa sẵn sàng. Chạy scripts/start-ai-idol-syna.ps1 trên máy này; video sẽ tự được tạo tiếp.") from exc
+    render_audio = padded_wav_bytes(str(audio), intro, outro) if intro or outro else audio_bytes
+    payload = {"manifest": manifest, "audio": base64.b64encode(render_audio).decode("ascii")}
     background = _asset_path(BACKGROUNDS_DIR, configuration.get("background_asset", ""))
     if configuration.get("background_asset") and not background:
         raise ValueError("Không tìm thấy phông nền đã chọn.")
@@ -132,5 +176,5 @@ def render_syna_video(job_id: str, audio_path: str, script: str, snapshot: dict,
                 finally:
                     partial.unlink(missing_ok=True)
         except requests.RequestException as exc:
-            raise RuntimeError("Mất kết nối khi tạo Syna. Kiểm tra renderer local rồi thử lại; không cần tạo lại kịch bản.") from exc
+            raise RendererUnavailable("Mất kết nối khi tạo Syna. Kiểm tra renderer local; video sẽ tự được tạo tiếp.") from exc
     return str(output)

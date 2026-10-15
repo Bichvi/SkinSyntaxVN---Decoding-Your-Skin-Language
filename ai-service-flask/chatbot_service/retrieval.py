@@ -28,6 +28,8 @@ _DEFAULT_CHROMA_PATH = str(
     Path(__file__).resolve().parent.parent / "database" / "chroma_db"
 )
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", _DEFAULT_CHROMA_PATH)
+CHROMA_HOST = os.getenv("CHROMA_HOST", "").strip()
+CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
 
 
 _vectorstore: Chroma | None = None
@@ -52,11 +54,20 @@ def get_vectorstore() -> Chroma:
             model_kwargs=EMBEDDING_MODEL_KWARGS,
             encode_kwargs=EMBEDDING_ENCODE_KWARGS,
         )
-        _vectorstore = Chroma(
-            collection_name="products",
-            persist_directory=CHROMA_DB_PATH,
-            embedding_function=emb,
-        )
+        if CHROMA_HOST:
+            import chromadb
+
+            _vectorstore = Chroma(
+                collection_name="products",
+                client=chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT),
+                embedding_function=emb,
+            )
+        else:
+            _vectorstore = Chroma(
+                collection_name="products",
+                persist_directory=CHROMA_DB_PATH,
+                embedding_function=emb,
+            )
         logger.info(f"[RETRIEVAL] ChromaDB loaded — {_vectorstore._collection.count():,} docs")
     return _vectorstore
 

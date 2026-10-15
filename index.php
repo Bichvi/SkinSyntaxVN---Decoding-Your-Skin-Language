@@ -49,6 +49,9 @@ if (is_file($helpersFile)) {
     require_once $helpersFile;
 }
 
+require_once $backendRoot . '/app/services/ProductEventTracker.php';
+ProductEventTracker::ensureCookie();
+
 if (!headers_sent()) {
     header('Content-Type: text/html; charset=utf-8');
 }
@@ -59,7 +62,7 @@ ob_start(static function ($buffer) {
 // AI Idol is isolated from unrelated customer/chat controllers. Dispatch it
 // after shared helpers are available but before optional controllers load.
 $r = $_GET['r'] ?? 'home';
-if (in_array($r, ['admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign', 'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign', 'admin_ai_idol_approve_script', 'admin_ai_idol_agent_runs', 'admin_ai_idol_agent_create', 'admin_ai_idol_agent_run', 'admin_ai_idol_agent_confirm', 'admin_ai_idol_agent_retry', 'admin_ai_idol_agent_cancel'], true)) {
+if (in_array($r, ['admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign', 'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign', 'admin_ai_idol_approve_script', 'admin_ai_idol_agent_runs', 'admin_ai_idol_agent_create', 'admin_ai_idol_agent_run', 'admin_ai_idol_agent_confirm', 'admin_ai_idol_agent_retry', 'admin_ai_idol_agent_cancel', 'admin_ai_idol_health', 'admin_ai_idol_cancel_campaign', 'admin_ai_idol_reschedule_campaign', 'admin_ai_idol_products', 'admin_ai_idol_video_visibility'], true)) {
     if (require $backendRoot . '/app/routes/ai_idol.php') {
         return;
     }

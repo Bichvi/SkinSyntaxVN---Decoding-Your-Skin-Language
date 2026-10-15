@@ -25,23 +25,32 @@ def _authorized() -> bool:
     return hmac.compare_digest(supplied, expected)
 
 
+PURPOSES = {"product_video", "live_and_product", "live_only"}
+
+
 def _normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
     raw = payload.get("source") if isinstance(payload.get("source"), dict) else {}
+    purpose = str(raw.get("purpose") or "").strip().lower()
+    purpose = purpose if purpose in PURPOSES else "live_only"
+    evergreen = purpose == "product_video"
     return {
         "source": {
             "name": _clip(raw.get("name"), 240),
             "brand": _clip(raw.get("brand"), 120),
             "category": _clip(raw.get("category"), 160),
             "origin": _clip(raw.get("origin"), 120),
-            "price": _clip(raw.get("price"), 60),
-            "market_price": _clip(raw.get("market_price"), 60),
-            "ingredients": _clip(raw.get("ingredients"), 1000),
+            # Evergreen product videos must not be able to repeat a price.
+            "price": "" if evergreen else _clip(raw.get("price"), 60),
+            "market_price": "" if evergreen else _clip(raw.get("market_price"), 60),
+            "ingredients": _clip(raw.get("ingredients"), 2000 if evergreen else 1000),
             "description": _clip(raw.get("description"), 1300),
             "usage": _clip(raw.get("usage"), 650),
             "skin_type": _clip(raw.get("skin_type"), 180),
-            "knowledge": _clip(raw.get("knowledge"), 1000),
+            "knowledge": _clip(raw.get("knowledge"), 2200 if evergreen else 1000),
             "content_mode": _clip(raw.get("content_mode"), 80),
             "length_mode": _clip(raw.get("length_mode"), 80),
+            "purpose": purpose,
+            "narration_styles": _clip(raw.get("narration_styles"), 300),
         }
     }
 

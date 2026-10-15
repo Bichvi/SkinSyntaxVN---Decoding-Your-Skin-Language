@@ -816,3 +816,564 @@ THAY ĐỔI TỪ NGÀY 26/8/2026
 - **TC06**: Bấm xóa phòng chat -> Sidebar cập nhật biến mất, MongoDB thực hiện delete document.
 - **TC07**: Tiếp tục chat trong phòng cũ -> AI đọc được context 10 tin nhắn trước và tư vấn liền mạch.
 - **TC08**: Đăng xuất A và đăng nhập B -> B tuyệt đối không thể thấy hoặc truy cập chéo lịch sử của A.
+
+---
+
+## 18. AI Idol Command Center — Agent lọc kho, phân tích bán hàng và tạo livestream có kiểm soát (28/09/2026)
+
+### 18.1 Mục tiêu
+
+- Mở rộng luồng **Syna Agent** để Admin có thể nhập một câu lệnh tự nhiên cho nhiều việc: lọc sản phẩm, kiểm tra tồn kho, kiểm tra hạn sử dụng, phân tích bán hàng hoặc tạo livestream.
+- Thêm các prompt mẫu để Admin chỉ cần nhấn chọn, sau đó vẫn có thể sửa điều kiện trước khi chạy.
+- Tách rõ hai loại tác vụ:
+  - **Truy vấn chỉ đọc:** trả danh sách sản phẩm và bằng chứng, không gọi LLM/TTS/render, không tạo campaign.
+  - **Truy vấn kết hợp tạo livestream:** chỉ tiếp tục pipeline cũ khi dữ liệu đầy đủ, số lượng đạt yêu cầu, lịch hợp lệ và chính sách xác nhận cho phép.
+- Không để Agent tự bù sản phẩm ngoài điều kiện, không dùng số lượt đánh giá để giả làm doanh số, không tự chuyển giờ phát đã sai sang ngày khác.
+
+### 18.2 Các file backend mới và thay đổi chính
+
+- **[command_query.py](ai-idol-service/agents/command_query.py)** — Bộ biên dịch câu lệnh thành `QueryPlan` và executor đọc dữ liệu:
+  - Nhận diện nhóm `kem chống nắng`, `sữa rửa mặt`, `serum`.
+  - Hỗ trợ số lượng từ 1–50; mặc định 10 khi người dùng không ghi số.
+  - Hỗ trợ tồn kho: hết hàng, tồn kho trên/dưới mức, tồn kho cao/thấp.
+  - Hỗ trợ hạn dùng theo ngày hết hạn thật và tháng lịch: tối đa 18 tháng, từ 17–19 tháng; loại lô hết hạn và lô không ở trạng thái `available`.
+  - Từ chối câu mơ hồ như “khoảng 18 tháng” để hỏi lại thay vì tự suy diễn.
+  - Hỗ trợ các tiêu chí bán hàng: bán chạy, bán tốt 7/30 ngày, bán chạy toàn kỳ, doanh thu cao nhưng chuyển đổi thấp, xem nhiều nhưng chưa mua, thêm giỏ nhiều, giảm giá nhưng bán chậm, tăng trưởng.
+  - Trả `selected`, `evidence`, `warnings`, `missing_data`, `complete`, `matched_count`, `requested_count`, `checked_at` và trạng thái `RESULTS_READY`, `DATA_UNAVAILABLE`, `EMPTY_RESULTS` hoặc `NEEDS_INPUT`.
+  - Dữ liệu thiếu khác với số 0; không xếp hạng trên tập bị thiếu coverage mà không cảnh báo.
+  - Chuyển đổi chỉ tính khi `converted_sessions` là tập con hợp lệ của `viewed_sessions` và có tối thiểu 100 phiên xem.
+  - Tăng trưởng không chia cho 0; thiếu baseline được ghi là thiếu dữ liệu.
+  - So sánh cao/thấp dùng percentile trong cùng nhóm; cần ít nhất 5 sản phẩm đủ số liệu.
+
+- **[query_sources.py](ai-idol-service/agents/query_sources.py)** — Adapter MongoDB chỉ đọc:
+  - Đọc catalog, `inventory_batches`, `product_metrics_snapshots` với projection giới hạn trường.
+  - Catalog tối đa 20.000 bản ghi, lô tối đa 50.000, snapshot tối đa 20.000.
+  - Nếu vượt giới hạn thì báo lỗi, không cắt ngầm dữ liệu và vẫn giả vờ xếp hạng toàn kho.
+  - Chưa tạo collection, index hoặc migration tự động.
+
+- **[service.py](ai-idol-service/agents/service.py)** — Tích hợp planner vào Agent:
+  - `PRODUCT_SEARCH` có truy vấn nghiệp vụ sẽ chạy read-only và dừng ở kết quả.
+  - Lệnh ghép lọc + tạo live chỉ tạo campaign khi đủ sản phẩm và `complete=true`.
+  - Truy vấn thiếu dữ liệu, thiếu số lượng hoặc sai lịch chuyển sang `NEEDS_INPUT`/`SCHEDULE_REVIEW`.
+  - Lịch quá khứ hoặc không đủ thời gian chuẩn bị không bị âm thầm dời sang ngày mai.
+  - Campaign vẫn dùng chính sách `assisted`/`auto_preview` hiện có; không bật auto-publish.
+  - Query-only không gọi parser LLM, không gọi render, không gọi TTS và không enqueue campaign.
+
+- **[intent_classifier.py](ai-idol-service/agents/intent_classifier.py)**:
+  - Nhận diện yêu cầu lọc kho/phân tích bán hàng là truy vấn sản phẩm an toàn.
+  - Thu hẹp nhận diện lệnh hủy để từ “sử dụng” trong “hạn sử dụng” không bị hiểu nhầm thành “dừng”.
+
+- **[intent_parser.py](ai-idol-service/agents/intent_parser.py)**:
+  - Phân biệt giờ phát với thời lượng; ví dụ `19h` không còn bị đọc thành thời lượng 19 giờ.
+  - Hỗ trợ ngày rõ dạng `dd/mm/yyyy` và kiểm tra ngày không hợp lệ.
+  - Giữ nguyên lịch đã qua để yêu cầu Admin sửa, không tự đổi ngữ nghĩa lịch.
+
+- **[product_resolver.py](ai-idol-service/agents/product_resolver.py)**:
+  - Chuẩn hóa idempotent, giữ `product_id` và `sales_count` khi sản phẩm được chuẩn hóa lần hai.
+
+### 18.3 Thay đổi giao diện Admin AI Idol
+
+- **[index.php](frontend/views/admin/ai_idol/index.php)**:
+  - Thêm 15 prompt mẫu dưới ô nhập lệnh, chia thành:
+    - Kho & hạn sử dụng.
+    - Phân tích bán hàng.
+    - Tạo livestream.
+  - Nhấn prompt chỉ điền nội dung; không tự gửi request.
+  - Có nút khôi phục lệnh trước.
+  - Ghi chú rõ dữ liệu cần có: lô hàng cho hạn dùng, snapshot theo kỳ cho thống kê 7/30 ngày.
+
+- **[ai-idol-studio.js](frontend/public/assets/js/ai-idol-studio.js)**:
+  - Hiển thị điều kiện đã hiểu, số lượng yêu cầu/thực tìm được, thời điểm kiểm tra và nhóm dữ liệu thiếu.
+  - Hiển thị bằng chứng cho từng sản phẩm: tồn khả dụng, lô phù hợp, HSD, số bán, doanh thu, phiên xem/mua, thêm giỏ, tăng trưởng và nguồn số liệu.
+  - Không còn hiển thị điểm khớp như thể đó là độ tin cậy dữ liệu nghiệp vụ.
+  - Cho sửa lại lệnh truy vấn.
+  - Cho đưa các sản phẩm đã xác minh vào Wizard; nếu mã nằm ngoài 100 sản phẩm tải ban đầu, frontend thêm thẻ sản phẩm cục bộ để Admin tiếp tục kiểm tra.
+
+- **[ai-idol-studio.css](frontend/public/assets/css/ai-idol-studio.css)**:
+  - Thêm style cho nhóm prompt, trạng thái dữ liệu, bảng bằng chứng và cảnh báo thiếu dữ liệu.
+  - Giữ phạm vi CSS trong `.idol-studio`, hỗ trợ responsive và focus bằng bàn phím.
+
+### 18.4 Hợp đồng kết quả
+
+`run.plan.query_result` có dạng tổng quát:
+
+```json
+{
+  "status": "RESULTS_READY",
+  "selected": [{
+    "product_id": "...",
+    "name": "...",
+    "reason": "...",
+    "evidence": {}
+  }],
+  "warnings": [],
+  "missing_data": {},
+  "complete": true,
+  "matched_count": 10,
+  "requested_count": 10,
+  "checked_at": "..."
+}
+```
+
+Các trường hợp được xử lý:
+
+| Trường hợp | Hành vi |
+| --- | --- |
+| Chỉ lọc, đủ dữ liệu | Hiển thị kết quả; không tạo video/campaign |
+| Không có sản phẩm phù hợp | `EMPTY_RESULTS`; không bù sản phẩm ngoài điều kiện |
+| Thiếu lô/HSD/snapshot | `DATA_UNAVAILABLE`; chỉ rõ nhóm dữ liệu cần bổ sung |
+| Câu lệnh mơ hồ | `NEEDS_INPUT`; hiển thị câu hỏi làm rõ |
+| Lọc + tạo live nhưng thiếu số lượng | Dừng `NEEDS_INPUT`; không render |
+| Đủ dữ liệu + đủ số lượng + lịch hợp lệ | Tiếp tục pipeline campaign hiện có |
+| Lịch quá khứ hoặc sai định dạng | `SCHEDULE_REVIEW`; không tự dời lịch |
+| Catalog vượt giới hạn đọc | Báo lỗi; không xếp hạng trên tập bị cắt |
+
+### 18.5 Kiểm thử và kiểm chứng
+
+- **82 test backend PASS** trong image `skinsyntax-ai-idol:local`, chạy bằng unittest, mount source chỉ đọc và không gọi mạng.
+- Trong đó có **34 test mới** cho planner, executor và orchestration:
+  - Hạn dùng theo tháng lịch, nhiều lô, lô hết hạn, lô cách ly.
+  - Missing stock khác stock bằng 0.
+  - Không chọn kem nền/SPF hoặc cleanser nhờ từ khóa mô tả để thay cho kem chống nắng.
+  - Không cho mã sản phẩm cụ thể bypass bộ lọc tồn kho.
+  - Tách số bán toàn kỳ khỏi snapshot 7/30 ngày.
+  - Kiểm tra cohort chuyển đổi, percentile, baseline tăng trưởng và sample tối thiểu.
+  - Query-only không gọi LLM hoặc `create_campaign`.
+  - Lệnh ghép thiếu dữ liệu/sản phẩm không tạo campaign.
+  - Lệnh ghép hợp lệ giữ lại bằng chứng và policy assisted.
+- `php -l frontend/views/admin/ai_idol/index.php`: PASS.
+- `node --check frontend/public/assets/js/ai-idol-studio.js`: PASS.
+- `git diff --check`: PASS tại thời điểm ghi nhật ký.
+- PHP render view với catalog rỗng: PASS, xác nhận 15 nút prompt và nút khôi phục.
+
+### 18.6 Kiểm tra dữ liệu local và giới hạn triển khai
+
+- MongoDB local có 6.271 sản phẩm; 258 bản ghi khớp nhóm kem chống nắng.
+- Chưa có dữ liệu lô/hạn dùng đủ để trả lời truy vấn từ 17–19 tháng.
+- Chưa có snapshot bán hàng 7/30 ngày đủ coverage.
+- Bán chạy toàn kỳ hiện không có bản ghi hợp lệ có số bán lớn hơn 0 trong truy vấn kiểm tra.
+- Không dùng `review_count`, lượt xem tổng hoặc dữ liệu không cùng cohort để bù số liệu bán hàng.
+- Chưa rebuild/restart các service Docker đang chạy; code mới đã được kiểm thử bằng container riêng với mount chỉ đọc.
+- E2E Admin chưa chạy thành công vì browser đang ở phiên khách và bị chuyển khỏi trang Admin; không tạo session giả hoặc bỏ qua quyền.
+- Chưa commit, push hoặc migrate database.
+
+### 18.7 Việc cần làm trước khi dùng dữ liệu thật
+
+1. Tạo quy trình nhập `inventory_batches` gồm mã lô, NSX, HSD, số lượng khả dụng và trạng thái; có giữ chỗ/hoàn kho theo FEFO.
+2. Tạo job snapshot hàng ngày cho `product_metrics_snapshots`, có unique key theo sản phẩm, kỳ và ngày chốt.
+3. Thu thập event `product_view`, `add_to_cart`, `purchase` với `event_id`, thời gian, session ẩn danh và attribution nhất quán.
+4. Tạo index sau khi đo explain/latency; không chạy migration tự động trong Agent.
+5. Rebuild các process AI Idol ở thời điểm an toàn, sau đó đăng nhập Admin để thử prompt kho, hạn dùng và bán chạy.
+6. Chỉ bật campaign preview trên fixture đủ dữ liệu; giữ auto-publish tắt cho đến khi hoàn tất kiểm duyệt.
+
+## 19. Prompt Builder nhiều lựa chọn cho Syna Agent (28/09/2026)
+
+### 19.1 Mục tiêu
+
+- Cho Admin ghép một prompt hoàn chỉnh từ nhiều lựa chọn thay vì phải tự nhớ cú pháp câu lệnh.
+- Mỗi lựa chọn được phản ánh ngay trong ô “Prompt đang ghép”; người dùng có thể chọn một phần, nhiều phần hoặc bỏ qua toàn bộ nhóm không cần thiết.
+- Giữ ô nhập tự do và nút “Dùng prompt này” để người dùng xem lại, chỉnh tay rồi mới chạy Agent.
+
+### 19.2 Nhóm lựa chọn đã thêm
+
+- **Danh mục sản phẩm:** chọn một nhánh theo tầng Nhóm → Danh mục → Phân loại. Các nhánh phổ biến được ánh xạ về cụm từ truy vấn hiện có như `kem chống nắng`, `sữa rửa mặt`, `serum`; nhánh chưa có dữ liệu chuyên biệt vẫn tạo câu lệnh để Agent báo thiếu dữ liệu thay vì tự đoán.
+- **Kho & hạn sử dụng:** chọn nhiều điều kiện: 17–19 tháng, tối đa 18 tháng, tồn kho nhiều, tồn kho thấp hoặc hết hàng.
+- **Phạm vi kho/lô:** dropdown một lựa chọn gồm tất cả kho, một kho cụ thể hoặc một lô cụ thể; khi chọn kho/lô sẽ xuất hiện ô nhập mã/tên tương ứng.
+- **Phân tích bán hàng:** chọn nhiều thước đo bán chạy, doanh thu/chuyển đổi, lượt xem, lượt thêm giỏ, giảm giá bán chậm và tăng trưởng theo kỳ.
+- **Số lượng & thương hiệu:** số lượng là một lựa chọn duy nhất (Top 1/3/5/10 hoặc tự chọn); thương hiệu là trường tùy chọn để quảng bá nhiều sản phẩm của cùng một brand, kèm giới hạn tối đa hai sản phẩm mỗi brand và ưu tiên đủ tồn kho.
+- **Phong cách Syna:** chọn nhiều phong cách như tươi vui, tư vấn nhẹ nhàng, chuyên gia khoa học, chốt sale, giải thích chi tiết, nhấn mạnh thành phần hoặc giá.
+- **Tạo livestream:** checkbox tùy chọn; khi bật sẽ mở ngày giờ (tối thiểu sau hiện tại 1 giờ), thời lượng 30–120 phút và phạm vi phát nội bộ/YouTube/Facebook.
+
+### 19.3 Cách ghép và an toàn
+
+- UI chỉ tạo bản nháp prompt ở phía trình duyệt; chưa gọi Agent cho đến khi Admin bấm “Dùng prompt này” rồi “Lập kế hoạch & chạy”.
+- Các lựa chọn trong cùng nhóm điều kiện được nối bằng dấu phẩy; phong cách và kênh được nối thành cụm tự nhiên để LLM/intent parser dễ đọc.
+- Không bắt buộc điền tất cả nhóm. Nếu chỉ chọn danh mục, Agent vẫn nhận câu lệnh tìm sản phẩm; nếu bật livestream mà bỏ trống giờ, UI tự gợi ý mốc tối thiểu một giờ sau hiện tại để tránh lịch quá khứ.
+- Khi chọn phạm vi kho hoặc lô nhưng chưa nhập mã tương ứng, prompt vẫn hiển thị placeholder `[chưa nhập mã ...]` và nút dùng prompt bị khóa để tránh chạy một điều kiện chưa hoàn chỉnh.
+- Mã kho, mã lô và tên thương hiệu do người dùng nhập được giữ nguyên trong prompt nhưng không được dùng để tự động suy diễn dữ liệu nếu backend không tìm thấy bằng chứng.
+
+### 19.4 Tệp thay đổi và kiểm tra
+
+- `frontend/views/admin/ai_idol/index.php`: thêm giao diện Prompt Builder, dropdown phân cấp, checkbox đa lựa chọn và phần lịch livestream.
+- `frontend/public/assets/js/ai-idol-studio.js`: thêm ánh xạ danh mục, sinh prompt theo thời gian thực, định dạng ngày giờ, hiển thị số lựa chọn và nút đưa prompt vào ô lệnh.
+- `frontend/public/assets/css/ai-idol-studio.css`: thêm layout responsive cho nhóm lựa chọn, prompt preview và trạng thái mobile.
+- `php -l frontend/views/admin/ai_idol/index.php`: PASS.
+- `node --check frontend/public/assets/js/ai-idol-studio.js`: PASS.
+- `git diff --check`: PASS sau thay đổi Prompt Builder.
+
+## 20. Inventory Batch Ledger — ngày sản xuất, hạn dùng và tồn theo lô (28/09/2026)
+
+### 20.1 Phạm vi đã triển khai
+
+- Thêm model `backend/app/models/InventoryBatch.php` dùng collection `inventory_batches` làm nguồn dữ liệu cho tồn kho/hạn dùng theo từng lô và từng kho.
+- Mỗi lô lưu `product_id`, `batch_code`, `warehouse_id`, `manufactured_on`, `expires_on`, `received_on`, `initial_quantity`, `available_quantity`, `reserved_quantity`, `sold_quantity`, `damaged_quantity` và `status`.
+- Mọi lô mới đều ghi một movement `receipt` trong `inventory_movements`.
+- Thêm các movement điều chỉnh: bán, giữ hàng, hủy giữ, trả hàng, hư hỏng và điều chỉnh tăng/giảm. Các movement dùng update có điều kiện để không cho tồn khả dụng âm.
+- Không cho xuất/giữ lô đã hết hạn hoặc đang cách ly.
+- Thêm index định danh lô theo `(product_id, warehouse_id, batch_code)`, index hạn dùng/tồn kho và index lịch sử movement.
+
+### 20.2 Giao diện Admin
+
+- Thêm `AdminInventoryController` và route:
+  - `admin_inventory_batches`: danh sách/lọc lô.
+  - `admin_inventory_batch_save`: tạo lô mới.
+  - `admin_inventory_movement`: ghi nhận thay đổi tồn.
+- Thêm màn hình `frontend/views/admin/inventory_batches.php` với form nhập sản phẩm, mã lô, kho, ngày sản xuất, hạn sử dụng và số lượng.
+- Thêm mục “Kho & Lô hàng” vào menu Admin.
+- Hiển thị số ngày còn lại, trạng thái hết hạn và thao tác movement ngay trên từng dòng.
+
+### 20.3 Tương thích AI Idol
+
+- Giữ nguyên collection `san_pham`; không ghi đè tồn kho cũ và không tự suy đoán ngày cho dữ liệu thiếu.
+- AI Idol đã có query source đọc `inventory_batches` với các trường `product_id`, `batch_id`/`batch_code`, `expires_on`, `available_quantity`, `status`; các lô mới tạo từ màn hình này có đủ trường để phục vụ bộ lọc 17–19 tháng, tối đa 18 tháng và tồn kho.
+- Query engine đã nhận và áp dụng thêm `warehouse_id`/`batch_id` từ prompt; khi người dùng chọn kho/lô nhưng dữ liệu chưa có, engine trả thiếu dữ liệu thay vì rơi về tồn kho legacy của `san_pham`.
+- Nếu chưa có dữ liệu lô/hạn dùng, Agent tiếp tục trả `DATA_UNAVAILABLE` thay vì tự tạo kết quả.
+
+### 20.4 Kiểm tra và giới hạn
+
+- `php -l backend/app/models/InventoryBatch.php`: PASS.
+- `php -l backend/app/controllers/AdminInventoryController.php`: PASS.
+- `php -l backend/public/index.php`: PASS.
+- `php -l frontend/views/admin/inventory_batches.php`: PASS.
+- `git diff --check`: PASS (chỉ còn cảnh báo chuẩn xuống dòng LF/CRLF của Git trên Windows).
+- Docker unittest AI Idol: **85 tests PASS**, gồm test mới lọc theo kho, mã lô và chặn fallback sang tồn legacy khi scope lô/kho thiếu dữ liệu.
+- Chưa chạy migration/import trên dữ liệu thật, chưa sửa tồn kho trong `san_pham`, chưa bật job tự động đánh dấu expired.
+
+## 21. Tự sinh dữ liệu lô demo cho kho (28/09/2026)
+
+### 21.1 Cách hoạt động
+
+- Thêm nút **Tự tạo dữ liệu mẫu** trên trang `admin_inventory_batches` để Admin không phải nhập thủ công từng sản phẩm.
+- Hệ thống quét các sản phẩm đang hoạt động trong `san_pham`, bỏ qua sản phẩm đã có lô tại kho được chọn và không sửa dữ liệu sản phẩm gốc.
+- Tồn kho được đọc theo thứ tự alias hiện có: `so_luong_ton_kho` → `so_luong_ton` → `ton_kho` → `stock` → `quantity`.
+- Sản phẩm có tồn kho rõ ràng (kể cả bằng 0) sẽ được tạo một lô tại `AUTO-DEFAULT` với mã `AUTO-<mã sản phẩm>-<YYYYMMDD>`.
+- Mốc mặc định cho dữ liệu demo là hạn dùng 24 tháng, ngày sản xuất cách hiện tại 6 tháng, nên còn xấp xỉ 18 tháng kể từ ngày chạy.
+
+### 21.2 An toàn dữ liệu
+
+- Lô tự sinh được gắn `data_source=auto_generated_demo`, `verification_status=unverified`, `needs_verification=true` và ghi chú phải đối chiếu với phiếu nhập/nhãn thật.
+- Sản phẩm thiếu trường tồn kho không bị đoán số lượng; chỉ được thống kê ở nhóm **Cần xác minh** và không tự tạo lô.
+- Không ghi đè lô cũ, không ghi đè `san_pham`, không tạo movement giả cho sản phẩm có tồn bằng 0; lô này chỉ có trạng thái `depleted` để phục vụ bộ lọc hết hàng.
+- Lô có tồn dương được ghi movement `receipt` riêng để lịch sử kho nhất quán.
+- Nút có hộp thoại xác nhận và giới hạn tối đa 500 sản phẩm mỗi lần chạy.
+
+### 21.3 Tệp thay đổi
+
+- `backend/app/models/InventoryBatch.php`: thêm `previewAutoSeed()` và `autoSeedMissingBatches()`; sinh candidate có ngày/SL deterministic và insert idempotent.
+- `backend/app/controllers/AdminInventoryController.php`: thêm action `autoSeed()` và truyền thống kê preview cho view.
+- `backend/public/index.php`: thêm route `admin_inventory_auto_seed`.
+- `frontend/views/admin/inventory_batches.php`: thêm panel xem trước số lượng sẵn sàng/cần xác minh, chọn kho mặc định và nút chạy.
+
+### 21.4 Cách dùng và bước chuyển sang dữ liệu thật
+
+1. Vào **Admin → Kho & Lô hàng**, kiểm tra số lượng “Sẵn sàng” và “Cần xác minh”.
+2. Chọn mã kho nội bộ rồi bấm **Tự tạo dữ liệu mẫu**.
+3. Dùng AI Idol lọc thử `còn 17–19 tháng`, `tồn kho thấp` hoặc `đã hết hàng`.
+4. Khi có dữ liệu thật, tạo lô chính thức theo mã lô/NSX/HSD trên nhãn; không dùng lô `AUTO-*` để làm chứng từ bán hàng.
+5. Giai đoạn tiếp theo nên thêm nút **Xác minh lô** hoặc import CSV/OCR để chuyển lô demo sang `verified` sau khi đối chiếu.
+
+### 21.5 Dữ liệu demo đã tạo trong môi trường local
+
+- Đã chạy hàm auto-seed trong container PHP với kho `AUTO-DEFAULT` và tạo **500 lô** từ các sản phẩm đang có tồn kho trong `san_pham`.
+- Mỗi lô có ngày sản xuất `2026-03-28`, hạn `2028-03-28` và tồn khả dụng lấy từ trường tồn kho hiện có; đây là dữ liệu mô phỏng, không phải chứng từ nhập hàng.
+- MongoDB local hiện có 500 bản ghi `inventory_batches` tại kho `AUTO-DEFAULT`; có thể bấm lại nút để tạo tiếp các sản phẩm còn thiếu (tối đa 500 mỗi lần).
+
+### 22. Bộ dữ liệu đa dạng để kiểm thử bộ lọc kho (28/09/2026)
+
+- Bổ sung action `admin_inventory_diverse_seed` và nút **Sinh nhiều dạng để test** trên trang `admin_inventory_batches`.
+- Luồng này không dùng dữ liệu kho thật và không ghi đè lô cũ; dữ liệu được tách vào kho `AUTO-SCENARIOS`, mã lô có tiền tố `DEMO-` và chạy lặp lại an toàn.
+- Mỗi lần có thể sinh 500, 1.000, 2.000 hoặc 3.000 lô. Các scenario được phân bổ vòng tròn để tạo dữ liệu đủ dạng:
+  - Hạn còn khoảng 17, 18, 19 tháng.
+  - Sắp hết hạn trong 3 tháng.
+  - Tồn kho nhiều (>100) và tồn kho thấp (≤10).
+  - Đã hết hàng (`depleted`).
+  - Đã hết hạn (`expired`).
+  - Tạm cách ly (`quarantined`).
+  - Hạn còn dài trên 24 tháng để kiểm tra điều kiện loại trừ.
+- Các lô demo có movement nhập kho/bán hàng tương ứng, được gắn `data_source=auto_generated_diverse_demo`, `scenario`, `verification_status=unverified` và `needs_verification=true`.
+- Đã thêm `previewDiverseSeed()`, `seedDiverseDemoBatches()` vào `InventoryBatch`, controller `seedDiverse()` và route tương ứng. Sau khi sinh, lọc `Mã kho = AUTO-SCENARIOS` để xem riêng bộ test.
+- Kiểm tra giao diện Admin sau khi reload: danh sách hiển thị mã `AUTO-*`, khoảng 547 ngày còn lại và nhãn **Dữ liệu tự tạo · cần xác minh**.
+
+### 23. Bộ 10 lô theo ngày HSD cố định và ẩn lô hết hạn (28/09/2026)
+
+- Thêm nút **Tạo 10 lô cố định** trên trang admin_inventory_batches.
+- Bộ test tạo đúng 10 lô ở kho riêng AUTO-FIXED-EXPIRY, phân bổ:
+  - 2028-09-28: 3 lô.
+  - 2028-03-29: 3 lô.
+  - 2028-05-01: 2 lô.
+  - 2029-03-02: 2 lô.
+- Mỗi lô dùng một sản phẩm khác nhau, có ngày sản xuất lùi 24 tháng, tồn demo 30–60 và movement nhập kho tương ứng.
+- Mã lô có tiền tố FIXED-EXPIRY-; chạy lại an toàn, không tạo trùng.
+- Danh sách kho mặc định tự ẩn lô đã hết hạn. Admin vẫn xem được bằng cách chọn trạng thái **Đã hết hạn** hoặc thêm `show_expired=1`.
+- Các lô demo vẫn gắn needs_verification=true và không được xem là tồn kho thật.
+
+### 24. Cách ly lô hết hạn khỏi kho bán hàng (28/09/2026)
+
+- Danh sách kho mặc định tiếp tục ẩn mọi lô có `expires_on` nhỏ hơn ngày hiện tại, kể cả khi dữ liệu cũ vẫn còn `status=available`.
+- Khi sinh bộ dữ liệu đa dạng, profile `expired` được ghi riêng vào kho cách ly demo `AUTO-EXPIRED`; các profile còn lại vẫn ở kho test được chọn (mặc định `AUTO-SCENARIOS`).
+- Bộ lọc trạng thái **Đã hết hạn** tìm cả lô có `status=expired` và lô có ngày HSD đã qua, nên không bỏ sót dữ liệu cũ.
+- Thêm liên kết **Xem kho cách ly hết hạn** trên trang quản trị để xem riêng `AUTO-EXPIRED` với `show_expired=1`.
+- Không tự động chuyển kho thật hoặc sửa `san_pham`; dữ liệu demo được gắn nhãn cần xác minh và không được phép xuất/giữ bán.
+
+### 25. Sửa nhầm intent “hạn sử dụng” thành hủy campaign và kiểm thử runtime (29/09/2026)
+
+- Sửa `ai-idol-service/agents/intent_classifier.py`: không còn dùng substring `dung` để nhận diện hủy, vì từ `sử dụng` trước đây bị bắt nhầm thành `CANCEL_CAMPAIGN`.
+- Chỉ nhận hủy khi có lệnh rõ ràng (`hủy`, `cancel`, `xóa lịch`, hoặc `dừng` đi kèm live/livestream/phát/chương trình/campaign/agent).
+- Ưu tiên `PRODUCT_SEARCH` cho các lệnh lọc hạn dùng/tồn kho/phân tích bán hàng trước các nhánh sản phẩm chung.
+- Bổ sung ánh xạ danh mục `foundation` cho `kem nền`, `phấn nền`, `foundation`, `cushion`, `BB cream`; cập nhật ma trận 200 testcase để kiểm tra không mở rộng sang kem chống nắng.
+- Sửa inline script trong `frontend/views/admin/layouts/header.php`: loại bỏ `return` ở top-level gây `SyntaxError: Illegal return statement`, khởi tạo đầy đủ biến scroll/sidebar và giữ hành vi thông báo.
+- Thêm hồi quy `ai-idol-service/tests/test_intent_classifier_regression.py` và testcase truy vấn kem nền trong `test_command_query.py`.
+
+#### Kết quả xác minh
+
+- Runtime Docker `skinsyntax-ai-idol:local`, `ai-idol-service` healthy; worker và beat đều running.
+- Smoke trong container: `Tìm kem nền còn hạn sử dụng từ 17 đến 19 tháng` → `PRODUCT_SEARCH` (90%); `Hủy campaign` → `CANCEL_CAMPAIGN` (98%).
+- UI Agent đã chạy lại cùng câu lệnh: nhận đúng **Tìm sản phẩm**, danh mục **Kem nền / trang điểm nền**; trả 0 kết quả vì catalog Mongo local hiện chưa có sản phẩm kem nền/lô phù hợp, không còn báo sai intent hay tự đổi sang danh mục khác.
+- Test: hồi quy intent 3/3; Agent 20/20; command query 31/31; query service 7/7; ma trận 200/200; `py_compile`, `node --check`, `php -l`, `git diff --check` đều PASS.
+- Console browser chỉ còn một log `Illegal return` cũ từ 08:25 UTC trước khi sửa; không phát sinh log mới sau reload.
+
+### 26. Sửa lỗi import engine khi chạy toàn bộ test AI Idol (30/09/2026)
+
+- Thêm `ai-idol-service/engines/__init__.py` với lazy loading cho các engine media. Pipeline vẫn chỉ nạp engine nặng khi tới đúng stage, đồng thời các integration/test double có thể truy cập ổn định qua `engines.voice_engine`, `engines.avatar_engine` và các module liên quan.
+- Chuyển import tùy chọn `edge_tts` và `gTTS` trong `providers/tts_provider.py` vào đúng hàm fallback. Thiếu một provider tùy chọn không còn làm hỏng việc import pipeline hoặc test nhánh avatar legacy.
+- Sửa adapter Chroma của chatbot: Docker dùng `chromadb.HttpClient` tới service `chromadb:8000` thay vì SQLite local cũ lỗi schema `_type`; adapter retrieval pre-warm dùng cùng đường đi.
+- Loại model Groq `qwen/qwen3.6-27b` đã trả 404 khỏi danh sách hard-code; GPT-OSS 120B/20B vẫn là fallback hợp lệ.
+- Kết quả: `python -m unittest discover -s ai-idol-service/tests -q` chạy **89/89 PASS**. Trước sửa có 2 lỗi `AttributeError/ModuleNotFoundError` ở `test_syna`; sau sửa không còn lỗi.
+- Các cảnh báo `Script Council unavailable` hoặc `Structured parsing degraded` trong test offline là fallback có chủ đích, không phải test failure. Cảnh báo thiếu snapshot/lô vẫn giữ nguyên fail-closed và không dùng số đánh giá để bù dữ liệu.
+- Runtime chatbot sau restart: `/api/health` trả `chromadb=true`, `documents=6377`; log xác nhận hybrid pipeline nạp thành công và truy vấn trả sản phẩm.
+
+### 27. Chặn lô catalog giả khi lọc theo hạn sử dụng (30/09/2026)
+
+- Sửa `ai-idol-service/agents/command_query.py`: truy vấn có điều kiện hạn dùng chỉ được tính trên dữ liệu `inventory_batches` hợp lệ (mã lô, ngày HSD và số lượng). Không còn dùng `expiry_date`/`ngay_het_han` ở cấp catalog để tạo lô giả với mã `catalog`.
+- Nếu sản phẩm không có lô xác minh, kết quả được đánh dấu `DATA_UNAVAILABLE`, ghi rõ thiếu `expiry_or_batch_quantity` và không đưa sản phẩm đó vào danh sách xếp hạng. Cách này tránh hiển thị “Lô chưa có mã” như một bằng chứng tồn kho thật.
+- Thêm hồi quy `test_expiry_never_falls_back_to_catalog_date_as_fake_batch` trong `ai-idol-service/tests/test_command_query.py`.
+
+#### Kết quả xác minh
+
+- `python -m unittest ai-idol-service/tests/test_command_query.py -q`: **32/32 PASS**.
+- `python -m unittest discover -s ai-idol-service/tests -q`: **90/90 PASS**.
+- Ma trận 200 testcase cần chạy lại sau khi build service; tiêu chí mới là không có dòng `batch_id=catalog` khi truy vấn hạn dùng.
+- Cảnh báo offline `Structured parsing degraded` và `Script Council unavailable` trong unittest là fallback có chủ đích, không phải lỗi test.
+
+### 28. Chuẩn hóa mã lô trong bằng chứng hạn dùng (30/09/2026)
+
+- Lô trong MongoDB dùng `batch_code` làm mã nghiệp vụ, còn một số fixture/test dùng `batch_id`. Query engine nay ưu tiên `batch_id` và fallback chính thức sang `batch_code`.
+- Lô có ngày HSD/số lượng nhưng thiếu cả `batch_id` lẫn `batch_code` bị loại khỏi kết quả và tính vào `expiry_or_batch_quantity`; không còn render chuỗi “Lô chưa có mã”.
+- Cập nhật fixture kiểm thử kem nền để có mã lô, đồng thời thêm test cho fallback `batch_code` và fail-closed khi thiếu mã.
+
+#### Kết quả xác minh sau rebuild
+
+- `python -m unittest ai-idol-service/tests/test_command_query.py -q`: **34/34 PASS**.
+- `python -m unittest discover -s ai-idol-service/tests -q`: **92/92 PASS**.
+- `python docs/build_ai_idol_200_testcases.py`: **200/200 PASS**.
+- Rebuild/restart `ai-idol-service`, `ai-idol-worker`, `ai-idol-beat`: hoàn tất; `/api/health` trả `ok=true`, `mongo=ok`, `agent_enabled=true`.
+- Agent run live với lệnh `Tìm sản phẩm còn hạn sử dụng từ 17 đến 19 tháng.`: nhận diện `PRODUCT_SEARCH`, trả 10/10; tất cả bằng chứng đều có mã như `AUTO-1-20260928`, không còn mã trống.
+
+### 29. Reprocess các Agent run cũ bị phân loại nhầm (30/09/2026)
+
+- Xác định các run ngày 29/09 có câu lệnh hạn sử dụng nhưng đã lưu `CANCEL_CAMPAIGN` do classifier cũ bắt nhầm chuỗi “sử dụng”.
+- Reprocess 4 run ở trạng thái `NEEDS_INPUT`; không tạo campaign, video hoặc livestream.
+- Sau khi chạy lại, cả 4 run đều nhận đúng `PRODUCT_SEARCH`; kết quả là `EMPTY_RESULTS` hoặc `RESULTS_READY` tùy dữ liệu, không còn yêu cầu “Chọn chương trình cần hủy”.
+
+### 30. Snapshot số liệu sản phẩm và tracking phiên (13/10/2026)
+
+- Thêm `ai-idol-service/core/product_metrics.py`: dựng `product_metrics_snapshots` (7 và 30 ngày) từ đơn hàng thật và `product_events`; trường chưa đo được là `null`, không bao giờ thay bằng 0. CLI `ensure-indexes | build | backfill | run-due`.
+- Thêm task Celery `ai_idol.build_product_metrics` (queue `control`, beat phút 30 mỗi giờ); cấu hình `AI_IDOL_TRACKING_STARTED_ON`, `AI_IDOL_PRODUCT_EVENTS_RETENTION_DAYS`, `PRODUCT_EVENTS_ENABLED` trong `.env.example`.
+- PHP: thêm `backend/app/services/ProductEventTracker.php` (cookie phiên `ssv_sid` băm SHA-256, bỏ qua admin/nhân viên/bot/prefetch, ghi idempotent), nối vào xem chi tiết, thêm giỏ (4 điểm) và `HoaDon::taoDonHang` (`analytics_sid`). Không sửa `command_query.py` và `query_sources.py`.
+- Mở rộng `tests/fakes.py` với `$gte` và `bulk_write`; thêm `tests/test_product_metrics.py`.
+
+#### Kết quả xác minh
+
+- `python -m unittest discover -s tests -q` (trong container `ai-idol-worker`, mount source): **198/198 PASS** (baseline 177, thêm 21 test mới).
+- `php -l` PASS cho 9 file PHP đã tạo hoặc sửa; `git diff --check` sạch trên các file đã sửa.
+- Triển khai (được người dùng duyệt, 13/10/2026): `ensure-indexes` tạo 6 index (`pms_identity`, `pms_lookup`, `pmr_as_of`, `pe_event_id`, `pe_type_time`, `pe_ttl`); rebuild và khởi động lại `ai-idol-*`; `backfill --days 30` dựng 30 ngày, mỗi ngày 4.946 snapshot (2.473 sản phẩm × 2 cửa sổ), `sales_unreconciled = 0`.
+- PHP mount trực tiếp nên tracking có hiệu lực ngay; response trang chủ đã trả cookie `ssv_sid` (HttpOnly, SameSite=Lax). Chưa đặt `AI_IDOL_TRACKING_STARTED_ON`, nên các trường phiên vẫn `null`.
+- Agent sau triển khai: `Lọc 10 sản phẩm bán chạy 30 ngày` → `EMPTY_RESULTS` (đúng: 12 đơn tính doanh thu đều thuộc tháng 3 và 5/2026); `Lọc 5 sữa rửa mặt xem nhiều chưa chốt đơn 30 ngày` → `DATA_UNAVAILABLE` (chưa đủ 30 ngày tracking, đúng thiết kế).
+
+### 31. Sửa 6 lỗi Prompt Builder (L1–L6) để prompt từ Builder chạy đúng truy vấn chỉ đọc (14/10/2026)
+
+Kế hoạch: `docs/plans/2026-10-13-prompt-builder-fixes.md`. Chỉ đọc catalog/ledger; không ghi DB, không tạo campaign.
+
+- **L1 – Prompt chỉ có danh mục/thương hiệu/phong cách không bao giờ chạy truy vấn.** Nguyên nhân: `business_query_requested` chỉ nhận token kho/hạn dùng/bán hàng/`loc `, classifier đẩy "Tìm mặt nạ chăm sóc da", "Tìm nước tẩy trang" xuống `UNKNOWN`, `command_query` chỉ ánh xạ 4 danh mục, và regex `thuong hieu` bị dùng làm lọc cứng (bắt nhầm "toi da 2 san pham" thành tên thương hiệu). Sửa: thêm `catalog_search_requested` (câu bắt đầu bằng tìm/lọc/liệt kê và có danh mục, "sản phẩm" hoặc danh mục chưa hỗ trợ) làm `PRODUCT_SEARCH` 0.90; `service.py` chỉ dùng hàm này khi intent đã là `PRODUCT_SEARCH`, nên lệnh CREATE không bị mở rộng thành tự chọn 10 sản phẩm. Thêm `CATEGORY_PATHS` (27 danh mục theo taxonomy Builder, bằng chứng chỉ lấy từ `loai_san_pham`/`danh_muc_day_du`/`category`, cụm cụ thể nhất thắng), `niacinamide` và `vitamin c` vào `ACTIVE_ALIASES`. Plan có thêm `brand`, `brand_mode` (`prefer` khi có "ưu tiên", còn lại `only`) và `per_brand_max` (sản phẩm thiếu thương hiệu bị loại và tính vào `missing["brand"]`). Prompt không có điều kiện (chỉ có phong cách) trả `NEEDS_INPUT` ở `QUERY_RESULTS` với câu hỏi rõ ràng; "phục hồi hàng rào da" không có danh mục thật nên bị bỏ khỏi Builder và backend hỏi lại ("chưa có ánh xạ").
+- **L2 – Ngưỡng tồn kho bị hiểu thành số lượng.** "tồn kho trên 100 sản phẩm" cho `limit=100` rồi bị kẹp/hỏi lại 1–50. Sửa: gỡ cụm ngưỡng tồn kho và cụm "mỗi thương hiệu tối đa N" khỏi text trước khi tìm số lượng. Mâu thuẫn (nhiều ngưỡng tồn kho, "hết hàng" cùng "còn hàng/còn đủ hàng", khoảng hạn dùng cùng biên hạn dùng) nay hỏi lại, không lấy điều kiện đầu tiên.
+- **L3 – Mã kho/lô dính dấu chấm và nguồn lô không được nạp.** Token mã nuốt dấu `.` cuối câu (`'auto-default.'`); `load_query_sources` chỉ nạp `inventory_batches` khi có hạn dùng/tồn kho nên plan chỉ có kho/lô nhận `batches=[]` và mọi sản phẩm bị tính thiếu dữ liệu; sản phẩm có lô nhưng ngoài kho/lô yêu cầu vẫn lọt vào với `stock = 0`. Sửa: mã phải kết thúc bằng chữ/số và giữ nguyên hoa/thường theo brief gốc; nạp lô khi có kho/lô; sản phẩm đã có lô nhưng không có lô trong phạm vi bị loại (sản phẩm không có lô nào vẫn là thiếu dữ liệu); so khớp mã lô với cả `batch_id` lẫn `batch_code`.
+- **L4 – Nhiều tiêu chí bán hàng.** Builder dùng checkbox "có thể chọn nhiều" và backend chọn âm thầm một cửa sổ (7 ngày, rồi toàn kỳ, rồi 30). Sửa: Builder chuyển sang radio "chọn 1" (có lựa chọn "Không chọn"); backend luôn hỏi lại khi có từ 2 chiến lược hoặc khi các kỳ thống kê khác nhau (7 ngày, 30 ngày, toàn kỳ).
+- **L5 – Builder tạo câu bị chính form từ chối.** "Tìm serum." (10 ký tự) và "Tìm dầu xả." dưới ngưỡng 12 ký tự của form. Sửa: hằng `AGENT_BRIEF_MIN_LENGTH = 12` dùng chung với submit; câu ngắn tự thành "Tìm sản phẩm serum."; nút "Dùng prompt này" bị tắt kèm gợi ý (`#agentPromptHint`) khi prompt rỗng, thiếu mã kho/lô hoặc quá ngắn. Nhóm hạn dùng và tồn kho tách thành hai nhóm radio; chọn "Đã hết hàng" tự tắt "còn đủ hàng".
+- **L6 – "livestream" trong mô tả tồn kho bị hiểu là lệnh tạo.** Fragment "ưu tiên sản phẩm còn đủ hàng để bán trong livestream" làm classifier ra `CREATE_CAMPAIGN` rồi `NEEDS_INPUT product`. Sửa: classifier gỡ cụm "đủ hàng … (để) bán trong/khi/trên live(stream)" trước khi tìm create cue (trừ khi ngay sau là lịch); "còn đủ hàng" được hiểu là `stock_min = 1` kèm assumption; Builder đổi wording thành "ưu tiên sản phẩm còn đủ hàng (đủ bán khi live)". `renderQueryEvidence` hiển thị thêm Thương hiệu/Kho/Lô.
+- File sửa: `ai-idol-service/agents/{command_query,query_sources,intent_classifier,service,product_resolver}.py` (service chỉ đổi 1 import và 1 điều kiện), `frontend/public/assets/js/ai-idol-studio.js`, `frontend/views/admin/ai_idol/index.php`; test mới `ai-idol-service/tests/test_prompt_builder_cases.py`. Không đổi `intent_parser.py`, `product_metrics.py`, ai-service-flask, chatbot, recommendation, voice, avatar, `.runtime/`.
+
+#### Kết quả xác minh
+
+- `python -m unittest discover -s tests -q` (container `ai-idol-worker`, mount source): **233/233 PASS** (198 test cũ + 35 test mới của `test_prompt_builder_cases.py`).
+- `python docs/build_ai_idol_200_testcases.py --skip-docx`: **TESTCASES=200 PASS=200 FAIL=0**.
+- `node --check frontend/public/assets/js/ai-idol-studio.js`: PASS. `php -l frontend/views/admin/ai_idol/index.php`: PASS. `git diff --check` sạch trên các file đã sửa.
+- Chưa rebuild/restart container và chưa chạy lại UI bằng Playwright (`E2E NOT RUN`). Image `ai-idol-*` chứa sẵn source nên cần rebuild `ai-idol-service`, `ai-idol-worker`, `ai-idol-control-worker`, `ai-idol-broadcast-worker`, `ai-idol-beat` thì thay đổi Python mới có hiệu lực; JS/PHP được mount trực tiếp.
+
+### 32. Bộ dữ liệu test Prompt Builder `pb-fixture-v1` trên Atlas (14/10/2026)
+
+Kế hoạch: `docs/plans/2026-10-14-prompt-builder-test-fixtures.md`. Package `ai-idol-service/fixtures/prompt_builder/`, CLI `python -m fixtures.prompt_builder plan|archive-legacy|restore-categories|apply|verify|reset|restore-legacy` (lệnh ghi cần `--yes`, có `--dry-run`).
+
+- **Sửa lỗi thương hiệu:** `agents/query_sources.load_catalog` ghép `ten_thuong_hieu` từ `ma_thuong_hieu` qua collection `thuong_hieu`. Trước đây lọc/ưu tiên thương hiệu luôn rỗng.
+- **Dữ liệu đã nạp** (seed 20261014, `as_of` 2026-10-14; mọi document gắn `test_dataset="pb-fixture-v1"`):
+
+  | Collection | Số document |
+  |---|---|
+  | `khach_hang` (persona: loại da, ngân sách, brand yêu thích; email `@example.test`) | 160 |
+  | `product_events` (45 ngày) | 68.740 |
+  | `hoa_don` (`ma_hoa_don` từ 500001) | 2.305 |
+  | `chi_tiet_hoa_don` | 3.092 |
+  | `inventory_batches` (kho `KHO-HCM-01`/`KHO-HN-01`/`KHO-DN-01`) | 4.451 |
+  | `inventory_movements` (receipt + sale theo FEFO) | 11.754 |
+
+- **Lô demo cũ:** 2.000 lô `auto_generated_*` (`AUTO-DEFAULT`, `AUTO-SCENARIOS`) được chép sang `inventory_batches_archive` rồi gỡ; hoàn tác bằng `restore-legacy --yes`.
+- **Danh mục:** khôi phục 380 sản phẩm thật Trang điểm/Cơ thể/Tóc từ `san_pham_backup_6377` vào `san_pham` (có tag). Đã xoá cache Simple recommender và rebuild TF-IDF (2.853 sản phẩm).
+- `.env`: `AI_IDOL_TRACKING_STARTED_ON=2026-08-30` (trước đó là 2026-10-14). Đã rebuild image và recreate 5 container `ai-idol-*`, chạy `product_metrics backfill --days 30` (`sales_unreconciled = 0`).
+- Không đồng bộ `so_luong_ton_kho`/`so_luong_da_ban` của `san_pham`, nên recommender và trang shop không bị dữ liệu đơn giả tác động. Hệ quả: dòng "Tồn khả dụng" trong bằng chứng Agent vẫn hiện số catalog cũ (ví dụ 300), không phải tổng theo lô.
+
+#### Kết quả xác minh
+
+- `python -m unittest discover -s tests -q`: **314/314 PASS** (234 cũ + 80 mới).
+- `plan` (offline) và `verify` (online trên Atlas): **163 case, 157 PASS, 0 FAIL, 6 KNOWN_GAP**. Báo cáo ở `.runtime/pb-fixture/report-2026-10-14.md`.
+- 6 KNOWN_GAP thuộc engine: "Lọc 1/3/5 mặt nạ giấy" và "Lọc 1/3/5 dầu gội" bị lấy mặc định 10 sản phẩm, vì regex đếm số lượng chỉ nhận đơn vị `sản phẩm|sp|kem|sữa|gel|serum`.
+- `growth_7` luôn báo "dữ liệu chưa đầy đủ" (229 sản phẩm không có bán kỳ trước). Đây là hành vi engine, không phải thiếu dữ liệu.
+- E2E thật trên `index.php?r=admin_ai_idol` (browser pane, admin đã đăng nhập): **PASS 6/6**.
+
+  | Case | Kết quả |
+  |---|---|
+  | Builder: Kem chống nắng + 17–19 tháng + Top 10 | 10/10 · 46 khớp; lô biên 2028-03-14 được chọn |
+  | Tồn ≤10 | 10/10 · 14 khớp |
+  | Kho `KHO-DN-01` + 17–19 tháng | 7/7 |
+  | Xem nhiều, chưa mua | 6/6 |
+  | Tăng trưởng 7 ngày | 7/7 |
+  | Ưu tiên La Roche-Posay + mỗi brand ≤2 | 10/10 · đúng 2 La Roche-Posay đứng đầu |
+
+- **Lưu ý:**
+  - Dashboard doanh thu Admin đang cộng cả đơn fixture.
+  - Mốc hạn dùng gắn với 14/10/2026; test vào ngày khác thì chạy `reset --yes` rồi `apply --yes` (và `backfill`).
+  - Khi gỡ hẳn dữ liệu: chạy `reset --yes` và `restore-legacy --yes`, đặt lại `AI_IDOL_TRACKING_STARTED_ON`, recreate container, `backfill`, rồi rebuild TF-IDF.
+
+#### 32.1 Sửa đếm số lượng và tạo tài khoản cho khách fixture (14/10/2026)
+
+- **Sửa đếm số lượng:** `agents/command_query.py` thêm `LEADING_COUNT_PATTERN`. Câu "Lọc/Tìm N <danh mục bất kỳ>" nay nhận đúng N (ví dụ mặt nạ giấy, dầu gội, sữa tắm). Số theo sau là kỳ thời gian (ngày/tháng/tuần…) không bị coi là số lượng. Test: `BuilderQuantityTests` (3 test). `KNOWN_GAPS` trong `cases.py` nay rỗng.
+- **Email khách fixture** đổi sang dạng `{tên}.{họ}{NNN}@example.test`, ví dụ `ha.pham001@example.test`. Lệnh mới `refresh-emails` cập nhật email theo `ma_kh`; lệnh từ chối chạy nếu họ tên sinh lại lệch với DB.
+- **Tài khoản đăng nhập:** script `backend/scripts/seed_pb_fixture_accounts.php` (chạy trong `skinsyntax-php`, có `--dry-run` và `--rotate`).
+  - Tạo `nguoidung` với `id = ma_kh`, `vai_tro=khach_hang`, mật khẩu ngẫu nhiên 14 ký tự đạt chính sách đăng ký, băm bằng `password_hash` (bcrypt).
+  - Lưu hồ sơ khảo sát da qua `NguoiDung::luuKhaoSatKhachHang`, ánh xạ từ persona sang đúng giá trị của form `khaosat.php`: loại da, vấn đề da, mục tiêu, độ nhạy cảm, thành phần tránh, ngân sách, thương hiệu ưu tiên.
+  - Không đụng tài khoản thật trùng email.
+  - Mật khẩu chỉ ghi vào `.runtime/pb-fixture/accounts.csv`; thư mục `.runtime/pb-fixture/` đã thêm vào `.gitignore`.
+- `reset` nay xoá cả `nguoidung` có tag.
+- **Đã chạy trên Atlas:**
+  - `refresh-emails --yes`: 160 email.
+  - Script tài khoản: 160 tài khoản tạo mới, 160 hồ sơ khảo sát; 15 tài khoản thật giữ nguyên.
+
+##### Kết quả xác minh
+
+- `python -m unittest discover -s tests -q`: **336/336 PASS**. `php -l backend/scripts/seed_pb_fixture_accounts.php`: PASS.
+- `verify` online sau khi rebuild image: **163/163 PASS, 0 KNOWN_GAP**.
+- **E2E UI:** Builder chọn Mặt nạ giấy + Top 3 tạo câu "Lọc 3 mặt nạ giấy." → 3/3 (trước đây trả 10).
+- **Đăng nhập thật bằng form `xulydangnhap`** (curl, tài khoản `ha.pham001@example.test`):
+  - Mật khẩu đúng → 302 về `home`; mật khẩu sai → 302 về trang đăng nhập.
+  - Trang `hoso` hiện đúng tên, email, loại da và các mã đơn `50xxxx` (14 đơn của khách này).
+- **Đổi mật khẩu theo yêu cầu người dùng:** chạy `--rotate --password-from-email`, nên mật khẩu = phần trước `@` của email (ví dụ `nhi.ngo052`). 160 tài khoản đã đổi. Đăng nhập thử `nhi.ngo052` và `huy.do110` → `home`; mật khẩu sai → trang đăng nhập. Mật khẩu này không đạt chính sách đăng ký, chỉ dùng cho dữ liệu test.
+- Bổ sung sau kiểm thử live: `san_pham` chỉ lưu `ma_thuong_hieu` (int), tên nằm ở collection `thuong_hieu` (id dạng chuỗi), nên lọc/ưu tiên/giới hạn theo thương hiệu trước đây không bao giờ khớp. `query_sources.load_catalog` nay nối tên thương hiệu; thêm test `CatalogBrandJoinTests` → **234/234 PASS**.
+- Đã rebuild và restart `ai-idol-*`, chạy lại 97 câu Builder cũ qua API: 26 `RESULTS_READY`, 9 `EMPTY_RESULTS` (catalog chỉ có nhóm Chăm sóc da mặt nên Trang điểm/Cơ thể/Tóc rỗng là đúng dữ liệu), 11 `DATA_UNAVAILABLE` (chỉ số phiên chưa đủ tracking), 49 `NEEDS_INPUT` có câu hỏi rõ (nhiều tiêu chí, mâu thuẫn tồn kho/hạn dùng, chỉ có phong cách, live chưa có sản phẩm), "Tìm serum." bị chặn <12 ký tự như cũ; campaign thử đã hủy.
+- UI Builder đã xác minh trong trình duyệt: bán hàng là radio (chỉ 1 lựa chọn), serum sinh "Tìm sản phẩm serum.", "Đã hết hàng" tự tắt "còn đủ hàng", thiếu mã kho thì nút bị khóa kèm gợi ý.
+- 14/10/2026: đặt `AI_IDOL_TRACKING_STARTED_ON=2026-10-14` trong `.env`, recreate `ai-idol-*`; container xác nhận đã nạp giá trị. Chỉ số phiên cửa sổ 7 ngày dự kiến có từ 21/10, cửa sổ 30 ngày từ 13/11.
+  - *Ghi chú (mục 33):* đây là trạng thái **trước** khi nạp `pb-fixture-v1`. Giá trị hiện hành là `2026-08-30` (đặt ở mục 32 để snapshot đọc được 45 ngày sự kiện fixture); đã kiểm tra lại cả `.env` lẫn container. Khi `reset` fixture thì đặt lại `2026-10-14`.
+
+### 33. Lịch sử đơn hàng dạng tab kiểu Shopee, sửa nút Hủy đơn, live search và tăng tốc trang Hồ sơ (14/10/2026)
+
+- **Tab con** trong Hồ sơ → Lịch sử đơn hàng: Tất cả / Chờ thanh toán / Chờ xác nhận / Chờ lấy hàng / Đang giao / Hoàn thành / Đã hủy.
+  - Mỗi tab có badge số đơn.
+  - Đơn hiển thị dạng thẻ: mã đơn, ngày, thanh toán, nhãn trạng thái, sản phẩm, thành tiền, nút theo trạng thái.
+  - Tìm theo mã đơn hoặc từng từ trong tên sản phẩm (không dấu, bỏ dấu câu).
+  - Phân trang 10 đơn ở server: `?r=hoso&tab=orders&don=<tab>&q_don=<từ khoá>&trang_don=<n>`.
+  - Tab "Trả hàng" chưa làm vì chưa có trạng thái/luồng trả hàng.
+- **Phân loại** nằm trong `backend/app/services/OrderTabs.php`, dựa trên trạng thái sẵn có, không đổi DB.
+  - Chuẩn hoá cả chuỗi có dấu và không dấu (`Hoan thanh`/`Hoàn thành`) và đơn thiếu `trang_thai_normalized`.
+  - QR chưa thanh toán ở `pending`/`confirmed` → Chờ thanh toán; `confirmed` → Chờ lấy hàng.
+  - Hủy được khi chưa giao. Mua lại khi Hoàn thành hoặc Đã hủy.
+- **Sửa lỗi có sẵn trong `hoso.php`:** view dùng `strtolower` nên không đổi được chữ "Đ". Hệ quả:
+  - Đơn "Đã thanh toán" vẫn hiện banner "đang chờ chuyển khoản".
+  - Đơn "Đã hủy" vẫn hiện nút hủy.
+  - Điều kiện "Mua lại" dính chuỗi lỗi font `hoÃ n thÃ nh`.
+  - Nay mọi điều kiện lấy từ `OrderTabs`.
+- **Sửa nút Hủy đơn của khách:** form gửi `r=huydonhang` → 404; route `huydon` gọi `TaiKhoanController::huydon()` không tồn tại → Fatal.
+  - Nay cả hai route gọi `QuanTriController::customerOrderCancel` ở `frontend/public/index.php` và `backend/public/index.php`.
+  - Handler kiểm tra chủ đơn, trạng thái, bắt buộc lý do.
+  - Sau khi hủy, quay về tab đơn hàng (thành công → tab Đã hủy).
+- **Live search:** module chung `frontend/public/assets/js/live-filter.js`, được nạp ở footer.
+  - Form GET có `data-live-filter`, `data-live-target`, `data-live-also`, `data-live-reset`.
+  - Gõ chữ thì chờ 300ms; đổi select/checkbox thì chạy ngay.
+  - Tải lại đúng URL và chỉ thay vùng kết quả, `history.replaceState`. Không JS thì form vẫn submit như cũ.
+  - Ô tìm đơn ở Hồ sơ là trang đầu dùng module này.
+- **Tăng tốc** (mỗi lượt Atlas khoảng 50ms):
+  - `TaiKhoan::getOrderHistory`: tra sản phẩm/thương hiệu theo lô `$in` thay vì 2–3 `findOne` mỗi dòng. GitNexus: rủi ro **CRITICAL** (trang chủ, Gợi ý, chatbot dùng chung), người dùng đã duyệt. Output so khớp **giống hệt** bản cũ trên 22 khách / 207 đơn / 264 dòng; thời gian 46,7s → 6,4s.
+  - `DanhGia::canUserReviewProductsBatch` (mới, không sửa `canUserReviewProduct`): 4 truy vấn cho cả trang thay vì 4 truy vấn mỗi dòng. So khớp **giống hệt** 310 lần kiểm tra (có 12 dòng đã đánh giá, mã rỗng, chưa mua); 59s → 10s.
+  - Bỏ lời gọi `getCustomerReviewEligibility` vô ích: kết quả chỉ được tra bằng mã rỗng nên luôn mặc định, tốn ~1,9s.
+  - Request live (`X-Requested-With: live-filter`) ở `TaiKhoanController::render` chỉ trả view, bỏ header/footer/menu, và không tải giỏ hàng/hồ sơ da.
+  - Tổng quan đếm đơn bằng `orderCounts['all']`, đếm đánh giá bằng `countDocuments` trên `danh_gia_san_pham`.
+- **Kết quả đo** (khách 18 đơn, `minh.pham105`): trang Hồ sơ đầy đủ ~10s → **~2,2s**; request live **~0,6–1,3s** (trước 7–11s). Trên trình duyệt, kết quả cập nhật ~1,2–1,6s sau phím cuối, gồm 300ms debounce.
+
+#### Kết quả xác minh
+
+- `php tests/order_tabs_test.php` (mới): **46/46 PASS**. `admin_usecase_contract_test.php` (PHP host): **327/327 PASS**. `php -l` các file PHP đã sửa: PASS. `node --check live-filter.js`: PASS.
+- **E2E trên trình duyệt** (khách `minh.pham105`):
+  - Đếm tab khớp DB (Tất cả 18, Chờ xác nhận 1, Chờ lấy hàng 1, Hoàn thành 14, Đã hủy 2), trang 1/2 và 2/2.
+  - Lọc tab Hoàn thành.
+  - Gõ "loreal" → 5 đơn, gõ thêm "căng mịn" → 2 đơn, không tải lại trang.
+  - Không tràn ngang ở khổ ~330px.
+- **Hủy đơn qua route thật:**
+  - Thiếu lý do → từ chối.
+  - Đơn của khách khác → từ chối, đơn giữ nguyên.
+  - Hợp lệ → #502274 "Đã hủy", lý do "Khách đổi ý".
+  - Hủy lại → chặn.
+- Smoke `home` và `goiy` (cùng dùng `getOrderHistory`): 200, không có lỗi/warning.
+- Lưu ý: hủy đơn gọi `restoreStockForOrder`, nên tồn `san_pham` của sản phẩm trong đơn fixture #502274 được cộng lại; `reset` fixture không hoàn nguyên khoản này.
+
+### 34. Tăng tốc trang admin dùng live search, sửa 504 danh sách đơn, nối route trợ giúp, lưu lịch sử khi Enter (14/10/2026)
+
+- **`QuanTri::listOrders` hết N+1 (sửa `admin_orders` 504).** Trước đây mỗi đơn gọi `khach_hang->findOne` và `chi_tiet_hoa_don->countDocuments` (~4.700 lượt Atlas cho 2.334 đơn, > 120s nên Nginx trả 504).
+  - Giữ nguyên chữ ký và dữ liệu trả về. Lọc trạng thái vẫn chạy **trước** khi bổ sung dữ liệu khách hàng.
+  - Khách hàng tra bằng một truy vấn `$in` (lấy bản ghi đầu tiên cho từng khoá, phân biệt kiểu số/chuỗi); số dòng hàng đếm bằng một `aggregate` (`$match` + `$group`).
+  - Hàm trợ giúp riêng `lookupKey`, `findFirstByValues`, `countOrderLines` (chép ý tưởng từ `TaiKhoan.php`, không sửa file đó). Khoá số gộp int và float nguyên giống cách Mongo so sánh số.
+  - GitNexus: `listOrders` **HIGH** (9 phụ thuộc, người dùng đã duyệt).
+  - So khớp bản cũ/mới trên Atlas, 14 cặp tham số (không lọc, 7 trạng thái gồm `cho_xu_ly` và `Hoàn thành`, từ khoá `5022`, `minh`, `Hoàn`, `cod`, `zzz`, `minh`+`completed`): **IDENTICAL** (so sánh `===` mảng đã giải mã và cả chuỗi JSON). Toàn bộ 14 truy vấn bản mới ~11s; riêng truy vấn không lọc ~1,8s so với ~241s bản cũ (chạy nền, 4 tiến trình song song).
+- **Phân trang danh sách đơn admin/nhân viên** (`QuanTriController::paginateOrderList`, `frontend/views/admin/orders.php`): 50 đơn/trang (`?page=`, tự giới hạn 1..tổng trang).
+  - Bộ đếm "Có N đơn chờ duyệt" và xuất CSV/Excel vẫn tính trên **toàn bộ** danh sách đã lọc (file Excel có 2.335 dòng = tiêu đề + 2.334 đơn).
+  - Thanh "‹ Trước · Trang X/Y · N đơn · Sau ›" nằm trong `#orderListPanel`, giữ `q`, `status`, `detail`. `page` được thêm vào `data-live-reset`.
+- **`QuanTri::listCustomers`**: một truy vấn `hoa_don` `$in` (projection `ma_kh`, `tong_tien`) thay vì `find` cho từng khách; khách thiếu `ma_kh` vẫn dùng truy vấn cũ. So khớp 5 cặp tham số (`''`, `minh`, `VIP`, `Thường`, `zzz`): **IDENTICAL**. `admin_users` 17–29s → ~2,1s.
+- **`InventoryBatch::listBatches`**: tên sản phẩm tra một lần bằng `$in` (dạng chuỗi và dạng số như `findProductName`), mặc định vẫn là `Không tìm thấy sản phẩm`. So khớp 7 tổ hợp bộ lọc (`[]`, `q=zzz`, `status=expired`, `warehouse_id=KHO-DN-01`, `show_expired=1`, và hai trường hợp `limit=500`): **IDENTICAL**.
+- **`AdminInventoryController::index`**: request live-filter bỏ `ensureIndexes`, `listProductOptions`, `previewAutoSeed`, `previewDiverseSeed` (quét toàn collection mà vùng `#batchResults` không dùng). Tải trang thường không đổi; vùng kết quả live giống hệt vùng của trang thường (201 dòng khớp từng ký tự).
+- **Route trợ giúp**: ở nhánh `default:` của `backend/public/index.php` và `frontend/public/index.php` thêm `require .../routes/store_assistance.php` trước khi trả 404, nên chỉ các route chưa có `case` mới vào được file đó.
+  - Nay trả 200 trang hỗ trợ: `tro_giup`, `faq`, `lien_he`, `khieu_nai`, `quy_che_hoat_dong`, `chinh_sach_cookie`, `chinh_sach_van_chuyen`, `doi_tra_hoan_tien`, `chinh_sach_xu_ly_du_lieu`. `tro_giup&q=otp` lọc `#helpResults` còn 2 thẻ (20 thẻ khi không lọc, 0 thẻ + thông báo rỗng khi `zzzzqq`).
+  - `chat_purchase_action` bằng GET trả 405 JSON `Chỉ nhận yêu cầu POST.` (không 500, không tạo đơn).
+  - 6 route chính sách đang chạy (`ho_tro_khach_hang`, `huong_dan_nhan_otp`, `dieu_kien_giao_dich`, `chinh_sach_bao_mat`, `xuly_du_lieu_ca_nhan`, `bao_hanh`) và `home` (khách): HTML trước/sau **giống hệt** sau khi chuẩn hoá phần thay đổi theo mỗi request (thứ tự mega-menu trong `<header>`, mã captcha, `?v=` mascot).
+  - Khối "tiếp tục thanh toán sau chat" trong `store_assistance.php` vẫn **không chạy** vì `home` có `case` riêng.
+  - File `index.php` ở thư mục gốc (bản XAMPP) chưa được nối route này.
+- **Lịch sử tìm kiếm chỉ lưu khi người dùng chốt (Enter / nút Tìm)**: `live-filter.js` có `run({commit})`; submit luôn chạy (kể cả truy vấn không đổi) và gửi thêm `X-Live-Commit: 1`; gõ và đổi select vẫn không commit. `SanPhamController::tatca` lưu lịch sử khi request không phải live **hoặc** có `X-Live-Commit: 1`. Kiểm bằng `api_smart_search` với khách `minh.pham105`: live không commit → không đổi; live commit → thêm một từ khoá; request thường → thêm một từ khoá.
+  - Lưu ý lỗi có sẵn: `lich_su_tim_kiem` có index unique cũ `_RM_id` trên `id` nên `luuLichSuTimKiem` (insert vào Mongo) luôn lỗi `E11000` và bị nuốt; lịch sử thực tế chỉ lưu ở session. Chưa sửa (ngoài phạm vi), không có dòng test nào được ghi vào DB (đã đếm và xoá theo `tu_khoa` bắt đầu bằng `zzhist`: 0 dòng).
+- **Nhả khóa session cho request live chỉ đọc**: ngay sau `session_start()`, nếu là GET có `X-Requested-With: live-filter` và không có `X-Live-Commit` thì `session_write_close()` (`$_SESSION` vẫn đọc được). Hai request live đồng thời cùng cookie: `tatca` trước B=2,5s (A=1,4s, xếp hàng) → sau 1,1s/1,4s; `admin_orders` trước B=4,5s → sau 2,2s/2,3s.
+- **Tăng worker PHP-FPM** (`docker/php/zz-skinsyntax-fpm.conf`): `pm=dynamic`, `max_children=20`, `start=4`, `min_spare=2`, `max_spare=8`, `max_requests=500` (trước: 5/2/1/3). `Dockerfile.php` COPY file này vào image.
+  - `docker compose build php-backend` hiện **thất bại** từ trước ở bước `composer update`: `backend/composer.json` ghim `mongodb/mongodb 1.19.1` đang dính security advisory (container đang chạy dùng 2.4.0 trong `backend/vendor`). Vì vậy file cấu hình còn được mount trong `docker-compose.yml` (`./docker/php/zz-skinsyntax-fpm.conf:/usr/local/etc/php-fpm.d/zz-skinsyntax-fpm.conf:ro`) và chỉ tạo lại service PHP bằng `docker compose up -d --no-deps --no-build php-backend`; sau đó phải `nginx -s reload` vì Nginx giữ IP cũ của container (502 cho tới khi reload). `php-fpm -tt` xác nhận cấu hình mới.
+
+#### Kết quả đo (curl, Atlas ~50ms/lượt; máy dùng chung nên nhiễu, mỗi số đo 3 lần)
+
+| Trang | Trước | Sau |
+| --- | --- | --- |
+| `admin_orders` | 504 (> 120s) | ~1,9–2,6s (50 đơn/trang) |
+| `admin_orders` live (`q=minh`) | 504 | ~1,9–2,2s |
+| `admin_users` | 17–29s | ~1,8–2,3s |
+| `admin_users` live (`q=minh`) | 2,2–2,6s | ~1,5s |
+| `admin_inventory_batches` | 12–14s | ~2,8–3,2s |
+| `admin_inventory_batches` live (`q=KHO`) | 12,4–14s | ~1,3–1,6s |
+| `hoso` live | 0,6–1,3s (mục 33) | ~0,8–1,7s (không đổi, nhiễu) |
+| `tatca` live (`q=serum`) | ~1,4s | ~0,9–1,2s |
+| `tro_giup` | 404 | ~0,85–1,05s (200) |
+
+Nền của mọi trang admin hiện còn ~1,2–1,7s (layout/header + kết nối Atlas), nên các số trên khó xuống thấp hơn nếu không tối ưu layout.
+
+#### Kết quả xác minh
+
+- `admin_usecase_contract_test.php`: **331/331 PASS** (kế hoạch ghi 327; file test là bản chưa theo dõi trong Git, ngày 28/09, không do thay đổi này). `php -l` mọi file PHP đã sửa và `node --check live-filter.js`: PASS. `git diff --check`: không lỗi khoảng trắng.
+- Chưa chạy E2E trên trình duyệt (kế hoạch giao cho phiên chính). Chưa commit.

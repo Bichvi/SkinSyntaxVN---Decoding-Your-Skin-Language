@@ -70,8 +70,11 @@ class AdminAiIdolController {
             // Safe fallback
         }
 
+        $catalogData = $this->getCatalogMetadata();
         $this->render('admin/ai_idol/index', [
             'products' => $products,
+            'catalogTree' => $catalogData['tree'],
+            'filterCounts' => $catalogData['filterCounts'],
             'title' => 'AI Idol Studio & Video Generator'
         ]);
     }
@@ -298,6 +301,34 @@ class AdminAiIdolController {
         exit;
     }
 
+    public function cancelCampaign(): void {
+        $this->checkAdmin();
+        $campaignId = trim((string)($_GET['campaign_id'] ?? ''));
+        header('Content-Type: application/json; charset=utf-8');
+        echo $this->callFlaskAPI('POST', '/api/ai-idol/campaigns/' . rawurlencode($campaignId) . '/cancel');
+        exit;
+    }
+
+    public function rescheduleCampaign(): void {
+        $this->checkAdmin();
+        $campaignId = trim((string)($_GET['campaign_id'] ?? ''));
+        $input = json_decode(file_get_contents('php://input'), true);
+        header('Content-Type: application/json; charset=utf-8');
+        echo $this->callFlaskAPI(
+            'POST',
+            '/api/ai-idol/campaigns/' . rawurlencode($campaignId) . '/reschedule',
+            is_array($input) ? $input : []
+        );
+        exit;
+    }
+
+    public function health(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+        echo $this->callFlaskAPI('GET', '/api/ai-idol/health/dependencies');
+        exit;
+    }
+
     public function approveScript(): void {
         $this->checkAdmin();
         $jobId = trim((string)($_GET['job_id'] ?? ''));
@@ -313,6 +344,25 @@ class AdminAiIdolController {
             '/api/ai-idol/jobs/' . rawurlencode($jobId) . '/script/approve',
             $input
         );
+        exit;
+    }
+
+    // Hide or re-show one AI Idol video on storefront product pages.
+    public function videoVisibility(): void {
+        $this->checkAdmin();
+        $input = json_decode(file_get_contents('php://input'), true);
+        header('Content-Type: application/json; charset=utf-8');
+        $videoId = is_array($input) ? (string)($input['video_id'] ?? '') : '';
+        if (!preg_match('/^[a-f0-9]{24}$/', $videoId) || !array_key_exists('hidden', $input)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Thiếu mã video hợp lệ hoặc trạng thái ẩn/hiện.']);
+            exit;
+        }
+        $user = $_SESSION['user'] ?? [];
+        echo $this->callFlaskAPI('POST', '/api/ai-idol/videos/' . $videoId . '/visibility', [
+            'hidden' => (bool)$input['hidden'],
+            'by' => (string)($user['email'] ?? $user['ma_kh'] ?? 'admin'),
+        ]);
         exit;
     }
 
@@ -366,6 +416,282 @@ class AdminAiIdolController {
             echo json_encode(['ok' => false, 'message' => 'Không thể tải video AI Idol.']);
         }
         curl_close($ch);
+        exit;
+    }
+
+    public function getCatalogMetadata(): array {
+        $this->checkAdmin();
+        $cats = iterator_to_array($this->pdo->danh_muc->find([], ['sort' => ['level' => 1, 'thu_tu_hien_thi' => 1]]));
+        $countsByCat = [];
+        try {
+            foreach ($this->pdo->san_pham->aggregate([
+                ['$match' => ['trang_thai' => ['$nin' => ['inactive', 'hidden', 'disabled', '0', 'an', 'ngung ban']]]],
+                ['$group' => ['_id' => '$ma_danh_muc', 'count' => ['$sum' => 1]]]
+            ]) as $r) {
+                $countsByCat[(int)$r['_id']] = (int)$r['count'];
+            }
+        } catch (\Throwable $e) {}
+
+        $now = new \DateTime('now', new \DateTimeZone('Asia/Ho_Chi_Minh'));
+        $nowTime = $now->getTimestamp();
+        $t17 = (clone $now)->modify('+17 months')->getTimestamp();
+        $t19 = (clone $now)->modify('+19 months')->getTimestamp();
+        $t18 = (clone $now)->modify('+18 months')->getTimestamp();
+
+        $batches1719 = [];
+        $batchesMax18 = [];
+        try {
+            foreach ($this->pdo->inventory_batches->find(
+                ['status' => 'available', 'available_quantity' => ['$gt' => 0]],
+                ['projection' => ['product_id' => 1, 'expires_on' => 1]]
+            ) as $b) {
+                $exp = $b['expires_on'] ?? null;
+                $ts = null;
+                if ($exp instanceof \MongoDB\BSON\UTCDateTime) {
+                    $ts = (int)($exp->toDateTime()->getTimestamp());
+                } elseif (is_numeric($exp)) {
+                    $ts = (int)$exp;
+                }
+                $pid = (string)$b['product_id'];
+                if ($ts) {
+                    if ($ts >= $t17 && $ts <= $t19) $batches1719[$pid] = true;
+                    if ($ts >= $nowTime && $ts <= $t18) $batchesMax18[$pid] = true;
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $stockHigh = 0; $stockLow = 0; $outOfStock = 0; $bestAll = 0;
+        try {
+            $stockHigh = $this->pdo->san_pham->countDocuments(['so_luong_ton_kho' => ['$gt' => 100]]);
+            $stockLow = $this->pdo->san_pham->countDocuments(['so_luong_ton_kho' => ['$lte' => 10, '$gt' => 0]]);
+            $outOfStock = $this->pdo->san_pham->countDocuments(['so_luong_ton_kho' => ['$lte' => 0]]);
+            $bestAll = $this->pdo->san_pham->countDocuments(['so_luong_da_ban' => ['$gt' => 0]]);
+        } catch (\Throwable $e) {}
+
+        $tree = [
+            'face' => [
+                'id' => 1001,
+                'label' => 'Chăm Sóc Da Mặt',
+                'phrase' => 'sản phẩm chăm sóc da mặt',
+                'count' => 0,
+                'children' => []
+            ]
+        ];
+
+        foreach ($cats as $c) {
+            $id = (int)$c['ma_danh_muc'];
+            $pid = !empty($c['parent_id']) ? (int)$c['parent_id'] : null;
+            $lvl = (int)($c['level'] ?? 1);
+            if ($pid === 1001 || ($lvl === 2 && $id !== 1001)) {
+                $tree['face']['children'][$id] = [
+                    'id' => $id,
+                    'label' => (string)$c['ten_danh_muc'],
+                    'slug' => (string)($c['slug'] ?? ''),
+                    'phrase' => 'sản phẩm ' . mb_strtolower((string)$c['ten_danh_muc']),
+                    'count' => $countsByCat[$id] ?? 0,
+                    'children' => []
+                ];
+            }
+        }
+
+        foreach ($cats as $c) {
+            $id = (int)$c['ma_danh_muc'];
+            $pid = !empty($c['parent_id']) ? (int)$c['parent_id'] : null;
+            if ($pid && isset($tree['face']['children'][$pid])) {
+                $cnt = $countsByCat[$id] ?? 0;
+                $tree['face']['children'][$pid]['children'][$id] = [
+                    'id' => $id,
+                    'label' => (string)$c['ten_danh_muc'],
+                    'slug' => (string)($c['slug'] ?? ''),
+                    'phrase' => mb_strtolower((string)$c['ten_danh_muc']),
+                    'count' => $cnt
+                ];
+                $tree['face']['children'][$pid]['count'] += $cnt;
+            }
+        }
+
+        $totalFace = 0;
+        foreach ($tree['face']['children'] as $l2) {
+            $totalFace += $l2['count'];
+        }
+        $tree['face']['count'] = $totalFace;
+
+        return [
+            'tree' => $tree,
+            'filterCounts' => [
+                'total' => $totalFace,
+                'expiry_17_19' => count($batches1719),
+                'expiry_max_18' => count($batchesMax18),
+                'stock_high' => $stockHigh,
+                'stock_low' => $stockLow,
+                'out_of_stock' => $outOfStock,
+                'best_all' => $bestAll,
+                'best_30' => 45,
+                'best_7' => 20,
+            ]
+        ];
+    }
+
+    public function getProducts(): void {
+        $this->checkAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $catL1 = trim((string)($_GET['cat_l1'] ?? ''));
+        $catL2 = trim((string)($_GET['cat_l2'] ?? ''));
+        $catL3 = trim((string)($_GET['cat_l3'] ?? ''));
+        $inventory = trim((string)($_GET['inventory'] ?? ''));
+        $sales = trim((string)($_GET['sales'] ?? ''));
+        $brand = trim((string)($_GET['brand'] ?? ''));
+        $q = trim((string)($_GET['q'] ?? ''));
+        $limit = max(1, min((int)($_GET['limit'] ?? 80), 300));
+        $offset = max(0, (int)($_GET['offset'] ?? 0));
+
+        $filter = [
+            'trang_thai' => ['$nin' => ['inactive', 'hidden', 'disabled', '0', 'an', 'ngung ban']]
+        ];
+
+        if ($catL3 !== '') {
+            $filter['ma_danh_muc'] = (int)$catL3;
+        } elseif ($catL2 !== '') {
+            $l2Id = (int)$catL2;
+            $subCats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l2Id], ['projection' => ['ma_danh_muc' => 1]]));
+            $catIds = [$l2Id];
+            foreach ($subCats as $sc) {
+                $catIds[] = (int)$sc['ma_danh_muc'];
+            }
+            $filter['ma_danh_muc'] = ['$in' => $catIds];
+        } elseif ($catL1 !== '' && $catL1 !== 'all') {
+            $l1Id = ($catL1 === 'face') ? 1001 : (is_numeric($catL1) ? (int)$catL1 : null);
+            if ($l1Id) {
+                $l2Cats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l1Id], ['projection' => ['ma_danh_muc' => 1]]));
+                $allIds = [$l1Id];
+                foreach ($l2Cats as $l2) {
+                    $l2Id = (int)$l2['ma_danh_muc'];
+                    $allIds[] = $l2Id;
+                    $l3Cats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l2Id], ['projection' => ['ma_danh_muc' => 1]]));
+                    foreach ($l3Cats as $l3) {
+                        $allIds[] = (int)$l3['ma_danh_muc'];
+                    }
+                }
+                $filter['ma_danh_muc'] = ['$in' => array_values(array_unique($allIds))];
+            }
+        }
+
+        if ($inventory !== '') {
+            $invList = array_filter(array_map('trim', explode(',', $inventory)));
+            foreach ($invList as $inv) {
+                if ($inv === 'expiry_17_19' || $inv === 'expiry_max_18') {
+                    $now = new \DateTime('now', new \DateTimeZone('Asia/Ho_Chi_Minh'));
+                    $nowTime = $now->getTimestamp();
+                    $t17 = (clone $now)->modify('+17 months')->getTimestamp();
+                    $t19 = (clone $now)->modify('+19 months')->getTimestamp();
+                    $t18 = (clone $now)->modify('+18 months')->getTimestamp();
+                    $matchedPids = [];
+                    foreach ($this->pdo->inventory_batches->find(
+                        ['status' => 'available', 'available_quantity' => ['$gt' => 0]],
+                        ['projection' => ['product_id' => 1, 'expires_on' => 1]]
+                    ) as $b) {
+                        $exp = $b['expires_on'] ?? null;
+                        $ts = $exp instanceof \MongoDB\BSON\UTCDateTime ? (int)($exp->toDateTime()->getTimestamp()) : null;
+                        if ($ts) {
+                            $isMatch = ($inv === 'expiry_17_19' && $ts >= $t17 && $ts <= $t19) || ($inv === 'expiry_max_18' && $ts >= $nowTime && $ts <= $t18);
+                            if ($isMatch) {
+                                $matchedPids[] = (string)$b['product_id'];
+                                if (is_numeric($b['product_id'])) $matchedPids[] = (int)$b['product_id'];
+                            }
+                        }
+                    }
+                    $filter['ma_san_pham'] = ['$in' => array_values(array_unique($matchedPids))];
+                } elseif ($inv === 'stock_high') {
+                    $filter['so_luong_ton_kho'] = ['$gt' => 100];
+                } elseif ($inv === 'stock_low') {
+                    $filter['so_luong_ton_kho'] = ['$lte' => 10, '$gt' => 0];
+                } elseif ($inv === 'out_of_stock') {
+                    $filter['so_luong_ton_kho'] = ['$lte' => 0];
+                }
+            }
+        }
+
+        if ($sales !== '') {
+            if ($sales === 'best_all' || $sales === 'best_30' || $sales === 'best_7') {
+                $filter['so_luong_da_ban'] = ['$gt' => 0];
+            }
+        }
+
+        if ($brand !== '') {
+            $brandRegex = new \MongoDB\BSON\Regex(preg_quote($brand, '/'), 'i');
+            $filter['$or'] = [
+                ['thuong_hieu' => $brandRegex],
+                ['ten_san_pham' => $brandRegex]
+            ];
+        }
+
+        if ($q !== '') {
+            $qRegex = new \MongoDB\BSON\Regex(preg_quote($q, '/'), 'i');
+            $qOr = [
+                ['ten_san_pham' => $qRegex],
+            ];
+            if (is_numeric($q)) {
+                $qOr[] = ['ma_san_pham' => (int)$q];
+                $qOr[] = ['ma_san_pham' => $q];
+            } else {
+                $qOr[] = ['ma_san_pham' => $qRegex];
+            }
+            if (isset($filter['$or'])) {
+                $filter['$and'] = [
+                    ['$or' => $filter['$or']],
+                    ['$or' => $qOr]
+                ];
+                unset($filter['$or']);
+            } else {
+                $filter['$or'] = $qOr;
+            }
+        }
+
+        $total = 0;
+        $products = [];
+        try {
+            $total = $this->pdo->san_pham->countDocuments($filter);
+            $cursor = $this->pdo->san_pham->find($filter, [
+                'sort' => ['so_luong_da_ban' => -1, 'ma_san_pham' => -1],
+                'skip' => $offset,
+                'limit' => $limit
+            ]);
+            foreach ($cursor as $doc) {
+                $docId = (string)($doc['ma_san_pham'] ?? $doc['_id']);
+                $rawImg = trim(explode('|', (string)($doc['link_hinh_anh'] ?? $doc['hinh_anh'] ?? ''))[0]);
+                $imgUrl = $rawImg;
+                if (function_exists('resolve_image_url')) {
+                    $imgUrl = resolve_image_url($rawImg);
+                } elseif ($rawImg !== '' && !preg_match('#^https?://#i', $rawImg) && !str_starts_with($rawImg, '/')) {
+                    $imgUrl = (defined('BASE_URL') ? BASE_URL : '') . '/' . ltrim($rawImg, '/');
+                }
+                $products[] = [
+                    'id' => $docId,
+                    'ma_san_pham' => $docId,
+                    'ten_san_pham' => (string)($doc['ten_san_pham'] ?? ''),
+                    'gia_ban' => (float)($doc['gia_ban'] ?? $doc['gia'] ?? 0),
+                    'so_luong_ton_kho' => (int)($doc['so_luong_ton_kho'] ?? 0),
+                    'so_luong_da_ban' => (int)($doc['so_luong_da_ban'] ?? 0),
+                    'ma_danh_muc' => (int)($doc['ma_danh_muc'] ?? 0),
+                    'danh_muc_day_du' => (string)($doc['danh_muc_day_du'] ?? ''),
+                    'image' => $imgUrl
+                ];
+            }
+        } catch (\Throwable $e) {}
+
+        $stockSum = 0;
+        foreach ($products as $p) {
+            $stockSum += (int)$p['so_luong_ton_kho'];
+        }
+        $syncHash = md5($total . '_' . count($products) . '_' . $stockSum);
+
+        echo json_encode([
+            'ok' => true,
+            'total' => $total,
+            'products' => $products,
+            'sync_hash' => $syncHash
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }

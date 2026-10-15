@@ -1,0 +1,9 @@
+{
+  "results": [
+    "PASS: legacy media validation remains required; vertical format remains available to custom avatars",
+    "PASS: Syna goes through creation contract without upload and preserves review state",
+    "PASS: mobile overflow and browser script error checks"
+  ],
+  "errors": [],
+  "scope": "PHP view/live JS/CSS, API writes intercepted; not authenticated full E2E"
+}

@@ -1,0 +1,2601 @@
+{
+  "scope": "100 guest HTTP requests, routing/facts contract only; skincare prose not clinically scored",
+  "same_code_snapshot": true,
+  "snapshot": {
+    "backend\\app\\content\\support.json": "2c94b58ac9c8329e64e6e66e3a44d2865aaf9b9921a98b91dfc8e751f45a03de",
+    "backend\\app\\services\\ChatPurchaseService.php": "b92229fce789797551c1275a913acdf137b3cc018ab43b613b613f775cfb02f3",
+    "backend\\app\\services\\PurchaseIntent.php": "d108ecd1c431df383134836a6396dfba202ac6f8e7d8f860616a8efcd5b4619d",
+    "backend\\app\\services\\SupportKnowledge.php": "c4cfaf4004df63d8942f4d237d1211f376ec1b34573119165d4fd8dcd17aa60c",
+    "backend\\app\\services\\ChatProductCatalog.php": "a0bfded97e939c41772016e92cd0e900922e0bac0f06f374ca1b48ddddfcfb1c",
+    "backend\\app\\controllers\\ShopAssistantController.php": "6892dd58613013e84bdf1f3afcbf162ba26e0c8188e1ba01d8be96c3d6d89c67"
+  },
+  "passed": 100,
+  "results": [
+    {
+      "kind": "support",
+      "topic": "dieu-khoan",
+      "message": "Cho tôi xem điều khoản sử dụng",
+      "id": "STORE-001",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn có thể xem điều khoản sử dụng tại đường dẫn bên dưới. Khi mua hàng, hãy kiểm tra đúng sản phẩm, số lượng, giá và phí trước khi xác nhận. Tư vấn chăm sóc da trên website không thay thế việc khám, chẩn đoán hay điều trị. Nếu có tranh chấp, bạn vẫn có các quyền được pháp luật bảo vệ.\n\n[Điều khoản sử dụng](/index.php?r=tro_giup&bai=dieu-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dieu-khoan",
+        "sources": [
+          {
+            "title": "Điều khoản sử dụng",
+            "url": "/index.php?r=tro_giup&bai=dieu-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.16
+    },
+    {
+      "kind": "support",
+      "topic": "dieu-khoan",
+      "message": "Điều kiện giao dịch chung ở đâu?",
+      "id": "STORE-002",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn có thể xem điều khoản sử dụng tại đường dẫn bên dưới. Khi mua hàng, hãy kiểm tra đúng sản phẩm, số lượng, giá và phí trước khi xác nhận. Tư vấn chăm sóc da trên website không thay thế việc khám, chẩn đoán hay điều trị. Nếu có tranh chấp, bạn vẫn có các quyền được pháp luật bảo vệ.\n\n[Điều khoản sử dụng](/index.php?r=tro_giup&bai=dieu-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dieu-khoan",
+        "sources": [
+          {
+            "title": "Điều khoản sử dụng",
+            "url": "/index.php?r=tro_giup&bai=dieu-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.17
+    },
+    {
+      "kind": "support",
+      "topic": "dieu-khoan",
+      "message": "Tôi cần Terms of Service",
+      "id": "STORE-003",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn có thể xem điều khoản sử dụng tại đường dẫn bên dưới. Khi mua hàng, hãy kiểm tra đúng sản phẩm, số lượng, giá và phí trước khi xác nhận. Tư vấn chăm sóc da trên website không thay thế việc khám, chẩn đoán hay điều trị. Nếu có tranh chấp, bạn vẫn có các quyền được pháp luật bảo vệ.\n\n[Điều khoản sử dụng](/index.php?r=tro_giup&bai=dieu-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dieu-khoan",
+        "sources": [
+          {
+            "title": "Điều khoản sử dụng",
+            "url": "/index.php?r=tro_giup&bai=dieu-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.17
+    },
+    {
+      "kind": "support",
+      "topic": "dieu-khoan",
+      "message": "Tôi muốn đọc điều khoản trước khi mua",
+      "id": "STORE-004",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn muốn mua sản phẩm nào? Gửi tên hoặc thương hiệu, kèm dung tích nếu bạn đã chọn được nhé.\n\nBạn có thể xem điều khoản sử dụng tại đường dẫn bên dưới. Khi mua hàng, hãy kiểm tra đúng sản phẩm, số lượng, giá và phí trước khi xác nhận. Tư vấn chăm sóc da trên website không thay thế việc khám, chẩn đoán hay điều trị. Nếu có tranh chấp, bạn vẫn có các quyền được pháp luật bảo vệ.\n\n[Điều khoản sử dụng](/index.php?r=tro_giup&bai=dieu-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "sources": [
+          {
+            "title": "Điều khoản sử dụng",
+            "url": "/index.php?r=tro_giup&bai=dieu-khoan",
+            "version": "2026-09-12"
+          }
+        ],
+        "support_topic": "dieu-khoan"
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "bao-mat",
+      "message": "Chính sách bảo mật của cửa hàng thế nào?",
+      "id": "STORE-005",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Email được dùng để tạo tài khoản, gửi OTP đăng ký và liên kết khôi phục mật khẩu. OTP đăng ký hiện gửi qua email, không phải SMS. Số điện thoại và địa chỉ phục vụ liên hệ/giao hàng khi bạn cung cấp. Hồ sơ da và nội dung chat có thể được xử lý để tư vấn; đừng gửi OTP, mật khẩu hoặc thông tin thẻ vào chat. Bạn có thể yêu cầu xem, sửa hoặc xóa dữ liệu qua cskh@skinsyntax.com; dữ liệu phải lưu theo pháp luật được xử lý riêng.\n\n[Chính sách bảo mật & dữ liệu cá nhân](/index.php?r=tro_giup&bai=bao-mat)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "bao-mat",
+        "sources": [
+          {
+            "title": "Chính sách bảo mật & dữ liệu cá nhân",
+            "url": "/index.php?r=tro_giup&bai=bao-mat",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "bao-mat",
+      "message": "Email dùng nhận OTP được xử lý email như thế nào?",
+      "id": "STORE-006",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Email được dùng để tạo tài khoản, gửi OTP đăng ký và liên kết khôi phục mật khẩu. OTP đăng ký hiện gửi qua email, không phải SMS. Số điện thoại và địa chỉ phục vụ liên hệ/giao hàng khi bạn cung cấp. Hồ sơ da và nội dung chat có thể được xử lý để tư vấn; đừng gửi OTP, mật khẩu hoặc thông tin thẻ vào chat. Bạn có thể yêu cầu xem, sửa hoặc xóa dữ liệu qua cskh@skinsyntax.com; dữ liệu phải lưu theo pháp luật được xử lý riêng.\n\n[Chính sách bảo mật & dữ liệu cá nhân](/index.php?r=tro_giup&bai=bao-mat)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "bao-mat",
+        "sources": [
+          {
+            "title": "Chính sách bảo mật & dữ liệu cá nhân",
+            "url": "/index.php?r=tro_giup&bai=bao-mat",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "bao-mat",
+      "message": "Shop có bán dữ liệu cá nhân không?",
+      "id": "STORE-007",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Email được dùng để tạo tài khoản, gửi OTP đăng ký và liên kết khôi phục mật khẩu. OTP đăng ký hiện gửi qua email, không phải SMS. Số điện thoại và địa chỉ phục vụ liên hệ/giao hàng khi bạn cung cấp. Hồ sơ da và nội dung chat có thể được xử lý để tư vấn; đừng gửi OTP, mật khẩu hoặc thông tin thẻ vào chat. Bạn có thể yêu cầu xem, sửa hoặc xóa dữ liệu qua cskh@skinsyntax.com; dữ liệu phải lưu theo pháp luật được xử lý riêng.\n\n[Chính sách bảo mật & dữ liệu cá nhân](/index.php?r=tro_giup&bai=bao-mat)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "bao-mat",
+        "sources": [
+          {
+            "title": "Chính sách bảo mật & dữ liệu cá nhân",
+            "url": "/index.php?r=tro_giup&bai=bao-mat",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "bao-mat",
+      "message": "Tôi muốn biết quyền riêng tư khi chat",
+      "id": "STORE-008",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Email được dùng để tạo tài khoản, gửi OTP đăng ký và liên kết khôi phục mật khẩu. OTP đăng ký hiện gửi qua email, không phải SMS. Số điện thoại và địa chỉ phục vụ liên hệ/giao hàng khi bạn cung cấp. Hồ sơ da và nội dung chat có thể được xử lý để tư vấn; đừng gửi OTP, mật khẩu hoặc thông tin thẻ vào chat. Bạn có thể yêu cầu xem, sửa hoặc xóa dữ liệu qua cskh@skinsyntax.com; dữ liệu phải lưu theo pháp luật được xử lý riêng.\n\n[Chính sách bảo mật & dữ liệu cá nhân](/index.php?r=tro_giup&bai=bao-mat)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "bao-mat",
+        "sources": [
+          {
+            "title": "Chính sách bảo mật & dữ liệu cá nhân",
+            "url": "/index.php?r=tro_giup&bai=bao-mat",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "cookie",
+      "message": "Website dùng cookie làm gì?",
+      "id": "STORE-009",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Website dùng cookie phiên để duy trì đăng nhập và giỏ hàng, đồng thời có lưu trữ trình duyệt cho trạng thái/lịch sử chat. Bạn có thể xóa dữ liệu website trong cài đặt trình duyệt hoặc xóa cuộc chat bằng nút thùng rác. Chặn cookie phiên có thể làm đăng nhập và giỏ hàng không hoạt động; xóa dữ liệu trên máy không đồng nghĩa xóa lịch sử đã lưu ở máy chủ.\n\n[Chính sách cookie & lưu trữ trình duyệt](/index.php?r=tro_giup&bai=cookie)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "cookie",
+        "sources": [
+          {
+            "title": "Chính sách cookie & lưu trữ trình duyệt",
+            "url": "/index.php?r=tro_giup&bai=cookie",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "support",
+      "topic": "cookie",
+      "message": "Xóa cookies có mất giỏ hàng không?",
+      "id": "STORE-010",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Website dùng cookie phiên để duy trì đăng nhập và giỏ hàng, đồng thời có lưu trữ trình duyệt cho trạng thái/lịch sử chat. Bạn có thể xóa dữ liệu website trong cài đặt trình duyệt hoặc xóa cuộc chat bằng nút thùng rác. Chặn cookie phiên có thể làm đăng nhập và giỏ hàng không hoạt động; xóa dữ liệu trên máy không đồng nghĩa xóa lịch sử đã lưu ở máy chủ.\n\n[Chính sách cookie & lưu trữ trình duyệt](/index.php?r=tro_giup&bai=cookie)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "cookie",
+        "sources": [
+          {
+            "title": "Chính sách cookie & lưu trữ trình duyệt",
+            "url": "/index.php?r=tro_giup&bai=cookie",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "cookie",
+      "message": "Tôi muốn xóa lịch sử chat",
+      "id": "STORE-011",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Website dùng cookie phiên để duy trì đăng nhập và giỏ hàng, đồng thời có lưu trữ trình duyệt cho trạng thái/lịch sử chat. Bạn có thể xóa dữ liệu website trong cài đặt trình duyệt hoặc xóa cuộc chat bằng nút thùng rác. Chặn cookie phiên có thể làm đăng nhập và giỏ hàng không hoạt động; xóa dữ liệu trên máy không đồng nghĩa xóa lịch sử đã lưu ở máy chủ.\n\n[Chính sách cookie & lưu trữ trình duyệt](/index.php?r=tro_giup&bai=cookie)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "cookie",
+        "sources": [
+          {
+            "title": "Chính sách cookie & lưu trữ trình duyệt",
+            "url": "/index.php?r=tro_giup&bai=cookie",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "cookie",
+      "message": "Lưu trữ trình duyệt gồm những gì?",
+      "id": "STORE-012",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Website dùng cookie phiên để duy trì đăng nhập và giỏ hàng, đồng thời có lưu trữ trình duyệt cho trạng thái/lịch sử chat. Bạn có thể xóa dữ liệu website trong cài đặt trình duyệt hoặc xóa cuộc chat bằng nút thùng rác. Chặn cookie phiên có thể làm đăng nhập và giỏ hàng không hoạt động; xóa dữ liệu trên máy không đồng nghĩa xóa lịch sử đã lưu ở máy chủ.\n\n[Chính sách cookie & lưu trữ trình duyệt](/index.php?r=tro_giup&bai=cookie)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "cookie",
+        "sources": [
+          {
+            "title": "Chính sách cookie & lưu trữ trình duyệt",
+            "url": "/index.php?r=tro_giup&bai=cookie",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "support",
+      "topic": "quy-che",
+      "message": "Xem quy chế hoạt động ở đâu?",
+      "id": "STORE-013",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Luồng hiện có trên website là tìm sản phẩm → khách xác nhận lựa chọn → thanh toán → theo dõi đơn → hỗ trợ sau mua. Chưa có căn cứ để khẳng định SkinSyntax đã đăng ký hoạt động như một sàn nhiều bên bán. Thông tin đơn vị vận hành và hồ sơ pháp lý cần được chủ website hoàn thiện; xem chi tiết tại trang quy chế.\n\n[Quy chế hoạt động website](/index.php?r=tro_giup&bai=quy-che)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "quy-che",
+        "sources": [
+          {
+            "title": "Quy chế hoạt động website",
+            "url": "/index.php?r=tro_giup&bai=quy-che",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "quy-che",
+      "message": "Shop có đăng ký Bộ Công Thương không?",
+      "id": "STORE-014",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Luồng hiện có trên website là tìm sản phẩm → khách xác nhận lựa chọn → thanh toán → theo dõi đơn → hỗ trợ sau mua. Chưa có căn cứ để khẳng định SkinSyntax đã đăng ký hoạt động như một sàn nhiều bên bán. Thông tin đơn vị vận hành và hồ sơ pháp lý cần được chủ website hoàn thiện; xem chi tiết tại trang quy chế.\n\n[Quy chế hoạt động website](/index.php?r=tro_giup&bai=quy-che)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "quy-che",
+        "sources": [
+          {
+            "title": "Quy chế hoạt động website",
+            "url": "/index.php?r=tro_giup&bai=quy-che",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "quy-che",
+      "message": "Tên đơn vị vận hành là gì?",
+      "id": "STORE-015",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Luồng hiện có trên website là tìm sản phẩm → khách xác nhận lựa chọn → thanh toán → theo dõi đơn → hỗ trợ sau mua. Chưa có căn cứ để khẳng định SkinSyntax đã đăng ký hoạt động như một sàn nhiều bên bán. Thông tin đơn vị vận hành và hồ sơ pháp lý cần được chủ website hoàn thiện; xem chi tiết tại trang quy chế.\n\n[Quy chế hoạt động website](/index.php?r=tro_giup&bai=quy-che)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "quy-che",
+        "sources": [
+          {
+            "title": "Quy chế hoạt động website",
+            "url": "/index.php?r=tro_giup&bai=quy-che",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "quy-che",
+      "message": "Có quy định theo Nghị định 52 không?",
+      "id": "STORE-016",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Luồng hiện có trên website là tìm sản phẩm → khách xác nhận lựa chọn → thanh toán → theo dõi đơn → hỗ trợ sau mua. Chưa có căn cứ để khẳng định SkinSyntax đã đăng ký hoạt động như một sàn nhiều bên bán. Thông tin đơn vị vận hành và hồ sơ pháp lý cần được chủ website hoàn thiện; xem chi tiết tại trang quy chế.\n\n[Quy chế hoạt động website](/index.php?r=tro_giup&bai=quy-che)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "quy-che",
+        "sources": [
+          {
+            "title": "Quy chế hoạt động website",
+            "url": "/index.php?r=tro_giup&bai=quy-che",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "khieu-nai",
+      "message": "Tôi muốn gửi khiếu nại",
+      "id": "STORE-017",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gửi mã đơn, mô tả vấn đề và ảnh liên quan qua cskh@skinsyntax.com hoặc gọi 0398606281. Mục tiêu phản hồi ban đầu là trong 24 giờ làm việc; đây chưa phải thời hạn giải quyết xong. Mình hướng dẫn trong chat nhưng chưa tự lập phiếu khiếu nại cho bạn. Nếu chưa đạt thỏa thuận, bạn vẫn có quyền yêu cầu cơ quan có thẩm quyền giải quyết.\n\n[Giải quyết khiếu nại & tranh chấp](/index.php?r=tro_giup&bai=khieu-nai)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "khieu-nai",
+        "sources": [
+          {
+            "title": "Giải quyết khiếu nại & tranh chấp",
+            "url": "/index.php?r=tro_giup&bai=khieu-nai",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "khieu-nai",
+      "message": "Tranh chấp với cửa hàng giải quyết sao?",
+      "id": "STORE-018",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gửi mã đơn, mô tả vấn đề và ảnh liên quan qua cskh@skinsyntax.com hoặc gọi 0398606281. Mục tiêu phản hồi ban đầu là trong 24 giờ làm việc; đây chưa phải thời hạn giải quyết xong. Mình hướng dẫn trong chat nhưng chưa tự lập phiếu khiếu nại cho bạn. Nếu chưa đạt thỏa thuận, bạn vẫn có quyền yêu cầu cơ quan có thẩm quyền giải quyết.\n\n[Giải quyết khiếu nại & tranh chấp](/index.php?r=tro_giup&bai=khieu-nai)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "khieu-nai",
+        "sources": [
+          {
+            "title": "Giải quyết khiếu nại & tranh chấp",
+            "url": "/index.php?r=tro_giup&bai=khieu-nai",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "khieu-nai",
+      "message": "Bao lâu có phản hồi khiếu nại?",
+      "id": "STORE-019",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gửi mã đơn, mô tả vấn đề và ảnh liên quan qua cskh@skinsyntax.com hoặc gọi 0398606281. Mục tiêu phản hồi ban đầu là trong 24 giờ làm việc; đây chưa phải thời hạn giải quyết xong. Mình hướng dẫn trong chat nhưng chưa tự lập phiếu khiếu nại cho bạn. Nếu chưa đạt thỏa thuận, bạn vẫn có quyền yêu cầu cơ quan có thẩm quyền giải quyết.\n\n[Giải quyết khiếu nại & tranh chấp](/index.php?r=tro_giup&bai=khieu-nai)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "khieu-nai",
+        "sources": [
+          {
+            "title": "Giải quyết khiếu nại & tranh chấp",
+            "url": "/index.php?r=tro_giup&bai=khieu-nai",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "khieu-nai",
+      "message": "Tôi cần phản ánh dịch vụ",
+      "id": "STORE-020",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gửi mã đơn, mô tả vấn đề và ảnh liên quan qua cskh@skinsyntax.com hoặc gọi 0398606281. Mục tiêu phản hồi ban đầu là trong 24 giờ làm việc; đây chưa phải thời hạn giải quyết xong. Mình hướng dẫn trong chat nhưng chưa tự lập phiếu khiếu nại cho bạn. Nếu chưa đạt thỏa thuận, bạn vẫn có quyền yêu cầu cơ quan có thẩm quyền giải quyết.\n\n[Giải quyết khiếu nại & tranh chấp](/index.php?r=tro_giup&bai=khieu-nai)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "khieu-nai",
+        "sources": [
+          {
+            "title": "Giải quyết khiếu nại & tranh chấp",
+            "url": "/index.php?r=tro_giup&bai=khieu-nai",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "dang-ky",
+      "message": "Tạo tài khoản như thế nào?",
+      "id": "STORE-021",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn mở Đăng ký, nhập họ tên, email, mật khẩu và xác nhận mật khẩu; hoàn thành captcha rồi bấm lấy OTP. Nhập mã 6 số được gửi về email, đọc và đồng ý các điều khoản bắt buộc rồi hoàn tất. Website hiện xác thực đăng ký bằng email, chưa hỗ trợ gửi OTP qua SMS. Nếu email đã tồn tại, dùng Quên mật khẩu.\n\n[Hướng dẫn đăng ký tài khoản](/index.php?r=tro_giup&bai=dang-ky)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dang-ky",
+        "sources": [
+          {
+            "title": "Hướng dẫn đăng ký tài khoản",
+            "url": "/index.php?r=tro_giup&bai=dang-ky",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "dang-ky",
+      "message": "Đăng ký bằng điện thoại được không?",
+      "id": "STORE-022",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn mở Đăng ký, nhập họ tên, email, mật khẩu và xác nhận mật khẩu; hoàn thành captcha rồi bấm lấy OTP. Nhập mã 6 số được gửi về email, đọc và đồng ý các điều khoản bắt buộc rồi hoàn tất. Website hiện xác thực đăng ký bằng email, chưa hỗ trợ gửi OTP qua SMS. Nếu email đã tồn tại, dùng Quên mật khẩu.\n\n[Hướng dẫn đăng ký tài khoản](/index.php?r=tro_giup&bai=dang-ky)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dang-ky",
+        "sources": [
+          {
+            "title": "Hướng dẫn đăng ký tài khoản",
+            "url": "/index.php?r=tro_giup&bai=dang-ky",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "dang-ky",
+      "message": "Tôi không biết cách register tài khoản",
+      "id": "STORE-023",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn mở Đăng ký, nhập họ tên, email, mật khẩu và xác nhận mật khẩu; hoàn thành captcha rồi bấm lấy OTP. Nhập mã 6 số được gửi về email, đọc và đồng ý các điều khoản bắt buộc rồi hoàn tất. Website hiện xác thực đăng ký bằng email, chưa hỗ trợ gửi OTP qua SMS. Nếu email đã tồn tại, dùng Quên mật khẩu.\n\n[Hướng dẫn đăng ký tài khoản](/index.php?r=tro_giup&bai=dang-ky)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dang-ky",
+        "sources": [
+          {
+            "title": "Hướng dẫn đăng ký tài khoản",
+            "url": "/index.php?r=tro_giup&bai=dang-ky",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "dang-ky",
+      "message": "Đăng ký báo email đã tồn tại thì sao?",
+      "id": "STORE-024",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn mở Đăng ký, nhập họ tên, email, mật khẩu và xác nhận mật khẩu; hoàn thành captcha rồi bấm lấy OTP. Nhập mã 6 số được gửi về email, đọc và đồng ý các điều khoản bắt buộc rồi hoàn tất. Website hiện xác thực đăng ký bằng email, chưa hỗ trợ gửi OTP qua SMS. Nếu email đã tồn tại, dùng Quên mật khẩu.\n\n[Hướng dẫn đăng ký tài khoản](/index.php?r=tro_giup&bai=dang-ky)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dang-ky",
+        "sources": [
+          {
+            "title": "Hướng dẫn đăng ký tài khoản",
+            "url": "/index.php?r=tro_giup&bai=dang-ky",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "otp",
+      "message": "Không nhận được OTP thì làm sao?",
+      "id": "STORE-025",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "OTP đăng ký là mã 6 số gửi qua email, có hiệu lực 10 phút và dùng cho lần xác thực đó. Bạn nhập đúng email, hoàn thành captcha rồi bấm lấy mã. Nếu chưa nhận được, kiểm tra Spam/Junk/Promotions và địa chỉ email; chờ ít nhất 60 giây trước khi gửi lại cùng email. Dùng mã mới nhất, không chia sẻ OTP cho bất kỳ ai. Hiện chưa gửi OTP qua SMS.\n\n[Hướng dẫn nhận & nhập OTP](/index.php?r=tro_giup&bai=otp)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "otp",
+        "sources": [
+          {
+            "title": "Hướng dẫn nhận & nhập OTP",
+            "url": "/index.php?r=tro_giup&bai=otp",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "otp",
+      "message": "OTP có hiệu lực mấy phút?",
+      "id": "STORE-026",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "OTP đăng ký là mã 6 số gửi qua email, có hiệu lực 10 phút và dùng cho lần xác thực đó. Bạn nhập đúng email, hoàn thành captcha rồi bấm lấy mã. Nếu chưa nhận được, kiểm tra Spam/Junk/Promotions và địa chỉ email; chờ ít nhất 60 giây trước khi gửi lại cùng email. Dùng mã mới nhất, không chia sẻ OTP cho bất kỳ ai. Hiện chưa gửi OTP qua SMS.\n\n[Hướng dẫn nhận & nhập OTP](/index.php?r=tro_giup&bai=otp)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "otp",
+        "sources": [
+          {
+            "title": "Hướng dẫn nhận & nhập OTP",
+            "url": "/index.php?r=tro_giup&bai=otp",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "otp",
+      "message": "Bao lâu được gửi lại mã xác thực?",
+      "id": "STORE-027",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "OTP đăng ký là mã 6 số gửi qua email, có hiệu lực 10 phút và dùng cho lần xác thực đó. Bạn nhập đúng email, hoàn thành captcha rồi bấm lấy mã. Nếu chưa nhận được, kiểm tra Spam/Junk/Promotions và địa chỉ email; chờ ít nhất 60 giây trước khi gửi lại cùng email. Dùng mã mới nhất, không chia sẻ OTP cho bất kỳ ai. Hiện chưa gửi OTP qua SMS.\n\n[Hướng dẫn nhận & nhập OTP](/index.php?r=tro_giup&bai=otp)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "otp",
+        "sources": [
+          {
+            "title": "Hướng dẫn nhận & nhập OTP",
+            "url": "/index.php?r=tro_giup&bai=otp",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "otp",
+      "message": "Captcha sai thì xử lý sao?",
+      "id": "STORE-028",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "OTP đăng ký là mã 6 số gửi qua email, có hiệu lực 10 phút và dùng cho lần xác thực đó. Bạn nhập đúng email, hoàn thành captcha rồi bấm lấy mã. Nếu chưa nhận được, kiểm tra Spam/Junk/Promotions và địa chỉ email; chờ ít nhất 60 giây trước khi gửi lại cùng email. Dùng mã mới nhất, không chia sẻ OTP cho bất kỳ ai. Hiện chưa gửi OTP qua SMS.\n\n[Hướng dẫn nhận & nhập OTP](/index.php?r=tro_giup&bai=otp)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "otp",
+        "sources": [
+          {
+            "title": "Hướng dẫn nhận & nhập OTP",
+            "url": "/index.php?r=tro_giup&bai=otp",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "quen-mat-khau",
+      "message": "Tôi quên mật khẩu rồi",
+      "id": "STORE-029",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Tại Đăng nhập, bạn chọn Quên mật khẩu và nhập email đã đăng ký. Website gửi liên kết đặt lại mật khẩu có hiệu lực 30 phút; mở liên kết để đặt và xác nhận mật khẩu mới. Luồng này dùng liên kết email, không phải OTP SMS. Nếu mất quyền truy cập email, liên hệ hỗ trợ để được hướng dẫn xác minh; đừng gửi mật khẩu hay OTP trong chat.\n\n[Quên mật khẩu & khôi phục tài khoản](/index.php?r=tro_giup&bai=quen-mat-khau)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "quen-mat-khau",
+        "sources": [
+          {
+            "title": "Quên mật khẩu & khôi phục tài khoản",
+            "url": "/index.php?r=tro_giup&bai=quen-mat-khau",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "quen-mat-khau",
+      "message": "Khôi phục tài khoản bằng cách nào?",
+      "id": "STORE-030",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Tại Đăng nhập, bạn chọn Quên mật khẩu và nhập email đã đăng ký. Website gửi liên kết đặt lại mật khẩu có hiệu lực 30 phút; mở liên kết để đặt và xác nhận mật khẩu mới. Luồng này dùng liên kết email, không phải OTP SMS. Nếu mất quyền truy cập email, liên hệ hỗ trợ để được hướng dẫn xác minh; đừng gửi mật khẩu hay OTP trong chat.\n\n[Quên mật khẩu & khôi phục tài khoản](/index.php?r=tro_giup&bai=quen-mat-khau)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "quen-mat-khau",
+        "sources": [
+          {
+            "title": "Quên mật khẩu & khôi phục tài khoản",
+            "url": "/index.php?r=tro_giup&bai=quen-mat-khau",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "quen-mat-khau",
+      "message": "Reset password có phải dùng mã SMS không?",
+      "id": "STORE-031",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Tại Đăng nhập, bạn chọn Quên mật khẩu và nhập email đã đăng ký. Website gửi liên kết đặt lại mật khẩu có hiệu lực 30 phút; mở liên kết để đặt và xác nhận mật khẩu mới. Luồng này dùng liên kết email, không phải OTP SMS. Nếu mất quyền truy cập email, liên hệ hỗ trợ để được hướng dẫn xác minh; đừng gửi mật khẩu hay OTP trong chat.\n\n[Quên mật khẩu & khôi phục tài khoản](/index.php?r=tro_giup&bai=quen-mat-khau)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "quen-mat-khau",
+        "sources": [
+          {
+            "title": "Quên mật khẩu & khôi phục tài khoản",
+            "url": "/index.php?r=tro_giup&bai=quen-mat-khau",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "quen-mat-khau",
+      "message": "Tôi mất quyền truy cập email đăng ký",
+      "id": "STORE-032",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Tại Đăng nhập, bạn chọn Quên mật khẩu và nhập email đã đăng ký. Website gửi liên kết đặt lại mật khẩu có hiệu lực 30 phút; mở liên kết để đặt và xác nhận mật khẩu mới. Luồng này dùng liên kết email, không phải OTP SMS. Nếu mất quyền truy cập email, liên hệ hỗ trợ để được hướng dẫn xác minh; đừng gửi mật khẩu hay OTP trong chat.\n\n[Quên mật khẩu & khôi phục tài khoản](/index.php?r=tro_giup&bai=quen-mat-khau)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "quen-mat-khau",
+        "sources": [
+          {
+            "title": "Quên mật khẩu & khôi phục tài khoản",
+            "url": "/index.php?r=tro_giup&bai=quen-mat-khau",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "doi-lien-he",
+      "message": "Tôi muốn đổi email đăng nhập",
+      "id": "STORE-033",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn có thể sửa số điện thoại liên hệ trong Hồ sơ → thông tin cá nhân và lưu lại. Việc này không đổi email đăng nhập. Website chưa có luồng tự đổi email bằng OTP ở cả địa chỉ cũ và mới; nếu cần đổi email, hãy liên hệ cskh@skinsyntax.com để được hướng dẫn xác minh.\n\n[Đổi email & số điện thoại liên hệ](/index.php?r=tro_giup&bai=doi-lien-he)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "doi-lien-he",
+        "sources": [
+          {
+            "title": "Đổi email & số điện thoại liên hệ",
+            "url": "/index.php?r=tro_giup&bai=doi-lien-he",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "doi-lien-he",
+      "message": "Làm sao đổi số điện thoại?",
+      "id": "STORE-034",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn có thể sửa số điện thoại liên hệ trong Hồ sơ → thông tin cá nhân và lưu lại. Việc này không đổi email đăng nhập. Website chưa có luồng tự đổi email bằng OTP ở cả địa chỉ cũ và mới; nếu cần đổi email, hãy liên hệ cskh@skinsyntax.com để được hướng dẫn xác minh.\n\n[Đổi email & số điện thoại liên hệ](/index.php?r=tro_giup&bai=doi-lien-he)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "doi-lien-he",
+        "sources": [
+          {
+            "title": "Đổi email & số điện thoại liên hệ",
+            "url": "/index.php?r=tro_giup&bai=doi-lien-he",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "doi-lien-he",
+      "message": "Sửa số điện thoại liên hệ ở đâu?",
+      "id": "STORE-035",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn có thể sửa số điện thoại liên hệ trong Hồ sơ → thông tin cá nhân và lưu lại. Việc này không đổi email đăng nhập. Website chưa có luồng tự đổi email bằng OTP ở cả địa chỉ cũ và mới; nếu cần đổi email, hãy liên hệ cskh@skinsyntax.com để được hướng dẫn xác minh.\n\n[Đổi email & số điện thoại liên hệ](/index.php?r=tro_giup&bai=doi-lien-he)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "doi-lien-he",
+        "sources": [
+          {
+            "title": "Đổi email & số điện thoại liên hệ",
+            "url": "/index.php?r=tro_giup&bai=doi-lien-he",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "doi-lien-he",
+      "message": "Đổi email có cần OTP ở hai bên không?",
+      "id": "STORE-036",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn có thể sửa số điện thoại liên hệ trong Hồ sơ → thông tin cá nhân và lưu lại. Việc này không đổi email đăng nhập. Website chưa có luồng tự đổi email bằng OTP ở cả địa chỉ cũ và mới; nếu cần đổi email, hãy liên hệ cskh@skinsyntax.com để được hướng dẫn xác minh.\n\n[Đổi email & số điện thoại liên hệ](/index.php?r=tro_giup&bai=doi-lien-he)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "doi-lien-he",
+        "sources": [
+          {
+            "title": "Đổi email & số điện thoại liên hệ",
+            "url": "/index.php?r=tro_giup&bai=doi-lien-he",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "an-toan-tai-khoan",
+      "message": "Nhân viên yêu cầu tôi đọc OTP có đúng không?",
+      "id": "STORE-037",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Không chia sẻ OTP hoặc mật khẩu cho bất kỳ ai, kể cả người tự xưng là nhân viên SkinSyntax. Không chuyển tiền để “xác minh” hay “nhận hoàn tiền” theo link lạ. Kiểm tra đúng website trước khi đăng nhập. Nếu nghi tài khoản bị lộ, dùng chức năng khôi phục để đặt mật khẩu mới và liên hệ hỗ trợ ngay.\n\n[Bảo vệ tài khoản & cảnh báo lừa đảo](/index.php?r=tro_giup&bai=an-toan-tai-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "an-toan-tai-khoan",
+        "sources": [
+          {
+            "title": "Bảo vệ tài khoản & cảnh báo lừa đảo",
+            "url": "/index.php?r=tro_giup&bai=an-toan-tai-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "an-toan-tai-khoan",
+      "message": "Làm sao bảo mật tài khoản?",
+      "id": "STORE-038",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Không chia sẻ OTP hoặc mật khẩu cho bất kỳ ai, kể cả người tự xưng là nhân viên SkinSyntax. Không chuyển tiền để “xác minh” hay “nhận hoàn tiền” theo link lạ. Kiểm tra đúng website trước khi đăng nhập. Nếu nghi tài khoản bị lộ, dùng chức năng khôi phục để đặt mật khẩu mới và liên hệ hỗ trợ ngay.\n\n[Bảo vệ tài khoản & cảnh báo lừa đảo](/index.php?r=tro_giup&bai=an-toan-tai-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "an-toan-tai-khoan",
+        "sources": [
+          {
+            "title": "Bảo vệ tài khoản & cảnh báo lừa đảo",
+            "url": "/index.php?r=tro_giup&bai=an-toan-tai-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "an-toan-tai-khoan",
+      "message": "Có dấu hiệu lừa đảo yêu cầu chuyển tiền xác minh",
+      "id": "STORE-039",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Không chia sẻ OTP hoặc mật khẩu cho bất kỳ ai, kể cả người tự xưng là nhân viên SkinSyntax. Không chuyển tiền để “xác minh” hay “nhận hoàn tiền” theo link lạ. Kiểm tra đúng website trước khi đăng nhập. Nếu nghi tài khoản bị lộ, dùng chức năng khôi phục để đặt mật khẩu mới và liên hệ hỗ trợ ngay.\n\n[Bảo vệ tài khoản & cảnh báo lừa đảo](/index.php?r=tro_giup&bai=an-toan-tai-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "an-toan-tai-khoan",
+        "sources": [
+          {
+            "title": "Bảo vệ tài khoản & cảnh báo lừa đảo",
+            "url": "/index.php?r=tro_giup&bai=an-toan-tai-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "an-toan-tai-khoan",
+      "message": "Tài khoản tôi bị hack phải làm gì?",
+      "id": "STORE-040",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Không chia sẻ OTP hoặc mật khẩu cho bất kỳ ai, kể cả người tự xưng là nhân viên SkinSyntax. Không chuyển tiền để “xác minh” hay “nhận hoàn tiền” theo link lạ. Kiểm tra đúng website trước khi đăng nhập. Nếu nghi tài khoản bị lộ, dùng chức năng khôi phục để đặt mật khẩu mới và liên hệ hỗ trợ ngay.\n\n[Bảo vệ tài khoản & cảnh báo lừa đảo](/index.php?r=tro_giup&bai=an-toan-tai-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "an-toan-tai-khoan",
+        "sources": [
+          {
+            "title": "Bảo vệ tài khoản & cảnh báo lừa đảo",
+            "url": "/index.php?r=tro_giup&bai=an-toan-tai-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "xoa-tai-khoan",
+      "message": "Tôi muốn xóa tài khoản",
+      "id": "STORE-041",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gửi yêu cầu xóa tài khoản tới cskh@skinsyntax.com. Website chưa có nút tự xóa tài khoản. Bộ phận hỗ trợ cần xác minh quyền sở hữu và trao đổi cách xử lý đơn đang thực hiện; một số dữ liệu giao dịch có thể phải lưu theo pháp luật. Mình chưa xóa hay lập yêu cầu thay bạn, và không cần bạn gửi OTP/mật khẩu trong chat.\n\n[Yêu cầu xóa tài khoản](/index.php?r=tro_giup&bai=xoa-tai-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "xoa-tai-khoan",
+        "sources": [
+          {
+            "title": "Yêu cầu xóa tài khoản",
+            "url": "/index.php?r=tro_giup&bai=xoa-tai-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "xoa-tai-khoan",
+      "message": "Đóng tài khoản có xóa đơn cũ không?",
+      "id": "STORE-042",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gửi yêu cầu xóa tài khoản tới cskh@skinsyntax.com. Website chưa có nút tự xóa tài khoản. Bộ phận hỗ trợ cần xác minh quyền sở hữu và trao đổi cách xử lý đơn đang thực hiện; một số dữ liệu giao dịch có thể phải lưu theo pháp luật. Mình chưa xóa hay lập yêu cầu thay bạn, và không cần bạn gửi OTP/mật khẩu trong chat.\n\n[Yêu cầu xóa tài khoản](/index.php?r=tro_giup&bai=xoa-tai-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "xoa-tai-khoan",
+        "sources": [
+          {
+            "title": "Yêu cầu xóa tài khoản",
+            "url": "/index.php?r=tro_giup&bai=xoa-tai-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "xoa-tai-khoan",
+      "message": "Tôi yêu cầu xóa dữ liệu",
+      "id": "STORE-043",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gửi yêu cầu xóa tài khoản tới cskh@skinsyntax.com. Website chưa có nút tự xóa tài khoản. Bộ phận hỗ trợ cần xác minh quyền sở hữu và trao đổi cách xử lý đơn đang thực hiện; một số dữ liệu giao dịch có thể phải lưu theo pháp luật. Mình chưa xóa hay lập yêu cầu thay bạn, và không cần bạn gửi OTP/mật khẩu trong chat.\n\n[Yêu cầu xóa tài khoản](/index.php?r=tro_giup&bai=xoa-tai-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "xoa-tai-khoan",
+        "sources": [
+          {
+            "title": "Yêu cầu xóa tài khoản",
+            "url": "/index.php?r=tro_giup&bai=xoa-tai-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "xoa-tai-khoan",
+      "message": "Tôi muốn rút lại đồng ý xử lý thông tin",
+      "id": "STORE-044",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gửi yêu cầu xóa tài khoản tới cskh@skinsyntax.com. Website chưa có nút tự xóa tài khoản. Bộ phận hỗ trợ cần xác minh quyền sở hữu và trao đổi cách xử lý đơn đang thực hiện; một số dữ liệu giao dịch có thể phải lưu theo pháp luật. Mình chưa xóa hay lập yêu cầu thay bạn, và không cần bạn gửi OTP/mật khẩu trong chat.\n\n[Yêu cầu xóa tài khoản](/index.php?r=tro_giup&bai=xoa-tai-khoan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "xoa-tai-khoan",
+        "sources": [
+          {
+            "title": "Yêu cầu xóa tài khoản",
+            "url": "/index.php?r=tro_giup&bai=xoa-tai-khoan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "dat-hang",
+      "message": "Hướng dẫn đặt hàng từng bước",
+      "id": "STORE-045",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn tìm sản phẩm → chọn đúng chai/phiên bản → kiểm tra số lượng → đến trang thanh toán → nhập thông tin giao hàng và chọn cách trả tiền → xác nhận đơn. Khi mua qua chat, mình đưa các sản phẩm tìm được để bạn tự chọn rồi bấm Thanh toán. Chọn trong chat chưa tạo đơn. Website cần đăng nhập để thanh toán; bạn vẫn tìm và chọn sản phẩm được khi chưa đăng nhập.\n\n[Hướng dẫn đặt hàng](/index.php?r=tro_giup&bai=dat-hang)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dat-hang",
+        "sources": [
+          {
+            "title": "Hướng dẫn đặt hàng",
+            "url": "/index.php?r=tro_giup&bai=dat-hang",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "dat-hang",
+      "message": "Làm sao đặt hàng trên web?",
+      "id": "STORE-046",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn tìm sản phẩm → chọn đúng chai/phiên bản → kiểm tra số lượng → đến trang thanh toán → nhập thông tin giao hàng và chọn cách trả tiền → xác nhận đơn. Khi mua qua chat, mình đưa các sản phẩm tìm được để bạn tự chọn rồi bấm Thanh toán. Chọn trong chat chưa tạo đơn. Website cần đăng nhập để thanh toán; bạn vẫn tìm và chọn sản phẩm được khi chưa đăng nhập.\n\n[Hướng dẫn đặt hàng](/index.php?r=tro_giup&bai=dat-hang)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dat-hang",
+        "sources": [
+          {
+            "title": "Hướng dẫn đặt hàng",
+            "url": "/index.php?r=tro_giup&bai=dat-hang",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "dat-hang",
+      "message": "Mua qua chat như thế nào?",
+      "id": "STORE-047",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình chưa tìm được sản phẩm đang bán khớp tên bạn vừa gửi. Bạn kiểm tra lại tên, thương hiệu hoặc gửi tên trên nhãn nhé. Điều này chưa có nghĩa cả cửa hàng không có sản phẩm đó.\n\nBạn tìm sản phẩm → chọn đúng chai/phiên bản → kiểm tra số lượng → đến trang thanh toán → nhập thông tin giao hàng và chọn cách trả tiền → xác nhận đơn. Khi mua qua chat, mình đưa các sản phẩm tìm được để bạn tự chọn rồi bấm Thanh toán. Chọn trong chat chưa tạo đơn. Website cần đăng nhập để thanh toán; bạn vẫn tìm và chọn sản phẩm được khi chưa đăng nhập.\n\n[Hướng dẫn đặt hàng](/index.php?r=tro_giup&bai=dat-hang)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "sources": [
+          {
+            "title": "Hướng dẫn đặt hàng",
+            "url": "/index.php?r=tro_giup&bai=dat-hang",
+            "version": "2026-09-12"
+          }
+        ],
+        "support_topic": "dat-hang"
+      },
+      "seconds": 0.24
+    },
+    {
+      "kind": "support",
+      "topic": "dat-hang",
+      "message": "Chưa đăng nhập có mua được không?",
+      "id": "STORE-048",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn tìm sản phẩm → chọn đúng chai/phiên bản → kiểm tra số lượng → đến trang thanh toán → nhập thông tin giao hàng và chọn cách trả tiền → xác nhận đơn. Khi mua qua chat, mình đưa các sản phẩm tìm được để bạn tự chọn rồi bấm Thanh toán. Chọn trong chat chưa tạo đơn. Website cần đăng nhập để thanh toán; bạn vẫn tìm và chọn sản phẩm được khi chưa đăng nhập.\n\n[Hướng dẫn đặt hàng](/index.php?r=tro_giup&bai=dat-hang)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "dat-hang",
+        "sources": [
+          {
+            "title": "Hướng dẫn đặt hàng",
+            "url": "/index.php?r=tro_giup&bai=dat-hang",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "thanh-toan",
+      "message": "Có những phương thức thanh toán nào?",
+      "id": "STORE-049",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn chọn phương thức đang hiển thị tại trang thanh toán: COD (trả khi nhận hàng), VNPAY hoặc chuyển khoản QR khi kênh QR được bật. Các ngân hàng/thẻ được chấp nhận xem ngay trên cổng thanh toán. Với QR, dùng đúng số tiền và nội dung mã đơn; ảnh chụp chuyển tiền không tự xác nhận đơn đã thanh toán. Nếu tiền đã trừ mà trạng thái chưa cập nhật, liên hệ hỗ trợ kèm mã đơn, đừng thanh toán lại ngay.\n\n[Phương thức thanh toán](/index.php?r=tro_giup&bai=thanh-toan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "thanh-toan",
+        "sources": [
+          {
+            "title": "Phương thức thanh toán",
+            "url": "/index.php?r=tro_giup&bai=thanh-toan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.05
+    },
+    {
+      "kind": "support",
+      "topic": "thanh-toan",
+      "message": "Có hỗ trợ COD không?",
+      "id": "STORE-050",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn chọn phương thức đang hiển thị tại trang thanh toán: COD (trả khi nhận hàng), VNPAY hoặc chuyển khoản QR khi kênh QR được bật. Các ngân hàng/thẻ được chấp nhận xem ngay trên cổng thanh toán. Với QR, dùng đúng số tiền và nội dung mã đơn; ảnh chụp chuyển tiền không tự xác nhận đơn đã thanh toán. Nếu tiền đã trừ mà trạng thái chưa cập nhật, liên hệ hỗ trợ kèm mã đơn, đừng thanh toán lại ngay.\n\n[Phương thức thanh toán](/index.php?r=tro_giup&bai=thanh-toan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "thanh-toan",
+        "sources": [
+          {
+            "title": "Phương thức thanh toán",
+            "url": "/index.php?r=tro_giup&bai=thanh-toan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "thanh-toan",
+      "message": "VNPAY lỗi mà tiền đã trừ thì sao?",
+      "id": "STORE-051",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn chọn phương thức đang hiển thị tại trang thanh toán: COD (trả khi nhận hàng), VNPAY hoặc chuyển khoản QR khi kênh QR được bật. Các ngân hàng/thẻ được chấp nhận xem ngay trên cổng thanh toán. Với QR, dùng đúng số tiền và nội dung mã đơn; ảnh chụp chuyển tiền không tự xác nhận đơn đã thanh toán. Nếu tiền đã trừ mà trạng thái chưa cập nhật, liên hệ hỗ trợ kèm mã đơn, đừng thanh toán lại ngay.\n\n[Phương thức thanh toán](/index.php?r=tro_giup&bai=thanh-toan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "thanh-toan",
+        "sources": [
+          {
+            "title": "Phương thức thanh toán",
+            "url": "/index.php?r=tro_giup&bai=thanh-toan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "thanh-toan",
+      "message": "Chuyển khoản QR rồi mà trạng thái không cập nhật",
+      "id": "STORE-052",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn chọn phương thức đang hiển thị tại trang thanh toán: COD (trả khi nhận hàng), VNPAY hoặc chuyển khoản QR khi kênh QR được bật. Các ngân hàng/thẻ được chấp nhận xem ngay trên cổng thanh toán. Với QR, dùng đúng số tiền và nội dung mã đơn; ảnh chụp chuyển tiền không tự xác nhận đơn đã thanh toán. Nếu tiền đã trừ mà trạng thái chưa cập nhật, liên hệ hỗ trợ kèm mã đơn, đừng thanh toán lại ngay.\n\n[Phương thức thanh toán](/index.php?r=tro_giup&bai=thanh-toan)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "thanh-toan",
+        "sources": [
+          {
+            "title": "Phương thức thanh toán",
+            "url": "/index.php?r=tro_giup&bai=thanh-toan",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "hoa-don",
+      "message": "Có xuất hóa đơn VAT không?",
+      "id": "STORE-053",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Nếu cần hóa đơn VAT, bạn liên hệ cskh@skinsyntax.com hoặc 0398606281 để xác nhận trước khi mua. Nếu đã đặt hàng, gửi mã đơn và thông tin hóa đơn cần thiết để được hướng dẫn. Trang thanh toán hiện chưa có ô yêu cầu VAT; bộ phận hỗ trợ sẽ xác nhận quy trình và thời gian gửi hóa đơn với bạn.\n\n[Hóa đơn & thông tin VAT](/index.php?r=tro_giup&bai=hoa-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "hoa-don",
+        "sources": [
+          {
+            "title": "Hóa đơn & thông tin VAT",
+            "url": "/index.php?r=tro_giup&bai=hoa-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "hoa-don",
+      "message": "Tôi muốn nhập mã số thuế công ty",
+      "id": "STORE-054",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Nếu cần hóa đơn VAT, bạn liên hệ cskh@skinsyntax.com hoặc 0398606281 để xác nhận trước khi mua. Nếu đã đặt hàng, gửi mã đơn và thông tin hóa đơn cần thiết để được hướng dẫn. Trang thanh toán hiện chưa có ô yêu cầu VAT; bộ phận hỗ trợ sẽ xác nhận quy trình và thời gian gửi hóa đơn với bạn.\n\n[Hóa đơn & thông tin VAT](/index.php?r=tro_giup&bai=hoa-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "hoa-don",
+        "sources": [
+          {
+            "title": "Hóa đơn & thông tin VAT",
+            "url": "/index.php?r=tro_giup&bai=hoa-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "hoa-don",
+      "message": "Tôi quên lấy invoice lúc đặt hàng",
+      "id": "STORE-055",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình chưa tìm được sản phẩm đang bán khớp tên bạn vừa gửi. Bạn kiểm tra lại tên, thương hiệu hoặc gửi tên trên nhãn nhé. Điều này chưa có nghĩa cả cửa hàng không có sản phẩm đó.\n\nNếu cần hóa đơn VAT, bạn liên hệ cskh@skinsyntax.com hoặc 0398606281 để xác nhận trước khi mua. Nếu đã đặt hàng, gửi mã đơn và thông tin hóa đơn cần thiết để được hướng dẫn. Trang thanh toán hiện chưa có ô yêu cầu VAT; bộ phận hỗ trợ sẽ xác nhận quy trình và thời gian gửi hóa đơn với bạn.\n\n[Hóa đơn & thông tin VAT](/index.php?r=tro_giup&bai=hoa-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "sources": [
+          {
+            "title": "Hóa đơn & thông tin VAT",
+            "url": "/index.php?r=tro_giup&bai=hoa-don",
+            "version": "2026-09-12"
+          }
+        ],
+        "support_topic": "hoa-don"
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "hoa-don",
+      "message": "Xin hóa đơn sau 10 ngày được không?",
+      "id": "STORE-056",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Nếu cần hóa đơn VAT, bạn liên hệ cskh@skinsyntax.com hoặc 0398606281 để xác nhận trước khi mua. Nếu đã đặt hàng, gửi mã đơn và thông tin hóa đơn cần thiết để được hướng dẫn. Trang thanh toán hiện chưa có ô yêu cầu VAT; bộ phận hỗ trợ sẽ xác nhận quy trình và thời gian gửi hóa đơn với bạn.\n\n[Hóa đơn & thông tin VAT](/index.php?r=tro_giup&bai=hoa-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "hoa-don",
+        "sources": [
+          {
+            "title": "Hóa đơn & thông tin VAT",
+            "url": "/index.php?r=tro_giup&bai=hoa-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "huy-sua-don",
+      "message": "Tôi muốn hủy đơn hàng đã đặt",
+      "id": "STORE-057",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn vào Hồ sơ → đơn hàng, chọn đúng đơn và kiểm tra nút Hủy đơn nếu trạng thái cho phép. Để sửa địa chỉ, số lượng hoặc sản phẩm của đơn đã đặt, liên hệ hỗ trợ kèm mã đơn. Đơn đang giao cần được kiểm tra trước khi thay đổi. Với đơn đã trả tiền online, việc hoàn tiền được xử lý theo chính sách đổi trả.\n\n[Hủy đơn & sửa thông tin đơn](/index.php?r=tro_giup&bai=huy-sua-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "huy-sua-don",
+        "sources": [
+          {
+            "title": "Hủy đơn & sửa thông tin đơn",
+            "url": "/index.php?r=tro_giup&bai=huy-sua-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "huy-sua-don",
+      "message": "Sửa đơn đã thanh toán thế nào?",
+      "id": "STORE-058",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn vào Hồ sơ → đơn hàng, chọn đúng đơn và kiểm tra nút Hủy đơn nếu trạng thái cho phép. Để sửa địa chỉ, số lượng hoặc sản phẩm của đơn đã đặt, liên hệ hỗ trợ kèm mã đơn. Đơn đang giao cần được kiểm tra trước khi thay đổi. Với đơn đã trả tiền online, việc hoàn tiền được xử lý theo chính sách đổi trả.\n\n[Hủy đơn & sửa thông tin đơn](/index.php?r=tro_giup&bai=huy-sua-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "huy-sua-don",
+        "sources": [
+          {
+            "title": "Hủy đơn & sửa thông tin đơn",
+            "url": "/index.php?r=tro_giup&bai=huy-sua-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "huy-sua-don",
+      "message": "Tôi muốn đổi địa chỉ giao hàng",
+      "id": "STORE-059",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn vào Hồ sơ → đơn hàng, chọn đúng đơn và kiểm tra nút Hủy đơn nếu trạng thái cho phép. Để sửa địa chỉ, số lượng hoặc sản phẩm của đơn đã đặt, liên hệ hỗ trợ kèm mã đơn. Đơn đang giao cần được kiểm tra trước khi thay đổi. Với đơn đã trả tiền online, việc hoàn tiền được xử lý theo chính sách đổi trả.\n\n[Hủy đơn & sửa thông tin đơn](/index.php?r=tro_giup&bai=huy-sua-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "huy-sua-don",
+        "sources": [
+          {
+            "title": "Hủy đơn & sửa thông tin đơn",
+            "url": "/index.php?r=tro_giup&bai=huy-sua-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "huy-sua-don",
+      "message": "Có thể đổi số lượng đơn cũ không?",
+      "id": "STORE-060",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn vào Hồ sơ → đơn hàng, chọn đúng đơn và kiểm tra nút Hủy đơn nếu trạng thái cho phép. Để sửa địa chỉ, số lượng hoặc sản phẩm của đơn đã đặt, liên hệ hỗ trợ kèm mã đơn. Đơn đang giao cần được kiểm tra trước khi thay đổi. Với đơn đã trả tiền online, việc hoàn tiền được xử lý theo chính sách đổi trả.\n\n[Hủy đơn & sửa thông tin đơn](/index.php?r=tro_giup&bai=huy-sua-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "huy-sua-don",
+        "sources": [
+          {
+            "title": "Hủy đơn & sửa thông tin đơn",
+            "url": "/index.php?r=tro_giup&bai=huy-sua-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "theo-doi-don",
+      "message": "Tôi muốn kiểm tra đơn hàng",
+      "id": "STORE-061",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn đăng nhập, mở Hồ sơ → đơn hàng để xem trạng thái của đơn mình. Thường có các bước chờ xác nhận, xử lý, giao hàng, hoàn tất hoặc đã hủy. Mình chưa tra cứu trực tiếp đơn riêng trong cuộc chat này nên không thể khẳng định đơn của bạn đang ở đâu. Nếu trạng thái chậm cập nhật, liên hệ hỗ trợ kèm mã đơn.\n\n[Theo dõi trạng thái đơn hàng](/index.php?r=tro_giup&bai=theo-doi-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "theo-doi-don",
+        "sources": [
+          {
+            "title": "Theo dõi trạng thái đơn hàng",
+            "url": "/index.php?r=tro_giup&bai=theo-doi-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "theo-doi-don",
+      "message": "Đơn của tôi đang ở đâu?",
+      "id": "STORE-062",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn đăng nhập, mở Hồ sơ → đơn hàng để xem trạng thái của đơn mình. Thường có các bước chờ xác nhận, xử lý, giao hàng, hoàn tất hoặc đã hủy. Mình chưa tra cứu trực tiếp đơn riêng trong cuộc chat này nên không thể khẳng định đơn của bạn đang ở đâu. Nếu trạng thái chậm cập nhật, liên hệ hỗ trợ kèm mã đơn.\n\n[Theo dõi trạng thái đơn hàng](/index.php?r=tro_giup&bai=theo-doi-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "theo-doi-don",
+        "sources": [
+          {
+            "title": "Theo dõi trạng thái đơn hàng",
+            "url": "/index.php?r=tro_giup&bai=theo-doi-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "theo-doi-don",
+      "message": "Làm sao tra cứu đơn?",
+      "id": "STORE-063",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn đăng nhập, mở Hồ sơ → đơn hàng để xem trạng thái của đơn mình. Thường có các bước chờ xác nhận, xử lý, giao hàng, hoàn tất hoặc đã hủy. Mình chưa tra cứu trực tiếp đơn riêng trong cuộc chat này nên không thể khẳng định đơn của bạn đang ở đâu. Nếu trạng thái chậm cập nhật, liên hệ hỗ trợ kèm mã đơn.\n\n[Theo dõi trạng thái đơn hàng](/index.php?r=tro_giup&bai=theo-doi-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "theo-doi-don",
+        "sources": [
+          {
+            "title": "Theo dõi trạng thái đơn hàng",
+            "url": "/index.php?r=tro_giup&bai=theo-doi-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "theo-doi-don",
+      "message": "Tôi cần mã vận đơn để tracking",
+      "id": "STORE-064",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn đăng nhập, mở Hồ sơ → đơn hàng để xem trạng thái của đơn mình. Thường có các bước chờ xác nhận, xử lý, giao hàng, hoàn tất hoặc đã hủy. Mình chưa tra cứu trực tiếp đơn riêng trong cuộc chat này nên không thể khẳng định đơn của bạn đang ở đâu. Nếu trạng thái chậm cập nhật, liên hệ hỗ trợ kèm mã đơn.\n\n[Theo dõi trạng thái đơn hàng](/index.php?r=tro_giup&bai=theo-doi-don)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "theo-doi-don",
+        "sources": [
+          {
+            "title": "Theo dõi trạng thái đơn hàng",
+            "url": "/index.php?r=tro_giup&bai=theo-doi-don",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "van-chuyen",
+      "message": "Phí ship bao nhiêu?",
+      "id": "STORE-065",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Phí giao hàng hiện là 30.000 đ/đơn. Để biết thời gian dự kiến và cửa hàng có giao đến địa chỉ của bạn không, bạn liên hệ 0398606281 hoặc cskh@skinsyntax.com. Thông tin theo từng khu vực đang được cập nhật; hãy kiểm tra phí và tổng tiền ở trang thanh toán trước khi xác nhận.\n\n[Chính sách vận chuyển](/index.php?r=tro_giup&bai=van-chuyen)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "van-chuyen",
+        "sources": [
+          {
+            "title": "Chính sách vận chuyển",
+            "url": "/index.php?r=tro_giup&bai=van-chuyen",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "van-chuyen",
+      "message": "Có miễn phí ship không?",
+      "id": "STORE-066",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Phí giao hàng hiện là 30.000 đ/đơn. Để biết thời gian dự kiến và cửa hàng có giao đến địa chỉ của bạn không, bạn liên hệ 0398606281 hoặc cskh@skinsyntax.com. Thông tin theo từng khu vực đang được cập nhật; hãy kiểm tra phí và tổng tiền ở trang thanh toán trước khi xác nhận.\n\n[Chính sách vận chuyển](/index.php?r=tro_giup&bai=van-chuyen)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "van-chuyen",
+        "sources": [
+          {
+            "title": "Chính sách vận chuyển",
+            "url": "/index.php?r=tro_giup&bai=van-chuyen",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "van-chuyen",
+      "message": "Bao lâu nhận được hàng?",
+      "id": "STORE-067",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Phí giao hàng hiện là 30.000 đ/đơn. Để biết thời gian dự kiến và cửa hàng có giao đến địa chỉ của bạn không, bạn liên hệ 0398606281 hoặc cskh@skinsyntax.com. Thông tin theo từng khu vực đang được cập nhật; hãy kiểm tra phí và tổng tiền ở trang thanh toán trước khi xác nhận.\n\n[Chính sách vận chuyển](/index.php?r=tro_giup&bai=van-chuyen)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "van-chuyen",
+        "sources": [
+          {
+            "title": "Chính sách vận chuyển",
+            "url": "/index.php?r=tro_giup&bai=van-chuyen",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "van-chuyen",
+      "message": "Shop có giao hàng toàn quốc không?",
+      "id": "STORE-068",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Phí giao hàng hiện là 30.000 đ/đơn. Để biết thời gian dự kiến và cửa hàng có giao đến địa chỉ của bạn không, bạn liên hệ 0398606281 hoặc cskh@skinsyntax.com. Thông tin theo từng khu vực đang được cập nhật; hãy kiểm tra phí và tổng tiền ở trang thanh toán trước khi xác nhận.\n\n[Chính sách vận chuyển](/index.php?r=tro_giup&bai=van-chuyen)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "van-chuyen",
+        "sources": [
+          {
+            "title": "Chính sách vận chuyển",
+            "url": "/index.php?r=tro_giup&bai=van-chuyen",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "doi-tra",
+      "message": "Điều kiện đổi trả sản phẩm?",
+      "id": "STORE-069",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "SkinSyntax tiếp nhận đổi trả trong 7 ngày từ khi nhận hàng đối với sản phẩm lỗi, hỏng do vận chuyển hoặc giao sai. Bạn giữ bao bì, nhãn và mã đơn, gửi mô tả cùng ảnh nếu có qua kênh hỗ trợ. Hàng đã dùng thường không áp dụng, trừ lỗi nhà sản xuất hoặc trường hợp theo pháp luật. Sau khi kiểm tra, bộ phận hỗ trợ sẽ xác nhận phương án xử lý, thời gian hoàn tiền và phí gửi trả với bạn.\n\n[Chính sách đổi trả & hoàn tiền](/index.php?r=tro_giup&bai=doi-tra)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "doi-tra",
+        "sources": [
+          {
+            "title": "Chính sách đổi trả & hoàn tiền",
+            "url": "/index.php?r=tro_giup&bai=doi-tra",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "support",
+      "topic": "doi-tra",
+      "message": "Hoàn tiền mất bao lâu?",
+      "id": "STORE-070",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "SkinSyntax tiếp nhận đổi trả trong 7 ngày từ khi nhận hàng đối với sản phẩm lỗi, hỏng do vận chuyển hoặc giao sai. Bạn giữ bao bì, nhãn và mã đơn, gửi mô tả cùng ảnh nếu có qua kênh hỗ trợ. Hàng đã dùng thường không áp dụng, trừ lỗi nhà sản xuất hoặc trường hợp theo pháp luật. Sau khi kiểm tra, bộ phận hỗ trợ sẽ xác nhận phương án xử lý, thời gian hoàn tiền và phí gửi trả với bạn.\n\n[Chính sách đổi trả & hoàn tiền](/index.php?r=tro_giup&bai=doi-tra)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "doi-tra",
+        "sources": [
+          {
+            "title": "Chính sách đổi trả & hoàn tiền",
+            "url": "/index.php?r=tro_giup&bai=doi-tra",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "support",
+      "topic": "doi-tra",
+      "message": "Tôi muốn trả hàng đã mở nắp",
+      "id": "STORE-071",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "SkinSyntax tiếp nhận đổi trả trong 7 ngày từ khi nhận hàng đối với sản phẩm lỗi, hỏng do vận chuyển hoặc giao sai. Bạn giữ bao bì, nhãn và mã đơn, gửi mô tả cùng ảnh nếu có qua kênh hỗ trợ. Hàng đã dùng thường không áp dụng, trừ lỗi nhà sản xuất hoặc trường hợp theo pháp luật. Sau khi kiểm tra, bộ phận hỗ trợ sẽ xác nhận phương án xử lý, thời gian hoàn tiền và phí gửi trả với bạn.\n\n[Chính sách đổi trả & hoàn tiền](/index.php?r=tro_giup&bai=doi-tra)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "doi-tra",
+        "sources": [
+          {
+            "title": "Chính sách đổi trả & hoàn tiền",
+            "url": "/index.php?r=tro_giup&bai=doi-tra",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "support",
+      "topic": "doi-tra",
+      "message": "Quá 7 ngày còn được tiếp nhận không?",
+      "id": "STORE-072",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "SkinSyntax tiếp nhận đổi trả trong 7 ngày từ khi nhận hàng đối với sản phẩm lỗi, hỏng do vận chuyển hoặc giao sai. Bạn giữ bao bì, nhãn và mã đơn, gửi mô tả cùng ảnh nếu có qua kênh hỗ trợ. Hàng đã dùng thường không áp dụng, trừ lỗi nhà sản xuất hoặc trường hợp theo pháp luật. Sau khi kiểm tra, bộ phận hỗ trợ sẽ xác nhận phương án xử lý, thời gian hoàn tiền và phí gửi trả với bạn.\n\n[Chính sách đổi trả & hoàn tiền](/index.php?r=tro_giup&bai=doi-tra)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "doi-tra",
+        "sources": [
+          {
+            "title": "Chính sách đổi trả & hoàn tiền",
+            "url": "/index.php?r=tro_giup&bai=doi-tra",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "support",
+      "topic": "hang-loi",
+      "message": "Chai của tôi bị vỡ khi giao",
+      "id": "STORE-073",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn giữ sản phẩm, bao bì và mã đơn; chụp ảnh tình trạng lỗi/hỏng hoặc giao sai nếu có thể. Liên hệ 0398606281 hoặc cskh@skinsyntax.com trong 7 ngày từ khi nhận để yêu cầu xử lý. Mục tiêu phản hồi ban đầu là 24 giờ làm việc. Ảnh/video giúp xác minh nhưng không có video mở hộp không đồng nghĩa mất quyền khiếu nại. Mình chưa tự tạo phiếu hoặc duyệt đổi hàng trong chat.\n\n[Nhận hàng lỗi, hỏng hoặc giao sai](/index.php?r=tro_giup&bai=hang-loi)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "hang-loi",
+        "sources": [
+          {
+            "title": "Nhận hàng lỗi, hỏng hoặc giao sai",
+            "url": "/index.php?r=tro_giup&bai=hang-loi",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.05
+    },
+    {
+      "kind": "support",
+      "topic": "hang-loi",
+      "message": "Tôi nhận hàng lỗi phải làm sao?",
+      "id": "STORE-074",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn giữ sản phẩm, bao bì và mã đơn; chụp ảnh tình trạng lỗi/hỏng hoặc giao sai nếu có thể. Liên hệ 0398606281 hoặc cskh@skinsyntax.com trong 7 ngày từ khi nhận để yêu cầu xử lý. Mục tiêu phản hồi ban đầu là 24 giờ làm việc. Ảnh/video giúp xác minh nhưng không có video mở hộp không đồng nghĩa mất quyền khiếu nại. Mình chưa tự tạo phiếu hoặc duyệt đổi hàng trong chat.\n\n[Nhận hàng lỗi, hỏng hoặc giao sai](/index.php?r=tro_giup&bai=hang-loi)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "hang-loi",
+        "sources": [
+          {
+            "title": "Nhận hàng lỗi, hỏng hoặc giao sai",
+            "url": "/index.php?r=tro_giup&bai=hang-loi",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.17
+    },
+    {
+      "kind": "support",
+      "topic": "hang-loi",
+      "message": "Shop giao sai sản phẩm cho tôi",
+      "id": "STORE-075",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn giữ sản phẩm, bao bì và mã đơn; chụp ảnh tình trạng lỗi/hỏng hoặc giao sai nếu có thể. Liên hệ 0398606281 hoặc cskh@skinsyntax.com trong 7 ngày từ khi nhận để yêu cầu xử lý. Mục tiêu phản hồi ban đầu là 24 giờ làm việc. Ảnh/video giúp xác minh nhưng không có video mở hộp không đồng nghĩa mất quyền khiếu nại. Mình chưa tự tạo phiếu hoặc duyệt đổi hàng trong chat.\n\n[Nhận hàng lỗi, hỏng hoặc giao sai](/index.php?r=tro_giup&bai=hang-loi)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "hang-loi",
+        "sources": [
+          {
+            "title": "Nhận hàng lỗi, hỏng hoặc giao sai",
+            "url": "/index.php?r=tro_giup&bai=hang-loi",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.17
+    },
+    {
+      "kind": "support",
+      "topic": "hang-loi",
+      "message": "Không có video mở hộp có được xử lý không?",
+      "id": "STORE-076",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn giữ sản phẩm, bao bì và mã đơn; chụp ảnh tình trạng lỗi/hỏng hoặc giao sai nếu có thể. Liên hệ 0398606281 hoặc cskh@skinsyntax.com trong 7 ngày từ khi nhận để yêu cầu xử lý. Mục tiêu phản hồi ban đầu là 24 giờ làm việc. Ảnh/video giúp xác minh nhưng không có video mở hộp không đồng nghĩa mất quyền khiếu nại. Mình chưa tự tạo phiếu hoặc duyệt đổi hàng trong chat.\n\n[Nhận hàng lỗi, hỏng hoặc giao sai](/index.php?r=tro_giup&bai=hang-loi)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "hang-loi",
+        "sources": [
+          {
+            "title": "Nhận hàng lỗi, hỏng hoặc giao sai",
+            "url": "/index.php?r=tro_giup&bai=hang-loi",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.14
+    },
+    {
+      "kind": "support",
+      "topic": "lien-he",
+      "message": "Hotline của SkinSyntax là gì?",
+      "id": "STORE-077",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gọi 0398606281 hoặc gửi email tới cskh@skinsyntax.com. Website có khung chat hỗ trợ; chatbot tư vấn không bảo đảm có nhân viên trực ngay. Giờ làm việc chưa được công bố. Với vấn đề đơn hàng, gửi mã đơn và mô tả ngắn gọn, che thông tin thanh toán nhạy cảm. Đừng gửi OTP hoặc mật khẩu.\n\n[Liên hệ bộ phận hỗ trợ](/index.php?r=tro_giup&bai=lien-he)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "lien-he",
+        "sources": [
+          {
+            "title": "Liên hệ bộ phận hỗ trợ",
+            "url": "/index.php?r=tro_giup&bai=lien-he",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "support",
+      "topic": "lien-he",
+      "message": "Email hỗ trợ của shop là gì?",
+      "id": "STORE-078",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gọi 0398606281 hoặc gửi email tới cskh@skinsyntax.com. Website có khung chat hỗ trợ; chatbot tư vấn không bảo đảm có nhân viên trực ngay. Giờ làm việc chưa được công bố. Với vấn đề đơn hàng, gửi mã đơn và mô tả ngắn gọn, che thông tin thanh toán nhạy cảm. Đừng gửi OTP hoặc mật khẩu.\n\n[Liên hệ bộ phận hỗ trợ](/index.php?r=tro_giup&bai=lien-he)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "lien-he",
+        "sources": [
+          {
+            "title": "Liên hệ bộ phận hỗ trợ",
+            "url": "/index.php?r=tro_giup&bai=lien-he",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.16
+    },
+    {
+      "kind": "support",
+      "topic": "lien-he",
+      "message": "Giờ làm việc của nhân viên thế nào?",
+      "id": "STORE-079",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gọi 0398606281 hoặc gửi email tới cskh@skinsyntax.com. Website có khung chat hỗ trợ; chatbot tư vấn không bảo đảm có nhân viên trực ngay. Giờ làm việc chưa được công bố. Với vấn đề đơn hàng, gửi mã đơn và mô tả ngắn gọn, che thông tin thanh toán nhạy cảm. Đừng gửi OTP hoặc mật khẩu.\n\n[Liên hệ bộ phận hỗ trợ](/index.php?r=tro_giup&bai=lien-he)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "lien-he",
+        "sources": [
+          {
+            "title": "Liên hệ bộ phận hỗ trợ",
+            "url": "/index.php?r=tro_giup&bai=lien-he",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.08
+    },
+    {
+      "kind": "support",
+      "topic": "lien-he",
+      "message": "Tôi muốn chat người thật",
+      "id": "STORE-080",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn gọi 0398606281 hoặc gửi email tới cskh@skinsyntax.com. Website có khung chat hỗ trợ; chatbot tư vấn không bảo đảm có nhân viên trực ngay. Giờ làm việc chưa được công bố. Với vấn đề đơn hàng, gửi mã đơn và mô tả ngắn gọn, che thông tin thanh toán nhạy cảm. Đừng gửi OTP hoặc mật khẩu.\n\n[Liên hệ bộ phận hỗ trợ](/index.php?r=tro_giup&bai=lien-he)",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "STORE_SUPPORT",
+        "pipeline_mode": "verified_store_content",
+        "support_topic": "lien-he",
+        "sources": [
+          {
+            "title": "Liên hệ bộ phận hỗ trợ",
+            "url": "/index.php?r=tro_giup&bai=lien-he",
+            "version": "2026-09-12"
+          }
+        ]
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "purchase",
+      "message": "tối mua 1 chai Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn",
+      "required_id": "1077",
+      "id": "STORE-081",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được các lựa chọn dưới đây. Bạn chọn đúng chai đang nói tới, kiểm tra số lượng rồi bấm Thanh toán nhé.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "commerce": {
+          "stage": "choose",
+          "quantity": 1,
+          "products": [
+            {
+              "id": "1077",
+              "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+              "price": 433000,
+              "brand": "CeraVe",
+              "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+              "detail_url": "/index.php?r=chitiet&id=1077",
+              "stock": null,
+              "available": true
+            }
+          ]
+        }
+      },
+      "seconds": 0.12
+    },
+    {
+      "kind": "purchase",
+      "message": "Đặt cho tôi 2 chai CeraVe Retinol",
+      "required_id": "1077",
+      "quantity": 2,
+      "id": "STORE-082",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được các lựa chọn dưới đây. Bạn chọn đúng chai đang nói tới, kiểm tra số lượng rồi bấm Thanh toán nhé.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "commerce": {
+          "stage": "choose",
+          "quantity": 2,
+          "products": [
+            {
+              "id": "1077",
+              "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+              "price": 433000,
+              "brand": "CeraVe",
+              "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+              "detail_url": "/index.php?r=chitiet&id=1077",
+              "stock": null,
+              "available": true
+            }
+          ]
+        }
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "purchase",
+      "message": "Mua cho mình serum cerave retinol 30ml",
+      "required_id": "1077",
+      "id": "STORE-083",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được các lựa chọn dưới đây. Bạn chọn đúng chai đang nói tới, kiểm tra số lượng rồi bấm Thanh toán nhé.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "commerce": {
+          "stage": "choose",
+          "quantity": 1,
+          "products": [
+            {
+              "id": "1077",
+              "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+              "price": 433000,
+              "brand": "CeraVe",
+              "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+              "detail_url": "/index.php?r=chitiet&id=1077",
+              "stock": null,
+              "available": true
+            }
+          ]
+        }
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "purchase",
+      "message": "Cho tôi lấy một chai Serum CeraVe Retinol",
+      "required_id": "1077",
+      "id": "STORE-084",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được các lựa chọn dưới đây. Bạn chọn đúng chai đang nói tới, kiểm tra số lượng rồi bấm Thanh toán nhé.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "commerce": {
+          "stage": "choose",
+          "quantity": 1,
+          "products": [
+            {
+              "id": "1077",
+              "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+              "price": 433000,
+              "brand": "CeraVe",
+              "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+              "detail_url": "/index.php?r=chitiet&id=1077",
+              "stock": null,
+              "available": true
+            }
+          ]
+        }
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "purchase",
+      "message": "Tui chốt CeraVe retinol nhé",
+      "required_id": "1077",
+      "id": "STORE-085",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được các lựa chọn dưới đây. Bạn chọn đúng chai đang nói tới, kiểm tra số lượng rồi bấm Thanh toán nhé.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "commerce": {
+          "stage": "choose",
+          "quantity": 1,
+          "products": [
+            {
+              "id": "1077",
+              "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+              "price": 433000,
+              "brand": "CeraVe",
+              "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+              "detail_url": "/index.php?r=chitiet&id=1077",
+              "stock": null,
+              "available": true
+            }
+          ]
+        }
+      },
+      "seconds": 0.09
+    },
+    {
+      "kind": "purchase",
+      "message": "Mua giúp tôi Serum CeraVe Retino 30ml",
+      "required_id": "1077",
+      "id": "STORE-086",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được các lựa chọn dưới đây. Bạn chọn đúng chai đang nói tới, kiểm tra số lượng rồi bấm Thanh toán nhé.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase",
+        "commerce": {
+          "stage": "choose",
+          "quantity": 1,
+          "products": [
+            {
+              "id": "1077",
+              "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+              "price": 433000,
+              "brand": "CeraVe",
+              "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+              "detail_url": "/index.php?r=chitiet&id=1077",
+              "stock": null,
+              "available": true
+            }
+          ]
+        }
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "purchase",
+      "message": "Tôi muốn mua serum CeraVe Retinol 999ml",
+      "empty": true,
+      "id": "STORE-087",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình chưa tìm được sản phẩm đang bán khớp tên bạn vừa gửi. Bạn kiểm tra lại tên, thương hiệu hoặc gửi tên trên nhãn nhé. Điều này chưa có nghĩa cả cửa hàng không có sản phẩm đó.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase"
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "purchase",
+      "message": "Mua cho tôi mỹ phẩm zzzmissingcatalog",
+      "empty": true,
+      "id": "STORE-088",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình chưa tìm được sản phẩm đang bán khớp tên bạn vừa gửi. Bạn kiểm tra lại tên, thương hiệu hoặc gửi tên trên nhãn nhé. Điều này chưa có nghĩa cả cửa hàng không có sản phẩm đó.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase"
+      },
+      "seconds": 0.11
+    },
+    {
+      "kind": "purchase",
+      "message": "Tôi muốn mua",
+      "empty": true,
+      "id": "STORE-089",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Bạn muốn mua sản phẩm nào? Gửi tên hoặc thương hiệu, kèm dung tích nếu bạn đã chọn được nhé.",
+        "products": [],
+        "conflicts": [],
+        "intent_mode": "PURCHASE",
+        "pipeline_mode": "catalog_purchase"
+      },
+      "seconds": 0.05
+    },
+    {
+      "kind": "purchase",
+      "message": "Đặt tôi 21 chai CeraVe Retinol",
+      "invalid": true,
+      "id": "STORE-090",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": false,
+        "message": "Mỗi lần chọn từ 1 đến 20 sản phẩm. Vui lòng nhập số lượng nguyên hợp lệ."
+      },
+      "seconds": 0.06
+    },
+    {
+      "kind": "advice",
+      "message": "Tôi có nên mua retinol không?",
+      "id": "STORE-091",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Việc có nên mua retinol hay không phụ thuộc vào nhiều yếu tố, bao gồm tình trạng da của bạn, mục tiêu chăm sóc da và mức độ nhạy cảm của da. Retinol là một dạng vitamin A có thể giúp cải thiện tình trạng da như nếp nhăn, sắc tố không đều và mụn. Tuy nhiên, nó cũng có thể gây kích ứng cho một số người, đặc biệt là những người có làn da nhạy cảm.\n\nNếu bạn đang cân nhắc sử dụng retinol, hãy xem xét các yếu tố sau:\n\n1. **Tình trạng da**: Nếu bạn có nếp nhăn, da không đều màu hoặc mụn, retinol có thể là một lựa chọn tốt.\n2. **Mức độ nhạy cảm**: Nếu da bạn nhạy cảm, bạn nên bắt đầu với nồng độ thấp và sử dụng ít thường xuyên để theo dõi phản ứng của da.\n3. **Mục tiêu chăm sóc da**: Nếu bạn muốn cải thiện các dấu hiệu lão hóa hoặc làm sáng da, retinol có thể giúp ích.\n\nNếu bạn có thêm thông tin về tình trạng da hoặc mục tiêu cụ thể, mình có thể giúp bạn phân tích rõ hơn.",
+        "conflicts": [],
+        "products": [],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "knowledge",
+        "eval_scores": null,
+        "latency": 9.24
+      },
+      "seconds": 9.51
+    },
+    {
+      "kind": "advice",
+      "message": "Tôi không muốn mua retinol nữa",
+      "id": "STORE-092",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Nếu bạn không muốn sử dụng retinol nữa, có thể bạn đang tìm kiếm các thành phần khác để chăm sóc da. Retinol thường được sử dụng để cải thiện tình trạng lão hóa và mụn, nhưng nếu bạn cảm thấy không phù hợp, có thể xem xét các lựa chọn khác như vitamin C, axit hyaluronic hoặc niacinamide. Những thành phần này cũng có tác dụng tốt cho da mà không gây kích ứng như retinol.\n\nNếu bạn có bất kỳ câu hỏi nào khác về các thành phần hoặc sản phẩm cụ thể, hãy cho mình biết nhé!",
+        "conflicts": [],
+        "products": [],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "knowledge",
+        "eval_scores": null,
+        "latency": 12.09
+      },
+      "seconds": 12.61
+    },
+    {
+      "kind": "advice",
+      "message": "Tôi chưa mua, chỉ hỏi retinol là gì",
+      "id": "STORE-093",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Retinol là một dạng của vitamin A, thường được sử dụng trong các sản phẩm chăm sóc da để cải thiện tình trạng da. Nó có khả năng thúc đẩy quá trình tái tạo tế bào, giúp làm giảm nếp nhăn, cải thiện độ đàn hồi và làm sáng da. Retinol cũng có thể giúp làm giảm mụn và cải thiện kết cấu da.\n\nKhi sử dụng retinol, bạn cần lưu ý rằng nó có thể gây kích ứng cho da, đặc biệt là trong giai đoạn đầu sử dụng. Do đó, việc bắt đầu với nồng độ thấp và tăng dần là một cách tiếp cận hợp lý.",
+        "conflicts": [],
+        "products": [],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "knowledge",
+        "eval_scores": null,
+        "latency": 5.42
+      },
+      "seconds": 5.5
+    },
+    {
+      "kind": "advice",
+      "message": "So sánh serum CeraVe và SVR",
+      "id": "STORE-094",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [[Mini] Serum Obagi Cấp Nước, Dưỡng Ẩm, Phục Hồi Da 5ml](index.php?r=chitiet&id=912) — 249.000đ.\n- [Serum SVR Làm Giảm Mụn, Mờ Nám, Làm Mềm Mịn Da 30ml](index.php?r=chitiet&id=166) — 519.000đ.\n- [Serum Tia'm Căng Bóng, Trẻ Hoá Da 40ml](index.php?r=chitiet&id=934) — 297.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "products": [
+          {
+            "id": "912",
+            "name": "[Mini] Serum Obagi Cấp Nước, Dưỡng Ẩm, Phục Hồi Da 5ml",
+            "brand": "Obagi",
+            "price": 249000,
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-422208817-1701139808_img_450x450_31d6f9_fit_center.jpg",
+            "detail_url": "/index.php?r=chitiet&id=912",
+            "description": "",
+            "ingredients": ""
+          },
+          {
+            "id": "166",
+            "name": "Serum SVR Làm Giảm Mụn, Mờ Nám, Làm Mềm Mịn Da 30ml",
+            "brand": "SVR",
+            "price": 519000,
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-tinh-chat-svr-lam-giam-mun-mo-nam-lam-mem-min-da-30ml-1751524035_img_450x450_31d6f9_fit_center.jpg",
+            "detail_url": "/index.php?r=chitiet&id=166",
+            "description": "",
+            "ingredients": ""
+          },
+          {
+            "id": "934",
+            "name": "Serum Tia'm Căng Bóng, Trẻ Hoá Da 40ml",
+            "brand": "TIA'M",
+            "price": 297000,
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-serum-tia-m-cang-bong-tre-hoa-da-40ml-1740987716_img_450x450_31d6f9_fit_center.jpg",
+            "detail_url": "/index.php?r=chitiet&id=934",
+            "description": "",
+            "ingredients": ""
+          }
+        ],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "search",
+        "eval_scores": null,
+        "latency": 12.12
+      },
+      "seconds": 12.39
+    },
+    {
+      "kind": "advice",
+      "message": "Tư vấn mua serum cho da nhạy cảm",
+      "id": "STORE-095",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum The Lab Dưỡng Ẩm, Làm Dịu Da 30ml](index.php?r=chitiet&id=3015) — 332.000đ.\n- [Serum 9Wishes Dưỡng Ẩm & Làm Căng Bóng Da 30ml](index.php?r=chitiet&id=246) — 214.000đ.\n- [Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml](index.php?r=chitiet&id=647) — 321.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "products": [
+          {
+            "id": "3015",
+            "name": "Serum The Lab Dưỡng Ẩm, Làm Dịu Da 30ml",
+            "brand": "The Lab",
+            "price": 332000,
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-422227976-1729500760_img_450x450_31d6f9_fit_center.jpg",
+            "detail_url": "/index.php?r=chitiet&id=3015",
+            "description": "",
+            "ingredients": ""
+          },
+          {
+            "id": "246",
+            "name": "Serum 9Wishes Dưỡng Ẩm & Làm Căng Bóng Da 30ml",
+            "brand": "9Wishes",
+            "price": 214000,
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-tinh-chat-9-wishes-cap-am-chuyen-sau-25ml_MFR3BzAGuv4Y4ciu_img_450x450_31d6f9_fit_center.png",
+            "detail_url": "/index.php?r=chitiet&id=246",
+            "description": "",
+            "ingredients": ""
+          },
+          {
+            "id": "647",
+            "name": "Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml",
+            "brand": "Olay",
+            "price": 321000,
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-serum-olay-mo-vet-tham-dom-nau-duong-sang-da-30ml-1760518791_img_450x450_31d6f9_fit_center.jpg",
+            "detail_url": "/index.php?r=chitiet&id=647",
+            "description": "",
+            "ingredients": ""
+          }
+        ],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "search",
+        "eval_scores": null,
+        "latency": 11.95
+      },
+      "seconds": 11.94
+    },
+    {
+      "kind": "advice",
+      "message": "Cách dùng retinol cho người mới",
+      "id": "STORE-096",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Khi bắt đầu sử dụng retinol, bạn nên tuân theo một số nguyên tắc cơ bản để giảm thiểu kích ứng và đạt được hiệu quả tốt nhất:\n\n1. **Bắt đầu từ nồng độ thấp**: Nếu bạn là người mới, hãy chọn sản phẩm có nồng độ retinol thấp (thường là 0.25% hoặc 0.5%) để da có thời gian thích nghi.\n\n2. **Sử dụng 1-2 lần/tuần**: Trong giai đoạn đầu, hãy áp dụng retinol 1-2 lần mỗi tuần. Sau đó, bạn có thể tăng dần tần suất sử dụng khi da đã quen.\n\n3. **Thoa vào buổi tối**: Retinol có thể làm da nhạy cảm với ánh nắng, vì vậy tốt nhất là bạn nên sử dụng vào buổi tối.\n\n4. **Kết hợp với kem dưỡng ẩm**: Để giảm thiểu kích ứng, bạn có thể thoa một lớp kem dưỡng ẩm sau khi dùng retinol. Điều này giúp giữ ẩm cho da và làm dịu cảm giác khó chịu.\n\n5. **Chờ sau khi rửa mặt**: Sau khi rửa mặt, hãy đợi khoảng 20-30 phút trước khi thoa retinol. Điều này giúp da khô hoàn toàn và giảm thiểu khả năng kích ứng.\n\n6. **Theo dõi phản ứng của da**: Nếu bạn thấy da bị đỏ, ngứa hoặc bong tróc quá mức, hãy giảm tần suất sử dụng hoặc ngừng lại một thời gian.\n\nNhững điều này sẽ giúp bạn bắt đầu an toàn và hiệu quả với retinol. Nếu bạn có thêm câu hỏi cụ thể nào khác, hãy cho mình biết nhé!",
+        "conflicts": [],
+        "products": [],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "knowledge",
+        "eval_scores": null,
+        "latency": 13.13
+      },
+      "seconds": 12.78
+    },
+    {
+      "kind": "advice",
+      "message": "Toner và serum khác nhau thế nào?",
+      "id": "STORE-097",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Toner và serum là hai sản phẩm chăm sóc da có chức năng và thành phần khác nhau.\n\n1. **Toner**: Thường được sử dụng sau bước rửa mặt, toner giúp cân bằng độ pH của da, loại bỏ bụi bẩn và dầu thừa còn sót lại. Nó cũng có thể cung cấp độ ẩm nhẹ cho da và chuẩn bị cho các bước chăm sóc tiếp theo. Thành phần trong toner thường bao gồm nước, chiết xuất thực vật, và một số chất làm dịu.\n\n2. **Serum**: Là sản phẩm có nồng độ cao các hoạt chất, serum thường được sử dụng để điều trị các vấn đề cụ thể của da như lão hóa, nám, hay mụn. Serum thường có kết cấu nhẹ hơn kem dưỡng nhưng đặc hơn toner, và chứa các thành phần như vitamin C, hyaluronic acid, hoặc peptide.\n\nTóm lại, toner chủ yếu giúp làm sạch và cân bằng da, trong khi serum tập trung vào việc điều trị và cải thiện tình trạng da.",
+        "conflicts": [],
+        "products": [],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "knowledge",
+        "eval_scores": null,
+        "latency": 10.64
+      },
+      "seconds": 10.75
+    },
+    {
+      "kind": "advice",
+      "message": "Tôi ko mua, chỉ muốn tìm hiểu",
+      "id": "STORE-098",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình tìm được 3 lựa chọn sản phẩm để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Dung Dịch Cân Bằng Da Bioderma Cho Da Dầu, Hỗn Hợp 200ml](index.php?r=chitiet&id=1589) — 399.000đ.\n- [[Mini] Serum Obagi Cấp Nước, Dưỡng Ẩm, Phục Hồi Da 5ml](index.php?r=chitiet&id=912) — 249.000đ.\n- [Sữa Chống Nắng Curél Mặt & Toàn Thân Cho Da Khô Nhạy Cảm 60ml](index.php?r=chitiet&id=916) — 346.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "products": [
+          {
+            "id": "1589",
+            "name": "Dung Dịch Cân Bằng Da Bioderma Cho Da Dầu, Hỗn Hợp 200ml",
+            "brand": "Bioderma",
+            "price": 399000,
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-dung-dich-can-bang-da-bioderma-cho-da-dau-hon-hop-200ml-1745397050_img_450x450_31d6f9_fit_center.jpg",
+            "detail_url": "/index.php?r=chitiet&id=1589",
+            "description": "",
+            "ingredients": ""
+          },
+          {
+            "id": "912",
+            "name": "[Mini] Serum Obagi Cấp Nước, Dưỡng Ẩm, Phục Hồi Da 5ml",
+            "brand": "Obagi",
+            "price": 249000,
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-422208817-1701139808_img_450x450_31d6f9_fit_center.jpg",
+            "detail_url": "/index.php?r=chitiet&id=912",
+            "description": "",
+            "ingredients": ""
+          },
+          {
+            "id": "916",
+            "name": "Sữa Chống Nắng Curél Mặt & Toàn Thân Cho Da Khô Nhạy Cảm 60ml",
+            "brand": "Curél",
+            "price": 346000,
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-sua-chong-nang-curel-spf50-pa-60ml_gQ4hn48AeM518ZWR_img_450x450_31d6f9_fit_center.png",
+            "detail_url": "/index.php?r=chitiet&id=916",
+            "description": "",
+            "ingredients": ""
+          }
+        ],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "search",
+        "eval_scores": null,
+        "latency": 12.19
+      },
+      "seconds": 12.34
+    },
+    {
+      "kind": "advice",
+      "message": "Chào Ngọc Vi",
+      "id": "STORE-099",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Mình là Ngọc Vi, trợ lý tư vấn của SkinSyntaxVN. Bạn đang muốn cải thiện điều gì ở da?",
+        "conflicts": [],
+        "products": [],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "general",
+        "eval_scores": null,
+        "latency": 8.27
+      },
+      "seconds": 8.38
+    },
+    {
+      "kind": "advice",
+      "message": "Tôi đang bong tróc, có nên mua retinol không?",
+      "id": "STORE-100",
+      "status": "PASS",
+      "failures": [],
+      "response": {
+        "ok": true,
+        "answer": "Nếu tình trạng khô căng, bong tróc hoặc đỏ rát bạn đã nêu vẫn còn, mình chưa khuyên bắt đầu retinol ngay. Retinoid có thể làm da khô và kích ứng thêm; nên trao đổi với bác sĩ da liễu trước khi bắt đầu nếu da đang nhạy cảm. [Hướng dẫn của AAD](https://www.aad.org/public/everyday-care/skin-care-secrets/anti-aging/retinoid-retinol)\n\nHiện da bạn còn bong tróc hoặc bị rát khi thoa sản phẩm không?",
+        "conflicts": [],
+        "products": [],
+        "fallback": false,
+        "fallback_reason": "",
+        "status_message": "",
+        "fallback_note": "",
+        "pipeline_mode": "consultation_v2",
+        "query_type": "simple single-intent query",
+        "intent_mode": "knowledge",
+        "eval_scores": null,
+        "latency": 6.18
+      },
+      "seconds": 6.28
+    }
+  ]
+}

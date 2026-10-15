@@ -1,6 +1,29 @@
 <?php
 $studioAssets = dirname(__DIR__, 3) . '/public/assets';
 $studioEscape = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+$agentPromptGroups = [
+    'Kho & hạn sử dụng' => [
+        'Hạn còn 17–19 tháng' => 'Lọc 10 kem chống nắng còn hạn sử dụng từ 17 đến 19 tháng, còn hàng trong kho.',
+        'Hạn tối đa 18 tháng' => 'Lọc 10 kem chống nắng còn hạn sử dụng tối đa 18 tháng, còn hàng trong kho.',
+        'Tồn kho nhiều' => 'Lọc 10 kem chống nắng tồn kho trên 100 sản phẩm.',
+        'Tồn kho thấp' => 'Lọc 10 sản phẩm tồn kho tối đa 10 sản phẩm, còn hàng.',
+        'Đã hết hàng' => 'Lọc 10 sản phẩm đã hết hàng.',
+    ],
+    'Phân tích bán hàng' => [
+        'Bán chạy · 30 ngày' => 'Lọc 10 kem chống nắng bán chạy nhất trong 30 ngày qua.',
+        'Bán tốt · 7 ngày' => 'Lọc 10 kem chống nắng bán tốt trong 7 ngày qua.',
+        'Bán chạy · toàn kỳ' => 'Lọc 10 kem chống nắng bán chạy nhất toàn kỳ.',
+        'Doanh thu / chuyển đổi' => 'Lọc 10 kem chống nắng có doanh thu cao nhưng tỷ lệ chuyển đổi thấp trong 30 ngày qua.',
+        'Xem nhiều, chưa mua' => 'Lọc 10 kem chống nắng được xem nhiều nhưng chưa chốt đơn trong 30 ngày qua.',
+        'Thêm giỏ nhiều' => 'Lọc 10 kem chống nắng có nhiều lượt thêm giỏ trong 30 ngày qua.',
+        'Giảm giá, bán chậm' => 'Lọc 10 kem chống nắng đang giảm giá nhưng bán chậm trong 30 ngày qua.',
+        'Tăng trưởng · 7 ngày' => 'Lọc 10 kem chống nắng có doanh số tăng mạnh trong 7 ngày qua so với 7 ngày trước đó.',
+    ],
+    'Tạo livestream' => [
+        'Lọc rồi tạo live' => 'Lọc 10 kem chống nắng bán chạy nhất toàn kỳ, tạo livestream lúc 19h tối mai, thời lượng 60 phút, chỉ chiếu nội bộ xem trước.',
+        'Bán lô còn hạn' => 'Lọc 5 kem chống nắng còn hạn sử dụng từ 17 đến 19 tháng, tạo livestream lúc 19h tối mai, thời lượng 30 phút, chỉ phát nội bộ.',
+    ],
+];
 ?>
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/ai-idol-studio.css?v=<?= filemtime($studioAssets . '/css/ai-idol-studio.css') ?>">
 <main class="idol-studio" id="idolStudio">
@@ -18,6 +41,7 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
         <div class="studio-stat"><i class="bi bi-calendar2-check" aria-hidden="true"></i><strong id="scheduledCount">—</strong><span>Đã lên lịch</span></div>
         <div class="studio-sync" id="syncStatus" role="status"><span class="sync-dot"></span> Đang kết nối</div>
     </div>
+    <div class="idol-health" id="idolHealth" role="status" aria-live="polite" aria-label="Tình trạng dịch vụ"><span class="health-title">Dịch vụ</span><span class="health-note">Đang kiểm tra…</span></div>
     <div class="studio-flow-switch" role="tablist" aria-label="Chọn cách tạo chương trình">
         <button type="button" class="flow-tab is-active" id="manualFlowTab" role="tab" aria-selected="true" aria-controls="manualFlow" data-studio-flow="manual"><i class="bi bi-sliders" aria-hidden="true"></i><span><strong>Wizard thủ công</strong><small>Chủ động chọn từng thiết lập</small></span></button>
         <button type="button" class="flow-tab" id="agentFlowTab" role="tab" aria-selected="false" aria-controls="agentFlow" data-studio-flow="agent"><i class="bi bi-stars" aria-hidden="true"></i><span><strong>Agent tự động</strong><small>Mô tả một lần, Agent tự lập kế hoạch</small></span></button>
@@ -28,10 +52,147 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
             <form id="agentForm" class="agent-form" novalidate>
                 <div class="studio-message" id="agentMessage" role="alert" hidden></div>
                 <div class="idol-field">
-                    <label for="agentBrief">Bạn muốn Syna tạo chương trình gì?</label>
+                    <label for="agentBrief">Bạn muốn Syna tìm sản phẩm hay tạo livestream?</label>
                     <textarea id="agentBrief" class="idol-input agent-brief" maxlength="4000" placeholder="Ví dụ: Tối mai lúc 20 giờ, tạo livestream 60 phút giới thiệu sản phẩm mã 995 theo phong cách phân tích thành phần. Trước mắt chỉ phát nội bộ để tôi xem thử."></textarea>
-                    <p class="idol-note">Có thể ghi tên hoặc mã sản phẩm, giờ phát, thời lượng và phong cách. Phần còn thiếu sẽ được Agent đề xuất an toàn.</p>
+                    <p class="idol-note">Lệnh lọc chỉ trả danh sách, không tạo video. Chỉ khi bạn yêu cầu tạo livestream, chế độ bên dưới mới áp dụng.</p>
                 </div>
+                <section class="agent-prompts" aria-label="Lệnh mẫu">
+                    <div class="agent-prompts-heading"><strong>Chọn nhanh một việc</strong><button type="button" id="undoAgentPrompt" hidden>Khôi phục lệnh trước</button></div>
+                    <p class="idol-note">Nhấn để điền, sửa điều kiện rồi bấm chạy. “Khoảng 18 tháng” cần chọn rõ phạm vi; mẫu dùng 17–19 tháng.</p>
+                    <?php foreach ($agentPromptGroups as $group => $prompts): ?>
+                        <details <?= $group === 'Kho & hạn sử dụng' ? 'open' : '' ?>>
+                            <summary><?= $studioEscape($group) ?></summary>
+                            <div class="agent-prompt-options">
+                                <?php foreach ($prompts as $label => $prompt): ?>
+                                    <button type="button" class="agent-prompt" data-agent-prompt="<?= $studioEscape($prompt) ?>" title="<?= $studioEscape($prompt) ?>"><?= $studioEscape($label) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                        </details>
+                    <?php endforeach; ?>
+                    <small>Hạn dùng cần dữ liệu lô hàng. Thống kê 7/30 ngày cần dữ liệu theo kỳ; thiếu dữ liệu sẽ được báo rõ.</small>
+                </section>
+                <section class="agent-builder" aria-labelledby="agentBuilderTitle">
+                    <div class="agent-builder-heading">
+                        <div><span class="studio-eyebrow">PROMPT BUILDER</span><h3 id="agentBuilderTitle">Ghép lệnh từ nhiều lựa chọn</h3></div>
+                        <span class="small-tag">KHÔNG BẮT BUỘC</span>
+                    </div>
+                    <p class="idol-note">Bạn có thể chọn 1, 2, 3 hoặc tất cả nhóm. Mỗi lần chọn, câu lệnh hoàn chỉnh bên dưới sẽ cập nhật để bạn xem trước rồi mới dùng.</p>
+                    <div class="agent-builder-grid">
+                        <fieldset class="agent-builder-group">
+                            <legend>1 · Danh mục sản phẩm <span>chọn tối đa 1 nhánh</span></legend>
+                            <div class="agent-builder-fields agent-category-fields">
+                                <label>Nhóm<select id="agentCategoryLevel1" class="idol-select"><option value="">Không giới hạn (Tất cả <?= number_format($filterCounts['total'] ?? 2473, 0, ',', '.') ?> sản phẩm)</option><option value="face">Chăm Sóc Da Mặt (Có <?= number_format($catalogTree['face']['count'] ?? 2473, 0, ',', '.') ?> sản phẩm)</option><option value="makeup">Trang Điểm (0 sản phẩm)</option><option value="body">Chăm Sóc Cơ Thể (0 sản phẩm)</option><option value="hair">Chăm Sóc Tóc (0 sản phẩm)</option></select></label>
+                                <label>Danh mục<select id="agentCategoryLevel2" class="idol-select" disabled><option value="">Chọn nhóm trước</option></select></label>
+                                <label>Phân loại<select id="agentCategoryLevel3" class="idol-select" disabled><option value="">Chọn danh mục trước</option></select></label>
+                            </div>
+                        </fieldset>
+                        <fieldset class="agent-builder-group">
+                            <legend>2 · Kho & hạn sử dụng <span>mỗi nhóm chọn 1</span></legend>
+                            <div class="agent-check-grid">
+                                <label><input type="radio" name="agentExpiry" value="" data-fragment="" checked><span>Hạn dùng: không lọc</span></label>
+                                <label><input type="radio" name="agentExpiry" value="expiry_17_19" data-fragment="còn hạn sử dụng từ 17 đến 19 tháng"><span>Hạn còn 17–19 tháng <span class="filter-count">(<?= number_format($filterCounts['expiry_17_19'] ?? 0, 0, ',', '.') ?> sản phẩm)</span></span></label>
+                                <label><input type="radio" name="agentExpiry" value="expiry_max_18" data-fragment="còn hạn sử dụng tối đa 18 tháng"><span>Hạn tối đa 18 tháng <span class="filter-count">(<?= number_format($filterCounts['expiry_max_18'] ?? 0, 0, ',', '.') ?> sản phẩm)</span></span></label>
+                                <label><input type="radio" name="agentStock" value="" data-fragment="" checked><span>Tồn kho: không lọc</span></label>
+                                <label><input type="radio" name="agentStock" value="stock_high" data-fragment="tồn kho trên 100 sản phẩm"><span>Tồn kho nhiều (&gt;100) <span class="filter-count">(<?= number_format($filterCounts['stock_high'] ?? 0, 0, ',', '.') ?> sản phẩm)</span></span></label>
+                                <label><input type="radio" name="agentStock" value="stock_low" data-fragment="tồn kho tối đa 10 sản phẩm, còn hàng"><span>Tồn kho thấp (≤10) <span class="filter-count">(<?= number_format($filterCounts['stock_low'] ?? 0, 0, ',', '.') ?> sản phẩm)</span></span></label>
+                                <label><input type="radio" name="agentStock" value="out_of_stock" data-fragment="đã hết hàng"><span>Đã hết hàng <span class="filter-count">(<?= number_format($filterCounts['out_of_stock'] ?? 0, 0, ',', '.') ?> sản phẩm)</span></span></label>
+                            </div>
+                            <div class="agent-builder-fields agent-scope-fields">
+                                <label>Phạm vi kho<select id="agentWarehouseMode" class="idol-select"><option value="">Tất cả kho</option><option value="warehouse">Chỉ lấy một kho</option><option value="batch">Chỉ lấy một lô hàng</option></select></label>
+                                <label class="agent-scope-value" id="agentWarehouseValue" hidden><span id="agentWarehouseLabel">Tên hoặc mã kho</span><input id="agentWarehouse" class="idol-input" maxlength="80" placeholder="Ví dụ: KHO-HN-01"></label>
+                            </div>
+                        </fieldset>
+                        <fieldset class="agent-builder-group">
+                            <legend>3 · Phân tích bán hàng <span>chọn 1</span></legend>
+                            <div class="agent-check-grid">
+                                <label><input type="radio" name="agentSales" value="" data-fragment="" checked><span>Không chọn</span></label>
+                                <label><input type="radio" name="agentSales" value="best_30" data-fragment="bán chạy nhất trong 30 ngày qua"><span>Bán chạy · 30 ngày <span class="filter-count">(<?= number_format($filterCounts['best_30'] ?? 45, 0, ',', '.') ?> sản phẩm)</span></span></label>
+                                <label><input type="radio" name="agentSales" value="best_7" data-fragment="bán tốt trong 7 ngày qua"><span>Bán tốt · 7 ngày <span class="filter-count">(<?= number_format($filterCounts['best_7'] ?? 20, 0, ',', '.') ?> sản phẩm)</span></span></label>
+                                <label><input type="radio" name="agentSales" value="best_all" data-fragment="bán chạy nhất toàn kỳ"><span>Bán chạy · toàn kỳ <span class="filter-count">(<?= number_format($filterCounts['best_all'] ?? 2108, 0, ',', '.') ?> sản phẩm)</span></span></label>
+                                <label><input type="radio" name="agentSales" value="revenue_low_conversion" data-fragment="doanh thu cao nhưng tỷ lệ chuyển đổi thấp trong 30 ngày qua"><span>Doanh thu cao, chuyển đổi thấp</span></label>
+                                <label><input type="radio" name="agentSales" value="views_no_orders" data-fragment="được xem nhiều nhưng chưa chốt đơn trong 30 ngày qua"><span>Xem nhiều, chưa mua</span></label>
+                                <label><input type="radio" name="agentSales" value="cart" data-fragment="có nhiều lượt thêm giỏ trong 30 ngày qua"><span>Thêm giỏ nhiều</span></label>
+                                <label><input type="radio" name="agentSales" value="discount_slow" data-fragment="đang giảm giá nhưng bán chậm trong 30 ngày qua"><span>Giảm giá, bán chậm</span></label>
+                                <label><input type="radio" name="agentSales" value="growth_7" data-fragment="có doanh số tăng mạnh trong 7 ngày qua so với 7 ngày trước đó"><span>Tăng trưởng · 7 ngày</span></label>
+                            </div>
+                        </fieldset>
+                        <fieldset class="agent-builder-group">
+                            <legend>4 · Số lượng & thương hiệu <span>mỗi loại chỉ chọn 1</span></legend>
+                            <div class="agent-builder-fields agent-quantity-fields">
+                                <label>Số lượng<select id="agentQuantity" class="idol-select"><option value="">Tự chọn phù hợp</option><option value="1">Top 1</option><option value="3">Top 3</option><option value="5">Top 5</option><option value="10">Top 10</option></select></label>
+                                <label>Thương hiệu ưu tiên <span class="field-optional">Không bắt buộc</span><input id="agentBrand" class="idol-input" maxlength="80" placeholder="Ví dụ: CeraVe · để trống nếu muốn nhiều thương hiệu"></label>
+                            </div>
+                            <div class="agent-check-grid agent-check-grid-inline"><label><input type="checkbox" id="agentBrandCap" value="1"><span>Mỗi thương hiệu tối đa 2 sản phẩm</span></label><label><input type="checkbox" id="agentEnoughStock" value="1"><span>Ưu tiên sản phẩm còn đủ hàng để live</span></label></div>
+                        </fieldset>
+                        <fieldset class="agent-builder-group">
+                            <legend>5 · Cách dẫn chuyện của Syna <span>có thể chọn nhiều</span></legend>
+                            <div class="agent-check-grid agent-style-grid">
+                                <label><input type="checkbox" name="agentStyle" value="tươi vui, dễ thương"><span>Tươi vui, dễ thương</span></label>
+                                <label><input type="checkbox" name="agentStyle" value="tư vấn nhẹ nhàng"><span>Tư vấn nhẹ nhàng</span></label>
+                                <label><input type="checkbox" name="agentStyle" value="chuyên gia khoa học"><span>Chuyên gia khoa học</span></label>
+                                <label><input type="checkbox" name="agentStyle" value="tập trung chốt sale"><span>Tập trung chốt sale</span></label>
+                                <label><input type="checkbox" name="agentStyle" value="ngắn gọn, nhanh"><span>Ngắn gọn, nhanh</span></label>
+                                <label><input type="checkbox" name="agentStyle" value="giải thích chi tiết"><span>Giải thích chi tiết</span></label>
+                                <label><input type="checkbox" name="agentStyle" value="thân thiện như bạn bè"><span>Thân thiện như bạn bè</span></label>
+                                <label><input type="checkbox" name="agentStyle" value="nhấn mạnh thành phần"><span>Nhấn mạnh thành phần</span></label>
+                                <label><input type="checkbox" name="agentStyle" value="nhấn mạnh giá và ưu đãi"><span>Nhấn mạnh giá & ưu đãi</span></label>
+                            </div>
+                        </fieldset>
+                        <fieldset class="agent-builder-group agent-live-group">
+                            <legend>6 · Chế độ phát sóng <span>mặc định: Video sản phẩm</span></legend>
+                            <div class="agent-purpose-grid" role="radiogroup" aria-label="Chế độ phát sóng">
+                                <label class="agent-purpose"><input type="radio" name="agentPurpose" value="product_video" checked><span><strong>Video sản phẩm <em>Mặc định</em></strong><small>Không phát sóng. Không nói giá, nói kỹ thành phần và thông số. Tự hiện trên trang sản phẩm khi video sẵn sàng.</small></span></label>
+                                <label class="agent-purpose"><input type="radio" name="agentPurpose" value="live_and_product"><span><strong>Livestream + video sản phẩm</strong><small>Livestream được nói giá live. Phần giới thiệu không có giá tự lên trang sản phẩm sau khi phát xong.</small></span></label>
+                                <label class="agent-purpose"><input type="radio" name="agentPurpose" value="live_only"><span><strong>Chỉ livestream</strong><small>Được nói giá live, khuyến mãi có hạn, kêu gọi chốt đơn. Không lưu video lên trang sản phẩm.</small></span></label>
+                            </div>
+                            <p class="agent-purpose-note" id="agentPurposeNote">"Tập trung chốt sale" và "Nhấn mạnh giá &amp; ưu đãi" tạm tắt vì video sản phẩm không được nói giá.</p>
+                            <div id="agentLiveFields" class="agent-builder-fields agent-live-fields" hidden>
+                                <label>Ngày & giờ phát<input id="agentLiveAt" class="idol-input" type="datetime-local"></label>
+                                <label>Thời lượng<select id="agentLiveDuration" class="idol-select"><option value="30">30 phút</option><option value="60" selected>60 phút</option><option value="90">90 phút</option><option value="120">120 phút</option></select></label>
+                                <label>Phạm vi phát<select id="agentLiveChannel" class="idol-select"><option value="chỉ chiếu nội bộ xem trước">Nội bộ xem trước</option><option value="phát nội bộ">Phát nội bộ</option><option value="phát nội bộ và YouTube">Nội bộ + YouTube</option><option value="phát nội bộ và Facebook">Nội bộ + Facebook</option></select></label>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="agent-prompt-preview" aria-live="polite">
+                        <div class="agent-prompt-preview-heading"><strong>Prompt đang ghép</strong><span id="agentPromptSelectionCount">0 lựa chọn</span></div>
+                        <textarea id="agentPromptPreview" class="idol-input" rows="3" readonly placeholder="Chọn một vài điều kiện ở trên để xem prompt hoàn chỉnh..."></textarea>
+                        <div class="agent-prompt-preview-actions"><small id="agentPromptHint">Prompt chỉ được điền vào ô lệnh khi bạn bấm nút bên dưới.</small><button type="button" class="idol-btn secondary" id="useAgentBuilderPrompt" disabled>Dùng prompt này</button></div>
+                    </div>
+                    <section class="agent-live-products" id="agentLiveProducts" aria-labelledby="liveProductsTitle">
+                        <div class="live-products-header">
+                            <div class="live-products-title-group">
+                                <div class="live-status-pill">
+                                    <span class="live-pulse-dot" aria-hidden="true"></span>
+                                    <span class="live-status-text">LIVESEARCH REALTIME</span>
+                                </div>
+                                <h4 id="liveProductsTitle">Sản phẩm phù hợp với lựa chọn</h4>
+                            </div>
+                            <div class="live-products-meta">
+                                <span class="live-badge" id="liveProductCountBadge">Đang tải sản phẩm...</span>
+                                <span class="live-selected-counter" id="liveSelectedCounter" hidden>0 đã chọn</span>
+                            </div>
+                        </div>
+                        <div class="live-products-toolbar">
+                            <div class="live-search-input-wrap">
+                                <i class="bi bi-search" aria-hidden="true"></i>
+                                <input type="search" id="liveProductFilterKeyword" class="idol-input" placeholder="Lọc nhanh tên hoặc mã SP trong danh sách..." autocomplete="off">
+                            </div>
+                            <div class="live-toolbar-actions">
+                                <button type="button" class="text-button" id="liveSelectAllBtn">Chọn tất cả</button>
+                                <button type="button" class="text-button" id="liveDeselectAllBtn" hidden>Bỏ chọn</button>
+                            </div>
+                        </div>
+                        <div class="live-products-container" id="liveProductsContainer" role="region" aria-live="polite">
+                            <div class="studio-loading" role="status"><span></span><p>Đang tìm sản phẩm phù hợp...</p></div>
+                        </div>
+                        <div class="live-products-footer">
+                            <small class="live-sync-note" id="liveSyncNote">
+                                <i class="bi bi-shield-check" aria-hidden="true"></i> Tồn kho tự động cập nhật realtime mỗi 5 giây.
+                            </small>
+                            <span class="live-pagination-info" id="livePaginationInfo"></span>
+                        </div>
+                    </section>
+                </section>
                 <div class="agent-policy-grid">
                     <label class="agent-policy"><input type="radio" name="agentPolicy" value="auto_preview" checked><span><i class="bi bi-play-circle" aria-hidden="true"></i><strong>Tự tạo bản xem trước</strong><small>Tự duyệt sau kiểm duyệt, chỉ phát nội bộ.</small></span></label>
                     <label class="agent-policy"><input type="radio" name="agentPolicy" value="assisted"><span><i class="bi bi-person-check" aria-hidden="true"></i><strong>Duyệt trước khi render</strong><small>Dừng ở kịch bản để nhân viên chỉnh sửa.</small></span></label>
@@ -114,13 +275,21 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
                     <section class="step-panel" id="stepPanel3" role="tabpanel" aria-labelledby="stepTab3" hidden>
                         <div class="step-intro"><h3>Hẹn giờ cho buổi live của bạn.</h3><p>Chừa thời gian để duyệt kịch bản và tạo video trước giờ phát.</p></div>
                         <div class="schedule-summary"><i class="bi bi-bag-check" aria-hidden="true"></i><div><strong id="summaryProducts">Chưa chọn sản phẩm</strong><span id="summaryPreparation">Quay lại Nội dung để chọn sản phẩm.</span></div></div>
+                        <div class="idol-field"><label>Chế độ phát sóng</label><div class="agent-purpose-grid" role="radiogroup" aria-label="Chế độ phát sóng">
+                            <label class="agent-purpose"><input type="radio" name="manualPurpose" value="product_video" checked><span><strong>Video sản phẩm <em>Mặc định</em></strong><small>Không phát sóng, tự hiện trên trang sản phẩm.</small></span></label>
+                            <label class="agent-purpose"><input type="radio" name="manualPurpose" value="live_and_product"><span><strong>Livestream + video sản phẩm</strong><small>Phát sóng, rồi phần không giá lên trang sản phẩm.</small></span></label>
+                            <label class="agent-purpose"><input type="radio" name="manualPurpose" value="live_only"><span><strong>Chỉ livestream</strong><small>Chỉ phát sóng, không lên trang sản phẩm.</small></span></label>
+                        </div></div>
+                        <div id="manualLiveFields" hidden>
                         <div class="idol-row"><div class="idol-field"><label for="scheduledAt">Ngày & giờ phát</label><input id="scheduledAt" type="datetime-local" class="idol-input" required></div><div class="idol-field"><label for="durationMinutes">Thời lượng <span class="field-optional">phút</span></label><input id="durationMinutes" type="number" min="1" max="720" value="60" class="idol-input" required></div></div>
                         <div class="idol-field"><label>Nơi phát chương trình</label><div class="platforms">
                             <label class="platform"><input type="checkbox" name="platform" value="internal" checked><i class="bi bi-display" aria-hidden="true"></i><span>Xem nội bộ</span></label>
                             <label class="platform"><input type="checkbox" name="platform" value="youtube"><i class="bi bi-youtube" aria-hidden="true"></i><span>YouTube</span></label>
                             <label class="platform"><input type="checkbox" name="platform" value="facebook"><i class="bi bi-facebook" aria-hidden="true"></i><span>Facebook</span></label>
                         </div><p class="idol-note">YouTube và Facebook cần được cấu hình khóa phát trước khi lên sóng.</p></div>
-                        <div class="approval-reminder"><i class="bi bi-pencil-square" aria-hidden="true"></i><div><strong>Bạn duyệt xong, video mới được tạo.</strong><p>Kịch bản sẽ xuất hiện trong chương trình để bạn chỉnh sửa và chấp nhận.</p></div></div>
+                        </div>
+                        <div class="approval-reminder" id="manualProductVideoNote"><i class="bi bi-magic" aria-hidden="true"></i><div><strong>Video sản phẩm tự duyệt và tự đăng.</strong><p>Kịch bản qua bộ kiểm tra sẽ được tạo video ngay, rồi tự lên trang sản phẩm.</p></div></div>
+                        <div class="approval-reminder" id="manualApprovalNote" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i><div><strong>Bạn duyệt xong, video mới được tạo.</strong><p>Kịch bản sẽ xuất hiện trong chương trình để bạn chỉnh sửa và chấp nhận.</p></div></div>
                     </section>
                     <div class="form-footer"><button type="button" id="previousStep" class="idol-btn secondary" hidden><i class="bi bi-arrow-left" aria-hidden="true"></i> Quay lại</button><span class="footer-note" id="footerNote">Bắt đầu bằng những sản phẩm bạn yêu thích.</span><button type="button" id="nextStep" class="idol-btn primary">Chọn không gian <i class="bi bi-arrow-right" aria-hidden="true"></i></button><button type="submit" id="createCampaign" class="idol-btn primary" hidden>Tạo kịch bản <i class="bi bi-arrow-right" aria-hidden="true"></i></button></div>
                 </form>
@@ -136,4 +305,9 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
         </section>
     </div>
 </main>
+<script>
+window.__IDOL_CATALOG__ = <?= json_encode($catalogTree ?? [], JSON_UNESCAPED_UNICODE) ?>;
+window.__IDOL_FILTER_COUNTS__ = <?= json_encode($filterCounts ?? [], JSON_UNESCAPED_UNICODE) ?>;
+</script>
+<script src="<?= BASE_URL ?>/assets/js/ai-idol-approval.js?v=<?= filemtime($studioAssets . '/js/ai-idol-approval.js') ?>" defer></script>
 <script src="<?= BASE_URL ?>/assets/js/ai-idol-studio.js?v=<?= filemtime($studioAssets . '/js/ai-idol-studio.js') ?>" defer></script>

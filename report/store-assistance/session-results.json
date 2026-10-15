@@ -1,0 +1,113 @@
+{
+  "results": [
+    {
+      "case": "Guest receives exact real product and requested quantity",
+      "status": "PASS"
+    },
+    {
+      "case": "GET actions rejected",
+      "status": "PASS"
+    },
+    {
+      "case": "Missing CSRF rejected",
+      "status": "PASS"
+    },
+    {
+      "case": "Offer cannot cross guest sessions",
+      "status": "PASS"
+    },
+    {
+      "case": "Unoffered product rejected",
+      "status": "PASS"
+    },
+    {
+      "case": "Invalid quantity 0",
+      "status": "PASS"
+    },
+    {
+      "case": "Invalid quantity -1",
+      "status": "PASS"
+    },
+    {
+      "case": "Invalid quantity 21",
+      "status": "PASS"
+    },
+    {
+      "case": "Invalid quantity 1.5",
+      "status": "PASS"
+    },
+    {
+      "case": "Invalid quantity 2",
+      "status": "PASS"
+    },
+    {
+      "case": "Select returns server subtotal",
+      "status": "PASS"
+    },
+    {
+      "case": "Support question during choice is grounded",
+      "status": "PASS"
+    },
+    {
+      "case": "Offer remains valid after support question",
+      "status": "PASS"
+    },
+    {
+      "case": "Tampered price rejected",
+      "status": "PASS"
+    },
+    {
+      "case": "Guest explicitly handed to login",
+      "status": "PASS"
+    },
+    {
+      "case": "Login resumes existing checkout without skin profile",
+      "status": "PASS"
+    },
+    {
+      "case": "Checkout shows subtotal for two bottles",
+      "status": "PASS"
+    },
+    {
+      "case": "Chat selection does not add products to shopping cart",
+      "status": "PASS"
+    },
+    {
+      "case": "Explicit exact purchase not silently replaced by profile recommendation",
+      "status": "PASS"
+    },
+    {
+      "case": "Signed-in customer goes directly to checkout",
+      "status": "PASS"
+    },
+    {
+      "case": "Canonical page tro_giup",
+      "status": "PASS"
+    },
+    {
+      "case": "Canonical page huong_dan_nhan_otp",
+      "status": "PASS"
+    },
+    {
+      "case": "Canonical page dieu_kien_giao_dich",
+      "status": "PASS"
+    },
+    {
+      "case": "Canonical page chinh_sach_bao_mat",
+      "status": "PASS"
+    },
+    {
+      "case": "Canonical page bao_hanh",
+      "status": "PASS"
+    },
+    {
+      "case": "Unknown article returns 404",
+      "status": "PASS"
+    },
+    {
+      "case": "Search query HTML escaped",
+      "status": "PASS"
+    }
+  ],
+  "cleanup_verified": true
+}

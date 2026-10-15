@@ -1,0 +1,164 @@
+[
+  {
+    "case": "invalid_1",
+    "passed": true,
+    "status": 400
+  },
+  {
+    "case": "invalid_2",
+    "passed": true,
+    "status": 400
+  },
+  {
+    "case": "invalid_3",
+    "passed": true,
+    "status": 400
+  },
+  {
+    "case": "invalid_4",
+    "passed": true,
+    "status": 400
+  },
+  {
+    "case": "invalid_5",
+    "passed": true,
+    "status": 400
+  },
+  {
+    "case": "invalid_6",
+    "passed": true,
+    "status": 400
+  },
+  {
+    "case": "invalid_7",
+    "passed": true,
+    "status": 400
+  },
+  {
+    "case": "invalid_8",
+    "passed": true,
+    "status": 400
+  },
+  {
+    "case": "php_empty",
+    "passed": true,
+    "status": 200,
+    "response": {
+      "ok": true,
+      "answer": "Mình đã kiểm tra nhóm Toner / Nước Cân Bằng Da, nhưng chưa chọn được sản phẩm đáp ứng đồng thời các điều kiện: ngân sách hoặc giá chưa xác định. Bạn muốn kiểm tra một sản phẩm cụ thể hay điều chỉnh khoảng giá?",
+      "conflicts": [],
+      "products": [],
+      "fallback": false,
+      "fallback_reason": "",
+      "status_message": "",
+      "fallback_note": "",
+      "pipeline_mode": "consultation_v2",
+      "query_type": "simple single-intent query",
+      "intent_mode": "search",
+      "eval_scores": null,
+      "latency": 6.02
+    }
+  },
+  {
+    "case": "php_knowledge",
+    "passed": true,
+    "status": 200,
+    "response": {
+      "ok": true,
+      "answer": "Một quy trình chăm sóc da cơ bản thường bao gồm các bước sau:\n\n1. **Làm sạch (Cleansing)**: Sử dụng sữa rửa mặt để loại bỏ bụi bẩn, dầu thừa và lớp trang điểm.\n2. **Toner**: Sử dụng toner để cân bằng độ pH cho da và chuẩn bị cho các bước tiếp theo.\n3. **Serum**: Áp dụng serum chứa các thành phần hoạt tính như vitamin C, hyaluronic acid, hoặc niacinamide để giải quyết các vấn đề cụ thể của da.\n4. **Kem dưỡng ẩm (Moisturizer)**: Dưỡng ẩm cho da để giữ cho da luôn mềm mại và đủ nước.\n5. **Kem chống nắng (Sunscreen)**: Vào buổi sáng, sử dụng kem chống nắng để bảo vệ da khỏi tác hại của tia UV.\n\nTùy thuộc vào nhu cầu và tình trạng da của mỗi người, có thể thêm hoặc điều chỉnh các bước này. Nếu bạn có thêm câu hỏi cụ thể về từng bước hoặc thành phần nào đó, hãy cho mình biết nhé!",
+      "conflicts": [],
+      "products": [],
+      "fallback": false,
+      "fallback_reason": "",
+      "status_message": "",
+      "fallback_note": "",
+      "pipeline_mode": "consultation_v2",
+      "query_type": "simple single-intent query",
+      "intent_mode": "knowledge",
+      "eval_scores": null,
+      "latency": 7.74
+    }
+  },
+  {
+    "case": "php_retinol",
+    "passed": true,
+    "status": 200,
+    "response": {
+      "ok": true,
+      "answer": "Mình tìm thấy một sản phẩm retinol phù hợp cho bạn:\n\n**[Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml](index.php?r=chitiet&id=244)**  \nGiá: 367.000 VNĐ  \n- **Thành phần chính**: Retinol 0.1%, Retinal, Bakuchiol, cùng nhiều chiết xuất tự nhiên khác.\n- **Công dụng**: Giúp cải thiện độ đàn hồi, giảm nếp nhăn, làm sáng da và cải thiện lỗ chân lông. Sản phẩm an toàn cho cả làn da nhạy cảm.\n\n**Hướng dẫn sử dụng**: \n- Trong 1-2 tuần đầu, sử dụng 1 lượng nhỏ (khoảng 2 giọt) vào buổi tối. Đối với da nhạy cảm, có thể sử dụng cách ngày với lượng ít hơn. Sau 3 tuần, nếu da thích ứng tốt, có thể tăng lượng dùng.\n\nNếu bạn cần thêm thông tin hoặc có câu hỏi khác, hãy cho mình biết nhé!",
+      "conflicts": [],
+      "products": [
+        {
+          "id": "244",
+          "name": "Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml",
+          "brand": "Some By Mi",
+          "price": 367000,
+          "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-serum-some-by-mi-retinol-01-ngua-lao-hoa-cang-bong-da-30ml_jRJ6i3FK3vDzjDVA_img_450x450_31d6f9_fit_center.png",
+          "detail_url": "/index.php?r=chitiet&id=244",
+          "description": "",
+          "ingredients": ""
+        }
+      ],
+      "fallback": false,
+      "fallback_reason": "",
+      "status_message": "",
+      "fallback_note": "",
+      "pipeline_mode": "consultation_v2",
+      "query_type": "simple single-intent query",
+      "intent_mode": "search",
+      "eval_scores": null,
+      "latency": 7.04
+    }
+  },
+  {
+    "case": "php_category_switch",
+    "passed": true,
+    "status": 200,
+    "response": {
+      "ok": true,
+      "answer": "Mình tìm được 3 lựa chọn Hỗ Trợ Trị Mụn để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Gel Giảm Mụn Naris Acmedica Ngăn Ngừa Sẹo Thâm 25g](index.php?r=chitiet&id=1961) — 349.000đ.\n- [Gel Dưỡng SVR Giảm Mụn & Loại Bỏ Dầu Cho Da 40ml](index.php?r=chitiet&id=589) — 361.000đ.\n- [Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml](index.php?r=chitiet&id=964) — 514.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+      "conflicts": [],
+      "products": [
+        {
+          "id": "1961",
+          "name": "Gel Giảm Mụn Naris Acmedica Ngăn Ngừa Sẹo Thâm 25g",
+          "brand": "Naris Cosmetics",
+          "price": 349000,
+          "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-248700037-1729048306_img_450x450_31d6f9_fit_center.jpg",
+          "detail_url": "/index.php?r=chitiet&id=1961",
+          "description": "",
+          "ingredients": ""
+        },
+        {
+          "id": "589",
+          "name": "Gel Dưỡng SVR Giảm Mụn & Loại Bỏ Dầu Cho Da 40ml",
+          "brand": "SVR",
+          "price": 361000,
+          "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-gel-duong-svr-giam-mun-loai-bo-dau-cho-da-40ml-moi-1751448897_img_450x450_31d6f9_fit_center.jpg",
+          "detail_url": "/index.php?r=chitiet&id=589",
+          "description": "",
+          "ingredients": ""
+        },
+        {
+          "id": "964",
+          "name": "Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml",
+          "brand": "La Roche-Posay",
+          "price": 514000,
+          "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-kem-duong-la-roche-posay-lam-giam-mun-chuyen-biet-15ml_rYvkgFgUVswYn1AT_img_450x450_31d6f9_fit_center.png",
+          "detail_url": "/index.php?r=chitiet&id=964",
+          "description": "",
+          "ingredients": ""
+        }
+      ],
+      "fallback": false,
+      "fallback_reason": "",
+      "status_message": "",
+      "fallback_note": "",
+      "pipeline_mode": "consultation_v2",
+      "query_type": "simple single-intent query",
+      "intent_mode": "search",
+      "eval_scores": null,
+      "latency": 11.2
+    }
+  }
+]

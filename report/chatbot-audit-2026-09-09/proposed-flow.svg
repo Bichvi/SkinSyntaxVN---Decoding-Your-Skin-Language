@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 2180" width="1800" height="2180" role="img">
+<title>LUỒNG ĐỀ XUẤT · AI TƯ VẤN ROUTINE CÓ KIỂM CHỨNG</title><desc>Một workflow LangGraph · Tái sử dụng PHP + Flask + MongoDB · Thông số là khởi điểm thử nghiệm, chưa áp dụng</desc>
+<rect width="1800" height="2180" fill="white"/>
+<text x="70" y="32" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="700" fill="#14372e">LUỒNG ĐỀ XUẤT · AI TƯ VẤN ROUTINE CÓ KIỂM CHỨNG</text>
+<text x="70" y="88" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="400" fill="#4c625a">Một workflow LangGraph · Tái sử dụng PHP + Flask + MongoDB · Thông số là khởi điểm thử nghiệm, chưa áp dụng</text>
+<polyline points="340,415 340,485" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="340,485 333.47551698833155,471.49329346470984 346.52448301166845,471.49329346470984" fill="#0d513a"/>
+<polyline points="610,615 670,615 670,225 740,225" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="740,225 726.4932934647098,231.52448301166845 726.4932934647098,218.47551698833155" fill="#0d513a"/>
+<polyline points="610,615 670,615 670,412 740,412" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="740,412 726.4932934647098,418.52448301166845 726.4932934647098,405.47551698833155" fill="#0d513a"/>
+<polyline points="610,615 670,615 670,618 740,618" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="740,618 726.4932934647098,624.5244830116685 726.4932934647098,611.4755169883315" fill="#0d513a"/>
+<polyline points="340,740 340,800" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="340,800 333.47551698833155,786.4932934647098 346.52448301166845,786.4932934647098" fill="#0d513a"/>
+<rect x="360" y="756" width="139.0" height="29" rx="8" fill="#ffffff" stroke="#ffffff" stroke-width="2"/>
+<text x="365" y="758" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="#0d513a">Thiếu dữ kiện</text>
+<polyline points="70,920 35,920 35,270 70,270" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="70,270 56.49329346470985,276.52448301166845 56.49329346470985,263.47551698833155" fill="#0d513a"/>
+<polyline points="1220,720 1220,785" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1220,785 1213.4755169883315,771.4932934647098 1226.5244830116685,771.4932934647098" fill="#0d513a"/>
+<polyline points="1700,412 1730,412 1730,865 1700,865" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1700,865 1713.50670653529,858.4755169883315 1713.50670653529,871.5244830116685" fill="#0d513a"/>
+<rect x="1445" y="744" width="194.0" height="29" rx="8" fill="#ffffff" stroke="#ffffff" stroke-width="2"/>
+<text x="1450" y="746" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="#0d513a">Kho kiến thức riêng</text>
+<polyline points="1220,1030 1220,1090" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1220,1090 1213.4755169883315,1076.49329346471 1226.5244830116685,1076.49329346471" fill="#0d513a"/>
+<polyline points="1220,1300 1220,1360" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1220,1360 1213.4755169883315,1346.49329346471 1226.5244830116685,1346.49329346471" fill="#0d513a"/>
+<polyline points="1220,1540 1220,1600" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1220,1600 1213.4755169883315,1586.49329346471 1226.5244830116685,1586.49329346471" fill="#0d513a"/>
+<polyline points="1220,1785 1220,1840" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1220,1840 1213.4755169883315,1826.49329346471 1226.5244830116685,1826.49329346471" fill="#0d513a"/>
+<polyline points="740,1940 670,1940 670,2050 610,2050" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="610,2050 623.5067065352902,2043.4755169883315 623.5067065352902,2056.5244830116685" fill="#0d513a"/>
+<polyline points="1700,225 1765,225 1765,2140 340,2140 340,2110" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="340,2110 346.52448301166845,2123.50670653529 333.47551698833155,2123.50670653529" fill="#0d513a"/>
+<polyline points="1700,1240 1747,1240 1747,1688 1700,1688" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="1700,1688 1713.50670653529,1681.4755169883315 1713.50670653529,1694.5244830116685" fill="#0d513a"/>
+<rect x="1255" y="1562" width="311.0" height="29" rx="8" fill="#ffffff" stroke="#ffffff" stroke-width="2"/>
+<text x="1260" y="1564" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="#0d513a">Knowledge bỏ qua chọn routine</text>
+<polyline points="740,1990 690,1990 690,1490 610,1490" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="610,1490 623.5067065352902,1483.4755169883315 623.5067065352902,1496.5244830116685" fill="#0d513a"/>
+<polyline points="740,1200 704,1200 704,1665 740,1665" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="740,1665 726.4932934647098,1671.5244830116685 726.4932934647098,1658.4755169883315" fill="#0d513a"/>
+<rect x="745" y="1318" width="143.0" height="29" rx="8" fill="#ffffff" stroke="#ffffff" stroke-width="2"/>
+<text x="750" y="1320" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="#0d513a">Product detail</text>
+<polyline points="610,1555 645,1555 645,325 610,325" fill="none" stroke="#0d513a" stroke-width="3" stroke-linejoin="round"/>
+<polygon points="610,325 623.5067065352902,318.47551698833155 623.5067065352902,331.52448301166845" fill="#0d513a"/>
+<rect x="70" y="150" width="540" height="265" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="70" y="150" width="540" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="87" y="156" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">1. Context chuẩn · PHP → Flask</text>
+<text x="89" y="216" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Pydantic v2 · JSON object trực tiếp</text>
+<text x="89" y="251" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">user / conversation / request ID</text>
+<text x="89" y="286" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">profile version + routine version</text>
+<text x="89" y="321" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Đồ đang dùng ≠ giỏ hàng ≠ đã mua</text>
+<text x="89" y="356" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">History canonical: role + content</text>
+<rect x="70" y="485" width="540" height="255" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="70" y="485" width="540" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="87" y="491" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">2. LangGraph · Route + state</text>
+<text x="89" y="551" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Một structured call: intent + constraints</text>
+<text x="89" y="585" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Subject; budget; exclusion; references</text>
+<text x="89" y="619" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Luật kiểm tra dữ kiện cần thiết</text>
+<text x="89" y="653" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Lưu pending_question, mục tiêu gốc</text>
+<text x="89" y="687" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Extractor: 400–700 output tokens</text>
+<rect x="70" y="800" width="540" height="205" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="70" y="800" width="540" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="87" y="806" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">Hỏi bổ sung / chuyển chuyên gia</text>
+<text x="89" y="866" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Mỗi lượt 1–2 câu liên quan quyết định</text>
+<text x="89" y="901" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Dừng và giải thích khi ngoài phạm vi</text>
+<text x="89" y="936" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Câu trả lời cập nhật state có cấu trúc</text>
+<rect x="740" y="150" width="960" height="155" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="740" y="150" width="960" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="757" y="156" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">A. GREETING / OUT_OF_SCOPE</text>
+<text x="759" y="216" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Trả lời ngắn hoặc hướng dẫn phạm vi hỗ trợ</text>
+<text x="759" y="251" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Không tự tìm web / chèn sản phẩm bán hàng</text>
+<rect x="740" y="355" width="960" height="155" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="740" y="355" width="960" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="757" y="361" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">B. KNOWLEDGE</text>
+<text x="759" y="421" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">RAG trên nguồn đã kiểm duyệt · có source_id</text>
+<text x="759" y="456" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Thiếu chứng cứ → nói rõ; tra nguồn allowlist nếu cần</text>
+<rect x="740" y="560" width="960" height="160" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="740" y="560" width="960" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="757" y="566" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">C. PRODUCT / ROUTINE / CHECK-IN</text>
+<text x="759" y="626" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Exact product ID trước; truy xuất đúng người/routine</text>
+<text x="759" y="661" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Tra giá, tồn kho, INCI, nhãn và lịch sử phản hồi từ DB</text>
+<rect x="740" y="785" width="960" height="245" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="740" y="785" width="960" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="757" y="791" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">3. Truy xuất bằng chứng + sản phẩm</text>
+<text x="759" y="851" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Benchmark E5-small: 384d · CPU · query:/passage:</text>
+<text x="759" y="885" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Dense top30 + BM25Okapi top30 · k1=1,5; b=0,75</text>
+<text x="759" y="919" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Chroma cosine; normalize cả index và query</text>
+<text x="759" y="953" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Weighted RRF: k=60; α=0,5 · cùng filter hai nhánh</text>
+<text x="759" y="987" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Knowledge chunk 250–350 tokens; overlap 50</text>
+<rect x="740" y="1090" width="960" height="210" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="740" y="1090" width="960" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="757" y="1096" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">4. Gộp → hydrate → lọc → rerank</text>
+<text x="759" y="1156" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Stable product_id; dữ kiện thiếu = unknown</text>
+<text x="759" y="1190" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Giữ budget / exclusion / category / stock</text>
+<text x="759" y="1224" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Cross-encoder một lượt: top30; batch8; max_length512</text>
+<text x="759" y="1258" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Knowledge top6; routine 3–5 ứng viên mỗi vai trò</text>
+<rect x="740" y="1360" width="960" height="180" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="740" y="1360" width="960" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="757" y="1366" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">5. Routine planner · Python / OR-Tools</text>
+<text x="759" y="1426" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Tận dụng đồ đang có; tối ưu phần phải mua thêm</text>
+<text x="759" y="1461" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Tổng tiền bằng integer VND; kiểm tra cả tổ hợp</text>
+<text x="759" y="1496" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Solver 0,5s; phân biệt feasible / infeasible / unknown</text>
+<rect x="740" y="1600" width="960" height="185" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="740" y="1600" width="960" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="757" y="1606" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">6. LLM giải thích plan đã kiểm tra</text>
+<text x="759" y="1666" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Một primary + tối đa một fallback đã benchmark</text>
+<text x="759" y="1701" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">Structured Outputs: claims + sources + product_ids</text>
+<text x="759" y="1736" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="400" fill="#14372e">800–1200 output tokens; context mục tiêu ≤6000</text>
+<rect x="740" y="1840" width="960" height="210" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="740" y="1840" width="960" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="757" y="1846" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">7. Validator đầu ra · bắt buộc</text>
+<text x="759" y="1906" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Schema; ID; nguồn; tổng tiền; thành phần cần tránh</text>
+<text x="759" y="1940" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Sai → repair tối đa 1 lần nếu còn deadline</text>
+<text x="759" y="1974" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Vẫn sai → trả giới hạn rõ, không giả vờ tư vấn xong</text>
+<text x="759" y="2008" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Giá/card render từ dữ liệu server, không từ prose</text>
+<rect x="70" y="1070" width="540" height="245" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="70" y="1070" width="540" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="87" y="1076" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">Dữ liệu tri thức được chuẩn bị</text>
+<text x="89" y="1136" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Nhãn hãng + nguồn chăm sóc da</text>
+<text x="89" y="1170" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">INCI đầy đủ; HDSD; ngày kiểm tra</text>
+<text x="89" y="1204" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Rule có nguồn + điều kiện áp dụng</text>
+<text x="89" y="1238" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Index version + embedding fingerprint</text>
+<text x="89" y="1272" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Đổi embedding → collection mới</text>
+<rect x="70" y="1375" width="540" height="235" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="70" y="1375" width="540" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="87" y="1381" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">8. MongoDB + checkpoints</text>
+<text x="89" y="1441" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Profile / routine có phiên bản</text>
+<text x="89" y="1475" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Survey state độc lập với văn bản chat</text>
+<text x="89" y="1509" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Check-in: trải nghiệm, tuân thủ, thay đổi</text>
+<text x="89" y="1543" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Phản hồi cập nhật context lượt sau</text>
+<rect x="70" y="1670" width="540" height="240" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="70" y="1670" width="540" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="87" y="1676" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">Vận hành và đo chất lượng</text>
+<text x="89" y="1736" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Deadline tổng 30s; call ≤12s và thời gian còn</text>
+<text x="89" y="1767" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">lại</text>
+<text x="89" y="1801" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Tắt cache response cá nhân hóa</text>
+<text x="89" y="1835" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Trace stage/model/docs/reject reasons</text>
+<text x="89" y="1869" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="#14372e">Recall/MRR; constraints; p50/p95</text>
+<rect x="70" y="1970" width="540" height="140" rx="8" fill="#eef6f0" stroke="#0d513a" stroke-width="2"/>
+<rect x="70" y="1970" width="540" height="52" rx="8" fill="#0d513a" stroke="#0d513a" stroke-width="2"/>
+<text x="87" y="1976" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">9. Người dùng nhận kế hoạch</text>
+<text x="89" y="2036" dominant-baseline="text-before-edge" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="400" fill="#14372e">Sáng/tối · lý do · nguồn · bước tiếp theo</text>
+</svg>

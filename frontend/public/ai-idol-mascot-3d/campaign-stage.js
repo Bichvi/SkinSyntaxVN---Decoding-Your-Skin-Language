@@ -1,12 +1,24 @@
 import { pilotPose, span, cueAt, mouthAt, talkingMotion, actionPose } from './timeline.js';
 
+// Speech window inside the audio. Older manifests have none: speech fills the clip.
+export function speechWindow(manifest) {
+  const start = Number(manifest.speech?.start), end = Number(manifest.speech?.end);
+  return Number.isFinite(start) && Number.isFinite(end) && end > start
+    ? { start, end } : { start: 0, end: manifest.duration };
+}
+
 export function campaignPose(time, manifest, envelope) {
   const mouth = mouthAt(envelope, time, time < manifest.duration);
+  const speech = speechWindow(manifest);
   const pose = pilotPose(Math.min(time, 15), mouth);
   const cue = cueAt(manifest.cues, time);
   const active = cue?.ingredient ?? -1;
   const look = active >= 0 ? span(time, cue.start - .25, Math.min(cue.end + .3, cue.start + 4.5), .65) : 0;
-  const wave = span(time, .15, Math.min(3.3, manifest.duration), .7);
+  // Greet through the music lead-in and lower the arm just after the first words.
+  const greet = span(time, .15, Math.min(Math.max(3.3, speech.start + .8), manifest.duration), .7);
+  // After the last word, wave goodbye until the clip ends (span stays up past the end).
+  const farewell = speech.end < manifest.duration - .5 ? span(time, speech.end + .15, manifest.duration + 1, .6) : 0;
+  const wave = Math.max(greet, farewell);
   const talking = talkingMotion(time, mouth);
   const action = actionPose(time, cue, mouth);
   // Absolute audio time, not a looping 15-second greeting. Arms share the existing skin rig.
@@ -30,7 +42,8 @@ export function campaignPose(time, manifest, envelope) {
     rightWrist: -look * .13 + talking.rightWrist + action.rightWrist,
     leftFoot: talking.leftFoot, rightFoot: talking.rightFoot,
     point: action.point,
-    pointTarget: action.pointTarget, action: action.action, sticker: action.sticker,
+    pointTarget: action.pointTarget, action: action.action,
+    sticker: action.sticker ?? (farewell > .35 ? 'heart' : null),
   };
 }
 
@@ -98,7 +111,11 @@ export function drawCampaign(ctx, scene, manifest, images, time, pose) {
   else label(ctx, 'Chưa có ảnh sản phẩm', 63, 295, 17, '#788370');
   lines(ctx, manifest.product.name, 45, 418, 250, 21, 4, 600);
   const price = manifest.product.price;
-  label(ctx, price > 0 ? new Intl.NumberFormat('vi-VN').format(price) + ' đ' : 'Giá đang cập nhật', 45, 567, price > 0 ? 29 : 20, '#244b35', 650);
+  // price_from: null = never show a price (evergreen product video); a number = show from that second.
+  const priceFrom = manifest.product.price_from === undefined ? 0 : manifest.product.price_from;
+  if (priceFrom !== null && time >= priceFrom) {
+    label(ctx, price > 0 ? new Intl.NumberFormat('vi-VN').format(price) + ' đ' : 'Giá đang cập nhật', 45, 567, price > 0 ? 29 : 20, '#244b35', 650);
+  }
   box(ctx, 772, 146, 476, 458, '#fffdf5');
   label(ctx, 'BẢNG GHI CHÚ', 796, 181, 13, '#788370', 600);
   label(ctx, 'Thành phần chính', 796, 222, 28, '#284c3a', 650);

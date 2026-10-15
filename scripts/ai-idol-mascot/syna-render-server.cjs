@@ -42,6 +42,9 @@ async function render(payload, req, res) {
   if (!manifest || manifest.format !== '16:9' || !manifest.product ||
       typeof manifest.product.name !== 'string' || manifest.product.name.length > 500 ||
       !Number.isFinite(manifest.product.price) || manifest.product.price < 0 ||
+      !(manifest.product.price_from === undefined || manifest.product.price_from === null ||
+        (Number.isFinite(manifest.product.price_from) && manifest.product.price_from >= 0 &&
+         manifest.product.price_from <= manifest.duration)) ||
       !Array.isArray(manifest.ingredients) || manifest.ingredients.length > 3 ||
       manifest.ingredients.some(x => typeof x !== 'string' || x.length > 160) ||
       !Array.isArray(manifest.cues) || manifest.cues.length > 1500) throw new Error('Invalid Syna manifest');

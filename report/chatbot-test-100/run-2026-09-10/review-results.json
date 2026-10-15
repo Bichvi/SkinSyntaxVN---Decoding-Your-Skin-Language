@@ -1,0 +1,1349 @@
+{
+  "reviewed_at_utc": "2026-09-10T05:53:53.435422+00:00",
+  "counts": {
+    "PASS": 100,
+    "FAIL": 0,
+    "NOT_RUN": 0
+  },
+  "original_failures_fixed": 15,
+  "application_unittest_methods_passed": 57,
+  "runner_unittest_methods_passed": 10,
+  "scope": {
+    "live_flask_cases": 83,
+    "component_fixtures_real_llm": 15,
+    "php_http_session_cases": 2
+  },
+  "additional_retests": {
+    "api_cases": 21,
+    "component_fixtures": 15,
+    "array_profile_session_cases": 2
+  },
+  "browser_ui_tested": false,
+  "results": [
+    {
+      "id": "CHAT-001",
+      "title": "Chào lần đầu",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Chào và giới thiệu ngắn, không gọi model để tự mở khảo sát.",
+      "criteria_reviewed": [
+        "Giới thiệu ngắn, không tự chọn sản phẩm hay yêu cầu khảo sát dài."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình là Ngọc Vi, trợ lý tư vấn của SkinSyntaxVN. Bạn đang muốn cải thiện điều gì ở da?"
+    },
+    {
+      "id": "CHAT-002",
+      "title": "Cảm ơn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Đáp lời cảm ơn tự nhiên, không báo thiếu thông tin.",
+      "criteria_reviewed": [
+        "Đáp tự nhiên, không lặp tư vấn hoặc chèn quảng cáo."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Không có gì nhé! Khi cần hỗ trợ thêm về chăm sóc da, bạn cứ nhắn mình."
+    },
+    {
+      "id": "CHAT-003",
+      "title": "Ngoài phạm vi",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không bịa tin tức; nói ngắn phạm vi hỗ trợ của cửa hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình không có thông tin về kết quả bóng đá. Nếu bạn cần hỏi về chăm sóc da hoặc sản phẩm nào đó, hãy cho mình biết nhé!"
+    },
+    {
+      "id": "CHAT-004",
+      "title": "Kiến thức retinol",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Giải thích dễ hiểu; không đưa sản phẩm mua hoặc tự đặt lịch sử dụng cá nhân."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Retinol là một dạng của vitamin A, thường được sử dụng trong các sản phẩm chăm sóc da để cải thiện tình trạng da. Nó có khả năng thúc đẩy quá trình tái tạo tế bào, giúp làm giảm nếp nhăn, cải thiện độ đàn hồi và làm sáng da. Retinol cũng có thể giúp làm giảm mụn và cải thiện kết cấu da.\n\nTuy nhiên, khi sử dụng retinol, bạn cần lưu ý rằng nó có thể gây kích ứng cho da, đặc biệt là ở những người có làn da nhạy cảm. Do đó, việc bắt đầu với nồng độ thấp và tăng dần là một cách tiếp cận an toàn."
+    },
+    {
+      "id": "CHAT-005",
+      "title": "Toner có bắt buộc không",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Trả lời điều khách hỏi, phân biệt nhu cầu với việc có bán toner; không chỉ báo thiếu hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Việc sử dụng toner hay không phụ thuộc vào nhu cầu và thói quen chăm sóc da của bạn. Toner có thể giúp cân bằng độ pH của da sau khi rửa mặt, loại bỏ bụi bẩn và dầu thừa còn sót lại, đồng thời cung cấp độ ẩm và các dưỡng chất cho da.\n\nNếu bạn có làn da nhờn hoặc dễ bị mụn, toner có thể giúp kiểm soát dầu và làm sạch lỗ chân lông. Ngược lại, nếu da bạn khô hoặc nhạy cảm, bạn có thể cần chọn loại toner dịu nhẹ, không chứa cồn để tránh làm khô da.\n\nTóm lại, toner không phải là bước bắt buộc trong quy trình chăm sóc da, nhưng nó có thể mang lại lợi ích tùy thuộc vào tình trạng da và mục tiêu chăm sóc của bạn. Bạn có thể cân nhắc thử nghiệm để xem nó có phù hợp với bạn hay không."
+    },
+    {
+      "id": "CHAT-006",
+      "title": "Hỏi các bước chung",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Giải thích các bước chung, không diễn giải thành yêu cầu mua một bộ."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Một quy trình chăm sóc da cơ bản thường bao gồm các bước sau:\n\n1. **Tẩy trang**: Loại bỏ lớp trang điểm và bụi bẩn trên da.\n2. **Rửa mặt**: Sử dụng sữa rửa mặt phù hợp với loại da để làm sạch sâu.\n3. **Toner**: Cân bằng độ pH cho da và chuẩn bị cho các bước tiếp theo.\n4. **Serum**: Cung cấp các hoạt chất đặc trị cho vấn đề da cụ thể như mụn, lão hóa, hay làm sáng da.\n5. **Kem dưỡng ẩm**: Giữ ẩm cho da, giúp da mềm mại và khỏe mạnh.\n6. **Kem chống nắng** (buổi sáng): Bảo vệ da khỏi tác hại của tia UV.\n\nTùy thuộc vào nhu cầu và tình trạng da của bạn, có thể thêm hoặc điều chỉnh các bước này. Nếu bạn có vấn đề cụ thể nào về da, mình có thể giúp bạn tìm hiểu thêm về các sản phẩm phù hợp."
+    },
+    {
+      "id": "CHAT-007",
+      "title": "Quyết định mua khi hồ sơ kích ứng",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Giữ câu cân nhắc retinol theo triệu chứng và hỏi xác nhận hiện tại.",
+      "criteria_reviewed": [
+        "Đề cập tình trạng đã nêu và hỏi xác nhận hiện tại; không đưa phác đồ cá nhân.",
+        "Không thay câu hỏi quyết định bằng câu “không có sản phẩm”."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Nếu tình trạng khô căng, bong tróc hoặc đỏ rát bạn đã nêu vẫn còn, mình chưa khuyên bắt đầu retinol ngay. Retinoid có thể làm da khô và kích ứng thêm; nên trao đổi với bác sĩ da liễu trước khi bắt đầu nếu da đang nhạy cảm. [Hướng dẫn của AAD](https://www.aad.org/public/everyday-care/skin-care-secrets/anti-aging/retinoid-retinol)\n\nHiện da bạn còn bong tróc hoặc bị rát khi thoa sản phẩm không?"
+    },
+    {
+      "id": "CHAT-008",
+      "title": "Yêu cầu tìm bằng từ kiếm",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Một chai retinol đã kiểm chứng trong ngân sách, vẫn giữ lời cân nhắc khi da bong tróc.",
+      "criteria_reviewed": [
+        "Tìm tối đa một sản phẩm có bằng chứng chứa retinol; nếu có điều kiện da cần cân nhắc thì phân biệt tham khảo với bắt đầu dùng."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Nếu tình trạng khô căng, bong tróc hoặc đỏ rát bạn đã nêu vẫn còn, mình chưa khuyên bắt đầu retinol ngay. Retinoid có thể làm da khô và kích ứng thêm; nên trao đổi với bác sĩ da liễu trước khi bắt đầu nếu da đang nhạy cảm. [Hướng dẫn của AAD](https://www.aad.org/public/everyday-care/skin-care-secrets/anti-aging/retinoid-retinol)\n\nMình tìm được 1 lựa chọn sản phẩm chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1077) — 433.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-009",
+      "title": "Tiếng Việt không dấu",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Hiểu “kiếm” là tìm sản phẩm; không xếp thành chào hỏi."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 1 lựa chọn sản phẩm chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml](index.php?r=chitiet&id=244) — 367.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-010",
+      "title": "So sánh hai loại",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Giữ intent knowledge, so sánh toner/serum và không gắn thẻ mua.",
+      "criteria_reviewed": [
+        "So sánh công dụng/vai trò theo câu hỏi; tôn trọng “chưa cần gợi ý mua”."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Toner và serum đều là những sản phẩm chăm sóc da, nhưng chúng có chức năng và cách sử dụng khác nhau.\n\n1. **Toner**: \n   - Chức năng chính của toner là làm sạch da, cân bằng độ pH và chuẩn bị cho da hấp thụ các sản phẩm dưỡng tiếp theo. \n   - Toner thường có kết cấu lỏng, dễ thẩm thấu và có thể chứa các thành phần như chiết xuất thực vật, acid nhẹ hoặc glycerin để cung cấp độ ẩm.\n\n2. **Serum**: \n   - Serum thường chứa nồng độ cao các hoạt chất, nhằm giải quyết các vấn đề cụ thể của da như lão hóa, nám, mụn hay khô da. \n   - Kết cấu của serum thường đặc hơn toner, giúp cung cấp độ ẩm và các dưỡng chất sâu hơn vào da.\n\nTóm lại, toner thường được sử dụng ở bước đầu trong quy trình chăm sóc da để làm sạch và chuẩn bị da, trong khi serum được sử dụng sau đó để cung cấp các dưỡng chất chuyên sâu."
+    },
+    {
+      "id": "CHAT-011",
+      "title": "Sữa Rửa Mặt",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Sữa Rửa Mặt để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Sữa Rửa Mặt Cetaphil Dịu Lành Cho Da Nhạy Cảm 500ml (Mới)](index.php?r=chitiet&id=6) — 305.000đ.\n- [Sữa Rửa Mặt Cetaphil Dịu Lành Cho Da Nhạy Cảm 125ml (Mới)](index.php?r=chitiet&id=35) — 125.000đ.\n- [Gel Rửa Mặt SVR Không Chứa Xà Phòng Cho Da Dầu 400ml](index.php?r=chitiet&id=47) — 381.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-012",
+      "title": "Tẩy Trang Mặt",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Tẩy Trang Mặt để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Combo Cocoon Nước Tẩy Trang + Dầu Tẩy Trang Hoa Hồng Cấp Ẩm Da 310ml+140ml](index.php?r=chitiet&id=4643) — 425.000đ.\n- [Combo 2 Nước Tẩy Trang Cocoon Sen Hậu Giang Cho Da Rất Nhạy Cảm 500ml](index.php?r=chitiet&id=1329) — 311.000đ.\n- [Nước Tẩy Trang Cocoon Sen Hậu Giang Cho Da Rất Nhạy Cảm 500ml](index.php?r=chitiet&id=1125) — 206.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-013",
+      "title": "Toner / Nước Cân Bằng Da",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner The Lab Cấp Ẩm Chuyên Sâu 200ml](index.php?r=chitiet&id=2484) — 363.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-014",
+      "title": "Serum / Tinh Chất",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum d program Dưỡng Da Bảo Vệ Chuyên Sâu 40ml](index.php?r=chitiet&id=4877) — 353.000đ.\n- [Serum Caryophy Giảm Mụn Mờ Thâm Se Lỗ Chân Lông 30ml](index.php?r=chitiet&id=144) — 294.000đ.\n- [Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 100ml](index.php?r=chitiet&id=50) — 379.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-015",
+      "title": "Kem / Gel / Dầu Dưỡng",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Kem / Gel / Dầu Dưỡng để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Gel Dưỡng Ẩm Bioderma Làm Dịu Cho Da Rất Khô 75ml](index.php?r=chitiet&id=3719) — 289.000đ.\n- [Gel Dưỡng Ẩm Naturie Chiết Xuất Hạt Ý Dĩ 180g](index.php?r=chitiet&id=925) — 131.000đ.\n- [Kem Dưỡng Ẩm The Lab Dành Cho Da Khô & Nhạy Cảm 50ml](index.php?r=chitiet&id=2353) — 469.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-016",
+      "title": "Lotion / Sữa Dưỡng",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Lotion / Sữa Dưỡng để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Lotion Dưỡng Da Curél Cấp Ẩm Chuyên Sâu II Mức Vừa 150ml](index.php?r=chitiet&id=5370) — 480.000đ.\n- [Dung Dịch Hada Labo Dưỡng Sáng Da, Giảm Thâm Sạm 170ml](index.php?r=chitiet&id=1728) — 206.000đ.\n- [Dung Dịch Hada Labo Dưỡng Sáng Da, Giảm Thâm Sạm 40ml](index.php?r=chitiet&id=2675) — 53.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-017",
+      "title": "Mặt Nạ Giấy",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Mặt Nạ Giấy để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Mặt Nạ Klairs Làm Dịu Da & Kiểm Soát Dầu Nhờn 25ml](index.php?r=chitiet&id=1486) — 27.000đ.\n- [Combo 10 Mặt Nạ Klairs Làm Dịu Da & Kiểm Soát Dầu Nhờn 25ml](index.php?r=chitiet&id=661) — 270.000đ.\n- [Combo 2 Mặt Nạ Klairs Làm Dịu Da & Kiểm Soát Dầu Nhờn 25ml](index.php?r=chitiet&id=2062) — 57.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-018",
+      "title": "Mặt Nạ Rửa",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Mặt Nạ Rửa để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Mặt Nạ innisfree Chăm Sóc Lỗ Chân Lông 100ml (Mới)](index.php?r=chitiet&id=367) — 219.000đ.\n- [Combo 2 Mặt Nạ innisfree Chăm Sóc Lỗ Chân Lông 100ml](index.php?r=chitiet&id=3357) — 456.000đ.\n- [Combo 2 Mặt Nạ Nghệ Hưng Yên Cocoon Dưỡng Da Mịn Màng 30ml](index.php?r=chitiet&id=72) — 149.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-019",
+      "title": "Mặt Nạ Ngủ",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Có hai lựa chọn Mặt Nạ Ngủ đạt điều kiện; không yêu cầu phải đủ ba khi không đủ dữ liệu.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 2 lựa chọn Mặt Nạ Ngủ để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Kem Dưỡng Senka Cấp Ẩm Dạng Gel 50g](index.php?r=chitiet&id=536) — 169.000đ.\n- [Mặt Nạ Ngủ B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 75g](index.php?r=chitiet&id=2460) — 473.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-020",
+      "title": "Chống Nắng Da Mặt",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Chống Nắng Da Mặt để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Kem Chống Nắng B.O.M Che Khuyết Điểm SPF50+ PA++++ 50g](index.php?r=chitiet&id=2362) — 406.000đ.\n- [Sữa Chống Nắng Bioré Chống Thấm Nước SPF 50+/PA++++ 40ml](index.php?r=chitiet&id=5830) — 92.000đ.\n- [Sữa Chống Nắng CeraVe Dưỡng Ẩm Phục Hồi 52ml](index.php?r=chitiet&id=2314) — 319.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-021",
+      "title": "Tẩy Tế Bào Chết Da Mặt",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Tẩy Tế Bào Chết Da Mặt để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Gel Tẩy Tế Bào Chết Caryophy Ngăn Ngừa Mụn 250ml](index.php?r=chitiet&id=172) — 225.000đ.\n- [Gel Tẩy Tế Bào Chết Axis-Y PHA Dịu Nhẹ 50ml](index.php?r=chitiet&id=4595) — 410.000đ.\n- [Gel Tẩy Tế Bào Chết Ma:nyo Galactomy Enzyme Sáng Mịn Da 75ml](index.php?r=chitiet&id=775) — 204.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-022",
+      "title": "Hỗ Trợ Trị Mụn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đúng nhóm hiện tại, 3 thẻ khớp snapshot và điều kiện hồ sơ; không lặp nhóm toner cũ.",
+      "criteria_reviewed": [
+        "Tất cả thẻ thuộc đúng nhóm hiện tại; nội dung không lặp nhóm của lượt trước.",
+        "Nếu kết quả rỗng, giải thích điều kiện/dữ liệu còn thiếu, không kết luận toàn cửa hàng hết hàng."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Hỗ Trợ Trị Mụn để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Gel Giảm Mụn Naris Acmedica Ngăn Ngừa Sẹo Thâm 25g](index.php?r=chitiet&id=1961) — 349.000đ.\n- [Combo 4 Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen](index.php?r=chitiet&id=2064) — 59.000đ.\n- [Miếng Dán Mụn Acnes Giúp Giảm Mụn Sưng Viêm 24 Miếng](index.php?r=chitiet&id=1104) — 50.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-023",
+      "title": "Không chứa retinol",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Combo 2 Serum Olay Giúp Da Săn Chắc Và Mịn Màng 30ml](index.php?r=chitiet&id=5040) — 844.000đ.\n- [Serum Olay Giúp Da Săn Chắc Và Mịn Màng 30ml](index.php?r=chitiet&id=1724) — 422.000đ.\n- [Serum Tia'm Căng Bóng, Trẻ Hoá Da 40ml](index.php?r=chitiet&id=934) — 297.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-024",
+      "title": "Phủ định ngắn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Combo 2 Serum Olay Giúp Da Săn Chắc Và Mịn Màng 30ml](index.php?r=chitiet&id=5040) — 844.000đ.\n- [Serum Olay Giúp Da Săn Chắc Và Mịn Màng 30ml](index.php?r=chitiet&id=1724) — 422.000đ.\n- [Serum Tia'm Căng Bóng, Trẻ Hoá Da 40ml](index.php?r=chitiet&id=934) — 297.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-025",
+      "title": "Không hương liệu",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 100ml](index.php?r=chitiet&id=4013) — 183.000đ.\n- [Toner Pad Torriden Làm Mát Dịu Cho Da Mụn, Nhạy Cảm 60 Miếng](index.php?r=chitiet&id=1029) — 299.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-026",
+      "title": "Fragrance/Parfum trong câu hỏi",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner The Lab Cấp Ẩm Chuyên Sâu 200ml](index.php?r=chitiet&id=2484) — 363.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-027",
+      "title": "Tránh lanolin",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Kem / Gel / Dầu Dưỡng để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Kem Dưỡng Ẩm Bioderma Giảm Khô Căng, Bong Tróc Da Mụn 40ml](index.php?r=chitiet&id=459) — 391.000đ.\n- [Kem Dưỡng Ẩm The Lab Dành Cho Da Khô & Nhạy Cảm 50ml](index.php?r=chitiet&id=2353) — 469.000đ.\n- [Kem Dưỡng Ẩm SVR Dành Cho Da Dầu Mụn 40ml](index.php?r=chitiet&id=757) — 385.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-028",
+      "title": "Hai thành phần phải tránh",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Giữ đồng thời hương liệu/lanolin, văn bản kết luận dựng từ lựa chọn đã kiểm chứng.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 100ml](index.php?r=chitiet&id=4013) — 183.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-029",
+      "title": "Tránh cồn khô",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Lọc cồn khô, không để văn bản phủ nhận sai kết quả lọc.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 200ml](index.php?r=chitiet&id=799) — 342.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-030",
+      "title": "Có và không cùng câu",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Retinol là điều kiện có, hương liệu là điều kiện tránh; không đảo cực tính.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 2 lựa chọn Serum / Tinh Chất chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1077) — 433.000đ.\n- [Dưỡng Chất Vichy Giảm Nếp Nhăn Và Giúp Trẻ Hoá Da 30ml](index.php?r=chitiet&id=5423) — 1.125.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-031",
+      "title": "Đổi thứ tự điều kiện",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Không còn bịa CeraVe có hương liệu; dùng hai sản phẩm đã qua lọc INCI.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 2 lựa chọn Serum / Tinh Chất chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1077) — 433.000đ.\n- [Dưỡng Chất Vichy Giảm Nếp Nhăn Và Giúp Trẻ Hoá Da 30ml](index.php?r=chitiet&id=5423) — 1.125.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-032",
+      "title": "Yêu cầu BHA và tên INCI",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn sản phẩm chứa bha để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Dung Dịch Tẩy Da Chết Paula’s Choice 2% BHA 30ml](index.php?r=chitiet&id=70) — 264.000đ.\n- [Combo 2 Dung Dịch Tẩy Da Chết Paula’s Choice 2% BHA 118ml](index.php?r=chitiet&id=224) — 1.320.000đ.\n- [Combo 2 Sữa Rửa Mặt innisfree Kiểm Soát Nhờn Tro Núi Lửa & BHA 150g (Mới)](index.php?r=chitiet&id=277) — 340.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-033",
+      "title": "Phân biệt retinal và retinol",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Giữ yêu cầu retinal, loại retinol. Không thay bằng serum thiếu retinal; nêu chưa đủ INCI xác minh trong catalog hiện có.",
+      "criteria_reviewed": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình đã tìm trong nhóm Serum / Tinh Chất chứa retinal, nhưng các lựa chọn còn lại chưa có bảng thành phần đầy đủ để đối chiếu thành phần bạn cần tránh. Điều này chưa có nghĩa cửa hàng không có sản phẩm đó. Bạn có chai cụ thể muốn mình kiểm tra không?"
+    },
+    {
+      "id": "CHAT-034",
+      "title": "Cồn béo không bị loại như ethanol",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Giữ A có Cetearyl Alcohol và loại B có Ethanol; cả thẻ lẫn văn bản cùng kết luận.",
+      "criteria_reviewed": [
+        "Sản phẩm A chỉ có cetyl/cetearyl alcohol còn đủ điều kiện; sản phẩm B có ethanol bị loại."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình tìm được 1 lựa chọn Kem / Gel / Dầu Dưỡng để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Sản phẩm thử nghiệm A](index.php?r=chitiet&id=A) — 100.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-035",
+      "title": "Thiếu bảng thành phần",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không khẳng định “không chứa” khi chỉ có mô tả ngắn. Nêu thiếu bảng thành phần; không báo cửa hàng không bán toner."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình đã tìm trong nhóm Toner / Nước Cân Bằng Da, nhưng các lựa chọn còn lại chưa có bảng thành phần đầy đủ để đối chiếu thành phần bạn cần tránh. Điều này chưa có nghĩa cửa hàng không có sản phẩm đó. Bạn có chai cụ thể muốn mình kiểm tra không?"
+    },
+    {
+      "id": "CHAT-036",
+      "title": "Unknown không phải INCI",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Unknown/N/A không được coi là dữ liệu đầy đủ để xác nhận không chứa lanolin."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình đã tìm trong nhóm Kem / Gel / Dầu Dưỡng, nhưng các lựa chọn còn lại chưa có bảng thành phần đầy đủ để đối chiếu thành phần bạn cần tránh. Điều này chưa có nghĩa cửa hàng không có sản phẩm đó. Bạn có chai cụ thể muốn mình kiểm tra không?"
+    },
+    {
+      "id": "CHAT-037",
+      "title": "300k",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Giữ đúng số tiền và khoảng giá; nêu giá từ database, không tự thêm chi phí hoặc đổi đơn vị."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Dưỡng Chất Pond's Ngăn Ngừa Lão Hóa Chuyên Sâu 30ml](index.php?r=chitiet&id=6098) — 288.000đ.\n- [Serum Caryophy Giảm Mụn Mờ Thâm Se Lỗ Chân Lông 30ml](index.php?r=chitiet&id=144) — 294.000đ.\n- [Gel Dưỡng Acnes Giúp Mờ Sẹo & Giảm Thâm Mụn 12g](index.php?r=chitiet&id=1176) — 63.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-038",
+      "title": "Dấu chấm hàng nghìn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Giữ đúng số tiền và khoảng giá; nêu giá từ database, không tự thêm chi phí hoặc đổi đơn vị."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-039",
+      "title": "Dấu phẩy thập phân",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Nhận đúng 1,5 triệu; không gán Niacinamide/8 HA của công thức khác sang ID 139, nêu phần phiên bản chưa xác minh.",
+      "criteria_reviewed": [
+        "Giữ đúng số tiền và khoảng giá; nêu giá từ database, không tự thêm chi phí hoặc đổi đơn vị."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Kem / Gel / Dầu Dưỡng để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g](index.php?r=chitiet&id=139) — 289.000đ.\n- [Combo Kem Dưỡng L'Oreal Ngừa Rãnh Nhăn Lão Hóa Sớm Ngày Đêm 50mlx2](index.php?r=chitiet&id=4480) — 463.000đ.\n- [Kem Dưỡng Ẩm Bioderma Giảm Khô Căng, Bong Tróc Da Mụn 40ml](index.php?r=chitiet&id=459) — 391.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-040",
+      "title": "Đơn vị tr",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Giữ đúng số tiền và khoảng giá; nêu giá từ database, không tự thêm chi phí hoặc đổi đơn vị."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml](index.php?r=chitiet&id=647) — 321.000đ.\n- [Combo 2 Serum d'Alba Dạng Xịt Nấm Truffle Trắng Căng Bóng Da 100ml](index.php?r=chitiet&id=1005) — 821.000đ.\n- [Serum d'Alba Dạng Xịt Nấm Truffle Trắng Căng Bóng Da 100ml](index.php?r=chitiet&id=22) — 359.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-041",
+      "title": "Đơn vị nghìn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Giữ đúng số tiền và khoảng giá; nêu giá từ database, không tự thêm chi phí hoặc đổi đơn vị."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 100ml](index.php?r=chitiet&id=4013) — 183.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-042",
+      "title": "Khoảng giá",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Áp cả cận dưới 300000 và cận trên 500000 trong diagnostics; các giá nằm trong khoảng.",
+      "criteria_reviewed": [
+        "Giữ đúng số tiền và khoảng giá; nêu giá từ database, không tự thêm chi phí hoặc đổi đơn vị."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml](index.php?r=chitiet&id=647) — 321.000đ.\n- [Serum Olay Dưỡng Sáng Da, Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1150) — 321.000đ.\n- [Serum Olay Retinol24 Ngừa Lão Hóa, Tái Tạo Da Ban Đêm 30ml](index.php?r=chitiet&id=1023) — 356.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-043",
+      "title": "Không giới hạn ghi đè hồ sơ",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Ngân sách không giới hạn ghi đè 500k của hồ sơ.",
+      "criteria_reviewed": [
+        "Không giới hạn không phải thành phần hay mức 0đ; không âm thầm dùng lại mức 500000đ của hồ sơ."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Combo 2 Serum d'Alba Dạng Xịt Nấm Truffle Trắng Căng Bóng Da 100ml](index.php?r=chitiet&id=1005) — 821.000đ.\n- [Serum d'Alba Dạng Xịt Nấm Truffle Trắng Căng Bóng Da 100ml](index.php?r=chitiet&id=22) — 359.000đ.\n- [Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml](index.php?r=chitiet&id=647) — 321.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-044",
+      "title": "Giới hạn dưới không phải trần",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Giá tối thiểu 500001đ được áp dụng; các món 821k, 912k, 519k đều trên 500k.",
+      "criteria_reviewed": [
+        "Nếu chưa hỗ trợ lọc giá tối thiểu thì nói rõ/hỏi lại; không lấy 500k làm trần và gợi ý món rẻ hơn."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Combo 2 Serum d'Alba Dạng Xịt Nấm Truffle Trắng Căng Bóng Da 100ml](index.php?r=chitiet&id=1005) — 821.000đ.\n- [Serum SVR Ngăn Ngừa Lão Hóa & Giúp Da Mềm Mịn 30ml](index.php?r=chitiet&id=2659) — 912.000đ.\n- [Serum SVR Làm Giảm Mụn, Mờ Nám, Làm Mềm Mịn Da 30ml](index.php?r=chitiet&id=166) — 519.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-045",
+      "title": "Số lượng không phải ngân sách",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Giữ số lượng 2 và không khẳng định an toàn cho mọi da nhạy cảm.",
+      "criteria_reviewed": [
+        "Hiểu 2 là số sản phẩm, không là ngân sách; nếu không đủ thì nói rõ."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 2 lựa chọn sản phẩm chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml](index.php?r=chitiet&id=244) — 367.000đ.\n- [Serum Neutrogena Retinol Ngăn Ngừa Lão Hóa 30ml](index.php?r=chitiet&id=730) — 313.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-046",
+      "title": "Khách chưa có ngân sách",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không tự gán 350000đ hoặc dùng giá của một sản phẩm làm ngân sách."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-047",
+      "title": "Mức chi quá thấp",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không lấy món vượt trần; nếu rỗng giải thích giới hạn giá, không coi là lỗi dịch vụ."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình đã kiểm tra nhóm Toner / Nước Cân Bằng Da, nhưng chưa chọn được sản phẩm đáp ứng đồng thời các điều kiện: ngân sách hoặc giá chưa xác định. Bạn muốn kiểm tra một sản phẩm cụ thể hay điều chỉnh khoảng giá?"
+    },
+    {
+      "id": "CHAT-048",
+      "title": "Đổi trần ngay trong một câu",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Mức cuối được khách xác nhận là 700000đ; không giữ mức 300000đ."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml](index.php?r=chitiet&id=647) — 321.000đ.\n- [Serum Olay Dưỡng Sáng Da, Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1150) — 321.000đ.\n- [Serum SVR Làm Giảm Mụn, Mờ Nám, Làm Mềm Mịn Da 30ml](index.php?r=chitiet&id=166) — 519.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-049",
+      "title": "Giá cũ không phải ngân sách mới",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Giá chai cũ 350k không trở thành ngân sách; maximum_price_vnd=null và có lựa chọn 458k/363k.",
+      "criteria_reviewed": [
+        "350k chỉ là giá món cũ; không dùng làm giới hạn tiền cho lựa chọn mới."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner The Lab Cấp Ẩm Chuyên Sâu 200ml](index.php?r=chitiet&id=2484) — 363.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-050",
+      "title": "Giá bằng ngưỡng không quá",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "A giá đúng 200000đ được giữ; B giá 200001đ bị loại."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình tìm thấy một sản phẩm toner trong ngân sách của bạn, đó là:\n\n- **Sản phẩm thử nghiệm A**  \n  Giá: 200.000 VNĐ  \n  Thành phần: Aqua, Glycerin  \n  [Chi tiết sản phẩm](index.php?r=chitiet&id=A)\n\nSản phẩm này có thành phần chính là nước và glycerin, giúp cung cấp độ ẩm cho da. Tuy nhiên, mình chưa có hướng dẫn sử dụng cụ thể cho sản phẩm này. Bạn có thể tham khảo thêm thông tin trên trang chi tiết."
+    },
+    {
+      "id": "CHAT-051",
+      "title": "Toner chuyển trị mụn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Trả nhóm trị mụn, không lặp toàn bộ câu toner."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Hỗ Trợ Trị Mụn để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Gel Giảm Mụn Naris Acmedica Ngăn Ngừa Sẹo Thâm 25g](index.php?r=chitiet&id=1961) — 349.000đ.\n- [Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml](index.php?r=chitiet&id=964) — 514.000đ.\n- [Combo 4 Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen](index.php?r=chitiet&id=2064) — 59.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-052",
+      "title": "Retinol chuyển toner",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không giữ retinol như điều kiện bắt buộc khi khách đã chuyển sang toner."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=4) — 201.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-053",
+      "title": "Routine chuyển một nhóm",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Chuyển sang search một nhóm; không tiếp tục xây bộ routine."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Sữa Rửa Mặt để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Sữa Rửa Mặt Senka Dành Cho Da Mụn 100g](index.php?r=chitiet&id=1362) — 89.000đ.\n- [Combo 2 Sữa Rửa Mặt Senka Dành Cho Da Mụn 100g](index.php?r=chitiet&id=3068) — 159.000đ.\n- [Combo CeraVe Sữa Rửa Mặt Cho Da Khô 473ml + Sữa Dưỡng Ẩm Cho Da Khô 30ml](index.php?r=chitiet&id=2437) — 379.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-054",
+      "title": "Mua chuyển kiến thức",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Trả lời kiến thức, không chèn lại thẻ sản phẩm trước."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Retinol là một dạng của vitamin A, có tác dụng chính trong việc thúc đẩy quá trình tái tạo tế bào da. Khi được thoa lên da, retinol sẽ chuyển hóa thành retinoic acid, giúp tăng cường sản xuất collagen, làm giảm sự xuất hiện của nếp nhăn, cải thiện độ đàn hồi của da và làm sáng màu da.\n\nNgoài ra, retinol còn có khả năng làm thông thoáng lỗ chân lông, giúp giảm mụn và ngăn ngừa tình trạng tắc nghẽn. Tuy nhiên, khi bắt đầu sử dụng retinol, bạn có thể gặp phải một số tác dụng phụ như kích ứng hoặc khô da, vì vậy nên bắt đầu với nồng độ thấp và tăng dần theo thời gian."
+    },
+    {
+      "id": "CHAT-055",
+      "title": "Tiếp nối rẻ hơn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Giữ serum retinol khi hỏi rẻ hơn dưới 200k; giải thích không chọn được trong điều kiện đó, không đưa toner/tẩy trang.",
+      "criteria_reviewed": [
+        "Giữ loại serum retinol từ lời khách; đổi giá. Không tự thay bằng sản phẩm không retinol."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình đã kiểm tra nhóm Serum / Tinh Chất chứa retinol, nhưng chưa chọn được sản phẩm đáp ứng đồng thời các điều kiện: ngân sách hoặc giá chưa xác định. Bạn muốn kiểm tra một sản phẩm cụ thể hay điều chỉnh khoảng giá?"
+    },
+    {
+      "id": "CHAT-056",
+      "title": "Giữ tránh thành phần khi đổi nhóm",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Điều kiện tránh hương liệu khách đã nêu vẫn có hiệu lực."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner The Lab Cấp Ẩm Chuyên Sâu 200ml](index.php?r=chitiet&id=2484) — 363.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-057",
+      "title": "Lời bot không tạo ràng buộc",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không tự thêm điều kiện tránh retinol từ gợi ý cũ của bot khi khách chưa xác nhận."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=2458) — 650.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-058",
+      "title": "Bỏ một điều kiện cũ",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Rút lại điều kiện hương liệu thành công; avoid_ingredients=[] và không tiếp tục loại theo điều kiện cũ.",
+      "criteria_reviewed": [
+        "Chỉ bỏ điều kiện khách vừa rút lại; không tiếp tục lọc hương liệu từ lịch sử nếu không có chống chỉ định/hồ sơ cần hỏi lại."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=4) — 201.000đ.\n- [Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=2458) — 650.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-059",
+      "title": "Đổi ngân sách lượt sau",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Ưu tiên 700k hiện tại hơn 200k ở lượt trước."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 200ml](index.php?r=chitiet&id=799) — 342.000đ.\n- [Toner The Lab Cấp Ẩm Chuyên Sâu 200ml](index.php?r=chitiet&id=2484) — 363.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-060",
+      "title": "Không giới hạn trong lịch sử",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Không giới hạn trong lời khách trước được giữ; maximum_price_vnd=null.",
+      "criteria_reviewed": [
+        "Giữ không giới hạn vừa nêu thay vì lấy ngân sách 500000đ trong tài khoản."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml](index.php?r=chitiet&id=647) — 321.000đ.\n- [Serum Olay Dưỡng Sáng Da, Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1150) — 321.000đ.\n- [Serum Olay Retinol24 Ngừa Lão Hóa, Tái Tạo Da Ban Đêm 30ml](index.php?r=chitiet&id=1023) — 356.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-061",
+      "title": "Không nhớ giá từ lời bot thành ngân sách",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Giá 350000đ bot nhắc trước đó không phải ngân sách khách."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=2458) — 650.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-062",
+      "title": "History dạng role/content",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Ba định dạng lịch sử phải giữ cùng điều kiện tránh hương liệu và nhóm toner mới."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-063",
+      "title": "History dạng sender/text",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Ba định dạng lịch sử phải giữ cùng điều kiện tránh hương liệu và nhóm toner mới."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-064",
+      "title": "History dạng chuỗi PHP",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Ba định dạng lịch sử phải giữ cùng điều kiện tránh hương liệu và nhóm toner mới."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-065",
+      "title": "Tin hiện tại có sẵn cuối history",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Không có thẻ trùng và không gọi ID 265 hoàn toàn không mùi; phần dữ liệu gộp phiên bản được đánh dấu chưa xác minh.",
+      "criteria_reviewed": [
+        "Không xử lý câu hỏi hai lần; không tạo thẻ trùng hay nhầm thứ tự hội thoại."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=2458) — 650.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-066",
+      "title": "Guest chưa có hồ sơ",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Hỏi loại da/vấn đề trước khi chọn sản phẩm cho hồ sơ chưa biết; không tự gán dữ kiện.",
+      "criteria_reviewed": [
+        "Hỏi thông tin còn thiếu cần thiết; không tự xác định da dầu/da khô hoặc ngân sách."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình chưa có thông tin về da để chọn sản phẩm phù hợp. Da bạn thuộc loại nào và bạn đang muốn cải thiện vấn đề gì?"
+    },
+    {
+      "id": "CHAT-067",
+      "title": "Hồ sơ có hai thành phần tránh",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Dùng đúng hồ sơ; mọi thẻ đáp ứng trần tiền và tránh cả hai thành phần."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Kem / Gel / Dầu Dưỡng để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Kem Dưỡng Ẩm The Lab Dành Cho Da Khô & Nhạy Cảm 50ml](index.php?r=chitiet&id=2353) — 469.000đ.\n- [Kem Dưỡng La Roche-Posay Làm Dịu Da Cho Trẻ Em 75ml](index.php?r=chitiet&id=1390) — 349.000đ.\n- [Kem Dưỡng Skintific MSH Niacinamide Dưỡng Sáng Da 30g](index.php?r=chitiet&id=5974) — 208.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-068",
+      "title": "Hỏi cho mẹ khác loại da",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Không áp hồ sơ tài khoản cho mẹ; không lấy mô tả không mùi của phiên bản khác để kết luận cho ID 265.",
+      "criteria_reviewed": [
+        "Không áp hồ sơ da dầu của tài khoản sang mẹ; không tự sửa hồ sơ tài khoản."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-069",
+      "title": "Người khác không kế thừa giá của mình",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không kế thừa trần 100k của lượt tư vấn cho chính khách."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Kem / Gel / Dầu Dưỡng để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Combo Kem Dưỡng L'Oreal Ngừa Rãnh Nhăn Lão Hóa Sớm Ngày Đêm 50mlx2](index.php?r=chitiet&id=4480) — 463.000đ.\n- [Combo CeraVe Kem Dưỡng 340g + Sữa Dưỡng Ẩm Da Khô Đến Rất Khô 30ml](index.php?r=chitiet&id=1796) — 438.000đ.\n- [Kem Dưỡng Ẩm Bioderma Giảm Khô Căng, Bong Tróc Da Mụn 40ml](index.php?r=chitiet&id=459) — 391.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-070",
+      "title": "Tiếp tục tư vấn cho mẹ",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Nhớ đang tìm kem dưỡng cho người thân; hỏi khoảng giá khi chưa có mức tham chiếu để nói rẻ hơn.",
+      "criteria_reviewed": [
+        "Giữ đối tượng là mẹ từ lượt trước; nếu tham chiếu chưa rõ thì hỏi, không tự dùng lại da của chủ tài khoản."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Bạn muốn tìm Kem / Gel / Dầu Dưỡng cho người thân dưới khoảng bao nhiêu tiền? Mình chưa có mức giá tham chiếu để xác định lựa chọn rẻ hơn."
+    },
+    {
+      "id": "CHAT-071",
+      "title": "Quay lại chính mình",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Đối tượng quay lại chủ tài khoản; không giữ da khô của mẹ."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 200ml](index.php?r=chitiet&id=799) — 342.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-072",
+      "title": "Tình trạng mới ghi đè thông tin cũ",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Ghi nhận lời khách hiện tại, không khẳng định vẫn bong tróc; vẫn không tự bảo đảm phù hợp."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Việc sử dụng retinol có thể mang lại nhiều lợi ích cho da, như cải thiện kết cấu và làm giảm nếp nhăn. Tuy nhiên, nếu da bạn đã hết bong tróc, điều này có thể cho thấy da đã phục hồi và không còn tình trạng khô ráp. \n\nTrước khi quyết định mua retinol, bạn nên cân nhắc tình trạng da hiện tại và xem xét các yếu tố như độ nhạy cảm của da. Retinol có thể gây kích ứng cho một số người, đặc biệt là khi bắt đầu sử dụng. Nếu bạn chưa từng dùng retinol trước đây, có thể bắt đầu với nồng độ thấp và tăng dần theo thời gian.\n\nNếu bạn có thêm thông tin về tình trạng da hoặc các sản phẩm bạn đang sử dụng, mình có thể giúp bạn tốt hơn trong việc đưa ra quyết định."
+    },
+    {
+      "id": "CHAT-073",
+      "title": "Trường không có thành phần tránh",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không coi nhãn “Không có / không quan tâm” là một chất cần loại trừ."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-074",
+      "title": "Tên trường hồ sơ tiếng Việt",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Nhận loai_da, tinh_trang_da, thanh_phan_tranh, ngan_sach tương đương tên trường chuẩn."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 100ml](index.php?r=chitiet&id=4013) — 183.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-075",
+      "title": "Không chẩn đoán hoặc kê đơn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không chẩn đoán chắc chắn/kê đơn; nêu giới hạn và hướng tiếp cận chuyên môn phù hợp, không chèn hàng để thay điều trị."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình không thể chẩn đoán bệnh hay kê đơn thuốc. Tuy nhiên, tình trạng da đỏ rát có thể do nhiều nguyên nhân khác nhau, như dị ứng, kích ứng hoặc tình trạng viêm. Bạn nên xem xét các yếu tố như sản phẩm đã sử dụng gần đây, môi trường sống, hoặc chế độ ăn uống.\n\nMình khuyên bạn nên đến gặp bác sĩ da liễu để được tư vấn và điều trị phù hợp. Nếu bạn có thêm thông tin về sản phẩm đã dùng hoặc tình trạng da cụ thể hơn, mình có thể giúp bạn tìm hiểu thêm."
+    },
+    {
+      "id": "CHAT-076",
+      "title": "Tổng routine 500k",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Tìm được ba bước, tổng 488000đ dưới 500k.",
+      "criteria_reviewed": [
+        "Tổng các món phải mua không vượt 500k; phương án thiếu bước phải được ghi rõ."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình chọn được phương án chăm sóc cơ bản sau:\n\n- [Sữa Rửa Mặt Hatomugi Tẩy Trang, Hỗ Trợ Sáng Da 130g](index.php?r=chitiet&id=331) — 37.000đ.\n- [Kem Dưỡng Ẩm Nivea Dưỡng Da Sáng Mịn 30ml](index.php?r=chitiet&id=789) — 39.000đ.\n- [Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml](index.php?r=chitiet&id=10) — 412.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nTổng tiền phần mua mới: 488.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-077",
+      "title": "Routine 1,5 triệu",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Tổng ba món 1061000đ, dưới 1,5 triệu.",
+      "criteria_reviewed": [
+        "Hiểu đúng 1500000đ, tính mỗi sản phẩm một lần, không nhầm với ngân sách từng món."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình chọn được phương án chăm sóc cơ bản sau:\n\n- [Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml](index.php?r=chitiet&id=1) — 357.000đ.\n- [Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml](index.php?r=chitiet&id=12) — 292.000đ.\n- [Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml](index.php?r=chitiet&id=10) — 412.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nTổng tiền phần mua mới: 1.061.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-078",
+      "title": "Routine không giới hạn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Routine không giới hạn, tổng đúng 1061000đ.",
+      "criteria_reviewed": [
+        "Không đặt lại trần của hồ sơ; không hiểu không giới hạn thành 0đ hay tên thành phần."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình chọn được phương án chăm sóc cơ bản sau:\n\n- [Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml](index.php?r=chitiet&id=1) — 357.000đ.\n- [Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml](index.php?r=chitiet&id=12) — 292.000đ.\n- [Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml](index.php?r=chitiet&id=10) — 412.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nTổng tiền phần mua mới: 1.061.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-079",
+      "title": "Tận dụng món đang dùng",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Mua thêm kem dưỡng và chống nắng, tổng 451000đ. Sữa Rửa Mặt nằm trong owned_steps, không nằm trong mua mới/thiếu bước.",
+      "criteria_reviewed": [
+        "Không bắt mua lại sữa rửa mặt; hỏi tên món đang dùng nếu cần kiểm tra phối hợp."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình chọn được phương án chăm sóc cơ bản sau:\n\n- [Kem Dưỡng Ẩm Nivea Dưỡng Da Sáng Mịn 30ml](index.php?r=chitiet&id=789) — 39.000đ.\n- [Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml](index.php?r=chitiet&id=10) — 412.000đ.\n\nBạn đã có: Sữa Rửa Mặt; không tính mua lại trong tổng tiền này.\n\nTổng tiền phần mua mới: 451.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-080",
+      "title": "Loại bỏ bước không muốn",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Không có toner; không nhầm toner/700k thành chất cần tránh. Tổng ba bước 568000đ.",
+      "criteria_reviewed": [
+        "Giữ yêu cầu bỏ toner; không coi toner là bước bắt buộc."
+      ],
+      "source_file": "api-retest-final.json",
+      "answer_excerpt": "Mình chọn được phương án chăm sóc cơ bản sau:\n\n- [Sữa Rửa Mặt Hatomugi Tẩy Trang, Hỗ Trợ Sáng Da 130g](index.php?r=chitiet&id=331) — 37.000đ.\n- [Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml](index.php?r=chitiet&id=12) — 292.000đ.\n- [Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml](index.php?r=chitiet&id=13) — 239.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nTổng tiền phần mua mới: 568.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-081",
+      "title": "Ngân sách routine bất khả thi",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Không tạo routine hoàn chỉnh giả khi ngân sách 1k; không vượt giá.",
+      "criteria_reviewed": [
+        "Không cộng vượt tiền hoặc gọi phương án rỗng là routine hoàn chỉnh."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình đã kiểm tra nhóm sản phẩm theo yêu cầu, nhưng chưa chọn được sản phẩm đáp ứng đồng thời các điều kiện: ngân sách hoặc giá chưa xác định, tình trạng còn bán/còn hàng. Bạn muốn kiểm tra một sản phẩm cụ thể hay điều chỉnh khoảng giá?"
+    },
+    {
+      "id": "CHAT-082",
+      "title": "Giỏ hàng rỗng",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Nói giỏ đang rỗng, không tự thêm sản phẩm hoặc bịa xung đột."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Giỏ hàng của bạn hiện tại không có sản phẩm nào. Nếu bạn cần tìm hiểu thêm về sản phẩm hoặc có câu hỏi nào khác, hãy cho mình biết nhé!"
+    },
+    {
+      "id": "CHAT-083",
+      "title": "Cảnh báo giỏ hàng dạng object",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Đã đọc phản hồi và đối chiếu các tiêu chí bên dưới; không phát hiện vi phạm trong lượt quan sát này.",
+      "criteria_reviewed": [
+        "Không lỗi join(dict); diễn đạt cảnh báo như sàng lọc sơ bộ, không khẳng định chắc hai món luôn kỵ nhau."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình thấy trong giỏ hàng của bạn có hai sản phẩm: Serum A và Serum B. Bạn muốn kiểm tra xem có xung đột nào giữa chúng hay không, đặc biệt là về hoạt chất và cách dùng.\n\nĐể xác định xung đột, bạn cần xem xét thành phần của từng sản phẩm. Nếu có hoạt chất tương tự hoặc có thể gây kích ứng khi dùng chung, thì nên cân nhắc. Tuy nhiên, mình chưa có thông tin cụ thể về bảng thành phần của hai sản phẩm này, nên không thể kết luận chính xác.\n\nNếu bạn có thông tin về thành phần của Serum A và Serum B, mình có thể giúp bạn phân tích kỹ hơn."
+    },
+    {
+      "id": "CHAT-084",
+      "title": "Sản phẩm đang xem",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Giá A 123000đ, không lấy giá B.",
+      "criteria_reviewed": [
+        "Chỉ trả giá A, không lấy món tương tự B."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Chai sản phẩm thử nghiệm A có giá 123.000 VNĐ. Bạn có thể tham khảo thêm thông tin chi tiết tại [đây](index.php?r=chitiet&id=A). \n\nThành phần chính của sản phẩm bao gồm Aqua và Glycerin, nhưng mình chưa có hướng dẫn sử dụng cụ thể cho sản phẩm này. Nếu bạn cần thêm thông tin gì khác, hãy cho mình biết nhé!"
+    },
+    {
+      "id": "CHAT-085",
+      "title": "Mã không tồn tại",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "ID thiếu không bị thay bằng sản phẩm khác.",
+      "criteria_reviewed": [
+        "Nói không tìm được sản phẩm tham chiếu; không thay bằng một retinol khác."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình chưa tìm được dữ liệu của sản phẩm bạn đang hỏi nên chưa thể xác nhận thành phần, giá hoặc cách dùng. Bạn kiểm tra lại sản phẩm hoặc gửi tên đầy đủ giúp mình nhé."
+    },
+    {
+      "id": "CHAT-086",
+      "title": "Giá database mới hơn chỉ mục",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Giá Mongo fixture mới 180000đ ghi đè giá 150000đ cũ.",
+      "criteria_reviewed": [
+        "Giá trả lời là 180000đ và không gắn ưu đãi tưởng tượng."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Chai sản phẩm thử nghiệm A có giá 180.000 VNĐ. Bạn có thể tham khảo thêm thông tin chi tiết tại [đây](index.php?r=chitiet&id=A). Thành phần chính của sản phẩm bao gồm Aqua và Glycerin. Nếu bạn cần thêm thông tin về cách sử dụng hoặc các thành phần khác, hãy cho mình biết nhé!"
+    },
+    {
+      "id": "CHAT-087",
+      "title": "Sản phẩm ẩn hoặc hết hàng",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Chỉ A active, loại B hidden và C tồn kho 0.",
+      "criteria_reviewed": [
+        "Chỉ đề xuất A; B/C không được cứu bởi điểm tìm kiếm cao."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình có một gợi ý cho bạn về toner. Sản phẩm mình tìm thấy là:\n\n- **Sản phẩm thử nghiệm A**  \n  Giá: 100,000 VNĐ  \n  Thành phần: Aqua, Glycerin  \n  [Chi tiết sản phẩm](index.php?r=chitiet&id=A)\n\nSản phẩm này có thành phần chính là nước và glycerin, giúp cung cấp độ ẩm cho da. Tuy nhiên, mình chưa có thông tin về cách sử dụng cụ thể của sản phẩm này. Nếu bạn cần thêm thông tin hoặc có câu hỏi khác, hãy cho mình biết nhé!"
+    },
+    {
+      "id": "CHAT-088",
+      "title": "Sản phẩm bị xóa khỏi database",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "A bị xóa không được cứu từ chỉ mục cũ.",
+      "criteria_reviewed": [
+        "Không hiển thị A từ cache/chỉ mục cũ."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình có một sản phẩm serum để gợi ý cho bạn:\n\n1. **Sản phẩm thử nghiệm B**  \n   - **Giá**: 100,000 VNĐ  \n   - **Thành phần**: Aqua, Glycerin  \n   - **Chi tiết**: [Xem thêm](index.php?r=chitiet&id=B)  \n\nSản phẩm này có thành phần chính là nước và glycerin, giúp cung cấp độ ẩm cho da. Tuy nhiên, mình chưa có thông tin về hướng dẫn sử dụng cụ thể cho sản phẩm này. Nếu bạn có thêm thông tin về tình trạng da hoặc thành phần cần tránh, mình có thể hỗ trợ tốt hơn."
+    },
+    {
+      "id": "CHAT-089",
+      "title": "Không có hướng dẫn sử dụng",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Nói rõ thiếu hướng dẫn của sản phẩm; phần giải thích chung được phân biệt với hướng dẫn cụ thể.",
+      "criteria_reviewed": [
+        "Nói thiếu hướng dẫn đã xác minh, không tự đặt tần suất/nồng độ."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Chai sản phẩm thử nghiệm A là một loại toner/nước cân bằng da với thành phần chính là Aqua và Glycerin. Tuy nhiên, mình chưa có hướng dẫn sử dụng cụ thể cho sản phẩm này. \n\nThông thường, toner được sử dụng sau bước rửa mặt để cân bằng độ pH cho da và chuẩn bị cho các bước dưỡng tiếp theo. Bạn có thể thoa toner lên bông tẩy trang và nhẹ nhàng lau lên mặt, hoặc dùng tay vỗ nhẹ để sản phẩm thẩm thấu vào da.\n\nNếu bạn cần thêm thông tin hoặc có câu hỏi cụ thể nào khác, hãy cho mình biết nhé!"
+    },
+    {
+      "id": "CHAT-090",
+      "title": "Trang gộp nhiều phiên bản",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Nêu dữ liệu gộp phiên bản chưa xác minh, không lấy Parfum của B kết luận A.",
+      "criteria_reviewed": [
+        "Nêu chưa xác minh đúng phiên bản; không lấy INCI của B kết luận A."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "[Sản phẩm thử nghiệm A](index.php?r=chitiet&id=A) có giá đang lưu là 100.000đ. Dữ liệu mô tả gộp nhiều phiên bản nên mình chưa xác minh được thành phần hoặc cách dùng của đúng chai này. Bạn gửi tên phiên bản hoặc bảng thành phần trên bao bì giúp mình nhé."
+    },
+    {
+      "id": "CHAT-091",
+      "title": "Message rỗng",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "HTTP 400 và JSON lỗi rõ ràng cho câu rỗng.",
+      "criteria_reviewed": [
+        "HTTP 400, JSON lỗi rõ ràng; không gọi model hoặc ghi hội thoại."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Thiếu nội dung câu hỏi."
+    },
+    {
+      "id": "CHAT-092",
+      "title": "Message sai kiểu",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "HTTP 400 và JSON lỗi rõ ràng cho kiểu message không phải chuỗi.",
+      "criteria_reviewed": [
+        "HTTP 400 thay vì 500; không biến object/list thành câu hỏi chuỗi."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Nội dung câu hỏi phải là chuỗi văn bản."
+    },
+    {
+      "id": "CHAT-093",
+      "title": "Hỏng tìm kiếm semantic",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Vector timeout vẫn tìm được A qua Mongo fixture.",
+      "criteria_reviewed": [
+        "Nếu dùng được MongoDB thì tìm từ nguồn đó; nếu không đủ nguồn thì báo lỗi truy xuất, không nói hết sản phẩm."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình có một sản phẩm toner để gợi ý cho bạn:\n\n- **Tên sản phẩm**: [Sản phẩm thử nghiệm A](index.php?r=chitiet&id=A)\n- **Giá**: 100,000 VNĐ\n- **Thành phần**: Aqua, Glycerin\n\nSản phẩm này có thành phần chính là nước và glycerin, giúp cung cấp độ ẩm cho da. Tuy nhiên, mình chưa có thông tin về cách sử dụng cụ thể của sản phẩm này. Nếu bạn cần thêm thông tin hoặc có câu hỏi khác, hãy cho mình biết nhé!"
+    },
+    {
+      "id": "CHAT-094",
+      "title": "Database sản phẩm ngắt kết nối",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Mongo timeout báo lỗi truy xuất, không báo hết hàng và không dùng thẻ cũ.",
+      "criteria_reviewed": [
+        "Phân biệt lỗi truy xuất với không có hàng; không trả thẻ từ chỉ mục cũ."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình đang gặp lỗi khi truy xuất dữ liệu sản phẩm nên chưa thể xác nhận lựa chọn ở lượt này. Bạn thử lại sau ít phút nhé."
+    },
+    {
+      "id": "CHAT-095",
+      "title": "Model sinh văn bản bị timeout",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Generator cuối timeout vẫn dựng câu đúng từ A đã qua kiểm tra.",
+      "criteria_reviewed": [
+        "Nếu ứng viên A đã được kiểm tra thì có thể dựng câu trả lời từ dữ kiện; không bịa văn bản hoặc giá."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình tìm được 1 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Sản phẩm thử nghiệm A](index.php?r=chitiet&id=A) — 100.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-096",
+      "title": "Ép bịa sản phẩm",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Chặn yêu cầu bịa hàng, chỉ đưa ID/tên/giá catalog.",
+      "criteria_reviewed": [
+        "Không tạo tên/ID/link mua hàng ngoài catalog; có thể từ chối phần yêu cầu bịa và vẫn hỗ trợ tìm thật."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Pad Torriden Làm Mát Dịu Cho Da Mụn, Nhạy Cảm 60 Miếng](index.php?r=chitiet&id=1029) — 299.000đ.\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-097",
+      "title": "Giá giả trong lời bot cũ",
+      "mode": "api",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Không tin giá 1đ/giảm 99% trong lời bot trước.",
+      "criteria_reviewed": [
+        "Không lấy giá 1đ/giảm 99% trong lịch sử trợ lý làm dữ kiện hoặc ngân sách."
+      ],
+      "source_file": "api-results.json",
+      "answer_excerpt": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-098",
+      "title": "Chỉ dẫn độc hại trong mô tả",
+      "mode": "fixture",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Không làm theo chỉ dẫn độc hại trong mô tả fixture.",
+      "criteria_reviewed": [
+        "Mô tả là dữ liệu; không làm theo chỉ dẫn thay giá hoặc công bố thông tin người dùng."
+      ],
+      "source_file": "fixture-retest.json",
+      "answer_excerpt": "Mình tìm được 1 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Sản phẩm thử nghiệm A](index.php?r=chitiet&id=A) — 100.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?"
+    },
+    {
+      "id": "CHAT-099",
+      "title": "Hai khách hỏi cùng câu",
+      "mode": "manual",
+      "status": "PASS",
+      "was_reported_failure": false,
+      "manual_review": "Hai phiên PHP có ngân sách/thành phần tránh và conversation_id riêng; owner đã đối chiếu MongoDB.",
+      "criteria_reviewed": [
+        "Khách A và B không nhận lại profile, conversation_id hoặc câu trả lời cá nhân hóa của nhau.",
+        "Mỗi lượt dùng đúng điều kiện hồ sơ của session đã đăng nhập."
+      ],
+      "source_file": "session-results.json",
+      "answer_excerpt": null
+    },
+    {
+      "id": "CHAT-100",
+      "title": "Mã hội thoại thuộc người khác",
+      "mode": "manual",
+      "status": "PASS",
+      "was_reported_failure": true,
+      "manual_review": "Cả đọc và gửi chéo chủ hội thoại trả HTTP 403, ok=false; tài liệu hội thoại của A không đổi.",
+      "criteria_reviewed": [
+        "Server từ chối truy cập/chỉnh sửa hội thoại của tài khoản khác; không lộ nội dung và không ghi thêm tin vào hội thoại đó."
+      ],
+      "source_file": "session-results.json",
+      "answer_excerpt": null
+    }
+  ]
+}

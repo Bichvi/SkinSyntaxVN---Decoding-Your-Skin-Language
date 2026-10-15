@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/fontawesome.min.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css?v=<?= (int)@filemtime(dirname(__DIR__, 3) . '/public/assets/css/admin.css') ?>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
     <script>
         (function() {
@@ -41,6 +41,7 @@ $notificationReviews = $notificationCenter['reviews'] ?? [];
 $notificationQuestions = $notificationCenter['questions'] ?? [];
 $notificationChats = $notificationCenter['chats'] ?? [];
 $orderNotificationRoute = user_can_access_route('admin_orders') ? 'admin_orders' : 'staff_orders';
+$canSeeAiIdolAlerts = user_can_access_route('admin_ai_idol');
 $isAdmin = $currentRole === 'admin';
 
 $formatAdminNoticeDate = static function ($value): string {
@@ -78,6 +79,13 @@ $menuGroups = [
                 'label' => 'Sản phẩm',
                 'meta' => 'Danh sách & Tồn kho',
                 'active' => strpos($currentRoute, 'admin_sp') === 0 || strpos($currentRoute, 'staff_product') === 0 || strpos($currentRoute, 'staff_sp') === 0,
+            ],
+            [
+                'route' => 'admin_inventory_batches',
+                'icon' => 'bi bi-calendar2-range-fill',
+                'label' => 'Kho & Lô hàng',
+                'meta' => 'Hạn dùng & tồn theo lô',
+                'active' => strpos($currentRoute, 'admin_inventory_') === 0,
             ],
             [
                 'route' => 'admin_categories',
@@ -287,6 +295,9 @@ foreach ($menuGroups as $group) {
                     </div>
 
                     <div class="admin-notification-body">
+                        <?php if ($canSeeAiIdolAlerts): ?>
+                            <div id="aiIdolNotificationGroup" hidden></div>
+                        <?php endif; ?>
                         <div class="admin-notification-section">
                             <div class="small fw-semibold text-uppercase text-muted">Đơn hàng mới</div>
                         </div>
@@ -403,6 +414,10 @@ foreach ($menuGroups as $group) {
     </div>
 
     <script>
+    (function () {
+        var pageScrollKey = 'adminPageScrollPosition';
+        var sidebarScrollKey = 'adminSidebarScrollPosition';
+        var sidebarNav = document.querySelector('.admin-sidebar-nav');
         var sidebarLinks = document.querySelectorAll('[data-admin-sidebar-link]');
 
         if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
@@ -445,34 +460,37 @@ foreach ($menuGroups as $group) {
         });
 
         var bellButton = document.getElementById('adminNotificationButton');
-        if (!bellButton) {
-            return;
-        }
-
-        var markedSeen = false;
-        var markSeen = function () {
-            if (markedSeen) {
-                return;
-            }
-            markedSeen = true;
-
-            var badge = document.getElementById('adminNotificationBadge');
-            if (badge) {
-                badge.remove();
-            }
-
-            fetch('index.php?r=admin_notifications_seen', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+        if (bellButton) {
+            var markedSeen = false;
+            var markSeen = function () {
+                if (markedSeen) {
+                    return;
                 }
-            }).catch(function () {
-                markedSeen = false;
-            });
-        };
+                markedSeen = true;
 
-        bellButton.addEventListener('click', markSeen, { once: true });
-    });
+                var badge = document.getElementById('adminNotificationBadge');
+                if (badge) {
+                    badge.remove();
+                }
+
+                fetch('index.php?r=admin_notifications_seen', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).catch(function () {
+                    markedSeen = false;
+                });
+            };
+
+            bellButton.addEventListener('click', markSeen, { once: true });
+        }
+    }());
     </script>
+    <?php if ($canSeeAiIdolAlerts): ?>
+        <?php $adminAssets = dirname(__DIR__, 3) . '/public/assets'; ?>
+        <script src="<?= BASE_URL ?>/assets/js/ai-idol-approval.js?v=<?= (int)@filemtime($adminAssets . '/js/ai-idol-approval.js') ?>" defer></script>
+        <script src="<?= BASE_URL ?>/assets/js/admin-ai-idol-alerts.js?v=<?= (int)@filemtime($adminAssets . '/js/admin-ai-idol-alerts.js') ?>" defer></script>
+    <?php endif; ?>
 
 

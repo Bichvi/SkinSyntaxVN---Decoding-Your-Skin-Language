@@ -10,7 +10,7 @@ SERVICE_DIR = os.path.dirname(os.path.dirname(__file__))
 if SERVICE_DIR not in sys.path:
     sys.path.insert(0, SERVICE_DIR)
 
-from agents.intent_parser import fallback_parse
+from agents.intent_parser import clean_product_id, fallback_parse
 from agents.intent_classifier import (
     CANCEL_CAMPAIGN,
     CREATE_CAMPAIGN,
@@ -19,9 +19,9 @@ from agents.intent_classifier import (
     RETRY_FAILED,
     classify_intent,
 )
-from agents.product_resolver import resolve_products
+from agents.product_resolver import normalize_catalog_product, resolve_products
 from agents.schemas import AgentBrief
-from agents.service import _safe_schedule, cancel_agent_run, process_agent_run
+from agents.service import ConflictError, _safe_schedule, cancel_agent_run, confirm_agent_run, process_agent_run
 from core.pipeline import should_auto_approve_script
 from engines.content_agent import _script_council_payload, generate_content_and_script
 
@@ -248,6 +248,356 @@ class AgentPolicyTests(unittest.TestCase):
     def test_agent_cannot_cancel_after_campaign_creation(self, _get):
         with self.assertRaisesRegex(ValueError, "Chương trình đã được tạo"):
             cancel_agent_run("run-1")
+
+
+BRIEF_93 = "Tối mai lúc 20 giờ, tạo livestream giới thiệu sản phẩm mã 93 an toàn"
+
+
+class ProductIdCleaningTests(unittest.TestCase):
+    def test_clean_product_id_forms(self):
+        self.assertEqual(clean_product_id("mã 93"), "93")
+        self.assertEqual(clean_product_id("93.0"), "93")
+        self.assertEqual(clean_product_id(93.0), "93")
+        self.assertEqual(clean_product_id("#93"), "93")
+        self.assertEqual(clean_product_id("ID: 745"), "745")
+        self.assertEqual(clean_product_id("Mã sản phẩm ABC12"), "abc12")
+        self.assertIsNone(clean_product_id("mã"))
+        self.assertIsNone(clean_product_id("an"))
+        self.assertIsNone(clean_product_id("9.5"))
+        self.assertIsNone(clean_product_id(None))
+
+    def test_brief_from_screenshot_extracts_only_the_id(self):
+        self.assertEqual(fallback_parse(BRIEF_93).explicit_product_ids, ["93"])
+
+    def test_schema_cleans_and_dedups_llm_ids(self):
+        brief = AgentBrief.from_mapping({"goal": "x", "explicit_product_ids": ["mã 93", "93.0", " ", "an"]})
+        self.assertEqual(brief.explicit_product_ids, ["93"])
+
+
+class ProductAliasResolverTests(unittest.TestCase):
+    CATALOG = [
+        {"ma_san_pham": 745, "id": 93, "ten_san_pham": "Kem Chống Nắng An Toàn Cho Da Nhạy Cảm"},
+        {"ma_san_pham": 120, "ten_san_pham": "Serum Rau Má Làm Dịu Da"},
+    ]
+
+    def test_alias_id_resolves_to_primary_ma_san_pham(self):
+        result = resolve_products(BRIEF_93, ["93"], [BRIEF_93], self.CATALOG)
+        self.assertEqual([item["product_id"] for item in result["selected"]], ["745"])
+        self.assertEqual(result["unresolved_ids"], [])
+
+    def test_aliases_cover_ma_id_and_object_id_with_numeric_normalisation(self):
+        product = normalize_catalog_product({
+            "_id": "64b64b64b64b64b64b64b64b", "ma_san_pham": 745.0, "id": 93, "ten_san_pham": "A",
+        })
+        self.assertEqual(product["id"], "745")
+        self.assertEqual(product["aliases"], ["745", "93", "64b64b64b64b64b64b64b64b"])
+        again = normalize_catalog_product(product)  # re-normalising keeps aliases
+        self.assertEqual(again["aliases"], product["aliases"])
+
+    def test_float_catalog_id_matches_clean_id(self):
+        result = resolve_products("sản phẩm mã 93", ["93"], [], [{"ma_san_pham": 93.0, "ten_san_pham": "Kem A"}])
+        self.assertEqual([item["product_id"] for item in result["selected"]], ["93"])
+
+    def test_primary_id_beats_another_products_alias(self):
+        catalog = [
+            {"ma_san_pham": 93, "ten_san_pham": "Kem Chính Chủ"},
+            {"ma_san_pham": 745, "id": 93, "ten_san_pham": "Kem Trùng Alias"},
+        ]
+        result = resolve_products("mã 93", ["93"], [], catalog)
+        self.assertEqual([item["product_id"] for item in result["selected"]], ["93"])
+
+    def test_missing_id_never_falls_back_to_fuzzy_match(self):
+        catalog = [{"ma_san_pham": 745, "ten_san_pham": "Kem Chống Nắng An Toàn Cho Da Nhạy Cảm"}]
+        result = resolve_products(BRIEF_93, ["93"], [BRIEF_93], catalog)
+        self.assertEqual(result["selected"], [])
+        self.assertEqual(result["unresolved_ids"], ["93"])
+        self.assertEqual(result["unresolved_reasons"], {"93": "NOT_FOUND"})
+        self.assertTrue(result["ambiguous"])  # offered as suggestions only
+        self.assertLessEqual(len(result["ambiguous"]), 5)
+
+    def test_command_words_do_not_inflate_overlap(self):
+        catalog = [{"ma_san_pham": 745, "ten_san_pham": "Rau Má An Toàn"}]
+        result = resolve_products("tạo livestream mã an toàn", [], [], catalog)
+        self.assertEqual(result["selected"], [])
+
+    def test_explicit_id_does_not_add_product_named_in_brief(self):
+        catalog = [
+            {"ma_san_pham": 120, "ten_san_pham": "Serum Rau Má Làm Dịu Da"},
+            {"ma_san_pham": 934, "ten_san_pham": "Kem Chống Nắng Dịu Nhẹ"},
+        ]
+        result = resolve_products("mã 120 và Kem Chống Nắng Dịu Nhẹ", ["120"], [], catalog)
+        self.assertEqual([item["product_id"] for item in result["selected"]], ["120"])
+
+
+class AgentRunHarness:
+    """Stateful in-memory agent run; no Mongo, no network, no real campaign."""
+
+    def __init__(self, brief, overrides=None, status="RECEIVED"):
+        self.run = {
+            "_id": "64b64b64b64b64b64b64b64b", "brief": brief, "status": status,
+            "overrides": {"autonomy_policy": "assisted", **(overrides or {})},
+            "campaign_id": None, "created_by": "admin",
+        }
+
+    def execute(self, catalog, *, llm_ids=None, rtmp=None, create=("campaign-1", True), db=None):
+        class FakeLlm:
+            def invoke_json_schema(_self, *args, **kwargs):
+                return {"goal": self.run["brief"], "explicit_product_ids": llm_ids or []}
+
+        def update(_run_id, values):
+            self.run.update(values)
+
+        create_kwargs = {"side_effect": create} if isinstance(create, Exception) else {"return_value": create}
+        patches = [
+            patch("agents.service.get_agent_run", side_effect=lambda _id: self.run),
+            patch("agents.service.update_agent_run", side_effect=update),
+            patch("agents.service.create_campaign", **create_kwargs),
+            patch("agents.service.RTMP_TARGETS", rtmp or {}),
+        ]
+        if db is not None:
+            patches += [patch("agents.service.get_db", return_value=db), patch("agents.service._catalog", return_value=catalog)]
+        started = [item.start() for item in patches]
+        try:
+            kwargs = {"catalog": catalog} if db is None else {}
+            process_agent_run(self.run["_id"], llm=FakeLlm(), **kwargs)
+        finally:
+            for item in patches:
+                item.stop()
+        self.create = started[2]
+        return self.run
+
+
+class FakeSanPham:
+    def __init__(self, document):
+        self.document = document
+        self.filters = []
+
+    def find_one(self, query, projection=None):
+        self.filters.append(query)
+        return self.document
+
+
+class FakeProductDb:
+    def __init__(self, document=None):
+        self.san_pham = FakeSanPham(document)
+
+
+class AgentProductConfirmationTests(unittest.TestCase):
+    CATALOG = [
+        {"ma_san_pham": 745, "id": 98, "ten_san_pham": "Kem Chống Nắng An Toàn"},
+        {"ma_san_pham": 93, "ten_san_pham": "Serum Phục Hồi Da"},
+    ]
+
+    def test_llm_invented_id_is_dropped_and_real_id_is_used(self):
+        harness = AgentRunHarness(BRIEF_93)
+        run = harness.execute(self.CATALOG, llm_ids=["555", "93.0"])
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        self.assertEqual(harness.create.call_args.args[0]["product_ids"], ["93"])
+        self.assertEqual(run["normalized_brief"]["explicit_product_ids"], ["93"])
+
+    def test_llm_id_absent_from_brief_cannot_pick_a_product(self):
+        harness = AgentRunHarness("Tạo livestream giới thiệu serum phục hồi vào tối mai lúc 20 giờ cho khách mới")
+        run = harness.execute(self.CATALOG, llm_ids=["745"])
+        self.assertEqual(run["normalized_brief"]["explicit_product_ids"], [])
+
+    def test_unknown_code_needs_input_with_structured_plan(self):
+        harness = AgentRunHarness(BRIEF_93.replace("mã 93", "mã 9393"))
+        run = harness.execute(self.CATALOG)
+        harness.create.assert_not_called()
+        plan = run["plan"]
+        self.assertEqual(run["status"], "NEEDS_INPUT")
+        self.assertEqual(plan["resolved_products"], [])
+        self.assertEqual(plan["unresolved_ids"], ["9393"])
+        self.assertEqual(plan["unresolved_reasons"], {"9393": "NOT_FOUND"})
+        self.assertEqual(plan["needs"], ["product"])
+        self.assertEqual(plan["confirmable_products"], plan["candidate_products"])
+        self.assertIn(
+            "Không tìm thấy mã 9393 trong catalog đang bán (đã đối chiếu mã sản phẩm, id và _id).",
+            plan["warnings"],
+        )
+
+    def test_hidden_product_is_reported_as_inactive(self):
+        db = FakeProductDb({"trang_thai": "inactive"})
+        harness = AgentRunHarness(BRIEF_93)
+        run = harness.execute([], db=db)
+        harness.create.assert_not_called()
+        self.assertEqual(run["plan"]["unresolved_reasons"], {"93": "INACTIVE"})
+        self.assertIn("Mã 93 đang ẩn/ngừng bán.", run["plan"]["warnings"])
+        self.assertIn({"ma_san_pham": 93}, db.san_pham.filters[0]["$or"])
+        self.assertIn({"id": "93"}, db.san_pham.filters[0]["$or"])
+
+    def test_confirmed_ids_skip_business_query_branch(self):
+        harness = AgentRunHarness(
+            "Lọc 10 kem chống nắng bán chạy toàn kỳ rồi tạo livestream",
+            {"explicit_product_ids": ["745"]},
+            status="NEEDS_INPUT",
+        )
+        run = harness.execute([{"ma_san_pham": 745, "ten_san_pham": "Kem chống nắng A", "so_luong_ban": 5}])
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        self.assertEqual(harness.create.call_args.args[0]["product_ids"], ["745"])
+
+    def test_unconfigured_rtmp_blocks_planning(self):
+        harness = AgentRunHarness(
+            "Giới thiệu sản phẩm mã 995 lên YouTube tối mai lúc 20 giờ",
+            {"explicit_product_ids": ["995"], "platforms": ["youtube"]},
+        )
+        run = harness.execute([{"ma_san_pham": 995, "ten_san_pham": "Kem Dưỡng Vichy"}])
+        harness.create.assert_not_called()
+        self.assertEqual((run["status"], run["current_stage"]), ("NEEDS_INPUT", "POLICY_GATE"))
+        self.assertEqual(run["plan"]["needs"], ["platform"])
+        self.assertIn("Chưa cấu hình RTMP cho youtube. Chọn phát nội bộ hoặc cấu hình trước.", run["plan"]["warnings"])
+        self.assertNotIn("rtmp://", str(run["plan"]))
+
+    def test_configured_rtmp_allows_campaign(self):
+        harness = AgentRunHarness(
+            "Giới thiệu sản phẩm mã 995 lên YouTube tối mai lúc 20 giờ",
+            {"explicit_product_ids": ["995"], "platforms": ["youtube"]},
+        )
+        run = harness.execute(
+            [{"ma_san_pham": 995, "ten_san_pham": "Kem Dưỡng Vichy"}],
+            rtmp={"youtube": "rtmp://example.invalid/live/secret"},
+        )
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        self.assertEqual(harness.create.call_args.args[0]["platforms"], ["youtube"])
+
+    def test_campaign_validation_error_asks_for_schedule_without_failing(self):
+        harness = AgentRunHarness(BRIEF_93, {"explicit_product_ids": ["93"]})
+        run = harness.execute(self.CATALOG, create=ValueError("Select at least one supported platform"))
+        self.assertEqual((run["status"], run["current_stage"]), ("NEEDS_INPUT", "SCHEDULE_REVIEW"))
+        self.assertEqual(run["plan"]["needs"], ["schedule"])
+        self.assertIn("Select at least one supported platform", run["plan"]["warnings"][0])
+        self.assertIsNone(run["campaign_id"])
+
+
+class ConfirmAgentRunTests(unittest.TestCase):
+    RUN_ID = "64b64b64b64b64b64b64b64b"
+
+    def confirm(self, run, payload, claimed=True):
+        def claim(collection, item_id, expected, new_status, extra=None):
+            return {"_id": item_id, "status": new_status, **(extra or {})} if run["status"] in expected and claimed else None
+
+        with patch("agents.service.get_agent_run", return_value=run), \
+                patch("agents.service.claim_transition", side_effect=claim) as claim_mock:
+            try:
+                return confirm_agent_run(self.RUN_ID, payload), claim_mock
+            except ValueError:
+                self.last_claim = claim_mock
+                raise
+
+    def test_confirm_while_interpreting_is_a_conflict(self):
+        run = {"_id": self.RUN_ID, "status": "INTERPRETING", "overrides": {}}
+        with self.assertRaises(ConflictError):
+            self.confirm(run, {"product_ids": ["745"]})
+        self.assertTrue(issubclass(ConflictError, ValueError))
+
+    def test_confirm_claims_atomically_and_cleans_payload(self):
+        run = {"_id": self.RUN_ID, "status": "NEEDS_INPUT", "overrides": {"autonomy_policy": "assisted"}}
+        _, claim = self.confirm(run, {"product_ids": ["mã 93", "93.0"], "scheduled_at": "2026-12-01T20:00"})
+        args = claim.call_args.args
+        self.assertEqual(args[0], "ai_idol_agent_runs")
+        self.assertEqual(set(args[2]), {"NEEDS_INPUT", "NEEDS_ATTENTION"})
+        self.assertEqual(args[3], "RECEIVED")
+        overrides = args[4]["overrides"]
+        self.assertEqual(overrides["explicit_product_ids"], ["93"])
+        self.assertEqual(overrides["scheduled_at"], "2026-12-01T20:00:00+07:00")
+        self.assertEqual(overrides["autonomy_policy"], "assisted")
+
+    def test_invalid_input_is_rejected_before_claiming(self):
+        run = {"_id": self.RUN_ID, "status": "NEEDS_INPUT", "overrides": {}}
+        for payload in ({"product_ids": ["mã"]}, {"scheduled_at": "không phải ngày"}):
+            with self.assertRaises(ValueError) as caught:
+                self.confirm(run, payload)
+            self.assertNotIsInstance(caught.exception, ConflictError)
+            self.last_claim.assert_not_called()
+
+    def test_confirm_after_campaign_creation_is_refused(self):
+        run = {"_id": self.RUN_ID, "status": "NEEDS_INPUT", "overrides": {}, "campaign_id": "campaign-1"}
+        with self.assertRaisesRegex(ValueError, "already created"):
+            self.confirm(run, {"product_ids": ["1"]})
+
+
+class AgentTaskRetryTests(unittest.TestCase):
+    def test_value_error_is_not_retried(self):
+        try:
+            import tasks
+        except ImportError as exc:  # heavy optional modules are absent in the minimal test env
+            self.skipTest(f"tasks module unavailable: {exc}")
+        with patch.object(tasks, "process_agent_run", side_effect=ValueError("bad input")), \
+                patch.object(tasks, "mark_agent_failed") as failed, \
+                patch.object(tasks.process_agent_run_task, "retry") as retry:
+            result = tasks.process_agent_run_task.run("64b64b64b64b64b64b64b64b")
+        retry.assert_not_called()
+        failed.assert_called_once()
+        self.assertFalse(result["ok"])
+
+
+class AgentPurposeTests(unittest.TestCase):
+    CATALOG = [{"ma_san_pham": 995, "ten_san_pham": "Kem Dưỡng Vichy"}]
+
+    def test_infer_purpose_from_text_and_schedule(self):
+        from agents.intent_parser import infer_purpose
+        self.assertEqual(infer_purpose("loc 5 serum ban chay", None), "product_video")
+        self.assertEqual(infer_purpose("loc 5 serum ban chay", "2026-12-01T20:00:00+07:00"), "live_and_product")
+        self.assertEqual(infer_purpose("tao livestream gioi thieu serum", None), "live_and_product")
+        self.assertEqual(infer_purpose("gioi thieu san pham ma 995 len youtube toi mai", None), "live_and_product")
+
+    def test_llm_path_reads_the_time_slot_from_the_brief(self):
+        from agents.intent_parser import parse_agent_brief
+
+        class NoScheduleLlm:
+            def invoke_json_schema(self, *args, **kwargs):
+                return {"goal": "x", "explicit_product_ids": ["995"]}
+
+        brief = parse_agent_brief("Giới thiệu sản phẩm mã 995 tối mai lúc 20 giờ", {}, llm=NoScheduleLlm())
+        self.assertEqual(brief.purpose, "live_and_product")
+
+    def test_fallback_parse_infers_purpose(self):
+        self.assertEqual(fallback_parse("Lọc 5 serum bán chạy").purpose, "product_video")
+        self.assertEqual(fallback_parse("Lọc 5 serum, tạo livestream lúc 19h tối mai").purpose, "live_and_product")
+
+    def test_brief_rejects_unknown_purpose(self):
+        self.assertIsNone(AgentBrief.from_mapping({"goal": "x", "purpose": "zzz"}).purpose)
+        self.assertEqual(AgentBrief.from_mapping({"goal": "x", "purpose": "live_only"}).purpose, "live_only")
+
+    def test_explicit_product_video_wins_over_livestream_words(self):
+        harness = AgentRunHarness("Giới thiệu sản phẩm mã 995, tạo livestream lúc 20 giờ tối mai",
+                                  {"explicit_product_ids": ["995"], "purpose": "product_video"})
+        run = harness.execute(self.CATALOG)
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        payload = harness.create.call_args.args[0]
+        self.assertEqual(payload["purpose"], "product_video")
+        self.assertIsNone(payload.get("scheduled_at"))
+        self.assertEqual(payload["platforms"], [])
+        self.assertEqual(payload["configuration"]["length_mode"], "Long (90-150s)")
+
+    def test_product_video_skips_the_rtmp_gate(self):
+        harness = AgentRunHarness("Giới thiệu sản phẩm mã 995 lên YouTube",
+                                  {"explicit_product_ids": ["995"], "platforms": ["youtube"], "purpose": "product_video"})
+        run = harness.execute(self.CATALOG)
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+
+    def test_unchosen_purpose_with_schedule_keeps_the_livestream(self):
+        harness = AgentRunHarness("Giới thiệu sản phẩm mã 995, tạo livestream lúc 20 giờ tối mai",
+                                  {"explicit_product_ids": ["995"]})
+        harness.execute(self.CATALOG)
+        payload = harness.create.call_args.args[0]
+        self.assertEqual(payload["purpose"], "live_and_product")
+        self.assertTrue(payload["scheduled_at"])
+
+    def test_create_agent_run_stores_purpose_override(self):
+        import core.agent_runs as agent_runs
+        from tests.fakes import FakeDb
+        db = FakeDb()
+        with patch.object(agent_runs, "get_db", return_value=db):
+            agent_runs.create_agent_run({"brief": "Lọc 5 serum bán chạy nhất", "purpose": "live_only"})
+        self.assertEqual(db.ai_idol_agent_runs.find_one({})["overrides"]["purpose"], "live_only")
+
+    def test_confirm_accepts_purpose(self):
+        run = {"_id": "64b64b64b64b64b64b64b64b", "status": "NEEDS_INPUT", "overrides": {}}
+        with patch("agents.service.get_agent_run", return_value=run),                 patch("agents.service.claim_transition",
+                      side_effect=lambda c, i, e, n, extra=None: {"_id": i, "status": n, **(extra or {})}) as claim:
+            confirm_agent_run(run["_id"], {"purpose": "product_video"})
+        self.assertEqual(claim.call_args.args[4]["overrides"]["purpose"], "product_video")
 
 
 if __name__ == "__main__":

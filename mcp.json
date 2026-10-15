@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "gitnexus": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "gitnexus",
+        "mcp"
+      ],
+      "type": "stdio"
+    }
+  }
+}

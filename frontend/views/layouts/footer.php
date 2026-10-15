@@ -1,6 +1,7 @@
 <script src="<?= BASE_URL ?>/assets/js/bootstrap.bundle.min.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/live-search.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/smart-search.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/live-filter.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/live-filter.js') ?: '1' ?>"></script>
 </main>
 
 <footer class="site-footer">
