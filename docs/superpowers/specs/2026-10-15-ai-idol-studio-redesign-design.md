@@ -309,3 +309,32 @@ Tách `frontend/public/assets/js/ai-idol-studio.js` (1343 dòng) thành:
 - Mới: `ai-idol-service/agents/autopilot.py`, `ai-idol-service/core/narration.py`, test tương ứng; `frontend/public/assets/js/studio-{logic,core,manual,auto,activity}.js`, `frontend/public/assets/js/tests/studio-logic.test.js`.
 - Sửa: `ai-idol-service/agents/service.py`, `agents/command_query.py`, `core/agent_runs.py`, `core/campaigns.py`, `engines/content_agent.py`, `app.py`, `config.py`, `.env.example`; `backend/app/controllers/AdminAiIdolController.php`, `backend/app/routes/ai_idol.php`, `backend/public/index.php`; `frontend/views/admin/ai_idol/index.php`, `frontend/public/assets/css/ai-idol-studio.css`.
 - Ngừng dùng ở trang Studio: `frontend/public/assets/js/ai-idol-studio.js` (xóa sau khi E2E pass, trong cùng thay đổi).
+
+## 11. Điều chỉnh sau khi kiểm tra nhánh `rcm_index` (15/10, chiều)
+
+Nhánh `origin/rcm_index` (commit `39c6b88`, chưa merge) thêm flash sale, voucher, cache Valkey, mở rộng makeup và hệ thống "xem video nhận thưởng". Nó cũng sửa trực tiếp các file của AI Idol Studio. Thử merge cho ra 13 file conflict.
+
+Quyết định của người dùng:
+
+- **D9 — Không để `rcm_index` ảnh hưởng AI Idol Studio.** Khi merge, mọi file thuộc Studio và Syna giữ bản `syna`:
+  - giao diện Studio: `frontend/views/admin/ai_idol/index.php`, `frontend/public/assets/js/ai-idol-studio.js`, `frontend/public/assets/css/ai-idol-studio.css`;
+  - dịch vụ: `ai-idol-service/**`, `ai-idol-agent-service/**`;
+  - Syna: `frontend/public/ai-idol-mascot-3d/**`, `scripts/ai-idol-mascot/**`, `scripts/start-ai-idol-syna.ps1`.
+
+  Các thay đổi của `rcm_index` trong những file này bị bỏ, gồm: tab "Xuất bản" trong Studio, nút "Lịch sớm nhất", `auto_adjust_schedule` trong `create_campaign`, sửa renderer Syna. Phần còn lại của `rcm_index` được merge bình thường.
+- **D10 — Trang sản phẩm dùng một cơ chế video duy nhất: `ai_product_videos` của `rcm_index`** (có voucher xem video và cache Valkey).
+  - Video `product_video` và `live_and_product` sẵn sàng thì pipeline **tự tạo bản ghi xuất bản** (`source: "auto"`, `is_published: true`) rồi xóa cache `product:videos:*`.
+  - Admin vẫn gỡ, đổi ưu tiên và gắn voucher được.
+  - Bản ghi admin đã sửa thì không bị ghi đè.
+  - Phần gắn trang sản phẩm cũ của `syna` (`partials/product_video.php` trong `chitiet.php`, `ProductVideoClient`) không nối lại.
+- **D11 — Quản lý xuất bản và voucher là một trang admin riêng** (`index.php?r=admin_ai_product_videos`), port từ tab "Xuất bản" của `rcm_index`, không nằm trong Studio. Chi tiết video trong bảng Hoạt động có link "Quản lý xuất bản" mở trang này cho đúng video.
+- **D12 — Video trên trang sản phẩm luôn là bản không nói giá.** Flask phát `product_page_file_path` khi được gọi với `?rendition=product_page`. Nếu file local đã bị dọn sau khi upload R2 thì chuyển hướng tới `media.video_url`. Video `live_only` không bao giờ phát ở rendition này.
+- **D13 — Route POST mới của Studio dùng CSRF** giống `rcm_index`: `verifyCsrf()`, token `window.AI_IDOL_CSRF`, header `X-CSRF-Token`.
+- **D14 — Merge `rcm_index` trước khi làm tiếp**, để các task sau xây trên code đã hợp nhất.
+
+Rủi ro phát hiện khi kiểm tra:
+- `stash@{0}` còn sửa đổi riêng của `syna` chưa có ở đâu khác:
+  - `docker-compose.yml`: service `ai-idol-control-worker` cho hàng đợi `control,agent`, autopilot cần nó;
+  - `LiveController.php`: `ProductEventTracker` ghi sự kiện "thêm giỏ";
+  - `.gitignore`: chặn nhạc bản quyền, `.runtime/pb-fixture/` (mật khẩu test) và `scripts/e2e/real-videos.json`.
+- Commit `9c04f59` đã đưa nhạc mp3 có bản quyền và `scripts/e2e/real-videos.json` lên `origin/syna_backup_15_15`. Plan không tự sửa lịch sử git.
