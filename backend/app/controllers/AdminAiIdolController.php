@@ -15,6 +15,15 @@ class AdminAiIdolController {
     ];
     public const PRODUCT_QUERY_TEXT_MAX = 80;
     public const PRODUCT_QUERY_LIMIT_MAX = 100;
+    // The face root of danh_muc (parent-less, children 2xxx/3/6, leaves below). Its picker key stays 'face'.
+    public const FACE_ROOT_CATEGORY_ID = 1001;
+    // Slug of a root category -> the key the Studio page has always used for that group.
+    public const CATALOG_ROOT_KEYS = [
+        'cham-soc-da-mat' => 'face',
+        'trang-diem' => 'makeup',
+        'cham-soc-co-the' => 'body',
+        'cham-soc-toc' => 'hair',
+    ];
     // Flask treats category_ids [] as "no filter" and rejects negative ids, so a selected category that expands to
     // nothing is sent as this id: a valid category id that no product has, hence "match nothing".
     public const NO_MATCH_CATEGORY_ID = 2147483647;
@@ -516,58 +525,16 @@ class AdminAiIdolController {
             $bestAll = $this->pdo->san_pham->countDocuments(['so_luong_da_ban' => ['$gt' => 0]]);
         } catch (\Throwable $e) {}
 
-        $tree = [
-            'face' => [
-                'id' => 1001,
-                'label' => 'Chăm Sóc Da Mặt',
-                'phrase' => 'sản phẩm chăm sóc da mặt',
-                'count' => 0,
-                'children' => []
-            ]
-        ];
-
-        foreach ($cats as $c) {
-            $id = (int)$c['ma_danh_muc'];
-            $pid = !empty($c['parent_id']) ? (int)$c['parent_id'] : null;
-            $lvl = (int)($c['level'] ?? 1);
-            if ($pid === 1001 || ($lvl === 2 && $id !== 1001)) {
-                $tree['face']['children'][$id] = [
-                    'id' => $id,
-                    'label' => (string)$c['ten_danh_muc'],
-                    'slug' => (string)($c['slug'] ?? ''),
-                    'phrase' => 'sản phẩm ' . mb_strtolower((string)$c['ten_danh_muc']),
-                    'count' => $countsByCat[$id] ?? 0,
-                    'children' => []
-                ];
-            }
+        $tree = self::buildCatalogTree($cats, $countsByCat);
+        $totalCategorized = 0;
+        foreach ($tree as $root) {
+            $totalCategorized += $root['count'];
         }
-
-        foreach ($cats as $c) {
-            $id = (int)$c['ma_danh_muc'];
-            $pid = !empty($c['parent_id']) ? (int)$c['parent_id'] : null;
-            if ($pid && isset($tree['face']['children'][$pid])) {
-                $cnt = $countsByCat[$id] ?? 0;
-                $tree['face']['children'][$pid]['children'][$id] = [
-                    'id' => $id,
-                    'label' => (string)$c['ten_danh_muc'],
-                    'slug' => (string)($c['slug'] ?? ''),
-                    'phrase' => mb_strtolower((string)$c['ten_danh_muc']),
-                    'count' => $cnt
-                ];
-                $tree['face']['children'][$pid]['count'] += $cnt;
-            }
-        }
-
-        $totalFace = 0;
-        foreach ($tree['face']['children'] as $l2) {
-            $totalFace += $l2['count'];
-        }
-        $tree['face']['count'] = $totalFace;
 
         return [
             'tree' => $tree,
             'filterCounts' => [
-                'total' => $totalFace,
+                'total' => $totalCategorized,
                 'expiry_17_19' => count($batches1719),
                 'expiry_max_18' => count($batchesMax18),
                 'stock_high' => $stockHigh,
@@ -578,6 +545,80 @@ class AdminAiIdolController {
                 'best_7' => 20,
             ]
         ];
+    }
+
+    /**
+     * The category picker tree: one node per root category (a category without a parent), each with its own
+     * children and grandchildren, so a leaf hangs from its real parent. A node's key is 'face' for the face root
+     * (1001), a known alias ('makeup', 'body', 'hair') or the slug; its `id` is the numeric ma_danh_muc that
+     * expandCategoryIds() understands. Counts are cumulative: a node counts its own products plus everything
+     * below it. A category whose parent does not exist hangs from nothing and is left out.
+     *
+     * @param iterable $cats          danh_muc rows in display order (arrays or BSON documents)
+     * @param array<int,int> $countsByCat products per ma_danh_muc
+     */
+    public static function buildCatalogTree(iterable $cats, array $countsByCat): array {
+        $rows = [];
+        foreach ($cats as $row) {
+            $id = (int)($row['ma_danh_muc'] ?? 0);
+            if ($id > 0 && !isset($rows[$id])) {
+                $rows[$id] = $row;
+            }
+        }
+        $childrenOf = [];
+        $rootIds = [];
+        foreach ($rows as $id => $row) {
+            $parent = (int)($row['parent_id'] ?? 0);
+            if ($parent <= 0) {
+                $rootIds[] = $id;
+            } elseif ($parent !== $id && isset($rows[$parent])) {
+                $childrenOf[$parent][] = $id;
+            }
+        }
+        // The face root claims 'face' even if another root carries the same slug.
+        $faceAt = array_search(self::FACE_ROOT_CATEGORY_ID, $rootIds, true);
+        if ($faceAt !== false && $faceAt > 0) {
+            array_splice($rootIds, $faceAt, 1);
+            array_unshift($rootIds, self::FACE_ROOT_CATEGORY_ID);
+        }
+
+        $node = static function (int $id, bool $prefixed) use ($rows, $countsByCat): array {
+            $label = (string)($rows[$id]['ten_danh_muc'] ?? '');
+            return [
+                'id' => $id,
+                'label' => $label,
+                'slug' => (string)($rows[$id]['slug'] ?? ''),
+                'phrase' => ($prefixed ? 'sản phẩm ' : '') . mb_strtolower($label),
+                'count' => $countsByCat[$id] ?? 0,
+            ];
+        };
+
+        $tree = [];
+        foreach ($rootIds as $rootId) {
+            $root = $node($rootId, true) + ['children' => []];
+            foreach ($childrenOf[$rootId] ?? [] as $l2Id) {
+                $l2 = $node($l2Id, true) + ['children' => []];
+                foreach ($childrenOf[$l2Id] ?? [] as $l3Id) {
+                    $l3 = $node($l3Id, false);
+                    $l2['children'][$l3Id] = $l3;
+                    $l2['count'] += $l3['count'];
+                }
+                $root['children'][$l2Id] = $l2;
+                $root['count'] += $l2['count'];
+            }
+            $tree[self::catalogRootKey($rows[$rootId], $rootId, $tree)] = $root;
+        }
+        return $tree;
+    }
+
+    /** Key of a root category in the picker tree; never one that is already taken. */
+    private static function catalogRootKey($row, int $id, array $taken): string {
+        $slug = strtolower(trim((string)($row['slug'] ?? '')));
+        $key = $id === self::FACE_ROOT_CATEGORY_ID ? 'face' : (self::CATALOG_ROOT_KEYS[$slug] ?? '');
+        if ($key === '') {
+            $key = (string)preg_replace('/[^a-z0-9_-]/', '', $slug);
+        }
+        return ($key === '' || isset($taken[$key])) ? 'cat_' . $id : $key;
     }
 
     /**

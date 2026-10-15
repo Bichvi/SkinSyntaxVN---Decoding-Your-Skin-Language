@@ -327,6 +327,75 @@ foreach ($routeKeysByFile as $label => $keys) {
         'missing: ' . implode(',', $missing) . '; extra: ' . implode(',', $extra));
 }
 
+/* ---------------------------------------------------------------- catalog tree (category picker) */
+
+$hasTree = method_exists('AdminAiIdolController', 'buildCatalogTree');
+$runner->check('IDOL-PX-080', 'AdminAiIdolController::buildCatalogTree exists', $hasTree);
+
+if ($hasTree) {
+    // The live danh_muc has the face root 1001 (level 1); the makeup extension adds root 22 (level 0).
+    $catalogRows = [
+        ['ma_danh_muc' => 22, 'ten_danh_muc' => 'Trang Điểm', 'slug' => 'trang-diem', 'parent_id' => null, 'level' => 0],
+        ['ma_danh_muc' => 1001, 'ten_danh_muc' => 'Chăm Sóc Da Mặt', 'slug' => 'cham-soc-da-mat', 'parent_id' => null, 'level' => 1],
+        ['ma_danh_muc' => 6, 'ten_danh_muc' => 'Chống Nắng Da Mặt', 'slug' => 'chong-nang', 'parent_id' => 1001, 'level' => 2],
+        ['ma_danh_muc' => 2002, 'ten_danh_muc' => 'Làm Sạch Da', 'slug' => 'lam-sach-da', 'parent_id' => 1001, 'level' => 2],
+        ['ma_danh_muc' => 23, 'ten_danh_muc' => 'Trang Điểm Môi', 'slug' => 'trang-diem-moi', 'parent_id' => 22, 'level' => 1],
+        ['ma_danh_muc' => 1, 'ten_danh_muc' => 'Sữa Rửa Mặt', 'slug' => 'sua-rua-mat', 'parent_id' => 2002, 'level' => 3],
+        ['ma_danh_muc' => 29, 'ten_danh_muc' => 'Son Kem / Tint', 'slug' => 'son-kem-tint', 'parent_id' => 23, 'level' => 2],
+        ['ma_danh_muc' => 500, 'ten_danh_muc' => 'Mồ Côi', 'slug' => 'mo-coi', 'parent_id' => 9999, 'level' => 2],
+        ['ma_danh_muc' => 77, 'ten_danh_muc' => 'Trùng Slug', 'slug' => 'cham-soc-da-mat', 'parent_id' => null, 'level' => 1],
+        ['ma_danh_muc' => 88, 'ten_danh_muc' => 'Chăm Sóc Tóc', 'slug' => 'cham-soc-toc', 'parent_id' => 0, 'level' => 1],
+        ['ma_danh_muc' => 99, 'ten_danh_muc' => 'Nhóm Mới', 'slug' => 'nhom-moi!', 'parent_id' => 0, 'level' => 1],
+    ];
+    $catalogCounts = [6 => 231, 1 => 285, 29 => 40, 22 => 0, 500 => 9, 2002 => 0];
+    $catalog = AdminAiIdolController::buildCatalogTree($catalogRows, $catalogCounts);
+
+    $runner->check('IDOL-PX-081', "One node per root: the face root first under 'face', the others by alias or slug",
+        array_keys($catalog) === ['face', 'makeup', 'cat_77', 'hair', 'nhom-moi'], json_encode(array_keys($catalog)));
+    $runner->check('IDOL-PX-082', 'Every root carries its numeric ma_danh_muc as id',
+        $catalog['face']['id'] === 1001 && $catalog['makeup']['id'] === 22 && $catalog['hair']['id'] === 88
+        && $catalog['face']['label'] === 'Chăm Sóc Da Mặt' && $catalog['makeup']['label'] === 'Trang Điểm');
+    $runner->check('IDOL-PX-083', 'Each leaf hangs from its real parent (no level-2 catch-all under face)',
+        array_keys($catalog['face']['children']) === [6, 2002]
+        && array_keys($catalog['makeup']['children']) === [23]
+        && array_keys($catalog['makeup']['children'][23]['children']) === [29]
+        && array_keys($catalog['face']['children'][2002]['children']) === [1]
+        && !isset($catalog['face']['children'][23]) && !isset($catalog['face']['children'][500]));
+    $runner->check('IDOL-PX-084', 'Counts are cumulative: a node counts its own products plus everything below',
+        $catalog['face']['count'] === 516 && $catalog['face']['children'][2002]['count'] === 285
+        && $catalog['face']['children'][6]['count'] === 231
+        && $catalog['makeup']['count'] === 40 && $catalog['makeup']['children'][23]['count'] === 40);
+    $runner->check('IDOL-PX-085', 'A category whose parent does not exist is left out of the tree',
+        !str_contains(json_encode($catalog, JSON_UNESCAPED_UNICODE), 'Mồ Côi'));
+    $runner->check('IDOL-PX-086', 'Nodes keep the shape the page reads (phrase on L1/L2, no children on L3, children as a JSON object)',
+        $catalog['face']['phrase'] === 'sản phẩm chăm sóc da mặt'
+        && $catalog['face']['children'][2002]['phrase'] === 'sản phẩm làm sạch da'
+        && !array_key_exists('children', $catalog['face']['children'][2002]['children'][1])
+        && $catalog['face']['children'][2002]['children'][1]['phrase'] === 'sữa rửa mặt'
+        && str_starts_with(json_encode($catalog['face']['children']), '{'));
+    $runner->check('IDOL-PX-087', 'An empty category list gives an empty tree', AdminAiIdolController::buildCatalogTree([], []) === []);
+
+    // The id the picker sends for a group must expand to that group's whole subtree.
+    $catalogController = new AdminAiIdolController(new FakePdo([
+        ['ma_danh_muc' => 23, 'parent_id' => 22], ['ma_danh_muc' => 29, 'parent_id' => 23],
+    ]));
+    $runner->check('IDOL-PX-088', "A makeup root sent by its numeric id expands to its subtree; 'face' still maps to 1001",
+        callPrivate($catalogController, 'expandCategoryIds', [(string)$catalog['makeup']['id'], '', '']) === [22, 23, 29]
+        && AdminAiIdolController::FACE_ROOT_CATEGORY_ID === 1001
+        && $catalog['face']['id'] === AdminAiIdolController::FACE_ROOT_CATEGORY_ID);
+}
+
+$catalogMetadataSource = methodSource('AdminAiIdolController', 'getCatalogMetadata');
+$runner->check('IDOL-PX-089', 'getCatalogMetadata() builds the tree with buildCatalogTree(), without the old level-2 catch-all, and totals every root',
+    str_contains($catalogMetadataSource, 'self::buildCatalogTree(')
+    && !str_contains($catalogMetadataSource, '$lvl === 2')
+    && !str_contains($catalogMetadataSource, "\$tree['face']")
+    && str_contains($catalogMetadataSource, "'total' => \$totalCategorized"));
+$studioViewSource = source($projectRoot . '/frontend/views/admin/ai_idol/index.php');
+$runner->check('IDOL-PX-090', 'The manual-tab group select takes its values from the tree, not from hard-coded text keys',
+    str_contains($studioViewSource, '$wzGroupOptions')
+    && !str_contains($studioViewSource, '<option value="face">') && !str_contains($studioViewSource, '<option value="makeup">'));
+
 /* ---------------------------------------------------------------- guards (static) */
 
 foreach (['queryProducts', 'approvePlatform'] as $method) {
