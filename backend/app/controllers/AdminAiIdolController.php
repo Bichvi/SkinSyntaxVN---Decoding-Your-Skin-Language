@@ -136,6 +136,29 @@ class AdminAiIdolController {
         ]);
     }
 
+    // 1b. Render the product-page video & voucher management page (publication, priority, watch-to-reward voucher).
+    public function productVideosPage(): void {
+        $this->checkAdmin();
+
+        $products = [];
+        try {
+            // Latest 100 products seed the pickers; the page searches the rest through admin_ai_idol_search_products.
+            $cursor = $this->pdo->san_pham->find([], ['limit' => 100, 'sort' => ['ma_san_pham' => -1]]);
+            foreach ($cursor as $doc) {
+                $doc['id'] = (string)$doc['_id'];
+                $products[] = $doc;
+            }
+        } catch (Throwable $e) {
+            // The pickers still work through the search endpoint.
+        }
+
+        $this->render('admin/product_videos', [
+            'products' => $products,
+            'csrfToken' => self::getCsrfToken(),
+            'title' => 'Video trang sản phẩm & voucher'
+        ]);
+    }
+
     // 2. cURL Proxy Helper to query Flask API
     private function callFlaskAPI(string $method, string $endpoint, array $data = []) {
         $url = $this->flaskUrl . $endpoint;

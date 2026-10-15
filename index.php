@@ -72,7 +72,7 @@ if (in_array($r, [
     'admin_ai_idol_product_videos', 'admin_ai_idol_search_products',
     'admin_ai_idol_publish_video', 'admin_ai_idol_toggle_publish',
     'admin_ai_idol_reward_campaign', 'admin_ai_idol_save_reward_campaign', 'admin_ai_idol_toggle_reward_campaign',
-    'admin_ai_idol_products_query', 'admin_ai_idol_approve_platform'
+    'admin_ai_idol_products_query', 'admin_ai_idol_approve_platform', 'admin_ai_product_videos'
 ], true)) {
     if (require $backendRoot . '/app/routes/ai_idol.php') {
         return;

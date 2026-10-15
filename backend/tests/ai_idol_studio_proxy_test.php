@@ -396,6 +396,28 @@ $runner->check('IDOL-PX-090', 'The manual-tab group select takes its values from
     str_contains($studioViewSource, '$wzGroupOptions')
     && !str_contains($studioViewSource, '<option value="face">') && !str_contains($studioViewSource, '<option value="makeup">'));
 
+/* ---------------------------------------------------------------- product-video management page (D11) */
+
+$runner->check('IDOL-PX-100', 'routes/ai_idol.php maps admin_ai_product_videos to GET productVideosPage',
+    ($tableKeys['admin_ai_product_videos']['method'] ?? null) === 'GET'
+    && ($tableKeys['admin_ai_product_videos']['action'] ?? null) === 'productVideosPage',
+    json_encode($tableKeys['admin_ai_product_videos'] ?? null));
+foreach ($routeKeysByFile as $label => $keys) {
+    $runner->check("IDOL-PX-101-{$label}", "{$label} allow-list contains admin_ai_product_videos", in_array('admin_ai_product_videos', $keys, true));
+}
+$pageBody = methodSource('AdminAiIdolController', 'productVideosPage');
+$runner->check('IDOL-PX-102', 'productVideosPage() checks admin first and renders admin/product_videos with the CSRF token',
+    $pageBody !== '' && strpos($pageBody, '$this->') === strpos($pageBody, '$this->checkAdmin()')
+    && str_contains($pageBody, "render('admin/product_videos'") && str_contains($pageBody, 'self::getCsrfToken()'));
+$productVideosView = source($projectRoot . '/frontend/views/admin/product_videos.php');
+$runner->check('IDOL-PX-103', 'The page loads only its own assets and the Studio view never loads them',
+    str_contains($productVideosView, 'admin-product-videos.js') && str_contains($productVideosView, 'admin-product-videos.css')
+    && !str_contains($productVideosView, 'ai-idol-studio') && !str_contains($productVideosView, 'studio-core')
+    && !str_contains($studioViewSource, 'admin-product-videos'));
+$productVideoModelSource = source($projectRoot . '/backend/app/models/ProductVideo.php');
+$runner->check('IDOL-PX-104', 'getManageableVideos() returns the source of each publication so the page can badge auto-published videos',
+    str_contains($productVideoModelSource, "'source' => \$pub ? (string)(\$pub['source'] ?? '') : ''"));
+
 /* ---------------------------------------------------------------- guards (static) */
 
 foreach (['queryProducts', 'approvePlatform'] as $method) {

@@ -402,6 +402,8 @@ class ProductVideo {
                     'primary_product_id' => $primaryPid,
                     'display_priority' => $pub ? (int)($pub['display_priority'] ?? 10) : 10,
                     'can_publish' => true,
+                    // 'auto' = the pipeline published it (ai-idol-service); '' = never published or created by an admin.
+                    'source' => $pub ? (string)($pub['source'] ?? '') : '',
                     'created_at' => isset($v['created_at']) && $v['created_at'] instanceof \MongoDB\BSON\UTCDateTime 
                         ? $v['created_at']->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('Y-m-d H:i:s') 
                         : '',
