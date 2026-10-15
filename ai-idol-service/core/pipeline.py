@@ -2,7 +2,9 @@ import os
 from bson import ObjectId
 from core.state_machine import checkpoint_job, update_job_stage, fail_job, update_job_snapshot, get_job, get_db, utcnow
 from config import AUDIO_PIPELINE_VERSION, logger
+from core.purpose import PRODUCT_VIDEO, purpose_of
 from core.script_text import sanitize_external_retailer_mentions
+from engines.audio_mixer import lead_in_seconds
 
 
 def should_auto_approve_script(config: dict) -> bool:
@@ -34,6 +36,7 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     product_id = job["product_id"]
     content_mode = job["content_mode"]
     config = job["configuration"]
+    purpose = purpose_of(job)
 
     # Import engines dynamically to prevent circular imports
     from engines.product_collector import collect_product_and_snapshot
@@ -86,12 +89,19 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     try:
         if not script_text:
             update_job_stage(job_id, "GENERATING_CONTENT")
-            draft = generate_content_and_script(snapshot, knowledge, content_mode, config)
+            draft = generate_content_and_script(snapshot, knowledge, content_mode, config, purpose)
             update_job_stage(job_id, "VALIDATING_SCRIPT")
             is_pass, script_text, feedback = validate_and_revise_script(
-                draft, snapshot, knowledge, content_mode, config
+                draft, snapshot, knowledge, content_mode, config, purpose=purpose
             )
             if not is_pass:
+                # Keep the rejected draft so staff can edit and approve it, but never
+                # store it as artifacts.script_text (that field means "usable script").
+                checkpoint_job(job_id, {
+                    "artifacts.rejected_script_text": str(script_text or "")[:20000],
+                    "artifacts.validation_feedback": str(feedback or "")[:4000],
+                    "script_status": "REJECTED_BY_VALIDATOR",
+                })
                 fail_job(job_id, "VALIDATING_SCRIPT", f"Kịch bản không vượt qua kiểm duyệt: {feedback}")
                 return False
             db.ai_idol_scripts.update_one(
@@ -107,13 +117,15 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
         fail_job(job_id, "GENERATING_CONTENT", f"Lỗi lập kịch bản/kiểm duyệt: {e}")
         return False
 
-    if job.get("script_status") != "APPROVED" and should_auto_approve_script(config):
+    # Product videos publish themselves (spec D12): the validated script needs no human gate.
+    product_video_auto = purpose == PRODUCT_VIDEO
+    if job.get("script_status") != "APPROVED" and (product_video_auto or should_auto_approve_script(config)):
         now = utcnow()
         db.ai_idol_scripts.update_one(
             {"job_id": job_id, "version": 1},
             {"$set": {
                 "status": "APPROVED",
-                "approved_by": "AI_IDOL_AGENT_POLICY",
+                "approved_by": "PRODUCT_VIDEO_AUTO" if product_video_auto else "AI_IDOL_AGENT_POLICY",
                 "approved_at": now,
                 "updated_at": now,
             }},
@@ -181,11 +193,22 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     # the mascot or the full presentation scene to a human-face lip-sync model.
     if config.get("avatar_mode") == "syna_3d":
         try:
-            from engines.syna_engine import render_syna_video
+            from engines.syna_engine import RendererUnavailable, render_syna_video
             update_job_stage(job_id, "RENDERING")
-            final_video_path = render_syna_video(job_id, audio_path, script_text, snapshot, config)
+            final_video_path = render_syna_video(job_id, audio_path, script_text, snapshot, config, purpose=purpose)
             checkpoint_job(job_id, {"artifacts.final_video_path": final_video_path,
                                     "artifacts.video_renderer": "syna-native-v4"})
+        except RendererUnavailable as e:
+            # Not a job failure: script and voice are checkpointed, so park the job
+            # and let the resume beat requeue it when Syna answers again.
+            logger.warning("[PIPELINE] Job %s waits for the Syna renderer: %s", job_id, e)
+            update_job_stage(job_id, "WAITING_RENDERER", status="WAITING_RENDERER")
+            checkpoint_job(job_id, {
+                "error_message": f"Đang chờ Syna: {e}"[:1000],
+                "failed_stage": None,
+                "waiting_renderer_since": utcnow(),
+            })
+            return False
         except Exception as e:
             fail_job(job_id, "RENDERING", f"Lỗi tạo video Syna 3D: {e}")
             return False
@@ -194,7 +217,37 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
         if not final_video_path:
             return False
 
-    return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db)
+    # STAGE 7b: Audio mastering + background music. Runs on every attempt from
+    # the raw render and the clean voice, so resumed jobs never double-mix.
+    from engines.audio_mixer import mix_program_audio
+    from engines.body_clip import product_page_clip
+    padded = config.get("avatar_mode") == "syna_3d"
+    rendered_path = final_video_path
+    # Evergreen product videos get no price title card either.
+    mix_snapshot = {**snapshot, "price": None, "sale_price": None} if purpose == PRODUCT_VIDEO else snapshot
+    applied: dict = {}
+    final_video_path = mix_program_audio(
+        job_id, final_video_path, audio_path, config, mix_snapshot,
+        # Syna renders the lead-in/tail herself (greeting and goodbye wave).
+        video_padded=padded, applied=applied,
+    )
+    page_path, block_reason = product_page_clip(
+        job_id, purpose, final_video_path, audio_path,
+        intro=applied_intro(job_id, config, padded=padded, rendered=rendered_path,
+                            final=final_video_path, applied=applied),
+    )
+
+    return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db,
+                               purpose=purpose, campaign_id=job.get("campaign_id"),
+                               page_path=page_path, block_reason=block_reason)
+
+
+def applied_intro(job_id: str, config: dict, *, padded: bool, rendered: str, final: str, applied: dict) -> float:
+    """Seconds before the first word in `final`, so script sections can be located on its timeline."""
+    if final != rendered:
+        return float(applied.get("intro", 0.0))  # what the mixer actually placed
+    # Mix skipped or failed: only a Syna render carries its own lead-in.
+    return lead_in_seconds(job_id, config)[0] if padded else 0.0
 
 
 def _render_legacy_media(job_id, audio_path, script_text, snapshot, config, artifacts, audio_refreshed):
@@ -226,7 +279,8 @@ def _render_legacy_media(job_id, audio_path, script_text, snapshot, config, arti
     return final_video_path
 
 
-def _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db):
+def _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db, *,
+                        purpose="live_only", campaign_id=None, page_path=None, block_reason=None):
     from engines.video_composer import get_audio_duration
     # STAGE 8: Complete and set status to READY
     try:
@@ -235,9 +289,15 @@ def _complete_video_job(job_id, product_id, config, final_video_path, audio_path
             "job_id": job_id,
             "product_id": product_id,
             "file_path": final_video_path,
-            "duration": get_audio_duration(audio_path),
+            # Probe the final file: the music intro/outro makes it longer than the voice.
+            "duration": get_audio_duration(final_video_path),
             "format": config.get("format", "9:16"),
             "resolution": "720x1280" if config.get("format") == "9:16" else "1280x720",
+            "purpose": purpose,
+            "campaign_id": campaign_id,
+            # What media publishing uploads for product pages (None: never shown there).
+            "product_page_file_path": page_path,
+            "product_page_block_reason": block_reason,
             "created_at": utcnow()
         }
         existing_video = db.ai_idol_videos.find_one({"job_id": job_id})

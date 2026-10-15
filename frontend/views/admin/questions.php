@@ -29,10 +29,10 @@ $formatQuestionDate = static function ($value): string {
     <?php endif; ?>
 
     <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
-        <form class="row g-2" method="get" action="index.php">
+        <form class="row g-2" method="get" action="index.php" data-live-filter="true" data-live-target="#questionResults">
             <input type="hidden" name="r" value="admin_questions">
             <div class="col-md-5">
-                <input class="form-control" name="q" value="<?= h($q) ?>" placeholder="Mã hỏi đáp, mã SP, tên SP, khách hàng, nội dung..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                <input class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Mã hỏi đáp, mã SP, tên SP, khách hàng, nội dung..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-md-3">
                 <select class="form-select" name="status" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
@@ -51,7 +51,7 @@ $formatQuestionDate = static function ($value): string {
         </form>
     </div>
 
-    <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
+    <div class="admin-card p-0 overflow-hidden mb-0 live-region" id="questionResults" aria-live="polite" style="border-radius: 8px !important;">
         <div class="card-body p-0">
             <?php if (empty($questions)): ?>
                 <div class="text-center text-muted py-5">Chưa có câu hỏi sản phẩm nào phù hợp.</div>

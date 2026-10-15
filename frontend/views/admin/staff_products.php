@@ -74,13 +74,13 @@ if ($totalPages <= 7) {
     </div>
 
     <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
-        <form class="row g-2 align-items-end" method="GET" action="index.php" data-live-filter="true">
+        <form class="row g-2 align-items-end" method="GET" action="index.php" data-live-filter="true" data-live-target="#staffProductResults" data-live-reset="page">
             <input type="hidden" name="r" value="staff_products">
             <div class="col-12 col-lg-6">
                 <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.76rem;">Tìm kiếm nhanh sản phẩm</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white" style="border-color: var(--admin-border);"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Nhập mã SP, tên sản phẩm, thương hiệu, danh mục..." style="border-radius: 0 6px 6px 0; border-color: var(--admin-border); font-size: 0.85rem;">
+                    <input type="text" class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Nhập mã SP, tên sản phẩm, thương hiệu, danh mục..." style="border-radius: 0 6px 6px 0; border-color: var(--admin-border); font-size: 0.85rem;">
                 </div>
             </div>
             <div class="col-12 col-lg-2">
@@ -98,6 +98,7 @@ if ($totalPages <= 7) {
         </form>
     </div>
 
+    <div id="staffProductResults" class="live-region" aria-live="polite">
     <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
         <div class="table-responsive">
             <table class="table admin-table align-middle mb-0">
@@ -177,4 +178,5 @@ if ($totalPages <= 7) {
             </ul>
         </nav>
     <?php endif; ?>
+    </div>
 </div>

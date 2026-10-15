@@ -59,6 +59,8 @@ if _env_chroma and os.path.isabs(_env_chroma) and os.path.exists(_env_chroma):
     CHROMA_DB_PATH = _env_chroma
 else:
     CHROMA_DB_PATH = _DEFAULT_CHROMA_PATH
+CHROMA_HOST = os.getenv("CHROMA_HOST", "").strip()
+CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
 FLASK_PORT = int(os.getenv("CHATBOT_PORT", 5002))
 
 
@@ -100,11 +102,24 @@ def get_vectorstore(): # tải dữ liệu sản phẩm từ ChromaDB.
     if _vectorstore is None:
         try:
             emb = get_embedding_function()
-            _vectorstore = Chroma(
-                collection_name="products",
-                persist_directory=CHROMA_DB_PATH,
-                embedding_function=emb,
-            )
+            if CHROMA_HOST:
+                # The shared Chroma service is the canonical runtime index.
+                # The old mounted SQLite index can have an incompatible
+                # configuration schema (KeyError: '_type').
+                import chromadb
+
+                client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+                _vectorstore = Chroma(
+                    collection_name="products",
+                    client=client,
+                    embedding_function=emb,
+                )
+            else:
+                _vectorstore = Chroma(
+                    collection_name="products",
+                    persist_directory=CHROMA_DB_PATH,
+                    embedding_function=emb,
+                )
             print(f"[OK] ChromaDB loaded — {_vectorstore._collection.count():,} docs")
         except Exception as e:
             print(f"[WARN] Vectorstore initialization failed (e.g. disk space / cache): {e}")
@@ -320,10 +335,11 @@ def get_llms():
                 print(f"[WARN] Gemini ({g_model}) {label} init failed: {e}")
 
 
-    # 2. Groq — Qwen 2.5 27B / GPT-OSS 120B
+    # 2. Groq — keep only models currently supported by the configured account.
+    # qwen/qwen3.6-27b was removed after Groq returned a deterministic 404.
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
     if ChatOpenAI is not None and groq_key:
-        for model in ["qwen/qwen3.6-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
+        for model in ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
             try:
                 groq = ChatOpenAI(
                     openai_api_key=groq_key,
@@ -2616,8 +2632,10 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
                     selected_routine_docs = best_combo
                     print(f"[BUDGET OPTIMIZATION] Found combo under budget {yc.ngan_sach}: total price {best_combo_price}")
                 else:
-                    selected_routine_docs = []
-                    print(f"[BUDGET OPTIMIZATION] No combo fits budget {yc.ngan_sach}. Cheapest combo is {cheapest_combo_price} which exceeds budget.")
+                    # Trả routine rẻ nhất thay vì danh sách rỗng: khách vẫn thấy sản phẩm thật,
+                    # còn cảnh báo vượt ngân sách bên dưới để LLM giải thích và gợi ý tối giản.
+                    selected_routine_docs = list(cheapest_combo or [])
+                    print(f"[BUDGET OPTIMIZATION] No combo fits budget {yc.ngan_sach}. Using cheapest combo {cheapest_combo_price} which exceeds budget.")
                     # Thêm thông báo hướng dẫn cụ thể vào rich_context để LLM xử lý
                     cheapest_fmt = f"{int(cheapest_combo_price):,}".replace(",", ".")
                     ngan_sach_fmt = f"{int(yc.ngan_sach):,}".replace(",", ".")

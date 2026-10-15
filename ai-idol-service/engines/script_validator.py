@@ -2,7 +2,11 @@ import re
 from providers.llm_provider import LLMProvider
 from config import logger
 from core.text_budget import clip_text
-from core.script_text import find_external_retailer_mentions, sanitize_external_retailer_mentions
+from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO
+from core.script_text import (
+    SALE_LABELS, find_external_retailer_mentions, find_price_mentions, sanitize_external_retailer_mentions,
+    split_labeled_sections,
+)
 
 # Forbidden marketing claims for cosmetic products in Vietnam
 FORBIDDEN_PATTERNS = [
@@ -65,7 +69,7 @@ THÔNG TIN SẢN PHẨM GỐC:
 
 KỊCH BẢN CẦN KIỂM DUYỆT:
 \"\"\"
-{clip_text(script, 3200)}
+{clip_text(script, 6000)}
 \"\"\"
 
 Hãy kiểm tra kỹ và đưa ra phán quyết PASS hoặc FAIL kèm lý do chi tiết.
@@ -87,15 +91,56 @@ Hãy kiểm tra kỹ và đưa ra phán quyết PASS hoặc FAIL kèm lý do chi
         logger.error(f"[SCRIPT-VALIDATOR] LLM validation unavailable: {e}")
         return False, f"Không thể chạy bộ kiểm duyệt LLM: {e}"
 
-def validate_and_revise_script(script: str, snapshot: dict, knowledge: str, content_mode: str, config: dict) -> tuple[bool, str, str]:
+def check_purpose_rules(script: str, snapshot: dict, purpose: str) -> list[str]:
+    """Deterministic rules for scripts whose words end up on product pages."""
+    if purpose not in (PRODUCT_VIDEO, LIVE_AND_PRODUCT):
+        return []
+    sections = split_labeled_sections(script)
+    if purpose == LIVE_AND_PRODUCT:
+        if not any(label in SALE_LABELS for label, _ in sections):
+            # Unrecognised headers: keep the livestream alive; the product-page clip is
+            # withheld downstream (missing_price_marker) instead of failing the whole show.
+            return []
+        evergreen = []
+        for label, text in sections:
+            if label in SALE_LABELS:
+                break
+            evergreen.append(text)
+        scope, where = " ".join(evergreen), "trước phần [Price]"
+    else:
+        scope, where = " ".join(text for _, text in sections), "trong video sản phẩm"
+    errors = []
+    mentions = find_price_mentions(scope)
+    if mentions:
+        errors.append(f"Không được nói giá hoặc khuyến mãi {where}: {', '.join(dict.fromkeys(mentions))}")
+    if (purpose == PRODUCT_VIDEO and str(snapshot.get("ingredients") or "").strip()
+            and not any(label == "ingredients" and text.strip() for label, text in sections)):
+        errors.append("Thiếu phần [Ingredients] dù sản phẩm có dữ liệu thành phần")
+    return errors
+
+
+def _revision_structure(purpose: str) -> str:
+    if purpose == PRODUCT_VIDEO:
+        return ("CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 7 phần, mỗi phần mở đầu bằng một dòng tiêu đề riêng: "
+                "[Hook], [Problem], [Product Intro], [Specs], [Ingredients], [How to Use], [Wrap-up]. "
+                "Tuyệt đối không nói giá, khuyến mãi, chốt đơn, hôm nay, livestream.")
+    if purpose == LIVE_AND_PRODUCT:
+        return ("CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 8 phần, mỗi phần mở đầu bằng một dòng tiêu đề riêng: "
+                "[Opening], [Hook], [Product Intro], [Key Benefits], [How to Use], [Price], [CTA], [Closing]. "
+                "Trước [Price] không nhắc giá, khuyến mãi, chốt đơn, hôm nay, livestream.")
+    return "CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 8 phần (Opening, Hook, Product Intro, Key Benefits, How to Use, Price, CTA, Closing)."
+
+
+def validate_and_revise_script(script: str, snapshot: dict, knowledge: str, content_mode: str, config: dict,
+                               purpose: str = LEGACY_PURPOSE) -> tuple[bool, str, str]:
     """Run validation check and trigger revision loop up to 3 times if violations are found."""
     current_script = sanitize_external_retailer_mentions(script)
     llm = LLMProvider()
-    
+
     for attempt in range(1, 4):
         logger.info(f"[SCRIPT-VALIDATOR] Validation attempt {attempt}/3...")
-        
-        blacklist_err = check_blacklist(current_script)
+
+        blacklist_err = check_blacklist(current_script) or "; ".join(check_purpose_rules(current_script, snapshot, purpose))
         if blacklist_err:
             logger.warning(f"[SCRIPT-VALIDATOR] Blacklist hit: {blacklist_err}")
             is_pass, feedback = False, blacklist_err
@@ -119,12 +164,15 @@ QUY TẮC PHÁT ÂM TTS (RẤT QUAN TRỌNG):
 - Hoạt chất tiếng Anh viết phiên âm dễ đọc tiếng Việt hoặc viết tách rời chữ cái bằng gạch nối (ví dụ: viết "A H A" hoặc "A-H-A" thay vì "AHA", "B H A" thay vì "BHA", "Re-ti-nol" thay vì "Retinol", "Ni-a-ci-na-mi" thay vì "Niacinamide").
 - Không viết các ký hiệu toán học như "+", "-", "x", viết bằng chữ: "cộng", "trừ", "nhân".
 
-CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 8 phần (Opening, Hook, Product Intro, Key Benefits, How to Use, Price, CTA, Closing).
-"""
+""" + _revision_structure(purpose) + "\n"
+            headed = purpose in (PRODUCT_VIDEO, LIVE_AND_PRODUCT)
+            price_line = "" if purpose == PRODUCT_VIDEO else f"- Giá bán: {snapshot.get('price')} đồng\n"
+            keep = ("giữ nguyên các dòng tiêu đề trong ngoặc vuông" if headed
+                    else "giữ cấu trúc 8 phần liền mạch")
             user_prompt = f"""
 BẢN THẢO BỊ LỖI TRƯỚC ĐÓ:
 \"\"\"
-{clip_text(current_script, 3200)}
+{clip_text(current_script, 6000 if headed else 3200)}
 \"\"\"
 
 BÁO CÁO VI PHẠM TỪ VALIDATOR:
@@ -135,12 +183,11 @@ Không nhắc bất kỳ sàn thương mại điện tử hoặc nhà bán lẻ 
 THÔNG TIN SẢN PHẨM GỐC:
 - Tên sản phẩm: {snapshot.get('name')}
 - Thương hiệu: {snapshot.get('brand')}
-- Giá bán: {snapshot.get('price')} đồng
-- Thành phần: {clip_text(snapshot.get('ingredients'), 900)}
+{price_line}- Thành phần: {clip_text(snapshot.get('ingredients'), 900)}
 - Công dụng thật: {clip_text(snapshot.get('description'), 1200)}
 - Cách dùng: {clip_text(snapshot.get('usage'), 650)}
 
-Hãy chỉnh sửa viết lại kịch bản bán hàng bằng tiếng Việt một cách tự nhiên, loại bỏ hoàn toàn các tuyên bố vi phạm trên, giữ cấu trúc 8 phần liền mạch và không chứa các ký tự đặc biệt hay emoji.
+Hãy chỉnh sửa viết lại kịch bản bán hàng bằng tiếng Việt một cách tự nhiên, loại bỏ hoàn toàn các tuyên bố vi phạm trên, {keep} và không chứa các ký tự đặc biệt hay emoji.
 """
             try:
                 current_script = sanitize_external_retailer_mentions(llm.invoke(system_prompt, user_prompt))

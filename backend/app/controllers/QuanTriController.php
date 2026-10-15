@@ -557,6 +557,49 @@ class QuanTriController {
         exit;
     }
 
+    public function adminOrderPrint(): void {
+        $this->requireRole(['admin']);
+
+        // Keep the legacy route usable for links that pass an order id/type
+        // instead of the older print_invoice/print_delivery query keys.
+        if (!isset($_GET['print_invoice']) && !isset($_GET['print_delivery'])) {
+            $orderId = max(0, (int)($_GET['ma_hoa_don'] ?? $_GET['id'] ?? 0));
+            $documentType = strtolower(trim((string)($_GET['type'] ?? 'invoice')));
+            if ($orderId > 0) {
+                $_GET[$documentType === 'delivery' ? 'print_delivery' : 'print_invoice'] = $orderId;
+            }
+        }
+
+        $this->handleOrderPrintRequest('admin_orders');
+        redirect(BASE_URL . '/index.php?r=admin_orders');
+    }
+
+    private const ORDER_LIST_PAGE_SIZE = 50;
+
+    /**
+     * Cắt danh sách đơn thành từng trang; bộ đếm đơn chờ duyệt luôn tính trên toàn bộ danh sách đã lọc.
+     * Xuất CSV/Excel không đi qua hàm này nên vẫn dùng toàn bộ danh sách.
+     */
+    private function paginateOrderList(array $all): array {
+        $total = count($all);
+        $pages = max(1, (int)ceil($total / self::ORDER_LIST_PAGE_SIZE));
+        $page = min($pages, max(1, (int)($_GET['page'] ?? 1)));
+        $pendingCount = 0;
+        foreach ($all as $order) {
+            $normalized = trim((string)($order['trang_thai_normalized'] ?? ''));
+            if ($normalized === 'pending' || $normalized === 'cho_xu_ly') {
+                $pendingCount++;
+            }
+        }
+        return [
+            'orders' => array_slice($all, ($page - 1) * self::ORDER_LIST_PAGE_SIZE, self::ORDER_LIST_PAGE_SIZE),
+            'orderTotal' => $total,
+            'orderPage' => $page,
+            'orderPages' => $pages,
+            'pendingCount' => $pendingCount,
+        ];
+    }
+
     public function adminOrders(): void {
         $this->requireRole(['admin']);
         $this->handleOrderPrintRequest('admin_orders');
@@ -569,8 +612,8 @@ class QuanTriController {
             return;
         }
 
-        $this->renderAdmin('orders', [
-            'orders' => $this->model->listOrders($q, $status),
+        $orderView = $this->paginateOrderList($this->model->listOrders($q, $status));
+        $this->renderAdmin('orders', $orderView + [
             'orderDetail' => $detailId > 0 ? $this->model->getOrderById($detailId) : null,
             'statusOptions' => $this->model->getOrderStatusOptions(),
             'q' => $q,
@@ -906,8 +949,8 @@ class QuanTriController {
         $q = trim((string)($_GET['q'] ?? ''));
         $status = trim((string)($_GET['status'] ?? ''));
         $detailId = max(0, (int)($_GET['detail'] ?? 0));
-        $this->renderAdmin('orders', [
-            'orders' => $this->model->listOrders($q, $status),
+        $orderView = $this->paginateOrderList($this->model->listOrders($q, $status));
+        $this->renderAdmin('orders', $orderView + [
             'orderDetail' => $detailId > 0 ? $this->model->getOrderById($detailId) : null,
             'statusOptions' => $this->model->getOrderStatusOptions(),
             'q' => $q,
@@ -1192,6 +1235,120 @@ class QuanTriController {
             'brandOptions' => $brandOptions,
             'categoryOptions' => $categoryOptions,
         ]);
+    }
+
+    public function staffProductDelete(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=staff_products');
+        }
+
+        $id = trim((string)($_POST['id'] ?? ''));
+        $ok = $id !== '' && $this->sanPhamModel->adminDelete($id);
+        $errorMessage = method_exists($this->sanPhamModel, 'getLastErrorMessage')
+            ? ((string)($this->sanPhamModel->getLastErrorMessage() ?? '') ?: 'Không thể xóa sản phẩm.')
+            : 'Không thể xóa sản phẩm.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa sản phẩm.' : $errorMessage);
+        redirect(BASE_URL . '/index.php?r=staff_products');
+    }
+
+    private function reviewCollectionName(string $rowRef): string {
+        return trim($rowRef) === 'danh_gia' ? 'danh_gia' : 'danh_gia_san_pham';
+    }
+
+    private function updateReviewModerationStatus(int $reviewId, string $rowRef, string $status): bool {
+        if ($reviewId <= 0) {
+            return false;
+        }
+
+        global $db;
+        $mongoDb = $db ?? (is_object($this->pdo) && method_exists($this->pdo, 'raw') ? $this->pdo->raw() : $this->pdo);
+        if (!is_object($mongoDb)) {
+            return false;
+        }
+
+        try {
+            $result = $mongoDb->{$this->reviewCollectionName($rowRef)}->updateOne(
+                ['ma_danh_gia' => $reviewId],
+                ['$set' => [
+                    'trang_thai' => $status,
+                    'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+                ]]
+            );
+            return method_exists($result, 'getMatchedCount') && $result->getMatchedCount() > 0;
+        } catch (Throwable $e) {
+            error_log('review moderation update error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function deleteReview(int $reviewId, string $rowRef): bool {
+        if ($reviewId <= 0) {
+            return false;
+        }
+
+        global $db;
+        $mongoDb = $db ?? (is_object($this->pdo) && method_exists($this->pdo, 'raw') ? $this->pdo->raw() : $this->pdo);
+        if (!is_object($mongoDb)) {
+            return false;
+        }
+
+        try {
+            $result = $mongoDb->{$this->reviewCollectionName($rowRef)}->deleteOne(['ma_danh_gia' => $reviewId]);
+            return method_exists($result, 'getDeletedCount') && $result->getDeletedCount() > 0;
+        } catch (Throwable $e) {
+            error_log('review delete error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function adminReviews(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $this->staffReviews();
+    }
+
+    public function adminReviewApprove(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_reviews');
+        }
+
+        $reviewId = max(0, (int)($_POST['ma_danh_gia'] ?? 0));
+        $rowRef = trim((string)($_POST['row_ref'] ?? ''));
+        $ok = $this->updateReviewModerationStatus($reviewId, $rowRef, 'hien_thi');
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã duyệt đánh giá.' : 'Không thể duyệt đánh giá.');
+        redirect(BASE_URL . '/index.php?r=admin_reviews&detail=' . $reviewId);
+    }
+
+    public function adminReviewHide(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_reviews');
+        }
+
+        $reviewId = max(0, (int)($_POST['ma_danh_gia'] ?? 0));
+        $rowRef = trim((string)($_POST['row_ref'] ?? ''));
+        $ok = $this->updateReviewModerationStatus($reviewId, $rowRef, 'an');
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã ẩn đánh giá.' : 'Không thể ẩn đánh giá.');
+        redirect(BASE_URL . '/index.php?r=admin_reviews&detail=' . $reviewId);
+    }
+
+    public function adminReviewDelete(): void {
+        $this->requireRole(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=admin_reviews');
+        }
+
+        $reviewId = max(0, (int)($_POST['ma_danh_gia'] ?? 0));
+        $rowRef = trim((string)($_POST['row_ref'] ?? ''));
+        $ok = $this->deleteReview($reviewId, $rowRef);
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa đánh giá.' : 'Không thể xóa đánh giá.');
+        redirect(BASE_URL . '/index.php?r=admin_reviews');
+    }
+
+    public function adminReviewReply(): void {
+        $this->requireRole(['admin', 'nhanvien']);
+        $this->staffReviewReply();
     }
 
     public function staffReviews(): void {
@@ -1484,8 +1641,9 @@ class QuanTriController {
 
     public function customerOrderCancel(): void {
         $user = $this->requireRole(['khach_hang']);
+        $ordersTab = '&tab=orders#tab-orders';  // quay về đúng tab Lịch sử đơn hàng
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(BASE_URL . '/index.php?r=hoso');
+            redirect(BASE_URL . '/index.php?r=hoso' . $ordersTab);
         }
 
         $orderId = max(0, (int)($_POST['ma_hoa_don'] ?? 0));
@@ -1498,23 +1656,23 @@ class QuanTriController {
 
         if (!$detail || $email === '' || $ownerEmail !== $email) {
             set_flash('error', 'Không thể hủy đơn hàng này.');
-            redirect(BASE_URL . '/index.php?r=hoso');
+            redirect(BASE_URL . '/index.php?r=hoso' . $ordersTab);
         }
 
         if (in_array($currentStatus, ['shipping', 'completed', 'cancelled'], true)) {
             set_flash('error', 'Đơn hàng đã ở trạng thái không thể hủy.');
-            redirect(BASE_URL . '/index.php?r=hoso');
+            redirect(BASE_URL . '/index.php?r=hoso' . $ordersTab);
         }
 
         $payload = $this->extractCancellationReasonFromPost();
         if (empty($payload['ok'])) {
             set_flash('error', (string)($payload['message'] ?? 'Vui lòng chọn lý do hủy đơn hàng.'));
-            redirect(BASE_URL . '/index.php?r=hoso');
+            redirect(BASE_URL . '/index.php?r=hoso' . $ordersTab);
         }
 
         $ok = $this->model->updateOrderStatus($orderId, 'cancelled', (string)($payload['reason'] ?? ''));
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã hủy đơn hàng.' : 'Không thể hủy đơn hàng.');
-        redirect(BASE_URL . '/index.php?r=hoso');
+        redirect(BASE_URL . '/index.php?r=hoso' . ($ok ? '&don=da_huy' : '') . $ordersTab);
     }
 
     public function adminLives(): void {

@@ -402,6 +402,14 @@ body.sidebar-is-collapsed .sidebar-menu-link::before {
   font-size: 0.88rem;
 }
 
+/* AI Idol: scripts awaiting approval close to airtime */
+.ai-idol-alert { border-left: 3px solid #D97706 !important; }
+.ai-idol-alert .ai-idol-alert-title { color: #B45309; }
+.ai-idol-alert.is-urgent, .ai-idol-alert.is-missed { border-left-color: #DC2626 !important; }
+.ai-idol-alert.is-urgent .ai-idol-alert-title, .ai-idol-alert.is-missed .ai-idol-alert-title { color: #B91C1C; }
+[data-theme="dark"] .ai-idol-alert .ai-idol-alert-title { color: #FBBF24; }
+[data-theme="dark"] .ai-idol-alert.is-urgent .ai-idol-alert-title, [data-theme="dark"] .ai-idol-alert.is-missed .ai-idol-alert-title { color: #F87171; }
+
 /* KPI CARDS SYSTEM (SHADCN/UI COMPACT DATA CARDS) */
 .kpi-card {
   background: var(--admin-surface) !important;
@@ -786,4 +794,10 @@ button:active {
 .form-check-input:focus {
   border-color: var(--admin-primary) !important;
   box-shadow: 0 0 0 0.2rem rgba(24, 59, 43, 0.2) !important;
+}
+
+/* Vùng kết quả của live-filter: mờ nhẹ khi đang tải */
+.live-region[aria-busy="true"] {
+  opacity: .55;
+  transition: opacity .15s ease;
 }

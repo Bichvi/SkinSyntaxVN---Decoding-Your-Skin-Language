@@ -1,13 +1,18 @@
 import os
 import uuid
 from flask import Flask, request, jsonify, send_file
-from agents.service import cancel_agent_run, confirm_agent_run
+from agents.service import ConflictError, cancel_agent_run, confirm_agent_run
+from agents.structured_query import FilterError, run_structured_query
 from config import AGENT_ENABLED, AVATARS_DIR, BACKGROUNDS_DIR, PORT, logger
-from core.campaigns import create_campaign, get_campaign, list_campaigns
+from core.campaigns import CampaignConflict, CampaignNotFound, cancel_campaign, create_campaign, get_campaign, list_campaigns, reschedule_campaign, retry_campaign
 from core.agent_runs import create_agent_run, get_agent_run, list_agent_runs, update_agent_run
 from core.state_machine import create_job, ensure_indexes, get_job, get_db, object_id, utcnow
 from core.pipeline import start_pipeline_thread
+from core.health import dependency_status
+from core.product_videos import list_product_videos, set_video_visibility
 from core.script_text import sanitize_external_retailer_mentions
+from core.purpose import purpose_of
+from engines.script_validator import check_blacklist, check_purpose_rules
 from tasks import prepare_campaign_task, generate_job_task, process_agent_run_task
 
 app = Flask(__name__)
@@ -33,6 +38,12 @@ def api_health():
         "mongo": mongo,
         "agent_enabled": AGENT_ENABLED,
     }), 200 if healthy else 503
+
+
+@app.route("/api/ai-idol/health/dependencies", methods=["GET"])
+def api_dependency_health():
+    """Cached (15 s) status of every service the live pipeline needs; never exposes secrets."""
+    return jsonify({"ok": True, "data": dependency_status(force=request.args.get("refresh") == "1")})
 
 
 def _agent_disabled_response():
@@ -88,6 +99,8 @@ def api_confirm_agent_run(run_id):
         run = confirm_agent_run(run_id, request.get_json(silent=True) or {})
         process_agent_run_task.delay(run_id)
         return jsonify({"ok": True, "data": run}), 202
+    except ConflictError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
     except ValueError as exc:
         return jsonify({"ok": False, "message": str(exc)}), 400
 
@@ -190,31 +203,37 @@ def api_get_campaign(campaign_id):
 @app.route("/api/ai-idol/campaigns/<campaign_id>/retry", methods=["POST"])
 def api_retry_campaign(campaign_id):
     try:
-        db = get_db()
-        campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
-        if not campaign:
-            return jsonify({"ok": False, "message": "Campaign not found"}), 404
-        failed_segments = list(db.ai_idol_segments.find({"campaign_id": campaign_id, "status": "FAILED"}))
-        if not failed_segments:
-            return jsonify({"ok": False, "message": "Campaign has no failed segments"}), 400
-        db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {"$set": {
-            "status": "GENERATING", "error_message": None, "updated_at": utcnow(),
-        }})
-        queued = 0
-        for segment in failed_segments:
-            job_id = segment.get("job_id")
-            if job_id:
-                db.ai_idol_jobs.update_one({"_id": object_id(job_id)}, {"$set": {
-                    "status": "CREATED", "error_message": None, "updated_at": utcnow(),
-                }, "$inc": {"retry_count": 1}})
-                db.ai_idol_segments.update_one({"_id": segment["_id"]}, {"$set": {
-                    "status": "GENERATING", "error_message": None, "updated_at": utcnow(),
-                }})
-                generate_job_task.delay(job_id)
-                queued += 1
-        if queued == 0:
-            prepare_campaign_task.delay(campaign_id)
-        return jsonify({"ok": True, "queued": queued})
+        result = retry_campaign(campaign_id)
+        return jsonify({"ok": True, "queued": result["queued_segments"], **result})
+    except CampaignNotFound as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 404
+    except CampaignConflict as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+
+
+@app.route("/api/ai-idol/campaigns/<campaign_id>/cancel", methods=["POST"])
+def api_cancel_campaign(campaign_id):
+    try:
+        return jsonify({"ok": True, **cancel_campaign(campaign_id)})
+    except CampaignNotFound as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 404
+    except CampaignConflict as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+
+
+@app.route("/api/ai-idol/campaigns/<campaign_id>/reschedule", methods=["POST"])
+def api_reschedule_campaign(campaign_id):
+    try:
+        payload = request.get_json(silent=True) or {}
+        return jsonify({"ok": True, **reschedule_campaign(campaign_id, payload.get("scheduled_at"))})
+    except CampaignNotFound as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 404
+    except CampaignConflict as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
     except ValueError as exc:
         return jsonify({"ok": False, "message": str(exc)}), 400
 
@@ -243,6 +262,18 @@ def api_approve_job_script(job_id):
                 "ok": False,
                 "message": "Kịch bản không được vượt quá 20.000 ký tự.",
             }), 400
+
+        # Same fail-closed policy as the pipeline validator; a human edit is not a bypass.
+        violation = check_blacklist(script_text) or "; ".join(
+            # Product-page words get the same price/promotion rules as generated drafts.
+            check_purpose_rules(script_text, job.get("product_snapshot") or {}, purpose_of(job))
+        )
+        if violation:
+            return jsonify({
+                "ok": False,
+                "message": f"Kịch bản chưa đạt kiểm duyệt: {violation}",
+                "violation": violation,
+            }), 422
 
         now = utcnow()
         previous_text = str((job.get("artifacts") or {}).get("script_text", "")).strip()
@@ -472,6 +503,44 @@ def api_list_schedules():
         return jsonify({"ok": True, "schedules": schedules})
     except Exception as e:
         return jsonify({"ok": False, "message": str(e)}), 500
+
+@app.route("/api/ai-idol/products/query", methods=["POST"])
+def api_query_products():
+    """Read-only structured product query (manual mode filter form); body keys are the Prompt Builder selection keys."""
+    filters = request.get_json(silent=True)
+    try:
+        return jsonify(run_structured_query({} if filters is None else filters))
+    except FilterError as exc:  # not ValueError: loaders raise it for data-size limits, which are server errors
+        return jsonify({"ok": False, "message": str(exc)}), 400
+    except Exception:
+        logger.exception("[APP] Unable to run structured product query")
+        return jsonify({"ok": False, "message": "Không truy vấn được sản phẩm, thử lại sau."}), 500
+
+
+@app.route("/api/ai-idol/products/<product_id>/videos", methods=["GET"])
+def api_list_product_videos(product_id):
+    try:
+        limit = int(request.args.get("limit", 30))
+    except (TypeError, ValueError):
+        limit = 30
+    try:
+        return jsonify({"ok": True, "data": list_product_videos(product_id, limit=limit)})
+    except Exception:
+        logger.exception("[APP] Unable to list product videos")
+        return jsonify({"ok": False, "message": "Không tải được video sản phẩm"}), 500
+
+
+@app.route("/api/ai-idol/videos/<video_id>/visibility", methods=["POST"])
+def api_set_video_visibility(video_id):
+    payload = request.get_json(silent=True) or {}
+    try:
+        state = set_video_visibility(video_id, bool(payload.get("hidden")), str(payload.get("by") or ""))
+        return jsonify({"ok": True, "data": state})
+    except LookupError:
+        return jsonify({"ok": False, "message": "Video not found"}), 404
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+
 
 @app.route("/api/ai-idol/videos/<video_id>", methods=["GET"])
 def api_get_video_file(video_id):

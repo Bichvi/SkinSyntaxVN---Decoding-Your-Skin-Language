@@ -37,6 +37,22 @@ INTENT_LABELS = {
     UNKNOWN,
 }
 
+# Match cancellation commands as complete actions.  A plain substring check
+# for ``dung`` would also match the word ``su dung`` (usage), turning an
+# inventory/expiry search into a false campaign cancellation.
+CANCEL_COMMAND_PATTERN = re.compile(
+    r"\b(?:huy|cancel|xoa lich|xoa chuong trinh)\b"
+    r"|(?:^|[.!?]\s*|hay\s+)dung\s+"
+    r"(?:live|livestream|phat|chuong trinh|campaign|agent)\b"
+)
+
+# "còn đủ hàng để bán trong livestream" describes stock, not a create action,
+# unless a schedule follows ("... trong livestream lúc 20h").
+LIVE_STOCK_QUALIFIER = re.compile(
+    r"\bdu\s+hang\b[^,.;]*?\b(?:de\s+)?ban\s+(?:trong|khi|tren)\s+(?:livestream|live stream|live)\b"
+    r"(?!\s*(?:luc|vao|toi|sang|chieu|ngay|\d))"
+)
+
 
 @dataclass(frozen=True)
 class IntentClassification:
@@ -79,7 +95,7 @@ def classify_intent(brief_text: str) -> IntentClassification:
     text = normalize_text(brief_text)
     entities = _entities(text)
 
-    if _has_any(text, ("huy", "dung", "xoa lich", "xoa chuong trinh", "cancel")):
+    if CANCEL_COMMAND_PATTERN.search(text):
         return IntentClassification(
             CANCEL_CAMPAIGN, 0.98, "Có từ khóa hủy hoặc dừng chương trình.", entities,
             True, "Chọn chương trình cần hủy; chưa tạo chương trình mới.",
@@ -117,11 +133,18 @@ def classify_intent(brief_text: str) -> IntentClassification:
         "livestream", "live stream", "len song", "phat luc", "lich phat",
         "quang ba", "tao video", "len lich", "gioi thieu san pham",
     )
-    has_create_cue = _has_any(text, create_cues)
+    has_create_cue = _has_any(LIVE_STOCK_QUALIFIER.sub(" ", text), create_cues)
     if has_create_cue:
         return IntentClassification(
             CREATE_CAMPAIGN, 0.94, "Có hành động tạo/lên lịch/phát hoặc quảng bá livestream.", entities,
             False, "Tiếp tục trích xuất sản phẩm, kiểm tra chính sách rồi lập campaign.",
+        )
+
+    from agents.command_query import business_query_requested, catalog_search_requested
+    if business_query_requested(brief_text) or catalog_search_requested(brief_text):
+        return IntentClassification(
+            PRODUCT_SEARCH, 0.90, "Yêu cầu lọc kho hoặc phân tích bán hàng; chỉ đọc dữ liệu.", entities,
+            False, "Kiểm tra bộ lọc, trả kết quả có bằng chứng; không tạo video.",
         )
 
     if _has_any(text, ("xem truoc", "preview", "xem video", "chieu noi bo")):

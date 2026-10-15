@@ -6,6 +6,15 @@ ini_set('memory_limit', '256M');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+// Request GET chỉ-đọc do live-filter.js gửi khi gõ/đổi bộ lọc: nhả khóa session ngay để các request
+// song song cùng phiên không phải xếp hàng. $_SESSION vẫn đọc được (đăng nhập, vai trò, giỏ hàng...).
+// Enter/nút Tìm gửi thêm X-Live-Commit nên giữ khóa và ghi session bình thường (lịch sử tìm kiếm).
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET'
+    && ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'live-filter'
+    && !isset($_SERVER['HTTP_X_LIVE_COMMIT'])
+    && session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
 
 $backendRoot = is_dir(__DIR__ . '/backend/app')
     ? realpath(__DIR__ . '/backend')
@@ -49,6 +58,9 @@ if (is_file($helpersFile)) {
     require_once $helpersFile;
 }
 
+require_once $backendRoot . '/app/services/ProductEventTracker.php';
+ProductEventTracker::ensureCookie();
+
 if (!headers_sent()) {
     header('Content-Type: text/html; charset=utf-8');
 }
@@ -57,7 +69,7 @@ ob_start(static function ($buffer) {
 });
 
 $r = $_GET['r'] ?? 'home';
-if (in_array($r, ['admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign', 'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign', 'admin_ai_idol_approve_script', 'admin_ai_idol_agent_runs', 'admin_ai_idol_agent_create', 'admin_ai_idol_agent_run', 'admin_ai_idol_agent_confirm', 'admin_ai_idol_agent_retry', 'admin_ai_idol_agent_cancel'], true)) {
+if (in_array($r, ['admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign', 'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign', 'admin_ai_idol_approve_script', 'admin_ai_idol_agent_runs', 'admin_ai_idol_agent_create', 'admin_ai_idol_agent_run', 'admin_ai_idol_agent_confirm', 'admin_ai_idol_agent_retry', 'admin_ai_idol_agent_cancel', 'admin_ai_idol_health', 'admin_ai_idol_cancel_campaign', 'admin_ai_idol_reschedule_campaign', 'admin_ai_idol_products', 'admin_ai_idol_video_visibility'], true)) {
     if (require $backendRoot . '/app/routes/ai_idol.php') {
         return;
     }
@@ -69,6 +81,7 @@ require_once $backendRoot . '/app/controllers/AuthController.php';
 require_once $backendRoot . '/app/controllers/TaiKhoanController.php';
 require_once $backendRoot . '/app/controllers/AdminController.php';
 require_once $backendRoot . '/app/controllers/QuanTriController.php';
+require_once $backendRoot . '/app/controllers/AdminInventoryController.php';
 require_once $backendRoot . '/app/controllers/LiveController.php';
 if (is_file($backendRoot . '/app/services/VnpayService.php')) {
     require_once $backendRoot . '/app/services/VnpayService.php';
@@ -327,6 +340,10 @@ switch ($r) {
         (new TaiKhoanController($pdo))->capnhatHoso();
         break;
 
+    case 'capnhat_loaida':
+        (new TaiKhoanController($pdo))->capNhatLoaiDa();
+        break;
+
     case 'diachi_macdinh':
         (new TaiKhoanController($pdo))->datDiaChiMacDinh();
         break;
@@ -336,7 +353,9 @@ switch ($r) {
         break;
 
     case 'huydon':
-        (new TaiKhoanController($pdo))->huydon();
+    case 'huydonhang':
+        // Khách tự hủy đơn (form ở Hồ sơ → Lịch sử đơn hàng). TaiKhoanController không có huydon().
+        (new QuanTriController($pdo))->customerOrderCancel();
         break;
 
     case 'danhgia_sanpham':
@@ -402,11 +421,11 @@ switch ($r) {
         break;
 
     case 'admin_login':
-        (new QuanTriController($pdo))->login();
+        (new AuthController($pdo))->dangnhap();
         break;
 
     case 'admin_logout':
-        (new QuanTriController($pdo))->logout();
+        (new AuthController($pdo))->logout();
         break;
 
     case 'admin_sp':
@@ -431,6 +450,30 @@ switch ($r) {
 
     case 'admin_sp_stock':
         (new QuanTriController($pdo))->adminProductStock();
+        break;
+
+    case 'admin_inventory_batches':
+        (new AdminInventoryController($pdo))->index();
+        break;
+
+    case 'admin_inventory_auto_seed':
+        (new AdminInventoryController($pdo))->autoSeed();
+        break;
+
+    case 'admin_inventory_diverse_seed':
+        (new AdminInventoryController($pdo))->seedDiverse();
+        break;
+
+    case 'admin_inventory_fixed_expiry_seed':
+        (new AdminInventoryController($pdo))->seedFixedExpiry();
+        break;
+
+    case 'admin_inventory_batch_save':
+        (new AdminInventoryController($pdo))->saveBatch();
+        break;
+
+    case 'admin_inventory_movement':
+        (new AdminInventoryController($pdo))->addMovement();
         break;
 
     case 'admin_orders':
@@ -573,11 +616,11 @@ switch ($r) {
         break;
 
     case 'admin_sepay_webhook':
-        (new QuanTriController($pdo))->sepayWebhook();
+        (new HomeController($pdo))->paymentWebhook();
         break;
 
     case 'admin_sepay_manual_sync':
-        (new QuanTriController($pdo))->sepayManualSync();
+        (new HomeController($pdo))->adminSepayManualSync();
         break;
 
     case 'staff_dashboard':
@@ -633,6 +676,10 @@ switch ($r) {
         break;
 
     default:
+        // Route trợ giúp/hỗ trợ và chat mua hàng chỉ nhận các route chưa có `case` riêng ở trên.
+        if (require $backendRoot . '/app/routes/store_assistance.php') {
+            break;
+        }
         http_response_code(404);
         $view404 = defined('VIEW_DIR') ? VIEW_DIR . '/404.php' : __DIR__ . '/../views/404.php';
         if (file_exists($view404)) {

@@ -1,0 +1,54 @@
+{
+  "scope": "PHP HTTP session integration with independent cookie jars; no browser UI clicks",
+  "results": [
+    {
+      "id": "CHAT-099",
+      "status": "AUTO_FAIL",
+      "automated_failures": [
+        "A: missing owned conversation",
+        "A: invalid/degraded answer",
+        "B: missing owned conversation",
+        "B: invalid/degraded answer",
+        "Shared conversation ID"
+      ],
+      "evidence": [
+        {
+          "account": "A",
+          "profile": {
+            "budget": 100000,
+            "avoid_ingredients": [
+              "Fragrance/Parfum"
+            ]
+          },
+          "chat": {
+            "http_status": 200,
+            "response": {
+              "html_received": true,
+              "raw_excerpt": "<br />\n<b>Fatal error</b>:  Uncaught TypeError: HomeController::splitProfileValues(): Argument #1 ($raw) must be of type ?string, MongoDB\\Model\\BSONArray given, called in /var/www/html/app/controllers/HomeController.php on line 633 and defined in /var/www/html/app/controllers/HomeController.php:720\nStack trace:\n#0 /var/www/html/app/controllers/HomeController.php(633): HomeController-&gt;splitProfileValues(Object(MongoDB\\Model\\BSONArray))\n#1 /var/www/html/app/controllers/HomeController.php(2102): HomeController-&gt;buildRecommendationProfile('chat-test-f35b2...')\n#2 /var/www/html/app/controllers/HomeController.php(2253): HomeController-&gt;aiChatAssistant()\n#3 /var/www/html/public/index.php(172): HomeController-&gt;aiChatApi()\n#4 {main}\n  thrown in <b>/var/www/html/app/controllers/HomeController.php</b> on line <b>720</b><br />\n"
+            }
+          },
+          "conversation_owner_verified": false
+        },
+        {
+          "account": "B",
+          "profile": {
+            "budget": 800000,
+            "avoid_ingredients": [
+              "Lanolin"
+            ]
+          },
+          "chat": {
+            "http_status": 200,
+            "response": {
+              "html_received": true,
+              "raw_excerpt": "<br />\n<b>Fatal error</b>:  Uncaught TypeError: HomeController::splitProfileValues(): Argument #1 ($raw) must be of type ?string, MongoDB\\Model\\BSONArray given, called in /var/www/html/app/controllers/HomeController.php on line 633 and defined in /var/www/html/app/controllers/HomeController.php:720\nStack trace:\n#0 /var/www/html/app/controllers/HomeController.php(633): HomeController-&gt;splitProfileValues(Object(MongoDB\\Model\\BSONArray))\n#1 /var/www/html/app/controllers/HomeController.php(2102): HomeController-&gt;buildRecommendationProfile('chat-test-f35b2...')\n#2 /var/www/html/app/controllers/HomeController.php(2253): HomeController-&gt;aiChatAssistant()\n#3 /var/www/html/public/index.php(172): HomeController-&gt;aiChatApi()\n#4 {main}\n  thrown in <b>/var/www/html/app/controllers/HomeController.php</b> on line <b>720</b><br />\n"
+            }
+          },
+          "conversation_owner_verified": false
+        }
+      ]
+    }
+  ],
+  "execution_error": "RuntimeError: No conversation for ownership test",
+  "cleanup_verified": true
+}

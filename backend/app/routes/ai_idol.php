@@ -15,6 +15,11 @@ $idolRoutes = [
     'admin_ai_idol_agent_confirm' => ['POST', 'confirmAgentRun'],
     'admin_ai_idol_agent_retry' => ['POST', 'retryAgentRun'],
     'admin_ai_idol_agent_cancel' => ['POST', 'cancelAgentRun'],
+    'admin_ai_idol_health' => ['GET', 'health'],
+    'admin_ai_idol_cancel_campaign' => ['POST', 'cancelCampaign'],
+    'admin_ai_idol_reschedule_campaign' => ['POST', 'rescheduleCampaign'],
+    'admin_ai_idol_products' => ['GET', 'getProducts'],
+    'admin_ai_idol_video_visibility' => ['POST', 'videoVisibility'],
 ];
 if (!isset($idolRoutes[$r])) {
     return false;

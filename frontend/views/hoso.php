@@ -232,15 +232,13 @@ if (!empty($ngayThamGia)) {
   }
 }
 
-$orderCount = count($orders);
-$reviewSentCount = 0;
-foreach ($orders as $orderRow) {
-  foreach (($orderRow['items'] ?? []) as $orderItem) {
-    if (!empty($orderItem['has_reviewed'])) {
-      $reviewSentCount++;
-    }
-  }
-}
+// $orders chỉ là trang đơn đang xem (10 đơn); tổng số đơn/đánh giá do controller đếm trên toàn bộ.
+$orderTab = $orderTab ?? 'all';
+$orderQuery = $orderQuery ?? '';
+$orderCounts = $orderCounts ?? OrderTabs::counts($orders);
+$orderPage = $orderPage ?? ['page' => 1, 'pages' => 1, 'matched' => count($orders)];
+$orderCount = (int)($orderCounts['all'] ?? count($orders));
+$reviewSentCount = (int)($reviewSentCount ?? 0);
 
 $accountVerificationLabel = !empty($account['email']) ? 'Đã xác thực' : 'Chưa xác thực';
 $accountVerificationHint = !empty($account['email'])
@@ -406,6 +404,267 @@ $accountVerificationHint = !empty($account['email'])
     color: #64748B;
     font-size: 0.82rem;
     line-height: 1.5;
+  }
+
+  /* Lịch sử đơn hàng: tab con kiểu Shopee */
+  .order-tabs {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+    scrollbar-width: thin;
+  }
+
+  .order-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    padding: 10px 14px;
+    color: #4b5563;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+  }
+
+  .order-tab:hover {
+    color: #1f7a53;
+  }
+
+  .order-tab.is-active {
+    color: #1f7a53;
+    border-bottom-color: #1f7a53;
+  }
+
+  .order-tab:focus-visible {
+    outline: 2px solid #1f7a53;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  .order-tab-count {
+    min-width: 22px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #eef5f0;
+    color: #236142;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .order-tab.is-active .order-tab-count {
+    background: #1f7a53;
+    color: #fff;
+  }
+
+  .order-search {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .order-search .form-control {
+    max-width: 420px;
+  }
+
+  #orderResults[aria-busy="true"] {
+    opacity: 0.55;
+    transition: opacity 0.15s ease;
+  }
+
+  .order-empty {
+    padding: 36px 16px;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    color: #6b7280;
+    text-align: center;
+  }
+
+  .order-empty a {
+    display: block;
+    margin-top: 6px;
+    color: #1f7a53;
+    font-weight: 600;
+  }
+
+  .order-card-list {
+    display: grid;
+    gap: 14px;
+  }
+
+  .order-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .order-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #eef2f0;
+  }
+
+  .order-card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #16324d;
+  }
+
+  .order-card-sub {
+    margin-top: 2px;
+    color: #6b7280;
+    font-size: 0.86rem;
+  }
+
+  .order-status {
+    flex: 0 0 auto;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .order-status-success { background: #e8f5ee; color: #1f7a53; }
+  .order-status-warning { background: #fff4db; color: #8a5a00; }
+  .order-status-info { background: #e8f1fb; color: #1f5f99; }
+  .order-status-primary { background: #e9ecfb; color: #3442a8; }
+  .order-status-danger { background: #fdecec; color: #b42318; }
+  .order-status-secondary { background: #f1f3f5; color: #4b5563; }
+
+  .order-card-alert {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 16px 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #fff8e6;
+    color: #6b4a00;
+  }
+
+  .order-card .order-product-list {
+    padding: 12px 16px;
+  }
+
+  .order-card-note {
+    margin: 0 16px 12px;
+    color: #6b7280;
+    font-size: 0.88rem;
+  }
+
+  .order-card-foot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 12px 16px;
+    border-top: 1px solid #eef2f0;
+    background: #fafcfb;
+  }
+
+  .order-card-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.88rem;
+  }
+
+  .order-card-total {
+    text-align: right;
+    color: #4b5563;
+  }
+
+  .order-card-total strong {
+    color: #b42318;
+    font-size: 1.08rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .order-card-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: flex-start;
+  }
+
+  .order-card-actions form {
+    margin: 0;
+  }
+
+  .order-cancel > summary {
+    list-style: none;
+  }
+
+  .order-cancel > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .order-cancel-form {
+    display: grid;
+    gap: 8px;
+    width: min(320px, 100%);
+    margin-top: 8px;
+  }
+
+  .order-status-note.is-muted {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  .order-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .order-pagination-info {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 575.98px) {
+    .order-search .form-control {
+      max-width: none;
+    }
+
+    .order-card-head,
+    .order-card-alert {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .order-card-foot {
+      grid-template-columns: 1fr;
+    }
+
+    .order-card-total {
+      text-align: left;
+    }
+
+    .order-card-actions {
+      justify-content: stretch;
+    }
+
+    .order-card-actions > * {
+      flex: 1 1 auto;
+    }
   }
 
   .order-product-list {
@@ -756,175 +1015,208 @@ window.openSupportChat = function (evt) {
       </div>
 
       <div class="tab-pane fade" id="tab-orders" role="tabpanel">
-        <?php if (empty($orders)): ?>
-          <div class="alert alert-info mb-0">Bạn chưa có đơn hàng nào.</div>
+        <?php
+          $orderTabUrl = static function (string $tab, int $page = 1) use ($orderQuery): string {
+              $params = ['r' => 'hoso', 'tab' => 'orders', 'don' => $tab];
+              if ($orderQuery !== '') $params['q_don'] = $orderQuery;
+              if ($page > 1) $params['trang_don'] = $page;
+              return BASE_URL . '/index.php?' . http_build_query($params) . '#tab-orders';
+          };
+          $orderTabTone = [
+              'cho_thanh_toan' => 'warning', 'cho_xac_nhan' => 'info', 'cho_lay_hang' => 'info',
+              'dang_giao' => 'primary', 'hoan_thanh' => 'success', 'da_huy' => 'danger',
+          ];
+          $orderEmptyText = [
+              'cho_thanh_toan' => 'Không có đơn nào đang chờ thanh toán.',
+              'cho_xac_nhan' => 'Không có đơn nào đang chờ shop xác nhận.',
+              'cho_lay_hang' => 'Không có đơn nào đang chờ lấy hàng.',
+              'dang_giao' => 'Không có đơn nào đang trên đường giao.',
+              'hoan_thanh' => 'Chưa có đơn nào hoàn thành.',
+              'da_huy' => 'Không có đơn nào đã hủy.',
+          ];
+          $placeholderImage = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22 viewBox=%220 0 56 56%22%3E%3Crect width=%2256%22 height=%2256%22 rx=%2214%22 fill=%22%23edf4ef%22/%3E%3Cpath d=%22M16 37l8-9 6 7 5-5 6 7H16z%22 fill=%22%2396aca0%22/%3E%3Ccircle cx=%2222%22 cy=%2221%22 r=%224%22 fill=%22%23bfd0c5%22/%3E%3C/svg%3E';
+        ?>
+        <nav class="order-tabs" id="orderTabsNav" aria-label="Lọc đơn hàng theo trạng thái">
+          <?php foreach (OrderTabs::TABS as $tabKey => $tabLabel): ?>
+            <?php $isActiveTab = $tabKey === $orderTab; ?>
+            <a class="order-tab<?= $isActiveTab ? ' is-active' : '' ?>" href="<?= h($orderTabUrl($tabKey)) ?>"<?= $isActiveTab ? ' aria-current="page"' : '' ?>>
+              <span><?= h($tabLabel) ?></span>
+              <?php if ((int)($orderCounts[$tabKey] ?? 0) > 0): ?>
+                <span class="order-tab-count"><?= number_format((int)$orderCounts[$tabKey], 0, ',', '.') ?></span>
+              <?php endif; ?>
+            </a>
+          <?php endforeach; ?>
+        </nav>
+
+        <form class="order-search" method="get" action="<?= BASE_URL ?>/index.php" role="search"
+              data-live-filter data-live-target="#orderResults" data-live-also="#orderTabsNav" data-live-reset="trang_don">
+          <input type="hidden" name="r" value="hoso">
+          <input type="hidden" name="tab" value="orders">
+          <input type="hidden" name="don" value="<?= h($orderTab) ?>">
+          <label class="visually-hidden" for="orderSearchInput">Tìm đơn hàng</label>
+          <input class="form-control" id="orderSearchInput" type="search" name="q_don" maxlength="80" value="<?= h($orderQuery) ?>" placeholder="Tìm theo mã đơn hoặc tên sản phẩm" autocomplete="off">
+          <button class="btn btn-outline-brand" type="submit">Tìm</button>
+        </form>
+
+        <div id="orderResults" aria-live="polite">
+        <?php if ($orderCount === 0): ?>
+          <div class="order-empty">Bạn chưa có đơn hàng nào.</div>
+        <?php elseif (empty($orders)): ?>
+          <div class="order-empty">
+            <?= h($orderQuery !== '' ? 'Không tìm thấy đơn nào khớp "' . $orderQuery . '" ở mục này.' : ($orderEmptyText[$orderTab] ?? 'Không có đơn nào ở mục này.')) ?>
+            <?php if ($orderTab !== 'all' || $orderQuery !== ''): ?>
+              <a href="<?= h(BASE_URL . '/index.php?r=hoso&tab=orders#tab-orders') ?>">Xem tất cả đơn</a>
+            <?php endif; ?>
+          </div>
         <?php else: ?>
-          <div class="table-responsive">
-            <table class="table align-middle">
-              <thead>
-                <tr>
-                  <th>Mã đơn</th>
-                  <th>Ngày</th>
-                  <th>Tổng tiền</th>
-                  <th>Trạng thái</th>
-                  <th>Thanh toán</th>
-                  <th>Điểm</th>
-                  <th>Chi tiết</th>
-                  <th class="text-end">Tác vụ</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php foreach ($orders as $o): ?>
-                  <?php $paymentMethod = strtolower(trim((string)($o['hinh_thuc_thanh_toan'] ?? 'cod'))); ?>
-                  <?php $orderStatus = strtolower(trim((string)($o['trang_thai'] ?? ''))); ?>
-                  <?php $paymentStatus = strtolower(trim((string)($o['status_thanh_toan'] ?? 'chua thanh toan'))); ?>
-                  <?php $isCancelledOrder = in_array($orderStatus, ['da huy', 'đã hủy', 'huy', 'cancelled', 'canceled'], true); ?>
-                  <?php $detailCollapseId = 'order-details-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', (string)($o['ma_hoa_don'] ?? '0')); ?>
-                  <?php $canReopenTransferQr = $paymentMethod === 'bank_transfer_qr' && !$isCancelledOrder && !in_array($paymentStatus, ['da thanh toan', 'paid', 'thanh cong'], true); ?>
-                  <?php $canReorderOrder = (($o['trang_thai_normalized'] ?? '') === 'completed') || in_array($orderStatus, ['hoan thanh', 'hoÃ n thÃ nh', 'completed'], true); ?>
-                  <tr>
-                    <td>#<?= h($o['ma_hoa_don'] ?? '') ?></td>
-                    <td><?= h(!empty($o['ngay_dat']) ? date('d/m/Y H:i', strtotime((string)$o['ngay_dat'])) : '') ?></td>
-                    <td><?= vnd($o['tong_tien'] ?? 0) ?></td>
-                    <td><span class="badge text-bg-secondary"><?= h($o['trang_thai'] ?? 'moi') ?></span></td>
-                    <td>
-                      <div class="small fw-semibold"><?= strtolower(trim((string)($o['hinh_thuc_thanh_toan'] ?? 'cod'))) === 'bank_transfer_qr' ? 'QR chuyển khoản' : 'COD' ?></div>
-                      <div class="small text-muted"><?= h($o['status_thanh_toan'] ?? 'Chua thanh toan') ?></div>
-                      <?php if ($canReopenTransferQr): ?>
-                        <a class="btn btn-sm btn-outline-success mt-2" href="<?= BASE_URL ?>/index.php?r=camon&ma_hoa_don=<?= urlencode((string)($o['ma_hoa_don'] ?? '')) ?>">Mở QR chuyển khoản</a>
+          <div class="order-card-list">
+            <?php foreach ($orders as $o): ?>
+              <?php $orderId = (string)($o['ma_hoa_don'] ?? ''); ?>
+              <?php $tabKey = (string)($o['order_tab'] ?? OrderTabs::tabOf($o)); ?>
+              <?php $actions = $o['order_actions'] ?? OrderTabs::actions($o); ?>
+              <?php $isQr = OrderTabs::isQrPayment($o); ?>
+              <?php $paymentState = (string)($o['payment_state'] ?? OrderTabs::paymentState($o)); ?>
+              <?php $statusLabel = OrderTabs::TABS[$tabKey] ?? (string)($o['trang_thai'] ?? 'Không rõ'); ?>
+              <article class="order-card" aria-labelledby="order-title-<?= h($orderId) ?>">
+                <header class="order-card-head">
+                  <div>
+                    <h3 class="order-card-title" id="order-title-<?= h($orderId) ?>">Đơn #<?= h($orderId) ?></h3>
+                    <div class="order-card-sub">
+                      <?= h(!empty($o['ngay_dat']) ? date('d/m/Y H:i', strtotime((string)$o['ngay_dat'])) : '') ?>
+                      · <?= $isQr ? 'QR chuyển khoản' : 'COD' ?>
+                      · <?= h($paymentState === 'paid' ? 'Đã thanh toán' : ($paymentState === 'expired' ? 'Quá hạn thanh toán' : ($paymentState === 'awaiting' ? 'Chờ chuyển khoản' : 'Chưa thanh toán'))) ?>
+                    </div>
+                  </div>
+                  <span class="order-status order-status-<?= h($orderTabTone[$tabKey] ?? 'secondary') ?>"><?= h($statusLabel) ?></span>
+                </header>
+
+                <?php if (!empty($actions['pay_qr'])): ?>
+                  <div class="order-card-alert">
+                    <div>
+                      <strong>Đơn này đang chờ chuyển khoản.</strong>
+                      <div class="small">Mở lại màn hình QR để thanh toán đúng mã đơn #<?= h($orderId) ?>.</div>
+                    </div>
+                    <a class="btn btn-sm btn-success" href="<?= BASE_URL ?>/index.php?r=camon&ma_hoa_don=<?= urlencode($orderId) ?>">Thanh toán ngay</a>
+                  </div>
+                <?php endif; ?>
+
+                <?php if (empty($o['items'])): ?>
+                  <div class="small text-muted px-3 py-2">Đơn hàng này chưa có chi tiết sản phẩm hiển thị.</div>
+                <?php else: ?>
+                  <div class="order-product-list">
+                    <?php foreach ($o['items'] as $item): ?>
+                      <?php $canReviewFromOrder = !empty($item['has_purchased']) || !empty($actions['review']); ?>
+                      <?php $productId = trim((string)($item['ma_san_pham'] ?? '')); ?>
+                      <?php $resolvedDetailUrl = $productId !== '' ? (BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($productId) . '&tab=danh-gia') : ''; ?>
+                      <?php $productImage = trim((string)($item['image_url'] ?? '')); ?>
+                      <?php if ($productImage === ''): ?>
+                        <?php $productImage = resolve_image_url((string)($item['link_hinh_anh'] ?? '')); ?>
                       <?php endif; ?>
-                    </td>
-                    <td>
-                      <?php if ($isCancelledOrder): ?>
-                        <span class="badge text-bg-danger">Đơn đã hủy</span>
-                      <?php elseif (!empty($o['da_tich_diem'])): ?>
-                        <span class="badge text-bg-success">+<?= number_format((int)($o['diem_cong'] ?? 0), 0, ',', '.') ?></span>
-                      <?php else: ?>
-                        <span class="text-muted small">Chờ hoàn thành</span>
-                      <?php endif; ?>
-                      <?php if ($isCancelledOrder && !empty($o['ly_do_huy'])): ?>
-                        <div class="small text-muted mt-1">Lý do: <?= h((string)($o['ly_do_huy'] ?? '')) ?></div>
-                      <?php endif; ?>
-                      <?php if ((int)($o['diem_su_dung'] ?? 0) > 0): ?>
-                        <div class="small text-muted mt-1">Đã dùng <?= number_format((int)($o['diem_su_dung'] ?? 0), 0, ',', '.') ?> điểm</div>
-                      <?php endif; ?>
-                    </td>
-                    <td>
-                      <button
-                        class="btn btn-sm btn-outline-secondary order-detail-toggle"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#<?= h($detailCollapseId) ?>"
-                        aria-expanded="false"
-                        aria-controls="<?= h($detailCollapseId) ?>"
-                      >
-                        Xem chi tiết
-                      </button>
-                    </td>
-                    <td class="text-end">
-                      <?php if ($canReorderOrder): ?>
-                        <form method="post" action="<?= BASE_URL ?>/index.php?r=hoso&reorder=<?= urlencode((string)($o['ma_hoa_don'] ?? '')) ?>" class="d-inline-block mb-2">
-                          <button type="submit" class="btn btn-sm btn-success">Mua lại</button>
-                        </form>
-                      <?php endif; ?>
-                      <?php if (!in_array($orderStatus, ['dang giao', 'đang giao', 'hoan thanh', 'hoàn thành'], true) && !$isCancelledOrder): ?>
-                        <form method="post" action="<?= BASE_URL ?>/index.php?r=huydonhang" class="d-inline-flex flex-column gap-2" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
-                          <input type="hidden" name="ma_hoa_don" value="<?= h($o['ma_hoa_don'] ?? '') ?>">
-                          <select class="form-select form-select-sm" name="ly_do_huy" required>
+                      <div class="order-product-card"<?= $resolvedDetailUrl !== '' ? ' data-detail-url="' . h($resolvedDetailUrl) . '"' : '' ?>>
+                        <a class="order-product-link order-product-main" href="<?= h($resolvedDetailUrl !== '' ? $resolvedDetailUrl : '#') ?>">
+                          <img class="order-product-thumb" src="<?= h($productImage !== '' ? $productImage : $placeholderImage) ?>" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.onerror=null;this.src='<?= h($placeholderImage) ?>';" alt="<?= h((string)($item['ten_san_pham'] ?? 'Sản phẩm')) ?>">
+                          <div class="min-w-0">
+                            <div class="order-product-name"><?= h((string)($item['ten_san_pham'] ?? ('SP #' . ($item['ma_san_pham'] ?? '')))) ?></div>
+                            <div class="order-product-meta">
+                              <?= h((string)($item['thuong_hieu'] ?? '')) ?>
+                              <?php if (!empty($item['thuong_hieu']) && !empty($item['so_luong'])): ?>•<?php endif; ?>
+                              SL: <?= number_format((int)($item['so_luong'] ?? 0), 0, ',', '.') ?>
+                              <?php if ((int)($item['don_gia'] ?? 0) > 0): ?>• <?= vnd($item['don_gia'] ?? 0) ?><?php endif; ?>
+                            </div>
+                          </div>
+                        </a>
+                        <div class="order-product-actions">
+                          <?php if (!empty($item['has_reviewed'])): ?>
+                            <?php if ($resolvedDetailUrl !== ''): ?>
+                              <form method="get" action="<?= BASE_URL ?>/index.php">
+                                <input type="hidden" name="r" value="chitiet">
+                                <input type="hidden" name="id" value="<?= h($productId) ?>">
+                                <input type="hidden" name="tab" value="danh-gia">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Xem lại phần đánh giá</button>
+                              </form>
+                            <?php endif; ?>
+                            <span class="order-status-note">Đã đánh giá và nhận ưu đãi</span>
+                          <?php elseif ($canReviewFromOrder && $resolvedDetailUrl !== ''): ?>
+                            <form method="get" action="<?= BASE_URL ?>/index.php">
+                              <input type="hidden" name="r" value="chitiet">
+                              <input type="hidden" name="id" value="<?= h($productId) ?>">
+                              <input type="hidden" name="tab" value="danh-gia">
+                              <button type="submit" class="btn btn-sm btn-outline-brand">Đánh giá ngay để nhận ưu đãi</button>
+                            </form>
+                            <span class="order-status-note">Đủ điều kiện nhận thêm 1 điểm</span>
+                          <?php elseif (!in_array($tabKey, ['da_huy'], true)): ?>
+                            <span class="order-status-note is-muted">Đánh giá được sau khi nhận hàng</span>
+                          <?php endif; ?>
+                        </div>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                <?php endif; ?>
+
+                <?php if ($tabKey === 'da_huy' && !empty($o['ly_do_huy'])): ?>
+                  <div class="order-card-note">Lý do hủy: <?= h((string)$o['ly_do_huy']) ?></div>
+                <?php endif; ?>
+
+                <footer class="order-card-foot">
+                  <div class="order-card-points">
+                    <?php if ($tabKey === 'da_huy'): ?>
+                      <span class="text-muted">Đơn đã hủy, không tích điểm</span>
+                    <?php elseif (!empty($o['da_tich_diem'])): ?>
+                      <span class="badge text-bg-success">+<?= number_format((int)($o['diem_cong'] ?? 0), 0, ',', '.') ?> điểm</span>
+                    <?php else: ?>
+                      <span class="text-muted">Tích điểm khi đơn hoàn thành</span>
+                    <?php endif; ?>
+                    <?php if ((int)($o['diem_su_dung'] ?? 0) > 0): ?>
+                      <span class="text-muted">· Đã dùng <?= number_format((int)($o['diem_su_dung'] ?? 0), 0, ',', '.') ?> điểm</span>
+                    <?php endif; ?>
+                  </div>
+                  <div class="order-card-total">Thành tiền: <strong><?= vnd($o['tong_tien'] ?? 0) ?></strong></div>
+                  <div class="order-card-actions">
+                    <?php if (!empty($actions['pay_qr'])): ?>
+                      <a class="btn btn-sm btn-success" href="<?= BASE_URL ?>/index.php?r=camon&ma_hoa_don=<?= urlencode($orderId) ?>">Mở QR chuyển khoản</a>
+                    <?php endif; ?>
+                    <?php if (!empty($actions['reorder'])): ?>
+                      <form method="post" action="<?= BASE_URL ?>/index.php?r=hoso&reorder=<?= urlencode($orderId) ?>">
+                        <button type="submit" class="btn btn-sm btn-success">Mua lại</button>
+                      </form>
+                    <?php endif; ?>
+                    <?php if (!empty($actions['cancel'])): ?>
+                      <details class="order-cancel">
+                        <summary class="btn btn-sm btn-outline-danger">Hủy đơn</summary>
+                        <form method="post" action="<?= BASE_URL ?>/index.php?r=huydonhang" class="order-cancel-form" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
+                          <input type="hidden" name="ma_hoa_don" value="<?= h($orderId) ?>">
+                          <label class="visually-hidden" for="cancel-reason-<?= h($orderId) ?>">Lý do hủy đơn</label>
+                          <select class="form-select form-select-sm" id="cancel-reason-<?= h($orderId) ?>" name="ly_do_huy" required>
                             <option value="">Chọn lý do hủy đơn</option>
                             <?php foreach (($cancelReasonOptions ?? []) as $value => $label): ?>
                               <option value="<?= h((string)$value) ?>"><?= h((string)$label) ?></option>
                             <?php endforeach; ?>
                           </select>
                           <textarea class="form-control form-control-sm" name="ly_do_huy_bo_sung" rows="2" placeholder="Ghi chú thêm cho lý do hủy (nếu có)"></textarea>
-                          <button type="submit" class="btn btn-sm btn-outline-danger">Hủy đơn</button>
+                          <button type="submit" class="btn btn-sm btn-danger">Xác nhận hủy</button>
                         </form>
-                      <?php else: ?>
-                        <span class="text-muted small">Không khả dụng</span>
-                      <?php endif; ?>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="8" class="p-0 border-0">
-                      <div id="<?= h($detailCollapseId) ?>" class="collapse order-detail-panel">
-                        <div class="bg-light-subtle px-3 py-3">
-                          <?php if ($canReopenTransferQr): ?>
-                            <div class="alert alert-warning d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-                              <div>
-                                <strong>Đơn này đang chờ chuyển khoản.</strong>
-                                <div class="small">Bạn có thể mở lại màn hình QR để thanh toán tiếp theo đúng mã đơn.</div>
-                              </div>
-                              <a class="btn btn-sm btn-success" href="<?= BASE_URL ?>/index.php?r=camon&ma_hoa_don=<?= urlencode((string)($o['ma_hoa_don'] ?? '')) ?>">Xem QR thanh toán</a>
-                            </div>
-                          <?php endif; ?>
-                          <?php if (empty($o['items'])): ?>
-                            <div class="small text-muted py-2">Đơn hàng này chưa có chi tiết sản phẩm hiển thị.</div>
-                          <?php else: ?>
-                            <div class="order-product-list">
-                              <?php foreach ($o['items'] as $item): ?>
-                                <?php $canReviewFromOrder = !empty($item['has_purchased']) || in_array($orderStatus, ['hoan thanh', 'hoàn thành', 'da giao', 'đã giao'], true); ?>
-                                <?php $productId = trim((string)($item['ma_san_pham'] ?? '')); ?>
-                                <?php $resolvedDetailUrl = $productId !== '' ? (BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($productId) . '&tab=danh-gia') : ''; ?>
-                                <?php $productImage = trim((string)($item['image_url'] ?? '')); ?>
-                                <?php if ($productImage === ''): ?>
-                                  <?php $productImage = resolve_image_url((string)($item['link_hinh_anh'] ?? '')); ?>
-                                <?php endif; ?>
-                                <div class="order-product-card"<?= $resolvedDetailUrl !== '' ? ' data-detail-url="' . h($resolvedDetailUrl) . '"' : '' ?>>
-                                  <a class="order-product-link order-product-main" href="<?= h($resolvedDetailUrl !== '' ? $resolvedDetailUrl : '#') ?>">
-                                    <img class="order-product-thumb" src="<?= h($productImage !== '' ? $productImage : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22 viewBox=%220 0 56 56%22%3E%3Crect width=%2256%22 height=%2256%22 rx=%2214%22 fill=%22%23edf4ef%22/%3E%3Cpath d=%22M16 37l8-9 6 7 5-5 6 7H16z%22 fill=%22%2396aca0%22/%3E%3Ccircle cx=%2222%22 cy=%2221%22 r=%224%22 fill=%22%23bfd0c5%22/%3E%3C/svg%3E') ?>" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22 viewBox=%220 0 56 56%22%3E%3Crect width=%2256%22 height=%2256%22 rx=%2214%22 fill=%22%23edf4ef%22/%3E%3Cpath d=%22M16 37l8-9 6 7 5-5 6 7H16z%22 fill=%22%2396aca0%22/%3E%3Ccircle cx=%2222%22 cy=%2221%22 r=%224%22 fill=%22%23bfd0c5%22/%3E%3C/svg%3E';" alt="<?= h((string)($item['ten_san_pham'] ?? 'Sản phẩm')) ?>">
-                                    <div class="min-w-0">
-                                      <div class="order-product-name"><?= h((string)($item['ten_san_pham'] ?? ('SP #' . ($item['ma_san_pham'] ?? '')))) ?></div>
-                                      <div class="order-product-meta">
-                                        <?= h((string)($item['thuong_hieu'] ?? '')) ?>
-                                        <?php if (!empty($item['thuong_hieu']) && !empty($item['so_luong'])): ?>•<?php endif; ?>
-                                        SL: <?= number_format((int)($item['so_luong'] ?? 0), 0, ',', '.') ?>
-                                        <?php if ((int)($item['don_gia'] ?? 0) > 0): ?>• <?= vnd($item['don_gia'] ?? 0) ?><?php endif; ?>
-                                      </div>
-                                    </div>
-                                  </a>
-                                  <div class="order-product-actions">
-                                    <?php if (!empty($item['has_reviewed'])): ?>
-                                      <?php if ($resolvedDetailUrl !== ''): ?>
-                                        <form method="get" action="<?= BASE_URL ?>/index.php">
-                                          <input type="hidden" name="r" value="chitiet">
-                                          <input type="hidden" name="id" value="<?= h($productId) ?>">
-                                          <input type="hidden" name="tab" value="danh-gia">
-                                          <button type="submit" class="btn btn-sm btn-outline-secondary">Xem lại phần đánh giá</button>
-                                        </form>
-                                      <?php else: ?>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Xem lại phần đánh giá</button>
-                                      <?php endif; ?>
-                                      <span class="order-status-note">Đã đánh giá và nhận ưu đãi</span>
-                                    <?php elseif ($canReviewFromOrder): ?>
-                                      <?php if ($resolvedDetailUrl !== ''): ?>
-                                        <form method="get" action="<?= BASE_URL ?>/index.php">
-                                          <input type="hidden" name="r" value="chitiet">
-                                          <input type="hidden" name="id" value="<?= h($productId) ?>">
-                                          <input type="hidden" name="tab" value="danh-gia">
-                                          <button type="submit" class="btn btn-sm btn-outline-brand">Đánh giá ngay để nhận ưu đãi</button>
-                                        </form>
-                                      <?php else: ?>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Đánh giá ngay để nhận ưu đãi</button>
-                                      <?php endif; ?>
-                                      <span class="order-status-note">Đủ điều kiện nhận thêm 1 điểm</span>
-                                    <?php else: ?>
-                                      <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Đánh giá ngay để nhận ưu đãi</button>
-                                      <span class="order-status-note">Chờ đơn được xác nhận trước khi đánh giá</span>
-                                    <?php endif; ?>
-                                  </div>
-                                </div>
-                              <?php endforeach; ?>
-                            </div>
-                          <?php endif; ?>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
+                      </details>
+                    <?php endif; ?>
+                  </div>
+                </footer>
+              </article>
+            <?php endforeach; ?>
           </div>
+
+          <?php if ((int)$orderPage['pages'] > 1): ?>
+            <nav class="order-pagination" aria-label="Phân trang đơn hàng">
+              <?php $currentPage = (int)$orderPage['page']; $lastPage = (int)$orderPage['pages']; ?>
+              <?php if ($currentPage > 1): ?>
+                <a class="btn btn-sm btn-outline-secondary" href="<?= h($orderTabUrl($orderTab, $currentPage - 1)) ?>">‹ Trước</a>
+              <?php endif; ?>
+              <span class="order-pagination-info">Trang <?= $currentPage ?>/<?= $lastPage ?> · <?= number_format((int)$orderPage['matched'], 0, ',', '.') ?> đơn</span>
+              <?php if ($currentPage < $lastPage): ?>
+                <a class="btn btn-sm btn-outline-secondary" href="<?= h($orderTabUrl($orderTab, $currentPage + 1)) ?>">Sau ›</a>
+              <?php endif; ?>
+            </nav>
+          <?php endif; ?>
         <?php endif; ?>
+        </div>
       </div>
 
       <div class="tab-pane fade" id="tab-cart" role="tabpanel">

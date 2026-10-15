@@ -1,0 +1,167 @@
+{
+  "scope": "PHP HTTP session integration with independent cookie jars; no browser UI clicks",
+  "results": [
+    {
+      "id": "CHAT-099",
+      "status": "REVIEW_REQUIRED",
+      "automated_failures": [],
+      "evidence": [
+        {
+          "account": "A",
+          "profile": {
+            "budget": 100000,
+            "avoid_ingredients": [
+              "Fragrance/Parfum"
+            ]
+          },
+          "chat": {
+            "http_status": 200,
+            "response": {
+              "ok": true,
+              "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Some By Mi AHA-BHA-PHA Cho Da Mụn 30ml](index.php?r=chitiet&id=4310) — 49.000đ.\n- [Nước Dưỡng Da Chinoshio Dokudami Chiết Xuất Lá Diếp Cá 500ml](index.php?r=chitiet&id=517) — 67.000đ.\n- [[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 30ml](index.php?r=chitiet&id=618) — 59.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+              "conflicts": [],
+              "products": [
+                {
+                  "id": "4310",
+                  "name": "Nước Hoa Hồng Some By Mi AHA-BHA-PHA Cho Da Mụn 30ml",
+                  "brand": "Some By Mi",
+                  "price": 49000,
+                  "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-hoa-hong-some-by-mi-aha-bha-pha-cho-da-mun-30ml-1694839634_img_450x450_31d6f9_fit_center.jpg",
+                  "detail_url": "/index.php?r=chitiet&id=4310",
+                  "description": "",
+                  "ingredients": ""
+                },
+                {
+                  "id": "517",
+                  "name": "Nước Dưỡng Da Chinoshio Dokudami Chiết Xuất Lá Diếp Cá 500ml",
+                  "brand": "Chinoshio",
+                  "price": 67000,
+                  "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-hoa-hong-dokudami-chiet-xuat-tu-la-diep-ca-500ml-1741252311_img_450x450_31d6f9_fit_center.jpg",
+                  "detail_url": "/index.php?r=chitiet&id=517",
+                  "description": "",
+                  "ingredients": ""
+                },
+                {
+                  "id": "618",
+                  "name": "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 30ml",
+                  "brand": "Klairs",
+                  "price": 59000,
+                  "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-hoa-hong-klairs-khong-mui-cho-da-nhay-cam-30ml-1741659998_img_450x450_31d6f9_fit_center.jpg",
+                  "detail_url": "/index.php?r=chitiet&id=618",
+                  "description": "",
+                  "ingredients": ""
+                }
+              ],
+              "fallback": false,
+              "fallback_reason": "",
+              "status_message": "",
+              "fallback_note": "",
+              "pipeline_mode": "consultation_v2",
+              "query_type": "simple single-intent query",
+              "intent_mode": "search",
+              "eval_scores": null,
+              "latency": 7.06,
+              "conversation_id": "6aa13e5f4ecf6af5f5e26177"
+            }
+          },
+          "conversation_owner_verified": true
+        },
+        {
+          "account": "B",
+          "profile": {
+            "budget": 800000,
+            "avoid_ingredients": [
+              "Lanolin"
+            ]
+          },
+          "chat": {
+            "http_status": 200,
+            "response": {
+              "ok": true,
+              "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Combo 2 Toner Compliment BHA Kiềm Dầu Sáng Da 200ml](index.php?r=chitiet&id=3210) — 180.000đ.\n- [Combo 2 Toner S:kin Heritage Sơn Đoòng Cấp Ẩm Và Phục Hồi 273ml](index.php?r=chitiet&id=2880) — 254.000đ.\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+              "conflicts": [],
+              "products": [
+                {
+                  "id": "3210",
+                  "name": "Combo 2 Toner Compliment BHA Kiềm Dầu Sáng Da 200ml",
+                  "brand": "Compliment",
+                  "price": 180000,
+                  "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-combo-2-toner-compliment-bha-kiem-dau-sang-da-200ml-1755681678_img_450x450_31d6f9_fit_center.jpg",
+                  "detail_url": "/index.php?r=chitiet&id=3210",
+                  "description": "",
+                  "ingredients": ""
+                },
+                {
+                  "id": "2880",
+                  "name": "Combo 2 Toner S:kin Heritage Sơn Đoòng Cấp Ẩm Và Phục Hồi 273ml",
+                  "brand": "S:kin Heritage",
+                  "price": 254000,
+                  "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-combo-2-toner-s-kin-heritage-son-doong-cap-am-va-phuc-hoi-273ml_nLEMm9boyxpTd6kv_img_450x450_31d6f9_fit_center.png",
+                  "detail_url": "/index.php?r=chitiet&id=2880",
+                  "description": "",
+                  "ingredients": ""
+                },
+                {
+                  "id": "265",
+                  "name": "Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml",
+                  "brand": "Klairs",
+                  "price": 254000,
+                  "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-nuoc-hoa-hong-klairs-danh-cho-da-nhay-cam-180ml_krfo98Zw7xbxAsR5_img_450x450_31d6f9_fit_center.png",
+                  "detail_url": "/index.php?r=chitiet&id=265",
+                  "description": "",
+                  "ingredients": ""
+                }
+              ],
+              "fallback": false,
+              "fallback_reason": "",
+              "status_message": "",
+              "fallback_note": "",
+              "pipeline_mode": "consultation_v2",
+              "query_type": "simple single-intent query",
+              "intent_mode": "search",
+              "eval_scores": null,
+              "latency": 5.62,
+              "conversation_id": "6aa13e664ecf6af5f5e2617b"
+            }
+          },
+          "conversation_owner_verified": true
+        }
+      ]
+    },
+    {
+      "id": "CHAT-100",
+      "status": "AUTO_FAIL",
+      "automated_failures": [
+        "Cross-owner send accepted instead of rejected"
+      ],
+      "read": {
+        "http_status": 500,
+        "response": {
+          "message": "Forbidden",
+          "ok": false
+        }
+      },
+      "send": {
+        "http_status": 200,
+        "response": {
+          "ok": true,
+          "answer": "Mình thấy bạn có ngân sách 800.000 VNĐ và muốn tránh thành phần lanolin. Tuy nhiên, hiện tại không có sản phẩm nào trong danh sách mà mình có thể đề xuất cho bạn. Bạn có thể cho mình biết thêm về tình trạng da hoặc những vấn đề cụ thể mà bạn đang gặp phải không? Điều này sẽ giúp mình tìm kiếm thông tin phù hợp hơn cho bạn.",
+          "conflicts": [],
+          "products": [],
+          "fallback": false,
+          "fallback_reason": "",
+          "status_message": "",
+          "fallback_note": "",
+          "pipeline_mode": "consultation_v2",
+          "query_type": "simple single-intent query",
+          "intent_mode": "general",
+          "eval_scores": null,
+          "latency": 2.27,
+          "conversation_id": "6aa13e5f4ecf6af5f5e26177"
+        }
+      },
+      "owner_document_unchanged": true
+    }
+  ],
+  "cleanup_verified": true
+}
