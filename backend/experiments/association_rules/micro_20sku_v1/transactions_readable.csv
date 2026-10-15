@@ -1,0 +1,31 @@
+﻿Basket ID,SKU IDs,Product Names,Routine Roles,Basket Size,Pattern Applied,Noise Applied?
+B001,[16],Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,1,SPONTANEOUS_SINGLE,Yes
+B002,[112],"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,1,SPONTANEOUS_SINGLE,Yes
+B003,[188],Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml,MASK,1,SPONTANEOUS_SINGLE,Yes
+B004,[4365],"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,1,SPONTANEOUS_SINGLE,Yes
+B005,[5],Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml,MAKEUP_REMOVAL,1,SPONTANEOUS_SINGLE,Yes
+B006,[62],Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,1,SPONTANEOUS_SINGLE,Yes
+B007,"[5, 21]","Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml + Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",MAKEUP_REMOVAL + CLEANSER,2,DOUBLE_CLEANSING,No
+B008,"[103, 4365]","Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml + Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",MAKEUP_REMOVAL + CLEANSER,2,DOUBLE_CLEANSING,No
+B009,"[5, 728]",Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml + Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml,MAKEUP_REMOVAL + CLEANSER,2,DOUBLE_CLEANSING,No
+B010,"[4365, 4]","Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml + Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",CLEANSER + TONER,2,CLEANSE_TONE,No
+B011,"[21, 240]","Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml + Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml",CLEANSER + TONER,2,CLEANSE_TONE,No
+B012,"[728, 740]",Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml + Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml,CLEANSER + TREATMENT,2,ACNE_TARGET,No
+B013,"[4365, 112]","Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml + Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",CLEANSER + TREATMENT,2,ACNE_TARGET,No
+B014,"[350, 139]",Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml + Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,SERUM + MOISTURIZER,2,BARRIER_REPAIR,No
+B015,"[68, 93]",Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml + Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml,SERUM + MOISTURIZER,2,BARRIER_REPAIR,No
+B016,"[318, 16]",Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g + Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),MOISTURIZER + SUNSCREEN,2,DAYTIME_DEFENSE,No
+B017,"[93, 10]","Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml + Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",MOISTURIZER + SUNSCREEN,2,DAYTIME_DEFENSE,No
+B018,"[240, 649]",Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml + Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh),TONER + MASK,2,EXPLORATORY_NOISE,Yes
+B019,"[5, 21, 4]","Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml + Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml + Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",MAKEUP_REMOVAL + CLEANSER + TONER,3,CLEANSING_RITUAL,No
+B020,"[4365, 188, 318]","Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml + Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml + Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g",CLEANSER + MASK + MOISTURIZER,3,WEEKLY_PAMPER,No
+B021,"[728, 649, 725]",Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml + Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh) + Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương),CLEANSER + MASK + SUNSCREEN,3,SOOTHING_CARE,No
+B022,"[728, 112, 139]","Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml + Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g + Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",CLEANSER + TREATMENT + MOISTURIZER,3,ACNE_RECOVERY,No
+B023,"[68, 139, 10]","Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml + Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g + Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",SERUM + MOISTURIZER + SUNSCREEN,3,DAY_ROUTINE,No
+B024,"[62, 318, 725]",Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml + Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g + Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương),SERUM + MOISTURIZER + SUNSCREEN,3,DAY_ROUTINE,No
+B025,"[21, 4, 350]","Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml + Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml + Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",CLEANSER + TONER + SERUM,3,HYDRATION_CORE,No
+B026,"[240, 740, 16]",Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml + Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml + Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),TONER + TREATMENT + SUNSCREEN,3,EXPLORATORY_NOISE,Yes
+B027,"[103, 4365, 350, 139]","Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml + Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml + Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml + Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",MAKEUP_REMOVAL + CLEANSER + SERUM + MOISTURIZER,4,EVENING_ROUTINE,No
+B028,"[5, 728, 112, 318]","Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml + Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml + Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g + Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g",MAKEUP_REMOVAL + CLEANSER + TREATMENT + MOISTURIZER,4,FULL_ACNE_SYSTEM,No
+B029,"[21, 240, 93, 10]","Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml + Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml + Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml + Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",CLEANSER + TONER + MOISTURIZER + SUNSCREEN,4,FULL_DAY_SYSTEM,No
+B030,"[103, 4365, 4, 188]","Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml + Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml + Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml + Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml",MAKEUP_REMOVAL + CLEANSER + TONER + MASK,4,DEEP_CLEAN_MASK,No

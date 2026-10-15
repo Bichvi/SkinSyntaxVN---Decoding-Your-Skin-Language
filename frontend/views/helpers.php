@@ -219,6 +219,23 @@ function get_flash($key) {
 }
 
 function get_top_10_sale_products(): array {
+    static $memoryCache = null;
+    if ($memoryCache !== null) {
+        return $memoryCache;
+    }
+
+    $cacheFile = dirname(__DIR__, 2) . '/backend/storage/cache/top_10_sale_cache.json';
+    if (file_exists($cacheFile)) {
+        $mtime = filemtime($cacheFile);
+        if ($mtime !== false && (time() - $mtime) < 3600) {
+            $cached = json_decode((string)@file_get_contents($cacheFile), true);
+            if (is_array($cached) && !empty($cached)) {
+                $memoryCache = $cached;
+                return $memoryCache;
+            }
+        }
+    }
+
     global $db, $pdo;
     $mongoDb = $db ?? $pdo;
     if (!$mongoDb) return [];

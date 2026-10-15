@@ -1,0 +1,7 @@
+Component,Research_Status,Production_Status,Evidence,Missing_Validation
+Catalog Hierarchical Encoding (28 nodes),COMPLETE,NOT IN PRODUCTION,"Step 7D verified 100% coverage (2473/2473), 0 cycles, 0 orphans",Production PHP uses relational taxonomy queries directly; vector encoding not integrated
+Ingredient Parser V2 (Regex + Normalization),COMPLETE,NOT IN PRODUCTION,"Step 7C.1 audited zero diol/slash errors; Jaccard@10 overlap=0.8140",Production recommender uses direct keyword/token matching in PHP; Python parser not deployed
+TruncatedSVD 30D Representation,COMPLETE,NOT IN PRODUCTION,Step 7B/7C/7D verified dimensionality reduction from 4086 terms to 30D dense space,No offline/online artifact serving pipeline or model versioning registry established
+K-Means Clustering Engine (K=5..15),COMPLETE,NOT PRODUCTION-READY,Step 7D stability audited (Init ARI=0.7923; Subsample ARI=0.8116 at K=8),Lacks human relevance protocol; lacks variant deduplication policy; lacks A/B test validation
+Cluster-Based Neighbor Retrieval,EXPLORATORY,NOT PRODUCTION-READY,Step 7D audited 120 anchors (+67.5% ingredient overlap; 93.25% leaf match),Zero clinical validation; zero user click-through rate or conversion testing
+Product-Family / Variant Policy,IDENTIFIED REQUIREMENT,NOT IMPLEMENTED,Step 7D proved material partition change on variant collapse (ARI=0.5655; NMI=0.7458),Variant deduplication logic not implemented in production ingestion pipeline

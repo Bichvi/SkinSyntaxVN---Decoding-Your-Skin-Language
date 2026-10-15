@@ -1,0 +1,956 @@
+{
+    "timestamp": "2026-10-07T15:59:59+07:00",
+    "database": "skinsyntax",
+    "source": "MongoDB Atlas (Canonical)",
+    "root": {
+        "id": 1001,
+        "name": "Chăm Sóc Da Mặt",
+        "level": 1,
+        "is_leaf": false,
+        "total_products": 2473
+    },
+    "groups_count": 8,
+    "groups": [
+        {
+            "id": 2001,
+            "name": "Mặt Nạ",
+            "slug": "mat-na",
+            "is_leaf": false,
+            "direct_count": 0,
+            "recursive_count": 622,
+            "children": [
+                {
+                    "id": 11,
+                    "name": "Mặt Nạ Giấy",
+                    "slug": "mat-na-giay",
+                    "is_leaf": true,
+                    "count": 549
+                },
+                {
+                    "id": 19,
+                    "name": "Mặt Nạ Rửa",
+                    "slug": "mat-na-rua",
+                    "is_leaf": true,
+                    "count": 50
+                },
+                {
+                    "id": 53,
+                    "name": "Mặt Nạ Ngủ",
+                    "slug": "mat-na-ngu",
+                    "is_leaf": true,
+                    "count": 20
+                },
+                {
+                    "id": 83,
+                    "name": "Mặt Nạ Lột",
+                    "slug": "mat-na-lot",
+                    "is_leaf": true,
+                    "count": 3
+                }
+            ]
+        },
+        {
+            "id": 2002,
+            "name": "Làm Sạch Da",
+            "slug": "lam-sach-da",
+            "is_leaf": false,
+            "direct_count": 0,
+            "recursive_count": 613,
+            "children": [
+                {
+                    "id": 1,
+                    "name": "Sữa Rửa Mặt",
+                    "slug": "sua-rua-mat",
+                    "is_leaf": true,
+                    "count": 285
+                },
+                {
+                    "id": 2,
+                    "name": "Tẩy Trang Mặt",
+                    "slug": "tay-trang-mat",
+                    "is_leaf": true,
+                    "count": 195
+                },
+                {
+                    "id": 4,
+                    "name": "Toner \/ Nước Cân Bằng Da",
+                    "slug": "toner-nuoc-can-bang-da",
+                    "is_leaf": true,
+                    "count": 94
+                },
+                {
+                    "id": 17,
+                    "name": "Tẩy Tế Bào Chết Da Mặt",
+                    "slug": "tay-te-bao-chet-da-mat",
+                    "is_leaf": true,
+                    "count": 39
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "name": "Chống Nắng Da Mặt",
+            "slug": "chong-nang-da-mat",
+            "is_leaf": true,
+            "direct_count": 231,
+            "recursive_count": 231,
+            "children": []
+        },
+        {
+            "id": 2003,
+            "name": "Dưỡng Ẩm",
+            "slug": "duong-am",
+            "is_leaf": false,
+            "direct_count": 0,
+            "recursive_count": 313,
+            "children": [
+                {
+                    "id": 7,
+                    "name": "Kem \/ Gel \/ Dầu Dưỡng",
+                    "slug": "kem-gel-dau-duong",
+                    "is_leaf": true,
+                    "count": 215
+                },
+                {
+                    "id": 37,
+                    "name": "Lotion \/ Sữa Dưỡng",
+                    "slug": "lotion-sua-duong",
+                    "is_leaf": true,
+                    "count": 58
+                },
+                {
+                    "id": 30,
+                    "name": "Xịt Khoáng",
+                    "slug": "xit-khoang",
+                    "is_leaf": true,
+                    "count": 40
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "name": "Bộ Chăm Sóc Da Mặt",
+            "slug": "bo-cham-soc-da-mat",
+            "is_leaf": true,
+            "direct_count": 211,
+            "recursive_count": 211,
+            "children": []
+        },
+        {
+            "id": 2004,
+            "name": "Đặc Trị",
+            "slug": "dac-tri",
+            "is_leaf": false,
+            "direct_count": 0,
+            "recursive_count": 275,
+            "children": [
+                {
+                    "id": 9,
+                    "name": "Serum \/ Tinh Chất",
+                    "slug": "serum-tinh-chat",
+                    "is_leaf": true,
+                    "count": 207
+                },
+                {
+                    "id": 25,
+                    "name": "Hỗ Trợ Trị Mụn",
+                    "slug": "ho-tro-tri-mun",
+                    "is_leaf": true,
+                    "count": 66
+                },
+                {
+                    "id": 105,
+                    "name": "Sản Phẩm Đặc Trị Khác",
+                    "slug": "san-pham-dac-tri-khac",
+                    "is_leaf": true,
+                    "count": 2
+                }
+            ]
+        },
+        {
+            "id": 2005,
+            "name": "Dưỡng Mắt",
+            "slug": "duong-mat",
+            "is_leaf": false,
+            "direct_count": 0,
+            "recursive_count": 27,
+            "children": [
+                {
+                    "id": 38,
+                    "name": "Serum \/ Kem Dưỡng Mắt",
+                    "slug": "serum-kem-duong-mat",
+                    "is_leaf": true,
+                    "count": 16
+                },
+                {
+                    "id": 60,
+                    "name": "Mặt Nạ Mắt",
+                    "slug": "mat-na-mat",
+                    "is_leaf": true,
+                    "count": 11
+                }
+            ]
+        },
+        {
+            "id": 2006,
+            "name": "Dưỡng Môi",
+            "slug": "duong-moi",
+            "is_leaf": false,
+            "direct_count": 0,
+            "recursive_count": 181,
+            "children": [
+                {
+                    "id": 18,
+                    "name": "Son Dưỡng Môi",
+                    "slug": "son-duong-moi",
+                    "is_leaf": true,
+                    "count": 167
+                },
+                {
+                    "id": 29,
+                    "name": "Mặt Nạ Môi",
+                    "slug": "mat-na-moi",
+                    "is_leaf": true,
+                    "count": 11
+                },
+                {
+                    "id": 73,
+                    "name": "Tẩy Tế Bào Chết Môi",
+                    "slug": "tay-te-bao-chet-moi",
+                    "is_leaf": true,
+                    "count": 3
+                }
+            ]
+        }
+    ],
+    "all_admin_nodes": [
+        {
+            "_id": {
+                "$oid": "6abcc3e87852678a094f9db3"
+            },
+            "ma_danh_muc": 1001,
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt",
+            "is_leaf": false,
+            "level": 1,
+            "parent_id": null,
+            "slug": "cham-soc-da-mat",
+            "status": "active",
+            "ten_danh_muc": "Chăm Sóc Da Mặt",
+            "thu_tu_hien_thi": 1,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "",
+            "children_count": 8,
+            "direct_product_count": 0,
+            "recursive_product_count": 2473,
+            "so_san_pham": 2473
+        },
+        {
+            "_id": {
+                "$oid": "6abcc3e87852678a094f9db4"
+            },
+            "ma_danh_muc": 2001,
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ",
+            "is_leaf": false,
+            "level": 2,
+            "parent_id": 1001,
+            "slug": "mat-na",
+            "status": "active",
+            "ten_danh_muc": "Mặt Nạ",
+            "thu_tu_hien_thi": 1,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Chăm Sóc Da Mặt",
+            "children_count": 4,
+            "direct_product_count": 0,
+            "recursive_product_count": 622,
+            "so_san_pham": 622
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05951"
+            },
+            "ma_danh_muc": 11,
+            "ten_danh_muc": "Mặt Nạ Giấy",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Giấy",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Giấy",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2001,
+            "slug": "mat-na-giay",
+            "status": "active",
+            "thu_tu_hien_thi": 1,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Mặt Nạ",
+            "children_count": 0,
+            "direct_product_count": 549,
+            "recursive_product_count": 549,
+            "so_san_pham": 549
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05959"
+            },
+            "ma_danh_muc": 19,
+            "ten_danh_muc": "Mặt Nạ Rửa",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Rửa",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Rửa",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2001,
+            "slug": "mat-na-rua",
+            "status": "active",
+            "thu_tu_hien_thi": 2,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Mặt Nạ",
+            "children_count": 0,
+            "direct_product_count": 50,
+            "recursive_product_count": 50,
+            "so_san_pham": 50
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05967"
+            },
+            "ma_danh_muc": 53,
+            "ten_danh_muc": "Mặt Nạ Ngủ",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Ngủ",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Ngủ",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2001,
+            "slug": "mat-na-ngu",
+            "status": "active",
+            "thu_tu_hien_thi": 3,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Mặt Nạ",
+            "children_count": 0,
+            "direct_product_count": 20,
+            "recursive_product_count": 20,
+            "so_san_pham": 20
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05997"
+            },
+            "ma_danh_muc": 83,
+            "ten_danh_muc": "Mặt Nạ Lột",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Lột",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ -> Mặt Nạ Lột",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2001,
+            "slug": "mat-na-lot",
+            "status": "active",
+            "thu_tu_hien_thi": 4,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Mặt Nạ",
+            "children_count": 0,
+            "direct_product_count": 3,
+            "recursive_product_count": 3,
+            "so_san_pham": 3
+        },
+        {
+            "_id": {
+                "$oid": "6abcc3e87852678a094f9db5"
+            },
+            "ma_danh_muc": 2002,
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da",
+            "is_leaf": false,
+            "level": 2,
+            "parent_id": 1001,
+            "slug": "lam-sach-da",
+            "status": "active",
+            "ten_danh_muc": "Làm Sạch Da",
+            "thu_tu_hien_thi": 2,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Chăm Sóc Da Mặt",
+            "children_count": 4,
+            "direct_product_count": 0,
+            "recursive_product_count": 613,
+            "so_san_pham": 613
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd0592b"
+            },
+            "ma_danh_muc": 1,
+            "ten_danh_muc": "Sữa Rửa Mặt",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Sữa Rửa Mặt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Sữa Rửa Mặt",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2002,
+            "slug": "sua-rua-mat",
+            "status": "active",
+            "thu_tu_hien_thi": 1,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Làm Sạch Da",
+            "children_count": 0,
+            "direct_product_count": 285,
+            "recursive_product_count": 285,
+            "so_san_pham": 285
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd0592d"
+            },
+            "ma_danh_muc": 2,
+            "ten_danh_muc": "Tẩy Trang Mặt",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Tẩy Trang Mặt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Tẩy Trang Mặt",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2002,
+            "slug": "tay-trang-mat",
+            "status": "active",
+            "thu_tu_hien_thi": 2,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Làm Sạch Da",
+            "children_count": 0,
+            "direct_product_count": 195,
+            "recursive_product_count": 195,
+            "so_san_pham": 195
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05931"
+            },
+            "ma_danh_muc": 4,
+            "ten_danh_muc": "Toner \/ Nước Cân Bằng Da",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Toner \/ Nước Cân Bằng Da",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Toner \/ Nước Cân Bằng Da",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2002,
+            "slug": "toner-nuoc-can-bang-da",
+            "status": "active",
+            "thu_tu_hien_thi": 3,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Làm Sạch Da",
+            "children_count": 0,
+            "direct_product_count": 94,
+            "recursive_product_count": 94,
+            "so_san_pham": 94
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05957"
+            },
+            "ma_danh_muc": 17,
+            "ten_danh_muc": "Tẩy Tế Bào Chết Da Mặt",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Tẩy Tế Bào Chết Da Mặt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Làm Sạch Da -> Tẩy Tế Bào Chết Da Mặt",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2002,
+            "slug": "tay-te-bao-chet-da-mat",
+            "status": "active",
+            "thu_tu_hien_thi": 4,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Làm Sạch Da",
+            "children_count": 0,
+            "direct_product_count": 39,
+            "recursive_product_count": 39,
+            "so_san_pham": 39
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05938"
+            },
+            "ma_danh_muc": 6,
+            "ten_danh_muc": "Chống Nắng Da Mặt",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Chống Nắng Da Mặt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Chống Nắng Da Mặt",
+            "is_leaf": true,
+            "level": 2,
+            "parent_id": 1001,
+            "slug": "chong-nang-da-mat",
+            "status": "active",
+            "thu_tu_hien_thi": 3,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Chăm Sóc Da Mặt",
+            "children_count": 0,
+            "direct_product_count": 231,
+            "recursive_product_count": 231,
+            "so_san_pham": 231
+        },
+        {
+            "_id": {
+                "$oid": "6abcc3e87852678a094f9db6"
+            },
+            "ma_danh_muc": 2003,
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm",
+            "is_leaf": false,
+            "level": 2,
+            "parent_id": 1001,
+            "slug": "duong-am",
+            "status": "active",
+            "ten_danh_muc": "Dưỡng Ẩm",
+            "thu_tu_hien_thi": 4,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Chăm Sóc Da Mặt",
+            "children_count": 3,
+            "direct_product_count": 0,
+            "recursive_product_count": 313,
+            "so_san_pham": 313
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05939"
+            },
+            "ma_danh_muc": 7,
+            "ten_danh_muc": "Kem \/ Gel \/ Dầu Dưỡng",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Kem \/ Gel \/ Dầu Dưỡng",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Kem \/ Gel \/ Dầu Dưỡng",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2003,
+            "slug": "kem-gel-dau-duong",
+            "status": "active",
+            "thu_tu_hien_thi": 1,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Dưỡng Ẩm",
+            "children_count": 0,
+            "direct_product_count": 215,
+            "recursive_product_count": 215,
+            "so_san_pham": 215
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05975"
+            },
+            "ma_danh_muc": 37,
+            "ten_danh_muc": "Lotion \/ Sữa Dưỡng",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Lotion \/ Sữa Dưỡng",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Lotion \/ Sữa Dưỡng",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2003,
+            "slug": "lotion-sua-duong",
+            "status": "active",
+            "thu_tu_hien_thi": 2,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Dưỡng Ẩm",
+            "children_count": 0,
+            "direct_product_count": 58,
+            "recursive_product_count": 58,
+            "so_san_pham": 58
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd0593e"
+            },
+            "ma_danh_muc": 30,
+            "ten_danh_muc": "Xịt Khoáng",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Xịt Khoáng",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Ẩm -> Xịt Khoáng",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2003,
+            "slug": "xit-khoang",
+            "status": "active",
+            "thu_tu_hien_thi": 3,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Dưỡng Ẩm",
+            "children_count": 0,
+            "direct_product_count": 40,
+            "recursive_product_count": 40,
+            "so_san_pham": 40
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd0592e"
+            },
+            "ma_danh_muc": 3,
+            "ten_danh_muc": "Bộ Chăm Sóc Da Mặt",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Bộ Chăm Sóc Da Mặt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Bộ Chăm Sóc Da Mặt",
+            "is_leaf": true,
+            "level": 2,
+            "parent_id": 1001,
+            "slug": "bo-cham-soc-da-mat",
+            "status": "active",
+            "thu_tu_hien_thi": 5,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Chăm Sóc Da Mặt",
+            "children_count": 0,
+            "direct_product_count": 211,
+            "recursive_product_count": 211,
+            "so_san_pham": 211
+        },
+        {
+            "_id": {
+                "$oid": "6abcc3e97852678a094f9db7"
+            },
+            "ma_danh_muc": 2004,
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị",
+            "is_leaf": false,
+            "level": 2,
+            "parent_id": 1001,
+            "slug": "dac-tri",
+            "status": "active",
+            "ten_danh_muc": "Đặc Trị",
+            "thu_tu_hien_thi": 6,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Chăm Sóc Da Mặt",
+            "children_count": 3,
+            "direct_product_count": 0,
+            "recursive_product_count": 275,
+            "so_san_pham": 275
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd0593b"
+            },
+            "ma_danh_muc": 9,
+            "ten_danh_muc": "Serum \/ Tinh Chất",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Serum \/ Tinh Chất",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Serum \/ Tinh Chất",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2004,
+            "slug": "serum-tinh-chat",
+            "status": "active",
+            "thu_tu_hien_thi": 1,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Đặc Trị",
+            "children_count": 0,
+            "direct_product_count": 207,
+            "recursive_product_count": 207,
+            "so_san_pham": 207
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05933"
+            },
+            "ma_danh_muc": 25,
+            "ten_danh_muc": "Hỗ Trợ Trị Mụn",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Hỗ Trợ Trị Mụn",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Hỗ Trợ Trị Mụn",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2004,
+            "slug": "ho-tro-tri-mun",
+            "status": "active",
+            "thu_tu_hien_thi": 2,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Đặc Trị",
+            "children_count": 0,
+            "direct_product_count": 66,
+            "recursive_product_count": 66,
+            "so_san_pham": 66
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05945"
+            },
+            "ma_danh_muc": 105,
+            "ten_danh_muc": "Sản Phẩm Đặc Trị Khác",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Sản Phẩm Đặc Trị Khác",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Đặc Trị -> Sản Phẩm Đặc Trị Khác",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2004,
+            "slug": "san-pham-dac-tri-khac",
+            "status": "active",
+            "thu_tu_hien_thi": 3,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Đặc Trị",
+            "children_count": 0,
+            "direct_product_count": 2,
+            "recursive_product_count": 2,
+            "so_san_pham": 2
+        },
+        {
+            "_id": {
+                "$oid": "6abcc3e97852678a094f9db8"
+            },
+            "ma_danh_muc": 2005,
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt",
+            "is_leaf": false,
+            "level": 2,
+            "parent_id": 1001,
+            "slug": "duong-mat",
+            "status": "active",
+            "ten_danh_muc": "Dưỡng Mắt",
+            "thu_tu_hien_thi": 7,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Chăm Sóc Da Mặt",
+            "children_count": 2,
+            "direct_product_count": 0,
+            "recursive_product_count": 27,
+            "so_san_pham": 27
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05976"
+            },
+            "ma_danh_muc": 38,
+            "ten_danh_muc": "Serum \/ Kem Dưỡng Mắt",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt -> Serum \/ Kem Dưỡng Mắt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt -> Serum \/ Kem Dưỡng Mắt",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2005,
+            "slug": "serum-kem-duong-mat",
+            "status": "active",
+            "thu_tu_hien_thi": 1,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Dưỡng Mắt",
+            "children_count": 0,
+            "direct_product_count": 16,
+            "recursive_product_count": 16,
+            "so_san_pham": 16
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd0596e"
+            },
+            "ma_danh_muc": 60,
+            "ten_danh_muc": "Mặt Nạ Mắt",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt -> Mặt Nạ Mắt",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Mắt -> Mặt Nạ Mắt",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2005,
+            "slug": "mat-na-mat",
+            "status": "active",
+            "thu_tu_hien_thi": 2,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Dưỡng Mắt",
+            "children_count": 0,
+            "direct_product_count": 11,
+            "recursive_product_count": 11,
+            "so_san_pham": 11
+        },
+        {
+            "_id": {
+                "$oid": "6abcc3e97852678a094f9db9"
+            },
+            "ma_danh_muc": 2006,
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi",
+            "is_leaf": false,
+            "level": 2,
+            "parent_id": 1001,
+            "slug": "duong-moi",
+            "status": "active",
+            "ten_danh_muc": "Dưỡng Môi",
+            "thu_tu_hien_thi": 8,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Chăm Sóc Da Mặt",
+            "children_count": 3,
+            "direct_product_count": 0,
+            "recursive_product_count": 181,
+            "so_san_pham": 181
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd05958"
+            },
+            "ma_danh_muc": 18,
+            "ten_danh_muc": "Son Dưỡng Môi",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Son Dưỡng Môi",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Son Dưỡng Môi",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2006,
+            "slug": "son-duong-moi",
+            "status": "active",
+            "thu_tu_hien_thi": 1,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Dưỡng Môi",
+            "children_count": 0,
+            "direct_product_count": 167,
+            "recursive_product_count": 167,
+            "so_san_pham": 167
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd0593d"
+            },
+            "ma_danh_muc": 29,
+            "ten_danh_muc": "Mặt Nạ Môi",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Mặt Nạ Môi",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Mặt Nạ Môi",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2006,
+            "slug": "mat-na-moi",
+            "status": "active",
+            "thu_tu_hien_thi": 2,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Dưỡng Môi",
+            "children_count": 0,
+            "direct_product_count": 11,
+            "recursive_product_count": 11,
+            "so_san_pham": 11
+        },
+        {
+            "_id": {
+                "$oid": "69fcf36244bee9190dd059a0"
+            },
+            "ma_danh_muc": 73,
+            "ten_danh_muc": "Tẩy Tế Bào Chết Môi",
+            "danh_muc_day_du": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Tẩy Tế Bào Chết Môi",
+            "full_path": "Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Dưỡng Môi -> Tẩy Tế Bào Chết Môi",
+            "is_leaf": true,
+            "level": 3,
+            "parent_id": 2006,
+            "slug": "tay-te-bao-chet-moi",
+            "status": "active",
+            "thu_tu_hien_thi": 3,
+            "trang_thai": "active",
+            "updated_at": {
+                "$date": {
+                    "$numberLong": "1790755815360"
+                }
+            },
+            "parent_name": "Dưỡng Môi",
+            "children_count": 0,
+            "direct_product_count": 3,
+            "recursive_product_count": 3,
+            "so_san_pham": 3
+        }
+    ]
+}

@@ -1,0 +1,275 @@
+[
+  {
+    "k": 1,
+    "C_count": 8,
+    "L_count": 8,
+    "candidates": [
+      [
+        "CLEANSER"
+      ],
+      [
+        "MAKEUP_REMOVAL"
+      ],
+      [
+        "MASK"
+      ],
+      [
+        "MOISTURIZER"
+      ],
+      [
+        "SERUM"
+      ],
+      [
+        "SUNSCREEN"
+      ],
+      [
+        "TONER"
+      ],
+      [
+        "TREATMENT"
+      ]
+    ],
+    "frequent_itemsets": [
+      {
+        "itemset": [
+          "CLEANSER"
+        ],
+        "count": 17,
+        "support": 0.5667
+      },
+      {
+        "itemset": [
+          "MAKEUP_REMOVAL"
+        ],
+        "count": 8,
+        "support": 0.2667
+      },
+      {
+        "itemset": [
+          "MASK"
+        ],
+        "count": 5,
+        "support": 0.1667
+      },
+      {
+        "itemset": [
+          "MOISTURIZER"
+        ],
+        "count": 11,
+        "support": 0.3667
+      },
+      {
+        "itemset": [
+          "SERUM"
+        ],
+        "count": 7,
+        "support": 0.2333
+      },
+      {
+        "itemset": [
+          "SUNSCREEN"
+        ],
+        "count": 8,
+        "support": 0.2667
+      },
+      {
+        "itemset": [
+          "TONER"
+        ],
+        "count": 8,
+        "support": 0.2667
+      },
+      {
+        "itemset": [
+          "TREATMENT"
+        ],
+        "count": 6,
+        "support": 0.2
+      }
+    ]
+  },
+  {
+    "k": 2,
+    "C_count": 28,
+    "L_count": 7,
+    "candidates": [
+      [
+        "CLEANSER",
+        "MAKEUP_REMOVAL"
+      ],
+      [
+        "CLEANSER",
+        "MASK"
+      ],
+      [
+        "CLEANSER",
+        "MOISTURIZER"
+      ],
+      [
+        "CLEANSER",
+        "SERUM"
+      ],
+      [
+        "CLEANSER",
+        "SUNSCREEN"
+      ],
+      [
+        "CLEANSER",
+        "TONER"
+      ],
+      [
+        "CLEANSER",
+        "TREATMENT"
+      ],
+      [
+        "MAKEUP_REMOVAL",
+        "MASK"
+      ],
+      [
+        "MAKEUP_REMOVAL",
+        "MOISTURIZER"
+      ],
+      [
+        "MAKEUP_REMOVAL",
+        "SERUM"
+      ],
+      [
+        "MAKEUP_REMOVAL",
+        "SUNSCREEN"
+      ],
+      [
+        "MAKEUP_REMOVAL",
+        "TONER"
+      ],
+      [
+        "MAKEUP_REMOVAL",
+        "TREATMENT"
+      ],
+      [
+        "MASK",
+        "MOISTURIZER"
+      ],
+      [
+        "MASK",
+        "SERUM"
+      ],
+      [
+        "MASK",
+        "SUNSCREEN"
+      ],
+      [
+        "MASK",
+        "TONER"
+      ],
+      [
+        "MASK",
+        "TREATMENT"
+      ],
+      [
+        "MOISTURIZER",
+        "SERUM"
+      ],
+      [
+        "MOISTURIZER",
+        "SUNSCREEN"
+      ],
+      [
+        "MOISTURIZER",
+        "TONER"
+      ],
+      [
+        "MOISTURIZER",
+        "TREATMENT"
+      ],
+      [
+        "SERUM",
+        "SUNSCREEN"
+      ],
+      [
+        "SERUM",
+        "TONER"
+      ],
+      [
+        "SERUM",
+        "TREATMENT"
+      ],
+      [
+        "SUNSCREEN",
+        "TONER"
+      ],
+      [
+        "SUNSCREEN",
+        "TREATMENT"
+      ],
+      [
+        "TONER",
+        "TREATMENT"
+      ]
+    ],
+    "frequent_itemsets": [
+      {
+        "itemset": [
+          "CLEANSER",
+          "MAKEUP_REMOVAL"
+        ],
+        "count": 7,
+        "support": 0.2333
+      },
+      {
+        "itemset": [
+          "CLEANSER",
+          "MASK"
+        ],
+        "count": 3,
+        "support": 0.1
+      },
+      {
+        "itemset": [
+          "CLEANSER",
+          "MOISTURIZER"
+        ],
+        "count": 5,
+        "support": 0.1667
+      },
+      {
+        "itemset": [
+          "CLEANSER",
+          "TONER"
+        ],
+        "count": 6,
+        "support": 0.2
+      },
+      {
+        "itemset": [
+          "CLEANSER",
+          "TREATMENT"
+        ],
+        "count": 4,
+        "support": 0.1333
+      },
+      {
+        "itemset": [
+          "MOISTURIZER",
+          "SERUM"
+        ],
+        "count": 5,
+        "support": 0.1667
+      },
+      {
+        "itemset": [
+          "MOISTURIZER",
+          "SUNSCREEN"
+        ],
+        "count": 5,
+        "support": 0.1667
+      }
+    ]
+  },
+  {
+    "k": 3,
+    "C_count": 0,
+    "L_count": 0,
+    "candidates": [],
+    "frequent_itemsets": []
+  }
+]

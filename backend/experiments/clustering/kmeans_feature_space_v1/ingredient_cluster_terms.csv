@@ -1,0 +1,13 @@
+Config,Cluster_ID,Size,Dominant_Role,Median_Price_VND,Top_Characteristic_Ingredients
+Config_I,C1,199,SERUM,328000,"extract, leaf, leaf extract, sodium, glycol, acid, flower, fruit, oil, fruit extract"
+Config_I,C2,141,CLEANSER,176000,"da, cho, cho da, da da, acid, vitamin, hoa, extract, chi, oxy"
+Config_I,C3,227,CLEANSER,194000,"sodium, acid, cocoyl, potassium, glycol, sodium benzoate, chloride, citric, citric acid, glycerin"
+Config_I,C4,120,SUNSCREEN,297000,"dimethicone, ci, oxide, extract, zinc oxide, crosspolymer, titanium, zinc, polydimethylsiloxyethyl, ethylhexyl"
+Config_I,C5,86,SUNSCREEN,356500,"ethylhexyl, alkyl, alcohol, glycol, acrylate, sodium, crosspolymer, acid, alkyl acrylate, triazine"
+Config_I,C6,231,MOISTURIZER,329000,"sodium, glycol, acid, alcohol, oil, dimethicone, stearate, glycerin, extract, glyceryl"
+Config_MI,C1,179,CLEANSER,116000,"acid, sodium, potassium, extract, cocoyl, da, stearate, glycol, glyceryl, disodium"
+Config_MI,C2,197,SERUM,371000,"extract, sodium, acid, glycol, hyaluronate, sodium hyaluronate, oil, leaf, butylene glycol, butylene"
+Config_MI,C3,188,MOISTURIZER,359500,"extract, sodium, glycol, dimethicone, alcohol, oil, acid, da, stearate, seed"
+Config_MI,C4,143,SUNSCREEN,96000,"dimethicone, extract, glycol, sodium, acid, da, crosspolymer, ci, oil, alcohol"
+Config_MI,C5,168,SUNSCREEN,358500,"extract, ethylhexyl, dimethicone, ci, da, glycol, sodium, acid, crosspolymer, benzoate"
+Config_MI,C6,129,CLEANSER,366000,"sodium, acid, cocoyl, glycol, salicylic, extract, citric, citric acid, salicylic acid, sodium benzoate"

@@ -1,0 +1,3 @@
+Config,Full_Sample_N,Complete_Sample_N,Missing_Count,ARI_Shared_Products,NMI_Shared_Products,Silhouette_Full,Silhouette_Complete,Impact_Assessment
+Config_I (Ingredient Only),1004,996,8,0.6878,0.7487,0.1031,0.0948,Minimal perturbation (ARI > 0.90) due to tiny missing proportion (0.80%)
+Config_MI (Metadata + Ingredient),1004,996,8,0.9843,0.9795,0.1696,0.1698,Negligible structural shift

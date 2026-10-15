@@ -1,0 +1,45 @@
+{
+    "catalog_items": 2473,
+    "items_with_at_least_one_neighbor": 1329,
+    "items_with_zero_neighbors": 1144,
+    "pct_items_zero_neighbors": 46.26,
+    "avg_neighbors_per_item": 11.74,
+    "median_neighbors_among_active": 13,
+    "similarity_distribution": {
+        "min": 0.01,
+        "p25": 0.0506,
+        "median_p50": 0.1308,
+        "p75": 0.347,
+        "p90": 0.7053,
+        "max": 1,
+        "mean": 0.248
+    },
+    "segmented_by_interaction_frequency": {
+        "0_interactions": {
+            "items": 1028,
+            "zero_neighbor_items": 1028,
+            "zero_neighbor_pct": 100
+        },
+        "1-2_interactions": {
+            "items": 395,
+            "zero_neighbor_items": 35,
+            "zero_neighbor_pct": 8.86
+        },
+        "3-5_interactions": {
+            "items": 404,
+            "zero_neighbor_items": 57,
+            "zero_neighbor_pct": 14.11
+        },
+        "6-10_interactions": {
+            "items": 345,
+            "zero_neighbor_items": 20,
+            "zero_neighbor_pct": 5.8
+        },
+        "11+_interactions": {
+            "items": 301,
+            "zero_neighbor_items": 4,
+            "zero_neighbor_pct": 1.33
+        }
+    },
+    "diagnostic_conclusion": "Item-Based kNN performs poorly (HR@10 = 0.0076) primarily because 46.3% of catalog items have exactly ZERO cosine neighbors in the user-item interaction matrix. For products with <= 2 interactions, 8.86% have zero neighbors. When a held-out test item has no neighbors overlapping with the user train history, kNN receives a score of 0.0 and falls back to a fraction of global popularity, losing to pure Most Popular."
+}

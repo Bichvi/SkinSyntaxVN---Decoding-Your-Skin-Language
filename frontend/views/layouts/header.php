@@ -7,7 +7,34 @@ $cartCount = 0;
 foreach (($_SESSION['gio_hang'] ?? []) as $qty) {
   $cartCount += (int)$qty;
 }
-$quickCategories = array_slice(array_keys($menuCats), 0, 6);
+
+// Chuẩn hóa danh sách Level-2 groups từ cây phân cấp canonical danh_muc
+$menuGroups = [];
+foreach ($menuCats as $rootKey => $rootItem) {
+  if (is_array($rootItem) && !empty($rootItem['groups'])) {
+    foreach ($rootItem['groups'] as $grp) {
+      $menuGroups[] = $grp;
+    }
+  } elseif (is_array($rootItem)) {
+    foreach ($rootItem as $k => $v) {
+      if (!in_array($k, ['root_id', 'root_name', 'total_count', 'groups'], true)) {
+        $menuGroups[] = [
+          'id' => null,
+          'name' => $k,
+          'is_leaf' => true,
+          'recursive_count' => (int)$v,
+          'children' => []
+        ];
+      }
+    }
+  }
+}
+
+$quickCategories = [];
+foreach ($menuGroups as $grp) {
+  $quickCategories[] = $grp['name'];
+}
+$quickCategories = array_slice($quickCategories, 0, 6);
 $googleEnabled = defined('GOOGLE_OAUTH_CLIENT_ID') && defined('GOOGLE_OAUTH_CLIENT_SECRET')
   && trim((string)GOOGLE_OAUTH_CLIENT_ID) !== ''
   && trim((string)GOOGLE_OAUTH_CLIENT_SECRET) !== '';
@@ -47,26 +74,23 @@ $socialLinks = [
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap.min.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/fontawesome.min.css">
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/style.css') ?: '20261007_prem' ?>">
 </head>
 <body class="site-body">
 
 <header class="site-header">
-  <div class="promo-strip">
-    <div class="container promo-strip__inner">
-      <span><i class="fas fa-shield-heart"></i> Mỹ phẩm chọn theo nhu cầu da, ngân sách và routine</span>
-      <span><i class="fas fa-badge-check"></i> Trải nghiệm mua sắm gọn, rõ và tập trung vào skincare</span>
-      <span><i class="fas fa-sparkles"></i> Gợi ý cá nhân hóa theo khảo sát SkinSyntax</span>
-    </div>
-  </div>
+  <!-- TIER 1: UTILITY BAR -->
   <div class="utility-strip">
-    <div class="container utility-strip__inner">
+    <div class="header-container utility-strip__inner">
       <div class="utility-links">
-        <span class="utility-contact"><i class="fas fa-headset"></i> Hỗ trợ khách hàng: 1900 0000</span>
+        <span class="utility-contact"><i class="fas fa-headset me-1 text-success"></i> Hỗ trợ khách hàng: <strong>1900 0000</strong></span>
+        <span class="utility-sep">·</span>
         <a href="<?= BASE_URL ?>/index.php?r=tatca">Tra cứu sản phẩm</a>
-        <a href="<?= BASE_URL ?>/index.php?r=goiy">Gợi ý routine</a>
+        <span class="utility-sep">·</span>
         <a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang">Hệ thống cửa hàng</a>
+        <span class="utility-sep">·</span>
         <a href="<?= BASE_URL ?>/index.php?r=bao_hanh">Bảo hành</a>
+        <span class="utility-sep">·</span>
         <a href="<?= BASE_URL ?>/index.php?r=ho_tro_khach_hang">Hỗ trợ khách hàng</a>
       </div>
       <div class="utility-links utility-links--social">
@@ -75,136 +99,201 @@ $socialLinks = [
             <i class="fa-brands <?= h($social['icon']) ?>"></i>
           </a>
         <?php endforeach; ?>
+        <span class="utility-sep mx-1">|</span>
+        <?php if (is_logged_in()): ?>
+          <span class="utility-greeting text-white-50">Xin chào, <strong class="text-white"><?= h($currentUser['ho_ten'] ?? 'Quản trị viên') ?></strong></span>
+          <a class="text-white-50 ms-2" href="<?= BASE_URL ?>/index.php?r=dangxuat" title="Đăng xuất"><i class="fas fa-arrow-right-from-bracket me-1"></i>Đăng xuất</a>
+        <?php else: ?>
+          <a class="text-white-50" href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login"><i class="fas fa-arrow-right-to-bracket me-1"></i>Đăng nhập</a>
+          <span class="utility-sep mx-1">/</span>
+          <a class="text-white-50" href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Đăng ký</a>
+        <?php endif; ?>
       </div>
-      <?php if (is_logged_in()): ?>
-        <div class="utility-links utility-links--account">
-          <span class="utility-greeting">Xin chào, <?= h($currentUser['ho_ten'] ?? 'User') ?></span>
-          <a href="<?= BASE_URL ?>/index.php?r=dangxuat">Đăng xuất</a>
-        </div>
-      <?php endif; ?>
     </div>
   </div>
 
+  <!-- TIER 2: MAIN ACTION HEADER -->
   <div class="header-main">
-    <div class="container header-main__grid">
+    <div class="header-container header-main__inner">
+      <!-- Logo -->
       <a class="brand-lockup" href="<?= BASE_URL ?>/index.php">
         <span class="brand-lockup__mark">S</span>
         <span class="brand-lockup__copy">
           <strong>SkinSyntax</strong>
-          <small>Decoding Your Skin Language</small>
+          <small>DECODING YOUR SKIN LANGUAGE</small>
         </span>
       </a>
 
-      <form class="searchbar live-search-form header-search" method="get" action="<?= BASE_URL ?>/index.php" id="liveSearchForm" autocomplete="off" data-live-search-url="<?= BASE_URL ?>/index.php?r=live_search" data-smart-search-url="<?= BASE_URL ?>/index.php?r=api_smart_search">
-        <input type="hidden" name="r" value="tatca">
-        <div class="live-search-box header-search__box">
+      <!-- Search Discovery -->
+      <div class="header-search-wrap">
+        <form class="searchbar live-search-form header-search" method="get" action="<?= BASE_URL ?>/index.php" id="liveSearchForm" autocomplete="off" data-live-search-url="<?= BASE_URL ?>/index.php?r=live_search" data-smart-search-url="<?= BASE_URL ?>/index.php?r=api_smart_search">
+          <input type="hidden" name="r" value="tatca">
           <i class="fas fa-magnifying-glass header-search__icon"></i>
           <label for="search-input" class="visually-hidden">Tìm kiếm sản phẩm</label>
           <input class="form-control" name="q" id="search-input" placeholder="Tìm sản phẩm, thương hiệu, vấn đề da..." value="<?= h($_GET['q'] ?? '') ?>" autocomplete="off" aria-label="Tìm kiếm sản phẩm" aria-autocomplete="list" aria-expanded="false" aria-controls="smartSearchDropdown">
-          <button class="header-search__icon-btn" type="submit" aria-label="Tìm kiếm"><i class="fas fa-magnifying-glass"></i></button>
+          <button class="btn header-search__submit" type="submit" aria-label="Tìm kiếm">
+            <span>Tìm kiếm</span>
+          </button>
           <div class="smart-search-dropdown" id="smartSearchDropdown" role="listbox" aria-label="Gợi ý sản phẩm" hidden></div>
-        </div>
-        <button class="btn btn-brand header-search__submit" type="submit">Tìm kiếm</button>
-      </form>
+        </form>
+      </div>
 
-      <div class="header-actions">
-        <a href="<?= BASE_URL ?>/index.php?r=goiy" class="header-action-card" title="Gợi ý routine">
-          <i class="fas fa-wand-magic-sparkles"></i>
-          <span>
-            <strong>Gợi ý routine</strong>
-            <small>Nhận gợi ý ngay</small>
-          </span>
+      <!-- Actions: LIVE, Routine, Account, Cart -->
+      <div class="header-actions-group">
+        <!-- LIVE Commercial Hero Action -->
+        <a href="<?= BASE_URL ?>/index.php?r=live" class="header-action-btn--live d-none d-lg-inline-flex" title="Livestream Tư Vấn cùng Chuyên gia">
+          <span class="live-pulse-dot"></span>
+          <i class="fa-solid fa-video" style="font-size: 1.05rem;"></i>
+          <div>
+            <strong class="d-block" style="font-size: 0.86rem; line-height: 1.2; color: #9F1239;">LIVE Tư vấn</strong>
+            <small style="font-size: 0.7rem; color: #E11D48; display: block; font-weight: 500;">Tư vấn trực tiếp</small>
+          </div>
         </a>
 
+        <!-- ROUTINE Personalization Signature Feature -->
+        <a href="<?= BASE_URL ?>/index.php?r=goiy" class="header-action-btn--routine d-none d-lg-inline-flex" title="Khảo sát da & Gợi ý routine cá nhân hóa">
+          <i class="fas fa-wand-magic-sparkles" style="font-size: 1.15rem; color: #15803D;"></i>
+          <div>
+            <strong class="d-block" style="font-size: 0.86rem; line-height: 1.2; color: #14532D;">Gợi ý routine</strong>
+            <small style="font-size: 0.7rem; color: #15803D; display: block; font-weight: 500;">Nhận gợi ý ngay</small>
+          </div>
+        </a>
+
+        <!-- Account -->
         <?php if (is_logged_in()): ?>
-          <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="header-icon-link" title="Tài khoản">
-            <i class="fas fa-user"></i>
-            <span><?= h($currentRole === 'admin' ? 'Quản trị' : ($currentRole === 'nhanvien' ? 'Nhân viên' : 'Tài khoản')) ?></span>
+          <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="header-action-btn--neutral" title="Quản trị / Hồ sơ tài khoản">
+            <i class="fas fa-circle-user" style="font-size: 1.2rem; color: #64748B;"></i>
+            <strong style="font-size: 0.85rem; color: #334155;"><?= h($currentRole === 'admin' ? 'Quản trị' : ($currentRole === 'nhanvien' ? 'Nhân viên' : 'Tài khoản')) ?></strong>
           </a>
         <?php else: ?>
-          <a href="#" class="header-icon-link" title="Đăng nhập" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">
-            <i class="fas fa-user"></i>
-            <span>Đăng nhập</span>
+          <a href="#" class="header-action-btn--neutral" title="Đăng nhập tài khoản" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">
+            <i class="fas fa-circle-user" style="font-size: 1.2rem; color: #64748B;"></i>
+            <strong style="font-size: 0.85rem; color: #334155;">Đăng nhập</strong>
           </a>
         <?php endif; ?>
 
-        <a href="<?= BASE_URL ?>/index.php?r=giohang" class="header-icon-link header-icon-link--cart" id="headerCartLink" title="Giỏ hàng">
-          <i class="fas fa-bag-shopping"></i>
-          <span>Giỏ hàng</span>
+        <!-- Cart -->
+        <a href="<?= BASE_URL ?>/index.php?r=giohang" class="header-action-btn--neutral" id="headerCartLink" title="Xem giỏ hàng">
+          <i class="fas fa-bag-shopping" style="font-size: 1.15rem; color: #183B2B;"></i>
+          <strong style="font-size: 0.86rem; color: #183B2B;">Giỏ hàng</strong>
           <em class="header-cart-badge" id="headerCartCount" style="<?= $cartCount > 0 ? '' : 'display: none !important;' ?>"><?= $cartCount ?></em>
         </a>
 
-        <button class="mobile-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNavOffcanvas" aria-controls="mobileNavOffcanvas" aria-label="Mở menu hệ thống">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNavOffcanvas" aria-controls="mobileNavOffcanvas" aria-label="Mở menu hệ thống" style="width: 44px; height: 44px; display: inline-grid; place-items: center; border-radius: 10px; background: #F8FAF8; border: 1px solid #E2E8F0; color: #183B2B;">
           <i class="fas fa-bars"></i>
         </button>
+      </div>
+
+      <!-- Mobile Quick Actions Strip (LIVE & Routine) -->
+      <div class="mobile-quick-actions d-flex d-lg-none gap-2 w-100 order-4 mt-1">
+        <a href="<?= BASE_URL ?>/index.php?r=live" class="btn btn-sm flex-fill d-inline-flex align-items-center justify-content-center gap-1.5 py-2 rounded-3 fw-bold text-decoration-none" style="background: #FFF1F2; border: 1px solid #FECDD3; color: #BE123C; font-size: 0.82rem;">
+          <span class="live-pulse-dot" style="width: 7px; height: 7px;"></span>
+          <i class="fa-solid fa-video me-1"></i> LIVE Tư vấn
+        </a>
+        <a href="<?= BASE_URL ?>/index.php?r=goiy" class="btn btn-sm flex-fill d-inline-flex align-items-center justify-content-center gap-1.5 py-2 rounded-3 fw-bold text-decoration-none" style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #166534; font-size: 0.82rem;">
+          <i class="fas fa-wand-magic-sparkles me-1 text-success"></i> Gợi ý routine
+        </a>
       </div>
     </div>
   </div>
 
+  <!-- TIER 3: CATEGORY + TRUST BAR -->
   <div class="header-nav-shell">
-    <div class="container header-nav">
+    <div class="header-container header-nav__inner">
+      <!-- Left: Category Mega Menu Trigger -->
       <div class="dropdown header-catalog">
-        <a class="header-catalog__toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <a class="header-catalog__toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="headerCatalogDropdown">
           <i class="fas fa-bars"></i>
           <span>Danh mục sản phẩm</span>
         </a>
 
-        <div class="dropdown-menu mega-menu header-mega-menu p-3">
-          <div class="row g-3 align-items-stretch">
-            <div class="col-lg-3">
-              <div class="mega-menu-highlight">
-                <span class="mega-menu-highlight__eyebrow">Danh mục nổi bật</span>
-                <h5>Khám phá từng nhóm skincare theo đúng nhu cầu da.</h5>
-                <p>Từ làm sạch, dưỡng ẩm đến đặc trị, mọi danh mục đều được gom lại để bạn lọc nhanh hơn.</p>
-                <a href="<?= BASE_URL ?>/index.php?r=goiy" class="mega-menu-highlight__link">Mở gợi ý routine</a>
+        <!-- Canonical 28-node Mega Menu (Phase 2 Source of Truth) -->
+        <div class="dropdown-menu mega-menu header-mega-menu p-3" aria-labelledby="headerCatalogDropdown" style="min-width: 1100px; max-width: 1200px; border-radius: 14px; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12); border: 1px solid #E2E8F0;">
+          <div class="d-flex gap-3 align-items-stretch">
+            <div style="width: 215px; flex: 0 0 215px;">
+              <div class="mega-menu-highlight h-100 p-3 d-flex flex-column justify-content-between" style="background: linear-gradient(135deg, #183B2B 0%, #2D6A4F 100%); border-radius: 12px; color: #FFFFFF;">
+                <div>
+                  <span class="mega-menu-highlight__eyebrow text-uppercase fw-bold text-white-50" style="font-size: 0.7rem; letter-spacing: 0.05em;">DANH MỤC NỔI BẬT</span>
+                  <h5 class="fw-bold mt-2 mb-2 text-white" style="font-size: 1.1rem; line-height: 1.35;">Khám phá từng nhóm skincare theo đúng nhu cầu da.</h5>
+                  <p class="small mb-3" style="color: rgba(255,255,255,0.85); font-size: 0.8rem; line-height: 1.45;">Mọi sản phẩm đều được chuẩn hóa theo danh mục khoa học.</p>
+                </div>
+                <div>
+                  <a href="<?= BASE_URL ?>/index.php?r=goiy" class="btn btn-sm btn-light fw-bold w-100 py-2 text-decoration-none" style="color: #183B2B; border-radius: 8px; font-size: 0.82rem;">
+                    <i class="fas fa-wand-magic-sparkles me-1 text-warning"></i> Mở gợi ý routine
+                  </a>
+                </div>
               </div>
             </div>
-            <div class="col-lg-9">
-              <div class="row g-3">
-            <?php foreach ($menuCats as $c1 => $c2s): ?>
-              <div class="col-6 col-lg-4">
-                <div class="col-title"><?= h($c1) ?></div>
-                <?php if (!empty($c2s)): ?>
-                  <ul class="list-unstyled mb-0">
-                    <?php foreach ($c2s as $c2 => $cnt): ?>
-                      <li>
-                        <a class="dropdown-item" href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($c1) ?>&cap2=<?= urlencode($c2) ?>">
-                          <?= h($c2) ?> (<?= (int)$cnt ?>)
-                        </a>
-                      </li>
-                    <?php endforeach; ?>
-                  </ul>
-                <?php else: ?>
-                  <a class="dropdown-item" href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($c1) ?>">
-                    Xem tất cả
-                  </a>
-                <?php endif; ?>
-              </div>
-            <?php endforeach; ?>
+            <div style="flex: 1 1 0; min-width: 0;">
+              <div class="row g-2 row-cols-1 row-cols-sm-2 row-cols-lg-4">
+                <?php foreach ($menuGroups as $grp): ?>
+                  <?php
+                    $grpName = $grp['name'] ?? '';
+                    $grpCount = (int)($grp['recursive_count'] ?? $grp['direct_count'] ?? 0);
+                    $isLeaf = !empty($grp['is_leaf']);
+                    $children = $grp['children'] ?? [];
+                  ?>
+                  <div class="col">
+                    <div class="p-2 h-100 d-flex flex-column justify-content-between" style="background: #F8FAF8; border-radius: 10px; border: 1px solid #EBF2EE;">
+                      <div>
+                        <div class="col-title d-flex align-items-center justify-content-between mb-1 pb-1 border-bottom" style="border-color: #E2E8F0 !important;">
+                          <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($grpName) ?>&ma_danh_muc=<?= (int)($grp['id'] ?? 0) ?>" class="text-decoration-none fw-bold text-dark text-nowrap" style="color: #183B2B; font-size: 0.85rem;" title="<?= h($grpName) ?>">
+                            <?= h($grpName) ?>
+                          </a>
+                          <span class="badge rounded-pill fw-semibold ms-1 flex-shrink-0" style="background: #EBF2EE; color: #183B2B; font-size: 0.68rem; padding: 3px 6px;"><?= number_format($grpCount, 0, ',', '.') ?></span>
+                        </div>
+                        <?php if (!empty($children)): ?>
+                          <ul class="list-unstyled mb-0 d-grid gap-0.5">
+                            <?php foreach ($children as $ch): ?>
+                              <li>
+                                <a class="dropdown-item py-1 px-1 rounded d-flex align-items-center justify-content-between" href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($grpName) ?>&cap2=<?= urlencode($ch['name']) ?>&ma_danh_muc=<?= (int)$ch['id'] ?>" style="font-size: 0.78rem; color: #475569; white-space: normal;" title="<?= h($ch['name']) ?>">
+                                  <span class="text-truncate me-1" style="flex: 1 1 auto; min-width: 0; font-size: 0.78rem;"><?= h($ch['name']) ?></span>
+                                  <small class="text-muted flex-shrink-0" style="font-size: 0.7rem;">(<?= (int)$ch['count'] ?>)</small>
+                                </a>
+                              </li>
+                            <?php endforeach; ?>
+                          </ul>
+                        <?php endif; ?>
+                      </div>
+                      <?php if (empty($children)): ?>
+                        <div class="pt-2">
+                          <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($grpName) ?>&ma_danh_muc=<?= (int)($grp['id'] ?? 0) ?>" class="text-success small fw-semibold text-decoration-none d-inline-flex align-items-center gap-1" style="font-size: 0.78rem;">
+                            <span>Khám phá ngay</span> <i class="fas fa-arrow-right" style="font-size: 0.65rem;"></i>
+                          </a>
+                        </div>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <nav class="header-shortcuts" aria-label="Liên kết nhanh">
-        <a class="header-shortcuts__link" href="<?= BASE_URL ?>/index.php?r=home">Trang chủ</a>
-        <a class="header-shortcuts__link" href="<?= BASE_URL ?>/index.php?r=tatca">Tất cả sản phẩm</a>
-        <a class="header-shortcuts__link fw-bold d-inline-flex align-items-center gap-1" href="<?= BASE_URL ?>/index.php?r=live" style="background: #FFE4E6; color: #E11D48 !important; padding: 4px 12px; border-radius: 999px; font-size: 0.84rem;">
-          <span class="d-inline-block rounded-circle bg-danger" style="width: 7px; height: 7px;"></span>
-          <i class="fa-solid fa-video me-1"></i> Livestream Tư Vấn
-        </a>
-        <?php foreach ($quickCategories as $category): ?>
-          <a class="header-shortcuts__link" href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode((string)$category) ?>">
-            <?= h((string)$category) ?>
-          </a>
-        <?php endforeach; ?>
-      </nav>
-
-      <a class="header-deal-pill" href="<?= BASE_URL ?>/index.php?r=goiy">
-        <i class="fas fa-gift"></i>
-        <span>Khảo sát da để mở routine cá nhân</span>
-      </a>
+      <!-- Right: Authentic Trust Benefits Bar (Evidence-based) -->
+      <div class="header-trust-bar d-none d-lg-flex">
+        <div class="header-trust-item">
+          <i class="fas fa-shield-check"></i>
+          <span><strong>Sản phẩm chính hãng</strong><span class="text-muted"> · An tâm mua sắm</span></span>
+        </div>
+        <span class="header-trust-divider"></span>
+        <div class="header-trust-item">
+          <i class="fas fa-truck-fast"></i>
+          <span><strong>Giao hàng toàn quốc</strong><span class="text-muted"> · Nhanh chóng & an toàn</span></span>
+        </div>
+        <span class="header-trust-divider"></span>
+        <div class="header-trust-item">
+          <i class="fas fa-wand-magic-sparkles"></i>
+          <span><strong>Cá nhân hóa routine</strong><span class="text-muted"> · Chuẩn nhu cầu da</span></span>
+        </div>
+        <span class="header-trust-divider"></span>
+        <div class="header-trust-item">
+          <i class="fas fa-headset"></i>
+          <span><strong>Hỗ trợ tận tâm</strong><span class="text-muted"> · Đồng hành cùng bạn</span></span>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -221,7 +310,7 @@ $socialLinks = [
     </a>
     <button type="button" class="btn-close text-reset ms-2" data-bs-dismiss="offcanvas" aria-label="Đóng"></button>
   </div>
-  <div class="offcanvas-body p-0">
+  <div class="offcanvas-body p-0 pb-5">
     <!-- User Quick Access Card -->
     <div class="mobile-nav-user-card p-3 border-bottom bg-light">
       <?php if (is_logged_in()): ?>
@@ -256,28 +345,36 @@ $socialLinks = [
     <div class="p-3 border-bottom">
       <h6 class="text-uppercase text-muted fw-bold small mb-2" style="letter-spacing: 0.05em;">Danh mục sản phẩm</h6>
       <div class="accordion accordion-flush" id="mobileCatAccordion">
-        <?php $catIndex = 0; foreach ($menuCats as $c1 => $c2s): $catIndex++; $accordionId = "mobileCat-" . $catIndex; ?>
+        <?php $catIndex = 0; foreach ($menuGroups as $grp): $catIndex++; $accordionId = "mobileCat-" . $catIndex; ?>
+          <?php
+            $grpName = $grp['name'] ?? '';
+            $grpCount = (int)($grp['recursive_count'] ?? $grp['direct_count'] ?? 0);
+            $children = $grp['children'] ?? [];
+            $hasChildren = !empty($children);
+          ?>
           <div class="accordion-item border-0">
             <h2 class="accordion-header" id="heading-<?= $accordionId ?>">
-              <?php if (!empty($c2s)): ?>
-                <button class="accordion-button collapsed py-2 px-0 fw-semibold text-dark bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?= $accordionId ?>" aria-expanded="false" aria-controls="collapse-<?= $accordionId ?>">
-                  <?= h($c1) ?>
+              <?php if ($hasChildren): ?>
+                <button class="accordion-button collapsed py-2 px-0 fw-semibold text-dark bg-transparent shadow-none d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?= $accordionId ?>" aria-expanded="false" aria-controls="collapse-<?= $accordionId ?>" style="font-size: 0.95rem;">
+                  <span><?= h($grpName) ?> <span class="badge rounded-pill bg-light text-dark ms-1" style="font-size: 0.72rem;"><?= number_format($grpCount, 0, ',', '.') ?></span></span>
                 </button>
               <?php else: ?>
-                <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($c1) ?>" class="d-block py-2 text-decoration-none fw-semibold text-dark">
-                  <?= h($c1) ?>
+                <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($grpName) ?>&ma_danh_muc=<?= (int)($grp['id'] ?? 0) ?>" class="d-flex align-items-center justify-content-between py-2 text-decoration-none fw-semibold text-dark" style="font-size: 0.95rem;">
+                  <span><?= h($grpName) ?></span>
+                  <span class="badge rounded-pill bg-light text-dark" style="font-size: 0.72rem;"><?= number_format($grpCount, 0, ',', '.') ?></span>
                 </a>
               <?php endif; ?>
             </h2>
-            <?php if (!empty($c2s)): ?>
+            <?php if ($hasChildren): ?>
               <div id="collapse-<?= $accordionId ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?= $accordionId ?>" data-bs-parent="#mobileCatAccordion">
                 <div class="accordion-body py-1 px-2 border-start ms-2 mb-2">
-                  <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($c1) ?>" class="d-block py-1 text-success fw-bold small text-decoration-none">
-                    Xem tất cả <?= h($c1) ?>
+                  <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($grpName) ?>&ma_danh_muc=<?= (int)($grp['id'] ?? 0) ?>" class="d-block py-1 text-success fw-bold small text-decoration-none">
+                    Xem tất cả <?= h($grpName) ?> (<?= number_format($grpCount, 0, ',', '.') ?>)
                   </a>
-                  <?php foreach ($c2s as $c2 => $cnt): ?>
-                    <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($c1) ?>&cap2=<?= urlencode($c2) ?>" class="d-block py-1 text-muted small text-decoration-none">
-                      <?= h($c2) ?> <span class="text-secondary">(<?= (int)$cnt ?>)</span>
+                  <?php foreach ($children as $ch): ?>
+                    <a href="<?= BASE_URL ?>/index.php?r=tatca&cap1=<?= urlencode($grpName) ?>&cap2=<?= urlencode($ch['name']) ?>&ma_danh_muc=<?= (int)$ch['id'] ?>" class="d-flex align-items-center justify-content-between py-1 text-muted small text-decoration-none">
+                      <span><?= h($ch['name']) ?></span>
+                      <span class="text-secondary">(<?= (int)$ch['count'] ?>)</span>
                     </a>
                   <?php endforeach; ?>
                 </div>

@@ -1,0 +1,61 @@
+Anchor_ID,Anchor_Name,Top10_Jaccard_V1_vs_V2,Mean_Ing_Overlap_V1,Mean_Ing_Overlap_V2,Same_Role_Rate_V1,Same_Role_Rate_V2,Price_ZDiff_V1,Price_ZDiff_V2,Has_1_2_Hexanediol,Has_Compound_Slash
+P_939,Gel Dưỡng Ẩm Ban Đêm Paula’s Choice Cho Da Mềm Mịn 60ml,0.25,0.0885,0.0279,1.0,1.0,0.5519,0.5881,False,True
+P_6029,Sữa Rửa Mặt Freeplus Dưỡng Ẩm Dịu Nhẹ Cho Da 100g,0.25,0.0662,0.054,0.8,1.0,0.4156,0.4662,False,False
+P_665,Miếng Dán Mụn Acnes Giúp Giảm Mụn Sưng Viêm 48 Miếng,0.25,0.2619,0.2285,1.0,1.0,0.6698,1.2904,False,True
+P_4711,Gel Rửa Mặt Swiss Image Dưỡng Ẩm Chuyên Sâu 200ml,0.4286,0.1058,0.1171,1.0,1.0,0.2344,0.3502,False,True
+P_815,"Sữa Rửa Mặt Paula's Choice Ngừa Mụn, Se Lỗ Chân Lông 177ml",0.4286,0.1192,0.0992,1.0,1.0,0.1508,0.1964,False,True
+P_5187,Serum Pond's Age Miracle Ngăn Ngừa Lão Hóa 30ml,0.4286,0.1306,0.1411,1.0,1.0,0.1935,0.2061,False,True
+P_936,Combo 2 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml,0.5385,0.6112,0.4343,1.0,1.0,0.471,0.2904,False,True
+P_1390,Kem Dưỡng La Roche-Posay Làm Dịu Da Cho Trẻ Em 75ml,0.5385,0.0943,0.0917,1.0,1.0,0.3137,0.2807,False,True
+P_736,Tinh Chất Sur.Medic+ Huyết Thanh Sáng Da Căng Bóng 32ml,0.5385,0.1201,0.1096,1.0,1.0,0.1469,0.1841,True,False
+P_2277,"Kem Dưỡng L'Oreal Cấp Ẩm, Kiềm Dầu & Giảm Bóng Nhờn 8H 50ml",0.5385,0.1405,0.1458,0.9,1.0,0.307,0.2872,False,True
+P_4655,Combo 2 Tinh Chất Cocoon Nghệ Hưng Yên x2.2 Sáng Da Chuyên S,0.5385,0.277,0.2708,1.0,1.0,0.6624,0.6303,False,True
+P_2315,"Combo 9Wishes Serum Dưỡng Sáng, Giảm Thâm + Serum Dưỡng Ẩm C",0.5385,0.1963,0.2777,1.0,1.0,0.2931,0.3644,True,False
+P_5070,Kem Dưỡng d program Ngăn Ngừa Lão Hóa 45g,0.6667,0.0271,0.0296,1.0,1.0,0.6032,0.7024,False,True
+P_2396,"Kem Dưỡng Torriden Săn Chắc Da, Ngừa Lão Hóa 60ml",0.6667,0.1343,0.1207,1.0,1.0,0.237,0.2258,True,True
+P_1233,"Sữa Chống Nắng Senka Kiềm Dầu, Mịn Lì Cho Da Dầu 40ml",0.6667,0.4529,0.4584,1.0,1.0,0.567,0.5086,False,True
+P_1506,Gel Rửa Mặt SVR Dành Cho Da Nhạy Cảm 55ml,0.6667,0.2737,0.2491,1.0,1.0,0.4,0.4794,False,True
+P_5727,Kem Dưỡng Paula’s Choice Căng Mọng Và Giảm Nếp Nhăn 50ml,0.6667,0.1064,0.0914,0.8,0.9,0.5306,0.4971,False,True
+P_258,"Kem Dưỡng Avène Làm Lành Da Nội Sinh, Ngừa Nhiễm Khuẩn 40ml",0.6667,0.2,0.2,0.9,1.0,0.3362,0.3087,False,True
+P_783,Tinh Chất Cocoon Nghệ Hưng Yên x2.2 Sáng Da Chuyên Sâu 30ml,0.6667,0.2671,0.2632,1.0,1.0,0.3023,0.26,False,True
+P_673,[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g,0.6667,0.3574,0.3561,0.9,1.0,0.7843,0.827,True,True
+P_1000,Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml,0.6667,0.31,0.3239,1.0,1.0,0.5464,0.469,False,False
+P_674,Kem Dưỡng Ẩm Bioderma Chuyên Sâu Cho Da Rất Khô 75ml,0.6667,0.1884,0.1431,1.0,1.0,0.4678,0.4305,True,True
+P_860,Kem Chống Nắng d'Alba Nâng Tông Cân Bằng Sắc Da Đỏ 50ml,0.6667,0.3671,0.3776,1.0,1.0,0.2551,0.2139,True,True
+P_1997,Sữa Rửa Mặt Neutrogena Ngăn Ngừa Mụn Đầu Đen 100g,0.6667,0.111,0.1077,1.0,1.0,0.4941,0.4081,False,False
+P_2063,Combo 2 Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml,0.6667,0.2012,0.1961,1.0,1.0,0.5117,0.5692,True,True
+P_2847,"Dầu Olive Milaganics Nguyên Chất Dưỡng Da, Dưỡng Tóc 100ml",0.8182,0.1271,0.1282,0.8,0.7,0.5699,0.5327,False,False
+P_4501,Sữa Rửa Mặt Beplain Đậu Xanh Sạch Sâu Cho Mọi Loại Da 80ml,0.8182,0.1819,0.1829,1.0,1.0,0.397,0.3386,True,False
+P_550,Kem Dưỡng Garnier Tinh Chất Serum Sáng Da Ban Ngày 50ml,0.8182,0.0969,0.1016,1.0,1.0,0.638,0.663,False,True
+P_2245,Kem Chống Nắng Round Lab Nâng Tông Sáng Hồng Rạng Rỡ 50ml,0.8182,0.1843,0.1767,1.0,1.0,0.2114,0.1831,True,True
+P_466,Kem Dưỡng Ẩm Nivea Dưỡng Da Sáng Mịn 60ml,0.8182,0.1557,0.1644,1.0,0.9,0.5897,0.4672,False,False
+P_4797,Kem Dưỡng Bio-essence Làm Giảm Đốm Nâu & Sáng Da 25g,0.8182,0.1499,0.1467,1.0,1.0,0.2165,0.2298,False,True
+P_4976,"Serum Celimax Dưỡng Ẩm Hỗ Trợ Phục Hồi, Làm Dịu 30ml",0.8182,0.1352,0.1357,1.0,1.0,0.3158,0.2472,True,False
+P_2811,"Sữa Rửa Mặt Obagi 2% BHA Sạch Sâu, Tẩy Tế Bào Chết 118ml",0.8182,0.1055,0.104,1.0,1.0,0.7691,0.7142,False,True
+P_5916,Combo 2 Sữa Rửa Mặt Vichy Dạng Gel Làm Sạch Sâu Da Dầu Mụn 5,0.8182,0.4952,0.4219,1.0,1.0,0.5804,0.5097,False,True
+P_668,Combo 2 Kem Rửa Mặt Hada Labo Dưỡng Chuyên Biệt Ngừa Lão Hóa,0.8182,0.353,0.3236,1.0,1.0,0.444,0.4038,False,False
+P_3259,Sữa Rửa Mặt Meishoku Ngăn Ngừa Mụn 80g,0.8182,0.1894,0.1715,1.0,1.0,0.5382,0.4802,False,False
+P_897,"Gel Giảm Mụn Cerave Mờ Thâm, Thu Nhỏ Lỗ Chân Lông 40ml",0.8182,0.1043,0.1178,1.0,1.0,0.3972,0.415,False,True
+P_5566,Sữa Rửa Mặt On: The Body Chiết Xuất Ô Liu Cho Da Khô 200g,0.8182,0.1915,0.1928,1.0,1.0,0.3697,0.3929,True,True
+P_195,"Kem Dưỡng Ẩm Klairs Cho Da Khô, Nhạy Cảm 80ml",0.8182,0.1066,0.106,1.0,1.0,0.2536,0.2637,True,True
+P_48,Kem Dưỡng Olay Luminous Sáng Da Mờ Thâm Nám Ban Đêm 50g,0.8182,0.4365,0.4458,1.0,1.0,0.6257,0.6393,False,True
+P_850,Kem Dưỡng Eucerin Giúp Phục Hồi & Tái Tạo Da 50ml,0.8182,0.1223,0.1174,1.0,1.0,0.25,0.2509,True,True
+P_5054,"[Mini] Kem Chống Nắng Beplain Nâng Tông, Cấp Ẩm Căng Bóng 10",0.8182,0.1888,0.1873,0.9,0.9,1.0273,1.0273,True,True
+P_611,Sữa Chống Nắng Cocoon Chiết Xuất Bí Đao Quang Phổ Rộng 15ml,0.8182,0.3329,0.3285,1.0,1.0,0.6258,0.6172,True,True
+P_38,"Serum L'Oreal Sáng Da, Mờ Thâm Mụn & Nám 30ml (Mới)",0.8182,0.3104,0.26,1.0,1.0,0.3341,0.3195,False,True
+P_1674,Kem Chống Nắng Vichy Chống Bụi Mịn Cho Da Dầu Mụn 50ml,0.8182,0.3658,0.3932,1.0,1.0,0.3095,0.287,False,True
+P_3536,"Gel Rửa Mặt Elixir Hỗ Trợ Làm Sạch, Dưỡng Ẩm 180g",0.8182,0.129,0.13,1.0,1.0,0.1797,0.187,False,False
+P_3532,"Gel Rửa Mặt Elixir Hỗ Trợ Làm Sạch Sâu, Ngừa Lão Hóa 105g",0.8182,0.145,0.1371,1.0,1.0,0.287,0.3039,False,True
+P_571,Sữa Rửa Mặt Cetaphil Tạo Bọt Dịu Lành Cho Da Nhạy Cảm 473ml,1.0,0.4348,0.4348,1.0,1.0,0.3073,0.3073,False,True
+P_834,Combo 2 Gel Rửa Mặt SVR Không Chứa Xà Phòng Cho Da Dầu 400ml,1.0,0.4652,0.4652,0.9,0.9,0.6982,0.6982,False,False
+P_762,Kem Dưỡng Đêm Eucerin Giảm Nếp Nhăn Sâu & Chảy Xệ 50ml,1.0,0.1645,0.1595,0.7,0.7,0.3921,0.3921,False,False
+P_408,Miếng Dán Mụn Mayan Ultra Thin Spot 20+4 Miếng,1.0,0.1,0.1,0.8,0.8,0.5582,0.5582,False,False
+P_1567,Combo 2 Kem Dưỡng Olay Luminous Sáng Da Mờ Thâm Nám Ban Đêm ,1.0,0.3931,0.3931,1.0,1.0,0.2594,0.2594,False,True
+P_1001,Combo 2 Miếng Dán Mụn Derma Angel Dùng Cho Ngày & Đêm 18 Miế,1.0,0.3,0.3,1.0,1.0,1.2226,1.2226,False,False
+P_10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 5",1.0,0.374,0.3742,1.0,1.0,0.2974,0.2974,False,True
+P_2717,Kem Dưỡng Axis-Y Sáng Da & Giảm Thâm 50ml,1.0,0.1604,0.1577,1.0,1.0,0.242,0.242,True,True
+P_214,Kem Dưỡng Olay Regenerist Ngừa Lão Hóa Da Ban Đêm 50g,1.0,0.348,0.348,1.0,1.0,0.2163,0.2163,False,True
+P_77,Sữa Chống Nắng Sunplay Skin Aqua Dưỡng Da Sáng Mịn 55g,1.0,0.6217,0.6151,1.0,1.0,0.3966,0.3966,False,True
+P_3068,Combo 2 Sữa Rửa Mặt Senka Dành Cho Da Mụn 100g,1.0,0.754,0.754,1.0,1.0,0.6144,0.6144,False,True
+P_1662,"Combo 2 Kem Chống Nắng Beplain Nâng Tông, Cấp Ẩm Căng Bóng 5",1.0,0.8185,0.8174,1.0,1.0,0.5327,0.5327,True,True
+P_862,Serum La Bonita Hyaluronic Acid Cấp Ẩm Dịu Da 50ml,1.0,0.2552,0.2487,1.0,1.0,0.5508,0.5508,True,False

@@ -1,0 +1,21 @@
+K,Config_1,Config_2,ARI,NMI,Interpretation_Notice
+6,CONFIG_TAX_LEAF,CONFIG_TAX_HIER,0.4261,0.6524,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+6,CONFIG_TAX_HIER,CONFIG_TAX_PRICE,0.8002,0.8512,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+6,CONFIG_TAX_PRICE,CONFIG_TAX_PRICE_SKIN,0.9915,0.9869,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+6,CONFIG_TAX_PRICE_SKIN,CONFIG_TAX_PRICE_SKIN_ING,0.8402,0.8859,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+6,CONFIG_TAX_PRICE_SKIN_ING,CONFIG_BLOCK_NORMALIZED,0.5195,0.6142,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+8,CONFIG_TAX_LEAF,CONFIG_TAX_HIER,0.6895,0.8389,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+8,CONFIG_TAX_HIER,CONFIG_TAX_PRICE,0.7223,0.8853,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+8,CONFIG_TAX_PRICE,CONFIG_TAX_PRICE_SKIN,0.9837,0.9835,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+8,CONFIG_TAX_PRICE_SKIN,CONFIG_TAX_PRICE_SKIN_ING,0.7947,0.9167,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+8,CONFIG_TAX_PRICE_SKIN_ING,CONFIG_BLOCK_NORMALIZED,0.5376,0.6504,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+10,CONFIG_TAX_LEAF,CONFIG_TAX_HIER,0.8239,0.9037,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+10,CONFIG_TAX_HIER,CONFIG_TAX_PRICE,0.7485,0.883,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+10,CONFIG_TAX_PRICE,CONFIG_TAX_PRICE_SKIN,0.915,0.9404,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+10,CONFIG_TAX_PRICE_SKIN,CONFIG_TAX_PRICE_SKIN_ING,0.9042,0.933,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+10,CONFIG_TAX_PRICE_SKIN_ING,CONFIG_BLOCK_NORMALIZED,0.5686,0.7373,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+12,CONFIG_TAX_LEAF,CONFIG_TAX_HIER,0.9502,0.9538,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+12,CONFIG_TAX_HIER,CONFIG_TAX_PRICE,0.791,0.9002,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+12,CONFIG_TAX_PRICE,CONFIG_TAX_PRICE_SKIN,0.8942,0.9276,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+12,CONFIG_TAX_PRICE_SKIN,CONFIG_TAX_PRICE_SKIN_ING,0.8907,0.9252,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.
+12,CONFIG_TAX_PRICE_SKIN_ING,CONFIG_BLOCK_NORMALIZED,0.5072,0.6461,ARI/NMI do tuong dong phan hoach; KHONG quy doi thanh % sai khac.

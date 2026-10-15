@@ -1,0 +1,2506 @@
+[
+  {
+    "basket_id": "S001",
+    "items": [
+      6082
+    ],
+    "item_names": [
+      "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml"
+    ],
+    "roles": [
+      "TONER"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S002",
+    "items": [
+      1,
+      1368
+    ],
+    "item_names": [
+      "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "SERUM"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S003",
+    "items": [
+      728,
+      6165,
+      673
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Mặt Nạ Dermal Tinh Chất Dưỡng Sáng Da 23g",
+      "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK",
+      "MOISTURIZER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "DEEP_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S004",
+    "items": [
+      16,
+      1000,
+      103,
+      139
+    ],
+    "item_names": [
+      "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+      "Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g"
+    ],
+    "roles": [
+      "SUNSCREEN",
+      "CLEANSER",
+      "MAKEUP_REMOVAL",
+      "MOISTURIZER"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S005",
+    "items": [
+      6082,
+      1749
+    ],
+    "item_names": [
+      "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml",
+      "Combo 2 Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml"
+    ],
+    "roles": [
+      "TONER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S006",
+    "items": [
+      5,
+      4365,
+      6350,
+      139,
+      649
+    ],
+    "item_names": [
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh)"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "SERUM",
+      "MOISTURIZER",
+      "MASK"
+    ],
+    "basket_size": 5,
+    "pattern_applied": "COMPREHENSIVE_REGIMEN",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S007",
+    "items": [
+      201,
+      4,
+      6203,
+      188
+    ],
+    "item_names": [
+      "Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",
+      "Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 95ml",
+      "Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml"
+    ],
+    "roles": [
+      "TREATMENT",
+      "TONER",
+      "MAKEUP_REMOVAL",
+      "MASK"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S008",
+    "items": [
+      93
+    ],
+    "item_names": [
+      "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml"
+    ],
+    "roles": [
+      "MOISTURIZER"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S009",
+    "items": [
+      4,
+      728
+    ],
+    "item_names": [
+      "Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml"
+    ],
+    "roles": [
+      "TONER",
+      "CLEANSER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S010",
+    "items": [
+      318
+    ],
+    "item_names": [
+      "Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g"
+    ],
+    "roles": [
+      "MOISTURIZER"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S011",
+    "items": [
+      4365,
+      6302,
+      4450
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Mặt Nạ Mediheal Hỗ Trợ Dưỡng Ẩm Sâu 20ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK",
+      "MOISTURIZER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "DEEP_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S012",
+    "items": [
+      4450,
+      6212,
+      6350,
+      5
+    ],
+    "item_names": [
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g",
+      "Mặt Nạ Emmié 5% Niacinamide Sáng Da Mờ Thâm Dạng Pad 20 Miếng",
+      "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml"
+    ],
+    "roles": [
+      "MOISTURIZER",
+      "MASK",
+      "SERUM",
+      "MAKEUP_REMOVAL"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S013",
+    "items": [
+      21,
+      6165
+    ],
+    "item_names": [
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+      "Mặt Nạ Dermal Tinh Chất Dưỡng Sáng Da 23g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DEEP_PURIFYING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S014",
+    "items": [
+      6082,
+      6350,
+      139,
+      10
+    ],
+    "item_names": [
+      "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml",
+      "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml"
+    ],
+    "roles": [
+      "TONER",
+      "SERUM",
+      "MOISTURIZER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "SOOTHING_DAY_REGIMEN",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S015",
+    "items": [
+      21
+    ],
+    "item_names": [
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml"
+    ],
+    "roles": [
+      "CLEANSER"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S016",
+    "items": [
+      673,
+      285,
+      6302
+    ],
+    "item_names": [
+      "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g",
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+      "Mặt Nạ Mediheal Hỗ Trợ Dưỡng Ẩm Sâu 20ml"
+    ],
+    "roles": [
+      "MOISTURIZER",
+      "MAKEUP_REMOVAL",
+      "MASK"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S017",
+    "items": [
+      139,
+      16,
+      68,
+      285
+    ],
+    "item_names": [
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",
+      "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml",
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml"
+    ],
+    "roles": [
+      "MOISTURIZER",
+      "SUNSCREEN",
+      "SERUM",
+      "MAKEUP_REMOVAL"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S018",
+    "items": [
+      1749,
+      2458
+    ],
+    "item_names": [
+      "Combo 2 Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",
+      "Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml"
+    ],
+    "roles": [
+      "SUNSCREEN",
+      "TONER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S019",
+    "items": [
+      16,
+      240
+    ],
+    "item_names": [
+      "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",
+      "Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml"
+    ],
+    "roles": [
+      "SUNSCREEN",
+      "TONER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S020",
+    "items": [
+      350,
+      318
+    ],
+    "item_names": [
+      "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+      "Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S021",
+    "items": [
+      285,
+      1000,
+      68,
+      139,
+      2405
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+      "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Combo 2 Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "SERUM",
+      "MOISTURIZER",
+      "TREATMENT"
+    ],
+    "basket_size": 5,
+    "pattern_applied": "COMPREHENSIVE_REGIMEN",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S022",
+    "items": [
+      6203,
+      1
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 95ml",
+      "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DOUBLE_CLEANSING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S023",
+    "items": [
+      21,
+      740,
+      6082,
+      4450
+    ],
+    "item_names": [
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+      "Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml",
+      "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT",
+      "TONER",
+      "MOISTURIZER"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S024",
+    "items": [
+      21,
+      188
+    ],
+    "item_names": [
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+      "Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DEEP_PURIFYING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S025",
+    "items": [
+      1368,
+      139,
+      16
+    ],
+    "item_names": [
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "DAY_HYDRATION_PROTECT",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S026",
+    "items": [
+      728,
+      201
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "ACNE_TARGET",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S027",
+    "items": [
+      68
+    ],
+    "item_names": [
+      "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml"
+    ],
+    "roles": [
+      "SERUM"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S028",
+    "items": [
+      62,
+      139
+    ],
+    "item_names": [
+      "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BARRIER_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.148888+00:00"
+  },
+  {
+    "basket_id": "S029",
+    "items": [
+      21,
+      112
+    ],
+    "item_names": [
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+      "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "ACNE_TARGET",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S030",
+    "items": [
+      728,
+      201,
+      4450
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT",
+      "MOISTURIZER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "ACNE_CARE_CYCLE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S031",
+    "items": [
+      62,
+      673
+    ],
+    "item_names": [
+      "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+      "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BARRIER_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S032",
+    "items": [
+      1368,
+      673
+    ],
+    "item_names": [
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml",
+      "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BARRIER_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S033",
+    "items": [
+      6203,
+      4365,
+      350,
+      139
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 95ml",
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "EVENING_REPAIR_ROUTINE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S034",
+    "items": [
+      6350,
+      4365,
+      725,
+      740
+    ],
+    "item_names": [
+      "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)",
+      "Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml"
+    ],
+    "roles": [
+      "SERUM",
+      "CLEANSER",
+      "SUNSCREEN",
+      "TREATMENT"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S035",
+    "items": [
+      4365,
+      3038
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen (1 Miếng)"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "ACNE_TARGET",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S036",
+    "items": [
+      188,
+      728
+    ],
+    "item_names": [
+      "Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml"
+    ],
+    "roles": [
+      "MASK",
+      "CLEANSER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S037",
+    "items": [
+      1368,
+      93
+    ],
+    "item_names": [
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml",
+      "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BARRIER_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S038",
+    "items": [
+      1368,
+      10
+    ],
+    "item_names": [
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml",
+      "Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml"
+    ],
+    "roles": [
+      "SERUM",
+      "SUNSCREEN"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S039",
+    "items": [
+      6350,
+      725
+    ],
+    "item_names": [
+      "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+      "Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)"
+    ],
+    "roles": [
+      "SERUM",
+      "SUNSCREEN"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S040",
+    "items": [
+      728,
+      240
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TONER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "CLEANSE_TONE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S041",
+    "items": [
+      1,
+      201,
+      318
+    ],
+    "item_names": [
+      "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",
+      "Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",
+      "Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT",
+      "MOISTURIZER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "ACNE_CARE_CYCLE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S042",
+    "items": [
+      318,
+      725
+    ],
+    "item_names": [
+      "Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g",
+      "Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)"
+    ],
+    "roles": [
+      "MOISTURIZER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "MORNING_DEFENSE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S043",
+    "items": [
+      21,
+      112,
+      6212,
+      93
+    ],
+    "item_names": [
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+      "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+      "Mặt Nạ Emmié 5% Niacinamide Sáng Da Mờ Thâm Dạng Pad 20 Miếng",
+      "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT",
+      "MASK",
+      "MOISTURIZER"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "ACNE_INTENSIVE_CARE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S044",
+    "items": [
+      1,
+      6165
+    ],
+    "item_names": [
+      "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",
+      "Mặt Nạ Dermal Tinh Chất Dưỡng Sáng Da 23g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S045",
+    "items": [
+      1368,
+      673
+    ],
+    "item_names": [
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml",
+      "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BARRIER_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S046",
+    "items": [
+      5,
+      1000
+    ],
+    "item_names": [
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DOUBLE_CLEANSING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S047",
+    "items": [
+      103,
+      1000
+    ],
+    "item_names": [
+      "Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DOUBLE_CLEANSING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S048",
+    "items": [
+      10,
+      62,
+      4365
+    ],
+    "item_names": [
+      "Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",
+      "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml"
+    ],
+    "roles": [
+      "SUNSCREEN",
+      "SERUM",
+      "CLEANSER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S049",
+    "items": [
+      5
+    ],
+    "item_names": [
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S050",
+    "items": [
+      240,
+      6376,
+      139,
+      6212
+    ],
+    "item_names": [
+      "Nước Hoa Hồng Simple Làm Dịu Da & Cấp Ẩm 200ml",
+      "Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + 2 Nước Tẩy Trang Sạch Sâu Cho Da Dầu 95ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Mặt Nạ Emmié 5% Niacinamide Sáng Da Mờ Thâm Dạng Pad 20 Miếng"
+    ],
+    "roles": [
+      "TONER",
+      "MAKEUP_REMOVAL",
+      "MOISTURIZER",
+      "MASK"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S051",
+    "items": [
+      4365,
+      649
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh)"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DEEP_PURIFYING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S052",
+    "items": [
+      350,
+      4365,
+      5,
+      6302
+    ],
+    "item_names": [
+      "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",
+      "Mặt Nạ Mediheal Hỗ Trợ Dưỡng Ẩm Sâu 20ml"
+    ],
+    "roles": [
+      "SERUM",
+      "CLEANSER",
+      "MAKEUP_REMOVAL",
+      "MASK"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S053",
+    "items": [
+      62
+    ],
+    "item_names": [
+      "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml"
+    ],
+    "roles": [
+      "SERUM"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S054",
+    "items": [
+      728,
+      6082
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TONER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "CLEANSE_TONE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S055",
+    "items": [
+      62,
+      4450,
+      725
+    ],
+    "item_names": [
+      "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g",
+      "Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "DAY_HYDRATION_PROTECT",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S056",
+    "items": [
+      1368,
+      139,
+      1749
+    ],
+    "item_names": [
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Combo 2 Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "DAY_HYDRATION_PROTECT",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S057",
+    "items": [
+      6203,
+      21,
+      4,
+      16
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 95ml",
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+      "Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+      "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "TONER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "MORNING_FULL_ROUTINE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S058",
+    "items": [
+      5,
+      728
+    ],
+    "item_names": [
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DOUBLE_CLEANSING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S059",
+    "items": [
+      725,
+      728,
+      350,
+      285,
+      188
+    ],
+    "item_names": [
+      "Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+      "Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml"
+    ],
+    "roles": [
+      "SUNSCREEN",
+      "CLEANSER",
+      "SERUM",
+      "MAKEUP_REMOVAL",
+      "MASK"
+    ],
+    "basket_size": 5,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S060",
+    "items": [
+      4365
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml"
+    ],
+    "roles": [
+      "CLEANSER"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S061",
+    "items": [
+      103,
+      4365,
+      2458,
+      1749
+    ],
+    "item_names": [
+      "Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+      "Combo 2 Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "TONER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "MORNING_FULL_ROUTINE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S062",
+    "items": [
+      6376,
+      5689,
+      93,
+      2405
+    ],
+    "item_names": [
+      "Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + 2 Nước Tẩy Trang Sạch Sâu Cho Da Dầu 95ml",
+      "[Mini] Nước Thần Lancôme Clarifique Dưỡng Sáng Da 10ml",
+      "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml",
+      "Combo 2 Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "TONER",
+      "MOISTURIZER",
+      "TREATMENT"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S063",
+    "items": [
+      4365,
+      188
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DEEP_PURIFYING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S064",
+    "items": [
+      62,
+      93,
+      1749
+    ],
+    "item_names": [
+      "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+      "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml",
+      "Combo 2 Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "DAY_HYDRATION_PROTECT",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S065",
+    "items": [
+      4365,
+      112
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "ACNE_TARGET",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S066",
+    "items": [
+      728,
+      112,
+      6302,
+      139
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+      "Mặt Nạ Mediheal Hỗ Trợ Dưỡng Ẩm Sâu 20ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT",
+      "MASK",
+      "MOISTURIZER"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "ACNE_INTENSIVE_CARE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S067",
+    "items": [
+      285,
+      728,
+      5689
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "[Mini] Nước Thần Lancôme Clarifique Dưỡng Sáng Da 10ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "TONER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "FULL_CLEANSING_TONE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S068",
+    "items": [
+      285,
+      728,
+      2458
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "TONER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "FULL_CLEANSING_TONE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S069",
+    "items": [
+      649,
+      6350,
+      725,
+      93,
+      1000
+    ],
+    "item_names": [
+      "Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh)",
+      "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+      "Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)",
+      "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml"
+    ],
+    "roles": [
+      "MASK",
+      "SERUM",
+      "SUNSCREEN",
+      "MOISTURIZER",
+      "CLEANSER"
+    ],
+    "basket_size": 5,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S070",
+    "items": [
+      5689,
+      62,
+      139
+    ],
+    "item_names": [
+      "[Mini] Nước Thần Lancôme Clarifique Dưỡng Sáng Da 10ml",
+      "Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g"
+    ],
+    "roles": [
+      "TONER",
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "HYDRATING_TRIO",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S071",
+    "items": [
+      1000,
+      6165,
+      4450
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+      "Mặt Nạ Dermal Tinh Chất Dưỡng Sáng Da 23g",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK",
+      "MOISTURIZER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "DEEP_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S072",
+    "items": [
+      16,
+      188,
+      350
+    ],
+    "item_names": [
+      "Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới)",
+      "Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml",
+      "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml"
+    ],
+    "roles": [
+      "SUNSCREEN",
+      "MASK",
+      "SERUM"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S073",
+    "items": [
+      1,
+      3038
+    ],
+    "item_names": [
+      "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",
+      "Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen (1 Miếng)"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "ACNE_TARGET",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S074",
+    "items": [
+      1368,
+      673
+    ],
+    "item_names": [
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml",
+      "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BARRIER_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S075",
+    "items": [
+      6350
+    ],
+    "item_names": [
+      "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml"
+    ],
+    "roles": [
+      "SERUM"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S076",
+    "items": [
+      4365,
+      6165
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "Mặt Nạ Dermal Tinh Chất Dưỡng Sáng Da 23g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DEEP_PURIFYING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S077",
+    "items": [
+      285,
+      5689,
+      93,
+      21,
+      649
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+      "[Mini] Nước Thần Lancôme Clarifique Dưỡng Sáng Da 10ml",
+      "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml",
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+      "Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh)"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "TONER",
+      "MOISTURIZER",
+      "CLEANSER",
+      "MASK"
+    ],
+    "basket_size": 5,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S078",
+    "items": [
+      3038
+    ],
+    "item_names": [
+      "Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen (1 Miếng)"
+    ],
+    "roles": [
+      "TREATMENT"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S079",
+    "items": [
+      139,
+      10
+    ],
+    "item_names": [
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml"
+    ],
+    "roles": [
+      "MOISTURIZER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "MORNING_DEFENSE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S080",
+    "items": [
+      2458
+    ],
+    "item_names": [
+      "Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml"
+    ],
+    "roles": [
+      "TONER"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S081",
+    "items": [
+      6376,
+      1,
+      6082,
+      725
+    ],
+    "item_names": [
+      "Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + 2 Nước Tẩy Trang Sạch Sâu Cho Da Dầu 95ml",
+      "Sữa Rửa Mặt CeraVe Sạch Sâu Cho Da Thường Đến Da Dầu 473ml",
+      "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml",
+      "Sữa Chống Nắng Sunplay Hiệu Chỉnh Sắc Da 50g (Xanh Dương)"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "TONER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "MORNING_FULL_ROUTINE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S082",
+    "items": [
+      649,
+      740,
+      285,
+      4450
+    ],
+    "item_names": [
+      "Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh)",
+      "Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml",
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g"
+    ],
+    "roles": [
+      "MASK",
+      "TREATMENT",
+      "MAKEUP_REMOVAL",
+      "MOISTURIZER"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S083",
+    "items": [
+      68,
+      4450
+    ],
+    "item_names": [
+      "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BARRIER_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S084",
+    "items": [
+      673,
+      4,
+      649
+    ],
+    "item_names": [
+      "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g",
+      "Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+      "Mặt Nạ Banobagi Dưỡng Sáng Và Cấp Ẩm Cho Da 30g (Xanh)"
+    ],
+    "roles": [
+      "MOISTURIZER",
+      "TONER",
+      "MASK"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S085",
+    "items": [
+      4450,
+      5,
+      6212,
+      3038
+    ],
+    "item_names": [
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g",
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",
+      "Mặt Nạ Emmié 5% Niacinamide Sáng Da Mờ Thâm Dạng Pad 20 Miếng",
+      "Miếng Dán Ciracle Hỗ Trợ Hút Và Đẩy Mụn Đầu Đen (1 Miếng)"
+    ],
+    "roles": [
+      "MOISTURIZER",
+      "MAKEUP_REMOVAL",
+      "MASK",
+      "TREATMENT"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S086",
+    "items": [
+      103,
+      1000,
+      6350,
+      673
+    ],
+    "item_names": [
+      "Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 400ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+      "Serum Elixir Hỗ Trợ Săn Chắc Da, Ngừa Lão Hóa 40ml",
+      "[Mini] Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 20g"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "EVENING_REPAIR_ROUTINE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S087",
+    "items": [
+      68,
+      93
+    ],
+    "item_names": [
+      "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml",
+      "Sữa Dưỡng Ẩm Embryolisse Siêu Phục Hồi Da 30ml"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S088",
+    "items": [
+      112,
+      6082
+    ],
+    "item_names": [
+      "Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+      "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml"
+    ],
+    "roles": [
+      "TREATMENT",
+      "TONER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S089",
+    "items": [
+      5,
+      728,
+      5689
+    ],
+    "item_names": [
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "[Mini] Nước Thần Lancôme Clarifique Dưỡng Sáng Da 10ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "TONER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "FULL_CLEANSING_TONE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S090",
+    "items": [
+      139,
+      1749
+    ],
+    "item_names": [
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+      "Combo 2 Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml"
+    ],
+    "roles": [
+      "MOISTURIZER",
+      "SUNSCREEN"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "MORNING_DEFENSE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S091",
+    "items": [
+      285,
+      350
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Căng Mịn Da 95ml",
+      "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "SERUM"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "PURE_EXPLORATION",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S092",
+    "items": [
+      6203,
+      1000
+    ],
+    "item_names": [
+      "[Mini] Combo 4 Nước Tẩy Trang L'Oreal Làm Sạch Sâu Cho Da Dầu 95ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DOUBLE_CLEANSING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S093",
+    "items": [
+      5,
+      728,
+      350,
+      4450
+    ],
+    "item_names": [
+      "Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml",
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "EVENING_REPAIR_ROUTINE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S094",
+    "items": [
+      6165
+    ],
+    "item_names": [
+      "Mặt Nạ Dermal Tinh Chất Dưỡng Sáng Da 23g"
+    ],
+    "roles": [
+      "MASK"
+    ],
+    "basket_size": 1,
+    "pattern_applied": "SPONTANEOUS_SINGLE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S095",
+    "items": [
+      728,
+      6302
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Mặt Nạ Mediheal Hỗ Trợ Dưỡng Ẩm Sâu 20ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "MASK"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "DEEP_PURIFYING",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S096",
+    "items": [
+      728,
+      201,
+      6212,
+      4450,
+      2458
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 200ml",
+      "Gel Dưỡng Megaduo Giảm Mụn, Mờ Thâm 15g",
+      "Mặt Nạ Emmié 5% Niacinamide Sáng Da Mờ Thâm Dạng Pad 20 Miếng",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g",
+      "Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT",
+      "MASK",
+      "MOISTURIZER",
+      "TONER"
+    ],
+    "basket_size": 5,
+    "pattern_applied": "COMPREHENSIVE_REGIMEN",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S097",
+    "items": [
+      6376,
+      21,
+      6212,
+      1368
+    ],
+    "item_names": [
+      "Combo L'Oreal Nước Tẩy Trang Dưỡng Ẩm 400ml + 2 Nước Tẩy Trang Sạch Sâu Cho Da Dầu 95ml",
+      "Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",
+      "Mặt Nạ Emmié 5% Niacinamide Sáng Da Mờ Thâm Dạng Pad 20 Miếng",
+      "Bút Chấm Eucerin Chuyên Biệt Mờ Đốm Nâu & Thâm Nám 5ml"
+    ],
+    "roles": [
+      "MAKEUP_REMOVAL",
+      "CLEANSER",
+      "MASK",
+      "SERUM"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S098",
+    "items": [
+      4365,
+      6082,
+      318,
+      188
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",
+      "[Mini] Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 10ml",
+      "Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g",
+      "Mặt Nạ Naruko Tràm Trà Kiểm Soát Dầu Và Giảm Mụn 26ml"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TONER",
+      "MOISTURIZER",
+      "MASK"
+    ],
+    "basket_size": 4,
+    "pattern_applied": "BACKGROUND_NOISE",
+    "noise_applied": "Yes",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S099",
+    "items": [
+      1000,
+      2405,
+      318
+    ],
+    "item_names": [
+      "Gel Rửa Mặt Eucerin Cho Da Nhờn Mụn 75ml",
+      "Combo 2 Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",
+      "Kem Dưỡng Ẩm Hada Labo Tối Ưu Cho Mọi Loại Da 50g"
+    ],
+    "roles": [
+      "CLEANSER",
+      "TREATMENT",
+      "MOISTURIZER"
+    ],
+    "basket_size": 3,
+    "pattern_applied": "ACNE_CARE_CYCLE",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  },
+  {
+    "basket_id": "S100",
+    "items": [
+      350,
+      4450
+    ],
+    "item_names": [
+      "Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml",
+      "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 60g"
+    ],
+    "roles": [
+      "SERUM",
+      "MOISTURIZER"
+    ],
+    "basket_size": 2,
+    "pattern_applied": "BARRIER_REPAIR",
+    "noise_applied": "No",
+    "source": "synthetic_seed",
+    "scenario": "association_scale_40sku_100basket_v1",
+    "generator_version": "scaling-v2",
+    "seed": 43,
+    "created_at": "2026-10-03T17:14:02.149886+00:00"
+  }
+]

@@ -1,0 +1,11 @@
+Product_ID,Product_Name,Role,Config_A_Cluster (Role+Price),Config_B_Cluster (Role+Price+Skin),Assignment_Shift
+P_4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,Cluster_1,Cluster_1,Stable
+P_21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,Cluster_3,Cluster_3,Stable
+P_350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,Cluster_2,Cluster_2,Stable
+P_62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,Cluster_2,Cluster_2,Stable
+P_139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,Cluster_2,Cluster_2,Stable
+P_318,Kem Dưỡng Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Thường/Khô 50g,MOISTURIZER,Cluster_1,Cluster_1,Stable
+P_16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,Cluster_3,Cluster_3,Stable
+P_725,Sữa Chống Nắng Sunplay Skin Aqua Nắp Xanh Dành Cho Da Dầu 50g,SUNSCREEN,Cluster_1,Cluster_1,Stable
+P_112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,Cluster_1,Cluster_1,Stable
+P_740,Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml,TREATMENT,Cluster_2,Cluster_2,Stable

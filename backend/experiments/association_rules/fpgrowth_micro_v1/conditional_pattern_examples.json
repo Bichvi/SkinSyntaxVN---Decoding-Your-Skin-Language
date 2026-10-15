@@ -1,0 +1,179 @@
+{
+  "MASK": {
+    "item": "MASK",
+    "header_table_frequency": 5,
+    "conditional_pattern_base": [
+      {
+        "prefix_path": [
+          "TONER"
+        ],
+        "path_count": 1
+      },
+      {
+        "prefix_path": [
+          "CLEANSER",
+          "MOISTURIZER"
+        ],
+        "path_count": 1
+      },
+      {
+        "prefix_path": [
+          "CLEANSER",
+          "SUNSCREEN"
+        ],
+        "path_count": 1
+      },
+      {
+        "prefix_path": [
+          "CLEANSER",
+          "MAKEUP_REMOVAL",
+          "TONER"
+        ],
+        "path_count": 1
+      }
+    ],
+    "conditional_item_counts": {
+      "TONER": 2,
+      "CLEANSER": 3,
+      "MOISTURIZER": 1,
+      "SUNSCREEN": 1,
+      "MAKEUP_REMOVAL": 1
+    },
+    "retained_conditional_items": {
+      "CLEANSER": 3
+    },
+    "conditional_fp_tree": {
+      "node_id": 32,
+      "item": "ROOT",
+      "count": 3,
+      "parent_item": null,
+      "children": [
+        {
+          "node_id": 33,
+          "item": "CLEANSER",
+          "count": 3,
+          "parent_item": "ROOT",
+          "children": []
+        }
+      ]
+    }
+  },
+  "TREATMENT": {
+    "item": "TREATMENT",
+    "header_table_frequency": 6,
+    "conditional_pattern_base": [
+      {
+        "prefix_path": [
+          "CLEANSER"
+        ],
+        "path_count": 2
+      },
+      {
+        "prefix_path": [
+          "CLEANSER",
+          "MOISTURIZER"
+        ],
+        "path_count": 1
+      },
+      {
+        "prefix_path": [
+          "SUNSCREEN",
+          "TONER"
+        ],
+        "path_count": 1
+      },
+      {
+        "prefix_path": [
+          "CLEANSER",
+          "MOISTURIZER",
+          "MAKEUP_REMOVAL"
+        ],
+        "path_count": 1
+      }
+    ],
+    "conditional_item_counts": {
+      "CLEANSER": 4,
+      "MOISTURIZER": 2,
+      "SUNSCREEN": 1,
+      "TONER": 1,
+      "MAKEUP_REMOVAL": 1
+    },
+    "retained_conditional_items": {
+      "CLEANSER": 4
+    },
+    "conditional_fp_tree": {
+      "node_id": 34,
+      "item": "ROOT",
+      "count": 4,
+      "parent_item": null,
+      "children": [
+        {
+          "node_id": 35,
+          "item": "CLEANSER",
+          "count": 4,
+          "parent_item": "ROOT",
+          "children": []
+        }
+      ]
+    }
+  },
+  "SERUM": {
+    "item": "SERUM",
+    "header_table_frequency": 7,
+    "conditional_pattern_base": [
+      {
+        "prefix_path": [
+          "MOISTURIZER"
+        ],
+        "path_count": 2
+      },
+      {
+        "prefix_path": [
+          "MOISTURIZER",
+          "SUNSCREEN"
+        ],
+        "path_count": 2
+      },
+      {
+        "prefix_path": [
+          "CLEANSER",
+          "TONER"
+        ],
+        "path_count": 1
+      },
+      {
+        "prefix_path": [
+          "CLEANSER",
+          "MOISTURIZER",
+          "MAKEUP_REMOVAL"
+        ],
+        "path_count": 1
+      }
+    ],
+    "conditional_item_counts": {
+      "MOISTURIZER": 5,
+      "SUNSCREEN": 2,
+      "CLEANSER": 2,
+      "TONER": 1,
+      "MAKEUP_REMOVAL": 1
+    },
+    "retained_conditional_items": {
+      "MOISTURIZER": 5
+    },
+    "conditional_fp_tree": {
+      "node_id": 36,
+      "item": "ROOT",
+      "count": 5,
+      "parent_item": null,
+      "children": [
+        {
+          "node_id": 37,
+          "item": "MOISTURIZER",
+          "count": 5,
+          "parent_item": "ROOT",
+          "children": []
+        }
+      ]
+    }
+  }
+}

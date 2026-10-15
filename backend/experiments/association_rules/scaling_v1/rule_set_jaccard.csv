@@ -1,0 +1,4 @@
+Pair,Jaccard,Rules_A_Count,Rules_B_Count
+Stage S (S20_B30) vs Stage M (M40_B100),0.3714,13,35
+Stage M (M40_B100) vs Stage L (L80_B300),0.5581,35,32
+Stage S (S20_B30) vs Stage L (L80_B300),0.4062,13,32

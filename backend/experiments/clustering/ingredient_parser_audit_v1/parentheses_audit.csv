@@ -1,0 +1,1107 @@
+bracket_content,context_example,frequency,product_count,classification,v1_behavior,v2_behavior
+(Aqua),"Purified Water (Aqua), Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Peg
+-150 Pentaerythrityl Te",159,112,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Parfum),"Dimethicone, Water (Aqua), Zinc Oxide, Alcohol, Diisopropyl Sebacate, Isododecane, Octocrylene, Ethylhexyl Salicylate, C",85,60,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI 77891),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",50,38,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Sunflower),"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",49,48,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Corn),"Dimethicone, Water (Aqua), Zinc Oxide, Alcohol, Diisopropyl Sebacate, Isododecane, Octocrylene, Ethylhexyl Salicylate, C",47,29,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Avocado),"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",45,32,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(jojoba),"hyaluronic acid, vitamin c, vitamin b3, pearl powder. bảng thành phần, 9 polydimethylsiloxyethyl dimethicone, silica, di",45,9,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(HA),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",45,28,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Orange),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",44,29,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Witch Hazel),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",42,39,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Rosemary),"Water, Niacinamide, Propanediol, Dipropylene Glycol, Acetyl Glucosamine, Calcium Pantothenate, Sodium Ascorbyl Phosphate",42,27,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Vitamin B3),"Purified Water (Aqua), Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Peg
+-150 Pentaerythrityl Te",41,32,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Tea Tree),"Water, Isododecane, 1,2
+-Hexanediol, Dipropylene Glycol, Glycereth
+-26, Tuber Magnatum Extract, Butylene Glycol, Polypro",41,36,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Carrot),"Aqua (Water), Butylene Glycol, Propylene Glycol, Ethylhexyl Methoxycinnamate, Polymethyl Methacrylate, PEG
+-8, Ethylhexy",40,19,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Water),"Aqua (Water), Butylene Glycol, Propylene Glycol, Ethylhexyl Methoxycinnamate, Polymethyl Methacrylate, PEG
+-8, Ethylhexy",37,35,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Rice),"Water, Isododecane, 1,2
+-Hexanediol, Dipropylene Glycol, Glycereth
+-26, Tuber Magnatum Extract, Butylene Glycol, Polypro",37,25,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Matricaria),"Water, Niacinamide, Propanediol, Dipropylene Glycol, Acetyl Glucosamine, Calcium Pantothenate, Sodium Ascorbyl Phosphate",37,35,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Peach),"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",36,16,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Lavender),"Water, Niacinamide, Propanediol, Dipropylene Glycol, Acetyl Glucosamine, Calcium Pantothenate, Sodium Ascorbyl Phosphate",35,25,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(ha),"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",34,17,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Jojoba),"Water, Cyclopentasiloxane, Zinc Oxide, Ethylhexyl Methoxycinnamate, Methyl Methacrylate Crosspolymer, Dimethicone, PEG
+-",34,34,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Lemon),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",34,28,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Nano HA),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",34,18,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(Soybean),"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",32,29,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Walnut),"Water (Aqua),Juglans Regia (Walnut) Shell Powder,Glycerin,Glyceryl Stearate Se,Cetearyl Alcohol,Cocamidopropyl Betaine,S",30,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Grapefruit),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",30,27,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Turmeric),"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",27,25,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(nano),"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",27,12,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(Coconut),"• Kem Dưỡng Olay Total Effects Ngừa Lão Hóa Da Ban Ngày 50g: Water, Glycerin, Niacinamide, Ethylhexyl Salicylate, Butyl ",26,14,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Vitamin E),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",24,15,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Olive),"Water, Isododecane, 1,2
+-Hexanediol, Dipropylene Glycol, Glycereth
+-26, Tuber Magnatum Extract, Butylene Glycol, Polypro",24,18,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Broccoli),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",23,23,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ci 77891),"Water (Aqua), Dimethicone, Ethylhexyl Methoxycinnamate, Alcohol, Zinc Oxide, Titanium Dioxide, Glycerin, Diisopropyl Seb",23,23,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+[Nano],"Alcohol Denat., Diisopropyl Sebacate, Silica, Butyl Methoxydibenzoylmethane, Ci 77891 / Titanium Dioxide, C12
+-15 Alkyl ",23,15,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+"(1, 3, 6
+-II)","Purified Water (Aqua), Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Peg
+-150 Pentaerythrityl Te",23,12,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Super HA),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",22,16,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(BHA),"Purified Water (Aqua), Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Peg
+-150 Pentaerythrityl Te",20,20,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Licorice),"Water, Cyclohexasiloxane, Dicaprylyl Carbonate, Glycerin, Methylpropanediol, 1,2
+-Hexanediol, Niacinamide, Hydrogenated ",20,20,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Bergamot),"Water, Zinc Oxide (CI 77947), Propylheptylcaprylate, Titanium Dioxide (CI 77891), Butyloctyl Salicylate, Caprylyl Methic",20,18,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Vitamin C),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",20,11,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Grape),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",20,20,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Fragrance),"Aqua (Water), Butylene Glycol, Propylene Glycol, Ethylhexyl Methoxycinnamate, Polymethyl Methacrylate, PEG
+-8, Ethylhexy",19,19,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Sage),"Water, Isododecane, 1,2
+-Hexanediol, Dipropylene Glycol, Glycereth
+-26, Tuber Magnatum Extract, Butylene Glycol, Polypro",19,15,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ci 77491),"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",19,19,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(2%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",19,7,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Ci 77492),"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",17,15,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Peppermint),"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",17,16,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(antioxidant),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",17,7,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(rose),"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",17,17,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(kakadu plum fruit extract),"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",17,17,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(penetrating ha),"hyaluronic acid, vitamin c, pearl powder. bảng thành phần, peg, 18 methyl ether dimethyl silane, acrylates copolymer, po",17,17,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Trimethylsiloxy),"Water, Ethylhexyl Methoxycinnamate, Ethylhexyl Salicylate, Methylene Bis
+-Benzotriazolyl Tetramethylbutylphenol, BisEthy",16,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI 77491),"Water, Zinc Oxide (CI 77947), Propylheptylcaprylate, Titanium Dioxide (CI 77891), Butyloctyl Salicylate, Caprylyl Methic",16,16,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Willow),"Water, Niacinamide, Butylene Glycol, 1,2
+-Hexanediol, Zinc PCA, Sodium Hyaluronate, Allantoin, Ethylhexylglycerin, Disod",15,15,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ci 42090),"Water (Aqua), Dimethicone, Ethylhexyl Methoxycinnamate, Alcohol, Zinc Oxide, Titanium Dioxide, Glycerin, Diisopropyl Seb",15,9,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Job's Tears),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",15,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Mandarin Orange),"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",15,11,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(And),"Purified Water (Aqua), Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Peg
+-150 Pentaerythrityl Te",15,15,BLEND_SEPARATOR,"Deleted (and), causing all blend components to merge into one mega-token","Converted (and) to delimiter comma, separating distinct components"
+(texture enhancer),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",14,5,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(Aqua, Eau)","Water (Aqua, Eau), Zinc Oxide 10%, Sulfur, Salicylic Acid 2%, Melaleuca Alternifolia (Tea Tree) Leaf Oil, Camphor, Magne",14,6,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(CI 77492),"Water, Zinc Oxide (CI 77947), Propylheptylcaprylate, Titanium Dioxide (CI 77891), Butyloctyl Salicylate, Caprylyl Methic",14,14,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Apricot),"Water (Aqua),Juglans Regia (Walnut) Shell Powder,Glycerin,Glyceryl Stearate Se,Cetearyl Alcohol,Cocamidopropyl Betaine,S",14,8,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Shea),"Aqua (water), Paraffinum Liquidum, Stearic Acid, Glyceryl Stearate, Triethanolamine, Cera Alba, Cetyl Palmitate, Butyros",14,13,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Nano),"Water/Aqua, Butyloctyl Salicylate, Octinoxate/Ethylhexyl Methoxycinnamate, Titanium Dioxide (Nano), Dimethicone, Cetyl E",13,6,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(hydration),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",13,7,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-soothing)","Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",12,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Alpha Lipoic Acid),"Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",12,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Apple),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",12,12,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Niacinamide),"Aqua, Cocamidopropyl Betaine, Propylene Glycol, Hydroxypropyl Methylcellulose, Panthenol, Disodium EDTA, Hydroxypropyl C",12,12,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Meadowfoam),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",12,12,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(preservative),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",12,6,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(Cabbage),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",11,11,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Mushroom),"Water, Portulaca Oleracea Extract (89,15%),Glycerin, Propanediol, Centella asiatica Extract, Vitis Vinifera (Grape) Frui",11,11,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Purified Water),"Aqua (Purified Water), Disodium Laureth Sulfosuccinate, Coco
+-Betaine, Peg
+-7 Glyceryl Cocoate, Glycerin, Sodium Laureth",11,10,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Kiwi),"Water, Sodium Cocoyl Glycinate, Propylene Glycol, Pentylene Glycol, Coco
+-Betaine, Acrylates Copolymer, PEG
+-150 Pentaer",11,5,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Palm),"Water (Aqua), Alcohol, Dimethicone, Diisopropyl Sebacate, Octocrylene, Ethylhexyl Salicylate, Homosalate, Titanium Dioxi",11,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-replenishing)","Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",11,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI 77007),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",11,11,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(chiết xuất Cà rốt tím),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",10,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Mel),"Water (Aqua), Propanediol, Glycerin, Xylitol, Peg/Ppg
+-14/7 Dimethyl Ether, Phenoxyethanol, Peg
+-8, Bis
+-Peg
+-18 Methyl ",10,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Mistletoe),"Water, Propanediol, Dipropylene Glycol, Cyclopentasiloxane, Glycersth
+-26, Tanium Dioxide (CI 77891) Niacinamide Cycl Ch",10,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-restoring)","Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",10,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ci 17200),"Water (Aqua), Dimethicone, Ethylhexyl Methoxycinnamate, Alcohol, Zinc Oxide, Titanium Dioxide, Glycerin, Diisopropyl Seb",10,10,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Fermented HA),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",10,10,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Honeysuckle),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",10,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Màu Xanh Lá),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",10,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Màu Tím Nhạt),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",10,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Jasmine),"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",10,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Màu Xanh Nhạt),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",10,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Màu Hồng),"Water(Aqua), Ethylhexyl Triazone 4, Dibutyl Adipate, Propanediol, Diethylamino Hydroxybenzoyl Hexyl Benzoate 3, Butyloct",10,10,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI 17200),"Water (Aqua),Juglans Regia (Walnut) Shell Powder,Glycerin,Glyceryl Stearate Se,Cetearyl Alcohol,Cocamidopropyl Betaine,S",9,9,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(texture
+-enhancing)","Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",9,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Sugarcane),"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",9,9,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(100 Ppm),"Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",9,5,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(CI 77947),"Water, Zinc Oxide (CI 77947), Propylheptylcaprylate, Titanium Dioxide (CI 77891), Butyloctyl Salicylate, Caprylyl Methic",9,9,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(Vitamin B3, Vitamin E, Vitamin C)","Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",9,3,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(CI 77499),"Water, Zinc Oxide (CI 77947), Propylheptylcaprylate, Titanium Dioxide (CI 77891), Butyloctyl Salicylate, Caprylyl Methic",9,9,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Rosmarinus Officinalis Leaf Oil),"Water (Aqua), Butylene Glycol, Dipropylene Glycol, Glycerin, Alcohol, Pentaerythrityl Tetraethylhexanoate, Tranexamic Ac",9,7,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(3%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",8,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Marula Oil),"Water, Propanediol, Dipropylene Glycol, Cyclopentasiloxane, Glycersth
+-26, Tanium Dioxide (CI 77891) Niacinamide Cycl Ch",8,8,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Paraffinum Liquidum),"Aqua/Water/Eau, Methyl Methacrylate Crosspolymer, Dipropylene Glycol, Cyclopentasiloxane, Cyclohexasiloxane, Dimethicone",8,8,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Pelargonium Graveolens),"Aqua, Cocamidopropyl Betaine, Propylene Glycol, Hydroxypropyl Methylcellulose, Panthenol, Disodium EDTA, Hydroxypropyl C",8,8,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Hoa cúc La Mã),"Aqua, Cocamidopropyl Betaine, Propylene Glycol, Hydroxypropyl Methylcellulose, Panthenol, Disodium EDTA, Hydroxypropyl C",8,8,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Anthemis Nobilis),"Aqua, Cocamidopropyl Betaine, Propylene Glycol, Hydroxypropyl Methylcellulose, Panthenol, Disodium EDTA, Hydroxypropyl C",8,8,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Cocoa),"Water, Sodium Ascorbyl Phosphate (10%), Isopentyldiol, 1,2
+-Hexanediol, Niacinamide, Dipropylene Glycol, Butylene Glycol",8,8,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Rau má),"Water, Cetyl Ethylhexanoate, Butylene Glycol, Glycerin, Sodium Hyaluronate, Caprylic/Capric Triglyceride, Centella Asiat",7,7,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Ivy),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",7,7,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Lime),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",7,7,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Vitamin B5),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",7,7,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Shea Butter),"Water, Cetyl Ethylhexanoate, Butylene Glycol, Glycerin, Sodium Hyaluronate, Caprylic/Capric Triglyceride, Centella Asiat",7,7,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Artichoke),"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",7,5,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(pH balancing),"Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",7,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Mallow),"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",7,5,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Thyme),"Water, Isododecane, 1,2
+-Hexanediol, Dipropylene Glycol, Glycereth
+-26, Tuber Magnatum Extract, Butylene Glycol, Polypro",7,7,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Tràm trà),"Water/Aqua, Potassium Laureth Phosphate, Cocamidopropyl Betaine, Acrylates/Steareth
+-20 Methacrylate Copolymer, Sodium C",7,7,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Oat),"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",7,7,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Basil),"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",7,7,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cera Alba),Nước Khoáng Avene (Avene Aqua). Caprylic/Capric Triglyceride. Dầu Khoáng (Paraffinum Liquidum). Glycerin. Hydrogenated V,7,7,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Eggplant),"Water, Butylene Glycol, Glycerin, 1,2
+-Hexanediol, Hydrogenated Didecene, Allantoin, Trehalose, Hamamelis Virginiana (Wi",6,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Anise),"Water, Niacinamide, Propanediol, Dipropylene Glycol, Acetyl Glucosamine, Calcium Pantothenate, Sodium Ascorbyl Phosphate",6,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Coix Seed Extract),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",6,6,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(ổn định trong ánh sáng, không bị suy giảm khi tiếp xúc với tia cực tím)","Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",6,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Iron Oxide Red),"Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",6,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Carrageenan),"Aqua (Water), Sodium Cocoamphoacetate, Peg
+-40 Glyceryl Cocoate, Peg
+-200 Hydrogenated Glyceryl Palmate, Sodium Coceth S",6,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Papaya),"Aqua (Water), Glycerin, Caprylic/Capric Triglyceride, Cyclopentasiloxane, Cetyl Alcohol, Glyceryl Stearate, Cetyl Ethylh",6,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Iron Oxide Yellow),"Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",6,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Hyaluronic Acid),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",6,6,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Quince Seed Extract),"Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",6,6,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Prunus Persica),"1. Sữa Rửa Mặt Tẩy Trang Dạng Gel Hương Đào Momopuri Cleansing Gel 150g Triethylhexanoin, Glycerin, Water (Aqua), Peg
+-2",6,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(AHA),"Water, Sodium Laureth Sulfate, Glycerin, Sodium Cocoyl Glycinate, Potassium Laureth Phosphate, Potassium Cocoyl Glycinat",6,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Green Tea),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",6,6,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(IPMP),"Water, Glyceryl Stearate SE, PEG
+-60 Glyceryl Stearate, Isopropyl Myristate, Butylene Glycol, Ethanol, Sulfur, Salicylic",6,6,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ci 19140),"Water (Aqua),Juglans Regia (Walnut) Shell Powder,Glycerin,Glyceryl Stearate Se,Cetearyl Alcohol,Cocamidopropyl Betaine,S",6,6,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(1%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",5,5,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(50, 000mg)","Carbonated Water, Water, Glycerin, Butylene Glycol, Galactomyces Ferment Filtrate, Beta
+-Glucan, Bifida Fermet Filtrate,",5,5,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Avene Aqua),Nước Khoáng Avene (Avene Aqua). Caprylic/Capric Triglyceride. Dầu Khoáng (Paraffinum Liquidum). Glycerin. Hydrogenated V,5,5,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Binding HA),"Water, Butylene Glycol, Pentylene Glycol, Glycerin, Hydrolyzed Sodium Hyaluronate (Nano HA), Bis
+-Ethoxydiglycol Cyclohe",5,5,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(vitamin B5),"Water, Ethylhexyl Methoxycinnamate, Ethylhexyl Salicylate, Methylene Bis
+-Benzotriazolyl Tetramethylbutylphenol, BisEthy",5,5,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(preservatives),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",5,2,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(vitamin C/antioxidant),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",5,5,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Dexpanthenol),"Water, Panthenol (Dexpanthenol), Niacinamide, Glycerin, Alcohol Denat., Hyaluronic Acid, Centella Asiatica Extract, Buty",5,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(25, Dipropylene Glycol, Glycerin, Methylpropanediol, Butylene Glycol, Water, Adansonia Digitata Seed Extract (10, 000ppm)","Carbonated Water, Water, Glycerin, Butylene Glycol, Galactomyces Ferment Filtrate, Beta
+-Glucan, Bifida Fermet Filtrate,",5,5,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+[Butyrospermum Parkii (Shea Butter),"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",5,3,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+[Theobroma Cacao (Cocoa),"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",5,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+[Fragrance],"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",5,5,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Blue 1),"Water, Ethylhexyl Methoxycinnamate, Alcohol, Butyl Methoxydibenzoylmethane, Octocrylene, Steareth
+-6, Dimethicone, Butyl",5,5,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(HA, Super HA, Nano HA)","Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",5,5,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(hydration/skin replenishing),"Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",5,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(C30
+-45)","Water, Methoxycinnamate Ethylhexyl, Ethanol, (Lauryl Metacrylat / Metacrylic Axit Na) Cross Polymer, Alkyl Axit Benzoic ",5,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Horse Chestnut),"Water, Glycerin, Ethylhexyl Salicylate, Niacinamide, Butyl Methoxydibenzoylmethane, Dimethicone/Vinyl Dimethicone Crossp",5,5,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(stabilizer),"Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",5,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Raspberry),"Water, Glycolic Acid, Butylene Glycol, Glycerin, Sodium Hydroxide, 1,2
+-Hexanediol, Xanthan Gum, Gaultheria Procumbens (",5,5,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(HA, SHA & Nano HA)","Water, Diglycerin, Dipropylene Glycol, Glycerin, Pentylene Glycol, Squalane, Tranexamic Acid, Caprylic/Capric Triglyceri",5,5,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(Prickly Pear),"Water, Isononyl Isononanoate, Dimethicone, Diethylhexyl Succinate, Zinc Oxide (Nano), Butylene Glycol, Triethylhexyl Tri",4,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(vitamin C),"• Obagi 0.5% Soothing Retinol: Nước, Caprylic/Capric Triglyceride, Glyceryl Stearate, Cyclopentasiloxane, Butylene Glyco",4,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Sakura),"Water, Isononyl Isononanoate, Dimethicone, Diethylhexyl Succinate, Zinc Oxide (Nano), Butylene Glycol, Triethylhexyl Tri",4,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Zea Mays),"1. Sữa Rửa Mặt Tẩy Trang Dạng Gel Hương Đào Momopuri Cleansing Gel 150g Triethylhexanoin, Glycerin, Water (Aqua), Peg
+-2",4,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(White Truffle),"Water, C12
+-15 Alkyl Benzoate, Titanium Dioxide, Benzotriazolyl Dodecyl p
+-Cresol, Propanediol, Butyloctyl Salicylate, C",4,4,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(skin
+-soothing/antioxidant)","Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(10.44%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(7.49475%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Wasabi),"Thành phần sản phẩm Sữa Rửa Mặt Naris Nature Charcoal Facial Wash
+• Chiết xuất Than Hoạt Tính: giúp loại bỏ triệt để bụi",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(chiết xuất cây cơm cháy),"• Obagi 0.5% Soothing Retinol: Nước, Caprylic/Capric Triglyceride, Glyceryl Stearate, Cyclopentasiloxane, Butylene Glyco",4,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Watermelon),"Water/Aqua, Butyloctyl Salicylate, Octinoxate/Ethylhexyl Methoxycinnamate, Titanium Dioxide (Nano), Dimethicone, Cetyl E",4,4,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Carob),"Water, Glycerin, Propanediol, Niacinamide, Butylene Glycol, Alpha
+-arbutin, Caprylic/Capric Triglyceride, Isohexadecane,",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ginger),"Thành phần sản phẩm
+• Chiết xuất từ rễ Gừng (Zingiber Officinale Root Extract) và Glycerin: giúp da trông săn chắc, đủ ẩ",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(chiết xuất bơ hạt mỡ),"• Obagi 0.5% Soothing Retinol: Nước, Caprylic/Capric Triglyceride, Glyceryl Stearate, Cyclopentasiloxane, Butylene Glyco",4,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(F.I.L. D213768/1),"Aqua / Water, Glycerin, Cetearyl Alcohol, Caprylic/Capric Triglyceride, Cetyl Alcohol, Ceteareth
+-20, Petrolatum, Dimeth",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(tinh dầu Jojoba),"• Obagi 0.5% Soothing Retinol: Nước, Caprylic/Capric Triglyceride, Glyceryl Stearate, Cyclopentasiloxane, Butylene Glyco",4,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Yellow 5),"Water, Ethylhexyl Methoxycinnamate, Alcohol, Butyl Methoxydibenzoylmethane, Octocrylene, Steareth
+-6, Dimethicone, Butyl",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Màu Trắng),"Thành phần sản phẩm Dưỡng chất từ cây Phỉ (Witch Hazel): giúp làm sạch sâu và hỗ trợ se khít lỗ chân lông, cho làn da mị",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Màu Đen),"Thành phần sản phẩm Dưỡng chất từ cây Phỉ (Witch Hazel): giúp làm sạch sâu và hỗ trợ se khít lỗ chân lông, cho làn da mị",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(skin replenishing),"Water (Aqua), Niacinamide (vitamin B3, skin
+-restoring ), Acetyl Glucosamine (skin replenishing/antioxidant), Ascorbyl G",4,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(F.I.L. Y292059/1),"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(chiết xuất cây xô thơm),"• Obagi 0.5% Soothing Retinol: Nước, Caprylic/Capric Triglyceride, Glyceryl Stearate, Cyclopentasiloxane, Butylene Glyco",4,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(chiết xuất cây nọc sởi),"• Obagi 0.5% Soothing Retinol: Nước, Caprylic/Capric Triglyceride, Glyceryl Stearate, Cyclopentasiloxane, Butylene Glyco",4,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(chiết xuất cúc la mã),"• Obagi 0.5% Soothing Retinol: Nước, Caprylic/Capric Triglyceride, Glyceryl Stearate, Cyclopentasiloxane, Butylene Glyco",4,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(F.I.L. Z283405/1),"Aqua / Water, Ethylexhyl Methoxycinamate, Glycerin, Isohexadecane, Cyclohexasiloxane, Ammonium Polyacryloyldmethyl Taura",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Sulfur),"Water (Aqua, Eau), Zinc Oxide 10%, Sulfur, Salicylic Acid 2%, Melaleuca Alternifolia (Tea Tree) Leaf Oil, Camphor, Magne",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(C12
+-15)","Water, Kaolin, Lauryl Phosphate/ Polyoxyethylene (1.0) Monoakyl (C12
+-15) Ethers Phosphates/ Ethylhexylglycerin/ Potassi",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Tea Tree Oil),"Aqua, Sodium Lauroyl Sarcosinate, Cocamidopropyl Betaine, Glycerin, PEG
+-40 Hydrogenated Castor Oil, Hydroxyethylcellulo",4,4,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Acerola),"Water, Sodium Ascorbyl Phosphate (10%), Isopentyldiol, 1,2
+-Hexanediol, Niacinamide, Dipropylene Glycol, Butylene Glycol",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Lentil),"Centella Asiatica Extract(70.78 %), Dipropylene Glycol, Glycerin, Water, Niacinamide, Caprylic/Capric Triglyceride, Cety",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(10%),"Water, Sodium Ascorbyl Phosphate (10%), Isopentyldiol, 1,2
+-Hexanediol, Niacinamide, Dipropylene Glycol, Butylene Glycol",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(0.5%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Sugar Maple),"Water, Sodium Cocoyl Glycinate, Propylene Glycol, Pentylene Glycol, Coco
+-Betaine, Acrylates Copolymer, PEG
+-150 Pentaer",4,4,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(100 ppb),"Water, Glycerin, Butylene glycol, 1,2
+-Hexanediol, Glycereth
+-26, Sodium hyaluronate (9000 ppm), Tromethamine (100 pp pp",4,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(3D HA),"Water, Butylene Glycol, Pentylene Glycol, Glycerin, Hydrolyzed Sodium Hyaluronate (Nano HA), Bis
+-Ethoxydiglycol Cyclohe",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(6.9951%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(10.78%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(1.1%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(5.301%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(6.195040%),"Cyclopentasiloxane, Water (Aqua), Zinc Oxide (10.44%), Alcohol, Isododecane, Ethylhexyl Methoxycinnamate (7.49475%), Tal",4,4,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(pH adjuster),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",4,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+[Prunus Amygdalus Dulci (Sweet Almond),"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",4,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Limon),"Aqua, Sodium Lauroyl Sarcosinate, Cocamidopropyl Betaine, Glycerin, PEG
+-40 Hydrogenated Castor Oil, Hydroxyethylcellulo",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI77288),"Water (Aqua, Eau), Zinc Oxide 10%, Sulfur, Salicylic Acid 2%, Melaleuca Alternifolia (Tea Tree) Leaf Oil, Camphor, Magne",4,4,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Mango),"Aqua/Water/Eau, Glycerin, Dicaprylyl Ether, Propylheptyl Caprylate, Butylene Glycol, Glyceryl Stearate Citrate, Glycol P",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Mineral Oil),"Water, Glycerin, Paraffinum Liquidum (Mineral Oil), Dimethicone, Isopropyl Palmitate, Stearic Acid, Cetyl Alcohol, Polys",3,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(and),"Aqua, Glyceryl Stearate (and) PEG
+-100 Stearate, Caprylic / Capric Triglyceride, Arbutin, Stearic Acid, Cyclopentasiloxa",3,1,BLEND_SEPARATOR,"Deleted (and), causing all blend components to merge into one mega-token","Converted (and) to delimiter comma, separating distinct components"
+(PHA),"Water, Butylene Glycol, T.X.A, Diglycerin, Pentylene Glycol, PPG
+-26
+-Buteth
+-26, Bis
+- Ethoxydiglycol Cyclohexane 1,4
+-",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Evening Primrose),"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",3,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Nanoscale),"Cyclopentasiloxane, Water, Zinc Oxide (Nanoscale), Ethylhexyl Methoxycinnamate, Ci 77891, Titanium Dioxide (Nanoscale), ",3,1,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(Rosmarinus Officinalis Leaf Extract),"Thành phần sản phẩm 1. Sữa Chống Nắng Elixir Reflet Balancing Oshiroi Milk SPF50+ PA++++ Dưỡng Da Kiềm Dầu 35g Water, et",3,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Wheat),"Water, Pentylene Glycol, 1,2
+-Hexanediol, Niacinamide, Butylene Glycol, Sodium Hyaluronate, Allantoin, Panthenol, Adeno ",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Safflower),"Water, Pentylene Glycol, 1,2
+-Hexanediol, Niacinamide, Butylene Glycol, Sodium Hyaluronate, Allantoin, Panthenol, Adeno ",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(antioxidants),"Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",3,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(O
+-cymen
+-5
+-ol)","Thành phần sản phẩm Ethoxydiglycol, Butylene Glycol, Dipropylene Glycol, Water, Ascorbic Acid, Alpinia Katsumadai Seed E",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Carnauba),"Dimethicone, Sáp Tổng Hợp, Homosalate, Silica, Isoeicosane, Octocrylene, Phenylpropyldimethylsiloxysilicate, Ethylhexyl ",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Rapeseed),"Water, Pentylene Glycol, 1,2
+-Hexanediol, Niacinamide, Butylene Glycol, Sodium Hyaluronate, Allantoin, Panthenol, Adeno ",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Blackberry),"Water, Glycolic Acid, Butylene Glycol, Glycerin, Sodium Hydroxide, 1,2
+-Hexanediol, Xanthan Gum, Gaultheria Procumbens (",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cucumber),"Aqua, Sodium Lauryl Sulfate, Cocamide DEA, PEG
+-7 Glyceryl Cocoate, Salicylic Acid (2%), Cocamidopropyl Betaine, Hamamel",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(0.01%
+- là dung môi trong hoạt chất càng hóa nước cứng, bắt các icon kim loại, bảo vệ sản phầm khỏi tác nhân oxi hóa)","Water/Aqua, Potassium Laureth Phosphate, Cocamidopropyl Betaine, Acrylates/Steareth
+-20 Methacrylate Copolymer, Sodium C",3,3,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Ban Đêm),"Aqua / Water,Glycerin, Alcohol, Dipropylene Glycol, Butylene Glycol, Peg/Ppg/Polybutylene Glycol
+-8/5/3 Glycerin, Niacin",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cera Microcristallina),Nước Khoáng Avene (Avene Aqua). Caprylic/Capric Triglyceride. Dầu Khoáng (Paraffinum Liquidum). Glycerin. Hydrogenated V,3,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Hương thảo),"Water/Aqua, Potassium Laureth Phosphate, Cocamidopropyl Betaine, Acrylates/Steareth
+-20 Methacrylate Copolymer, Sodium C",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Oải hương),"Water/Aqua, Potassium Laureth Phosphate, Cocamidopropyl Betaine, Acrylates/Steareth
+-20 Methacrylate Copolymer, Sodium C",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cam),"Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(F.I.L. B166675/2),"Aqua / Water, Glycerin, Dimethicone, Isohexadecane, Silica, Hydroxyethylpiperazine Ethane Sulfonic Acid, Alcohol Denat.,",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Bilberry),"Water, Sodium Cocoyl Glycinate, Propylene Glycol, Pentylene Glycol, Coco
+-Betaine, Acrylates Copolymer, PEG
+-150 Pentaer",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI 42090),"Water, Ethylhexyl Methoxycinnamate, Alcohol, Butyl Methoxydibenzoylmethane, Octocrylene, Steareth
+-6, Dimethicone, Butyl",3,3,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Tomato),"Aqua (Water), Glycerin, Caprylic/Capric Triglyceride, Cyclopentasiloxane, Cetyl Alcohol, Glyceryl Stearate, Cetyl Ethylh",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(3000Ppb),"Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Centella Asiatica Extract (14.51%), Purified Water, Olea Europaea Fr",3,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(*Lưu ý danh sách thành phần được cập nhật thường xuyên. Vui lòng tham khảo danh sách thành phần trên sản phẩm để biết danh sách cập nhật mới nhất nhằm đảm bảo cho mục đích sử dụng của bạn.),"Aqua / Water, Ocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Niacinamide, Salicylic Acid, Sodium M",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Xanh),"Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Đỏ),"Nước tinh khiết, Cyclopentasiloxane, Zin C Oxide, Homosalate, Butyl Octyl Salicylate, Propanediol, Ethylhexyl Salicylate",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Xanh Bạc Hà),"Water, Ethylhexyl Methoxycinnamate, Alcohol, Butyl Methoxydibenzoylmethane, Octocrylene, Steareth
+-6, Dimethicone, Butyl",3,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+[Bi 418],"Aqua/Water/Eau, Sodium Cocoamphoacetate, Sodium Laureth Sulfate, Methylpropanediol, Disodium Edta, Mannitol, Xylitol, Rh",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Vitamin C tinh khiết),"Water, Sodium Cocoyl Glycinate, Propylene Glycol, Pentylene Glycol, Coco
+-Betaine, Acrylates Copolymer, PEG
+-150 Pentaer",3,3,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(C6
+-14 Olefin)","Water, Cyclohexasiloxane, Dicaprylyl Carbonate, Glycerin, Methylpropanediol, 1,2
+-Hexanediol, Niacinamide, Hydrogenated ",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Bí đao),"Water/Aqua, Potassium Laureth Phosphate, Cocamidopropyl Betaine, Acrylates/Steareth
+-20 Methacrylate Copolymer, Sodium C",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(1,000ppm)","Niacinamide, Chiết Xuất Protein Từ Sữa, Adenosine, Water, Glycerin, Caprylic/Capric Triglyceride, Butylene Glycol, Cetea",3,3,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Sweet Almond),"Coco
+-Caprylate/Caprate, Macadamia Integrifolia Seed Oil, Dicaprylyl Ether, Caprylic/Capric Triglyceride, Prunus Amygdal",3,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(thickener),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",3,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Lactic Acid),"Water, Glycerin, Niacinamide, Dimethicone, Lactic Acid, Polyacrylate Crosspolymer
+-6, Sodium Lactate, Panthenol, 3
+-O
+-E",3,3,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(emollient),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",3,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Chamomile),"Acrylates Copolymer, Alcohol, Vinyl Caprolactam/VP/ Dimethylaminoethyl Methacrylate Copolymer, Salicylic Acid (BHA), Wat",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Lichen),"Water, Niacinamide, 1,2
+-Hexanediol, Glutathione, Heli anthus Annuus (Sunflower) Seed Oil, Cetearyl Olivate, Sorbitan Ol",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Blueberry),"Water, Alcohol Denat., Calamine, Glycerin, Melaleuca Alternifolia (Tea Tree) Leaf Oil, Asiaticoside, Madecassic Acid, As",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(B5),"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Khóa Ẩm),"Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Daisy),"Water, Dipropylene Glycol, Neopentyl Glycol Diheptanoate, 1,2
+-Hexanediol, Niacinamide, Sorbitol, Hydroxyethyl Urea, Per",3,3,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(100 ppm),"Purified water, propanediol, glycerin, 1,2
+-hexanediol, 3
+-O
+-ethyl ascorbic acid (20,000 ppm), betaine, erythritol, but",2,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Tetramethylhydroxypiperidinol),"Houttuynia cordata Extract, Water, Dipropylene Glycol, Butylene Glycol, Glycerin, Alcohol, Melaleuca Alternifolia (Tea T",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(YlangYlang),"Water, Glycerin, Sodium Cocoyl Glycinate, Butylene Glycol, Hydroxypropyl Starch Phosphate, Cocamidopropyl Betaine, PEG
+-",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(B3),"Hydrolyzed Collagen, Sodium Hyaluronate, Hydrolyzed Hyaluronic Acid, Sodium Acetylated Hyaluronate, Retinyl Palmitate, W",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cranberry),"Water, Butylene Glycol, Glycerin, Cyclopentasiloxane, Dimethicone/Vinyl Dimethicone Crosspolymer, Biosaccharide Gum
+-1, ",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Pineapple),"Water, Glycerin, Hydrogenated Palm Acid, Lauric Acid, Potassium Hydroxide, Myristic Acid, Cocamidopropyl Betaine, Glycer",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(water),"Aqua (water), Paraffinum Liquidum, Stearic Acid, Glyceryl Stearate, Triethanolamine, Cera Alba, Cetyl Palmitate, Butyros",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(dimethylacrylamide/acryloyldimethyltaurate Na),"Thành phần sản phẩm 1. Sữa Chống Nắng Elixir Reflet Balancing Oshiroi Milk SPF50+ PA++++ Dưỡng Da Kiềm Dầu 35g Water, et",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Lưu ý: Danh sách thành phần của Axis
+-Y đôi khi có thể được cập nhật để phản ánh những cải tiến về công thức. Vui lòng tham khảo danh sách thành phần được in trên bao bì sản phẩm để biết thêm thông tin. Cập nhật lần cuối: 27/03/2023)","Water, Zinc Oxide, Cyclohexasiloxane, Dipropylene Glycol, Butyloctyl Salicylate, Propanediol, Isododecane, Polyglyceryl
+",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Copernicia Cerifera Cera),"Thành phần sản phẩm Water (Aqua), Butylene Glycol, Dipropylene Glycol, Alcohol, Glycerin, Dimethicone, Pentaerythrityl T",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Clary),"Water, Butylene Glycol, Glycerin, 1,2
+-Hexanediol, Hydrogenated Didecene, Allantoin, Trehalose, Hamamelis Virginiana (Wi",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Hyacinth),"Water, Butylene Glycol, Glycerin, 1,2
+-Hexanediol, Hydrogenated Didecene, Allantoin, Trehalose, Hamamelis Virginiana (Wi",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Clove),"Water, Pentylene Glycol, 1,2
+-Hexanediol, Niacinamide, Butylene Glycol, Sodium Hyaluronate, Allantoin, Panthenol, Adeno ",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(parfum),"chiết xuất bưởi hồng và kẽm, tinh chất hoa cúc và vitamin e, glucoside, glyceryl oleate, glycerides thực vật thủy lực , ",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+[HA],"Aqua / Water, Glycerin, Hydroxyethylpiperazine Ethane Sulfonic Acid, Sodium Hyaluronate, Peg
+-60 Hydrogenated Castor Oil",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(20,000 ppm)","Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(texture
+-enhancing/mattifying agent)","Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Eucerit ),"Aqua, Paraffinum Liquidum, Cera Microcristallina, Glycerin, Lanolin Alcohol (Eucerit ), Paraffin, Panthenol, Magnesium S",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+[Bi 479],"Aqua/Water/Eau, Glycerin, Niacinamide, Sodium Polyacrylate, Dipotassium Glycyrrhizate, Hydrogenated Polydecene, Pentylen",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(chelating agent),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Oryza Sativa Starch),"Aquacaprylic/Capric Triglyceridecetearyl Alcohol, Isohexadecaneniacinamidepentylene Glycol, Butylene Glycolglycerinoctyl",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Edelweiss),"Nước Băng Tan từ dãy núi Alpine và Chiết Xuất Thảo Mộc từ Thảm Thực Vật Thụy Sĩ, Aqua (Water), Caprylic/Capric Triglycer",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Than vỏ trấu),"Water, Stearic Acid, Glycerin, Palmitic Acid, Lauric Acid, Myristic Acid, Potassium Hydroxide, Silica, Butylene Glycol, ",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Ylang Ylang),"Water, Glycerin, Sodium Cocoyl Glycinate, Butylene Glycol, Cocamidopropyl Betaine, Hydroxypropyl Starch Phosphate, PEG
+-",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Aloe Barbadensis),"Octyldodecanol, Butylene Glycol Dicaprylate/Dicaprate, Ethylhexyl Methoxycinnamate, Dibutyl Ethylhexanoyl Glutamide, Dib",2,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Zingiber Officinale Root Extract),"Thành phần sản phẩm
+• Chiết xuất từ rễ Gừng (Zingiber Officinale Root Extract) và Glycerin: giúp da trông săn chắc, đủ ẩ",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(Ci 77491, Ci ... 77492, Ci 77499)","Water/Aqua, Butyloctyl Salicylate, Octinoxate/Ethylhexyl Methoxycinnamate, Titanium Dioxide (Nano), Dimethicone, Cetyl E",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(0.1 Ppm),"Water, Glycerin, Diglycerin, 1,2
+-Hexanediol, Butylene Glycol, Methyl Gluceth
+-20, Panthenol, Hydroxyethyl Acrylate/Sodi",2,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Vinyl Dimethicone/Methicone Silsesquioxane),"Lpg, Water, Ethylhexyl Methoxycinnamate, Isododecane, Cyclopentasiloxane, Ethanol, Neopentyl Glycol Diethylhexanoate, Ca",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Hydrolyzed Silk/Pgpropylmethylsilanediol),"Lpg, Water, Ethylhexyl Methoxycinnamate, Isododecane, Cyclopentasiloxane, Ethanol, Neopentyl Glycol Diethylhexanoate, Ca",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Vp/Eicosene),"Lpg, Water, Ethylhexyl Methoxycinnamate, Isododecane, Cyclopentasiloxane, Ethanol, Neopentyl Glycol Diethylhexanoate, Ca",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Candelilla),"Dimethicone, Sáp Tổng Hợp, Homosalate, Silica, Isoeicosane, Octocrylene, Phenylpropyldimethylsiloxysilicate, Ethylhexyl ",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(
+-)","Thành phần sản phẩm Water, Hamamelis Virginiana (Witch Hazel) Water, Salvia Officinalis (Sage) Extract, Mentha Piperita ",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Lauryl Metacrylat / Metacrylic Axit Na),"Water, Methoxycinnamate Ethylhexyl, Ethanol, (Lauryl Metacrylat / Metacrylic Axit Na) Cross Polymer, Alkyl Axit Benzoic ",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(Acrylates / Alkyl Acrylate (C10
+-30)","Water, Methoxycinnamate Ethylhexyl, Ethanol, (Lauryl Metacrylat / Metacrylic Axit Na) Cross Polymer, Alkyl Axit Benzoic ",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Nano ),"Water/Aqua, Butyloctyl Salicylate, Octinoxate/Ethylhexyl Methoxycinnamate, Titanium Dioxide (Nano), Dimethicone, Cetyl E",2,2,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(Rose),"Water/Aqua, Butyloctyl Salicylate, Octinoxate/Ethylhexyl Methoxycinnamate, Titanium Dioxide (Nano), Dimethicone, Cetyl E",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ci 77499),"1. Sữa Chống Nắng Bioderma Phổ Rộng Ráo Mịn
+- Không Màu Aqua/Water/Eau, C12
+-15 Alkyl Benzoate, Silica, Glycerin, Bis
+-E",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(vitamin B3, skin
+-restoring )","Water (Aqua), Niacinamide (vitamin B3, skin
+-restoring ), Acetyl Glucosamine (skin replenishing/antioxidant), Ascorbyl G",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(skin replenishing/antioxidant),"Water (Aqua), Niacinamide (vitamin B3, skin
+-restoring ), Acetyl Glucosamine (skin replenishing/antioxidant), Ascorbyl G",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(licorice extract/skin
+-soothing)","Water (Aqua), Niacinamide (vitamin B3, skin
+-restoring ), Acetyl Glucosamine (skin replenishing/antioxidant), Ascorbyl G",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(mooi),"rễ cây mật nhân, rong tảo đỏ (mooi), hoa đậu trắng, cà rốt đen, ceramide và cholesterol",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Hazel),"Coco
+-Caprylate/Caprate, Macadamia Integrifolia Seed Oil, Dicaprylyl Ether, Caprylic/Capric Triglyceride, Prunus Amygdal",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+[N2212/A],"Coco
+-Caprylate/Caprate, Macadamia Integrifolia Seed Oil, Dicaprylyl Ether, Caprylic/Capric Triglyceride, Prunus Amygdal",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(3),"T.X.A, Dipotassium Glycyrrhizinate, Yeast Extract (3), Olive Leaf Extract, 1,3
+-Butylene Glycol, Hydroxypropyl
+-Β
+-Cyclo",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(14),"T.X.A, Dipotassium Glycyrrhizinate, Yeast Extract (3), Olive Leaf Extract, 1,3
+-Butylene Glycol, Hydroxypropyl
+-Β
+-Cyclo",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(7),"T.X.A, Dipotassium Glycyrrhizinate, Yeast Extract (3), Olive Leaf Extract, 1,3
+-Butylene Glycol, Hydroxypropyl
+-Β
+-Cyclo",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(solvent),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(emulsifier),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(non
+-fragrant antioxidant plant oil)","Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(vitamin E/antioxidant),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Peanut),"Aqua, Niacinamide, Acetyl Glucosamine, Glycerin, Betaine, Camellia Sinensis Leaf Extract, Butylene Glycol, Microcitrus A",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI 61565),"Water (Aqua), Propanediol,Glycerin, Isononyl Isononanoate, Butylene Glycol, Betaine, Niacinamide, Limnanthes Alba (Meado",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(CI 60725),"Water (Aqua), Propanediol,Glycerin, Isononyl Isononanoate, Butylene Glycol, Betaine, Niacinamide, Limnanthes Alba (Meado",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(50.000ppm),"Nước, Dipropylene Glycol, Panthenol(50.000ppm), Glycerin, 1,2
+-Hexanediol, Betaine, Nước ép lá lô hội Arborescens, Chiết",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(solvent/texture enhancer),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(slip agent/hydration),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(green tea
+-derived antioxidant)","Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(Water, Eau)","Aqua (Water, Eau), Glycerin, Diglycerin, 1,2
+-Hexanediol, Inulin, Panthenol, Sodium Polyacryloyldimethyl Taurate, Xantha",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(Acrylate / Alkyl Acrylate (C10
+-30)","Water, Glycerin, Bg, Behenyl Alcohol, Mineral Oil, Cetanol, Dimethicone, Sorbitan Stearate, Polysorbate 60, Stearic Acid",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(phi nano),"Water, Cyclopentasiloxane, Ethylhexyl Methoxycinnamate, Cyclohexasiloxane, Zinc Oxide (CI 77947), Ethylhexyl Salicylate,",2,2,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(cleansing),"Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(hydration/skin
+-soothing)","Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+[1],"Water, Propanediol, Glycerin, Niacinamide, 3
+-O
+-Ethyl Ascorbic Acid, 1,2
+-Hexanediol, Isopropyl Myristate, Betaine, Ery",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Perfume),"Silica, C12
+-15 Alkyl Benzoate, Methylene Bis
+-Benzotriazolyl Tetramethylbutylphenol [Nano], Corn Starch Modified, Dieth",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(vitamin E),"Aloe Barbadensis Leaf Fruit Juice, Aqua, Glycerin, Tocopherol (vitamin E), Carbomer 940, Propylene Glycol, Triethanolami",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Penetrating HA),"Water, Butylene Glycol, Pentylene Glycol, Glycerin, Hydrolyzed Sodium Hyaluronate (Nano HA), Bis
+-Ethoxydiglycol Cyclohe",2,2,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(10ppm),"Water, Glycerin, Butylene Glycol, 1,2
+-Hexanediol, Niacinamide, Alcohol, Lactobacillus /Centella Asiatica Extract Fermen",2,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(thickeners),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Castor),"Centella Asiatica Extract(70.78 %), Dipropylene Glycol, Glycerin, Water, Niacinamide, Caprylic/Capric Triglyceride, Cety",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(20,000 Ppm)","Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Dill),"• Kem Dưỡng Olay Regenerist Micro
+-Sculpting Ngừa Lão Hóa Da Ban Ngày 50g: Water, Glycerin, Isohexadecane, Niacinamide*,",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Fig),"Water, Cyclohexasiloxane, Dicaprylyl Carbonate, Glycerin, Methylpropanediol, 1,2
+-Hexanediol, Niacinamide, Hydrogenated ",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(10,000Ppm)","Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Centella Asiatica Extract (14.51%), Purified Water, Olea Europaea Fr",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(7500Ppb),"Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Centella Asiatica Extract (14.51%), Purified Water, Olea Europaea Fr",2,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Lilac),"Aqua, Glycereth
+-26, Tribehenin PEG
+-20 Esters, Niacinamide, Dimethicone, Salicylic Acid, Silica, Milk Protein, Syringa ",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(rice),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(CI 40800),"Water (Aqua), Propanediol,Glycerin, Isononyl Isononanoate, Butylene Glycol, Betaine, Niacinamide, Limnanthes Alba (Meado",2,2,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(Gel
+-Based Thickener)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Slip Agent),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",2,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(Skin
+-Identical Ingredient)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",2,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(5%),"Avobenzone 3%, Homosalate (10%), Octisalate (5%), Octocrylene (2.8%), Oxybenzone 6%, Water, Butyloctyl Salicylate, Styre",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(2.8%),"Avobenzone 3%, Homosalate (10%), Octisalate (5%), Octocrylene (2.8%), Oxybenzone 6%, Water, Butyloctyl Salicylate, Styre",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Eucerit®),"Aqua, Glycerin, Paraffinum Liquidum, Myristyl Alcohol, Butylene Glycol, Alcohol Denat, Stearic Acid, Myristyl Myristate,",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Chiết xuất nấm),"Nước, Dipropylene Glycol, Panthenol(50.000ppm), Glycerin, 1,2
+-Hexanediol, Betaine, Nước ép lá lô hội Arborescens, Chiết",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(5,000ppm)","Purified Water, Glycerin, Myristic Acid, Lauric Acid, Potassium Hydroxide, Kaolin, Stearic Acid, Glyceryl Stearate, Laur",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(1,073ppm)","Purified Water, Glycerin, Myristic Acid, Lauric Acid, Potassium Hydroxide, Kaolin, Stearic Acid, Glyceryl Stearate, Laur",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(9000 ppm),"Water, Glycerin, Butylene glycol, 1,2
+-Hexanediol, Glycereth
+-26, Sodium hyaluronate (9000 ppm), Tromethamine (100 pp pp",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(100 pp ppb),"Water, Glycerin, Butylene glycol, 1,2
+-Hexanediol, Glycereth
+-26, Sodium hyaluronate (9000 ppm), Tromethamine (100 pp pp",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(900 O ppm, Tromethamine, Carbomer, Allantoin, Sodium Chloride, Malachite Extract,Trimonium Hyaluronate ( 100 ppb)","Water, Glycerin, Butylene glycol, 1,2
+-Hexanediol, Glycereth
+-26, Sodium hyaluronate (9000 ppm), Tromethamine (100 pp pp",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(25 ppb),"Water, Glycerin, Butylene glycol, 1,2
+-Hexanediol, Glycereth
+-26, Sodium hyaluronate (9000 ppm), Tromethamine (100 pp pp",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(10 ppb),"Water, Glycerin, Butylene glycol, 1,2
+-Hexanediol, Glycereth
+-26, Sodium hyaluronate (9000 ppm), Tromethamine (100 pp pp",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(2 ppb),"Water, Glycerin, Butylene glycol, 1,2
+-Hexanediol, Glycereth
+-26, Sodium hyaluronate (9000 ppm), Tromethamine (100 pp pp",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Dưỡng Ẩm),"Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",2,2,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(35.8%),"Centella Asiatica Extract (35.8%), Cyclopentasiloxane, Zinc Oxide, Butyl Octyl Salicylate, Titanium Dioxide, Propanediol",2,2,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(texture enhancer/film
+-forming agent)","Thành phần sản phẩm Water (Aqua), Cyclopentasiloxane (texture enhancer/hydration), Octyldodecyl Neopentanoate (texture e",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(Alkyl Acrylate / Steareth
+-20)","Nước, Cocoylglycine Kali, Lauryl Betaine, Natri Lauramin Zodiacetate, (Alkyl Acrylate / Steareth
+-20) Copolyme, Kali Hyd",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(B),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Li),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Sr),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(HCO3
+-)","Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(NH4+),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(PO43),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(1%; 100% pure),"Water, Sodium Hyaluronate (1%; 100% pure), Benzylalcohol, Dehydroacetic Acid.",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(F),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(1),"T.X.Acid*, Dipotassium Glycyrrhizinate*, Yeast Extract (3), Neem Leaf Extract, Seaweed Extract (4), Seaweed Extract (1),",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Phytosteryl/2
+-Octyldodecyl)","T.X.Acid*, Dipotassium Glycyrrhizinate*, Yeast Extract (3), Neem Leaf Extract, Seaweed Extract (4), Seaweed Extract (1),",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Pisum Sativum (Pea),"Aqua (Water, Eau) , Propanediol , Butylene Glycol , Diglycerin , Glycerin , 1,2
+-Hexanediol , Ascorbyl Glucoside , 3
+-O
+",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(một vị thuốc đông y từ trung hoa),"rễ cây bạch liễm (một vị thuốc đông y từ trung hoa), chiết xuất cây hoa họ cúc cô đặc thế hệ mới, tảo ecklonia kurome",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Dầu Tầm Xuân),"Thành phần sản phẩm
+• 3% RoseHip Oil (Dầu Tầm Xuân): tái tạo da, cung cấp dưỡng chất và tăng cường độ ẩm, củng cố hàng r",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(pro vitamin B5),"Thành phần sản phẩm
+• 3% RoseHip Oil (Dầu Tầm Xuân): tái tạo da, cung cấp dưỡng chất và tăng cường độ ẩm, củng cố hàng r",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(chiết xuất rễ Cam Thảo),"Thành phần sản phẩm
+• 3% RoseHip Oil (Dầu Tầm Xuân): tái tạo da, cung cấp dưỡng chất và tăng cường độ ẩm, củng cố hàng r",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(F.I.L. N70040253/2),"Aqua / Water / Eau, Glycerin, Coco
+-Betaine, Propanediol, Sodium Cocoyl Glycinate, Peg
+-120 Methyl Glucose Dioleate, Sod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+[Bi 722],"Aqua/Water/Eau, Sodium Cocoamphoacetate, Propanediol, Sodium Lauroyl Sarcosinate, Citric Acid, Coco
+-Glucoside, Glyceryl",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Mới),"Hydrolyzed Collagen, Sodium Hyaluronate, Hydrolyzed Hyaluronic Acid, Sodium Acetylated Hyaluronate, Retinyl Palmitate, W",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Fruit Ceramide),"Hydrolyzed Collagen, Sodium Hyaluronate, Hydrolyzed Hyaluronic Acid, Sodium Acetylated Hyaluronate, Retinyl Palmitate, W",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Royal Jelly Extract),"Thành phần sản phẩm Chứa thành phần dưỡng ẩm: Hyaluronic acid (Sodium Hyaluronate), chiết xuất sữa ong chúa (Royal Jelly",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Hydroxyethyl Acrylate / Acryloyldimethyltaurine Na),"Thành phần sản phẩm Chứa thành phần dưỡng ẩm: Hyaluronic acid (Sodium Hyaluronate), chiết xuất sữa ong chúa (Royal Jelly",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Na Acrylate / Acryloyldimethyltaurine Na),"Thành phần sản phẩm Chứa thành phần dưỡng ẩm: Hyaluronic acid (Sodium Hyaluronate), chiết xuất sữa ong chúa (Royal Jelly",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Pumpkin),"Thành phần sản phẩm Water, Myristic Acid, Glycerin, Potassium Hydroxide, Stearic Acid, Lauric Acid, PEG
+-100 Stearate, G",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Banana),"Thành phần sản phẩm Water, Myristic Acid, Glycerin, Potassium Hydroxide, Stearic Acid, Lauric Acid, PEG
+-100 Stearate, G",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(AP),"Centella Asiatica Extract (72%), Mentha Piperita (Peppermint) Leaf Extract, Ginger Eextract, Ceramide (NP), Coptis Chine",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(77%),"Centella Asiatica Extract (77%), Butylene Glycol, Glycerin, Niacinamide, T.X.A, 1,2
+-Hexanediol, Purified Water, Betaine",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(Licorice/Anti
+-Irritant)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Vitamin C/Antioxidant),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(0.1Ppm),"Water, Sodium Ascorbyl Phosphate (10%), Isopentyldiol, 1,2
+-Hexanediol, Niacinamide, Dipropylene Glycol, Butylene Glycol",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(licorice),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(anise),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(grapefruit),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(celery),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI 77019),"Water, Zinc Oxide (CI 77947), Propanediol, Butyloctyl Salicylate, Methyl Trimethicone, Cyclohexasiloxane, Coco
+-Caprylat",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(CI 77288),"Water, Zinc Oxide (CI 77947), Propanediol, Butyloctyl Salicylate, Methyl Trimethicone, Cyclohexasiloxane, Coco
+-Caprylat",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Nano Tetrahydrocurcumin),"Thành phần sản phẩm
+• Nano THC (Nano Tetrahydrocurcumin): Chất chống oxy hóa mạnh, kháng viêm, kháng khuẩn, giúp lành vế",1,1,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(Tăng Cường Thẩm Thấu),"Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Giảm Sưng),"Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Kháng Sưng Viêm),"Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Giảm Đỏ),"Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(All Preservatives),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,ANNOTATION,Silently deleted,Stripped processing modifier; term retained
+(Seaweed),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Water
+-Binding Agent)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Antioxidants),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Emollient Plant Oil/Lubricant),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Vitamin E/Antioxidant),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(Vitamin B3/Cell
+-Communicating Ingredient)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Silicones/Slip Agents),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(SA),"Thành phần sản phẩm
+• Nano THC (Nano Tetrahydrocurcumin): Chất chống oxy hóa mạnh, kháng viêm, kháng khuẩn, giúp lành vế",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(2,775ppm)","Water, Butylene Glycol, Glycerin, Helianthus Annuus (Sunflower) Seed Oil, 1,2
+-Hexanediol, Polysorbate 60, Betaine, Dime",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(2,000ppm)","Water, Butylene Glycol, Glycerin, Helianthus Annuus (Sunflower) Seed Oil, 1,2
+-Hexanediol, Polysorbate 60, Betaine, Dime",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Silicone Slip Agent),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(72%),"Centella Asiatica Extract (72%), Mentha Piperita (Peppermint) Leaf Extract, Ginger Eextract, Ceramide (NP), Coptis Chine",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(NP),"Centella Asiatica Extract (72%), Mentha Piperita (Peppermint) Leaf Extract, Ginger Eextract, Ceramide (NP), Coptis Chine",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(EOP),"Centella Asiatica Extract (72%), Mentha Piperita (Peppermint) Leaf Extract, Ginger Eextract, Ceramide (NP), Coptis Chine",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(NS),"Centella Asiatica Extract (72%), Mentha Piperita (Peppermint) Leaf Extract, Ginger Eextract, Ceramide (NP), Coptis Chine",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(17500Ppb),"Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Centella Asiatica Extract (14.51%), Purified Water, Olea Europaea Fr",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(500Ppb),"Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Centella Asiatica Extract (14.51%), Purified Water, Olea Europaea Fr",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(100Pppm),"Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Centella Asiatica Extract (14.51%), Purified Water, Olea Europaea Fr",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(vitamin b3),"white ten, niacinamide (vitamin b3), chiết xuất rau má, chiết xuất rễ dâu tằm, chiết xuất táo xanh, chiết xuất trà xanh,",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(cabbage),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(broccoli),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(turnip),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(carrot),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(tomato),"Water, Sodium hyaluronate, Butylene glycol, Peg
+-60 hydrogenated castor oil, Dimethyl sulfone, Betaine, Natto gum, Disod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Cell
+-Communicating Ingredient)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Antioxidant),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Emulsifier),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Vitamin B5/Water
+-Binding Agent)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(Film
+-Forming/Water
+-Binding Agent)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(Silicone Film
+-Forming Agent)","Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Thickener),"Water, Cyclopentasiloxane (Silicone Slip Agent), Butylene Glycol (Slip Agent), Glycerin, (Skin
+-Identical Ingredient) La",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Acai),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Wild Cherry),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(skin
+-replenishing/hydration)","Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-restoring/hydration)","Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(*),"Thành phần sản phẩm AQUA / WATER, SODIUM COCOYL GLYCINATE, COCO
+-BETAINE, GLYCERIN, SODIUM CHLORIDE, CI 77891 / TITANIUM",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(70.78 %),"Centella Asiatica Extract(70.78 %), Dipropylene Glycol, Glycerin, Water, Niacinamide, Caprylic/Capric Triglyceride, Cety",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(10,000 Ppm)","Centella Asiatica Extract(70.78 %), Dipropylene Glycol, Glycerin, Water, Niacinamide, Caprylic/Capric Triglyceride, Cety",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(11 Ppm),"Centella Asiatica Extract(70.78 %), Dipropylene Glycol, Glycerin, Water, Niacinamide, Caprylic/Capric Triglyceride, Cety",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(810,841 Ppm)","Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Fil. Z70020268/1),"Aqua/Water, Sodium Laureth Sulfate, Glycerin, Decyl Glucoside, Sodium Chloride, Peg
+-150 Pentaerythrityl Tetrastearate, ",1,1,COLOR_CODE_OR_FORMULA_ID,Silently deleted,Formula codes stripped; cosmetic color indices retained cleanly
+[Bi 2068],"Aqua/Water/Eau, Butylene Glycol, Glycerin, Propanediol, Acetyl Glucosamine, Pentylene Glycol, Salicylic Acid, Xanthan Gu",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Yến Mạch),"Nước (Aqua), Dầu Khoáng (Paraffinum Liquidum), Caprylic / Capric Triglyceride, Glycerin, Dầu Hydro Hóa Rau, Kẽm Oxit, Pe",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(0.1 %),"Water, Cyclohexasiloxane, Dicaprylyl Carbonate, Glycerin, Methylpropanediol, 1,2
+-Hexanediol, Niacinamide, Hydrogenated ",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(12Ppm),"Water, Sodium Ascorbyl Phosphate (10%), Isopentyldiol, 1,2
+-Hexanediol, Niacinamide, Dipropylene Glycol, Butylene Glycol",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+[Pyrus Malus (Apple),"Nước Băng Tan từ dãy núi Alpine và Phức Hợp Thực Vật Dưỡng Sáng Thụy Sĩ. Aqua (Water), Caprylic/Capric Triglyceride, Gyc",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(14.51%),"Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Centella Asiatica Extract (14.51%), Purified Water, Olea Europaea Fr",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+[Bi 573],"Silica, C12
+-15 Alkyl Benzoate, Methylene Bis
+-Benzotriazolyl Tetramethylbutylphenol [Nano], Corn Starch Modified, Dieth",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(5%, Hydroxyethylcellulose, Centella Asiatica Extract, Citrus Junos Fruit Extract, Illicium Verum(Anise)","Water, Propylen Glycol, Ascorbic Acid(5%, Hydroxyethylcellulose, Centella Asiatica Extract, Citrus Junos Fruit Extract, ",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Celery),"Aqua (Water), Glycerin, Caprylic/Capric Triglyceride, Cyclopentasiloxane, Cetyl Alcohol, Glyceryl Stearate, Cetyl Ethylh",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Turnip),"Aqua (Water), Glycerin, Caprylic/Capric Triglyceride, Cyclopentasiloxane, Cetyl Alcohol, Glyceryl Stearate, Cetyl Ethylh",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+[Bi 2039],"Aqua/Water/Eau, Caprylic/Capric Triglyceride, Glycerin, Polyglyceryl
+-3 Polyricinoleate, Brassica Campestris (Rapeseed) ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(F.I.L. Y70030183/1),"Aqua / Water, Alcohol Denat., Glycerin, Dipropylene Glycol, Butylene Glycol, Niacinamide, Peg/Ppg/Polybutylene Glycol
+-8",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(placenta extract),"chiết xuất nhau thai (placenta extract), jobi ma, yuen seed extract, morus alba root extract, sodium pca, malic acid, or",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Red 33),"Aqua (Water), Propylene Glycol, Glycolic Acid, Propanediol, Salicylic Acid, Panthenol, PEG
+-40 Hydrogenated Castor Oil, ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(92%),"Aloe Barbadensis Leaf Extract (92%), Alcohol, Glyceryl polyacrylate, Dipropylene glycol, Butylene Glycol, Glycerin, Prop",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(20ppm),"Water, Glycerin, Butylene Glycol, 1,2
+-Hexanediol, Niacinamide, Alcohol, Lactobacillus /Centella Asiatica Extract Fermen",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(5ppm),"Water, Glycerin, Butylene Glycol, 1,2
+-Hexanediol, Niacinamide, Alcohol, Lactobacillus /Centella Asiatica Extract Fermen",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+[Whey Protein],"Nước Băng Tan từ dãy núi Alpine và Phức Hợp Thực Vật Dưỡng Sáng Thụy Sĩ. Aqua (Water), Pentylene Glycol, Methylpropanedi",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(F.I.L Z70042997/1),"Aqua/Water, Alcohol Denat., Dilsopropyl Sebacate, Silica, Isopropyl Myristate, Ethylhexyl Salicylate, Bis
+-Ethylexyloxyp",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(120ppm),"Hamamelis Virginiana (Witch Hazel) Water, Water, Dimethicone, Cyclopentasiloxane, Butylene Glycol, Niacinamide, 1,2
+-Hex",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(skin
+-smoothing)","Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+- soothing)","Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI 61570),"AVÈNE THERMAL SPRING WATER, WATER, SODIUM LAUROYL METHYL ISETHIONATE, ZINC COCETH SULFATE, POLYSORBATE 20, SODIUM COCOAM",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(CI 19140),"AVÈNE THERMAL SPRING WATER, WATER, SODIUM LAUROYL METHYL ISETHIONATE, ZINC COCETH SULFATE, POLYSORBATE 20, SODIUM COCOAM",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(0.00005ppm),"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+[Bi 728],"Aqua/Water/Eau, Glycerin, Methyl Methacrylate Crosspolymer, Dipropylene Glycol, Zinc Gluconate, Coco
+-Caprylate/Caprate,",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Bifida Ferment Lysate),Thành phần sản phẩm Kem chống nắng Caryophy Smart Sunscreen Tone Up với các thành phần chống nắng vượt trội giúp bảo vệ ,1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(1,000 Ppb)","Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(0.5 Ppm),"Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(0.016 Ppm),"Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(0.0154 Ppm),"Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(0.00025 Ppm),"Vitamin Tree Extract (810,841 Ppm), Glycerin, Purified Water, Niacinamide (20,000 Ppm), 1,2
+-Hexanediol, Caprylic/Capric",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(titanium dioxide, zinc oxide)","màng lọc chống nắng vật lý (titanium dioxide, zinc oxide), hợp chất 7 loại hoa trắng (white flower complex), chiết xuất ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(white flower complex),"màng lọc chống nắng vật lý (titanium dioxide, zinc oxide), hợp chất 7 loại hoa trắng (white flower complex), chiết xuất ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(chamomile extract),"màng lọc chống nắng vật lý (titanium dioxide, zinc oxide), hợp chất 7 loại hoa trắng (white flower complex), chiết xuất ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Wintergreen),"Water, Glycolic Acid, Butylene Glycol, Glycerin, Sodium Hydroxide, 1,2
+-Hexanediol, Xanthan Gum, Gaultheria Procumbens (",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(F..L. Z70021807/3),"Aqua / Water, Alcohol,Denat., Disopropyl Sebacate, Silica, Isopropyl Myristate, Ethylhexyl Salicylate Bis
+-Ethylhexyloxy",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(sunflower oil/non
+-fragrant oil/antioxidant)","Water (Aqua), Sodium Cocoyl Isethionate (cleansing), Sodium Lauroamphoacetate (cleansing), Stearic Acid (texture
+-enhanc",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(2),"T.X.A, Dipotassium Glycyrrhizinate, Yeast Extract (3), Olive Leaf Extract, 1,3
+-Butylene Glycol, Hydroxypropyl
+-Β
+-Cyclo",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-replenishing/skin
+-soothing)","Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-conditioning/brightening)","Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(emollient solvent),"Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(skin
+-softening)","Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-restoring/antioxidant)","Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(amino acid/hydration),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(hydration/chelation),"Water (Aqua), Ethyl Macadamiate (hydration), Glycerin (skin
+-replenishing), Cetearyl Alcohol (texture enhancer), Propane",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+( Licorice),"Water, Sodium Hyaluronate, Niacinamide, Glutathione, Helianthus Annuus (Sunflower) Seed Oil, Cetearyl Olivate, Sorbitan ",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Meadowsweet),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Purslane),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(absorbent),"Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Làm Mềm, Giảm Sưng)","Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Dưỡng Ẩm), Helianthus Annuus (Sunflower) Seed Oil (Làm Mềm, Giảm Sưng), B",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Phục Hồi Hàng Rào Tế Bào, Giảm Sưng)","Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Dưỡng Ẩm), Helianthus Annuus (Sunflower) Seed Oil (Làm Mềm, Giảm Sưng), B",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Tẩy Tế Bào Chết),"Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Dưỡng Ẩm), Helianthus Annuus (Sunflower) Seed Oil (Làm Mềm, Giảm Sưng), B",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(PARFUM),"AVÈNE THERMAL SPRING WATER, WATER, SODIUM LAUROYL METHYL ISETHIONATE, ZINC COCETH SULFATE, POLYSORBATE 20, SODIUM COCOAM",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(5Ppm),"Water, Butylene Glycol, Caprylic/Capric Triglyceride, Glycerin, Cetearyl Alcohol, Cetearyl Olivate, Limnanthes Alba (Mea",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(Linoleic Acid, Linolenic Acid)",Thành phần sản phẩm Kem chống nắng Caryophy Smart Sunscreen Tone Up với các thành phần chống nắng vượt trội giúp bảo vệ ,1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(dữ liệu cho biết mức độ tổn thương của da),Thành phần sản phẩm Kem chống nắng Caryophy Smart Sunscreen Tone Up với các thành phần chống nắng vượt trội giúp bảo vệ ,1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(bao gồm Fructooligosaccharides và Beta Vulgaris Root Extract),Thành phần sản phẩm Kem chống nắng Caryophy Smart Sunscreen Tone Up với các thành phần chống nắng vượt trội giúp bảo vệ ,1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Chiết xuất rau sam),Thành phần sản phẩm Kem chống nắng Caryophy Smart Sunscreen Tone Up với các thành phần chống nắng vượt trội giúp bảo vệ ,1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Chiết xuất nho),Thành phần sản phẩm Kem chống nắng Caryophy Smart Sunscreen Tone Up với các thành phần chống nắng vượt trội giúp bảo vệ ,1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(chiết xuất từ gốc tự nhiên, tinh dầu dừa)",Thành phần sản phẩm Kem chống nắng Caryophy Smart Sunscreen Tone Up với các thành phần chống nắng vượt trội giúp bảo vệ ,1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(89,15%)","Water, Portulaca Oleracea Extract (89,15%),Glycerin, Propanediol, Centella asiatica Extract, Vitis Vinifera (Grape) Frui",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Camellia Japonica),"Dimethicone, Sáp Tổng Hợp, Homosalate, Silica, Isoeicosane, Octocrylene, Phenylpropyldimethylsiloxysilicate, Ethylhexyl ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Helianthus Annuus),"Dimethicone, Sáp Tổng Hợp, Homosalate, Silica, Isoeicosane, Octocrylene, Phenylpropyldimethylsiloxysilicate, Ethylhexyl ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Aloe Vera),"Water, Glycerin, Laureth
+-6 Carboxylic Acid, Myristic Acid, Potassium Hydroxide, Ethanol, Lauric Acid, Niacinamide, Zinc",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+[Bi 2012],"Aqua/Water/Eau, Glycerin, Dicaprylyl Ether, Propylheptyl Caprylate, Butylene Glycol, Glyceryl Stearate Citrate, Glycol P",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cl 77891),"Water (Aqua), Stearic Acid, Myristic Acid, PEG
+-8, Potassium Hydroxide, Lauric Acid, Glycerin, Dipropylene Glycol, Alcoh",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ci 47005),"Water (Aqua), Glycerin, Stearic Acid, Myristic Acid, Potassium Hydroxide, Propylene Glycol Laurate, Lauric Acid, Peg
+-8,",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(trung bình, cao và rất cao)","Thành phần sản phẩm
+• Vitamin B3 (Niacinamide): giúp củng cố và hỗ trợ phục hồi hàng rào bảo vệ da.
+• 3 loại Hyaluronic ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(Giữ Nước, Điều Tiết Tế Bào)","Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Dưỡng Ẩm), Helianthus Annuus (Sunflower) Seed Oil (Làm Mềm, Giảm Sưng), B",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Centella Asiatica),"Octyldodecanol, Butylene Glycol Dicaprylate/Dicaprate, Ethylhexyl Methoxycinnamate, Dibutyl Ethylhexanoyl Glutamide, Dib",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Cucumis Sativus),"Octyldodecanol, Butylene Glycol Dicaprylate/Dicaprate, Ethylhexyl Methoxycinnamate, Dibutyl Ethylhexanoyl Glutamide, Dib",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Peptide X50 Pure White),"Thành phần sản phẩm Peptide X50 Pure White, Hyaluronic Acid, Niacinamide Water, Butylene Glycol, Caprylic/Capric Triglyc",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(bha),"13% lưu huỳnh, 18% zinc oxide, 5% niacinamide, 2% salicylic acid (bha)",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Sugar Cane),"Water, Acrylates Copolymer, Sorbitol, Pentylene Glycol, Sodium Taurine Cocoyl Methyltaurate, Decyl Glucoside, Potassium ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(white peony),"hoa đậu trắng (white peony), cà rốt đen (black carrot), rong tảo đỏ (red algae), nấm tuyết (snow fungus)",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(900.1 Ppm),"Water, Glycerin, Diglycerin, 1,2
+-Hexanediol, Butylene Glycol, Methyl Gluceth
+-20, Panthenol, Hydroxyethyl Acrylate/Sodi",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(65.1 Ppm),"Water, Glycerin, Diglycerin, 1,2
+-Hexanediol, Butylene Glycol, Methyl Gluceth
+-20, Panthenol, Hydroxyethyl Acrylate/Sodi",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(35 Ppm),"Water, Glycerin, Diglycerin, 1,2
+-Hexanediol, Butylene Glycol, Methyl Gluceth
+-20, Panthenol, Hydroxyethyl Acrylate/Sodi",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(2 O Ppm),"Water, Glycerin, Diglycerin, 1,2
+-Hexanediol, Butylene Glycol, Methyl Gluceth
+-20, Panthenol, Hydroxyethyl Acrylate/Sodi",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(b3),"glycerin, niacinamide (b3), panthenol (b5)",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(b5),"glycerin, niacinamide (b3), panthenol (b5)",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(quýt nhật),"vitamin c, chiết xuất yuzu (quýt nhật)",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(1,000Ppm)","Water, Glycerin, Butylene Glycol, C12
+-15 Alkyl Benzoate, Polymethyl Methacrylate, Diethylamino Hydroxybenzoyl Hexyl Ben",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Fil T70014688/1),"Aqua / Nước, Glycerin, Alcohol Denat., Dimethicone, Isononyl Isononanoate, Capryloyl Salicylic Acid, Menthoxypropanediol",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(3010Ppm),"Water, Butylene Glycol, Caprylic/Capric Triglyceride, Glycerin, Cetearyl Alcohol, Cetearyl Olivate, Limnanthes Alba (Mea",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(Làm Làm Vết Thương, Chống Uva, Octyldodecanol, Butylene Glycol, Polyacrylamide, Mannitol, Xylitol, Rhamnose, Laminaria Ochroleuca Extract, Copper Sulfate , Zinc Sulfate (Ngăn, Sodium Hyaluronate (Cấp Ẩm, Giảm Sự Mất Nước Qua Da)","Aqua (Water), Glycerin (Khóa Ẩm), Ethylhexyl Palmitate (Làm Mềm Da), Fructooligosaccharides, Zinc Oxide (Làm Làm Vết Thư",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Resveratrol: Giảm Thương Tổn Tế Bào),"Aqua (Water), Glycerin (Khóa Ẩm), Ethylhexyl Palmitate (Làm Mềm Da), Fructooligosaccharides, Zinc Oxide (Làm Làm Vết Thư",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Centella Asiatica:, Asiatic Acid, Madecassic Acid, C13
+-14 Isoparaffin, Octyldodecyl Xyloside, Peg
+-30 Dipolyhydroxystearate, Caprylic/Capric Triglyceride, Laureth
+-7, Laureth
+-3, Hydroxyethylcellulose, Acetyl Dipeptide
+-1 Cetyl Ester, Potassium Sorbate. 2. Bioderma Cicabio Crème+ SPF50+ Phục Hồi, Ngừa Sẹo & Giảm Tăng Sắc Tố Thành phần đầy đủ: Aqua/Water/Eau, Diethylhexyl Butamido Triazone, Dicaprylyl Carbonate, Diisopropyl Sebacate, Propanediol, Butyl Methoxydibenzoylmethane, Corn Starch Modified, Bis
+-Ethylhexyloxyphenol Methoxyphenyl Triazine, Polyglyceryl
+-6 Stearate, Diethylamino Hydroxybenzoyl Hexyl Benzoate, Dibutyl Adipate, Ethylhexyl Triazone, Butylene Glycol, Pentylene Glycol, Xylose, C20
+-22 Alkyl Phosphate, C20
+-22 Alcohols, Microcrystalline Cellulose, Glyceryl Caprylate, Squalane, Polyglyceryl
+-6 Behenate, Sodium Polyglutamate, Polyacrylate Crosspolymer
+-6, Sodium Citrate, Xanthan Gum, Dipalmitoyl Hydroxyproline, Sodium Hyaluronate, O
+-Cymen
+-5
+-Ol, Mannitol, Rhamnose, Xylitol, Sodium Hydroxide, Acetyl Dipeptide
+-1 Cetyl Ester, Glabridin, Tocopherol, Fructooligosaccharides, Propylheptyl Caprylate. [Bi 689]","Aqua (Water), Glycerin (Khóa Ẩm), Ethylhexyl Palmitate (Làm Mềm Da), Fructooligosaccharides, Zinc Oxide (Làm Làm Vết Thư",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(skin
+-conditioning agent)","Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+( suspending agent),"Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Pomegranate),"Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(astaxanthin/antioxidant),"Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(534,580ppm)","Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(0.5Ppm),"Water, Butylene Glycol, Caprylic/Capric Triglyceride, Glycerin, Cetearyl Alcohol, Cetearyl Olivate, Limnanthes Alba (Mea",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(CI77891),"Water(Aqua), Zinc Oxide, Titanium Dioxide(CI77891), Butyloctyl Salicylate, Isohexadecane, Ethylhexyl Palmitate, Isododec",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI77492),"Water(Aqua), Zinc Oxide, Titanium Dioxide(CI77891), Butyloctyl Salicylate, Isohexadecane, Ethylhexyl Palmitate, Isododec",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(CI77491),"Water(Aqua), Zinc Oxide, Titanium Dioxide(CI77891), Butyloctyl Salicylate, Isohexadecane, Ethylhexyl Palmitate, Isododec",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Glycine Soja Oil),"Avene Thermal Spring Water (Avene Aqua). C12
+-15 Alkyl Benzoate. Dicaprylyl Carbonate. Diethylamino Hydroxybenzoyl Hexyl",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Lens Esculenta Seed Extract),"Avene Thermal Spring Water (Avene Aqua). C12
+-15 Alkyl Benzoate. Dicaprylyl Carbonate. Diethylamino Hydroxybenzoyl Hexyl",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+[BI 655],"Thành phần sản phẩm AQUA/WATER/EAU, SODIUM LAURETH SULFATE, LAURYL GLUCOSIDE, PEG
+-200 HYDROGENATED GLYCERYL PALMATE, DI",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Camellia Sinensis),"Octyldodecanol, Butylene Glycol Dicaprylate/Dicaprate, Ethylhexyl Methoxycinnamate, Dibutyl Ethylhexanoyl Glutamide, Dib",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Avena Sativa Leaf/Stem Extract),"Water (Aqua), Caprylic/Capric Triglyceride, Glycerin, Butyrospermum Parkii (Shea) Butter, Dimethicone, Cetearyl Alcohol,",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Coenzyme Q10),"Water, T.azarotene, Ascorbic Acid (Vitamin C), Tocopherol (Vitamin E), Collagen, Ubiquinone (Coenzyme Q10), Carbomer, Sq",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Butyrospermum Parkii Butter),"Aquacaprylic/Capric Triglyceridecetearyl Alcohol, Isohexadecaneniacinamidepentylene Glycol, Butylene Glycolglycerinoctyl",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Pro Vitamin B5),"Panthenol (Pro Vitamin B5), Tocopheryl Acetate (Vitamin C), Magnesium Ascorbyl Phosphate (Vitamin E), Sodium Hyalurorate",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Than tre),"Water, Stearic Acid, Glycerin, Palmitic Acid, Lauric Acid, Myristic Acid, Potassium Hydroxide, Silica, Butylene Glycol, ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Chiết xuất lá chanh sim),"Water, Stearic Acid, Glycerin, Palmitic Acid, Lauric Acid, Myristic Acid, Potassium Hydroxide, Silica, Butylene Glycol, ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Ethylhexanoate),"Cyclopentasiloxane, Water, Zinc Oxide (Nanoscale), Ethylhexyl Methoxycinnamate, Ci 77891, Titanium Dioxide (Nanoscale), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Daily),"Cyclopentasiloxane, Water, Zinc Oxide (Nanoscale), Ethylhexyl Methoxycinnamate, Ci 77891, Titanium Dioxide (Nanoscale), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Panaxginseng),"Cyclopentasiloxane, Water, Zinc Oxide (Nanoscale), Ethylhexyl Methoxycinnamate, Ci 77891, Titanium Dioxide (Nanoscale), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(black carrot),"hoa đậu trắng (white peony), cà rốt đen (black carrot), rong tảo đỏ (red algae), nấm tuyết (snow fungus)",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(red algae),"hoa đậu trắng (white peony), cà rốt đen (black carrot), rong tảo đỏ (red algae), nấm tuyết (snow fungus)",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(snow fungus),"hoa đậu trắng (white peony), cà rốt đen (black carrot), rong tảo đỏ (red algae), nấm tuyết (snow fungus)",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Japanese Camellia),"Cyclopentasiloxane, Zinc Oxide, Water, Butylene Glycol, Glycerin, Methyl Methacrylate Crosspolymer, Titanium Dioxide, Di",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Cập nhật lần cuối: 08/ 2024),"Water, Glycerin, Propanediol, Niacinamide, Butylene Glycol, Alpha
+-arbutin, Caprylic/Capric Triglyceride, Isohexadecane,",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(0,7%)","Aqua, Sodium Olivoyl Glutamate, Sodium Olivate, Olivamidopropyl Betaine, Maltooligosyl Glucoside, Hydrogenated Starch Hy",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Làm Mềm Da),"Aqua (Water), Glycerin (Khóa Ẩm), Ethylhexyl Palmitate (Làm Mềm Da), Fructooligosaccharides, Zinc Oxide (Làm Làm Vết Thư",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(5 Ppm),"Purified Water, Butylene Glycol, Dipropylene Glycol, Glycerin, Niacinamide, 1,2
+-Hexanediol, Sodium Polyacrylate, Phenyl",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(0.503ppm),"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+"(10,000ppb)","Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(75ppm),"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(15ppm),"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(0.5ppm),"Hippophae Rhamnoides Water (534,580ppm), Glycerin, Butylene Glycol, Methyl Hydrogenated Rosinate, Water, Dipropylene Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(emollient texture enhancer),"Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+"(CI77491, CI 77492, CI 77499)","Thành phần sản phẩm Thành phần hoạt chất:
+• Zinc Oxide 13%: màng lọc chống nắng khoáng chất. Thành phần khác: Water (Aqu",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(skin
+-soothing antioxidant plant)","Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-replenishing/antioxidant)","Water (Aqua), Niacinamide (skin
+-restoring), Glycerin (skin
+-replenishing), Lactobacillus (skin
+-replenishing/skin
+-soot",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(38%),"Purified Water, Centella Asiatica Leaf Water(38%), Butylene Glycol, 1,2
+-Hexanediol, Niacinamide, Glycerin, Pantolactone",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Pear),"Purified Water, Centella Asiatica Leaf Water(38%), Butylene Glycol, 1,2
+-Hexanediol, Niacinamide, Glycerin, Pantolactone",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Melon),"Purified Water, Centella Asiatica Leaf Water(38%), Butylene Glycol, 1,2
+-Hexanediol, Niacinamide, Glycerin, Pantolactone",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(F.I.L. C271270/3),"Thành phần sản phẩm Aqua / Water, Glycerin, Myristic Acid, Palmitic Acid, Stearic Acid, Potassium Hydroxide, Lauric Acid",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(skin
+-restoring/skin
+-replenishing)","Water (Aqua), Niacinamide (skin
+-restoring/skin
+-replenishing), Pentylene Glycol (solvent/texture enhancer), Butylene Gl",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Chống Oxy Hóa),"Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Đất sét trắng),"Water, Glycerin, Palmitic Acid, Stearic Acid, Lauric Acid, Myristic Acid, Potassium Hydroxide, Butylene Glycol, Sorbitol",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Garlic),"Water, Zinc Oxide, Cyclopentasiloxane, Homosalate, Butyloctyl Salicylate, Propanediol, Ethylhexyl Salicylate, Propylhept",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Black Tea),"Water / Aqua / Eau, Glycerin, Butylene Glycol, Hydrogenated Poly(C6
+-14 Olefin), Pentaerythrityl Tetraethylhexanoate, Me",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(0.7%),"Water, Butylene Glycol, Propanediol, Glycerin, 1,2
+-Hexanediol, Morinda Citrifolia Fruit Extract (0.7%), Sodium Polyacry",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Tangerine),"Water, Butylene Glycol, Propanediol, Glycerin, 1,2
+-Hexanediol, Morinda Citrifolia Fruit Extract (0.7%), Sodium Polyacry",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cotton),"Aqua(Water), Ethylhexyl Methoxycinnamate, Butylene Glycol, Propylene Glycol, Polymethyl Methacrylate, Ethylhexyl Salicyl",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(800,000 Ppm)","Glacial Water (800,000 Ppm), Dipropylene Glycol, Cetyl Ethylhexanoate, Purified Water, 1,2
+-Hexanediol, Niacinamide, Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(207 Ppm),"Glacial Water (800,000 Ppm), Dipropylene Glycol, Cetyl Ethylhexanoate, Purified Water, 1,2
+-Hexanediol, Niacinamide, Gly",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Daffodil),"Zinc Oxide (CI 77947), Titanium Dioxide (CI 77891), Niacinamide, Silica, Aluminum Hydroxide, Sorbitan Isostearate, Stear",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Onion),"Aqua, Allium cepa (Onion) bulb extract, Aloe Barbadensis Leaf Juice, Nicotinamide, Glycerol, Allantoin, Xanthan Gum, Phe",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(bản cũ),"(bản cũ): Water, Butylene Glycol, Caprylic/Capric Triglyceride, Dimethicone, Triethylhexyl Trimellitate, Pentylene Glyco",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(bản mới),"(bản cũ): Water, Butylene Glycol, Caprylic/Capric Triglyceride, Dimethicone, Triethylhexyl Trimellitate, Pentylene Glyco",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Camu Camu),"Water, Glycerin, Sodium Cocoyl Glycinate, Sorbitol, Sodium Cocoyl Isethionate, Acrylates Copolymer, Cocamide Methyl MEA,",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Pionin),"Water, Glycerin, Sodium Cocoyl Glycinate, Sorbitol, Sodium Cocoyl Isethionate, Acrylates Copolymer, Cocamide Methyl MEA,",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"[Long
+-Lasting HA]","Aqua / Water, Glycerin, Hydroxyethylpiperazine Ethane Sulfonic Acid, Sodium Hyaluronate, Peg
+-60 Hydrogenated Castor Oil",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(15 Ppm),"Purified Water, Butylene Glycol, Dipropylene Glycol, Glycerin, Niacinamide, 1,2
+-Hexanediol, Sodium Polyacrylate, Phenyl",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+[N4102/B],"Thành phần sản phẩm Aqua/Water, Rosa Damascena Flower Water, Sodium Lauroyl Sarcosinate, Pentylene Glycol, Glycerin, Sod",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Glycolic Acid & Mandelic Acid),"Thành phần sản phẩm
+• 5% AHA (Glycolic Acid & Mandelic Acid): tẩy tế bào chết, giảm thiểu tình trạng tắc nghẽn lỗ chân l",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(aqua),"Propylene glycol, water (aqua), L
+-ascorbic acid, alcohol, ascorbyl glucoside, fragrance.",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(Hoa Cúc),"Thành phần sản phẩm
+• 3% RoseHip Oil (Dầu Tầm Xuân): tái tạo da, cung cấp dưỡng chất và tăng cường độ ẩm, củng cố hàng r",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Hạt Dẻ Ngựa),"Thành phần sản phẩm
+• 3% RoseHip Oil (Dầu Tầm Xuân): tái tạo da, cung cấp dưỡng chất và tăng cường độ ẩm, củng cố hàng r",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cây Đậu Chổi),"Thành phần sản phẩm
+• 3% RoseHip Oil (Dầu Tầm Xuân): tái tạo da, cung cấp dưỡng chất và tăng cường độ ẩm, củng cố hàng r",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Cây Ban Âu),"Thành phần sản phẩm
+• 3% RoseHip Oil (Dầu Tầm Xuân): tái tạo da, cung cấp dưỡng chất và tăng cường độ ẩm, củng cố hàng r",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(1
+-Ethylpentyl)","Chamomila Et *, Nước Tinh Khiết, Bg, Glycerin, Alkyl
+-1,3
+-Dimethylbutyl Ether, Glycol Neopentyl Dicaprate, Dimethicone,",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Than đen),"Water, Glycerin, Sodium Cocoyl Glycinate, Butylene Glycol, Hydroxypropyl Starch Phosphate, Cocamidopropyl Betaine, Laury",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Sodium Hyaluronate),"Thành phần sản phẩm Chứa thành phần dưỡng ẩm: Hyaluronic acid (Sodium Hyaluronate), chiết xuất sữa ong chúa (Royal Jelly",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(2.5 Ppm),"Purified Water, Butylene Glycol, Dipropylene Glycol, Glycerin, Niacinamide, 1,2
+-Hexanediol, Sodium Polyacrylate, Phenyl",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(1.5 Ppm),"Purified Water, Butylene Glycol, Dipropylene Glycol, Glycerin, Niacinamide, 1,2
+-Hexanediol, Sodium Polyacrylate, Phenyl",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+[Citrus Limon (Lemon),"Aqua/(Water), Decyl Glucoside, Glycerin, Cellulose Gum, Disodium Cocoyl Glutamate, Polysorbate 20, Phenoxyethanol, Sodiu",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(phytosteryl / octyldodecyl),"Water, DPG, glycerin, PEG
+-60 hydrogenated castor oil, carbomer, diphenylsiloxyphenyl trimethicone, BG, niacinamide, pol",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Màu Da),Thành phần sản phẩm Kem Chống Nắng Không Nhờn Rít & Giúp Làm Giảm Thâm Nám Vichy Ideal Soleil 3 In 1 Tinted Anti Dark Sp,1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Titanium Dioxide),"Aqua (Water), Butylene Glycol, Propylene Glycol, Ethylhexyl Methoxycinnamate, Polymethyl Methacrylate, PEG
+-8, Ethylhexy",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Mn),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(hydration/soothing),"Thành phần sản phẩm Water (Aqua), Cyclopentasiloxane (texture enhancer/hydration), Octyldodecyl Neopentanoate (texture e",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(solubilizing agent),"Thành phần sản phẩm Water (Aqua), Cyclopentasiloxane (texture enhancer/hydration), Octyldodecyl Neopentanoate (texture e",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(surfactant),"Thành phần sản phẩm Water (Aqua), Cyclopentasiloxane (texture enhancer/hydration), Octyldodecyl Neopentanoate (texture e",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Msh),"Water, Butylene Glycol, Isononyl Isononanoate, Glycerin, Niacinamide, Ceramide Eop, Ceramide Ns/Ceramide Ng, Undecylenoy",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Melaleuca Alternifolia),"Thành phần sản phẩm Thành phần hoạt chất: Salicylic Acid 0.5% Các thành phần khác: Purified Water (Aqua), Alcohol, Niaci",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Mentha Piperita),"Thành phần sản phẩm Thành phần hoạt chất: Salicylic Acid 0.5% Các thành phần khác: Purified Water (Aqua), Alcohol, Niaci",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Mentha Viridis),"Thành phần sản phẩm Thành phần hoạt chất: Salicylic Acid 0.5% Các thành phần khác: Purified Water (Aqua), Alcohol, Niaci",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(1.0),"Water, Kaolin, Lauryl Phosphate/ Polyoxyethylene (1.0) Monoakyl (C12
+-15) Ethers Phosphates/ Ethylhexylglycerin/ Potassi",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Melaleuca Viridiflora),"Thành phần sản phẩm Thành phần hoạt chất: Salicylic Acid 0.5% Các thành phần khác: Purified Water (Aqua), Alcohol, Niaci",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(lemon extract),"vitamin c, chiết xuất chanh (lemon extract)",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(SE),"Glycerin, cocoylglycine kali, nước, 1,3
+-butylene glycol, polyglyceryl myristate
+-10, Disodium lauryl sulfosuccine, glyc",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Wool),"Water, Glycerin, Bg, Dpg, Squalane, Maltol, Macadamia Nut Fatty Acid Phytosteryl, Hydrogenated Lecithin, Carbomer, Chole",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Tea Tree Extract),"Water, Alcohol, Propylene Glycol, Carbomer, Salicylic Acid, Triethanolamine, 4
+-Terpineol (Tea Tree Extract), Niacinamid",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(texture enhancer/hydration),"Thành phần sản phẩm Water (Aqua), Cyclopentasiloxane (texture enhancer/hydration), Octyldodecyl Neopentanoate (texture e",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(4),"T.X.Acid*, Dipotassium Glycyrrhizinate*, Yeast Extract (3), Neem Leaf Extract, Seaweed Extract (4), Seaweed Extract (1),",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Giữ Nước, Phục Hồi Lớp Hàng Rào Chắn Của Da)","Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+"(Vitamin E, Chống Lão Hóa Và Oxy Hóa)","Aqua (Water), Glycerin (Khóa Ẩm), Mineral Oil (Paraffinum Liquidum) (Dưỡng Ẩm), Ethylhexyl Palmitate, Dipropylene Glycol",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+(K),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Si),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Mg),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,CONCENTRATION,Silently deleted along with all parenthetical text,Stripped as concentration metadata; chemical entity preserved
+(Na),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(S),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Citris Paradisi),"Thành phần sản phẩm Thành phần hoạt chất: Salicylic Acid 0.5% Các thành phần khác: Purified Water (Aqua), Alcohol, Niaci",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Citrus Limonum),"Thành phần sản phẩm Thành phần hoạt chất: Salicylic Acid 0.5% Các thành phần khác: Purified Water (Aqua), Alcohol, Niaci",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Citrus Paradisi),"Thành phần sản phẩm Thành phần hoạt chất: Salicylic Acid 0.5% Các thành phần khác: Purified Water (Aqua), Alcohol, Niaci",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Citris Nobilis),"Thành phần sản phẩm Thành phần hoạt chất: Salicylic Acid 0.5% Các thành phần khác: Purified Water (Aqua), Alcohol, Niaci",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Bitter Orange),"Aqua,Butylene Glycol,Hydrogenated Polyisobutene,Dimethicone,Glycerin,Propylene Glycol,1,2
+-Hexanediol,Hydroxyacetophenon",1,1,SYNONYM_OR_COMMON_NAME,Silently deleted; sometimes left generic residue (e.g. butter),Normalized with whitespace; preserves main chemical or botanical name
+"(Octinoxate, Avobenzone, Benzophenone
+-4)","Thành phần sản phẩm
+• Màng lọc chống nắng hóa học (Octinoxate, Avobenzone, Benzophenone
+-4): Hấp thụ tia UV, giúp chống ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Zinc Oxide),"Thành phần sản phẩm
+• Màng lọc chống nắng hóa học (Octinoxate, Avobenzone, Benzophenone
+-4): Hấp thụ tia UV, giúp chống ",1,1,BOTANICAL_OR_LATIN,Silently deleted,Preserved in token without bracket delimiter collision
+(Ca),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain
+(Fe),"Thành phần sản phẩm Xịt khoáng Vichy Aqua / Water, Calcium (Ca), Iron (Fe), Manganese (Mn), Fluorine(F), Potassium (K), ",1,1,OTHER_OR_UNCERTAIN,Silently deleted,Brackets removed; inner text evaluated and flagged if uncertain

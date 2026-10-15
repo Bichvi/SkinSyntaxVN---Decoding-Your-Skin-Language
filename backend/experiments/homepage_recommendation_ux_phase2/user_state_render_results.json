@@ -1,0 +1,254 @@
+{
+    "A_cold_start": {
+        "state_name": "A Cold start",
+        "is_logged_in": false,
+        "has_survey": false,
+        "resolved_mode": "SIMPLE",
+        "dominant_signal": "SIMPLE",
+        "kicker": "GỢI Ý NỔI BẬT",
+        "title": "Sản phẩm nổi bật tại SkinSyntax",
+        "subtitle": "Khám phá những lựa chọn được đánh giá cao tại SkinSyntax.",
+        "top4_for_you_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "top4_top_rated_ids": [
+            "68",
+            "2",
+            "2137",
+            "4400"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": true,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    },
+    "B_search": {
+        "state_name": "B Search",
+        "is_logged_in": false,
+        "has_survey": false,
+        "resolved_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "SEARCH",
+        "kicker": "TÌM KIẾM GẦN ĐÂY",
+        "title": "Có thể bạn đang quan tâm",
+        "subtitle": "Gợi ý dựa trên những gì bạn vừa tìm kiếm.",
+        "top4_for_you_ids": [
+            "6350",
+            "2350",
+            "5788",
+            "2780"
+        ],
+        "top4_top_rated_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": true,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    },
+    "C_view": {
+        "state_name": "C View",
+        "is_logged_in": false,
+        "has_survey": false,
+        "resolved_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "VIEW",
+        "kicker": "VỪA XEM GẦN ĐÂY",
+        "title": "Dựa trên sản phẩm bạn vừa xem",
+        "subtitle": "Khám phá những lựa chọn có đặc điểm tương tự.",
+        "top4_for_you_ids": [
+            "11",
+            "36",
+            "152",
+            "3331"
+        ],
+        "top4_top_rated_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": true,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    },
+    "D_cart": {
+        "state_name": "D Cart",
+        "is_logged_in": false,
+        "has_survey": false,
+        "resolved_mode": "BEHAVIOR_CONTENT",
+        "dominant_signal": "CART",
+        "kicker": "DỰA TRÊN GIỎ HÀNG",
+        "title": "Có thể bạn cũng quan tâm",
+        "subtitle": "Gợi ý dựa trên những sản phẩm bạn đang quan tâm trong giỏ hàng.",
+        "top4_for_you_ids": [
+            "11",
+            "36",
+            "152",
+            "3331"
+        ],
+        "top4_top_rated_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": true,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    },
+    "E_logged_in_no_survey": {
+        "state_name": "E Logged-in no survey",
+        "is_logged_in": true,
+        "has_survey": false,
+        "resolved_mode": "SIMPLE",
+        "dominant_signal": "SIMPLE",
+        "kicker": "GỢI Ý NỔI BẬT",
+        "title": "Sản phẩm nổi bật tại SkinSyntax",
+        "subtitle": "Khám phá những lựa chọn được đánh giá cao tại SkinSyntax.",
+        "top4_for_you_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "top4_top_rated_ids": [
+            "68",
+            "2",
+            "2137",
+            "4400"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": true,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    },
+    "F_purchase": {
+        "state_name": "F Purchase",
+        "is_logged_in": true,
+        "has_survey": false,
+        "resolved_mode": "PURCHASE_CONTENT",
+        "dominant_signal": "PURCHASE",
+        "kicker": "LỊCH SỬ MUA SẮM",
+        "title": "Dựa trên sản phẩm bạn từng mua",
+        "subtitle": "Gợi ý dựa trên những sản phẩm bạn từng mua.",
+        "top4_for_you_ids": [
+            "1",
+            "36",
+            "152",
+            "3331"
+        ],
+        "top4_top_rated_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": true,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    },
+    "G_profile": {
+        "state_name": "G Profile",
+        "is_logged_in": true,
+        "has_survey": true,
+        "resolved_mode": "PROFILE_CONTENT",
+        "dominant_signal": "PROFILE",
+        "kicker": "HỒ SƠ LÀN DA",
+        "title": "Phù hợp với thông tin làn da của bạn",
+        "subtitle": "Được gợi ý dựa trên thông tin làn da bạn đã chia sẻ.",
+        "top4_for_you_ids": [
+            "1239",
+            "3711",
+            "4382",
+            "4819"
+        ],
+        "top4_top_rated_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": false,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    },
+    "H_profile_and_behavior": {
+        "state_name": "H Profile + behavior",
+        "is_logged_in": true,
+        "has_survey": true,
+        "resolved_mode": "ADAPTIVE_HYBRID",
+        "dominant_signal": "HYBRID",
+        "kicker": "DÀNH RIÊNG CHO BẠN",
+        "title": "Gợi ý dành riêng cho bạn",
+        "subtitle": "Kết hợp thông tin làn da và những sản phẩm bạn đang quan tâm.",
+        "top4_for_you_ids": [
+            "2928",
+            "3531",
+            "1395",
+            "5349"
+        ],
+        "top4_top_rated_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": false,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    },
+    "I_partial_profile": {
+        "state_name": "I Partial profile",
+        "is_logged_in": true,
+        "has_survey": false,
+        "resolved_mode": "SIMPLE",
+        "dominant_signal": "SIMPLE",
+        "kicker": "GỢI Ý NỔI BẬT",
+        "title": "Gợi ý nổi bật cho bạn",
+        "subtitle": "Khám phá những sản phẩm nổi bật tại SkinSyntax.",
+        "top4_for_you_ids": [
+            "1000",
+            "266",
+            "728",
+            "4365"
+        ],
+        "top4_top_rated_ids": [
+            "68",
+            "2",
+            "2137",
+            "4400"
+        ],
+        "deduplication_pass": true,
+        "survey_cta_visible": true,
+        "fake_reviews_removed": true,
+        "no_survey_badge": true,
+        "no_enum_leaks": true,
+        "status": "PASS"
+    }
+}

@@ -1,0 +1,16 @@
+Rule,Description,Stage,N_Baskets,Count_A,Count_C,Co_Occurrence_Count,Support,Confidence,Lift,Rule_Status
+SKU_10 -> SKU_93,La Roche-Posay Anthelios -> Embryolisse Lait-Crème,S20_B30,30,3,3,2,0.0667,0.6667,6.6667,Generated
+SKU_10 -> SKU_93,La Roche-Posay Anthelios -> Embryolisse Lait-Crème,M40_B100,100,4,8,0,0.0,0.0,0.0,Filtered/Absent
+SKU_10 -> SKU_93,La Roche-Posay Anthelios -> Embryolisse Lait-Crème,L80_B300,300,9,10,0,0.0,0.0,0.0,Filtered/Absent
+SKU_93 -> SKU_10,Embryolisse Lait-Crème -> La Roche-Posay Anthelios,S20_B30,30,3,3,2,0.0667,0.6667,6.6667,Generated
+SKU_93 -> SKU_10,Embryolisse Lait-Crème -> La Roche-Posay Anthelios,M40_B100,100,8,4,0,0.0,0.0,0.0,Filtered/Absent
+SKU_93 -> SKU_10,Embryolisse Lait-Crème -> La Roche-Posay Anthelios,L80_B300,300,10,9,0,0.0,0.0,0.0,Filtered/Absent
+SKU_350 -> SKU_139,Skin1004 Rau Má -> Klairs Midnight Blue,S20_B30,30,3,4,2,0.0667,0.6667,5.0,Generated
+SKU_350 -> SKU_139,Skin1004 Rau Má -> Klairs Midnight Blue,M40_B100,100,8,14,1,0.01,0.125,0.8929,Filtered/Absent
+SKU_350 -> SKU_139,Skin1004 Rau Má -> Klairs Midnight Blue,L80_B300,300,6,19,0,0.0,0.0,0.0,Filtered/Absent
+SKU_728 -> SKU_112,Eucerin Gel -> Megaduo Plus,S20_B30,30,5,4,2,0.0667,0.4,3.0,Generated
+SKU_728 -> SKU_112,Eucerin Gel -> Megaduo Plus,M40_B100,100,16,5,1,0.01,0.0625,1.25,Filtered/Absent
+SKU_728 -> SKU_112,Eucerin Gel -> Megaduo Plus,L80_B300,300,12,9,1,0.0033,0.0833,2.7778,Filtered/Absent
+SKU_103 -> SKU_4365,L'Oreal Micellar -> Cosrx Low pH Gel,S20_B30,30,3,7,3,0.1,1.0,4.2857,Generated
+SKU_103 -> SKU_4365,L'Oreal Micellar -> Cosrx Low pH Gel,M40_B100,100,4,14,1,0.01,0.25,1.7857,Filtered/Absent
+SKU_103 -> SKU_4365,L'Oreal Micellar -> Cosrx Low pH Gel,L80_B300,300,6,16,0,0.0,0.0,0.0,Filtered/Absent

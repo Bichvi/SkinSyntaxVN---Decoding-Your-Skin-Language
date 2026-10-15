@@ -1,0 +1,104 @@
+{
+  "desktop1920": {
+    "tier1": {
+      "exists": true,
+      "routineRemoved": true,
+      "hasPhone": true,
+      "socialLinksCount": 3
+    },
+    "tier2": {
+      "exists": true,
+      "logoValid": true,
+      "search": {
+        "exists": true,
+        "placeholder": "Tìm sản phẩm, thương hiệu, vấn đề da...",
+        "width": 513,
+        "height": 52,
+        "btnText": "Tìm kiếm"
+      },
+      "live": {
+        "exists": true,
+        "hasPulseDot": true,
+        "href": "/index.php?r=live",
+        "text": "LIVE Tư vấn Tư vấn trực tiếp"
+      },
+      "routine": {
+        "exists": true,
+        "href": "/index.php?r=goiy",
+        "text": "Gợi ý routine Nhận gợi ý ngay"
+      },
+      "cart": {
+        "exists": true,
+        "href": "/index.php?r=giohang"
+      }
+    },
+    "tier3": {
+      "exists": true,
+      "catalogBtnText": "Danh mục sản phẩm",
+      "trustItemsCount": 4,
+      "legacyChipsAbsent": true
+    },
+    "noHorizOverflow": true
+  },
+  "desktop1440": {
+    "scrollWidth": 1425,
+    "noHorizOverflow": true,
+    "searchWidth": 398,
+    "liveVisible": true,
+    "routineVisible": true,
+    "cartVisible": true
+  },
+  "tablet768": {
+    "scrollWidth": 753,
+    "noHorizOverflow": true,
+    "mobileToggleVisible": true,
+    "searchVisible": true,
+    "quickActionsVisible": true
+  },
+  "mobile375": {
+    "scrollWidth": 375,
+    "noHorizOverflow": true,
+    "logoVisible": true,
+    "searchVisible": true,
+    "quickActionsVisible": true,
+    "mobileToggleVisible": true,
+    "cartVisible": true
+  },
+  "mobile412": {
+    "scrollWidth": 412,
+    "noHorizOverflow": true,
+    "searchVisible": true,
+    "quickActionsVisible": true
+  },
+  "productCTA": {
+    "cardFound": true,
+    "sameRow": true,
+    "sameHeight": true,
+    "addHeight": 38,
+    "buyHeight": 38,
+    "addWidth": 149,
+    "buyWidth": 149,
+    "widthRatio": "0.50",
+    "addText": "Thêm vào giỏ",
+    "buyText": "Mua ngay",
+    "buyWhiteSpace": "nowrap",
+    "addBg": "rgb(241, 245, 249)",
+    "buyBg": "rgb(24, 59, 43)",
+    "cardClip": {
+      "x": 240,
+      "y": 1102,
+      "width": 360,
+      "height": 470,
+      "scale": 1
+    }
+  },
+  "overall": "PASS",
+  "passMatrix": {
+    "DESKTOP 1920": "PASS",
+    "DESKTOP 1440": "PASS",
+    "TABLET": "PASS",
+    "MOBILE 375": "PASS",
+    "MOBILE 412": "PASS",
+    "PRODUCT CTA": "PASS"
+  }
+}

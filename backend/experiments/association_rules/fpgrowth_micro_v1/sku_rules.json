@@ -1,0 +1,254 @@
+[
+  {
+    "antecedent": [
+      "SKU_103"
+    ],
+    "consequent": [
+      "SKU_4365"
+    ],
+    "support_count": 3,
+    "support": 0.1,
+    "antecedent_support": 0.1,
+    "consequent_support": 0.2333,
+    "confidence": 1.0,
+    "lift": 4.2857
+  },
+  {
+    "antecedent": [
+      "SKU_10"
+    ],
+    "consequent": [
+      "SKU_93"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1,
+    "consequent_support": 0.1,
+    "confidence": 0.6667,
+    "lift": 6.6667
+  },
+  {
+    "antecedent": [
+      "SKU_93"
+    ],
+    "consequent": [
+      "SKU_10"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1,
+    "consequent_support": 0.1,
+    "confidence": 0.6667,
+    "lift": 6.6667
+  },
+  {
+    "antecedent": [
+      "SKU_350"
+    ],
+    "consequent": [
+      "SKU_139"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1,
+    "consequent_support": 0.1333,
+    "confidence": 0.6667,
+    "lift": 5.0
+  },
+  {
+    "antecedent": [
+      "SKU_188"
+    ],
+    "consequent": [
+      "SKU_4365"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1,
+    "consequent_support": 0.2333,
+    "confidence": 0.6667,
+    "lift": 2.8571
+  },
+  {
+    "antecedent": [
+      "SKU_139"
+    ],
+    "consequent": [
+      "SKU_350"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1333,
+    "consequent_support": 0.1,
+    "confidence": 0.5,
+    "lift": 5.0
+  },
+  {
+    "antecedent": [
+      "SKU_112"
+    ],
+    "consequent": [
+      "SKU_728"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1333,
+    "consequent_support": 0.1667,
+    "confidence": 0.5,
+    "lift": 3.0
+  },
+  {
+    "antecedent": [
+      "SKU_240"
+    ],
+    "consequent": [
+      "SKU_21"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1333,
+    "consequent_support": 0.1667,
+    "confidence": 0.5,
+    "lift": 3.0
+  },
+  {
+    "antecedent": [
+      "SKU_4"
+    ],
+    "consequent": [
+      "SKU_21"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1333,
+    "consequent_support": 0.1667,
+    "confidence": 0.5,
+    "lift": 3.0
+  },
+  {
+    "antecedent": [
+      "SKU_4"
+    ],
+    "consequent": [
+      "SKU_4365"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1333,
+    "consequent_support": 0.2333,
+    "confidence": 0.5,
+    "lift": 2.1429
+  },
+  {
+    "antecedent": [
+      "SKU_4365"
+    ],
+    "consequent": [
+      "SKU_103"
+    ],
+    "support_count": 3,
+    "support": 0.1,
+    "antecedent_support": 0.2333,
+    "consequent_support": 0.1,
+    "confidence": 0.4286,
+    "lift": 4.2857
+  },
+  {
+    "antecedent": [
+      "SKU_21"
+    ],
+    "consequent": [
+      "SKU_240"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1667,
+    "consequent_support": 0.1333,
+    "confidence": 0.4,
+    "lift": 3.0
+  },
+  {
+    "antecedent": [
+      "SKU_21"
+    ],
+    "consequent": [
+      "SKU_4"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1667,
+    "consequent_support": 0.1333,
+    "confidence": 0.4,
+    "lift": 3.0
+  },
+  {
+    "antecedent": [
+      "SKU_728"
+    ],
+    "consequent": [
+      "SKU_112"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1667,
+    "consequent_support": 0.1333,
+    "confidence": 0.4,
+    "lift": 3.0
+  },
+  {
+    "antecedent": [
+      "SKU_21"
+    ],
+    "consequent": [
+      "SKU_5"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1667,
+    "consequent_support": 0.1667,
+    "confidence": 0.4,
+    "lift": 2.4
+  },
+  {
+    "antecedent": [
+      "SKU_5"
+    ],
+    "consequent": [
+      "SKU_21"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1667,
+    "consequent_support": 0.1667,
+    "confidence": 0.4,
+    "lift": 2.4
+  },
+  {
+    "antecedent": [
+      "SKU_5"
+    ],
+    "consequent": [
+      "SKU_728"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1667,
+    "consequent_support": 0.1667,
+    "confidence": 0.4,
+    "lift": 2.4
+  },
+  {
+    "antecedent": [
+      "SKU_728"
+    ],
+    "consequent": [
+      "SKU_5"
+    ],
+    "support_count": 2,
+    "support": 0.0667,
+    "antecedent_support": 0.1667,
+    "consequent_support": 0.1667,
+    "confidence": 0.4,
+    "lift": 2.4
+  }
+]

@@ -1,0 +1,411 @@
+{
+  "vocabulary_size": 7805,
+  "non_zero_elements": 115990,
+  "matrix_shape": [
+    1004,
+    7805
+  ],
+  "sparsity": 0.9851982205706322,
+  "top_terms_by_idf": [
+    {
+      "term": "sodium",
+      "idf": 1.2381814286787503
+    },
+    {
+      "term": "acid",
+      "idf": 1.2573024701255289
+    },
+    {
+      "term": "glycol",
+      "idf": 1.284701444313643
+    },
+    {
+      "term": "glycerin",
+      "idf": 1.3101549283038394
+    },
+    {
+      "term": "extract",
+      "idf": 1.5514403429201808
+    },
+    {
+      "term": "butylene",
+      "idf": 1.6666360550116135
+    },
+    {
+      "term": "butylene glycol",
+      "idf": 1.6842318169019928
+    },
+    {
+      "term": "edta",
+      "idf": 1.734798706442576
+    },
+    {
+      "term": "alcohol",
+      "idf": 1.799060640660945
+    },
+    {
+      "term": "disodium",
+      "idf": 1.8169182580609515
+    },
+    {
+      "term": "phenoxyethanol",
+      "idf": 1.839698286392771
+    },
+    {
+      "term": "hydroxide",
+      "idf": 1.851285901565159
+    },
+    {
+      "term": "hyaluronate",
+      "idf": 1.8917194711436498
+    },
+    {
+      "term": "oil",
+      "idf": 1.908855753386637
+    },
+    {
+      "term": "disodium edta",
+      "idf": 1.9288065398059857
+    },
+    {
+      "term": "niacinamide",
+      "idf": 1.9569054510283452
+    },
+    {
+      "term": "fragrance",
+      "idf": 1.9699434453664753
+    },
+    {
+      "term": "gum",
+      "idf": 1.9858167945227654
+    },
+    {
+      "term": "sodium hyaluronate",
+      "idf": 1.9858167945227654
+    },
+    {
+      "term": "dimethicone",
+      "idf": 1.9965407578857408
+    },
+    {
+      "term": "crosspolymer",
+      "idf": 2.023864862160295
+    },
+    {
+      "term": "leaf",
+      "idf": 2.066304045435452
+    },
+    {
+      "term": "xanthan",
+      "idf": 2.1016018275164754
+    },
+    {
+      "term": "glyceryl",
+      "idf": 2.1076078515766876
+    },
+    {
+      "term": "xanthan gum",
+      "idf": 2.1076078515766876
+    },
+    {
+      "term": "tocopherol",
+      "idf": 2.1166850697278043
+    },
+    {
+      "term": "water",
+      "idf": 2.119729212109032
+    },
+    {
+      "term": "citric",
+      "idf": 2.119729212109032
+    },
+    {
+      "term": "benzoate",
+      "idf": 2.13509049727052
+    },
+    {
+      "term": "citric acid",
+      "idf": 2.1475517177083314
+    },
+    {
+      "term": "copolymer",
+      "idf": 2.1957151190869544
+    },
+    {
+      "term": "potassium",
+      "idf": 2.2359890182248945
+    },
+    {
+      "term": "ethylhexylglycerin",
+      "idf": 2.2428618975126566
+    },
+    {
+      "term": "alkyl",
+      "idf": 2.2672959228499385
+    },
+    {
+      "term": "acrylates",
+      "idf": 2.2743881511594304
+    },
+    {
+      "term": "acrylate",
+      "idf": 2.2743881511594304
+    },
+    {
+      "term": "leaf extract",
+      "idf": 2.2851217068025393
+    },
+    {
+      "term": "stearate",
+      "idf": 2.295971722826605
+    },
+    {
+      "term": "caprylyl",
+      "idf": 2.3217558399823197
+    },
+    {
+      "term": "aqua",
+      "idf": 2.359783235571559
+    },
+    {
+      "term": "methyl",
+      "idf": 2.363666735597956
+    },
+    {
+      "term": "2-hexanediol",
+      "idf": 2.3912819026309293
+    },
+    {
+      "term": "hydrogenated",
+      "idf": 2.4074112845608133
+    },
+    {
+      "term": "panthenol",
+      "idf": 2.432103897151185
+    },
+    {
+      "term": "silica",
+      "idf": 2.432103897151185
+    },
+    {
+      "term": "carbomer",
+      "idf": 2.4531573063490173
+    },
+    {
+      "term": "fruit",
+      "idf": 2.4531573063490173
+    },
+    {
+      "term": "glucoside",
+      "idf": 2.4617043669274756
+    },
+    {
+      "term": "caprylyl glycol",
+      "idf": 2.496642418288756
+    },
+    {
+      "term": "parfum",
+      "idf": 2.496642418288756
+    },
+    {
+      "term": "da",
+      "idf": 2.5010967686381367
+    },
+    {
+      "term": "propanediol",
+      "idf": 2.5145801189754233
+    },
+    {
+      "term": "ethylhexyl",
+      "idf": 2.5236710906766753
+    },
+    {
+      "term": "alkyl acrylate",
+      "idf": 2.5282477577040874
+    },
+    {
+      "term": "seed",
+      "idf": 2.537464412809011
+    },
+    {
+      "term": "zinc",
+      "idf": 2.556156545821164
+    },
+    {
+      "term": "dioxide",
+      "idf": 2.5608846870171096
+    },
+    {
+      "term": "sodium hydroxide",
+      "idf": 2.5656352897757073
+    },
+    {
+      "term": "root",
+      "idf": 2.5752047407918583
+    },
+    {
+      "term": "phosphate",
+      "idf": 2.580024027227807
+    },
+    {
+      "term": "titanium",
+      "idf": 2.580024027227807
+    },
+    {
+      "term": "acrylate crosspolymer",
+      "idf": 2.580024027227807
+    },
+    {
+      "term": "flower",
+      "idf": 2.580024027227807
+    },
+    {
+      "term": "stearic",
+      "idf": 2.584866651703595
+    },
+    {
+      "term": "root extract",
+      "idf": 2.584866651703595
+    },
+    {
+      "term": "betaine",
+      "idf": 2.584866651703595
+    },
+    {
+      "term": "stearic acid",
+      "idf": 2.589732841354768
+    },
+    {
+      "term": "fruit extract",
+      "idf": 2.589732841354768
+    },
+    {
+      "term": "c10-30",
+      "idf": 2.5946228266489597
+    },
+    {
+      "term": "capric",
+      "idf": 2.599536841451389
+    },
+    {
+      "term": "cetyl",
+      "idf": 2.599536841451389
+    },
+    {
+      "term": "titanium dioxide",
+      "idf": 2.599536841451389
+    },
+    {
+      "term": "caprylic",
+      "idf": 2.619437995768684
+    },
+    {
+      "term": "caprylic capric",
+      "idf": 2.624475789798641
+    },
+    {
+      "term": "pentylene",
+      "idf": 2.634628161262659
+    },
+    {
+      "term": "ci",
+      "idf": 2.634628161262659
+    },
+    {
+      "term": "c10-30 alkyl",
+      "idf": 2.6397432619294294
+    },
+    {
+      "term": "chloride",
+      "idf": 2.6500526315882906
+    },
+    {
+      "term": "pentylene glycol",
+      "idf": 2.66571874833269
+    },
+    {
+      "term": "glyceryl stearate",
+      "idf": 2.66571874833269
+    },
+    {
+      "term": "hyaluronic",
+      "idf": 2.6709958054335337
+    },
+    {
+      "term": "acetate",
+      "idf": 2.6709958054335337
+    },
+    {
+      "term": "acrylates c10-30",
+      "idf": 2.6816342036385894
+    },
+    {
+      "term": "hydrolyzed",
+      "idf": 2.6923869954148514
+    },
+    {
+      "term": "allantoin",
+      "idf": 2.6923869954148514
+    },
+    {
+      "term": "propylene",
+      "idf": 2.703256667651755
+    },
+    {
+      "term": "hyaluronic acid",
+      "idf": 2.708736133416381
+    },
+    {
+      "term": "propylene glycol",
+      "idf": 2.730959270201091
+    },
+    {
+      "term": "dipropylene",
+      "idf": 2.730959270201091
+    },
+    {
+      "term": "dipropylene glycol",
+      "idf": 2.730959270201091
+    },
+    {
+      "term": "polysorbate",
+      "idf": 2.742258825455024
+    },
+    {
+      "term": "triglyceride",
+      "idf": 2.7479568465696618
+    },
+    {
+      "term": "cetearyl",
+      "idf": 2.759451225995397
+    },
+    {
+      "term": "acid sodium",
+      "idf": 2.759451225995397
+    },
+    {
+      "term": "capric triglyceride",
+      "idf": 2.759451225995397
+    },
+    {
+      "term": "taurate",
+      "idf": 2.765248343679723
+    },
+    {
+      "term": "sodium chloride",
+      "idf": 2.776944383442914
+    },
+    {
+      "term": "aluminum",
+      "idf": 2.7828441055701028
+    },
+    {
+      "term": "tocopheryl",
+      "idf": 2.7828441055701028
+    },
+    {
+      "term": "ascorbyl",
+      "idf": 2.7828441055701028
+    }
+  ]
+}

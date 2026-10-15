@@ -1,0 +1,26 @@
+{
+    "total_evaluated_users": 432,
+    "comparison": {
+        "MOST_POPULAR": {
+            "CategoryAffinity@10": 0.1259,
+            "BrandAffinity@10": 0.0197,
+            "PriceRangeMatch@10": 0.3873
+        },
+        "ITEM_KNN": {
+            "CategoryAffinity@10": 0.1611,
+            "BrandAffinity@10": 0.025,
+            "PriceRangeMatch@10": 0.3162
+        },
+        "MATRIX_FACTORIZATION": {
+            "CategoryAffinity@10": 0.1324,
+            "BrandAffinity@10": 0.0192,
+            "PriceRangeMatch@10": 0.3178
+        },
+        "BPR": {
+            "CategoryAffinity@10": 0.1262,
+            "BrandAffinity@10": 0.0208,
+            "PriceRangeMatch@10": 0.3961
+        }
+    },
+    "scientific_conclusion": "Item-kNN and BPR show partial recovery of synthetic category\/brand preferences under the generator assumptions."
+}

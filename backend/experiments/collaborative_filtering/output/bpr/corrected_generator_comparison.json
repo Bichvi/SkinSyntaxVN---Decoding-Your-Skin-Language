@@ -1,0 +1,323 @@
+{
+    "scenario": "cf_experiment_v2_corrected",
+    "generator_fix": "Resolved category ID and brand ID Zend strict-type casting in computeAffinity so category (+0.40) and brand (+0.35) affinity contribute to product selection.",
+    "mean_metrics": {
+        "RANDOM": {
+            "HitRate@5": 0.0031,
+            "Precision@5": 0.0006,
+            "Recall@5": 0.0031,
+            "NDCG@5": 0.0017,
+            "HitRate@10": 0.0069,
+            "Precision@10": 0.0007,
+            "Recall@10": 0.0069,
+            "NDCG@10": 0.0028,
+            "MRR@10": 0.0017
+        },
+        "MOST_POPULAR": {
+            "HitRate@5": 0.0204,
+            "Precision@5": 0.0041,
+            "Recall@5": 0.0204,
+            "NDCG@5": 0.0125,
+            "HitRate@10": 0.0468,
+            "Precision@10": 0.0047,
+            "Recall@10": 0.0468,
+            "NDCG@10": 0.0209,
+            "MRR@10": 0.0133
+        },
+        "ITEM_KNN": {
+            "HitRate@5": 0.0075,
+            "Precision@5": 0.0015,
+            "Recall@5": 0.0075,
+            "NDCG@5": 0.0036,
+            "HitRate@10": 0.015,
+            "Precision@10": 0.0015,
+            "Recall@10": 0.015,
+            "NDCG@10": 0.0061,
+            "MRR@10": 0.0034
+        },
+        "MATRIX_FACTORIZATION": {
+            "HitRate@5": 0.0045,
+            "Precision@5": 0.0009,
+            "Recall@5": 0.0045,
+            "NDCG@5": 0.0026,
+            "HitRate@10": 0.0075,
+            "Precision@10": 0.0008,
+            "Recall@10": 0.0075,
+            "NDCG@10": 0.0036,
+            "MRR@10": 0.0024
+        },
+        "BPR": {
+            "HitRate@5": 0.0296,
+            "Precision@5": 0.0059,
+            "Recall@5": 0.0296,
+            "NDCG@5": 0.0181,
+            "HitRate@10": 0.053,
+            "Precision@10": 0.0053,
+            "Recall@10": 0.053,
+            "NDCG@10": 0.0258,
+            "MRR@10": 0.0176
+        },
+        "HYBRID_W02": {
+            "HitRate@5": 0.0212,
+            "Precision@5": 0.0042,
+            "Recall@5": 0.0212,
+            "NDCG@5": 0.0132,
+            "HitRate@10": 0.0483,
+            "Precision@10": 0.0048,
+            "Recall@10": 0.0483,
+            "NDCG@10": 0.0219,
+            "MRR@10": 0.0142
+        },
+        "HYBRID_W04": {
+            "HitRate@5": 0.0227,
+            "Precision@5": 0.0045,
+            "Recall@5": 0.0227,
+            "NDCG@5": 0.014,
+            "HitRate@10": 0.0507,
+            "Precision@10": 0.0051,
+            "Recall@10": 0.0507,
+            "NDCG@10": 0.0229,
+            "MRR@10": 0.0147
+        }
+    },
+    "per_seed_metrics": {
+        "42": {
+            "RANDOM": {
+                "HitRate@5": 0.0093,
+                "Precision@5": 0.0019,
+                "Recall@5": 0.0093,
+                "NDCG@5": 0.0051,
+                "HitRate@10": 0.0139,
+                "Precision@10": 0.0014,
+                "Recall@10": 0.0139,
+                "NDCG@10": 0.0065,
+                "MRR@10": 0.0042
+            },
+            "MOST_POPULAR": {
+                "HitRate@5": 0.0116,
+                "Precision@5": 0.0023,
+                "Recall@5": 0.0116,
+                "NDCG@5": 0.0088,
+                "HitRate@10": 0.0347,
+                "Precision@10": 0.0035,
+                "Recall@10": 0.0347,
+                "NDCG@10": 0.0161,
+                "MRR@10": 0.0108
+            },
+            "ITEM_KNN": {
+                "HitRate@5": 0,
+                "Precision@5": 0,
+                "Recall@5": 0,
+                "NDCG@5": 0,
+                "HitRate@10": 0.0023,
+                "Precision@10": 0.0002,
+                "Recall@10": 0.0023,
+                "NDCG@10": 0.0008,
+                "MRR@10": 0.0004
+            },
+            "MATRIX_FACTORIZATION": {
+                "HitRate@5": 0.0046,
+                "Precision@5": 0.0009,
+                "Recall@5": 0.0046,
+                "NDCG@5": 0.0033,
+                "HitRate@10": 0.0046,
+                "Precision@10": 0.0005,
+                "Recall@10": 0.0046,
+                "NDCG@10": 0.0033,
+                "MRR@10": 0.0029
+            },
+            "BPR": {
+                "HitRate@5": 0.0324,
+                "Precision@5": 0.0065,
+                "Recall@5": 0.0324,
+                "NDCG@5": 0.0194,
+                "HitRate@10": 0.0486,
+                "Precision@10": 0.0049,
+                "Recall@10": 0.0486,
+                "NDCG@10": 0.0246,
+                "MRR@10": 0.0173
+            },
+            "HYBRID_W02": {
+                "HitRate@5": 0.0116,
+                "Precision@5": 0.0023,
+                "Recall@5": 0.0116,
+                "NDCG@5": 0.0089,
+                "HitRate@10": 0.037,
+                "Precision@10": 0.0037,
+                "Recall@10": 0.037,
+                "NDCG@10": 0.017,
+                "MRR@10": 0.0113
+            },
+            "HYBRID_W04": {
+                "HitRate@5": 0.0116,
+                "Precision@5": 0.0023,
+                "Recall@5": 0.0116,
+                "NDCG@5": 0.0082,
+                "HitRate@10": 0.0347,
+                "Precision@10": 0.0035,
+                "Recall@10": 0.0347,
+                "NDCG@10": 0.0157,
+                "MRR@10": 0.0102
+            }
+        },
+        "123": {
+            "RANDOM": {
+                "HitRate@5": 0,
+                "Precision@5": 0,
+                "Recall@5": 0,
+                "NDCG@5": 0,
+                "HitRate@10": 0.0046,
+                "Precision@10": 0.0005,
+                "Recall@10": 0.0046,
+                "NDCG@10": 0.0014,
+                "MRR@10": 0.0006
+            },
+            "MOST_POPULAR": {
+                "HitRate@5": 0.0229,
+                "Precision@5": 0.0046,
+                "Recall@5": 0.0229,
+                "NDCG@5": 0.0118,
+                "HitRate@10": 0.0389,
+                "Precision@10": 0.0039,
+                "Recall@10": 0.0389,
+                "NDCG@10": 0.0168,
+                "MRR@10": 0.0102
+            },
+            "ITEM_KNN": {
+                "HitRate@5": 0.0114,
+                "Precision@5": 0.0023,
+                "Recall@5": 0.0114,
+                "NDCG@5": 0.0051,
+                "HitRate@10": 0.0183,
+                "Precision@10": 0.0018,
+                "Recall@10": 0.0183,
+                "NDCG@10": 0.0074,
+                "MRR@10": 0.004
+            },
+            "MATRIX_FACTORIZATION": {
+                "HitRate@5": 0.0023,
+                "Precision@5": 0.0005,
+                "Recall@5": 0.0023,
+                "NDCG@5": 0.0009,
+                "HitRate@10": 0.0046,
+                "Precision@10": 0.0005,
+                "Recall@10": 0.0046,
+                "NDCG@10": 0.0016,
+                "MRR@10": 0.0007
+            },
+            "BPR": {
+                "HitRate@5": 0.0252,
+                "Precision@5": 0.005,
+                "Recall@5": 0.0252,
+                "NDCG@5": 0.0158,
+                "HitRate@10": 0.0481,
+                "Precision@10": 0.0048,
+                "Recall@10": 0.0481,
+                "NDCG@10": 0.0231,
+                "MRR@10": 0.0157
+            },
+            "HYBRID_W02": {
+                "HitRate@5": 0.0229,
+                "Precision@5": 0.0046,
+                "Recall@5": 0.0229,
+                "NDCG@5": 0.0129,
+                "HitRate@10": 0.0412,
+                "Precision@10": 0.0041,
+                "Recall@10": 0.0412,
+                "NDCG@10": 0.0187,
+                "MRR@10": 0.012
+            },
+            "HYBRID_W04": {
+                "HitRate@5": 0.0275,
+                "Precision@5": 0.0055,
+                "Recall@5": 0.0275,
+                "NDCG@5": 0.0167,
+                "HitRate@10": 0.0549,
+                "Precision@10": 0.0055,
+                "Recall@10": 0.0549,
+                "NDCG@10": 0.0251,
+                "MRR@10": 0.0164
+            }
+        },
+        "2026": {
+            "RANDOM": {
+                "HitRate@5": 0,
+                "Precision@5": 0,
+                "Recall@5": 0,
+                "NDCG@5": 0,
+                "HitRate@10": 0.0022,
+                "Precision@10": 0.0002,
+                "Recall@10": 0.0022,
+                "NDCG@10": 0.0006,
+                "MRR@10": 0.0002
+            },
+            "MOST_POPULAR": {
+                "HitRate@5": 0.0267,
+                "Precision@5": 0.0053,
+                "Recall@5": 0.0267,
+                "NDCG@5": 0.0169,
+                "HitRate@10": 0.0668,
+                "Precision@10": 0.0067,
+                "Recall@10": 0.0668,
+                "NDCG@10": 0.0298,
+                "MRR@10": 0.019
+            },
+            "ITEM_KNN": {
+                "HitRate@5": 0.0111,
+                "Precision@5": 0.0022,
+                "Recall@5": 0.0111,
+                "NDCG@5": 0.0057,
+                "HitRate@10": 0.0245,
+                "Precision@10": 0.0024,
+                "Recall@10": 0.0245,
+                "NDCG@10": 0.0101,
+                "MRR@10": 0.0058
+            },
+            "MATRIX_FACTORIZATION": {
+                "HitRate@5": 0.0067,
+                "Precision@5": 0.0013,
+                "Recall@5": 0.0067,
+                "NDCG@5": 0.0037,
+                "HitRate@10": 0.0134,
+                "Precision@10": 0.0013,
+                "Recall@10": 0.0134,
+                "NDCG@10": 0.006,
+                "MRR@10": 0.0037
+            },
+            "BPR": {
+                "HitRate@5": 0.0312,
+                "Precision@5": 0.0062,
+                "Recall@5": 0.0312,
+                "NDCG@5": 0.0192,
+                "HitRate@10": 0.0624,
+                "Precision@10": 0.0062,
+                "Recall@10": 0.0624,
+                "NDCG@10": 0.0296,
+                "MRR@10": 0.0197
+            },
+            "HYBRID_W02": {
+                "HitRate@5": 0.029,
+                "Precision@5": 0.0058,
+                "Recall@5": 0.029,
+                "NDCG@5": 0.0179,
+                "HitRate@10": 0.0668,
+                "Precision@10": 0.0067,
+                "Recall@10": 0.0668,
+                "NDCG@10": 0.03,
+                "MRR@10": 0.0193
+            },
+            "HYBRID_W04": {
+                "HitRate@5": 0.029,
+                "Precision@5": 0.0058,
+                "Recall@5": 0.029,
+                "NDCG@5": 0.0171,
+                "HitRate@10": 0.0624,
+                "Precision@10": 0.0062,
+                "Recall@10": 0.0624,
+                "NDCG@10": 0.0278,
+                "MRR@10": 0.0176
+            }
+        }
+    },
+    "comparison_note": "Under V2, personalized observable structure is active, narrowing the gap between CF methods and global popularity."
+}

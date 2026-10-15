@@ -1,0 +1,14 @@
+Reason_Tag,Underlying_Signal,Emitting_Condition,Is_Grounded,Is_Natural_Vietnamese,Is_Non_Technical,Has_Medical_Claim,Audit_Status,UX_Notes
+"Sản phẩm nổi bật được yêu thích",SIMPLE,"Chế độ SIMPLE (Cold start hoặc fallback)",YES,YES,YES,NO,VALID,Phản ánh đúng xếp hạng toàn cục dựa trên số lượng đánh giá và điểm số
+"Dựa trên tìm kiếm gần đây",SEARCH,"in_array('search', activeBehaviorSignals)",YES,YES,YES,NO,VALID,Chỉ hiển thị khi có từ khóa tìm kiếm trong phiên hoặc tài khoản
+"Tương tự sản phẩm vừa xem",VIEW,"in_array('view', activeBehaviorSignals)",YES,YES,YES,NO,VALID,Chỉ hiển thị khi người dùng đã xem ít nhất 1 sản phẩm
+"Phù hợp với giỏ hàng",CART,"in_array('cart', activeBehaviorSignals)",YES,YES,YES,NO,VALID,Chỉ hiển thị khi giỏ hàng có sản phẩm đang chờ
+"Tương thích lịch sử mua sắm",PURCHASE,"in_array('purchase', activeBehaviorSignals)",YES,YES,YES,NO,VALID,Chỉ hiển thị khi khách hàng đã có đơn hàng hợp lệ
+"Khớp loại da",PROFILE,"skin_type_match >= 1.0",YES,YES,YES,NO,VALID,Chỉ hiển thị khi sản phẩm có nhãn tương thích trực tiếp với loại da trong hồ sơ
+"Phù hợp mọi loại da",PROFILE,"skin_type_match >= 0.70 & has profile",YES,YES,YES,NO,VALID,Sản phẩm universal phù hợp với nhiều loại da khi người dùng có hồ sơ
+"Trong ngân sách",BUDGET,"custBudget != null & budget_score >= 1.0",YES,YES,YES,NO,VALID,Sản phẩm nằm trong tầm giá người dùng đã chọn trong khảo sát
+"Gợi ý cá nhân hóa",HYBRID,"Fallback khi không có tag đơn lẻ cụ thể",PARTIAL,YES,YES,NO,NEEDS_REFINEMENT,"Tag chung chung, nên thay bằng nhãn ngữ cảnh cụ thể hơn"
+"Đã khảo sát",GLOBAL_CARD,hasSurvey == true trên mọi card,NO,YES,YES,NO,DEFECTIVE,"Hiển thị toàn bộ sản phẩm trên trang chủ bất kể sản phẩm có hợp da hay không (do match_score bị null)"
+"Độ hợp ->",GLOBAL_CARD,hasSurvey == false trên mọi card,PARTIAL,YES,YES,NO,NEEDS_REFINEMENT,"Kêu gọi người dùng làm khảo sát, nhưng gắn trên từng card gây lặp lại dày đặc"
+"Yêu thích nhất",SECTION_5_5,Hardcoded trong vòng lặp Section 5.5,YES,YES,YES,NO,VALID,Gắn nhãn đồng bộ cho khối Simple Weighted Rating
+"Mới lên kệ",SECTION_6,Hardcoded trong vòng lặp Section 6,YES,YES,YES,NO,VALID,Gắn nhãn đồng bộ cho khối sản phẩm mới

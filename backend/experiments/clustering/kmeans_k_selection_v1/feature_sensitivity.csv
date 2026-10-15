@@ -1,0 +1,4 @@
+Configuration,Num_Features,Feature_List,WCSS_K5,Silhouette_K5,ARI_vs_Config_B (Primary)
+Config_A (Role + Price),6,"['role_cleanser', 'role_serum', 'role_moisturizer', 'role_sunscreen', 'role_treatment', 'z_price']",22.6833,0.4224,0.8434
+Config_B (Role + Price + Skin) [PRIMARY],9,"['role_cleanser', 'role_serum', 'role_moisturizer', 'role_sunscreen', 'role_treatment', 'z_price', 'skin_oily', 'skin_dry', 'skin_sensitive']",36.9165,0.2799,1.0
+"Config_C (Price + Skin, No Role)",4,"['z_price', 'skin_oily', 'skin_dry', 'skin_sensitive']",11.8468,0.4403,0.3055

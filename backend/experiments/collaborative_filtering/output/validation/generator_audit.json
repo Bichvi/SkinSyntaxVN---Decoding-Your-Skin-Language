@@ -1,0 +1,63 @@
+{
+    "equation": {
+        "candidate_pool_assembly": {
+            "preferred_categories": "Sampled using Pareto power-law x^2.2 from items sorted by (0.6*sold + 0.4*rating) desc (up to 12 items\/cat)",
+            "preferred_brands": "Sampled using Pareto power-law x^2.0 from items sorted by (0.6*sold + 0.4*rating) desc (up to 10 items\/brand)",
+            "global_popular": "10 items uniformly sampled from global top 100 popular items",
+            "catalog_exploration": "6 items uniformly sampled from full catalog"
+        },
+        "affinity_formula": "If exploration (p = exploration_tendency): score = 0.20 + U(0, 0.30). Else: score = max(0.02, 0.05 [base] + 0.40 * I(cat in preferred) + 0.35 * I(brand in preferred) + budget_bonus + popularity_bias * (0.6 * min(1, sold\/1000) + 0.4 * max(0, (rating-3)\/2)) + U(-0.08, 0.08))",
+        "top_pool_selection": "Candidates sorted by affinity descending; top 16 items form topPool.",
+        "event_item_selection": "If repeat_purchase (p = repeat_purchase_tendency) and past items exist: choose from history. Else: choose uniformly from topPool."
+    },
+    "component_influence": {
+        "preferred_categories": {
+            "influences_sampling": true,
+            "mechanism": "Pareto power-law pool injection + 0.40 affinity bonus"
+        },
+        "preferred_brands": {
+            "influences_sampling": true,
+            "mechanism": "Pareto power-law pool injection + 0.35 affinity bonus"
+        },
+        "price_min_max": {
+            "influences_sampling": true,
+            "mechanism": "0.20 affinity bonus if within bounds, 0.08 if soft match"
+        },
+        "exploration_tendency": {
+            "influences_sampling": true,
+            "mechanism": "Probability of bypassing preference scoring to assign uniform noise score"
+        },
+        "popularity_bias": {
+            "influences_sampling": true,
+            "mechanism": "Weights product normalized sold count (0.6) and rating (0.4)"
+        },
+        "repeat_purchase_tendency": {
+            "influences_sampling": true,
+            "mechanism": "Probability of re-sampling an item already interacted with"
+        },
+        "latent_factors": {
+            "influences_sampling": false,
+            "mechanism": "None",
+            "status": "User latent_factors are generated\/stored but do not influence item selection."
+        }
+    },
+    "critical_findings": {
+        "item_latent_vectors_exist": false,
+        "user_latent_factors_used": false,
+        "latent_collaborative_interaction_present": false,
+        "statement": "User latent_factors are generated\/stored but do not influence item selection.",
+        "explanation": "Products in the production catalog have observable metadata (category, brand, price, sales, rating) but have NO planted latent vector q_i. While user profiles store a 5-dimensional vector latent_factors, this vector is never referenced in computeAffinity() or candidate sampling. Therefore, in scenario cf_experiment_v1, there is NO planted collaborative latent interaction for Funk MF or Item-kNN to discover beyond observable content affinity and popularity."
+    },
+    "1000_sample_decomposition": {
+        "repeat_purchase_bypass_count": 429,
+        "preference_selected_count": 571,
+        "total_samples": 1000,
+        "category_match_share": 0,
+        "brand_match_share": 0,
+        "price_match_share": 0.3439,
+        "popularity_bias_share": 0.5101,
+        "base_floor_share": 0.1461,
+        "noise_and_exploration_share": 0,
+        "latent_factors_share": 0
+    }
+}

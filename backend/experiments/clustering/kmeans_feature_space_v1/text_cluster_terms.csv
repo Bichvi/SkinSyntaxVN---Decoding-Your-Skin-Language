@@ -1,0 +1,7 @@
+Config,Cluster_ID,Size,Dominant_Role,Median_Price_VND,Top_Characteristic_Text_Terms
+Config_T,C1,194,SERUM,358000,"serum, dưỡng, 30ml, sáng, chất, tinh, thâm, vitamin, hồi, mụn"
+Config_T,C2,111,TREATMENT,269000,"mụn, miếng, gel, posay, roche, dán, giảm, la, dầu, thâm"
+Config_T,C3,272,CLEANSER,170500,"rửa, sữa, sạch, gel, mụn, cleanser, dầu, sâu, bọt, 100g"
+Config_T,C4,205,MOISTURIZER,332000,"dưỡng, kem, cream, gel, sáng, hồi, ban, phục, chất, lão"
+Config_T,C5,139,SUNSCREEN,341000,"chống, kem, pa, spf50, tia, nâng, vệ, tông, sunscreen, uv"
+Config_T,C6,83,SUNSCREEN,172000,"chống, sunplay, pa, uv, spf50, aqua, sữa, skin, anessa, milk"

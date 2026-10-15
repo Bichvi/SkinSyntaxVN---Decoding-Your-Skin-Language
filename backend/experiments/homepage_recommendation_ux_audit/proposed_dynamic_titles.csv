@@ -1,0 +1,10 @@
+Algorithm_Mode,Dominant_Signal,Proposed_Kicker,Proposed_Title,Proposed_Subtitle,Why_Natural_Vietnamese
+SIMPLE,SIMPLE,GỢI Ý NỔI BẬT,Sản phẩm được yêu thích tại SkinSyntax,Những lựa chọn nổi bật được cộng đồng skincare đánh giá cao.,Tiếng Việt trang nhã; phản ánh đúng bản chất xếp hạng cộng đồng toàn cục không cá nhân hóa
+BEHAVIOR_CONTENT,SEARCH,TÌM KIẾM GẦN ĐÂY,Có thể bạn đang quan tâm,Gợi ý dựa trên những nhu cầu bạn vừa tìm kiếm.,Tự nhiên; trực tiếp liên kết với hành vi tìm kiếm từ khóa của người dùng
+BEHAVIOR_CONTENT,VIEW,VỪA XEM GẦN ĐÂY,Dựa trên sản phẩm bạn vừa xem,Những lựa chọn tương tự về công dụng và thành phần nổi bật.,Rõ ràng; giúp người dùng hiểu vì sao các sản phẩm này xuất hiện
+BEHAVIOR_CONTENT,CART,DÀNH CHO GIỎ HÀNG,Gợi ý phù hợp với giỏ hàng của bạn,Các sản phẩm kết hợp hài hòa cùng những món bạn đã chọn.,Tạo cảm giác gợi ý routine bổ trợ tự nhiên mà không gây cảm giác ép mua
+PURCHASE_CONTENT,PURCHASE,LỊCH SỬ MUA SẮM,Gợi ý từ thói quen mua sắm,Sản phẩm tương thích với chu trình chăm sóc da bạn từng trải nghiệm.,Lịch sự; tôn trọng lịch sử mua sắm thực tế của khách hàng
+PROFILE_CONTENT,PROFILE,HỒ SƠ LÀN DA,Phù hợp với làn da của bạn,Được chọn lọc dựa trên thông tin làn da bạn đã chia sẻ.,Chân thực; chỉ dùng khi người dùng thực sự có hồ sơ khảo sát da hợp lệ
+ADAPTIVE_HYBRID,HYBRID,DÀNH RIÊNG CHO BẠN,Gợi ý tối ưu cho bạn,Hòa trộn giữa đặc điểm làn da và các sản phẩm bạn đang quan tâm.,Ấm áp; loại bỏ dòng chữ kỹ thuật 'Hồ sơ da & Hành vi' trước đây
+PARTIAL_PROFILE_FALLBACK,PROFILE,GỢI Ý BAN ĐẦU,Lựa chọn theo đặc điểm da cơ bản,Gợi ý bước đầu dựa trên thông tin bạn đã cung cấp.,Thành thật; không giả vờ đã cá nhân hóa sâu khi mới chỉ có thông tin một phần
+PARTIAL_PROFILE_FALLBACK,BEHAVIOR,GỢI Ý THEO QUAN TÂM,Dựa trên sản phẩm bạn vừa tương tác,Gợi ý ưu tiên theo sở thích gần đây của bạn.,Phản ánh chính xác hành vi thay vì mượn danh hồ sơ da chưa hoàn chỉnh

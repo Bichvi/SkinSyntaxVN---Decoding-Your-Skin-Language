@@ -1,0 +1,27 @@
+{
+    "synthetic_users": 500,
+    "total_interactions": 13281,
+    "unique_user_item_pairs": 4613,
+    "unique_products_interacted": 1434,
+    "catalog_total_products": 2473,
+    "catalog_coverage_pct": 57.99,
+    "avg_interactions_per_user": 26.56,
+    "median_interactions_per_user": 26,
+    "min_interactions_per_user": 8,
+    "max_interactions_per_user": 47,
+    "matrix_dimensions": "500 users x 2473 items",
+    "matrix_density_pct": 0.3731,
+    "event_counts": {
+        "view": 6744,
+        "search_click": 1731,
+        "add_to_cart": 2926,
+        "purchase": 1356,
+        "rating": 524
+    },
+    "users_ge_5_interactions": 500,
+    "users_ge_10_interactions": 477,
+    "users_ge_20_interactions": 330,
+    "products_ge_2_interactions": 1234,
+    "products_ge_5_interactions": 753,
+    "products_ge_10_interactions": 357
+}

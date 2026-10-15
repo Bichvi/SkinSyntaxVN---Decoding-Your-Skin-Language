@@ -1,0 +1,252 @@
+[
+  {
+    "itemset": [
+      "SKU_4365"
+    ],
+    "k": 1,
+    "support_count": 7,
+    "support": 0.2333
+  },
+  {
+    "itemset": [
+      "SKU_21"
+    ],
+    "k": 1,
+    "support_count": 5,
+    "support": 0.1667
+  },
+  {
+    "itemset": [
+      "SKU_5"
+    ],
+    "k": 1,
+    "support_count": 5,
+    "support": 0.1667
+  },
+  {
+    "itemset": [
+      "SKU_728"
+    ],
+    "k": 1,
+    "support_count": 5,
+    "support": 0.1667
+  },
+  {
+    "itemset": [
+      "SKU_112"
+    ],
+    "k": 1,
+    "support_count": 4,
+    "support": 0.1333
+  },
+  {
+    "itemset": [
+      "SKU_139"
+    ],
+    "k": 1,
+    "support_count": 4,
+    "support": 0.1333
+  },
+  {
+    "itemset": [
+      "SKU_240"
+    ],
+    "k": 1,
+    "support_count": 4,
+    "support": 0.1333
+  },
+  {
+    "itemset": [
+      "SKU_318"
+    ],
+    "k": 1,
+    "support_count": 4,
+    "support": 0.1333
+  },
+  {
+    "itemset": [
+      "SKU_4"
+    ],
+    "k": 1,
+    "support_count": 4,
+    "support": 0.1333
+  },
+  {
+    "itemset": [
+      "SKU_10"
+    ],
+    "k": 1,
+    "support_count": 3,
+    "support": 0.1
+  },
+  {
+    "itemset": [
+      "SKU_103"
+    ],
+    "k": 1,
+    "support_count": 3,
+    "support": 0.1
+  },
+  {
+    "itemset": [
+      "SKU_16"
+    ],
+    "k": 1,
+    "support_count": 3,
+    "support": 0.1
+  },
+  {
+    "itemset": [
+      "SKU_188"
+    ],
+    "k": 1,
+    "support_count": 3,
+    "support": 0.1
+  },
+  {
+    "itemset": [
+      "SKU_350"
+    ],
+    "k": 1,
+    "support_count": 3,
+    "support": 0.1
+  },
+  {
+    "itemset": [
+      "SKU_93"
+    ],
+    "k": 1,
+    "support_count": 3,
+    "support": 0.1
+  },
+  {
+    "itemset": [
+      "SKU_62"
+    ],
+    "k": 1,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_649"
+    ],
+    "k": 1,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_68"
+    ],
+    "k": 1,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_725"
+    ],
+    "k": 1,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_740"
+    ],
+    "k": 1,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_103",
+      "SKU_4365"
+    ],
+    "k": 2,
+    "support_count": 3,
+    "support": 0.1
+  },
+  {
+    "itemset": [
+      "SKU_10",
+      "SKU_93"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_112",
+      "SKU_728"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_139",
+      "SKU_350"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_188",
+      "SKU_4365"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_21",
+      "SKU_240"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_21",
+      "SKU_4"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_21",
+      "SKU_5"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_4",
+      "SKU_4365"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  },
+  {
+    "itemset": [
+      "SKU_5",
+      "SKU_728"
+    ],
+    "k": 2,
+    "support_count": 2,
+    "support": 0.0667
+  }
+]

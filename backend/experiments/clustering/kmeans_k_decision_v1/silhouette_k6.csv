@@ -1,0 +1,41 @@
+Product_ID,SKU_ID,Product_Name,Role,K6_Cluster,Silhouette_K6
+P_4365,4365,"Gel Rửa Mặt Cosrx Tràm Trà, 0.5% BHA Có Độ pH Thấp 150ml",CLEANSER,K6_C2,0.0821
+P_21,21,"Gel Rửa Mặt La Roche-Posay Dành Cho Da Dầu, Nhạy Cảm 400ml",CLEANSER,K6_C2,0.2015
+P_2654,2654,Sữa Rửa Mặt Hazeline Dưỡng Ẩm Sáng Da Yến Mạch & Dâu Tằm 100g,CLEANSER,K6_C3,0.2795
+P_2939,2939,Sữa Rửa Mặt Bioré Cho Nam Hạt Tác Động Kép Sạch Nhờn 100g,CLEANSER,K6_C3,0.2999
+P_255,255,Sữa Rửa Mặt Tia'm Ốc Sên Làm Dịu & Phục Hồi Da 200ml,CLEANSER,K6_C2,0.272
+P_2740,2740,Bọt Rửa Mặt DrCeutics Sạch Sâu Dịu Nhẹ Cho Mọi Loại Da 420g,CLEANSER,K6_C2,0.2151
+P_5537,5537,Sữa Rửa Mặt Nuxe Tạo Bọt Dịu Nhẹ Cho Mọi Loại Da 150ml,CLEANSER,K6_C2,0.2469
+P_1315,1315,Sữa Rửa Mặt Vichy Dạng Gel Làm Sạch Sâu & Giảm Nhờn 200ml,CLEANSER,K6_C2,0.0999
+P_350,350,Serum Skin1004 Rau Má Làm Dịu & Hỗ Trợ Phục Hồi Da 55ml,SERUM,K6_C5,0.247
+P_62,62,Serum L'Oreal Hyaluronic Acid Cấp Ẩm Sáng Da 30ml,SERUM,K6_C5,0.2912
+P_1176,1176,Gel Dưỡng Acnes Giúp Mờ Sẹo & Giảm Thâm Mụn 12g,SERUM,K6_C3,0.1187
+P_761,761,Serum Balance Active Formula Cấp Nước Dưỡng Ẩm Da 30ml,SERUM,K6_C5,0.2283
+P_2263,2263,Tinh Chất Cocoon Cấp Nước & Cấp Ẩm Sâu Từ Hoa Hồng 30ml,SERUM,K6_C5,0.4783
+P_755,755,Serum DrCeutics 12% Niacinamide Sáng Da Mờ Thâm Kiềm Dầu 40g,SERUM,K6_C5,0.4788
+P_2348,2348,Serum Anessa Dưỡng Da Và Phục Hồi Da Sau Nắng 180ml,SERUM,K6_C5,0.3225
+P_4688,4688,Serum Eucerin Dưỡng Cho Da Mụn 40ml,SERUM,K6_C5,0.0682
+P_139,139,Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g,MOISTURIZER,K6_C4,0.424
+P_318,318,Kem Dưỡng Hada Labo Dưỡng Ẩm Tối Ưu Cho Da Thường/Khô 50g,MOISTURIZER,K6_C4,0.2765
+P_469,469,Sáp Dưỡng Ẩm Vaseline Original Protecting Jelly 50ml,MOISTURIZER,K6_C3,0.2249
+P_1240,1240,Kem Dưỡng Ẩm Nivea Làm Mềm Da 50ml,MOISTURIZER,K6_C3,0.2376
+P_5974,5974,Kem Dưỡng Skintific MSH Niacinamide Dưỡng Sáng Da 30g,MOISTURIZER,K6_C4,0.4683
+P_4457,4457,Kem Dưỡng Beplain Peptide Đậu Xanh Chăm Sóc Lỗ Chân Lông 60ml,MOISTURIZER,K6_C4,0.4708
+P_294,294,Kem Dưỡng Ẩm Cetaphil Dịu Lành Cho Da Nhạy Cảm 453g,MOISTURIZER,K6_C4,0.3939
+P_5092,5092,Kem Dưỡng Bio-essence Vàng 24K Ngừa Lão Hóa Ban Ngày 40g,MOISTURIZER,K6_C4,0.36
+P_16,16,Sữa Chống Nắng Anessa Dưỡng Da Kiềm Dầu 60ml (Bản Mới),SUNSCREEN,K6_C1,0.2262
+P_725,725,Sữa Chống Nắng Sunplay Skin Aqua Nắp Xanh Dành Cho Da Dầu 50g,SUNSCREEN,K6_C3,0.0725
+P_3950,3950,Sữa Chống Nắng Bioré Bảo Vệ Hoàn Hảo - Dưỡng Ẩm 25ml,SUNSCREEN,K6_C3,0.3508
+P_1657,1657,Sữa Chống Nắng Sunplay Giải Nhiệt Da 30g,SUNSCREEN,K6_C3,0.2124
+P_1192,1192,Kem Chống Nắng Decumar Kiềm Dầu Nâng Tông Cho Da Mụn 50g,SUNSCREEN,K6_C1,0.2682
+P_3066,3066,Kem Chống Nắng Judydoll Cấp Ẩm Nâng Tông - 01 Tông Sáng 40g,SUNSCREEN,K6_C1,0.3425
+P_2362,2362,Kem Chống Nắng B.O.M Che Khuyết Điểm SPF50+ PA++++ 50g,SUNSCREEN,K6_C1,0.5173
+P_10,10,"Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",SUNSCREEN,K6_C1,0.5152
+P_112,112,"Gel Dưỡng Megaduo Plus Giảm Mụn, Mờ Thâm 15g",TREATMENT,K6_C3,0.0324
+P_740,740,Gel Giảm Mụn Eucerin Dành Cho Mụn Viêm & Không Viêm 40ml,TREATMENT,K6_C6,0.4083
+P_357,357,Miếng Dán Mụn Derma Angel Dùng Cho Ngày & Đêm 18 Miếng,TREATMENT,K6_C3,0.417
+P_1617,1617,Gel Giảm Mụn Acnes Đầu Trắng Và Đầu Đen 18g,TREATMENT,K6_C3,0.4134
+P_2394,2394,Dung Dịch Jumiso Làm Mềm Mụn Đầu Đen 150ml,TREATMENT,K6_C6,0.5548
+P_283,283,Chấm Mụn Neogen Dermalogy Hỗ Trợ Giảm Sưng Viêm 15ml,TREATMENT,K6_C6,0.5722
+P_880,880,"Kem Dưỡng Vichy Giảm Mụn, Phục Hồi Da 50ml",TREATMENT,K6_C6,0.5879
+P_964,964,Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml,TREATMENT,K6_C6,0.5831

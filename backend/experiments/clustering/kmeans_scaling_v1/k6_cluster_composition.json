@@ -1,0 +1,435 @@
+{
+  "S40_GLOBAL": [
+    {
+      "cluster_index": 1,
+      "size": 5,
+      "role_distribution": {
+        "SUNSCREEN": 5
+      },
+      "dominant_role": "SUNSCREEN",
+      "purity": 1.0,
+      "brand_count": 5,
+      "price_median": 406000,
+      "mean_z_price": 0.3356,
+      "mean_silhouette": 0.3912,
+      "skin_oily_pct": 40.0,
+      "skin_dry_pct": 0.0,
+      "skin_sensitive_pct": 0.0
+    },
+    {
+      "cluster_index": 2,
+      "size": 6,
+      "role_distribution": {
+        "CLEANSER": 6
+      },
+      "dominant_role": "CLEANSER",
+      "purity": 1.0,
+      "brand_count": 6,
+      "price_median": 301500,
+      "mean_z_price": 0.0682,
+      "mean_silhouette": 0.2019,
+      "skin_oily_pct": 50.0,
+      "skin_dry_pct": 0.0,
+      "skin_sensitive_pct": 50.0
+    },
+    {
+      "cluster_index": 3,
+      "size": 11,
+      "role_distribution": {
+        "TREATMENT": 3,
+        "SUNSCREEN": 3,
+        "CLEANSER": 2,
+        "MOISTURIZER": 2,
+        "SERUM": 1
+      },
+      "dominant_role": "TREATMENT",
+      "purity": 0.2727,
+      "brand_count": 9,
+      "price_median": 59000,
+      "mean_z_price": -1.6304,
+      "mean_silhouette": 0.1939,
+      "skin_oily_pct": 54.5,
+      "skin_dry_pct": 18.2,
+      "skin_sensitive_pct": 0.0
+    },
+    {
+      "cluster_index": 4,
+      "size": 6,
+      "role_distribution": {
+        "MOISTURIZER": 6
+      },
+      "dominant_role": "MOISTURIZER",
+      "purity": 1.0,
+      "brand_count": 6,
+      "price_median": 269500,
+      "mean_z_price": 0.1172,
+      "mean_silhouette": 0.4097,
+      "skin_oily_pct": 0.0,
+      "skin_dry_pct": 16.7,
+      "skin_sensitive_pct": 33.3
+    },
+    {
+      "cluster_index": 5,
+      "size": 7,
+      "role_distribution": {
+        "SERUM": 7
+      },
+      "dominant_role": "SERUM",
+      "purity": 1.0,
+      "brand_count": 7,
+      "price_median": 289000,
+      "mean_z_price": 0.0224,
+      "mean_silhouette": 0.3198,
+      "skin_oily_pct": 14.3,
+      "skin_dry_pct": 14.3,
+      "skin_sensitive_pct": 14.3
+    },
+    {
+      "cluster_index": 6,
+      "size": 5,
+      "role_distribution": {
+        "TREATMENT": 5
+      },
+      "dominant_role": "TREATMENT",
+      "purity": 1.0,
+      "brand_count": 5,
+      "price_median": 370000,
+      "mean_z_price": 0.4418,
+      "mean_silhouette": 0.556,
+      "skin_oily_pct": 100.0,
+      "skin_dry_pct": 0.0,
+      "skin_sensitive_pct": 20.0
+    }
+  ],
+  "M80": [
+    {
+      "cluster_index": 1,
+      "size": 16,
+      "role_distribution": {
+        "TREATMENT": 7,
+        "SUNSCREEN": 4,
+        "CLEANSER": 3,
+        "MOISTURIZER": 2
+      },
+      "dominant_role": "TREATMENT",
+      "purity": 0.4375,
+      "brand_count": 12,
+      "price_median": 383000,
+      "mean_z_price": 0.4324,
+      "mean_silhouette": 0.2024,
+      "skin_oily_pct": 93.8,
+      "skin_dry_pct": 0.0,
+      "skin_sensitive_pct": 18.8
+    },
+    {
+      "cluster_index": 2,
+      "size": 11,
+      "role_distribution": {
+        "MOISTURIZER": 3,
+        "CLEANSER": 3,
+        "SERUM": 3,
+        "SUNSCREEN": 2
+      },
+      "dominant_role": "MOISTURIZER",
+      "purity": 0.2727,
+      "brand_count": 10,
+      "price_median": 59000,
+      "mean_z_price": -1.645,
+      "mean_silhouette": 0.1905,
+      "skin_oily_pct": 0.0,
+      "skin_dry_pct": 36.4,
+      "skin_sensitive_pct": 0.0
+    },
+    {
+      "cluster_index": 3,
+      "size": 11,
+      "role_distribution": {
+        "SERUM": 11
+      },
+      "dominant_role": "SERUM",
+      "purity": 1.0,
+      "brand_count": 11,
+      "price_median": 299000,
+      "mean_z_price": 0.2811,
+      "mean_silhouette": 0.4173,
+      "skin_oily_pct": 9.1,
+      "skin_dry_pct": 18.2,
+      "skin_sensitive_pct": 18.2
+    },
+    {
+      "cluster_index": 4,
+      "size": 14,
+      "role_distribution": {
+        "TREATMENT": 8,
+        "CLEANSER": 3,
+        "SUNSCREEN": 3
+      },
+      "dominant_role": "TREATMENT",
+      "purity": 0.5714,
+      "brand_count": 10,
+      "price_median": 59500,
+      "mean_z_price": -1.7315,
+      "mean_silhouette": 0.2345,
+      "skin_oily_pct": 100.0,
+      "skin_dry_pct": 0.0,
+      "skin_sensitive_pct": 0.0
+    },
+    {
+      "cluster_index": 5,
+      "size": 6,
+      "role_distribution": {
+        "SERUM": 2,
+        "TREATMENT": 1,
+        "CLEANSER": 1,
+        "SUNSCREEN": 1,
+        "MOISTURIZER": 1
+      },
+      "dominant_role": "SERUM",
+      "purity": 0.3333,
+      "brand_count": 5,
+      "price_median": 1968500,
+      "mean_z_price": 2.2684,
+      "mean_silhouette": 0.2219,
+      "skin_oily_pct": 0.0,
+      "skin_dry_pct": 16.7,
+      "skin_sensitive_pct": 0.0
+    },
+    {
+      "cluster_index": 6,
+      "size": 22,
+      "role_distribution": {
+        "MOISTURIZER": 10,
+        "SUNSCREEN": 6,
+        "CLEANSER": 6
+      },
+      "dominant_role": "MOISTURIZER",
+      "purity": 0.4545,
+      "brand_count": 19,
+      "price_median": 284000,
+      "mean_z_price": 0.1266,
+      "mean_silhouette": 0.1572,
+      "skin_oily_pct": 0.0,
+      "skin_dry_pct": 13.6,
+      "skin_sensitive_pct": 18.2
+    }
+  ],
+  "L200": [
+    {
+      "cluster_index": 1,
+      "size": 24,
+      "role_distribution": {
+        "TREATMENT": 23,
+        "CLEANSER": 1
+      },
+      "dominant_role": "TREATMENT",
+      "purity": 0.9583,
+      "brand_count": 14,
+      "price_median": 52500,
+      "mean_z_price": -1.9574,
+      "mean_silhouette": 0.4471,
+      "skin_oily_pct": 95.8,
+      "skin_dry_pct": 0.0,
+      "skin_sensitive_pct": 0.0
+    },
+    {
+      "cluster_index": 2,
+      "size": 29,
+      "role_distribution": {
+        "SERUM": 29
+      },
+      "dominant_role": "SERUM",
+      "purity": 1.0,
+      "brand_count": 24,
+      "price_median": 332000,
+      "mean_z_price": 0.3292,
+      "mean_silhouette": 0.4209,
+      "skin_oily_pct": 13.8,
+      "skin_dry_pct": 10.3,
+      "skin_sensitive_pct": 20.7
+    },
+    {
+      "cluster_index": 3,
+      "size": 32,
+      "role_distribution": {
+        "TREATMENT": 14,
+        "MOISTURIZER": 7,
+        "SUNSCREEN": 6,
+        "CLEANSER": 5
+      },
+      "dominant_role": "TREATMENT",
+      "purity": 0.4375,
+      "brand_count": 20,
+      "price_median": 380000,
+      "mean_z_price": 0.4309,
+      "mean_silhouette": 0.2776,
+      "skin_oily_pct": 100.0,
+      "skin_dry_pct": 0.0,
+      "skin_sensitive_pct": 6.2
+    },
+    {
+      "cluster_index": 4,
+      "size": 57,
+      "role_distribution": {
+        "MOISTURIZER": 23,
+        "SUNSCREEN": 20,
+        "CLEANSER": 13,
+        "TREATMENT": 1
+      },
+      "dominant_role": "MOISTURIZER",
+      "purity": 0.4035,
+      "brand_count": 40,
+      "price_median": 329000,
+      "mean_z_price": 0.2304,
+      "mean_silhouette": 0.1601,
+      "skin_oily_pct": 0.0,
+      "skin_dry_pct": 15.8,
+      "skin_sensitive_pct": 21.1
+    },
+    {
+      "cluster_index": 5,
+      "size": 18,
+      "role_distribution": {
+        "SERUM": 7,
+        "MOISTURIZER": 4,
+        "SUNSCREEN": 3,
+        "CLEANSER": 2,
+        "TREATMENT": 2
+      },
+      "dominant_role": "SERUM",
+      "purity": 0.3889,
+      "brand_count": 9,
+      "price_median": 1138000,
+      "mean_z_price": 1.9741,
+      "mean_silhouette": 0.2589,
+      "skin_oily_pct": 0.0,
+      "skin_dry_pct": 5.6,
+      "skin_sensitive_pct": 0.0
+    },
+    {
+      "cluster_index": 6,
+      "size": 40,
+      "role_distribution": {
+        "CLEANSER": 19,
+        "SUNSCREEN": 11,
+        "MOISTURIZER": 6,
+        "SERUM": 4
+      },
+      "dominant_role": "CLEANSER",
+      "purity": 0.475,
+      "brand_count": 24,
+      "price_median": 85500,
+      "mean_z_price": -1.3443,
+      "mean_silhouette": 0.1594,
+      "skin_oily_pct": 30.0,
+      "skin_dry_pct": 17.5,
+      "skin_sensitive_pct": 0.0
+    }
+  ],
+  "FULL": [
+    {
+      "cluster_index": 1,
+      "size": 171,
+      "role_distribution": {
+        "MOISTURIZER": 171
+      },
+      "dominant_role": "MOISTURIZER",
+      "purity": 1.0,
+      "brand_count": 62,
+      "price_median": 329000,
+      "mean_z_price": 0.2735,
+      "mean_silhouette": 0.4099,
+      "skin_oily_pct": 11.7,
+      "skin_dry_pct": 18.7,
+      "skin_sensitive_pct": 14.6
+    },
+    {
+      "cluster_index": 2,
+      "size": 182,
+      "role_distribution": {
+        "SUNSCREEN": 182
+      },
+      "dominant_role": "SUNSCREEN",
+      "purity": 1.0,
+      "brand_count": 54,
+      "price_median": 317000,
+      "mean_z_price": 0.1856,
+      "mean_silhouette": 0.3871,
+      "skin_oily_pct": 23.1,
+      "skin_dry_pct": 8.8,
+      "skin_sensitive_pct": 14.8
+    },
+    {
+      "cluster_index": 3,
+      "size": 187,
+      "role_distribution": {
+        "CLEANSER": 165,
+        "TREATMENT": 22
+      },
+      "dominant_role": "CLEANSER",
+      "purity": 0.8824,
+      "brand_count": 56,
+      "price_median": 298000,
+      "mean_z_price": 0.1499,
+      "mean_silhouette": 0.2809,
+      "skin_oily_pct": 44.9,
+      "skin_dry_pct": 9.1,
+      "skin_sensitive_pct": 16.0
+    },
+    {
+      "cluster_index": 4,
+      "size": 213,
+      "role_distribution": {
+        "CLEANSER": 117,
+        "TREATMENT": 40,
+        "SUNSCREEN": 31,
+        "MOISTURIZER": 21,
+        "SERUM": 4
+      },
+      "dominant_role": "CLEANSER",
+      "purity": 0.5493,
+      "brand_count": 55,
+      "price_median": 80000,
+      "mean_z_price": -1.4658,
+      "mean_silhouette": 0.201,
+      "skin_oily_pct": 49.3,
+      "skin_dry_pct": 10.3,
+      "skin_sensitive_pct": 7.5
+    },
+    {
+      "cluster_index": 5,
+      "size": 158,
+      "role_distribution": {
+        "SERUM": 158
+      },
+      "dominant_role": "SERUM",
+      "purity": 1.0,
+      "brand_count": 59,
+      "price_median": 327500,
+      "mean_z_price": 0.2955,
+      "mean_silhouette": 0.4716,
+      "skin_oily_pct": 17.1,
+      "skin_dry_pct": 6.3,
+      "skin_sensitive_pct": 11.4
+    },
+    {
+      "cluster_index": 6,
+      "size": 93,
+      "role_distribution": {
+        "SERUM": 45,
+        "MOISTURIZER": 23,
+        "SUNSCREEN": 18,
+        "TREATMENT": 4,
+        "CLEANSER": 3
+      },
+      "dominant_role": "SERUM",
+      "purity": 0.4839,
+      "brand_count": 29,
+      "price_median": 950000,
+      "mean_z_price": 1.6874,
+      "mean_silhouette": 0.1473,
+      "skin_oily_pct": 15.1,
+      "skin_dry_pct": 8.6,
+      "skin_sensitive_pct": 11.8
+    }
+  ]
+}

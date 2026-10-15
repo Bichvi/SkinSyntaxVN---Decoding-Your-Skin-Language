@@ -1,0 +1,720 @@
+{
+  "K_3": [
+    {
+      "cluster_index": 1,
+      "cluster_name": "Cluster_1",
+      "size": 10,
+      "member_pids": [
+        "P_21",
+        "P_1315",
+        "P_4688",
+        "P_16",
+        "P_1192",
+        "P_740",
+        "P_2394",
+        "P_283",
+        "P_880",
+        "P_964"
+      ],
+      "role_distribution": {
+        "TREATMENT": 5,
+        "CLEANSER": 2,
+        "SUNSCREEN": 2,
+        "SERUM": 1
+      },
+      "brand_count": 7,
+      "brand_list": [
+        "Vichy",
+        "Decumar",
+        "Eucerin",
+        "Anessa",
+        "Jumiso",
+        "Neogen Dermalogy",
+        "La Roche-Posay"
+      ],
+      "price_min": 208000,
+      "price_median": 408000,
+      "price_max": 549000,
+      "skin_prevalence": {
+        "oily": "10/10 (100.0%)",
+        "dry": "0/10 (0.0%)",
+        "sensitive": "2/10 (20.0%)"
+      }
+    },
+    {
+      "cluster_index": 2,
+      "cluster_name": "Cluster_2",
+      "size": 17,
+      "member_pids": [
+        "P_255",
+        "P_2740",
+        "P_5537",
+        "P_350",
+        "P_62",
+        "P_2263",
+        "P_755",
+        "P_2348",
+        "P_139",
+        "P_318",
+        "P_5974",
+        "P_4457",
+        "P_294",
+        "P_5092",
+        "P_3066",
+        "P_2362",
+        "P_10"
+      ],
+      "role_distribution": {
+        "MOISTURIZER": 6,
+        "SERUM": 5,
+        "CLEANSER": 3,
+        "SUNSCREEN": 3
+      },
+      "brand_count": 16,
+      "brand_list": [
+        "DrCeutics",
+        "Beplain",
+        "TIA'M",
+        "Cocoon",
+        "Anessa",
+        "Hada Labo",
+        "B.O.M",
+        "Judydoll",
+        "Bio-essence",
+        "Skintific",
+        "Skin1004",
+        "La Roche-Posay",
+        "Cetaphil",
+        "L'Oreal",
+        "Nuxe",
+        "Klairs"
+      ],
+      "price_min": 185000,
+      "price_median": 289000,
+      "price_max": 412000,
+      "skin_prevalence": {
+        "oily": "0/17 (0.0%)",
+        "dry": "2/17 (11.8%)",
+        "sensitive": "5/17 (29.4%)"
+      }
+    },
+    {
+      "cluster_index": 3,
+      "cluster_name": "Cluster_3",
+      "size": 13,
+      "member_pids": [
+        "P_4365",
+        "P_2654",
+        "P_2939",
+        "P_1176",
+        "P_761",
+        "P_469",
+        "P_1240",
+        "P_725",
+        "P_3950",
+        "P_1657",
+        "P_112",
+        "P_357",
+        "P_1617"
+      ],
+      "role_distribution": {
+        "CLEANSER": 3,
+        "TREATMENT": 3,
+        "SUNSCREEN": 3,
+        "MOISTURIZER": 2,
+        "SERUM": 2
+      },
+      "brand_count": 11,
+      "brand_list": [
+        "Nivea",
+        "Derma Angel",
+        "Bioré",
+        "Sunplay Skin Aqua",
+        "Sunplay",
+        "Vaseline",
+        "Acnes",
+        "Balance Active Formula",
+        "Cosrx",
+        "Megaduo",
+        "Hazeline"
+      ],
+      "price_min": 52000,
+      "price_median": 63000,
+      "price_max": 129000,
+      "skin_prevalence": {
+        "oily": "7/13 (53.8%)",
+        "dry": "2/13 (15.4%)",
+        "sensitive": "0/13 (0.0%)"
+      }
+    }
+  ],
+  "K_4": [
+    {
+      "cluster_index": 1,
+      "cluster_name": "Cluster_1",
+      "size": 7,
+      "member_pids": [
+        "P_350",
+        "P_62",
+        "P_761",
+        "P_2263",
+        "P_755",
+        "P_2348",
+        "P_4688"
+      ],
+      "role_distribution": {
+        "SERUM": 7
+      },
+      "brand_count": 7,
+      "brand_list": [
+        "DrCeutics",
+        "Eucerin",
+        "Cocoon",
+        "Anessa",
+        "Balance Active Formula",
+        "Skin1004",
+        "L'Oreal"
+      ],
+      "price_min": 117000,
+      "price_median": 289000,
+      "price_max": 415000,
+      "skin_prevalence": {
+        "oily": "1/7 (14.3%)",
+        "dry": "1/7 (14.3%)",
+        "sensitive": "1/7 (14.3%)"
+      }
+    },
+    {
+      "cluster_index": 2,
+      "cluster_name": "Cluster_2",
+      "size": 12,
+      "member_pids": [
+        "P_255",
+        "P_2740",
+        "P_5537",
+        "P_139",
+        "P_318",
+        "P_5974",
+        "P_4457",
+        "P_294",
+        "P_5092",
+        "P_3066",
+        "P_2362",
+        "P_10"
+      ],
+      "role_distribution": {
+        "MOISTURIZER": 6,
+        "CLEANSER": 3,
+        "SUNSCREEN": 3
+      },
+      "brand_count": 12,
+      "brand_list": [
+        "DrCeutics",
+        "Beplain",
+        "Hada Labo",
+        "B.O.M",
+        "Judydoll",
+        "Bio-essence",
+        "Skintific",
+        "La Roche-Posay",
+        "Cetaphil",
+        "TIA'M",
+        "Nuxe",
+        "Klairs"
+      ],
+      "price_min": 185000,
+      "price_median": 269500,
+      "price_max": 412000,
+      "skin_prevalence": {
+        "oily": "0/12 (0.0%)",
+        "dry": "1/12 (8.3%)",
+        "sensitive": "4/12 (33.3%)"
+      }
+    },
+    {
+      "cluster_index": 3,
+      "cluster_name": "Cluster_3",
+      "size": 12,
+      "member_pids": [
+        "P_4365",
+        "P_2654",
+        "P_2939",
+        "P_1176",
+        "P_469",
+        "P_1240",
+        "P_725",
+        "P_3950",
+        "P_1657",
+        "P_112",
+        "P_357",
+        "P_1617"
+      ],
+      "role_distribution": {
+        "CLEANSER": 3,
+        "TREATMENT": 3,
+        "SUNSCREEN": 3,
+        "MOISTURIZER": 2,
+        "SERUM": 1
+      },
+      "brand_count": 10,
+      "brand_list": [
+        "Derma Angel",
+        "Bioré",
+        "Sunplay Skin Aqua",
+        "Sunplay",
+        "Vaseline",
+        "Acnes",
+        "Cosrx",
+        "Nivea",
+        "Megaduo",
+        "Hazeline"
+      ],
+      "price_min": 52000,
+      "price_median": 61000,
+      "price_max": 129000,
+      "skin_prevalence": {
+        "oily": "7/12 (58.3%)",
+        "dry": "2/12 (16.7%)",
+        "sensitive": "0/12 (0.0%)"
+      }
+    },
+    {
+      "cluster_index": 4,
+      "cluster_name": "Cluster_4",
+      "size": 9,
+      "member_pids": [
+        "P_21",
+        "P_1315",
+        "P_16",
+        "P_1192",
+        "P_740",
+        "P_2394",
+        "P_283",
+        "P_880",
+        "P_964"
+      ],
+      "role_distribution": {
+        "TREATMENT": 5,
+        "CLEANSER": 2,
+        "SUNSCREEN": 2
+      },
+      "brand_count": 7,
+      "brand_list": [
+        "Vichy",
+        "Decumar",
+        "Eucerin",
+        "Anessa",
+        "Jumiso",
+        "Neogen Dermalogy",
+        "La Roche-Posay"
+      ],
+      "price_min": 208000,
+      "price_median": 404000,
+      "price_max": 549000,
+      "skin_prevalence": {
+        "oily": "9/9 (100.0%)",
+        "dry": "0/9 (0.0%)",
+        "sensitive": "2/9 (22.2%)"
+      }
+    }
+  ],
+  "K_5": [
+    {
+      "cluster_index": 1,
+      "cluster_name": "Cluster_1",
+      "size": 7,
+      "member_pids": [
+        "P_350",
+        "P_62",
+        "P_761",
+        "P_2263",
+        "P_755",
+        "P_2348",
+        "P_4688"
+      ],
+      "role_distribution": {
+        "SERUM": 7
+      },
+      "brand_count": 7,
+      "brand_list": [
+        "DrCeutics",
+        "Eucerin",
+        "Cocoon",
+        "Anessa",
+        "Balance Active Formula",
+        "Skin1004",
+        "L'Oreal"
+      ],
+      "price_min": 117000,
+      "price_median": 289000,
+      "price_max": 415000,
+      "skin_prevalence": {
+        "oily": "1/7 (14.3%)",
+        "dry": "1/7 (14.3%)",
+        "sensitive": "1/7 (14.3%)"
+      }
+    },
+    {
+      "cluster_index": 2,
+      "cluster_name": "Cluster_2",
+      "size": 9,
+      "member_pids": [
+        "P_255",
+        "P_2740",
+        "P_5537",
+        "P_139",
+        "P_318",
+        "P_5974",
+        "P_4457",
+        "P_294",
+        "P_5092"
+      ],
+      "role_distribution": {
+        "MOISTURIZER": 6,
+        "CLEANSER": 3
+      },
+      "brand_count": 9,
+      "brand_list": [
+        "DrCeutics",
+        "Beplain",
+        "Hada Labo",
+        "Bio-essence",
+        "Skintific",
+        "Cetaphil",
+        "TIA'M",
+        "Nuxe",
+        "Klairs"
+      ],
+      "price_min": 185000,
+      "price_median": 210000,
+      "price_max": 411000,
+      "skin_prevalence": {
+        "oily": "0/9 (0.0%)",
+        "dry": "1/9 (11.1%)",
+        "sensitive": "4/9 (44.4%)"
+      }
+    },
+    {
+      "cluster_index": 3,
+      "cluster_name": "Cluster_3",
+      "size": 12,
+      "member_pids": [
+        "P_4365",
+        "P_2654",
+        "P_2939",
+        "P_1176",
+        "P_469",
+        "P_1240",
+        "P_725",
+        "P_3950",
+        "P_1657",
+        "P_112",
+        "P_357",
+        "P_1617"
+      ],
+      "role_distribution": {
+        "CLEANSER": 3,
+        "TREATMENT": 3,
+        "SUNSCREEN": 3,
+        "MOISTURIZER": 2,
+        "SERUM": 1
+      },
+      "brand_count": 10,
+      "brand_list": [
+        "Derma Angel",
+        "Bioré",
+        "Sunplay Skin Aqua",
+        "Sunplay",
+        "Vaseline",
+        "Acnes",
+        "Cosrx",
+        "Nivea",
+        "Megaduo",
+        "Hazeline"
+      ],
+      "price_min": 52000,
+      "price_median": 61000,
+      "price_max": 129000,
+      "skin_prevalence": {
+        "oily": "7/12 (58.3%)",
+        "dry": "2/12 (16.7%)",
+        "sensitive": "0/12 (0.0%)"
+      }
+    },
+    {
+      "cluster_index": 4,
+      "cluster_name": "Cluster_4",
+      "size": 5,
+      "member_pids": [
+        "P_16",
+        "P_1192",
+        "P_3066",
+        "P_2362",
+        "P_10"
+      ],
+      "role_distribution": {
+        "SUNSCREEN": 5
+      },
+      "brand_count": 5,
+      "brand_list": [
+        "Decumar",
+        "Anessa",
+        "B.O.M",
+        "Judydoll",
+        "La Roche-Posay"
+      ],
+      "price_min": 208000,
+      "price_median": 406000,
+      "price_max": 549000,
+      "skin_prevalence": {
+        "oily": "2/5 (40.0%)",
+        "dry": "0/5 (0.0%)",
+        "sensitive": "0/5 (0.0%)"
+      }
+    },
+    {
+      "cluster_index": 5,
+      "cluster_name": "Cluster_5",
+      "size": 7,
+      "member_pids": [
+        "P_21",
+        "P_1315",
+        "P_740",
+        "P_2394",
+        "P_283",
+        "P_880",
+        "P_964"
+      ],
+      "role_distribution": {
+        "TREATMENT": 5,
+        "CLEANSER": 2
+      },
+      "brand_count": 5,
+      "brand_list": [
+        "Vichy",
+        "Eucerin",
+        "Jumiso",
+        "Neogen Dermalogy",
+        "La Roche-Posay"
+      ],
+      "price_min": 248000,
+      "price_median": 404000,
+      "price_max": 514000,
+      "skin_prevalence": {
+        "oily": "7/7 (100.0%)",
+        "dry": "0/7 (0.0%)",
+        "sensitive": "2/7 (28.6%)"
+      }
+    }
+  ],
+  "K_6": [
+    {
+      "cluster_index": 1,
+      "cluster_name": "Cluster_1",
+      "size": 5,
+      "member_pids": [
+        "P_16",
+        "P_1192",
+        "P_3066",
+        "P_2362",
+        "P_10"
+      ],
+      "role_distribution": {
+        "SUNSCREEN": 5
+      },
+      "brand_count": 5,
+      "brand_list": [
+        "Decumar",
+        "Anessa",
+        "B.O.M",
+        "Judydoll",
+        "La Roche-Posay"
+      ],
+      "price_min": 208000,
+      "price_median": 406000,
+      "price_max": 549000,
+      "skin_prevalence": {
+        "oily": "2/5 (40.0%)",
+        "dry": "0/5 (0.0%)",
+        "sensitive": "0/5 (0.0%)"
+      }
+    },
+    {
+      "cluster_index": 2,
+      "cluster_name": "Cluster_2",
+      "size": 6,
+      "member_pids": [
+        "P_4365",
+        "P_21",
+        "P_255",
+        "P_2740",
+        "P_5537",
+        "P_1315"
+      ],
+      "role_distribution": {
+        "CLEANSER": 6
+      },
+      "brand_count": 6,
+      "brand_list": [
+        "DrCeutics",
+        "Vichy",
+        "Cosrx",
+        "La Roche-Posay",
+        "TIA'M",
+        "Nuxe"
+      ],
+      "price_min": 129000,
+      "price_median": 301500,
+      "price_max": 412000,
+      "skin_prevalence": {
+        "oily": "3/6 (50.0%)",
+        "dry": "0/6 (0.0%)",
+        "sensitive": "3/6 (50.0%)"
+      }
+    },
+    {
+      "cluster_index": 3,
+      "cluster_name": "Cluster_3",
+      "size": 11,
+      "member_pids": [
+        "P_2654",
+        "P_2939",
+        "P_1176",
+        "P_469",
+        "P_1240",
+        "P_725",
+        "P_3950",
+        "P_1657",
+        "P_112",
+        "P_357",
+        "P_1617"
+      ],
+      "role_distribution": {
+        "TREATMENT": 3,
+        "SUNSCREEN": 3,
+        "CLEANSER": 2,
+        "MOISTURIZER": 2,
+        "SERUM": 1
+      },
+      "brand_count": 9,
+      "brand_list": [
+        "Derma Angel",
+        "Bioré",
+        "Sunplay Skin Aqua",
+        "Sunplay",
+        "Vaseline",
+        "Acnes",
+        "Nivea",
+        "Megaduo",
+        "Hazeline"
+      ],
+      "price_min": 52000,
+      "price_median": 59000,
+      "price_max": 105000,
+      "skin_prevalence": {
+        "oily": "6/11 (54.5%)",
+        "dry": "2/11 (18.2%)",
+        "sensitive": "0/11 (0.0%)"
+      }
+    },
+    {
+      "cluster_index": 4,
+      "cluster_name": "Cluster_4",
+      "size": 6,
+      "member_pids": [
+        "P_139",
+        "P_318",
+        "P_5974",
+        "P_4457",
+        "P_294",
+        "P_5092"
+      ],
+      "role_distribution": {
+        "MOISTURIZER": 6
+      },
+      "brand_count": 6,
+      "brand_list": [
+        "Hada Labo",
+        "Bio-essence",
+        "Skintific",
+        "Cetaphil",
+        "Klairs",
+        "Beplain"
+      ],
+      "price_min": 185000,
+      "price_median": 269500,
+      "price_max": 411000,
+      "skin_prevalence": {
+        "oily": "0/6 (0.0%)",
+        "dry": "1/6 (16.7%)",
+        "sensitive": "2/6 (33.3%)"
+      }
+    },
+    {
+      "cluster_index": 5,
+      "cluster_name": "Cluster_5",
+      "size": 7,
+      "member_pids": [
+        "P_350",
+        "P_62",
+        "P_761",
+        "P_2263",
+        "P_755",
+        "P_2348",
+        "P_4688"
+      ],
+      "role_distribution": {
+        "SERUM": 7
+      },
+      "brand_count": 7,
+      "brand_list": [
+        "DrCeutics",
+        "Eucerin",
+        "Cocoon",
+        "Anessa",
+        "Balance Active Formula",
+        "Skin1004",
+        "L'Oreal"
+      ],
+      "price_min": 117000,
+      "price_median": 289000,
+      "price_max": 415000,
+      "skin_prevalence": {
+        "oily": "1/7 (14.3%)",
+        "dry": "1/7 (14.3%)",
+        "sensitive": "1/7 (14.3%)"
+      }
+    },
+    {
+      "cluster_index": 6,
+      "cluster_name": "Cluster_6",
+      "size": 5,
+      "member_pids": [
+        "P_740",
+        "P_2394",
+        "P_283",
+        "P_880",
+        "P_964"
+      ],
+      "role_distribution": {
+        "TREATMENT": 5
+      },
+      "brand_count": 5,
+      "brand_list": [
+        "Vichy",
+        "Eucerin",
+        "Jumiso",
+        "Neogen Dermalogy",
+        "La Roche-Posay"
+      ],
+      "price_min": 248000,
+      "price_median": 370000,
+      "price_max": 514000,
+      "skin_prevalence": {
+        "oily": "5/5 (100.0%)",
+        "dry": "0/5 (0.0%)",
+        "sensitive": "1/5 (20.0%)"
+      }
+    }
+  ]
+}

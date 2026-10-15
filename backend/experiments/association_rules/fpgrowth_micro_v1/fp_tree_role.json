@@ -1,0 +1,301 @@
+{
+  "global_item_ordering": [
+    {
+      "item": "CLEANSER",
+      "frequency": 17
+    },
+    {
+      "item": "MOISTURIZER",
+      "frequency": 11
+    },
+    {
+      "item": "MAKEUP_REMOVAL",
+      "frequency": 8
+    },
+    {
+      "item": "SUNSCREEN",
+      "frequency": 8
+    },
+    {
+      "item": "TONER",
+      "frequency": 8
+    },
+    {
+      "item": "SERUM",
+      "frequency": 7
+    },
+    {
+      "item": "TREATMENT",
+      "frequency": 6
+    },
+    {
+      "item": "MASK",
+      "frequency": 5
+    }
+  ],
+  "header_table": {
+    "SUNSCREEN": [
+      8,
+      2
+    ],
+    "TREATMENT": [
+      6,
+      3
+    ],
+    "MASK": [
+      5,
+      4
+    ],
+    "CLEANSER": [
+      17,
+      5
+    ],
+    "MAKEUP_REMOVAL": [
+      8,
+      6
+    ],
+    "SERUM": [
+      7,
+      7
+    ],
+    "TONER": [
+      8,
+      9
+    ],
+    "MOISTURIZER": [
+      11,
+      11
+    ]
+  },
+  "fp_tree_root": {
+    "node_id": 1,
+    "item": "ROOT",
+    "count": 30,
+    "parent_item": null,
+    "children": [
+      {
+        "node_id": 2,
+        "item": "SUNSCREEN",
+        "count": 2,
+        "parent_item": "ROOT",
+        "children": [
+          {
+            "node_id": 24,
+            "item": "TONER",
+            "count": 1,
+            "parent_item": "SUNSCREEN",
+            "children": [
+              {
+                "node_id": 25,
+                "item": "TREATMENT",
+                "count": 1,
+                "parent_item": "TONER",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "node_id": 3,
+        "item": "TREATMENT",
+        "count": 1,
+        "parent_item": "ROOT",
+        "children": []
+      },
+      {
+        "node_id": 4,
+        "item": "MASK",
+        "count": 1,
+        "parent_item": "ROOT",
+        "children": []
+      },
+      {
+        "node_id": 5,
+        "item": "CLEANSER",
+        "count": 17,
+        "parent_item": "ROOT",
+        "children": [
+          {
+            "node_id": 8,
+            "item": "MAKEUP_REMOVAL",
+            "count": 5,
+            "parent_item": "CLEANSER",
+            "children": [
+              {
+                "node_id": 16,
+                "item": "TONER",
+                "count": 2,
+                "parent_item": "MAKEUP_REMOVAL",
+                "children": [
+                  {
+                    "node_id": 31,
+                    "item": "MASK",
+                    "count": 1,
+                    "parent_item": "TONER",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node_id": 9,
+            "item": "TONER",
+            "count": 3,
+            "parent_item": "CLEANSER",
+            "children": [
+              {
+                "node_id": 23,
+                "item": "SERUM",
+                "count": 1,
+                "parent_item": "TONER",
+                "children": []
+              }
+            ]
+          },
+          {
+            "node_id": 10,
+            "item": "TREATMENT",
+            "count": 2,
+            "parent_item": "CLEANSER",
+            "children": []
+          },
+          {
+            "node_id": 17,
+            "item": "MOISTURIZER",
+            "count": 5,
+            "parent_item": "CLEANSER",
+            "children": [
+              {
+                "node_id": 18,
+                "item": "MASK",
+                "count": 1,
+                "parent_item": "MOISTURIZER",
+                "children": []
+              },
+              {
+                "node_id": 21,
+                "item": "TREATMENT",
+                "count": 1,
+                "parent_item": "MOISTURIZER",
+                "children": []
+              },
+              {
+                "node_id": 26,
+                "item": "MAKEUP_REMOVAL",
+                "count": 2,
+                "parent_item": "MOISTURIZER",
+                "children": [
+                  {
+                    "node_id": 27,
+                    "item": "SERUM",
+                    "count": 1,
+                    "parent_item": "MAKEUP_REMOVAL",
+                    "children": []
+                  },
+                  {
+                    "node_id": 28,
+                    "item": "TREATMENT",
+                    "count": 1,
+                    "parent_item": "MAKEUP_REMOVAL",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "node_id": 29,
+                "item": "SUNSCREEN",
+                "count": 1,
+                "parent_item": "MOISTURIZER",
+                "children": [
+                  {
+                    "node_id": 30,
+                    "item": "TONER",
+                    "count": 1,
+                    "parent_item": "SUNSCREEN",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node_id": 19,
+            "item": "SUNSCREEN",
+            "count": 1,
+            "parent_item": "CLEANSER",
+            "children": [
+              {
+                "node_id": 20,
+                "item": "MASK",
+                "count": 1,
+                "parent_item": "SUNSCREEN",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "node_id": 6,
+        "item": "MAKEUP_REMOVAL",
+        "count": 1,
+        "parent_item": "ROOT",
+        "children": []
+      },
+      {
+        "node_id": 7,
+        "item": "SERUM",
+        "count": 1,
+        "parent_item": "ROOT",
+        "children": []
+      },
+      {
+        "node_id": 11,
+        "item": "MOISTURIZER",
+        "count": 6,
+        "parent_item": "ROOT",
+        "children": [
+          {
+            "node_id": 12,
+            "item": "SERUM",
+            "count": 2,
+            "parent_item": "MOISTURIZER",
+            "children": []
+          },
+          {
+            "node_id": 13,
+            "item": "SUNSCREEN",
+            "count": 4,
+            "parent_item": "MOISTURIZER",
+            "children": [
+              {
+                "node_id": 22,
+                "item": "SERUM",
+                "count": 2,
+                "parent_item": "SUNSCREEN",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "node_id": 14,
+        "item": "TONER",
+        "count": 1,
+        "parent_item": "ROOT",
+        "children": [
+          {
+            "node_id": 15,
+            "item": "MASK",
+            "count": 1,
+            "parent_item": "TONER",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}

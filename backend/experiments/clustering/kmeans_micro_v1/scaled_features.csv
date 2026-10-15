@@ -1,0 +1,11 @@
+Product_ID,SKU_ID,Role,role_cleanser,role_serum,role_moisturizer,role_sunscreen,role_treatment,z_price,skin_oily,skin_dry,skin_sensitive
+P_4365,4365,CLEANSER,1,0,0,0,0,-1.0876,1,0,0
+P_21,21,CLEANSER,1,0,0,0,0,0.9604,1,0,1
+P_350,350,SERUM,0,1,0,0,0,0.395,0,0,1
+P_62,62,SERUM,0,1,0,0,0,0.335,0,1,0
+P_139,139,MOISTURIZER,0,0,1,0,0,0.5636,0,0,1
+P_318,318,MOISTURIZER,0,0,1,0,0,-0.4517,0,1,0
+P_16,16,SUNSCREEN,0,0,0,1,0,1.4667,1,0,0
+P_725,725,SUNSCREEN,0,0,0,1,0,-1.5017,1,0,0
+P_112,112,TREATMENT,0,0,0,0,1,-1.4506,1,0,0
+P_740,740,TREATMENT,0,0,0,0,1,0.7708,1,0,1
