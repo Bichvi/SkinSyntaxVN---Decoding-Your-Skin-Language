@@ -1,0 +1,9 @@
+Cluster_ID,Cluster_Size,Cluster_Size_Pct,Dominant_Parents,Dominant_Leaves,Scientific_Note
+0,181,7.32,"Dưỡng Môi (181, 100.0%)","Son Dưỡng Môi (167, 92.3%); Mặt Nạ Môi (11, 6.1%); Tẩy Tế Bào Chết Môi (3, 1.7%)",Alignment phan nao la he qua tat yeu cua taxonomy features trong vector.
+1,286,11.56,"Mặt Nạ (284, 99.3%); Dưỡng Mắt (2, 0.7%)","Mặt Nạ Giấy (236, 82.5%); Mặt Nạ Rửa (32, 11.2%); Mặt Nạ Ngủ (13, 4.5%)",Alignment phan nao la he qua tat yeu cua taxonomy features trong vector.
+2,260,10.51,"Đặc Trị (260, 100.0%)","Serum / Tinh Chất (207, 79.6%); Hỗ Trợ Trị Mụn (51, 19.6%); Sản Phẩm Đặc Trị Khác (2, 0.8%)",Alignment phan nao la he qua tat yeu cua taxonomy features trong vector.
+3,616,24.91,"Làm Sạch Da (610, 99.0%); Dưỡng Mắt (6, 1.0%)","Sữa Rửa Mặt (285, 46.3%); Tẩy Trang Mặt (192, 31.2%); Toner / Nước Cân Bằng Da (94, 15.3%)",Alignment phan nao la he qua tat yeu cua taxonomy features trong vector.
+4,327,13.22,"Dưỡng Ẩm (313, 95.7%); Dưỡng Mắt (14, 4.3%)","Kem / Gel / Dầu Dưỡng (215, 65.7%); Lotion / Sữa Dưỡng (58, 17.7%); Xịt Khoáng (40, 12.2%)",Alignment phan nao la he qua tat yeu cua taxonomy features trong vector.
+5,211,8.53,"Chăm Sóc Da Mặt (211, 100.0%)","Bộ Chăm Sóc Da Mặt (211, 100.0%)",Alignment phan nao la he qua tat yeu cua taxonomy features trong vector.
+6,231,9.34,"Chăm Sóc Da Mặt (231, 100.0%)","Chống Nắng Da Mặt (231, 100.0%)",Alignment phan nao la he qua tat yeu cua taxonomy features trong vector.
+7,361,14.6,"Mặt Nạ (338, 93.6%); Đặc Trị (15, 4.2%)","Mặt Nạ Giấy (313, 86.7%); Mặt Nạ Rửa (18, 5.0%); Hỗ Trợ Trị Mụn (15, 4.2%)",Alignment phan nao la he qua tat yeu cua taxonomy features trong vector.

@@ -1,0 +1,37 @@
+{
+  "dataset_baskets": 30,
+  "apriori_operations": {
+    "candidate_counts": {
+      "C1": 8,
+      "C2": 28,
+      "C3": 0
+    },
+    "frequent_counts": {
+      "L1": 8,
+      "L2": 7,
+      "L3": 0
+    },
+    "transaction_matrix_scans": 2,
+    "candidate_support_checks": 36
+  },
+  "fpgrowth_operations": {
+    "role_level": {
+      "fp_tree_nodes_count": 30,
+      "header_table_entries": 8,
+      "conditional_pattern_bases_count": 15,
+      "conditional_trees_count": 7,
+      "recursive_mining_calls": 8
+    },
+    "sku_level": {
+      "fp_tree_nodes_count": 49,
+      "header_table_entries": 20,
+      "conditional_pattern_bases_count": 30,
+      "conditional_trees_count": 9,
+      "recursive_mining_calls": 10
+    }
+  },
+  "theoretical_comparison_notes": {
+    "Apriori": "Relies on iterative level-wise candidate generation and subset testing. Scans database or candidates at each level k.",
+    "FPGrowth": "Compresses transactions into a compact prefix-tree (FP-tree) with header-table node links. Mines frequent patterns recursively by constructing conditional pattern bases without candidate generation."
+  }
+}

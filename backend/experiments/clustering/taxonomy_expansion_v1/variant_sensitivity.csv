@@ -1,0 +1,12 @@
+Metric,Value
+Total_Products,2473
+Distinct_Variant_Families,1939
+Multi_Product_Families,364
+Products_in_Multi_Families,898
+Mean_Top1_Variant_Rate,0.1545
+Mean_Top5_Variant_Rate,0.0751
+Mean_Top10_Variant_Rate,0.0446
+Collapsed_Catalog_Size,1939
+ARI_Full_vs_Collapsed_Subset (K=8),0.5655
+NMI_Full_vs_Collapsed_Subset (K=8),0.7458
+Interpretation_Notice,Partition similarity remained high under this specific variant-collapsing sensitivity analysis.

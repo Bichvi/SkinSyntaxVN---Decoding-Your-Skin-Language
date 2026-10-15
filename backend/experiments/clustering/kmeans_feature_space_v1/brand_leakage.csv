@@ -1,0 +1,20 @@
+Config,Cluster_ID,Cluster_Size,Distinct_Brands_Count,Top_Brand_Name,Top_Brand_Product_Count,Top_Brand_Concentration_Pct
+Config_M,C1,171,62.0,Olay,12.0,7.02
+Config_M,C2,94,30.0,Vichy,10.0,10.64
+Config_M,C3,156,59.0,Garnier,7.0,4.49
+Config_M,C4,187,56.0,CeraVe,17.0,9.09
+Config_M,C5,182,54.0,Sunplay,31.0,17.03
+Config_M,C6,214,55.0,Acnes,21.0,9.81
+Config_T,C1,194,67.0,Garnier,10.0,5.15
+Config_T,C2,111,37.0,La Roche-Posay,29.0,26.13
+Config_T,C3,272,74.0,CeraVe,20.0,7.35
+Config_T,C4,205,69.0,Olay,13.0,6.34
+Config_T,C5,139,56.0,Beplain,11.0,7.91
+Config_T,C6,83,7.0,Sunplay,41.0,49.4
+Config_MIT,C1,164,46.0,Cetaphil,18.0,10.98
+Config_MIT,C2,85,19.0,Sunplay,41.0,48.24
+Config_MIT,C3,146,51.0,Anessa,17.0,11.64
+Config_MIT,C4,200,58.0,Acnes,20.0,10.0
+Config_MIT,C5,202,67.0,Cocoon,8.0,3.96
+Config_MIT,C6,207,72.0,Olay,13.0,6.28
+SENSITIVITY_TEST,T_WITH_BRAND vs T_BRAND_REMOVED,1004,0.6997605399806162,ARI_Score,0.6998,0.7507

@@ -1,0 +1,4 @@
+Config,Full_Catalog_N,Collapsed_Catalog_N,Excluded_Variants_Count,Silhouette_With_Variants,Silhouette_Variants_Collapsed,ARI_Full_vs_Collapsed_Sub
+Config_M,1004,816,188,0.3223,0.3402,0.9945
+Config_MI_WORD,1004,816,188,0.1697,0.1781,0.9851
+Config_MI_INGREDIENT,1004,816,188,0.1667,0.1751,0.974

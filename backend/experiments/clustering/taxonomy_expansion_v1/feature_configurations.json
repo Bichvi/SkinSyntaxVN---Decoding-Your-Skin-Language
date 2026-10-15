@@ -1,0 +1,61 @@
+{
+  "configurations": {
+    "CONFIG_TAX_LEAF": {
+      "dimensions": 21,
+      "sample_count": 2473,
+      "sparsity_pct": 95.24,
+      "blocks_included": [
+        "taxonomy_leaf"
+      ]
+    },
+    "CONFIG_TAX_HIER": {
+      "dimensions": 28,
+      "sample_count": 2473,
+      "sparsity_pct": 92.86,
+      "blocks_included": [
+        "taxonomy_hierarchical"
+      ]
+    },
+    "CONFIG_TAX_PRICE": {
+      "dimensions": 29,
+      "sample_count": 2473,
+      "sparsity_pct": 89.66,
+      "blocks_included": [
+        "taxonomy_hierarchical",
+        "price"
+      ]
+    },
+    "CONFIG_TAX_PRICE_SKIN": {
+      "dimensions": 32,
+      "sample_count": 2473,
+      "sparsity_pct": 88.96,
+      "blocks_included": [
+        "taxonomy_hierarchical",
+        "price",
+        "skin"
+      ]
+    },
+    "CONFIG_TAX_PRICE_SKIN_ING": {
+      "dimensions": 62,
+      "sample_count": 2473,
+      "sparsity_pct": 47.52,
+      "blocks_included": [
+        "taxonomy_hierarchical",
+        "price",
+        "skin",
+        "ingredient_v2_svd30"
+      ]
+    },
+    "CONFIG_BLOCK_NORMALIZED": {
+      "dimensions": 62,
+      "sample_count": 2473,
+      "sparsity_pct": 47.52,
+      "blocks_included": [
+        "taxonomy_hierarchical",
+        "price",
+        "skin",
+        "ingredient_v2_svd30"
+      ]
+    }
+  }
+}

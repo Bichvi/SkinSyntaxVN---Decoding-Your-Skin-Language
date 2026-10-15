@@ -1,0 +1,207 @@
+{
+    "sample_size": 20,
+    "all_target_candidates_present": true,
+    "all_targets_unseen_in_train": true,
+    "samples": [
+        {
+            "user_id": 1000137,
+            "train_item_count": 6,
+            "target_item": 1311,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 1513,
+            "rank_from_knn": 1513,
+            "rank_from_mf": 1513
+        },
+        {
+            "user_id": 1000399,
+            "train_item_count": 9,
+            "target_item": 679,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 1427,
+            "rank_from_knn": 1427,
+            "rank_from_mf": 1427
+        },
+        {
+            "user_id": 1000133,
+            "train_item_count": 6,
+            "target_item": 766,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 125,
+            "rank_from_knn": 286,
+            "rank_from_mf": 1294
+        },
+        {
+            "user_id": 1000428,
+            "train_item_count": 8,
+            "target_item": 603,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 399,
+            "rank_from_knn": 555,
+            "rank_from_mf": 245
+        },
+        {
+            "user_id": 1000123,
+            "train_item_count": 11,
+            "target_item": 33,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 100,
+            "rank_from_knn": 226,
+            "rank_from_mf": 1286
+        },
+        {
+            "user_id": 1000189,
+            "train_item_count": 5,
+            "target_item": 152,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 68,
+            "rank_from_knn": 86,
+            "rank_from_mf": 1265
+        },
+        {
+            "user_id": 1000423,
+            "train_item_count": 7,
+            "target_item": 2432,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 234,
+            "rank_from_knn": 341,
+            "rank_from_mf": 495
+        },
+        {
+            "user_id": 1000245,
+            "train_item_count": 6,
+            "target_item": 60,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 4,
+            "rank_from_knn": 91,
+            "rank_from_mf": 989
+        },
+        {
+            "user_id": 1000408,
+            "train_item_count": 11,
+            "target_item": 2951,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 1752,
+            "rank_from_knn": 1752,
+            "rank_from_mf": 1752
+        },
+        {
+            "user_id": 1000411,
+            "train_item_count": 6,
+            "target_item": 759,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 35,
+            "rank_from_knn": 41,
+            "rank_from_mf": 384
+        },
+        {
+            "user_id": 1000254,
+            "train_item_count": 14,
+            "target_item": 176,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 1328,
+            "rank_from_knn": 1328,
+            "rank_from_mf": 1328
+        },
+        {
+            "user_id": 1000073,
+            "train_item_count": 7,
+            "target_item": 1019,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 400,
+            "rank_from_knn": 205,
+            "rank_from_mf": 356
+        },
+        {
+            "user_id": 1000001,
+            "train_item_count": 12,
+            "target_item": 1,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 50,
+            "rank_from_knn": 253,
+            "rank_from_mf": 618
+        },
+        {
+            "user_id": 1000418,
+            "train_item_count": 9,
+            "target_item": 497,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 646,
+            "rank_from_knn": 723,
+            "rank_from_mf": 711
+        },
+        {
+            "user_id": 1000494,
+            "train_item_count": 13,
+            "target_item": 4365,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 28,
+            "rank_from_knn": 143,
+            "rank_from_mf": 372
+        },
+        {
+            "user_id": 1000425,
+            "train_item_count": 11,
+            "target_item": 718,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 38,
+            "rank_from_knn": 117,
+            "rank_from_mf": 62
+        },
+        {
+            "user_id": 1000164,
+            "train_item_count": 7,
+            "target_item": 6204,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 259,
+            "rank_from_knn": 18,
+            "rank_from_mf": 59
+        },
+        {
+            "user_id": 1000261,
+            "train_item_count": 6,
+            "target_item": 5968,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 797,
+            "rank_from_knn": 835,
+            "rank_from_mf": 590
+        },
+        {
+            "user_id": 1000388,
+            "train_item_count": 10,
+            "target_item": 2458,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 43,
+            "rank_from_knn": 210,
+            "rank_from_mf": 469
+        },
+        {
+            "user_id": 1000235,
+            "train_item_count": 6,
+            "target_item": 52,
+            "target_candidate_present": "YES",
+            "target_seen_in_train": "NO",
+            "rank_from_popular": 31,
+            "rank_from_knn": 92,
+            "rank_from_mf": 365
+        }
+    ]
+}

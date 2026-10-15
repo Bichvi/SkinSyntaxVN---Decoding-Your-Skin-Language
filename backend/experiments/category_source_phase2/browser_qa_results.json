@@ -1,0 +1,203 @@
+{
+  "desktopMenu": {
+    "isVisible": true,
+    "rect": {
+      "x": 32.5,
+      "y": 127.578125,
+      "width": 1100,
+      "height": 323.8125
+    },
+    "eyebrow": "DANH MỤC NỔI BẬT",
+    "heading": "Khám phá từng nhóm skincare theo đúng nhu cầu da.",
+    "cta": "Mở gợi ý routine",
+    "groupCount": 0,
+    "groups": [],
+    "foundLegacy": []
+  },
+  "categoryLinks": {
+    "Làm Sạch Da": {
+      "title": "SkinSyntax",
+      "h1": "",
+      "breadcrumb": "",
+      "productCardCount": 24,
+      "hasError": false
+    },
+    "Sữa Rửa Mặt": {
+      "title": "SkinSyntax",
+      "h1": "",
+      "breadcrumb": "",
+      "productCardCount": 24,
+      "hasError": false
+    },
+    "Dưỡng Ẩm": {
+      "title": "SkinSyntax",
+      "h1": "",
+      "breadcrumb": "",
+      "productCardCount": 24,
+      "hasError": false
+    },
+    "Mặt Nạ": {
+      "title": "SkinSyntax",
+      "h1": "",
+      "breadcrumb": "",
+      "productCardCount": 24,
+      "hasError": false
+    },
+    "Đặc Trị": {
+      "title": "SkinSyntax",
+      "h1": "",
+      "breadcrumb": "",
+      "productCardCount": 24,
+      "hasError": false
+    },
+    "Chống Nắng Da Mặt": {
+      "title": "SkinSyntax",
+      "h1": "",
+      "breadcrumb": "",
+      "productCardCount": 24,
+      "hasError": false
+    }
+  },
+  "adminCategories": {
+    "totalRows": 28,
+    "foundLegacy": [],
+    "node1001": {
+      "id": "#1001",
+      "name": "Chăm Sóc Da Mặt Nhóm (8 con)",
+      "parent": "Cấp 1",
+      "directCount": "—",
+      "recursiveCount": "0 / 2.473 SP",
+      "isLeaf": "Sửa Xóa"
+    },
+    "node2002": {
+      "id": "#2002",
+      "name": "├─ Làm Sạch Da Nhóm (4 con)",
+      "parent": "Cấp 2",
+      "directCount": "Chăm Sóc Da Mặt",
+      "recursiveCount": "0 / 613 SP",
+      "isLeaf": "Sửa Xóa"
+    },
+    "node1": {
+      "id": "#1",
+      "name": "└── Sữa Rửa Mặt Leaf",
+      "parent": "Cấp 3",
+      "directCount": "Làm Sạch Da",
+      "recursiveCount": "285 SP",
+      "isLeaf": "Sửa Xóa"
+    },
+    "node2001": {
+      "id": "#2001",
+      "name": "├─ Mặt Nạ Nhóm (4 con)",
+      "parent": "Cấp 2",
+      "directCount": "Chăm Sóc Da Mặt",
+      "recursiveCount": "0 / 622 SP",
+      "isLeaf": "Sửa Xóa"
+    },
+    "node11": {
+      "id": "#11",
+      "name": "└── Mặt Nạ Giấy Leaf",
+      "parent": "Cấp 3",
+      "directCount": "Mặt Nạ",
+      "recursiveCount": "549 SP",
+      "isLeaf": "Sửa Xóa"
+    },
+    "sample": [
+      {
+        "id": "#1001",
+        "name": "Chăm Sóc Da Mặt Nhóm (8 con)",
+        "parent": "Cấp 1",
+        "directCount": "—",
+        "recursiveCount": "0 / 2.473 SP",
+        "isLeaf": "Sửa Xóa"
+      },
+      {
+        "id": "#2001",
+        "name": "├─ Mặt Nạ Nhóm (4 con)",
+        "parent": "Cấp 2",
+        "directCount": "Chăm Sóc Da Mặt",
+        "recursiveCount": "0 / 622 SP",
+        "isLeaf": "Sửa Xóa"
+      },
+      {
+        "id": "#11",
+        "name": "└── Mặt Nạ Giấy Leaf",
+        "parent": "Cấp 3",
+        "directCount": "Mặt Nạ",
+        "recursiveCount": "549 SP",
+        "isLeaf": "Sửa Xóa"
+      },
+      {
+        "id": "#19",
+        "name": "└── Mặt Nạ Rửa Leaf",
+        "parent": "Cấp 3",
+        "directCount": "Mặt Nạ",
+        "recursiveCount": "50 SP",
+        "isLeaf": "Sửa Xóa"
+      },
+      {
+        "id": "#53",
+        "name": "└── Mặt Nạ Ngủ Leaf",
+        "parent": "Cấp 3",
+        "directCount": "Mặt Nạ",
+        "recursiveCount": "20 SP",
+        "isLeaf": "Sửa Xóa"
+      },
+      {
+        "id": "#83",
+        "name": "└── Mặt Nạ Lột Leaf",
+        "parent": "Cấp 3",
+        "directCount": "Mặt Nạ",
+        "recursiveCount": "3 SP",
+        "isLeaf": "Sửa Xóa"
+      },
+      {
+        "id": "#2002",
+        "name": "├─ Làm Sạch Da Nhóm (4 con)",
+        "parent": "Cấp 2",
+        "directCount": "Chăm Sóc Da Mặt",
+        "recursiveCount": "0 / 613 SP",
+        "isLeaf": "Sửa Xóa"
+      },
+      {
+        "id": "#1",
+        "name": "└── Sữa Rửa Mặt Leaf",
+        "parent": "Cấp 3",
+        "directCount": "Làm Sạch Da",
+        "recursiveCount": "285 SP",
+        "isLeaf": "Sửa Xóa"
+      }
+    ]
+  },
+  "mobileMenu": {
+    "isShown": true,
+    "accordionItemCount": 8,
+    "firstGroupExpanded": true,
+    "firstGroupLeaves": [
+      "Xem tất cả Mặt Nạ (622)",
+      "Mặt Nạ Giấy\n                      (549)",
+      "Mặt Nạ Rửa\n                      (50)",
+      "Mặt Nạ Ngủ\n                      (20)",
+      "Mặt Nạ Lột\n                      (3)"
+    ],
+    "hasHorizontalOverflow": false,
+    "docWidth": 375,
+    "clientWidth": 375
+  },
+  "tabletMenu": {
+    "shortcutsCount": 9,
+    "shortcuts": [
+      "Trang chủ",
+      "Tất cả sản phẩm",
+      "Livestream Tư Vấn",
+      "Mặt Nạ",
+      "Làm Sạch Da",
+      "Chống Nắng Da Mặt",
+      "Dưỡng Ẩm",
+      "Bộ Chăm Sóc Da Mặt",
+      "Đặc Trị"
+    ],
+    "hasHorizontalOverflow": false,
+    "docWidth": 753,
+    "clientWidth": 753
+  }
+}

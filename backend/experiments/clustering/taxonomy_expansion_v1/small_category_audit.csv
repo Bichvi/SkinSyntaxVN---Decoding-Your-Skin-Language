@@ -1,0 +1,7 @@
+category_id,category_name,parent_name,product_count,tier,handling_in_hierarchical_encoding
+38,Serum / Kem Dưỡng Mắt,Dưỡng Mắt,16,<20,Shares macro branch 'Dưỡng Mắt' via hierarchical multi-hot encoding without manual merge.
+29,Mặt Nạ Môi,Dưỡng Môi,11,<20,Shares macro branch 'Dưỡng Môi' via hierarchical multi-hot encoding without manual merge.
+60,Mặt Nạ Mắt,Dưỡng Mắt,11,<20,Shares macro branch 'Dưỡng Mắt' via hierarchical multi-hot encoding without manual merge.
+73,Tẩy Tế Bào Chết Môi,Dưỡng Môi,3,<5,Shares macro branch 'Dưỡng Môi' via hierarchical multi-hot encoding without manual merge.
+83,Mặt Nạ Lột,Mặt Nạ,3,<5,Shares macro branch 'Mặt Nạ' via hierarchical multi-hot encoding without manual merge.
+105,Sản Phẩm Đặc Trị Khác,Đặc Trị,2,<5,Shares macro branch 'Đặc Trị' via hierarchical multi-hot encoding without manual merge.

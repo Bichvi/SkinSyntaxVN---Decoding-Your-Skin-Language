@@ -1,0 +1,6 @@
+,CLEANSER,SERUM,MOISTURIZER,SUNSCREEN,TREATMENT,Cluster_Size,Dominant_Role,Dominant_Role_Count,Purity
+Cluster_1,0,7,0,0,0,7,SERUM,7,1.0
+Cluster_2,3,0,6,0,0,9,MOISTURIZER,6,0.6667
+Cluster_3,3,1,2,3,3,12,CLEANSER,3,0.25
+Cluster_4,0,0,0,5,0,5,SUNSCREEN,5,1.0
+Cluster_5,2,0,0,0,5,7,TREATMENT,5,0.7143

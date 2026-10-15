@@ -1,0 +1,32 @@
+{
+    "total_interactions": 13137,
+    "total_catalog_products": 2473,
+    "unique_products_interacted": 1445,
+    "concentration_shares": {
+        "top_1_pct_products": {
+            "item_count": 25,
+            "interactions": 1863,
+            "share_pct": 14.18
+        },
+        "top_5_pct_products": {
+            "item_count": 124,
+            "interactions": 5769,
+            "share_pct": 43.91
+        },
+        "top_10_pct_products": {
+            "item_count": 248,
+            "interactions": 7771,
+            "share_pct": 59.15
+        },
+        "top_20_pct_products": {
+            "item_count": 495,
+            "interactions": 10037,
+            "share_pct": 76.4
+        }
+    },
+    "gini_coefficient": {
+        "full_catalog_gini": 0.7543,
+        "active_items_only_gini": 0.5795
+    },
+    "why_most_popular_wins": "The generator pulls heavily from popular items in three distinct phases: (1) sampling category candidates via power law x^2.2 from items sorted by popularity, (2) sampling brand candidates via power law x^2.0, and (3) injecting 10 items directly from global top 100. Consequently, the top 10% most popular items capture 59.2% of all interactions (Gini = 0.7543). In a Leave-One-Out evaluation against 2,460 unseen candidates, recommending the most popular items globally yields a far higher probability of hitting a held-out interaction than collaborative models that suffer from extreme co-occurrence sparsity."
+}

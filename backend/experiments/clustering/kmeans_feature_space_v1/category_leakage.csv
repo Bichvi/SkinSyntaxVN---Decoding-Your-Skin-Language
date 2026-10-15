@@ -1,0 +1,4 @@
+Experiment,ARI_to_Ground_Truth_Role,NMI_to_Ground_Truth_Role,Note
+T_WITHOUT_CATEGORY (Pure Name + Description),0.8061,0.803,Text clusters do not purely copy category hierarchy
+T_WITH_CATEGORY (Breadcrumbs Appended),0.8499,0.8275,Appended breadcrumbs increase alignment to pre-existing taxonomy
+T_WITHOUT_CAT vs T_WITH_CAT,0.7161,0.7388,Direct partition stability when category tokens are included

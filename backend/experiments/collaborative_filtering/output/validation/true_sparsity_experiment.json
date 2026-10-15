@@ -1,0 +1,98 @@
+{
+    "experiment_name": "TRUE_SPARSITY_EXPERIMENT",
+    "controlled_parameters": {
+        "num_users": 500,
+        "total_catalog": 2473,
+        "random_seed": 42
+    },
+    "note": "Unlike the historical dataset scale experiment (100, 300, 500 users) which maintained constant per-user interaction length, this true sparsity experiment fixes user count at 500 and modulates per-user interaction depth (5-10 vs 15-25 vs 30-50 unique items).",
+    "tiers": {
+        "SPARSE (Short History)": {
+            "users": 500,
+            "avg_unique_items_per_user": 5,
+            "min_unique_items": 1,
+            "max_unique_items": 10,
+            "total_events": 5344,
+            "unique_user_item_pairs": 2493,
+            "matrix_density_pct": 0.2016,
+            "catalog_coverage_pct": 42.14,
+            "eligible_evaluation_users": 300,
+            "excluded_users": 200,
+            "comparison": {
+                "MOST_POPULAR": {
+                    "HR@10": 0.0467,
+                    "Recall@10": 0.0467,
+                    "NDCG@10": 0.0228
+                },
+                "ITEM_KNN": {
+                    "HR@10": 0.01,
+                    "Recall@10": 0.01,
+                    "NDCG@10": 0.0032
+                },
+                "MATRIX_FACTORIZATION": {
+                    "HR@10": 0.0167,
+                    "Recall@10": 0.0167,
+                    "NDCG@10": 0.0096
+                }
+            }
+        },
+        "MEDIUM (Moderate History)": {
+            "users": 500,
+            "avg_unique_items_per_user": 10.6,
+            "min_unique_items": 4,
+            "max_unique_items": 16,
+            "total_events": 16062,
+            "unique_user_item_pairs": 5313,
+            "matrix_density_pct": 0.4297,
+            "catalog_coverage_pct": 60.61,
+            "eligible_evaluation_users": 492,
+            "excluded_users": 8,
+            "comparison": {
+                "MOST_POPULAR": {
+                    "HR@10": 0.0508,
+                    "Recall@10": 0.0508,
+                    "NDCG@10": 0.0247
+                },
+                "ITEM_KNN": {
+                    "HR@10": 0.0061,
+                    "Recall@10": 0.0061,
+                    "NDCG@10": 0.0034
+                },
+                "MATRIX_FACTORIZATION": {
+                    "HR@10": 0.0142,
+                    "Recall@10": 0.0142,
+                    "NDCG@10": 0.0055
+                }
+            }
+        },
+        "DENSE (Rich History)": {
+            "users": 500,
+            "avg_unique_items_per_user": 14.4,
+            "min_unique_items": 9,
+            "max_unique_items": 16,
+            "total_events": 35087,
+            "unique_user_item_pairs": 7223,
+            "matrix_density_pct": 0.5841,
+            "catalog_coverage_pct": 69.39,
+            "eligible_evaluation_users": 500,
+            "excluded_users": 0,
+            "comparison": {
+                "MOST_POPULAR": {
+                    "HR@10": 0.068,
+                    "Recall@10": 0.068,
+                    "NDCG@10": 0.0294
+                },
+                "ITEM_KNN": {
+                    "HR@10": 0.014,
+                    "Recall@10": 0.014,
+                    "NDCG@10": 0.0061
+                },
+                "MATRIX_FACTORIZATION": {
+                    "HR@10": 0.042,
+                    "Recall@10": 0.042,
+                    "NDCG@10": 0.0182
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,101 @@
+Term,Classification,Explanation,Sampling_Source
+sodium,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+acid,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+glycol,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+glycerin,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+extract,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Top_Frequency_IDF
+butylene,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+butylene glycol,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+edta,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+alcohol,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+disodium,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+phenoxyethanol,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+hydroxide,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+hyaluronate,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+oil,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Top_Frequency_IDF
+disodium edta,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+niacinamide,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+fragrance,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Top_Frequency_IDF
+gum,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+sodium hyaluronate,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+dimethicone,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+crosspolymer,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+leaf,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Top_Frequency_IDF
+xanthan,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+glyceryl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+xanthan gum,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+tocopherol,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+water,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Top_Frequency_IDF
+citric,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+benzoate,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+citric acid,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+copolymer,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+potassium,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+ethylhexylglycerin,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+alkyl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+acrylates,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+acrylate,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+leaf extract,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+stearate,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+caprylyl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+aqua,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Top_Frequency_IDF
+methyl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+2-hexanediol,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+hydrogenated,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+panthenol,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+silica,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Top_Frequency_IDF
+carbomer,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+fruit,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Top_Frequency_IDF
+glucoside,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Top_Frequency_IDF
+caprylyl glycol,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Top_Frequency_IDF
+parfum,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Top_Frequency_IDF
+stearic,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+dipropylene glycol,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+hyaluronic,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+taurate,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+fruit extract,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+tocopheryl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+c10-30 alkyl,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+ci,CHEMICAL_FRAGMENT,Từ viết tắt hoặc đoạn cụm từ quá ngắn,Random_Sample
+acrylates c10-30,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+capric,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+flower,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Random_Sample
+seed,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Random_Sample
+propylene glycol,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+root,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Random_Sample
+alkyl acrylate,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+dioxide,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+triglyceride,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+sodium chloride,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+aluminum,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+betaine,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+phosphate,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Random_Sample
+stearic acid,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+pentylene,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+allantoin,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+acetate,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+da,GENERIC_WORD,"Từ ngữ sinh học hoặc ngôn ngữ chung, không định danh hoạt chất đơn lẻ",Random_Sample
+capric triglyceride,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+chloride,CHEMICAL_FRAGMENT,"Mảnh từ hóa học đơn lẻ, bị tách rời khỏi danh pháp hợp chất đầy đủ",Random_Sample
+hydrolyzed,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+zinc,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+glyceryl stearate,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+acrylate crosspolymer,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+hyaluronic acid,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+propanediol,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+titanium dioxide,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+ethylhexyl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+acid sodium,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+propylene,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+caprylic capric,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+polysorbate,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+titanium,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+caprylic,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+c10-30,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+ascorbyl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+cetyl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+sodium hydroxide,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+cetearyl,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample
+root extract,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+pentylene glycol,VALID_INGREDIENT,Thuật ngữ hóa học / hoạt chất mỹ phẩm độc lập hợp lệ,Random_Sample
+dipropylene,VALID_INGREDIENT,Thuật ngữ thành phần mỹ phẩm đơn,Random_Sample

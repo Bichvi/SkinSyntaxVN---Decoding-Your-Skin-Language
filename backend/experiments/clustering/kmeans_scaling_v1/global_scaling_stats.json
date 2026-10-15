@@ -1,0 +1,9 @@
+{
+  "N_full": 1004,
+  "price_min_vnd": 15000,
+  "price_median_vnd": 293500,
+  "price_max_vnd": 2900000,
+  "mu_full_log_price": 12.433513,
+  "sigma_full_log_price_pop": 0.826471,
+  "scaling_convention": "Population standard deviation across FULL eligible active catalog (N=1004)"
+}

@@ -1,0 +1,44 @@
+{
+    "audit_timestamp": "2026-10-07T15:37:50+07:00",
+    "canonical_source": "Atlas MongoDB",
+    "san_pham_integrity": {
+        "total_products": 2473,
+        "active_products": 2473,
+        "distinct_ma_danh_muc_count": 21,
+        "distinct_ma_danh_muc_values": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            9,
+            11,
+            17,
+            18,
+            19,
+            25,
+            29,
+            30,
+            37,
+            38,
+            53,
+            60,
+            73,
+            83,
+            105
+        ],
+        "products_attached_to_leaf": 2473,
+        "products_attached_to_parent": 0,
+        "orphan_products_count": 0,
+        "orphan_breakdown": []
+    },
+    "legacy_source_integrity": {
+        "total_products": 6377,
+        "active_products": 6376,
+        "distinct_ma_danh_muc_count": 125,
+        "products_attached_to_leaf": 6377,
+        "products_attached_to_parent": 0,
+        "orphan_products_count": 0
+    }
+}

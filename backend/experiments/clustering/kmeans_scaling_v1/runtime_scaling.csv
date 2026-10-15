@@ -1,0 +1,5 @@
+Stage,N,Feature_Dimensions,K_Range,Restarts_per_K,Total_Runs,Runtime_Seconds,Avg_Iterations
+S40_GLOBAL,40,9,4..8,20,100,0.09,3.9
+M80,80,9,4..8,20,100,0.17,6.6
+L200,200,9,4..8,20,100,0.22,9.8
+FULL,1004,9,4..8,20,100,0.73,15.2

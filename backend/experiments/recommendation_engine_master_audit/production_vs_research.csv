@@ -1,0 +1,15 @@
+Component,Algorithm,Data_Source,Current_Status,Website_Uses_It,Synthetic,Production_Ready,Primary_Purpose
+Simple WR,IMDb Weighted Rating,san_pham (diem_danh_gia & so_luong_danh_gia),PRODUCTION,YES,NO,YES,Global non-personalized rating baseline (Section 5.5)
+Content-Based TF-IDF,Cosine Similarity on Term Vectors,san_pham (Config B text fields),PRODUCTION,YES,NO,YES,Item metadata similarity matching
+Behavior-Aware CB,Multi-Signal Behavior Fusion + TF-IDF,Session (search view cart) & hoa_don,PRODUCTION,YES,NO,YES,Realtime in-session behavioral adaptation
+Profile-Aware CB,Skin Profile Term Vector + Attribute Rerank,khach_hang survey & skin_profile,PRODUCTION,YES,NO,YES,Skin type and concern profile-based matching
+Adaptive Hybrid,Linear Query Fusion (0.50 Behavior + 0.50 Profile),Session signals + khach_hang profile,PRODUCTION,YES,NO,YES,Context-routed multi-signal personalization (Section 3)
+Explainability,Signal-Grounded Dynamic Reason Generation,Active scoring contributions,PRODUCTION,YES,NO,YES,Transparent non-medical recommendation badges
+Interaction Logging,Unified Non-blocking Event Logger,Session and MongoDB tuong_tac_nguoi_dung,PRODUCTION,YES,NO,YES,Organic interaction capture (view cart search purchase)
+Apriori,Frequent 2-itemset Mining,Controlled Synthetic Baskets (30-300),RESEARCH,NO,YES,NO,Pairwise co-occurrence research baseline
+FP-Growth,Frequent Pattern Tree Mining,Controlled Synthetic Baskets (30-300),RESEARCH,NO,YES,NO,Scalable frequent itemset mining research
+Item-kNN,Cosine Similarity over User Interaction Vectors,Organic and Synthetic Interaction Matrices,RESEARCH,NO,PARTIAL,NO,Neighborhood-based collaborative filtering research
+Funk MF,Regularized Matrix Factorization (SGD),Controlled Latent Synthetic Matrix (300x50),RESEARCH,NO,YES,NO,Latent factor collaborative rating prediction
+BPR,Bayesian Personalized Ranking (Pairwise Loss),Controlled Implicit Feedback Matrix (300x50),RESEARCH,NO,YES,NO,Implicit ranking optimization research
+K-Means,Hierarchical Multi-Hot + Log-Price + SVD 30D,Active Catalog (2473 products 28 nodes),RESEARCH,NO,NO,NO,Offline exploratory catalog analysis and segmentation (no universal K established)
+Ingredient Parser V2,Rule-based Ingredient String Parser V2,thanh_phan string (1004 & 2473 products),EXPERIMENTAL,NO,NO,NO,Forensic ingredient representation research

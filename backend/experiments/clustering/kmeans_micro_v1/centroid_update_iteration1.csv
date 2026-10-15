@@ -1,0 +1,4 @@
+Centroid,Cluster_Size,Members,mean_role_cleanser,mean_role_serum,mean_role_moisturizer,mean_role_sunscreen,mean_role_treatment,mean_z_price,mean_skin_oily,mean_skin_dry,mean_skin_sensitive
+C1,4,"P_4365, P_318, P_725, P_112",0.25,0.0,0.25,0.25,0.25,-1.1229,0.75,0.25,0.0
+C2,4,"P_350, P_62, P_139, P_740",0.0,0.5,0.25,0.0,0.25,0.5161,0.25,0.25,0.75
+C3,2,"P_21, P_16",0.5,0.0,0.0,0.5,0.0,1.2135,1.0,0.0,0.5
