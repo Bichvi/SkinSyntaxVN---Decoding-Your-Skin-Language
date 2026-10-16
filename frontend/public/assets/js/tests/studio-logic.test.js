@@ -150,10 +150,10 @@ test('describeIntent never throws on missing fields and ignores styles the purpo
   assert.equal(L.describeIntent({}), 'Chưa chọn sản phẩm.');
   assert.equal(typeof L.describeIntent({ products: [{ id: 'x' }] }), 'string');
   const sel = selBase();
-  sel.styles = ['pricing', 'gentle'];
+  sel.styles = ['closing', 'gentle'];
   const text = L.describeIntent(sel);
   assert.ok(text.includes('phong cách tư vấn nhẹ nhàng, Syna 3D'));
-  assert.ok(!text.includes('giá và ưu đãi'));
+  assert.ok(!text.includes('chốt sale'));
   // a live purpose with a broken date drops the clock but stays readable
   const live = selBase();
   live.purpose = 'live_only';
