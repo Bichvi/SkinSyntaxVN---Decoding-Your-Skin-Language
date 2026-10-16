@@ -8,6 +8,7 @@ from core.purpose import PURPOSES
 
 AUTONOMY_POLICIES = {"assisted", "auto_preview", "auto_publish"}
 CONTENT_MODES = {"Product Intro", "Problem-Solution", "Scientific Review"}
+APPROVAL_MODES = {"AUTO", "MANUAL"}
 PLATFORMS = {"internal", "youtube", "facebook"}
 
 
@@ -26,6 +27,8 @@ class AgentBrief:
     confidence: float = 0.0
     # Broadcast mode chosen in Studio; None means "infer it from the brief".
     purpose: str | None = None
+    # Explicit script-approval choice (AUTO|MANUAL); None means "derive it from autonomy_policy".
+    approval_mode: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -36,6 +39,7 @@ class AgentBrief:
         if policy not in AUTONOMY_POLICIES:
             policy = "auto_preview"
 
+        approval = str(data.get("approval_mode") or "").strip().upper()
         purpose = str(data.get("purpose") or "").strip().lower()
         mode = str(data.get("content_mode") or "Product Intro").strip()
         if mode not in CONTENT_MODES:
@@ -89,6 +93,7 @@ class AgentBrief:
             ][:20],
             confidence=max(0.0, min(confidence, 1.0)),
             purpose=purpose if purpose in PURPOSES else None,
+            approval_mode=approval if approval in APPROVAL_MODES else None,
         )
 
 

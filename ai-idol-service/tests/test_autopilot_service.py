@@ -108,6 +108,18 @@ class AutopilotCreatesTests(unittest.TestCase):
         self.assertEqual(harness.payload["configuration"]["agent_autonomy_policy"], "auto_preview")
         self.assertEqual(harness.payload["configuration"]["script_approval_mode"], "auto")
 
+    def test_autopilot_manual_approval_mode_waits_for_script_review(self):
+        harness = AutopilotHarness("Làm video giới thiệu sản phẩm mã 995", {"approval_mode": "MANUAL"})
+        harness.execute([VICHY])
+        configuration = harness.payload["configuration"]
+        self.assertEqual(configuration["script_approval_mode"], "human")
+        self.assertEqual(configuration["agent_autonomy_policy"], "auto_preview")
+
+    def test_autopilot_invalid_approval_mode_falls_back_to_auto(self):
+        harness = AutopilotHarness("Làm video giới thiệu sản phẩm mã 995", {"approval_mode": "yolo"})
+        harness.execute([VICHY])
+        self.assertEqual(harness.payload["configuration"]["script_approval_mode"], "auto")
+
     def test_campaign_rejection_stops_with_a_decision(self):
         harness = AutopilotHarness("Làm video giới thiệu sản phẩm mã 995")
         run = harness.execute([VICHY], create=ValueError("Select at least one product"))

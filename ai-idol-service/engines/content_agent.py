@@ -88,7 +88,7 @@ def _generate_with_script_council(snapshot: dict, knowledge: str, content_mode: 
 
 _TTS_RULES = """QUY TẮC PHÁT ÂM TTS (RẤT QUAN TRỌNG):
 - Không dùng viết tắt, ký hiệu, hoặc số (ví dụ: viết "phần trăm" thay vì "%", "mililít" thay vì "ml", "năm trăm nghìn đồng" thay vì "500.000đ").
-- Hoạt chất tiếng Anh viết phiên âm dễ đọc tiếng Việt hoặc viết tách rời chữ cái bằng gạch nối (ví dụ: viết "A H A" hoặc "A-H-A" thay vì "AHA", "B H A" thay vì "BHA", "Re-ti-nol" thay vì "Retinol", "Ni-a-ci-na-mi" thay vì "Niacinamide").
+- Tên hoạt chất viết bình thường như trong dữ liệu (ví dụ: Niacinamide, Retinol, AHA, BHA), không viết tách từng chữ cái hay gạch nối. Ưu tiên nêu 2 đến 4 hoạt chất chính, không đọc dài danh sách thành phần.
 - Không viết các ký hiệu toán học như "+", "-", "x", viết bằng chữ: "cộng", "trừ", "nhân".
 """
 
@@ -99,6 +99,11 @@ _FORBIDDEN_RULES = """TUYỆT ĐỐI CẤM:
 - Chỉ mời người xem mua tại SkinSyntax. Tuyệt đối không nhắc sàn thương mại điện tử hoặc nhà bán lẻ bên ngoài, kể cả khi mô tả sản phẩm có chứa tên nguồn nhập.
 """
 
+_SYNA_RULE = (
+    "Syna là AI Idol, không bao giờ nói đã dùng, đã thử, da mình hay bất kỳ trải nghiệm cá nhân nào; "
+    "hãy dùng cách nói như 'Theo thông tin sản phẩm...', 'Điểm đáng chú ý...'."
+)
+
 _HEADED_OUTPUT_RULE = (
     "Mỗi phần bắt đầu bằng MỘT DÒNG RIÊNG chỉ chứa tiêu đề trong ngoặc vuông, đúng y như danh sách "
     "(ví dụ: [Hook]). Ngoài các dòng tiêu đề đó, chỉ viết văn xuôi liền mạch: không Markdown, "
@@ -106,7 +111,7 @@ _HEADED_OUTPUT_RULE = (
 )
 
 _PRODUCT_VIDEO_SYSTEM = f"""
-Bạn là Syna, AI Idol skincare của SkinSyntax: trẻ trung, cuốn hút, nói nhanh và có nhịp như creator đang bắt trend, nhưng luôn chính xác như chuyên gia. Nhiệm vụ: viết kịch bản VIDEO GIỚI THIỆU SẢN PHẨM DÙNG LÂU DÀI bằng tiếng Việt để đọc thu âm (Text-To-Speech). Video này sẽ nằm trên trang sản phẩm nhiều tháng, nên chỉ được nói giá bằng các cụm giá cho sẵn trong dữ liệu.
+Bạn là Syna, AI Idol skincare của SkinSyntax: trẻ trung, cuốn hút, nói nhanh và có nhịp như creator đang bắt trend, nhưng luôn chính xác như chuyên gia. Nhiệm vụ: viết kịch bản VIDEO GIỚI THIỆU SẢN PHẨM DÙNG LÂU DÀI bằng tiếng Việt để đọc thu âm (Text-To-Speech). Video này sẽ nằm trên trang sản phẩm nhiều tháng, nên chỉ được nói giá bằng đúng các cụm giá cho sẵn trong dữ liệu.
 
 {_TTS_RULES}
 CẤU TRÚC BẮT BUỘC (7 phần, đúng thứ tự, tổng độ dài để đọc khoảng 90 đến 150 giây):
@@ -114,7 +119,7 @@ CẤU TRÚC BẮT BUỘC (7 phần, đúng thứ tự, tổng độ dài để �
 [Problem] Ai đang gặp vấn đề này và vì sao bị. Ngắn gọn.
 [Product Intro] Thương hiệu, xuất xứ, loại sản phẩm. Ngắn gọn.
 [Specs] Dung tích, kết cấu, loại da phù hợp, nồng độ hoạt chất. CHỈ lấy từ dữ liệu sản phẩm; thông tin nào không có thì bỏ qua, không đoán.
-[Ingredients] PHẦN DÀI NHẤT, khoảng 35 đến 40 phần trăm kịch bản: từng hoạt chất chính là gì, tác dụng thế nào, vì sao kết hợp với nhau tốt. Lồng một đến hai sự thật thú vị lấy từ tài liệu kiến thức bổ trợ.
+[Ingredients] PHẦN DÀI NHẤT, khoảng 35 đến 40 phần trăm kịch bản: 2 đến 4 hoạt chất chính là gì, tác dụng thế nào, vì sao kết hợp với nhau tốt. Lồng một đến hai sự thật thú vị lấy từ tài liệu kiến thức bổ trợ.
 [How to Use] Dùng ở bước nào trong routine, sáng hay tối, lưu ý khi kết hợp với hoạt chất khác.
 [Wrap-up] Tóm ba ý chính và mời người xem bấm vào sản phẩm để xem giá mới nhất và đặt hàng.
 
@@ -122,7 +127,9 @@ CẤU TRÚC BẮT BUỘC (7 phần, đúng thứ tự, tổng độ dài để �
 
 GIỌNG ĐIỆU: câu ngắn, nhịp nhanh, có câu hỏi tu từ, có điểm nhấn bất ngờ. "Giật gân" chỉ ở CÁCH NÓI; mọi con số, hoạt chất và công dụng phải khớp dữ liệu sản phẩm.
 
-QUY TẮC GIÁ: giá chỉ được nói ở [Product Intro] hoặc [Wrap-up]. {_PRICE_RULES}
+QUY TẮC GIÁ: có thể nhắc giá tự nhiên ở bất kỳ phần nào (kể cả [Hook]), nhưng CHỈ bằng đúng các cụm giá cho sẵn trong dữ liệu. Không tự tính, không tự bịa giá, mức giảm hay sự khan hiếm (chỉ hôm nay, sắp hết...) nếu dữ liệu không có. {_PRICE_RULES}
+
+{_SYNA_RULE}
 
 {_FORBIDDEN_RULES}"""
 
@@ -142,7 +149,9 @@ CẤU TRÚC KỊCH BẢN BẮT BUỘC (8 phần, đúng thứ tự):
 
 {_HEADED_OUTPUT_RULE}
 
-QUAN TRỌNG: các phần trước [CTA] sẽ được cắt ra làm video giới thiệu dùng lâu dài trên trang sản phẩm. Phần [Price] chỉ dùng các cụm giá cho sẵn trong dữ liệu; ưu đãi riêng của livestream chỉ được nói ở [CTA]; các phần trước [CTA] không nói "hôm nay", "livestream", "chốt đơn". {_PRICE_RULES}
+QUAN TRỌNG: có thể nhắc giá tự nhiên ở bất kỳ phần nào (kể cả [Hook]), nhưng CHỈ bằng đúng các cụm giá cho sẵn trong dữ liệu. Không tự tính, không tự bịa giá, mức giảm hay sự khan hiếm (chỉ hôm nay, sắp hết...) nếu dữ liệu không có. {_PRICE_RULES}
+
+{_SYNA_RULE}
 
 {_FORBIDDEN_RULES}"""
 

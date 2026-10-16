@@ -19,7 +19,8 @@ PRICING_B = {"regular_price": 299000, "market_price": 350000,
 class CompleteJobClaimTests(unittest.TestCase):
     def complete(self, purpose, snapshot):
         db = FakeDb()
-        with patch("engines.video_composer.get_audio_duration", return_value=48.0),                 patch.object(pipeline, "get_db", return_value=db):
+        with patch("engines.video_composer.get_audio_duration", return_value=48.0),                 patch.object(pipeline, "get_db", return_value=db), \
+                patch("core.pipeline.os.path.isfile", return_value=True):
             pipeline._complete_video_job(
                 "64b64b64b64b64b64b64b64b", "1024", {"format": "16:9"}, "/x/final.mp4", "/x/voice.wav", db,
                 purpose=purpose, snapshot=snapshot)

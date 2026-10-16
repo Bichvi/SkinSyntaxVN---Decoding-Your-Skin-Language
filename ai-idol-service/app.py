@@ -10,7 +10,7 @@ from core.state_machine import create_job, ensure_indexes, get_job, get_db, obje
 from core.pipeline import start_pipeline_thread
 from core.health import dependency_status
 from core.product_videos import list_product_videos, set_video_visibility
-from core.script_text import sanitize_external_retailer_mentions
+from core import script_recovery
 from core.purpose import purpose_of, video_publishes_to_product_page
 from engines.script_validator import check_blacklist, check_purpose_rules
 from tasks import prepare_campaign_task, generate_job_task, process_agent_run_task
@@ -252,121 +252,42 @@ def api_approve_campaign_platform(campaign_id):
         return jsonify({"ok": False, "message": str(exc)}), 400
 
 
-@app.route("/api/ai-idol/jobs/<job_id>/script/approve", methods=["POST"])
-def api_approve_job_script(job_id):
+def _recovery_response(job_id, action):
+    """Run one script-recovery action; the server alone decides PASS, client validation fields are ignored."""
     try:
-        db = get_db()
-        job = db.ai_idol_jobs.find_one({"_id": object_id(job_id)})
-        if not job:
-            return jsonify({"ok": False, "message": "Job not found"}), 404
-        if job.get("status") not in {"AWAITING_APPROVAL", "FAILED"}:
-            return jsonify({
-                "ok": False,
-                "message": "Kịch bản không ở trạng thái chờ duyệt.",
-            }), 409
-        payload = request.get_json(silent=True) or {}
-        script_text = sanitize_external_retailer_mentions(payload.get("script_text", "")).strip()
-        if len(script_text) < 40:
-            return jsonify({
-                "ok": False,
-                "message": "Kịch bản cần ít nhất 40 ký tự.",
-            }), 400
-        if len(script_text) > 20000:
-            return jsonify({
-                "ok": False,
-                "message": "Kịch bản không được vượt quá 20.000 ký tự.",
-            }), 400
-
-        # Same fail-closed policy as the pipeline validator; a human edit is not a bypass.
-        violation = check_blacklist(script_text) or "; ".join(
-            # Product-page words get the same price/promotion rules as generated drafts.
-            check_purpose_rules(script_text, job.get("product_snapshot") or {}, purpose_of(job))
-        )
-        if violation:
-            return jsonify({
-                "ok": False,
-                "message": f"Kịch bản chưa đạt kiểm duyệt: {violation}",
-                "violation": violation,
-            }), 422
-
-        now = utcnow()
-        previous_text = str((job.get("artifacts") or {}).get("script_text", "")).strip()
-        latest = db.ai_idol_scripts.find_one(
-            {"job_id": job_id}, sort=[("version", -1)], projection={"version": 1}
-        )
-        version = int((latest or {}).get("version", 0)) + 1
-        db.ai_idol_scripts.insert_one({
-            "job_id": job_id,
-            "product_id": job.get("product_id"),
-            "content_mode": job.get("content_mode"),
-            "script_text": script_text,
-            "version": version,
-            "status": "APPROVED",
-            "approved_at": now,
-            "created_at": now,
-            "updated_at": now,
-        })
-
-        unset_values = {
-            "artifacts.avatar_video_path": "",
-            "artifacts.final_video_path": "",
-            "final_video_path": "",
-            "video_id": "",
-        }
-        if script_text != previous_text:
-            unset_values.update({
-                "artifacts.audio_path": "",
-                "artifacts.audio_pipeline_version": "",
-            })
-        db.ai_idol_jobs.update_one(
-            {"_id": job["_id"]},
-            {
-                "$set": {
-                    "artifacts.script_text": script_text,
-                    "script_status": "APPROVED",
-                    "script_version": version,
-                    "script_approved_at": now,
-                    "status": "QUEUED",
-                    "current_stage": "SCRIPT_APPROVED",
-                    "failed_stage": None,
-                    "error_message": None,
-                    "updated_at": now,
-                },
-                "$unset": unset_values,
-            },
-        )
-        campaign_id = job.get("campaign_id")
-        if job.get("segment_id"):
-            db.ai_idol_segments.update_one(
-                {"_id": object_id(job["segment_id"])},
-                {"$set": {
-                    "status": "GENERATING",
-                    "error_message": None,
-                    "updated_at": now,
-                }},
-            )
-        if campaign_id:
-            failed = db.ai_idol_segments.count_documents({
-                "campaign_id": str(campaign_id), "status": "FAILED"
-            })
-            db.ai_idol_campaigns.update_one(
-                {"_id": object_id(str(campaign_id))},
-                {"$set": {
-                    "status": "GENERATING",
-                    "progress.failed": failed,
-                    "error_message": None,
-                    "updated_at": now,
-                }},
-            )
-        generate_job_task.delay(job_id)
-        return jsonify({
-            "ok": True,
-            "job_id": job_id,
-            "script_version": version,
-            "status": "QUEUED",
-        }), 202
+        outcome = action(get_db())
+    except script_recovery.RecoveryError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), exc.status
     except ValueError as exc:
         return jsonify({"ok": False, "message": str(exc)}), 400
+    if outcome.resume:
+        generate_job_task.delay(job_id)
+    return jsonify(outcome.body(job_id)), 202 if outcome.resume else 200
+
+
+@app.route("/api/ai-idol/jobs/<job_id>/script/approve", methods=["POST"])
+def api_approve_job_script(job_id):
+    payload = request.get_json(silent=True) or {}
+    submitted = payload.get("script_text")
+    return _recovery_response(job_id, lambda db: script_recovery.approve(
+        db, job_id, None if submitted is None else str(submitted)))
+
+
+@app.route("/api/ai-idol/jobs/<job_id>/script/retry-repair", methods=["POST"])
+def api_retry_repair_job_script(job_id):
+    return _recovery_response(job_id, lambda db: script_recovery.retry_repair(db, job_id))
+
+
+@app.route("/api/ai-idol/jobs/<job_id>/script/rewrite", methods=["POST"])
+def api_rewrite_job_script(job_id):
+    payload = request.get_json(silent=True) or {}
+    return _recovery_response(job_id, lambda db: script_recovery.rewrite(
+        db, job_id, payload.get("instruction"), payload.get("custom_text")))
+
+
+@app.route("/api/ai-idol/jobs/<job_id>/cancel", methods=["POST"])
+def api_cancel_job(job_id):
+    return _recovery_response(job_id, lambda db: script_recovery.cancel(db, job_id))
 
 
 @app.route("/api/ai-idol/campaigns/<campaign_id>/video", methods=["GET"])

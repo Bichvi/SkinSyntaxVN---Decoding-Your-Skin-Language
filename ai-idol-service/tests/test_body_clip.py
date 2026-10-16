@@ -167,7 +167,8 @@ class CompleteJobTests(unittest.TestCase):
     def test_video_document_records_product_page_fields(self):
         db = FakeDb()
         with patch("engines.video_composer.get_audio_duration", return_value=48.0), \
-                patch.object(pipeline, "get_db", return_value=db):
+                patch.object(pipeline, "get_db", return_value=db), \
+                patch("core.pipeline.os.path.isfile", return_value=True):
             pipeline._complete_video_job(
                 "64b64b64b64b64b64b64b64b", "93", {"format": "16:9"}, "/x/final.mp4", "/x/voice.wav", db,
                 purpose="live_and_product", campaign_id="c1", page_path=None, block_reason="missing_price_marker",

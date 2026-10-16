@@ -71,10 +71,15 @@ class ProductVideoPriceTests(unittest.TestCase):
     def test_promo_with_flash_passes(self):
         self.assertEqual(check(script("Đang có khuyến mãi.")), [])
 
-    def test_always_banned_words_fail(self):
-        for word in ("hôm nay", "tối nay", "livestream", "chốt đơn", "voucher"):
+    def test_scarcity_words_fail_without_verified_flash(self):
+        for word in ("hôm nay", "tối nay", "chốt đơn", "sắp hết", "chỉ còn vài chai", "số lượng có hạn"):
             with self.subTest(word=word):
-                self.assertTrue(check(script(f"Mua {word} nhé.")))
+                self.assertTrue(check(script(f"Mua {word} nhé."), PRICING_NO_FLASH))
+
+    def test_scarcity_words_pass_with_verified_flash(self):
+        for word in ("hôm nay", "sắp hết", "số lượng có hạn"):
+            with self.subTest(word=word):
+                self.assertEqual(check(script(f"Mua {word} nhé.")), [])
 
     def test_no_pricing_any_amount_fails(self):
         self.assertTrue(check(script("Chỉ hai trăm nghìn đồng."), None))
@@ -84,18 +89,24 @@ class ProductVideoPriceTests(unittest.TestCase):
         self.assertEqual(check(script("Da dầu rất hợp."), None), [])
 
     def test_find_price_violations_one_message_per_kind(self):
-        errors = find_price_violations("hôm nay và tối nay, 299k và 199k", PRICING)
+        errors = find_price_violations("hôm nay và tối nay, 299k và 199k", PRICING_NO_FLASH)
         self.assertEqual(len(errors), 2)
 
 
 class LiveAndProductScopeTests(unittest.TestCase):
-    def test_scope_stops_at_cta(self):
-        live = "[Hook]\nDa dầu?\n[Price]\nGiá hai trăm chín mươi chín nghìn đồng.\n[CTA]\nHôm nay chốt đơn nhé."
+    def test_price_is_checked_in_every_section(self):
+        live = "[Hook]\nDa dầu?\n[Price]\nGiá hai trăm chín mươi chín nghìn đồng.\n[CTA]\nĐặt ngay nhé."
         self.assertEqual(check(live, PRICING, "live_and_product"), [])
+        early = "[Hook]\nChỉ hai trăm chín mươi chín nghìn đồng.\n[Price]\nGiá tốt.\n[CTA]\nĐặt ngay."
+        self.assertEqual(check(early, PRICING, "live_and_product"), [])
 
-    def test_price_section_is_checked(self):
+    def test_wrong_price_in_hook_or_cta_fails(self):
+        self.assertTrue(check("[Hook]\nChỉ 199k!\n[Price]\nGiá tốt.\n[CTA]\nĐặt.", PRICING, "live_and_product"))
+        self.assertTrue(check("[Hook]\nDa dầu?\n[Price]\nGiá tốt.\n[CTA]\nChỉ 199k.", PRICING, "live_and_product"))
+
+    def test_scarcity_without_flash_fails(self):
         live = "[Hook]\nDa dầu?\n[Price]\nHôm nay giá tốt.\n[CTA]\nChốt đơn."
-        self.assertTrue(check(live, PRICING, "live_and_product"))
+        self.assertTrue(check(live, PRICING_NO_FLASH, "live_and_product"))
 
     def test_without_cta_or_closing_is_skipped(self):
         live = "[Hook]\nDa dầu?\n[Price]\nHôm nay giá 199k."

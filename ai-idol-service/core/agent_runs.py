@@ -140,6 +140,7 @@ def create_agent_run(payload: dict[str, Any], created_by: str | None = None) -> 
             "content_mode": payload.get("content_mode"),
             "explicit_product_ids": payload.get("product_ids"),
             "purpose": payload.get("purpose"),
+            "approval_mode": payload.get("approval_mode"),
         },
         "status": "RECEIVED",
         "current_stage": "RECEIVED",

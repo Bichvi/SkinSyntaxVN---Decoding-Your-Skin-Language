@@ -35,6 +35,8 @@ def reap_stale_work(now: dt.datetime | None = None) -> dict[str, int]:
     base_cutoff = now - dt.timedelta(minutes=STALE_JOB_MINUTES)
     for job in db.ai_idol_jobs.find({"status": "IN_PROGRESS", "updated_at": {"$lt": base_cutoff}}).limit(50):
         stage = job.get("current_stage")
+        if stage == "AUTO_REPAIR_EXHAUSTED" or job.get("status") == "AUTO_REPAIR_EXHAUSTED":
+            continue  # parked for staff; never failed by the sweep
         minutes = _job_threshold_minutes(stage)
         if job["updated_at"] >= now - dt.timedelta(minutes=minutes):
             continue
