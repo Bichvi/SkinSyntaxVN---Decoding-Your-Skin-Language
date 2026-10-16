@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../services/ProductQueryCache.php';
+
 /**
  * Inventory batches are the source of truth for stock and expiry filters.
  * Product master data stays in san_pham; each row here represents one lot in
@@ -8,6 +10,7 @@
 class InventoryBatch
 {
     private $db;
+    private ?array $productScan = null;
     private ?string $lastErrorMessage = null;
     private const VALID_STATUSES = ['available', 'quarantined', 'expired', 'depleted'];
     private const VALID_MOVEMENTS = [
@@ -27,6 +30,8 @@ class InventoryBatch
 
     public function ensureIndexes(): void
     {
+        // Chỉ chạy tối đa 1 lần/10 phút (createIndex = 4 round trip Atlas); lỗi trả null để thử lại ở request sau
+        ProductQueryCache::remember('inventoryIndexes:v1', 600, function () {
         try {
             $this->db->inventory_batches->createIndex(
                 ['product_id' => 1, 'warehouse_id' => 1, 'batch_code' => 1],
@@ -44,11 +49,14 @@ class InventoryBatch
                 ['batch_id' => 1, 'occurred_at' => -1],
                 ['name' => 'inventory_movement_history']
             );
+            return true;
         } catch (Throwable $e) {
             // Index creation must not take down the Admin page. The error is
             // logged so deployment can repair duplicate legacy rows explicitly.
             error_log('inventory indexes: ' . $e->getMessage());
+            return null;
         }
+        });
     }
 
     public function listProductOptions(string $keyword = ''): array
@@ -64,7 +72,7 @@ class InventoryBatch
         }
 
         $items = [];
-        foreach ($this->db->san_pham->find($filter, ['sort' => ['ma_san_pham' => 1], 'limit' => 200]) as $doc) {
+        foreach ($this->db->san_pham->find($filter, ['sort' => ['ma_san_pham' => 1], 'limit' => 200, 'projection' => ['ma_san_pham' => 1, 'id' => 1, 'ten_san_pham' => 1]]) as $doc) {
             $items[] = [
                 'product_id' => (string)($doc['ma_san_pham'] ?? $doc['id'] ?? $doc['_id'] ?? ''),
                 'name' => (string)($doc['ten_san_pham'] ?? 'Sản phẩm chưa đặt tên'),
@@ -179,16 +187,7 @@ class InventoryBatch
         }
 
         $candidates = [];
-        foreach ($this->db->san_pham->find([], [
-            'projection' => [
-                'ma_san_pham' => 1, 'id' => 1, 'ten_san_pham' => 1,
-                'trang_thai' => 1, 'status' => 1,
-                'so_luong_ton_kho' => 1, 'so_luong_ton' => 1,
-                'ton_kho' => 1, 'stock' => 1, 'quantity' => 1,
-            ],
-            'sort' => ['ma_san_pham' => 1],
-            'limit' => 20000,
-        ]) as $product) {
+        foreach ($this->productScan() as $product) {
             $productId = (string)($product['ma_san_pham'] ?? $product['id'] ?? '');
             if ($productId === '' || isset($existing[$productId])) {
                 continue;
@@ -784,16 +783,30 @@ class InventoryBatch
         return null;
     }
 
+    // Quét san_pham 1 lần/instance (union projection) cho previewAutoSeed và activeProductsForDemo
+    private function productScan(): array
+    {
+        if ($this->productScan === null) {
+            $this->productScan = [];
+            foreach ($this->db->san_pham->find([], [
+                'projection' => [
+                    'ma_san_pham' => 1, 'id' => 1, 'ten_san_pham' => 1,
+                    'trang_thai' => 1, 'status' => 1,
+                    'so_luong_ton_kho' => 1, 'so_luong_ton' => 1,
+                    'ton_kho' => 1, 'stock' => 1, 'quantity' => 1,
+                ],
+                'sort' => ['ma_san_pham' => 1],
+                'limit' => 20000,
+            ]) as $doc) {
+                $this->productScan[] = $doc;
+            }
+        }
+        return $this->productScan;
+    }
+
     private function activeProductsForDemo(): iterable
     {
-        foreach ($this->db->san_pham->find([], [
-            'projection' => [
-                'ma_san_pham' => 1, 'id' => 1, 'ten_san_pham' => 1,
-                'trang_thai' => 1, 'status' => 1,
-            ],
-            'sort' => ['ma_san_pham' => 1],
-            'limit' => 20000,
-        ]) as $product) {
+        foreach ($this->productScan() as $product) {
             $productId = (string)($product['ma_san_pham'] ?? $product['id'] ?? '');
             if ($productId === '') {
                 continue;

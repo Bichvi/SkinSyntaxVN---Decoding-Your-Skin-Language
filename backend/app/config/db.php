@@ -80,8 +80,7 @@ try {
 
     try {
         $client = new MongoDB\Client($mongoUri, [], $driverOptions);
-        // Ping kiểm tra kết nối với DB chỉ định.
-        $client->selectDatabase($mongoDbName)->command(['ping' => 1]);
+        // Không ping mỗi request: driver kết nối lười, lỗi Atlas sẽ ném ra ở truy vấn đầu tiên (controller đã bắt).
     } catch (Throwable $connEx) {
         // Không silent fallback sang local. Nếu Atlas lỗi thì fail rõ ràng để xử lý.
         throw new RuntimeException("Ket noi MongoDB ($activeMode) that bai: " . $connEx->getMessage(), 0, $connEx);

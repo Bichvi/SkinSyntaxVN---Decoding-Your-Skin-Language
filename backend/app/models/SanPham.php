@@ -5,6 +5,14 @@ require_once __DIR__ . '/../services/ProductQueryCache.php';
 class SanPham {
     // Trang danh sách không dùng 3 trường nặng này; chitiet/admin đọc đầy đủ qua findById.
     private const LISTING_PROJECTION = ['mo_ta' => 0, 'thanh_phan_full' => 0, 'hdsd' => 0];
+    // Chỉ các trường picker admin cần (kèm trường để normalizeProductRecord tính tồn kho/trạng thái)
+    private const PICKER_PROJECTION = [
+        'ma_san_pham' => 1, 'id' => 1, 'ten_san_pham' => 1, 'gia_ban' => 1,
+        'so_luong' => 1, 'so_luong_kho' => 1, 'ton_kho' => 1, 'so_luong_ton_kho' => 1,
+        'so_luong_ton' => 1, 'stock' => 1, 'quantity' => 1, 'trang_thai' => 1, 'status' => 1,
+        'trang_thai_kho' => 1, 'ma_thuong_hieu' => 1, 'ma_danh_muc' => 1, 'ma_xuat_xu' => 1,
+        'danh_muc_day_du' => 1,
+    ];
 
     private $db;
     private ?string $lastErrorMessage = null;
@@ -378,8 +386,57 @@ class SanPham {
 
 
     public function getAllProducts(array $filters = [], int $limit = 100, ?string $sort = null): array {
-        $res = $this->paginate(1, max(1, $limit), '', '', '', '', false);
-        return $res['items'] ?? [];
+        $limit = max(1, $limit);
+        return ProductQueryCache::remember('allProducts:' . $limit, 600, function () use ($limit): array {
+            $res = $this->paginateWithProjection(1, $limit, '', '', '', '', false, '', 'default', self::LISTING_PROJECTION);
+            return $res['items'] ?? [];
+        });
+    }
+
+    // Danh sách sản phẩm gọn cho picker admin (không cache, cùng filter/sort với paginate admin)
+    public function getProductPickerOptions(int $limit = 2000): array {
+        return $this->paginateWithProjection(1, max(1, $limit), '', '', '', '', false, '', 'default', self::PICKER_PROJECTION)['items'] ?? [];
+    }
+
+    // Lấy nhiều sản phẩm trong 1 query: [id string => product đã normalize] (không lọc hiển thị, giống findById)
+    public function findManyByIds(array $ids): array {
+        $wanted = [];
+        foreach ($ids as $id) {
+            $id = trim((string)($id ?? ''));
+            if ($id !== '') {
+                $wanted[$id] = true;
+            }
+        }
+        if (!$wanted) {
+            return [];
+        }
+        $or = [];
+        foreach (array_keys($wanted) as $id) {
+            $or[] = $this->productFlexibleFilter($id);
+        }
+        $map = [];
+        $products = [];
+        foreach ($this->db->san_pham->find(['$or' => $or]) as $doc) {
+            $p = $this->normalizeProductRecord($doc);
+            $products[] = $p;
+            $key = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
+            if ($key !== '' && !isset($map[$key])) {
+                $map[$key] = $p;
+            }
+        }
+        // Map thêm theo id gốc được yêu cầu (ma_san_pham / id / _id)
+        foreach (array_keys($wanted) as $id) {
+            if (isset($map[$id])) {
+                continue;
+            }
+            foreach ($products as $p) {
+                if ((string)($p['ma_san_pham'] ?? '') === $id || (string)($p['id'] ?? '') === $id || (string)($p['_id'] ?? '') === $id) {
+                    $map[$id] = $p;
+                    break;
+                }
+            }
+        }
+        return $map;
     }
 
 
@@ -775,6 +832,11 @@ class SanPham {
     }
 
     public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false, string $stockStatusFilter = '', string $sort = 'default'): array {
+        // Trang public không render mo_ta/thanh_phan_full/hdsd -> bỏ khỏi projection; admin giữ full doc
+        return $this->paginateWithProjection($page, $perPage, $q, $cap1Val, $cap2Val, $statusFilter, $onlyVisibleOnWebsite, $stockStatusFilter, $sort, $onlyVisibleOnWebsite ? self::LISTING_PROJECTION : null);
+    }
+
+    private function paginateWithProjection(int $page, int $perPage, string $q, string $cap1Val, string $cap2Val, string $statusFilter, bool $onlyVisibleOnWebsite, string $stockStatusFilter, string $sort, ?array $projection): array {
         $page = max(1, $page);
         $perPage = max(1, $perPage);
         $skip = ($page - 1) * $perPage;
@@ -832,6 +894,9 @@ class SanPham {
             'skip' => $skip,
             'limit' => $perPage
         ];
+        if ($projection !== null) {
+            $options['projection'] = $projection;
+        }
 
         $cursor = $this->db->san_pham->find($filter, $options);
         $items = [];
@@ -1153,7 +1218,20 @@ class SanPham {
 
             $projection = self::CARD_PROJECTION;
 
-        $cursor = $this->db->san_pham->find($filter, ['projection' => $projection]);
+        // Tính WR phía server, chỉ lấy top 60 thay vì tải toàn bộ ứng viên
+        $vExpr = ['$toInt' => '$so_luong_danh_gia'];
+        $rExpr = ['$toDouble' => '$diem_danh_gia'];
+        $vmExpr = ['$add' => [$vExpr, $m]];
+        $cursor = $this->db->san_pham->aggregate([
+            ['$match' => $filter],
+            ['$addFields' => ['_wr' => ['$add' => [
+                ['$multiply' => [['$divide' => [$vExpr, $vmExpr]], $rExpr]],
+                ['$multiply' => [['$divide' => [$m, $vmExpr]], $C]],
+            ]]]],
+            ['$sort' => ['_wr' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => 1]],
+            ['$limit' => 60],
+            ['$project' => $projection],
+        ]);
         $candidates = [];
 
         foreach ($cursor as $doc) {
@@ -1654,6 +1732,7 @@ class SanPham {
             'sort' => $sortMap[$sortKey] ?? $sortMap['popular'],
             'skip' => ($page - 1) * $limit,
             'limit' => $limit,
+            'projection' => self::LISTING_PROJECTION,
         ]);
 
         $items = [];

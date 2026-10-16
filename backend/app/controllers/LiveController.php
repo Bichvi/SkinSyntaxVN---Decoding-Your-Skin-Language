@@ -39,11 +39,20 @@ class LiveController {
 
         $selectedId = trim((string)($_GET['id'] ?? $_GET['room_id'] ?? $_GET['room'] ?? ''));
 
+        // Gom id sản phẩm ghim -> 1 query thay vì N query tuần tự
+        $pinnedIds = [];
+        foreach ($rawLives as $live) {
+            if (!empty($live['ma_san_pham_ghim'])) {
+                $pinnedIds[] = (string)$live['ma_san_pham_ghim'];
+            }
+        }
+        $productsById = $spModel->findManyByIds($pinnedIds);
+
         $liveSessions = [];
         foreach ($rawLives as $idx => $live) {
             $p = null;
             if (!empty($live['ma_san_pham_ghim'])) {
-                $p = $spModel->findById($live['ma_san_pham_ghim']);
+                $p = $productsById[(string)$live['ma_san_pham_ghim']] ?? null;
             }
             if (!$p && !empty($topSaleProducts[$idx])) {
                 $p = $topSaleProducts[$idx];

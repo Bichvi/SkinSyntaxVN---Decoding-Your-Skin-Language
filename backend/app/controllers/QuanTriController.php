@@ -1697,9 +1697,16 @@ class QuanTriController {
         require_once __DIR__ . '/../models/PhienLive.php';
         $phienLiveModel = new PhienLive($this->pdo);
         $lives = $phienLiveModel->getAllLives();
-        $paginateRes = $this->sanPhamModel->paginate(1, 2000);
-        $allProducts = $paginateRes['items'] ?? [];
+        $allProducts = $this->sanPhamModel->getProductPickerOptions(2000);
 
+        // Gom sản phẩm ghim -> 1 query thay vì N+1
+        $pinnedIds = [];
+        foreach ($lives as $l) {
+            if (!empty($l['ma_san_pham_ghim'])) {
+                $pinnedIds[] = (string)$l['ma_san_pham_ghim'];
+            }
+        }
+        $productsById = $this->sanPhamModel->findManyByIds($pinnedIds);
 
         foreach ($lives as &$live) {
             $st = (string)($live['trang_thai'] ?? 'chuamoi');
@@ -1708,7 +1715,7 @@ class QuanTriController {
                 $live['trang_thai'] = 'ketthuc';
             }
             if (!empty($live['ma_san_pham_ghim'])) {
-                $p = $this->sanPhamModel->findById($live['ma_san_pham_ghim']);
+                $p = $productsById[(string)$live['ma_san_pham_ghim']] ?? null;
                 if ($p) {
                     $live['pinned_product'] = $p;
                 }
