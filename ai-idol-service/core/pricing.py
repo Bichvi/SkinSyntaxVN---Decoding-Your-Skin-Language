@@ -27,7 +27,8 @@ def _price(value) -> int:
 
 
 def _item_price(item: dict) -> int:
-    return _price(item.get("flash_price", item.get("gia_flash")))
+    value = item.get("flash_price")
+    return _price(value if value is not None else item.get("gia_flash"))
 
 
 def _find_flash(product_id: str, regular: int, now: dt.datetime, min_remaining: int, db) -> dict | None:
@@ -41,8 +42,10 @@ def _find_flash(product_id: str, regular: int, now: dt.datetime, min_remaining: 
         if (end - now).total_seconds() < min_remaining:
             continue
         for item in camp.get("items") or []:
-            code = item.get("ma_san_pham", item.get("product_id"))
-            if code is None or str(code) != product_id:
+            code = item.get("ma_san_pham")
+            if code is None:
+                code = item.get("product_id")
+            if code is None or str(code).strip() != product_id:
                 continue
             price = _item_price(item)
             if 0 < price < regular and (best is None or price < best["flash_price"]):
@@ -50,7 +53,7 @@ def _find_flash(product_id: str, regular: int, now: dt.datetime, min_remaining: 
                     "campaign_id": camp.get("ma_campaign"),
                     "campaign_name": camp.get("ten_campaign") or camp.get("name") or "",
                     "flash_price": price,
-                    "discount_percent": round((regular - price) / regular * 100),
+                    "discount_percent": ((regular - price) * 200 + regular) // (2 * regular),  # half-up, like PHP round()
                     "end_ts": int(end.timestamp()),
                 }
     return best
