@@ -235,6 +235,23 @@ class IdempotencyTests(PublicationTestCase):
         self.assertEqual(self.purge.call_count, 1)
         self.assertEqual(len(self.decisions(run_id)), 1)
 
+    def test_publish_key_is_job_product_version_and_new_version_adds_a_record(self):
+        job_id = ObjectId()
+        self.db.ai_idol_jobs.insert_one({"_id": job_id, "artifacts": {"script_version": 2}})
+        video_id = self.video(job_id=str(job_id))
+        self.assertIsNotNone(publications.auto_publish_video(video_id))
+        self.assertIsNone(publications.auto_publish_video(video_id))
+        stored = self.publications_for(video_id)
+        self.assertEqual([r["publish_key"] for r in stored], [f"{job_id}:93:2"])
+        self.db.ai_idol_jobs.update_one({"_id": job_id}, {"$set": {"artifacts.script_version": 3}})
+        self.assertIsNotNone(publications.auto_publish_video(video_id))
+        self.assertEqual(len(self.publications_for(video_id)), 2)
+
+    def test_missing_script_version_defaults_to_one(self):
+        video_id = self.video()
+        publications.auto_publish_video(video_id)
+        self.assertTrue(self.publications_for(video_id)[0]["publish_key"].endswith(":93:1"))
+
     def test_a_record_the_admin_took_down_is_left_exactly_as_it_is(self):
         video_id = self.video()
         admin_record = {

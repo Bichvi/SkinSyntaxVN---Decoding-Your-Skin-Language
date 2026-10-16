@@ -136,6 +136,37 @@ def _publication(video: dict[str, Any], video_id: str, product_id: str, campaign
     }
 
 
+_index_ready = False
+
+
+def _ensure_publish_key_index(db) -> None:
+    """Create the unique publish_key index once per process; tolerate it existing or the call failing."""
+    global _index_ready
+    if _index_ready:
+        return
+    try:
+        db.ai_product_videos.create_index(
+            "publish_key", unique=True, name="uniq_publish_key",
+            partialFilterExpression={"publish_key": {"$type": "string"}},  # legacy/admin records have no key
+        )
+    except Exception as exc:
+        logger.warning("[PRODUCT-PAGE] publish_key index not ensured: %s", redact_secrets(exc))
+    _index_ready = True
+
+
+def _script_version(video: dict[str, Any]) -> int:
+    try:
+        job = get_db().ai_idol_jobs.find_one({"_id": object_id(str(video.get("job_id") or ""))}, {"artifacts": 1, "script_version": 1})
+    except ValueError:
+        job = None
+    job = job or {}
+    raw = (job.get("artifacts") or {}).get("script_version") or job.get("script_version")
+    try:
+        return max(int(raw), 1)
+    except (TypeError, ValueError):
+        return 1
+
+
 def _publish(video_id: str) -> dict[str, Any] | None:
     try:
         video_oid = object_id(video_id)
@@ -151,13 +182,16 @@ def _publish(video_id: str) -> dict[str, Any] | None:
     if not product_id:
         return None
     video_id = str(video_oid)  # the key ProductVideo reads back
-    if db.ai_product_videos.find_one({"video_id": video_id}, {"_id": 1}):
-        return None  # published once already, perhaps edited or unpublished since: not ours to change
+    publish_key = f"{video.get('job_id') or ''}:{product_id}:{_script_version(video)}"
+    for existing in db.ai_product_videos.find({"video_id": video_id}, {"publish_key": 1}):
+        if existing.get("publish_key") in (None, publish_key):
+            return None  # published once already, perhaps edited or unpublished since: not ours to change
 
+    _ensure_publish_key_index(db)
     campaign = _campaign(video)
-    record = _publication(video, video_id, product_id, campaign)
+    record = {**_publication(video, video_id, product_id, campaign), "publish_key": publish_key}
     # $setOnInsert: if another worker created the record meanwhile, nothing is overwritten.
-    result = db.ai_product_videos.update_one({"video_id": video_id}, {"$setOnInsert": record}, upsert=True)
+    result = db.ai_product_videos.update_one({"video_id": video_id, "publish_key": {"$in": [publish_key, None]}}, {"$setOnInsert": record}, upsert=True)
     if result.upserted_id is None:
         return None
     purge_product_video_cache()
