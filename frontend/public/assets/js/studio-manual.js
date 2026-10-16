@@ -296,6 +296,8 @@
   }
 
   // The create-campaign body: the payload of the old wizard plus configuration.narration_styles.
+  const APPROVAL_MODES = ['AUTO', 'MANUAL'];
+
   function buildCampaignPayload(input) {
     const i = input && typeof input === 'object' ? input : {};
     const purpose = PURPOSES.includes(i.purpose) ? i.purpose : 'product_video';
@@ -316,6 +318,7 @@
         avatar_asset: syna ? '' : String(i.avatarAsset ?? ''),
         background_asset: String(i.backgroundAsset ?? ''),
         narration_styles: pruneStyles(i.styles, purpose),
+        ...(APPROVAL_MODES.includes(i.approvalMode) ? { approval_mode: i.approvalMode } : {}),
       },
     };
   }
@@ -394,7 +397,7 @@
   const summaryEl = $('manualSummary');
   const prevButton = $('manualPrev');
   const nextButton = $('manualNext');
-  const createButton = $('manualCreate');
+  const createButtons = [$('manualCreateAuto'), $('manualCreateReview')];
 
   const cat1 = $('manualCategoryLevel1');
   const cat2 = $('manualCategoryLevel2');
@@ -925,7 +928,7 @@
     counterEl.textContent = `Bước ${currentStep} / ${STEP_COUNT}`;
     prevButton.hidden = currentStep === 1;
     nextButton.hidden = currentStep === STEP_COUNT;
-    createButton.hidden = currentStep !== STEP_COUNT;
+    createButtons.forEach((button) => { button.hidden = currentStep !== STEP_COUNT; });
     if (currentStep !== 3) avatarVideo.pause();
     else if (avatarValid && isVideoFile(avatarInput.files && avatarInput.files[0])) avatarVideo.play().catch(() => {});
     if (currentStep === 2) {
@@ -1069,12 +1072,15 @@
     return result.filename;
   }
 
-  function setBusy(busy) {
+  function setBusy(busy, activeButton) {
     submitting = busy;
-    createButton.disabled = busy;
+    createButtons.forEach((button) => {
+      button.disabled = busy;
+      if (!button.dataset.label) button.dataset.label = button.innerHTML;
+      button.innerHTML = busy && button === activeButton ? 'Đang chuẩn bị…' : button.dataset.label;
+    });
     prevButton.disabled = busy;
     stepButtons.forEach((button) => { button.disabled = busy; });
-    createButton.textContent = busy ? 'Đang chuẩn bị…' : 'Tạo chương trình';
     form.setAttribute('aria-busy', String(busy));
   }
 
@@ -1103,7 +1109,7 @@
     runQuery({ force: true });
   }
 
-  async function createCampaign() {
+  async function createCampaign(approvalMode, button) {
     if (submitting) return;
     for (let step = 1; step <= 3; step += 1) { // a step can have gone stale since it was visited
       const result = validateStep(step);
@@ -1113,7 +1119,7 @@
       if (result.focus) result.focus.focus();
       return;
     }
-    setBusy(true);
+    setBusy(true, button);
     notify(messageEl, '');
     let created = null;
     try {
@@ -1133,6 +1139,7 @@
         character: sel.character,
         avatarIsVideo: isVideoFile(avatarFile),
         styles: sel.styles,
+        approvalMode,
       };
       // The required avatar goes first so a failure does not leave an orphan background behind.
       const avatarAsset = await uploadAsset('avatar', avatarFile);
@@ -1167,7 +1174,10 @@
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (currentStep === STEP_COUNT) createCampaign(); // Enter in a text field on an earlier step does nothing
+    if (currentStep === STEP_COUNT) {
+      const button = event.submitter && createButtons.includes(event.submitter) ? event.submitter : null;
+      createCampaign(button && button.dataset.approval === 'AUTO' ? 'AUTO' : 'MANUAL', button);
+    } // Enter in a text field on an earlier step does nothing
   });
 
   // ----------------------------------------------------------------------- health

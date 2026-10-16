@@ -154,7 +154,84 @@
       + `${stepsMarkup(item)}${approvalAlertMarkup(warning, true)}${needs}${pendingChip}</button></li>`;
   }
 
+  // ---- script review cards (approval + error recovery). Pure markup so they can be unit-tested in Node.
+  const RECOVERY_STATES = ['AUTO_REPAIR_EXHAUSTED', 'REJECTED_BY_VALIDATOR'];
+  const APPROVAL_STATES = ['AWAITING_APPROVAL', 'AWAITING_SCRIPT_APPROVAL', 'PENDING_APPROVAL'];
+  const REWRITE_OPTIONS = [
+    ['NATURAL', 'Tự nhiên hơn'], ['SHORTER', 'Ngắn gọn hơn'], ['STRONGER_SALES', 'Bán hàng mạnh hơn'], ['PROFESSIONAL', 'Chuyên nghiệp hơn'],
+    ['HOOK_STRONGER', 'Hook hấp dẫn hơn'], ['LESS_JARGON', 'Giảm thuật ngữ'],
+  ];
+  const REWRITE_ENUM = REWRITE_OPTIONS.map((o) => o[0]).concat('CUSTOM');
+  const MAX_REPAIR_ATTEMPTS = 3;
+
+  function scriptReviewState(segment) {
+    if (!isObject(segment)) return null;
+    const names = [segment.status, segment.current_stage, segment.script_status].map((s) => String(s || ''));
+    if (names.some((s) => RECOVERY_STATES.includes(s))) return 'recovery';
+    if (names.some((s) => APPROVAL_STATES.includes(s))) return 'approval';
+    return null;
+  }
+
+  function rewritePayload(instruction, customText) {
+    if (instruction === 'CUSTOM') return { instruction: 'CUSTOM', custom_text: String(customText || '').trim() };
+    return { instruction: REWRITE_ENUM.includes(instruction) ? instruction : 'NATURAL' };
+  }
+
+  function lastIssues(segment) {
+    const history = asArray(segment.validation_history);
+    const last = history.length ? history[history.length - 1] : null;
+    const fromHistory = isObject(last) ? asArray(last.issues) : [];
+    return fromHistory.length ? fromHistory : asArray(segment.issues);
+  }
+
+  function reviewButtons(jobId, ui, kind) {
+    const id = escapeHtml(jobId);
+    const dis = ui.busy ? ' disabled' : '';
+    const rewriteOpts = REWRITE_OPTIONS.map(([code, label]) => `<button type="button" role="menuitem" class="script-rewrite-opt" data-script-rewrite="${code}" data-job="${id}"${dis}>${escapeHtml(label)}</button>`).join('')
+      + `<div class="script-rewrite-custom"><input type="text" class="script-rewrite-text" data-job="${id}" maxlength="300" placeholder="Yêu cầu riêng cho Crew AI…" aria-label="Yêu cầu viết lại riêng" value="${escapeHtml(ui.customText || '')}"><button type="button" data-script-rewrite="CUSTOM" data-job="${id}"${dis}>Gửi</button></div>`;
+    const rewrite = `<span class="script-rewrite"><button type="button" class="idol-btn secondary" data-script-toggle="rw" data-job="${id}" aria-expanded="${ui.rewriteOpen ? 'true' : 'false'}"${dis}>↻ AI viết lại ▾</button>`
+      + `<span class="script-rewrite-menu" role="menu"${ui.rewriteOpen ? '' : ' hidden'}>${rewriteOpts}</span></span>`;
+    const edit = `<button type="button" class="idol-btn secondary" data-script-toggle="ed" data-job="${id}" aria-expanded="${ui.editOpen ? 'true' : 'false'}"${dis}>✎ Chỉnh sửa</button>`;
+    const cancel = `<button type="button" class="idol-btn secondary" data-script-cancel="${id}"${dis}>${kind === 'recovery' ? 'Hủy job' : 'Hủy'}</button>`;
+    if (kind === 'recovery') {
+      return `<div class="script-actions"><button type="button" class="idol-btn primary" data-script-retry="${id}"${dis}>↻ Thử lại</button>${rewrite}${edit}${cancel}</div>`;
+    }
+    return `<div class="script-actions"><button type="button" class="idol-btn primary" data-approve-script="${id}"${dis}>${ui.busy ? 'Đang gửi…' : '✓ Chấp nhận & tạo video'}</button>${rewrite}${edit}${cancel}</div>`;
+  }
+
+  function scriptReviewMarkup(segment, title, ui = {}) {
+    const kind = scriptReviewState(segment);
+    if (!kind) return '';
+    const jobId = String(segment.job_id || '');
+    const id = escapeHtml(jobId);
+    const text = String(ui.draft != null ? ui.draft : (segment.script_text || segment.rejected_script_text || ''));
+    const version = Number(segment.script_version) || 1;
+    const repairs = asArray(segment.repair_history);
+    const attempts = Number(segment.repair_attempt) || repairs.length;
+    const note = ui.note && ui.note.text ? `<p class="script-note${ui.note.success ? ' is-ok' : ''}" role="status">${escapeHtml(ui.note.text)}</p>` : '';
+    const editor = `<div class="script-edit"${ui.editOpen ? '' : ' hidden'}><label for="script-${id}">${escapeHtml(title)}</label>`
+      + `<textarea class="script-editor" data-job="${id}" id="script-${id}">${escapeHtml(text)}</textarea>`
+      + `<button type="button" class="idol-btn primary" data-approve-script="${id}"${ui.busy ? ' disabled' : ''}>Lưu & tạo video</button></div>`;
+    const preview = ui.editOpen ? '' : `<blockquote class="script-preview">${escapeHtml(text)}</blockquote>`;
+    if (kind === 'recovery') {
+      const issues = lastIssues(segment).map((i) => {
+        const o = isObject(i) ? i : {};
+        const quote = o.original_text ? `<q>${escapeHtml(o.original_text)}</q>` : '';
+        return `<li><code>${escapeHtml(o.code || '')}</code> ${escapeHtml(o.reason || '')}${quote ? ` ${quote}` : ''}</li>`;
+      }).join('');
+      return `<section class="script-card is-recovery" data-key="script:${id}"><h4>⚠ Crew AI chưa thể hoàn tất kịch bản</h4>`
+        + `<p>Đã tự sửa: ${Math.min(attempts, MAX_REPAIR_ATTEMPTS)}/${MAX_REPAIR_ATTEMPTS} lần</p>${issues ? `<ul class="script-issues">${issues}</ul>` : ''}`
+        + `${preview}${editor}${note}${reviewButtons(jobId, ui, 'recovery')}</section>`;
+    }
+    const checks = ['Thông tin sản phẩm', 'Giá đã xác minh', 'Khuyến mãi hợp lệ', 'Claims đạt kiểm tra', 'Sẵn sàng đọc'];
+    const fixed = repairs.length ? `<p class="script-fixed">Crew AI đã tự sửa ${repairs.length} vấn đề</p>` : '';
+    return `<section class="script-card is-approval" data-key="script:${id}"><h4>Kịch bản V${version} — Đã đạt kiểm tra ✓</h4>`
+      + `<ul class="script-checklist">${checks.map((c) => `<li>✓ ${escapeHtml(c)}</li>`).join('')}</ul>${fixed}`
+      + `${preview}${editor}${note}${reviewButtons(jobId, ui, 'approval')}</section>`;
+  }
+
   const helpers = {
+    scriptReviewState, scriptReviewMarkup, rewritePayload, REWRITE_ENUM,
     publishedCount, pollDelay, pendingPlatformsOf, canApprovePlatform, segmentPageState, publicationUrl, toDatetimeLocal, vnTime, stepsMarkup, cardMarkup, isInternalOnly,
   };
   if (inNode) module.exports = helpers;
@@ -201,6 +278,7 @@
   const detailGate = logic.createLatestGate();
   const scriptDrafts = new Map();
   const approvingJobs = new Set();
+  const scriptNotes = new Map(); // job id -> { text, success } result of the last script action
   const busyActions = new Set(); // '<campaign id>:platform:youtube', '<campaign id>:campaign:cancel', 'run:<id>:retry' ... while in flight
   const busyKey = (id, name) => `${id}:${name}`;
   const toggled = new Map(); // <details> the staff opened or closed by hand, by data-key
@@ -310,13 +388,19 @@
     const rejected = segment.script_status === 'REJECTED_BY_VALIDATOR' && Boolean(segment.rejected_script_text);
     const awaiting = segment.status === 'AWAITING_APPROVAL' || segment.script_status === 'PENDING_APPROVAL' || rejected;
     const scriptText = String(awaiting && scriptDrafts.has(jobId) ? scriptDrafts.get(jobId) : (segment.script_text || (rejected ? segment.rejected_script_text : '')));
-    const feedback = rejected
-      ? `<div class="agent-warning script-feedback"><strong>Kịch bản bị từ chối:</strong> ${escapeHtml(segment.validation_feedback || 'Có nội dung vi phạm quy chế quảng cáo.')}<br>Sửa lại các câu bị nêu rồi bấm chấp nhận; hệ thống sẽ kiểm tra lại trước khi tạo video.</div>`
-      : '';
+    const feedback = '';
     const detailKey = `script:${jobId}`;
     const open = toggled.has(detailKey) ? toggled.get(detailKey) : awaiting;
     const sending = approvingJobs.has(jobId);
-    const scriptMarkup = scriptText
+    const reviewKind = scriptReviewState(segment);
+    const reviewUi = {
+      busy: approvingJobs.has(jobId), draft: scriptDrafts.has(jobId) ? scriptDrafts.get(jobId) : null,
+      rewriteOpen: toggled.get(`rw:${jobId}`) === true, editOpen: toggled.get(`ed:${jobId}`) === true,
+      customText: scriptDrafts.get(`custom:${jobId}`) || '', note: scriptNotes.get(jobId) || null,
+    };
+    const scriptMarkup = reviewKind
+      ? scriptReviewMarkup(segment, title, reviewUi)
+      : scriptText
       ? `<details class="script-review" data-key="${escapeHtml(detailKey)}"${open ? ' open' : ''}><summary>${rejected ? 'Sửa kịch bản bị từ chối' : awaiting ? 'Chỉnh sửa & duyệt kịch bản' : 'Xem kịch bản đã duyệt'}</summary>${feedback}`
         + `<label for="script-${escapeHtml(jobId)}">${escapeHtml(title)}</label><textarea class="script-editor" data-job="${escapeHtml(jobId)}" id="script-${escapeHtml(jobId)}"${awaiting ? '' : ' readonly'}>${escapeHtml(scriptText)}</textarea>`
         + `<p class="script-review-note">${awaiting ? 'Sửa trực tiếp lời giới thiệu. Giọng nói và video chỉ được tạo sau khi bạn chấp nhận.' : 'Kịch bản đã duyệt cho video này.'}</p>`
@@ -687,12 +771,64 @@
     renderDetail(); // the button shows "Đang gửi duyệt…" and stays disabled across polls
     detailMessage('');
     try {
-      await api(routeUrl('admin_ai_idol_approve_script', 'job_id', jobId), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ script_text: text }) });
+      const res = await api(routeUrl('admin_ai_idol_approve_script', 'job_id', jobId), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ script_text: text }) });
       scriptDrafts.delete(jobId);
-      detailMessage('Đã chấp nhận kịch bản. Video sẽ được tạo.', true);
+      toggled.delete(`ed:${jobId}`);
+      applyScriptResult(jobId, res, 'Đang tạo giọng & video…');
       await afterChange(); // the lock is released only after the refreshed detail has replaced the button
     } catch (error) {
       detailMessage(`Không thể duyệt kịch bản: ${error.message}`);
+    } finally {
+      approvingJobs.delete(jobId);
+      lastDetailHtml = '';
+      renderDetail();
+    }
+    return undefined;
+  }
+
+  // Shared result handling for approve / retry / rewrite: branch on `status`, not `ok`.
+  function applyScriptResult(jobId, res, queuedText) {
+    const data = isObject(res) ? res : {};
+    const status = String(data.status || '');
+    let text = String(data.message || '');
+    let success = true;
+    if (status === 'QUEUED') text = queuedText;
+    else if (status === 'AUTO_REPAIR_EXHAUSTED') { text = text || 'Crew AI chưa thể hoàn tất kịch bản.'; success = false; }
+    else if (data.repaired) text = `Crew AI đã tự sửa thêm, xem lại V${Number(data.script_version) || ''}`.trim();
+    else if (!text) text = 'Đã cập nhật kịch bản.';
+    scriptNotes.set(jobId, { text, success });
+    detailMessage(text, success);
+  }
+
+  async function scriptAction(kind, jobId, extra) {
+    if (approvingJobs.has(jobId)) return undefined;
+    let route = 'admin_ai_idol_job_retry_repair';
+    let body = {};
+    if (kind === 'rewrite') {
+      route = 'admin_ai_idol_job_rewrite';
+      body = rewritePayload(extra.instruction, extra.customText);
+      if (body.instruction === 'CUSTOM' && !body.custom_text) return detailMessage('Hãy nhập yêu cầu viết lại.');
+    } else if (kind === 'cancel') {
+      if (!global.confirm('Hủy job này?')) return undefined;
+      route = 'admin_ai_idol_job_cancel';
+    }
+    approvingJobs.add(jobId);
+    toggled.set(`rw:${jobId}`, false);
+    scriptNotes.delete(jobId);
+    lastDetailHtml = '';
+    renderDetail();
+    detailMessage('');
+    try {
+      const res = await api(routeUrl(route, 'job_id', jobId), { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
+      if (kind === 'cancel') { scriptNotes.set(jobId, { text: 'Đã hủy job.', success: true }); detailMessage('Đã hủy job.', true); } else {
+        scriptDrafts.delete(jobId);
+        applyScriptResult(jobId, res, 'Đang tạo giọng & video…');
+      }
+      await afterChange();
+    } catch (error) {
+      if (error && error.data && error.data.status === 'AUTO_REPAIR_EXHAUSTED') applyScriptResult(jobId, error.data, '');
+      else { scriptNotes.set(jobId, { text: error.message, success: false }); detailMessage(error.message); }
+      await afterChange();
     } finally {
       approvingJobs.delete(jobId);
       lastDetailHtml = '';
@@ -771,6 +907,7 @@
 
   bodyEl.addEventListener('input', (event) => {
     if (event.target.matches('.script-editor:not([readonly])')) scriptDrafts.set(event.target.dataset.job, event.target.value);
+    if (event.target.matches('.script-rewrite-text')) scriptDrafts.set(`custom:${event.target.dataset.job}`, event.target.value);
   });
   bodyEl.addEventListener('toggle', (event) => {
     const key = event.target.dataset && event.target.dataset.key;
@@ -782,6 +919,19 @@
     if (!target || target.disabled) return;
     if (target.hasAttribute('data-act-close')) return closeDetail();
     if (target.dataset.approveScript) return approveScript(target);
+    if (target.dataset.scriptToggle) {
+      const key = `${target.dataset.scriptToggle}:${target.dataset.job}`;
+      toggled.set(key, !(toggled.get(key) === true));
+      lastDetailHtml = '';
+      return renderDetail();
+    }
+    if (target.dataset.scriptRetry) return scriptAction('retry', target.dataset.scriptRetry);
+    if (target.dataset.scriptCancel) return scriptAction('cancel', target.dataset.scriptCancel);
+    if (target.dataset.scriptRewrite) {
+      const jobId = target.dataset.job;
+      const input = bodyEl.querySelector(`.script-rewrite-text[data-job="${jobId.replace(/"/g, '')}"]`);
+      return scriptAction('rewrite', jobId, { instruction: target.dataset.scriptRewrite, customText: input ? input.value : '' });
+    }
     if (target.dataset.approvePlatform) return approvePlatform(target.dataset.approvePlatform);
     if (['actCancelCampaign', 'actAirNow', 'actRescheduleCampaign', 'actRetryCampaign'].includes(target.id)) return campaignControl(target.id);
     if (target.dataset.runRetry) return runControl('retry', target.dataset.runRetry);

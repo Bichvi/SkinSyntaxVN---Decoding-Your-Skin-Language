@@ -454,3 +454,13 @@ test('reviewMarkup shows the broadcast time, channels and the approval step for 
   assert.match(html, /Không chọn/);
   assert.ok(!html.includes('<i>') && !html.includes('<b>'));
 });
+
+test('buildCampaignPayload carries a valid approval_mode', () => {
+  assert.equal(M.buildCampaignPayload({ approvalMode: 'AUTO' }).configuration.approval_mode, 'AUTO');
+  assert.equal(M.buildCampaignPayload({ approvalMode: 'MANUAL' }).configuration.approval_mode, 'MANUAL');
+});
+
+test('buildCampaignPayload drops an unknown approval_mode', () => {
+  assert.ok(!('approval_mode' in M.buildCampaignPayload({ approvalMode: 'auto' }).configuration));
+  assert.ok(!('approval_mode' in M.buildCampaignPayload({}).configuration));
+});

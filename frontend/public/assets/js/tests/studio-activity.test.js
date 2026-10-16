@@ -80,3 +80,31 @@ test('cardMarkup hides the pending chip once the permission window is over', () 
   const html = A.cardMarkup(merged(campaign({ status: 'LIVE', pending_external_platforms: ['youtube'] })));
   assert.ok(!/Chờ cho phép/.test(html));
 });
+
+const recoverySeg = (over = {}) => ({ job_id: 'j<1>', status: 'AUTO_REPAIR_EXHAUSTED', script_text: 'Xin chào <b>x</b>', repair_attempt: 3, validation_history: [{ issues: [{ code: 'PRICE_UNVERIFIED', reason: 'Giá chưa xác minh', original_text: 'chỉ 99k <i>' }] }], ...over });
+
+test('recovery card has 4 actions, lists issues, escapes HTML and never says rejected', () => {
+  const html = A.scriptReviewMarkup(recoverySeg(), 'SP', {});
+  assert.equal(A.scriptReviewState(recoverySeg()), 'recovery');
+  assert.equal(A.scriptReviewState(recoverySeg({ status: 'FAILED', script_status: 'REJECTED_BY_VALIDATOR' })), 'recovery');
+  assert.ok(html.includes('Crew AI chưa thể hoàn tất kịch bản') && html.includes('3/3'));
+  assert.ok(!html.includes('Kịch bản bị từ chối'));
+  ['data-script-retry', 'data-script-toggle="rw"', 'data-script-toggle="ed"', 'data-script-cancel'].forEach((k) => assert.ok(html.includes(k), k));
+  assert.ok(html.includes('PRICE_UNVERIFIED') && html.includes('&lt;i&gt;') && !html.includes('<b>x</b>'));
+});
+
+test('approval card shows version, checklist and repair count', () => {
+  const html = A.scriptReviewMarkup({ job_id: 'j1', status: 'AWAITING_APPROVAL', script_version: 2, script_text: 'abc', repair_history: [{}, {}] }, 'SP', {});
+  assert.ok(html.includes('Kịch bản V2 — Đã đạt kiểm tra'));
+  ['Thông tin sản phẩm', 'Giá đã xác minh', 'Khuyến mãi hợp lệ', 'Claims đạt kiểm tra', 'Sẵn sàng đọc'].forEach((t) => assert.ok(html.includes(t), t));
+  assert.ok(html.includes('Crew AI đã tự sửa 2 vấn đề') && html.includes('data-approve-script'));
+  assert.ok(A.scriptReviewMarkup({ job_id: 'j1', status: 'AWAITING_APPROVAL', script_text: 'abc' }, 'SP', { busy: true }).includes('disabled'));
+  assert.equal(A.scriptReviewState({ status: 'GENERATING' }), null);
+});
+
+test('rewritePayload only emits enum instructions', () => {
+  assert.deepEqual(A.REWRITE_ENUM, ['NATURAL', 'SHORTER', 'STRONGER_SALES', 'PROFESSIONAL', 'HOOK_STRONGER', 'LESS_JARGON', 'CUSTOM']);
+  assert.deepEqual(A.rewritePayload('SHORTER'), { instruction: 'SHORTER' });
+  assert.deepEqual(A.rewritePayload('CUSTOM', ' ngắn '), { instruction: 'CUSTOM', custom_text: 'ngắn' });
+  assert.deepEqual(A.rewritePayload('evil'), { instruction: 'NATURAL' });
+});

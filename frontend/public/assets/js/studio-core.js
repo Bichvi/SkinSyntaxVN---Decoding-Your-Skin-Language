@@ -50,6 +50,7 @@
     PARTIAL_FAILURE: 'Lỗi một phần', FAILED: 'Bị lỗi', CANCELLED: 'Đã hủy', SKIPPED: 'Đã bỏ qua',
     WAITING_RENDERER: 'Chờ Syna', ASSEMBLING: 'Đang ghép video', VALIDATING: 'Đang kiểm tra',
     REJECTED_BY_VALIDATOR: 'Bị từ chối kiểm duyệt',
+    VALIDATING_SCRIPT: 'Đang kiểm tra kịch bản', REPAIRING_SCRIPT: 'Crew AI đang tự sửa', AUTO_REPAIR_EXHAUSTED: 'Cần xử lý kịch bản', FINAL_CHECK: 'Kiểm tra video cuối',
     RESULTS_READY: 'Đã tìm xong', DATA_UNAVAILABLE: 'Thiếu dữ liệu', EMPTY_RESULTS: 'Không có kết quả',
     // Agent run stages
     RECEIVED: 'Đã tiếp nhận', INTERPRETING: 'Đang hiểu yêu cầu', CLASSIFYING_INTENT: 'Đang phân loại ý định',
