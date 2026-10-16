@@ -170,8 +170,8 @@
   }
 
   const INTENT_TAILS = Object.freeze({
-    product_video: 'video tự đăng lên trang sản phẩm khi sẵn sàng.',
-    live_and_product: 'sau buổi phát, phần giới thiệu kèm giá tự đăng lên trang sản phẩm.',
+    product_video: 'video sẽ đăng lên trang sản phẩm (tự đăng hoặc sau khi bạn duyệt).',
+    live_and_product: 'sau buổi phát, phần giới thiệu kèm giá đăng lên trang sản phẩm (tự đăng hoặc sau khi bạn duyệt).',
     live_only: 'không đăng lên trang sản phẩm.',
   });
 

@@ -354,9 +354,8 @@
       planRows.push(row('Thời lượng', escapeHtml(`${v.duration} phút`)));
       planRows.push(row('Kênh phát', escapeHtml((v.channels || []).join(', ') || 'Chưa chọn')));
     }
-    planRows.push(row('Duyệt kịch bản', escapeHtml(live
-      ? 'Bạn duyệt kịch bản trước khi render.'
-      : 'Tự duyệt sau kiểm duyệt, rồi tự đăng lên trang sản phẩm.')));
+    planRows.push(row('Duyệt kịch bản', escapeHtml(
+      'Chọn ở nút cuối: ⚡ Tạo & tự đăng (không cần duyệt) hoặc 👤 Tạo & duyệt kịch bản (dừng chờ bạn duyệt).')));
 
     const styleLabels = Array.isArray(v.styleLabels) ? v.styleLabels : [];
     const contentRows = [

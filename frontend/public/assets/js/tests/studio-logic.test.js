@@ -96,7 +96,7 @@ test('describeIntent: one product, product_video, one style', () => {
   sel.styles = ['gentle'];
   assert.equal(
     L.describeIntent(sel),
-    'Syna làm video sản phẩm (nói giá bán và ưu đãi đang chạy) cho 1 sản phẩm: Serum B5, cách kể giới thiệu sản phẩm, phong cách tư vấn nhẹ nhàng, Syna 3D khung 16:9; video tự đăng lên trang sản phẩm khi sẵn sàng.'
+    'Syna làm video sản phẩm (nói giá bán và ưu đãi đang chạy) cho 1 sản phẩm: Serum B5, cách kể giới thiệu sản phẩm, phong cách tư vấn nhẹ nhàng, Syna 3D khung 16:9; video sẽ đăng lên trang sản phẩm (tự đăng hoặc sau khi bạn duyệt).'
   );
 });
 
@@ -112,7 +112,7 @@ test('describeIntent: five products, live_and_product on YouTube + internal', ()
   };
   assert.equal(
     L.describeIntent(sel),
-    'Syna livestream 90 phút lúc 20:05 16/10/2026 trên Nội bộ, YouTube cho 5 sản phẩm: A, B, C và 2 sản phẩm khác, cách kể phân tích thành phần, phong cách nhấn mạnh thành phần, nhấn mạnh giá và ưu đãi, nhân vật riêng khung 9:16; sau buổi phát, phần giới thiệu kèm giá tự đăng lên trang sản phẩm.'
+    'Syna livestream 90 phút lúc 20:05 16/10/2026 trên Nội bộ, YouTube cho 5 sản phẩm: A, B, C và 2 sản phẩm khác, cách kể phân tích thành phần, phong cách nhấn mạnh thành phần, nhấn mạnh giá và ưu đãi, nhân vật riêng khung 9:16; sau buổi phát, phần giới thiệu kèm giá đăng lên trang sản phẩm (tự đăng hoặc sau khi bạn duyệt).'
   );
 });
 

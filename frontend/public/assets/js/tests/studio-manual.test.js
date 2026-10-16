@@ -435,7 +435,7 @@ test('reviewMarkup has one block per step with an edit button that names its ste
   assert.match(html, /Tư vấn nhẹ nhàng/);
   assert.match(html, /Tự đặt theo ngày/);
   assert.match(html, /Syna 3D/);
-  assert.match(html, /Tự duyệt sau kiểm duyệt/);
+  assert.match(html, /Tạo &amp; tự đăng/);
   assert.ok(!html.includes('<b>'), 'product names are escaped');
   assert.ok(!/Giờ phát/.test(html), 'a product video has no broadcast time');
 });
@@ -448,7 +448,7 @@ test('reviewMarkup shows the broadcast time, channels and the approval step for 
   assert.match(html, /20:00 15\/10\/2026/);
   assert.match(html, /60 phút/);
   assert.match(html, /Nội bộ, YouTube/);
-  assert.match(html, /Bạn duyệt kịch bản trước khi render/);
+  assert.match(html, /Tạo &amp; duyệt kịch bản/);
   assert.match(html, /Nhân vật riêng \(a&lt;b&gt;\.mp4\)/);
   assert.match(html, /bg\.png/);
   assert.match(html, /Không chọn/);
