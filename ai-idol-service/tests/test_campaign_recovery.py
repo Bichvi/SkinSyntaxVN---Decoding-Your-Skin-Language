@@ -312,7 +312,9 @@ class RejectedScriptTests(unittest.TestCase):
             "engines.knowledge_retriever": types.SimpleNamespace(retrieve_knowledge=MagicMock()),
             "engines.content_agent": types.SimpleNamespace(generate_content_and_script=MagicMock(return_value="bản nháp")),
             "engines.script_validator": types.SimpleNamespace(
-                validate_and_revise_script=MagicMock(return_value=(False, "cam kết trị khỏi hoàn toàn", "Vi phạm từ khóa cấm"))),
+                validate_and_repair_script=MagicMock(return_value=types.SimpleNamespace(
+                    passed=False, script="cam kết trị khỏi hoàn toàn", feedback="Vi phạm từ khóa cấm",
+                    history=[], repair_attempts=3))),
         }
         import core.pipeline as pipeline
         with patch.dict(sys.modules, stubs), \
@@ -325,9 +327,9 @@ class RejectedScriptTests(unittest.TestCase):
         saved = checkpoint.call_args.args[1]
         self.assertEqual(saved["artifacts.rejected_script_text"], "cam kết trị khỏi hoàn toàn")
         self.assertEqual(saved["artifacts.validation_feedback"], "Vi phạm từ khóa cấm")
-        self.assertEqual(saved["script_status"], "REJECTED_BY_VALIDATOR")
+        self.assertEqual(saved["status"], "AUTO_REPAIR_EXHAUSTED")
         self.assertNotIn("artifacts.script_text", saved)
-        fail.assert_called_once()
+        fail.assert_not_called()
 
     def test_get_campaign_exposes_rejected_draft_and_feedback(self):
         campaign_id, job_id = oid(), oid()
@@ -353,17 +355,16 @@ class ApproveBlacklistTests(unittest.TestCase):
             import app as service_app
         return service_app, service_app.app.test_client()
 
-    def test_approve_rejects_forbidden_claims_with_422_and_writes_nothing(self):
+    def test_approve_forbidden_claims_parks_job_exhausted_and_never_resumes(self):
         service_app, client = self.client()
         job_id = oid()
         db = FakeDb(ai_idol_jobs=Collection([{"_id": job_id, "status": "FAILED", "product_id": "93", "artifacts": {}}]))
         script = "Sản phẩm này cam kết trị khỏi hoàn toàn nám chỉ sau một đêm sử dụng, hãy mua ngay hôm nay."
-        with patch.object(service_app, "get_db", return_value=db), \
-                patch.object(service_app.generate_job_task, "delay") as delay:
+        with patch.object(service_app, "get_db", return_value=db),                 patch("engines.script_repair.repair_script", side_effect=RuntimeError("llm down")),                 patch.object(service_app.generate_job_task, "delay") as delay:
             response = client.post(f"/api/ai-idol/jobs/{job_id}/script/approve", json={"script_text": script})
-        self.assertEqual(response.status_code, 422)
-        self.assertFalse(response.get_json()["ok"])
-        self.assertEqual(db.ai_idol_jobs.docs[0]["status"], "FAILED")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "AUTO_REPAIR_EXHAUSTED")
+        self.assertEqual(db.ai_idol_jobs.docs[0]["status"], "AUTO_REPAIR_EXHAUSTED")
         self.assertEqual(db.ai_idol_scripts.docs, [])
         delay.assert_not_called()
 

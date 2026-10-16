@@ -436,6 +436,37 @@ class AdminAiIdolController {
         exit;
     }
 
+    public function retryRepairJobScript(): void {
+        $this->proxyJobScriptAction('/script/retry-repair');
+    }
+
+    public function rewriteJobScript(): void {
+        $this->proxyJobScriptAction('/script/rewrite');
+    }
+
+    public function cancelJob(): void {
+        $this->proxyJobScriptAction('/cancel');
+    }
+
+    private function proxyJobScriptAction(string $suffix): void {
+        $this->checkAdmin();
+        $jobId = trim((string)($_GET['job_id'] ?? ''));
+        $input = json_decode(file_get_contents('php://input'), true);
+        $this->verifyCsrf(is_array($input) ? $input : null);
+        header('Content-Type: application/json; charset=utf-8');
+        if ($jobId === '') {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'message' => 'Thiếu mã job.']);
+            exit;
+        }
+        echo $this->callFlaskAPI(
+            'POST',
+            '/api/ai-idol/jobs/' . rawurlencode($jobId) . $suffix,
+            is_array($input) ? $input : []
+        );
+        exit;
+    }
+
     // Hide or re-show one AI Idol video on storefront product pages.
     public function videoVisibility(): void {
         $this->checkAdmin();

@@ -162,10 +162,12 @@ _MONEY_PATTERNS = (
     # Only a percent in discount context is a price claim; "Niacinamide mười phần trăm" is not.
     re.compile(rf"\bgiam\s+(?:gia\s+)?(?:\d+(?:[.,]\d+)?|{_SPELLED_NUMBER}(?:\s+{_SPELLED_NUMBER})*)\s*(?:%|phan\s+tram\b)"),
 )
-_ALWAYS_BANNED = re.compile(
-    r"\b(?:hom nay|toi nay|ngay mai|live ?stream|chot don|chi con|duy nhat|voucher|freeship|ma giam)\b"
+# Urgency/scarcity wording: only allowed when a verified flash sale with a deadline exists.
+_SCARCITY = re.compile(
+    r"\b(?:chi hom nay|hom nay|toi nay|ngay mai|chot don|chi con(?: vai)?|duy nhat|sap het|"
+    r"flash sale|so luong co han|con it|het hang)\b"
 )
-_FLASH_ONLY = re.compile(r"\b(?:flash sale|sale|khuyen mai|uu dai|giam gia|co han|ket thuc|sap het)\b")
+_PROMO = re.compile(r"\b(?:sale|khuyen mai|uu dai|giam gia|co han|ket thuc|voucher|freeship|ma giam)\b")
 _MAGNITUDE = r"(?:tram|nghin|trieu|ty|muoi|linh)"
 _PHRASE_MARK = "\x00"
 # A removed valid phrase glued to more number words is a different amount, not the valid one.
@@ -199,27 +201,58 @@ def _remove_valid_phrases(folded: str, phrases: dict[str, str]) -> str:
     return folded
 
 
-def find_price_violations(text: str, pricing: dict | None) -> list[str]:
-    """Vietnamese error messages for price talk that is not an exact backend phrase; [] when valid."""
+def _scan_price_text(text: str, pricing: dict | None, section: str | None) -> list[dict]:
     from core.vi_money import price_phrases
 
+    pricing = pricing or {}
     phrases = price_phrases(pricing)
     remaining = _remove_valid_phrases(_fold_speech(text), phrases)
-    errors: list[str] = []
+    flash = pricing.get("flash") or {}
+    issues: list[dict] = []
+
+    def add(code, original, reason):
+        issues.append({"code": code, "section": section, "original_text": original, "reason": reason})
+
     mentions = [m.group(0) for pattern in _MONEY_PATTERNS for m in pattern.finditer(remaining)]
     mentions += [m.group(0) for m in _EXTENDED_AMOUNT.finditer(remaining)]
     if mentions:
         if phrases:
-            errors.append("Con số giá không khớp dữ liệu, chỉ dùng đúng các cụm: " + "; ".join(phrases.values()))
+            reason = "Con số giá không khớp dữ liệu, chỉ dùng đúng các cụm: " + "; ".join(phrases.values())
         else:
-            errors.append("Con số giá không khớp dữ liệu, sản phẩm không có dữ liệu giá nên không được nói "
-                          "bất kỳ con số tiền hoặc phần trăm nào")
-    banned = [m.group(0) for m in _ALWAYS_BANNED.finditer(remaining)]
-    if banned:
-        errors.append("Không được dùng các từ: " + ", ".join(dict.fromkeys(banned)))
-    if not (pricing or {}).get("flash") and _FLASH_ONLY.search(remaining):
-        errors.append("Không có chương trình ưu đãi đang chạy, không được nói ưu đãi, khuyến mãi, sale, giảm giá hay có hạn")
-    return errors
+            reason = ("Con số giá không khớp dữ liệu, sản phẩm không có dữ liệu giá nên không được nói "
+                      "bất kỳ con số tiền hoặc phần trăm nào")
+        add("PRICE_MISMATCH", mentions[0].replace(_PHRASE_MARK, " ").strip(), reason)
+    if not flash:
+        promo = [m.group(0) for m in _PROMO.finditer(remaining)]
+        if promo:
+            add("PROMO_UNVERIFIED", promo[0],
+                "Không có chương trình ưu đãi đang chạy, không được nói ưu đãi, khuyến mãi, sale, giảm giá hay có hạn")
+    if not (flash and flash.get("end_ts")):
+        scarcity = [m.group(0) for m in _SCARCITY.finditer(remaining)]
+        if scarcity:
+            add("SCARCITY_UNVERIFIED", scarcity[0],
+                "Không có flash sale xác thực kèm hạn kết thúc, không được dùng từ tạo khan hiếm: "
+                + ", ".join(dict.fromkeys(scarcity)))
+    return issues
+
+
+def find_price_issues(text: str, pricing: dict | None) -> list[dict]:
+    """Structured price/promo/scarcity issues over the WHOLE script (any section); [] when valid.
+
+    Each item: {code, section, original_text, reason}."""
+    issues: list[dict] = []
+    for label, body in split_labeled_sections(text):
+        issues.extend(_scan_price_text(body, pricing, label or None))
+    return issues
+
+
+def find_price_violations(text: str, pricing: dict | None) -> list[str]:
+    """Backward-compatible wrapper: one Vietnamese message per distinct issue; [] when valid."""
+    messages: list[str] = []
+    for issue in find_price_issues(text, pricing):
+        if issue["reason"] not in messages:
+            messages.append(issue["reason"])
+    return messages
 
 
 def clean_script_for_speech(script: str) -> str:

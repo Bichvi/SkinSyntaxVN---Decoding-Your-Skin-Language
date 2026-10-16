@@ -75,3 +75,12 @@ class QueryServiceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ApprovalModeSchemaTests(unittest.TestCase):
+    def test_approval_mode_is_validated(self):
+        from agents.schemas import AgentBrief
+        self.assertEqual(AgentBrief.from_mapping({"goal": "x", "approval_mode": " manual "}).approval_mode, "MANUAL")
+        self.assertEqual(AgentBrief.from_mapping({"goal": "x", "approval_mode": "AUTO"}).approval_mode, "AUTO")
+        self.assertIsNone(AgentBrief.from_mapping({"goal": "x", "approval_mode": "bogus"}).approval_mode)
+        self.assertIsNone(AgentBrief.from_mapping({"goal": "x"}).approval_mode)

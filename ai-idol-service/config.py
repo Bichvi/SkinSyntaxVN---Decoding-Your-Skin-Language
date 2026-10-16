@@ -105,6 +105,10 @@ BROADCAST_MAX_RETRIES = int(os.getenv("AI_IDOL_BROADCAST_MAX_RETRIES", "3"))
 BROADCAST_RETRY_SECONDS = int(os.getenv("AI_IDOL_BROADCAST_RETRY_SECONDS", "5"))
 BROADCAST_LATE_GRACE_MINUTES = int(os.getenv("AI_IDOL_BROADCAST_LATE_GRACE_MINUTES", "30"))
 RENDER_WAIT_CUTOFF_MINUTES = int(os.getenv("AI_IDOL_RENDER_WAIT_CUTOFF_MINUTES", "10"))
+# Self-healing script validation: repair only failing sections, at most this many rounds.
+MAX_SCRIPT_REPAIR_ATTEMPTS = int(os.getenv("AI_IDOL_MAX_SCRIPT_REPAIR_ATTEMPTS", "3"))
+# false = legacy behaviour (rewrite the whole script from one feedback string).
+SELF_HEALING_ENABLED = os.getenv("AI_IDOL_SELF_HEALING_ENABLED", "true").strip().lower() not in ("0", "false", "no", "off")
 STALE_JOB_MINUTES = int(os.getenv("AI_IDOL_STALE_JOB_MINUTES", "45"))
 STALE_STARTING_MINUTES = int(os.getenv("AI_IDOL_STALE_STARTING_MINUTES", "3"))
 STALE_ASSEMBLING_MINUTES = int(os.getenv("AI_IDOL_STALE_ASSEMBLING_MINUTES", "60"))

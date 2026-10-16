@@ -36,6 +36,7 @@ DONE_SEGMENT_STATUSES = ["READY", "SKIPPED", "CANCELLED"]
 SCRIPT_REJECTED_STAGE = "VALIDATING_SCRIPT"
 # Set on the job by core.pipeline right before it fails the job for a rejected script.
 SCRIPT_REJECTED_STATUS = "REJECTED_BY_VALIDATOR"
+APPROVAL_MODES = ("AUTO", "MANUAL")
 ALL_SCRIPTS_REJECTED_MESSAGE = "Tất cả kịch bản đều trượt kiểm duyệt"
 SKIP_REASON_LIMIT = 200
 
@@ -106,6 +107,12 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
     configuration = payload.get("configuration") or {}
     if not isinstance(configuration, dict):
         raise ValueError("configuration must be an object")
+    if "approval_mode" in configuration:
+        approval_mode = str(configuration.get("approval_mode") or "").strip().upper()
+        if approval_mode not in APPROVAL_MODES:
+            raise ValueError("approval_mode must be AUTO or MANUAL")
+        configuration = {**configuration, "approval_mode": approval_mode,
+                         "script_approval_mode": "auto" if approval_mode == "AUTO" else "human"}
     if configuration.get("avatar_mode") == "syna_3d":
         if configuration.get("format", "16:9") != "16:9":
             raise ValueError("Syna 3D hiện hỗ trợ khung ngang 16:9")
@@ -257,11 +264,14 @@ def update_campaign_from_job(job_id: str) -> str | None:
         segment_status = "READY"
     elif job_status == "AWAITING_APPROVAL":
         segment_status = "AWAITING_APPROVAL"
-    elif job_status == "FAILED":
+    elif job_status in ("AUTO_REPAIR_EXHAUSTED", "FAILED"):
+        # An exhausted job is parked for staff (the job itself stays resumable, not failed).
         segment_status = "FAILED"
         # script_status is stamped only when the validator rejected the draft; a watchdog timeout in the same
         # stage is a technical failure and must stay FAILED.
-        if job.get("failed_stage") == SCRIPT_REJECTED_STAGE and job.get("script_status") == SCRIPT_REJECTED_STATUS:
+        legacy_rejected = (job_status == "FAILED" and job.get("failed_stage") == SCRIPT_REJECTED_STAGE
+                           and job.get("script_status") == SCRIPT_REJECTED_STATUS)
+        if job_status == "AUTO_REPAIR_EXHAUSTED" or legacy_rejected:
             # Only autopilot drops a product; a manual programme keeps the failure for its staff to fix.
             owner = db.ai_idol_campaigns.find_one(
                 {"_id": object_id(campaign_id)},

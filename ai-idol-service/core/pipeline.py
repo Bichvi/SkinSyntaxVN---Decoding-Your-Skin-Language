@@ -8,8 +8,12 @@ from engines.audio_mixer import lead_in_seconds
 
 
 def should_auto_approve_script(config: dict) -> bool:
-    """Allow auto approval only for explicitly agent-managed safe policies."""
-
+    """Explicit approval_mode wins; otherwise auto approval only for agent-managed safe policies."""
+    mode = str(config.get("approval_mode") or "").upper()
+    if mode == "AUTO":
+        return True
+    if mode == "MANUAL":
+        return False
     return bool(
         config.get("agent_managed")
         and config.get("script_approval_mode") == "auto"
@@ -42,7 +46,7 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     from engines.product_collector import collect_product_and_snapshot
     from engines.knowledge_retriever import retrieve_knowledge
     from engines.content_agent import generate_content_and_script
-    from engines.script_validator import validate_and_revise_script
+    from engines.script_validator import validate_and_repair_script
 
     # Every completed stage stores a checkpoint. Retry therefore resumes instead of regenerating.
     artifacts = job.get("artifacts") or {}
@@ -90,19 +94,31 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
         if not script_text:
             update_job_stage(job_id, "GENERATING_CONTENT")
             draft = generate_content_and_script(snapshot, knowledge, content_mode, config, purpose)
-            update_job_stage(job_id, "VALIDATING_SCRIPT")
-            is_pass, script_text, feedback = validate_and_revise_script(
-                draft, snapshot, knowledge, content_mode, config, purpose=purpose
+            result = validate_and_repair_script(
+                draft, snapshot, purpose,
+                on_event=lambda kind, version, _text: update_job_stage(
+                    job_id, "VALIDATING_SCRIPT" if kind == "validating" else "REPAIRING_SCRIPT"),
             )
-            if not is_pass:
-                # Keep the rejected draft so staff can edit and approve it, but never
-                # store it as artifacts.script_text (that field means "usable script").
+            script_text = result.script
+            versions, history, repairs = _version_records(draft, result)
+            tracking = {
+                "artifacts.script_versions": versions, "artifacts.validation_history": history,
+                "artifacts.repair_history": repairs, "artifacts.repair_attempt": result.repair_attempts,
+                "artifacts.script_version": len(versions),
+            }
+            if not result.passed:
+                # Keep the last draft for staff, but never store it as artifacts.script_text
+                # (that field means "usable script"). The job is parked, not failed or cancelled.
+                feedback = result.feedback
                 checkpoint_job(job_id, {
+                    **tracking,
                     "artifacts.rejected_script_text": str(script_text or "")[:20000],
                     "artifacts.validation_feedback": str(feedback or "")[:4000],
-                    "script_status": "REJECTED_BY_VALIDATOR",
+                    "status": "AUTO_REPAIR_EXHAUSTED", "current_stage": "AUTO_REPAIR_EXHAUSTED",
+                    "error_message": f"Kịch bản chưa đạt sau {result.repair_attempts} lần tự sửa: {feedback}"[:4000],
+                    "failed_stage": None,
                 })
-                fail_job(job_id, "VALIDATING_SCRIPT", f"Kịch bản không vượt qua kiểm duyệt: {feedback}")
+                logger.warning("[PIPELINE] Job %s: auto repair exhausted: %s", job_id, feedback)
                 return False
             db.ai_idol_scripts.update_one(
                 {"job_id": job_id, "version": 1},
@@ -112,20 +128,21 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
                  "$setOnInsert": {"created_at": utcnow()}},
                 upsert=True,
             )
-            checkpoint_job(job_id, {"artifacts.script_text": script_text})
+            checkpoint_job(job_id, {**tracking, "artifacts.script_text": script_text})
     except Exception as e:
         fail_job(job_id, "GENERATING_CONTENT", f"Lỗi lập kịch bản/kiểm duyệt: {e}")
         return False
 
     # Product videos publish themselves (spec D12): the validated script needs no human gate.
-    product_video_auto = purpose == PRODUCT_VIDEO
+    mode = str(config.get("approval_mode") or "").upper()
+    product_video_auto = purpose == PRODUCT_VIDEO and mode != "MANUAL"
     if job.get("script_status") != "APPROVED" and (product_video_auto or should_auto_approve_script(config)):
         now = utcnow()
         db.ai_idol_scripts.update_one(
             {"job_id": job_id, "version": 1},
             {"$set": {
                 "status": "APPROVED",
-                "approved_by": "PRODUCT_VIDEO_AUTO" if product_video_auto else "AI_IDOL_AGENT_POLICY",
+                "approved_by": "AUTO_APPROVAL_MODE" if mode == "AUTO" else ("PRODUCT_VIDEO_AUTO" if product_video_auto else "AI_IDOL_AGENT_POLICY"),
                 "approved_at": now,
                 "updated_at": now,
             }},
@@ -245,7 +262,50 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
 
     return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db,
                                purpose=purpose, campaign_id=job.get("campaign_id"),
-                               page_path=page_path, block_reason=block_reason, snapshot=snapshot)
+                               page_path=page_path, block_reason=block_reason, snapshot=snapshot,
+                               script_text=script_text)
+
+
+def _version_records(draft: str, result) -> tuple[list, list, list]:
+    now = utcnow()
+    versions, history, repairs = [], [], []
+    for entry in result.history:
+        v = entry["version"]
+        versions.append({"version": v, "text": entry.get("text", ""), "created_at": now,
+                         "source": "generated" if v == 1 else "auto_repair"})
+        history.append({"version": v, "passed": entry["passed"], "issues": entry["issues"]})
+        repair = entry.get("repair") or {}
+        if repair.get("to_version"):
+            repairs.append({"from_version": v, "to_version": repair["to_version"],
+                            "issue_codes": repair.get("issue_codes", [])})
+    return versions, history, repairs
+
+
+def final_machine_check(db, job_id: str, product_id: str, snapshot: dict, script_text, video_path: str,
+                        duration, purpose: str) -> list[str]:
+    """Last gate before READY. Returns problem strings (empty = pass)."""
+    from engines.script_validator import validate_script
+    problems = []
+    try:
+        job = db.ai_idol_jobs.find_one({"_id": ObjectId(job_id)}) or {}
+    except Exception:
+        job = {}
+    if str(job.get("product_id") or product_id) != str(product_id):
+        problems.append("product_id không khớp job")
+    if not video_path or not os.path.isfile(video_path):
+        problems.append("File video không tồn tại")
+    try:
+        if not duration or float(duration) <= 0:
+            problems.append("Video có thời lượng bằng 0")
+    except (TypeError, ValueError):
+        problems.append("Không đo được thời lượng video")
+    if script_text is not None:
+        try:
+            problems.extend(f"Kịch bản: {i.reason}" for i in validate_script(script_text, snapshot or {}, purpose)
+                            if i.severity == "error")
+        except Exception as e:
+            problems.append(f"Không kiểm tra lại được kịch bản: {e}")
+    return problems
 
 
 def applied_intro(job_id: str, config: dict, *, padded: bool, rendered: str, final: str, applied: dict) -> float:
@@ -286,7 +346,8 @@ def _render_legacy_media(job_id, audio_path, script_text, snapshot, config, arti
 
 
 def _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db, *,
-                        purpose="live_only", campaign_id=None, page_path=None, block_reason=None, snapshot=None):
+                        purpose="live_only", campaign_id=None, page_path=None, block_reason=None, snapshot=None,
+                        script_text=None):
     from core.pricing import claim_from_pricing
     from engines.video_composer import get_audio_duration
     # STAGE 8: Complete and set status to READY
@@ -295,13 +356,18 @@ def _complete_video_job(job_id, product_id, config, final_video_path, audio_path
         claim = None
         if purpose != LIVE_ONLY:
             claim = claim_from_pricing(str(snapshot.get("id") or product_id), snapshot.get("pricing"))
+        # Probe the final file: the music intro/outro makes it longer than the voice.
+        duration = get_audio_duration(final_video_path)
+        problems = final_machine_check(db, job_id, product_id, snapshot, script_text, final_video_path, duration, purpose)
+        if problems:
+            fail_job(job_id, "FINAL_CHECK", "Kiểm tra cuối thất bại: " + "; ".join(problems))
+            return False
         # Save complete video metadata
         video_doc = {
             "job_id": job_id,
             "product_id": product_id,
             "file_path": final_video_path,
-            # Probe the final file: the music intro/outro makes it longer than the voice.
-            "duration": get_audio_duration(final_video_path),
+            "duration": duration,
             "format": config.get("format", "9:16"),
             "resolution": "720x1280" if config.get("format") == "9:16" else "1280x720",
             "purpose": purpose,

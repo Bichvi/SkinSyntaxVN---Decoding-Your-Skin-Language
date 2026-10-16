@@ -731,6 +731,9 @@ def process_agent_run(
             return get_agent_run(run_id) or plan
 
         policy = brief.autonomy_policy
+        # Explicit admin choice wins; otherwise an assisted policy waits for review and anything else runs unattended.
+        approval_mode = brief.approval_mode or ("MANUAL" if policy == "assisted" else "AUTO")
+        script_approval = "human" if approval_mode == "MANUAL" else "auto"
         if policy == "auto_publish" and not AGENT_ALLOW_AUTO_PUBLISH:
             update_agent_run(run_id, {
                 "status": "NEEDS_INPUT",
@@ -819,7 +822,7 @@ def process_agent_run(
             "purpose": purpose,
             "platforms": platforms,
             "autonomy_policy": policy,
-            "approval_mode": "human" if policy == "assisted" else "auto",
+            "approval_mode": script_approval,
             "warnings": _renderer_warnings(renderer_check),
             "query_result": query_result,
         }
@@ -846,7 +849,7 @@ def process_agent_run(
                 "agent_managed": True,
                 "agent_run_id": run_id,
                 "agent_autonomy_policy": policy,
-                "script_approval_mode": "human" if policy == "assisted" else "auto",
+                "script_approval_mode": script_approval,
             },
         }
         if autopilot:

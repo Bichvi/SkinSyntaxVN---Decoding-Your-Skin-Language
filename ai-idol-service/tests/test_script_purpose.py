@@ -93,6 +93,11 @@ class PromptTests(unittest.TestCase):
         self.assertNotIn("Tuyệt đối không nói giá", system)
         self.assertIn("bấm vào sản phẩm để xem giá mới nhất và đặt hàng", system)
         self.assertIn("đúng nguyên văn", system)
+        self.assertNotIn("chỉ được nói ở", system)
+        self.assertNotIn("A-H-A", system)
+        self.assertNotIn("Re-ti-nol", system)
+        self.assertIn("không bao giờ nói đã dùng", system)
+        self.assertIn("kể cả [Hook]", system)
 
     def test_product_video_without_pricing_says_no_price_data(self):
         _, user = self.prompts("product_video")
@@ -101,7 +106,8 @@ class PromptTests(unittest.TestCase):
     def test_live_and_product_prompt_scopes_live_offers_to_cta(self):
         system, user = content_agent.build_script_prompts(
             dict(SNAP, pricing=PRICING), "k", "Product Intro", {}, "live_and_product")
-        self.assertIn("chỉ được nói ở [CTA]", system)
+        self.assertNotIn("chỉ được nói ở", system)
+        self.assertIn("không bao giờ nói đã dùng", system)
         self.assertIn("Flash sale: ", user)
         self.assertNotIn("Mọi nội dung về giá và kêu gọi mua chỉ nằm từ [Price] trở đi", system)
 
@@ -118,9 +124,9 @@ class PurposeRuleTests(unittest.TestCase):
     def test_product_video_without_known_ingredients_needs_no_section(self):
         self.assertEqual(script_validator.check_purpose_rules("[Hook]\nDa dầu?", {"ingredients": ""}, "product_video"), [])
 
-    def test_live_and_product_allows_price_only_after_price_header(self):
+    def test_live_and_product_allows_correct_price_in_any_section(self):
         snap = {**SNAP, "pricing": {"regular_price": 289000, "market_price": None, "flash": None}}
-        ok = "[Hook]\nDa dầu?\n[Price]\nChỉ hai trăm tám mươi chín nghìn đồng.\n[CTA]\nĐặt ngay hôm nay."
+        ok = "[Hook]\nChỉ hai trăm tám mươi chín nghìn đồng.\n[Price]\nGiá tốt.\n[CTA]\nĐặt ngay."
         bad = "[Hook]\nChỉ một trăm nghìn đồng!\n[Price]\nGiá tốt.\n[CTA]\nĐặt ngay."
         self.assertEqual(script_validator.check_purpose_rules(ok, snap, "live_and_product"), [])
         self.assertTrue(script_validator.check_purpose_rules(bad, snap, "live_and_product"))
@@ -141,7 +147,9 @@ class PurposeRuleTests(unittest.TestCase):
             def invoke(self, system, user):
                 return priced
 
+        import engines.script_repair as script_repair
         with patch.object(script_validator, "LLMProvider", FakeLLM), \
+                patch.object(script_repair, "LLMProvider", FakeLLM), \
                 patch.object(script_validator, "validate_script_via_llm", return_value=(True, "")):
             ok, _, feedback = script_validator.validate_and_revise_script(
                 priced, SNAP, "", "Product Intro", {}, purpose="product_video"
@@ -170,7 +178,7 @@ class ManualApprovalRuleTests(unittest.TestCase):
     def test_priced_product_video_script_is_refused(self):
         script = "[Ingredients]\nNiacinamide làm đều màu da và giảm dầu thừa rất hiệu quả.\n[Wrap-up]\nChỉ 199k hôm nay."
         response, task = self.approve("product_video", script)
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.get_json()["status"], "AUTO_REPAIR_EXHAUSTED")
         task.delay.assert_not_called()
 
     def test_live_only_script_with_price_is_still_approvable(self):
