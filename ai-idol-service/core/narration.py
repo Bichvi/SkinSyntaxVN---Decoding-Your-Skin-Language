@@ -7,24 +7,26 @@ from agents.intent_parser import normalize_text
 from core.purpose import PRODUCT_VIDEO
 
 
-# (key, label, speaks_price) in the fixed display order.
-NARRATION_STYLES: tuple[tuple[str, str, bool], ...] = (
-    ("cheerful", "Tươi vui, dễ thương", False),
-    ("gentle", "Tư vấn nhẹ nhàng", False),
-    ("expert", "Chuyên gia khoa học", False),
-    ("closing", "Tập trung chốt sale", True),
-    ("concise", "Ngắn gọn, nhanh", False),
-    ("detailed", "Giải thích chi tiết", False),
-    ("friendly", "Thân thiện như bạn bè", False),
-    ("ingredients", "Nhấn mạnh thành phần", False),
-    ("pricing", "Nhấn mạnh giá & ưu đãi", True),
+# (key, label, speaks_price, live_only) in the fixed display order.
+NARRATION_STYLES: tuple[tuple[str, str, bool, bool], ...] = (
+    ("cheerful", "Tươi vui, dễ thương", False, False),
+    ("gentle", "Tư vấn nhẹ nhàng", False, False),
+    ("expert", "Chuyên gia khoa học", False, False),
+    ("closing", "Tập trung chốt sale", True, True),
+    ("concise", "Ngắn gọn, nhanh", False, False),
+    ("detailed", "Giải thích chi tiết", False, False),
+    ("friendly", "Thân thiện như bạn bè", False, False),
+    ("ingredients", "Nhấn mạnh thành phần", False, False),
+    ("pricing", "Nhấn mạnh giá & ưu đãi", True, False),
 )
-# An evergreen product video must never speak a price, so these styles are dropped for it.
-PRICE_STYLES: frozenset[str] = frozenset(key for key, _, speaks_price in NARRATION_STYLES if speaks_price)
+# Styles that speak a price or deal; kept as a name for code that cares about price talk.
+PRICE_STYLES: frozenset[str] = frozenset(key for key, _, speaks_price, _ in NARRATION_STYLES if speaks_price)
+# A product video lives on the product page for good, so styles that push a sale are dropped for it.
+LIVE_ONLY_STYLES: frozenset[str] = frozenset(key for key, _, _, live_only in NARRATION_STYLES if live_only)
 # Choosing one of these removes the other (the one listed first wins).
 _EXCLUSIVE = frozenset({"concise", "detailed"})
 
-_LABELS = {key: label for key, label, _ in NARRATION_STYLES}
+_LABELS = {key: label for key, label, _, _ in NARRATION_STYLES}
 # Aliases are matched on accent-stripped text, so they carry no diacritics.
 _ALIASES: dict[str, tuple[str, ...]] = {
     "cheerful": ("vui tuoi", "tuoi vui", "de thuong", "tuoi tan"),
@@ -47,7 +49,7 @@ def normalize_styles(values, purpose: str) -> tuple[list[str], list[str]]:
     """Return (styles, dropped): known keys in first-seen order, minus what this purpose cannot say.
 
     Unknown keys and repeats vanish silently; `dropped` lists only valid styles that were removed
-    on purpose (price talk in a product video, or the later of concise/detailed).
+    on purpose (live-only sale talk in a product video, or the later of concise/detailed).
     """
     styles: list[str] = []
     dropped: list[str] = []
@@ -59,7 +61,7 @@ def normalize_styles(values, purpose: str) -> tuple[list[str], list[str]]:
         if key not in _LABELS or key in seen:
             continue
         seen.add(key)
-        if purpose == PRODUCT_VIDEO and key in PRICE_STYLES:
+        if purpose == PRODUCT_VIDEO and key in LIVE_ONLY_STYLES:
             dropped.append(key)
         elif key in _EXCLUSIVE and any(kept in _EXCLUSIVE for kept in styles):
             dropped.append(key)
@@ -73,7 +75,7 @@ def styles_from_text(text: str) -> list[str]:
     normalized = normalize_text(text)
     if not normalized:
         return []
-    return [key for key, _, _ in NARRATION_STYLES if _ALIAS_PATTERNS[key].search(normalized)]
+    return [key for key, _, _, _ in NARRATION_STYLES if _ALIAS_PATTERNS[key].search(normalized)]
 
 
 def style_instruction(styles: list[str]) -> str:

@@ -10,7 +10,7 @@ if SERVICE_DIR not in sys.path:
 
 import core.campaigns as campaigns
 from core.narration import (
-    NARRATION_STYLES, PRICE_STYLES, normalize_styles, style_instruction, styles_from_text,
+    LIVE_ONLY_STYLES, NARRATION_STYLES, PRICE_STYLES, normalize_styles, style_instruction, styles_from_text,
 )
 from engines.content_agent import _script_council_payload, build_script_prompts
 from tests.fakes import FakeDb
@@ -21,15 +21,19 @@ SNAPSHOT = {"name": "Kem A", "brand": "B", "price": 100000, "ingredients": "", "
 
 class NarrationTests(unittest.TestCase):
     def test_style_table_matches_the_spec_order_and_price_flags(self):
-        self.assertEqual([key for key, _, _ in NARRATION_STYLES],
+        self.assertEqual([key for key, _, _, _ in NARRATION_STYLES],
                          ["cheerful", "gentle", "expert", "closing", "concise",
                           "detailed", "friendly", "ingredients", "pricing"])
-        self.assertEqual({key for key, _, speaks_price in NARRATION_STYLES if speaks_price}, set(PRICE_STYLES))
+        self.assertEqual({key for key, _, speaks_price, _ in NARRATION_STYLES if speaks_price}, set(PRICE_STYLES))
         self.assertEqual(PRICE_STYLES, frozenset({"closing", "pricing"}))
 
     def test_normalize_drops_price_styles_for_product_video(self):
         self.assertEqual(normalize_styles(["gentle", "pricing", "closing"], "product_video"),
-                         (["gentle"], ["pricing", "closing"]))
+                         (["gentle", "pricing"], ["closing"]))
+
+    def test_product_video_keeps_pricing_drops_closing(self):
+        self.assertEqual(LIVE_ONLY_STYLES, frozenset({"closing"}))
+        self.assertEqual(normalize_styles(["pricing", "closing"], "product_video"), (["pricing"], ["closing"]))
 
     def test_normalize_keeps_price_styles_for_live(self):
         self.assertEqual(normalize_styles(["pricing"], "live_only")[0], ["pricing"])
@@ -96,7 +100,7 @@ class NarrationTests(unittest.TestCase):
             campaign_id, created = campaigns.create_campaign({
                 "product_ids": ["1"],
                 "purpose": "product_video",
-                "configuration": {"narration_styles": ["pricing", "gentle"]},
+                "configuration": {"narration_styles": ["closing", "gentle"]},
             })
         self.assertTrue(created)
         stored = db.ai_idol_campaigns.find_one({})

@@ -45,7 +45,7 @@ from config import (
 )
 from core.agent_runs import get_agent_run, mark_agent_failed, update_agent_run
 from core.campaigns import create_campaign, parse_schedule
-from core.narration import NARRATION_STYLES, PRICE_STYLES, normalize_styles, styles_from_text
+from core.narration import LIVE_ONLY_STYLES, NARRATION_STYLES, normalize_styles, styles_from_text
 from core.purpose import PRODUCT_VIDEO_LENGTH_MODE, has_broadcast
 from core.redact import redact_secrets
 from core.state_machine import claim_transition, get_db
@@ -157,7 +157,7 @@ def _build_campaign_name(campaign_name: str, selected: list[dict[str, Any]], sch
 
 # --- Autopilot helpers (runs with mode == "autopilot"; the classic path never calls them) -------------------------
 
-_STYLE_LABELS = {key: label for key, label, _ in NARRATION_STYLES}
+_STYLE_LABELS = {key: label for key, label, _, _ in NARRATION_STYLES}
 # What the query layer reports as a gap, in words the admin understands.
 _MISSING_DATA_LABELS = {
     "lifetime_sales": "doanh số toàn kỳ",
@@ -470,12 +470,11 @@ def _autopilot_styles(brief_text: str, purpose: str) -> tuple[list[str], list[di
     if styles:
         names = ", ".join(_STYLE_LABELS[key].lower() for key in styles)
         decisions.append(make_decision("STYLES_APPLIED", "done", f"Áp dụng phong cách dẫn: {names}."))
-    price = [key for key in dropped if key in PRICE_STYLES]
-    if price:
-        names = ", ".join(_STYLE_LABELS[key].lower() for key in price)
+    if any(key in LIVE_ONLY_STYLES for key in dropped):
         decisions.append(make_decision(
-            "STYLES_PRICE_DROPPED", "adjusted", f"Bỏ phong cách nói giá ({names}) vì video sản phẩm không nói giá."))
-    conflict = [key for key in dropped if key not in PRICE_STYLES]
+            "STYLES_PRICE_DROPPED", "adjusted",
+            "Bỏ phong cách tập trung chốt sale vì video sản phẩm không kêu gọi chốt đơn."))
+    conflict = [key for key in dropped if key not in LIVE_ONLY_STYLES]
     if conflict:
         kept = next((key for key in styles if key in {"concise", "detailed"}), None)
         names = ", ".join(_STYLE_LABELS[key].lower() for key in conflict)

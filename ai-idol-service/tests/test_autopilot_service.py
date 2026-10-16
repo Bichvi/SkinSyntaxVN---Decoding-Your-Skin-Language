@@ -422,6 +422,8 @@ class AutopilotStyleTests(unittest.TestCase):
         self.assertEqual(harness.payload["purpose"], "product_video")
         self.assertEqual(harness.payload["configuration"]["narration_styles"], ["cheerful"])
         self.assertEqual(decision(run, "STYLES_PRICE_DROPPED")["level"], "adjusted")
+        self.assertEqual(decision(run, "STYLES_PRICE_DROPPED")["message"],
+                         "Bỏ phong cách tập trung chốt sale vì video sản phẩm không kêu gọi chốt đơn.")
         self.assertEqual(decision(run, "STYLES_APPLIED")["level"], "done")
 
     def test_price_styles_stay_for_a_livestream(self):
