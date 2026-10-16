@@ -110,7 +110,7 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
         if configuration.get("format", "16:9") != "16:9":
             raise ValueError("Syna 3D hiện hỗ trợ khung ngang 16:9")
         configuration = {**configuration, "format": "16:9", "avatar_asset": ""}
-    # A product video never speaks a price, so price styles are dropped for it; always stored as a list.
+    # A product video never calls for closing the sale, so live-only styles are dropped for it; always stored as a list.
     narration_styles, _ = normalize_styles(configuration.get("narration_styles"), purpose)
     configuration = {**configuration, "narration_styles": narration_styles}
 

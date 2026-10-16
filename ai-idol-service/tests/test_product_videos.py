@@ -151,8 +151,29 @@ class VisibilityTests(unittest.TestCase):
         state = product_videos.product_page_state(doc)
         self.assertEqual(state, {
             "video_id": str(doc["_id"]), "ready": False, "hidden": False, "eligible": True,
-            "block_reason": "missing_price_marker", "last_error": "timeout",
+            "block_reason": "missing_price_marker", "last_error": "timeout", "price_state": None,
         })
+
+    def test_page_state_price_state_none_without_claim(self):
+        with patch.object(product_videos, "current_pricing") as lookup:
+            self.assertIsNone(product_videos.product_page_state(video())["price_state"])
+        lookup.assert_not_called()
+
+    def test_page_state_reports_regular_changed(self):
+        claim = {"product_id": "1024", "regular_price": 299000, "market_price": None, "flash": None,
+                 "valid_until_ts": None}
+        current = {"regular_price": 310000, "market_price": None, "flash": None, "valid_until_ts": None}
+        with patch.object(product_videos, "current_pricing", return_value=current):
+            state = product_videos.product_page_state(video(price_claim=claim))
+        self.assertEqual(state["price_state"], "regular_changed")
+
+    def test_page_state_pricing_lookup_error_is_none_not_crash(self):
+        claim = {"product_id": "1024", "regular_price": 299000, "market_price": None, "flash": None,
+                 "valid_until_ts": None}
+        with patch.object(product_videos, "current_pricing", side_effect=RuntimeError("db down")):
+            with self.assertLogs(product_videos.logger, level="WARNING"):
+                state = product_videos.product_page_state(video(price_claim=claim))
+        self.assertIsNone(state["price_state"])
 
     def test_review_i3_livestream_only_and_legacy_videos_are_not_eligible(self):
         self.assertFalse(product_videos.product_page_state(video(purpose="live_only"))["eligible"])

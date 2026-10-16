@@ -6,8 +6,12 @@ spoke prices, so they are never listed here.
 """
 from __future__ import annotations
 
+import logging
+
+from core.pricing import current_pricing, price_claim_state
 from core.state_machine import get_db, object_id, serialize, utcnow
 
+logger = logging.getLogger(__name__)
 
 PRODUCT_PAGE_PURPOSES = ("product_video", "live_and_product")
 # Campaigns created before purposes existed were plain livestreams.
@@ -85,6 +89,20 @@ def set_video_visibility(video_id: str, hidden: bool, by: str) -> dict:
     return product_page_state(db.ai_idol_videos.find_one(query))
 
 
+def _price_state(video: dict) -> str | None:
+    """Why the price spoken in the video no longer holds, or None (fine, no claim, or lookup failed)."""
+    claim = video.get("price_claim")
+    if not claim:
+        return None
+    try:
+        now = utcnow()
+        current = current_pricing(str(claim.get("product_id")), now)
+        return price_claim_state(claim, current, int(now.timestamp()))
+    except Exception as exc:
+        logger.warning("Price check failed for video %s: %s", video.get("_id"), type(exc).__name__)
+        return None
+
+
 def product_page_state(video: dict) -> dict:
     eligible = bool(video.get("product_page_backfill")) or video.get("purpose") in PRODUCT_PAGE_PURPOSES
     return {
@@ -95,4 +113,5 @@ def product_page_state(video: dict) -> dict:
         "eligible": eligible,
         "block_reason": video.get("product_page_block_reason"),
         "last_error": (video.get("media") or {}).get("last_error"),
+        "price_state": _price_state(video),
     }
