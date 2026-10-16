@@ -30,7 +30,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
 <div class="container my-4">
   <div class="p-4 mb-4 bg-white border" style="border-radius: 12px; border-color: var(--border) !important;">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
-      <div>
+      <div id="catalogSummary" aria-live="polite">
         <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.75rem;">SKINSYNTAX CATALOG</span>
         <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.8rem;"><?= h($pageTitle) ?></h2>
         <div class="text-muted small mt-1">Tổng cộng: <strong><?= (int)$total ?></strong> sản phẩm chuẩn skincare</div>
@@ -45,7 +45,8 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       </a>
     </div>
 
-    <form class="row g-2 pt-3 border-top align-items-end" method="get" action="<?= BASE_URL ?>/index.php">
+    <form class="row g-2 pt-3 border-top align-items-end" method="get" action="<?= BASE_URL ?>/index.php"
+          data-live-filter data-live-target="#catalogResults" data-live-also="#catalogSummary" data-live-reset="page">
       <input type="hidden" name="r" value="<?= h($listRoute) ?>">
       <?php if ($listType): ?><input type="hidden" name="type" value="<?= h($listType) ?>"><?php endif; ?>
       <?php if ($cap1): ?><input type="hidden" name="cap1" value="<?= h($cap1) ?>"><?php endif; ?>
@@ -61,7 +62,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
 
       <div class="col-12 col-md-3">
         <label for="catalogSortSelect" class="form-label small fw-semibold text-dark mb-1"><i class="fas fa-arrow-down-wide-short me-1 text-success"></i>Sắp xếp</label>
-        <select id="catalogSortSelect" class="form-select" name="sort" onchange="this.form.submit()" style="border-radius: 6px; padding: 10px 16px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem; cursor: pointer; color: #0F172A; font-weight: 500;">
+        <select id="catalogSortSelect" class="form-select" name="sort" style="border-radius: 6px; padding: 10px 16px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem; cursor: pointer; color: #0F172A; font-weight: 500;">
           <option value="default" <?= in_array($sort, ['default', 'mac_dinh', '']) ? 'selected' : '' ?>>Mặc định</option>
           <option value="price_asc" <?= in_array($sort, ['price_asc', 'gia_asc', 'gia_tang']) ? 'selected' : '' ?>>Giá tăng dần</option>
           <option value="price_desc" <?= in_array($sort, ['price_desc', 'gia_desc', 'gia_giam']) ? 'selected' : '' ?>>Giá giảm dần</option>
@@ -82,6 +83,8 @@ $startPage = max(1, $endPage - $maxVisible + 1);
     </form>
   </div>
 
+  <style>#catalogResults[aria-busy="true"], #catalogSummary[aria-busy="true"] { opacity: .55; transition: opacity .15s; }</style>
+  <div id="catalogResults" aria-live="polite">
   <?php if ($dbUnavailableMessage !== ''): ?>
     <div class="alert alert-warning border-0 shadow-sm" style="border-radius: 8px;"><?= h($dbUnavailableMessage) ?></div>
   <?php elseif (empty($items)): ?>
@@ -195,4 +198,5 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       </ul>
     </nav>
   <?php endif; ?>
+  </div>
 </div>

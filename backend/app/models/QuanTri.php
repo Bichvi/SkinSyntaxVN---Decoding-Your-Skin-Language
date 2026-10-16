@@ -446,10 +446,14 @@ class QuanTri {
         $orderLimit = max(1, min(10, $orderLimit));
         $chatLimit = max(1, min(10, $chatLimit));
 
+        // Đếm đơn chờ xử lý bằng một aggregate theo trạng thái thay vì quét toàn bộ hoa_don.
         $pendingOrdersCount = 0;
-        foreach ($this->db->hoa_don->find([], ['projection' => ['trang_thai' => 1]]) as $orderDoc) {
-            if ($this->normalizeOrderStatus(((array)$orderDoc)['trang_thai'] ?? '') === 'pending') {
-                $pendingOrdersCount++;
+        foreach ($this->db->hoa_don->aggregate([
+            ['$group' => ['_id' => '$trang_thai', 'n' => ['$sum' => 1]]],
+        ]) as $statusGroup) {
+            $statusGroup = (array)$statusGroup;
+            if ($this->normalizeOrderStatus($statusGroup['_id'] ?? '') === 'pending') {
+                $pendingOrdersCount += (int)($statusGroup['n'] ?? 0);
             }
         }
 
@@ -470,12 +474,39 @@ class QuanTri {
             ['sort' => ['created_at' => -1, 'ma_thong_bao' => -1], 'limit' => $orderLimit]
         );
 
+        // Gom thông báo, nạp đơn hàng và khách hàng bằng truy vấn $in thay vì findOne từng dòng.
+        $notices = [];
+        $orderIds = [];
         foreach ($notificationDocs as $doc) {
             $notice = (array)$doc;
             $orderId = (int)($notice['ma_hoa_don'] ?? 0);
-            $order = $orderId > 0 ? (array)($this->db->hoa_don->findOne(['ma_hoa_don' => $orderId]) ?? []) : [];
+            $notices[] = [$notice, $orderId];
+            if ($orderId > 0) {
+                $orderIds[$orderId] = $orderId;
+            }
+        }
+        $orderDocsByKey = [];
+        if ($orderIds) {
+            foreach ($this->db->hoa_don->find(['ma_hoa_don' => ['$in' => array_values($orderIds)]]) as $orderDoc) {
+                $key = $this->mongoLookupKey(((array)$orderDoc)['ma_hoa_don'] ?? null);
+                if (!isset($orderDocsByKey[$key])) {
+                    $orderDocsByKey[$key] = $orderDoc;
+                }
+            }
+        }
+        $notifyCustomerIds = [];
+        foreach ($orderDocsByKey as $orderDoc) {
+            $maKh = ((array)$orderDoc)['ma_kh'] ?? null;
+            if (!empty($maKh)) {
+                $notifyCustomerIds[] = $maKh;
+            }
+        }
+        $notifyCustomers = $this->fetchCustomersByMaKh($notifyCustomerIds);
+
+        foreach ($notices as [$notice, $orderId]) {
+            $order = $orderId > 0 ? (array)($orderDocsByKey[$this->mongoLookupKey($orderId)] ?? []) : [];
             if (!empty($order['ma_kh'])) {
-                $kh = $this->db->khach_hang->findOne(['ma_kh' => $order['ma_kh']]);
+                $kh = $notifyCustomers[$this->mongoLookupKey($order['ma_kh'])] ?? null;
                 if ($kh) {
                     $order['ho_ten'] = $kh['ho_ten'];
                     $order['email'] = $kh['email'];
@@ -1186,6 +1217,16 @@ class QuanTri {
         }
 
         try {
+            $emailRegex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
+            $duplicateFilter = ['email' => $emailRegex];
+            if ($id !== null && $id > 0) {
+                $duplicateFilter['ma_nv'] = ['$ne' => $id];
+            }
+            if ($this->db->nhan_vien->findOne($duplicateFilter)) {
+                $this->lastErrorMessage = 'Email nhân viên đã tồn tại. Vui lòng dùng email khác.';
+                return false;
+            }
+
             if ($id !== null && $id > 0) {
                 $this->db->nhan_vien->updateOne(['ma_nv' => $id], ['$set' => $payload]);
                 return true;
@@ -1265,6 +1306,8 @@ class QuanTri {
         $cursor = $this->db->hoa_don->find($filter, $options);
         $items = [];
 
+        // Giai đoạn 1: lọc theo trạng thái, giữ nguyên thứ tự đơn hàng.
+        $candidates = [];
         foreach ($cursor as $doc) {
             $order = (array) $doc;
             $order['trang_thai_normalized'] = $this->normalizeOrderStatus($order['trang_thai'] ?? '');
@@ -1273,8 +1316,19 @@ class QuanTri {
             if ($statusCanonical !== '' && $order['trang_thai_normalized'] !== $statusCanonical) {
                 continue;
             }
-            
-            $kh = $this->db->khach_hang->findOne(['ma_kh' => $order['ma_kh']]);
+            $candidates[] = $order;
+        }
+
+        // Giai đoạn 2: nạp toàn bộ khách hàng bằng truy vấn $in (thiếu ma_kh khớp như findOne(null)).
+        $customerIds = [];
+        foreach ($candidates as $order) {
+            $customerIds[] = $order['ma_kh'] ?? null;
+        }
+        $customers = $this->fetchCustomersByMaKh($customerIds);
+
+        $kept = [];
+        foreach ($candidates as $order) {
+            $kh = $customers[$this->mongoLookupKey($order['ma_kh'] ?? null)] ?? null;
             if ($kh) {
                 $order['ho_ten'] = $kh['ho_ten'];
                 $order['email'] = $kh['email'];
@@ -1297,11 +1351,69 @@ class QuanTri {
                     continue;
                 }
             }
+            $kept[] = $order;
+        }
 
-            $order['so_dong_hang'] = $this->db->chi_tiet_hoa_don->countDocuments(['ma_hoa_don' => $order['ma_hoa_don']]);
+        // Giai đoạn 3: đếm dòng hàng bằng một aggregate cho toàn bộ đơn còn lại.
+        $lineCounts = $this->countOrderLines(array_map(static fn($o) => $o['ma_hoa_don'] ?? null, $kept));
+        foreach ($kept as $order) {
+            $order['so_dong_hang'] = $lineCounts[$this->mongoLookupKey($order['ma_hoa_don'] ?? null)] ?? 0;
             $items[] = $order;
         }
         return $items;
+    }
+
+    // Khóa tra cứu theo kiểu BSON: số so sánh theo giá trị (Mongo coi int/double bằng nhau), kiểu khác tách riêng.
+    private function mongoLookupKey($value): string {
+        if ($value === null) {
+            return 'null';
+        }
+        if (is_int($value) || is_float($value)) {
+            return 'n:' . (string)(float)$value;
+        }
+        if (is_string($value) || is_bool($value)) {
+            return gettype($value) . ':' . (string)$value;
+        }
+        return 'x:' . md5(serialize($value));
+    }
+
+    // Trả về map [khóa kiểu => khách hàng đầu tiên] cho danh sách ma_kh, mỗi ~1000 giá trị một truy vấn.
+    private function fetchCustomersByMaKh(array $maKhValues): array {
+        $unique = [];
+        foreach ($maKhValues as $value) {
+            $unique[$this->mongoLookupKey($value)] ??= $value;
+        }
+        $map = [];
+        foreach (array_chunk(array_values($unique), 1000) as $chunk) {
+            foreach ($this->db->khach_hang->find(['ma_kh' => ['$in' => $chunk]]) as $kh) {
+                $key = $this->mongoLookupKey(((array)$kh)['ma_kh'] ?? null);
+                if (!isset($map[$key])) {
+                    $map[$key] = $kh;
+                }
+            }
+        }
+        return $map;
+    }
+
+    // Trả về map [khóa kiểu => số dòng chi tiết] cho danh sách ma_hoa_don bằng aggregate $group.
+    private function countOrderLines(array $orderIds): array {
+        $unique = [];
+        foreach ($orderIds as $value) {
+            $unique[$this->mongoLookupKey($value)] ??= $value;
+        }
+        $counts = [];
+        foreach (array_chunk(array_values($unique), 1000) as $chunk) {
+            $rows = $this->db->chi_tiet_hoa_don->aggregate([
+                ['$match' => ['ma_hoa_don' => ['$in' => $chunk]]],
+                ['$group' => ['_id' => '$ma_hoa_don', 'n' => ['$sum' => 1]]],
+            ]);
+            foreach ($rows as $row) {
+                $row = (array)$row;
+                $key = $this->mongoLookupKey($row['_id'] ?? null);
+                $counts[$key] = ($counts[$key] ?? 0) + (int)$row['n'];
+            }
+        }
+        return $counts;
     }
 
     public function getOrderById(int $id): ?array {

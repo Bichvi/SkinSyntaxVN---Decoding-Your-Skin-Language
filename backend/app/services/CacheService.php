@@ -149,6 +149,15 @@ class CacheService
 
         // 2. Check L2 Remote Valkey Cache
         if (!$this->connect()) {
+            // Valkey không dùng được -> file cache cục bộ
+            if ($this->fileFallbackEnabled()) {
+                $hit = $this->fileRead($fullKey);
+                if ($hit !== null) {
+                    $this->hits++;
+                    $this->l1MemoryCache[$fullKey] = $hit[0];
+                    return $hit[0];
+                }
+            }
             $this->misses++;
             return $default;
         }
@@ -206,9 +215,17 @@ class CacheService
         }
 
         if (!$this->connect()) {
+            $useFile = $this->fileFallbackEnabled();
             foreach ($missingKeys as $fullKey) {
-                $this->misses++;
-                $result[$missingFullToOrig[$fullKey]] = $default;
+                $hit = $useFile ? $this->fileRead($fullKey) : null;
+                if ($hit !== null) {
+                    $this->hits++;
+                    $this->l1MemoryCache[$fullKey] = $hit[0];
+                    $result[$missingFullToOrig[$fullKey]] = $hit[0];
+                } else {
+                    $this->misses++;
+                    $result[$missingFullToOrig[$fullKey]] = $default;
+                }
             }
             return $result;
         }
@@ -258,6 +275,10 @@ class CacheService
         $this->l1MemoryCache[$fullKey] = $value;
 
         if (!$this->connect()) {
+            if ($this->fileFallbackEnabled() && $this->fileWrite($fullKey, $value, $ttl ?? $this->defaultTtl)) {
+                $this->writes++;
+                return true;
+            }
             return false;
         }
 
@@ -292,6 +313,10 @@ class CacheService
         unset($this->l1MemoryCache[$fullKey]);
 
         if (!$this->connect()) {
+            if ($this->fileFallbackEnabled()) {
+                $path = $this->filePath($fullKey);
+                return is_file($path) && @unlink($path);
+            }
             return false;
         }
 
@@ -315,7 +340,7 @@ class CacheService
         }
 
         if (!$this->connect()) {
-            return false;
+            return $this->fileFallbackEnabled() && $this->fileRead($fullKey) !== null;
         }
 
         try {
@@ -365,7 +390,18 @@ class CacheService
         }
 
         if (!$this->connect()) {
-            return 0;
+            if (!$this->fileFallbackEnabled()) {
+                return 0;
+            }
+            $count = 0;
+            foreach (@glob($this->fileDir() . '/*.cache') ?: [] as $file) {
+                $raw = @file_get_contents($file);
+                $data = $raw === false ? null : json_decode($raw, true);
+                if (is_array($data) && isset($data['__key']) && preg_match($regex, (string)$data['__key']) && @unlink($file)) {
+                    $count++;
+                }
+            }
+            return $count;
         }
 
         try {
@@ -387,6 +423,76 @@ class CacheService
         } catch (Throwable $e) {
             $this->lastError = 'SCAN/DELETE failed: ' . $e->getMessage();
             return 0;
+        }
+    }
+
+    /**
+     * File-backed L2 fallback: chỉ dùng khi Valkey không khả dụng và driver không phải none/disabled/array.
+     */
+    private function fileFallbackEnabled(): bool
+    {
+        return !in_array($this->driver, ['none', 'disabled', 'array'], true) && !$this->connect();
+    }
+
+    private function fileDir(): string
+    {
+        return sys_get_temp_dir() . '/skinsyntax-kv-cache';
+    }
+
+    private function filePath(string $fullKey): string
+    {
+        return $this->fileDir() . '/' . sha1($fullKey) . '.cache';
+    }
+
+    /** @return array{0: mixed}|null [value] khi hit, null khi miss/hết hạn/hỏng */
+    private function fileRead(string $fullKey): ?array
+    {
+        try {
+            $path = $this->filePath($fullKey);
+            $raw = @file_get_contents($path);
+            if ($raw === false) {
+                return null;
+            }
+            $data = json_decode($raw, true);
+            if (!is_array($data) || !array_key_exists('__ss_cached_data', $data) || ($data['__key'] ?? null) !== $fullKey) {
+                return null;
+            }
+            $exp = (int)($data['__expires_at'] ?? 0);
+            if ($exp > 0 && $exp < time()) {
+                @unlink($path);
+                return null;
+            }
+            return [$data['__ss_cached_data']];
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
+    private function fileWrite(string $fullKey, mixed $value, int $ttl): bool
+    {
+        try {
+            $dir = $this->fileDir();
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0777, true);
+            }
+            $payload = json_encode([
+                '__ss_cached_data' => $value,
+                '__cached_at' => time(),
+                '__key' => $fullKey,
+                '__expires_at' => $ttl > 0 ? time() + $ttl : 0,
+            ], JSON_UNESCAPED_UNICODE);
+            if ($payload === false) {
+                return false;
+            }
+            $path = $this->filePath($fullKey);
+            $tmp = $path . '.' . bin2hex(random_bytes(6)) . '.tmp';
+            if (@file_put_contents($tmp, $payload) === false || !@rename($tmp, $path)) {
+                @unlink($tmp);
+                return false;
+            }
+            return true;
+        } catch (Throwable $e) {
+            return false;
         }
     }
 
