@@ -56,11 +56,67 @@ class ProductVideo {
     }
 
     /**
+     * Mirrors price_claim_state() in ai-idol-service (spec 3.3): whether the prices a video spoke are still the
+     * canonical ones. Conditions are evaluated in order; $pricing is a resolveEffectivePrice() result at $now.
+     *
+     * @param array|object|null $claim ai_idol_videos.price_claim (array or BSONDocument)
+     */
+    public static function priceClaimHolds($claim, array $pricing, int $now): bool {
+        if ($claim === null) {
+            return true;
+        }
+        $c = self::claimToArray($claim);
+        if (!$c) {
+            return true;
+        }
+        $validUntil = $c['valid_until_ts'] ?? null;
+        if ($validUntil !== null && $now >= (int)$validUntil) {
+            return false; // flash_ended
+        }
+        if ((int)($pricing['regular_price'] ?? 0) !== (int)($c['regular_price'] ?? 0)) {
+            return false; // regular_changed
+        }
+        if (($c['market_price'] ?? null) !== null && (int)($pricing['market_price'] ?? 0) !== (int)$c['market_price']) {
+            return false; // market_changed
+        }
+        $flash = $c['flash'] ?? null;
+        if ($flash !== null) {
+            $flash = self::claimToArray($flash);
+            if (empty($pricing['is_flash_sale'])
+                || (int)($pricing['campaign_id'] ?? 0) !== (int)($flash['campaign_id'] ?? 0)
+                || (int)($pricing['effective_price'] ?? 0) !== (int)($flash['flash_price'] ?? 0)) {
+                return false; // flash_changed
+            }
+        }
+        // A claim without flash spoke the list price, which stays true while a flash sale runs.
+        return true;
+    }
+
+    /** Drops cached items whose spoken flash price has expired; items lacking the key (older cache entries) stay. */
+    public static function dropExpiredPriceClaims(array $items, int $now): array {
+        return array_values(array_filter($items, static function ($item) use ($now): bool {
+            $until = is_array($item) ? ($item['price_valid_until_ts'] ?? null) : null;
+            return $until === null || (int)$until > $now;
+        }));
+    }
+
+    private static function claimToArray($value): array {
+        if (is_array($value)) {
+            return $value;
+        }
+        if ($value instanceof \Traversable) {
+            return iterator_to_array($value);
+        }
+        return is_object($value) ? (array)$value : [];
+    }
+
+    /**
      * Whether each source video may appear on product pages, per video id (string). A video with no document,
      * no purpose or an unknown purpose counts as live_only unless it carries the legacy product_page_backfill flag.
+     * A video whose price_claim no longer matches the canonical price is ineligible too.
      *
      * @param string[] $videoIds
-     * @return array<string,bool>
+     * @return array<string, array{eligible: bool, price_valid_until_ts: ?int}>
      */
     private function loadVideoEligibility(array $videoIds): array {
         $oids = [];
@@ -70,16 +126,52 @@ class ProductVideo {
                 $oids[] = $oid;
             }
         }
-        $purposes = [];
+        $result = [];
         if (!$oids) {
-            return $purposes;
+            return $result;
         }
-        $projection = ['projection' => ['_id' => 1, 'purpose' => 1, 'product_page_backfill' => 1]];
+        $projection = ['projection' => ['_id' => 1, 'purpose' => 1, 'product_page_backfill' => 1, 'price_claim' => 1]];
+        $claims = [];
         foreach ($this->db->ai_idol_videos->find(['_id' => ['$in' => $oids]], $projection) as $doc) {
             $row = (array)$doc;
-            $purposes[(string)($row['_id'] ?? '')] = self::videoPublishesToProductPage($row);
+            $id = (string)($row['_id'] ?? '');
+            $eligible = self::videoPublishesToProductPage($row);
+            $claim = isset($row['price_claim']) ? self::claimToArray($row['price_claim']) : [];
+            $until = $claim && ($claim['valid_until_ts'] ?? null) !== null ? (int)$claim['valid_until_ts'] : null;
+            if ($eligible && $claim) {
+                $claims[$id] = $claim;
+            }
+            $result[$id] = ['eligible' => $eligible, 'price_valid_until_ts' => $until];
         }
-        return $purposes;
+        if (!$claims) {
+            return $result;
+        }
+        // One price resolution per distinct product, at a single instant.
+        $now = time();
+        $pricingByProduct = [];
+        $resolver = null;
+        foreach ($claims as $id => $claim) {
+            $pid = (string)($claim['product_id'] ?? '');
+            if ($pid === '') {
+                continue;
+            }
+            try {
+                if (!array_key_exists($pid, $pricingByProduct)) {
+                    if ($resolver === null) {
+                        require_once __DIR__ . '/FlashSaleCampaign.php';
+                        $resolver = new FlashSaleCampaign($this->db);
+                    }
+                    $pricingByProduct[$pid] = $resolver->resolveEffectivePrice($pid, $now);
+                }
+                if (!self::priceClaimHolds($claim, $pricingByProduct[$pid], $now)) {
+                    $result[$id]['eligible'] = false;
+                }
+            } catch (Throwable $e) {
+                // Fail open on purpose: a price lookup error must not make videos vanish from the storefront.
+                error_log('ProductVideo price claim check failed for product ' . $pid . ': ' . $e->getMessage());
+            }
+        }
+        return $result;
     }
 
     private function normalizeDocument($doc): ?array {
@@ -148,10 +240,17 @@ class ProductVideo {
             return [];
         }
         // A publication whose source video spoke prices (live_only / unknown purpose) must never reach the storefront.
-        $purposes = $this->loadVideoEligibility(array_column($items, 'video_id'));
-        return array_values(array_filter($items, static function (array $item) use ($purposes): bool {
-            return $purposes[$item['video_id']] ?? false;
-        }));
+        $eligibility = $this->loadVideoEligibility(array_column($items, 'video_id'));
+        $visible = [];
+        foreach ($items as $item) {
+            $state = $eligibility[$item['video_id']] ?? null;
+            if (!$state || !$state['eligible']) {
+                continue;
+            }
+            $item['price_valid_until_ts'] = $state['price_valid_until_ts'];
+            $visible[] = $item;
+        }
+        return $visible;
     }
 
     /**

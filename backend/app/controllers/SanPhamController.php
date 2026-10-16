@@ -586,7 +586,9 @@ class SanPhamController {
 
         $productVideos = null;
         if (isset($cachedBatch[$videoKey]) && is_array($cachedBatch[$videoKey])) {
-            $productVideos = $cachedBatch[$videoKey];
+            // Cached for up to 30 min: drop videos whose spoken flash price has since expired.
+            require_once __DIR__ . '/../models/ProductVideo.php';
+            $productVideos = ProductVideo::dropExpiredPriceClaims($cachedBatch[$videoKey], time());
         } else {
             try {
                 require_once __DIR__ . '/../models/ProductVideo.php';
