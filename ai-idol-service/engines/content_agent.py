@@ -12,6 +12,7 @@ from core.text_budget import clip_text
 from core.narration import style_instruction
 from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO, PRODUCT_VIDEO_LENGTH_MODE
 from core.script_text import sanitize_external_retailer_mentions
+from engines.script_validator import _PRICE_RULES, price_data_lines
 
 
 def _safe_source(value, limit: int):
@@ -30,18 +31,27 @@ def _style_line_after_length(config: dict) -> str:
     return f"\n{line}" if line else ""
 
 
+def price_lines(pricing: dict | None) -> str:
+    """The DATA price lines (the exact phrases a page script may speak); one source with the validator."""
+    return price_data_lines({"pricing": pricing})
+
+
 def _script_council_payload(snapshot: dict, knowledge: str, content_mode: str, config: dict,
                             purpose: str = LEGACY_PURPOSE) -> dict:
     evergreen = purpose == PRODUCT_VIDEO
+    page_purpose = purpose in (PRODUCT_VIDEO, LIVE_AND_PRODUCT)
+    source_price = {"price": "", "market_price": "", "price_lines": price_lines(snapshot.get("pricing"))} if page_purpose else {
+        "price": snapshot.get("price"),
+        "market_price": snapshot.get("market_price", snapshot.get("price")),
+    }
     return {
         "source": {
             "name": sanitize_external_retailer_mentions(snapshot.get("name")),
             "brand": sanitize_external_retailer_mentions(snapshot.get("brand")),
             "category": sanitize_external_retailer_mentions(snapshot.get("category")),
             "origin": sanitize_external_retailer_mentions(snapshot.get("origin")),
-            # An evergreen product video must never learn the price it could repeat.
-            "price": "" if evergreen else snapshot.get("price"),
-            "market_price": "" if evergreen else snapshot.get("market_price", snapshot.get("price")),
+            # Page scripts get backend-made price phrases, never raw numbers they could reformat.
+            **source_price,
             "ingredients": _safe_source(snapshot.get("ingredients"), 2000 if evergreen else 1000),
             "description": _safe_source(snapshot.get("description"), 1300),
             "usage": _safe_source(snapshot.get("usage"), 650),
@@ -96,7 +106,7 @@ _HEADED_OUTPUT_RULE = (
 )
 
 _PRODUCT_VIDEO_SYSTEM = f"""
-Bạn là Syna, AI Idol skincare của SkinSyntax: trẻ trung, cuốn hút, nói nhanh và có nhịp như creator đang bắt trend, nhưng luôn chính xác như chuyên gia. Nhiệm vụ: viết kịch bản VIDEO GIỚI THIỆU SẢN PHẨM DÙNG LÂU DÀI bằng tiếng Việt để đọc thu âm (Text-To-Speech). Video này sẽ nằm trên trang sản phẩm nhiều tháng, nên tuyệt đối không nói giá và không có ưu đãi có thời hạn.
+Bạn là Syna, AI Idol skincare của SkinSyntax: trẻ trung, cuốn hút, nói nhanh và có nhịp như creator đang bắt trend, nhưng luôn chính xác như chuyên gia. Nhiệm vụ: viết kịch bản VIDEO GIỚI THIỆU SẢN PHẨM DÙNG LÂU DÀI bằng tiếng Việt để đọc thu âm (Text-To-Speech). Video này sẽ nằm trên trang sản phẩm nhiều tháng, nên chỉ được nói giá bằng các cụm giá cho sẵn trong dữ liệu.
 
 {_TTS_RULES}
 CẤU TRÚC BẮT BUỘC (7 phần, đúng thứ tự, tổng độ dài để đọc khoảng 90 đến 150 giây):
@@ -106,13 +116,13 @@ CẤU TRÚC BẮT BUỘC (7 phần, đúng thứ tự, tổng độ dài để �
 [Specs] Dung tích, kết cấu, loại da phù hợp, nồng độ hoạt chất. CHỈ lấy từ dữ liệu sản phẩm; thông tin nào không có thì bỏ qua, không đoán.
 [Ingredients] PHẦN DÀI NHẤT, khoảng 35 đến 40 phần trăm kịch bản: từng hoạt chất chính là gì, tác dụng thế nào, vì sao kết hợp với nhau tốt. Lồng một đến hai sự thật thú vị lấy từ tài liệu kiến thức bổ trợ.
 [How to Use] Dùng ở bước nào trong routine, sáng hay tối, lưu ý khi kết hợp với hoạt chất khác.
-[Wrap-up] Tóm ba ý chính và mời người xem xem chi tiết sản phẩm ngay trên trang này.
+[Wrap-up] Tóm ba ý chính và mời người xem bấm vào sản phẩm để xem giá mới nhất và đặt hàng.
 
 {_HEADED_OUTPUT_RULE}
 
 GIỌNG ĐIỆU: câu ngắn, nhịp nhanh, có câu hỏi tu từ, có điểm nhấn bất ngờ. "Giật gân" chỉ ở CÁCH NÓI; mọi con số, hoạt chất và công dụng phải khớp dữ liệu sản phẩm.
 
-KHÔNG BAO GIỜ NÓI: giá tiền dưới bất kỳ dạng nào, giảm giá, khuyến mãi, ưu đãi, sale, voucher, "chốt đơn", "hôm nay", "livestream", "chỉ còn", "duy nhất".
+QUY TẮC GIÁ: giá chỉ được nói ở [Product Intro] hoặc [Wrap-up]. {_PRICE_RULES}
 
 {_FORBIDDEN_RULES}"""
 
@@ -132,7 +142,7 @@ CẤU TRÚC KỊCH BẢN BẮT BUỘC (8 phần, đúng thứ tự):
 
 {_HEADED_OUTPUT_RULE}
 
-QUAN TRỌNG: năm phần đầu (từ [Opening] đến [How to Use]) sẽ được cắt ra làm video giới thiệu dùng lâu dài trên trang sản phẩm. Vì vậy trong năm phần đó KHÔNG nhắc giá tiền, giảm giá, khuyến mãi, ưu đãi, "chốt đơn", "hôm nay", "livestream". Mọi nội dung về giá và kêu gọi mua chỉ nằm từ [Price] trở đi.
+QUAN TRỌNG: các phần trước [CTA] sẽ được cắt ra làm video giới thiệu dùng lâu dài trên trang sản phẩm. Phần [Price] chỉ dùng các cụm giá cho sẵn trong dữ liệu; ưu đãi riêng của livestream chỉ được nói ở [CTA]; các phần trước [CTA] không nói "hôm nay", "livestream", "chốt đơn". {_PRICE_RULES}
 
 {_FORBIDDEN_RULES}"""
 
@@ -145,10 +155,7 @@ def _product_source_lines(snapshot: dict, *, with_price: bool, ingredients: int,
         f"- Xuất xứ: {sanitize_external_retailer_mentions(snapshot.get('origin'))}",
     ]
     if with_price:
-        lines += [
-            f"- Giá bán: {snapshot.get('price')} đồng",
-            f"- Giá thị trường: {snapshot.get('market_price', snapshot.get('price'))} đồng",
-        ]
+        lines.append(price_lines(snapshot.get("pricing")))
     lines += [
         f"- Thành phần: {_safe_source(snapshot.get('ingredients'), ingredients)}",
         f"- Mô tả công dụng: {_safe_source(snapshot.get('description'), description)}",
@@ -166,7 +173,7 @@ def build_script_prompts(snapshot: dict, knowledge: str, content_mode: str, conf
 Hãy viết kịch bản video giới thiệu sản phẩm dùng lâu dài cho sản phẩm sau đây:
 
 THÔNG TIN SẢN PHẨM:
-{_product_source_lines(snapshot, with_price=False, ingredients=2000, description=1600, usage=800)}
+{_product_source_lines(snapshot, with_price=True, ingredients=2000, description=1600, usage=800)}
 
 TÀI LIỆU KIẾN THỨC BỔ TRỢ (RAG):
 {_safe_source(knowledge, 2200) if knowledge else "Không có tài liệu bổ sung."}
