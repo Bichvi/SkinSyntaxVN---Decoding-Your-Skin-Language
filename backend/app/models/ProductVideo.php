@@ -92,6 +92,17 @@ class ProductVideo {
         return true;
     }
 
+    /**
+     * Verdict used by the storefront: null or degraded pricing (no product found, regular_price <= 0) is
+     * indeterminate, so the video stays (fail open) instead of being compared against a zero price.
+     */
+    public static function claimVerdict($claim, ?array $pricing, int $now): bool {
+        if ($pricing === null || (int)($pricing['regular_price'] ?? 0) <= 0) {
+            return true;
+        }
+        return self::priceClaimHolds($claim, $pricing, $now);
+    }
+
     /** Drops cached items whose spoken flash price has expired; items lacking the key (older cache entries) stay. */
     public static function dropExpiredPriceClaims(array $items, int $now): array {
         return array_values(array_filter($items, static function ($item) use ($now): bool {
@@ -163,12 +174,14 @@ class ProductVideo {
                     }
                     $pricingByProduct[$pid] = $resolver->resolveEffectivePrice($pid, $now);
                 }
-                if (!self::priceClaimHolds($claim, $pricingByProduct[$pid], $now)) {
+                if (!self::claimVerdict($claim, $pricingByProduct[$pid], $now)) {
                     $result[$id]['eligible'] = false;
                 }
             } catch (Throwable $e) {
-                // Fail open on purpose: a price lookup error must not make videos vanish from the storefront.
-                error_log('ProductVideo price claim check failed for product ' . $pid . ': ' . $e->getMessage());
+                // Fail open on purpose: a price lookup error (or a degraded lookup, see claimVerdict) must not make
+                // videos vanish from the storefront. A campaign-load error swallowed inside FlashSaleCampaign still
+                // hides flash-claim videos (the flash no longer resolves) and cannot be detected from here.
+                error_log('ProductVideo price claim check failed for product ' . $pid . ': ' . get_class($e));
             }
         }
         return $result;

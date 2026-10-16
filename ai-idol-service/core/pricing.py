@@ -20,9 +20,10 @@ def _aware(value):
 
 
 def _price(value) -> int:
+    """Like PHP (int): decimal strings such as "199000.0" truncate instead of failing."""
     try:
-        return int(value or 0)
-    except (TypeError, ValueError):
+        return int(float(value or 0))
+    except (TypeError, ValueError, OverflowError):
         return 0
 
 
@@ -31,32 +32,42 @@ def _item_price(item: dict) -> int:
     return _price(value if value is not None else item.get("gia_flash"))
 
 
+def _item_code(item: dict):
+    for key in ("ma_san_pham", "product_id", "id"):
+        if item.get(key) is not None:
+            return str(item[key]).strip()
+    return None
+
+
 def _find_flash(product_id: str, regular: int, now: dt.datetime, min_remaining: int, db) -> dict | None:
-    best = None
+    """Mirror FlashSaleCampaign::loadActiveCampaigns + resolveEffectivePrice: campaigns whose is_active is not
+    false and whose window covers now, newest start first; the first one with a valid item for the product wins."""
+    candidates = []
     for camp in db.flash_sale_campaigns.find({"end_at": {"$gt": now}}):
-        if not (camp.get("is_active") or camp.get("enabled")):
+        if camp.get("is_active") is False:
             continue
         start, end = _aware(camp.get("start_at")), _aware(camp.get("end_at"))
         if start is None or end is None or not (start <= now < end):
             continue
-        if (end - now).total_seconds() < min_remaining:
-            continue
+        candidates.append((start, end, camp))
+    candidates.sort(key=lambda c: c[0], reverse=True)
+    for start, end, camp in candidates:
         for item in camp.get("items") or []:
-            code = item.get("ma_san_pham")
-            if code is None:
-                code = item.get("product_id")
-            if code is None or str(code).strip() != product_id:
+            if _item_code(item) != product_id:
                 continue
             price = _item_price(item)
-            if 0 < price < regular and (best is None or price < best["flash_price"]):
-                best = {
-                    "campaign_id": camp.get("ma_campaign"),
-                    "campaign_name": camp.get("ten_campaign") or camp.get("name") or "",
-                    "flash_price": price,
-                    "discount_percent": ((regular - price) * 200 + regular) // (2 * regular),  # half-up, like PHP round()
-                    "end_ts": int(end.timestamp()),
-                }
-    return best
+            if not 0 < price < regular:
+                continue
+            if (end - now).total_seconds() < min_remaining:
+                return None  # Python-only floor: the chosen campaign is too close to ending, no fall-through
+            return {
+                "campaign_id": camp.get("ma_campaign"),
+                "campaign_name": camp.get("ten_campaign") or camp.get("name") or "",
+                "flash_price": price,
+                "discount_percent": ((regular - price) * 200 + regular) // (2 * regular),  # half-up, like PHP round()
+                "end_ts": int(end.timestamp()),
+            }
+    return None
 
 
 def resolve_pricing(product_id: str, product: dict, now: dt.datetime, db=None,

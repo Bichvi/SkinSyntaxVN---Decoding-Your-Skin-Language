@@ -36,8 +36,8 @@
   const RUN_RETRYABLE = ['FAILED', 'NEEDS_ATTENTION'];
   const STEP_STATE_TEXT = { done: 'đã xong', active: 'đang làm', blocked: 'cần bạn', todo: 'chưa tới' };
   const PAGE_BLOCK_REASONS = {
-    missing_price_marker: 'Kịch bản thiếu mốc [Price] nên không tách được phần không nói giá.',
-    body_cut_failed: 'Không cắt được phần giới thiệu không giá.',
+    missing_price_marker: 'Kịch bản thiếu mốc [CTA] nên không tách được phần giới thiệu cho trang sản phẩm.',
+    body_cut_failed: 'Không cắt được phần giới thiệu cho trang sản phẩm.',
   };
   const MIN_SCRIPT_LENGTH = 40;
   const MIN_RESCHEDULE_MS = 2 * 60 * 1000;
