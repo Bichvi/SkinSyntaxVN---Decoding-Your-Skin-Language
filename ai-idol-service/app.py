@@ -11,7 +11,7 @@ from core.pipeline import start_pipeline_thread
 from core.health import dependency_status
 from core.product_videos import list_product_videos, set_video_visibility
 from core.script_text import sanitize_external_retailer_mentions
-from core.purpose import publishes_to_product_page, purpose_of
+from core.purpose import purpose_of, video_publishes_to_product_page
 from engines.script_validator import check_blacklist, check_purpose_rules
 from tasks import prepare_campaign_task, generate_job_task, process_agent_run_task
 
@@ -561,7 +561,7 @@ PRODUCT_PAGE_RENDITION = "product_page"
 
 def _product_page_rendition(video):
     """The price-free clip for storefront product pages (spec D12): never the full render, never a livestream-only video."""
-    if not publishes_to_product_page(purpose_of(video)):
+    if not video_publishes_to_product_page(video):
         return jsonify({"ok": False, "message": "Video này không có bản cho trang sản phẩm"}), 404
     page_path = video.get("product_page_file_path")
     if page_path and os.path.isfile(page_path):

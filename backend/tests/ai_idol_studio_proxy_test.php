@@ -470,6 +470,16 @@ class FakeVideoCursorCollection
     {
     }
 
+    public function insertOne(array $doc): object
+    {
+        return new class {
+            public function getInsertedId(): MongoDB\BSON\ObjectId
+            {
+                return new MongoDB\BSON\ObjectId(str_repeat('9', 24));
+            }
+        };
+    }
+
     public function findOne($filter = [])
     {
         foreach ($this->rows as $row) {
@@ -512,6 +522,7 @@ if (class_exists('MongoDB\BSON\ObjectId')) {
     $vLive = str_repeat('c', 24);
     $vLegacy = str_repeat('d', 24);
     $vMissing = str_repeat('e', 24);
+    $vBackfill = str_repeat('f', 24);
     $pub = static fn(string $id, string $videoId): array => [
         '_id' => $oid($id), 'video_id' => $videoId, 'is_published' => true, 'associated_product_ids' => ['111'],
     ];
@@ -519,23 +530,25 @@ if (class_exists('MongoDB\BSON\ObjectId')) {
         [
             $pub(str_repeat('1', 24), $vProduct), $pub(str_repeat('2', 24), $vBoth), $pub(str_repeat('3', 24), $vLive),
             $pub(str_repeat('4', 24), $vLegacy), $pub(str_repeat('5', 24), $vMissing), $pub(str_repeat('6', 24), 'not-an-object-id'),
+            $pub(str_repeat('7', 24), $vBackfill),
         ],
         [
             ['_id' => $oid($vProduct), 'purpose' => 'product_video'],
             ['_id' => $oid($vBoth), 'purpose' => 'live_and_product'],
             ['_id' => $oid($vLive), 'purpose' => 'live_only'],
             ['_id' => $oid($vLegacy)],
+            ['_id' => $oid($vBackfill), 'product_page_backfill' => true],
         ]
     );
     $pvModel = new ProductVideo($db);
     $visible = array_column($pvModel->getPublishedVideosByProductId('111'), 'video_id');
-    $runner->check('IDOL-PX-130', 'getPublishedVideosByProductId() keeps product_video and live_and_product only',
-        $visible === [$vProduct, $vBoth], json_encode($visible));
+    $runner->check('IDOL-PX-130', 'getPublishedVideosByProductId() keeps product_video, live_and_product and vetted legacy backfill videos only',
+        $visible === [$vProduct, $vBoth, $vBackfill], json_encode($visible));
     $inFilter = $db->ai_idol_videos->lastFilter['_id']['$in'] ?? [];
     $runner->check('IDOL-PX-131', 'The source videos are loaded with one $in query over valid ObjectIds',
-        count($inFilter) === 5 && $inFilter[0] instanceof MongoDB\BSON\ObjectId);
+        count($inFilter) === 6 && $inFilter[0] instanceof MongoDB\BSON\ObjectId);
 
-    $publishDb = new FakeProductVideoDb([], [['_id' => $oid($vLive), 'purpose' => 'live_only'], ['_id' => $oid($vLegacy)]]);
+    $publishDb = new FakeProductVideoDb([], [['_id' => $oid($vLive), 'purpose' => 'live_only'], ['_id' => $oid($vLegacy)], ['_id' => $oid($vBackfill), 'product_page_backfill' => true]]);
     $publishModel = new ProductVideo($publishDb);
     foreach ([$vLive, $vLegacy] as $n => $ineligibleId) {
         $res = $publishModel->publishVideo(['video_id' => $ineligibleId, 'associated_product_ids' => ['111']]);
@@ -545,7 +558,20 @@ if (class_exists('MongoDB\BSON\ObjectId')) {
     }
 }
 $runner->check('IDOL-PX-133', 'getManageableVideos() exposes product_page_eligible per video',
-    str_contains($productVideoModelSource, "'product_page_eligible' => self::purposePublishesToProductPage("));
+    str_contains($productVideoModelSource, "'product_page_eligible' => self::videoPublishesToProductPage("));
+if (class_exists('MongoDB\BSON\ObjectId')) {
+    $runner->check('IDOL-PX-136', 'videoPublishesToProductPage(): purpose or product_page_backfill, nothing else',
+        ProductVideo::videoPublishesToProductPage(['product_page_backfill' => true]) === true
+        && ProductVideo::videoPublishesToProductPage(['purpose' => 'live_only', 'product_page_backfill' => true]) === true
+        && ProductVideo::videoPublishesToProductPage(['purpose' => 'product_video']) === true
+        && ProductVideo::videoPublishesToProductPage(['purpose' => 'live_only']) === false
+        && ProductVideo::videoPublishesToProductPage(['product_page_backfill' => false]) === false
+        && ProductVideo::videoPublishesToProductPage([]) === false);
+    $backfillPublish = $publishModel->publishVideo(['video_id' => $vBackfill, 'associated_product_ids' => ['111']]);
+    $runner->check('IDOL-PX-137', 'publishVideo() does not reject a backfill video as a livestream',
+        ($backfillPublish['message'] ?? '') !== 'Video này là bản livestream có nói giá nên không thể đăng lên trang sản phẩm.',
+        json_encode($backfillPublish, JSON_UNESCAPED_UNICODE));
+}
 $apvScript = source($projectRoot . '/frontend/public/assets/js/admin-product-videos.js');
 $runner->check('IDOL-PX-134', 'The product-video page disables publishing for ineligible videos with the explanation',
     str_contains($apvScript, 'product_page_eligible') && str_contains($apvScript, "apvPubSubmit').disabled = !eligible")
