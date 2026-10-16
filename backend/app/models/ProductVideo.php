@@ -39,6 +39,39 @@ class ProductVideo {
         }
     }
 
+    public const INELIGIBLE_MESSAGE = 'Video này là bản livestream có nói giá nên không thể đăng lên trang sản phẩm.';
+
+    /** Mirrors ai-idol-service core/purpose.py: only these purposes may appear on product pages. */
+    public static function purposePublishesToProductPage($purpose): bool {
+        return in_array(strtolower(trim((string)$purpose)), ['product_video', 'live_and_product'], true);
+    }
+
+    /**
+     * Source-video purpose per video id (string). A video with no purpose, an unknown purpose or no document
+     * counts as live_only, exactly like purpose_of() in the Python service.
+     *
+     * @param string[] $videoIds
+     * @return array<string,string>
+     */
+    private function loadVideoPurposes(array $videoIds): array {
+        $oids = [];
+        foreach ($videoIds as $vid) {
+            $oid = $this->toObjectId((string)$vid);
+            if ($oid) {
+                $oids[] = $oid;
+            }
+        }
+        $purposes = [];
+        if (!$oids) {
+            return $purposes;
+        }
+        foreach ($this->db->ai_idol_videos->find(['_id' => ['$in' => $oids]]) as $doc) {
+            $row = (array)$doc;
+            $purposes[(string)($row['_id'] ?? '')] = (string)($row['purpose'] ?? '');
+        }
+        return $purposes;
+    }
+
     private function normalizeDocument($doc): ?array {
         if (!$doc) return null;
         $row = (array)$doc;
@@ -101,7 +134,14 @@ class ProductVideo {
                 $items[] = $item;
             }
         }
-        return $items;
+        if (!$items) {
+            return [];
+        }
+        // A publication whose source video spoke prices (live_only / unknown purpose) must never reach the storefront.
+        $purposes = $this->loadVideoPurposes(array_column($items, 'video_id'));
+        return array_values(array_filter($items, static function (array $item) use ($purposes): bool {
+            return self::purposePublishesToProductPage($purposes[$item['video_id']] ?? '');
+        }));
     }
 
     /**
@@ -166,6 +206,9 @@ class ProductVideo {
             if (!$segmentDoc || ($segmentDoc['status'] ?? '') !== 'READY') {
                 return ['ok' => false, 'message' => 'Video chưa hoàn tất hoặc không tồn tại trong hệ thống.'];
             }
+        }
+        if ($videoDoc && !self::purposePublishesToProductPage(((array)$videoDoc)['purpose'] ?? '')) {
+            return ['ok' => false, 'message' => self::INELIGIBLE_MESSAGE];
         }
 
         // Chuẩn hóa danh sách sản phẩm liên kết
@@ -402,6 +445,7 @@ class ProductVideo {
                     'primary_product_id' => $primaryPid,
                     'display_priority' => $pub ? (int)($pub['display_priority'] ?? 10) : 10,
                     'can_publish' => true,
+                    'product_page_eligible' => self::purposePublishesToProductPage($v['purpose'] ?? ''),
                     // 'auto' = the pipeline published it (ai-idol-service); '' = never published or created by an admin.
                     'source' => $pub ? (string)($pub['source'] ?? '') : '',
                     'created_at' => isset($v['created_at']) && $v['created_at'] instanceof \MongoDB\BSON\UTCDateTime 

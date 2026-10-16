@@ -214,7 +214,11 @@ def retry_pending(limit: int = 20, *, client=None) -> int:
             break
         if int((doc.get("media") or {}).get("attempts") or 0) >= MAX_ATTEMPTS or not _retry_eligible(doc):
             continue
-        published += int(publish_video(str(doc["_id"]), client=client))
+        video_id = str(doc["_id"])
+        if publish_video(video_id, client=client):
+            published += 1
+            # Listing it on its product page is best effort and idempotent (never raises).
+            auto_publish_video(video_id)
     return published
 
 
