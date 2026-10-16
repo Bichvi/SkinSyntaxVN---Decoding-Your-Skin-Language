@@ -31,6 +31,7 @@ class AdminAiIdolController {
     private $pdo;
     private $sanPhamModel;
     private $flaskUrl;
+    private ?array $orphanGroupsCache = null;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -557,11 +558,15 @@ class AdminAiIdolController {
             $bestAll = $this->pdo->san_pham->countDocuments(['so_luong_da_ban' => ['$gt' => 0]]);
         } catch (\Throwable $e) {}
 
-        $tree = self::buildCatalogTree($cats, $countsByCat);
-        $totalCategorized = 0;
-        foreach ($tree as $root) {
-            $totalCategorized += $root['count'];
+        // Products whose ma_danh_muc is missing from danh_muc still count and are grouped by their danh_muc_day_du.
+        $existingIds = [];
+        foreach ($cats as $cat) {
+            $existingIds[] = (int)($cat['ma_danh_muc'] ?? 0);
         }
+        $this->orphanGroupsCache = $this->loadOrphanGroups($existingIds);
+        $tree = self::buildCatalogTree($cats, $countsByCat, $this->orphanGroupsCache);
+        // Every visible product, whatever its category (the same visibility filter getProducts() uses).
+        $totalCategorized = array_sum($countsByCat);
 
         return [
             'tree' => $tree,
@@ -588,8 +593,11 @@ class AdminAiIdolController {
      *
      * @param iterable $cats          danh_muc rows in display order (arrays or BSON documents)
      * @param array<int,int> $countsByCat products per ma_danh_muc
+     * @param array $orphanGroups groupOrphanCategories() output: products whose ma_danh_muc is not in danh_muc.
+     *                            The face group joins the face root; the others become synthetic roots
+     *                            (id null, keyed by their group key).
      */
-    public static function buildCatalogTree(iterable $cats, array $countsByCat): array {
+    public static function buildCatalogTree(iterable $cats, array $countsByCat, array $orphanGroups = []): array {
         $rows = [];
         foreach ($cats as $row) {
             $id = (int)($row['ma_danh_muc'] ?? 0);
@@ -640,7 +648,118 @@ class AdminAiIdolController {
             }
             $tree[self::catalogRootKey($rows[$rootId], $rootId, $tree)] = $root;
         }
+        foreach ($orphanGroups as $groupKey => $group) {
+            $children = [];
+            foreach ($group['children'] as $childId => $child) {
+                $children[$childId] = [
+                    'id' => $childId,
+                    'label' => $child['label'],
+                    'slug' => '',
+                    'phrase' => 'sản phẩm ' . mb_strtolower($child['label']),
+                    'count' => $child['count'],
+                    'children' => [],
+                ];
+            }
+            if ($groupKey === 'face' && isset($tree['face'])) {
+                $tree['face']['children'] += $children;
+                $tree['face']['count'] += $group['count'];
+                continue;
+            }
+            $key = isset($tree[$groupKey]) ? $groupKey . '_orphan' : $groupKey;
+            $tree[$key] = [
+                'id' => null,
+                'label' => $group['label'],
+                'slug' => '',
+                'phrase' => 'sản phẩm ' . mb_strtolower($group['label']),
+                'count' => $group['count'],
+                'children' => $children,
+            ];
+        }
         return $tree;
+    }
+
+    /**
+     * Group products whose ma_danh_muc has no danh_muc row by the L1 group of their danh_muc_day_du
+     * ("Sức Khỏe - Làm Đẹp -> Chăm Sóc Cơ Thể -> ..."): the group is the segment after a leading
+     * "Sức Khỏe - Làm Đẹp". Known groups map to the picker's static keys, anything else to a stable slug key.
+     *
+     * @param iterable $rows each {ma_danh_muc:int, path:string, count:int}
+     * @return array<string,array{label:string,count:int,children:array<int,array{label:string,count:int}>}>
+     */
+    public static function groupOrphanCategories(iterable $rows): array {
+        $groups = [];
+        foreach ($rows as $row) {
+            $id = (int)($row['ma_danh_muc'] ?? 0);
+            $count = (int)($row['count'] ?? 0);
+            if ($id <= 0 || $count <= 0) {
+                continue;
+            }
+            $segments = array_values(array_filter(
+                array_map('trim', explode('->', (string)($row['path'] ?? ''))),
+                static fn(string $segment): bool => $segment !== ''
+            ));
+            if ($segments !== [] && mb_strtolower($segments[0]) === 'sức khỏe - làm đẹp') {
+                array_shift($segments);
+            }
+            $label = $segments[0] ?? 'Khác';
+            $lower = mb_strtolower($label);
+            if (str_contains($lower, 'chăm sóc cơ thể')) {
+                $key = 'body';
+            } elseif (str_contains($lower, 'chăm sóc tóc')) {
+                $key = 'hair';
+            } elseif (str_contains($lower, 'trang điểm')) {
+                $key = 'makeup';
+            } elseif (str_contains($lower, 'chăm sóc da mặt')) {
+                $key = 'face';
+            } else {
+                $key = 'grp_' . substr(md5($lower), 0, 8);
+            }
+            if (!isset($groups[$key])) {
+                $groups[$key] = ['label' => $label, 'count' => 0, 'children' => []];
+            }
+            $groups[$key]['count'] += $count;
+            if (isset($groups[$key]['children'][$id])) {
+                $groups[$key]['children'][$id]['count'] += $count;
+            } else {
+                $groups[$key]['children'][$id] = ['label' => $segments[1] ?? $label, 'count' => $count];
+            }
+        }
+        return $groups;
+    }
+
+    /** One projected aggregate over the visible products whose ma_danh_muc is not in $existingIds. */
+    private function loadOrphanGroups(array $existingIds): array {
+        $rows = [];
+        try {
+            foreach ($this->pdo->san_pham->aggregate([
+                ['$match' => [
+                    'trang_thai' => ['$nin' => ['inactive', 'hidden', 'disabled', '0', 'an', 'ngung ban']],
+                    'ma_danh_muc' => ['$nin' => array_values(array_unique($existingIds))],
+                ]],
+                ['$group' => ['_id' => '$ma_danh_muc', 'path' => ['$first' => '$danh_muc_day_du'], 'count' => ['$sum' => 1]]],
+            ]) as $r) {
+                $rows[] = ['ma_danh_muc' => (int)$r['_id'], 'path' => (string)($r['path'] ?? ''), 'count' => (int)$r['count']];
+            }
+        } catch (\Throwable $e) {
+            return [];
+        }
+        return self::groupOrphanCategories($rows);
+    }
+
+    /** Orphan groups for expandCategoryIds(): the ones getCatalogMetadata() already built, or one lookup. */
+    private function orphanGroups(): array {
+        if ($this->orphanGroupsCache === null) {
+            $ids = [];
+            try {
+                foreach ($this->pdo->danh_muc->find([], ['projection' => ['ma_danh_muc' => 1]]) as $cat) {
+                    $ids[] = (int)$cat['ma_danh_muc'];
+                }
+            } catch (\Throwable $e) {
+                $ids = [];
+            }
+            $this->orphanGroupsCache = $this->loadOrphanGroups($ids);
+        }
+        return $this->orphanGroupsCache;
     }
 
     /** Key of a root category in the picker tree; never one that is already taken. */
@@ -672,6 +791,11 @@ class AdminAiIdolController {
         }
         if ($catL1 !== '' && $catL1 !== 'all') {
             $l1Id = ($catL1 === 'face') ? 1001 : (is_numeric($catL1) ? (int)$catL1 : null);
+            if ($l1Id === null) {
+                // A synthetic group (body, hair, ...): the orphan ma_danh_muc of that group.
+                $group = $this->orphanGroups()[$catL1] ?? null;
+                return $group === null ? null : array_map('intval', array_keys($group['children']));
+            }
             if ($l1Id) {
                 $l2Cats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l1Id], ['projection' => ['ma_danh_muc' => 1]]));
                 $allIds = [$l1Id];
@@ -681,6 +805,11 @@ class AdminAiIdolController {
                     $l3Cats = iterator_to_array($this->pdo->danh_muc->find(['parent_id' => $l2Id], ['projection' => ['ma_danh_muc' => 1]]));
                     foreach ($l3Cats as $l3) {
                         $allIds[] = (int)$l3['ma_danh_muc'];
+                    }
+                }
+                if ($l1Id === self::FACE_ROOT_CATEGORY_ID) {
+                    foreach (array_keys($this->orphanGroups()['face']['children'] ?? []) as $orphanId) {
+                        $allIds[] = (int)$orphanId;
                     }
                 }
                 return array_values(array_unique($allIds));

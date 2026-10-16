@@ -70,13 +70,43 @@ final class FakeCategoryCollection
     }
 }
 
+/** Fake `san_pham`: aggregate() applies the ma_danh_muc $nin match and the per-category group the controller sends. */
+final class FakeProductCollection
+{
+    public function __construct(private array $products)
+    {
+    }
+
+    public function aggregate(array $pipeline): ArrayIterator
+    {
+        $match = $pipeline[0]['$match'] ?? [];
+        $hidden = $match['trang_thai']['$nin'] ?? [];
+        $excluded = $match['ma_danh_muc']['$nin'] ?? null;
+        $groups = [];
+        foreach ($this->products as $product) {
+            if (in_array($product['trang_thai'] ?? 'active', $hidden, true)) {
+                continue;
+            }
+            $cat = $product['ma_danh_muc'] ?? null;
+            if ($excluded !== null && in_array($cat, $excluded, true)) {
+                continue;
+            }
+            $groups[$cat] ??= ['_id' => $cat, 'path' => $product['danh_muc_day_du'] ?? null, 'count' => 0];
+            $groups[$cat]['count']++;
+        }
+        return new ArrayIterator(array_values($groups));
+    }
+}
+
 final class FakePdo
 {
     public FakeCategoryCollection $danh_muc;
+    public FakeProductCollection $san_pham;
 
-    public function __construct(array $categoryRows)
+    public function __construct(array $categoryRows, array $products = [])
     {
         $this->danh_muc = new FakeCategoryCollection($categoryRows);
+        $this->san_pham = new FakeProductCollection($products);
     }
 }
 
@@ -384,6 +414,67 @@ if ($hasTree) {
         && AdminAiIdolController::FACE_ROOT_CATEGORY_ID === 1001
         && $catalog['face']['id'] === AdminAiIdolController::FACE_ROOT_CATEGORY_ID);
 }
+
+/* Orphan products: ma_danh_muc not in danh_muc are grouped by the L1 segment of danh_muc_day_du. */
+$orphanProducts = [];
+$addProducts = static function (int $cat, string $path, int $n, string $status = 'active') use (&$orphanProducts): void {
+    for ($i = 0; $i < $n; $i++) {
+        $orphanProducts[] = ['ma_danh_muc' => $cat, 'danh_muc_day_du' => $path, 'trang_thai' => $status];
+    }
+};
+$addProducts(1001, 'Chăm Sóc Da Mặt', 4);                       // the face root itself
+$addProducts(6, 'Chăm Sóc Da Mặt -> Chống Nắng', 3);            // a real child
+$addProducts(22, 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Cơ Thể -> Sữa Tắm', 2);
+$addProducts(23, 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Cơ Thể -> Dưỡng Thể', 3);
+$addProducts(15, 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Tóc Và Da Đầu -> Dầu Gội', 4);
+$addProducts(27, 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Tóc Và Da Đầu -> Dầu Xả', 1);
+$addProducts(70, 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ', 2);
+$addProducts(80, 'Thực Phẩm Chức Năng -> Vitamin', 1);
+$addProducts(22, 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Cơ Thể -> Sữa Tắm', 5, 'inactive'); // hidden: never counted
+$orphanCats = [
+    ['ma_danh_muc' => 1001, 'ten_danh_muc' => 'Chăm Sóc Da Mặt', 'slug' => 'cham-soc-da-mat', 'parent_id' => null, 'level' => 1],
+    ['ma_danh_muc' => 6, 'ten_danh_muc' => 'Chống Nắng', 'slug' => 'chong-nang', 'parent_id' => 1001, 'level' => 2],
+];
+$orphanController = new AdminAiIdolController(new FakePdo($orphanCats, $orphanProducts));
+$orphanGroups = AdminAiIdolController::groupOrphanCategories([
+    ['ma_danh_muc' => 22, 'path' => 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Cơ Thể -> Sữa Tắm', 'count' => 2],
+    ['ma_danh_muc' => 23, 'path' => 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Cơ Thể -> Dưỡng Thể', 'count' => 3],
+    ['ma_danh_muc' => 15, 'path' => 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Tóc Và Da Đầu -> Dầu Gội', 'count' => 4],
+    ['ma_danh_muc' => 70, 'path' => 'Sức Khỏe - Làm Đẹp -> Chăm Sóc Da Mặt -> Mặt Nạ', 'count' => 2],
+    ['ma_danh_muc' => 80, 'path' => 'Thực Phẩm Chức Năng -> Vitamin', 'count' => 1],
+]);
+$runner->check('IDOL-PX-120', 'Orphan products group into body / hair / face / a slug key by the L1 segment',
+    array_keys($orphanGroups) === ['body', 'hair', 'face', array_keys($orphanGroups)[3]]
+    && str_starts_with(array_keys($orphanGroups)[3], 'grp_')
+    && $orphanGroups['body']['count'] === 5 && $orphanGroups['hair']['count'] === 4
+    && $orphanGroups['body']['label'] === 'Chăm Sóc Cơ Thể' && $orphanGroups['body']['children'][22] === ['label' => 'Sữa Tắm', 'count' => 2],
+    json_encode(array_keys($orphanGroups)));
+
+$orphanTree = AdminAiIdolController::buildCatalogTree($orphanCats, [1001 => 4, 6 => 3], $orphanGroups);
+$runner->check('IDOL-PX-121', 'Synthetic groups are roots with id null, their count and children keyed by the orphan ma_danh_muc',
+    $orphanTree['body']['id'] === null && $orphanTree['body']['label'] === 'Chăm Sóc Cơ Thể' && $orphanTree['body']['count'] === 5
+    && array_keys($orphanTree['body']['children']) === [22, 23] && $orphanTree['body']['children'][23]['id'] === 23
+    && $orphanTree['body']['children'][23]['label'] === 'Dưỡng Thể' && $orphanTree['body']['children'][23]['count'] === 3
+    && $orphanTree['hair']['count'] === 4 && !isset($orphanTree['makeup']),
+    json_encode(array_keys($orphanTree)));
+$runner->check('IDOL-PX-122', 'The face group joins the face root: its children and count grow, no second face root appears',
+    $orphanTree['face']['id'] === 1001 && $orphanTree['face']['count'] === 7 + 2
+    && isset($orphanTree['face']['children'][70]) && isset($orphanTree['face']['children'][6])
+    && count(array_filter(array_keys($orphanTree), static fn($k) => str_starts_with((string)$k, 'face'))) === 1);
+
+$expandOrphan = static fn(string $l1, string $l2 = '', string $l3 = '') => callPrivate($orphanController, 'expandCategoryIds', [$l1, $l2, $l3]);
+$runner->check('IDOL-PX-123', "expandCategoryIds('body') / ('hair') map the key to that group's orphan ma_danh_muc",
+    $expandOrphan('body') === [22, 23] && $expandOrphan('hair') === [15, 27]
+    && $expandOrphan('22', '', '') !== null && $expandOrphan('', '23') === [23],
+    json_encode([$expandOrphan('body'), $expandOrphan('hair')]));
+$runner->check('IDOL-PX-124', "'face' (and its numeric id 1001) also covers the face group's orphans",
+    $expandOrphan('face') === [1001, 6, 70] && $expandOrphan('1001') === [1001, 6, 70], json_encode($expandOrphan('face')));
+$runner->check('IDOL-PX-125', 'A group with no products keeps the old behaviour (null, then the NO_MATCH sentinel upstream)',
+    $expandOrphan('makeup') === null);
+
+$runner->check('IDOL-PX-126', 'getCatalogMetadata() totals every visible product, not just the tree roots',
+    str_contains(methodSource('AdminAiIdolController', 'getCatalogMetadata'), 'array_sum($countsByCat)')
+    && str_contains(methodSource('AdminAiIdolController', 'getCatalogMetadata'), '$this->loadOrphanGroups('));
 
 $catalogMetadataSource = methodSource('AdminAiIdolController', 'getCatalogMetadata');
 $runner->check('IDOL-PX-089', 'getCatalogMetadata() builds the tree with buildCatalogTree(), without the old level-2 catch-all, and totals every root',

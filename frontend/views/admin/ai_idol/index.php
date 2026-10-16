@@ -32,16 +32,17 @@ $wzGroups = [
 $wzGroupOptions = [];
 foreach ($wzGroups as $wzKey => [$wzLabel, $wzValue, $wzCountText]) {
     $wzNode = $wzTree[$wzKey] ?? null;
-    if (is_array($wzNode) && (int)($wzNode['id'] ?? 0) > 0) {
-        $wzValue = (string)(int)$wzNode['id'];
+    // A synthetic group (id null: products whose category is not in danh_muc) is offered by its key.
+    if (is_array($wzNode) && ((int)($wzNode['id'] ?? 0) > 0 || array_key_exists('id', $wzNode))) {
+        $wzValue = (int)($wzNode['id'] ?? 0) > 0 ? (string)(int)$wzNode['id'] : (string)$wzKey;
         $wzLabel = trim((string)($wzNode['label'] ?? '')) !== '' ? (string)$wzNode['label'] : $wzLabel;
         $wzCountText = 'Có ' . $wzNumber($wzNode['count'] ?? 0);
     }
     $wzGroupOptions[] = [$wzValue, $wzLabel, $wzCountText];
 }
 foreach ($wzTree as $wzKey => $wzNode) { // any other root the database has
-    if (!isset($wzGroups[$wzKey]) && is_array($wzNode) && (int)($wzNode['id'] ?? 0) > 0) {
-        $wzGroupOptions[] = [(string)(int)$wzNode['id'], (string)($wzNode['label'] ?? ''), 'Có ' . $wzNumber($wzNode['count'] ?? 0)];
+    if (!isset($wzGroups[$wzKey]) && is_array($wzNode) && ((int)($wzNode['id'] ?? 0) > 0 || array_key_exists('id', $wzNode))) {
+        $wzGroupOptions[] = [(int)($wzNode['id'] ?? 0) > 0 ? (string)(int)$wzNode['id'] : (string)$wzKey,(string)($wzNode['label'] ?? ''), 'Có ' . $wzNumber($wzNode['count'] ?? 0)];
     }
 }
 // [value, label, count|null]: a null count shows no "(N sản phẩm)".
