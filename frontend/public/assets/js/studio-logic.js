@@ -151,7 +151,7 @@
   }
 
   function describeLead(purpose, schedule) {
-    if (purpose === 'product_video') return 'Syna làm video sản phẩm (không nói giá)';
+    if (purpose === 'product_video') return 'Syna làm video sản phẩm (nói giá bán và ưu đãi đang chạy)';
     const sched = isObject(schedule) ? schedule : {};
     let lead = 'Syna livestream';
     const duration = Number(sched.duration);
@@ -171,7 +171,7 @@
 
   const INTENT_TAILS = Object.freeze({
     product_video: 'video tự đăng lên trang sản phẩm khi sẵn sàng.',
-    live_and_product: 'sau buổi phát, phần giới thiệu không giá tự đăng lên trang sản phẩm.',
+    live_and_product: 'sau buổi phát, phần giới thiệu kèm giá tự đăng lên trang sản phẩm.',
     live_only: 'không đăng lên trang sản phẩm.',
   });
 
