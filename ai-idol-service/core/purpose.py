@@ -30,3 +30,8 @@ def has_broadcast(purpose: str) -> bool:
 
 def publishes_to_product_page(purpose: str) -> bool:
     return purpose in (PRODUCT_VIDEO, LIVE_AND_PRODUCT)
+
+
+def video_publishes_to_product_page(video: dict | None) -> bool:
+    """By purpose, or vetted by the one-time legacy backfill (its product-page clip is price-free)."""
+    return bool((video or {}).get("product_page_backfill")) or publishes_to_product_page(purpose_of(video))

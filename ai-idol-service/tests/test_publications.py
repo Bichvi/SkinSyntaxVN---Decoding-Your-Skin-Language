@@ -480,6 +480,20 @@ class RouteTests(unittest.TestCase):
             video_id = self.video(file_path=page, product_page_file_path=page, media={"video_url": R2_URL}, **fields)
             self.assertEqual(self.get(video_id).status_code, 404)
 
+    def test_vetted_backfill_video_without_purpose_is_served_but_unvetted_is_not(self):
+        page = self.file("page.mp4", b"BACKFILL")
+        local = self.video(purpose=None, product_page_backfill=True, file_path="/gone/full.mp4", product_page_file_path=page)
+        response = self.get(local)
+        self.assertEqual((response.status_code, response.data), (200, b"BACKFILL"))
+        remote = self.video(purpose=None, product_page_backfill=True, file_path="/gone/full.mp4",
+                            product_page_file_path="/gone/page.mp4", media={"video_url": R2_URL})
+        redirected = self.get(remote)
+        self.assertEqual((redirected.status_code, redirected.headers["Location"]), (302, R2_URL))
+        bare = self.video(purpose=None, product_page_backfill=True, file_path="/gone/full.mp4")
+        self.assertEqual(self.get(bare).status_code, 404)
+        unvetted = self.video(purpose=None, file_path=page, product_page_file_path=page, media={"video_url": R2_URL})
+        self.assertEqual(self.get(unvetted).status_code, 404)
+
     def test_the_full_render_is_never_a_fallback(self):
         full = self.file("full.mp4", b"FULL-RENDER-WITH-PRICE")
         video_id = self.video(purpose="live_and_product", file_path=full, product_page_file_path=None)
