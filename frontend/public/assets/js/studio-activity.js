@@ -78,6 +78,10 @@
     if (!isObject(segment)) return null;
     const page = isObject(segment.product_page) ? segment.product_page : null;
     if (page && page.eligible === false) return { text: 'Không đăng lên trang sản phẩm (chỉ livestream).', live: false, auto: false };
+    if (page && page.price_state) {
+      const auto = isObject(segment.publication) && segment.publication.source === 'auto';
+      return { text: 'Giá trong video không còn đúng, video đã tự ẩn khỏi trang sản phẩm. Hãy tạo video mới.', live: false, auto };
+    }
     if (!('publication' in segment)) return null;
     const publication = segment.publication;
     if (!isObject(publication)) return { text: 'Chưa có bản xuất bản', live: false, auto: false };

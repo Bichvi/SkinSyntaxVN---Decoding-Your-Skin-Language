@@ -338,7 +338,7 @@ test('rtmpWarning names the chosen channels that have no RTMP and stays quiet wh
 // ------------------------------------------------------------------------ styles
 
 test('pruneStyles drops what the purpose forbids, unknown keys and duplicates', () => {
-  assert.deepEqual(M.pruneStyles(['gentle', 'closing', 'pricing', 'ingredients'], 'product_video'), ['gentle', 'ingredients']);
+  assert.deepEqual(M.pruneStyles(['gentle', 'closing', 'pricing', 'ingredients'], 'product_video'), ['gentle', 'pricing', 'ingredients']);
   assert.deepEqual(M.pruneStyles(['gentle', 'closing', 'gentle', 'nope'], 'live_only'), ['gentle', 'closing']);
   assert.deepEqual(M.pruneStyles(['closing', 'pricing'], 'live_and_product'), ['closing', 'pricing']);
   assert.deepEqual(M.pruneStyles(null, 'product_video'), []);
@@ -346,7 +346,7 @@ test('pruneStyles drops what the purpose forbids, unknown keys and duplicates', 
 
 // ---------------------------------------------------------------------- payload
 
-test('a product video payload has no schedule, no channels and no price styles', () => {
+test('a product video payload has no schedule, no channels and no live-only styles', () => {
   const payload = M.buildCampaignPayload({
     name: '  Video kem  ', productIds: ['1', '2'], purpose: 'product_video', scheduledAt: '2026-10-15T20:00',
     platforms: ['youtube'], duration: 90, contentMode: 'Scientific Review', format: '9:16', character: 'syna_3d',
@@ -366,7 +366,7 @@ test('a product video payload has no schedule, no channels and no price styles',
       avatar_mode: 'syna_3d',
       avatar_asset: '',
       background_asset: 'bg.png',
-      narration_styles: ['gentle'],
+      narration_styles: ['gentle', 'pricing'],
     },
   });
 });

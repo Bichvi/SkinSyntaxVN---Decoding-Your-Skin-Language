@@ -38,6 +38,14 @@ test('segmentPageState labels the product page from the ai_product_videos record
   assert.deepEqual(A.segmentPageState({ publication: null }), { text: 'Chưa có bản xuất bản', live: false, auto: false });
 });
 
+test('segmentPageState explains a video hidden by a stale price claim', () => {
+  const text = 'Giá trong video không còn đúng, video đã tự ẩn khỏi trang sản phẩm. Hãy tạo video mới.';
+  const page = { eligible: true, price_state: 'regular_changed' };
+  assert.deepEqual(A.segmentPageState({ product_page: page, publication: { is_published: true, source: 'auto' } }), { text, live: false, auto: true });
+  assert.deepEqual(A.segmentPageState({ product_page: page, publication: { is_published: true, source: null } }), { text, live: false, auto: false });
+  assert.equal(A.segmentPageState({ product_page: { eligible: true, price_state: null }, publication: { is_published: true } }).text, 'Đã đăng trang SP');
+});
+
 test('publishedCount counts only published publications', () => {
   assert.equal(A.publishedCount([{ publication: { is_published: true } }, { publication: { is_published: false } }, { publication: null }, {}]), 1);
   assert.equal(A.publishedCount(null), 0);

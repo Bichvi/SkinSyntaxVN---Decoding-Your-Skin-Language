@@ -184,8 +184,8 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                             <h3 class="wz-step-title" id="manualStepTitle2" tabindex="-1">Bước 2 · Mục đích &amp; lịch phát</h3>
                             <p class="wz-lead">Chọn mục đích trước vì nó quyết định phong cách dẫn nào được dùng ở bước sau.</p>
                             <div class="wz-purposes" role="radiogroup" aria-label="Chế độ phát sóng">
-                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="product_video" checked><span><strong>Video sản phẩm <em>Mặc định</em></strong><small>Không phát sóng. Không nói giá, nói kỹ thành phần và thông số. Tự hiện trên trang sản phẩm khi video sẵn sàng.</small></span></label>
-                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_and_product"><span><strong>Livestream + video sản phẩm</strong><small>Livestream được nói giá live. Phần giới thiệu không có giá tự lên trang sản phẩm sau khi phát xong.</small></span></label>
+                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="product_video" checked><span><strong>Video sản phẩm <em>Mặc định</em></strong><small>Không phát sóng. Nói giá bán và ưu đãi đang chạy, lấy từ hệ thống. Video tự ẩn khỏi trang sản phẩm khi giá đổi hoặc ưu đãi hết hạn.</small></span></label>
+                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_and_product"><span><strong>Livestream + video sản phẩm</strong><small>Livestream được nói giá, khuyến mãi và kêu gọi chốt đơn. Phần giới thiệu kèm giá tự lên trang sản phẩm sau khi phát xong và tự ẩn khi giá không còn đúng.</small></span></label>
                                 <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_only"><span><strong>Chỉ livestream</strong><small>Được nói giá live, khuyến mãi có hạn, kêu gọi chốt đơn. Không lưu video lên trang sản phẩm.</small></span></label>
                             </div>
                             <div id="manualLiveFields" hidden>
