@@ -23,6 +23,8 @@ SNAP = {
 }
 # sha256(system + "\0" + user) of the livestream prompt before purposes existed.
 LIVE_ONLY_FINGERPRINT = "4565298572e16efe4b7021a6d3cf95f92e1c67fcddd8eedef5c8c12d1b539993"
+PRICING = {"regular_price": 299000, "market_price": 350000,
+           "flash": {"flash_price": 249000, "discount_percent": 17, "end_ts": 1792256340}}
 PRODUCT_VIDEO_HEADERS = ["[Hook]", "[Problem]", "[Product Intro]", "[Specs]", "[Ingredients]", "[How to Use]", "[Wrap-up]"]
 LIVE_HEADERS = ["[Opening]", "[Hook]", "[Product Intro]", "[Key Benefits]", "[How to Use]", "[Price]", "[CTA]", "[Closing]"]
 
@@ -51,7 +53,6 @@ class PromptTests(unittest.TestCase):
         system, user = self.prompts("product_video")
         for header in PRODUCT_VIDEO_HEADERS:
             self.assertIn(header, system)
-        self.assertNotIn("Giá bán", user)
         self.assertNotIn("289000", user)
         self.assertIn("Long (90-150s)", user)
 
@@ -60,7 +61,7 @@ class PromptTests(unittest.TestCase):
         for header in LIVE_HEADERS:
             self.assertIn(header, system)
         self.assertIn("chốt đơn", system)
-        self.assertIn("Giá bán", user)
+        self.assertIn("Giá: không có dữ liệu", user)
 
     def test_council_payload_hides_price_for_product_video(self):
         payload = content_agent._script_council_payload(SNAP, "k" * 3000, "Product Intro", {}, "product_video")
@@ -70,9 +71,39 @@ class PromptTests(unittest.TestCase):
         self.assertEqual(payload["source"]["length_mode"], "Long (90-150s)")
         self.assertGreater(len(payload["source"]["knowledge"]), 2000)
 
-    def test_council_payload_keeps_price_for_livestreams(self):
-        payload = content_agent._script_council_payload(SNAP, "k", "Product Intro", {}, "live_and_product")
+    def test_council_payload_keeps_price_for_live_only(self):
+        payload = content_agent._script_council_payload(SNAP, "k", "Product Intro", {}, "live_only")
         self.assertEqual(payload["source"]["price"], 289000)
+        self.assertNotIn("price_lines", payload["source"])
+
+    def test_council_payload_carries_price_lines_for_page_purposes(self):
+        snap = dict(SNAP, pricing=PRICING)
+        for purpose in ("product_video", "live_and_product"):
+            source = content_agent._script_council_payload(snap, "k", "Product Intro", {}, purpose)["source"]
+            self.assertEqual(source["price"], "")
+            self.assertEqual(source["market_price"], "")
+            self.assertIn("Giá bán tại SkinSyntax: hai trăm chín mươi chín nghìn đồng", source["price_lines"])
+
+    def test_product_video_prompt_carries_price_lines(self):
+        system, user = content_agent.build_script_prompts(
+            dict(SNAP, pricing=PRICING), "k", "Product Intro", {}, "product_video")
+        self.assertIn("Giá bán tại SkinSyntax: hai trăm chín mươi chín nghìn đồng", user)
+        self.assertIn("Flash sale: ", user)
+        self.assertNotIn("289000", user)
+        self.assertNotIn("Tuyệt đối không nói giá", system)
+        self.assertIn("bấm vào sản phẩm để xem giá mới nhất và đặt hàng", system)
+        self.assertIn("đúng nguyên văn", system)
+
+    def test_product_video_without_pricing_says_no_price_data(self):
+        _, user = self.prompts("product_video")
+        self.assertIn("Giá: không có dữ liệu, không nhắc giá.", user)
+
+    def test_live_and_product_prompt_scopes_live_offers_to_cta(self):
+        system, user = content_agent.build_script_prompts(
+            dict(SNAP, pricing=PRICING), "k", "Product Intro", {}, "live_and_product")
+        self.assertIn("chỉ được nói ở [CTA]", system)
+        self.assertIn("Flash sale: ", user)
+        self.assertNotIn("Mọi nội dung về giá và kêu gọi mua chỉ nằm từ [Price] trở đi", system)
 
 
 class PurposeRuleTests(unittest.TestCase):

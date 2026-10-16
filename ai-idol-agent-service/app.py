@@ -33,15 +33,17 @@ def _normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
     purpose = str(raw.get("purpose") or "").strip().lower()
     purpose = purpose if purpose in PURPOSES else "live_only"
     evergreen = purpose == "product_video"
+    page_purpose = purpose in ("product_video", "live_and_product")
     return {
         "source": {
             "name": _clip(raw.get("name"), 240),
             "brand": _clip(raw.get("brand"), 120),
             "category": _clip(raw.get("category"), 160),
             "origin": _clip(raw.get("origin"), 120),
-            # Evergreen product videos must not be able to repeat a price.
-            "price": "" if evergreen else _clip(raw.get("price"), 60),
-            "market_price": "" if evergreen else _clip(raw.get("market_price"), 60),
+            # Page scripts speak only the backend-made price phrases, never raw prices.
+            "price": "" if page_purpose else _clip(raw.get("price"), 60),
+            "market_price": "" if page_purpose else _clip(raw.get("market_price"), 60),
+            "price_lines": _clip(raw.get("price_lines"), 600) if page_purpose else "",
             "ingredients": _clip(raw.get("ingredients"), 2000 if evergreen else 1000),
             "description": _clip(raw.get("description"), 1300),
             "usage": _clip(raw.get("usage"), 650),

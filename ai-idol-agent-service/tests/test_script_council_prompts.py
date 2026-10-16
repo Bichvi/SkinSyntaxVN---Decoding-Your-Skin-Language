@@ -17,8 +17,6 @@ PURPOSES = ("product_video", "live_and_product", "live_only")
 STYLE_LINE = "- Phong cách dẫn chuyện: tư vấn nhẹ nhàng, nhấn mạnh thành phần."
 # sha256 of writer_description(purpose) before narration styles existed.
 WRITER_FINGERPRINTS = {
-    "product_video": "5222b1a845a8ddef0ca7a181999f2dbd73531fe1a4dd55ba987310a6eadc7504",
-    "live_and_product": "e317a6d3111283efd76eb97699765da19f8804872bcd6022dbc5a4684f76b6fb",
     "live_only": "61c7306263f144cd2c5d9e2c41962e93eb7eb81d2efe9978f8340fa28792dfb4",
 }
 
@@ -28,7 +26,6 @@ class WriterPromptTests(unittest.TestCase):
         text = writer_description("product_video")
         for header in ("[Hook]", "[Specs]", "[Ingredients]", "[Wrap-up]"):
             self.assertIn(header, text)
-        self.assertIn("không nói giá", text)
         self.assertNotIn("Giá: {price}", text)
 
     def test_live_only_writer_keeps_eight_unlabelled_beats(self):
@@ -39,10 +36,25 @@ class WriterPromptTests(unittest.TestCase):
     def test_live_and_product_writer_marks_price_section(self):
         text = writer_description("live_and_product")
         self.assertIn("[Price]", text)
-        self.assertIn("Giá: {price}", text)
+        self.assertIn("{price_lines}", text)
+        self.assertNotIn("Giá: {price}", text)
+
+    def test_writer_product_video_uses_price_lines(self):
+        text = writer_description("product_video")
+        self.assertIn("{price_lines}", text)
+        self.assertNotIn("Giá thị trường: {market_price}", text)
+        self.assertIn("đúng nguyên văn", text)
+        self.assertIn("bấm vào sản phẩm để xem giá mới nhất và đặt hàng", text)
+        self.assertNotIn("Tuyệt đối không nói giá", text)
+
+    def test_editor_live_and_product_scope_before_cta(self):
+        text = editor_description("live_and_product")
+        self.assertIn("trước [CTA]", text)
+        self.assertIn("đúng nguyên văn", text)
+        self.assertIn("giá tham khảo thị trường", editor_description("product_video"))
 
     def test_writer_without_styles_is_unchanged(self):
-        for purpose in PURPOSES:
+        for purpose in WRITER_FINGERPRINTS:
             with self.subTest(purpose=purpose):
                 for styles in (None, ""):
                     text = writer_description(purpose) if styles is None else writer_description(purpose, styles)
@@ -87,6 +99,18 @@ class TokenBudgetTests(unittest.TestCase):
 class NormalizePayloadTests(unittest.TestCase):
     def test_unknown_purpose_is_live_only(self):
         self.assertEqual(council_app._normalize_payload({"source": {"purpose": "zzz"}})["source"]["purpose"], "live_only")
+
+    def test_payload_clips_price_lines_to_600(self):
+        for purpose in ("product_video", "live_and_product"):
+            source = council_app._normalize_payload({"source": {
+                "purpose": purpose, "price": "1", "market_price": "2", "price_lines": "p" * 900}})["source"]
+            self.assertEqual(len(source["price_lines"]), 600)
+            self.assertEqual(source["price"], "")
+            self.assertEqual(source["market_price"], "")
+
+    def test_live_only_has_no_price_lines(self):
+        source = council_app._normalize_payload({"source": {"purpose": "live_only", "price_lines": "x"}})["source"]
+        self.assertEqual(source["price_lines"], "")
 
     def test_product_video_keeps_more_source_and_drops_price(self):
         source = council_app._normalize_payload({"source": {
