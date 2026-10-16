@@ -84,6 +84,15 @@ class ResolvePricingTests(unittest.TestCase):
         c = campaign(start_at=dt.datetime(2026, 10, 16, 5, 0, tzinfo=UTC))
         self.assertIsNone(self.resolve(c)["flash"])
 
+    def test_discount_rounds_half_up_like_php(self):
+        p = self.resolve(campaign(items=[{"ma_san_pham": "1024", "flash_price": 175000}]),
+                         product={"gia_ban": 200000})
+        self.assertEqual(p["flash"]["discount_percent"], 13)
+
+    def test_null_flash_price_falls_back_to_gia_flash(self):
+        c = campaign(items=[{"ma_san_pham": " 1024 ", "flash_price": None, "gia_flash": 249000}])
+        self.assertEqual(self.resolve(c)["flash"]["flash_price"], 249000)
+
     def test_lowest_flash_wins(self):
         c2 = campaign(ma_campaign=13, items=[{"product_id": "1024", "gia_flash": 229000}])
         self.assertEqual(self.resolve(campaign(), c2)["flash"]["campaign_id"], 13)
