@@ -17,7 +17,7 @@ import requests
 
 from config import BACKGROUNDS_DIR, OUTPUT_DIR, TEMP_DIR
 from engines.audio_mixer import lead_in_seconds
-from engines.body_clip import price_from_for
+from engines.body_clip import board_price, price_from_for
 from engines.avatar_engine import _asset_path
 from engines.program_composer import probe_duration
 from engines.video_composer import build_subtitle_cues, download_product_image
@@ -96,11 +96,12 @@ def build_manifest(snapshot: dict, script: str, duration: float, timings: list, 
                 active = index
                 break
         cues.append({"start": start, "end": min(duration, end), "text": text, "ingredient": active})
-    price = snapshot.get("sale_price") or snapshot.get("price") or 0
+    price = board_price(snapshot, purpose)
     manifest = {"version": RENDER_VERSION, "format": "16:9", "duration": duration,
                 "product": {"name": str(snapshot.get("name") or "Sản phẩm")[:500], "price": max(0, int(price)),
                             # Timings are already on the video timeline (lead-in included).
-                            "price_from": price_from_for(purpose, timings, 0.0)},
+                            "price_from": price_from_for(purpose, timings, 0.0,
+                                                           has_claim=bool(snapshot.get("pricing")))},
                 "ingredients": ingredients, "cues": cues}
     if speech:
         # Speech window inside the padded audio: Syna greets before it and waves goodbye after.

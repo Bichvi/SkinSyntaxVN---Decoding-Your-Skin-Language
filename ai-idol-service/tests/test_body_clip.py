@@ -21,12 +21,20 @@ from engines.syna_engine import build_manifest
 TIMINGS = [
     {"start": 0.0, "end": 5.0, "text": "Da dầu?", "label": "hook"},
     {"start": 41.2, "end": 50.0, "text": "Giá chỉ một trăm nghìn đồng.", "label": "price"},
+    {"start": 55.0, "end": 60.0, "text": "Chốt đơn ngay.", "label": "cta"},
 ]
+PRICE_ONLY = TIMINGS[:2]
+CLOSING = TIMINGS[:2] + [{"start": 52.0, "end": 58.0, "text": "Tạm biệt.", "label": "closing"}]
+PRICING = {"regular_price": 299000, "market_price": 350000,
+           "flash": {"campaign_id": 12, "flash_price": 249000, "end_ts": 1792256340}}
 
 
 class CutPointTests(unittest.TestCase):
     def test_cut_lands_on_first_sale_section_after_the_intro(self):
         self.assertAlmostEqual(body_clip.body_cut_seconds(TIMINGS, 2.5), 43.7)
+
+    def test_cut_labels_can_be_narrowed(self):
+        self.assertAlmostEqual(body_clip.body_cut_seconds(TIMINGS, 2.5, labels=frozenset({"cta"})), 57.5)
 
     def test_no_sale_section_means_no_cut(self):
         self.assertIsNone(body_clip.body_cut_seconds(TIMINGS[:1], 2.5))
@@ -36,6 +44,30 @@ class CutPointTests(unittest.TestCase):
         self.assertIsNone(body_clip.price_from_for("product_video", TIMINGS, 2.5))
         self.assertAlmostEqual(body_clip.price_from_for("live_and_product", TIMINGS, 2.5), 43.7)
         self.assertEqual(body_clip.price_from_for("live_and_product", TIMINGS[:1], 2.5), 0.0)
+
+    def test_price_from_product_video_with_claim_is_zero(self):
+        self.assertEqual(body_clip.price_from_for("product_video", TIMINGS, 2.5, has_claim=True), 0.0)
+
+    def test_price_from_product_video_without_claim_is_none(self):
+        self.assertIsNone(body_clip.price_from_for("product_video", TIMINGS, 2.5, has_claim=False))
+
+    def test_price_from_live_and_product_is_price_section_start(self):
+        self.assertAlmostEqual(body_clip.price_from_for("live_and_product", TIMINGS, 2.5), 43.7)
+
+    def test_price_from_live_and_product_falls_back_without_price_label(self):
+        timings = [TIMINGS[0], TIMINGS[2]]
+        self.assertAlmostEqual(body_clip.price_from_for("live_and_product", timings, 2.5), 57.5)
+
+    def test_board_price_prefers_flash(self):
+        snap = {"price": 1, "sale_price": 2, "pricing": PRICING}
+        self.assertEqual(body_clip.board_price(snap, "product_video"), 249000)
+        self.assertEqual(body_clip.board_price(snap, "live_and_product"), 249000)
+        self.assertEqual(body_clip.board_price({"pricing": {**PRICING, "flash": None}}, "product_video"), 299000)
+        self.assertEqual(body_clip.board_price({"price": 5}, "product_video"), 0)
+
+    def test_board_price_live_only_unchanged(self):
+        self.assertEqual(body_clip.board_price({"price": 100, "sale_price": 80, "pricing": PRICING}, "live_only"), 80)
+        self.assertEqual(body_clip.board_price({"price": 100}, "live_only"), 100)
 
     def test_cut_command_trims_and_fades_out(self):
         with patch.object(body_clip.subprocess, "run", return_value=SimpleNamespace(returncode=0, stderr="")) as run, \
@@ -65,6 +97,23 @@ class ProductPageClipTests(unittest.TestCase):
         self.assertEqual(body_clip.product_page_clip("j", "product_video", self.video, self.audio, intro=2.5),
                          (self.video, None))
 
+    def test_live_and_product_clip_cuts_at_cta(self):
+        self.write_timings(TIMINGS)
+        with patch.object(body_clip, "cut_body_clip", side_effect=lambda src, dst, cut: dst) as cut:
+            body_clip.product_page_clip("j", "live_and_product", self.video, self.audio, intro=2.5)
+        self.assertAlmostEqual(cut.call_args[0][2], 57.5)
+
+    def test_live_and_product_clip_falls_back_to_closing(self):
+        self.write_timings(CLOSING)
+        with patch.object(body_clip, "cut_body_clip", side_effect=lambda src, dst, cut: dst) as cut:
+            body_clip.product_page_clip("j", "live_and_product", self.video, self.audio, intro=2.5)
+        self.assertAlmostEqual(cut.call_args[0][2], 54.5)
+
+    def test_live_and_product_without_cta_or_closing_is_blocked(self):
+        self.write_timings(PRICE_ONLY)
+        self.assertEqual(body_clip.product_page_clip("j", "live_and_product", self.video, self.audio, intro=2.5),
+                         (None, "missing_price_marker"))
+
     def test_live_and_product_without_price_marker_is_blocked(self):
         self.write_timings(TIMINGS[:1])
         self.assertEqual(body_clip.product_page_clip("j", "live_and_product", self.video, self.audio, intro=2.5),
@@ -76,13 +125,13 @@ class ProductPageClipTests(unittest.TestCase):
             path, reason = body_clip.product_page_clip("j", "live_and_product", self.video, self.audio, intro=2.5)
         self.assertIsNone(reason)
         self.assertTrue(path.endswith(".body.mp4"))
-        self.assertAlmostEqual(cut.call_args[0][2], 43.7)
+        self.assertAlmostEqual(cut.call_args[0][2], 57.5)
 
-    def test_review_c2_no_lead_in_cuts_exactly_at_price(self):
+    def test_review_c2_no_lead_in_cuts_exactly_at_cta(self):
         self.write_timings(TIMINGS)
         with patch.object(body_clip, "cut_body_clip", side_effect=lambda src, dst, cut: dst) as cut:
             body_clip.product_page_clip("j", "live_and_product", self.video, self.audio, intro=0.0)
-        self.assertAlmostEqual(cut.call_args[0][2], 41.2)
+        self.assertAlmostEqual(cut.call_args[0][2], 55.0)
 
     def test_review_c2_pipeline_uses_the_lead_in_the_mixer_applied(self):
         # Mixed file: trust what the mixer reports (0 for a voice-only or mismatched mix).

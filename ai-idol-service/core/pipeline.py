@@ -2,7 +2,7 @@ import os
 from bson import ObjectId
 from core.state_machine import checkpoint_job, update_job_stage, fail_job, update_job_snapshot, get_job, get_db, utcnow
 from config import AUDIO_PIPELINE_VERSION, logger
-from core.purpose import PRODUCT_VIDEO, purpose_of
+from core.purpose import LIVE_ONLY, PRODUCT_VIDEO, purpose_of
 from core.script_text import sanitize_external_retailer_mentions
 from engines.audio_mixer import lead_in_seconds
 
@@ -220,11 +220,17 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     # STAGE 7b: Audio mastering + background music. Runs on every attempt from
     # the raw render and the clean voice, so resumed jobs never double-mix.
     from engines.audio_mixer import mix_program_audio
-    from engines.body_clip import product_page_clip
+    from engines.body_clip import board_price, product_page_clip
     padded = config.get("avatar_mode") == "syna_3d"
     rendered_path = final_video_path
-    # Evergreen product videos get no price title card either.
-    mix_snapshot = {**snapshot, "price": None, "sale_price": None} if purpose == PRODUCT_VIDEO else snapshot
+    mix_snapshot = snapshot
+    if purpose != LIVE_ONLY and snapshot.get("pricing"):
+        # Board shows the resolved price (flash if running, else regular).
+        board = board_price(snapshot, purpose)
+        mix_snapshot = {**snapshot, "price": board, "sale_price": board}
+    elif purpose == PRODUCT_VIDEO:
+        # Evergreen product videos without a price claim get no price title card.
+        mix_snapshot = {**snapshot, "price": None, "sale_price": None}
     applied: dict = {}
     final_video_path = mix_program_audio(
         job_id, final_video_path, audio_path, config, mix_snapshot,
@@ -239,7 +245,7 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
 
     return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db,
                                purpose=purpose, campaign_id=job.get("campaign_id"),
-                               page_path=page_path, block_reason=block_reason)
+                               page_path=page_path, block_reason=block_reason, snapshot=snapshot)
 
 
 def applied_intro(job_id: str, config: dict, *, padded: bool, rendered: str, final: str, applied: dict) -> float:
@@ -280,10 +286,15 @@ def _render_legacy_media(job_id, audio_path, script_text, snapshot, config, arti
 
 
 def _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db, *,
-                        purpose="live_only", campaign_id=None, page_path=None, block_reason=None):
+                        purpose="live_only", campaign_id=None, page_path=None, block_reason=None, snapshot=None):
+    from core.pricing import claim_from_pricing
     from engines.video_composer import get_audio_duration
     # STAGE 8: Complete and set status to READY
     try:
+        snapshot = snapshot or {}
+        claim = None
+        if purpose != LIVE_ONLY:
+            claim = claim_from_pricing(str(snapshot.get("id") or product_id), snapshot.get("pricing"))
         # Save complete video metadata
         video_doc = {
             "job_id": job_id,
@@ -298,6 +309,8 @@ def _complete_video_job(job_id, product_id, config, final_video_path, audio_path
             # What media publishing uploads for product pages (None: never shown there).
             "product_page_file_path": page_path,
             "product_page_block_reason": block_reason,
+            # Prices the video may speak; the storefront hides it once they stop holding.
+            "price_claim": claim,
             "created_at": utcnow()
         }
         existing_video = db.ai_idol_videos.find_one({"job_id": job_id})
