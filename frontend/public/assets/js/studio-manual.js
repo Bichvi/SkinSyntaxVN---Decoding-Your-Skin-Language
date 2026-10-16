@@ -715,8 +715,8 @@
   }
 
   function lockedStylesSentence() {
-    const labels = logic.NARRATION_STYLES.filter((style) => style.price).map((style) => `“${style.label}”`);
-    return `${labels.join(' và ')} tạm tắt vì video sản phẩm không được nói giá.`;
+    const labels = logic.NARRATION_STYLES.filter((style) => style.liveOnly).map((style) => `“${style.label}”`);
+    return `${labels.join(' và ')} tạm tắt vì video sản phẩm nằm lâu dài trên trang sản phẩm.`;
   }
 
   function buildStyleGrid() {

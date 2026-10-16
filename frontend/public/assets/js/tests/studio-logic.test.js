@@ -27,6 +27,10 @@ test('NARRATION_STYLES keeps the fixed order, labels and price flags', () => {
   assert.deepEqual(L.NARRATION_STYLES.filter((s) => s.price).map((s) => s.key), ['closing', 'pricing']);
 });
 
+test('NARRATION_STYLES liveOnly flags', () => {
+  assert.deepEqual(L.NARRATION_STYLES.filter((s) => s.liveOnly).map((s) => s.key), ['closing']);
+});
+
 test('PURPOSE_LABELS and CONTENT_MODE_LABELS are exact', () => {
   assert.deepEqual({ ...L.PURPOSE_LABELS }, {
     product_video: 'Video sản phẩm',
@@ -42,8 +46,8 @@ test('PURPOSE_LABELS and CONTENT_MODE_LABELS are exact', () => {
 
 // ------------------------------------------------------- allowed / toggle styles
 
-test('allowedStyles hides the price-speaking styles only for product_video', () => {
-  assert.deepEqual(L.allowedStyles('product_video'), ['cheerful', 'gentle', 'expert', 'concise', 'detailed', 'friendly', 'ingredients']);
+test('allowedStyles hides only the live-only style for product_video', () => {
+  assert.deepEqual(L.allowedStyles('product_video'), ['cheerful', 'gentle', 'expert', 'concise', 'detailed', 'friendly', 'ingredients', 'pricing']);
   assert.deepEqual(L.allowedStyles('live_only'), STYLE_KEYS);
   assert.deepEqual(L.allowedStyles('live_and_product'), STYLE_KEYS);
 });
@@ -55,7 +59,7 @@ test('toggleStyle adds, removes and ignores a key the purpose forbids', () => {
   // the price styles are locked for product_video: current comes back untouched
   const current = ['gentle'];
   assert.equal(L.toggleStyle(current, 'closing', 'product_video'), current);
-  assert.deepEqual(L.toggleStyle(current, 'pricing', 'product_video'), ['gentle']);
+  assert.deepEqual(L.toggleStyle(current, 'pricing', 'product_video'), ['gentle', 'pricing']);
   // ...but fine when the video is also live
   assert.deepEqual(L.toggleStyle(current, 'closing', 'live_and_product'), ['gentle', 'closing']);
   // unknown keys never get in

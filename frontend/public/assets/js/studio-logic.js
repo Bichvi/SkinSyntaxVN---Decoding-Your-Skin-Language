@@ -15,16 +15,17 @@
   // ------------------------------------------------------------------ constants
 
   // Fixed display order. `price: true` = the style makes Syna speak prices.
+  // `liveOnly: true` = the style is not allowed for a product_video (it calls for an order close).
   const NARRATION_STYLES = Object.freeze([
-    Object.freeze({ key: 'cheerful', label: 'Tươi vui, dễ thương', price: false }),
-    Object.freeze({ key: 'gentle', label: 'Tư vấn nhẹ nhàng', price: false }),
-    Object.freeze({ key: 'expert', label: 'Chuyên gia khoa học', price: false }),
-    Object.freeze({ key: 'closing', label: 'Tập trung chốt sale', price: true }),
-    Object.freeze({ key: 'concise', label: 'Ngắn gọn, nhanh', price: false }),
-    Object.freeze({ key: 'detailed', label: 'Giải thích chi tiết', price: false }),
-    Object.freeze({ key: 'friendly', label: 'Thân thiện như bạn bè', price: false }),
-    Object.freeze({ key: 'ingredients', label: 'Nhấn mạnh thành phần', price: false }),
-    Object.freeze({ key: 'pricing', label: 'Nhấn mạnh giá & ưu đãi', price: true }),
+    Object.freeze({ key: 'cheerful', label: 'Tươi vui, dễ thương', price: false, liveOnly: false }),
+    Object.freeze({ key: 'gentle', label: 'Tư vấn nhẹ nhàng', price: false, liveOnly: false }),
+    Object.freeze({ key: 'expert', label: 'Chuyên gia khoa học', price: false, liveOnly: false }),
+    Object.freeze({ key: 'closing', label: 'Tập trung chốt sale', price: true, liveOnly: true }),
+    Object.freeze({ key: 'concise', label: 'Ngắn gọn, nhanh', price: false, liveOnly: false }),
+    Object.freeze({ key: 'detailed', label: 'Giải thích chi tiết', price: false, liveOnly: false }),
+    Object.freeze({ key: 'friendly', label: 'Thân thiện như bạn bè', price: false, liveOnly: false }),
+    Object.freeze({ key: 'ingredients', label: 'Nhấn mạnh thành phần', price: false, liveOnly: false }),
+    Object.freeze({ key: 'pricing', label: 'Nhấn mạnh giá & ưu đãi', price: true, liveOnly: false }),
   ]);
 
   const PURPOSE_LABELS = Object.freeze({
@@ -109,7 +110,7 @@
 
   function allowedStyles(purpose) {
     const productOnly = normalizePurpose(purpose, DEFAULT_PURPOSE) === 'product_video';
-    return NARRATION_STYLES.filter((style) => !(productOnly && style.price)).map((style) => style.key);
+    return NARRATION_STYLES.filter((style) => !(productOnly && style.liveOnly)).map((style) => style.key);
   }
 
   function toggleStyle(current, key, purpose) {
