@@ -11,26 +11,41 @@ import subprocess
 
 from config import logger
 from core.purpose import LIVE_AND_PRODUCT, LIVE_ONLY, PRODUCT_VIDEO
-from core.script_text import SALE_LABELS
+from core.script_text import PAGE_CUT_LABELS, SALE_LABELS
 
 
-def body_cut_seconds(timings: list[dict], intro: float) -> float | None:
-    """Video time where the first sale section starts, or None when the script has none."""
+def body_cut_seconds(timings: list[dict], intro: float, labels=SALE_LABELS) -> float | None:
+    """Video time where the first section in `labels` starts, or None when the script has none."""
     for item in timings:
-        if item.get("label") in SALE_LABELS:
+        if item.get("label") in labels:
             return round(float(intro) + float(item.get("start", 0.0)), 3)
     return None
 
 
-def price_from_for(purpose: str, timings: list[dict], intro: float) -> float | None:
-    """When the on-screen price may appear: never for product videos, at the sale cut for both-mode."""
+def price_from_for(purpose: str, timings: list[dict], intro: float, has_claim: bool = False) -> float | None:
+    """When the on-screen price may appear: from the start for a claimed product video, at [Price] for both-mode."""
     if purpose == PRODUCT_VIDEO:
-        return None
+        return 0.0 if has_claim else None
     if purpose == LIVE_AND_PRODUCT:
-        cut = body_cut_seconds(timings, intro)
+        cut = body_cut_seconds(timings, intro, labels=frozenset({"price"}))
+        if cut is None:
+            cut = body_cut_seconds(timings, intro)
         # Without a marker the livestream keeps its price board; the clip is blocked elsewhere.
         return 0.0 if cut is None else cut
     return 0.0
+
+
+def board_price(snapshot: dict, purpose: str) -> int:
+    """Price shown on the board: live_only keeps the old rule, other modes follow the resolved pricing."""
+    if purpose == LIVE_ONLY:
+        return int(snapshot.get("sale_price") or snapshot.get("price") or 0)
+    pricing = snapshot.get("pricing")
+    if not pricing:
+        return 0
+    flash = pricing.get("flash")
+    if flash:
+        return int(flash["flash_price"])
+    return int(pricing.get("regular_price") or 0)
 
 
 def cut_body_clip(src: str, dst: str, cut_seconds: float, fade: float = 0.6) -> str:
@@ -63,7 +78,7 @@ def product_page_clip(job_id: str, purpose: str, video_path: str, audio_path: st
             timings = json.load(handle)
     except (OSError, ValueError):
         return None, "missing_price_marker"
-    cut = body_cut_seconds(timings, intro)
+    cut = body_cut_seconds(timings, intro, labels=PAGE_CUT_LABELS)
     if cut is None:
         return None, "missing_price_marker"
     stem, _ = os.path.splitext(video_path)
