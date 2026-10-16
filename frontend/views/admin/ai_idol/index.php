@@ -109,6 +109,11 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                         </div>
                         <div class="au-chips" id="autoChips" role="group" aria-label="Mẫu gợi ý"></div>
                         <div class="studio-message" id="autoMessage" role="alert" hidden></div>
+                        <fieldset class="au-approval" id="autoApproval">
+                            <legend class="au-approval-legend">Chế độ duyệt</legend>
+                            <label class="au-approval-opt"><input type="radio" name="autoApprovalMode" value="AUTO" checked><span class="au-approval-title">⚡ Tự đăng luôn</span><span class="au-approval-hint">AI tự viết, tự sửa, dựng video và đăng</span></label>
+                            <label class="au-approval-opt"><input type="radio" name="autoApprovalMode" value="MANUAL"><span class="au-approval-title">👤 Duyệt kịch bản trước</span><span class="au-approval-hint">Dừng lại chờ bạn duyệt kịch bản</span></label>
+                        </fieldset>
                         <div class="au-actions">
                             <button type="button" class="idol-btn secondary" id="autoUndo" hidden><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Khôi phục lệnh trước</button>
                             <button type="submit" class="idol-btn primary" id="autoSubmit"><i class="bi bi-send" aria-hidden="true"></i> Giao cho Syna</button>
@@ -261,7 +266,8 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                             <div class="wz-nav">
                                 <button type="button" class="idol-btn secondary" id="manualPrev" hidden><i class="bi bi-arrow-left" aria-hidden="true"></i> Quay lại</button>
                                 <button type="button" class="idol-btn primary" id="manualNext">Tiếp tục <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-                                <button type="submit" class="idol-btn primary" id="manualCreate" hidden>Tạo chương trình</button>
+                                <button type="submit" class="idol-btn secondary wz-create" id="manualCreateReview" data-approval="MANUAL" hidden><span>👤 Tạo &amp; duyệt kịch bản</span><small>AI viết và tự sửa xong sẽ chờ bạn duyệt kịch bản rồi mới tạo video</small></button>
+                                <button type="submit" class="idol-btn primary wz-create" id="manualCreateAuto" data-approval="AUTO" hidden><span>⚡ Tạo &amp; tự đăng</span><small>Tự động hoàn toàn: AI viết, tự sửa, dựng video và đăng — không cần duyệt</small></button>
                             </div>
                         </div>
                     </form>

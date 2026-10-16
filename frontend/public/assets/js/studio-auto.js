@@ -46,6 +46,12 @@
   const form = $('autoForm');
   if (!briefEl || !form || !cardEl) return;
 
+  // Only AUTO|MANUAL ever leave the browser; anything else falls back to AUTO.
+  const approvalMode = () => {
+    const picked = form.querySelector('input[name="autoApprovalMode"]:checked');
+    return picked && picked.value === 'MANUAL' ? 'MANUAL' : 'AUTO';
+  };
+
   let previousPrompt = '';
   let currentRun = null;
   let pinnedId = '';   // run chosen by creation / open-item; studio:data must not replace it with another
@@ -115,7 +121,7 @@
       const result = await api(CREATE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief, mode: 'autopilot', idempotency_key: `studio:${Date.now()}` }),
+        body: JSON.stringify({ brief, mode: 'autopilot', approval_mode: approvalMode(), idempotency_key: `studio:${Date.now()}` }),
       });
       const id = String(result.run_id || '');
       if (!id) throw new Error('Máy chủ không trả về mã lần chạy.');
