@@ -144,18 +144,32 @@ def split_speech_sections(script: str) -> list[str]:
     return [text for _, text in split_labeled_sections(script)]
 
 
-_SPELLED_NUMBER = r"(?:mot|hai|ba|bon|tu|nam|lam|sau|bay|tam|chin|muoi|muoi|tram|chuc|linh|le)"
-_PRICE_PATTERNS = (
+# Sections from which a combined livestream/product script stops being product-page copy.
+PAGE_CUT_LABELS = frozenset({"cta", "closing"})
+
+# Folded Vietnamese number vocabulary, including the words core.vi_money emits.
+_SPELLED_NUMBER = (
+    r"(?:khong|mot|hai|ba|bon|tu|nam|lam|sau|bay|tam|chin|muoi|tram|chuc|linh|le|"
+    r"nghin|trieu|ty)"
+)
+_MONEY_PATTERNS = (
     re.compile(r"\d[\d.,]*\s*(?:k|nghin|ngan|trieu|dong|vnd|d)\b"),
     re.compile(r"\b(?:nghin|ngan|trieu|tram|chuc|muoi)\s+dong\b"),
     # TTS rules make the model spell prices out: "ba trăm năm mươi nghìn".
     re.compile(rf"\b{_SPELLED_NUMBER}\s+(?:nghin|ngan|trieu)\b"),
     re.compile(r"\bvnd\s*\d"),
     re.compile(r"\bgiam\s+(?:gia\s+)?\d+\s*%"),
-    re.compile(
-        r"\b(?:giam gia|khuyen mai|uu dai|flash sale|sale|chot don|hom nay|live ?stream|"
-        r"chi con|duy nhat|voucher|freeship|ma giam)\b"
-    ),
+    re.compile(rf"\b(?:\d+(?:[.,]\d+)?|{_SPELLED_NUMBER}(?:\s+{_SPELLED_NUMBER})*)\s+phan\s+tram\b"),
+)
+_ALWAYS_BANNED = re.compile(
+    r"\b(?:hom nay|toi nay|ngay mai|live ?stream|chot don|chi con|duy nhat|voucher|freeship|ma giam)\b"
+)
+_FLASH_ONLY = re.compile(r"\b(?:flash sale|sale|khuyen mai|uu dai|giam gia|co han|ket thuc|sap het)\b")
+_MAGNITUDE = r"(?:tram|nghin|trieu|ty|muoi|linh)"
+_PHRASE_MARK = "\x00"
+# A removed valid phrase glued to more number words is a different amount, not the valid one.
+_EXTENDED_AMOUNT = re.compile(
+    rf"\b{_MAGNITUDE}\s+{_PHRASE_MARK}|{_PHRASE_MARK}\s*(?:{_SPELLED_NUMBER}\s+)*{_MAGNITUDE}\b"
 )
 
 
@@ -165,13 +179,46 @@ def _fold(text: str) -> str:
     return "".join(ch for ch in unicodedata.normalize("NFD", lowered) if unicodedata.category(ch) != "Mn")
 
 
-def find_price_mentions(text: str) -> list[str]:
-    """Money and time-limited promotion phrases, accent-insensitive; [] when the text is evergreen."""
-    folded = _fold(text)
-    found: list[str] = []
-    for pattern in _PRICE_PATTERNS:
-        found.extend(match.group(0) for match in pattern.finditer(folded))
-    return found
+def _fold_speech(text: str) -> str:
+    """Folded text with the "ngàn" spelling of thousand mapped onto "nghìn"."""
+    return re.sub(r"\bngan\b", "nghin", _fold(text))
+
+
+def _remove_valid_phrases(folded: str, phrases: dict[str, str]) -> str:
+    """Replace each backend-made phrase with a marker; money phrases may omit the trailing "đồng"."""
+    patterns = []
+    for phrase in phrases.values():
+        core = _fold_speech(phrase).strip()
+        optional_unit = ""
+        if core.endswith(" dong"):
+            core, optional_unit = core[: -len(" dong")], r"(?:\s+dong)?"
+        patterns.append(rf"(?<!\w){re.escape(core)}{optional_unit}(?!\w)")
+    for pattern in sorted(patterns, key=len, reverse=True):
+        folded = re.sub(pattern, _PHRASE_MARK, folded)
+    return folded
+
+
+def find_price_violations(text: str, pricing: dict | None) -> list[str]:
+    """Vietnamese error messages for price talk that is not an exact backend phrase; [] when valid."""
+    from core.vi_money import price_phrases
+
+    phrases = price_phrases(pricing)
+    remaining = _remove_valid_phrases(_fold_speech(text), phrases)
+    errors: list[str] = []
+    mentions = [m.group(0) for pattern in _MONEY_PATTERNS for m in pattern.finditer(remaining)]
+    mentions += [m.group(0) for m in _EXTENDED_AMOUNT.finditer(remaining)]
+    if mentions:
+        if phrases:
+            errors.append("Con số giá không khớp dữ liệu, chỉ dùng đúng các cụm: " + "; ".join(phrases.values()))
+        else:
+            errors.append("Con số giá không khớp dữ liệu, sản phẩm không có dữ liệu giá nên không được nói "
+                          "bất kỳ con số tiền hoặc phần trăm nào")
+    banned = [m.group(0) for m in _ALWAYS_BANNED.finditer(remaining)]
+    if banned:
+        errors.append("Không được dùng các từ: " + ", ".join(dict.fromkeys(banned)))
+    if not (pricing or {}).get("flash") and _FLASH_ONLY.search(remaining):
+        errors.append("Không có chương trình ưu đãi đang chạy, không được nói ưu đãi, khuyến mãi, sale, giảm giá hay có hạn")
+    return errors
 
 
 def clean_script_for_speech(script: str) -> str:

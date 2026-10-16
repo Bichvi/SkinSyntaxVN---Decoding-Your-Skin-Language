@@ -4,9 +4,10 @@ from config import logger
 from core.text_budget import clip_text
 from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO
 from core.script_text import (
-    SALE_LABELS, find_external_retailer_mentions, find_price_mentions, sanitize_external_retailer_mentions,
+    PAGE_CUT_LABELS, find_external_retailer_mentions, find_price_violations, sanitize_external_retailer_mentions,
     split_labeled_sections,
 )
+from core.vi_money import price_phrases
 
 # Forbidden marketing claims for cosmetic products in Vietnam
 FORBIDDEN_PATTERNS = [
@@ -37,7 +38,27 @@ def check_blacklist(script: str) -> str:
             return f"Vi phạm từ khóa cấm hoặc thổi phồng hiệu quả: '{pattern}'"
     return ""
 
-def validate_script_via_llm(script: str, snapshot: dict) -> tuple[bool, str]:
+def price_data_lines(snapshot: dict) -> str:
+    """DATA-block price lines made of the exact phrases the script may speak."""
+    phrases = price_phrases(snapshot.get("pricing"))
+    if not phrases:
+        return "- Giá: không có dữ liệu, không nhắc giá."
+    lines = []
+    if "regular" in phrases:
+        lines.append(f"- Giá bán tại SkinSyntax: {phrases['regular']}")
+    if "market" in phrases:
+        lines.append(f"- Giá tham khảo thị trường: {phrases['market']}")
+    if "flash" in phrases:
+        flash_parts = [phrases[key] for key in ("flash", "discount", "deadline") if key in phrases]
+        lines.append("- Flash sale: " + ", ".join(flash_parts))
+    return "\n".join(lines)
+
+
+def _is_page_purpose(purpose: str) -> bool:
+    return purpose in (PRODUCT_VIDEO, LIVE_AND_PRODUCT)
+
+
+def validate_script_via_llm(script: str, snapshot: dict, purpose: str = LEGACY_PURPOSE) -> tuple[bool, str]:
     """Use LLM as an auditor to check for hallucinated properties or overclaims."""
     llm = LLMProvider()
     
@@ -47,7 +68,7 @@ Bạn là một kiểm duyệt viên quảng cáo mỹ phẩm và dược mỹ p
 Hãy rà soát theo các tiêu chí:
 1. Có tự ý thổi phồng hiệu quả điều trị (như cam kết trị khỏi hoàn toàn, trị mụn tận gốc) không?
 2. Có tuyên bố hiệu quả thời gian nhanh bất hợp lý không?
-3. Có nói sai hoạt chất, sai giá tiền, sai xuất xứ so với thông tin sản phẩm gốc không?
+3. Có nói sai hoạt chất, sai giá tiền, sai xuất xứ so với thông tin sản phẩm gốc không? Các cụm giá, giá tham khảo thị trường và flash sale ghi trong thông tin sản phẩm gốc là đúng, không đánh FAIL.
 
 Nếu có vi phạm, hãy trả về kết quả định dạng:
 FAIL: [Mô tả chi tiết các điểm vi phạm cần chỉnh sửa]
@@ -58,11 +79,13 @@ PASS
 Tên nơi bán bắt buộc là SkinSyntax. Tên sàn hoặc nhà bán lẻ bên ngoài không được xuất hiện trong lời thoại.
 """
 
+    price_line = (price_data_lines(snapshot) if _is_page_purpose(purpose)
+                  else f"- Giá bán: {snapshot.get('price')} đồng")
     user_prompt = f"""
 THÔNG TIN SẢN PHẨM GỐC:
 - Tên sản phẩm: {snapshot.get('name')}
 - Thương hiệu: {snapshot.get('brand')}
-- Giá bán: {snapshot.get('price')} đồng
+{price_line}
 - Thành phần: {clip_text(snapshot.get('ingredients'), 900)}
 - Công dụng thật: {clip_text(snapshot.get('description'), 1200)}
 - Cách dùng: {clip_text(snapshot.get('usage'), 650)}
@@ -97,37 +120,44 @@ def check_purpose_rules(script: str, snapshot: dict, purpose: str) -> list[str]:
         return []
     sections = split_labeled_sections(script)
     if purpose == LIVE_AND_PRODUCT:
-        if not any(label in SALE_LABELS for label, _ in sections):
+        if not any(label in PAGE_CUT_LABELS for label, _ in sections):
             # Unrecognised headers: keep the livestream alive; the product-page clip is
             # withheld downstream (missing_price_marker) instead of failing the whole show.
             return []
-        evergreen = []
+        page_copy = []
         for label, text in sections:
-            if label in SALE_LABELS:
+            if label in PAGE_CUT_LABELS:
                 break
-            evergreen.append(text)
-        scope, where = " ".join(evergreen), "trước phần [Price]"
+            page_copy.append(text)
+        scope = " ".join(page_copy)
     else:
-        scope, where = " ".join(text for _, text in sections), "trong video sản phẩm"
-    errors = []
-    mentions = find_price_mentions(scope)
-    if mentions:
-        errors.append(f"Không được nói giá hoặc khuyến mãi {where}: {', '.join(dict.fromkeys(mentions))}")
+        scope = " ".join(text for _, text in sections)
+    errors = find_price_violations(scope, snapshot.get("pricing"))
     if (purpose == PRODUCT_VIDEO and str(snapshot.get("ingredients") or "").strip()
             and not any(label == "ingredients" and text.strip() for label, text in sections)):
         errors.append("Thiếu phần [Ingredients] dù sản phẩm có dữ liệu thành phần")
     return errors
 
 
+_PRICE_RULES = (
+    "Chỉ được nói giá bằng đúng nguyên văn các cụm giá trong phần thông tin sản phẩm, không tự đổi số, không viết số hay ký hiệu tiền. "
+    "Không có dòng Flash sale thì không được dùng các từ ưu đãi, khuyến mãi, sale, giảm, có hạn. "
+    "Không bao giờ nói hôm nay, tối nay, ngày mai, livestream, chốt đơn, chỉ còn, duy nhất, voucher, mã giảm. "
+    "Gọi giá thị trường là giá tham khảo thị trường, không gọi là giá gốc."
+)
+
+
 def _revision_structure(purpose: str) -> str:
     if purpose == PRODUCT_VIDEO:
         return ("CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 7 phần, mỗi phần mở đầu bằng một dòng tiêu đề riêng: "
                 "[Hook], [Problem], [Product Intro], [Specs], [Ingredients], [How to Use], [Wrap-up]. "
-                "Tuyệt đối không nói giá, khuyến mãi, chốt đơn, hôm nay, livestream.")
+                "Giá chỉ được nói ở [Product Intro] hoặc [Wrap-up]; [Wrap-up] mời bấm vào sản phẩm để xem giá mới nhất và đặt hàng. "
+                + _PRICE_RULES)
     if purpose == LIVE_AND_PRODUCT:
         return ("CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 8 phần, mỗi phần mở đầu bằng một dòng tiêu đề riêng: "
                 "[Opening], [Hook], [Product Intro], [Key Benefits], [How to Use], [Price], [CTA], [Closing]. "
-                "Trước [Price] không nhắc giá, khuyến mãi, chốt đơn, hôm nay, livestream.")
+                "Phần [Price] dùng đúng các cụm giá; ưu đãi riêng của livestream chỉ được nói ở [CTA]. "
+                + _PRICE_RULES)
     return "CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 8 phần (Opening, Hook, Product Intro, Key Benefits, How to Use, Price, CTA, Closing)."
 
 
@@ -145,7 +175,7 @@ def validate_and_revise_script(script: str, snapshot: dict, knowledge: str, cont
             logger.warning(f"[SCRIPT-VALIDATOR] Blacklist hit: {blacklist_err}")
             is_pass, feedback = False, blacklist_err
         else:
-            is_pass, feedback = validate_script_via_llm(current_script, snapshot)
+            is_pass, feedback = validate_script_via_llm(current_script, snapshot, purpose)
             
         if is_pass:
             logger.info("[SCRIPT-VALIDATOR] Script passed validation checks!")
@@ -166,7 +196,8 @@ QUY TẮC PHÁT ÂM TTS (RẤT QUAN TRỌNG):
 
 """ + _revision_structure(purpose) + "\n"
             headed = purpose in (PRODUCT_VIDEO, LIVE_AND_PRODUCT)
-            price_line = "" if purpose == PRODUCT_VIDEO else f"- Giá bán: {snapshot.get('price')} đồng\n"
+            price_line = (price_data_lines(snapshot) if headed
+                          else f"- Giá bán: {snapshot.get('price')} đồng") + "\n"
             keep = ("giữ nguyên các dòng tiêu đề trong ngoặc vuông" if headed
                     else "giữ cấu trúc 8 phần liền mạch")
             user_prompt = f"""

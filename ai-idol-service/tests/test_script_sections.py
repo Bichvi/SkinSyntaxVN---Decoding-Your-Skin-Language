@@ -7,7 +7,7 @@ SERVICE_DIR = os.path.dirname(os.path.dirname(__file__))
 if SERVICE_DIR not in sys.path:
     sys.path.insert(0, SERVICE_DIR)
 
-from core.script_text import SALE_LABELS, find_price_mentions, split_labeled_sections, split_speech_sections
+from core.script_text import SALE_LABELS, find_price_violations, split_labeled_sections, split_speech_sections
 
 
 class LabeledSectionTests(unittest.TestCase):
@@ -48,29 +48,30 @@ class LabeledSectionTests(unittest.TestCase):
         self.assertEqual(SALE_LABELS, frozenset({"price", "cta", "closing"}))
 
 
-class PriceMentionTests(unittest.TestCase):
+class PriceViolationTests(unittest.TestCase):
     def test_numeric_prices_are_found(self):
-        self.assertTrue(find_price_mentions("chỉ 199k thôi"))
-        self.assertTrue(find_price_mentions("199.000 đồng"))
-        self.assertTrue(find_price_mentions("giá 250.000đ"))
+        self.assertTrue(find_price_violations("chỉ 199k thôi", None))
+        self.assertTrue(find_price_violations("199.000 đồng", None))
+        self.assertTrue(find_price_violations("giá 250.000đ", None))
 
     def test_spelled_out_prices_are_found(self):
-        self.assertTrue(find_price_mentions("chỉ một trăm chín mươi chín nghìn đồng"))
+        self.assertTrue(find_price_violations("chỉ một trăm chín mươi chín nghìn đồng", None))
 
     def test_promotion_words_are_found_with_or_without_accents(self):
-        self.assertTrue(find_price_mentions("chot don ngay"))
-        self.assertTrue(find_price_mentions("Flash sale hôm nay"))
-        self.assertTrue(find_price_mentions("đang có khuyến mãi"))
+        self.assertTrue(find_price_violations("chot don ngay", None))
+        self.assertTrue(find_price_violations("Flash sale hôm nay", None))
+        self.assertTrue(find_price_violations("đang có khuyến mãi", None))
 
     def test_review_i5_price_forms_are_found(self):
-        self.assertTrue(find_price_mentions("chỉ 350.000 ₫ thôi"))
-        self.assertTrue(find_price_mentions("chỉ ba trăm năm mươi nghìn"))
-        self.assertTrue(find_price_mentions("giá VND 350.000"))
-        self.assertTrue(find_price_mentions("đang giảm 20% cho bạn"))
+        self.assertTrue(find_price_violations("chỉ 350.000 ₫ thôi", None))
+        self.assertTrue(find_price_violations("chỉ ba trăm năm mươi nghìn", None))
+        self.assertTrue(find_price_violations("giá VND 350.000", None))
+        self.assertTrue(find_price_violations("đang giảm 20% cho bạn", None))
 
     def test_skincare_language_is_not_a_price(self):
-        self.assertEqual(find_price_mentions("Niacinamide 10 phần trăm"), [])
-        self.assertEqual(find_price_mentions("Kẽm hoạt động đồng thời với dung tích 30 mililít"), [])
+        # Spec 4.3 step 2: any "<number> phần trăm" outside the backend phrases is a price claim.
+        self.assertTrue(find_price_violations("Niacinamide 10 phần trăm", None))
+        self.assertEqual(find_price_violations("Kẽm hoạt động đồng thời với dung tích 30 mililít", None), [])
 
 
 if __name__ == "__main__":

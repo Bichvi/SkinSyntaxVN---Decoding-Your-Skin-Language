@@ -88,10 +88,11 @@ class PurposeRuleTests(unittest.TestCase):
         self.assertEqual(script_validator.check_purpose_rules("[Hook]\nDa dầu?", {"ingredients": ""}, "product_video"), [])
 
     def test_live_and_product_allows_price_only_after_price_header(self):
-        ok = "[Hook]\nDa dầu?\n[Price]\nChỉ một trăm nghìn đồng."
-        bad = "[Hook]\nChỉ một trăm nghìn đồng!\n[Price]\nGiá tốt."
-        self.assertEqual(script_validator.check_purpose_rules(ok, SNAP, "live_and_product"), [])
-        self.assertTrue(script_validator.check_purpose_rules(bad, SNAP, "live_and_product"))
+        snap = {**SNAP, "pricing": {"regular_price": 289000, "market_price": None, "flash": None}}
+        ok = "[Hook]\nDa dầu?\n[Price]\nChỉ hai trăm tám mươi chín nghìn đồng.\n[CTA]\nĐặt ngay hôm nay."
+        bad = "[Hook]\nChỉ một trăm nghìn đồng!\n[Price]\nGiá tốt.\n[CTA]\nĐặt ngay."
+        self.assertEqual(script_validator.check_purpose_rules(ok, snap, "live_and_product"), [])
+        self.assertTrue(script_validator.check_purpose_rules(bad, snap, "live_and_product"))
 
     def test_review_i1_unlabelled_livestream_script_is_not_failed(self):
         # No recognised [Price] section: the livestream must still render; the product-page
@@ -115,7 +116,7 @@ class PurposeRuleTests(unittest.TestCase):
                 priced, SNAP, "", "Product Intro", {}, purpose="product_video"
             )
         self.assertFalse(ok)
-        self.assertIn("199k", feedback)
+        self.assertIn("Con số giá không khớp dữ liệu", feedback)
 
 
 class ManualApprovalRuleTests(unittest.TestCase):
