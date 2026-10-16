@@ -7,6 +7,7 @@ import wave
 from providers.tts_provider import TTSProvider
 from config import AUDIO_DIR, SECTION_PAUSE_SECONDS, logger
 from core.script_text import split_labeled_sections
+from core.tts_normalize import normalize_for_tts
 
 
 def _audio_duration(path: str) -> float:
@@ -61,7 +62,7 @@ def generate_voice_audio(job_id: str, script_text: str, config: dict) -> str:
     try:
         for index, section in enumerate(sections):
             part_path = os.path.join(AUDIO_DIR, f"voice_{job_id}.part{index:02d}.wav")
-            if not tts.generate(section, part_path):
+            if not tts.generate(normalize_for_tts(section), part_path):
                 raise RuntimeError(f"TTS failed for speech section {index + 1}")
             part_paths.append(part_path)
             part_duration = _audio_duration(part_path)
