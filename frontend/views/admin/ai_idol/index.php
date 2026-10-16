@@ -11,7 +11,7 @@ $studioAssetUrl = static function (string $path) use ($studioAssets): string {
 // Load order matters: pure logic -> shared core -> manual wizard -> auto flow -> activity panel.
 $studioScripts = ['ai-idol-approval.js', 'studio-logic.js', 'studio-core.js', 'studio-manual.js', 'studio-auto.js', 'studio-activity.js'];
 $studioCsrf = (string)($csrfToken ?? (class_exists('AdminAiIdolController', false) ? AdminAiIdolController::getCsrfToken() : ''));
-$studioJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP;
+$studioJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE;
 
 // Tab Thủ công (#manualFlow): the filter labels, values and counts of the product filters. $filterCounts and
 // $catalogTree come from AdminAiIdolController::index(); the fallbacks are the counts the old page showed.
@@ -286,7 +286,9 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
     </div>
 </main>
 <script>
-window.AI_IDOL_CSRF = <?= json_encode($studioCsrf) ?>;
+window.AI_IDOL_CSRF = <?= json_encode($studioCsrf, $studioJsonFlags) ?>;
+</script>
+<script>
 window.__IDOL_CATALOG__ = <?= json_encode($catalogTree ?? [], $studioJsonFlags) ?>;
 window.__IDOL_FILTER_COUNTS__ = <?= json_encode($filterCounts ?? [], $studioJsonFlags) ?>;
 </script>

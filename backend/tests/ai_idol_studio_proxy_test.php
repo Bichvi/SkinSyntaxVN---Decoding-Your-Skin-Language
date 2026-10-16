@@ -444,4 +444,115 @@ $runner->check('IDOL-PX-075', "approvePlatform() takes 'by' from the session lik
 $runner->check('IDOL-PX-076', 'getProducts() reuses expandCategoryIds()',
     str_contains(methodSource('AdminAiIdolController', 'getProducts'), 'expandCategoryIds('));
 
+/* ---------------------------------------------------------------- CSRF on every mutating proxy handler (I2) */
+
+foreach (['createCampaign', 'createAgentRun', 'proxyAgentMutation', 'uploadAsset', 'retryCampaign', 'cancelCampaign',
+          'rescheduleCampaign', 'approveScript', 'videoVisibility'] as $method) {
+    $body = methodSource('AdminAiIdolController', $method);
+    $adminAt = strpos($body, '$this->checkAdmin()');
+    $csrfAt = strpos($body, '$this->verifyCsrf(');
+    $runner->check("IDOL-PX-120-{$method}", "{$method}() calls verifyCsrf() after checkAdmin() and before callFlaskAPI()",
+        $body !== '' && $adminAt !== false && $csrfAt !== false && $csrfAt > $adminAt
+        && $csrfAt < (int)strpos($body, $method === 'uploadAsset' ? '$_POST' : 'callFlaskAPI('));
+}
+
+/* ---------------------------------------------------------------- product-page eligibility (I1) */
+
+class FakeVideoCursorCollection
+{
+    public array $lastFilter = [];
+
+    public function __construct(private array $rows)
+    {
+    }
+
+    public function createIndex($keys): void
+    {
+    }
+
+    public function findOne($filter = [])
+    {
+        foreach ($this->rows as $row) {
+            if ((string)$row['_id'] === (string)($filter['_id'] ?? '')) {
+                return $row;
+            }
+        }
+        return null;
+    }
+
+    public function find($filter = [], $options = []): ArrayIterator
+    {
+        $this->lastFilter = $filter;
+        $rows = $this->rows;
+        if (isset($filter['_id']['$in'])) {
+            $wanted = array_map('strval', $filter['_id']['$in']);
+            $rows = array_filter($rows, static fn(array $r): bool => in_array((string)$r['_id'], $wanted, true));
+        }
+        return new ArrayIterator(array_values($rows));
+    }
+}
+
+final class FakeProductVideoDb
+{
+    public FakeVideoCursorCollection $ai_product_videos;
+    public FakeVideoCursorCollection $ai_idol_videos;
+
+    public function __construct(array $publications, array $videos)
+    {
+        $this->ai_product_videos = new FakeVideoCursorCollection($publications);
+        $this->ai_idol_videos = new FakeVideoCursorCollection($videos);
+    }
+}
+
+if (class_exists('MongoDB\BSON\ObjectId')) {
+    require_once $projectRoot . '/backend/app/models/ProductVideo.php';
+    $oid = static fn(string $hex): MongoDB\BSON\ObjectId => new MongoDB\BSON\ObjectId($hex);
+    $vProduct = str_repeat('a', 24);
+    $vBoth = str_repeat('b', 24);
+    $vLive = str_repeat('c', 24);
+    $vLegacy = str_repeat('d', 24);
+    $vMissing = str_repeat('e', 24);
+    $pub = static fn(string $id, string $videoId): array => [
+        '_id' => $oid($id), 'video_id' => $videoId, 'is_published' => true, 'associated_product_ids' => ['111'],
+    ];
+    $db = new FakeProductVideoDb(
+        [
+            $pub(str_repeat('1', 24), $vProduct), $pub(str_repeat('2', 24), $vBoth), $pub(str_repeat('3', 24), $vLive),
+            $pub(str_repeat('4', 24), $vLegacy), $pub(str_repeat('5', 24), $vMissing), $pub(str_repeat('6', 24), 'not-an-object-id'),
+        ],
+        [
+            ['_id' => $oid($vProduct), 'purpose' => 'product_video'],
+            ['_id' => $oid($vBoth), 'purpose' => 'live_and_product'],
+            ['_id' => $oid($vLive), 'purpose' => 'live_only'],
+            ['_id' => $oid($vLegacy)],
+        ]
+    );
+    $pvModel = new ProductVideo($db);
+    $visible = array_column($pvModel->getPublishedVideosByProductId('111'), 'video_id');
+    $runner->check('IDOL-PX-130', 'getPublishedVideosByProductId() keeps product_video and live_and_product only',
+        $visible === [$vProduct, $vBoth], json_encode($visible));
+    $inFilter = $db->ai_idol_videos->lastFilter['_id']['$in'] ?? [];
+    $runner->check('IDOL-PX-131', 'The source videos are loaded with one $in query over valid ObjectIds',
+        count($inFilter) === 5 && $inFilter[0] instanceof MongoDB\BSON\ObjectId);
+
+    $publishDb = new FakeProductVideoDb([], [['_id' => $oid($vLive), 'purpose' => 'live_only'], ['_id' => $oid($vLegacy)]]);
+    $publishModel = new ProductVideo($publishDb);
+    foreach ([$vLive, $vLegacy] as $n => $ineligibleId) {
+        $res = $publishModel->publishVideo(['video_id' => $ineligibleId, 'associated_product_ids' => ['111']]);
+        $runner->check("IDOL-PX-132-{$n}", 'publishVideo() rejects a livestream (live_only / no purpose) video with the Vietnamese message',
+            ($res['ok'] ?? true) === false && ($res['message'] ?? '') === 'Video này là bản livestream có nói giá nên không thể đăng lên trang sản phẩm.',
+            json_encode($res, JSON_UNESCAPED_UNICODE));
+    }
+}
+$runner->check('IDOL-PX-133', 'getManageableVideos() exposes product_page_eligible per video',
+    str_contains($productVideoModelSource, "'product_page_eligible' => self::purposePublishesToProductPage("));
+$apvScript = source($projectRoot . '/frontend/public/assets/js/admin-product-videos.js');
+$runner->check('IDOL-PX-134', 'The product-video page disables publishing for ineligible videos with the explanation',
+    str_contains($apvScript, 'product_page_eligible') && str_contains($apvScript, "apvPubSubmit').disabled = !eligible")
+    && str_contains($apvScript, 'Video này là bản livestream có nói giá'));
+$studioView = source($projectRoot . '/frontend/views/admin/ai_idol/index.php');
+$runner->check('IDOL-PX-135', 'Studio and product-video pages JSON flags substitute invalid UTF-8; the CSRF token has its own script block',
+    str_contains($studioView, 'JSON_INVALID_UTF8_SUBSTITUTE') && str_contains($productVideosView, 'JSON_INVALID_UTF8_SUBSTITUTE')
+    && preg_match('~<script>\s*window\.AI_IDOL_CSRF.*?</script>\s*<script>\s*window\.__IDOL_CATALOG__~s', $studioView) === 1);
+
 exit($runner->summary());

@@ -402,6 +402,9 @@
     return inflight;
   }
 
+  const INELIGIBLE_MSG = 'Video này là bản livestream có nói giá nên không thể đăng lên trang sản phẩm.';
+  const isEligible = (v) => !v || v.product_page_eligible !== false;
+
   function cardHtml(v) {
     const isReady = v.render_status === 'READY';
     const isPublished = Boolean(v.is_published);
@@ -416,6 +419,9 @@
     const renderBadge = isReady
       ? '<span class="apv-badge ready"><i class="bi bi-check2" aria-hidden="true"></i> Sẵn sàng</span>'
       : '<span class="apv-badge pending"><i class="bi bi-arrow-repeat apv-spin" aria-hidden="true"></i> Đang render</span>';
+    const ineligibleBadge = isEligible(v)
+      ? ''
+      : `<span class="apv-badge pending" title="${escapeHtml(INELIGIBLE_MSG)}"><i class="bi bi-slash-circle" aria-hidden="true"></i> Có nói giá</span>`;
     const autoBadge = isAutoSource(v)
       ? '<span class="apv-badge auto" title="Hệ thống tự đăng video này khi render xong"><i class="bi bi-robot" aria-hidden="true"></i> Tự động</span>'
       : '';
@@ -438,7 +444,7 @@
         <span class="apv-card-duration">${escapeHtml(formatDuration(v.duration))}</span>
       </div>
       <div class="apv-card-body">
-        <div class="apv-card-tags">${publishedBadge}${renderBadge}${autoBadge}${rewardBadge}</div>
+        <div class="apv-card-tags">${publishedBadge}${renderBadge}${ineligibleBadge}${autoBadge}${rewardBadge}</div>
         <h3 class="apv-card-title" title="${escapeHtml(title)}">${escapeHtml(title)}</h3>
         <div class="apv-card-campaign"><i class="bi bi-collection-play" aria-hidden="true"></i> <span>${escapeHtml(v.campaign_name || 'Chương trình AI Idol')}</span></div>
         <div class="apv-card-meta">
@@ -539,6 +545,10 @@
       : '<i class="bi bi-dash-circle" aria-hidden="true"></i> Chưa xuất bản (nháp)';
     $('apvPubAuto').hidden = !isAutoSource(video);
     $('apvPubUnpublish').hidden = !video.is_published;
+    const eligible = isEligible(video);
+    $('apvPubSubmit').disabled = !eligible;
+    $('apvPubSubmit').title = eligible ? '' : INELIGIBLE_MSG;
+    if (!eligible) showBox($('apvPubAlert'), INELIGIBLE_MSG);
 
     const ids = (video.associated_product_ids || []).map(String).filter(Boolean);
     if (!ids.length && video.default_product_id) ids.push(String(video.default_product_id));
@@ -557,6 +567,7 @@
   $('apvPubSubmit').addEventListener('click', async () => {
     const video = pubVideo;
     if (!video) return;
+    if (!isEligible(video)) { showBox($('apvPubAlert'), INELIGIBLE_MSG); return; }
     const alertBox = $('apvPubAlert');
     const ids = Array.from(pubPicker.selected);
     if (!ids.length) { showBox(alertBox, 'Vui lòng chọn ít nhất một sản phẩm liên kết để xuất bản video.'); return; }

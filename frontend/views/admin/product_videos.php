@@ -23,7 +23,7 @@ $apvConfig = [
     'products' => $apvProducts,
     'placeholder' => BASE_URL . '/assets/images/placeholder.svg',
 ];
-$apvJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+$apvJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE;
 ?>
 <link rel="stylesheet" href="<?= htmlspecialchars($apvAssetUrl('css/admin-product-videos.css'), ENT_QUOTES, 'UTF-8') ?>">
 <main class="apv" id="adminProductVideos">

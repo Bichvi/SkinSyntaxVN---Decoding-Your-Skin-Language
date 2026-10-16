@@ -184,6 +184,17 @@ class CampaignPublishTests(PublisherTestCase):
         self.assertNotIn("product_page_ready_at", self.stored(waiting))
         self.assertNotIn("product_page_ready_at", self.stored(exhausted))
 
+    def test_retry_lists_each_successfully_uploaded_clip_on_its_product_page(self):
+        clip = self.file("c.mp4")
+        ok = self.video(purpose="product_video", product_page_file_path=clip, file_path=clip)
+        with patch.dict(os.environ, R2), patch.object(media_publisher, "auto_publish_video") as listed:
+            self.assertEqual(media_publisher.retry_pending(client=FakeS3()), 1)
+        listed.assert_called_once_with(ok)
+        self.video(purpose="product_video", product_page_file_path=clip, file_path=clip)
+        with patch.dict(os.environ, R2), patch.object(media_publisher, "auto_publish_video") as listed:
+            self.assertEqual(media_publisher.retry_pending(client=FakeS3(fail="boom")), 0)
+        listed.assert_not_called()
+
 
 class BackfillTests(PublisherTestCase):
     def test_dry_run_writes_nothing(self):

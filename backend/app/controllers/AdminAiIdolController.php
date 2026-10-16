@@ -241,6 +241,7 @@ class AdminAiIdolController {
     public function createCampaign(): void {
         $this->checkAdmin();
         $input = json_decode(file_get_contents('php://input'), true);
+        $this->verifyCsrf(is_array($input) ? $input : null);
         header('Content-Type: application/json; charset=utf-8');
         if (!is_array($input)) {
             http_response_code(400);
@@ -254,6 +255,7 @@ class AdminAiIdolController {
     public function createAgentRun(): void {
         $this->checkAdmin();
         $input = json_decode(file_get_contents('php://input'), true);
+        $this->verifyCsrf(is_array($input) ? $input : null);
         header('Content-Type: application/json; charset=utf-8');
         if (!is_array($input)) {
             http_response_code(400);
@@ -298,6 +300,7 @@ class AdminAiIdolController {
         $this->checkAdmin();
         $runId = trim((string)($_GET['run_id'] ?? ''));
         $input = json_decode(file_get_contents('php://input'), true);
+        $this->verifyCsrf(is_array($input) ? $input : null);
         header('Content-Type: application/json; charset=utf-8');
         if ($runId === '') {
             http_response_code(400);
@@ -314,6 +317,7 @@ class AdminAiIdolController {
 
     public function uploadAsset(): void {
         $this->checkAdmin();
+        $this->verifyCsrf(null);
         header('Content-Type: application/json; charset=utf-8');
         $kind = strtolower(trim((string)($_POST['kind'] ?? '')));
         $file = $_FILES['file'] ?? null;
@@ -375,6 +379,7 @@ class AdminAiIdolController {
 
     public function retryCampaign(): void {
         $this->checkAdmin();
+        $this->verifyCsrf(null);
         $campaignId = trim((string)($_GET['campaign_id'] ?? ''));
         header('Content-Type: application/json; charset=utf-8');
         echo $this->callFlaskAPI('POST', '/api/ai-idol/campaigns/' . rawurlencode($campaignId) . '/retry');
@@ -383,6 +388,7 @@ class AdminAiIdolController {
 
     public function cancelCampaign(): void {
         $this->checkAdmin();
+        $this->verifyCsrf(null);
         $campaignId = trim((string)($_GET['campaign_id'] ?? ''));
         header('Content-Type: application/json; charset=utf-8');
         echo $this->callFlaskAPI('POST', '/api/ai-idol/campaigns/' . rawurlencode($campaignId) . '/cancel');
@@ -393,6 +399,7 @@ class AdminAiIdolController {
         $this->checkAdmin();
         $campaignId = trim((string)($_GET['campaign_id'] ?? ''));
         $input = json_decode(file_get_contents('php://input'), true);
+        $this->verifyCsrf(is_array($input) ? $input : null);
         header('Content-Type: application/json; charset=utf-8');
         echo $this->callFlaskAPI(
             'POST',
@@ -413,6 +420,7 @@ class AdminAiIdolController {
         $this->checkAdmin();
         $jobId = trim((string)($_GET['job_id'] ?? ''));
         $input = json_decode(file_get_contents('php://input'), true);
+        $this->verifyCsrf(is_array($input) ? $input : null);
         header('Content-Type: application/json; charset=utf-8');
         if ($jobId === '' || !is_array($input)) {
             http_response_code(400);
@@ -431,6 +439,7 @@ class AdminAiIdolController {
     public function videoVisibility(): void {
         $this->checkAdmin();
         $input = json_decode(file_get_contents('php://input'), true);
+        $this->verifyCsrf(is_array($input) ? $input : null);
         header('Content-Type: application/json; charset=utf-8');
         $videoId = is_array($input) ? (string)($input['video_id'] ?? '') : '';
         if (!preg_match('/^[a-f0-9]{24}$/', $videoId) || !array_key_exists('hidden', $input)) {

@@ -167,7 +167,7 @@ services:
     <<: *ai-idol-common
     container_name: skinsyntax-ai-idol
     ports:
-      - "5003:5003"
+      - "127.0.0.1:5003:5003"
     command: ["gunicorn", "--bind", "0.0.0.0:5003", "--workers", "1", "--threads", "4", "--timeout", "120", "app:app"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5003/api/health"]
