@@ -5,7 +5,8 @@
  *     node scripts/e2e/product-video.e2e.cjs
  *
  * Fixtures: scripts/e2e/seed-product-video-fixture.py (products 5689, 1000, 93, 1005 carry videos).
- * Optional env: E2E_BASE_URL, E2E_LIVE=1 (after seeding --live).
+ * Optional env: E2E_BASE_URL, E2E_LIVE=1 (after seeding --live), E2E_PRICE_CLAIMS=1 (after seeding --price-claims;
+ * clear the product:videos:1000 cache key first when the storefront cache is on).
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -225,6 +226,32 @@ async function main() {
       await liveCtx.close();
     } else {
       skip('live (set E2E_LIVE=1 after seeding --live)');
+    }
+
+    /* ---------------- Price claims (gated) ---------------- */
+    if (process.env.E2E_PRICE_CLAIMS === '1') {
+      const claimCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+      watch(claimCtx, 'price-claims');
+      const cp = await claimCtx.newPage();
+      // chitiet renders the first eligible video's title (#synaVideoTitle) and every eligible one in the playlist.
+      const videoTitles = async () => cp.evaluate(() => [
+        ...Array.from(document.querySelectorAll('#synaVideoTitle')).map((n) => n.textContent.trim()),
+        ...Array.from(document.querySelectorAll('.syna-video-playlist-item')).map((n) => n.getAttribute('data-video-title') || ''),
+      ]);
+      await check('10. product 1000: video whose price claim still holds is shown ("Giá còn đúng")', async () => {
+        await open(cp, 1000);
+        const titles = await videoTitles();
+        assert.ok(titles.some((t) => t.includes('Giá còn đúng')), `no "Giá còn đúng" video, saw: ${JSON.stringify(titles)}`);
+        await shot(cp, '10-desktop-1000-price-claims.png');
+      });
+      await check('11. product 1000: video whose price changed is hidden ("Giá đã đổi")', async () => {
+        await open(cp, 1000);
+        const titles = await videoTitles();
+        assert.ok(!titles.some((t) => t.includes('Giá đã đổi')), `stale-price video still shown: ${JSON.stringify(titles)}`);
+      });
+      await claimCtx.close();
+    } else {
+      skip('price claims (set E2E_PRICE_CLAIMS=1 after seeding --price-claims)');
     }
 
     /* ---------------- Studio (moved) ---------------- */
