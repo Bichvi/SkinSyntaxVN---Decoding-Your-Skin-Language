@@ -81,6 +81,20 @@ class PipelineModeTests(unittest.TestCase):
         voice.assert_not_called()
         self.assertIn("AWAITING_APPROVAL", self.statuses(db))
 
+    def test_agent_written_manual_config_stops_product_video(self):
+        cfg = {"agent_managed": True, "agent_autonomy_policy": "auto_preview",
+               "approval_mode": "MANUAL", "script_approval_mode": "human"}
+        db, voice = self.run_pipeline("product_video", cfg)
+        voice.assert_not_called()
+        self.assertIn("AWAITING_APPROVAL", self.statuses(db))
+
+    def test_agent_written_auto_config_continues_product_video(self):
+        cfg = {"agent_managed": True, "agent_autonomy_policy": "auto_preview",
+               "approval_mode": "AUTO", "script_approval_mode": "auto"}
+        db, voice = self.run_pipeline("product_video", cfg)
+        voice.assert_called_once()
+        self.assertNotIn("AWAITING_APPROVAL", self.statuses(db))
+
     def test_absent_mode_keeps_old_behaviour(self):
         _, voice = self.run_pipeline("product_video", {})
         voice.assert_called_once()

@@ -849,6 +849,7 @@ def process_agent_run(
                 "agent_managed": True,
                 "agent_run_id": run_id,
                 "agent_autonomy_policy": policy,
+                "approval_mode": approval_mode,
                 "script_approval_mode": script_approval,
             },
         }
