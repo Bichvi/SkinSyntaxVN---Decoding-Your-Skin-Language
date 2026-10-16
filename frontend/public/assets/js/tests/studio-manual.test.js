@@ -163,6 +163,13 @@ const tree = {
   },
 };
 
+test('a synthetic group (id null) is found by its key and lists its orphan categories', () => {
+  const synthetic = { body: { id: null, label: 'Chăm Sóc Cơ Thể', count: 5, children: { 22: { id: 22, label: 'Sữa Tắm', count: 2 }, 23: { id: 23, label: 'Dưỡng Thể', count: 3 } } } };
+  assert.equal(M.rootCategory(synthetic, 'body').count, 5);
+  assert.deepEqual(M.level2Options(synthetic, 'body').map((o) => [o.value, o.label, o.count]), [['22', 'Sữa Tắm', 2], ['23', 'Dưỡng Thể', 3]]);
+  assert.equal(M.rootCategory(synthetic, 'hair'), null);
+});
+
 test('rootCategory finds a group by its numeric id or by its key', () => {
   assert.equal(M.rootCategory(tree, '1001').label, 'Chăm Sóc Da Mặt');
   assert.equal(M.rootCategory(tree, 'face').id, 1001);
