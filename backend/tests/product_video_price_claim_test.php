@@ -65,4 +65,11 @@ check(array_keys(ProductVideo::dropExpiredPriceClaims($items, $now)) === [0, 1, 
 check(array_column(ProductVideo::dropExpiredPriceClaims([['video_id' => 'a'], ['video_id' => 'b']], $now), 'video_id') === ['a', 'b'],
     'cache items without price_valid_until_ts are kept');
 
+// claimVerdict: degraded or missing pricing is indeterminate -> keep the video (fail open)
+check(ProductVideo::claimVerdict($claim, null, $now) === true, 'claimVerdict: null pricing keeps video');
+check(ProductVideo::claimVerdict($claim, ['regular_price' => 0, 'market_price' => 0, 'is_flash_sale' => false], $now) === true,
+    'claimVerdict: regular_price 0 (product not found) keeps video');
+check(ProductVideo::claimVerdict($claim, $pricing(['regular_price' => 1]), $now) === false, 'claimVerdict: real mismatch hides video');
+check(ProductVideo::claimVerdict($claim, $pricing(), $now) === true, 'claimVerdict: matching pricing keeps video');
+
 exit($failures === 0 ? 0 : 1);

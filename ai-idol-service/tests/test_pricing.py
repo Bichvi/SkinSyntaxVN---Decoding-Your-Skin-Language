@@ -93,9 +93,36 @@ class ResolvePricingTests(unittest.TestCase):
         c = campaign(items=[{"ma_san_pham": " 1024 ", "flash_price": None, "gia_flash": 249000}])
         self.assertEqual(self.resolve(c)["flash"]["flash_price"], 249000)
 
-    def test_lowest_flash_wins(self):
-        c2 = campaign(ma_campaign=13, items=[{"product_id": "1024", "gia_flash": 229000}])
-        self.assertEqual(self.resolve(campaign(), c2)["flash"]["campaign_id"], 13)
+    def test_newest_start_wins_not_lowest_price(self):
+        newer = campaign(ma_campaign=13, start_at=dt.datetime(2026, 10, 16, 1, 0, tzinfo=UTC),
+                         items=[{"product_id": "1024", "gia_flash": 279000}])
+        self.assertEqual(self.resolve(campaign(), newer)["flash"]["campaign_id"], 13)
+
+    def test_newer_campaign_without_valid_price_falls_to_older(self):
+        newer = campaign(ma_campaign=13, start_at=dt.datetime(2026, 10, 16, 1, 0, tzinfo=UTC),
+                         items=[{"ma_san_pham": "1024", "flash_price": 299000}])
+        self.assertEqual(self.resolve(campaign(), newer)["flash"]["campaign_id"], 12)
+
+    def test_min_remaining_applies_to_chosen_campaign_only(self):
+        newer = campaign(ma_campaign=13, start_at=dt.datetime(2026, 10, 16, 1, 0, tzinfo=UTC),
+                         end_at=dt.datetime(2026, 10, 16, 4, 0, tzinfo=UTC))
+        self.assertIsNone(self.resolve(campaign(), newer)["flash"])
+        self.assertEqual(self.resolve(campaign(), newer, min_remaining=0)["flash"]["campaign_id"], 13)
+
+    def test_campaign_with_neither_flag_matches_php(self):
+        c = campaign()
+        del c["is_active"], c["enabled"]
+        self.assertEqual(self.resolve(c)["flash"]["flash_price"], 249000)
+
+    def test_is_active_false_excluded_even_if_enabled(self):
+        self.assertIsNone(self.resolve(campaign(is_active=False, enabled=True))["flash"])
+
+    def test_decimal_string_prices_truncate_like_php(self):
+        c = campaign(items=[{"ma_san_pham": "1024", "flash_price": "249000.0"}])
+        p = self.resolve(c, product={"ma_san_pham": "1024", "gia_ban": "299000.0", "gia_thi_truong": "350000.9"})
+        self.assertEqual(p["regular_price"], 299000)
+        self.assertEqual(p["market_price"], 350000)
+        self.assertEqual(p["flash"]["flash_price"], 249000)
 
     def test_zero_prices_give_no_pricing(self):
         p = self.resolve(product={"gia_ban": 0, "gia_thi_truong": 350000})
