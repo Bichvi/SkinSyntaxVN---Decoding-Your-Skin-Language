@@ -69,8 +69,7 @@ class PriceViolationTests(unittest.TestCase):
         self.assertTrue(find_price_violations("đang giảm 20% cho bạn", None))
 
     def test_skincare_language_is_not_a_price(self):
-        # Spec 4.3 step 2: any "<number> phần trăm" outside the backend phrases is a price claim.
-        self.assertTrue(find_price_violations("Niacinamide 10 phần trăm", None))
+        self.assertEqual(find_price_violations("Niacinamide 10 phần trăm", None), [])
         self.assertEqual(find_price_violations("Kẽm hoạt động đồng thời với dung tích 30 mililít", None), [])
 
 

@@ -60,6 +60,10 @@ class ProductVideoPriceTests(unittest.TestCase):
     def test_wrong_percent_fails(self):
         self.assertTrue(check(script("Đang giảm hai mươi phần trăm.")))
 
+    def test_ingredient_percent_is_not_a_price(self):
+        text = script().replace("Ba mươi mililít.", "Ba mươi mililít, Niacinamide mười phần trăm.")
+        self.assertEqual(check(text), [])
+
     def test_promo_without_flash_fails(self):
         errors = check(script("Giá hai trăm chín mươi chín nghìn đồng, đang ưu đãi."), PRICING_NO_FLASH)
         self.assertTrue(any("Không có chương trình ưu đãi đang chạy" in e for e in errors))

@@ -159,7 +159,8 @@ _MONEY_PATTERNS = (
     re.compile(rf"\b{_SPELLED_NUMBER}\s+(?:nghin|ngan|trieu)\b"),
     re.compile(r"\bvnd\s*\d"),
     re.compile(r"\bgiam\s+(?:gia\s+)?\d+\s*%"),
-    re.compile(rf"\b(?:\d+(?:[.,]\d+)?|{_SPELLED_NUMBER}(?:\s+{_SPELLED_NUMBER})*)\s+phan\s+tram\b"),
+    # Only a percent in discount context is a price claim; "Niacinamide mười phần trăm" is not.
+    re.compile(rf"\bgiam\s+(?:gia\s+)?(?:\d+(?:[.,]\d+)?|{_SPELLED_NUMBER}(?:\s+{_SPELLED_NUMBER})*)\s*(?:%|phan\s+tram\b)"),
 )
 _ALWAYS_BANNED = re.compile(
     r"\b(?:hom nay|toi nay|ngay mai|live ?stream|chot don|chi con|duy nhat|voucher|freeship|ma giam)\b"
