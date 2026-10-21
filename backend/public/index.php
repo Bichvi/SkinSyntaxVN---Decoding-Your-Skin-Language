@@ -117,6 +117,20 @@ switch ($r) {
         (new SanPhamController($pdo))->tatca();
         break;
 
+    case 'search_event':
+        // Smart Search Bước 08: beacon sự kiện khối gợi ý -> search_events (204, không body).
+        require_once $backendRoot . '/app/services/SearchEventTracker.php';
+        $searchEventStatus = SearchEventTracker::handle(
+            $pdo,
+            (string)($_SERVER['REQUEST_METHOD'] ?? 'GET'),
+            (string)file_get_contents('php://input', false, null, 0, SearchEventTracker::MAX_BODY + 1)
+        );
+        if (!headers_sent()) {
+            header('Cache-Control: no-store');
+        }
+        http_response_code($searchEventStatus);
+        exit;
+
     case 'danhsach':
         (new SanPhamController($pdo))->danhsach();
         break;
