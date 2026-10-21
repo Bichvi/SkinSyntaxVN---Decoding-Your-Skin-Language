@@ -87,6 +87,8 @@ $startPage = max(1, $endPage - $maxVisible + 1);
   <div id="catalogResults" aria-live="polite">
   <?php if ($dbUnavailableMessage !== ''): ?>
     <div class="alert alert-warning border-0 shadow-sm" style="border-radius: 8px;"><?= h($dbUnavailableMessage) ?></div>
+  <?php elseif (empty($items) && is_array($searchFallback ?? null) && !empty($searchFallback['sections'])): ?>
+    <?php $ssfHasExact = false; include __DIR__ . '/partials/search_fallback.php'; ?>
   <?php elseif (empty($items)): ?>
     <div class="p-5 text-center bg-white border text-muted" style="border-radius: 12px; border-color: var(--border) !important;">
       <i class="fas fa-box-open fs-1 mb-3" style="color: #183B2B;"></i>
@@ -167,6 +169,9 @@ $startPage = max(1, $endPage - $maxVisible + 1);
         </div>
       <?php endforeach; ?>
     </div>
+    <?php if (is_array($searchFallback ?? null) && !empty($searchFallback['sections'])): ?>
+      <?php $ssfHasExact = true; include __DIR__ . '/partials/search_fallback.php'; ?>
+    <?php endif; ?>
   <?php endif; ?>
 
   <?php if ($totalPages > 1): ?>
@@ -200,3 +205,5 @@ $startPage = max(1, $endPage - $maxVisible + 1);
   <?php endif; ?>
   </div>
 </div>
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/search-fallback.css?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/css/search-fallback.css') ?: '1' ?>">
+<script src="<?= BASE_URL ?>/assets/js/search-fallback.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/search-fallback.js') ?: '1' ?>" defer></script>
