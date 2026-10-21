@@ -65,6 +65,16 @@ def _catalog() -> list[dict[str, Any]]:
             if str(item.get("trang_thai", item.get("status", ""))).lower() not in _HIDDEN_STATUSES]
 
 
+def _queries_grounded(queries: list[str], normalized_brief: str) -> bool:
+    """Every product query must come from the brief: at least 60% of its words appear there."""
+    brief_words = set(re.split(r"[^a-z0-9]+", normalized_brief))
+    for query in queries:
+        words = [w for w in re.split(r"[^a-z0-9]+", normalize_text(query)) if len(w) > 1]
+        if words and sum(w in brief_words for w in words) / len(words) < 0.6:
+            return False
+    return True
+
+
 def _needs_fields(
     selected: list[dict[str, Any]],
     candidates: list[dict[str, Any]],
@@ -630,11 +640,15 @@ def process_agent_run(
             explicit_ids = list(deterministic.explicit_product_ids)
             for raw_id in brief.explicit_product_ids:
                 token = clean_product_id(raw_id)
-                if token and token not in explicit_ids and re.search(
+                # Catalog ids always carry a digit; "gel"/"son" from the LLM are product words, not ids.
+                if token and re.search(r"\d", token) and token not in explicit_ids and re.search(
                     rf"(?<![a-z0-9]){re.escape(token)}(?![a-z0-9])", text
                 ):
                     explicit_ids.append(token)
         brief.explicit_product_ids = explicit_ids
+        if not _queries_grounded(brief.product_queries, text):
+            # The LLM invented a name the staff never wrote: split the brief itself instead.
+            brief.product_queries = list(deterministic.product_queries)
         # A clock time nobody can read is not a reason to stop autopilot: it picks a golden slot instead.
         unreadable_clock = bool(
             autopilot and explicit_clock and not deterministic.scheduled_at
@@ -682,6 +696,7 @@ def process_agent_run(
             lookup=bool(unresolved_ids) and catalog is None and query_result is None,
         )
         constraint_mismatches = resolution.get("constraint_mismatches") or []
+        unresolved_queries = list(resolution.get("unresolved_queries") or [])
         popularity_unverified = bool(
             resolution.get("popularity_requested")
             and not resolution.get("popularity_data_available")
@@ -697,10 +712,16 @@ def process_agent_run(
                     "candidate_products": resolution["ambiguous"],
                     "constraints": resolution.get("constraints", []),
                 }, empty_warnings)
-            unresolved_ids, constraint_mismatches, popularity_unverified = [], [], False
-        if not selected or unresolved_ids or constraint_mismatches or popularity_unverified:
+            if unresolved_queries:
+                decisions.append(make_decision(
+                    "QUERIES_DROPPED", "adjusted",
+                    "Bỏ tên chưa xác định được sản phẩm: " + ", ".join(f"“{q}”" for q in unresolved_queries) + ".",
+                ))
+            unresolved_ids, constraint_mismatches, popularity_unverified, unresolved_queries = [], [], False, []
+        if not selected or unresolved_ids or constraint_mismatches or popularity_unverified or unresolved_queries:
             warnings = ["Cần xác nhận sản phẩm trước khi tạo kịch bản."]
             warnings.extend(_unresolved_warning(item, unresolved_reasons[item]) for item in unresolved_ids)
+            warnings.extend(f"Chưa xác định được sản phẩm cho “{q}”; chọn trong danh sách gợi ý." for q in unresolved_queries)
             if resolution.get("constraints"):
                 warnings.append(
                     "Chỉ được chọn sản phẩm đáp ứng: " + ", ".join(resolution["constraints"])
