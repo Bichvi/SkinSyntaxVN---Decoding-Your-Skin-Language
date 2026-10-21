@@ -3121,6 +3121,15 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
 app = Flask(__name__)
 CORS(app)
 
+# Smart search recommend API (step 05). Isolated blueprint; failures never block chat.
+try:
+    from search_service.routes import search_bp
+
+    # Warm-up starts per worker on its first request (gunicorn preload_app=True forks).
+    app.register_blueprint(search_bp)
+except Exception as _search_exc:  # pragma: no cover - optional module
+    print(f"[WARN] search_service not registered: {type(_search_exc).__name__}")
+
 
 @app.get("/health")
 def simple_health():

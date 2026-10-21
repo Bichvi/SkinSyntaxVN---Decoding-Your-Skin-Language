@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "skinsyntax/search/recommend_response.v1",
+  "title": "POST /api/search/recommend response (v1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "degraded", "degraded_branches", "took_ms", "intent", "sections"],
+  "properties": {
+    "mode": {"type": "string", "enum": ["fallback"]},
+    "degraded": {"type": "boolean"},
+    "degraded_branches": {"type": "array", "items": {"type": "string"}},
+    "took_ms": {"type": "integer", "minimum": 0},
+    "intent": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["brands", "categories", "skin_types", "concerns", "confidence"],
+          "properties": {
+            "brands": {"type": "array", "items": {"type": "string"}},
+            "categories": {"type": "array", "items": {"type": "string"}},
+            "skin_types": {"type": "array", "items": {"type": "string"}},
+            "concerns": {"type": "array", "items": {"type": "string"}},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "brand_names": {"type": "array", "items": {"type": "string"}, "description": "optional (05B): display names parallel to brands"},
+            "category_names": {"type": "array", "items": {"type": "string"}, "description": "optional (05B): display names parallel to categories"}
+          }
+        }
+      ]
+    },
+    "sections": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "items"],
+        "properties": {
+          "key": {"type": "string", "enum": ["same_brand", "category_alt", "personalized", "semantic", "trending"]},
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["product_id", "score", "reason_code", "reason_params"],
+              "properties": {
+                "product_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$"},
+                "score": {"type": "number"},
+                "reason_code": {"type": "string", "enum": ["same_brand", "same_category", "shared_ingredients", "fits_skin_type", "targets_concern", "semantic_match", "trending", "bought_together"]},
+                "reason_params": {"type": "array", "maxItems": 3, "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
