@@ -21,6 +21,7 @@ COPY frontend/ /var/www/frontend
 ENV FRONTEND_ROOT=/var/www/frontend
 
 COPY docker/php/zz-skinsyntax-fpm.conf /usr/local/etc/php-fpm.d/zz-skinsyntax-fpm.conf
+COPY docker/php/zz-skinsyntax-opcache.ini /usr/local/etc/php/conf.d/zz-skinsyntax-opcache.ini
 
 COPY backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh

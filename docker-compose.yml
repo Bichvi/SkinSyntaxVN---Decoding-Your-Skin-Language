@@ -277,6 +277,8 @@ services:
       - ./.env:/var/www/.env:ro
       # Pool PHP-FPM lớn hơn (xem docker/php/zz-skinsyntax-fpm.conf); Dockerfile.php cũng COPY file này vào image.
       - ./docker/php/zz-skinsyntax-fpm.conf:/usr/local/etc/php-fpm.d/zz-skinsyntax-fpm.conf:ro
+      # Opcache ít kiểm tra timestamp hơn (xem docker/php/zz-skinsyntax-opcache.ini)
+      - ./docker/php/zz-skinsyntax-opcache.ini:/usr/local/etc/php/conf.d/zz-skinsyntax-opcache.ini:ro
       - uploads_data:/var/www/html/public/uploads
     depends_on:
       mongodb:
