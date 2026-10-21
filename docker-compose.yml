@@ -75,6 +75,33 @@ services:
     networks:
       - skinsyntax-net
 
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: skinsyntax-neo4j
+    restart: unless-stopped
+    mem_limit: 1g
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 128m
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u \"$${NEO4J_AUTH%%/*}\" -p \"$${NEO4J_AUTH#*/}\" 'RETURN 1' >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    networks:
+      - skinsyntax-net
+
   redis:
     image: redis:7-alpine
     container_name: skinsyntax-redis
@@ -104,7 +131,8 @@ services:
     environment:
       CHATBOT_PORT: "5001"
       GUNICORN_WORKERS: "${GUNICORN_WORKERS:-2}"
-      GUNICORN_WORKER_CLASS: "sync"
+      GUNICORN_WORKER_CLASS: "gthread"
+      GUNICORN_THREADS: "${GUNICORN_THREADS:-8}"
       CHROMA_HOST: chromadb
       CHROMA_PORT: "8000"
       # Local fallback for non-Docker runs; Docker uses the Chroma service above.
@@ -117,6 +145,14 @@ services:
       REDIS_CACHE_TTL: "604800"
       SESSION_CACHE_TTL: "3600"
       PYTHONPATH: "/app:/app/chatbot_service"
+      # Neo4j is optional for Flask: no healthy dependency, search degrades if down.
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-}
+      # Smart search mode B (Bước 05B): graph branches on; Neo4j down -> degraded, never 5xx.
+      SEARCH_GRAPH_ENABLED: "${SEARCH_GRAPH_ENABLED:-true}"
+      # Bước 08: boost "thường mua cùng" (CO_PURCHASED, cần graph_sync --derive co_purchase). Mặc định tắt.
+      SEARCH_CO_PURCHASE_ENABLED: "${SEARCH_CO_PURCHASE_ENABLED:-false}"
     volumes:
       - ./database:/app/database:ro
       - ./ai-service-flask:/app
@@ -218,6 +254,9 @@ services:
       AI_HYBRID_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/langchain-rag
       # Trước đây thiếu biến này nên PHP gọi 127.0.0.1:5002 (không tồn tại trong container).
       AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/profile
+      # Smart Search Bước 06 (PHP -> Flask). Không đặt trong .env để khỏi bị .env (127.0.0.1) ghi đè.
+      SEARCH_RECOMMEND_ENDPOINT: http://ai-service:5001/api/search/recommend
+      SEARCH_BREAKER_REDIS_URL: redis://redis:6379/0
       # Trang goiy dùng engine PHP; bật "1" để chờ thêm AI RAG (~10s/lần, có cache session).
       AI_GOIY_SYNC_AI: "${AI_GOIY_SYNC_AI:-0}"
       AI_CHAT_TIMEOUT: "60"
@@ -318,6 +357,10 @@ volumes:
     name: skinsyntax-vieneu-model-cache
   ai_idol_storage:
     name: skinsyntax-ai-idol-storage
+  neo4j_data:
+    name: skinsyntax-neo4j-data
+  neo4j_logs:
+    name: skinsyntax-neo4j-logs
 
 networks:
   skinsyntax-net:
