@@ -166,7 +166,7 @@ def business_query_requested(text: str) -> bool:
     ))
 
 
-def build_query_plan(brief: str, *, today: dt.date | None = None) -> dict:
+def build_query_plan(brief: str, *, today: dt.date | None = None, vocab=None) -> dict:
     today = today or dt.datetime.now(ZoneInfo(TIMEZONE)).date()
     text = normalize_text(brief)
     categories = detect_categories(text)
@@ -190,6 +190,13 @@ def build_query_plan(brief: str, *, today: dt.date | None = None) -> dict:
         "brand": None, "brand_mode": None, "per_brand_max": None,
         "questions": questions, "assumptions": [],
     }
+    extracted = None
+    if vocab is not None:
+        from agents.catalog_constraints import extract_constraints
+        extracted = extract_constraints(brief, vocab)
+        plan.update(constraints=extracted["constraints"], content_notes=extracted["content_notes"])
+        plan["assumptions"].extend(extracted["assumptions"])
+        questions.extend(extracted["conflicts"])
     warehouse = re.search(r"(?:chi lay (?:tu|o) kho|kho cu the|ma kho)\s*[:#-]?\s*" + SCOPE_CODE, text)
     batch = re.search(r"(?:chi lay tu lo hang|lo hang|ma lo)\s*[:#-]?\s*" + SCOPE_CODE, text)
     if warehouse:
@@ -293,14 +300,15 @@ def build_query_plan(brief: str, *, today: dt.date | None = None) -> dict:
         plan["assumptions"].append("Kỳ thống kê: " + period_label)
     if not categories and not re.search(r"\b(?:san pham|sp)\b", text):
         questions.append("Chưa xác định được nhóm sản phẩm; hãy ghi rõ danh mục hoặc 'sản phẩm'.")
-    if re.search(r"\b(?:khong|ngoai tru|tru)\b", text.replace("khong qua", "").replace("chua chot", "")):
+    if (extracted["unparsed_negations"] if extracted is not None else
+            re.search(r"\b(?:khong|ngoai tru|tru)\b", text.replace("khong qua", "").replace("chua chot", ""))):
         questions.append("Lệnh có phủ định/loại trừ chưa được hỗ trợ. Chọn mẫu lọc hoặc tách rõ điều kiện trước khi chạy.")
     # Unsupported qualifiers must not silently broaden a structured query.
-    if any(x in text for x in ("da dau", "da nhay cam", "loai tru", "khong lay", "tru thuong hieu")):
+    if extracted is None and any(x in text for x in ("da dau", "da nhay cam", "loai tru", "khong lay", "tru thuong hieu")):
         questions.append("Bộ lọc loại da/loại trừ chưa có ánh xạ xác minh trong truy vấn này; hãy dùng bộ lọc sản phẩm trước.")
     from agents.product_resolver import _requested_constraints
     has_condition = bool(
-        count or categories or plan["brand"] or plan["per_brand_max"] or plan["warehouse_id"] or plan["batch_id"]
+        count or categories or plan["brand"] or plan["per_brand_max"] or plan.get("constraints") or plan["warehouse_id"] or plan["batch_id"]
         or plan["expiry_required"] or plan["stock_min"] is not None or plan["stock_max"] is not None
         or plan["rank_by"] != "catalog" or _extract_explicit_ids(text) or _requested_constraints([text])
     )
@@ -324,6 +332,9 @@ def build_query_plan(brief: str, *, today: dt.date | None = None) -> dict:
         plan["summary"].append("Lô: " + plan["batch_id"])
     if plan["brand"]:
         plan["summary"].append(("Ưu tiên thương hiệu: " if plan["brand_mode"] == "prefer" else "Thương hiệu: ") + plan["brand"])
+    if plan.get("constraints"):
+        from agents.catalog_constraints import summarize_constraints
+        plan["summary"].extend(summarize_constraints(plan["constraints"], skip_brand=bool(plan["brand"])))
     if plan["per_brand_max"]:
         plan["summary"].append(f"Mỗi thương hiệu tối đa {plan['per_brand_max']} sản phẩm")
     return plan
@@ -360,7 +371,7 @@ def _percentile(values: list[float], fraction: float) -> float:
 
 
 def execute_query(plan: dict, catalog: list[dict], *, batches: list[dict] | None = None,
-                  snapshots: list[dict] | None = None, brief: str = "") -> dict:
+                  snapshots: list[dict] | None = None, brief: str = "", vocab=None) -> dict:
     """Return selection evidence; callers decide whether to build a campaign."""
     from agents.product_resolver import _matches_constraints, _requested_constraints, normalize_catalog_product
 
@@ -391,6 +402,11 @@ def execute_query(plan: dict, catalog: list[dict], *, batches: list[dict] | None
     rows = []
     category_ids = None if plan.get("category_ids") is None else set(plan["category_ids"])
     constraints = _requested_constraints([brief])
+    plan_constraints = plan.get("constraints") or []
+    if plan_constraints:
+        from agents.catalog_constraints import apply_constraints
+        handled = {c["value"][0] for c in plan_constraints if c["field"] == "ingredient"}
+        constraints = [c for c in constraints if c not in handled]
     from agents.intent_parser import _extract_explicit_ids
     explicit_ids = _extract_explicit_ids(normalize_text(brief))
     for raw in catalog:
@@ -407,9 +423,16 @@ def execute_query(plan: dict, catalog: list[dict], *, batches: list[dict] | None
         normalized = normalize_catalog_product(raw)
         if not _matches_constraints(normalized, constraints):
             continue
+        extra = {}
+        if plan_constraints:
+            ok, extra, miss = apply_constraints(raw, plan_constraints, vocab)
+            if miss:
+                missing[miss] += 1
+            if not ok:
+                continue
         if plan.get("brand") and plan.get("brand_mode") == "only" and normalize_text(normalized["brand"]) != plan["brand"]:
             continue
-        evidence = {"stock": first_number(raw, STOCK_FIELDS), "price": first_number(raw, ("gia_ban", "price"))}
+        evidence = {"stock": first_number(raw, STOCK_FIELDS), "price": first_number(raw, ("gia_ban", "price")), **extra}
         if plan.get("brand") or plan.get("per_brand_max"):
             evidence["brand"] = normalized["brand"]
         matched_batches = []
@@ -551,6 +574,8 @@ def execute_query(plan: dict, catalog: list[dict], *, batches: list[dict] | None
     rows.sort(key=sort_key)
     if plan.get("brand") and plan.get("brand_mode") == "prefer":
         rows.sort(key=lambda row: normalize_text(row["evidence"].get("brand")) != plan["brand"])
+    if any("soft_score" in r["evidence"] for r in rows):
+        rows.sort(key=lambda row: -row["evidence"].get("soft_score", 0))
     if plan.get("per_brand_max"):
         per_brand: Counter = Counter()
         capped = []

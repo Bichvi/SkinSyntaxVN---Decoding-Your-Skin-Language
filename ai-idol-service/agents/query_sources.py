@@ -40,7 +40,15 @@ def load_catalog(db) -> list[dict]:
     # san_pham only stores ma_thuong_hieu; the brand name lives in thuong_hieu.
     brands = {_brand_key(b.get("ma_thuong_hieu")): b.get("ten_thuong_hieu") for b in bounded_rows(
         db.thuong_hieu.find({}, {"_id": 0, "ma_thuong_hieu": 1, "ten_thuong_hieu": 1}), 5000, "Thương hiệu")}
+    origins = {_brand_key(r.get("ma_xuat_xu")): r.get("ten_xuat_xu") for r in bounded_rows(
+        db.xuat_xu.find({}, {"_id": 0, "ma_xuat_xu": 1, "ten_xuat_xu": 1}), 5000, "Xuất xứ")}
+    factories = {_brand_key(r.get("ma_nsx")): r.get("ten_nsx") for r in bounded_rows(
+        db.noi_san_xuat.find({}, {"_id": 0, "ma_nsx": 1, "ten_nsx": 1}), 5000, "Nơi sản xuất")}
     for row in rows:
+        for src, dst, table in (("ma_xuat_xu", "ten_xuat_xu", origins), ("ma_noi_san_xuat", "ten_noi_san_xuat", factories)):
+            name = table.get(_brand_key(row.get(src))) if row.get(src) is not None else None
+            if name and not row.get(dst):
+                row[dst] = name
         if row.get("thuong_hieu") or row.get("ten_thuong_hieu"):
             continue
         key = _brand_key(row.get("ma_thuong_hieu"))
@@ -56,11 +64,22 @@ def _load_catalog_rows(db) -> list[dict]:
         "loai_san_pham": 1, "danh_muc_day_du": 1, "ma_danh_muc": 1, "trang_thai": 1, "status": 1,
         "link_hinh_anh": 1, "hinh_anh": 1,
         "thanh_phan_chinh": 1, "thanh_phan_clean": 1, "thanh_phan_day_du": 1,
+        "loai_da": 1, "ma_loai_da": 1, "ma_xuat_xu": 1, "ma_noi_san_xuat": 1,
+        "thanh_phan": 1, "thanh_phan_full": 1, "thanh_phan_sach": 1,
         "mo_ta": 1, "gia_ban": 1, "gia_thi_truong": 1,
         "so_luong_ton_kho": 1, "so_luong_ton": 1, "ton_kho": 1, "stock": 1, "quantity": 1,
         "so_luong_ban": 1, "so_luong_da_ban": 1, "luot_ban": 1,
         "expiry_date": 1, "ngay_het_han": 1, "diem_danh_gia": 1, "so_luong_danh_gia": 1,
     }), 20000, "Catalog")
+
+
+def load_vocabulary(db):
+    from agents.catalog_constraints import CatalogVocabulary
+    def rows(collection, label):
+        return bounded_rows(collection.find({}, {"_id": 0}), 5000, label)
+    return CatalogVocabulary.from_rows(
+        rows(db.thuong_hieu, "Thương hiệu"), rows(db.xuat_xu, "Xuất xứ"),
+        rows(db.noi_san_xuat, "Nơi sản xuất"), rows(db.loai_da, "Loại da"))
 
 
 def load_query_sources(db, plan: dict) -> tuple[list[dict], list[dict]]:
