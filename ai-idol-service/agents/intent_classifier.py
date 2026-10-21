@@ -132,6 +132,7 @@ def classify_intent(brief_text: str) -> IntentClassification:
         "tao chuong trinh", "tao campaign", "tao livestream", "tao live",
         "livestream", "live stream", "len song", "phat luc", "lich phat",
         "quang ba", "tao video", "len lich", "gioi thieu san pham",
+        "lam video", "quay video", "dung video", "lam clip", "tao clip",
     )
     has_create_cue = _has_any(LIVE_STOCK_QUALIFIER.sub(" ", text), create_cues)
     if has_create_cue:

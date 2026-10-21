@@ -67,8 +67,9 @@ class Harness:
             "engines.content_agent": types.SimpleNamespace(generate_content_and_script=lambda *a, **k: SCRIPT),
             "engines.script_validator": types.SimpleNamespace(
                 validate_and_repair_script=lambda draft, *a, **k: types.SimpleNamespace(
-                    passed=True, script=draft, feedback="", repair_attempts=0,
-                    history=[{"version": 1, "text": draft, "passed": True, "issues": []}])),
+                    passed=True, script=draft, feedback="", repair_attempts=0, issues=[],
+                    history=[{"version": 1, "text": draft, "passed": True, "issues": []}]),
+                validate_script=lambda *a, **k: []),
             "engines.voice_engine": types.SimpleNamespace(generate_voice_audio=lambda *a, **k: self.master.name),
         }))
         self.stack.enter_context(patch("engines.video_composer.get_audio_duration", return_value=12.0))

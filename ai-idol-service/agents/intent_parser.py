@@ -123,6 +123,40 @@ def infer_purpose(normalized_text: str, scheduled_at: str | None) -> str:
     return PRODUCT_VIDEO
 
 
+# Opening command words before the first product name ("làm video cho", "tạo livestream giới thiệu").
+_QUERY_LEAD = re.compile(
+    r"^(?:(?:hay|giup|cho|minh|toi|em)\s+)*(?:(?:lam|tao|quay|dung|len|gioi thieu|review|quang ba)\s+)+"
+    r"(?:(?:\d{1,2}\s+)?(?:video|clip|livestream|live stream|live|chuong trinh|buoi live)\s+)?"
+    r"(?:(?:gioi thieu|review|ve|cho)\s+)*(?:(?:cac\s+)?(?:san pham|sp)\s+)?"
+)
+# Where a product name stops and the schedule / platform / options begin.
+_QUERY_TAIL = re.compile(
+    r"(?:^|\s)(?:luc|vao luc|dang|dang len|phat|len song|tren|toi nay|toi mai|sang mai|ngay mai|hom nay|"
+    r"che do|duyet|noi bo|preview|youtube|facebook|tiktok|thoi luong|keo dai)\b"
+    r"|(?:^|\s)\d{1,2}\s*(?:h|gio)\b|(?:^|\s)\d{1,2}h\d|(?:^|\s)\d{1,3}\s*phut\b"
+)
+_QUERY_SPLIT = re.compile(r"\s*(?:[,;\n+]|\bvà\b|\bva\b)\s*", re.IGNORECASE)
+
+
+def split_product_queries(brief_text: str) -> list[str]:
+    """Cut "A, B và C" into one query per product; one name (or none) keeps the whole brief, as before."""
+    original = re.sub(r"\s+", " ", str(brief_text or "")).strip()
+    queries: list[str] = []
+    for part in _QUERY_SPLIT.split(original):
+        part = part.strip(" .:-")
+        # normalize_text keeps one char per char here, so a match on it slices the original text.
+        lowered = normalize_text(part)
+        if len(lowered) != len(part):
+            continue
+        start = _QUERY_LEAD.match(lowered).end() if _QUERY_LEAD.match(lowered) else 0
+        tail = _QUERY_TAIL.search(lowered[start:])
+        query = part[start:start + tail.start() if tail else len(part)].strip(" .:-")
+        words = [w for w in normalize_text(query).split() if len(w) > 1]
+        if words and len(normalize_text(query)) >= 3 and query not in queries:
+            queries.append(query)
+    return queries if len(queries) > 1 else [brief_text]
+
+
 def fallback_parse(brief_text: str, overrides: dict | None = None, *, now: dt.datetime | None = None) -> AgentBrief:
     overrides = overrides or {}
     local_now = now or dt.datetime.now(ZoneInfo(TIMEZONE))
@@ -144,7 +178,7 @@ def fallback_parse(brief_text: str, overrides: dict | None = None, *, now: dt.da
 
     data = {
         "goal": brief_text,
-        "product_queries": [brief_text],
+        "product_queries": split_product_queries(brief_text),
         "explicit_product_ids": _extract_explicit_ids(normalized),
         "content_mode": content_mode,
         "scheduled_at": _extract_schedule(normalized, local_now),

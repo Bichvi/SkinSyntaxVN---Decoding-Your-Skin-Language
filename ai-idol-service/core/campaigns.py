@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import os
+import uuid
 from zoneinfo import ZoneInfo
 
 from pymongo import ReturnDocument
@@ -126,7 +127,8 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
     idempotency_key = str(payload.get("idempotency_key") or "").strip()
     if not idempotency_key:
         # Without a time slot there is nothing natural to dedupe on: every request is new.
-        moment = scheduled_at.isoformat() if scheduled_at else f"{purpose}|{utcnow().isoformat()}"
+        # A random token, not the clock: back-to-back calls can share a timestamp (coarse Windows clock).
+        moment = scheduled_at.isoformat() if scheduled_at else f"{purpose}|{uuid.uuid4().hex}"
         source = f"{name}|{moment}|{'|'.join(product_ids)}"
         idempotency_key = hashlib.sha256(source.encode()).hexdigest()
 

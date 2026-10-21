@@ -210,6 +210,44 @@ def _score(query: str, product: dict[str, Any], constraints: list[str] | None = 
     return round(min(score, 0.98), 4)
 
 
+def _name_tokens(text: str) -> list[str]:
+    return [token for token in re.split(r"[^a-z0-9]+", normalize_text(text)) if len(token) > 1 and not token.isdigit()]
+
+
+def _name_match(query: str, product: dict[str, Any]) -> tuple[float, float]:
+    """(coverage, tightness) of one named product, on name + brand only (descriptions mention everything).
+
+    Coverage: how much of the query the name holds. Tightness: how little else the name adds,
+    so "Gel Dưỡng SVR Giảm Mụn" beats a combo that only shares the brand and a word or two.
+    """
+    query_tokens = [token for token in _name_tokens(query) if token not in _TOKEN_STOPWORDS]
+    name_tokens = set(_name_tokens(f"{product.get('name') or ''} {product.get('brand') or ''}"))
+    if not query_tokens or not name_tokens:
+        return 0.0, 0.0
+    matched = sum(1 for token in query_tokens if token in name_tokens)
+    return matched / len(query_tokens), matched / len(name_tokens)
+
+
+def _name_match_score(query: str, product: dict[str, Any]) -> float:
+    coverage, tightness = _name_match(query, product)
+    return round(0.8 * coverage + 0.2 * tightness, 4)
+
+
+def _clear_winner(query: str, top: dict[str, Any], second: dict[str, Any] | None, top_score: float,
+                  second_score: float, threshold: float) -> bool:
+    if top_score < threshold:
+        return False
+    if top_score - second_score >= 0.08 or second is None:
+        return True
+    # Both names hold every word of the query and the top name is almost exactly the query:
+    # it is the one meant (the single lipstick, not the combo that bundles it with two others).
+    # A short generic query ("kem chống nắng") never qualifies, so it is still asked.
+    top_cov, top_tight = _name_match(query, top)
+    second_cov, second_tight = _name_match(query, second)
+    return (top_cov == 1.0 and second_cov == 1.0 and top_tight >= 0.75
+            and top_tight - second_tight >= 0.10)
+
+
 def resolve_products(
     brief_text: str,
     explicit_product_ids: list[str],
@@ -290,9 +328,38 @@ def resolve_products(
         if product_name and product_name in normalized_brief and item.product_id not in {x.product_id for x in selected}:
             selected.append(ProductMatch(item.product_id, item.name, max(item.score, 0.98), "Tên xuất hiện trong lệnh"))
 
+    # Several named products ("serum B5, kem chống nắng Anessa và ..."): match each query on its own,
+    # so one strong name cannot hide the others. A query without a clear winner is left to the user.
+    unresolved_queries: list[str] = []
+    query_candidates: list[ProductMatch] = []
+    per_query = (
+        len(queries) > 1 and not has_explicit_ids and not constraints
+        and not popularity_requested and not constraint_mismatches
+    )
+    if per_query:
+        for query in queries:
+            scored = sorted(
+                (ProductMatch(p["id"], p["name"], _name_match_score(query, p), f"Khớp “{query[:60]}”")
+                 for p in candidate_products),
+                key=lambda item: (-item.score, item.name),
+            )
+            scored = [item for item in scored if item.score > 0]
+            chosen = {item.product_id for item in selected}
+            top = scored[0] if scored else None
+            runner = scored[1] if len(scored) > 1 else None
+            by_id = {p["id"]: p for p in candidate_products}
+            if top and _clear_winner(query, by_id[top.product_id], by_id[runner.product_id] if runner else None,
+                                     top.score, runner.score if runner else 0.0, threshold):
+                if top.product_id not in chosen:
+                    selected.append(top)
+            elif not (top and top.product_id in chosen and top.score >= threshold):
+                unresolved_queries.append(query)
+                query_candidates.extend(item for item in scored[:MAX_CANDIDATES] if item.product_id not in chosen)
+
     popularity_data_available = any(item.get("sales_count", 0.0) > 0 for item in candidate_products)
     if (
         not has_explicit_ids
+        and not per_query  # named products: an unclear name is asked, never filled by the overall top match
         and not selected
         and ranked
         and not constraint_mismatches
@@ -315,7 +382,13 @@ def resolve_products(
             item.to_dict() for item in ranked if item.product_id not in chosen_ids
         ][:MAX_CANDIDATES]
     else:
-        ambiguous = [] if selected else [item.to_dict() for item in ranked[:MAX_CANDIDATES]]
+        ambiguous = [] if selected or per_query else [item.to_dict() for item in ranked[:MAX_CANDIDATES]]
+    if unresolved_queries:
+        seen = {item["product_id"] for item in ambiguous} | {item.product_id for item in selected}
+        for item in query_candidates:
+            if item.product_id not in seen:
+                seen.add(item.product_id)
+                ambiguous.append(item.to_dict())
     return {
         "selected": [item.to_dict() for item in selected],
         "ambiguous": ambiguous,
@@ -326,4 +399,5 @@ def resolve_products(
         "popularity_requested": popularity_requested,
         "popularity_data_available": any(item.get("sales_count", 0.0) > 0 for item in candidate_products),
         "constraint_mismatches": constraint_mismatches,
+        "unresolved_queries": unresolved_queries,
     }
