@@ -382,11 +382,17 @@ class SanPhamController {
         // live = request live-filter chưa commit (từ khóa đang gõ dở) -> báo cáo chỉ số bỏ qua.
         if ($q !== '') {
             require_once dirname(__DIR__) . '/services/InteractionLogger.php';
-            InteractionLogger::logSearch($q, [
+            require_once dirname(__DIR__) . '/services/AfterResponse.php';
+            // Ghi log sau khi đã trả response (đỡ 2 round-trip Atlas); chụp user/session trước vì session sẽ đóng.
+            [$logUserId, $logSessionId] = InteractionLogger::captureContext();
+            $logMeta = [
                 'result_count' => (int)($res['total'] ?? 0),
                 'live' => $isLiveFilterRequest && !$isLiveCommit,
                 'page' => $page,
-            ]);
+            ];
+            AfterResponse::defer(static function () use ($q, $logMeta, $logUserId, $logSessionId): void {
+                InteractionLogger::logSearch($q, $logMeta, $logUserId, $logSessionId);
+            });
         }
 
         // Smart Search Bước 06: ít/không có kết quả -> gợi ý từ Flask (không cache cùng $res).
@@ -788,7 +794,11 @@ class SanPhamController {
 
         // Phase B: Unified Interaction Logging
         require_once dirname(__DIR__) . '/services/InteractionLogger.php';
-        InteractionLogger::logView($productId);
+        require_once dirname(__DIR__) . '/services/AfterResponse.php';
+        [$logUserId, $logSessionId] = InteractionLogger::captureContext();
+        AfterResponse::defer(static function () use ($productId, $logUserId, $logSessionId): void {
+            InteractionLogger::logView($productId, [], $logUserId, $logSessionId);
+        });
     }
 
     /**

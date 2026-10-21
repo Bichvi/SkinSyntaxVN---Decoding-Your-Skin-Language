@@ -45,15 +45,27 @@ class InteractionLogger {
         }
     }
 
-    public static function logView(string|int $productId, array $metadata = []): bool {
-        return self::log(TuongTac::TYPE_VIEW, $productId, null, null, $metadata);
+    /**
+     * Lấy user id + session id hiện tại để truyền vào log chạy hoãn (AfterResponse) sau khi session đã đóng.
+     * Cùng điều kiện với InteractionLogger::log nên document lưu ra không đổi.
+     *
+     * @return array{0: ?int, 1: ?string}
+     */
+    public static function captureContext(): array {
+        $userId = isset($_SESSION['user']['ma_kh']) ? (int)$_SESSION['user']['ma_kh'] : null;
+        $sessionId = session_status() === PHP_SESSION_ACTIVE ? session_id() : null;
+        return [$userId, $sessionId];
     }
 
-    public static function logSearch(string $query, array $metadata = []): bool {
+    public static function logView(string|int $productId, array $metadata = [], ?int $userId = null, ?string $sessionId = null): bool {
+        return self::log(TuongTac::TYPE_VIEW, $productId, $userId, $sessionId, $metadata);
+    }
+
+    public static function logSearch(string $query, array $metadata = [], ?int $userId = null, ?string $sessionId = null): bool {
         $cleanQuery = trim($query);
         if ($cleanQuery === '') return false;
         $meta = array_merge($metadata, ['query' => $cleanQuery]);
-        return self::log(TuongTac::TYPE_SEARCH, null, null, null, $meta);
+        return self::log(TuongTac::TYPE_SEARCH, null, $userId, $sessionId, $meta);
     }
 
     public static function logSearchClick(string|int $productId, string $query, array $metadata = []): bool {

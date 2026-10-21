@@ -853,8 +853,8 @@ class HomeController {
                 $data['totalFiltered'] = (int)($searchResult['total'] ?? 0);
             }
             $data['sections'] = $this->model->publicRecommendationSections(6, $filters, $sortKey);
-            $data['brands'] = method_exists($this->model, 'listBrandOptions') ? $this->model->listBrandOptions() : [];
-            $data['categories'] = method_exists($this->model, 'listCategoryOptions') ? $this->model->listCategoryOptions() : [];
+            $data['brands'] = method_exists($this->model, 'listBrandOptions') ? ProductQueryCache::remember('filterOptions:brands', 600, fn() => $this->model->listBrandOptions()) : [];
+            $data['categories'] = method_exists($this->model, 'listCategoryOptions') ? ProductQueryCache::remember('filterOptions:categories', 600, fn() => $this->model->listCategoryOptions()) : [];
         } catch (Throwable $e) {
             error_log($logContext . ' MongoDB error: ' . $e->getMessage());
             $data['message'] = 'Hiện chưa thể tải dữ liệu sản phẩm. Vui lòng thử lại sau.';
@@ -893,8 +893,8 @@ class HomeController {
         $brands = [];
         $categories = [];
         try {
-            $brands = method_exists($this->model, 'listBrandOptions') ? $this->model->listBrandOptions() : [];
-            $categories = method_exists($this->model, 'listCategoryOptions') ? $this->model->listCategoryOptions() : [];
+            $brands = method_exists($this->model, 'listBrandOptions') ? ProductQueryCache::remember('filterOptions:brands', 600, fn() => $this->model->listBrandOptions()) : [];
+            $categories = method_exists($this->model, 'listCategoryOptions') ? ProductQueryCache::remember('filterOptions:categories', 600, fn() => $this->model->listCategoryOptions()) : [];
         } catch (Throwable $e) {
             error_log('product_collection options MongoDB error: ' . $e->getMessage());
         }

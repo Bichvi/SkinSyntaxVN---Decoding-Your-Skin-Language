@@ -74,7 +74,7 @@ $ssfCsrf = class_exists('SearchEventTracker') ? SearchEventTracker::csrfToken() 
                 <span class="ssf-reason" aria-label="Lý do gợi ý: <?= $ssfE($reasonText) ?>"><?= $ssfE($reasonText) ?></span>
               <?php endif; ?>
               <a href="<?= $ssfE($detailUrl) ?>" class="ssf-thumb-link">
-                <img src="<?= $ssfE($img ?: default_placeholder_image()) ?>" loading="lazy" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= $ssfE(default_placeholder_image()) ?>';" alt="<?= $ssfE($p['ten_san_pham'] ?? '') ?>">
+                <img src="<?= $ssfE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= $ssfE(default_placeholder_image()) ?>';" alt="<?= $ssfE($p['ten_san_pham'] ?? '') ?>">
               </a>
             </div>
             <div class="ssf-meta">

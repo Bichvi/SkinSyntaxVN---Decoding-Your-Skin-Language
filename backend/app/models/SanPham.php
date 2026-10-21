@@ -1064,17 +1064,22 @@ class SanPham {
             $filter = ['$and' => [$filter, $this->availableProductFilter()]];
         }
 
+        // Gợi ý/live search không dùng mo_ta, thanh_phan_full, hdsd -> bỏ khỏi projection; cache 120 s để đỡ round-trip Atlas
         $options = [
             'sort' => ['ten_san_pham' => 1],
-            'limit' => $limit
+            'limit' => $limit,
+            'projection' => self::LISTING_PROJECTION,
         ];
 
-        $cursor = $this->db->san_pham->find($filter, $options);
-        $items = [];
-        foreach ($cursor as $doc) {
-            $items[] = $this->normalizeProductRecord($doc);
-        }
-        return $items;
+        $cacheKey = 'suggest:' . md5(serialize([$q, $limit, $onlyVisibleOnWebsite]));
+        return ProductQueryCache::remember($cacheKey, 120, function () use ($filter, $options): array {
+            $cursor = $this->db->san_pham->find($filter, $options);
+            $items = [];
+            foreach ($cursor as $doc) {
+                $items[] = $this->normalizeProductRecord($doc);
+            }
+            return $items;
+        });
     }
 
     public function getTopTrending(int $limit = 5, bool $onlyVisibleOnWebsite = false): array {
@@ -1089,12 +1094,15 @@ class SanPham {
             'limit' => $limit
         ];
 
-        $cursor = $this->db->san_pham->find($filter, $options);
-        $items = [];
-        foreach ($cursor as $doc) {
-            $items[] = $this->normalizeProductRecord($doc);
-        }
-        return $items;
+        $cacheKey = 'trending:' . md5(serialize([$limit, $onlyVisibleOnWebsite]));
+        return ProductQueryCache::remember($cacheKey, 120, function () use ($filter, $options): array {
+            $cursor = $this->db->san_pham->find($filter, $options);
+            $items = [];
+            foreach ($cursor as $doc) {
+                $items[] = $this->normalizeProductRecord($doc);
+            }
+            return $items;
+        });
     }
 
     public function searchLive(string $q, int $limit = 5, bool $onlyVisibleOnWebsite = false): array {
@@ -1718,6 +1726,13 @@ class SanPham {
     }
 
     public function getCollectionProducts(string $type, array $filters = [], int $page = 1, int $perPage = 20, ?string $sort = null): array {
+        $cacheKey = 'collection:' . md5(serialize(func_get_args()));
+        return ProductQueryCache::remember($cacheKey, 120, function () use ($type, $filters, $page, $perPage, $sort): array {
+            return $this->queryCollectionProducts($type, $filters, $page, $perPage, $sort);
+        });
+    }
+
+    private function queryCollectionProducts(string $type, array $filters, int $page, int $perPage, ?string $sort): array {
         $page = max(1, $page);
         $perPage = max(1, min(60, $perPage));
         $type = trim($type);
@@ -1885,13 +1900,17 @@ class SanPham {
 
     public function publicRecommendationSections(int $limitEach = 6, array $filters = [], ?string $sort = null): array {
         $limitEach = max(1, min(16, $limitEach));
-        return [
-            'best_seller' => $this->getBestSellerProducts($filters, $limitEach, $sort),
-            'top_rated' => $this->getTopRatedProducts($filters, $limitEach, $sort),
-            'discount' => $this->getDiscountProducts($filters, $limitEach, $sort),
-            'most_viewed' => $this->getMostViewedProducts($filters, $limitEach, $sort),
-            'new' => $this->getNewProducts($filters, $limitEach, $sort),
-        ];
+        // Không phụ thuộc user/session nên cache chung 120 s (6 truy vấn Atlas ~0.8 MB)
+        $cacheKey = 'recsections:' . md5(serialize(func_get_args()));
+        return ProductQueryCache::remember($cacheKey, 120, function () use ($filters, $limitEach, $sort): array {
+            return [
+                'best_seller' => $this->getBestSellerProducts($filters, $limitEach, $sort),
+                'top_rated' => $this->getTopRatedProducts($filters, $limitEach, $sort),
+                'discount' => $this->getDiscountProducts($filters, $limitEach, $sort),
+                'most_viewed' => $this->getMostViewedProducts($filters, $limitEach, $sort),
+                'new' => $this->getNewProducts($filters, $limitEach, $sort),
+            ];
+        });
     }
 
     private function parseLookupLabel(string $label): array {
