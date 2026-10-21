@@ -30,7 +30,7 @@ from agents.command_query import (
     first_number,
     number,
 )
-from agents.query_sources import load_catalog, load_query_sources, product_id_filter
+from agents.query_sources import load_catalog, load_query_sources, load_vocabulary, product_id_filter
 from agents.product_resolver import _id_alias, normalize_catalog_product, resolve_products
 from config import (
     AGENT_ALLOW_AUTO_PUBLISH,
@@ -550,7 +550,8 @@ def process_agent_run(
                  # A plain "Tìm <danh mục>" is read-only; it never widens a create command.
                  or (classification.intent == PRODUCT_SEARCH and catalog_search_requested(run["brief"])))
         ):
-            query_plan = build_query_plan(run["brief"], **query_clock)
+            vocab = load_vocabulary(get_db())
+            query_plan = build_query_plan(run["brief"], vocab=vocab, **query_clock)
             if autopilot:
                 unclear = query_questions_decision(query_plan["questions"])
                 if unclear:
@@ -564,7 +565,7 @@ def process_agent_run(
             products = [] if query_plan["questions"] else catalog if catalog is not None else load_catalog(get_db())
             if not query_plan["questions"] and catalog is None:
                 batches, snapshots = load_query_sources(get_db(), query_plan)
-            query_result = execute_query(query_plan, products, batches=batches, snapshots=snapshots, brief=run["brief"])
+            query_result = execute_query(query_plan, products, batches=batches, snapshots=snapshots, brief=run["brief"], vocab=vocab)
             plan = {
                 "intent_classification": classification_data, "brief": run["brief"],
                 "query_result": query_result, "resolved_products": query_result["selected"],

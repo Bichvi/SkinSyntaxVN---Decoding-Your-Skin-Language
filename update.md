@@ -7,6 +7,8 @@ Ngôn ngữ tài liệu: tiếng Việt. Mọi khẳng định bên dưới đư
 
 Không có bí mật nào trong tài liệu này. Không đọc, không ghi giá trị `.env`. Tên biến môi trường được nêu, giá trị thì không.
 
+> **Cập nhật 2026-10-21 (chưa commit):** Syna lọc sản phẩm theo loại da, thương hiệu, xuất xứ, nơi sản xuất, thành phần và giá. Mỗi điều kiện được phân loại HARD (bắt buộc) hoặc SOFT (ưu tiên). Syna không còn dừng vì cụm "da dầu". Chi tiết: [`update_catalog_constraints.md`](update_catalog_constraints.md).
+
 ---
 
 ## 1. Tổng quan dự án và mục tiêu Syna
