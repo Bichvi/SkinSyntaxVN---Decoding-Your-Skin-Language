@@ -337,6 +337,80 @@ class SanPham {
         return new \MongoDB\BSON\Regex($q, 'i');
     }
 
+    // Từ ngắn không mang nghĩa tìm kiếm, bỏ khi tách token
+    private const SEARCH_STOPWORDS = ['cho', 'và', 'của', 'các', 'loại', 'dành', 'the', 'for'];
+    private const SEARCH_MAX_TOKENS = 6;
+    // Chữ cái gốc => mọi biến thể có dấu (thường + hoa) để khớp không dấu trên Mongo
+    private const SEARCH_ACCENT_CLASSES = [
+        'a' => 'aàáạảãâầấậẩẫăằắặẳẵAÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴ',
+        'e' => 'eèéẹẻẽêềếệểễEÈÉẸẺẼÊỀẾỆỂỄ',
+        'i' => 'iìíịỉĩIÌÍỊỈĨ',
+        'o' => 'oòóọỏõôồốộổỗơờớợởỡOÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠ',
+        'u' => 'uùúụủũưừứựửữUÙÚỤỦŨƯỪỨỰỬỮ',
+        'y' => 'yỳýỵỷỹYỲÝỴỶỸ',
+        'd' => 'dđDĐ',
+    ];
+
+    // Chuẩn hóa q, tách theo khoảng trắng, bỏ stopword, giữ tối đa 6 token đầu
+    private static function tokenizeSearchQuery(string $q): array {
+        $q = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $q) ?? ''), 'UTF-8');
+        if ($q === '') {
+            return [];
+        }
+        $tokens = array_filter(explode(' ', $q), fn($t) => $t !== '' && !in_array($t, self::SEARCH_STOPWORDS, true));
+        return array_slice(array_values($tokens), 0, self::SEARCH_MAX_TOKENS);
+    }
+
+    // Regex khớp token bất kể có dấu hay không ("sua" ~ "Sữa"), escape ký tự đặc biệt
+    private function buildAccentInsensitiveRegex(string $token): \MongoDB\BSON\Regex {
+        $plain = strtr(mb_strtolower($token, 'UTF-8'), [
+            'à'=>'a','á'=>'a','ạ'=>'a','ả'=>'a','ã'=>'a','â'=>'a','ầ'=>'a','ấ'=>'a','ậ'=>'a','ẩ'=>'a','ẫ'=>'a','ă'=>'a','ằ'=>'a','ắ'=>'a','ặ'=>'a','ẳ'=>'a','ẵ'=>'a',
+            'è'=>'e','é'=>'e','ẹ'=>'e','ẻ'=>'e','ẽ'=>'e','ê'=>'e','ề'=>'e','ế'=>'e','ệ'=>'e','ể'=>'e','ễ'=>'e',
+            'ì'=>'i','í'=>'i','ị'=>'i','ỉ'=>'i','ĩ'=>'i',
+            'ò'=>'o','ó'=>'o','ọ'=>'o','ỏ'=>'o','õ'=>'o','ô'=>'o','ồ'=>'o','ố'=>'o','ộ'=>'o','ổ'=>'o','ỗ'=>'o','ơ'=>'o','ờ'=>'o','ớ'=>'o','ợ'=>'o','ở'=>'o','ỡ'=>'o',
+            'ù'=>'u','ú'=>'u','ụ'=>'u','ủ'=>'u','ũ'=>'u','ư'=>'u','ừ'=>'u','ứ'=>'u','ự'=>'u','ử'=>'u','ữ'=>'u',
+            'ỳ'=>'y','ý'=>'y','ỵ'=>'y','ỷ'=>'y','ỹ'=>'y','đ'=>'d',
+        ]);
+        $pattern = '';
+        foreach (mb_str_split($plain, 1, 'UTF-8') as $ch) {
+            $pattern .= isset(self::SEARCH_ACCENT_CLASSES[$ch])
+                ? '[' . self::SEARCH_ACCENT_CLASSES[$ch] . ']'
+                : preg_quote($ch, '/');
+        }
+        return new \MongoDB\BSON\Regex($pattern, 'i');
+    }
+
+    // Mỗi token phải khớp ít nhất 1 trường (OR), mọi token phải khớp (AND). Hãng tra qua ma_thuong_hieu.
+    private function buildTokenSearchFilter(array $tokens): array {
+        $and = [];
+        foreach ($tokens as $tok) {
+            $rx = $this->buildAccentInsensitiveRegex($tok);
+            $or = [
+                ['ten_san_pham' => $rx],
+                ['ma_san_pham' => $rx],
+                ['thuong_hieu' => $rx],
+                ['danh_muc_day_du' => $rx],
+                ['loai_san_pham' => $rx],
+                ['barcode' => $rx],
+            ];
+            $brandIds = [];
+            try {
+                foreach ($this->db->thuong_hieu->find(['ten_thuong_hieu' => $rx], ['projection' => ['ma_thuong_hieu' => 1], 'limit' => 50]) as $b) {
+                    if (isset($b['ma_thuong_hieu'])) {
+                        $brandIds[] = $b['ma_thuong_hieu'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Không tra được hãng thì vẫn tìm theo các trường còn lại
+            }
+            if (!empty($brandIds)) {
+                $or[] = ['ma_thuong_hieu' => ['$in' => $brandIds]];
+            }
+            $and[] = ['$or' => $or];
+        }
+        return ['$and' => $and];
+    }
+
     public function latest(int $limit = 8, bool $onlyVisibleOnWebsite = false, bool $excludeNonBeauty = false): array {
         $valkeyKey = 'home:latest:' . $limit . ':' . ($onlyVisibleOnWebsite ? '1' : '0') . ':' . ($excludeNonBeauty ? '1' : '0');
         if (class_exists('CacheService')) {
@@ -439,6 +513,65 @@ class SanPham {
         return $map;
     }
 
+
+    /**
+     * Smart Search Bước 06: lấy SP đang bán theo danh sách mã (1 truy vấn $in), trả về ĐÚNG thứ tự $ids,
+     * bỏ id không tìm thấy/ẩn. ma_san_pham trong Atlas là số nguyên (long) -> ép int.
+     */
+    public function findVisibleByIds(array $ids): array {
+        $order = [];
+        foreach ($ids as $id) {
+            $id = trim((string)$id);
+            if ($id !== '' && ctype_digit($id) && !isset($order[$id])) {
+                $order[$id] = (int)$id;
+            }
+        }
+        if (!$order) {
+            return [];
+        }
+        $filter = ['$and' => [
+            ['ma_san_pham' => ['$in' => array_values($order)]],
+            $this->availableProductFilter(),
+        ]];
+        $byId = [];
+        foreach ($this->db->san_pham->find($filter, ['projection' => self::LISTING_PROJECTION]) as $doc) {
+            $p = $this->normalizeProductRecord($doc);
+            $key = (string)($p['ma_san_pham'] ?? '');
+            if ($key !== '' && !isset($byId[$key])) {
+                $byId[$key] = $p;
+            }
+        }
+        return self::orderByIds(array_keys($order), $byId);
+    }
+
+    /** Hàm thuần: sắp $byId (map id => sp) theo thứ tự $ids, bỏ id thiếu. */
+    public static function orderByIds(array $ids, array $byId): array {
+        $out = [];
+        foreach ($ids as $id) {
+            $id = (string)$id;
+            if (isset($byId[$id])) {
+                $out[] = $byId[$id];
+            }
+        }
+        return $out;
+    }
+
+    /** SP bán chạy (so_luong_da_ban giảm dần), chỉ SP đang bán. Dùng làm fallback khi Flask lỗi. */
+    public function bestSellers(int $limit = 8): array {
+        $limit = max(1, min(24, $limit));
+        return ProductQueryCache::remember('search:bestSellers:' . $limit, 300, function () use ($limit): array {
+            $items = [];
+            $cursor = $this->db->san_pham->find($this->availableProductFilter(), [
+                'sort' => ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+                'limit' => $limit,
+                'projection' => self::LISTING_PROJECTION,
+            ]);
+            foreach ($cursor as $doc) {
+                $items[] = $this->normalizeProductRecord($doc);
+            }
+            return $items;
+        });
+    }
 
     public function find($id, bool $onlyVisibleOnWebsite = false) {
         $filter = $this->productFlexibleFilter($id);
@@ -843,7 +976,11 @@ class SanPham {
         
         $filter = [];
 
-        if (trim($q) !== '') {
+        $searchTokens = is_numeric(trim($q)) ? [] : self::tokenizeSearchQuery($q);
+        if (!empty($searchTokens)) {
+            $filter = $this->buildTokenSearchFilter($searchTokens);
+        } elseif (trim($q) !== '') {
+            // q là số (mã SP) hoặc chỉ toàn stopword: giữ hành vi cũ nguyên cụm
             $regex = $this->buildSearchRegex($q);
             $filter['$or'] = [
                 ['ten_san_pham' => $regex],

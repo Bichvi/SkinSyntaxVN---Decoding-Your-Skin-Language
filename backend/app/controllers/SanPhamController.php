@@ -353,8 +353,6 @@ class SanPhamController {
             if (!$isLiveFilterRequest || $isLiveCommit) {
                 $this->saveSearchHistory($q);
             }
-            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
-            InteractionLogger::logSearch($q);
         }
 
         $perPage = 24;
@@ -365,7 +363,7 @@ class SanPhamController {
             'c1' => $cap1,
             'c2' => $cap2,
             'sort' => $sort,
-            'v' => 1
+            'v' => 2
         ]));
 
         $res = null;
@@ -380,6 +378,23 @@ class SanPhamController {
             }
         }
 
+        // Bước 08: log tìm kiếm ghi sau khi có kết quả để có result_count (zero-result rate);
+        // live = request live-filter chưa commit (từ khóa đang gõ dở) -> báo cáo chỉ số bỏ qua.
+        if ($q !== '') {
+            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
+            InteractionLogger::logSearch($q, [
+                'result_count' => (int)($res['total'] ?? 0),
+                'live' => $isLiveFilterRequest && !$isLiveCommit,
+                'page' => $page,
+            ]);
+        }
+
+        // Smart Search Bước 06: ít/không có kết quả -> gợi ý từ Flask (không cache cùng $res).
+        $searchFallback = null;
+        if ($q !== '' && $page === 1 && (int)($res['total'] ?? 0) < 4) {
+            $searchFallback = $this->buildSearchFallback($q, $res['items'] ?? []);
+        }
+
         $this->render('tatca', [
             'items' => $res['items'] ?? [],
             'total' => $res['total'] ?? 0,
@@ -388,8 +403,67 @@ class SanPhamController {
             'q' => $q,
             'cap1' => $cap1,
             'cap2' => $cap2,
-            'sort' => $sort
+            'sort' => $sort,
+            'searchFallback' => $searchFallback
         ]);
+    }
+
+    /** Gợi ý khi tìm kiếm ít kết quả. Không bao giờ ném lỗi; null nếu tính năng tắt hoặc lỗi hoàn toàn. */
+    private function buildSearchFallback(string $q, array $currentItems): ?array {
+        try {
+            require_once dirname(__DIR__) . '/services/SearchRecommendClient.php';
+            require_once dirname(__DIR__) . '/services/SearchFallbackBuilder.php';
+            require_once dirname(__DIR__) . '/services/SearchEventTracker.php'; // csrf cho beacon trong partial
+            if (in_array(strtolower(ss_env('SEARCH_FALLBACK_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
+                return null;
+            }
+
+            $excludeIds = [];
+            foreach ($currentItems as $it) {
+                $id = (string)($it['ma_san_pham'] ?? $it['id'] ?? '');
+                if ($id !== '') {
+                    $excludeIds[] = $id;
+                }
+            }
+            $cartIds = [];
+            if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+                $cartIds = array_slice(array_map('strval', array_keys($_SESSION['gio_hang'])), 0, 50);
+            }
+            $userHash = null;
+            $salt = ss_env('SEARCH_USER_HASH_SALT', '');
+            $email = (string)($_SESSION['user']['email'] ?? '');
+            if ($salt !== '' && $email !== '') {
+                $userHash = hash('sha256', mb_strtolower(trim($email)) . $salt);
+            }
+            // Bước 08: hồ sơ da rút gọn {skin_type, concerns} (key đồ thị), không tên/email.
+            $skinProfile = $email !== '' ? $this->searchSkinProfile($email) : null;
+
+            $client = SearchRecommendClient::fromEnv();
+            $response = $client ? $client->recommend($q, $userHash, $skinProfile, $cartIds, $excludeIds, 8) : null;
+
+            $model = $this->model;
+            return SearchFallbackBuilder::build(
+                $response,
+                function (array $ids) use ($model): array { return $model->findVisibleByIds($ids); },
+                function (int $limit) use ($model): array { return $model->bestSellers($limit); },
+                $q
+            );
+        } catch (Throwable $e) {
+            error_log('[SEARCH_RECOMMEND] fallback build error: ' . get_class($e));
+            return null;
+        }
+    }
+
+    /** Hồ sơ da của khách đăng nhập cho tìm kiếm (chỉ đọc khach_hang). Lỗi/không có -> null. */
+    private function searchSkinProfile(string $email): ?array {
+        try {
+            require_once dirname(__DIR__) . '/services/SearchSkinProfile.php';
+            $kh = (new TaiKhoan($this->pdo))->getKhachHangByEmail($email);
+            return SearchSkinProfile::fromCustomer($kh);
+        } catch (Throwable $e) {
+            error_log('[SEARCH_RECOMMEND] skin profile skipped: ' . get_class($e));
+            return null;
+        }
     }
 
     public function danhsach() {
