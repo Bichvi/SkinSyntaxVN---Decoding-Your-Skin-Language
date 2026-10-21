@@ -9,6 +9,8 @@ Không có bí mật nào trong tài liệu này. Không đọc, không ghi giá
 
 > **Cập nhật 2026-10-21 (chưa commit):** Syna lọc sản phẩm theo loại da, thương hiệu, xuất xứ, nơi sản xuất, thành phần và giá. Mỗi điều kiện được phân loại HARD (bắt buộc) hoặc SOFT (ưu tiên). Syna không còn dừng vì cụm "da dầu". Chi tiết: [`update_catalog_constraints.md`](update_catalog_constraints.md).
 
+> **Smart Search + Neo4j (2026-10-21, phần lớn chưa commit):** tìm kiếm `r=tatca` khớp theo từng từ, không phân biệt dấu (commit `e42f4ac`). Khi có ít hơn 4 kết quả, trang hiện khối gợi ý có lý do. Nguồn gợi ý: Flask `POST /api/search/recommend` (đồ thị Neo4j + Chroma + đang bán chạy). Khi Flask hoặc Neo4j tắt, trang tự hạ cấp. Có thêm beacon `search_events` và script đo chỉ số. Gunicorn `skinsyntax-ai` chuyển sang gthread. Chi tiết: [`update_neo4j_search_recommendation.md`](update_neo4j_search_recommendation.md). Người dùng cần đặt `SEARCH_INTERNAL_TOKEN`.
+
 ---
 
 ## 1. Tổng quan dự án và mục tiêu Syna
