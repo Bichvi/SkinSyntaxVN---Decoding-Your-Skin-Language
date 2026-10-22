@@ -57,6 +57,11 @@ class CacheService
         return self::$instance;
     }
 
+    public static function resetInstance(): void
+    {
+        self::$instance = null;
+    }
+
     /**
      * Lazy initialization of the Valkey connection with timeout and error suppression.
      */
@@ -141,6 +146,12 @@ class CacheService
     {
         $fullKey = $this->formatKey($key);
 
+        // Safe Bypass Guard: Check if remote cache is bypassed due to an invalidation failure
+        if ($this->isBypassedDueToFailedInvalidation($key)) {
+            $this->misses++;
+            return $default;
+        }
+
         // 1. Check L1 Request-Scoped Memory Cache
         if (array_key_exists($fullKey, $this->l1MemoryCache)) {
             $this->hits++;
@@ -191,6 +202,11 @@ class CacheService
         $missingFullToOrig = [];
 
         foreach ($keys as $k) {
+            if ($this->isBypassedDueToFailedInvalidation($k)) {
+                $this->misses++;
+                $result[$k] = $default;
+                continue;
+            }
             $fullKey = $this->formatKey($k);
             if (array_key_exists($fullKey, $this->l1MemoryCache)) {
                 $this->hits++;
@@ -292,14 +308,17 @@ class CacheService
         unset($this->l1MemoryCache[$fullKey]);
 
         if (!$this->connect()) {
+            $this->recordInvalidationFailure($key, 'Cannot connect to Valkey during delete');
             return false;
         }
 
         try {
             $deleted = $this->client->del([$fullKey]);
+            $this->clearInvalidationFailure();
             return $deleted > 0;
         } catch (Throwable $e) {
             $this->lastError = 'DELETE failed: ' . $e->getMessage();
+            $this->recordInvalidationFailure($key, $e->getMessage());
             return false;
         }
     }
@@ -365,6 +384,7 @@ class CacheService
         }
 
         if (!$this->connect()) {
+            $this->recordInvalidationFailure($pattern, 'Cannot connect to Valkey during deleteByPattern');
             return 0;
         }
 
@@ -383,10 +403,65 @@ class CacheService
                 }
             } while ($cursor !== '0' && $cursor !== 0);
 
+            $this->clearInvalidationFailure();
             return $totalDeleted;
         } catch (Throwable $e) {
             $this->lastError = 'SCAN/DELETE failed: ' . $e->getMessage();
+            $this->recordInvalidationFailure($pattern, $e->getMessage());
             return 0;
+        }
+    }
+
+    public function getInvalidationFailureFlagFile(): string
+    {
+        return dirname(__DIR__, 2) . '/storage/cache/cache_invalidation_failed.flag';
+    }
+
+    public function isBypassedDueToFailedInvalidation(string $key): bool
+    {
+        $flagFile = $this->getInvalidationFailureFlagFile();
+        if (!file_exists($flagFile)) {
+            return false;
+        }
+
+        $raw = @file_get_contents($flagFile);
+        $data = $raw ? json_decode($raw, true) : null;
+        if (!is_array($data) || empty($data['failed_at'])) {
+            @unlink($flagFile);
+            return false;
+        }
+
+        if ((time() - (int)$data['failed_at']) < 300) {
+            $failedPattern = (string)($data['pattern'] ?? '');
+            if ($failedPattern === '' || $failedPattern === '*' || str_starts_with($key, rtrim($failedPattern, '*'))) {
+                return true;
+            }
+        } else {
+            @unlink($flagFile);
+        }
+
+        return false;
+    }
+
+    public function recordInvalidationFailure(string $pattern, string $error): void
+    {
+        $flagFile = $this->getInvalidationFailureFlagFile();
+        $dir = dirname($flagFile);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        @file_put_contents($flagFile, json_encode([
+            'failed_at' => time(),
+            'pattern' => $pattern,
+            'error' => $error,
+        ]));
+    }
+
+    public function clearInvalidationFailure(): void
+    {
+        $flagFile = $this->getInvalidationFailureFlagFile();
+        if (file_exists($flagFile)) {
+            @unlink($flagFile);
         }
     }
 

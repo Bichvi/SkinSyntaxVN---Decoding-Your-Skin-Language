@@ -53,11 +53,21 @@ class FlashSaleCampaign {
 
     public static function clearRequestCache(): void {
         self::$requestActiveCampaignsCache = null;
+        if (!class_exists('SanPham') && is_file(__DIR__ . '/SanPham.php')) {
+            require_once __DIR__ . '/SanPham.php';
+        }
         if (class_exists('SanPham') && method_exists('SanPham', 'invalidateProductCache')) {
             SanPham::invalidateProductCache();
-        } elseif (class_exists('CacheService')) {
-            CacheService::getInstance()->deleteByPattern('home:*');
-            CacheService::getInstance()->deleteByPattern('catalog:*');
+        } else {
+            if (!class_exists('CacheService') && is_file(dirname(__DIR__) . '/services/CacheService.php')) {
+                require_once dirname(__DIR__) . '/services/CacheService.php';
+            }
+            if (class_exists('CacheService')) {
+                $cache = CacheService::getInstance();
+                $cache->deleteByPattern('home:*');
+                $cache->deleteByPattern('catalog:*');
+                $cache->deleteByPattern('menu:*');
+            }
         }
     }
 
@@ -959,6 +969,61 @@ class FlashSaleCampaign {
             return null;
         } catch (\Throwable $e) {
             error_log('FlashSaleCampaign getUpcomingCampaign error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Compute the next campaign transition timestamp (Unix seconds) relative to $now.
+     * Earliest of:
+     * - End time of any currently active campaign
+     * - Start time of any upcoming campaign
+     * Returns null if no active or upcoming campaign is found.
+     */
+    public function getNextCampaignTransitionTimestamp(?int $now = null): ?int {
+        $nowTs = $now !== null ? $now : time();
+        $nowUtc = new \MongoDB\BSON\UTCDateTime($nowTs * 1000);
+
+        try {
+            // 1. Earliest end time among currently active campaigns
+            $activeCursor = $this->db->{self::COLLECTION_NAME}->find([
+                'is_active' => ['$ne' => false],
+                'start_at'  => ['$lte' => $nowUtc],
+                'end_at'    => ['$gt' => $nowUtc],
+            ], [
+                'sort' => ['end_at' => 1],
+                'limit' => 1,
+                'projection' => ['end_at' => 1],
+            ]);
+
+            $earliestEnd = null;
+            foreach ($activeCursor as $doc) {
+                $earliestEnd = $this->utcDateTimeToTimestamp($doc['end_at'] ?? null);
+                break;
+            }
+
+            // 2. Earliest start time among upcoming campaigns
+            $upcomingCursor = $this->db->{self::COLLECTION_NAME}->find([
+                'is_active' => ['$ne' => false],
+                'start_at'  => ['$gt' => $nowUtc],
+            ], [
+                'sort' => ['start_at' => 1],
+                'limit' => 1,
+                'projection' => ['start_at' => 1],
+            ]);
+
+            $earliestStart = null;
+            foreach ($upcomingCursor as $doc) {
+                $earliestStart = $this->utcDateTimeToTimestamp($doc['start_at'] ?? null);
+                break;
+            }
+
+            if ($earliestEnd !== null && $earliestStart !== null) {
+                return min($earliestEnd, $earliestStart);
+            }
+            return $earliestEnd ?? $earliestStart;
+        } catch (\Throwable $e) {
+            error_log('FlashSaleCampaign getNextCampaignTransitionTimestamp error: ' . $e->getMessage());
             return null;
         }
     }

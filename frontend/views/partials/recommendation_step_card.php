@@ -81,13 +81,17 @@ $modalData = static function (array $item): string {
   </div>
 
   <div class="step-card__product">
+      <?php $isFirstStepCard = (($index ?? 0) === 0 && ($session ?? 'am') === 'am'); ?>
       <a class="step-card__image-wrap" data-product-link href="<?= h($detailUrl !== '' ? $detailUrl : '#') ?>" aria-label="Xem <?= h($productName) ?>">
       <img
         class="step-card__image"
         data-product-image
         src="<?= h($image) ?>"
         alt="<?= h($productName) ?>"
-        loading="lazy"
+        <?= $isFirstStepCard ? 'fetchpriority="high"' : 'loading="lazy"' ?>
+        decoding="async"
+        width="200"
+        height="200"
         referrerpolicy="no-referrer"
         data-fallback-image="<?= h(default_placeholder_image()) ?>"
       >
@@ -156,7 +160,7 @@ $modalData = static function (array $item): string {
             $altData = array_merge($alt, ['id' => $altId, 'name' => $altName, 'price' => $altPrice, 'image' => $altImage]);
           ?>
           <button type="button" class="alternative-option" data-alternative data-step-key="<?= h($stepKey) ?>" data-product="<?= h($modalData($altData)) ?>">
-            <img src="<?= h($altImage) ?>" alt="" loading="lazy" referrerpolicy="no-referrer">
+            <img src="<?= h($altImage) ?>" alt="" loading="lazy" decoding="async" width="36" height="36" referrerpolicy="no-referrer">
             <span><strong><?= h($altName) ?></strong><span><?= h(vnd($altPrice)) ?></span></span>
             <span class="alternative-chip">Chọn</span>
           </button>

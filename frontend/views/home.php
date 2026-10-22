@@ -142,7 +142,7 @@ $skinConcernCategories = [
 ];
 
 // Product card renderer
-$renderHomeProductCard = static function (array $p, string $tag = '', string $whyFitText = ''): void {
+$renderHomeProductCard = static function (array $p, string $tag = '', string $whyFitText = '', bool $isAboveFold = false, bool $isLcp = false): void {
     $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
     $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
     $giaBan = (string)($p['gia_ban'] ?? '');
@@ -175,7 +175,16 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
         <?php endif; ?>
 
         <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 overflow-hidden" style="border-radius: 8px; aspect-ratio: 1/1;">
-          <img class="product-card-img" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h(!empty($p['ten_san_pham']) ? $p['ten_san_pham'] : 'Sản phẩm SkinSyntax') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+          <img class="product-card-img"
+               src="<?= h($img ?: default_placeholder_image()) ?>"
+               <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?>
+               decoding="async"
+               width="280"
+               height="280"
+               referrerpolicy="no-referrer"
+               onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
+               alt="<?= h(!empty($p['ten_san_pham']) ? $p['ten_san_pham'] : 'Sản phẩm SkinSyntax') ?>"
+               style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
         </a>
       </div>
 
@@ -256,7 +265,7 @@ $renderHomeProductCard = static function (array $p, string $tag = '', string $wh
 };
 
 // Dedicated Flash Sale Card Renderer (Real campaign pricing & discount badge)
-$renderFlashSaleProductCard = static function (array $p): void {
+$renderFlashSaleProductCard = static function (array $p, bool $isAboveFold = false, bool $isLcp = false): void {
     $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
     $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
     $flashPrice = (int)($p['flash_price'] ?? $p['effective_price'] ?? 0);
@@ -280,7 +289,16 @@ $renderFlashSaleProductCard = static function (array $p): void {
         </span>
 
         <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 overflow-hidden" style="border-radius: 8px; aspect-ratio: 1/1;">
-          <img class="product-card-img" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h(!empty($p['ten_san_pham']) ? $p['ten_san_pham'] : 'Sản phẩm Flash Sale') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+          <img class="product-card-img"
+               src="<?= h($img ?: default_placeholder_image()) ?>"
+               <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?>
+               decoding="async"
+               width="280"
+               height="280"
+               referrerpolicy="no-referrer"
+               onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
+               alt="<?= h(!empty($p['ten_san_pham']) ? $p['ten_san_pham'] : 'Sản phẩm Flash Sale') ?>"
+               style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
         </a>
       </div>
 
@@ -433,7 +451,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
           </div>
 
           <div class="syna-mascot-img-wrap">
-            <img src="<?= BASE_URL ?>/assets/images/syna_listening.png" alt="SYNA Mascot" class="syna-mascot-img state-idle" id="synaMascotImg">
+            <img src="<?= BASE_URL ?>/assets/images/syna_listening.png" alt="SYNA Mascot" class="syna-mascot-img state-idle" id="synaMascotImg" fetchpriority="high" decoding="async" width="300" height="360">
           </div>
         </div>
       </div>
@@ -463,11 +481,35 @@ $renderFlashSaleProductCard = static function (array $p): void {
         bye: baseUrl + 'syna_bye.png'
       };
 
-      // 2. PRELOAD ALL POSE ASSETS (prevents white flash on pose switch)
-      Object.values(synaStates).forEach(function (src) {
-        var img = new Image();
-        img.src = src;
+      // 2. SELECTIVE POSE ASSET LOADING (Only immediate initial states + On-demand with fallback)
+      var loadedStates = {};
+      var immediateStates = ['idle', 'greeting', 'talking1', 'talking2'];
+      immediateStates.forEach(function (key) {
+        if (synaStates[key]) {
+          var img = new Image();
+          img.onload = function () { loadedStates[synaStates[key]] = true; };
+          img.src = synaStates[key];
+        }
       });
+
+      // Background prefetch during idle time for subsequent dialogue poses
+      var prefetchRemainingStates = function () {
+        Object.keys(synaStates).forEach(function (key) {
+          if (!immediateStates.includes(key)) {
+            var src = synaStates[key];
+            if (!loadedStates[src]) {
+              var img = new Image();
+              img.onload = function () { loadedStates[src] = true; };
+              img.src = src;
+            }
+          }
+        });
+      };
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(prefetchRemainingStates, { timeout: 3500 });
+      } else {
+        setTimeout(prefetchRemainingStates, 2500);
+      }
 
       // 3. SET INITIAL IDLE IMAGE & BIND ONERROR FALLBACK
       mascotImg.src = synaStates.idle;
@@ -502,7 +544,9 @@ $renderFlashSaleProductCard = static function (array $p): void {
             talkingInterval = setInterval(function () {
               talkingToggle = !talkingToggle;
               var talkSrc = talkingToggle ? synaStates.talking2 : synaStates.talking1;
-              mascotImg.src = talkSrc;
+              if (loadedStates[talkSrc]) {
+                mascotImg.src = talkSrc;
+              }
             }, 380);
           } else {
             return;
@@ -510,7 +554,19 @@ $renderFlashSaleProductCard = static function (array $p): void {
         }
 
         if (targetSrc) {
-          mascotImg.src = targetSrc;
+          if (loadedStates[targetSrc]) {
+            mascotImg.src = targetSrc;
+          } else {
+            // Load on demand and switch smoothly once ready, retaining current pose as fallback
+            var targetImg = new Image();
+            targetImg.onload = function () {
+              loadedStates[targetSrc] = true;
+              if (currentState === stateName) {
+                mascotImg.src = targetSrc;
+              }
+            };
+            targetImg.src = targetSrc;
+          }
         }
 
         // Apply matching CSS motion class
@@ -849,7 +905,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
           <?php if ($featLiveProd && $featProdId !== ''): ?>
             <div class="p-3 rounded-3 mb-3 d-flex align-items-center gap-3" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);">
               <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= rawurlencode($featProdId) ?>" class="d-block flex-shrink-0">
-                <img src="<?= h(resolve_image_url((string)($featLiveProd['link_hinh_anh'] ?? $featLiveProd['hinh_anh'] ?? ''))) ?>" alt="<?= h($featLiveProd['ten_san_pham'] ?? 'Live Product') ?>" style="width: 58px; height: 58px; object-fit: cover; border-radius: 8px; background: #FFF;">
+                <img src="<?= h(resolve_image_url((string)($featLiveProd['link_hinh_anh'] ?? $featLiveProd['hinh_anh'] ?? ''))) ?>" alt="<?= h($featLiveProd['ten_san_pham'] ?? 'Live Product') ?>" loading="lazy" decoding="async" width="58" height="58" style="width: 58px; height: 58px; object-fit: cover; border-radius: 8px; background: #FFF;">
               </a>
               <div class="overflow-hidden flex-grow-1">
                 <span class="badge bg-success mb-1" style="font-size: 0.65rem; background: #2D6A4F !important;">Sản phẩm ghim trong live</span>
@@ -1138,12 +1194,17 @@ document.addEventListener('DOMContentLoaded', function () {
         item.classList.remove('d-none');
         if (animate) {
           item.classList.remove('flash-card-entering');
-          void item.offsetWidth;
-          item.classList.add('flash-card-entering');
         }
       } else {
         item.classList.add('d-none');
         item.classList.remove('flash-card-entering');
+      }
+    }
+
+    if (animate && viewport) {
+      void viewport.offsetWidth;
+      for (var j = startIndex; j < endIndex; j++) {
+        items[j].classList.add('flash-card-entering');
       }
     }
 

@@ -39,12 +39,14 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     $aiChatSkinProfile = null;
   }
 }
+$mascotFilePath = dirname(__DIR__, 2) . '/public/assets/images/syna_mascot.png';
+$mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) : '20261018';
 ?>
 <?php if ($pdo !== null): ?>
   <div class="ai-chat-widget" data-ai-chat-widget>
     <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với Syna (AI Advisor)">
       <span class="ai-chat-widget__trigger-avatar" aria-hidden="true">
-        <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= time() ?>" alt="SYNA Mascot">
+        <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= $mascotVersion ?>" alt="SYNA Mascot" width="36" height="36" decoding="async">
       </span>
       <span class="ai-chat-widget__trigger-text">
         <strong>Chat với Syna</strong>
@@ -71,7 +73,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         <header class="ai-chat-widget__panel-head">
         <div class="ai-chat-widget__panel-head-main">
           <div class="ai-chat-widget__panel-avatar" aria-hidden="true">
-            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= time() ?>" alt="SYNA Mascot" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= $mascotVersion ?>" alt="SYNA Mascot" width="40" height="40" decoding="async" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
           </div>
           <div class="ai-chat-widget__panel-info">
             <div class="ai-chat-widget__panel-title">SYNA | AI SKINCARE ADVISOR</div>
@@ -1851,7 +1853,7 @@ if ($aiChatEmail !== '' && $pdo !== null) {
           }
 
           var formattedContent = isUser ? escapeHtml(message.content) : formatMarkdown(message.content);
-          var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png?v=' . time()) ?>;
+          var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png?v=' . $mascotVersion) ?>;
           var avatar = isUser
             ? ''
             : '<div class="ai-chat-widget__bubble-avatar" aria-hidden="true" style="overflow:hidden;border-radius:10px;"><img src="' + mascotImgUrl + '" alt="SYNA Mascot" style="width:100%;height:100%;object-fit:cover;"></div>';
@@ -1943,10 +1945,39 @@ if ($aiChatEmail !== '' && $pdo !== null) {
         }
       };
 
+      var chatInitialized = false;
+      var ensureChatInitialized = function () {
+        if (chatInitialized) return;
+        chatInitialized = true;
+        try {
+          if (userLoggedIn) {
+            var savedConvId = window.sessionStorage.getItem('aiChatActiveConversationIdV4:' + storageScope);
+            if (savedConvId && savedConvId !== 'null' && savedConvId !== 'undefined') {
+              activeConversationId = savedConvId;
+              selectConversation(savedConvId);
+            }
+          } else {
+            var stored = window.sessionStorage.getItem(storageKey);
+            if (stored) {
+              var parsed = JSON.parse(stored);
+              if (Array.isArray(parsed)) {
+                messages = parsed;
+              }
+            }
+          }
+        } catch (error) {}
+
+        renderMessages();
+        if (messages.length === 0) {
+          injectGreeting();
+        }
+      };
+
       var openWidget = function () {
         if (!panel || !trigger) {
           return;
         }
+        ensureChatInitialized();
         if (closeTimer) {
           window.clearTimeout(closeTimer);
           closeTimer = null;
@@ -2422,25 +2453,6 @@ if ($aiChatEmail !== '' && $pdo !== null) {
       };
       // â”€â”€ End auto-greeting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-      try {
-        if (userLoggedIn) {
-          var savedConvId = window.sessionStorage.getItem('aiChatActiveConversationIdV4:' + storageScope);
-          if (savedConvId && savedConvId !== 'null' && savedConvId !== 'undefined') {
-            activeConversationId = savedConvId;
-            selectConversation(savedConvId);
-          }
-        } else {
-          var stored = window.sessionStorage.getItem(storageKey);
-          if (stored) {
-            var parsed = JSON.parse(stored);
-            if (Array.isArray(parsed)) {
-              messages = parsed;
-            }
-          }
-        }
-      } catch (error) {
-      }
-
       window.openSynaChat = function () {
         if (typeof openWidget === 'function') {
           openWidget();
@@ -2449,11 +2461,12 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 
       syncLayout();
       syncExpandedState();
-      renderMessages();
 
-      // Inject greeting after first render if no prior history
-      if (messages.length === 0) {
-        injectGreeting();
+      // Lazy-initialize chat messages and conversation during idle time if not already opened
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(ensureChatInitialized, { timeout: 4000 });
+      } else {
+        setTimeout(ensureChatInitialized, 3000);
       }
     });
   </script>

@@ -6,7 +6,12 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../app/config/config.php';
 require_once __DIR__ . '/../app/config/db.php';
 require_once __DIR__ . '/../app/services/CacheService.php';
-require_once '/var/www/frontend/views/helpers.php';
+$helpersPath = is_file(__DIR__ . '/../../frontend/views/helpers.php')
+    ? __DIR__ . '/../../frontend/views/helpers.php'
+    : '/var/www/frontend/views/helpers.php';
+if (is_file($helpersPath)) {
+    require_once $helpersPath;
+}
 require_once __DIR__ . '/../app/models/SanPham.php';
 require_once __DIR__ . '/../app/models/FlashSaleCampaign.php';
 require_once __DIR__ . '/../app/models/ProductVideo.php';

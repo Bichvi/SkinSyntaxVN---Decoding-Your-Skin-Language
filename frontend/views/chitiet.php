@@ -632,6 +632,10 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
         <img id="mainImage"
              class="detail-main-img w-100 h-auto"
              src="<?= h($main) ?>"
+             fetchpriority="high"
+             decoding="async"
+             width="500"
+             height="500"
              referrerpolicy="no-referrer"
              onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
              alt="<?= h($p['ten_san_pham'] ?? '') ?>"
@@ -646,6 +650,10 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                     data-src="<?= h($url) ?>"
                     style="width: 64px; height: 64px; flex-shrink: 0; background: #FFF; border-color: var(--border); border-radius: 6px;">
               <img src="<?= h($url) ?>"
+                   loading="lazy"
+                   decoding="async"
+                   width="64"
+                   height="64"
                    referrerpolicy="no-referrer"
                    onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
                    alt="thumb"
@@ -1624,6 +1632,10 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                       <img src="<?= h($fbImg) ?>" 
                            alt="<?= h($fbItem['ten_san_pham'] ?? '') ?>"
                            class="w-100 h-100 object-fit-cover"
+                           loading="lazy"
+                           decoding="async"
+                           width="200"
+                           height="200"
                            referrerpolicy="no-referrer"
                            onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';">
                     </a>
@@ -1899,7 +1911,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                     <div class="review-item__content"><?= nl2br_safe($review['noi_dung'] ?? '') ?></div>
                     <?php $reviewImagesRaw = $review['hinh_anh'] ?? []; $reviewImages = is_array($reviewImagesRaw) ? array_values(array_filter(array_map('strval', $reviewImagesRaw))) : split_image_urls((string)$reviewImagesRaw, 6); ?>
                     <?php if (!empty($reviewImages)): ?>
-                      <div class="review-item__images"><?php foreach ($reviewImages as $reviewImage): ?><img src="<?= h(resolve_image_url($reviewImage)) ?>" alt="Ảnh đánh giá" referrerpolicy="no-referrer" onerror="this.remove();"><?php endforeach; ?></div>
+                      <div class="review-item__images"><?php foreach ($reviewImages as $reviewImage): ?><img src="<?= h(resolve_image_url($reviewImage)) ?>" alt="Ảnh đánh giá" loading="lazy" decoding="async" width="80" height="80" referrerpolicy="no-referrer" onerror="this.remove();"><?php endforeach; ?></div>
                     <?php endif; ?>
                     <?php $shopReply = $review['phan_hoi_shop'] ?? null; if (is_object($shopReply)) $shopReply = (array)$shopReply; ?>
                     <?php if (!empty($shopReply['noi_dung'])): ?>

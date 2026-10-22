@@ -70,9 +70,11 @@ $socialLinks = [
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300;400;500;600;700;800&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" crossorigin="anonymous">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css"></noscript>
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/fontawesome.min.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/style.css') ?: '20261007_prem' ?>">
 </head>
