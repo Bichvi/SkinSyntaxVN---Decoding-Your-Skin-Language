@@ -3130,6 +3130,14 @@ try:
 except Exception as _search_exc:  # pragma: no cover - optional module
     print(f"[WARN] search_service not registered: {type(_search_exc).__name__}")
 
+# Neo4j homepage recommendation sections (/api/home/recommend). Isolated blueprint.
+try:
+    from home_service.routes import home_bp
+
+    app.register_blueprint(home_bp)
+except Exception as _home_exc:  # pragma: no cover - optional module
+    print(f"[WARN] home_service not registered: {type(_home_exc).__name__}")
+
 
 @app.get("/health")
 def simple_health():
