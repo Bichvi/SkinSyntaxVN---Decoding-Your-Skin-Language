@@ -76,6 +76,21 @@ class ProductVideoPriceTests(unittest.TestCase):
             with self.subTest(word=word):
                 self.assertTrue(check(script(f"Mua {word} nhé."), PRICING_NO_FLASH))
 
+    def test_greeting_today_is_not_scarcity(self):
+        for sentence in (
+            "Rất vui được gặp các bạn trong buổi livestream hôm nay.",
+            "Hôm nay mình muốn giới thiệu một sản phẩm.",
+            "Cảm ơn các bạn đã ghé thăm phiên livestream hôm nay.",
+            "Mình rất vui được gặp lại các bạn trong buổi phát sóng hôm nay.",
+        ):
+            with self.subTest(sentence=sentence):
+                self.assertEqual(check(script(sentence), PRICING_NO_FLASH), [])
+
+    def test_today_as_deadline_is_scarcity(self):
+        for sentence in ("Giá này chỉ hôm nay.", "Ưu đãi hôm nay thôi.", "Nhanh tay mua ngay hôm nay nhé."):
+            with self.subTest(sentence=sentence):
+                self.assertTrue(check(script(sentence), PRICING_NO_FLASH))
+
     def test_scarcity_words_pass_with_verified_flash(self):
         for word in ("hôm nay", "sắp hết", "số lượng có hạn"):
             with self.subTest(word=word):
@@ -89,7 +104,7 @@ class ProductVideoPriceTests(unittest.TestCase):
         self.assertEqual(check(script("Da dầu rất hợp."), None), [])
 
     def test_find_price_violations_one_message_per_kind(self):
-        errors = find_price_violations("hôm nay và tối nay, 299k và 199k", PRICING_NO_FLASH)
+        errors = find_price_violations("Chỉ hôm nay và tối nay thôi, 299k và 199k", PRICING_NO_FLASH)
         self.assertEqual(len(errors), 2)
 
 
