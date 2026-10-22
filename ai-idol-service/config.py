@@ -23,7 +23,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("AI_IDOL_GROQ_MODEL", "openai/gpt-oss-20b")
 GROQ_FALLBACK_MODELS = [
     model.strip()
-    for model in os.getenv("AI_IDOL_GROQ_FALLBACK_MODELS", "qwen/qwen3.8-27b").split(",")
+    for model in os.getenv("AI_IDOL_GROQ_FALLBACK_MODELS", "openai/gpt-oss-120b,qwen/qwen3.8-27b").split(",")
     if model.strip() and model.strip() != GROQ_MODEL
 ]
 GROQ_MAX_PROMPT_CHARS = int(os.getenv("AI_IDOL_GROQ_MAX_PROMPT_CHARS", "8000"))
@@ -42,6 +42,16 @@ SCRIPT_COUNCIL_URL = os.getenv(
     "AI_IDOL_SCRIPT_COUNCIL_URL", "http://ai-idol-agent-service:5013"
 ).rstrip("/")
 SCRIPT_COUNCIL_TIMEOUT = int(os.getenv("AI_IDOL_SCRIPT_COUNCIL_TIMEOUT", "240"))
+
+
+def _script_candidates() -> int:
+    try:
+        return max(1, min(3, int(os.getenv("AI_IDOL_SCRIPT_CANDIDATES", "2"))))
+    except (TypeError, ValueError):
+        return 2
+
+
+SCRIPT_CANDIDATES = _script_candidates()
 INTERNAL_TOKEN = os.getenv("AI_IDOL_INTERNAL_TOKEN", "").strip()
 
 AVATAR_PROVIDER = os.getenv("AVATAR_PROVIDER", "mock").lower()

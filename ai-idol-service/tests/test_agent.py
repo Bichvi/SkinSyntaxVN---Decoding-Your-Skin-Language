@@ -232,6 +232,7 @@ class AgentPolicyTests(unittest.TestCase):
         council.assert_called_once()
 
     @patch("engines.content_agent._generate_with_script_council", side_effect=RuntimeError("offline"))
+    @patch("engines.content_agent.SCRIPT_CANDIDATES", 1)
     @patch("engines.content_agent.LLMProvider")
     def test_script_council_failure_uses_single_agent_fallback(self, provider, _council):
         provider.return_value.invoke.return_value = "Bản dự phòng an toàn. " * 8
