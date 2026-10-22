@@ -620,7 +620,9 @@ def get_campaign(campaign_id: str) -> dict | None:
             job = db.ai_idol_jobs.find_one({"_id": object_id(job_id)}, {
                 "status": 1, "current_stage": 1, "script_status": 1,
                 "artifacts.script_text": 1, "artifacts.rejected_script_text": 1,
-                "artifacts.validation_feedback": 1,
+                "artifacts.validation_feedback": 1, "artifacts.repair_attempt": 1,
+                "artifacts.repair_history": 1, "artifacts.validation_history": 1,
+                "artifacts.script_version": 1,
             })
         except ValueError:
             job = None
@@ -632,6 +634,11 @@ def get_campaign(campaign_id: str) -> dict | None:
             segment["script_text"] = artifacts.get("script_text", "")
             segment["rejected_script_text"] = artifacts.get("rejected_script_text", "")
             segment["validation_feedback"] = artifacts.get("validation_feedback", "")
+            # The studio's recovery card shows "Đã tự sửa: n/3" and the last issues from these.
+            segment["repair_attempt"] = int(artifacts.get("repair_attempt") or 0)
+            segment["repair_history"] = artifacts.get("repair_history") or []
+            segment["validation_history"] = artifacts.get("validation_history") or []
+            segment["script_version"] = int(artifacts.get("script_version") or 0)
     for segment in segments:
         video_id = segment.get("video_id")
         try:
