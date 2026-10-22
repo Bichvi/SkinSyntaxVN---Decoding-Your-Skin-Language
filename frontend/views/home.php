@@ -600,6 +600,8 @@ $renderFlashSaleProductCard = static function (array $p): void {
     </section>
   <?php endif; ?>
 
+  <?php include __DIR__ . '/partials/home_graph_seen.php'; ?>
+
   <!-- 4. FLASH SALE (Personalized Carousel UX Extension: All valid campaign products) -->
   <?php if (!empty($flashSaleCampaign) && !empty($flashSaleProducts)): ?>
     <section class="mb-5 p-4 text-white position-relative" style="background: #183B2B; border-radius: 16px; border: 1px solid #2D6A4F;" data-flash-sale-countdown data-flash-sale-carousel data-end-timestamp="<?= (int)($flashSaleCampaign['end_at_ts'] ?? 0) ?>">
@@ -682,6 +684,8 @@ $renderFlashSaleProductCard = static function (array $p): void {
       </div>
     </section>
   <?php endif; ?>
+
+  <?php include __DIR__ . '/partials/home_graph_skin.php'; ?>
 
   <!-- 5. SYNA AI LIVESTREAM SECTION (GỘP THÀNH 1 SECTION DUY NHẤT) -->
   <section class="mb-5 p-4 text-white" style="background: #183B2B; border-radius: 20px; border: 1px solid #2D6A4F; box-shadow: 0 12px 32px rgba(24, 59, 43, 0.15);">
@@ -784,6 +788,8 @@ $renderFlashSaleProductCard = static function (array $p): void {
     </section>
   <?php endif; ?>
 
+
+  <?php include __DIR__ . '/partials/home_graph_concern.php'; ?>
 
   <!-- 6. NEW PRODUCTS (MỸ PHẨM VỪA LÊN KỆ - BEAUTY COSMETICS ONLY) -->
   <?php if (!empty($newProducts)): ?>
@@ -1203,3 +1209,5 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 </style>
+
+<script src="<?= h(BASE_URL . '/assets/js/home-graph.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/home-graph.js')) ?>" defer></script>
