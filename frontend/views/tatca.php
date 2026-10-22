@@ -93,7 +93,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
     </div>
   <?php else: ?>
     <div class="row g-3">
-      <?php foreach ($items as $p):
+      <?php foreach ($items as $idx => $p):
         $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
         $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
         $giaBan = (string)($p['gia_ban'] ?? '');
@@ -101,6 +101,8 @@ $startPage = max(1, $endPage - $maxVisible + 1);
         $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
         $rating = isset($p['diem_danh_gia']) && (float)$p['diem_danh_gia'] > 0 ? (float)$p['diem_danh_gia'] : 4.9;
         $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;
+        $isLcp = ($idx === 0);
+        $isAboveFold = ($idx < 4);
       ?>
         <div class="col-6 col-md-3">
           <div class="product-card h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
@@ -112,7 +114,15 @@ $startPage = max(1, $endPage - $maxVisible + 1);
               <?php endif; ?>
 
               <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 h-100 overflow-hidden" style="border-radius: 8px;">
-                <img src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h($p['ten_san_pham'] ?? '') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+                <img src="<?= h($img ?: default_placeholder_image()) ?>"
+                     <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?>
+                     decoding="async"
+                     width="280"
+                     height="280"
+                     referrerpolicy="no-referrer"
+                     onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
+                     alt="<?= h($p['ten_san_pham'] ?? '') ?>"
+                     style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
               </a>
             </div>
 

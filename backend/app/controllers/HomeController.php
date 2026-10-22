@@ -558,10 +558,34 @@ class HomeController {
         if (class_exists('CacheService')) {
             $cached = CacheService::getInstance()->get($cacheKey);
             if (is_array($cached) && isset($cached['latest'], $cached['cats'], $cached['flash_deals'])) {
-                if (!empty($cached['menu_tree']) && method_exists('SanPham', 'setMenuTreeCache')) {
-                    SanPham::setMenuTreeCache($cached['menu_tree']);
+                // Flash Sale Lifecycle Safety Guard:
+                // Verify whether cached campaign state has crossed its start or end boundary
+                $now = time();
+                $isStale = false;
+
+                if (!empty($cached['primary_campaign'])) {
+                    $campaign = $cached['primary_campaign'];
+                    $startTs = (int)($campaign['start_at_ts'] ?? 0);
+                    $endTs = (int)($campaign['end_at_ts'] ?? 0);
+                    if ($now < $startTs || $now >= $endTs) {
+                        $isStale = true;
+                    }
                 }
-                return $cached;
+
+                if (isset($cached['__next_transition_ts']) && $cached['__next_transition_ts'] !== null) {
+                    if ($now >= (int)$cached['__next_transition_ts']) {
+                        $isStale = true;
+                    }
+                }
+
+                if ($isStale) {
+                    CacheService::getInstance()->delete($cacheKey);
+                } else {
+                    if (!empty($cached['menu_tree']) && method_exists('SanPham', 'setMenuTreeCache')) {
+                        SanPham::setMenuTreeCache($cached['menu_tree']);
+                    }
+                    return $cached;
+                }
             }
         }
 
@@ -583,7 +607,21 @@ class HomeController {
         ];
 
         if (class_exists('CacheService')) {
-            CacheService::getInstance()->set($cacheKey, $composite, 300);
+            $defaultTtl = 300;
+            $nextTransitionTs = $flashSaleModel->getNextCampaignTransitionTimestamp();
+            $effectiveTtl = $defaultTtl;
+
+            if ($nextTransitionTs !== null) {
+                $diff = $nextTransitionTs - time();
+                if ($diff <= 0) {
+                    $effectiveTtl = 1;
+                } elseif ($diff < $defaultTtl) {
+                    $effectiveTtl = max(1, $diff);
+                }
+            }
+
+            $composite['__next_transition_ts'] = $nextTransitionTs;
+            CacheService::getInstance()->set($cacheKey, $composite, $effectiveTtl);
         }
 
         return $composite;

@@ -51,7 +51,7 @@ $queryWith = static function (array $extra) use ($publicFilters): string {
     ], static fn($value) => $value !== '');
     return http_build_query(array_merge($query, $extra));
 };
-$renderCard = static function (array $product, string $badgeLabel = '', string $cardVariant = 'default'): void {
+$renderCard = static function (array $product, string $badgeLabel = '', string $cardVariant = 'default', bool $isAboveFold = false, bool $isLcp = false): void {
     include __DIR__ . '/partials/goiy_product_card.php';
 };
 
@@ -851,14 +851,14 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
             <div class="goiy-empty">Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại. Hãy thử chọn mức giá hoặc từ khóa khác.</div>
           <?php else: ?>
             <div class="goiy-product-grid">
-              <?php foreach ($publicProducts as $product): ?>
-                <?php $renderCard($product, 'LỌC KHỚP'); ?>
+              <?php foreach ($publicProducts as $pIdx => $product): ?>
+                <?php $renderCard($product, 'LỌC KHỚP', 'default', $pIdx < 4, $pIdx === 0); ?>
               <?php endforeach; ?>
             </div>
           <?php endif; ?>
         </section>
       <?php else: ?>
-        <?php foreach ($sections as $key => $meta): ?>
+        <?php $secIdx = 0; foreach ($sections as $key => $meta): ?>
           <?php $items = is_array($publicSections[$key] ?? null) ? $publicSections[$key] : []; ?>
           <section class="goiy-section mb-4">
             <div class="goiy-section__head">
@@ -871,13 +871,13 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
               <div class="goiy-empty">Chưa có sản phẩm phù hợp trong nhóm này.</div>
             <?php else: ?>
               <div class="goiy-product-grid">
-                <?php foreach ($items as $product): ?>
-                  <?php $renderCard($product, $meta['badge']); ?>
+                <?php foreach ($items as $itemIdx => $product): ?>
+                  <?php $renderCard($product, $meta['badge'], 'default', $secIdx === 0 && $itemIdx < 4, $secIdx === 0 && $itemIdx === 0); ?>
                 <?php endforeach; ?>
               </div>
             <?php endif; ?>
           </section>
-        <?php endforeach; ?>
+        <?php $secIdx++; endforeach; ?>
       <?php endif; ?>
     </div>
   <?php else: ?>

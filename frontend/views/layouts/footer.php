@@ -1,7 +1,7 @@
-<script src="<?= BASE_URL ?>/assets/js/bootstrap.bundle.min.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/live-search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/smart-search.js"></script>
 </main>
+<script src="<?= BASE_URL ?>/assets/js/bootstrap.bundle.min.js" defer></script>
+<script src="<?= BASE_URL ?>/assets/js/live-search.js" defer></script>
+<script src="<?= BASE_URL ?>/assets/js/smart-search.js" defer></script>
 
 <footer class="site-footer">
   <div class="container">
