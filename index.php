@@ -98,6 +98,10 @@ switch ($r) {
         (new HomeController($pdo))->index();
         break;
 
+    case 'home_concern':
+        (new HomeController($pdo))->concern();
+        break;
+
     case 'flash_sale':
         (new HomeController($pdo))->flashSale();
         break;
