@@ -9,6 +9,7 @@ require_once __DIR__ . '/../models/Voucher.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/SkincareProductClassifier.php';
 require_once __DIR__ . '/../services/RecommendationExplainer.php';
+require_once __DIR__ . '/../services/SupportKnowledge.php';
 
 class HomeController {
     private $pdo;
@@ -360,57 +361,6 @@ class HomeController {
         (new AuthController($this->pdo))->xulykhaosat();
     }
 
-    public function otpGuide() {
-        $this->render('info/otp-guide');
-    }
-
-    public function termsReference() {
-        $this->renderPolicyReference([
-            'title' => 'Điều kiện giao dịch chung',
-            'eyebrow' => 'Điều khoản SkinSyntax',
-            'summary' => 'Điều kiện giao dịch này do SkinSyntax ban hành và áp dụng cho toàn bộ hoạt động đăng ký tài khoản, truy cập nội dung, mua sắm, thanh toán và sử dụng dịch vụ trên website.',
-            'highlights' => [
-                'Người dùng cam kết cung cấp thông tin đúng sự thật khi đăng ký tài khoản, đặt hàng, thanh toán và làm khảo sát da. SkinSyntax có quyền từ chối xử lý khi phát hiện thông tin sai lệch hoặc có dấu hiệu gian lận.',
-                'Mọi đơn hàng chỉ được xác nhận sau khi SkinSyntax kiểm tra tình trạng sản phẩm, thông tin nhận hàng, phương thức thanh toán và các điều kiện áp dụng của voucher hoặc chương trình khuyến mãi.',
-                'Giá bán, ưu đãi, phí vận chuyển và thời gian giao hàng có thể thay đổi theo từng thời điểm. SkinSyntax sẽ hiển thị thông tin hiện hành trên website trước khi người dùng hoàn tất giao dịch.',
-                'Người dùng có trách nhiệm bảo mật tài khoản, mật khẩu, mã OTP và các thiết bị đăng nhập. Mọi thao tác phát sinh từ tài khoản đã xác thực được xem là do chính chủ tài khoản thực hiện, trừ khi có chứng cứ ngược lại.',
-                'Nội dung, hình ảnh, logo, bố cục, dữ liệu sản phẩm và các tài nguyên hiển thị trên SkinSyntax thuộc quyền quản lý của SkinSyntax hoặc đối tác cấp phép; không được sao chép, khai thác lại hoặc sử dụng trái phép.',
-                'Khi phát sinh khiếu nại, tranh chấp hoặc yêu cầu hỗ trợ, hai bên ưu tiên giải quyết trên tinh thần hợp tác. Trường hợp không thể tự thỏa thuận, vấn đề sẽ được xử lý theo quy định pháp luật Việt Nam.',
-            ],
-        ]);
-    }
-
-    public function privacyReference() {
-        $this->renderPolicyReference([
-            'title' => 'Chính sách bảo mật thông tin',
-            'eyebrow' => 'Bảo mật tại SkinSyntax',
-            'summary' => 'SkinSyntax cam kết bảo vệ thông tin cá nhân, lịch sử giao dịch, dữ liệu khảo sát da và các dữ liệu kỹ thuật phát sinh trong quá trình người dùng sử dụng website.',
-            'highlights' => [
-                'SkinSyntax chỉ thu thập những thông tin cần thiết cho việc tạo tài khoản, xác thực OTP, xử lý đơn hàng, chăm sóc khách hàng, cá nhân hóa gợi ý sản phẩm và duy trì vận hành hệ thống.',
-                'Dữ liệu của người dùng được lưu trữ với các biện pháp kiểm soát truy cập phù hợp. Chỉ nhân sự, bộ phận hoặc dịch vụ được ủy quyền mới được tiếp cận dữ liệu trong phạm vi công việc cần thiết.',
-                'SkinSyntax không bán hoặc trao đổi thông tin cá nhân của người dùng cho bên thứ ba vì mục đích thương mại độc lập. Việc chia sẻ chỉ diễn ra khi cần thiết để giao hàng, xử lý thanh toán, gửi thông báo hoặc tuân thủ yêu cầu pháp luật.',
-                'Người dùng có quyền yêu cầu xem lại, cập nhật, chỉnh sửa hoặc hạn chế xử lý thông tin của mình thông qua các kênh hỗ trợ do SkinSyntax công bố trên website.',
-                'Trong trường hợp phát hiện truy cập trái phép, rò rỉ dữ liệu hoặc rủi ro an toàn thông tin, SkinSyntax sẽ đánh giá tác động, áp dụng biện pháp khắc phục phù hợp và thông báo cho các bên liên quan khi cần thiết.',
-            ],
-        ]);
-    }
-
-    public function personalDataReference() {
-        $this->renderPolicyReference([
-            'title' => 'Chính sách xử lý dữ liệu cá nhân',
-            'eyebrow' => 'Quyền riêng tư người dùng',
-            'summary' => 'Chính sách này mô tả cách SkinSyntax tiếp nhận, sử dụng, lưu trữ, chia sẻ có kiểm soát và bảo vệ dữ liệu cá nhân của người dùng trong toàn bộ vòng đời dịch vụ.',
-            'highlights' => [
-                'Dữ liệu cá nhân có thể bao gồm thông tin nhận dạng, thông tin liên hệ, địa chỉ giao hàng, lịch sử mua sắm, phản hồi sản phẩm, dữ liệu khảo sát da và dữ liệu kỹ thuật phục vụ bảo mật hệ thống.',
-                'SkinSyntax xử lý dữ liệu cá nhân trên cơ sở sự đồng ý của người dùng, nhu cầu thực hiện hợp đồng mua bán, nghĩa vụ pháp lý hoặc lợi ích hợp pháp liên quan đến bảo mật và vận hành dịch vụ.',
-                'Dữ liệu được lưu giữ trong thời gian cần thiết để hoàn thành mục đích thu thập, giải quyết tranh chấp, hỗ trợ hậu mãi và đáp ứng yêu cầu lưu trữ theo quy định pháp luật hiện hành.',
-                'Người dùng có quyền đồng ý, từ chối, rút lại sự đồng ý, yêu cầu cung cấp bản sao dữ liệu, yêu cầu chỉnh sửa hoặc đề nghị xóa dữ liệu nếu việc xóa không xung đột với nghĩa vụ lưu trữ bắt buộc.',
-                'SkinSyntax có thể sử dụng cookie hoặc công nghệ tương đương cho chức năng đăng nhập, ghi nhớ tùy chọn, thống kê và tối ưu trải nghiệm; người dùng có thể tự điều chỉnh bằng cài đặt trình duyệt của mình.',
-                'Khi có cập nhật quan trọng liên quan đến phạm vi xử lý dữ liệu cá nhân, SkinSyntax sẽ công bố phiên bản mới trên website để người dùng chủ động theo dõi.',
-            ],
-        ]);
-    }
-
     public function storeNetwork(): void {
         $this->render('info/store-network', [
             'title' => 'Hệ thống cửa hàng SkinSyntax',
@@ -418,8 +368,7 @@ class HomeController {
             'summary' => 'SkinSyntax đang vận hành theo mô hình online-first: ưu tiên tra cứu sản phẩm, tư vấn routine, hỗ trợ đơn hàng và xử lý sau mua ngay trên website. Thông tin điểm hỗ trợ trực tiếp sẽ được cập nhật theo từng giai đoạn mở rộng.',
             'stats' => [
                 ['value' => 'Toàn quốc', 'label' => 'Phạm vi phục vụ qua kênh online'],
-                ['value' => '08:00 - 22:00', 'label' => 'Khung giờ hỗ trợ khách hàng'],
-                ['value' => '1900 0000', 'label' => 'Hotline tiếp nhận nhanh'],
+                ['value' => SupportKnowledge::contact()['phone'] ?: 'Trung tâm hỗ trợ', 'label' => 'Hotline tiếp nhận (giờ hỗ trợ chưa được công bố)'],
             ],
             'channels' => [
                 [
@@ -449,106 +398,6 @@ class HomeController {
                 ['label' => 'Trung tâm hỗ trợ khách hàng', 'url' => BASE_URL . '/index.php?r=ho_tro_khach_hang'],
             ],
         ]);
-    }
-
-    public function warrantyCenter(): void {
-        $this->render('info/service-hub', [
-            'title' => 'Bảo hành và hỗ trợ sau mua',
-            'eyebrow' => 'Chăm sóc sau bán',
-            'summary' => 'SkinSyntax tiếp nhận yêu cầu liên quan đến lỗi sản phẩm, hướng dẫn đổi trả hợp lệ, xác minh hóa đơn và điều phối hỗ trợ với nhà cung cấp khi cần.',
-            'sections' => [
-                [
-                    'title' => 'Phạm vi tiếp nhận',
-                    'items' => [
-                        'Sản phẩm nhận sai, thiếu phụ kiện, lỗi do vận chuyển hoặc có dấu hiệu bất thường khi mở hộp.',
-                        'Sản phẩm có chính sách bảo hành riêng từ nhà phân phối hoặc cần xác minh tem, mã lô, hóa đơn mua hàng.',
-                        'Yêu cầu kiểm tra tình trạng đơn hàng sau mua, bổ sung thông tin hoặc hướng dẫn gửi lại sản phẩm để đối soát.',
-                    ],
-                ],
-                [
-                    'title' => 'Thông tin cần chuẩn bị',
-                    'items' => [
-                        'Mã đơn hàng hoặc số điện thoại dùng khi mua sắm.',
-                        'Tên sản phẩm, số lượng gặp vấn đề và mô tả tình trạng thực tế.',
-                        'Hình ảnh/video lúc mở kiện hàng nếu có, để SkinSyntax rút ngắn thời gian xác minh.',
-                    ],
-                ],
-                [
-                    'title' => 'Quy trình xử lý',
-                    'items' => [
-                        'Tiếp nhận yêu cầu qua hotline hoặc chat hỗ trợ và xác nhận thông tin đơn.',
-                        'Đánh giá tình trạng sản phẩm, kiểm tra chứng từ mua hàng và hướng xử lý phù hợp.',
-                        'Phản hồi phương án tiếp theo: đổi sản phẩm, hoàn tiền, bổ sung thông tin hoặc liên hệ nhà cung cấp.',
-                    ],
-                ],
-            ],
-            'supportCard' => [
-                'title' => 'Liên hệ bảo hành',
-                'text' => 'Khung giờ ưu tiên tiếp nhận là 08:00 - 22:00 mỗi ngày. Các yêu cầu có đủ mã đơn và mô tả tình trạng sẽ được xử lý nhanh hơn.',
-                'bullets' => [
-                    'Hotline: 1900 0000',
-                    'Kênh nhanh: chat hỗ trợ trên website',
-                    'Đối chiếu chính sách chung: đổi trả, bảo mật, điều kiện giao dịch',
-                ],
-            ],
-            'actions' => [
-                ['label' => 'Mở chat hỗ trợ', 'url' => BASE_URL . '/index.php?r=lichsuchat'],
-                ['label' => 'Xem điều kiện giao dịch', 'url' => BASE_URL . '/index.php?r=dieu_kien_giao_dich'],
-                ['label' => 'Chính sách bảo mật', 'url' => BASE_URL . '/index.php?r=chinh_sach_bao_mat'],
-            ],
-        ]);
-    }
-
-    public function customerSupport(): void {
-        $this->render('info/service-hub', [
-            'title' => 'Trung tâm hỗ trợ khách hàng',
-            'eyebrow' => 'Customer care',
-            'summary' => 'Trang này tổng hợp các kênh hỗ trợ, câu hỏi thường gặp và những đường dẫn quan trọng để bạn xử lý nhanh các tình huống trước, trong và sau khi mua sắm.',
-            'sections' => [
-                [
-                    'title' => 'Kênh hỗ trợ chính',
-                    'items' => [
-                        'Hotline 1900 0000 để xử lý các trường hợp cần phản hồi ngay.',
-                        'Chat hỗ trợ trên website để theo dõi lịch sử trao đổi và cập nhật trạng thái xử lý.',
-                        'AI chat để hỏi nhanh về routine, thành phần, xung đột hoạt chất và gợi ý sản phẩm.',
-                    ],
-                ],
-                [
-                    'title' => 'Nhóm vấn đề thường gặp',
-                    'items' => [
-                        'Đăng ký tài khoản, xác thực OTP, quên mật khẩu và cập nhật hồ sơ cá nhân.',
-                        'Đặt hàng, áp voucher, áp điểm, chọn địa chỉ nhận hàng và thanh toán.',
-                        'Theo dõi đơn, hủy đơn hợp lệ, đánh giá sản phẩm và hỗ trợ sau mua.',
-                    ],
-                ],
-                [
-                    'title' => 'Điểm đến nhanh',
-                    'items' => [
-                        'Hướng dẫn nhận OTP nếu bạn chưa lấy được mã xác thực.',
-                        'Khảo sát da và gợi ý routine nếu bạn muốn cá nhân hóa trải nghiệm mua sắm.',
-                        'Các chính sách điều kiện giao dịch, bảo mật và dữ liệu cá nhân khi cần tra cứu.',
-                    ],
-                ],
-            ],
-            'supportCard' => [
-                'title' => 'Hỗ trợ theo ngữ cảnh',
-                'text' => 'SkinSyntax ưu tiên gom trải nghiệm hỗ trợ ngay trong website để bạn không phải chuyển qua nhiều kênh riêng lẻ.',
-                'bullets' => [
-                    'Tra cứu sản phẩm ngay trong header',
-                    'Mở AI chat ở góc màn hình để hỏi nhanh',
-                    'Khi đăng nhập, bạn có thể lưu lịch sử chat và đơn hàng trong cùng một tài khoản',
-                ],
-            ],
-            'actions' => [
-                ['label' => 'Xem hướng dẫn OTP', 'url' => BASE_URL . '/index.php?r=huong_dan_nhan_otp'],
-                ['label' => 'Mở routine AI', 'url' => BASE_URL . '/index.php?r=goiy'],
-                ['label' => 'Chính sách dữ liệu', 'url' => BASE_URL . '/index.php?r=chinh_sach_xu_ly_du_lieu'],
-            ],
-        ]);
-    }
-
-    private function renderPolicyReference(array $data): void {
-        $this->render('info/policy-reference', $data);
     }
 
     private static ?array $highlightedCategoriesCache = null;
@@ -2946,7 +2795,7 @@ class HomeController {
         ]);
     }
 
-    private function buildAiAssistantPrompt(string $message, array $history, array $profile, array $cartItems, array $conflicts, array $products, string $currentProductId = ''): string {
+    private function buildAiAssistantPrompt(string $message, array $history, array $profile, array $cartItems, array $conflicts, array $products, string $currentProductId = '', array $supportArticles = []): string {
         $historyLines = [];
         foreach (array_slice($history, -6) as $turn) {
             if (!is_array($turn)) {
@@ -2991,6 +2840,9 @@ class HomeController {
                 'Tra loi chi tiet, co cau truc, su dung bullet point va chu trinh ro rang, khong gioi han so doan van.',
             ],
         ];
+
+        // Khóa duy nhất do Bước 04 thêm; danh sách rỗng -> payload giống hệt trước đây.
+        $payload = SupportKnowledge::withSupportArticles($payload, $supportArticles);
 
         return json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: $message;
     }
@@ -3133,10 +2985,34 @@ class HomeController {
             return;
         }
 
-        $cachedPayload = $this->getCachedAiResponsePayload($message, $currentProductId);
-        if ($cachedPayload !== null) {
-            echo json_encode($cachedPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            return;
+        // Bài hỗ trợ cửa hàng liên quan (rank MỘT lần, chạy trước cache để quyết định bỏ qua cache).
+        // Lỗi đọc kho -> bỏ qua, luồng cũ chạy tiếp.
+        $supportKnowledge = null;
+        $supportRanked = [];
+        $supportArticles = [];
+        try {
+            $rankStart = microtime(true);
+            $supportKnowledge = new SupportKnowledge();
+            $supportRanked = $supportKnowledge->rank($message, 3, BASE_URL);
+            $supportArticles = $supportKnowledge->toChatContext($supportRanked);
+            if ($supportRanked !== []) {
+                error_log(sprintf('[STORE_SUPPORT] rank slug=%s score=%.2f n=%d ms=%.1f', $supportRanked[0]['article']['slug'], $supportRanked[0]['score'], count($supportRanked), (microtime(true) - $rankStart) * 1000));
+            }
+        } catch (Throwable $supportError) {
+            error_log('[STORE_SUPPORT] knowledge_unavailable');
+            $supportKnowledge = null;
+            $supportRanked = [];
+            $supportArticles = [];
+        }
+
+        // Câu chính sách: không đọc cũng không ghi cache phản hồi (đáp án phải theo bài hiện hành). Câu khác giữ nguyên.
+        $bypassAiCache = SupportKnowledge::shouldBypassChatCache($supportRanked);
+        if (!$bypassAiCache) {
+            $cachedPayload = $this->getCachedAiResponsePayload($message, $currentProductId);
+            if ($cachedPayload !== null) {
+                echo json_encode($cachedPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                return;
+            }
         }
 
         $cartItems = $this->buildAiCartContext();
@@ -3222,7 +3098,7 @@ class HomeController {
         $endpoint = $this->getAiChatEndpoint();
 
         $payload = [
-            'message' => $this->buildAiAssistantPrompt($message, $history, $profile, $cartItems, $conflicts, $products, $currentProductId),
+            'message' => $this->buildAiAssistantPrompt($message, $history, $profile, $cartItems, $conflicts, $products, $currentProductId, $supportArticles),
             'conversation_id' => $conversationId !== '' ? $conversationId : null,
             'user_email' => $email !== '' ? $email : null,
         ];
@@ -3260,6 +3136,15 @@ class HomeController {
             }
         } else {
             $decoded = json_decode((string)($response['body'] ?? ''), true);
+        }
+
+        // Flask lỗi/timeout/non-2xx và bài hỗ trợ đầu đủ chắc chắn -> trả bản soạn sẵn từ kho chính thức.
+        $supportFallback = null;
+        if (!$isRoutineRequest && $supportKnowledge !== null && SupportKnowledge::flaskFailed($response, is_array($decoded) ? $decoded : null)) {
+            $supportFallback = $supportKnowledge->fallbackResponse($supportRanked, $message);
+            if ($supportFallback !== null) {
+                error_log(sprintf('[STORE_SUPPORT] flask_fallback slug=%s status=%d', $supportFallback['support_topic'], (int)($response['status'] ?? 0)));
+            }
         }
 
         if ($isRoutineRequest) {
@@ -3333,8 +3218,17 @@ class HomeController {
         if ($decoded && isset($decoded['conversation_id'])) {
             $payload['conversation_id'] = $decoded['conversation_id'];
         }
+        // Khóa mới cho STORE_SUPPORT (sources, suggested_questions, support_topic); khóa cũ không đổi.
+        $payload = array_merge($payload, SupportKnowledge::flaskSupportFields(is_array($decoded) ? $decoded : null));
 
-        if ($answer !== 'Tôi đề xuất những sản phẩm này') {
+        if ($supportFallback !== null) {
+            // Sản phẩm PHP tự gắn không liên quan câu hỏi chính sách; không cache để Flask hồi phục thì trả lời lại bằng LLM.
+            $payload = array_merge($payload, $supportFallback, ['products' => []]);
+            echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            return;
+        }
+
+        if (!$bypassAiCache && $answer !== 'Tôi đề xuất những sản phẩm này') {
             $this->storeAiResponsePayload($message, $payload, $currentProductId);
         }
 

@@ -303,32 +303,8 @@ switch ($r) {
         (new AuthController($pdo))->xulykhaosat();
         break;
 
-    case 'huong_dan_nhan_otp':
-        (new HomeController($pdo))->otpGuide();
-        break;
-
     case 'he_thong_cua_hang':
         (new HomeController($pdo))->storeNetwork();
-        break;
-
-    case 'bao_hanh':
-        (new HomeController($pdo))->warrantyCenter();
-        break;
-
-    case 'ho_tro_khach_hang':
-        (new HomeController($pdo))->customerSupport();
-        break;
-
-    case 'dieu_kien_giao_dich':
-        (new HomeController($pdo))->termsReference();
-        break;
-
-    case 'chinh_sach_bao_mat':
-        (new HomeController($pdo))->privacyReference();
-        break;
-
-    case 'xuly_du_lieu_ca_nhan':
-        (new HomeController($pdo))->personalDataReference();
         break;
 
     case 'gui_captcha_dang_ky':

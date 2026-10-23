@@ -291,7 +291,8 @@ switch ($r) {
         break;
 
     case 'huong_dan_nhan_otp':
-        (new HomeController($pdo))->otpGuide();
+        require_once $backendRoot . '/app/controllers/SupportController.php';
+        (new SupportController($pdo))->show('otp');
         break;
 
     case 'he_thong_cua_hang':
@@ -299,23 +300,28 @@ switch ($r) {
         break;
 
     case 'bao_hanh':
-        (new HomeController($pdo))->warrantyCenter();
+        require_once $backendRoot . '/app/controllers/SupportController.php';
+        (new SupportController($pdo))->show('doi-tra');
         break;
 
     case 'ho_tro_khach_hang':
-        (new HomeController($pdo))->customerSupport();
+        require_once $backendRoot . '/app/controllers/SupportController.php';
+        (new SupportController($pdo))->show();
         break;
 
     case 'dieu_kien_giao_dich':
-        (new HomeController($pdo))->termsReference();
+        require_once $backendRoot . '/app/controllers/SupportController.php';
+        (new SupportController($pdo))->show('dieu-khoan');
         break;
 
     case 'chinh_sach_bao_mat':
-        (new HomeController($pdo))->privacyReference();
+        require_once $backendRoot . '/app/controllers/SupportController.php';
+        (new SupportController($pdo))->show('bao-mat');
         break;
 
     case 'xuly_du_lieu_ca_nhan':
-        (new HomeController($pdo))->personalDataReference();
+        require_once $backendRoot . '/app/controllers/SupportController.php';
+        (new SupportController($pdo))->show('bao-mat');
         break;
 
     case 'gui_captcha_dang_ky':

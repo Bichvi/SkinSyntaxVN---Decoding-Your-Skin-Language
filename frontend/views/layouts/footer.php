@@ -18,7 +18,7 @@
     </section>
 
     <section class="site-footer__topline">
-      <div class="site-footer__service-pill"><i class="fas fa-phone-volume"></i> Hotline hỗ trợ: 1900 0000</div>
+      <?php $footerPhone = class_exists('SupportKnowledge') ? (SupportKnowledge::contact()['phone'] ?? '') : ''; if ($footerPhone !== ''): ?><div class="site-footer__service-pill"><i class="fas fa-phone-volume"></i> Hotline hỗ trợ: <?= h($footerPhone) ?></div><?php endif; ?>
       <div class="site-footer__service-pill"><i class="fas fa-truck-fast"></i> Luồng mua hàng gọn, rõ trạng thái đơn</div>
       <div class="site-footer__service-pill"><i class="fas fa-shield-heart"></i> Tập trung vào routine và dữ liệu da</div>
       <div class="site-footer__socials">
