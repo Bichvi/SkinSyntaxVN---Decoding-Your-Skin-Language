@@ -1,0 +1,30 @@
+# A/B experiments for POST /api/search/recommend (U12 part B). Read by search_service/experiments.py,
+# reloaded within ~10 s of a file change (no restart). Only `status: running` experiments are applied.
+#
+#   id        lowercase [a-z0-9_-], up to 40 chars; part of the bucket hash (new id = new random split)
+#   status    draft (never applied) | running | stopped (never applied; keep for the report)
+#   traffic   exactly two arms, `control` + one named variant, whole percentages summing to 100
+#   overrides applied to the non-control arm. Allowed keys:
+#               weights.graph | weights.semantic | weights.popularity | weights.personal   (0..1)
+#               w_cop | w_curated | w_ctr                                                    (0..1)
+#               co_purchase: true|false   ctr_boost: true|false   (switch a gated boost on for ONE arm only)
+#
+# Only ONE experiment runs at a time (the first `running` entry). Run policy and how to read the result:
+# docs/ops/search-ops.md ("A/B"), report: python scripts/search_metrics.py --experiment <id> --days 14
+#
+# Gate (U12): do not set `running` before there are >= 1000 searches / week; the sample below stays `draft`.
+
+experiments:
+  - id: graph_weight_v1
+    description: "More weight on the Neo4j graph score (0.35 -> 0.45), less on semantic similarity (0.30 -> 0.20)."
+    status: draft
+    traffic: {control: 50, variant: 50}
+    overrides:
+      weights.graph: 0.45
+      weights.semantic: 0.20
+
+  # Example for measuring the (still gated) behavioural boosts per arm instead of switching them on for everybody:
+  # - id: co_purchase_v1
+  #   status: draft
+  #   traffic: {control: 50, variant: 50}
+  #   overrides: {co_purchase: true}
