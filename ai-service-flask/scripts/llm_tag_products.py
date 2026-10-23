@@ -137,7 +137,7 @@ def write_csv(path: str, rows: list[dict[str, Any]]) -> None:
 def run(args: argparse.Namespace) -> int:
     from chatbot_service.llm_pool import get_llms
     from graph_sync.config import load_settings
-    from graph_sync.extract import connect, load_lookups
+    from graph_sync.extract import connect, load_lookups, with_retry
     from graph_sync.ingredients import load_aliases
     from graph_sync.transform import to_graph_row
     from tagging.labeler import load_hints, build_suggestion_doc, load_vocabulary
@@ -201,8 +201,10 @@ def run(args: argparse.Namespace) -> int:
         if not parsed.ok:
             failed += 1
         elif not args.dry_run:
-            db[COLLECTION].replace_one({"ma_san_pham": doc.get("ma_san_pham"), "status": "pending"},
-                                       suggestion, upsert=True)
+            # Atlas drops idle connections now and then; retry instead of killing a long run.
+            with_retry(lambda: db[COLLECTION].replace_one(
+                {"ma_san_pham": doc.get("ma_san_pham"), "status": "pending"}, suggestion, upsert=True),
+                "mongo save suggestion")
             saved += 1
         print(f"[{n}/{len(docs)}] {doc.get('ma_san_pham')} {'OK' if parsed.ok else 'LỖI'}", flush=True)
 
