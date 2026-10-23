@@ -59,7 +59,22 @@ php backend/tests/home_graph_recommender_test.php
 
 ## E2E
 
-**NOT RUN (deferred to merge)** — Docker đang phục vụ checkout chính chứ không phải worktree này, nên chưa chạy được curl/Playwright thật. Sau khi merge cần chạy 7 kịch bản trong brief (khách mới + chip, đổi chip, "Vì bạn đã xem", hồi quy các khối cũ và không trùng "Được Yêu Thích Nhất", `docker stop skinsyntax-ai`, mobile 375px, "Hợp với da bạn" với tài khoản có khảo sát). Chưa có kết quả PASS nào được ghi nhận.
+Chạy thật sau khi merge vào `syna` (2026-10-23), trên Docker `localhost:8080`, bằng trình duyệt tích hợp của Claude Desktop (Playwright MCP không kết nối được trong phiên này) + curl.
+
+| # | Kịch bản | Kết quả |
+|---|---|---|
+| 0 | Recreate `ai-service` + `php-backend`; log Flask không có `home_service not registered`; `POST /api/home/recommend` từ container PHP có token → 200, `degraded:false`, seen 4 / skin 4 / concern 8; không token từ host → 401 | PASS (took_ms nguội 1166, ấm 6 nhờ Redis) |
+| 1 | Khách mới: khối vấn đề da hiện, chip "Thâm mụn" được chọn, 8 thẻ có lý do ("Chứa Tranexamic Acid, hỗ trợ thâm mụn") | PASS |
+| 2 | Bấm "Mụn" rồi "Khô / thiếu ẩm" → lưới đổi bộ id khác, lý do đúng vấn đề, không trạng thái lỗi | PASS |
+| 3 | Xem SP 1086 → về trang chủ: "Vì bạn đã xem Nước Tẩy Trang Bioderma…", 4 thẻ ("Cùng chứa Zinc Gluconate với…"), không gợi ý lại chính SP đã xem | PASS |
+| 4 | Hồi quy: khối 2, khối 3, "Được Yêu Thích Nhất", "Mỹ Phẩm Vừa Lên Kệ" còn đủ; 0 SP trùng giữa khối mới và "Được Yêu Thích Nhất" | PASS |
+| 5 | `home_concern&c=mun` → 200 `text/html`, `Cache-Control: private, no-store`, 8 thẻ; `c=<script>` → 400 `Yêu cầu không hợp lệ`, không phản chiếu input | PASS |
+| 6 | `docker stop skinsyntax-ai` → trang chủ vẫn 200, khối mới ẩn, khối cũ đủ, không lỗi PHP; bật lại health 200 | PASS |
+| 7 | TTFB trang chủ (curl, 4 lần): Flask chạy 0,24–0,92 s; Flask tắt 0,06–1,08 s — tương đương, số liệu nhiễu; chưa đo riêng cờ `HOME_GRAPH_ENABLED=0` | Đo xong, chưa kết luận p95 |
+| 8 | Mobile 375px: thanh chip cuộn ngang (1014px trong 351px), trang không tràn ngang | PASS |
+| 9 | "Hợp với da bạn" với tài khoản đã làm khảo sát | **NOT RUN** — không có tài khoản test có khảo sát; đã kiểm qua API (skin 4 SP, `skin_type=da_dau`) |
+
+Sửa phát sinh khi chạy thật: route `home_concern` chỉ được thêm vào `index.php` gốc (XAMPP), nhưng Docker dùng `backend/public/index.php` (nginx root `/var/www/html/public`, `/var/www/html` = `backend/`) → đã thêm `case 'home_concern'` vào `backend/public/index.php`. Sau khi sửa PHP trong Docker cần `docker exec skinsyntax-php kill -USR2 1` (opcache `revalidate_freq=60`).
 
 ## Số đo (Task 4, Flask, không Redis)
 
