@@ -17,6 +17,8 @@ Không có bí mật nào trong tài liệu này. Không đọc, không ghi giá
 
 > **Chất lượng dữ liệu tìm kiếm (U06, 2026-10-22, chưa commit):** tỷ lệ lượt thành phần map sang INCI tăng từ 54,2% lên 88,5%, sản phẩm có ít nhất một hoạt chất từ 77,4% lên 90,2% (sửa parser đọc đúng danh sách INCI trong dữ liệu marketing + 776 mục alias mới). Có công cụ gợi ý alias, báo cáo từ khóa 0 kết quả và script áp synonym đã duyệt. Chi tiết: [`update_search_data_quality.md`](update_search_data_quality.md).
 
+> **Trung tâm hỗ trợ hợp nhất + chatbot trả lời chính sách/HDSD (2026-10-23, đã commit):** một nguồn sự thật `support.json` (hotline `0398606281`, giờ hỗ trợ chưa công bố), trung tâm hỗ trợ accordion 4 cấp, 9 bài hướng dẫn tính năng, Syna trả lời chính sách bằng LLM dựa trên bài chính thức có hậu kiểm số liệu và bản soạn sẵn dự phòng, widget hiện nguồn/chip/menu Trợ giúp. Eval 45 câu: đúng slug 25/25, số liệu lạ 0, p95 6 s; còn 1 lỗi khẳng định quá mức (VAT). Chi tiết: [`update_store_support_chatbot.md`](update_store_support_chatbot.md).
+
 ---
 
 ## 1. Tổng quan dự án và mục tiêu Syna

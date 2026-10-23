@@ -1,6 +1,6 @@
 # Trung tâm hỗ trợ hợp nhất + Chatbot trả lời chính sách & HDSD — Thiết kế
 
-Ngày: 2026-10-21 · Nhánh: `syna` · Trạng thái: chờ duyệt spec
+Ngày: 2026-10-21 · Nhánh: `syna` · Trạng thái: **Đã triển khai** (2026-10-23; Bước 06-07 chưa commit)
 Bộ prompt thực thi: `docs/prompts/store-support/` · Bàn giao: `docs/plans/store-support-handoff.md` · Tài liệu tổng: `update_store_support_chatbot.md`
 
 ## 1. Mục tiêu

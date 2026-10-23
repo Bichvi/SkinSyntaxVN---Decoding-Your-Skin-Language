@@ -322,6 +322,12 @@ QUY TẮC BẮT BUỘC
    phải trả lời bằng đúng cách đó; không được nói "chưa có thông tin chính thức".
 11. Nếu thật sự không có trong NGUỒN: chỉ nói chưa có thông tin chính thức kèm kênh liên
    hệ có trong NGUỒN, KHÔNG kèm danh sách bước.
+12. Với câu hỏi có/không ("có ... không", "được không", "đúng không"): chỉ trả lời "có",
+   "không", "được", "không được" khi NGUỒN nói rõ đúng điều đó. KHÔNG khẳng định khi NGUỒN
+   chỉ hướng dẫn liên hệ/xác nhận.
+13. Nếu NGUỒN chỉ bảo khách liên hệ hoặc xác nhận (ví dụ hóa đơn VAT), câu đầu phải nói
+   đúng như vậy: "Bạn cần liên hệ <kênh trong NGUỒN> để xác nhận ..." — không mở đầu bằng
+   "Shop có ..." hay "Có, ...".
 
 ĐỊNH DẠNG
 - Tiếng Việt, xưng "mình", gọi "bạn", thân thiện, ngắn gọn (≤ 180 từ trừ khi cần nhiều bước).
@@ -428,7 +434,7 @@ def _facts(text: str) -> dict[str, set]:
             "phone": phone, "email": email, "url": urls, "_body": body}
 
 
-def validate_answer(answer: str, passages: list[dict]) -> list[str]:
+def validate_answer(answer: str, passages: list[dict], question: str = "") -> list[str]:
     """Danh sách loại lỗi (rỗng = đạt). Mọi giá trị số/SĐT/email/URL trong câu trả lời phải có trong NGUỒN ghép;
     cụm hứa hẹn bị cấm (không có trong nguồn) -> 'promise'. Giới hạn: chỉ bắt số dạng chữ số, không bắt số viết bằng chữ."""
     if not str(answer or "").strip():
@@ -451,7 +457,58 @@ def validate_answer(answer: str, passages: list[dict]) -> list[str]:
         errors.append("promise")
     if _NO_INFO_RE.search(_fold(answer)) and len(_NUMBERED_STEP_RE.findall(str(answer))) >= 2:
         errors.append("no_info_with_steps")
+    if question and _unsupported_opening_claim(answer, source_text, question):
+        errors.append("unsupported_claim")
     return errors
+
+
+# ── Hậu kiểm câu mở đầu khẳng định (Bước 07b) ──
+# Chỉ chạy khi câu hỏi là câu có/không VÀ câu đầu của câu trả lời khẳng định "có/được". Cụm hành động chính
+# của câu đầu (đã bỏ dấu, bỏ stopword) phải xuất hiện trong ít nhất một câu nguồn KHÔNG mang giọng "liên hệ/xác nhận/chưa".
+# Bảo thủ: thiếu dữ liệu (cụm quá ngắn, không có câu hỏi) -> không báo lỗi.
+
+_YESNO_Q_RE = re.compile(r"\bco\b.*\bkhong\b|\b(?:duoc|dung|phai) khong\b|\bduoc chu\b|\bco duoc\b|\bkhong$")
+_OPEN_CLAIM_RE = re.compile(r"^(?:(?:shop|skinsyntax|syna|cua hang) )?(?:co|duoc)(?: |$)|^ban co the ")
+_HEDGE_RE = re.compile(
+    r"\bde xac nhan\b|\bxac nhan (?:viec|truoc khi|thoi gian|quy trinh)\b|\bde biet\b|"
+    r"\bchua (?:co|cong bo|ho tro|ap dung|duoc)\b|\bdang duoc cap nhat\b|\bchua xac dinh\b")
+_CLAIM_STOP = frozenset((
+    "shop skinsyntax syna cua hang minh ban co duoc khong la va cho cua the de nhe a ah ha nha nay thi se dang hien "
+    "hay voi tai o trong nhung roi da dung phai chu ma vay luon cung nua".split()))
+
+
+def _claim_tokens(text: str) -> list[str]:
+    return [t for t in _fold(text).split() if t not in _CLAIM_STOP and (len(t) > 1 or t.isdigit())]
+
+
+def _opening_sentence(answer: str) -> str:
+    for line in str(answer or "").splitlines():
+        line = _CITATION_RE.sub(" ", re.sub(r"[*_>#`]+|^\s*[-•]\s+", " ", line)).strip()
+        if line and not re.match(r"(?i)^nguồn\s*:", line):
+            return re.split(r"[.!?;](?=\s|$)", line, maxsplit=1)[0]
+    return ""
+
+
+def _unsupported_opening_claim(answer: str, source_text: str, question: str) -> bool:
+    if not _YESNO_Q_RE.search(_fold(question)):
+        return False
+    opening = _fold(_opening_sentence(answer))
+    m = _OPEN_CLAIM_RE.match(opening)
+    if not m:
+        return False
+    key = set(_claim_tokens(opening[m.end():]))
+    if len(key) < 2:  # "Có." / "Được." trơ trọi: dùng cụm hành động của câu hỏi
+        key = set(_claim_tokens(question))
+    if len(key) < 2:
+        return False
+    best, supported = 0.0, False
+    for sent in re.split(r"[.;!?](?=\s|$)|\n", source_text):
+        folded = _fold(sent)
+        cover = len(key & set(folded.split())) / len(key)
+        best = max(best, cover)
+        if cover >= 0.6 and not _HEDGE_RE.search(folded):
+            supported = True
+    return not supported
 
 
 _LINK_RE = re.compile(r"\[([^\]]*)\]\(\s*([^)\s]+)\s*\)")
@@ -580,6 +637,7 @@ def build_ctx(message: str, msg_data, chat_history_str: str, reranker=None, arti
             "articles": articles,
             "sources": sources,
             "suggested_questions": suggested_questions(articles, message),
+            "question": str(message or "").strip()[:QUESTION_CHARS],
         },
         "products": [],
         "conflicts": [],
@@ -595,7 +653,7 @@ def build_response(ctx: dict, raw_answer, latency: float) -> dict:
     answer = re.sub(r"<think>.*?</think>", "", str(raw_answer or ""), flags=re.DOTALL).strip()
     if answer:
         answer = canonicalize_links(answer, passages)
-    kinds = ["llm_error"] if not answer else validate_answer(answer, passages)
+    kinds = ["llm_error"] if not answer else validate_answer(answer, passages, sup.get("question", ""))
     if kinds:
         _log(f"validation_failed slug={_safe_slug(first['slug'])} kinds={','.join(kinds)}")
         answer = fallback_answer(articles)
