@@ -5,7 +5,7 @@
 if (!isset($searchFallback) || !is_array($searchFallback)) {
   return;
 }
-$ssfQ = trim((string)($q ?? ''));
+$ssfQ = trim((string)($qEffective ?? $q ?? '')); // U05: từ khóa thực sự đã tìm (đã tự sửa nếu có)
 $ssfHasExact = !empty($ssfHasExact);
 $ssfChips = is_array($searchFallback['chips'] ?? null) ? $searchFallback['chips'] : [];
 $ssfSections = is_array($searchFallback['sections'] ?? null) ? $searchFallback['sections'] : [];
@@ -22,10 +22,14 @@ $ssfUrl = static function (string $url): string {
 $ssfPrompt = 'Mình đang tìm ' . $ssfQ . ', gợi ý giúp mình sản phẩm thay thế phù hợp';
 // Bước 08: beacon sự kiện (search-fallback.js) -> r=search_event; token CSRF không trạng thái theo phiên.
 $ssfCsrf = class_exists('SearchEventTracker') ? SearchEventTracker::csrfToken() : '';
+// U12: nhánh A/B của lượt hiển thị (nếu có thí nghiệm đang chạy) -> beacon gắn kèm để báo cáo theo variant.
+$ssfExp = is_array($searchFallback['experiment'] ?? null) ? $searchFallback['experiment'] : [];
+$ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
+  ? ' data-ssf-experiment="' . $ssfE($ssfExp['id']) . '" data-ssf-variant="' . $ssfE($ssfExp['variant']) . '"' : '';
 ?>
 <div class="ssf" data-ssf data-ssf-degraded="<?= !empty($searchFallback['degraded']) ? '1' : '0' ?>"
   data-ssf-q="<?= $ssfE($ssfQ) ?>" data-ssf-csrf="<?= $ssfE($ssfCsrf) ?>"
-  data-ssf-endpoint="<?= $ssfE(BASE_URL . '/index.php?r=search_event') ?>">
+  data-ssf-endpoint="<?= $ssfE(BASE_URL . '/index.php?r=search_event') ?>"<?= $ssfExpAttr ?>>
   <?php if ($ssfHasExact): ?>
     <h3 class="ssf-more-title">Gợi ý thêm cho bạn</h3>
   <?php else: ?>

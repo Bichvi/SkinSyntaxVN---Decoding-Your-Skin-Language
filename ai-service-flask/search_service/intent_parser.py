@@ -27,6 +27,15 @@ logger = logging.getLogger(__name__)
 
 NEGATIONS = frozenset({"khong", "no", "non"})
 NEGATION_SUFFIXES = frozenset({"free"})
+# U10 negation scope: a cue followed by at most MAX_NEG_FILLERS filler words still negates the entity
+# ("không chứa cồn", "không kỵ retinol", "không xung đột với BHA"). Lists continue the scope
+# ("không chứa cồn và paraben"). ``CONFLICT_FILLERS`` turn an exclusion into "avoid conflicts with X".
+NEG_CUES = NEGATIONS | frozenset({"ko", "tranh", "tru"})   # "loại" alone is not a cue ("loại retinol nào")
+NEG_FILLERS = frozenset({"chua", "co", "dung", "them", "gay", "bi", "ky", "xung", "dot", "voi", "cung", "chung",
+                         "la", "can", "phai", "lam", "chat", "thanh", "phan", "khac", "duoc"})
+CONFLICT_FILLERS = frozenset({"ky", "xung", "dot", "khac"})
+LIST_JOINERS = frozenset({"va", "hoac", "hay", "voi", "cung", "ma"})
+MAX_NEG_FILLERS = 3
 NEGATABLE_TYPES = frozenset({"ingredient", "concern", "benefit"})
 FUZZY_MIN_LEN = 4
 FUZZY_RATIO_GUARD = 8  # plain ratio must be >= cutoff - guard (blocks WRatio partial hits)
@@ -150,6 +159,32 @@ def _match(tokens: list[str], snap: DictionarySnapshot) -> list[tuple[int, int, 
     return found
 
 
+def negation_scope(tokens: list[str], start: int, entity_pos: set[int],
+                   previous: tuple[int, bool] | None = None) -> tuple[bool, bool]:
+    """Is the entity at ``tokens[start]`` negated, and is it a "do not conflict with" (kỵ) phrase?
+
+    ``previous`` = (end index, conflict flag) of the last negated entity, so "không chứa cồn và paraben"
+    negates both. Returns ``(negated, conflict)``.
+    """
+
+    if previous is not None:
+        gap = tokens[previous[0]:start]
+        if len(gap) <= 2 and all(t in LIST_JOINERS for t in gap):
+            return True, previous[1]
+    for back in range(1, MAX_NEG_FILLERS + 2):
+        idx = start - back
+        if idx < 0 or idx in entity_pos:
+            return False, False
+        if tokens[idx] in NEG_CUES:
+            between = tokens[idx + 1:start]
+            if all(t in NEG_FILLERS for t in between):
+                return True, any(t in CONFLICT_FILLERS for t in between)
+            return False, False
+        if tokens[idx] not in NEG_FILLERS:
+            return False, False
+    return False, False
+
+
 def _fuzzy_brand(token: str, snap: DictionarySnapshot) -> str | None:
     """Step 5: rapidfuzz WRatio over compact brand forms, guarded by plain ratio."""
 
@@ -184,8 +219,19 @@ def _snapshot(dictionary: Any) -> DictionarySnapshot:
     return _yaml_only.snapshot()
 
 
-def parse(q: Any, dictionary: EntityDictionary | DictionarySnapshot | None = None) -> Intent:
-    """Parse ``q`` into an :class:`Intent`. Never raises on user input."""
+def parse(
+    q: Any,
+    dictionary: EntityDictionary | DictionarySnapshot | None = None,
+    *,
+    trace: list[dict[str, Any]] | None = None,
+) -> Intent:
+    """Parse ``q`` into an :class:`Intent`. Never raises on user input.
+
+    ``trace`` (optional, U05): when a list is passed it receives one dict per recognised piece, in
+    token order - ``{"kind": "match", "tokens": [...], "type": str, "key": str}`` for dictionary hits and
+    ``{"kind": "fuzzy", "token": str, "key": str}`` for fuzzy brand hits - so callers can tell a typo
+    correction from an exact entity. It does not change the returned Intent.
+    """
 
     raw = clean(q)
     normalized = normalize(raw)
@@ -198,19 +244,32 @@ def parse(q: Any, dictionary: EntityDictionary | DictionarySnapshot | None = Non
     matches = _match(tokens, snap)
 
     fields: dict[str, list[str]] = {name: [] for name in TYPE_FIELDS.values()}
+    excluded: list[str] = []
+    avoid_conflict: list[str] = []
     entity_pos: set[int] = set()
+    last_negated: tuple[int, bool] | None = None
     for start, length, entity_type, key in matches:
-        before = tokens[start - 1] if start > 0 else None
         after = tokens[start + length] if start + length < len(tokens) else None
-        negated = entity_type in NEGATABLE_TYPES and (
-            (before in NEGATIONS and start - 1 not in entity_pos) or after in NEGATION_SUFFIXES
-        )
+        negated, conflict = False, False
+        if entity_type in NEGATABLE_TYPES:
+            negated, conflict = negation_scope(tokens, start, entity_pos, last_negated)
+            if not negated and after in NEGATION_SUFFIXES:
+                negated = True
         if negated:
-            continue  # exclusion ("không cồn", "alcohol free"): leave tokens as residual
+            # exclusion ("không cồn", "không kỵ retinol", "alcohol free"): tokens stay residual; U10 also records the key
+            last_negated = (start + length, conflict)
+            if entity_type == "ingredient":
+                target = avoid_conflict if conflict else excluded
+                if key not in target:
+                    target.append(key)
+            continue
         bucket = fields[TYPE_FIELDS[entity_type]]
         if key not in bucket:
             bucket.append(key)
         entity_pos.update(range(start, start + length))
+        if trace is not None:
+            trace.append({"kind": "match", "tokens": tokens[start:start + length],
+                          "type": entity_type, "key": key, "pos": start})
 
     residual: list[str] = []
     entity_chars = price_chars
@@ -227,6 +286,8 @@ def parse(q: Any, dictionary: EntityDictionary | DictionarySnapshot | None = Non
                 if brand not in fields["brands"]:
                     fields["brands"].append(brand)
                 entity_chars += len(token)
+                if trace is not None:
+                    trace.append({"kind": "fuzzy", "token": token, "key": brand, "pos": idx})
                 continue
         residual.append(token)
         residual_chars += len(token)
@@ -239,5 +300,7 @@ def parse(q: Any, dictionary: EntityDictionary | DictionarySnapshot | None = Non
         price=price,
         residual_terms=residual,
         confidence=confidence,
+        exclude_ingredients=excluded,
+        avoid_conflict_with=avoid_conflict,
         **fields,
     )

@@ -17,6 +17,15 @@ final class SearchFallbackBuilder
      */
     public static function build(?array $response, callable $findVisibleByIds, callable $bestSellers, string $q = ''): array
     {
+        $result = self::buildSections($response, $findVisibleByIds, $bestSellers, $q);
+        if (is_array($response['experiment'] ?? null)) {
+            $result['experiment'] = $response['experiment']; // U12: view đưa vào data-attribute để beacon gắn nhánh A/B
+        }
+        return $result;
+    }
+
+    private static function buildSections(?array $response, callable $findVisibleByIds, callable $bestSellers, string $q): array
+    {
         $intent = is_array($response['intent'] ?? null) ? $response['intent'] : null;
         $chips = self::chips($intent, $q);
         if ($response === null) {
