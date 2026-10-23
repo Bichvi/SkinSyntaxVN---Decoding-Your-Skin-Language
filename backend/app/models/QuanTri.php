@@ -395,8 +395,9 @@ class QuanTri {
         $summary = [
             'tong_san_pham' => $this->db->san_pham->countDocuments([]),
             'tong_danh_muc' => $this->db->danh_muc->countDocuments([]),
-            'tong_khach_hang' => $this->db->khach_hang->countDocuments([]),
-            'tong_nhan_vien' => $this->db->nhan_vien->countDocuments([
+            // U13: tài khoản E2E (is_test_account:true) không tính vào thống kê.
+            'tong_khach_hang' => $this->db->khach_hang->countDocuments(['is_test_account' => ['$ne' => true]]),
+            'tong_nhan_vien' => $this->db->nhan_vien->countDocuments(['is_test_account' => ['$ne' => true],
                 '$or' => [
                     ['deleted_at' => null],
                     ['deleted_at' => ['$exists' => false]]
