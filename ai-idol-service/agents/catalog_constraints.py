@@ -184,7 +184,33 @@ def _parse_amount(number: str, unit: str | None) -> float | None:
     return value * mult
 
 
-def extract_constraints(brief: str, vocab: CatalogVocabulary) -> dict:
+def _bare_countries(text: str, country_alt: str, alias_to_canonical: dict, taken: list, spans: list) -> list:
+    """Autopilot: "kem dưỡng ẩm Hàn Quốc", "từ Pháp hoặc Đức" — a country with no "xuất xứ" prefix is the origin.
+
+    Long names stand alone; short aliases (Pháp, Đức, Nhật...) need "từ" or a list link to a country already found.
+    """
+    found: list[tuple[int, int, str]] = []
+
+    def free(start: int, end: int) -> bool:
+        return not any(start < e and s < end for s, e in taken) and not any(start < e and s < end for s, e, _ in found)
+
+    for m in re.finditer(rf"(?<![a-z0-9])({country_alt})(?![a-z0-9])(?! pham)", text):
+        alias = m.group(1)
+        if len(alias) >= 7 and free(m.start(1), m.end(1)):
+            found.append((m.start(1), m.end(1), alias_to_canonical[alias]))
+    for m in re.finditer(rf"(?<![a-z0-9])tu\s+({country_alt})(?![a-z0-9])(?! pham)", text):
+        if free(m.start(1), m.end(1)):
+            found.append((m.start(1), m.end(1), alias_to_canonical[m.group(1)]))
+    for _ in range(3):  # "Pháp hoặc Đức": a short alias right after a country already found
+        for start, end, _ in list(spans) + list(found):
+            m = re.match(rf"\s*(?:,|/|va|hoac|hay)\s*({country_alt})(?![a-z0-9])", text[end:])
+            if m and free(end + m.start(1), end + m.end(1)):
+                found.append((end + m.start(1), end + m.end(1), alias_to_canonical[m.group(1)]))
+    taken.extend((s, e) for s, e, _ in found)
+    return found
+
+
+def extract_constraints(brief: str, vocab: CatalogVocabulary, *, bare_country: bool = False) -> dict:
     """{constraints, content_notes, assumptions, conflicts, unparsed_negations}; values are JSON-safe."""
     text = _n(brief)
     found: list[dict] = []
@@ -193,6 +219,10 @@ def extract_constraints(brief: str, vocab: CatalogVocabulary) -> dict:
 
     def add(field_name: str, values: list[str], span_start: int, span_end: int, source: str, *, forced_op: str | None = None):
         neg = _negated(text, span_start)
+        if neg is not None and bare_country and field_name != "ingredient" and any(
+                re.search(_word(re.escape(a)), text[neg:span_start])
+                for aliases, _ in INGREDIENTS.values() for a in aliases if not a.startswith("(?")):
+            neg = None  # "không chứa hương liệu cho da nhạy cảm": the "không" belongs to the ingredient
         if neg is not None:
             consumed_neg.add(neg)
         strength, explicit = _marker_strength(text, span_start)
@@ -229,6 +259,8 @@ def extract_constraints(brief: str, vocab: CatalogVocabulary) -> dict:
             spans2.append((m.start(), m.end(), alias_to_canonical[m.group(1)]))
             if implicit and not re.match(r"xuat xu|nhap|thuong hieu", m.group(0)) and ASSUMPTION_ORIGIN not in assumptions:
                 assumptions.append(ASSUMPTION_ORIGIN)
+        if bare_country and field_name == "origin_country":
+            spans2.extend(_bare_countries(text, country_alt, alias_to_canonical, taken, spans2))
         for group in _group(spans2, text):
             add(field_name, [c for _, _, c in group], group[0][0], group[-1][1], text[group[0][0]:group[-1][1]])
 
