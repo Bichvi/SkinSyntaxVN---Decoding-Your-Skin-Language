@@ -65,7 +65,8 @@ class ThongKe {
 
     public function getTongNguoiDung(): int {
         // Trong MongoDB có thể ko có cột vai_tro, nhưng ta dùng logic tương đương
-        return $this->db->nguoidung->countDocuments(['vai_tro' => 'khach_hang']);
+        // U13: bỏ tài khoản E2E (is_test_account:true) khỏi thống kê.
+        return $this->db->nguoidung->countDocuments(['vai_tro' => 'khach_hang', 'is_test_account' => ['$ne' => true]]);
     }
 
     public function getDoanhThu(): float {
@@ -118,7 +119,7 @@ class ThongKe {
             'limit' => $limit
         ];
 
-        $cursor = $this->db->nguoidung->find([], $options);
+        $cursor = $this->db->nguoidung->find(['is_test_account' => ['$ne' => true]], $options);
         $items = [];
 
         foreach ($cursor as $doc) {
