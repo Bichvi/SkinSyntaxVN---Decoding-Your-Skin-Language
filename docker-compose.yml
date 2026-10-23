@@ -161,6 +161,8 @@ services:
       SEARCH_RERANK_ENABLED: "${SEARCH_RERANK_ENABLED:-false}"
       # U10: Syna trả lời câu hỏi có điều kiện (loại da / hoạt chất / xung đột / giá / hãng) bằng tool Neo4j. false = chỉ RAG.
       SYNA_GRAPH_TOOLS_ENABLED: "${SYNA_GRAPH_TOOLS_ENABLED:-true}"
+      # Trang chủ gợi ý theo đồ thị: TTL cache Flask (giây).
+      HOME_GRAPH_CACHE_TTL: "${HOME_GRAPH_CACHE_TTL:-600}"
     volumes:
       - ./database:/app/database:ro
       - ./ai-service-flask:/app
@@ -354,6 +356,9 @@ services:
       AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/profile
       # Smart Search Bước 06 (PHP -> Flask). Không đặt trong .env để khỏi bị .env (127.0.0.1) ghi đè.
       SEARCH_RECOMMEND_ENDPOINT: http://ai-service:5001/api/search/recommend
+      # Trang chủ gợi ý theo đồ thị (PHP -> Flask). 0 = tắt, PHP không gọi Flask.
+      HOME_GRAPH_ENABLED: "${HOME_GRAPH_ENABLED:-1}"
+      HOME_RECOMMEND_ENDPOINT: http://ai-service:5001/api/home/recommend
       SEARCH_BREAKER_REDIS_URL: redis://redis:6379/0
       # Trang goiy dùng engine PHP; bật "1" để chờ thêm AI RAG (~10s/lần, có cache session).
       AI_GOIY_SYNC_AI: "${AI_GOIY_SYNC_AI:-0}"
