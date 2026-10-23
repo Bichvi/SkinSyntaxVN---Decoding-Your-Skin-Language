@@ -103,3 +103,18 @@ def test_cross_encoder_budget_overrun_skipped():
     with ThreadPoolExecutor(1) as ex:
         _, applied = cross_encoder_blend("q", ranked, {}, slow, budget_ms=50, executor=ex)
     assert not applied and ranked[0].score == before
+
+
+def test_curated_tags_add_small_flat_boost_without_changing_reason():
+    by = {"semantic": [C("a", 1, "semantic"), C("b", 1, "semantic")]}
+    base = {r.product_id: r for r in combine(by)}
+    boosted = {r.product_id: r for r in combine(by, curated={"b": True}, w_curated=0.05)}
+    assert boosted["a"].score == base["a"].score
+    assert abs(boosted["b"].score - base["b"].score - 0.05) < 1e-9
+    assert boosted["b"].reason_code == base["b"].reason_code
+    assert {r.product_id: r.score for r in combine(by, curated={"b": True}, w_curated=0.0)}["b"] == base["b"].score
+
+
+def test_curated_boost_default_is_005():
+    from search_service import config
+    assert config.W_CURATED == 0.05

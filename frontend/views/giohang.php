@@ -141,6 +141,23 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
             </table>
           </div>
         </section>
+
+        <?php
+          // U09: cảnh báo hoạt chất xung đột + gợi ý hoàn thiện routine (tải bằng fetch, lỗi -> ẩn, không chặn thanh toán).
+          $cartInsightsEnabled = !in_array(strtolower(function_exists('ss_env') ? ss_env('CART_INSIGHTS_ENABLED', '1') : '1'), ['0', 'false', 'off', 'no'], true);
+          $cinAsset = static function (string $path): string {
+            return BASE_URL . '/assets/' . $path . '?v=' . (@filemtime(dirname(__DIR__) . '/public/assets/' . $path) ?: '1');
+          };
+        ?>
+        <?php if ($cartInsightsEnabled): ?>
+          <link rel="stylesheet" href="<?= h($cinAsset('css/search-fallback.css')) ?>">
+          <link rel="stylesheet" href="<?= h($cinAsset('css/similar-products.css')) ?>">
+          <link rel="stylesheet" href="<?= h($cinAsset('css/cart-insights.css')) ?>">
+          <div class="cin-wrap" data-cart-insights hidden aria-live="polite" aria-busy="true"
+               data-url="<?= h(BASE_URL . '/index.php?r=cart_analyze') ?>"></div>
+          <script src="<?= h($cinAsset('js/search-fallback.js')) ?>" defer></script>
+          <script src="<?= h($cinAsset('js/cart-insights.js')) ?>" defer></script>
+        <?php endif; ?>
       </div>
 
       <div class="col-lg-4">
@@ -739,6 +756,7 @@ document.addEventListener('DOMContentLoaded', function () {
         row.dataset.qty = String(qty);
         setLineTotal(row);
         renderSummary();
+        document.dispatchEvent(new CustomEvent('cart:changed'));
       })
       .catch(() => {
         input.value = String(prevQty);
@@ -766,6 +784,7 @@ document.addEventListener('DOMContentLoaded', function () {
         window.setTimeout(() => {
           row.remove();
           renderSummary();
+          document.dispatchEvent(new CustomEvent('cart:changed'));
 
           if (!document.querySelector('.cart-item')) {
             if (cartLayout) {
@@ -848,5 +867,13 @@ document.addEventListener('DOMContentLoaded', function () {
     setLineTotal(row);
   });
   renderSummary();
+
+  // U09: khối gợi ý thêm sản phẩm vào giỏ -> cart-insights.js thay lại các hàng, ở đây tính lại tổng tiền.
+  document.addEventListener('cart:rows-changed', function () {
+    document.querySelectorAll('.cart-item').forEach((row) => {
+      setLineTotal(row);
+    });
+    renderSummary();
+  });
 });
 </script>

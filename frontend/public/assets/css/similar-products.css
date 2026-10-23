@@ -1,0 +1,34 @@
+/* U08: "Sản phẩm tương tự" ở trang chi tiết - tiền tố ssim- (dùng lại thẻ .ssf-card của search-fallback.css) */
+.ssim-wrap { margin-top: 24px; padding: 20px; border: 1px solid #E2EADF; border-radius: 20px; background: #FFF; box-shadow: 0 4px 20px rgba(24, 59, 43, .04); }
+.ssim-wrap[hidden] { display: none; }
+.ssim-wrap .ssf { margin-top: 0; }
+.ssim-wrap .ssf-section { margin-top: 0; }
+.ssim-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.ssim-title { margin: 0; font-size: 1.15rem; }
+.ssim-nav { display: none; gap: 8px; }
+.ssim-arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #C8DACF; background: #FFF; color: #183B2B; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.ssim-arrow:hover:not(:disabled) { background: #183B2B; color: #FFF; }
+.ssim-arrow:disabled { opacity: .35; cursor: default; }
+
+.ssim-track { --ssim-gap: 12px; --ssim-per-view: 2; display: flex; gap: var(--ssim-gap); overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain; padding: 2px 2px 10px; scrollbar-width: thin; scrollbar-color: #C8DACF transparent; }
+.ssim-track:focus-visible { outline: 3px solid #84A98C; outline-offset: 2px; border-radius: 8px; }
+.ssim-card { flex: 0 0 calc((100% - var(--ssim-gap) * (var(--ssim-per-view) - 1)) / var(--ssim-per-view)); scroll-snap-align: start; }
+@media (min-width: 992px) {
+  .ssim-track { --ssim-gap: 16px; --ssim-per-view: 4; }
+  .ssim-nav { display: inline-flex; }
+}
+
+/* khung chờ (skeleton) giữ chỗ trong lúc fetch */
+.ssim-skeleton { display: block; }
+.ssim-skel-title { width: 190px; height: 20px; border-radius: 6px; margin-bottom: 14px; }
+.ssim-skel-row { display: flex; gap: 12px; overflow: hidden; }
+.ssim-skel-card { flex: 0 0 calc((100% - 12px) / 2); height: 330px; border-radius: 12px; }
+@media (min-width: 992px) { .ssim-skel-row { gap: 16px; } .ssim-skel-card { flex-basis: calc((100% - 48px) / 4); } }
+.ssim-skel-title, .ssim-skel-card { background: linear-gradient(90deg, #EEF3EF 25%, #F7FAF8 37%, #EEF3EF 63%); background-size: 400% 100%; animation: ssim-shimmer 1.4s ease infinite; }
+@keyframes ssim-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .ssim-skel-title, .ssim-skel-card { animation: none; } .ssim-track { scroll-behavior: auto; } }
+
+@media (max-width: 575.98px) {
+  .ssim-wrap { padding: 14px; border-radius: 16px; }
+  .ssim-skel-card { height: 300px; }
+}

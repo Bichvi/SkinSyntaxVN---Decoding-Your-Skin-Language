@@ -1,0 +1,40 @@
+/* U09: khối "Lưu ý hoạt chất" + "Hoàn thiện routine" ở giỏ hàng - tiền tố cin- (dùng lại thẻ .ssf-card / .ssim-track) */
+.cin-wrap { margin-top: 20px; }
+.cin-wrap[hidden] { display: none; }
+.cin { display: grid; gap: 16px; margin-top: 0; }
+.cin-section { padding: 18px 20px; border: 1px solid #E2EADF; border-radius: 16px; background: #FFF; box-shadow: 0 4px 20px rgba(24, 59, 43, .04); margin-top: 0; }
+.cin-title { margin: 0 0 12px; font-size: 1.1rem; }
+
+.cin-conflict-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cin-conflict { border: 1px solid #E2EADF; border-left-width: 4px; border-radius: 10px; padding: 12px 14px; background: #FAFCFA; }
+.cin-sev-high { border-color: #F2C6B8; border-left-color: #C2410C; background: #FFF6F2; }
+.cin-sev-medium { border-left-color: #B7791F; background: #FFFBF1; }
+.cin-sev-low { border-left-color: #6B8F7A; }
+.cin-conflict-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 6px; }
+.cin-badge { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.cin-badge-high { background: #C2410C; color: #FFF; }
+.cin-badge-medium { background: #FDEBC8; color: #7A4A0A; }
+.cin-badge-low { background: #E4EEE8; color: #183B2B; }
+.cin-ings { font-size: .82rem; font-weight: 600; color: #3C5A4A; }
+.cin-pair { font-size: .92rem; font-weight: 600; color: #183B2B; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.cin-pair a { color: inherit; text-decoration: underline; text-decoration-color: #B8CDBF; text-underline-offset: 3px; }
+.cin-pair a:hover { color: #0F2A1E; text-decoration-color: currentColor; }
+.cin-plus { color: #6B8F7A; font-weight: 700; }
+.cin-advice { margin: 6px 0 0; font-size: .88rem; color: #1F3328; }
+.cin-timing { margin: 2px 0 0; font-size: .8rem; color: #5C705E; }
+.cin-note { margin: 10px 0 0; font-size: .78rem; color: #6A7B6F; }
+
+.cin-steps { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.cin-step { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; border: 1px solid #C8DACF; }
+.cin-step-has { background: #E8F2EC; color: #183B2B; }
+.cin-step-missing { background: #FFF; color: #7A4A0A; border-style: dashed; border-color: #D9B777; }
+.cin-group + .cin-group { margin-top: 14px; }
+.cin-group-title { margin: 0 0 8px; font-size: .95rem; font-weight: 700; color: #183B2B; }
+.cin-track { --ssim-per-view: 2; }
+@media (min-width: 992px) { .cin-track { --ssim-per-view: 3; } }
+.cin-card .ssf-actions form { width: 100%; }
+.cin-status { margin: 8px 0 0; font-size: .82rem; color: #3C5A4A; }
+
+@media (max-width: 575.98px) {
+  .cin-section { padding: 14px; border-radius: 12px; }
+}
