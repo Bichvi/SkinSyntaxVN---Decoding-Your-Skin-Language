@@ -5,6 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import os
+import threading
 
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -21,14 +22,26 @@ OPENAI_MODELS = [
 ]
 
 _llms: list | None = None
+_llms_lock = threading.Lock()
 
 
 def get_llms() -> list:
+    """Double-checked locking: builder chạy đúng 1 lần dù nhiều luồng gọi đồng thời,
+    và không luồng nào thấy danh sách đang dựng dở."""
     global _llms
-    if _llms is not None:
-        return _llms
+    cached = _llms
+    if cached is not None:
+        return cached
+    with _llms_lock:
+        if _llms is not None:
+            return _llms
+        built = _build_llms()
+        _llms = built  # gán nguyên tử sau khi dựng xong
+        return built
 
-    _llms = []
+
+def _build_llms() -> list:
+    built: list = []
     try:
         from langchain_openai import ChatOpenAI
     except Exception:
@@ -48,14 +61,14 @@ def get_llms() -> list:
                     max_retries=1,
                     request_timeout=20,
                 )
-                _llms.append(llm)
+                built.append(llm)
                 logger.debug(f"[LLM_POOL] OpenAI {model} ready")
                 break
             except Exception as e:
                 logger.warning(f"[LLM_POOL] OpenAI {model} init failed: {e}")
 
-    logger.info(f"[LLM_POOL] Pool ready: {len(_llms)} LLM(s) available")
-    return _llms
+    logger.info(f"[LLM_POOL] Pool ready: {len(built)} LLM(s) available")
+    return built
 
 
 def get_classifier_llm():
