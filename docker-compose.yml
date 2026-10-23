@@ -79,7 +79,7 @@ services:
     image: neo4j:5.26-community
     container_name: skinsyntax-neo4j
     restart: unless-stopped
-    mem_limit: 1g
+    mem_limit: 1536m
     environment:
       NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
       NEO4J_PLUGINS: '["apoc"]'
@@ -106,6 +106,9 @@ services:
     image: redis:7-alpine
     container_name: skinsyntax-redis
     restart: unless-stopped
+    # U03: AOF (appendfsync everysec) so Streams buffers (search:events:v1 ...) survive a restart.
+    # Enabled on the live instance with CONFIG SET first (no data loss); RDB snapshots stay on.
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
     ports:
       - "6380:6379"
     volumes:
@@ -153,6 +156,11 @@ services:
       SEARCH_GRAPH_ENABLED: "${SEARCH_GRAPH_ENABLED:-true}"
       # Bước 08: boost "thường mua cùng" (CO_PURCHASED, cần graph_sync --derive co_purchase). Mặc định tắt.
       SEARCH_CO_PURCHASE_ENABLED: "${SEARCH_CO_PURCHASE_ENABLED:-false}"
+      # U12: boost CTR (Redis search:ctr:v1:*, job ctr_boost 05:00) và cross-encoder. CỔNG DỮ LIỆU CHƯA ĐẠT -> tắt (xem docs/plans/upgrade-handoff.md, mục U12).
+      SEARCH_CTR_BOOST_ENABLED: "${SEARCH_CTR_BOOST_ENABLED:-false}"
+      SEARCH_RERANK_ENABLED: "${SEARCH_RERANK_ENABLED:-false}"
+      # U10: Syna trả lời câu hỏi có điều kiện (loại da / hoạt chất / xung đột / giá / hãng) bằng tool Neo4j. false = chỉ RAG.
+      SYNA_GRAPH_TOOLS_ENABLED: "${SYNA_GRAPH_TOOLS_ENABLED:-true}"
     volumes:
       - ./database:/app/database:ro
       - ./ai-service-flask:/app
@@ -165,6 +173,96 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - skinsyntax-net
+
+  # U03: gom sự kiện tìm kiếm từ Redis Stream search:events:v1 -> Mongo search_events (lô 500 / 5s).
+  # Dùng chung image Dockerfile.ai (không thêm thư viện); mount code như ai-service nên sửa code chỉ cần restart.
+  search-worker:
+    # Cùng tên image với ai-service (project `skinsyntax`): có sẵn thì dùng luôn, không build lại (~5GB, tải torch).
+    image: skinsyntax-ai-service:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.ai
+    container_name: skinsyntax-search-worker
+    restart: unless-stopped
+    command: ["python", "-m", "workers.search_events_flusher"]
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DB: ${MONGO_DB:-skinsyntax}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-skinsyntax}
+      REDIS_URL: redis://redis:6379/0
+      PYTHONPATH: "/app:/app/chatbot_service"
+      SEARCH_WORKER_HEARTBEAT: /tmp/search_worker.heartbeat
+    volumes:
+      - ./ai-service-flask:/app
+    mem_limit: 256m
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,sys,time; sys.exit(0 if time.time()-os.path.getmtime('/tmp/search_worker.heartbeat')<60 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - skinsyntax-net
+
+  # U11: giữ Neo4j / Chroma / cache khớp catalog. Consumer Redis Stream `catalog:changes:v1` (debounce 30s) +
+  # lịch định kỳ (workers/jobs.py, múi giờ Asia/Ho_Chi_Minh). Tách khỏi search-worker (256m) vì tải embedding
+  # (Chroma upsert) và chạy graph_sync cần nhiều RAM hơn. Cùng image Dockerfile.ai: KHÔNG build riêng.
+  catalog-worker:
+    image: skinsyntax-ai-service:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.ai
+    container_name: skinsyntax-catalog-worker
+    restart: unless-stopped
+    command: ["python", "-m", "workers.catalog_worker"]
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DB: ${MONGO_DB:-skinsyntax}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-skinsyntax}
+      REDIS_URL: redis://redis:6379/0
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-}
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: "8000"
+      CHROMA_DB_PATH: /app/database/chroma_db
+      PYTHONPATH: "/app:/app/chatbot_service"
+      CATALOG_WORKER_HEARTBEAT: /tmp/catalog_worker.heartbeat
+      # Sau khi đồng bộ, gọi 1 lượt autocomplete để PHP dựng lại chỉ mục gợi ý (search:suggestidx:v1).
+      PHP_INTERNAL_URL: http://nginx
+      # graph_eval (đánh giá tool đồ thị sau đồng bộ đêm) cần runtime đồ thị bật, như ai-service.
+      SEARCH_GRAPH_ENABLED: "${SEARCH_GRAPH_ENABLED:-true}"
+      SEARCH_CTR_BOOST_ENABLED: "${SEARCH_CTR_BOOST_ENABLED:-false}"   # U12: chỉ để job ctr_boost báo cờ trong kết quả
+      SYNA_GRAPH_TOOLS_ENABLED: "${SYNA_GRAPH_TOOLS_ENABLED:-true}"
+      OPS_DICTIONARY_OUT: /export/search_dictionary.json
+      OPS_REPORT_DIR: /reports/search-metrics
+    volumes:
+      - ./ai-service-flask:/app
+      - ./database:/app/database:ro
+      # Job xuất từ điển ghi thẳng vào file PHP đọc (backend/app/data/search_dictionary.json).
+      - ./backend/app/data:/export
+      - ./report/search-metrics:/reports/search-metrics
+    mem_limit: 1536m
+    depends_on:
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,sys,time; sys.exit(0 if time.time()-os.path.getmtime('/tmp/catalog_worker.heartbeat')<90 else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -321,15 +419,28 @@ services:
       PRECISION: "int8"
     volumes:
       - vieneu_model_cache:/root/.cache/huggingface
+    # Tải model ONNX lần đầu có thể mất vài phút; không đánh dấu unhealthy trong lúc đó.
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
     networks:
       - skinsyntax-net
 
+  # Profile "voice": agent chỉ là mô phỏng co-host và cần voice-service (TTS) chạy được,
+  # nên KHÔNG tự khởi động cùng stack. Bật bằng:
+  #   docker compose --profile voice up -d livekit-voice-agent
+  # (lệnh này kéo theo voice-service và chờ nó healthy). Tắt: docker compose stop livekit-voice-agent
   livekit-voice-agent:
+    profiles: ["voice"]
     build:
       context: ./livekit-voice-agent
       dockerfile: Dockerfile
     container_name: skinsyntax-livekit-agent
-    restart: unless-stopped
+    # agent.py thoát 1 khi phụ thuộc chưa sẵn sàng (sau backoff nội bộ); thoát 0 khi mô phỏng xong.
+    restart: on-failure:5
     env_file:
       - .env
     environment:
@@ -340,9 +451,12 @@ services:
       TTS_SERVICE_URL: http://voice-service:5002/api/tts/stream
       REDIS_URL: redis://redis:6379/0
     depends_on:
-      - voice-service
-      - ai-service
-      - redis
+      voice-service:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - skinsyntax-net
 

@@ -4,6 +4,8 @@
 // - Circuit breaker: 3 lỗi liên tiếp -> bỏ qua Flask 60s. Trạng thái lưu Valkey/Redis qua CacheService
 //   (không có APCu) hoặc Redis qua RESP; không có -> chỉ theo request.
 // - Không log token, user hash, hồ sơ da.
+require_once __DIR__ . '/RedisLite.php';
+
 final class SearchRecommendClient
 {
     public const SECTION_KEYS = ['same_brand', 'category_alt', 'personalized', 'semantic', 'trending'];
@@ -12,6 +14,11 @@ final class SearchRecommendClient
     public const BREAKER_FAILS = 3;
     public const BREAKER_OPEN_SECONDS = 60;
     private const BREAKER_KEY = 'search:recommend:breaker:v1';
+    private const INTENT_BREAKER_KEY = 'search:intent:breaker:v1'; // U05: breaker riêng, intent chậm không làm mở breaker của recommend
+    // U09 (từ review U08): mỗi endpoint Flask một breaker riêng — similar/cart chậm khi Neo4j chết không được che luôn recommend.
+    private const SIMILAR_BREAKER_KEY = 'search:similar:breaker:v1';
+    private const CART_BREAKER_KEY = 'search:cart:breaker:v1';
+    public const INTENT_TYPES = ['fuzzy', 'synonym'];
 
     private static array $requestState = [];
 
@@ -64,7 +71,7 @@ final class SearchRecommendClient
     }
 
     /** @return array|null response đã validate, null nếu lỗi/timeout/circuit mở */
-    public function recommend(string $q, ?string $userHash, ?array $skinProfile, array $cartIds, array $excludeIds, int $limitPerSection = 8): ?array
+    public function recommend(string $q, ?string $userHash, ?array $skinProfile, array $cartIds, array $excludeIds, int $limitPerSection = 8, ?string $sessionHash = null): ?array
     {
         if ($this->isOpen()) {
             return null;
@@ -77,6 +84,9 @@ final class SearchRecommendClient
         ];
         if ($userHash !== null && $userHash !== '') {
             $payload['user_hash'] = $userHash;
+        }
+        if ($sessionHash !== null && preg_match('/^[A-Fa-f0-9]{8,128}$/', $sessionHash)) {
+            $payload['session_hash'] = $sessionHash; // U12: đã băm; Flask chỉ dùng để chia nhánh A/B
         }
         if ($skinProfile) {
             $payload['skin_profile'] = $skinProfile;
@@ -114,6 +124,386 @@ final class SearchRecommendClient
         }
         $this->recordSuccess();
         return $data;
+    }
+
+    /**
+     * U05: GET /api/search/intent?q= -> ['corrected_q' => string, 'corrections' => [['from','to','type']]] hoặc null
+     * khi lỗi/timeout/breaker mở/response sai cấu trúc. Timeout ngắn (SEARCH_INTENT_TIMEOUT_MS, mặc định 300ms), không retry.
+     */
+    public function intent(string $q): ?array
+    {
+        $q = trim(mb_substr($q, 0, 200, 'UTF-8'));
+        if ($q === '' || $this->isOpen(self::INTENT_BREAKER_KEY)) {
+            return null;
+        }
+        $env = static function (string $k, string $d): string {
+            return function_exists('ss_env') ? ss_env($k, $d) : (string)(getenv($k) ?: $d);
+        };
+        $timeoutMs = max(100, min($this->timeoutMs, (int)$env('SEARCH_INTENT_TIMEOUT_MS', '300')));
+        $url = $this->intentUrl() . '?q=' . rawurlencode($q);
+        $headers = ['Accept: application/json', 'X-Request-Id: ' . self::requestId()];
+        if ($this->internalToken !== '') {
+            $headers[] = 'X-Internal-Token: ' . $this->internalToken;
+        }
+        $res = $this->transport
+            ? ($this->transport)($url, '', $headers, $timeoutMs, min($this->connectTimeoutMs, $timeoutMs), 'GET')
+            : $this->curlGet($url, $headers, $timeoutMs);
+        $status = (int)($res['status'] ?? 0);
+        $data = null;
+        if ($status >= 200 && $status < 300) {
+            $decoded = json_decode((string)($res['body'] ?? ''), true);
+            $data = is_array($decoded) ? self::validateIntentResponse($decoded) : null;
+        }
+        if ($data === null) {
+            $this->recordFailure(self::INTENT_BREAKER_KEY);
+            error_log(sprintf('[SEARCH_INTENT] failed status=%d error=%s', $status, substr((string)(($res['error'] ?? '') ?: 'invalid response'), 0, 120)));
+            return null;
+        }
+        $this->recordSuccess(self::INTENT_BREAKER_KEY);
+        return $data;
+    }
+
+    /**
+     * U11: GET /api/ops/health (Neo4j/Chroma/Redis/Mongo, stream backlog, job status, alerts) cho trang admin chỉ đọc.
+     * Không dùng breaker (chỉ admin gọi, ít khi); lỗi/timeout/response lạ => null. Chỉ giữ các khóa đã biết.
+     * @return array|null
+     */
+    public function opsHealth(int $timeoutMs = 4000): ?array
+    {
+        $url = preg_replace('#/api/search/recommend/?$#', '/api/ops/health', $this->baseUrl);
+        if (!is_string($url) || $url === $this->baseUrl) {
+            $url = rtrim($this->baseUrl, '/') . '/api/ops/health';
+        }
+        $headers = ['Accept: application/json', 'X-Request-Id: ' . self::requestId()];
+        if ($this->internalToken !== '') {
+            $headers[] = 'X-Internal-Token: ' . $this->internalToken;
+        }
+        $res = $this->transport
+            ? ($this->transport)($url, '', $headers, $timeoutMs, min($this->connectTimeoutMs, $timeoutMs), 'GET')
+            : $this->curlGet($url, $headers, $timeoutMs);
+        $status = (int)($res['status'] ?? 0);
+        $data = ($status >= 200 && $status < 300) ? json_decode((string)($res['body'] ?? ''), true) : null;
+        if (!is_array($data) || !isset($data['alerts']) || !is_array($data['alerts'])) {
+            error_log(sprintf('[SEARCH_OPS] health failed status=%d', $status));
+            return null;
+        }
+        return array_intersect_key($data, array_flip(['generated_at', 'ok', 'alerts', 'neo4j', 'chroma', 'mongo', 'redis', 'drift', 'jobs']));
+    }
+
+    /**
+     * U08: GET /api/products/<id>/similar -> ['degraded'=>bool,'source'=>?string,'items'=>[['product_id','score','reason_code','reason_params']]]
+     * hoặc null khi lỗi/timeout/breaker mở/response sai cấu trúc. Breaker RIÊNG (`search:similar:breaker:v1`, 3 lỗi liên tiếp
+     * -> bỏ qua 60s). Timeout SEARCH_SIMILAR_TIMEOUT_MS (mặc định 800ms), không retry.
+     */
+    public function similar(string $productId, ?string $skinType, array $excludeIds, int $limit = 8): ?array
+    {
+        $productId = trim($productId);
+        if (!preg_match(self::PRODUCT_ID_PATTERN, $productId) || $this->isOpen(self::SIMILAR_BREAKER_KEY)) {
+            return null;
+        }
+        $env = static function (string $k, string $d): string {
+            return function_exists('ss_env') ? ss_env($k, $d) : (string)(getenv($k) ?: $d);
+        };
+        $timeoutMs = max(100, min(5000, (int)$env('SEARCH_SIMILAR_TIMEOUT_MS', '800')));
+        $query = ['limit' => max(1, min(20, $limit))];
+        $exclude = self::cleanIds($excludeIds, 50);
+        if ($exclude) {
+            $query['exclude'] = implode(',', $exclude);
+        }
+        if ($skinType !== null && preg_match('/^[a-z0-9_]{1,32}$/', $skinType)) {
+            $query['skin_type'] = $skinType;
+        }
+        $url = $this->similarUrl($productId) . '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        $requestId = self::requestId();
+        $headers = ['Accept: application/json', 'X-Request-Id: ' . $requestId];
+        if ($this->internalToken !== '') {
+            $headers[] = 'X-Internal-Token: ' . $this->internalToken;
+        }
+        $started = microtime(true);
+        $res = $this->transport
+            ? ($this->transport)($url, '', $headers, $timeoutMs, min($this->connectTimeoutMs, $timeoutMs), 'GET')
+            : $this->curlGet($url, $headers, $timeoutMs);
+        $tookMs = (int)round((microtime(true) - $started) * 1000);
+        $status = (int)($res['status'] ?? 0);
+        $data = null;
+        if ($status >= 200 && $status < 300) {
+            $decoded = json_decode((string)($res['body'] ?? ''), true);
+            $data = is_array($decoded) ? self::validateSimilarResponse($decoded) : null;
+        }
+        if ($data === null) {
+            $this->recordFailure(self::SIMILAR_BREAKER_KEY);
+            error_log(sprintf('[SEARCH_SIMILAR] failed request_id=%s status=%d took_ms=%d error=%s', $requestId, $status, $tookMs, substr((string)(($res['error'] ?? '') ?: ($status >= 200 && $status < 300 ? 'invalid response' : 'http error')), 0, 160)));
+            return null;
+        }
+        $this->recordSuccess(self::SIMILAR_BREAKER_KEY);
+        return $data;
+    }
+
+    public const CART_SEVERITIES = ['high', 'medium', 'low'];
+    public const CART_TIMINGS = ['same_routine', 'same_session', 'ok_alternate_days'];
+    public const CART_REASON_CODES = ['completes_routine', 'fits_skin_type'];
+    public const STEP_PATTERN = '/^[a-z0-9_]{1,40}$/';
+
+    /**
+     * U09: POST /api/cart/analyze -> ['conflicts'=>[...],'routine'=>['has','missing','labels'],'suggestions'=>[['step','items']],'degraded'=>bool]
+     * hoặc null khi lỗi/timeout/breaker mở/response sai cấu trúc. Breaker RIÊNG (`search:cart:breaker:v1`), timeout
+     * CART_ANALYZE_TIMEOUT_MS (mặc định 1000ms), không retry. Giỏ hàng luôn chạy được khi trả null.
+     */
+    public function cartAnalyze(array $productIds, ?array $skinProfile = null): ?array
+    {
+        $ids = self::cleanIds($productIds, 50);
+        if (!$ids || $this->isOpen(self::CART_BREAKER_KEY)) {
+            return null;
+        }
+        $env = static function (string $k, string $d): string {
+            return function_exists('ss_env') ? ss_env($k, $d) : (string)(getenv($k) ?: $d);
+        };
+        $timeoutMs = max(100, min(5000, (int)$env('CART_ANALYZE_TIMEOUT_MS', '1000')));
+        $payload = ['product_ids' => $ids];
+        $skinType = is_array($skinProfile) ? ($skinProfile['skin_type'] ?? null) : null;
+        if (is_string($skinType) && preg_match('/^[a-z0-9_]{1,32}$/', $skinType)) {
+            $payload['skin_profile'] = ['skin_type' => $skinType];
+        }
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($body === false) {
+            return null;
+        }
+        $requestId = self::requestId();
+        $headers = ['Accept: application/json', 'Content-Type: application/json', 'X-Request-Id: ' . $requestId];
+        if ($this->internalToken !== '') {
+            $headers[] = 'X-Internal-Token: ' . $this->internalToken;
+        }
+        $url = $this->originUrl() . '/api/cart/analyze';
+        $started = microtime(true);
+        $res = $this->transport
+            ? ($this->transport)($url, $body, $headers, $timeoutMs, min($this->connectTimeoutMs, $timeoutMs), 'POST')
+            : $this->curlPost($body, $headers, $url, $timeoutMs);
+        $tookMs = (int)round((microtime(true) - $started) * 1000);
+        $status = (int)($res['status'] ?? 0);
+        $data = null;
+        if ($status >= 200 && $status < 300) {
+            $decoded = json_decode((string)($res['body'] ?? ''), true);
+            $data = is_array($decoded) ? self::validateCartResponse($decoded) : null;
+        }
+        if ($data === null) {
+            $this->recordFailure(self::CART_BREAKER_KEY);
+            error_log(sprintf('[SEARCH_CART] failed request_id=%s status=%d took_ms=%d error=%s', $requestId, $status, $tookMs, substr((string)(($res['error'] ?? '') ?: ($status >= 200 && $status < 300 ? 'invalid response' : 'http error')), 0, 160)));
+            return null;
+        }
+        $this->recordSuccess(self::CART_BREAKER_KEY);
+        return $data;
+    }
+
+    private function originUrl(): string
+    {
+        $p = parse_url($this->baseUrl);
+        return (is_array($p) && !empty($p['host']))
+            ? (($p['scheme'] ?? 'http') . '://' . $p['host'] . (isset($p['port']) ? ':' . $p['port'] : ''))
+            : rtrim($this->baseUrl, '/');
+    }
+
+    /** Validate theo contract cart_analyze_response.schema.json. Mục sai -> bỏ mục; thiếu cấu trúc chính -> null. */
+    public static function validateCartResponse(array $data): ?array
+    {
+        if (!isset($data['conflicts'], $data['routine'], $data['suggestions'])
+            || !is_array($data['conflicts']) || !array_is_list($data['conflicts'])
+            || !is_array($data['routine']) || !is_array($data['suggestions']) || !array_is_list($data['suggestions'])) {
+            return null;
+        }
+        $conflicts = [];
+        foreach (array_slice($data['conflicts'], 0, 50) as $c) {
+            if (!is_array($c)) {
+                continue;
+            }
+            $a = is_int($c['a'] ?? null) ? (string)$c['a'] : ($c['a'] ?? null);
+            $b = is_int($c['b'] ?? null) ? (string)$c['b'] : ($c['b'] ?? null);
+            if (!is_string($a) || !is_string($b) || !preg_match(self::PRODUCT_ID_PATTERN, $a) || !preg_match(self::PRODUCT_ID_PATTERN, $b)
+                || !in_array($c['severity'] ?? null, self::CART_SEVERITIES, true)
+                || !in_array($c['timing'] ?? null, self::CART_TIMINGS, true)) {
+                continue;
+            }
+            $ings = [];
+            foreach (array_slice(array_values((array)($c['ingredients'] ?? [])), 0, 4) as $n) {
+                if (is_string($n) && trim($n) !== '') {
+                    $ings[] = mb_substr(trim($n), 0, 80, 'UTF-8');
+                }
+            }
+            $rule = (is_string($c['rule_id'] ?? null) && preg_match('/^[A-Za-z0-9_.-]{1,64}$/', $c['rule_id'])) ? $c['rule_id'] : '';
+            $conflicts[] = [
+                'a' => $a, 'b' => $b, 'severity' => $c['severity'], 'timing' => $c['timing'], 'ingredients' => $ings,
+                'rule_id' => $rule,
+                'advice_vi' => is_string($c['advice_vi'] ?? null) ? mb_substr(trim($c['advice_vi']), 0, 400, 'UTF-8') : '',
+            ];
+        }
+        $steps = static function ($list): array {
+            $out = [];
+            foreach (array_slice(array_values((array)$list), 0, 12) as $k) {
+                if (is_string($k) && preg_match(SearchRecommendClient::STEP_PATTERN, $k) && !in_array($k, $out, true)) {
+                    $out[] = $k;
+                }
+            }
+            return $out;
+        };
+        $labels = [];
+        foreach ((array)($data['routine']['labels'] ?? []) as $k => $v) {
+            if (is_string($k) && preg_match(self::STEP_PATTERN, $k) && is_string($v) && trim($v) !== '' && count($labels) < 12) {
+                $labels[$k] = mb_substr(trim($v), 0, 60, 'UTF-8');
+            }
+        }
+        $suggestions = [];
+        foreach (array_slice($data['suggestions'], 0, 3) as $s) {
+            if (!is_array($s) || !is_string($s['step'] ?? null) || !preg_match(self::STEP_PATTERN, $s['step']) || !is_array($s['items'] ?? null)) {
+                continue;
+            }
+            $items = [];
+            $seen = [];
+            foreach (array_slice(array_values($s['items']), 0, 4) as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $pid = $item['product_id'] ?? null;
+                if (is_int($pid)) {
+                    $pid = (string)$pid;
+                }
+                $code = $item['reason_code'] ?? null;
+                if (!is_string($pid) || !preg_match(self::PRODUCT_ID_PATTERN, $pid) || isset($seen[$pid])
+                    || !is_string($code) || !in_array($code, self::CART_REASON_CODES, true)) {
+                    continue;
+                }
+                $seen[$pid] = true;
+                $params = [];
+                foreach (array_slice(array_values((array)($item['reason_params'] ?? [])), 0, 3) as $param) {
+                    if (is_string($param)) {
+                        $params[] = $param;
+                    }
+                }
+                $items[] = [
+                    'product_id' => $pid,
+                    'score' => is_numeric($item['score'] ?? null) ? (float)$item['score'] : 0.0,
+                    'reason_code' => $code,
+                    'reason_params' => $params,
+                ];
+            }
+            if ($items) {
+                $suggestions[] = ['step' => $s['step'], 'items' => $items];
+            }
+        }
+        return [
+            'conflicts' => $conflicts,
+            'routine' => [
+                'has' => $steps($data['routine']['has'] ?? []),
+                'missing' => $steps($data['routine']['missing'] ?? []),
+                'labels' => $labels,
+                'order' => $steps($data['routine']['order'] ?? []),
+            ],
+            'suggestions' => $suggestions,
+            'degraded' => (bool)($data['degraded'] ?? false),
+        ];
+    }
+
+    /** ".../api/search/recommend" -> ".../api/products/<id>/similar" (cùng scheme/host/port). */
+    private function similarUrl(string $productId): string
+    {
+        $p = parse_url($this->baseUrl);
+        $origin = (is_array($p) && !empty($p['host']))
+            ? (($p['scheme'] ?? 'http') . '://' . $p['host'] . (isset($p['port']) ? ':' . $p['port'] : ''))
+            : rtrim($this->baseUrl, '/');
+        return $origin . '/api/products/' . rawurlencode($productId) . '/similar';
+    }
+
+    public const SIMILAR_REASON_CODES = ['shared_ingredients', 'same_category', 'same_brand'];
+
+    /** Validate theo contract similar_response.schema.json. Item sai -> bỏ item; cấu trúc sai -> null. */
+    public static function validateSimilarResponse(array $data): ?array
+    {
+        if (!isset($data['items']) || !is_array($data['items']) || !array_is_list($data['items'])) {
+            return null;
+        }
+        $items = [];
+        $seen = [];
+        foreach (array_slice($data['items'], 0, 20) as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $pid = $item['product_id'] ?? null;
+            if (is_int($pid)) {
+                $pid = (string)$pid;
+            }
+            $code = $item['reason_code'] ?? null;
+            if (!is_string($pid) || !preg_match(self::PRODUCT_ID_PATTERN, $pid) || isset($seen[$pid])
+                || !is_string($code) || !in_array($code, self::SIMILAR_REASON_CODES, true)) {
+                continue;
+            }
+            $seen[$pid] = true;
+            $params = [];
+            foreach (array_slice(array_values((array)($item['reason_params'] ?? [])), 0, 3) as $param) {
+                if (is_string($param)) {
+                    $params[] = $param;
+                }
+            }
+            $items[] = [
+                'product_id' => $pid,
+                'score' => is_numeric($item['score'] ?? null) ? (float)$item['score'] : 0.0,
+                'reason_code' => $code,
+                'reason_params' => $params,
+            ];
+        }
+        $source = $data['source'] ?? null;
+        return [
+            'degraded' => (bool)($data['degraded'] ?? false),
+            'source' => in_array($source, ['graph', 'semantic'], true) ? $source : null,
+            'items' => $items,
+        ];
+    }
+
+    private function intentUrl(): string
+    {
+        $replaced = preg_replace('#/recommend/?$#', '/intent', $this->baseUrl);
+        return ($replaced !== null && $replaced !== $this->baseUrl) ? $replaced : rtrim($this->baseUrl, '/') . '/intent';
+    }
+
+    /** @return array{corrected_q:string, corrections:list<array{from:string,to:string,type:string}>}|null */
+    public static function validateIntentResponse(array $data): ?array
+    {
+        if (!isset($data['corrected_q']) || !is_string($data['corrected_q']) || !isset($data['corrections']) || !is_array($data['corrections']) || !array_is_list($data['corrections'])) {
+            return null;
+        }
+        $corrections = [];
+        foreach (array_slice($data['corrections'], 0, 6) as $c) {
+            if (!is_array($c) || !is_string($c['from'] ?? null) || !is_string($c['to'] ?? null) || !in_array($c['type'] ?? null, self::INTENT_TYPES, true)) {
+                continue;
+            }
+            $corrections[] = [
+                'from' => mb_substr($c['from'], 0, 80, 'UTF-8'),
+                'to' => mb_substr($c['to'], 0, 80, 'UTF-8'),
+                'type' => $c['type'],
+            ];
+        }
+        return ['corrected_q' => mb_substr(trim($data['corrected_q']), 0, 200, 'UTF-8'), 'corrections' => $corrections];
+    }
+
+    /**
+     * Câu truy vấn đã sửa nếu response có ít nhất một correction loại "fuzzy" (gõ sai tên hãng) và câu sửa khác câu gốc
+     * (không phân biệt hoa/thường, khoảng trắng). Chỉ "synonym" (viết tắt) hoặc không có gì -> null.
+     */
+    public static function fuzzyCorrectedQuery(?array $intent, string $q): ?string
+    {
+        if ($intent === null) {
+            return null;
+        }
+        $hasFuzzy = false;
+        foreach ($intent['corrections'] ?? [] as $c) {
+            if (($c['type'] ?? '') === 'fuzzy') {
+                $hasFuzzy = true;
+                break;
+            }
+        }
+        $corrected = trim((string)($intent['corrected_q'] ?? ''));
+        if (!$hasFuzzy || $corrected === '') {
+            return null;
+        }
+        $norm = static fn(string $t): string => mb_strtolower(trim((string)preg_replace('/\s+/u', ' ', $t)), 'UTF-8');
+        return $norm($corrected) === $norm($q) ? null : $corrected;
     }
 
     /** Validate tối thiểu theo contract v1. Item sai -> bỏ item; cấu trúc sai -> null. */
@@ -176,12 +566,19 @@ final class SearchRecommendClient
                 $intent[$k] = array_map(fn($n) => mb_substr($n, 0, 80, 'UTF-8'), array_slice($names, 0, 5));
             }
         }
-        return [
+        $out = [
             'degraded' => (bool)($data['degraded'] ?? false),
             'degraded_branches' => array_values(array_filter((array)($data['degraded_branches'] ?? []), 'is_string')),
             'intent' => $intent,
             'sections' => $sections,
         ];
+        // U12 (tùy chọn): nhánh A/B của request; chỉ nhận id/variant đúng mẫu, còn lại bỏ.
+        $exp = $data['experiment'] ?? null;
+        if (is_array($exp) && is_string($exp['id'] ?? null) && is_string($exp['variant'] ?? null)
+            && preg_match('/^[a-z0-9][a-z0-9_-]{0,39}$/', $exp['id']) && preg_match('/^[a-z0-9][a-z0-9_-]{0,19}$/', $exp['variant'])) {
+            $out['experiment'] = ['id' => $exp['id'], 'variant' => $exp['variant']];
+        }
+        return $out;
     }
 
     private static function cleanIds(array $ids, int $max): array
@@ -211,19 +608,43 @@ final class SearchRecommendClient
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($b), 4));
     }
 
-    private function curlPost(string $body, array $headers): array
+    private function curlPost(string $body, array $headers, ?string $url = null, ?int $timeoutMs = null): array
     {
         if (!function_exists('curl_init')) {
             return ['status' => 0, 'body' => '', 'error' => 'curl unavailable'];
         }
-        $ch = curl_init($this->baseUrl);
+        $ch = curl_init($url ?? $this->baseUrl);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $body,
             CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_TIMEOUT_MS => $this->timeoutMs,
+            CURLOPT_TIMEOUT_MS => $timeoutMs ?? $this->timeoutMs,
             CURLOPT_CONNECTTIMEOUT_MS => $this->connectTimeoutMs,
+            CURLOPT_NOSIGNAL => true,
+            CURLOPT_FOLLOWLOCATION => false,
+        ]);
+        if (defined('CURL_IPRESOLVE_V4')) {
+            curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        }
+        $resp = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        return ['status' => $status, 'body' => is_string($resp) ? $resp : '', 'error' => $error];
+    }
+
+    private function curlGet(string $url, array $headers, int $timeoutMs): array
+    {
+        if (!function_exists('curl_init')) {
+            return ['status' => 0, 'body' => '', 'error' => 'curl unavailable'];
+        }
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_TIMEOUT_MS => $timeoutMs,
+            CURLOPT_CONNECTTIMEOUT_MS => min($this->connectTimeoutMs, $timeoutMs),
             CURLOPT_NOSIGNAL => true,
             CURLOPT_FOLLOWLOCATION => false,
         ]);
@@ -266,57 +687,57 @@ final class SearchRecommendClient
         return self::$redis ?: null;
     }
 
-    private function loadState(): array
+    private function loadState(string $key = self::BREAKER_KEY): array
     {
         $empty = ['fails' => 0, 'open_until' => 0];
         if ($this->stateStore) {
-            $s = ($this->stateStore['get'])(self::BREAKER_KEY);
+            $s = ($this->stateStore['get'])($key);
             return is_array($s) ? $s : $empty;
         }
         try {
             if (class_exists('CacheService') && CacheService::getInstance()->isAvailable()) {
-                $s = CacheService::getInstance()->get(self::BREAKER_KEY);
+                $s = CacheService::getInstance()->get($key);
                 return is_array($s) ? $s : $empty;
             }
             if ($r = self::redis()) {
-                $s = json_decode((string)$r->get(self::BREAKER_KEY), true);
+                $s = json_decode((string)$r->get($key), true);
                 return is_array($s) ? $s : $empty;
             }
         } catch (Throwable $e) {
             // rơi xuống trạng thái theo request
         }
-        return self::$requestState ?: $empty;
+        return (self::$requestState[$key] ?? null) ?: $empty;
     }
 
-    private function saveState(array $s): void
+    private function saveState(array $s, string $key = self::BREAKER_KEY): void
     {
         if ($this->stateStore) {
-            ($this->stateStore['set'])(self::BREAKER_KEY, $s);
+            ($this->stateStore['set'])($key, $s);
             return;
         }
         try {
             if (class_exists('CacheService') && CacheService::getInstance()->isAvailable()) {
-                CacheService::getInstance()->set(self::BREAKER_KEY, $s, self::BREAKER_OPEN_SECONDS * 5);
+                CacheService::getInstance()->set($key, $s, self::BREAKER_OPEN_SECONDS * 5);
                 return;
             }
             if ($r = self::redis()) {
-                $r->setex(self::BREAKER_KEY, self::BREAKER_OPEN_SECONDS * 5, json_encode($s));
+                $r->setex($key, self::BREAKER_OPEN_SECONDS * 5, json_encode($s));
                 return;
             }
         } catch (Throwable $e) {
         }
-        self::$requestState = $s;
+        self::$requestState[$key] = $s;
     }
 
-    public function isOpen(): bool
+    public function isOpen(string $key = self::BREAKER_KEY): bool
     {
-        $s = $this->loadState();
+        $s = $this->loadState($key);
         return (int)($s['open_until'] ?? 0) > time();
     }
 
-    private function recordFailure(): void
+    private function recordFailure(string $key = self::BREAKER_KEY): void
     {
-        $s = $this->loadState();
+        $s = $this->loadState($key);
         $fails = (int)($s['fails'] ?? 0) + 1;
         $openUntil = (int)($s['open_until'] ?? 0);
         if ($fails >= self::BREAKER_FAILS) {
@@ -324,107 +745,43 @@ final class SearchRecommendClient
             $fails = 0;
             error_log('[SEARCH_RECOMMEND] circuit open for ' . self::BREAKER_OPEN_SECONDS . 's');
         }
-        $this->saveState(['fails' => $fails, 'open_until' => $openUntil]);
+        $this->saveState(['fails' => $fails, 'open_until' => $openUntil], $key);
     }
 
-    private function recordSuccess(): void
+    private function recordSuccess(string $key = self::BREAKER_KEY): void
     {
-        $s = $this->loadState();
+        $s = $this->loadState($key);
         if ((int)($s['fails'] ?? 0) !== 0 || (int)($s['open_until'] ?? 0) !== 0) {
-            $this->saveState(['fails' => 0, 'open_until' => 0]);
+            $this->saveState(['fails' => 0, 'open_until' => 0], $key);
         }
     }
 }
 
-/** Client Redis RESP tối giản chỉ cho breaker (timeout 200ms; lỗi -> null/false, không ném). */
+/**
+ * Giữ lại cho tương thích (breaker + test cũ): bọc RedisLite (U03) với API get/setex/ping như trước.
+ * Timeout 200ms; lỗi -> null/false, không ném.
+ */
 final class SearchBreakerRedis
 {
-    private $sock = null;
+    private RedisLite $redis;
 
-    public function __construct(private string $url)
+    public function __construct(string $url)
     {
-    }
-
-    private function conn()
-    {
-        if ($this->sock) {
-            return $this->sock;
-        }
-        $p = parse_url($this->url);
-        if (!is_array($p) || empty($p['host'])) {
-            return null;
-        }
-        $sock = @fsockopen($p['host'], (int)($p['port'] ?? 6379), $errno, $errstr, 0.2);
-        if (!$sock) {
-            return null;
-        }
-        stream_set_timeout($sock, 0, 200000);
-        $this->sock = $sock;
-        if (!empty($p['pass'])) {
-            $auth = isset($p['user']) && $p['user'] !== '' && $p['user'] !== 'default' ? ['AUTH', rawurldecode($p['user']), rawurldecode($p['pass'])] : ['AUTH', rawurldecode($p['pass'])];
-            $this->cmd($auth);
-        }
-        $db = (int)ltrim((string)($p['path'] ?? ''), '/');
-        if ($db > 0) {
-            $this->cmd(['SELECT', (string)$db]);
-        }
-        return $this->sock;
-    }
-
-    private function cmd(array $args)
-    {
-        $sock = $this->conn();
-        if (!$sock) {
-            return null;
-        }
-        $crlf = "\r\n";
-        $out = '*' . count($args) . $crlf;
-        foreach ($args as $a) {
-            $out .= '$' . strlen($a) . $crlf . $a . $crlf;
-        }
-        if (@fwrite($sock, $out) === false) {
-            return null;
-        }
-        $line = fgets($sock);
-        if ($line === false) {
-            return null;
-        }
-        $type = $line[0];
-        $rest = rtrim(substr($line, 1), "\r\n");
-        if ($type === '+' || $type === ':') {
-            return $rest;
-        }
-        if ($type === '$') {
-            $len = (int)$rest;
-            if ($len < 0) {
-                return null;
-            }
-            $data = '';
-            while (strlen($data) < $len + 2) {
-                $chunk = fread($sock, $len + 2 - strlen($data));
-                if ($chunk === false || $chunk === '') {
-                    return null;
-                }
-                $data .= $chunk;
-            }
-            return substr($data, 0, $len);
-        }
-        return null; // '-' lỗi hoặc kiểu không hỗ trợ
+        $this->redis = new RedisLite($url);
     }
 
     public function ping(): bool
     {
-        return $this->cmd(['PING']) === 'PONG';
+        return $this->redis->ping();
     }
 
     public function get(string $key): ?string
     {
-        $v = $this->cmd(['GET', $key]);
-        return is_string($v) ? $v : null;
+        return $this->redis->get($key);
     }
 
     public function setex(string $key, int $ttl, string $value): bool
     {
-        return $this->cmd(['SETEX', $key, (string)$ttl, $value]) === 'OK';
+        return $this->redis->setex($key, $ttl, $value);
     }
 }
