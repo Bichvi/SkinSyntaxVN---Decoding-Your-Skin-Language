@@ -12,6 +12,9 @@ $pageTitle = trim((string)($pageTitle ?? 'Tất cả sản phẩm'));
 $dbUnavailableMessage = trim((string)($dbUnavailableMessage ?? ''));
 $listRoute = trim((string)($listRoute ?? 'tatca'));
 $listType = trim((string)($listType ?? ''));
+$didYouMean = is_array($didYouMean ?? null) ? $didYouMean : null; // U05: ['mode' => 'auto'|'suggest', 'original', 'corrected']
+$exact = !empty($exact);
+$pageQ = (string)($qEffective ?? $q); // phân trang dùng từ khóa đã sửa (nếu tự sửa) để trang 2+ không rỗng
 $paginationBase = BASE_URL . '/index.php?r=' . rawurlencode($listRoute);
 if ($listType !== '') {
   $paginationBase .= '&type=' . urlencode($listType);
@@ -19,6 +22,18 @@ if ($listType !== '') {
 if (!empty($sort) && $sort !== 'default') {
   $paginationBase .= '&sort=' . urlencode($sort);
 }
+if ($exact) {
+  $paginationBase .= '&exact=1';
+}
+// Link tìm lại bằng từ khóa khác, giữ danh mục/sắp xếp hiện tại.
+$searchLink = function (string $keyword, bool $asExact = false) use ($listRoute, $cap1, $cap2, $sort): string {
+  $url = BASE_URL . '/index.php?r=' . rawurlencode($listRoute) . '&q=' . urlencode($keyword);
+  if ($cap1 !== '') $url .= '&cap1=' . urlencode($cap1);
+  if ($cap2 !== '') $url .= '&cap2=' . urlencode($cap2);
+  if (!empty($sort) && $sort !== 'default') $url .= '&sort=' . urlencode($sort);
+  if ($asExact) $url .= '&exact=1';
+  return $url;
+};
 
 $totalPages = max(1, (int)ceil($total / $perPage));
 $maxVisible = 10;
@@ -51,6 +66,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       <?php if ($listType): ?><input type="hidden" name="type" value="<?= h($listType) ?>"><?php endif; ?>
       <?php if ($cap1): ?><input type="hidden" name="cap1" value="<?= h($cap1) ?>"><?php endif; ?>
       <?php if ($cap2): ?><input type="hidden" name="cap2" value="<?= h($cap2) ?>"><?php endif; ?>
+      <?php if ($exact): ?><input type="hidden" name="exact" value="1"><?php endif; ?>
 
       <div class="col-12 col-md-5">
         <label for="catalogSearchInput" class="form-label small fw-semibold text-muted mb-1">Từ khóa tìm kiếm</label>
@@ -85,6 +101,16 @@ $startPage = max(1, $endPage - $maxVisible + 1);
 
   <style>#catalogResults[aria-busy="true"], #catalogSummary[aria-busy="true"] { opacity: .55; transition: opacity .15s; }</style>
   <div id="catalogResults" aria-live="polite">
+  <?php if ($didYouMean !== null): ?>
+    <div class="alert alert-info border-0 shadow-sm py-2 px-3 mb-3 search-did-you-mean" role="status" data-did-you-mean="<?= h($didYouMean['mode']) ?>" style="border-radius: 8px; font-size: 0.9rem;">
+      <?php if ($didYouMean['mode'] === 'auto'): ?>
+        Đang hiển thị kết quả cho «<strong><?= h($didYouMean['corrected']) ?></strong>».
+        Tìm chính xác «<a href="<?= h($searchLink($didYouMean['original'], true)) ?>" class="fw-semibold" data-did-you-mean-exact><?= h($didYouMean['original']) ?></a>»
+      <?php else: ?>
+        Có phải bạn muốn tìm «<a href="<?= h($searchLink($didYouMean['corrected'])) ?>" class="fw-semibold" data-did-you-mean-link><?= h($didYouMean['corrected']) ?></a>»?
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
   <?php if ($dbUnavailableMessage !== ''): ?>
     <div class="alert alert-warning border-0 shadow-sm" style="border-radius: 8px;"><?= h($dbUnavailableMessage) ?></div>
   <?php elseif (empty($items) && is_array($searchFallback ?? null) && !empty($searchFallback['sections'])): ?>
@@ -179,7 +205,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       <ul class="pagination justify-content-center gap-1">
         <?php if ($page > 1): ?>
           <li class="page-item">
-            <a class="page-link d-grid place-items-center" href="<?= $paginationBase ?>&page=1&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>" style="width: 36px; height: 36px; border-radius: 6px; border-color: var(--border); color: #183B2B;">
+            <a class="page-link d-grid place-items-center" href="<?= $paginationBase ?>&page=1&q=<?= urlencode($pageQ) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>" style="width: 36px; height: 36px; border-radius: 6px; border-color: var(--border); color: #183B2B;">
               «
             </a>
           </li>
@@ -187,7 +213,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
 
         <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
           <li class="page-item <?= ($i === (int)$page) ? 'active' : '' ?>">
-            <a class="page-link d-grid place-items-center fw-semibold" href="<?= $paginationBase ?>&page=<?= $i ?>&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>" style="width: 36px; height: 36px; border-radius: 6px; border-color: var(--border); <?= ($i === (int)$page) ? 'background: #183B2B; color: #FFF; border-color: #183B2B;' : 'color: #0F172A;' ?>">
+            <a class="page-link d-grid place-items-center fw-semibold" href="<?= $paginationBase ?>&page=<?= $i ?>&q=<?= urlencode($pageQ) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>" style="width: 36px; height: 36px; border-radius: 6px; border-color: var(--border); <?= ($i === (int)$page) ? 'background: #183B2B; color: #FFF; border-color: #183B2B;' : 'color: #0F172A;' ?>">
               <?= $i ?>
             </a>
           </li>
@@ -195,7 +221,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
 
         <?php if ($page < $totalPages): ?>
           <li class="page-item">
-            <a class="page-link d-grid place-items-center" href="<?= $paginationBase ?>&page=<?= $totalPages ?>&q=<?= urlencode($q) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>" style="width: 36px; height: 36px; border-radius: 6px; border-color: var(--border); color: #183B2B;">
+            <a class="page-link d-grid place-items-center" href="<?= $paginationBase ?>&page=<?= $totalPages ?>&q=<?= urlencode($pageQ) ?>&cap1=<?= urlencode($cap1) ?>&cap2=<?= urlencode($cap2) ?>" style="width: 36px; height: 36px; border-radius: 6px; border-color: var(--border); color: #183B2B;">
               »
             </a>
           </li>

@@ -265,7 +265,8 @@ def test_noisy_unmapped_ingredients_ignored(dictionary):
     it = p("kem", dictionary)  # "Kẽm" unmapped 1-word must not hijack "kem"
     assert it.ingredients == []
     it = p("chiết xuất hoa sen", dictionary)
-    assert it.ingredients == ["chiet_xuat_hoa_sen"]
+    # U06 aliased the Vietnamese name to its INCI entry, so the canonical key now wins over the raw ETL key
+    assert it.ingredients == ["nelumbo_nucifera_flower_extract"]
 
 
 def test_descriptive_unmapped_phrases_do_not_steal_matches(dictionary):
@@ -287,6 +288,7 @@ def test_to_dict_is_json_serialisable(dictionary):
     assert set(data) == {
         "raw", "normalized", "brands", "categories", "ingredients", "skin_types",
         "concerns", "benefits", "price", "residual_terms", "confidence",
+        "exclude_ingredients", "avoid_conflict_with",     # U10 (additive)
     }
 
 
@@ -309,3 +311,45 @@ def test_synonyms_added_in_step_04(dictionary):
     assert p("kem dưỡng đêm", dictionary).categories == ["kem_duong"]
     assert p("lót nền", dictionary).categories == ["kem_lot"]
     assert p("serum b5", dictionary).ingredients == ["panthenol"]
+
+
+# ------------------------------------------------------------------ U10: negation scope
+
+
+def test_exclusion_with_filler_words_is_recorded_not_included(dictionary):
+    it = p("sữa rửa mặt không chứa cồn dưới 300k", dictionary)
+    assert it.categories == ["sua_rua_mat"]
+    assert it.ingredients == [] and it.exclude_ingredients == ["alcohol_denat"]
+    assert it.avoid_conflict_with == []
+    assert it.price is not None and it.price.max_vnd == 300000
+
+
+def test_not_conflict_with_goes_to_avoid_conflict_with(dictionary):
+    it = p("serum nào hợp da dầu, không kỵ retinol", dictionary)
+    assert it.categories == ["serum"] and it.skin_types == ["da_dau"]
+    assert it.ingredients == [] and it.exclude_ingredients == []
+    assert it.avoid_conflict_with == ["retinol"]
+    it = p("serum không xung đột với BHA", dictionary)
+    assert it.avoid_conflict_with == ["salicylic_acid"] and it.ingredients == []
+
+
+def test_negation_list_continues_over_joiners(dictionary):
+    it = p("kem dưỡng không chứa cồn và hương liệu", dictionary)
+    assert it.ingredients == []
+    assert set(it.exclude_ingredients) == {"alcohol_denat", "fragrance"}
+
+
+def test_positive_and_negative_ingredients_in_one_query(dictionary):
+    it = p("serum có niacinamide không chứa cồn", dictionary)
+    assert it.ingredients == ["niacinamide"] and it.exclude_ingredients == ["alcohol_denat"]
+
+
+def test_together_phrase_is_not_a_negation(dictionary):
+    it = p("retinol dùng chung với BHA được không", dictionary)
+    assert it.ingredients == ["retinol", "salicylic_acid"]
+    assert it.exclude_ingredients == [] and it.avoid_conflict_with == []
+
+
+def test_alcohol_free_suffix_still_negates(dictionary):
+    it = p("toner alcohol free", dictionary)
+    assert it.exclude_ingredients == ["alcohol_denat"] and it.ingredients == []

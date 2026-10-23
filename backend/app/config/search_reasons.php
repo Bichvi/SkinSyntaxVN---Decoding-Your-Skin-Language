@@ -9,6 +9,9 @@ return [
         'semantic'     => 'Có thể bạn đang tìm',
         'trending'     => 'Được mua nhiều tuần này',
         'best_sellers' => 'Sản phẩm bán chạy', // fallback PHP
+        'similar'      => 'Sản phẩm tương tự', // U08: trang chi tiết sản phẩm
+        'routine'      => 'Hoàn thiện routine của bạn', // U09: giỏ hàng
+        'conflict'     => 'Cảnh báo hoạt chất', // U09: giỏ hàng
     ],
     'reasons' => [
         'shared_ingredients' => 'Chung hoạt chất %s',
@@ -19,6 +22,7 @@ return [
         'semantic_match'     => 'Gần với từ khóa',
         'trending'           => 'Bán chạy',
         'bought_together'    => 'Thường mua cùng',
+        'completes_routine'  => 'Hoàn thiện routine: %s', // U09
     ],
     'labels' => [
         'da_kho'      => 'da khô',

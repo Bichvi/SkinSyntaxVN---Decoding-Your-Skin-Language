@@ -186,6 +186,13 @@ class EntityDictionary:
             Thread(target=self.snapshot, daemon=True, name="entity-dict-reload").start()
         return snap
 
+    def invalidate(self) -> None:
+        """Mark the snapshot stale (reloaded in the background on the next ``snapshot_nowait``)."""
+
+        snap = self._snap
+        if snap is not None:
+            self._snap = replace(snap, loaded_at=float("-inf"))
+
     def reload(self) -> DictionarySnapshot:
         with self._lock:
             self._snap = self._build(self._snap)

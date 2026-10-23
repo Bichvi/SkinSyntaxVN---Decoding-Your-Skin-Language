@@ -1,0 +1,1702 @@
+{
+ "version": 1,
+ "generated_at": "2026-10-22T23:47:03Z",
+ "source": "neo4j",
+ "brands": [
+  {
+   "key": "16plain",
+   "name": "16plain",
+   "fold": "16plain"
+  },
+  {
+   "key": "3ce",
+   "name": "3CE",
+   "fold": "3ce"
+  },
+  {
+   "key": "50_megumi",
+   "name": "50 Megumi",
+   "fold": "50 megumi"
+  },
+  {
+   "key": "9wishes",
+   "name": "9Wishes",
+   "fold": "9wishes"
+  },
+  {
+   "key": "a_derma",
+   "name": "A-Derma",
+   "fold": "a-derma"
+  },
+  {
+   "key": "abib",
+   "name": "Abib",
+   "fold": "abib"
+  },
+  {
+   "key": "acnes",
+   "name": "Acnes",
+   "fold": "acnes"
+  },
+  {
+   "key": "age_20_s",
+   "name": "AGE 20's",
+   "fold": "age 20's"
+  },
+  {
+   "key": "altruist",
+   "name": "Altruist",
+   "fold": "altruist"
+  },
+  {
+   "key": "anessa",
+   "name": "Anessa",
+   "fold": "anessa"
+  },
+  {
+   "key": "angel_s_liquid",
+   "name": "Angel's Liquid",
+   "fold": "angel's liquid"
+  },
+  {
+   "key": "aperire",
+   "name": "Aperire",
+   "fold": "aperire"
+  },
+  {
+   "key": "aprilskin",
+   "name": "Aprilskin",
+   "fold": "aprilskin"
+  },
+  {
+   "key": "aromatica",
+   "name": "Aromatica",
+   "fold": "aromatica"
+  },
+  {
+   "key": "arrahan",
+   "name": "Arrahan",
+   "fold": "arrahan"
+  },
+  {
+   "key": "arumtown",
+   "name": "Arumtown",
+   "fold": "arumtown"
+  },
+  {
+   "key": "australis",
+   "name": "australis",
+   "fold": "australis"
+  },
+  {
+   "key": "avander",
+   "name": "Avander",
+   "fold": "avander"
+  },
+  {
+   "key": "avene",
+   "name": "Avène",
+   "fold": "avene"
+  },
+  {
+   "key": "axis_y",
+   "name": "Axis-Y",
+   "fold": "axis-y"
+  },
+  {
+   "key": "azderma",
+   "name": "Azderma",
+   "fold": "azderma"
+  },
+  {
+   "key": "b_o_m",
+   "name": "B.O.M",
+   "fold": "b.o.m"
+  },
+  {
+   "key": "baby_bright",
+   "name": "Baby Bright",
+   "fold": "baby bright"
+  },
+  {
+   "key": "balance_active_formula",
+   "name": "Balance Active Formula",
+   "fold": "balance active formula"
+  },
+  {
+   "key": "banana_boat",
+   "name": "Banana Boat",
+   "fold": "banana boat"
+  },
+  {
+   "key": "banila_co",
+   "name": "Banila Co",
+   "fold": "banila co"
+  },
+  {
+   "key": "banobagi",
+   "name": "Banobagi",
+   "fold": "banobagi"
+  },
+  {
+   "key": "baresoul",
+   "name": "BareSoul",
+   "fold": "baresoul"
+  },
+  {
+   "key": "batiste",
+   "name": "Batiste",
+   "fold": "batiste"
+  },
+  {
+   "key": "beplain",
+   "name": "Beplain",
+   "fold": "beplain"
+  },
+  {
+   "key": "bielenda",
+   "name": "Bielenda",
+   "fold": "bielenda"
+  },
+  {
+   "key": "bio_essence",
+   "name": "Bio-essence",
+   "fold": "bio-essence"
+  },
+  {
+   "key": "bio_oil",
+   "name": "Bio-Oil",
+   "fold": "bio-oil"
+  },
+  {
+   "key": "biochem",
+   "name": "Biochem",
+   "fold": "biochem"
+  },
+  {
+   "key": "bioderma",
+   "name": "Bioderma",
+   "fold": "bioderma"
+  },
+  {
+   "key": "biore",
+   "name": "Bioré",
+   "fold": "biore"
+  },
+  {
+   "key": "black_rouge",
+   "name": "Black Rouge",
+   "fold": "black rouge"
+  },
+  {
+   "key": "bnbg",
+   "name": "BNBG",
+   "fold": "bnbg"
+  },
+  {
+   "key": "by_wishtrend",
+   "name": "By Wishtrend",
+   "fold": "by wishtrend"
+  },
+  {
+   "key": "bye_bye_blemish",
+   "name": "Bye Bye Blemish",
+   "fold": "bye bye blemish"
+  },
+  {
+   "key": "byphasse",
+   "name": "Byphasse",
+   "fold": "byphasse"
+  },
+  {
+   "key": "bys",
+   "name": "BYS",
+   "fold": "bys"
+  },
+  {
+   "key": "care_nel",
+   "name": "Care:Nel",
+   "fold": "care:nel"
+  },
+  {
+   "key": "carslan",
+   "name": "Carslan",
+   "fold": "carslan"
+  },
+  {
+   "key": "caryophy",
+   "name": "Caryophy",
+   "fold": "caryophy"
+  },
+  {
+   "key": "cathy_doll",
+   "name": "Cathy Doll",
+   "fold": "cathy doll"
+  },
+  {
+   "key": "celefit",
+   "name": "Celefit",
+   "fold": "celefit"
+  },
+  {
+   "key": "celimax",
+   "name": "Celimax",
+   "fold": "celimax"
+  },
+  {
+   "key": "cell_fusion_c",
+   "name": "Cell Fusion C",
+   "fold": "cell fusion c"
+  },
+  {
+   "key": "cerave",
+   "name": "CeraVe",
+   "fold": "cerave"
+  },
+  {
+   "key": "cetaphil",
+   "name": "Cetaphil",
+   "fold": "cetaphil"
+  },
+  {
+   "key": "cezanne",
+   "name": "Cezanne",
+   "fold": "cezanne"
+  },
+  {
+   "key": "chacott",
+   "name": "Chacott",
+   "fold": "chacott"
+  },
+  {
+   "key": "chando",
+   "name": "Chando",
+   "fold": "chando"
+  },
+  {
+   "key": "chinoshio",
+   "name": "Chinoshio",
+   "fold": "chinoshio"
+  },
+  {
+   "key": "ciracle",
+   "name": "Ciracle",
+   "fold": "ciracle"
+  },
+  {
+   "key": "clean_clear",
+   "name": "Clean & Clear",
+   "fold": "clean & clear"
+  },
+  {
+   "key": "clinicos",
+   "name": "Clinicos",
+   "fold": "clinicos"
+  },
+  {
+   "key": "coast",
+   "name": "Coast",
+   "fold": "coast"
+  },
+  {
+   "key": "cocoon",
+   "name": "Cocoon",
+   "fold": "cocoon"
+  },
+  {
+   "key": "colorkey",
+   "name": "Colorkey",
+   "fold": "colorkey"
+  },
+  {
+   "key": "compliment",
+   "name": "Compliment",
+   "fold": "compliment"
+  },
+  {
+   "key": "cosmedica",
+   "name": "Cosmedica",
+   "fold": "cosmedica"
+  },
+  {
+   "key": "cosrx",
+   "name": "Cosrx",
+   "fold": "cosrx"
+  },
+  {
+   "key": "curel",
+   "name": "Curél",
+   "fold": "curel"
+  },
+  {
+   "key": "d_alba",
+   "name": "d'Alba",
+   "fold": "d'alba"
+  },
+  {
+   "key": "decumar",
+   "name": "Decumar",
+   "fold": "decumar"
+  },
+  {
+   "key": "derladie",
+   "name": "Derladie",
+   "fold": "derladie"
+  },
+  {
+   "key": "derma_angel",
+   "name": "Derma Angel",
+   "fold": "derma angel"
+  },
+  {
+   "key": "dermablock",
+   "name": "Dermablock",
+   "fold": "dermablock"
+  },
+  {
+   "key": "dermal",
+   "name": "Dermal",
+   "fold": "dermal"
+  },
+  {
+   "key": "dermatix",
+   "name": "Dermatix",
+   "fold": "dermatix"
+  },
+  {
+   "key": "dhc",
+   "name": "DHC",
+   "fold": "dhc"
+  },
+  {
+   "key": "double_rich",
+   "name": "Double Rich",
+   "fold": "double rich"
+  },
+  {
+   "key": "dove",
+   "name": "Dove",
+   "fold": "dove"
+  },
+  {
+   "key": "dprogram",
+   "name": "dProgram",
+   "fold": "dprogram"
+  },
+  {
+   "key": "dr_her_paris",
+   "name": "Dr HER Paris",
+   "fold": "dr her paris"
+  },
+  {
+   "key": "dr_forhair",
+   "name": "Dr.ForHair",
+   "fold": "dr.forhair"
+  },
+  {
+   "key": "dr_g",
+   "name": "Dr.G",
+   "fold": "dr.g"
+  },
+  {
+   "key": "drceutics",
+   "name": "DrCeutics",
+   "fold": "drceutics"
+  },
+  {
+   "key": "ducray",
+   "name": "Ducray",
+   "fold": "ducray"
+  },
+  {
+   "key": "eau_thermale_jonzac",
+   "name": "Eau Thermale Jonzac",
+   "fold": "eau thermale jonzac"
+  },
+  {
+   "key": "ecowipes",
+   "name": "EcoWipes",
+   "fold": "ecowipes"
+  },
+  {
+   "key": "elixir",
+   "name": "Elixir",
+   "fold": "elixir"
+  },
+  {
+   "key": "ellips",
+   "name": "Ellips",
+   "fold": "ellips"
+  },
+  {
+   "key": "embryolisse",
+   "name": "Embryolisse",
+   "fold": "embryolisse"
+  },
+  {
+   "key": "emmie_by_happy_skin",
+   "name": "Emmié by Happy Skin",
+   "fold": "emmie by happy skin"
+  },
+  {
+   "key": "espoir",
+   "name": "Espoir",
+   "fold": "espoir"
+  },
+  {
+   "key": "eucerin",
+   "name": "Eucerin",
+   "fold": "eucerin"
+  },
+  {
+   "key": "eveline",
+   "name": "Eveline",
+   "fold": "eveline"
+  },
+  {
+   "key": "evian",
+   "name": "Evian",
+   "fold": "evian"
+  },
+  {
+   "key": "evoluderm",
+   "name": "Evoluderm",
+   "fold": "evoluderm"
+  },
+  {
+   "key": "felina",
+   "name": "Felina",
+   "fold": "felina"
+  },
+  {
+   "key": "fino",
+   "name": "Fino",
+   "fold": "fino"
+  },
+  {
+   "key": "five_grains",
+   "name": "Five Grains",
+   "fold": "five grains"
+  },
+  {
+   "key": "fixderma",
+   "name": "Fixderma",
+   "fold": "fixderma"
+  },
+  {
+   "key": "flawsome",
+   "name": "Flawsome",
+   "fold": "flawsome"
+  },
+  {
+   "key": "foodaholic",
+   "name": "Foodaholic",
+   "fold": "foodaholic"
+  },
+  {
+   "key": "forencos",
+   "name": "Forencos",
+   "fold": "forencos"
+  },
+  {
+   "key": "frankly",
+   "name": "Frankly",
+   "fold": "frankly"
+  },
+  {
+   "key": "freeplus",
+   "name": "Freeplus",
+   "fold": "freeplus"
+  },
+  {
+   "key": "gamma_chemicals",
+   "name": "Gamma Chemicals",
+   "fold": "gamma chemicals"
+  },
+  {
+   "key": "garnier",
+   "name": "Garnier",
+   "fold": "garnier"
+  },
+  {
+   "key": "gennie",
+   "name": "Gennie",
+   "fold": "gennie"
+  },
+  {
+   "key": "girlz_only",
+   "name": "Girlz Only",
+   "fold": "girlz only"
+  },
+  {
+   "key": "goodndoc",
+   "name": "GoodnDoc",
+   "fold": "goodndoc"
+  },
+  {
+   "key": "gookin",
+   "name": "Gookin",
+   "fold": "gookin"
+  },
+  {
+   "key": "grace_and_glow",
+   "name": "Grace And Glow",
+   "fold": "grace and glow"
+  },
+  {
+   "key": "hada_labo",
+   "name": "Hada Labo",
+   "fold": "hada labo"
+  },
+  {
+   "key": "happy_event",
+   "name": "Happy Event",
+   "fold": "happy event"
+  },
+  {
+   "key": "hasi",
+   "name": "HASI",
+   "fold": "hasi"
+  },
+  {
+   "key": "hatomugi",
+   "name": "Hatomugi",
+   "fold": "hatomugi"
+  },
+  {
+   "key": "hazeline",
+   "name": "Hazeline",
+   "fold": "hazeline"
+  },
+  {
+   "key": "heliocare",
+   "name": "Heliocare",
+   "fold": "heliocare"
+  },
+  {
+   "key": "hexze",
+   "name": "Hexze",
+   "fold": "hexze"
+  },
+  {
+   "key": "hotosu",
+   "name": "Hotosu",
+   "fold": "hotosu"
+  },
+  {
+   "key": "huxley",
+   "name": "Huxley",
+   "fold": "huxley"
+  },
+  {
+   "key": "hyaestic",
+   "name": "Hyaestic",
+   "fold": "hyaestic"
+  },
+  {
+   "key": "i_m_from",
+   "name": "I'm from",
+   "fold": "i'm from"
+  },
+  {
+   "key": "innisfree",
+   "name": "innisfree",
+   "fold": "innisfree"
+  },
+  {
+   "key": "isis_pharma",
+   "name": "Isis Pharma",
+   "fold": "isis pharma"
+  },
+  {
+   "key": "jmsolution",
+   "name": "JMsolution",
+   "fold": "jmsolution"
+  },
+  {
+   "key": "joocyee",
+   "name": "Joocyee",
+   "fold": "joocyee"
+  },
+  {
+   "key": "judydoll",
+   "name": "Judydoll",
+   "fold": "judydoll"
+  },
+  {
+   "key": "jumiso",
+   "name": "Jumiso",
+   "fold": "jumiso"
+  },
+  {
+   "key": "keyshu",
+   "name": "Keyshu",
+   "fold": "keyshu"
+  },
+  {
+   "key": "kiss_my_body",
+   "name": "Kiss My Body",
+   "fold": "kiss my body"
+  },
+  {
+   "key": "klairs",
+   "name": "Klairs",
+   "fold": "klairs"
+  },
+  {
+   "key": "kose",
+   "name": "Kosé",
+   "fold": "kose"
+  },
+  {
+   "key": "kumargic",
+   "name": "Kumargic",
+   "fold": "kumargic"
+  },
+  {
+   "key": "l_oreal",
+   "name": "L'Oreal",
+   "fold": "l'oreal"
+  },
+  {
+   "key": "l_oreal_professionnel",
+   "name": "L'Oreal Professionnel",
+   "fold": "l'oreal professionnel"
+  },
+  {
+   "key": "la_bonita",
+   "name": "La Bonita",
+   "fold": "la bonita"
+  },
+  {
+   "key": "la_roche_posay",
+   "name": "La Roche-Posay",
+   "fold": "la roche-posay"
+  },
+  {
+   "key": "labiotte",
+   "name": "Labiotte",
+   "fold": "labiotte"
+  },
+  {
+   "key": "laboratorios_babe",
+   "name": "Laboratorios Babé",
+   "fold": "laboratorios babe"
+  },
+  {
+   "key": "lactacyd",
+   "name": "Lactacyd",
+   "fold": "lactacyd"
+  },
+  {
+   "key": "lanbena",
+   "name": "Lanbena",
+   "fold": "lanbena"
+  },
+  {
+   "key": "lancome",
+   "name": "Lancôme",
+   "fold": "lancome"
+  },
+  {
+   "key": "laneige",
+   "name": "Laneige",
+   "fold": "laneige"
+  },
+  {
+   "key": "lanybeau",
+   "name": "Lánybeau",
+   "fold": "lanybeau"
+  },
+  {
+   "key": "lebelage",
+   "name": "Lebelage",
+   "fold": "lebelage"
+  },
+  {
+   "key": "lemonade",
+   "name": "Lemonade",
+   "fold": "lemonade"
+  },
+  {
+   "key": "lifebuoy",
+   "name": "Lifebuoy",
+   "fold": "lifebuoy"
+  },
+  {
+   "key": "lilybyred",
+   "name": "Lilybyred",
+   "fold": "lilybyred"
+  },
+  {
+   "key": "lime",
+   "name": "Lime",
+   "fold": "lime"
+  },
+  {
+   "key": "lipice",
+   "name": "LipIce",
+   "fold": "lipice"
+  },
+  {
+   "key": "lipstician",
+   "name": "Lipstician",
+   "fold": "lipstician"
+  },
+  {
+   "key": "luvum",
+   "name": "Luvum",
+   "fold": "luvum"
+  },
+  {
+   "key": "ma_nyo",
+   "name": "Ma:nyo",
+   "fold": "ma:nyo"
+  },
+  {
+   "key": "martiderm",
+   "name": "Martiderm",
+   "fold": "martiderm"
+  },
+  {
+   "key": "mastige",
+   "name": "Mastige",
+   "fold": "mastige"
+  },
+  {
+   "key": "mayan",
+   "name": "Mayan",
+   "fold": "mayan"
+  },
+  {
+   "key": "maybelline",
+   "name": "Maybelline",
+   "fold": "maybelline"
+  },
+  {
+   "key": "medianswer",
+   "name": "Medianswer",
+   "fold": "medianswer"
+  },
+  {
+   "key": "medicube",
+   "name": "Medicube",
+   "fold": "medicube"
+  },
+  {
+   "key": "mediheal",
+   "name": "Mediheal",
+   "fold": "mediheal"
+  },
+  {
+   "key": "meishoku",
+   "name": "MEISHOKU",
+   "fold": "meishoku"
+  },
+  {
+   "key": "melano_cc",
+   "name": "Melano CC",
+   "fold": "melano cc"
+  },
+  {
+   "key": "menard",
+   "name": "Menard",
+   "fold": "menard"
+  },
+  {
+   "key": "milaganics",
+   "name": "Milaganics",
+   "fold": "milaganics"
+  },
+  {
+   "key": "mise_en_scene",
+   "name": "Mise en scène",
+   "fold": "mise en scene"
+  },
+  {
+   "key": "momopuri",
+   "name": "Momopuri",
+   "fold": "momopuri"
+  },
+  {
+   "key": "naris_cosmetics",
+   "name": "Naris Cosmetics",
+   "fold": "naris cosmetics"
+  },
+  {
+   "key": "naruko",
+   "name": "Naruko",
+   "fold": "naruko"
+  },
+  {
+   "key": "nature_republic",
+   "name": "Nature Republic",
+   "fold": "nature republic"
+  },
+  {
+   "key": "naturie",
+   "name": "Naturie",
+   "fold": "naturie"
+  },
+  {
+   "key": "neogen_dermalogy",
+   "name": "Neogen Dermalogy",
+   "fold": "neogen dermalogy"
+  },
+  {
+   "key": "nerman",
+   "name": "Nerman",
+   "fold": "nerman"
+  },
+  {
+   "key": "neutrogena",
+   "name": "Neutrogena",
+   "fold": "neutrogena"
+  },
+  {
+   "key": "nguyen_xuan",
+   "name": "Nguyên Xuân",
+   "fold": "nguyen xuan"
+  },
+  {
+   "key": "nivea",
+   "name": "Nivea",
+   "fold": "nivea"
+  },
+  {
+   "key": "nuxe",
+   "name": "Nuxe",
+   "fold": "nuxe"
+  },
+  {
+   "key": "obagi",
+   "name": "Obagi",
+   "fold": "obagi"
+  },
+  {
+   "key": "ogx",
+   "name": "OGX",
+   "fold": "ogx"
+  },
+  {
+   "key": "oh_oh",
+   "name": "oh!oh!",
+   "fold": "oh!oh!"
+  },
+  {
+   "key": "olay",
+   "name": "Olay",
+   "fold": "olay"
+  },
+  {
+   "key": "on_the_body",
+   "name": "On: The Body",
+   "fold": "on: the body"
+  },
+  {
+   "key": "organist",
+   "name": "Organist",
+   "fold": "organist"
+  },
+  {
+   "key": "oxy",
+   "name": "OXY",
+   "fold": "oxy"
+  },
+  {
+   "key": "palmolive",
+   "name": "Palmolive",
+   "fold": "palmolive"
+  },
+  {
+   "key": "pantene",
+   "name": "Pantene",
+   "fold": "pantene"
+  },
+  {
+   "key": "paula_s_choice",
+   "name": "Paula's Choice",
+   "fold": "paula's choice"
+  },
+  {
+   "key": "pekah",
+   "name": "Pekah",
+   "fold": "pekah"
+  },
+  {
+   "key": "pelican",
+   "name": "Pelican",
+   "fold": "pelican"
+  },
+  {
+   "key": "petit_cochon",
+   "name": "Petit Cochon",
+   "fold": "petit cochon"
+  },
+  {
+   "key": "pond_s",
+   "name": "Pond's",
+   "fold": "pond's"
+  },
+  {
+   "key": "prettyskin",
+   "name": "Prettyskin",
+   "fold": "prettyskin"
+  },
+  {
+   "key": "pure_paw_paw",
+   "name": "Pure Paw Paw",
+   "fold": "pure paw paw"
+  },
+  {
+   "key": "pure_smile",
+   "name": "Pure Smile",
+   "fold": "pure smile"
+  },
+  {
+   "key": "purederm",
+   "name": "Purederm",
+   "fold": "purederm"
+  },
+  {
+   "key": "purite_by_provence",
+   "name": "Purité By Prôvence",
+   "fold": "purite by provence"
+  },
+  {
+   "key": "pyunkang_yul",
+   "name": "Pyunkang Yul",
+   "fold": "pyunkang yul"
+  },
+  {
+   "key": "rainbow_l_affair",
+   "name": "Rainbow L’affair",
+   "fold": "rainbow l’affair"
+  },
+  {
+   "key": "raip",
+   "name": "Raip",
+   "fold": "raip"
+  },
+  {
+   "key": "rosette",
+   "name": "Rosette",
+   "fold": "rosette"
+  },
+  {
+   "key": "round_lab",
+   "name": "Round Lab",
+   "fold": "round lab"
+  },
+  {
+   "key": "s_o_b",
+   "name": "S.O.B",
+   "fold": "s.o.b"
+  },
+  {
+   "key": "s_o_n",
+   "name": "S.O.N",
+   "fold": "s.o.n"
+  },
+  {
+   "key": "s_kin_heritage",
+   "name": "S:kin Heritage",
+   "fold": "s:kin heritage"
+  },
+  {
+   "key": "scarz",
+   "name": "Scarz",
+   "fold": "scarz"
+  },
+  {
+   "key": "selsun",
+   "name": "Selsun",
+   "fold": "selsun"
+  },
+  {
+   "key": "senka",
+   "name": "Senka",
+   "fold": "senka"
+  },
+  {
+   "key": "sexylook",
+   "name": "Sexylook",
+   "fold": "sexylook"
+  },
+  {
+   "key": "shimbi",
+   "name": "Shimbi",
+   "fold": "shimbi"
+  },
+  {
+   "key": "silkygirl",
+   "name": "Silkygirl",
+   "fold": "silkygirl"
+  },
+  {
+   "key": "simple",
+   "name": "Simple",
+   "fold": "simple"
+  },
+  {
+   "key": "skin1004",
+   "name": "Skin1004",
+   "fold": "skin1004"
+  },
+  {
+   "key": "skinceuticals",
+   "name": "SkinCeuticals",
+   "fold": "skinceuticals"
+  },
+  {
+   "key": "skinoxy",
+   "name": "Skinoxy",
+   "fold": "skinoxy"
+  },
+  {
+   "key": "skinpres_t",
+   "name": "Skinpres.T",
+   "fold": "skinpres.t"
+  },
+  {
+   "key": "skintific",
+   "name": "Skintific",
+   "fold": "skintific"
+  },
+  {
+   "key": "so_natural",
+   "name": "So'Natural",
+   "fold": "so'natural"
+  },
+  {
+   "key": "some_by_mi",
+   "name": "Some By Mi",
+   "fold": "some by mi"
+  },
+  {
+   "key": "spes",
+   "name": "Spes",
+   "fold": "spes"
+  },
+  {
+   "key": "st_ives",
+   "name": "St.Ives",
+   "fold": "st.ives"
+  },
+  {
+   "key": "sunplay",
+   "name": "Sunplay",
+   "fold": "sunplay"
+  },
+  {
+   "key": "sunsilk",
+   "name": "Sunsilk",
+   "fold": "sunsilk"
+  },
+  {
+   "key": "sur_medic",
+   "name": "Sur.Medic+",
+   "fold": "sur.medic+"
+  },
+  {
+   "key": "svr",
+   "name": "SVR",
+   "fold": "svr"
+  },
+  {
+   "key": "swiss_image",
+   "name": "Swiss Image",
+   "fold": "swiss image"
+  },
+  {
+   "key": "teenilicious",
+   "name": "Teenilicious",
+   "fold": "teenilicious"
+  },
+  {
+   "key": "tenamyd",
+   "name": "Tenamyd",
+   "fold": "tenamyd"
+  },
+  {
+   "key": "tesori_d_oriente",
+   "name": "Tesori d'Oriente",
+   "fold": "tesori d'oriente"
+  },
+  {
+   "key": "the_cafune",
+   "name": "The Cafuné",
+   "fold": "the cafune"
+  },
+  {
+   "key": "the_lab",
+   "name": "The Lab",
+   "fold": "the lab"
+  },
+  {
+   "key": "the_saem",
+   "name": "The SAEM",
+   "fold": "the saem"
+  },
+  {
+   "key": "tia_m",
+   "name": "TIA'M",
+   "fold": "tia'm"
+  },
+  {
+   "key": "timeless",
+   "name": "Timeless",
+   "fold": "timeless"
+  },
+  {
+   "key": "topicrem",
+   "name": "Topicrem",
+   "fold": "topicrem"
+  },
+  {
+   "key": "torriden",
+   "name": "Torriden",
+   "fold": "torriden"
+  },
+  {
+   "key": "tresemme",
+   "name": "TRESemmé",
+   "fold": "tresemme"
+  },
+  {
+   "key": "tsubaki",
+   "name": "Tsubaki",
+   "fold": "tsubaki"
+  },
+  {
+   "key": "unknown",
+   "name": "Unknown",
+   "fold": "unknown"
+  },
+  {
+   "key": "urgo",
+   "name": "Urgo",
+   "fold": "urgo"
+  },
+  {
+   "key": "uriage",
+   "name": "Uriage",
+   "fold": "uriage"
+  },
+  {
+   "key": "vaseline",
+   "name": "Vaseline",
+   "fold": "vaseline"
+  },
+  {
+   "key": "vegick",
+   "name": "Vegick",
+   "fold": "vegick"
+  },
+  {
+   "key": "vichy",
+   "name": "Vichy",
+   "fold": "vichy"
+  },
+  {
+   "key": "vt_cosmetics",
+   "name": "VT Cosmetics",
+   "fold": "vt cosmetics"
+  },
+  {
+   "key": "white_conc",
+   "name": "White Conc",
+   "fold": "white conc"
+  },
+  {
+   "key": "wonjin",
+   "name": "WonJin",
+   "fold": "wonjin"
+  },
+  {
+   "key": "ya_samaya",
+   "name": "Ya Samaya",
+   "fold": "ya samaya"
+  }
+ ],
+ "categories": [
+  {
+   "key": "bb_cc_cream",
+   "name": "BB / CC Cream",
+   "fold": "bb / cc cream",
+   "aliases": [
+    "bb cc cream"
+   ]
+  },
+  {
+   "key": "bo_cham_soc_da_mat",
+   "name": "Bộ Chăm Sóc Da Mặt",
+   "fold": "bo cham soc da mat",
+   "aliases": [
+    "bo cham soc da",
+    "combo duong da",
+    "set duong da"
+   ]
+  },
+  {
+   "key": "cham_soc_co_the",
+   "name": "Chăm Sóc Cơ Thể",
+   "fold": "cham soc co the",
+   "aliases": []
+  },
+  {
+   "key": "cham_soc_da_mat",
+   "name": "Chăm Sóc Da Mặt",
+   "fold": "cham soc da mat",
+   "aliases": [
+    "cham soc da",
+    "skincare"
+   ]
+  },
+  {
+   "key": "cham_soc_toc_va_da_dau",
+   "name": "Chăm Sóc Tóc Và Da Đầu",
+   "fold": "cham soc toc va da dau",
+   "aliases": []
+  },
+  {
+   "key": "che_khuyet_diem",
+   "name": "Che Khuyết Điểm",
+   "fold": "che khuyet diem",
+   "aliases": [
+    "concealer"
+   ]
+  },
+  {
+   "key": "chong_nang_co_the",
+   "name": "Chống Nắng Cơ Thể",
+   "fold": "chong nang co the",
+   "aliases": [
+    "chong nang body",
+    "kem chong nang body"
+   ]
+  },
+  {
+   "key": "kem_chong_nang",
+   "name": "Chống Nắng Da Mặt",
+   "fold": "chong nang da mat",
+   "aliases": [
+    "chong nang",
+    "kcn",
+    "kem chong nang",
+    "kem chong nang da mat",
+    "sunblock",
+    "sunscreen"
+   ]
+  },
+  {
+   "key": "dac_tri",
+   "name": "Đặc Trị",
+   "fold": "dac tri",
+   "aliases": []
+  },
+  {
+   "key": "dau_goi",
+   "name": "Dầu Gội",
+   "fold": "dau goi",
+   "aliases": [
+    "shampoo"
+   ]
+  },
+  {
+   "key": "dau_goi_kho",
+   "name": "Dầu Gội Khô",
+   "fold": "dau goi kho",
+   "aliases": []
+  },
+  {
+   "key": "dau_goi_va_dau_xa",
+   "name": "Dầu Gội Và Dầu Xả",
+   "fold": "dau goi va dau xa",
+   "aliases": []
+  },
+  {
+   "key": "dau_goi_xa_2in1",
+   "name": "Dầu Gội Xả 2in1",
+   "fold": "dau goi xa 2in1",
+   "aliases": []
+  },
+  {
+   "key": "dau_xa",
+   "name": "Dầu Xả",
+   "fold": "dau xa",
+   "aliases": [
+    "conditioner"
+   ]
+  },
+  {
+   "key": "duong_am",
+   "name": "Dưỡng Ẩm",
+   "fold": "duong am",
+   "aliases": []
+  },
+  {
+   "key": "duong_mat",
+   "name": "Dưỡng Mắt",
+   "fold": "duong mat",
+   "aliases": []
+  },
+  {
+   "key": "duong_moi",
+   "name": "Dưỡng Môi",
+   "fold": "duong moi",
+   "aliases": []
+  },
+  {
+   "key": "duong_the",
+   "name": "Dưỡng Thể",
+   "fold": "duong the",
+   "aliases": [
+    "body lotion",
+    "kem duong the",
+    "sua duong the"
+   ]
+  },
+  {
+   "key": "duong_toc",
+   "name": "Dưỡng Tóc",
+   "fold": "duong toc",
+   "aliases": []
+  },
+  {
+   "key": "ho_tro_tri_mun",
+   "name": "Hỗ Trợ Trị Mụn",
+   "fold": "ho tro tri mun",
+   "aliases": [
+    "acne patch",
+    "cham mun",
+    "gel cham mun",
+    "mieng dan mun"
+   ]
+  },
+  {
+   "key": "kem_duong",
+   "name": "Kem / Gel / Dầu Dưỡng",
+   "fold": "kem / gel / dau duong",
+   "aliases": [
+    "cream",
+    "dau duong",
+    "face cream",
+    "gel duong",
+    "kem dem",
+    "kem duong",
+    "kem duong am",
+    "kem duong da",
+    "kem duong da mat",
+    "kem duong dem",
+    "kem gel dau duong",
+    "moisturizer",
+    "night cream"
+   ]
+  },
+  {
+   "key": "kem_lot",
+   "name": "Kem Lót",
+   "fold": "kem lot",
+   "aliases": [
+    "kem lot nen",
+    "lot nen",
+    "primer"
+   ]
+  },
+  {
+   "key": "kem_nen",
+   "name": "Kem Nền",
+   "fold": "kem nen",
+   "aliases": [
+    "foundation"
+   ]
+  },
+  {
+   "key": "lam_sach_da",
+   "name": "Làm Sạch Da",
+   "fold": "lam sach da",
+   "aliases": [
+    "lam sach"
+   ]
+  },
+  {
+   "key": "lotion_sua_duong",
+   "name": "Lotion / Sữa Dưỡng",
+   "fold": "lotion / sua duong",
+   "aliases": [
+    "emulsion",
+    "lotion",
+    "lotion sua duong",
+    "sua duong"
+   ]
+  },
+  {
+   "key": "mat_na",
+   "name": "Mặt Nạ",
+   "fold": "mat na",
+   "aliases": [
+    "face mask",
+    "mask"
+   ]
+  },
+  {
+   "key": "mat_na_kem_u_toc",
+   "name": "Mặt Nạ / Kem Ủ Tóc",
+   "fold": "mat na / kem u toc",
+   "aliases": [
+    "mat na kem u toc"
+   ]
+  },
+  {
+   "key": "mat_na_giay",
+   "name": "Mặt Nạ Giấy",
+   "fold": "mat na giay",
+   "aliases": [
+    "mat na mieng",
+    "sheet mask"
+   ]
+  },
+  {
+   "key": "mat_na_lot",
+   "name": "Mặt Nạ Lột",
+   "fold": "mat na lot",
+   "aliases": [
+    "peel off mask"
+   ]
+  },
+  {
+   "key": "mat_na_mat",
+   "name": "Mặt Nạ Mắt",
+   "fold": "mat na mat",
+   "aliases": [
+    "eye mask",
+    "eye patch"
+   ]
+  },
+  {
+   "key": "mat_na_moi",
+   "name": "Mặt Nạ Môi",
+   "fold": "mat na moi",
+   "aliases": [
+    "lip mask"
+   ]
+  },
+  {
+   "key": "mat_na_ngu",
+   "name": "Mặt Nạ Ngủ",
+   "fold": "mat na ngu",
+   "aliases": [
+    "sleeping mask"
+   ]
+  },
+  {
+   "key": "mat_na_rua",
+   "name": "Mặt Nạ Rửa",
+   "fold": "mat na rua",
+   "aliases": [
+    "clay mask",
+    "mat na dat set",
+    "wash off mask"
+   ]
+  },
+  {
+   "key": "phan_nen",
+   "name": "Phấn Nền",
+   "fold": "phan nen",
+   "aliases": []
+  },
+  {
+   "key": "phan_nuoc_cushion",
+   "name": "Phấn Nước Cushion",
+   "fold": "phan nuoc cushion",
+   "aliases": [
+    "cushion",
+    "phan nuoc"
+   ]
+  },
+  {
+   "key": "san_pham_dac_tri_khac",
+   "name": "Sản Phẩm Đặc Trị Khác",
+   "fold": "san pham dac tri khac",
+   "aliases": []
+  },
+  {
+   "key": "serum_dau_duong_toc",
+   "name": "Serum / Dầu Dưỡng Tóc",
+   "fold": "serum / dau duong toc",
+   "aliases": [
+    "serum dau duong toc"
+   ]
+  },
+  {
+   "key": "serum_kem_duong_mat",
+   "name": "Serum / Kem Dưỡng Mắt",
+   "fold": "serum / kem duong mat",
+   "aliases": [
+    "eye cream",
+    "eye serum",
+    "kem duong vung mat",
+    "serum kem duong mat"
+   ]
+  },
+  {
+   "key": "serum",
+   "name": "Serum / Tinh Chất",
+   "fold": "serum / tinh chat",
+   "aliases": [
+    "ampoule",
+    "essence",
+    "huyet thanh",
+    "serum",
+    "serum tinh chat",
+    "tinh chat"
+   ]
+  },
+  {
+   "key": "son_bong",
+   "name": "Son Bóng",
+   "fold": "son bong",
+   "aliases": []
+  },
+  {
+   "key": "son_duong_moi",
+   "name": "Son Dưỡng Môi",
+   "fold": "son duong moi",
+   "aliases": [
+    "lip balm",
+    "son duong"
+   ]
+  },
+  {
+   "key": "son_kem_tint",
+   "name": "Son Kem / Tint",
+   "fold": "son kem / tint",
+   "aliases": [
+    "lip tint",
+    "son kem",
+    "son kem tint",
+    "son tint"
+   ]
+  },
+  {
+   "key": "son_thoi",
+   "name": "Son Thỏi",
+   "fold": "son thoi",
+   "aliases": []
+  },
+  {
+   "key": "sua_rua_mat",
+   "name": "Sữa Rửa Mặt",
+   "fold": "sua rua mat",
+   "aliases": [
+    "bot rua mat",
+    "cleanser",
+    "cleansing foam",
+    "face wash",
+    "facial cleanser",
+    "foaming wash",
+    "gel rua mat",
+    "rua mat",
+    "srm",
+    "sua rua"
+   ]
+  },
+  {
+   "key": "sua_tam",
+   "name": "Sữa Tắm",
+   "fold": "sua tam",
+   "aliases": [
+    "body wash",
+    "shower gel"
+   ]
+  },
+  {
+   "key": "tay_te_bao_chet",
+   "name": "Tẩy Tế Bào Chết Da Mặt",
+   "fold": "tay te bao chet da mat",
+   "aliases": [
+    "exfoliator",
+    "scrub",
+    "tay tbc",
+    "tay te bao chet"
+   ]
+  },
+  {
+   "key": "tay_te_bao_chet_moi",
+   "name": "Tẩy Tế Bào Chết Môi",
+   "fold": "tay te bao chet moi",
+   "aliases": [
+    "lip scrub"
+   ]
+  },
+  {
+   "key": "tay_trang",
+   "name": "Tẩy Trang Mặt",
+   "fold": "tay trang mat",
+   "aliases": [
+    "cleansing oil",
+    "dau tay trang",
+    "makeup remover",
+    "micellar",
+    "micellar water",
+    "nuoc tay trang",
+    "sap tay trang",
+    "tay trang"
+   ]
+  },
+  {
+   "key": "toner",
+   "name": "Toner / Nước Cân Bằng Da",
+   "fold": "toner / nuoc can bang da",
+   "aliases": [
+    "lotion toner",
+    "nuoc can bang",
+    "nuoc can bang da",
+    "nuoc hoa hong",
+    "toner",
+    "toner nuoc can bang da"
+   ]
+  },
+  {
+   "key": "trang_diem",
+   "name": "Trang Điểm",
+   "fold": "trang diem",
+   "aliases": []
+  },
+  {
+   "key": "trang_diem_mat",
+   "name": "Trang Điểm Mặt",
+   "fold": "trang diem mat",
+   "aliases": []
+  },
+  {
+   "key": "trang_diem_moi",
+   "name": "Trang Điểm Môi",
+   "fold": "trang diem moi",
+   "aliases": []
+  },
+  {
+   "key": "xa_phong",
+   "name": "Xà Phòng",
+   "fold": "xa phong",
+   "aliases": []
+  },
+  {
+   "key": "xit_duong_toc",
+   "name": "Xịt Dưỡng Tóc",
+   "fold": "xit duong toc",
+   "aliases": []
+  },
+  {
+   "key": "xit_khoang",
+   "name": "Xịt Khoáng",
+   "fold": "xit khoang",
+   "aliases": [
+    "face mist",
+    "mineral spray",
+    "xit duong da"
+   ]
+  }
+ ]
+}
