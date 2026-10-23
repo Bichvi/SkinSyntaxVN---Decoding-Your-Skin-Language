@@ -67,3 +67,24 @@ def test_service_crash_returns_degraded_200(client, monkeypatch):
     monkeypatch.setattr(routes, "_service", lambda: Crash())
     r = client.post("/api/search/recommend", json={"q": "x"}, headers={"X-Internal-Token": TOKEN})
     assert r.status_code == 200 and r.get_json()["degraded"] is True
+
+
+def test_429_with_retry_after_when_rate_limited(client, monkeypatch):
+    monkeypatch.setattr(config, "INTERNAL_TOKEN", TOKEN)
+    seen = {}
+
+    def deny(key, limit, window_s, **kw):
+        seen.update(key=key, limit=limit, window=window_s)
+        return False, 2.3
+
+    monkeypatch.setattr(routes.ratelimit, "allow", deny)
+    r = client.post("/api/search/recommend", json={"q": "x"}, headers={"X-Internal-Token": TOKEN},
+                    environ_base={"REMOTE_ADDR": "172.18.0.5"})
+    assert r.status_code == 429 and r.headers["Retry-After"] == "3" and r.get_json() == {"error": "rate_limited"}
+    assert seen["key"] == "rl:search_recommend:v1:172.18.0.5" and seen["limit"] == config.RATE_LIMIT_PER_WINDOW
+
+
+def test_unauthorized_requests_do_not_consume_rate_limit(client, monkeypatch):
+    monkeypatch.setattr(config, "INTERNAL_TOKEN", TOKEN)
+    monkeypatch.setattr(routes.ratelimit, "allow", lambda *a, **k: (_ for _ in ()).throw(AssertionError("called")))
+    assert client.post("/api/search/recommend", json={"q": "x"}).status_code == 401

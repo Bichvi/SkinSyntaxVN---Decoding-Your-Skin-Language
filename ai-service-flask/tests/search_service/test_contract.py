@@ -68,3 +68,31 @@ def test_mode_b_parsed_intent_matches_contract(monkeypatch):
         out = svc.recommend(validate_request({"q": q}))
         jsonschema.validate(out, SCHEMA)
         assert isinstance(out["intent"], dict) and "category_names" in out["intent"]
+
+
+def test_experiment_field_is_optional_and_validated():
+    base = {"mode": "fallback", "degraded": False, "degraded_branches": [], "took_ms": 3, "intent": None, "sections": []}
+    jsonschema.validate(base, SCHEMA)                                    # old responses stay valid
+    jsonschema.validate({**base, "experiment": {"id": "graph_weight_v1", "variant": "control"}}, SCHEMA)
+    for bad in ({"id": "Bad Id", "variant": "x"}, {"id": "ok"}, {"id": "ok", "variant": "x", "extra": 1}):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({**base, "experiment": bad}, SCHEMA)
+
+
+def test_service_output_with_experiment_matches_contract():
+    from search_service import experiments as ex
+
+    experiment = ex.parse_experiment({"id": "graph_weight_v1", "status": "running", "traffic": {"control": 50, "variant": 50},
+                                      "overrides": {"weights.graph": 0.45}})
+
+    class Reg:
+        def assign(self, session_hash):
+            return ex.select([experiment], session_hash)
+
+    def sem(req, intent):
+        return [Candidate("1496", 0.7, "semantic_match", "semantic")]
+
+    out = SearchRecommendService({"semantic": sem}, experiments=Reg()).recommend(
+        validate_request({"q": "toner", "session_hash": "ab" * 32}))
+    assert "experiment" in out
+    jsonschema.validate(out, SCHEMA)

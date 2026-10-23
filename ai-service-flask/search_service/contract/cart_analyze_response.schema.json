@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "skinsyntax/search/cart_analyze_response.v1",
+  "title": "POST /api/cart/analyze response (v1, U09)",
+  "description": "Request: {\"product_ids\": [<=50 ids], \"skin_profile\": {\"skin_type\": \"da_dau\"}?}. Header X-Internal-Token required when SEARCH_INTERNAL_TOKEN is set. 400 {error, field} on bad input, 429 when rate limited, 404 when SEARCH_CART_ENABLED=0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["conflicts", "routine", "suggestions", "degraded"],
+  "properties": {
+    "conflicts": {
+      "type": "array",
+      "description": "One entry per conflicting product pair (highest severity), most severe first.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["a", "b", "severity", "timing", "ingredients", "rule_id", "advice_code", "advice_vi"],
+        "properties": {
+          "a": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$"},
+          "b": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$"},
+          "severity": {"type": "string", "enum": ["high", "medium", "low"]},
+          "timing": {"type": "string", "enum": ["same_routine", "same_session", "ok_alternate_days"]},
+          "ingredients": {"type": "array", "maxItems": 4, "items": {"type": "string"}},
+          "rule_id": {"type": "string"},
+          "advice_code": {"type": "string", "description": "same as rule_id"},
+          "advice_vi": {"type": "string", "description": "Vietnamese advice text from conflict_rules.yaml (escape in views)"},
+          "evidence": {"type": "string", "enum": ["", "limited", "moderate", "strong"]}
+        }
+      }
+    },
+    "routine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["has", "missing"],
+      "properties": {
+        "has": {"type": "array", "items": {"type": "string"}, "description": "routine_steps.yaml step keys the cart covers (canonical order)"},
+        "missing": {"type": "array", "items": {"type": "string"}, "description": "non-optional steps not covered; empty when the cart has no face-care product"},
+        "labels": {"type": "object", "additionalProperties": {"type": "string"}, "description": "step key -> Vietnamese label"},
+        "order": {"type": "array", "items": {"type": "string"}, "description": "canonical step order (JSON object keys are not ordered)"}
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "items"],
+        "properties": {
+          "step": {"type": "string"},
+          "items": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["product_id", "score", "reason_code", "reason_params"],
+              "properties": {
+                "product_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$"},
+                "score": {"type": "number"},
+                "reason_code": {"type": "string", "enum": ["completes_routine", "fits_skin_type"]},
+                "reason_params": {"type": "array", "maxItems": 3, "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "degraded": {"type": "boolean", "description": "true = Neo4j unavailable: conflicts come from the Python rules, no suggestions"},
+    "took_ms": {"type": "integer", "minimum": 0}
+  }
+}

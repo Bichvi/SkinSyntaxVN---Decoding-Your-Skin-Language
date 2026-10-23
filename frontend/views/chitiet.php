@@ -1672,7 +1672,26 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
         </div>
       <?php endif; ?>
 
-      <div class="detail-tabs-card mt-4 p-4 p-md-5 rounded-4 bg-white border w-100" style="border-radius: 28px !important; border-color: #E2EADF !important; box-shadow: 0 10px 30px rgba(33, 84, 39, 0.04);">
+      <?php
+        // U08: "Sản phẩm tương tự" (SIMILAR_TO trong Neo4j) - tải lười bằng fetch, nằm cạnh khối mua kèm cũ (không thay thế).
+        $similarEnabled = !in_array(strtolower(function_exists('ss_env') ? ss_env('SIMILAR_PRODUCTS_ENABLED', '1') : '1'), ['0', 'false', 'off', 'no'], true);
+        $similarPid = trim((string)($p['ma_san_pham'] ?? $id ?? ''));
+      ?>
+      <?php if ($similarEnabled && $similarPid !== '' && preg_match('/^[A-Za-z0-9_-]{1,32}$/', $similarPid)): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/search-fallback.css?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/css/search-fallback.css') ?: '1' ?>">
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/similar-products.css?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/css/similar-products.css') ?: '1' ?>">
+        <div class="ssim-wrap w-100" data-similar-products aria-live="polite" aria-busy="true"
+             data-url="<?= h(BASE_URL . '/index.php?r=similar_products&id=' . rawurlencode($similarPid)) ?>">
+          <div class="ssim-skeleton" aria-hidden="true">
+            <div class="ssim-skel-title"></div>
+            <div class="ssim-skel-row"><div class="ssim-skel-card"></div><div class="ssim-skel-card"></div><div class="ssim-skel-card d-none d-lg-block"></div><div class="ssim-skel-card d-none d-lg-block"></div></div>
+          </div>
+        </div>
+        <script src="<?= BASE_URL ?>/assets/js/search-fallback.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/search-fallback.js') ?: '1' ?>" defer></script>
+        <script src="<?= BASE_URL ?>/assets/js/similar-products.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/similar-products.js') ?: '1' ?>" defer></script>
+      <?php endif; ?>
+
+      <div class="detail-tabs-card mt-4 p-4 p-md-5 rounded-4 bg-white border w-100"style="border-radius: 28px !important; border-color: #E2EADF !important; box-shadow: 0 10px 30px rgba(33, 84, 39, 0.04);">
         <div class="detail-tabs-header mb-4 pb-2 border-bottom">
           <ul class="nav nav-pills flex-nowrap overflow-x-auto gap-2" id="detailTabNav" role="tablist">
             <li class="nav-item" role="presentation">

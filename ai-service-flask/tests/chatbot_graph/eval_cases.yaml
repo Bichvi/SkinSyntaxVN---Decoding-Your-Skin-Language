@@ -1,0 +1,192 @@
+# U10 evaluation set for the Syna graph tools (run: scripts/eval_graph_tools.py, inside the ai container).
+# Every expectation is checked by machine against Neo4j / Mongo with queries that are independent of the tool's own
+# Cypher (the script writes its own verification queries).
+#
+#   q            Vietnamese question exactly as a customer would type it
+#   current      optional current_product_id (customer is on that product page)
+#   route        expected plan: {tool, args (subset)}; "route: null" = the question must NOT be routed (RAG as before)
+#   expect       machine checks applied to the tool result:
+#     min_count / max_count       number of products / pairs / items returned
+#     category: <key>             every product is in that category (leaf or descendant)
+#     skin: <key>                 every product is SUITABLE_FOR that skin type (or flagged "universal" and tagged moi_loai_da)
+#     excludes: [group|key]       no product CONTAINS any ingredient of the group / key
+#     contains_any: [key,...]     every product CONTAINS at least one of those keys (vitamin C family etc.)
+#     no_conflict_with: [key]     no product has an ingredient with a medium/high CONFLICTS_WITH edge to that key
+#     brand: <key>                every product is of that brand
+#     price_max / price_min       refreshed price (Mongo) inside the window
+#     truth_exists: {brand, category}   result is non-empty exactly when the graph has such a product in stock
+#     severity / timing / advice_contains / consult_expert   (check_conflicts)
+#     probe: {ingredient: bool}   (explain_product) presence agrees with the graph
+#     similar_edges: true         (similar_products) every item is SIMILAR_TO the source product in the graph
+#   e2e          true = one of the 5 questions sent through /api/chat by --with-llm
+
+cases:
+  # ---------------------------------------------------------------- find_products
+  - id: serum_oily_not_retinol_conflict
+    q: "serum nào hợp da dầu, không kỵ retinol"
+    e2e: true
+    route: {tool: find_products, args: {category: serum, skin_type: da_dau, avoid_conflict_with: [retinol]}}
+    expect: {min_count: 1, category: serum, skin: da_dau, no_conflict_with: [retinol]}
+
+  - id: cleanser_no_alcohol_under_300k
+    q: "sữa rửa mặt không chứa cồn dưới 300k"
+    e2e: true
+    route: {tool: find_products, args: {category: sua_rua_mat, exclude_ingredients: [alcohol_denat], price_max: 300000}}
+    expect: {min_count: 1, category: sua_rua_mat, excludes: [alcohol], price_max: 300000}
+
+  - id: toner_no_alcohol_under_200k
+    q: "toner không cồn dưới 200k"
+    route: {tool: find_products, args: {category: toner, price_max: 200000}}
+    expect: {min_count: 1, category: toner, excludes: [alcohol], price_max: 200000}
+
+  - id: moisturizer_no_paraben_sensitive
+    q: "kem dưỡng không paraben cho da nhạy cảm"
+    route: {tool: find_products, args: {category: kem_duong, skin_type: da_nhay_cam, exclude_ingredients: [paraben]}}
+    expect: {min_count: 1, category: kem_duong, skin: da_nhay_cam, excludes: [paraben]}
+
+  - id: moisturizer_no_fragrance_no_paraben
+    q: "kem dưỡng không hương liệu không paraben"
+    route: {tool: find_products, args: {category: kem_duong}}
+    expect: {min_count: 1, category: kem_duong, excludes: [fragrance, paraben]}
+
+  - id: serum_vitamin_c_under_400k
+    q: "serum vitamin c dưới 400k"
+    route: {tool: find_products, args: {category: serum, include_ingredients: [ascorbic_acid], price_max: 400000}}
+    expect:
+      min_count: 1
+      category: serum
+      price_max: 400000
+      contains_any: [ascorbic_acid, 3_o_ethyl_ascorbic_acid, ascorbyl_glucoside, sodium_ascorbyl_phosphate,
+                     magnesium_ascorbyl_phosphate, tetrahexyldecyl_ascorbate, ascorbyl_tetraisopalmitate]
+
+  - id: serum_niacinamide_200_500k
+    q: "serum có niacinamide giá từ 200k đến 500k"
+    route: {tool: find_products, args: {category: serum, include_ingredients: [niacinamide], price_min: 200000, price_max: 500000}}
+    expect: {min_count: 1, category: serum, contains_any: [niacinamide], price_min: 200000, price_max: 500000}
+
+  - id: sunscreen_no_alcohol_under_350k
+    q: "kem chống nắng không cồn dưới 350k"
+    route: {tool: find_products, args: {category: kem_chong_nang, price_max: 350000}}
+    expect: {min_count: 1, category: kem_chong_nang, excludes: [alcohol], price_max: 350000}
+
+  - id: torriden_has_sunscreen
+    q: "Torriden có kem chống nắng không"
+    e2e: true
+    route: {tool: find_products, args: {category: kem_chong_nang, brand: torriden}}
+    expect: {category: kem_chong_nang, brand: torriden, truth_exists: {brand: torriden, category: kem_chong_nang}}
+
+  - id: torriden_has_serum
+    q: "Torriden có serum không"
+    route: {tool: find_products, args: {category: serum, brand: torriden}}
+    expect: {category: serum, brand: torriden, truth_exists: {brand: torriden, category: serum}}
+
+  - id: cerave_cleanser_no_alcohol
+    q: "CeraVe có sữa rửa mặt không chứa cồn không"
+    route: {tool: find_products, args: {category: sua_rua_mat, brand: cerave}}
+    expect: {category: sua_rua_mat, brand: cerave, excludes: [alcohol], truth_exists: {brand: cerave, category: sua_rua_mat, excludes: [alcohol]}}
+
+  - id: serum_acne_oil_control_oily
+    q: "serum trị mụn kiềm dầu cho da dầu"
+    route: {tool: find_products, args: {category: serum, skin_type: da_dau, concerns: [mun], benefits: [kiem_dau]}}
+    expect: {min_count: 1, category: serum, skin: da_dau}
+
+  - id: moisturizer_silicone_free_dry
+    q: "kem dưỡng silicone free cho da khô"
+    route: {tool: find_products, args: {category: kem_duong, skin_type: da_kho, exclude_ingredients: [silicone]}}
+    expect: {min_count: 1, category: kem_duong, skin: da_kho, excludes: [silicone]}
+
+  - id: cleanser_acne_no_fragrance_250k
+    q: "sữa rửa mặt cho da mụn không hương liệu dưới 250k"
+    route: {tool: find_products, args: {category: sua_rua_mat, skin_type: da_mun, price_max: 250000}}
+    expect: {min_count: 1, category: sua_rua_mat, skin: da_mun, excludes: [fragrance], price_max: 250000}
+
+  - id: retinol_serum_not_bha_conflict
+    q: "serum có retinol không xung đột với BHA"
+    # retinol itself conflicts with salicylic acid (rule retinoid_bha), so no retinol product can satisfy this
+    route: {tool: find_products, args: {category: serum, include_ingredients: [retinol], avoid_conflict_with: [salicylic_acid]}}
+    expect: {max_count: 0, no_conflict_with: [salicylic_acid]}
+
+  - id: toner_dry_no_alcohol
+    q: "toner hợp da khô không chứa cồn"
+    route: {tool: find_products, args: {category: toner, skin_type: da_kho}}
+    expect: {min_count: 1, category: toner, skin: da_kho, excludes: [alcohol]}
+
+  - id: mask_no_paraben_150k
+    q: "mặt nạ không paraben dưới 150k"
+    route: {tool: find_products, args: {category: mat_na, price_max: 150000}}
+    expect: {min_count: 1, category: mat_na, excludes: [paraben], price_max: 150000}
+
+  - id: moisturizer_sensitive_no_alcohol_no_fragrance_400k
+    q: "kem dưỡng da nhạy cảm không cồn không hương liệu dưới 400k"
+    route: {tool: find_products, args: {category: kem_duong, skin_type: da_nhay_cam, price_max: 400000}}
+    expect: {min_count: 1, category: kem_duong, skin: da_nhay_cam, excludes: [alcohol, fragrance], price_max: 400000}
+
+  # ---------------------------------------------------------------- check_conflicts
+  - id: retinol_with_bha
+    q: "retinol dùng chung với BHA được không"
+    e2e: true
+    route: {tool: check_conflicts, args: {ingredient_keys: [retinol, salicylic_acid]}}
+    expect: {min_count: 1, severity: high, timing: same_routine, advice_contains: ["xen kẽ"], consult_expert: true}
+
+  - id: vitamin_c_with_retinol
+    q: "vitamin c kết hợp với retinol có sao không"
+    route: {tool: check_conflicts, args: {ingredient_keys: [ascorbic_acid, retinol]}}
+    expect: {min_count: 1}
+
+  - id: aha_with_bha
+    q: "AHA và BHA dùng chung được không"
+    route: {tool: check_conflicts, args: {ingredient_keys: [aha, salicylic_acid]}}
+    expect: {min_count: 1}
+
+  - id: niacinamide_with_hyaluronic
+    q: "niacinamide dùng chung với hyaluronic acid được không"
+    route: {tool: check_conflicts, args: {ingredient_keys: [niacinamide, hyaluronic_acid]}}
+    expect: {max_count: 0, consult_expert: false}
+
+  - id: benzoyl_peroxide_with_retinol
+    q: "benzoyl peroxide dùng cùng retinol được không"
+    route: {tool: check_conflicts, args: {ingredient_keys: [benzoyl_peroxide, retinol]}}
+    expect: {min_count: 1, severity: medium}
+
+  # ---------------------------------------------------------------- explain_product / similar_products (product page)
+  - id: current_product_alcohol
+    q: "sản phẩm này có cồn không"
+    current: "1496"
+    e2e: true
+    route: {tool: explain_product, args: {product_id: "1496", probe_ingredients: [alcohol_denat]}}
+    expect: {probe: {alcohol: graph}}
+
+  - id: current_product_paraben
+    q: "sản phẩm này có paraben không"
+    current: "1496"
+    route: {tool: explain_product, args: {product_id: "1496", probe_ingredients: [paraben]}}
+    expect: {probe: {paraben: graph}}
+
+  - id: current_product_oily_skin
+    q: "sản phẩm này hợp da dầu không"
+    current: "1496"
+    route: {tool: explain_product, args: {product_id: "1496"}}
+    expect: {skin_types_match_graph: true}
+
+  - id: current_product_similar
+    q: "sản phẩm tương tự sản phẩm này"
+    current: "1496"
+    route: {tool: similar_products, args: {product_id: "1496"}}
+    expect: {min_count: 1, similar_edges: true}
+
+  # ---------------------------------------------------------------- must NOT be routed (the RAG pipeline keeps them)
+  - id: plain_serum_oily
+    q: "serum cho da dầu"
+    route: null
+  - id: plain_sunscreen_oily
+    q: "kem chống nắng cho da dầu"
+    route: null
+  - id: knowledge_retinol
+    q: "retinol là gì"
+    route: null
+  - id: store_policy
+    q: "đổi trả trong bao lâu"
+    route: null
+  - id: routine_request
+    q: "routine cho da dầu mụn không cồn"
+    route: null

@@ -26,6 +26,8 @@ class RecommendRequest:
     cart_ids: tuple[str, ...] = ()
     exclude_ids: tuple[str, ...] = ()
     limit_per_section: int = config.LIMIT_PER_SECTION
+    # U12: already-hashed analytics session id sent by PHP; the only input of A/B bucketing (None = no experiment).
+    session_hash: str | None = None
 
 
 @dataclass
@@ -104,6 +106,10 @@ def validate_request(payload: Any) -> RecommendRequest:
     if user_hash is not None and (not isinstance(user_hash, str) or not re.fullmatch(r"[A-Fa-f0-9]{1,128}", user_hash)):
         raise ValidationError("user_hash")
 
+    session_hash = payload.get("session_hash")
+    if session_hash is not None and (not isinstance(session_hash, str) or not re.fullmatch(r"[A-Fa-f0-9]{8,128}", session_hash)):
+        raise ValidationError("session_hash")
+
     limit = payload.get("limit_per_section", config.LIMIT_PER_SECTION)
     if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 20:
         raise ValidationError("limit_per_section")
@@ -115,6 +121,7 @@ def validate_request(payload: Any) -> RecommendRequest:
         cart_ids=_ids(payload, "cart_ids"),
         exclude_ids=_ids(payload, "exclude_ids"),
         limit_per_section=limit,
+        session_hash=session_hash.lower() if session_hash else None,
     )
 
 
@@ -145,6 +152,11 @@ class Intent:
     price: PriceRange | None = None
     residual_terms: list[str] = field(default_factory=list)
     confidence: float = 0.0
+    # U10: negated ingredients. ``exclude_ingredients`` = "không chứa cồn / không paraben";
+    # ``avoid_conflict_with`` = "không kỵ retinol / không xung đột với BHA". Both are also left in
+    # ``residual_terms`` (older behaviour), so search callers that ignore these fields see no change.
+    exclude_ingredients: list[str] = field(default_factory=list)
+    avoid_conflict_with: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -159,6 +171,8 @@ class Intent:
             "price": self.price.to_dict() if self.price else None,
             "residual_terms": list(self.residual_terms),
             "confidence": self.confidence,
+            "exclude_ingredients": list(self.exclude_ingredients),
+            "avoid_conflict_with": list(self.avoid_conflict_with),
         }
 
     @property

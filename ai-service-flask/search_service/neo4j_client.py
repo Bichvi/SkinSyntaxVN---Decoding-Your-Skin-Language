@@ -10,15 +10,27 @@ import time) — ``warm_up`` does it in ``post_fork``.
 from __future__ import annotations
 
 import logging
+import os
 import time
+from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from threading import Lock, Thread
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar
 
 from . import config
 
 logger = logging.getLogger(__name__)
 RETRY_SECONDS = 10.0
 QUERY_TIMEOUT_S = 0.7
+# U09: hard wall-clock limit for one graph call as seen by the *request* thread. The server-side
+# transaction timeout (QUERY_TIMEOUT_S) cannot fire when the host is unreachable (stopped container:
+# the docker DNS name fails only after ~4s), so without this a request waits for the whole connect
+# failure and the next request waits again. Past the deadline the breaker opens and callers degrade.
+try:
+    CALL_DEADLINE_S = max(0.2, float(os.getenv("NEO4J_CALL_DEADLINE_S", "0.6")))
+except ValueError:  # pragma: no cover - bad env value
+    CALL_DEADLINE_S = 0.6
+_T = TypeVar("_T")
 
 _driver: Any | None = None
 _down_until = 0.0
@@ -147,6 +159,37 @@ def _probe_loop() -> None:
 def _set_driver(driver: Any) -> None:
     global _driver
     _driver = driver
+
+
+_pool: ThreadPoolExecutor | None = None
+_pool_lock = Lock()
+
+
+def _call_pool() -> ThreadPoolExecutor:
+    """Created on first use, i.e. after gunicorn forks (threads must not exist before the fork)."""
+
+    global _pool
+    if _pool is None:
+        with _pool_lock:
+            if _pool is None:
+                _pool = ThreadPoolExecutor(max_workers=16, thread_name_prefix="neo4j-call")
+    return _pool
+
+
+def run_with_deadline(fn: Callable[[], _T], deadline_s: float | None = None) -> _T:
+    """Run a blocking graph call; give up after ``deadline_s`` (default ``CALL_DEADLINE_S``).
+
+    Past the deadline the breaker opens (``report_failure(None)``) and ``RuntimeError("neo4j_timeout")``
+    is raised, so this request and every following one degrade at once instead of each waiting out
+    the connect failure. Errors raised by ``fn`` propagate unchanged (the caller reports them).
+    """
+
+    future: Future[_T] = _call_pool().submit(fn)
+    try:
+        return future.result(timeout=CALL_DEADLINE_S if deadline_s is None else deadline_s)
+    except FutureTimeout:
+        report_failure(None)
+        raise RuntimeError("neo4j_timeout") from None
 
 
 def is_open() -> bool:

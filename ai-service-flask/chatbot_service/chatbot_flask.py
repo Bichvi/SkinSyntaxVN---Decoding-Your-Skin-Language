@@ -9,7 +9,7 @@ Thứ tự ưu tiên:
   3. OpenRouter llama-3.1 — FREE tier
   4. Zhipu glm-4-flash  — FREE tier
 """
-import os, sys, re, json, signal, random, time
+import os, sys, re, json, signal, random, time, threading
 from datetime import datetime
 from bson.objectid import ObjectId
 from pathlib import Path
@@ -49,6 +49,7 @@ from profile_state import determine_profile_state, detect_profile_conflict, calc
 from survey_service import is_in_survey_flow, handle_survey_flow, get_last_ai_message
 from profile_service import save_user_profile
 from chatbot_service import store_support  # nhánh STORE_SUPPORT (logic thuần)
+from chatbot_service import graph_router  # U10: tool đồ thị Neo4j cho câu hỏi có điều kiện
 # ─── Config ─────────────────────────────────────────────────────────────────
 # Tự động tính đường dẫn tương đối từ vị trí file script này
 # ai-service-flask/chatbot_flask.py → ../database/chroma_db
@@ -97,53 +98,70 @@ GEMINI_MODEL = os.getenv("GEMINI_CHAT_MODEL", "gemini-2.5-flash").strip()
 # ─── ChromaDB lazy init ──────────────────────────────────────────────────────
 _vectorstore = None
 _hybrid_pipeline = None
+_vectorstore_lock = threading.Lock()
+_hybrid_pipeline_lock = threading.Lock()
 
-def get_vectorstore(): # tải dữ liệu sản phẩm từ ChromaDB.
+
+def _build_vectorstore():
+    """Dựng Chroma vào biến cục bộ; trả False nếu lỗi (sentinel, giữ hành vi cũ)."""
+    try:
+        emb = get_embedding_function()
+        if CHROMA_HOST:
+            # The shared Chroma service is the canonical runtime index.
+            # The old mounted SQLite index can have an incompatible
+            # configuration schema (KeyError: '_type').
+            import chromadb
+
+            client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+            vs = Chroma(
+                collection_name="products",
+                client=client,
+                embedding_function=emb,
+            )
+        else:
+            vs = Chroma(
+                collection_name="products",
+                persist_directory=CHROMA_DB_PATH,
+                embedding_function=emb,
+            )
+        print(f"[OK] ChromaDB loaded — {vs._collection.count():,} docs")
+        return vs
+    except Exception as e:
+        print(f"[WARN] Vectorstore initialization failed (e.g. disk space / cache): {e}")
+        return False
+
+
+def get_vectorstore(): # tải dữ liệu sản phẩm từ ChromaDB (double-checked locking, an toàn đa luồng).
     global _vectorstore
-    if _vectorstore is None:
-        try:
-            emb = get_embedding_function()
-            if CHROMA_HOST:
-                # The shared Chroma service is the canonical runtime index.
-                # The old mounted SQLite index can have an incompatible
-                # configuration schema (KeyError: '_type').
-                import chromadb
-
-                client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
-                _vectorstore = Chroma(
-                    collection_name="products",
-                    client=client,
-                    embedding_function=emb,
-                )
-            else:
-                _vectorstore = Chroma(
-                    collection_name="products",
-                    persist_directory=CHROMA_DB_PATH,
-                    embedding_function=emb,
-                )
-            print(f"[OK] ChromaDB loaded — {_vectorstore._collection.count():,} docs")
-        except Exception as e:
-            print(f"[WARN] Vectorstore initialization failed (e.g. disk space / cache): {e}")
-            _vectorstore = False
-    return _vectorstore if _vectorstore is not False else None
+    cached = _vectorstore
+    if cached is None:
+        with _vectorstore_lock:
+            cached = _vectorstore
+            if cached is None:
+                cached = _vectorstore = _build_vectorstore()
+    return cached if cached is not False else None
 
 
 def get_hybrid_pipeline(): #kết hợp tìm kiếm ngữ nghĩa và keyword.
     global _hybrid_pipeline
     vs = get_vectorstore()
-    if _hybrid_pipeline is None or getattr(_hybrid_pipeline, 'vectorstore', None) is None:
-        if vs:
-            _hybrid_pipeline = HybridSearchPipeline(
-                vectorstore=vs,
-                bm25_index=BM25Search(),
-                alpha=0.5,
-            )
-            print("[OK] Hybrid pipeline loaded (RRF + Vietnamese reranker)")
-        else:
+    pipeline = _hybrid_pipeline
+    if pipeline is None or getattr(pipeline, 'vectorstore', None) is None:
+        if not vs:
             return None
-    elif vs and _hybrid_pipeline.vectorstore != vs:
-        _hybrid_pipeline.vectorstore = vs
-    return _hybrid_pipeline
+        with _hybrid_pipeline_lock:
+            pipeline = _hybrid_pipeline
+            if pipeline is None or getattr(pipeline, 'vectorstore', None) is None:
+                pipeline = HybridSearchPipeline(
+                    vectorstore=vs,
+                    bm25_index=BM25Search(),
+                    alpha=0.5,
+                )
+                _hybrid_pipeline = pipeline  # gán sau khi dựng xong
+                print("[OK] Hybrid pipeline loaded (RRF + Vietnamese reranker)")
+    elif vs and pipeline.vectorstore != vs:
+        pipeline.vectorstore = vs
+    return pipeline
 
 
 def _should_use_web_search(message: str, yc: "PhanTichYeuCau") -> bool:
@@ -252,22 +270,114 @@ def _get_message_text(response) -> str:
 _llms = None
 _last_llm_init_time = 0
 
+_llms_lock = threading.Lock()
+
+# U11: validate LLMs in the background. A real validation request per provider took ~23s on the first
+# chat after a restart; now get_llms() returns the CONFIGURED pool immediately (state "unvalidated") and a
+# daemon thread swaps in the validated pool. A request that hits a bad provider already falls back to the
+# next one (cooldown + try/except in every call site), so an unvalidated entry costs one failed call at most.
+LLM_BG_VALIDATION_ENABLED = os.getenv("CHATBOT_LLM_BG_VALIDATION", "1").strip().lower() not in {"0", "false", "no", "off"}
+LLM_STATE_UNVALIDATED = "unvalidated"
+LLM_STATE_VALIDATED = "validated"
+_llm_state: dict = {}                       # id(llm) -> state
+_llm_validation_lock = threading.Lock()
+_llm_validation_thread = None
+_llm_validation_done = threading.Event()
+
+
+def llm_validation_state(llm) -> str:
+    """"unvalidated" while the background check has not confirmed this provider, else "validated"."""
+    return _llm_state.get(id(llm), LLM_STATE_VALIDATED)
+
+
+def llm_pool_status() -> dict:
+    pool = _llms or []
+    unvalidated = sum(1 for llm in pool if llm_validation_state(llm) == LLM_STATE_UNVALIDATED)
+    return {"size": len(pool), "unvalidated": unvalidated, "validated": len(pool) - unvalidated,
+            "validation_started": _llm_validation_thread is not None, "validation_done": _llm_validation_done.is_set()}
+
+
+def _validate_llms_background() -> None:
+    """Rebuild the pool WITH real validation requests, then swap it in. All providers failing keeps the
+    configured pool (per-call fallback handles errors) instead of leaving the chatbot with no LLM."""
+    global _llms
+    started = time.time()
+    try:
+        validated = _build_llms(validate=True)
+        with _llms_lock:
+            if validated:
+                _llms = validated
+                _llm_state.clear()
+                for llm in validated:
+                    _llm_state[id(llm)] = LLM_STATE_VALIDATED
+                print(f"[OK] LLM background validation done in {time.time() - started:.1f}s: {len(validated)} provider(s)")
+            else:
+                print("[WARN] LLM background validation: no provider passed; keeping the configured (unvalidated) pool")
+    except Exception as exc:
+        print(f"[WARN] LLM background validation failed: {type(exc).__name__}")
+    finally:
+        _llm_validation_done.set()
+
+
+def _schedule_validation() -> None:
+    """Start the one-shot background validation (idempotent; never blocks the caller)."""
+    global _llm_validation_thread
+    if not LLM_BG_VALIDATION_ENABLED:
+        return
+    with _llm_validation_lock:
+        if _llm_validation_thread is not None:
+            return
+        _llm_validation_thread = threading.Thread(target=_validate_llms_background, daemon=True, name="llm-validation")
+        _llm_validation_thread.start()
+
+
+def _assume_llm_ok(llm) -> bool:
+    """Deferred validation: accept the first constructible candidate of each provider without a request."""
+    return True
+
+
 def get_llms():
+    """Double-checked locking: gunicorn gthread chạy 8 luồng/worker, builder chỉ chạy 1 lần
+    và luồng khác không bao giờ thấy danh sách đang dựng dở (build vào biến cục bộ).
+    U11: dựng pool KHÔNG gọi LLM thật (nhanh); kiểm tra thật chạy nền (xem _validate_llms_background)."""
     global _llms, _last_llm_init_time
-    import time
-    
-    # Nếu đã nạp được LLMs thành công, trả về ngay
-    if _llms:
-        return _llms
-        
-    # Nếu chưa thử hoặc đã thử nhưng bị rỗng (lỗi), chỉ cho phép thử lại sau mỗi 5 phút (300s)
-    current_time = time.time()
-    if _llms is not None and (current_time - _last_llm_init_time < 300):
-        return _llms
 
-    _last_llm_init_time = current_time
+    # Nếu đã nạp được LLMs thành công, trả về ngay (không khóa)
+    cached = _llms
+    if cached:
+        return cached
 
-    _llms = []
+    # Nếu đã thử nhưng bị rỗng (lỗi), chỉ cho phép thử lại sau mỗi 5 phút (300s)
+    if cached is not None and (time.time() - _last_llm_init_time < 300):
+        return cached
+
+    with _llms_lock:
+        cached = _llms
+        if cached:
+            return cached
+        if cached is not None and (time.time() - _last_llm_init_time < 300):
+            return cached
+        _last_llm_init_time = time.time()
+        try:
+            built = _build_llms(validate=not LLM_BG_VALIDATION_ENABLED)
+        except Exception:
+            _llms = []  # giữ hành vi cũ: lỗi dựng -> danh sách rỗng, thử lại sau 300s
+            raise
+        if LLM_BG_VALIDATION_ENABLED:
+            for llm in built:
+                _llm_state[id(llm)] = LLM_STATE_UNVALIDATED
+        _llms = built  # gán nguyên tử sau khi dựng xong
+    if built and LLM_BG_VALIDATION_ENABLED:
+        _schedule_validation()
+    return built
+
+
+def _build_llms(validate: bool = True) -> list:
+    """validate=True: mỗi provider thử lần lượt các model, gọi LLM thật để xác nhận (chậm, ~20s+).
+    validate=False: lấy ứng viên đầu tiên dựng được của mỗi provider, không gọi mạng (U11)."""
+    built = []
+    _check = _test_llm_connection if validate else _assume_llm_ok
+    _state_word = "validated" if validate else "configured (validation deferred)"
 
     # Khởi tạo ChatOpenAI
     try:
@@ -291,9 +401,9 @@ def get_llms():
                     max_retries=1,
                 )
                 print(f"[INFO] Testing OpenAI ({o_model})...")
-                if _test_llm_connection(o_llm):
-                    _llms.append(o_llm)
-                    print(f"[OK] OpenAI ({o_model}) loaded and validated (PRIMARY HIGH-SPEED)")
+                if _check(o_llm):
+                    built.append(o_llm)
+                    print(f"[OK] OpenAI ({o_model}) loaded and {_state_word} (PRIMARY HIGH-SPEED)")
                     break
                 else:
                     print(f"[WARN] OpenAI ({o_model}) validation failed")
@@ -326,9 +436,9 @@ def get_llms():
                     safety_settings=safety,
                 )
                 print(f"[INFO] Testing Gemini ({g_model}) ({label})...")
-                if _test_llm_connection(llm):
-                    _llms.append(llm)
-                    print(f"[OK] Gemini ({g_model}) ({label}) loaded and validated")
+                if _check(llm):
+                    built.append(llm)
+                    print(f"[OK] Gemini ({g_model}) ({label}) loaded and {_state_word}")
                     break
                 else:
                     print(f"[WARN] Gemini ({g_model}) ({label}) failed validation/quota")
@@ -351,9 +461,9 @@ def get_llms():
                     max_retries=0,
                 )
                 print(f"[INFO] Testing Groq {model}...")
-                if _test_llm_connection(groq):
-                    _llms.append(groq)
-                    print(f"[OK] Groq {model} loaded and validated")
+                if _check(groq):
+                    built.append(groq)
+                    print(f"[OK] Groq {model} loaded and {_state_word}")
                     break  # chỉ cần 1 Groq model hoạt động
                 else:
                     print(f"[WARN] Groq {model} skipped due to connection issue")
@@ -374,9 +484,9 @@ def get_llms():
                 max_retries=0,
             )
             print(f"[INFO] Testing Zhipu glm-4-flash...")
-            if _test_llm_connection(zhipu):
-                _llms.append(zhipu)
-                print(f"[OK] Zhipu glm-4-flash loaded and validated")
+            if _check(zhipu):
+                built.append(zhipu)
+                print(f"[OK] Zhipu glm-4-flash loaded and {_state_word}")
             else:
                 print(f"[WARN] Zhipu glm-4-flash skipped due to connection issue")
         except Exception as e:
@@ -400,17 +510,17 @@ def get_llms():
                     max_retries=0,
                 )
                 print(f"[INFO] Testing OpenRouter {or_model}...")
-                if _test_llm_connection(or_llm):
-                    _llms.append(or_llm)
-                    print(f"[OK] OpenRouter {or_model} loaded and validated")
+                if _check(or_llm):
+                    built.append(or_llm)
+                    print(f"[OK] OpenRouter {or_model} loaded and {_state_word}")
                     break
                 else:
                     print(f"[WARN] OpenRouter {or_model} skipped due to connection issue")
             except Exception as e:
                 print(f"[WARN] OpenRouter {or_model} init failed: {e}")
 
-    print(f"[OK] Total LLMs ready: {len(_llms)}")
-    return _llms
+    print(f"[OK] Total LLMs ready: {len(built)}")
+    return built
 
 
 def get_groq_llama_70b():
@@ -2173,6 +2283,26 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             print(f"[STORE_SUPPORT] branch_error kind={type(ss_exc).__name__}")
         # Câu sản phẩm (hoặc nhánh lỗi) + có bài: nhắc chính sách ngắn trong context của nhánh sản phẩm
         rich_context = rich_context + "\n\n" + store_support.policy_context_block(ss_articles)
+
+    # 1c. U10 GRAPH TOOLS: câu hỏi có điều kiện quan hệ (loại da + không kỵ/không chứa hoạt chất, giá, hãng, "dùng chung
+    # A với B được không") -> tool Neo4j có tham số (graph_tools), LLM chỉ diễn đạt kết quả. Tắt bằng
+    # SYNA_GRAPH_TOOLS_ENABLED; mọi lỗi/không khớp trả None và luồng RAG bên dưới chạy y như cũ.
+    if graph_router.enabled():
+        try:
+            gt_history = msg_data.get("conversation_history", []) if msg_data else []
+            if not is_in_survey_flow(message, gt_history):
+                graph_result = graph_router.try_answer(
+                    message, msg_data, graph_router.get_runtime(),
+                    generate=lambda graph_prompt: _store_support_generate(graph_prompt, llms),
+                    blocked=lambda plan: plan.tool != "check_conflicts" and (
+                        should_delay_retinol_for_profile(message, profile, None)
+                        or should_delay_vitamin_c_for_profile(message, profile, None)),
+                )
+                if graph_result is not None:
+                    graph_result["latency"] = round(time.time() - start_time, 2)
+                    return graph_result
+        except Exception as graph_exc:
+            print(f"[GRAPH_TOOLS] branch_error kind={type(graph_exc).__name__}")
 
     # 2. Câu hỏi độc lập và phân loại ý định (Contextualization & Intent Recognition)
     rewritten_query = contextualize_query(message, chat_history_str, llms)

@@ -1,0 +1,49 @@
+# U10 - Syna graph tools. Ingredient groups used when a customer says "không chứa cồn / paraben / silicone" or
+# "có vitamin C". Keys are keys of ingredient_aliases.yaml (the ETL vocabulary written to Neo4j as Ingredient.key).
+#
+# exclusion_groups: a product is dropped when it CONTAINS any key of the group.
+#   triggers : ingredient keys the intent parser may produce that mean the whole group ("cồn" -> alcohol_denat)
+#   surfaces : accent-free phrases for words the parser's dictionary does not know ("paraben"); matched after a negation
+#   keys / roles / key_contains / key_suffix : how the group expands against ingredient_aliases.yaml
+#   (roles: every alias entry with that role; key_contains / key_suffix: substring / suffix of the alias key)
+# include_families: a requested ingredient is satisfied by ANY key of its family (vitamin C and its derivatives ...).
+#
+# Honest limits: only mapped INCI names count (≈88% of ingredient mentions, see update_search_data_quality.md);
+# a product whose ingredient list is missing/unparsed is never reported as "free of" something.
+
+exclusion_groups:
+  alcohol:
+    name: "cồn khô"
+    triggers: [alcohol_denat]
+    surfaces: ["con kho", "drying alcohol"]
+    # Fatty alcohols (cetyl / stearyl / cetearyl ...) and benzyl alcohol (preservative) are NOT drying alcohols.
+    keys: [alcohol_denat, isopropyl_alcohol, t_butyl_alcohol]
+  fragrance:
+    name: "hương liệu"
+    triggers: [fragrance]
+    surfaces: ["huong lieu", "nuoc hoa", "huong thom", "parfum"]
+    keys: [fragrance]
+    roles: [fragrance]            # strict: also fragrance allergens and essential oils flagged role=fragrance
+  paraben:
+    name: "paraben"
+    surfaces: ["paraben", "parabens"]
+    key_suffix: [paraben]
+  sulfate:
+    name: "sulfate"
+    surfaces: ["sulfate", "sulphate", "sls", "sles"]
+    keys: [sodium_lauryl_sulfate, sodium_laureth_sulfate, ammonium_lauryl_sulfate, ammonium_laureth_sulfate]
+  silicone:
+    name: "silicone"
+    surfaces: ["silicone", "silicon"]
+    key_contains: [dimethicone, siloxane, methicone, silicone]
+  mineral_oil:
+    name: "dầu khoáng"
+    surfaces: ["dau khoang", "mineral oil"]
+    keys: [mineral_oil, paraffin]
+
+include_families:
+  ascorbic_acid: [ascorbic_acid, 3_o_ethyl_ascorbic_acid, ascorbyl_glucoside, sodium_ascorbyl_phosphate,
+                  magnesium_ascorbyl_phosphate, tetrahexyldecyl_ascorbate, ascorbyl_tetraisopalmitate]
+  hyaluronic_acid: [hyaluronic_acid, sodium_hyaluronate, hydrolyzed_hyaluronic_acid, hydrolyzed_sodium_hyaluronate,
+                    sodium_acetylated_hyaluronate, potassium_hyaluronate]
+  ceramide: [ceramide, ceramide_np, ceramide_ap, ceramide_eop, ceramide_ng]

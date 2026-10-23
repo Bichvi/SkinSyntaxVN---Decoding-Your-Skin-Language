@@ -3122,15 +3122,24 @@ class HomeController {
         $response = $this->postJsonRequest($endpoint, $payload, $this->getAiChatTimeout());
         $answer = '';
         $decoded = null;
+        // U10: Flask answered from Neo4j graph tools (price/stock re-read from Mongo, answer checked against the
+        // returned product ids). Its product list and wording are authoritative for this reply: the text heuristics
+        // below (category/ingredient regex, generic "found products" sentence) must not rewrite or empty them.
+        $graphTool = null;
 
         if ((int)($response['status'] ?? 0) >= 200 && (int)($response['status'] ?? 0) < 300) {
             $decoded = json_decode((string)($response['body'] ?? ''), true);
             $answer = $this->trimAiAnswer((string)($decoded['answer'] ?? ''));
-            if (is_array($decoded) && !empty($decoded['products']) && is_array($decoded['products'])) {
+            if (is_array($decoded) && isset($decoded['graph_tool']) && is_array($decoded['graph_tool'])) {
+                $graphTool = $decoded['graph_tool'];
+            }
+            if (is_array($decoded) && is_array($decoded['products'] ?? null) && ($graphTool !== null || !empty($decoded['products']))) {
                 $mapped = $this->mapHybridProductsForChatWidget($decoded['products']);
-                $mapped = $this->filterAiProductsForMessage($message, $mapped);
+                if ($graphTool === null) {
+                    $mapped = $this->filterAiProductsForMessage($message, $mapped);
+                }
                 $mapped = $this->filterAiProductsForProfile($mapped, $profile);
-                if (!$isRoutineRequest && !empty($mapped)) {
+                if ($graphTool !== null || (!$isRoutineRequest && !empty($mapped))) {
                     $products = $mapped;
                 }
             }
@@ -3159,7 +3168,7 @@ class HomeController {
 
         // Do not show a denial together with real products returned by the catalog.
         // This can happen when an LLM follows an old "no result" phrase from history.
-        if (!empty($products) && $this->aiAnswerDeniesAvailableProducts($answer)) {
+        if ($graphTool === null && !empty($products) && $this->aiAnswerDeniesAvailableProducts($answer)) {
             $answer = $this->buildAiAssistantFallback($message, $conflicts, $products, $profile);
         }
 
@@ -3167,7 +3176,7 @@ class HomeController {
         // truth. Do not let the LLM mention a different product than the rows
         // returned by MongoDB (for example an unreturned brand or a wrong
         // product type); the cards already contain the grounded details.
-        if (!$isRoutineRequest && $this->isAiProductDiscoveryRequest($message) && !empty($products)) {
+        if (!$isRoutineRequest && $graphTool === null && $this->isAiProductDiscoveryRequest($message) && !empty($products)) {
             $answer = 'Mình đã tìm thấy các sản phẩm đúng nhóm bạn đang tìm trong catalog. Bạn có thể xem thành phần, giá và link chi tiết ở các thẻ bên dưới.';
         }
 
@@ -3218,6 +3227,10 @@ class HomeController {
         if ($decoded && isset($decoded['conversation_id'])) {
             $payload['conversation_id'] = $decoded['conversation_id'];
         }
+        if ($graphTool !== null) {
+            $payload['graph_tool'] = $graphTool;
+        }
+
         // Khóa mới cho STORE_SUPPORT (sources, suggested_questions, support_topic); khóa cũ không đổi.
         $payload = array_merge($payload, SupportKnowledge::flaskSupportFields(is_array($decoded) ? $decoded : null));
 
