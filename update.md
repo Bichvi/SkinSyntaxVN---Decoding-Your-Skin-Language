@@ -11,6 +11,12 @@ Không có bí mật nào trong tài liệu này. Không đọc, không ghi giá
 
 > **Smart Search + Neo4j (2026-10-21, phần lớn chưa commit):** tìm kiếm `r=tatca` khớp theo từng từ, không phân biệt dấu (commit `e42f4ac`). Khi có ít hơn 4 kết quả, trang hiện khối gợi ý có lý do. Nguồn gợi ý: Flask `POST /api/search/recommend` (đồ thị Neo4j + Chroma + đang bán chạy). Khi Flask hoặc Neo4j tắt, trang tự hạ cấp. Có thêm beacon `search_events` và script đo chỉ số. Gunicorn `skinsyntax-ai` chuyển sang gthread. Chi tiết: [`update_neo4j_search_recommendation.md`](update_neo4j_search_recommendation.md). Người dùng cần đặt `SEARCH_INTERNAL_TOKEN`.
 
+> **Sản phẩm tương tự ở trang chi tiết (U08, 2026-10-23, chưa commit):** khối carousel "Sản phẩm tương tự" dựa trên quan hệ `SIMILAR_TO` của Neo4j (xếp lại theo cùng danh mục lá, tồn kho, bán chạy, loại da; tối đa 3 sản phẩm cùng hãng), tải lười bằng fetch nên không làm chậm trang; Neo4j lỗi thì dùng embedding Chroma. Đặt cạnh khối "mua kèm" cũ, không thay thế. Chi tiết: [`update_similar_products.md`](update_similar_products.md).
+
+> **Nhãn công dụng do người duyệt (U07, 2026-10-22, chưa commit):** admin nhập tay công dụng/vấn đề da/loại da ở form sửa sản phẩm, AI (pool LLM sẵn có) chỉ gợi ý vào `tag_suggestions` và chờ duyệt ở `admin_tag_review`; ETL ưu tiên `manual` > `llm_approved` > rule. Chi tiết: `update_tag_curation.md`.
+
+> **Chất lượng dữ liệu tìm kiếm (U06, 2026-10-22, chưa commit):** tỷ lệ lượt thành phần map sang INCI tăng từ 54,2% lên 88,5%, sản phẩm có ít nhất một hoạt chất từ 77,4% lên 90,2% (sửa parser đọc đúng danh sách INCI trong dữ liệu marketing + 776 mục alias mới). Có công cụ gợi ý alias, báo cáo từ khóa 0 kết quả và script áp synonym đã duyệt. Chi tiết: [`update_search_data_quality.md`](update_search_data_quality.md).
+
 ---
 
 ## 1. Tổng quan dự án và mục tiêu Syna
@@ -627,7 +633,17 @@ Rollback nhanh khi nghi ngờ self-healing: đặt `AI_IDOL_MAX_SCRIPT_REPAIR_AT
 
 `docs/superpowers/specs/2026-10-14-product-video-design.md` (video lên trang sản phẩm, 3 chế độ `purpose`), `2026-10-15-ai-idol-studio-redesign-design.md` (Studio 2 chế độ), `2026-10-16-price-aware-product-video-design.md` (giá có hạn sử dụng, `product_snapshot.pricing`, `price_claim`); plans cùng tên trong `docs/superpowers/plans/`; `ai-idol-service/README.md` (vận hành).
 
+> **Giỏ hàng: cảnh báo xung đột hoạt chất + gợi ý hoàn thiện routine (U09, 2026-10-23, chưa commit):** khối tải bằng fetch ở trang giỏ báo các cặp sản phẩm có hoạt chất kỵ nhau (nguồn luật có trích dẫn `conflict_rules.yaml`, 55 cặp INCI) và gợi ý bước còn thiếu của routine, không chặn thanh toán; Neo4j lỗi thì dùng luật Python. Kèm tách breaker PHP theo từng endpoint. Chi tiết: [`update_cart_conflicts.md`](update_cart_conflicts.md).
+
+> **Syna truy vấn Neo4j bằng tool có tham số (U10, 2026-10-23, chưa commit):** câu hỏi có điều kiện ("serum hợp da dầu, không kỵ retinol", "sữa rửa mặt không chứa cồn dưới 300k", "retinol dùng chung BHA được không", "Torriden có kem chống nắng không") được router tất định chuyển sang 4 tool Cypher cố định (`find_products`, `check_conflicts`, `explain_product`, `similar_products`); LLM chỉ diễn đạt kết quả, giá/tồn kho đọc lại từ Mongo, câu hỏi thường vẫn đi RAG. Cờ `SYNA_GRAPH_TOOLS_ENABLED`. Bộ đánh giá 32 câu: 444/444 ràng buộc đạt. Chi tiết: `update_syna_graph_tools.md`.
+
 ## Sửa sau bàn giao
 
 - Agent MANUAL + `product_video`: `ai-idol-service/agents/service.py` ghi thêm `configuration.approval_mode`. Frontend: dòng "Duyệt kịch bản" ở tóm tắt bước 4 (`studio-manual.js`) và câu ý định (`INTENT_TAILS` trong `studio-logic.js`) không còn khẳng định tự đăng, trung lập theo hai nút cuối.
 - Test: `tests/test_autopilot_service.py` (assert `approval_mode` MANUAL/AUTO), `tests/test_approval_mode.py` (config do Agent ghi: MANUAL dừng, AUTO tiếp tục với product_video), `frontend/public/assets/js/tests/studio-manual.test.js`, `studio-logic.test.js`.
+
+- U11 (vận hành tìm kiếm): đồng bộ Neo4j/Chroma/cache theo sự kiện catalog, lịch định kỳ, giám sát. Xem `update_ops_scheduler.md` và `docs/ops/search-ops.md`.
+
+- U12 (nâng cao có cổng điều kiện): hạ tầng boost CTR, khung A/B, co-purchase theo nhánh, benchmark cross-encoder; mọi cờ hành vi đang TẮT vì cổng dữ liệu/độ trễ chưa đạt. Xem `update_advanced_gated.md` và `docs/ops/search-ops.md` mục 9.
+
+- U13 (kiểm thử tổng giai đoạn 2): E2E 16 kịch bản, bench, kiểm chứng đường hoàn kho `HoaDon`, sửa nhỏ (thống kê loại tài khoản test, route `admin_sp_create`, đồng bộ trạng thái ẩn Chroma/Neo4j). Tổng hợp toàn bộ giai đoạn 2 (bảng key Redis, luồng sự kiện, lịch job, cờ, cổng U12, rủi ro): `update_search_upgrade_phase2.md`.
