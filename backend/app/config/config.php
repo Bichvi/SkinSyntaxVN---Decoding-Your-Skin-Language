@@ -52,6 +52,12 @@ if (!function_exists('ss_load_env')) {
 				continue;
 			}
 
+			// Biến môi trường thật (Docker compose) thắng .env; .env chỉ lấp chỗ trống (XAMPP).
+			$existing = getenv($key);
+			if ($existing !== false && $existing !== '') {
+				continue;
+			}
+
 			if ((ss_starts_with($value, '"') && ss_ends_with($value, '"')) || (ss_starts_with($value, "'") && ss_ends_with($value, "'"))) {
 				$value = substr($value, 1, -1);
 			}
@@ -148,3 +154,7 @@ if (!defined('VIEW_DIR')) {
 		}
 	}
 }
+
+// Nguồn duy nhất cho hotline/email hỗ trợ: header/footer (frontend/views) gọi SupportKnowledge::contact().
+// Chỉ khai báo class, không đọc file nội dung cho tới khi được dùng.
+require_once __DIR__ . '/../services/SupportKnowledge.php';

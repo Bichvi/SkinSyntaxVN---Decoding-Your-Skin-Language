@@ -247,7 +247,7 @@ services:
       DB_MODE: ${DB_MODE:-atlas}
       DOCKER_USE_ATLAS: "1"
       FRONTEND_ROOT: /var/www/frontend
-      APP_URL: http://localhost
+      APP_URL: ${APP_URL:-http://localhost}
       AI_CHAT_ENDPOINT: http://ai-service:5001/api/chat/auto
       AI_CHAT_STREAM_ENDPOINT: http://ai-service:5001/api/chat/stream
       AI_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/explain

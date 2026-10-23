@@ -48,6 +48,7 @@ from shared.embedding_provider import get_embedding_function
 from profile_state import determine_profile_state, detect_profile_conflict, calculate_days_since_update
 from survey_service import is_in_survey_flow, handle_survey_flow, get_last_ai_message
 from profile_service import save_user_profile
+from chatbot_service import store_support  # nhánh STORE_SUPPORT (logic thuần)
 # ─── Config ─────────────────────────────────────────────────────────────────
 # Tự động tính đường dẫn tương đối từ vị trí file script này
 # ai-service-flask/chatbot_flask.py → ../database/chroma_db
@@ -2034,6 +2035,34 @@ def save_chat_messages(conv_id: str, email: str, user_text: str, assistant_text:
         print(f"[ERROR] save_chat_messages: {e}")
 
 
+def _store_support_generate(prompt: str, llms: list):
+    """Gọi LLM cho nhánh STORE_SUPPORT theo đúng mẫu vòng cooldown của xu_ly_cau_hoi.
+    Trả về văn bản, hoặc None nếu mọi LLM đều lỗi/bị cooldown (nơi gọi sẽ dùng bản soạn sẵn)."""
+    from langchain_core.messages import HumanMessage
+
+    current_time = time.time()
+    for llm in llms or []:
+        if _get_llm_cooldown(llm) > current_time:
+            continue
+        model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
+        try:
+            response = llm.invoke([HumanMessage(content=prompt)])
+            text = _get_message_text(response)
+            if text:
+                text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+            if text:
+                print(f"[STORE_SUPPORT] generated model={model_name}")
+                return text
+        except Exception as e:
+            err_str = str(e).lower()
+            if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str or "quota" in err_str:
+                _set_llm_cooldown(llm, 300)
+                print(f"[STORE_SUPPORT] llm_rate_limited model={model_name}")
+            else:
+                print(f"[STORE_SUPPORT] llm_failed model={model_name} kind={type(e).__name__}")
+    return None
+
+
 # ─── Main Pipeline ───────────────────────────────────────────────────────────
 def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     import time
@@ -2121,6 +2150,29 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         rich_context_parts.append(f"- PHÁT HIỆN XUNG ĐỘT HOẠT CHẤT: {', '.join(cart_conflicts)}")
         
     rich_context = "\n".join(rich_context_parts) if rich_context_parts else "Không có thông tin hồ sơ bổ sung."
+
+    # 1b. STORE_SUPPORT: câu hỏi chính sách/HDSD trả lời từ bài chính thức PHP gửi sang (store_support_articles).
+    # Đặt SAU kiểm khảo sát (khách đang làm khảo sát được ưu tiên) và TRƯỚC contextualize_query/classify_intent
+    # (tiết kiệm 2 lượt LLM, tránh nhánh GENERAL_CONVERSATION -> Tavily web search trả lời theo shop khác).
+    # Câu nối tiếp không có bài từ PHP vẫn đi luồng cũ; mọi lỗi ở nhánh này rơi về luồng cũ, không trả 500.
+    ss_articles = store_support.extract_articles(msg_data)
+    if ss_articles:
+        try:
+            ss_history = msg_data.get("conversation_history", []) if msg_data else []
+            if not is_in_survey_flow(message, ss_history) and not store_support.has_product_intent(
+                message, msg_data, rule_based_parse
+            ):
+                ss_ctx = store_support.build_ctx(
+                    message, msg_data, chat_history_str,
+                    reranker=getattr(pipeline, "reranker", None) if pipeline else None,
+                    articles=ss_articles,
+                )
+                ss_raw = _store_support_generate(ss_ctx["prompt"], llms)
+                return store_support.build_response(ss_ctx, ss_raw, round(time.time() - start_time, 2))
+        except Exception as ss_exc:
+            print(f"[STORE_SUPPORT] branch_error kind={type(ss_exc).__name__}")
+        # Câu sản phẩm (hoặc nhánh lỗi) + có bài: nhắc chính sách ngắn trong context của nhánh sản phẩm
+        rich_context = rich_context + "\n\n" + store_support.policy_context_block(ss_articles)
 
     # 2. Câu hỏi độc lập và phân loại ý định (Contextualization & Intent Recognition)
     rewritten_query = contextualize_query(message, chat_history_str, llms)
