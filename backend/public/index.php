@@ -97,6 +97,8 @@ require_once $backendRoot . '/app/controllers/TaiKhoanController.php';
 require_once $backendRoot . '/app/controllers/AdminController.php';
 require_once $backendRoot . '/app/controllers/QuanTriController.php';
 require_once $backendRoot . '/app/controllers/AdminInventoryController.php';
+require_once $backendRoot . '/app/controllers/AdminTagController.php';
+require_once $backendRoot . '/app/controllers/AdminSearchOpsController.php';
 require_once $backendRoot . '/app/controllers/LiveController.php';
 if (is_file($backendRoot . '/app/services/VnpayService.php')) {
     require_once $backendRoot . '/app/services/VnpayService.php';
@@ -142,6 +144,16 @@ switch ($r) {
 
     case 'chitiet':
         (new SanPhamController($pdo))->chitiet();
+        break;
+
+    case 'similar_products':
+        // U08: khối "Sản phẩm tương tự" (HTML partial, tải lười từ trang chi tiết).
+        (new SanPhamController($pdo))->similarProducts();
+        break;
+
+    case 'cart_analyze':
+        // U09: khối "Lưu ý hoạt chất + Hoàn thiện routine" của giỏ hàng (HTML partial, tải bằng fetch).
+        (new SanPhamController($pdo))->cartInsights();
         break;
 
     case 'product_video_stream':
@@ -476,11 +488,29 @@ switch ($r) {
         break;
 
     case 'admin_sp_them':
+    case 'admin_sp_create': // alias (U13): nút "Thêm sản phẩm mới" và action của themSP.php gọi tên này
         (new QuanTriController($pdo))->adminProductCreate();
         break;
 
     case 'admin_sp_sua':
+    case 'admin_sp_edit': // alias: link "Sửa" và action của form (suaSP.php, danhsachSP.php) gọi tên này
         (new QuanTriController($pdo))->adminProductEdit();
+        break;
+
+    case 'admin_sp_tags':
+        (new AdminTagController($pdo))->saveProductTags();
+        break;
+
+    case 'admin_tag_review':
+        (new AdminTagController($pdo))->reviewIndex();
+        break;
+
+    case 'admin_tag_review_act':
+        (new AdminTagController($pdo))->reviewAction();
+        break;
+
+    case 'admin_search_ops':
+        (new AdminSearchOpsController($pdo))->index();
         break;
 
     case 'admin_sp_xoa':
