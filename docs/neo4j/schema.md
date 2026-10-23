@@ -22,7 +22,7 @@ Migration: `migrations/neo4j/*.cypher` (idempotent) — chạy `python -m graph_
 - `(Product)-[:OF_BRAND]->(Brand)`
 - `(Product)-[:IN_CATEGORY]->(Category)` (gắn vào lá), `(Category)-[:CHILD_OF]->(Category)` (level 3→2→1)
 - `(Product)-[:CONTAINS {rank:int}]->(Ingredient)` — rank = thứ tự trong bảng thành phần, 1 = nhiều nhất
-- `(Product)-[:SUITABLE_FOR {source:'data'|'inferred'}]->(SkinType)`, `(Product)-[:TARGETS {source:'inferred'}]->(Concern)`, `(Product)-[:HAS_BENEFIT {source:'inferred'}]->(Benefit)`
+- `(Product)-[:SUITABLE_FOR {source:'data'|'inferred'|'manual'|'llm_approved'}]->(SkinType)`, `(Product)-[:TARGETS {source:'inferred'|'manual'|'llm_approved'}]->(Concern)`, `(Product)-[:HAS_BENEFIT {source:'inferred'|'manual'|'llm_approved'}]->(Benefit)` (U07: `manual` > `llm_approved` > `inferred`; `Product.tag_source` = `manual`|`llm_approved`|`rule`)
 - `Product` có thêm `ingredient_source` (`full`/`sach`/null), `category_source` (`danh_muc`/`path`). `IN_CATEGORY` chỉ gắn vào **lá**; lọc theo danh mục cha phải đi qua `CHILD_OF`.
 - `(Product)-[:MADE_IN]->(Origin)` *(tùy chọn)*
 - `(Ingredient)-[:HELPS]->(Concern)`, `(Ingredient)-[:CONFLICTS_WITH {severity, reason}]-(Ingredient)` (lưu 1 chiều, truy vấn không hướng)
@@ -76,7 +76,7 @@ RETURN i.inci, j.inci, r.severity, r.reason;
 MATCH (p:Product {active:true})-[:SUITABLE_FOR]->(:SkinType {key:$skin})
 RETURN p.id, p.name ORDER BY p.sold DESC LIMIT 20;
 
-// 5. SIMILAR_TO của 1 SP
+// 5. SIMILAR_TO của 1 SP (U08 đọc KHÔNG hướng + xếp lại: xem graph_repository.SIMILAR_PRODUCTS)
 MATCH (:Product {id:$id})-[s:SIMILAR_TO]->(q:Product {active:true})
 RETURN q.id, q.name, s.score, s.reason, s.shared ORDER BY s.score DESC LIMIT 10;
 ```

@@ -30,8 +30,12 @@ class TagRule:
 class ConflictPair:
     a: str           # smaller ingredient key
     b: str
-    severity: str
-    reason: str
+    severity: str    # high | medium | low (legacy rules: "same_session")
+    reason: str      # advice text (kept for readers of the old edge property)
+    timing: str = "same_session"
+    advice_vi: str = ""
+    rule_id: str = ""
+    evidence: str = ""
 
 
 @dataclass
@@ -139,12 +143,16 @@ def conflict_pairs(
     groups: Mapping[str, Sequence[str]] | None = None,
     severity: str = "same_session",
 ) -> list[ConflictPair]:
-    """Expand the existing CONFLICT_RULES (group names) into ingredient-key pairs.
+    """Ingredient-key conflict pairs, undirected (a < b).
 
-    ``severity`` is not in the source; ``same_session`` mirrors its meaning
-    ("do not use in the same AM/PM session"). Pairs are undirected: a < b.
+    With explicit ``source_rules``/``groups`` (tests, old callers): the legacy expansion of
+    ``CONFLICT_RULES`` only, ``severity`` copied as before. With no arguments (the ETL): the legacy rules
+    (``recommendation_service/knowledge/ingredient_rules.py``, kept compatible) merged with the reviewed
+    ``data/graph/conflict_rules.yaml`` (U09); the YAML wins on a shared pair. Legacy-only pairs would get
+    ``severity=medium``; today the YAML contains all of them, so none are left.
     """
 
+    explicit = source_rules is not None or groups is not None
     if source_rules is None:
         source_rules = _load_conflict_source().CONFLICT_RULES
     groups = load_conflict_groups() if groups is None else groups
@@ -155,5 +163,16 @@ def conflict_pairs(
                 if left == right:
                     continue
                 a, b = sorted((left, right))
-                pairs.setdefault((a, b), ConflictPair(a, b, severity, str(rule.resolution)))
+                if explicit:
+                    pairs.setdefault((a, b), ConflictPair(a, b, severity, str(rule.resolution)))
+                else:
+                    pairs.setdefault((a, b), ConflictPair(
+                        a, b, "medium", str(rule.resolution), "same_session", str(rule.resolution),
+                        f"legacy_{rule.first}_{rule.second}".replace(" ", "_"), "moderate"))
+    if not explicit:
+        from .conflicts import expand_pairs
+
+        for pair in expand_pairs():
+            pairs[(pair.a, pair.b)] = ConflictPair(
+                pair.a, pair.b, pair.severity, pair.advice_vi, pair.timing, pair.advice_vi, pair.rule_id, pair.evidence)
     return [pairs[k] for k in sorted(pairs)]

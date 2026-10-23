@@ -1,0 +1,112 @@
+{
+  "generated_at": "2026-10-22T13:29:01Z",
+  "source": "ai-service-flask/data/graph/synonyms.yaml",
+  "groups": {
+    "benefits": [
+      {
+        "key": "cap_am",
+        "name": "Cấp ẩm"
+      },
+      {
+        "key": "phuc_hoi",
+        "name": "Phục hồi"
+      },
+      {
+        "key": "lam_diu",
+        "name": "Làm dịu"
+      },
+      {
+        "key": "sang_da",
+        "name": "Sáng da"
+      },
+      {
+        "key": "lam_sach_sau",
+        "name": "Làm sạch sâu"
+      },
+      {
+        "key": "tay_da_chet",
+        "name": "Tẩy da chết hóa học"
+      },
+      {
+        "key": "chong_lao_hoa",
+        "name": "Chống lão hóa"
+      },
+      {
+        "key": "chong_oxy_hoa",
+        "name": "Chống oxy hóa"
+      },
+      {
+        "key": "kiem_dau",
+        "name": "Kiềm dầu"
+      },
+      {
+        "key": "chong_tia_uv",
+        "name": "Chống tia UV"
+      },
+      {
+        "key": "khang_khuan",
+        "name": "Kháng khuẩn"
+      }
+    ],
+    "concerns": [
+      {
+        "key": "mun",
+        "name": "Mụn"
+      },
+      {
+        "key": "tham_mun",
+        "name": "Thâm mụn"
+      },
+      {
+        "key": "nam_tan_nhang",
+        "name": "Nám / tàn nhang"
+      },
+      {
+        "key": "lo_chan_long",
+        "name": "Lỗ chân lông to"
+      },
+      {
+        "key": "dau_thua",
+        "name": "Dầu thừa"
+      },
+      {
+        "key": "kho_da",
+        "name": "Khô / thiếu ẩm"
+      },
+      {
+        "key": "kich_ung",
+        "name": "Kích ứng / mẩn đỏ"
+      },
+      {
+        "key": "lao_hoa",
+        "name": "Lão hóa / nếp nhăn"
+      },
+      {
+        "key": "xin_mau",
+        "name": "Da xỉn màu"
+      }
+    ],
+    "skin_types": [
+      {
+        "key": "da_dau",
+        "name": "Da dầu"
+      },
+      {
+        "key": "da_kho",
+        "name": "Da khô"
+      },
+      {
+        "key": "da_nhay_cam",
+        "name": "Da nhạy cảm"
+      },
+      {
+        "key": "da_mun",
+        "name": "Da mụn"
+      },
+      {
+        "key": "moi_loai_da",
+        "name": "Mọi loại da"
+      }
+    ]
+  }
+}
