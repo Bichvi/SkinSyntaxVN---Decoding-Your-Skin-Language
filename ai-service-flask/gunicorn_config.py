@@ -29,14 +29,30 @@ def post_fork(server, worker):
     except Exception as e:
         server.log.warning(f"[Worker {worker.pid}] Pre-warm failed: {e}")
     try:
+        # Singletons của chatbot_flask (module chạy thật /api/chat): client Chroma + pipeline, và (U11)
+        # pool LLM đã cấu hình. get_llms() giờ KHÔNG gọi LLM thật khi trả về (pool đánh dấu "unvalidated");
+        # việc kiểm tra thật chạy ở luồng nền để lượt chat đầu tiên không phải chờ ~23s.
+        from chatbot_service.chatbot_flask import (
+            get_vectorstore as _cf_vectorstore,
+            get_hybrid_pipeline as _cf_pipeline,
+            get_llms as _cf_llms,
+        )
+        _cf_vectorstore()
+        _cf_pipeline()
+        _cf_llms()
+        server.log.info(f"[Worker {worker.pid}] chatbot_flask vectorstore/pipeline/llm pool pre-warmed (LLM validation in background)")
+    except Exception as e:
+        server.log.warning(f"[Worker {worker.pid}] chatbot_flask pre-warm failed: {e}")
+    try:
         # Smart-search warm-up before serving, not on the first user request: catalog, BM25,
         # embedding, EntityDictionary and the Neo4j driver + query plans (Bước 05B). The driver
         # is created HERE, after fork (never in the preloaded master: sockets must not be shared).
         # Marks this pid so before_app_request won't re-run it.
         from search_service import routes as search_routes
-        from search_service.service import warm_up
+        from search_service.service import start_invalidation_listener, warm_up
         search_routes._warm_pid = os.getpid()
         warm_up()
+        start_invalidation_listener()  # U03: cache:invalidate subscriber (before_app_request is skipped once _warm_pid is set)
         server.log.info(f"[Worker {worker.pid}] search_service warmed")
     except Exception as e:
         server.log.warning(f"[Worker {worker.pid}] search warm-up failed: {type(e).__name__}")

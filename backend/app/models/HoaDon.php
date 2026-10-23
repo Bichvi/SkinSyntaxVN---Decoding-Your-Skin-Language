@@ -174,6 +174,7 @@ class HoaDon {
                 'updated_at' => new \MongoDB\BSON\UTCDateTime()
             ];
             $this->db->san_pham->updateOne($filter, ['$set' => $set]);
+            $this->emitStockEdge((string)($product['ma_san_pham'] ?? $productId), $before, $after);
             $this->notifyLowStock((string)($product['ma_san_pham'] ?? $productId), (string)($product['ten_san_pham'] ?? ''), $after);
         }
         return true;
@@ -195,6 +196,23 @@ class HoaDon {
                 'updated_at' => new \MongoDB\BSON\UTCDateTime()
             ];
             $this->db->san_pham->updateOne($this->productLookupFilter($productId), ['$set' => $set]);
+            $this->emitStockEdge((string)($product['ma_san_pham'] ?? $productId), $before, $after);
+        }
+    }
+
+    /**
+     * U11: chỉ khi sản phẩm chuyển giữa còn hàng <-> hết hàng mới phát sự kiện catalog (mỗi đơn đều trừ kho,
+     * nếu phát hết sẽ ngập luồng; số tồn chính xác vẫn được job đồng bộ hằng giờ/đêm bù). Không bao giờ ném lỗi.
+     */
+    private function emitStockEdge(string $productId, int $before, int $after): void {
+        if (($before > 0) === ($after > 0)) {
+            return;
+        }
+        try {
+            require_once __DIR__ . '/../services/CatalogEvents.php';
+            CatalogEvents::publish(CatalogEvents::TYPE_STOCK, $productId, ['reason' => $after > 0 ? 'restock_order_cancel' : 'sold_out', 'source' => 'order']);
+        } catch (Throwable $e) {
+            error_log('HoaDon::emitStockEdge: ' . get_class($e));
         }
     }
 
