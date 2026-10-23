@@ -10,6 +10,7 @@ require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/SkincareProductClassifier.php';
 require_once __DIR__ . '/../services/RecommendationExplainer.php';
 require_once __DIR__ . '/../services/SupportKnowledge.php';
+require_once __DIR__ . '/../services/HomeGraphRecommender.php';
 
 class HomeController {
     private $pdo;
@@ -228,6 +229,41 @@ class HomeController {
                     'user_state'      => $rankResult['user_state'],
                 ];
             }
+
+            // Home graph (Neo4j qua Flask): mọi lỗi -> null, các khối cũ không bị ảnh hưởng.
+            $homeGraph = null;
+            try {
+                $homeGraphExclude = [];
+                $homeGraphIdOf = static fn($p) => is_array($p) ? (string)($p['ma_san_pham'] ?? $p['id'] ?? '') : '';
+                $homeGraphForYou = array_slice(array_values(array_filter($homepageSections['forYou'] ?? $homepageSections['bestSellers'] ?? [])), 0, 4);
+                if (empty($homeGraphForYou)) {
+                    $homeGraphForYou = array_slice($latest, 3, 4);
+                }
+                $homeGraphBlocks = [
+                    $homeGraphForYou,
+                    array_slice(array_values(array_filter($homepageSections['topRatedWeighted'] ?? [])), 0, 4),
+                    array_slice($latest, 0, 4),
+                    array_slice((array)($primaryFlashCampaign['hydrated_items'] ?? []), 0, 4),
+                ];
+                foreach ($homeGraphBlocks as $homeGraphBlock) {
+                    foreach ($homeGraphBlock as $homeGraphProduct) {
+                        $homeGraphPid = $homeGraphIdOf($homeGraphProduct);
+                        if ($homeGraphPid !== '') {
+                            $homeGraphExclude[] = $homeGraphPid;
+                        }
+                    }
+                }
+                $homeGraph = $this->homeGraphRecommender()->build([
+                    'seen_ids' => $recentViewed,
+                    'cart_ids' => array_keys($cartItems),
+                    'skin_profile' => $isLoggedIn ? $this->homeGraphSkinProfile((string)($_SESSION['user']['email'] ?? '')) : null,
+                    'exclude_ids' => array_values(array_unique($homeGraphExclude)),
+                    'sections' => ['seen', 'skin', 'concern'],
+                ]);
+            } catch (Throwable $e) {
+                error_log('[HOME_GRAPH] index skipped: ' . get_class($e));
+                $homeGraph = null;
+            }
         } catch (Throwable $e) {
             error_log('home MongoDB error: ' . $e->getMessage());
             $dbUnavailableMessage = 'Hiện chưa thể tải dữ liệu sản phẩm. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
@@ -249,7 +285,105 @@ class HomeController {
             'isLoggedIn' => $isLoggedIn,
             'userProfile' => $userProfile,
             'hasSurvey' => $hasSurvey,
+            'homeGraph' => $homeGraph ?? null,
         ]);
+    }
+
+    private function homeGraphRecommender(): HomeGraphRecommender {
+        $model = $this->model;
+        return new HomeGraphRecommender(
+            HomeRecommendClient::fromEnv(),
+            static function (array $ids) use ($model): array { return $model->findVisibleByIds($ids); }
+        );
+    }
+
+    /** Hồ sơ da {skin_type, concerns} của khách đăng nhập (chỉ đọc khach_hang). Lỗi/không có -> null. */
+    private function homeGraphSkinProfile(string $email, bool $allowLookup = true): ?array {
+        if ($email === '') {
+            return null;
+        }
+        // Cache trong session (chỉ {skin_type, concerns} đã làm sạch, khóa theo hash email, TTL 10 phút)
+        // để không truy vấn Mongo lại ở mỗi lần tải trang chủ / bấm chip.
+        $emailKey = hash('sha256', mb_strtolower($email, 'UTF-8'));
+        $cached = $_SESSION['home_graph_skin_profile'] ?? null;
+        if (is_array($cached) && ($cached['k'] ?? '') === $emailKey && (time() - (int)($cached['t'] ?? 0)) < 600) {
+            return is_array($cached['p'] ?? null) ? $cached['p'] : null;
+        }
+        if (!$allowLookup) {
+            return null;
+        }
+        try {
+            $kh = (new TaiKhoan($this->pdo))->getKhachHangByEmail($email);
+            $profile = SearchSkinProfile::fromCustomer($kh);
+            $_SESSION['home_graph_skin_profile'] = [
+                'k' => $emailKey,
+                't' => time(),
+                'p' => $profile === null ? null : [
+                    'skin_type' => $profile['skin_type'] ?? null,
+                    'concerns' => array_values($profile['concerns'] ?? []),
+                ],
+            ];
+            return $profile;
+        } catch (Throwable $e) {
+            error_log('[HOME_GRAPH] skin profile skipped: ' . get_class($e));
+            return null;
+        }
+    }
+
+    /** GET index.php?r=home_concern&c=<key>: HTML lưới 8 SP theo vấn đề da (không layout). */
+    public function concern(): void {
+        $key = $_GET['c'] ?? '';
+        if (!is_string($key) || !in_array($key, SearchSkinProfile::CONCERNS, true)) {
+            http_response_code(400);
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Yêu cầu không hợp lệ';
+            return;
+        }
+
+        $block = null;
+        $failed = false;
+        try {
+            $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']['email']);
+            $cartIds = [];
+            if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+                foreach ($_SESSION['gio_hang'] as $k => $v) {
+                    $cartIds[] = (string)((is_array($v) && isset($v['ma_san_pham'])) ? $v['ma_san_pham'] : $k);
+                }
+            }
+            $seenIds = is_array($_SESSION['recent_viewed_products'] ?? null) ? $_SESSION['recent_viewed_products'] : [];
+            // Chỉ đọc cache session (do index() lưu), không truy vấn Mongo ở route này.
+            $skinProfile = $isLoggedIn ? $this->homeGraphSkinProfile((string)$_SESSION['user']['email'], false) : null;
+            // Nhả khóa session trước khi gọi Flask để các request song song không xếp hàng.
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+            $result = $this->homeGraphRecommender()->build([
+                'seen_ids' => $seenIds,
+                'cart_ids' => $cartIds,
+                'skin_profile' => $skinProfile,
+                'concern' => $key,
+                'sections' => ['concern'],
+            ]);
+            $block = $result['concern'] ?? null;
+            $failed = !empty($result['failed']);
+        } catch (Throwable $e) {
+            error_log('[HOME_GRAPH] concern skipped: ' . get_class($e));
+            $block = null;
+            $failed = true;
+        }
+
+        header('Content-Type: text/html; charset=UTF-8');
+        header('Cache-Control: private, no-store');
+        $concernKey = $key;
+        $concernProducts = is_array($block) ? ($block['products'] ?? []) : [];
+        // $error chỉ true khi lỗi thật (Flask/Mongo/exception); khối null do không đủ SP -> lưới hiện "Chưa có sản phẩm phù hợp".
+        $error = $failed;
+        $partials = dirname(__DIR__, 3) . '/frontend/views/partials';
+        if (defined('VIEW_DIR') && is_dir(VIEW_DIR . '/partials')) {
+            $partials = VIEW_DIR . '/partials';
+        }
+        $renderHomeProductCard = require $partials . '/home_product_card.php';
+        require $partials . '/home_graph_concern_grid.php';
     }
 
     public function flashSale(): void {
