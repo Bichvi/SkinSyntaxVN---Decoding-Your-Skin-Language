@@ -32,12 +32,13 @@ final class HomeGraphRecommender
 
     /**
      * @param array{seen_ids?:array,skin_profile?:?array,cart_ids?:array,exclude_ids?:array,concern?:?string,sections?:array} $ctx
-     * @return array{seen:?array,skin:?array,concern:?array,concern_keys:array}
+     * @return array{seen:?array,skin:?array,concern:?array,concern_keys:array,failed:bool} failed=true khi lỗi thật (client tắt, Flask lỗi, exception)
      */
     public function build(array $ctx): array
     {
-        $result = ['seen' => null, 'skin' => null, 'concern' => null, 'concern_keys' => self::CONCERN_NAMES];
+        $result = ['seen' => null, 'skin' => null, 'concern' => null, 'concern_keys' => self::CONCERN_NAMES, 'failed' => false];
         if ($this->client === null) {
+            $result['failed'] = true;
             return $result;
         }
         try {
@@ -59,33 +60,52 @@ final class HomeGraphRecommender
             }
             $response = $this->client->recommend($payload);
             if ($response === null) {
+                $result['failed'] = true;
                 return $result;
             }
+            $wanted = [];
+            $allIds = [];
             foreach ($response['sections'] as $section) {
-                $key = $section['key'];
-                if (!in_array($key, $sections, true)) {
+                if (!in_array($section['key'], $sections, true)) {
                     continue;
                 }
-                $result[$key] = $this->hydrate($section);
+                $wanted[] = $section;
+                foreach ($section['items'] as $item) {
+                    $allIds[$item['product_id']] = true;
+                }
+            }
+            // Một lần truy vấn Mongo cho mọi khối (giảm round trip tới Atlas).
+            $byId = $this->loadProducts(array_map('strval', array_keys($allIds)));
+            foreach ($wanted as $section) {
+                $result[$section['key']] = $this->hydrate($section, $byId);
             }
         } catch (Throwable $e) {
             error_log('[HOME_GRAPH] ' . get_class($e));
+            $result['failed'] = true;
             $result['seen'] = $result['skin'] = $result['concern'] = null;
         }
         return $result;
     }
 
-    private function hydrate(array $section): ?array
+    /** @return array<string,array> sản phẩm Mongo theo ma_san_pham */
+    private function loadProducts(array $ids): array
     {
-        $ids = array_map(static fn($i) => $i['product_id'], $section['items']);
-        if (!$ids) {
-            return null;
-        }
         $byId = [];
+        if (!$ids) {
+            return $byId;
+        }
         foreach (($this->findVisibleByIds)($ids) as $p) {
             if (is_array($p) && isset($p['ma_san_pham'])) {
                 $byId[(string)$p['ma_san_pham']] = $p;
             }
+        }
+        return $byId;
+    }
+
+    private function hydrate(array $section, array $byId): ?array
+    {
+        if (!$section['items']) {
+            return null;
         }
         $products = [];
         foreach ($section['items'] as $item) {

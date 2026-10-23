@@ -297,13 +297,32 @@ class HomeController {
     }
 
     /** Hồ sơ da {skin_type, concerns} của khách đăng nhập (chỉ đọc khach_hang). Lỗi/không có -> null. */
-    private function homeGraphSkinProfile(string $email): ?array {
+    private function homeGraphSkinProfile(string $email, bool $allowLookup = true): ?array {
         if ($email === '') {
+            return null;
+        }
+        // Cache trong session (chỉ {skin_type, concerns} đã làm sạch, khóa theo hash email, TTL 10 phút)
+        // để không truy vấn Mongo lại ở mỗi lần tải trang chủ / bấm chip.
+        $emailKey = hash('sha256', mb_strtolower($email, 'UTF-8'));
+        $cached = $_SESSION['home_graph_skin_profile'] ?? null;
+        if (is_array($cached) && ($cached['k'] ?? '') === $emailKey && (time() - (int)($cached['t'] ?? 0)) < 600) {
+            return is_array($cached['p'] ?? null) ? $cached['p'] : null;
+        }
+        if (!$allowLookup) {
             return null;
         }
         try {
             $kh = (new TaiKhoan($this->pdo))->getKhachHangByEmail($email);
-            return SearchSkinProfile::fromCustomer($kh);
+            $profile = SearchSkinProfile::fromCustomer($kh);
+            $_SESSION['home_graph_skin_profile'] = [
+                'k' => $emailKey,
+                't' => time(),
+                'p' => $profile === null ? null : [
+                    'skin_type' => $profile['skin_type'] ?? null,
+                    'concerns' => array_values($profile['concerns'] ?? []),
+                ],
+            ];
+            return $profile;
         } catch (Throwable $e) {
             error_log('[HOME_GRAPH] skin profile skipped: ' . get_class($e));
             return null;
@@ -321,6 +340,7 @@ class HomeController {
         }
 
         $block = null;
+        $failed = false;
         try {
             $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']['email']);
             $cartIds = [];
@@ -329,24 +349,34 @@ class HomeController {
                     $cartIds[] = (string)((is_array($v) && isset($v['ma_san_pham'])) ? $v['ma_san_pham'] : $k);
                 }
             }
+            $seenIds = is_array($_SESSION['recent_viewed_products'] ?? null) ? $_SESSION['recent_viewed_products'] : [];
+            // Chỉ đọc cache session (do index() lưu), không truy vấn Mongo ở route này.
+            $skinProfile = $isLoggedIn ? $this->homeGraphSkinProfile((string)$_SESSION['user']['email'], false) : null;
+            // Nhả khóa session trước khi gọi Flask để các request song song không xếp hàng.
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
             $result = $this->homeGraphRecommender()->build([
-                'seen_ids' => is_array($_SESSION['recent_viewed_products'] ?? null) ? $_SESSION['recent_viewed_products'] : [],
+                'seen_ids' => $seenIds,
                 'cart_ids' => $cartIds,
-                'skin_profile' => $isLoggedIn ? $this->homeGraphSkinProfile((string)$_SESSION['user']['email']) : null,
+                'skin_profile' => $skinProfile,
                 'concern' => $key,
                 'sections' => ['concern'],
             ]);
             $block = $result['concern'] ?? null;
+            $failed = !empty($result['failed']);
         } catch (Throwable $e) {
             error_log('[HOME_GRAPH] concern skipped: ' . get_class($e));
             $block = null;
+            $failed = true;
         }
 
         header('Content-Type: text/html; charset=UTF-8');
-        header('Cache-Control: private, max-age=60');
+        header('Cache-Control: private, no-store');
         $concernKey = $key;
         $concernProducts = is_array($block) ? ($block['products'] ?? []) : [];
-        $error = ($block === null);
+        // $error chỉ true khi lỗi thật (Flask/Mongo/exception); khối null do không đủ SP -> lưới hiện "Chưa có sản phẩm phù hợp".
+        $error = $failed;
         $partials = dirname(__DIR__, 3) . '/frontend/views/partials';
         if (defined('VIEW_DIR') && is_dir(VIEW_DIR . '/partials')) {
             $partials = VIEW_DIR . '/partials';
