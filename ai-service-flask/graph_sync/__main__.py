@@ -4,6 +4,8 @@ python -m graph_sync --full                  # load all + deactivate missing + s
 python -m graph_sync --since 2026-10-01T00:00:00Z [--no-similarity]
 python -m graph_sync --dry-run               # no Neo4j writes, report only
 python -m graph_sync --similarity-only
+python -m graph_sync --conflicts-only [--dry-run]   # only (Ingredient)-[:CONFLICTS_WITH]->(Ingredient) from conflict_rules.yaml; no Mongo
+python -m graph_sync --ids 1496,462 [--no-similarity] [--dry-run]   # U11: just these products (+ local SIMILAR_TO)
 python -m graph_sync --derive co_purchase --days 90 [--dry-run]   # CO_PURCHASED from orders
 
 Exit codes: 0 ok · 1 error · 2 bad arguments / --since unsupported · 3 another sync holds the lock.
@@ -16,9 +18,11 @@ import argparse
 import logging
 import sys
 import time
-import uuid
 from contextlib import contextmanager
 from typing import Any, Iterator
+
+from shared.redis_kit.client import make_client
+from shared.redis_kit.lock import LockHeld, RedisLock
 
 from . import extract
 from .config import Settings, load_settings
@@ -34,39 +38,20 @@ log = logging.getLogger("graph_sync")
 EXIT_OK, EXIT_ERROR, EXIT_USAGE, EXIT_LOCKED = 0, 1, 2, 3
 
 
-class LockHeld(RuntimeError):
-    pass
-
-
 @contextmanager
 def redis_lock(settings: Settings) -> Iterator[None]:
-    """``SET graph_sync:lock NX EX 1800``; no Redis -> warn and continue without a lock."""
+    """Single-flight lock ``graph_sync:lock`` (legacy key kept) via ``shared.redis_kit.RedisLock``.
 
-    client = None
-    token = uuid.uuid4().hex
-    if settings.redis_url:
-        try:
-            import redis  # type: ignore[import-not-found]
+    Held by another run -> ``LockHeld``; no Redis -> warn and continue without a lock (as before).
+    """
 
-            client = redis.Redis.from_url(settings.redis_url, socket_connect_timeout=2, socket_timeout=2)
-            if not client.set(settings.lock_key, token, nx=True, ex=settings.lock_ttl):
-                raise LockHeld(settings.lock_key)
-        except LockHeld:
-            raise
-        except Exception as exc:
-            log.warning("redis lock unavailable (%s); continuing without lock", type(exc).__name__)
-            client = None
-    else:
+    if not settings.redis_url:
         log.warning("REDIS_URL not set; continuing without lock")
-    try:
         yield
-    finally:
-        if client is not None:
-            try:
-                if client.get(settings.lock_key) == token.encode():
-                    client.delete(settings.lock_key)
-            except Exception as exc:
-                log.warning("could not release redis lock: %s", type(exc).__name__)
+        return
+    client = make_client(settings.redis_url, socket_timeout=2.0, connect_timeout=2.0)
+    with RedisLock(settings.lock_key, ttl_ms=settings.lock_ttl * 1000, client=client, fail_open=True):
+        yield
 
 
 def _transform(docs: list[dict[str, Any]], lookups: Any) -> list[dict[str, Any]]:
@@ -182,6 +167,8 @@ def run(args: argparse.Namespace, settings: Settings) -> int:
             names = {e.key: e.inci for e in load_aliases().values()}
             loader.load_conflicts(pairs, names)
             loader.load_helps(helps)
+            if full_catalog:
+                extra["pruned_orphan_ingredients"] = loader.prune_orphan_ingredients()
             timings["load"] = time.perf_counter() - t
         if want_similarity:
             t = time.perf_counter()
@@ -192,6 +179,47 @@ def run(args: argparse.Namespace, settings: Settings) -> int:
         driver.close()
     timings["total"] = time.perf_counter() - started
     print_report(title, None if args.similarity_only else cov, counts, timings, extra)
+    return EXIT_OK
+
+
+def run_ids(args: argparse.Namespace, settings: Settings) -> int:
+    from .incremental import run_ids as _run_ids
+
+    return _run_ids(args, settings)
+
+
+def run_conflicts_only(args: argparse.Namespace, settings: Settings) -> int:
+    """``--conflicts-only`` (U09): rewrite just the CONFLICTS_WITH edges. A small targeted write (~60 edges,
+    no product or SIMILAR_TO traffic - the Neo4j container sits near its memory limit); idempotent; Mongo is not read."""
+
+    from .conflicts import load_rule_set, validate_keys
+
+    started = time.perf_counter()
+    pairs = conflict_pairs()
+    aliases = load_aliases()
+    names = {e.key: e.inci for e in aliases.values()}
+    unknown = validate_keys(load_rule_set(), aliases.keys())
+    if unknown:
+        log.warning("conflict rules use ingredient keys missing from ingredient_aliases.yaml: %s", sorted(unknown))
+    by_severity: dict[str, int] = {}
+    for pair in pairs:
+        by_severity[pair.severity] = by_severity.get(pair.severity, 0) + 1
+    summary: dict[str, Any] = {"rules": len(load_rule_set().rules), "conflict_pairs": len(pairs),
+                               "by_severity": dict(sorted(by_severity.items()))}
+    if not args.dry_run:
+        driver = _driver(settings)
+        try:
+            from .load import GraphLoader
+
+            loader = GraphLoader(driver, batch_size=settings.batch_size)
+            loader.load_conflicts(pairs, names)
+            summary["conflicts_in_neo4j"] = loader.count_conflicts()
+        finally:
+            driver.close()
+    summary["seconds"] = round(time.perf_counter() - started, 2)
+    print("== graph_sync conflicts-only" + (" (dry-run)" if args.dry_run else ""))
+    for key, value in summary.items():
+        print(f"  {key}: {value}")
     return EXIT_OK
 
 
@@ -230,8 +258,11 @@ def build_parser() -> argparse.ArgumentParser:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--full", action="store_true", help="load whole catalog, deactivate missing, similarity")
     mode.add_argument("--since", metavar="ISO8601", help="load products with updated_at >= since")
+    mode.add_argument("--ids", metavar="ID,ID", help="sync only these ma_san_pham (event driven, local similarity)")
     mode.add_argument("--similarity-only", action="store_true", help="recompute SIMILAR_TO only")
     mode.add_argument("--derive", choices=["co_purchase"], help="derive relationships from orders")
+    mode.add_argument("--conflicts-only", action="store_true",
+                      help="rewrite only CONFLICTS_WITH from data/graph/conflict_rules.yaml (no Mongo, small write)")
     parser.add_argument("--days", type=int, default=90, help="order window for --derive (default 90)")
     parser.add_argument("--dry-run", action="store_true", help="no Neo4j writes; print report")
     parser.add_argument("--no-similarity", action="store_true", help="skip SIMILAR_TO (with --since/--full)")
@@ -242,11 +273,11 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     logging.getLogger("neo4j").setLevel(logging.WARNING)
     args = build_parser().parse_args(argv)
-    if not (args.full or args.since or args.similarity_only or args.derive or args.dry_run):
+    if not (args.full or args.since or args.ids or args.similarity_only or args.derive or args.conflicts_only or args.dry_run):
         build_parser().print_usage(sys.stderr)
         return EXIT_USAGE
     settings = load_settings()
-    job = run_derive if args.derive else run
+    job = run_derive if args.derive else (run_conflicts_only if args.conflicts_only else (run_ids if args.ids else run))
     try:
         if args.dry_run:
             return job(args, settings)

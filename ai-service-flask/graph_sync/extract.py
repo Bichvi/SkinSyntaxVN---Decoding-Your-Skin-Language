@@ -7,6 +7,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Callable, Iterator, TypeVar
 
+from .curation import CURATION_FIELDS
 from .transform import CategoryInfo, Lookups, code
 
 log = logging.getLogger("graph_sync.extract")
@@ -19,8 +20,10 @@ PRODUCT_PROJECTION = {
     "thanh_phan_full": 1, "thanh_phan_sach": 1, "trang_thai": 1, "trang_thai_kho": 1,
     "so_luong_ton_kho": 1, "so_luong_ton": 1, "ton_kho": 1, "stock": 1, "quantity": 1,
     "updated_at": 1,
+    **{name: 1 for name in CURATION_FIELDS},     # U07: cong_dung_keys, van_de_da_keys, loai_da_keys, tag_source...
 }
 UPDATED_FIELD = "updated_at"   # 100% of san_pham (Bước 00 audit)
+TAG_UPDATED_FIELD = "tag_updated_at"   # U07: tag edits touch only the tag fields, not updated_at
 RETRIES = 4
 
 
@@ -95,7 +98,10 @@ def ensure_since_supported(db: Any) -> None:
 def iter_products(db: Any, since: datetime | None = None, batch_size: int = 500) -> Iterator[dict[str, Any]]:
     """All products (visible and hidden: visibility is decided in transform), optionally changed since."""
 
-    query: dict[str, Any] = {UPDATED_FIELD: {"$gte": since}} if since is not None else {}
+    query: dict[str, Any] = (
+        {"$or": [{UPDATED_FIELD: {"$gte": since}}, {TAG_UPDATED_FIELD: {"$gte": since}}]}
+        if since is not None else {}
+    )
     cursor = db["san_pham"].find(query, PRODUCT_PROJECTION).batch_size(batch_size)
     for doc in cursor:
         yield dict(doc)

@@ -3,59 +3,62 @@
 # Variants are compared after slugify. Unlisted ingredients still get a key (slug of the
 # raw name) with inci = null and are counted in the ETL report ("top unmapped").
 # role: active | uv_filter | humectant | emollient | base | preservative | fragrance
-#   base/preservative/fragrance/emollient are excluded from "shared actives" (SIMILAR_TO.shared).
+#       | colorant | thickener | emulsifier           (last three: U06, excipients)
+#   everything except active/uv_filter is excluded from "shared actives" (SIMILAR_TO.shared) and from
+#   the "shared active" reasons of the search service (search_service.graph_repository.GENERIC_ROLES).
+# Ambiguous names are NOT aliased: they wait for a human decision in ingredient_review.csv.
 # Selection: the ~200 most frequent names in san_pham.thanh_phan_full / thanh_phan_sach
 # (2026-10-21 snapshot) + Vietnamese names seen in thanh_phan_sach. INCI spelling: EU CosIng.
 
 ingredients:
   # ---------- base / vehicle ----------
   water: {inci: "Water", name_vi: "Nước", role: base, aliases: ["aqua", "aqua/water", "aqua/water/eau", "water/aqua", "water/aqua/eau", "eau", "purified water", "nước", "nước tinh khiết", "deionized water"]}
-  glycerin: {inci: "Glycerin", role: humectant, aliases: ["glycerine", "glycerol"]}
-  butylene_glycol: {inci: "Butylene Glycol", role: base, aliases: ["bg", "1,3-butylene glycol"]}
+  glycerin: {inci: "Glycerin", role: humectant, aliases: ["glycerine", "glycerol", "concentrated glycerin"]}
+  butylene_glycol: {inci: "Butylene Glycol", role: base, aliases: ["bg", "1,3-butylene glycol", "butylene glucol"]}
   propanediol: {inci: "Propanediol", role: base}
-  dipropylene_glycol: {inci: "Dipropylene Glycol", role: base}
-  pentylene_glycol: {inci: "Pentylene Glycol", role: base}
+  dipropylene_glycol: {inci: "Dipropylene Glycol", role: base, aliases: ["dpg", "dypropylene glycol"]}
+  pentylene_glycol: {inci: "Pentylene Glycol", role: base, aliases: ["petylene glycol"]}
   propylene_glycol: {inci: "Propylene Glycol", role: base}
   hexylene_glycol: {inci: "Hexylene Glycol", role: base}
   methylpropanediol: {inci: "Methylpropanediol", role: base}
-  1_2_hexanediol: {inci: "1,2-Hexanediol", role: base, aliases: ["1, 2-hexanediol", "hexanediol"]}
+  1_2_hexanediol: {inci: "1,2-Hexanediol", role: base, aliases: ["1, 2-hexanediol", "hexanediol", "2-hexanediol"]}
   caprylyl_glycol: {inci: "Caprylyl Glycol", role: base}
-  ethylhexylglycerin: {inci: "Ethylhexylglycerin", role: base, aliases: ["ethylhexyl glycerin"]}
-  alcohol_denat: {inci: "Alcohol Denat.", name_vi: "Cồn", role: base, aliases: ["alcohol", "ethanol", "denatured alcohol", "sd alcohol", "sd alcohol 40-b", "cồn"]}
-  disodium_edta: {inci: "Disodium EDTA", role: base}
+  ethylhexylglycerin: {inci: "Ethylhexylglycerin", role: base, aliases: ["ethylhexyl glycerin", "ethyhexylglycerin", "ethylhexl glycerin", "ethylhexyglycerin"]}
+  alcohol_denat: {inci: "Alcohol Denat.", name_vi: "Cồn", role: base, aliases: ["alcohol", "ethanol", "denatured alcohol", "sd alcohol", "sd alcohol 40-b", "cồn", "ethyl alcohol", "alchol denat"]}
+  disodium_edta: {inci: "Disodium EDTA", role: base, aliases: ["edetate disodium", "edetate disodium dihydrate", "edta-2na", "disodium edt", "disodium edita"]}
   tetrasodium_edta: {inci: "Tetrasodium EDTA", role: base}
   trisodium_edta: {inci: "Trisodium EDTA", role: base}
   trisodium_ethylenediamine_disuccinate: {inci: "Trisodium Ethylenediamine Disuccinate", role: base}
-  citric_acid: {inci: "Citric Acid", role: base}
+  citric_acid: {inci: "Citric Acid", role: base, aliases: ["axit citric"]}
   sodium_citrate: {inci: "Sodium Citrate", role: base}
   sodium_hydroxide: {inci: "Sodium Hydroxide", role: base}
   potassium_hydroxide: {inci: "Potassium Hydroxide", role: base}
   tromethamine: {inci: "Tromethamine", role: base}
-  triethanolamine: {inci: "Triethanolamine", role: base}
+  triethanolamine: {inci: "Triethanolamine", role: base, aliases: ["trietanolamine"]}
   arginine: {inci: "Arginine", role: base}
   sodium_chloride: {inci: "Sodium Chloride", role: base}
   magnesium_sulfate: {inci: "Magnesium Sulfate", role: base}
   xanthan_gum: {inci: "Xanthan Gum", role: base}
   carbomer: {inci: "Carbomer", role: base}
-  hydroxyethylcellulose: {inci: "Hydroxyethylcellulose", role: base, aliases: ["hydroxyethyl cellulose"]}
-  acrylates_c10_30_alkyl_acrylate_crosspolymer: {inci: "Acrylates/C10-30 Alkyl Acrylate Crosspolymer", role: base}
-  ammonium_acryloyldimethyltaurate_vp_copolymer: {inci: "Ammonium Acryloyldimethyltaurate/VP Copolymer", role: base}
+  hydroxyethylcellulose: {inci: "Hydroxyethylcellulose", role: base, aliases: ["hydroxyethyl cellulose", "hydroxyethylcellulos"]}
+  acrylates_c10_30_alkyl_acrylate_crosspolymer: {inci: "Acrylates/C10-30 Alkyl Acrylate Crosspolymer", role: base, aliases: ["acrylate/c10-30 alkyl acrylate crosspolymer"]}
+  ammonium_acryloyldimethyltaurate_vp_copolymer: {inci: "Ammonium Acryloyldimethyltaurate/VP Copolymer", role: base, aliases: ["ammonium acryloyldimethyltaurate/vp"]}
   sodium_polyacrylate: {inci: "Sodium Polyacrylate", role: base}
   silica: {inci: "Silica", role: base, aliases: ["hydrated silica"]}
-  aluminum_hydroxide: {inci: "Aluminum Hydroxide", role: base}
+  aluminum_hydroxide: {inci: "Aluminum Hydroxide", role: base, aliases: ["aluminium hydroxide"]}
   alumina: {inci: "Alumina", role: base}
   mica: {inci: "Mica", role: base}
   talc: {inci: "Talc", role: base}
   polysorbate_20: {inci: "Polysorbate 20", role: base}
   polysorbate_60: {inci: "Polysorbate 60", role: base}
   polysorbate_80: {inci: "Polysorbate 80", role: base}
-  glyceryl_stearate: {inci: "Glyceryl Stearate", role: base}
+  glyceryl_stearate: {inci: "Glyceryl Stearate", role: base, aliases: ["glyceryl monostearate", "glyceryl sterate"]}
   glyceryl_stearate_se: {inci: "Glyceryl Stearate SE", role: base}
   peg_100_stearate: {inci: "PEG-100 Stearate", role: base}
-  peg_60_hydrogenated_castor_oil: {inci: "PEG-60 Hydrogenated Castor Oil", role: base}
+  peg_60_hydrogenated_castor_oil: {inci: "PEG-60 Hydrogenated Castor Oil", role: base, aliases: ["60 hydrogenated castor oil", "peg-60 hydrogen", "ated castor oil", "peg-60 hydrogenated castor oll"]}
   peg_40_hydrogenated_castor_oil: {inci: "PEG-40 Hydrogenated Castor Oil", role: base}
-  glycereth_26: {inci: "Glycereth-26", role: humectant}
-  cetearyl_alcohol: {inci: "Cetearyl Alcohol", role: emollient}
+  glycereth_26: {inci: "Glycereth-26", role: humectant, aliases: ["glycersth-26"]}
+  cetearyl_alcohol: {inci: "Cetearyl Alcohol", role: emollient, aliases: ["cetearl alcohol"]}
   cetyl_alcohol: {inci: "Cetyl Alcohol", role: emollient}
   behenyl_alcohol: {inci: "Behenyl Alcohol", role: emollient}
   stearic_acid: {inci: "Stearic Acid", role: base}
@@ -64,22 +67,22 @@ ingredients:
   lauric_acid: {inci: "Lauric Acid", role: base}
   hydrogenated_lecithin: {inci: "Hydrogenated Lecithin", role: base}
   cocamidopropyl_betaine: {inci: "Cocamidopropyl Betaine", role: base}
-  coco_betaine: {inci: "Coco-Betaine", role: base}
+  coco_betaine: {inci: "Coco-Betaine", role: base, aliases: ["coco-betain"]}
   decyl_glucoside: {inci: "Decyl Glucoside", role: base}
-  sodium_laureth_sulfate: {inci: "Sodium Laureth Sulfate", role: base, aliases: ["sles"]}
+  sodium_laureth_sulfate: {inci: "Sodium Laureth Sulfate", role: base, aliases: ["sles", "sodium laureth sulphate"]}
   sodium_lauryl_sulfate: {inci: "Sodium Lauryl Sulfate", role: base, aliases: ["sls"]}
   # ---------- emollients / silicones ----------
-  dimethicone: {inci: "Dimethicone", role: emollient}
+  dimethicone: {inci: "Dimethicone", role: emollient, aliases: ["dimethicon"]}
   dimethiconol: {inci: "Dimethiconol", role: emollient}
   cyclopentasiloxane: {inci: "Cyclopentasiloxane", role: emollient}
-  cyclohexasiloxane: {inci: "Cyclohexasiloxane", role: emollient}
+  cyclohexasiloxane: {inci: "Cyclohexasiloxane", role: emollient, aliases: ["cyclohexailoxane", "cyclohexaloxane", "cyclohexaxiloxane"]}
   caprylyl_methicone: {inci: "Caprylyl Methicone", role: emollient}
   phenyl_trimethicone: {inci: "Phenyl Trimethicone", role: emollient}
   trimethylsiloxysilicate: {inci: "Trimethylsiloxysilicate", role: emollient}
-  caprylic_capric_triglyceride: {inci: "Caprylic/Capric Triglyceride", role: emollient}
+  caprylic_capric_triglyceride: {inci: "Caprylic/Capric Triglyceride", role: emollient, aliases: ["caprylic/capnc triglyceride", "caprylic/capric triglycerides", "caprylic/capric triglceride"]}
   isododecane: {inci: "Isododecane", role: emollient}
   isohexadecane: {inci: "Isohexadecane", role: emollient}
-  isononyl_isononanoate: {inci: "Isononyl Isononanoate", role: emollient}
+  isononyl_isononanoate: {inci: "Isononyl Isononanoate", role: emollient, aliases: ["lsononyl isononanoate"]}
   isopropyl_myristate: {inci: "Isopropyl Myristate", role: emollient}
   isopropyl_palmitate: {inci: "Isopropyl Palmitate", role: emollient}
   octyldodecanol: {inci: "Octyldodecanol", role: emollient}
@@ -88,15 +91,15 @@ ingredients:
   c12_15_alkyl_benzoate: {inci: "C12-15 Alkyl Benzoate", role: emollient}
   cetyl_ethylhexanoate: {inci: "Cetyl Ethylhexanoate", role: emollient}
   ethylhexyl_palmitate: {inci: "Ethylhexyl Palmitate", role: emollient}
-  microcrystalline_wax: {inci: "Microcrystalline Wax", role: emollient}
+  microcrystalline_wax: {inci: "Microcrystalline Wax", role: emollient, aliases: ["cera microcristallina", "cire microcristalline"]}
   synthetic_wax: {inci: "Synthetic Wax", role: emollient}
   petrolatum: {inci: "Petrolatum", role: emollient, aliases: ["vaseline"]}
-  mineral_oil: {inci: "Mineral Oil", role: emollient, aliases: ["paraffinum liquidum"]}
+  mineral_oil: {inci: "Mineral Oil", role: emollient, aliases: ["paraffinum liquidum", "dầu khoáng"]}
   # ---------- preservatives / antioxidant stabilisers ----------
-  phenoxyethanol: {inci: "Phenoxyethanol", role: preservative}
+  phenoxyethanol: {inci: "Phenoxyethanol", role: preservative, aliases: ["2-phenoxyethanol", "phenolxyethanol", "phenoxyetanol", "phenoxyethabol"]}
   sodium_benzoate: {inci: "Sodium Benzoate", role: preservative}
-  potassium_sorbate: {inci: "Potassium Sorbate", role: preservative}
-  methylparaben: {inci: "Methylparaben", role: preservative}
+  potassium_sorbate: {inci: "Potassium Sorbate", role: preservative, aliases: ["potasium sorbate"]}
+  methylparaben: {inci: "Methylparaben", role: preservative, aliases: ["methylparben"]}
   propylparaben: {inci: "Propylparaben", role: preservative}
   ethylparaben: {inci: "Ethylparaben", role: preservative}
   chlorphenesin: {inci: "Chlorphenesin", role: preservative}
@@ -105,7 +108,7 @@ ingredients:
   bht: {inci: "BHT", role: preservative}
   sodium_metabisulfite: {inci: "Sodium Metabisulfite", role: preservative}
   # ---------- fragrance & allergens ----------
-  fragrance: {inci: "Fragrance", name_vi: "Hương liệu", role: fragrance, aliases: ["parfum", "fragrance/parfum", "parfum/fragrance", "hương liệu", "perfume"]}
+  fragrance: {inci: "Fragrance", name_vi: "Hương liệu", role: fragrance, aliases: ["parfum", "fragrance/parfum", "parfum/fragrance", "hương liệu", "perfume", "hương thơm", "parfume"]}
   linalool: {inci: "Linalool", role: fragrance}
   limonene: {inci: "Limonene", role: fragrance}
   citronellol: {inci: "Citronellol", role: fragrance}
@@ -113,37 +116,39 @@ ingredients:
   hexyl_cinnamal: {inci: "Hexyl Cinnamal", role: fragrance}
   benzyl_salicylate: {inci: "Benzyl Salicylate", role: fragrance}
   # ---------- humectants ----------
-  betaine: {inci: "Betaine", role: humectant}
-  trehalose: {inci: "Trehalose", role: humectant}
+  betaine: {inci: "Betaine", role: humectant, aliases: ["betain"]}
+  trehalose: {inci: "Trehalose", role: humectant, aliases: ["trebalose"]}
   sodium_pca: {inci: "Sodium PCA", role: humectant}
-  sodium_lactate: {inci: "Sodium Lactate", role: humectant}
+  sodium_lactate: {inci: "Sodium Lactate", role: humectant, aliases: ["sodium lactat"]}
   xylitol: {inci: "Xylitol", role: humectant}
   sorbitol: {inci: "Sorbitol", role: humectant}
   urea: {inci: "Urea", role: humectant}
   saccharide_isomerate: {inci: "Saccharide Isomerate", role: humectant}
   # ---------- hyaluronic family ----------
   hyaluronic_acid: {inci: "Hyaluronic Acid", name_vi: "Axit hyaluronic", role: active, aliases: ["ha", "axit hyaluronic", "acid hyaluronic", "hyaluronic", "super ha"]}
-  sodium_hyaluronate: {inci: "Sodium Hyaluronate", role: active, aliases: ["natri hyaluronate"]}
-  hydrolyzed_hyaluronic_acid: {inci: "Hydrolyzed Hyaluronic Acid", role: active, aliases: ["nano ha"]}
-  hydrolyzed_sodium_hyaluronate: {inci: "Hydrolyzed Sodium Hyaluronate", role: active}
-  sodium_acetylated_hyaluronate: {inci: "Sodium Acetylated Hyaluronate", role: active}
+  sodium_hyaluronate: {inci: "Sodium Hyaluronate", role: active, aliases: ["natri hyaluronate", "sodium hyalutonate", "sodium hyaludronate", "sodium hуaluronate"]}
+  hydrolyzed_hyaluronic_acid: {inci: "Hydrolyzed Hyaluronic Acid", role: active, aliases: ["nano ha", "axit hyaluronic thủy phân", "hyaluronic acid phân tử nhỏ"]}
+  hydrolyzed_sodium_hyaluronate: {inci: "Hydrolyzed Sodium Hyaluronate", role: active, aliases: ["natri hyaluronate thủy phân"]}
+  sodium_acetylated_hyaluronate: {inci: "Sodium Acetylated Hyaluronate", role: active, aliases: ["sodium acetyl hyaluronate"]}
   sodium_hyaluronate_crosspolymer: {inci: "Sodium Hyaluronate Crosspolymer", role: active}
   hydroxypropyltrimonium_hyaluronate: {inci: "Hydroxypropyltrimonium Hyaluronate", role: active}
   # ---------- vitamins ----------
   niacinamide: {inci: "Niacinamide", name_vi: "Vitamin B3", role: active, aliases: ["nicotinamide", "vitamin b3", "vit b3"]}
   panthenol: {inci: "Panthenol", name_vi: "Vitamin B5", role: active, aliases: ["d-panthenol", "dl-panthenol", "vitamin b5", "provitamin b5", "pro-vitamin b5", "b5", "vit b5"]}
-  tocopherol: {inci: "Tocopherol", name_vi: "Vitamin E", role: active, aliases: ["vitamin e", "vit e"]}
-  tocopheryl_acetate: {inci: "Tocopheryl Acetate", role: active}
+  tocopherol: {inci: "Tocopherol", name_vi: "Vitamin E", role: active, aliases: ["vitamin e", "vit e", "tocophero"]}
+  tocopheryl_acetate: {inci: "Tocopheryl Acetate", role: active, aliases: ["tocopherol acetate"]}
   ascorbic_acid: {inci: "Ascorbic Acid", name_vi: "Vitamin C", role: active, aliases: ["vitamin c", "vit c", "l-ascorbic acid", "axit ascorbic", "pure vitamin c"]}
   sodium_ascorbyl_phosphate: {inci: "Sodium Ascorbyl Phosphate", role: active}
   magnesium_ascorbyl_phosphate: {inci: "Magnesium Ascorbyl Phosphate", role: active}
-  3_o_ethyl_ascorbic_acid: {inci: "3-O-Ethyl Ascorbic Acid", role: active, aliases: ["ethyl ascorbic acid"]}
+  3_o_ethyl_ascorbic_acid: {inci: "3-O-Ethyl Ascorbic Acid", role: active, aliases: ["ethyl ascorbic acid", "3-0-ethyl ascorbic acid"]}
   ascorbyl_glucoside: {inci: "Ascorbyl Glucoside", role: active}
   ascorbyl_tetraisopalmitate: {inci: "Ascorbyl Tetraisopalmitate", role: active}
   vitamin_c_derivative: {inci: "Vitamin C derivative", name_vi: "Dẫn xuất vitamin C", role: active, aliases: ["dẫn xuất vitamin c"]}
   retinol: {inci: "Retinol", name_vi: "Vitamin A", role: active, aliases: ["vitamin a", "retinol vàng", "pure retinol"]}
   retinal: {inci: "Retinal", role: active, aliases: ["retinaldehyde"]}
-  retinyl_palmitate: {inci: "Retinyl Palmitate", role: active}
+  tretinoin: {inci: "Tretinoin", name_vi: "Tretinoin (retinoic acid)", role: active, aliases: ["retinoic acid", "all-trans retinoic acid"]}   # U09: conflict rules
+  adapalene: {inci: "Adapalene", role: active}                                                                              # U09: conflict rules
+  retinyl_palmitate: {inci: "Retinyl Palmitate", role: active, aliases: ["retinуl palmitate"]}
   biotin: {inci: "Biotin", role: active}
   # ---------- acids / exfoliants ----------
   salicylic_acid: {inci: "Salicylic Acid", name_vi: "BHA", role: active, aliases: ["bha", "axit salicylic", "acid salicylic", "beta hydroxy acid", "sa"]}
@@ -154,30 +159,30 @@ ingredients:
   pha: {inci: "Polyhydroxy Acids", name_vi: "PHA", role: active, aliases: ["polyhydroxy acid"]}
   gluconolactone: {inci: "Gluconolactone", role: active}
   azelaic_acid: {inci: "Azelaic Acid", role: active, aliases: ["axit azelaic"]}
-  tranexamic_acid: {inci: "Tranexamic Acid", role: active, aliases: ["t.x.a", "txa", "axit tranexamic"]}
+  tranexamic_acid: {inci: "Tranexamic Acid", role: active, aliases: ["t.x.a", "txa", "axit tranexamic", "t.x.acid"]}
   benzoyl_peroxide: {inci: "Benzoyl Peroxide", role: active, aliases: ["bpo"]}
   sulfur: {inci: "Sulfur", name_vi: "Lưu huỳnh", role: active, aliases: ["lưu huỳnh"]}
   # ---------- brightening ----------
   arbutin: {inci: "Arbutin", role: active, aliases: ["alpha-arbutin", "alpha arbutin", "beta arbutin"]}
   glutathione: {inci: "Glutathione", role: active}
   # ---------- soothing / repair ----------
-  centella_asiatica_extract: {inci: "Centella Asiatica Extract", name_vi: "Chiết xuất rau má", role: active, aliases: ["chiết xuất rau má", "rau má", "cica", "centella", "centella asiatica", "centella asiatica leaf extract"]}
+  centella_asiatica_extract: {inci: "Centella Asiatica Extract", name_vi: "Chiết xuất rau má", role: active, aliases: ["chiết xuất rau má", "rau má", "cica", "centella", "centella asiatica", "centella asiatica leaf extract", "centella asiatica root extract", "centella asiatica extracт"]}
   madecassoside: {inci: "Madecassoside", role: active}
   asiaticoside: {inci: "Asiaticoside", role: active}
   madecassic_acid: {inci: "Madecassic Acid", role: active}
   asiatic_acid: {inci: "Asiatic Acid", role: active}
   allantoin: {inci: "Allantoin", role: active}
   bisabolol: {inci: "Bisabolol", role: active, aliases: ["alpha-bisabolol"]}
-  dipotassium_glycyrrhizate: {inci: "Dipotassium Glycyrrhizate", role: active}
-  glycyrrhiza_glabra_root_extract: {inci: "Glycyrrhiza Glabra (Licorice) Root Extract", name_vi: "Chiết xuất cam thảo", role: active, aliases: ["chiết xuất cam thảo", "cam thảo", "licorice root extract"]}
+  dipotassium_glycyrrhizate: {inci: "Dipotassium Glycyrrhizate", role: active, aliases: ["dipotassium glycyrrhizinate", "dipotassium dlycerrhizate", "dipotassium glycyrhizate"]}
+  glycyrrhiza_glabra_root_extract: {inci: "Glycyrrhiza Glabra (Licorice) Root Extract", name_vi: "Chiết xuất cam thảo", role: active, aliases: ["chiết xuất cam thảo", "cam thảo", "licorice root extract", "rễ cây cam thảo", "rễ cay cam thảo"]}
   beta_glucan: {inci: "Beta-Glucan", role: active, aliases: ["glucan"]}
   ectoin: {inci: "Ectoin", role: active, aliases: ["ectoine"]}
-  aloe_barbadensis_leaf_extract: {inci: "Aloe Barbadensis Leaf Extract", name_vi: "Lô hội", role: active, aliases: ["aloe barbadensis leaf juice", "nha đam", "lô hội", "nước ép lá lô hội", "aloe vera"]}
-  portulaca_oleracea_extract: {inci: "Portulaca Oleracea Extract", name_vi: "Rau sam", role: active}
-  chamomilla_recutita_flower_extract: {inci: "Chamomilla Recutita (Matricaria) Flower Extract", name_vi: "Hoa cúc", role: active}
-  camellia_sinensis_leaf_extract: {inci: "Camellia Sinensis Leaf Extract", name_vi: "Chiết xuất trà xanh", role: active, aliases: ["chiết xuất trà xanh", "trà xanh", "green tea extract"]}
-  melaleuca_alternifolia_leaf_oil: {inci: "Melaleuca Alternifolia (Tea Tree) Leaf Oil", name_vi: "Tinh dầu tràm trà", role: active, aliases: ["tràm trà", "tinh dầu tràm trà", "tea tree oil", "chiết xuất tràm trà"]}
-  hamamelis_virginiana_extract: {inci: "Hamamelis Virginiana (Witch Hazel) Extract", name_vi: "Cây phỉ", role: active, aliases: ["chiết xuất cây phỉ", "witch hazel"]}
+  aloe_barbadensis_leaf_extract: {inci: "Aloe Barbadensis Leaf Extract", name_vi: "Lô hội", role: active, aliases: ["aloe barbadensis leaf juice", "nha đam", "lô hội", "nước ép lá lô hội", "aloe vera", "aloe barbadensis extract", "chiết xuất nha đam", "chiết xuất lô hội", "aloe barbadensis leaf juice powder", "aloe vera leaf juice", "tinh chất nha đam"]}
+  portulaca_oleracea_extract: {inci: "Portulaca Oleracea Extract", name_vi: "Rau sam", role: active, aliases: ["chiết xuất rau sam"]}
+  chamomilla_recutita_flower_extract: {inci: "Chamomilla Recutita (Matricaria) Flower Extract", name_vi: "Hoa cúc", role: active, aliases: ["matricaria flower extract", "matricaria chamomilla flower extract", "chiết xuất hoa cúc la mã", "chiết xuất hoa cúc"]}
+  camellia_sinensis_leaf_extract: {inci: "Camellia Sinensis Leaf Extract", name_vi: "Chiết xuất trà xanh", role: active, aliases: ["chiết xuất trà xanh", "trà xanh", "green tea extract", "tinh chất trà xanh"]}
+  melaleuca_alternifolia_leaf_oil: {inci: "Melaleuca Alternifolia (Tea Tree) Leaf Oil", name_vi: "Tinh dầu tràm trà", role: active, aliases: ["tràm trà", "tinh dầu tràm trà", "tea tree oil", "chiết xuất tràm trà", "tea tree leaf oil", "melalueca alternifolia leaf oil"]}
+  hamamelis_virginiana_extract: {inci: "Hamamelis Virginiana (Witch Hazel) Extract", name_vi: "Cây phỉ", role: active, aliases: ["chiết xuất cây phỉ", "witch hazel", "hamamelis virginiana leaf extract", "hamamelis virginiana water", "hamamelis virginiana leaf water", "chiết xuất nước cây phỉ", "hamamelis virginiana", "hamamells virginlana extract", "hammamelis virginiana extract", "hammamellis virginiana"]}
   benincasa_cerifera_fruit_extract: {inci: "Benincasa Cerifera Fruit Extract", name_vi: "Bí đao", role: active, aliases: ["bí đao", "chiết xuất bí đao"]}
   coix_lacryma_jobi_seed_extract: {inci: "Coix Lacryma-Jobi Ma-yuen Seed Extract", name_vi: "Hạt ý dĩ", role: active, aliases: ["coix lacryma-jobi ma-yuen seed extract", "chiết xuất hạt ý dĩ", "ý dĩ"]}
   zinc_pca: {inci: "Zinc PCA", role: active}
@@ -185,31 +190,829 @@ ingredients:
   kaolin: {inci: "Kaolin", name_vi: "Đất sét trắng", role: active, aliases: ["đất sét kaolin", "kaolin clay"]}
   bakuchiol: {inci: "Bakuchiol", role: active}
   adenosine: {inci: "Adenosine", role: active}
-  ubiquinone: {inci: "Ubiquinone", name_vi: "Coenzyme Q10", role: active, aliases: ["coenzyme q10", "q10"]}
-  palmitoyl_tripeptide_1: {inci: "Palmitoyl Tripeptide-1", role: active, aliases: ["palmitoyl tripeptide"]}
+  ubiquinone: {inci: "Ubiquinone", name_vi: "Coenzyme Q10", role: active, aliases: ["coenzyme q10", "q10", "ubiquione"]}
+  palmitoyl_tripeptide_1: {inci: "Palmitoyl Tripeptide-1", role: active, aliases: ["palmitoyl tripeptide", "palmitonyl tripeptide 1"]}
   acetyl_hexapeptide_8: {inci: "Acetyl Hexapeptide-8", role: active, aliases: ["acetyl hexapeptide", "argireline", "acetyl hexapeptide-3"]}
   peptides: {inci: "Peptides", role: active, aliases: ["peptide", "copper peptide"]}
   collagen: {inci: "Collagen", role: active}
-  hydrolyzed_collagen: {inci: "Hydrolyzed Collagen", role: active}
+  hydrolyzed_collagen: {inci: "Hydrolyzed Collagen", role: active, aliases: ["collagen thủy phân", "collagen thuỷ phân"]}
   ceramide_np: {inci: "Ceramide NP", role: active, aliases: ["ceramide 3"]}
   ceramide_ap: {inci: "Ceramide AP", role: active, aliases: ["ceramide 6 ii"]}
   ceramide_eop: {inci: "Ceramide EOP", role: active, aliases: ["ceramide 1"]}
   ceramide: {inci: "Ceramides", role: active, aliases: ["ceramides", "3 loại ceramides", "3 loại ceramide"]}
   cholesterol: {inci: "Cholesterol", role: active}
   squalane: {inci: "Squalane", role: active}
-  butyrospermum_parkii_butter: {inci: "Butyrospermum Parkii (Shea) Butter", name_vi: "Bơ hạt mỡ", role: emollient, aliases: ["shea butter", "bơ hạt mỡ", "bơ shea"]}
+  butyrospermum_parkii_butter: {inci: "Butyrospermum Parkii (Shea) Butter", name_vi: "Bơ hạt mỡ", role: emollient, aliases: ["shea butter", "bơ hạt mỡ", "bơ shea", "butyrospermum parkii", "butyrosperm", "parkii butter", "hea butter"]}
   simmondsia_chinensis_seed_oil: {inci: "Simmondsia Chinensis (Jojoba) Seed Oil", name_vi: "Dầu jojoba", role: emollient, aliases: ["dầu jojoba", "jojoba oil"]}
   honey: {inci: "Honey", name_vi: "Mật ong", role: active, aliases: ["mật ong", "mel"]}
   snail_secretion_filtrate: {inci: "Snail Secretion Filtrate", name_vi: "Dịch nhầy ốc sên", role: active, aliases: ["dịch nhầy ốc sên", "snail mucin"]}
   # ---------- UV filters ----------
   titanium_dioxide: {inci: "Titanium Dioxide", role: uv_filter, aliases: ["ci 77891"]}
-  zinc_oxide: {inci: "Zinc Oxide", role: uv_filter}
-  ethylhexyl_methoxycinnamate: {inci: "Ethylhexyl Methoxycinnamate", role: uv_filter, aliases: ["octinoxate", "octyl methoxycinnamate", "methoxycinnamate ethylhexyl"]}
+  zinc_oxide: {inci: "Zinc Oxide", role: uv_filter, aliases: ["kẽm oxyde"]}
+  ethylhexyl_methoxycinnamate: {inci: "Ethylhexyl Methoxycinnamate", role: uv_filter, aliases: ["octinoxate", "octyl methoxycinnamate", "methoxycinnamate ethylhexyl", "ethylexhyl methoxycinamate", "ethylhexyl methoxycinnamte"]}
   octocrylene: {inci: "Octocrylene", role: uv_filter}
   homosalate: {inci: "Homosalate", role: uv_filter}
   ethylhexyl_salicylate: {inci: "Ethylhexyl Salicylate", role: uv_filter, aliases: ["octisalate"]}
   butyl_methoxydibenzoylmethane: {inci: "Butyl Methoxydibenzoylmethane", role: uv_filter, aliases: ["avobenzone"]}
-  bis_ethylhexyloxyphenol_methoxyphenyl_triazine: {inci: "Bis-Ethylhexyloxyphenol Methoxyphenyl Triazine", role: uv_filter, aliases: ["ethylhexyloxyphenol methoxyphenyl triazine", "tinosorb s", "bemotrizinol"]}
+  bis_ethylhexyloxyphenol_methoxyphenyl_triazine: {inci: "Bis-Ethylhexyloxyphenol Methoxyphenyl Triazine", role: uv_filter, aliases: ["ethylhexyloxyphenol methoxyphenyl triazine", "tinosorb s", "bemotrizinol", "bis-ethylhexyloxyphenol", "bis-ethylhexylophenol methoxyphenyl triazine"]}
   diethylamino_hydroxybenzoyl_hexyl_benzoate: {inci: "Diethylamino Hydroxybenzoyl Hexyl Benzoate", role: uv_filter, aliases: ["uvinul a plus"]}
   ethylhexyl_triazone: {inci: "Ethylhexyl Triazone", role: uv_filter, aliases: ["uvinul t 150"]}
   methylene_bis_benzotriazolyl_tetramethylbutylphenol: {inci: "Methylene Bis-Benzotriazolyl Tetramethylbutylphenol", role: uv_filter, aliases: ["tinosorb m"]}
+  # ---------- U06 additions (2026-10-22): top unmapped INCI by frequency; roles colorant/thickener/emulsifier added ----------
+  # -- U06 emollient
+  stearyl_alcohol: {inci: "Stearyl Alcohol", role: emollient}
+  olea_europaea_fruit_oil: {inci: "Olea Europaea Fruit Oil", name_vi: "Dầu ô liu", role: emollient, aliases: ["olive oil", "olive fruit oil", "dầu ô liu", "dầu oliu", "dầu olive"]}
+  helianthus_annuus_seed_oil: {inci: "Helianthus Annuus Seed Oil", name_vi: "Dầu hướng dương", role: emollient, aliases: ["sunflower seed oil", "dầu hướng dương"]}
+  macadamia_ternifolia_seed_oil: {inci: "Macadamia Ternifolia Seed Oil", name_vi: "Dầu macadamia", role: emollient, aliases: ["macadamia seed oil"]}
+  macadamia_integrifolia_seed_oil: {inci: "Macadamia Integrifolia Seed Oil", role: emollient}
+  persea_gratissima_oil: {inci: "Persea Gratissima Oil", name_vi: "Dầu bơ", role: emollient, aliases: ["avocado oil", "dầu bơ"]}
+  argania_spinosa_kernel_oil: {inci: "Argania Spinosa Kernel Oil", name_vi: "Dầu argan", role: emollient, aliases: ["argania spinosa oil", "argan oil", "dầu argan"]}
+  glycol_distearate: {inci: "Glycol Distearate", role: emollient}
+  glyceryl_caprylate: {inci: "Glyceryl Caprylate", role: emollient}
+  dimethicone_vinyl_dimethicone_crosspolymer: {inci: "Dimethicone/Vinyl Dimethicone Crosspolymer", role: emollient}
+  dimethicone_crosspolymer: {inci: "Dimethicone Crosspolymer", role: emollient}
+  butyloctyl_salicylate: {inci: "Butyloctyl Salicylate", role: emollient}
+  diisopropyl_sebacate: {inci: "Diisopropyl Sebacate", role: emollient, aliases: ["disopropyl sebacate"]}
+  polyisobutene: {inci: "Polyisobutene", role: emollient}
+  polybutene: {inci: "Polybutene", role: emollient}
+  hydrogenated_polydecene: {inci: "Hydrogenated Polydecene", role: emollient}
+  dicaprylyl_carbonate: {inci: "Dicaprylyl Carbonate", role: emollient}
+  dibutyl_adipate: {inci: "Dibutyl Adipate", role: emollient}
+  isostearic_acid: {inci: "Isostearic Acid", role: emollient}
+  bis_diglyceryl_polyacyladipate_2: {inci: "Bis-Diglyceryl Polyacyladipate-2", role: emollient, aliases: ["bis-die glyceryl polyacyl adipate-2"]}
+  beeswax: {inci: "Beeswax", name_vi: "Sáp ong", role: emollient, aliases: ["cera alba", "white beeswax", "sáp ong"]}
+  synthetic_beeswax: {inci: "Synthetic Beeswax", role: emollient}
+  behenyl_beeswax: {inci: "Behenyl Beeswax", role: emollient}
+  ozokerite: {inci: "Ozokerite", role: emollient}
+  ceresin: {inci: "Ceresin", role: emollient}
+  paraffin: {inci: "Paraffin", role: emollient}
+  copernicia_cerifera_wax: {inci: "Copernicia Cerifera Wax", name_vi: "Sáp carnauba", role: emollient, aliases: ["copernicia cerifera cera", "carnauba wax"]}
+  euphorbia_cerifera_wax: {inci: "Euphorbia Cerifera Wax", name_vi: "Sáp candelilla", role: emollient, aliases: ["euphorbia cerifera cera", "candelilla wax", "candelilla cera"]}
+  oryza_sativa_bran_wax: {inci: "Oryza Sativa Bran Wax", role: emollient}
+  hydrogenated_vegetable_oil: {inci: "Hydrogenated Vegetable Oil", role: emollient}
+  vegetable_oil: {inci: "Vegetable Oil", role: emollient}
+  cetyl_palmitate: {inci: "Cetyl Palmitate", role: emollient}
+  myristyl_myristate: {inci: "Myristyl Myristate", role: emollient, aliases: ["myristic myristate"]}
+  triethylhexanoin: {inci: "Triethylhexanoin", role: emollient}
+  pentaerythrityl_tetraethylhexanoate: {inci: "Pentaerythrityl Tetraethylhexanoate", role: emollient}
+  pentaerythrityl_tetraisostearate: {inci: "Pentaerythrityl Tetraisostearate", role: emollient}
+  isopropyl_isostearate: {inci: "Isopropyl Isostearate", role: emollient}
+  c15_19_alkane: {inci: "C15-19 Alkane", role: emollient}
+  c13_14_isoparaffin: {inci: "C13-14 Isoparaffin", role: emollient}
+  glycine_soja_oil: {inci: "Glycine Soja Oil", name_vi: "Dầu đậu nành", role: emollient, aliases: ["soybean oil", "glycine soya oil"]}
+  ricinus_communis_seed_oil: {inci: "Ricinus Communis Seed Oil", name_vi: "Dầu thầu dầu", role: emollient, aliases: ["castor oil"]}
+  cocos_nucifera_oil: {inci: "Cocos Nucifera Oil", name_vi: "Dầu dừa", role: emollient, aliases: ["coconut oil", "dầu dừa"]}
+  prunus_amygdalus_dulcis_oil: {inci: "Prunus Amygdalus Dulcis Oil", name_vi: "Dầu hạnh nhân", role: emollient, aliases: ["sweet almond oil", "dầu hạnh nhân"]}
+  camellia_japonica_seed_oil: {inci: "Camellia Japonica Seed Oil", role: emollient}
+  vitis_vinifera_seed_oil: {inci: "Vitis Vinifera Seed Oil", name_vi: "Dầu hạt nho", role: emollient, aliases: ["grape seed oil", "dầu hạt nho"]}
+  limnanthes_alba_seed_oil: {inci: "Limnanthes Alba Seed Oil", role: emollient}
+  rosa_canina_fruit_oil: {inci: "Rosa Canina Fruit Oil", name_vi: "Dầu tầm xuân", role: emollient, aliases: ["rosehip oil", "dầu tầm xuân"]}
+  oryza_sativa_bran_oil: {inci: "Oryza Sativa Bran Oil", name_vi: "Dầu cám gạo", role: emollient, aliases: ["rice bran oil", "dầu cám gạo"]}
+  theobroma_cacao_seed_butter: {inci: "Theobroma Cacao Seed Butter", name_vi: "Bơ cacao", role: emollient, aliases: ["cocoa butter", "bơ cacao"]}
+  jojoba_esters: {inci: "Jojoba Esters", role: emollient}
+  jojoba_oil_macadamia_seed_oil_esters: {inci: "Jojoba Oil/Macadamia Seed Oil Esters", role: emollient}
+  squalene: {inci: "Squalene", role: emollient}
+  hydrogen_dimethicone: {inci: "Hydrogen Dimethicone", role: emollient, aliases: ["hydrogen diethicone"]}
+  amodimethicone: {inci: "Amodimethicone", role: emollient}
+  methicone: {inci: "Methicone", role: emollient, aliases: ["methicon"]}
+  methyl_trimethicone: {inci: "Methyl Trimethicone", role: emollient}
+  phenyl_methicone: {inci: "Phenyl Methicone", role: emollient}
+  cyclotetrasiloxane: {inci: "Cyclotetrasiloxane", role: emollient}
+  cyclomethicone: {inci: "Cyclomethicone", role: emollient}
+  diphenylsiloxy_phenyl_trimethicone: {inci: "Diphenylsiloxy Phenyl Trimethicone", role: emollient}
+  coco_caprylate_caprate: {inci: "Coco-Caprylate/Caprate", role: emollient}
+  butylene_glycol_dicaprylate_dicaprate: {inci: "Butylene Glycol Dicaprylate/Dicaprate", role: emollient}
+  triethylhexyl_trimellitate: {inci: "Triethylhexyl Trimellitate", role: emollient}
+  tridecyl_trimellitate: {inci: "Tridecyl Trimellitate", role: emollient}
+  dicaprylyl_ether: {inci: "Dicaprylyl Ether", role: emollient}
+  ethylhexyl_stearate: {inci: "Ethylhexyl Stearate", role: emollient}
+  capric_triglyceride: {inci: "Capric Triglyceride", role: emollient}
+  c10_18_triglycerides: {inci: "C10-18 Triglycerides", role: emollient}
+  c20_40_alkyl_stearate: {inci: "C20-40 Alkyl Stearate", role: emollient}
+  c14_22_alcohols: {inci: "C14-22 Alcohols", role: emollient}
+  glyceryl_linolenate: {inci: "Glyceryl Linolenate", role: emollient}
+  glyceryl_arachidonate: {inci: "Glyceryl Arachidonate", role: emollient}
+  glyceryl_oleate: {inci: "Glyceryl Oleate", role: emollient}
+  glyceryl_linoleate: {inci: "Glyceryl Linoleate", role: emollient}
+  isopropyl_lauroyl_sarcosinate: {inci: "Isopropyl Lauroyl Sarcosinate", role: emollient}
+  phytosteryl_macadamiate: {inci: "Phytosteryl Macadamiate", role: emollient}
+  phytosteryl_octyldodecyl_lauroyl_glutamate: {inci: "Phytosteryl/Octyldodecyl Lauroyl Glutamate", role: emollient}
+  phytosterols: {inci: "Phytosterols", role: emollient}
+  phospholipids: {inci: "Phospholipids", role: emollient}
+  cetyl_pg_hydroxyethyl_palmitamide: {inci: "Cetyl-PG Hydroxyethyl Palmitamide", role: emollient}
+  # -- U06 emulsifier
+  peg_7_glyceryl_cocoate: {inci: "PEG-7 Glyceryl Cocoate", role: emulsifier}
+  peg_6_caprylic_capric_glycerides: {inci: "PEG-6 Caprylic/Capric Glycerides", role: emulsifier}
+  peg_7_caprylic_capric_glycerides: {inci: "PEG-7 Caprylic/Capric Glycerides", role: emulsifier}
+  poloxamer_184: {inci: "Poloxamer 184", role: emulsifier}
+  poloxamer_124: {inci: "Poloxamer 124", role: emulsifier}
+  peg_10_dimethicone: {inci: "PEG-10 Dimethicone", role: emulsifier}
+  peg_12_dimethicone: {inci: "PEG-12 Dimethicone", role: emulsifier}
+  peg_9_polydimethylsiloxyethyl_dimethicone: {inci: "Peg-9 Polydimethylsiloxyethyl Dimethicone", role: emulsifier, aliases: ["9 polydimethylsiloxyethyl dimethicone"]}
+  lauryl_peg_9_polydimethylsiloxyethyl_dimethicone: {inci: "Lauryl PEG-9 Polydimethylsiloxyethyl Dimethicone", role: emulsifier, aliases: ["lauryl pg-9 polydimethylsiloxyethyldimethicone"]}
+  lauryl_peg_10_tris_silylethyl_dimethicone: {inci: "Lauryl PEG-10 Tris Silylethyl Dimethicone", role: emulsifier}
+  cetyl_peg_ppg_10_1_dimethicone: {inci: "Cetyl PEG/PPG-10/1 Dimethicone", role: emulsifier}
+  dimethicone_peg_10_15_crosspolymer: {inci: "Dimethicone/PEG-10/15 Crosspolymer", role: emulsifier}
+  dimethicone_polyglycerin_3_crosspolymer: {inci: "Dimethicone/Polyglycerin-3 Crosspolymer", role: emulsifier}
+  polyglyceryl_10_laurate: {inci: "Polyglyceryl-10 Laurate", role: emulsifier, aliases: ["10 laurate"]}
+  polyglyceryl_10_stearate: {inci: "Polyglyceryl-10 Stearate", role: emulsifier, aliases: ["polyglycerol-10 stearate"]}
+  polyglyceryl_10_myristate: {inci: "Polyglyceryl-10 Myristate", role: emulsifier}
+  polyglyceryl_2_triisostearate: {inci: "Polyglyceryl-2 Triisostearate", role: emulsifier}
+  polyglyceryl_2_diisostearate: {inci: "Polyglyceryl-2 Diisostearate", role: emulsifier, aliases: ["polyglyceryl diisostearate-2"]}
+  polyglyceryl_2_isostearate: {inci: "Polyglyceryl-2 Isostearate", role: emulsifier}
+  polyglyceryl_3_methylglucose_distearate: {inci: "Polyglyceryl-3 Methylglucose Distearate", role: emulsifier}
+  polyglyceryl_3_polyricinoleate: {inci: "Polyglyceryl-3 Polyricinoleate", role: emulsifier}
+  polyglyceryl_3_diisostearate: {inci: "Polyglyceryl-3 Diisostearate", role: emulsifier}
+  polyglyceryl_4_oleate: {inci: "Polyglyceryl-4 Oleate", role: emulsifier}
+  polyglyceryl_4_isostearate: {inci: "Polyglyceryl-4 Isostearate", role: emulsifier}
+  polyglyceryl_4_caprate: {inci: "Polyglyceryl-4 Caprate", role: emulsifier}
+  polyglyceryl_4_laurate_sebacate: {inci: "Polyglyceryl-4 Laurate/Sebacate", role: emulsifier}
+  polyglyceryl_4_caprylate_caprate: {inci: "Polyglyceryl-4 Caprylate/Caprate", role: emulsifier}
+  polyglyceryl_6_polyricinoleate: {inci: "Polyglyceryl-6 Polyricinoleate", role: emulsifier}
+  polyglyceryl_6_polyhydroxystearate: {inci: "Polyglyceryl-6 Polyhydroxystearate", role: emulsifier}
+  sorbitan_isostearate: {inci: "Sorbitan Isostearate", role: emulsifier}
+  sorbitan_sesquioleate: {inci: "Sorbitan Sesquioleate", role: emulsifier}
+  sorbitan_stearate: {inci: "Sorbitan Stearate", role: emulsifier}
+  sorbitan_olivate: {inci: "Sorbitan Olivate", role: emulsifier}
+  sorbitan_oleate: {inci: "Sorbitan Oleate", role: emulsifier}
+  sorbitan_sesquiisostearate: {inci: "Sorbitan Sesquiisostearate", role: emulsifier}
+  disodium_cocoamphodiacetate: {inci: "Disodium Cocoamphodiacetate", role: emulsifier}
+  sodium_cocoamphoacetate: {inci: "Sodium Cocoamphoacetate", role: emulsifier}
+  cetrimonium_chloride: {inci: "Cetrimonium Chloride", role: emulsifier, aliases: ["cetrimonium chforide"]}
+  cetrimonium_bromide: {inci: "Cetrimonium Bromide", role: emulsifier}
+  myrtrimonium_bromide: {inci: "Myrtrimonium Bromide", role: emulsifier}
+  steartrimonium_chloride: {inci: "Steartrimonium Chloride", role: emulsifier, aliases: ["stealtrimonium chloride", "steatriimonium chloride"]}
+  behentrimonium_methosulfate: {inci: "Behentrimonium Methosulfate", role: emulsifier}
+  behentrimonium_chloride: {inci: "Behentrimonium Chloride", role: emulsifier, aliases: ["behentimonium chloride"]}
+  sodium_lauroyl_lactylate: {inci: "Sodium Lauroyl Lactylate", role: emulsifier}
+  sodium_methyl_cocoyl_taurate: {inci: "Sodium Methyl Cocoyl Taurate", role: emulsifier}
+  sodium_cocoyl_glycinate: {inci: "Sodium Cocoyl Glycinate", role: emulsifier}
+  sodium_cocoyl_isethionate: {inci: "Sodium Cocoyl Isethionate", role: emulsifier}
+  sodium_cocoyl_glutamate: {inci: "Sodium Cocoyl Glutamate", role: emulsifier}
+  sodium_lauroyl_sarcosinate: {inci: "Sodium Lauroyl Sarcosinate", role: emulsifier}
+  sodium_lauroyl_aspartate: {inci: "Sodium Lauroyl Aspartate", role: emulsifier}
+  sodium_stearoyl_glutamate: {inci: "Sodium Stearoyl Glutamate", role: emulsifier, aliases: ["sodium stearoyl glumate"]}
+  disodium_stearoyl_glutamate: {inci: "Disodium Stearoyl Glutamate", role: emulsifier}
+  disodium_cocoyl_glutamate: {inci: "Disodium Cocoyl Glutamate", role: emulsifier}
+  sodium_dilauramidoglutamide_lysine: {inci: "Sodium Dilauramidoglutamide Lysine", role: emulsifier}
+  potassium_cocoyl_glycinate: {inci: "Potassium Cocoyl Glycinate", role: emulsifier}
+  potassium_cetyl_phosphate: {inci: "Potassium Cetyl Phosphate", role: emulsifier, aliases: ["potassiumcetyl phsphate"]}
+  potassium_laurate: {inci: "Potassium Laurate", role: emulsifier}
+  potassium_laureth_phosphate: {inci: "Potassium Laureth Phosphate", role: emulsifier}
+  potassium_stearate: {inci: "Potassium Stearate", role: emulsifier}
+  potassium_myristate: {inci: "Potassium Myristate", role: emulsifier}
+  cetearyl_olivate: {inci: "Cetearyl Olivate", role: emulsifier}
+  cetearyl_glucoside: {inci: "Cetearyl Glucoside", role: emulsifier}
+  coco_glucoside: {inci: "Coco-Glucoside", role: emulsifier}
+  lauryl_glucoside: {inci: "Lauryl Glucoside", role: emulsifier}
+  c12_20_alkyl_glucoside: {inci: "C12-20 Alkyl Glucoside", role: emulsifier}
+  caprylyl_capryl_glucoside: {inci: "Caprylyl/Capryl Glucoside", role: emulsifier}
+  ceteareth_20: {inci: "Ceteareth-20", role: emulsifier}
+  ceteareth_12: {inci: "Ceteareth-12", role: emulsifier}
+  trideceth_10: {inci: "Trideceth-10", role: emulsifier}
+  trideceth_6: {inci: "Trideceth-6", role: emulsifier}
+  laureth_7: {inci: "Laureth-7", role: emulsifier}
+  laureth_4: {inci: "Laureth-4", role: emulsifier}
+  laureth_23: {inci: "Laureth-23", role: emulsifier}
+  isoceteth_20: {inci: "Isoceteth-20", role: emulsifier}
+  ppg_26_buteth_26: {inci: "PPG-26-Buteth-26", role: emulsifier}
+  peg_30_dipolyhydroxystearate: {inci: "PEG-30 Dipolyhydroxystearate", role: emulsifier}
+  peg_20_methyl_glucose_sesquistearate: {inci: "PEG-20 Methyl Glucose Sesquistearate", role: emulsifier}
+  peg_ppg_17_6_copolymer: {inci: "PEG/PPG-17/6 Copolymer", role: emulsifier}
+  peg_ppg_17_4_dimethyl_ether: {inci: "PEG/PPG-17/4 Dimethyl Ether", role: emulsifier}
+  cocamide_mea: {inci: "Cocamide MEA", role: emulsifier}
+  cocoyl_methyl_glucamide: {inci: "Cocoyl Methyl Glucamide", role: emulsifier}
+  lauryl_hydroxysultaine: {inci: "Lauryl Hydroxysultaine", role: emulsifier, aliases: ["lauryl hydroxysuitaine"]}
+  cocamidopropyl_hydroxysultaine: {inci: "Cocamidopropyl Hydroxysultaine", role: emulsifier, aliases: ["ocamidopropyl hydroxysultaine"]}
+  lauryl_betaine: {inci: "Lauryl Betaine", role: emulsifier}
+  disodium_laureth_sulfosuccinate: {inci: "Disodium Laureth Sulfosuccinate", role: emulsifier}
+  ammonium_lauryl_sulfate: {inci: "Ammonium Lauryl Sulfate", role: emulsifier}
+  ammonium_laureth_sulfate: {inci: "Ammonium Laureth Sulfate", role: emulsifier}
+  sucrose_stearate: {inci: "Sucrose Stearate", role: emulsifier}
+  polyoxyl_40_stearate: {inci: "Polyoxyl 40 Stearate", role: emulsifier, aliases: ["peg-40 stearate"]}
+  glyceryl_stearate_citrate: {inci: "Glyceryl Stearate Citrate", role: emulsifier, aliases: ["gylceryl stearate citrate"]}
+  glycereth_25_pca_isostearate: {inci: "Glycereth-25 PCA Isostearate", role: emulsifier}
+  olive_oil_peg_7_esters: {inci: "Olive Oil PEG-7 Esters", role: emulsifier}
+  peg_60_almond_glycerides: {inci: "PEG-60 Almond Glycerides", role: emulsifier}
+  lecithin: {inci: "Lecithin", role: emulsifier}
+  hydrogenated_phosphatidylcholine: {inci: "Hydrogenated Phosphatidylcholine", role: emulsifier}
+  # -- U06 thickener
+  disteardimonium_hectorite: {inci: "Disteardimonium Hectorite", role: thickener, aliases: ["disteadimonium hectorite", "disteadymonium hectorite"]}
+  stearalkonium_hectorite: {inci: "Stearalkonium Hectorite", role: thickener}
+  glyceryl_acrylate_acrylic_acid_copolymer: {inci: "Glyceryl Acrylate/Acrylic Acid Copolymer", role: thickener}
+  acrylates_copolymer: {inci: "Acrylates Copolymer", role: thickener, aliases: ["acrylate copolymer"]}
+  sodium_acrylates_copolymer: {inci: "Sodium Acrylates Copolymer", role: thickener}
+  acrylates_dimethicone_copolymer: {inci: "Acrylates/Dimethicone Copolymer", role: thickener, aliases: ["acrylate/dimethicone copolymer"]}
+  polyacrylate_crosspolymer_6: {inci: "Polyacrylate Crosspolymer-6", role: thickener}
+  polyacrylate_crosspolymer_11: {inci: "Polyacrylate Crosspolymer-11", role: thickener}
+  polyacrylate_13: {inci: "Polyacrylate-13", role: thickener}
+  polyacrylamide: {inci: "Polyacrylamide", role: thickener}
+  sodium_acrylate_sodium_acryloyldimethyl_taurate_copolymer: {inci: "Sodium Acrylate/Sodium Acryloyldimethyl Taurate Copolymer", role: thickener}
+  ammonium_polyacryloyldimethyl_taurate: {inci: "Ammonium Polyacryloyldimethyl Taurate", role: thickener, aliases: ["ammonium polyacryloyldimethyltaurate", "ammonium polyacryloyldmethyl taurate"]}
+  sodium_polyacryloyldimethyl_taurate: {inci: "Sodium Polyacryloyldimethyl Taurate", role: thickener}
+  c12_22_alkyl_acrylate_hydroxyethylacrylate_copolymer: {inci: "C12-22 Alkyl Acrylate/Hydroxyethylacrylate Copolymer", role: thickener}
+  lauryl_methacrylate_sodium_methacrylate_crosspolymer: {inci: "Lauryl Methacrylate/Sodium Methacrylate Crosspolymer", role: thickener}
+  sodium_carbomer: {inci: "Sodium Carbomer", role: thickener}
+  sodium_polyacrylate_starch: {inci: "Sodium Polyacrylate Starch", role: thickener}
+  styrene_acrylates_copolymer: {inci: "Styrene/Acrylates Copolymer", role: thickener}
+  ethylene_propylene_styrene_copolymer: {inci: "Ethylene/Propylene/Styrene Copolymer", role: thickener}
+  pvm_ma_copolymer: {inci: "PVM/MA Copolymer", role: thickener}
+  vp_eicosene_copolymer: {inci: "VP/Eicosene Copolymer", role: thickener}
+  vp_hexadecene_copolymer: {inci: "VP/Hexadecene Copolymer", role: thickener}
+  pvp: {inci: "PVP", role: thickener}
+  polyvinyl_alcohol: {inci: "Polyvinyl Alcohol", role: thickener}
+  polyquaternium_6: {inci: "Polyquaternium-6", role: thickener}
+  polyquaternium_7: {inci: "Polyquaternium-7", role: thickener}
+  polyquaternium_10: {inci: "Polyquaternium-10", role: thickener}
+  polyquaternium_39: {inci: "Polyquaternium-39", role: thickener}
+  polyquaternium_51: {inci: "Polyquaternium-51", role: thickener}
+  peg_120_methyl_glucose_dioleate: {inci: "PEG-120 Methyl Glucose Dioleate", role: thickener}
+  peg_150_distearate: {inci: "PEG-150 Distearate", role: thickener}
+  peg_150_pentaerythrityl_tetrastearate: {inci: "PEG-150 Pentaerythrityl Tetrastearate", role: thickener}
+  sucrose_tetrastearate_triacetate: {inci: "Sucrose Tetrastearate Triacetate", role: thickener}
+  hydroxypropyl_methylcellulose: {inci: "Hydroxypropyl Methylcellulose", role: thickener}
+  cellulose_gum: {inci: "Cellulose Gum", role: thickener}
+  cellulose: {inci: "Cellulose", role: thickener}
+  microcrystalline_cellulose: {inci: "Microcrystalline Cellulose", role: thickener}
+  hydroxypropyl_guar: {inci: "Hydroxypropyl Guar", role: thickener}
+  guar_hydroxypropyltrimonium_chloride: {inci: "Guar Hydroxypropyltrimonium Chloride", role: thickener}
+  hydroxypropyl_starch_phosphate: {inci: "Hydroxypropyl Starch Phosphate", role: thickener}
+  distarch_phosphate: {inci: "Distarch Phosphate", role: thickener}
+  amylopectin: {inci: "Amylopectin", role: thickener}
+  dextrin_palmitate: {inci: "Dextrin Palmitate", role: thickener}
+  trihydroxystearin: {inci: "Trihydroxystearin", role: thickener}
+  inulin_lauryl_carbamate: {inci: "Inulin Lauryl Carbamate", role: thickener}
+  inulin: {inci: "Inulin", role: thickener}
+  acacia_senegal_gum: {inci: "Acacia Senegal Gum", role: thickener}
+  ceratonia_siliqua_gum: {inci: "Ceratonia Siliqua Gum", role: thickener}
+  hydrolyzed_sclerotium_gum: {inci: "Hydrolyzed Sclerotium Gum", role: thickener}
+  sclerotium_gum: {inci: "Sclerotium Gum", role: thickener}
+  natto_gum: {inci: "Natto Gum", role: thickener}
+  pullulan: {inci: "Pullulan", role: thickener}
+  carrageenan: {inci: "Carrageenan", role: thickener}
+  agar: {inci: "Agar", role: thickener}
+  potassium_alginate: {inci: "Potassium Alginate", role: thickener}
+  # -- U06 humectant
+  peg_8: {inci: "PEG-8", role: humectant}
+  xylitylglucoside: {inci: "Xylitylglucoside", role: humectant}
+  anhydroxylitol: {inci: "Anhydroxylitol", role: humectant}
+  mannitol: {inci: "Mannitol", role: humectant}
+  glucose: {inci: "Glucose", role: humectant}
+  pantolactone: {inci: "Pantolactone", role: humectant}
+  erythritol: {inci: "Erythritol", role: humectant}
+  rhamnose: {inci: "Rhamnose", role: humectant}
+  fructose: {inci: "Fructose", role: humectant}
+  sucrose: {inci: "Sucrose", role: humectant}
+  maltitol: {inci: "Maltitol", role: humectant}
+  hydrogenated_starch_hydrolysate: {inci: "Hydrogenated Starch Hydrolysate", role: humectant}
+  maltooligosyl_glucoside: {inci: "Maltooligosyl Glucoside", role: humectant}
+  glycosyl_trehalose: {inci: "Glycosyl Trehalose", role: humectant}
+  diglycerin: {inci: "Diglycerin", role: humectant}
+  polyglycerin_10: {inci: "Polyglycerin-10", role: humectant}
+  methyl_gluceth_20: {inci: "Methyl Gluceth-20", role: humectant}
+  glyceryl_glucoside: {inci: "Glyceryl Glucoside", role: humectant}
+  glyceryl_polymethacrylate: {inci: "Glyceryl Polymethacrylate", role: humectant}
+  glyceryl_polyacrylate: {inci: "Glyceryl Polyacrylate", role: humectant}
+  hydroxyethyl_urea: {inci: "Hydroxyethyl Urea", role: humectant}
+  peg_ppg_polybutylene_glycol_8_5_3_glycerin: {inci: "PEG/PPG/Polybutylene Glycol-8/5/3 Glycerin", role: humectant}
+  pca: {inci: "PCA", role: humectant}
+  polyglutamic_acid: {inci: "Polyglutamic Acid", name_vi: "Axit polyglutamic", role: humectant, aliases: ["poly glutamic acid", "pga"]}
+  cocos_nucifera_water: {inci: "Cocos Nucifera Water", role: humectant}
+  serine: {inci: "Serine", role: humectant}
+  glycine: {inci: "Glycine", role: humectant}
+  proline: {inci: "Proline", role: humectant}
+  alanine: {inci: "Alanine", role: humectant}
+  threonine: {inci: "Threonine", role: humectant}
+  valine: {inci: "Valine", role: humectant}
+  histidine: {inci: "Histidine", role: humectant}
+  isoleucine: {inci: "Isoleucine", role: humectant}
+  phenylalanine: {inci: "Phenylalanine", role: humectant}
+  lysine_hcl: {inci: "Lysine HCl", role: humectant, aliases: ["lysine hydrochloride", "lysine hci"]}
+  aspartic_acid: {inci: "Aspartic Acid", role: humectant}
+  glutamic_acid: {inci: "Glutamic Acid", role: humectant}
+  magnesium_aspartate: {inci: "Magnesium Aspartate", role: humectant}
+  dihydroxypropyl_arginine_hcl: {inci: "Dihydroxypropyl Arginine HCl", role: humectant}
+  # -- U06 base
+  triethoxycaprylylsilane: {inci: "Triethoxycaprylylsilane", role: base, aliases: ["triethoxycaprylsilane"]}
+  polymethylsilsesquioxane: {inci: "Polymethylsilsesquioxane", role: base}
+  polypropylsilsesquioxane: {inci: "Polypropylsilsesquioxane", role: base}
+  polysilicone_9: {inci: "Polysilicone-9", role: base}
+  methyl_methacrylate_crosspolymer: {inci: "Methyl Methacrylate Crosspolymer", role: base}
+  glycol_dimethacrylate_crosspolymer: {inci: "Glycol Dimethacrylate Crosspolymer", role: base}
+  hdi_trimethylol_hexyllactone_crosspolymer: {inci: "HDI/Trimethylol Hexyllactone Crosspolymer", role: base, aliases: ["hdi/trimethylol hexyllactone crosspolymet"]}
+  vinyl_dimethicone_methicone_silsesquioxane_crosspolymer: {inci: "Vinyl Dimethicone/Methicone Silsesquioxane Crosspolymer", role: base}
+  polymethyl_methacrylate: {inci: "Polymethyl Methacrylate", role: base}
+  polystyrene: {inci: "Polystyrene", role: base}
+  polyethylene: {inci: "Polyethylene", role: base}
+  nylon_12: {inci: "Nylon-12", role: base}
+  synthetic_fluorphlogopite: {inci: "Synthetic Fluorphlogopite", role: base, aliases: ["fluorphlogopite", "synthetic fluorophlogopite"]}
+  perlite: {inci: "Perlite", role: base}
+  tin_oxide: {inci: "Tin Oxide", role: base}
+  silica_dimethyl_silylate: {inci: "Silica Dimethyl Silylate", role: base}
+  silica_silylate: {inci: "Silica Silylate", role: base}
+  aluminum_starch_octenylsuccinate: {inci: "Aluminum Starch Octenylsuccinate", role: base, aliases: ["aluminium starch octenylsuccinate", "aluminym starch octenylsuccinate"]}
+  zea_mays_starch: {inci: "Zea Mays Starch", role: base}
+  oryza_sativa_starch: {inci: "Oryza Sativa Starch", role: base}
+  tapioca_starch: {inci: "Tapioca Starch", role: base}
+  maltodextrin: {inci: "Maltodextrin", role: base}
+  dextrin: {inci: "Dextrin", role: base}
+  lauroyl_lysine: {inci: "Lauroyl Lysine", role: base}
+  juglans_regia_shell_powder: {inci: "Juglans Regia Shell Powder", role: base}
+  isopropyl_titanium_triisostearate: {inci: "Isopropyl Titanium Triisostearate", role: base}
+  polyhydroxystearic_acid: {inci: "Polyhydroxystearic Acid", role: base}
+  hydroxypropyl_cyclodextrin: {inci: "Hydroxypropyl Cyclodextrin", role: base}
+  bis_peg_18_methyl_ether_dimethyl_silane: {inci: "Bis-PEG-18 Methyl Ether Dimethyl Silane", role: base, aliases: ["peg-18 methyl ether dimethyl silane", "dimethyl silane", "bs-peg-18 methyl ether dimethyl slane"]}
+  peg_6: {inci: "PEG-6", role: base}
+  peg_32: {inci: "PEG-32", role: base}
+  peg_400: {inci: "PEG-400", role: base}
+  ppg_17: {inci: "PPG-17", role: base}
+  peg_ppg_14_7_dimethyl_ether: {inci: "PEG/PPG-14/7 Dimethyl Ether", role: base}
+  propylene_carbonate: {inci: "Propylene Carbonate", role: base}
+  isopentyldiol: {inci: "Isopentyldiol", role: base}
+  ethyl_hexanediol: {inci: "Ethyl Hexanediol", role: base}
+  ethoxydiglycol: {inci: "Ethoxydiglycol", role: base}
+  dimethyl_isosorbide: {inci: "Dimethyl Isosorbide", role: base}
+  t_butyl_alcohol: {inci: "T-Butyl Alcohol", role: base}
+  isopropyl_alcohol: {inci: "Isopropyl Alcohol", role: base}
+  aminomethyl_propanol: {inci: "Aminomethyl Propanol", role: base}
+  triethyl_citrate: {inci: "Triethyl Citrate", role: base}
+  isobutane: {inci: "Isobutane", role: base}
+  propane: {inci: "Propane", role: base}
+  butane: {inci: "Butane", role: base}
+  nitrogen: {inci: "Nitrogen", role: base}
+  hydroxyethylpiperazine_ethane_sulfonic_acid: {inci: "Hydroxyethylpiperazine Ethane Sulfonic Acid", role: base}
+  potassium_phosphate: {inci: "Potassium Phosphate", role: base}
+  dipotassium_phosphate: {inci: "Dipotassium Phosphate", role: base}
+  disodium_phosphate: {inci: "Disodium Phosphate", role: base}
+  sodium_phosphate: {inci: "Sodium Phosphate", role: base}
+  sodium_metaphosphate: {inci: "Sodium Metaphosphate", role: base}
+  potassium_chloride: {inci: "Potassium Chloride", role: base}
+  sodium_sulfate: {inci: "Sodium Sulfate", role: base}
+  sodium_acetate: {inci: "Sodium Acetate", role: base}
+  sodium_nitrate: {inci: "Sodium Nitrate", role: base}
+  calcium_gluconate: {inci: "Calcium Gluconate", role: base}
+  copper_sulfate: {inci: "Copper Sulfate", role: base}
+  copper_gluconate: {inci: "Copper Gluconate", role: base}
+  sodium_phytate: {inci: "Sodium Phytate", role: base}
+  phytic_acid: {inci: "Phytic Acid", role: base}
+  succinic_acid: {inci: "Succinic Acid", role: base}
+  malic_acid: {inci: "Malic Acid", role: base}
+  disodium_succinate: {inci: "Disodium Succinate", role: base}
+  tetrasodium_glutamate_diacetate: {inci: "Tetrasodium Glutamate Diacetate", role: base}
+  edta: {inci: "EDTA", role: base}
+  sea_water: {inci: "Sea Water", role: base, aliases: ["seawater", "maris aqua", "nước biển"]}
+  # -- U06 preservative
+  o_cymen_5_ol: {inci: "O-Cymen-5-Ol", role: preservative}
+  polyaminopropyl_biguanide: {inci: "Polyaminopropyl Biguanide", role: preservative}
+  cetylpyridinium_chloride: {inci: "Cetylpyridinium Chloride", role: preservative}
+  pentaerythrityl_tetra_di_t_butyl_hydroxyhydrocinnamate: {inci: "Pentaerythrityl Tetra-Di-T-Butyl Hydroxyhydrocinnamate", role: preservative, aliases: ["pentaerythrityl tetra-di-t-butly hydroxyhydrocinnamate"]}
+  iodopropynyl_butylcarbamate: {inci: "Iodopropynyl Butylcarbamate", role: preservative}
+  dmdm_hydantoin: {inci: "DMDM Hydantoin", role: preservative}
+  butylparaben: {inci: "Butylparaben", role: preservative}
+  methylchloroisothiazolinone: {inci: "Methylchloroisothiazolinone", role: preservative}
+  methylisothiazolinone: {inci: "Methylisothiazolinone", role: preservative}
+  benzoic_acid: {inci: "Benzoic Acid", role: preservative}
+  sorbic_acid: {inci: "Sorbic Acid", role: preservative}
+  dehydroacetic_acid: {inci: "Dehydroacetic Acid", role: preservative}
+  sodium_dehydroacetate: {inci: "Sodium Dehydroacetate", role: preservative}
+  sodium_salicylate: {inci: "Sodium Salicylate", role: preservative}
+  isopropylmethylphenol: {inci: "Isopropylmethylphenol", role: preservative}
+  phenethyl_alcohol: {inci: "Phenethyl Alcohol", role: preservative}
+  decylene_glycol: {inci: "Decylene Glycol", role: preservative}
+  piroctone_olamine: {inci: "Piroctone Olamine", role: preservative}
+  # -- U06 fragrance
+  menthol: {inci: "Menthol", role: fragrance}
+  menthyl_lactate: {inci: "Menthyl Lactate", role: fragrance}
+  menthoxypropanediol: {inci: "Menthoxypropanediol", role: fragrance}
+  camphor: {inci: "Camphor", role: fragrance}
+  coumarin: {inci: "Coumarin", role: fragrance}
+  alpha_isomethyl_ionone: {inci: "Alpha-Isomethyl Ionone", role: fragrance}
+  hydroxycitronellal: {inci: "Hydroxycitronellal", role: fragrance}
+  butylphenyl_methylpropional: {inci: "Butylphenyl Methylpropional", role: fragrance}
+  benzyl_benzoate: {inci: "Benzyl Benzoate", role: fragrance, aliases: ["benzyl ben zoat", "benzyl benzoat"]}
+  4_terpineol: {inci: "4-Terpineol", role: fragrance}
+  lavandula_angustifolia_oil: {inci: "Lavandula Angustifolia Oil", name_vi: "Tinh dầu oải hương", role: fragrance, aliases: ["lavender oil", "tinh dầu oải hương"]}
+  lavandula_angustifolia_flower_oil: {inci: "Lavandula Angustifolia Flower Oil", role: fragrance}
+  rosmarinus_officinalis_leaf_oil: {inci: "Rosmarinus Officinalis Leaf Oil", name_vi: "Tinh dầu hương thảo", role: fragrance, aliases: ["rosemary oil", "tinh dầu hương thảo", "rosmarius officinalis leaf oil"]}
+  citrus_aurantium_bergamia_fruit_oil: {inci: "Citrus Aurantium Bergamia Fruit Oil", role: fragrance, aliases: ["bergamot oil", "citrus auran um bergamia fruit oil"]}
+  citrus_aurantium_dulcis_peel_oil: {inci: "Citrus Aurantium Dulcis Peel Oil", role: fragrance}
+  citrus_aurantium_dulcis_oil: {inci: "Citrus Aurantium Dulcis Oil", role: fragrance}
+  citrus_grandis_peel_oil: {inci: "Citrus Grandis Peel Oil", role: fragrance}
+  citrus_limon_peel_oil: {inci: "Citrus Limon Peel Oil", role: fragrance}
+  eucalyptus_globulus_leaf_oil: {inci: "Eucalyptus Globulus Leaf Oil", role: fragrance}
+  mentha_piperita_oil: {inci: "Mentha Piperita Oil", role: fragrance}
+  cananga_odorata_flower_oil: {inci: "Cananga Odorata Flower Oil", role: fragrance}
+  # -- U06 colorant
+  iron_oxides: {inci: "Iron Oxides", role: colorant, aliases: ["iron oxide"]}
+  ci_15850: {inci: "CI 15850", role: colorant}
+  ci_77491: {inci: "CI 77491", role: colorant}
+  ci_77492: {inci: "CI 77492", role: colorant}
+  ci_77499: {inci: "CI 77499", role: colorant}
+  ci_77288: {inci: "CI 77288", role: colorant}
+  ci_77289: {inci: "CI 77289", role: colorant}
+  ci_19140: {inci: "CI 19140", role: colorant, aliases: ["yellow 5", "tartrazine"]}
+  ci_42090: {inci: "CI 42090", role: colorant, aliases: ["blue 1"]}
+  ci_60725: {inci: "CI 60725", role: colorant, aliases: ["violet 2"]}
+  ci_61565: {inci: "CI 61565", role: colorant, aliases: ["green 6"]}
+  ci_15985: {inci: "CI 15985", role: colorant, aliases: ["yellow 6"]}
+  ci_45370: {inci: "CI 45370", role: colorant}
+  ci_45380: {inci: "CI 45380", role: colorant}
+  ci_45410: {inci: "CI 45410", role: colorant}
+  ci_16035: {inci: "CI 16035", role: colorant, aliases: ["red 40"]}
+  red_7: {inci: "Red 7", role: colorant}
+  beta_carotene: {inci: "Beta-Carotene", role: colorant}
+  caramel: {inci: "Caramel", role: colorant}
+  ultramarines: {inci: "Ultramarines", role: colorant}
+  # -- U06 uv_filter
+  phenylbenzimidazole_sulfonic_acid: {inci: "Phenylbenzimidazole Sulfonic Acid", role: uv_filter}
+  drometrizole_trisiloxane: {inci: "Drometrizole Trisiloxane", role: uv_filter}
+  terephthalylidene_dicamphor_sulfonic_acid: {inci: "Terephthalylidene Dicamphor Sulfonic Acid", role: uv_filter}
+  polysilicone_15: {inci: "Polysilicone-15", role: uv_filter}
+  benzophenone_4: {inci: "Benzophenone-4", role: uv_filter}
+  ethylhexyl_methoxycrylene: {inci: "Ethylhexyl Methoxycrylene", role: uv_filter}
+  # -- U06 active
+  thiamine_hcl: {inci: "Thiamine HCl", name_vi: "Vitamin B1", role: active, aliases: ["thiamine hydrochloride", "thiamine hci", "thiamine"]}
+  folic_acid: {inci: "Folic Acid", name_vi: "Vitamin B9", role: active, aliases: ["vitamin b9"]}
+  riboflavin: {inci: "Riboflavin", name_vi: "Vitamin B2", role: active, aliases: ["vitamin b2"]}
+  niacin: {inci: "Niacin", role: active}
+  pantothenic_acid: {inci: "Pantothenic Acid", role: active}
+  calcium_pantothenate: {inci: "Calcium Pantothenate", role: active}
+  pyridoxine: {inci: "Pyridoxine", name_vi: "Vitamin B6", role: active, aliases: ["pyridoxine hcl", "pyridoxin hydroclorid", "vitamin b6"]}
+  cyanocobalamin: {inci: "Cyanocobalamin", name_vi: "Vitamin B12", role: active, aliases: ["vitamin b12"]}
+  ascorbyl_palmitate: {inci: "Ascorbyl Palmitate", role: active}
+  tetrahexyldecyl_ascorbate: {inci: "Tetrahexyldecyl Ascorbate", role: active}
+  ferulic_acid: {inci: "Ferulic Acid", name_vi: "Axit ferulic", role: active, aliases: ["axit ferulic"]}
+  caffeine: {inci: "Caffeine", role: active}
+  carnitine: {inci: "Carnitine", role: active, aliases: ["carnitine hcl", "carnitine hci"]}
+  carnosine: {inci: "Carnosine", role: active}
+  acetyl_glucosamine: {inci: "Acetyl Glucosamine", role: active}
+  phytosphingosine: {inci: "Phytosphingosine", role: active}
+  capryloyl_salicylic_acid: {inci: "Capryloyl Salicylic Acid", role: active}
+  glycyrrhetinic_acid: {inci: "Glycyrrhetinic Acid", role: active}
+  stearyl_glycyrrhetinate: {inci: "Stearyl Glycyrrhetinate", role: active}
+  lactobionic_acid: {inci: "Lactobionic Acid", role: active}
+  potassium_azeloyl_diglycinate: {inci: "Potassium Azeloyl Diglycinate", role: active}
+  capryloyl_glycine: {inci: "Capryloyl Glycine", role: active}
+  tetrahydrodiferuloylmethane: {inci: "Tetrahydrodiferuloylmethane", role: active, aliases: ["tetrahydrocurcumin"]}
+  colloidal_platinum: {inci: "Colloidal Platinum", role: active}
+  soluble_collagen: {inci: "Soluble Collagen", role: active, aliases: ["water-soluble collagen", "water soluble collagen"]}
+  hydrolyzed_soy_protein: {inci: "Hydrolyzed Soy Protein", role: active}
+  hydrolyzed_keratin: {inci: "Hydrolyzed Keratin", role: active}
+  placental_protein: {inci: "Placental Protein", role: active}
+  milk_protein_extract: {inci: "Milk Protein Extract", role: active}
+  glycine_max_polypeptide: {inci: "Glycine Max Polypeptide", role: active}
+  palmitoyl_pentapeptide_4: {inci: "Palmitoyl Pentapeptide-4", role: active, aliases: ["matrixyl"]}
+  palmitoyl_tripeptide_5: {inci: "Palmitoyl Tripeptide-5", role: active}
+  palmitoyl_tetrapeptide_7: {inci: "Palmitoyl Tetrapeptide-7", role: active, aliases: ["palmitoyl tetrapeptit-7"]}
+  acetyl_tetrapeptide_5: {inci: "Acetyl Tetrapeptide-5", role: active}
+  palmitoyl_oligopeptide: {inci: "Palmitoyl Oligopeptide", role: active}
+  copper_tripeptide_1: {inci: "Copper Tripeptide-1", role: active}
+  tripeptide_1: {inci: "Tripeptide-1", role: active}
+  potassium_hyaluronate: {inci: "Potassium Hyaluronate", role: active}
+  biosaccharide_gum_1: {inci: "Biosaccharide Gum-1", role: active, aliases: ["blosaccharide gum-1"]}
+  biosaccharide_gum_4: {inci: "Biosaccharide Gum-4", role: active}
+  zinc_sulfate: {inci: "Zinc Sulfate", role: active}
+  bentonite: {inci: "Bentonite", role: active}
+  illite: {inci: "Illite", role: active}
+  montmorillonite: {inci: "Montmorillonite", role: active}
+  charcoal_powder: {inci: "Charcoal Powder", name_vi: "Than hoạt tính", role: active, aliases: ["than hoạt tính", "than tre"]}
+  volcanic_ash: {inci: "Volcanic Ash", name_vi: "Tro núi lửa", role: active, aliases: ["tro núi lửa"]}
+  pearl_powder: {inci: "Pearl Powder", name_vi: "Bột ngọc trai", role: active, aliases: ["bột ngọc trai"]}
+  pearl_extract: {inci: "Pearl Extract", role: active}
+  lactobacillus_ferment: {inci: "Lactobacillus Ferment", role: active}
+  lactobacillus_ferment_lysate: {inci: "Lactobacillus Ferment Lysate", role: active}
+  bifida_ferment_lysate: {inci: "Bifida Ferment Lysate", role: active}
+  vitreoscilla_ferment: {inci: "Vitreoscilla Ferment", role: active}
+  saccharomyces_ferment_lysate_filtrate: {inci: "Saccharomyces Ferment Lysate Filtrate", role: active}
+  galactomyces_ferment_filtrate: {inci: "Galactomyces Ferment Filtrate", role: active}
+  alteromonas_ferment_extract: {inci: "Alteromonas Ferment Extract", role: active}
+  lactococcus_hyaluronic_acid_ferment_filtrate: {inci: "Lactococcus/Hyaluronic Acid Ferment Filtrate", role: active, aliases: ["lactococus/hyaluronic acid ferment filtrate"]}
+  euglena_gracilis_extract: {inci: "Euglena Gracilis Extract", role: active}
+  haematococcus_pluvialis_extract: {inci: "Haematococcus Pluvialis Extract", role: active, aliases: ["haematococcus pluvialis", "haematococcus luvialis extract"]}
+  chlorella_vulgaris_extract: {inci: "Chlorella Vulgaris Extract", role: active}
+  algae_extract: {inci: "Algae Extract", role: active}
+  chondrus_crispus_extract: {inci: "Chondrus Crispus Extract", role: active, aliases: ["chandrus crispus extract"]}
+  chondrus_crispus_powder: {inci: "Chondrus Crispus Powder", role: active}
+  undaria_pinnatifida_extract: {inci: "Undaria Pinnatifida Extract", role: active}
+  kappaphycus_alvarezii_extract: {inci: "Kappaphycus Alvarezii Extract", role: active}
+  corallina_officinalis_extract: {inci: "Corallina Officinalis Extract", role: active}
+  ecklonia_cava_extract: {inci: "Ecklonia Cava Extract", role: active}
+  royal_jelly_extract: {inci: "Royal Jelly Extract", name_vi: "Sữa ong chúa", role: active, aliases: ["sữa ong chúa"]}
+  honey_extract: {inci: "Honey Extract", role: active, aliases: ["chiết xuất mật ong"]}
+  propolis_extract: {inci: "Propolis Extract", name_vi: "Keo ong", role: active, aliases: ["chiết xuất keo ong", "keo ong"]}
+  swiftlet_nest_extract: {inci: "Swiftlet Nest Extract", name_vi: "Yến sào", role: active, aliases: ["yến sào", "chiết xuất tổ yến"]}
+  silk_extract: {inci: "Silk Extract", role: active}
+  houttuynia_cordata_extract: {inci: "Houttuynia Cordata Extract", name_vi: "Diếp cá", role: active, aliases: ["diếp cá", "chiết xuất diếp cá", "houttuynia cordata"]}
+  curcuma_longa_root_extract: {inci: "Curcuma Longa Root Extract", name_vi: "Nghệ", role: active, aliases: ["nghệ", "chiết xuất nghệ", "turmeric root extract"]}
+  salix_alba_bark_extract: {inci: "Salix Alba Bark Extract", role: active, aliases: ["willow bark extract"]}
+  citrus_limon_fruit_extract: {inci: "Citrus Limon Fruit Extract", role: active, aliases: ["lemon fruit extract", "lemon extract"]}
+  zingiber_officinale_root_extract: {inci: "Zingiber Officinale Root Extract", name_vi: "Gừng", role: active, aliases: ["gừng", "ginger root extract"]}
+  mentha_piperita_leaf_extract: {inci: "Mentha Piperita Leaf Extract", name_vi: "Bạc hà", role: active, aliases: ["bạc hà", "peppermint leaf extract"]}
+  mentha_rotundifolia_leaf_extract: {inci: "Mentha Rotundifolia Leaf Extract", role: active, aliases: ["mentha rot-undifolia leaf extract"]}
+  calendula_officinalis_flower_extract: {inci: "Calendula Officinalis Flower Extract", name_vi: "Cúc vạn thọ", role: active, aliases: ["cúc vạn thọ", "calendula extract", "calendula officinalis extract"]}
+  rosmarinus_officinalis_leaf_extract: {inci: "Rosmarinus Officinalis Leaf Extract", name_vi: "Hương thảo", role: active, aliases: ["hương thảo", "rosemary leaf extract"]}
+  melia_azadirachta_leaf_extract: {inci: "Melia Azadirachta Leaf Extract", name_vi: "Neem", role: active, aliases: ["neem", "neem leaf extract"]}
+  melia_azadirachta_flower_extract: {inci: "Melia Azadirachta Flower Extract", role: active}
+  salvia_officinalis_leaf_extract: {inci: "Salvia Officinalis Leaf Extract", role: active}
+  melaleuca_alternifolia_leaf_extract: {inci: "Melaleuca Alternifolia Leaf Extract", role: active, aliases: ["tea tree leaf extract", "tea tree extract"]}
+  nelumbo_nucifera_flower_extract: {inci: "Nelumbo Nucifera Flower Extract", name_vi: "Sen", role: active, aliases: ["chiết xuất hoa sen", "hoa sen"]}
+  anthemis_nobilis_flower_extract: {inci: "Anthemis Nobilis Flower Extract", role: active}
+  rosa_gallica_flower_extract: {inci: "Rosa Gallica Flower Extract", name_vi: "Hoa hồng Pháp", role: active, aliases: ["chiết xuất hoa hồng pháp"]}
+  rosa_damascena_flower_water: {inci: "Rosa Damascena Flower Water", role: active, aliases: ["damask rose water"]}
+  punica_granatum_fruit_extract: {inci: "Punica Granatum Fruit Extract", name_vi: "Lựu", role: active, aliases: ["chiết xuất lựu", "pomegranate fruit extract"]}
+  carica_papaya_fruit_extract: {inci: "Carica Papaya Fruit Extract", name_vi: "Đu đủ", role: active, aliases: ["chiết xuất đu đủ"]}
+  morus_alba_bark_extract: {inci: "Morus Alba Bark Extract", role: active}
+  morus_alba_root_extract: {inci: "Morus Alba Root Extract", role: active}
+  scutellaria_baicalensis_root_extract: {inci: "Scutellaria Baicalensis Root Extract", name_vi: "Hoàng cầm", role: active, aliases: ["hoàng cầm"]}
+  citrus_aurantium_dulcis_fruit_extract: {inci: "Citrus Aurantium Dulcis Fruit Extract", role: active}
+  citrus_junos_fruit_extract: {inci: "Citrus Junos Fruit Extract", role: active}
+  citrus_unshiu_peel_extract: {inci: "Citrus Unshiu Peel Extract", role: active}
+  citrus_reticulata_fruit_extract: {inci: "Citrus Reticulata Fruit Extract", role: active}
+  citrus_grandis_fruit_extract: {inci: "Citrus Grandis Fruit Extract", role: active}
+  citrus_paradisi_fruit_extract: {inci: "Citrus Paradisi Fruit Extract", role: active}
+  microcitrus_australasica_fruit_extract: {inci: "Microcitrus Australasica Fruit Extract", role: active}
+  ginkgo_biloba_leaf_extract: {inci: "Ginkgo Biloba Leaf Extract", name_vi: "Bạch quả", role: active, aliases: ["bạch quả"]}
+  daucus_carota_sativa_root_extract: {inci: "Daucus Carota Sativa Root Extract", role: active}
+  lens_esculenta_seed_extract: {inci: "Lens Esculenta Seed Extract", role: active}
+  paeonia_suffruticosa_root_extract: {inci: "Paeonia Suffruticosa Root Extract", role: active, aliases: ["peony root extract", "paeony root extract"]}
+  lavandula_angustifolia_flower_extract: {inci: "Lavandula Angustifolia Flower Extract", role: active, aliases: ["lavender extract", "lavandula angustifolia extract"]}
+  cucumis_sativus_fruit_extract: {inci: "Cucumis Sativus Fruit Extract", name_vi: "Dưa leo", role: active, aliases: ["cucumber extract", "chiết xuất dưa leo"]}
+  allium_cepa_bulb_extract: {inci: "Allium Cepa Bulb Extract", role: active}
+  oryza_sativa_extract: {inci: "Oryza Sativa Extract", role: active}
+  eucalyptus_globulus_leaf_extract: {inci: "Eucalyptus Globulus Leaf Extract", role: active, aliases: ["eucalyptus leaf extract"]}
+  phaseolus_radiatus_seed_extract: {inci: "Phaseolus Radiatus Seed Extract", role: active}
+  glycine_soja_seed_extract: {inci: "Glycine Soja Seed Extract", role: active}
+  chamaecyparis_obtusa_leaf_extract: {inci: "Chamaecyparis Obtusa Leaf Extract", role: active}
+  enantia_chlorantha_bark_extract: {inci: "Enantia Chlorantha Bark Extract", role: active}
+  saccharum_officinarum_extract: {inci: "Saccharum Officinarum Extract", role: active}
+  althaea_rosea_flower_extract: {inci: "Althaea Rosea Flower Extract", role: active}
+  hippophae_rhamnoides_fruit_extract: {inci: "Hippophae Rhamnoides Fruit Extract", role: active}
+  hippophae_rhamnoides_extract: {inci: "Hippophae Rhamnoides Extract", role: active}
+  leontopodium_alpinum_extract: {inci: "Leontopodium Alpinum Extract", role: active}
+  avena_sativa_meal_extract: {inci: "Avena Sativa Meal Extract", role: active}
+  melissa_officinalis_leaf_extract: {inci: "Melissa Officinalis Leaf Extract", role: active, aliases: ["lemon balm leaf extract"]}
+  gardenia_florida_fruit_extract: {inci: "Gardenia Florida Fruit Extract", role: active}
+  saussurea_involucrata_extract: {inci: "Saussurea Involucrata Extract", role: active}
+  ocimum_sanctum_leaf_extract: {inci: "Ocimum Sanctum Leaf Extract", role: active}
+  glycyrrhiza_inflata_root_extract: {inci: "Glycyrrhiza Inflata Root Extract", role: active}
+  centaurea_cyanus_flower_extract: {inci: "Centaurea Cyanus Flower Extract", role: active}
+  phellodendron_amurense_bark_extract: {inci: "Phellodendron Amurense Bark Extract", role: active}
+  origanum_vulgare_leaf_extract: {inci: "Origanum Vulgare Leaf Extract", role: active, aliases: ["oregano leaf extract"]}
+  pelargonium_graveolens_extract: {inci: "Pelargonium Graveolens Extract", role: active, aliases: ["scented geranium extract"]}
+  fragaria_chiloensis_fruit_extract: {inci: "Fragaria Chiloensis Fruit Extract", role: active}
+  epilobium_angustifolium_flower_leaf_stem_extract: {inci: "Epilobium Angustifolium Flower/Leaf/Stem Extract", role: active}
+  brassica_oleracea_italica_extract: {inci: "Brassica Oleracea Italica Extract", role: active}
+  pueraria_lobata_root_extract: {inci: "Pueraria Lobata Root Extract", role: active}
+  stellaria_media_extract: {inci: "Stellaria Media Extract", role: active}
+  freesia_refracta_extract: {inci: "Freesia Refracta Extract", role: active}
+  opuntia_tuna_fruit_extract: {inci: "Opuntia Tuna Fruit Extract", role: active}
+  opuntia_ficus_indica_stem_extract: {inci: "Opuntia Ficus-Indica Stem Extract", role: active}
+  prunus_yedoensis_leaf_extract: {inci: "Prunus Yedoensis Leaf Extract", role: active}
+  prunus_mume_fruit_extract: {inci: "Prunus Mume Fruit Extract", role: active}
+  perilla_ocymoides_leaf_extract: {inci: "Perilla Ocymoides Leaf Extract", role: active}
+  olea_europaea_leaf_extract: {inci: "Olea Europaea Leaf Extract", role: active}
+  pyrus_malus_fruit_extract: {inci: "Pyrus Malus Fruit Extract", role: active}
+  malus_domestica_fruit_extract: {inci: "Malus Domestica Fruit Extract", role: active}
+  artemisia_vulgaris_extract: {inci: "Artemisia Vulgaris Extract", role: active}
+  ulmus_davidiana_root_extract: {inci: "Ulmus Davidiana Root Extract", role: active}
+  vaccinium_angustifolium_fruit_extract: {inci: "Vaccinium Angustifolium Fruit Extract", role: active}
+  tremella_fuciformis_extract: {inci: "Tremella Fuciformis Extract", name_vi: "Nấm tuyết", role: active, aliases: ["nấm tuyết"]}
+  sophora_angustifolia_root_extract: {inci: "Sophora Angustifolia Root Extract", role: active}
+  moringa_oleifera_seed_extract: {inci: "Moringa Oleifera Seed Extract", role: active}
+  potentilla_erecta_root_extract: {inci: "Potentilla Erecta Root Extract", role: active}
+  rheum_palmatum_root_extract: {inci: "Rheum Palmatum Root Extract", role: active}
+  lilium_tigrinum_extract: {inci: "Lilium Tigrinum Extract", role: active}
+  angelica_acutiloba_root_extract: {inci: "Angelica Acutiloba Root Extract", role: active}
+  pinus_palustris_leaf_extract: {inci: "Pinus Palustris Leaf Extract", role: active}
+  rubus_fruticosus_fruit_extract: {inci: "Rubus Fruticosus Fruit Extract", role: active}
+  camellia_japonica_flower_extract: {inci: "Camellia Japonica Flower Extract", role: active}
+  ganoderma_lucidum_extract: {inci: "Ganoderma Lucidum Extract", name_vi: "Nấm linh chi", role: active, aliases: ["chiết xuất từ linh chi", "chiết xuất linh chi", "nấm linh chi"]}
+  # ---------- U06 additions batch 2 (2026-10-22): next most frequent unmapped INCI ----------
+  # -- U06 humectant
+  fructooligosaccharides: {inci: "Fructooligosaccharides", role: humectant}
+  maltose: {inci: "Maltose", role: humectant}
+  xylose: {inci: "Xylose", role: humectant}
+  inositol: {inci: "Inositol", role: humectant}
+  raffinose: {inci: "Raffinose", role: humectant}
+  mannose: {inci: "Mannose", role: humectant}
+  polyglycerin_3: {inci: "Polyglycerin-3", role: humectant}
+  sarcosine: {inci: "Sarcosine", role: humectant}
+  arginine_hcl: {inci: "Arginine HCl", role: humectant, aliases: ["arginine hcl"]}
+  dimethyl_sulfone: {inci: "Dimethyl Sulfone", role: humectant}
+  molasses: {inci: "Molasses", role: humectant}
+  # -- U06 base
+  sodium_gluconate: {inci: "Sodium Gluconate", role: base}
+  magnesium_chloride: {inci: "Magnesium Chloride", role: base}
+  magnesium_nitrate: {inci: "Magnesium Nitrate", role: base}
+  magnesium_stearate: {inci: "Magnesium Stearate", role: base}
+  manganese_gluconate: {inci: "Manganese Gluconate", role: base}
+  barium_sulfate: {inci: "Barium Sulfate", role: base}
+  boron_nitride: {inci: "Boron Nitride", role: base}
+  cyclodextrin: {inci: "Cyclodextrin", role: base}
+  glyoxal: {inci: "Glyoxal", role: base}
+  maris_sal: {inci: "Maris Sal", role: base}
+  peg_ppg_9_2_dimethyl_ether: {inci: "PEG/PPG-9/2 Dimethyl Ether", role: base}
+  polymethylsilsesquioxane_trimethylsiloxysilicate: {inci: "Polymethylsilsesquioxane/Trimethylsiloxysilicate", role: base}
+  c30_45_alkyldimethylsilyl_polypropylsilsesquioxane: {inci: "C30-45 Alkyldimethylsilyl Polypropylsilsesquioxane", role: base}
+  # -- U06 thickener
+  magnesium_aluminum_silicate: {inci: "Magnesium Aluminum Silicate", role: thickener}
+  dextran: {inci: "Dextran", role: thickener}
+  dextrin_isostearate: {inci: "Dextrin Isostearate", role: thickener}
+  peg_150: {inci: "PEG-150", role: thickener, aliases: ["peg-150"]}
+  peg_14m: {inci: "PEG-14M", role: thickener}
+  peg_240_hdi_copolymer_bis_decyltetradeceth_20_ether: {inci: "PEG-240/HDI Copolymer Bis-Decyltetradeceth-20 Ether", role: thickener, aliases: ["peg-240 hdi copolymer bis-decytetradeceth-20 ether"]}
+  polyquaternium_52: {inci: "Polyquaternium-52", role: thickener}
+  acrylates_steareth_20_methacrylate_copolymer: {inci: "Acrylates/Steareth-20 Methacrylate Copolymer", role: thickener}
+  ethylene_propylene_copolymer: {inci: "Ethylene/Propylene Copolymer", role: thickener}
+  hydrogenated_styrene_isoprene_copolymer: {inci: "Hydrogenated Styrene/Isoprene Copolymer", role: thickener, aliases: ["hydrogenated styreneasoprene copolymer", "hydrogenated styrene/soprene copolymer"]}
+  # -- U06 emollient
+  tribehenin: {inci: "Tribehenin", role: emollient}
+  hydrogenated_castor_oil: {inci: "Hydrogenated Castor Oil", role: emollient, aliases: ["hydrogenated castor oi"]}
+  hydrogenated_coco_glycerides: {inci: "Hydrogenated Coco-Glycerides", role: emollient}
+  helianthus_annuus_seed_wax: {inci: "Helianthus Annuus Seed Wax", role: emollient}
+  glycol_stearate: {inci: "Glycol Stearate", role: emollient}
+  triisostearin: {inci: "Triisostearin", role: emollient}
+  corylus_avellana_seed_oil: {inci: "Corylus Avellana Seed Oil", role: emollient}
+  oenothera_biennis_oil: {inci: "Oenothera Biennis Oil", role: emollient}
+  astrocaryum_murumuru_seed_butter: {inci: "Astrocaryum Murumuru Seed Butter", role: emollient}
+  hydrogenated_jojoba_oil: {inci: "Hydrogenated Jojoba Oil", role: emollient}
+  glyceryl_behenate: {inci: "Glyceryl Behenate", role: emollient}
+  camellia_sinensis_leaf_oil: {inci: "Camellia Sinensis Leaf Oil", role: emollient}
+  mangifera_indica_seed_butter: {inci: "Mangifera Indica Seed Butter", role: emollient}
+  carthamus_tinctorius_seed_oil: {inci: "Carthamus Tinctorius Seed Oil", role: emollient}
+  prunus_armeniaca_kernel_oil: {inci: "Prunus Armeniaca Kernel Oil", role: emollient}
+  propylheptyl_caprylate: {inci: "Propylheptyl Caprylate", role: emollient}
+  neopentyl_glycol_diheptanoate: {inci: "Neopentyl Glycol Diheptanoate", role: emollient}
+  diethylhexyl_succinate: {inci: "Diethylhexyl Succinate", role: emollient}
+  diethoxyethyl_succinate: {inci: "Diethoxyethyl Succinate", role: emollient}
+  isostearyl_alcohol: {inci: "Isostearyl Alcohol", role: emollient}
+  cetyl_esters: {inci: "Cetyl Esters", role: emollient}
+  batyl_alcohol: {inci: "Batyl Alcohol", role: emollient}
+  dimer_dilinoleyl_dimer_dilinoleate: {inci: "Dimer Dilinoleyl Dimer Dilinoleate", role: emollient}
+  bis_ethoxydiglycol_cyclohexane_1_4_dicarboxylate: {inci: "Bis-Ethoxydiglycol Cyclohexane 1,4-Dicarboxylate", role: emollient}
+  trisiloxane: {inci: "Trisiloxane", role: emollient}
+  disiloxane: {inci: "Disiloxane", role: emollient}
+  simethicone: {inci: "Simethicone", role: emollient}
+  aminopropyl_dimethicone: {inci: "Aminopropyl Dimethicone", role: emollient}
+  bis_stearyl_dimethicone: {inci: "Bis-Stearyl Dimethicone", role: emollient}
+  trimethylsiloxyphenyl_dimethicone: {inci: "Trimethylsiloxyphenyl Dimethicone", role: emollient}
+  trimethyl_pentaphenyl_trisiloxane: {inci: "Trimethyl Pentaphenyl Trisiloxane", role: emollient}
+  # -- U06 emulsifier
+  ppg_6_decyltetradeceth_30: {inci: "PPG-6-Decyltetradeceth-30", role: emulsifier}
+  ppg_13_decyltetradeceth_24: {inci: "PPG-13-Decyltetradeceth-24", role: emulsifier}
+  polyglyceryl_3_polydimethylsiloxyethyl_dimethicone: {inci: "Polyglyceryl-3 Polydimethylsiloxyethyl Dimethicone", role: emulsifier}
+  peg_20_glyceryl_triisostearate: {inci: "PEG-20 Glyceryl Triisostearate", role: emulsifier}
+  cocamide_dea: {inci: "Cocamide DEA", role: emulsifier}
+  cocamide_methyl_mea: {inci: "Cocamide Methyl MEA", role: emulsifier}
+  c12_14_alketh_12: {inci: "C12-14 Alketh-12", role: emulsifier}
+  potassium_cocoate: {inci: "Potassium Cocoate", role: emulsifier}
+  laureth_10: {inci: "Laureth-10", role: emulsifier}
+  laureth_2: {inci: "Laureth-2", role: emulsifier}
+  peg_200_hydrogenated_glyceryl_palmate: {inci: "PEG-200 Hydrogenated Glyceryl Palmate", role: emulsifier}
+  peg_3_dimethicone: {inci: "PEG-3 Dimethicone", role: emulsifier}
+  peg_11_methyl_ether_dimethicone: {inci: "PEG-11 Methyl Ether Dimethicone", role: emulsifier}
+  peg_60_glyceryl_stearate: {inci: "PEG-60 Glyceryl Stearate", role: emulsifier}
+  peg_90_glyceryl_isostearate: {inci: "PEG-90 Glyceryl Isostearate", role: emulsifier}
+  peg_55_stearate: {inci: "PEG-55 Stearate", role: emulsifier}
+  peg_55_propylene_glycol_oleate: {inci: "PEG-55 Propylene Glycol Oleate", role: emulsifier}
+  peg_50_hydrogenated_castor_oil: {inci: "PEG-50 Hydrogenated Castor Oil", role: emulsifier}
+  peg_20_sorbitan_isostearate: {inci: "PEG-20 Sorbitan Isostearate", role: emulsifier}
+  peg_8_caprylic_capric_glycerides: {inci: "PEG-8 Caprylic/Capric Glycerides", role: emulsifier}
+  peg_20: {inci: "PEG-20", role: emulsifier}
+  ppg_10_methyl_glucose_ether: {inci: "PPG-10 Methyl Glucose Ether", role: emulsifier, aliases: ["10 methyl glucose ether"]}
+  peg_ppg_18_18_dimethicone: {inci: "PEG/PPG-18/18 Dimethicone", role: emulsifier}
+  bis_peg_ppg_14_14_dimethicone: {inci: "Bis-PEG/PPG-14/14 Dimethicone", role: emulsifier}
+  bis_butyldimethicone_polyglyceryl_3: {inci: "Bis-Butyldimethicone Polyglyceryl-3", role: emulsifier}
+  polyglyceryl_3_distearate: {inci: "Polyglyceryl-3 Distearate", role: emulsifier}
+  polyglyceryl_3_stearate: {inci: "Polyglyceryl-3 Stearate", role: emulsifier}
+  polyglyceryl_10_pentaisostearate: {inci: "Polyglyceryl-10 Pentaisostearate", role: emulsifier}
+  potassium_cocoyl_glutamate: {inci: "Potassium Cocoyl Glutamate", role: emulsifier}
+  sodium_lauroyl_glutamate: {inci: "Sodium Lauroyl Glutamate", role: emulsifier}
+  sodium_methyl_stearoyl_taurate: {inci: "Sodium Methyl Stearoyl Taurate", role: emulsifier}
+  sodium_laurylglucosides_hydroxypropylsulfonate: {inci: "Sodium Laurylglucosides Hydroxypropylsulfonate", role: emulsifier}
+  diethylhexyl_sodium_sulfosuccinate: {inci: "Diethylhexyl Sodium Sulfosuccinate", role: emulsifier}
+  ceteareth_25: {inci: "Ceteareth-25", role: emulsifier}
+  methyl_glucose_sesquistearate: {inci: "Methyl Glucose Sesquistearate", role: emulsifier}
+  stearamidopropyl_dimethylamine: {inci: "Stearamidopropyl Dimethylamine", role: emulsifier}
+  tea_dodecylbenzenesulfonate: {inci: "TEA-Dodecylbenzenesulfonate", role: emulsifier}
+  trideceth_9: {inci: "Trideceth-9", role: emulsifier}
+  trideceth_12: {inci: "Trideceth-12", role: emulsifier}
+  ppg_2_hydroxyethyl_cocamide: {inci: "PPG-2 Hydroxyethyl Cocamide", role: emulsifier}
+  # -- U06 preservative
+  caprylhydroxamic_acid: {inci: "Caprylhydroxamic Acid", role: preservative}
+  diazolidinyl_urea: {inci: "Diazolidinyl Urea", role: preservative}
+  sodium_hydroxymethylglycinate: {inci: "Sodium Hydroxymethylglycinate", role: preservative}
+  # -- U06 fragrance
+  citral: {inci: "Citral", role: fragrance}
+  eugenol: {inci: "Eugenol", role: fragrance}
+  amyl_cinnamal: {inci: "Amyl Cinnamal", role: fragrance}
+  pelargonium_graveolens_flower_oil: {inci: "Pelargonium Graveolens Flower Oil", role: fragrance}
+  rosa_damascena_flower_oil: {inci: "Rosa Damascena Flower Oil", role: fragrance}
+  anthemis_nobilis_flower_oil: {inci: "Anthemis Nobilis Flower Oil", role: fragrance}
+  curcuma_longa_root_oil: {inci: "Curcuma Longa Root Oil", role: fragrance}
+  eucalyptus_oil: {inci: "Eucalyptus Oil", role: fragrance}
+  # -- U06 colorant
+  d_c_red_7_ca_lake: {inci: "D&C Red 7 Ca Lake", role: colorant, aliases: ["red 7 lake"]}
+  d_c_red_27_al_lake: {inci: "D&C Red 27 Al Lake", role: colorant}
+  yellow_5_lake: {inci: "Yellow 5 Lake", role: colorant}
+  red_33: {inci: "Red 33", role: colorant}
+  ci_73015: {inci: "CI 73015", role: colorant}
+  ci_47005: {inci: "CI 47005", role: colorant}
+  # -- U06 uv_filter
+  methoxyphenyl_triazine: {inci: "Methoxyphenyl Triazine", role: uv_filter}
+  tris_biphenyl_triazine: {inci: "Tris-Biphenyl Triazine", role: uv_filter}
+  benzotriazolyl_dodecyl_p_cresol: {inci: "Benzotriazolyl Dodecyl p-Cresol", role: uv_filter}
+  # -- U06 active
+  theanine: {inci: "Theanine", role: active}
+  protease: {inci: "Protease", role: active}
+  sericin: {inci: "Sericin", role: active}
+  yogurt_powder: {inci: "Yogurt Powder", role: active, aliases: ["yoghurt powder"]}
+  velvet_extract: {inci: "Velvet Extract", role: active}
+  yeast_extract: {inci: "Yeast Extract", role: active}
+  yeast_ferment_extract: {inci: "Yeast Ferment Extract", role: active}
+  yeast_beta_glucan: {inci: "Yeast Beta-Glucan", role: active}
+  milk_extract: {inci: "Milk Extract", role: active}
+  nonapeptide_1: {inci: "Nonapeptide-1", role: active}
+  palmitoyl_hexapeptide_12: {inci: "Palmitoyl Hexapeptide-12", role: active}
+  ceramide_ng: {inci: "Ceramide NG", role: active}
+  menthyl_nicotinate: {inci: "Menthyl Nicotinate", role: active}
+  guaiazulene: {inci: "Guaiazulene", role: active}
+  panthenyl_ethyl_ether: {inci: "Panthenyl Ethyl Ether", role: active}
+  betaine_salicylate: {inci: "Betaine Salicylate", role: active}
+  epigallocatechin_gallate: {inci: "Epigallocatechin Gallate", role: active}
+  oleanolic_acid: {inci: "Oleanolic Acid", role: active}
+  acetyl_hydroxyproline: {inci: "Acetyl Hydroxyproline", role: active}
+  isobutylamido_thiazolyl_resorcinol: {inci: "Isobutylamido Thiazolyl Resorcinol", role: active}
+  hydrolyzed_wheat_protein: {inci: "Hydrolyzed Wheat Protein", role: active}
+  hydrolyzed_rice_protein: {inci: "Hydrolyzed Rice Protein", role: active}
+  hydrolyzed_pea_protein: {inci: "Hydrolyzed Pea Protein", role: active}
+  hydrolyzed_royal_jelly_protein: {inci: "Hydrolyzed Royal Jelly Protein", role: active}
+  2_oleamido_1_3_octadecanediol: {inci: "2-Oleamido-1,3-Octadecanediol", role: active}
+  glycolipids: {inci: "Glycolipids", role: active}
+  24k_gold: {inci: "24K Gold", role: active}
+  malachite_extract: {inci: "Malachite Extract", role: active}
+  lactobacillus: {inci: "Lactobacillus", role: active}
+  bifida_ferment_filtrate: {inci: "Bifida Ferment Filtrate", role: active, aliases: ["bifida fermet filtrate"]}
+  zymomonas_ferment_extract: {inci: "Zymomonas Ferment Extract", role: active}
+  gluconobacter_honey_ferment_filtrate: {inci: "Gluconobacter/Honey Ferment Filtrate", role: active}
+  saccharomyces_xylinum_black_tea_ferment: {inci: "Saccharomyces/Xylinum/Black Tea Ferment", role: active}
+  saccharomyces_imperata_cylindrica_root_ferment_extract: {inci: "Saccharomyces/Imperata Cylindrica Root Ferment Extract", role: active}
+  lycium_barbarum_fruit_extract: {inci: "Lycium Barbarum Fruit Extract", name_vi: "Kỷ tử", role: active, aliases: ["kỷ tử"]}
+  rose_extract: {inci: "Rose Extract", role: active}
+  tuber_magnatum_extract: {inci: "Tuber Magnatum Extract", role: active}
+  tuber_melanosporum_extract: {inci: "Tuber Melanosporum Extract", role: active}
+  curcuma_longa_root_powder: {inci: "Curcuma Longa Root Powder", role: active}
+  serenoa_serrulata_fruit_extract: {inci: "Serenoa Serrulata Fruit Extract", role: active}
+  kalanchoe_spathulata_leaf_extract: {inci: "Kalanchoe Spathulata Leaf Extract", role: active}
+  scutellaria_alpina_flower_extract: {inci: "Scutellaria Alpina Flower Extract", role: active, aliases: ["scutellaria alpina flower"]}
+  peucedanum_ostruthium_leaf_extract: {inci: "Peucedanum Ostruthium Leaf Extract", role: active}
+  artemisia_umbelliformis_extract: {inci: "Artemisia Umbelliformis Extract", role: active}
+  epilobium_fleischeri_extract: {inci: "Epilobium Fleischeri Extract", role: active}
+  jasminum_officinale_extract: {inci: "Jasminum Officinale Extract", role: active}
+  jasminum_officinale_flower_extract: {inci: "Jasminum Officinale Flower Extract", role: active, aliases: ["jasmium officinale flower extract"]}
+  prunus_persica_leaf_extract: {inci: "Prunus Persica Leaf Extract", role: active}
+  citrus_limon_juice: {inci: "Citrus Limon Juice", role: active}
+  origanum_majorana_leaf_extract: {inci: "Origanum Majorana Leaf Extract", role: active}
+  oenothera_biennis_flower_extract: {inci: "Oenothera Biennis Flower Extract", role: active}
+  ananas_sativus_fruit_extract: {inci: "Ananas Sativus Fruit Extract", role: active}
+  schisandra_sphenanthera_fruit_extract: {inci: "Schisandra Sphenanthera Fruit Extract", role: active}
+  illicium_verum_fruit_extract: {inci: "Illicium Verum Fruit Extract", role: active}
+  laminaria_ochroleuca_extract: {inci: "Laminaria Ochroleuca Extract", role: active}
+  laminaria_japonica_extract: {inci: "Laminaria Japonica Extract", role: active}
+  aesculus_hippocastanum_seed_extract: {inci: "Aesculus Hippocastanum Seed Extract", role: active}
+  vaccinium_myrtillus_fruit_extract: {inci: "Vaccinium Myrtillus Fruit Extract", role: active, aliases: ["vaccinium mуrtilluѕ fruit eхtract"]}
+  codium_tomentosum_extract: {inci: "Codium Tomentosum Extract", role: active}
+  castanea_sativa_seed_extract: {inci: "Castanea Sativa Seed Extract", role: active}
+  thymus_vulgaris_leaf_extract: {inci: "Thymus Vulgaris Leaf Extract", role: active}
+  cassia_angustifolia_leaf_extract: {inci: "Cassia Angustifolia Leaf Extract", role: active}
+  iris_ensata_extract: {inci: "Iris Ensata Extract", role: active}
+  leontopodium_alpinum_flower_extract: {inci: "Leontopodium Alpinum Flower Extract", role: active}
+  rosa_rugosa_flower_extract: {inci: "Rosa Rugosa Flower Extract", role: active}
+  glycine_soja_germ_extract: {inci: "Glycine Soja Germ Extract", role: active}
+  citrus_junos_peel_extract: {inci: "Citrus Junos Peel Extract", role: active}
+  pelvetia_canaliculata_extract: {inci: "Pelvetia Canaliculata Extract", role: active}
+  avena_sativa_kernel_extract: {inci: "Avena Sativa Kernel Extract", role: active}
+  arctium_lappa_root_extract: {inci: "Arctium Lappa Root Extract", role: active}
+  coptis_chinensis_root_extract: {inci: "Coptis Chinensis Root Extract", role: active}
+  morus_nigra_fruit_extract: {inci: "Morus Nigra Fruit Extract", role: active, aliases: ["moruѕ nigra fruit eхtract"]}
+  glycyrrhiza_uralensis_root_extract: {inci: "Glycyrrhiza Uralensis Root Extract", role: active}
+  pear_extract: {inci: "Pear Extract", role: active}
+  melon_seed_extract: {inci: "Melon Seed Extract", role: active}
+  orris_root_extract: {inci: "Orris Root Extract", role: active}
+  peach_extract: {inci: "Peach Extract", role: active}
+  peach_seed_extract: {inci: "Peach Seed Extract", role: active}
+  sesamum_indicum_seed_extract: {inci: "Sesamum Indicum Seed Extract", role: active}
+  crocus_sativus_flower_extract: {inci: "Crocus Sativus Flower Extract", role: active}
+  annona_cherimola_fruit_extract: {inci: "Annona Cherimola Fruit Extract", role: active}
+  betula_platyphylla_japonica_juice: {inci: "Betula Platyphylla Japonica Juice", role: active}
+  monarda_didyma_leaf_extract: {inci: "Monarda Didyma Leaf Extract", role: active}
+  camellia_oleifera_leaf_extract: {inci: "Camellia Oleifera Leaf Extract", role: active}
+  anastatica_hierochuntica_extract: {inci: "Anastatica Hierochuntica Extract", role: active}
+  vitis_vinifera_fruit_extract: {inci: "Vitis Vinifera Fruit Extract", role: active}
+  euterpe_oleracea_fruit_extract: {inci: "Euterpe Oleracea Fruit Extract", role: active, aliases: ["euterpe oleracea fruit eхtract"]}
+  zanthoxylum_piperitum_fruit_extract: {inci: "Zanthoxylum Piperitum Fruit Extract", role: active}
+  artemisia_princeps_leaf_extract: {inci: "Artemisia Princeps Leaf Extract", role: active}
+  vanilla_fruit_extract: {inci: "Vanilla Fruit Extract", role: active}
+  nigella_sativa_seed_extract: {inci: "Nigella Sativa Seed Extract", role: active}
+  acer_saccharum_extract: {inci: "Acer Saccharum Extract", role: active}
+  leonurus_sibiricus_flower_extract: {inci: "Leonurus Sibiricus Flower Extract", role: active, aliases: ["leonurus sibiricus flower"]}

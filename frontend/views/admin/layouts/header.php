@@ -81,6 +81,20 @@ $menuGroups = [
                 'active' => strpos($currentRoute, 'admin_sp') === 0 || strpos($currentRoute, 'staff_product') === 0 || strpos($currentRoute, 'staff_sp') === 0,
             ],
             [
+                'route' => 'admin_tag_review',
+                'icon' => 'bi bi-tags-fill',
+                'label' => 'Duyệt nhãn công dụng',
+                'meta' => 'Gợi ý AI chờ xác nhận',
+                'active' => strpos($currentRoute, 'admin_tag_review') === 0,
+            ],
+            [
+                'route' => 'admin_search_ops',
+                'icon' => 'bi bi-activity',
+                'label' => 'Vận hành tìm kiếm',
+                'meta' => 'Đồng bộ & giám sát',
+                'active' => strpos($currentRoute, 'admin_search_ops') === 0,
+            ],
+            [
                 'route' => 'admin_inventory_batches',
                 'icon' => 'bi bi-calendar2-range-fill',
                 'label' => 'Kho & Lô hàng',

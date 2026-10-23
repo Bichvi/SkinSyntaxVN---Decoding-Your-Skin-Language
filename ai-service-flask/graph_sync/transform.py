@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
+from .curation import resolve_tags
 from .ingredients import AliasEntry, IngredientRef, parse_ingredients
 from .normalize import display_names, group_synonyms, normalize_key, slugify
 from .rules import TagRule, infer_tags
@@ -161,6 +162,9 @@ def to_graph_row(
     refs, ingredient_source = _pick_ingredients(doc, aliases)
     own_skin = _own_skin_types(doc, lookups, skin_syn, set(skin_names))
     tags = infer_tags([r.key for r in refs], {"skin_types": own_skin}, rules)
+    resolved = resolve_tags(
+        tags, doc, {"benefits": benefit_names, "concerns": concern_names, "skin_types": skin_names},
+    )
 
     return {
         "id": pid,
@@ -189,10 +193,18 @@ def to_graph_row(
         ],
         "ingredient_source": ingredient_source,
         "skin_types": [
-            {"key": k, "name": skin_names.get(k, k), "source": tags.skin_type_source} for k in tags.skin_types
+            {"key": t["key"], "name": skin_names.get(t["key"], t["key"]), "source": t["source"]}
+            for t in resolved["skin_types"]
         ],
-        "concerns": [{"key": k, "name": concern_names.get(k, k)} for k in tags.concerns],
-        "benefits": [{"key": k, "name": benefit_names.get(k, k)} for k in tags.benefits],
+        "concerns": [
+            {"key": t["key"], "name": concern_names.get(t["key"], t["key"]), "source": t["source"]}
+            for t in resolved["concerns"]
+        ],
+        "benefits": [
+            {"key": t["key"], "name": benefit_names.get(t["key"], t["key"]), "source": t["source"]}
+            for t in resolved["benefits"]
+        ],
+        "tag_source": resolved["tag_source"],
         "origin": [{"key": slugify(origin_name), "name": origin_name}] if slugify(origin_name) else [],
     }
 
