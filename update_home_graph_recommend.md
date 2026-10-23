@@ -23,6 +23,7 @@ Thêm 3 khối gợi ý mới lên trang chủ, tính từ đồ thị Neo4j (qu
 | `HOME_GRAPH_ENABLED` | Mặc định bật. `0` -> PHP không gọi Flask, trang chủ như cũ. |
 | `HOME_RECOMMEND_ENDPOINT` | URL Flask `/api/home/recommend`. |
 | `HOME_RECOMMEND_TIMEOUT_MS` | Timeout PHP (mặc định 800ms tổng, 300ms connect, không retry). |
+| `HOME_RECOMMEND_CONNECT_TIMEOUT_MS` | Timeout kết nối PHP -> Flask (mặc định 300ms). |
 | `HOME_GRAPH_CACHE_TTL` | TTL cache phía Flask (mặc định 600s). |
 
 **Cách tắt**: đặt `HOME_GRAPH_ENABLED=0` rồi khởi động lại PHP/container. Cầu dao PHP tự mở 60s sau 3 lỗi liên tiếp (key `home:recommend:breaker:v1`).
@@ -31,13 +32,14 @@ Phụ thuộc: đồ thị home dùng `neo4j_client.is_enabled`, nên cần `SEA
 
 ## Lệnh test
 
-Chạy pytest **theo từng thư mục** (basename test trùng nhau vì không có `__init__.py`):
+Chạy pytest chung hai thư mục (basename test home đã đổi thành `test_home_*.py` nên không còn xung đột):
 
 ```
 cd ai-service-flask
-pytest tests/home_service
-pytest tests/search_service
+pytest tests/home_service tests/search_service -m "not integration"
 ```
+
+Ghi chú: route `home_concern` trả `Cache-Control: private, no-store`; hồ sơ da `{skin_type, concerns}` (đã làm sạch) được cache trong `$_SESSION['home_graph_skin_profile']` (khóa hash email, TTL 10 phút) để route này không truy vấn Mongo; `HomeGraphRecommender::hydrate` chỉ gọi `findVisibleByIds` một lần cho mọi khối.
 
 PHP (chỉ 3 file của kế hoạch này; không chạy hàng loạt `backend/tests` vì nhiều script ghi DB thật):
 

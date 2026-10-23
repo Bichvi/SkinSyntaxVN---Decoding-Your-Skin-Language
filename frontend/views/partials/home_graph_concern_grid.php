@@ -7,10 +7,14 @@ $concernProducts = isset($concernProducts) && is_array($concernProducts) ? $conc
 $error = !empty($error);
 $concernName = HomeGraphRecommender::CONCERN_NAMES[$concernKey] ?? '';
 ?>
-<?php if ($error || !$concernProducts): ?>
+<?php if ($error): ?>
   <div class="col-12 text-center py-4" data-concern-error>
     <p class="text-muted mb-2">Chưa tải được, thử lại</p>
     <button type="button" class="btn btn-sm btn-outline-success" data-retry>Thử lại</button>
+  </div>
+<?php elseif (count($concernProducts) < 4): ?>
+  <div class="col-12 text-center py-4" data-concern-empty>
+    <p class="text-muted mb-0">Chưa có sản phẩm phù hợp</p>
   </div>
 <?php else: ?>
   <?php foreach (array_slice($concernProducts, 0, 8) as $p): ?>

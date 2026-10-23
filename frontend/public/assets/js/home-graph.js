@@ -43,6 +43,7 @@
     skeleton();
     fetch(base + '/index.php?r=home_concern&c=' + encodeURIComponent(key), {
       credentials: 'same-origin',
+      cache: 'no-store',
       signal: mine.signal
     }).then(function (res) {
       if (!res.ok) throw new Error('http');

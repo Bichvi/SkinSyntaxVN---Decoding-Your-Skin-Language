@@ -84,4 +84,30 @@ $boom = static function (array $ids): array { throw new RuntimeException('x'); }
 $r = (new HomeGraphRecommender($mkClient(flaskBody([1, 2, 3, 4])), $boom))->build($ctx);
 check($r['concern'] === null && count($r['concern_keys']) === 9, 'exception yields null blocks and keeps concern_keys');
 
+// single Mongo call for all sections
+$calls = 0;
+$countingMongo = static function (array $ids) use (&$calls): array {
+    $calls++;
+    return array_map(static fn($id) => ['ma_san_pham' => $id, 'ten_san_pham' => 'SP ' . $id], $ids);
+};
+$mkItems = static fn(array $ids): array => array_map(static fn($i) => ['product_id' => (string)$i, 'reason' => ['code' => 'concern_target', 'concern' => 'Mụn']], $ids);
+$threeBody = json_encode(['degraded' => false, 'took_ms' => 5, 'sections' => [
+    ['key' => 'seen', 'seed' => ['product_id' => '9', 'name' => 'X'], 'items' => $mkItems([1, 2, 3, 4])],
+    ['key' => 'skin', 'skin_type' => 'da_dau', 'items' => $mkItems([5, 6, 7, 8])],
+    ['key' => 'concern', 'concern' => ['key' => 'mun', 'name' => 'Mụn'], 'items' => $mkItems([10, 11, 12, 13, 14, 15, 16, 17])],
+]]);
+$ctx3 = $ctx;
+$ctx3['sections'] = ['seen', 'skin', 'concern'];
+$r = (new HomeGraphRecommender($mkClient($threeBody), $countingMongo))->build($ctx3);
+check($calls === 1, 'findVisibleByIds called exactly once for 3 sections');
+check($r['seen'] !== null && $r['skin'] !== null && $r['concern'] !== null && count($r['concern']['products']) === 8, 'all 3 sections hydrated from single call');
+
+// failed flag (lỗi thật khác với "không đủ sản phẩm")
+check(($r['failed'] ?? null) === false, 'failed=false on success');
+check((new HomeGraphRecommender(null, $mongo([])))->build($ctx)['failed'] === true, 'failed=true when client null');
+$r = (new HomeGraphRecommender($mkClient(flaskBody([1, 2, 3, 4])), $mongo([1, 2, 3])))->build($ctx);
+check($r['concern'] === null && $r['failed'] === false, 'below threshold is not a failure');
+$r = (new HomeGraphRecommender($mkClient(flaskBody([1, 2, 3, 4])), $boom))->build($ctx);
+check($r['failed'] === true, 'exception sets failed=true');
+
 exit($failures > 0 ? 1 : 0);
