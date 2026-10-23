@@ -690,3 +690,70 @@ def test_build_response_no_info_with_steps_falls_back_to_official_article(capsys
     assert "no_info_with_steps" in res["fallback_reason"]
     assert "cskh@skinsyntax.com" in res["answer"] and "chưa có thông tin chính thức" not in res["answer"].lower()
     assert "validation_failed" in capsys.readouterr().out
+
+
+# ───────────────────────── unsupported_claim (Bước 07b) ─────────────────────────
+
+VAT_SRC = [passage(
+    "Liên hệ để xác nhận việc xuất hóa đơn cho giao dịch của bạn.\n"
+    "Nếu cần hóa đơn VAT, bạn liên hệ cskh@skinsyntax.com hoặc 0398606281 để xác nhận trước khi mua. "
+    "Trang thanh toán hiện chưa có ô yêu cầu VAT; bộ phận hỗ trợ sẽ xác nhận quy trình và thời gian gửi hóa đơn với bạn.",
+    url="/index.php?r=tro_giup&bai=hoa-don", title="Hóa đơn VAT")]
+VAT_Q = "shop có xuất hóa đơn VAT không"
+RETURN_SRC = [passage(
+    "SkinSyntax tiếp nhận đổi trả trong 7 ngày từ khi nhận hàng đối với sản phẩm lỗi, hỏng do vận chuyển hoặc giao sai. "
+    "Hàng đã dùng thường không áp dụng, trừ lỗi nhà sản xuất. Phí giao hàng hiện là 30.000 đ/đơn. "
+    "Bạn có thể yêu cầu xem, sửa hoặc xóa dữ liệu qua cskh@skinsyntax.com. "
+    "Tại Đăng nhập, bạn chọn Quên mật khẩu và nhập email đã đăng ký.")]
+
+
+def test_unsupported_claim_vat_overclaim_is_caught():
+    for opening in ["Shop có xuất hóa đơn VAT.", "Có, SkinSyntax xuất hóa đơn VAT cho bạn.", "Được, shop xuất hóa đơn VAT nhé."]:
+        ans = f"{opening} Bạn liên hệ cskh@skinsyntax.com hoặc 0398606281 để xác nhận [1]."
+        assert "unsupported_claim" in ss.validate_answer(ans, VAT_SRC, VAT_Q), opening
+
+
+def test_unsupported_claim_hedged_vat_answer_passes():
+    ans = "Bạn cần liên hệ cskh@skinsyntax.com hoặc 0398606281 để xác nhận việc xuất hóa đơn VAT trước khi mua [1]."
+    assert ss.validate_answer(ans, VAT_SRC, VAT_Q) == []
+
+
+@pytest.mark.parametrize("question,answer", [
+    ("đổi trả có được trong 7 ngày không", "Có, SkinSyntax tiếp nhận đổi trả trong 7 ngày từ khi nhận hàng [1]."),
+    ("shop có nhận đổi trả không", "Shop có tiếp nhận đổi trả trong 7 ngày với sản phẩm lỗi, hỏng hoặc giao sai [1]."),
+    ("mình có thể quên mật khẩu rồi đặt lại được không", "Bạn có thể chọn Quên mật khẩu và nhập email đã đăng ký tại Đăng nhập [1]."),
+    ("phí ship có cố định không", "Có, phí giao hàng hiện là 30.000 đ/đơn [1]."),
+    ("mình có thể yêu cầu xem dữ liệu cá nhân không", "Được, bạn có thể yêu cầu xem, sửa hoặc xóa dữ liệu qua cskh@skinsyntax.com [1]."),
+    ("hàng đã dùng có đổi trả được không", "Được, nhưng hàng đã dùng thường không áp dụng, trừ lỗi nhà sản xuất [1]."),
+])
+def test_unsupported_claim_supported_yes_answers_not_flagged(question, answer):
+    assert "unsupported_claim" not in ss.validate_answer(answer, RETURN_SRC, question)
+
+
+@pytest.mark.parametrize("answer", [
+    "Hiện chưa có thông tin chính thức: đơn của bạn không được freeship, phí giao hàng là 30.000 đ [1].",
+    "Không được freeship, phí giao hàng hiện là 30.000 đ/đơn [1].",
+    "Mình chưa có thông tin chính thức về việc này; bạn liên hệ cskh@skinsyntax.com để hỏi thêm.",
+    "Không, shop không hỗ trợ đổi trả vì không hợp da; chỉ nhận hàng lỗi, hỏng hoặc giao sai [1].",
+])
+def test_unsupported_claim_negative_answers_not_flagged(answer):
+    assert "unsupported_claim" not in ss.validate_answer(answer, RETURN_SRC, "đơn của mình có được freeship không")
+
+
+def test_unsupported_claim_needs_yes_no_question():
+    ans = "Shop có xuất hóa đơn VAT."
+    assert "unsupported_claim" not in ss.validate_answer(ans, VAT_SRC, "cách xuất hóa đơn VAT thế nào")
+    assert "unsupported_claim" not in ss.validate_answer(ans, VAT_SRC)  # không có câu hỏi -> không kiểm
+
+
+def test_build_response_vat_overclaim_falls_back(capsys):
+    payload = load_payload()
+    ctx = ss.build_ctx("shop có tặng quà sinh nhật không", payload, "")
+    assert ctx["store_support"]["question"] == "shop có tặng quà sinh nhật không"
+    res = ss.build_response(ctx, "Shop có tặng quà sinh nhật cho khách hàng.\n\nNguồn: [x](/index.php?r=tro_giup&bai=doi-tra)", latency=0.1)
+    assert res["fallback"] is True and "unsupported_claim" in res["fallback_reason"]
+    assert "kinds=unsupported_claim" in capsys.readouterr().out
+
+
+def test_prompt_has_yes_no_rule():
+    assert "KHÔNG khẳng định" in ss.PROMPT_TEMPLATE and "12." in ss.PROMPT_TEMPLATE
