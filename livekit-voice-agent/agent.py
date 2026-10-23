@@ -1,15 +1,57 @@
 import asyncio
 import json
 import logging
+import sys
 import time
 import requests
-from typing import Optional
+from typing import Callable, Iterable, Optional, Tuple
 
 from config import config
 from voice_queue import VoiceQueueEngine, CommentItem
 
 logger = logging.getLogger("LiveKitVoiceAgent")
 logging.basicConfig(level=logging.INFO)
+
+def _probe_health(url: str, timeout: float = 3.0) -> bool:
+    """True nếu GET url trả 2xx. Chỉ dùng cho kiểm tra sẵn sàng, không tốn tài nguyên chat."""
+    try:
+        return requests.get(url, timeout=timeout).ok
+    except requests.RequestException:
+        return False
+
+
+def wait_for_dependencies(
+    targets: Iterable[Tuple[str, str]],
+    max_wait: float,
+    initial_backoff: float,
+    max_backoff: float,
+    probe: Callable[[str], bool] = _probe_health,
+    sleep: Callable[[float], None] = time.sleep,
+    monotonic: Callable[[], float] = time.monotonic,
+) -> bool:
+    """Chờ mọi phụ thuộc (tên, health_url) trả OK với exponential backoff.
+
+    Trả False nếu hết max_wait mà vẫn còn phụ thuộc chưa sẵn sàng. Không gửi
+    bất kỳ request chat/TTS nào trong lúc chờ.
+    """
+    pending = list(targets)
+    deadline = monotonic() + max_wait
+    delay = initial_backoff
+    while pending:
+        pending = [(name, url) for name, url in pending if not probe(url)]
+        if not pending:
+            return True
+        if monotonic() + delay > deadline:
+            names = ", ".join(name for name, _ in pending)
+            logger.error(f"Phụ thuộc chưa sẵn sàng sau {max_wait:.0f}s: {names}")
+            return False
+        logger.warning(
+            "Chờ phụ thuộc: %s (thử lại sau %.0fs)", ", ".join(n for n, _ in pending), delay
+        )
+        sleep(delay)
+        delay = min(delay * 2, max_backoff)
+    return True
+
 
 class AIBeautyAdvisorCoHost:
     def __init__(self, room_name: str = "default-room"):
@@ -107,6 +149,16 @@ class AIBeautyAdvisorCoHost:
         self.is_running = False
 
 if __name__ == "__main__":
+    # Không gửi chat RAG khi ai-service/voice-service chưa sẵn sàng; thoát mã 1 để
+    # Docker (restart: on-failure) tự giãn khoảng cách thử lại thay vì spam.
+    if not wait_for_dependencies(
+        [("ai-service", config.AI_HEALTH_URL), ("voice-service", config.TTS_HEALTH_URL)],
+        max_wait=config.STARTUP_WAIT_SECONDS,
+        initial_backoff=config.STARTUP_BACKOFF_INITIAL,
+        max_backoff=config.STARTUP_BACKOFF_MAX,
+    ):
+        sys.exit(1)
+
     agent = AIBeautyAdvisorCoHost()
     
     # Test simulation

@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 
 import os
 import random
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,8 @@ CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
 
 _vectorstore: Chroma | None = None
 _hybrid_pipeline: HybridSearchPipeline | None = None
+_vectorstore_lock = threading.Lock()
+_hybrid_pipeline_lock = threading.Lock()
 
 
 
@@ -46,63 +49,86 @@ class MockDocument:
 
 
 
-def get_vectorstore() -> Chroma:
-    global _vectorstore
-    if _vectorstore is None:
-        emb = get_embedding_function() if get_embedding_function else HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
-            model_kwargs=EMBEDDING_MODEL_KWARGS,
-            encode_kwargs=EMBEDDING_ENCODE_KWARGS,
+def _build_vectorstore() -> Chroma:
+    emb = get_embedding_function() if get_embedding_function else HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL,
+        model_kwargs=EMBEDDING_MODEL_KWARGS,
+        encode_kwargs=EMBEDDING_ENCODE_KWARGS,
+    )
+    if CHROMA_HOST:
+        import chromadb
+
+        vs = Chroma(
+            collection_name="products",
+            client=chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT),
+            embedding_function=emb,
         )
-        if CHROMA_HOST:
-            import chromadb
+    else:
+        vs = Chroma(
+            collection_name="products",
+            persist_directory=CHROMA_DB_PATH,
+            embedding_function=emb,
+        )
+    logger.info(f"[RETRIEVAL] ChromaDB loaded — {vs._collection.count():,} docs")
+    return vs
 
-            _vectorstore = Chroma(
-                collection_name="products",
-                client=chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT),
-                embedding_function=emb,
-            )
-        else:
-            _vectorstore = Chroma(
-                collection_name="products",
-                persist_directory=CHROMA_DB_PATH,
-                embedding_function=emb,
-            )
-        logger.info(f"[RETRIEVAL] ChromaDB loaded — {_vectorstore._collection.count():,} docs")
-    return _vectorstore
 
+def get_vectorstore() -> Chroma:
+    """Double-checked locking: Chroma/embedding chỉ khởi tạo 1 lần dù nhiều luồng gọi đồng thời."""
+    global _vectorstore
+    cached = _vectorstore
+    if cached is not None:
+        return cached
+    with _vectorstore_lock:
+        if _vectorstore is not None:
+            return _vectorstore
+        built = _build_vectorstore()
+        _vectorstore = built  # gán sau khi dựng xong
+        return built
+
+
+def _build_hybrid_pipeline() -> HybridSearchPipeline:
+    vs = get_vectorstore()
+
+    # Populate BM25 from all documents in ChromaDB
+    bm25_docs: list[dict] = []
+    try:
+        result = vs._collection.get(include=["documents", "metadatas"])
+        for doc_id, content, meta in zip(
+            result.get("ids", []),
+            result.get("documents", []),
+            result.get("metadatas", []),
+        ):
+            bm25_docs.append({"id": doc_id, "content": content or "", "metadata": meta or {}})
+        logger.info(f"[RETRIEVAL] BM25 populated: {len(bm25_docs):,} docs")
+    except Exception as e:
+        logger.warning(f"[RETRIEVAL] BM25 population failed: {e} — keyword search disabled")
+
+    pipeline = HybridSearchPipeline(
+        vectorstore=vs,
+        bm25_index=BM25Search(bm25_docs),
+        alpha=0.6,  # Slightly favor semantic search for Vietnamese queries
+    )
+    logger.debug("[RETRIEVAL] Hybrid pipeline ready (BM25 + Semantic RRF + LangChain reranker)")
+    return pipeline
 
 
 def get_hybrid_pipeline() -> HybridSearchPipeline:
     """
     Initialize HybridSearchPipeline with BM25 populated from ChromaDB.
     BM25 requires real document data for keyword search to work correctly.
+    Double-checked locking: pipeline (và nạp BM25) chỉ dựng 1 lần.
     """
     global _hybrid_pipeline
-    if _hybrid_pipeline is None:
-        vs = get_vectorstore()
-
-        # Populate BM25 from all documents in ChromaDB
-        bm25_docs: list[dict] = []
-        try:
-            result = vs._collection.get(include=["documents", "metadatas"])
-            for doc_id, content, meta in zip(
-                result.get("ids", []),
-                result.get("documents", []),
-                result.get("metadatas", []),
-            ):
-                bm25_docs.append({"id": doc_id, "content": content or "", "metadata": meta or {}})
-            logger.info(f"[RETRIEVAL] BM25 populated: {len(bm25_docs):,} docs")
-        except Exception as e:
-            logger.warning(f"[RETRIEVAL] BM25 population failed: {e} — keyword search disabled")
-
-        _hybrid_pipeline = HybridSearchPipeline(
-            vectorstore=vs,
-            bm25_index=BM25Search(bm25_docs),
-            alpha=0.6,  # Slightly favor semantic search for Vietnamese queries
-        )
-        logger.debug("[RETRIEVAL] Hybrid pipeline ready (BM25 + Semantic RRF + LangChain reranker)")
-    return _hybrid_pipeline
+    cached = _hybrid_pipeline
+    if cached is not None:
+        return cached
+    with _hybrid_pipeline_lock:
+        if _hybrid_pipeline is not None:
+            return _hybrid_pipeline
+        built = _build_hybrid_pipeline()
+        _hybrid_pipeline = built
+        return built
 
 
 
