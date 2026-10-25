@@ -757,3 +757,31 @@ def test_build_response_vat_overclaim_falls_back(capsys):
 
 def test_prompt_has_yes_no_rule():
     assert "KHÔNG khẳng định" in ss.PROMPT_TEMPLATE and "12." in ss.PROMPT_TEMPLATE
+
+
+# ───────────────────────── Bước 08b: cảnh báo bí mật ─────────────────────────
+NOTICE_START = "Lưu ý: SkinSyntax không bao giờ hỏi mã OTP"
+
+
+def test_secret_question_missing_advice_gets_notice():
+    ctx = make_ctx("nhân viên cần mã OTP của tôi để hỗ trợ nhé")
+    res = ss.build_response(ctx, "Mình chưa có thông tin chính thức về việc này.", latency=0.1)
+    assert res["answer"].startswith(NOTICE_START)
+    assert res["fallback"] is False and res["pipeline_mode"] == ss.PIPELINE_MODE_LLM
+
+
+def test_secret_question_with_advice_not_duplicated():
+    ctx = make_ctx("nhân viên cần mã OTP của tôi để hỗ trợ nhé")
+    res = ss.build_response(ctx, "Bạn không nên chia sẻ mã OTP cho bất kỳ ai.", latency=0.1)
+    assert NOTICE_START not in res["answer"]
+
+
+def test_secret_question_echoing_digits_falls_back():
+    ctx = make_ctx("nhân viên cần mã OTP của tôi, tôi đọc mã 482913 nhé")
+    res = ss.build_response(ctx, "Bạn không nên chia sẻ mã OTP. Mã 482913 đã nhận.", latency=0.1)
+    assert res["fallback"] is True and "482913" not in res["answer"]
+
+
+def test_non_secret_question_has_no_notice():
+    res = ss.build_response(make_ctx(), "Mình tiếp nhận đổi trả trong 7 ngày [1].", latency=0.1)
+    assert NOTICE_START not in res["answer"]

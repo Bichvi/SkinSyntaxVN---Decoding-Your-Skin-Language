@@ -413,7 +413,7 @@
       "group": "account",
       "title": "Đổi email & số điện thoại liên hệ",
       "summary": "Phân biệt email đăng nhập với thông tin nhận hàng trong hồ sơ.",
-      "answer": "Bạn có thể sửa số điện thoại liên hệ trong Hồ sơ → thông tin cá nhân và lưu lại. Việc này không đổi email đăng nhập. Website chưa có luồng tự đổi email bằng OTP ở cả địa chỉ cũ và mới; nếu cần đổi email, hãy liên hệ cskh@skinsyntax.com để được hướng dẫn xác minh.",
+      "answer": "Hiện website chưa có chức năng tự đổi email đăng nhập hay số điện thoại trong hồ sơ. Muốn đổi, hãy liên hệ cskh@skinsyntax.com hoặc hotline 0398606281 để được hướng dẫn xác minh. Riêng số điện thoại nhận hàng của từng đơn, bạn nhập ở trang Thanh toán khi đặt hàng.",
       "triggers": [
         "doi email",
         "thay email",
@@ -432,22 +432,18 @@
         {
           "title": "Số điện thoại liên hệ",
           "items": [
-            "Đăng nhập, vào Hồ sơ và chỉnh sửa thông tin cá nhân. Cập nhật số điện thoại liên hệ chính xác rồi lưu.",
-            "Kiểm tra lại thông tin nhận hàng tại mỗi lần thanh toán; thay đổi hồ sơ không tự sửa địa chỉ hay số điện thoại của đơn đã đặt."
+            "Website chưa có chức năng tự đổi số điện thoại trong hồ sơ. Gửi yêu cầu tới cskh@skinsyntax.com hoặc gọi 0398606281 để được hướng dẫn.",
+            "Số điện thoại nhận hàng của mỗi đơn được nhập ở trang Thanh toán (ô Số điện thoại khi nhập địa chỉ mới); kiểm tra lại ở mỗi lần đặt hàng."
           ]
         },
         {
           "title": "Email đăng nhập",
           "items": [
-            "Chưa có chức năng tự đổi email kèm hai lượt OTP trên giao diện. Gửi yêu cầu tới email hỗ trợ để được hướng dẫn xác minh và phương án phù hợp.",
+            "Chưa có chức năng tự đổi email đăng nhập trên giao diện. Gửi yêu cầu tới cskh@skinsyntax.com để được hướng dẫn xác minh và phương án phù hợp.",
             "Không cung cấp mật khẩu hoặc OTP trong nội dung yêu cầu. Nhân viên hỗ trợ không được yêu cầu bạn đọc mã để chuyển quyền tài khoản."
           ]
         }
-      ],
-      "action": {
-        "label": "Mở hồ sơ",
-        "url": "index.php?r=hoso"
-      }
+      ]
     },
     {
       "slug": "an-toan-tai-khoan",
@@ -526,8 +522,8 @@
       "slug": "dat-hang",
       "group": "orders",
       "title": "Hướng dẫn đặt hàng",
-      "summary": "Chọn đúng sản phẩm, kiểm tra số lượng và xác nhận ở trang thanh toán.",
-      "answer": "Bạn tìm sản phẩm → chọn đúng chai/phiên bản → kiểm tra số lượng → đến trang thanh toán → nhập thông tin giao hàng và chọn cách trả tiền → xác nhận đơn. Khi mua qua chat, mình đưa các sản phẩm tìm được để bạn tự chọn rồi bấm Thanh toán. Chọn trong chat chưa tạo đơn. Website cần đăng nhập để thanh toán; bạn vẫn tìm và chọn sản phẩm được khi chưa đăng nhập.",
+      "summary": "Thêm sản phẩm vào giỏ, chọn sản phẩm cần mua, thanh toán và bấm ĐẶT HÀNG.",
+      "answer": "Bạn bấm Thêm vào giỏ (hoặc Mua ngay) ở sản phẩm → vào Giỏ hàng, tích chọn sản phẩm và chỉnh số lượng → bấm Tiếp tục (Thanh toán) → ở trang Thanh toán chọn hoặc nhập địa chỉ nhận hàng, chọn phương thức thanh toán → bấm ĐẶT HÀNG. Trang Thanh toán cần đăng nhập; nếu chưa đăng nhập, website chuyển tới trang Đăng nhập. Chat tư vấn không tự tạo đơn.",
       "triggers": [
         "huong dan dat hang",
         "cach dat hang",
@@ -541,16 +537,18 @@
       ],
       "questions": [
         "Đặt hàng từng bước như thế nào?",
-        "Chưa đăng nhập có thể chọn sản phẩm trong chat không?"
+        "Chưa đăng nhập có đặt hàng được không?"
       ],
       "sections": [
         {
           "title": "Từ tìm sản phẩm đến xác nhận",
           "items": [
-            "Tìm qua thanh tìm kiếm, danh mục hoặc nói tên sản phẩm muốn mua trong chat. Kiểm tra nhãn, dung tích và phiên bản trên trang chi tiết.",
-            "Với mua qua chat, bấm Chọn sản phẩm này, chỉnh số lượng rồi bấm Thanh toán. Giá và khả năng cung ứng được kiểm tra lại; bạn cần xác nhận lại nếu giá thay đổi.",
-            "Đăng nhập nếu được yêu cầu. Tại trang thanh toán, kiểm tra sản phẩm, số lượng, giá, phí giao hàng, địa chỉ và số điện thoại nhận hàng.",
-            "Chọn phương thức thanh toán đang hiển thị, kiểm tra tổng tiền rồi xác nhận đặt hàng. Theo dõi mã đơn và trạng thái trong tài khoản."
+            "Tìm qua thanh tìm kiếm hoặc danh mục. Kiểm tra nhãn, dung tích và phiên bản trên trang chi tiết sản phẩm.",
+            "Bấm Thêm vào giỏ để thêm sản phẩm (ở trang chi tiết nút là + Thêm giỏ), hoặc bấm Mua ngay để thêm rồi chuyển tới Giỏ hàng.",
+            "Ở Giỏ hàng, tích chọn sản phẩm muốn mua, chỉnh số lượng bằng nút − và +, rồi bấm Tiếp tục (Thanh toán). Nút này chưa bấm được khi chưa chọn sản phẩm nào.",
+            "Trang Thanh toán yêu cầu đăng nhập; chưa đăng nhập, website báo «Vui lòng đăng nhập để thanh toán.» và chuyển tới trang Đăng nhập.",
+            "Tại trang Thanh toán, chọn địa chỉ nhận hàng có sẵn hoặc nhập địa chỉ mới (Tên người nhận, Số điện thoại, Tỉnh / Thành phố, Quận / Huyện, Phường / Xã, Số nhà, tên đường, tòa nhà), rồi chọn phương thức trong khung Phương thức thanh toán.",
+            "Kiểm tra lại tổng tiền rồi bấm ĐẶT HÀNG. Theo dõi đơn trong tab Lịch sử đơn hàng của Tài khoản của tôi."
           ]
         },
         {

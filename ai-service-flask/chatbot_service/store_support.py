@@ -644,6 +644,29 @@ def build_ctx(message: str, msg_data, chat_history_str: str, reranker=None, arti
     }
 
 
+# ── Bước 08b: câu hỏi nhắc OTP/mật khẩu/số thẻ ──
+_SECRET_Q_RE = re.compile(r"\botp\b|\bma xac\b|\bmat khau\b|\bso the\b|\bpass\b")
+_SECRET_ADVICE_RE = re.compile(r"\b(?:khong|dung)(?: nen| bao gio| duoc)? (?:chia se|cung cap|gui|doc|tiet lo)\b")
+_SECRET_TOPIC_RE = re.compile(r"\botp\b|\bma\b|\bmat khau\b|\bso the\b|\bthong tin\b")
+_SECRET_NOTICE = ("Lưu ý: SkinSyntax không bao giờ hỏi mã OTP, mật khẩu hay số thẻ — bạn đừng chia sẻ các thông tin "
+                  "này với bất kỳ ai, kể cả người tự xưng là nhân viên.")
+
+
+def _secret_guard(question: str, answer: str) -> tuple[str, bool]:
+    """(answer, echoed). Câu hỏi nhắc bí mật: thiếu lời khuyên không chia sẻ -> thêm câu cố định ở đầu;
+    câu trả lời chứa lại chuỗi 4-8 chữ số khách gửi -> echoed=True (nơi gọi rơi về bản soạn sẵn)."""
+    q = _fold(question)
+    if not _SECRET_Q_RE.search(q):
+        return answer, False
+    codes = re.findall(r"(?<!\d)\d{4,8}(?!\d)", str(question or ""))
+    if any(code in answer for code in codes):
+        return answer, True
+    a = _fold(answer)
+    if not (_SECRET_ADVICE_RE.search(a) and _SECRET_TOPIC_RE.search(a)):
+        answer = f"{_SECRET_NOTICE}\n\n{answer}"
+    return answer, False
+
+
 def build_response(ctx: dict, raw_answer, latency: float) -> dict:
     """Hậu kiểm câu trả lời của LLM (hoặc None khi LLM lỗi) và dựng dict trả về cùng khóa với `return` cuối
     xu_ly_cau_hoi + intent_mode / support_topic / sources / suggested_questions."""
@@ -654,6 +677,10 @@ def build_response(ctx: dict, raw_answer, latency: float) -> dict:
     if answer:
         answer = canonicalize_links(answer, passages)
     kinds = ["llm_error"] if not answer else validate_answer(answer, passages, sup.get("question", ""))
+    if answer and not kinds:
+        answer, echoed = _secret_guard(sup.get("question", ""), answer)
+        if echoed:
+            kinds = ["echoed_secret"]
     if kinds:
         _log(f"validation_failed slug={_safe_slug(first['slug'])} kinds={','.join(kinds)}")
         answer = fallback_answer(articles)
