@@ -178,6 +178,23 @@ $check('toChatContext: answer quá dài vẫn <= giới hạn và không cắt g
     && in_array($lastWord, ['Câu', 'trả', 'lời', 'rất', 'dài', 'không', 'dấu', 'cách'], true));
 $check('toChatContext: rỗng -> []', $k->toChatContext([]) === []);
 
+// Chọn section theo câu hỏi khi bài vượt giới hạn
+$qa = $long;
+$qa['sections'] = [
+    ['title' => 'Mục một', 'items' => ['Nội dung chung ' . str_repeat('từ ', 500)]],
+    ['title' => 'Mục hai', 'items' => ['Thông tin khác ' . str_repeat('chữ ', 500)]],
+    ['title' => 'Xóa dữ liệu', 'items' => ['Gửi yêu cầu xóa dữ liệu cá nhân tới cskh']],
+];
+$cq = $k->toChatContext([['article' => $qa, 'score' => 5.0, 'url' => $base . '/x']], 'tôi muốn xóa dữ liệu cá nhân')[0];
+$titles = array_column($cq['sections'], 'title');
+$check('toChatContext(câu hỏi): section liên quan ở cuối bài được giữ và đứng đầu', ($titles[0] ?? '') === 'Xóa dữ liệu' && $measure($cq) <= SupportKnowledge::CONTEXT_CHAR_LIMIT);
+$c0 = $k->toChatContext([['article' => $qa, 'score' => 5.0, 'url' => $base . '/x']])[0];
+$check('toChatContext(không câu hỏi): hành vi cũ, section đầu trước', (array_column($c0['sections'], 'title')[0] ?? '') === 'Mục một' && !in_array('Xóa dữ liệu', array_column($c0['sections'], 'title'), true));
+$cTie = $k->toChatContext([['article' => $qa, 'score' => 5.0, 'url' => $base . '/x']], 'abc xyz')[0];
+$check('toChatContext(câu hỏi không trùng): giữ thứ tự gốc', (array_column($cTie['sections'], 'title')[0] ?? '') === 'Mục một');
+$short = $k->toChatContext($k->rank('Điều kiện đổi trả là gì?', 3, $base), 'Điều kiện đổi trả là gì?');
+$check('toChatContext(câu hỏi): bài ngắn không đổi so với không truyền câu hỏi', $short === $ctx);
+
 // ---------- 8. gợi ý + fallback ----------
 $ranked = $k->rank('Phí vận chuyển bao nhiêu?', 3, $base);
 $sug = $k->suggestedQuestions($ranked, 'Phí vận chuyển bao nhiêu?');

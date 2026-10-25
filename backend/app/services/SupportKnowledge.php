@@ -176,8 +176,9 @@ final class SupportKnowledge
     }
 
     /** Nội dung gọn gửi sang Flask: mỗi bài <= CONTEXT_CHAR_LIMIT ký tự, cắt item cuối trước. */
-    public function toChatContext(array $ranked): array
+    public function toChatContext(array $ranked, string $message = ''): array
     {
+        $queryTokens = $message === '' ? [] : $this->queryTokens(self::fold(mb_substr($message, 0, 300, 'UTF-8')));
         $out = [];
         foreach ($ranked as $entry) {
             $article = $entry['article'] ?? null;
@@ -192,7 +193,9 @@ final class SupportKnowledge
             if ($budget < 0) {
                 $answer = self::cutAtWord($answer, max(0, mb_strlen($answer) + $budget));
             } else {
-                foreach ($article['sections'] ?? [] as $section) {
+                $articleSections = array_values(array_filter($article['sections'] ?? [], 'is_array'));
+                if ($queryTokens !== []) $articleSections = $this->sectionsByRelevance($articleSections, $queryTokens, $budget);
+                foreach ($articleSections as $section) {
                     $items = [];
                     $sectionTitle = (string)($section['title'] ?? '');
                     $sectionCost = mb_strlen($sectionTitle);
@@ -214,6 +217,31 @@ final class SupportKnowledge
             ];
         }
         return $out;
+    }
+
+    /**
+     * Bài vượt ngân sách: xếp section theo số token câu hỏi trùng (giảm dần, bằng điểm giữ thứ tự gốc).
+     * Bài vừa ngân sách giữ nguyên thứ tự.
+     */
+    private function sectionsByRelevance(array $sections, array $queryTokens, int $budget): array
+    {
+        $total = 0;
+        $scored = [];
+        foreach ($sections as $position => $section) {
+            $text = (string)($section['title'] ?? '');
+            $total += mb_strlen($text);
+            foreach ($section['items'] ?? [] as $item) {
+                $itemText = self::itemText($item);
+                $details = self::itemDetails($item);
+                $total += mb_strlen($itemText) + array_sum(array_map('mb_strlen', $details));
+                $text .= ' ' . $itemText . ' ' . implode(' ', $details);
+            }
+            $set = $this->tokenSet($text);
+            $scored[] = [count(array_filter($queryTokens, static fn($t) => isset($set[$t]))), $position, $section];
+        }
+        if ($total <= $budget) return $sections;
+        usort($scored, static fn($a, $b) => $b[0] <=> $a[0] ?: $a[1] <=> $b[1]);
+        return array_column($scored, 2);
     }
 
     /** Câu hỏi gợi ý (<= 3) từ `questions` của các bài đã xếp hạng, luân phiên giữa các bài, bỏ câu trùng câu khách. */

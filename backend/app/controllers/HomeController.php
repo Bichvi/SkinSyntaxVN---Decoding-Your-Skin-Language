@@ -3128,7 +3128,7 @@ class HomeController {
             $rankStart = microtime(true);
             $supportKnowledge = new SupportKnowledge();
             $supportRanked = $supportKnowledge->rank($message, 3, BASE_URL);
-            $supportArticles = $supportKnowledge->toChatContext($supportRanked);
+            $supportArticles = $supportKnowledge->toChatContext($supportRanked, $message);
             if ($supportRanked !== []) {
                 error_log(sprintf('[STORE_SUPPORT] rank slug=%s score=%.2f n=%d ms=%.1f', $supportRanked[0]['article']['slug'], $supportRanked[0]['score'], count($supportRanked), (microtime(true) - $rankStart) * 1000));
             }
