@@ -649,3 +649,5 @@ Rollback nhanh khi nghi ngờ self-healing: đặt `AI_IDOL_MAX_SCRIPT_REPAIR_AT
 - U12 (nâng cao có cổng điều kiện): hạ tầng boost CTR, khung A/B, co-purchase theo nhánh, benchmark cross-encoder; mọi cờ hành vi đang TẮT vì cổng dữ liệu/độ trễ chưa đạt. Xem `update_advanced_gated.md` và `docs/ops/search-ops.md` mục 9.
 
 - U13 (kiểm thử tổng giai đoạn 2): E2E 16 kịch bản, bench, kiểm chứng đường hoàn kho `HoaDon`, sửa nhỏ (thống kê loại tài khoản test, route `admin_sp_create`, đồng bộ trạng thái ẩn Chroma/Neo4j). Tổng hợp toàn bộ giai đoạn 2 (bảng key Redis, luồng sự kiện, lịch job, cờ, cổng U12, rủi ro): `update_search_upgrade_phase2.md`.
+
+- Trang chủ gợi ý theo đồ thị Neo4j (giai đoạn 1: "Vì bạn đã xem", "Hợp với da bạn", "Theo vấn đề da" + nhãn lý do; không đổi các thuật toán gợi ý cũ). Xem `update_home_graph_recommend.md`.
