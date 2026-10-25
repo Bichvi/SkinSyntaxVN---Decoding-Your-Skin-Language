@@ -7,7 +7,7 @@ import json
 from pymongo import MongoClient
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ATLAS_URI = 'mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB'
+ATLAS_URI = os.environ["MONGO_URI"]
 
 
 def audit_catalog_schema():

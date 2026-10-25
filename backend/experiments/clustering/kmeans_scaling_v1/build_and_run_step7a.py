@@ -173,7 +173,7 @@ def run_step7a():
 
     # 2. Audit MongoDB Catalog & Build FULL Eligible Dataset
     # Load credentials safely from environment or project config without printing
-    db_uri = os.environ.get('MONGODB_URI', 'mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB')
+    db_uri = (os.environ.get('MONGODB_URI') or os.environ["MONGO_URI"])
     client = MongoClient(db_uri)
     db = client['skinsyntax']
     col_sp = db['san_pham']

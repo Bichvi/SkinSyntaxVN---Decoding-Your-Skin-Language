@@ -34,7 +34,7 @@ from apriori import apriori_first_principles, get_transactions_from_matrix
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STEP2_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '..', 'micro_20sku_v1'))
-ATLAS_URI = 'mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB'
+ATLAS_URI = os.environ["MONGO_URI"]
 
 EXPECTED_STEP2_HASHES = {
     'baskets_30.json': '7443fda76f84ca686bea10fa41fb26566e4da81550ee8a12afa41e910ecae593',
