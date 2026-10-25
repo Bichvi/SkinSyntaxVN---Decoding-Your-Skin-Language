@@ -48,6 +48,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--dry-run", action="store_true", help="call the LLM and print; write nothing")
     p.add_argument("--rpm", type=float, default=30.0, help="max LLM calls per minute (0 = unlimited)")
     p.add_argument("--max-attempts", type=int, default=3)
+    p.add_argument("--provider", choices=("groq", "pool"), default="groq",
+                   help="groq = GROQ_API_KEY (default); pool = first model of chatbot llm_pool")
+    p.add_argument("--groq-model", default="openai/gpt-oss-20b")
     p.add_argument("--out", help="write the quality table as CSV")
     p.add_argument("--price-in", type=float, default=DEFAULT_PRICE_IN)
     p.add_argument("--price-out", type=float, default=DEFAULT_PRICE_OUT)
@@ -134,6 +137,22 @@ def write_csv(path: str, rows: list[dict[str, Any]]) -> None:
                              " | ".join(r["evidence"]), r["error"] or ""])
 
 
+def build_groq_llm(model: str) -> Any:
+    """Groq via its OpenAI-compatible API (same setup the chatbot uses)."""
+
+    import os
+
+    key = os.getenv("GROQ_API_KEY", "").strip()
+    if not key:
+        return None
+    from langchain_openai import ChatOpenAI
+
+    return ChatOpenAI(openai_api_key=key, openai_api_base="https://api.groq.com/openai/v1",
+                      model_name=model, temperature=0, max_tokens=4096, max_retries=0,
+                      # gpt-oss spends tokens on hidden reasoning; low effort keeps room for the JSON.
+                      model_kwargs={"reasoning_effort": "low"})
+
+
 def run(args: argparse.Namespace) -> int:
     from chatbot_service.llm_pool import get_llms
     from graph_sync.config import load_settings
@@ -146,11 +165,17 @@ def run(args: argparse.Namespace) -> int:
     )
     from tagging.runner import Labeler
 
-    llms = get_llms()
-    if not llms:
-        print("Không có LLM nào được cấu hình (thiếu OPENAI_API_KEY?).", file=sys.stderr)
-        return 1
-    llm = llms[0]
+    if args.provider == "groq":
+        llm = build_groq_llm(args.groq_model)
+        if llm is None:
+            print("Thiếu GROQ_API_KEY trong môi trường.", file=sys.stderr)
+            return 1
+    else:
+        llms = get_llms()
+        if not llms:
+            print("Không có LLM nào được cấu hình (thiếu OPENAI_API_KEY?).", file=sys.stderr)
+            return 1
+        llm = llms[0]
     try:
         llm = llm.bind(response_format={"type": "json_object"})
     except Exception:            # provider without JSON mode: the parser tolerates fences/prose anyway
