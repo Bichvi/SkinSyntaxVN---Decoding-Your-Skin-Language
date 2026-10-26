@@ -70,6 +70,13 @@ $paraphrase = [
     'otp het han chua' => 'otp',
     'xin hóa đơn công ty' => 'hoa-don',
     'khong dang nhap duoc tai khoan' => 'quen-mat-khau',
+    'dùng voucher khi thanh toán thế nào' => 'dung-voucher',
+    'nhap ma giam gia o dau' => 'dung-voucher',
+    'làm sao đánh giá sản phẩm đã mua' => 'danh-gia',
+    'lam sao viet danh gia' => 'danh-gia',
+    'đặt câu hỏi cho shop ở đâu' => 'hoi-dap-san-pham',
+    'gui cau hoi o tab hoi dap' => 'hoi-dap-san-pham',
+    'đổi số điện thoại ở đâu' => 'doi-lien-he',
 ];
 $pBad = [];
 foreach ($paraphrase as $q => $slug) {
@@ -251,6 +258,10 @@ $check('shouldBypassChatCache: "tôi muốn xem dữ liệu cá nhân của mìn
 foreach (['serum cho da dầu', 'chào shop', 'kem chống nắng nào tốt cho da nhạy cảm'] as $productQ) {
     $check("shouldBypassChatCache: \"$productQ\" -> false (giữ cache cũ)", SupportKnowledge::shouldBypassChatCache($k->rank($productQ, 3, $base)) === false);
 }
+
+// ---------- 13. isStoreSupportReply: chỉ intent_mode STORE_SUPPORT mới bỏ ghi đè văn bản sản phẩm (Bước 09b) ----------
+$check('isStoreSupportReply: STORE_SUPPORT -> true', SupportKnowledge::isStoreSupportReply(['intent_mode' => 'STORE_SUPPORT']) === true);
+$check('isStoreSupportReply: PRODUCT_INQUIRY/thiếu/null -> false', !SupportKnowledge::isStoreSupportReply(['intent_mode' => 'PRODUCT_INQUIRY']) && !SupportKnowledge::isStoreSupportReply([]) && !SupportKnowledge::isStoreSupportReply(null));
 
 echo PHP_EOL . "Tổng: $pass PASS, $fail FAIL" . PHP_EOL;
 exit($fail > 0 ? 1 : 0);

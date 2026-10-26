@@ -107,7 +107,7 @@ $routeExists = static function (string $route) use ($routerSource, $assistanceSo
 };
 $check('routeExists: route thật (khaosat, giohang) có case', $routeExists('khaosat') && $routeExists('giohang'));
 $check('routeExists: alias store_assistance (tro_giup, chat_purchase_action) được nhận', $routeExists('tro_giup') && $routeExists('chat_purchase_action'));
-$check('routeExists: route không có case (lichsuchat, route_bia) bị từ chối', !$routeExists('lichsuchat') && !$routeExists('route_bia') && !$routeExists("a'b"));
+$check('routeExists: route không có case (route_khong_ton_tai, route_bia) bị từ chối', !$routeExists('route_khong_ton_tai') && !$routeExists('route_bia') && !$routeExists("a'b"));
 
 $guides = array_values(array_filter($data['articles'], static fn($a) => ($a['group'] ?? '') === 'guide'));
 $check('có ít nhất 1 bài guide (' . count($guides) . ' bài)', count($guides) >= 1);

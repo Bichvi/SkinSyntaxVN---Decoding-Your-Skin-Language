@@ -314,6 +314,12 @@ final class SupportKnowledge
     }
 
     /** Flask coi là lỗi: không 2xx (gồm timeout, status 0) hoặc 2xx nhưng thân không phải JSON. */
+    /** Flask đã trả lời theo luồng hỗ trợ cửa hàng -> không ghi đè/heuristic văn bản sản phẩm. */
+    public static function isStoreSupportReply(?array $decoded): bool
+    {
+        return is_array($decoded) && ($decoded['intent_mode'] ?? null) === 'STORE_SUPPORT';
+    }
+
     public static function flaskFailed(array $response, ?array $decoded): bool
     {
         $status = (int)($response['status'] ?? 0);

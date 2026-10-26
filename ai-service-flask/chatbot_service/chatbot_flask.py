@@ -2149,19 +2149,38 @@ def _store_support_generate(prompt: str, llms: list):
     """Gọi LLM cho nhánh STORE_SUPPORT theo đúng mẫu vòng cooldown của xu_ly_cau_hoi.
     Trả về văn bản, hoặc None nếu mọi LLM đều lỗi/bị cooldown (nơi gọi sẽ dùng bản soạn sẵn)."""
     from langchain_core.messages import HumanMessage
+    import concurrent.futures as _cf
 
-    current_time = time.time()
+    try:
+        budget = float(os.getenv("STORE_SUPPORT_LLM_BUDGET_S", "15"))
+    except ValueError:
+        budget = 15.0
+    t0 = time.time()
+    deadline = t0 + budget
+    current_time = t0
     for llm in llms or []:
         if _get_llm_cooldown(llm) > current_time:
             continue
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            break
         model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
+        call_start = time.time()
+        executor = _cf.ThreadPoolExecutor(max_workers=1)
         try:
-            response = llm.invoke([HumanMessage(content=prompt)])
+            future = executor.submit(llm.invoke, [HumanMessage(content=prompt)])
+            try:
+                response = future.result(timeout=remaining)
+            except _cf.TimeoutError:
+                print(f"[STORE_SUPPORT] llm_timeout model={model_name} waited={time.time() - call_start:.1f}s")
+                break
+            finally:
+                executor.shutdown(wait=False)
             text = _get_message_text(response)
             if text:
                 text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
             if text:
-                print(f"[STORE_SUPPORT] generated model={model_name}")
+                print(f"[STORE_SUPPORT] generated model={model_name} total={time.time() - t0:.1f}s")
                 return text
         except Exception as e:
             err_str = str(e).lower()
@@ -2170,6 +2189,7 @@ def _store_support_generate(prompt: str, llms: list):
                 print(f"[STORE_SUPPORT] llm_rate_limited model={model_name}")
             else:
                 print(f"[STORE_SUPPORT] llm_failed model={model_name} kind={type(e).__name__}")
+    print(f"[STORE_SUPPORT] llm_none total={time.time() - t0:.1f}s")
     return None
 
 

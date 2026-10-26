@@ -3302,7 +3302,8 @@ class HomeController {
 
         // Do not show a denial together with real products returned by the catalog.
         // This can happen when an LLM follows an old "no result" phrase from history.
-        if ($graphTool === null && !empty($products) && $this->aiAnswerDeniesAvailableProducts($answer)) {
+        $isStoreSupportReply = SupportKnowledge::isStoreSupportReply(is_array($decoded) ? $decoded : null);
+        if (!$isStoreSupportReply && $graphTool === null && !empty($products) && $this->aiAnswerDeniesAvailableProducts($answer)) {
             $answer = $this->buildAiAssistantFallback($message, $conflicts, $products, $profile);
         }
 
@@ -3310,7 +3311,7 @@ class HomeController {
         // truth. Do not let the LLM mention a different product than the rows
         // returned by MongoDB (for example an unreturned brand or a wrong
         // product type); the cards already contain the grounded details.
-        if (!$isRoutineRequest && $graphTool === null && $this->isAiProductDiscoveryRequest($message) && !empty($products)) {
+        if (!$isStoreSupportReply && !$isRoutineRequest && $graphTool === null && $this->isAiProductDiscoveryRequest($message) && !empty($products)) {
             $answer = 'Mình đã tìm thấy các sản phẩm đúng nhóm bạn đang tìm trong catalog. Bạn có thể xem thành phần, giá và link chi tiết ở các thẻ bên dưới.';
         }
 

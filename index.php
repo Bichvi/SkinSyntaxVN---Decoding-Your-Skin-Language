@@ -384,32 +384,51 @@ switch ($r) {
         (new TaiKhoanController($pdo))->hoso();
         break;
 
+    case 'capnhatthongtin':
     case 'capnhathoso':
-        (new TaiKhoanController($pdo))->capnhatHoso();
+        (new TaiKhoanController($pdo))->capNhatThongTin();
         break;
 
     case 'capnhat_loaida':
         (new TaiKhoanController($pdo))->capNhatLoaiDa();
         break;
 
-    case 'diachi_macdinh':
-        (new TaiKhoanController($pdo))->datDiaChiMacDinh();
-        break;
-
-    case 'xoa_diachi':
-        (new TaiKhoanController($pdo))->xoaDiaChi();
-        break;
-
     case 'huydon':
         (new TaiKhoanController($pdo))->huydon();
         break;
 
+    case 'guidanhgia':
     case 'danhgia_sanpham':
-        (new TaiKhoanController($pdo))->danhgiaSanpham();
+        (new QuanTriController($pdo))->customerReviewSave();
         break;
 
+    case 'guicauhoi':
     case 'hoidap_sanpham':
-        (new SanPhamController($pdo))->hoidapSanpham();
+        (new QuanTriController($pdo))->customerQuestionSave();
+        break;
+
+    case 'lichsuchat':
+        (new QuanTriController($pdo))->customerChat();
+        break;
+
+    case 'chat_send':
+        (new QuanTriController($pdo))->customerChatSend();
+        break;
+
+    case 'apdung_voucher':
+        (new HomeController($pdo))->apDungVoucher();
+        break;
+
+    case 'bo_voucher':
+        (new HomeController($pdo))->boVoucher();
+        break;
+
+    case 'apdung_diem':
+        (new HomeController($pdo))->apDungDiem();
+        break;
+
+    case 'bo_diem':
+        (new HomeController($pdo))->boDiem();
         break;
 
     case 'live':
