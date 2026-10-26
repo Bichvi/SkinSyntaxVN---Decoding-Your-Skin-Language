@@ -412,8 +412,8 @@
       "slug": "doi-lien-he",
       "group": "account",
       "title": "Đổi email & số điện thoại liên hệ",
-      "summary": "Phân biệt email đăng nhập với thông tin nhận hàng trong hồ sơ.",
-      "answer": "Hiện website chưa có chức năng tự đổi email đăng nhập hay số điện thoại trong hồ sơ. Muốn đổi, hãy liên hệ cskh@skinsyntax.com hoặc hotline 0398606281 để được hướng dẫn xác minh. Riêng số điện thoại nhận hàng của từng đơn, bạn nhập ở trang Thanh toán khi đặt hàng.",
+      "summary": "Tự sửa số điện thoại ở Hồ sơ; email đăng nhập thì liên hệ hỗ trợ.",
+      "answer": "Số điện thoại bạn tự sửa được: đăng nhập, vào Tài khoản, tab Tổng quan, sửa ô Số điện thoại trong khung Cập nhật thông tin tài khoản rồi bấm Lưu thông tin. Ô Email trong khung này bị khóa nên email đăng nhập không tự đổi được; muốn đổi, hãy liên hệ cskh@skinsyntax.com hoặc hotline 0398606281 để được hướng dẫn xác minh. Số điện thoại nhận hàng của từng đơn thì bạn nhập ở trang Thanh toán khi đặt hàng.",
       "triggers": [
         "doi email",
         "thay email",
@@ -432,14 +432,17 @@
         {
           "title": "Số điện thoại liên hệ",
           "items": [
-            "Website chưa có chức năng tự đổi số điện thoại trong hồ sơ. Gửi yêu cầu tới cskh@skinsyntax.com hoặc gọi 0398606281 để được hướng dẫn.",
+            "Đăng nhập, bấm Tài khoản ở đầu trang rồi mở tab Tổng quan.",
+            "Trong khung Cập nhật thông tin tài khoản, sửa ô Số điện thoại.",
+            "Bấm Lưu thông tin; dòng thông báo cạnh nút báo «Đã cập nhật thông tin tài khoản.» khi xong.",
+            "Nếu phần Họ tên bị để trống, trang báo «Họ tên không được để trống.»; nhập lại rồi lưu.",
             "Số điện thoại nhận hàng của mỗi đơn được nhập ở trang Thanh toán (ô Số điện thoại khi nhập địa chỉ mới); kiểm tra lại ở mỗi lần đặt hàng."
           ]
         },
         {
           "title": "Email đăng nhập",
           "items": [
-            "Chưa có chức năng tự đổi email đăng nhập trên giao diện. Gửi yêu cầu tới cskh@skinsyntax.com để được hướng dẫn xác minh và phương án phù hợp.",
+            "Ô Email trong khung Cập nhật thông tin tài khoản bị khóa, nên email đăng nhập chưa tự đổi được trên giao diện. Gửi yêu cầu tới cskh@skinsyntax.com hoặc gọi 0398606281 để được hướng dẫn xác minh và phương án phù hợp.",
             "Không cung cấp mật khẩu hoặc OTP trong nội dung yêu cầu. Nhân viên hỗ trợ không được yêu cầu bạn đọc mã để chuyển quyền tài khoản."
           ]
         }
@@ -1364,10 +1367,195 @@
       "updated": "2026-10-23"
     },
     {
+      "slug": "dung-voucher",
+      "group": "guide",
+      "title": "Dùng voucher và điểm khi đặt hàng",
+      "summary": "Nhập mã giảm giá và đổi điểm ở bước cuối trước khi bấm đặt hàng.",
+      "answer": "Ở trang Thanh toán (cần đăng nhập), nhập mã vào ô «Nhập mã voucher» rồi bấm Áp dụng; muốn bỏ mã thì bấm Gỡ mã. Để dùng điểm tích lũy, nhập số điểm vào ô «Nhập số điểm muốn dùng» rồi bấm Đổi điểm; muốn bỏ thì bấm Gỡ điểm. Mã giảm giá được tính trên giá trị hàng trước phí vận chuyển. Nếu báo lỗi, đọc thông báo trên trang để biết mã không tồn tại, hết hạn hay chưa đạt giá trị tối thiểu.",
+      "triggers": [
+        "dung voucher",
+        "su dung voucher",
+        "ap dung voucher",
+        "nhap voucher",
+        "nhap ma giam gia",
+        "ap dung ma giam gia",
+        "go ma giam gia",
+        "dung diem tich luy",
+        "doi diem tich luy",
+        "ma giam gia khi thanh toan"
+      ],
+      "questions": [
+        "Dùng voucher khi thanh toán thế nào?",
+        "Nhập mã giảm giá ở đâu?",
+        "Đổi điểm để giảm giá đơn hàng ra sao?"
+      ],
+      "sections": [
+        {
+          "title": "Trước khi bắt đầu",
+          "items": [
+            "Cần đăng nhập bằng tài khoản khách hàng và đã chọn hàng để vào trang Thanh toán (từ Giỏ hàng bấm Tiếp tục). Tài khoản Admin/Staff không dùng được mã giảm giá khi đặt hàng.",
+            "Chưa có mã? Voucher nhận được nằm ở Tài khoản, tab Ví Voucher; xem bài Xem video để nhận voucher để biết một cách nhận mã."
+          ]
+        },
+        {
+          "title": "Áp dụng mã giảm giá",
+          "items": [
+            "Ở trang Thanh toán, tìm khung Mã giảm giá.",
+            "Nhập mã vào ô «Nhập mã voucher» rồi bấm Áp dụng.",
+            "Khi mã được nhận, trang báo «Áp dụng mã giảm giá thành công.», khung hiện mã đang dùng và dòng Giảm voucher xuất hiện trong phần tổng tiền. Mã giảm giá được tính trên giá trị sản phẩm trước phí vận chuyển.",
+            "Muốn bỏ mã, bấm Gỡ mã; trang báo «Đã gỡ mã giảm giá khỏi đơn hàng.»"
+          ]
+        },
+        {
+          "title": "Dùng điểm tích lũy",
+          "items": [
+            "Ở khung Dùng điểm tích lũy, trang hiện số điểm bạn có và mức quy đổi (1 điểm = 1.000đ) cùng số điểm tối đa dùng được cho đơn này.",
+            "Nhập số điểm vào ô «Nhập số điểm muốn dùng» rồi bấm Đổi điểm. Nếu nhập nhiều hơn số điểm bạn có hoặc hơn mức đơn hàng cho phép, hệ thống chỉ áp dụng phần tối đa dùng được.",
+            "Khi xong, trang báo «Đã áp dụng ... điểm cho đơn hàng.» và dòng Giảm bằng điểm xuất hiện trong phần tổng tiền. Muốn bỏ, bấm Gỡ điểm."
+          ]
+        },
+        {
+          "title": "Nếu gặp lỗi",
+          "items": [
+            {
+              "text": "Với mã giảm giá, trang có thể báo:",
+              "details": [
+                "«Mã giảm giá không tồn tại.»: kiểm tra lại cách gõ mã.",
+                "«Mã giảm giá đã hết hạn.» hoặc «Mã giảm giá chưa đến thời gian áp dụng.»: mã ngoài thời gian dùng.",
+                "«Đơn hàng chưa đạt giá trị tối thiểu để dùng mã này.»: thêm hàng vào đơn rồi thử lại.",
+                "«Mã giảm giá đã hết lượt sử dụng.»: mã không còn lượt."
+              ]
+            },
+            {
+              "text": "Với điểm tích lũy, trang có thể báo:",
+              "details": [
+                "«Tài khoản của bạn hiện chưa có điểm tích lũy để sử dụng.»",
+                "«Vui lòng nhập số điểm hợp lệ để áp dụng.»: nhập số điểm lớn hơn 0.",
+                "«Giá trị đơn hàng hiện tại chưa đủ để quy đổi điểm thành giảm giá.»"
+              ]
+            }
+          ]
+        }
+      ],
+      "route_sources": [
+        "thanhtoan",
+        "apdung_voucher",
+        "bo_voucher",
+        "apdung_diem",
+        "bo_diem",
+        "customer_vouchers"
+      ],
+      "updated": "2026-10-26"
+    },
+    {
+      "slug": "danh-gia",
+      "group": "guide",
+      "title": "Viết đánh giá cho hàng bạn mua",
+      "summary": "Gửi số sao, nhận xét và hình ảnh ở tab Đánh giá sau khi đơn Hoàn thành.",
+      "answer": "Đăng nhập, mở trang chi tiết của món hàng bạn đã mua và vào tab Đánh giá. Chọn Số sao, nhập Nội dung đánh giá, có thể đính kèm Hình ảnh đánh giá rồi bấm Gửi đánh giá. Chỉ đơn ở trạng thái Hoàn thành mới được đánh giá, và mỗi lần mua chỉ đánh giá một lần.",
+      "triggers": [
+        "viet danh gia",
+        "gui danh gia",
+        "danh gia mon hang",
+        "danh gia sau khi mua",
+        "cham sao",
+        "khong danh gia duoc",
+        "nut gui danh gia"
+      ],
+      "questions": [
+        "Làm sao viết đánh giá cho hàng tôi mua?",
+        "Vì sao tôi không viết được đánh giá?"
+      ],
+      "sections": [
+        {
+          "title": "Điều kiện",
+          "items": [
+            "Cần đăng nhập bằng tài khoản khách hàng. Chưa đăng nhập, tab Đánh giá hiện «Vui lòng đăng nhập để đánh giá sản phẩm.»",
+            "Chỉ đánh giá được món hàng bạn đã mua, trong đơn ở trạng thái Hoàn thành (biểu mẫu ghi «Chỉ đơn Hoàn thành mới được đánh giá»).",
+            "Mỗi lần mua đánh giá một lần; nếu đã đánh giá, trang hiện «Bạn đã đánh giá sản phẩm này rồi.»"
+          ]
+        },
+        {
+          "title": "Các bước",
+          "items": [
+            "Mở trang chi tiết của món hàng đã mua, bấm tab Đánh giá.",
+            "Ở mục Viết đánh giá, chọn Số sao (mặc định là 5 sao).",
+            "Nhập Nội dung đánh giá (bắt buộc).",
+            "Nếu muốn, bấm chọn ảnh ở Hình ảnh đánh giá; có thể chọn nhiều ảnh.",
+            "Bấm Gửi đánh giá; trang báo «Đã gửi đánh giá sản phẩm.» rồi quay lại tab Đánh giá. Số lượt bạn đã gửi hiện ở Tài khoản, tab Tổng quan, mục Đánh giá đã gửi."
+          ]
+        },
+        {
+          "title": "Nếu không thấy biểu mẫu hoặc gặp lỗi",
+          "items": [
+            "Trang ghi «Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua sản phẩm này.»: bạn chưa có đơn Hoàn thành cho món hàng này; theo dõi trạng thái đơn ở Tài khoản, tab Lịch sử đơn hàng.",
+            "Báo «Vui lòng nhập đầy đủ nội dung đánh giá.»: nhập Nội dung đánh giá rồi gửi lại."
+          ]
+        }
+      ],
+      "route_sources": [
+        "chitiet",
+        "danhgia_sanpham",
+        "guidanhgia",
+        "hoso"
+      ],
+      "updated": "2026-10-26"
+    },
+    {
+      "slug": "hoi-dap-san-pham",
+      "group": "guide",
+      "title": "Đặt câu hỏi ở tab Hỏi đáp",
+      "summary": "Đăng nhập và gửi câu hỏi cho shop ngay ở tab Hỏi đáp của trang chi tiết.",
+      "answer": "Mở trang chi tiết của món hàng bạn quan tâm, bấm tab Hỏi đáp, nhập câu hỏi vào khung rồi bấm Gửi (cần đăng nhập). Trang báo «Đã gửi câu hỏi. SkinSyntax sẽ phản hồi sớm.» Khi shop trả lời, câu trả lời hiện bên dưới câu hỏi với nhãn SkinSyntax trả lời.",
+      "triggers": [
+        "hoi dap",
+        "tab hoi dap",
+        "dat cau hoi",
+        "gui cau hoi",
+        "dat cau hoi cho shop",
+        "hoi shop tren trang",
+        "cau hoi tren trang chi tiet"
+      ],
+      "questions": [
+        "Đặt câu hỏi cho shop ở đâu?",
+        "Gửi câu hỏi ở tab Hỏi đáp như thế nào?"
+      ],
+      "sections": [
+        {
+          "title": "Các bước",
+          "items": [
+            "Đăng nhập bằng tài khoản khách hàng. Chưa đăng nhập, tab Hỏi đáp hiện «Vui lòng đăng nhập để gửi câu hỏi về sản phẩm.»",
+            "Mở trang chi tiết của món hàng, bấm tab Hỏi đáp.",
+            "Nhập câu hỏi vào khung «Bạn có câu hỏi với sản phẩm này? Đặt câu hỏi ngay...».",
+            "Bấm Gửi; trang báo «Đã gửi câu hỏi. SkinSyntax sẽ phản hồi sớm.» rồi quay lại tab Hỏi đáp."
+          ]
+        },
+        {
+          "title": "Xem câu trả lời",
+          "items": [
+            "Quay lại tab Hỏi đáp của đúng trang đó; câu trả lời của shop hiện dưới câu hỏi với nhãn SkinSyntax trả lời.",
+            "Chưa thấy câu trả lời mà cần hỗ trợ gấp thì xem bài Liên hệ bộ phận hỗ trợ."
+          ]
+        },
+        {
+          "title": "Nếu gặp lỗi",
+          "items": [
+            "Báo «Vui lòng nhập câu hỏi cho sản phẩm.»: nhập nội dung câu hỏi rồi gửi lại."
+          ]
+        }
+      ],
+      "route_sources": [
+        "chitiet",
+        "hoidap_sanpham",
+        "guicauhoi"
+      ],
+      "updated": "2026-10-26"
+    },
+    {
       "slug": "ho-so",
       "group": "guide",
       "title": "Tài khoản của tôi: các tab và đổi mật khẩu",
-      "summary": "Các tab trong Tài khoản của tôi và cách đổi mật khẩu khi đang đăng nhập.",
+      "summary": "Các tab trong Tài khoản của tôi, cách cập nhật thông tin và đổi mật khẩu.",
       "answer": "Đăng nhập rồi bấm Tài khoản ở đầu trang để vào «Tài khoản của tôi», nơi có các tab Tổng quan, Lịch sử đơn hàng, Giỏ hàng của tôi, Hồ sơ Làn da và Ví Voucher. Muốn đổi mật khẩu, mở tab Tổng quan, điền khung Đổi mật khẩu (mật khẩu mới ít nhất 6 ký tự) rồi bấm Đổi mật khẩu. Nếu chưa đăng nhập được vì quên mật khẩu, hãy dùng Quên mật khẩu ở trang Đăng nhập.",
       "triggers": [
         "doi mat khau",
@@ -1389,13 +1577,32 @@
             {
               "text": "Trang có các tab:",
               "details": [
-                "Tổng quan: Loại KH và tiến độ hạng thành viên, Ngày tham gia, Số đơn hàng, Đánh giá đã gửi, khung Đổi mật khẩu.",
+                "Tổng quan: Loại KH và tiến độ hạng thành viên, Ngày tham gia, Số đơn hàng, Đánh giá đã gửi, khung Cập nhật thông tin tài khoản, khung Đổi mật khẩu.",
                 "Lịch sử đơn hàng.",
                 "Giỏ hàng của tôi.",
                 "Hồ sơ Làn da: Loại da, Mức độ nhạy cảm, Mục tiêu chăm sóc, Ngân sách trung bình, và các nút Cập nhật nhanh, Khảo sát đầy đủ.",
                 "Ví Voucher: các voucher bạn đã nhận."
               ]
             }
+          ]
+        },
+        {
+          "title": "Cập nhật thông tin tài khoản",
+          "items": [
+            "Ở tab Tổng quan, tìm khung Cập nhật thông tin tài khoản.",
+            {
+              "text": "Sửa các ô cần đổi:",
+              "details": [
+                "Họ tên (bắt buộc).",
+                "Giới tính (Nữ, Nam hoặc Khác).",
+                "Năm sinh.",
+                "Số điện thoại.",
+                "Địa chỉ.",
+                "Email: ô này bị khóa, không sửa được."
+              ]
+            },
+            "Bấm Lưu thông tin; dòng thông báo cạnh nút báo «Đã cập nhật thông tin tài khoản.» khi xong.",
+            "Báo «Năm sinh không hợp lệ.»: nhập lại năm sinh bằng số, năm sinh không được lớn hơn năm hiện tại."
           ]
         },
         {
@@ -1420,9 +1627,10 @@
       },
       "route_sources": [
         "hoso",
+        "capnhatthongtin",
         "doimatkhau"
       ],
-      "updated": "2026-10-23"
+      "updated": "2026-10-26"
     },
     {
       "slug": "he-thong-cua-hang",
