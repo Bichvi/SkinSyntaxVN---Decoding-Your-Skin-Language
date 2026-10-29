@@ -166,6 +166,9 @@ def test_quick_build_makes_no_network_validation_call(fresh, monkeypatch):
     built = cf._build_llms(validate=False)
     assert time.perf_counter() - started < 5
     assert attempts == []                                # no validation request at all
-    assert len(built) == 5                               # one candidate per provider: OpenAI, Gemini, Groq, Zhipu, OpenRouter
+    assert len(built) == 5                               # one candidate per provider, in order: Groq, Gemini, Zhipu, OpenRouter, OpenAI (paid, last)
+    _name = lambda llm: str(getattr(llm, "model_name", getattr(llm, "model", "")))
+    assert _name(built[0]).startswith("openai/gpt-oss")  # Groq model first
+    assert _name(built[-1]) == "gpt-4o-mini"             # OpenAI last
     # validate=True does call it (proves the check above is meaningful) and drops providers that fail
     assert cf._build_llms(validate=True) == [] and attempts
