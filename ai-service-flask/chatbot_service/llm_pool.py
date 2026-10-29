@@ -49,8 +49,54 @@ def _build_llms() -> list:
             from langchain_community.chat_models import ChatOpenAI
         except Exception:
             ChatOpenAI = None
+    # (a) Groq — free, ưu tiên đầu tiên (không gọi mạng khi dựng)
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if ChatOpenAI is not None and groq_key:
+        try:
+            groq_model = os.getenv("GROQ_CHAT_MODEL", "openai/gpt-oss-120b").strip() or "openai/gpt-oss-120b"
+            groq_kwargs = dict(
+                openai_api_key=groq_key,
+                openai_api_base="https://api.groq.com/openai/v1",
+                model_name=groq_model,
+                temperature=0,
+                max_tokens=4096,
+                max_retries=0,
+                request_timeout=20,
+            )
+            if groq_model.startswith("openai/gpt-oss"):
+                groq_kwargs["reasoning_effort"] = "low"
+            built.append(ChatOpenAI(**groq_kwargs))
+            logger.debug(f"[LLM_POOL] Groq {groq_model} ready")
+        except Exception as e:
+            logger.warning(f"[LLM_POOL] Groq init failed: {type(e).__name__}")
+
+    # (b) Gemini — free, thứ hai
+    gemini_key = os.getenv("GOOGLE_API_KEY", "").strip()
+    if not gemini_key:
+        gemini_key = next(
+            (k.strip() for k in os.getenv("GOOGLE_API_KEYS", "").split(",") if k.strip()), ""
+        )
+    if gemini_key:
+        try:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+
+            gemini_model = os.getenv("GEMINI_CHAT_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+            built.append(
+                ChatGoogleGenerativeAI(
+                    model=gemini_model,
+                    temperature=0,
+                    max_tokens=4096,
+                    max_retries=0,
+                    google_api_key=gemini_key,
+                )
+            )
+            logger.debug(f"[LLM_POOL] Gemini {gemini_model} ready")
+        except Exception as e:
+            logger.warning(f"[LLM_POOL] Gemini init failed: {type(e).__name__}")
+
+    # (c) OpenAI — trả phí, chỉ là fallback cuối cùng
     openai_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if openai_key and openai_key.startswith("sk-"):
+    if ChatOpenAI is not None and openai_key and openai_key.startswith("sk-"):
         for model in OPENAI_MODELS or [OPENAI_MODEL]:
             try:
                 llm = ChatOpenAI(
@@ -62,10 +108,10 @@ def _build_llms() -> list:
                     request_timeout=20,
                 )
                 built.append(llm)
-                logger.debug(f"[LLM_POOL] OpenAI {model} ready")
+                logger.debug(f"[LLM_POOL] OpenAI {model} ready (paid fallback, last)")
                 break
             except Exception as e:
-                logger.warning(f"[LLM_POOL] OpenAI {model} init failed: {e}")
+                logger.warning(f"[LLM_POOL] OpenAI {model} init failed: {type(e).__name__}")
 
     logger.info(f"[LLM_POOL] Pool ready: {len(built)} LLM(s) available")
     return built

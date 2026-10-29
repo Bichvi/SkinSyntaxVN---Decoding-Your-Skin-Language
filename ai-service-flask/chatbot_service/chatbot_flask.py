@@ -388,29 +388,31 @@ def _build_llms(validate: bool = True) -> list:
         except Exception:
             ChatOpenAI = None
 
-    # 0. OpenAI GPT-4o-mini (Key trả phí — tốc độ cao, thông minh, không lo quota)
-    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if ChatOpenAI is not None and openai_key:
-        for o_model in ["gpt-4o-mini", "gpt-4o"]:
+    # 1. Groq — keep only models currently supported by the configured account.
+    # qwen/qwen3.6-27b was removed after Groq returned a deterministic 404.
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if ChatOpenAI is not None and groq_key:
+        for model in ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
             try:
-                o_llm = ChatOpenAI(
-                    openai_api_key=openai_key,
-                    model_name=o_model,
-                    temperature=0.2,
+                groq = ChatOpenAI(
+                    openai_api_key=groq_key,
+                    openai_api_base="https://api.groq.com/openai/v1",
+                    model_name=model,
+                    temperature=0,
                     max_tokens=4096,
-                    max_retries=1,
+                    max_retries=0,
                 )
-                print(f"[INFO] Testing OpenAI ({o_model})...")
-                if _check(o_llm):
-                    built.append(o_llm)
-                    print(f"[OK] OpenAI ({o_model}) loaded and {_state_word} (PRIMARY HIGH-SPEED)")
-                    break
+                print(f"[INFO] Testing Groq {model}...")
+                if _check(groq):
+                    built.append(groq)
+                    print(f"[OK] Groq {model} loaded and {_state_word}")
+                    break  # chỉ cần 1 Groq model hoạt động
                 else:
-                    print(f"[WARN] OpenAI ({o_model}) validation failed")
+                    print(f"[WARN] Groq {model} skipped due to connection issue")
             except Exception as e:
-                print(f"[WARN] OpenAI ({o_model}) init failed: {e}")
+                print(f"[WARN] Groq {model} init failed: {e}")
 
-    # 1. Gemini Flash — 1500 req/ngày/key (FREE)
+    # 2. Gemini Flash — 1500 req/ngày/key (FREE)
     from langchain_google_genai import ChatGoogleGenerativeAI, HarmCategory, HarmBlockThreshold
     safety = {
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -444,31 +446,6 @@ def _build_llms(validate: bool = True) -> list:
                     print(f"[WARN] Gemini ({g_model}) ({label}) failed validation/quota")
             except Exception as e:
                 print(f"[WARN] Gemini ({g_model}) {label} init failed: {e}")
-
-
-    # 2. Groq — keep only models currently supported by the configured account.
-    # qwen/qwen3.6-27b was removed after Groq returned a deterministic 404.
-    groq_key = os.getenv("GROQ_API_KEY", "").strip()
-    if ChatOpenAI is not None and groq_key:
-        for model in ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
-            try:
-                groq = ChatOpenAI(
-                    openai_api_key=groq_key,
-                    openai_api_base="https://api.groq.com/openai/v1",
-                    model_name=model,
-                    temperature=0,
-                    max_tokens=4096,
-                    max_retries=0,
-                )
-                print(f"[INFO] Testing Groq {model}...")
-                if _check(groq):
-                    built.append(groq)
-                    print(f"[OK] Groq {model} loaded and {_state_word}")
-                    break  # chỉ cần 1 Groq model hoạt động
-                else:
-                    print(f"[WARN] Groq {model} skipped due to connection issue")
-            except Exception as e:
-                print(f"[WARN] Groq {model} init failed: {e}")
 
     # 3. Zhipu glm-4-flash (FREE, phản hồi siêu tốc ~1.5 - 3 giây, giới hạn cực cao)
     # Đưa lên trước OpenRouter để tránh nghẽn/timeout
@@ -518,6 +495,28 @@ def _build_llms(validate: bool = True) -> list:
                     print(f"[WARN] OpenRouter {or_model} skipped due to connection issue")
             except Exception as e:
                 print(f"[WARN] OpenRouter {or_model} init failed: {e}")
+
+    # 5. OpenAI GPT-4o-mini — key trả phí, chỉ dùng làm fallback khi các provider miễn phí thất bại
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if ChatOpenAI is not None and openai_key:
+        for o_model in ["gpt-4o-mini", "gpt-4o"]:
+            try:
+                o_llm = ChatOpenAI(
+                    openai_api_key=openai_key,
+                    model_name=o_model,
+                    temperature=0.2,
+                    max_tokens=4096,
+                    max_retries=1,
+                )
+                print(f"[INFO] Testing OpenAI ({o_model})...")
+                if _check(o_llm):
+                    built.append(o_llm)
+                    print(f"[OK] OpenAI ({o_model}) loaded and {_state_word} (PAID FALLBACK)")
+                    break
+                else:
+                    print(f"[WARN] OpenAI ({o_model}) validation failed")
+            except Exception as e:
+                print(f"[WARN] OpenAI ({o_model}) init failed: {e}")
 
     print(f"[OK] Total LLMs ready: {len(built)}")
     return built
