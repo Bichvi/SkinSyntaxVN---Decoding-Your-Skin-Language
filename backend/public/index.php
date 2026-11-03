@@ -72,6 +72,23 @@ ob_start(static function ($buffer) {
 });
 
 $r = $_GET['r'] ?? 'home';
+
+require_once $backendRoot . '/app/services/ChatAgentToken.php';
+require_once $backendRoot . '/app/controllers/ChatAgentInternalController.php';
+$chatAgentRequireListener = ss_env('CHAT_AGENT_REQUIRE_LISTENER', '') === '1';
+if (($_SERVER['CHAT_AGENT_INTERNAL_LISTENER'] ?? null) === '1') {
+    $listenerRoute = is_string($r) ? $r : '';
+    if (!ChatAgentInternalController::listenerAllows($listenerRoute, $_SERVER, $chatAgentRequireListener)) {
+        http_response_code(404);
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-store');
+        }
+        echo json_encode(['error' => 'Not found'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
 if (in_array($r, [
     'admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign',
     'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign',
@@ -103,9 +120,6 @@ require_once $backendRoot . '/app/controllers/LiveController.php';
 if (is_file($backendRoot . '/app/services/VnpayService.php')) {
     require_once $backendRoot . '/app/services/VnpayService.php';
 }
-
-$r = $_GET['r'] ?? 'home';
-
 
 switch ($r) {
     case 'home':
@@ -805,6 +819,9 @@ switch ($r) {
 
     default:
         // Route trợ giúp/hỗ trợ và chat mua hàng chỉ nhận các route chưa có `case` riêng ở trên.
+        if (require $backendRoot . '/app/routes/chat_agent.php') {
+            break;
+        }
         if (require $backendRoot . '/app/routes/store_assistance.php') {
             break;
         }

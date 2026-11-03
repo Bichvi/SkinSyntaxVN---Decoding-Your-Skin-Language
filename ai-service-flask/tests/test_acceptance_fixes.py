@@ -12,6 +12,7 @@ from chatbot_service.consultation.runtime import CATEGORIES, SKIN_TYPES
 from chatbot_service.consultation.request_rules import RulePlanner
 from chatbot_service.consultation.service import ConsultationService
 from test_chat_regressions import doc, FakeCatalog
+from tests.agent_graph.test_auth import _issue_token
 
 
 class AcceptanceFixes(unittest.TestCase):
@@ -257,10 +258,13 @@ class IngredientSafetyGate(unittest.TestCase):
 class ConversationAccess(unittest.TestCase):
     def test_cross_owner_send_stops_before_generation_and_save(self):
         from chatbot_service import chatbot_flask as routes
-        with patch.object(routes, 'get_conversation_by_id', return_value=None), \
+        import agent_graph.config as config
+        with patch.object(config, 'TOKEN_SECRET', 'route-secret'), \
+             patch.object(routes, 'get_conversation_by_id', return_value=None), \
              patch.object(routes, 'xu_ly_cau_hoi') as generate, patch.object(routes, 'save_chat_messages') as save:
             response = routes.app.test_client().post('/api/chat/auto', json={
-                'message':'Tiếp tục', 'user_email':'b@example.invalid', 'conversation_id':'0123456789abcdef01234567'})
+                'message':'Tiếp tục', 'user_email':'b@example.invalid', 'conversation_id':'0123456789abcdef01234567'},
+                headers={'X-Agent-Token': _issue_token('route-secret', 'b@example.invalid')})
         self.assertEqual(response.status_code, 403)
         self.assertFalse(response.json['ok'])
         generate.assert_not_called()
@@ -268,12 +272,31 @@ class ConversationAccess(unittest.TestCase):
 
     def test_missing_session_and_invalid_id_rejected(self):
         from chatbot_service import chatbot_flask as routes
-        with patch.object(routes, 'xu_ly_cau_hoi') as generate:
-            for payload, status in [({'conversation_id':'0123456789abcdef01234567'}, 401),
-                                    ({'conversation_id':'not-an-id', 'user_email':'a@example.invalid'}, 400)]:
-                with self.subTest(payload=payload):
-                    response = routes.app.test_client().post('/api/chat/auto', json={'message':'Tiếp tục', **payload})
-                    self.assertEqual(response.status_code, status)
+        import agent_graph.config as config
+        with patch.object(config, 'TOKEN_SECRET', 'route-secret'), \
+             patch.object(routes, 'xu_ly_cau_hoi') as generate:
+            response = routes.app.test_client().post(
+                '/api/chat/auto', json={'message':'Tiếp tục', 'conversation_id':'0123456789abcdef01234567'})
+            self.assertEqual(response.status_code, 401)
+
+            response = routes.app.test_client().post(
+                '/api/chat/auto',
+                headers={'X-Agent-Token': _issue_token('route-secret', 'a@example.invalid')},
+                json={'message':'Tiếp tục', 'conversation_id':'not-an-id', 'user_email':'a@example.invalid'},
+            )
+            self.assertEqual(response.status_code, 400)
+        generate.assert_not_called()
+
+    def test_body_user_email_alone_does_not_create_identity(self):
+        from chatbot_service import chatbot_flask as routes
+        import agent_graph.config as config
+        with patch.object(config, 'TOKEN_SECRET', 'route-secret'), \
+             patch.object(routes, 'xu_ly_cau_hoi') as generate:
+            response = routes.app.test_client().post('/api/chat/auto', json={
+                'message':'Tiếp tục', 'user_email':'a@example.invalid',
+                'conversation_id':'0123456789abcdef01234567'})
+        self.assertEqual(response.status_code, 401)
+        self.assertFalse(response.json['ok'])
         generate.assert_not_called()
 
 

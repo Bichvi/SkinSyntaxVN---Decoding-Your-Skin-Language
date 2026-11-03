@@ -48,6 +48,8 @@ from shared.embedding_provider import get_embedding_function
 from profile_state import determine_profile_state, detect_profile_conflict, calculate_days_since_update
 from survey_service import is_in_survey_flow, handle_survey_flow, get_last_ai_message
 from profile_service import save_user_profile
+from agent_graph.auth import identity_from_request
+from agent_graph import config as agent_config
 from chatbot_service import store_support  # nhánh STORE_SUPPORT (logic thuần)
 from chatbot_service import graph_router  # U10: tool đồ thị Neo4j cho câu hỏi có điều kiện
 # ─── Config ─────────────────────────────────────────────────────────────────
@@ -2362,7 +2364,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     profile_data = {}
     if msg_data:
         profile_data = msg_data.get("customer_profile", {}) or {}
-        user_email = profile_data.get("email") or ""
+        user_email = msg_data.get("_verified_email") or ""
 
     # A. Kiểm tra xem có đang trong luồng khảo sát da không
     history_list = msg_data.get("conversation_history", []) if msg_data else []
@@ -3339,6 +3341,14 @@ try:
 except Exception as _home_exc:  # pragma: no cover - optional module
     print(f"[WARN] home_service not registered: {type(_home_exc).__name__}")
 
+if agent_config.AGENT_V2:
+    try:
+        from agent_graph import routes as agent_routes
+
+        agent_routes.register(app)
+    except Exception as _agent_exc:  # pragma: no cover - optional module
+        print(f"[WARN] agent_graph not registered: {type(_agent_exc).__name__}")
+
 
 @app.get("/health")
 def simple_health():
@@ -3406,7 +3416,10 @@ def chat():
 
     # Đọc conversation_id và user_email
     conversation_id = data.get("conversation_id") or (msg_data.get("conversation_id") if isinstance(msg_data, dict) else None)
-    user_email = data.get("user_email") or (msg_data.get("user_email") if isinstance(msg_data, dict) else None)
+    claims = identity_from_request(request)
+    user_email = claims.em.strip() if claims else None
+    if isinstance(msg_data, dict):
+        msg_data["_verified_email"] = user_email
     
     if isinstance(conversation_id, str):
         conversation_id = conversation_id.strip()
@@ -3647,9 +3660,10 @@ def recommendation_profile():
 
 @app.get("/api/chat/conversations")
 def get_conversations():
-    email = request.headers.get("X-User-Email")
-    if not email:
+    claims = identity_from_request(request)
+    if not claims or not claims.has("chat") or not claims.em.strip():
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
+    email = claims.em.strip()
         
     try:
         db = get_mongodb_connection()
@@ -3676,9 +3690,10 @@ def get_conversations():
 
 @app.get("/api/chat/conversations/<conv_id>")
 def get_conversation(conv_id):
-    email = request.headers.get("X-User-Email")
-    if not email:
+    claims = identity_from_request(request)
+    if not claims or not claims.has("chat") or not claims.em.strip():
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
+    email = claims.em.strip()
         
     try:
         db = get_mongodb_connection()
@@ -3716,9 +3731,10 @@ def get_conversation(conv_id):
 
 @app.post("/api/chat/conversations")
 def create_conversation():
-    email = request.headers.get("X-User-Email")
-    if not email:
+    claims = identity_from_request(request)
+    if not claims or not claims.has("chat") or not claims.em.strip():
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
+    email = claims.em.strip()
         
     try:
         db = get_mongodb_connection()
@@ -3740,9 +3756,10 @@ def create_conversation():
 
 @app.delete("/api/chat/conversations/<conv_id>")
 def delete_conversation(conv_id):
-    email = request.headers.get("X-User-Email")
-    if not email:
+    claims = identity_from_request(request)
+    if not claims or not claims.has("chat") or not claims.em.strip():
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
+    email = claims.em.strip()
         
     try:
         db = get_mongodb_connection()
@@ -3786,4 +3803,3 @@ if __name__ == "__main__":
     print(f"[INFO]  Health check: http://127.0.0.1:{FLASK_PORT}/health")
     print(f"[INFO]  Detailed health: http://127.0.0.1:{FLASK_PORT}/api/health")
     app.run(host="0.0.0.0", port=FLASK_PORT, debug=False, use_reloader=False)
-

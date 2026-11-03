@@ -350,6 +350,8 @@ services:
       APP_URL: ${APP_URL:-http://localhost}
       AI_CHAT_ENDPOINT: http://ai-service:5001/api/chat/auto
       AI_CHAT_STREAM_ENDPOINT: http://ai-service:5001/api/chat/stream
+      # Chat agent v2 (PHP -> Flask SSE). Cổng nội bộ của ai-service là 5001 (CHATBOT_PORT / gunicorn_config.py).
+      AI_AGENT_ENDPOINT: http://ai-service:5001/api/agent/chat
       AI_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/explain
       AI_HYBRID_RECOMMENDATION_ENDPOINT: http://ai-service:5001/api/recommend/langchain-rag
       # Trước đây thiếu biến này nên PHP gọi 127.0.0.1:5002 (không tồn tại trong container).

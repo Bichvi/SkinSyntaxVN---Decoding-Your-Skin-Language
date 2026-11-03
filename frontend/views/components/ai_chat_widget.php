@@ -59,9 +59,40 @@ try {
   $aiChatHelp = [];
 }
 $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL, '/') . '/' : '') . 'index.php?r=ho_tro_khach_hang';
+// Backend root differs per layout (XAMPP repo: <repo>/backend, Docker: /var/www/html): derive it from the
+// file that defines ss_env (backend/app/config/config.php) instead of a fixed relative path.
+$aiChatBackendRoot = dirname(__DIR__, 3) . '/backend';
+if (function_exists('ss_env')) {
+  try {
+    $aiChatBackendRoot = dirname((string)(new ReflectionFunction('ss_env'))->getFileName(), 3);
+  } catch (Throwable $e) {
+    // keep the repo-relative default
+  }
+}
+$chatPurchaseController = $aiChatBackendRoot . '/app/controllers/ShopAssistantController.php';
+if (is_file($chatPurchaseController)) {
+  require_once $chatPurchaseController;
+}
+$aiChatPurchaseCsrf = class_exists('ShopAssistantController') ? ShopAssistantController::csrfToken() : '';
+$aiChatVnpayHost = '';
+if (defined('VNPAY_URL') && trim((string)VNPAY_URL) !== '') {
+  $aiChatVnpayHost = (string)(parse_url((string)VNPAY_URL, PHP_URL_HOST) ?: '');
+}
+$aiChatAgentV2 = '0';
+$chatAgentGate = $aiChatBackendRoot . '/app/services/ChatAgentGate.php';
+try {
+  if (is_file($chatAgentGate)) {
+    require_once $chatAgentGate;
+    if (class_exists('ChatAgentGate') && function_exists('ss_env')) {
+      $aiChatAgentV2 = (new ChatAgentGate(RedisLite::shared(), ['SYNA_AGENT_V2' => ss_env('SYNA_AGENT_V2', '')]))->agentEnabled() ? '1' : '0';
+    }
+  }
+} catch (Throwable $e) {
+  $aiChatAgentV2 = '0';
+}
 ?>
 <?php if ($pdo !== null): ?>
-  <div class="ai-chat-widget" data-ai-chat-widget>
+  <div class="ai-chat-widget" data-ai-chat-widget data-agent-v2="<?= $aiChatAgentV2 ?>" data-chat-csrf="<?= htmlspecialchars($aiChatPurchaseCsrf, ENT_QUOTES, 'UTF-8') ?>" data-vnpay-host="<?= htmlspecialchars($aiChatVnpayHost, ENT_QUOTES, 'UTF-8') ?>">
     <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với Syna (AI Advisor)">
       <span class="ai-chat-widget__trigger-avatar" aria-hidden="true">
         <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= time() ?>" alt="SYNA Mascot">
@@ -1417,6 +1448,7 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
     }
   </style>
 
+  <script src="<?= BASE_URL ?>/assets/js/chat-agent-stream.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-agent-stream.js') ?: '1' ?>"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var widget = document.querySelector('[data-ai-chat-widget]');
@@ -1449,6 +1481,7 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
       ];
       var loadingInterval = null;
       var currentLoadingTextIndex = 0;
+      var agentSendGeneration = 0;
       var toggleProfileBtns = widget.querySelectorAll('[data-ai-chat-toggle-profile]');
       var profileRestrictedBtn = widget.querySelector('[data-ai-chat-profile-restricted]');
       var profileBanner = widget.querySelector('[data-ai-profile-banner]');
@@ -1458,6 +1491,14 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
       var messages = [];
       var defaultBottom = parseFloat(window.getComputedStyle(widget).bottom || '88') || 88;
       var expandedStorageKey = 'aiChatExpandedV4:' + storageScope;
+      if (window.SkinSyntaxAgent && widget.dataset.agentV2 === '1') {
+        window.SkinSyntaxAgent.configure({
+          endpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=ai_chat_agent_stream' : 'index.php?r=ai_chat_agent_stream' ?>',
+          confirmEndpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=chat_order_confirm' : 'index.php?r=chat_order_confirm' ?>',
+          csrf: widget.dataset.chatCsrf || '',
+          vnpayHost: widget.dataset.vnpayHost || ''
+        });
+      }
 
       var activeConversationId = null;
       var sidebar = widget.querySelector('[data-ai-chat-sidebar]');
@@ -1857,12 +1898,16 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
           var meta = '';
           var contentPrefix = '';
           var contentSuffix = '';
+          var agentUiHtml = '';
           if (!isUser) {
             var conflictCards = renderConflictCards(message.conflicts || []);
             var productCards = renderProductCards(message.products || []);
             meta += renderMetaBlock('Conflict Detection', conflictCards);
             if (productCards.length) {
               contentSuffix += '<div class="ai-chat-widget__product-group">' + productCards.join('') + '</div>';
+            }
+            if (message.agentUi) {
+              agentUiHtml = '<div data-ai-agent-ui></div>';
             }
 
             if (window.SKIN_CHAT_DEBUG === true) {
@@ -1925,13 +1970,24 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
             + meta
             + '</div>'
             + '</div>'
-            + '</div>';
+            + '</div>'
+            + agentUiHtml;
         }).join('');
 
         stream.innerHTML = (welcome ? welcome.outerHTML : '') + html;
+        if (window.SkinSyntaxAgent && typeof window.SkinSyntaxAgent.cleanupDraftCards === 'function') {
+          window.SkinSyntaxAgent.cleanupDraftCards(stream);
+        }
         welcome = stream.querySelector('[data-ai-chat-welcome]');
         if (welcome) {
           welcome.hidden = messages.length > 0;
+        }
+        if (window.SkinSyntaxAgent) {
+          var agentUiMessages = messages.filter(function (item) { return item.role !== 'user' && item.agentUi; });
+          stream.querySelectorAll('[data-ai-agent-ui]').forEach(function (target, index) {
+            var item = agentUiMessages[index];
+            if (item) window.SkinSyntaxAgent.renderUi(item.agentUi, target, { onSend: sendMessage });
+          });
         }
         updateStatus();
         scrollToBottom();
@@ -1939,7 +1995,15 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
 
       var saveMessages = function () {
         try {
-          window.sessionStorage.setItem(storageKey, JSON.stringify(messages.slice(-12)));
+          var persistable = messages.slice(-12).filter(function (item) {
+            return !item || item.typing !== true;
+          }).map(function (item) {
+            if (item && item.agentUi && item.agentUi.kind === 'draft_card') {
+              return { role: 'assistant', content: 'Đơn nháp (đã hết phiên)' };
+            }
+            return item;
+          });
+          window.sessionStorage.setItem(storageKey, JSON.stringify(persistable));
         } catch (error) {
         }
       };
@@ -2031,6 +2095,17 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
         if (!panel || !trigger) {
           return;
         }
+        agentSendGeneration += 1;
+        if (window.SkinSyntaxAgent && typeof window.SkinSyntaxAgent.abort === 'function') {
+          window.SkinSyntaxAgent.abort();
+        }
+        messages = messages.filter(function (item) { return !item || item.typing !== true; });
+        saveMessages();
+        if (loadingInterval) {
+          clearInterval(loadingInterval);
+          loadingInterval = null;
+        }
+        setLoading(false);
         trigger.setAttribute('aria-expanded', 'false');
         widget.classList.remove('is-open');
 
@@ -2049,12 +2124,14 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
         }, 280);
       };
 
-      var sendMessage = function (text) {
+      var sendMessage = function (text, skipAgent) {
         var startTime = Date.now();
         var content = String(text || '').trim();
         if (content === '') {
           return;
         }
+
+        messages = messages.filter(function (item) { return !item || item.typing !== true; });
 
         openWidget();
         addMessage({ role: 'user', content: content });
@@ -2079,6 +2156,82 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
             }, 200);
           }
         }, 4000);
+
+        if (!skipAgent && widget.dataset.agentV2 === '1' && window.SkinSyntaxAgent) {
+          var agentSendId = ++agentSendGeneration;
+          var handedOffToLegacy = false;
+          var isCurrentAgentSend = function () { return agentSendId === agentSendGeneration; };
+          var agentMessage = messages[messages.length - 1];
+          var agentText = '';
+          var finishAgent = function () {
+            if (!isCurrentAgentSend()) return;
+            if (agentMessage) {
+              agentMessage.typing = false;
+              agentMessage.content = agentText;
+            }
+            renderMessages();
+          };
+          window.SkinSyntaxAgent.send({
+            message: content,
+            conversationId: activeConversationId,
+            onMeta: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              if (payload.conversation_id && activeConversationId !== payload.conversation_id) {
+                activeConversationId = payload.conversation_id;
+                try { window.sessionStorage.setItem('aiChatActiveConversationIdV4:' + storageScope, activeConversationId); } catch (e) {}
+              }
+            },
+            onToken: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              agentText += String(payload.text || '');
+              var typing = messages.find(function (item) { return item.id === typingId; });
+              if (typing) { typing.typing = false; typing.content = agentText; typing.id = typingId; }
+              renderMessages();
+            },
+            onUi: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              finishAgent();
+              if (payload && payload.kind === 'product_list') {
+                var productPayload = payload.payload || {};
+                if (Array.isArray(productPayload.products)) {
+                  addMessage({ role: 'assistant', content: '', products: productPayload.products });
+                }
+              } else {
+                addMessage({ role: 'assistant', content: '', agentUi: Object.assign({}, payload || {}, { messageId: typingId }) });
+              }
+            },
+            onCartUpdated: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              if (typeof updateCartBadge === 'function') updateCartBadge(parseInt(payload.count, 10) || 0);
+            },
+            onDone: finishAgent,
+            onError: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              finishAgent();
+              addMessage({ role: 'assistant', content: String(payload.message || 'AI hiện chưa phản hồi được. Vui lòng thử lại sau.'), conflicts: [], products: [] });
+            }
+          }).then(function (result) {
+            if (!isCurrentAgentSend()) return;
+            if (result && result.fallback === true) {
+              handedOffToLegacy = true;
+              messages = messages.filter(function (item) { return item.id !== typingId; });
+              if (messages.length && messages[messages.length - 1].role === 'user' && messages[messages.length - 1].content === content) {
+                messages.pop();
+              }
+              renderMessages();
+              sendMessage(content, true);
+            }
+          }).catch(function () {
+            if (!isCurrentAgentSend()) return;
+            if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
+            setLoading(false);
+          }).finally(function () {
+            if (!isCurrentAgentSend() || handedOffToLegacy) return;
+            if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
+            setLoading(false);
+          });
+          return;
+        }
 
         var currentProductId = null;
         try {
@@ -2582,7 +2735,12 @@ $aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL,
           if (stored) {
             var parsed = JSON.parse(stored);
             if (Array.isArray(parsed)) {
-              messages = parsed;
+              messages = parsed.map(function (item) {
+                if (item && item.agentUi && item.agentUi.kind === 'draft_card') {
+                  return { role: 'assistant', content: 'Đơn nháp (đã hết phiên)' };
+                }
+                return item;
+              });
             }
           }
         }

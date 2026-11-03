@@ -11,6 +11,7 @@ require_once __DIR__ . '/../services/SkincareProductClassifier.php';
 require_once __DIR__ . '/../services/RecommendationExplainer.php';
 require_once __DIR__ . '/../services/SupportKnowledge.php';
 require_once __DIR__ . '/../services/HomeGraphRecommender.php';
+require_once __DIR__ . '/../services/ChatAgentToken.php';
 
 class HomeController {
     private $pdo;
@@ -3253,7 +3254,7 @@ class HomeController {
             $payload['catalog_persist_product_ids'] = $routinePersistProductIds;
         }
 
-        $response = $this->postJsonRequest($endpoint, $payload, $this->getAiChatTimeout());
+        $response = $this->postJsonRequest($endpoint, $payload, $this->getAiChatTimeout(), $this->agentTokenHeader($conversationId));
         $answer = '';
         $decoded = null;
         // U10: Flask answered from Neo4j graph tools (price/stock re-read from Mongo, answer checked against the
@@ -3428,8 +3429,13 @@ class HomeController {
         $headers = [
             'Accept: application/json',
         ];
-        if ($email !== null) {
-            $headers[] = 'X-User-Email: ' . $email;
+        $conversationId = isset($payload['conversation_id']) ? (string)$payload['conversation_id'] : '';
+        if ($conversationId === '' && preg_match('#^/api/chat/conversations/([^/]+)$#', $path, $matches) === 1) {
+            $conversationId = rawurldecode($matches[1]);
+        }
+        $agentTokenHeader = $this->agentTokenHeader($conversationId);
+        if ($agentTokenHeader !== null) {
+            $headers[] = $agentTokenHeader;
         }
 
         $body = '';
@@ -3466,6 +3472,30 @@ class HomeController {
             'body' => '',
             'error' => 'cURL not available',
         ];
+    }
+
+    private function agentTokenHeader(?string $conversationId = null): ?string {
+        if (!defined('CHAT_AGENT_TOKEN_SECRET') || CHAT_AGENT_TOKEN_SECRET === '') {
+            return null;
+        }
+        $user = current_user() ?? [];
+        if (!is_array($user) || !isset($user['id'], $user['email'])) {
+            return null;
+        }
+        $email = trim((string)$user['email']);
+        if ($email === '') {
+            return null;
+        }
+        try {
+            return 'X-Agent-Token: ' . ChatAgentToken::issue([
+                'sub' => (string)$user['id'],
+                'em' => $email,
+                'sid' => (string)($conversationId ?? ''),
+                'scope' => ['chat'],
+            ], CHAT_AGENT_TOKEN_SECRET);
+        } catch (Throwable $e) {
+            return null;
+        }
     }
 
     public function getConversations(): void {
@@ -3542,7 +3572,7 @@ class HomeController {
         echo $response['body'] !== '' ? $response['body'] : json_encode(['ok' => false, 'message' => $response['error']]);
     }
 
-    private function postJsonRequest(string $url, array $payload, int $timeout = 20): array {
+    private function postJsonRequest(string $url, array $payload, int $timeout = 20, ?string $agentTokenHeader = null): array {
         $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($body === false) {
             return [
@@ -3557,6 +3587,9 @@ class HomeController {
             'Content-Type: application/json',
             'Content-Length: ' . strlen($body),
         ];
+        if ($agentTokenHeader !== null) {
+            $headers[] = $agentTokenHeader;
+        }
 
         if (function_exists('curl_init')) {
             $ch = curl_init($url);
@@ -5462,10 +5495,6 @@ class HomeController {
         exit;
     }
 }
-
-
-
-
 
 
 

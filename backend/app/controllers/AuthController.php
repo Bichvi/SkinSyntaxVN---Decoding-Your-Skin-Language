@@ -202,7 +202,7 @@ class AuthController {
 
     private function loginCustomerSession(array $user): void {
         $_SESSION['user'] = [
-            'id' => $user['id'],
+            'id' => $user['id'] ?? (isset($user['_id']) ? (string)$user['_id'] : null),
             'ho_ten' => $user['ho_ten'],
             'email' => $user['email'],
             'role' => 'khach_hang',
