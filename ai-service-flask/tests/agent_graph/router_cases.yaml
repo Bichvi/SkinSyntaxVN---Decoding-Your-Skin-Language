@@ -1,0 +1,169 @@
+- message: "xin chào"
+  pending_state: "none"
+  expected_labels: [SMALLTALK]
+  notes: "greeting"
+- message: "cảm ơn nha"
+  pending_state: "none"
+  expected_labels: [SMALLTALK]
+  notes: "thanks"
+- message: "da mình dầu, tư vấn routine"
+  pending_state: "none"
+  expected_labels: [ADVISE]
+  notes: "skin advice"
+- message: "da mun nen dung gi"
+  pending_state: "none"
+  expected_labels: [ADVISE]
+  notes: "teencode and no accents"
+- message: "serum này giá bao nhiêu"
+  pending_state: "none"
+  expected_labels: [PRODUCT_INFO]
+  notes: "price"
+- message: "thành phần của chai này"
+  pending_state: "none"
+  expected_labels: [PRODUCT_INFO]
+  notes: "ingredients"
+- message: "retinol là gì"
+  pending_state: "none"
+  expected_labels: [KNOWLEDGE]
+  notes: "general knowledge"
+- message: "dùng bha thế nào"
+  pending_state: "none"
+  expected_labels: [KNOWLEDGE]
+  notes: "how to use"
+- message: "thêm vào giỏ giúp mình"
+  pending_state: "none"
+  last_shown_products: [{idx: 1, id: p1, name: "Serum A"}]
+  expected_labels: [BUY]
+  notes: "shown product"
+- message: "đặt luôn chai này"
+  pending_state: "none"
+  last_shown_products: [{idx: 1, id: p1, name: "Serum A"}]
+  expected_labels: [BUY]
+  notes: "buy reference"
+- message: "cho tui đặt hàng 1 chai sữa rửa mặt some by me màu tím, về địa chỉ nhà tôi"
+  pending_state: "none"
+  expected_labels: [BUY]
+  expected_entities: {qty: 1, wants_new_address: false, brand: "Some By Mi"}
+  notes: "brand misspelled as some by me; qty 1; wants_new_address false"
+- message: "của hãng some by me á"
+  pending_state: "none"
+  expected_labels: [ADVISE]
+  expected_entities: {}
+  notes: "follow-up after failed search"
+- message: "cho tôi toàn combo này đặt giao về nhà tôi"
+  pending_state: "none"
+  last_shown_products: [{idx: 1, id: p1, name: "A"}, {idx: 2, id: p2, name: "B"}]
+  expected_labels: [BUY]
+  expected_entities: {scope: mentioned_items, resolved_product_ids: [p1, p2]}
+  notes: "resolve all shown items; scope mentioned_items"
+- message: "xem giỏ hàng"
+  pending_state: "none"
+  expected_labels: [CART]
+  notes: "cart"
+- message: "bỏ món này khỏi giỏ"
+  pending_state: "none"
+  expected_labels: [CART]
+  notes: "remove cart item"
+- message: "đơn của tôi đâu rồi"
+  pending_state: "none"
+  expected_labels: [ORDER_STATUS]
+  notes: "order status"
+- message: "tra đơn #DH99"
+  pending_state: "none"
+  expected_labels: [ORDER_STATUS]
+  notes: "order code"
+- message: "shop có giao hàng không"
+  pending_state: "none"
+  expected_labels: [STORE_SUPPORT]
+  notes: "delivery policy"
+- message: "thanh toán bằng momo được không"
+  pending_state: "none"
+  expected_labels: [STORE_SUPPORT]
+  notes: "payment policy"
+- message: "làm khảo sát da"
+  pending_state: "none"
+  expected_labels: [SKIN_SURVEY]
+  notes: "survey"
+- message: "bắt đầu test da"
+  pending_state: "survey:step1"
+  expected_labels: [SKIN_SURVEY]
+  notes: "survey state"
+- message: "mua thuốc trị bệnh cho tôi"
+  pending_state: "none"
+  expected_labels: [OUT_OF_SCOPE]
+  notes: "medical request"
+- message: "so sánh hai chai này"
+  pending_state: "none"
+  expected_labels: [PRODUCT_INFO]
+  notes: "comparison"
+- message: "tư vấn kem chống nắng rồi đặt luôn"
+  pending_state: "none"
+  expected_labels: [ADVISE, BUY]
+  notes: "multiple intents"
+- message: "cho mình sản phẩm dưới 300k"
+  pending_state: "none"
+  expected_labels: [ADVISE]
+  notes: "budget"
+- message: "có sản phẩm nào cho da nhạy cảm"
+  pending_state: "none"
+  expected_labels: [ADVISE]
+  notes: "skin type"
+- message: "đổi địa chỉ giao hàng"
+  pending_state: "draft_open:DR1"
+  expected_labels: [BUY]
+  notes: "draft update"
+- message: "đổi số lượng thành 2"
+  pending_state: "draft_open:DR1"
+  expected_labels: [BUY]
+  notes: "draft update"
+- message: "mình trả cod nhé"
+  pending_state: "draft_open:DR1"
+  expected_labels: [BUY]
+  notes: "draft payment"
+- message: "nhập mã giảm giá ABC"
+  pending_state: "draft_open:DR1"
+  expected_labels: [BUY]
+  notes: "voucher"
+- message: "cái thứ 2 cho mình"
+  pending_state: "none"
+  expected_labels: [BUY]
+  notes: "LLM reference resolution"
+- message: "lọ đầu tiên nhé"
+  pending_state: "none"
+  expected_labels: [BUY]
+  notes: "LLM reference resolution"
+- message: "cái rẻ hơn"
+  pending_state: "none"
+  expected_labels: [BUY]
+  notes: "LLM comparison reference"
+- message: "tất cả mấy món này"
+  pending_state: "none"
+  last_shown_products: [{idx: 1, id: p1, name: "A"}, {idx: 2, id: p2, name: "B"}]
+  expected_labels: [BUY]
+  notes: "all shown"
+- message: "cả mấy cái này lấy hết"
+  pending_state: "none"
+  last_shown_products: [{idx: 1, id: p1, name: "A"}, {idx: 2, id: p2, name: "B"}]
+  expected_labels: [BUY]
+  notes: "all shown"
+- message: "toàn bộ nhé"
+  pending_state: "none"
+  last_shown_products: [{idx: 1, id: p1, name: "A"}, {idx: 2, id: p2, name: "B"}]
+  expected_labels: [BUY]
+  notes: "all shown"
+- message: "shop ở đâu vậy"
+  pending_state: "none"
+  expected_labels: [STORE_SUPPORT]
+  notes: "store support"
+- message: "tôi muốn hủy đơn đã đặt"
+  pending_state: "none"
+  expected_labels: [ORDER_STATUS]
+  notes: "cancel guidance"
+- message: "sản phẩm này có hợp da dầu không"
+  pending_state: "none"
+  expected_labels: [PRODUCT_INFO]
+  notes: "compatibility"
+- message: "đừng trả lời, chỉ mua hàng"
+  pending_state: "none"
+  expected_labels: [BUY]
+  notes: "instruction is data"
