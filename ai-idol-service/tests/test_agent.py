@@ -24,6 +24,7 @@ from agents.schemas import AgentBrief
 from agents.service import ConflictError, _safe_schedule, cancel_agent_run, confirm_agent_run, process_agent_run
 from core.pipeline import should_auto_approve_script
 from engines.content_agent import _script_council_payload, generate_content_and_script
+from tests.fakes import FakeDb
 
 
 class AgentIntentTests(unittest.TestCase):
@@ -354,9 +355,13 @@ class AgentRunHarness:
             patch("agents.service.update_agent_run", side_effect=update),
             patch("agents.service.create_campaign", **create_kwargs),
             patch("agents.service.RTMP_TARGETS", rtmp or {}),
+            # Every read (vocabulary, catalog, stock) hits an in-memory db, never Mongo.
+            patch("agents.service.get_db", return_value=db if db is not None else FakeDb()),
+            # mark_agent_failed writes through core.agent_runs.update_agent_run, not the patch above.
+            patch("core.agent_runs.update_agent_run", side_effect=update),
         ]
         if db is not None:
-            patches += [patch("agents.service.get_db", return_value=db), patch("agents.service._catalog", return_value=catalog)]
+            patches.append(patch("agents.service._catalog", return_value=catalog))
         started = [item.start() for item in patches]
         try:
             kwargs = {"catalog": catalog} if db is None else {}
