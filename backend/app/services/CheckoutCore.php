@@ -119,6 +119,14 @@ class CheckoutCore
         return $best;
     }
 
+    public function validateVoucher(string $code, int $subtotal): array
+    {
+        if (!is_object($this->voucherModel) || !method_exists($this->voucherModel, 'validateForCheckout')) {
+            return ['ok' => false, 'message' => 'Không thể xác thực mã giảm giá.'];
+        }
+        return $this->voucherModel->validateForCheckout($code, $subtotal);
+    }
+
     private function voucherExpiry(array $result, array $entitlement): int
     {
         $voucher = is_array($result['voucher'] ?? null) ? $result['voucher'] : [];
