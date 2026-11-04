@@ -32,7 +32,7 @@ from agents.command_query import (
     number,
 )
 from agents.query_sources import load_catalog, load_query_sources, load_vocabulary, product_id_filter
-from agents.product_resolver import _id_alias, normalize_catalog_product, resolve_products
+from agents.product_resolver import _id_alias, _unknown_terms, normalize_catalog_product, resolve_products
 from config import (
     AGENT_ALLOW_AUTO_PUBLISH,
     AUTOPILOT_DEFAULT_PRODUCTS,
@@ -441,6 +441,26 @@ def _without_constraint_mismatches(
     return resolve_products(brief_text, keep, brief.product_queries, products)
 
 
+def _not_in_catalog(terms: list[str]) -> dict[str, Any]:
+    return make_decision(
+        "NOT_IN_CATALOG", "stopped",
+        f"Không tìm thấy “{', '.join(terms)}” trong catalog đang bán; không tự chọn sản phẩm thay thế. "
+        "Hãy chọn trong danh sách gợi ý hoặc sửa tên sản phẩm.",
+    )
+
+
+def _unknown_names(brief_text: str, products: list[dict[str, Any]]) -> list[str]:
+    """Capitalised words without Vietnamese accents in a set query ("3 son Dior") that the catalog never mentions.
+
+    Only such names count: a set query is full of filter words ("Lọc", "Bán Chạy", "Hàn Quốc").
+    """
+    words = re.findall(r"\w+", brief_text)[1:]  # the first word is capitalised anyway
+    names = {normalize_text(word) for word in words if word[0].isupper() and word.isascii()}
+    if not names:
+        return []
+    return [term for term in _unknown_terms([brief_text], products) if term in names]
+
+
 def _autopilot_pick(
     brief,
     resolution: dict[str, Any],
@@ -459,6 +479,10 @@ def _autopilot_pick(
         )
         decisions.append(make_decision("IDS_DROPPED", "adjusted", f"Bỏ mã không dùng được: {parts}."))
         warnings.extend(_unresolved_warning(item, unresolved_reasons.get(item, "NOT_FOUND")) for item in unresolved)
+    terms = resolution.get("unknown_terms") or []
+    if terms and not brief.explicit_product_ids:
+        # A name we do not sell must not be replaced by a fuzzy look-alike.
+        return [], _not_in_catalog(terms), warnings
     if not selected and not brief.explicit_product_ids and resolution["ambiguous"]:
         picked = resolution["ambiguous"][0]
         selected = [picked]
@@ -659,6 +683,11 @@ def process_agent_run(
             is_query_only = classification.intent == PRODUCT_SEARCH
             enough = len(query_result["selected"]) == query_plan["limit"]
             if autopilot:
+                # "3 son Dior" when Dior is not sold: stop rather than fill the set with other best sellers.
+                terms = _unknown_names(run["brief"], [normalize_catalog_product(item) for item in products]) if products else []
+                if terms:
+                    return _autopilot_stop(run_id, decisions, _not_in_catalog(terms), plan)
+
                 def load_period(days: int) -> list[dict[str, Any]]:
                     if catalog is not None:
                         return snapshots or []
