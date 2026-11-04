@@ -41,6 +41,8 @@ SECTION_NAMES = (
 SALE_LABELS = frozenset({"price", "cta", "closing"})
 _LABEL_CAPTURE = re.compile(rf"(?:{SECTION_NAMES})", re.IGNORECASE)
 BRACKET_LINE = re.compile(rf"^\s*\[\s*({SECTION_NAMES})\s*\]\s*:?[ \t]*$", re.IGNORECASE)
+# "[Ingredients] content" on one line: only the bracketed form may omit the colon.
+BRACKET_INLINE = re.compile(rf"^\s*(\[\s*({SECTION_NAMES})\s*\])\s*:?[ \t]*(\S.*)$", re.IGNORECASE)
 LEADING_LABEL = re.compile(
     rf"^\s*(?:#+\s*)?(?:\*{{1,3}}|_{{1,3}}|\[)?\s*({SECTION_NAMES})\s*(?:\*{{1,3}}|_{{1,3}}|\])?\s*:",
     re.IGNORECASE,
@@ -116,6 +118,14 @@ def split_labeled_sections(script: str) -> list[tuple[str, str]]:
         if header is not None:
             flush()
             label = header
+            continue
+        inline = BRACKET_INLINE.match(raw_line)
+        if inline:
+            flush()
+            label = _canonical_label(inline.group(2))
+            cleaned = _clean_line(inline.group(3))
+            if cleaned:
+                current.append(cleaned)
             continue
         leading = LEADING_LABEL.match(raw_line)
         if leading:

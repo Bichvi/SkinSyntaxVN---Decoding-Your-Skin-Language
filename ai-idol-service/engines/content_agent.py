@@ -14,12 +14,12 @@ from core.text_budget import clean_prompt_text, clip_text
 from core.narration import style_instruction
 from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO, PRODUCT_VIDEO_LENGTH_MODE
 from core.script_text import sanitize_external_retailer_mentions
-from engines.script_validator import _PRICE_RULES, price_data_lines
+from engines.script_validator import _PRICE_RULES, price_data_lines, scrub_forbidden_claims
 
 
 def _safe_source(value, limit: int):
-    """Keep imported retailer names out of the generation context."""
-    return sanitize_external_retailer_mentions(clip_text(value, limit))
+    """Keep imported retailer names and forbidden claim phrases out of the generation context."""
+    return scrub_forbidden_claims(sanitize_external_retailer_mentions(clip_text(value, limit)))
 
 
 def _narration_style_line(config: dict) -> str:
