@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from difflib import SequenceMatcher
+from difflib import SequenceMatcher, get_close_matches
 import re
 from typing import Any
 
@@ -37,6 +37,12 @@ _TOKEN_STOPWORDS = frozenset({
     "bo", "xem", "truoc", "phat",
 })
 MAX_CANDIDATES = 5
+# Command/social words that are never product words and may be missing from catalog text.
+_FRAME_WORDS = frozenset({
+    "video", "clip", "livestream", "live", "stream", "review", "reels", "reel", "tiktok",
+    "shorts", "short", "youtube", "facebook", "fb", "pls", "please", "ok", "nhe", "nha",
+    "ad", "ads", "promo", "campaign", "lam",
+})
 
 
 def _id_alias(value: Any) -> str:
@@ -176,6 +182,11 @@ def _requested_limit(text: str) -> int:
     match = re.search(r"\b(\d{1,2})\s*(?:san pham|sp)\b", normalized)
     if match:
         return max(1, min(int(match.group(1)), 10))
+    # "3 kem chống nắng": lazy import, command_query imports this module lazily too.
+    from agents.command_query import _auto_count
+    match = _auto_count(normalized)
+    if match:
+        return max(1, min(int(match.group(1)), 10))
     return 1
 
 
@@ -212,6 +223,27 @@ def _score(query: str, product: dict[str, Any], constraints: list[str] | None = 
 
 def _name_tokens(text: str) -> list[str]:
     return [token for token in re.split(r"[^a-z0-9]+", normalize_text(text)) if len(token) > 1 and not token.isdigit()]
+
+
+def _unknown_terms(queries: list[str], products: list[dict[str, Any]]) -> list[str]:
+    """Query words found nowhere in the catalog (not even as a close spelling): a brand/product we do not sell."""
+    vocab: set[str] = set()
+    for product in products:
+        vocab.update(token for token in re.split(r"[^a-z0-9]+", _searchable_text(product)) if len(token) > 1)
+    vocab_list: list[str] | None = None
+    unknown: list[str] = []
+    for query in queries:
+        for token in _name_tokens(query):
+            if (token in unknown or any(ch.isdigit() for ch in token) or token in _TOKEN_STOPWORDS
+                    or token in _FRAME_WORDS or token in vocab):
+                continue
+            if len(token) >= 5:
+                if vocab_list is None:
+                    vocab_list = list(vocab)
+                if get_close_matches(token, vocab_list, n=1, cutoff=0.85):
+                    continue
+            unknown.append(token)
+    return unknown
 
 
 def _name_match(query: str, product: dict[str, Any]) -> tuple[float, float]:
@@ -293,7 +325,15 @@ def resolve_products(
     queries = [query for query in product_queries if str(query).strip()] or [brief_text]
     candidate_products = [item for item in products if _matches_constraints(item, constraints)]
     ranked: list[ProductMatch] = []
+    name_fit: dict[str, float] = {}  # name+brand fit, breaks ties between equal scores
+    name_cov: dict[str, float] = {}  # share of query words in the name; ties on it go to the best seller
+    name_phrase: dict[str, bool] = {}  # the name holds a query as one run ("kem chống nắng", not "kem nền … chống nắng")
+    phrases = [" ".join(_name_tokens(query)) for query in queries + [brief_text]]
     for product in candidate_products:
+        name_text = f" {' '.join(_name_tokens(product['name']))} "
+        name_phrase[product["id"]] = any(phrase and f" {phrase} " in name_text for phrase in phrases)
+        name_fit[product["id"]] = max(_name_match_score(query, product) for query in queries + [brief_text])
+        name_cov[product["id"]] = max(_name_match(query, product)[0] for query in queries + [brief_text])
         score = max(_score(query, product, constraints) for query in queries + [brief_text])
         if score > 0:
             reason = (
@@ -302,7 +342,10 @@ def resolve_products(
                 else "Khớp tên/ngữ nghĩa lệnh"
             )
             ranked.append(ProductMatch(product["id"], product["name"], score, reason))
-    ranked.sort(key=lambda item: (-item.score, item.name))
+    sales_by_id = {item["id"]: item.get("sales_count", 0.0) for item in candidate_products}
+    ranked.sort(key=lambda item: (-item.score, not name_phrase[item.product_id], -name_cov[item.product_id],
+                                  -sales_by_id[item.product_id],
+                                  -name_fit[item.product_id], item.name))
 
     if popularity_requested and ranked:
         product_by_id = {item["id"]: item for item in candidate_products}
@@ -310,6 +353,7 @@ def resolve_products(
             key=lambda item: (
                 -product_by_id[item.product_id].get("sales_count", 0.0),
                 -item.score,
+                -name_fit[item.product_id],
                 -product_by_id[item.product_id].get("rating", 0.0),
                 item.name,
             )
@@ -372,8 +416,14 @@ def resolve_products(
             else:
                 top = eligible[0]
                 second_score = eligible[1].score if len(eligible) > 1 else 0.0
-                if top.score - second_score >= 0.08 or top.score >= 0.9:
+                if top.score - second_score >= 0.08:
                     selected.append(top)
+                elif top.score >= 0.9 and (
+                    len(eligible) < 2
+                    or second_score < top.score
+                    or name_fit[top.product_id] - name_fit[eligible[1].product_id] >= 0.10
+                ):
+                    selected.append(top)  # a score tie needs a clearly better name to auto-pick
 
     chosen_ids = {item.product_id for item in selected}
     if has_explicit_ids:
@@ -400,4 +450,5 @@ def resolve_products(
         "popularity_data_available": any(item.get("sales_count", 0.0) > 0 for item in candidate_products),
         "constraint_mismatches": constraint_mismatches,
         "unresolved_queries": unresolved_queries,
+        "unknown_terms": [] if has_explicit_ids else _unknown_terms(queries, products),
     }

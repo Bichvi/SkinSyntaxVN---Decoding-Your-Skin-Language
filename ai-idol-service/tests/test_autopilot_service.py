@@ -174,6 +174,34 @@ class AutopilotProductTests(unittest.TestCase):
         self.assertEqual(picked["level"], "adjusted")
         self.assertTrue(any(name in picked["message"] for name in ("Alpha", "Beta")))
 
+    def test_unknown_brand_stops_instead_of_picking(self):
+        catalog = [row(11, "Son Bóng Black Rouge GZ02"), row(12, "Son Kem Lì Romand")]
+        harness = AutopilotHarness("Làm video cho son Chanel Rouge Allure")
+        run = harness.execute(catalog)
+        harness.create.assert_not_called()
+        last = run["decisions"][-1]
+        self.assertEqual(last["code"], "NOT_IN_CATALOG")
+        self.assertEqual(last["level"], "stopped")
+        self.assertTrue(run["plan"]["candidate_products"])
+        self.assertIsNone(run.get("campaign_id"))
+
+    def test_unknown_brand_in_a_set_query_stops(self):
+        catalog = [row(11, "Son Kem Lì Romand", sold=50), row(12, "Son Dưỡng Môi Vaseline", sold=40),
+                   row(13, "Kem Chống Nắng Anessa", sold=30)]
+        harness = AutopilotHarness("Làm video 3 son Dior")
+        run = harness.execute(catalog)
+        harness.create.assert_not_called()
+        last = run["decisions"][-1]
+        self.assertEqual((last["code"], last["level"]), ("NOT_IN_CATALOG", "stopped"))
+        self.assertIn("dior", last["message"])
+
+    def test_known_words_in_a_set_query_still_create(self):
+        catalog = [row(11, "Son Kem Lì Romand", sold=50), row(12, "Son Dưỡng Môi Vaseline", sold=40),
+                   row(13, "Kem Chống Nắng Anessa", sold=30)]
+        harness = AutopilotHarness("Làm video 2 son Romand bán chạy nhất")
+        run = harness.execute(catalog)
+        self.assertNotIn("NOT_IN_CATALOG", [item["code"] for item in run["decisions"]])
+
     def test_constraint_mismatch_dropped_while_other_ids_stay(self):
         harness = AutopilotHarness("Làm video giới thiệu serum retinol mã 777 và mã 934")
         run = harness.execute([RETINOL, OTHER])
