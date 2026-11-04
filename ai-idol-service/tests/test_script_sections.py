@@ -73,5 +73,19 @@ class PriceViolationTests(unittest.TestCase):
         self.assertEqual(find_price_violations("Kẽm hoạt động đồng thời với dung tích 30 mililít", None), [])
 
 
+class SameLineBracketHeaderTests(unittest.TestCase):
+    def test_same_line_header_splits_sections(self):
+        text = "[Specs] Dung tich 75ml.\n[Ingredients] • Salicylic Acid: tay.\n[How to Use] 1. Lam uot."
+        self.assertEqual(split_labeled_sections(text), [
+            ("specs", "Dung tich 75ml."),
+            ("ingredients", "Salicylic Acid: tay."),
+            ("how_to_use", "Lam uot."),
+        ])
+
+    def test_bare_word_without_colon_is_not_a_header(self):
+        self.assertEqual(split_labeled_sections("[Hook]\nProblem là da dầu."), [("hook", "Problem là da dầu.")])
+        self.assertEqual(split_labeled_sections("Ingredients rất dịu nhẹ."), [("", "Ingredients rất dịu nhẹ.")])
+
+
 if __name__ == "__main__":
     unittest.main()

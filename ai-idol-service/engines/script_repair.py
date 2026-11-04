@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from config import logger
-from core.script_text import _canonical_label, _header_label, sanitize_external_retailer_mentions
+from core.script_text import BRACKET_INLINE, _canonical_label, _header_label, sanitize_external_retailer_mentions
 from core.text_budget import clip_text
 from providers.llm_provider import LLMProvider
 
@@ -11,14 +11,24 @@ Quy tắc: chỉ nói giá bằng đúng nguyên văn các cụm giá trong dữ
 không cam kết trị khỏi, không kể trải nghiệm cá nhân đã dùng; không dùng ký hiệu, emoji, số viết tắt (viết phần trăm, mililít bằng chữ).
 Chỉ trả về nội dung đã sửa, không giải thích, không thêm dòng tiêu đề trong ngoặc vuông."""
 
+_REPAIR_SYSTEM_WHOLE = _REPAIR_SYSTEM.replace(
+    "không thêm dòng tiêu đề trong ngoặc vuông.",
+    "giữ nguyên mọi dòng tiêu đề trong ngoặc vuông ([Hook], [Ingredients]...), mỗi tiêu đề nằm riêng một dòng; "
+    "nếu lỗi nêu thiếu một phần thì thêm phần đó với đúng dòng tiêu đề của nó.")
+
 
 def _split_raw(script: str) -> list[dict]:
     """Split into blocks keeping the exact raw text: [{label, header, body}] (first block may be headerless)."""
     blocks: list[dict] = [{"label": "", "header": "", "body": []}]
     for line in str(script or "").split("\n"):
         label = _header_label(line.strip("\r"))
+        inline = BRACKET_INLINE.match(line.strip("\r")) if label is None else None
         if label is not None:
             blocks.append({"label": label, "header": line, "body": []})
+        elif inline:
+            # "[Label] content": header and body share a line; split so section repair can find it.
+            blocks.append({"label": _canonical_label(inline.group(2)), "header": inline.group(1),
+                           "body": [inline.group(3)]})
         else:
             blocks[-1]["body"].append(line)
     return blocks
@@ -44,17 +54,17 @@ def _describe(issues) -> str:
 
 
 def _product_facts(snapshot: dict) -> str:
-    from engines.script_validator import price_data_lines
+    from engines.script_validator import price_data_lines, scrub_forbidden_claims as scrub
     return (f"- Tên sản phẩm: {snapshot.get('name')}\n- Thương hiệu: {snapshot.get('brand')}\n"
-            f"{price_data_lines(snapshot)}\n- Thành phần: {clip_text(snapshot.get('ingredients'), 900)}\n"
-            f"- Công dụng thật: {clip_text(snapshot.get('description'), 1200)}\n"
-            f"- Cách dùng: {clip_text(snapshot.get('usage'), 650)}")
+            f"{price_data_lines(snapshot)}\n- Thành phần: {scrub(clip_text(snapshot.get('ingredients'), 900))}\n"
+            f"- Công dụng thật: {scrub(clip_text(snapshot.get('description'), 1200))}\n"
+            f"- Cách dùng: {scrub(clip_text(snapshot.get('usage'), 650))}")
 
 
-def _ask(text: str, issues, snapshot: dict, scope: str) -> str:
+def _ask(text: str, issues, snapshot: dict, scope: str, system: str = _REPAIR_SYSTEM) -> str:
     user = (f"{scope}:\n\"\"\"\n{clip_text(text, 6000)}\n\"\"\"\n\nLỖI CẦN SỬA:\n{_describe(issues)}\n\n"
             f"THÔNG TIN SẢN PHẨM GỐC:\n{_product_facts(snapshot)}\n\nTrả về duy nhất nội dung đã sửa.")
-    return sanitize_external_retailer_mentions(LLMProvider().invoke(_REPAIR_SYSTEM, user)).strip()
+    return sanitize_external_retailer_mentions(LLMProvider().invoke(system, user)).strip()
 
 
 def repair_script(script: str, issues, snapshot: dict, purpose: str) -> str:
@@ -75,7 +85,8 @@ def repair_script(script: str, issues, snapshot: dict, purpose: str) -> str:
     if whole:
         # An issue without a locatable section: the whole script is the repair unit.
         logger.info("[SCRIPT-REPAIR] whole-script repair for %d issue(s)", len(whole))
-        return _ask(script, issues, snapshot, "KỊCH BẢN CẦN SỬA (giữ nguyên các dòng tiêu đề trong ngoặc vuông nếu có)")
+        return _ask(script, issues, snapshot, "KỊCH BẢN CẦN SỬA (giữ nguyên các dòng tiêu đề trong ngoặc vuông nếu có)",
+                    _REPAIR_SYSTEM_WHOLE)
     for block in blocks:
         group = by_label.get(block["label"])
         if not group or not block["header"]:
