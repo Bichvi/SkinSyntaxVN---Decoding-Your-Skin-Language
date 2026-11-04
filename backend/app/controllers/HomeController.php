@@ -10,6 +10,7 @@ require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/SkincareProductClassifier.php';
 require_once __DIR__ . '/../services/RecommendationExplainer.php';
 require_once __DIR__ . '/../services/SupportKnowledge.php';
+require_once __DIR__ . '/ShopAssistantController.php';
 require_once __DIR__ . '/../services/HomeGraphRecommender.php';
 require_once __DIR__ . '/../services/ChatAgentToken.php';
 
@@ -3118,6 +3119,25 @@ class HomeController {
             ];
             echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             return;
+        }
+
+        // Cart reads and explicit purchase requests are answered by the PHP BFF
+        // before Flask, so product offers stay session-bound and the cart is
+        // never changed. Policy questions keep going to the Flask STORE_SUPPORT
+        // branch below (LLM answer with fact check, canned answer as fallback).
+        try {
+            $isShopRequest = PurchaseIntent::isCartRequest($message) || PurchaseIntent::parse($message) !== null;
+            $shopReply = $isShopRequest ? (new ShopAssistantController($this->pdo))->reply($message) : null;
+            if (is_array($shopReply)) {
+                $shopReply['conversation_id'] = $conversationId !== '' ? $conversationId : null;
+                $shopReply['pipeline_mode'] = $shopReply['pipeline_mode'] ?? 'php_store_assistance';
+                $shopReply['intent_mode'] = $shopReply['intent_mode'] ?? ($shopReply['commerce']['stage'] ?? 'STORE_SUPPORT');
+                echo json_encode($shopReply, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                return;
+            }
+        } catch (Throwable $shopError) {
+            // A catalog/support failure must not take down the existing AI path.
+            error_log('[STORE_SUPPORT] preflight_unavailable ' . get_class($shopError));
         }
 
         // Bài hỗ trợ cửa hàng liên quan (rank MỘT lần, chạy trước cache để quyết định bỏ qua cache).

@@ -1906,6 +1906,9 @@ try {
             if (productCards.length) {
               contentSuffix += '<div class="ai-chat-widget__product-group">' + productCards.join('') + '</div>';
             }
+            if (message.commerce && window.SkinSyntaxPurchase) {
+              contentSuffix += '<div class="ai-chat-widget__commerce-card" data-ai-commerce-card></div>';
+            }
             if (message.agentUi) {
               agentUiHtml = '<div data-ai-agent-ui></div>';
             }
@@ -1990,6 +1993,14 @@ try {
           });
         }
         updateStatus();
+        if (window.SkinSyntaxPurchase) {
+          var commerceMessages = messages.filter(function (item) { return item.role !== 'user' && item.commerce; });
+          stream.querySelectorAll('[data-ai-commerce-card]').forEach(function (target, index) {
+            var commerce = commerceMessages[index] ? commerceMessages[index].commerce : null;
+            if (!commerce) return;
+            target.innerHTML = window.SkinSyntaxPurchase.render(commerce);
+          });
+        }
         scrollToBottom();
       };
 
@@ -2303,6 +2314,7 @@ try {
               support_topic: payload.support_topic,
               sources: Array.isArray(payload.sources) ? payload.sources : [],
               suggested_questions: Array.isArray(payload.suggested_questions) ? payload.suggested_questions : [],
+              commerce: payload.commerce || null,
               latency: payload.latency
             });
 
@@ -2756,6 +2768,28 @@ try {
       syncLayout();
       syncExpandedState();
       renderMessages();
+
+      if (window.SkinSyntaxPurchase) {
+        window.SkinSyntaxPurchase.mount(stream, {
+          endpoint: '<?= BASE_URL ?>/index.php?r=chat_purchase_action',
+          csrf: <?= json_encode($aiChatPurchaseCsrf, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
+          onQuote: function (offer, quote) {
+            var target = messages.find(function (item) { return item.commerce && item.commerce.offer === offer; });
+            if (target) {
+              target.commerce = quote;
+              renderMessages();
+            }
+          },
+          onChange: function (offer) {
+            var target = messages.find(function (item) { return item.commerce && item.commerce.offer === offer; });
+            if (target) {
+              target.commerce.stage = 'choose';
+              renderMessages();
+            }
+          },
+          onQuantity: function () {}
+        });
+      }
 
       // Inject greeting after first render if no prior history
       if (messages.length === 0) {

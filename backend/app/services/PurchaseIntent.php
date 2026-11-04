@@ -5,6 +5,19 @@ require_once __DIR__ . '/SupportKnowledge.php';
 /** A purchase request is a proposal to show choices, never authorization to order. */
 final class PurchaseIntent
 {
+    public static function isCartRequest(string $message): bool
+    {
+        // fold() lowercases and strips diacritics, so patterns are plain ASCII.
+        // Only a plain "what is in my cart" read qualifies; changes, conflict
+        // checks and help questions keep going to their own flows.
+        $text = SupportKnowledge::fold($message);
+        if (!preg_match('/\b(gio hang|gio cua|gio minh|trong gio|cart)\b/', $text)) return false;
+        if (preg_match('/\b(them|xoa|go|bo ra|bo di|bo khoi|khoi gio|cap nhat|sua|doi)\b/', $text)) return false;
+        if (preg_match('/\b(xung dot|ket hop|dung chung|hop khong|loi|huong dan|cach|lam sao|tai sao|phi|voucher|ma giam)\b/', $text)) return false;
+        if (preg_match('/^(xem |mo )?(gio hang|cart)( cua (toi|minh|em|tui))?$/', $text)) return true;
+        return (bool)preg_match('/\b(xem|co gi|co nhung gi|dang co|gom|liet ke|kiem tra|bao nhieu|tong tien|tam tinh)\b/', $text);
+    }
+
     public static function parse(string $message): ?array
     {
         $text = SupportKnowledge::fold($message);
