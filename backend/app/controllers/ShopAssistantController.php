@@ -8,7 +8,8 @@ require_once __DIR__ . '/../services/ChatPurchaseService.php';
 final class ShopAssistantController
 {
     private $db;
-    public function __construct($db) { $this->db = $db; }
+    private $catalog;
+    public function __construct($db, $catalog = null) { $this->db = $db; $this->catalog = $catalog; }
 
     public static function csrfToken(): string
     {
@@ -18,12 +19,41 @@ final class ShopAssistantController
 
     private function service(): ChatPurchaseService
     {
-        return new ChatPurchaseService(new ChatProductCatalog($this->db), $_SESSION);
+        $catalog = $this->catalog ?? new ChatProductCatalog($this->db);
+        return new ChatPurchaseService($catalog, $_SESSION);
+    }
+
+    private function cartReply(): array
+    {
+        $catalog = $this->catalog ?? new ChatProductCatalog($this->db);
+        $items = [];
+        $subtotal = 0;
+        foreach ((array)($_SESSION['gio_hang'] ?? []) as $id => $rawQuantity) {
+            $id = trim((string)$id);
+            $quantity = filter_var($rawQuantity, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
+            if ($id === '') continue;
+            $product = $catalog->find($id);
+            if (!$product) {
+                $items[] = ['id' => $id, 'name' => 'Sản phẩm không còn trong catalog', 'quantity' => $quantity, 'available' => false, 'price' => 0, 'subtotal' => 0];
+                continue;
+            }
+            $price = (int)($product['price'] ?? 0);
+            $lineTotal = $price > 0 ? $price * $quantity : 0;
+            $subtotal += $lineTotal;
+            $items[] = array_merge($product, ['quantity' => $quantity, 'subtotal' => $lineTotal, 'available' => !empty($product['available'])]);
+        }
+        return [
+            'ok' => true,
+            'answer' => $items ? 'Đây là các sản phẩm hiện có trong giỏ của bạn. Mình chưa thay đổi giỏ hàng.' : 'Giỏ hàng của bạn đang trống.',
+            'products' => [], 'conflicts' => [], 'intent_mode' => 'CART', 'pipeline_mode' => 'php_cart_read',
+            'commerce' => ['stage' => 'cart', 'items' => $items, 'subtotal' => $subtotal, 'count' => count($items), 'cart_url' => BASE_URL . '/index.php?r=giohang'],
+        ];
     }
 
     public function reply(string $message): ?array
     {
         if (mb_strlen($message) > 2000) return null;
+        if (PurchaseIntent::isCartRequest($message)) return $this->cartReply();
         $support = (new SupportKnowledge())->answer($message, BASE_URL);
         $intent = PurchaseIntent::parse($message);
         if ($intent === null) return $support;

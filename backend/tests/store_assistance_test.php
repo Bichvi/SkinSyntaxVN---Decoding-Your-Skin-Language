@@ -4,6 +4,9 @@ require_once __DIR__ . '/../app/services/SupportKnowledge.php';
 require_once __DIR__ . '/../app/services/PurchaseIntent.php';
 require_once __DIR__ . '/../app/services/ChatProductCatalog.php';
 require_once __DIR__ . '/../app/services/ChatPurchaseService.php';
+require_once __DIR__ . '/../app/controllers/ShopAssistantController.php';
+
+if (!defined('BASE_URL')) define('BASE_URL', 'https://example.test');
 
 $checks = 0;
 function check(bool $condition, string $label): void {
@@ -22,6 +25,10 @@ foreach ($knowledge->data()['articles'] as $article) {
     check(!str_contains(json_encode($article, JSON_UNESCAPED_UNICODE), '[ĐIỀN'), 'No draft placeholders in published body');
 }
 foreach (['Tôi có nên mua retinol không?', 'Tư vấn mua serum cho da nhạy cảm', 'Tôi chưa mua, chỉ hỏi cách dùng', 'Hướng dẫn đặt hàng', 'So sánh CeraVe và SVR', 'Tôi không muốn mua nữa'] as $message) check(PurchaseIntent::parse($message) === null, 'Not a purchase: ' . $message);
+check(PurchaseIntent::isCartRequest('Giỏ hàng của mình có gì?'), 'Cart intent recognized');
+check(!PurchaseIntent::isCartRequest('Thêm sản phẩm vào giỏ giúp mình'), 'Cart mutation is not read-only intent');
+foreach (['Xem giỏ hàng', 'giỏ hàng', 'Trong giỏ mình đang có những gì?', 'Kiểm tra giỏ hàng giúp mình'] as $message) check(PurchaseIntent::isCartRequest($message), 'Cart read: ' . $message);
+foreach (['Sản phẩm trong giỏ có xung đột không?', 'Giỏ hàng bị lỗi không thanh toán được', 'Hướng dẫn thanh toán giỏ hàng', 'Bỏ serum ra khỏi giỏ', 'Đổi số lượng trong giỏ hàng', 'Áp voucher cho giỏ hàng'] as $message) check(!PurchaseIntent::isCartRequest($message), 'Not a cart read: ' . $message);
 $intent = PurchaseIntent::parse('tối mua 1 chai Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn');
 check($intent === ['query'=>'serum cerave retinol mo tham mun', 'quantity'=>1], 'Original user example');
 check(PurchaseIntent::parse('đặt cho tôi 2 chai CeraVe Retinol')['quantity'] === 2, 'Quantity extraction');
@@ -68,4 +75,18 @@ rejects(fn() => $service->quote($offer['offer'], '1', 1), 409, 'Product removed'
 $now += 601;
 rejects(fn() => $service->quote($offer['offer'], '1', 1), 410, 'Expired offer');
 check(!isset($service->offer(['query'=>'missing','quantity'=>1])['commerce']), 'No match cannot fabricate offer');
+
+// Controller contract: a chat purchase creates a session-bound offer, while
+// the checkout handoff remains the only operation that writes checkout_items.
+$_SESSION = ['gio_hang' => ['1' => 3]];
+$catalog->product['price'] = 350000;
+$catalog->product['available'] = true;
+$controller = new ShopAssistantController(null, $catalog);
+$reply = $controller->reply('Mua cho mình 1 chai Test retinol');
+check(is_array($reply) && ($reply['ok'] ?? false) === true, 'Controller purchase reply is successful');
+check(($reply['commerce']['stage'] ?? '') === 'choose', 'Controller returns explicit product choice');
+check(!isset($_SESSION['checkout_items']), 'Controller offer does not prepare checkout');
+$cartReply = $controller->reply('Giỏ hàng của mình có gì?');
+check(($cartReply['intent_mode'] ?? '') === 'CART' && ($cartReply['commerce']['subtotal'] ?? 0) === 1050000, 'Controller returns current cart subtotal');
+check(!isset($_SESSION['checkout_items']), 'Cart read does not prepare checkout');
 echo "PASS: {$checks} assertions\n";

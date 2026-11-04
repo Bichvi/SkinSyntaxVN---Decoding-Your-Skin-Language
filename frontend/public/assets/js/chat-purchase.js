@@ -17,12 +17,29 @@
       + '<div><a href="' + escape(safeUrl(item.detail_url)) + '">' + escape(item.name) + '</a>'
       + '<small>' + escape(item.brand) + '</small><strong>' + escape(money(item.price)) + '</strong></div></div>';
   };
+  var offerChoices = new Map();
   var render = function (state) {
-    if (!state || !state.offer || !['choose', 'selected'].includes(state.stage)) return '';
-    var html = '<section class="ss-chat-buy" data-buy-offer="' + escape(state.offer) + '" aria-label="Chọn sản phẩm để thanh toán">';
-    if (state.stage === 'choose') {
+    if (!state || !['cart', 'choose', 'selected'].includes(state.stage)) return '';
+    if (state.stage !== 'cart' && !state.offer) return '';
+    if (state.stage === 'choose' && Array.isArray(state.products)) {
+      offerChoices.set(state.offer, state.products);
+      if (offerChoices.size > 24) offerChoices.delete(offerChoices.keys().next().value);
+    }
+    var html = '<section class="ss-chat-buy" data-buy-offer="' + escape(state.offer || '') + '" aria-label="Chọn sản phẩm để thanh toán">';
+    if (state.stage === 'cart') {
+      html += '<p class="ss-chat-buy__step">Giỏ hàng hiện tại</p>';
+      if (!Array.isArray(state.items) || !state.items.length) {
+        html += '<p>Giỏ hàng đang trống.</p>';
+      } else {
+        state.items.forEach(function (item) {
+          html += '<div class="ss-chat-buy__cart-row"><span>' + escape(item.name) + ' × ' + escape(item.quantity) + '</span><strong>' + escape(money(item.subtotal || 0)) + '</strong></div>';
+        });
+        html += '<div class="ss-chat-buy__total"><span>Tạm tính</span><strong>' + escape(money(state.subtotal || 0)) + '</strong></div>';
+      }
+      html += '<a class="ss-chat-buy__checkout-link" href="' + escape(safeUrl(state.cart_url || '')) + '">Xem giỏ hàng và thanh toán →</a>';
+    } else if (state.stage === 'choose') {
       html += '<p class="ss-chat-buy__step">Chọn đúng sản phẩm bạn muốn mua</p>';
-      (state.products || []).forEach(function (item) {
+      (state.products || offerChoices.get(state.offer) || []).forEach(function (item) {
         html += '<div class="ss-chat-buy__option">' + product(item)
           + '<button type="button" data-buy-select="' + escape(item.id) + '" data-buy-quantity="' + escape(state.quantity) + '">Chọn sản phẩm này</button></div>';
       });

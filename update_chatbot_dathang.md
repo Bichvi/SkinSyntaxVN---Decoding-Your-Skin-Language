@@ -520,6 +520,13 @@ Cả 5 phần đã được duyệt trong chat ngày 2026-10-27 (C, C2, C3, C4, 
 - `TaiKhoanController::hoso` ghi đè `$_SESSION['user']['id']` thành 0 với tài khoản thiếu `id` (agent đã chịu được nhờ `ChatAgentIdentity`).
 - Chưa làm: GĐ2 (Generative UI đầy đủ, shadow mode), GĐ3 (MCP, Langfuse), GĐ4 (bộ đánh giá 120 câu, kịch bản tấn công trong CI).
 
+### G2. Thẻ giỏ hàng trên luồng chat cũ (2026-11-04)
+
+Áp dụng khi `SYNA_AGENT_V2` tắt hoặc agent trả `fallback`. `HomeController::aiChatAssistant` gọi `ShopAssistantController` trước Flask, **chỉ** với câu xem giỏ (`PurchaseIntent::isCartRequest`) hoặc yêu cầu mua (`PurchaseIntent::parse`). Câu chính sách vẫn đi nhánh Flask `STORE_SUPPORT` như thiết kế 2026-10-23.
+- Xem giỏ: chỉ đọc `$_SESSION['gio_hang']`, trả `commerce.stage = cart` (dòng sản phẩm, tạm tính, link `r=giohang`); widget vẽ thẻ bằng `chat-purchase.js`. Không đổi giỏ, không ghi `checkout_items`.
+- Bộ nhận diện bỏ qua câu thêm/xóa/đổi trong giỏ, hỏi xung đột, lỗi, hướng dẫn, phí, voucher.
+- Kiểm thử: `backend/tests/store_assistance_test.php` (186 assertion), `backend/tests/chat_purchase_client_test.cjs` (6), unit `Chat*Test`/`Support*Test` pass; E2E `e2e/chat-cart-card.e2e.cjs` (khách vãng lai, không tạo đơn) PASS 8/8.
+
 ## F. Rủi ro đã thấy
 
 - Đổi quyết định "không tạo đơn trong chat" → cần cập nhật `docs/plans/2026-09-11-store-assistance.md` để tránh mâu thuẫn.

@@ -2,6 +2,7 @@
 <script src="<?= BASE_URL ?>/assets/js/live-search.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/smart-search.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/live-filter.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/live-filter.js') ?: '1' ?>"></script>
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/chat-purchase.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/chat-purchase.css') ?: '1' ?>">
 </main>
 
 <footer class="site-footer">
@@ -85,6 +86,7 @@ if ($pdo !== null) {
   require __DIR__ . '/../components/support_chat_widget.php';
 }
 ?>
+<script src="<?= BASE_URL ?>/assets/js/chat-purchase.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-purchase.js') ?: '1' ?>"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const showCartToast = function (message, ok) {
