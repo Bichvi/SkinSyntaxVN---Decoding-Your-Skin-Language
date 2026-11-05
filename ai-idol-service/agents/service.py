@@ -504,12 +504,15 @@ def _autopilot_pick(
         # A name we do not sell must not be replaced by a fuzzy look-alike.
         return [], _not_in_catalog(terms), warnings
     if not selected and not brief.explicit_product_ids and resolution["ambiguous"]:
-        picked = resolution["ambiguous"][0]
-        if not _name_supports_request(picked["name"], [*brief.product_queries, raw_text or brief.goal]):
+        # Candidates come best-scored first; take the first whose name really carries the request.
+        queries = [*brief.product_queries, raw_text or brief.goal]
+        picked = next((item for item in resolution["ambiguous"] if _name_supports_request(item["name"], queries)), None)
+        if picked is None:
+            closest = resolution["ambiguous"][0]
             return [], make_decision(
                 "NAME_UNCLEAR", "stopped",
-                f"Chưa rõ sản phẩm: lệnh không ghi mã và không khớp rõ tên sản phẩm nào (ứng viên gần nhất “{picked['name']}”, "
-                f"mã {picked['product_id']}). Không tự chọn sản phẩm thay thế; hãy ghi mã (ví dụ “mã 98”) hoặc tên đầy đủ.",
+                f"Chưa rõ sản phẩm: lệnh không ghi mã và không khớp rõ tên sản phẩm nào (ứng viên gần nhất “{closest['name']}”, "
+                f"mã {closest['product_id']}). Không tự chọn sản phẩm thay thế; hãy ghi mã (ví dụ “mã 98”) hoặc tên đầy đủ.",
             ), warnings
         selected = [picked]
         decisions.append(make_decision(
