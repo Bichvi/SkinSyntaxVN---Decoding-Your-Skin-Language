@@ -168,7 +168,7 @@ def _agent_messages(state: GraphState) -> list[BaseMessage]:
     ctx = state["ctx"]
     skin_profile = _safe_mapping(
         getattr(ctx, "skin_profile", {}),
-        {"skin_type", "concerns", "budget_max", "avoid_ingredients"},
+        {"skin_type", "concerns", "goal", "budget_max", "avoid_ingredients", "sensitivity"},
     )
     open_draft = {"draft_id": ctx.state.open_draft_id} if ctx.state.open_draft_id else "none"
     prompt = render(

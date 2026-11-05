@@ -6,6 +6,7 @@ import hmac
 import json
 import logging
 import os
+import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
@@ -115,14 +116,44 @@ def _cart_snapshot(value: Any) -> list[dict]:
     return result
 
 
+def _profile_str_list(value: Any) -> list[str]:
+    items = [value] if isinstance(value, str) else value if isinstance(value, list) else []
+    result = [item.strip()[:200] for item in items if isinstance(item, str) and item.strip()]
+    return result[:10]
+
+
 def _profile(value: Any) -> dict:
+    """Canonical skin profile: skin_type, goal, concerns, avoid_ingredients, budget_max.
+
+    Legacy keys loai_da / van_de are still accepted. Everything else is dropped.
+    """
     if not isinstance(value, dict):
         return {}
-    return {
-        key: value[key]
-        for key in ("loai_da", "van_de")
-        if isinstance(value.get(key), str)
-    }
+    result: dict = {}
+    skin_type = value.get("skin_type", value.get("loai_da"))
+    if isinstance(skin_type, str) and skin_type.strip():
+        result["skin_type"] = skin_type.strip()[:200]
+    goal = value.get("goal")
+    if isinstance(goal, str) and goal.strip():
+        result["goal"] = goal.strip()[:200]
+    concerns = _profile_str_list(value.get("concerns", value.get("van_de")))
+    if concerns:
+        result["concerns"] = concerns
+    avoid = _profile_str_list(value.get("avoid_ingredients"))
+    if avoid:
+        result["avoid_ingredients"] = avoid
+    budget = value.get("budget_max")
+    if isinstance(budget, int) and not isinstance(budget, bool) and budget > 0:
+        result["budget_max"] = budget
+    sensitivity = value.get("sensitivity")
+    if isinstance(sensitivity, str) and sensitivity.strip():
+        result["sensitivity"] = sensitivity.strip()[:200]
+    updated_at = value.get("updated_at")
+    if isinstance(updated_at, str):
+        updated_at = updated_at.strip()
+        if len(updated_at) <= 40 and re.match(r"^\d{4}-\d{2}-\d{2}", updated_at):
+            result["updated_at"] = updated_at
+    return result
 
 
 def _conversation_messages(conversation: dict | None) -> tuple[list[Any], list[dict]]:
@@ -328,9 +359,13 @@ def chat_agent():
                 logger.warning("agent conversation creation failed: %s", type(exc).__name__)
         history, recent_turns = _conversation_messages(conversation)
 
+    # The legacy chatbot reads `budget`; the agent profile uses `budget_max`.
+    legacy_customer_profile = dict(profile)
+    if "budget_max" in profile:
+        legacy_customer_profile["budget"] = profile["budget_max"]
     legacy_payload = {
         "_verified_email": claims.em.strip() if claims else None,
-        "customer_profile": profile,
+        "customer_profile": legacy_customer_profile,
         "cart_items": cart_snapshot,
         "conversation_history": [
             {"sender": item.get("role"), "text": item.get("content")}

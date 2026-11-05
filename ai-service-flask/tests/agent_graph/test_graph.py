@@ -872,3 +872,25 @@ def test_last_shown_products_set_by_search_tool_is_saved_and_reloaded_next_turn(
         legacy_payload={}, conversation_id="conv-A", state_store=store,
     ))
     assert [item["id"] for item in next_ctx.state.last_shown_products] == ["1000", "1001"]
+
+
+def test_agent_system_message_includes_skin_profile_and_goal():
+    router = ScriptedRouter(output("ADVISE"))
+    model = ScriptedChatModel(responses=[AIMessage(content="ok")])
+    graph = build_graph(router, lambda tools: model.bind_tools(tools), lambda *_args: {"answer": "legacy"})
+    ctx = context()
+    ctx.skin_profile = {
+        "skin_type": "Da thường-xyz",
+        "goal": "Dưỡng sáng-xyz",
+        "concerns": ["Lỗ chân lông to"],
+        "avoid_ingredients": ["cồn"],
+        "budget_max": 500000,
+        "secret": "leak-me",
+    }
+
+    list(run_turn(graph, message="tư vấn", ctx=ctx, history=[], recent_turns=[], legacy_payload={}))
+
+    system = model.calls[0][0].content
+    assert "Da thường-xyz" in system
+    assert "Dưỡng sáng-xyz" in system
+    assert "leak-me" not in system
