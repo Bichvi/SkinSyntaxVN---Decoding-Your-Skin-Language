@@ -220,20 +220,30 @@ def detect_needs(text: str) -> list[dict]:
 
 
 def _need_hits(raw: dict, name: str, needs: list[dict], vocab) -> int:
+    return _need_score(raw, name, needs, vocab)[0]
+
+
+def _need_score(raw: dict, name: str, needs: list[dict], vocab) -> tuple[int, int]:
+    """(hits, strength): strength is 2 per need said by the name/skin type, 1 per need only in the ingredients."""
     from agents.catalog_constraints import _row_skin
     fields = ("thanh_phan_chinh", "thanh_phan_clean", "thanh_phan_day_du", "thanh_phan", "thanh_phan_sach")
+    norm_name = normalize_text(name)
     haystack = normalize_text(" ".join([name, *(str(raw.get(k) or "") for k in fields)]))
-    hits = 0
+    hits = strength = 0
     for need in needs:
-        hit = any(re.search(p, haystack) for p in need["patterns"])
-        if not hit and need.get("skin"):
-            hit = need["skin"] in _row_skin(raw, vocab)
+        by_name = any(re.search(p, norm_name) for p in need["patterns"])
+        hit = by_name or any(re.search(p, haystack) for p in need["patterns"])
+        level = 2 if by_name else 1
+        if need.get("skin") and need["skin"] in _row_skin(raw, vocab):
+            hit, level = True, 2
         if need.get("special") == "no_fragrance":
             full = normalize_text(str(raw.get("thanh_phan_full") or ""))
             if full:
                 hit = not any(a in full for a in FRAGRANCE_ALIASES)
+            level = 2
         hits += bool(hit)
-    return hits
+        strength += level if hit else 0
+    return hits, strength
 
 
 def _auto_count(text: str):
@@ -710,7 +720,7 @@ def execute_query(plan: dict, catalog: list[dict], *, batches: list[dict] | None
                 evidence["combo"] = True
             evidence["line"] = line_key(name, normalized.get("brand"))
         if plan.get("needs"):
-            evidence["need_score"] = _need_hits(raw, name, plan["needs"], vocab)
+            evidence["need_score"], evidence["need_strength"] = _need_score(raw, name, plan["needs"], vocab)
         if plan.get("brand") or plan.get("per_brand_max"):
             evidence["brand"] = normalized["brand"]
         matched_batches = []
@@ -867,7 +877,7 @@ def execute_query(plan: dict, catalog: list[dict], *, batches: list[dict] | None
     if any("soft_score" in r["evidence"] for r in rows):
         rows.sort(key=lambda row: -row["evidence"].get("soft_score", 0))
     if plan.get("needs"):
-        rows.sort(key=lambda row: -row["evidence"].get("need_score", 0))
+        rows.sort(key=lambda row: (-row["evidence"].get("need_score", 0), -row["evidence"].get("need_strength", 0)))
         wanted = len(plan["needs"])
         for floor in (wanted, 1):  # every need first, then any need; filter only when that still fills the list
             matches = [r for r in rows if r["evidence"].get("need_score", 0) >= floor]

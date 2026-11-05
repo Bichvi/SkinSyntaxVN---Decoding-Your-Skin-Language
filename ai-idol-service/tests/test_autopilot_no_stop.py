@@ -311,6 +311,14 @@ class NoStopRoundTwoTests(unittest.TestCase):
         self.assertTrue({"100", "101"} <= set(harness.ids[:2]))
         self.assertEqual(decision(run, "NEED_RELAXED")["level"], "adjusted")
 
+    def test_name_or_skin_evidence_beats_an_ingredient_only_mention(self):
+        top = item(100, "Mặt Nạ Naruko", sold=99, loai_da="Da dầu",
+                   thanh_phan_day_du="tràm trà làm dịu nốt mụn")
+        by_name = item(101, "Gel Rửa Mặt Cho Da Nhờn Mụn", sold=5, loai_da="Da dầu")
+        by_skin = item(102, "Kem Dưỡng Da", sold=3, loai_da="Da dầu/Da mụn")
+        harness, run = self.created("Làm video 2 sản phẩm trị mụn cho da dầu", [top, by_name, by_skin])
+        self.assertEqual(sorted(harness.ids), ["101", "102"])
+
     def test_serum_category_excludes_sunscreen_essences(self):
         serums = [item(100 + i, f"Serum Vitamin C {i}", sold=i, category="Chăm sóc da mặt -> Serum") for i in range(3)]
         sun = [item(200 + i, f"Tinh Chất Chống Nắng Vitamin C {i}", sold=99) for i in range(5)]
