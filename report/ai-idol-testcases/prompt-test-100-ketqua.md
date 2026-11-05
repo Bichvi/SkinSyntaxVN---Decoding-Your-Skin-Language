@@ -26,7 +26,9 @@ Ký hiệu: ✅ đạt · 🟡 đạt một phần · ❌ sai
 | Mã sản phẩm chỉ đọc được khi có “mã/ID/#” | `agents/intent_parser.py` — `_extract_explicit_ids` nhận thêm “sản phẩm 98”, “sp 101”, “sản phẩm 98 và 68”; bỏ qua số đi kèm đơn vị (30 ngày, 50ml, 200k, 9h, 20/11, 1.0%…) | #33, #36, #83, #87 ra đúng mã. #36 và #83 ở chế độ Thường cũng tạo được chiến dịch |
 | Tự động chọn bừa sản phẩm khi tên mơ hồ (`AMBIGUOUS_PICKED`) | `agents/service.py` — `_autopilot_pick` chỉ tự chọn khi tên ứng viên chứa 2 từ liền nhau của lệnh (hoặc từ duy nhất của lệnh); nếu không thì dừng với `NAME_UNCLEAR` và gửi danh sách gợi ý | 12 câu trước đây tạo video cho sản phẩm sai (Dove, Hada Labo, Torriden…) giờ dừng lại. Các lựa chọn đúng (#15 La Roche-Posay, #84 Beplain, #85 Timeless, #95 kem chống nắng) giữ nguyên |
 
-Test mới: `ai-idol-service/tests/test_explicit_id_and_pick_guard.py` (7 test, 18 subtest). Các bộ `test_agent`, `test_autopilot_service`, `test_multi_product_resolve`, `test_prompt_builder_cases` + file mới: 173 passed, 1 skipped.
+Bổ sung: `_autopilot_pick` xét lần lượt các ứng viên (tối đa 5) và chọn ứng viên **đầu tiên** có tên khớp lệnh, thay vì chỉ ứng viên đứng đầu. Chạy lại 100 câu: **không câu nào đổi kết quả**, vì trên dữ liệu thật 5 ứng viên đầu của các câu bị dừng không có sản phẩm đúng (vd “toner” → Torriden, phấn AGE 20's, Bioré, chấm mụn Lanbena; “Obagi” → không có SP Obagi nào). Gốc là cách chấm điểm trong `product_resolver._score`: độ giống của cả câu lệnh lấn át từ khóa chính — cần sửa ở bước xếp hạng.
+
+Test mới: `ai-idol-service/tests/test_explicit_id_and_pick_guard.py` (8 test, 18 subtest). Các bộ `test_agent`, `test_autopilot_service`, `test_multi_product_resolve`, `test_prompt_builder_cases` + file mới: 174 passed, 1 skipped.
 
 | Nhóm (sau sửa) | Thường ✅/🟡/❌ | Tự động ✅/🟡/❌ |
 |---|---|---|
