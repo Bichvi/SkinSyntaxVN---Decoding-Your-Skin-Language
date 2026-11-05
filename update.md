@@ -8,6 +8,7 @@ Ngôn ngữ tài liệu: tiếng Việt. Mọi khẳng định bên dưới đư
 Không có bí mật nào trong tài liệu này. Không đọc, không ghi giá trị `.env`. Tên biến môi trường được nêu, giá trị thì không.
 
 > **Giới hạn thử đăng nhập/OTP (2026-11-05):** chặn dò mật khẩu, spam mail đặt lại và spam/đoán OTP đăng ký bằng `AuthThrottle` (Redis, fail-open; OTP sai 5 lần phải lấy mã mới). Chi tiết: [update_auth_rate_limit.md](update_auth_rate_limit.md).
+> **Bộ đếm lượt xem qua Redis (2026-11-05):** trang chi tiết sản phẩm không còn ghi `$inc luot_xem` thẳng lên Atlas mỗi lượt xem mà đệm vào Redis local (`ProductViewCounter`), job `product_views_flush` ghi dồn sang Mongo mỗi 5 phút; tắt bằng `PRODUCT_VIEWS_REDIS_ENABLED=0`. Chi tiết: [update_luot_xem.md](update_luot_xem.md).
 
 > **Chatbot đặt hàng qua chat (GĐ0+GĐ1 đã code 2026-11-03, E2E PASS — đơn test #502308 đã hủy):** agent LangGraph (router + 11 tool) sau cờ `SYNA_AGENT_V2`, token HMAC giữa PHP–Flask, đơn nháp Mongo, đơn chỉ tạo khi khách bấm "Xác nhận đặt hàng"; cần thêm biến `.env` (xem mục G). Chi tiết: [`update_chatbot_dathang.md`](update_chatbot_dathang.md).
 

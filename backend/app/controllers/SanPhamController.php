@@ -664,12 +664,13 @@ class SanPhamController {
         }
 
         // Mỗi lần truy cập trang chi tiết sẽ tăng 1 lượt xem.
+        $pending = null;
         try {
-            $this->model->tangLuotXem($id);
+            $pending = $this->model->tangLuotXem($id);
         } catch (Throwable $e) {
             error_log('product view counter MongoDB error: ' . $e->getMessage());
         }
-        $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + 1;
+        $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + ($pending !== null ? $pending : 1);
 
         // Lưu vào recent viewed products của session (tối đa 5 sản phẩm)
         $this->trackRecentViewedProduct((string)($p['ma_san_pham'] ?? $id));

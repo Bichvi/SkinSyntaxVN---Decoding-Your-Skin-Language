@@ -26,6 +26,9 @@ PRODUCT_SIMILAR_PREFIX = "product:similar:v1:"  # + g<gen>:<id>:<skin|any>  STRI
 # -- cart --
 CART_ANALYZE_PREFIX = "cart:analyze:v1:"         # + g<gen>:<sha1(ids|skin)>  STRING json, TTL SEARCH_CART_CACHE_TTL (U09)
 
+PRODUCT_VIEWS = "product:views:v1"            # HASH ma_san_pham -> lượt xem chưa ghi vào Mongo, không TTL (PHP HINCRBY, job product_views_flush rút mỗi 5 phút)
+PRODUCT_VIEWS_FLUSHING = "product:views:v1:flushing"  # HASH tạm: RENAME từ PRODUCT_VIEWS khi flush, xóa sau khi bulk_write Mongo xong
+
 # -- catalog --
 CATALOG_CHANGES_STREAM = "catalog:changes:v1"   # STREAM (U11)
 CATALOG_CHANGES_DEAD = CATALOG_CHANGES_STREAM + ":dead"
