@@ -5,6 +5,7 @@ HARD constraints filter, SOFT only re-order, CONTENT notes never filter. Missing
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -184,19 +185,48 @@ def _parse_amount(number: str, unit: str | None) -> float | None:
     return value * mult
 
 
-def _bare_countries(text: str, country_alt: str, alias_to_canonical: dict, taken: list, spans: list) -> list:
+# Short country words that look like other words once accents are gone (nhất, hạn...).
+ACCENTED_COUNTRY = {"nhat": "nhật", "han": "hàn", "phap": "pháp", "duc": "đức", "my": "mỹ", "uc": "úc"}
+ACCENT_BLOCK_BEFORE = {"my": {"thẩm"}, "phap": {"phương", "biện", "giải"}, "duc": {"đạo"}}
+ACCENT_BLOCK_AFTER = {"my": {"phẩm"}, "han": {"gắn"}}
+
+
+def _raw_words(raw: str) -> list[str]:
+    return re.findall(r"\w+", unicodedata.normalize("NFC", str(raw or "")).lower().replace("ð", "đ"))
+
+
+def _written_with_accents(raw_words: list[str], text: str, alias: str, start: int) -> bool:
+    """The occurrence of `alias` at text[start] is the country word, spelled with its own accents in the brief."""
+    accented = ACCENTED_COUNTRY.get(alias)
+    if not accented:
+        return False
+    same = [i for i, w in enumerate(raw_words) if _n(w) == alias]
+    nth = len(re.findall(_word(re.escape(alias)), text[:start]))
+    if len(same) != len(re.findall(_word(re.escape(alias)), text)) or nth >= len(same):
+        return False
+    i = same[nth]
+    before = raw_words[i - 1] if i > 0 else ""
+    after = raw_words[i + 1] if i + 1 < len(raw_words) else ""
+    return (raw_words[i] == accented and before not in ACCENT_BLOCK_BEFORE.get(alias, ())
+            and after not in ACCENT_BLOCK_AFTER.get(alias, ()))
+
+
+def _bare_countries(text: str, country_alt: str, alias_to_canonical: dict, taken: list, spans: list,
+                    raw: str = "") -> list:
     """Autopilot: "kem dưỡng ẩm Hàn Quốc", "từ Pháp hoặc Đức" — a country with no "xuất xứ" prefix is the origin.
 
-    Long names stand alone; short aliases (Pháp, Đức, Nhật...) need "từ" or a list link to a country already found.
+    Long names stand alone; short aliases (Pháp, Đức, Nhật...) need "từ", a list link to a country already found,
+    or the country's own accents in the original brief (so "nhất" and "hạn" are not read as Nhật and Hàn).
     """
     found: list[tuple[int, int, str]] = []
+    raw_words = _raw_words(raw)
 
     def free(start: int, end: int) -> bool:
         return not any(start < e and s < end for s, e in taken) and not any(start < e and s < end for s, e, _ in found)
 
     for m in re.finditer(rf"(?<![a-z0-9])({country_alt})(?![a-z0-9])(?! pham)", text):
         alias = m.group(1)
-        if len(alias) >= 7 and free(m.start(1), m.end(1)):
+        if (len(alias) >= 7 or _written_with_accents(raw_words, text, alias, m.start(1))) and free(m.start(1), m.end(1)):
             found.append((m.start(1), m.end(1), alias_to_canonical[alias]))
     for m in re.finditer(rf"(?<![a-z0-9])tu\s+({country_alt})(?![a-z0-9])(?! pham)", text):
         if free(m.start(1), m.end(1)):
@@ -260,7 +290,7 @@ def extract_constraints(brief: str, vocab: CatalogVocabulary, *, bare_country: b
             if implicit and not re.match(r"xuat xu|nhap|thuong hieu", m.group(0)) and ASSUMPTION_ORIGIN not in assumptions:
                 assumptions.append(ASSUMPTION_ORIGIN)
         if bare_country and field_name == "origin_country":
-            spans2.extend(_bare_countries(text, country_alt, alias_to_canonical, taken, spans2))
+            spans2.extend(_bare_countries(text, country_alt, alias_to_canonical, taken, spans2, brief))
         for group in _group(spans2, text):
             add(field_name, [c for _, _, c in group], group[0][0], group[-1][1], text[group[0][0]:group[-1][1]])
 
