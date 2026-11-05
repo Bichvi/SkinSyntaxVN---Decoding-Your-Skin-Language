@@ -211,6 +211,56 @@ def popular_maintain() -> dict[str, Any]:
     return result
 
 
+def flush_product_views(r: Any, db: Any) -> dict[str, Any]:
+    """Rút bộ đếm lượt xem trong Redis sang Mongo (``$inc luot_xem``). Thuần để test được.
+
+    RENAME nguyên tử nên lượt xem mới vẫn rơi vào key chính mới. Nếu Mongo lỗi thì giữ key ``flushing`` cho lần sau.
+    Chấp nhận: crash giữa bulk_write và DEL có thể đếm đôi một lô đúng một lần."""
+
+    from pymongo import UpdateOne
+
+    leftover = bool(r.exists(keys.PRODUCT_VIEWS_FLUSHING))
+    if not leftover:
+        if not r.exists(keys.PRODUCT_VIEWS):
+            return {"products": 0, "views": 0}
+        r.rename(keys.PRODUCT_VIEWS, keys.PRODUCT_VIEWS_FLUSHING)
+    raw = r.hgetall(keys.PRODUCT_VIEWS_FLUSHING) or {}
+    ops_list = []
+    total = 0
+    for pid, n in raw.items():
+        pid = pid.decode() if isinstance(pid, bytes) else str(pid)
+        try:
+            count = int(n)
+        except (TypeError, ValueError):
+            continue
+        if count <= 0:
+            continue
+        ids = [pid, int(pid)] if pid.isdigit() else [pid]
+        ops_list.append(UpdateOne({"ma_san_pham": {"$in": ids}}, {"$inc": {"luot_xem": count}}))
+        total += count
+    matched = 0
+    if ops_list:
+        result = db["san_pham"].bulk_write(ops_list, ordered=False)   # lỗi thì ném ra, giữ key flushing
+        matched = result.matched_count
+    r.delete(keys.PRODUCT_VIEWS_FLUSHING)
+    return {"products": len(ops_list), "views": total, "matched": matched, "leftover": leftover}
+
+
+def product_views_flush() -> dict[str, Any]:
+    """Mỗi 5 phút: ghi lượt xem đệm trong Redis (PHP ``ProductViewCounter``) sang Mongo ``san_pham.luot_xem``."""
+
+    from search_service.catalog import get_mongo_db
+    from shared.redis_kit import client as redis_client
+
+    r = redis_client.get_redis()
+    if r is None:
+        raise RuntimeError("redis_unavailable")
+    db = get_mongo_db()
+    if db is None:
+        raise RuntimeError("mongo_unavailable")
+    return flush_product_views(r, db)
+
+
 def zero_result_report() -> dict[str, Any]:
     out = _env_path("OPS_REPORT_DIR", "/reports/search-metrics")
     Path(out).mkdir(parents=True, exist_ok=True)
@@ -292,6 +342,7 @@ def build_jobs() -> list[JobSpec]:
         JobSpec("popular_maintain", Schedule(minute=10, hour=4), popular_maintain, lock_ttl_s=300),
         JobSpec("ctr_boost", Schedule(minute=0, hour=5), ctr_boost, lock_ttl_s=1200, catch_up=False),
         JobSpec("zero_result_report", Schedule(minute=0, hour=8, weekday=0), zero_result_report, lock_ttl_s=1000),
+        JobSpec("product_views_flush", Schedule(every_minutes=5), product_views_flush, lock_ttl_s=240, catch_up=False),
         JobSpec("config_watch", Schedule(every_minutes=5), config_watch, lock_ttl_s=700, catch_up=False),
         JobSpec("health_check", Schedule(every_minutes=5), health_check, lock_ttl_s=120, catch_up=False),
     ]

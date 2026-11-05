@@ -53,6 +53,7 @@ Cơ chế: bộ lập lịch tự viết trong `workers/scheduler.py` (khoảng 
 | `ctr_boost` | 05:00 | (U12) CTR 30 ngày theo (section, product) -> Redis `search:ctr:v1:<section>`; ghi số liệu cổng dữ liệu (impression/click) vào trạng thái job. Ranker chỉ dùng khi `SEARCH_CTR_BOOST_ENABLED=true` (hiện tắt) |
 | `zero_result_report` | Thứ Hai 08:00 | `search_metrics.py --zero-result-report` -> `report/search-metrics/zero_results_<ngày>.csv` (người duyệt điền `approve=y`) |
 | `config_watch` | mỗi 5 phút | `conflict_rules.yaml` đổi -> `graph_sync --conflicts-only` + invalidate; synonyms/aliases/groups/rules YAML đổi -> `publish_invalidate("dictionary")` |
+| `product_views_flush` | mỗi 5 phút | ghi lượt xem đệm trong Redis (`product:views:v1`, PHP `ProductViewCounter`) sang Mongo `san_pham.luot_xem` bằng `$inc` (RENAME nguyên tử sang `product:views:v1:flushing` rồi `bulk_write`; Mongo lỗi thì giữ key flushing cho lần sau). Chi tiết: `update_luot_xem.md` |
 | `health_check` | mỗi 5 phút | tính health, ghi log WARNING cho từng cảnh báo |
 
 Mỗi job ghi `ops:job:<tên>:last` (JSON: `started_at`, `finished_at`, `duration_s`, `status` ok/fail/skipped, `detail`, `error`; TTL 30 ngày) và `ops:job:<tên>:fails` (số lần lỗi liên tiếp).
