@@ -51,7 +51,7 @@ Test tích hợp dùng db 15 (`REDIS_TEST_URL`, mặc định `redis://127.0.0.1
 | `graph_sync:lock` | STRING (token) | 1800s | `graph_sync` qua `RedisLock` | cùng code |
 | `cache:invalidate` | Pub/Sub channel | không lưu | `publish_invalidate` | listener nền trong Flask |
 
-Scope `rl:` đang dùng: `search_recommend` (Flask, theo IP gọi, 50 req/s), `search_event` (PHP, theo phiên, 60 sự kiện/60s), `search_event_ip` (PHP, IP công khai, 300/60s), `search_fallback` (PHP, theo phiên, 120/60s), `search_fallback_ip` (PHP, IP công khai, 120/60s), `product_similar` (Flask, IP gọi, 50 req/s), `similar_products` (PHP, theo phiên, 60/60s), `similar_products_ip` (PHP, IP công khai, 120/60s). Ident phiên/IP luôn là hash cắt ngắn, không lưu IP thô.
+Scope `rl:` đang dùng: `search_recommend` (Flask, theo IP gọi, 50 req/s), `search_event` (PHP, theo phiên, 60 sự kiện/60s), `search_event_ip` (PHP, IP công khai, 300/60s), `search_fallback` (PHP, theo phiên, 120/60s), `search_fallback_ip` (PHP, IP công khai, 120/60s), `product_similar` (Flask, IP gọi, 50 req/s), `similar_products` (PHP, theo phiên, 60/60s), `similar_products_ip` (PHP, IP công khai, 120/60s), `auth_login_email` (PHP, 10/900s), `auth_login_ip` (30/900s), `auth_login_session` (20/900s), `auth_reset_email` / `auth_reset_ip` / `auth_reset_session` (3 / 10 / 5 mỗi 900s), `auth_signup_otp_email` / `auth_signup_otp_ip` / `auth_signup_otp_session` (3 / 10 / 5 mỗi 600s; ident email = hash cắt ngắn, scope `_ip` chỉ dùng khi có IP công khai, không thì `_session`). Ident phiên/IP/email luôn là hash cắt ngắn, không lưu IP hay email thô.
 
 ### Entry của `search:events:v1`
 

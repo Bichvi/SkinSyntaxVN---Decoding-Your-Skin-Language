@@ -2,6 +2,7 @@
 // backend/app/controllers/AuthController.php
 
 require_once __DIR__ . "/../models/NguoiDung.php";
+require_once __DIR__ . "/../services/AuthThrottle.php";
 
 class AuthController {
     private $pdo;
@@ -293,6 +294,14 @@ class AuthController {
         $email = trim($_POST['email'] ?? '');
         $matkhau = $_POST['mat_khau'] ?? '';
 
+        // Giới hạn số lần thử đăng nhập (chống dò mật khẩu).
+        $t = AuthThrottle::check('login', $email);
+        if (!$t['allowed']) {
+            set_flash('error', AuthThrottle::message($t['retry_after']));
+            header('Location: ' . BASE_URL . '/index.php?auth=login');
+            exit;
+        }
+
         $staff = $this->model->timNhanVienTheoEmail($email);
         if ($staff && !empty($staff['mat_khau']) && password_verify($matkhau, (string)$staff['mat_khau'])) {
 
@@ -355,6 +364,14 @@ class AuthController {
         $email = trim((string)($_POST['email'] ?? ''));
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             set_flash('error', 'Vui lòng nhập email hợp lệ để nhận liên kết đặt lại mật khẩu.');
+            header('Location: ' . BASE_URL . '/index.php?auth=forgot');
+            exit;
+        }
+
+        // Giới hạn gửi mail đặt lại (áp dụng dù email có tồn tại hay không).
+        $t = AuthThrottle::check('reset', $email);
+        if (!$t['allowed']) {
+            set_flash('error', AuthThrottle::message($t['retry_after']));
             header('Location: ' . BASE_URL . '/index.php?auth=forgot');
             exit;
         }
@@ -687,6 +704,12 @@ class AuthController {
             ], 422);
         }
 
+        // Giới hạn gửi OTP đăng ký (không phụ thuộc cooldown theo phiên).
+        $t = AuthThrottle::check('signup_otp', $email);
+        if (!$t['allowed']) {
+            $this->jsonResponse(['ok' => false, 'message' => AuthThrottle::message($t['retry_after']), 'retry_after' => $t['retry_after']], 429);
+        }
+
         if ($this->model->timTheoEmail($email)) {
             $this->jsonResponse(['ok' => false, 'message' => 'Email này đã tồn tại trong hệ thống.'], 409);
         }
@@ -766,8 +789,23 @@ class AuthController {
             exit;
         }
 
+        // Nhập sai OTP quá nhiều lần -> bắt lấy mã mới.
+        if (AuthThrottle::otpLocked($otpState)) {
+            $this->clearSignupOtp();
+            set_flash('error', 'Bạn đã nhập sai OTP quá nhiều lần. Vui lòng lấy mã OTP mới.');
+            header('Location: ' . BASE_URL . '/index.php?auth=register');
+            exit;
+        }
+
         if (!hash_equals((string)($otpState['otp_hash'] ?? ''), hash('sha256', $otp))) {
-            set_flash('error', 'OTP không đúng. Vui lòng kiểm tra lại email của bạn.');
+            $r = AuthThrottle::otpFailed($otpState);
+            if ($r['locked']) {
+                $this->clearSignupOtp();
+                set_flash('error', 'Bạn đã nhập sai OTP quá nhiều lần. Vui lòng lấy mã OTP mới.');
+            } else {
+                $_SESSION['signup_email_otp'] = $r['state'];
+                set_flash('error', 'OTP không đúng. Vui lòng kiểm tra lại email của bạn.');
+            }
             header('Location: ' . BASE_URL . '/index.php?auth=register');
             exit;
         }
