@@ -32,7 +32,9 @@ from agents.command_query import (
     number,
 )
 from agents.query_sources import load_catalog, load_query_sources, load_vocabulary, product_id_filter
-from agents.product_resolver import _id_alias, _unknown_terms, normalize_catalog_product, resolve_products
+from agents.product_resolver import (
+    _FRAME_WORDS, _TOKEN_STOPWORDS, _id_alias, _name_tokens, _unknown_terms, normalize_catalog_product, resolve_products,
+)
 from config import (
     AGENT_ALLOW_AUTO_PUBLISH,
     AUTOPILOT_DEFAULT_PRODUCTS,
@@ -461,12 +463,30 @@ def _unknown_names(brief_text: str, products: list[dict[str, Any]]) -> list[str]
     return [term for term in _unknown_terms([brief_text], products) if term in names]
 
 
+def _content_tokens(text: str) -> list[str]:
+    return [token for token in _name_tokens(text) if token not in _TOKEN_STOPWORDS and token not in _FRAME_WORDS]
+
+
+def _name_supports_request(name: str, queries: list[str]) -> bool:
+    """True when the candidate name shares two adjacent words with a query, or the query's only word."""
+    name_tokens = _content_tokens(name)
+    name_pairs = set(zip(name_tokens, name_tokens[1:]))
+    for query in queries:
+        tokens = _content_tokens(query)
+        if len(tokens) == 1 and tokens[0] in name_tokens:
+            return True
+        if any(pair in name_pairs for pair in zip(tokens, tokens[1:])):
+            return True
+    return False
+
+
 def _autopilot_pick(
     brief,
     resolution: dict[str, Any],
     unresolved_reasons: dict[str, str],
     popularity_unverified: bool,
     decisions: list[dict[str, Any]],
+    raw_text: str = "",
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[str]]:
     """Decide the products without asking: (selected, stop decision if nothing is left, warnings for the stop)."""
     selected = list(resolution["selected"])
@@ -485,6 +505,12 @@ def _autopilot_pick(
         return [], _not_in_catalog(terms), warnings
     if not selected and not brief.explicit_product_ids and resolution["ambiguous"]:
         picked = resolution["ambiguous"][0]
+        if not _name_supports_request(picked["name"], [*brief.product_queries, raw_text or brief.goal]):
+            return [], make_decision(
+                "NAME_UNCLEAR", "stopped",
+                f"Chưa rõ sản phẩm: lệnh không ghi mã và không khớp rõ tên sản phẩm nào (ứng viên gần nhất “{picked['name']}”, "
+                f"mã {picked['product_id']}). Không tự chọn sản phẩm thay thế; hãy ghi mã (ví dụ “mã 98”) hoặc tên đầy đủ.",
+            ), warnings
         selected = [picked]
         decisions.append(make_decision(
             "AMBIGUOUS_PICKED", "adjusted",
@@ -823,7 +849,7 @@ def process_agent_run(
         if autopilot:
             # Drop what cannot be used and carry on with the rest; only an empty selection stops the run.
             selected, empty, empty_warnings = _autopilot_pick(
-                brief, resolution, unresolved_reasons, popularity_unverified, decisions)
+                brief, resolution, unresolved_reasons, popularity_unverified, decisions, run["brief"])
             if empty:
                 return _autopilot_stop(run_id, decisions, empty, {
                     "intent_classification": classification_data, "brief": brief.to_dict(),
