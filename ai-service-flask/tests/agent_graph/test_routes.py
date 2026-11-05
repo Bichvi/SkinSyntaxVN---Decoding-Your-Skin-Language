@@ -243,3 +243,81 @@ def test_registration_flag_controls_fresh_flask_app(monkeypatch):
     if config.AGENT_V2:
         routes.register(on_app)
     assert on_app.test_client().post("/api/agent/chat").status_code != 404
+
+
+def test_profile_accepts_canonical_keys(route_app):
+    _app, routes = route_app
+
+    result = routes._profile({
+        "skin_type": "Da thường",
+        "goal": "Dưỡng sáng",
+        "concerns": ["Lỗ chân lông to"],
+        "avoid_ingredients": "cồn, hương liệu",
+        "budget_max": 500000,
+        "junk": "x",
+    })
+
+    assert result == {
+        "skin_type": "Da thường",
+        "goal": "Dưỡng sáng",
+        "concerns": ["Lỗ chân lông to"],
+        "avoid_ingredients": ["cồn, hương liệu"],
+        "budget_max": 500000,
+    }
+
+
+def test_profile_maps_legacy_keys_and_drops_junk(route_app):
+    _app, routes = route_app
+
+    result = routes._profile({"loai_da": "Da dầu", "van_de": "Mụn", "evil": "x", "budget_max": True})
+
+    assert result == {"skin_type": "Da dầu", "concerns": ["Mụn"]}
+    assert routes._profile({"budget_max": 0, "concerns": [1, "a" * 300]}) == {"concerns": ["a" * 200]}
+    assert routes._profile("nope") == {}
+
+
+def test_profile_keeps_sensitivity_and_valid_updated_at(route_app):
+    _app, routes = route_app
+
+    kept = routes._profile({
+        "skin_type": "Da dầu",
+        "sensitivity": "  Khỏe mạnh, hiếm khi ",
+        "updated_at": "2026-11-01T10:00:00+00:00",
+        "budget_max": 500000,
+    })
+    assert kept["sensitivity"] == "Khỏe mạnh, hiếm khi"
+    assert kept["updated_at"] == "2026-11-01T10:00:00+00:00"
+
+    dropped = routes._profile({"skin_type": "Da dầu", "sensitivity": 5, "updated_at": "yesterday"})
+    assert "sensitivity" not in dropped
+    assert "updated_at" not in dropped
+    assert "updated_at" not in routes._profile({"updated_at": "2026-11-01" + "x" * 40})
+
+
+def test_legacy_payload_mirrors_budget_max_without_mutating_profile(route_app, monkeypatch):
+    app, routes = route_app
+    captured = {}
+
+    def fake_run_turn(_graph, **kwargs):
+        captured.update(kwargs)
+        yield "done", {}
+
+    monkeypatch.setattr(routes, "run_turn", fake_run_turn)
+
+    response = app.test_client().post(
+        "/api/agent/chat",
+        headers=_headers(),
+        json={"message": "tư vấn cho tôi", "profile": {
+            "skin_type": "Da dầu", "sensitivity": "Khỏe mạnh, hiếm khi",
+            "updated_at": "2026-11-01T10:00:00+00:00", "budget_max": 500000,
+        }},
+    )
+
+    assert response.status_code == 200
+    _ = response.data
+    legacy = captured["legacy_payload"]["customer_profile"]
+    assert legacy["budget"] == 500000
+    assert legacy["sensitivity"] == "Khỏe mạnh, hiếm khi"
+    assert legacy["updated_at"] == "2026-11-01T10:00:00+00:00"
+    assert "budget" not in captured["skin_profile"]
+    assert captured["skin_profile"]["budget_max"] == 500000

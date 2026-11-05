@@ -26,7 +26,8 @@ final class ChatAgentController
         private $bodyReader = null,
         private $purchaseEnabledResolver = null,
         private $clock = null,
-        private ?string $internalSecret = null
+        private ?string $internalSecret = null,
+        private $profileResolver = null
     ) {
     }
 
@@ -105,17 +106,7 @@ final class ChatAgentController
         }
 
         $conversationId = trim((string)($body['conversation_id'] ?? ''));
-        $profile = isset($body['profile']) && is_array($body['profile']) ? $body['profile'] : null;
-        $outboundBody = [
-            'message' => $message,
-            'cart_snapshot' => $this->cartSnapshot(),
-        ];
-        if ($conversationId !== '') {
-            $outboundBody['conversation_id'] = $conversationId;
-        }
-        if ($profile !== null) {
-            $outboundBody['profile'] = $profile;
-        }
+        $outboundBody = $this->buildOutboundBody($body, $loggedIn, $user, $message);
 
         $agentToken = null;
         $scopes = $gate->scopesFor($loggedIn, $this->isStaff($user));
@@ -367,6 +358,145 @@ final class ChatAgentController
     {
         if ($this->bodyReader !== null) return (string)($this->bodyReader)();
         return (string)file_get_contents('php://input', false, null, 0, 8193);
+    }
+
+    /**
+     * Builds the JSON body sent to the agent service. The skin profile is resolved server-side
+     * from the logged-in account; any client-supplied `profile` is ignored.
+     */
+    private function buildOutboundBody(array $body, bool $loggedIn, array $user, string $message): array
+    {
+        $conversationId = trim((string)($body['conversation_id'] ?? ''));
+        $outboundBody = [
+            'message' => $message,
+            'cart_snapshot' => $this->cartSnapshot(),
+        ];
+        if ($conversationId !== '') {
+            $outboundBody['conversation_id'] = $conversationId;
+        }
+        $email = trim((string)($user['email'] ?? ''));
+        if ($loggedIn && $email !== '') {
+            $profile = $this->resolveProfile($email);
+            if (is_array($profile) && $profile !== []) {
+                $outboundBody['profile'] = $profile;
+            }
+        }
+        return $outboundBody;
+    }
+
+    private function resolveProfile(string $email): ?array
+    {
+        try {
+            if (is_callable($this->profileResolver)) {
+                $result = ($this->profileResolver)($email);
+                return is_array($result) ? $result : null;
+            }
+            if ($this->db === null) {
+                return null;
+            }
+            require_once __DIR__ . '/../models/TaiKhoan.php';
+            $model = new TaiKhoan($this->db);
+            $skin = $model->getSkinProfileByEmail($email);
+            $khachHang = $model->getKhachHangByEmail($email);
+            return self::buildAgentProfile(is_array($skin) ? $skin : null, is_array($khachHang) ? $khachHang : null);
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Pure mapping from account rows to the canonical agent profile
+     * (skin_type, concerns, goal, avoid_ingredients, budget_max). Empty keys are omitted.
+     */
+    public static function buildAgentProfile(?array $skinProfile, ?array $khachHang): array
+    {
+        $skinProfile = $skinProfile ?? [];
+        $khachHang = $khachHang ?? [];
+        $profile = [];
+
+        $skinType = self::cleanProfileText($skinProfile['loai_da'] ?? '');
+        if ($skinType !== '' && self::lower($skinType) !== 'chưa xác định') {
+            $profile['skin_type'] = $skinType;
+        }
+
+        $concernsRaw = trim((string)($skinProfile['van_de_da'] ?? ''));
+        if ($concernsRaw === '') {
+            $concernsRaw = (string)($khachHang['van_de_da'] ?? '');
+        }
+        $concerns = self::cleanProfileList($concernsRaw);
+        if ($concerns !== []) {
+            $profile['concerns'] = $concerns;
+        }
+
+        $goal = self::cleanProfileText($khachHang['muc_tieu_cham_soc'] ?? '');
+        if ($goal !== '') {
+            $profile['goal'] = $goal;
+        }
+
+        $avoid = self::cleanProfileList((string)($khachHang['thanh_phan_tranh'] ?? ''));
+        if ($avoid !== []) {
+            $profile['avoid_ingredients'] = $avoid;
+        }
+
+        $budget = (int)($skinProfile['ngan_sach'] ?? 0);
+        if ($budget <= 0) {
+            $budget = (int)($khachHang['ngan_sach'] ?? 0);
+        }
+        if ($budget > 0) {
+            $profile['budget_max'] = $budget;
+        }
+
+        $sensitivity = self::cleanProfileText($khachHang['muc_do_nhay_cam'] ?? '');
+        if ($sensitivity !== '') {
+            $profile['sensitivity'] = $sensitivity;
+        }
+
+        $updatedAt = $khachHang['updated_at'] ?? null;
+        $updatedAtIso = '';
+        if (is_object($updatedAt) && method_exists($updatedAt, 'toDateTime')) {
+            $updatedAtIso = $updatedAt->toDateTime()->format('c');
+        } elseif (is_string($updatedAt) && trim($updatedAt) !== '') {
+            $updatedAtIso = trim($updatedAt);
+        }
+        if ($updatedAtIso !== '') {
+            $profile['updated_at'] = $updatedAtIso;
+        }
+        return $profile;
+    }
+
+    private static function lower(string $value): string
+    {
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+    }
+
+    private static function isProfilePlaceholder(string $value): bool
+    {
+        $v = self::lower(trim($value));
+        return $v === ''
+            || $v === 'không có'
+            || $v === 'không có / không quan tâm'
+            || str_starts_with($v, 'chưa ghi nhận');
+    }
+
+    private static function cleanProfileText($value): string
+    {
+        $text = trim((string)$value);
+        if (self::isProfilePlaceholder($text)) {
+            return '';
+        }
+        return function_exists('mb_substr') ? mb_substr($text, 0, 200, 'UTF-8') : substr($text, 0, 200);
+    }
+
+    private static function cleanProfileList(string $raw): array
+    {
+        $items = [];
+        foreach (explode(',', $raw) as $part) {
+            $clean = self::cleanProfileText($part);
+            if ($clean !== '') {
+                $items[] = $clean;
+            }
+        }
+        return array_slice($items, 0, 10);
     }
 
     private function cartSnapshot(): array

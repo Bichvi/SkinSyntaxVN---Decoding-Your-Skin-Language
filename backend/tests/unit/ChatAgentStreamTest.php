@@ -125,6 +125,66 @@ $_SERVER['SYNA_AGENT_V2'] = '0';
 $check('default_gate_off_returns_404_fallback', $code === 404 && ($json['fallback'] ?? null) === true);
 unset($_SERVER['SYNA_AGENT_V2']);
 
+// Skin profile: built server-side from the account, never trusted from the browser.
+$mapped = ChatAgentController::buildAgentProfile(
+    ['loai_da' => 'Da thường', 'van_de_da' => 'Lỗ chân lông to', 'ngan_sach' => 500000],
+    ['muc_tieu_cham_soc' => 'Dưỡng sáng, mờ thâm nám', 'thanh_phan_tranh' => 'Không có / Không quan tâm', 'van_de_da' => 'x', 'ngan_sach' => 1]
+);
+$check('build_agent_profile_maps_example_and_drops_placeholder', $mapped === [
+    'skin_type' => 'Da thường',
+    'concerns' => ['Lỗ chân lông to'],
+    'goal' => 'Dưỡng sáng, mờ thâm nám',
+    'budget_max' => 500000,
+]);
+$mapped2 = ChatAgentController::buildAgentProfile(
+    ['loai_da' => 'Chưa xác định', 'van_de_da' => '', 'ngan_sach' => 0],
+    ['van_de_da' => 'Mụn, Thâm', 'thanh_phan_tranh' => 'Cồn, Hương liệu', 'ngan_sach' => '300000', 'muc_tieu_cham_soc' => 'Chưa ghi nhận thêm']
+);
+$check('build_agent_profile_fallbacks_and_lists', $mapped2 === [
+    'concerns' => ['Mụn', 'Thâm'],
+    'avoid_ingredients' => ['Cồn', 'Hương liệu'],
+    'budget_max' => 300000,
+]);
+$fakeDate = new class {
+    public function toDateTime(): DateTime { return new DateTime('2026-11-01T10:00:00+00:00'); }
+};
+$withSens = ChatAgentController::buildAgentProfile(
+    ['loai_da' => 'Da dầu'],
+    ['muc_do_nhay_cam' => 'Khỏe mạnh, hiếm khi', 'updated_at' => $fakeDate]
+);
+$check('build_agent_profile_includes_sensitivity_and_object_updated_at',
+    ($withSens['sensitivity'] ?? null) === 'Khỏe mạnh, hiếm khi'
+    && ($withSens['updated_at'] ?? null) === '2026-11-01T10:00:00+00:00');
+$withStr = ChatAgentController::buildAgentProfile(['loai_da' => 'Da dầu'], ['updated_at' => '2026-10-20T08:00:00+00:00']);
+$check('build_agent_profile_accepts_string_updated_at', ($withStr['updated_at'] ?? null) === '2026-10-20T08:00:00+00:00');
+$placeholderSens = ChatAgentController::buildAgentProfile(['loai_da' => 'Da dầu'], ['muc_do_nhay_cam' => 'Chưa ghi nhận thêm', 'updated_at' => 12345]);
+$check('build_agent_profile_drops_placeholder_sensitivity_and_bad_updated_at',
+    !array_key_exists('sensitivity', $placeholderSens) && !array_key_exists('updated_at', $placeholderSens));
+$check('build_agent_profile_empty_inputs_yield_empty', ChatAgentController::buildAgentProfile(null, null) === []);
+
+$captured = null;
+$streamWithProfile = static function (bool $loggedIn, array $user, ?callable $resolver, string $body) use ($gate): array {
+    $c = new ChatAgentController(
+        null, null, $gate, null, null,
+        static fn(): bool => $loggedIn,
+        static fn(): array => $user,
+        null,
+        static fn(): string => $body,
+        null, null, 'internal-secret', $resolver
+    );
+    $m = new ReflectionMethod($c, 'buildOutboundBody');
+    $m->setAccessible(true);
+    return $m->invoke($c, json_decode($body, true), $loggedIn, $user, '');
+};
+$calls = [];
+$resolver = static function (string $email) use (&$calls): ?array { $calls[] = $email; return ['skin_type' => 'Da thường']; };
+$out = $streamWithProfile(true, ['id' => 7, 'email' => 'a@b.test'], $resolver, '{"message":"x","profile":{"skin_type":"EVIL"}}');
+$check('outbound_profile_comes_from_resolver_not_client', ($out['profile'] ?? null) === ['skin_type' => 'Da thường'] && $calls === ['a@b.test']);
+$out = $streamWithProfile(false, [], $resolver, '{"message":"x","profile":{"skin_type":"EVIL"}}');
+$check('guest_outbound_has_no_profile', !array_key_exists('profile', $out));
+$out = $streamWithProfile(true, ['id' => 7, 'email' => 'a@b.test'], static fn(string $e): ?array => [], '{"message":"x"}');
+$check('empty_resolved_profile_is_omitted', !array_key_exists('profile', $out));
+
 $sessionDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'chat-sse-' . bin2hex(random_bytes(8));
 mkdir($sessionDir, 0700, true);
 $sessionId = 'task16session';

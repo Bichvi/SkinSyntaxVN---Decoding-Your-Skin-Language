@@ -51,6 +51,7 @@ from profile_service import save_user_profile
 from agent_graph.auth import identity_from_request
 from agent_graph import config as agent_config
 from chatbot_service import store_support  # nhánh STORE_SUPPORT (logic thuần)
+from chatbot_service.profile_context import normalize_profile, profile_context_lines
 from chatbot_service import graph_router  # U10: tool đồ thị Neo4j cho câu hỏi có điều kiện
 # ─── Config ─────────────────────────────────────────────────────────────────
 # Tự động tính đường dẫn tương đối từ vị trí file script này
@@ -711,6 +712,12 @@ Nhiệm vụ của bạn là:
 1. Trả lời câu hỏi chitchat, chào hỏi hoặc câu hỏi ngoài ngành của khách hàng một cách cực kỳ lịch sự, tự nhiên, vui vẻ, mang tính kết nối cao.
 2. Nếu câu hỏi yêu cầu thông tin thực tế từ web (Ví dụ: giá vàng, thời tiết, sự kiện...), hãy dựa vào <thong_tin_web> để trả lời chính xác, ngắn gọn.
 3. Ở cuối câu trả lời, hãy khéo léo giới thiệu các sản phẩm bán chạy/nổi bật tại SkinSyntaxVN để "kéo" khách hàng quan tâm đến việc chăm sóc da hoặc mua sắm (Tuyệt đối không gượng ép).
+4. Nếu khách hỏi về làn da / hồ sơ da của chính họ hoặc điều gì hợp với họ, hãy trả lời dựa trên <ho_so_khach> (nêu loại da, tình trạng da, mục tiêu chăm sóc). Tuyệt đối không nói là bạn không biết da của khách khi <ho_so_khach> đã có dữ liệu; chỉ khi nó ghi "Không có thông tin hồ sơ bổ sung." thì mời khách làm khảo sát da.
+
+### HỒ SƠ DA CỦA KHÁCH (từ tài khoản)
+<ho_so_khach>
+{rich_context}
+</ho_so_khach>
 
 ### LỊCH SỬ TRÒ CHUYỆN (CONVERSATION HISTORY)
 <lich_su_tro_chuyen>
@@ -2216,12 +2223,15 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     current_product_id = None
 
     profile = {}
+    profile_goal = None
     if msg_data:
         # Extract profile
         profile = msg_data.get("customer_profile", {}) or {}
-        skin_type = profile.get("skin_type") or profile.get("loai_da")
-        avoid_ingredients = profile.get("avoid_ingredients") or profile.get("thanh_phan_can_tranh") or []
-        skin_issues = profile.get("skin_issues") or profile.get("tinh_trang_da") or []
+        _norm_profile = normalize_profile(profile)
+        skin_type = _norm_profile["skin_type"]
+        avoid_ingredients = _norm_profile["avoid_ingredients"]
+        skin_issues = _norm_profile["skin_issues"]
+        profile_goal = _norm_profile["goal"]
         
         # Extract cart and conflicts
         cart_items = msg_data.get("cart_items", []) or []
@@ -2249,12 +2259,12 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             chat_history_str = str(history_raw)
 
     rich_context_parts = []
-    if skin_type:
-        rich_context_parts.append(f"- Loại da của khách: {skin_type}")
-    if skin_issues:
-        rich_context_parts.append(f"- Tình trạng da: {', '.join(skin_issues)}")
-    if avoid_ingredients:
-        rich_context_parts.append(f"- Thành phần cần tránh: {', '.join(avoid_ingredients)}")
+    rich_context_parts.extend(profile_context_lines({
+        "skin_type": skin_type,
+        "skin_issues": skin_issues,
+        "avoid_ingredients": avoid_ingredients,
+        "goal": profile_goal,
+    }))
         
     if current_product_id and retrieved_products_sql:
         first_product = retrieved_products_sql[0]
@@ -3206,6 +3216,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     # 6. Apply system prompts based on Intent
     if intent == "GENERAL_CONVERSATION":
         prompt = GENERAL_CONVERSATION_SYSTEM_PROMPT \
+            .replace("{rich_context}", rich_context) \
             .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
             .replace("{web_results}", web_results_text or "Không có dữ liệu bổ sung.") \
             .replace("{search_results}", format_search_results(final_merged_docs)) \
