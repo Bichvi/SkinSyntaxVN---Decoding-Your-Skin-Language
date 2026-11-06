@@ -18,6 +18,7 @@ final class SearchRecommendClient
     // U09 (từ review U08): mỗi endpoint Flask một breaker riêng — similar/cart chậm khi Neo4j chết không được che luôn recommend.
     private const SIMILAR_BREAKER_KEY = 'search:similar:breaker:v1';
     private const CART_BREAKER_KEY = 'search:cart:breaker:v1';
+    private const LABEL_BREAKER_KEY = 'label:breaker:v1'; // chụp bảng thành phần: breaker riêng, vision chậm không che recommend/cart
     public const INTENT_TYPES = ['fuzzy', 'synonym'];
 
     private static array $requestState = [];
@@ -292,6 +293,244 @@ final class SearchRecommendClient
         }
         $this->recordSuccess(self::CART_BREAKER_KEY);
         return $data;
+    }
+
+    /**
+     * Chụp bảng thành phần: POST /api/label/analyze. Trả mảng đã validate khi 200; 413 -> ['__error'=>'too_large'],
+     * 429 -> ['__error'=>'rate_limited'], 404 -> ['__error'=>'disabled']; lỗi/timeout/breaker mở/response sai -> null.
+     * Breaker RIÊNG (`label:breaker:v1`), timeout LABEL_ANALYZE_TIMEOUT_MS (mặc định 25000, kẹp 1000..30000), không retry.
+     * Không log nội dung payload (có ảnh/email).
+     */
+    public function labelAnalyze(array $payload, ?string $requestId = null): ?array
+    {
+        if ($this->isOpen(self::LABEL_BREAKER_KEY)) {
+            return null;
+        }
+        $env = static function (string $k, string $d): string {
+            return function_exists('ss_env') ? ss_env($k, $d) : (string)(getenv($k) ?: $d);
+        };
+        $timeoutMs = max(1000, min(30000, (int)$env('LABEL_ANALYZE_TIMEOUT_MS', '25000')));
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($body === false) {
+            return null;
+        }
+        if ($requestId === null || !preg_match('/^[A-Za-z0-9-]{8,64}$/', $requestId)) {
+            $requestId = self::requestId();
+        }
+        $headers = ['Accept: application/json', 'Content-Type: application/json', 'X-Request-Id: ' . $requestId];
+        if ($this->internalToken !== '') {
+            $headers[] = 'X-Internal-Token: ' . $this->internalToken;
+        }
+        $url = $this->originUrl() . '/api/label/analyze';
+        $started = microtime(true);
+        $res = $this->transport
+            ? ($this->transport)($url, $body, $headers, $timeoutMs, min($this->connectTimeoutMs, $timeoutMs), 'POST')
+            : $this->curlPost($body, $headers, $url, $timeoutMs);
+        $tookMs = (int)round((microtime(true) - $started) * 1000);
+        $status = (int)($res['status'] ?? 0);
+        $errors = [413 => 'too_large', 429 => 'rate_limited', 404 => 'disabled'];
+        if (isset($errors[$status])) {
+            return ['__error' => $errors[$status]];
+        }
+        $data = null;
+        if ($status >= 200 && $status < 300) {
+            $decoded = json_decode((string)($res['body'] ?? ''), true);
+            $data = is_array($decoded) ? self::validateLabelResponse($decoded) : null;
+        }
+        if ($data === null) {
+            if ($status === 0 || $status >= 500 || ($status >= 200 && $status < 300)) {
+                $this->recordFailure(self::LABEL_BREAKER_KEY);
+            }
+            error_log(sprintf('[LABEL_SCAN] failed request_id=%s status=%d took_ms=%d', $requestId, $status, $tookMs));
+            return null;
+        }
+        $this->recordSuccess(self::LABEL_BREAKER_KEY);
+        return $data;
+    }
+
+    public const LABEL_STATUSES = ['ok', 'not_label', 'unreadable', 'vision_unavailable'];
+    public const LABEL_PRODUCT_TYPES = ['cleanser', 'toner', 'serum', 'moisturizer', 'sunscreen', 'mask', 'other'];
+    public const LABEL_WARNINGS = ['low_recognition', 'graph_degraded', 'profile_missing', 'cart_empty', 'internal_error'];
+    public const LABEL_ALT_REASONS = ['gentler_fits_skin', 'no_cart_conflict'];
+
+    /** Validate theo contract label_analyze_response.schema.json: chỉ giữ khóa đã biết, kẹp độ dài; sai kiểu -> null. */
+    public static function validateLabelResponse(array $data): ?array
+    {
+        $str = static function ($v, int $max): ?string {
+            return is_string($v) ? mb_substr($v, 0, $max, 'UTF-8') : null;
+        };
+        $strList = static function ($v, int $maxItems, int $maxLen): array {
+            $out = [];
+            foreach (is_array($v) ? array_slice(array_values($v), 0, $maxItems) : [] as $x) {
+                if (is_string($x) && $x !== '') {
+                    $out[] = mb_substr($x, 0, $maxLen, 'UTF-8');
+                }
+            }
+            return $out;
+        };
+        $idOk = static function ($v): ?string {
+            if (is_int($v)) {
+                $v = (string)$v;
+            }
+            return (is_string($v) && preg_match(self::PRODUCT_ID_PATTERN, $v)) ? $v : null;
+        };
+        $status = $data['status'] ?? null;
+        if (!is_string($status) || !in_array($status, self::LABEL_STATUSES, true)) {
+            return null;
+        }
+        if (!isset($data['product'], $data['ingredients']) || !is_array($data['product']) || !is_array($data['ingredients'])) {
+            return null;
+        }
+        if (isset($data['skin_fit']) && !is_array($data['skin_fit'])) {
+            return null;
+        }
+        foreach (['conflicts', 'schedule', 'alternatives', 'warnings'] as $k) {
+            if (isset($data[$k]) && (!is_array($data[$k]) || !array_is_list($data[$k]))) {
+                return null;
+            }
+        }
+
+        $p = $data['product'];
+        $matched = $p['matched_product_id'] ?? null;
+        $score = $p['match_score'] ?? null;
+        $ptype = $p['product_type'] ?? 'other';
+        $product = [
+            'name' => $str($p['name'] ?? '', 200) ?? '',
+            'brand' => $str($p['brand'] ?? '', 200) ?? '',
+            'product_type' => in_array($ptype, self::LABEL_PRODUCT_TYPES, true) ? $ptype : 'other',
+            'matched_product_id' => $matched === null ? null : $idOk($matched),
+            'match_score' => (is_int($score) || is_float($score)) ? max(0.0, min(1.0, (float)$score)) : null,
+        ];
+
+        $ing = $data['ingredients'];
+        $rawItems = $ing['items'] ?? [];
+        if (!is_array($rawItems) || !array_is_list($rawItems)) {
+            return null;
+        }
+        $items = [];
+        foreach (array_slice($rawItems, 0, 120) as $it) {
+            if (!is_array($it) || !is_string($it['key'] ?? null) || !is_string($it['name'] ?? null)) {
+                continue;
+            }
+            $items[] = [
+                'key' => mb_substr($it['key'], 0, 120, 'UTF-8'),
+                'name' => mb_substr($it['name'], 0, 160, 'UTF-8'),
+                'name_vi' => $str($it['name_vi'] ?? null, 160),
+                'role' => $str($it['role'] ?? null, 80),
+                'rank' => is_int($it['rank'] ?? null) ? $it['rank'] : null,
+                'highlight' => ($it['highlight'] ?? false) === true,
+            ];
+        }
+        $source = $ing['source'] ?? 'photo';
+        $ingredients = [
+            'source' => in_array($source, ['catalog', 'photo', 'user_edit'], true) ? $source : 'photo',
+            'total' => is_int($ing['total'] ?? null) ? max(0, $ing['total']) : count($items),
+            'recognized' => is_int($ing['recognized'] ?? null) ? max(0, $ing['recognized']) : 0,
+            'items' => $items,
+            'raw_text' => $str($ing['raw_text'] ?? '', 6000) ?? '',
+        ];
+
+        $conflicts = [];
+        foreach (array_slice($data['conflicts'] ?? [], 0, 20) as $c) {
+            $cid = is_array($c) ? $idOk($c['cart_product_id'] ?? null) : null;
+            if ($cid === null || !in_array($c['severity'] ?? null, self::CART_SEVERITIES, true) || !in_array($c['timing'] ?? null, self::CART_TIMINGS, true)) {
+                continue;
+            }
+            $entry = [
+                'cart_product_id' => $cid,
+                'severity' => $c['severity'],
+                'timing' => $c['timing'],
+                'ingredients' => $strList($c['ingredients'] ?? [], 8, 80),
+                'advice_vi' => $str($c['advice_vi'] ?? '', 600) ?? '',
+                'rule_id' => (is_string($c['rule_id'] ?? null) && preg_match('/^[A-Za-z0-9_.-]{1,64}$/', $c['rule_id'])) ? $c['rule_id'] : '',
+                'evidence' => $str($c['evidence'] ?? '', 400) ?? '',
+            ];
+            if (is_string($c['cart_product_name'] ?? null)) {
+                $entry['cart_product_name'] = mb_substr($c['cart_product_name'], 0, 200, 'UTF-8');
+            }
+            $conflicts[] = $entry;
+        }
+
+        $slot = static function ($v) {
+            return ($v === 'am' || $v === 'pm') ? $v : null;
+        };
+        $schedule = [];
+        foreach (array_slice($data['schedule'] ?? [], 0, 20) as $s) {
+            $cid = is_array($s) ? $idOk($s['cart_product_id'] ?? null) : null;
+            if ($cid === null || !in_array($s['kind'] ?? null, ['split_session', 'alternate_nights', 'alternate_days'], true)) {
+                continue;
+            }
+            $schedule[] = [
+                'cart_product_id' => $cid,
+                'scan_slot' => $slot($s['scan_slot'] ?? null),
+                'cart_slot' => $slot($s['cart_slot'] ?? null),
+                'kind' => $s['kind'],
+                'reason_vi' => $str($s['reason_vi'] ?? '', 400) ?? '',
+            ];
+        }
+
+        $sf = is_array($data['skin_fit'] ?? null) ? $data['skin_fit'] : [];
+        $prof = is_array($sf['profile'] ?? null) ? $sf['profile'] : [];
+        $findings = static function ($list) use ($str, $strList): array {
+            $out = [];
+            foreach (is_array($list) ? array_slice(array_values($list), 0, 10) : [] as $f) {
+                if (!is_array($f) || !is_string($f['rule_id'] ?? null)) {
+                    continue;
+                }
+                $out[] = [
+                    'rule_id' => mb_substr($f['rule_id'], 0, 64, 'UTF-8'),
+                    'reason_vi' => $str($f['reason_vi'] ?? '', 400) ?? '',
+                    'ingredients' => $strList($f['ingredients'] ?? [], 8, 80),
+                ];
+            }
+            return $out;
+        };
+        $verdict = $sf['verdict'] ?? 'unknown';
+        $skinFit = [
+            'verdict' => in_array($verdict, ['good', 'caution', 'avoid', 'neutral', 'unknown'], true) ? $verdict : 'unknown',
+            'profile' => [
+                'skin_type' => in_array($prof['skin_type'] ?? null, ['dau', 'kho', 'hon_hop', 'thuong'], true) ? $prof['skin_type'] : null,
+                'sensitive' => ($prof['sensitive'] ?? false) === true,
+                'concerns' => $strList($prof['concerns'] ?? [], 20, 40),
+            ],
+            'good' => $findings($sf['good'] ?? []),
+            'caution' => $findings($sf['caution'] ?? []),
+            'avoid' => $findings($sf['avoid'] ?? []),
+        ];
+
+        $alternatives = [];
+        foreach (array_slice($data['alternatives'] ?? [], 0, 3) as $a) {
+            $pid = is_array($a) ? $idOk($a['product_id'] ?? null) : null;
+            if ($pid === null || !in_array($a['reason_code'] ?? null, self::LABEL_ALT_REASONS, true)) {
+                continue;
+            }
+            $alternatives[] = [
+                'product_id' => $pid,
+                'reason_code' => $a['reason_code'],
+                'reason_params' => $strList($a['reason_params'] ?? [], 4, 80),
+            ];
+        }
+
+        $warnings = [];
+        foreach (array_slice($data['warnings'] ?? [], 0, 10) as $w) {
+            if (is_string($w) && in_array($w, self::LABEL_WARNINGS, true) && !in_array($w, $warnings, true)) {
+                $warnings[] = $w;
+            }
+        }
+
+        return [
+            'status' => $status,
+            'product' => $product,
+            'ingredients' => $ingredients,
+            'conflicts' => $conflicts,
+            'schedule' => $schedule,
+            'skin_fit' => $skinFit,
+            'alternatives' => $alternatives,
+            'warnings' => $warnings,
+            'summary_vi' => $str($data['summary_vi'] ?? '', 600) ?? '',
+            'sunscreen_note' => ($data['sunscreen_note'] ?? false) === true,
+            'took_ms' => is_int($data['took_ms'] ?? null) ? max(0, $data['took_ms']) : 0,
+        ];
     }
 
     private function originUrl(): string

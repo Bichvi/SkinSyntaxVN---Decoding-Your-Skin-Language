@@ -156,6 +156,12 @@ switch ($r) {
         (new SanPhamController($pdo))->cartInsights();
         break;
 
+    case 'chat_label_scan':
+        // Chụp bảng thành phần: widget chat gửi ảnh/chữ thành phần, trả JSON phân tích (Flask /api/label/analyze).
+        require_once $backendRoot . '/app/controllers/LabelScanController.php';
+        (new LabelScanController($pdo))->scan();
+        break;
+
     case 'product_video_stream':
         (new SanPhamController($pdo))->streamProductVideo();
         break;
