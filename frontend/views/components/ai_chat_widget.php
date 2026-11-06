@@ -90,6 +90,8 @@ try {
 } catch (Throwable $e) {
   $aiChatAgentV2 = '0';
 }
+$aiLabelScanOn = function_exists('ss_env')
+  && in_array(strtolower(trim((string)ss_env('LABEL_SCAN_ENABLED', '0'))), ['1', 'true', 'on', 'yes'], true);
 ?>
 <?php if ($pdo !== null): ?>
   <div class="ai-chat-widget" data-ai-chat-widget data-agent-v2="<?= $aiChatAgentV2 ?>" data-chat-csrf="<?= htmlspecialchars($aiChatPurchaseCsrf, ENT_QUOTES, 'UTF-8') ?>" data-vnpay-host="<?= htmlspecialchars($aiChatVnpayHost, ENT_QUOTES, 'UTF-8') ?>">
@@ -237,7 +239,12 @@ try {
           <textarea class="form-control ai-chat-widget__textarea" rows="2" data-ai-chat-input placeholder="Hỏi Syna về thành phần, sản phẩm, routine hoặc phân tích giỏ hàng... hoặc hỏi về đổi trả, vận chuyển, voucher" required></textarea>
           <button class="btn ai-chat-widget__submit" type="submit" data-ai-chat-submit>Gửi</button>
         </div>
-        
+<?php if ($aiLabelScanOn): ?>
+        <div class="ai-label-attach">
+          <button type="button" class="ai-label-attach__btn" data-ai-label-btn title="Chụp hoặc chọn ảnh bảng thành phần">📎 Gửi ảnh bảng thành phần</button>
+          <input type="file" accept="image/jpeg,image/png,image/webp" data-ai-label-input hidden>
+        </div>
+<?php endif; ?>
       </form>
       </div>
     </section>
@@ -1449,6 +1456,10 @@ try {
   </style>
 
   <script src="<?= BASE_URL ?>/assets/js/chat-agent-stream.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-agent-stream.js') ?: '1' ?>"></script>
+<?php if ($aiLabelScanOn): ?>
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/ai-chat-label-scan.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/ai-chat-label-scan.css') ?: '1' ?>">
+  <script src="<?= BASE_URL ?>/assets/js/ai-chat-label-scan.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/ai-chat-label-scan.js') ?: '1' ?>"></script>
+<?php endif; ?>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var widget = document.querySelector('[data-ai-chat-widget]');
@@ -1887,7 +1898,7 @@ try {
             var initialText = thinkingMessages[currentLoadingTextIndex] || thinkingMessages[0];
             return '<div class="ai-chat-widget__typing-row">'
               + '<div class="ai-chat-widget__typing-bubble">'
-              + '<span class="ai-chat-widget__typing-text" data-ai-typing-text>' + initialText + '</span>'
+              + '<span class="ai-chat-widget__typing-text" data-ai-typing-text>' + (message.typingText ? escapeHtml(message.typingText) : initialText) + '</span>'
               + '<span class="ai-chat-widget__typing-dots">'
               + '<span></span><span></span><span></span>'
               + '</span>'
@@ -1908,6 +1919,9 @@ try {
             }
             if (message.commerce && window.SkinSyntaxPurchase) {
               contentSuffix += '<div class="ai-chat-widget__commerce-card" data-ai-commerce-card></div>';
+            }
+            if (message.labelScan && window.SkinSyntaxLabelScan) {
+              contentSuffix += window.SkinSyntaxLabelScan.renderCard(message.labelScan, message.id, message.labelScanState);
             }
             if (message.agentUi) {
               agentUiHtml = '<div data-ai-agent-ui></div>';
@@ -1938,6 +1952,10 @@ try {
             }
           }
 
+          if (isUser && message.labelThumb && window.SkinSyntaxLabelScan) {
+            contentPrefix += window.SkinSyntaxLabelScan.thumbHtml(message.id);
+          }
+
           var supportContent = message.content;
           if (!isUser && message.intent_mode === 'STORE_SUPPORT') {
             var chipHtml = '';
@@ -1956,7 +1974,7 @@ try {
             contentPrefix += '<div class="ai-chat-widget__official">📘 Thông tin chính thức của SkinSyntax</div>';
             contentSuffix = sourceHtml + (chipHtml !== '' ? '<div class="ai-chat-widget__chip-row">' + chipHtml + '</div>' : '') + contentSuffix;
           }
-          var formattedContent = isUser ? escapeHtml(message.content) : formatMarkdown(supportContent);
+          var formattedContent = isUser ? escapeHtml(message.content) : (message.labelScan ? '<p>' + escapeHtml(message.content) + '</p>' : formatMarkdown(supportContent));
           var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png?v=' . time()) ?>;
           var avatar = isUser
             ? ''
@@ -2767,6 +2785,28 @@ try {
 
       syncLayout();
       syncExpandedState();
+<?php if ($aiLabelScanOn): ?>
+      if (window.SkinSyntaxLabelScan) {
+        window.SkinSyntaxLabelScan.init({
+          widget: widget,
+          form: form,
+          endpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=chat_label_scan' : 'index.php?r=chat_label_scan' ?>',
+          csrf: widget.dataset.chatCsrf || '',
+          getConversationId: function () { return activeConversationId; },
+          isLoggedIn: userLoggedIn,
+          addMessage: addMessage,
+          replaceMessage: function (id, message) {
+            var index = messages.findIndex(function (item) { return item && item.id === id; });
+            if (index === -1) { messages.push(message); } else { messages[index] = message; }
+            saveMessages();
+            renderMessages();
+          },
+          escapeHtml: escapeHtml,
+          renderProductCards: renderProductCards,
+          sendMessage: sendMessage
+        });
+      }
+<?php endif; ?>
       renderMessages();
 
       if (window.SkinSyntaxPurchase) {

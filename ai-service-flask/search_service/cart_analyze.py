@@ -391,6 +391,67 @@ class CartAnalyzeService:
         ids = list(ids)
         return self._conflicts(ids, self._categories(ids))
 
+    def cart_ingredients(self, ids: Sequence[str]) -> tuple[dict[str, list[tuple[str, int | None]]],
+                                                              dict[str, list[str]], bool]:
+        """Public entry for the label scan: ``({id: [(conflict-relevant key, rank)]}, {id: category chain}, degraded)``.
+
+        Neo4j first (only keys that take part in a conflict rule, enough for conflict checks); on a missing graph or
+        any graph error the Mongo text path of ``_fallback_conflicts`` with ``degraded=True``."""
+
+        ids = list(ids)
+        if not ids:
+            return {}, {}, False
+        categories = self._categories(ids)
+        if self.graph is not None:
+            try:
+                profile = self.graph.cart_profile(ids, sorted(self.rule_set.keys()))
+                found = {pid: [(str(i["key"]), i.get("rank")) for i in (profile.get(pid) or {}).get("conflict_ings", [])]
+                         for pid in ids}
+                return found, categories, False
+            except Exception as exc:
+                logger.warning("cart_ingredients graph degraded: %s", type(exc).__name__)
+        loader = self.text_loader or mongo_text_loader
+        parsed: dict[str, list[tuple[str, int | None]]] = {}
+        try:
+            texts = dict(loader(ids))
+            from graph_sync.ingredients import load_aliases, parse_ingredients
+
+            aliases = load_aliases()
+            for pid, doc in texts.items():
+                refs = parse_ingredients(doc.get("full"), aliases) or parse_ingredients(doc.get("sach"), aliases)
+                parsed[pid] = [(r.key, r.rank) for r in refs]
+        except Exception as exc:
+            logger.warning("cart_ingredients text path failed: %s", type(exc).__name__)
+        return parsed, categories, True
+
+    def step_candidates(self, step_key: str, cart_ids: Sequence[str], skin_type: str | None,
+                        extra_keys: Sequence[str] = (), limit: int = 6) -> list[dict[str, Any]]:
+        """Public entry for the label scan: ranked non-conflicting candidates of one routine step, each with its
+        ``conflict_ings`` (``extra_keys`` are added to the keys the graph reports). ``[]`` without a graph;
+        graph errors propagate to the caller."""
+
+        step = self.routine.step(step_key)
+        if self.graph is None or step is None:
+            return []
+        ids = list(cart_ids)
+        rule_keys = sorted(self.rule_set.keys())
+        conflict_keys = sorted(set(rule_keys) | {str(k) for k in extra_keys})
+        cart_data = self.graph.cart_profile(ids, rule_keys) if ids else {}
+        cart_benefits: set[str] = set()
+        for data in cart_data.values():
+            cart_benefits.update(data["benefits"])
+        rows = self.graph.routine_candidates(list(step.categories), ids, skin_type, conflict_keys, config.CART_CANDIDATES)
+        cop: Mapping[str, float] | None = None
+        if self.co_purchase_enabled and rows:
+            try:
+                cop = self.graph.co_purchased(ids, [str(r["id"]) for r in rows])
+            except Exception:
+                cop = None
+        items = rank_step_candidates(rows, cart_benefits, cart_data, self._categories(ids), step.categories,
+                                     step.label_vi, skin_type, self.rule_set, cop, limit)
+        by_id = {str(r["id"]): list(r.get("conflict_ings") or []) for r in rows}
+        return [dict(item, conflict_ings=by_id.get(item["product_id"], [])) for item in items]
+
     # -- suggestions
     def _suggestions(self, req: CartRequest, routine: Mapping[str, Any], categories: Mapping[str, Sequence[str]]) -> list[dict[str, Any]]:
         if self.graph is None or not routine["applicable"] or not routine["suggest_order"]:

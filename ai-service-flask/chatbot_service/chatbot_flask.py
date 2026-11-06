@@ -3352,6 +3352,14 @@ try:
 except Exception as _home_exc:  # pragma: no cover - optional module
     print(f"[WARN] home_service not registered: {type(_home_exc).__name__}")
 
+# Photo-of-label analysis (/api/label/analyze). Isolated blueprint; failures never block chat.
+try:
+    from label_service.routes import label_bp
+
+    app.register_blueprint(label_bp)
+except Exception as _label_exc:  # pragma: no cover - optional module
+    print(f"[WARN] label_service not registered: {type(_label_exc).__name__}")
+
 if agent_config.AGENT_V2:
     try:
         from agent_graph import routes as agent_routes
