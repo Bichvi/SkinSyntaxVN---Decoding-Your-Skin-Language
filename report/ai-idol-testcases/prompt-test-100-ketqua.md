@@ -1,6 +1,6 @@
 # Kết quả test 100 câu lệnh AI Idol
 
-Bộ câu: [prompt-test-100.md](prompt-test-100.md) · Catalog: 2.853 sản phẩm (đọc từ MongoDB Atlas) · Cập nhật 05/11/2026 sau khi sửa 2 lỗi
+Bộ câu: [prompt-test-100.md](prompt-test-100.md) · Catalog: 2.853 sản phẩm (đọc từ MongoDB Atlas) · Cập nhật 06/11/2026 sau khi sửa 2 lỗi và cách xếp hạng sản phẩm
 
 ## Cách chạy
 
@@ -8,39 +8,40 @@ Bộ câu: [prompt-test-100.md](prompt-test-100.md) · Catalog: 2.853 sản ph�
 - **Chỉ đọc DB**: lưu trạng thái run trong bộ nhớ, `create_campaign` bị thay bằng hàm chỉ ghi lại payload. **Không có chiến dịch, video hay agent run nào được tạo thật.**
 - **LLM bị tắt** (giả lập lỗi): agent dùng bộ phân tích theo luật (`fallback_parse`). Các câu đi qua nhánh truy vấn (query) không dùng LLM nên giống production.
 - Không kiểm tra bước viết kịch bản/TTS/render — chỉ kiểm tra hiểu lệnh, lọc và chọn sản phẩm, lịch, nền tảng.
-- Dữ liệu thô (chỉ lưu trên máy chạy test, không commit): `prompt-test-100-raw.jsonl` (trước khi sửa) · `prompt-test-100-raw-v2.jsonl` (sau khi sửa)
+- Dữ liệu thô (chỉ lưu trên máy chạy test, không commit): `prompt-test-100-raw.jsonl` (trước khi sửa) · `prompt-test-100-raw-v2.jsonl` (sau khi sửa 2 lỗi) · `prompt-test-100-raw-v3.jsonl` (sau khi sửa xếp hạng)
 
 Ký hiệu: ✅ đạt · 🟡 đạt một phần · ❌ sai
 
 ## Tổng quan
 
-| Chế độ | Trước sửa ✅ / 🟡 / ❌ | Sau sửa ✅ / 🟡 / ❌ |
-|---|---|---|
-| Thường | 25 / 17 / 58 | **27 / 15 / 58** |
-| Tự động | 42 / 22 / 36 | **48 / 32 / 20** |
+| Chế độ | Trước sửa ✅ / 🟡 / ❌ | Sau sửa 2 lỗi | Sau sửa xếp hạng |
+|---|---|---|---|
+| Thường | 25 / 17 / 58 | 27 / 15 / 58 | **27 / 15 / 58** |
+| Tự động | 42 / 22 / 36 | 48 / 32 / 20 | **50 / 32 / 18** |
 
-## 2 lỗi đã sửa
+## Các lỗi đã sửa
 
 | Lỗi | Sửa ở đâu | Kết quả |
 |---|---|---|
 | Mã sản phẩm chỉ đọc được khi có “mã/ID/#” | `agents/intent_parser.py` — `_extract_explicit_ids` nhận thêm “sản phẩm 98”, “sp 101”, “sản phẩm 98 và 68”; bỏ qua số đi kèm đơn vị (30 ngày, 50ml, 200k, 9h, 20/11, 1.0%…) | #33, #36, #83, #87 ra đúng mã. #36 và #83 ở chế độ Thường cũng tạo được chiến dịch |
 | Tự động chọn bừa sản phẩm khi tên mơ hồ (`AMBIGUOUS_PICKED`) | `agents/service.py` — `_autopilot_pick` chỉ tự chọn khi tên ứng viên chứa 2 từ liền nhau của lệnh (hoặc từ duy nhất của lệnh); nếu không thì dừng với `NAME_UNCLEAR` và gửi danh sách gợi ý | 12 câu trước đây tạo video cho sản phẩm sai (Dove, Hada Labo, Torriden…) giờ dừng lại. Các lựa chọn đúng (#15 La Roche-Posay, #84 Beplain, #85 Timeless, #95 kem chống nắng) giữ nguyên |
+| Xếp hạng ứng viên để độ giống của cả câu lấn át từ khóa chính | `agents/product_resolver.py` — `_score` chỉ tính từ nội dung (bỏ từ lệnh như “cho tôi xem”, “sản phẩm nào”, “thương hiệu”); từ khớp tên/thương hiệu/danh mục được 1 điểm, chỉ khớp mô tả/thành phần được 0,5 | #12 “toner” → Toner Derladie; #51 “Obagi” → Kem dưỡng Obagi Retinol; #18 Tự động đủ 3 serum; #53 dừng thay vì tạo video cho Sunplay; #59 ra serum thay vì mặt nạ ủ tóc. Các câu hỏi chung (#21, #23, #50, #69, #97) vẫn dừng, không tự chọn |
 
-Bổ sung: `_autopilot_pick` xét lần lượt các ứng viên (tối đa 5) và chọn ứng viên **đầu tiên** có tên khớp lệnh, thay vì chỉ ứng viên đứng đầu. Chạy lại 100 câu: **không câu nào đổi kết quả**, vì trên dữ liệu thật 5 ứng viên đầu của các câu bị dừng không có sản phẩm đúng (vd “toner” → Torriden, phấn AGE 20's, Bioré, chấm mụn Lanbena; “Obagi” → không có SP Obagi nào). Gốc là cách chấm điểm trong `product_resolver._score`: độ giống của cả câu lệnh lấn át từ khóa chính — cần sửa ở bước xếp hạng.
+Bổ sung: `_autopilot_pick` xét lần lượt các ứng viên (tối đa 5) và chọn ứng viên **đầu tiên** có tên khớp lệnh, thay vì chỉ ứng viên đứng đầu. Bản này chỉ phát huy khi xếp hạng đúng, nên đi kèm bản sửa `_score` ở trên.
 
-Test mới: `ai-idol-service/tests/test_explicit_id_and_pick_guard.py` (8 test, 18 subtest). Các bộ `test_agent`, `test_autopilot_service`, `test_multi_product_resolve`, `test_prompt_builder_cases` + file mới: 174 passed, 1 skipped.
+Test mới: `ai-idol-service/tests/test_explicit_id_and_pick_guard.py` (8 test) và `ContentWordScoringTests` trong `tests/test_resolver_ranking.py` (4 test). Các bộ `test_agent`, `test_autopilot_service`, `test_multi_product_resolve`, `test_prompt_builder_cases`, `test_resolver_ranking` + file mới: 190 passed, 1 skipped.
 
-| Nhóm (sau sửa) | Thường ✅/🟡/❌ | Tự động ✅/🟡/❌ |
+| Nhóm (sau sửa xếp hạng) | Thường ✅/🟡/❌ | Tự động ✅/🟡/❌ |
 |---|---|---|
 | Loại da (1–8) | 3 / 0 / 5 | 3 / 3 / 2 |
-| Loại sản phẩm (9–16) | 3 / 1 / 4 | 4 / 4 / 0 |
+| Loại sản phẩm (9–16) | 3 / 1 / 4 | 5 / 3 / 0 |
 | Số lượng (17–22) | 1 / 0 / 5 | 2 / 3 / 1 |
 | Tồn kho (23–30) | 5 / 0 / 3 | 3 / 1 / 4 |
 | Mã sản phẩm (31–36) | 1 / 2 / 3 | 2 / 3 / 1 |
 | Tên sản phẩm (37–43) | 1 / 1 / 5 | 3 / 2 / 2 |
 | Xuất xứ (44–50) | 0 / 1 / 6 | 5 / 0 / 2 |
-| Thương hiệu (51–57) | 0 / 1 / 6 | 3 / 2 / 2 |
-| Giá (58–63) | 0 / 2 / 4 | 2 / 2 / 2 |
+| Thương hiệu (51–57) | 0 / 1 / 6 | 4 / 2 / 1 |
+| Giá (58–63) | 0 / 2 / 4 | 2 / 3 / 1 |
 | Hạn dùng/kho/lô (64–69) | 1 / 1 / 4 | 4 / 1 / 1 |
 | Doanh số (70–75) | 0 / 3 / 3 | 1 / 4 / 1 |
 | Kết hợp (76–82) | 1 / 0 / 6 | 4 / 3 / 0 |
@@ -101,7 +102,7 @@ Mục 1 và 2 dưới đây **đã sửa** (giữ lại để đối chiếu).
 | 9 | Liệt kê các loại kem chống nắng | ✅ | ✅ | Đúng kỳ vọng<br><sub>Thường: PRODUCT_SEARCH → RESULTS_READY: 10 Kem Chống Nắng La Roche-Posa, 101 Kem Chống Nắng Beplain Nâng , 1043 Kem Chống Nắng d'Alba Vật Lý …<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 27 Kem Chống Nắng MartiDerm Phổ, 155 Kem Chống Nắng Naris Cosmeti, 2856 [Mua 1 Tặng 1] Naris Cosmeti …</sub> |
 | 10 | Tìm serum phục hồi da | ✅ | 🟡 | Tự động lẫn “Nước xịt dưỡng tóc” vào serum<br><sub>Thường: PRODUCT_SEARCH → RESULTS_READY: 1005 Combo 2 Serum d'Alba Dạng Xị, 1018 Combo Angel's Liquid Serum 3, 1023 Serum Olay Retinol24 Ngừa Lã …<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 191 Serum Klairs Vitamin C Cho D, 68 Serum Timeless Vitamin B5 Là, 1079 Serum Garnier Giảm Mụn Mờ Th …</sub> |
 | 11 | Có những sản phẩm hỗ trợ trị mụn nào? | ❌ | ✅ | Đúng kỳ vọng<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 213 Hộp 8 Miếng Mặt Nạ Naruko Tr, 1000 Gel Rửa Mặt Eucerin Cho Da N, 4365 Gel Rửa Mặt Cosrx Tràm Trà,  …</sub> |
-| 12 | Cho tôi xem toner | ❌ | 🟡 | Tự động dừng (NAME_UNCLEAR) thay vì chọn nhầm Torriden; chưa lọc được danh mục toner<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → NEEDS_INPUT</sub> |
+| 12 | Cho tôi xem toner | ❌ | ✅ | Tự động chọn Toner Derladie (1245). Thường vẫn NEEDS_INPUT (lỗi 6)<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 1245 Toner Derladie Cây Phỉ Ngừa</sub> |
 | 13 | Tìm mặt nạ giấy | ✅ | ✅ | Đúng kỳ vọng<br><sub>Thường: PRODUCT_SEARCH → RESULTS_READY: 1002 Mặt Nạ Sur.Medic+ Cấp Nước &, 1019 Mặt Nạ Wonjin Phục Hồi Cấp T, 1026 Combo 5 Mặt Nạ BNBG Vitamin  …<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 1326 Hộp 10 Miếng Mặt Nạ Naruko Ý, 1866 Mặt Nạ Naruko Ý Dĩ Nhân Đỏ S, 5173 Mặt Nạ BNBG Vita Complex Dưỡ …</sub> |
 | 14 | Sản phẩm chứa retinol | ❌ | ✅ | Đúng kỳ vọng<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 112 Gel Dưỡng Megaduo Plus Giảm , 201 Gel Dưỡng Megaduo Giảm Mụn, , 509 Sữa Dưỡng Thể Vaseline Sáng  …</sub> |
 | 15 | Kem chống nắng nâng tông kiềm dầu | ❌ | 🟡 | Chọn La Roche-Posay (tên khớp), không phải Beplain<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 10 Kem Chống Nắng La Roche-Posa</sub> |
@@ -112,7 +113,7 @@ Mục 1 và 2 dưới đây **đã sửa** (giữ lại để đối chiếu).
 | # | Câu lệnh | Thường | Tự động | Kết quả thực tế / ghi chú |
 |---|---|---|---|---|
 | 17 | Cho tôi 5 sản phẩm chống nắng | ❌ | ❌ | Mất danh mục chống nắng: ra cushion, tẩy trang, mặt nạ<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 3168 Bút Cushion Che Khuyết Điểm , 103 Nước Tẩy Trang L'Oreal Làm S, 1326 Hộp 10 Miếng Mặt Nạ Naruko Ý …</sub> |
-| 18 | Top 3 serum bán chạy | ❌ | ✅ | Thường: “Top 3 serum” ra combo chống nắng, mặt nạ<br><sub>Thường: PRODUCT_SEARCH → RESULTS_READY: 4540 Combo Cocoon Kem Chống Nắng , 4720 Combo Cocoon Tinh Chất Bí Đa, 721 Combo 10 Mặt Nạ Wonjin Siêu <br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 1378 Serum L'Oreal Dưỡng Sáng Và , 146 Serum So'Natural Tái Tạo Da , 1313 Nước Dưỡng Bio-essence Vàng </sub> |
+| 18 | Top 3 serum bán chạy | ❌ | ✅ | Thường: “Top 3 serum” ra combo chống nắng, mặt nạ<br><sub>Thường: PRODUCT_SEARCH → RESULTS_READY: 4540 Combo Cocoon Kem Chống Nắng , 4720 Combo Cocoon Tinh Chất Bí Đa, 721 Combo 10 Mặt Nạ Wonjin Siêu <br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 1378 Serum L'Oreal Dưỡng Sáng Và , 146 Serum So'Natural Tái Tạo Da , 176 Serum oh!oh! Dưỡng Sáng Da</sub> |
 | 19 | Liệt kê 1 sản phẩm cho da dầu | ✅ | 🟡 | Tự động: 1 SP cho da dầu = Bút Cushion<br><sub>Thường: PRODUCT_SEARCH → RESULTS_READY: 1 Sữa Rửa Mặt CeraVe Sạch Sâu <br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 3168 Bút Cushion Che Khuyết Điểm </sub> |
 | 20 | Cho tôi 200 sản phẩm | ❌ | 🟡 | Giới hạn 10 nhưng thông báo ghi sai “Xin 50”<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 3168 Bút Cushion Che Khuyết Điểm , 103 Nước Tẩy Trang L'Oreal Làm S, 1326 Hộp 10 Miếng Mặt Nạ Naruko Ý …</sub> |
 | 21 | Cho tôi 0 sản phẩm | ❌ | 🟡 | Dừng (NAME_UNCLEAR) thay vì chọn bừa; chưa báo rõ số lượng 0 không hợp lệ<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → NEEDS_INPUT</sub> |
@@ -170,9 +171,9 @@ Mục 1 và 2 dưới đây **đã sửa** (giữ lại để đối chiếu).
 
 | # | Câu lệnh | Thường | Tự động | Kết quả thực tế / ghi chú |
 |---|---|---|---|---|
-| 51 | Sản phẩm của Obagi | ❌ | 🟡 | Dừng thay vì chọn nhầm Hada Labo; chưa lọc được theo brand Obagi<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → NEEDS_INPUT</sub> |
+| 51 | Sản phẩm của Obagi | ❌ | ✅ | Tự động chọn Kem dưỡng Obagi Retinol 0.5% (299). Thường vẫn NEEDS_INPUT<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 299 Kem Dưỡng Obagi Retinol 0.5%</sub> |
 | 52 | Liệt kê hàng Beplain | ❌ | ❌ | “Liệt kê hàng Beplain” → UNKNOWN<br><sub>Thường: UNKNOWN → NEEDS_INPUT<br>Tự động: UNKNOWN → NEEDS_INPUT</sub> |
-| 53 | Thương hiệu Timeless có bao nhiêu sản phẩm? | ❌ | ❌ | Đếm SP Timeless → ra 3 SP Sunplay<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 4484 Bộ Sản Phẩm Sunplay & Hada L, 2748 Tinh Chất Chống Nắng Sunplay, 1960 Tinh Chất Chống Nắng Sunplay</sub> |
+| 53 | Thương hiệu Timeless có bao nhiêu sản phẩm? | ❌ | 🟡 | Tự động dừng (NAME_UNCLEAR) thay vì tạo video cho Sunplay; chưa trả lời được câu đếm<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → NEEDS_INPUT</sub> |
 | 54 | Ưu tiên La Roche-Posay, lấy 5 kem chống nắng | ❌ | ✅ | Đúng kỳ vọng<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 10 Kem Chống Nắng La Roche-Posa, 1262 Sữa Chống Nắng La Roche-Posa, 27 Kem Chống Nắng MartiDerm Phổ …</sub> |
 | 55 | Kem chống nắng không phải của Beplain | ❌ | ✅ | Loại trừ thương hiệu hoạt động<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 27 Kem Chống Nắng MartiDerm Phổ, 155 Kem Chống Nắng Naris Cosmeti, 2856 [Mua 1 Tặng 1] Naris Cosmeti …</sub> |
 | 56 | Thương hiệu Cerave hoặc Cetaphil | ❌ | 🟡 | Dừng thay vì chỉ lấy 1 CeraVe; chưa hiểu HOẶC thương hiệu<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → NEEDS_INPUT</sub> |
@@ -183,7 +184,7 @@ Mục 1 và 2 dưới đây **đã sửa** (giữ lại để đối chiếu).
 | # | Câu lệnh | Thường | Tự động | Kết quả thực tế / ghi chú |
 |---|---|---|---|---|
 | 58 | Kem chống nắng dưới 300k | ❌ | ✅ | Đúng kỳ vọng<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 1233 Sữa Chống Nắng Senka Kiềm Dầ, 1561 Gel Sữa Chống Nắng Senka Ẩm , 308 Kem Chống Nắng L'Oreal Mịn N …</sub> |
-| 59 | Serum từ 200 nghìn đến 500 nghìn | ❌ | ❌ | “200 nghìn đến 500 nghìn” không hiểu → ra Mặt nạ ủ tóc<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 1553 Mặt Nạ Ủ Tóc Pantene Miracle</sub> |
+| 59 | Serum từ 200 nghìn đến 500 nghìn | ❌ | 🟡 | Tự động ra Serum B.O.M (2183) thay vì mặt nạ ủ tóc; khoảng giá “nghìn” vẫn chưa hiểu<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 2183 Serum B.O.M Từ 8 Loại Trà</sub> |
 | 60 | Sản phẩm trên 1 triệu | ❌ | ✅ | Đúng kỳ vọng<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 5824 Nước Tẩy Trang Byphasse Cho , 5287 Serum Vichy 89 Khoáng Chất P, 299 Kem Dưỡng Obagi Retinol 0.5% …</sub> |
 | 61 | Sản phẩm rẻ nhất cho da dầu | ❌ | ❌ | “rẻ nhất” bị bỏ qua, xếp theo bán chạy<br><sub>Thường: PRODUCT_SEARCH → NEEDS_INPUT<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 3168 Bút Cushion Che Khuyết Điểm , 103 Nước Tẩy Trang L'Oreal Làm S, 1326 Hộp 10 Miếng Mặt Nạ Naruko Ý …</sub> |
 | 62 | Sản phẩm đang giảm giá nhưng bán chậm | 🟡 | 🟡 | Thứ tự theo mã SP (10, 100, 1001…) → thiếu số liệu giảm giá<br><sub>Thường: PRODUCT_SEARCH → RESULTS_READY: 10 Kem Chống Nắng La Roche-Posa, 100 Kem Dưỡng La Roche-Posay Giả, 1001 Combo 2 Miếng Dán Mụn Derma  …<br>Tự động: PRODUCT_SEARCH → CAMPAIGN_CREATED: 10 Kem Chống Nắng La Roche-Posa, 100 Kem Dưỡng La Roche-Posay Giả, 1003 Xịt Khoáng Avène Cấp Nước, L …</sub> |

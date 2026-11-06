@@ -37,6 +37,12 @@ _TOKEN_STOPWORDS = frozenset({
     "bo", "xem", "truoc", "phat",
 })
 MAX_CANDIDATES = 5
+# Generic question/filler words ignored only when scoring a query against a product.
+_SCORE_FILLER = frozenset({
+    "nao", "co", "chu", "trong", "ten", "duoc", "bao", "lau", "hay", "vao", "nhung", "cac",
+    "mot", "la", "khong", "gi", "nay", "do", "thuong", "hieu", "xuat", "xu", "huong", "dan",
+    "su", "dung", "hoac", "con", "hang", "ve", "thi", "nhat", "top",
+})
 # Command/social words that are never product words and may be missing from catalog text.
 _FRAME_WORDS = frozenset({
     "video", "clip", "livestream", "live", "stream", "review", "reels", "reel", "tiktok",
@@ -198,11 +204,33 @@ def _score(query: str, product: dict[str, Any], constraints: list[str] | None = 
         return 0.0
     if name and name in normalized_query:
         return 0.98
-    query_tokens = {token for token in normalized_query.split() if len(token) > 1 and not token.isdigit()}
-    searchable_tokens = {token for token in haystack.split() if len(token) > 1 and not token.isdigit()}
-    # Command words ("ma", "an toan"...) may not earn overlap credit.
-    overlap = len((query_tokens - _TOKEN_STOPWORDS) & searchable_tokens) / max(1, len(query_tokens))
-    sequence = SequenceMatcher(None, normalized_query, name).ratio() if name else 0.0
+    # Only content words count: command/filler words ("cho toi xem", "nao", "co")
+    # neither earn credit nor dilute the denominator.
+    skip = _TOKEN_STOPWORDS | _FRAME_WORDS | _SCORE_FILLER
+    content: list[str] = []
+    for token in re.split(r"[^a-z0-9]+", normalized_query):
+        if len(token) > 1 and not token.isdigit() and token not in skip and token not in content:
+            content.append(token)
+    overlap = 0.0
+    sequence = 0.0
+    if content:
+        identity_text = normalize_text(
+            " ".join(str(product.get(key) or "") for key in ("name", "brand", "category"))
+        )
+        identity_tokens = set(re.split(r"[^a-z0-9]+", identity_text))
+        searchable_tokens = set(re.split(r"[^a-z0-9]+", haystack))
+        # A hit in name/brand/category is strong; one only in the id, ingredients or
+        # long description is weak evidence (copy often mentions unrelated words).
+        earned = sum(
+            1.0 if token in identity_tokens else 0.5 if token in searchable_tokens else 0.0
+            for token in content
+        )
+        overlap = earned / len(content)
+        sequence = SequenceMatcher(None, " ".join(content), name).ratio() if name else 0.0
+    elif name:
+        # Nothing but command words: keep a weak whole-query similarity so callers
+        # can still offer suggestions, far below the auto-pick threshold.
+        sequence = SequenceMatcher(None, normalized_query, name).ratio()
     score = max(overlap, sequence * 0.85)
     if constraints:
         matched = sum(
