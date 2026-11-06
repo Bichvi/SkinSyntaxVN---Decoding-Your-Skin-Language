@@ -42,7 +42,8 @@ class TieBreakTests(unittest.TestCase):
 
     def test_exact_product_is_first_candidate_without_llm(self):
         result = resolve_products(f"Làm video giới thiệu {HATO_QUERY}", [], [], HATOMUGI)
-        self.assertEqual(result["ambiguous"][0]["product_id"], "173")
+        first = (result["selected"] or result["ambiguous"])[0]
+        self.assertEqual(first["product_id"], "173")
 
     def test_count_picks_real_sunscreens_by_sales(self):
         result = resolve_products("Làm video 3 kem chống nắng", [], ["kem chống nắng"], SUNSCREENS)
@@ -75,6 +76,52 @@ class TieBreakTests(unittest.TestCase):
         self.assertEqual(result["selected"], [])
         self.assertTrue(result["ambiguous"])
         self.assertTrue(result["ambiguous"][0]["name"].startswith("Kem Chống Nắng"))
+
+
+def _item(pid, name, brand="", category="", desc=""):
+    return {"ma_san_pham": pid, "ten_san_pham": name, "ten_thuong_hieu": brand,
+            "loai_san_pham": category, "mo_ta": desc, "so_luong_ban": 0}
+
+
+class ContentWordScoringTests(unittest.TestCase):
+    def test_filler_words_do_not_dilute_category_query(self):
+        catalog = [
+            _item("T1", "Kem Chống Nắng Torriden Nâng Tông Da 60ml", "Torriden", "Kem chống nắng"),
+            _item("A1", "Phấn Tươi AGE 20's Tông Da Trung Bình 12.5g", "AGE 20's", "Phấn"),
+            _item("K1", "Toner Klairs Cân Bằng Da 180ml", "Klairs", "Toner"),
+            _item("S1", "Nước Hoa Hồng Some By Mi Toner 150ml", "Some By Mi", "Toner"),
+        ]
+        result = resolve_products("Cho tôi xem toner", [], [], catalog)
+        order = [c["product_id"] for c in result["ambiguous"]] or _ids(result["selected"])
+        self.assertTrue(order)
+        self.assertEqual(set(order[:2]), {"K1", "S1"})
+        for other in ("T1", "A1"):
+            if other in order:
+                self.assertGreater(order.index(other), 1)
+
+    def test_brand_query_puts_brand_product_first(self):
+        catalog = [
+            _item("H1", "Bộ Sản Phẩm Hada Labo Dưỡng Sáng Da 3 Món", "Hada Labo", "Bộ sản phẩm"),
+            _item("O1", "Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da 28g", "Obagi", "Kem dưỡng"),
+        ]
+        result = resolve_products("Sản phẩm của Obagi", [], [], catalog)
+        first = (result["selected"] or result["ambiguous"])[0]
+        self.assertEqual(first["product_id"], "O1")
+
+    def test_availability_question_selects_nothing(self):
+        catalog = [
+            _item("A", "Serum Vitamin C Klairs 30ml", "Klairs", "Serum", "sản phẩm còn hàng tại kho"),
+            _item("B", "Sữa Rửa Mặt Cerave 236ml", "Cerave", "Sữa rửa mặt", "còn hàng"),
+        ]
+        result = resolve_products("Sản phẩm nào còn hàng?", [], [], catalog)
+        self.assertEqual(result["selected"], [])
+
+    def test_description_only_token_scores_low(self):
+        from agents.product_resolver import _score
+        product = {"id": "1", "name": "Sữa Rửa Mặt Cerave 236ml", "brand": "Cerave",
+                   "category": "Sữa rửa mặt", "ingredients": "",
+                   "description": "phù hợp da dầu mụn có chứa retinol"}
+        self.assertLess(_score("retinol", product), 0.62)
 
 
 class UnknownTermTests(unittest.TestCase):

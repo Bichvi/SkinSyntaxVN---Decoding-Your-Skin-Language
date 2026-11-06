@@ -66,23 +66,27 @@ class AutopilotPickGuardTests(unittest.TestCase):
         self.assertEqual(set(harness.payload["product_ids"]), {"98", "68"})
 
     def test_first_candidate_whose_name_matches_is_picked(self):
-        # The resolver ranks the Torriden sunscreen above the toner for "toner"; the sunscreen must be skipped.
+        # Two toners tie, so the resolver asks; autopilot takes the first one whose name carries "toner".
         catalog = [
             row(1, "Sữa Rửa Mặt Cerave Dịu Nhẹ"),
             row(2, "Toner Klairs Cân Bằng Da"),
+            row(4, "Toner Some By Mi Cân Bằng Da"),
             row(3, "Kem Chống Nắng Torriden"),
         ]
         harness = AutopilotHarness("Cho tôi xem toner")
         run = harness.execute(catalog)
         self.assertEqual(run["status"], "CAMPAIGN_CREATED")
-        self.assertEqual(harness.payload["product_ids"], ["2"])
-        self.assertIn("Toner Klairs", decision(run, "AMBIGUOUS_PICKED")["message"])
+        self.assertEqual(len(harness.payload["product_ids"]), 1)
+        self.assertIn(harness.payload["product_ids"][0], {"2", "4"})
+        self.assertIn("Toner", decision(run, "AMBIGUOUS_PICKED")["message"])
 
     def test_unclear_name_stops(self):
-        # "toner" is a known catalog word (a category) but no product name carries it.
+        # "toner" only appears in a description ("dùng sau toner"): no product is a toner.
+        def described(code, name, text):
+            return {**row(code, name), "mo_ta": text}
         catalog = [
-            row(1, "Sữa Rửa Mặt Cerave Dịu Nhẹ"),
-            row(2, "Nước Cân Bằng Klairs", category="Chăm sóc da mặt -> Toner"),
+            described(1, "Sữa Rửa Mặt Cerave Dịu Nhẹ", "Dùng trước toner"),
+            described(2, "Nước Cân Bằng Klairs", "Dùng sau toner"),
             row(3, "Kem Chống Nắng Torriden"),
         ]
         harness = AutopilotHarness("Cho tôi xem toner")
