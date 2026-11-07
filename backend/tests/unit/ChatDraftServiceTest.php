@@ -129,6 +129,9 @@ $check('creates_card_with_masked_phone', $card['receiver'] === [
     'name' => 'Nguyen Van A', 'phone_masked' => '09xx xxx 123', 'address_short' => 'TP.HCM',
 ] && $card['items'][0]['line_total'] === 200 && $card['expires_at'] === 1_800_000_600);
 
+$check('card_carries_server_now', $card['server_now'] === 1_800_000_000);
+$check('get_card_carries_server_now', $service->get($card['draft_id'], 'customer-1')['server_now'] === 1_800_000_000);
+
 $core->voucher = ['voucher' => ['ma_code' => 'SAVE'], 'discount' => 50];
 $voucherCard = $freshService()->upsert($claims, $baseRequest, $snapshot);
 $check('auto_applies_best_voucher', $voucherCard['voucher'] === ['code' => 'SAVE', 'discount' => 50]

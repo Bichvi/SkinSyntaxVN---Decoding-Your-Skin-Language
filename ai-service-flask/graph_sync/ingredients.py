@@ -99,7 +99,8 @@ _PREFIX = re.compile(
 # Marketing exports mix a descriptive block ("Thành phần chính: • Name: effect") with the real
 # INCI list ("Thành phần chi tiết: Water, ..."); several products can be concatenated ("2. Name ...").
 _MARKER = re.compile(
-    r"(?P<detail>(?:thành phần (?:chi tiết|đầy đủ|toàn bộ)|full ingredients?|ingredients?)\s*:)"
+    r"(?P<detail>(?:thành phần (?:chi tiết|đầy đủ|toàn bộ)|full ingredients?|ingredients?)\s*:"
+    r"|(?:bảng thành phần|bang thanh phan)\s*:)"
     r"|(?P<main>thành phần (?:chính|nổi bật|hoạt chất)[^:\n]{0,40}:)",
     re.I,
 )
@@ -163,6 +164,12 @@ def _looks_like_inci_list(body: str) -> bool:
     return short_ascii / len(pieces) >= 0.7
 
 
+def has_detail_marker(text: Any) -> bool:
+    """True when the text contains a "real INCI list follows" marker (``Bảng thành phần:``, ``Ingredients:``...)."""
+
+    return any(m.group("detail") for m in _MARKER.finditer(str(text or "")))
+
+
 def _split_marketing(text: str) -> tuple[list[str], list[str]]:
     """Split a mixed export into (ingredient-list texts, descriptive bullet heads)."""
 
@@ -170,7 +177,11 @@ def _split_marketing(text: str) -> tuple[list[str], list[str]]:
     if not matches and "•" not in text:
         return [text], []
     segments: list[tuple[str, str]] = []
+    # Text before a leading *detail* marker is a preamble: a short highlight list / prose / title is not
+    # INCI, but a long ASCII comma list is (an earlier variant's real list in a concatenated export).
     kind = "ingredients"
+    if matches and matches[0].group("detail") and not _looks_like_inci_list(text[:matches[0].start()]):
+        kind = "marketing"
     cursor = 0
     for m in matches:
         segments.append((kind, text[cursor:m.start()]))

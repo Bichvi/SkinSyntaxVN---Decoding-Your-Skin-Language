@@ -16,6 +16,10 @@ from .normalize import DATA_DIR
 RULES_PATH = DATA_DIR / "ingredient_rules.yaml"
 CONFLICT_SOURCE = Path(__file__).resolve().parents[1] / "recommendation_service" / "knowledge" / "ingredient_rules.py"
 TOP_N_FOR_TAGS = 15
+# Categories whose trace actives are not a treatment claim (sunscreen, makeup, cleansers): no inferred concerns.
+NO_CONCERN_INFERENCE_CATEGORIES = frozenset({
+    "kem_chong_nang", "chong_nang_co_the", "trang_diem", "tay_trang", "sua_rua_mat",
+})
 TAG_GROUPS = ("benefits", "concerns", "skin_types")
 
 
@@ -92,12 +96,14 @@ def infer_tags(
     product = product or {}
     tags = Tags()
     inferred_skin: list[str] = []
+    skip_concerns = any(c in NO_CONCERN_INFERENCE_CATEGORIES for c in (product.get("categories") or ()))
     for key in list(ingredient_keys)[:top_n]:
         rule = table.get(key)
         if rule is None:
             continue
         _extend(tags.benefits, rule.benefits)
-        _extend(tags.concerns, rule.concerns)
+        if not skip_concerns:
+            _extend(tags.concerns, rule.concerns)
         _extend(inferred_skin, rule.skin_types)
     own_skin = [s for s in (product.get("skin_types") or []) if s]
     if own_skin:

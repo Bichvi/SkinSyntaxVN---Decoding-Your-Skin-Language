@@ -19,6 +19,7 @@ import pytest
 # A reserved ".invalid" host on port 1: nothing can answer, even for a client built some other way.
 BLOCKED_MONGO_URI = "mongodb://real-mongo-blocked-by-tests.invalid:1/"
 os.environ["MONGO_URI"] = BLOCKED_MONGO_URI
+os.environ["AI_IDOL_CATALOG_CACHE_TTL"] = "0"  # no Redis catalog cache unless a test enables it
 
 SERVICE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SERVICE_DIR not in sys.path:
@@ -29,6 +30,7 @@ import core.state_machine as state_machine  # noqa: E402
 
 # Already imported by something else first? Pin the copies the code actually reads.
 config.MONGO_URI = state_machine.MONGO_URI = BLOCKED_MONGO_URI
+config.CATALOG_CACHE_TTL_SECONDS = 0
 
 BLOCKED_MESSAGE = (
     "A test reached core.state_machine.get_db() and tried to open a real MongoDB connection. "

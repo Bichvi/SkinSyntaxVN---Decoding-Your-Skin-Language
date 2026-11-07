@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import copy
+import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
@@ -19,7 +20,7 @@ from pydantic import ValidationError
 
 from .config import MAX_STEPS, TURN_TIMEOUT_S
 from .prompts import AGENT_PROMPT, render
-from .router import RouterOutput, classify
+from .router import RouterOutput, classify, fold
 from .state import ConvState, StateStore
 from .tools import ToolContext, build_tools
 
@@ -35,7 +36,62 @@ LOGIN_REQUIRED_LABELS = {"BUY", "CART", "ORDER_STATUS"}
 TIMEOUT_TEXT = "Mình cần thêm chút thời gian, bạn nhắn lại giúp mình nhé."
 DEFAULT_TEXT = "Mình chưa rõ bạn muốn mình hỗ trợ việc gì. Bạn nói rõ hơn giúp mình nhé."
 ERROR_TEXT = "Mình gặp sự cố khi xử lý yêu cầu. Bạn thử lại giúp mình nhé."
+MUTATION_DRAFT_TEXT = "Mình đã cập nhật đơn nháp, bạn xem lại thẻ đơn bên trên và bấm “Xác nhận đặt hàng” nếu đã đúng nhé."
+MUTATION_CART_TEXT = "Mình đã cập nhật giỏ hàng của bạn. Bạn mở giỏ hàng để kiểm tra lại nhé, không cần gửi lại yêu cầu."
 VIETNAMESE_TIMEZONE = ZoneInfo("Asia/Ho_Chi_Minh")
+PAYMENT_SUPPORT_TEXT = (
+    "SkinSyntaxVN hiện hỗ trợ 3 cách thanh toán: COD (trả tiền khi nhận hàng), VNPay và chuyển khoản QR. "
+    "Cửa hàng chưa hỗ trợ trả góp hay các ví điện tử khác như MoMo, ZaloPay. "
+    "Bạn chọn một trong 3 cách trên giúp mình nhé."
+)
+NO_DRAFT_FALLBACK_TEXT = (
+    "Mình chưa lập được đơn nháp cho bạn. Bạn cho mình biết người nhận, số điện thoại, địa chỉ giao hàng "
+    "và cách thanh toán (COD, VNPay hoặc chuyển khoản QR) để mình lập đơn nhé."
+)
+ORDER_FALLBACK_TEXT = "Đơn hàng chỉ được tạo khi bạn bấm “Xác nhận đặt hàng” trên thẻ đơn nháp nhé."
+_NO_DRAFT_CORRECTION = (
+    "[Kiểm tra tự động] Chưa có đơn nháp nào được tạo trong hệ thống (prepare_order_draft chưa trả về thẻ đơn). "
+    "Không được nói đơn nháp đã sẵn sàng hay đơn đã được đặt. Hãy gọi prepare_order_draft nếu đã đủ thông tin, "
+    "hoặc hỏi khách đúng một thông tin còn thiếu (địa chỉ giao hàng, người nhận, SĐT, cách thanh toán)."
+)
+_ORDER_CORRECTION = (
+    "[Kiểm tra tự động] Đơn hàng chưa được tạo: đơn chỉ được tạo khi khách tự bấm \"Xác nhận đặt hàng\" "
+    "trên thẻ đơn nháp. Không được nói đơn đã được đặt hay đặt hàng thành công. Hãy trả lời lại, nhắc khách "
+    "kiểm tra thẻ đơn nháp và bấm \"Xác nhận đặt hàng\"."
+)
+
+_ORDER_CLAIM_RE = re.compile(
+    r"\bdat hang thanh cong\b"
+    r"|\bdon hang (?:cua ban )?(?:da|vua) (?:duoc )?(?:tao|dat)\b"
+    r"|\bda tao (?:xong )?don(?! nhap)\b"
+)
+_DRAFT_CLAIM_RE = re.compile(
+    r"\bdon nhap (?:cua ban )?(?:da|dang) (?:duoc )?(?:san sang|tao|lap)\b"
+    r"|\bdon nhap (?:cua ban )?(?:minh )?(?:tao|lap) san\b"
+    r"|\bda (?:tao|lap) (?:xong )?don nhap\b"
+)
+_UNSUPPORTED_PAYMENT_RE = re.compile(
+    # Card payments are NOT listed: VNPay accepts domestic and international cards.
+    r"\btra gop\b|\bmomo\b|\bzalo ?pay\b|\bshopee ?pay\b|\bviettel ?money\b|\bpaypal\b"
+    r"|\bvi dien tu\b|\bpay ?later\b|\bfundiin\b|\bkredivo\b"
+)
+
+
+def is_unsupported_payment_question(message: str) -> bool:
+    """True when the customer mentions a payment method the store does not offer."""
+    return bool(_UNSUPPORTED_PAYMENT_RE.search(fold(message or "")))
+
+
+def claims_false_commitment(text: str, *, has_open_draft: bool) -> str | None:
+    """Return "order" / "draft" when the text claims something the agent cannot have done."""
+    folded = fold(text or "")
+    if not folded:
+        return None
+    if _ORDER_CLAIM_RE.search(folded):
+        return "order"
+    if not has_open_draft and _DRAFT_CLAIM_RE.search(folded):
+        return "draft"
+    return None
 
 Event = tuple[str, dict]
 
@@ -286,6 +342,23 @@ def _consecutive_agent_count(queue: list[str]) -> int:
     return count
 
 
+def _claim_kind(ctx: ToolContext, text: str, batch: list[str]) -> str | None:
+    kind = claims_false_commitment(text, has_open_draft=bool(ctx.state.open_draft_id))
+    if kind == "order" and "ORDER_STATUS" in batch:
+        # Order lookups legitimately say "đơn hàng của bạn đã được tạo lúc ..."
+        return None
+    return kind
+
+
+def _guard_text(ctx: ToolContext, text: str, batch: list[str]) -> str:
+    """Replace a false order/draft claim with a deterministic, truthful message."""
+    kind = _claim_kind(ctx, text, batch) if text else None
+    if kind is None:
+        return text
+    logger.warning("agent final text replaced by fallback: false %s claim", kind)
+    return NO_DRAFT_FALLBACK_TEXT if not ctx.state.open_draft_id else ORDER_FALLBACK_TEXT
+
+
 def _final_no_tools_summary(state: GraphState, messages: list[BaseMessage], last_text: str) -> str:
     if _timed_out(state):
         return last_text
@@ -331,6 +404,7 @@ def _run_agent(state: GraphState) -> None:
     last_text = ""
     stopped = False
     hit_step_cap = False
+    corrected = False
 
     while not stopped:
         if _cancelled(state) or _timed_out(state):
@@ -345,11 +419,22 @@ def _run_agent(state: GraphState) -> None:
         if not isinstance(response, AIMessage):
             response = AIMessage(content=_text_content(response))
         messages.append(response)
-        last_text = _text_content(response) or last_text
+        response_text = _text_content(response)
+        last_text = response_text or last_text
         tool_calls = list(getattr(response, "tool_calls", []) or [])
         if not tool_calls:
+            claim = _claim_kind(ctx, response_text, batch) if response_text else None
+            if claim and not corrected and not _cancelled(state) and not _timed_out(state):
+                corrected = True
+                logger.info("agent claim corrected: kind=%s", claim)
+                correction = (
+                    _ORDER_CORRECTION if claim == "order" and ctx.state.open_draft_id else _NO_DRAFT_CORRECTION
+                )
+                messages.append(HumanMessage(content=correction))
+                last_text = ""
+                continue
             if last_text:
-                _emit(state, "token", {"text": last_text})
+                _emit(state, "token", {"text": _guard_text(ctx, last_text, batch)})
             break
 
         for call in tool_calls:
@@ -397,12 +482,13 @@ def _run_agent(state: GraphState) -> None:
 
     if hit_step_cap and not state.get("timeout_emitted") and not _cancelled(state):
         summary = _final_no_tools_summary(state, messages, last_text)
-        if summary and summary != last_text:
-            _emit(state, "token", {"text": summary})
+        guarded = _guard_text(ctx, summary, batch) if summary else summary
+        if guarded and (summary != last_text or guarded != summary):
+            _emit(state, "token", {"text": guarded})
         _emit_timeout(state)
     elif stopped and not _cancelled(state):
         if last_text:
-            _emit(state, "token", {"text": last_text})
+            _emit(state, "token", {"text": _guard_text(ctx, last_text, batch)})
         _emit_timeout(state)
 
     state["intent_queue"] = state["intent_queue"][batch_size:]
@@ -451,10 +537,25 @@ def build_graph(router_llm, agent_llm_factory, legacy: Callable[[str, dict], dic
             _emit_timeout(state)
             return {"halted": True, "intent_queue": []}
         queue = [intent.label for intent in routed.intents]
+        clarification = routed.needs_clarification
+        payment_question = is_unsupported_payment_question(state["message"])
+        if payment_question:
+            # The store only supports COD / VNPay / QR transfer: the legacy bot must not improvise.
+            queue = [label for label in queue if label not in LEGACY_LABELS]
+            if ctx.claims is None:
+                queue = [label for label in queue if label not in LOGIN_REQUIRED_LABELS]
+            clarification = None
         ctx.state.intent_queue = list(queue)
         _snapshot_state(state)
         state["router_output"] = routed
-        if routed.needs_clarification and ctx.claims is None and any(
+        if payment_question and "BUY" not in queue:
+            _emit(state, "token", {"text": PAYMENT_SUPPORT_TEXT})
+            if not queue:
+                ctx.state.intent_queue = []
+                _snapshot_state(state)
+                return {"router_output": routed, "intent_queue": [], "halted": True}
+            return {"router_output": routed, "intent_queue": queue}
+        if clarification and ctx.claims is None and any(
             label in LOGIN_REQUIRED_LABELS for label in queue
         ):
             _emit(state, "ui", {"kind": "login_required", "payload": {}})
@@ -462,9 +563,9 @@ def build_graph(router_llm, agent_llm_factory, legacy: Callable[[str, dict], dic
             ctx.state.intent_queue = []
             _snapshot_state(state)
             return {"router_output": routed, "intent_queue": [], "halted": True}
-        if routed.needs_clarification:
-            _emit(state, "ui", {"kind": "clarify", "payload": {"question": routed.needs_clarification, "options": []}})
-            _emit(state, "token", {"text": routed.needs_clarification})
+        if clarification:
+            _emit(state, "ui", {"kind": "clarify", "payload": {"question": clarification, "options": []}})
+            _emit(state, "token", {"text": clarification})
             ctx.state.intent_queue = []
             _snapshot_state(state)
             return {"router_output": routed, "intent_queue": [], "halted": True}
@@ -586,7 +687,25 @@ def run_turn(
         "snapshot_box": {},
     }
     _snapshot_state(input_state)
-    ctx.emit = lambda kind, payload: _publish(input_state, (kind, payload))
+    mutations: set[str] = set()
+
+    def _emit_observing_mutations(kind: str, payload: dict) -> None:
+        if kind == "cart_effect":
+            mutations.add("cart")
+        elif kind == "ui" and isinstance(payload, dict) and payload.get("kind") == "draft_card":
+            mutations.add("draft")
+        _publish(input_state, (kind, payload))
+
+    ctx.emit = _emit_observing_mutations
+
+    def _failure_terminal() -> Event:
+        # A write tool already succeeded this turn: telling the customer "error" would make them retry
+        # and double the cart/draft change. Say what happened instead.
+        if mutations and not cancel_event.is_set():
+            text = MUTATION_DRAFT_TEXT if "draft" in mutations else MUTATION_CART_TEXT
+            _publish(input_state, ("token", {"text": text}))
+            return ("done", {})
+        return ("error", {"message": ERROR_TEXT})
 
     def worker() -> None:
         state_to_save: ConvState | None = None
@@ -596,10 +715,10 @@ def run_turn(
             graph.invoke(input_state)
         except Exception as exc:
             logger.warning("turn worker failed: %s", type(exc).__name__)
-            terminal = ("error", {"message": ERROR_TEXT})
+            terminal = _failure_terminal()
         except BaseException as exc:
             logger.warning("turn worker failed: %s", type(exc).__name__)
-            terminal = ("error", {"message": ERROR_TEXT})
+            terminal = _failure_terminal()
             base_exception = exc
 
         try:

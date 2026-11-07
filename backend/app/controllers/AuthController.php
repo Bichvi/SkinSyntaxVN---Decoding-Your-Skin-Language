@@ -302,7 +302,16 @@ class AuthController {
             exit;
         }
 
-        $staff = $this->model->timNhanVienTheoEmail($email);
+        try {
+            $staff = $this->model->timNhanVienTheoEmail($email);
+            $u = $staff ? null : $this->model->timTheoEmail($email);
+        } catch (\MongoDB\Driver\Exception\ConnectionException $e) {
+            // Mất kết nối CSDL (thường là Atlas chập chờn): báo gọn thay vì trang Fatal error.
+            error_log('[auth] MongoDB connection error on login: ' . get_class($e));
+            set_flash('error', 'Không kết nối được cơ sở dữ liệu. Vui lòng thử lại sau ít giây.');
+            header('Location: ' . BASE_URL . '/index.php?auth=login');
+            exit;
+        }
         if ($staff && !empty($staff['mat_khau']) && password_verify($matkhau, (string)$staff['mat_khau'])) {
 
             $staffStatus = strtolower(trim((string)($staff['trang_thai'] ?? 'active')));
@@ -336,7 +345,6 @@ class AuthController {
             exit;
         }
 
-        $u = $this->model->timTheoEmail($email);
         if ($u && password_verify($matkhau, (string)$u['mat_khau'])) {
             $this->loginCustomerSession($u);
 

@@ -8,7 +8,7 @@ Priority per group: ``manual`` > ``llm_approved`` > rule. A curated list REPLACE
 list of that group when it contains at least one valid key; an empty/invalid list falls back to the
 rules (so an admin who only ticks benefits does not wipe the inferred concerns). Skin types are
 additive: the product's own ``ma_loai_da`` entry (``source=data``) is kept and curated extras are
-appended.
+appended (except that ``llm_approved`` never adds the universal ``moi_loai_da`` to such a product).
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from .rules import Tags
 # Highest priority first.
 CURATED_SOURCES: tuple[str, ...] = ("manual", "llm_approved")
 RULE_SOURCE = "rule"
+UNIVERSAL_SKIN = "moi_loai_da"
 INFERRED = "inferred"
 
 # Tag group -> Mongo field on san_pham.
@@ -99,6 +100,9 @@ def resolve_tags(
     skin: list[dict[str, str]] = [{"key": k, "source": own_source} for k in inferred.skin_types]
     if source is not None:
         extras = clean_keys(doc.get(FIELD_BY_GROUP["skin_types"]), valid_sets["skin_types"])
+        if extras and own_source == "data" and source == "llm_approved":
+            # an LLM must not widen a product with a known specific skin type to "all skin types"
+            extras = [k for k in extras if k != UNIVERSAL_SKIN]
         if extras:
             used_curated = True
             if own_source == "data":

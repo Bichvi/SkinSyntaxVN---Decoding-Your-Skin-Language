@@ -101,6 +101,8 @@ $check('breaker: thành công reset đếm', (function () use ($ok, $stateStore,
 
 // ---------- formatter ----------
 $check('fmt: label map', SearchReasonFormatter::format('fits_skin_type', ['da_dau', 'da_nhay_cam']) === 'Hợp da dầu, da nhạy cảm');
+$check('fmt: label moi_loai_da', SearchReasonFormatter::format('fits_skin_type', ['moi_loai_da']) === 'Hợp da thường');
+$check('fmt: label da_mun', SearchReasonFormatter::format('fits_skin_type', ['da_mun']) === 'Hợp da mụn');
 $check('fmt: tối đa 3 param', SearchReasonFormatter::format('shared_ingredients', ['a', 'b', 'c', 'd']) === 'Chung hoạt chất a, b, c');
 $check('fmt: param dài cắt 40 ký tự', SearchReasonFormatter::format('targets_concern', [str_repeat('ơ', 60)]) === 'Hỗ trợ ' . str_repeat('ơ', 40));
 $check('fmt: code lạ -> rỗng', SearchReasonFormatter::format('unknown', ['x']) === '');

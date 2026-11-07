@@ -13,6 +13,7 @@ x-ai-idol-common: &ai-idol-common
     MONGO_DB: ${MONGO_DB:-skinsyntax}
     MONGO_DB_NAME: ${MONGO_DB_NAME:-skinsyntax}
     AI_IDOL_REDIS_URL: redis://redis:6379/2
+    AI_IDOL_CATALOG_EVENTS_REDIS_URL: redis://redis:6379/0
     AI_IDOL_CHROMA_HOST: chromadb
     AI_IDOL_CHROMA_PORT: "8000"
     AI_IDOL_AGENT_ENABLED: "true"

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from dataclasses import dataclass, field
@@ -501,6 +502,12 @@ def _stale_replaces(exc: PhpError) -> bool:
     return exc.status == 409 and str(getattr(exc, "code", "") or "") != "out_of_stock"
 
 
+def _card_deadline(card: dict) -> float:
+    expires, now = card.get("expires_at"), card.get("server_now")
+    numbers = all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in (expires, now))
+    return time.time() + (expires - now if numbers else 600)
+
+
 def _draft_product_ids(ctx: ToolContext, payload: dict) -> list[str]:
     if payload.get("scope") == "whole_cart":
         candidates = [item.get("product_id") or item.get("id") for item in ctx.cart_snapshot if isinstance(item, dict)]
@@ -536,6 +543,43 @@ def _draft_conflict_warnings(ctx: ToolContext, payload: dict) -> list[str]:
         if len(warnings) >= _MAX_CONFLICT_WARNINGS:
             break
     return warnings
+
+
+_MAX_LINE_QTY = 20
+
+
+def _snapshot_key(item: Any) -> str:
+    if not isinstance(item, dict):
+        return ""
+    return str(item.get("id") or item.get("product_id") or "")
+
+
+def _snapshot_add(ctx: ToolContext, line: Any, fallback_id: str, fallback_qty: int) -> None:
+    """Mirror a successful cart add into the turn's cart snapshot (in place), like ChatCartEffect."""
+    line = line if isinstance(line, dict) else {}
+    pid = str(line.get("id") or line.get("product_id") or fallback_id)
+    try:
+        qty = int(line.get("qty") or fallback_qty)
+    except (TypeError, ValueError):
+        qty = fallback_qty
+    for existing in ctx.cart_snapshot:
+        if _snapshot_key(existing) == pid:
+            try:
+                current = int(existing.get("qty") or 0)
+            except (TypeError, ValueError):
+                current = 0
+            existing["qty"] = min(_MAX_LINE_QTY, current + qty)
+            return
+    ctx.cart_snapshot.append({
+        "id": pid,
+        "name": str(line.get("name") or ""),
+        "qty": min(_MAX_LINE_QTY, qty),
+        "unit_price": line.get("unit_price") or 0,
+    })
+
+
+def _snapshot_remove(ctx: ToolContext, product_id: str) -> None:
+    ctx.cart_snapshot[:] = [item for item in ctx.cart_snapshot if _snapshot_key(item) != str(product_id)]
 
 
 def _build(ctx: ToolContext, name: str) -> StructuredTool:
@@ -584,6 +628,7 @@ def _build(ctx: ToolContext, name: str) -> StructuredTool:
                         response = _php(ctx, "internal_agent_cart_add", {"product_id": product_id, "qty": item_data["qty"]})
                         if response.get("effect") is not None:
                             ctx.emit("cart_effect", {"effect": response["effect"]})
+                        _snapshot_add(ctx, response.get("line"), str(product_id), int(item_data["qty"]))
                         added.append(response.get("line", response))
                     except PhpError as exc:
                         code = _error_code(exc)
@@ -597,6 +642,7 @@ def _build(ctx: ToolContext, name: str) -> StructuredTool:
                 response = _php(ctx, "internal_agent_cart_remove", {"product_id": raw["product_id"]})
                 if response.get("effect") is not None:
                     ctx.emit("cart_effect", {"effect": response["effect"]})
+                _snapshot_remove(ctx, raw["product_id"])
                 return response
             return _guarded(ctx, name, remove, params)
         if name == "get_checkout_defaults":
@@ -607,6 +653,24 @@ def _build(ctx: ToolContext, name: str) -> StructuredTool:
                 if isinstance(payload.get("new_address"), BaseModel):
                     payload["new_address"] = payload["new_address"].model_dump(exclude_none=True)
                 payload["replaces"] = ctx.state.open_draft_id
+                stored_qty = ctx.state.open_draft_qty
+                deadline = ctx.state.open_draft_deadline
+                original_qty = raw.get("qty")
+                if (
+                    not payload.get("qty") and ctx.state.open_draft_id and stored_qty
+                    and deadline is not None and time.time() < deadline
+                ):
+                    # Re-drafting without a qty must not silently drop the quantity the customer already chose,
+                    # but only for items still in the cart (confirm removes them) and while the draft is live.
+                    in_cart = {
+                        str(item.get("product_id") or item.get("id"))
+                        for item in ctx.cart_snapshot if isinstance(item, dict)
+                    }
+                    wanted = in_cart
+                    if payload.get("scope") == "mentioned_items" and payload.get("product_ids"):
+                        wanted = in_cart & {str(pid) for pid in payload["product_ids"]}
+                    carried = {pid: qty for pid, qty in stored_qty.items() if pid in wanted}
+                    payload["qty"] = carried or None
                 payload["cart_snapshot"] = ctx.cart_snapshot
                 payload["conflict_warnings"] = _draft_conflict_warnings(ctx, payload)
                 try:
@@ -616,11 +680,16 @@ def _build(ctx: ToolContext, name: str) -> StructuredTool:
                         raise
                     # The draft we meant to replace is gone (expired, used or unknown): forget it, retry once.
                     ctx.state.open_draft_id = None
+                    ctx.state.open_draft_qty = None
+                    ctx.state.open_draft_deadline = None
+                    payload["qty"] = original_qty  # the old draft is gone, so its quantities are too
                     payload["replaces"] = None
                     response = _php(ctx, "internal_agent_draft", payload)
                 card = response.get("card")
                 if card is not None:
                     ctx.state.open_draft_id = card.get("draft_id")
+                    ctx.state.open_draft_qty = payload.get("qty") or None
+                    ctx.state.open_draft_deadline = _card_deadline(card)
                     ctx.emit("ui", {"kind": "draft_card", "payload": card})
                 return response
             return _guarded(ctx, name, draft, params)
@@ -630,6 +699,8 @@ def _build(ctx: ToolContext, name: str) -> StructuredTool:
                 card = response.get("card")
                 if card is not None:
                     ctx.state.open_draft_id = card.get("draft_id")
+                    ctx.state.open_draft_qty = None
+                    ctx.state.open_draft_deadline = None
                     ctx.emit("ui", {"kind": "draft_card", "payload": card})
                 return response
             return _guarded(ctx, name, reorder, params)

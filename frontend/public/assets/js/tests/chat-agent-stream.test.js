@@ -75,8 +75,14 @@ function loadAgent(fetchImpl = () => Promise.reject(new Error('unused'))) {
     },
     clearInterval: (id) => activeTimers.delete(id)
   };
+  const clock = { offsetMs: 0 };
+  const RealDate = Date;
+  class FakeDate extends RealDate {
+    static now() { return RealDate.now() + clock.offsetMs; }
+  }
   const context = {
     window,
+    Date: FakeDate,
     document: new FakeDocument(),
     Intl,
     TextDecoder,
@@ -87,7 +93,7 @@ function loadAgent(fetchImpl = () => Promise.reject(new Error('unused'))) {
     fetch: (...args) => fetchState.impl(...args)
   };
   vm.runInNewContext(source, context);
-  return { agent: window.SkinSyntaxAgent, window, document: context.document, fetchState, activeTimers };
+  return { agent: window.SkinSyntaxAgent, window, document: context.document, fetchState, activeTimers, clock };
 }
 
 test('parses SSE CRLF, bare CR, and multi-line data', () => {
@@ -261,4 +267,43 @@ test('stream request is a JSON POST', async () => {
   assert.equal(captured.init.method, 'POST');
   assert.equal(captured.init.headers['Content-Type'], 'application/json');
   assert.equal(JSON.parse(captured.init.body).message, 'xin chào');
+});
+
+test('draft countdown uses a local deadline when server clock is ahead of the browser', () => {
+  const { agent, document, clock } = loadAgent();
+  const serverNow = Math.floor(Date.now() / 1000) + 167;
+  const payload = { draft_id: 'skew-1', server_now: serverNow, expires_at: serverNow + 600, items: [] };
+  const node = document.createElement('div');
+  agent.renderDraftCard(payload, node, { messageId: 'skew-m' });
+  const remaining = Math.round((payload.deadline_ms - Date.now()) / 1000);
+  assert.ok(remaining >= 599 && remaining <= 600, 'remaining ' + remaining);
+  assert.equal(agent.getDraftCardState('skew-m').status, 'pending');
+  assert.match(node.textContent, /Còn (59\d|600) giây/);
+  clock.offsetMs = 601 * 1000;
+  agent.renderDraftCard(payload, node, { messageId: 'skew-m' });
+  assert.equal(agent.getDraftCardState('skew-m').status, 'expired');
+  assert.match(node.textContent, /hết hạn/);
+});
+
+test('re-rendering a stored draft payload does not extend its deadline', () => {
+  const { agent, document, clock } = loadAgent();
+  const serverNow = Math.floor(Date.now() / 1000);
+  const payload = { draft_id: 'stable-1', server_now: serverNow, expires_at: serverNow + 600, items: [] };
+  agent.renderDraftCard(payload, document.createElement('div'), { messageId: 'stable-m' });
+  const first = payload.deadline_ms;
+  clock.offsetMs = 300 * 1000;
+  agent.renderDraftCard(payload, document.createElement('div'), { messageId: 'stable-m' });
+  assert.equal(payload.deadline_ms, first);
+});
+
+test('draft without server_now keeps the expires_at behaviour', () => {
+  const { agent, document, clock } = loadAgent();
+  const payload = { draft_id: 'legacy-1', expires_at: Math.floor(Date.now() / 1000) + 60, items: [] };
+  const node = document.createElement('div');
+  agent.renderDraftCard(payload, node, { messageId: 'legacy-m' });
+  assert.equal(payload.deadline_ms, undefined);
+  assert.equal(agent.getDraftCardState('legacy-m').status, 'pending');
+  clock.offsetMs = 120 * 1000;
+  agent.renderDraftCard(payload, node, { messageId: 'legacy-m' });
+  assert.equal(agent.getDraftCardState('legacy-m').status, 'expired');
 });

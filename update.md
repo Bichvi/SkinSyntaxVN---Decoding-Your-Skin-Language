@@ -25,6 +25,8 @@ Không có bí mật nào trong tài liệu này. Không đọc, không ghi giá
 
 > **Chất lượng dữ liệu tìm kiếm (U06, 2026-10-22, chưa commit):** tỷ lệ lượt thành phần map sang INCI tăng từ 54,2% lên 88,5%, sản phẩm có ít nhất một hoạt chất từ 77,4% lên 90,2% (sửa parser đọc đúng danh sách INCI trong dữ liệu marketing + 776 mục alias mới). Có công cụ gợi ý alias, báo cáo từ khóa 0 kết quả và script áp synonym đã duyệt. Chi tiết: [`update_search_data_quality.md`](update_search_data_quality.md).
 
+> **Chất lượng kịch bản AI Idol (2026-10-22, chưa commit):** prompt không còn bị mất xuống dòng và bị cắt giữa. Kịch bản viết theo nguyên tắc kể chuyện, có đoạn mẫu giọng văn. Trên 3 sản phẩm thật: số phần tách đúng tăng từ 1/4 lên 4/4 kịch bản; video sản phẩm hết lỗi kiểm tra tự động. Bước 4: sinh nhiều bản, LLM chấm từng cặp rồi chọn (`AI_IDOL_SCRIPT_CANDIDATES`, mặc định 2); thêm `gpt-oss-120b` vào model dự phòng để tăng hạn mức Groq miễn phí. Chi tiết: [`update_ai_idol_script_quality.md`](update_ai_idol_script_quality.md).
+
 > **Trung tâm hỗ trợ hợp nhất + chatbot trả lời chính sách/HDSD (2026-10-23, đã commit):** một nguồn sự thật `support.json` (hotline `0398606281`, giờ hỗ trợ chưa công bố), trung tâm hỗ trợ accordion 4 cấp, 9 bài hướng dẫn tính năng, Syna trả lời chính sách bằng LLM dựa trên bài chính thức có hậu kiểm số liệu và bản soạn sẵn dự phòng, widget hiện nguồn/chip/menu Trợ giúp. Eval 45 câu: đúng slug 25/25, số liệu lạ 0, p95 6 s; còn 1 lỗi khẳng định quá mức (VAT). Chi tiết: [`update_store_support_chatbot.md`](update_store_support_chatbot.md).
 
 ---
@@ -659,3 +661,4 @@ Rollback nhanh khi nghi ngờ self-healing: đặt `AI_IDOL_MAX_SCRIPT_REPAIR_AT
 - U13 (kiểm thử tổng giai đoạn 2): E2E 16 kịch bản, bench, kiểm chứng đường hoàn kho `HoaDon`, sửa nhỏ (thống kê loại tài khoản test, route `admin_sp_create`, đồng bộ trạng thái ẩn Chroma/Neo4j). Tổng hợp toàn bộ giai đoạn 2 (bảng key Redis, luồng sự kiện, lịch job, cờ, cổng U12, rủi ro): `update_search_upgrade_phase2.md`.
 
 - Trang chủ gợi ý theo đồ thị Neo4j (giai đoạn 1: "Vì bạn đã xem", "Hợp với da bạn", "Theo vấn đề da" + nhãn lý do; không đổi các thuật toán gợi ý cũ). Xem `update_home_graph_recommend.md`.
+- Sửa nhãn "Hợp moi_loai_da" ở gợi ý giỏ hàng: thêm nhãn hiển thị, và graph_sync không cho tag LLM nới sản phẩm đã có loại da riêng thành "mọi loại da" (446 sản phẩm); sửa đọc INCI "Bảng thành phần:" và bỏ suy vấn đề da cho kem chống nắng/trang điểm/tẩy trang/sữa rửa mặt; Neo4j đã đồng bộ lại 2026-11-05. Xem `update_nhan_loai_da.md`.

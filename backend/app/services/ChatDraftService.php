@@ -235,6 +235,7 @@ final class ChatDraftService
         return [
             'draft_id' => $draftId,
             'expires_at' => $expiresAt,
+            'server_now' => $now,
             'items' => $displayItems,
             'subtotal' => $subtotal,
             'voucher' => $voucher === null ? null : [
@@ -261,6 +262,7 @@ final class ChatDraftService
         return [
             'draft_id' => (string)$doc['_id'],
             'expires_at' => (int)$doc['expires_at'],
+            'server_now' => $now,
             'items' => $doc['_display_items'] ?? $doc['items'] ?? [],
             'subtotal' => (int)($doc['subtotal'] ?? 0),
             'voucher' => $voucherCode === '' ? null : ['code' => $voucherCode, 'discount' => $discount],
