@@ -67,3 +67,17 @@ def test_conflict_pairs_from_real_source():
     assert ("retinol", "salicylic_acid") in keys
     assert ("benzoyl_peroxide", "retinol") in keys
     assert all(p.a < p.b for p in pairs)
+
+
+def test_no_concern_inference_for_sunscreen_makeup_cleanser_categories():
+    keys = ["water", "niacinamide", "hyaluronic_acid"]
+    for chain in (["kem_chong_nang"], ["trang_diem", "son_moi"], ["cham_soc_da", "sua_rua_mat"]):
+        tags = infer_tags(keys, {"categories": chain}, RULES)
+        assert tags.concerns == [] and tags.benefits == ["sang_da", "cap_am"]
+        assert tags.skin_types == ["da_kho", "moi_loai_da"]
+
+
+def test_serum_or_missing_categories_keep_concerns():
+    keys = ["niacinamide"]
+    assert infer_tags(keys, {"categories": ["serum"]}, RULES).concerns == ["tham_mun", "dau_thua"]
+    assert infer_tags(keys, {}, RULES).concerns == ["tham_mun", "dau_thua"]

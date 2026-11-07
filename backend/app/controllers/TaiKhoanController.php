@@ -296,7 +296,10 @@ class TaiKhoanController {
         }
 
         // Đồng bộ session để các request sau dùng đúng id/email mới nhất.
-        $_SESSION['user']['id'] = (int)($account['id'] ?? 0);
+        // Tài khoản chỉ có _id Mongo (không có id số) giữ nguyên id session, tránh đổi sub của Syna.
+        if ((int)($account['id'] ?? 0) > 0) {
+            $_SESSION['user']['id'] = (int)$account['id'];
+        }
         $_SESSION['user']['email'] = (string)($account['email'] ?? ($user['email'] ?? ''));
         $_SESSION['user']['ho_ten'] = (string)($account['ho_ten'] ?? ($user['ho_ten'] ?? ''));
 

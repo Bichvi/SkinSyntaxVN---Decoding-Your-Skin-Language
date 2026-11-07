@@ -1,4 +1,4 @@
-from graph_sync.ingredients import AliasEntry, clean_fragments, load_aliases, parse_ingredients
+from graph_sync.ingredients import AliasEntry, clean_fragments, has_detail_marker, load_aliases, parse_ingredients
 
 ALIASES = {
     "water": AliasEntry("water", "Water", "Nước", "base"),
@@ -154,3 +154,24 @@ def test_alias_file_integrity():
                 clashes.append(f"{variant!r}: {owner[slug]} vs {slugify(key)}")
     assert not clashes, clashes
     assert len(raw) > 700
+
+
+HIGHLIGHT_THEN_TABLE = (
+    "Hyaluronic Acid, Vitamin C, Pearl Powder. Bảng thành phần: Water,Ethylhexyl Methoxycinnamate, "
+    "Butylene Glycol, Glycerin, Magnesium Ascorbyl Phosphate, Sodium Hyaluronate"
+)
+
+
+def test_highlight_preamble_before_bang_thanh_phan_is_not_an_ingredient_list():
+    refs = parse_ingredients(HIGHLIGHT_THEN_TABLE)
+    got = keys(refs)
+    assert got[0] == "water"
+    assert "ascorbic_acid" not in got[:3]
+    assert "magnesium_ascorbyl_phosphate" in got
+
+
+def test_preamble_before_detail_marker_is_dropped_and_no_marker_unchanged():
+    assert clean_fragments("Dưỡng ẩm. Hyaluronic Acid, Vitamin C. Thành phần chi tiết: Water, Glycerin") == [
+        "Water", "Glycerin"]
+    assert clean_fragments("Water, Glycerin, Niacinamide") == ["Water", "Glycerin", "Niacinamide"]
+    assert has_detail_marker(HIGHLIGHT_THEN_TABLE) and not has_detail_marker("Water, Glycerin")

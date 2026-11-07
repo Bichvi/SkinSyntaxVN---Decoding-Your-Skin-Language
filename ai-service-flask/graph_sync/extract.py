@@ -17,7 +17,7 @@ PRODUCT_PROJECTION = {
     "_id": 0, "ma_san_pham": 1, "ten_san_pham": 1, "gia_ban": 1, "gia_thi_truong": 1,
     "so_luong_da_ban": 1, "diem_danh_gia": 1, "ma_thuong_hieu": 1, "ma_danh_muc": 1,
     "danh_muc_day_du": 1, "ma_loai_da": 1, "loai_da": 1, "ma_xuat_xu": 1,
-    "thanh_phan_full": 1, "thanh_phan_sach": 1, "trang_thai": 1, "trang_thai_kho": 1,
+    "thanh_phan": 1, "thanh_phan_full": 1, "thanh_phan_sach": 1, "trang_thai": 1, "trang_thai_kho": 1,
     "so_luong_ton_kho": 1, "so_luong_ton": 1, "ton_kho": 1, "stock": 1, "quantity": 1,
     "updated_at": 1,
     **{name: 1 for name in CURATION_FIELDS},     # U07: cong_dung_keys, van_de_da_keys, loai_da_keys, tag_source...

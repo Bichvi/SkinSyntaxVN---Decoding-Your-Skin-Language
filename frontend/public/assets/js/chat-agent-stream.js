@@ -154,8 +154,23 @@
     }
   };
 
+  // Server and browser clocks may differ: fix the local deadline once, when the card first arrives, and reuse it.
+  var stampDeadline = function (payload) {
+    if (!payload || typeof payload !== 'object' || Number.isFinite(payload.deadline_ms)) return payload;
+    var expiresAt = Number(payload.expires_at);
+    var serverNow = Number(payload.server_now);
+    if (Number.isFinite(expiresAt) && Number.isFinite(serverNow) && serverNow > 0) {
+      payload.deadline_ms = Date.now() + (expiresAt - serverNow) * 1000;
+    }
+    return payload;
+  };
+
+  var draftDeadline = function (payload) {
+    return Number.isFinite(payload.deadline_ms) ? payload.deadline_ms : Number(payload.expires_at || 0) * 1000;
+  };
+
   var draftExpired = function (payload) {
-    return Number(payload.expires_at || 0) * 1000 <= Date.now();
+    return draftDeadline(payload) <= Date.now();
   };
 
   var getDraftState = function (key, payload) {
@@ -178,7 +193,7 @@
   };
 
   var renderDraftCard = function (payload, container, options) {
-    payload = payload || {};
+    payload = stampDeadline(payload || {});
     options = options || {};
     var key = getDraftKey(payload, options);
     var state = getDraftState(key, payload);
@@ -252,7 +267,7 @@
       countdown.textContent = 'Đơn nháp đã hết hạn';
     };
     var tick = function () {
-      var remaining = Math.max(0, Number(currentPayload.expires_at || 0) * 1000 - Date.now());
+      var remaining = Math.max(0, draftDeadline(currentPayload) - Date.now());
       if (!remaining) return expired();
       countdown.textContent = 'Còn ' + Math.ceil(remaining / 1000) + ' giây';
     };
@@ -305,7 +320,7 @@
         }
         if (result && result.ok && result.status === 'changed') {
           state.status = 'changed';
-          state.payload = result.card || {};
+          state.payload = stampDeadline(result.card || {});
           state.changeMessage = 'Giá đã thay đổi, bạn kiểm tra lại nhé';
           state.errorMessage = '';
           clearDraftTimer(state);

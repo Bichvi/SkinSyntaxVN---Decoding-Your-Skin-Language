@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 class ConvState:
     last_shown_products: list[dict] = field(default_factory=list)
     open_draft_id: str | None = None
+    open_draft_qty: dict[str, int] | None = None
+    open_draft_deadline: float | None = None
     pending: str = "none"
     intent_queue: list[str] = field(default_factory=list)
 
@@ -32,6 +34,21 @@ class StateStore:
     def _product_view(product: dict) -> dict:
         return {key: product[key] for key in ("id", "name", "idx") if key in product}
 
+    @staticmethod
+    def _valid_qty(value) -> dict[str, int] | None:
+        if not isinstance(value, dict) or not value:
+            return None
+        for key, qty in value.items():
+            if not isinstance(key, str) or isinstance(qty, bool) or not isinstance(qty, int) or qty <= 0:
+                return None
+        return dict(value)
+
+    @staticmethod
+    def _valid_deadline(value) -> float | None:
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+            return None
+        return value
+
     def load(self, sid: str) -> ConvState:
         try:
             raw = self.redis.get(self._key(sid))
@@ -46,6 +63,8 @@ class StateStore:
             return ConvState(
                 last_shown_products=[self._product_view(item) for item in products if isinstance(item, dict)],
                 open_draft_id=data.get("open_draft_id") or data.get("draft_id"),
+                open_draft_qty=self._valid_qty(data.get("draft_qty")),
+                open_draft_deadline=self._valid_deadline(data.get("draft_deadline")),
                 pending=str(data.get("pending", "none")),
                 intent_queue=list(data.get("intent_queue", [])),
             )
@@ -56,6 +75,8 @@ class StateStore:
         payload = {
             "last_shown_products": [self._product_view(item) for item in state.last_shown_products],
             "draft_id": state.open_draft_id,
+            "draft_qty": state.open_draft_qty,
+            "draft_deadline": state.open_draft_deadline,
             "pending": state.pending,
             "intent_queue": state.intent_queue,
         }

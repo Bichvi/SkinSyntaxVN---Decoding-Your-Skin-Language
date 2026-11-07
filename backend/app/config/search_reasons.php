@@ -30,6 +30,10 @@ return [
         'da_hon_hop'  => 'da hỗn hợp',
         'da_thuong'   => 'da thường',
         'da_nhay_cam' => 'da nhạy cảm',
+        // param của fits_skin_type là loại da trong hồ sơ khách; mã 2 "Da thường/Mọi loại da" -> "Hợp da thường"
+        // đọc đúng, còn "Hợp mọi loại da" sẽ mô tả sai sản phẩm.
+        'moi_loai_da' => 'da thường',
+        'da_mun'      => 'da mụn',
         'mun'         => 'da mụn',
         'tham_nam'    => 'thâm nám',
         'lao_hoa'     => 'chống lão hóa',

@@ -9,7 +9,15 @@ import pytest
 from langchain_core.messages import AIMessage
 
 from agent_graph.auth import AgentClaims
-from agent_graph.graph import build_graph, run_turn
+from agent_graph.graph import (
+    NO_DRAFT_FALLBACK_TEXT,
+    ORDER_FALLBACK_TEXT,
+    PAYMENT_SUPPORT_TEXT,
+    build_graph,
+    claims_false_commitment,
+    is_unsupported_payment_question,
+    run_turn,
+)
 from agent_graph.router import Intent, RouterEntities, RouterOutput
 from agent_graph.state import ConvState
 from agent_graph.tools import ToolContext
@@ -274,7 +282,10 @@ def test_timeout_stops_cleanly_with_injected_clock(monkeypatch):
 def test_model_order_claim_does_not_emit_order_ui_or_call_confirmation_route():
     router = ScriptedRouter(output("BUY"))
     php = FakePhp()
-    model = ScriptedChatModel(responses=[AIMessage(content="Mình đã đặt hàng thành công.")])
+    model = ScriptedChatModel(responses=[
+        AIMessage(content="Mình đã đặt hàng thành công."),
+        AIMessage(content="Mình đã đặt hàng thành công."),
+    ])
     graph = build_graph(router, lambda tools: model.bind_tools(tools), lambda *_args: {"answer": "legacy"})
     events = list(run_turn(
         graph,
@@ -286,7 +297,7 @@ def test_model_order_claim_does_not_emit_order_ui_or_call_confirmation_route():
     ))
 
     assert events == [
-        ("token", {"text": "Mình đã đặt hàng thành công."}),
+        ("token", {"text": NO_DRAFT_FALLBACK_TEXT}),
         ("done", {}),
     ]
     assert php.calls == []
@@ -894,3 +905,286 @@ def test_agent_system_message_includes_skin_profile_and_goal():
     assert "Da thường-xyz" in system
     assert "Dưỡng sáng-xyz" in system
     assert "leak-me" not in system
+
+
+# --- D2: never claim a draft/order exists when it does not ---
+
+D2_SENTENCE = (
+    'Đơn nháp của bạn đã sẵn sàng. Bạn kiểm tra rồi bấm "Xác nhận đặt hàng" '
+    "trong vòng 10 phút nhé."
+)
+G5_SENTENCE = "Đơn nháp của bạn đã được tạo sẵn, nhưng chưa được xác nhận. Bạn bấm Xác nhận đặt hàng nhé."
+
+
+@pytest.mark.parametrize("text", [
+    D2_SENTENCE,
+    "Đơn nháp đang sẵn sàng rồi nhé",
+    "Mình đã tạo xong đơn nháp cho bạn",
+    "Mình đã lập đơn nháp rồi",
+    "Đơn nháp đã được lập",
+    "Đơn nháp của bạn mình tạo sẵn rồi",
+])
+def test_draft_claim_detected_only_without_open_draft(text):
+    assert claims_false_commitment(text, has_open_draft=False) == "draft"
+    assert claims_false_commitment(text, has_open_draft=True) is None
+
+
+@pytest.mark.parametrize("text", [
+    "Mình đã đặt hàng thành công.",
+    "Đặt hàng thành công rồi nhé!",
+    "Đơn hàng của bạn đã được tạo.",
+    "Đơn hàng đã được đặt.",
+    "Mình đã tạo đơn hàng cho bạn.",
+    "Đã tạo đơn cho bạn rồi.",
+])
+def test_order_claim_detected_even_with_open_draft(text):
+    assert claims_false_commitment(text, has_open_draft=False) == "order"
+    assert claims_false_commitment(text, has_open_draft=True) == "order"
+
+
+@pytest.mark.parametrize("text", [
+    "Bạn muốn mình lập đơn nháp không?",
+    'Sau khi lập đơn nháp bạn bấm "Xác nhận đặt hàng" nhé.',
+    "Bạn cho mình địa chỉ để mình tạo đơn nháp nhé.",
+    "Sản phẩm này hợp với da dầu.",
+    "Giỏ hàng của bạn đã sẵn sàng thanh toán khi bạn muốn.",
+    "",
+])
+def test_non_claims_are_not_flagged(text):
+    assert claims_false_commitment(text, has_open_draft=False) is None
+
+
+def test_g5_sentence_is_fine_with_draft_and_flagged_without():
+    assert claims_false_commitment(G5_SENTENCE, has_open_draft=True) is None
+    assert claims_false_commitment(G5_SENTENCE, has_open_draft=False) == "draft"
+
+
+def _buy_run(responses, *, state=None, message="đặt cả giỏ, giao về địa chỉ cũ, COD"):
+    router = ScriptedRouter(output("BUY"))
+    model = ScriptedChatModel(responses=responses)
+    graph = build_graph(router, lambda tools: model.bind_tools(tools), lambda *_args: {"answer": "legacy"})
+    events = list(run_turn(
+        graph, message=message, ctx=context(scopes=("draft:create",), state=state),
+        history=[], recent_turns=[], legacy_payload={},
+    ))
+    return model, events
+
+
+def test_false_draft_claim_is_corrected_and_only_the_question_is_emitted():
+    question = "Bạn cho mình địa chỉ giao hàng nhé?"
+    model, events = _buy_run([AIMessage(content=D2_SENTENCE), AIMessage(content=question)])
+    tokens = [payload["text"] for kind, payload in events if kind == "token"]
+    assert tokens == [question]
+    assert len(model.calls) == 2
+    corrective = model.calls[1][-1]
+    assert corrective.type == "human" and "Kiểm tra tự động" in corrective.content
+    assert events[-1] == ("done", {})
+    assert [kind for kind, _ in events if kind in {"done", "error"}] == ["done"]
+
+
+def test_repeated_false_draft_claim_falls_back_deterministically():
+    model, events = _buy_run([AIMessage(content=D2_SENTENCE), AIMessage(content=D2_SENTENCE)])
+    tokens = [payload["text"] for kind, payload in events if kind == "token"]
+    assert tokens == [NO_DRAFT_FALLBACK_TEXT]
+    assert "Mình chưa lập được đơn nháp" in NO_DRAFT_FALLBACK_TEXT
+    assert len(model.calls) == 2
+    assert events[-1] == ("done", {})
+
+
+def test_draft_claim_with_open_draft_in_state_is_emitted_unchanged():
+    model, events = _buy_run([AIMessage(content=G5_SENTENCE)], state=ConvState(open_draft_id="D9"))
+    tokens = [payload["text"] for kind, payload in events if kind == "token"]
+    assert tokens == [G5_SENTENCE]
+    assert len(model.calls) == 1
+
+
+def test_draft_claim_after_draft_card_emitted_this_turn_is_fine():
+    php = FakePhp({"internal_agent_draft": {"ok": True, "card": {"draft_id": "D1", "expires_at": 1}}})
+    router = ScriptedRouter(output("BUY"))
+    model = ScriptedChatModel(responses=[
+        scripted_tool_call("prepare_order_draft", {
+            "scope": "whole_cart", "address_choice": "default", "payment_method": "cod",
+        }, "d1"),
+        AIMessage(content=G5_SENTENCE),
+    ])
+    graph = build_graph(router, lambda tools: model.bind_tools(tools), lambda *_args: {"answer": "legacy"})
+    events = list(run_turn(
+        graph, message="đặt cả giỏ", ctx=context(scopes=("draft:create",), php=php),
+        history=[], recent_turns=[], legacy_payload={},
+    ))
+    assert ("token", {"text": G5_SENTENCE}) in events
+    assert len(model.calls) == 2
+
+
+def test_order_claim_is_corrected_even_with_open_draft():
+    good = 'Đơn nháp đang chờ bạn bấm "Xác nhận đặt hàng" nhé.'
+    model, events = _buy_run(
+        [AIMessage(content="Mình đã đặt hàng thành công!"), AIMessage(content=good)],
+        state=ConvState(open_draft_id="D9"),
+    )
+    tokens = [payload["text"] for kind, payload in events if kind == "token"]
+    assert tokens == [good]
+    assert "Xác nhận đặt hàng" in model.calls[1][-1].content
+
+
+def test_repeated_order_claim_with_open_draft_uses_order_fallback():
+    _model, events = _buy_run(
+        [AIMessage(content="Đặt hàng thành công rồi nhé"), AIMessage(content="Đặt hàng thành công rồi nhé")],
+        state=ConvState(open_draft_id="D9"),
+    )
+    tokens = [payload["text"] for kind, payload in events if kind == "token"]
+    assert tokens == [ORDER_FALLBACK_TEXT]
+    assert sum(1 for kind, _ in events if kind in {"done", "error"}) == 1
+
+
+def test_false_claim_in_step_cap_summary_is_replaced_by_fallback(monkeypatch):
+    import agent_graph.graph as graph_module
+
+    monkeypatch.setattr(graph_module, "MAX_STEPS", 1)
+    router = ScriptedRouter(output("BUY"))
+    model = ScriptedChatModel(responses=[
+        scripted_tool_call("get_checkout_defaults", {}, "c1"),
+        AIMessage(content=D2_SENTENCE),
+    ])
+    graph = build_graph(router, lambda tools: model.bind_tools(tools), lambda *_args: {"answer": "legacy"})
+    events = list(run_turn(
+        graph, message="đặt cả giỏ", ctx=context(scopes=("draft:create",)),
+        history=[], recent_turns=[], legacy_payload={},
+    ))
+    texts = [payload["text"] for kind, payload in events if kind == "token"]
+    assert D2_SENTENCE not in texts
+    assert NO_DRAFT_FALLBACK_TEXT in texts
+    assert events[-1] == ("done", {})
+
+
+# --- D8: unsupported payment methods never reach the legacy bot ---
+
+@pytest.mark.parametrize("text", [
+    "mua trả góp được không", "có trả góp không shop", "thanh toán bằng MoMo được không",
+    "đổi sang momo", "có ZaloPay không", "zalo pay được ko", "nhận shopeepay không",
+    "Viettel Money thì sao", "dùng paypal được không", "thanh toán ví điện tử",
+    "có paylater không", "pay later", "fundiin", "kredivo", "home paylater",
+])
+def test_unsupported_payment_questions_detected(text):
+    assert is_unsupported_payment_question(text)
+
+
+@pytest.mark.parametrize("text", [
+    "thanh toán COD", "chuyển khoản QR nhé", "VNPay", "mình thanh toán sau khi nhận hàng",
+    "serum này hợp da dầu không", "góp ý giúp mình", "momofuku", "",
+    # Cards go through VNPay, so they are supported and must reach the agent.
+    "quẹt thẻ tín dụng được không", "credit card ok không",
+])
+def test_supported_or_unrelated_messages_not_detected(text):
+    assert not is_unsupported_payment_question(text)
+
+
+def _route_run(labels, message, *, claims_on=True, responses=None):
+    router = ScriptedRouter(output(*labels))
+    model = ScriptedChatModel(responses=responses or [AIMessage(content="agent trả lời")])
+    legacy_calls = []
+
+    def legacy(msg, payload):
+        legacy_calls.append(msg)
+        return {"answer": "Bên mình hỗ trợ trả góp 0%!"}
+
+    graph = build_graph(router, lambda tools: model.bind_tools(tools), legacy)
+    ctx = context(scopes=("draft:create",))
+    if not claims_on:
+        ctx.claims = None
+    events = list(run_turn(graph, message=message, ctx=ctx, history=[], recent_turns=[], legacy_payload={}))
+    return model, legacy_calls, events
+
+
+def test_installment_question_gets_payment_text_and_skips_legacy():
+    model, legacy_calls, events = _route_run(["STORE_SUPPORT"], "mua trả góp được không")
+    assert legacy_calls == []
+    assert ("token", {"text": PAYMENT_SUPPORT_TEXT}) in events
+    assert not model.calls
+    assert events[-1] == ("done", {})
+
+
+def test_guest_installment_question_with_buy_label_gets_payment_text_not_login():
+    model, legacy_calls, events = _route_run(["BUY"], "có trả góp không", claims_on=False)
+    assert ("token", {"text": PAYMENT_SUPPORT_TEXT}) in events
+    assert not any(kind == "ui" and payload["kind"] == "login_required" for kind, payload in events)
+    assert legacy_calls == [] and not model.calls
+
+
+def test_logged_in_buy_momo_lets_agent_answer_without_payment_text():
+    model, legacy_calls, events = _route_run(["BUY"], "đổi sang MoMo")
+    assert ("token", {"text": PAYMENT_SUPPORT_TEXT}) not in events
+    assert ("token", {"text": "agent trả lời"}) in events
+    assert len(model.calls) == 1 and legacy_calls == []
+
+
+def test_mixed_store_support_and_advise_gives_payment_text_then_agent():
+    model, legacy_calls, events = _route_run(["STORE_SUPPORT", "ADVISE"], "trả góp được không, và tư vấn serum")
+    tokens = [payload["text"] for kind, payload in events if kind == "token"]
+    assert tokens == [PAYMENT_SUPPORT_TEXT, "agent trả lời"]
+    assert legacy_calls == []
+
+
+def test_payment_question_clears_clarification():
+    router = ScriptedRouter(RouterOutput(
+        intents=[Intent(label="STORE_SUPPORT", confidence=1)], needs_clarification="Bạn muốn hỏi gì?",
+    ))
+    model = ScriptedChatModel(responses=[])
+    graph = build_graph(router, lambda tools: model.bind_tools(tools), lambda *_a: {"answer": "legacy"})
+    events = list(run_turn(graph, message="trả góp không", ctx=context(), history=[], recent_turns=[], legacy_payload={}))
+    tokens = [payload["text"] for kind, payload in events if kind == "token"]
+    assert tokens == [PAYMENT_SUPPORT_TEXT]
+    assert not any(kind == "ui" and payload["kind"] == "clarify" for kind, payload in events)
+
+
+def _failing_turn(emits, exc=None):
+    import agent_graph.graph as graph_module
+
+    ctx = context()
+
+    def invoke(_state):
+        for kind, payload in emits:
+            ctx.emit(kind, payload)
+        raise exc or RuntimeError("final llm call failed")
+
+    fake_graph = SimpleNamespace(invoke=invoke, agent_llm_factory=None)
+    events = list(run_turn(
+        fake_graph, message="x", ctx=ctx, history=[], recent_turns=[], legacy_payload={},
+    ))
+    return graph_module, events
+
+
+def test_worker_failure_after_cart_effect_says_cart_updated_not_error():
+    graph_module, events = _failing_turn([("cart_effect", {"effect": {"op": "add"}})])
+    assert events == [
+        ("cart_effect", {"effect": {"op": "add"}}),
+        ("token", {"text": graph_module.MUTATION_CART_TEXT}),
+        ("done", {}),
+    ]
+
+
+def test_worker_failure_after_draft_card_says_draft_updated_not_error():
+    graph_module, events = _failing_turn([
+        ("cart_effect", {"effect": {"op": "add"}}),
+        ("ui", {"kind": "draft_card", "payload": {"draft_id": "D1"}}),
+    ])
+    assert events[-2:] == [("token", {"text": graph_module.MUTATION_DRAFT_TEXT}), ("done", {})]
+    assert not any(event[0] == "error" for event in events)
+
+
+def test_worker_failure_without_mutation_is_still_an_error():
+    graph_module, events = _failing_turn([("ui", {"kind": "order_list", "payload": {}})])
+    assert events[-1] == ("error", {"message": graph_module.ERROR_TEXT})
+    assert not any(event[0] == "token" for event in events)
+
+
+def test_base_exception_after_mutation_still_reraises_with_done():
+    graph_module, events = [], []
+    with pytest.raises(KeyboardInterrupt):
+        stream = run_turn(
+            SimpleNamespace(invoke=lambda _s: (_ for _ in ()).throw(KeyboardInterrupt()), agent_llm_factory=None),
+            message="x", ctx=(c := context()), history=[], recent_turns=[], legacy_payload={},
+        )
+        c.emit("cart_effect", {"effect": {}})
+        while True:
+            events.append(next(stream))

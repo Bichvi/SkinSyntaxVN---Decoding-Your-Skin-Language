@@ -609,3 +609,208 @@ def test_prepare_draft_schema_lists_php_address_fields():
     schema = json.dumps(tool.args_schema.model_json_schema(), ensure_ascii=False)
     for key in ("ten_nguoi_nhan", "sdt_nguoi_nhan", "dia_chi_giao_hang"):
         assert key in schema
+
+
+from agent_graph.php_client import PhpError  # noqa: E402
+
+
+# --- C5: the cart snapshot must follow add/remove calls made earlier in the same turn ---
+
+class _CartPhp(FakePhp):
+    def __init__(self, fail_ids=()):
+        super().__init__()
+        self.fail_ids = set(fail_ids)
+
+    def call(self, route, payload=None):
+        self.calls.append((route, payload))
+        if route == "internal_agent_cart_add":
+            if payload["product_id"] in self.fail_ids:
+                raise PhpError(409, "het hang", code="out_of_stock")
+            pid = payload["product_id"]
+            return {"ok": True, "effect": {"op": "add"}, "line": {
+                "id": pid, "name": f"Product {pid}", "unit_price": 150, "qty": payload["qty"]}}
+        if route == "internal_agent_cart_remove":
+            return {"ok": True, "effect": {"op": "remove"}}
+        return {"ok": True}
+
+
+def _cart_ctx(php, graph=None, cart=None):
+    ctx = context(("cart:write", "draft:create"), php=php, graph=graph or FakeGraph())
+    ctx.cart_snapshot = cart if cart is not None else [{"id": "244", "name": "Retinol", "qty": 1, "unit_price": 500}]
+    return ctx
+
+
+def test_add_then_check_conflicts_includes_new_item():
+    graph = FakeGraph()
+    ctx = _cart_ctx(_CartPhp(), graph)
+    tools = tool_map(ctx)
+    tools["add_to_cart"].invoke({"items": [{"product_id": "4310", "qty": 1}]})
+    tools["check_conflicts"].invoke({"product_ids": [], "include_cart": True})
+    assert graph.calls[0][1]["product_ids"] == ["244", "4310"]
+    assert {"id": "4310", "name": "Product 4310", "qty": 1, "unit_price": 150} in ctx.cart_snapshot
+
+
+def test_add_existing_line_sums_quantities_and_caps_at_20():
+    ctx = _cart_ctx(_CartPhp(), cart=[{"id": "244", "name": "Retinol", "qty": 19, "unit_price": 500}])
+    tool_map(ctx)["add_to_cart"].invoke({"items": [{"product_id": "244", "qty": 5}]})
+    assert len(ctx.cart_snapshot) == 1
+    assert ctx.cart_snapshot[0]["qty"] == 20
+
+
+def test_add_matches_existing_line_by_product_id_key():
+    ctx = _cart_ctx(_CartPhp(), cart=[{"product_id": "244", "qty": 2}])
+    tool_map(ctx)["add_to_cart"].invoke({"items": [{"product_id": "244", "qty": 1}]})
+    assert len(ctx.cart_snapshot) == 1
+    assert ctx.cart_snapshot[0]["qty"] == 3
+
+
+def test_remove_drops_line_from_snapshot_and_view_cart():
+    ctx = _cart_ctx(_CartPhp())
+    tools = tool_map(ctx)
+    tools["remove_from_cart"].invoke({"product_id": "244"})
+    assert ctx.cart_snapshot == []
+    assert '"cart": []' in tools["view_cart"].invoke({})
+
+
+def test_view_cart_shows_item_added_this_turn():
+    ctx = _cart_ctx(_CartPhp())
+    tools = tool_map(ctx)
+    tools["add_to_cart"].invoke({"items": [{"product_id": "4310", "qty": 2}]})
+    assert "Product 4310" in tools["view_cart"].invoke({})
+
+
+def test_whole_cart_draft_payload_contains_item_added_this_turn():
+    php = _CartPhp()
+    ctx = _cart_ctx(php)
+    tools = tool_map(ctx)
+    tools["add_to_cart"].invoke({"items": [{"product_id": "4310", "qty": 1}]})
+    tools["prepare_order_draft"].invoke({**DRAFT_ARGS, "scope": "whole_cart", "product_ids": []})
+    payload = next(p for route, p in php.calls if route == "internal_agent_draft")
+    assert [item["id"] for item in payload["cart_snapshot"]] == ["244", "4310"]
+
+
+def test_failed_add_leaves_snapshot_unchanged():
+    ctx = _cart_ctx(_CartPhp(fail_ids={"4310"}))
+    before = [dict(item) for item in ctx.cart_snapshot]
+    tool_map(ctx)["add_to_cart"].invoke({"items": [{"product_id": "4310", "qty": 1}]})
+    assert ctx.cart_snapshot == before
+
+
+def test_snapshot_is_mutated_in_place():
+    ctx = _cart_ctx(_CartPhp())
+    same = ctx.cart_snapshot
+    tool_map(ctx)["add_to_cart"].invoke({"items": [{"product_id": "4310", "qty": 1}]})
+    assert ctx.cart_snapshot is same and len(same) == 2
+
+
+NOW = 1_000_000.0
+
+
+def _open_state(qty, *, deadline=NOW + 300, draft_id="D0"):
+    return ConvState(open_draft_id=draft_id, open_draft_qty=qty, open_draft_deadline=deadline)
+
+
+def _draft_call(state, monkeypatch, cart=("1200", "9"), **overrides):
+    monkeypatch.setattr("agent_graph.tools.time.time", lambda: NOW)
+    php = FakePhp({"internal_agent_draft": {"ok": True, "card": PHP_CARD}})
+    ctx = context(("draft:create",), php=php, state=state)
+    ctx.cart_snapshot[:] = [{"id": pid, "qty": 1} for pid in cart]
+    args = {"scope": "mentioned_items", "product_ids": ["1200"], "address_choice": "default", "payment_method": "cod"}
+    args.update(overrides)
+    tool_map(ctx)["prepare_order_draft"].invoke(args)
+    return php.calls[0][1]
+
+
+def test_redraft_without_qty_carries_over_open_draft_qty(monkeypatch):
+    state = _open_state({"1200": 3, "9": 2})
+    payload = _draft_call(state, monkeypatch)
+    assert payload["qty"] == {"1200": 3}
+    assert state.open_draft_qty == {"1200": 3}
+
+
+def test_redraft_whole_cart_carries_all_stored_qty(monkeypatch):
+    payload = _draft_call(_open_state({"1200": 3, "9": 2}), monkeypatch, scope="whole_cart", product_ids=[])
+    assert payload["qty"] == {"1200": 3, "9": 2}
+
+
+def test_redraft_mentioned_items_without_ids_keeps_all_stored(monkeypatch):
+    payload = _draft_call(_open_state({"1200": 3, "9": 2}), monkeypatch, product_ids=[])
+    assert payload["qty"] == {"1200": 3, "9": 2}
+
+
+def test_carry_over_skips_ids_not_in_cart_snapshot(monkeypatch):
+    payload = _draft_call(_open_state({"1200": 3, "9": 2}), monkeypatch, cart=("9",), scope="whole_cart", product_ids=[])
+    assert payload["qty"] == {"9": 2}
+    payload = _draft_call(_open_state({"1200": 3}), monkeypatch, cart=("9",))
+    assert not payload.get("qty")
+
+
+def test_carry_over_skips_expired_draft(monkeypatch):
+    state = _open_state({"1200": 3}, deadline=NOW - 1)
+    payload = _draft_call(state, monkeypatch)
+    assert not payload.get("qty")
+
+
+def test_carry_over_needs_a_deadline(monkeypatch):
+    payload = _draft_call(_open_state({"1200": 3}, deadline=None), monkeypatch)
+    assert not payload.get("qty")
+
+
+def test_redraft_explicit_qty_wins_and_is_stored(monkeypatch):
+    state = _open_state({"1200": 3})
+    payload = _draft_call(state, monkeypatch, qty={"1200": 5})
+    assert payload["qty"] == {"1200": 5}
+    assert state.open_draft_qty == {"1200": 5}
+
+
+def test_draft_without_open_draft_does_not_carry_qty(monkeypatch):
+    state = ConvState(open_draft_qty={"1200": 3}, open_draft_deadline=NOW + 300)
+    payload = _draft_call(state, monkeypatch)
+    assert not payload.get("qty")
+    assert state.open_draft_qty is None
+
+
+def test_card_deadline_uses_expires_at_minus_server_now(monkeypatch):
+    monkeypatch.setattr("agent_graph.tools.time.time", lambda: NOW)
+    from agent_graph.tools import _card_deadline
+
+    assert _card_deadline({"expires_at": 1_000, "server_now": 700}) == NOW + 300
+    assert _card_deadline({"expires_at": 1_000}) == NOW + 600
+    assert _card_deadline({"expires_at": "x", "server_now": 1}) == NOW + 600
+
+
+def test_stored_deadline_comes_from_card(monkeypatch):
+    monkeypatch.setattr("agent_graph.tools.time.time", lambda: NOW)
+    card = dict(PHP_CARD, expires_at=1_000, server_now=700)
+    php = FakePhp({"internal_agent_draft": {"ok": True, "card": card}})
+    state = ConvState()
+    tool_map(context(("draft:create",), php=php, state=state))["prepare_order_draft"].invoke(DRAFT_ARGS)
+    assert state.open_draft_deadline == NOW + 300
+
+
+def test_reorder_clears_open_draft_qty():
+    state = _open_state({"1200": 3})
+    php = FakePhp({"internal_agent_reorder": {"ok": True, "card": PHP_CARD}})
+    tool_map(context(("draft:create",), php=php, state=state))["reorder_from_order"].invoke({"order_code": "#DH1"})
+    assert state.open_draft_qty is None
+    assert state.open_draft_deadline is None
+
+
+def test_stale_replaces_retry_sends_original_qty_not_carried(monkeypatch):
+    from agent_graph.php_client import PhpError
+
+    class RetryPhp(FakePhp):
+        def call(self, route, payload=None):
+            self.calls.append((route, dict(payload or {})))
+            if payload and payload.get("replaces"):
+                raise PhpError(404, "missing", code="not_found")
+            return {"ok": True, "card": PHP_CARD}
+
+    monkeypatch.setattr("agent_graph.tools.time.time", lambda: NOW)
+    state = _open_state({"1200": 3}, draft_id="stale")
+    php = RetryPhp()
+    ctx = context(("draft:create",), php=php, state=state)
+    ctx.cart_snapshot[:] = [{"id": "1200", "qty": 1}]
+    tool_map(ctx)["prepare_order_draft"].invoke(DRAFT_ARGS | {"product_ids": ["1200"]})
+    assert php.calls[0][1]["qty"] == {"1200": 3}
+    assert not php.calls[1][1].get("qty")

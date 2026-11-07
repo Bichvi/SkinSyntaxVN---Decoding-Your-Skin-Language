@@ -77,6 +77,24 @@ def test_skin_types_replace_rule_inferred_ones():
     assert keys(out["skin_types"]) == [("moi_loai_da", "llm_approved")]
 
 
+def test_llm_cannot_widen_specific_own_skin_type_to_all():
+    t = inferred(skin_types=["da_nhay_cam"], skin_type_source="data")
+    out = resolve_tags(t, {"tag_source": "llm_approved", "loai_da_keys": ["da_nhay_cam", "moi_loai_da"]}, VALID)
+    assert keys(out["skin_types"]) == [("da_nhay_cam", "data")]
+
+
+def test_llm_other_extras_still_appended_but_universal_dropped():
+    t = inferred(skin_types=["da_nhay_cam"], skin_type_source="data")
+    out = resolve_tags(t, {"tag_source": "llm_approved", "loai_da_keys": ["moi_loai_da", "da_kho"]}, VALID)
+    assert keys(out["skin_types"]) == [("da_nhay_cam", "data"), ("da_kho", "llm_approved")]
+
+
+def test_manual_may_still_add_universal_skin_type():
+    t = inferred(skin_types=["da_nhay_cam"], skin_type_source="data")
+    out = resolve_tags(t, {"tag_source": "manual", "loai_da_keys": ["moi_loai_da"]}, VALID)
+    assert keys(out["skin_types"]) == [("da_nhay_cam", "data"), ("moi_loai_da", "manual")]
+
+
 def test_clean_keys_accepts_string_and_limits():
     assert clean_keys("cap_am", VALID["benefits"]) == ["cap_am"]
     assert clean_keys(["cap_am", "lam_diu", "sang_da"], VALID["benefits"], limit=2) == ["cap_am", "lam_diu"]
@@ -87,7 +105,7 @@ def test_clean_keys_accepts_string_and_limits():
 
 LOOKUPS = Lookups(
     brands={"24": "Torriden"},
-    categories={"1": CategoryInfo("Sữa Rửa Mặt", 1, None)},
+    categories={"1": CategoryInfo("Tinh Chất Serum", 1, None)},
     skin_types={"5": "Da khô/Hỗn hợp khô"},
 )
 ALIASES = {"sodium_hyaluronate": AliasEntry("sodium_hyaluronate", "Sodium Hyaluronate", None, "active")}
