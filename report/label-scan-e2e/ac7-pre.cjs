@@ -1,0 +1,16 @@
+const path=require('node:path');const {chromium}=require('playwright');
+const BASE='http://127.0.0.1:8080';const OUT=__dirname;
+(async()=>{const b=await chromium.launch({channel:'chrome'});const p=await (await b.newContext({viewport:{width:1280,height:900}})).newPage();
+const scripts=[];p.on('request',r=>{if(/label-scan/.test(r.url()))scripts.push(r.url())});
+const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto(BASE+'/index.php',{waitUntil:'domcontentloaded'});await p.waitForSelector('[data-ai-chat-widget]');
+if((await p.getAttribute('[data-ai-chat-toggle]','aria-expanded'))!=='true')await p.click('[data-ai-chat-toggle]');
+await p.waitForSelector('[data-ai-chat-input]',{state:'visible'});
+console.log('attach btn count',await p.locator('[data-ai-label-btn]').count());
+console.log('label scan requests',scripts.length);
+console.log('SkinSyntaxLabelScan defined',await p.evaluate(()=>typeof window.SkinSyntaxLabelScan));
+const done=p.waitForResponse(r=>/r=ai_chat_(api|assistant|agent)/.test(r.url())&&r.request().method()==='POST',{timeout:120000});
+await p.fill('[data-ai-chat-input]','Da dầu nên dùng sữa rửa mặt nào?');await p.$eval('[data-ai-chat-form]',f=>f.requestSubmit());
+const r=await done;console.log('chat status',r.status(),r.url().split('?')[1]);
+await p.waitForTimeout(4000);await p.screenshot({path:path.join(OUT,'ac7-flag-off.png')});
+console.log('pageerrors',errs.length);await b.close();})().catch(e=>{console.error(e);process.exit(2)});

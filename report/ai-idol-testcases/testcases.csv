@@ -1,0 +1,845 @@
+﻿ID,Nhóm,File,Class,Testcase,Kết quả
+TC-001,Luồng end-to-end,test_e2e_flow.py,EndToEndFlowTests,assisted waits for approval then schedules,PASS
+TC-002,Luồng end-to-end,test_e2e_flow.py,EndToEndFlowTests,auto preview runs to completed with the requested product,PASS
+TC-003,Luồng end-to-end,test_e2e_flow.py,EndToEndFlowTests,syna down waits then resumes when it returns,PASS
+TC-004,Chiến dịch (campaign),test_purpose.py,CreateCampaignPurposeTests,two unscheduled product video campaigns are distinct,PASS
+TC-005,Agent & ý định lệnh,test_agent_run_view.py,AgentRunViewTests,invalid or missing video ids are skipped without crashing,PASS
+TC-006,Agent & ý định lệnh,test_agent_run_view.py,AgentRunViewTests,legacy campaign without purpose is live only,PASS
+TC-007,Agent & ý định lệnh,test_agent_run_view.py,AgentRunViewTests,live only campaign reports live only,PASS
+TC-008,Agent & ý định lệnh,test_agent_run_view.py,AgentRunViewTests,product video run exposes purpose and product page error,PASS
+TC-009,Agent & ý định lệnh,test_agent_run_view.py,AgentRunViewTests,ready product page video is reported ready,PASS
+TC-010,Agent & ý định lệnh,test_agent_run_view.py,AgentRunViewTests,segment without video has no product page,PASS
+TC-011,Agent & ý định lệnh,test_agent_run_view.py,AgentRunViewTests,videos are fetched with a single query,PASS
+TC-012,Agent & ý định lệnh,test_agent_run_view.py,PendingExternalPlatformsTests,campaign pending external platforms is exposed,PASS
+TC-013,Agent & ý định lệnh,test_agent_run_view.py,PendingExternalPlatformsTests,campaign without pending platforms defaults to empty list,PASS
+TC-014,Agent & ý định lệnh,test_agent.py,AgentIntentTests,classifier does not turn product search into campaign,PASS
+TC-015,Agent & ý định lệnh,test_agent.py,AgentIntentTests,classifier handles operational commands,PASS
+TC-016,Agent & ý định lệnh,test_agent.py,AgentIntentTests,classifier routes create request,PASS
+TC-017,Agent & ý định lệnh,test_agent.py,AgentIntentTests,fallback extracts product time mode and platform,PASS
+TC-018,Agent & ý định lệnh,test_agent.py,AgentIntentTests,schema sanitizes unknown policy and platforms,PASS
+TC-019,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,agent cannot cancel after campaign creation,PASS
+TC-020,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,agent managed content uses script council,PASS
+TC-021,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,agent preview can auto approve,PASS
+TC-022,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,auto preview forces internal and marks campaign agent managed,PASS
+TC-023,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,manual campaign never auto approves,PASS
+TC-024,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,missing schedule uses safe lead time,PASS
+TC-025,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,non campaign intent stops before llm or campaign creation,PASS
+TC-026,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,script council failure uses single agent fallback,PASS
+TC-027,Agent & ý định lệnh,test_agent.py,AgentPolicyTests,script council payload is compact and contains product facts,PASS
+TC-028,Agent & ý định lệnh,test_agent.py,AgentProductConfirmationTests,campaign validation error asks for schedule without failing,PASS
+TC-029,Agent & ý định lệnh,test_agent.py,AgentProductConfirmationTests,configured rtmp allows campaign,PASS
+TC-030,Agent & ý định lệnh,test_agent.py,AgentProductConfirmationTests,confirmed ids skip business query branch,PASS
+TC-031,Agent & ý định lệnh,test_agent.py,AgentProductConfirmationTests,hidden product is reported as inactive,PASS
+TC-032,Agent & ý định lệnh,test_agent.py,AgentProductConfirmationTests,llm id absent from brief cannot pick a product,PASS
+TC-033,Agent & ý định lệnh,test_agent.py,AgentProductConfirmationTests,llm invented id is dropped and real id is used,PASS
+TC-034,Agent & ý định lệnh,test_agent.py,AgentProductConfirmationTests,unconfigured rtmp blocks planning,PASS
+TC-035,Agent & ý định lệnh,test_agent.py,AgentProductConfirmationTests,unknown code needs input with structured plan,PASS
+TC-036,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,brief rejects unknown purpose,PASS
+TC-037,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,confirm accepts purpose,PASS
+TC-038,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,create agent run stores purpose override,PASS
+TC-039,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,explicit product video wins over livestream words,PASS
+TC-040,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,fallback parse infers purpose,PASS
+TC-041,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,infer purpose from text and schedule,PASS
+TC-042,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,llm path reads the time slot from the brief,PASS
+TC-043,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,product video skips the rtmp gate,PASS
+TC-044,Agent & ý định lệnh,test_agent.py,AgentPurposeTests,unchosen purpose with schedule keeps the livestream,PASS
+TC-045,Agent & ý định lệnh,test_agent.py,AgentTaskRetryTests,value error is not retried,PASS
+TC-046,Agent & ý định lệnh,test_agent.py,ConfirmAgentRunTests,confirm after campaign creation is refused,PASS
+TC-047,Agent & ý định lệnh,test_agent.py,ConfirmAgentRunTests,confirm claims atomically and cleans payload,PASS
+TC-048,Agent & ý định lệnh,test_agent.py,ConfirmAgentRunTests,confirm while interpreting is a conflict,PASS
+TC-049,Agent & ý định lệnh,test_agent.py,ConfirmAgentRunTests,invalid input is rejected before claiming,PASS
+TC-050,Agent & ý định lệnh,test_agent.py,ProductAliasResolverTests,alias id resolves to primary ma san pham,PASS
+TC-051,Agent & ý định lệnh,test_agent.py,ProductAliasResolverTests,aliases cover ma id and object id with numeric normalisation,PASS
+TC-052,Agent & ý định lệnh,test_agent.py,ProductAliasResolverTests,command words do not inflate overlap,PASS
+TC-053,Agent & ý định lệnh,test_agent.py,ProductAliasResolverTests,explicit id does not add product named in brief,PASS
+TC-054,Agent & ý định lệnh,test_agent.py,ProductAliasResolverTests,float catalog id matches clean id,PASS
+TC-055,Agent & ý định lệnh,test_agent.py,ProductAliasResolverTests,missing id never falls back to fuzzy match,PASS
+TC-056,Agent & ý định lệnh,test_agent.py,ProductAliasResolverTests,primary id beats another products alias,PASS
+TC-057,Agent & ý định lệnh,test_agent.py,ProductIdCleaningTests,brief from screenshot extracts only the id,PASS
+TC-058,Agent & ý định lệnh,test_agent.py,ProductIdCleaningTests,clean product id forms,PASS
+TC-059,Agent & ý định lệnh,test_agent.py,ProductIdCleaningTests,schema cleans and dedups llm ids,PASS
+TC-060,Agent & ý định lệnh,test_agent.py,ProductResolverTests,bestseller request does not claim without sales data,PASS
+TC-061,Agent & ý định lệnh,test_agent.py,ProductResolverTests,exact product id wins,PASS
+TC-062,Agent & ý định lệnh,test_agent.py,ProductResolverTests,explicit id requires an id marker,PASS
+TC-063,Agent & ý định lệnh,test_agent.py,ProductResolverTests,product name in brief is selected,PASS
+TC-064,Agent & ý định lệnh,test_agent.py,ProductResolverTests,quantity phrase is not interpreted as product id,PASS
+TC-065,Agent & ý định lệnh,test_agent.py,ProductResolverTests,unknown id requires input,PASS
+TC-066,Autopilot & duyệt,test_approval_mode.py,CreateCampaignModeTests,bad enum raises,PASS
+TC-067,Autopilot & duyệt,test_approval_mode.py,CreateCampaignModeTests,mapping and absent,PASS
+TC-068,Autopilot & duyệt,test_approval_mode.py,PipelineModeTests,absent mode keeps old behaviour,PASS
+TC-069,Autopilot & duyệt,test_approval_mode.py,PipelineModeTests,agent written auto config continues product video,PASS
+TC-070,Autopilot & duyệt,test_approval_mode.py,PipelineModeTests,agent written manual config stops product video,PASS
+TC-071,Autopilot & duyệt,test_approval_mode.py,PipelineModeTests,auto never awaits,PASS
+TC-072,Autopilot & duyệt,test_approval_mode.py,PipelineModeTests,manual stops after pass even for product video,PASS
+TC-073,Autopilot & duyệt,test_approval_mode.py,ShouldAutoApproveTests,modes,PASS
+TC-074,Giọng nói & âm thanh,test_audio_mixer.py,CommandTests,music command reencodes only when padded,PASS
+TC-075,Giọng nói & âm thanh,test_audio_mixer.py,CommandTests,music graph ducks pads and limits,PASS
+TC-076,Giọng nói & âm thanh,test_audio_mixer.py,CommandTests,voice only command keeps video stream,PASS
+TC-077,Giọng nói & âm thanh,test_audio_mixer.py,MixFallbackTests,ffmpeg failure keeps original,PASS
+TC-078,Giọng nói & âm thanh,test_audio_mixer.py,MixFallbackTests,job level opt out,PASS
+TC-079,Giọng nói & âm thanh,test_audio_mixer.py,MixFallbackTests,missing inputs keep original without ffmpeg,PASS
+TC-080,Giọng nói & âm thanh,test_audio_mixer.py,MixFallbackTests,review c2 mismatched syna render reports no lead in,PASS
+TC-081,Giọng nói & âm thanh,test_audio_mixer.py,MixFallbackTests,review c2 music mix reports its lead in,PASS
+TC-082,Giọng nói & âm thanh,test_audio_mixer.py,MixFallbackTests,review c2 voice only mix reports no lead in,PASS
+TC-083,Giọng nói & âm thanh,test_audio_mixer.py,MusicBedLevelTests,default ducking is gentler so music stays audible,PASS
+TC-084,Giọng nói & âm thanh,test_audio_mixer.py,MusicBedLevelTests,defaults raise the bed and bump the pipeline version,PASS
+TC-085,Giọng nói & âm thanh,test_audio_mixer.py,MusicBedLevelTests,duck ratio is configurable,PASS
+TC-086,Giọng nói & âm thanh,test_audio_mixer.py,MusicPickTests,empty library means no music,PASS
+TC-087,Giọng nói & âm thanh,test_audio_mixer.py,MusicPickTests,path traversal track falls back to library,PASS
+TC-088,Giọng nói & âm thanh,test_audio_mixer.py,MusicPickTests,pick is stable and ignores non audio,PASS
+TC-089,Giọng nói & âm thanh,test_audio_mixer.py,MusicPickTests,requested track and opt out,PASS
+TC-090,Giọng nói & âm thanh,test_audio_mixer.py,TimingTests,short track always starts from the top,PASS
+TC-091,Giọng nói & âm thanh,test_audio_mixer.py,TimingTests,timing is stable per job and within range,PASS
+TC-092,Autopilot & duyệt,test_autopilot_rules.py,AutopilotConfigTests,defaults,PASS
+TC-093,Autopilot & duyệt,test_autopilot_rules.py,AutopilotConfigTests,positive int bad values warn and use default,PASS
+TC-094,Autopilot & duyệt,test_autopilot_rules.py,AutopilotConfigTests,positive int missing uses default quietly,PASS
+TC-095,Autopilot & duyệt,test_autopilot_rules.py,AutopilotConfigTests,positive int reads a valid value,PASS
+TC-096,Autopilot & duyệt,test_autopilot_rules.py,AutopilotConfigTests,slots string valid and invalid,PASS
+TC-097,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,limit default and cap,PASS
+TC-098,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,out of stock only for live,PASS
+TC-099,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,parse slots fallback,PASS
+TC-100,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,platform split,PASS
+TC-101,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,query questions,PASS
+TC-102,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,schedule kept,PASS
+TC-103,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,schedule moved rounds up,PASS
+TC-104,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,shortfall,PASS
+TC-105,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,slot after midnight,PASS
+TC-106,Autopilot & duyệt,test_autopilot_rules.py,AutopilotRuleTests,slot same day,PASS
+TC-107,Autopilot & duyệt,test_autopilot_rules.py,CountRuleTests,cap message names both numbers,PASS
+TC-108,Autopilot & duyệt,test_autopilot_rules.py,CountRuleTests,default never exceeds maximum,PASS
+TC-109,Autopilot & duyệt,test_autopilot_rules.py,CountRuleTests,default when not explicit,PASS
+TC-110,Autopilot & duyệt,test_autopilot_rules.py,CountRuleTests,exact maximum is not capped,PASS
+TC-111,Autopilot & duyệt,test_autopilot_rules.py,CountRuleTests,more found than requested is fine,PASS
+TC-112,Autopilot & duyệt,test_autopilot_rules.py,CountRuleTests,no products stops,PASS
+TC-113,Autopilot & duyệt,test_autopilot_rules.py,CountRuleTests,shortfall message,PASS
+TC-114,Autopilot & duyệt,test_autopilot_rules.py,DecisionShapeTests,decision has the documented shape,PASS
+TC-115,Autopilot & duyệt,test_autopilot_rules.py,DecisionShapeTests,default clock is utc iso,PASS
+TC-116,Autopilot & duyệt,test_autopilot_rules.py,DecisionShapeTests,message is redacted,PASS
+TC-117,Autopilot & duyệt,test_autopilot_rules.py,DecisionShapeTests,naive now is read as utc,PASS
+TC-118,Autopilot & duyệt,test_autopilot_rules.py,DecisionShapeTests,unknown level is rejected,PASS
+TC-119,Autopilot & duyệt,test_autopilot_rules.py,OutOfStockTests,all dropped returns empty list,PASS
+TC-120,Autopilot & duyệt,test_autopilot_rules.py,OutOfStockTests,input list is not mutated,PASS
+TC-121,Autopilot & duyệt,test_autopilot_rules.py,OutOfStockTests,names dropped products,PASS
+TC-122,Autopilot & duyệt,test_autopilot_rules.py,OutOfStockTests,nothing dropped means no decision,PASS
+TC-123,Autopilot & duyệt,test_autopilot_rules.py,OutOfStockTests,numeric product id matches string stock key,PASS
+TC-124,Autopilot & duyệt,test_autopilot_rules.py,OutOfStockTests,unknown stock is kept,PASS
+TC-125,Autopilot & duyệt,test_autopilot_rules.py,OutOfStockTests,video only purpose keeps everything,PASS
+TC-126,Autopilot & duyệt,test_autopilot_rules.py,PlatformTests,configured external channel waits for permission,PASS
+TC-127,Autopilot & duyệt,test_autopilot_rules.py,PlatformTests,duplicates case and unknown channels,PASS
+TC-128,Autopilot & duyệt,test_autopilot_rules.py,PlatformTests,internal only,PASS
+TC-129,Autopilot & duyệt,test_autopilot_rules.py,PlatformTests,pending keeps request order,PASS
+TC-130,Autopilot & duyệt,test_autopilot_rules.py,PlatformTests,unconfigured channel is not pending,PASS
+TC-131,Autopilot & duyệt,test_autopilot_rules.py,QueryQuestionTests,count range question is resolved by the cap,PASS
+TC-132,Autopilot & duyệt,test_autopilot_rules.py,QueryQuestionTests,other questions stop and are joined,PASS
+TC-133,Autopilot & duyệt,test_autopilot_rules.py,ScheduleTests,missing time picks prime slot,PASS
+TC-134,Autopilot & duyệt,test_autopilot_rules.py,ScheduleTests,moved message has old and new time,PASS
+TC-135,Autopilot & duyệt,test_autopilot_rules.py,ScheduleTests,requested equal to earliest is kept,PASS
+TC-136,Autopilot & duyệt,test_autopilot_rules.py,ScheduleTests,requested time is kept,PASS
+TC-137,Autopilot & duyệt,test_autopilot_rules.py,ScheduleTests,times are shown in the local zone,PASS
+TC-138,Autopilot & duyệt,test_autopilot_rules.py,ScheduleTests,unreadable time says so,PASS
+TC-139,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,parse slots reads sorted unique times,PASS
+TC-140,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,parse slots rejects any bad part,PASS
+TC-141,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,round up custom step,PASS
+TC-142,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,round up keeps exact boundary and drops seconds,PASS
+TC-143,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,round up rejects bad step,PASS
+TC-144,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,round up to quarter hour,PASS
+TC-145,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,single slot rolls to tomorrow,PASS
+TC-146,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,slot converts other timezones to local day,PASS
+TC-147,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,slot equal to earliest is allowed,PASS
+TC-148,Autopilot & duyệt,test_autopilot_rules.py,SlotTests,slot one minute late goes to next,PASS
+TC-149,Autopilot & duyệt,test_autopilot_service.py,AutopilotCreatesTests,autopilot forces auto preview whatever the overrides say,PASS
+TC-150,Autopilot & duyệt,test_autopilot_service.py,AutopilotCreatesTests,autopilot invalid approval mode falls back to auto,PASS
+TC-151,Autopilot & duyệt,test_autopilot_service.py,AutopilotCreatesTests,autopilot manual approval mode waits for script review,PASS
+TC-152,Autopilot & duyệt,test_autopilot_service.py,AutopilotCreatesTests,campaign created decision is recorded last,PASS
+TC-153,Autopilot & duyệt,test_autopilot_service.py,AutopilotCreatesTests,campaign rejection stops with a decision,PASS
+TC-154,Autopilot & duyệt,test_autopilot_service.py,AutopilotCreatesTests,classic payload carries no autopilot fields,PASS
+TC-155,Autopilot & duyệt,test_autopilot_service.py,AutopilotCreatesTests,classic run unchanged,PASS
+TC-156,Autopilot & duyệt,test_autopilot_service.py,AutopilotCreatesTests,search prompt creates product video,PASS
+TC-157,Autopilot & duyệt,test_autopilot_service.py,AutopilotMetricsFallbackTests,a fallback that finds no more keeps the period result,PASS
+TC-158,Autopilot & duyệt,test_autopilot_service.py,AutopilotMetricsFallbackTests,complete snapshots need no fallback,PASS
+TC-159,Autopilot & duyệt,test_autopilot_service.py,AutopilotMetricsFallbackTests,enough ranked products keep the period ranking,PASS
+TC-160,Autopilot & duyệt,test_autopilot_service.py,AutopilotMetricsFallbackTests,filter prompt without snapshots ranks by lifetime sales,PASS
+TC-161,Autopilot & duyệt,test_autopilot_service.py,AutopilotMetricsFallbackTests,livestream prompt without snapshots ranks by lifetime sales,PASS
+TC-162,Autopilot & duyệt,test_autopilot_service.py,AutopilotMetricsFallbackTests,nothing to rank on still stops,PASS
+TC-163,Autopilot & duyệt,test_autopilot_service.py,AutopilotMetricsFallbackTests,partial snapshots that leave the list short fall back,PASS
+TC-164,Autopilot & duyệt,test_autopilot_service.py,AutopilotMetricsFallbackTests,the message names the ranking that was replaced,PASS
+TC-165,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,ambiguous name picks the first candidate,PASS
+TC-166,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,constraint mismatch dropped while other ids stay,PASS
+TC-167,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,default count and cap,PASS
+TC-168,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,every constraint mismatch stops without a fuzzy replacement,PASS
+TC-169,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,missing figures are noted but the run goes on,PASS
+TC-170,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,no products from a query carries the query warnings,PASS
+TC-171,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,no products stops,PASS
+TC-172,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,operational intent stops,PASS
+TC-173,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,unclear query stops,PASS
+TC-174,Autopilot & duyệt,test_autopilot_service.py,AutopilotProductTests,unknown id dropped,PASS
+TC-175,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,a date with an unreadable hour keeps the day too,PASS
+TC-176,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,a date without an hour keeps the day and picks the slot,PASS
+TC-177,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,a past date without an hour uses the earliest slot and says so,PASS
+TC-178,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,live out of stock dropped,PASS
+TC-179,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,live with only sold out products stops,PASS
+TC-180,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,live without time picks slot,PASS
+TC-181,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,past time moved,PASS
+TC-182,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,product video has no schedule or platform decisions,PASS
+TC-183,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,product video keeps sold out products,PASS
+TC-184,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,reachable time is kept,PASS
+TC-185,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,rtmp target never reaches a decision,PASS
+TC-186,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,schedule counts only the products left after the stock check,PASS
+TC-187,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,today with every slot gone moves to the next day and says so,PASS
+TC-188,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,tomorrow without an hour is tomorrow,PASS
+TC-189,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,unreadable clock does not stop the run,PASS
+TC-190,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,youtube pending when configured,PASS
+TC-191,Autopilot & duyệt,test_autopilot_service.py,AutopilotScheduleTests,youtube unconfigured noted,PASS
+TC-192,Autopilot & duyệt,test_autopilot_service.py,AutopilotStyleTests,a prompt without styles records none,PASS
+TC-193,Autopilot & duyệt,test_autopilot_service.py,AutopilotStyleTests,price styles dropped for product video,PASS
+TC-194,Autopilot & duyệt,test_autopilot_service.py,AutopilotStyleTests,price styles stay for a livestream,PASS
+TC-195,Autopilot & duyệt,test_autopilot_service.py,CreateAgentRunModeTests,create agent run mode,PASS
+TC-196,Autopilot & duyệt,test_autopilot_service.py,CreateAgentRunModeTests,missing or unknown mode is classic,PASS
+TC-197,Autopilot & duyệt,test_autopilot_service.py,CreateAgentRunModeTests,mode is part of the idempotency hash,PASS
+TC-198,Autopilot & duyệt,test_autopilot_service.py,EarliestStartTests,safe schedule is built on earliest start,PASS
+TC-199,Autopilot & duyệt,test_autopilot_service.py,PendingExternalPlatformsTests,create campaign pending platforms,PASS
+TC-200,Autopilot & duyệt,test_autopilot_service.py,PendingExternalPlatformsTests,missing or malformed pending is an empty list,PASS
+TC-201,Autopilot & duyệt,test_autopilot_service.py,PendingExternalPlatformsTests,product video keeps no pending platform,PASS
+TC-202,Autopilot & duyệt,test_autopilot_service.py,StockLevelTests,a failing lookup is none not an error,PASS
+TC-203,Autopilot & duyệt,test_autopilot_service.py,StockLevelTests,evidence beats the catalog row beats the database,PASS
+TC-204,Autopilot & duyệt,test_autopilot_service.py,StockLevelTests,unknown stock is none,PASS
+TC-205,Avatar Syna & video,test_avatar_engine.py,AvatarEngineTests,motion template automatically selects wav2lip,PASS
+TC-206,Avatar Syna & video,test_avatar_provider.py,SadTalkerProviderTests,sadtalker requires portrait,PASS
+TC-207,Avatar Syna & video,test_avatar_provider.py,SadTalkerProviderTests,sadtalker sends shared paths,PASS
+TC-208,Avatar Syna & video,test_avatar_provider.py,SadTalkerProviderTests,wav2lip requires motion video,PASS
+TC-209,Avatar Syna & video,test_avatar_provider.py,SadTalkerProviderTests,wav2lip sends motion template to local service,PASS
+TC-210,Avatar Syna & video,test_body_clip.py,CompleteJobTests,video document records product page fields,PASS
+TC-211,Avatar Syna & video,test_body_clip.py,CutPointTests,board price live only unchanged,PASS
+TC-212,Avatar Syna & video,test_body_clip.py,CutPointTests,board price prefers flash,PASS
+TC-213,Avatar Syna & video,test_body_clip.py,CutPointTests,cut command trims and fades out,PASS
+TC-214,Avatar Syna & video,test_body_clip.py,CutPointTests,cut labels can be narrowed,PASS
+TC-215,Avatar Syna & video,test_body_clip.py,CutPointTests,cut lands on first sale section after the intro,PASS
+TC-216,Avatar Syna & video,test_body_clip.py,CutPointTests,no sale section means no cut,PASS
+TC-217,Avatar Syna & video,test_body_clip.py,CutPointTests,price from live and product falls back without price label,PASS
+TC-218,Avatar Syna & video,test_body_clip.py,CutPointTests,price from live and product is price section start,PASS
+TC-219,Avatar Syna & video,test_body_clip.py,CutPointTests,price from per purpose,PASS
+TC-220,Avatar Syna & video,test_body_clip.py,CutPointTests,price from product video with claim is zero,PASS
+TC-221,Avatar Syna & video,test_body_clip.py,CutPointTests,price from product video without claim is none,PASS
+TC-222,Avatar Syna & video,test_body_clip.py,ManifestTests,price from follows purpose,PASS
+TC-223,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,cut failure blocks the page but keeps the job,PASS
+TC-224,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,live and product clip cuts at cta,PASS
+TC-225,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,live and product clip falls back to closing,PASS
+TC-226,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,live and product cuts after the applied lead in,PASS
+TC-227,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,live and product without cta or closing is blocked,PASS
+TC-228,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,live and product without price marker is blocked,PASS
+TC-229,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,live only has no product page clip,PASS
+TC-230,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,product video uses the full render,PASS
+TC-231,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,review c2 no lead in cuts exactly at cta,PASS
+TC-232,Avatar Syna & video,test_body_clip.py,ProductPageClipTests,review c2 pipeline uses the lead in the mixer applied,PASS
+TC-233,Phát sóng & xuất bản,test_broadcast_lifecycle.py,AgentRendererWarningTests,down renderer adds a non blocking warning,PASS
+TC-234,Phát sóng & xuất bản,test_broadcast_lifecycle.py,AgentTimelineDataTests,run without campaign keeps its own status,PASS
+TC-235,Phát sóng & xuất bản,test_broadcast_lifecycle.py,AgentTimelineDataTests,serialized run exposes campaign progress and redacts broadcasts,PASS
+TC-236,Phát sóng & xuất bản,test_broadcast_lifecycle.py,AgentTimelineDataTests,stage history is pushed and bounded to thirty,PASS
+TC-237,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,cancel stops open work keeps ready and completes agent run,PASS
+TC-238,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,cancel unknown campaign,PASS
+TC-239,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,cancel while live or starting is a conflict,PASS
+TC-240,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,endpoints map errors,PASS
+TC-241,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,late job callback cannot revive cancelled segment,PASS
+TC-242,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,missed slot with finished programme returns to schedule,PASS
+TC-243,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,now is only for internal only campaigns,PASS
+TC-244,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,reschedule enforces two minute lead,PASS
+TC-245,Phát sóng & xuất bản,test_broadcast_lifecycle.py,CancelRescheduleTests,reschedule live campaign is a conflict,PASS
+TC-246,Phát sóng & xuất bản,test_broadcast_lifecycle.py,DependencyHealthTests,avatar not required when provider is mock,PASS
+TC-247,Phát sóng & xuất bản,test_broadcast_lifecycle.py,DependencyHealthTests,down mongo makes overall down,PASS
+TC-248,Phát sóng & xuất bản,test_broadcast_lifecycle.py,DependencyHealthTests,endpoint returns cached status,PASS
+TC-249,Phát sóng & xuất bản,test_broadcast_lifecycle.py,DependencyHealthTests,probes run once per cache window and failures degrade,PASS
+TC-250,Phát sóng & xuất bản,test_broadcast_lifecycle.py,DependencyHealthTests,rtmp reports platform names only,PASS
+TC-251,Phát sóng & xuất bản,test_broadcast_lifecycle.py,DependencyHealthTests,syna requires matching renderer version,PASS
+TC-252,Phát sóng & xuất bản,test_broadcast_lifecycle.py,DispatchTests,campaign past the grace window needs attention,PASS
+TC-253,Phát sóng & xuất bản,test_broadcast_lifecycle.py,DispatchTests,due campaign starts,PASS
+TC-254,Phát sóng & xuất bản,test_broadcast_lifecycle.py,InternalBroadcastTests,finalize closes only finished internal campaigns,PASS
+TC-255,Phát sóng & xuất bản,test_broadcast_lifecycle.py,InternalBroadcastTests,finalize uses partial failure when a broadcast failed and is conditional,PASS
+TC-256,Phát sóng & xuất bản,test_broadcast_lifecycle.py,InternalBroadcastTests,internal only campaign stays live until ends at,PASS
+TC-257,Phát sóng & xuất bản,test_broadcast_lifecycle.py,InternalBroadcastTests,internal target goes live with end time without ffmpeg,PASS
+TC-258,Phát sóng & xuất bản,test_broadcast_lifecycle.py,InternalBroadcastTests,orphaned mixed campaign is closed after grace,PASS
+TC-259,Phát sóng & xuất bản,test_broadcast_lifecycle.py,RedactionTests,failed preflight message is redacted before it is stored,PASS
+TC-260,Phát sóng & xuất bản,test_broadcast_lifecycle.py,RedactionTests,redact removes target key and any rtmp url,PASS
+TC-261,Phát sóng & xuất bản,test_broadcast_lifecycle.py,RedactionTests,stream failure never persists the secret,PASS
+TC-262,Phát sóng & xuất bản,test_broadcast_lifecycle.py,RendererUnavailableTests,connection failure is renderer unavailable,PASS
+TC-263,Phát sóng & xuất bản,test_broadcast_lifecycle.py,RendererUnavailableTests,renderer unavailable is still a runtime error,PASS
+TC-264,Phát sóng & xuất bản,test_broadcast_lifecycle.py,RendererUnavailableTests,version mismatch is renderer unavailable,PASS
+TC-265,Phát sóng & xuất bản,test_broadcast_lifecycle.py,ResumeWaitingRendersTests,healthy renderer requeues the job once,PASS
+TC-266,Phát sóng & xuất bản,test_broadcast_lifecycle.py,ResumeWaitingRendersTests,job is failed when less than ten minutes to airtime,PASS
+TC-267,Phát sóng & xuất bản,test_broadcast_lifecycle.py,ResumeWaitingRendersTests,unhealthy renderer keeps the job waiting,PASS
+TC-268,Phát sóng & xuất bản,test_broadcast_lifecycle.py,RoutesTests,new beat tasks are routed to control and expire,PASS
+TC-269,Phát sóng & xuất bản,test_broadcast.py,BroadcastCommandTests,internal preview does not launch ffmpeg,PASS
+TC-270,Phát sóng & xuất bản,test_broadcast.py,BroadcastCommandTests,rtmp stream loops for requested campaign duration,PASS
+TC-271,Chiến dịch (campaign),test_campaign_recovery.py,ApproveBlacklistTests,approve forbidden claims parks job exhausted and never resumes,PASS
+TC-272,Chiến dịch (campaign),test_campaign_recovery.py,ApproveBlacklistTests,retry endpoint maps conflict and not found,PASS
+TC-273,Chiến dịch (campaign),test_campaign_recovery.py,GenerateJobTaskTests,cancelled campaign fails job without running pipeline,PASS
+TC-274,Chiến dịch (campaign),test_campaign_recovery.py,GenerateJobTaskTests,earlier failures are still retried,PASS
+TC-275,Chiến dịch (campaign),test_campaign_recovery.py,GenerateJobTaskTests,exhausted retries fail the job and update campaign,PASS
+TC-276,Chiến dịch (campaign),test_campaign_recovery.py,GenerateJobTaskTests,ready job only resyncs campaign,PASS
+TC-277,Chiến dịch (campaign),test_campaign_recovery.py,PrepareCampaignTests,all segments failing records a reason,PASS
+TC-278,Chiến dịch (campaign),test_campaign_recovery.py,PrepareCampaignTests,late job callback cannot revive a cancelled campaign,PASS
+TC-279,Chiến dịch (campaign),test_campaign_recovery.py,PrepareCampaignTests,returns only jobs that are not ready,PASS
+TC-280,Chiến dịch (campaign),test_campaign_recovery.py,PrepareCampaignTests,task assembles when every job was already ready,PASS
+TC-281,Chiến dịch (campaign),test_campaign_recovery.py,QueueRoutingTests,every registered task has a route and beat entries expire,PASS
+TC-282,Chiến dịch (campaign),test_campaign_recovery.py,QueueRoutingTests,routes split control media and broadcast,PASS
+TC-283,Chiến dịch (campaign),test_campaign_recovery.py,RejectedScriptTests,get campaign exposes rejected draft and feedback,PASS
+TC-284,Chiến dịch (campaign),test_campaign_recovery.py,RejectedScriptTests,validator rejection keeps draft without marking it usable,PASS
+TC-285,Chiến dịch (campaign),test_campaign_recovery.py,RetryCampaignTests,all ready without master requeues assembly,PASS
+TC-286,Chiến dịch (campaign),test_campaign_recovery.py,RetryCampaignTests,failed segment with job resets and queues the job,PASS
+TC-287,Chiến dịch (campaign),test_campaign_recovery.py,RetryCampaignTests,failed segment without job queues preparation,PASS
+TC-288,Chiến dịch (campaign),test_campaign_recovery.py,RetryCampaignTests,preflight only problem is a conflict with instructions,PASS
+TC-289,Chiến dịch (campaign),test_campaign_recovery.py,RetryCampaignTests,resume ready campaign claims only when everything is ready,PASS
+TC-290,Chiến dịch (campaign),test_campaign_recovery.py,RetryCampaignTests,unknown campaign and wrong state,PASS
+TC-291,Chiến dịch (campaign),test_campaign_recovery.py,WatchdogTests,fails only stale in progress jobs with conditional updates,PASS
+TC-292,Chiến dịch (campaign),test_campaign_recovery.py,WatchdogTests,job that finishes during the sweep is left alone,PASS
+TC-293,Chiến dịch (campaign),test_campaign_recovery.py,WatchdogTests,stuck starting and assembling campaigns need attention,PASS
+TC-294,Chiến dịch (campaign),test_campaign_skip.py,AppendDecisionsTests,appends normalised decisions in order,PASS
+TC-295,Chiến dịch (campaign),test_campaign_skip.py,AppendDecisionsTests,blank malformed or unknown run is ignored,PASS
+TC-296,Chiến dịch (campaign),test_campaign_skip.py,AppendDecisionsTests,empty list is a no op,PASS
+TC-297,Chiến dịch (campaign),test_campaign_skip.py,AppendDecisionsTests,messages are redacted,PASS
+TC-298,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,cancel keeps skipped,PASS
+TC-299,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,prepare ignores skipped,PASS
+TC-300,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,prepare with only skipped segments explains why,PASS
+TC-301,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,reschedule is not blocked by skipped,PASS
+TC-302,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,resume does not assemble when nothing is ready or work remains,PASS
+TC-303,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,resume with skipped,PASS
+TC-304,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,retry livestream with skipped queues assembly,PASS
+TC-305,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,retry never requeues skipped segments,PASS
+TC-306,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,retry product video with skipped marks ready,PASS
+TC-307,Chiến dịch (campaign),test_campaign_skip.py,PrepareCancelResumeRetryWithSkippedTests,retry with only skipped segments is not mistaken for all ready,PASS
+TC-308,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,a failed segment still blocks even when another is skipped,PASS
+TC-309,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,all rejected needs attention,PASS
+TC-310,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,cancelled segment is never skipped,PASS
+TC-311,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,in flight counts are read before the settled ones,PASS
+TC-312,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,manual campaign keeps failed,PASS
+TC-313,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,one rejected script is skipped,PASS
+TC-314,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,skip decision names the product by code when name is unknown,PASS
+TC-315,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,skip decision shortens a long error to 200 characters,PASS
+TC-316,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,skip without a run id still skips and does not fail,PASS
+TC-317,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,skipped segment comes back when its job finishes after a manual rescue,PASS
+TC-318,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,technical failure not skipped,PASS
+TC-319,Chiến dịch (campaign),test_campaign_skip.py,UpdateCampaignFromJobSkipTests,validation timeout is not skipped,PASS
+TC-320,Chiến dịch (campaign),test_campaigns.py,CampaignValidationTests,campaign product limit is enforced,PASS
+TC-321,Chiến dịch (campaign),test_campaigns.py,CampaignValidationTests,campaign requires at least one product,PASS
+TC-322,Chiến dịch (campaign),test_campaigns.py,CampaignValidationTests,naive schedule is interpreted in configured timezone,PASS
+TC-323,Chiến dịch (campaign),test_campaigns.py,CampaignValidationTests,product ids are trimmed and deduplicated in order,PASS
+TC-324,Chiến dịch (campaign),test_campaigns.py,CampaignValidationTests,utc schedule remains the same instant,PASS
+TC-325,Chiến dịch (campaign),test_campaigns.py,ProductVideoLifecycleTests,generate job task finishes product video without assembly,PASS
+TC-326,Chiến dịch (campaign),test_campaigns.py,ProductVideoLifecycleTests,livestream and legacy campaigns still assemble,PASS
+TC-327,Chiến dịch (campaign),test_campaigns.py,ProductVideoLifecycleTests,product video campaign is never claimed for assembly,PASS
+TC-328,Chiến dịch (campaign),test_campaigns.py,ProductVideoLifecycleTests,retry of ready product video campaign does not assemble,PASS
+TC-329,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,brand aliases do not mix professionnel,PASS
+TC-330,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,conflict becomes question,PASS
+TC-331,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,hard vs soft brand sort,PASS
+TC-332,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,ingredient include and exclude,PASS
+TC-333,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,origin vs factory,PASS
+TC-334,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,price,PASS
+TC-335,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,skin matching,PASS
+TC-336,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,user brief has no question,PASS
+TC-337,Agent & ý định lệnh,test_catalog_constraints.py,CatalogConstraintTests,without vocab keeps blocking question,PASS
+TC-338,Agent & ý định lệnh,test_catalog_constraints.py,ParsedNegationDoesNotBlockTest,parsed negations do not ask,PASS
+TC-339,Agent & ý định lệnh,test_command_query_service.py,ApprovalModeSchemaTests,approval mode is validated,PASS
+TC-340,Agent & ý định lệnh,test_command_query_service.py,QueryServiceTests,ambiguous expiry returns question,PASS
+TC-341,Agent & ý định lệnh,test_command_query_service.py,QueryServiceTests,compound partial coverage never creates campaign,PASS
+TC-342,Agent & ý định lệnh,test_command_query_service.py,QueryServiceTests,compound shortfall never creates campaign,PASS
+TC-343,Agent & ý định lệnh,test_command_query_service.py,QueryServiceTests,explicit past and invalid date dont auto reschedule,PASS
+TC-344,Agent & ý định lệnh,test_command_query_service.py,QueryServiceTests,missing expiry returns actionable data gap,PASS
+TC-345,Agent & ý định lệnh,test_command_query_service.py,QueryServiceTests,read only never generates,PASS
+TC-346,Agent & ý định lệnh,test_command_query_service.py,QueryServiceTests,valid compound keeps evidence and assisted policy,PASS
+TC-347,Agent & ý định lệnh,test_command_query.py,InventoryTests,batch scope does not fallback to legacy stock,PASS
+TC-348,Agent & ý định lệnh,test_command_query.py,InventoryTests,batch scope filters batch code for expiry,PASS
+TC-349,Agent & ý định lệnh,test_command_query.py,InventoryTests,batch scope filters warehouse,PASS
+TC-350,Agent & ý định lệnh,test_command_query.py,InventoryTests,expired batches not counted as stock,PASS
+TC-351,Agent & ý định lệnh,test_command_query.py,InventoryTests,expiry never falls back to catalog date as fake batch,PASS
+TC-352,Agent & ý định lệnh,test_command_query.py,InventoryTests,expiry rejects batch without identifier,PASS
+TC-353,Agent & ý định lệnh,test_command_query.py,InventoryTests,expiry requires actual date not shelf life,PASS
+TC-354,Agent & ý định lệnh,test_command_query.py,InventoryTests,expiry uses batch code when batch id is missing,PASS
+TC-355,Agent & ý định lệnh,test_command_query.py,InventoryTests,explicit id cannot bypass filters,PASS
+TC-356,Agent & ý định lệnh,test_command_query.py,InventoryTests,missing stock is not zero,PASS
+TC-357,Agent & ý định lệnh,test_command_query.py,InventoryTests,multi batch only eligible quantity,PASS
+TC-358,Agent & ý định lệnh,test_command_query.py,InventoryTests,no replacement by unrelated spf,PASS
+TC-359,Agent & ý định lệnh,test_command_query.py,InventoryTests,stock threshold order and limit,PASS
+TC-360,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,ambiguous expiry asks,PASS
+TC-361,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,compound command,PASS
+TC-362,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,count not product id,PASS
+TC-363,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,expiry does not become stock threshold,PASS
+TC-364,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,foundation category is resolved for inventory search,PASS
+TC-365,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,invalid or unsupported queries clarify,PASS
+TC-366,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,inventory not cancel,PASS
+TC-367,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,months are calendar months,PASS
+TC-368,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,schedule hour not duration,PASS
+TC-369,Agent & ý định lệnh,test_command_query.py,QueryPlanTests,tonight not silently tomorrow,PASS
+TC-370,Agent & ý định lệnh,test_command_query.py,SalesTests,30 days not lifetime reviews or views,PASS
+TC-371,Agent & ý định lệnh,test_command_query.py,SalesTests,catalog limit fails instead of partial ranking,PASS
+TC-372,Agent & ý định lệnh,test_command_query.py,SalesTests,duplicate snapshots fail closed,PASS
+TC-373,Agent & ý định lệnh,test_command_query.py,SalesTests,full period can use lifetime,PASS
+TC-374,Agent & ý định lệnh,test_command_query.py,SalesTests,growth and cart ranking,PASS
+TC-375,Agent & ý định lệnh,test_command_query.py,SalesTests,invalid conversion cohort rejected,PASS
+TC-376,Agent & ý định lệnh,test_command_query.py,SalesTests,normalization preserves lifetime sales,PASS
+TC-377,Agent & ý định lệnh,test_command_query.py,SalesTests,percentile strategies,PASS
+TC-378,Agent & ý định lệnh,test_command_query.py,SalesTests,snapshot requires right window date and coverage,PASS
+TC-379,Agent & ý định lệnh,test_command_query.py,SalesTests,views without purchase and minimum sample,PASS
+TC-380,Agent & ý định lệnh,test_command_query.py,SalesTests,zero baseline no infinite growth,PASS
+TC-381,Agent & ý định lệnh,test_intent_classifier_regression.py,IntentCollisionRegressionTests,create command with expiry remains create,PASS
+TC-382,Agent & ý định lệnh,test_intent_classifier_regression.py,IntentCollisionRegressionTests,explicit stop commands still cancel,PASS
+TC-383,Agent & ý định lệnh,test_intent_classifier_regression.py,IntentCollisionRegressionTests,usage word never means cancel,PASS
+TC-384,Phát sóng & xuất bản,test_media_publisher.py,BackfillScopeTests,backfill skips every video that already has a purpose,PASS
+TC-385,Phát sóng & xuất bản,test_media_publisher.py,BackfillTests,apply publishes old videos with files and keeps their files,PASS
+TC-386,Phát sóng & xuất bản,test_media_publisher.py,BackfillTests,dry run writes nothing,PASS
+TC-387,Phát sóng & xuất bản,test_media_publisher.py,BroadcastHookTests,finalize queues publish only for product page campaigns,PASS
+TC-388,Phát sóng & xuất bản,test_media_publisher.py,CampaignPublishTests,completed both mode campaign publishes bodies then drops full media,PASS
+TC-389,Phát sóng & xuất bản,test_media_publisher.py,CampaignPublishTests,live only campaign publishes nothing,PASS
+TC-390,Phát sóng & xuất bản,test_media_publisher.py,CampaignPublishTests,publishable rules,PASS
+TC-391,Phát sóng & xuất bản,test_media_publisher.py,CampaignPublishTests,retry lists each successfully uploaded clip on its product page,PASS
+TC-392,Phát sóng & xuất bản,test_media_publisher.py,CampaignPublishTests,retry skips both mode clips before broadcast ends,PASS
+TC-393,Phát sóng & xuất bản,test_media_publisher.py,PublishVideoTests,cleanup without ready stamp deletes nothing,PASS
+TC-394,Phát sóng & xuất bản,test_media_publisher.py,PublishVideoTests,review i3 unconfigured r2 is visible without burning attempts,PASS
+TC-395,Phát sóng & xuất bản,test_media_publisher.py,PublishVideoTests,review i4 card duration is the published clip,PASS
+TC-396,Phát sóng & xuất bản,test_media_publisher.py,PublishVideoTests,success publishes urls and cleans product video files,PASS
+TC-397,Phát sóng & xuất bản,test_media_publisher.py,PublishVideoTests,unconfigured r2 neither uploads nor deletes,PASS
+TC-398,Phát sóng & xuất bản,test_media_publisher.py,PublishVideoTests,upload failure counts attempt redacts and keeps files,PASS
+TC-399,Phát sóng & xuất bản,test_media_publisher.py,TaskWiringTests,livestream jobs wait for the broadcast,PASS
+TC-400,Phát sóng & xuất bản,test_media_publisher.py,TaskWiringTests,ready product video job is published right away,PASS
+TC-401,Phát sóng & xuất bản,test_media_publisher.py,TaskWiringTests,retry beat is scheduled every ten minutes,PASS
+TC-402,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,concise and detailed are exclusive,PASS
+TC-403,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,council payload carries styles,PASS
+TC-404,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,council payload styles are empty when not chosen,PASS
+TC-405,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,create campaign always stores a list,PASS
+TC-406,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,create campaign keeps price styles for a livestream,PASS
+TC-407,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,create campaign normalizes styles,PASS
+TC-408,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,normalize drops price styles for product video,PASS
+TC-409,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,normalize keeps price styles for live,PASS
+TC-410,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,normalize tolerates non list and non string values,PASS
+TC-411,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,normalize unknown and duplicates,PASS
+TC-412,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,product video keeps pricing drops closing,PASS
+TC-413,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,script prompt contains styles for every purpose,PASS
+TC-414,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,style instruction,PASS
+TC-415,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,style line sits directly after the length line,PASS
+TC-416,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,style table matches the spec order and price flags,PASS
+TC-417,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,styles from text,PASS
+TC-418,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,styles from text follows style order not text order,PASS
+TC-419,Kịch bản & kiểm duyệt,test_narration.py,NarrationTests,styles from text without a style is empty,PASS
+TC-420,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,anchor lots match user examples,PASS
+TC-421,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,boundary lot is stored at vietnam midnight,PASS
+TC-422,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,boundary lots exist,PASS
+TC-423,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,every active product has ledger,PASS
+TC-424,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,every focus category has the designed cases,PASS
+TC-425,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,everything is tagged and deterministic,PASS
+TC-426,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,no duplicate identity and varied quantities,PASS
+TC-427,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,scope batch and warehouse manifest,PASS
+TC-428,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,shelf life consistent,PASS
+TC-429,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,stock boundaries,PASS
+TC-430,Prompt builder (fixture),test_pb_fixture_batches.py,BatchMatrixTests,wrong status lots never count,PASS
+TC-431,Prompt builder (fixture),test_pb_fixture_batches.py,FefoTests,allocate fefo uses earliest expiry in same warehouse first,PASS
+TC-432,Prompt builder (fixture),test_pb_fixture_batches.py,FefoTests,fefo never negative and identity holds,PASS
+TC-433,Prompt builder (fixture),test_pb_fixture_batches.py,FefoTests,history sales precede the order window,PASS
+TC-434,Prompt builder (fixture),test_pb_fixture_batches.py,FefoTests,movements replay to available quantity,PASS
+TC-435,Prompt builder (fixture),test_pb_fixture_cases.py,ComposeBriefTests,builder taxonomy is complete,PASS
+TC-436,Prompt builder (fixture),test_pb_fixture_cases.py,ComposeBriefTests,compose brief matches js examples,PASS
+TC-437,Prompt builder (fixture),test_pb_fixture_cases.py,OfflineMatrixTests,all cases pass offline,PASS
+TC-438,Prompt builder (fixture),test_pb_fixture_cases.py,OfflineMatrixTests,case names are unique,PASS
+TC-439,Prompt builder (fixture),test_pb_fixture_cases.py,OfflineMatrixTests,cases pass on other day,PASS
+TC-440,Prompt builder (fixture),test_pb_fixture_cases.py,OfflineMatrixTests,every sales criterion returns results,PASS
+TC-441,Prompt builder (fixture),test_pb_fixture_cases.py,OfflineMatrixTests,no known engine gaps and quantity cases pass,PASS
+TC-442,Prompt builder (fixture),test_pb_fixture_cases.py,OfflineMatrixTests,oracle agrees with designed boundaries,PASS
+TC-443,Prompt builder (fixture),test_pb_fixture_cases.py,OfflineMatrixTests,scope batch code is globally unique,PASS
+TC-444,Prompt builder (fixture),test_pb_fixture_catalog.py,ClassifyTests,real catalog paths,PASS
+TC-445,Prompt builder (fixture),test_pb_fixture_catalog.py,ClassifyTests,shelf life covers every agent category,PASS
+TC-446,Prompt builder (fixture),test_pb_fixture_catalog.py,ClassifyTests,shelf life special cases,PASS
+TC-447,Prompt builder (fixture),test_pb_fixture_catalog.py,ClassifyTests,tag marks every required field,PASS
+TC-448,Prompt builder (fixture),test_pb_fixture_catalog.py,ClassifyTests,unrelated product is none,PASS
+TC-449,Prompt builder (fixture),test_pb_fixture_catalog.py,PopularityTests,better rating scores higher,PASS
+TC-450,Prompt builder (fixture),test_pb_fixture_catalog.py,PopularityTests,positive and monotonic in sales,PASS
+TC-451,Prompt builder (fixture),test_pb_fixture_catalog.py,RestoreTests,input rows are not mutated,PASS
+TC-452,Prompt builder (fixture),test_pb_fixture_catalog.py,RestoreTests,same seed same result,PASS
+TC-453,Prompt builder (fixture),test_pb_fixture_catalog.py,RestoreTests,skips live ids and caps per leaf,PASS
+TC-454,Prompt builder (fixture),test_pb_fixture_commerce.py,CustomerTests,customers have name emails and reserved range,PASS
+TC-455,Prompt builder (fixture),test_pb_fixture_commerce.py,CustomerTests,same seed and day give same dataset,PASS
+TC-456,Prompt builder (fixture),test_pb_fixture_commerce.py,OrderTests,events follow tracker schema,PASS
+TC-457,Prompt builder (fixture),test_pb_fixture_commerce.py,OrderTests,ids use the reserved ranges,PASS
+TC-458,Prompt builder (fixture),test_pb_fixture_commerce.py,OrderTests,no sales for unsellable or anchor products,PASS
+TC-459,Prompt builder (fixture),test_pb_fixture_commerce.py,OrderTests,order sid follows view,PASS
+TC-460,Prompt builder (fixture),test_pb_fixture_commerce.py,OrderTests,orders internally consistent,PASS
+TC-461,Prompt builder (fixture),test_pb_fixture_commerce.py,OrderTests,skin and budget affinity,PASS
+TC-462,Prompt builder (fixture),test_pb_fixture_commerce.py,OrderTests,status matches order age,PASS
+TC-463,Prompt builder (fixture),test_pb_fixture_commerce.py,OrderTests,time of day and calendar effects,PASS
+TC-464,Prompt builder (fixture),test_pb_fixture_commerce.py,SessionAndMetricTests,dirty mode adds unreconciled returns,PASS
+TC-465,Prompt builder (fixture),test_pb_fixture_commerce.py,SessionAndMetricTests,engineered cases measurable,PASS
+TC-466,Prompt builder (fixture),test_pb_fixture_commerce.py,SessionAndMetricTests,engineered products are sunscreens and disjoint,PASS
+TC-467,Prompt builder (fixture),test_pb_fixture_commerce.py,SessionAndMetricTests,revenue low conversion group,PASS
+TC-468,Prompt builder (fixture),test_pb_fixture_commerce.py,SessionAndMetricTests,session volume and funnel,PASS
+TC-469,Prompt builder (fixture),test_pb_fixture_commerce.py,SessionAndMetricTests,sessions covered,PASS
+TC-470,Prompt builder (fixture),test_pb_fixture_store.py,ApplyTests,apply refuses existing dataset with other as of,PASS
+TC-471,Prompt builder (fixture),test_pb_fixture_store.py,ApplyTests,apply refuses partial leftovers,PASS
+TC-472,Prompt builder (fixture),test_pb_fixture_store.py,ApplyTests,apply refuses when id range taken,PASS
+TC-473,Prompt builder (fixture),test_pb_fixture_store.py,ApplyTests,apply refuses when legacy active,PASS
+TC-474,Prompt builder (fixture),test_pb_fixture_store.py,ApplyTests,apply tags everything,PASS
+TC-475,Prompt builder (fixture),test_pb_fixture_store.py,ApplyTests,dry run writes nothing,PASS
+TC-476,Prompt builder (fixture),test_pb_fixture_store.py,ArchiveTests,archive keeps originals if copies are missing,PASS
+TC-477,Prompt builder (fixture),test_pb_fixture_store.py,ArchiveTests,archive then restore roundtrip,PASS
+TC-478,Prompt builder (fixture),test_pb_fixture_store.py,CliTests,parse defaults and flags,PASS
+TC-479,Prompt builder (fixture),test_pb_fixture_store.py,CliTests,write commands need explicit confirmation,PASS
+TC-480,Prompt builder (fixture),test_pb_fixture_store.py,ResetTests,refresh emails refuses when regenerated names drift,PASS
+TC-481,Prompt builder (fixture),test_pb_fixture_store.py,ResetTests,refresh emails updates customers and their accounts,PASS
+TC-482,Prompt builder (fixture),test_pb_fixture_store.py,ResetTests,reset is idempotent,PASS
+TC-483,Prompt builder (fixture),test_pb_fixture_store.py,ResetTests,reset only removes tagged,PASS
+TC-484,Prompt builder (fixture),test_pb_fixture_store.py,ResetTests,reset removes fixture login accounts only,PASS
+TC-485,Prompt builder (fixture),test_pb_fixture_store.py,ResetTests,reset restores catalog values and drops recent snapshots,PASS
+TC-486,Prompt builder (fixture),test_pb_fixture_store.py,RestoreCategoriesTests,dry run inserts nothing,PASS
+TC-487,Prompt builder (fixture),test_pb_fixture_store.py,RestoreCategoriesTests,plan simulation equals real restore,PASS
+TC-488,Prompt builder (fixture),test_pb_fixture_store.py,RestoreCategoriesTests,restore inserts tagged active products and reset removes them,PASS
+TC-489,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,already streaming platform is noop even after airtime,PASS
+TC-490,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,approve keeps the other pending platform,PASS
+TC-491,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,approve moves platform,PASS
+TC-492,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,approve twice is noop,PASS
+TC-493,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,blank approver is recorded as admin,PASS
+TC-494,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,campaign without agent run still approves,PASS
+TC-495,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,every approvable status accepts the platform,PASS
+TC-496,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,live campaign conflict,PASS
+TC-497,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,not pending rejected,PASS
+TC-498,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,platform approved by another request in between is a noop,PASS
+TC-499,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,route status codes,PASS
+TC-500,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,route tolerates missing body,PASS
+TC-501,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,status changes between read and write is a conflict,PASS
+TC-502,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,unconfigured rejected,PASS
+TC-503,Autopilot & duyệt,test_platform_approval.py,PlatformApprovalTests,unknown campaign not found,PASS
+TC-504,Giá & khuyến mãi,test_price_rules.py,LiveAndProductScopeTests,cut labels,PASS
+TC-505,Giá & khuyến mãi,test_price_rules.py,LiveAndProductScopeTests,price is checked in every section,PASS
+TC-506,Giá & khuyến mãi,test_price_rules.py,LiveAndProductScopeTests,scarcity without flash fails,PASS
+TC-507,Giá & khuyến mãi,test_price_rules.py,LiveAndProductScopeTests,without cta or closing is skipped,PASS
+TC-508,Giá & khuyến mãi,test_price_rules.py,LiveAndProductScopeTests,wrong price in hook or cta fails,PASS
+TC-509,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,digits fail,PASS
+TC-510,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,exact phrases pass,PASS
+TC-511,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,extended amount fails,PASS
+TC-512,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,find price violations one message per kind,PASS
+TC-513,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,ingredient percent is not a price,PASS
+TC-514,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,no pricing any amount fails,PASS
+TC-515,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,no pricing without amount passes,PASS
+TC-516,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,phrase without dong and ngan variant pass,PASS
+TC-517,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,promo with flash passes,PASS
+TC-518,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,promo without flash fails,PASS
+TC-519,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,scarcity words fail without verified flash,PASS
+TC-520,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,scarcity words pass with verified flash,PASS
+TC-521,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,wrong amount fails,PASS
+TC-522,Giá & khuyến mãi,test_price_rules.py,ProductVideoPriceTests,wrong percent fails,PASS
+TC-523,Giá & khuyến mãi,test_pricing.py,CollectorTests,collector attaches pricing,PASS
+TC-524,Giá & khuyến mãi,test_pricing.py,CollectorTests,collector pricing failure is none,PASS
+TC-525,Giá & khuyến mãi,test_pricing.py,CurrentPricingTests,int id product and missing product,PASS
+TC-526,Giá & khuyến mãi,test_pricing.py,CurrentPricingTests,reads product and ignores two hour floor,PASS
+TC-527,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,campaign disabled,PASS
+TC-528,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,claim none is ok,PASS
+TC-529,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,claim shape,PASS
+TC-530,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,claim without flash then flash starts ok,PASS
+TC-531,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,current none with claim,PASS
+TC-532,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,flash ended,PASS
+TC-533,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,flash price changed,PASS
+TC-534,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,market changed,PASS
+TC-535,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,regular changed,PASS
+TC-536,Giá & khuyến mãi,test_pricing.py,PriceClaimStateTests,unchanged ok,PASS
+TC-537,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,campaign with neither flag matches php,PASS
+TC-538,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,case a no campaign,PASS
+TC-539,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,case b active flash,PASS
+TC-540,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,case c disabled,PASS
+TC-541,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,case d under two hours,PASS
+TC-542,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,case e flash not lower,PASS
+TC-543,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,case f other product,PASS
+TC-544,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,decimal string prices truncate like php,PASS
+TC-545,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,discount rounds half up like php,PASS
+TC-546,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,int product id in items matches,PASS
+TC-547,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,is active false excluded even if enabled,PASS
+TC-548,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,market not above regular is none,PASS
+TC-549,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,min remaining applies to chosen campaign only,PASS
+TC-550,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,naive datetimes treated as utc,PASS
+TC-551,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,newer campaign without valid price falls to older,PASS
+TC-552,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,newest start wins not lowest price,PASS
+TC-553,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,not started yet,PASS
+TC-554,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,null flash price falls back to gia flash,PASS
+TC-555,Giá & khuyến mãi,test_pricing.py,ResolvePricingTests,zero prices give no pricing,PASS
+TC-556,Giá & khuyến mãi,test_product_metrics.py,BuildTests,build is idempotent and typed,PASS
+TC-557,Giá & khuyến mãi,test_product_metrics.py,BuildTests,failed run is recorded without message,PASS
+TC-558,Giá & khuyến mãi,test_product_metrics.py,BuildTests,future as of rejected,PASS
+TC-559,Giá & khuyến mãi,test_product_metrics.py,CeleryWiringTests,route and beat,PASS
+TC-560,Giá & khuyến mãi,test_product_metrics.py,HelperTests,canonical product id,PASS
+TC-561,Giá & khuyến mãi,test_product_metrics.py,HelperTests,revenue order rules,PASS
+TC-562,Giá & khuyến mãi,test_product_metrics.py,RunDueTests,long gap catches up seven days,PASS
+TC-563,Giá & khuyến mãi,test_product_metrics.py,RunDueTests,no previous run builds today only,PASS
+TC-564,Giá & khuyến mãi,test_product_metrics.py,RunDueTests,up to date does nothing,PASS
+TC-565,Giá & khuyến mãi,test_product_metrics.py,RunDueTests,yesterday builds today only,PASS
+TC-566,Giá & khuyến mãi,test_product_metrics.py,SalesTests,allocation excludes shipping,PASS
+TC-567,Giá & khuyến mãi,test_product_metrics.py,SalesTests,cancelled excluded and completion date used,PASS
+TC-568,Giá & khuyến mãi,test_product_metrics.py,SalesTests,invalid line isolated,PASS
+TC-569,Giá & khuyến mãi,test_product_metrics.py,SalesTests,no orders is measured zero,PASS
+TC-570,Giá & khuyến mãi,test_product_metrics.py,SalesTests,previous window,PASS
+TC-571,Giá & khuyến mãi,test_product_metrics.py,SalesTests,return makes period unreconciled,PASS
+TC-572,Giá & khuyến mãi,test_product_metrics.py,SalesTests,window upper bound is exclusive,PASS
+TC-573,Giá & khuyến mãi,test_product_metrics.py,SessionTests,full coverage counts,PASS
+TC-574,Giá & khuyến mãi,test_product_metrics.py,SessionTests,outside retention,PASS
+TC-575,Giá & khuyến mãi,test_product_metrics.py,SessionTests,tracking gap nulls sessions,PASS
+TC-576,Giá & khuyến mãi,test_product_metrics.py,SessionTests,unconfigured tracking keeps sales and contract,PASS
+TC-577,Avatar Syna & video,test_product_videos.py,CampaignDetailTests,segments expose product page state,PASS
+TC-578,Avatar Syna & video,test_product_videos.py,CampaignPublicationTests,segments carry their ai product videos record or none,PASS
+TC-579,Avatar Syna & video,test_product_videos.py,ListProductVideosTests,legacy and live only videos never reach product page,PASS
+TC-580,Avatar Syna & video,test_product_videos.py,ListProductVideosTests,legacy live campaign without purpose counts as live,PASS
+TC-581,Avatar Syna & video,test_product_videos.py,ListProductVideosTests,limit is clamped to thirty,PASS
+TC-582,Avatar Syna & video,test_product_videos.py,ListProductVideosTests,live campaign containing product is reported,PASS
+TC-583,Avatar Syna & video,test_product_videos.py,ListProductVideosTests,live ignores other products and non live status,PASS
+TC-584,Avatar Syna & video,test_product_videos.py,ListProductVideosTests,only ready visible product page videos newest first,PASS
+TC-585,Avatar Syna & video,test_product_videos.py,ListProductVideosTests,product ids lead with clip product then three campaign peers,PASS
+TC-586,Avatar Syna & video,test_product_videos.py,ListProductVideosTests,product ids without campaign is only clip product,PASS
+TC-587,Avatar Syna & video,test_product_videos.py,RouteTests,list route wraps data,PASS
+TC-588,Avatar Syna & video,test_product_videos.py,RouteTests,visibility route maps unknown video to 404,PASS
+TC-589,Avatar Syna & video,test_product_videos.py,RouteTests,visibility route passes flag and actor,PASS
+TC-590,Avatar Syna & video,test_product_videos.py,VisibilityTests,hide then unhide round trip,PASS
+TC-591,Avatar Syna & video,test_product_videos.py,VisibilityTests,page state price state none without claim,PASS
+TC-592,Avatar Syna & video,test_product_videos.py,VisibilityTests,page state pricing lookup error is none not crash,PASS
+TC-593,Avatar Syna & video,test_product_videos.py,VisibilityTests,page state reports regular changed,PASS
+TC-594,Avatar Syna & video,test_product_videos.py,VisibilityTests,product page state reports block reason and upload error,PASS
+TC-595,Avatar Syna & video,test_product_videos.py,VisibilityTests,review i3 livestream only and legacy videos are not eligible,PASS
+TC-596,Avatar Syna & video,test_product_videos.py,VisibilityTests,unknown video raises lookup error,PASS
+TC-597,Prompt builder (fixture),test_prompt_builder_cases.py,BrandTests,missing brand fails closed under cap,PASS
+TC-598,Prompt builder (fixture),test_prompt_builder_cases.py,BrandTests,per brand cap is not a brand filter or a limit,PASS
+TC-599,Prompt builder (fixture),test_prompt_builder_cases.py,BrandTests,plain brand stays a hard filter,PASS
+TC-600,Prompt builder (fixture),test_prompt_builder_cases.py,BrandTests,preferred brand orders without filtering,PASS
+TC-601,Prompt builder (fixture),test_prompt_builder_cases.py,BrandTests,preferred brand with cap,PASS
+TC-602,Prompt builder (fixture),test_prompt_builder_cases.py,BuilderQuantityTests,count before any category phrase,PASS
+TC-603,Prompt builder (fixture),test_prompt_builder_cases.py,BuilderQuantityTests,existing unit forms still work,PASS
+TC-604,Prompt builder (fixture),test_prompt_builder_cases.py,BuilderQuantityTests,period or threshold after verb is not a count,PASS
+TC-605,Prompt builder (fixture),test_prompt_builder_cases.py,CatalogBrandJoinTests,brand name joined from brand collection,PASS
+TC-606,Prompt builder (fixture),test_prompt_builder_cases.py,CategorySearchTests,builder category prompts run as queries,PASS
+TC-607,Prompt builder (fixture),test_prompt_builder_cases.py,CategorySearchTests,plain sunscreen keeps legacy category,PASS
+TC-608,Prompt builder (fixture),test_prompt_builder_cases.py,CategorySearchTests,style only prompt asks for a condition,PASS
+TC-609,Prompt builder (fixture),test_prompt_builder_cases.py,CategorySearchTests,unsupported categories ask instead of guessing,PASS
+TC-610,Prompt builder (fixture),test_prompt_builder_cases.py,LiveWordingTests,enough stock plan,PASS
+TC-611,Prompt builder (fixture),test_prompt_builder_cases.py,LiveWordingTests,long prompt plan,PASS
+TC-612,Prompt builder (fixture),test_prompt_builder_cases.py,LiveWordingTests,scheduled live is still a create command,PASS
+TC-613,Prompt builder (fixture),test_prompt_builder_cases.py,LiveWordingTests,stock wording is product search,PASS
+TC-614,Prompt builder (fixture),test_prompt_builder_cases.py,RegressionTests,bare filter,PASS
+TC-615,Prompt builder (fixture),test_prompt_builder_cases.py,RegressionTests,compound create command is unchanged,PASS
+TC-616,Prompt builder (fixture),test_prompt_builder_cases.py,RegressionTests,expiry windows unchanged,PASS
+TC-617,Prompt builder (fixture),test_prompt_builder_cases.py,RegressionTests,explicit product id and cancel,PASS
+TC-618,Prompt builder (fixture),test_prompt_builder_cases.py,RegressionTests,legacy categories,PASS
+TC-619,Prompt builder (fixture),test_prompt_builder_cases.py,RegressionTests,vague product request is not a catalog search,PASS
+TC-620,Prompt builder (fixture),test_prompt_builder_cases.py,SalesCriteriaTests,missing session metrics stay unavailable,PASS
+TC-621,Prompt builder (fixture),test_prompt_builder_cases.py,SalesCriteriaTests,multiple criteria or windows never pick silently,PASS
+TC-622,Prompt builder (fixture),test_prompt_builder_cases.py,SalesCriteriaTests,single criterion prompts,PASS
+TC-623,Prompt builder (fixture),test_prompt_builder_cases.py,ServiceRoutingTests,category search returns results without llm or campaign,PASS
+TC-624,Prompt builder (fixture),test_prompt_builder_cases.py,ServiceRoutingTests,create command is not turned into a catalog query,PASS
+TC-625,Prompt builder (fixture),test_prompt_builder_cases.py,ServiceRoutingTests,style only prompt stops at query results with question,PASS
+TC-626,Prompt builder (fixture),test_prompt_builder_cases.py,ServiceRoutingTests,warehouse scope with ledger,PASS
+TC-627,Prompt builder (fixture),test_prompt_builder_cases.py,StockThresholdTests,contradictions ask instead of picking,PASS
+TC-628,Prompt builder (fixture),test_prompt_builder_cases.py,StockThresholdTests,explicit count still wins,PASS
+TC-629,Prompt builder (fixture),test_prompt_builder_cases.py,StockThresholdTests,low stock with in stock,PASS
+TC-630,Prompt builder (fixture),test_prompt_builder_cases.py,StockThresholdTests,out of stock,PASS
+TC-631,Prompt builder (fixture),test_prompt_builder_cases.py,StockThresholdTests,threshold is not limit,PASS
+TC-632,Prompt builder (fixture),test_prompt_builder_cases.py,WarehouseScopeTests,codes keep case and drop final dot,PASS
+TC-633,Prompt builder (fixture),test_prompt_builder_cases.py,WarehouseScopeTests,lot scope,PASS
+TC-634,Prompt builder (fixture),test_prompt_builder_cases.py,WarehouseScopeTests,scope loads batch ledger,PASS
+TC-635,Prompt builder (fixture),test_prompt_builder_cases.py,WarehouseScopeTests,warehouse scope excludes other warehouses,PASS
+TC-636,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,clip that only lives on r2 still publishes,PASS
+TC-637,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,decision is appended to the agent run,PASS
+TC-638,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,decision names the product when the job snapshot has one,PASS
+TC-639,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,defaults fill in when the video has no campaign or segment,PASS
+TC-640,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,live and product publishes its price free clip,PASS
+TC-641,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,no agent run means no decision and no failure,PASS
+TC-642,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,product video gets a published record with the publish video schema,PASS
+TC-643,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,unprobeable clip falls back to the render duration,PASS
+TC-644,Phát sóng & xuất bản,test_publications.py,CreatesRecordTests,uploaded clip duration wins without probing,PASS
+TC-645,Phát sóng & xuất bản,test_publications.py,HookTests,clip is published after its upload attempt,PASS
+TC-646,Phát sóng & xuất bản,test_publications.py,HookTests,failed job publishes nothing,PASS
+TC-647,Phát sóng & xuất bản,test_publications.py,HookTests,finished show publishes each clip even when the r2 upload fails,PASS
+TC-648,Phát sóng & xuất bản,test_publications.py,HookTests,livestream jobs wait for the broadcast,PASS
+TC-649,Phát sóng & xuất bản,test_publications.py,HookTests,ready product video job publishes to the product page,PASS
+TC-650,Phát sóng & xuất bản,test_publications.py,HookTests,show still on air or live only publishes nothing,PASS
+TC-651,Phát sóng & xuất bản,test_publications.py,IdempotencyTests,a record created between the check and the write is not overwritten,PASS
+TC-652,Phát sóng & xuất bản,test_publications.py,IdempotencyTests,a record the admin took down is left exactly as it is,PASS
+TC-653,Phát sóng & xuất bản,test_publications.py,IdempotencyTests,missing script version defaults to one,PASS
+TC-654,Phát sóng & xuất bản,test_publications.py,IdempotencyTests,publish key is job product version and new version adds a record,PASS
+TC-655,Phát sóng & xuất bản,test_publications.py,IdempotencyTests,second call leaves one record and does no more work,PASS
+TC-656,Phát sóng & xuất bản,test_publications.py,NeverFailsTests,database errors are logged not raised,PASS
+TC-657,Phát sóng & xuất bản,test_publications.py,NeverFailsTests,unreadable video documents are logged not raised,PASS
+TC-658,Phát sóng & xuất bản,test_publications.py,NoRecordTests,hidden video is not published,PASS
+TC-659,Phát sóng & xuất bản,test_publications.py,NoRecordTests,legacy video without purpose is never published,PASS
+TC-660,Phát sóng & xuất bản,test_publications.py,NoRecordTests,live only video is never published,PASS
+TC-661,Phát sóng & xuất bản,test_publications.py,NoRecordTests,unknown or malformed video id is ignored,PASS
+TC-662,Phát sóng & xuất bản,test_publications.py,NoRecordTests,video without a price free file is not published,PASS
+TC-663,Phát sóng & xuất bản,test_publications.py,NoRecordTests,video without a product is not published,PASS
+TC-664,Phát sóng & xuất bản,test_publications.py,PurgeCacheTests,client construction errors are swallowed,PASS
+TC-665,Phát sóng & xuất bản,test_publications.py,PurgeCacheTests,connection errors are swallowed and never leak the url,PASS
+TC-666,Phát sóng & xuất bản,test_publications.py,PurgeCacheTests,deletes product video keys under the cache prefix,PASS
+TC-667,Phát sóng & xuất bản,test_publications.py,PurgeCacheTests,keys are deleted in batches,PASS
+TC-668,Phát sóng & xuất bản,test_publications.py,PurgeCacheTests,missing valkey url is skipped with a warning,PASS
+TC-669,Phát sóng & xuất bản,test_publications.py,PurgeCacheTests,prefix defaults to skinsyntax and glob characters are escaped,PASS
+TC-670,Phát sóng & xuất bản,test_publications.py,PurgeCacheTests,real client uses short socket timeouts,PASS
+TC-671,Phát sóng & xuất bản,test_publications.py,RouteTests,live only video is never served in this rendition,PASS
+TC-672,Phát sóng & xuất bản,test_publications.py,RouteTests,local file wins over the r2 copy,PASS
+TC-673,Phát sóng & xuất bản,test_publications.py,RouteTests,missing local file redirects to the r2 copy,PASS
+TC-674,Phát sóng & xuất bản,test_publications.py,RouteTests,nothing to serve is 404,PASS
+TC-675,Phát sóng & xuất bản,test_publications.py,RouteTests,product page rendition streams the price free file with range support,PASS
+TC-676,Phát sóng & xuất bản,test_publications.py,RouteTests,the full render is never a fallback,PASS
+TC-677,Phát sóng & xuất bản,test_publications.py,RouteTests,unknown rendition is rejected instead of serving the full render,PASS
+TC-678,Phát sóng & xuất bản,test_publications.py,RouteTests,vetted backfill video without purpose is served but unvetted is not,PASS
+TC-679,Phát sóng & xuất bản,test_publications.py,RouteTests,without the parameter the full render is served as before,PASS
+TC-680,Chiến dịch (campaign),test_purpose.py,CreateCampaignPurposeTests,create job defaults to legacy purpose,PASS
+TC-681,Chiến dịch (campaign),test_purpose.py,CreateCampaignPurposeTests,live purposes still require a schedule,PASS
+TC-682,Chiến dịch (campaign),test_purpose.py,CreateCampaignPurposeTests,missing purpose defaults to product video,PASS
+TC-683,Chiến dịch (campaign),test_purpose.py,CreateCampaignPurposeTests,prepare campaign creates long product video jobs,PASS
+TC-684,Chiến dịch (campaign),test_purpose.py,CreateCampaignPurposeTests,prepare campaign keeps explicit length mode,PASS
+TC-685,Chiến dịch (campaign),test_purpose.py,CreateCampaignPurposeTests,product video needs no schedule,PASS
+TC-686,Chiến dịch (campaign),test_purpose.py,CreateCampaignPurposeTests,scheduled request without purpose keeps its livestream,PASS
+TC-687,Chiến dịch (campaign),test_purpose.py,PurposeTests,broadcast and product page flags,PASS
+TC-688,Chiến dịch (campaign),test_purpose.py,PurposeTests,missing purpose on stored documents is legacy live only,PASS
+TC-689,Chiến dịch (campaign),test_purpose.py,PurposeTests,normalize defaults to product video,PASS
+TC-690,Agent & ý định lệnh,test_query_sources_brand.py,CatalogBrandTests,brand name resolved from ma thuong hieu,PASS
+TC-691,Agent & ý định lệnh,test_query_sources_brand.py,CatalogBrandTests,existing brand name kept,PASS
+TC-692,Agent & ý định lệnh,test_query_sources_brand.py,CatalogBrandTests,numeric forms of brand id are equivalent,PASS
+TC-693,Agent & ý định lệnh,test_query_sources_brand.py,CatalogBrandTests,unknown brand id leaves brand empty,PASS
+TC-694,Kịch bản & kiểm duyệt,test_repair_exhausted.py,FinalCheckTests,complete job fails with final check,PASS
+TC-695,Kịch bản & kiểm duyệt,test_repair_exhausted.py,FinalCheckTests,missing video fails,PASS
+TC-696,Kịch bản & kiểm duyệt,test_repair_exhausted.py,RepairExhaustedTests,exhausted parks job without media,PASS
+TC-697,Kịch bản & kiểm duyệt,test_repair_exhausted.py,RepairExhaustedTests,watchdog ignores exhausted job,PASS
+TC-698,Kịch bản & kiểm duyệt,test_script_purpose.py,AutoApproveTests,product video script is auto approved even in human mode,PASS
+TC-699,Kịch bản & kiểm duyệt,test_script_purpose.py,ManualApprovalRuleTests,live only script with price is still approvable,PASS
+TC-700,Kịch bản & kiểm duyệt,test_script_purpose.py,ManualApprovalRuleTests,priced product video script is refused,PASS
+TC-701,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,council payload carries price lines for page purposes,PASS
+TC-702,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,council payload hides price for product video,PASS
+TC-703,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,council payload keeps price for live only,PASS
+TC-704,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,default generation uses the live only prompt,PASS
+TC-705,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,live and product prompt marks sections and keeps intro neutral,PASS
+TC-706,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,live and product prompt scopes live offers to cta,PASS
+TC-707,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,live only prompt is unchanged,PASS
+TC-708,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,product video prompt carries price lines,PASS
+TC-709,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,product video prompt is evergreen and long,PASS
+TC-710,Kịch bản & kiểm duyệt,test_script_purpose.py,PromptTests,product video without pricing says no price data,PASS
+TC-711,Kịch bản & kiểm duyệt,test_script_purpose.py,PurposeRuleTests,live and product allows correct price in any section,PASS
+TC-712,Kịch bản & kiểm duyệt,test_script_purpose.py,PurposeRuleTests,live only has no extra rules,PASS
+TC-713,Kịch bản & kiểm duyệt,test_script_purpose.py,PurposeRuleTests,product video rejects any price,PASS
+TC-714,Kịch bản & kiểm duyệt,test_script_purpose.py,PurposeRuleTests,product video requires ingredients when known,PASS
+TC-715,Kịch bản & kiểm duyệt,test_script_purpose.py,PurposeRuleTests,product video without known ingredients needs no section,PASS
+TC-716,Kịch bản & kiểm duyệt,test_script_purpose.py,PurposeRuleTests,review i1 unlabelled livestream script is not failed,PASS
+TC-717,Kịch bản & kiểm duyệt,test_script_purpose.py,PurposeRuleTests,validation fails when revisions keep the price,PASS
+TC-718,Kịch bản & kiểm duyệt,test_script_recovery_api.py,RecoveryApiTests,approve edit passes resumes once and double click conflicts,PASS
+TC-719,Kịch bản & kiểm duyệt,test_script_recovery_api.py,RecoveryApiTests,approve edit repaired goes to awaiting,PASS
+TC-720,Kịch bản & kiểm duyệt,test_script_recovery_api.py,RecoveryApiTests,approve failing edit parks exhausted not 422,PASS
+TC-721,Kịch bản & kiểm duyệt,test_script_recovery_api.py,RecoveryApiTests,cancel,PASS
+TC-722,Kịch bản & kiểm duyệt,test_script_recovery_api.py,RecoveryApiTests,retry repair manual awaits and auto resumes,PASS
+TC-723,Kịch bản & kiểm duyệt,test_script_recovery_api.py,RecoveryApiTests,retry repair wrong state conflicts,PASS
+TC-724,Kịch bản & kiểm duyệt,test_script_recovery_api.py,RecoveryApiTests,rewrite failure parks exhausted,PASS
+TC-725,Kịch bản & kiểm duyệt,test_script_recovery_api.py,RecoveryApiTests,rewrite validates enum and runs,PASS
+TC-726,Kịch bản & kiểm duyệt,test_script_repair.py,RepairScriptTests,only failing section changes,PASS
+TC-727,Kịch bản & kiểm duyệt,test_script_repair.py,RepairScriptTests,repair then pass,PASS
+TC-728,Kịch bản & kiểm duyệt,test_script_repair.py,RepairScriptTests,section none repairs whole script,PASS
+TC-729,Kịch bản & kiểm duyệt,test_script_repair.py,RepairScriptTests,stops after three repairs,PASS
+TC-730,Kịch bản & kiểm duyệt,test_script_repair.py,RepairScriptTests,technical issue is retried not repaired,PASS
+TC-731,Kịch bản & kiểm duyệt,test_script_review.py,ScriptReviewTests,pipeline stops before media when script is not approved,PASS
+TC-732,Kịch bản & kiểm duyệt,test_script_sections.py,LabeledSectionTests,bracket headers label each section,PASS
+TC-733,Kịch bản & kiểm duyệt,test_script_sections.py,LabeledSectionTests,inline header labels its own line,PASS
+TC-734,Kịch bản & kiểm duyệt,test_script_sections.py,LabeledSectionTests,long section chunks keep their label,PASS
+TC-735,Kịch bản & kiểm duyệt,test_script_sections.py,LabeledSectionTests,markdown header is canonicalised,PASS
+TC-736,Kịch bản & kiểm duyệt,test_script_sections.py,LabeledSectionTests,new product video headers,PASS
+TC-737,Kịch bản & kiểm duyệt,test_script_sections.py,LabeledSectionTests,sale labels,PASS
+TC-738,Kịch bản & kiểm duyệt,test_script_sections.py,LabeledSectionTests,speech sections unchanged for headed scripts,PASS
+TC-739,Kịch bản & kiểm duyệt,test_script_sections.py,LabeledSectionTests,unlabelled prose matches speech sections,PASS
+TC-740,Kịch bản & kiểm duyệt,test_script_sections.py,PriceViolationTests,numeric prices are found,PASS
+TC-741,Kịch bản & kiểm duyệt,test_script_sections.py,PriceViolationTests,promotion words are found with or without accents,PASS
+TC-742,Kịch bản & kiểm duyệt,test_script_sections.py,PriceViolationTests,review i5 price forms are found,PASS
+TC-743,Kịch bản & kiểm duyệt,test_script_sections.py,PriceViolationTests,skincare language is not a price,PASS
+TC-744,Kịch bản & kiểm duyệt,test_script_sections.py,PriceViolationTests,spelled out prices are found,PASS
+TC-745,Agent & ý định lệnh,test_structured_query.py,CommandQueryTests,category ids accepts string ids and drops rows without one,PASS
+TC-746,Agent & ý định lệnh,test_structured_query.py,CommandQueryTests,category ids filter,PASS
+TC-747,Agent & ý định lệnh,test_structured_query.py,CommandQueryTests,category ids none or missing means no filter,PASS
+TC-748,Agent & ý định lệnh,test_structured_query.py,CommandQueryTests,limit explicit flag,PASS
+TC-749,Agent & ý định lệnh,test_structured_query.py,EndpointTests,endpoint 400 on absurdly long digit string,PASS
+TC-750,Agent & ý định lệnh,test_structured_query.py,EndpointTests,endpoint 400 on bad filter,PASS
+TC-751,Agent & ý định lệnh,test_structured_query.py,EndpointTests,endpoint 400 when body is not an object,PASS
+TC-752,Agent & ý định lệnh,test_structured_query.py,EndpointTests,endpoint 500 hides internal errors,PASS
+TC-753,Agent & ý định lệnh,test_structured_query.py,EndpointTests,endpoint 500 when a loader raises value error,PASS
+TC-754,Agent & ý định lệnh,test_structured_query.py,EndpointTests,endpoint passes filters and returns the result,PASS
+TC-755,Agent & ý định lệnh,test_structured_query.py,ParityTests,combined filters match prompt builder plan,PASS
+TC-756,Agent & ý định lệnh,test_structured_query.py,ParityTests,filters match prompt builder plan,PASS
+TC-757,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,brand is normalized and preferred,PASS
+TC-758,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,category ids,PASS
+TC-759,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,defaults,PASS
+TC-760,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,enough stock is ignored for out of stock,PASS
+TC-761,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,every enum key is validated with its name,PASS
+TC-762,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,every rejection is a filter error,PASS
+TC-763,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,flags accept form encoded values,PASS
+TC-764,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,limit bounds,PASS
+TC-765,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,non object filters rejected,PASS
+TC-766,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,plan has the keys of build query plan plus category ids and q,PASS
+TC-767,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,q is trimmed and blank means none,PASS
+TC-768,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,scope code keeps its case,PASS
+TC-769,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,scope code without mode is ignored,PASS
+TC-770,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,scope mode requires a code,PASS
+TC-771,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,unknown enum rejected,PASS
+TC-772,Agent & ý định lệnh,test_structured_query.py,PlanFromFiltersTests,unknown keys are ignored,PASS
+TC-773,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,category ids filter end to end,PASS
+TC-774,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,expiry query reports batch stock and expiry date,PASS
+TC-775,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,failed load is not cached,PASS
+TC-776,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,image falls back to hinh anh,PASS
+TC-777,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,invalid filters raise before any load,PASS
+TC-778,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,limit cuts but matched count keeps the total,PASS
+TC-779,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,metric value for sales ranking,PASS
+TC-780,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,metric value for stock ranking,PASS
+TC-781,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,missing data is reported without the count warning,PASS
+TC-782,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,product shape and q filter,PASS
+TC-783,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,q is applied before the limit cut,PASS
+TC-784,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,q matches code and ignores accents and case,PASS
+TC-785,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,results are not cached,PASS
+TC-786,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,source cache is bounded,PASS
+TC-787,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,source cache key follows the day,PASS
+TC-788,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,source cache key follows the plan not the presentation,PASS
+TC-789,Agent & ý định lệnh,test_structured_query.py,RunStructuredQueryTests,sources cached for 30 seconds,PASS
+TC-790,Giọng nói & âm thanh,test_subtitles.py,ScriptRetailerPolicyTests,external retailer names are replaced before tts,PASS
+TC-791,Giọng nói & âm thanh,test_subtitles.py,SubtitleTimingTests,authoring labels and list markers are not spoken,PASS
+TC-792,Giọng nói & âm thanh,test_subtitles.py,SubtitleTimingTests,cues never run past audio or reverse,PASS
+TC-793,Avatar Syna & video,test_syna_lead_in.py,PaddedVideoMixTests,music mix keeps syna frames and only shifts voice,PASS
+TC-794,Avatar Syna & video,test_syna_lead_in.py,PaddedVideoMixTests,old unpadded render is mixed without shift,PASS
+TC-795,Avatar Syna & video,test_syna_lead_in.py,PaddedVideoMixTests,voice only mix shifts voice for padded video,PASS
+TC-796,Avatar Syna & video,test_syna_lead_in.py,SynaPaddingTests,cues shift with the lead in and manifest carries speech window,PASS
+TC-797,Avatar Syna & video,test_syna_lead_in.py,SynaPaddingTests,syna and mixer agree on lead in,PASS
+TC-798,Avatar Syna & video,test_syna_lead_in.py,SynaPaddingTests,wav gets exact silent lead in and tail,PASS
+TC-799,Avatar Syna & video,test_syna.py,SynaTests,campaign rejects vertical syna before database write,PASS
+TC-800,Avatar Syna & video,test_syna.py,SynaTests,ingredients are source labels not invented benefits,PASS
+TC-801,Avatar Syna & video,test_syna.py,SynaTests,invalid format duration and missing timing fail,PASS
+TC-802,Avatar Syna & video,test_syna.py,SynaTests,legacy avatar still composes,PASS
+TC-803,Avatar Syna & video,test_syna.py,SynaTests,manifest uses actual product price and measured timing,PASS
+TC-804,Avatar Syna & video,test_syna.py,SynaTests,no network for invalid job identifier,PASS
+TC-805,Avatar Syna & video,test_syna.py,SynaTests,syna keeps employee approval and bypasses human face renderer,PASS
+TC-806,Kịch bản & kiểm duyệt,test_text_budget.py,TextBudgetTests,avatar motion video format is verified by signature,PASS
+TC-807,Kịch bản & kiểm duyệt,test_text_budget.py,TextBudgetTests,clean text collapses database whitespace,PASS
+TC-808,Kịch bản & kiểm duyệt,test_text_budget.py,TextBudgetTests,clip text never exceeds limit and keeps both ends,PASS
+TC-809,Kịch bản & kiểm duyệt,test_text_budget.py,TextBudgetTests,downloaded image format is verified by signature,PASS
+TC-810,Kịch bản & kiểm duyệt,test_text_budget.py,TextBudgetTests,message pair stays inside provider budget,PASS
+TC-811,Avatar Syna & video,test_title_cards.py,CardGraphTests,card inputs are long enough for crossfade,PASS
+TC-812,Avatar Syna & video,test_title_cards.py,CardGraphTests,cards without product or price,PASS
+TC-813,Avatar Syna & video,test_title_cards.py,CardGraphTests,main video enters exactly when speech starts,PASS
+TC-814,Avatar Syna & video,test_title_cards.py,CardGraphTests,mix command uses cards instead of frozen frames,PASS
+TC-815,Avatar Syna & video,test_title_cards.py,CardTextTests,price format,PASS
+TC-816,Avatar Syna & video,test_title_cards.py,CardTextTests,wrap limits lines and marks truncation,PASS
+TC-817,Avatar Syna & video,test_title_cards.py,PauseTests,pauses vary within range and are stable,PASS
+TC-818,Avatar Syna & video,test_title_cards.py,PauseTests,silence matches tts format,PASS
+TC-819,Giọng nói & âm thanh,test_tts_normalize.py,TtsNormalizeTests,dictionary,PASS
+TC-820,Giọng nói & âm thanh,test_tts_normalize.py,TtsNormalizeTests,generic code and unchanged,PASS
+TC-821,Giọng nói & âm thanh,test_tts_normalize.py,TtsNormalizeTests,numbers,PASS
+TC-822,Giọng nói & âm thanh,test_tts_normalize.py,TtsNormalizeTests,spf pa,PASS
+TC-823,Giọng nói & âm thanh,test_tts_normalize.py,TtsNormalizeTests,timings keep original text,PASS
+TC-824,Giọng nói & âm thanh,test_tts_normalize.py,TtsNormalizeTests,uvinul,PASS
+TC-825,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,correct price in hook passes,PASS
+TC-826,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,external retailer and blacklist,PASS
+TC-827,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,llm failure is technical,PASS
+TC-828,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,llm json array parsed,PASS
+TC-829,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,llm unparseable falls back to single issue,PASS
+TC-830,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,missing ingredients section,PASS
+TC-831,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,personal experience,PASS
+TC-832,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,promo without flash,PASS
+TC-833,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,scarcity allowed with verified flash,PASS
+TC-834,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,scarcity without flash,PASS
+TC-835,Kịch bản & kiểm duyệt,test_validation_contract.py,ValidationContractTests,wrong price is price mismatch,PASS
+TC-836,Giá & khuyến mãi,test_vi_money.py,NumberWordsTests,deadline end of day,PASS
+TC-837,Giá & khuyến mãi,test_vi_money.py,NumberWordsTests,deadline hour minute and early day,PASS
+TC-838,Giá & khuyến mãi,test_vi_money.py,NumberWordsTests,money and percent,PASS
+TC-839,Giá & khuyến mãi,test_vi_money.py,NumberWordsTests,price phrases,PASS
+TC-840,Giá & khuyến mãi,test_vi_money.py,NumberWordsTests,spec examples,PASS
+TC-841,Giá & khuyến mãi,test_video_price_claim.py,CompleteJobClaimTests,claim uses snapshot id over argument,PASS
+TC-842,Giá & khuyến mãi,test_video_price_claim.py,CompleteJobClaimTests,complete video job writes claim,PASS
+TC-843,Giá & khuyến mãi,test_video_price_claim.py,CompleteJobClaimTests,live only has no claim,PASS
+TC-844,Giá & khuyến mãi,test_video_price_claim.py,CompleteJobClaimTests,snapshot without pricing has no claim,PASS

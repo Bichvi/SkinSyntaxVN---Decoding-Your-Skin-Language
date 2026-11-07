@@ -1,0 +1,52 @@
+{
+  "base": "http://127.0.0.1:8080",
+  "at": "2026-11-03T16:28:52.820Z",
+  "createdOrderId": 502308,
+  "results": [
+    {
+      "step": "widget flag data-agent-v2=1",
+      "ok": true,
+      "note": "value=1"
+    },
+    {
+      "step": "guest buy → login prompt, no draft",
+      "ok": true,
+      "note": "loginLinks=1 drafts=0"
+    },
+    {
+      "step": "customer login",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "products shown during advice",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "draft card with Confirm button",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "no order created before clicking Confirm",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "double click → exactly one created order",
+      "ok": true,
+      "note": "confirm calls=1 created=1"
+    },
+    {
+      "step": "order listed in customer orders",
+      "ok": true,
+      "note": "order_id=502308"
+    },
+    {
+      "step": "test order cancelled",
+      "ok": true,
+      "note": "order_id=502308 http=302"
+    }
+  ]
+}

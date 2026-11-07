@@ -1,0 +1,333 @@
+[
+ {
+  "product": "98",
+  "name": "Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da, Ngừa Mụn 28g",
+  "purpose": "product_video",
+  "prompt_chars": 7584,
+  "sent_chars": 7579,
+  "clipped": true,
+  "newlines_kept": 64,
+  "sections": [
+   "hook",
+   "problem",
+   "product_intro",
+   "specs",
+   "ingredients",
+   "ingredients",
+   "how_to_use",
+   "wrap_up"
+  ],
+  "words": 448,
+  "deterministic_issues": [],
+  "seconds": 89.3,
+  "selection": {
+   "n": 3,
+   "candidates": [
+    {
+     "index": 0,
+     "hard": [
+      "SCARCITY_UNVERIFIED",
+      "MISSING_SECTION:how_to_use"
+     ],
+     "soft_penalty": 1,
+     "words": 285,
+     "model_start": 0
+    },
+    {
+     "index": 1,
+     "hard": [],
+     "soft_penalty": 3,
+     "words": 448,
+     "model_start": 1
+    },
+    {
+     "index": 2,
+     "hard": [],
+     "soft_penalty": 4,
+     "words": 196,
+     "model_start": 2
+    }
+   ],
+   "judgements": [
+    {
+     "a": 1,
+     "b": 2,
+     "scores": {
+      "a": {
+       "faithful": 9,
+       "flow": 8,
+       "hook": 8,
+       "natural": 7
+      },
+      "b": {
+       "faithful": 8,
+       "flow": 7,
+       "hook": 6,
+       "natural": 8
+      }
+     },
+     "winner": "A",
+     "reason": "Kịch bản A có hook cụ thể và sinh động hơn (cảm giác da khô căng), flow liền mạch với phép so sánh 'kiến trúc sư' giúp giải thích cơ chế Retinol dễ hiểu. A nêu rõ giá cụ thể và cảnh báo chi tiết về việc không thoa lên da ướt, tăng độ tin cậy. Kịch bản B ngắn gọn, tự nhiên nhưng hook hơi chung chung, thiếu chi tiết kỹ thuật quan trọng và không nêu giá cụ thể như yêu cầu thông tin sản phẩm."
+    }
+   ],
+   "chosen": 1,
+   "reason": "judge"
+  }
+ },
+ {
+  "product": "101",
+  "name": "Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml",
+  "purpose": "product_video",
+  "prompt_chars": 7796,
+  "sent_chars": 7791,
+  "clipped": true,
+  "newlines_kept": 64,
+  "sections": [
+   "hook",
+   "problem",
+   "product_intro",
+   "specs",
+   "ingredients",
+   "how_to_use",
+   "wrap_up"
+  ],
+  "words": 303,
+  "deterministic_issues": [],
+  "seconds": 5.9,
+  "selection": {
+   "n": 3,
+   "candidates": [
+    {
+     "index": 0,
+     "hard": [
+      "PERSONAL_EXPERIENCE"
+     ],
+     "soft_penalty": 4,
+     "words": 289,
+     "model_start": 0
+    },
+    {
+     "index": 1,
+     "hard": [],
+     "soft_penalty": 2,
+     "words": 381,
+     "model_start": 1
+    },
+    {
+     "index": 2,
+     "hard": [],
+     "soft_penalty": 4,
+     "words": 303,
+     "model_start": 2
+    }
+   ],
+   "judgements": [
+    {
+     "a": 1,
+     "b": 2,
+     "scores": {
+      "a": {
+       "hook": 6,
+       "flow": 8,
+       "natural": 7,
+       "faithful": 7
+      },
+      "b": {
+       "hook": 5,
+       "flow": 8,
+       "natural": 7,
+       "faithful": 8
+      }
+     },
+     "winner": "B",
+     "reason": "Kịch bản B có độ chính xác cao hơn về thông tin sản phẩm, bao gồm giá và thành phần, nên được đánh giá cao hơn trong tiêu chí faithful. Hook và natural của cả hai kịch bản tương đối giống nhau, nhưng B có điểm thấp hơn một chút vì hook hơi chung chung. Flow của cả hai đều liền mạch. Vì vậy, B là người chiến thắng."
+    }
+   ],
+   "chosen": 2,
+   "reason": "judge"
+  }
+ },
+ {
+  "product": "68",
+  "name": "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml",
+  "purpose": "product_video",
+  "prompt_chars": 7523,
+  "sent_chars": 7518,
+  "clipped": true,
+  "newlines_kept": 64,
+  "sections": [
+   "hook",
+   "problem",
+   "product_intro",
+   "specs",
+   "ingredients",
+   "how_to_use",
+   "wrap_up"
+  ],
+  "words": 250,
+  "deterministic_issues": [],
+  "seconds": 88.6,
+  "selection": {
+   "n": 3,
+   "candidates": [
+    {
+     "index": 0,
+     "hard": [],
+     "soft_penalty": 3,
+     "words": 250,
+     "model_start": 0
+    },
+    {
+     "index": 1,
+     "hard": [],
+     "soft_penalty": 3,
+     "words": 362,
+     "model_start": 1
+    },
+    {
+     "index": 2,
+     "hard": [],
+     "soft_penalty": 3,
+     "words": 283,
+     "model_start": 2
+    }
+   ],
+   "judgements": [
+    {
+     "a": 0,
+     "b": 1,
+     "scores": {
+      "a": {
+       "faithful": 9,
+       "flow": 8,
+       "hook": 8,
+       "natural": 9
+      },
+      "b": {
+       "faithful": 8,
+       "flow": 9,
+       "hook": 7,
+       "natural": 8
+      }
+     },
+     "winner": "A",
+     "reason": "Kịch bản A có hook cụ thể và tự nhiên hơn, tránh được lỗi chính tả 'Timeles' và câu hỏi tu từ sáo rỗng của B. A diễn đạt ngắn gọn, dễ đọc cho giọng máy, trong khi B hơi dài dòng và lặp ý về độ ẩm. Cả hai đều trung thực về thông tin, nhưng A mượt mà hơn."
+    },
+    {
+     "a": 0,
+     "b": 2,
+     "scores": {
+      "a": {
+       "faithful": 9,
+       "flow": 8,
+       "hook": 8,
+       "natural": 9
+      },
+      "b": {
+       "faithful": 8,
+       "flow": 8,
+       "hook": 9,
+       "natural": 8
+      }
+     },
+     "winner": "A",
+     "reason": "Kịch bản A có hook cụ thể và tự nhiên hơn, tránh được các cụm từ sáo rỗng. Kịch bản B bị trừ điểm ở phần faithful vì thêm cụm 'sáng hơn' (hiệu quả không được nêu trong thông tin sản phẩm, chỉ có làm dịu/phục hồi) và cách đọc giá tiền trong wrap-up hơi cứng nhắc so với A."
+    }
+   ],
+   "chosen": 0,
+   "reason": "judge"
+  }
+ },
+ {
+  "product": "101",
+  "name": "Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml",
+  "purpose": "live_and_product",
+  "prompt_chars": 7406,
+  "sent_chars": 7401,
+  "clipped": true,
+  "newlines_kept": 65,
+  "sections": [
+   "opening",
+   "hook",
+   "product_intro",
+   "key_benefits",
+   "how_to_use",
+   "price",
+   "cta",
+   "closing"
+  ],
+  "words": 275,
+  "deterministic_issues": [],
+  "seconds": 64.0,
+  "selection": {
+   "n": 3,
+   "candidates": [
+    {
+     "index": 0,
+     "hard": [],
+     "soft_penalty": 1,
+     "words": 270,
+     "model_start": 0
+    },
+    {
+     "index": 1,
+     "hard": [],
+     "soft_penalty": 0,
+     "words": 296,
+     "model_start": 1
+    },
+    {
+     "index": 2,
+     "hard": [],
+     "soft_penalty": 0,
+     "words": 275,
+     "model_start": 2
+    }
+   ],
+   "judgements": [
+    {
+     "a": 0,
+     "b": 1,
+     "scores": {
+      "a": {
+       "faithful": 9,
+       "flow": 8,
+       "hook": 7,
+       "natural": 8
+      },
+      "b": {
+       "faithful": 8,
+       "flow": 8,
+       "hook": 8,
+       "natural": 7
+      }
+     },
+     "winner": "A",
+     "reason": "Kịch bản A có hook cụ thể và logic hơn (kem nền trôi do da dầu), trong khi B dùng phép so sánh hơi gượng ('như vừa khóc xong'). Về độ trung thực, A bám sát mô tả sản phẩm (nâng tone, kiềm dầu), còn B thêm chi tiết 'makeup bám như keo' là suy diễn không có trong thông tin gốc, dễ gây hiểu lầm về công dụng chính của kem chống nắng. Cả hai đều đọc tốt cho giọng máy, nhưng A an toàn và chính xác hơn."
+    },
+    {
+     "a": 0,
+     "b": 2,
+     "scores": {
+      "a": {
+       "faithful": 9,
+       "flow": 8,
+       "hook": 7,
+       "natural": 8
+      },
+      "b": {
+       "faithful": 8,
+       "flow": 9,
+       "hook": 8,
+       "natural": 9
+      }
+     },
+     "winner": "B",
+     "reason": "Kịch bản B vượt trội về mặt tự nhiên (natural) và mạch lạc (flow) nhờ giọng văn gần gũi, sử dụng từ ngữ phù hợp với giọng đọc máy (viết chữ số ra chữ) và kết nối các ý mượt mà hơn. Kịch bản A bị trừ điểm ở phần natural do sử dụng ký hiệu 'SPF50+' và 'PA++++' gây khó đọc cho AI, cùng với câu văn hơi cứng nhắc. Về độ trung thực (faithful), B bị trừ nhẹ vì cụm từ 'căng mọng' có thể gây hiểu nhầm về khả năng cấp ẩm sâu của kem chống nắng, trong khi A bám sát mô tả 'cấp ẩm và làm dịu' hơn. Tuy A赢"
+    }
+   ],
+   "chosen": 2,
+   "reason": "judge"
+  }
+ }
+]

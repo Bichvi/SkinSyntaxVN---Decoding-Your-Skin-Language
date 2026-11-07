@@ -1,0 +1,15 @@
+[Hook]
+Da bạn đang rát nhẹ sau khi dùng sản phẩm mới. Cảm giác căng khô khiến bạn muốn che mặt lại.
+[Problem]
+Hàng rào bảo vệ da của bạn đang mỏng đi. Nó không giữ được độ ẩm bên trong. Kết quả là da mất nước và dễ kích ứng.
+[Product Intro]
+Timeless Serum Vitamin B5 từ Mỹ chính là lời giải. Đây là tinh chất chuyên làm dịu và phục hồi.
+[Specs]
+Em serum này có kết cấu lỏng nhẹ. Nó không chứa dầu và phù hợp da nhạy cảm. Dung tích ba mươi mililít dùng được lâu.
+[Ingredients]
+Điểm đáng chú ý nằm ở Vitamin B5. Chất này giống như lớp chăn ấm cho da. Nó giúp giảm mẩn đỏ tức thì. Vitamin B5 còn hỗ trợ chữa lành tổn thương do mụn. Nó tăng cường hàng rào bảo vệ tự nhiên.
+Đi cùng là Hyaluronic Acid. Hãy nghĩ đến nó như miếng bọt biển. Nó hút nước và giữ ẩm sâu. Hai thành phần này hợp nhau rất tốt. Một bên làm dịu, một bên cấp nước. Da bạn sẽ cân bằng trở lại.
+[How to Use]
+Bạn dùng sau bước toner. Lấy hai đến ba giọt thoa lên mặt. Nhớ dùng sáng và tối mỗi ngày. Luôn thoa kem dưỡng ẩm sau đó. Việc này giúp khóa ẩm và tránh khô da.
+[Wrap-up]
+Không còn cảm giác căng rát khó chịu nữa. Bấm vào sản phẩm để xem giá mới nhất và đặt hàng nha.

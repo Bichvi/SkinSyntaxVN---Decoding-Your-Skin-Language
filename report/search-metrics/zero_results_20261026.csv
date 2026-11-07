@@ -1,0 +1,4 @@
+﻿q_norm,count,brands,categories,ingredients,concerns,residual,suggestion_type,suggestion,alias,target_group,target_key,score,note,approve
+toriden srm,4,torriden,sua_rua_mat,,,,need_review,,,,,,intent hiểu đủ (hãng/danh mục) nhưng tìm theo từ khóa gốc vẫn 0 kết quả: kiểm kho hoặc cần áp synonym phía tìm kiếm PHP,
+srm cho da dau,2,,sua_rua_mat,,,,need_review,,,,,,intent hiểu đủ (hãng/danh mục) nhưng tìm theo từ khóa gốc vẫn 0 kết quả: kiểm kho hoặc cần áp synonym phía tìm kiếm PHP,
+zzzxxqq,2,,,,,zzzxxqq,need_review,,,,,,không có alias gần và semantic không đồng thuận - cần người xem,

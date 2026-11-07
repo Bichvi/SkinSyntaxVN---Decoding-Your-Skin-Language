@@ -1,0 +1,23 @@
+PASS Live: retinol product added to guest cart - 98 Đã thêm sản phẩm vào giỏ hàng
+PASS Live: attach button visible (flag on)
+PASS Live photo 1: route ok - ok=true code= took=1586
+PASS Live photo 1: card header + ingredient chips
+PASS Live photo 1: skin quick-pick shown for guest
+PASS Live photo 1: cart conflict block or cart note present
+PASS Live quick-pick Da kho: card updated (pressed + fit title) - 🟢 Phù hợp · Da khô
+PASS Live photo 4: tips note, no ingredient card
+PASS Live photo 7: low_recognition warning strip
+PASS Live photo 7: edit box available
+PASS Live reanalyze: route ok - code=
+PASS Live reanalyze: conflict block with retinol cart product - Đối chiếu với giỏ hàng | 🔴 Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da, Ngừa Mụn 28g | Retinoid kết hợp AHA dễ gây khô, đỏ rát 
+PASS Live reanalyze: schedule line shown - 🗓 HYALURONIC MOISTURIZING CREAM và Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da, Ngừa Mụn 28g: dùng xen 
+PASS Mobile 375px: no horizontal page overflow
+PASS Follow-up chip sends a normal chat message and gets a reply - "Xếp routine sáng/tối có HYALURONIC MOISTURIZING CREAM cho tô" -> 200
+PASS Mock vision_unavailable: paste box shown
+PASS Mock too_large: Vietnamese bubble
+PASS Mock bad_type: Vietnamese bubble
+PASS Mock rate_limited: Vietnamese bubble
+PASS Mock csrf: Vietnamese bubble
+PASS Mock XSS: rendered as text, no injected img, no dialog - dialogs=0
+PASS No page JS errors
+PASS: 22/22
