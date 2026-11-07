@@ -1136,19 +1136,27 @@ class SanPham {
         array $recentViewedIds = [],
         ?array $userProfile = null,
         array $behaviorSignals = [],
-        ?array $preloadedFlashDeals = null
+        ?array $preloadedFlashDeals = null,
+        ?int $refreshSeed = null,
+        array $latestProducts = []
     ): array {
         $limitEach = max(4, min(12, $limitEach));
 
         $flashDeals = ($preloadedFlashDeals !== null) ? $preloadedFlashDeals : $this->getFlashSaleProducts($limitEach);
 
         // Adaptive Recommender V1 (Phase A)
-        $adaptiveRecs = $this->getHybridRecommendations($recentViewedIds, $userProfile, $limitEach, $behaviorSignals);
+        // On a normal homepage request we load a wider candidate pool and use the
+        // request seed to rotate the visible window. Calls without a seed retain
+        // the deterministic legacy behavior used by CLI/integration checks.
+        $candidateLimit = $refreshSeed === null
+            ? $limitEach
+            : min(24, max($limitEach * 3, 12));
+        $adaptiveCandidates = $this->getHybridRecommendations($recentViewedIds, $userProfile, $candidateLimit, $behaviorSignals);
 
         // If adaptiveRecs is empty (e.g. cold start guest or simple mode), fallback to Simple Recommender Top-4
-        if (empty($adaptiveRecs)) {
-            $fallbackSimple = $this->getSimpleRecommenderProducts(4);
-            $adaptiveRecs = [];
+        if (empty($adaptiveCandidates)) {
+            $fallbackSimple = $this->getSimpleRecommenderProducts($candidateLimit);
+            $adaptiveCandidates = [];
             foreach ($fallbackSimple as $p) {
                 $p['recommender_meta'] = [
                     'algorithm' => 'adaptive_v1',
@@ -1169,27 +1177,37 @@ class SanPham {
                     'reason_tags' => ['Sản phẩm nổi bật được yêu thích'],
                     'reason' => 'Sản phẩm nổi bật được yêu thích',
                 ];
-                $adaptiveRecs[] = $p;
+                $adaptiveCandidates[] = $p;
             }
         }
+
+        $adaptiveRecs = $this->selectHomepageProductWindow($adaptiveCandidates, $limitEach, $refreshSeed);
 
         // Section 5.5 Simple Recommender using IMDb Weighted Rating (Top-24)
         // Presentation-level deduplication: avoid duplicating SKUs rendered in forYou
         $forYouIds = array_map('strval', array_column($adaptiveRecs, 'ma_san_pham'));
-        $simplePool = $this->getSimpleRecommenderProducts(max(16, $limitEach * 4));
-        $topRatedWeighted = [];
-        foreach ($simplePool as $p) {
-            $pid = (string)($p['ma_san_pham'] ?? '');
-            if (!in_array($pid, $forYouIds, true)) {
-                $topRatedWeighted[] = $p;
-                if (count($topRatedWeighted) >= $limitEach) {
-                    break;
-                }
-            }
-        }
+        $simplePool = $this->getSimpleRecommenderProducts(max(16, $candidateLimit));
+        $topRatedWeighted = $this->selectHomepageProductWindow($simplePool, $limitEach, $refreshSeed, $forYouIds);
         if (empty($topRatedWeighted)) {
             $topRatedWeighted = array_slice($simplePool, 0, $limitEach);
         }
+
+        // Fresh "today" suggestions use the unused part of the personalized pool
+        // first, then fall back to strong global candidates. This keeps profile and
+        // behavior context useful without duplicating the main For-You row.
+        $todayPool = array_merge(
+            $this->selectHomepageProductWindow($adaptiveCandidates, count($adaptiveCandidates), null, $forYouIds),
+            $simplePool
+        );
+        $todayProducts = $this->selectHomepageProductWindow($todayPool, $limitEach, $refreshSeed, $forYouIds);
+
+        // The latest pool is loaded by HomeController with a wider limit. Choose a
+        // refresh-aware subset and exclude products already shown above.
+        $shownIds = array_values(array_unique(array_merge(
+            $forYouIds,
+            array_map('strval', array_column($todayProducts, 'ma_san_pham'))
+        )));
+        $newProducts = $this->selectHomepageProductWindow($latestProducts, $limitEach, $refreshSeed, $shownIds);
 
         return [
             'flashDeals' => $flashDeals,
@@ -1198,9 +1216,58 @@ class SanPham {
             'forYou' => $adaptiveRecs, // Section 3 single primary Adaptive For-You section
             'adaptiveForYou' => $adaptiveRecs,
             'topRatedWeighted' => $topRatedWeighted, // Section 5.5 Simple Recommender
+            'today' => $todayProducts,
+            'newProducts' => $newProducts,
             'contentBased' => $adaptiveRecs, // Backward compatibility
             'hybridRecs' => $adaptiveRecs,
         ];
+    }
+
+    /**
+     * Select a unique, visible homepage window without changing recommendation scores.
+     * A null seed preserves the old score order; a request seed rotates exploration
+     * across the already-approved candidate pool so each refresh can feel new.
+     */
+    private function selectHomepageProductWindow(
+        array $products,
+        int $limit,
+        ?int $seed = null,
+        array $excludeIds = []
+    ): array {
+        $limit = max(1, min(24, $limit));
+        $excluded = [];
+        foreach ($excludeIds as $id) {
+            $value = trim((string)$id);
+            if ($value !== '') {
+                $excluded[$value] = true;
+            }
+        }
+
+        $unique = [];
+        foreach ($products as $product) {
+            if (!is_array($product)) {
+                continue;
+            }
+            $id = trim((string)($product['ma_san_pham'] ?? $product['id'] ?? ''));
+            if ($id === '' || isset($excluded[$id]) || isset($unique[$id])) {
+                continue;
+            }
+            $unique[$id] = $product;
+        }
+
+        $items = array_values($unique);
+        if ($seed !== null && count($items) > 1) {
+            usort($items, static function (array $left, array $right) use ($seed): int {
+                $leftId = (string)($left['ma_san_pham'] ?? $left['id'] ?? '');
+                $rightId = (string)($right['ma_san_pham'] ?? $right['id'] ?? '');
+                return strcmp(
+                    hash('sha256', (string)$seed . '|' . $leftId),
+                    hash('sha256', (string)$seed . '|' . $rightId)
+                );
+            });
+        }
+
+        return array_slice($items, 0, $limit);
     }
 
     /**

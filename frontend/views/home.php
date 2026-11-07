@@ -58,7 +58,7 @@ if (!empty($flashSaleCampaign) && !empty($flashSaleCampaign['hydrated_items'])) 
     $flashSaleProducts = $flashSaleCampaign['hydrated_items'];
 }
 
-$newProducts = array_slice($latest, 0, 4);
+$newProducts = array_slice(array_values(array_filter($homepageSections['newProducts'] ?? $latest)), 0, 4);
 
 $forYouProducts = array_slice(array_values(array_filter($homepageSections['forYou'] ?? $homepageSections['bestSellers'] ?? [])), 0, 4);
 if (empty($forYouProducts)) {
@@ -66,8 +66,15 @@ if (empty($forYouProducts)) {
 }
 
 $topRatedWeightedProducts = array_slice(array_values(array_filter($homepageSections['topRatedWeighted'] ?? [])), 0, 4);
+$todayProducts = array_slice(array_values(array_filter($homepageSections['today'] ?? $homepageSections['topRatedWeighted'] ?? [])), 0, 4);
 
 $contentBasedProducts = array_slice(array_values(array_filter($homepageSections['contentBased'] ?? [])), 0, 4);
+
+$todaySectionKicker = 'GỢI Ý HÔM NAY · Được Yêu Thích Nhất';
+$todaySectionTitle = 'Gợi ý hôm nay, mỗi lần ghé là một lựa chọn mới';
+$todaySectionSub = 'Danh sách được làm mới theo lượt ghé thăm và những sản phẩm bạn đang quan tâm.';
+$newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Hôm Nay';
+$newSectionSub = 'Khám phá sản phẩm mới, được chọn lại để trang chủ không lặp một danh sách cố định.';
 
 // Brand names
 $brandNames = [];
@@ -695,6 +702,36 @@ $renderFlashSaleProductCard = static function (array $p, bool $isAboveFold = fal
           $sectionTitle = 'Sản phẩm nổi bật tại SkinSyntax';
           $sectionSub = 'Khám phá những lựa chọn được đánh giá cao tại SkinSyntax.';
       }
+
+      // The secondary homepage rows use the same evidence as the primary
+      // recommender, so a guest, a partial-profile account and a completed
+      // skin profile each see truthful copy instead of one fixed headline.
+      if ($hasSurvey && !empty($userProfile) && $algoMode === 'ADAPTIVE_HYBRID') {
+          $todaySectionTitle = 'Gợi ý hôm nay dành riêng cho bạn';
+          $todaySectionSub = 'Kết hợp hồ sơ làn da với những gì bạn đang quan tâm để làm mới lựa chọn mỗi lần ghé thăm.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Hợp Với Làn Da Bạn';
+          $newSectionSub = 'Sản phẩm mới được lọc lại theo hồ sơ da và tín hiệu quan tâm gần đây của bạn.';
+      } elseif ($hasSurvey && !empty($userProfile)) {
+          $todaySectionTitle = 'Gợi ý hôm nay cho làn da của bạn';
+          $todaySectionSub = 'Dựa trên thông tin làn da bạn đã chia sẻ, danh sách sẽ được làm mới sau mỗi lần tải lại.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Hợp Với Bạn';
+          $newSectionSub = 'Khám phá các sản phẩm mới nhưng vẫn ưu tiên độ phù hợp với hồ sơ da của bạn.';
+      } elseif ($dominantSignal === 'SEARCH') {
+          $todaySectionTitle = 'Có thể bạn đang quan tâm hôm nay';
+          $todaySectionSub = 'Gợi ý dựa trên những gì bạn vừa tìm kiếm và được làm mới sau mỗi lần tải lại.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Theo Mối Quan Tâm Của Bạn';
+          $newSectionSub = 'Các sản phẩm mới liên quan đến nhu cầu bạn vừa tìm kiếm.';
+      } elseif (in_array($dominantSignal, ['VIEW', 'CART', 'PURCHASE'], true)) {
+          $todaySectionTitle = 'Gợi ý hôm nay từ những gì bạn quan tâm';
+          $todaySectionSub = 'Kết hợp lượt xem, giỏ hàng hoặc lịch sử mua sắm để mỗi lần F5 có thêm lựa chọn mới.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Có Thể Bạn Sẽ Thích';
+          $newSectionSub = 'Khám phá sản phẩm mới dựa trên hành vi mua sắm gần đây của bạn.';
+      } elseif ($isLoggedIn) {
+          $todaySectionTitle = 'Gợi ý hôm nay dành cho bạn';
+          $todaySectionSub = 'Bạn có thể hoàn thành hồ sơ da để hệ thống cá nhân hóa sâu hơn; danh sách hiện vẫn được làm mới mỗi lần ghé thăm.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Cho Bạn';
+          $newSectionSub = 'Một cửa sổ sản phẩm mới được chọn lại mỗi lần tải trang, không đóng khung trong một danh sách cố định.';
+      }
     ?>
     <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 pb-3 border-bottom">
@@ -929,22 +966,22 @@ $renderFlashSaleProductCard = static function (array $p, bool $isAboveFold = fal
     </div>
   </section>
 
-  <!-- 5.5 SIMPLE RECOMMENDER (ĐƯỢC YÊU THÍCH NHẤT - IMDB WEIGHTED RATING) -->
-  <?php if (!empty($topRatedWeightedProducts)): ?>
+  <!-- 5.5 REFRESH-AWARE TODAY RECOMMENDATIONS -->
+  <?php if (!empty($todayProducts)): ?>
     <section class="mb-5">
       <div class="d-flex justify-content-between align-items-end mb-3">
         <div>
-          <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">BẢNG XẾP HẠNG ĐÁNH GIÁ</span>
-          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Được Yêu Thích Nhất</h2>
-          <span class="text-muted small" style="font-size: 0.82rem;">Những sản phẩm được cộng đồng đánh giá cao</span>
+          <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;"><?= h($todaySectionKicker) ?></span>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;"><?= h($todaySectionTitle) ?></h2>
+          <span class="text-muted small" style="font-size: 0.82rem;"><?= h($todaySectionSub) ?></span>
         </div>
-        <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+        <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Khám phá thêm <i class="fas fa-arrow-right ms-1"></i></a>
       </div>
 
       <div class="row g-3">
-        <?php foreach ($topRatedWeightedProducts as $p): ?>
+        <?php foreach ($todayProducts as $p): ?>
           <div class="col-6 col-md-3">
-            <?php $renderHomeProductCard($p, 'Yêu thích nhất'); ?>
+            <?php $renderHomeProductCard($p, 'Gợi ý hôm nay'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -952,13 +989,14 @@ $renderFlashSaleProductCard = static function (array $p, bool $isAboveFold = fal
   <?php endif; ?>
 
 
-  <!-- 6. NEW PRODUCTS (MỸ PHẨM VỪA LÊN KỆ - BEAUTY COSMETICS ONLY) -->
+  <!-- 6. NEW PRODUCTS (REFRESH-AWARE DISCOVERY WINDOW) -->
   <?php if (!empty($newProducts)): ?>
     <section class="mb-5">
       <div class="d-flex justify-content-between align-items-end mb-3">
         <div>
-          <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">SẢN PHẨM MỚI</span>
-          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Mỹ Phẩm Vừa Lên Kệ</h2>
+          <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">SẢN PHẨM MỚI · KHÁM PHÁ HÔM NAY</span>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;"><?= h($newSectionTitle) ?></h2>
+          <span class="text-muted small" style="font-size: 0.82rem;"><?= h($newSectionSub) ?></span>
         </div>
         <a href="<?= BASE_URL ?>/index.php?r=tatca" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
       </div>
