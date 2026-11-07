@@ -4295,7 +4295,8 @@ class HomeController {
     private function isValidWebhookRequest(): bool {
         $secret = $this->getWebhookSecret();
         if ($secret === '') {
-            return true;
+            // Fail closed: a webhook without an explicitly configured secret must not mutate orders.
+            return false;
         }
 
         $incoming = trim((string)($_GET['token'] ?? ''));
