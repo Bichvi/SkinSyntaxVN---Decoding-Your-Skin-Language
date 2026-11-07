@@ -4,6 +4,7 @@
 </div>
 
 <script src="<?= BASE_URL ?>/assets/js/bootstrap.bundle.min.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/live-filter.js?v=<?= @filemtime(dirname(__DIR__, 3) . '/public/assets/js/live-filter.js') ?: '1' ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // AsmrProg Theme Switcher (Light / Dark Mode Pill)
@@ -91,6 +92,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var forms = document.querySelectorAll('form[data-live-filter="true"][method="get" i]');
     forms.forEach(function (form) {
+        // Form đã khai báo data-live-target do live-filter.js xử lý (AJAX, không tải lại trang).
+        if (form.hasAttribute('data-live-target')) return;
         var debounceTimer = null;
         var scheduleSubmit = function (delay, target) {
             window.clearTimeout(debounceTimer);

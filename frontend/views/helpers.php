@@ -244,36 +244,33 @@ function get_top_10_sale_products(): array {
             require_once __DIR__ . '/models/SanPham.php';
         }
         $spModel = new SanPham($mongoDb);
-        $top10 = $spModel->getDiscountProducts([], 10);
-        $result = [];
-        foreach ($top10 as $item) {
-            $id = (string)($item['ma_san_pham'] ?? $item['id'] ?? (isset($item['_id']) ? (string)$item['_id'] : ''));
-            $salePrice = (float)($item['gia_ban'] ?? 0);
-            $marketPrice = (float)($item['gia_thi_truong'] ?? 0);
-            $discount = $marketPrice > $salePrice ? (int)round((($marketPrice - $salePrice) / $marketPrice) * 100) : 0;
-            $img = resolve_image_url((string)($item['link_hinh_anh'] ?? $item['image_url'] ?? ''));
-            $result[] = [
-                'id' => $id,
-                'name' => (string)($item['ten_san_pham'] ?? ''),
-                'brand' => (string)($item['thuong_hieu'] ?? 'SkinSyntax'),
-                'price' => (int)$salePrice,
-                'market_price' => (int)$marketPrice,
-                'discount' => $discount,
-                'image' => $img !== '' ? $img : default_placeholder_image(),
-                'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id)
-            ];
-        }
-
-        if (!empty($result)) {
-            $memoryCache = $result;
-            $dir = dirname($cacheFile);
-            if (!is_dir($dir)) {
-                @mkdir($dir, 0777, true);
+        $build = function () use ($spModel): array {
+            $top10 = $spModel->getDiscountProducts([], 10);
+            $result = [];
+            foreach ($top10 as $item) {
+                $id = (string)($item['ma_san_pham'] ?? $item['id'] ?? (isset($item['_id']) ? (string)$item['_id'] : ''));
+                $salePrice = (float)($item['gia_ban'] ?? 0);
+                $marketPrice = (float)($item['gia_thi_truong'] ?? 0);
+                $discount = $marketPrice > $salePrice ? (int)round((($marketPrice - $salePrice) / $marketPrice) * 100) : 0;
+                $img = resolve_image_url((string)($item['link_hinh_anh'] ?? $item['image_url'] ?? ''));
+                $result[] = [
+                    'id' => $id,
+                    'name' => (string)($item['ten_san_pham'] ?? ''),
+                    'brand' => (string)($item['thuong_hieu'] ?? 'SkinSyntax'),
+                    'price' => (int)$salePrice,
+                    'market_price' => (int)$marketPrice,
+                    'discount' => $discount,
+                    'image' => $img !== '' ? $img : default_placeholder_image(),
+                    'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id)
+                ];
             }
-            @file_put_contents($cacheFile, json_encode($result, JSON_UNESCAPED_UNICODE));
+            return $result;
+        };
+        // Chạy ở footer mọi trang nên cache 2 phút; thiếu ProductQueryCache thì tính trực tiếp như cũ
+        if (class_exists('ProductQueryCache')) {
+            return ProductQueryCache::remember('top10Sale:' . (defined('BASE_URL') ? BASE_URL : ''), 120, $build);
         }
-
-        return $result;
+        return $build();
     } catch (Throwable $e) {
         return [];
     }
@@ -347,6 +344,7 @@ function route_access_map(): array {
         'admin_live_delete' => ['admin', 'nhanvien'],
         'admin_live_pin_product' => ['admin', 'nhanvien'],
         'admin_ai_idol' => ['admin'],
+        'admin_ai_product_videos' => ['admin'],
         'admin_reports' => ['admin'],
         'admin_questions' => ['admin', 'nhanvien'],
         'admin_question_reply' => ['admin', 'nhanvien'],

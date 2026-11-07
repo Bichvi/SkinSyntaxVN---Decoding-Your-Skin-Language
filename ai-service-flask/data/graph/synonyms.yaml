@@ -1,0 +1,82 @@
+# Synonym groups for graph keys (docs/neo4j/schema.md, rule step 6).
+# Shape: <group>: { <canonical_key>: { name: <display>, aliases: [<variant>, ...] } }
+# Variants are compared after slugify (lower, no accents, non-alnum -> "_"), so
+# "Sữa Rửa Mặt", "sua rua mat" and "SỮA-RỬA-MẶT" are the same variant.
+# A variant must not appear in two groups (enforced by tests/graph_sync/test_normalize.py).
+# Caveat: accents are stripped, so "mắt" (eye) == "mặt" (face) -> avoid such aliases.
+# Reused by Bước 04 (intent parser): add user phrasings here, not in code.
+
+categories:
+  # --- level 1 / 2 (danh_muc) ---
+  cham_soc_da_mat: {name: "Chăm Sóc Da Mặt", aliases: ["skincare", "chăm sóc da"]}
+  lam_sach_da: {name: "Làm Sạch Da", aliases: ["làm sạch"]}
+  duong_am: {name: "Dưỡng Ẩm"}
+  dac_tri: {name: "Đặc Trị"}
+  mat_na: {name: "Mặt Nạ", aliases: ["mask", "face mask"]}
+  duong_moi: {name: "Dưỡng Môi"}
+  duong_mat: {name: "Dưỡng Mắt"}
+  bo_cham_soc_da_mat: {name: "Bộ Chăm Sóc Da Mặt", aliases: ["bộ chăm sóc da", "set dưỡng da", "combo dưỡng da"]}
+  kem_chong_nang: {name: "Chống Nắng Da Mặt", aliases: ["kem chống nắng", "chống nắng", "kcn", "sunscreen", "sunblock", "chống nắng da mặt", "kem chống nắng da mặt"]}
+  # --- level 3 (danh_muc leaves) ---
+  sua_rua_mat: {name: "Sữa Rửa Mặt", aliases: ["srm", "cleanser", "facial cleanser", "gel rửa mặt", "rửa mặt", "sữa rửa", "cleansing foam", "bọt rửa mặt", "face wash", "foaming wash"]}
+  tay_trang: {name: "Tẩy Trang Mặt", aliases: ["tẩy trang", "nước tẩy trang", "dầu tẩy trang", "sáp tẩy trang", "micellar", "micellar water", "makeup remover", "cleansing oil"]}
+  toner: {name: "Toner / Nước Cân Bằng Da", aliases: ["nước cân bằng", "nước cân bằng da", "nước hoa hồng", "lotion toner"]}
+  tay_te_bao_chet: {name: "Tẩy Tế Bào Chết Da Mặt", aliases: ["tẩy tế bào chết", "tẩy tbc", "scrub", "exfoliator"]}
+  serum: {name: "Serum / Tinh Chất", aliases: ["tinh chất", "essence", "ampoule", "huyết thanh"]}
+  san_pham_dac_tri_khac: {name: "Sản Phẩm Đặc Trị Khác"}
+  ho_tro_tri_mun: {name: "Hỗ Trợ Trị Mụn", aliases: ["chấm mụn", "gel chấm mụn", "miếng dán mụn", "acne patch"]}
+  kem_duong: {name: "Kem / Gel / Dầu Dưỡng", aliases: ["kem dưỡng", "kem dưỡng ẩm", "kem dưỡng da", "gel dưỡng", "dầu dưỡng", "moisturizer", "cream", "kem dưỡng da mặt", "face cream", "night cream", "kem dưỡng đêm", "kem đêm"]}
+  lotion_sua_duong: {name: "Lotion / Sữa Dưỡng", aliases: ["sữa dưỡng", "lotion", "emulsion"]}
+  xit_khoang: {name: "Xịt Khoáng", aliases: ["mineral spray", "face mist", "xịt dưỡng da"]}
+  mat_na_giay: {name: "Mặt Nạ Giấy", aliases: ["sheet mask", "mặt nạ miếng"]}
+  mat_na_rua: {name: "Mặt Nạ Rửa", aliases: ["wash off mask", "mặt nạ đất sét", "clay mask"]}
+  mat_na_lot: {name: "Mặt Nạ Lột", aliases: ["peel off mask"]}
+  mat_na_ngu: {name: "Mặt Nạ Ngủ", aliases: ["sleeping mask"]}
+  serum_kem_duong_mat: {name: "Serum / Kem Dưỡng Mắt", aliases: ["eye cream", "eye serum", "kem dưỡng vùng mắt"]}
+  mat_na_mat: {name: "Mặt Nạ Mắt", aliases: ["eye mask", "eye patch"]}
+  son_duong_moi: {name: "Son Dưỡng Môi", aliases: ["son dưỡng", "lip balm"]}
+  mat_na_moi: {name: "Mặt Nạ Môi", aliases: ["lip mask"]}
+  tay_te_bao_chet_moi: {name: "Tẩy Tế Bào Chết Môi", aliases: ["lip scrub"]}
+  # --- categories only present in danh_muc_day_du of orphan codes (not in danh_muc) ---
+  sua_tam: {name: "Sữa Tắm", aliases: ["body wash", "shower gel"]}
+  duong_the: {name: "Dưỡng Thể", aliases: ["body lotion", "kem dưỡng thể", "sữa dưỡng thể"]}
+  chong_nang_co_the: {name: "Chống Nắng Cơ Thể", aliases: ["kem chống nắng body", "chống nắng body"]}
+  dau_goi: {name: "Dầu Gội", aliases: ["shampoo"]}
+  dau_xa: {name: "Dầu Xả", aliases: ["conditioner"]}
+  phan_nuoc_cushion: {name: "Phấn Nước Cushion", aliases: ["cushion", "phấn nước"]}
+  kem_nen: {name: "Kem Nền", aliases: ["foundation"]}
+  che_khuyet_diem: {name: "Che Khuyết Điểm", aliases: ["concealer"]}
+  kem_lot: {name: "Kem Lót", aliases: ["primer", "lót nền", "kem lót nền"]}
+  son_kem_tint: {name: "Son Kem / Tint", aliases: ["son kem", "son tint", "lip tint"]}
+
+skin_types:
+  # ma_loai_da: 1,8,9 -> da_dau · 2 -> moi_loai_da · 3 -> da_nhay_cam · 5,7,10 -> da_kho · 6 -> da_mun · 4 Unknown -> none
+  da_dau: {name: "Da dầu", aliases: ["oily skin", "da nhờn", "da dầu/hỗn hợp dầu", "hỗn hợp dầu", "da hỗn hợp thiên dầu", "hỗn hợp thiên dầu", "da dầu hỗn hợp"]}
+  da_kho: {name: "Da khô", aliases: ["dry skin", "da khô/hỗn hợp khô", "hỗn hợp khô", "da khô / hỗn hợp thiên khô", "hỗn hợp thiên khô", "da khô hỗn hợp"]}
+  da_nhay_cam: {name: "Da nhạy cảm", aliases: ["nhạy cảm", "sensitive skin", "da yếu", "da kích ứng"]}
+  da_mun: {name: "Da mụn", aliases: ["da dễ nổi mụn", "acne prone", "acne prone skin", "da bị mụn"]}
+  moi_loai_da: {name: "Mọi loại da", aliases: ["da thường", "da thường/mọi loại da", "all skin types", "normal skin", "mọi làn da"]}
+
+concerns:
+  mun: {name: "Mụn", aliases: ["acne", "trị mụn", "ngừa mụn", "mụn ẩn", "mụn đầu đen", "mụn viêm", "giảm mụn"]}
+  tham_mun: {name: "Thâm mụn", aliases: ["thâm", "vết thâm", "post acne marks", "mờ thâm"]}
+  nam_tan_nhang: {name: "Nám / tàn nhang", aliases: ["nám", "tàn nhang", "đốm nâu", "hyperpigmentation", "melasma"]}
+  lo_chan_long: {name: "Lỗ chân lông to", aliases: ["lỗ chân lông", "lcl", "se khít lỗ chân lông", "pores"]}
+  dau_thua: {name: "Dầu thừa", aliases: ["bóng dầu", "đổ dầu", "nhờn", "excess oil"]}
+  kho_da: {name: "Khô / thiếu ẩm", aliases: ["khô da", "khô ráp", "thiếu ẩm", "thiếu nước", "mất nước", "bong tróc", "dehydrated"]}
+  kich_ung: {name: "Kích ứng / mẩn đỏ", aliases: ["kích ứng", "mẩn đỏ", "đỏ da", "ửng đỏ", "rát da", "irritation", "redness"]}
+  lao_hoa: {name: "Lão hóa / nếp nhăn", aliases: ["lão hóa", "nếp nhăn", "chảy xệ", "wrinkles", "aging"]}
+  xin_mau: {name: "Da xỉn màu", aliases: ["xỉn màu", "da xỉn", "sạm da", "dull skin"]}
+
+benefits:
+  cap_am: {name: "Cấp ẩm", aliases: ["giữ ẩm", "cấp nước", "hydrating", "moisturizing"]}
+  phuc_hoi: {name: "Phục hồi", aliases: ["phục hồi da", "repair", "tái tạo", "phục hồi hàng rào"]}
+  lam_diu: {name: "Làm dịu", aliases: ["dịu da", "làm dịu da", "soothing", "calming"]}
+  sang_da: {name: "Sáng da", aliases: ["dưỡng sáng", "dưỡng trắng", "trắng da", "làm sáng da", "brightening"]}
+  lam_sach_sau: {name: "Làm sạch sâu", aliases: ["sạch sâu", "deep cleansing", "thông thoáng lỗ chân lông"]}
+  tay_da_chet: {name: "Tẩy da chết hóa học", aliases: ["exfoliating", "làm bong tế bào chết", "peeling"]}
+  chong_lao_hoa: {name: "Chống lão hóa", aliases: ["anti aging", "ngừa lão hóa", "giảm nếp nhăn"]}
+  chong_oxy_hoa: {name: "Chống oxy hóa", aliases: ["antioxidant"]}
+  kiem_dau: {name: "Kiềm dầu", aliases: ["kiểm soát dầu", "oil control"]}
+  chong_tia_uv: {name: "Chống tia UV", aliases: ["uv protection", "bảo vệ khỏi tia uv"]}
+  khang_khuan: {name: "Kháng khuẩn", aliases: ["antibacterial", "diệt khuẩn"]}

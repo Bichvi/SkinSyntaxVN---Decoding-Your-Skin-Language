@@ -134,20 +134,38 @@ class TaiKhoan {
 
         if (empty($orderIds)) return [];
 
-        $detailsCursor = $this->db->chi_tiet_hoa_don->find(['ma_hoa_don' => ['$in' => $orderIds]], ['sort' => ['ma_hoa_don' => -1, 'id' => 1]]);
-        $detailsByOrder = [];
+        $details = [];
+        foreach ($this->db->chi_tiet_hoa_don->find(['ma_hoa_don' => ['$in' => $orderIds]], ['sort' => ['ma_hoa_don' => -1, 'id' => 1]]) as $doc) {
+            $details[] = (array) $doc;
+        }
 
-        foreach ($detailsCursor as $doc) {
-            $detail = (array) $doc;
-            $sp = $this->db->san_pham->findOne(['ma_san_pham' => $detail['ma_san_pham']]);
-            if (!$sp && is_numeric($detail['ma_san_pham'] ?? null)) {
-                $sp = $this->db->san_pham->findOne(['ma_san_pham' => (int)$detail['ma_san_pham']]);
+        // Tra sản phẩm/thương hiệu theo lô ($in) thay vì 2-3 findOne mỗi dòng (mỗi lượt Atlas ~50ms).
+        // Giữ đúng ngữ nghĩa cũ: khớp đúng kiểu trước, chuỗi số thì thử thêm dạng int; trùng mã thì lấy bản đầu như findOne.
+        $productFields = ['ma_san_pham' => 1, 'ten_san_pham' => 1, 'link_hinh_anh' => 1, 'hinh_anh' => 1, 'ma_thuong_hieu' => 1];
+        $products = $this->findFirstByValues('san_pham', 'ma_san_pham', array_map(fn($d) => $d['ma_san_pham'] ?? null, $details), $productFields);
+        $numericRetry = [];
+        foreach ($details as $detail) {
+            $raw = $detail['ma_san_pham'] ?? null;
+            if (!isset($products[$this->lookupKey($raw)]) && is_numeric($raw)) {
+                $numericRetry[] = (int)$raw;
             }
+        }
+        $products += $this->findFirstByValues('san_pham', 'ma_san_pham', $numericRetry, $productFields);
+        $brandIds = [];
+        foreach ($products as $sp) {
+            if (isset($sp['ma_thuong_hieu'])) $brandIds[] = $sp['ma_thuong_hieu'];
+        }
+        $brands = $this->findFirstByValues('thuong_hieu', 'ma_thuong_hieu', $brandIds, ['ma_thuong_hieu' => 1, 'ten_thuong_hieu' => 1]);
+
+        $detailsByOrder = [];
+        foreach ($details as $detail) {
+            $raw = $detail['ma_san_pham'] ?? null;
+            $sp = $products[$this->lookupKey($raw)] ?? (is_numeric($raw) ? ($products[$this->lookupKey((int)$raw)] ?? null) : null);
             if ($sp) {
-                $detail['ten_san_pham'] = $sp['ten_san_pham'];
+                $detail['ten_san_pham'] = $sp['ten_san_pham'] ?? null;
                 $detail['link_hinh_anh'] = $sp['link_hinh_anh'] ?? $sp['hinh_anh'] ?? '';
                 if (isset($sp['ma_thuong_hieu'])) {
-                    $th = $this->db->thuong_hieu->findOne(['ma_thuong_hieu' => $sp['ma_thuong_hieu']]);
+                    $th = $brands[$this->lookupKey($sp['ma_thuong_hieu'])] ?? null;
                     $detail['thuong_hieu'] = $th ? $th['ten_thuong_hieu'] : '';
                 } else {
                     $detail['thuong_hieu'] = '';
@@ -161,6 +179,34 @@ class TaiKhoan {
         }
 
         return $orders;
+    }
+
+    /** Khoá tra cứu phân biệt kiểu như truy vấn Mongo khớp đúng kiểu: "93" (chuỗi) khác 93 (số). */
+    private function lookupKey($value): string {
+        if (is_int($value)) return 'i:' . $value;
+        if (is_float($value)) return 'f:' . $value;
+        if (is_string($value)) return 's:' . $value;
+        return 'x:' . json_encode($value);
+    }
+
+    /**
+     * Một truy vấn $in cho nhiều giá trị; mỗi giá trị lấy bản ghi đầu tiên theo thứ tự tự nhiên (giống findOne).
+     * Trả [lookupKey(giá trị) => document dạng mảng].
+     */
+    private function findFirstByValues(string $collection, string $field, array $values, array $projection): array {
+        $unique = [];
+        foreach ($values as $value) {
+            if ($value === null || is_bool($value)) continue;
+            $unique[$this->lookupKey($value)] = $value;
+        }
+        if (!$unique) return [];
+        $found = [];
+        foreach ($this->db->{$collection}->find([$field => ['$in' => array_values($unique)]], ['projection' => $projection]) as $doc) {
+            $row = (array)$doc;
+            $key = $this->lookupKey($row[$field] ?? null);
+            if (!isset($found[$key])) $found[$key] = $row;
+        }
+        return $found;
     }
 
     public function getCartItems(int $maKh): array {

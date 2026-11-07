@@ -1,13 +1,18 @@
 import os
 import uuid
-from flask import Flask, request, jsonify, send_file
-from agents.service import cancel_agent_run, confirm_agent_run
+from flask import Flask, redirect, request, jsonify, send_file
+from agents.service import ConflictError, cancel_agent_run, confirm_agent_run
+from agents.structured_query import FilterError, run_structured_query
 from config import AGENT_ENABLED, AVATARS_DIR, BACKGROUNDS_DIR, PORT, logger
-from core.campaigns import create_campaign, get_campaign, list_campaigns
+from core.campaigns import CampaignConflict, CampaignNotFound, approve_external_platform, cancel_campaign, create_campaign, get_campaign, list_campaigns, reschedule_campaign, retry_campaign
 from core.agent_runs import create_agent_run, get_agent_run, list_agent_runs, update_agent_run
 from core.state_machine import create_job, ensure_indexes, get_job, get_db, object_id, utcnow
 from core.pipeline import start_pipeline_thread
-from core.script_text import sanitize_external_retailer_mentions
+from core.health import dependency_status
+from core.product_videos import list_product_videos, set_video_visibility
+from core import script_recovery
+from core.purpose import purpose_of, video_publishes_to_product_page
+from engines.script_validator import check_blacklist, check_purpose_rules
 from tasks import prepare_campaign_task, generate_job_task, process_agent_run_task
 
 app = Flask(__name__)
@@ -33,6 +38,12 @@ def api_health():
         "mongo": mongo,
         "agent_enabled": AGENT_ENABLED,
     }), 200 if healthy else 503
+
+
+@app.route("/api/ai-idol/health/dependencies", methods=["GET"])
+def api_dependency_health():
+    """Cached (15 s) status of every service the live pipeline needs; never exposes secrets."""
+    return jsonify({"ok": True, "data": dependency_status(force=request.args.get("refresh") == "1")})
 
 
 def _agent_disabled_response():
@@ -88,6 +99,8 @@ def api_confirm_agent_run(run_id):
         run = confirm_agent_run(run_id, request.get_json(silent=True) or {})
         process_agent_run_task.delay(run_id)
         return jsonify({"ok": True, "data": run}), 202
+    except ConflictError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
     except ValueError as exc:
         return jsonify({"ok": False, "message": str(exc)}), 400
 
@@ -190,138 +203,91 @@ def api_get_campaign(campaign_id):
 @app.route("/api/ai-idol/campaigns/<campaign_id>/retry", methods=["POST"])
 def api_retry_campaign(campaign_id):
     try:
-        db = get_db()
-        campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
-        if not campaign:
-            return jsonify({"ok": False, "message": "Campaign not found"}), 404
-        failed_segments = list(db.ai_idol_segments.find({"campaign_id": campaign_id, "status": "FAILED"}))
-        if not failed_segments:
-            return jsonify({"ok": False, "message": "Campaign has no failed segments"}), 400
-        db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {"$set": {
-            "status": "GENERATING", "error_message": None, "updated_at": utcnow(),
-        }})
-        queued = 0
-        for segment in failed_segments:
-            job_id = segment.get("job_id")
-            if job_id:
-                db.ai_idol_jobs.update_one({"_id": object_id(job_id)}, {"$set": {
-                    "status": "CREATED", "error_message": None, "updated_at": utcnow(),
-                }, "$inc": {"retry_count": 1}})
-                db.ai_idol_segments.update_one({"_id": segment["_id"]}, {"$set": {
-                    "status": "GENERATING", "error_message": None, "updated_at": utcnow(),
-                }})
-                generate_job_task.delay(job_id)
-                queued += 1
-        if queued == 0:
-            prepare_campaign_task.delay(campaign_id)
-        return jsonify({"ok": True, "queued": queued})
+        result = retry_campaign(campaign_id)
+        return jsonify({"ok": True, "queued": result["queued_segments"], **result})
+    except CampaignNotFound as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 404
+    except CampaignConflict as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
     except ValueError as exc:
         return jsonify({"ok": False, "message": str(exc)}), 400
+
+
+@app.route("/api/ai-idol/campaigns/<campaign_id>/cancel", methods=["POST"])
+def api_cancel_campaign(campaign_id):
+    try:
+        return jsonify({"ok": True, **cancel_campaign(campaign_id)})
+    except CampaignNotFound as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 404
+    except CampaignConflict as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+
+
+@app.route("/api/ai-idol/campaigns/<campaign_id>/reschedule", methods=["POST"])
+def api_reschedule_campaign(campaign_id):
+    try:
+        payload = request.get_json(silent=True) or {}
+        return jsonify({"ok": True, **reschedule_campaign(campaign_id, payload.get("scheduled_at"))})
+    except CampaignNotFound as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 404
+    except CampaignConflict as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+
+
+@app.route("/api/ai-idol/campaigns/<campaign_id>/platforms/approve", methods=["POST"])
+def api_approve_campaign_platform(campaign_id):
+    try:
+        payload = request.get_json(silent=True) or {}
+        data = approve_external_platform(campaign_id, str(payload.get("platform") or ""), str(payload.get("by") or ""))
+        return jsonify({"ok": True, "data": data})
+    except CampaignNotFound as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 404
+    except CampaignConflict as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 409
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+
+
+def _recovery_response(job_id, action):
+    """Run one script-recovery action; the server alone decides PASS, client validation fields are ignored."""
+    try:
+        outcome = action(get_db())
+    except script_recovery.RecoveryError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), exc.status
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+    if outcome.resume:
+        generate_job_task.delay(job_id)
+    return jsonify(outcome.body(job_id)), 202 if outcome.resume else 200
 
 
 @app.route("/api/ai-idol/jobs/<job_id>/script/approve", methods=["POST"])
 def api_approve_job_script(job_id):
-    try:
-        db = get_db()
-        job = db.ai_idol_jobs.find_one({"_id": object_id(job_id)})
-        if not job:
-            return jsonify({"ok": False, "message": "Job not found"}), 404
-        if job.get("status") not in {"AWAITING_APPROVAL", "FAILED"}:
-            return jsonify({
-                "ok": False,
-                "message": "Kịch bản không ở trạng thái chờ duyệt.",
-            }), 409
-        payload = request.get_json(silent=True) or {}
-        script_text = sanitize_external_retailer_mentions(payload.get("script_text", "")).strip()
-        if len(script_text) < 40:
-            return jsonify({
-                "ok": False,
-                "message": "Kịch bản cần ít nhất 40 ký tự.",
-            }), 400
-        if len(script_text) > 20000:
-            return jsonify({
-                "ok": False,
-                "message": "Kịch bản không được vượt quá 20.000 ký tự.",
-            }), 400
+    payload = request.get_json(silent=True) or {}
+    submitted = payload.get("script_text")
+    return _recovery_response(job_id, lambda db: script_recovery.approve(
+        db, job_id, None if submitted is None else str(submitted)))
 
-        now = utcnow()
-        previous_text = str((job.get("artifacts") or {}).get("script_text", "")).strip()
-        latest = db.ai_idol_scripts.find_one(
-            {"job_id": job_id}, sort=[("version", -1)], projection={"version": 1}
-        )
-        version = int((latest or {}).get("version", 0)) + 1
-        db.ai_idol_scripts.insert_one({
-            "job_id": job_id,
-            "product_id": job.get("product_id"),
-            "content_mode": job.get("content_mode"),
-            "script_text": script_text,
-            "version": version,
-            "status": "APPROVED",
-            "approved_at": now,
-            "created_at": now,
-            "updated_at": now,
-        })
 
-        unset_values = {
-            "artifacts.avatar_video_path": "",
-            "artifacts.final_video_path": "",
-            "final_video_path": "",
-            "video_id": "",
-        }
-        if script_text != previous_text:
-            unset_values.update({
-                "artifacts.audio_path": "",
-                "artifacts.audio_pipeline_version": "",
-            })
-        db.ai_idol_jobs.update_one(
-            {"_id": job["_id"]},
-            {
-                "$set": {
-                    "artifacts.script_text": script_text,
-                    "script_status": "APPROVED",
-                    "script_version": version,
-                    "script_approved_at": now,
-                    "status": "QUEUED",
-                    "current_stage": "SCRIPT_APPROVED",
-                    "failed_stage": None,
-                    "error_message": None,
-                    "updated_at": now,
-                },
-                "$unset": unset_values,
-            },
-        )
-        campaign_id = job.get("campaign_id")
-        if job.get("segment_id"):
-            db.ai_idol_segments.update_one(
-                {"_id": object_id(job["segment_id"])},
-                {"$set": {
-                    "status": "GENERATING",
-                    "error_message": None,
-                    "updated_at": now,
-                }},
-            )
-        if campaign_id:
-            failed = db.ai_idol_segments.count_documents({
-                "campaign_id": str(campaign_id), "status": "FAILED"
-            })
-            db.ai_idol_campaigns.update_one(
-                {"_id": object_id(str(campaign_id))},
-                {"$set": {
-                    "status": "GENERATING",
-                    "progress.failed": failed,
-                    "error_message": None,
-                    "updated_at": now,
-                }},
-            )
-        generate_job_task.delay(job_id)
-        return jsonify({
-            "ok": True,
-            "job_id": job_id,
-            "script_version": version,
-            "status": "QUEUED",
-        }), 202
-    except ValueError as exc:
-        return jsonify({"ok": False, "message": str(exc)}), 400
+@app.route("/api/ai-idol/jobs/<job_id>/script/retry-repair", methods=["POST"])
+def api_retry_repair_job_script(job_id):
+    return _recovery_response(job_id, lambda db: script_recovery.retry_repair(db, job_id))
+
+
+@app.route("/api/ai-idol/jobs/<job_id>/script/rewrite", methods=["POST"])
+def api_rewrite_job_script(job_id):
+    payload = request.get_json(silent=True) or {}
+    return _recovery_response(job_id, lambda db: script_recovery.rewrite(
+        db, job_id, payload.get("instruction"), payload.get("custom_text")))
+
+
+@app.route("/api/ai-idol/jobs/<job_id>/cancel", methods=["POST"])
+def api_cancel_job(job_id):
+    return _recovery_response(job_id, lambda db: script_recovery.cancel(db, job_id))
 
 
 @app.route("/api/ai-idol/campaigns/<campaign_id>/video", methods=["GET"])
@@ -473,14 +439,73 @@ def api_list_schedules():
     except Exception as e:
         return jsonify({"ok": False, "message": str(e)}), 500
 
+@app.route("/api/ai-idol/products/query", methods=["POST"])
+def api_query_products():
+    """Read-only structured product query (manual mode filter form); body keys are the Prompt Builder selection keys."""
+    filters = request.get_json(silent=True)
+    try:
+        return jsonify(run_structured_query({} if filters is None else filters))
+    except FilterError as exc:  # not ValueError: loaders raise it for data-size limits, which are server errors
+        return jsonify({"ok": False, "message": str(exc)}), 400
+    except Exception:
+        logger.exception("[APP] Unable to run structured product query")
+        return jsonify({"ok": False, "message": "Không truy vấn được sản phẩm, thử lại sau."}), 500
+
+
+@app.route("/api/ai-idol/products/<product_id>/videos", methods=["GET"])
+def api_list_product_videos(product_id):
+    try:
+        limit = int(request.args.get("limit", 30))
+    except (TypeError, ValueError):
+        limit = 30
+    try:
+        return jsonify({"ok": True, "data": list_product_videos(product_id, limit=limit)})
+    except Exception:
+        logger.exception("[APP] Unable to list product videos")
+        return jsonify({"ok": False, "message": "Không tải được video sản phẩm"}), 500
+
+
+@app.route("/api/ai-idol/videos/<video_id>/visibility", methods=["POST"])
+def api_set_video_visibility(video_id):
+    payload = request.get_json(silent=True) or {}
+    try:
+        state = set_video_visibility(video_id, bool(payload.get("hidden")), str(payload.get("by") or ""))
+        return jsonify({"ok": True, "data": state})
+    except LookupError:
+        return jsonify({"ok": False, "message": "Video not found"}), 404
+    except ValueError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 400
+
+
+PRODUCT_PAGE_RENDITION = "product_page"
+
+
+def _product_page_rendition(video):
+    """The price-free clip for storefront product pages (spec D12): never the full render, never a livestream-only video."""
+    if not video_publishes_to_product_page(video):
+        return jsonify({"ok": False, "message": "Video này không có bản cho trang sản phẩm"}), 404
+    page_path = video.get("product_page_file_path")
+    if page_path and os.path.isfile(page_path):
+        return send_file(page_path, mimetype="video/mp4", conditional=True)
+    uploaded_url = (video.get("media") or {}).get("video_url")
+    if uploaded_url:  # the local copy was cleaned up after the R2 upload
+        return redirect(uploaded_url, code=302)
+    return jsonify({"ok": False, "message": "Video cho trang sản phẩm chưa sẵn sàng"}), 404
+
+
 @app.route("/api/ai-idol/videos/<video_id>", methods=["GET"])
 def api_get_video_file(video_id):
+    rendition = (request.args.get("rendition") or "").strip()
+    if rendition not in ("", PRODUCT_PAGE_RENDITION):
+        return jsonify({"ok": False, "message": "Unsupported rendition"}), 400
     try:
         db = get_db()
         video = db.ai_idol_videos.find_one({"_id": object_id(video_id)})
         if not video:
             return jsonify({"ok": False, "message": "Video not found"}), 404
-            
+        if rendition == PRODUCT_PAGE_RENDITION:
+            return _product_page_rendition(video)
+
         file_path = video.get("file_path")
         if not os.path.exists(file_path):
             return jsonify({"ok": False, "message": f"Video file not found at {file_path}"}), 404

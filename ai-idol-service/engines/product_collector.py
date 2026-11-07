@@ -1,6 +1,7 @@
 from bson import ObjectId
 from pymongo import MongoClient
-from core.state_machine import get_db
+from core.state_machine import get_db, utcnow
+from core.pricing import resolve_pricing
 from config import logger
 
 def collect_product_and_snapshot(product_id) -> dict:
@@ -83,6 +84,12 @@ def collect_product_and_snapshot(product_id) -> dict:
             snapshot["market_price"] = int(product["gia_thi_truong"])
         except ValueError:
             pass
+
+    try:
+        snapshot["pricing"] = resolve_pricing(snapshot["id"], product, utcnow())
+    except Exception as exc:
+        logger.warning(f"[PRODUCT-COLLECTOR] Pricing unavailable for {product_id}: {type(exc).__name__}")
+        snapshot["pricing"] = None
 
     logger.info(f"[PRODUCT-COLLECTOR] Snapshot built for '{snapshot['name']}' ({snapshot['brand']})")
     return snapshot

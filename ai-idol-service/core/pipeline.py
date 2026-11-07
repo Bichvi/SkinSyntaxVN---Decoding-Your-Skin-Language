@@ -2,12 +2,18 @@ import os
 from bson import ObjectId
 from core.state_machine import checkpoint_job, update_job_stage, fail_job, update_job_snapshot, get_job, get_db, utcnow
 from config import AUDIO_PIPELINE_VERSION, logger
+from core.purpose import LIVE_ONLY, PRODUCT_VIDEO, purpose_of
 from core.script_text import sanitize_external_retailer_mentions
+from engines.audio_mixer import lead_in_seconds
 
 
 def should_auto_approve_script(config: dict) -> bool:
-    """Allow auto approval only for explicitly agent-managed safe policies."""
-
+    """Explicit approval_mode wins; otherwise auto approval only for agent-managed safe policies."""
+    mode = str(config.get("approval_mode") or "").upper()
+    if mode == "AUTO":
+        return True
+    if mode == "MANUAL":
+        return False
     return bool(
         config.get("agent_managed")
         and config.get("script_approval_mode") == "auto"
@@ -34,12 +40,13 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     product_id = job["product_id"]
     content_mode = job["content_mode"]
     config = job["configuration"]
+    purpose = purpose_of(job)
 
     # Import engines dynamically to prevent circular imports
     from engines.product_collector import collect_product_and_snapshot
     from engines.knowledge_retriever import retrieve_knowledge
     from engines.content_agent import generate_content_and_script
-    from engines.script_validator import validate_and_revise_script
+    from engines.script_validator import validate_and_repair_script
 
     # Every completed stage stores a checkpoint. Retry therefore resumes instead of regenerating.
     artifacts = job.get("artifacts") or {}
@@ -86,13 +93,32 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     try:
         if not script_text:
             update_job_stage(job_id, "GENERATING_CONTENT")
-            draft = generate_content_and_script(snapshot, knowledge, content_mode, config)
-            update_job_stage(job_id, "VALIDATING_SCRIPT")
-            is_pass, script_text, feedback = validate_and_revise_script(
-                draft, snapshot, knowledge, content_mode, config
+            draft = generate_content_and_script(snapshot, knowledge, content_mode, config, purpose)
+            result = validate_and_repair_script(
+                draft, snapshot, purpose,
+                on_event=lambda kind, version, _text: update_job_stage(
+                    job_id, "VALIDATING_SCRIPT" if kind == "validating" else "REPAIRING_SCRIPT"),
             )
-            if not is_pass:
-                fail_job(job_id, "VALIDATING_SCRIPT", f"Kịch bản không vượt qua kiểm duyệt: {feedback}")
+            script_text = result.script
+            versions, history, repairs = _version_records(draft, result)
+            tracking = {
+                "artifacts.script_versions": versions, "artifacts.validation_history": history,
+                "artifacts.repair_history": repairs, "artifacts.repair_attempt": result.repair_attempts,
+                "artifacts.script_version": len(versions),
+            }
+            if not result.passed:
+                # Keep the last draft for staff, but never store it as artifacts.script_text
+                # (that field means "usable script"). The job is parked, not failed or cancelled.
+                feedback = result.feedback
+                checkpoint_job(job_id, {
+                    **tracking,
+                    "artifacts.rejected_script_text": str(script_text or "")[:20000],
+                    "artifacts.validation_feedback": str(feedback or "")[:4000],
+                    "status": "AUTO_REPAIR_EXHAUSTED", "current_stage": "AUTO_REPAIR_EXHAUSTED",
+                    "error_message": f"Kịch bản chưa đạt sau {result.repair_attempts} lần tự sửa: {feedback}"[:4000],
+                    "failed_stage": None,
+                })
+                logger.warning("[PIPELINE] Job %s: auto repair exhausted: %s", job_id, feedback)
                 return False
             db.ai_idol_scripts.update_one(
                 {"job_id": job_id, "version": 1},
@@ -102,18 +128,21 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
                  "$setOnInsert": {"created_at": utcnow()}},
                 upsert=True,
             )
-            checkpoint_job(job_id, {"artifacts.script_text": script_text})
+            checkpoint_job(job_id, {**tracking, "artifacts.script_text": script_text})
     except Exception as e:
         fail_job(job_id, "GENERATING_CONTENT", f"Lỗi lập kịch bản/kiểm duyệt: {e}")
         return False
 
-    if job.get("script_status") != "APPROVED" and should_auto_approve_script(config):
+    # Product videos publish themselves (spec D12): the validated script needs no human gate.
+    mode = str(config.get("approval_mode") or "").upper()
+    product_video_auto = purpose == PRODUCT_VIDEO and mode != "MANUAL"
+    if job.get("script_status") != "APPROVED" and (product_video_auto or should_auto_approve_script(config)):
         now = utcnow()
         db.ai_idol_scripts.update_one(
             {"job_id": job_id, "version": 1},
             {"$set": {
                 "status": "APPROVED",
-                "approved_by": "AI_IDOL_AGENT_POLICY",
+                "approved_by": "AUTO_APPROVAL_MODE" if mode == "AUTO" else ("PRODUCT_VIDEO_AUTO" if product_video_auto else "AI_IDOL_AGENT_POLICY"),
                 "approved_at": now,
                 "updated_at": now,
             }},
@@ -181,11 +210,22 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     # the mascot or the full presentation scene to a human-face lip-sync model.
     if config.get("avatar_mode") == "syna_3d":
         try:
-            from engines.syna_engine import render_syna_video
+            from engines.syna_engine import RendererUnavailable, render_syna_video
             update_job_stage(job_id, "RENDERING")
-            final_video_path = render_syna_video(job_id, audio_path, script_text, snapshot, config)
+            final_video_path = render_syna_video(job_id, audio_path, script_text, snapshot, config, purpose=purpose)
             checkpoint_job(job_id, {"artifacts.final_video_path": final_video_path,
                                     "artifacts.video_renderer": "syna-native-v4"})
+        except RendererUnavailable as e:
+            # Not a job failure: script and voice are checkpointed, so park the job
+            # and let the resume beat requeue it when Syna answers again.
+            logger.warning("[PIPELINE] Job %s waits for the Syna renderer: %s", job_id, e)
+            update_job_stage(job_id, "WAITING_RENDERER", status="WAITING_RENDERER")
+            checkpoint_job(job_id, {
+                "error_message": f"Đang chờ Syna: {e}"[:1000],
+                "failed_stage": None,
+                "waiting_renderer_since": utcnow(),
+            })
+            return False
         except Exception as e:
             fail_job(job_id, "RENDERING", f"Lỗi tạo video Syna 3D: {e}")
             return False
@@ -194,7 +234,86 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
         if not final_video_path:
             return False
 
-    return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db)
+    # STAGE 7b: Audio mastering + background music. Runs on every attempt from
+    # the raw render and the clean voice, so resumed jobs never double-mix.
+    from engines.audio_mixer import mix_program_audio
+    from engines.body_clip import board_price, product_page_clip
+    padded = config.get("avatar_mode") == "syna_3d"
+    rendered_path = final_video_path
+    mix_snapshot = snapshot
+    if purpose != LIVE_ONLY and snapshot.get("pricing"):
+        # Board shows the resolved price (flash if running, else regular).
+        board = board_price(snapshot, purpose)
+        mix_snapshot = {**snapshot, "price": board, "sale_price": board}
+    elif purpose == PRODUCT_VIDEO:
+        # Evergreen product videos without a price claim get no price title card.
+        mix_snapshot = {**snapshot, "price": None, "sale_price": None}
+    applied: dict = {}
+    final_video_path = mix_program_audio(
+        job_id, final_video_path, audio_path, config, mix_snapshot,
+        # Syna renders the lead-in/tail herself (greeting and goodbye wave).
+        video_padded=padded, applied=applied,
+    )
+    page_path, block_reason = product_page_clip(
+        job_id, purpose, final_video_path, audio_path,
+        intro=applied_intro(job_id, config, padded=padded, rendered=rendered_path,
+                            final=final_video_path, applied=applied),
+    )
+
+    return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db,
+                               purpose=purpose, campaign_id=job.get("campaign_id"),
+                               page_path=page_path, block_reason=block_reason, snapshot=snapshot,
+                               script_text=script_text)
+
+
+def _version_records(draft: str, result) -> tuple[list, list, list]:
+    now = utcnow()
+    versions, history, repairs = [], [], []
+    for entry in result.history:
+        v = entry["version"]
+        versions.append({"version": v, "text": entry.get("text", ""), "created_at": now,
+                         "source": "generated" if v == 1 else "auto_repair"})
+        history.append({"version": v, "passed": entry["passed"], "issues": entry["issues"]})
+        repair = entry.get("repair") or {}
+        if repair.get("to_version"):
+            repairs.append({"from_version": v, "to_version": repair["to_version"],
+                            "issue_codes": repair.get("issue_codes", [])})
+    return versions, history, repairs
+
+
+def final_machine_check(db, job_id: str, product_id: str, snapshot: dict, script_text, video_path: str,
+                        duration, purpose: str) -> list[str]:
+    """Last gate before READY. Returns problem strings (empty = pass)."""
+    from engines.script_validator import validate_script
+    problems = []
+    try:
+        job = db.ai_idol_jobs.find_one({"_id": ObjectId(job_id)}) or {}
+    except Exception:
+        job = {}
+    if str(job.get("product_id") or product_id) != str(product_id):
+        problems.append("product_id không khớp job")
+    if not video_path or not os.path.isfile(video_path):
+        problems.append("File video không tồn tại")
+    try:
+        if not duration or float(duration) <= 0:
+            problems.append("Video có thời lượng bằng 0")
+    except (TypeError, ValueError):
+        problems.append("Không đo được thời lượng video")
+    if script_text is not None:
+        try:
+            problems.extend(f"Kịch bản: {i.reason}" for i in validate_script(script_text, snapshot or {}, purpose)
+                            if i.severity == "error")
+        except Exception as e:
+            problems.append(f"Không kiểm tra lại được kịch bản: {e}")
+    return problems
+
+
+def applied_intro(job_id: str, config: dict, *, padded: bool, rendered: str, final: str, applied: dict) -> float:
+    """Seconds before the first word in `final`, so script sections can be located on its timeline."""
+    if final != rendered:
+        return float(applied.get("intro", 0.0))  # what the mixer actually placed
+    # Mix skipped or failed: only a Syna render carries its own lead-in.
+    return lead_in_seconds(job_id, config)[0] if padded else 0.0
 
 
 def _render_legacy_media(job_id, audio_path, script_text, snapshot, config, artifacts, audio_refreshed):
@@ -226,18 +345,38 @@ def _render_legacy_media(job_id, audio_path, script_text, snapshot, config, arti
     return final_video_path
 
 
-def _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db):
+def _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db, *,
+                        purpose="live_only", campaign_id=None, page_path=None, block_reason=None, snapshot=None,
+                        script_text=None):
+    from core.pricing import claim_from_pricing
     from engines.video_composer import get_audio_duration
     # STAGE 8: Complete and set status to READY
     try:
+        snapshot = snapshot or {}
+        claim = None
+        if purpose != LIVE_ONLY:
+            claim = claim_from_pricing(str(snapshot.get("id") or product_id), snapshot.get("pricing"))
+        # Probe the final file: the music intro/outro makes it longer than the voice.
+        duration = get_audio_duration(final_video_path)
+        problems = final_machine_check(db, job_id, product_id, snapshot, script_text, final_video_path, duration, purpose)
+        if problems:
+            fail_job(job_id, "FINAL_CHECK", "Kiểm tra cuối thất bại: " + "; ".join(problems))
+            return False
         # Save complete video metadata
         video_doc = {
             "job_id": job_id,
             "product_id": product_id,
             "file_path": final_video_path,
-            "duration": get_audio_duration(audio_path),
+            "duration": duration,
             "format": config.get("format", "9:16"),
             "resolution": "720x1280" if config.get("format") == "9:16" else "1280x720",
+            "purpose": purpose,
+            "campaign_id": campaign_id,
+            # What media publishing uploads for product pages (None: never shown there).
+            "product_page_file_path": page_path,
+            "product_page_block_reason": block_reason,
+            # Prices the video may speak; the storefront hides it once they stop holding.
+            "price_claim": claim,
             "created_at": utcnow()
         }
         existing_video = db.ai_idol_videos.find_one({"job_id": job_id})

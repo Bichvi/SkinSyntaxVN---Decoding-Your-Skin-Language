@@ -6,11 +6,15 @@ require_once __DIR__ . '/../models/TaiKhoan.php';
 require_once __DIR__ . '/../models/HoaDon.php';
 require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/Voucher.php';
+require_once __DIR__ . '/../services/ProductEventTracker.php';
+require_once __DIR__ . '/../services/SkincareProductClassifier.php';
+require_once __DIR__ . '/../services/RecommendationExplainer.php';
 
 class HomeController {
     private $pdo;
     private SanPham $model;
     private GoiYContentBased $goiYModel;
+    private ?RecommendationExplainer $recommendationExplainer = null;
     private HoaDon $hoaDonModel;
     private Voucher $voucherModel;
     private const POINT_VALUE_VND = 1000;
@@ -659,30 +663,28 @@ class HomeController {
 
         // Pipeline gom nhóm và đếm danh mục bằng MongoDB
         try {
-            $pipeline = [
-                ['$match' => ['danh_muc_day_du' => ['$nin' => [null, '']]]],
-                ['$group' => ['_id' => '$danh_muc_day_du', 'so_luong' => ['$sum' => 1]]],
-                ['$sort' => ['so_luong' => -1]],
-                ['$limit' => 6]
-            ];
-
-            $cursor = $this->pdo->san_pham->aggregate($pipeline);
-            $result = [];
-
-            foreach ($cursor as $doc) {
-                $result[] = [
-                    'danh_muc_day_du' => (string) $doc['_id'],
-                    'so_luong' => (int) $doc['so_luong']
+            $result = ProductQueryCache::remember('highlightedCategories', 600, function (): array {
+                $pipeline = [
+                    ['$match' => ['danh_muc_day_du' => ['$nin' => [null, '']]]],
+                    ['$group' => ['_id' => '$danh_muc_day_du', 'so_luong' => ['$sum' => 1]]],
+                    ['$sort' => ['so_luong' => -1]],
+                    ['$limit' => 6]
                 ];
-            }
+
+                $cursor = $this->pdo->san_pham->aggregate($pipeline);
+                $result = [];
+
+                foreach ($cursor as $doc) {
+                    $result[] = [
+                        'danh_muc_day_du' => (string) $doc['_id'],
+                        'so_luong' => (int) $doc['so_luong']
+                    ];
+                }
+                return $result;
+            });
 
             if (!empty($result)) {
                 self::$highlightedCategoriesCache = $result;
-                $dir = dirname($cacheFile);
-                if (!is_dir($dir)) {
-                    @mkdir($dir, 0777, true);
-                }
-                @file_put_contents($cacheFile, json_encode($result, JSON_UNESCAPED_UNICODE));
                 if (class_exists('CacheService')) {
                     CacheService::getInstance()->set('home:highlighted_categories', $result, 3600);
                 }
@@ -889,8 +891,8 @@ class HomeController {
                 $data['totalFiltered'] = (int)($searchResult['total'] ?? 0);
             }
             $data['sections'] = $this->model->publicRecommendationSections(6, $filters, $sortKey);
-            $data['brands'] = method_exists($this->model, 'listBrandOptions') ? $this->model->listBrandOptions() : [];
-            $data['categories'] = method_exists($this->model, 'listCategoryOptions') ? $this->model->listCategoryOptions() : [];
+            $data['brands'] = method_exists($this->model, 'listBrandOptions') ? ProductQueryCache::remember('filterOptions:brands', 600, fn() => $this->model->listBrandOptions()) : [];
+            $data['categories'] = method_exists($this->model, 'listCategoryOptions') ? ProductQueryCache::remember('filterOptions:categories', 600, fn() => $this->model->listCategoryOptions()) : [];
         } catch (Throwable $e) {
             error_log($logContext . ' MongoDB error: ' . $e->getMessage());
             $data['message'] = 'Hiện chưa thể tải dữ liệu sản phẩm. Vui lòng thử lại sau.';
@@ -929,8 +931,8 @@ class HomeController {
         $brands = [];
         $categories = [];
         try {
-            $brands = method_exists($this->model, 'listBrandOptions') ? $this->model->listBrandOptions() : [];
-            $categories = method_exists($this->model, 'listCategoryOptions') ? $this->model->listCategoryOptions() : [];
+            $brands = method_exists($this->model, 'listBrandOptions') ? ProductQueryCache::remember('filterOptions:brands', 600, fn() => $this->model->listBrandOptions()) : [];
+            $categories = method_exists($this->model, 'listCategoryOptions') ? ProductQueryCache::remember('filterOptions:categories', 600, fn() => $this->model->listCategoryOptions()) : [];
         } catch (Throwable $e) {
             error_log('product_collection options MongoDB error: ' . $e->getMessage());
         }
@@ -1997,42 +1999,6 @@ class HomeController {
             '/\bson\b|son kem|son thỏi|son thoi|son dưỡng môi|son duong moi|má hồng|ma hong|phấn|phan|trang điểm|trang diem|makeup|che khuyết điểm|che khuyet diem|kem nền|kem nen|cushion|mascara|dưỡng thể|duong the|body|sữa tắm|sua tam|dầu gội|dau goi|dầu xả|dau xa|tóc|toc|khử mùi|khu mui|lăn nách|lan nach|trắng răng|trang rang|kem đánh răng|kem danh rang|nước súc miệng|nuoc suc mieng|nước hoa|nuoc hoa|parfum/u',
             $text
         ) === 1;
-    }
-
-    private function hasRoutineCategoryCoverage(array $products): bool {
-        $required = [
-            'remover' => false,
-            'cleanser' => false,
-            'toner' => false,
-            'treatment' => false,
-            'moisturizer' => false,
-            'sunscreen' => false,
-        ];
-
-        foreach ($products as $product) {
-            if (!is_array($product) || $this->isNonFacialAiProduct($product)) {
-                continue;
-            }
-            $text = $this->normalizeAiProductText(implode(' ', [
-                (string)($product['name'] ?? $product['ten_san_pham'] ?? ''),
-                (string)($product['category'] ?? $product['loai_san_pham'] ?? $product['danh_muc'] ?? ''),
-            ]));
-            if (preg_match('/tẩy trang|tay trang|micellar|cleansing water|cleansing oil|cleansing balm/u', $text)) {
-                $required['remover'] = true;
-            } elseif (preg_match('/sữa rửa mặt|sua rua mat|rửa mặt|rua mat|cleanser|face wash|foaming wash|cleansing foam/u', $text)) {
-                $required['cleanser'] = true;
-            } elseif (preg_match('/toner|nước cân bằng|nuoc can bang|nước hoa hồng|nuoc hoa hong/u', $text)) {
-                $required['toner'] = true;
-            } elseif (preg_match('/serum|tinh chất|tinh chat|essence|ampoule|retinol|tretinoin|bha|aha|niacinamide|salicylic|benzoyl/u', $text)) {
-                $required['treatment'] = true;
-            } elseif (preg_match('/chống nắng|chong nang|kem chống nắng|sunscreen|sunblock|spf/u', $text)) {
-                $required['sunscreen'] = true;
-            } elseif (preg_match('/dưỡng ẩm|duong am|kem dưỡng|kem duong|phục hồi|phuc hoi|moisturizer|face cream|gel dưỡng|gel duong|emulsion/u', $text)) {
-                $required['moisturizer'] = true;
-            }
-        }
-
-        return !in_array(false, $required, true);
     }
 
     private function isAiProductDiscoveryRequest(string $message): bool {
@@ -3642,104 +3608,184 @@ class HomeController {
         ];
     }
 
+    private const GOIY_ROUTINE_CACHE_TTL = 600;
+    private const GOIY_ROUTINE_ALTERNATIVES = 3;
+
     private function fetchLlamaIndexRecommendations(array $profile, array $sessionUser): array {
+        // Trang goiy dùng engine content-based PHP làm nguồn chính: chấm điểm toàn bộ sản phẩm
+        // thuộc các bước routine (~1.1k) và trả kèm lựa chọn thay thế cho từng bước.
+        // /api/recommend/profile của AI service chạy cả LLM (~10s) trong khi trang không hiển thị
+        // câu trả lời, nên chỉ gọi đồng bộ khi bật AI_GOIY_SYNC_AI=1. Khi bật, sản phẩm AI chọn
+        // đứng trước (làm sản phẩm chính), engine PHP lấp các bước còn thiếu và phần thay thế.
+        $syncAi = $this->isGoiySyncAiEnabled();
+        $cacheKey = 'goiy_routine_' . md5((string)json_encode([
+            $profile['skin_type'] ?? '',
+            $profile['concerns'] ?? [],
+            $profile['goal'] ?? '',
+            $profile['avoid_ingredients'] ?? [],
+            $profile['budget'] ?? null,
+            $syncAi,
+            'fit_explanation_v1',
+        ], JSON_UNESCAPED_UNICODE));
+        $cached = $_SESSION[$cacheKey] ?? null;
+        if (is_array($cached) && is_array($cached['result'] ?? null) && (int)($cached['created_at'] ?? 0) > time() - self::GOIY_ROUTINE_CACHE_TTL) {
+            return $cached['result'];
+        }
+
+        $contentProducts = [];
+        try {
+            $contentProducts = $this->buildContentBasedRoutineProducts($profile);
+        } catch (Throwable $e) {
+            error_log('goiy content-based routine error: ' . $e->getMessage());
+        }
+
+        $aiResult = $syncAi ? $this->fetchAiRoutineProducts($profile, $sessionUser) : ['products' => [], 'answer_text' => ''];
+
+        $products = [];
+        $seenIds = [];
+        foreach (array_merge($aiResult['products'], $contentProducts) as $product) {
+            $id = (string)($product['id'] ?? '');
+            if ($id === '' || isset($seenIds[$id])) {
+                continue;
+            }
+            $seenIds[$id] = true;
+            $products[] = $product;
+        }
+
+        if (!$products) {
+            return [
+                'ok' => false,
+                'message' => 'Hiện chưa thể tải gợi ý sản phẩm cá nhân hóa. Vui lòng thử lại sau.',
+                'answer_text' => '',
+                'products' => [],
+            ];
+        }
+
+        $skinTypeStr = !empty($profile['skin_type']) ? $profile['skin_type'] : 'làn da';
+        $result = [
+            'ok' => true,
+            'source' => $aiResult['products'] ? 'langchain_rag+content_based' : 'content_based',
+            'answer_text' => $aiResult['answer_text'] !== ''
+                ? $aiResult['answer_text']
+                : "SkinSyntax đã phân tích hồ sơ da ({$skinTypeStr}) và lựa chọn chu trình sản phẩm phù hợp nhất dành cho bạn bên dưới.",
+            'products' => $products,
+            'candidate_count' => $this->goiYModel->lastScoredCount(),
+        ];
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION[$cacheKey] = ['created_at' => time(), 'result' => $result];
+        }
+        return $result;
+    }
+
+    private function isGoiySyncAiEnabled(): bool {
+        $value = function_exists('ss_env') ? ss_env('AI_GOIY_SYNC_AI', '0') : (getenv('AI_GOIY_SYNC_AI') ?: '0');
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    private function buildContentBasedRoutineProducts(array $profile): array {
+        $avoid = $profile['avoid_ingredients'] ?? '';
+        $rows = $this->goiYModel->recommendFromPost([
+            'skin_type' => $profile['skin_type'] ?? '',
+            'concerns' => $profile['concerns'] ?? [],
+            'goal' => $profile['goal'] ?? '',
+            'avoid_ingredients' => is_array($avoid) ? implode(', ', $avoid) : (string)$avoid,
+            'budget' => $profile['budget'] ?? null,
+            'gioi_tinh' => $profile['gioi_tinh'] ?? '',
+            'nam_sinh' => $profile['nam_sinh'] ?? '',
+            'is_routine' => true,
+            'routine_alternatives' => self::GOIY_ROUTINE_ALTERNATIVES,
+            'query_text' => $profile['user_query'] ?? '',
+        ], count(SkincareProductClassifier::ROUTINE_STEPS) * (1 + self::GOIY_ROUTINE_ALTERNATIVES));
+
+        $products = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && !SkincareProductClassifier::isNonFacial($row)) {
+                $products[] = $this->formatGoiyRoutineProduct($row, $profile);
+            }
+        }
+        return $products;
+    }
+
+    private function fetchAiRoutineProducts(array $profile, array $sessionUser): array {
+        $empty = ['products' => [], 'answer_text' => ''];
         $endpoint = $this->getLlamaIndexRecommendationEndpoint();
+        if ($endpoint === '') {
+            return $empty;
+        }
+
         $customerId = (int)($profile['customer_id'] ?? 0);
-        $payload = [
+        $response = $this->postJsonRequest($endpoint, [
             'user_id' => $customerId > 0 ? $customerId : (int)($sessionUser['id'] ?? 0),
             'email' => trim((string)($sessionUser['email'] ?? '')),
             'session_user_id' => (int)($sessionUser['id'] ?? 0),
             'user_profile' => $profile,
-        ];
-
-        if ($endpoint !== '') {
-            $response = $this->postJsonRequest($endpoint, $payload, $this->getLlamaIndexRecommendationTimeout());
-            if ((int)($response['status'] ?? 0) >= 200 && (int)($response['status'] ?? 0) < 300) {
-                $decoded = json_decode((string)($response['body'] ?? ''), true);
-                if (is_array($decoded) && !empty($decoded['ok'])) {
-                    $rawProducts = $decoded['recommendations'] ?? $decoded['products'] ?? [];
-                    $products = [];
-                    foreach ($rawProducts as $row) {
-                        if (!is_array($row)) continue;
-                        if ($this->isNonFacialAiProduct($row)) continue;
-                        $row['id'] = (string)($row['id'] ?? $row['product_id'] ?? $row['ma_san_pham'] ?? '');
-                        $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
-                        
-                        // Chạy toàn bộ candidate qua CompatibilityEngine chuẩn hóa của PHP
-                        $compat = $this->goiYModel->evaluateCompatibility($row, $profile);
-                        
-                        $row['retrieval_score'] = (float)($row['retrieval_score'] ?? $row['_rank_score'] ?? $row['score'] ?? 0.0);
-                        $row['raw_compatibility_score'] = $compat['raw_compatibility_score'];
-                        $row['compatibility_score'] = $compat['compatibility_score'];
-                        $row['data_coverage'] = $compat['data_coverage'];
-                        $row['data_status'] = $compat['data_status'];
-                        $row['reasons'] = $compat['reasons'];
-                        $row['personalization_reasons'] = $compat['personalization_reasons'];
-                        $row['warnings'] = $compat['warnings'];
-                        $row['evidence'] = $compat['evidence'];
-
-                        // Gán key tương thích ngược cho template
-                        $row['match_percent'] = $compat['compatibility_score'];
-                        $row['fit_status'] = $compat['data_status'];
-
-                        $products[] = $row;
-                    }
-
-                    if (!empty($products) && $this->hasRoutineCategoryCoverage($products)) {
-                        return [
-                            'ok' => true,
-                            'source' => $decoded['source'] ?? 'langchain_shared_core',
-                            'answer_text' => trim((string)($decoded['answer_text'] ?? '')),
-                            'products' => $products,
-                        ];
-                    }
-                }
-            }
+        ], $this->getLlamaIndexRecommendationTimeout());
+        $status = (int)($response['status'] ?? 0);
+        $decoded = $status >= 200 && $status < 300 ? json_decode((string)($response['body'] ?? ''), true) : null;
+        if (!is_array($decoded) || empty($decoded['ok'])) {
+            return $empty;
         }
 
-        // Tự động fallback sang GoiYContentBased của PHP khi AI Service chưa sẵn sàng
-        try {
-            $fallbackInput = [
-                'skin_type' => $profile['skin_type'] ?? '',
-                'concerns' => $profile['concerns'] ?? [],
-                'avoid_ingredients' => is_array($profile['avoid_ingredients'] ?? null) ? implode(', ', $profile['avoid_ingredients']) : ($profile['avoid_ingredients'] ?? ''),
-                'budget' => $profile['budget'] ?? null,
-                'gioi_tinh' => $profile['gioi_tinh'] ?? '',
-                'nam_sinh' => $profile['nam_sinh'] ?? '',
-                'is_routine' => true,
-                'query_text' => $profile['user_query'] ?? '',
-            ];
-            $fallbackProducts = $this->goiYModel->recommendFromPost($fallbackInput, 12);
-            $formattedProducts = [];
-            foreach ($fallbackProducts as $p) {
-                if (!is_array($p)) continue;
-                if ($this->isNonFacialAiProduct($p)) continue;
-                $p['id'] = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
-                $p['image_url'] = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['image_url'] ?? ''));
-                $p['match_percent'] = $p['compatibility_score'] ?? null;
-                $p['fit_status'] = $p['data_status'] ?? 'insufficient';
-                $formattedProducts[] = $p;
+        $products = [];
+        foreach ($decoded['recommendations'] ?? $decoded['products'] ?? [] as $row) {
+            if (!is_array($row) || SkincareProductClassifier::isNonFacial($row)) {
+                continue;
             }
-
-            if (!empty($formattedProducts)) {
-                $skinTypeStr = !empty($profile['skin_type']) ? $profile['skin_type'] : 'làn da';
-                return [
-                    'ok' => true,
-                    'source' => 'content_based_fallback',
-                    'answer_text' => "SkinSyntax đã phân tích hồ sơ da ({$skinTypeStr}) và lựa chọn chu trình sản phẩm phù hợp nhất dành cho bạn bên dưới.",
-                    'products' => $formattedProducts,
-                ];
-            }
-        } catch (Throwable $e) {
-            error_log('goiy fallback error: ' . $e->getMessage());
+            // Chạy candidate qua CompatibilityEngine chuẩn hóa của PHP để điểm/lý do đồng nhất với engine chính.
+            $compat = $this->goiYModel->evaluateCompatibility($row, $profile);
+            $row['retrieval_score'] = (float)($row['retrieval_score'] ?? $row['_rank_score'] ?? $row['score'] ?? 0.0);
+            $row = array_merge($row, [
+                'raw_compatibility_score' => $compat['raw_compatibility_score'],
+                'compatibility_score' => $compat['compatibility_score'],
+                'data_coverage' => $compat['data_coverage'],
+                'data_status' => $compat['data_status'],
+                'reasons' => $compat['reasons'],
+                'personalization_reasons' => $compat['personalization_reasons'],
+                'warnings' => $compat['warnings'],
+                'evidence' => $compat['evidence'],
+                'routine_role' => 'primary',
+            ]);
+            $products[] = $this->formatGoiyRoutineProduct($row, $profile);
         }
 
-        return [
-            'ok' => false,
-            'message' => 'Hiện chưa thể tải gợi ý sản phẩm cá nhân hóa. Vui lòng thử lại sau.',
-            'answer_text' => '',
-            'products' => [],
-        ];
+        return ['products' => $products, 'answer_text' => trim((string)($decoded['answer_text'] ?? ''))];
+    }
+
+    private function formatGoiyRoutineProduct(array $row, array $profile = []): array {
+        $row['id'] = (string)($row['id'] ?? $row['product_id'] ?? $row['ma_san_pham'] ?? '');
+        $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
+        $row['routine_step'] = (string)($row['routine_step'] ?? '') ?: SkincareProductClassifier::routineStep($row);
+        $row['original_price'] = (int)($row['original_price'] ?? $row['gia_thi_truong'] ?? 0);
+        // Gán key tương thích ngược cho template.
+        $row['match_percent'] = $row['compatibility_score'] ?? null;
+        $row['fit_status'] = $row['data_status'] ?? 'insufficient';
+
+        // Khối "Kiểm tra an toàn" chỉ nên báo cảnh báo an toàn thật (thành phần cần tránh,
+        // da nhạy cảm). Ghi chú độ phù hợp như "chưa thấy thông tin loại da" chuyển sang fit_notes.
+        $warnings = array_values(array_filter(array_map('strval', is_array($row['warnings'] ?? null) ? $row['warnings'] : [])));
+        $isSafety = static fn(string $warning): bool => preg_match('/thành phần bạn muốn tránh|Da bạn nhạy cảm/u', $warning) === 1;
+        $row['warnings'] = array_values(array_filter($warnings, $isSafety));
+        $row['fit_notes'] = array_values(array_filter($warnings, static fn(string $warning): bool => !$isSafety($warning)));
+
+        $reasons = array_merge(
+            is_array($row['reasons'] ?? null) ? $row['reasons'] : [],
+            is_array($row['personalization_reasons'] ?? null) ? $row['personalization_reasons'] : []
+        );
+        $row['why_this_product'] = trim(implode(' ', array_slice(array_values(array_unique(array_filter(array_map('strval', $reasons)))), 0, 3)));
+
+        // Lời giải thích Tình trạng -> Vấn đề -> Giải pháp cần evidence/mo_ta/thanh_phan_day_du nên dựng trước khi xoá.
+        $row['fit_explanation'] = $this->getRecommendationExplainer()->explain($profile, $row);
+
+        // Trường dài không dùng ở giao diện; bỏ để kết quả cache trong session gọn.
+        unset($row['mo_ta'], $row['hdsd'], $row['thanh_phan_day_du'], $row['thanh_phan_full'], $row['evidence']);
+        return $row;
+    }
+
+    private function getRecommendationExplainer(): RecommendationExplainer {
+        if ($this->recommendationExplainer === null) {
+            $this->recommendationExplainer = new RecommendationExplainer($this->goiYModel);
+        }
+        return $this->recommendationExplainer;
     }
 
     private function buildRecommendationFallbackExplanation(array $profile, array $product): string {
@@ -4699,6 +4745,7 @@ class HomeController {
             }
 
             $maHoaDon = $this->hoaDonModel->taoDonHang([ 
+                'analytics_sid' => ProductEventTracker::sessionHash(),
                 'email' => $email,
                 'ho_ten_mac_dinh' => (string)($user['ho_ten'] ?? ''),
                 'ten_nguoi_nhan' => $tenNguoiNhan,
@@ -5053,6 +5100,95 @@ class HomeController {
             'message' => 'Chưa nhận đơn hàng này trong giao dịch chuyển khoản.',
             'order_id' => $orderId,
             'matched_transaction' => $matched,
+        ]);
+    }
+
+    public function adminSepayManualSync(): void {
+        if (!function_exists('is_logged_in') || !is_logged_in()) {
+            redirect(BASE_URL . '/index.php?r=dangnhap');
+        }
+
+        if (!function_exists('current_role') || current_role() !== 'admin') {
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => 'Forbidden',
+            ], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => 'Method not allowed',
+            ], 405);
+        }
+
+        $orderId = max(0, (int)($_POST['order_id'] ?? $_GET['order_id'] ?? 0));
+        if ($orderId <= 0) {
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => 'Mã đơn hàng không hợp lệ.',
+            ], 422);
+        }
+
+        if (!$this->isSePayPollingEnabled()) {
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => 'SePay API polling chưa được cấu hình.',
+            ], 200);
+        }
+
+        $order = $this->hoaDonModel->getOrderById($orderId);
+        if (!$order) {
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => 'Không tìm thấy đơn hàng.',
+            ], 404);
+        }
+
+        $transactionsResult = $this->fetchSePayTransactionsForOrder($order);
+        if (empty($transactionsResult['ok'])) {
+            $this->jsonResponse([
+                'ok' => false,
+                'message' => (string)($transactionsResult['message'] ?? 'Không thể kiểm tra giao dịch SePay.'),
+                'order_id' => $orderId,
+            ], 502);
+        }
+
+        foreach (($transactionsResult['transactions'] ?? []) as $transaction) {
+            if ($this->extractOrderIdFromTransferContent((string)($transaction['content'] ?? '')) !== $orderId) {
+                continue;
+            }
+
+            $result = $this->hoaDonModel->markPaidByTransfer(
+                $orderId,
+                (int)($transaction['amount'] ?? 0),
+                (string)($transaction['reference'] ?? ''),
+                (string)($transaction['content'] ?? '')
+            );
+            if (!empty($result['ok'])) {
+                $this->jsonResponse([
+                    'ok' => true,
+                    'paid' => true,
+                    'order_id' => $orderId,
+                    'message' => 'Đã đối soát giao dịch và cập nhật đơn hàng.',
+                    'matched_transaction' => $transaction,
+                    'already_paid' => !empty($result['already_paid']),
+                ]);
+            }
+
+            $this->jsonResponse([
+                'ok' => false,
+                'paid' => false,
+                'order_id' => $orderId,
+                'message' => (string)($result['message'] ?? 'Không thể cập nhật trạng thái thanh toán.'),
+            ], 422);
+        }
+
+        $this->jsonResponse([
+            'ok' => true,
+            'paid' => false,
+            'order_id' => $orderId,
+            'message' => 'Chưa nhận giao dịch phù hợp cho đơn hàng.',
         ]);
     }
 

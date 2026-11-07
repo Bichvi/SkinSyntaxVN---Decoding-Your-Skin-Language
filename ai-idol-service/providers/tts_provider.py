@@ -1,9 +1,7 @@
 import asyncio
 import os
 import subprocess
-import edge_tts
-from gtts import gTTS
-from config import PIPER_CONFIG_PATH, PIPER_MODEL_PATH, TTS_PROVIDER, logger
+from config import PIPER_CONFIG_PATH, PIPER_MODEL_PATH, PIPER_SENTENCE_SILENCE, TTS_PROVIDER, logger
 
 class TTSProvider:
     NORMALIZE_FILTER = (
@@ -36,6 +34,7 @@ class TTSProvider:
         wav_path = os.path.splitext(output_path)[0] + ".raw.wav"
         result = subprocess.run(
             ["piper", "--model", PIPER_MODEL_PATH, "--config", PIPER_CONFIG_PATH,
+             "--sentence_silence", str(max(0.0, PIPER_SENTENCE_SILENCE)),
              "--output_file", wav_path],
             input=text, text=True, capture_output=True, timeout=180,
         )
@@ -48,6 +47,11 @@ class TTSProvider:
                 os.remove(wav_path)
 
     def _generate_edge(self, text: str, output_path: str) -> bool:
+        # Keep optional online TTS dependencies lazy.  The pipeline must still
+        # import and test its legacy media path when the image does not install
+        # Edge TTS (or when Piper is the configured provider).
+        import edge_tts
+
         temp_path = os.path.splitext(output_path)[0] + ".edge.mp3"
         try:
             communicate = edge_tts.Communicate(text, "vi-VN-HoaiMyNeural")
@@ -64,6 +68,8 @@ class TTSProvider:
                 os.remove(temp_path)
 
     def _generate_gtts(self, text: str, output_path: str) -> bool:
+        from gtts import gTTS
+
         temp_path = os.path.splitext(output_path)[0] + ".gtts.mp3"
         try:
             gTTS(text=text, lang="vi").save(temp_path)

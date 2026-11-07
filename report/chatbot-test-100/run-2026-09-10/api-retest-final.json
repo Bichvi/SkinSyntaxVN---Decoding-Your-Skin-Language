@@ -1,0 +1,1144 @@
+{
+  "created_at_utc": "20260910T054853924228Z",
+  "endpoint": "http://localhost:5001/api/chat/auto",
+  "catalog_snapshot": "report/chatbot-test-100/run-2026-09-10/catalog.json",
+  "summary": {
+    "specification_cases": 100,
+    "selected": 21,
+    "modes": {
+      "api": 21
+    }
+  },
+  "results": [
+    {
+      "id": "CHAT-001",
+      "title": "Chào lần đầu",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Giới thiệu ngắn, không tự chọn sản phẩm hay yêu cầu khảo sát dài."
+      ],
+      "response": {
+        "answer": "Mình là Ngọc Vi, trợ lý tư vấn của SkinSyntaxVN. Bạn đang muốn cải thiện điều gì ở da?",
+        "conflicts": [],
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "general",
+        "latency": 0.0,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": []
+      },
+      "elapsed_seconds": 0.05
+    },
+    {
+      "id": "CHAT-002",
+      "title": "Cảm ơn",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Đáp tự nhiên, không lặp tư vấn hoặc chèn quảng cáo."
+      ],
+      "response": {
+        "answer": "Không có gì nhé! Khi cần hỗ trợ thêm về chăm sóc da, bạn cứ nhắn mình.",
+        "conflicts": [],
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "general",
+        "latency": 0.0,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": []
+      },
+      "elapsed_seconds": 0.01
+    },
+    {
+      "id": "CHAT-008",
+      "title": "Yêu cầu tìm bằng từ kiếm",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Tìm tối đa một sản phẩm có bằng chứng chứa retinol; nếu có điều kiện da cần cân nhắc thì phân biệt tham khảo với bắt đầu dùng."
+      ],
+      "response": {
+        "answer": "Nếu tình trạng khô căng, bong tróc hoặc đỏ rát bạn đã nêu vẫn còn, mình chưa khuyên bắt đầu retinol ngay. Retinoid có thể làm da khô và kích ứng thêm; nên trao đổi với bác sĩ da liễu trước khi bắt đầu nếu da đang nhạy cảm. [Hướng dẫn của AAD](https://www.aad.org/public/everyday-care/skin-care-secrets/anti-aging/retinoid-retinol)\n\nMình tìm được 1 lựa chọn sản phẩm chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1077) — 433.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "ingredient_constraints_require_verified_summary",
+            "unsupported_suitability",
+            "retinoid_requires_review"
+          ],
+          "candidate_count": 166,
+          "category": null,
+          "constraints": {
+            "avoid_ingredients": [
+              "hương liệu",
+              "lanolin"
+            ],
+            "maximum_price_vnd": 500000,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "budget_or_unknown_price",
+            "excluded_ingredient",
+            "ingredients_unverified"
+          ],
+          "selected_count": 1
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 4.06,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "CeraVe",
+            "detail_url": "index.php?r=chitiet&id=1077",
+            "id": "1077",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+            "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+            "price": 433000,
+            "summary": "• Màng bọc phân tử retinol: giúp đẩy nhanh quá trình tái tạo tế bào để tẩy tế bào chết bị hư tổn, giảm sự xuất hiện đốm "
+          }
+        ]
+      },
+      "elapsed_seconds": 4.06
+    },
+    {
+      "id": "CHAT-010",
+      "title": "So sánh hai loại",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "So sánh công dụng/vai trò theo câu hỏi; tôn trọng “chưa cần gợi ý mua”."
+      ],
+      "response": {
+        "answer": "Toner và serum đều là những sản phẩm chăm sóc da, nhưng chúng có chức năng và cách sử dụng khác nhau.\n\n1. **Toner**: \n   - Chức năng chính của toner là làm sạch da, cân bằng độ pH và chuẩn bị cho da hấp thụ các sản phẩm dưỡng tiếp theo. \n   - Toner thường có kết cấu lỏng, dễ thẩm thấu và có thể chứa các thành phần như chiết xuất thực vật, acid nhẹ hoặc glycerin để cung cấp độ ẩm.\n\n2. **Serum**: \n   - Serum thường chứa nồng độ cao các hoạt chất, nhằm giải quyết các vấn đề cụ thể của da như lão hóa, nám, mụn hay khô da. \n   - Kết cấu của serum thường đặc hơn toner, giúp cung cấp độ ẩm và các dưỡng chất sâu hơn vào da.\n\nTóm lại, toner thường được sử dụng ở bước đầu trong quy trình chăm sóc da để làm sạch và chuẩn bị da, trong khi serum được sử dụng sau đó để cung cấp các dưỡng chất chuyên sâu.",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [],
+          "candidate_count": 0,
+          "category": null,
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [],
+          "selected_count": 0
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "knowledge",
+        "latency": 3.12,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": []
+      },
+      "elapsed_seconds": 3.23
+    },
+    {
+      "id": "CHAT-028",
+      "title": "Hai thành phần phải tránh",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml](index.php?r=chitiet&id=1999) — 226.000đ.\n- [Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 100ml](index.php?r=chitiet&id=4013) — 183.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "ingredient_constraints_require_verified_summary"
+          ],
+          "candidate_count": 94,
+          "category": "Toner / Nước Cân Bằng Da",
+          "constraints": {
+            "avoid_ingredients": [
+              "hương liệu",
+              "lanolin"
+            ],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "excluded_ingredient",
+            "ingredients_unverified"
+          ],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 5.03,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Round Lab",
+            "detail_url": "index.php?r=chitiet&id=1999",
+            "id": "1999",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-toner-round-lab-bo-sung-do-am-lam-diu-da-200ml_9z7TLtXBig34XR4v_img_450x450_31d6f9_fit_center.png",
+            "name": "Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 200ml",
+            "price": 226000,
+            "summary": "• Nước biển sâu Ulleungdo: cung cấp dưỡng chất cần thiết nuôi dưỡng làn da khoẻ đồng thời duy trì sự cân bằng ẩm tối ưu "
+          },
+          {
+            "brand": "Round Lab",
+            "detail_url": "index.php?r=chitiet&id=4013",
+            "id": "4013",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-toner-round-lab-bo-sung-do-am-lam-diu-da-100ml_UKisNVHiBKaEnFze_img_450x450_31d6f9_fit_center.png",
+            "name": "Toner Round Lab Bổ Sung Độ Ẩm Làm Dịu Da 100ml",
+            "price": 183000,
+            "summary": "• Nước biển sâu Ulleungdo: cung cấp dưỡng chất cần thiết nuôi dưỡng làn da khoẻ đồng thời duy trì sự cân bằng ẩm tối ưu "
+          },
+          {
+            "brand": "Pyunkang Yul",
+            "detail_url": "index.php?r=chitiet&id=1590",
+            "id": "1590",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-toner-pyunkang-yul-cap-am-lam-diu-da-100ml-1696575177_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml",
+            "price": 239000,
+            "summary": "• 94.6% chiết xuất rễ cây Hoàng Kỳ: Kháng khuẩn, kháng viêm, chống oxy hóa.\r\n• Arigin: Đóng vai trò như một amino axit, "
+          }
+        ]
+      },
+      "elapsed_seconds": 5.5
+    },
+    {
+      "id": "CHAT-029",
+      "title": "Tránh cồn khô",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 200ml](index.php?r=chitiet&id=799) — 342.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "ingredient_constraints_require_verified_summary"
+          ],
+          "candidate_count": 94,
+          "category": "Toner / Nước Cân Bằng Da",
+          "constraints": {
+            "avoid_ingredients": [
+              "cồn"
+            ],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "excluded_ingredient",
+            "ingredients_unverified"
+          ],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 3.89,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Pyunkang Yul",
+            "detail_url": "index.php?r=chitiet&id=799",
+            "id": "799",
+            "image_url": "https://media.hcdn.vn/hsk/17255282131320x50.jpg",
+            "name": "Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 200ml",
+            "price": 342000,
+            "summary": "• 94.6% chiết xuất rễ cây Hoàng Kỳ: Kháng khuẩn, kháng viêm, chống oxy hóa.\r\n• Arigin: Đóng vai trò như một amino axit, "
+          },
+          {
+            "brand": "Pyunkang Yul",
+            "detail_url": "index.php?r=chitiet&id=1590",
+            "id": "1590",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-toner-pyunkang-yul-cap-am-lam-diu-da-100ml-1696575177_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml",
+            "price": 239000,
+            "summary": "• 94.6% chiết xuất rễ cây Hoàng Kỳ: Kháng khuẩn, kháng viêm, chống oxy hóa.\r\n• Arigin: Đóng vai trò như một amino axit, "
+          },
+          {
+            "brand": "B.O.M",
+            "detail_url": "index.php?r=chitiet&id=1907",
+            "id": "1907",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-can-bang-b-o-m-sang-da-ho-tro-mo-nep-nhan-150ml-1726114438_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml",
+            "price": 458000,
+            "summary": "• 5 loại Peptide: giúp cải thiện nếp nhăn và cho da vùng săn chắc, đàn hồi hơn.\r\n• Glyceryl Glucoside và 8 loại Axit Hya"
+          }
+        ]
+      },
+      "elapsed_seconds": 4.25
+    },
+    {
+      "id": "CHAT-030",
+      "title": "Có và không cùng câu",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "response": {
+        "answer": "Mình tìm được 2 lựa chọn Serum / Tinh Chất chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1077) — 433.000đ.\n- [Dưỡng Chất Vichy Giảm Nếp Nhăn Và Giúp Trẻ Hoá Da 30ml](index.php?r=chitiet&id=5423) — 1.125.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "ingredient_constraints_require_verified_summary",
+            "unknown_product_link"
+          ],
+          "candidate_count": 26,
+          "category": "Serum / Tinh Chất",
+          "constraints": {
+            "avoid_ingredients": [
+              "hương liệu"
+            ],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "excluded_ingredient",
+            "ingredients_unverified"
+          ],
+          "selected_count": 2
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 4.5,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "CeraVe",
+            "detail_url": "index.php?r=chitiet&id=1077",
+            "id": "1077",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+            "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+            "price": 433000,
+            "summary": "• Màng bọc phân tử retinol: giúp đẩy nhanh quá trình tái tạo tế bào để tẩy tế bào chết bị hư tổn, giảm sự xuất hiện đốm "
+          },
+          {
+            "brand": "Vichy",
+            "detail_url": "index.php?r=chitiet&id=5423",
+            "id": "5423",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-422210591-1695017989_img_450x450_31d6f9_fit_center.png",
+            "name": "Dưỡng Chất Vichy Giảm Nếp Nhăn Và Giúp Trẻ Hoá Da 30ml",
+            "price": 1125000,
+            "summary": "• 0,2% retinol tinh khiết: giúp làm giảm sự xuất hiện của các nếp nhăn\r\n- kể cả nếp nhăn sâu, làm mịn da, hỗ trợ tái tạo"
+          }
+        ]
+      },
+      "elapsed_seconds": 4.69
+    },
+    {
+      "id": "CHAT-031",
+      "title": "Đổi thứ tự điều kiện",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "response": {
+        "answer": "Mình tìm được 2 lựa chọn Serum / Tinh Chất chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1077) — 433.000đ.\n- [Dưỡng Chất Vichy Giảm Nếp Nhăn Và Giúp Trẻ Hoá Da 30ml](index.php?r=chitiet&id=5423) — 1.125.000đ.\n\nMình đã đối chiếu các thành phần bạn cần tránh với bảng thành phần được lưu; điều này không bảo đảm sản phẩm sẽ hợp da hoặc không gây kích ứng.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "ingredient_constraints_require_verified_summary"
+          ],
+          "candidate_count": 26,
+          "category": "Serum / Tinh Chất",
+          "constraints": {
+            "avoid_ingredients": [
+              "hương liệu"
+            ],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "excluded_ingredient",
+            "ingredients_unverified"
+          ],
+          "selected_count": 2
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 3.64,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "CeraVe",
+            "detail_url": "index.php?r=chitiet&id=1077",
+            "id": "1077",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-serum-cerave-retinol-ho-tro-mo-tham-mun-30ml_BcXBRnsWSNvaTSwT_img_450x450_31d6f9_fit_center.png",
+            "name": "Serum CeraVe Retinol Hỗ Trợ Mờ Thâm Mụn 30ml",
+            "price": 433000,
+            "summary": "• Màng bọc phân tử retinol: giúp đẩy nhanh quá trình tái tạo tế bào để tẩy tế bào chết bị hư tổn, giảm sự xuất hiện đốm "
+          },
+          {
+            "brand": "Vichy",
+            "detail_url": "index.php?r=chitiet&id=5423",
+            "id": "5423",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-422210591-1695017989_img_450x450_31d6f9_fit_center.png",
+            "name": "Dưỡng Chất Vichy Giảm Nếp Nhăn Và Giúp Trẻ Hoá Da 30ml",
+            "price": 1125000,
+            "summary": "• 0,2% retinol tinh khiết: giúp làm giảm sự xuất hiện của các nếp nhăn\r\n- kể cả nếp nhăn sâu, làm mịn da, hỗ trợ tái tạo"
+          }
+        ]
+      },
+      "elapsed_seconds": 3.66
+    },
+    {
+      "id": "CHAT-033",
+      "title": "Phân biệt retinal và retinol",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Manually verify whether an empty list/clarification is justified by the actual catalog and conditions",
+        "Kiểm tra thành phần từ đúng sản phẩm/phiên bản; không đảo điều kiện có và không.",
+        "Không dùng mô tả của sản phẩm khác trên trang gộp để xác nhận thành phần."
+      ],
+      "response": {
+        "answer": "Mình đã tìm trong nhóm Serum / Tinh Chất chứa retinal, nhưng các lựa chọn còn lại chưa có bảng thành phần đầy đủ để đối chiếu thành phần bạn cần tránh. Điều này chưa có nghĩa cửa hàng không có sản phẩm đó. Bạn có chai cụ thể muốn mình kiểm tra không?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [],
+          "candidate_count": 21,
+          "category": "Serum / Tinh Chất",
+          "constraints": {
+            "avoid_ingredients": [
+              "retinol"
+            ],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "excluded_ingredient",
+            "ingredients_unverified"
+          ],
+          "selected_count": 0
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 2.63,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": []
+      },
+      "elapsed_seconds": 2.64
+    },
+    {
+      "id": "CHAT-039",
+      "title": "Dấu phẩy thập phân",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Giữ đúng số tiền và khoảng giá; nêu giá từ database, không tự thêm chi phí hoặc đổi đơn vị."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Kem / Gel / Dầu Dưỡng để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g](index.php?r=chitiet&id=139) — 289.000đ.\n- [Combo Kem Dưỡng L'Oreal Ngừa Rãnh Nhăn Lão Hóa Sớm Ngày Đêm 50mlx2](index.php?r=chitiet&id=4480) — 463.000đ.\n- [Kem Dưỡng Ẩm Bioderma Giảm Khô Căng, Bong Tróc Da Mụn 40ml](index.php?r=chitiet&id=459) — 391.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "variant_facts_unverified",
+            "unsupported_price",
+            "unknown_product_link"
+          ],
+          "candidate_count": 202,
+          "category": "Kem / Gel / Dầu Dưỡng",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": 1500000,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "budget_or_unknown_price",
+            "stock"
+          ],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 5.15,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Klairs",
+            "detail_url": "index.php?r=chitiet&id=139",
+            "id": "139",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-kem-duong-am-klairs-lam-diu-phuc-hoi-da-ban-dem-50g_CGMCc6kQDzbD7twb_img_450x450_31d6f9_fit_center.png",
+            "name": "Kem Dưỡng Ẩm Klairs Làm Dịu & Phục Hồi Da Ban Đêm 50g",
+            "price": 289000,
+            "summary": ""
+          },
+          {
+            "brand": "L'Oreal",
+            "detail_url": "index.php?r=chitiet&id=4480",
+            "id": "4480",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-combo-kem-duong-l-oreal-cap-am-cang-min-da-ngua-ranh-nhan-lao-hoa-som-ban-dem-50mlx2-1764917320_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Combo Kem Dưỡng L'Oreal Ngừa Rãnh Nhăn Lão Hóa Sớm Ngày Đêm 50mlx2",
+            "price": 463000,
+            "summary": ""
+          },
+          {
+            "brand": "Bioderma",
+            "detail_url": "index.php?r=chitiet&id=459",
+            "id": "459",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-kem-duong-am-bioderma-cap-nuoc-cho-da-kho-mun-40ml-1745306867_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Kem Dưỡng Ẩm Bioderma Giảm Khô Căng, Bong Tróc Da Mụn 40ml",
+            "price": 391000,
+            "summary": "• Sáng chế Fluidactiv™: Những thay đổi về sự lưu thông của bã nhờn có thể là nguyên nhân gây ra mụn. Hợp chất này giúp c"
+          }
+        ]
+      },
+      "elapsed_seconds": 5.17
+    },
+    {
+      "id": "CHAT-042",
+      "title": "Khoảng giá",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Giữ đúng số tiền và khoảng giá; nêu giá từ database, không tự thêm chi phí hoặc đổi đơn vị."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml](index.php?r=chitiet&id=647) — 321.000đ.\n- [Serum Olay Dưỡng Sáng Da, Mờ Thâm Mụn 30ml](index.php?r=chitiet&id=1150) — 321.000đ.\n- [Serum Olay Retinol24 Ngừa Lão Hóa, Tái Tạo Da Ban Đêm 30ml](index.php?r=chitiet&id=1023) — 356.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "variant_facts_unverified",
+            "unsupported_price",
+            "unknown_product_link"
+          ],
+          "candidate_count": 200,
+          "category": "Serum / Tinh Chất",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": 500000,
+            "minimum_price_vnd": 300000
+          },
+          "rejected_reasons": [
+            "budget_or_unknown_price"
+          ],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 5.16,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Olay",
+            "detail_url": "index.php?r=chitiet&id=647",
+            "id": "647",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-serum-olay-mo-vet-tham-dom-nau-duong-sang-da-30ml-1760518791_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Serum Olay Mờ Vết Thâm, Đốm Nâu, Dưỡng Sáng Da 30ml",
+            "price": 321000,
+            "summary": ""
+          },
+          {
+            "brand": "Olay",
+            "detail_url": "index.php?r=chitiet&id=1150",
+            "id": "1150",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-tinh-chat-olay-niacinamide-aha-ngua-lao-hoa-30ml-1760515978_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Serum Olay Dưỡng Sáng Da, Mờ Thâm Mụn 30ml",
+            "price": 321000,
+            "summary": ""
+          },
+          {
+            "brand": "Olay",
+            "detail_url": "index.php?r=chitiet&id=1023",
+            "id": "1023",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-tinh-chat-olay-ngua-lao-hoa-chiet-xuat-retinol-24-30ml-1760518212_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Serum Olay Retinol24 Ngừa Lão Hóa, Tái Tạo Da Ban Đêm 30ml",
+            "price": 356000,
+            "summary": ""
+          }
+        ]
+      },
+      "elapsed_seconds": 5.16
+    },
+    {
+      "id": "CHAT-044",
+      "title": "Giới hạn dưới không phải trần",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Nếu chưa hỗ trợ lọc giá tối thiểu thì nói rõ/hỏi lại; không lấy 500k làm trần và gợi ý món rẻ hơn."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Serum / Tinh Chất để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Combo 2 Serum d'Alba Dạng Xịt Nấm Truffle Trắng Căng Bóng Da 100ml](index.php?r=chitiet&id=1005) — 821.000đ.\n- [Serum SVR Ngăn Ngừa Lão Hóa & Giúp Da Mềm Mịn 30ml](index.php?r=chitiet&id=2659) — 912.000đ.\n- [Serum SVR Làm Giảm Mụn, Mờ Nám, Làm Mềm Mịn Da 30ml](index.php?r=chitiet&id=166) — 519.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "unsupported_price",
+            "missing_selected_product",
+            "unknown_product_link"
+          ],
+          "candidate_count": 200,
+          "category": "Serum / Tinh Chất",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": 500001
+          },
+          "rejected_reasons": [
+            "budget_or_unknown_price"
+          ],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 5.34,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "d'Alba",
+            "detail_url": "index.php?r=chitiet&id=1005",
+            "id": "1005",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-combo-2-serum-d-alba-dang-xit-nam-truffle-trang-cang-bong-da-100ml-1729485806_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Combo 2 Serum d'Alba Dạng Xịt Nấm Truffle Trắng Căng Bóng Da 100ml",
+            "price": 821000,
+            "summary": "• Nấm Truffle trắng\r\n- loại nấm quý hiếm và đắt nhất thế giới được nhập khẩu từ Piedmont, Ý\r\n- giúp cung cấp khoáng chất"
+          },
+          {
+            "brand": "SVR",
+            "detail_url": "index.php?r=chitiet&id=2659",
+            "id": "2659",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-tinh-chat-svr-ngan-ngua-lao-hoa-giup-da-mem-min-30ml-1762155859_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Serum SVR Ngăn Ngừa Lão Hóa & Giúp Da Mềm Mịn 30ml",
+            "price": 912000,
+            "summary": "• 0.1% Retinol tinh khiết + 0.2% Encapsulated Retinol: giúp tái cấu trúc da và tái tạo lớp biểu bì, khắc phục các nếp nh"
+          },
+          {
+            "brand": "SVR",
+            "detail_url": "index.php?r=chitiet&id=166",
+            "id": "166",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-tinh-chat-svr-lam-giam-mun-mo-nam-lam-mem-min-da-30ml-1751524035_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Serum SVR Làm Giảm Mụn, Mờ Nám, Làm Mềm Mịn Da 30ml",
+            "price": 519000,
+            "summary": "• 14% Gluconolactone: là một hoạt chất có nguồn gốc tự nhiên, mang lại hiệu quả tương tự như AHA nhưng độ dung nạp tốt h"
+          }
+        ]
+      },
+      "elapsed_seconds": 5.74
+    },
+    {
+      "id": "CHAT-049",
+      "title": "Giá cũ không phải ngân sách mới",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "350k chỉ là giá món cũ; không dùng làm giới hạn tiền cho lựa chọn mới."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner The Lab Cấp Ẩm Chuyên Sâu 200ml](index.php?r=chitiet&id=2484) — 363.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "variant_facts_unverified",
+            "unsupported_price",
+            "unknown_product_link"
+          ],
+          "candidate_count": 94,
+          "category": "Toner / Nước Cân Bằng Da",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 6.06,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Klairs",
+            "detail_url": "index.php?r=chitiet&id=265",
+            "id": "265",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-nuoc-hoa-hong-klairs-danh-cho-da-nhay-cam-180ml_krfo98Zw7xbxAsR5_img_450x450_31d6f9_fit_center.png",
+            "name": "Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml",
+            "price": 254000,
+            "summary": ""
+          },
+          {
+            "brand": "B.O.M",
+            "detail_url": "index.php?r=chitiet&id=1907",
+            "id": "1907",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-can-bang-b-o-m-sang-da-ho-tro-mo-nep-nhan-150ml-1726114438_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml",
+            "price": 458000,
+            "summary": "• 5 loại Peptide: giúp cải thiện nếp nhăn và cho da vùng săn chắc, đàn hồi hơn.\r\n• Glyceryl Glucoside và 8 loại Axit Hya"
+          },
+          {
+            "brand": "The Lab",
+            "detail_url": "index.php?r=chitiet&id=2484",
+            "id": "2484",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-can-bang-the-lab-cap-am-chuyen-sau-200ml-1709023599_img_450x450_31d6f9_fit_center.png",
+            "name": "Toner The Lab Cấp Ẩm Chuyên Sâu 200ml",
+            "price": 363000,
+            "summary": "• Hyaluronic Acid 5000: Da thẩm thấu nhanh qua lớp biểu bì, giúp da duy trì độ ẩm lâu dài, căng mọng từ bên trong mà khô"
+          }
+        ]
+      },
+      "elapsed_seconds": 6.58
+    },
+    {
+      "id": "CHAT-055",
+      "title": "Tiếp nối rẻ hơn",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Manually verify whether an empty list/clarification is justified by the actual catalog and conditions",
+        "Giữ loại serum retinol từ lời khách; đổi giá. Không tự thay bằng sản phẩm không retinol."
+      ],
+      "response": {
+        "answer": "Mình đã kiểm tra nhóm Serum / Tinh Chất chứa retinol, nhưng chưa chọn được sản phẩm đáp ứng đồng thời các điều kiện: ngân sách hoặc giá chưa xác định. Bạn muốn kiểm tra một sản phẩm cụ thể hay điều chỉnh khoảng giá?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [],
+          "candidate_count": 26,
+          "category": "Serum / Tinh Chất",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": 200000,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "budget_or_unknown_price"
+          ],
+          "selected_count": 0
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 4.32,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": []
+      },
+      "elapsed_seconds": 4.33
+    },
+    {
+      "id": "CHAT-058",
+      "title": "Bỏ một điều kiện cũ",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Chỉ bỏ điều kiện khách vừa rút lại; không tiếp tục lọc hương liệu từ lịch sử nếu không có chống chỉ định/hồ sơ cần hỏi lại."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=4) — 201.000đ.\n- [Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=2458) — 650.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "variant_facts_unverified",
+            "unknown_product_link"
+          ],
+          "candidate_count": 94,
+          "category": "Toner / Nước Cân Bằng Da",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 5.0,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Klairs",
+            "detail_url": "index.php?r=chitiet&id=265",
+            "id": "265",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-nuoc-hoa-hong-klairs-danh-cho-da-nhay-cam-180ml_krfo98Zw7xbxAsR5_img_450x450_31d6f9_fit_center.png",
+            "name": "Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml",
+            "price": 254000,
+            "summary": ""
+          },
+          {
+            "brand": "Klairs",
+            "detail_url": "index.php?r=chitiet&id=4",
+            "id": "4",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-nuoc-hoa-hong-khong-mui-klairs-danh-cho-da-nhay-cam-180ml_EVHPvYCmEoHZH66H_img_450x450_31d6f9_fit_center.png",
+            "name": "Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+            "price": 201000,
+            "summary": ""
+          },
+          {
+            "brand": "Klairs",
+            "detail_url": "index.php?r=chitiet&id=2458",
+            "id": "2458",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-422219221-1730367530_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+            "price": 650000,
+            "summary": ""
+          }
+        ]
+      },
+      "elapsed_seconds": 5.0
+    },
+    {
+      "id": "CHAT-065",
+      "title": "Tin hiện tại có sẵn cuối history",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Không xử lý câu hỏi hai lần; không tạo thẻ trùng hay nhầm thứ tự hội thoại."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=2458) — 650.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "variant_facts_unverified",
+            "unknown_product_link"
+          ],
+          "candidate_count": 94,
+          "category": "Toner / Nước Cân Bằng Da",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 5.64,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Klairs",
+            "detail_url": "index.php?r=chitiet&id=265",
+            "id": "265",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-nuoc-hoa-hong-klairs-danh-cho-da-nhay-cam-180ml_krfo98Zw7xbxAsR5_img_450x450_31d6f9_fit_center.png",
+            "name": "Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml",
+            "price": 254000,
+            "summary": ""
+          },
+          {
+            "brand": "B.O.M",
+            "detail_url": "index.php?r=chitiet&id=1907",
+            "id": "1907",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-can-bang-b-o-m-sang-da-ho-tro-mo-nep-nhan-150ml-1726114438_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml",
+            "price": 458000,
+            "summary": "• 5 loại Peptide: giúp cải thiện nếp nhăn và cho da vùng săn chắc, đàn hồi hơn.\r\n• Glyceryl Glucoside và 8 loại Axit Hya"
+          },
+          {
+            "brand": "Klairs",
+            "detail_url": "index.php?r=chitiet&id=2458",
+            "id": "2458",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-422219221-1730367530_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Combo 2 Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+            "price": 650000,
+            "summary": ""
+          }
+        ]
+      },
+      "elapsed_seconds": 5.64
+    },
+    {
+      "id": "CHAT-066",
+      "title": "Guest chưa có hồ sơ",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Manually verify whether an empty list/clarification is justified by the actual catalog and conditions",
+        "Hỏi thông tin còn thiếu cần thiết; không tự xác định da dầu/da khô hoặc ngân sách."
+      ],
+      "response": {
+        "answer": "Mình chưa có thông tin về da để chọn sản phẩm phù hợp. Da bạn thuộc loại nào và bạn đang muốn cải thiện vấn đề gì?",
+        "conflicts": [],
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "clarify",
+        "latency": 1.13,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": []
+      },
+      "elapsed_seconds": 1.12
+    },
+    {
+      "id": "CHAT-068",
+      "title": "Hỏi cho mẹ khác loại da",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Không áp hồ sơ da dầu của tài khoản sang mẹ; không tự sửa hồ sơ tài khoản."
+      ],
+      "response": {
+        "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml](index.php?r=chitiet&id=1590) — 239.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "variant_facts_unverified",
+            "missing_selected_product"
+          ],
+          "candidate_count": 94,
+          "category": "Toner / Nước Cân Bằng Da",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": null,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 4.32,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Klairs",
+            "detail_url": "index.php?r=chitiet&id=265",
+            "id": "265",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-nuoc-hoa-hong-klairs-danh-cho-da-nhay-cam-180ml_krfo98Zw7xbxAsR5_img_450x450_31d6f9_fit_center.png",
+            "name": "Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml",
+            "price": 254000,
+            "summary": ""
+          },
+          {
+            "brand": "B.O.M",
+            "detail_url": "index.php?r=chitiet&id=1907",
+            "id": "1907",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-can-bang-b-o-m-sang-da-ho-tro-mo-nep-nhan-150ml-1726114438_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml",
+            "price": 458000,
+            "summary": "• 5 loại Peptide: giúp cải thiện nếp nhăn và cho da vùng săn chắc, đàn hồi hơn.\r\n• Glyceryl Glucoside và 8 loại Axit Hya"
+          },
+          {
+            "brand": "Pyunkang Yul",
+            "detail_url": "index.php?r=chitiet&id=1590",
+            "id": "1590",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-toner-pyunkang-yul-cap-am-lam-diu-da-100ml-1696575177_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Toner Pyunkang Yul Cấp Ẩm, Làm Dịu Da 100ml",
+            "price": 239000,
+            "summary": "• 94.6% chiết xuất rễ cây Hoàng Kỳ: Kháng khuẩn, kháng viêm, chống oxy hóa.\r\n• Arigin: Đóng vai trò như một amino axit, "
+          }
+        ]
+      },
+      "elapsed_seconds": 4.33
+    },
+    {
+      "id": "CHAT-070",
+      "title": "Tiếp tục tư vấn cho mẹ",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Manually verify whether an empty list/clarification is justified by the actual catalog and conditions",
+        "Giữ đối tượng là mẹ từ lượt trước; nếu tham chiếu chưa rõ thì hỏi, không tự dùng lại da của chủ tài khoản."
+      ],
+      "response": {
+        "answer": "Bạn muốn tìm Kem / Gel / Dầu Dưỡng cho người thân dưới khoảng bao nhiêu tiền? Mình chưa có mức giá tham chiếu để xác định lựa chọn rẻ hơn.",
+        "conflicts": [],
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "clarify",
+        "latency": 1.68,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": []
+      },
+      "elapsed_seconds": 1.73
+    },
+    {
+      "id": "CHAT-079",
+      "title": "Tận dụng món đang dùng",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Không bắt mua lại sữa rửa mặt; hỏi tên món đang dùng nếu cần kiểm tra phối hợp."
+      ],
+      "response": {
+        "answer": "Mình chọn được phương án chăm sóc cơ bản sau:\n\n- [Kem Dưỡng Ẩm Nivea Dưỡng Da Sáng Mịn 30ml](index.php?r=chitiet&id=789) — 39.000đ.\n- [Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml](index.php?r=chitiet&id=10) — 412.000đ.\n\nBạn đã có: Sữa Rửa Mặt; không tính mua lại trong tổng tiền này.\n\nTổng tiền phần mua mới: 451.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "routine_scope_needs_summary"
+          ],
+          "candidate_count": 636,
+          "category": "Sữa Rửa Mặt",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": 500000,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "budget_or_unknown_price",
+            "stock"
+          ],
+          "selected_count": 2
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "routine",
+        "latency": 3.96,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Nivea",
+            "detail_url": "index.php?r=chitiet&id=789",
+            "id": "789",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-kem-duong-am-da-nivea-30ml_FV8R47xcnnTu263Q_img_450x450_31d6f9_fit_center.png",
+            "name": "Kem Dưỡng Ẩm Nivea Dưỡng Da Sáng Mịn 30ml",
+            "price": 39000,
+            "summary": "• Hoạt chất Eucerit: giúp phục hồi và tăng cường độ ẩm suốt 24 giờ, dưỡng da luôn mềm mại, căng mượt.\r\n• Chiết xuất từ s"
+          },
+          {
+            "brand": "La Roche-Posay",
+            "detail_url": "index.php?r=chitiet&id=10",
+            "id": "10",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-kem-chong-nang-la-roche-posay-spf-50-bao-ve-da-50ml_9nrvZ91dijvmjEMJ_img_450x450_31d6f9_fit_center.png",
+            "name": "Kem Chống Nắng La Roche-Posay Phổ Rộng, Nâng Tông Kiềm Dầu 50ml",
+            "price": 412000,
+            "summary": "• 10 màng lọc chống nắng hóa học và vật lý: Mexoryl XS, Mexoryl XL, Tinosorb, Uvinul T 150, Avobenzone, Ethylhexyl Salic"
+          }
+        ],
+        "routine": {
+          "budget_vnd": 500000,
+          "missing_steps": [],
+          "owned_steps": [
+            "Sữa Rửa Mặt"
+          ],
+          "total_vnd": 451000
+        }
+      },
+      "elapsed_seconds": 4.33
+    },
+    {
+      "id": "CHAT-080",
+      "title": "Loại bỏ bước không muốn",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Giữ yêu cầu bỏ toner; không coi toner là bước bắt buộc."
+      ],
+      "response": {
+        "answer": "Mình chọn được phương án chăm sóc cơ bản sau:\n\n- [Sữa Rửa Mặt Hatomugi Tẩy Trang, Hỗ Trợ Sáng Da 130g](index.php?r=chitiet&id=331) — 37.000đ.\n- [Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml](index.php?r=chitiet&id=12) — 292.000đ.\n- [Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml](index.php?r=chitiet&id=13) — 239.000đ.\n\nMột số dữ liệu mô tả gộp nhiều phiên bản; mình chưa xác minh được thành phần và cách dùng của đúng phiên bản đó. Các lựa chọn này chỉ để tham khảo tên và giá.\n\nTổng tiền phần mua mới: 568.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "variant_facts_unverified",
+            "unsupported_price"
+          ],
+          "candidate_count": 636,
+          "category": "Toner / Nước Cân Bằng Da",
+          "constraints": {
+            "avoid_ingredients": [],
+            "maximum_price_vnd": 700000,
+            "minimum_price_vnd": null
+          },
+          "rejected_reasons": [
+            "budget_or_unknown_price",
+            "stock"
+          ],
+          "selected_count": 3
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "routine",
+        "latency": 4.49,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Hatomugi",
+            "detail_url": "index.php?r=chitiet&id=331",
+            "id": "331",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-422202362-1695104365_img_450x450_31d6f9_fit_center.png",
+            "name": "Sữa Rửa Mặt Hatomugi Tẩy Trang, Hỗ Trợ Sáng Da 130g",
+            "price": 37000,
+            "summary": ""
+          },
+          {
+            "brand": "La Roche-Posay",
+            "detail_url": "index.php?r=chitiet&id=12",
+            "id": "12",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-kem-duong-la-roche-posay-giup-phuc-hoi-da-da-cong-dung-40ml_8qvDEcQqWYA1aiB8_img_450x450_31d6f9_fit_center.png",
+            "name": "Kem Dưỡng La Roche-Posay Giúp Phục Hồi Da Đa Công Dụng 40ml",
+            "price": 292000,
+            "summary": "• TRIBIOMA: phức hợp độc quyền giúp cân bằng hệ vi sinh vật trên da, tăng cường hoạt động của lợi khuẩn & ức chế sự phát"
+          },
+          {
+            "brand": "Skin1004",
+            "detail_url": "index.php?r=chitiet&id=13",
+            "id": "13",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-kem-chong-nang-skin1004-chiet-xuat-rau-ma-spf50-pa-50ml_wZ15ph39SgjHFkyk_img_450x450_31d6f9_fit_center.png",
+            "name": "Kem Chống Nắng Skin1004 Cho Da Nhạy Cảm SPF 50+ 50ml",
+            "price": 239000,
+            "summary": "• Thêm 20% chiết xuất rau má so với phiên bản trước, rau má vùng Madagascar: giàu vitamin B,C và polyphenols có khả năng"
+          }
+        ],
+        "routine": {
+          "budget_vnd": 700000,
+          "missing_steps": [],
+          "owned_steps": [],
+          "total_vnd": 568000
+        }
+      },
+      "elapsed_seconds": 4.81
+    }
+  ],
+  "result_counts": {
+    "REVIEW_REQUIRED": 21
+  }
+}

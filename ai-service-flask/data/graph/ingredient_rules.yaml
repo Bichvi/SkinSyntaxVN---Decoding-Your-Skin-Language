@@ -1,0 +1,115 @@
+# Ingredient key -> inferred tags (graph_sync.rules.infer_tags). Deterministic, no LLM.
+# Keys are canonical keys from ingredient_aliases.yaml; tag keys must exist in synonyms.yaml
+# (benefits / concerns / skin_types groups; enforced by tests/graph_sync/test_rules.py).
+# Only the first 15 ingredients of a product are considered. skin_types here are used only
+# when the product has no usable ma_loai_da (code 4 = Unknown).
+# Selection: actives among the most frequent ingredients of san_pham (2026-10-21 snapshot).
+# References: EU CosIng ingredient functions; Paula's Choice Ingredient Dictionary;
+# DermNet NZ topic pages; existing project knowledge
+# (recommendation_service/knowledge/concern_mapping.py CONCERN_ACTIVES).
+# Also feeds (Ingredient)-[:HELPS]->(Concern) from each rule's `concerns`.
+
+rules:
+  # hydration
+  hyaluronic_acid:                    {benefits: [cap_am], concerns: [kho_da], skin_types: [da_kho, moi_loai_da]}
+  sodium_hyaluronate:                 {benefits: [cap_am], concerns: [kho_da], skin_types: [da_kho, moi_loai_da]}
+  hydrolyzed_hyaluronic_acid:         {benefits: [cap_am], concerns: [kho_da]}
+  hydrolyzed_sodium_hyaluronate:      {benefits: [cap_am], concerns: [kho_da]}
+  sodium_acetylated_hyaluronate:      {benefits: [cap_am], concerns: [kho_da]}
+  sodium_hyaluronate_crosspolymer:    {benefits: [cap_am], concerns: [kho_da]}
+  hydroxypropyltrimonium_hyaluronate: {benefits: [cap_am], concerns: [kho_da]}
+  betaine:                            {benefits: [cap_am]}
+  trehalose:                          {benefits: [cap_am]}
+  sodium_pca:                         {benefits: [cap_am]}
+  urea:                               {benefits: [cap_am, tay_da_chet], concerns: [kho_da], skin_types: [da_kho]}
+  squalane:                           {benefits: [cap_am, phuc_hoi], concerns: [kho_da]}
+  butyrospermum_parkii_butter:        {benefits: [cap_am], concerns: [kho_da], skin_types: [da_kho]}
+  collagen:                           {benefits: [cap_am]}
+  hydrolyzed_collagen:                {benefits: [cap_am]}
+  # barrier / repair / soothing
+  panthenol:                          {benefits: [phuc_hoi, cap_am]}
+  ceramide_np:                        {benefits: [phuc_hoi, cap_am], concerns: [kho_da, kich_ung], skin_types: [da_kho, da_nhay_cam]}
+  ceramide_ap:                        {benefits: [phuc_hoi, cap_am], concerns: [kho_da, kich_ung], skin_types: [da_kho, da_nhay_cam]}
+  ceramide_eop:                       {benefits: [phuc_hoi, cap_am], concerns: [kho_da, kich_ung], skin_types: [da_kho, da_nhay_cam]}
+  ceramide:                           {benefits: [phuc_hoi, cap_am], concerns: [kho_da, kich_ung], skin_types: [da_kho, da_nhay_cam]}
+  cholesterol:                        {benefits: [phuc_hoi]}
+  centella_asiatica_extract:          {benefits: [lam_diu], concerns: [mun, kich_ung], skin_types: [da_nhay_cam]}
+  madecassoside:                      {benefits: [lam_diu, phuc_hoi], concerns: [kich_ung], skin_types: [da_nhay_cam]}
+  asiaticoside:                       {benefits: [lam_diu, phuc_hoi], concerns: [kich_ung]}
+  madecassic_acid:                    {benefits: [lam_diu, phuc_hoi], concerns: [kich_ung]}
+  asiatic_acid:                       {benefits: [lam_diu, phuc_hoi], concerns: [kich_ung]}
+  allantoin:                          {benefits: [lam_diu, phuc_hoi], concerns: [kich_ung]}
+  bisabolol:                          {benefits: [lam_diu], concerns: [kich_ung]}
+  dipotassium_glycyrrhizate:          {benefits: [lam_diu], concerns: [kich_ung]}
+  glycyrrhiza_glabra_root_extract:    {benefits: [lam_diu, sang_da], concerns: [kich_ung, tham_mun]}
+  beta_glucan:                        {benefits: [cap_am, lam_diu]}
+  ectoin:                             {benefits: [phuc_hoi, lam_diu], concerns: [kich_ung], skin_types: [da_nhay_cam]}
+  aloe_barbadensis_leaf_extract:      {benefits: [lam_diu, cap_am]}
+  portulaca_oleracea_extract:         {benefits: [lam_diu], concerns: [kich_ung]}
+  chamomilla_recutita_flower_extract: {benefits: [lam_diu], concerns: [kich_ung]}
+  snail_secretion_filtrate:           {benefits: [phuc_hoi, cap_am]}
+  # acne / oil / pores
+  salicylic_acid:                     {benefits: [lam_sach_sau, tay_da_chet], concerns: [mun, lo_chan_long], skin_types: [da_dau]}
+  niacinamide:                        {benefits: [sang_da, kiem_dau], concerns: [tham_mun, dau_thua]}
+  zinc_pca:                           {benefits: [kiem_dau], concerns: [dau_thua, mun], skin_types: [da_dau]}
+  zinc_gluconate:                     {benefits: [kiem_dau], concerns: [mun]}
+  melaleuca_alternifolia_leaf_oil:    {benefits: [khang_khuan], concerns: [mun], skin_types: [da_mun]}
+  benzoyl_peroxide:                   {benefits: [khang_khuan], concerns: [mun], skin_types: [da_mun]}
+  sulfur:                             {benefits: [khang_khuan], concerns: [mun], skin_types: [da_mun]}
+  azelaic_acid:                       {benefits: [sang_da], concerns: [mun, tham_mun]}
+  kaolin:                             {benefits: [lam_sach_sau, kiem_dau], concerns: [dau_thua, lo_chan_long], skin_types: [da_dau]}
+  hamamelis_virginiana_extract:       {benefits: [kiem_dau, lam_diu], concerns: [lo_chan_long]}
+  # exfoliation
+  aha:                                {benefits: [tay_da_chet, sang_da], concerns: [xin_mau, lo_chan_long]}
+  glycolic_acid:                      {benefits: [tay_da_chet, sang_da], concerns: [xin_mau, lo_chan_long]}
+  lactic_acid:                        {benefits: [tay_da_chet, cap_am], concerns: [xin_mau]}
+  mandelic_acid:                      {benefits: [tay_da_chet], concerns: [mun, xin_mau]}
+  pha:                                {benefits: [tay_da_chet, cap_am], concerns: [xin_mau]}
+  gluconolactone:                     {benefits: [tay_da_chet, cap_am], concerns: [xin_mau]}
+  # brightening / pigmentation
+  ascorbic_acid:                      {benefits: [sang_da, chong_oxy_hoa], concerns: [tham_mun, nam_tan_nhang, xin_mau]}
+  sodium_ascorbyl_phosphate:          {benefits: [sang_da, chong_oxy_hoa], concerns: [tham_mun, xin_mau]}
+  magnesium_ascorbyl_phosphate:       {benefits: [sang_da, chong_oxy_hoa], concerns: [tham_mun, xin_mau]}
+  3_o_ethyl_ascorbic_acid:            {benefits: [sang_da], concerns: [tham_mun, xin_mau]}
+  ascorbyl_glucoside:                 {benefits: [sang_da], concerns: [tham_mun, xin_mau]}
+  ascorbyl_tetraisopalmitate:         {benefits: [sang_da, chong_oxy_hoa], concerns: [tham_mun, xin_mau]}
+  vitamin_c_derivative:               {benefits: [sang_da], concerns: [tham_mun, xin_mau]}
+  tranexamic_acid:                    {benefits: [sang_da], concerns: [nam_tan_nhang, tham_mun]}
+  arbutin:                            {benefits: [sang_da], concerns: [nam_tan_nhang, tham_mun]}
+  glutathione:                        {benefits: [sang_da], concerns: [xin_mau]}
+  benincasa_cerifera_fruit_extract:   {benefits: [kiem_dau], concerns: [mun, dau_thua]}
+  coix_lacryma_jobi_seed_extract:     {benefits: [sang_da, cap_am], concerns: [xin_mau]}
+  # anti-ageing / antioxidant
+  retinol:                            {benefits: [chong_lao_hoa], concerns: [lao_hoa, mun]}
+  retinal:                            {benefits: [chong_lao_hoa], concerns: [lao_hoa, mun]}
+  retinyl_palmitate:                  {benefits: [chong_lao_hoa], concerns: [lao_hoa]}
+  bakuchiol:                          {benefits: [chong_lao_hoa], concerns: [lao_hoa]}
+  adenosine:                          {benefits: [chong_lao_hoa], concerns: [lao_hoa]}
+  palmitoyl_tripeptide_1:             {benefits: [chong_lao_hoa], concerns: [lao_hoa]}
+  acetyl_hexapeptide_8:               {benefits: [chong_lao_hoa], concerns: [lao_hoa]}
+  peptides:                           {benefits: [chong_lao_hoa], concerns: [lao_hoa]}
+  ubiquinone:                         {benefits: [chong_oxy_hoa, chong_lao_hoa], concerns: [lao_hoa]}
+  tocopherol:                         {benefits: [chong_oxy_hoa]}
+  tocopheryl_acetate:                 {benefits: [chong_oxy_hoa]}
+  camellia_sinensis_leaf_extract:     {benefits: [chong_oxy_hoa, lam_diu]}
+  # sun protection
+  titanium_dioxide:                   {benefits: [chong_tia_uv]}
+  zinc_oxide:                         {benefits: [chong_tia_uv]}
+  ethylhexyl_methoxycinnamate:        {benefits: [chong_tia_uv]}
+  octocrylene:                        {benefits: [chong_tia_uv]}
+  homosalate:                         {benefits: [chong_tia_uv]}
+  ethylhexyl_salicylate:              {benefits: [chong_tia_uv]}
+  butyl_methoxydibenzoylmethane:      {benefits: [chong_tia_uv]}
+  bis_ethylhexyloxyphenol_methoxyphenyl_triazine: {benefits: [chong_tia_uv]}
+  diethylamino_hydroxybenzoyl_hexyl_benzoate:     {benefits: [chong_tia_uv]}
+  ethylhexyl_triazone:                {benefits: [chong_tia_uv]}
+  methylene_bis_benzotriazolyl_tetramethylbutylphenol: {benefits: [chong_tia_uv]}
+
+# Same-session conflicts. Source (not invented): recommendation_service/knowledge/ingredient_rules.py
+# CONFLICT_RULES (retinol+aha, retinol+bha, retinol+benzoyl peroxide) with its _ALIASES groups
+# expanded to canonical ingredient keys above. Edges are stored once (smaller key first).
+conflict_groups:
+  retinol: [retinol, retinal]
+  aha: [aha, glycolic_acid, lactic_acid, mandelic_acid]
+  bha: [salicylic_acid]
+  benzoyl peroxide: [benzoyl_peroxide]

@@ -29,3 +29,9 @@ pandas>=2.0.0
 tqdm>=4.66.0
 pymongo>=4.6.0
 pymysql>=1.1.0
+
+# Graph database driver (Smart Search, graph_sync)
+neo4j>=5.20,<6
+
+# Smart Search intent parser (search_service.intent_parser, fuzzy brand match)
+rapidfuzz>=3.9,<4

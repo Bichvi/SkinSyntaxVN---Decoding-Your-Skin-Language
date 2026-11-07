@@ -210,6 +210,33 @@ class AuthController {
         ];
     }
 
+    private function normalizeStaffRole(array $staff): string {
+        $roleId = (int)($staff['ma_vai_tro'] ?? 0);
+        if ($roleId === 1) {
+            return 'admin';
+        }
+        if ($roleId === 2) {
+            return 'nhanvien';
+        }
+
+        $rawRole = trim((string)($staff['ten_vai_tro'] ?? $staff['vai_tro'] ?? ''));
+        $normalized = function_exists('mb_strtolower')
+            ? mb_strtolower($rawRole, 'UTF-8')
+            : strtolower($rawRole);
+        $normalized = str_replace(['_', '-'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/u', ' ', $normalized) ?: $normalized;
+
+        if (
+            in_array($normalized, ['admin', 'administrator', 'quantri', 'quan tri', 'quản trị', 'quan tri vien', 'quản trị viên'], true)
+            || str_contains($normalized, 'quan tri')
+            || str_contains($normalized, 'quản trị')
+        ) {
+            return 'admin';
+        }
+
+        return 'nhanvien';
+    }
+
     private function shouldUseLocalSocialFallback(string $provider): bool {
         $mode = strtolower(trim((string)($_GET['oauth_mode'] ?? '')));
         if (in_array($mode, ['real', 'oauth'], true)) {
@@ -277,12 +304,7 @@ class AuthController {
                 exit;
             }
 
-            $roleName = strtolower(trim((string)($staff['ten_vai_tro'] ?? 'nhanvien')));
-            if ($roleName === 'nhanvien') {
-                $roleName = 'nhanvien';
-            } elseif ($roleName === 'admin') {
-                $roleName = 'admin';
-            }
+            $roleName = $this->normalizeStaffRole($staff);
 
             $_SESSION['user'] = [
                 'id' => 'staff-' . (int)$staff['ma_nv'],

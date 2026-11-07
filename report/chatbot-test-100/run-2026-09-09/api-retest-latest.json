@@ -1,0 +1,67 @@
+{
+  "created_at_utc": "20260909T144755056317Z",
+  "endpoint": "http://localhost:5001/api/chat/auto",
+  "catalog_snapshot": "report/chatbot-test-100/run-2026-09-09/catalog.json",
+  "summary": {
+    "specification_cases": 100,
+    "selected": 1,
+    "modes": {
+      "api": 1
+    }
+  },
+  "results": [
+    {
+      "id": "CHAT-045",
+      "title": "Số lượng không phải ngân sách",
+      "status": "REVIEW_REQUIRED",
+      "http_status": 200,
+      "automated_failures": [],
+      "pending_review": [
+        "Hiểu 2 là số sản phẩm, không là ngân sách; nếu không đủ thì nói rõ."
+      ],
+      "response": {
+        "answer": "Mình tìm được 2 lựa chọn sản phẩm chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml](index.php?r=chitiet&id=244) — 367.000đ.\n- [Serum Hada Labo Retinol B3 Ngừa Lão Hóa 30ml (Mới)](index.php?r=chitiet&id=602) — 317.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+        "conflicts": [],
+        "diagnostics": {
+          "answer_validation": [
+            "unsupported_safety_guarantee"
+          ],
+          "candidate_count": 166,
+          "category": null,
+          "rejected_reasons": [],
+          "selected_count": 2
+        },
+        "eval_scores": null,
+        "fallback": false,
+        "intent_mode": "search",
+        "latency": 5.04,
+        "ok": true,
+        "pipeline_mode": "consultation_v2",
+        "products": [
+          {
+            "brand": "Some By Mi",
+            "detail_url": "index.php?r=chitiet&id=244",
+            "id": "244",
+            "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-serum-some-by-mi-retinol-01-ngua-lao-hoa-cang-bong-da-30ml_jRJ6i3FK3vDzjDVA_img_450x450_31d6f9_fit_center.png",
+            "name": "Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml",
+            "price": 367000,
+            "summary": "• Retinol 0,1%: Hoạt chất vàng giúp thúc đẩy quá trình tổng hợp Collagen và Elastin\r\n- những sợi đàn hồi dưới da, cho bề"
+          },
+          {
+            "brand": "Hada Labo",
+            "detail_url": "index.php?r=chitiet&id=602",
+            "id": "602",
+            "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-serum-hada-labo-retinol-b3-ngua-lao-hoa-30ml-moi-1729654498_img_450x450_31d6f9_fit_center.jpg",
+            "name": "Serum Hada Labo Retinol B3 Ngừa Lão Hóa 30ml (Mới)",
+            "price": 317000,
+            "summary": "• Collagen plus (collagen và colla plus): giúp tăng tạo collagen, elastin, làm mờ nếp nhăn, phục hồi vùng da kém săn chắ"
+          }
+        ]
+      },
+      "elapsed_seconds": 5.44
+    }
+  ],
+  "result_counts": {
+    "REVIEW_REQUIRED": 1
+  }
+}

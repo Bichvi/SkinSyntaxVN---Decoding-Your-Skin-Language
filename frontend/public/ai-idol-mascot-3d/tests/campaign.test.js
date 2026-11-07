@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { campaignPose } from '../campaign-stage.js';
+import { campaignPose, speechWindow } from '../campaign-stage.js';
 const manifest = { duration: 45, cues: [{ start: 20, end: 25, text: 'Niacinamide', ingredient: 0 }] };
 test('campaign follows speech beyond the pilot and turns towards board at the ingredient cue', () => {
   const p = campaignPose(22, manifest, { step: 1, values: Array(46).fill(.5) });
@@ -27,4 +27,24 @@ test('semantic cues add safe gestures without product-specific lifting', () => {
   assert.equal(campaignPose(6, cta, envelope).sticker, 'heart');
   assert.equal(campaignPose(6, benefit, envelope).action, 'benefit');
   assert.equal(campaignPose(6, benefit, envelope).point, 0);
+});
+
+test('music lead-in: Syna greets before speaking and waves goodbye after the last word', () => {
+  const padded = { duration: 26, speech: { start: 2.6, end: 23.6 }, cues: [{ start: 2.6, end: 6, text: 'Xin chào', ingredient: -1 }] };
+  assert.deepEqual(speechWindow(padded), { start: 2.6, end: 23.6 });
+  assert.ok(campaignPose(1.5, padded, null).leftArm < -1, 'waving during the silent lead-in');
+  assert.ok(campaignPose(2.7, padded, null).leftArm < -1, 'still waving as the first word starts');
+  assert.ok(campaignPose(4.5, padded, null).leftArm > -.5, 'arm lowered once talking');
+  assert.equal(campaignPose(12, padded, null).sticker, null);
+  const goodbye = campaignPose(25.2, padded, null);
+  assert.ok(goodbye.leftArm < -1, 'goodbye wave after speech');
+  assert.equal(goodbye.sticker, 'heart');
+  assert.equal(goodbye.mouth, 0);
+});
+
+test('manifests without a speech window keep the original timing', () => {
+  const legacy = { duration: 20, cues: [] };
+  assert.deepEqual(speechWindow(legacy), { start: 0, end: 20 });
+  assert.equal(campaignPose(19.5, legacy, null).sticker, null);
+  assert.equal(campaignPose(17, legacy, null).leftArm, -.1);
 });

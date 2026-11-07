@@ -465,6 +465,167 @@ class DanhGia {
         return $result;
     }
 
+    /** Giá trị Mongo $in khớp một ứng viên mã (chuỗi khớp đúng chuỗi; số khớp số), như truy vấn trong canUserReviewProduct. */
+    private function matchesIdCandidates($value, array $candidates): bool {
+        foreach ($candidates as $candidate) {
+            if (is_string($candidate) ? (is_string($value) && $value === $candidate)
+                : ((is_int($value) || is_float($value)) && $value == $candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function docMatchesProduct(array $doc, array $fields, array $candidates): bool {
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $doc) && $this->matchesIdCandidates($doc[$field], $candidates)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * canUserReviewProduct cho nhiều dòng đơn của cùng một khách bằng 4 truy vấn (thay vì 4 truy vấn mỗi dòng).
+     * $requests: [['product_id' =>, 'order_id' =>, 'order_item_id' =>], ...]; trả kết quả theo đúng thứ tự,
+     * cùng dạng và cùng giá trị với canUserReviewProduct($customerId, product_id, order_id, order_item_id).
+     */
+    public function canUserReviewProductsBatch(int $customerId, array $requests): array {
+        $base = ['has_purchased' => false, 'has_reviewed' => false, 'order_id' => '', 'order_item_id' => '',
+                 'message' => 'Chỉ đơn Hoàn thành mới được đánh giá.'];
+        $candidatesByProduct = [];
+        foreach ($requests as $request) {
+            $productId = trim((string)($request['product_id'] ?? ''));
+            if ($productId !== '') $candidatesByProduct[$productId] = $this->productIdCandidates($productId);
+        }
+        if ($customerId <= 0 || !$candidatesByProduct) {
+            return array_map(fn() => $base, $requests);
+        }
+        $allCandidates = array_values(array_unique(array_merge(...array_values($candidatesByProduct)), SORT_REGULAR));
+
+        // 1) Đơn hoàn thành của khách (giống completedPurchasesForProduct).
+        $orders = [];
+        $orderIds = [];
+        foreach ($this->db->hoa_don->find(
+            ['ma_kh' => $customerId],
+            ['sort' => ['ngay_dat' => 1, 'ma_hoa_don' => 1], 'projection' => ['ma_hoa_don' => 1, 'trang_thai' => 1, 'trang_thai_normalized' => 1, 'ngay_dat' => 1]]
+        ) as $orderDoc) {
+            $order = (array)$orderDoc;
+            if (($order['trang_thai_normalized'] ?? '') === 'completed' || $this->normalizeOrderStatus($order['trang_thai'] ?? '') === 'completed') {
+                $orderId = trim((string)($order['ma_hoa_don'] ?? ''));
+                if ($orderId !== '') {
+                    $orders[$orderId] = $order;
+                    $orderIds[] = is_numeric($orderId) ? (int)$orderId : $orderId;
+                }
+            }
+        }
+
+        // 2) Dòng đơn của mọi sản phẩm cần xét, cùng thứ tự sắp xếp.
+        $details = [];
+        if ($orderIds) {
+            foreach ($this->db->chi_tiet_hoa_don->find([
+                '$and' => [
+                    ['ma_hoa_don' => ['$in' => $orderIds]],
+                    ['$or' => [['ma_san_pham' => ['$in' => $allCandidates]], ['id_san_pham' => ['$in' => $allCandidates]], ['product_id' => ['$in' => $allCandidates]]]],
+                ],
+            ], ['sort' => ['ma_hoa_don' => 1, 'id' => 1]]) as $detailDoc) {
+                $details[] = (array)$detailDoc;
+            }
+        }
+
+        // 3) Đánh giá của khách cho các sản phẩm này (bảng mới + bảng cũ), giống reviewedPurchaseKeys.
+        $reviewsNew = [];
+        $reviewsLegacy = [];
+        if ($details) {
+            $productClause = ['$or' => [['ma_san_pham' => ['$in' => $allCandidates]], ['id' => ['$in' => $allCandidates]]]];
+            foreach ($this->db->danh_gia_san_pham->find(['$and' => [
+                ['ma_khach_hang' => $customerId], $productClause,
+                ['$or' => [['trang_thai' => ['$exists' => false]], ['trang_thai' => 'hien_thi'], ['trang_thai' => 'active']]],
+            ]]) as $doc) {
+                $reviewsNew[] = (array)$doc;
+            }
+            foreach ($this->db->danh_gia->find(['$and' => [
+                ['$or' => [['ma_kh' => $customerId], ['ma_khach_hang' => $customerId]]], $productClause,
+            ]]) as $doc) {
+                $reviewsLegacy[] = (array)$doc;
+            }
+        }
+
+        $perProduct = [];
+        foreach ($candidatesByProduct as $productId => $candidates) {
+            $productId = (string)$productId;
+            $purchases = [];
+            foreach ($details as $detail) {
+                if (!$this->docMatchesProduct($detail, ['ma_san_pham', 'id_san_pham', 'product_id'], $candidates)) continue;
+                $orderId = trim((string)($detail['ma_hoa_don'] ?? ''));
+                $itemId = $this->orderItemIdFromDetail($detail);
+                $purchaseProductId = trim((string)($detail['ma_san_pham'] ?? $productId));
+                $purchases[] = ['order_id' => $orderId, 'order_item_id' => $itemId,
+                                'key' => $this->reviewPurchaseKey($orderId, $itemId, $purchaseProductId)];
+            }
+            $consumed = [];
+            $legacyReviews = 0;
+            foreach (array_merge($reviewsNew, $reviewsLegacy) as $review) {
+                if (!$this->docMatchesProduct($review, ['ma_san_pham', 'id'], $candidates)) continue;
+                $orderId = $this->orderIdFromReview($review);
+                $itemId = $this->orderItemIdFromReview($review);
+                if ($orderId !== '' || $itemId !== '') {
+                    $consumed[$this->reviewPurchaseKey($orderId, $itemId, trim((string)($review['ma_san_pham'] ?? $productId)))] = true;
+                } else {
+                    $legacyReviews++;
+                }
+            }
+            foreach ($purchases as $purchase) {
+                if ($legacyReviews <= 0) break;
+                if ($purchase['key'] !== '' && empty($consumed[$purchase['key']])) {
+                    $consumed[$purchase['key']] = true;
+                    $legacyReviews--;
+                }
+            }
+            $perProduct[$productId] = [$purchases, $consumed];
+        }
+
+        $results = [];
+        foreach ($requests as $index => $request) {
+            $productId = trim((string)($request['product_id'] ?? ''));
+            $result = $base;
+            [$purchases, $consumed] = $perProduct[$productId] ?? [[], []];
+            if ($productId === '' || !$purchases) {
+                $results[$index] = $result;
+                continue;
+            }
+            $result['has_purchased'] = true;
+            $preferredOrderId = trim((string)($request['order_id'] ?? ''));
+            $preferredOrderItemId = trim((string)($request['order_item_id'] ?? ''));
+            $hasPreferredPurchase = $preferredOrderId !== '' || $preferredOrderItemId !== '';
+            $eligible = null;
+            foreach ($purchases as $purchase) {
+                if ($purchase['key'] === '' || !empty($consumed[$purchase['key']])) continue;
+                $matchesPreferred = ($preferredOrderId === '' || $preferredOrderId === $purchase['order_id'])
+                    && ($preferredOrderItemId === '' || $preferredOrderItemId === $purchase['order_item_id']);
+                if ($matchesPreferred) {
+                    $eligible = $purchase;
+                    break;
+                }
+                if (!$hasPreferredPurchase && $eligible === null) {
+                    $eligible = $purchase;
+                }
+            }
+            if ($eligible === null) {
+                $result['has_reviewed'] = true;
+                $result['message'] = 'Bạn đã đánh giá tất cả các lần mua của sản phẩm này.';
+            } else {
+                $result['order_id'] = $eligible['order_id'];
+                $result['ma_hoa_don'] = $result['order_id'];
+                $result['order_item_id'] = $eligible['order_item_id'];
+                $result['ma_chi_tiet_hoa_don'] = $result['order_item_id'];
+                $result['message'] = '';
+            }
+            $results[$index] = $result;
+        }
+        return $results;
+    }
+
     public function addReview(string $productId, int $customerId, array $data): array {
         $productId = trim((string)$productId);
         $content = trim((string)($data['noi_dung'] ?? ''));

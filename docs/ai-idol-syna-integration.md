@@ -30,6 +30,11 @@ The renderer runs on localhost:7862, using the existing Node/Chrome/FFmpeg insta
 
 ## Limits and operations
 
-Keep the computer awake and Docker plus the local Syna renderer running during generation. Start the renderer with `powershell -ExecutionPolicy Bypass -File scripts/start-ai-idol-syna.ps1`; stop with the matching stop script. The launcher does not install packages or change startup settings. No claim of free cloud hosting or instantaneous rendering: CPU/GPU/RAM, electricity and disk space are still used.
+Keep the computer awake and Docker plus the local Syna renderer running during generation. Start the renderer with `powershell -ExecutionPolicy Bypass -File scripts/start-ai-idol-syna.ps1`; stop with the matching stop script. The launcher does not install packages or change startup settings.
+The renderer does not survive a reboot or sign-out; Docker workers then log `Network is unreachable` for
+`host.docker.internal:7862` (Docker Desktop's report for a closed host port), and Syna jobs wait in
+`WAITING_RENDERER`. To start it at every sign-in, opt in once with
+`powershell -ExecutionPolicy Bypass -File scripts/register-ai-idol-syna-autostart.ps1`
+(current user, no admin); remove it with the same command plus `-Unregister`. No claim of free cloud hosting or instantaneous rendering: CPU/GPU/RAM, electricity and disk space are still used.
 
 GitNexus: repository and worktree are SkinSyntaxVN---Decoding-Your-Skin-Language at the project root. Index 84d4d5e was 8 commits behind HEAD during pre-edit analysis; refresh attempted. Pipeline impact LOW: run_ai_idol_pipeline_async and generate_job_task; campaign creation LOW: api_create_campaign. Frontend handlers have local callers; dynamic form listeners manually inspected. Existing unrelated dirty files are preserved. No commit requested.

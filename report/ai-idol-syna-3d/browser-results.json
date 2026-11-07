@@ -1,0 +1,24 @@
+{
+  "url": "http://localhost:8080/ai-idol-mascot-3d/index.html",
+  "results": [
+    "PASS: both true 90-degree profiles, rear view and full-turn keyboard inspection",
+    "PASS: real WebGL geometry, front/side views, product price and separate board",
+    "PASS: paused scene does not redraw; recorded uninterrupted seven-second playback metrics",
+    "PASS: audio mouth, pause, seek, wave/turn/point/return and reduced motion",
+    "PASS: real fifteen-second WebM export with narration",
+    "PASS: cancel, mobile layout and keyboard playback",
+    "PASS: missing audio, WebGL unavailable/lost, old 2D still works, no JS errors, external requests or writes"
+  ],
+  "metrics": {
+    "fps": "28.8",
+    "renderMs": "1.6",
+    "triangles": "65254",
+    "geometries": "72",
+    "sampleSeconds": 7,
+    "observedFrames": 202,
+    "maxGapMs": 44,
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x00009A68) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "idleRenders": 0
+  },
+  "errors": []
+}

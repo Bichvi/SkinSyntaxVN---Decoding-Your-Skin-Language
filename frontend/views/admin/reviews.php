@@ -53,10 +53,10 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
     </div>
 
     <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
-        <form class="row g-2" method="get" action="index.php" data-live-filter="true">
+        <form class="row g-2" method="get" action="index.php" data-live-filter="true" data-live-target="#reviewList" data-live-also="#reviewDetail">
             <input type="hidden" name="r" value="staff_reviews">
             <div class="col-lg-3 col-md-6">
-                <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Mã đánh giá, mã SP, tên SP..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                <input type="text" class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Mã đánh giá, mã SP, tên SP..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-lg-2 col-md-3">
                 <select class="form-select" name="so_sao" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
@@ -74,7 +74,7 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
                 </select>
             </div>
             <div class="col-lg-2 col-md-4">
-                <input type="text" class="form-control" name="ma_van_don" value="<?= h($maVanDon) ?>" placeholder="Mã đơn hàng" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                <input type="text" class="form-control" name="ma_van_don" autocomplete="off" value="<?= h($maVanDon) ?>" placeholder="Mã đơn hàng" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-lg-3 col-md-8 d-flex gap-2">
                 <button type="submit" class="btn text-white fw-semibold w-100" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">Lọc đánh giá</button>
@@ -85,7 +85,7 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
 
     <div class="row g-4">
         <!-- Reviews List Panel (Left) -->
-        <div class="col-xl-5">
+        <div class="col-xl-5 live-region" id="reviewList" aria-live="polite">
             <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
                 <div class="p-3 border-bottom background-subtle d-flex align-items-center justify-content-between">
                     <h6 class="fw-bold mb-0" style="color: var(--admin-text);">Danh sách đánh giá</h6>
@@ -127,7 +127,7 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
         </div>
 
         <!-- Detail & Reply Panel (Right) -->
-        <div class="col-xl-7">
+        <div class="col-xl-7 live-region" id="reviewDetail" aria-live="polite">
             <div class="admin-card p-3.5 mb-0" style="border-radius: 8px !important;">
                 <?php if (!$selectedReview): ?>
                     <div class="text-center text-muted py-5 d-flex flex-column align-items-center justify-content-center">

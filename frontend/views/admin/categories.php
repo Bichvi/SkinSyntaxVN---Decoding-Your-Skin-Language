@@ -65,10 +65,10 @@ $selectedParentId = $editing ? ($editing['parent_id'] ?? null) : 1001;
         <div class="col-lg-8">
             <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
                 <div class="p-3 border-bottom background-subtle">
-                    <form class="row g-2" method="get" action="index.php" data-live-filter="true">
+                    <form class="row g-2" method="get" action="index.php" data-live-filter="true" data-live-target="#categoryResults">
                         <input type="hidden" name="r" value="admin_categories">
                         <div class="col-md-9">
-                            <input type="text" class="form-control" name="q" value="<?= h($q) ?>" placeholder="Tìm danh mục theo mã, tên hoặc danh mục cha..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                            <input type="text" class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Tìm danh mục theo mã, tên hoặc danh mục cha..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
                         </div>
                         <div class="col-md-3 d-grid">
                             <button type="submit" class="btn btn-sm text-white fw-semibold" style="background: #183B2B; border-radius: 6px;">Tìm kiếm</button>
@@ -76,7 +76,7 @@ $selectedParentId = $editing ? ($editing['parent_id'] ?? null) : 1001;
                     </form>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive live-region" id="categoryResults" aria-live="polite">
                     <table class="table admin-table align-middle mb-0">
                         <thead>
                             <tr>
