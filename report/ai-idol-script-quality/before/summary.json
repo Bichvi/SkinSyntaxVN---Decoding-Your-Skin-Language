@@ -1,0 +1,89 @@
+[
+ {
+  "product": "98",
+  "name": "Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da, Ngừa Mụn 28g",
+  "purpose": "product_video",
+  "prompt_chars": 8996,
+  "sent_chars": 8000,
+  "clipped": true,
+  "newlines_kept": 0,
+  "sections": [
+   "",
+   "",
+   ""
+  ],
+  "words": 316,
+  "deterministic_issues": [
+   "MISSING_SECTION: "
+  ],
+  "seconds": 8.6
+ },
+ {
+  "product": "101",
+  "name": "Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml",
+  "purpose": "product_video",
+  "prompt_chars": 8455,
+  "sent_chars": 8000,
+  "clipped": true,
+  "newlines_kept": 0,
+  "sections": [
+   "",
+   "",
+   ""
+  ],
+  "words": 290,
+  "deterministic_issues": [
+   "SCARCITY_UNVERIFIED: hom nay",
+   "MISSING_SECTION: "
+  ],
+  "seconds": 1.4
+ },
+ {
+  "product": "68",
+  "name": "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml",
+  "purpose": "product_video",
+  "prompt_chars": 8582,
+  "sent_chars": 8000,
+  "clipped": true,
+  "newlines_kept": 0,
+  "sections": [
+   "hook",
+   "problem",
+   "product_intro",
+   "specs",
+   "ingredients",
+   "how_to_use",
+   "wrap_up"
+  ],
+  "words": 378,
+  "deterministic_issues": [
+   "SCARCITY_UNVERIFIED: hom nay",
+   "SCARCITY_UNVERIFIED: hom nay"
+  ],
+  "seconds": 1.7
+ },
+ {
+  "product": "101",
+  "name": "Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml",
+  "purpose": "live_and_product",
+  "prompt_chars": 6954,
+  "sent_chars": 6940,
+  "clipped": true,
+  "newlines_kept": 0,
+  "sections": [
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   ""
+  ],
+  "words": 395,
+  "deterministic_issues": [
+   "SCARCITY_UNVERIFIED: hom nay"
+  ],
+  "seconds": 30.2
+ }
+]

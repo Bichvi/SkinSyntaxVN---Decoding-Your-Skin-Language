@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><title>Luồng chatbot Syna</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:2400px;height:2010px;position:relative;background:#fff;font-family:'Segoe UI',Arial,sans-serif;color:#17321f}
+.b{position:absolute;border:2.5px solid #1e5631;border-radius:10px;background:#eef6ec;overflow:hidden}
+.h{background:#1e5631;color:#fff;font-weight:700;font-size:25px;padding:9px 16px;text-align:center}
+.h.alt{background:#3f9a63}.h.dk{background:#0f2e1b}
+.in{padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.n{background:#c8e2c3;border:2px solid #2e7d4f;border-radius:7px;padding:8px 12px;font-size:20px;line-height:1.28;text-align:center}
+.n b{display:block;font-size:21px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;width:100%}
+.row .n{flex:1;min-width:0}
+.ar{font-size:24px;font-weight:900;color:#1e5631}
+.tags{display:flex;flex-wrap:wrap;gap:6px;width:100%}
+.t,.p,.k{font-size:16.5px;border-radius:12px;padding:3px 10px;font-weight:600;white-space:nowrap}
+.t{background:#1e5631;color:#fff}              /* công nghệ */
+.p{background:#ffd76a;color:#4a3500}            /* pattern */
+.k{background:#d9d2ff;color:#2b1d7a}            /* kỹ thuật */
+.warn{font-size:16px;color:#8a2b00;font-style:italic;width:100%}
+svg.lines{position:absolute;left:0;top:0;pointer-events:none}
+.lbl{position:absolute;font-size:20px;font-weight:700;color:#1e5631;background:#fff;padding:0 4px}
+.dia{position:absolute;left:250px;top:770px;width:360px;height:110px}
+.dia div{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-weight:700;font-size:20px;line-height:1.2;padding:0 50px}
+.user{position:absolute;left:28px;top:640px;width:90px;text-align:center;font-weight:700;font-size:22px}
+.title{position:absolute;left:150px;top:6px;font-size:16px;color:#5a6e60}
+.legend{position:absolute;left:150px;top:1958px;display:flex;gap:22px;align-items:center;font-size:19px}
+</style></head><body>
+
+<svg class="lines" width="2400" height="2010">
+ <defs><marker id="a" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#17321f"/></marker>
+ <marker id="g" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#3f9a63"/></marker></defs>
+ <g fill="none" stroke="#17321f" stroke-width="3">
+  <!-- user -> step0 -->
+  <path d="M73,630 L73,130 L146,130" marker-end="url(#a)"/>
+  <!-- spine -->
+  <path d="M430,292 L430,318" marker-end="url(#a)"/>
+  <path d="M430,508 L430,534" marker-end="url(#a)"/>
+  <path d="M430,740 L430,766" marker-end="url(#a)"/>
+  <path d="M430,880 L430,916" marker-end="url(#a)"/>
+  <path d="M430,1320 L430,1340" marker-end="url(#a)"/>
+  <!-- diamond yes -> agent -->
+  <path d="M612,823 L760,823 L760,250 L816,250" marker-end="url(#a)"/>
+  <!-- agent fallback -> legacy -->
+  <path d="M1000,488 L1000,520" stroke-dasharray="8 6" stroke="#b5452b"/>
+  <!-- classify -> channels -->
+  <path d="M712,1460 L780,1460 L780,592"/>
+  <path d="M780,592 L816,592" marker-end="url(#a)"/>
+  <path d="M780,780 L816,780" marker-end="url(#a)"/>
+  <path d="M780,958 L816,958" marker-end="url(#a)"/>
+  <!-- hybrid -> rerank -> prompt -> llm -> finish -->
+  <path d="M1592,1150 L1626,1150" marker-end="url(#a)"/>
+  <path d="M1998,1300 L1998,1360" marker-end="url(#a)"/>
+  <path d="M1626,1470 L1590,1470" marker-end="url(#a)"/>
+  <path d="M1120,1470 L1086,1470" marker-end="url(#a)"/>
+  <!-- ch1, ch2 -> prompt -->
+  <path d="M2372,592 L2390,592 L2390,1440 L2376,1440" stroke="#3f9a63" stroke-dasharray="7 5" marker-end="url(#g)"/>
+  <path d="M2372,780 L2390,780" stroke="#3f9a63" stroke-dasharray="7 5"/>
+  <!-- agent -> finish -->
+  <path d="M2372,250 L2395,250 L2395,592" stroke="#3f9a63" stroke-dasharray="7 5"/>
+  <!-- finish -> user -->
+  <path d="M953,1576 L953,1600 L73,1600 L73,800" marker-end="url(#a)"/>
+ </g>
+</svg>
+
+<div class="title">SkinSyntaxVN · Luồng xử lý một tin nhắn của chatbot Syna (theo code hiện tại)</div>
+<div class="lbl" style="left:84px;top:300px;writing-mode:vertical-rl">Tin nhắn</div>
+<div class="lbl" style="left:240px;top:1588px">Câu trả lời + thẻ sản phẩm</div>
+<div class="lbl" style="left:640px;top:792px">Có</div>
+<div class="lbl" style="left:440px;top:884px">Không</div>
+<div class="lbl" style="left:1010px;top:490px;color:#b5452b;font-size:17px">agent lỗi → lùi về luồng cũ</div>
+
+<div class="user"><svg width="70" height="110" viewBox="0 0 70 110"><circle cx="35" cy="20" r="16" fill="#c8e2c3" stroke="#17321f" stroke-width="3"/><path d="M35,36 L35,72 M10,50 L60,50 M35,72 L14,104 M35,72 L56,104" stroke="#17321f" stroke-width="3" fill="none"/></svg><div>Khách</div></div>
+
+<!-- STEP 0 -->
+<div class="b" style="left:150px;top:30px;width:560px;height:262px">
+ <div class="h">Bước 0 · Cổng vào</div>
+ <div class="in"><div class="row"><div class="n"><b>Trình duyệt</b>chat-agent-stream.js</div><span class="ar">→</span><div class="n"><b>Nginx 1.27</b>reverse proxy</div><span class="ar">→</span><div class="n"><b>PHP 8.2 MVC</b>aiChatAssistant</div></div>
+ <div class="tags"><span class="p">BFF pattern</span><span class="p">Reverse proxy</span><span class="k">Session + CSRF</span><span class="k">Rate limit (Redis)</span><span class="p">Circuit breaker</span></div></div>
+</div>
+
+<!-- STEP 1 -->
+<div class="b" style="left:150px;top:322px;width:560px;height:186px">
+ <div class="h">Bước 1 · Rich Context (PHP gom ngữ cảnh)</div>
+ <div class="in"><div class="n" style="width:100%">Hồ sơ da · giỏ hàng + xung đột · trang SP đang xem · ứng viên SP từ <b style="display:inline">MongoDB Atlas</b> · lịch sử chat · bài chính sách<br>+ ký <b style="display:inline">token HMAC-SHA256</b> (5 phút, có scope)</div>
+ <div class="tags"><span class="p">Context injection</span><span class="k">Server-side grounding</span><span class="k">Least privilege (scope)</span></div></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="b" style="left:150px;top:538px;width:560px;height:202px">
+ <div class="h">Bước 2 · LangGraph · nút route</div>
+ <div class="in"><div class="row"><div class="n"><b>Luật regex</b>chạy trước, 0 token</div><span class="ar">→</span><div class="n"><b>LLM → JSON</b>danh sách ý định</div><span class="ar">→</span><div class="n"><b>Hàng đợi</b>nhiều ý định</div></div>
+ <div class="tags"><span class="t">LangGraph StateGraph</span><span class="p">Router</span><span class="p">Rule-first, LLM-fallback</span><span class="k">Feature flag SYNA_AGENT_V2</span></div></div>
+</div>
+
+<!-- DIAMOND -->
+<div class="dia"><svg width="360" height="110"><polygon points="180,2 358,55 180,108 2,55" fill="#1e5631"/></svg><div>Mua / giỏ / tra đơn / tư vấn có hành động?</div></div>
+
+<!-- STEP 3 -->
+<div class="b" style="left:150px;top:920px;width:560px;height:400px">
+ <div class="h">Bước 3 · Nhánh tất định chạy trước</div>
+ <div class="in">
+  <div class="n" style="width:100%"><b>STORE_SUPPORT</b>support.json → xếp hạng → LLM trả lời có trích nguồn → <b style="display:inline">hậu kiểm từng con số</b> → sai thì dùng câu soạn sẵn</div>
+  <div class="row"><div class="n"><b>Graph tools · Neo4j 5.26</b>Cypher tham số hóa, hạn 600 ms</div><div class="n"><b>Khảo sát da</b>hỏi từng bước → lưu hồ sơ</div></div>
+  <div class="tags"><span class="p">Guardrail / post-validation</span><span class="k">Template Cypher</span><span class="p">State machine</span><span class="p">Timeout + fallback</span></div>
+ </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="b" style="left:150px;top:1344px;width:560px;height:240px">
+ <div class="h">Bước 4 · Viết lại câu hỏi &amp; phân loại</div>
+ <div class="in"><div class="row"><div class="n"><b style="font-size:17px">contextualize_query</b>viết lại theo lịch sử</div><span class="ar">→</span><div class="n"><b>classify_intent()</b>luật ghi đè + LLM</div><span class="ar">→</span><div class="n"><b style="font-size:17px">parse_yeu_cau</b>loại da, ngân sách, hoạt chất</div></div>
+ <div class="tags"><span class="t">LangChain</span><span class="k">Query rewriting</span><span class="k">Structured output</span></div></div>
+</div>
+
+<!-- AGENT -->
+<div class="b" style="left:820px;top:30px;width:1552px;height:458px">
+ <div class="h dk">Kênh Agent · nút agent của LangGraph (cờ SYNA_AGENT_V2) · LLM gọi công cụ: Groq → Gemini → OpenAI</div>
+ <div class="in">
+  <div class="tags" style="gap:8px"><span class="t">search_products</span><span class="t">get_product</span><span class="t">compare_products</span><span class="t">check_conflicts</span><span class="t">view_cart</span><span class="t">add_to_cart</span><span class="t">remove_from_cart</span><span class="t">get_checkout_defaults</span><span class="t">prepare_order_draft</span><span class="t">reorder_from_order</span><span class="t">get_order_status</span></div>
+  <div class="row">
+   <div class="n"><b>Vòng lặp tool-calling</b>tối đa 8 bước · 45 giây/lượt</div><span class="ar">→</span>
+   <div class="n"><b>Kiểm scope token</b>mỗi tool một quyền</div><span class="ar">→</span>
+   <div class="n"><b>Gọi PHP</b>PHP mới ghi giỏ;<br>trả cart_effect có chữ ký + nonce</div><span class="ar">→</span>
+   <div class="n"><b>Đơn nháp</b>Mongo chat_order_drafts<br>TTL 10 phút</div><span class="ar">→</span>
+   <div class="n"><b>Khách tự bấm Xác nhận</b>phiên + CSRF + Origin<br>5 lần / 10 phút</div><span class="ar">→</span>
+   <div class="n"><b>findOneAndUpdate</b>used_at → đơn chỉ tạo 1 lần</div>
+  </div>
+  <div class="n" style="width:100%"><b style="display:inline">Guard claims_false_commitment:</b> chặn câu LLM tự nói "đã đặt đơn" khi chưa có đơn thật · giá và tồn kho được PHP đọc lại trước khi tạo đơn</div>
+  <div class="tags"><span class="p">ReAct / tool-calling agent</span><span class="p">Human-in-the-loop</span><span class="p">Idempotency (single-use)</span><span class="k">HMAC signing + nonce</span><span class="p">Capability token / scope</span><span class="k">TTL</span><span class="p">Output guardrail</span><span class="p">Bounded loop (step + time budget)</span></div>
+ </div>
+</div>
+
+<!-- CHANNEL 1 -->
+<div class="b" style="left:820px;top:524px;width:1552px;height:136px">
+ <div class="h alt">Kênh 1 · GENERAL_CONVERSATION</div>
+ <div class="in"><div class="row"><div class="n"><b>Tavily web search</b>chỉ khi cần thông tin ngoài</div><span class="ar">→</span><div class="n"><b>ChromaDB</b>3 sản phẩm nổi bật</div><span class="ar">→</span><div class="n"><b>Prompt chitchat</b></div>
+ <div class="tags" style="width:auto;flex:1.4"><span class="t">Tavily</span><span class="p">Conditional tool use</span></div></div></div>
+</div>
+
+<!-- CHANNEL 2 -->
+<div class="b" style="left:820px;top:690px;width:1552px;height:180px">
+ <div class="h alt">Kênh 2 · COSMETIC_KNOWLEDGE</div>
+ <div class="in"><div class="row"><div class="n"><b>Tách tên hoạt chất</b></div><span class="ar">→</span><div class="n"><b>Tavily</b>kiến thức khoa học</div><span class="ar">→</span><div class="n"><b>Hybrid search</b>theo hoạt chất (top 15)</div><span class="ar">→</span><div class="n"><b>Lọc SP chứa đúng hoạt chất</b></div><span class="ar">→</span><div class="n"><b>Prompt kiến thức</b></div></div>
+ <div class="tags"><span class="k">Entity extraction</span><span class="p">RAG = web + catalog</span><span class="k">Post-filter</span></div></div>
+</div>
+
+<!-- CHANNEL 3 -->
+<div class="b" style="left:820px;top:900px;width:1552px;height:56px;border-color:#3f9a63">
+ <div class="h alt">Kênh 3 · PRODUCT_INFO · PERSONALIZED · PERSONALIZED_PRODUCT · GENERAL_SKINCARE_KNOWLEDGE</div>
+</div>
+
+<!-- HYBRID -->
+<div class="b" style="left:820px;top:964px;width:772px;height:336px">
+ <div class="h">Bước 5 · Hybrid Search</div>
+ <div class="in">
+  <div class="row"><div class="n"><b>Semantic · ChromaDB 0.5</b>embedding static-similarity-mrl-multilingual-v1 (CPU)</div><div class="n"><b>Lexical · BM25</b></div><span class="ar">→</span><div class="n" style="flex:.8"><b>RRF</b>Σ 1/(k + rank)</div></div>
+  <div class="row"><div class="n"><b>+ Ứng viên PHP</b>từ Mongo, gộp vào</div><div class="n"><b>Lọc</b>ngân sách · loại da · chất cần tránh · không phải SP mặt</div></div>
+  <div class="tags"><span class="t">ChromaDB</span><span class="t">sentence-transformers</span><span class="k">Reciprocal Rank Fusion</span><span class="k">Metadata filter</span><span class="p">Hybrid retrieval</span></div>
+  <div class="warn">Lưu ý: chỉ mục BM25 ở luồng chat đang khởi tạo rỗng, nên thực tế chủ yếu là tìm theo nghĩa + ứng viên PHP.</div>
+ </div>
+</div>
+
+<!-- RERANK -->
+<div class="b" style="left:1630px;top:964px;width:742px;height:336px">
+ <div class="h">Bước 6 · Cross-Encoder Rerank</div>
+ <div class="in">
+  <div class="n" style="width:100%"><b>mmarco-mMiniLMv2-L12-H384-v1</b>chấm từng cặp (câu hỏi, sản phẩm) → xếp lại top-N</div>
+  <div class="n" style="width:100%">Reranker lỗi → giữ thứ tự cũ, không chặn câu trả lời</div>
+  <div class="tags"><span class="t">Cross-encoder</span><span class="p">Two-stage retrieval (lấy rộng → xếp kỹ)</span><span class="p">Graceful degradation</span></div>
+ </div>
+</div>
+
+<!-- PROMPT -->
+<div class="b" style="left:1630px;top:1364px;width:742px;height:212px">
+ <div class="h">Bước 7 · Prompt theo ý định + luật an toàn</div>
+ <div class="in">
+  <div class="n" style="width:100%">Chèn hồ sơ da + sản phẩm thật (giá từ DB) + xung đột trong giỏ; hoãn retinol / vitamin C nếu da đang nhạy cảm</div>
+  <div class="tags"><span class="p">Prompt template theo intent</span><span class="k">RAG grounding</span><span class="k">Safety rules</span></div>
+ </div>
+</div>
+
+<!-- LLM -->
+<div class="b" style="left:1124px;top:1364px;width:466px;height:212px">
+ <div class="h">Bước 8 · Multi-LLM Failover</div>
+ <div class="in">
+  <div class="row"><div class="n">OpenAI</div><div class="n">Gemini</div><div class="n">Groq</div></div>
+  <div class="row"><div class="n">Zhipu</div><div class="n">OpenRouter</div></div>
+  <div class="tags"><span class="p">Failover chain</span><span class="k">Cooldown 300 s / model</span></div>
+ </div>
+</div>
+
+<!-- FINISH -->
+<div class="b" style="left:820px;top:1364px;width:266px;height:212px">
+ <div class="h">Bước 9 · finish</div>
+ <div class="in">
+  <div class="n" style="width:100%">Lưu lịch sử (Mongo), trạng thái (Redis) → PHP → UI</div>
+  <div class="tags"><span class="t">Redis 7</span><span class="t">MongoDB</span></div>
+ </div>
+</div>
+
+<!-- LABEL SCAN -->
+<div class="b" style="left:150px;top:1620px;width:1050px;height:322px">
+ <div class="h dk">Nhánh riêng · Chụp bảng thành phần</div>
+ <div class="in">
+  <div class="row"><div class="n"><b>Ảnh</b>không lưu lại</div><span class="ar">→</span><div class="n"><b>Vision LLM</b>Groq qwen → Gemini<br>chỉ chép chữ</div><span class="ar">→</span><div class="n"><b>parse_ingredients</b>806 tên gọi → INCI</div><span class="ar">→</span><div class="n"><b>Luật YAML</b>xung đột (11 luật / 55 cặp) · hợp da 🟢🟡🔴</div><span class="ar">→</span><div class="n"><b>Lịch sáng/tối</b>+ SP thay thế + tóm tắt</div></div>
+  <div class="tags"><span class="p">LLM chỉ trích xuất, luật quyết định</span><span class="k">Normalization / alias dictionary</span><span class="p">Rule engine</span><span class="p">Fallback chain</span><span class="k">Rate limit 6 / 10 phút</span><span class="p">Privacy by design</span></div>
+  <div class="warn" style="color:#3a5a44">Đường lùi: Groq hết hạn mức → Gemini → ô cho khách tự dán thành phần.</div>
+ </div>
+</div>
+
+<!-- DATA SYNC -->
+<div class="b" style="left:1240px;top:1620px;width:1132px;height:322px">
+ <div class="h dk">Pipeline dữ liệu nền · giữ các kho khớp nhau</div>
+ <div class="in">
+  <div class="row"><div class="n"><b>Admin sửa SP</b>PHP → Mongo Atlas</div><span class="ar">→</span><div class="n"><b>Redis Stream</b>sự kiện</div><span class="ar">→</span><div class="n"><b>catalog worker</b>graph_sync: extract → ingredients → curation/rules → transform</div><span class="ar">→</span><div class="n"><b>Neo4j + Chroma</b>bản dẫn xuất</div></div>
+  <div class="n" style="width:100%">+ đồng bộ đầy đủ lúc 02:30 mỗi đêm · nhãn admin nhập luôn thắng nhãn AI gợi ý</div>
+  <div class="tags"><span class="p">Event-driven</span><span class="p">Single source of truth (Mongo)</span><span class="p">Derived read models</span><span class="k">ETL</span><span class="k">Nightly reconciliation</span></div>
+ </div>
+</div>
+
+<div class="legend"><b>Chú thích:</b><span class="t">Công nghệ</span><span class="p">Pattern thiết kế</span><span class="k">Kỹ thuật</span><span>── luồng chính</span><span style="color:#3f9a63">- - - đi tiếp tới bước sau</span><span style="color:#b5452b">- - - đường lùi</span></div>
+</body></html>

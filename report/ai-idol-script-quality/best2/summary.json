@@ -1,0 +1,253 @@
+[
+ {
+  "product": "98",
+  "name": "Kem Dưỡng Obagi Retinol 1.0% Trẻ Hóa Da, Ngừa Mụn 28g",
+  "purpose": "product_video",
+  "prompt_chars": 7584,
+  "sent_chars": 7579,
+  "clipped": true,
+  "newlines_kept": 64,
+  "sections": [
+   "hook",
+   "problem",
+   "product_intro",
+   "specs",
+   "ingredients",
+   "how_to_use",
+   "wrap_up"
+  ],
+  "words": 397,
+  "deterministic_issues": [
+   "SCARCITY_UNVERIFIED: ngay hom nay"
+  ],
+  "seconds": 6.2,
+  "selection": {
+   "n": 2,
+   "candidates": [
+    {
+     "index": 0,
+     "hard": [
+      "SCARCITY_UNVERIFIED"
+     ],
+     "soft_penalty": 2,
+     "words": 397,
+     "model_start": 0
+    },
+    {
+     "index": 1,
+     "hard": [
+      "SCARCITY_UNVERIFIED"
+     ],
+     "soft_penalty": 2,
+     "words": 377,
+     "model_start": 1
+    }
+   ],
+   "judgements": [
+    {
+     "a": 0,
+     "b": 1,
+     "scores": {
+      "a": {
+       "hook": 7,
+       "flow": 8,
+       "natural": 7,
+       "faithful": 9
+      },
+      "b": {
+       "hook": 6,
+       "flow": 7,
+       "natural": 7,
+       "faithful": 9
+      }
+     },
+     "winner": "A",
+     "reason": "Cả hai kịch bản đều có hook đủ thu hút, nhưng kịch bản A mở đầu chi tiết hơn, tạo khoảnh khắc cụ thể hơn. Flow của A mạch lạc hơn, các phần liên kết chặt chẽ. Natural của cả hai tương đối tốt, không lặp tên sản phẩm quá nhiều. Faithful: cả hai trình bày đúng thành phần, công dụng và giá. Vì vậy A được ưu tiên."
+    }
+   ],
+   "chosen": 0,
+   "reason": "judge"
+  }
+ },
+ {
+  "product": "101",
+  "name": "Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml",
+  "purpose": "product_video",
+  "prompt_chars": 7796,
+  "sent_chars": 7791,
+  "clipped": true,
+  "newlines_kept": 64,
+  "sections": [
+   "hook",
+   "problem",
+   "product_intro",
+   "specs",
+   "ingredients",
+   "ingredients",
+   "how_to_use",
+   "wrap_up"
+  ],
+  "words": 381,
+  "deterministic_issues": [],
+  "seconds": 5.3,
+  "selection": {
+   "n": 2,
+   "candidates": [
+    {
+     "index": 0,
+     "hard": [
+      "SCARCITY_UNVERIFIED"
+     ],
+     "soft_penalty": 2,
+     "words": 366,
+     "model_start": 0
+    },
+    {
+     "index": 1,
+     "hard": [],
+     "soft_penalty": 1,
+     "words": 381,
+     "model_start": 1
+    }
+   ],
+   "judgements": [],
+   "chosen": 1,
+   "reason": "only_clean"
+  }
+ },
+ {
+  "product": "68",
+  "name": "Serum Timeless Vitamin B5 Làm Dịu & Phục Hồi Da 30ml",
+  "purpose": "product_video",
+  "prompt_chars": 7523,
+  "sent_chars": 7518,
+  "clipped": true,
+  "newlines_kept": 64,
+  "sections": [
+   "hook",
+   "problem",
+   "product_intro",
+   "specs",
+   "ingredients",
+   "how_to_use",
+   "wrap_up"
+  ],
+  "words": 325,
+  "deterministic_issues": [
+   "PERSONAL_EXPERIENCE: da mình"
+  ],
+  "seconds": 5.1,
+  "selection": {
+   "n": 2,
+   "candidates": [
+    {
+     "index": 0,
+     "hard": [
+      "PERSONAL_EXPERIENCE"
+     ],
+     "soft_penalty": 9,
+     "words": 325,
+     "model_start": 0
+    },
+    {
+     "index": 1,
+     "hard": [
+      "SCARCITY_UNVERIFIED"
+     ],
+     "soft_penalty": 5,
+     "words": 369,
+     "model_start": 1
+    }
+   ],
+   "judgements": [
+    {
+     "a": 0,
+     "b": 1,
+     "scores": {
+      "a": {
+       "hook": 8,
+       "flow": 7,
+       "natural": 8,
+       "faithful": 9
+      },
+      "b": {
+       "hook": 7,
+       "flow": 7,
+       "natural": 6,
+       "faithful": 9
+      }
+     },
+     "winner": "A",
+     "reason": "Kịch bản A có hook mạnh hơn, flow mạch lạc hơn, ngôn ngữ tự nhiên và tránh lặp lại, trong khi B có nhiều hình ảnh so sánh và câu dài, làm giảm tính tự nhiên. Cả hai đều trung thực về thông tin sản phẩm."
+    }
+   ],
+   "chosen": 0,
+   "reason": "judge"
+  }
+ },
+ {
+  "product": "101",
+  "name": "Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml",
+  "purpose": "live_and_product",
+  "prompt_chars": 7406,
+  "sent_chars": 7401,
+  "clipped": true,
+  "newlines_kept": 65,
+  "sections": [
+   "opening",
+   "hook",
+   "product_intro",
+   "key_benefits",
+   "how_to_use",
+   "price",
+   "cta",
+   "closing"
+  ],
+  "words": 313,
+  "deterministic_issues": [],
+  "seconds": 4.6,
+  "selection": {
+   "n": 2,
+   "candidates": [
+    {
+     "index": 0,
+     "hard": [],
+     "soft_penalty": 1,
+     "words": 318,
+     "model_start": 0
+    },
+    {
+     "index": 1,
+     "hard": [],
+     "soft_penalty": 0,
+     "words": 313,
+     "model_start": 1
+    }
+   ],
+   "judgements": [
+    {
+     "a": 0,
+     "b": 1,
+     "scores": {
+      "a": {
+       "hook": 8,
+       "flow": 7,
+       "natural": 7,
+       "faithful": 9
+      },
+      "b": {
+       "hook": 7,
+       "flow": 8,
+       "natural": 8,
+       "faithful": 9
+      }
+     },
+     "winner": "B",
+     "reason": "Cả hai kịch bản đều có hook đủ hấp dẫn, nhưng kịch bản A mở đầu bằng câu hỏi trực tiếp về vấn đề da khô nắng, tạo khoảnh khắc gắn kết cao hơn. Flow của kịch bản B hơi mạch lạc hơn vì các đoạn được nối mượt mà, trong khi A có một số đoạn ngắt quãng. Natural: B dùng ngôn ngữ nhẹ nhàng, ít lặp lại tên sản phẩm, trong khi A có vài câu dài và lặp lại “điều này”. Faithful: Cả hai đều trùng khớp thông tin chính, không có sai lệch. Vì hook và natural của A cao hơn, tôi chọn A là người chiến thắng."
+    }
+   ],
+   "chosen": 1,
+   "reason": "judge"
+  }
+ }
+]
