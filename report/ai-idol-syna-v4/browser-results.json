@@ -1,0 +1,17 @@
+{
+  "url": "http://localhost:8080/ai-idol-mascot-demo/index.html",
+  "results": [
+    "PASS: static page, atlas, WAV and 5 sentence cues load",
+    "PASS: audible playback clock drives visible animation; pause closes mouth",
+    "PASS: clicking sentence seeks narration and associated gesture",
+    "PASS: reduced motion and manual gesture controls",
+    "PASS: 8 expressions, 12 action presets and sticker controls",
+    "PASS: themes, local image upload and malformed-image errors",
+    "PASS: full WebM export and mouth closes at end",
+    "PASS: cancel export restores controls without saving partial video",
+    "PASS: mobile layout has no horizontal overflow; keyboard starts playback",
+    "PASS: missing audio is explained; playback stays disabled",
+    "PASS: no JavaScript errors, external calls, POST or campaign writes"
+  ],
+  "errors": []
+}

@@ -47,4 +47,23 @@ ai-service-flask/chroma_data/
 chroma_db/
 scratch/
 backend/storage/backups/
+.runtime/
+celerybeat-schedule*
 
+# AI Idol background music (licensed assets, not committed)
+ai-idol-service/assets/music/*
+!ai-idol-service/assets/music/README.md
+
+# Báo cáo và tài khoản test pb-fixture (chứa mật khẩu dạng rõ, không commit)
+.runtime/pb-fixture/
+
+# Local product-video preview media
+frontend/public/e2e-media/
+scripts/e2e/real-videos.json
+
+# Neo4j local data (named volumes by default; bind mounts if any)
+neo4j/data/
+neo4j/logs/
+
+# Playwright MCP tool output (page snapshots, console logs)
+.playwright-mcp/

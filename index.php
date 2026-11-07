@@ -49,6 +49,9 @@ if (is_file($helpersFile)) {
     require_once $helpersFile;
 }
 
+require_once $backendRoot . '/app/services/ProductEventTracker.php';
+ProductEventTracker::ensureCookie();
+
 if (!headers_sent()) {
     header('Content-Type: text/html; charset=utf-8');
 }
@@ -63,10 +66,14 @@ if (in_array($r, [
     'admin_ai_idol', 'admin_ai_idol_campaigns', 'admin_ai_idol_campaign', 'admin_ai_idol_stream_campaign',
     'admin_ai_idol_create_campaign', 'admin_ai_idol_upload_asset', 'admin_ai_idol_retry_campaign',
     'admin_ai_idol_approve_script', 'admin_ai_idol_agent_runs', 'admin_ai_idol_agent_create',
+    'admin_ai_idol_job_retry_repair', 'admin_ai_idol_job_rewrite', 'admin_ai_idol_job_cancel',
     'admin_ai_idol_agent_run', 'admin_ai_idol_agent_confirm', 'admin_ai_idol_agent_retry',
-    'admin_ai_idol_agent_cancel', 'admin_ai_idol_product_videos', 'admin_ai_idol_search_products',
+    'admin_ai_idol_agent_cancel', 'admin_ai_idol_health', 'admin_ai_idol_cancel_campaign',
+    'admin_ai_idol_reschedule_campaign', 'admin_ai_idol_products', 'admin_ai_idol_video_visibility',
+    'admin_ai_idol_product_videos', 'admin_ai_idol_search_products',
     'admin_ai_idol_publish_video', 'admin_ai_idol_toggle_publish',
-    'admin_ai_idol_reward_campaign', 'admin_ai_idol_save_reward_campaign', 'admin_ai_idol_toggle_reward_campaign'
+    'admin_ai_idol_reward_campaign', 'admin_ai_idol_save_reward_campaign', 'admin_ai_idol_toggle_reward_campaign',
+    'admin_ai_idol_products_query', 'admin_ai_idol_approve_platform', 'admin_ai_product_videos'
 ], true)) {
     if (require $backendRoot . '/app/routes/ai_idol.php') {
         return;
@@ -455,11 +462,11 @@ switch ($r) {
         break;
 
     case 'admin_login':
-        (new QuanTriController($pdo))->login();
+        (new AuthController($pdo))->dangnhap();
         break;
 
     case 'admin_logout':
-        (new QuanTriController($pdo))->logout();
+        (new AuthController($pdo))->logout();
         break;
 
     case 'admin_sp':
@@ -658,11 +665,11 @@ switch ($r) {
         break;
 
     case 'admin_sepay_webhook':
-        (new QuanTriController($pdo))->sepayWebhook();
+        (new HomeController($pdo))->paymentWebhook();
         break;
 
     case 'admin_sepay_manual_sync':
-        (new QuanTriController($pdo))->sepayManualSync();
+        (new HomeController($pdo))->adminSepayManualSync();
         break;
 
     case 'staff_dashboard':

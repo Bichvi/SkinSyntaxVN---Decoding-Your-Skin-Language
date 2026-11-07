@@ -1,0 +1,2679 @@
+{
+  "rows": [
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 1",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 1,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 2 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 2",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 2,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 3 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 3",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 3,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 4 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 4",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 4,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 5 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 5",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 5,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 6 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 6",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 6,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 7 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 7",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 7,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 8 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 8",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 8,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 9 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 9",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 9,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 10 kem chống nắng bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem chống nắng; tối đa 10",
+      "note": "Không lấy cleanser, serum hoặc makeup chỉ vì có SPF.",
+      "id": 10,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 101 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 101",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 11,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 102 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 102",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 12,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "102"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 103 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 103",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 13,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "103"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 104 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 104",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 14,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "104"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 105 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 105",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 15,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 106 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 106",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 16,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "106"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 107 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 107",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 17,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "107"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 108 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 108",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 18,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "108"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 109 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 109",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 19,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "109"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 1 kem chống nắng mã sản phẩm 110 bán chạy toàn kỳ",
+      "expected": "Chọn đúng mã 110",
+      "note": "Mã sản phẩm phải được ưu tiên hơn điểm phổ biến.",
+      "id": 20,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "110"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 111",
+      "expected": "Chưa tạo campaign; tìm đúng mã 111",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 21,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 112",
+      "expected": "Chưa tạo campaign; tìm đúng mã 112",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 22,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "112"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 113",
+      "expected": "Chưa tạo campaign; tìm đúng mã 113",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 23,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "113"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 114",
+      "expected": "Chưa tạo campaign; tìm đúng mã 114",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 24,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "114"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 115",
+      "expected": "Chưa tạo campaign; tìm đúng mã 115",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 25,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "115"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 116",
+      "expected": "Chưa tạo campaign; tìm đúng mã 116",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 26,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "116"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 117",
+      "expected": "Chưa tạo campaign; tìm đúng mã 117",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 27,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "117"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 118",
+      "expected": "Chưa tạo campaign; tìm đúng mã 118",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 28,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "118"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 119",
+      "expected": "Chưa tạo campaign; tìm đúng mã 119",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 29,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Tìm sản phẩm mã 120",
+      "expected": "Chưa tạo campaign; tìm đúng mã 120",
+      "note": "Tên sản phẩm đơn lẻ được coi là truy vấn tìm kiếm.",
+      "id": 30,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "120"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 10 kem nền SPF50 bán chạy toàn kỳ",
+      "expected": "RESULTS_READY; chỉ kem nền",
+      "note": "Đã có ánh xạ kem nền; không mở rộng sang kem chống nắng.",
+      "id": 31,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "401"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 10 toner bán chạy toàn kỳ",
+      "expected": "NEEDS_INPUT vì danh mục chưa hỗ trợ",
+      "note": "Danh mục chưa được xác minh phải hỏi lại.",
+      "id": 32,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=2",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 0 kem chống nắng",
+      "expected": "NEEDS_INPUT số lượng ngoài 1–50",
+      "note": "Chặn số lượng bằng 0.",
+      "id": 33,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 51 kem chống nắng",
+      "expected": "NEEDS_INPUT số lượng ngoài 1–50",
+      "note": "Chặn yêu cầu quá lớn.",
+      "id": 34,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc kem chống nắng và serum bán chạy",
+      "expected": "NEEDS_INPUT nhiều danh mục",
+      "note": "Mỗi lần chỉ xếp hạng một nhóm đồng nhất.",
+      "id": 35,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 10 sản phẩm bán chạy toàn kỳ",
+      "expected": "Kết quả catalog có bằng chứng",
+      "note": "Không tự gắn danh mục chưa được nói.",
+      "id": 36,
+      "actual": "status=RESULTS_READY; matched=31; warnings=0",
+      "selected": [
+        "401",
+        "201",
+        "202",
+        "203",
+        "204",
+        "205",
+        "301",
+        "302",
+        "303",
+        "304"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Product extraction",
+      "input": "Lọc 10 serum bán chạy toàn kỳ",
+      "expected": "Chỉ chọn serum, không chọn sunscreen",
+      "note": "Kiểm tra ánh xạ danh mục serum độc lập.",
+      "id": 37,
+      "actual": "status=RESULTS_READY; matched=5; warnings=1",
+      "selected": [
+        "301",
+        "302",
+        "303",
+        "304",
+        "305"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 10 kem chống nắng còn hạn sử dụng từ 17 đến 19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 38,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111",
+        "104",
+        "102",
+        "118",
+        "119",
+        "120",
+        "105",
+        "112",
+        "103"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 5 kem chống nắng hạn dùng từ 17 đến 19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 39,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111",
+        "104",
+        "102",
+        "118"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 3 kem chống nắng còn hạn sử dụng từ 17 đến 19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 40,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111",
+        "104"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn sử dụng từ 17 đến 19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 41,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 8 kem chống nắng còn hạn sử dụng từ 17 đến 19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 42,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111",
+        "104",
+        "102",
+        "118",
+        "119",
+        "120",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 9 kem chống nắng hạn dùng 17-19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 43,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111",
+        "104",
+        "102",
+        "118",
+        "119",
+        "120",
+        "105",
+        "112"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 2 kem chống nắng hạn dùng từ 17 đến 19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 44,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 4 kem chống nắng còn hạn sử dụng 17–19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 45,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111",
+        "104",
+        "102"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 6 kem chống nắng hạn dùng từ 17 đến 19 tháng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 46,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111",
+        "104",
+        "102",
+        "118",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 7 kem chống nắng còn 17 đến 19 tháng hạn sử dụng",
+      "expected": "Chỉ lô còn hạn trong khoảng 17–19 tháng",
+      "note": "Hết hạn và lô cách ly không được tính.",
+      "id": 47,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101",
+        "111",
+        "104",
+        "102",
+        "118",
+        "119",
+        "120"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng tối đa 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 48,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "117"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 2 kem chống nắng hạn dùng tối đa 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 49,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "117",
+        "109"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 3 kem chống nắng hạn dùng tối đa 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 50,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "117",
+        "109",
+        "110"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 4 kem chống nắng hạn dùng tối đa 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 51,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "117",
+        "109",
+        "110",
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 5 kem chống nắng hạn dùng tối đa 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 52,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "117",
+        "109",
+        "110",
+        "101",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng ít nhất 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 53,
+      "actual": "status=RESULTS_READY; matched=14; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 2 kem chống nắng hạn dùng ít nhất 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 54,
+      "actual": "status=RESULTS_READY; matched=14; warnings=0",
+      "selected": [
+        "101",
+        "102"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 3 kem chống nắng hạn dùng ít nhất 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 55,
+      "actual": "status=RESULTS_READY; matched=14; warnings=0",
+      "selected": [
+        "101",
+        "102",
+        "118"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 4 kem chống nắng hạn dùng ít nhất 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 56,
+      "actual": "status=RESULTS_READY; matched=14; warnings=0",
+      "selected": [
+        "101",
+        "102",
+        "118",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 5 kem chống nắng hạn dùng ít nhất 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 57,
+      "actual": "status=RESULTS_READY; matched=14; warnings=0",
+      "selected": [
+        "101",
+        "102",
+        "118",
+        "119",
+        "120"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng trên 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 58,
+      "actual": "status=RESULTS_READY; matched=9; warnings=0",
+      "selected": [
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 2 kem chống nắng hạn dùng trên 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 59,
+      "actual": "status=RESULTS_READY; matched=9; warnings=0",
+      "selected": [
+        "105",
+        "112"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 3 kem chống nắng hạn dùng trên 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 60,
+      "actual": "status=RESULTS_READY; matched=9; warnings=0",
+      "selected": [
+        "105",
+        "112",
+        "103"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 4 kem chống nắng hạn dùng trên 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 61,
+      "actual": "status=RESULTS_READY; matched=9; warnings=0",
+      "selected": [
+        "105",
+        "112",
+        "103",
+        "113"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 5 kem chống nắng hạn dùng trên 18 tháng",
+      "expected": "Kế hoạch có expiry_from",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 62,
+      "actual": "status=RESULTS_READY; matched=9; warnings=0",
+      "selected": [
+        "105",
+        "112",
+        "103",
+        "113",
+        "108"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng dưới 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 63,
+      "actual": "status=RESULTS_READY; matched=6; warnings=0",
+      "selected": [
+        "117"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 2 kem chống nắng hạn dùng dưới 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 64,
+      "actual": "status=RESULTS_READY; matched=6; warnings=0",
+      "selected": [
+        "117",
+        "109"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 3 kem chống nắng hạn dùng dưới 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 65,
+      "actual": "status=RESULTS_READY; matched=6; warnings=0",
+      "selected": [
+        "117",
+        "109",
+        "110"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 4 kem chống nắng hạn dùng dưới 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 66,
+      "actual": "status=RESULTS_READY; matched=6; warnings=0",
+      "selected": [
+        "117",
+        "109",
+        "110",
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 5 kem chống nắng hạn dùng dưới 18 tháng",
+      "expected": "Kế hoạch có expiry_to",
+      "note": "Biên ngày được tính theo tháng lịch từ ngày kiểm thử.",
+      "id": 67,
+      "actual": "status=RESULTS_READY; matched=6; warnings=0",
+      "selected": [
+        "117",
+        "109",
+        "110",
+        "101",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 10 kem chống nắng tồn kho trên 10",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 68,
+      "actual": "status=RESULTS_READY; matched=19; warnings=0",
+      "selected": [
+        "101",
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 5 kem chống nắng tồn kho trên 100",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 69,
+      "actual": "status=EMPTY_RESULTS; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 3 kem chống nắng tồn kho ít nhất 10",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 70,
+      "actual": "status=RESULTS_READY; matched=19; warnings=0",
+      "selected": [
+        "101",
+        "120",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 4 kem chống nắng tồn kho tối đa 10",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 71,
+      "actual": "status=EMPTY_RESULTS; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 2 kem chống nắng tồn kho dưới 5",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 72,
+      "actual": "status=EMPTY_RESULTS; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 10 sản phẩm hết hàng",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 73,
+      "actual": "status=RESULTS_READY; matched=1; warnings=1",
+      "selected": [
+        "106"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng còn hàng",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 74,
+      "actual": "status=RESULTS_READY; matched=19; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 8 kem chống nắng tồn kho trên 1",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 75,
+      "actual": "status=RESULTS_READY; matched=19; warnings=0",
+      "selected": [
+        "101",
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 6 kem chống nắng tồn kho tối đa 20",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 76,
+      "actual": "status=RESULTS_READY; matched=8; warnings=0",
+      "selected": [
+        "102",
+        "103",
+        "104",
+        "105",
+        "107",
+        "108"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 7 kem chống nắng tồn kho trên 50",
+      "expected": "Không tính lô hết hạn; áp dụng ngưỡng kho",
+      "note": "Tồn kho phải dựa trên lô còn hiệu lực khi có ledger.",
+      "id": 77,
+      "actual": "status=EMPTY_RESULTS; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ kho KHO-HN-01",
+      "expected": "Có bằng chứng kho KHO-HN-01",
+      "note": "Kho cụ thể phải được lọc chính xác.",
+      "id": 78,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ kho KHO-HN-01",
+      "expected": "Có bằng chứng kho KHO-HN-01",
+      "note": "Kho cụ thể phải được lọc chính xác.",
+      "id": 79,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ kho KHO-HN-01",
+      "expected": "Có bằng chứng kho KHO-HN-01",
+      "note": "Kho cụ thể phải được lọc chính xác.",
+      "id": 80,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ kho KHO-HN-01",
+      "expected": "Có bằng chứng kho KHO-HN-01",
+      "note": "Kho cụ thể phải được lọc chính xác.",
+      "id": 81,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ kho KHO-HN-01",
+      "expected": "Có bằng chứng kho KHO-HN-01",
+      "note": "Kho cụ thể phải được lọc chính xác.",
+      "id": 82,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ lô hàng LOT-101",
+      "expected": "Có bằng chứng lô LOT-101",
+      "note": "Mã lô không được thay bằng tồn kho catalog.",
+      "id": 83,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "101"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ lô hàng LOT-102",
+      "expected": "Có bằng chứng lô LOT-102",
+      "note": "Mã lô không được thay bằng tồn kho catalog.",
+      "id": 84,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "102"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ lô hàng LOT-103",
+      "expected": "Có bằng chứng lô LOT-103",
+      "note": "Mã lô không được thay bằng tồn kho catalog.",
+      "id": 85,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "103"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ lô hàng LOT-104",
+      "expected": "Có bằng chứng lô LOT-104",
+      "note": "Mã lô không được thay bằng tồn kho catalog.",
+      "id": 86,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "104"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 1 kem chống nắng hạn dùng từ 17 đến 19 tháng chỉ lấy từ lô hàng LOT-105",
+      "expected": "Có bằng chứng lô LOT-105",
+      "note": "Mã lô không được thay bằng tồn kho catalog.",
+      "id": 87,
+      "actual": "status=RESULTS_READY; matched=1; warnings=0",
+      "selected": [
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 10 kem chống nắng còn khoảng 18 tháng hạn sử dụng",
+      "expected": "NEEDS_INPUT vì mơ hồ",
+      "note": "Khoảng 18 tháng phải yêu cầu người dùng chọn biên rõ.",
+      "id": 88,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 10 kem chống nắng hạn dùng từ 19 đến 17 tháng",
+      "expected": "NEEDS_INPUT khoảng đảo chiều",
+      "note": "Không tự đảo điều kiện.",
+      "id": 89,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Inventory and expiry",
+      "input": "Lọc 10 kem chống nắng hạn dùng tối đa 18 tháng",
+      "expected": "Không dùng shelf life thay ngày thật",
+      "note": "Chỉ ngày hết hạn thực tế mới đủ bằng chứng.",
+      "id": 90,
+      "actual": "status=RESULTS_READY; matched=10; warnings=0",
+      "selected": [
+        "117",
+        "109",
+        "110",
+        "101",
+        "111",
+        "104",
+        "102",
+        "118",
+        "119",
+        "120"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy nhất toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 91,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 5 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 92,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 3 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 93,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 1 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 94,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 8 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 95,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 2 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 96,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 4 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 97,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 6 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 98,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 7 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 99,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 9 kem chống nắng bán chạy toàn kỳ",
+      "expected": "Xếp theo số bán lifetime, không dùng lượt đánh giá",
+      "note": "Toàn kỳ dùng so_luong_ban từ catalog.",
+      "id": 100,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 1 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 101,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 2 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 102,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 3 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 103,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 4 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 104,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 5 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 105,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 6 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 106,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 7 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 107,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 8 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 108,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 9 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 109,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán tốt 7 ngày qua",
+      "expected": "Dùng snapshot 7 ngày đúng as_of",
+      "note": "Không lấy nhầm số bán toàn kỳ.",
+      "id": 110,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng có nhiều lượt thêm giỏ",
+      "expected": "Có bằng chứng cart_sessions",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 111,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng có nhiều lượt thêm giỏ",
+      "expected": "Có bằng chứng cart_sessions",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 112,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng có nhiều lượt thêm giỏ",
+      "expected": "Có bằng chứng cart_sessions",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 113,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng có nhiều lượt thêm giỏ",
+      "expected": "Có bằng chứng cart_sessions",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 114,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng xem nhiều chưa chốt đơn",
+      "expected": "Có bằng chứng viewed_sessions",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 115,
+      "actual": "status=RESULTS_READY; matched=4; warnings=1",
+      "selected": [
+        "120",
+        "115",
+        "110",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng xem nhiều chưa chốt đơn",
+      "expected": "Có bằng chứng viewed_sessions",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 116,
+      "actual": "status=RESULTS_READY; matched=4; warnings=1",
+      "selected": [
+        "120",
+        "115",
+        "110",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng xem nhiều chưa chốt đơn",
+      "expected": "Có bằng chứng viewed_sessions",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 117,
+      "actual": "status=RESULTS_READY; matched=4; warnings=1",
+      "selected": [
+        "120",
+        "115",
+        "110",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng xem nhiều chưa chốt đơn",
+      "expected": "Có bằng chứng viewed_sessions",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 118,
+      "actual": "status=RESULTS_READY; matched=4; warnings=1",
+      "selected": [
+        "120",
+        "115",
+        "110",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh thu cao chuyển đổi thấp",
+      "expected": "Có bằng chứng net_revenue",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 119,
+      "actual": "status=RESULTS_READY; matched=2; warnings=1",
+      "selected": [
+        "120",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh thu cao chuyển đổi thấp",
+      "expected": "Có bằng chứng net_revenue",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 120,
+      "actual": "status=RESULTS_READY; matched=2; warnings=1",
+      "selected": [
+        "120",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh thu cao chuyển đổi thấp",
+      "expected": "Có bằng chứng net_revenue",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 121,
+      "actual": "status=RESULTS_READY; matched=2; warnings=1",
+      "selected": [
+        "120",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh thu cao chuyển đổi thấp",
+      "expected": "Có bằng chứng net_revenue",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 122,
+      "actual": "status=RESULTS_READY; matched=2; warnings=1",
+      "selected": [
+        "120",
+        "119"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng giảm giá nhưng bán chậm",
+      "expected": "Có bằng chứng units_per_day",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 123,
+      "actual": "status=RESULTS_READY; matched=5; warnings=1",
+      "selected": [
+        "101",
+        "102",
+        "103",
+        "104",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng giảm giá nhưng bán chậm",
+      "expected": "Có bằng chứng units_per_day",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 124,
+      "actual": "status=RESULTS_READY; matched=5; warnings=1",
+      "selected": [
+        "101",
+        "102",
+        "103",
+        "104",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng giảm giá nhưng bán chậm",
+      "expected": "Có bằng chứng units_per_day",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 125,
+      "actual": "status=RESULTS_READY; matched=5; warnings=1",
+      "selected": [
+        "101",
+        "102",
+        "103",
+        "104",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng giảm giá nhưng bán chậm",
+      "expected": "Có bằng chứng units_per_day",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 126,
+      "actual": "status=RESULTS_READY; matched=5; warnings=1",
+      "selected": [
+        "101",
+        "102",
+        "103",
+        "104",
+        "105"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng tăng trưởng",
+      "expected": "Có bằng chứng growth_rate",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 127,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "101",
+        "102",
+        "103",
+        "104",
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng tăng trưởng",
+      "expected": "Có bằng chứng growth_rate",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 128,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "101",
+        "102",
+        "103",
+        "104",
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng tăng trưởng",
+      "expected": "Có bằng chứng growth_rate",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 129,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "101",
+        "102",
+        "103",
+        "104",
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng tăng trưởng",
+      "expected": "Có bằng chứng growth_rate",
+      "note": "Xếp hạng phải dựa trên snapshot đúng cửa sổ.",
+      "id": 130,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "101",
+        "102",
+        "103",
+        "104",
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy trong 14 ngày qua",
+      "expected": "NEEDS_INPUT cửa sổ chưa hỗ trợ",
+      "note": "Chỉ hỗ trợ 7 hoặc 30 ngày hoàn tất.",
+      "id": 131,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy trong 14 ngày qua",
+      "expected": "NEEDS_INPUT cửa sổ chưa hỗ trợ",
+      "note": "Chỉ hỗ trợ 7 hoặc 30 ngày hoàn tất.",
+      "id": 132,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy trong 14 ngày qua",
+      "expected": "NEEDS_INPUT cửa sổ chưa hỗ trợ",
+      "note": "Chỉ hỗ trợ 7 hoặc 30 ngày hoàn tất.",
+      "id": 133,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy trong 14 ngày qua",
+      "expected": "NEEDS_INPUT cửa sổ chưa hỗ trợ",
+      "note": "Chỉ hỗ trợ 7 hoặc 30 ngày hoàn tất.",
+      "id": 134,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy trong 14 ngày qua",
+      "expected": "NEEDS_INPUT cửa sổ chưa hỗ trợ",
+      "note": "Chỉ hỗ trợ 7 hoặc 30 ngày hoàn tất.",
+      "id": 135,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh số tăng mạnh tuần này",
+      "expected": "NEEDS_INPUT chưa có cửa sổ tuần đang diễn ra",
+      "note": "Không tự bịa dữ liệu tuần.",
+      "id": 136,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh số tăng mạnh tuần này",
+      "expected": "NEEDS_INPUT chưa có cửa sổ tuần đang diễn ra",
+      "note": "Không tự bịa dữ liệu tuần.",
+      "id": 137,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh số tăng mạnh tuần này",
+      "expected": "NEEDS_INPUT chưa có cửa sổ tuần đang diễn ra",
+      "note": "Không tự bịa dữ liệu tuần.",
+      "id": 138,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh số tăng mạnh tuần này",
+      "expected": "NEEDS_INPUT chưa có cửa sổ tuần đang diễn ra",
+      "note": "Không tự bịa dữ liệu tuần.",
+      "id": 139,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng doanh số tăng mạnh tuần này",
+      "expected": "NEEDS_INPUT chưa có cửa sổ tuần đang diễn ra",
+      "note": "Không tự bịa dữ liệu tuần.",
+      "id": 140,
+      "actual": "status=NEEDS_INPUT; matched=0; warnings=1",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy",
+      "expected": "Có snapshot 30 ngày thì xếp hạng theo snapshot",
+      "note": "Không nhầm truy vấn mặc định 30 ngày với toàn kỳ.",
+      "id": 141,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy",
+      "expected": "Có snapshot 30 ngày thì xếp hạng theo snapshot",
+      "note": "Không nhầm truy vấn mặc định 30 ngày với toàn kỳ.",
+      "id": 142,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy",
+      "expected": "Có snapshot 30 ngày thì xếp hạng theo snapshot",
+      "note": "Không nhầm truy vấn mặc định 30 ngày với toàn kỳ.",
+      "id": 143,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy",
+      "expected": "Có snapshot 30 ngày thì xếp hạng theo snapshot",
+      "note": "Không nhầm truy vấn mặc định 30 ngày với toàn kỳ.",
+      "id": 144,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Sales analytics",
+      "input": "Lọc 10 kem chống nắng bán chạy",
+      "expected": "Có snapshot 30 ngày thì xếp hạng theo snapshot",
+      "note": "Không nhầm truy vấn mặc định 30 ngày với toàn kỳ.",
+      "id": 145,
+      "actual": "status=RESULTS_READY; matched=20; warnings=0",
+      "selected": [
+        "120",
+        "119",
+        "118",
+        "117",
+        "116",
+        "115",
+        "114",
+        "113",
+        "112",
+        "111"
+      ],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Lọc 10 kem chống nắng bán chạy",
+      "expected": "PRODUCT_SEARCH",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 146,
+      "actual": "intent=PRODUCT_SEARCH; confidence=0.90",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Tìm sản phẩm serum",
+      "expected": "PRODUCT_SEARCH",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 147,
+      "actual": "intent=PRODUCT_SEARCH; confidence=0.90",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Cho tôi danh sách kem chống nắng",
+      "expected": "PRODUCT_SEARCH",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 148,
+      "actual": "intent=PRODUCT_SEARCH; confidence=0.72",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Lọc kho còn hạn 18 tháng",
+      "expected": "PRODUCT_SEARCH",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 149,
+      "actual": "intent=PRODUCT_SEARCH; confidence=0.90",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Tạo livestream tối mai lúc 19h",
+      "expected": "CREATE_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 150,
+      "actual": "intent=CREATE_CAMPAIGN; confidence=0.94",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Lên lịch live 20h nội bộ",
+      "expected": "CREATE_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 151,
+      "actual": "intent=CREATE_CAMPAIGN; confidence=0.94",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Quảng bá 5 sản phẩm",
+      "expected": "CREATE_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 152,
+      "actual": "intent=CREATE_CAMPAIGN; confidence=0.94",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Tạo video giới thiệu sản phẩm",
+      "expected": "CREATE_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 153,
+      "actual": "intent=CREATE_CAMPAIGN; confidence=0.94",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Xem trước campaign đã tạo",
+      "expected": "PREVIEW_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 154,
+      "actual": "intent=PREVIEW_CAMPAIGN; confidence=0.93",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Chiếu nội bộ xem trước",
+      "expected": "PREVIEW_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 155,
+      "actual": "intent=PREVIEW_CAMPAIGN; confidence=0.93",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Sửa kịch bản sản phẩm 101",
+      "expected": "REVISE_SCRIPT",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 156,
+      "actual": "intent=REVISE_SCRIPT; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Biên tập kịch bản",
+      "expected": "REVISE_SCRIPT",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 157,
+      "actual": "intent=REVISE_SCRIPT; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Duyệt kịch bản",
+      "expected": "APPROVE_SCRIPT",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 158,
+      "actual": "intent=APPROVE_SCRIPT; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Chấp nhận kịch bản và tạo video",
+      "expected": "APPROVE_SCRIPT",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 159,
+      "actual": "intent=APPROVE_SCRIPT; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Tạo lại phần bị lỗi",
+      "expected": "RETRY_FAILED",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 160,
+      "actual": "intent=RETRY_FAILED; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Retry sản phẩm lỗi",
+      "expected": "RETRY_FAILED",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 161,
+      "actual": "intent=RETRY_FAILED; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Hủy livestream tối nay",
+      "expected": "CANCEL_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 162,
+      "actual": "intent=CANCEL_CAMPAIGN; confidence=0.98",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Dừng chương trình",
+      "expected": "CANCEL_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 163,
+      "actual": "intent=CANCEL_CAMPAIGN; confidence=0.98",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Xem tiến độ đang tạo",
+      "expected": "STATUS_QUERY",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 164,
+      "actual": "intent=STATUS_QUERY; confidence=0.96",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Trạng thái campaign",
+      "expected": "STATUS_QUERY",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 165,
+      "actual": "intent=STATUS_QUERY; confidence=0.96",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Retinol",
+      "expected": "PRODUCT_SEARCH",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 166,
+      "actual": "intent=PRODUCT_SEARCH; confidence=0.72",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "CeraVe",
+      "expected": "PRODUCT_SEARCH",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 167,
+      "actual": "intent=PRODUCT_SEARCH; confidence=0.72",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Sản phẩm",
+      "expected": "PRODUCT_SEARCH",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 168,
+      "actual": "intent=PRODUCT_SEARCH; confidence=0.72",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Xin chào",
+      "expected": "UNKNOWN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 169,
+      "actual": "intent=UNKNOWN; confidence=0.20",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Hãy làm gì đó",
+      "expected": "UNKNOWN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 170,
+      "actual": "intent=UNKNOWN; confidence=0.20",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Báo cáo doanh thu",
+      "expected": "PRODUCT_SEARCH",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 171,
+      "actual": "intent=PRODUCT_SEARCH; confidence=0.90",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Dừng live rồi tạo mới",
+      "expected": "CANCEL_CAMPAIGN",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 172,
+      "actual": "intent=CANCEL_CAMPAIGN; confidence=0.98",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Retry campaign lỗi livestream",
+      "expected": "RETRY_FAILED",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 173,
+      "actual": "intent=RETRY_FAILED; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Sửa kịch bản livestream",
+      "expected": "REVISE_SCRIPT",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 174,
+      "actual": "intent=REVISE_SCRIPT; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Intent classification",
+      "input": "Duyệt kịch bản livestream",
+      "expected": "APPROVE_SCRIPT",
+      "note": "Intent phải được định tuyến trước LLM và trước thao tác tốn GPU.",
+      "id": 175,
+      "actual": "intent=APPROVE_SCRIPT; confidence=0.97",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19 giờ ngày 28/9/2026",
+      "expected": "duration=60; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 176,
+      "actual": "scheduled_at=2026-09-28T19:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream tối mai lúc 20h",
+      "expected": "duration=60; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 177,
+      "actual": "scheduled_at=2026-09-29T20:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h tối nay, thời lượng 2 giờ",
+      "expected": "duration=120; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 178,
+      "actual": "scheduled_at=2026-09-28T19:00:00+07:00; duration=120m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream 30 phút lúc 9:30 ngày 30/9/2026",
+      "expected": "duration=30; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 179,
+      "actual": "scheduled_at=2026-09-30T09:30:00+07:00; duration=30m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo live ngày 2026-10-01 21:15 trong 45 phút",
+      "expected": "duration=45; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 180,
+      "actual": "scheduled_at=2026-10-01T21:15:00+07:00; duration=45m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 18h, thời lượng 1 giờ",
+      "expected": "duration=60; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 181,
+      "actual": "scheduled_at=2026-09-28T18:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 23h, thời lượng 60 phút",
+      "expected": "duration=60; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 182,
+      "actual": "scheduled_at=2026-09-28T23:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo live ngày mai 8h trong 90 phút",
+      "expected": "duration=90; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 183,
+      "actual": "scheduled_at=2026-09-29T08:00:00+07:00; duration=90m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo live nội bộ 15 phút",
+      "expected": "duration=15; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 184,
+      "actual": "scheduled_at=-; duration=15m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream 720 phút",
+      "expected": "duration=720; schedule parsed safely",
+      "note": "Không nhầm giờ phát thành thời lượng.",
+      "id": 185,
+      "actual": "scheduled_at=-; duration=720m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 31/2/2027",
+      "expected": "Không tự dời ngày lỗi",
+      "note": "Ngày không hợp lệ phải được duyệt lại.",
+      "id": 186,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 31/2/2027",
+      "expected": "Không tự dời ngày lỗi",
+      "note": "Ngày không hợp lệ phải được duyệt lại.",
+      "id": 187,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 31/2/2027",
+      "expected": "Không tự dời ngày lỗi",
+      "note": "Ngày không hợp lệ phải được duyệt lại.",
+      "id": 188,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 31/2/2027",
+      "expected": "Không tự dời ngày lỗi",
+      "note": "Ngày không hợp lệ phải được duyệt lại.",
+      "id": 189,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 31/2/2027",
+      "expected": "Không tự dời ngày lỗi",
+      "note": "Ngày không hợp lệ phải được duyệt lại.",
+      "id": 190,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 27/9/2020",
+      "expected": "Giữ ngày quá khứ để review",
+      "note": "Không tự ý đổi sang ngày khác.",
+      "id": 191,
+      "actual": "scheduled_at=2020-09-27T19:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 27/9/2020",
+      "expected": "Giữ ngày quá khứ để review",
+      "note": "Không tự ý đổi sang ngày khác.",
+      "id": 192,
+      "actual": "scheduled_at=2020-09-27T19:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 27/9/2020",
+      "expected": "Giữ ngày quá khứ để review",
+      "note": "Không tự ý đổi sang ngày khác.",
+      "id": 193,
+      "actual": "scheduled_at=2020-09-27T19:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 27/9/2020",
+      "expected": "Giữ ngày quá khứ để review",
+      "note": "Không tự ý đổi sang ngày khác.",
+      "id": 194,
+      "actual": "scheduled_at=2020-09-27T19:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream lúc 19h ngày 27/9/2020",
+      "expected": "Giữ ngày quá khứ để review",
+      "note": "Không tự ý đổi sang ngày khác.",
+      "id": 195,
+      "actual": "scheduled_at=2020-09-27T19:00:00+07:00; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream giới thiệu sản phẩm",
+      "expected": "Không tự phát nếu thiếu lịch cụ thể",
+      "note": "Mặc định 60 phút nhưng không bịa giờ phát.",
+      "id": 196,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream giới thiệu sản phẩm",
+      "expected": "Không tự phát nếu thiếu lịch cụ thể",
+      "note": "Mặc định 60 phút nhưng không bịa giờ phát.",
+      "id": 197,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream giới thiệu sản phẩm",
+      "expected": "Không tự phát nếu thiếu lịch cụ thể",
+      "note": "Mặc định 60 phút nhưng không bịa giờ phát.",
+      "id": 198,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream giới thiệu sản phẩm",
+      "expected": "Không tự phát nếu thiếu lịch cụ thể",
+      "note": "Mặc định 60 phút nhưng không bịa giờ phát.",
+      "id": 199,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    },
+    {
+      "group": "Schedule and safety",
+      "input": "Tạo livestream giới thiệu sản phẩm",
+      "expected": "Không tự phát nếu thiếu lịch cụ thể",
+      "note": "Mặc định 60 phút nhưng không bịa giờ phát.",
+      "id": 200,
+      "actual": "scheduled_at=-; duration=60m",
+      "selected": [],
+      "result": "PASS"
+    }
+  ],
+  "counts": {
+    "PASS": 200,
+    "FAIL": 0,
+    "groups": {
+      "Product extraction": 37,
+      "Inventory and expiry": 53,
+      "Sales analytics": 55,
+      "Intent classification": 30,
+      "Schedule and safety": 25
+    }
+  }
+}

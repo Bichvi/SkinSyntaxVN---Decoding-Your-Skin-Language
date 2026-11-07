@@ -4,7 +4,7 @@ import datetime as dt
 from typing import Any, Iterable
 
 from bson import ObjectId
-from pymongo import ASCENDING, MongoClient, ReturnDocument
+from pymongo import ASCENDING, DESCENDING, MongoClient, ReturnDocument
 
 from config import MONGO_DB, MONGO_URI, logger
 
@@ -34,6 +34,10 @@ def ensure_indexes() -> None:
     db.ai_idol_agent_runs.create_index([("status", ASCENDING), ("updated_at", ASCENDING)])
     db.ai_idol_agent_runs.create_index("campaign_id", sparse=True)
     db.ai_idol_agent_runs.create_index("idempotency_key", unique=True, sparse=True)
+    db.ai_idol_videos.create_index(
+        [("product_id", ASCENDING), ("product_page_ready_at", DESCENDING)],
+        partialFilterExpression={"product_page_ready_at": {"$exists": True}},
+    )
 
 
 def object_id(value: str) -> ObjectId:
@@ -55,11 +59,12 @@ def serialize(value: Any) -> Any:
 
 
 def create_job(product_id: str, content_mode: str, configuration: dict, *, campaign_id=None,
-               segment_id=None, product_snapshot=None) -> str:
+               segment_id=None, product_snapshot=None, purpose: str = "live_only") -> str:
     now = utcnow()
     job = {
         "product_id": str(product_id), "campaign_id": campaign_id, "segment_id": segment_id,
-        "content_mode": content_mode, "configuration": configuration or {}, "status": "CREATED",
+        "content_mode": content_mode, "purpose": purpose,
+        "configuration": configuration or {}, "status": "CREATED",
         "current_stage": "CREATED", "retry_count": 0, "error_message": None,
         "failed_stage": None, "product_snapshot": product_snapshot, "artifacts": {},
         "created_at": now, "updated_at": now,

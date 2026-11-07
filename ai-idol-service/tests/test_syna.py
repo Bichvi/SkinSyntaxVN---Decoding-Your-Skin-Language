@@ -25,7 +25,7 @@ class SynaTests(unittest.TestCase):
         snapshot = {'name': 'Vichy', 'ingredients': '• 4% Niacinamide: thông tin', 'price': 1126000}
         timing = [{'start': 16, 'end': 22, 'text': 'Niacinamide là một thành phần của sản phẩm.'}]
         m = build_manifest(snapshot, timing[0]['text'], 23, timing, {'format': '16:9'})
-        self.assertEqual(m['product'], {'name': 'Vichy', 'price': 1126000})
+        self.assertEqual(m['product'], {'name': 'Vichy', 'price': 1126000, 'price_from': 0.0})
         self.assertEqual(m['cues'][0]['start'], 16)
         self.assertEqual(m['cues'][0]['ingredient'], 0)
         self.assertNotIn('Centella', str(m))
@@ -54,7 +54,7 @@ class SynaTests(unittest.TestCase):
             db = MagicMock()
             db.ai_idol_videos.find_one.return_value = {'_id': 'existing-video'}
             with patch('core.pipeline.get_job', return_value=job), patch('core.pipeline.get_db', return_value=db), \
-                 patch('core.pipeline.update_job_stage'), patch('core.pipeline.checkpoint_job'), \
+                 patch('core.pipeline.update_job_stage'), patch('core.pipeline.checkpoint_job'), patch('core.pipeline.final_machine_check', return_value=[]), \
                  patch('engines.syna_engine.render_syna_video', return_value='/native/syna.mp4') as syna, \
                  patch('engines.avatar_engine.generate_avatar_video') as avatar, \
                  patch('engines.video_composer.compose_final_video') as compose, \
@@ -73,7 +73,7 @@ class SynaTests(unittest.TestCase):
                'artifacts': {'knowledge': 'known', 'script_text': 'Kịch bản.', 'audio_pipeline_version': 'old'}}
         db = MagicMock(); db.ai_idol_videos.find_one.return_value = {'_id': 'video'}
         with patch('core.pipeline.get_job', return_value=job), patch('core.pipeline.get_db', return_value=db), \
-             patch('core.pipeline.update_job_stage'), patch('core.pipeline.checkpoint_job'), \
+             patch('core.pipeline.update_job_stage'), patch('core.pipeline.checkpoint_job'), patch('core.pipeline.final_machine_check', return_value=[]), \
              patch('engines.voice_engine.generate_voice_audio', return_value='/voice.wav'), \
              patch('engines.avatar_engine.generate_avatar_video', return_value='/avatar.mp4') as avatar, \
              patch('engines.video_composer.compose_final_video', return_value='/final.mp4') as compose, \

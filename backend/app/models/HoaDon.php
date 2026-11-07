@@ -636,6 +636,7 @@ class HoaDon {
             'da_hoan_ton_kho' => false,
             'da_hoan_kho' => false,
             'ngay_dat' => new \MongoDB\BSON\UTCDateTime(),
+            'analytics_sid' => (isset($payload['analytics_sid']) && is_string($payload['analytics_sid']) && preg_match('/^[a-f0-9]{64}$/', $payload['analytics_sid'])) ? $payload['analytics_sid'] : null,
         ];
 
         try {

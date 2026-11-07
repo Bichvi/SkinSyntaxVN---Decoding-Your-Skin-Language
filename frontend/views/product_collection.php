@@ -64,14 +64,15 @@ $pageUrl = static function (int $targetPage) use ($type, $publicFilters): string
       </a>
     </div>
 
-    <form class="p-4 mb-4 rounded-4" method="get" action="<?= h(BASE_URL . '/index.php') ?>" style="background: #F8FAF8; border: 1px solid #E2EADF;">
+    <form class="p-4 mb-4 rounded-4" method="get" action="<?= h(BASE_URL . '/index.php') ?>" style="background: #F8FAF8; border: 1px solid #E2EADF;"
+          data-live-filter data-live-target="#collectionResults" data-live-reset="page">
       <input type="hidden" name="r" value="product_collection">
       <input type="hidden" name="type" value="<?= h($type) ?>">
 
       <div class="row g-3 align-items-end">
         <div class="col-12 col-md-3">
           <label for="collectionKeywordInput" class="form-label text-uppercase fw-bold small text-muted">Từ khóa</label>
-          <input id="collectionKeywordInput" class="form-control" type="search" name="keyword" value="<?= h((string)($publicFilters['keyword'] ?? '')) ?>" placeholder="serum, chống nắng, BHA..." style="border-radius: 999px; background: #FFF; border-color: #E2EADF;">
+          <input id="collectionKeywordInput" class="form-control" type="search" name="keyword" autocomplete="off" value="<?= h((string)($publicFilters['keyword'] ?? '')) ?>" placeholder="serum, chống nắng, BHA..." style="border-radius: 999px; background: #FFF; border-color: #E2EADF;">
         </div>
 
         <div class="col-6 col-md-2">
@@ -116,6 +117,8 @@ $pageUrl = static function (int $targetPage) use ($type, $publicFilters): string
       </div>
     </form>
 
+    <style>#collectionResults[aria-busy="true"] { opacity: .55; transition: opacity .15s; }</style>
+    <div id="collectionResults" aria-live="polite">
     <?php if ($message !== ''): ?>
       <div class="alert alert-info rounded-4 mb-4"><?= h($message) ?></div>
     <?php endif; ?>
@@ -154,5 +157,6 @@ $pageUrl = static function (int $targetPage) use ($type, $publicFilters): string
         </ul>
       </nav>
     <?php endif; ?>
+    </div>
   </div>
 </div>

@@ -5,10 +5,12 @@ require_once __DIR__ . '/../models/TaiKhoan.php';
 require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../models/HoiDap.php';
+require_once __DIR__ . '/../services/ProductEventTracker.php';
 
 class SanPhamController {
     private const SEARCH_KEYWORD_MAX_LEN = 250;
     private const SEARCH_HISTORY_LIMIT = 8;
+    private const VIDEO_REDIRECT_STATUSES = [301, 302, 303, 307, 308];
 
     private $pdo;
     private SanPham $model;
@@ -187,6 +189,7 @@ class SanPhamController {
 
             $_SESSION['gio_hang'] = $_SESSION['gio_hang'] ?? [];
             $_SESSION['gio_hang'][$cartProductId] = $currentQty + $qty;
+            ProductEventTracker::record($this->pdo, 'add_to_cart', $cartProductId);
 
             // Phase B: Unified Interaction Logging
             require_once dirname(__DIR__) . '/services/InteractionLogger.php';
@@ -341,10 +344,15 @@ class SanPhamController {
             $cap2 = $maDm;
         }
 
+        // Live-filter (gõ tới đâu lọc tới đó) gọi lại trang này ở mỗi lần dừng gõ:
+        // không ghi lịch sử tìm kiếm cho các request đó để tránh lưu từ khóa dở dang ("ser", "seru"...).
+        // Khi người dùng bấm Enter/nút Tìm, live-filter.js gửi thêm "X-Live-Commit: 1" => ghi lịch sử như submit thường.
+        $isLiveFilterRequest = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'live-filter';
+        $isLiveCommit = $isLiveFilterRequest && ($_SERVER['HTTP_X_LIVE_COMMIT'] ?? '') === '1';
         if ($q !== '') {
-            $this->saveSearchHistory($q);
-            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
-            InteractionLogger::logSearch($q);
+            if (!$isLiveFilterRequest || $isLiveCommit) {
+                $this->saveSearchHistory($q);
+            }
         }
 
         $perPage = 24;
@@ -355,7 +363,7 @@ class SanPhamController {
             'c1' => $cap1,
             'c2' => $cap2,
             'sort' => $sort,
-            'v' => 1
+            'v' => 2
         ]));
 
         $res = null;
@@ -370,6 +378,29 @@ class SanPhamController {
             }
         }
 
+        // Bước 08: log tìm kiếm ghi sau khi có kết quả để có result_count (zero-result rate);
+        // live = request live-filter chưa commit (từ khóa đang gõ dở) -> báo cáo chỉ số bỏ qua.
+        if ($q !== '') {
+            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
+            require_once dirname(__DIR__) . '/services/AfterResponse.php';
+            // Ghi log sau khi đã trả response (đỡ 2 round-trip Atlas); chụp user/session trước vì session sẽ đóng.
+            [$logUserId, $logSessionId] = InteractionLogger::captureContext();
+            $logMeta = [
+                'result_count' => (int)($res['total'] ?? 0),
+                'live' => $isLiveFilterRequest && !$isLiveCommit,
+                'page' => $page,
+            ];
+            AfterResponse::defer(static function () use ($q, $logMeta, $logUserId, $logSessionId): void {
+                InteractionLogger::logSearch($q, $logMeta, $logUserId, $logSessionId);
+            });
+        }
+
+        // Smart Search Bước 06: ít/không có kết quả -> gợi ý từ Flask (không cache cùng $res).
+        $searchFallback = null;
+        if ($q !== '' && $page === 1 && (int)($res['total'] ?? 0) < 4) {
+            $searchFallback = $this->buildSearchFallback($q, $res['items'] ?? []);
+        }
+
         $this->render('tatca', [
             'items' => $res['items'] ?? [],
             'total' => $res['total'] ?? 0,
@@ -378,8 +409,67 @@ class SanPhamController {
             'q' => $q,
             'cap1' => $cap1,
             'cap2' => $cap2,
-            'sort' => $sort
+            'sort' => $sort,
+            'searchFallback' => $searchFallback
         ]);
+    }
+
+    /** Gợi ý khi tìm kiếm ít kết quả. Không bao giờ ném lỗi; null nếu tính năng tắt hoặc lỗi hoàn toàn. */
+    private function buildSearchFallback(string $q, array $currentItems): ?array {
+        try {
+            require_once dirname(__DIR__) . '/services/SearchRecommendClient.php';
+            require_once dirname(__DIR__) . '/services/SearchFallbackBuilder.php';
+            require_once dirname(__DIR__) . '/services/SearchEventTracker.php'; // csrf cho beacon trong partial
+            if (in_array(strtolower(ss_env('SEARCH_FALLBACK_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
+                return null;
+            }
+
+            $excludeIds = [];
+            foreach ($currentItems as $it) {
+                $id = (string)($it['ma_san_pham'] ?? $it['id'] ?? '');
+                if ($id !== '') {
+                    $excludeIds[] = $id;
+                }
+            }
+            $cartIds = [];
+            if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+                $cartIds = array_slice(array_map('strval', array_keys($_SESSION['gio_hang'])), 0, 50);
+            }
+            $userHash = null;
+            $salt = ss_env('SEARCH_USER_HASH_SALT', '');
+            $email = (string)($_SESSION['user']['email'] ?? '');
+            if ($salt !== '' && $email !== '') {
+                $userHash = hash('sha256', mb_strtolower(trim($email)) . $salt);
+            }
+            // Bước 08: hồ sơ da rút gọn {skin_type, concerns} (key đồ thị), không tên/email.
+            $skinProfile = $email !== '' ? $this->searchSkinProfile($email) : null;
+
+            $client = SearchRecommendClient::fromEnv();
+            $response = $client ? $client->recommend($q, $userHash, $skinProfile, $cartIds, $excludeIds, 8) : null;
+
+            $model = $this->model;
+            return SearchFallbackBuilder::build(
+                $response,
+                function (array $ids) use ($model): array { return $model->findVisibleByIds($ids); },
+                function (int $limit) use ($model): array { return $model->bestSellers($limit); },
+                $q
+            );
+        } catch (Throwable $e) {
+            error_log('[SEARCH_RECOMMEND] fallback build error: ' . get_class($e));
+            return null;
+        }
+    }
+
+    /** Hồ sơ da của khách đăng nhập cho tìm kiếm (chỉ đọc khach_hang). Lỗi/không có -> null. */
+    private function searchSkinProfile(string $email): ?array {
+        try {
+            require_once dirname(__DIR__) . '/services/SearchSkinProfile.php';
+            $kh = (new TaiKhoan($this->pdo))->getKhachHangByEmail($email);
+            return SearchSkinProfile::fromCustomer($kh);
+        } catch (Throwable $e) {
+            error_log('[SEARCH_RECOMMEND] skin profile skipped: ' . get_class($e));
+            return null;
+        }
     }
 
     public function danhsach() {
@@ -479,6 +569,7 @@ class SanPhamController {
 
         // Lưu vào recent viewed products của session (tối đa 5 sản phẩm)
         $this->trackRecentViewedProduct((string)($p['ma_san_pham'] ?? $id));
+        ProductEventTracker::record($this->pdo, 'product_view', (string)($p['ma_san_pham'] ?? $p['id'] ?? $id));
 
         if ($q !== '') {
             $this->saveSearchHistory($q);
@@ -575,7 +666,9 @@ class SanPhamController {
 
         $productVideos = null;
         if (isset($cachedBatch[$videoKey]) && is_array($cachedBatch[$videoKey])) {
-            $productVideos = $cachedBatch[$videoKey];
+            // Cached for up to 30 min: drop videos whose spoken flash price has since expired.
+            require_once __DIR__ . '/../models/ProductVideo.php';
+            $productVideos = ProductVideo::dropExpiredPriceClaims($cachedBatch[$videoKey], time());
         } else {
             try {
                 require_once __DIR__ . '/../models/ProductVideo.php';
@@ -701,7 +794,11 @@ class SanPhamController {
 
         // Phase B: Unified Interaction Logging
         require_once dirname(__DIR__) . '/services/InteractionLogger.php';
-        InteractionLogger::logView($productId);
+        require_once dirname(__DIR__) . '/services/AfterResponse.php';
+        [$logUserId, $logSessionId] = InteractionLogger::captureContext();
+        AfterResponse::defer(static function () use ($productId, $logUserId, $logSessionId): void {
+            InteractionLogger::logView($productId, [], $logUserId, $logSessionId);
+        });
     }
 
     /**
@@ -754,7 +851,9 @@ class SanPhamController {
         }
 
         $flaskUrl = rtrim((string)(getenv('AI_IDOL_ENDPOINT') ?: 'http://ai-idol-service:5003'), '/');
-        $endpoint = $flaskUrl . '/api/ai-idol/videos/' . rawurlencode($videoId);
+        // Product pages always play the price-free clip, never the full render (spec D12).
+        $endpoint = $flaskUrl . '/api/ai-idol/videos/' . rawurlencode($videoId) . '?rendition=product_page';
+        $r2Base = function_exists('ss_env') ? ss_env('R2_PUBLIC_BASE_URL', '') : (string)(getenv('R2_PUBLIC_BASE_URL') ?: '');
 
         $ch = curl_init($endpoint);
         $requestHeaders = [];
@@ -762,22 +861,36 @@ class SanPhamController {
             $requestHeaders[] = 'Range: ' . $_SERVER['HTTP_RANGE'];
         }
 
+        // Flask answers with a redirect once the local copy was moved to R2. It is never passed through
+        // blindly: the status, headers and body of a redirect stay here until its target is validated.
+        $upstream = ['status' => 0, 'location' => ''];
+        $isRedirect = static fn(array $state): bool => in_array($state['status'], self::VIDEO_REDIRECT_STATUSES, true);
+
         curl_setopt_array($ch, [
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_TIMEOUT => 0,
             CURLOPT_HTTPHEADER => $requestHeaders,
-            CURLOPT_HEADERFUNCTION => static function ($curl, string $line): int {
+            CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$upstream, $isRedirect): int {
                 $length = strlen($line);
                 if (preg_match('#^HTTP/\\S+\\s+(\\d+)#i', trim($line), $match)) {
-                    http_response_code((int)$match[1]);
+                    $upstream = ['status' => (int)$match[1], 'location' => ''];
+                    if (!$isRedirect($upstream)) {
+                        http_response_code($upstream['status']);
+                    }
+                } elseif ($isRedirect($upstream)) {
+                    if (preg_match('/^Location:\\s*(.+)$/i', trim($line), $match)) {
+                        $upstream['location'] = trim($match[1]);
+                    }
                 } elseif (preg_match('/^(Content-Type|Content-Length|Content-Range|Accept-Ranges|Cache-Control):/i', $line)) {
                     header(trim($line), true);
                 }
                 return $length;
             },
-            CURLOPT_WRITEFUNCTION => static function ($curl, string $chunk): int {
-                echo $chunk;
-                flush();
+            CURLOPT_WRITEFUNCTION => static function ($curl, string $chunk) use (&$upstream, $isRedirect): int {
+                if (!$isRedirect($upstream)) {
+                    echo $chunk;
+                    flush();
+                }
                 return strlen($chunk);
             },
         ]);
@@ -787,9 +900,32 @@ class SanPhamController {
             http_response_code(502);
             header('Content-Type: text/plain; charset=utf-8');
             echo 'Cannot stream video source.';
+        } elseif ($ok !== false && $isRedirect($upstream) && !headers_sent()) {
+            $target = self::productVideoRedirectTarget($upstream['location'], $r2Base);
+            if ($target === null) {
+                http_response_code(404);
+                header('Content-Type: text/plain; charset=utf-8');
+                echo 'Video not found or unavailable.';
+            } else {
+                header('Location: ' . $target, true, 302);
+            }
         }
         curl_close($ch);
         exit;
+    }
+
+    /**
+     * The only redirect the product-video proxy hands to a browser: a file on the public R2 bucket.
+     * Anything else (another host, a lookalike host such as "<base>.evil.com", a header-injection attempt,
+     * or R2 not configured) is rejected so the stream can never bounce visitors elsewhere.
+     */
+    public static function productVideoRedirectTarget(string $location, string $r2PublicBase): ?string {
+        $base = rtrim(trim($r2PublicBase), '/');
+        $location = trim($location);
+        if ($base === '' || $location === '' || preg_match('/[\\x00-\\x20\\x7f]/', $location)) {
+            return null;
+        }
+        return strncmp($location, $base . '/', strlen($base) + 1) === 0 ? $location : null;
     }
 }
 

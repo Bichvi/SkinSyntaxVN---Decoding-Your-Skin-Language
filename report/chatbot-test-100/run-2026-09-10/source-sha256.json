@@ -1,0 +1,18 @@
+{
+  "ai-service-flask/chatbot_service/consultation/advisory.py": "f1fe0f6b10fdee68e3e6fa8d4c4896cc972fe8d01a42267f713a081e8c41d876",
+  "ai-service-flask/chatbot_service/consultation/answer_validation.py": "7340484747b47388d69357171827c0fd994e96c1aaa928e550ea39b2a3be4ef5",
+  "ai-service-flask/chatbot_service/consultation/catalog.py": "59ac3a0058c01aef5b81eacdd6304cf541bd3196f64568503de2dc894e2a1667",
+  "ai-service-flask/chatbot_service/consultation/context.py": "f3cf126dbce9d7e76eea0e97fc3e8e4c596fe9a1bebbda6421d4f5759c165390",
+  "ai-service-flask/chatbot_service/consultation/ingredients.py": "59d5a101d4db9c163936564f132557b2dc48a60ca491a71bb796deeba568b8f5",
+  "ai-service-flask/chatbot_service/consultation/money.py": "d0ec91c182a28915f96f31eb78b1c715e96d5ca6338e8e4de5a3759190ed03c3",
+  "ai-service-flask/chatbot_service/consultation/planning.py": "c1e08fb0e1a4a7aa93db62f1b52e79abe9b0c937a8f76a4c8dff76f07fa57643",
+  "ai-service-flask/chatbot_service/consultation/policy.py": "33ac5a66213216f59aa33b88efa42c39a235bb68b6529f18648dab906535fc25",
+  "ai-service-flask/chatbot_service/consultation/presentation.py": "384e8f1435977966e6d1495311f2be83344c83f4c98300d0c0ec09f6d21c0f74",
+  "ai-service-flask/chatbot_service/consultation/request_rules.py": "31b00c70e9abe6462d1aea7f275930c07c9f600368d5afd686dfeb1fb847bb2d",
+  "ai-service-flask/chatbot_service/consultation/routine.py": "1e2cc7da44a7cba1c1129247902f796107352dff4e9f95a6b1e6c942cb73296e",
+  "ai-service-flask/chatbot_service/consultation/runtime.py": "5c85226fd926c12b7620f437536b0efbb2fbf42037f45e4b0778448b6f8a4597",
+  "ai-service-flask/chatbot_service/consultation/service.py": "ed804e96568dc7e30fb54f9350e1be56c93ea8915bb6c785335b67f2409974bc",
+  "ai-service-flask/chatbot_service/consultation/__init__.py": "188bf59d2a187de4ca2dd28f2235a1deddb94df4f4199c3bfd33fe67b4dbf1d6",
+  "ai-service-flask/chatbot_service/chatbot_flask.py": "ab4bbadc510be70ffb4c782457a457c49ced243b7c6143caff4e4c54ba95d0ed",
+  "backend/app/controllers/HomeController.php": "9fcdf0241faa44f0282db241a2c369505e8dec422c02eda0f075b50c85211aee"
+}

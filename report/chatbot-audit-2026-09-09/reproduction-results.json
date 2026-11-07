@@ -1,0 +1,154 @@
+{
+  "method": "Offline behavioral probes against the current source, without importing the app.\n\nLoads selected, unmodified functions/classes with AST. Network, model inference and\ndatabase boundaries are replaced by explicit fixtures. This is NOT an end-to-end\ntest or a clinical evaluation. Exit 0 means the audit ran, not that the app is correct.\nRun: python report/chatbot-audit-2026-09-09/reproduce_findings.py\n",
+  "total": 15,
+  "reproduced": 15,
+  "results": [
+    {
+      "id": "F02a",
+      "title": "Active factory creates an empty BM25 index",
+      "reproduced": true,
+      "observed": 0
+    },
+    {
+      "id": "F02b",
+      "title": "BM25 scores a document which does not contain the query token",
+      "reproduced": true,
+      "observed": [
+        [
+          "lip",
+          0.6931471805599453
+        ],
+        [
+          "ret",
+          0.6931471805599453
+        ]
+      ]
+    },
+    {
+      "id": "F02c",
+      "title": "Lexical-only results bypass metadata filter",
+      "reproduced": true,
+      "observed": [
+        "serum",
+        "cleanser"
+      ]
+    },
+    {
+      "id": "F03",
+      "title": "Survey cannot read Mongo-restored dictionary history",
+      "reproduced": true,
+      "observed": {
+        "last_ai": "",
+        "in_survey": false
+      }
+    },
+    {
+      "id": "F04",
+      "title": "Discount synthesized from product ID without sale data",
+      "reproduced": true,
+      "observed": {
+        "product_id": "123",
+        "discount": 25,
+        "claimed_original_price": true
+      }
+    },
+    {
+      "id": "F05",
+      "title": "Actual usage metadata ignored; random category tip is supplied as evidence",
+      "reproduced": true,
+      "observed": {
+        "label_used": false,
+        "usage_line": "  Hướng dẫn sử dụng: Các hoạt chất trong serum là cao độ nên dùng lượng ít, massage nhẹ nhàng để thẩm thấu tốt trước khi thoa kem dưỡng."
+      }
+    },
+    {
+      "id": "F10",
+      "title": "Vietnamese decimal comma in budget is misparsed",
+      "reproduced": true,
+      "observed": {
+        "input": "1,5 triệu",
+        "actual": 5000000,
+        "expected": 1500000
+      }
+    },
+    {
+      "id": "F11",
+      "title": "Fast keyword parser loses the explicit excluded ingredient",
+      "reproduced": true,
+      "observed": {
+        "loai_da": null,
+        "loai_san_pham": "Kem / Gel / Dầu Dưỡng",
+        "tinh_trang_da": null,
+        "so_luong_goi_y": 3,
+        "tu_khoa_ngu_nghia": "kem dưỡng không chứa retinol",
+        "is_routine": false,
+        "ngan_sach": null
+      }
+    },
+    {
+      "id": "F12",
+      "title": "Faithfulness heuristic gives 1.0 to a contradiction",
+      "reproduced": true,
+      "observed": 1.0
+    },
+    {
+      "id": "F06",
+      "title": "Nonempty PHP conflict objects crash string join",
+      "reproduced": true,
+      "observed": "sequence item 0: expected str instance, dict found"
+    },
+    {
+      "id": "F07",
+      "title": "PHP concerns and ingredients fields disappear in orchestration",
+      "reproduced": true,
+      "observed": {
+        "concern_in_prompt": false,
+        "ingredient_in_prompt": false
+      }
+    },
+    {
+      "id": "F08",
+      "title": "PHP merge invalidates an already budget-fitted routine",
+      "reproduced": true,
+      "observed": {
+        "budget": 350000,
+        "fitted_combo_before_merge": 300000,
+        "returned_total": 1100000,
+        "returned_count": 7
+      }
+    },
+    {
+      "id": "F09",
+      "title": "Excluded ingredient is context only, not a final eligibility filter",
+      "reproduced": true,
+      "observed": [
+        {
+          "ten_san_pham": "Retinol serum",
+          "thuong_hieu": "Unknown",
+          "gia_ban": 100000,
+          "loai_da": "Unknown",
+          "loai_san_pham": "Unknown",
+          "xuat_xu_thuong_hieu": "Unknown",
+          "link_hinh_anh": "",
+          "thanh_phan_chinh": "retinol",
+          "mo_ta": "",
+          "id": "R"
+        }
+      ]
+    },
+    {
+      "id": "F13",
+      "title": "Account skin type overwrites the explicit target of the current question",
+      "reproduced": true,
+      "observed": "Da dầu"
+    },
+    {
+      "id": "F14",
+      "title": "General skincare knowledge intent falls through to product retrieval",
+      "reproduced": true,
+      "observed": {
+        "search_calls": 1
+      }
+    }
+  ]
+}

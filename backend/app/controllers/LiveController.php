@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../services/ProductEventTracker.php';
+
 class LiveController {
     private $pdo;
 
@@ -37,11 +39,20 @@ class LiveController {
 
         $selectedId = trim((string)($_GET['id'] ?? $_GET['room_id'] ?? $_GET['room'] ?? ''));
 
+        // Gom id sản phẩm ghim -> 1 query thay vì N query tuần tự
+        $pinnedIds = [];
+        foreach ($rawLives as $live) {
+            if (!empty($live['ma_san_pham_ghim'])) {
+                $pinnedIds[] = (string)$live['ma_san_pham_ghim'];
+            }
+        }
+        $productsById = $spModel->findManyByIds($pinnedIds);
+
         $liveSessions = [];
         foreach ($rawLives as $idx => $live) {
             $p = null;
             if (!empty($live['ma_san_pham_ghim'])) {
-                $p = $spModel->findById($live['ma_san_pham_ghim']);
+                $p = $productsById[(string)$live['ma_san_pham_ghim']] ?? null;
             }
             if (!$p && !empty($topSaleProducts[$idx])) {
                 $p = $topSaleProducts[$idx];
@@ -353,6 +364,7 @@ class LiveController {
             if ($pIdStr !== '') {
                 $currentQty = (int)($_SESSION['gio_hang'][$pIdStr] ?? 0);
                 $_SESSION['gio_hang'][$pIdStr] = $currentQty + 1;
+                ProductEventTracker::record($mongoDb, 'add_to_cart', $pIdStr);
             }
 
             $userDisplayName = is_logged_in() ? (current_user()['ho_ten'] ?? 'bạn') : 'khách hàng';
@@ -809,6 +821,7 @@ class LiveController {
         }
 
         $_SESSION['gio_hang'][$productId] = (int)($_SESSION['gio_hang'][$productId] ?? 0) + $qty;
+        ProductEventTracker::record($mongoDb, 'add_to_cart', $productId);
 
         $cartCount = 0;
         foreach ($_SESSION['gio_hang'] as $q) {

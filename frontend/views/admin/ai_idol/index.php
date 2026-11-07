@@ -1,8 +1,81 @@
 <?php
+// AI Idol Studio shell: header, overview, service health, the two-mode switch (Tự động / Thủ công)
+// and the shared Activity column. The panels start empty; studio-auto.js, studio-manual.js and
+// studio-activity.js render into #autoFlow, #manualFlow and #activityPanel.
 $studioAssets = dirname(__DIR__, 3) . '/public/assets';
-$studioEscape = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+// Script files that a later step has not created yet must not raise a PHP warning (they just 404).
+$studioAssetUrl = static function (string $path) use ($studioAssets): string {
+    $file = $studioAssets . '/' . $path;
+    return BASE_URL . '/assets/' . $path . '?v=' . (file_exists($file) ? (int)filemtime($file) : 0);
+};
+// Load order matters: pure logic -> shared core -> manual wizard -> auto flow -> activity panel.
+$studioScripts = ['ai-idol-approval.js', 'studio-logic.js', 'studio-core.js', 'studio-manual.js', 'studio-auto.js', 'studio-activity.js'];
+$studioCsrf = (string)($csrfToken ?? (class_exists('AdminAiIdolController', false) ? AdminAiIdolController::getCsrfToken() : ''));
+$studioJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE;
+
+// Tab Thủ công (#manualFlow): the filter labels, values and counts of the product filters. $filterCounts and
+// $catalogTree come from AdminAiIdolController::index(); the fallbacks are the counts the old page showed.
+$wzEsc = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+$wzNumber = static fn($value): string => number_format((int)$value, 0, ',', '.');
+$wzCounts = is_array($filterCounts ?? null) ? $filterCounts : [];
+$wzTree = is_array($catalogTree ?? null) ? $catalogTree : [];
+$wzTotal = $wzCounts['total'] ?? 2473;
+// Group select (Nhóm): a root category found in the tree is offered by its numeric id with the count the tree
+// holds; a group with no root in the database keeps the static option the page always had.
+// [tree key => [label, static value, static count text]]
+$wzGroups = [
+    'face' => ['Chăm Sóc Da Mặt', 'face', 'Có ' . $wzNumber(2473)],
+    'makeup' => ['Trang Điểm', 'makeup', '0'],
+    'body' => ['Chăm Sóc Cơ Thể', 'body', '0'],
+    'hair' => ['Chăm Sóc Tóc', 'hair', '0'],
+];
+$wzGroupOptions = [];
+foreach ($wzGroups as $wzKey => [$wzLabel, $wzValue, $wzCountText]) {
+    $wzNode = $wzTree[$wzKey] ?? null;
+    // A synthetic group (id null: products whose category is not in danh_muc) is offered by its key.
+    if (is_array($wzNode) && ((int)($wzNode['id'] ?? 0) > 0 || array_key_exists('id', $wzNode))) {
+        $wzValue = (int)($wzNode['id'] ?? 0) > 0 ? (string)(int)$wzNode['id'] : (string)$wzKey;
+        $wzLabel = trim((string)($wzNode['label'] ?? '')) !== '' ? (string)$wzNode['label'] : $wzLabel;
+        $wzCountText = 'Có ' . $wzNumber($wzNode['count'] ?? 0);
+    }
+    $wzGroupOptions[] = [$wzValue, $wzLabel, $wzCountText];
+}
+foreach ($wzTree as $wzKey => $wzNode) { // any other root the database has
+    if (!isset($wzGroups[$wzKey]) && is_array($wzNode) && ((int)($wzNode['id'] ?? 0) > 0 || array_key_exists('id', $wzNode))) {
+        $wzGroupOptions[] = [(int)($wzNode['id'] ?? 0) > 0 ? (string)(int)$wzNode['id'] : (string)$wzKey,(string)($wzNode['label'] ?? ''), 'Có ' . $wzNumber($wzNode['count'] ?? 0)];
+    }
+}
+// [value, label, count|null]: a null count shows no "(N sản phẩm)".
+$wzExpiry = [
+    ['', 'Hạn dùng: không lọc', null],
+    ['expiry_17_19', 'Hạn còn 17–19 tháng', $wzCounts['expiry_17_19'] ?? 0],
+    ['expiry_max_18', 'Hạn tối đa 18 tháng', $wzCounts['expiry_max_18'] ?? 0],
+];
+$wzStock = [
+    ['', 'Tồn kho: không lọc', null],
+    ['stock_high', 'Tồn kho nhiều (>100)', $wzCounts['stock_high'] ?? 0],
+    ['stock_low', 'Tồn kho thấp (≤10)', $wzCounts['stock_low'] ?? 0],
+    ['out_of_stock', 'Đã hết hàng', $wzCounts['out_of_stock'] ?? 0],
+];
+$wzSales = [
+    ['', 'Không chọn', null],
+    ['best_30', 'Bán chạy · 30 ngày', $wzCounts['best_30'] ?? 45],
+    ['best_7', 'Bán tốt · 7 ngày', $wzCounts['best_7'] ?? 20],
+    ['best_all', 'Bán chạy · toàn kỳ', $wzCounts['best_all'] ?? 2108],
+    ['revenue_low_conversion', 'Doanh thu cao, chuyển đổi thấp', null],
+    ['views_no_orders', 'Xem nhiều, chưa mua', null],
+    ['cart', 'Thêm giỏ nhiều', null],
+    ['discount_slow', 'Giảm giá, bán chậm', null],
+    ['growth_7', 'Tăng trưởng · 7 ngày', null],
+];
+$wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumber): void {
+    foreach ($options as [$value, $label, $count]) {
+        echo '<label class="wz-option"><input type="radio" name="', $name, '" value="', $wzEsc($value), '"', $value === '' ? ' checked' : '', '>',
+            '<span>', $wzEsc($label), $count === null ? '' : ' <span class="wz-count">(' . $wzNumber($count) . ' sản phẩm)</span>', '</span></label>';
+    }
+};
 ?>
-<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/ai-idol-studio.css?v=<?= filemtime($studioAssets . '/css/ai-idol-studio.css') ?>">
+<link rel="stylesheet" href="<?= $studioAssetUrl('css/ai-idol-studio.css') ?>">
 <main class="idol-studio" id="idolStudio">
     <header class="studio-heading">
         <div>
@@ -18,455 +91,214 @@ $studioEscape = static fn($value): string => htmlspecialchars((string)$value, EN
         <div class="studio-stat"><i class="bi bi-calendar2-check" aria-hidden="true"></i><strong id="scheduledCount">—</strong><span>Đã lên lịch</span></div>
         <div class="studio-sync" id="syncStatus" role="status"><span class="sync-dot"></span> Đang kết nối</div>
     </div>
-    <?php
-    $activeFlow = $_GET['flow'] ?? $_GET['tab'] ?? 'manual';
-    if (!in_array($activeFlow, ['manual', 'agent', 'publication'], true)) {
-        $activeFlow = 'manual';
-    }
-    ?>
-    <div class="studio-flow-switch" role="tablist" aria-label="Chọn chế độ làm việc">
-        <button type="button" class="flow-tab <?= $activeFlow === 'manual' ? 'is-active' : '' ?>" id="manualFlowTab" role="tab" aria-selected="<?= $activeFlow === 'manual' ? 'true' : 'false' ?>" aria-controls="manualFlow" data-studio-flow="manual"><i class="bi bi-sliders" aria-hidden="true"></i><span><strong>Wizard thủ công</strong><small>Chủ động chọn từng thiết lập</small></span></button>
-        <button type="button" class="flow-tab <?= $activeFlow === 'agent' ? 'is-active' : '' ?>" id="agentFlowTab" role="tab" aria-selected="<?= $activeFlow === 'agent' ? 'true' : 'false' ?>" aria-controls="agentFlow" data-studio-flow="agent"><i class="bi bi-stars" aria-hidden="true"></i><span><strong>Agent tự động</strong><small>Mô tả một lần, Agent tự lập kế hoạch</small></span></button>
-        <button type="button" class="flow-tab <?= $activeFlow === 'publication' ? 'is-active' : '' ?>" id="pubFlowTab" role="tab" aria-selected="<?= $activeFlow === 'publication' ? 'true' : 'false' ?>" aria-controls="pubFlow" data-studio-flow="publication"><i class="bi bi-film" aria-hidden="true"></i><span><strong>Xuất bản sản phẩm</strong><small>Video đã tạo → Lên web</small></span></button>
-    </div>
-    <section class="agent-flow" id="agentFlow" role="tabpanel" aria-labelledby="agentFlowTab" <?= $activeFlow !== 'agent' ? 'hidden' : '' ?>>
-        <div class="agent-compose studio-panel">
-            <div class="panel-heading"><div><span class="studio-eyebrow">SYNA AGENT</span><h2>Giao việc bằng một câu</h2></div><span class="small-tag">BETA AN TOÀN</span></div>
-            <form id="agentForm" class="agent-form" novalidate>
-                <div class="studio-message" id="agentMessage" role="alert" hidden></div>
-                <div class="idol-field">
-                    <label for="agentBrief">Bạn muốn Syna tạo chương trình gì?</label>
-                    <textarea id="agentBrief" class="idol-input agent-brief" maxlength="4000" placeholder="Ví dụ: Tối mai lúc 20 giờ, tạo livestream 60 phút giới thiệu sản phẩm mã 995 theo phong cách phân tích thành phần. Trước mắt chỉ phát nội bộ để tôi xem thử."></textarea>
-                    <p class="idol-note">Có thể ghi tên hoặc mã sản phẩm, giờ phát, thời lượng và phong cách. Phần còn thiếu sẽ được Agent đề xuất an toàn.</p>
-                </div>
-                <div class="agent-policy-grid">
-                    <label class="agent-policy"><input type="radio" name="agentPolicy" value="auto_preview" checked><span><i class="bi bi-play-circle" aria-hidden="true"></i><strong>Tự tạo bản xem trước</strong><small>Tự duyệt sau kiểm duyệt, chỉ phát nội bộ.</small></span></label>
-                    <label class="agent-policy"><input type="radio" name="agentPolicy" value="assisted"><span><i class="bi bi-person-check" aria-hidden="true"></i><strong>Duyệt trước khi render</strong><small>Dừng ở kịch bản để nhân viên chỉnh sửa.</small></span></label>
-                </div>
-                <div class="agent-form-footer"><span><i class="bi bi-shield-check" aria-hidden="true"></i> Tự phát YouTube/Facebook vẫn đang khóa.</span><button type="submit" class="idol-btn primary" id="runAgent">Lập kế hoạch & chạy <i class="bi bi-arrow-right" aria-hidden="true"></i></button></div>
-            </form>
-        </div>
-        <div class="agent-monitor studio-panel">
-            <div class="panel-heading"><div><span class="studio-eyebrow">TIẾN ĐỘ</span><h2>Agent đang làm gì?</h2></div><button type="button" class="icon-button" id="refreshAgentRuns" aria-label="Làm mới Agent"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button></div>
-            <div class="agent-run-list" id="agentRunList"><div class="empty"><i class="bi bi-stars" aria-hidden="true"></i><p>Chưa có yêu cầu Agent nào.</p></div></div>
-            <div class="agent-run-detail" id="agentRunDetail" hidden></div>
-        </div>
-    </section>
-    <div class="studio-workspace" id="manualFlow" role="tabpanel" aria-labelledby="manualFlowTab" <?= $activeFlow !== 'manual' ? 'hidden' : '' ?>>
-        <div class="studio-setup">
-            <section class="studio-panel" aria-labelledby="setupTitle">
-                <div class="panel-heading"><div><span class="studio-eyebrow">CHUẨN BỊ</span><h2 id="setupTitle">Tạo chương trình mới</h2></div><span class="step-counter" id="stepCounter">Bước 1 / 3</span></div>
-                <div class="studio-steps" role="tablist" aria-label="Thiết lập chương trình">
-                    <button type="button" role="tab" id="stepTab1" class="step-tab is-active" data-step="1" aria-selected="true" aria-controls="stepPanel1"><span>01</span> Nội dung</button>
-                    <button type="button" role="tab" id="stepTab2" class="step-tab" data-step="2" aria-selected="false" aria-controls="stepPanel2" tabindex="-1"><span>02</span> Không gian</button>
-                    <button type="button" role="tab" id="stepTab3" class="step-tab" data-step="3" aria-selected="false" aria-controls="stepPanel3" tabindex="-1"><span>03</span> Lịch phát</button>
-                </div>
-                <form id="studioForm" novalidate>
-                    <div class="studio-message" id="formMessage" role="alert" hidden></div>
-                    <section class="step-panel" id="stepPanel1" role="tabpanel" aria-labelledby="stepTab1">
-                        <div class="idol-field"><label for="campaignName">Tên chương trình <span class="field-optional">Không bắt buộc</span></label><input id="campaignName" class="idol-input" maxlength="160" placeholder="Ví dụ: Một chút chăm da, tối thứ Sáu" autocomplete="off"></div>
+    <div class="idol-health" id="idolHealth" role="status" aria-live="polite" aria-label="Tình trạng dịch vụ"><span class="health-title">Dịch vụ</span><span class="health-note">Đang kiểm tra…</span></div>
+    <div class="studio-layout">
+        <div class="studio-main">
+            <div class="studio-flow-switch" role="tablist" aria-label="Chọn cách tạo chương trình">
+                <button type="button" class="flow-tab is-active" id="autoFlowTab" role="tab" aria-selected="true" aria-controls="autoFlow" tabindex="0" data-studio-flow="auto"><i class="bi bi-stars" aria-hidden="true"></i><span><strong>Tự động</strong><small>Giao việc cho Syna bằng một câu</small></span></button>
+                <button type="button" class="flow-tab" id="manualFlowTab" role="tab" aria-selected="false" aria-controls="manualFlow" tabindex="-1" data-studio-flow="manual"><i class="bi bi-sliders" aria-hidden="true"></i><span><strong>Thủ công</strong><small>Tự chọn từng bước</small></span></button>
+            </div>
+            <section class="studio-flow-panel" id="autoFlow" role="tabpanel" aria-labelledby="autoFlowTab">
+                <form class="studio-panel au" id="autoForm" novalidate>
+                    <div class="panel-heading"><div><span class="studio-eyebrow">TỰ ĐỘNG</span><h2>Giao việc cho Syna</h2></div></div>
+                    <div class="au-body">
                         <div class="idol-field">
-                            <div class="field-heading"><label for="productSearch">Sản phẩm lên sóng</label><span class="selection-count" id="selectionCount">0 đã chọn</span></div>
-                            <div class="product-toolbar"><div class="studio-search"><i class="bi bi-search" aria-hidden="true"></i><input id="productSearch" class="idol-input" type="search" placeholder="Tìm tên hoặc mã sản phẩm" autocomplete="off"></div><button type="button" class="text-button" id="selectVisible">Chọn tất cả</button></div>
-                            <div id="productList" class="product-list" role="group" aria-label="Chọn sản phẩm">
-                                <?php foreach ($products as $p):
-                                    $productId = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
-                                    $productName = (string)($p['ten_san_pham'] ?? 'Sản phẩm chưa đặt tên');
-                                    $rawImage = explode('|', (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''))[0];
-                                    $imageUrl = resolve_image_url(trim($rawImage));
-                                ?>
-                                <label class="product-item" data-search="<?= $studioEscape(mb_strtolower($productId . ' ' . $productName)) ?>">
-                                    <input type="checkbox" class="product-check" value="<?= $studioEscape($productId) ?>" data-name="<?= $studioEscape($productName) ?>">
-                                    <span class="product-thumb"><img src="<?= $studioEscape($imageUrl) ?>" alt="" loading="lazy" width="42" height="48"></span>
-                                    <span class="product-copy"><span class="product-name"><?= $studioEscape($productName) ?></span><small>Mã sản phẩm <?= $studioEscape($productId) ?></small></span>
-                                    <i class="bi bi-check2 selected-tick" aria-hidden="true"></i>
-                                </label>
-                                <?php endforeach; ?>
-                                <div class="empty compact" id="productEmpty" <?= count($products) ? 'hidden' : '' ?>><i class="bi bi-search" aria-hidden="true"></i><p>Không tìm thấy sản phẩm.<br>Thử tên hoặc mã khác nhé.</p></div>
-                            </div>
-                            <div id="selectedChips" class="selected-chips" aria-label="Sản phẩm đã chọn" hidden></div>
-                            <p id="selectionNote" class="idol-note" aria-live="polite">Chọn sản phẩm bạn muốn giới thiệu trong buổi live.</p>
+                            <label for="autoBrief">Bạn muốn làm gì? <span class="au-count" id="autoBriefCount" aria-hidden="true">0 / 4000</span></label>
+                            <textarea id="autoBrief" rows="5" maxlength="4000" aria-describedby="autoBriefHint autoMessage" placeholder="Ví dụ: Làm video sản phẩm cho 5 kem chống nắng bán chạy nhất trong 30 ngày qua."></textarea>
+                            <p class="au-hint" id="autoBriefHint">Ghi sản phẩm (tên, mã, hoặc điều kiện như bán chạy 30 ngày, hạn 17–19 tháng), mục đích (video sản phẩm / livestream), giờ phát và giọng dẫn nếu muốn. Thiếu gì Syna sẽ tự quyết và ghi rõ.</p>
                         </div>
-                        <div class="idol-field"><label for="contentMode">Cách kể câu chuyện</label><select id="contentMode" class="idol-select"><option value="Product Intro">Giới thiệu sản phẩm</option><option value="Problem-Solution">Vấn đề & giải pháp</option><option value="Scientific Review">Phân tích thành phần</option></select></div>
-                    </section>
-                    <section class="step-panel" id="stepPanel2" role="tabpanel" aria-labelledby="stepTab2" hidden>
-                        <div class="step-intro"><h3>Chọn gương mặt, đặt không gian.</h3><p>Nhân vật và phông nền tạo nên phong cách buổi live.</p></div>
-                        <div class="idol-field"><label for="characterMode">Nhân vật dẫn chương trình</label><select id="characterMode" class="idol-select"><option value="syna_3d">Syna 3D · mèo rau má của SkinSyntax</option><option value="custom">Ảnh hoặc video nhân vật riêng</option></select><p class="idol-note" id="synaModeHelp">Syna nói theo kịch bản bạn duyệt; giữ ảnh, tên, giá sản phẩm và có bảng thành phần riêng. Không cần tải video mẫu. Bản này hỗ trợ khung ngang 16:9.</p></div>
-                        <div class="idol-field"><label for="videoFormat">Khung hình</label><select id="videoFormat" class="idol-select"><option value="16:9">Ngang 16:9 · phù hợp livestream</option><option value="9:16">Dọc 9:16 · phù hợp điện thoại</option></select></div>
-                        <div class="asset-grid">
-                            <div class="asset-picker" id="customAvatarPicker" hidden>
-                                <label class="asset-drop" for="avatarFile"><span class="asset-icon"><i class="bi bi-person-video3" aria-hidden="true"></i></span><strong>Nhân vật chính</strong><span id="avatarFilename">Chọn video hoặc ảnh</span><small>Video ≤ 35 MB · ảnh ≤ 10 MB</small><input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"></label>
-                                <img id="avatarImagePreview" class="asset-preview" alt="Xem trước nhân vật">
-                                <video id="avatarVideoPreview" class="asset-preview" muted loop controls playsinline aria-label="Xem trước video nhân vật"></video>
-                                <div class="asset-caption"><span class="small-tag">Gợi ý</span> Video 5–30 giây có cử động tự nhiên.</div>
-                            </div>
-                            <div class="asset-picker">
-                                <label class="asset-drop" for="backgroundFile"><span class="asset-icon peach"><i class="bi bi-image" aria-hidden="true"></i></span><strong>Phông nền</strong><span id="backgroundFilename">Chọn ảnh nền · tùy chọn</span><small>PNG, JPG, WebP ≤ 10 MB</small><input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
-                                <img id="backgroundPreview" class="asset-preview" alt="Xem trước phông nền">
-                                <div class="asset-caption">Ảnh ngang 1920 × 1080 cho khung 16:9.</div>
-                            </div>
+                        <div class="au-chips" id="autoChips" role="group" aria-label="Mẫu gợi ý"></div>
+                        <div class="studio-message" id="autoMessage" role="alert" hidden></div>
+                        <fieldset class="au-approval" id="autoApproval">
+                            <legend class="au-approval-legend">Chế độ duyệt</legend>
+                            <label class="au-approval-opt"><input type="radio" name="autoApprovalMode" value="AUTO" checked><span class="au-approval-title">⚡ Tự đăng luôn</span><span class="au-approval-hint">AI tự viết, tự sửa, dựng video và đăng</span></label>
+                            <label class="au-approval-opt"><input type="radio" name="autoApprovalMode" value="MANUAL"><span class="au-approval-title">👤 Duyệt kịch bản trước</span><span class="au-approval-hint">Dừng lại chờ bạn duyệt kịch bản</span></label>
+                        </fieldset>
+                        <div class="au-actions">
+                            <button type="button" class="idol-btn secondary" id="autoUndo" hidden><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Khôi phục lệnh trước</button>
+                            <button type="submit" class="idol-btn primary" id="autoSubmit"><i class="bi bi-send" aria-hidden="true"></i> Giao cho Syna</button>
                         </div>
-                        <div id="avatarModeNote" class="avatar-mode-note" hidden>Chọn nhân vật để xem trước tại đây.</div>
-                        <section class="syna-live-preview" aria-labelledby="synaPreviewTitle">
-                            <div class="syna-live-preview-heading">
-                                <div><span class="studio-eyebrow">NHÂN VẬT CỦA BẠN</span><h3 id="synaPreviewTitle">Syna 3D</h3></div>
-                                <span class="small-tag">Xem thử chuyển động</span>
-                            </div>
-                            <p class="idol-note">Khung dưới chỉ minh họa chuyển động. Video chương trình sẽ dùng sản phẩm, giá và giọng đọc của kịch bản bạn duyệt — không dùng lại clip mẫu này.</p>
-                            <iframe class="syna-live-preview-frame" title="Bản thử Syna 3D cho livestream" src="<?= BASE_URL ?>/ai-idol-mascot-3d/index.html?embed=1&amp;rev=syna-native-v3" loading="lazy"></iframe>
-                            <p class="idol-note">Khi tạo video, cần bật Docker và dịch vụ Syna local. Không sử dụng Wav2Lip hay SadTalker cho Syna.</p>
-                        </section>
-                        <details class="studio-tips"><summary>Chuẩn bị hình ảnh thế nào cho đẹp?</summary><p>Dùng video 720p, camera cố định, mặt rõ và có sẵn chớp mắt, chuyển động đầu, vai hoặc tay. Hệ thống giữ các chuyển động đó và tạo lại khẩu hình.</p><p>Với ảnh tĩnh, chỉ miệng và đầu cử động nhẹ. Với video, phông nền đã có trong clip vẫn được giữ; ảnh nền bạn chọn chỉ lấp phần viền khi khác tỉ lệ.</p></details>
-                    </section>
-                    <section class="step-panel" id="stepPanel3" role="tabpanel" aria-labelledby="stepTab3" hidden>
-                        <div class="step-intro"><h3>Hẹn giờ cho buổi live của bạn.</h3><p>Chừa thời gian để duyệt kịch bản và tạo video trước giờ phát.</p></div>
-                        <div class="schedule-summary"><i class="bi bi-bag-check" aria-hidden="true"></i><div><strong id="summaryProducts">Chưa chọn sản phẩm</strong><span id="summaryPreparation">Quay lại Nội dung để chọn sản phẩm.</span></div></div>
-                        <div class="idol-row"><div class="idol-field"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><label for="scheduledAt" style="margin-bottom:0;">Ngày &amp; giờ phát</label><button type="button" id="btnEarliestSchedule" class="small-tag" style="background:rgba(217,119,6,0.12);color:var(--brand);border:1px solid rgba(217,119,6,0.3);cursor:pointer;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;" title="Bấm để đặt mốc giờ sớm nhất hợp lệ">Sớm nhất (+<span id="leadMinutesBadge">8</span>p)</button></div><input id="scheduledAt" type="datetime-local" class="idol-input" required><p class="idol-note" id="scheduleLeadNote" style="margin-top:6px;font-size:11px;">Cần tối thiểu <strong id="leadMinutesText">8 phút</strong> chuẩn bị video trước giờ phát.</p></div><div class="idol-field"><label for="durationMinutes">Thời lượng <span class="field-optional">phút</span></label><input id="durationMinutes" type="number" min="1" max="720" value="60" class="idol-input" required></div></div>
-                        <div class="idol-field"><label>Nơi phát chương trình</label><div class="platforms">
-                            <label class="platform"><input type="checkbox" name="platform" value="internal" checked><i class="bi bi-display" aria-hidden="true"></i><span>Xem nội bộ</span></label>
-                            <label class="platform"><input type="checkbox" name="platform" value="youtube"><i class="bi bi-youtube" aria-hidden="true"></i><span>YouTube</span></label>
-                            <label class="platform"><input type="checkbox" name="platform" value="facebook"><i class="bi bi-facebook" aria-hidden="true"></i><span>Facebook</span></label>
-                        </div><p class="idol-note">YouTube và Facebook cần được cấu hình khóa phát trước khi lên sóng.</p></div>
-                        <div class="approval-reminder"><i class="bi bi-pencil-square" aria-hidden="true"></i><div><strong>Bạn duyệt xong, video mới được tạo.</strong><p>Kịch bản sẽ xuất hiện trong chương trình để bạn chỉnh sửa và chấp nhận.</p></div></div>
-                    </section>
-                    <div class="form-footer"><button type="button" id="previousStep" class="idol-btn secondary" hidden><i class="bi bi-arrow-left" aria-hidden="true"></i> Quay lại</button><span class="footer-note" id="footerNote">Bắt đầu bằng những sản phẩm bạn yêu thích.</span><button type="button" id="nextStep" class="idol-btn primary">Chọn không gian <i class="bi bi-arrow-right" aria-hidden="true"></i></button><button type="submit" id="createCampaign" class="idol-btn primary" hidden>Tạo kịch bản <i class="bi bi-arrow-right" aria-hidden="true"></i></button></div>
+                    </div>
                 </form>
+                <div class="studio-panel au-card" id="autoCard" role="region" aria-label="Syna đã quyết định" aria-live="polite" hidden></div>
             </section>
-            <div class="studio-footnote"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Chuẩn bị nội dung <span aria-hidden="true">→</span> Duyệt kịch bản <span aria-hidden="true">→</span> Lên sóng theo lịch</span></div>
-        </div>
-        <section class="studio-panel studio-library" aria-labelledby="libraryTitle">
-            <div class="panel-heading"><div><span class="studio-eyebrow">THƯ VIỆN</span><h2 id="libraryTitle">Chương trình của bạn</h2></div><button type="button" class="icon-button" id="refreshCampaigns" aria-label="Làm mới danh sách" title="Làm mới danh sách"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button></div>
-            <div class="campaign-filters" role="group" aria-label="Lọc chương trình"><button type="button" class="filter-button is-active" data-filter="all" aria-pressed="true">Tất cả <span id="libraryCount">—</span></button><button type="button" class="filter-button" data-filter="approval" aria-pressed="false">Chờ duyệt</button><button type="button" class="filter-button" data-filter="scheduled" aria-pressed="false">Đã lên lịch</button></div>
-            <div id="campaignList" class="campaign-list" aria-label="Danh sách chương trình"><div class="studio-loading" role="status"><span></span><span></span><span></span><p>Đang tải chương trình…</p></div></div>
-            <div id="campaignDetail" class="detail" hidden></div>
-            <div class="library-idle" id="libraryIdle"><div class="idle-frame" aria-hidden="true"><i class="bi bi-play-circle"></i></div><h3>Một không gian cho câu chuyện của bạn.</h3><p>Chọn chương trình để xem video, duyệt kịch bản<br>và theo dõi tiến độ tại đây.</p></div>
-        </section>
-    </div>
-
-    <!-- Phase V1.1: Panel Quản lý Xuất bản Video Lên Sản Phẩm -->
-    <section class="studio-publication-panel" id="pubFlow" role="tabpanel" aria-labelledby="pubFlowTab" <?= $activeFlow !== 'publication' ? 'hidden' : '' ?>>
-        <div class="panel-heading">
-            <div>
-                <span class="studio-eyebrow"><i class="bi bi-shop me-1"></i> XUẤT BẢN THƯƠNG MẠI</span>
-                <h2>Video đã tạo → Xuất bản lên sản phẩm</h2>
-                <p class="idol-note" style="margin-top: 4px;">Quản lý gắn video thuyết minh AI Idol đã kết xuất vào các trang chi tiết sản phẩm SkinSyntaxVN.</p>
-            </div>
-            <button type="button" class="icon-button" id="refreshPubVideos" aria-label="Làm mới danh sách video" title="Làm mới danh sách"><i class="bi bi-arrow-clockwise"></i></button>
-        </div>
-        <div class="publication-toolbar">
-            <div class="pub-filter-group" role="group" aria-label="Lọc video xuất bản">
-                <button type="button" class="pub-filter-btn is-active" data-pub-filter="all">Tất cả video <span id="pubCountAll">(0)</span></button>
-                <button type="button" class="pub-filter-btn" data-pub-filter="published">Đã xuất bản <span id="pubCountPublished">(0)</span></button>
-                <button type="button" class="pub-filter-btn" data-pub-filter="unpublished">Chưa xuất bản <span id="pubCountUnpublished">(0)</span></button>
-            </div>
-            <div class="studio-search" style="max-width: 300px; width: 100%;">
-                <i class="bi bi-search" aria-hidden="true"></i>
-                <input id="pubSearchInput" class="idol-input" type="search" placeholder="Tìm video hoặc chiến dịch..." autocomplete="off">
-            </div>
-        </div>
-        <div id="pubVideoMessage" class="studio-message m-3" role="alert" hidden></div>
-        <div class="publication-grid" id="pubVideoGrid" aria-label="Danh sách video xuất bản">
-            <div class="studio-loading" role="status"><span></span><span></span><span></span><p>Đang tải danh sách video…</p></div>
-        </div>
-    </section>
-
-    <!-- Modal Quản Lý Xuất Bản Video Sản Phẩm -->
-    <div class="pub-modal-backdrop" id="pubModalBackdrop" hidden>
-        <div class="pub-modal" id="pubModal" role="dialog" aria-modal="true" aria-labelledby="pubModalTitle">
-            <div class="pub-modal-header">
-                <div>
-                    <span class="studio-eyebrow"><i class="bi bi-sliders me-1"></i> THIẾT LẬP XUẤT BẢN</span>
-                    <h3 id="pubModalTitle">Quản lý xuất bản video lên sản phẩm</h3>
-                </div>
-                <button type="button" class="pub-modal-close" id="closePubModalBtn" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
-            </div>
-            <div class="pub-modal-body">
-                <div id="pubModalAlert" class="studio-message" role="alert" hidden></div>
-
-                <!-- Video Info Banner -->
-                <div class="pub-video-summary">
-                    <div class="pub-video-poster-box">
-                        <img id="pubModalPoster" src="<?= BASE_URL ?>/favicon.ico" alt="" class="pub-video-poster">
-                        <span id="pubModalDurationBadge" class="pub-duration-badge">00:00</span>
-                    </div>
-                    <div class="pub-video-meta">
-                        <div class="pub-video-meta-top">
-                            <span class="pub-campaign-tag" id="pubModalCampaignName">Chương trình AI Idol</span>
-                            <span id="pubModalStatusBadge" class="pub-badge-status published">Đã xuất bản</span>
-                            <span id="pubModalRenderStatusBadge" class="pub-badge-status unready" hidden>Chưa render</span>
-                        </div>
-                        <div class="idol-field" style="margin-top: 6px; margin-bottom: 0;">
-                            <label for="pubModalVideoTitle" style="font-size: 11.5px; margin-bottom: 4px;">Tiêu đề video hiển thị trên PDP</label>
-                            <input type="text" id="pubModalVideoTitle" class="idol-input" placeholder="Tiêu đề video..." maxlength="200">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Display Priority -->
-                <div class="idol-field">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                        <label for="pubModalPriority" style="margin-bottom: 0;">Độ ưu tiên hiển thị (Display Priority)</label>
-                        <small class="text-muted" style="font-size: 11px;">Số càng lớn thì video xếp càng trước trên trang sản phẩm</small>
-                    </div>
-                    <input type="number" id="pubModalPriority" class="idol-input" min="1" max="1000" value="10" style="max-width: 140px; margin-top: 6px;">
-                </div>
-
-                <!-- Product Association Section -->
-                <div class="pub-products-section">
-                    <div class="field-heading">
-                        <label style="font-weight: 650; margin-bottom: 0;">Sản phẩm liên kết hiển thị video</label>
-                        <span class="selection-count" id="pubModalSelectedCount">0 đã chọn</span>
-                    </div>
-                    <p class="idol-note" style="margin-top: 2px;">Video sẽ xuất hiện trên trang chi tiết của tất cả sản phẩm được chọn bên dưới.</p>
-
-                    <!-- Search Toolbar -->
-                    <div class="pub-search-bar mt-2">
-                        <div class="studio-search" style="flex: 1;">
-                            <i class="bi bi-search" aria-hidden="true"></i>
-                            <input id="pubModalProductSearch" data-alias="pubProductSearchInput" class="idol-input" type="search" placeholder="Tìm tên hoặc mã sản phẩm trong kho..." autocomplete="off">
-                        </div>
-                        <button type="button" class="text-button" id="pubModalSelectAllVisible">Chọn tất cả</button>
-                        <button type="button" class="text-button" id="pubModalClearAll">Bỏ chọn hết</button>
-                    </div>
-
-                    <!-- Selected Chips Container -->
-                    <div id="pubModalSelectedChips" data-alias="pubSelectedChips" class="selected-chips mt-2" hidden></div>
-
-                    <!-- Primary Product Selector -->
-                    <div class="idol-field mt-2" id="pubModalPrimaryWrap">
-                        <label for="pubModalPrimaryProduct" style="font-size: 11.5px;">Sản phẩm chính (Primary Product)</label>
-                        <select id="pubModalPrimaryProduct" data-alias="pubPrimarySelect" class="idol-select"></select>
-                    </div>
-
-                    <!-- Product Checklist -->
-                    <div class="pub-product-list mt-2" id="pubModalProductList" role="group" aria-label="Danh sách sản phẩm">
-                        <!-- Rendered dynamically -->
-                    </div>
-                </div>
-            </div>
-            <div class="pub-modal-footer">
-                <button type="button" class="idol-btn danger-outline" id="pubModalUnpublishBtn" data-alias="pubUnpublishBtn" hidden>
-                    <i class="bi bi-eye-slash me-1"></i> Hủy xuất bản
-                </button>
-                <div style="flex: 1;"></div>
-                <button type="button" class="idol-btn secondary" id="pubModalCloseBtn">Đóng</button>
-                <button type="button" class="idol-btn primary" id="pubModalSubmitBtn" data-alias="pubSubmitPublishBtn">
-                    <i class="bi bi-cloud-arrow-up me-1"></i> Xuất bản lên trang sản phẩm
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Cấu hình Voucher Xem Video (Watch-to-Reward Campaign) -->
-    <div class="pub-modal-backdrop" id="rewardModalBackdrop" hidden>
-        <div class="pub-modal reward-modal" id="rewardModal" role="dialog" aria-modal="true" aria-labelledby="rewardModalTitle" style="max-width: 680px;">
-            <div class="pub-modal-header">
-                <div>
-                    <span class="studio-eyebrow"><i class="bi bi-gift me-1"></i> WATCH-TO-REWARD</span>
-                    <h3 id="rewardModalTitle">Cấu hình voucher xem video</h3>
-                </div>
-                <button type="button" class="pub-modal-close" id="closeRewardModalBtn" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
-            </div>
-            <div class="pub-modal-body">
-                <div id="rewardModalAlert" class="studio-message" role="alert" hidden></div>
-
-                <!-- Video Summary Card -->
-                <div class="pub-video-summary">
-                    <div class="pub-video-poster-box">
-                        <img id="rewardModalPoster" src="<?= BASE_URL ?>/favicon.ico" alt="" class="pub-video-poster">
-                        <span id="rewardModalDurationBadge" class="pub-duration-badge">00:00</span>
-                    </div>
-                    <div class="pub-video-meta">
-                        <div class="pub-video-meta-top">
-                            <span class="pub-campaign-tag" id="rewardModalCampaignName">Chương trình AI Idol</span>
-                            <span id="rewardModalVideoStatusBadge" class="pub-badge-status published">Đã xuất bản</span>
-                        </div>
-                        <h4 id="rewardModalVideoTitle" style="font-size: 14px; font-weight: 650; margin: 6px 0 2px; color: var(--text);">Tiêu đề video</h4>
-                        <div style="font-size: 11.5px; color: var(--muted);" id="rewardModalVideoSub">Mã video: <code id="rewardModalVideoId">—</code></div>
-                    </div>
-                </div>
-
-                <!-- Real Statistics Panel (Only shown when real campaign & data exists) -->
-                <div id="rewardStatsCard" class="reward-stats-card mt-3" hidden>
-                    <div class="reward-stats-header">
-                        <span class="studio-eyebrow" style="font-size: 10px;"><i class="bi bi-graph-up me-1"></i> DỮ LIỆU PHÁT HÀNH THỰC TẾ</span>
-                        <span id="rewardStatsStatusBadge" class="pub-badge-status published">Đang hoạt động</span>
-                    </div>
-                    <div class="reward-stats-grid">
-                        <div class="reward-stat-box">
-                            <span class="reward-stat-label">Đã phát</span>
-                            <strong class="reward-stat-val" id="rewardStatIssuedCount">0</strong>
-                            <small class="text-muted">voucher</small>
-                        </div>
-                        <div class="reward-stat-box">
-                            <span class="reward-stat-label">Tổng hạn ngạch</span>
-                            <strong class="reward-stat-val" id="rewardStatTotalQuota">0</strong>
-                            <small class="text-muted">voucher</small>
-                        </div>
-                        <div class="reward-stat-box">
-                            <span class="reward-stat-label">Còn lại</span>
-                            <strong class="reward-stat-val" id="rewardStatRemaining">0</strong>
-                            <small class="text-muted">voucher</small>
-                        </div>
-                        <div class="reward-stat-box">
-                            <span class="reward-stat-label">Giới hạn/User</span>
-                            <strong class="reward-stat-val" id="rewardStatUserLimit">1</strong>
-                            <small class="text-muted">lần</small>
-                        </div>
-                    </div>
-                    <div class="reward-stat-meta mt-2" id="rewardStatTimestamps" style="font-size: 11px; color: var(--muted);"></div>
-                </div>
-
-                <!-- Form Fields -->
-                <form id="rewardCampaignForm" class="mt-3" novalidate>
-                    <input type="hidden" id="rewardCampaignId" value="">
-                    <input type="hidden" id="rewardVideoId" value="">
-                    <input type="hidden" id="rewardPublicationId" value="">
-
-                    <!-- Campaign Name -->
-                    <div class="idol-field">
-                        <label for="rewardNameInput">Tên chiến dịch ưu đãi</label>
-                        <input type="text" id="rewardNameInput" class="idol-input" placeholder="Ví dụ: Voucher xem video Syna 3D - Giảm 15%" maxlength="150" required>
-                    </div>
-
-                    <!-- Discount Type & Value Grid -->
-                    <div class="idol-row">
-                        <div class="idol-field" style="flex: 1;">
-                            <label for="rewardDiscountTypeSelect">Loại giảm giá</label>
-                            <select id="rewardDiscountTypeSelect" class="idol-select">
-                                <option value="percentage">Phần trăm (%)</option>
-                                <option value="fixed">Số tiền cố định (VNĐ)</option>
-                            </select>
-                        </div>
-                        <div class="idol-field" style="flex: 1;">
-                            <label for="rewardDiscountValueInput" id="rewardDiscountValueLabel">Mức giảm (%)</label>
-                            <input type="number" id="rewardDiscountValueInput" class="idol-input" min="1" max="100" value="10" required>
-                            <small class="text-muted" id="rewardDiscountValueHelp" style="font-size: 10.5px;">Nhập từ 1 đến 100%</small>
-                        </div>
-                    </div>
-
-                    <!-- Max Discount (for percent) & Min Order Amount -->
-                    <div class="idol-row">
-                        <div class="idol-field" style="flex: 1;" id="rewardMaxDiscountWrap">
-                            <label for="rewardMaxDiscountInput">Mức giảm tối đa (VNĐ) <span class="field-optional">Tùy chọn</span></label>
-                            <input type="number" id="rewardMaxDiscountInput" class="idol-input" min="0" step="5000" placeholder="Để trống nếu không giới hạn">
-                            <small class="text-muted" style="font-size: 10.5px;">Áp dụng cho giảm phần trăm</small>
-                        </div>
-                        <div class="idol-field" style="flex: 1;">
-                            <label for="rewardMinOrderInput">Đơn hàng tối thiểu (VNĐ)</label>
-                            <input type="number" id="rewardMinOrderInput" class="idol-input" min="0" step="10000" value="0">
-                            <small class="text-muted" style="font-size: 10.5px;">0 = không yêu cầu đơn tối thiểu</small>
-                        </div>
-                    </div>
-
-                    <!-- Dates Grid -->
-                    <div class="idol-row">
-                        <div class="idol-field" style="flex: 1;">
-                            <label for="rewardStartDateInput">Ngày bắt đầu</label>
-                            <input type="datetime-local" id="rewardStartDateInput" class="idol-input" required>
-                        </div>
-                        <div class="idol-field" style="flex: 1;">
-                            <label for="rewardEndDateInput">Ngày kết thúc</label>
-                            <input type="datetime-local" id="rewardEndDateInput" class="idol-input" required>
-                        </div>
-                    </div>
-
-                    <!-- Quota & User Limit Grid -->
-                    <div class="idol-row">
-                        <div class="idol-field" style="flex: 1;">
-                            <div style="display:flex;justify-content:space-between;align-items:baseline;">
-                                <label for="rewardTotalQuotaInput" style="margin-bottom:0;">Tổng hạn ngạch phát hành</label>
-                                <small class="text-muted" id="rewardQuotaHelp" style="font-size: 10.5px;">Tối thiểu 1</small>
+            <section class="studio-flow-panel" id="manualFlow" role="tabpanel" aria-labelledby="manualFlowTab" hidden>
+                <div class="studio-panel wz">
+                    <div class="panel-heading"><div><span class="studio-eyebrow">THỦ CÔNG</span><h2>Tạo chương trình từng bước</h2></div><span class="step-counter" id="manualStepCounter">Bước 1 / 4</span></div>
+                    <ol class="wz-steps" role="list" aria-label="Các bước tạo chương trình">
+                        <li><button type="button" class="wz-step is-active" data-wz-step="1" aria-current="step"><span class="wz-step-no" aria-hidden="true">1</span><span class="wz-step-name"><span class="visually-hidden">Bước 1: </span>Sản phẩm<span class="wz-step-hint visually-hidden"></span></span></button></li>
+                        <li><button type="button" class="wz-step" data-wz-step="2"><span class="wz-step-no" aria-hidden="true">2</span><span class="wz-step-name"><span class="visually-hidden">Bước 2: </span>Mục đích &amp; lịch<span class="wz-step-hint visually-hidden"></span></span></button></li>
+                        <li><button type="button" class="wz-step" data-wz-step="3"><span class="wz-step-no" aria-hidden="true">3</span><span class="wz-step-name"><span class="visually-hidden">Bước 3: </span>Nội dung &amp; nhân vật<span class="wz-step-hint visually-hidden"></span></span></button></li>
+                        <li><button type="button" class="wz-step" data-wz-step="4"><span class="wz-step-no" aria-hidden="true">4</span><span class="wz-step-name"><span class="visually-hidden">Bước 4: </span>Xem lại &amp; tạo<span class="wz-step-hint visually-hidden"></span></span></button></li>
+                    </ol>
+                    <form id="manualForm" class="wz-form" novalidate>
+                        <section class="wz-step-panel" id="manualStep1" aria-labelledby="manualStepTitle1">
+                            <h3 class="wz-step-title" id="manualStepTitle1" tabindex="-1">Bước 1 · Chọn sản phẩm</h3>
+                            <p class="wz-lead">Lọc theo danh mục, kho, bán hàng rồi tick các sản phẩm bạn muốn. Lựa chọn được giữ lại khi bạn đổi bộ lọc.</p>
+                            <div class="wz-split">
+                                <div class="wz-filters" id="manualFilters">
+                                    <fieldset class="wz-group">
+                                        <legend>1 · Danh mục sản phẩm <span>chọn tối đa 1 nhánh</span></legend>
+                                        <label class="wz-field">Nhóm<select id="manualCategoryLevel1" class="idol-select"><option value="">Không giới hạn (Tất cả <?= $wzNumber($wzTotal) ?> sản phẩm)</option><?php foreach ($wzGroupOptions as [$wzValue, $wzLabel, $wzCountText]): ?><option value="<?= $wzEsc($wzValue) ?>"><?= $wzEsc($wzLabel) ?> (<?= $wzEsc($wzCountText) ?> sản phẩm)</option><?php endforeach; ?></select></label>
+                                        <label class="wz-field">Danh mục<select id="manualCategoryLevel2" class="idol-select" disabled><option value="">Chọn nhóm trước</option></select></label>
+                                        <label class="wz-field">Phân loại<select id="manualCategoryLevel3" class="idol-select" disabled><option value="">Chọn danh mục trước</option></select></label>
+                                    </fieldset>
+                                    <fieldset class="wz-group">
+                                        <legend>2 · Kho &amp; hạn sử dụng <span>mỗi nhóm chọn 1</span></legend>
+                                        <div class="wz-options" role="radiogroup" aria-label="Hạn sử dụng"><?php $wzRadios('manualExpiry', $wzExpiry); ?></div>
+                                        <div class="wz-options" role="radiogroup" aria-label="Tồn kho"><?php $wzRadios('manualStock', $wzStock); ?></div>
+                                        <label class="wz-field">Phạm vi kho<select id="manualWarehouseMode" class="idol-select"><option value="">Tất cả kho</option><option value="warehouse">Chỉ lấy một kho</option><option value="batch">Chỉ lấy một lô hàng</option></select></label>
+                                        <label class="wz-field" id="manualWarehouseValue" hidden><span id="manualWarehouseLabel">Tên hoặc mã kho</span><input id="manualWarehouse" class="idol-input" maxlength="80" placeholder="Ví dụ: KHO-HN-01" autocomplete="off"></label>
+                                    </fieldset>
+                                    <fieldset class="wz-group">
+                                        <legend>3 · Phân tích bán hàng <span>chọn 1</span></legend>
+                                        <div class="wz-options" role="radiogroup" aria-label="Phân tích bán hàng"><?php $wzRadios('manualSales', $wzSales); ?></div>
+                                    </fieldset>
+                                    <fieldset class="wz-group">
+                                        <legend>4 · Số lượng &amp; thương hiệu <span>mỗi loại chỉ chọn 1</span></legend>
+                                        <label class="wz-field">Số lượng<select id="manualQuantity" class="idol-select"><option value="">Tự chọn phù hợp</option><option value="1">Top 1</option><option value="3">Top 3</option><option value="5">Top 5</option><option value="10">Top 10</option></select></label>
+                                        <label class="wz-field">Thương hiệu ưu tiên <span class="field-optional">Không bắt buộc</span><input id="manualBrand" class="idol-input" maxlength="80" placeholder="Ví dụ: CeraVe · để trống nếu muốn nhiều thương hiệu" autocomplete="off"></label>
+                                        <div class="wz-options">
+                                            <label class="wz-option"><input type="checkbox" id="manualBrandCap" value="1"><span>Mỗi thương hiệu tối đa 2 sản phẩm</span></label>
+                                            <label class="wz-option"><input type="checkbox" id="manualEnoughStock" value="1"><span>Ưu tiên sản phẩm còn đủ hàng để live</span></label>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                                <div class="wz-results" id="manualResults" role="region" aria-labelledby="manualResultsTitle" aria-busy="false">
+                                    <div class="wz-results-head"><h4 id="manualResultsTitle">Sản phẩm phù hợp</h4><span class="wz-selected-count" id="manualSelectedCount">0 đã chọn</span></div>
+                                    <div class="wz-toolbar">
+                                        <div class="studio-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" id="manualSearch" class="idol-input" placeholder="Lọc nhanh tên hoặc mã SP trong kết quả…" aria-label="Lọc nhanh tên hoặc mã sản phẩm trong kết quả" autocomplete="off"></div>
+                                        <button type="button" class="text-button" id="manualSelectAll">Chọn tất cả</button>
+                                        <button type="button" class="text-button" id="manualDeselect" title="Bỏ chọn mọi sản phẩm đã chọn" disabled>Bỏ chọn</button>
+                                    </div>
+                                    <div class="wz-live" aria-live="polite">
+                                        <p class="wz-status" id="manualResultStatus"></p>
+                                        <ul class="wz-notes" id="manualResultNotes" role="list" hidden></ul>
+                                    </div>
+                                    <div class="wz-error" id="manualResultError" role="alert" hidden>
+                                        <p id="manualResultErrorText"></p>
+                                        <button type="button" class="idol-btn secondary" id="manualRetry"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Thử lại</button>
+                                    </div>
+                                    <ul class="wz-product-list" id="manualProductList" role="list" aria-label="Danh sách sản phẩm" hidden></ul>
+                                    <div class="wz-chips" id="manualChips" role="group" aria-label="Sản phẩm đã chọn" hidden></div>
+                                </div>
                             </div>
-                            <input type="number" id="rewardTotalQuotaInput" class="idol-input" min="1" max="100000" value="100" required style="margin-top:4px;">
-                        </div>
-                        <div class="idol-field" style="flex: 1;">
-                            <label for="rewardUserLimitInput">Giới hạn nhận / khách hàng</label>
-                            <input type="number" id="rewardUserLimitInput" class="idol-input" min="1" max="10" value="1" required>
-                            <small class="text-muted" style="font-size: 10.5px;">Mặc định mỗi khách nhận 1 lần</small>
-                        </div>
-                    </div>
+                        </section>
 
-                    <!-- Stacking Policies -->
-                    <div class="idol-field">
-                        <label style="font-weight: 650; margin-bottom: 6px;">Chính sách cộng dồn ưu đãi</label>
-                        <div class="reward-policy-box">
-                            <label class="reward-checkbox-row">
-                                <input type="checkbox" id="rewardStackFlashSale">
-                                <span>
-                                    <strong>Cho phép áp dụng chung với Flash Sale</strong>
-                                    <small class="d-block text-muted">Mặc định tắt. Khi bật, khách hàng có thể dùng voucher này cho sản phẩm đang trong phiên Flash Sale.</small>
-                                </span>
-                            </label>
-                            <label class="reward-checkbox-row mt-2">
-                                <input type="checkbox" id="rewardStackOther">
-                                <span>
-                                    <strong>Cho phép cộng dồn với voucher khuyến mãi khác</strong>
-                                    <small class="d-block text-muted">Mặc định tắt. Không khuyến khích để tránh chồng chéo chiết khấu.</small>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Active Switch -->
-                    <div class="idol-field">
-                        <label class="reward-checkbox-row active-toggle-row">
-                            <input type="checkbox" id="rewardIsActive" checked>
-                            <span>
-                                <strong>Kích hoạt chiến dịch ngay</strong>
-                                <small class="d-block text-muted">Mỗi video chỉ được có tối đa 1 chiến dịch voucher ở trạng thái kích hoạt.</small>
-                            </span>
-                        </label>
-                    </div>
-
-                    <!-- Applicable Products Section -->
-                    <div class="pub-products-section mt-3">
-                        <div class="field-heading">
-                            <label style="font-weight: 650; margin-bottom: 0;">Sản phẩm áp dụng voucher</label>
-                            <span class="selection-count" id="rewardSelectedProductCount">0 đã chọn</span>
-                        </div>
-                        <p class="idol-note" style="margin-top: 2px;">Voucher thưởng sẽ chỉ có hiệu lực cho các sản phẩm được chọn bên dưới khi thanh toán.</p>
-
-                        <div class="pub-search-bar mt-2">
-                            <div class="studio-search" style="flex: 1;">
-                                <i class="bi bi-search" aria-hidden="true"></i>
-                                <input id="rewardProductSearchInput" class="idol-input" type="search" placeholder="Tìm sản phẩm áp dụng..." autocomplete="off">
+                        <section class="wz-step-panel" id="manualStep2" aria-labelledby="manualStepTitle2" hidden>
+                            <h3 class="wz-step-title" id="manualStepTitle2" tabindex="-1">Bước 2 · Mục đích &amp; lịch phát</h3>
+                            <p class="wz-lead">Chọn mục đích trước vì nó quyết định phong cách dẫn nào được dùng ở bước sau.</p>
+                            <div class="wz-purposes" role="radiogroup" aria-label="Chế độ phát sóng">
+                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="product_video" checked><span><strong>Video sản phẩm <em>Mặc định</em></strong><small>Không phát sóng. Nói giá bán và ưu đãi đang chạy, lấy từ hệ thống. Video tự ẩn khỏi trang sản phẩm khi giá đổi hoặc ưu đãi hết hạn.</small></span></label>
+                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_and_product"><span><strong>Livestream + video sản phẩm</strong><small>Livestream được nói giá, khuyến mãi và kêu gọi chốt đơn. Phần giới thiệu kèm giá tự lên trang sản phẩm sau khi phát xong và tự ẩn khi giá không còn đúng.</small></span></label>
+                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_only"><span><strong>Chỉ livestream</strong><small>Được nói giá live, khuyến mãi có hạn, kêu gọi chốt đơn. Không lưu video lên trang sản phẩm.</small></span></label>
                             </div>
-                            <button type="button" class="text-button" id="rewardSelectAllLinked">Chọn các sản phẩm của video</button>
-                            <button type="button" class="text-button" id="rewardClearAllProducts">Bỏ chọn hết</button>
+                            <div id="manualLiveFields" hidden>
+                                <div class="idol-row">
+                                    <div class="idol-field"><label for="manualScheduledAt">Ngày &amp; giờ phát</label><input id="manualScheduledAt" type="datetime-local" class="idol-input"></div>
+                                    <div class="idol-field"><label for="manualDuration">Thời lượng <span class="field-optional">phút</span></label><input id="manualDuration" type="number" min="1" max="720" value="60" class="idol-input"></div>
+                                </div>
+                                <p class="idol-note" id="manualPrepNote"></p>
+                                <fieldset class="wz-platform-group">
+                                    <legend>Nơi phát chương trình</legend>
+                                    <div class="platforms">
+                                        <label class="platform"><input type="checkbox" name="manualPlatform" value="internal" checked><i class="bi bi-display" aria-hidden="true"></i><span>Xem nội bộ</span></label>
+                                        <label class="platform"><input type="checkbox" name="manualPlatform" value="youtube"><i class="bi bi-youtube" aria-hidden="true"></i><span>YouTube</span></label>
+                                        <label class="platform"><input type="checkbox" name="manualPlatform" value="facebook"><i class="bi bi-facebook" aria-hidden="true"></i><span>Facebook</span></label>
+                                    </div>
+                                </fieldset>
+                                <p class="idol-note">YouTube và Facebook cần được cấu hình khóa phát trước khi lên sóng.</p>
+                                <p class="wz-warn" id="manualRtmpWarn" role="status" hidden></p>
+                            </div>
+                            <div class="approval-reminder" id="manualProductVideoNote"><i class="bi bi-magic" aria-hidden="true"></i><div><strong>Video sản phẩm tự duyệt và tự đăng.</strong><p>Kịch bản qua bộ kiểm tra sẽ được tạo video ngay, rồi tự lên trang sản phẩm.</p></div></div>
+                            <div class="approval-reminder" id="manualApprovalNote" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i><div><strong>Bạn duyệt xong, video mới được tạo.</strong><p>Kịch bản sẽ xuất hiện trong chương trình để bạn chỉnh sửa và chấp nhận.</p></div></div>
+                        </section>
+
+                        <section class="wz-step-panel" id="manualStep3" aria-labelledby="manualStepTitle3" hidden>
+                            <h3 class="wz-step-title" id="manualStepTitle3" tabindex="-1">Bước 3 · Nội dung &amp; nhân vật</h3>
+                            <div class="idol-field"><label for="manualName">Tên chương trình <span class="field-optional">Không bắt buộc</span></label><input id="manualName" class="idol-input" maxlength="160" placeholder="Ví dụ: Một chút chăm da, tối thứ Sáu" autocomplete="off"></div>
+                            <div class="idol-field"><label for="manualContentMode">Cách kể câu chuyện</label><select id="manualContentMode" class="idol-select"><option value="Product Intro">Giới thiệu sản phẩm</option><option value="Problem-Solution">Vấn đề &amp; giải pháp</option><option value="Scientific Review">Phân tích thành phần</option></select></div>
+                            <fieldset class="wz-group wz-styles">
+                                <legend>Cách dẫn chuyện của Syna <span>có thể chọn nhiều</span></legend>
+                                <div class="wz-style-grid" id="manualStyleGrid"></div>
+                                <p class="wz-style-note" id="manualStyleNote" hidden></p>
+                            </fieldset>
+                            <div class="idol-field"><label for="manualCharacter">Nhân vật dẫn chương trình</label><select id="manualCharacter" class="idol-select"><option value="syna_3d">Syna 3D · mèo rau má của SkinSyntax</option><option value="custom">Ảnh hoặc video nhân vật riêng</option></select><p class="idol-note" id="manualSynaHelp">Syna nói theo kịch bản bạn duyệt; giữ ảnh, tên, giá sản phẩm và có bảng thành phần riêng. Không cần tải video mẫu. Bản này hỗ trợ khung ngang 16:9.</p></div>
+                            <div class="idol-field"><label for="manualFormat">Khung hình</label><select id="manualFormat" class="idol-select"><option value="16:9">Ngang 16:9 · phù hợp livestream</option><option value="9:16">Dọc 9:16 · phù hợp điện thoại</option></select></div>
+                            <div class="asset-grid">
+                                <div class="asset-picker" id="manualCustomAvatar" hidden>
+                                    <label class="asset-drop" for="manualAvatarFile"><span class="asset-icon"><i class="bi bi-person-video3" aria-hidden="true"></i></span><strong>Nhân vật chính</strong><span id="manualAvatarFilename">Chọn video hoặc ảnh</span><small>Video ≤ 35 MB · ảnh ≤ 10 MB</small><input id="manualAvatarFile" type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"></label>
+                                    <img id="manualAvatarImage" class="asset-preview" alt="Xem trước nhân vật">
+                                    <video id="manualAvatarVideo" class="asset-preview" muted loop controls playsinline aria-label="Xem trước video nhân vật"></video>
+                                    <div class="asset-caption"><span class="small-tag">Gợi ý</span> Video 5–30 giây có cử động tự nhiên.</div>
+                                </div>
+                                <div class="asset-picker">
+                                    <label class="asset-drop" for="manualBackgroundFile"><span class="asset-icon peach"><i class="bi bi-image" aria-hidden="true"></i></span><strong>Phông nền</strong><span id="manualBackgroundFilename">Chọn ảnh nền · tùy chọn</span><small>PNG, JPG, WebP ≤ 10 MB</small><input id="manualBackgroundFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
+                                    <img id="manualBackgroundImage" class="asset-preview" alt="Xem trước phông nền">
+                                    <div class="asset-caption">Ảnh ngang 1920 × 1080 cho khung 16:9.</div>
+                                </div>
+                            </div>
+                            <div id="manualAvatarNote" class="avatar-mode-note" hidden>Chọn nhân vật để xem trước tại đây.</div>
+                            <section class="syna-live-preview" id="manualSynaPreview" aria-labelledby="manualSynaTitle">
+                                <div class="syna-live-preview-heading">
+                                    <div><span class="studio-eyebrow">NHÂN VẬT CỦA BẠN</span><h3 id="manualSynaTitle">Syna 3D</h3></div>
+                                    <span class="small-tag">Xem thử chuyển động</span>
+                                </div>
+                                <p class="idol-note">Khung dưới chỉ minh họa chuyển động. Video chương trình sẽ dùng sản phẩm, giá và giọng đọc của kịch bản bạn duyệt — không dùng lại clip mẫu này.</p>
+                                <iframe class="syna-live-preview-frame" title="Bản thử Syna 3D cho livestream" src="<?= BASE_URL ?>/ai-idol-mascot-3d/index.html?embed=1&amp;rev=syna-native-v3" loading="lazy"></iframe>
+                                <p class="idol-note">Khi tạo video, cần bật Docker và dịch vụ Syna local. Không sử dụng Wav2Lip hay SadTalker cho Syna.</p>
+                            </section>
+                            <details class="studio-tips"><summary>Chuẩn bị hình ảnh thế nào cho đẹp?</summary><p>Dùng video 720p, camera cố định, mặt rõ và có sẵn chớp mắt, chuyển động đầu, vai hoặc tay. Hệ thống giữ các chuyển động đó và tạo lại khẩu hình.</p><p>Với ảnh tĩnh, chỉ miệng và đầu cử động nhẹ. Với video, phông nền đã có trong clip vẫn được giữ; ảnh nền bạn chọn chỉ lấp phần viền khi khác tỉ lệ.</p></details>
+                        </section>
+
+                        <section class="wz-step-panel" id="manualStep4" aria-labelledby="manualStepTitle4" hidden>
+                            <h3 class="wz-step-title" id="manualStepTitle4" tabindex="-1">Bước 4 · Xem lại &amp; tạo</h3>
+                            <section class="wz-intent" aria-labelledby="manualIntentTitle">
+                                <h4 id="manualIntentTitle">Ý định của bạn</h4>
+                                <p id="manualIntent" aria-live="polite"></p>
+                            </section>
+                            <div class="wz-review" id="manualReview"></div>
+                        </section>
+
+                        <div class="studio-message" id="manualMessage" role="alert" hidden></div>
+                        <div class="wz-footer">
+                            <p class="wz-summary" id="manualSummary"></p>
+                            <div class="wz-nav">
+                                <button type="button" class="idol-btn secondary" id="manualPrev" hidden><i class="bi bi-arrow-left" aria-hidden="true"></i> Quay lại</button>
+                                <button type="button" class="idol-btn primary" id="manualNext">Tiếp tục <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+                                <button type="submit" class="idol-btn secondary wz-create" id="manualCreateReview" data-approval="MANUAL" hidden><span>👤 Tạo &amp; duyệt kịch bản</span><small>AI viết và tự sửa xong sẽ chờ bạn duyệt kịch bản rồi mới tạo video</small></button>
+                                <button type="submit" class="idol-btn primary wz-create" id="manualCreateAuto" data-approval="AUTO" hidden><span>⚡ Tạo &amp; tự đăng</span><small>Tự động hoàn toàn: AI viết, tự sửa, dựng video và đăng — không cần duyệt</small></button>
+                            </div>
                         </div>
-
-                        <!-- Selected Chips -->
-                        <div id="rewardSelectedChips" class="selected-chips mt-2" hidden></div>
-
-                        <!-- Product List -->
-                        <div class="pub-product-list mt-2" id="rewardProductList" role="group" aria-label="Danh sách sản phẩm áp dụng"></div>
-                    </div>
-                </form>
-            </div>
-            <div class="pub-modal-footer">
-                <button type="button" class="idol-btn danger-outline" id="rewardToggleActiveBtn" hidden>
-                    <i class="bi bi-pause-circle me-1"></i> Tắt chiến dịch
-                </button>
-                <div style="flex: 1;"></div>
-                <button type="button" class="idol-btn secondary" id="closeRewardModalFooterBtn">Đóng</button>
-                <button type="button" class="idol-btn primary" id="rewardModalSubmitBtn">
-                    <i class="bi bi-check2-circle me-1"></i> Lưu cấu hình voucher
-                </button>
-            </div>
+                    </form>
+                </div>
+            </section>
         </div>
+        <aside class="studio-activity" id="activityPanel" aria-label="Hoạt động">
+            <section class="studio-panel act">
+                <div class="panel-heading"><div><span class="studio-eyebrow">HOẠT ĐỘNG</span><h2>Việc Syna đang làm</h2></div><button type="button" class="icon-button" id="activityRefresh" aria-label="Làm mới hoạt động" title="Làm mới"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button></div>
+                <div class="act-filters" role="group" aria-label="Lọc hoạt động">
+                    <button type="button" class="act-filter is-active" data-act-filter="all" aria-pressed="true">Tất cả <span class="act-count">0</span></button>
+                    <button type="button" class="act-filter" data-act-filter="needs_you" aria-pressed="false">Cần bạn <span class="act-count">0</span></button>
+                    <button type="button" class="act-filter" data-act-filter="scheduled" aria-pressed="false">Đã lên lịch <span class="act-count">0</span></button>
+                </div>
+                <div class="visually-hidden" id="activityLive" role="status" aria-live="polite"></div>
+                <div class="act-list" id="activityList" aria-busy="true"><p class="act-empty">Đang tải hoạt động…</p></div>
+                <div class="detail act-detail" id="activityDetail" role="region" aria-labelledby="actDetailTitle" tabindex="-1" hidden>
+                    <div id="activityDetailBody"></div>
+                    <div class="studio-message" id="activityDetailMessage" role="alert" hidden></div>
+                </div>
+            </section>
+        </aside>
     </div>
 </main>
 <script>
-    window.AI_IDOL_CSRF = <?= json_encode($csrfToken ?? '') ?>;
-    window.AI_IDOL_PRODUCTS = <?= json_encode(array_values(array_map(static function($p) use ($studioEscape) {
-        $rawImage = explode('|', (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''))[0];
-        return [
-            'id' => (string)($p['ma_san_pham'] ?? $p['id'] ?? ''),
-            'name' => (string)($p['ten_san_pham'] ?? 'Sản phẩm chưa đặt tên'),
-            'image' => resolve_image_url(trim($rawImage)),
-            'price' => (float)($p['gia_ban'] ?? 0)
-        ];
-    }, $products)), JSON_UNESCAPED_UNICODE) ?>;
+window.AI_IDOL_CSRF = <?= json_encode($studioCsrf, $studioJsonFlags) ?>;
 </script>
-<script src="<?= BASE_URL ?>/assets/js/ai-idol-studio.js?v=<?= filemtime($studioAssets . '/js/ai-idol-studio.js') ?>" defer></script>
+<script>
+window.__IDOL_CATALOG__ = <?= json_encode($catalogTree ?? [], $studioJsonFlags) ?>;
+window.__IDOL_FILTER_COUNTS__ = <?= json_encode($filterCounts ?? [], $studioJsonFlags) ?>;
+</script>
+<?php foreach ($studioScripts as $studioScript): ?>
+<script src="<?= $studioAssetUrl('js/' . $studioScript) ?>" defer></script>
+<?php endforeach; ?>

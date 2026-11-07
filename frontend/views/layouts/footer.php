@@ -2,6 +2,7 @@
 <script src="<?= BASE_URL ?>/assets/js/bootstrap.bundle.min.js" defer></script>
 <script src="<?= BASE_URL ?>/assets/js/live-search.js" defer></script>
 <script src="<?= BASE_URL ?>/assets/js/smart-search.js" defer></script>
+<script src="<?= BASE_URL ?>/assets/js/live-filter.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/live-filter.js') ?: '1' ?>" defer></script>
 
 <footer class="site-footer">
   <div class="container">

@@ -1,0 +1,285 @@
+[
+  {
+    "case": "guest_retinol",
+    "endpoint": "http://localhost:8080/index.php?r=ai_chat_api",
+    "payload": {
+      "message": "bạn kiếm cho mình 1 chai retinol đi"
+    },
+    "errors": [],
+    "response": {
+      "ok": true,
+      "answer": "Mình tìm được 1 lựa chọn sản phẩm chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml](index.php?r=chitiet&id=244) — 367.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+      "conflicts": [],
+      "products": [
+        {
+          "id": "244",
+          "name": "Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml",
+          "brand": "Some By Mi",
+          "price": 367000,
+          "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-serum-some-by-mi-retinol-01-ngua-lao-hoa-cang-bong-da-30ml_jRJ6i3FK3vDzjDVA_img_450x450_31d6f9_fit_center.png",
+          "detail_url": "/index.php?r=chitiet&id=244",
+          "description": "",
+          "ingredients": ""
+        }
+      ],
+      "fallback": false,
+      "fallback_reason": "",
+      "status_message": "",
+      "fallback_note": "",
+      "pipeline_mode": "consultation_v2",
+      "query_type": "simple single-intent query",
+      "intent_mode": "search",
+      "eval_scores": null,
+      "latency": 5.21
+    }
+  },
+  {
+    "case": "guest_toner_after_retinol",
+    "endpoint": "http://localhost:8080/index.php?r=ai_chat_api",
+    "payload": {
+      "message": "Gợi ý cho tôi một vài sản phẩm thuộc nhóm: Toner / Nước Cân Bằng Da",
+      "history": [
+        {
+          "role": "user",
+          "content": "bạn kiếm cho mình 1 chai retinol đi"
+        },
+        {
+          "role": "assistant",
+          "content": "Mình chưa có sản phẩm retinol nào."
+        }
+      ]
+    },
+    "errors": [],
+    "response": {
+      "ok": true,
+      "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Dung Dịch Cân Bằng Da Bioderma Cho Da Dầu, Hỗn Hợp 200ml](index.php?r=chitiet&id=1589) — 399.000đ.\n- [Nước Hoa Hồng L'Oreal Làm Giảm Nếp Nhăn 200ml](index.php?r=chitiet&id=1461) — 179.000đ.\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+      "conflicts": [],
+      "products": [
+        {
+          "id": "1589",
+          "name": "Dung Dịch Cân Bằng Da Bioderma Cho Da Dầu, Hỗn Hợp 200ml",
+          "brand": "Bioderma",
+          "price": 399000,
+          "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-dung-dich-can-bang-da-bioderma-cho-da-dau-hon-hop-200ml-1745397050_img_450x450_31d6f9_fit_center.jpg",
+          "detail_url": "/index.php?r=chitiet&id=1589",
+          "description": "",
+          "ingredients": ""
+        },
+        {
+          "id": "1461",
+          "name": "Nước Hoa Hồng L'Oreal Làm Giảm Nếp Nhăn 200ml",
+          "brand": "L'Oreal",
+          "price": 179000,
+          "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-100150036-1695972071_img_450x450_31d6f9_fit_center.jpg",
+          "detail_url": "/index.php?r=chitiet&id=1461",
+          "description": "",
+          "ingredients": ""
+        },
+        {
+          "id": "1907",
+          "name": "Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml",
+          "brand": "B.O.M",
+          "price": 458000,
+          "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-can-bang-b-o-m-sang-da-ho-tro-mo-nep-nhan-150ml-1726114438_img_450x450_31d6f9_fit_center.jpg",
+          "detail_url": "/index.php?r=chitiet&id=1907",
+          "description": "",
+          "ingredients": ""
+        }
+      ],
+      "fallback": false,
+      "fallback_reason": "",
+      "status_message": "",
+      "fallback_note": "",
+      "pipeline_mode": "consultation_v2",
+      "query_type": "simple single-intent query",
+      "intent_mode": "search",
+      "eval_scores": null,
+      "latency": 5.61
+    }
+  },
+  {
+    "case": "profile_toner",
+    "endpoint": "http://localhost:5001/api/chat/auto",
+    "payload": {
+      "message": "Gợi ý cho tôi một vài sản phẩm phù hợp với da tôi thuộc nhóm: Toner / Nước Cân Bằng Da",
+      "customer_profile": {
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "concerns": [
+          "khô căng",
+          "bong tróc"
+        ],
+        "avoid_ingredients": [
+          "Không có / Không quan tâm"
+        ]
+      }
+    },
+    "errors": [],
+    "response": {
+      "answer": "Mình tìm được 3 lựa chọn Toner / Nước Cân Bằng Da để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml](index.php?r=chitiet&id=1907) — 458.000đ.\n- [Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=265) — 254.000đ.\n- [Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml](index.php?r=chitiet&id=4) — 201.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+      "conflicts": [],
+      "diagnostics": {
+        "answer_validation": [
+          "unsupported_suitability",
+          "unknown_product_link"
+        ],
+        "candidate_count": 94,
+        "category": "Toner / Nước Cân Bằng Da",
+        "rejected_reasons": [],
+        "selected_count": 3
+      },
+      "eval_scores": null,
+      "fallback": false,
+      "intent_mode": "search",
+      "latency": 6.91,
+      "ok": true,
+      "pipeline_mode": "consultation_v2",
+      "products": [
+        {
+          "brand": "B.O.M",
+          "detail_url": "index.php?r=chitiet&id=1907",
+          "id": "1907",
+          "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-nuoc-can-bang-b-o-m-sang-da-ho-tro-mo-nep-nhan-150ml-1726114438_img_450x450_31d6f9_fit_center.jpg",
+          "name": "Nước Cân Bằng B.O.M Sáng Da, Hỗ Trợ Mờ Nếp Nhăn 150ml",
+          "price": 458000,
+          "summary": "• 5 loại Peptide: giúp cải thiện nếp nhăn và cho da vùng săn chắc, đàn hồi hơn.\r\n• Glyceryl Glucoside và 8 loại Axit Hya"
+        },
+        {
+          "brand": "Klairs",
+          "detail_url": "index.php?r=chitiet&id=265",
+          "id": "265",
+          "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-nuoc-hoa-hong-klairs-danh-cho-da-nhay-cam-180ml_krfo98Zw7xbxAsR5_img_450x450_31d6f9_fit_center.png",
+          "name": "Nước Hoa Hồng Klairs Dành Cho Da Nhạy Cảm 180ml",
+          "price": 254000,
+          "summary": "• Sodium Hyaluronate, β\r\n-glucan: Giúp da được cấp ẩm tức thì và giữ ẩm cho da.\r\n• Chiết xuất rau má: Giúp làm dịu da, g"
+        },
+        {
+          "brand": "Klairs",
+          "detail_url": "index.php?r=chitiet&id=4",
+          "id": "4",
+          "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-nuoc-hoa-hong-khong-mui-klairs-danh-cho-da-nhay-cam-180ml_EVHPvYCmEoHZH66H_img_450x450_31d6f9_fit_center.png",
+          "name": "Nước Hoa Hồng Klairs Không Mùi Cho Da Nhạy Cảm 180ml",
+          "price": 201000,
+          "summary": "• Sodium Hyaluronate, β\r\n-glucan: Giúp da được cấp ẩm tức thì và giữ ẩm cho da.\r\n• Chiết xuất rau má: Giúp làm dịu da, g"
+        }
+      ]
+    }
+  },
+  {
+    "case": "profile_retinol_decision",
+    "endpoint": "http://localhost:5001/api/chat/auto",
+    "payload": {
+      "message": "tôi có nên mua 1 chai retinol ở hiện tại không",
+      "customer_profile": {
+        "skin_type": "Da dầu/Hỗn hợp dầu",
+        "concerns": [
+          "khô căng",
+          "bong tróc"
+        ],
+        "avoid_ingredients": [
+          "Không có / Không quan tâm"
+        ]
+      }
+    },
+    "errors": [],
+    "response": {
+      "answer": "Nếu tình trạng khô căng, bong tróc hoặc đỏ rát bạn đã nêu vẫn còn, mình chưa khuyên bắt đầu retinol ngay. Retinoid có thể làm da khô và kích ứng thêm; nên trao đổi với bác sĩ da liễu trước khi bắt đầu nếu da đang nhạy cảm. [Hướng dẫn của AAD](https://www.aad.org/public/everyday-care/skin-care-secrets/anti-aging/retinoid-retinol)\n\nHiện da bạn còn bong tróc hoặc bị rát khi thoa sản phẩm không?",
+      "conflicts": [],
+      "eval_scores": null,
+      "fallback": false,
+      "intent_mode": "knowledge",
+      "latency": 2.04,
+      "ok": true,
+      "pipeline_mode": "consultation_v2",
+      "products": []
+    }
+  },
+  {
+    "case": "retinol_budget_5000",
+    "endpoint": "http://localhost:8080/index.php?r=ai_chat_api",
+    "payload": {
+      "message": "Tìm 1 chai retinol, ngân sách tối đa 5.000 đồng"
+    },
+    "errors": [],
+    "response": {
+      "ok": true,
+      "answer": "Mình đã kiểm tra nhóm sản phẩm chứa retinol, nhưng chưa chọn được sản phẩm đáp ứng đồng thời các điều kiện: ngân sách hoặc giá chưa xác định. Bạn muốn kiểm tra một sản phẩm cụ thể hay điều chỉnh khoảng giá?",
+      "conflicts": [],
+      "products": [],
+      "fallback": false,
+      "fallback_reason": "",
+      "status_message": "",
+      "fallback_note": "",
+      "pipeline_mode": "consultation_v2",
+      "query_type": "simple single-intent query",
+      "intent_mode": "search",
+      "eval_scores": null,
+      "latency": 3.39
+    }
+  },
+  {
+    "case": "category_switch",
+    "endpoint": "http://localhost:5001/api/chat/auto",
+    "payload": {
+      "message": "Gợi ý cho tôi một vài sản phẩm thuộc nhóm: Hỗ Trợ Trị Mụn",
+      "conversation_history": [
+        {
+          "role": "user",
+          "content": "tìm toner"
+        },
+        {
+          "role": "assistant",
+          "content": "Mình chưa có toner nào."
+        }
+      ]
+    },
+    "errors": [],
+    "response": {
+      "answer": "Mình tìm được 3 lựa chọn Hỗ Trợ Trị Mụn để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Gel Giảm Mụn Naris Acmedica Ngăn Ngừa Sẹo Thâm 25g](index.php?r=chitiet&id=1961) — 349.000đ.\n- [Gel Dưỡng SVR Giảm Mụn & Loại Bỏ Dầu Cho Da 40ml](index.php?r=chitiet&id=589) — 361.000đ.\n- [Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml](index.php?r=chitiet&id=964) — 514.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+      "conflicts": [],
+      "diagnostics": {
+        "answer_validation": [
+          "unknown_product_link"
+        ],
+        "candidate_count": 66,
+        "category": "Hỗ Trợ Trị Mụn",
+        "rejected_reasons": [],
+        "selected_count": 3
+      },
+      "eval_scores": null,
+      "fallback": false,
+      "intent_mode": "search",
+      "latency": 7.27,
+      "ok": true,
+      "pipeline_mode": "consultation_v2",
+      "products": [
+        {
+          "brand": "Naris Cosmetics",
+          "detail_url": "index.php?r=chitiet&id=1961",
+          "id": "1961",
+          "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-248700037-1729048306_img_450x450_31d6f9_fit_center.jpg",
+          "name": "Gel Giảm Mụn Naris Acmedica Ngăn Ngừa Sẹo Thâm 25g",
+          "price": 349000,
+          "summary": "• Hyaluronic Acid: Cung cấp độ ẩm cho da và ngăn ngừa hiện tượng mất nước.\r\n• Glycerin: Hoạt chất giữ ẩm tự nhiên.\r\n• 6 "
+        },
+        {
+          "brand": "SVR",
+          "detail_url": "index.php?r=chitiet&id=589",
+          "id": "589",
+          "image_url": "https://media.hcdn.vn/catalog/product/f/a/facebook-dynamic-gel-duong-svr-giam-mun-loai-bo-dau-cho-da-40ml-moi-1751448897_img_450x450_31d6f9_fit_center.jpg",
+          "name": "Gel Dưỡng SVR Giảm Mụn & Loại Bỏ Dầu Cho Da 40ml",
+          "price": 361000,
+          "summary": "• 14% Gluconolactone: là một acid polyhydroxy (PHA) có hiệu quả trong việc điều chỉnh kết cấu da như AHA nhưng được dung"
+        },
+        {
+          "brand": "La Roche-Posay",
+          "detail_url": "index.php?r=chitiet&id=964",
+          "id": "964",
+          "image_url": "https://media.hcdn.vn/catalog/product/p/r/promotions-auto-kem-duong-la-roche-posay-lam-giam-mun-chuyen-biet-15ml_rYvkgFgUVswYn1AT_img_450x450_31d6f9_fit_center.png",
+          "name": "Kem Giảm Mụn La Roche-Posay Dành Cho Mụn Sưng Đỏ 15ml",
+          "price": 514000,
+          "summary": "• Niacinamide giúp làm dịu da, ngăn chặn sự xuất hiện của những đốm mụn.\r\n• Piroctone olamine và glycacil giúp diệt khuẩ"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "CHAT-049": {
+    "parsed_budget": 350000,
+    "expected_budget": null
+  },
+  "CHAT-058": {
+    "current_exclusions": [
+      "hương liệu"
+    ],
+    "expected_exclusions": []
+  },
+  "notes": "Direct production pure functions; no model/network. Corroborates API diagnostics; not a substitute for full end-to-end tests."
+}

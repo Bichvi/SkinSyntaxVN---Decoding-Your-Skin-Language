@@ -1,0 +1,30 @@
+{
+  "answer": "Mình tìm được 1 lựa chọn sản phẩm chứa retinol để bạn tham khảo, đã lọc theo yêu cầu trong dữ liệu cửa hàng:\n\n- [Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml](index.php?r=chitiet&id=244) — 367.000đ.\n\nBạn muốn mình phân tích kỹ lựa chọn nào trước?",
+  "conflicts": [],
+  "diagnostics": {
+    "answer_validation": [
+      "unknown_product_link"
+    ],
+    "candidate_count": 166,
+    "category": null,
+    "rejected_reasons": [],
+    "selected_count": 1
+  },
+  "eval_scores": null,
+  "fallback": false,
+  "intent_mode": "search",
+  "latency": 4.67,
+  "ok": true,
+  "pipeline_mode": "consultation_v2",
+  "products": [
+    {
+      "brand": "Some By Mi",
+      "detail_url": "index.php?r=chitiet&id=244",
+      "id": "244",
+      "image_url": "https://media.hcdn.vn/catalog/product/p/r/special-deal-serum-some-by-mi-retinol-01-ngua-lao-hoa-cang-bong-da-30ml_jRJ6i3FK3vDzjDVA_img_450x450_31d6f9_fit_center.png",
+      "name": "Serum Some By Mi Retinol 0.1% Ngừa Lão Hóa, Căng Bóng Da 30ml",
+      "price": 367000,
+      "summary": "• Retinol 0,1%: Hoạt chất vàng giúp thúc đẩy quá trình tổng hợp Collagen và Elastin\r\n- những sợi đàn hồi dưới da, cho bề"
+    }
+  ]
+}
