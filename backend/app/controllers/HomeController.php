@@ -201,8 +201,16 @@ class HomeController {
             $preloadedFlashDeals = $publicData['flash_deals'] ?? [];
             $primaryFlashCampaign = $publicData['primary_campaign'] ?? null;
 
+            // A fresh request seed lets the homepage explore a different product window on refresh
+            // while the recommender still decides which candidates are relevant to this user.
+            try {
+                $homepageRefreshSeed = random_int(1, 2147483647);
+            } catch (Throwable $e) {
+                // Exploration is best-effort; do not turn a random-source issue into a homepage outage.
+                $homepageRefreshSeed = (int)(microtime(true) * 1000000) & 2147483647;
+            }
             $homepageSections = method_exists($this->model, 'getHomepageProductSections')
-                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals, $preloadedFlashDeals)
+                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals, $preloadedFlashDeals, $homepageRefreshSeed, $latest)
                 : [];
 
             require_once __DIR__ . '/../models/FlashSaleCampaign.php';
@@ -558,7 +566,8 @@ class HomeController {
      * Bundles menu_tree, latest, cats, flash_deals, and primary_campaign into 1 Valkey key.
      */
     public function getHomepagePublicData(): array {
-        $cacheKey = 'home:composite_public';
+        // v2 includes a larger latest-product pool used for refresh-aware homepage discovery.
+        $cacheKey = 'home:composite_public:v2';
         if (class_exists('CacheService')) {
             $cached = CacheService::getInstance()->get($cacheKey);
             if (is_array($cached) && isset($cached['latest'], $cached['cats'], $cached['flash_deals'])) {
@@ -597,7 +606,7 @@ class HomeController {
         $flashSaleModel = new FlashSaleCampaign($this->pdo);
 
         $menuTree = $this->model->menuTree();
-        $latest = $this->model->latest(12, true, true);
+        $latest = $this->model->latest(24, true, true);
         $cats = $this->getHighlightedCategories();
         $flashDeals = $this->model->getFlashSaleProducts(8);
         $primaryCampaign = $flashSaleModel->getPrimaryActiveCampaign();
