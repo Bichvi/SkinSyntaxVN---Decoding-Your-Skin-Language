@@ -5,7 +5,7 @@
   are deleted from THIS collection only. The chatbot's ``products`` collection is untouched.
 - Uses the shared embedding model (shared.embedding_provider).
 
-Run inside the AI container (Chroma server 0.5.20):
+Run inside the AI container (Chroma server 1.5.9):
     docker exec skinsyntax-ai python -m search_service.scripts.reindex_chroma
 """
 

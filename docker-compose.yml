@@ -57,7 +57,7 @@ services:
       - skinsyntax-net
 
   chromadb:
-    image: chromadb/chroma:0.5.20
+    image: chromadb/chroma:1.5.9
     container_name: skinsyntax-chromadb
     restart: unless-stopped
     ports:
