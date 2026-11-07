@@ -14,9 +14,9 @@ matplotlib==3.7.2                  # For plotting evaluation results
 pandas==2.0.3                      # For data analysis
 
 # Already in your project (add if missing)
-langchain-chroma==0.4.1            # ChromaDB integration
+langchain-chroma==1.1.0            # Keep aligned with requirements.txt
 langchain-huggingface==0.0.49      # HuggingFace embeddings
-chromadb==0.4.24                   # ChromaDB vector store
+chromadb==1.5.9                    # Keep aligned with the Docker Chroma service
 
 # Optional: For performance profiling
 py-spy==0.3.14                     # CPU profiling

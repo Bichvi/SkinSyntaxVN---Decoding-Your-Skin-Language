@@ -45,7 +45,7 @@ flowchart LR
 | Backend | PHP 8.2 MVC | Routing, auth, BFF gọi AI service |
 | AI Service | Python 3.11, Flask, LangChain | RAG, agent, streaming SSE |
 | Database | MongoDB 7 | Sản phẩm, người dùng, đơn hàng |
-| Vector DB | ChromaDB 0.5 | Embedding ~6.000 sản phẩm |
+| Vector DB | ChromaDB 1.5.9 | Embedding ~6.000 sản phẩm |
 | Cache | Redis 7 | Session/response cache cho chat |
 | Proxy | Nginx 1.27 | Phục vụ web, chặn `/api/` AI ra ngoài |
 
