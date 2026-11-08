@@ -85,7 +85,7 @@ $cinDetail = static function (string $id): string {
                     <span class="ssf-reason" title="<?= $cinE($reasonText) ?>" aria-label="Lý do gợi ý: <?= $cinE($reasonText) ?>"><?= $cinE($reasonText) ?></span>
                   <?php endif; ?>
                   <a href="<?= $cinE($detailUrl) ?>" class="ssf-thumb-link">
-                    <img src="<?= $cinE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= $cinE(default_placeholder_image()) ?>';" alt="<?= $cinE($p['ten_san_pham'] ?? '') ?>">
+              <img src="<?= $cinE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>" data-image-placeholder="<?= $cinE(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" alt="<?= $cinE($p['ten_san_pham'] ?? '') ?>">
                   </a>
                 </div>
                 <div class="ssf-meta">

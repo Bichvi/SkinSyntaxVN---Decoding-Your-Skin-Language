@@ -151,7 +151,9 @@ $startPage = max(1, $endPage - $maxVisible + 1);
                      width="280"
                      height="280"
                      referrerpolicy="no-referrer"
-                     onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
+                     data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>"
+                     data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                     onerror="window.SkinSyntaxImageFallback(this)"
                      alt="<?= h($p['ten_san_pham'] ?? '') ?>"
                      style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
               </a>

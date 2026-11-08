@@ -69,6 +69,26 @@ $socialLinks = [
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SkinSyntax | DECODING YOUR SKIN LANGUAGE</title>
+  <script>
+    window.SkinSyntaxImageFallback = function (image) {
+      if (!image) return;
+      var raw = image.getAttribute('data-image-fallbacks') || '[]';
+      var fallbacks = [];
+      try { fallbacks = JSON.parse(raw); } catch (error) { fallbacks = []; }
+      while (fallbacks.length > 0) {
+        var next = fallbacks.shift();
+        image.setAttribute('data-image-fallbacks', JSON.stringify(fallbacks));
+        if (next && next !== image.currentSrc && next !== image.src) {
+          image.onerror = function () { window.SkinSyntaxImageFallback(image); };
+          image.src = next;
+          return;
+        }
+      }
+      image.onerror = null;
+      var placeholder = image.getAttribute('data-image-placeholder');
+      if (placeholder) image.src = placeholder;
+    };
+  </script>
   <link rel="preload" as="image" href="<?= h($siteLogoUrl) ?>" fetchpriority="high">
   <link rel="icon" type="image/png" sizes="any" href="<?= h($siteLogoUrl) ?>">
   <link rel="alternate icon" type="image/svg+xml" href="<?= BASE_URL ?>/assets/images/favicon.svg">

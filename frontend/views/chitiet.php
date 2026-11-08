@@ -1,7 +1,8 @@
 <?php
 $p = $p ?? [];
-$imgs = split_image_urls(function_exists('product_image_source') ? product_image_source($p) : ($p['link_hinh_anh'] ?? ''), 10);
+$imgs = function_exists('product_image_urls') ? product_image_urls($p, 10) : split_image_urls($p['link_hinh_anh'] ?? '', 10);
 $main = $imgs[0] ?? default_placeholder_image();
+$detailImageFallbacks = function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $main) : '[]';
 $reviews = $reviews ?? [];
 $reviewPermission = isset($reviewPermission) && is_array($reviewPermission) ? $reviewPermission : ['has_purchased' => false, 'has_reviewed' => false];
 $activeTab = trim((string)($activeTab ?? ''));
@@ -637,7 +638,9 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
              width="500"
              height="500"
              referrerpolicy="no-referrer"
-             onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
+             data-image-fallbacks="<?= $detailImageFallbacks ?>"
+             data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+             onerror="window.SkinSyntaxImageFallback(this)"
              alt="<?= h($p['ten_san_pham'] ?? '') ?>"
              style="border-radius: 8px; aspect-ratio: 1/1; object-fit: cover;">
       </div>
@@ -655,7 +658,9 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                    width="64"
                    height="64"
                    referrerpolicy="no-referrer"
-                   onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
+                   data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $url) : '[]' ?>"
+                   data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                   onerror="window.SkinSyntaxImageFallback(this)"
                    alt="thumb"
                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
             </button>
@@ -1637,7 +1642,9 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                            width="200"
                            height="200"
                            referrerpolicy="no-referrer"
-                           onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';">
+                           data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($fbItem, $fbImg) : '[]' ?>"
+                           data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                           onerror="window.SkinSyntaxImageFallback(this)">
                     </a>
                     <div class="mb-1">
                       <?php if ($isGenuineRule && $fbConf !== null): ?>
@@ -1702,6 +1709,8 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
         <script src="<?= BASE_URL ?>/assets/js/search-fallback.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/search-fallback.js') ?: '1' ?>" defer></script>
         <script src="<?= BASE_URL ?>/assets/js/similar-products.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/similar-products.js') ?: '1' ?>" defer></script>
       <?php endif; ?>
+
+      <?php include __DIR__ . '/partials/recent_viewed_products.php'; ?>
 
       <div class="detail-tabs-card mt-4 p-4 p-md-5 rounded-4 bg-white border w-100"style="border-radius: 28px !important; border-color: #E2EADF !important; box-shadow: 0 10px 30px rgba(33, 84, 39, 0.04);">
         <div class="detail-tabs-header mb-4 pb-2 border-bottom">

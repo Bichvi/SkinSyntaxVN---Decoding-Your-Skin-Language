@@ -200,7 +200,7 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
                   <tr>
                     <td>
                       <div class="checkout-product">
-                        <img src="<?= h($img ?: default_placeholder_image()) ?>" alt="<?= h($p['ten_san_pham'] ?? '') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';">
+                        <img src="<?= h($img ?: default_placeholder_image()) ?>" alt="<?= h($p['ten_san_pham'] ?? '') ?>" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)">
                         <div>
                           <div class="name"><?= h($p['ten_san_pham'] ?? '') ?></div>
                           <div class="brand"><?= h($p['thuong_hieu'] ?? '') ?></div>

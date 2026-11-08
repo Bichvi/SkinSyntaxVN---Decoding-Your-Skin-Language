@@ -65,7 +65,7 @@ $isLcp = $isLcp ?? false;
 <?php if ($cardVariant === 'rcm'): ?>
   <article class="rcm-product-card product-card h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
     <a class="rcm-product-image-wrap position-relative d-block p-2" href="<?= h($detailUrl) ?>" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 12px 12px 0 0;">
-      <img src="<?= h($image) ?>" <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?> decoding="async" width="280" height="280" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+      <img src="<?= h($image) ?>" <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?> decoding="async" width="280" height="280" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($product, $image) : '[]' ?>" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
       <?php if ($discount !== null): ?>
         <span class="rcm-discount-badge position-absolute" style="top: 12px; left: 12px; background: #E11D48; color: #FFF; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; z-index: 3;">-<?= h((string)$discount) ?>%</span>
       <?php endif; ?>
@@ -238,7 +238,7 @@ $isLcp = $isLcp ?? false;
 
 <article class="flash-product goiy-product-card product-card h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease;">
   <a class="flash-product__image position-relative d-block p-2" href="<?= h($detailUrl) ?>" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 12px 12px 0 0;">
-    <img src="<?= h($image) ?>" <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?> decoding="async" width="280" height="280" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+    <img src="<?= h($image) ?>" <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?> decoding="async" width="280" height="280" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($product, $image) : '[]' ?>" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
     <?php if ($discount !== null): ?>
       <span class="flash-product__badge position-absolute" style="top: 12px; left: 12px; background: #E11D48; color: #FFF; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; z-index: 3;">-<?= h((string)$discount) ?>%</span>
     <?php endif; ?>
