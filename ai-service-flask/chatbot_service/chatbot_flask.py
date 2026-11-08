@@ -9,7 +9,7 @@ Thứ tự ưu tiên:
   3. OpenRouter llama-3.1 — FREE tier
   4. Zhipu glm-4-flash  — FREE tier
 """
-import os, sys, re, json, signal, random, time
+import os, sys, re, json, signal, random, time, threading
 from datetime import datetime
 from bson.objectid import ObjectId
 from pathlib import Path
@@ -48,6 +48,11 @@ from shared.embedding_provider import get_embedding_function
 from profile_state import determine_profile_state, detect_profile_conflict, calculate_days_since_update
 from survey_service import is_in_survey_flow, handle_survey_flow, get_last_ai_message
 from profile_service import save_user_profile
+from agent_graph.auth import identity_from_request
+from agent_graph import config as agent_config
+from chatbot_service import store_support  # nhánh STORE_SUPPORT (logic thuần)
+from chatbot_service.profile_context import normalize_profile, profile_context_lines
+from chatbot_service import graph_router  # U10: tool đồ thị Neo4j cho câu hỏi có điều kiện
 # ─── Config ─────────────────────────────────────────────────────────────────
 # Tự động tính đường dẫn tương đối từ vị trí file script này
 # ai-service-flask/chatbot_flask.py → ../database/chroma_db
@@ -96,53 +101,70 @@ GEMINI_MODEL = os.getenv("GEMINI_CHAT_MODEL", "gemini-2.5-flash").strip()
 # ─── ChromaDB lazy init ──────────────────────────────────────────────────────
 _vectorstore = None
 _hybrid_pipeline = None
+_vectorstore_lock = threading.Lock()
+_hybrid_pipeline_lock = threading.Lock()
 
-def get_vectorstore(): # tải dữ liệu sản phẩm từ ChromaDB.
+
+def _build_vectorstore():
+    """Dựng Chroma vào biến cục bộ; trả False nếu lỗi (sentinel, giữ hành vi cũ)."""
+    try:
+        emb = get_embedding_function()
+        if CHROMA_HOST:
+            # The shared Chroma service is the canonical runtime index.
+            # The old mounted SQLite index can have an incompatible
+            # configuration schema (KeyError: '_type').
+            import chromadb
+
+            client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+            vs = Chroma(
+                collection_name="products",
+                client=client,
+                embedding_function=emb,
+            )
+        else:
+            vs = Chroma(
+                collection_name="products",
+                persist_directory=CHROMA_DB_PATH,
+                embedding_function=emb,
+            )
+        print(f"[OK] ChromaDB loaded — {vs._collection.count():,} docs")
+        return vs
+    except Exception as e:
+        print(f"[WARN] Vectorstore initialization failed (e.g. disk space / cache): {e}")
+        return False
+
+
+def get_vectorstore(): # tải dữ liệu sản phẩm từ ChromaDB (double-checked locking, an toàn đa luồng).
     global _vectorstore
-    if _vectorstore is None:
-        try:
-            emb = get_embedding_function()
-            if CHROMA_HOST:
-                # The shared Chroma service is the canonical runtime index.
-                # The old mounted SQLite index can have an incompatible
-                # configuration schema (KeyError: '_type').
-                import chromadb
-
-                client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
-                _vectorstore = Chroma(
-                    collection_name="products",
-                    client=client,
-                    embedding_function=emb,
-                )
-            else:
-                _vectorstore = Chroma(
-                    collection_name="products",
-                    persist_directory=CHROMA_DB_PATH,
-                    embedding_function=emb,
-                )
-            print(f"[OK] ChromaDB loaded — {_vectorstore._collection.count():,} docs")
-        except Exception as e:
-            print(f"[WARN] Vectorstore initialization failed (e.g. disk space / cache): {e}")
-            _vectorstore = False
-    return _vectorstore if _vectorstore is not False else None
+    cached = _vectorstore
+    if cached is None:
+        with _vectorstore_lock:
+            cached = _vectorstore
+            if cached is None:
+                cached = _vectorstore = _build_vectorstore()
+    return cached if cached is not False else None
 
 
 def get_hybrid_pipeline(): #kết hợp tìm kiếm ngữ nghĩa và keyword.
     global _hybrid_pipeline
     vs = get_vectorstore()
-    if _hybrid_pipeline is None or getattr(_hybrid_pipeline, 'vectorstore', None) is None:
-        if vs:
-            _hybrid_pipeline = HybridSearchPipeline(
-                vectorstore=vs,
-                bm25_index=BM25Search(),
-                alpha=0.5,
-            )
-            print("[OK] Hybrid pipeline loaded (RRF + Vietnamese reranker)")
-        else:
+    pipeline = _hybrid_pipeline
+    if pipeline is None or getattr(pipeline, 'vectorstore', None) is None:
+        if not vs:
             return None
-    elif vs and _hybrid_pipeline.vectorstore != vs:
-        _hybrid_pipeline.vectorstore = vs
-    return _hybrid_pipeline
+        with _hybrid_pipeline_lock:
+            pipeline = _hybrid_pipeline
+            if pipeline is None or getattr(pipeline, 'vectorstore', None) is None:
+                pipeline = HybridSearchPipeline(
+                    vectorstore=vs,
+                    bm25_index=BM25Search(),
+                    alpha=0.5,
+                )
+                _hybrid_pipeline = pipeline  # gán sau khi dựng xong
+                print("[OK] Hybrid pipeline loaded (RRF + Vietnamese reranker)")
+    elif vs and pipeline.vectorstore != vs:
+        pipeline.vectorstore = vs
+    return pipeline
 
 
 def _should_use_web_search(message: str, yc: "PhanTichYeuCau") -> bool:
@@ -251,22 +273,114 @@ def _get_message_text(response) -> str:
 _llms = None
 _last_llm_init_time = 0
 
+_llms_lock = threading.Lock()
+
+# U11: validate LLMs in the background. A real validation request per provider took ~23s on the first
+# chat after a restart; now get_llms() returns the CONFIGURED pool immediately (state "unvalidated") and a
+# daemon thread swaps in the validated pool. A request that hits a bad provider already falls back to the
+# next one (cooldown + try/except in every call site), so an unvalidated entry costs one failed call at most.
+LLM_BG_VALIDATION_ENABLED = os.getenv("CHATBOT_LLM_BG_VALIDATION", "1").strip().lower() not in {"0", "false", "no", "off"}
+LLM_STATE_UNVALIDATED = "unvalidated"
+LLM_STATE_VALIDATED = "validated"
+_llm_state: dict = {}                       # id(llm) -> state
+_llm_validation_lock = threading.Lock()
+_llm_validation_thread = None
+_llm_validation_done = threading.Event()
+
+
+def llm_validation_state(llm) -> str:
+    """"unvalidated" while the background check has not confirmed this provider, else "validated"."""
+    return _llm_state.get(id(llm), LLM_STATE_VALIDATED)
+
+
+def llm_pool_status() -> dict:
+    pool = _llms or []
+    unvalidated = sum(1 for llm in pool if llm_validation_state(llm) == LLM_STATE_UNVALIDATED)
+    return {"size": len(pool), "unvalidated": unvalidated, "validated": len(pool) - unvalidated,
+            "validation_started": _llm_validation_thread is not None, "validation_done": _llm_validation_done.is_set()}
+
+
+def _validate_llms_background() -> None:
+    """Rebuild the pool WITH real validation requests, then swap it in. All providers failing keeps the
+    configured pool (per-call fallback handles errors) instead of leaving the chatbot with no LLM."""
+    global _llms
+    started = time.time()
+    try:
+        validated = _build_llms(validate=True)
+        with _llms_lock:
+            if validated:
+                _llms = validated
+                _llm_state.clear()
+                for llm in validated:
+                    _llm_state[id(llm)] = LLM_STATE_VALIDATED
+                print(f"[OK] LLM background validation done in {time.time() - started:.1f}s: {len(validated)} provider(s)")
+            else:
+                print("[WARN] LLM background validation: no provider passed; keeping the configured (unvalidated) pool")
+    except Exception as exc:
+        print(f"[WARN] LLM background validation failed: {type(exc).__name__}")
+    finally:
+        _llm_validation_done.set()
+
+
+def _schedule_validation() -> None:
+    """Start the one-shot background validation (idempotent; never blocks the caller)."""
+    global _llm_validation_thread
+    if not LLM_BG_VALIDATION_ENABLED:
+        return
+    with _llm_validation_lock:
+        if _llm_validation_thread is not None:
+            return
+        _llm_validation_thread = threading.Thread(target=_validate_llms_background, daemon=True, name="llm-validation")
+        _llm_validation_thread.start()
+
+
+def _assume_llm_ok(llm) -> bool:
+    """Deferred validation: accept the first constructible candidate of each provider without a request."""
+    return True
+
+
 def get_llms():
+    """Double-checked locking: gunicorn gthread chạy 8 luồng/worker, builder chỉ chạy 1 lần
+    và luồng khác không bao giờ thấy danh sách đang dựng dở (build vào biến cục bộ).
+    U11: dựng pool KHÔNG gọi LLM thật (nhanh); kiểm tra thật chạy nền (xem _validate_llms_background)."""
     global _llms, _last_llm_init_time
-    import time
-    
-    # Nếu đã nạp được LLMs thành công, trả về ngay
-    if _llms:
-        return _llms
-        
-    # Nếu chưa thử hoặc đã thử nhưng bị rỗng (lỗi), chỉ cho phép thử lại sau mỗi 5 phút (300s)
-    current_time = time.time()
-    if _llms is not None and (current_time - _last_llm_init_time < 300):
-        return _llms
 
-    _last_llm_init_time = current_time
+    # Nếu đã nạp được LLMs thành công, trả về ngay (không khóa)
+    cached = _llms
+    if cached:
+        return cached
 
-    _llms = []
+    # Nếu đã thử nhưng bị rỗng (lỗi), chỉ cho phép thử lại sau mỗi 5 phút (300s)
+    if cached is not None and (time.time() - _last_llm_init_time < 300):
+        return cached
+
+    with _llms_lock:
+        cached = _llms
+        if cached:
+            return cached
+        if cached is not None and (time.time() - _last_llm_init_time < 300):
+            return cached
+        _last_llm_init_time = time.time()
+        try:
+            built = _build_llms(validate=not LLM_BG_VALIDATION_ENABLED)
+        except Exception:
+            _llms = []  # giữ hành vi cũ: lỗi dựng -> danh sách rỗng, thử lại sau 300s
+            raise
+        if LLM_BG_VALIDATION_ENABLED:
+            for llm in built:
+                _llm_state[id(llm)] = LLM_STATE_UNVALIDATED
+        _llms = built  # gán nguyên tử sau khi dựng xong
+    if built and LLM_BG_VALIDATION_ENABLED:
+        _schedule_validation()
+    return built
+
+
+def _build_llms(validate: bool = True) -> list:
+    """validate=True: mỗi provider thử lần lượt các model, gọi LLM thật để xác nhận (chậm, ~20s+).
+    validate=False: lấy ứng viên đầu tiên dựng được của mỗi provider, không gọi mạng (U11)."""
+    built = []
+    _check = _test_llm_connection if validate else _assume_llm_ok
+    _state_word = "validated" if validate else "configured (validation deferred)"
 
     # Khởi tạo ChatOpenAI
     try:
@@ -277,29 +391,31 @@ def get_llms():
         except Exception:
             ChatOpenAI = None
 
-    # 0. OpenAI GPT-4o-mini (Key trả phí — tốc độ cao, thông minh, không lo quota)
-    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if ChatOpenAI is not None and openai_key:
-        for o_model in ["gpt-4o-mini", "gpt-4o"]:
+    # 1. Groq — keep only models currently supported by the configured account.
+    # qwen/qwen3.6-27b was removed after Groq returned a deterministic 404.
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if ChatOpenAI is not None and groq_key:
+        for model in ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
             try:
-                o_llm = ChatOpenAI(
-                    openai_api_key=openai_key,
-                    model_name=o_model,
-                    temperature=0.2,
+                groq = ChatOpenAI(
+                    openai_api_key=groq_key,
+                    openai_api_base="https://api.groq.com/openai/v1",
+                    model_name=model,
+                    temperature=0,
                     max_tokens=4096,
-                    max_retries=1,
+                    max_retries=0,
                 )
-                print(f"[INFO] Testing OpenAI ({o_model})...")
-                if _test_llm_connection(o_llm):
-                    _llms.append(o_llm)
-                    print(f"[OK] OpenAI ({o_model}) loaded and validated (PRIMARY HIGH-SPEED)")
-                    break
+                print(f"[INFO] Testing Groq {model}...")
+                if _check(groq):
+                    built.append(groq)
+                    print(f"[OK] Groq {model} loaded and {_state_word}")
+                    break  # chỉ cần 1 Groq model hoạt động
                 else:
-                    print(f"[WARN] OpenAI ({o_model}) validation failed")
+                    print(f"[WARN] Groq {model} skipped due to connection issue")
             except Exception as e:
-                print(f"[WARN] OpenAI ({o_model}) init failed: {e}")
+                print(f"[WARN] Groq {model} init failed: {e}")
 
-    # 1. Gemini Flash — 1500 req/ngày/key (FREE)
+    # 2. Gemini Flash — 1500 req/ngày/key (FREE)
     from langchain_google_genai import ChatGoogleGenerativeAI, HarmCategory, HarmBlockThreshold
     safety = {
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -325,39 +441,14 @@ def get_llms():
                     safety_settings=safety,
                 )
                 print(f"[INFO] Testing Gemini ({g_model}) ({label})...")
-                if _test_llm_connection(llm):
-                    _llms.append(llm)
-                    print(f"[OK] Gemini ({g_model}) ({label}) loaded and validated")
+                if _check(llm):
+                    built.append(llm)
+                    print(f"[OK] Gemini ({g_model}) ({label}) loaded and {_state_word}")
                     break
                 else:
                     print(f"[WARN] Gemini ({g_model}) ({label}) failed validation/quota")
             except Exception as e:
                 print(f"[WARN] Gemini ({g_model}) {label} init failed: {e}")
-
-
-    # 2. Groq — keep only models currently supported by the configured account.
-    # qwen/qwen3.6-27b was removed after Groq returned a deterministic 404.
-    groq_key = os.getenv("GROQ_API_KEY", "").strip()
-    if ChatOpenAI is not None and groq_key:
-        for model in ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
-            try:
-                groq = ChatOpenAI(
-                    openai_api_key=groq_key,
-                    openai_api_base="https://api.groq.com/openai/v1",
-                    model_name=model,
-                    temperature=0,
-                    max_tokens=4096,
-                    max_retries=0,
-                )
-                print(f"[INFO] Testing Groq {model}...")
-                if _test_llm_connection(groq):
-                    _llms.append(groq)
-                    print(f"[OK] Groq {model} loaded and validated")
-                    break  # chỉ cần 1 Groq model hoạt động
-                else:
-                    print(f"[WARN] Groq {model} skipped due to connection issue")
-            except Exception as e:
-                print(f"[WARN] Groq {model} init failed: {e}")
 
     # 3. Zhipu glm-4-flash (FREE, phản hồi siêu tốc ~1.5 - 3 giây, giới hạn cực cao)
     # Đưa lên trước OpenRouter để tránh nghẽn/timeout
@@ -373,9 +464,9 @@ def get_llms():
                 max_retries=0,
             )
             print(f"[INFO] Testing Zhipu glm-4-flash...")
-            if _test_llm_connection(zhipu):
-                _llms.append(zhipu)
-                print(f"[OK] Zhipu glm-4-flash loaded and validated")
+            if _check(zhipu):
+                built.append(zhipu)
+                print(f"[OK] Zhipu glm-4-flash loaded and {_state_word}")
             else:
                 print(f"[WARN] Zhipu glm-4-flash skipped due to connection issue")
         except Exception as e:
@@ -399,17 +490,39 @@ def get_llms():
                     max_retries=0,
                 )
                 print(f"[INFO] Testing OpenRouter {or_model}...")
-                if _test_llm_connection(or_llm):
-                    _llms.append(or_llm)
-                    print(f"[OK] OpenRouter {or_model} loaded and validated")
+                if _check(or_llm):
+                    built.append(or_llm)
+                    print(f"[OK] OpenRouter {or_model} loaded and {_state_word}")
                     break
                 else:
                     print(f"[WARN] OpenRouter {or_model} skipped due to connection issue")
             except Exception as e:
                 print(f"[WARN] OpenRouter {or_model} init failed: {e}")
 
-    print(f"[OK] Total LLMs ready: {len(_llms)}")
-    return _llms
+    # 5. OpenAI GPT-4o-mini — key trả phí, chỉ dùng làm fallback khi các provider miễn phí thất bại
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if ChatOpenAI is not None and openai_key:
+        for o_model in ["gpt-4o-mini", "gpt-4o"]:
+            try:
+                o_llm = ChatOpenAI(
+                    openai_api_key=openai_key,
+                    model_name=o_model,
+                    temperature=0.2,
+                    max_tokens=4096,
+                    max_retries=1,
+                )
+                print(f"[INFO] Testing OpenAI ({o_model})...")
+                if _check(o_llm):
+                    built.append(o_llm)
+                    print(f"[OK] OpenAI ({o_model}) loaded and {_state_word} (PAID FALLBACK)")
+                    break
+                else:
+                    print(f"[WARN] OpenAI ({o_model}) validation failed")
+            except Exception as e:
+                print(f"[WARN] OpenAI ({o_model}) init failed: {e}")
+
+    print(f"[OK] Total LLMs ready: {len(built)}")
+    return built
 
 
 def get_groq_llama_70b():
@@ -599,6 +712,12 @@ Nhiệm vụ của bạn là:
 1. Trả lời câu hỏi chitchat, chào hỏi hoặc câu hỏi ngoài ngành của khách hàng một cách cực kỳ lịch sự, tự nhiên, vui vẻ, mang tính kết nối cao.
 2. Nếu câu hỏi yêu cầu thông tin thực tế từ web (Ví dụ: giá vàng, thời tiết, sự kiện...), hãy dựa vào <thong_tin_web> để trả lời chính xác, ngắn gọn.
 3. Ở cuối câu trả lời, hãy khéo léo giới thiệu các sản phẩm bán chạy/nổi bật tại SkinSyntaxVN để "kéo" khách hàng quan tâm đến việc chăm sóc da hoặc mua sắm (Tuyệt đối không gượng ép).
+4. Nếu khách hỏi về làn da / hồ sơ da của chính họ hoặc điều gì hợp với họ, hãy trả lời dựa trên <ho_so_khach> (nêu loại da, tình trạng da, mục tiêu chăm sóc). Tuyệt đối không nói là bạn không biết da của khách khi <ho_so_khach> đã có dữ liệu; chỉ khi nó ghi "Không có thông tin hồ sơ bổ sung." thì mời khách làm khảo sát da.
+
+### HỒ SƠ DA CỦA KHÁCH (từ tài khoản)
+<ho_so_khach>
+{rich_context}
+</ho_so_khach>
 
 ### LỊCH SỬ TRÒ CHUYỆN (CONVERSATION HISTORY)
 <lich_su_tro_chuyen>
@@ -2034,6 +2153,54 @@ def save_chat_messages(conv_id: str, email: str, user_text: str, assistant_text:
         print(f"[ERROR] save_chat_messages: {e}")
 
 
+def _store_support_generate(prompt: str, llms: list):
+    """Gọi LLM cho nhánh STORE_SUPPORT theo đúng mẫu vòng cooldown của xu_ly_cau_hoi.
+    Trả về văn bản, hoặc None nếu mọi LLM đều lỗi/bị cooldown (nơi gọi sẽ dùng bản soạn sẵn)."""
+    from langchain_core.messages import HumanMessage
+    import concurrent.futures as _cf
+
+    try:
+        budget = float(os.getenv("STORE_SUPPORT_LLM_BUDGET_S", "15"))
+    except ValueError:
+        budget = 15.0
+    t0 = time.time()
+    deadline = t0 + budget
+    current_time = t0
+    for llm in llms or []:
+        if _get_llm_cooldown(llm) > current_time:
+            continue
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            break
+        model_name = getattr(llm, 'model', getattr(llm, 'model_name', 'Unknown'))
+        call_start = time.time()
+        executor = _cf.ThreadPoolExecutor(max_workers=1)
+        try:
+            future = executor.submit(llm.invoke, [HumanMessage(content=prompt)])
+            try:
+                response = future.result(timeout=remaining)
+            except _cf.TimeoutError:
+                print(f"[STORE_SUPPORT] llm_timeout model={model_name} waited={time.time() - call_start:.1f}s")
+                break
+            finally:
+                executor.shutdown(wait=False)
+            text = _get_message_text(response)
+            if text:
+                text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+            if text:
+                print(f"[STORE_SUPPORT] generated model={model_name} total={time.time() - t0:.1f}s")
+                return text
+        except Exception as e:
+            err_str = str(e).lower()
+            if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str or "quota" in err_str:
+                _set_llm_cooldown(llm, 300)
+                print(f"[STORE_SUPPORT] llm_rate_limited model={model_name}")
+            else:
+                print(f"[STORE_SUPPORT] llm_failed model={model_name} kind={type(e).__name__}")
+    print(f"[STORE_SUPPORT] llm_none total={time.time() - t0:.1f}s")
+    return None
+
+
 # ─── Main Pipeline ───────────────────────────────────────────────────────────
 def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     import time
@@ -2056,12 +2223,15 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     current_product_id = None
 
     profile = {}
+    profile_goal = None
     if msg_data:
         # Extract profile
         profile = msg_data.get("customer_profile", {}) or {}
-        skin_type = profile.get("skin_type") or profile.get("loai_da")
-        avoid_ingredients = profile.get("avoid_ingredients") or profile.get("thanh_phan_can_tranh") or []
-        skin_issues = profile.get("skin_issues") or profile.get("tinh_trang_da") or []
+        _norm_profile = normalize_profile(profile)
+        skin_type = _norm_profile["skin_type"]
+        avoid_ingredients = _norm_profile["avoid_ingredients"]
+        skin_issues = _norm_profile["skin_issues"]
+        profile_goal = _norm_profile["goal"]
         
         # Extract cart and conflicts
         cart_items = msg_data.get("cart_items", []) or []
@@ -2089,12 +2259,12 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             chat_history_str = str(history_raw)
 
     rich_context_parts = []
-    if skin_type:
-        rich_context_parts.append(f"- Loại da của khách: {skin_type}")
-    if skin_issues:
-        rich_context_parts.append(f"- Tình trạng da: {', '.join(skin_issues)}")
-    if avoid_ingredients:
-        rich_context_parts.append(f"- Thành phần cần tránh: {', '.join(avoid_ingredients)}")
+    rich_context_parts.extend(profile_context_lines({
+        "skin_type": skin_type,
+        "skin_issues": skin_issues,
+        "avoid_ingredients": avoid_ingredients,
+        "goal": profile_goal,
+    }))
         
     if current_product_id and retrieved_products_sql:
         first_product = retrieved_products_sql[0]
@@ -2121,6 +2291,49 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
         rich_context_parts.append(f"- PHÁT HIỆN XUNG ĐỘT HOẠT CHẤT: {', '.join(cart_conflicts)}")
         
     rich_context = "\n".join(rich_context_parts) if rich_context_parts else "Không có thông tin hồ sơ bổ sung."
+
+    # 1b. STORE_SUPPORT: câu hỏi chính sách/HDSD trả lời từ bài chính thức PHP gửi sang (store_support_articles).
+    # Đặt SAU kiểm khảo sát (khách đang làm khảo sát được ưu tiên) và TRƯỚC contextualize_query/classify_intent
+    # (tiết kiệm 2 lượt LLM, tránh nhánh GENERAL_CONVERSATION -> Tavily web search trả lời theo shop khác).
+    # Câu nối tiếp không có bài từ PHP vẫn đi luồng cũ; mọi lỗi ở nhánh này rơi về luồng cũ, không trả 500.
+    ss_articles = store_support.extract_articles(msg_data)
+    if ss_articles:
+        try:
+            ss_history = msg_data.get("conversation_history", []) if msg_data else []
+            if not is_in_survey_flow(message, ss_history) and not store_support.has_product_intent(
+                message, msg_data, rule_based_parse
+            ):
+                ss_ctx = store_support.build_ctx(
+                    message, msg_data, chat_history_str,
+                    reranker=getattr(pipeline, "reranker", None) if pipeline else None,
+                    articles=ss_articles,
+                )
+                ss_raw = _store_support_generate(ss_ctx["prompt"], llms)
+                return store_support.build_response(ss_ctx, ss_raw, round(time.time() - start_time, 2))
+        except Exception as ss_exc:
+            print(f"[STORE_SUPPORT] branch_error kind={type(ss_exc).__name__}")
+        # Câu sản phẩm (hoặc nhánh lỗi) + có bài: nhắc chính sách ngắn trong context của nhánh sản phẩm
+        rich_context = rich_context + "\n\n" + store_support.policy_context_block(ss_articles)
+
+    # 1c. U10 GRAPH TOOLS: câu hỏi có điều kiện quan hệ (loại da + không kỵ/không chứa hoạt chất, giá, hãng, "dùng chung
+    # A với B được không") -> tool Neo4j có tham số (graph_tools), LLM chỉ diễn đạt kết quả. Tắt bằng
+    # SYNA_GRAPH_TOOLS_ENABLED; mọi lỗi/không khớp trả None và luồng RAG bên dưới chạy y như cũ.
+    if graph_router.enabled():
+        try:
+            gt_history = msg_data.get("conversation_history", []) if msg_data else []
+            if not is_in_survey_flow(message, gt_history):
+                graph_result = graph_router.try_answer(
+                    message, msg_data, graph_router.get_runtime(),
+                    generate=lambda graph_prompt: _store_support_generate(graph_prompt, llms),
+                    blocked=lambda plan: plan.tool != "check_conflicts" and (
+                        should_delay_retinol_for_profile(message, profile, None)
+                        or should_delay_vitamin_c_for_profile(message, profile, None)),
+                )
+                if graph_result is not None:
+                    graph_result["latency"] = round(time.time() - start_time, 2)
+                    return graph_result
+        except Exception as graph_exc:
+            print(f"[GRAPH_TOOLS] branch_error kind={type(graph_exc).__name__}")
 
     # 2. Câu hỏi độc lập và phân loại ý định (Contextualization & Intent Recognition)
     rewritten_query = contextualize_query(message, chat_history_str, llms)
@@ -2161,7 +2374,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     profile_data = {}
     if msg_data:
         profile_data = msg_data.get("customer_profile", {}) or {}
-        user_email = profile_data.get("email") or ""
+        user_email = msg_data.get("_verified_email") or ""
 
     # A. Kiểm tra xem có đang trong luồng khảo sát da không
     history_list = msg_data.get("conversation_history", []) if msg_data else []
@@ -3003,6 +3216,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     # 6. Apply system prompts based on Intent
     if intent == "GENERAL_CONVERSATION":
         prompt = GENERAL_CONVERSATION_SYSTEM_PROMPT \
+            .replace("{rich_context}", rich_context) \
             .replace("{history}", chat_history_str or "Không có lịch sử trò chuyện trước đó.") \
             .replace("{web_results}", web_results_text or "Không có dữ liệu bổ sung.") \
             .replace("{search_results}", format_search_results(final_merged_docs)) \
@@ -3130,6 +3344,20 @@ try:
 except Exception as _search_exc:  # pragma: no cover - optional module
     print(f"[WARN] search_service not registered: {type(_search_exc).__name__}")
 
+# Photo-of-label analysis (/api/label/analyze). Isolated blueprint; failures never block chat.
+try:
+    from label_service.routes import label_bp
+
+    app.register_blueprint(label_bp)
+except Exception as _label_exc:  # pragma: no cover - optional module
+    print(f"[WARN] label_service not registered: {type(_label_exc).__name__}")
+if agent_config.AGENT_V2:
+    try:
+        from agent_graph import routes as agent_routes
+
+        agent_routes.register(app)
+    except Exception as _agent_exc:  # pragma: no cover - optional module
+        print(f"[WARN] agent_graph not registered: {type(_agent_exc).__name__}")
 
 @app.get("/health")
 def simple_health():
@@ -3197,7 +3425,10 @@ def chat():
 
     # Đọc conversation_id và user_email
     conversation_id = data.get("conversation_id") or (msg_data.get("conversation_id") if isinstance(msg_data, dict) else None)
-    user_email = data.get("user_email") or (msg_data.get("user_email") if isinstance(msg_data, dict) else None)
+    claims = identity_from_request(request)
+    user_email = claims.em.strip() if claims else None
+    if isinstance(msg_data, dict):
+        msg_data["_verified_email"] = user_email
     
     if isinstance(conversation_id, str):
         conversation_id = conversation_id.strip()
@@ -3438,9 +3669,10 @@ def recommendation_profile():
 
 @app.get("/api/chat/conversations")
 def get_conversations():
-    email = request.headers.get("X-User-Email")
-    if not email:
+    claims = identity_from_request(request)
+    if not claims or not claims.has("chat") or not claims.em.strip():
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
+    email = claims.em.strip()
         
     try:
         db = get_mongodb_connection()
@@ -3467,9 +3699,10 @@ def get_conversations():
 
 @app.get("/api/chat/conversations/<conv_id>")
 def get_conversation(conv_id):
-    email = request.headers.get("X-User-Email")
-    if not email:
+    claims = identity_from_request(request)
+    if not claims or not claims.has("chat") or not claims.em.strip():
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
+    email = claims.em.strip()
         
     try:
         db = get_mongodb_connection()
@@ -3507,9 +3740,10 @@ def get_conversation(conv_id):
 
 @app.post("/api/chat/conversations")
 def create_conversation():
-    email = request.headers.get("X-User-Email")
-    if not email:
+    claims = identity_from_request(request)
+    if not claims or not claims.has("chat") or not claims.em.strip():
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
+    email = claims.em.strip()
         
     try:
         db = get_mongodb_connection()
@@ -3531,9 +3765,10 @@ def create_conversation():
 
 @app.delete("/api/chat/conversations/<conv_id>")
 def delete_conversation(conv_id):
-    email = request.headers.get("X-User-Email")
-    if not email:
+    claims = identity_from_request(request)
+    if not claims or not claims.has("chat") or not claims.em.strip():
         return jsonify({"ok": False, "message": "Unauthorized"}), 401
+    email = claims.em.strip()
         
     try:
         db = get_mongodb_connection()
@@ -3577,4 +3812,3 @@ if __name__ == "__main__":
     print(f"[INFO]  Health check: http://127.0.0.1:{FLASK_PORT}/health")
     print(f"[INFO]  Detailed health: http://127.0.0.1:{FLASK_PORT}/api/health")
     app.run(host="0.0.0.0", port=FLASK_PORT, debug=False, use_reloader=False)
-

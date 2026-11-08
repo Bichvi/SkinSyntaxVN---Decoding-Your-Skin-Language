@@ -1,0 +1,63 @@
+{
+    "customer_question": "đổi trả trong bao lâu",
+    "store_support_articles": [
+        {
+            "slug": "doi-tra",
+            "title": "Chính sách đổi trả & hoàn tiền",
+            "summary": "Tiếp nhận trong 7 ngày với hàng lỗi, hỏng do vận chuyển hoặc giao sai.",
+            "answer": "SkinSyntax tiếp nhận đổi trả trong 7 ngày từ khi nhận hàng đối với sản phẩm lỗi, hỏng do vận chuyển hoặc giao sai. Bạn giữ bao bì, nhãn và mã đơn, gửi mô tả cùng ảnh nếu có qua kênh hỗ trợ. Hàng đã dùng thường không áp dụng, trừ lỗi nhà sản xuất hoặc trường hợp theo pháp luật. Sau khi kiểm tra, bộ phận hỗ trợ sẽ xác nhận phương án xử lý, thời gian hoàn tiền và phí gửi trả với bạn.",
+            "sections": [
+                {
+                    "title": "Phạm vi tiếp nhận",
+                    "items": [
+                        {
+                            "text": "Trong 7 ngày kể từ ngày nhận hàng, tiếp nhận yêu cầu đối với hàng lỗi, hư hỏng do vận chuyển hoặc giao sai sản phẩm. Giữ xác nhận đơn/mã đơn để đối chiếu.",
+                            "details": []
+                        },
+                        {
+                            "text": "Trường hợp thiếu phụ kiện hoặc có dấu hiệu bất thường khi mở hộp cũng có thể gửi để xác minh theo quy trình dưới đây. Sản phẩm có chính sách bảo hành riêng từ nhà phân phối, hoặc cần xác minh tem, mã lô, hóa đơn mua hàng, được tiếp nhận để đối chiếu.",
+                            "details": []
+                        },
+                        {
+                            "text": "Thông thường sản phẩm cần còn tem, nhãn, bao bì, chưa qua sử dụng; ngoại lệ lỗi nhà sản xuất hoặc quyền theo quy định pháp luật được xem xét theo tình trạng thực tế.",
+                            "details": []
+                        },
+                        {
+                            "text": "Yêu cầu quá 7 ngày, hư hỏng do bảo quản/sử dụng hoặc hàng đã dùng không thuộc chính sách đổi trả thông thường; không dùng giới hạn này để loại trừ trách nhiệm pháp luật hay từ chối tiếp nhận mọi phản ánh.",
+                            "details": []
+                        }
+                    ]
+                },
+                {
+                    "title": "Quy trình",
+                    "items": [
+                        {
+                            "text": "Liên hệ hỗ trợ, nêu mã đơn, vấn đề và thời điểm nhận. Cung cấp ảnh/video nếu có; không yêu cầu bắt buộc phải có video mở hộp mới tiếp nhận.",
+                            "details": []
+                        },
+                        {
+                            "text": "Chờ xác minh và thống nhất phương án đổi/hoàn, địa chỉ gửi trả và bên chịu phí trước khi tự gửi hàng. Không gửi về địa chỉ chưa được xác nhận.",
+                            "details": []
+                        },
+                        {
+                            "text": "Sau khi kiểm tra đủ điều kiện, bộ phận hỗ trợ xác nhận thời gian xử lý và hình thức hoàn. Online ưu tiên phương thức gốc nếu hỗ trợ; COD có thể hoàn chuyển khoản sau khi xác minh. Thời hạn cụ thể và phí gửi trả chưa được công bố cố định.",
+                            "details": []
+                        },
+                        {
+                            "text": "Tùy từng trường hợp, phương án phản hồi có thể là đổi sản phẩm, hoàn tiền, bổ sung thông tin hoặc liên hệ nhà cung cấp.",
+                            "details": []
+                        }
+                    ]
+                }
+            ],
+            "url": "/index.php?r=tro_giup&bai=doi-tra",
+            "version": "2026-10-21",
+            "score": 40.8,
+            "questions": [
+                "Điều kiện đổi trả là gì?",
+                "Hoàn tiền mất bao lâu?",
+                "Hàng đã mở nắp có được xử lý không?"
+            ]
+        }
+    ]
+}

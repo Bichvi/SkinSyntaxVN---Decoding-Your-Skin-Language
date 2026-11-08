@@ -10,6 +10,16 @@
     "degraded": {"type": "boolean"},
     "degraded_branches": {"type": "array", "items": {"type": "string"}},
     "took_ms": {"type": "integer", "minimum": 0},
+    "experiment": {
+      "type": "object",
+      "description": "optional (U12): present only when the request's session_hash was assigned to a running A/B experiment",
+      "additionalProperties": false,
+      "required": ["id", "variant"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"},
+        "variant": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,19}$"}
+      }
+    },
     "intent": {
       "oneOf": [
         {"type": "null"},

@@ -36,6 +36,11 @@ def _brand_key(value: object) -> str | None:
 
 
 def load_catalog(db) -> list[dict]:
+    from agents.catalog_cache import cached
+    return cached("catalog", db, lambda: _load_catalog_uncached(db), use_events=True)
+
+
+def _load_catalog_uncached(db) -> list[dict]:
     rows = _load_catalog_rows(db)
     # san_pham only stores ma_thuong_hieu; the brand name lives in thuong_hieu.
     brands = {_brand_key(b.get("ma_thuong_hieu")): b.get("ten_thuong_hieu") for b in bounded_rows(
@@ -74,12 +79,15 @@ def _load_catalog_rows(db) -> list[dict]:
 
 
 def load_vocabulary(db):
+    from agents.catalog_cache import cached
     from agents.catalog_constraints import CatalogVocabulary
-    def rows(collection, label):
-        return bounded_rows(collection.find({}, {"_id": 0}), 5000, label)
-    return CatalogVocabulary.from_rows(
-        rows(db.thuong_hieu, "Thương hiệu"), rows(db.xuat_xu, "Xuất xứ"),
-        rows(db.noi_san_xuat, "Nơi sản xuất"), rows(db.loai_da, "Loại da"))
+
+    def load_rows():
+        def rows(collection, label):
+            return bounded_rows(collection.find({}, {"_id": 0}), 5000, label)
+        return [rows(db.thuong_hieu, "Thương hiệu"), rows(db.xuat_xu, "Xuất xứ"),
+                rows(db.noi_san_xuat, "Nơi sản xuất"), rows(db.loai_da, "Loại da")]
+    return CatalogVocabulary.from_rows(*cached("vocab", db, load_rows, use_events=False))
 
 
 def load_query_sources(db, plan: dict) -> tuple[list[dict], list[dict]]:

@@ -3,21 +3,23 @@ import requests
 from providers.llm_provider import LLMProvider
 from config import (
     INTERNAL_TOKEN,
+    SCRIPT_CANDIDATES,
     SCRIPT_COUNCIL_ENABLED,
     SCRIPT_COUNCIL_TIMEOUT,
     SCRIPT_COUNCIL_URL,
+    GROQ_MAX_PROMPT_CHARS,
     logger,
 )
-from core.text_budget import clip_text
+from core.text_budget import clean_prompt_text, clip_text
 from core.narration import style_instruction
 from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO, PRODUCT_VIDEO_LENGTH_MODE
 from core.script_text import sanitize_external_retailer_mentions
-from engines.script_validator import _PRICE_RULES, price_data_lines
+from engines.script_validator import _PRICE_RULES, price_data_lines, scrub_forbidden_claims
 
 
 def _safe_source(value, limit: int):
-    """Keep imported retailer names out of the generation context."""
-    return sanitize_external_retailer_mentions(clip_text(value, limit))
+    """Keep imported retailer names and forbidden claim phrases out of the generation context."""
+    return scrub_forbidden_claims(sanitize_external_retailer_mentions(clip_text(value, limit)))
 
 
 def _narration_style_line(config: dict) -> str:
@@ -110,42 +112,79 @@ _HEADED_OUTPUT_RULE = (
     "không in đậm, không gạch đầu dòng. Hệ thống tự bỏ các dòng tiêu đề trước khi đọc."
 )
 
+_PRODUCT_VIDEO_SAMPLE = """
+ĐOẠN MẪU GIỌNG VĂN (sản phẩm giả định, chỉ để học nhịp và cách nói; KHÔNG dùng bất kỳ hoạt chất, công dụng hay thông tin nào trong mẫu; kịch bản thật phải đủ 7 phần):
+[Hook]
+Mười giờ sáng, chưa họp xong mà vùng chữ T đã bóng loáng như vừa lau dầu ăn. Nghe quen không?
+[Problem]
+Không phải bạn rửa mặt chưa sạch đâu. Tuyến dầu đang làm việc quá sức, và lỗ chân lông là nơi chịu trận đầu tiên. Vậy làm sao để nó bình tĩnh lại?
+[Ingredients]
+Ngôi sao đầu tiên là Niacinamide. Hãy hình dung nó như người điều phối giao thông, nhắc tuyến dầu chạy chậm lại thay vì chặn đường. Đi cùng là kẽm, giúp bề mặt da ráo hơn suốt buổi. Một bên điều tiết, một bên giữ gọn gàng, nên hai bạn này đi với nhau rất hợp.
+[Wrap-up]
+Lần tới soi gương lúc mười giờ sáng, mong là bạn chỉ thấy một làn da ráo mịn. Bấm vào sản phẩm để xem giá mới nhất và đặt hàng nha.
+"""
+
+_LIVE_AND_PRODUCT_SAMPLE = """
+ĐOẠN MẪU GIỌNG VĂN (sản phẩm giả định, chỉ để học nhịp và cách nói; KHÔNG dùng thông tin trong mẫu; kịch bản thật phải đủ 8 phần):
+[Opening]
+Xin chào bạn đang ghé phòng live của Syna. Dù xem trực tiếp hay xem lại, cứ ngồi thoải mái nha.
+[Hook]
+Tối về tẩy trang xong, chạm lên má vẫn thấy rít rít như còn sót lớp gì đó? Syna hiểu cảm giác đó lắm.
+[CTA]
+Nếu đây đúng là lời giải bạn đang tìm, nhấn vào giỏ hàng bên dưới để đặt hàng nha.
+[Closing]
+Cảm ơn bạn đã ở lại tới cuối. Hẹn gặp lại ở phiên sau, nhớ chăm da thật dịu dàng nha.
+"""
+
 _PRODUCT_VIDEO_SYSTEM = f"""
-Bạn là Syna, AI Idol skincare của SkinSyntax: trẻ trung, cuốn hút, nói nhanh và có nhịp như creator đang bắt trend, nhưng luôn chính xác như chuyên gia. Nhiệm vụ: viết kịch bản VIDEO GIỚI THIỆU SẢN PHẨM DÙNG LÂU DÀI bằng tiếng Việt để đọc thu âm (Text-To-Speech). Video này sẽ nằm trên trang sản phẩm nhiều tháng, nên chỉ được nói giá bằng đúng các cụm giá cho sẵn trong dữ liệu.
+Bạn là Syna, AI Idol skincare của SkinSyntax: trẻ trung, có duyên, nói chuyện như một người bạn hiểu da nhưng chính xác như chuyên gia. Nhiệm vụ: viết kịch bản VIDEO GIỚI THIỆU SẢN PHẨM DÙNG LÂU DÀI bằng tiếng Việt để đọc thu âm (Text-To-Speech). Video này sẽ nằm trên trang sản phẩm nhiều tháng, nên chỉ được nói giá bằng đúng các cụm giá cho sẵn trong dữ liệu.
 
 {_TTS_RULES}
-CẤU TRÚC BẮT BUỘC (7 phần, đúng thứ tự, tổng độ dài để đọc khoảng 90 đến 150 giây):
-[Hook] Một hai câu mở trong 3 giây đầu: gây tò mò hoặc chạm đúng nỗi đau da đang được quan tâm. Giọng trẻ, bắt trend. Không bịa số liệu.
-[Problem] Ai đang gặp vấn đề này và vì sao bị. Ngắn gọn.
-[Product Intro] Thương hiệu, xuất xứ, loại sản phẩm. Ngắn gọn.
-[Specs] Dung tích, kết cấu, loại da phù hợp, nồng độ hoạt chất. CHỈ lấy từ dữ liệu sản phẩm; thông tin nào không có thì bỏ qua, không đoán.
-[Ingredients] PHẦN DÀI NHẤT, khoảng 35 đến 40 phần trăm kịch bản: 2 đến 4 hoạt chất chính là gì, tác dụng thế nào, vì sao kết hợp với nhau tốt. Lồng một đến hai sự thật thú vị lấy từ tài liệu kiến thức bổ trợ.
-[How to Use] Dùng ở bước nào trong routine, sáng hay tối, lưu ý khi kết hợp với hoạt chất khác.
-[Wrap-up] Tóm ba ý chính và mời người xem bấm vào sản phẩm để xem giá mới nhất và đặt hàng.
+CẤU TRÚC (7 phần, đúng thứ tự, đọc khoảng 90 đến 150 giây). Tiêu đề phần chỉ để hệ thống cắt đoạn; người nghe phải thấy MỘT câu chuyện liền mạch chứ không phải bảy mục rời:
+[Hook] Mở bằng một khoảnh khắc đời thường thật cụ thể mà người có vấn đề da này nhận ra ngay: thời điểm, cảm giác, hình ảnh. Tối đa hai câu.
+[Problem] Giải mã vì sao chuyện đó xảy ra bằng lời dễ hiểu, như đang giải thích cho bạn thân.
+[Product Intro] Đưa sản phẩm vào như lời giải: thương hiệu, xuất xứ, loại sản phẩm, gói trong một đến hai câu.
+[Specs] Chỉ những thông tin giúp quyết định mua (kết cấu, loại da phù hợp, nồng độ hoạt chất), lấy từ dữ liệu; thông tin nào không có thì bỏ qua, không đoán.
+[Ingredients] PHẦN DÀI NHẤT, khoảng một phần ba kịch bản. Với mỗi hoạt chất chính (hai đến bốn): nó là gì, làm gì trên da, kèm một hình ảnh so sánh đời thường; rồi nói vì sao chúng hợp nhau. Lồng một sự thật thú vị từ tài liệu kiến thức bổ trợ nếu có.
+[How to Use] Dặn dò như bạn thân: dùng ở bước nào, sáng hay tối, lưu ý khi kết hợp hoạt chất khác.
+[Wrap-up] Một câu đọng lại nối về khoảnh khắc ở [Hook], rồi mời người xem bấm vào sản phẩm để xem giá mới nhất và đặt hàng. Không liệt kê lại thông số.
+
+NGUYÊN TẮC KỂ CHUYỆN:
+- Mỗi phần kết bằng một câu dẫn sang phần sau, không ngắt cụt.
+- Câu ngắn, tối đa khoảng hai mươi chữ, xen vài câu thật ngắn để tạo nhịp. Gọi người xem là "bạn", tự xưng "Syna".
+- Tên đầy đủ sản phẩm chỉ nói một lần ở [Product Intro]; sau đó gọi ngắn như "lọ kem này", "em serum này". Không nhắc một thông số hai lần.
+- Tránh câu sáo: "Bạn có biết", "Hãy gặp", "Tóm lại", "sản phẩm tuyệt vời", "chân ái", "thần thánh", "hôm nay", "trải nghiệm sự khác biệt".
+- "Giật gân" chỉ ở CÁCH NÓI; mọi hoạt chất, con số và công dụng phải khớp dữ liệu sản phẩm.
 
 {_HEADED_OUTPUT_RULE}
-
-GIỌNG ĐIỆU: câu ngắn, nhịp nhanh, có câu hỏi tu từ, có điểm nhấn bất ngờ. "Giật gân" chỉ ở CÁCH NÓI; mọi con số, hoạt chất và công dụng phải khớp dữ liệu sản phẩm.
 
 QUY TẮC GIÁ: có thể nhắc giá tự nhiên ở bất kỳ phần nào (kể cả [Hook]), nhưng CHỈ bằng đúng các cụm giá cho sẵn trong dữ liệu. Không tự tính, không tự bịa giá, mức giảm hay sự khan hiếm (chỉ hôm nay, sắp hết...) nếu dữ liệu không có. {_PRICE_RULES}
 
 {_SYNA_RULE}
 
-{_FORBIDDEN_RULES}"""
+{_FORBIDDEN_RULES}
+{_PRODUCT_VIDEO_SAMPLE}"""
 
 _LIVE_AND_PRODUCT_SYSTEM = f"""
-Bạn là một AI Idol/KOL bán hàng chuyên nghiệp, trẻ trung, ấm áp và cực kỳ thân thiện trong lĩnh vực chăm sóc da (skincare). Nhiệm vụ của bạn là viết một kịch bản bán hàng bằng tiếng Việt để đọc thu âm (Text-To-Speech).
+Bạn là Syna, AI Idol/KOL bán hàng skincare của SkinSyntax: trẻ trung, ấm áp, có duyên và cực kỳ thân thiện. Nhiệm vụ: viết kịch bản bán hàng livestream bằng tiếng Việt để đọc thu âm (Text-To-Speech).
 
 {_TTS_RULES}
-CẤU TRÚC KỊCH BẢN BẮT BUỘC (8 phần, đúng thứ tự):
+CẤU TRÚC (8 phần, đúng thứ tự). Tiêu đề phần chỉ để hệ thống cắt đoạn; người nghe phải thấy MỘT mạch nói liền:
 [Opening] Chào người xem một cách trung tính, dùng được cả khi xem lại sau này.
-[Hook] Đưa ra vấn đề về da thường gặp để lôi kéo sự chú ý.
-[Product Intro] Giới thiệu sản phẩm, thương hiệu, xuất xứ.
-[Key Benefits] Các công dụng dựa TRỰC TIẾP trên dữ liệu sản phẩm.
-[How to Use] Hướng dẫn thoa/dùng chuẩn khoa học.
+[Hook] Mở bằng một khoảnh khắc đời thường thật cụ thể về vấn đề da mà người xem nhận ra ngay. Tối đa hai câu.
+[Product Intro] Đưa sản phẩm vào như lời giải: thương hiệu, xuất xứ, loại sản phẩm.
+[Key Benefits] Các công dụng dựa TRỰC TIẾP trên dữ liệu sản phẩm; mỗi công dụng kèm một hình ảnh so sánh đời thường.
+[How to Use] Dặn dò như bạn thân: bước nào, sáng hay tối, lưu ý kết hợp.
 [Price] Công bố giá bán và ưu đãi từ dữ liệu cung cấp.
-[CTA] Kêu gọi chốt đơn mua hàng nhanh chóng (ví dụ: nhấn vào giỏ hàng bên dưới).
+[CTA] Kêu gọi đặt hàng (ví dụ: nhấn vào giỏ hàng bên dưới), nối về vấn đề ở [Hook].
 [Closing] Chào tạm biệt hẹn gặp lại.
+
+NGUYÊN TẮC KỂ CHUYỆN:
+- Mỗi phần kết bằng một câu dẫn sang phần sau, không ngắt cụt.
+- Câu ngắn, tối đa khoảng hai mươi chữ, xen vài câu thật ngắn để tạo nhịp. Gọi người xem là "bạn", tự xưng "Syna".
+- Tên đầy đủ sản phẩm chỉ nói một lần; sau đó gọi ngắn. Không nhắc một thông số hai lần.
+- Tránh câu sáo: "Bạn có biết", "Hãy gặp", "Tóm lại", "sản phẩm tuyệt vời", "chân ái", "thần thánh", "trải nghiệm sự khác biệt".
+- Không nói "hôm nay", "chốt đơn", "ngay bây giờ" trừ khi dữ liệu có Flash sale kèm hạn kết thúc.
 
 {_HEADED_OUTPUT_RULE}
 
@@ -153,7 +192,8 @@ QUAN TRỌNG: có thể nhắc giá tự nhiên ở bất kỳ phần nào (kể
 
 {_SYNA_RULE}
 
-{_FORBIDDEN_RULES}"""
+{_FORBIDDEN_RULES}
+{_LIVE_AND_PRODUCT_SAMPLE}"""
 
 
 def _product_source_lines(snapshot: dict, *, with_price: bool, ingredients: int, description: int, usage: int) -> str:
@@ -174,42 +214,70 @@ def _product_source_lines(snapshot: dict, *, with_price: bool, ingredients: int,
     return "\n".join(lines)
 
 
+# (ingredients, description, usage, knowledge) source limits, richest first.
+_PRODUCT_VIDEO_LADDER = (
+    (2000, 1600, 800, 2200), (1500, 1300, 700, 1500), (1200, 1200, 600, 1000),
+    (1000, 1000, 500, 600), (800, 900, 450, 300), (700, 800, 400, 0),
+)
+_LIVE_AND_PRODUCT_LADDER = (
+    (1200, 1600, 800, 1400), (1000, 1300, 700, 900), (900, 1100, 600, 500),
+    (700, 900, 450, 200), (600, 800, 400, 0),
+)
+
+
+def _fit_ladder_prompts(system: str, ladder, make_user) -> str:
+    """First rung whose system+user fits the budget; RAG shrinks first, product facts last."""
+    budget = GROQ_MAX_PROMPT_CHARS - 200
+    user = ""
+    for limits in ladder:
+        user = make_user(*limits)
+        if len(clean_prompt_text(system)) + len(clean_prompt_text(user)) <= budget:
+            break
+    return user
+
+
 def build_script_prompts(snapshot: dict, knowledge: str, content_mode: str, config: dict,
                          purpose: str = LEGACY_PURPOSE) -> tuple[str, str]:
     """System and user prompts for one product script in the given broadcast purpose."""
     if purpose == PRODUCT_VIDEO:
-        user_prompt = f"""
+        def make_user(ing, desc, usage, rag):
+            rag_text = _safe_source(knowledge, rag) if (knowledge and rag > 0) else ""
+            return f"""
 Hãy viết kịch bản video giới thiệu sản phẩm dùng lâu dài cho sản phẩm sau đây:
 
 THÔNG TIN SẢN PHẨM:
-{_product_source_lines(snapshot, with_price=True, ingredients=2000, description=1600, usage=800)}
+{_product_source_lines(snapshot, with_price=True, ingredients=ing, description=desc, usage=usage)}
 
 TÀI LIỆU KIẾN THỨC BỔ TRỢ (RAG):
-{_safe_source(knowledge, 2200) if knowledge else "Không có tài liệu bổ sung."}
+{rag_text or "Không có tài liệu bổ sung."}
 
 Cấu hình bổ sung:
 - Chế độ Content: {content_mode}
 - Độ dài mong muốn: {config.get('length_mode') or PRODUCT_VIDEO_LENGTH_MODE}{_style_line_after_length(config)}
 
-Viết đủ 7 phần theo đúng định dạng tiêu đề trong ngoặc vuông.
+Viết đủ 7 phần, mỗi tiêu đề trong ngoặc vuông nằm trên một dòng riêng.
 """
+        user_prompt = _fit_ladder_prompts(_PRODUCT_VIDEO_SYSTEM, _PRODUCT_VIDEO_LADDER, make_user)
         return _PRODUCT_VIDEO_SYSTEM, user_prompt
     if purpose == LIVE_AND_PRODUCT:
-        user_prompt = f"""
+        def make_user(ing, desc, usage, rag):
+            rag_text = _safe_source(knowledge, rag) if (knowledge and rag > 0) else ""
+            return f"""
 Hãy viết kịch bản livestream giới thiệu sản phẩm sau đây:
 
 THÔNG TIN SẢN PHẨM:
-{_product_source_lines(snapshot, with_price=True, ingredients=1200, description=1600, usage=800)}
+{_product_source_lines(snapshot, with_price=True, ingredients=ing, description=desc, usage=usage)}
 
 TÀI LIỆU KIẾN THỨC BỔ TRỢ (RAG):
-{_safe_source(knowledge, 1400) if knowledge else "Không có tài liệu bổ sung."}
+{rag_text or "Không có tài liệu bổ sung."}
 
 Cấu hình bổ sung:
 - Chế độ Content: {content_mode}
 - Độ dài mong muốn: {config.get('length_mode', 'Short (30-60s)')}{_style_line_after_length(config)}
 
-Viết đủ 8 phần theo đúng định dạng tiêu đề trong ngoặc vuông.
+Viết đủ 8 phần, mỗi tiêu đề trong ngoặc vuông nằm trên một dòng riêng.
 """
+        user_prompt = _fit_ladder_prompts(_LIVE_AND_PRODUCT_SYSTEM, _LIVE_AND_PRODUCT_LADDER, make_user)
         return _LIVE_AND_PRODUCT_SYSTEM, user_prompt
     return _live_only_prompts(snapshot, knowledge, content_mode, config)
 
@@ -227,9 +295,13 @@ def generate_content_and_script(snapshot: dict, knowledge: str, content_mode: st
             logger.warning("[CONTENT-AGENT] Script Council unavailable, using single-agent fallback: %s", exc)
 
     logger.info("[CONTENT-AGENT] Crafting script draft using LLM...")
-    llm = LLMProvider()
     system_prompt, user_prompt = build_script_prompts(snapshot, knowledge, content_mode, config, purpose)
-    script = llm.invoke(system_prompt, user_prompt)
+    if SCRIPT_CANDIDATES > 1:
+        from engines.script_selector import select_best_script
+        script, _report = select_best_script(system_prompt, user_prompt, snapshot, purpose, n=SCRIPT_CANDIDATES)
+        logger.info("[CONTENT-AGENT] Script draft generated successfully (best-of-%s).", SCRIPT_CANDIDATES)
+        return script
+    script = LLMProvider().invoke(system_prompt, user_prompt)
     logger.info("[CONTENT-AGENT] Script draft generated successfully.")
     return sanitize_external_retailer_mentions(script)
 

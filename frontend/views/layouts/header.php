@@ -1,6 +1,7 @@
 <?php
 // backend/app/views/layouts/header.php
 $menuCats = $menuCats ?? [];
+$supportPhone = class_exists('SupportKnowledge') ? (SupportKnowledge::contact()['phone'] ?? '') : '';
 $currentUser = current_user();
 $currentRole = strtolower(trim((string)($currentUser['role'] ?? $currentUser['vai_tro'] ?? 'khach_hang')));
 $cartCount = 0;
@@ -84,8 +85,8 @@ $socialLinks = [
   <div class="utility-strip">
     <div class="header-container utility-strip__inner">
       <div class="utility-links">
-        <span class="utility-contact"><i class="fas fa-headset me-1 text-success"></i> Hỗ trợ khách hàng: <strong>1900 0000</strong></span>
-        <span class="utility-sep">·</span>
+        <?php if ($supportPhone !== ''): ?><span class="utility-contact"><i class="fas fa-headset me-1 text-success"></i> Hỗ trợ khách hàng: <strong><?= h($supportPhone) ?></strong></span>
+        <span class="utility-sep">·</span><?php endif; ?>
         <a href="<?= BASE_URL ?>/index.php?r=tatca">Tra cứu sản phẩm</a>
         <span class="utility-sep">·</span>
         <a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang">Hệ thống cửa hàng</a>
@@ -402,7 +403,7 @@ $socialLinks = [
 
     <!-- Footer / Social in Offcanvas -->
     <div class="p-3 bg-light">
-      <div class="text-muted small mb-2"><i class="fas fa-phone me-1 text-success"></i> Hotline: <strong>1900 0000</strong></div>
+      <?php if ($supportPhone !== ''): ?><div class="text-muted small mb-2"><i class="fas fa-phone me-1 text-success"></i> Hotline: <strong><?= h($supportPhone) ?></strong></div><?php endif; ?>
       <div class="d-flex gap-3 align-items-center">
         <?php foreach ($socialLinks as $social): ?>
           <a class="text-muted fs-5" href="<?= h($social['url']) ?>" aria-label="<?= h($social['label']) ?>" target="_blank" rel="noopener noreferrer">

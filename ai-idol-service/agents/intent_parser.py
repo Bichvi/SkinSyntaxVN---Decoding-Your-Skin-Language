@@ -47,6 +47,30 @@ def clean_product_id(raw: object) -> str | None:
     return token
 
 
+_PRODUCT_WORD_ID = re.compile(
+    r"\b(?:san\s*pham|sp)\b\s*[#:\-]?\s*(\d{1,6})\b"
+    r"((?:\s*(?:,|&|\+|\bva\b|\bhoac\b)\s*\d{1,6}\b)*)"
+)
+_NOT_AN_ID_AFTER = re.compile(
+    r"\s*(?:[.,]\d|/\d|%"
+    r"|(?:ngay|thang|tuan|nam|phut|gio|h|ml|l|g|gr|gram|kg|k|nghin|ngan|trieu|tr|d|dong|vnd"
+    r"|phan\s+tram|san\s+pham|sp|mon|mieng|mau|lan|video|clip|cai|chai|hop|tuyp|loai|buoc|nguoi)\b)"
+)
+
+
+def _ids_after_product_word(text: str) -> list[str]:
+    """"sản phẩm 98", "sp 12, 34 và 56": bare numbers count only when they are not quantities/units/dates."""
+    found: list[str] = []
+    for match in _PRODUCT_WORD_ID.finditer(text):
+        run = match.group(1) + match.group(2)
+        start = match.start(1)
+        for number in re.finditer(r"\d{1,6}", run):
+            end = start + number.end()
+            if not _NOT_AN_ID_AFTER.match(text, end) and number.group(0) not in found:
+                found.append(number.group(0))
+    return found
+
+
 def _extract_explicit_ids(text: str) -> list[str]:
     patterns = (
         # An id is explicit only when the user writes "mã", "ID" or "#".
@@ -62,6 +86,9 @@ def _extract_explicit_ids(text: str) -> list[str]:
             value = clean_product_id(match)
             if value and value not in values:
                 values.append(value)
+    for value in _ids_after_product_word(normalize_text(text)):
+        if value not in values:
+            values.append(value)
     return values
 
 

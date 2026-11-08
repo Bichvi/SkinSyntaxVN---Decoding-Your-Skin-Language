@@ -623,7 +623,17 @@ class SanPham {
         }
     }
 
-    public function tangLuotXem(string $id): void {
+    public function tangLuotXem(string $id): ?int {
+        // Ưu tiên đệm vào Redis local (job nền ghi dồn sang Mongo); Redis không có thì ghi thẳng Mongo.
+        if (!class_exists('ProductViewCounter') && is_file(dirname(__DIR__) . '/services/ProductViewCounter.php')) {
+            require_once dirname(__DIR__) . '/services/ProductViewCounter.php';
+        }
+        if (class_exists('ProductViewCounter')) {
+            $pending = ProductViewCounter::record($id);
+            if ($pending !== null) {
+                return $pending;
+            }
+        }
         $filter = ['ma_san_pham' => $id];
         $update = ['$inc' => ['luot_xem' => 1]];
         
@@ -631,6 +641,7 @@ class SanPham {
         if ($result->getModifiedCount() === 0 && is_numeric($id)) {
             $this->db->san_pham->updateOne(['ma_san_pham' => (int) $id], $update);
         }
+        return null;
     }
 
     public function getCanonicalCategoryHierarchy(): array {

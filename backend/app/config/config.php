@@ -52,6 +52,12 @@ if (!function_exists('ss_load_env')) {
 				continue;
 			}
 
+			// Biến môi trường thật (Docker compose) thắng .env; .env chỉ lấp chỗ trống (XAMPP).
+			$existing = getenv($key);
+			if ($existing !== false && $existing !== '') {
+				continue;
+			}
+
 			if ((ss_starts_with($value, '"') && ss_ends_with($value, '"')) || (ss_starts_with($value, "'") && ss_ends_with($value, "'"))) {
 				$value = substr($value, 1, -1);
 			}
@@ -128,7 +134,10 @@ defined('AI_LLAMA_INDEX_RECOMMENDATION_TIMEOUT') || define('AI_LLAMA_INDEX_RECOM
 defined('AI_PROFILE_RECOMMENDATION_ENDPOINT_BASE') || define('AI_PROFILE_RECOMMENDATION_ENDPOINT_BASE', ss_env('AI_PROFILE_RECOMMENDATION_ENDPOINT_BASE', 'http://127.0.0.1:5002/api/recommend/profile'));
 defined('AI_PROFILE_RECOMMENDATION_TIMEOUT') || define('AI_PROFILE_RECOMMENDATION_TIMEOUT', 20);
 defined('AI_CHAT_ENDPOINT') || define('AI_CHAT_ENDPOINT', ss_env('AI_CHAT_ENDPOINT', 'http://127.0.0.1:5002/api/chat/auto'));
+defined('AI_AGENT_ENDPOINT') || define('AI_AGENT_ENDPOINT', ss_env('AI_AGENT_ENDPOINT', 'http://127.0.0.1:5002/api/agent/chat'));
 defined('AI_CHAT_TIMEOUT') || define('AI_CHAT_TIMEOUT', 60);
+defined('CHAT_AGENT_TOKEN_SECRET') || define('CHAT_AGENT_TOKEN_SECRET', ss_env('CHAT_AGENT_TOKEN_SECRET', ''));
+defined('CHAT_AGENT_INTERNAL_SECRET') || define('CHAT_AGENT_INTERNAL_SECRET', ss_env('CHAT_AGENT_INTERNAL_SECRET', ''));
 
 defined('LIVEKIT_URL') || define('LIVEKIT_URL', ss_env('LIVEKIT_URL', 'wss://skinsyntax-live.livekit.cloud'));
 defined('LIVEKIT_API_KEY') || define('LIVEKIT_API_KEY', ss_env('LIVEKIT_API_KEY', 'devkey'));
@@ -148,3 +157,7 @@ if (!defined('VIEW_DIR')) {
 		}
 	}
 }
+
+// Nguồn duy nhất cho hotline/email hỗ trợ: header/footer (frontend/views) gọi SupportKnowledge::contact().
+// Chỉ khai báo class, không đọc file nội dung cho tới khi được dùng.
+require_once __DIR__ . '/../services/SupportKnowledge.php';

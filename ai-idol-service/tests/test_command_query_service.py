@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from agents.service import process_agent_run
+from tests.fakes import FakeDb
 
 
 class QueryServiceTests(unittest.TestCase):
@@ -20,7 +21,9 @@ class QueryServiceTests(unittest.TestCase):
              patch("agents.service.update_agent_run", side_effect=update), \
              patch("agents.service.create_campaign", return_value=("campaign-test", True)) as create, \
              patch("agents.service.LLMProvider") as provider, \
-             patch("agents.service.parse_agent_brief") as parser:
+             patch("agents.service.parse_agent_brief") as parser, \
+             patch("agents.service.get_db", return_value=FakeDb()), \
+             patch("core.agent_runs.update_agent_run", side_effect=update):
             result = process_agent_run("run-test", catalog=self.PRODUCTS if catalog is None else catalog, enqueue_campaign=enqueue)
         provider.assert_not_called()
         parser.assert_not_called()

@@ -83,17 +83,28 @@ def combine(
     weights: Mapping[str, float] | None = None,
     bought_together: Mapping[str, float] | None = None,
     w_cop: float = config.W_COP,
+    curated: Mapping[str, bool] | None = None,
+    w_curated: float = config.W_CURATED,
+    ctr: Mapping[str, Mapping[str, float]] | None = None,
+    w_ctr: float = config.W_CTR,
 ) -> list[Ranked]:
     """Return one ``Ranked`` per (product, branch) with the product's combined score.
 
     ``bought_together`` (normalized, see ``bought_together_scores``) adds ``w_cop * value``; when
     that is the product's largest score component the reason becomes ``bought_together``.
+    ``curated`` (product id -> True when its tags are ``manual``/``llm_approved``) adds the flat
+    ``w_curated`` (U07); it never changes the reason.
+    ``ctr`` (U12, ``{section: {product_id: ctr_norm in [0,1]}}``, only products with enough impressions, see
+    ``search_service.ctr``) adds ``w_ctr * (ctr_norm - 0.5)`` to that product's score IN THAT SECTION; the median product
+    gets 0, so the boost is symmetric. Never changes the reason.
     """
 
     weights = weights or config.WEIGHTS
     sold = sold or {}
     in_stock = in_stock or {}
     bought_together = bought_together or {}
+    curated = curated or {}
+    ctr = ctr or {}
     norms = {branch: normalize(cands) for branch, cands in by_branch.items()}
     all_ids = [pid for branch_norm in norms.values() for pid in branch_norm]
     popularity = popularity_scores(sold, all_ids)
@@ -109,7 +120,7 @@ def combine(
             weights.get("popularity", 0) * popularity.get(pid, 0.0),
         )
         cop = w_cop * float(bought_together.get(pid, 0.0))
-        score = sum(parts) + cop
+        score = sum(parts) + cop + (w_curated if curated.get(pid) else 0.0)
         if cop > 0 and cop > max(parts):
             cop_led.add(pid)
         if in_stock.get(pid, True) is False:
@@ -124,11 +135,13 @@ def combine(
                 continue
             seen.add(cand.product_id)
             led = cand.product_id in cop_led
+            ctr_norm = ctr.get(branch, {}).get(cand.product_id)
+            boost = w_ctr * (float(ctr_norm) - 0.5) if ctr_norm is not None and w_ctr else 0.0
             ranked.append(
                 Ranked(
                     product_id=cand.product_id,
                     branch=branch,
-                    score=product_score[cand.product_id],
+                    score=product_score[cand.product_id] + boost,
                     reason_code="bought_together" if led else cand.reason_code,
                     reason_params=[] if led else [str(p) for p in cand.reason_params][:3],
                     branch_norm=norms[branch].get(cand.product_id, 0.0),

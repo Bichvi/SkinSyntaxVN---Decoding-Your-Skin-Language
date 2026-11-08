@@ -398,10 +398,6 @@ def _get_tool_calling_llm():
     llms = get_llms()
     if not llms:
         return None
-    for llm in llms:
-        model = getattr(llm, "model", getattr(llm, "model_name", "")).lower()
-        if model.startswith("gpt-"):
-            return llm
     return llms[0]
 
 

@@ -12,3 +12,16 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "integration: needs a real local Neo4j (NEO4J_TEST_URI/NEO4J_URI + NEO4J_PASSWORD), else skipped",
     )
+
+
+import pytest  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _no_real_redis(monkeypatch):
+    """Unit tests never talk to a developer's Redis (cache/limiter degrade to no-ops)."""
+
+    from shared.redis_kit import client as redis_client
+
+    redis_client.reset()
+    monkeypatch.setattr(redis_client, "get_redis", lambda: None)

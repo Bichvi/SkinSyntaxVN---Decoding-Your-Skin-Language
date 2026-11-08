@@ -347,6 +347,26 @@ class RejectedScriptTests(unittest.TestCase):
         self.assertEqual(segment["rejected_script_text"], "nháp")
         self.assertEqual(segment["validation_feedback"], "lý do")
         self.assertEqual(segment["script_text"], "")
+        self.assertEqual(segment["repair_attempt"], 0)
+
+    def test_get_campaign_exposes_repair_count_and_issues(self):
+        # The recovery card reads "Đã tự sửa: n/3" from repair_attempt; it showed 0/3 when missing.
+        campaign_id, job_id = oid(), oid()
+        history = [{"version": v, "passed": False, "issues": [{"code": "SCARCITY_UNVERIFIED"}]} for v in (1, 2, 3, 4)]
+        db = FakeDb(
+            ai_idol_campaigns=Collection([{"_id": campaign_id, "status": "NEEDS_ATTENTION"}]),
+            ai_idol_segments=Collection([{"_id": oid(), "campaign_id": str(campaign_id), "position": 0,
+                                          "job_id": str(job_id), "status": "FAILED"}]),
+            ai_idol_jobs=Collection([{"_id": job_id, "status": "AUTO_REPAIR_EXHAUSTED", "artifacts": {
+                "rejected_script_text": "nháp", "repair_attempt": 3, "script_version": 4,
+                "repair_history": [{"from_version": 1, "to_version": 2}], "validation_history": history}}]),
+        )
+        with patch.object(campaigns, "get_db", return_value=db):
+            segment = campaigns.get_campaign(str(campaign_id))["segments"][0]
+        self.assertEqual(segment["repair_attempt"], 3)
+        self.assertEqual(segment["script_version"], 4)
+        self.assertEqual(segment["validation_history"][-1]["issues"][0]["code"], "SCARCITY_UNVERIFIED")
+        self.assertEqual(len(segment["repair_history"]), 1)
 
 
 class ApproveBlacklistTests(unittest.TestCase):

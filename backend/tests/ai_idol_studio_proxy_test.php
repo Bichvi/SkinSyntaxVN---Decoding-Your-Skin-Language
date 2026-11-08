@@ -328,6 +328,9 @@ if ($hasImageMap) {
 $routeContracts = [
     'admin_ai_idol_products_query' => 'queryProducts',
     'admin_ai_idol_approve_platform' => 'approvePlatform',
+    'admin_ai_idol_job_retry_repair' => 'retryRepairJobScript',
+    'admin_ai_idol_job_rewrite' => 'rewriteJobScript',
+    'admin_ai_idol_job_cancel' => 'cancelJob',
 ];
 $routeKeysByFile = [];
 foreach ($entrypoints as $label => $path) {

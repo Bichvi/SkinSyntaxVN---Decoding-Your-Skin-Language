@@ -18,6 +18,7 @@ from agents.autopilot import (
     resolve_schedule,
     split_platforms,
 )
+from agents.autopilot_query import names_specific_products, relax_empty_query, set_query_signals
 from agents.intent_classifier import CREATE_CAMPAIGN, PRODUCT_SEARCH, classify_intent
 from agents.intent_parser import clean_product_id, fallback_parse, infer_purpose, normalize_text, parse_agent_brief
 from agents.command_query import (
@@ -31,7 +32,9 @@ from agents.command_query import (
     number,
 )
 from agents.query_sources import load_catalog, load_query_sources, load_vocabulary, product_id_filter
-from agents.product_resolver import _id_alias, normalize_catalog_product, resolve_products
+from agents.product_resolver import (
+    _FRAME_WORDS, _TOKEN_STOPWORDS, _id_alias, _name_tokens, _unknown_terms, normalize_catalog_product, resolve_products,
+)
 from config import (
     AGENT_ALLOW_AUTO_PUBLISH,
     AUTOPILOT_DEFAULT_PRODUCTS,
@@ -293,6 +296,7 @@ def _lifetime_sales_fallback(
     products: list[dict[str, Any]],
     batches: list[dict[str, Any]] | None,
     brief_text: str,
+    vocab=None,
 ) -> tuple[dict[str, Any], dict[str, Any]] | None:
     """Without snapshots for the period, rank by lifetime sales instead: (new query result, decision), else None.
 
@@ -306,10 +310,11 @@ def _lifetime_sales_fallback(
         or len(query_result["selected"]) >= query_plan["limit"]
     ):
         return None
+    lifetime_rank = "discount_slow" if rank == "discount_slow" else "units"
     fallback_plan = {
-        **query_plan, "rank_by": "units", "window_days": None,
+        **query_plan, "rank_by": lifetime_rank, "window_days": None,
         "summary": [
-            f"Xếp hạng: {METRIC_LABELS['units']}" if str(line).startswith("Xếp hạng:") else line
+            f"Xếp hạng: {METRIC_LABELS[lifetime_rank]}" if str(line).startswith("Xếp hạng:") else line
             for line in query_plan.get("summary") or []
         ],
         "assumptions": [
@@ -317,11 +322,53 @@ def _lifetime_sales_fallback(
             _LIFETIME_PERIOD,
         ],
     }
-    fallback = execute_query(fallback_plan, products, batches=batches, snapshots=[], brief=brief_text)
+    fallback = execute_query(fallback_plan, products, batches=batches, snapshots=[], brief=brief_text, vocab=vocab)
     if len(fallback["selected"]) <= len(query_result["selected"]):
         return None
     message = f"Chưa có số liệu {window} ngày cho tiêu chí “{METRIC_LABELS[rank]}”; xếp theo doanh số toàn kỳ thay thế."
     return fallback, make_decision("METRICS_FALLBACK", "adjusted", message)
+
+
+def _fill_short_period(
+    query_plan: dict[str, Any],
+    query_result: dict[str, Any],
+    products: list[dict[str, Any]],
+    batches: list[dict[str, Any]] | None,
+    brief_text: str,
+    vocab,
+    load_snapshots: Callable[[int], list[dict[str, Any]]] | None,
+) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    """A period ranking that found too few products: top it up from the 30-day ranking, then lifetime sales.
+
+    Same filters throughout; (new query result, decision), or None when nothing could be added.
+    """
+    rank, window, limit = query_plan["rank_by"], query_plan.get("window_days"), query_plan["limit"]
+    selected = list(query_result["selected"])
+    if rank not in _WINDOWED_RANKS or not window or not 0 < len(selected) < limit:
+        return None
+    sources: list[tuple[str, dict[str, Any], list[dict[str, Any]]]] = []
+    if window < 30 and load_snapshots is not None:
+        sources.append((f"xếp hạng 30 ngày", {**query_plan, "window_days": 30}, load_snapshots(30)))
+    lifetime_rank = "discount_slow" if rank == "discount_slow" else "units"
+    sources.append(("doanh số toàn kỳ", {**query_plan, "rank_by": lifetime_rank, "window_days": None}, []))
+    taken = {item["product_id"] for item in selected}
+    added: list[str] = []
+    for label, plan, snaps in sources:
+        if len(selected) >= limit:
+            break
+        extra = execute_query(plan, products, batches=batches, snapshots=snaps, brief=brief_text, vocab=vocab)
+        fresh = [row for row in extra["selected"] if row["product_id"] not in taken][:limit - len(selected)]
+        for row in fresh:
+            row["evidence"]["fill_source"] = label
+            taken.add(row["product_id"])
+        if fresh:
+            selected.extend(fresh)
+            added.append(f"{len(fresh)} từ {label}")
+    if not added:
+        return None
+    message = (f"Chỉ {len(query_result['selected'])} sản phẩm có số liệu {window} ngày cho “{METRIC_LABELS[rank]}”; "
+               "bổ sung " + ", ".join(added) + " với cùng bộ lọc.")
+    return {**query_result, "selected": selected}, make_decision("METRICS_FALLBACK", "adjusted", message)
 
 
 def _autopilot_query_outcome(
@@ -331,15 +378,30 @@ def _autopilot_query_outcome(
     products: list[dict[str, Any]],
     batches: list[dict[str, Any]] | None,
     brief_text: str,
+    vocab=None,
+    snapshots: list[dict[str, Any]] | None = None,
+    load_snapshots: Callable[[int], list[dict[str, Any]]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
     """Autopilot makes what it found: (query result to use, stop decision if it found nothing at all).
 
-    A short or incomplete result is explained rather than stopping; missing period figures fall back to lifetime sales.
+    A short or incomplete result is explained rather than stopping; missing period figures fall back to lifetime sales,
+    and a query that found nothing is relaxed step by step (each step recorded) until something is found.
     """
-    replaced = _lifetime_sales_fallback(query_plan, query_result, products, batches, brief_text)
+    replaced = _fill_short_period(query_plan, query_result, products, batches, brief_text, vocab, load_snapshots)
+    if replaced is None:
+        replaced = _lifetime_sales_fallback(query_plan, query_result, products, batches, brief_text, vocab)
     if replaced:
         query_result, fallback_decision = replaced
         decisions.append(fallback_decision)
+    if not query_result["selected"] and products:
+        relaxed = relax_empty_query(query_plan, lambda plan: execute_query(
+            plan, products, batches=batches, snapshots=snapshots, brief=brief_text, vocab=vocab))
+        if relaxed:
+            relaxed_plan, query_result, steps = relaxed
+            query_plan.update(relaxed_plan)
+            decisions.append(make_decision(
+                "QUERY_RELAXED", "adjusted",
+                "Không có sản phẩm nào khớp đủ điều kiện nên nới dần: " + "; ".join(steps) + "."))
     shortfall = count_shortfall(query_plan["limit"], len(query_result["selected"]))
     if shortfall and shortfall["level"] == "stopped":
         return query_result, shortfall
@@ -381,12 +443,50 @@ def _without_constraint_mismatches(
     return resolve_products(brief_text, keep, brief.product_queries, products)
 
 
+def _not_in_catalog(terms: list[str]) -> dict[str, Any]:
+    return make_decision(
+        "NOT_IN_CATALOG", "stopped",
+        f"Không tìm thấy “{', '.join(terms)}” trong catalog đang bán; không tự chọn sản phẩm thay thế. "
+        "Hãy chọn trong danh sách gợi ý hoặc sửa tên sản phẩm.",
+    )
+
+
+def _unknown_names(brief_text: str, products: list[dict[str, Any]]) -> list[str]:
+    """Capitalised words without Vietnamese accents in a set query ("3 son Dior") that the catalog never mentions.
+
+    Only such names count: a set query is full of filter words ("Lọc", "Bán Chạy", "Hàn Quốc").
+    """
+    words = re.findall(r"\w+", brief_text)[1:]  # the first word is capitalised anyway
+    names = {normalize_text(word) for word in words if word[0].isupper() and word.isascii()}
+    if not names:
+        return []
+    return [term for term in _unknown_terms([brief_text], products) if term in names]
+
+
+def _content_tokens(text: str) -> list[str]:
+    return [token for token in _name_tokens(text) if token not in _TOKEN_STOPWORDS and token not in _FRAME_WORDS]
+
+
+def _name_supports_request(name: str, queries: list[str]) -> bool:
+    """True when the candidate name shares two adjacent words with a query, or the query's only word."""
+    name_tokens = _content_tokens(name)
+    name_pairs = set(zip(name_tokens, name_tokens[1:]))
+    for query in queries:
+        tokens = _content_tokens(query)
+        if len(tokens) == 1 and tokens[0] in name_tokens:
+            return True
+        if any(pair in name_pairs for pair in zip(tokens, tokens[1:])):
+            return True
+    return False
+
+
 def _autopilot_pick(
     brief,
     resolution: dict[str, Any],
     unresolved_reasons: dict[str, str],
     popularity_unverified: bool,
     decisions: list[dict[str, Any]],
+    raw_text: str = "",
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[str]]:
     """Decide the products without asking: (selected, stop decision if nothing is left, warnings for the stop)."""
     selected = list(resolution["selected"])
@@ -399,8 +499,21 @@ def _autopilot_pick(
         )
         decisions.append(make_decision("IDS_DROPPED", "adjusted", f"Bỏ mã không dùng được: {parts}."))
         warnings.extend(_unresolved_warning(item, unresolved_reasons.get(item, "NOT_FOUND")) for item in unresolved)
+    terms = resolution.get("unknown_terms") or []
+    if terms and not brief.explicit_product_ids:
+        # A name we do not sell must not be replaced by a fuzzy look-alike.
+        return [], _not_in_catalog(terms), warnings
     if not selected and not brief.explicit_product_ids and resolution["ambiguous"]:
-        picked = resolution["ambiguous"][0]
+        # Candidates come best-scored first; take the first whose name really carries the request.
+        queries = [*brief.product_queries, raw_text or brief.goal]
+        picked = next((item for item in resolution["ambiguous"] if _name_supports_request(item["name"], queries)), None)
+        if picked is None:
+            closest = resolution["ambiguous"][0]
+            return [], make_decision(
+                "NAME_UNCLEAR", "stopped",
+                f"Chưa rõ sản phẩm: lệnh không ghi mã và không khớp rõ tên sản phẩm nào (ứng viên gần nhất “{closest['name']}”, "
+                f"mã {closest['product_id']}). Không tự chọn sản phẩm thay thế; hãy ghi mã (ví dụ “mã 98”) hoặc tên đầy đủ.",
+            ), warnings
         selected = [picked]
         decisions.append(make_decision(
             "AMBIGUOUS_PICKED", "adjusted",
@@ -553,15 +666,28 @@ def process_agent_run(
                 decisions.append(make_decision(
                     "INTENT_CREATE", "done", "Coi lệnh tìm sản phẩm này là yêu cầu làm video giới thiệu sản phẩm."))
         # Product ids chosen/typed by the staff replace the business query.
-        if (
+        vocab = None
+        wants_query = (
             not override_ids
             and classification.intent in {CREATE_CAMPAIGN, PRODUCT_SEARCH}
             and (business_query_requested(run["brief"])
                  # A plain "Tìm <danh mục>" is read-only; it never widens a create command.
                  or (classification.intent == PRODUCT_SEARCH and catalog_search_requested(run["brief"])))
-        ):
+        )
+        if autopilot and not wants_query and not override_ids and classification.intent in {CREATE_CAMPAIGN, PRODUCT_SEARCH}:
+            # A brief that describes a SET of products ("5 kem chống nắng Nhật", "sản phẩm của Eucerin") is a catalog
+            # query, not one product name: the name resolver would pick a single random candidate.
             vocab = load_vocabulary(get_db())
-            query_plan = build_query_plan(run["brief"], vocab=vocab, **query_clock)
+            signal = set_query_signals(run["brief"], vocab)
+            if signal:
+                named = resolve_products(
+                    run["brief"], [], fallback_parse(run["brief"], {}, **clock).product_queries,
+                    catalog if catalog is not None else _catalog())
+                wants_query = not names_specific_products(named, signal)
+        if wants_query:
+            if vocab is None:
+                vocab = load_vocabulary(get_db())
+            query_plan = build_query_plan(run["brief"], vocab=vocab, autopilot=autopilot, **query_clock)
             if autopilot:
                 unclear = query_questions_decision(query_plan["questions"])
                 if unclear:
@@ -570,6 +696,8 @@ def process_agent_run(
                         "query_result": execute_query(query_plan, [], brief=run["brief"]),
                     })
                 _apply_autopilot_limit(query_plan, decisions)
+                for item in query_plan.get("autopilot_notes") or []:
+                    decisions.append(make_decision(item["code"], "adjusted", item["message"]))
             update_agent_run(run_id, {"current_stage": "QUERYING_PRODUCTS"})
             # Clarification does not require a database read or an LLM request.
             products = [] if query_plan["questions"] else catalog if catalog is not None else load_catalog(get_db())
@@ -584,8 +712,25 @@ def process_agent_run(
             is_query_only = classification.intent == PRODUCT_SEARCH
             enough = len(query_result["selected"]) == query_plan["limit"]
             if autopilot:
+                # "3 son Dior" when Dior is not sold: stop rather than fill the set with other best sellers.
+                terms = _unknown_names(run["brief"], [normalize_catalog_product(item) for item in products]) if products else []
+                if terms:
+                    return _autopilot_stop(run_id, decisions, _not_in_catalog(terms), plan)
+
+                def load_period(days: int) -> list[dict[str, Any]]:
+                    if catalog is not None:
+                        return snapshots or []
+                    return load_query_sources(get_db(), {**query_plan, "window_days": days})[1]
+
                 query_result, empty = _autopilot_query_outcome(
-                    query_plan, query_result, decisions, products, batches, run["brief"])
+                    query_plan, query_result, decisions, products, batches, run["brief"], vocab, snapshots, load_period)
+                match = query_result.get("need_match")
+                if match and match["matched"] < match["requested"]:
+                    labels = ", ".join(match["labels"])
+                    decisions.append(make_decision(
+                        "NEED_RELAXED", "adjusted",
+                        f"Chỉ {match['matched']}/{match['requested']} sản phẩm khớp nhu cầu {labels}; "
+                        "phần còn lại xếp theo tiêu chí chung."))
                 plan.update(query_result=query_result, resolved_products=query_result["selected"],
                             warnings=query_result["warnings"])
                 if empty:
@@ -668,6 +813,8 @@ def process_agent_run(
                          **_needs_fields(query_result["selected"] if query_result else [], [], [], {}, ["schedule"])},
             })
             return get_agent_run(run_id) or {}
+        if autopilot and not deterministic.scheduled_at and not (run.get("overrides") or {}).get("scheduled_at"):
+            brief.scheduled_at = None  # an hour the LLM made up is not an appointment
         # A date with no usable hour (dd/mm/yyyy, "ngày mai") is still the day the admin asked for.
         requested_day = _requested_day(text, schedule_now) if autopilot and not brief.scheduled_at else None
         if requested_day is not None and not _HOUR_TOKEN.search(clock_text):
@@ -705,7 +852,7 @@ def process_agent_run(
         if autopilot:
             # Drop what cannot be used and carry on with the rest; only an empty selection stops the run.
             selected, empty, empty_warnings = _autopilot_pick(
-                brief, resolution, unresolved_reasons, popularity_unverified, decisions)
+                brief, resolution, unresolved_reasons, popularity_unverified, decisions, run["brief"])
             if empty:
                 return _autopilot_stop(run_id, decisions, empty, {
                     "intent_classification": classification_data, "brief": brief.to_dict(),
@@ -774,7 +921,12 @@ def process_agent_run(
             })
             return get_agent_run(run_id) or {}
 
-        purpose = brief.purpose or infer_purpose(normalize_text(run["brief"]), brief.scheduled_at)
+        if autopilot:
+            # Decided by rule, never by the LLM: only livestream wording or a typed time slot keeps a broadcast.
+            purpose = (run.get("overrides") or {}).get("purpose") or infer_purpose(
+                normalize_text(run["brief"]), brief.scheduled_at or ("slot" if unreadable_clock else None))
+        else:
+            purpose = brief.purpose or infer_purpose(normalize_text(run["brief"]), brief.scheduled_at)
         live = has_broadcast(purpose)
         if autopilot and live:
             # A sold-out product cannot be sold on air; its product video is unaffected.

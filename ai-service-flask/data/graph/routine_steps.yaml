@@ -1,0 +1,49 @@
+# Basic face-care routine (U09). Used by search_service.cart_analyze to tell what a cart already covers
+# and which step is missing. Step order mirrors recommendation_service/knowledge/concern_mapping.py
+# (cleanser -> toner -> serum/treatment -> moisturiser -> sunscreen in the morning; the evening adds
+# make-up removal and drops the sunscreen).
+#
+#   categories : graph Category keys. A product counts for a step when ANY key of its category chain
+#                (leaf + CHILD_OF ancestors) is in this list.
+#   core       : true = part of the minimum routine (cleanser, moisturiser, sunscreen), suggested first.
+#   optional   : true = never reported as "missing" (only suggested if the cart already uses it).
+#   label_vi   : shown to customers.
+
+# Face-care roots: the routine is only analysed when the cart holds at least one product under one of these.
+face_care_roots: [cham_soc_da_mat]
+
+sessions:
+  am: [sua_rua_mat, toner, serum, kem_duong, kem_chong_nang]
+  pm: [tay_trang, sua_rua_mat, toner, serum, kem_duong]
+
+steps:
+  tay_trang:
+    label_vi: "Tẩy trang"
+    categories: [tay_trang]
+    core: false
+    optional: true
+  sua_rua_mat:
+    label_vi: "Sữa rửa mặt"
+    categories: [sua_rua_mat]
+    core: true
+    optional: false
+  toner:
+    label_vi: "Toner / Nước cân bằng"
+    categories: [toner]
+    core: false
+    optional: false
+  serum:
+    label_vi: "Serum / Tinh chất"
+    categories: [serum, ho_tro_tri_mun]
+    core: false
+    optional: false
+  kem_duong:
+    label_vi: "Kem dưỡng ẩm"
+    categories: [kem_duong, lotion_sua_duong]
+    core: true
+    optional: false
+  kem_chong_nang:
+    label_vi: "Kem chống nắng"
+    categories: [kem_chong_nang]
+    core: true
+    optional: false

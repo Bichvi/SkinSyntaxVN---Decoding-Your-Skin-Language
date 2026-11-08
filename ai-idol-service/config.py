@@ -14,6 +14,9 @@ PORT = int(os.getenv("AI_IDOL_PORT", "5003"))
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.getenv("MONGO_DB", "skinsyntax")
 REDIS_URL = os.getenv("AI_IDOL_REDIS_URL", os.getenv("REDIS_URL", "redis://localhost:6379/2"))
+# Catalog/vocabulary cache in Redis (TTL <= 0 disables it); the events URL is the Redis db holding catalog:changes:v1.
+CATALOG_CACHE_TTL_SECONDS = int(os.getenv("AI_IDOL_CATALOG_CACHE_TTL", "300"))
+CATALOG_EVENTS_REDIS_URL = os.getenv("AI_IDOL_CATALOG_EVENTS_REDIS_URL", "")
 CHROMA_COLLECTION = os.getenv("AI_IDOL_CHROMA_COLLECTION", "products")
 CHROMA_HOST = os.getenv("AI_IDOL_CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.getenv("AI_IDOL_CHROMA_PORT", "8000"))
@@ -23,7 +26,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("AI_IDOL_GROQ_MODEL", "openai/gpt-oss-20b")
 GROQ_FALLBACK_MODELS = [
     model.strip()
-    for model in os.getenv("AI_IDOL_GROQ_FALLBACK_MODELS", "qwen/qwen3.8-27b").split(",")
+    for model in os.getenv("AI_IDOL_GROQ_FALLBACK_MODELS", "openai/gpt-oss-120b,qwen/qwen3.8-27b").split(",")
     if model.strip() and model.strip() != GROQ_MODEL
 ]
 GROQ_MAX_PROMPT_CHARS = int(os.getenv("AI_IDOL_GROQ_MAX_PROMPT_CHARS", "8000"))
@@ -42,6 +45,16 @@ SCRIPT_COUNCIL_URL = os.getenv(
     "AI_IDOL_SCRIPT_COUNCIL_URL", "http://ai-idol-agent-service:5013"
 ).rstrip("/")
 SCRIPT_COUNCIL_TIMEOUT = int(os.getenv("AI_IDOL_SCRIPT_COUNCIL_TIMEOUT", "240"))
+
+
+def _script_candidates() -> int:
+    try:
+        return max(1, min(3, int(os.getenv("AI_IDOL_SCRIPT_CANDIDATES", "2"))))
+    except (TypeError, ValueError):
+        return 2
+
+
+SCRIPT_CANDIDATES = _script_candidates()
 INTERNAL_TOKEN = os.getenv("AI_IDOL_INTERNAL_TOKEN", "").strip()
 
 AVATAR_PROVIDER = os.getenv("AVATAR_PROVIDER", "mock").lower()

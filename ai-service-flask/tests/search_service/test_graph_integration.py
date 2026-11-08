@@ -51,7 +51,11 @@ def _brands(repo, ids):
 def test_all_queries_pass_explain(repo):
     params = dict(brand="x", categories=[], category="x", ingredients=[], min_price=None, max_price=None,
                   generic_roles=gr.GENERIC_ROLES, max_rank=15, profile_size=8, seed_ids=[], exclude_brand_ids=[],
-                  skin_type=None, concerns=[], cart_ids=[])
+                  skin_type=None, concerns=[], cart_ids=[], id="1496", limit=40,
+                  # U10 find_products / explain_product
+                  universal=False, benefits=[""], include_groups=[[""]], exclude_keys=[""], avoid_keys=[""],
+                  rank_limits={"": 10000}, f_categories=False, f_concerns=False, f_benefits=False, f_include=False,
+                  f_exclude=False, f_avoid=False, need_ingredient_data=False, fetch=5, probe_keys=[""])
     for name, cypher in gr.ALL_QUERIES.items():
         with repo.driver.session() as s:
             s.run("EXPLAIN " + cypher, **params).consume()
@@ -123,3 +127,63 @@ def test_warm_queries_are_fast(repo):
         repo.category_alt("sua_rua_mat", "torriden")
         repo.personalized("da_dau", [], ["sua_rua_mat"], [])
     assert (time.perf_counter() - started) / 3 < 0.5
+
+
+# -- U08: SIMILAR_PRODUCTS (detail page "Sản phẩm tương tự") --
+def test_similar_products_1496_has_other_brand_cleansers_in_top8(repo):
+    from search_service.similar import finalize, rank_candidates
+
+    rows = repo.similar_products("1496", "", 40)
+    assert rows and all(r["id"] != "1496" for r in rows)
+    top = finalize(rank_candidates(rows), ["1496"], 8)
+    assert 4 <= len(top) <= 8
+    ids = [i["product_id"] for i in top]
+    leaf = _categories(repo, ["1496", *ids])
+    brands = _brands(repo, ["1496", *ids])
+    same_leaf_other_brand = [i for i in ids if leaf.get(i) == leaf["1496"] and brands.get(i) != "torriden"]
+    assert same_leaf_other_brand, "same_leaf boost should surface other-brand cleansers"
+    from collections import Counter
+
+    assert max(Counter(brands.get(i, "") for i in ids).values()) <= 3
+
+
+def test_similar_products_skin_type_marks_fit_and_unknown_product_is_empty(repo):
+    rows = repo.similar_products("1496", "da_dau", 40)
+    assert rows and all(isinstance(r["skin_fit"], bool) for r in rows)
+    assert repo.similar_products("no-such-product", "", 40) == []
+
+
+# -- U09: cart analysis (needs `python -m graph_sync --conflicts-only` to have run) --
+def _leave_on_with(repo, key, max_rank, cats):
+    with repo.driver.session() as s:
+        rec = s.run(
+            "MATCH (p:Product {active:true})-[r:CONTAINS]->(:Ingredient {key:$k}) WHERE r.rank <= $mx "
+            "MATCH (p)-[:IN_CATEGORY]->(c:Category) WHERE c.key IN $cats "
+            "RETURN p.id AS id ORDER BY p.sold DESC LIMIT 1", k=key, mx=max_rank, cats=cats).single()
+    return rec["id"] if rec else None
+
+
+def test_cart_conflicts_retinol_and_salicylic_acid_is_high(repo):
+    from search_service.cart_analyze import conflicts_from_rows
+    from graph_sync.conflicts import load_rule_set
+
+    retinol = _leave_on_with(repo, "retinol", 12, ["serum", "kem_duong"])
+    bha = _leave_on_with(repo, "salicylic_acid", 8, ["serum", "toner", "ho_tro_tri_mun", "kem_duong"])
+    if not (retinol and bha):
+        pytest.skip("no leave-on retinol / salicylic acid products in this graph")
+    rows = repo.cart_conflicts([retinol, bha])
+    if not rows:
+        pytest.skip("CONFLICTS_WITH not loaded: run python -m graph_sync --conflicts-only")
+    cats = repo.cart_categories([retinol, bha])
+    out = conflicts_from_rows(rows, cats, load_rule_set())
+    assert out and out[0]["severity"] == "high" and {out[0]["a"], out[0]["b"]} == {retinol, bha}
+    assert repo.cart_conflicts([retinol]) == [] and repo.cart_conflicts([]) == []
+
+
+def test_conflict_edges_carry_the_rule_attributes(repo):
+    with repo.driver.session() as s:
+        rows = s.run("MATCH ()-[c:CONFLICTS_WITH]->() RETURN c.severity AS s, c.timing AS t, c.rule_id AS r, c.advice_vi AS a").data()
+    if not rows or all(r["r"] is None for r in rows):
+        pytest.skip("CONFLICTS_WITH not loaded with rule attributes")
+    assert len(rows) >= 30
+    assert all(r["s"] in ("high", "medium", "low") and r["t"] and r["r"] and r["a"] for r in rows)
