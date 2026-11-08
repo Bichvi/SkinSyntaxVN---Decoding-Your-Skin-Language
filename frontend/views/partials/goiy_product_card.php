@@ -13,7 +13,7 @@ if ($detailUrl === '') {
     $detailUrl = BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($productId);
 }
 
-$image = resolve_image_url((string)($product['link_hinh_anh'] ?? $product['image_url'] ?? ''));
+$image = resolve_image_url(product_image_source($product));
 if ($image === '') {
     $image = default_placeholder_image();
 }

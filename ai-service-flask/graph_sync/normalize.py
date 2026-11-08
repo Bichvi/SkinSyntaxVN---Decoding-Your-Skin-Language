@@ -92,3 +92,10 @@ def display_names(group: str, path: Path | str | None = None) -> dict[str, str]:
         slugify(key): str((spec or {}).get("name") or key)
         for key, spec in load_synonym_groups(path).get(group, {}).items()
     }
+
+
+def clear_caches() -> None:
+    """Forget parsed YAML (called when synonyms.yaml / aliases change at runtime, e.g. cache:invalidate)."""
+
+    for cached in (_load_yaml, group_synonyms, load_synonyms, display_names):
+        cached.cache_clear()

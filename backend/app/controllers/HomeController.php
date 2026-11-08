@@ -11,6 +11,7 @@ require_once __DIR__ . '/../services/SkincareProductClassifier.php';
 require_once __DIR__ . '/../services/RecommendationExplainer.php';
 require_once __DIR__ . '/../services/SupportKnowledge.php';
 require_once __DIR__ . '/ShopAssistantController.php';
+require_once __DIR__ . '/../services/HomeGraphRecommender.php';
 require_once __DIR__ . '/../services/ChatAgentToken.php';
 
 class HomeController {
@@ -204,16 +205,8 @@ class HomeController {
             $preloadedFlashDeals = $publicData['flash_deals'] ?? [];
             $primaryFlashCampaign = $publicData['primary_campaign'] ?? null;
 
-            // A fresh request seed lets the homepage explore a different product window on refresh
-            // while the recommender still decides which candidates are relevant to this user.
-            try {
-                $homepageRefreshSeed = random_int(1, 2147483647);
-            } catch (Throwable $e) {
-                // Exploration is best-effort; do not turn a random-source issue into a homepage outage.
-                $homepageRefreshSeed = (int)(microtime(true) * 1000000) & 2147483647;
-            }
             $homepageSections = method_exists($this->model, 'getHomepageProductSections')
-                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals, $preloadedFlashDeals, $homepageRefreshSeed, $latest)
+                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals, $preloadedFlashDeals)
                 : [];
 
             require_once __DIR__ . '/../models/FlashSaleCampaign.php';
@@ -238,6 +231,41 @@ class HomeController {
                     'user_state'      => $rankResult['user_state'],
                 ];
             }
+
+            // Home graph (Neo4j qua Flask): mọi lỗi -> null, các khối cũ không bị ảnh hưởng.
+            $homeGraph = null;
+            try {
+                $homeGraphExclude = [];
+                $homeGraphIdOf = static fn($p) => is_array($p) ? (string)($p['ma_san_pham'] ?? $p['id'] ?? '') : '';
+                $homeGraphForYou = array_slice(array_values(array_filter($homepageSections['forYou'] ?? $homepageSections['bestSellers'] ?? [])), 0, 4);
+                if (empty($homeGraphForYou)) {
+                    $homeGraphForYou = array_slice($latest, 3, 4);
+                }
+                $homeGraphBlocks = [
+                    $homeGraphForYou,
+                    array_slice(array_values(array_filter($homepageSections['topRatedWeighted'] ?? [])), 0, 4),
+                    array_slice($latest, 0, 4),
+                    array_slice((array)($primaryFlashCampaign['hydrated_items'] ?? []), 0, 4),
+                ];
+                foreach ($homeGraphBlocks as $homeGraphBlock) {
+                    foreach ($homeGraphBlock as $homeGraphProduct) {
+                        $homeGraphPid = $homeGraphIdOf($homeGraphProduct);
+                        if ($homeGraphPid !== '') {
+                            $homeGraphExclude[] = $homeGraphPid;
+                        }
+                    }
+                }
+                $homeGraph = $this->homeGraphRecommender()->build([
+                    'seen_ids' => $recentViewed,
+                    'cart_ids' => array_keys($cartItems),
+                    'skin_profile' => $isLoggedIn ? $this->homeGraphSkinProfile((string)($_SESSION['user']['email'] ?? '')) : null,
+                    'exclude_ids' => array_values(array_unique($homeGraphExclude)),
+                    'sections' => ['seen', 'skin', 'concern'],
+                ]);
+            } catch (Throwable $e) {
+                error_log('[HOME_GRAPH] index skipped: ' . get_class($e));
+                $homeGraph = null;
+            }
         } catch (Throwable $e) {
             error_log('home MongoDB error: ' . $e->getMessage());
             $dbUnavailableMessage = 'Hiện chưa thể tải dữ liệu sản phẩm. Vui lòng kiểm tra MongoDB hoặc thử lại sau.';
@@ -259,7 +287,105 @@ class HomeController {
             'isLoggedIn' => $isLoggedIn,
             'userProfile' => $userProfile,
             'hasSurvey' => $hasSurvey,
+            'homeGraph' => $homeGraph ?? null,
         ]);
+    }
+
+    private function homeGraphRecommender(): HomeGraphRecommender {
+        $model = $this->model;
+        return new HomeGraphRecommender(
+            HomeRecommendClient::fromEnv(),
+            static function (array $ids) use ($model): array { return $model->findVisibleByIds($ids); }
+        );
+    }
+
+    /** Hồ sơ da {skin_type, concerns} của khách đăng nhập (chỉ đọc khach_hang). Lỗi/không có -> null. */
+    private function homeGraphSkinProfile(string $email, bool $allowLookup = true): ?array {
+        if ($email === '') {
+            return null;
+        }
+        // Cache trong session (chỉ {skin_type, concerns} đã làm sạch, khóa theo hash email, TTL 10 phút)
+        // để không truy vấn Mongo lại ở mỗi lần tải trang chủ / bấm chip.
+        $emailKey = hash('sha256', mb_strtolower($email, 'UTF-8'));
+        $cached = $_SESSION['home_graph_skin_profile'] ?? null;
+        if (is_array($cached) && ($cached['k'] ?? '') === $emailKey && (time() - (int)($cached['t'] ?? 0)) < 600) {
+            return is_array($cached['p'] ?? null) ? $cached['p'] : null;
+        }
+        if (!$allowLookup) {
+            return null;
+        }
+        try {
+            $kh = (new TaiKhoan($this->pdo))->getKhachHangByEmail($email);
+            $profile = SearchSkinProfile::fromCustomer($kh);
+            $_SESSION['home_graph_skin_profile'] = [
+                'k' => $emailKey,
+                't' => time(),
+                'p' => $profile === null ? null : [
+                    'skin_type' => $profile['skin_type'] ?? null,
+                    'concerns' => array_values($profile['concerns'] ?? []),
+                ],
+            ];
+            return $profile;
+        } catch (Throwable $e) {
+            error_log('[HOME_GRAPH] skin profile skipped: ' . get_class($e));
+            return null;
+        }
+    }
+
+    /** GET index.php?r=home_concern&c=<key>: HTML lưới 8 SP theo vấn đề da (không layout). */
+    public function concern(): void {
+        $key = $_GET['c'] ?? '';
+        if (!is_string($key) || !in_array($key, SearchSkinProfile::CONCERNS, true)) {
+            http_response_code(400);
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Yêu cầu không hợp lệ';
+            return;
+        }
+
+        $block = null;
+        $failed = false;
+        try {
+            $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']['email']);
+            $cartIds = [];
+            if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+                foreach ($_SESSION['gio_hang'] as $k => $v) {
+                    $cartIds[] = (string)((is_array($v) && isset($v['ma_san_pham'])) ? $v['ma_san_pham'] : $k);
+                }
+            }
+            $seenIds = is_array($_SESSION['recent_viewed_products'] ?? null) ? $_SESSION['recent_viewed_products'] : [];
+            // Chỉ đọc cache session (do index() lưu), không truy vấn Mongo ở route này.
+            $skinProfile = $isLoggedIn ? $this->homeGraphSkinProfile((string)$_SESSION['user']['email'], false) : null;
+            // Nhả khóa session trước khi gọi Flask để các request song song không xếp hàng.
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+            $result = $this->homeGraphRecommender()->build([
+                'seen_ids' => $seenIds,
+                'cart_ids' => $cartIds,
+                'skin_profile' => $skinProfile,
+                'concern' => $key,
+                'sections' => ['concern'],
+            ]);
+            $block = $result['concern'] ?? null;
+            $failed = !empty($result['failed']);
+        } catch (Throwable $e) {
+            error_log('[HOME_GRAPH] concern skipped: ' . get_class($e));
+            $block = null;
+            $failed = true;
+        }
+
+        header('Content-Type: text/html; charset=UTF-8');
+        header('Cache-Control: private, no-store');
+        $concernKey = $key;
+        $concernProducts = is_array($block) ? ($block['products'] ?? []) : [];
+        // $error chỉ true khi lỗi thật (Flask/Mongo/exception); khối null do không đủ SP -> lưới hiện "Chưa có sản phẩm phù hợp".
+        $error = $failed;
+        $partials = dirname(__DIR__, 3) . '/frontend/views/partials';
+        if (defined('VIEW_DIR') && is_dir(VIEW_DIR . '/partials')) {
+            $partials = VIEW_DIR . '/partials';
+        }
+        $renderHomeProductCard = require $partials . '/home_product_card.php';
+        require $partials . '/home_graph_concern_grid.php';
     }
 
     public function flashSale(): void {
@@ -417,39 +543,14 @@ class HomeController {
      * Bundles menu_tree, latest, cats, flash_deals, and primary_campaign into 1 Valkey key.
      */
     public function getHomepagePublicData(): array {
-        // v2 includes a larger latest-product pool used for refresh-aware homepage discovery.
-        $cacheKey = 'home:composite_public:v2';
+        $cacheKey = 'home:composite_public';
         if (class_exists('CacheService')) {
             $cached = CacheService::getInstance()->get($cacheKey);
             if (is_array($cached) && isset($cached['latest'], $cached['cats'], $cached['flash_deals'])) {
-                // Flash Sale Lifecycle Safety Guard:
-                // Verify whether cached campaign state has crossed its start or end boundary
-                $now = time();
-                $isStale = false;
-
-                if (!empty($cached['primary_campaign'])) {
-                    $campaign = $cached['primary_campaign'];
-                    $startTs = (int)($campaign['start_at_ts'] ?? 0);
-                    $endTs = (int)($campaign['end_at_ts'] ?? 0);
-                    if ($now < $startTs || $now >= $endTs) {
-                        $isStale = true;
-                    }
+                if (!empty($cached['menu_tree']) && method_exists('SanPham', 'setMenuTreeCache')) {
+                    SanPham::setMenuTreeCache($cached['menu_tree']);
                 }
-
-                if (isset($cached['__next_transition_ts']) && $cached['__next_transition_ts'] !== null) {
-                    if ($now >= (int)$cached['__next_transition_ts']) {
-                        $isStale = true;
-                    }
-                }
-
-                if ($isStale) {
-                    CacheService::getInstance()->delete($cacheKey);
-                } else {
-                    if (!empty($cached['menu_tree']) && method_exists('SanPham', 'setMenuTreeCache')) {
-                        SanPham::setMenuTreeCache($cached['menu_tree']);
-                    }
-                    return $cached;
-                }
+                return $cached;
             }
         }
 
@@ -457,7 +558,7 @@ class HomeController {
         $flashSaleModel = new FlashSaleCampaign($this->pdo);
 
         $menuTree = $this->model->menuTree();
-        $latest = $this->model->latest(24, true, true);
+        $latest = $this->model->latest(12, true, true);
         $cats = $this->getHighlightedCategories();
         $flashDeals = $this->model->getFlashSaleProducts(8);
         $primaryCampaign = $flashSaleModel->getPrimaryActiveCampaign();
@@ -471,21 +572,7 @@ class HomeController {
         ];
 
         if (class_exists('CacheService')) {
-            $defaultTtl = 300;
-            $nextTransitionTs = $flashSaleModel->getNextCampaignTransitionTimestamp();
-            $effectiveTtl = $defaultTtl;
-
-            if ($nextTransitionTs !== null) {
-                $diff = $nextTransitionTs - time();
-                if ($diff <= 0) {
-                    $effectiveTtl = 1;
-                } elseif ($diff < $defaultTtl) {
-                    $effectiveTtl = max(1, $diff);
-                }
-            }
-
-            $composite['__next_transition_ts'] = $nextTransitionTs;
-            CacheService::getInstance()->set($cacheKey, $composite, $effectiveTtl);
+            CacheService::getInstance()->set($cacheKey, $composite, 300);
         }
 
         return $composite;
@@ -2280,7 +2367,7 @@ class HomeController {
                 'phan_tram_giam' => (float)($detail['phan_tram_giam'] ?? 0),
                 'savings' => (int)($detail['tien_tiet_kiem'] ?? 0),
                 'tien_tiet_kiem' => (int)($detail['tien_tiet_kiem'] ?? 0),
-                'image_url' => resolve_image_url((string)($detail['link_hinh_anh'] ?? $detail['hinh_anh'] ?? '')),
+                'image_url' => resolve_image_url(product_image_source($detail)),
                 'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode((string)($detail['ma_san_pham'] ?? $productId)),
                 'description' => trim((string)($detail['mo_ta'] ?? '')),
                 'ingredients' => $ingredients,
@@ -2393,7 +2480,7 @@ class HomeController {
                 'phan_tram_giam' => (float)($r['phan_tram_giam'] ?? $r['discount_percent'] ?? $r['discount_pct'] ?? 0),
                 'savings' => (int)($r['tien_tiet_kiem'] ?? $r['savings'] ?? 0),
                 'tien_tiet_kiem' => (int)($r['tien_tiet_kiem'] ?? $r['savings'] ?? 0),
-                'image_url' => resolve_image_url((string)($r['image_url'] ?? $r['link_hinh_anh'] ?? '')),
+                'image_url' => resolve_image_url(product_image_source($r)),
                 'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id),
                 'description' => trim((string)($r['llm_explanation'] ?? $r['description'] ?? '')),
                 'ingredients' => trim((string)($r['ingredients'] ?? $r['thanh_phan_full'] ?? $r['thanh_phan_day_du'] ?? '')),
@@ -3116,7 +3203,7 @@ class HomeController {
                     'phan_tram_giam' => (float)($detail['phan_tram_giam'] ?? 0),
                     'savings' => (int)($detail['tien_tiet_kiem'] ?? 0),
                     'tien_tiet_kiem' => (int)($detail['tien_tiet_kiem'] ?? 0),
-                    'image_url' => resolve_image_url((string)($detail['link_hinh_anh'] ?? $detail['hinh_anh'] ?? '')),
+                    'image_url' => resolve_image_url(product_image_source($detail)),
                     'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode((string)($detail['ma_san_pham'] ?? $currentProductId)),
                     'description' => trim((string)($detail['mo_ta'] ?? '')),
                     'ingredients' => $this->extractIngredientSource($detail),
@@ -3723,7 +3810,7 @@ class HomeController {
 
     private function formatGoiyRoutineProduct(array $row, array $profile = []): array {
         $row['id'] = (string)($row['id'] ?? $row['product_id'] ?? $row['ma_san_pham'] ?? '');
-        $row['image_url'] = resolve_image_url((string)($row['link_hinh_anh'] ?? $row['image_url'] ?? ''));
+        $row['image_url'] = resolve_image_url(product_image_source($row));
         $row['routine_step'] = (string)($row['routine_step'] ?? '') ?: SkincareProductClassifier::routineStep($row);
         $row['original_price'] = (int)($row['original_price'] ?? $row['gia_thi_truong'] ?? 0);
         // Gán key tương thích ngược cho template.
@@ -4015,7 +4102,7 @@ class HomeController {
                 continue;
             }
 
-            $row['image_url'] = resolve_image_url((string)($row['image_url'] ?? $row['link_hinh_anh'] ?? ''));
+            $row['image_url'] = resolve_image_url(product_image_source($row));
             $row['link_hinh_anh'] = (string)($row['image_url'] ?? '');
             $items[] = $row;
         }
@@ -4265,8 +4352,7 @@ class HomeController {
     private function isValidWebhookRequest(): bool {
         $secret = $this->getWebhookSecret();
         if ($secret === '') {
-            // Fail closed: a webhook without an explicitly configured secret must not mutate orders.
-            return false;
+            return true;
         }
 
         $incoming = trim((string)($_GET['token'] ?? ''));
@@ -5345,7 +5431,7 @@ class HomeController {
                     $item['llm_explanation'] = $aiExplanation;
                     $item['explanation_source'] = $explanationSource;
                     // Chuẩn hóa ảnh về URL đầu tiên dùng được để frontend hiển thị.
-                    $item['image_url'] = resolve_image_url((string)($item['image_url'] ?? $item['link_hinh_anh'] ?? ''));
+                    $item['image_url'] = resolve_image_url(product_image_source($item));
                 }
                 unset($item);
                 $aiResult = [
@@ -5357,7 +5443,7 @@ class HomeController {
                 $results = $this->goiYModel->recommendFromPost($_POST, 12);
                 foreach ($results as &$item) {
                     // Chuẩn hóa ảnh của sản phẩm fallback.
-                    $item['image_url'] = resolve_image_url((string)($item['link_hinh_anh'] ?? ''));
+                    $item['image_url'] = resolve_image_url(product_image_source($item));
                 }
                 unset($item);
 

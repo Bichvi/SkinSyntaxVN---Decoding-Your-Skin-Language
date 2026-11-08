@@ -47,8 +47,15 @@
     var csrf = root.dataset.ssfCsrf;
     var q = root.dataset.ssfQ || '';
     if (!endpoint || !csrf || !q || !events.length) return;
+    var payload = { q: q, csrf: csrf };
+    // U12: nhánh A/B của lượt hiển thị (chỉ có khi thí nghiệm đang chạy)
+    if (root.dataset.ssfExperiment && root.dataset.ssfVariant) {
+      payload.experiment = root.dataset.ssfExperiment;
+      payload.variant = root.dataset.ssfVariant;
+    }
     for (var i = 0; i < events.length; i += MAX_BATCH) {
-      var body = JSON.stringify({ q: q, csrf: csrf, events: events.slice(i, i + MAX_BATCH) });
+      payload.events = events.slice(i, i + MAX_BATCH);
+      var body = JSON.stringify(payload);
       var sent = false;
       try {
         if (navigator.sendBeacon) {
@@ -86,9 +93,34 @@
     });
   }, { threshold: 0.25 }) : null;
 
+  // U12: thẻ của một section theo thứ tự hiển thị (vị trí = chỉ số + 1) để tính CTR có chuẩn hóa vị trí.
+  function cardsOf(section) {
+    return section ? section.querySelectorAll('.ssf-card[data-product-id]') : [];
+  }
+
   function impression(section) {
     var key = section.dataset.ssfSectionKey;
-    if (key) track(rootOf(section), { action: 'impression', section: key });
+    if (!key) return;
+    var event = { action: 'impression', section: key };
+    var cards = cardsOf(section), ids = [];
+    for (var i = 0; i < cards.length && ids.length < 20; i++) ids.push(cards[i].dataset.productId);
+    if (ids.length) event.product_ids = ids;
+    track(rootOf(section), event);
+  }
+
+  function positionOf(card) {
+    var section = card.closest ? card.closest('[data-ssf-section-key]') : null;
+    var cards = cardsOf(section);
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i] === card) return i + 1 <= 50 ? i + 1 : 0;
+    }
+    return 0;
+  }
+
+  function withPosition(card, event) {
+    var pos = positionOf(card);
+    if (pos > 0) event.position = pos;
+    return event;
   }
 
   function scanSections() {
@@ -120,7 +152,7 @@
     if (!link) return;
     var card = link.closest('.ssf-card');
     if (card && card.dataset.productId && card.dataset.ssfSection) {
-      track(rootOf(card), { action: 'click', section: card.dataset.ssfSection, product_id: card.dataset.productId }, true);
+      track(rootOf(card), withPosition(card, { action: 'click', section: card.dataset.ssfSection, product_id: card.dataset.productId }), true);
     }
   }, true);
 
@@ -128,7 +160,7 @@
     var form = event.target;
     var card = form && form.closest ? form.closest('.ssf-card') : null;
     if (!card || !card.dataset.productId || !card.dataset.ssfSection) return;
-    track(rootOf(card), { action: 'add_to_cart', section: card.dataset.ssfSection, product_id: card.dataset.productId }, true);
+    track(rootOf(card), withPosition(card, { action: 'add_to_cart', section: card.dataset.ssfSection, product_id: card.dataset.productId }), true);
   }, true);
 
   window.addEventListener('pagehide', flush);

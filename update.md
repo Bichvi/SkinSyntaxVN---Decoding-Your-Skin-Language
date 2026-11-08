@@ -7,9 +7,27 @@ Ngôn ngữ tài liệu: tiếng Việt. Mọi khẳng định bên dưới đư
 
 Không có bí mật nào trong tài liệu này. Không đọc, không ghi giá trị `.env`. Tên biến môi trường được nêu, giá trị thì không.
 
+> **Chụp bảng thành phần trong chatbot (2026-11-06, ĐÃ CODE, chưa commit; chạy thật: E2E 22/22, AC1–AC7 PASS, p95 3,9 s; model đọc ảnh đổi sang Groq qwen/qwen3.8-27b vì llama-4-scout bị gỡ; Groq miễn phí ≈ 1 ảnh/phút):** khách gửi ảnh mặt sau chai vào Syna → Groq qwen3.8-27b chỉ chép chữ (Gemini dự phòng) → tách INCI → xung đột với giỏ (cùng luật U09) + độ hợp hồ sơ da (luật YAML mới) + xếp lịch sáng/tối + món thay thế + nhận món shop bán. Có ma trận test 18 loại khách và 8 mốc giao Sonnet. Chi tiết: [`update_chup_thanh_phan.md`](update_chup_thanh_phan.md).
+> **Giới hạn thử đăng nhập/OTP (2026-11-05):** chặn dò mật khẩu, spam mail đặt lại và spam/đoán OTP đăng ký bằng `AuthThrottle` (Redis, fail-open; OTP sai 5 lần phải lấy mã mới). Chi tiết: [update_auth_rate_limit.md](update_auth_rate_limit.md).
+> **Bộ đếm lượt xem qua Redis (2026-11-05):** trang chi tiết sản phẩm không còn ghi `$inc luot_xem` thẳng lên Atlas mỗi lượt xem mà đệm vào Redis local (`ProductViewCounter`), job `product_views_flush` ghi dồn sang Mongo mỗi 5 phút; tắt bằng `PRODUCT_VIEWS_REDIS_ENABLED=0`. Chi tiết: [update_luot_xem.md](update_luot_xem.md).
+
+> **Chatbot đặt hàng qua chat (GĐ0+GĐ1 đã code 2026-11-03, E2E PASS — đơn test #502308 đã hủy):** agent LangGraph (router + 11 tool) sau cờ `SYNA_AGENT_V2`, token HMAC giữa PHP–Flask, đơn nháp Mongo, đơn chỉ tạo khi khách bấm "Xác nhận đặt hàng"; cần thêm biến `.env` (xem mục G). Chi tiết: [`update_chatbot_dathang.md`](update_chatbot_dathang.md).
+
 > **Cập nhật 2026-10-21 (chưa commit):** Syna lọc sản phẩm theo loại da, thương hiệu, xuất xứ, nơi sản xuất, thành phần và giá. Mỗi điều kiện được phân loại HARD (bắt buộc) hoặc SOFT (ưu tiên). Syna không còn dừng vì cụm "da dầu". Chi tiết: [`update_catalog_constraints.md`](update_catalog_constraints.md).
 
+> **Technology Inventory & Implementation Traceability (2026-10-21; bản đầu commit `d2b3884`; rà soát 2026-10-23 và 2026-10-27 theo HEAD `8531657`, ghi chú `50c61ab` và LangGraph đang làm dở khi commit ngày 2026-11-03):** kiểm kê toàn bộ công nghệ (frontend, PHP, DB, AI, multimedia, infra) kèm trạng thái thực và bằng chứng `file:dòng`, phân tích LLM/embedding/hybrid search/orchestration/recommender/pipeline video, sơ đồ phụ thuộc, lịch sử đổi công nghệ, roadmap và quick reference cho agent kế tiếp. Bản 2026-10-27 thêm bảng đối chiếu yêu cầu I–XI, home graph, giai đoạn 2 đã commit, §11 hồ sơ 15 mục cho 14 công nghệ chính, §12 roadmap chi tiết, §13 quality gates. **Cảnh báo kiểm thử:** từ `ac0e63b`, 53 test của ai-idol-service gọi `get_db()` thật, nên chạy pytest với `.env` thật sẽ chạm Atlas production; phải đặt rỗng `MONGO_URI` trước (§8.5, §10 mục 28 của file đó). Chi tiết: [`update_technology_inventory.md`](update_technology_inventory.md). Lưu ý đính chính §1.1: Redis db 0 không phải cache PHP; cache PHP là CacheService qua `VALKEY_URL`.
+
 > **Smart Search + Neo4j (2026-10-21, phần lớn chưa commit):** tìm kiếm `r=tatca` khớp theo từng từ, không phân biệt dấu (commit `e42f4ac`). Khi có ít hơn 4 kết quả, trang hiện khối gợi ý có lý do. Nguồn gợi ý: Flask `POST /api/search/recommend` (đồ thị Neo4j + Chroma + đang bán chạy). Khi Flask hoặc Neo4j tắt, trang tự hạ cấp. Có thêm beacon `search_events` và script đo chỉ số. Gunicorn `skinsyntax-ai` chuyển sang gthread. Chi tiết: [`update_neo4j_search_recommendation.md`](update_neo4j_search_recommendation.md). Người dùng cần đặt `SEARCH_INTERNAL_TOKEN`.
+
+> **Sản phẩm tương tự ở trang chi tiết (U08, 2026-10-23, chưa commit):** khối carousel "Sản phẩm tương tự" dựa trên quan hệ `SIMILAR_TO` của Neo4j (xếp lại theo cùng danh mục lá, tồn kho, bán chạy, loại da; tối đa 3 sản phẩm cùng hãng), tải lười bằng fetch nên không làm chậm trang; Neo4j lỗi thì dùng embedding Chroma. Đặt cạnh khối "mua kèm" cũ, không thay thế. Chi tiết: [`update_similar_products.md`](update_similar_products.md).
+
+> **Nhãn công dụng do người duyệt (U07, 2026-10-22, chưa commit):** admin nhập tay công dụng/vấn đề da/loại da ở form sửa sản phẩm, AI (pool LLM sẵn có) chỉ gợi ý vào `tag_suggestions` và chờ duyệt ở `admin_tag_review`; ETL ưu tiên `manual` > `llm_approved` > rule. Chi tiết: `update_tag_curation.md`.
+
+> **Chất lượng dữ liệu tìm kiếm (U06, 2026-10-22, chưa commit):** tỷ lệ lượt thành phần map sang INCI tăng từ 54,2% lên 88,5%, sản phẩm có ít nhất một hoạt chất từ 77,4% lên 90,2% (sửa parser đọc đúng danh sách INCI trong dữ liệu marketing + 776 mục alias mới). Có công cụ gợi ý alias, báo cáo từ khóa 0 kết quả và script áp synonym đã duyệt. Chi tiết: [`update_search_data_quality.md`](update_search_data_quality.md).
+
+> **Chất lượng kịch bản AI Idol (2026-10-22, chưa commit):** prompt không còn bị mất xuống dòng và bị cắt giữa. Kịch bản viết theo nguyên tắc kể chuyện, có đoạn mẫu giọng văn. Trên 3 sản phẩm thật: số phần tách đúng tăng từ 1/4 lên 4/4 kịch bản; video sản phẩm hết lỗi kiểm tra tự động. Bước 4: sinh nhiều bản, LLM chấm từng cặp rồi chọn (`AI_IDOL_SCRIPT_CANDIDATES`, mặc định 2); thêm `gpt-oss-120b` vào model dự phòng để tăng hạn mức Groq miễn phí. Chi tiết: [`update_ai_idol_script_quality.md`](update_ai_idol_script_quality.md).
+
+> **Trung tâm hỗ trợ hợp nhất + chatbot trả lời chính sách/HDSD (2026-10-23, đã commit):** một nguồn sự thật `support.json` (hotline `0398606281`, giờ hỗ trợ chưa công bố), trung tâm hỗ trợ accordion 4 cấp, 9 bài hướng dẫn tính năng, Syna trả lời chính sách bằng LLM dựa trên bài chính thức có hậu kiểm số liệu và bản soạn sẵn dự phòng, widget hiện nguồn/chip/menu Trợ giúp. Eval 45 câu: đúng slug 25/25, số liệu lạ 0, p95 6 s; còn 1 lỗi khẳng định quá mức (VAT). Chi tiết: [`update_store_support_chatbot.md`](update_store_support_chatbot.md).
 
 ---
 
@@ -627,7 +645,20 @@ Rollback nhanh khi nghi ngờ self-healing: đặt `AI_IDOL_MAX_SCRIPT_REPAIR_AT
 
 `docs/superpowers/specs/2026-10-14-product-video-design.md` (video lên trang sản phẩm, 3 chế độ `purpose`), `2026-10-15-ai-idol-studio-redesign-design.md` (Studio 2 chế độ), `2026-10-16-price-aware-product-video-design.md` (giá có hạn sử dụng, `product_snapshot.pricing`, `price_claim`); plans cùng tên trong `docs/superpowers/plans/`; `ai-idol-service/README.md` (vận hành).
 
+> **Giỏ hàng: cảnh báo xung đột hoạt chất + gợi ý hoàn thiện routine (U09, 2026-10-23, chưa commit):** khối tải bằng fetch ở trang giỏ báo các cặp sản phẩm có hoạt chất kỵ nhau (nguồn luật có trích dẫn `conflict_rules.yaml`, 55 cặp INCI) và gợi ý bước còn thiếu của routine, không chặn thanh toán; Neo4j lỗi thì dùng luật Python. Kèm tách breaker PHP theo từng endpoint. Chi tiết: [`update_cart_conflicts.md`](update_cart_conflicts.md).
+
+> **Syna truy vấn Neo4j bằng tool có tham số (U10, 2026-10-23, chưa commit):** câu hỏi có điều kiện ("serum hợp da dầu, không kỵ retinol", "sữa rửa mặt không chứa cồn dưới 300k", "retinol dùng chung BHA được không", "Torriden có kem chống nắng không") được router tất định chuyển sang 4 tool Cypher cố định (`find_products`, `check_conflicts`, `explain_product`, `similar_products`); LLM chỉ diễn đạt kết quả, giá/tồn kho đọc lại từ Mongo, câu hỏi thường vẫn đi RAG. Cờ `SYNA_GRAPH_TOOLS_ENABLED`. Bộ đánh giá 32 câu: 444/444 ràng buộc đạt. Chi tiết: `update_syna_graph_tools.md`.
+
 ## Sửa sau bàn giao
 
 - Agent MANUAL + `product_video`: `ai-idol-service/agents/service.py` ghi thêm `configuration.approval_mode`. Frontend: dòng "Duyệt kịch bản" ở tóm tắt bước 4 (`studio-manual.js`) và câu ý định (`INTENT_TAILS` trong `studio-logic.js`) không còn khẳng định tự đăng, trung lập theo hai nút cuối.
 - Test: `tests/test_autopilot_service.py` (assert `approval_mode` MANUAL/AUTO), `tests/test_approval_mode.py` (config do Agent ghi: MANUAL dừng, AUTO tiếp tục với product_video), `frontend/public/assets/js/tests/studio-manual.test.js`, `studio-logic.test.js`.
+
+- U11 (vận hành tìm kiếm): đồng bộ Neo4j/Chroma/cache theo sự kiện catalog, lịch định kỳ, giám sát. Xem `update_ops_scheduler.md` và `docs/ops/search-ops.md`.
+
+- U12 (nâng cao có cổng điều kiện): hạ tầng boost CTR, khung A/B, co-purchase theo nhánh, benchmark cross-encoder; mọi cờ hành vi đang TẮT vì cổng dữ liệu/độ trễ chưa đạt. Xem `update_advanced_gated.md` và `docs/ops/search-ops.md` mục 9.
+
+- U13 (kiểm thử tổng giai đoạn 2): E2E 16 kịch bản, bench, kiểm chứng đường hoàn kho `HoaDon`, sửa nhỏ (thống kê loại tài khoản test, route `admin_sp_create`, đồng bộ trạng thái ẩn Chroma/Neo4j). Tổng hợp toàn bộ giai đoạn 2 (bảng key Redis, luồng sự kiện, lịch job, cờ, cổng U12, rủi ro): `update_search_upgrade_phase2.md`.
+
+- Trang chủ gợi ý theo đồ thị Neo4j (giai đoạn 1: "Vì bạn đã xem", "Hợp với da bạn", "Theo vấn đề da" + nhãn lý do; không đổi các thuật toán gợi ý cũ). Xem `update_home_graph_recommend.md`.
+- Sửa nhãn "Hợp moi_loai_da" ở gợi ý giỏ hàng: thêm nhãn hiển thị, và graph_sync không cho tag LLM nới sản phẩm đã có loại da riêng thành "mọi loại da" (446 sản phẩm); sửa đọc INCI "Bảng thành phần:" và bỏ suy vấn đề da cho kem chống nắng/trang điểm/tẩy trang/sữa rửa mặt; Neo4j đã đồng bộ lại 2026-11-05. Xem `update_nhan_loai_da.md`.

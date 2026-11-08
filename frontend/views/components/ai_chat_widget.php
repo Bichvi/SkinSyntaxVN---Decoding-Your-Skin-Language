@@ -39,8 +39,6 @@ if ($aiChatEmail !== '' && $pdo !== null) {
     $aiChatSkinProfile = null;
   }
 }
-$mascotFilePath = dirname(__DIR__, 2) . '/public/assets/images/syna_mascot.png';
-$mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) : '20261018';
 
 // Menu "Trợ giúp": chỉ nhóm + câu hỏi mẫu (không gửi answer/sections xuống client).
 $aiChatHelp = [];
@@ -99,7 +97,7 @@ $aiLabelScanOn = function_exists('ss_env')
   <div class="ai-chat-widget" data-ai-chat-widget data-agent-v2="<?= $aiChatAgentV2 ?>" data-chat-csrf="<?= htmlspecialchars($aiChatPurchaseCsrf, ENT_QUOTES, 'UTF-8') ?>" data-vnpay-host="<?= htmlspecialchars($aiChatVnpayHost, ENT_QUOTES, 'UTF-8') ?>">
     <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với Syna (AI Advisor)">
       <span class="ai-chat-widget__trigger-avatar" aria-hidden="true">
-        <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= $mascotVersion ?>" alt="SYNA Mascot" width="36" height="36" decoding="async">
+        <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= time() ?>" alt="SYNA Mascot">
       </span>
       <span class="ai-chat-widget__trigger-text">
         <strong>Chat với Syna</strong>
@@ -126,7 +124,7 @@ $aiLabelScanOn = function_exists('ss_env')
         <header class="ai-chat-widget__panel-head">
         <div class="ai-chat-widget__panel-head-main">
           <div class="ai-chat-widget__panel-avatar" aria-hidden="true">
-            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= $mascotVersion ?>" alt="SYNA Mascot" width="40" height="40" decoding="async" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+            <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= time() ?>" alt="SYNA Mascot" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
           </div>
           <div class="ai-chat-widget__panel-info">
             <div class="ai-chat-widget__panel-title">SYNA | AI SKINCARE ADVISOR</div>
@@ -1977,7 +1975,7 @@ $aiLabelScanOn = function_exists('ss_env')
             contentSuffix = sourceHtml + (chipHtml !== '' ? '<div class="ai-chat-widget__chip-row">' + chipHtml + '</div>' : '') + contentSuffix;
           }
           var formattedContent = isUser ? escapeHtml(message.content) : (message.labelScan ? '<p>' + escapeHtml(message.content) + '</p>' : formatMarkdown(supportContent));
-          var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png?v=' . $mascotVersion) ?>;
+          var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png?v=' . time()) ?>;
           var avatar = isUser
             ? ''
             : '<div class="ai-chat-widget__bubble-avatar" aria-hidden="true" style="overflow:hidden;border-radius:10px;"><img src="' + mascotImgUrl + '" alt="SYNA Mascot" style="width:100%;height:100%;object-fit:cover;"></div>';
@@ -2096,44 +2094,10 @@ $aiLabelScanOn = function_exists('ss_env')
         }
       };
 
-      var chatInitialized = false;
-      var ensureChatInitialized = function () {
-        if (chatInitialized) return;
-        chatInitialized = true;
-        try {
-          if (userLoggedIn) {
-            var savedConvId = window.sessionStorage.getItem('aiChatActiveConversationIdV4:' + storageScope);
-            if (savedConvId && savedConvId !== 'null' && savedConvId !== 'undefined') {
-              activeConversationId = savedConvId;
-              selectConversation(savedConvId);
-            }
-          } else {
-            var stored = window.sessionStorage.getItem(storageKey);
-            if (stored) {
-              var parsed = JSON.parse(stored);
-              if (Array.isArray(parsed)) {
-                messages = parsed.map(function (item) {
-                  if (item && item.agentUi && item.agentUi.kind === 'draft_card') {
-                    return { role: 'assistant', content: 'Đơn nháp (đã hết phiên)' };
-                  }
-                  return item;
-                });
-              }
-            }
-          }
-        } catch (error) {}
-
-        renderMessages();
-        if (messages.length === 0) {
-          injectGreeting();
-        }
-      };
-
       var openWidget = function () {
         if (!panel || !trigger) {
           return;
         }
-        ensureChatInitialized();
         if (closeTimer) {
           window.clearTimeout(closeTimer);
           closeTimer = null;
@@ -2789,6 +2753,30 @@ $aiLabelScanOn = function_exists('ss_env')
       };
       // â”€â”€ End auto-greeting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+      try {
+        if (userLoggedIn) {
+          var savedConvId = window.sessionStorage.getItem('aiChatActiveConversationIdV4:' + storageScope);
+          if (savedConvId && savedConvId !== 'null' && savedConvId !== 'undefined') {
+            activeConversationId = savedConvId;
+            selectConversation(savedConvId);
+          }
+        } else {
+          var stored = window.sessionStorage.getItem(storageKey);
+          if (stored) {
+            var parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              messages = parsed.map(function (item) {
+                if (item && item.agentUi && item.agentUi.kind === 'draft_card') {
+                  return { role: 'assistant', content: 'Đơn nháp (đã hết phiên)' };
+                }
+                return item;
+              });
+            }
+          }
+        }
+      } catch (error) {
+      }
+
       window.openSynaChat = function () {
         if (typeof openWidget === 'function') {
           openWidget();
@@ -2843,11 +2831,9 @@ $aiLabelScanOn = function_exists('ss_env')
         });
       }
 
-      // Lazy-initialize chat messages and conversation during idle time if not already opened
-      if ('requestIdleCallback' in window) {
-        window.requestIdleCallback(ensureChatInitialized, { timeout: 4000 });
-      } else {
-        setTimeout(ensureChatInitialized, 3000);
+      // Inject greeting after first render if no prior history
+      if (messages.length === 0) {
+        injectGreeting();
       }
     });
   </script>

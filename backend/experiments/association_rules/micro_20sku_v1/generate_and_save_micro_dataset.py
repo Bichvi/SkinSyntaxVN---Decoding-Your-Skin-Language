@@ -415,7 +415,7 @@ def main():
 
     # 8. Insert into MongoDB skinsyntax_research_dev.synthetic_baskets
     try:
-        client = pymongo.MongoClient('mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB')
+        client = pymongo.MongoClient(os.environ["MONGO_URI"])
         r_db = client['skinsyntax_research_dev']
         col = r_db['synthetic_baskets']
         

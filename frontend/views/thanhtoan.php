@@ -195,7 +195,7 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
                 <?php foreach ($items as $it): ?>
                   <?php
                     $p = $it['product'] ?? [];
-                    $img = resolve_image_url((string)($p['link_hinh_anh'] ?? ''));
+                    $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? ''));
                   ?>
                   <tr>
                     <td>

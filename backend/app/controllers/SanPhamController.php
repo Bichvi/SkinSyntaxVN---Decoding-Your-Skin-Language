@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../models/HoiDap.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
+require_once __DIR__ . '/../services/SearchSuggestService.php';
 
 class SanPhamController {
     private const SEARCH_KEYWORD_MAX_LEN = 250;
@@ -339,6 +340,7 @@ class SanPhamController {
         $cap2 = trim((string)($_GET['cap2'] ?? ''));
         $maDm = trim((string)($_GET['ma_danh_muc'] ?? $_GET['category_id'] ?? ''));
         $sort = trim((string)($_GET['sort'] ?? 'default'));
+        $exact = (string)($_GET['exact'] ?? '') === '1'; // U05: tắt tự sửa từ khóa, tìm đúng như đã gõ
 
         if ($maDm !== '' && $cap1 === '' && $cap2 === '') {
             $cap2 = $maDm;
@@ -356,27 +358,7 @@ class SanPhamController {
         }
 
         $perPage = 24;
-        $filterKey = 'catalog:tatca:' . md5(json_encode([
-            'p' => $page,
-            'per' => $perPage,
-            'q' => $q,
-            'c1' => $cap1,
-            'c2' => $cap2,
-            'sort' => $sort,
-            'v' => 2
-        ]));
-
-        $res = null;
-        if (class_exists('CacheService')) {
-            $res = CacheService::getInstance()->get($filterKey);
-        }
-
-        if (!is_array($res) || !isset($res['items'])) {
-            $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true, '', $sort);
-            if (class_exists('CacheService') && is_array($res) && isset($res['items'])) {
-                CacheService::getInstance()->set($filterKey, $res, 300);
-            }
-        }
+        $res = $this->fetchCatalogPage($page, $perPage, $q, $cap1, $cap2, $sort);
 
         // Bước 08: log tìm kiếm ghi sau khi có kết quả để có result_count (zero-result rate);
         // live = request live-filter chưa commit (từ khóa đang gõ dở) -> báo cáo chỉ số bỏ qua.
@@ -393,12 +375,40 @@ class SanPhamController {
             AfterResponse::defer(static function () use ($q, $logMeta, $logUserId, $logSessionId): void {
                 InteractionLogger::logSearch($q, $logMeta, $logUserId, $logSessionId);
             });
+            // U04: từ khóa phổ biến cho autocomplete - chỉ tính tìm kiếm đã commit (không phải live-filter đang gõ dở),
+            // trang 1, có kết quả; SearchPopularity tự lọc PII và nuốt lỗi Redis.
+            if (!$logMeta['live'] && $page === 1 && $logMeta['result_count'] > 0) {
+                $popularCount = $logMeta['result_count'];
+                AfterResponse::defer(static function () use ($q, $popularCount): void {
+                    SearchPopularity::record($q, $popularCount);
+                });
+            }
+        }
+
+        // U05 "Có phải bạn muốn tìm...": gõ sai tên hãng (fuzzy) -> q gốc 0 kết quả thì tự tìm theo câu đã sửa (kèm banner
+        // + link exact=1), q gốc có kết quả thì chỉ gợi ý bằng link. Lỗi Flask/timeout -> bỏ qua, trang không đổi.
+        $searchQ = $q;
+        $didYouMean = null;
+        if ($q !== '' && $page === 1 && !$exact) {
+            $corrected = $this->fuzzyCorrectedQuery($q);
+            if ($corrected !== null) {
+                $correctedRes = $this->fetchCatalogPage(1, $perPage, $corrected, $cap1, $cap2, $sort);
+                if ((int)($correctedRes['total'] ?? 0) > 0) {
+                    if ((int)($res['total'] ?? 0) === 0) {
+                        $res = $correctedRes;
+                        $searchQ = $corrected;
+                        $didYouMean = ['mode' => 'auto', 'original' => $q, 'corrected' => $corrected];
+                    } else {
+                        $didYouMean = ['mode' => 'suggest', 'original' => $q, 'corrected' => $corrected];
+                    }
+                }
+            }
         }
 
         // Smart Search Bước 06: ít/không có kết quả -> gợi ý từ Flask (không cache cùng $res).
         $searchFallback = null;
-        if ($q !== '' && $page === 1 && (int)($res['total'] ?? 0) < 4) {
-            $searchFallback = $this->buildSearchFallback($q, $res['items'] ?? []);
+        if ($searchQ !== '' && $page === 1 && (int)($res['total'] ?? 0) < 4) {
+            $searchFallback = $this->buildSearchFallback($searchQ, $res['items'] ?? []);
         }
 
         $this->render('tatca', [
@@ -410,8 +420,77 @@ class SanPhamController {
             'cap1' => $cap1,
             'cap2' => $cap2,
             'sort' => $sort,
-            'searchFallback' => $searchFallback
+            'searchFallback' => $searchFallback,
+            'qEffective' => $searchQ,
+            'didYouMean' => $didYouMean,
+            'exact' => $exact,
         ]);
+    }
+
+    /** Một trang danh mục/tìm kiếm công khai, có cache CacheService (nếu bật). Cache v3: thêm xếp hạng độ phù hợp (U05). */
+    private function fetchCatalogPage(int $page, int $perPage, string $q, string $cap1, string $cap2, string $sort): array {
+        $filterKey = 'catalog:tatca:' . md5(json_encode([
+            'p' => $page,
+            'per' => $perPage,
+            'q' => $q,
+            'c1' => $cap1,
+            'c2' => $cap2,
+            'sort' => $sort,
+            'v' => 3
+        ]));
+
+        $res = null;
+        if (class_exists('CacheService')) {
+            $res = CacheService::getInstance()->get($filterKey);
+        }
+
+        if (!is_array($res) || !isset($res['items'])) {
+            $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true, '', $sort);
+            if (class_exists('CacheService') && is_array($res) && isset($res['items'])) {
+                CacheService::getInstance()->set($filterKey, $res, 300);
+            }
+        }
+        return is_array($res) ? $res : ['items' => [], 'total' => 0];
+    }
+
+    /**
+     * U05: câu truy vấn đã sửa nếu Flask báo gõ sai tên hãng (fuzzy). Không bao giờ ném lỗi; null nếu tắt/lỗi/không cần sửa.
+     * Bỏ qua q là số hoặc quá ngắn (mã sản phẩm, đang gõ dở).
+     */
+    private function fuzzyCorrectedQuery(string $q): ?string {
+        try {
+            if (mb_strlen($q, 'UTF-8') < 4 || is_numeric($q)
+                || in_array(strtolower(ss_env('SEARCH_CORRECTION_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
+                return null;
+            }
+            require_once dirname(__DIR__) . '/services/SearchRecommendClient.php';
+            $client = SearchRecommendClient::fromEnv();
+            if ($client === null || !$this->searchIntentAllowed()) {
+                return null;
+            }
+            return SearchRecommendClient::fuzzyCorrectedQuery($client->intent($q), $q);
+        } catch (Throwable $e) {
+            error_log('[SEARCH_INTENT] correction skipped: ' . get_class($e));
+            return null;
+        }
+    }
+
+    /** Rate limit gọi intent: 120 lượt/phút theo phiên (U03 RateLimiter). Redis lỗi -> cho qua. */
+    private function searchIntentAllowed(): bool {
+        try {
+            require_once dirname(__DIR__) . '/services/RateLimiter.php';
+            $sid = session_id();
+            if ($sid !== '' && !RateLimiter::shared()->hit('search_intent', substr(hash('sha256', 'ssi-sid|' . $sid), 0, 32), 120, 60)['allowed']) {
+                return false;
+            }
+            $ip = RateLimiter::clientIdentity();
+            if ($ip !== null && !RateLimiter::shared()->hit('search_intent_ip', $ip, 240, 60)['allowed']) {
+                return false;
+            }
+        } catch (Throwable $e) {
+            // fail-open
+        }
+        return true;
     }
 
     /** Gợi ý khi tìm kiếm ít kết quả. Không bao giờ ném lỗi; null nếu tính năng tắt hoặc lỗi hoàn toàn. */
@@ -422,6 +501,9 @@ class SanPhamController {
             require_once dirname(__DIR__) . '/services/SearchEventTracker.php'; // csrf cho beacon trong partial
             if (in_array(strtolower(ss_env('SEARCH_FALLBACK_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
                 return null;
+            }
+            if (!$this->searchFallbackAllowed()) {
+                return null; // U03: vượt giới hạn -> chỉ bỏ khối gợi ý, trang tìm kiếm vẫn hiển thị bình thường
             }
 
             $excludeIds = [];
@@ -445,7 +527,7 @@ class SanPhamController {
             $skinProfile = $email !== '' ? $this->searchSkinProfile($email) : null;
 
             $client = SearchRecommendClient::fromEnv();
-            $response = $client ? $client->recommend($q, $userHash, $skinProfile, $cartIds, $excludeIds, 8) : null;
+            $response = $client ? $client->recommend($q, $userHash, $skinProfile, $cartIds, $excludeIds, 8, SearchEventTracker::sessionHash()) : null;
 
             $model = $this->model;
             return SearchFallbackBuilder::build(
@@ -458,6 +540,28 @@ class SanPhamController {
             error_log('[SEARCH_RECOMMEND] fallback build error: ' . get_class($e));
             return null;
         }
+    }
+
+    /**
+     * Rate limit khối gợi ý (U03): 120 lượt/phút theo phiên, và theo IP công khai nếu nhận diện được.
+     * Redis lỗi/không có -> cho qua (fail-open). Không bao giờ chặn trang.
+     */
+    private function searchFallbackAllowed(): bool {
+        try {
+            require_once dirname(__DIR__) . '/services/RateLimiter.php';
+            $limiter = RateLimiter::shared();
+            $sid = session_id();
+            if ($sid !== '' && !$limiter->hit('search_fallback', substr(hash('sha256', 'ssf-sid|' . $sid), 0, 32), 120, 60)['allowed']) {
+                return false;
+            }
+            $ip = RateLimiter::clientIdentity();
+            if ($ip !== null && !$limiter->hit('search_fallback_ip', $ip, 120, 60)['allowed']) {
+                return false;
+            }
+        } catch (Throwable $e) {
+            error_log('[SEARCH_RECOMMEND] rate limit skipped: ' . get_class($e));
+        }
+        return true;
     }
 
     /** Hồ sơ da của khách đăng nhập cho tìm kiếm (chỉ đọc khach_hang). Lỗi/không có -> null. */
@@ -705,6 +809,202 @@ class SanPhamController {
         ]);
     }
 
+    /**
+     * U08: khối "Sản phẩm tương tự" tải lười từ trang chi tiết. GET ?r=similar_products&id=<ma_san_pham>
+     * -> 200 + HTML partial (partials/similar_products.php) khi có >= 2 sản phẩm hiển thị được; 204 (rỗng) khi tắt,
+     * Flask lỗi/breaker mở hoặc không đủ sản phẩm; 400 id sai; 429 vượt giới hạn. Không bao giờ ném lỗi ra trang.
+     */
+    public function similarProducts() {
+        header('Cache-Control: private, no-store');
+        $id = trim((string)($_GET['id'] ?? ''));
+        if (!preg_match('/^[A-Za-z0-9_-]{1,32}$/', $id)) {
+            http_response_code(400);
+            return;
+        }
+        if (in_array(strtolower(ss_env('SIMILAR_PRODUCTS_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
+            http_response_code(204);
+            return;
+        }
+        // Đọc trạng thái phiên rồi nhả khóa ngay: request này chỉ đọc, không nên chặn các request song song cùng phiên.
+        $cartIds = [];
+        if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+            $cartIds = array_slice(array_map('strval', array_keys($_SESSION['gio_hang'])), 0, 40);
+        }
+        $email = (string)($_SESSION['user']['email'] ?? '');
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        try {
+            require_once dirname(__DIR__) . '/services/SearchRecommendClient.php';
+            require_once dirname(__DIR__) . '/services/SearchEventTracker.php'; // csrf cho beacon trong partial
+            require_once dirname(__DIR__) . '/services/SearchReasonFormatter.php';
+            if (!$this->similarProductsAllowed()) {
+                http_response_code(429);
+                header('Retry-After: 30');
+                return;
+            }
+            $client = SearchRecommendClient::fromEnv();
+            if (!$client) {
+                http_response_code(204);
+                return;
+            }
+            $skinType = null;
+            if ($email !== '') {
+                $profile = $this->searchSkinProfile($email);
+                $skinType = is_array($profile) ? ($profile['skin_type'] ?? null) : null;
+            }
+            $response = $client->similar($id, is_string($skinType) ? $skinType : null, array_merge([$id], $cartIds), 8);
+            $ids = [];
+            foreach ((array)($response['items'] ?? []) as $item) {
+                $ids[] = (string)$item['product_id'];
+            }
+            $products = [];
+            if ($ids) {
+                foreach ($this->model->findVisibleByIds($ids) as $product) {
+                    $key = (string)($product['ma_san_pham'] ?? $product['id'] ?? '');
+                    if ($key !== '') {
+                        $products[$key] = $product;
+                    }
+                }
+            }
+            $similarItems = [];
+            foreach ((array)($response['items'] ?? []) as $item) {
+                $pid = (string)$item['product_id'];
+                if (!isset($products[$pid]) || $pid === $id) {
+                    continue; // ẩn/hết hiệu lực trong Mongo
+                }
+                $product = $products[$pid];
+                $product['reason_code'] = (string)$item['reason_code'];
+                $product['reason_text'] = SearchReasonFormatter::format((string)$item['reason_code'], (array)$item['reason_params']);
+                $similarItems[] = $product;
+            }
+            if (count($similarItems) < 2) {
+                http_response_code(204);
+                return;
+            }
+            $similarProductId = $id;
+            $similarDegraded = !empty($response['degraded']);
+            $similarTitle = SearchReasonFormatter::sectionTitle('similar');
+            header('Content-Type: text/html; charset=utf-8');
+            $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+            require $viewDir . '/partials/similar_products.php';
+        } catch (Throwable $e) {
+            error_log('[SEARCH_SIMILAR] block error: ' . get_class($e));
+            if (!headers_sent()) {
+                http_response_code(204);
+            }
+        }
+    }
+
+    /**
+     * U09: GET index.php?r=cart_analyze -> khối "Lưu ý hoạt chất + Hoàn thiện routine" của giỏ hàng (HTML partial).
+     * Đọc giỏ từ phiên, gọi Flask `cart/analyze` (timeout 1s, breaker riêng). 200 + HTML khi có cảnh báo hoặc gợi ý;
+     * 204 khi tắt (CART_INSIGHTS_ENABLED=0), giỏ trống, Flask lỗi/breaker mở, hoặc không có gì để hiện; 429 vượt giới hạn.
+     * Không bao giờ ném lỗi ra trang giỏ hàng, không chặn thanh toán.
+     */
+    public function cartInsights() {
+        header('Cache-Control: private, no-store');
+        if (in_array(strtolower(ss_env('CART_INSIGHTS_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
+            http_response_code(204);
+            return;
+        }
+        $cartIds = [];
+        if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+            $cartIds = array_slice(array_map('strval', array_keys($_SESSION['gio_hang'])), 0, 50);
+        }
+        $email = (string)($_SESSION['user']['email'] ?? '');
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close(); // chỉ đọc: không giữ khóa phiên khi chờ Flask
+        }
+        if (!$cartIds) {
+            http_response_code(204);
+            return;
+        }
+        try {
+            require_once dirname(__DIR__) . '/services/SearchRecommendClient.php';
+            require_once dirname(__DIR__) . '/services/SearchEventTracker.php'; // csrf cho beacon trong partial
+            require_once dirname(__DIR__) . '/services/SearchReasonFormatter.php';
+            require_once dirname(__DIR__) . '/services/CartInsights.php';
+            if (!$this->insightsAllowed('cart_insights')) {
+                http_response_code(429);
+                header('Retry-After: 30');
+                return;
+            }
+            $client = SearchRecommendClient::fromEnv();
+            if (!$client) {
+                http_response_code(204);
+                return;
+            }
+            $profile = $email !== '' ? $this->searchSkinProfile($email) : null;
+            $analysis = $client->cartAnalyze($cartIds, is_array($profile) ? $profile : null);
+            if ($analysis === null) {
+                http_response_code(204);
+                return;
+            }
+            $want = array_values(array_unique(array_merge(CartInsights::productIds($analysis))));
+            $products = [];
+            if ($want) {
+                foreach ($this->model->findVisibleByIds($want) as $product) {
+                    $key = (string)($product['ma_san_pham'] ?? $product['id'] ?? '');
+                    if ($key !== '') {
+                        $products[$key] = $product;
+                    }
+                }
+            }
+            $cartInsights = CartInsights::build($analysis, $products, $cartIds);
+            if (empty($cartInsights['visible'])) {
+                http_response_code(204);
+                return;
+            }
+            header('Content-Type: text/html; charset=utf-8');
+            $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+            require $viewDir . '/partials/cart_insights.php';
+        } catch (Throwable $e) {
+            error_log('[SEARCH_CART] block error: ' . get_class($e));
+            if (!headers_sent()) {
+                http_response_code(204);
+            }
+        }
+    }
+
+    /** Giới hạn khối giỏ hàng: 60 lượt/phút theo phiên, 120/phút theo IP công khai. Redis lỗi -> cho qua. */
+    private function insightsAllowed(string $scope): bool {
+        try {
+            require_once dirname(__DIR__) . '/services/RateLimiter.php';
+            $limiter = RateLimiter::shared();
+            $sid = session_id();
+            if ($sid !== '' && !$limiter->hit($scope, substr(hash('sha256', $scope . '-sid|' . $sid), 0, 32), 60, 60)['allowed']) {
+                return false;
+            }
+            $ip = RateLimiter::clientIdentity();
+            if ($ip !== null && !$limiter->hit($scope . '_ip', $ip, 120, 60)['allowed']) {
+                return false;
+            }
+        } catch (Throwable $e) {
+            error_log('[SEARCH_CART] rate limit skipped: ' . get_class($e));
+        }
+        return true;
+    }
+
+    /** Giới hạn khối tương tự: 60 lượt/phút theo phiên, 120/phút theo IP công khai. Redis lỗi -> cho qua. */
+    private function similarProductsAllowed(): bool {
+        try {
+            require_once dirname(__DIR__) . '/services/RateLimiter.php';
+            $limiter = RateLimiter::shared();
+            $sid = session_id();
+            if ($sid !== '' && !$limiter->hit('similar_products', substr(hash('sha256', 'ssim-sid|' . $sid), 0, 32), 60, 60)['allowed']) {
+                return false;
+            }
+            $ip = RateLimiter::clientIdentity();
+            if ($ip !== null && !$limiter->hit('similar_products_ip', $ip, 120, 60)['allowed']) {
+                return false;
+            }
+        } catch (Throwable $e) {
+            error_log('[SEARCH_SIMILAR] rate limit skipped: ' . get_class($e));
+        }
+        return true;
+    }
+
     public function liveSearch() {
         header('Content-Type: application/json; charset=utf-8');
 
@@ -755,11 +1055,20 @@ class SanPhamController {
                 return;
             }
 
-            $results = $this->model->searchLive($q, 5, true);
+            // U04: sản phẩm khớp theo từng từ (token cuối là tiền tố) + thương hiệu/danh mục/từ khóa phổ biến.
+            // `results` giữ nguyên là danh sách sản phẩm (app mobile dùng); các nhóm khác nằm trong `groups`.
+            $t0 = microtime(true);
+            $suggest = new SearchSuggestService($this->model);
+            $payload = $suggest->suggest($q);
+            // Server-Timing: đo thời gian xử lý phía server (không gồm nginx/mạng) để theo dõi p95 gợi ý;
+            // desc = cache (Redis theo tiền tố) | index (chỉ mục Redis) | mongo (truy vấn Atlas)
+            header(sprintf('Server-Timing: suggest;dur=%.1f;desc="%s"', (microtime(true) - $t0) * 1000, $suggest->lastSource()));
             echo json_encode([
                 'type' => 'live_search',
-                'results' => $results,
-            ], JSON_UNESCAPED_UNICODE);
+                'results' => $payload['results'],
+                'groups' => $payload['groups'],
+                'cached' => $payload['cached'],
+            ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         } catch (Throwable $e) {
             http_response_code(500);
             echo json_encode([

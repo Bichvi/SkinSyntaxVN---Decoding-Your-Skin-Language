@@ -31,7 +31,7 @@ $ssimCsrf = class_exists('SearchEventTracker') ? SearchEventTracker::csrfToken()
         if (!is_array($p)) continue;
         $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
         if ($productId === '') continue;
-        $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+        $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
         $giaBan = (string)($p['gia_ban'] ?? '');
         $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
         $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;

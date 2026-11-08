@@ -995,6 +995,7 @@ final class SearchRecommendClient
         }
     }
 }
+
 /**
  * Giữ lại cho tương thích (breaker + test cũ): bọc RedisLite (U03) với API get/setex/ping như trước.
  * Timeout 200ms; lỗi -> null/false, không ném.

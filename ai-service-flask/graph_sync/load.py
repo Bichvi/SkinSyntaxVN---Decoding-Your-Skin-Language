@@ -31,7 +31,8 @@ UPSERT_PRODUCTS = """
 UNWIND $rows AS r
 MERGE (p:Product {id: r.id})
 SET p += r.props, p.active = r.active,
-    p.ingredient_source = r.ingredient_source, p.category_source = r.category_source
+    p.ingredient_source = r.ingredient_source, p.category_source = r.category_source,
+    p.tag_source = coalesce(r.tag_source, 'rule')
 WITH p, r
 OPTIONAL MATCH (p)-[old:OF_BRAND|IN_CATEGORY|CONTAINS|SUITABLE_FOR|TARGETS|HAS_BENEFIT|MADE_IN]->()
 DELETE old
@@ -56,10 +57,10 @@ FOREACH (s IN r.skin_types |
   MERGE (p)-[:SUITABLE_FOR {source: s.source}]->(n))
 FOREACH (c IN r.concerns |
   MERGE (n:Concern {key: c.key}) SET n.name = c.name
-  MERGE (p)-[:TARGETS {source: 'inferred'}]->(n))
+  MERGE (p)-[:TARGETS {source: coalesce(c.source, 'inferred')}]->(n))
 FOREACH (b IN r.benefits |
   MERGE (n:Benefit {key: b.key}) SET n.name = b.name
-  MERGE (p)-[:HAS_BENEFIT {source: 'inferred'}]->(n))
+  MERGE (p)-[:HAS_BENEFIT {source: coalesce(b.source, 'inferred')}]->(n))
 FOREACH (o IN r.origin |
   MERGE (n:Origin {key: o.key}) SET n.name = o.name
   MERGE (p)-[:MADE_IN]->(n))
@@ -72,13 +73,28 @@ SET p.active = false
 RETURN count(p) AS n
 """
 
+DEACTIVATE_IDS = """
+MATCH (p:Product) WHERE p.id IN $ids AND p.active = true
+SET p.active = false
+RETURN count(p) AS n
+"""
+
+# Ingredient nodes no product contains any more (renamed/aliased/parsed away) and with no other
+# relationship (CONFLICTS_WITH / HELPS keep theirs). Full sync only: a --since run sees few products.
+PRUNE_ORPHAN_INGREDIENTS = """
+MATCH (i:Ingredient) WHERE NOT (i)--()
+DELETE i
+RETURN count(*) AS n
+"""
+
 REPLACE_CONFLICTS = "MATCH (:Ingredient)-[old:CONFLICTS_WITH]->(:Ingredient) DELETE old"
 UPSERT_CONFLICTS = """
 UNWIND $pairs AS c
 MERGE (a:Ingredient {key: c.a}) ON CREATE SET a.name = c.a_name, a.inci = c.a_name
 MERGE (b:Ingredient {key: c.b}) ON CREATE SET b.name = c.b_name, b.inci = c.b_name
 MERGE (a)-[r:CONFLICTS_WITH]->(b)
-SET r.severity = c.severity, r.reason = c.reason
+SET r.severity = c.severity, r.reason = c.reason, r.timing = c.timing, r.advice_vi = c.advice_vi,
+    r.rule_id = c.rule_id, r.evidence = c.evidence
 """
 
 REPLACE_HELPS = "MATCH (:Ingredient)-[old:HELPS]->(:Concern) DELETE old"
@@ -154,13 +170,28 @@ class GraphLoader:
         result = self._write(DEACTIVATE_MISSING, ids=list(ids))
         return int(result[0]["n"]) if result else 0
 
+    def deactivate_ids(self, ids: Sequence[str]) -> int:
+        """U11: products deleted from Mongo -> ``active=false`` (history/edges stay for the nightly prune)."""
+
+        result = self._write(DEACTIVATE_IDS, ids=list(ids))
+        return int(result[0]["n"]) if result else 0
+
+    def prune_orphan_ingredients(self) -> int:
+        result = self._write(PRUNE_ORPHAN_INGREDIENTS)
+        return int(result[0]["n"]) if result else 0
+
     def load_conflicts(self, pairs: Sequence[ConflictPair], names: dict[str, str]) -> None:
         rows = [
-            {"a": p.a, "b": p.b, "severity": p.severity, "reason": p.reason,
+            {"a": p.a, "b": p.b, "severity": p.severity, "reason": p.reason, "timing": p.timing,
+             "advice_vi": p.advice_vi or p.reason, "rule_id": p.rule_id, "evidence": p.evidence,
              "a_name": names.get(p.a, p.a), "b_name": names.get(p.b, p.b)}
             for p in pairs
         ]
         self._write_many([(REPLACE_CONFLICTS, {}), (UPSERT_CONFLICTS, {"pairs": rows})])
+
+    def count_conflicts(self) -> int:
+        with self.driver.session(database=self.database) as session:
+            return int(session.run("MATCH ()-[r:CONFLICTS_WITH]->() RETURN count(r) AS n").single()["n"])
 
     def load_helps(self, rows: Sequence[dict[str, str]]) -> None:
         self._write_many([(REPLACE_HELPS, {}), (UPSERT_HELPS, {"rows": list(rows)})])

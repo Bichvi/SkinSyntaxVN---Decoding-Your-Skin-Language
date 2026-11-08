@@ -126,7 +126,7 @@ class TaiKhoanController {
             $products = $ai['products'] ?? [];
             if (is_array($products) && !empty($products)) {
                 foreach ($products as &$item) {
-                    $item['image_url'] = resolve_image_url((string)($item['image_url'] ?? $item['link_hinh_anh'] ?? ''));
+                    $item['image_url'] = resolve_image_url(product_image_source($item));
                 }
                 unset($item);
 
@@ -144,7 +144,7 @@ class TaiKhoanController {
         $fallback = $this->sanPhamModel->getTopTrending(8, true);
         foreach ($fallback as &$item) {
             $item['id'] = (string)($item['id'] ?? $item['ma_san_pham'] ?? '');
-            $item['image_url'] = resolve_image_url((string)($item['link_hinh_anh'] ?? $item['hinh_anh'] ?? ''));
+            $item['image_url'] = resolve_image_url(product_image_source($item));
             $item['score'] = 0;
             $item['reasons'] = ['Guest recommendation: sản phẩm phổ biến trong MongoDB.'];
         }

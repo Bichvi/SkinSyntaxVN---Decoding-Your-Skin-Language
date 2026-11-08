@@ -33,7 +33,7 @@ from apriori import apriori_first_principles, get_transactions_from_matrix
 from fpgrowth import fpgrowth_first_principles
 from generator_v2 import select_nested_products, generate_baskets_stage
 
-ATLAS_URI = 'mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB'
+ATLAS_URI = os.environ["MONGO_URI"]
 
 
 def compute_sha256(filepath: str) -> str:

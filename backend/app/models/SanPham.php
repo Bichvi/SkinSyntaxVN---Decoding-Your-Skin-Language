@@ -1,10 +1,21 @@
 <?php
 // backend/app/models/SanPham.php
 require_once __DIR__ . '/../services/ProductQueryCache.php';
+require_once __DIR__ . '/../services/SearchSkinProfile.php';
+require_once __DIR__ . '/../services/CatalogEvents.php';
 
 class SanPham {
     // Trang danh sách không dùng 3 trường nặng này; chitiet/admin đọc đầy đủ qua findById.
     private const LISTING_PROJECTION = ['mo_ta' => 0, 'thanh_phan_full' => 0, 'hdsd' => 0];
+
+    // U05 - xếp hạng kết quả tìm kiếm (sort=default + có từ khóa): _score = tổng các thành phần dưới đây.
+    // Chỉnh trọng số ở đây; công tắc khẩn cấp: SEARCH_RANKING_ENABLED=0 (quay lại thứ tự cũ của Mongo).
+    public const RANK_W_PHRASE = 100;   // tên chứa đủ mọi từ khóa liền nhau, đúng thứ tự (không dấu)
+    public const RANK_W_PREFIX = 60;    // tên bắt đầu bằng từ khóa đầu
+    public const RANK_W_TOKENS = 40;    // x (số từ khóa có trong tên / tổng số từ khóa)
+    public const RANK_W_BRAND = 30;     // thương hiệu khớp một trong các từ khóa
+    public const RANK_W_SALES = 10;     // x log10(1 + so_luong_da_ban)
+    public const RANK_W_OUT_OF_STOCK = 50; // trừ khi hết hàng
     // Chỉ các trường picker admin cần (kèm trường để normalizeProductRecord tính tồn kho/trạng thái)
     private const PICKER_PROJECTION = [
         'ma_san_pham' => 1, 'id' => 1, 'ten_san_pham' => 1, 'gia_ban' => 1,
@@ -18,6 +29,14 @@ class SanPham {
     private ?string $lastErrorMessage = null;
     private const VI_ACCENTS = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
     private const VI_ASCII = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd';
+
+    // Gợi ý khi gõ chỉ cần các trường này (+ trường normalizeProductRecord dùng để suy ra hãng/danh mục/kho)
+    private const SUGGEST_PROJECTION = [
+        'ma_san_pham' => 1, 'id' => 1, 'ten_san_pham' => 1, 'gia_ban' => 1, 'link_hinh_anh' => 1, 'hinh_anh' => 1,
+        'ma_thuong_hieu' => 1, 'ma_danh_muc' => 1, 'ma_xuat_xu' => 1, 'danh_muc_day_du' => 1, 'loai_san_pham' => 1,
+        'trang_thai' => 1, 'trang_thai_kho' => 1, 'so_luong_ton_kho' => 1, 'so_luong_ton' => 1, 'ton_kho' => 1,
+        'so_luong_da_ban' => 1, 'diem_danh_gia' => 1, 'so_luong_danh_gia' => 1,
+    ];
 
     public const CARD_PROJECTION = [
         'ma_san_pham' => 1,
@@ -361,8 +380,9 @@ class SanPham {
         return array_slice(array_values($tokens), 0, self::SEARCH_MAX_TOKENS);
     }
 
-    // Regex khớp token bất kể có dấu hay không ("sua" ~ "Sữa"), escape ký tự đặc biệt
-    private function buildAccentInsensitiveRegex(string $token): \MongoDB\BSON\Regex {
+    // Regex khớp token bất kể có dấu hay không ("sua" ~ "Sữa"), escape ký tự đặc biệt.
+    // $mode: 'substr' (mặc định, như Bước 01) | 'prefix' (đầu từ: `(^|\s)tok`) | 'word' (đủ từ: đầu từ + hết từ).
+    private function buildAccentInsensitiveRegex(string $token, string $mode = 'substr'): \MongoDB\BSON\Regex {
         $plain = strtr(mb_strtolower($token, 'UTF-8'), [
             'à'=>'a','á'=>'a','ạ'=>'a','ả'=>'a','ã'=>'a','â'=>'a','ầ'=>'a','ấ'=>'a','ậ'=>'a','ẩ'=>'a','ẫ'=>'a','ă'=>'a','ằ'=>'a','ắ'=>'a','ặ'=>'a','ẳ'=>'a','ẵ'=>'a',
             'è'=>'e','é'=>'e','ẹ'=>'e','ẻ'=>'e','ẽ'=>'e','ê'=>'e','ề'=>'e','ế'=>'e','ệ'=>'e','ể'=>'e','ễ'=>'e',
@@ -377,38 +397,99 @@ class SanPham {
                 ? '[' . self::SEARCH_ACCENT_CLASSES[$ch] . ']'
                 : preg_quote($ch, '/');
         }
+        if ($mode === 'prefix') {
+            $pattern = '(^|\s)' . $pattern;
+        } elseif ($mode === 'word') {
+            $pattern = '(^|\s)' . $pattern . '($|[\s,.;:)\/-])';
+        }
         return new \MongoDB\BSON\Regex($pattern, 'i');
     }
 
     // Mỗi token phải khớp ít nhất 1 trường (OR), mọi token phải khớp (AND). Hãng tra qua ma_thuong_hieu.
-    private function buildTokenSearchFilter(array $tokens): array {
+    // $suggestMode (U04, gợi ý khi gõ): token cuối khớp TIỀN TỐ từ (`(^|\s)tok`), các token trước khớp ĐỦ từ;
+    // hãng tra bằng map tên hãng trong cache (không thêm round-trip Atlas). $includeIngredients thêm các
+    // trường thành phần (khớp chuỗi con như trước) để chatbot vẫn tìm theo hoạt chất.
+    private function buildTokenSearchFilter(array $tokens, bool $suggestMode = false, bool $includeIngredients = false): array {
         $and = [];
-        foreach ($tokens as $tok) {
-            $rx = $this->buildAccentInsensitiveRegex($tok);
+        $lastIndex = count($tokens) - 1;
+        foreach ($tokens as $i => $tok) {
+            $isLast = $i === $lastIndex;
+            $rx = $this->buildAccentInsensitiveRegex($tok, $suggestMode ? ($isLast ? 'prefix' : 'word') : 'substr');
+            $rxCode = $suggestMode ? new \MongoDB\BSON\Regex('^' . preg_quote($tok, '/'), 'i') : $rx;
             $or = [
                 ['ten_san_pham' => $rx],
-                ['ma_san_pham' => $rx],
+                ['ma_san_pham' => $rxCode],
                 ['thuong_hieu' => $rx],
                 ['danh_muc_day_du' => $rx],
                 ['loai_san_pham' => $rx],
-                ['barcode' => $rx],
+                ['barcode' => $rxCode],
             ];
-            $brandIds = [];
-            try {
-                foreach ($this->db->thuong_hieu->find(['ten_thuong_hieu' => $rx], ['projection' => ['ma_thuong_hieu' => 1], 'limit' => 50]) as $b) {
-                    if (isset($b['ma_thuong_hieu'])) {
-                        $brandIds[] = $b['ma_thuong_hieu'];
-                    }
+            if ($suggestMode && $includeIngredients) {
+                $rxSub = $this->buildAccentInsensitiveRegex($tok);
+                foreach (['thanh_phan', 'thanh_phan_full', 'thanh_phan_sach', 'thanh_phan_chinh'] as $field) {
+                    $or[] = [$field => $rxSub];
                 }
-            } catch (\Throwable $e) {
-                // Không tra được hãng thì vẫn tìm theo các trường còn lại
             }
+            $brandIds = $suggestMode ? $this->brandIdsMatchingRegex($rx) : $this->brandIdsFromDb($rx);
             if (!empty($brandIds)) {
                 $or[] = ['ma_thuong_hieu' => ['$in' => $brandIds]];
             }
             $and[] = ['$or' => $or];
         }
         return ['$and' => $and];
+    }
+
+    private function brandIdsFromDb(\MongoDB\BSON\Regex $rx): array {
+        $brandIds = [];
+        try {
+            foreach ($this->db->thuong_hieu->find(['ten_thuong_hieu' => $rx], ['projection' => ['ma_thuong_hieu' => 1], 'limit' => 50]) as $b) {
+                if (isset($b['ma_thuong_hieu'])) {
+                    $brandIds[] = $b['ma_thuong_hieu'];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Không tra được hãng thì vẫn tìm theo các trường còn lại
+        }
+        return $brandIds;
+    }
+
+    // Như brandIdsFromDb nhưng khớp trên map mã->tên hãng đã cache (file 10 phút), không gọi Atlas.
+    private function brandIdsMatchingRegex(\MongoDB\BSON\Regex $rx): array {
+        $pattern = '/' . $rx->getPattern() . '/iu';
+        $ids = [];
+        try {
+            foreach ($this->cachedLookupMap('thuong_hieu') as $id => $name) {
+                if ($name !== '' && @preg_match($pattern, $name) === 1) {
+                    // Mã hãng trong san_pham có thể lưu số hoặc chuỗi: đưa cả hai dạng vào $in
+                    $ids[] = ctype_digit((string)$id) ? (int)$id : (string)$id;
+                    if (ctype_digit((string)$id)) {
+                        $ids[] = (string)$id;
+                    }
+                    if (count($ids) >= 100) {
+                        break;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Không có map hãng thì vẫn tìm theo các trường còn lại
+        }
+        return $ids;
+    }
+
+    // Map mã => tên của một collection tra cứu (thuong_hieu|danh_muc|xuat_xu), cùng nguồn cache với lookupName().
+    private function cachedLookupMap(string $collection): array {
+        [$prop, $idField, $nameField] = self::LOOKUP_SOURCES[$collection];
+        if (self::${$prop} === null) {
+            self::${$prop} = [];
+            self::$lookupLoadedFromDb[$collection] = true;
+            $fromDb = false;
+            self::${$prop} = ProductQueryCache::remember('lookup:' . $collection, 600, function () use ($collection, $idField, $nameField, &$fromDb): array {
+                $fromDb = true;
+                return $this->loadLookupMap($collection, $idField, $nameField);
+            });
+            self::$lookupLoadedFromDb[$collection] = $fromDb;
+        }
+        return self::${$prop};
     }
 
     public function latest(int $limit = 8, bool $onlyVisibleOnWebsite = false, bool $excludeNonBeauty = false): array {
@@ -593,6 +674,15 @@ class SanPham {
         return $this->find($id, $onlyVisibleOnWebsite);
     }
 
+    /** U11: đẩy sự kiện đổi catalog (Redis Stream) cho worker đồng bộ Neo4j/Chroma/cache. Không bao giờ ném lỗi. */
+    private function emitCatalogEvent(string $type, string $id, array $extra = []): void {
+        try {
+            CatalogEvents::publish($type, $id, $extra + ['source' => 'admin']);
+        } catch (Throwable $e) {
+            error_log('emitCatalogEvent: ' . get_class($e));
+        }
+    }
+
     public function updateProductVisibility(string $id, string $status): bool {
         $this->setError(null);
         $id = trim($id);
@@ -613,6 +703,7 @@ class SanPham {
             $result = $this->db->san_pham->updateMany($filter, ['$set' => $payload]);
             if ($result->getMatchedCount() > 0) {
                 self::invalidateProductCache($id);
+                $this->emitCatalogEvent(CatalogEvents::visibilityType($normalizedStatus), $id, ['reason' => 'visibility']);
                 return true;
             }
             $this->setError('Khong tim thay san pham can cap nhat.');
@@ -1035,6 +1126,15 @@ class SanPham {
             $filter = empty($filter) ? $stockFilter : ['$and' => [$filter, $stockFilter]];
         }
 
+        // U05: trang công khai + có từ khóa + sort mặc định -> xếp theo độ phù hợp (aggregate). Admin/sort khác giữ find().
+        if ($onlyVisibleOnWebsite && !empty($searchTokens) && $this->isDefaultSort($sort) && self::rankingEnabled()) {
+            try {
+                return $this->paginateRanked($filter, $searchTokens, $skip, $perPage, $projection);
+            } catch (\Throwable $e) {
+                error_log('[SEARCH_RANK] aggregate failed, falling back to find(): ' . get_class($e));
+            }
+        }
+
         $total = $this->db->san_pham->countDocuments($filter);
         
         $options = [
@@ -1055,42 +1155,180 @@ class SanPham {
         return ['items' => $items, 'total' => $total];
     }
 
-    public function searchSuggestions(string $q, int $limit = 8, bool $onlyVisibleOnWebsite = false): array {
+    private static function rankingEnabled(): bool {
+        $v = function_exists('ss_env') ? ss_env('SEARCH_RANKING_ENABLED', '1') : '1';
+        return !in_array(strtolower($v), ['0', 'false', 'off', 'no'], true);
+    }
+
+    private function isDefaultSort(string $sort): bool {
+        $marker = ['__default__' => 1];
+        return $this->buildProductSort($sort, $marker) === $marker;
+    }
+
+    /** Trang kết quả đã xếp hạng: một aggregate ($facet) trả cả items và total. */
+    private function paginateRanked(array $filter, array $tokens, int $skip, int $perPage, ?array $projection): array {
+        $pipeline = $this->buildRankedSearchPipeline($filter, $tokens, $skip, $perPage, $projection);
+        $rows = iterator_to_array($this->db->san_pham->aggregate($pipeline, ['allowDiskUse' => true]), false);
+        $row = (array)($rows[0] ?? []);
+        $items = [];
+        foreach ((array)($row['items'] ?? []) as $doc) {
+            $items[] = $this->normalizeProductRecord($doc);
+        }
+        $totalRow = (array)(((array)($row['total'] ?? []))[0] ?? []);
+        return ['items' => $items, 'total' => (int)($totalRow['n'] ?? 0)];
+    }
+
+    /**
+     * Pipeline xếp hạng (U05). Công khai để test cấu trúc không cần DB.
+     * $match(filter) -> bỏ trường nặng -> $addFields _score -> $sort {_score, so_luong_da_ban, ma_san_pham}
+     * -> $facet {items: skip/limit/project, total: count}. Tie-breaker ma_san_pham giữ phân trang ổn định.
+     */
+    public function buildRankedSearchPipeline(array $filter, array $tokens, int $skip, int $limit, ?array $projection = null): array {
+        $tokens = array_values($tokens);
+        $stages = [['$match' => $filter]];
+        if ($projection !== null && $projection !== [] && !in_array(1, $projection, true)) {
+            $stages[] = ['$project' => $projection]; // chỉ dạng loại trừ: bỏ mo_ta/thanh_phan_full/hdsd trước khi sắp xếp
+        }
+        $stages[] = ['$addFields' => ['_score' => $this->rankingScoreExpression($tokens)]];
+        $stages[] = ['$sort' => ['_score' => -1, 'so_luong_da_ban' => -1, 'ma_san_pham' => 1]];
+        $stages[] = ['$facet' => [
+            'items' => [['$skip' => max(0, $skip)], ['$limit' => max(1, $limit)], ['$project' => ['_score' => 0]]],
+            'total' => [['$count' => 'n']],
+        ]];
+        return $stages;
+    }
+
+    /** Biểu thức $add các thành phần điểm (xem RANK_W_*). */
+    public function rankingScoreExpression(array $tokens): array {
+        $patterns = [];
+        foreach ($tokens as $tok) {
+            $patterns[] = $this->buildAccentInsensitiveRegex((string)$tok)->getPattern();
+        }
+        $n = max(1, count($patterns));
+        $match = static fn(string $pattern): array => ['$regexMatch' => ['input' => '$$n', 'regex' => $pattern, 'options' => 'i']];
+        $when = static fn(array $cond, $then): array => ['$cond' => [$cond, $then, 0]];
+
+        $brandIds = [];
+        foreach ($tokens as $tok) {
+            foreach ($this->brandIdsMatchingRegex($this->buildAccentInsensitiveRegex((string)$tok)) as $id) {
+                $brandIds[gettype($id) . ':' . $id] = $id; // int 24 và "24" là hai giá trị khác nhau trong Mongo
+            }
+        }
+        $brandIds = array_values($brandIds);
+
+        $terms = [
+            $when($match(implode('\s+', $patterns)), self::RANK_W_PHRASE),
+            $when($match('^' . $patterns[0]), self::RANK_W_PREFIX),
+            ['$multiply' => [
+                self::RANK_W_TOKENS / $n,
+                ['$add' => array_map(static fn(string $pt): array => ['$cond' => [$match($pt), 1, 0]], $patterns)],
+            ]],
+            $brandIds === [] ? 0 : $when(['$in' => ['$ma_thuong_hieu', $brandIds]], self::RANK_W_BRAND),
+            ['$multiply' => [self::RANK_W_SALES, ['$log10' => ['$add' => [1, ['$max' => [0,
+                ['$convert' => ['input' => '$so_luong_da_ban', 'to' => 'double', 'onError' => 0, 'onNull' => 0]]]]]]]]],
+            $when(['$or' => [
+                ['$eq' => ['$trang_thai_kho', 'het_hang']],
+                ['$and' => [['$isNumber' => '$so_luong_ton_kho'], ['$lte' => ['$so_luong_ton_kho', 0]]]],
+            ]], -self::RANK_W_OUT_OF_STOCK),
+        ];
+        return ['$let' => [
+            'vars' => ['n' => ['$convert' => ['input' => '$ten_san_pham', 'to' => 'string', 'onError' => '', 'onNull' => '']]],
+            'in' => ['$add' => $terms],
+        ]];
+    }
+
+    /**
+     * Gợi ý sản phẩm khi gõ (U04). Cùng logic token với tìm kiếm Bước 01: AND giữa token, OR giữa trường,
+     * không dấu, hãng tra qua ma_thuong_hieu; token cuối (đang gõ dở) khớp TIỀN TỐ từ, các token trước khớp đủ từ.
+     * Xếp: tên bắt đầu bằng cụm đang gõ -> mọi token là đầu từ trong tên -> còn lại; trong mỗi bậc theo so_luong_da_ban.
+     * $includeIngredients (mặc định true, giữ hành vi cũ cho chatbot) thêm khớp theo trường thành phần.
+     * Định dạng phần tử trả về không đổi (normalizeProductRecord).
+     */
+    public function searchSuggestions(string $q, int $limit = 8, bool $onlyVisibleOnWebsite = false, bool $includeIngredients = true): array {
         $limit = max(1, min(20, $limit));
         $q = trim($q);
         if ($q === '') return [];
 
-        $filter = [];
-        $regex = $this->buildSearchRegex($q);
-        $filter['$or'] = [
-            ['ten_san_pham' => $regex],
-            ['ma_san_pham' => $regex],
-            ['thanh_phan' => $regex],
-            ['thanh_phan_full' => $regex],
-            ['thanh_phan_sach' => $regex],
-            ['thanh_phan_chinh' => $regex]
-        ];
+        $tokens = self::tokenizeSearchQuery($q);
+        if ($tokens === []) {
+            // Chỉ toàn stopword: giữ khớp nguyên cụm như trước
+            $tokens = [mb_strtolower(preg_replace('/\s+/u', ' ', $q) ?? $q, 'UTF-8')];
+        }
+        $filter = $this->buildTokenSearchFilter($tokens, true, $includeIngredients);
+        if (is_numeric($q)) {
+            $filter = ['$or' => [['ma_san_pham' => (int)$q], ['ma_san_pham' => (string)(int)$q], $filter]];
+        }
 
         if ($onlyVisibleOnWebsite) {
             $filter = ['$and' => [$filter, $this->availableProductFilter()]];
         }
 
-        // Gợi ý/live search không dùng mo_ta, thanh_phan_full, hdsd -> bỏ khỏi projection; cache 120 s để đỡ round-trip Atlas
+        // Lấy dư (theo bán chạy) rồi xếp lại trong PHP để tên khớp tiền tố lên đầu; projection mỏng + cache 120 s.
+        $fetch = max(30, $limit * 3);
         $options = [
-            'sort' => ['ten_san_pham' => 1],
-            'limit' => $limit,
-            'projection' => self::LISTING_PROJECTION,
+            'sort' => ['so_luong_da_ban' => -1, 'ten_san_pham' => 1],
+            'limit' => $fetch,
+            'projection' => self::SUGGEST_PROJECTION,
         ];
 
-        $cacheKey = 'suggest:' . md5(serialize([$q, $limit, $onlyVisibleOnWebsite]));
-        return ProductQueryCache::remember($cacheKey, 120, function () use ($filter, $options): array {
+        $cacheKey = 'suggest:v2:' . md5(serialize([$q, $limit, $onlyVisibleOnWebsite, $includeIngredients]));
+        return ProductQueryCache::remember($cacheKey, 120, function () use ($filter, $options, $q, $limit): array {
             $cursor = $this->db->san_pham->find($filter, $options);
             $items = [];
             foreach ($cursor as $doc) {
                 $items[] = $this->normalizeProductRecord($doc);
             }
-            return $items;
+            return self::rankSuggestions($items, $q, $limit);
         });
+    }
+
+    /**
+     * Toàn bộ sản phẩm đang hiển thị trên web ở dạng rút gọn (chỉ đọc) cho chỉ mục gợi ý SearchSuggestIndex.
+     * Một truy vấn Atlas; gọi ngoài đường phục vụ request (sau response).
+     */
+    public function buildSuggestIndex(): array {
+        $items = [];
+        foreach ($this->db->san_pham->find($this->availableProductFilter(), ['projection' => self::SUGGEST_PROJECTION]) as $doc) {
+            $items[] = $this->normalizeProductRecord($doc);
+        }
+        return $items;
+    }
+
+    /** @internal Xếp lại danh sách đã lấy (public static để test không cần DB). */
+    public static function rankSuggestions(array $items, string $q, int $limit): array {
+        $foldQ = SearchSkinProfile::fold($q);
+        $tokens = array_map([SearchSkinProfile::class, 'fold'], self::tokenizeSearchQuery($q));
+        $scored = [];
+        foreach (array_values($items) as $pos => $item) {
+            $name = SearchSkinProfile::fold((string)($item['ten_san_pham'] ?? ''));
+            $tier = 2;
+            if ($foldQ !== '' && strncmp($name, $foldQ, strlen($foldQ)) === 0) {
+                $tier = 0;
+            } elseif ($tokens !== [] && self::allTokensStartWords($name, $tokens)) {
+                $tier = 1;
+            }
+            // Hòa điểm: tên (không dấu) rồi mã -> thứ tự ổn định, không phụ thuộc thứ tự tài liệu đầu vào
+            $scored[] = [$tier, -(int)($item['so_luong_da_ban'] ?? 0), $name, (string)($item['id'] ?? $item['ma_san_pham'] ?? $pos), $item];
+        }
+        usort($scored, static fn(array $a, array $b): int => [$a[0], $a[1], $a[2], $a[3]] <=> [$b[0], $b[1], $b[2], $b[3]]);
+        return array_map(static fn(array $row): array => $row[4], array_slice($scored, 0, max(1, $limit)));
+    }
+
+    private static function allTokensStartWords(string $foldedName, array $foldedTokens): bool {
+        $words = $foldedName === '' ? [] : explode(' ', $foldedName);
+        foreach ($foldedTokens as $tok) {
+            $hit = false;
+            foreach ($words as $w) {
+                if ($tok !== '' && strncmp($w, $tok, strlen($tok)) === 0) {
+                    $hit = true;
+                    break;
+                }
+            }
+            if (!$hit) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public function getTopTrending(int $limit = 5, bool $onlyVisibleOnWebsite = false): array {
@@ -2165,6 +2403,7 @@ class SanPham {
             $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
             $this->db->san_pham->insertOne($payload);
             self::invalidateProductCache();
+            $this->emitCatalogEvent(CatalogEvents::TYPE_CREATED, (string)$payload['ma_san_pham'], ['reason' => 'admin_insert']);
             return true;
         } catch (Throwable $e) {
             $this->setError('Loi them san pham: ' . $e->getMessage());
@@ -2192,10 +2431,12 @@ class SanPham {
                 $payload['danh_muc_day_du'] = (string)($catDoc['full_path'] ?? $catDoc['danh_muc_day_du'] ?? $catDoc['ten_danh_muc'] ?? '');
             }
             unset($payload['ma_san_pham'], $payload['ngay_tao'], $payload['created_at']);
+            [$eventType, $changedFields] = CatalogEvents::classifyChange(is_array($current) ? $current : [], $payload);
             foreach ($this->productIdentityFilters($id) as $filter) {
                 $result = $this->db->san_pham->updateOne($filter, ['$set' => $payload]);
                 if ($result->getMatchedCount() > 0) {
                     self::invalidateProductCache($id);
+                    $this->emitCatalogEvent($eventType, $id, ['reason' => 'admin_update', 'fields' => implode(',', array_slice($changedFields, 0, 12))]);
                     return true;
                 }
             }
@@ -2232,6 +2473,7 @@ class SanPham {
                 $result = $this->db->san_pham->updateOne($filter, ['$set' => $payload]);
                 if ($result->getMatchedCount() > 0) {
                     self::invalidateProductCache($id);
+                    $this->emitCatalogEvent(CatalogEvents::TYPE_STOCK, $id, ['reason' => 'admin_inventory']);
                     return true;
                 }
             }

@@ -151,8 +151,11 @@ def conflict_pairs(
 ) -> list[ConflictPair]:
     """Ingredient-key conflict pairs, undirected (a < b).
 
-    Explicit source/group arguments preserve the legacy expansion. With no arguments, merge the
-    legacy rules with the reviewed YAML; YAML severity/timing wins for shared pairs.
+    With explicit ``source_rules``/``groups`` (tests, old callers): the legacy expansion of
+    ``CONFLICT_RULES`` only, ``severity`` copied as before. With no arguments (the ETL): the legacy rules
+    (``recommendation_service/knowledge/ingredient_rules.py``, kept compatible) merged with the reviewed
+    ``data/graph/conflict_rules.yaml`` (U09); the YAML wins on a shared pair. Legacy-only pairs would get
+    ``severity=medium``; today the YAML contains all of them, so none are left.
     """
 
     explicit = source_rules is not None or groups is not None

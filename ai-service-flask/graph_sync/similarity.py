@@ -10,7 +10,7 @@ from __future__ import annotations
 import heapq
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Collection, Iterable, Mapping, Sequence
 
 TOP_INGREDIENTS = 15
 ACTIVE_ROLES = frozenset({"active", "uv_filter"})
@@ -91,8 +91,12 @@ def _reason(a: ProductFeatures, b: ProductFeatures) -> tuple[str, list[str]]:
     return "shared_ingredients", [a.names.get(k, k) for k in shared[:3]]
 
 
-def candidate_pairs(products: Sequence[ProductFeatures]) -> set[tuple[int, int]]:
-    """Index pairs (i<j) sharing a not-too-common top-15 ingredient or the same category."""
+def candidate_pairs(products: Sequence[ProductFeatures],
+                    restrict: "Collection[int] | None" = None) -> set[tuple[int, int]]:
+    """Index pairs (i<j) sharing a not-too-common top-15 ingredient or the same category.
+
+    ``restrict`` (U11 local similarity): keep only pairs with at least one end in this index set.
+    """
 
     n = len(products)
     max_df = max(CANDIDATE_MIN_DF_CAP, int(CANDIDATE_MAX_DF * n))
@@ -107,6 +111,13 @@ def candidate_pairs(products: Sequence[ProductFeatures]) -> set[tuple[int, int]]
     for token, members in postings.items():
         if token.startswith("i:") and len(members) > max_df:
             continue
+        if restrict is not None:
+            focus = [m for m in members if m in restrict]
+            for a in focus:
+                for b in members:
+                    if a != b:
+                        pairs.add((a, b) if a < b else (b, a))
+            continue
         for x in range(len(members)):
             for y in range(x + 1, len(members)):
                 pairs.add((members[x], members[y]))
@@ -117,16 +128,25 @@ def compute_similar(
     products: Iterable[ProductFeatures],
     top_k: int = 10,
     min_score: float = 0.2,
+    only_sources: "Collection[str] | None" = None,
 ) -> list[dict[str, Any]]:
     """Directed edges ``source -> target`` (top ``top_k`` per source, score >= ``min_score``).
 
     Deterministic: ties broken by target id. Output sorted by source id then rank.
+    ``only_sources`` (U11 local similarity): only compute/emit edges whose source id is in this set; the
+    edges of those sources are identical to the full computation (top-k per source over all candidates).
     """
 
     items = sorted(products, key=lambda p: p.id)
+    wanted: set[int] | None = None
+    if only_sources is not None:
+        ids = {str(s) for s in only_sources}
+        wanted = {idx for idx, p in enumerate(items) if p.id in ids}
     heaps: dict[int, list[tuple[float, str, int]]] = defaultdict(list)
 
     def push(src: int, dst: int, score: float) -> None:
+        if wanted is not None and src not in wanted:
+            return
         # min-heap keyed by (score, inverted id order) so the worst candidate is popped first
         entry = (score, _neg_key(items[dst].id), dst)
         heap = heaps[src]
@@ -135,7 +155,7 @@ def compute_similar(
         elif entry > heap[0]:
             heapq.heapreplace(heap, entry)
 
-    for i, j in candidate_pairs(items):
+    for i, j in candidate_pairs(items, wanted):
         score = score_pair(items[i], items[j])
         if score + 1e-12 < min_score:
             continue

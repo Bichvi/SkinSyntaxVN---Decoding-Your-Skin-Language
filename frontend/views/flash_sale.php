@@ -112,7 +112,7 @@ $hasActiveCampaign = !empty($campaign) && $totalDeals > 0;
       <?php foreach ($deals as $dealIdx => $deal): ?>
         <?php
           $productId = (string)($deal['id'] ?? $deal['ma_san_pham'] ?? '');
-          $img = resolve_image_url((string)($deal['link_hinh_anh'] ?? $deal['hinh_anh'] ?? ''));
+          $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($deal) : (string)($deal['link_hinh_anh'] ?? $deal['hinh_anh'] ?? ''));
           $flashPrice = (int)($deal['flash_price'] ?? $deal['effective_price'] ?? 0);
           $regularPrice = (int)($deal['regular_price'] ?? $deal['gia_ban'] ?? 0);
           $discountPct = (int)($deal['discount_percent'] ?? $deal['phan_tram_giam'] ?? 0);

@@ -1,0 +1,8 @@
+metric,value
+searches,157
+searches_with_result_count,5
+zero_result,5
+zero_result_rate,1.0
+live_partial_skipped,0
+fallback_sessions,1
+chip_click_best_sellers,1

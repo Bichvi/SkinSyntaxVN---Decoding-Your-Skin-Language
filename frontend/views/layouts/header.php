@@ -8,6 +8,9 @@ $cartCount = 0;
 foreach (($_SESSION['gio_hang'] ?? []) as $qty) {
   $cartCount += (int)$qty;
 }
+$siteLogoPath = dirname(__DIR__, 2) . '/public/assets/images/logo.png';
+$siteLogoVersion = is_file($siteLogoPath) ? (string)@filemtime($siteLogoPath) : '1';
+$siteLogoUrl = BASE_URL . '/assets/images/logo.png?v=' . rawurlencode($siteLogoVersion);
 
 // Chuẩn hóa danh sách Level-2 groups từ cây phân cấp canonical danh_muc
 $menuGroups = [];
@@ -65,8 +68,10 @@ $socialLinks = [
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SkinSyntax</title>
-  <link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>/assets/images/favicon.svg">
+  <title>SkinSyntax | DECODING YOUR SKIN LANGUAGE</title>
+  <link rel="preload" as="image" href="<?= h($siteLogoUrl) ?>" fetchpriority="high">
+  <link rel="icon" type="image/png" sizes="any" href="<?= h($siteLogoUrl) ?>">
+  <link rel="alternate icon" type="image/svg+xml" href="<?= BASE_URL ?>/assets/images/favicon.svg">
   <link rel="alternate icon" href="<?= BASE_URL ?>/favicon.ico">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,9 +96,26 @@ $socialLinks = [
         <span class="utility-sep">·</span>
         <a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang">Hệ thống cửa hàng</a>
         <span class="utility-sep">·</span>
-        <a href="<?= BASE_URL ?>/index.php?r=bao_hanh">Bảo hành</a>
+        <details class="utility-dropdown">
+          <summary class="utility-dropdown__summary">Bảo hành <i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
+          <div class="utility-dropdown__menu" role="menu">
+            <a href="<?= BASE_URL ?>/index.php?r=bao_hanh" role="menuitem"><strong>Chính sách bảo hành</strong><small>Điều kiện và thời hạn hỗ trợ</small></a>
+            <a href="<?= BASE_URL ?>/index.php?r=doi_tra_hoan_tien" role="menuitem"><strong>Đổi trả &amp; hoàn tiền</strong><small>Cách gửi yêu cầu và thời gian xử lý</small></a>
+            <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_van_chuyen" role="menuitem"><strong>Vận chuyển &amp; nhận hàng</strong><small>Phí, thời gian và theo dõi đơn</small></a>
+            <a href="<?= BASE_URL ?>/index.php?r=dieu_kien_giao_dich" role="menuitem"><strong>Điều kiện giao dịch</strong><small>Quy định khi mua sắm trên SkinSyntax</small></a>
+          </div>
+        </details>
         <span class="utility-sep">·</span>
-        <a href="<?= BASE_URL ?>/index.php?r=ho_tro_khach_hang">Hỗ trợ khách hàng</a>
+        <details class="utility-dropdown">
+          <summary class="utility-dropdown__summary">Hỗ trợ khách hàng <i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
+          <div class="utility-dropdown__menu" role="menu">
+            <a href="<?= BASE_URL ?>/index.php?r=ho_tro_khach_hang" role="menuitem"><strong>Trung tâm trợ giúp</strong><small>Tìm nhanh câu trả lời theo chủ đề</small></a>
+            <a href="<?= BASE_URL ?>/index.php?r=huong_dan_nhan_otp" role="menuitem"><strong>Tài khoản &amp; OTP</strong><small>Đăng ký, đăng nhập và xác thực</small></a>
+            <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_bao_mat" role="menuitem"><strong>Bảo mật &amp; dữ liệu</strong><small>Thông tin về quyền riêng tư</small></a>
+            <a href="<?= BASE_URL ?>/index.php?r=khieu_nai" role="menuitem"><strong>Góp ý &amp; khiếu nại</strong><small>Gửi yêu cầu để được tiếp nhận</small></a>
+            <a href="<?= BASE_URL ?>/index.php?r=lien_he" role="menuitem"><strong>Liên hệ SkinSyntax</strong><small>Hotline và các kênh hỗ trợ</small></a>
+          </div>
+        </details>
       </div>
       <div class="utility-links utility-links--social">
         <?php foreach ($socialLinks as $social): ?>
@@ -120,10 +142,9 @@ $socialLinks = [
     <div class="header-container header-main__inner">
       <!-- Logo -->
       <a class="brand-lockup" href="<?= BASE_URL ?>/index.php">
-        <span class="brand-lockup__mark">S</span>
+        <img class="brand-lockup__logo" src="<?= h($siteLogoUrl) ?>" alt="" width="52" height="52" decoding="async" fetchpriority="high" aria-hidden="true">
         <span class="brand-lockup__copy">
           <strong>SkinSyntax</strong>
-          <small>DECODING YOUR SKIN LANGUAGE</small>
         </span>
       </a>
 
@@ -305,7 +326,7 @@ $socialLinks = [
 <div class="offcanvas offcanvas-end mobile-nav-offcanvas" tabindex="-1" id="mobileNavOffcanvas" aria-labelledby="mobileNavOffcanvasLabel">
   <div class="offcanvas-header border-bottom">
     <a class="brand-lockup me-auto text-decoration-none" href="<?= BASE_URL ?>/index.php">
-      <span class="brand-lockup__mark">S</span>
+      <img class="brand-lockup__logo" src="<?= h($siteLogoUrl) ?>" alt="" width="44" height="44" decoding="async" aria-hidden="true">
       <span class="brand-lockup__copy">
         <strong>SkinSyntax</strong>
         </span>
