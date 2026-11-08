@@ -1587,6 +1587,12 @@ body.site-body{
   outline:none;
 }
 
+/* Keep the primary line readable when the global utility-link hover rule wins. */
+.utility-dropdown__menu a:hover strong,
+.utility-dropdown__menu a:focus-visible strong{
+  color:#183B2B;
+}
+
 .utility-dropdown__menu strong{
   font-size:12px;
   font-weight:800;
