@@ -1270,3 +1270,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </style>
 
 <script src="<?= h(BASE_URL . '/assets/js/home-graph.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/home-graph.js')) ?>" defer></script>
+
+<?php require __DIR__ . '/components/welcome_popup.php'; ?>
