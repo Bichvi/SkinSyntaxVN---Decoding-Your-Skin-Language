@@ -144,6 +144,56 @@ if ($selectedCategoryLabel === '' && !empty($product['loai_san_pham'])) {
 			<button type="submit" class="btn btn-primary">Cập nhật</button>
 		</div>
 	</form>
+
+	<?php
+	$tagCtx = class_exists('TagCuration') ? TagCuration::formContext(is_array($product) ? $product : [], $_SESSION) : null;
+	$tagProductId = (string)($product['ma_san_pham'] ?? $product['id'] ?? '');
+	$tagSourceLabels = ['manual' => 'Nhập tay', 'llm_approved' => 'AI gợi ý, đã duyệt'];
+	?>
+	<?php if ($tagCtx !== null && $tagProductId !== ''): ?>
+	<form method="POST" action="index.php?r=admin_sp_tags" class="card border-0 shadow-sm mt-4" id="tagForm" data-testid="tag-form">
+		<div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+			<div>
+				<h2 class="h5 mb-0">Nhãn công dụng &amp; vấn đề da</h2>
+				<div class="text-muted small">Dữ liệu do người chịu trách nhiệm xác nhận, được ưu tiên hơn nhãn suy luận từ thành phần. Lưu riêng, không cần bấm &ldquo;Cập nhật&rdquo; phía trên.</div>
+			</div>
+			<div class="small text-muted text-end">
+				<?php if ($tagCtx['source'] !== ''): ?>
+					<span class="badge text-bg-success" data-testid="tag-source"><?= h($tagSourceLabels[$tagCtx['source']] ?? $tagCtx['source']) ?></span>
+					<?php if ($tagCtx['updated_at'] !== ''): ?><span class="ms-1">cập nhật <?= h($tagCtx['updated_at']) ?></span><?php endif; ?>
+				<?php else: ?>
+					<span class="badge text-bg-secondary">Chưa có nhãn nhập tay (đang dùng nhãn suy luận)</span>
+				<?php endif; ?>
+			</div>
+		</div>
+		<div class="card-body">
+			<input type="hidden" name="csrf" value="<?= h($tagCtx['csrf']) ?>">
+			<input type="hidden" name="id" value="<?= h($tagProductId) ?>">
+			<div class="row g-4">
+				<?php foreach ($tagCtx['groups'] as $tagGroup => $tagItems): ?>
+					<?php $tagField = $tagCtx['fields'][$tagGroup]; ?>
+					<div class="col-md-4">
+						<fieldset>
+							<legend class="form-label fw-semibold fs-6"><?= h($tagCtx['labels'][$tagGroup] ?? $tagGroup) ?></legend>
+							<?php if ($tagItems === []): ?>
+								<div class="text-muted small">Chưa nạp được danh sách key chuẩn.</div>
+							<?php endif; ?>
+							<?php foreach ($tagItems as $tagKey => $tagName): ?>
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" name="<?= h($tagField) ?>[]" value="<?= h($tagKey) ?>" id="tag_<?= h($tagField . '_' . $tagKey) ?>" <?= in_array($tagKey, $tagCtx['selected'][$tagGroup], true) ? 'checked' : '' ?>>
+									<label class="form-check-label" for="tag_<?= h($tagField . '_' . $tagKey) ?>"><?= h($tagName) ?></label>
+								</div>
+							<?php endforeach; ?>
+						</fieldset>
+					</div>
+				<?php endforeach; ?>
+			</div>
+		</div>
+		<div class="card-footer bg-white d-flex justify-content-end">
+			<button type="submit" class="btn btn-success" data-testid="tag-save">Lưu nhãn</button>
+		</div>
+	</form>
+	<?php endif; ?>
 </div>
 
 <datalist id="brand-options">

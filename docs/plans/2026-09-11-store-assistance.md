@@ -1,5 +1,8 @@
 # Support content and chat-assisted checkout
 
+> **Cập nhật 2026-11-03:** quyết định "không tạo đơn trong chat" của tài liệu này đã được thay bằng thiết kế mới: bot lập đơn nháp, đơn chỉ được tạo khi khách bấm "Xác nhận đặt hàng" trong khung chat (`chat_order_confirm`). Xem [`update_chatbot_dathang.md`](../../update_chatbot_dathang.md).
+
+
 ## Scope and acceptance
 - One authored support catalog drives 5 topic groups, individual articles, FAQs and grounded chat replies with article links.
 - Use actual email OTP/reset flows. Unconfirmed company identity, delivery promises, refund SLA and VAT arrangements remain explicitly unconfirmed.

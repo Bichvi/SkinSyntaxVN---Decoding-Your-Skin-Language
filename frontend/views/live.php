@@ -35,7 +35,7 @@ $pinnedName = (string)($pinnedP['ten_san_pham'] ?? 'Sản phẩm ghim ưu đãi 
 $pinnedBrand = (string)($pinnedP['thuong_hieu'] ?? 'SkinSyntax');
 $pinnedPrice = (float)($currentLive['gia_uu_dai_live'] ?? $pinnedP['gia_ban'] ?? 78000);
 $pinnedMarketPrice = (float)($pinnedP['gia_thi_truong'] ?? 0);
-$pinnedImg = resolve_image_url((string)($pinnedP['link_hinh_anh'] ?? $pinnedP['image_url'] ?? ''));
+$pinnedImg = resolve_image_url(product_image_source($pinnedP));
 
 $liveStatus = $currentLive['status'] ?? 'ended';
 $isLiveActive = ($liveStatus === 'live');
@@ -302,7 +302,7 @@ $isUpcoming = ($liveStatus === 'upcoming');
                     $pPrice = (float)($pItem['gia_ban'] ?? 0);
                     $pLivePrice = (float)($pItem['gia_uu_dai_live'] ?? $pPrice);
                     $pDealStock = (int)($pItem['so_luong_kho_deal'] ?? 20);
-                    $pImg = resolve_image_url((string)($pItem['link_hinh_anh'] ?? $pItem['hinh_anh'] ?? ''));
+                    $pImg = resolve_image_url(function_exists('product_image_source') ? product_image_source($pItem) : (string)($pItem['link_hinh_anh'] ?? $pItem['hinh_anh'] ?? ''));
                     $searchKey = mb_strtolower($pId . ' ' . $pName . ' ' . $pBrand, 'UTF-8');
                   ?>
                   <div class="live-product-item-row d-flex align-items-center gap-3 p-2.5 rounded-3 border bg-success bg-opacity-10 border-success position-relative" data-search="<?= h($searchKey) ?>" style="transition: all 0.2s ease;">
@@ -893,7 +893,7 @@ document.addEventListener('DOMContentLoaded', function() {
           'brand' => (string)($p['thuong_hieu'] ?? 'SkinSyntax'),
           'price' => (float)($p['gia_ban'] ?? 0),
           'stock' => (int)($p['so_luong_kho'] ?? $p['so_luong'] ?? $p['ton_kho'] ?? 20),
-          'img' => resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''))
+          'img' => resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''))
       ];
   }, is_array($allProducts) ? $allProducts : []), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 

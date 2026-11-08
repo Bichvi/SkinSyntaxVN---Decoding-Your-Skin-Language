@@ -1,6 +1,6 @@
 <?php
 $p = $p ?? [];
-$imgs = split_image_urls($p['link_hinh_anh'] ?? '', 10);
+$imgs = split_image_urls(function_exists('product_image_source') ? product_image_source($p) : ($p['link_hinh_anh'] ?? ''), 10);
 $main = $imgs[0] ?? default_placeholder_image();
 $reviews = $reviews ?? [];
 $reviewPermission = isset($reviewPermission) && is_array($reviewPermission) ? $reviewPermission : ['has_purchased' => false, 'has_reviewed' => false];
@@ -1618,7 +1618,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
           <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
             <?php foreach ($frequentlyBought as $fbItem): ?>
               <?php 
-                $fbImg = !empty($fbItem['hinh_anh']) ? $fbItem['hinh_anh'] : default_placeholder_image();
+                $fbImg = resolve_image_url(function_exists('product_image_source') ? product_image_source($fbItem) : (string)($fbItem['hinh_anh'] ?? $fbItem['link_hinh_anh'] ?? ''));
                 $fbUrl = BASE_URL . '/index.php?r=chitiet&id=' . urlencode((string)$fbItem['ma_san_pham']);
                 $source = $fbItem['recommendation_source'] ?? '';
                 $isGenuineRule = ($source === 'ASSOCIATION_RULE');

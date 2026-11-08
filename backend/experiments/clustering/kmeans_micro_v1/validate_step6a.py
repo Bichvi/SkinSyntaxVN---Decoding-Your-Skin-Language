@@ -31,7 +31,7 @@ def run_validations():
 
     # 2. Production DB unchanged
     # Connect and check total count in skinsyntax.san_pham == 2473
-    uri = "mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB"
+    uri = os.environ["MONGO_URI"]
     client = MongoClient(uri, serverSelectionTimeoutMS=5000)
     db = client["skinsyntax"]
     total_sp = db["san_pham"].count_documents({})

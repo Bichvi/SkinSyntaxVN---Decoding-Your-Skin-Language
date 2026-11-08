@@ -8,7 +8,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
-from .ingredients import AliasEntry, IngredientRef, parse_ingredients
+from .curation import resolve_tags
+from .ingredients import AliasEntry, IngredientRef, has_detail_marker, parse_ingredients
 from .normalize import display_names, group_synonyms, normalize_key, slugify
 from .rules import TagRule, infer_tags
 
@@ -121,6 +122,11 @@ def _pick_ingredients(doc: Mapping[str, Any], aliases: Mapping[str, AliasEntry] 
     full = parse_ingredients(doc.get("thanh_phan_full"), aliases)
     if full:
         return full, "full"
+    raw_text = doc.get("thanh_phan")
+    if has_detail_marker(raw_text):      # the cleaned ``thanh_phan_sach`` may have lost the head of the real list
+        raw = parse_ingredients(raw_text, aliases)
+        if raw:
+            return raw, "raw"
     sach = parse_ingredients(doc.get("thanh_phan_sach"), aliases)
     return (sach, "sach") if sach else ([], None)
 
@@ -160,7 +166,14 @@ def to_graph_row(
     categories, category_source = _category_chain(doc, lookups, category_syn)
     refs, ingredient_source = _pick_ingredients(doc, aliases)
     own_skin = _own_skin_types(doc, lookups, skin_syn, set(skin_names))
-    tags = infer_tags([r.key for r in refs], {"skin_types": own_skin}, rules)
+    tags = infer_tags(
+        [r.key for r in refs],
+        {"skin_types": own_skin, "categories": [c["key"] for c in categories]},
+        rules,
+    )
+    resolved = resolve_tags(
+        tags, doc, {"benefits": benefit_names, "concerns": concern_names, "skin_types": skin_names},
+    )
 
     return {
         "id": pid,
@@ -189,10 +202,18 @@ def to_graph_row(
         ],
         "ingredient_source": ingredient_source,
         "skin_types": [
-            {"key": k, "name": skin_names.get(k, k), "source": tags.skin_type_source} for k in tags.skin_types
+            {"key": t["key"], "name": skin_names.get(t["key"], t["key"]), "source": t["source"]}
+            for t in resolved["skin_types"]
         ],
-        "concerns": [{"key": k, "name": concern_names.get(k, k)} for k in tags.concerns],
-        "benefits": [{"key": k, "name": benefit_names.get(k, k)} for k in tags.benefits],
+        "concerns": [
+            {"key": t["key"], "name": concern_names.get(t["key"], t["key"]), "source": t["source"]}
+            for t in resolved["concerns"]
+        ],
+        "benefits": [
+            {"key": t["key"], "name": benefit_names.get(t["key"], t["key"]), "source": t["source"]}
+            for t in resolved["benefits"]
+        ],
+        "tag_source": resolved["tag_source"],
         "origin": [{"key": slugify(origin_name), "name": origin_name}] if slugify(origin_name) else [],
     }
 

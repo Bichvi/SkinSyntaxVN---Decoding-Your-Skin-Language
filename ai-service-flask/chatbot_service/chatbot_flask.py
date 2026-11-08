@@ -3344,6 +3344,14 @@ try:
 except Exception as _search_exc:  # pragma: no cover - optional module
     print(f"[WARN] search_service not registered: {type(_search_exc).__name__}")
 
+# Neo4j homepage recommendation sections (/api/home/recommend). Isolated blueprint.
+try:
+    from home_service.routes import home_bp
+
+    app.register_blueprint(home_bp)
+except Exception as _home_exc:  # pragma: no cover - optional module
+    print(f"[WARN] home_service not registered: {type(_home_exc).__name__}")
+
 # Photo-of-label analysis (/api/label/analyze). Isolated blueprint; failures never block chat.
 try:
     from label_service.routes import label_bp
@@ -3351,6 +3359,7 @@ try:
     app.register_blueprint(label_bp)
 except Exception as _label_exc:  # pragma: no cover - optional module
     print(f"[WARN] label_service not registered: {type(_label_exc).__name__}")
+
 if agent_config.AGENT_V2:
     try:
         from agent_graph import routes as agent_routes
@@ -3358,6 +3367,7 @@ if agent_config.AGENT_V2:
         agent_routes.register(app)
     except Exception as _agent_exc:  # pragma: no cover - optional module
         print(f"[WARN] agent_graph not registered: {type(_agent_exc).__name__}")
+
 
 @app.get("/health")
 def simple_health():

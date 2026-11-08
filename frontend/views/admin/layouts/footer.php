@@ -39,12 +39,23 @@ document.addEventListener('DOMContentLoaded', function () {
     var sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
     var backdrop = document.getElementById('sidebarBackdrop');
 
+    var setSidebarButtonState = function(isExpanded) {
+        if (!sidebarToggleBtn) return;
+        sidebarToggleBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        sidebarToggleBtn.setAttribute('aria-label', isExpanded ? 'Thu gọn thanh bên' : 'Mở rộng thanh bên');
+        sidebarToggleBtn.setAttribute('title', isExpanded ? 'Thu gọn thanh bên' : 'Mở rộng thanh bên');
+    };
+
+    setSidebarButtonState(!document.documentElement.classList.contains('sidebar-is-collapsed'));
+
     var toggleSidebar = function() {
         if (window.innerWidth < 992) {
-            document.body.classList.toggle('mobile-sidebar-open');
+            var isMobileOpen = document.body.classList.toggle('mobile-sidebar-open');
+            setSidebarButtonState(isMobileOpen);
         } else {
             var isCollapsed = document.documentElement.classList.toggle('sidebar-is-collapsed');
             localStorage.setItem('skinsyntax_admin_collapsed', isCollapsed ? 'true' : 'false');
+            setSidebarButtonState(!isCollapsed);
         }
     };
 
@@ -55,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (backdrop) {
         backdrop.addEventListener('click', function() {
             document.body.classList.remove('mobile-sidebar-open');
+            setSidebarButtonState(false);
         });
     }
 

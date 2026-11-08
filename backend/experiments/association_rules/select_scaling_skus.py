@@ -2,7 +2,7 @@ import json
 import os
 from pymongo import MongoClient
 
-client = MongoClient('mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB')
+client = MongoClient(os.environ["MONGO_URI"])
 db = client['skinsyntax']
 col = db['san_pham']
 

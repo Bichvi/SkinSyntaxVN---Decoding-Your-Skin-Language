@@ -1,0 +1,16 @@
+PASS Live: retinol product added to guest cart - 98 Đã thêm sản phẩm vào giỏ hàng
+PASS Live: attach button visible (flag on)
+PASS Live photo 1: route ok - ok=true code= took=2012
+FAIL Live photo 1: card header + ingredient chips
+FAIL Live photo 1: skin quick-pick shown for guest
+FAIL Live photo 1: cart conflict block or cart note present
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-ls-card]').last().locator('[data-ls-action="skin"][data-ls-skin="kho"]')[22m
+
+    at C:\xampp\htdocs\CNM\SkinSyntaxVN---Decoding-Your-Skin-Language\e2e\label-scan.e2e.cjs:75:70 {
+  log: [
+    `  - waiting for locator('[data-ls-card]').last().locator('[data-ls-action="skin"][data-ls-skin="kho"]')`
+  ],
+  name: 'TimeoutError'
+}

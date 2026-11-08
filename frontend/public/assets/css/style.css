@@ -803,6 +803,74 @@ a{ text-decoration:none; color:inherit; }
   padding:8px;
 }
 
+/* Autocomplete nhóm (U04): hàng gợi ý thương hiệu/danh mục/từ khóa, trạng thái bàn phím, highlight */
+.smart-search-dropdown{
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+}
+
+.smart-item.is-active,
+.smart-row.is-active{
+  background:#eef6ff;
+  border-color:#cfe2fb;
+}
+
+.smart-tag.is-active{
+  outline:2px solid #0f6b3e;
+  outline-offset:1px;
+}
+
+.smart-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 9px;
+  border-radius:10px;
+  border:1px solid transparent;
+  font-size:13px;
+  font-weight:600;
+  color:#0f172a;
+  text-decoration:none;
+  min-width:0;
+}
+
+.smart-row:hover{
+  background:#f8fbff;
+  border-color:#e6eefb;
+}
+
+.smart-row-icon{
+  flex:0 0 18px;
+  width:18px;
+  text-align:center;
+  font-size:12px;
+  color:#94a3b8;
+}
+
+.smart-row-label{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+
+.smart-search-dropdown mark{
+  background:transparent;
+  color:#0f6b3e;
+  font-weight:800;
+  padding:0;
+}
+
+@media (max-width:480px){
+  .smart-search-dropdown{
+    padding:8px;
+    max-height:min(460px, 70vh);
+  }
+  .smart-item-thumb{
+    width:44px;
+    height:44px;
+    flex-basis:44px;
+  }
+}
+
 .recommendation-page{
   padding-bottom:24px;
 }
@@ -1509,6 +1577,96 @@ body.site-body{
   color:#FFFFFF;
 }
 
+.utility-dropdown{
+  position:relative;
+  align-self:stretch;
+  display:inline-flex;
+  align-items:center;
+}
+
+.utility-dropdown__summary{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  list-style:none;
+  cursor:pointer;
+  color:#D2E5D5;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.utility-dropdown__summary::-webkit-details-marker{
+  display:none;
+}
+
+.utility-dropdown__summary i{
+  font-size:8px;
+  transition:transform .18s ease;
+}
+
+.utility-dropdown[open] .utility-dropdown__summary i{
+  transform:rotate(180deg);
+}
+
+.utility-dropdown__menu{
+  position:absolute;
+  top:calc(100% + 7px);
+  left:50%;
+  z-index:1200;
+  display:grid;
+  min-width:250px;
+  padding:7px;
+  transform:translateX(-50%);
+  border:1px solid #D8E7DB;
+  border-radius:10px;
+  background:#FFFFFF;
+  box-shadow:0 14px 28px rgba(15, 45, 28, .18);
+}
+
+.utility-dropdown__menu::before{
+  content:"";
+  position:absolute;
+  top:-5px;
+  left:50%;
+  width:10px;
+  height:10px;
+  transform:translateX(-50%) rotate(45deg);
+  border-top:1px solid #D8E7DB;
+  border-left:1px solid #D8E7DB;
+  background:#FFFFFF;
+}
+
+.utility-dropdown__menu a{
+  position:relative;
+  z-index:1;
+  display:grid;
+  gap:2px;
+  padding:8px 10px;
+  border-radius:7px;
+  color:#183B2B;
+  text-decoration:none;
+  white-space:normal;
+}
+
+.utility-dropdown__menu a:hover,
+.utility-dropdown__menu a:focus-visible{
+  background:#F0F7F1;
+  color:#183B2B;
+  outline:none;
+}
+
+.utility-dropdown__menu strong{
+  font-size:12px;
+  font-weight:800;
+}
+
+.utility-dropdown__menu small{
+  color:#6B7F70;
+  font-size:10px;
+  font-weight:500;
+  line-height:1.35;
+}
+
 /* ========================================================
    SKINSYNTAXVN — PREMIUM 3-TIER HEADER SYSTEM
    ======================================================== */
@@ -1611,6 +1769,14 @@ body.site-body{
   gap: 10px;
   text-decoration: none;
   flex-shrink: 0;
+}
+
+.brand-lockup__logo {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  display: block;
+  object-fit: contain;
 }
 
 .brand-lockup__mark {
@@ -3551,6 +3717,11 @@ img, video, iframe, svg {
     height: 36px !important;
     font-size: 1.05rem !important;
     border-radius: 8px !important;
+  }
+  .brand-lockup__logo {
+    width: 44px !important;
+    height: 44px !important;
+    flex-basis: 44px !important;
   }
   .brand-lockup__copy strong {
     font-size: 1.1rem !important;

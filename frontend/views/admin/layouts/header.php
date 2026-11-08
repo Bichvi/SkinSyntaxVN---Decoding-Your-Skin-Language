@@ -81,6 +81,20 @@ $menuGroups = [
                 'active' => strpos($currentRoute, 'admin_sp') === 0 || strpos($currentRoute, 'staff_product') === 0 || strpos($currentRoute, 'staff_sp') === 0,
             ],
             [
+                'route' => 'admin_tag_review',
+                'icon' => 'bi bi-tags-fill',
+                'label' => 'Duyệt nhãn công dụng',
+                'meta' => 'Gợi ý AI chờ xác nhận',
+                'active' => strpos($currentRoute, 'admin_tag_review') === 0,
+            ],
+            [
+                'route' => 'admin_search_ops',
+                'icon' => 'bi bi-activity',
+                'label' => 'Vận hành tìm kiếm',
+                'meta' => 'Đồng bộ & giám sát',
+                'active' => strpos($currentRoute, 'admin_search_ops') === 0,
+            ],
+            [
                 'route' => 'admin_inventory_batches',
                 'icon' => 'bi bi-calendar2-range-fill',
                 'label' => 'Kho & Lô hàng',
@@ -213,7 +227,7 @@ foreach ($menuGroups as $group) {
 
 <aside class="admin-sidebar" id="adminSidebar">
     <div class="admin-sidebar-header">
-        <a href="index.php?r=admin_dashboard" class="admin-brand-logo">
+        <a href="index.php?r=admin_dashboard" class="admin-brand-logo" aria-label="SkinSyntaxVN Commerce Center" title="SkinSyntaxVN Commerce Center">
             <div class="admin-brand-icon">
                 <i class="bi bi-stars fs-5"></i>
             </div>
@@ -259,7 +273,7 @@ foreach ($menuGroups as $group) {
 <div class="admin-main">
     <header class="admin-top-header">
         <div class="d-flex align-items-center gap-3">
-            <button type="button" class="admin-toggle-sidebar-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar" title="Thu gọn/Mở rộng Sidebar">
+            <button type="button" class="admin-toggle-sidebar-btn" id="sidebarToggleBtn" aria-controls="adminSidebar" aria-expanded="true" aria-label="Thu gọn thanh bên" title="Thu gọn thanh bên">
                 <i class="bi bi-list fs-5"></i>
             </button>
             <div class="d-none d-sm-block">

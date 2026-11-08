@@ -126,7 +126,9 @@ class LlamaIndexRecommendService:
             raise RuntimeError("Recommendation product metadata is missing.")
         self._meta = json.loads(path.read_text(encoding="utf-8"))
         return self._meta
-    # Hàm này giải quyết hồ sơ khách hàng dựa trên user_id hoặc email.
+    # Hàm này giải quyết hồ sơ khách hàng dựa trên user_id hoặc email. Nó tìm kiếm khách hàng trong cơ sở dữ liệu
+    # MongoDB dựa trên ma_kh hoặc email, và trả về thông tin khách hàng và tài khoản liên quan.
+    # Nếu không tìm thấy hồ sơ khách hàng, nó sẽ báo lỗi.
     def _resolve_customer(self, user_id: Any, email: str = "") -> tuple[dict, dict]:
         """Tìm hồ sơ khách hàng thật từ user_id hoặc email do PHP session gửi sang.
 
@@ -152,10 +154,13 @@ class LlamaIndexRecommendService:
             customer = self.db.khach_hang.find_one({"email": rx}) or {}
             account = self.db.nguoidung.find_one({"email": rx}) or account or {}
 
+        # PHP session thường gửi id của collection nguoidung, không phải ma_kh.
+        # Nếu đã tìm được account, dùng email account để map sang khach_hang.
         if not customer and account.get("email"):
             rx = re.compile("^" + re.escape(str(account.get("email"))) + "$", re.I)
             customer = self.db.khach_hang.find_one({"email": rx}) or {}
 
+        # Một số schema lưu mã liên kết user/customer trực tiếp.
         if not customer and account:
             for field in ("ma_kh", "customer_id", "khach_hang_id"):
                 if account.get(field) not in (None, "", 0, "0"):
@@ -172,16 +177,22 @@ class LlamaIndexRecommendService:
         if not customer:
             raise RuntimeError("Không tìm thấy hồ sơ khách hàng.")
         return customer, account
-
+    # Hàm này trích xuất loại da của khách hàng từ trường tinh_trang_dac_biet.
+    # Nó tìm kiếm một mẫu loaida:(\d+) trong trường này,
     def _skin_type_from_customer(self, customer: dict) -> str:
-        """Đọc loại da từ trường `tinh_trang_dac_biet` của khách hàng nếu có."""
+        """Đọc loại da từ trường `tinh_trang_dac_biet` của khách hàng nếu có.
+
+        Một số dữ liệu cũ lưu loại da dưới dạng token `loaida:<id>`, vì vậy hàm này
+        map id đó sang collection `loai_da` để lấy tên loại da dễ hiểu cho implicit query.
+        """
         special = str(customer.get("tinh_trang_dac_biet") or "")
         match = re.search(r"loaida:(\d+)", special)
         if not match:
             return ""
         row = self.db.loai_da.find_one({"ma_loai_da": int(match.group(1))})
         return str((row or {}).get("ten_loai_da") or "")
-
+    # Hàm này thu thập lịch sử tương tác của khách hàng, bao gồm các sản phẩm đã mua, sản phẩm trong giỏ hàng,
+    # và các tin nhắn chat gần đây.
     def _history(self, customer_id: int) -> dict:
         """Thu thập tín hiệu hành vi của khách hàng từ MongoDB.
 
@@ -191,6 +202,7 @@ class LlamaIndexRecommendService:
         order_items = []
         cart_items = []
         chat_terms = []
+
         order_ids = []
         for order in self.db.hoa_don.find({"ma_kh": customer_id}, sort=[("ngay_dat", -1), ("ma_hoa_don", -1)], limit=5):
             order_ids.append(order.get("ma_hoa_don"))

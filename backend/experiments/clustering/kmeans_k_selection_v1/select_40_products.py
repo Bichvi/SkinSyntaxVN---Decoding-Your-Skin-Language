@@ -22,7 +22,7 @@ with open(STEP6A_PATH, 'r', encoding='utf-8') as f:
 
 step6a_map = {p['ma_san_pham']: p for p in step6a_prods}
 
-ATLAS_URI = 'mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB'
+ATLAS_URI = os.environ["MONGO_URI"]
 client = MongoClient(ATLAS_URI)
 db = client['skinsyntax']
 col_sp = db['san_pham']

@@ -6,7 +6,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-ATLAS_URI = 'mongodb+srv://lamngoc562004_db_user:6NQ1A2vXuDnbWchv@skinsyntaxvn-db.3edac4m.mongodb.net/?appName=SkinSyntaxVN-DB'
+ATLAS_URI = os.environ["MONGO_URI"]
 
 # 1. Load data
 with open(os.path.join(base_dir, 'baskets_30.json'), 'r', encoding='utf-8') as f:

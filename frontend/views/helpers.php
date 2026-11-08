@@ -78,29 +78,89 @@ function product_is_out_of_stock(array $product): bool {
     return $status === 'het_hang' || ($stock !== null && $stock <= 0);
 }
 
-// Tách chuỗi "url1 | url2 | url3" -> lấy url hợp lệ đầu tiên
-function first_image_url($raw) {
-    if (!$raw) return null;
+// Chấm điểm URL ảnh để không chọn banner/thumbnail 20x50, 70x70 hoặc 80x80
+// làm ảnh chính rồi phóng lớn gây mờ. Giữ nguyên thứ tự gốc khi điểm bằng nhau.
+function image_url_score(string $url): int {
+    $path = strtolower((string)(parse_url($url, PHP_URL_PATH) ?: $url));
+    $score = 0;
 
-    $parts = preg_split('/\s*\|\s*/', trim($raw));
-    foreach ($parts as $p) {
-        $p = trim($p);
-        if ($p === '') continue;
-        if (filter_var($p, FILTER_VALIDATE_URL)) return $p;
+    if (strpos($path, '/catalog/product/') !== false) $score += 400;
+    if (strpos($path, '/wysiwyg/') !== false) $score += 250;
+    if (strpos($path, '/hsk/') !== false) $score -= 600;
+
+    if (preg_match('/(?:^|[_-])img[_-](\d+)x(\d+)(?:[_-]|\.|$)/i', $path, $m)) {
+        $maxDimension = max((int)$m[1], (int)$m[2]);
+        if ($maxDimension <= 100) {
+            $score -= 700;
+        } elseif ($maxDimension < 300) {
+            $score -= 150;
+        } elseif ($maxDimension >= 400) {
+            $score += 300;
+        }
     }
-    return null;
+
+    return $score;
 }
 
-// Lấy nhiều ảnh cho gallery
+function image_url_candidates($raw): array {
+    $parts = preg_split('/\s*\|\s*/', trim((string)$raw)) ?: [];
+    $ranked = [];
+    $seen = [];
+    foreach ($parts as $index => $part) {
+        $url = trim((string)$part);
+        if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) continue;
+        $key = strtolower($url);
+        if (isset($seen[$key])) continue;
+        $seen[$key] = true;
+        $ranked[] = [
+            'url' => $url,
+            'score' => image_url_score($url),
+            'index' => $index,
+        ];
+    }
+
+    usort($ranked, static function (array $left, array $right): int {
+        return ($right['score'] <=> $left['score']) ?: ($left['index'] <=> $right['index']);
+    });
+
+    return array_values(array_map(static fn(array $item): string => $item['url'], $ranked));
+}
+
+// Tách chuỗi "url1 | url2 | url3" -> lấy ảnh có chất lượng phù hợp nhất.
+function first_image_url($raw) {
+    $candidates = image_url_candidates($raw);
+    return $candidates[0] ?? null;
+}
+
+// Gộp các trường ảnh khác nhau từ catalog/API. Một số response có image_url
+// nhưng vẫn tạo link_hinh_anh rỗng; gom tất cả giúp resolver chọn được ảnh thật.
+function product_image_source(array $product): string {
+    $sources = [];
+    foreach (['image_url', 'image', 'link_hinh_anh', 'hinh_anh'] as $key) {
+        $value = $product[$key] ?? '';
+        if (is_array($value)) {
+            $value = implode(' | ', array_map('strval', $value));
+        }
+        $value = trim((string)$value);
+        if ($value !== '') $sources[] = $value;
+    }
+    return implode(' | ', array_values(array_unique($sources)));
+}
+
+// Lấy nhiều ảnh cho gallery, ưu tiên ảnh sản phẩm lớn hơn thumbnail/banner.
 function split_image_urls(?string $raw, int $max = 8): array {
     if (!$raw) return [];
-    $parts = preg_split('/\s*\|\s*/', trim($raw));
+
+    $remoteCandidates = image_url_candidates($raw);
+    if ($remoteCandidates !== []) {
+        return array_slice($remoteCandidates, 0, $max);
+    }
+
+    $parts = preg_split('/\s*\|\s*/', trim($raw)) ?: [];
     $urls = [];
-    foreach ($parts as $p) {
-        $p = trim($p);
-        if ($p === '') continue;
-        $resolved = resolve_image_url($p);
-        if ($resolved === '') continue;
+    foreach ($parts as $part) {
+        $resolved = resolve_image_url(trim((string)$part));
+        if ($resolved === '' || in_array($resolved, $urls, true)) continue;
         $urls[] = $resolved;
         if (count($urls) >= $max) break;
     }
@@ -314,6 +374,11 @@ function route_access_map(): array {
         'admin_sp' => ['admin'],
         'admin_sp_create' => ['admin'],
         'admin_sp_edit' => ['admin'],
+        'admin_sp_sua' => ['admin'],
+        'admin_sp_tags' => ['admin'],
+        'admin_tag_review' => ['admin'],
+        'admin_tag_review_act' => ['admin'],
+        'admin_search_ops' => ['admin'],
         'admin_sp_delete' => ['admin'],
         'admin_sp_visibility' => ['admin'],
         'admin_categories' => ['admin'],

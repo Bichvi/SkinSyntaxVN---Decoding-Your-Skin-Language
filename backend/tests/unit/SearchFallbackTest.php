@@ -163,5 +163,20 @@ $check('chips A: q rỗng -> Bán chạy không có q', end($chips)['url'] === '
 $fbQ = SearchFallbackBuilder::build(null, $fakeFind, $fakeBest, 'xyzabc');
 $check('builder: truyền q vào chip Bán chạy', end($fbQ['chips'])['url'] === 'index.php?r=tatca&q=xyzabc&sort=ban_chay');
 
+// ---------- U12: experiment đi qua validateResponse -> builder ----------
+$expResp = SearchRecommendClient::validateResponse(['sections' => [], 'experiment' => ['id' => 'graph_weight_v1', 'variant' => 'variant']]);
+$check('u12 validateResponse: giữ experiment hợp lệ', $expResp['experiment'] === ['id' => 'graph_weight_v1', 'variant' => 'variant']);
+$check('u12 validateResponse: experiment sai mẫu -> bỏ', !isset(SearchRecommendClient::validateResponse(['sections' => [], 'experiment' => ['id' => 'Bad ID', 'variant' => 'v']])['experiment']));
+$check('u12 validateResponse: không có experiment -> không có khóa', !array_key_exists('experiment', SearchRecommendClient::validateResponse(['sections' => []])));
+$fbExp = SearchFallbackBuilder::build($expResp, $fakeFind, $fakeBest, 'xyzabc');
+$check('u12 builder: copy experiment sang kết quả (kể cả khi rơi về Bán chạy)', $fbExp['experiment'] === ['id' => 'graph_weight_v1', 'variant' => 'variant']);
+$check('u12 builder: không experiment -> không khóa', !array_key_exists('experiment', SearchFallbackBuilder::build(null, $fakeFind, $fakeBest, 'x')));
+$sent = [];
+$cl = new SearchRecommendClient('http://x/api/search/recommend', '', 500, 100, function ($url, $body) use (&$sent) { $sent[] = json_decode($body, true); return ['status' => 200, 'body' => '{"sections":[]}']; });
+$cl->recommend('a', null, null, [], [], 8, str_repeat('ab', 32));
+$cl->recommend('a', null, null, [], [], 8, 'not-hex!');
+$cl->recommend('a', null, null, [], [], 8);
+$check('u12 recommend: session_hash hex được gửi, giá trị sai/thiếu thì không', ($sent[0]['session_hash'] ?? null) === str_repeat('ab', 32) && !isset($sent[1]['session_hash']) && !isset($sent[2]['session_hash']));
+
 echo PHP_EOL . "{$pass} passed, {$fail} failed" . PHP_EOL;
 exit($fail ? 1 : 0);

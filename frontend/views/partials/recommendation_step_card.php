@@ -9,7 +9,7 @@ $productName = trim((string)($product['name'] ?? $product['ten_san_pham'] ?? 'S�
 $brand = trim((string)($product['brand'] ?? $product['thuong_hieu'] ?? ''));
 $price = (int)($product['price'] ?? $product['gia_ban'] ?? 0);
 $originalPrice = (int)($product['original_price'] ?? $product['gia_thi_truong'] ?? $product['market_price'] ?? 0);
-$image = resolve_image_url((string)($product['image'] ?? $product['image_url'] ?? $product['link_hinh_anh'] ?? ''));
+$image = resolve_image_url(product_image_source($product));
 if ($image === '') {
     $image = default_placeholder_image();
 }
@@ -116,7 +116,7 @@ $fit = $normalizeFit($product['fit_explanation'] ?? null);
 // Dữ liệu tối thiểu để JS đổi qua lại giữa sản phẩm chính và lựa chọn thay thế.
 $swapPayload = static function (array $item) use ($reasonList, $normalizeFit): array {
     $id = trim((string)($item['id'] ?? $item['product_id'] ?? ''));
-    $image = resolve_image_url((string)($item['image'] ?? $item['image_url'] ?? $item['link_hinh_anh'] ?? ''));
+    $image = resolve_image_url(product_image_source($item));
     $scoreRaw = $item['match_score'] ?? $item['match_percent'] ?? $item['score'] ?? null;
     return [
         'id' => $id,
