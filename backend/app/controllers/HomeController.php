@@ -205,8 +205,17 @@ class HomeController {
             $preloadedFlashDeals = $publicData['flash_deals'] ?? [];
             $primaryFlashCampaign = $publicData['primary_campaign'] ?? null;
 
+            // Mỗi request trang chủ có một seed mới để cửa sổ sản phẩm được khám phá
+            // thay đổi khi người dùng bấm F5, nhưng vẫn nằm trong tập ứng viên đã lọc
+            // theo hồ sơ và hành vi của người dùng.
+            try {
+                $homepageRefreshSeed = random_int(1, 2147483647);
+            } catch (Throwable $e) {
+                // Random là best-effort; không để lỗi nguồn random làm hỏng trang chủ.
+                $homepageRefreshSeed = (int)(microtime(true) * 1000000) & 2147483647;
+            }
             $homepageSections = method_exists($this->model, 'getHomepageProductSections')
-                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals, $preloadedFlashDeals)
+                ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals, $preloadedFlashDeals, $homepageRefreshSeed, $latest)
                 : [];
 
             require_once __DIR__ . '/../models/FlashSaleCampaign.php';
@@ -543,14 +552,33 @@ class HomeController {
      * Bundles menu_tree, latest, cats, flash_deals, and primary_campaign into 1 Valkey key.
      */
     public function getHomepagePublicData(): array {
-        $cacheKey = 'home:composite_public';
+        // v2 giữ pool sản phẩm rộng hơn cho cửa sổ khám phá khi F5.
+        $cacheKey = 'home:composite_public:v2';
         if (class_exists('CacheService')) {
             $cached = CacheService::getInstance()->get($cacheKey);
             if (is_array($cached) && isset($cached['latest'], $cached['cats'], $cached['flash_deals'])) {
-                if (!empty($cached['menu_tree']) && method_exists('SanPham', 'setMenuTreeCache')) {
-                    SanPham::setMenuTreeCache($cached['menu_tree']);
+                // Không giữ cache Flash Sale qua mốc bắt đầu/kết thúc chiến dịch.
+                $now = time();
+                $isStale = false;
+                if (!empty($cached['primary_campaign'])) {
+                    $campaign = $cached['primary_campaign'];
+                    $startTs = (int)($campaign['start_at_ts'] ?? 0);
+                    $endTs = (int)($campaign['end_at_ts'] ?? 0);
+                    if ($now < $startTs || $now >= $endTs) {
+                        $isStale = true;
+                    }
                 }
-                return $cached;
+                if (isset($cached['__next_transition_ts']) && $cached['__next_transition_ts'] !== null
+                    && $now >= (int)$cached['__next_transition_ts']) {
+                    $isStale = true;
+                }
+                if (!$isStale) {
+                    if (!empty($cached['menu_tree']) && method_exists('SanPham', 'setMenuTreeCache')) {
+                        SanPham::setMenuTreeCache($cached['menu_tree']);
+                    }
+                    return $cached;
+                }
+                CacheService::getInstance()->delete($cacheKey);
             }
         }
 
@@ -558,7 +586,7 @@ class HomeController {
         $flashSaleModel = new FlashSaleCampaign($this->pdo);
 
         $menuTree = $this->model->menuTree();
-        $latest = $this->model->latest(12, true, true);
+        $latest = $this->model->latest(24, true, true);
         $cats = $this->getHighlightedCategories();
         $flashDeals = $this->model->getFlashSaleProducts(8);
         $primaryCampaign = $flashSaleModel->getPrimaryActiveCampaign();
@@ -572,7 +600,19 @@ class HomeController {
         ];
 
         if (class_exists('CacheService')) {
-            CacheService::getInstance()->set($cacheKey, $composite, 300);
+            $defaultTtl = 300;
+            $nextTransitionTs = $flashSaleModel->getNextCampaignTransitionTimestamp();
+            $effectiveTtl = $defaultTtl;
+            if ($nextTransitionTs !== null) {
+                $diff = $nextTransitionTs - time();
+                if ($diff <= 0) {
+                    $effectiveTtl = 1;
+                } elseif ($diff < $defaultTtl) {
+                    $effectiveTtl = max(1, $diff);
+                }
+            }
+            $composite['__next_transition_ts'] = $nextTransitionTs;
+            CacheService::getInstance()->set($cacheKey, $composite, $effectiveTtl);
         }
 
         return $composite;
