@@ -625,6 +625,70 @@ class SanPham {
         return self::orderByIds(array_keys($order), $byId);
     }
 
+    /**
+     * Fallback cho khối sản phẩm tương tự khi AI/Neo4j chưa có dữ liệu.
+     * Chỉ đọc catalog hiện tại, ưu tiên cùng thương hiệu hoặc cùng danh mục.
+     */
+    public function findSimilarFallback(array $product, array $excludeIds = [], int $limit = 8): array {
+        $limit = max(1, min(20, $limit));
+        $exclude = [];
+        foreach ($excludeIds as $id) {
+            $id = trim((string)$id);
+            if ($id !== '' && ctype_digit($id)) {
+                $exclude[] = (int)$id;
+            }
+        }
+
+        $similarOr = [];
+        foreach (['ma_thuong_hieu', 'ma_danh_muc'] as $field) {
+            $value = $product[$field] ?? null;
+            if ($value === null || $value === '') {
+                continue;
+            }
+            $similarOr[] = [$field => $value];
+            if (is_numeric($value)) {
+                $similarOr[] = [$field => (int)$value];
+            }
+            $similarOr[] = [$field => (string)$value];
+        }
+
+        $brand = trim((string)($product['thuong_hieu'] ?? ''));
+        if ($brand !== '') {
+            $similarOr[] = ['thuong_hieu' => $this->exactTextRegex($brand)];
+        }
+
+        $category = trim((string)($product['loai_san_pham'] ?? $product['danh_muc'] ?? ''));
+        if ($category !== '') {
+            $similarOr[] = ['loai_san_pham' => $this->exactTextRegex($category)];
+            $similarOr[] = ['danh_muc' => $this->exactTextRegex($category)];
+        }
+
+        $parts = [$this->availableProductFilter()];
+        if ($exclude !== []) {
+            $parts[] = ['ma_san_pham' => ['$nin' => array_values(array_unique($exclude))]];
+        }
+        if ($similarOr !== []) {
+            $parts[] = ['$or' => $similarOr];
+        }
+
+        $items = [];
+        foreach ($this->db->san_pham->find(
+            count($parts) === 1 ? $parts[0] : ['$and' => $parts],
+            [
+                'sort' => ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'luot_xem' => -1, 'ma_san_pham' => -1],
+                'limit' => max($limit, 12),
+                'projection' => self::LISTING_PROJECTION,
+            ]
+        ) as $doc) {
+            $items[] = $this->normalizeProductRecord($doc);
+            if (count($items) >= $limit) {
+                break;
+            }
+        }
+
+        return $items;
+    }
+
     /** Hàm thuần: sắp $byId (map id => sp) theo thứ tự $ids, bỏ id thiếu. */
     public static function orderByIds(array $ids, array $byId): array {
         $out = [];

@@ -672,8 +672,21 @@ class SanPhamController {
         }
         $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + ($pending !== null ? $pending : 1);
 
-        // Lưu vào recent viewed products của session (tối đa 5 sản phẩm)
-        $this->trackRecentViewedProduct((string)($p['ma_san_pham'] ?? $id));
+        // Lưu vào recent viewed products của session (tối đa 5 sản phẩm).
+        // Giữ lại các sản phẩm trước đó để trang chi tiết có thể hiển thị khối "Đã xem gần đây".
+        $viewedProductId = (string)($p['ma_san_pham'] ?? $id);
+        $this->trackRecentViewedProduct($viewedProductId);
+        $recentViewedProducts = [];
+        try {
+            $recentViewedIds = is_array($_SESSION['recent_viewed_products'] ?? null)
+                ? array_values(array_filter(array_map('strval', $_SESSION['recent_viewed_products']), static fn(string $recentId): bool => $recentId !== '' && $recentId !== $viewedProductId))
+                : [];
+            if ($recentViewedIds !== []) {
+                $recentViewedProducts = $this->model->findVisibleByIds(array_slice($recentViewedIds, 0, 4));
+            }
+        } catch (Throwable $e) {
+            error_log('recent viewed products error: ' . get_class($e));
+        }
         ProductEventTracker::record($this->pdo, 'product_view', (string)($p['ma_san_pham'] ?? $p['id'] ?? $id));
 
         if ($q !== '') {
@@ -802,6 +815,7 @@ class SanPhamController {
             'questions' => $questions,
             'questionCount' => $questionCount,
             'frequentlyBought' => $frequentlyBought,
+            'recentViewedProducts' => $recentViewedProducts,
             'productVideos' => $productVideos,
             'activeTab' => trim((string)($_GET['tab'] ?? '')),
             'reviewErrorMessage' => $reviewErrorMessage,
@@ -844,16 +858,15 @@ class SanPhamController {
                 return;
             }
             $client = SearchRecommendClient::fromEnv();
-            if (!$client) {
-                http_response_code(204);
-                return;
-            }
             $skinType = null;
             if ($email !== '') {
                 $profile = $this->searchSkinProfile($email);
                 $skinType = is_array($profile) ? ($profile['skin_type'] ?? null) : null;
             }
-            $response = $client->similar($id, is_string($skinType) ? $skinType : null, array_merge([$id], $cartIds), 8);
+            $response = $client
+                ? $client->similar($id, is_string($skinType) ? $skinType : null, array_merge([$id], $cartIds), 8)
+                : null;
+            $response = is_array($response) ? $response : [];
             $ids = [];
             foreach ((array)($response['items'] ?? []) as $item) {
                 $ids[] = (string)$item['product_id'];
@@ -877,6 +890,29 @@ class SanPhamController {
                 $product['reason_code'] = (string)$item['reason_code'];
                 $product['reason_text'] = SearchReasonFormatter::format((string)$item['reason_code'], (array)$item['reason_params']);
                 $similarItems[] = $product;
+            }
+
+            // Khi AI/Neo4j chưa đồng bộ hoặc breaker đang mở, vẫn hiển thị sản phẩm
+            // cùng thương hiệu/danh mục từ catalog để khối không biến mất khỏi PDP.
+            if (count($similarItems) < 2) {
+                $sourceProduct = $this->model->find($id, true);
+                if (is_array($sourceProduct) && $sourceProduct !== []) {
+                    $fallbackProducts = $this->model->findSimilarFallback($sourceProduct, array_merge([$id], $cartIds), 8);
+                    foreach ($fallbackProducts as $product) {
+                        $pid = (string)($product['ma_san_pham'] ?? $product['id'] ?? '');
+                        if ($pid === '' || $pid === $id) {
+                            continue;
+                        }
+                        $sameBrand = trim((string)($sourceProduct['thuong_hieu'] ?? '')) !== ''
+                            && strcasecmp(trim((string)($sourceProduct['thuong_hieu'] ?? '')), trim((string)($product['thuong_hieu'] ?? ''))) === 0;
+                        $product['reason_code'] = $sameBrand ? 'same_brand' : 'same_category';
+                        $product['reason_text'] = SearchReasonFormatter::format((string)$product['reason_code'], []);
+                        $similarItems[] = $product;
+                        if (count($similarItems) >= 8) {
+                            break;
+                        }
+                    }
+                }
             }
             if (count($similarItems) < 2) {
                 http_response_code(204);

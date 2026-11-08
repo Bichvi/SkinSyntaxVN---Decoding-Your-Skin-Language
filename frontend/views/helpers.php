@@ -147,6 +147,64 @@ function product_image_source(array $product): string {
     return implode(' | ', array_values(array_unique($sources)));
 }
 
+// Sinh danh sách ảnh dự phòng cho trường hợp URL ảnh chính từ catalog đã hết hạn.
+// Không gọi mạng từ PHP; trình duyệt chỉ thử lần lượt các URL vốn đã có trong dữ liệu sản phẩm.
+function product_image_urls(array $product, int $max = 10): array {
+    $parts = [];
+    foreach (['image_url', 'image', 'link_hinh_anh', 'hinh_anh'] as $key) {
+        $value = $product[$key] ?? '';
+        if (is_array($value)) {
+            $value = implode(' | ', array_map('strval', $value));
+        }
+        foreach (preg_split('/\s*\|\s*/', trim((string)$value)) ?: [] as $part) {
+            $url = trim((string)$part);
+            if ($url !== '') {
+                $parts[] = $url;
+            }
+        }
+    }
+
+    $candidates = [];
+    $seen = [];
+    $seenDetailImage = false;
+    foreach (array_slice($parts, 0, 16) as $index => $url) {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) continue;
+        $path = strtolower((string)(parse_url($url, PHP_URL_PATH) ?: $url));
+        if (strpos($path, '/hsk/') !== false || preg_match('#/(?:brand|logo)/#i', $path)) continue;
+        if ($seenDetailImage && strpos($path, '/catalog/product/') !== false) break;
+        if (strpos($path, '/wysiwyg/') !== false) {
+            $seenDetailImage = true;
+        }
+        $key = strtolower($url);
+        if (isset($seen[$key])) continue;
+        $seen[$key] = true;
+        $candidates[] = [
+            'url' => $url,
+            'score' => image_url_score($url),
+            'index' => $index,
+        ];
+    }
+
+    usort($candidates, static function (array $left, array $right): int {
+        return ($right['score'] <=> $left['score']) ?: ($left['index'] <=> $right['index']);
+    });
+
+    return array_slice(array_values(array_map(static fn(array $item): string => $item['url'], $candidates)), 0, max(1, $max));
+}
+
+function product_image_fallbacks_json(array $product, ?string $current = null): string {
+    $current = trim((string)($current ?? ''));
+    $fallbacks = array_values(array_filter(
+        product_image_urls($product, 12),
+        static fn(string $url): bool => $current === '' || $url !== $current
+    ));
+    return htmlspecialchars(
+        (string)json_encode(array_slice($fallbacks, 0, 8), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
+
 // Lấy nhiều ảnh cho gallery, ưu tiên ảnh sản phẩm lớn hơn thumbnail/banner.
 function split_image_urls(?string $raw, int $max = 8): array {
     if (!$raw) return [];

@@ -89,6 +89,21 @@ if ($pdo !== null) {
 <script src="<?= BASE_URL ?>/assets/js/chat-purchase.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-purchase.js') ?: '1' ?>"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    // Chỉ cho phép một menu tiện ích trên header mở tại một thời điểm.
+    const utilityDropdowns = Array.from(document.querySelectorAll('.utility-dropdown'));
+    utilityDropdowns.forEach(function (dropdown) {
+      dropdown.addEventListener('toggle', function () {
+        if (!dropdown.open) return;
+        utilityDropdowns.forEach(function (other) {
+          if (other !== dropdown) other.open = false;
+        });
+      });
+    });
+    document.addEventListener('click', function (event) {
+      if (event.target.closest('.utility-dropdown')) return;
+      utilityDropdowns.forEach(function (dropdown) { dropdown.open = false; });
+    });
+
     const showCartToast = function (message, ok) {
       let toast = document.querySelector('[data-cart-toast]');
       if (!toast) {

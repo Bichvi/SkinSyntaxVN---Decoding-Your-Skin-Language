@@ -146,7 +146,9 @@ $hasActiveCampaign = !empty($campaign) && $totalDeals > 0;
                      width="280"
                      height="280"
                      referrerpolicy="no-referrer"
-                     onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';"
+                     data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($deal, $img) : '[]' ?>"
+                     data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                     onerror="window.SkinSyntaxImageFallback(this)"
                      alt="<?= h(!empty($deal['ten_san_pham']) ? $deal['ten_san_pham'] : 'Sản phẩm Flash Sale') ?>"
                      style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
               </a>

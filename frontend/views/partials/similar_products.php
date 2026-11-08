@@ -45,7 +45,7 @@ $ssimCsrf = class_exists('SearchEventTracker') ? SearchEventTracker::csrfToken()
               <span class="ssf-reason" title="<?= $ssimE($reasonText) ?>" aria-label="Lý do gợi ý: <?= $ssimE($reasonText) ?>"><?= $ssimE($reasonText) ?></span>
             <?php endif; ?>
             <a href="<?= $ssimE($detailUrl) ?>" class="ssf-thumb-link">
-              <img src="<?= $ssimE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= $ssimE(default_placeholder_image()) ?>';" alt="<?= $ssimE($p['ten_san_pham'] ?? '') ?>">
+              <img src="<?= $ssimE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>" data-image-placeholder="<?= $ssimE(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" alt="<?= $ssimE($p['ten_san_pham'] ?? '') ?>">
             </a>
           </div>
           <div class="ssf-meta">
