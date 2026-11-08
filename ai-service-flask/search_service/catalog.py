@@ -19,8 +19,11 @@ _PROJECTION = {
     "_id": 0, "ma_san_pham": 1, "ten_san_pham": 1, "ma_thuong_hieu": 1, "ma_danh_muc": 1,
     "danh_muc_day_du": 1, "loai_da": 1, "thanh_phan_sach": 1, "thanh_phan_full": 1,
     "so_luong_da_ban": 1, "so_luong_ton_kho": 1, "trang_thai_kho": 1, "trang_thai": 1, "gia_ban": 1,
+    "tag_source": 1,
 }
-_HIDDEN = ["inactive", "hidden", "disabled", "0", "tam_an"]
+_CURATED_SOURCES = ("manual", "llm_approved")
+# Phải trùng graph_sync.transform.HIDDEN_STATUSES (Neo4j) và PHP SanPham::visibleProductFilter(); có test khóa.
+_HIDDEN = ["inactive", "hidden", "tam_an", "taman", "disabled", "off", "0"]
 
 _mongo_db: Any | None = None
 _mongo_lock = Lock()
@@ -79,6 +82,7 @@ def build_product(raw: dict[str, Any], brands: dict[str, str], categories: dict[
         "thanh_phan_day_du": ingredients[:600],
         "sold": int(raw.get("so_luong_da_ban") or 0),
         "in_stock": in_stock,
+        "curated": _key(raw.get("tag_source")).lower() in _CURATED_SOURCES,
         "price": _price(raw.get("gia_ban")),
         "category_keys": list((category_keys or {}).get(_key(raw.get("ma_danh_muc")), [])),
     }
@@ -114,7 +118,9 @@ def category_key_map(rows: list[dict[str, Any]]) -> dict[str, list[str]]:
     return out
 
 
-def load_catalog(db: Any) -> list[dict[str, Any]]:
+def load_catalog(db: Any, ids: list[str] | None = None) -> list[dict[str, Any]]:
+    """Visible catalog; ``ids`` (U11) restricts it to those ``ma_san_pham`` (int or str in Atlas)."""
+
     brands = {
         _key(b.get("ma_thuong_hieu")): _key(b.get("ten_thuong_hieu"))
         for b in db["thuong_hieu"].find({}, {"_id": 0, "ma_thuong_hieu": 1, "ten_thuong_hieu": 1})
@@ -122,7 +128,15 @@ def load_catalog(db: Any) -> list[dict[str, Any]]:
     category_rows = list(db["danh_muc"].find({}, {"_id": 0, "ma_danh_muc": 1, "ten_danh_muc": 1, "parent_id": 1}))
     categories = {_key(c.get("ma_danh_muc")): _key(c.get("ten_danh_muc")) for c in category_rows}
     keys = category_key_map(category_rows)
-    rows = db["san_pham"].find({"trang_thai": {"$nin": _HIDDEN}}, _PROJECTION)
+    query: dict[str, Any] = {"trang_thai": {"$nin": _HIDDEN}}
+    if ids is not None:
+        wanted: list[Any] = []
+        for value in ids:
+            wanted.append(str(value))
+            if str(value).isdigit():
+                wanted.append(int(value))
+        query["ma_san_pham"] = {"$in": wanted}
+    rows = db["san_pham"].find(query, _PROJECTION)
     return [p for p in (build_product(dict(r), brands, categories, keys) for r in rows) if p["id"]]
 
 
@@ -136,6 +150,7 @@ class CatalogStore:
         self._by_id: dict[str, dict[str, Any]] = {}
         self._stock: dict[str, bool] = {}
         self._sold: dict[str, float] = {}
+        self._curated: dict[str, bool] = {}
         self._texts: dict[str, str] = {}
         self._loaded_at = 0.0
         self.version = 0
@@ -159,9 +174,15 @@ class CatalogStore:
             self._by_id = {p["id"]: p for p in products}
             self._stock = {p["id"]: bool(p.get("in_stock", True)) for p in products}
             self._sold = {p["id"]: float(p.get("sold") or 0) for p in products}
+            self._curated = {p["id"]: True for p in products if p.get("curated")}
             self._texts = {p["id"]: f"{p.get('ten_san_pham', '')} - {p.get('loai_san_pham', '')}" for p in products}
             self._loaded_at = time.monotonic()
             self.version += 1
+
+    def invalidate(self) -> None:
+        """Mark the snapshot stale: the next read serves it once while a background reload runs."""
+
+        self._loaded_at = 0.0
 
     def _background_refresh(self) -> None:
         try:
@@ -196,6 +217,12 @@ class CatalogStore:
     def sold_map(self) -> dict[str, float]:
         self.products()
         return self._sold
+
+    def curated_map(self) -> dict[str, bool]:
+        """Product ids whose tags are human-curated (admin manual / approved LLM), U07."""
+
+        self.products()
+        return self._curated
 
     def stock_map(self) -> dict[str, bool]:
         self.products()

@@ -31,6 +31,31 @@ FORBIDDEN_PATTERNS = [
     r"\bgiảm (ngay|liền|tức thì)\b",
 ]
 
+# Claim phrases that may be scrubbed from free text (product data / draft scripts).
+# `100%`, "điều trị", "chuyên trị", "chữa bệnh", "diệt ..." stay out of the default scrub: they can be
+# real data (a 100% concentration) and deleting them could change the meaning; only the unambiguous
+# exaggeration phrases are removed. `strict=True` scrubs every FORBIDDEN_PATTERNS entry (last-resort
+# fallback on a script that still fails the blacklist after repair).
+_SCRUB_CLAIMS = re.compile(
+    r"trị khỏi hoàn toàn|trị dứt điểm|xóa sạch nám|tận gốc|cam kết khỏi|dứt điểm hoàn toàn|"
+    r"sau (?:3 ngày|2 ngày|1 đêm|một đêm)|\bgiảm (?:ngay|liền|tức thì)\b",
+    re.IGNORECASE,
+)
+
+
+def scrub_forbidden_claims(text: str, strict: bool = False) -> str:
+    """Remove forbidden claim phrases from free text, tidying spaces left behind (newlines kept)."""
+    if not text:
+        return text
+    cleaned = str(text)
+    patterns = [re.compile(p, re.IGNORECASE) for p in FORBIDDEN_PATTERNS] if strict else [_SCRUB_CLAIMS]
+    for pattern in patterns:
+        cleaned = pattern.sub("", cleaned)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    cleaned = re.sub(r"[ \t]+([,.;:!?])", r"\1", cleaned)
+    return re.sub(r"[ \t]+$", "", cleaned, flags=re.MULTILINE)
+
+
 def check_blacklist(script: str) -> str:
     """Check script against local regex blacklisted marketing claims."""
     if find_external_retailer_mentions(script):
@@ -95,21 +120,24 @@ Tên nơi bán bắt buộc là SkinSyntax. Tên sàn hoặc nhà bán lẻ bên
 """
     price_line = (price_data_lines(snapshot) if _is_page_purpose(purpose)
                   else f"- Giá bán: {snapshot.get('price')} đồng")
+    final_line = ("Hãy kiểm tra kỹ và trả về DUY NHẤT mảng JSON các vi phạm (mảng rỗng [] nếu không có vi phạm), "
+                  "không viết PASS hay FAIL." if json_mode
+                  else "Hãy kiểm tra kỹ và đưa ra phán quyết PASS hoặc FAIL kèm lý do chi tiết.")
     user_prompt = f"""
 THÔNG TIN SẢN PHẨM GỐC:
 - Tên sản phẩm: {snapshot.get('name')}
 - Thương hiệu: {snapshot.get('brand')}
 {price_line}
-- Thành phần: {clip_text(snapshot.get('ingredients'), 900)}
-- Công dụng thật: {clip_text(snapshot.get('description'), 1200)}
-- Cách dùng: {clip_text(snapshot.get('usage'), 650)}
+- Thành phần: {scrub_forbidden_claims(clip_text(snapshot.get('ingredients'), 900))}
+- Công dụng thật: {scrub_forbidden_claims(clip_text(snapshot.get('description'), 1200))}
+- Cách dùng: {scrub_forbidden_claims(clip_text(snapshot.get('usage'), 650))}
 
 KỊCH BẢN CẦN KIỂM DUYỆT:
 \"\"\"
 {clip_text(script, 6000)}
 \"\"\"
 
-Hãy kiểm tra kỹ và đưa ra phán quyết PASS hoặc FAIL kèm lý do chi tiết.
+{final_line}
 """
     return system_prompt, user_prompt
 
@@ -227,6 +255,8 @@ def _deterministic_issues(script: str, snapshot: dict, purpose: str) -> list[Val
 def _parse_audit(response: str) -> list[dict]:
     text = re.sub(r"^```(?:json)?|```$", "", str(response or "").strip(), flags=re.MULTILINE).strip()
     start, end = text.find("["), text.rfind("]")
+    if start < 0 and re.match(r"^\W*PASS\b", text, re.IGNORECASE):
+        return []
     if start < 0 or end < start:
         raise ValueError("no JSON array")
     data = json.loads(text[start:end + 1])
@@ -328,6 +358,9 @@ def validate_and_repair_script(script: str, snapshot: dict, purpose: str = LEGAC
             return result
         entry["repair"] = {"to_version": version + 1, "issue_codes": [i.code for i in errors]}
         current = sanitize_external_retailer_mentions(repaired)
+        if any(re.search(p, current, re.IGNORECASE) for p in FORBIDDEN_PATTERNS):
+            # The LLM may keep copying a claim from the product data: drop residual claim phrases.
+            current = scrub_forbidden_claims(current, strict=True)
         version += 1
 
 

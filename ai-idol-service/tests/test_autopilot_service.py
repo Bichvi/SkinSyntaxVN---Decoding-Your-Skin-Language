@@ -154,7 +154,7 @@ class AutopilotProductTests(unittest.TestCase):
 
     def test_no_products_from_a_query_carries_the_query_warnings(self):
         harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy nhất toàn kỳ")
-        run = harness.execute([row(1, "Serum Không Liên Quan", sold=9, category="Chăm sóc da mặt -> Serum")])
+        run = harness.execute([])  # only an empty catalog is a dead end; anything else is relaxed
         harness.create.assert_not_called()
         last = run["decisions"][-1]
         self.assertEqual(last["code"], "NO_PRODUCTS")
@@ -173,6 +173,34 @@ class AutopilotProductTests(unittest.TestCase):
         picked = decision(run, "AMBIGUOUS_PICKED")
         self.assertEqual(picked["level"], "adjusted")
         self.assertTrue(any(name in picked["message"] for name in ("Alpha", "Beta")))
+
+    def test_unknown_brand_stops_instead_of_picking(self):
+        catalog = [row(11, "Son Bóng Black Rouge GZ02"), row(12, "Son Kem Lì Romand")]
+        harness = AutopilotHarness("Làm video cho son Chanel Rouge Allure")
+        run = harness.execute(catalog)
+        harness.create.assert_not_called()
+        last = run["decisions"][-1]
+        self.assertEqual(last["code"], "NOT_IN_CATALOG")
+        self.assertEqual(last["level"], "stopped")
+        self.assertTrue(run["plan"]["candidate_products"])
+        self.assertIsNone(run.get("campaign_id"))
+
+    def test_unknown_brand_in_a_set_query_stops(self):
+        catalog = [row(11, "Son Kem Lì Romand", sold=50), row(12, "Son Dưỡng Môi Vaseline", sold=40),
+                   row(13, "Kem Chống Nắng Anessa", sold=30)]
+        harness = AutopilotHarness("Làm video 3 son Dior")
+        run = harness.execute(catalog)
+        harness.create.assert_not_called()
+        last = run["decisions"][-1]
+        self.assertEqual((last["code"], last["level"]), ("NOT_IN_CATALOG", "stopped"))
+        self.assertIn("dior", last["message"])
+
+    def test_known_words_in_a_set_query_still_create(self):
+        catalog = [row(11, "Son Kem Lì Romand", sold=50), row(12, "Son Dưỡng Môi Vaseline", sold=40),
+                   row(13, "Kem Chống Nắng Anessa", sold=30)]
+        harness = AutopilotHarness("Làm video 2 son Romand bán chạy nhất")
+        run = harness.execute(catalog)
+        self.assertNotIn("NOT_IN_CATALOG", [item["code"] for item in run["decisions"]])
 
     def test_constraint_mismatch_dropped_while_other_ids_stay(self):
         harness = AutopilotHarness("Làm video giới thiệu serum retinol mã 777 và mã 934")
@@ -199,14 +227,14 @@ class AutopilotProductTests(unittest.TestCase):
         self.assertTrue(last["message"].startswith("Prompt chưa phải yêu cầu tạo video/livestream"))
         self.assertEqual(run["plan"]["warnings"], [last["message"]])
 
-    def test_unclear_query_stops(self):
+    def test_unclear_query_is_defaulted_not_stopped(self):
         harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy trong 7 ngày và 30 ngày")
         run = harness.execute(SUNSCREENS)
-        harness.create.assert_not_called()
-        last = run["decisions"][-1]
-        self.assertEqual((last["code"], last["level"]), ("QUERY_UNCLEAR", "stopped"))
-        self.assertIn("kỳ thống kê", last["message"])
-        self.assertEqual(run["status"], "NEEDS_INPUT")
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        defaulted = decision(run, "QUERY_DEFAULTED")
+        self.assertEqual(defaulted["level"], "adjusted")
+        self.assertIn("kỳ thống kê", defaulted["message"])
+        self.assertNotIn("QUERY_UNCLEAR", codes(run))
 
     def test_default_count_and_cap(self):
         harness = AutopilotHarness("Lọc kem chống nắng bán chạy nhất toàn kỳ")
@@ -278,7 +306,8 @@ class AutopilotMetricsFallbackTests(unittest.TestCase):
     def test_partial_snapshots_that_leave_the_list_short_fall_back(self):
         harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
         run = harness.execute(SUNSCREENS, snapshots=[snapshot(105, 9), snapshot(106, 8), snapshot(107, 7)])
-        self.assertEqual(harness.payload["product_ids"], self.LIFETIME_TOP_5)
+        # the three ranked by the period come first, lifetime sales top up the rest
+        self.assertEqual(harness.payload["product_ids"], ["105", "106", "107", "100", "101"])
         self.assertIn("METRICS_FALLBACK", codes(run))
 
     def test_enough_ranked_products_keep_the_period_ranking(self):
@@ -298,13 +327,16 @@ class AutopilotMetricsFallbackTests(unittest.TestCase):
         self.assertNotIn("METRICS_FALLBACK", codes(run))
         self.assertIn("DATA_GAPS", codes(run))
 
-    def test_nothing_to_rank_on_still_stops(self):
+    def test_nothing_to_rank_on_is_relaxed_to_catalog_order(self):
         no_lifetime = [{k: v for k, v in item.items() if k != "so_luong_da_ban"} for item in SUNSCREENS]
         harness = AutopilotHarness("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
         run = harness.execute(no_lifetime)
-        harness.create.assert_not_called()
-        self.assertEqual(run["decisions"][-1]["code"], "NO_PRODUCTS")
-        self.assertNotIn("METRICS_FALLBACK", codes(run))
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        self.assertEqual(len(harness.payload["product_ids"]), 5)
+        relaxed = decision(run, "QUERY_RELAXED")
+        self.assertEqual(relaxed["level"], "adjusted")
+        self.assertIn("mã sản phẩm", relaxed["message"])
+        self.assertNotIn("NO_PRODUCTS", codes(run))
 
 
 class AutopilotScheduleTests(unittest.TestCase):

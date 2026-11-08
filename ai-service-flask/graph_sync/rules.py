@@ -16,6 +16,10 @@ from .normalize import DATA_DIR
 RULES_PATH = DATA_DIR / "ingredient_rules.yaml"
 CONFLICT_SOURCE = Path(__file__).resolve().parents[1] / "recommendation_service" / "knowledge" / "ingredient_rules.py"
 TOP_N_FOR_TAGS = 15
+# Categories whose trace actives are not a treatment claim (sunscreen, makeup, cleansers): no inferred concerns.
+NO_CONCERN_INFERENCE_CATEGORIES = frozenset({
+    "kem_chong_nang", "chong_nang_co_the", "trang_diem", "tay_trang", "sua_rua_mat",
+})
 TAG_GROUPS = ("benefits", "concerns", "skin_types")
 
 
@@ -30,8 +34,12 @@ class TagRule:
 class ConflictPair:
     a: str           # smaller ingredient key
     b: str
-    severity: str
-    reason: str
+    severity: str    # high | medium | low (legacy rules: "same_session")
+    reason: str      # advice text (kept for readers of the old edge property)
+    timing: str = "same_session"
+    advice_vi: str = ""
+    rule_id: str = ""
+    evidence: str = ""
 
 
 @dataclass
@@ -88,12 +96,14 @@ def infer_tags(
     product = product or {}
     tags = Tags()
     inferred_skin: list[str] = []
+    skip_concerns = any(c in NO_CONCERN_INFERENCE_CATEGORIES for c in (product.get("categories") or ()))
     for key in list(ingredient_keys)[:top_n]:
         rule = table.get(key)
         if rule is None:
             continue
         _extend(tags.benefits, rule.benefits)
-        _extend(tags.concerns, rule.concerns)
+        if not skip_concerns:
+            _extend(tags.concerns, rule.concerns)
         _extend(inferred_skin, rule.skin_types)
     own_skin = [s for s in (product.get("skin_types") or []) if s]
     if own_skin:
@@ -139,12 +149,13 @@ def conflict_pairs(
     groups: Mapping[str, Sequence[str]] | None = None,
     severity: str = "same_session",
 ) -> list[ConflictPair]:
-    """Expand the existing CONFLICT_RULES (group names) into ingredient-key pairs.
+    """Ingredient-key conflict pairs, undirected (a < b).
 
-    ``severity`` is not in the source; ``same_session`` mirrors its meaning
-    ("do not use in the same AM/PM session"). Pairs are undirected: a < b.
+    Explicit source/group arguments preserve the legacy expansion. With no arguments, merge the
+    legacy rules with the reviewed YAML; YAML severity/timing wins for shared pairs.
     """
 
+    explicit = source_rules is not None or groups is not None
     if source_rules is None:
         source_rules = _load_conflict_source().CONFLICT_RULES
     groups = load_conflict_groups() if groups is None else groups
@@ -155,5 +166,16 @@ def conflict_pairs(
                 if left == right:
                     continue
                 a, b = sorted((left, right))
-                pairs.setdefault((a, b), ConflictPair(a, b, severity, str(rule.resolution)))
+                if explicit:
+                    pairs.setdefault((a, b), ConflictPair(a, b, severity, str(rule.resolution)))
+                else:
+                    pairs.setdefault((a, b), ConflictPair(
+                        a, b, "medium", str(rule.resolution), "same_session", str(rule.resolution),
+                        f"legacy_{rule.first}_{rule.second}".replace(" ", "_"), "moderate"))
+    if not explicit:
+        from .conflicts import expand_pairs
+
+        for pair in expand_pairs():
+            pairs[(pair.a, pair.b)] = ConflictPair(
+                pair.a, pair.b, pair.severity, pair.advice_vi, pair.timing, pair.advice_vi, pair.rule_id, pair.evidence)
     return [pairs[k] for k in sorted(pairs)]

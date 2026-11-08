@@ -3,6 +3,7 @@
 <script src="<?= BASE_URL ?>/assets/js/live-search.js" defer></script>
 <script src="<?= BASE_URL ?>/assets/js/smart-search.js" defer></script>
 <script src="<?= BASE_URL ?>/assets/js/live-filter.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/live-filter.js') ?: '1' ?>" defer></script>
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/chat-purchase.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/chat-purchase.css') ?: '1' ?>">
 
 <footer class="site-footer">
   <div class="container">
@@ -18,7 +19,7 @@
     </section>
 
     <section class="site-footer__topline">
-      <div class="site-footer__service-pill"><i class="fas fa-phone-volume"></i> Hotline hỗ trợ: 1900 0000</div>
+      <?php $footerPhone = class_exists('SupportKnowledge') ? (SupportKnowledge::contact()['phone'] ?? '') : ''; if ($footerPhone !== ''): ?><div class="site-footer__service-pill"><i class="fas fa-phone-volume"></i> Hotline hỗ trợ: <?= h($footerPhone) ?></div><?php endif; ?>
       <div class="site-footer__service-pill"><i class="fas fa-truck-fast"></i> Luồng mua hàng gọn, rõ trạng thái đơn</div>
       <div class="site-footer__service-pill"><i class="fas fa-shield-heart"></i> Tập trung vào routine và dữ liệu da</div>
       <div class="site-footer__socials">
@@ -85,6 +86,8 @@ if ($pdo !== null) {
   require __DIR__ . '/../components/support_chat_widget.php';
 }
 ?>
+<script src="<?= BASE_URL ?>/assets/js/chat-purchase.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-purchase.js') ?: '1' ?>"></script>
+<script src="<?= BASE_URL ?>/assets/js/chat-purchase.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-purchase.js') ?: '1' ?>"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const showCartToast = function (message, ok) {

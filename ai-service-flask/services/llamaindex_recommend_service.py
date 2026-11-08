@@ -57,9 +57,9 @@ class LlamaIndexRecommendService:
         self._index = None
         self._meta = None
         self._index_nodes = None
-    # Hàm này tải chỉ mục LlamaIndex đã được xây dựng trước đó từ thư mục RECOMMENDATION_INDEX_DIR. 
-    # Nếu chỉ mục đã được tải, nó sẽ trả về lại. Nếu không tìm thấy tệp docstore.json, nó sẽ báo lỗi. 
-    # Sau đó, nó thiết lập embedding model và llm cho LlamaIndex, tạo storage context từ thư mục chỉ mục, 
+    # Hàm này tải chỉ mục LlamaIndex đã được xây dựng trước đó từ thư mục RECOMMENDATION_INDEX_DIR.
+    # Nếu chỉ mục đã được tải, nó sẽ trả về lại. Nếu không tìm thấy tệp docstore.json, nó sẽ báo lỗi.
+    # Sau đó, nó thiết lập embedding model và llm cho LlamaIndex, tạo storage context từ thư mục chỉ mục,
     # và tải chỉ mục từ storage. Cuối cùng, nó trả về đối tượng chỉ mục đã tải.
     def _load_index(self):
         """Load VectorStoreIndex đã persist từ database/recommendation_index.
@@ -126,7 +126,6 @@ class LlamaIndexRecommendService:
             raise RuntimeError("Recommendation product metadata is missing.")
         self._meta = json.loads(path.read_text(encoding="utf-8"))
         return self._meta
-
     # Hàm này giải quyết hồ sơ khách hàng dựa trên user_id hoặc email.
     def _resolve_customer(self, user_id: Any, email: str = "") -> tuple[dict, dict]:
         """Tìm hồ sơ khách hàng thật từ user_id hoặc email do PHP session gửi sang.
@@ -192,7 +191,6 @@ class LlamaIndexRecommendService:
         order_items = []
         cart_items = []
         chat_terms = []
-
         order_ids = []
         for order in self.db.hoa_don.find({"ma_kh": customer_id}, sort=[("ngay_dat", -1), ("ma_hoa_don", -1)], limit=5):
             order_ids.append(order.get("ma_hoa_don"))
@@ -234,10 +232,10 @@ class LlamaIndexRecommendService:
             return self.db.ho_so_da.find_one({"$or": clauses}) or {}
         except Exception:
             return {}
-    # Hàm này xây dựng một truy vấn ngầm định dựa trên hồ sơ khách hàng và lịch sử tương tác. 
-    # Nó kết hợp thông tin về loại da, vấn đề da, ngân sách, độ nhạy cảm, thành phần cần tránh, 
-    # các sản phẩm đã mua trước đó, sản phẩm trong giỏ hàng, và các nhu cầu chat gần đây để tạo 
-    # thành một truy vấn mô tả hồ sơ và nhu cầu của khách hàng. Nó cũng xây dựng một bộ lọc để 
+    # Hàm này xây dựng một truy vấn ngầm định dựa trên hồ sơ khách hàng và lịch sử tương tác.
+    # Nó kết hợp thông tin về loại da, vấn đề da, ngân sách, độ nhạy cảm, thành phần cần tránh,
+    # các sản phẩm đã mua trước đó, sản phẩm trong giỏ hàng, và các nhu cầu chat gần đây để tạo
+    # thành một truy vấn mô tả hồ sơ và nhu cầu của khách hàng. Nó cũng xây dựng một bộ lọc để
     # sử dụng trong quá trình lọc sản phẩm sau này.
     def _implicit_query(self, customer: dict, history: dict) -> tuple[str, dict]:
         """Tạo truy vấn ngầm định và metadata filter từ hồ sơ khách hàng.
@@ -357,7 +355,7 @@ class LlamaIndexRecommendService:
         hydrated = self._hydrate(candidate_ids)
         max_vec = max(vector_scores.values() or [1.0])
         max_bm25 = max(bm25_scores.values() or [1.0])
-        # Điểm số kết hợp: 58% vector, 32% BM25, 8% đánh giá, 6% độ phổ biến. Sau đó lọc sản phẩm dựa trên bộ lọc đã cho, 
+        # Điểm số kết hợp: 58% vector, 32% BM25, 8% đánh giá, 6% độ phổ biến. Sau đó lọc sản phẩm dựa trên bộ lọc đã cho,
         # và xếp hạng lại dựa trên điểm số kết hợp.
         def score_pass(strict_budget: bool, strict_skin: bool) -> list[dict]:
             rows = []
@@ -437,7 +435,7 @@ Chỉ dùng các sản phẩm có trong danh sách. Không bịa sản phẩm, k
 
 Implicit user profile/query:
 {query}
-    
+
 Retrieved and reranked products:
 {chr(10).join(product_lines)}
 
@@ -487,12 +485,12 @@ Không nêu chi tiết kỹ thuật LlamaIndex/BM25/rerank trong câu trả lờ
     def _llm_answer(self, customer: dict, query: str, products: list[dict]) -> str:
         """Chọn LLM tạo answer_text theo .env và fallback an toàn.
 
-        RECOMMENDATION_LLM_PROVIDER mặc định là `openai`. Nếu provider chính lỗi hoặc
-        thiếu key, service thử provider còn lại. Lỗi kỹ thuật chỉ ghi provider, không ghi key.
+        Gemini là provider chính (mặc định); OpenAI (trả phí) chỉ là fallback cuối cùng khi Gemini lỗi
+        hoặc thiếu key. Chỉ đặt RECOMMENDATION_LLM_PROVIDER=openai_first để ưu tiên OpenAI. Lỗi kỹ thuật chỉ ghi provider, không ghi key.
         """
         prompt = self._build_answer_prompt(customer, query, products)
-        provider = os.getenv("RECOMMENDATION_LLM_PROVIDER", "openai").strip().lower() or "openai"
-        providers = ["gemini", "openai"] if provider == "gemini" else ["openai", "gemini"]
+        provider = os.getenv("RECOMMENDATION_LLM_PROVIDER", "gemini").strip().lower() or "gemini"
+        providers = ["openai", "gemini"] if provider == "openai_first" else ["gemini", "openai"]
         last_error = None
 
         for item in providers:

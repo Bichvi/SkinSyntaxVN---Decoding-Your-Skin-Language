@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-12",
+  "version": "2026-10-21",
   "routing": {
     "priority": {
       "otp": 12,
@@ -51,6 +51,11 @@
       "description": "Nhận hàng, phản ánh sự cố và yêu cầu hoàn tiền.",
       "icon": "fa-truck-fast"
     },
+    "guide": {
+      "title": "Hướng dẫn sử dụng",
+      "description": "Các bước dùng tính năng trên SkinSyntax: khảo sát da, Syna, voucher, live…",
+      "icon": "fa-book-open"
+    },
     "contact": {
       "title": "Liên hệ hỗ trợ",
       "description": "Các kênh tiếp nhận và cách gửi thông tin cần thiết.",
@@ -77,6 +82,8 @@
           "title": "Phạm vi sử dụng",
           "items": [
             "Điều khoản áp dụng cho việc truy cập website, đăng ký tài khoản, sử dụng tư vấn và đặt mua sản phẩm do SkinSyntax giới thiệu. Cung cấp thông tin liên hệ và nhận hàng chính xác; không mạo danh, sử dụng tài khoản của người khác hoặc can thiệp trái phép vào hệ thống.",
+            "Thông tin khi đăng ký tài khoản, đặt hàng, thanh toán và làm khảo sát da cần đúng sự thật. SkinSyntax có quyền từ chối xử lý khi phát hiện thông tin sai lệch hoặc có dấu hiệu gian lận.",
+            "Bạn có trách nhiệm bảo mật tài khoản, mật khẩu, mã OTP và các thiết bị đăng nhập của mình.",
             "Nội dung chăm sóc da mang tính tham khảo. Mỹ phẩm không được giới thiệu như thuốc chữa bệnh; việc lựa chọn cần dựa trên nhãn sản phẩm và tình trạng thực tế của người dùng."
           ]
         },
@@ -84,15 +91,18 @@
           "title": "Giao dịch và nội dung",
           "items": [
             "Khách tự chọn sản phẩm và kiểm tra giá, số lượng, chi phí, địa chỉ, phương thức thanh toán tại trang thanh toán trước khi xác nhận đơn. Chọn sản phẩm trong chat chưa tạo đơn hàng và chưa thu tiền.",
+            "Đơn hàng chỉ được xác nhận sau khi SkinSyntax kiểm tra tình trạng sản phẩm, thông tin nhận hàng, phương thức thanh toán và điều kiện áp dụng của voucher hoặc chương trình khuyến mãi.",
+            "Giá bán, ưu đãi, phí vận chuyển và thời gian giao hàng có thể thay đổi theo từng thời điểm; thông tin hiện hành được hiển thị trên website trước khi bạn hoàn tất giao dịch.",
             "Nếu phát hiện sai giá, thiếu hàng hoặc thông tin không chính xác, SkinSyntax cần thông báo và thống nhất cách xử lý với khách; không tự thay thế sản phẩm hay tự tăng số tiền phải trả.",
-            "Tôn trọng quyền sở hữu trí tuệ của chủ thể có quyền đối với nội dung, nhãn hiệu và hình ảnh. Việc xuất hiện trên website không mặc nhiên có nghĩa mọi tài nguyên thuộc sở hữu SkinSyntax."
+            "Tôn trọng quyền sở hữu trí tuệ của chủ thể có quyền đối với nội dung, nhãn hiệu và hình ảnh. Việc xuất hiện trên website không mặc nhiên có nghĩa mọi tài nguyên thuộc sở hữu SkinSyntax. Không sao chép, khai thác lại hoặc sử dụng trái phép nội dung, hình ảnh, logo, bố cục và dữ liệu sản phẩm trên website."
           ]
         },
         {
           "title": "Quyền và thay đổi điều khoản",
           "items": [
             "Khách có thể liên hệ để yêu cầu hỗ trợ, khiếu nại hoặc thực hiện quyền liên quan đến dữ liệu cá nhân. Không điều khoản nào ở đây loại trừ trách nhiệm bắt buộc của bên bán hay các quyền của người tiêu dùng theo pháp luật.",
-            "Nội dung cập nhật được ghi ngày trên trang. Việc xử lý đơn đã giao kết cần theo thỏa thuận áp dụng và quy định pháp luật, không tự động áp dụng bất lợi từ một bản cập nhật sau đó."
+            "Nội dung cập nhật được ghi ngày trên trang. Việc xử lý đơn đã giao kết cần theo thỏa thuận áp dụng và quy định pháp luật, không tự động áp dụng bất lợi từ một bản cập nhật sau đó.",
+            "Khi phát sinh khiếu nại hoặc tranh chấp, hai bên ưu tiên giải quyết trên tinh thần hợp tác; nếu không tự thỏa thuận được, vấn đề được xử lý theo quy định pháp luật Việt Nam."
           ]
         }
       ]
@@ -127,21 +137,36 @@
             "Tài khoản: họ tên, email và thông tin xác thực phục vụ đăng ký, đăng nhập, khôi phục tài khoản. Mật khẩu được xử lý dạng băm; mã OTP đăng ký được đối chiếu qua giá trị băm trong phiên máy chủ.",
             "OTP đăng ký gồm 6 số, gửi qua email, có hiệu lực 10 phút. Phiên OTP được xóa khi đăng ký hoàn tất hoặc khi phát hiện hết hạn. Thời gian hiệu lực mã không phải cam kết xóa toàn bộ nhật ký gửi thư sau 10 phút.",
             "Số điện thoại, địa chỉ, đơn hàng và thông tin giao dịch được sử dụng để giao nhận, đối soát thanh toán và hỗ trợ sau mua. Không gửi OTP hoặc thông tin thẻ qua kênh hỗ trợ.",
-            "Hồ sơ da, câu hỏi, lịch sử chat, giỏ hàng và sản phẩm đang xem có thể được sử dụng để cá nhân hóa tư vấn. Chỉ cung cấp thông tin cần thiết; tránh đưa thông tin sức khỏe chi tiết hoặc thông tin riêng của người khác vào chat."
+            "Hồ sơ da, câu hỏi, lịch sử chat, giỏ hàng và sản phẩm đang xem có thể được sử dụng để cá nhân hóa tư vấn. Chỉ cung cấp thông tin cần thiết; tránh đưa thông tin sức khỏe chi tiết hoặc thông tin riêng của người khác vào chat.",
+            {
+              "text": "Dữ liệu cá nhân có thể được xử lý gồm:",
+              "details": [
+                "Thông tin nhận dạng, thông tin liên hệ và địa chỉ giao hàng.",
+                "Lịch sử mua sắm và phản hồi sản phẩm.",
+                "Dữ liệu khảo sát da.",
+                "Dữ liệu kỹ thuật phục vụ bảo mật hệ thống."
+              ]
+            },
+            "Dữ liệu cá nhân được xử lý trên cơ sở sự đồng ý của bạn, nhu cầu thực hiện hợp đồng mua bán, nghĩa vụ pháp lý hoặc lợi ích hợp pháp liên quan đến bảo mật và vận hành dịch vụ."
           ]
         },
         {
           "title": "Bên nhận dữ liệu và lưu giữ",
           "items": [
             "Dịch vụ gửi email, thanh toán, giao vận và dịch vụ xử lý tư vấn có thể tiếp nhận phần dữ liệu cần thiết để thực hiện chức năng tương ứng. Việc dùng dịch vụ xử lý tư vấn bên ngoài có thể phát sinh xử lý dữ liệu ngoài hệ thống SkinSyntax. Danh sách nhà cung cấp và địa điểm xử lý cụ thể cần được đơn vị vận hành xác nhận.",
+            "SkinSyntax không bán hoặc trao đổi thông tin cá nhân của bạn cho bên thứ ba vì mục đích thương mại độc lập. Việc chia sẻ chỉ diễn ra khi cần để giao hàng, xử lý thanh toán, gửi thông báo hoặc tuân thủ yêu cầu pháp luật.",
+            "Dữ liệu được kiểm soát truy cập; chỉ nhân sự, bộ phận hoặc dịch vụ được ủy quyền mới được tiếp cận trong phạm vi công việc cần thiết.",
             "SkinSyntax không sử dụng email hoặc số điện thoại chỉ cung cấp để xác thực OTP làm sự đồng ý mặc định nhận quảng cáo. Việc tiếp thị cần có căn cứ và cơ chế lựa chọn phù hợp.",
-            "Thời hạn lưu giữ theo từng loại dữ liệu, đơn vị kiểm soát dữ liệu và quy trình xử lý yêu cầu đang cần được đơn vị vận hành công bố đầy đủ. Chưa có cam kết xóa tức thì hoặc xóa mọi dữ liệu giao dịch khi đóng tài khoản."
+            "Thời hạn lưu giữ theo từng loại dữ liệu, đơn vị kiểm soát dữ liệu và quy trình xử lý yêu cầu đang cần được đơn vị vận hành công bố đầy đủ. Chưa có cam kết xóa tức thì hoặc xóa mọi dữ liệu giao dịch khi đóng tài khoản.",
+            "Dữ liệu được lưu giữ trong thời gian cần thiết để hoàn thành mục đích thu thập, giải quyết tranh chấp, hỗ trợ hậu mãi và đáp ứng yêu cầu lưu trữ theo quy định pháp luật.",
+            "Khi phát hiện truy cập trái phép, rò rỉ dữ liệu hoặc rủi ro an toàn thông tin, SkinSyntax đánh giá tác động, áp dụng biện pháp khắc phục phù hợp và thông báo cho các bên liên quan khi cần thiết."
           ]
         },
         {
           "title": "Yêu cầu của bạn",
           "items": [
             "Gửi yêu cầu truy cập, chỉnh sửa, rút lại đồng ý, hạn chế xử lý hoặc xóa dữ liệu tới cskh@skinsyntax.com. Chỉ cung cấp thông tin cần để xác định yêu cầu; bộ phận hỗ trợ sẽ hướng dẫn xác minh, không yêu cầu đọc mật khẩu/OTP trong chat.",
+            "Bạn có thể đồng ý hoặc từ chối xử lý dữ liệu, yêu cầu bản sao dữ liệu của mình; đề nghị xóa dữ liệu không áp dụng nếu xung đột với nghĩa vụ lưu trữ bắt buộc.",
             "Việc thực hiện quyền được xem xét theo pháp luật và nghĩa vụ lưu giữ liên quan. Khi có yêu cầu giữ lại dữ liệu giao dịch, cần thông báo phạm vi và lý do cho người yêu cầu."
           ]
         }
@@ -335,6 +360,7 @@
           "items": [
             "Kiểm tra thư mục Spam/Junk/Promotions và địa chỉ email đã nhập. Chờ ít nhất 60 giây trước khi gửi lại mã cho cùng email.",
             "Captcha sai hoặc không còn hợp lệ: làm mới captcha rồi nhập lại. OTP quá 10 phút: yêu cầu mã mới.",
+            "Nếu gửi lại quá nhiều lần liên tiếp, hệ thống có thể tạm chặn thao tác để bảo vệ tài khoản và tránh gửi thư lặp.",
             "Không chia sẻ OTP hoặc mật khẩu cho nhân viên, chatbot hay bất kỳ ai. Website hiện gửi OTP đăng ký qua email, chưa có SMS OTP."
           ]
         }
@@ -386,8 +412,8 @@
       "slug": "doi-lien-he",
       "group": "account",
       "title": "Đổi email & số điện thoại liên hệ",
-      "summary": "Phân biệt email đăng nhập với thông tin nhận hàng trong hồ sơ.",
-      "answer": "Bạn có thể sửa số điện thoại liên hệ trong Hồ sơ → thông tin cá nhân và lưu lại. Việc này không đổi email đăng nhập. Website chưa có luồng tự đổi email bằng OTP ở cả địa chỉ cũ và mới; nếu cần đổi email, hãy liên hệ cskh@skinsyntax.com để được hướng dẫn xác minh.",
+      "summary": "Tự sửa số điện thoại ở Hồ sơ; email đăng nhập thì liên hệ hỗ trợ.",
+      "answer": "Số điện thoại bạn tự sửa được: đăng nhập, vào Tài khoản, tab Tổng quan, sửa ô Số điện thoại trong khung Cập nhật thông tin tài khoản rồi bấm Lưu thông tin. Ô Email trong khung này bị khóa nên email đăng nhập không tự đổi được; muốn đổi, hãy liên hệ cskh@skinsyntax.com hoặc hotline 0398606281 để được hướng dẫn xác minh. Số điện thoại nhận hàng của từng đơn thì bạn nhập ở trang Thanh toán khi đặt hàng.",
       "triggers": [
         "doi email",
         "thay email",
@@ -406,22 +432,21 @@
         {
           "title": "Số điện thoại liên hệ",
           "items": [
-            "Đăng nhập, vào Hồ sơ và chỉnh sửa thông tin cá nhân. Cập nhật số điện thoại liên hệ chính xác rồi lưu.",
-            "Kiểm tra lại thông tin nhận hàng tại mỗi lần thanh toán; thay đổi hồ sơ không tự sửa địa chỉ hay số điện thoại của đơn đã đặt."
+            "Đăng nhập, bấm Tài khoản ở đầu trang rồi mở tab Tổng quan.",
+            "Trong khung Cập nhật thông tin tài khoản, sửa ô Số điện thoại.",
+            "Bấm Lưu thông tin; dòng thông báo cạnh nút báo «Đã cập nhật thông tin tài khoản.» khi xong.",
+            "Nếu phần Họ tên bị để trống, trang báo «Họ tên không được để trống.»; nhập lại rồi lưu.",
+            "Số điện thoại nhận hàng của mỗi đơn được nhập ở trang Thanh toán (ô Số điện thoại khi nhập địa chỉ mới); kiểm tra lại ở mỗi lần đặt hàng."
           ]
         },
         {
           "title": "Email đăng nhập",
           "items": [
-            "Chưa có chức năng tự đổi email kèm hai lượt OTP trên giao diện. Gửi yêu cầu tới email hỗ trợ để được hướng dẫn xác minh và phương án phù hợp.",
+            "Ô Email trong khung Cập nhật thông tin tài khoản bị khóa, nên email đăng nhập chưa tự đổi được trên giao diện. Gửi yêu cầu tới cskh@skinsyntax.com hoặc gọi 0398606281 để được hướng dẫn xác minh và phương án phù hợp.",
             "Không cung cấp mật khẩu hoặc OTP trong nội dung yêu cầu. Nhân viên hỗ trợ không được yêu cầu bạn đọc mã để chuyển quyền tài khoản."
           ]
         }
-      ],
-      "action": {
-        "label": "Mở hồ sơ",
-        "url": "index.php?r=hoso"
-      }
+      ]
     },
     {
       "slug": "an-toan-tai-khoan",
@@ -500,8 +525,8 @@
       "slug": "dat-hang",
       "group": "orders",
       "title": "Hướng dẫn đặt hàng",
-      "summary": "Chọn đúng sản phẩm, kiểm tra số lượng và xác nhận ở trang thanh toán.",
-      "answer": "Bạn tìm sản phẩm → chọn đúng chai/phiên bản → kiểm tra số lượng → đến trang thanh toán → nhập thông tin giao hàng và chọn cách trả tiền → xác nhận đơn. Khi mua qua chat, mình đưa các sản phẩm tìm được để bạn tự chọn rồi bấm Thanh toán. Chọn trong chat chưa tạo đơn. Website cần đăng nhập để thanh toán; bạn vẫn tìm và chọn sản phẩm được khi chưa đăng nhập.",
+      "summary": "Thêm sản phẩm vào giỏ, chọn sản phẩm cần mua, thanh toán và bấm ĐẶT HÀNG.",
+      "answer": "Bạn bấm Thêm vào giỏ (hoặc Mua ngay) ở sản phẩm → vào Giỏ hàng, tích chọn sản phẩm và chỉnh số lượng → bấm Tiếp tục (Thanh toán) → ở trang Thanh toán chọn hoặc nhập địa chỉ nhận hàng, chọn phương thức thanh toán → bấm ĐẶT HÀNG. Trang Thanh toán cần đăng nhập; nếu chưa đăng nhập, website chuyển tới trang Đăng nhập. Chat tư vấn không tự tạo đơn.",
       "triggers": [
         "huong dan dat hang",
         "cach dat hang",
@@ -515,16 +540,18 @@
       ],
       "questions": [
         "Đặt hàng từng bước như thế nào?",
-        "Chưa đăng nhập có thể chọn sản phẩm trong chat không?"
+        "Chưa đăng nhập có đặt hàng được không?"
       ],
       "sections": [
         {
           "title": "Từ tìm sản phẩm đến xác nhận",
           "items": [
-            "Tìm qua thanh tìm kiếm, danh mục hoặc nói tên sản phẩm muốn mua trong chat. Kiểm tra nhãn, dung tích và phiên bản trên trang chi tiết.",
-            "Với mua qua chat, bấm Chọn sản phẩm này, chỉnh số lượng rồi bấm Thanh toán. Giá và khả năng cung ứng được kiểm tra lại; bạn cần xác nhận lại nếu giá thay đổi.",
-            "Đăng nhập nếu được yêu cầu. Tại trang thanh toán, kiểm tra sản phẩm, số lượng, giá, phí giao hàng, địa chỉ và số điện thoại nhận hàng.",
-            "Chọn phương thức thanh toán đang hiển thị, kiểm tra tổng tiền rồi xác nhận đặt hàng. Theo dõi mã đơn và trạng thái trong tài khoản."
+            "Tìm qua thanh tìm kiếm hoặc danh mục. Kiểm tra nhãn, dung tích và phiên bản trên trang chi tiết sản phẩm.",
+            "Bấm Thêm vào giỏ để thêm sản phẩm (ở trang chi tiết nút là + Thêm giỏ), hoặc bấm Mua ngay để thêm rồi chuyển tới Giỏ hàng.",
+            "Ở Giỏ hàng, tích chọn sản phẩm muốn mua, chỉnh số lượng bằng nút − và +, rồi bấm Tiếp tục (Thanh toán). Nút này chưa bấm được khi chưa chọn sản phẩm nào.",
+            "Trang Thanh toán yêu cầu đăng nhập; chưa đăng nhập, website báo «Vui lòng đăng nhập để thanh toán.» và chuyển tới trang Đăng nhập.",
+            "Tại trang Thanh toán, chọn địa chỉ nhận hàng có sẵn hoặc nhập địa chỉ mới (Tên người nhận, Số điện thoại, Tỉnh / Thành phố, Quận / Huyện, Phường / Xã, Số nhà, tên đường, tòa nhà), rồi chọn phương thức trong khung Phương thức thanh toán.",
+            "Kiểm tra lại tổng tiền rồi bấm ĐẶT HÀNG. Theo dõi đơn trong tab Lịch sử đơn hàng của Tài khoản của tôi."
           ]
         },
         {
@@ -556,7 +583,8 @@
         "the visa",
         "the master",
         "vi dien tu",
-        "thanh toan loi"
+        "thanh toan loi",
+        "ho tro cod"
       ],
       "questions": [
         "Có thể thanh toán bằng những cách nào?",
@@ -749,7 +777,8 @@
         "return policy",
         "da mo nap",
         "da su dung co doi",
-        "qua 7 ngay"
+        "qua 7 ngay",
+        "tra lai hang"
       ],
       "questions": [
         "Điều kiện đổi trả là gì?",
@@ -761,6 +790,7 @@
           "title": "Phạm vi tiếp nhận",
           "items": [
             "Trong 7 ngày kể từ ngày nhận hàng, tiếp nhận yêu cầu đối với hàng lỗi, hư hỏng do vận chuyển hoặc giao sai sản phẩm. Giữ xác nhận đơn/mã đơn để đối chiếu.",
+            "Trường hợp thiếu phụ kiện hoặc có dấu hiệu bất thường khi mở hộp cũng có thể gửi để xác minh theo quy trình dưới đây. Sản phẩm có chính sách bảo hành riêng từ nhà phân phối, hoặc cần xác minh tem, mã lô, hóa đơn mua hàng, được tiếp nhận để đối chiếu.",
             "Thông thường sản phẩm cần còn tem, nhãn, bao bì, chưa qua sử dụng; ngoại lệ lỗi nhà sản xuất hoặc quyền theo quy định pháp luật được xem xét theo tình trạng thực tế.",
             "Yêu cầu quá 7 ngày, hư hỏng do bảo quản/sử dụng hoặc hàng đã dùng không thuộc chính sách đổi trả thông thường; không dùng giới hạn này để loại trừ trách nhiệm pháp luật hay từ chối tiếp nhận mọi phản ánh."
           ]
@@ -770,7 +800,8 @@
           "items": [
             "Liên hệ hỗ trợ, nêu mã đơn, vấn đề và thời điểm nhận. Cung cấp ảnh/video nếu có; không yêu cầu bắt buộc phải có video mở hộp mới tiếp nhận.",
             "Chờ xác minh và thống nhất phương án đổi/hoàn, địa chỉ gửi trả và bên chịu phí trước khi tự gửi hàng. Không gửi về địa chỉ chưa được xác nhận.",
-            "Sau khi kiểm tra đủ điều kiện, bộ phận hỗ trợ xác nhận thời gian xử lý và hình thức hoàn. Online ưu tiên phương thức gốc nếu hỗ trợ; COD có thể hoàn chuyển khoản sau khi xác minh. Thời hạn cụ thể và phí gửi trả chưa được công bố cố định."
+            "Sau khi kiểm tra đủ điều kiện, bộ phận hỗ trợ xác nhận thời gian xử lý và hình thức hoàn. Online ưu tiên phương thức gốc nếu hỗ trợ; COD có thể hoàn chuyển khoản sau khi xác minh. Thời hạn cụ thể và phí gửi trả chưa được công bố cố định.",
+            "Tùy từng trường hợp, phương án phản hồi có thể là đổi sản phẩm, hoàn tiền, bổ sung thông tin hoặc liên hệ nhà cung cấp."
           ]
         }
       ]
@@ -805,6 +836,7 @@
           "items": [
             "Ghi nhận tình trạng sản phẩm và bao bì ngay khi phát hiện, giữ lại nhãn/mã đơn. Ngừng sử dụng sản phẩm có dấu hiệu hỏng hoặc bất thường.",
             "Gửi mô tả, mã đơn và ảnh/video nếu có tới hỗ trợ trong 7 ngày từ khi nhận hàng. Mục tiêu phản hồi ban đầu: 24 giờ làm việc; đây chưa phải cam kết giải quyết xong.",
+            "Thông tin nên chuẩn bị: mã đơn hoặc số điện thoại dùng khi mua, tên sản phẩm, số lượng gặp vấn đề và mô tả tình trạng thực tế.",
             "Đợi hướng dẫn xác minh, gửi trả hoặc đổi/hoàn phù hợp. Không có video mở hộp không tự động làm mất quyền được tiếp nhận yêu cầu."
           ]
         }
@@ -826,6 +858,7 @@
         "gio lam viec",
         "gio ho tro",
         "so dien thoai cua shop",
+        "so dien thoai shop",
         "chat nguoi that",
         "kenh ho tro"
       ],
@@ -849,6 +882,802 @@
           ]
         }
       ]
+    },
+    {
+      "slug": "khao-sat-da",
+      "group": "guide",
+      "title": "Làm khảo sát và cập nhật hồ sơ",
+      "summary": "Khảo sát đầy đủ, cập nhật nhanh tình trạng hiện tại hoặc chỉ đổi loại trong tài khoản.",
+      "answer": "Bạn cần đăng nhập, bấm Tài khoản ở đầu trang rồi mở tab Hồ sơ Làn da. Bấm Khảo sát đầy đủ để làm bộ câu hỏi 4 phần, Cập nhật nhanh để trả lời 4 câu về tình trạng hiện tại, hoặc Cập nhật loại da để chỉ đổi loại da. Ở khảo sát đầy đủ, bạn có thể bấm Bỏ qua và làm lại sau.",
+      "triggers": [
+        "khao sat da",
+        "lam khao sat",
+        "khao sat nhanh",
+        "cap nhat loai da",
+        "doi loai da",
+        "skin quiz",
+        "cap nhat tinh trang da",
+        "bo qua khao sat"
+      ],
+      "questions": [
+        "Làm khảo sát ở mục nào của tài khoản?",
+        "Cập nhật nhanh tình trạng hôm nay như thế nào?",
+        "Tôi chỉ muốn đổi loại trong hồ sơ khảo sát thì làm thế nào?"
+      ],
+      "sections": [
+        {
+          "title": "Trước khi bắt đầu",
+          "items": [
+            "Cần đăng nhập (ngay sau khi đăng ký thành công thì không cần); nếu chưa, trang chuyển về Đăng nhập.",
+            "Vào từ Tài khoản → tab Hồ sơ Làn da, nơi có nút Cập nhật nhanh và Khảo sát đầy đủ. Sau khi đăng ký thành công, website cũng mở khảo sát đầy đủ.",
+            "Khảo sát đầy đủ tạo lại hồ sơ nền; khảo sát nhanh chỉ cập nhật tình trạng hiện tại."
+          ]
+        },
+        {
+          "title": "Khảo sát đầy đủ",
+          "items": [
+            {
+              "text": "Trang SkinSyntax Skin Quiz có 4 phần, chuyển phần bằng nút Kế tiếp và Quay lại:",
+              "details": [
+                "Phần 1. Thông tin cơ bản: Câu 1 giới tính, Câu 2 năm sinh.",
+                "Phần 2. Phân tích da chuyên sâu: Câu 3 loại da, Câu 4 mức dễ kích ứng, Câu 5 vấn đề da, Câu 6 mục tiêu.",
+                "Phần 3. Hoạt chất, sở thích và ngân sách: Câu 7 kết cấu, Câu 8 hoạt chất, Câu 9 thành phần muốn tránh, Câu 10 ngân sách.",
+                "Phần 4. Gu thương hiệu và xuất xứ: Câu 11 xuất xứ, Câu 12 thương hiệu."
+              ]
+            },
+            "Các câu bắt buộc là Câu 1, 2, 3, 4, 5, 9 và 10; các câu còn lại có thể để trống.",
+            "Ở phần cuối, bấm Lưu hồ sơ AI. Muốn làm sau, bấm Bỏ qua. Lưu xong, trang chuyển tới Gợi ý (nếu bạn vào từ tài khoản đã đăng nhập) hoặc về Đăng nhập (nếu bạn vừa đăng ký)."
+          ]
+        },
+        {
+          "title": "Cập nhật nhanh và đổi loại da",
+          "items": [
+            {
+              "text": "Cập nhật nhanh (trang Cập nhật da nhanh hôm nay): trả lời 4 câu rồi bấm Lưu cập nhật hôm nay; bấm Để sau nếu chưa muốn lưu.",
+              "details": [
+                "Câu 1: da hiện tại có dễ kích ứng, mẩn đỏ không.",
+                "Câu 2: vấn đề da muốn cải thiện nhất (chọn ít nhất 1).",
+                "Câu 3: mục tiêu chăm sóc ưu tiên nhất.",
+                "Câu 4: ngân sách tối đa cho 1 sản phẩm."
+              ]
+            },
+            {
+              "text": "Chỉ đổi loại da: ở tab Hồ sơ Làn da, bấm Cập nhật loại da, chọn loại da rồi bấm Lưu thay đổi.",
+              "details": [
+                "Chỉ loại da thay đổi; các thông tin khảo sát khác được giữ nguyên.",
+                "Bốn lựa chọn: Da dầu / Hỗn hợp thiên dầu; Da khô / Hỗn hợp thiên khô; Da hỗn hợp; Da thường / Không có vấn đề đặc biệt."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Nếu gặp lỗi",
+          "items": [
+            "Nút Kế tiếp chuyển màu xám hoặc báo «Vui lòng điền đầy đủ thông tin để qua bước mới.»: trả lời đủ các câu bắt buộc của phần đó.",
+            "Danh sách năm sinh chỉ gồm các năm từ 1970 trở đi; năm khác bị báo «Năm sinh không hợp lệ. Vui lòng chọn lại.»"
+          ]
+        }
+      ],
+      "action": {
+        "label": "Làm khảo sát da",
+        "url": "index.php?r=khaosat"
+      },
+      "route_sources": [
+        "khaosat",
+        "khaosatnhanh",
+        "xulykhaosatnhanh",
+        "luukhaosat",
+        "capnhat_loaida",
+        "hoso"
+      ],
+      "updated": "2026-10-23"
+    },
+    {
+      "slug": "tro-ly-ai",
+      "group": "guide",
+      "title": "Trò chuyện với Syna, trợ lý AI",
+      "summary": "Mở khung chat với trợ lý, bấm nút có sẵn, thêm vào giỏ và bắt đầu hoặc xóa cuộc trò chuyện.",
+      "answer": "Bấm nút Chat với Syna ở góc màn hình, nhập câu hỏi rồi bấm Gửi, hoặc bấm một nút gợi ý như Phân tích giỏ hàng. Bạn chat được cả khi chưa đăng nhập; khi đăng nhập sẽ có thêm cột Cuộc hội thoại và nút Gợi ý theo hồ sơ da. Thẻ sản phẩm Syna gợi ý có nút Thêm vào giỏ hàng, chỉ đưa sản phẩm vào giỏ chứ chưa tạo đơn. Nút thùng rác (Xóa lịch sử) làm trống khung chat hiện tại để bắt đầu cuộc mới.",
+      "triggers": [
+        "chat voi syna",
+        "tro chuyen voi syna",
+        "cach hoi syna",
+        "tro ly ai",
+        "khung chat syna",
+        "nut chat voi syna",
+        "cuoc hoi thoai",
+        "hoi thoai moi",
+        "lich su tro chuyen",
+        "cuoc tro chuyen moi"
+      ],
+      "questions": [
+        "Hỏi trợ lý AI về sản phẩm bằng cách nào?",
+        "Làm sao bắt đầu cuộc trò chuyện mới?",
+        "Xóa một cuộc trò chuyện ở mục nào?"
+      ],
+      "sections": [
+        {
+          "title": "Mở Syna và đặt câu hỏi",
+          "items": [
+            "Bấm nút Chat với Syna (dòng «Mình giúp bạn nhé») ở góc màn hình để mở khung chat.",
+            "Gõ câu hỏi vào ô «Hỏi Syna về thành phần, sản phẩm, routine hoặc phân tích giỏ hàng...» rồi bấm Gửi.",
+            {
+              "text": "Hoặc bấm nhanh một nút phía trên ô chat:",
+              "details": [
+                "Phân tích giỏ hàng",
+                "Da dầu mụn",
+                "Thành phần",
+                "Gợi ý theo hồ sơ da (chỉ hiện khi đã đăng nhập)"
+              ]
+            },
+            "Bấm Phóng to để mở rộng khung chat; bấm dấu X hoặc phím Esc để đóng."
+          ]
+        },
+        {
+          "title": "Sau khi Syna trả lời",
+          "items": [
+            {
+              "text": "Mỗi thẻ sản phẩm Syna gợi ý có các nút:",
+              "details": [
+                "Thêm vào giỏ hàng: thêm 1 sản phẩm vào giỏ, nút đổi thành «Đã thêm».",
+                "Xem chi tiết: mở trang sản phẩm.",
+                "Hỏi kỹ hơn: gửi câu hỏi tư vấn thành phần và cách dùng sản phẩm đó.",
+                "Hiện link: hiện đường dẫn trang sản phẩm."
+              ]
+            },
+            "Thêm vào giỏ chưa tạo đơn hàng. Mở giỏ hàng để kiểm tra rồi bấm Tiếp tục (Thanh toán).",
+            "Gợi ý theo hồ sơ da: nếu đã có hồ sơ da, chọn một nhóm (Toner, Sữa rửa mặt, Tẩy trang, Serum, Kem dưỡng, Chống nắng, Mặt nạ, Trị mụn) để Syna gợi ý; nếu chưa có, Syna gửi liên kết để hoàn thành khảo sát da."
+          ]
+        },
+        {
+          "title": "Cuộc hội thoại và xóa lịch sử",
+          "items": [
+            "Khi đã đăng nhập, cột Cuộc hội thoại bên trái liệt kê các cuộc chat: bấm một cuộc để mở lại, bấm Hội thoại mới để bắt đầu cuộc mới.",
+            "Để xóa một cuộc trong danh sách, bấm biểu tượng thùng rác (Xóa) cạnh cuộc đó và xác nhận «Bạn có chắc chắn muốn xóa cuộc trò chuyện này?».",
+            "Biểu tượng thùng rác ở đầu khung chat (Xóa lịch sử) chỉ làm trống khung chat hiện tại và bắt đầu cuộc mới; nó không xóa các cuộc đã lưu trong danh sách."
+          ]
+        },
+        {
+          "title": "Nếu Syna không trả lời",
+          "items": [
+            "Nếu khung chat báo «Không kết nối được tới AI service. Bạn có thể thử lại hoặc hỏi ngắn gọn hơn.», hãy gửi lại câu hỏi hoặc hỏi ngắn hơn.",
+            "Cần gặp nhân viên thì xem bài Liên hệ bộ phận hỗ trợ."
+          ]
+        }
+      ],
+      "route_sources": [
+        "ai_chat_api",
+        "ai_chat_get_conversations",
+        "ai_chat_delete_conversation",
+        "them_gio_hang_ajax"
+      ],
+      "updated": "2026-10-23"
+    },
+    {
+      "slug": "xung-dot-gio-hang",
+      "group": "guide",
+      "title": "Cảnh báo hoạt chất trong giỏ hàng",
+      "summary": "Giỏ hàng có thể hiện khối lưu ý hoạt chất và gợi ý bước còn thiếu, chỉ để tham khảo.",
+      "answer": "Khi bạn mở giỏ hàng, nếu có hai sản phẩm chứa hoạt chất cần lưu ý khi dùng chung, bên dưới bảng sản phẩm hiện khối «Lưu ý khi dùng chung hoạt chất» kèm mức độ, cặp sản phẩm và lời khuyên. Khối này chỉ là gợi ý tham khảo, bạn vẫn thanh toán bình thường; da nhạy cảm hoặc đang điều trị nên hỏi bác sĩ da liễu. Khối chỉ hiện khi có nội dung để hiển thị, nên giỏ không có cảnh báo hoặc hệ thống phân tích chưa phản hồi thì bạn sẽ không thấy nó.",
+      "triggers": [
+        "luu y hoat chat",
+        "dung chung hoat chat",
+        "tranh dung cung nhau",
+        "hoan thien routine cua ban",
+        "canh bao hoat chat",
+        "xung dot hoat chat",
+        "con thieu buoc routine"
+      ],
+      "questions": [
+        "Phần lưu ý hoạt chất hiện ở mục nào?",
+        "Bị báo nên tránh cùng nhau thì có thanh toán được không?"
+      ],
+      "sections": [
+        {
+          "title": "Xem cảnh báo trong giỏ hàng",
+          "items": [
+            "Thêm sản phẩm vào giỏ rồi mở trang Giỏ hàng của bạn. Khối phân tích nằm bên dưới bảng sản phẩm; bạn không cần đăng nhập để xem.",
+            {
+              "text": "Khối «Lưu ý khi dùng chung hoạt chất» (nếu có) cho từng cặp sản phẩm:",
+              "details": [
+                "Nhãn mức độ: Nên tránh dùng cùng nhau, Cần lưu ý khi dùng chung hoặc Lưu ý nhẹ.",
+                "Các hoạt chất liên quan và hai sản phẩm (bấm tên để xem chi tiết).",
+                "Lời khuyên và gợi ý thời điểm dùng, ví dụ dùng xen kẽ ngày hoặc tách buổi sáng và buổi tối."
+              ]
+            },
+            {
+              "text": "Khối «Hoàn thiện routine của bạn» (nếu có) cho biết routine còn thiếu bước nào:",
+              "details": [
+                "Bước đã có hiển thị dấu tích, bước còn thiếu hiển thị dấu cộng.",
+                "Mỗi nhóm «Còn thiếu: …» có sản phẩm gợi ý kèm nút Thêm vào giỏ."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Lưu ý",
+          "items": [
+            "Cảnh báo không chặn thanh toán: bạn vẫn bấm Tiếp tục (Thanh toán) như bình thường.",
+            "Nếu giỏ không có cặp cần lưu ý, hoặc hệ thống phân tích chưa trả kết quả kịp, khối này bị ẩn và giỏ hàng vẫn dùng bình thường.",
+            "Muốn hỏi thêm, mở khung chat Syna và bấm nút Phân tích giỏ hàng."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Mở giỏ hàng",
+        "url": "index.php?r=giohang"
+      },
+      "route_sources": [
+        "giohang",
+        "cart_analyze"
+      ],
+      "updated": "2026-10-23"
+    },
+    {
+      "slug": "goi-y-ca-nhan",
+      "group": "guide",
+      "title": "Xem trang Gợi ý cá nhân hóa",
+      "summary": "Trang Gợi ý hiện chu trình sáng và tối theo hồ sơ của bạn, hoặc trang khám phá nếu chưa có hồ sơ.",
+      "answer": "Bấm Gợi ý routine ở đầu trang để mở trang Gợi ý. Nếu bạn đã đăng nhập và có hồ sơ da, trang hiện routine Buổi sáng và Buổi tối theo từng bước, kèm mục «Vì sao Syna chọn cho bạn». Nếu chưa đăng nhập hoặc chưa có hồ sơ da, trang chỉ hiện sản phẩm để khám phá và mời bạn làm khảo sát da.",
+      "triggers": [
+        "trang goi y",
+        "goi y ca nhan",
+        "goi y theo ho so",
+        "kham pha bang ai",
+        "routine ca nhan",
+        "routine cua toi",
+        "xem routine goi y"
+      ],
+      "questions": [
+        "Xem gợi ý riêng cho mình ở mục nào?",
+        "Vì sao trang Gợi ý không hiện chu trình cho tôi?"
+      ],
+      "sections": [
+        {
+          "title": "Mở trang Gợi ý",
+          "items": [
+            "Bấm nút Gợi ý routine («Nhận gợi ý ngay») trên thanh đầu trang (trên điện thoại là mục «Routine cá nhân & Khảo sát da» trong menu), hoặc nút Khám phá bằng AI ở trang Tra cứu sản phẩm.",
+            "Chưa đăng nhập: trang «Khám phá sản phẩm phù hợp» có nút Đăng nhập để nhận gợi ý và Khảo sát da nhanh, cùng bộ lọc Từ khóa, Danh mục, Thương hiệu, Giá từ, Giá đến, Sắp xếp (bấm Lọc để áp dụng, Xóa để bỏ lọc).",
+            "Đã đăng nhập nhưng chưa có hồ sơ da: trang báo «Hoàn thành khảo sát da để SkinSyntax hiểu làn da của bạn.» kèm nút Khảo sát ngay."
+          ]
+        },
+        {
+          "title": "Khi đã có hồ sơ da",
+          "items": [
+            "Chọn tab Buổi sáng hoặc Buổi tối để xem routine theo thứ tự các bước.",
+            {
+              "text": "Mỗi bước có một sản phẩm gợi ý:",
+              "details": [
+                "Mục «Vì sao Syna chọn cho bạn» giải thích lý do chọn.",
+                "Nút Xem chi tiết và Thêm vào giỏ.",
+                "Khung «lựa chọn khác cho bước này»: chạm vào một sản phẩm để đổi."
+              ]
+            },
+            "Thanh «Thêm toàn bộ chu trình vào giỏ» có nút Thêm vào giỏ để thêm các sản phẩm đang chọn cùng lúc.",
+            "Gõ nhu cầu vào ô «Bạn muốn Syna giải thích thêm nhu cầu nào?» rồi bấm Hỏi Syna; bấm Cập nhật khảo sát da ở cột bên để đổi hồ sơ."
+          ]
+        },
+        {
+          "title": "Nếu gặp lỗi",
+          "items": [
+            "Báo «Chưa thể tải routine cá nhân hóa.»: thử lại sau hoặc cập nhật khảo sát da.",
+            "Báo «Chưa đủ sản phẩm hợp lệ để dựng routine.»: hệ thống không tự lấp dữ liệu thiếu; hãy cập nhật khảo sát hoặc khám phá catalog."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Mở trang Gợi ý",
+        "url": "index.php?r=goiy"
+      },
+      "route_sources": [
+        "goiy",
+        "tatca",
+        "them_gio_hang_ajax"
+      ],
+      "updated": "2026-10-23"
+    },
+    {
+      "slug": "tim-kiem",
+      "group": "guide",
+      "title": "Tìm kiếm và xử lý khi ít kết quả",
+      "summary": "Dùng ô tìm kiếm ở đầu trang, xem danh sách khi gõ, lọc kết quả và xem phần thay thế khi không tìm thấy.",
+      "answer": "Gõ tên sản phẩm, thương hiệu hoặc vấn đề da vào ô tìm kiếm ở đầu trang rồi bấm Tìm kiếm; danh sách gợi ý hiện khi bạn gõ từ 2 ký tự trở lên. Nếu kết quả ít hoặc không có, trang hiện phần gợi ý sản phẩm gần nhất và nút «Hỏi Syna để tìm sản phẩm thay thế». Bạn cũng có thể bấm Xem tất cả sản phẩm.",
+      "triggers": [
+        "tim kiem san pham",
+        "cach tim kiem",
+        "o tim kiem",
+        "khong tim thay san pham",
+        "tim sai ten",
+        "co phai ban muon tim",
+        "tim chinh xac",
+        "tra cuu san pham"
+      ],
+      "questions": [
+        "Tìm kiếm trên website bằng cách nào?",
+        "Không tìm thấy thứ mình cần thì làm sao?"
+      ],
+      "sections": [
+        {
+          "title": "Tìm sản phẩm",
+          "items": [
+            "Nhập vào ô «Tìm sản phẩm, thương hiệu, vấn đề da...» trên thanh đầu trang rồi bấm Tìm kiếm.",
+            {
+              "text": "Bấm vào ô tìm kiếm để mở danh sách gợi ý; gợi ý theo từ khóa hiện khi bạn gõ từ 2 ký tự trở lên:",
+              "details": [
+                "Chưa gõ gì: Tìm kiếm gần đây và Top Trending.",
+                "Đang gõ: các nhóm Sản phẩm, Thương hiệu, Danh mục và Tìm kiếm phổ biến.",
+                "Dùng phím mũi tên lên hoặc xuống để chọn, phím Esc để đóng."
+              ]
+            },
+            "Trang kết quả có ô «Từ khóa tìm kiếm» và danh sách Sắp xếp (Mặc định, Giá tăng dần, Giá giảm dần, Bán chạy, Đánh giá cao, Giảm giá nhiều, Mới nhất, Nhiều lượt xem); bấm Lọc sản phẩm để áp dụng, Xóa bộ lọc để bỏ."
+          ]
+        },
+        {
+          "title": "Khi gõ sai hoặc ít kết quả",
+          "items": [
+            "Gõ sai tên thương hiệu: trang hiện «Có phải bạn muốn tìm …?» để bạn bấm chọn từ đúng. Nếu từ bạn gõ không có kết quả mà từ đã sửa có, trang hiển thị kết quả của từ đã sửa và có liên kết để tìm chính xác từ bạn gõ.",
+            "Ít kết quả: trang thêm mục «Gợi ý thêm cho bạn». Không có kết quả khớp: trang báo «Chưa có sản phẩm khớp chính xác với …» kèm các lựa chọn gần nhất.",
+            "Bấm «Hỏi Syna để tìm sản phẩm thay thế» để mở khung chat Syna với câu hỏi điền sẵn (bạn bấm Gửi), hoặc bấm Xem tất cả sản phẩm.",
+            "Nếu trang chỉ báo «Không tìm thấy sản phẩm phù hợp», hãy thử từ khóa khác hoặc bấm Xem tất cả sản phẩm."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Tra cứu sản phẩm",
+        "url": "index.php?r=tatca"
+      },
+      "route_sources": [
+        "timkiem",
+        "tatca",
+        "api_smart_search"
+      ],
+      "updated": "2026-10-23"
+    },
+    {
+      "slug": "flash-sale",
+      "group": "guide",
+      "title": "Săn ưu đãi Flash",
+      "summary": "Xem chương trình ưu đãi chớp nhoáng đang diễn ra, sắp xếp và thêm vào giỏ hoặc Mua ngay.",
+      "answer": "Mở trang Flash Sale để xem chương trình đang diễn ra: tên chương trình, đồng hồ «KẾT THÚC SAU» và danh sách ưu đãi. Mỗi sản phẩm có nút Thêm vào giỏ và Mua ngay; Mua ngay đưa sản phẩm vào giỏ rồi chuyển tới giỏ hàng. Nếu chưa có chương trình, trang báo «Hiện chưa có chương trình Flash Sale đang diễn ra» và có thể cho biết chương trình sắp tới.",
+      "triggers": [
+        "flash sale",
+        "flash deal",
+        "san flash sale",
+        "san sale",
+        "uu dai chop nhoang",
+        "khung gio vang",
+        "gia flash sale",
+        "xem tat ca deal"
+      ],
+      "questions": [
+        "Xem chương trình Flash Sale ở đâu?",
+        "Mua ngay trong Flash Sale khác gì Thêm vào giỏ?"
+      ],
+      "sections": [
+        {
+          "title": "Xem chương trình",
+          "items": [
+            "Mở trang Flash Sale, ví dụ bằng liên kết Xem tất cả deal ở mục Flash Sale trên trang chủ.",
+            "Khi có chương trình đang diễn ra, đầu trang hiện tên chương trình, số sản phẩm áp dụng và đồng hồ «KẾT THÚC SAU». Hết giờ, trang báo «Phiên ưu đãi đã kết thúc».",
+            {
+              "text": "Mục Sắp xếp theo gồm:",
+              "details": [
+                "Dành cho bạn (chỉ hiện khi hệ thống có dữ liệu về bạn).",
+                "Ưu đãi nổi bật.",
+                "Giảm nhiều nhất.",
+                "Đánh giá tốt.",
+                "Giá thấp → cao.",
+                "Giá cao → thấp."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Mua sản phẩm Flash Sale",
+          "items": [
+            "Mỗi thẻ sản phẩm hiện nhãn Flash Deal, phần trăm giảm, giá ưu đãi và giá gốc (nếu có).",
+            {
+              "text": "Chọn một trong hai nút:",
+              "details": [
+                "Thêm vào giỏ: đưa sản phẩm vào giỏ hàng.",
+                "Mua ngay: đưa sản phẩm vào giỏ rồi chuyển tới giỏ hàng."
+              ]
+            },
+            "Sản phẩm hết hàng hiện nút «Hết hàng» và không bấm được.",
+            "Kiểm tra lại giá và tổng tiền ở giỏ hàng trước khi bấm Tiếp tục (Thanh toán)."
+          ]
+        },
+        {
+          "title": "Khi chưa có chương trình",
+          "items": [
+            "Trang báo «Hiện chưa có chương trình Flash Sale đang diễn ra»; nếu có chương trình sắp tới, trang hiện tên và thời điểm dự kiến bắt đầu (Giờ Việt Nam).",
+            "Bấm Về trang chủ hoặc Khám phá sản phẩm để tiếp tục mua sắm."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Xem Flash Sale",
+        "url": "index.php?r=flash_sale"
+      },
+      "route_sources": [
+        "flash_sale",
+        "them_gio_hang_ajax",
+        "giohang"
+      ],
+      "updated": "2026-10-23"
+    },
+    {
+      "slug": "video-nhan-thuong",
+      "group": "guide",
+      "title": "Xem video để nhận voucher",
+      "summary": "Xem hết video tư vấn Syna 3D trên trang sản phẩm có ưu đãi, đăng nhập để nhận voucher vào Ví Voucher.",
+      "answer": "Trên trang chi tiết của sản phẩm có video «Syna 3D» kèm khung ưu đãi, bạn bấm phát video và xem đến hết. Khi đủ điều kiện, khung ưu đãi báo «Đủ điều kiện nhận voucher» và hiện nút Nhận Voucher Ưu Đãi Ngay (cần đăng nhập). Voucher nhận được nằm trong tài khoản, tab Ví Voucher. Không phải sản phẩm nào cũng có video ưu đãi.",
+      "triggers": [
+        "voucher video",
+        "xem video nhan voucher",
+        "nhan voucher",
+        "lay voucher",
+        "video syna 3d",
+        "syna 3d",
+        "vi voucher",
+        "voucher cua toi"
+      ],
+      "questions": [
+        "Làm sao lấy voucher từ video?",
+        "Xem video xong không thấy nút nhận voucher thì sao?",
+        "Voucher nhận từ video nằm ở đâu?"
+      ],
+      "sections": [
+        {
+          "title": "Điều kiện",
+          "items": [
+            "Chỉ sản phẩm có video kèm khung ưu đãi (tên chương trình, mức giảm, và đơn tối thiểu nếu có) mới có voucher.",
+            "Nên đăng nhập trước khi xem. Nếu xem khi chưa đăng nhập, sau khi đủ điều kiện trang báo «Bạn đã xem đủ thời lượng video! Đăng nhập để nhận voucher vào ví tài khoản.» kèm nút Đăng nhập nhận Voucher.",
+            "Hệ thống chỉ tính phần video bạn thực sự xem: cần xem được từ 95% thời lượng và phải xem tới đoạn kết; tua qua đoạn nào thì đoạn đó không được tính."
+          ]
+        },
+        {
+          "title": "Các bước nhận voucher",
+          "items": [
+            "Mở trang chi tiết sản phẩm có video «Video AI Thuyết Minh» (Syna 3D) và khung ưu đãi bên dưới video.",
+            "Bấm vào video để phát có âm thanh thuyết minh rồi xem. Thanh tiến độ cho biết bạn đã xem được bao nhiêu; dòng «Xem hết video để mở khóa ưu đãi» đổi thành «Đã đủ điều kiện nhận voucher!» khi xong.",
+            "Bấm Nhận Voucher Ưu Đãi Ngay.",
+            "Mã voucher hiện trong khung «Đã nhận voucher»; bấm Sao chép để chép mã.",
+            "Bấm Xem trong Ví hoặc mở Tài khoản → tab Ví Voucher để xem lại. Mỗi voucher có trạng thái Khả dụng, Đã sử dụng hoặc Hết hạn."
+          ]
+        },
+        {
+          "title": "Nếu gặp lỗi",
+          "items": [
+            "Không thấy nút nhận: kiểm tra thanh tiến độ đã đủ chưa và bạn đã đăng nhập chưa.",
+            "Báo «Chiến dịch ưu đãi đã kết thúc hoặc hết hạn.» hoặc «Rất tiếc, số lượng voucher của chương trình đã được phát hết.»: chương trình không còn phát voucher.",
+            "Báo bạn đã nhận tối đa số lượng voucher cho phép trong chương trình: mỗi chương trình giới hạn số lần nhận cho mỗi tài khoản.",
+            "Video không phát: bấm Thử lại."
+          ]
+        }
+      ],
+      "route_sources": [
+        "video_watch_start",
+        "video_watch_heartbeat",
+        "video_watch_complete",
+        "video_watch_claim_reward",
+        "customer_vouchers",
+        "hoso"
+      ],
+      "updated": "2026-10-23"
+    },
+    {
+      "slug": "dung-voucher",
+      "group": "guide",
+      "title": "Dùng voucher và điểm khi đặt hàng",
+      "summary": "Nhập mã giảm giá và đổi điểm ở bước cuối trước khi bấm đặt hàng.",
+      "answer": "Ở trang Thanh toán (cần đăng nhập), nhập mã vào ô «Nhập mã voucher» rồi bấm Áp dụng; muốn bỏ mã thì bấm Gỡ mã. Để dùng điểm tích lũy, nhập số điểm vào ô «Nhập số điểm muốn dùng» rồi bấm Đổi điểm; muốn bỏ thì bấm Gỡ điểm. Mã giảm giá được tính trên giá trị hàng trước phí vận chuyển. Nếu báo lỗi, đọc thông báo trên trang để biết mã không tồn tại, hết hạn hay chưa đạt giá trị tối thiểu.",
+      "triggers": [
+        "dung voucher",
+        "su dung voucher",
+        "ap dung voucher",
+        "nhap voucher",
+        "nhap ma giam gia",
+        "ap dung ma giam gia",
+        "go ma giam gia",
+        "dung diem tich luy",
+        "doi diem tich luy",
+        "ma giam gia khi thanh toan"
+      ],
+      "questions": [
+        "Dùng voucher khi thanh toán thế nào?",
+        "Nhập mã giảm giá ở đâu?",
+        "Đổi điểm để giảm giá đơn hàng ra sao?"
+      ],
+      "sections": [
+        {
+          "title": "Trước khi bắt đầu",
+          "items": [
+            "Cần đăng nhập bằng tài khoản khách hàng và đã chọn hàng để vào trang Thanh toán (từ Giỏ hàng bấm Tiếp tục). Tài khoản Admin/Staff không dùng được mã giảm giá khi đặt hàng.",
+            "Chưa có mã? Voucher nhận được nằm ở Tài khoản, tab Ví Voucher; xem bài Xem video để nhận voucher để biết một cách nhận mã."
+          ]
+        },
+        {
+          "title": "Áp dụng mã giảm giá",
+          "items": [
+            "Ở trang Thanh toán, tìm khung Mã giảm giá.",
+            "Nhập mã vào ô «Nhập mã voucher» rồi bấm Áp dụng.",
+            "Khi mã được nhận, trang báo «Áp dụng mã giảm giá thành công.», khung hiện mã đang dùng và dòng Giảm voucher xuất hiện trong phần tổng tiền. Mã giảm giá được tính trên giá trị sản phẩm trước phí vận chuyển.",
+            "Muốn bỏ mã, bấm Gỡ mã; trang báo «Đã gỡ mã giảm giá khỏi đơn hàng.»"
+          ]
+        },
+        {
+          "title": "Dùng điểm tích lũy",
+          "items": [
+            "Ở khung Dùng điểm tích lũy, trang hiện số điểm bạn có và mức quy đổi (1 điểm = 1.000đ) cùng số điểm tối đa dùng được cho đơn này.",
+            "Nhập số điểm vào ô «Nhập số điểm muốn dùng» rồi bấm Đổi điểm. Nếu nhập nhiều hơn số điểm bạn có hoặc hơn mức đơn hàng cho phép, hệ thống chỉ áp dụng phần tối đa dùng được.",
+            "Khi xong, trang báo «Đã áp dụng ... điểm cho đơn hàng.» và dòng Giảm bằng điểm xuất hiện trong phần tổng tiền. Muốn bỏ, bấm Gỡ điểm."
+          ]
+        },
+        {
+          "title": "Nếu gặp lỗi",
+          "items": [
+            {
+              "text": "Với mã giảm giá, trang có thể báo:",
+              "details": [
+                "«Mã giảm giá không tồn tại.»: kiểm tra lại cách gõ mã.",
+                "«Mã giảm giá đã hết hạn.» hoặc «Mã giảm giá chưa đến thời gian áp dụng.»: mã ngoài thời gian dùng.",
+                "«Đơn hàng chưa đạt giá trị tối thiểu để dùng mã này.»: thêm hàng vào đơn rồi thử lại.",
+                "«Mã giảm giá đã hết lượt sử dụng.»: mã không còn lượt."
+              ]
+            },
+            {
+              "text": "Với điểm tích lũy, trang có thể báo:",
+              "details": [
+                "«Tài khoản của bạn hiện chưa có điểm tích lũy để sử dụng.»",
+                "«Vui lòng nhập số điểm hợp lệ để áp dụng.»: nhập số điểm lớn hơn 0.",
+                "«Giá trị đơn hàng hiện tại chưa đủ để quy đổi điểm thành giảm giá.»"
+              ]
+            }
+          ]
+        }
+      ],
+      "route_sources": [
+        "thanhtoan",
+        "apdung_voucher",
+        "bo_voucher",
+        "apdung_diem",
+        "bo_diem",
+        "customer_vouchers"
+      ],
+      "updated": "2026-10-26"
+    },
+    {
+      "slug": "danh-gia",
+      "group": "guide",
+      "title": "Viết đánh giá cho hàng bạn mua",
+      "summary": "Gửi số sao, nhận xét và hình ảnh ở tab Đánh giá sau khi đơn Hoàn thành.",
+      "answer": "Đăng nhập, mở trang chi tiết của món hàng bạn đã mua và vào tab Đánh giá. Chọn Số sao, nhập Nội dung đánh giá, có thể đính kèm Hình ảnh đánh giá rồi bấm Gửi đánh giá. Chỉ đơn ở trạng thái Hoàn thành mới được đánh giá, và mỗi lần mua chỉ đánh giá một lần.",
+      "triggers": [
+        "viet danh gia",
+        "gui danh gia",
+        "danh gia mon hang",
+        "danh gia sau khi mua",
+        "cham sao",
+        "khong danh gia duoc",
+        "nut gui danh gia"
+      ],
+      "questions": [
+        "Làm sao viết đánh giá cho hàng tôi mua?",
+        "Vì sao tôi không viết được đánh giá?"
+      ],
+      "sections": [
+        {
+          "title": "Điều kiện",
+          "items": [
+            "Cần đăng nhập bằng tài khoản khách hàng. Chưa đăng nhập, tab Đánh giá hiện «Vui lòng đăng nhập để đánh giá sản phẩm.»",
+            "Chỉ đánh giá được món hàng bạn đã mua, trong đơn ở trạng thái Hoàn thành (biểu mẫu ghi «Chỉ đơn Hoàn thành mới được đánh giá»).",
+            "Mỗi lần mua đánh giá một lần; nếu đã đánh giá, trang hiện «Bạn đã đánh giá sản phẩm này rồi.»"
+          ]
+        },
+        {
+          "title": "Các bước",
+          "items": [
+            "Mở trang chi tiết của món hàng đã mua, bấm tab Đánh giá.",
+            "Ở mục Viết đánh giá, chọn Số sao (mặc định là 5 sao).",
+            "Nhập Nội dung đánh giá (bắt buộc).",
+            "Nếu muốn, bấm chọn ảnh ở Hình ảnh đánh giá; có thể chọn nhiều ảnh.",
+            "Bấm Gửi đánh giá; trang báo «Đã gửi đánh giá sản phẩm.» rồi quay lại tab Đánh giá. Số lượt bạn đã gửi hiện ở Tài khoản, tab Tổng quan, mục Đánh giá đã gửi."
+          ]
+        },
+        {
+          "title": "Nếu không thấy biểu mẫu hoặc gặp lỗi",
+          "items": [
+            "Trang ghi «Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua sản phẩm này.»: bạn chưa có đơn Hoàn thành cho món hàng này; theo dõi trạng thái đơn ở Tài khoản, tab Lịch sử đơn hàng.",
+            "Báo «Vui lòng nhập đầy đủ nội dung đánh giá.»: nhập Nội dung đánh giá rồi gửi lại."
+          ]
+        }
+      ],
+      "route_sources": [
+        "chitiet",
+        "danhgia_sanpham",
+        "guidanhgia",
+        "hoso"
+      ],
+      "updated": "2026-10-26"
+    },
+    {
+      "slug": "hoi-dap-san-pham",
+      "group": "guide",
+      "title": "Đặt câu hỏi ở tab Hỏi đáp",
+      "summary": "Đăng nhập và gửi câu hỏi cho shop ngay ở tab Hỏi đáp của trang chi tiết.",
+      "answer": "Mở trang chi tiết của món hàng bạn quan tâm, bấm tab Hỏi đáp, nhập câu hỏi vào khung rồi bấm Gửi (cần đăng nhập). Trang báo «Đã gửi câu hỏi. SkinSyntax sẽ phản hồi sớm.» Khi shop trả lời, câu trả lời hiện bên dưới câu hỏi với nhãn SkinSyntax trả lời.",
+      "triggers": [
+        "hoi dap",
+        "tab hoi dap",
+        "dat cau hoi",
+        "gui cau hoi",
+        "dat cau hoi cho shop",
+        "hoi shop tren trang",
+        "cau hoi tren trang chi tiet"
+      ],
+      "questions": [
+        "Đặt câu hỏi cho shop ở đâu?",
+        "Gửi câu hỏi ở tab Hỏi đáp như thế nào?"
+      ],
+      "sections": [
+        {
+          "title": "Các bước",
+          "items": [
+            "Đăng nhập bằng tài khoản khách hàng. Chưa đăng nhập, tab Hỏi đáp hiện «Vui lòng đăng nhập để gửi câu hỏi về sản phẩm.»",
+            "Mở trang chi tiết của món hàng, bấm tab Hỏi đáp.",
+            "Nhập câu hỏi vào khung «Bạn có câu hỏi với sản phẩm này? Đặt câu hỏi ngay...».",
+            "Bấm Gửi; trang báo «Đã gửi câu hỏi. SkinSyntax sẽ phản hồi sớm.» rồi quay lại tab Hỏi đáp."
+          ]
+        },
+        {
+          "title": "Xem câu trả lời",
+          "items": [
+            "Quay lại tab Hỏi đáp của đúng trang đó; câu trả lời của shop hiện dưới câu hỏi với nhãn SkinSyntax trả lời.",
+            "Chưa thấy câu trả lời mà cần hỗ trợ gấp thì xem bài Liên hệ bộ phận hỗ trợ."
+          ]
+        },
+        {
+          "title": "Nếu gặp lỗi",
+          "items": [
+            "Báo «Vui lòng nhập câu hỏi cho sản phẩm.»: nhập nội dung câu hỏi rồi gửi lại."
+          ]
+        }
+      ],
+      "route_sources": [
+        "chitiet",
+        "hoidap_sanpham",
+        "guicauhoi"
+      ],
+      "updated": "2026-10-26"
+    },
+    {
+      "slug": "ho-so",
+      "group": "guide",
+      "title": "Tài khoản của tôi: các tab và đổi mật khẩu",
+      "summary": "Các tab trong Tài khoản của tôi, cách cập nhật thông tin và đổi mật khẩu.",
+      "answer": "Đăng nhập rồi bấm Tài khoản ở đầu trang để vào «Tài khoản của tôi», nơi có các tab Tổng quan, Lịch sử đơn hàng, Giỏ hàng của tôi, Hồ sơ Làn da và Ví Voucher. Muốn đổi mật khẩu, mở tab Tổng quan, điền khung Đổi mật khẩu (mật khẩu mới ít nhất 6 ký tự) rồi bấm Đổi mật khẩu. Nếu chưa đăng nhập được vì quên mật khẩu, hãy dùng Quên mật khẩu ở trang Đăng nhập.",
+      "triggers": [
+        "doi mat khau",
+        "thay mat khau",
+        "cap nhat mat khau",
+        "tai khoan cua toi",
+        "trang tai khoan",
+        "ho so ca nhan"
+      ],
+      "questions": [
+        "Đổi mật khẩu khi đang đăng nhập như thế nào?",
+        "Trang Tài khoản của tôi có những mục gì?"
+      ],
+      "sections": [
+        {
+          "title": "Các tab trong Tài khoản của tôi",
+          "items": [
+            "Cần đăng nhập. Nếu chưa, trang chuyển về Đăng nhập kèm thông báo «Vui lòng đăng nhập để truy cập trang tài khoản.»",
+            {
+              "text": "Trang có các tab:",
+              "details": [
+                "Tổng quan: Loại KH và tiến độ hạng thành viên, Ngày tham gia, Số đơn hàng, Đánh giá đã gửi, khung Cập nhật thông tin tài khoản, khung Đổi mật khẩu.",
+                "Lịch sử đơn hàng.",
+                "Giỏ hàng của tôi.",
+                "Hồ sơ Làn da: Loại da, Mức độ nhạy cảm, Mục tiêu chăm sóc, Ngân sách trung bình, và các nút Cập nhật nhanh, Khảo sát đầy đủ.",
+                "Ví Voucher: các voucher bạn đã nhận."
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Cập nhật thông tin tài khoản",
+          "items": [
+            "Ở tab Tổng quan, tìm khung Cập nhật thông tin tài khoản.",
+            {
+              "text": "Sửa các ô cần đổi:",
+              "details": [
+                "Họ tên (bắt buộc).",
+                "Giới tính (Nữ, Nam hoặc Khác).",
+                "Năm sinh.",
+                "Số điện thoại.",
+                "Địa chỉ.",
+                "Email: ô này bị khóa, không sửa được."
+              ]
+            },
+            "Bấm Lưu thông tin; dòng thông báo cạnh nút báo «Đã cập nhật thông tin tài khoản.» khi xong.",
+            "Báo «Năm sinh không hợp lệ.»: nhập lại năm sinh bằng số, năm sinh không được lớn hơn năm hiện tại."
+          ]
+        },
+        {
+          "title": "Đổi mật khẩu",
+          "items": [
+            "Ở tab Tổng quan, tìm khung Đổi mật khẩu.",
+            "Nhập Mật khẩu mới và Xác nhận mật khẩu mới.",
+            "Bấm Đổi mật khẩu; dòng thông báo cạnh nút báo «Đổi mật khẩu thành công.» khi xong."
+          ]
+        },
+        {
+          "title": "Nếu gặp lỗi",
+          "items": [
+            "Báo «Mật khẩu mới phải có ít nhất 6 ký tự.»: nhập mật khẩu dài hơn.",
+            "Báo «Xác nhận mật khẩu không khớp.»: nhập lại hai ô Mật khẩu mới và Xác nhận mật khẩu mới cho giống nhau."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Mở tài khoản của tôi",
+        "url": "index.php?r=hoso"
+      },
+      "route_sources": [
+        "hoso",
+        "capnhatthongtin",
+        "doimatkhau"
+      ],
+      "updated": "2026-10-26"
+    },
+    {
+      "slug": "he-thong-cua-hang",
+      "group": "guide",
+      "title": "Hệ thống cửa hàng SkinSyntax",
+      "summary": "SkinSyntax phục vụ toàn quốc qua kênh online; thông tin điểm hỗ trợ trực tiếp sẽ cập nhật khi có.",
+      "answer": "SkinSyntax hiện vận hành theo mô hình online-first: tra cứu sản phẩm, tư vấn routine, hỗ trợ đơn hàng và xử lý sau mua ngay trên website, phạm vi phục vụ toàn quốc qua kênh online. Trang Hệ thống cửa hàng chưa công bố cửa hàng hay điểm hỗ trợ trực tiếp; khi có, khu vực, thời gian hoạt động và hình thức phục vụ sẽ được cập nhật tại chính trang đó. Khi cần hỗ trợ, bạn xem bài Liên hệ bộ phận hỗ trợ.",
+      "triggers": [
+        "he thong cua hang",
+        "cua hang o dau",
+        "dia chi cua hang",
+        "cua hang offline",
+        "mua truc tiep",
+        "chi nhanh",
+        "cua hang gan nhat",
+        "diem ho tro truc tiep"
+      ],
+      "questions": [
+        "SkinSyntax có cửa hàng trực tiếp không?",
+        "Hệ thống cửa hàng SkinSyntax phục vụ khu vực nào?"
+      ],
+      "sections": [
+        {
+          "title": "Kênh phục vụ",
+          "items": [
+            "Mua sắm online tập trung: tra cứu danh mục, so sánh thành phần, kiểm tra giá bán và đặt hàng ngay trên website.",
+            "Tư vấn AI và chat hỗ trợ: hỏi AI về routine, thành phần, sản phẩm phù hợp hoặc mở khung chat hỗ trợ để trao đổi với bộ phận chăm sóc khách hàng.",
+            "Theo dõi đơn hàng: trạng thái rõ ràng từ lúc đặt đơn, thanh toán đến hoàn tất và hậu mãi."
+          ]
+        },
+        {
+          "title": "Cách bắt đầu",
+          "items": [
+            "Tìm sản phẩm hoặc làm khảo sát da để hệ thống hiểu nhu cầu chăm sóc da của bạn.",
+            "Đặt hàng, theo dõi đơn và xem lịch sử mua sắm ngay trong tài khoản SkinSyntax.",
+            "Khi cần hỗ trợ sau mua, mở chat hỗ trợ hoặc gọi hotline để được hướng dẫn tiếp tục."
+          ]
+        }
+      ],
+      "action": {
+        "label": "Xem hệ thống cửa hàng",
+        "url": "index.php?r=he_thong_cua_hang"
+      },
+      "route_sources": [
+        "he_thong_cua_hang"
+      ],
+      "updated": "2026-10-23"
     }
   ]
 }

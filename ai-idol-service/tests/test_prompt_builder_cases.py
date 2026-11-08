@@ -336,7 +336,9 @@ class ServiceRoutingTests(unittest.TestCase):
              patch("agents.service.update_agent_run", side_effect=update), \
              patch("agents.service.create_campaign", return_value=("campaign-test", True)) as create, \
              patch("agents.service.LLMProvider") as provider, \
-             patch("agents.service.parse_agent_brief") as parser:
+             patch("agents.service.parse_agent_brief") as parser, \
+             patch("agents.service.get_db", return_value=FakeDb()), \
+             patch("core.agent_runs.update_agent_run", side_effect=update):
             result = process_agent_run("run-test", catalog=CATALOG, batches=batches, enqueue_campaign=enqueue)
         provider.assert_not_called()
         parser.assert_not_called()
@@ -373,7 +375,9 @@ class ServiceRoutingTests(unittest.TestCase):
              patch("agents.service.create_campaign", return_value=("campaign-test", True)), \
              patch("agents.service.LLMProvider"), \
              patch("agents.service.parse_agent_brief", side_effect=lambda brief, overrides, llm=None: fallback_parse(brief, overrides)), \
-             patch("agents.service.execute_query") as query:
+             patch("agents.service.execute_query") as query, \
+             patch("agents.service.get_db", return_value=FakeDb()), \
+             patch("core.agent_runs.update_agent_run", side_effect=update):
             process_agent_run("run-test", catalog=CATALOG, enqueue_campaign=Mock())
         query.assert_not_called()
         self.assertEqual(run_doc["intent_classification"]["intent"], CREATE_CAMPAIGN)

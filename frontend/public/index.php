@@ -83,7 +83,8 @@ if (in_array($r, [
     'admin_ai_idol_product_videos', 'admin_ai_idol_search_products',
     'admin_ai_idol_publish_video', 'admin_ai_idol_toggle_publish',
     'admin_ai_idol_reward_campaign', 'admin_ai_idol_save_reward_campaign', 'admin_ai_idol_toggle_reward_campaign',
-    'admin_ai_idol_products_query', 'admin_ai_idol_approve_platform', 'admin_ai_product_videos'
+    'admin_ai_idol_products_query', 'admin_ai_idol_approve_platform', 'admin_ai_product_videos',
+    'admin_ai_idol_job_retry_repair', 'admin_ai_idol_job_rewrite', 'admin_ai_idol_job_cancel'
 ], true)) {
     if (require $backendRoot . '/app/routes/ai_idol.php') {
         return;
@@ -144,6 +145,11 @@ switch ($r) {
         (new SanPhamController($pdo))->chitiet();
         break;
 
+    case 'chat_label_scan':
+        // Chụp bảng thành phần: widget chat gửi ảnh/chữ thành phần, trả JSON phân tích (Flask /api/label/analyze).
+        require_once $backendRoot . '/app/controllers/LabelScanController.php';
+        (new LabelScanController($pdo))->scan();
+        break;
     case 'product_video_stream':
         (new SanPhamController($pdo))->streamProductVideo();
         break;
@@ -303,32 +309,8 @@ switch ($r) {
         (new AuthController($pdo))->xulykhaosat();
         break;
 
-    case 'huong_dan_nhan_otp':
-        (new HomeController($pdo))->otpGuide();
-        break;
-
     case 'he_thong_cua_hang':
         (new HomeController($pdo))->storeNetwork();
-        break;
-
-    case 'bao_hanh':
-        (new HomeController($pdo))->warrantyCenter();
-        break;
-
-    case 'ho_tro_khach_hang':
-        (new HomeController($pdo))->customerSupport();
-        break;
-
-    case 'dieu_kien_giao_dich':
-        (new HomeController($pdo))->termsReference();
-        break;
-
-    case 'chinh_sach_bao_mat':
-        (new HomeController($pdo))->privacyReference();
-        break;
-
-    case 'xuly_du_lieu_ca_nhan':
-        (new HomeController($pdo))->personalDataReference();
         break;
 
     case 'gui_captcha_dang_ky':
@@ -387,20 +369,13 @@ switch ($r) {
         (new TaiKhoanController($pdo))->hoso();
         break;
 
+    case 'capnhatthongtin':
     case 'capnhathoso':
-        (new TaiKhoanController($pdo))->capnhatHoso();
+        (new TaiKhoanController($pdo))->capNhatThongTin();
         break;
 
     case 'capnhat_loaida':
         (new TaiKhoanController($pdo))->capNhatLoaiDa();
-        break;
-
-    case 'diachi_macdinh':
-        (new TaiKhoanController($pdo))->datDiaChiMacDinh();
-        break;
-
-    case 'xoa_diachi':
-        (new TaiKhoanController($pdo))->xoaDiaChi();
         break;
 
     case 'huydon':
@@ -409,12 +384,38 @@ switch ($r) {
         (new QuanTriController($pdo))->customerOrderCancel();
         break;
 
+    case 'guidanhgia':
     case 'danhgia_sanpham':
-        (new TaiKhoanController($pdo))->danhgiaSanpham();
+        (new QuanTriController($pdo))->customerReviewSave();
         break;
 
+    case 'guicauhoi':
     case 'hoidap_sanpham':
-        (new SanPhamController($pdo))->hoidapSanpham();
+        (new QuanTriController($pdo))->customerQuestionSave();
+        break;
+
+    case 'lichsuchat':
+        (new QuanTriController($pdo))->customerChat();
+        break;
+
+    case 'chat_send':
+        (new QuanTriController($pdo))->customerChatSend();
+        break;
+
+    case 'apdung_voucher':
+        (new HomeController($pdo))->apDungVoucher();
+        break;
+
+    case 'bo_voucher':
+        (new HomeController($pdo))->boVoucher();
+        break;
+
+    case 'apdung_diem':
+        (new HomeController($pdo))->apDungDiem();
+        break;
+
+    case 'bo_diem':
+        (new HomeController($pdo))->boDiem();
         break;
 
     case 'live':

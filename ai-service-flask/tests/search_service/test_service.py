@@ -98,7 +98,7 @@ def test_exclude_ids_and_cache_key_normalization():
     assert all(i["product_id"] != "1" for s in out["sections"] for i in s["items"])
     a = cache_key(validate_request({"q": "Sữa  Rửa Mặt", "cart_ids": ["2", "1"]}))
     b = cache_key(validate_request({"q": "sua rua mat", "cart_ids": ["1", "2"]}))
-    assert a == b and a.startswith("search:rec:v2:")
+    assert a == b and a.startswith("search:rec:v3:")
 
 
 def test_trending_branch_falls_back_to_sold_and_skips_out_of_stock():

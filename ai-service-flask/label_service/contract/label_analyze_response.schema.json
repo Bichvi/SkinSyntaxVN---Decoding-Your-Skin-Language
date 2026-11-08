@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "label_analyze_response.schema.json",
+  "title": "POST /api/label/analyze response (200)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "product", "ingredients", "conflicts", "schedule", "skin_fit", "alternatives",
+               "warnings", "summary_vi", "sunscreen_note", "took_ms"],
+  "properties": {
+    "status": {"enum": ["ok", "not_label", "unreadable", "vision_unavailable"]},
+    "product": {
+      "type": "object",
+      "required": ["name", "brand", "product_type", "matched_product_id", "match_score"],
+      "properties": {
+        "name": {"type": "string", "maxLength": 200},
+        "brand": {"type": "string", "maxLength": 200},
+        "product_type": {"enum": ["cleanser", "toner", "serum", "moisturizer", "sunscreen", "mask", "other"]},
+        "matched_product_id": {"type": ["string", "null"]},
+        "match_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+      }
+    },
+    "ingredients": {
+      "type": "object",
+      "required": ["source", "total", "recognized", "items", "raw_text"],
+      "properties": {
+        "source": {"enum": ["catalog", "photo", "user_edit"]},
+        "total": {"type": "integer", "minimum": 0},
+        "recognized": {"type": "integer", "minimum": 0},
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "name", "name_vi", "role", "rank", "highlight"],
+            "properties": {
+              "key": {"type": "string"},
+              "name": {"type": "string"},
+              "name_vi": {"type": ["string", "null"]},
+              "role": {"type": ["string", "null"]},
+              "rank": {"type": ["integer", "null"]},
+              "highlight": {"type": "boolean"}
+            }
+          }
+        },
+        "raw_text": {"type": "string", "maxLength": 6000}
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cart_product_id", "severity", "timing", "ingredients", "advice_vi", "rule_id", "evidence"],
+        "properties": {
+          "cart_product_id": {"type": "string"},
+          "cart_product_name": {"type": "string"},
+          "severity": {"enum": ["high", "medium", "low"]},
+          "timing": {"enum": ["same_session", "same_routine", "ok_alternate_days"]},
+          "ingredients": {"type": "array", "items": {"type": "string"}},
+          "advice_vi": {"type": "string"},
+          "rule_id": {"type": "string"},
+          "evidence": {"type": "string"}
+        }
+      }
+    },
+    "schedule": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cart_product_id", "scan_slot", "cart_slot", "kind", "reason_vi"],
+        "properties": {
+          "cart_product_id": {"type": "string"},
+          "scan_slot": {"enum": ["am", "pm", null]},
+          "cart_slot": {"enum": ["am", "pm", null]},
+          "kind": {"enum": ["split_session", "alternate_nights", "alternate_days"]},
+          "reason_vi": {"type": "string"}
+        }
+      }
+    },
+    "skin_fit": {
+      "type": "object",
+      "required": ["verdict", "profile", "good", "caution", "avoid"],
+      "properties": {
+        "verdict": {"enum": ["good", "caution", "avoid", "neutral", "unknown"]},
+        "profile": {
+          "type": "object",
+          "required": ["skin_type", "sensitive", "concerns"],
+          "properties": {
+            "skin_type": {"enum": ["dau", "kho", "hon_hop", "thuong", null]},
+            "sensitive": {"type": "boolean"},
+            "concerns": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "good": {"$ref": "#/$defs/findings"},
+        "caution": {"$ref": "#/$defs/findings"},
+        "avoid": {"$ref": "#/$defs/findings"}
+      }
+    },
+    "alternatives": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["product_id", "reason_code", "reason_params"],
+        "properties": {
+          "product_id": {"type": "string"},
+          "reason_code": {"enum": ["gentler_fits_skin", "no_cart_conflict"]},
+          "reason_params": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["low_recognition", "graph_degraded", "profile_missing", "cart_empty", "internal_error"]}
+    },
+    "summary_vi": {"type": "string"},
+    "sunscreen_note": {"type": "boolean"},
+    "took_ms": {"type": "integer", "minimum": 0}
+  },
+  "$defs": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "reason_vi", "ingredients"],
+        "properties": {
+          "rule_id": {"type": "string"},
+          "reason_vi": {"type": "string"},
+          "ingredients": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

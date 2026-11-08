@@ -3,6 +3,8 @@
 // Chạy: php backend/tests/unit/SearchEventTest.php
 require_once __DIR__ . '/../../app/services/SearchSkinProfile.php';
 require_once __DIR__ . '/../../app/services/SearchEventTracker.php';
+require_once __DIR__ . '/../../app/services/RedisLite.php';
+require_once __DIR__ . '/../../app/services/RateLimiter.php';
 
 // Phiên CLI giả (phải mở trước khi in ra gì): handle() đọc session id + ghi bucket rate limit.
 ini_set('session.use_cookies', '0');
@@ -106,6 +108,86 @@ $many = json_encode(['q' => 'xyzabc', 'csrf' => $csrf, 'events' => array_fill(0,
 $codes = [];
 for ($i = 0; $i < 7; $i++) { $codes[] = SearchEventTracker::handle($fakeDb, 'POST', $many, 5001); }
 $check('handle: vượt rate -> 429', $codes === [204, 204, 204, 204, 204, 429, 429] && count($fakeDb->inserted['search_events']) === 51);
+
+// ---------- U03: Redis Stream + rate limit Redis (client giả) ----------
+class FakeRedisLite extends RedisLite {
+    public array $cmds = [];
+    /** @var mixed callable|array|null */
+    public $pipelineReply = null;
+    public $evalReply = null;
+    public function __construct() { parent::__construct('redis://127.0.0.1:1'); }
+    public function pipeline(array $commands): ?array {
+        $this->cmds = array_merge($this->cmds, $commands);
+        return is_callable($this->pipelineReply) ? ($this->pipelineReply)($commands) : $this->pipelineReply;
+    }
+    public function eval(string $script, array $keys = [], array $args = []) { return $this->evalReply; }
+}
+$fake = new FakeRedisLite();
+RedisLite::setShared($fake);
+RateLimiter::setShared(new RateLimiter($fake));
+$one = json_encode(['q' => 'xyzabc', 'csrf' => $csrf, 'events' => [['action' => 'click', 'section' => 'semantic', 'product_id' => '1496']]]);
+$two = json_encode(['q' => 'xyzabc', 'csrf' => $csrf, 'events' => [['action' => 'impression', 'section' => 'trending'], ['action' => 'click', 'section' => 'semantic', 'product_id' => '18']]]);
+$before = count($fakeDb->inserted['search_events']);
+
+$fake->evalReply = [1, 60];
+$fake->pipelineReply = fn(array $c) => array_map(fn($i) => "1700000000000-$i", array_keys($c));
+$check('stream: handle -> 204 và KHÔNG ghi Atlas trực tiếp', SearchEventTracker::handle($fakeDb, 'POST', $one, 7000) === 204 && count($fakeDb->inserted['search_events']) === $before);
+$cmd = $fake->cmds[0] ?? [];
+$check('stream: lệnh XADD search:events:v1 MAXLEN ~ 100000', array_slice($cmd, 0, 6) === ['XADD', 'search:events:v1', 'MAXLEN', '~', '100000', '*']);
+$kv = array_combine(array_filter(array_slice($cmd, 6), fn($k) => $k % 2 === 0, ARRAY_FILTER_USE_KEY), array_filter(array_slice($cmd, 6), fn($k) => $k % 2 === 1, ARRAY_FILTER_USE_KEY));
+$check('stream: fields = ts_ms,q_norm,section,product_id,action,user_hash,session_hash', array_keys($kv) === ['ts_ms', 'q_norm', 'section', 'product_id', 'action', 'user_hash', 'session_hash']
+    && $kv['q_norm'] === 'xyzabc' && $kv['product_id'] === '1496' && $kv['user_hash'] === '' && ctype_digit($kv['ts_ms']) && strlen($kv['ts_ms']) === 13);
+
+$fake->pipelineReply = null; // Redis mất kết nối
+$check('stream: Redis lỗi -> ghi Atlas trực tiếp (fallback)', SearchEventTracker::handle($fakeDb, 'POST', $one, 7001) === 204 && count($fakeDb->inserted['search_events']) === $before + 1);
+
+$fake->pipelineReply = fn(array $c) => ['1700000000000-0', new RedisLiteReplyError('OOM')];
+$check('stream: sự kiện bị Redis từ chối -> chỉ sự kiện đó ghi Atlas', SearchEventTracker::handle($fakeDb, 'POST', $two, 7002) === 204
+    && count($fakeDb->inserted['search_events']) === $before + 2 && end($fakeDb->inserted['search_events'])['product_id'] === '18');
+
+$fake->cmds = [];
+$fake->evalReply = [61, 33]; // vượt 60 sự kiện/phút
+$check('rate redis: vượt ngưỡng -> 429 và không XADD', SearchEventTracker::handle($fakeDb, 'POST', $one, 7003) === 429 && $fake->cmds === []);
+
+$fake->evalReply = null; // limiter lỗi -> bucket session (fail-open có giới hạn)
+$check('rate redis: limiter lỗi -> dùng bucket session, vẫn 204', SearchEventTracker::handle($fakeDb, 'POST', $one, 7004 + 10000) === 204);
+RedisLite::setShared(null);
+RateLimiter::setShared(null);
+
+// ---------- U12: product_ids / position / experiment (tùy chọn, tương thích ngược) ----------
+$u12 = SearchEventTracker::validate(['q' => 'toner', 'experiment' => 'graph_weight_v1', 'variant' => 'variant', 'events' => [
+    ['action' => 'impression', 'section' => 'semantic', 'product_ids' => ['1496', 18, 'ab-1']],
+    ['action' => 'click', 'section' => 'semantic', 'product_id' => '1496', 'position' => 2],
+    ['action' => 'add_to_cart', 'section' => 'semantic', 'product_id' => '18'],
+]]);
+$check('u12 validate: nhận product_ids/position/experiment', is_array($u12) && $u12['experiment'] === 'graph_weight_v1' && $u12['variant'] === 'variant'
+    && $u12['events'][0]['product_ids'] === ['1496', '18', 'ab-1'] && $u12['events'][1]['position'] === 2 && !isset($u12['events'][2]['position']));
+$u12docs = SearchEventTracker::buildDocs($u12, null, 'sess', 'TS');
+$check('u12 buildDocs: impression có product_ids, click có position, mọi doc có experiment+variant',
+    $u12docs[0]['product_ids'] === ['1496', '18', 'ab-1'] && $u12docs[1]['position'] === 2 && !isset($u12docs[1]['product_ids'])
+    && $u12docs[2]['experiment'] === 'graph_weight_v1' && $u12docs[2]['variant'] === 'variant');
+$u12f = SearchEventTracker::streamFields($u12docs[0], 1000);
+$check('u12 streamFields: product_ids nối dấu phẩy, experiment/variant là chuỗi', $u12f['product_ids'] === '1496,18,ab-1' && $u12f['experiment'] === 'graph_weight_v1' && $u12f['variant'] === 'variant' && !isset($u12f['position']));
+$check('u12 streamFields: position là chuỗi', SearchEventTracker::streamFields($u12docs[1], 1000)['position'] === '2');
+$plain = SearchEventTracker::buildDocs(SearchEventTracker::validate(['q' => 'toner', 'events' => [['action' => 'impression', 'section' => 'semantic']]]), null, 's', 'T');
+$check('u12 tương thích ngược: payload cũ -> doc không có trường mới', array_keys($plain[0]) === ['ts', 'q_norm', 'section', 'product_id', 'action', 'user_hash', 'session_hash']);
+$u12bad = [
+    'position 0' => [['action' => 'click', 'section' => 'semantic', 'product_id' => '1', 'position' => 0]],
+    'position 51' => [['action' => 'click', 'section' => 'semantic', 'product_id' => '1', 'position' => 51]],
+    'position chuỗi' => [['action' => 'click', 'section' => 'semantic', 'product_id' => '1', 'position' => '2']],
+    'product_ids rỗng' => [['action' => 'impression', 'section' => 'semantic', 'product_ids' => []]],
+    'product_ids 21 phần tử' => [['action' => 'impression', 'section' => 'semantic', 'product_ids' => array_map('strval', range(1, 21))]],
+    'product_ids id sai' => [['action' => 'impression', 'section' => 'semantic', 'product_ids' => ['1; DROP']]],
+    'product_ids không phải mảng' => [['action' => 'impression', 'section' => 'semantic', 'product_ids' => '1,2']],
+];
+foreach ($u12bad as $name => $events) {
+    $check("u12 validate: từ chối $name", SearchEventTracker::validate(['q' => 'toner', 'events' => $events]) === null);
+}
+$evImp = [['action' => 'impression', 'section' => 'semantic']];
+foreach (['experiment sai mẫu' => ['experiment' => 'Bad ID', 'variant' => 'variant'], 'variant sai mẫu' => ['experiment' => 'ok', 'variant' => 'x y'],
+          'thiếu variant' => ['experiment' => 'ok'], 'không phải chuỗi' => ['experiment' => ['a'], 'variant' => 'v']] as $name => $extra) {
+    $check("u12 validate: từ chối $name", SearchEventTracker::validate(['q' => 'toner', 'events' => $evImp] + $extra) === null);
+}
 
 // ---------- hồ sơ da ----------
 $p = SearchSkinProfile::fromCustomer([

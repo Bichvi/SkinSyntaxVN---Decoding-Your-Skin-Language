@@ -46,3 +46,16 @@ def test_body_not_object():
 
 def test_q_200_ok():
     assert len(validate_request({"q": "x" * 200}).q) == 200
+
+
+# ---------------------------------------------------------------- U12 session_hash
+
+def test_session_hash_is_optional_hex_and_lowercased():
+    assert validate_request({"q": "toner"}).session_hash is None
+    assert validate_request({"q": "toner", "session_hash": "AB" * 32}).session_hash == "ab" * 32
+
+
+@pytest.mark.parametrize("bad", [123, "xyz-not-hex", "abc", "a" * 129, ["a"], ""])
+def test_session_hash_rejects_bad_values(bad):
+    with pytest.raises(ValidationError):
+        validate_request({"q": "toner", "session_hash": bad})

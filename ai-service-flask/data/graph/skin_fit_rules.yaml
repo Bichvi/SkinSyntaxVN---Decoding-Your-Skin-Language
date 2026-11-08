@@ -1,0 +1,112 @@
+# Skin-fit rules for the ingredient-label scan (label_service.skin_fit). Cosmetic guidance, NOT medical diagnosis.
+#
+# when   : the rule applies if ANY listed condition matches the profile
+#          (skin_type: [dau|kho|hon_hop|thuong], sensitive: true, concerns: [mun|tham|lao_hoa|lo_chan_long|kho_rap|do_kich_ung]).
+# match  : one item or a list of items. Each item is exactly one of
+#            keys:   [ingredient keys of ingredient_aliases.yaml]
+#            group:  exclusion group of ingredient_groups.yaml (alcohol, fragrance) or group of conflict_rules.yaml
+#                    (retinoids, exfoliating_acids, benzoyl_peroxide)
+#            family: include_families of ingredient_groups.yaml (ascorbic_acid, hyaluronic_acid, ceramide)
+#          plus optional rank_max (1-based INCI position) or rank_limits: true (use conflict_rules.yaml rank_limits per key).
+#          An ingredient with unknown rank (None) always counts as within the limit.
+# source : public https URL (or a list of them), mandatory. Every URL was fetched and checked to be live.
+version: 1
+rules:
+  - id: sensitive_drying_alcohol
+    when: {sensitive: true, skin_type: [kho]}
+    match: {group: alcohol, rank_max: 6}
+    verdict: caution
+    reason_vi: "Cồn khô nằm ở nhóm thành phần đầu có thể làm da khô thêm, nhất là da nhạy cảm hoặc da khô."
+    source: "https://dermnetnz.org/topics/dry-skin"
+
+  - id: sensitive_fragrance
+    when: {sensitive: true}
+    match: {group: fragrance}
+    verdict: caution
+    reason_vi: "Hương liệu là nguyên nhân hay gặp gây kích ứng hoặc dị ứng ở da nhạy cảm."
+    source: "https://dermnetnz.org/topics/sensitive-skin"
+
+  - id: sensitive_strong_acids
+    when: {sensitive: true}
+    match: {group: exfoliating_acids, rank_limits: true}
+    verdict: caution
+    reason_vi: "Acid tẩy tế bào chết (AHA/BHA) ở nồng độ đáng kể dễ gây châm chích, đỏ và bong da với da nhạy cảm."
+    source: ["https://dermnetnz.org/topics/chemical-peels", "https://dermnetnz.org/topics/salicylic-acid"]
+
+  - id: sensitive_retinoid
+    when: {sensitive: true}
+    match: {group: retinoids}
+    verdict: caution
+    reason_vi: "Retinoid có thể gây khô, đỏ và bong tróc, da nhạy cảm nên bắt đầu thật chậm hoặc hỏi bác sĩ da liễu."
+    source: "https://dermnetnz.org/topics/topical-retinoids"
+
+  - id: sensitive_bpo
+    when: {sensitive: true}
+    match: {group: benzoyl_peroxide}
+    verdict: avoid
+    reason_vi: "Benzoyl peroxide thường làm da khô và kích ứng, da nhạy cảm nên tránh."
+    source: "https://dermnetnz.org/topics/benzoyl-peroxide"
+
+  - id: dry_drying_alcohol_top
+    when: {skin_type: [kho]}
+    match: {group: alcohol, rank_max: 3}
+    verdict: avoid
+    reason_vi: "Cồn khô nằm trong nhóm thành phần đầu sẽ làm da khô thêm."
+    source: "https://dermnetnz.org/topics/dry-skin"
+
+  - id: oily_heavy_occlusive
+    when: {skin_type: [dau], concerns: [mun]}
+    match:
+      keys: [cocos_nucifera_oil, isopropyl_myristate, isopropyl_palmitate, myristyl_myristate,
+             isopropyl_isostearate, theobroma_cacao_seed_butter]
+    verdict: caution
+    reason_vi: "Dầu/bơ nặng có thể bít lỗ chân lông, dễ làm da dầu hoặc da mụn nổi thêm mụn."
+    source: "https://dermnetnz.org/topics/acne"
+
+  - id: oily_bha
+    when: {skin_type: [dau], concerns: [mun, lo_chan_long]}
+    match: {keys: [salicylic_acid]}
+    verdict: good
+    reason_vi: "BHA (salicylic acid) tan trong dầu, giúp làm sạch lỗ chân lông và giảm mụn."
+    source: "https://dermnetnz.org/topics/salicylic-acid"
+
+  - id: acne_niacinamide
+    when: {skin_type: [dau], concerns: [mun]}
+    match: {keys: [niacinamide]}
+    verdict: good
+    reason_vi: "Niacinamide giúp kiểm soát dầu và hỗ trợ giảm mụn viêm."
+    source: "https://dermnetnz.org/topics/nicotinamide"
+
+  - id: dry_barrier
+    when: {skin_type: [kho], concerns: [kho_rap]}
+    match:
+      - {family: ceramide}
+      - {family: hyaluronic_acid}
+      - {keys: [glycerin], rank_max: 5}
+      - {keys: [panthenol]}
+    verdict: good
+    reason_vi: "Ceramide, hyaluronic acid, glycerin và panthenol giúp giữ ẩm và nuôi dưỡng hàng rào bảo vệ da."
+    source: ["https://dermnetnz.org/topics/dry-skin", "https://dermnetnz.org/topics/emollients-and-moisturisers"]
+
+  - id: pigment_brighten
+    when: {concerns: [tham]}
+    match:
+      - {keys: [niacinamide, tranexamic_acid]}
+      - {family: ascorbic_acid}
+    verdict: good
+    reason_vi: "Vitamin C, tranexamic acid và niacinamide được dùng để làm mờ vết thâm, sạm."
+    source: ["https://dermnetnz.org/topics/melasma", "https://dermnetnz.org/topics/nicotinamide"]
+
+  - id: aging_actives
+    when: {concerns: [lao_hoa]}
+    match: {group: retinoids}
+    verdict: good
+    reason_vi: "Retinoid là nhóm hoạt chất có bằng chứng hỗ trợ làm mờ nếp nhăn, chống lão hóa."
+    source: "https://dermnetnz.org/topics/topical-retinoids"
+
+  - id: soothing
+    when: {sensitive: true, concerns: [do_kich_ung]}
+    match: {keys: [centella_asiatica_extract, madecassoside, allantoin, panthenol]}
+    verdict: good
+    reason_vi: "Rau má, madecassoside, allantoin và panthenol giúp làm dịu da đang nhạy cảm hoặc kích ứng."
+    source: "https://dermnetnz.org/topics/sensitive-skin"

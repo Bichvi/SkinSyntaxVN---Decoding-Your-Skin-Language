@@ -41,9 +41,62 @@ if ($aiChatEmail !== '' && $pdo !== null) {
 }
 $mascotFilePath = dirname(__DIR__, 2) . '/public/assets/images/syna_mascot.png';
 $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) : '20261018';
+
+// Menu "Trợ giúp": chỉ nhóm + câu hỏi mẫu (không gửi answer/sections xuống client).
+$aiChatHelp = [];
+try {
+  $aiChatSupport = (new SupportKnowledge())->data();
+  foreach (($aiChatSupport['groups'] ?? []) as $gKey => $gVal) {
+    $aiChatHelp[$gKey] = ['key' => (string)$gKey, 'title' => (string)($gVal['title'] ?? ''), 'icon' => (string)($gVal['icon'] ?? 'fa-circle-question'), 'questions' => []];
+  }
+  foreach (($aiChatSupport['articles'] ?? []) as $aArt) {
+    $gKey = $aArt['group'] ?? '';
+    if (!isset($aiChatHelp[$gKey])) continue;
+    foreach (array_slice(array_values(array_filter($aArt['questions'] ?? [], 'is_string')), 0, 2) as $aQ) {
+      $aiChatHelp[$gKey]['questions'][] = $aQ;
+    }
+  }
+  $aiChatHelp = array_values(array_filter($aiChatHelp, static fn($g) => $g['questions'] !== []));
+} catch (Throwable $e) {
+  $aiChatHelp = [];
+}
+$aiChatHelpUrl = (defined('BASE_URL') && trim(BASE_URL) !== '' ? rtrim(BASE_URL, '/') . '/' : '') . 'index.php?r=ho_tro_khach_hang';
+// Backend root differs per layout (XAMPP repo: <repo>/backend, Docker: /var/www/html): derive it from the
+// file that defines ss_env (backend/app/config/config.php) instead of a fixed relative path.
+$aiChatBackendRoot = dirname(__DIR__, 3) . '/backend';
+if (function_exists('ss_env')) {
+  try {
+    $aiChatBackendRoot = dirname((string)(new ReflectionFunction('ss_env'))->getFileName(), 3);
+  } catch (Throwable $e) {
+    // keep the repo-relative default
+  }
+}
+$chatPurchaseController = $aiChatBackendRoot . '/app/controllers/ShopAssistantController.php';
+if (is_file($chatPurchaseController)) {
+  require_once $chatPurchaseController;
+}
+$aiChatPurchaseCsrf = class_exists('ShopAssistantController') ? ShopAssistantController::csrfToken() : '';
+$aiChatVnpayHost = '';
+if (defined('VNPAY_URL') && trim((string)VNPAY_URL) !== '') {
+  $aiChatVnpayHost = (string)(parse_url((string)VNPAY_URL, PHP_URL_HOST) ?: '');
+}
+$aiChatAgentV2 = '0';
+$chatAgentGate = $aiChatBackendRoot . '/app/services/ChatAgentGate.php';
+try {
+  if (is_file($chatAgentGate)) {
+    require_once $chatAgentGate;
+    if (class_exists('ChatAgentGate') && function_exists('ss_env')) {
+      $aiChatAgentV2 = (new ChatAgentGate(RedisLite::shared(), ['SYNA_AGENT_V2' => ss_env('SYNA_AGENT_V2', '')]))->agentEnabled() ? '1' : '0';
+    }
+  }
+} catch (Throwable $e) {
+  $aiChatAgentV2 = '0';
+}
+$aiLabelScanOn = function_exists('ss_env')
+  && in_array(strtolower(trim((string)ss_env('LABEL_SCAN_ENABLED', '0'))), ['1', 'true', 'on', 'yes'], true);
 ?>
 <?php if ($pdo !== null): ?>
-  <div class="ai-chat-widget" data-ai-chat-widget>
+  <div class="ai-chat-widget" data-ai-chat-widget data-agent-v2="<?= $aiChatAgentV2 ?>" data-chat-csrf="<?= htmlspecialchars($aiChatPurchaseCsrf, ENT_QUOTES, 'UTF-8') ?>" data-vnpay-host="<?= htmlspecialchars($aiChatVnpayHost, ENT_QUOTES, 'UTF-8') ?>">
     <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với Syna (AI Advisor)">
       <span class="ai-chat-widget__trigger-avatar" aria-hidden="true">
         <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= $mascotVersion ?>" alt="SYNA Mascot" width="36" height="36" decoding="async">
@@ -99,7 +152,10 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Phân tích nhanh giỏ hàng hiện tại và cảnh báo các cặp chất có thể xung đột.">Phân tích giỏ hàng</button>
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Tìm giúp tôi vài sản phẩm phù hợp với da dầu mụn và giải thích ngắn gọn.">Da dầu mụn</button>
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Tóm tắt giúp tôi các nhóm hoạt chất treatment phổ biến và cách dùng an toàn trong routine.">Thành phần</button>
-        
+        <?php if ($aiChatHelp): ?>
+          <button type="button" class="ai-chat-widget__quick-chip" data-ai-help-toggle aria-haspopup="menu" aria-expanded="false" aria-controls="ai-chat-help-menu">❓ Trợ giúp</button>
+        <?php endif; ?>
+
         <?php if (!empty($_SESSION['user'])): ?>
           <button type="button" class="ai-chat-widget__quick-chip ai-chat-widget__quick-chip--highlight" 
                   <?= $aiChatSkinProfile ? 'data-ai-chat-toggle-profile' : 'data-ai-chat-profile-restricted' ?>>
@@ -107,6 +163,10 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
           </button>
         <?php endif; ?>
       </div>
+
+<?php if ($aiChatHelp): ?>
+      <div class="ai-chat-help" id="ai-chat-help-menu" data-ai-help-menu role="menu" aria-label="Trợ giúp" hidden></div>
+<?php endif; ?>
 
 <?php if ($aiChatSkinProfile): ?>
       <div class="ai-chat-profile-banner" data-ai-profile-banner hidden
@@ -178,10 +238,15 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
 
       <form class="ai-chat-widget__form" data-ai-chat-form>
         <div class="ai-chat-widget__composer">
-          <textarea class="form-control ai-chat-widget__textarea" rows="2" data-ai-chat-input placeholder="Hỏi Syna về thành phần, sản phẩm, routine hoặc phân tích giỏ hàng..." required></textarea>
+          <textarea class="form-control ai-chat-widget__textarea" rows="2" data-ai-chat-input placeholder="Hỏi Syna về thành phần, sản phẩm, routine hoặc phân tích giỏ hàng... hoặc hỏi về đổi trả, vận chuyển, voucher" required></textarea>
           <button class="btn ai-chat-widget__submit" type="submit" data-ai-chat-submit>Gửi</button>
         </div>
-        
+<?php if ($aiLabelScanOn): ?>
+        <div class="ai-label-attach">
+          <button type="button" class="ai-label-attach__btn" data-ai-label-btn title="Chụp hoặc chọn ảnh bảng thành phần">📎 Gửi ảnh bảng thành phần</button>
+          <input type="file" accept="image/jpeg,image/png,image/webp" data-ai-label-input hidden>
+        </div>
+<?php endif; ?>
       </form>
       </div>
     </section>
@@ -673,6 +738,19 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
       transform: translateY(-1px);
       box-shadow: 0 6px 16px rgba(47, 106, 79, 0.3);
     }
+
+    .ai-chat-help { margin: 8px 14px 0; border: 1px solid #dce7db; border-radius: 12px; background: #fff; max-height: 50vh; flex-shrink: 0; overflow-y: auto; padding: 6px; }
+    .ai-chat-help[hidden] { display: none; }
+    .ai-chat-help__item { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 0; background: transparent; color: #234234; font-size: 13px; line-height: 1.35; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+    .ai-chat-help__item:hover, .ai-chat-help__item:focus-visible { background: #f0f7f2; outline: 2px solid #2f6a4f; outline-offset: -2px; }
+    .ai-chat-help__item--back { font-weight: 700; }
+    .ai-chat-help__item--link { color: #2f6a4f; font-weight: 700; text-decoration: none; }
+    .ai-chat-help__icon { width: 20px; text-align: center; flex: 0 0 20px; }
+    .ai-chat-widget__official { display: inline-block; font-size: 11px; font-weight: 700; color: #2f6a4f; background: #eaf4ee; border-radius: 999px; padding: 2px 8px; margin-bottom: 6px; }
+    .ai-chat-widget__source { margin-top: 8px; padding: 6px 10px; border: 1px solid #dce7db; border-radius: 10px; background: #f7fbf8; font-size: 12px; }
+    .ai-chat-widget__source p { display: inline; margin: 0; }
+    .ai-chat-widget__chip-row { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; margin-top: 8px; padding-bottom: 4px; }
+    .ai-chat-widget__chip-row .ai-chat-quick-btn { flex: 0 0 auto; white-space: nowrap; border: 1px solid #183B2B; color: #183B2B; background: #EBF2EE; border-radius: 16px; padding: 4px 12px; text-decoration: none; font-size: 12px; font-weight: 600; }
 
     .ai-chat-profile-banner {
       margin: 10px 14px;
@@ -1379,6 +1457,11 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
     }
   </style>
 
+  <script src="<?= BASE_URL ?>/assets/js/chat-agent-stream.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-agent-stream.js') ?: '1' ?>"></script>
+<?php if ($aiLabelScanOn): ?>
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/ai-chat-label-scan.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/ai-chat-label-scan.css') ?: '1' ?>">
+  <script src="<?= BASE_URL ?>/assets/js/ai-chat-label-scan.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/ai-chat-label-scan.js') ?: '1' ?>"></script>
+<?php endif; ?>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var widget = document.querySelector('[data-ai-chat-widget]');
@@ -1411,6 +1494,7 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
       ];
       var loadingInterval = null;
       var currentLoadingTextIndex = 0;
+      var agentSendGeneration = 0;
       var toggleProfileBtns = widget.querySelectorAll('[data-ai-chat-toggle-profile]');
       var profileRestrictedBtn = widget.querySelector('[data-ai-chat-profile-restricted]');
       var profileBanner = widget.querySelector('[data-ai-profile-banner]');
@@ -1420,6 +1504,14 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
       var messages = [];
       var defaultBottom = parseFloat(window.getComputedStyle(widget).bottom || '88') || 88;
       var expandedStorageKey = 'aiChatExpandedV4:' + storageScope;
+      if (window.SkinSyntaxAgent && widget.dataset.agentV2 === '1') {
+        window.SkinSyntaxAgent.configure({
+          endpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=ai_chat_agent_stream' : 'index.php?r=ai_chat_agent_stream' ?>',
+          confirmEndpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=chat_order_confirm' : 'index.php?r=chat_order_confirm' ?>',
+          csrf: widget.dataset.chatCsrf || '',
+          vnpayHost: widget.dataset.vnpayHost || ''
+        });
+      }
 
       var activeConversationId = null;
       var sidebar = widget.querySelector('[data-ai-chat-sidebar]');
@@ -1808,7 +1900,7 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
             var initialText = thinkingMessages[currentLoadingTextIndex] || thinkingMessages[0];
             return '<div class="ai-chat-widget__typing-row">'
               + '<div class="ai-chat-widget__typing-bubble">'
-              + '<span class="ai-chat-widget__typing-text" data-ai-typing-text>' + initialText + '</span>'
+              + '<span class="ai-chat-widget__typing-text" data-ai-typing-text>' + (message.typingText ? escapeHtml(message.typingText) : initialText) + '</span>'
               + '<span class="ai-chat-widget__typing-dots">'
               + '<span></span><span></span><span></span>'
               + '</span>'
@@ -1819,12 +1911,22 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
           var meta = '';
           var contentPrefix = '';
           var contentSuffix = '';
+          var agentUiHtml = '';
           if (!isUser) {
             var conflictCards = renderConflictCards(message.conflicts || []);
             var productCards = renderProductCards(message.products || []);
             meta += renderMetaBlock('Conflict Detection', conflictCards);
             if (productCards.length) {
               contentSuffix += '<div class="ai-chat-widget__product-group">' + productCards.join('') + '</div>';
+            }
+            if (message.commerce && window.SkinSyntaxPurchase) {
+              contentSuffix += '<div class="ai-chat-widget__commerce-card" data-ai-commerce-card></div>';
+            }
+            if (message.labelScan && window.SkinSyntaxLabelScan) {
+              contentSuffix += window.SkinSyntaxLabelScan.renderCard(message.labelScan, message.id, message.labelScanState);
+            }
+            if (message.agentUi) {
+              agentUiHtml = '<div data-ai-agent-ui></div>';
             }
 
             if (window.SKIN_CHAT_DEBUG === true) {
@@ -1852,7 +1954,29 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
             }
           }
 
-          var formattedContent = isUser ? escapeHtml(message.content) : formatMarkdown(message.content);
+          if (isUser && message.labelThumb && window.SkinSyntaxLabelScan) {
+            contentPrefix += window.SkinSyntaxLabelScan.thumbHtml(message.id);
+          }
+
+          var supportContent = message.content;
+          if (!isUser && message.intent_mode === 'STORE_SUPPORT') {
+            var chipHtml = '';
+            var sourceHtml = '';
+            supportContent = String(supportContent || '').replace(/\[([^\]\r\n]+)\]\((quicksend:[^)\r\n]+)\)/g, function (_, label, url) {
+              chipHtml += '<a href="' + escapeHtml(url) + '" class="ai-chat-quick-btn">' + escapeHtml(label) + '</a>';
+              return '';
+            });
+            if (chipHtml !== '') {
+              supportContent = supportContent.replace(/\n[^\n]{0,60}:[ \t]*$/, '');
+            }
+            supportContent = supportContent.replace(/^[ \t]*Nguồn:[ \t]*(.+)$/gm, function (_, rest) {
+              sourceHtml += '<div class="ai-chat-widget__source">📄 Nguồn: ' + formatMarkdown(rest).replace(/^<p>|<\/p>$/g, '') + '</div>';
+              return '';
+            });
+            contentPrefix += '<div class="ai-chat-widget__official">📘 Thông tin chính thức của SkinSyntax</div>';
+            contentSuffix = sourceHtml + (chipHtml !== '' ? '<div class="ai-chat-widget__chip-row">' + chipHtml + '</div>' : '') + contentSuffix;
+          }
+          var formattedContent = isUser ? escapeHtml(message.content) : (message.labelScan ? '<p>' + escapeHtml(message.content) + '</p>' : formatMarkdown(supportContent));
           var mascotImgUrl = <?= json_encode(BASE_URL . '/assets/images/syna_mascot.png?v=' . $mascotVersion) ?>;
           var avatar = isUser
             ? ''
@@ -1869,21 +1993,48 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
             + meta
             + '</div>'
             + '</div>'
-            + '</div>';
+            + '</div>'
+            + agentUiHtml;
         }).join('');
 
         stream.innerHTML = (welcome ? welcome.outerHTML : '') + html;
+        if (window.SkinSyntaxAgent && typeof window.SkinSyntaxAgent.cleanupDraftCards === 'function') {
+          window.SkinSyntaxAgent.cleanupDraftCards(stream);
+        }
         welcome = stream.querySelector('[data-ai-chat-welcome]');
         if (welcome) {
           welcome.hidden = messages.length > 0;
         }
+        if (window.SkinSyntaxAgent) {
+          var agentUiMessages = messages.filter(function (item) { return item.role !== 'user' && item.agentUi; });
+          stream.querySelectorAll('[data-ai-agent-ui]').forEach(function (target, index) {
+            var item = agentUiMessages[index];
+            if (item) window.SkinSyntaxAgent.renderUi(item.agentUi, target, { onSend: sendMessage });
+          });
+        }
         updateStatus();
+        if (window.SkinSyntaxPurchase) {
+          var commerceMessages = messages.filter(function (item) { return item.role !== 'user' && item.commerce; });
+          stream.querySelectorAll('[data-ai-commerce-card]').forEach(function (target, index) {
+            var commerce = commerceMessages[index] ? commerceMessages[index].commerce : null;
+            if (!commerce) return;
+            target.innerHTML = window.SkinSyntaxPurchase.render(commerce);
+          });
+        }
         scrollToBottom();
       };
 
       var saveMessages = function () {
         try {
-          window.sessionStorage.setItem(storageKey, JSON.stringify(messages.slice(-12)));
+          var persistable = messages.slice(-12).filter(function (item) {
+            return !item || item.typing !== true;
+          }).map(function (item) {
+            if (item && item.agentUi && item.agentUi.kind === 'draft_card') {
+              return { role: 'assistant', content: 'Đơn nháp (đã hết phiên)' };
+            }
+            return item;
+          });
+          window.sessionStorage.setItem(storageKey, JSON.stringify(persistable));
         } catch (error) {
         }
       };
@@ -1961,7 +2112,12 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
             if (stored) {
               var parsed = JSON.parse(stored);
               if (Array.isArray(parsed)) {
-                messages = parsed;
+                messages = parsed.map(function (item) {
+                  if (item && item.agentUi && item.agentUi.kind === 'draft_card') {
+                    return { role: 'assistant', content: 'Đơn nháp (đã hết phiên)' };
+                  }
+                  return item;
+                });
               }
             }
           }
@@ -2004,6 +2160,17 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
         if (!panel || !trigger) {
           return;
         }
+        agentSendGeneration += 1;
+        if (window.SkinSyntaxAgent && typeof window.SkinSyntaxAgent.abort === 'function') {
+          window.SkinSyntaxAgent.abort();
+        }
+        messages = messages.filter(function (item) { return !item || item.typing !== true; });
+        saveMessages();
+        if (loadingInterval) {
+          clearInterval(loadingInterval);
+          loadingInterval = null;
+        }
+        setLoading(false);
         trigger.setAttribute('aria-expanded', 'false');
         widget.classList.remove('is-open');
 
@@ -2022,12 +2189,14 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
         }, 280);
       };
 
-      var sendMessage = function (text) {
+      var sendMessage = function (text, skipAgent) {
         var startTime = Date.now();
         var content = String(text || '').trim();
         if (content === '') {
           return;
         }
+
+        messages = messages.filter(function (item) { return !item || item.typing !== true; });
 
         openWidget();
         addMessage({ role: 'user', content: content });
@@ -2052,6 +2221,82 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
             }, 200);
           }
         }, 4000);
+
+        if (!skipAgent && widget.dataset.agentV2 === '1' && window.SkinSyntaxAgent) {
+          var agentSendId = ++agentSendGeneration;
+          var handedOffToLegacy = false;
+          var isCurrentAgentSend = function () { return agentSendId === agentSendGeneration; };
+          var agentMessage = messages[messages.length - 1];
+          var agentText = '';
+          var finishAgent = function () {
+            if (!isCurrentAgentSend()) return;
+            if (agentMessage) {
+              agentMessage.typing = false;
+              agentMessage.content = agentText;
+            }
+            renderMessages();
+          };
+          window.SkinSyntaxAgent.send({
+            message: content,
+            conversationId: activeConversationId,
+            onMeta: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              if (payload.conversation_id && activeConversationId !== payload.conversation_id) {
+                activeConversationId = payload.conversation_id;
+                try { window.sessionStorage.setItem('aiChatActiveConversationIdV4:' + storageScope, activeConversationId); } catch (e) {}
+              }
+            },
+            onToken: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              agentText += String(payload.text || '');
+              var typing = messages.find(function (item) { return item.id === typingId; });
+              if (typing) { typing.typing = false; typing.content = agentText; typing.id = typingId; }
+              renderMessages();
+            },
+            onUi: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              finishAgent();
+              if (payload && payload.kind === 'product_list') {
+                var productPayload = payload.payload || {};
+                if (Array.isArray(productPayload.products)) {
+                  addMessage({ role: 'assistant', content: '', products: productPayload.products });
+                }
+              } else {
+                addMessage({ role: 'assistant', content: '', agentUi: Object.assign({}, payload || {}, { messageId: typingId }) });
+              }
+            },
+            onCartUpdated: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              if (typeof updateCartBadge === 'function') updateCartBadge(parseInt(payload.count, 10) || 0);
+            },
+            onDone: finishAgent,
+            onError: function (payload) {
+              if (!isCurrentAgentSend()) return;
+              finishAgent();
+              addMessage({ role: 'assistant', content: String(payload.message || 'AI hiện chưa phản hồi được. Vui lòng thử lại sau.'), conflicts: [], products: [] });
+            }
+          }).then(function (result) {
+            if (!isCurrentAgentSend()) return;
+            if (result && result.fallback === true) {
+              handedOffToLegacy = true;
+              messages = messages.filter(function (item) { return item.id !== typingId; });
+              if (messages.length && messages[messages.length - 1].role === 'user' && messages[messages.length - 1].content === content) {
+                messages.pop();
+              }
+              renderMessages();
+              sendMessage(content, true);
+            }
+          }).catch(function () {
+            if (!isCurrentAgentSend()) return;
+            if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
+            setLoading(false);
+          }).finally(function () {
+            if (!isCurrentAgentSend() || handedOffToLegacy) return;
+            if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
+            setLoading(false);
+          });
+          return;
+        }
 
         var currentProductId = null;
         try {
@@ -2120,6 +2365,10 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
               pipeline_mode: payload.pipeline_mode,
               query_type: payload.query_type,
               intent_mode: payload.intent_mode,
+              support_topic: payload.support_topic,
+              sources: Array.isArray(payload.sources) ? payload.sources : [],
+              suggested_questions: Array.isArray(payload.suggested_questions) ? payload.suggested_questions : [],
+              commerce: payload.commerce || null,
               latency: payload.latency
             });
 
@@ -2221,6 +2470,93 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
         input.addEventListener('input', function () {
           input.style.height = 'auto';
           input.style.height = Math.min(input.scrollHeight, 130) + 'px';
+        });
+      }
+
+      var helpData = <?= json_encode($aiChatHelp, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+      var helpUrl = <?= json_encode($aiChatHelpUrl) ?>;
+      var helpToggle = widget.querySelector('[data-ai-help-toggle]');
+      var helpMenu = widget.querySelector('[data-ai-help-menu]');
+      var helpGroupIndex = -1;
+
+      var helpItems = function () {
+        return Array.prototype.slice.call(helpMenu.querySelectorAll('[role="menuitem"]'));
+      };
+      var closeHelp = function (restoreFocus) {
+        helpMenu.hidden = true;
+        helpToggle.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) helpToggle.focus();
+      };
+      var renderHelp = function () {
+        var html = '';
+        if (helpGroupIndex < 0) {
+          helpData.forEach(function (group, index) {
+            html += '<button type="button" role="menuitem" class="ai-chat-help__item" data-help-group="' + index + '"><span class="ai-chat-help__icon"><i class="fa-solid ' + escapeHtml(group.icon) + '" aria-hidden="true"></i></span><span>' + escapeHtml(group.title) + '</span></button>';
+          });
+        } else {
+          var group = helpData[helpGroupIndex];
+          html += '<button type="button" role="menuitem" class="ai-chat-help__item ai-chat-help__item--back" data-help-back>← Quay lại</button>';
+          group.questions.forEach(function (question, index) {
+            html += '<button type="button" role="menuitem" class="ai-chat-help__item" data-help-question="' + index + '">' + escapeHtml(question) + '</button>';
+          });
+          html += '<a role="menuitem" class="ai-chat-help__item ai-chat-help__item--link" href="' + escapeHtml(helpUrl + '#nhom-' + group.key) + '">Xem tất cả trong Trung tâm hỗ trợ ↗</a>';
+        }
+        helpMenu.innerHTML = html;
+        var first = helpItems()[0];
+        if (first) first.focus();
+      };
+      if (helpToggle && helpMenu && helpData.length) {
+        helpToggle.addEventListener('click', function () {
+          if (!helpMenu.hidden) {
+            closeHelp(true);
+            return;
+          }
+          helpGroupIndex = -1;
+          helpMenu.hidden = false;
+          helpToggle.setAttribute('aria-expanded', 'true');
+          renderHelp();
+        });
+        helpMenu.addEventListener('click', function (event) {
+          var groupBtn = event.target.closest('[data-help-group]');
+          if (groupBtn) {
+            helpGroupIndex = parseInt(groupBtn.getAttribute('data-help-group'), 10);
+            renderHelp();
+            return;
+          }
+          if (event.target.closest('[data-help-back]')) {
+            helpGroupIndex = -1;
+            renderHelp();
+            return;
+          }
+          var questionBtn = event.target.closest('[data-help-question]');
+          if (questionBtn && helpGroupIndex >= 0) {
+            var question = helpData[helpGroupIndex].questions[parseInt(questionBtn.getAttribute('data-help-question'), 10)];
+            closeHelp(false);
+            if (question) sendMessage(question);
+          }
+        });
+        helpMenu.addEventListener('keydown', function (event) {
+          var items = helpItems();
+          var at = items.indexOf(document.activeElement);
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            var next = event.key === 'ArrowDown' ? (at + 1) % items.length : (at <= 0 ? items.length - 1 : at - 1);
+            items[next].focus();
+          } else if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            if (helpGroupIndex >= 0) {
+              helpGroupIndex = -1;
+              renderHelp();
+            } else {
+              closeHelp(true);
+            }
+          }
+        });
+        document.addEventListener('click', function (event) {
+          if (!helpMenu.hidden && event.composedPath().indexOf(helpMenu) === -1 && !event.target.closest('[data-ai-help-toggle]')) {
+            closeHelp(false);
+          }
         });
       }
 
@@ -2461,6 +2797,51 @@ $mascotVersion = is_file($mascotFilePath) ? (string)filemtime($mascotFilePath) :
 
       syncLayout();
       syncExpandedState();
+<?php if ($aiLabelScanOn): ?>
+      if (window.SkinSyntaxLabelScan) {
+        window.SkinSyntaxLabelScan.init({
+          widget: widget,
+          form: form,
+          endpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=chat_label_scan' : 'index.php?r=chat_label_scan' ?>',
+          csrf: widget.dataset.chatCsrf || '',
+          getConversationId: function () { return activeConversationId; },
+          isLoggedIn: userLoggedIn,
+          addMessage: addMessage,
+          replaceMessage: function (id, message) {
+            var index = messages.findIndex(function (item) { return item && item.id === id; });
+            if (index === -1) { messages.push(message); } else { messages[index] = message; }
+            saveMessages();
+            renderMessages();
+          },
+          escapeHtml: escapeHtml,
+          renderProductCards: renderProductCards,
+          sendMessage: sendMessage
+        });
+      }
+<?php endif; ?>
+      renderMessages();
+
+      if (window.SkinSyntaxPurchase) {
+        window.SkinSyntaxPurchase.mount(stream, {
+          endpoint: '<?= BASE_URL ?>/index.php?r=chat_purchase_action',
+          csrf: <?= json_encode($aiChatPurchaseCsrf, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
+          onQuote: function (offer, quote) {
+            var target = messages.find(function (item) { return item.commerce && item.commerce.offer === offer; });
+            if (target) {
+              target.commerce = quote;
+              renderMessages();
+            }
+          },
+          onChange: function (offer) {
+            var target = messages.find(function (item) { return item.commerce && item.commerce.offer === offer; });
+            if (target) {
+              target.commerce.stage = 'choose';
+              renderMessages();
+            }
+          },
+          onQuantity: function () {}
+        });
+      }
 
       // Lazy-initialize chat messages and conversation during idle time if not already opened
       if ('requestIdleCallback' in window) {

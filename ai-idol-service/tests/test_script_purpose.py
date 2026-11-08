@@ -45,7 +45,7 @@ class PromptTests(unittest.TestCase):
                 seen["pair"] = (system, user)
                 return "kịch bản"
 
-        with patch.object(content_agent, "LLMProvider", FakeLLM):
+        with patch.object(content_agent, "LLMProvider", FakeLLM), patch.object(content_agent, "SCRIPT_CANDIDATES", 1):
             content_agent.generate_content_and_script(SNAP, "Kiến thức", "Product Intro", {})
         self.assertEqual(seen["pair"], self.prompts("live_only"))
 

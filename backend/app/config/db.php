@@ -73,13 +73,17 @@ try {
     defined('MONGO_DB') || define('MONGO_DB', $mongoDbName);
     defined('DB_MODE') || define('DB_MODE', $activeMode);
 
-    $driverOptions = [
-        'serverSelectionTimeoutMS' => 5000,
+    // Đây là URI options (tham số thứ 2). Đặt ở tham số thứ 3 (driver options) thì driver bỏ qua.
+    // serverSelectionTryOnce=false: khi mạng tới Atlas chập chờn, driver tự thử lại
+    // trong khoảng serverSelectionTimeoutMS thay vì ném lỗi ngay ở lần hỏng đầu tiên.
+    $uriOptions = [
+        'serverSelectionTryOnce' => false,
+        'serverSelectionTimeoutMS' => 8000,
         'connectTimeoutMS' => 5000,
     ];
 
     try {
-        $client = new MongoDB\Client($mongoUri, [], $driverOptions);
+        $client = new MongoDB\Client($mongoUri, $uriOptions);
         // Không ping mỗi request: driver kết nối lười, lỗi Atlas sẽ ném ra ở truy vấn đầu tiên (controller đã bắt).
     } catch (Throwable $connEx) {
         // Không silent fallback sang local. Nếu Atlas lỗi thì fail rõ ràng để xử lý.

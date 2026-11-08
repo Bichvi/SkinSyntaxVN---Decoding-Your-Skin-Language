@@ -1,0 +1,5 @@
+# Test-only dependencies (not installed in the Docker image).
+# redis_kit unit tests: fakeredis emulates Streams/Pub-Sub; lupa lets it run the Lua lock scripts.
+pytest>=8.0
+fakeredis>=2.20
+lupa>=2.0

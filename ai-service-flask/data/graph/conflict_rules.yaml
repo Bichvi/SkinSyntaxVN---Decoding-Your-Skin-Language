@@ -1,0 +1,150 @@
+# Active-ingredient conflict rules (U09). Loaded by graph_sync.conflicts -> (Ingredient)-[:CONFLICTS_WITH]->(Ingredient)
+# (python -m graph_sync --conflicts-only) and by the cart analysis (search_service.cart_analyze).
+#
+# HOW TO EDIT
+#   * Every rule needs a public source. A pair that is not well established is either `severity: low` with
+#     `evidence: limited`, or it is left out. Popular "myths" are deliberately NOT here (e.g. niacinamide +
+#     vitamin C is not listed - the old warning is not supported for normal cosmetic use).
+#   * a / b are lists of ingredient keys (keys of ingredient_aliases.yaml) or group names from `groups`.
+#     A rule expands to every (x, y) with x in a, y in b, x != y. When a and b are the same list it expands to
+#     the unordered pairs inside it. The same pair coming from two rules keeps the higher severity.
+#   * severity: high | medium | low        (UI: high = warning colour, medium/low = information)
+#   * timing:   same_routine   - avoid having both in one routine (a morning AND an evening of the same day);
+#                                alternate days / nights instead
+#               same_session   - avoid layering in the same morning or the same evening; separating AM and PM is fine
+#               ok_alternate_days - acceptable when used on different days
+#   * evidence: strong | moderate | limited  (how well documented, informational only)
+#   * Older rules from recommendation_service/knowledge/ingredient_rules.py (CONFLICT_RULES: retinol+aha,
+#     retinol+bha, retinol+benzoyl peroxide) are all contained here; tests/graph_sync/test_conflicts.py keeps it so.
+#
+# Severity is about SKIN TOLERANCE / product stability, not toxicity. None of this is medical advice.
+
+groups:
+  retinoids: [retinol, retinal, tretinoin, adapalene]      # retinyl palmitate is excluded on purpose: a very weak ester
+                                                           # found in 100+ sunscreens/moisturisers, not a practical conflict
+  retinoids_oxidisable: [retinol, retinal, tretinoin]      # adapalene is stable with benzoyl peroxide (approved fixed combination)
+  ahas: [aha, glycolic_acid, lactic_acid, mandelic_acid]
+  bha: [salicylic_acid]
+  exfoliating_acids: [aha, glycolic_acid, lactic_acid, mandelic_acid, salicylic_acid]
+  vitamin_c: [ascorbic_acid]                               # pure L-ascorbic acid only; stable derivatives (SAP, MAP, ascorbyl glucoside) are not listed
+  benzoyl_peroxide: [benzoyl_peroxide]
+
+# An ingredient only takes part in a conflict when it is among the first N entries of the INCI list (rank, 1-based).
+# Reason: lactic/citric-type acids appear far down the list as pH adjusters; there they are not an exfoliating active.
+# Heuristic (the INCI order is only exact above 1%) - tune against real data. No entry = always counts (retinoids, BPO).
+rank_limits:
+  aha: 14
+  glycolic_acid: 14
+  lactic_acid: 10
+  mandelic_acid: 14
+  salicylic_acid: 20
+  ascorbic_acid: 12
+  copper_tripeptide_1: 15
+
+# Products in these categories (graph category keys, leaf or ancestor) are never reported:
+# hair care, make-up and lip balms are not part of a face-care routine.
+ignore_categories: [cham_soc_toc_va_da_dau, trang_diem, duong_moi]
+
+# Wash-off products have a short contact time. A conflict where either product is wash-off is shown one level lower
+# (high -> medium -> low) and a `low` one is dropped. Heuristic based on contact time, applied after the rules below.
+rinse_off_categories: [sua_rua_mat, tay_trang, mat_na_rua, sua_tam, xa_phong, dau_goi_va_dau_xa, tay_te_bao_chet_moi]
+
+rules:
+  - id: retinoid_aha
+    a: [retinoids]
+    b: [ahas]
+    severity: high
+    timing: same_routine
+    evidence: strong
+    advice_vi: "Retinoid kết hợp AHA dễ gây khô, đỏ rát và bong tróc. Hãy dùng xen kẽ: một tối retinoid, một tối AHA, và luôn dùng kem chống nắng ban ngày."
+    source: "AAD (American Academy of Dermatology) - hướng dẫn dùng retinoid: tránh dùng đồng thời các sản phẩm tẩy tế bào chết/gây kích ứng; DermNet NZ - Topical retinoids & Alpha hydroxy acids. Cặp này đã có trong CONFLICT_RULES của dự án (retinol + aha)."
+
+  - id: retinoid_bha
+    a: [retinoids]
+    b: [bha]
+    severity: high
+    timing: same_routine
+    evidence: strong
+    advice_vi: "Retinoid kết hợp BHA (salicylic acid) làm da dễ khô và kích ứng. Nên dùng xen kẽ tối, hoặc tách BHA sang buổi sáng nếu da chịu được."
+    source: "AAD - hướng dẫn dùng retinoid; DermNet NZ - Salicylic acid (kích ứng khi dùng cùng retinoid). Cặp này đã có trong CONFLICT_RULES của dự án (retinol + bha)."
+
+  - id: retinoid_benzoyl_peroxide
+    a: [retinoids_oxidisable]
+    b: [benzoyl_peroxide]
+    severity: medium
+    timing: same_session
+    evidence: strong
+    advice_vi: "Benzoyl peroxide là chất oxy hóa, có thể làm retinoid mất tác dụng và tăng khô rát khi bôi cùng lúc. Nên dùng benzoyl peroxide buổi sáng, retinoid buổi tối."
+    source: "Martin B. et al., Br J Dermatol 1998 (tretinoin bị benzoyl peroxide phân hủy, adapalene thì ổn định); DermNet NZ - Benzoyl peroxide. Adapalene bị loại khỏi luật này vì có thuốc phối hợp adapalene/benzoyl peroxide được cấp phép. Cặp retinol + benzoyl peroxide đã có trong CONFLICT_RULES của dự án."
+
+  - id: aha_bha_stack
+    a: [ahas]
+    b: [bha]
+    severity: medium
+    timing: same_session
+    evidence: moderate
+    advice_vi: "AHA và BHA đều tẩy tế bào chết; dùng chồng cùng buổi dễ làm tổn thương hàng rào da. Chỉ dùng một loại mỗi buổi hoặc cách ngày."
+    source: "DermNet NZ - Alpha hydroxy acids, Salicylic acid (kích ứng, nhạy cảm với nắng); AAD - tẩy tế bào chết quá mức."
+
+  - id: aha_aha_stack
+    a: [ahas]
+    b: [ahas]
+    severity: low
+    timing: same_session
+    evidence: limited
+    advice_vi: "Hai sản phẩm cùng nhóm AHA có thể dùng chồng thành tẩy tế bào chết quá mức. Chọn một sản phẩm cho mỗi lần dùng."
+    source: "DermNet NZ - Alpha hydroxy acids (tác dụng phụ phụ thuộc nồng độ và tần suất)."
+
+  - id: vitamin_c_acids
+    a: [vitamin_c]
+    b: [exfoliating_acids]
+    severity: low
+    timing: same_session
+    evidence: limited
+    advice_vi: "Vitamin C (L-ascorbic acid) và acid tẩy tế bào chết đều có pH thấp, dùng chung dễ châm chích với da nhạy cảm. Có thể tách vitamin C buổi sáng, acid buổi tối."
+    source: "Pinnell S.R. et al., Dermatol Surg 2001 (L-ascorbic acid cần pH thấp để thấm); bằng chứng lâm sàng về xung đột còn hạn chế, nên chỉ mức thấp."
+
+  - id: benzoyl_peroxide_vitamin_c
+    a: [benzoyl_peroxide]
+    b: [vitamin_c]
+    severity: medium
+    timing: same_session
+    evidence: moderate
+    advice_vi: "Benzoyl peroxide oxy hóa vitamin C và làm giảm tác dụng của nó. Hãy dùng riêng: một loại buổi sáng, loại kia buổi tối."
+    source: "DermNet NZ - Benzoyl peroxide (chất oxy hóa mạnh); tính chất hóa học của L-ascorbic acid (dễ bị oxy hóa)."
+
+  - id: benzoyl_peroxide_acids
+    a: [benzoyl_peroxide]
+    b: [exfoliating_acids]
+    severity: low
+    timing: same_session
+    evidence: limited
+    advice_vi: "Benzoyl peroxide và acid tẩy tế bào chết cùng làm khô da. Bắt đầu từng chất một và không bôi chồng trong cùng một buổi."
+    source: "DermNet NZ - Benzoyl peroxide, Salicylic acid (tác dụng phụ: khô, kích ứng, cộng dồn khi phối hợp nhiều hoạt chất trị mụn); nguyên tắc chung, không phải thử nghiệm đối đầu - mức thấp."
+
+  - id: retinoid_vitamin_c
+    a: [retinoids]
+    b: [vitamin_c]
+    severity: low
+    timing: same_session
+    evidence: limited
+    advice_vi: "Retinoid và vitamin C thường được khuyên tách buổi để hạn chế kích ứng: vitamin C buổi sáng, retinoid buổi tối."
+    source: "Khuyến nghị thực hành phổ biến về routine (vitamin C sáng, retinoid tối), không phải kết luận từ thử nghiệm lâm sàng - nên chỉ mức thấp."
+
+  - id: retinoid_retinoid
+    a: [retinoids]
+    b: [retinoids]
+    severity: low
+    timing: same_session
+    evidence: limited
+    advice_vi: "Hai sản phẩm đều chứa retinoid sẽ cộng dồn độ mạnh, dễ gây khô và bong tróc. Dùng một sản phẩm retinoid mỗi tối."
+    source: "AAD - hướng dẫn dùng retinoid (tăng dần, không dùng chồng nhiều retinoid)."
+
+  - id: copper_peptide_vitamin_c
+    a: [copper_tripeptide_1]
+    b: [vitamin_c]
+    severity: low
+    timing: same_session
+    evidence: limited
+    advice_vi: "Ion đồng trong peptide đồng có thể oxy hóa vitamin C làm giảm hiệu quả cả hai. Nên dùng ở hai buổi khác nhau."
+    source: "Hóa học của ascorbic acid (Cu2+ xúc tác oxy hóa); khuyến cáo của nhà sản xuất, chưa có nghiên cứu lâm sàng - mức thấp."

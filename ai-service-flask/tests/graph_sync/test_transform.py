@@ -66,7 +66,7 @@ def test_full_row_shape():
     assert row["ingredient_source"] == "full"
     assert row["skin_types"] == [{"key": "da_kho", "name": "Da khô", "source": "data"}]
     assert [b["key"] for b in row["benefits"]] == ["cap_am", "lam_sach_sau"]
-    assert [c["key"] for c in row["concerns"]] == ["kho_da", "mun"]
+    assert [c["key"] for c in row["concerns"]] == []     # cleanser category: no inferred concerns
     assert row["origin"] == [{"key": "han_quoc", "name": "Hàn Quốc"}]
 
 
@@ -110,3 +110,25 @@ def test_brand_display_name_most_common():
     rows = [convert(doc(ma_thuong_hieu=25)), convert(doc()), convert(doc(ma_san_pham=2))]
     names = canonical_brand_names(rows)
     assert names == {"torriden": "Torriden"}
+
+
+def test_raw_thanh_phan_with_marker_beats_damaged_sach():
+    row = convert(doc(
+        thanh_phan_full=None,
+        thanh_phan="Hyaluronic Acid, Vitamin C. Bảng thành phần: Water, Sodium Hyaluronate, Salicylic Acid",
+        thanh_phan_sach="peg, 18 methyl ether dimethyl silane",
+    ))
+    assert row["ingredient_source"] == "raw"
+    assert [i["key"] for i in row["ingredients"]][:3] == ["water", "sodium_hyaluronate", "salicylic_acid"]
+    plain = convert(doc(thanh_phan_full=None, thanh_phan="Water, Salicylic Acid", thanh_phan_sach="salicylic acid"))
+    assert plain["ingredient_source"] == "sach"
+
+
+def test_sunscreen_category_gets_no_inferred_concerns_but_keeps_benefits():
+    lookups = Lookups(
+        brands=LOOKUPS.brands, skin_types=LOOKUPS.skin_types, origins=LOOKUPS.origins,
+        categories={"9": CategoryInfo("Kem Chống Nắng", 3, None)},
+    )
+    row = to_graph_row(doc(ma_danh_muc=9), lookups, aliases=ALIASES, rules=RULES)
+    assert [c["key"] for c in row["categories"]] == ["kem_chong_nang"]
+    assert row["concerns"] == [] and [b["key"] for b in row["benefits"]]

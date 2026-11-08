@@ -41,6 +41,8 @@ SECTION_NAMES = (
 SALE_LABELS = frozenset({"price", "cta", "closing"})
 _LABEL_CAPTURE = re.compile(rf"(?:{SECTION_NAMES})", re.IGNORECASE)
 BRACKET_LINE = re.compile(rf"^\s*\[\s*({SECTION_NAMES})\s*\]\s*:?[ \t]*$", re.IGNORECASE)
+# "[Ingredients] content" on one line: only the bracketed form may omit the colon.
+BRACKET_INLINE = re.compile(rf"^\s*(\[\s*({SECTION_NAMES})\s*\])\s*:?[ \t]*(\S.*)$", re.IGNORECASE)
 LEADING_LABEL = re.compile(
     rf"^\s*(?:#+\s*)?(?:\*{{1,3}}|_{{1,3}}|\[)?\s*({SECTION_NAMES})\s*(?:\*{{1,3}}|_{{1,3}}|\])?\s*:",
     re.IGNORECASE,
@@ -117,6 +119,14 @@ def split_labeled_sections(script: str) -> list[tuple[str, str]]:
             flush()
             label = header
             continue
+        inline = BRACKET_INLINE.match(raw_line)
+        if inline:
+            flush()
+            label = _canonical_label(inline.group(2))
+            cleaned = _clean_line(inline.group(3))
+            if cleaned:
+                current.append(cleaned)
+            continue
         leading = LEADING_LABEL.match(raw_line)
         if leading:
             flush()
@@ -164,9 +174,34 @@ _MONEY_PATTERNS = (
 )
 # Urgency/scarcity wording: only allowed when a verified flash sale with a deadline exists.
 _SCARCITY = re.compile(
-    r"\b(?:chi hom nay|hom nay|toi nay|ngay mai|chot don|chi con(?: vai)?|duy nhat|sap het|"
+    r"\b(?:chot don|chi con(?: vai)?|duy nhat|sap het|"
     r"flash sale|so luong co han|con it|het hang)\b"
 )
+# "hôm nay / tối nay / ngày mai" is a normal greeting ("livestream hôm nay", "hôm nay mình giới thiệu").
+# It is scarcity only as a deadline: "chỉ hôm nay", "hôm nay thôi", or in a buy/price sentence.
+_TIME_WORD = re.compile(r"\b(?:hom nay|toi nay|ngay mai)\b")
+_TIME_DEADLINE = re.compile(
+    r"\b(?:(?:chi|rieng|het|den het|trong|ngay)\s+(?:hom nay|toi nay|ngay mai)|(?:hom nay|toi nay|ngay mai)\s+thoi)\b"
+)
+_BUY_CUE = re.compile(r"\b(?:mua|dat mua|dat hang|chot|gia|uu dai|nhanh tay)\b")
+_TIME_INTRO = re.compile(
+    r"\b(?:livestream|buoi|phien|phat song|song)\b(?:\s+\w+){0,3}\s+(?:hom nay|toi nay)\b"
+    r"|\b(?:hom nay|toi nay)\s+(?:minh|chung ta|chung minh|em|skinsyntax)\b"
+)
+
+
+def _scarcity_words(folded: str) -> list[str]:
+    found = [m.group(0) for m in _SCARCITY.finditer(folded)]
+    for sentence in re.split(r"[.!?;\n]+", folded):
+        if not _TIME_WORD.search(sentence):
+            continue
+        deadline = _TIME_DEADLINE.search(sentence)
+        if deadline:
+            found.append(deadline.group(0))
+            continue
+        if _BUY_CUE.search(sentence) and not _TIME_INTRO.search(sentence):
+            found.append(_TIME_WORD.search(sentence).group(0))
+    return found
 _PROMO = re.compile(r"\b(?:sale|khuyen mai|uu dai|giam gia|co han|ket thuc|voucher|freeship|ma giam)\b")
 _MAGNITUDE = r"(?:tram|nghin|trieu|ty|muoi|linh)"
 _PHRASE_MARK = "\x00"
@@ -228,7 +263,7 @@ def _scan_price_text(text: str, pricing: dict | None, section: str | None) -> li
             add("PROMO_UNVERIFIED", promo[0],
                 "Không có chương trình ưu đãi đang chạy, không được nói ưu đãi, khuyến mãi, sale, giảm giá hay có hạn")
     if not (flash and flash.get("end_ts")):
-        scarcity = [m.group(0) for m in _SCARCITY.finditer(remaining)]
+        scarcity = _scarcity_words(remaining)
         if scarcity:
             add("SCARCITY_UNVERIFIED", scarcity[0],
                 "Không có flash sale xác thực kèm hạn kết thúc, không được dùng từ tạo khan hiếm: "

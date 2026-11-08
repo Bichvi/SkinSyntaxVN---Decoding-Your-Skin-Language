@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "skinsyntax/search/similar_response.v1",
+  "title": "GET /api/products/<id>/similar response (v1, U08)",
+  "description": "Query: limit (1..20, default 8), exclude (csv of product ids, max 50), skin_type (graph SkinType key). Header X-Internal-Token required when SEARCH_INTERNAL_TOKEN is set.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["product_id", "items", "degraded", "took_ms"],
+  "properties": {
+    "product_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$"},
+    "items": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["product_id", "score", "reason_code", "reason_params"],
+        "properties": {
+          "product_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$"},
+          "score": {"type": "number"},
+          "reason_code": {"type": "string", "enum": ["shared_ingredients", "same_category", "same_brand"]},
+          "reason_params": {"type": "array", "maxItems": 3, "items": {"type": "string"}}
+        }
+      }
+    },
+    "degraded": {"type": "boolean", "description": "true = semantic (Chroma) fallback or empty because the graph was unavailable"},
+    "source": {"type": "string", "enum": ["graph", "semantic"], "description": "optional: where the candidates came from"},
+    "took_ms": {"type": "integer", "minimum": 0}
+  }
+}
