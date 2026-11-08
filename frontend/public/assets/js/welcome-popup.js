@@ -145,6 +145,7 @@
     root.hidden = false;
     window.requestAnimationFrame(function () {
       root.classList.add('is-visible');
+      root.classList.add('is-programmatic-focus');
       closeButton.focus();
     });
   }
@@ -164,10 +165,15 @@
   });
 
   document.addEventListener('keydown', function (event) {
+    root.classList.remove('is-programmatic-focus');
     if (!root.hidden && event.key === 'Escape') {
       event.preventDefault();
       closePopup(true);
     }
+  });
+
+  root.addEventListener('pointerdown', function () {
+    root.classList.remove('is-programmatic-focus');
   });
 
   image.addEventListener('error', function () {

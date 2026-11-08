@@ -38,6 +38,11 @@
   animation: ssWelcomePopupOut 0.18s ease-in forwards;
 }
 
+.ss-welcome-popup.is-programmatic-focus .ss-welcome-popup__hotspot:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .ss-welcome-popup__image {
   display: block;
   width: 100%;
@@ -57,9 +62,9 @@
 
 .ss-welcome-popup__hotspot--close {
   top: 0.5%;
-  right: 1.2%;
+  right: 3.5%;
   width: 10%;
-  height: 8%;
+  height: 7%;
   border-radius: 50%;
 }
 
