@@ -5,14 +5,27 @@ $pendingOrders = $pendingOrders ?? [];
 $conversations = $conversations ?? [];
 $reviews = $reviews ?? [];
 $questions = $questions ?? [];
+$staffTrend = is_array($staffTrend ?? null) ? $staffTrend : [];
+$staffDashboardStartDate = trim((string)($staffDashboardStartDate ?? date('Y-m-d', strtotime('-6 days'))));
+$staffDashboardEndDate = trim((string)($staffDashboardEndDate ?? date('Y-m-d')));
+$staffDashboardError = trim((string)($staffDashboardError ?? ''));
 
 $staffName = $user['ho_ten'] ?? $_SESSION['admin_name'] ?? 'Nhân viên';
 $donChoXuLy = (int)($summary['don_cho_xu_ly'] ?? count($pendingOrders));
 $chatPending = (int)($summary['chat_cho_tra_loi'] ?? count($conversations));
-$reviewPending = (int)($summary['danh_gia_cho_phan_hoi'] ?? count($reviews));
+$reviewPending = count($reviews);
 $questionPending = count($questions);
 
 $totalTaskCount = $donChoXuLy + $chatPending + $reviewPending + $questionPending;
+$workloadRows = $staffTrend;
+$workloadLabels = array_map(static fn(array $row): string => (string)($row['nhan'] ?? ''), $workloadRows);
+$workloadLabelsFull = array_map(static fn(array $row): string => (string)($row['nhan_day_du'] ?? ''), $workloadRows);
+$completedOrderSeries = array_map(static fn(array $row): int => (int)($row['so_don_hoan_tat'] ?? 0), $workloadRows);
+$chatReplySeries = array_map(static fn(array $row): int => (int)($row['so_phan_hoi_chat'] ?? 0), $workloadRows);
+$questionReplySeries = array_map(static fn(array $row): int => (int)($row['so_tra_loi_hoi_dap'] ?? 0), $workloadRows);
+$reviewReplySeries = array_map(static fn(array $row): int => (int)($row['so_phan_hoi_danh_gia'] ?? 0), $workloadRows);
+$workloadActivityTotal = array_sum(array_map(static fn(array $row): int => (int)($row['tong_hoat_dong'] ?? 0), $workloadRows));
+$hasTaskData = $totalTaskCount > 0;
 $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
 ?>
 
@@ -126,6 +139,10 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
   background: #DCFCE7;
   color: #15803D;
 }
+.fact-badge {
+  background: #F1F5F9;
+  color: #475569;
+}
 </style>
 
 <div class="container-fluid px-4 py-4">
@@ -181,7 +198,7 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
         </a>
         <a href="index.php?r=admin_lives" class="action-quick-btn shadow-sm">
             <i class="bi bi-camera-reels-fill text-danger fs-6"></i>
-            <span>Phòng LiveStream AI</span>
+            <span>Phòng phát trực tiếp</span>
         </a>
     </div>
 
@@ -194,8 +211,8 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                     <div>
                         <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Đơn Chờ Xử Lý</div>
                         <div class="fs-3 fw-bold my-1 tabular-nums" style="color: #B45309;"><?= number_format($donChoXuLy) ?></div>
-                        <span class="trend-badge trend-up">
-                            <i class="bi bi-arrow-up-short"></i> +12.5% vs hôm qua
+                        <span class="trend-badge fact-badge">
+                            <i class="bi bi-inbox"></i> Tồn chờ xử lý hiện tại
                         </span>
                     </div>
                     <div class="staff-kpi-icon" style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A;">
@@ -212,8 +229,8 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                     <div>
                         <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Chat Chờ Phản Hỏi</div>
                         <div class="fs-3 fw-bold my-1 tabular-nums" style="color: #0369A1;"><?= number_format($chatPending) ?></div>
-                        <span class="trend-badge trend-up">
-                            <i class="bi bi-arrow-up-short"></i> +8.2% vs tuần trước
+                        <span class="trend-badge fact-badge">
+                            <i class="bi bi-chat-dots"></i> Cuộc chat đang chờ phản hồi
                         </span>
                     </div>
                     <div class="staff-kpi-icon" style="background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD;">
@@ -230,8 +247,8 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                     <div>
                         <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Đánh Giá Cần Chăm Sóc</div>
                         <div class="fs-3 fw-bold my-1 tabular-nums" style="color: #D97706;"><?= number_format($reviewPending) ?></div>
-                        <span class="trend-badge trend-up">
-                            <i class="bi bi-star-fill me-0.5"></i> 98% hài lòng
+                        <span class="trend-badge fact-badge">
+                            <i class="bi bi-star"></i> Đánh giá chưa phản hồi
                         </span>
                     </div>
                     <div class="staff-kpi-icon" style="background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A;">
@@ -248,8 +265,8 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                     <div>
                         <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Hỏi Đáp Sản Phẩm</div>
                         <div class="fs-3 fw-bold my-1 tabular-nums" style="color: #15803D;"><?= number_format($questionPending) ?></div>
-                        <span class="trend-badge trend-up">
-                            <i class="bi bi-check2-circle"></i> Trả lời nhanh
+                        <span class="trend-badge fact-badge">
+                            <i class="bi bi-question-circle"></i> Câu hỏi chưa trả lời
                         </span>
                     </div>
                     <div class="staff-kpi-icon" style="background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0;">
@@ -262,19 +279,78 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
 
     <!-- CHARTS SECTION (DYNAMIC WORKLOAD VISUALIZATIONS) -->
     <div class="row g-4 mb-4">
-        <!-- 7-Day Workload & Orders Processed Chart -->
+        <!-- Workload & support activity chart -->
         <div class="col-12 col-lg-8">
             <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
-                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom gap-3 flex-wrap">
                     <div>
-                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-bar-chart-line-fill text-success me-1.5"></i> Tiến độ xử lý đơn hàng & phản hồi khách hàng (7 ngày qua)</h6>
-                        <div class="small text-muted" style="font-size: 0.78rem;">Thống kê khối lượng công việc hoàn thành trong tuần</div>
+                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-bar-chart-line-fill text-success me-1.5"></i> Hoạt động xử lý & hỗ trợ theo ngày</h6>
+                        <div class="small text-muted" style="font-size: 0.78rem;">Dữ liệu đã lưu: đơn hoàn tất toàn hệ thống và các phản hồi có mã nhân viên</div>
                     </div>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1" style="border-radius: 4px; font-size: 0.75rem;">Tuần này</span>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <a href="index.php?r=staff_dashboard" class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 text-decoration-none" style="border-radius: 4px; font-size: 0.75rem;">7 ngày</a>
+                        <a href="index.php?r=staff_dashboard&amp;start_date=<?= h(date('Y-m-d', strtotime('-29 days'))) ?>&amp;end_date=<?= h(date('Y-m-d')) ?>" class="badge bg-light text-secondary border px-2.5 py-1 text-decoration-none" style="border-radius: 4px; font-size: 0.75rem;">30 ngày</a>
+                    </div>
+                </div>
+                <form class="row g-2 align-items-end mb-3" method="get" action="index.php">
+                    <input type="hidden" name="r" value="staff_dashboard">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small text-muted mb-1" for="staffDashboardStartDate">Từ ngày</label>
+                        <input type="date" class="form-control form-control-sm" id="staffDashboardStartDate" name="start_date" value="<?= h($staffDashboardStartDate) ?>">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small text-muted mb-1" for="staffDashboardEndDate">Đến ngày</label>
+                        <input type="date" class="form-control form-control-sm" id="staffDashboardEndDate" name="end_date" value="<?= h($staffDashboardEndDate) ?>">
+                    </div>
+                    <div class="col-12 col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-sm text-white" style="background: #183B2B;">Lọc ngày</button>
+                        <a href="index.php?r=staff_dashboard" class="btn btn-sm btn-outline-secondary">Đặt lại</a>
+                    </div>
+                    <?php if ($staffDashboardError !== ''): ?>
+                        <div class="col-12"><div class="alert alert-danger py-2 px-3 mb-0 small"><?= h($staffDashboardError) ?></div></div>
+                    <?php endif; ?>
+                </form>
+                <div class="row g-2 mb-2">
+                    <div class="col-6 col-md-3"><div class="rounded-3 border p-2 h-100"><div class="small text-muted">Hoạt động trong kỳ</div><div class="fw-bold text-success tabular-nums"><?= number_format($workloadActivityTotal) ?></div></div></div>
+                    <div class="col-6 col-md-3"><div class="rounded-3 border p-2 h-100"><div class="small text-muted">Đơn hoàn tất</div><div class="fw-bold text-warning tabular-nums"><?= number_format(array_sum($completedOrderSeries)) ?></div></div></div>
+                    <div class="col-6 col-md-3"><div class="rounded-3 border p-2 h-100"><div class="small text-muted">Phản hồi chat</div><div class="fw-bold text-primary tabular-nums"><?= number_format(array_sum($chatReplySeries)) ?></div></div></div>
+                    <div class="col-6 col-md-3"><div class="rounded-3 border p-2 h-100"><div class="small text-muted">Hỏi đáp & đánh giá</div><div class="fw-bold text-info tabular-nums"><?= number_format(array_sum($questionReplySeries) + array_sum($reviewReplySeries)) ?></div></div></div>
                 </div>
                 <div style="height: 240px; position: relative;">
-                    <canvas id="staffWorkloadChart"></canvas>
+                    <?php if (empty($workloadRows)): ?>
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted small">Chưa có dữ liệu hoạt động trong khoảng thời gian này.</div>
+                    <?php else: ?>
+                        <canvas id="staffWorkloadChart"></canvas>
+                    <?php endif; ?>
                 </div>
+                <?php if (!empty($workloadRows)): ?>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th class="text-end">Đơn hoàn tất</th>
+                                    <th class="text-end">Chat</th>
+                                    <th class="text-end">Hỏi đáp</th>
+                                    <th class="text-end">Đánh giá</th>
+                                    <th class="text-end">Tổng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($workloadRows as $workloadRow): ?>
+                                    <tr>
+                                        <td><?= h((string)($workloadRow['nhan_day_du'] ?? '')) ?></td>
+                                        <td class="text-end"><?= number_format((int)($workloadRow['so_don_hoan_tat'] ?? 0)) ?></td>
+                                        <td class="text-end"><?= number_format((int)($workloadRow['so_phan_hoi_chat'] ?? 0)) ?></td>
+                                        <td class="text-end"><?= number_format((int)($workloadRow['so_tra_loi_hoi_dap'] ?? 0)) ?></td>
+                                        <td class="text-end"><?= number_format((int)($workloadRow['so_phan_hoi_danh_gia'] ?? 0)) ?></td>
+                                        <td class="text-end fw-semibold"><?= number_format((int)($workloadRow['tong_hoat_dong'] ?? 0)) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -288,7 +364,11 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                     </div>
                 </div>
                 <div style="height: 240px; position: relative;" class="d-flex align-items-center justify-content-center">
-                    <canvas id="staffTaskChart"></canvas>
+                    <?php if (!$hasTaskData): ?>
+                        <div class="text-center text-muted small"><i class="bi bi-check-circle text-success fs-2 d-block mb-2"></i>Không có công việc đang chờ.</div>
+                    <?php else: ?>
+                        <canvas id="staffTaskChart"></canvas>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -296,25 +376,39 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Staff 7-Day Workload Bar Chart
+        // Workload chart uses only persisted activity events returned by the controller.
         var ctxWorkload = document.getElementById('staffWorkloadChart');
         if (ctxWorkload && typeof Chart !== 'undefined') {
             new Chart(ctxWorkload, {
                 type: 'bar',
                 data: {
-                    labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+                    labels: <?= json_encode($workloadLabels, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>,
                     datasets: [{
-                        label: 'Số đơn đã xử lý (đơn)',
-                        data: [12, 18, 15, 24, 28, 35, 42],
+                        label: 'Đơn hoàn tất (đơn)',
+                        data: <?= json_encode($completedOrderSeries) ?>,
                         backgroundColor: 'rgba(24, 59, 43, 0.85)',
                         borderColor: '#183B2B',
                         borderWidth: 1,
                         borderRadius: 6,
                     }, {
-                        label: 'Số lượt chat & tư vấn (lượt)',
-                        data: [18, 25, 20, 32, 38, 45, 50],
+                        label: 'Phản hồi chat (lượt)',
+                        data: <?= json_encode($chatReplySeries) ?>,
                         backgroundColor: 'rgba(3, 105, 161, 0.4)',
                         borderColor: '#0369A1',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                    }, {
+                        label: 'Trả lời hỏi đáp (lượt)',
+                        data: <?= json_encode($questionReplySeries) ?>,
+                        backgroundColor: 'rgba(21, 128, 61, 0.45)',
+                        borderColor: '#15803D',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                    }, {
+                        label: 'Phản hồi đánh giá (lượt)',
+                        data: <?= json_encode($reviewReplySeries) ?>,
+                        backgroundColor: 'rgba(217, 119, 6, 0.45)',
+                        borderColor: '#D97706',
                         borderWidth: 1,
                         borderRadius: 6,
                     }]
@@ -323,7 +417,8 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'top', labels: { font: { family: 'Quicksand', size: 12 } } }
+                        legend: { position: 'top', labels: { font: { family: 'Quicksand', size: 11 } } },
+                        tooltip: { callbacks: { title: function(items) { return <?= json_encode($workloadLabelsFull, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>[items[0].dataIndex] || items[0].label; } } }
                     },
                     scales: {
                         y: { beginAtZero: true, grid: { color: '#F1F5F9' } },
@@ -333,7 +428,7 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
             });
         }
 
-        // Staff Task Distribution Doughnut Chart
+        // Queue distribution uses actual zero values; it is not padded with fake 1s.
         var ctxTask = document.getElementById('staffTaskChart');
         if (ctxTask && typeof Chart !== 'undefined') {
             new Chart(ctxTask, {
@@ -341,7 +436,7 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                 data: {
                     labels: ['Đơn hàng', 'Chat hỗ trợ', 'Đánh giá', 'Hỏi đáp'],
                     datasets: [{
-                        data: [<?= max(1, $donChoXuLy) ?>, <?= max(1, $chatPending) ?>, <?= max(1, $reviewPending) ?>, <?= max(1, $questionPending) ?>],
+                        data: [<?= $donChoXuLy ?>, <?= $chatPending ?>, <?= $reviewPending ?>, <?= $questionPending ?>],
                         backgroundColor: ['#B45309', '#0369A1', '#D97706', '#15803D'],
                         borderWidth: 2,
                         borderColor: '#ffffff'
@@ -460,13 +555,14 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
                         </div>
                     <?php else: ?>
                         <?php foreach (array_slice($reviews, 0, 5) as $review): ?>
+                            <?php $reviewStars = is_numeric($review['so_sao'] ?? null) ? (int)$review['so_sao'] : 0; ?>
                             <a href="index.php?r=staff_reviews" class="staff-task-item">
                                 <div class="fw-semibold text-dark text-truncate mb-1" style="max-width: 220px;">
                                     <?= h($review['ten_san_pham'] ?? 'Sản phẩm mỹ phẩm') ?>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between small text-muted">
-                                    <span class="text-warning"><i class="bi bi-star-fill me-1"></i><?= (int)($review['so_sao'] ?? 5) ?>/5</span>
-                                    <span class="text-truncate" style="max-width: 140px;"><?= h($review['noi_dung'] ?? '') ?></span>
+                                    <span class="text-warning"><i class="bi bi-star-fill me-1"></i><?= $reviewStars > 0 ? $reviewStars . '/5' : 'Chưa có số sao' ?></span>
+                                    <span class="text-truncate" style="max-width: 140px;"><?= h($review['noi_dung'] ?? 'Không có nội dung') ?></span>
                                 </div>
                             </a>
                         <?php endforeach; ?>

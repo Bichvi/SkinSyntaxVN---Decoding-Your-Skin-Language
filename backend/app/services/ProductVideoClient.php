@@ -25,9 +25,15 @@ final class ProductVideoClient
 
     public static function fromEnv(): self
     {
+        $endpoint = function_exists('ss_env')
+            ? (string)ss_env('AI_IDOL_ENDPOINT', 'http://ai-idol-service:5003')
+            : (string)(getenv('AI_IDOL_ENDPOINT') ?: 'http://ai-idol-service:5003');
+        $publicBase = function_exists('ss_env')
+            ? (string)ss_env('R2_PUBLIC_BASE_URL', '')
+            : (string)(getenv('R2_PUBLIC_BASE_URL') ?: '');
         return new self(
-            getenv('AI_IDOL_ENDPOINT') ?: 'http://ai-idol-service:5003',
-            (string)(getenv('R2_PUBLIC_BASE_URL') ?: '')
+            $endpoint,
+            $publicBase
         );
     }
 

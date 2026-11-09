@@ -86,6 +86,9 @@ function image_url_score(string $url): int {
 
     if (strpos($path, '/catalog/product/') !== false) $score += 400;
     if (strpos($path, '/wysiwyg/') !== false) $score += 250;
+    // Promotion composites are frequently removed from the source catalog;
+    // prefer a stable product/detail image when both are available.
+    if (strpos($path, 'promotions-auto') !== false) $score -= 650;
     if (strpos($path, '/hsk/') !== false) $score -= 600;
 
     if (preg_match('/(?:^|[_-])img[_-](\d+)x(\d+)(?:[_-]|\.|$)/i', $path, $m)) {
@@ -102,6 +105,18 @@ function image_url_score(string $url): int {
     return $score;
 }
 
+// Ảnh thumbnail nhỏ bị phóng lên gallery sẽ mất nét và không đọc được chữ.
+// Chỉ loại các URL có kích thước thấp được ghi rõ; ảnh chi tiết WYSIWYG không
+// ghi kích thước vẫn được giữ lại để trình duyệt kiểm tra và hiển thị.
+function image_url_is_gallery_quality(string $url): bool {
+    $path = strtolower((string)(parse_url($url, PHP_URL_PATH) ?: $url));
+    if (preg_match('/(?:^|[_-])img[_-](\d+)x(\d+)(?:[_-]|\.|$)/i', $path, $m)) {
+        return max((int)$m[1], (int)$m[2]) >= 400;
+    }
+
+    return true;
+}
+
 function image_url_candidates($raw): array {
     $parts = preg_split('/\s*\|\s*/', trim((string)$raw)) ?: [];
     $ranked = [];
@@ -109,6 +124,7 @@ function image_url_candidates($raw): array {
     foreach ($parts as $index => $part) {
         $url = trim((string)$part);
         if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) continue;
+        if (!image_url_is_gallery_quality($url)) continue;
         $key = strtolower($url);
         if (isset($seen[$key])) continue;
         $seen[$key] = true;
@@ -149,7 +165,7 @@ function product_image_source(array $product): string {
 
 // Sinh danh sách ảnh dự phòng cho trường hợp URL ảnh chính từ catalog đã hết hạn.
 // Không gọi mạng từ PHP; trình duyệt chỉ thử lần lượt các URL vốn đã có trong dữ liệu sản phẩm.
-function product_image_urls(array $product, int $max = 10): array {
+function product_image_urls(array $product, int $max = 10, bool $includeSmall = false): array {
     $parts = [];
     foreach (['image_url', 'image', 'link_hinh_anh', 'hinh_anh'] as $key) {
         $value = $product[$key] ?? '';
@@ -169,6 +185,7 @@ function product_image_urls(array $product, int $max = 10): array {
     $seenDetailImage = false;
     foreach (array_slice($parts, 0, 16) as $index => $url) {
         if (!filter_var($url, FILTER_VALIDATE_URL)) continue;
+        if (!$includeSmall && !image_url_is_gallery_quality($url)) continue;
         $path = strtolower((string)(parse_url($url, PHP_URL_PATH) ?: $url));
         if (strpos($path, '/hsk/') !== false || preg_match('#/(?:brand|logo)/#i', $path)) continue;
         if ($seenDetailImage && strpos($path, '/catalog/product/') !== false) break;
@@ -203,6 +220,91 @@ function product_image_fallbacks_json(array $product, ?string $current = null): 
         ENT_QUOTES,
         'UTF-8'
     );
+}
+
+// Thumbnail cards can safely fall back to a small catalog image. Gallery
+// callers keep the high-resolution-only contract above so a 70x70/80x80 URL
+// is never promoted into a large product gallery.
+function product_thumbnail_fallbacks_json(array $product, ?string $current = null): string {
+    $current = trim((string)($current ?? ''));
+    $fallbacks = array_values(array_filter(
+        product_image_urls($product, 12, true),
+        static fn(string $url): bool => $current === '' || $url !== $current
+    ));
+    return htmlspecialchars(
+        (string)json_encode(array_slice($fallbacks, 0, 10), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
+
+if (!function_exists('product_brand_label')) {
+    function product_brand_label(array $product): string {
+        $sources = [$product];
+        foreach (['raw_product', 'product', 'product_data'] as $nestedKey) {
+            if (isset($product[$nestedKey]) && is_array($product[$nestedKey])) {
+                $sources[] = $product[$nestedKey];
+            }
+        }
+
+        foreach ($sources as $source) {
+            foreach (['thuong_hieu', 'brand', 'ten_thuong_hieu', 'brand_name'] as $key) {
+                $label = trim((string)($source[$key] ?? ''));
+                if ($label !== '') {
+                    return $label;
+                }
+            }
+        }
+        return 'SkinSyntax';
+    }
+}
+
+if (!function_exists('homepage_visual_asset')) {
+    function homepage_visual_asset(string $kind, string $label): string {
+        $normalized = mb_strtolower(trim($label), 'UTF-8');
+        $relative = '';
+
+        if ($kind === 'category') {
+            $categoryAssets = [
+                'làm sạch da' => 'cleansing.jpg',
+                'chống nắng da mặt' => 'sunscreen.jpg',
+                'dưỡng ẩm' => 'moisturizing.jpg',
+                'đặc trị' => 'treatment.jpg',
+                'dưỡng môi' => 'lip-care.jpg',
+                'dưỡng mắt' => 'eye-care.jpg',
+                'bộ chăm sóc da' => 'skincare-set.jpg',
+                'mặt nạ' => 'mask.jpg',
+            ];
+            $file = $categoryAssets[$normalized] ?? '';
+            if ($file !== '') {
+                $relative = 'assets/images/home-categories/' . $file;
+            }
+        } elseif ($kind === 'brand') {
+            $brandAssets = [
+                'dermal' => 'dermal.jpg',
+                'elixir' => 'elixir.jpg',
+                'felina' => 'felina.jpg',
+                'hexze' => 'hexze.jpg',
+                'loreal' => 'loreal.jpg',
+                "l'oreal" => 'loreal.jpg',
+                'melano cc' => 'melano-cc.jpg',
+                'naris cosmetics' => 'naris-cosmetics.jpg',
+                'vichy' => 'vichy.jpg',
+            ];
+            // Product imagery remains the first choice. This local neutral
+            // background prevents a broken catalog URL from becoming a
+            // SkinSyntax placeholder while keeping the brand name in the card.
+            $file = $brandAssets[$normalized] ?? 'dermal.jpg';
+            $relative = 'assets/images/home-brands/' . $file;
+        }
+
+        if ($relative === '' || !is_file(dirname(__DIR__) . '/public/' . $relative)) {
+            return '';
+        }
+
+        $baseUrl = defined('BASE_URL') ? BASE_URL : '.';
+        return rtrim($baseUrl, '/') . '/' . $relative;
+    }
 }
 
 // Lấy nhiều ảnh cho gallery, ưu tiên ảnh sản phẩm lớn hơn thumbnail/banner.

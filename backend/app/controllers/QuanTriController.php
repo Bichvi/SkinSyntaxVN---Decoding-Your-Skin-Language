@@ -253,6 +253,7 @@ class QuanTriController {
         $this->requireRole(['admin']);
 
         $summary = $this->model->getDashboardSummary();
+        $dashboardFilters = $this->parseDashboardDateFilters();
         $this->renderAdmin('dashboard', [
             'tongSP' => (int)($summary['tong_san_pham'] ?? 0),
             'tongUser' => (int)($summary['tong_khach_hang'] ?? 0),
@@ -262,7 +263,59 @@ class QuanTriController {
             'userMoi' => $this->thongKeModel->getNguoiDungMoi(5),
             'lowStockProducts' => $this->model->getLowStockProducts(5, 6),
             'summary' => $summary,
+            'salesTrend' => $this->model->getDailySalesTrend($dashboardFilters['start_date'], $dashboardFilters['end_date']),
+            'productStatusSummary' => $this->model->getProductStatusSummary(),
+            'dashboardStartDate' => $dashboardFilters['start_date'],
+            'dashboardEndDate' => $dashboardFilters['end_date'],
+            'dashboardError' => $dashboardFilters['error'],
         ]);
+    }
+
+    private function parseDashboardDateFilters(): array {
+        $today = date('Y-m-d');
+        $defaultStart = date('Y-m-d', strtotime('-6 days'));
+        $start = trim((string)($_GET['start_date'] ?? ''));
+        $end = trim((string)($_GET['end_date'] ?? ''));
+        $error = '';
+
+        $isDate = static function (string $value): bool {
+            if ($value === '') {
+                return true;
+            }
+            $date = DateTime::createFromFormat('!Y-m-d', $value);
+            return $date instanceof DateTime && $date->format('Y-m-d') === $value;
+        };
+
+        if (!$isDate($start) || !$isDate($end)) {
+            $error = 'Ngày lọc không hợp lệ. Đang hiển thị lại 7 ngày gần nhất.';
+            $start = $defaultStart;
+            $end = $today;
+        } else {
+            if ($start === '' && $end === '') {
+                $start = $defaultStart;
+                $end = $today;
+            } elseif ($start === '') {
+                $start = date('Y-m-d', strtotime($end . ' -6 days'));
+            } elseif ($end === '') {
+                $end = $today;
+            }
+
+            if (strtotime($end) < strtotime($start)) {
+                $error = 'Khoảng thời gian không hợp lệ. Đang hiển thị lại 7 ngày gần nhất.';
+                $start = $defaultStart;
+                $end = $today;
+            } elseif ((int)((strtotime($end) - strtotime($start)) / 86400) + 1 > 366) {
+                $error = 'Dashboard chỉ cho phép xem tối đa 366 ngày mỗi lần.';
+                $start = $defaultStart;
+                $end = $today;
+            }
+        }
+
+        return [
+            'start_date' => $start,
+            'end_date' => $end,
+            'error' => $error,
+        ];
     }
 
     public function adminProducts(): void {
@@ -939,6 +992,7 @@ class QuanTriController {
     public function staffDashboard(): void {
         $user = $this->requireRole(['admin', 'nhanvien']);
         $summary = $this->model->getDashboardSummary();
+        $dashboardFilters = $this->parseDashboardDateFilters();
         global $db;
         $hoiDapModel = new HoiDap($db ?? $this->pdo);
         $questions = [];
@@ -951,8 +1005,12 @@ class QuanTriController {
             'user' => $user,
             'pendingOrders' => $this->model->listOrders('', 'pending'),
             'conversations' => $this->model->listChatConversations(true, 20),
-            'reviews' => $this->model->listReviews(''),
+            'reviews' => $this->model->listReviews('', ['trang_thai_phan_hoi' => 'pending', 'limit' => 60]),
             'questions' => $questions,
+            'staffTrend' => $this->model->getStaffWorkloadTrend($dashboardFilters['start_date'], $dashboardFilters['end_date']),
+            'staffDashboardStartDate' => $dashboardFilters['start_date'],
+            'staffDashboardEndDate' => $dashboardFilters['end_date'],
+            'staffDashboardError' => $dashboardFilters['error'],
         ]);
     }
 
@@ -1709,11 +1767,7 @@ class QuanTriController {
         $productsById = $this->sanPhamModel->findManyByIds($pinnedIds);
 
         foreach ($lives as &$live) {
-            $st = (string)($live['trang_thai'] ?? 'chuamoi');
-            if ($st === 'tamdung' || $st === 'paused') {
-                $st = 'ketthuc';
-                $live['trang_thai'] = 'ketthuc';
-            }
+            $st = (string)($live['status'] ?? 'scheduled');
             if (!empty($live['ma_san_pham_ghim'])) {
                 $p = $productsById[(string)$live['ma_san_pham_ghim']] ?? null;
                 if ($p) {
@@ -1724,12 +1778,16 @@ class QuanTriController {
             $live['tong_doanh_thu'] = (float)($live['tong_doanh_thu'] ?? 0);
             $live['tong_don_hang'] = (int)($live['tong_don_hang'] ?? 0);
             $live['tong_san_pham_ban'] = (int)($live['tong_san_pham_ban'] ?? 0);
-            $live['created_at'] = (string)($live['created_at'] ?? $live['khung_gio_bat_dau'] ?? date('Y-m-d H:i:s'));
+            if (isset($live['created_at']) && $live['created_at'] instanceof \MongoDB\BSON\UTCDateTime) {
+                $live['created_at'] = $live['created_at']->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('Y-m-d H:i:s');
+            } elseif (isset($live['created_at'])) {
+                $live['created_at'] = trim((string)$live['created_at']);
+            }
         }
         unset($live);
 
         $this->renderAdmin('lives', [
-            'pageTitle' => 'Quản lý Phiên LiveStream AI & Ưu Đãi Khung Giờ',
+            'pageTitle' => 'Quản lý phiên phát trực tiếp & ưu đãi',
             'user' => $user,
             'lives' => $lives,
             'allProducts' => $allProducts
@@ -1780,15 +1838,16 @@ class QuanTriController {
 
         $id = trim((string)($_GET['id'] ?? $_POST['id'] ?? ''));
         $status = trim((string)($_GET['status'] ?? $_POST['status'] ?? 'danglive'));
+        $next = trim((string)($_GET['next'] ?? $_POST['next'] ?? ''));
 
         if ($id !== '') {
             require_once __DIR__ . '/../models/PhienLive.php';
             $phienLiveModel = new PhienLive($this->pdo);
 
             $currentDoc = $phienLiveModel->findById($id);
-            $currentStatus = (string)($currentDoc['trang_thai'] ?? '');
+            $currentStatus = (string)($currentDoc['status'] ?? $currentDoc['trang_thai'] ?? '');
 
-            if ($currentStatus === 'ketthuc' && $status !== 'ketthuc') {
+            if (in_array($currentStatus, ['ended', 'replay_ready', 'recording_failed'], true) && $status !== 'ketthuc') {
                 set_flash('error', '🚫 Phiên LiveStream này đã KẾT THÚC vĩnh viễn và lưu bản ghi. Không thể khởi động lại!');
                 $redirectUrl = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/index.php?r=admin_lives');
                 redirect($redirectUrl);
@@ -1798,14 +1857,16 @@ class QuanTriController {
             $ok = $phienLiveModel->doiTrangThai($id, $status);
 
             $msg = 'Đã cập nhật trạng thái phiên Live!';
-            if ($status === 'danglive') $msg = '🔴 Đã phát sóng trực tiếp phiên Live!';
+            if ($status === 'danglive') $msg = '✅ Phiên đã sẵn sàng. Hãy mở phòng phát, sau đó mở camera và mic để bắt đầu.';
             elseif ($status === 'tamdung') $msg = '⏸ Đã tạm dừng phát sóng phiên LiveStream!';
             elseif ($status === 'ketthuc') $msg = '⏹ Đã kết thúc vĩnh viễn phiên LiveStream & lưu bản ghi!';
 
             set_flash($ok ? 'success' : 'error', $ok ? $msg : 'Không thể cập nhật trạng thái.');
         }
 
-        $redirectUrl = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/index.php?r=admin_lives');
+        $redirectUrl = ($next === 'live' && !empty($ok) && $id !== '')
+            ? (BASE_URL . '/index.php?r=live&id=' . urlencode($id) . '&studio=1')
+            : ($_SERVER['HTTP_REFERER'] ?? (BASE_URL . '/index.php?r=admin_lives'));
         redirect($redirectUrl);
     }
 

@@ -21,9 +21,15 @@ $ssimCsrf = class_exists('SearchEventTracker') ? SearchEventTracker::csrfToken()
   <section class="ssf-section ssim-section" aria-labelledby="ssim-heading" data-ssf-section-key="similar">
     <div class="ssim-head">
       <h4 class="ssf-section-title ssim-title" id="ssim-heading"><?= $ssimE($ssimTitle) ?></h4>
-      <div class="ssim-nav" aria-hidden="true">
-        <button type="button" class="ssim-arrow" data-ssim-prev tabindex="-1" aria-label="Cuộn sang trái"><i class="fa-solid fa-chevron-left"></i></button>
-        <button type="button" class="ssim-arrow" data-ssim-next tabindex="-1" aria-label="Cuộn sang phải"><i class="fa-solid fa-chevron-right"></i></button>
+      <div class="ssim-head-actions">
+        <button type="button" class="detail-product-refresh ssim-refresh" data-ssim-refresh aria-label="Đổi sản phẩm tương tự" title="Xem sản phẩm tương tự khác">
+          <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
+          <span>Đổi sản phẩm</span>
+        </button>
+        <div class="ssim-nav" aria-label="Điều hướng sản phẩm tương tự">
+          <button type="button" class="ssim-arrow" data-ssim-prev aria-label="Cuộn sang trái"><i class="fa-solid fa-chevron-left"></i></button>
+          <button type="button" class="ssim-arrow" data-ssim-next aria-label="Cuộn sang phải"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
       </div>
     </div>
     <div class="ssim-track" data-ssim-track role="list" tabindex="0" aria-label="<?= $ssimE($ssimTitle) ?>">

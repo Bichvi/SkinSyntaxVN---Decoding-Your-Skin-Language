@@ -87,8 +87,14 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
                     }
                     $lineTotal = $unitPrice * $qty;
 
-                    $rawImage = (string)($product['link_hinh_anh'] ?? $product['hinh_anh'] ?? '');
+                    $rawImage = function_exists('product_image_source')
+                      ? product_image_source($product)
+                      : (string)($product['link_hinh_anh'] ?? $product['hinh_anh'] ?? '');
                     $firstImage = resolve_image_url($rawImage);
+                    if ($firstImage === '' && function_exists('product_image_urls')) {
+                      $thumbnailCandidates = product_image_urls($product, 1, true);
+                      $firstImage = (string)($thumbnailCandidates[0] ?? '');
+                    }
                   ?>
                   <tr class="cart-item"
                       data-product-id="<?= h($product_id) ?>"
@@ -104,7 +110,9 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
                              alt="<?= h($product['ten_san_pham'] ?? 'Sản phẩm') ?>"
                              loading="lazy"
                              referrerpolicy="no-referrer"
-                             onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';">
+                              data-image-fallbacks="<?= function_exists('product_thumbnail_fallbacks_json') ? product_thumbnail_fallbacks_json($product, $firstImage) : '[]' ?>"
+                              data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                              onerror="window.SkinSyntaxImageFallback(this);">
                       <?php else: ?>
                         <div class="cart-thumb cart-thumb--empty">No image</div>
                       <?php endif; ?>
@@ -192,7 +200,7 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
             <strong id="totalValue"><?= format_vnd($remainingToFreeShip > 0 ? $total + 30000 : $total) ?></strong>
           </div>
 
-          <button type="button" class="btn btn-checkout-gradient w-100" id="checkoutButton">Tiếp tục (Thanh toán)</button>
+          <button type="button" class="btn btn-checkout-gradient w-100" id="checkoutButton">Thanh toán</button>
           <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn btn-continue-outline w-100 mt-2">Tiếp tục mua sắm</a>
         </aside>
       </div>
@@ -670,7 +678,7 @@ document.addEventListener('DOMContentLoaded', function () {
       checkoutButton.disabled = totals.selectedCount === 0;
       checkoutButton.textContent = totals.selectedCount === 0
         ? 'Chọn sản phẩm để thanh toán'
-        : 'Tiếp tục (Thanh toán)';
+        : 'Thanh toán';
     }
 
     if (selectAllItems) {

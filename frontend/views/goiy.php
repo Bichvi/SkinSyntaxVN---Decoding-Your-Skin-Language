@@ -10,6 +10,8 @@ $brandOptions = is_array($brandOptions ?? null) ? $brandOptions : [];
 $categoryOptions = is_array($categoryOptions ?? null) ? $categoryOptions : [];
 $profile = is_array($recommendationProfile ?? null) ? $recommendationProfile : [];
 $llamaRecommendation = is_array($llamaRecommendation ?? null) ? $llamaRecommendation : [];
+$temporaryConsultation = is_array($temporaryConsultation ?? null) ? $temporaryConsultation : null;
+$isTemporaryConsultation = $temporaryConsultation !== null || (($profile['profile_source'] ?? '') === 'temporary_checkin');
 $mongoUnavailableMessage = trim((string)($mongoUnavailableMessage ?? ''));
 $profileUnavailableMessage = trim((string)($profileUnavailableMessage ?? ''));
 $skinProfilePromptMessage = trim((string)($skinProfilePromptMessage ?? ''));
@@ -358,9 +360,6 @@ foreach ([$amRoutine, $pmRoutine] as $routine) {
 }
 $alternativeCount = count($alternativeIds);
 $candidateCount = max((int)($llamaRecommendation['candidate_count'] ?? 0), count($allSelected) + $alternativeCount);
-$recommendationSourceLabel = str_contains((string)($llamaRecommendation['source'] ?? ''), 'langchain')
-    ? 'AI RAG + SkinSyntax engine'
-    : 'SkinSyntax engine';
 $profileSkinType = trim((string)($canonicalProfile['skin_type'] ?? $profile['skin_type'] ?? ''));
 $profileSkinLabel = $profileSkinType === '' ? '' : (preg_match('/^da(\s|$)/iu', $profileSkinType) ? $profileSkinType : 'Da ' . $profileSkinType);
 $profileAvoid = $asList($canonicalProfile['avoided'] ?? $canonicalProfile['avoid_ingredients'] ?? $profile['avoid_ingredients'] ?? []);
@@ -378,7 +377,7 @@ $profileHeadline = $headlineConcern !== ''
     : ($profileSkinType !== '' ? 'Sản phẩm phù hợp với ' . $profileSkinType : 'Gợi ý được chọn từ hồ sơ của bạn');
 $profileSubheadline = $profileAvoid
     ? 'Đã ưu tiên tránh: ' . implode(', ', array_slice($profileAvoid, 0, 3))
-    : 'Dựa trên hồ sơ da, mục tiêu và dữ liệu catalog hiện có.';
+    : 'Dựa trên hồ sơ da và nhu cầu của bạn.';
 $excludedCount = null;
 foreach ([$llamaRecommendation['excluded_count'] ?? null, $llamaRecommendation['profile_summary']['excluded_count'] ?? null] as $count) {
     if (is_numeric($count)) { $excludedCount = max(0, (int)$count); break; }
@@ -443,6 +442,29 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
 <link rel="stylesheet" href="<?= h(BASE_URL . '/assets/css/goiy-recommendation.css?v=8') ?>">
 
 <style>
+  .consultation-state-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border: 1px solid #c9e4d2;
+    border-radius: 16px;
+    color: #174b32;
+    background: #effaf2;
+  }
+  .consultation-state-banner div { display: grid; gap: 3px; }
+  .consultation-state-banner span { color: #557263; font-size: .85rem; }
+  .consultation-state-banner button {
+    border: 0; border-radius: 999px; padding: 9px 14px; color: #fff;
+    background: #155b3b; font-weight: 750; white-space: nowrap;
+  }
+  @media (max-width: 640px) {
+    .consultation-state-banner { align-items: stretch; flex-direction: column; }
+    .consultation-state-banner button { width: 100%; }
+  }
+
   /* SkinSyntax Goiy (Catalog / Public Discovery) Styles */
   .goiy-page {
     background: #FAFAFA;
@@ -926,7 +948,7 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
       </div>
     </div>
   <?php else: ?>
-    <div class="recommendation-workspace" data-recommendation-root data-base-url="<?= h(BASE_URL) ?>" data-rotate-interval="180000">
+    <div class="recommendation-workspace" data-recommendation-root data-base-url="<?= h(BASE_URL) ?>" data-rotate-interval="180000" data-consultation-enabled="<?= ($isLoggedIn && $hasSurvey) ? '1' : '0' ?>" data-preference-url="<?= h(BASE_URL . '/index.php?r=consultation_preference') ?>">
       <header class="recommendation-hero">
         <div>
           <span class="recommendation-eyebrow"><i class="fa-solid fa-sparkles" aria-hidden="true"></i> Gợi ý cá nhân hóa</span>
@@ -944,13 +966,21 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
           <?php if ($profileBudget > 0): ?><div class="recommendation-fact"><strong><?= h(vnd($profileBudget)) ?></strong><span>Ngân sách tối đa mỗi sản phẩm</span></div><?php endif; ?>
         </div>
       </header>
+      <?php if ($isTemporaryConsultation): ?>
+        <section class="consultation-state-banner" role="status">
+          <div><strong>Đây là phiên tư vấn tạm thời</strong><span>Check-in hôm nay chỉ dùng để tạo routine; hồ sơ da lâu dài chưa bị thay đổi.</span></div>
+          <form method="post" action="<?= h(BASE_URL . '/index.php?r=luu_checkin_vao_hoso') ?>" onsubmit="return window.confirm('Lưu check-in này vào hồ sơ da lâu dài?');">
+            <button type="submit">Lưu vào hồ sơ lâu dài</button>
+          </form>
+        </section>
+      <?php endif; ?>
 
       <div class="recommendation-content">
         <main class="recommendation-main">
           <?php if (!$recommendationOk): ?>
             <div class="recommendation-message recommendation-message--error" role="alert"><strong>Chưa thể tải routine cá nhân hóa.</strong><br><?= h($profileUnavailableMessage !== '' ? $profileUnavailableMessage : ($llamaRecommendation['message'] ?? 'Bạn có thể thử lại sau hoặc cập nhật khảo sát da.')) ?></div>
           <?php elseif (!$hasRoutine): ?>
-            <div class="recommendation-empty"><strong>Chưa đủ sản phẩm hợp lệ để dựng routine.</strong><br>Hệ thống không tự lấp dữ liệu thiếu. Bạn có thể cập nhật khảo sát hoặc khám phá catalog.</div>
+            <div class="recommendation-empty"><strong>Chưa đủ sản phẩm phù hợp để tạo routine.</strong><br>Bạn có thể cập nhật khảo sát da để nhận gợi ý phù hợp hơn.</div>
           <?php else: ?>
             <div class="recommendation-tabs" role="tablist" aria-label="Cách xem gợi ý">
               <button type="button" role="tab" data-view-tab="routine" aria-selected="true"><i class="fa-solid fa-route" aria-hidden="true"></i> Routine theo bước</button>
@@ -970,11 +1000,11 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
                 <div>
                   <div class="recommendation-timeline" data-session-panel="am">
                     <?php $session = 'am'; foreach ($amRoutine as $index => $step): $stepKey = 'am-' . (int)($step['step_order'] ?? ($index + 1)); include __DIR__ . '/partials/recommendation_step_card.php'; endforeach; unset($session); ?>
-                    <?php if (!$amRoutine): ?><div class="recommendation-timeline__empty">Chưa có bước buổi sáng từ dữ liệu hiện tại.</div><?php endif; ?>
+                    <?php if (!$amRoutine): ?><div class="recommendation-timeline__empty">Chưa có gợi ý cho buổi sáng.</div><?php endif; ?>
                   </div>
                   <div class="recommendation-timeline" data-session-panel="pm" hidden>
                     <?php $session = 'pm'; foreach ($pmRoutine as $index => $step): $stepKey = 'pm-' . (int)($step['step_order'] ?? ($index + 1)); include __DIR__ . '/partials/recommendation_step_card.php'; endforeach; unset($session); ?>
-                    <?php if (!$pmRoutine): ?><div class="recommendation-timeline__empty">Chưa có bước buổi tối từ dữ liệu hiện tại.</div><?php endif; ?>
+                    <?php if (!$pmRoutine): ?><div class="recommendation-timeline__empty">Chưa có gợi ý cho buổi tối.</div><?php endif; ?>
                   </div>
                   <div class="recommendation-filter-empty" data-filter-empty hidden>Không có bước nào khớp vấn đề da đang chọn.</div>
                 </div>
@@ -982,21 +1012,21 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
             </section>
             <?php if ($hasIngredientMap): ?>
               <section class="recommendation-view" data-recommendation-view="ingredients" hidden>
-                <div class="recommendation-map-card__heading"><span class="recommendation-overline">Ingredient constellation</span><h2>Những mối liên hệ cần biết</h2><p class="recommendation-map-card__hint">Chỉ hiển thị mối liên hệ có trong dữ liệu thành phần hoặc cảnh báo backend.</p></div>
+                <div class="recommendation-map-card__heading"><span class="recommendation-overline">THÀNH PHẦN ĐÁNG CHÚ Ý</span><h2>Những mối liên hệ cần biết</h2><p class="recommendation-map-card__hint">Các mối liên hệ và lưu ý giữa các thành phần.</p></div>
                 <div class="ingredient-map" data-ingredient-map><svg class="ingredient-map__svg" data-ingredient-lines aria-hidden="true"></svg><div class="ingredient-map__nodes" data-ingredient-nodes></div><div class="ingredient-map__mobile-list" data-ingredient-mobile-list></div></div>
                 <div class="ingredient-map__legend"><span><i></i> Hoạt chất chung</span><span><i class="is-conflict"></i> Cặp cần lưu ý</span></div>
               </section>
             <?php endif; ?>
-            <?php if (!empty($llamaRecommendation['safety_notes'])): ?><div class="recommendation-safety-notes"><strong><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Ghi chú an toàn từ hệ thống</strong><br><?= nl2br(h((string)$llamaRecommendation['safety_notes'])) ?></div><?php endif; ?>
+            <?php if (!empty($llamaRecommendation['safety_notes'])): ?><div class="recommendation-safety-notes"><strong><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Lưu ý an toàn</strong><br><?= nl2br(h((string)$llamaRecommendation['safety_notes'])) ?></div><?php endif; ?>
           <?php endif; ?>
         </main>
         <aside class="recommendation-aside">
           <section class="skin-identity-card">
-            <div class="skin-identity-card__top"><div><span class="recommendation-overline">Skin identity</span><h2><?= h($profileSkinType !== '' ? $profileSkinLabel : 'Hồ sơ da') ?></h2><p class="skin-identity-card__name"><?= h($profileName) ?></p></div><span class="skin-identity-card__badge" aria-hidden="true"><i class="fa-solid fa-droplet"></i></span></div>
+            <div class="skin-identity-card__top"><div><span class="recommendation-overline">HỒ SƠ DA</span><h2><?= h($profileSkinType !== '' ? $profileSkinLabel : 'Hồ sơ da') ?></h2><p class="skin-identity-card__name"><?= h($profileName) ?></p></div><span class="skin-identity-card__badge" aria-hidden="true"><i class="fa-solid fa-droplet"></i></span></div>
             <div class="skin-identity-card__badges"><?php if ($profileSkinType !== ''): ?><span class="profile-chip"><?= h($profileSkinLabel) ?></span><?php endif; ?><?php if (!empty($profile['sensitivity'] ?? '')): ?><span class="profile-chip">Nhạy cảm <?= h((string)$profile['sensitivity']) ?></span><?php endif; ?></div>
             <?php if ($profileConcerns): ?><span class="skin-identity-card__section-label">Vấn đề da — chạm để lọc</span><div class="skin-identity-card__concerns"><?php foreach ($profileConcerns as $concern): ?><button type="button" class="profile-chip" data-concern-filter="<?= h($concern) ?>"><?= h($concern) ?></button><?php endforeach; ?></div><?php endif; ?>
-            <?php if ($profileAvoid): ?><div class="skin-identity-card__avoid"><strong><i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> Thành phần đang loại trừ</strong><?= h(implode(', ', $profileAvoid)) ?><?php if ($excludedCount !== null): ?> · <?= h(number_format($excludedCount)) ?> sản phẩm đã loại bỏ<?php else: ?><br><small>Response hiện chưa trả excluded_count.</small><?php endif; ?></div><?php endif; ?>
-            <div class="skin-identity-card__meta"><?php if ($profileBudget > 0): ?><div>Ngân sách mỗi sản phẩm <strong><?= h(vnd($profileBudget)) ?></strong></div><?php endif; ?><div>Nguồn gợi ý <strong><?= h($recommendationSourceLabel) ?></strong></div></div>
+            <?php if ($profileAvoid): ?><div class="skin-identity-card__avoid"><strong><i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> Thành phần đang loại trừ</strong><?= h(implode(', ', $profileAvoid)) ?><?php if ($excludedCount !== null): ?> · <?= h(number_format($excludedCount)) ?> sản phẩm đã loại bỏ<?php endif; ?></div><?php endif; ?>
+            <div class="skin-identity-card__meta"><?php if ($profileBudget > 0): ?><div>Ngân sách mỗi sản phẩm <strong><?= h(vnd($profileBudget)) ?></strong></div><?php endif; ?></div>
             <a class="skin-identity-card__survey" href="<?= h($surveyUrl) ?>">Cập nhật khảo sát da <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a>
           </section>
         </aside>

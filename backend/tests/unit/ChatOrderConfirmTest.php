@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+// Buffer test output so controllerResponse() can still set HTTP status headers.
+ob_start();
+
 define('BASE_URL', 'https://shop.test');
 define('VNPAY_TMN_CODE', 'TESTTMN');
 define('VNPAY_HASH_SECRET', 'TESTSECRET');

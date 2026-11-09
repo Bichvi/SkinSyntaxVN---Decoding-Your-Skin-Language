@@ -121,6 +121,19 @@ class ProductVideo {
         return is_object($value) ? (array)$value : [];
     }
 
+    /** Only expose media URLs from the configured public R2 bucket to the storefront. */
+    private static function sharedMediaUrl($value): string {
+        $url = trim((string)$value);
+        $base = function_exists('ss_env')
+            ? (string)ss_env('R2_PUBLIC_BASE_URL', '')
+            : (string)(getenv('R2_PUBLIC_BASE_URL') ?: '');
+        $base = rtrim(trim($base), '/');
+        if ($url === '' || $base === '' || strncmp($url, $base . '/', strlen($base) + 1) !== 0) {
+            return '';
+        }
+        return $url;
+    }
+
     /**
      * Whether each source video may appear on product pages, per video id (string). A video with no document,
      * no purpose or an unknown purpose counts as live_only unless it carries the legacy product_page_backfill flag.
@@ -141,7 +154,7 @@ class ProductVideo {
         if (!$oids) {
             return $result;
         }
-        $projection = ['projection' => ['_id' => 1, 'purpose' => 1, 'product_page_backfill' => 1, 'price_claim' => 1]];
+        $projection = ['projection' => ['_id' => 1, 'purpose' => 1, 'product_page_backfill' => 1, 'price_claim' => 1, 'media' => 1]];
         $claims = [];
         foreach ($this->db->ai_idol_videos->find(['_id' => ['$in' => $oids]], $projection) as $doc) {
             $row = (array)$doc;
@@ -149,10 +162,16 @@ class ProductVideo {
             $eligible = self::videoPublishesToProductPage($row);
             $claim = isset($row['price_claim']) ? self::claimToArray($row['price_claim']) : [];
             $until = $claim && ($claim['valid_until_ts'] ?? null) !== null ? (int)$claim['valid_until_ts'] : null;
+            $media = self::claimToArray($row['media'] ?? []);
             if ($eligible && $claim) {
                 $claims[$id] = $claim;
             }
-            $result[$id] = ['eligible' => $eligible, 'price_valid_until_ts' => $until];
+            $result[$id] = [
+                'eligible' => $eligible,
+                'price_valid_until_ts' => $until,
+                'video_url' => self::sharedMediaUrl($media['video_url'] ?? ''),
+                'poster_url' => self::sharedMediaUrl($media['poster_url'] ?? ''),
+            ];
         }
         if (!$claims) {
             return $result;
@@ -261,6 +280,12 @@ class ProductVideo {
                 continue;
             }
             $item['price_valid_until_ts'] = $state['price_valid_until_ts'];
+            if (!empty($state['video_url'])) {
+                $item['video_url'] = $state['video_url'];
+            }
+            if (!empty($state['poster_url'])) {
+                $item['poster_url'] = $state['poster_url'];
+            }
             $visible[] = $item;
         }
         return $visible;

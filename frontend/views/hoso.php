@@ -6,7 +6,12 @@ $skinProfile = $skinProfile ?? [];
 $loaiDaOptions = $loaiDaOptions ?? [];
 $khachHang = $khachHang ?? [];
 $latestQuickSkinUpdate = $latestQuickSkinUpdate ?? null;
+$quickSkinHistory = $quickSkinHistory ?? [];
+$skinProfiles = is_array($skinProfiles ?? null) ? $skinProfiles : [];
+$selectedSkinProfileId = trim((string)($selectedSkinProfileId ?? ($skinProfile['profile_id'] ?? '')));
 $customerVouchers = $customerVouchers ?? [];
+$skinBaseProfile = is_array($skinProfile['base_profile'] ?? null) ? $skinProfile['base_profile'] : [];
+$skinCurrentState = is_array($skinProfile['current_state'] ?? null) ? $skinProfile['current_state'] : [];
 
 $vanDeDaSaved = [];
 if (!empty($skinProfile['van_de_da'])) {
@@ -162,18 +167,19 @@ $renderTagList = static function (array $items, string $emptyText = 'Chưa có d
 };
 
 $surveySkinIssues = $parseConcernsForHoso(!empty($skinProfile['van_de_da']) ? (string)$skinProfile['van_de_da'] : (string)($khachHang['van_de_da'] ?? ''));
-$surveySpecialStates = $splitSpecialStates((string)($khachHang['tinh_trang_dac_biet'] ?? ''));
+$surveySpecialStates = $splitSpecialStates((string)($skinBaseProfile['tinh_trang_dac_biet'] ?? ($khachHang['tinh_trang_dac_biet'] ?? '')));
 
-$prioritiesParsed = $parsePrioritiesForHoso((string)($khachHang['tieu_chi_uu_tien'] ?? ''));
+$prioritiesParsed = $parsePrioritiesForHoso((string)($skinBaseProfile['tieu_chi_uu_tien'] ?? ($khachHang['tieu_chi_uu_tien'] ?? '')));
 $surveyTextures = $prioritiesParsed['textures'];
 $surveyIngredients = $prioritiesParsed['ingredients'];
 
-$surveyAvoidIngredients = $splitProfileValues((string)($khachHang['thanh_phan_tranh'] ?? ''));
-$surveyPreferredCountries = $splitProfileValues((string)($khachHang['kinh_nghiem_skincare'] ?? ''));
-$surveyPreferredBrands = $splitProfileValues((string)($khachHang['so_buoc_skincare'] ?? ''));
+$surveyAvoidIngredients = $splitProfileValues((string)($skinBaseProfile['thanh_phan_tranh'] ?? ($khachHang['thanh_phan_tranh'] ?? '')));
+$surveyPreferredCountries = $splitProfileValues((string)($skinBaseProfile['kinh_nghiem_skincare'] ?? ($khachHang['kinh_nghiem_skincare'] ?? '')));
+$surveyPreferredBrands = $splitProfileValues((string)($skinBaseProfile['so_buoc_skincare'] ?? ($khachHang['so_buoc_skincare'] ?? '')));
 
-$formattedBudget = !empty($skinProfile['ngan_sach'])
-  ? number_format((int)$skinProfile['ngan_sach'], 0, ',', '.') . 'đ'
+$currentBudgetValue = (int)($skinCurrentState['ngan_sach'] ?? ($skinProfile['ngan_sach'] ?? 0));
+$formattedBudget = $currentBudgetValue > 0
+  ? number_format($currentBudgetValue, 0, ',', '.') . 'đ'
   : 'Chưa có dữ liệu';
 
 $vipThreshold = 500;
@@ -1081,7 +1087,10 @@ window.openSupportChat = function (evt) {
               <?php $tabKey = (string)($o['order_tab'] ?? OrderTabs::tabOf($o)); ?>
               <?php $actions = $o['order_actions'] ?? OrderTabs::actions($o); ?>
               <?php $isQr = OrderTabs::isQrPayment($o); ?>
+              <?php $isVnpay = OrderTabs::isVnpayPayment($o); ?>
               <?php $paymentState = (string)($o['payment_state'] ?? OrderTabs::paymentState($o)); ?>
+              <?php $paymentStateLabel = $paymentState === 'paid' ? 'Đã thanh toán' : ($paymentState === 'expired' ? 'Quá hạn thanh toán' : ($paymentState === 'failed' ? 'Thanh toán thất bại' : ($paymentState === 'cancelled' ? 'Đã hủy thanh toán' : ($paymentState === 'awaiting' ? ($isQr ? 'Chờ chuyển khoản' : ($isVnpay ? 'Chờ thanh toán VNPAY' : 'Chờ thanh toán')) : 'Chưa thanh toán')))); ?>
+              <?php $paymentMethodLabel = OrderTabs::paymentMethodLabel($o); ?>
               <?php $statusLabel = OrderTabs::TABS[$tabKey] ?? (string)($o['trang_thai'] ?? 'Không rõ'); ?>
               <article class="order-card" aria-labelledby="order-title-<?= h($orderId) ?>">
                 <header class="order-card-head">
@@ -1089,20 +1098,23 @@ window.openSupportChat = function (evt) {
                     <h3 class="order-card-title" id="order-title-<?= h($orderId) ?>">Đơn #<?= h($orderId) ?></h3>
                     <div class="order-card-sub">
                       <?= h(!empty($o['ngay_dat']) ? date('d/m/Y H:i', strtotime((string)$o['ngay_dat'])) : '') ?>
-                      · <?= $isQr ? 'QR chuyển khoản' : 'COD' ?>
-                      · <?= h($paymentState === 'paid' ? 'Đã thanh toán' : ($paymentState === 'expired' ? 'Quá hạn thanh toán' : ($paymentState === 'awaiting' ? 'Chờ chuyển khoản' : 'Chưa thanh toán'))) ?>
+                       · <?= h($paymentMethodLabel) ?>
+                       · <?= h($paymentStateLabel) ?>
                     </div>
                   </div>
                   <span class="order-status order-status-<?= h($orderTabTone[$tabKey] ?? 'secondary') ?>"><?= h($statusLabel) ?></span>
                 </header>
 
-                <?php if (!empty($actions['pay_qr'])): ?>
+                <?php if (!empty($actions['pay_qr']) || !empty($actions['pay_vnpay'])): ?>
+                  <?php $retryPaymentUrl = !empty($actions['pay_vnpay'])
+                    ? BASE_URL . '/index.php?r=vnpay_repay&order_id=' . urlencode($orderId)
+                    : BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode($orderId); ?>
                   <div class="order-card-alert">
                     <div>
-                      <strong>Đơn này đang chờ chuyển khoản.</strong>
-                      <div class="small">Mở lại màn hình QR để thanh toán đúng mã đơn #<?= h($orderId) ?>.</div>
+                      <strong><?= !empty($actions['pay_vnpay']) ? 'Đơn này đang chờ thanh toán VNPAY.' : 'Đơn này đang chờ chuyển khoản.' ?></strong>
+                      <div class="small"><?= !empty($actions['pay_vnpay']) ? 'Mở lại cổng VNPAY để hoàn tất hoặc thử lại thanh toán.' : 'Mở lại màn hình QR để thanh toán đúng mã đơn #' . h($orderId) . '.' ?></div>
                     </div>
-                    <a class="btn btn-sm btn-success" href="<?= BASE_URL ?>/index.php?r=camon&ma_hoa_don=<?= urlencode($orderId) ?>">Thanh toán ngay</a>
+                    <a class="btn btn-sm btn-success" href="<?= h($retryPaymentUrl) ?>"><?= !empty($actions['pay_vnpay']) ? 'Thanh toán VNPAY' : 'Mở QR' ?></a>
                   </div>
                 <?php endif; ?>
 
@@ -1180,6 +1192,9 @@ window.openSupportChat = function (evt) {
                   <div class="order-card-actions">
                     <?php if (!empty($actions['pay_qr'])): ?>
                       <a class="btn btn-sm btn-success" href="<?= BASE_URL ?>/index.php?r=camon&ma_hoa_don=<?= urlencode($orderId) ?>">Mở QR chuyển khoản</a>
+                    <?php endif; ?>
+                    <?php if (!empty($actions['pay_vnpay'])): ?>
+                      <a class="btn btn-sm btn-warning" href="<?= BASE_URL ?>/index.php?r=vnpay_repay&order_id=<?= urlencode($orderId) ?>">Thanh toán VNPAY</a>
                     <?php endif; ?>
                     <?php if (!empty($actions['reorder'])): ?>
                       <form method="post" action="<?= BASE_URL ?>/index.php?r=hoso&reorder=<?= urlencode($orderId) ?>">
@@ -1269,8 +1284,30 @@ window.openSupportChat = function (evt) {
       </div>
 
       <div class="tab-pane fade" id="tab-skin" role="tabpanel">
+        <div class="border rounded-3 p-3 mb-3 bg-white shadow-sm">
+          <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+            <div>
+              <div class="small text-uppercase text-muted fw-bold">Hồ sơ đang xem</div>
+              <div class="fw-bold text-success fs-5"><?= h((string)($skinProfile['display_name'] ?? 'Hồ sơ của tôi')) ?></div>
+              <div class="small text-muted">Hồ sơ khác được tách riêng, không ghi đè hồ sơ chính.</div>
+            </div>
+            <form method="post" action="<?= BASE_URL ?>/index.php?r=chon_hoso_da" class="d-flex flex-wrap gap-2 align-items-end">
+              <label class="visually-hidden" for="skinProfileChooser">Chọn hồ sơ da</label>
+              <select class="form-select" id="skinProfileChooser" name="profile_id" aria-label="Chọn hồ sơ da">
+                <?php foreach ($skinProfiles as $profileOption): ?>
+                  <option value="<?= h((string)($profileOption['profile_id'] ?? '')) ?>" <?= ((string)($profileOption['profile_id'] ?? '') === $selectedSkinProfileId) ? 'selected' : '' ?>><?= h((string)($profileOption['display_name'] ?? 'Hồ sơ da')) ?><?= empty($profileOption['is_primary']) ? ' · Người khác' : ' · Chính' ?></option>
+                <?php endforeach; ?>
+              </select>
+              <button class="btn btn-outline-brand" type="submit">Chọn hồ sơ</button>
+            </form>
+          </div>
+          <form method="post" action="<?= BASE_URL ?>/index.php?r=tao_hoso_da" class="row g-2 mt-3" aria-label="Tạo hồ sơ da khác">
+            <div class="col-sm-8 col-md-9"><label class="visually-hidden" for="newSkinProfileName">Tên hồ sơ mới</label><input class="form-control" id="newSkinProfileName" name="display_name" maxlength="80" placeholder="Ví dụ: Hồ sơ của mẹ" required></div>
+            <div class="col-sm-4 col-md-3"><button class="btn btn-brand w-100" type="submit"><i class="fa-solid fa-user-plus me-1"></i>Tạo hồ sơ khác</button></div>
+          </form>
+        </div>
         <div class="alert alert-light border mb-3">
-          Hồ sơ làn da được lấy từ dữ liệu khảo sát và các lần cập nhật gần đây của bạn.
+          Hồ sơ làn da được cập nhật từ thông tin bạn đã chia sẻ.
         </div>
 
         <div class="row g-3 mb-4">
@@ -1334,13 +1371,13 @@ window.openSupportChat = function (evt) {
           <div class="col-md-6 col-xl-3">
             <div class="profile-stat h-100">
               <div class="label">Mức độ nhạy cảm</div>
-              <div class="value"><?= h($khachHang['muc_do_nhay_cam'] ?? 'Chưa có dữ liệu') ?></div>
+              <div class="value"><?= h($skinCurrentState['muc_do_nhay_cam'] ?? ($skinProfile['muc_do_nhay_cam'] ?? 'Chưa có dữ liệu')) ?></div>
             </div>
           </div>
           <div class="col-md-6 col-xl-3">
             <div class="profile-stat h-100">
               <div class="label">Mục tiêu chăm sóc</div>
-              <div class="value"><?= h($khachHang['muc_tieu_cham_soc'] ?? 'Chưa có dữ liệu') ?></div>
+              <div class="value"><?= h($skinCurrentState['muc_tieu_cham_soc'] ?? ($skinProfile['muc_tieu_cham_soc'] ?? 'Chưa có dữ liệu')) ?></div>
             </div>
           </div>
           <div class="col-md-6 col-xl-3">
@@ -1361,9 +1398,30 @@ window.openSupportChat = function (evt) {
           </div>
           <div class="d-flex flex-wrap gap-2">
             <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=khaosatnhanh"><i class="fa-solid fa-bolt me-1"></i> Cập nhật nhanh</a>
-            <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=khaosat">Khảo sát đầy đủ</a>
+            <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=khaosat<?= empty($skinProfile['is_primary']) && $selectedSkinProfileId !== '' ? '&profile_id=' . rawurlencode($selectedSkinProfileId) : '' ?>">Khảo sát đầy đủ</a>
           </div>
         </div>
+
+        <?php if (!empty($quickSkinHistory)): ?>
+          <details class="border rounded-3 bg-white mb-4 p-3">
+            <summary class="fw-bold text-success" style="cursor:pointer">Lịch sử cập nhật nhanh</summary>
+            <div class="table-responsive mt-3">
+              <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Thời gian</th><th>Mức kích ứng</th><th>Mục tiêu</th><th>Ngân sách</th></tr></thead>
+                <tbody>
+                <?php foreach ($quickSkinHistory as $historyItem): ?>
+                  <tr>
+                    <td><?= h((string)($historyItem['updated_at_display'] ?? '')) ?></td>
+                    <td><?= h((string)($historyItem['sensitivity'] ?? '')) ?></td>
+                    <td><?= h((string)($historyItem['goal'] ?? '')) ?></td>
+                    <td><?= !empty($historyItem['budget']) ? h(number_format((int)$historyItem['budget'], 0, ',', '.') . 'đ') : '—' ?></td>
+                  </tr>
+                <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          </details>
+        <?php endif; ?>
 
         <div class="row g-3 mb-4">
           <div class="col-lg-6">

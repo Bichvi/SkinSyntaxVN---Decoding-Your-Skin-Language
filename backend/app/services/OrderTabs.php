@@ -52,17 +52,32 @@ final class OrderTabs
         return self::STATUS_BY_TEXT[self::fold($order['trang_thai'] ?? '')] ?? '';
     }
 
-    /** paid | awaiting (chờ chuyển khoản) | expired (quá hạn) | unpaid. */
+    /** paid | awaiting | expired | failed | cancelled | unpaid. */
     public static function paymentState(array $order): string
     {
-        $text = self::fold($order['status_thanh_toan'] ?? $order['payment_status'] ?? '');
+        $paymentText = trim((string)($order['status_thanh_toan'] ?? ''));
+        if ($paymentText === '') {
+            $paymentText = trim((string)($order['payment_status'] ?? ''));
+        }
+        $text = self::fold($paymentText);
         if (in_array($text, ['da thanh toan', 'paid', 'thanh cong', 'completed'], true)) {
             return 'paid';
         }
         if (str_contains($text, 'qua han') || $text === 'expired') {
             return 'expired';
         }
-        if (str_contains($text, 'cho chuyen khoan') || $text === 'awaiting') {
+        if (str_contains($text, 'that bai') || $text === 'failed') {
+            return 'failed';
+        }
+        if (str_contains($text, 'da huy') || $text === 'cancelled' || $text === 'canceled') {
+            return 'cancelled';
+        }
+        if (
+            str_contains($text, 'cho chuyen khoan')
+            || str_contains($text, 'cho thanh toan')
+            || $text === 'awaiting'
+            || $text === 'pending'
+        ) {
             return 'awaiting';
         }
         return 'unpaid';
@@ -70,13 +85,43 @@ final class OrderTabs
 
     public static function isQrPayment(array $order): bool
     {
-        return self::fold($order['hinh_thuc_thanh_toan'] ?? 'cod') === 'bank transfer qr';
+        return self::paymentMethod($order) === 'bank transfer qr';
+    }
+
+    public static function isVnpayPayment(array $order): bool
+    {
+        return self::paymentMethod($order) === 'vnpay';
+    }
+
+    private static function paymentMethod(array $order): string
+    {
+        $method = trim((string)($order['hinh_thuc_thanh_toan'] ?? ''));
+        if ($method === '') {
+            $method = trim((string)($order['payment_method'] ?? 'cod'));
+        }
+        return self::fold($method);
+    }
+
+    public static function isOnlinePayment(array $order): bool
+    {
+        return self::isQrPayment($order) || self::isVnpayPayment($order);
+    }
+
+    public static function paymentMethodLabel(array $order): string
+    {
+        if (self::isQrPayment($order)) {
+            return 'QR chuyển khoản';
+        }
+        if (self::isVnpayPayment($order)) {
+            return 'VNPAY';
+        }
+        return 'COD';
     }
 
     public static function tabOf(array $order): string
     {
         $status = self::orderStatus($order);
-        if (in_array($status, ['pending', 'confirmed'], true) && self::isQrPayment($order) && self::paymentState($order) !== 'paid') {
+        if (in_array($status, ['pending', 'confirmed'], true) && self::isOnlinePayment($order) && self::paymentState($order) !== 'paid') {
             return 'cho_thanh_toan';
         }
         return self::TAB_BY_STATUS[$status] ?? 'khac';
@@ -86,8 +131,10 @@ final class OrderTabs
     public static function actions(array $order): array
     {
         $tab = self::tabOf($order);
+        $canPay = $tab === 'cho_thanh_toan';
         return [
-            'pay_qr' => $tab === 'cho_thanh_toan',
+            'pay_qr' => $canPay && self::isQrPayment($order),
+            'pay_vnpay' => $canPay && self::isVnpayPayment($order),
             'cancel' => in_array($tab, ['cho_thanh_toan', 'cho_xac_nhan', 'cho_lay_hang'], true),
             'reorder' => in_array($tab, ['hoan_thanh', 'da_huy'], true),
             'review' => $tab === 'hoan_thanh',

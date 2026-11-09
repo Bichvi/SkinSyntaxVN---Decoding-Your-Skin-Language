@@ -1,4 +1,39 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<?php
+$prefillKhachHang = is_array($khachHang ?? null) ? $khachHang : [];
+$prefillSkinProfile = is_array($skinProfile ?? null) ? $skinProfile : [];
+$prefillBase = is_array($prefillSkinProfile['base_profile'] ?? null) ? $prefillSkinProfile['base_profile'] : [];
+$prefillCurrent = is_array($prefillSkinProfile['current_state'] ?? null) ? $prefillSkinProfile['current_state'] : [];
+$prefillList = static function ($value): array {
+  if (is_array($value)) return array_values(array_filter(array_map('trim', $value), static fn($item) => $item !== ''));
+  $text = trim((string)$value);
+  return $text === '' ? [] : array_values(array_filter(array_map('trim', preg_split('/\s*[,|]\s*/u', $text) ?: []), static fn($item) => $item !== ''));
+};
+$prefillPriorities = static function ($value, string $prefix) use ($prefillList): array {
+  $text = (string)$value;
+  foreach (explode('|', $text) as $section) {
+    $section = trim($section);
+    if (mb_stripos($section, $prefix) === 0) {
+      return $prefillList(mb_substr($section, mb_strlen($prefix)));
+    }
+  }
+  return [];
+};
+$prefillGender = (string)($prefillBase['gioi_tinh'] ?? ($prefillKhachHang['gioi_tinh'] ?? ''));
+$prefillBirthYear = (string)($prefillBase['nam_sinh'] ?? ($prefillKhachHang['nam_sinh'] ?? ''));
+$prefillSkinType = (string)($prefillBase['loai_da'] ?? ($prefillSkinProfile['loai_da'] ?? ''));
+$prefillSensitivity = (string)($prefillCurrent['muc_do_nhay_cam'] ?? ($prefillKhachHang['muc_do_nhay_cam'] ?? ''));
+$prefillIssues = $prefillList($prefillCurrent['van_de_da'] ?? ($prefillKhachHang['van_de_da'] ?? ''));
+$prefillGoal = (string)($prefillCurrent['muc_tieu_cham_soc'] ?? ($prefillKhachHang['muc_tieu_cham_soc'] ?? ''));
+$prefillTextures = $prefillPriorities($prefillBase['tieu_chi_uu_tien'] ?? ($prefillKhachHang['tieu_chi_uu_tien'] ?? ''), 'Kết cấu:');
+$prefillIngredients = $prefillPriorities($prefillBase['tieu_chi_uu_tien'] ?? ($prefillKhachHang['tieu_chi_uu_tien'] ?? ''), 'Hoạt chất:');
+$prefillAvoid = $prefillList($prefillBase['thanh_phan_tranh'] ?? ($prefillKhachHang['thanh_phan_tranh'] ?? ''));
+$prefillCountries = $prefillList($prefillBase['kinh_nghiem_skincare'] ?? ($prefillKhachHang['kinh_nghiem_skincare'] ?? ''));
+$prefillBrands = $prefillList($prefillBase['so_buoc_skincare'] ?? ($prefillKhachHang['so_buoc_skincare'] ?? ''));
+$prefillBudget = (int)($prefillCurrent['ngan_sach'] ?? ($prefillKhachHang['ngan_sach'] ?? 0));
+$prefillBudgetKey = $prefillBudget <= 200000 && $prefillBudget > 0 ? 'duoi_200k' : ($prefillBudget <= 500000 && $prefillBudget > 0 ? '200_500k' : ($prefillBudget <= 1000000 && $prefillBudget > 0 ? '500_1000k' : ($prefillBudget > 1000000 ? 'tren_1000k' : '')));
+$prefillHasProfile = $prefillSkinType !== '' || $prefillBase !== [];
+?>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -379,7 +414,7 @@
         <button type="button" class="btn-close survey-close" id="btnCloseSurvey" aria-label="Đóng"></button>
         <p class="survey-kicker">AI Beauty Profile</p>
         <h2 class="survey-title" id="surveyWizardLabel">SkinSyntax Skin Quiz</h2>
-        <p class="survey-subtitle">Xin chào <?= h((string)($pending['ho_ten'] ?? 'bạn')) ?>, hoàn tất khảo sát để AI gợi ý routine sát nhu cầu nhất.</p>
+        <p class="survey-subtitle">Xin chào <?= h((string)($pending['ho_ten'] ?? 'bạn')) ?>, <?= $prefillHasProfile ? 'kiểm tra và chỉnh sửa hồ sơ da hiện tại của bạn.' : 'hoàn tất khảo sát để AI gợi ý routine sát nhu cầu nhất.' ?></p>
 
         <div class="survey-progress-wrap">
           <div class="survey-progress-meta">
@@ -403,9 +438,9 @@
             <div class="q-block">
               <label class="q-title">Câu 1. Giới tính của bạn là gì?</label>
               <div class="choice-grid choice-grid-3">
-                <label class="choice-card"><input type="radio" name="q1" value="Nữ" required><span class="choice-body">Nữ <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q1" value="Nam" required><span class="choice-body">Nam <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q1" value="Khác" required><span class="choice-body">Khác <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q1" value="Nữ" required <?= $prefillGender === 'Nữ' ? 'checked' : '' ?>><span class="choice-body">Nữ <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q1" value="Nam" required <?= $prefillGender === 'Nam' ? 'checked' : '' ?>><span class="choice-body">Nam <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q1" value="Khác" required <?= $prefillGender === 'Khác' ? 'checked' : '' ?>><span class="choice-body">Khác <span class="choice-check">✅</span></span></label>
               </div>
             </div>
 
@@ -415,7 +450,7 @@
                 <option value="">-- Chọn năm sinh --</option>
                 <?php $currentYear = (int)date('Y'); ?>
                 <?php for ($year = max(2010, $currentYear); $year >= 1970; $year--): ?>
-                  <option value="<?= $year ?>"><?= $year ?></option>
+                  <option value="<?= $year ?>" <?= $prefillBirthYear === (string)$year ? 'selected' : '' ?>><?= $year ?></option>
                 <?php endfor; ?>
               </select>
             </div>
@@ -431,44 +466,44 @@
             <div class="q-block">
               <label class="q-title">Câu 3. Bạn tự đánh giá loại da của mình là gì?</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="radio" name="q3" value="Da dầu/Hỗn hợp dầu" required><span class="choice-body">Da dầu / Hỗn hợp thiên dầu <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q3" value="Da khô/Hỗn hợp khô" required><span class="choice-body">Da khô / Hỗn hợp thiên khô <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q3" value="Da thường/Mọi loại da" required><span class="choice-body">Da thường / Không có vấn đề đặc biệt <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q3" value="Da nhạy cảm" required><span class="choice-body">Da nhạy cảm <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q3" value="Da mụn" required><span class="choice-body">Da mụn <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q3" value="Da khô" required><span class="choice-body">Da khô <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q3" value="Da hỗn hợp thiên dầu" required><span class="choice-body">Da hỗn hợp thiên dầu <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q3" value="Unknown" required><span class="choice-body">Unknown <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q3" value="Da dầu/Hỗn hợp dầu" required <?= $prefillSkinType === 'Da dầu/Hỗn hợp dầu' ? 'checked' : '' ?>><span class="choice-body">Da dầu / Hỗn hợp thiên dầu <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q3" value="Da khô/Hỗn hợp khô" required <?= $prefillSkinType === 'Da khô/Hỗn hợp khô' ? 'checked' : '' ?>><span class="choice-body">Da khô / Hỗn hợp thiên khô <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q3" value="Da thường/Mọi loại da" required <?= $prefillSkinType === 'Da thường/Mọi loại da' ? 'checked' : '' ?>><span class="choice-body">Da thường / Không có vấn đề đặc biệt <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q3" value="Da nhạy cảm" required <?= $prefillSkinType === 'Da nhạy cảm' ? 'checked' : '' ?>><span class="choice-body">Da nhạy cảm <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q3" value="Da mụn" required <?= $prefillSkinType === 'Da mụn' ? 'checked' : '' ?>><span class="choice-body">Da mụn <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q3" value="Da khô" required <?= $prefillSkinType === 'Da khô' ? 'checked' : '' ?>><span class="choice-body">Da khô <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q3" value="Da hỗn hợp thiên dầu" required <?= $prefillSkinType === 'Da hỗn hợp thiên dầu' ? 'checked' : '' ?>><span class="choice-body">Da hỗn hợp thiên dầu <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q3" value="Unknown" required <?= $prefillSkinType === 'Unknown' ? 'checked' : '' ?>><span class="choice-body">Unknown <span class="choice-check">✅</span></span></label>
               </div>
             </div>
 
             <div class="q-block">
               <label class="q-title">Câu 4. Da bạn có dễ bị kích ứng, mẩn đỏ không?</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="radio" name="q4" value="Rất dễ" required><span class="choice-body">Rất dễ (Da nhạy cảm) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q4" value="Khỏe mạnh, hiếm khi" required><span class="choice-body">Khỏe mạnh, hiếm khi <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q4" value="Rất dễ" required <?= $prefillSensitivity === 'Rất dễ' ? 'checked' : '' ?>><span class="choice-body">Rất dễ (Da nhạy cảm) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q4" value="Khỏe mạnh, hiếm khi" required <?= $prefillSensitivity === 'Khỏe mạnh, hiếm khi' ? 'checked' : '' ?>><span class="choice-body">Khỏe mạnh, hiếm khi <span class="choice-check">✅</span></span></label>
               </div>
             </div>
 
             <div class="q-block">
               <label class="q-title">Câu 5. Vấn đề da bạn đang muốn cải thiện nhất? (Có thể chọn nhiều)</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="checkbox" name="q5[]" value="Mụn viêm, sưng đỏ"><span class="choice-body">Mụn viêm, sưng đỏ <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q5[]" value="Mụn ẩn, mụn đầu đen"><span class="choice-body">Mụn ẩn, mụn đầu đen <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q5[]" value="Lỗ chân lông to"><span class="choice-body">Lỗ chân lông to <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q5[]" value="Thâm mụn, sạm nám, tàn nhang"><span class="choice-body">Thâm mụn, sạm nám, tàn nhang <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q5[]" value="Lão hóa, nếp nhăn"><span class="choice-body">Lão hóa, nếp nhăn <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q5[]" value="Da khô căng, bong tróc"><span class="choice-body">Da khô căng, bong tróc <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q5[]" value="Mụn viêm, sưng đỏ" <?= in_array('Mụn viêm, sưng đỏ', $prefillIssues, true) ? 'checked' : '' ?>><span class="choice-body">Mụn viêm, sưng đỏ <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q5[]" value="Mụn ẩn, mụn đầu đen" <?= in_array('Mụn ẩn, mụn đầu đen', $prefillIssues, true) ? 'checked' : '' ?>><span class="choice-body">Mụn ẩn, mụn đầu đen <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q5[]" value="Lỗ chân lông to" <?= in_array('Lỗ chân lông to', $prefillIssues, true) ? 'checked' : '' ?>><span class="choice-body">Lỗ chân lông to <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q5[]" value="Thâm mụn, sạm nám, tàn nhang" <?= in_array('Thâm mụn, sạm nám, tàn nhang', $prefillIssues, true) ? 'checked' : '' ?>><span class="choice-body">Thâm mụn, sạm nám, tàn nhang <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q5[]" value="Lão hóa, nếp nhăn" <?= in_array('Lão hóa, nếp nhăn', $prefillIssues, true) ? 'checked' : '' ?>><span class="choice-body">Lão hóa, nếp nhăn <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q5[]" value="Da khô căng, bong tróc" <?= in_array('Da khô căng, bong tróc', $prefillIssues, true) ? 'checked' : '' ?>><span class="choice-body">Da khô căng, bong tróc <span class="choice-check">✅</span></span></label>
               </div>
             </div>
 
             <div class="q-block">
               <label class="q-title">Câu 6. Mục tiêu chăm sóc da ưu tiên nhất của bạn hiện tại?</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="radio" name="q6" value="Sạch mụn, giảm viêm"><span class="choice-body">Sạch mụn, giảm viêm <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q6" value="Dưỡng sáng, mờ thâm nám"><span class="choice-body">Dưỡng sáng, mờ thâm nám <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q6" value="Phục hồi màng bảo vệ da, cấp ẩm"><span class="choice-body">Phục hồi màng bảo vệ da, cấp ẩm <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q6" value="Chống lão hóa, trẻ hóa da"><span class="choice-body">Chống lão hóa, trẻ hóa da <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q6" value="Sạch mụn, giảm viêm" <?= $prefillGoal === 'Sạch mụn, giảm viêm' ? 'checked' : '' ?>><span class="choice-body">Sạch mụn, giảm viêm <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q6" value="Dưỡng sáng, mờ thâm nám" <?= $prefillGoal === 'Dưỡng sáng, mờ thâm nám' ? 'checked' : '' ?>><span class="choice-body">Dưỡng sáng, mờ thâm nám <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q6" value="Phục hồi màng bảo vệ da, cấp ẩm" <?= $prefillGoal === 'Phục hồi màng bảo vệ da, cấp ẩm' ? 'checked' : '' ?>><span class="choice-body">Phục hồi màng bảo vệ da, cấp ẩm <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q6" value="Chống lão hóa, trẻ hóa da" <?= $prefillGoal === 'Chống lão hóa, trẻ hóa da' ? 'checked' : '' ?>><span class="choice-body">Chống lão hóa, trẻ hóa da <span class="choice-check">✅</span></span></label>
               </div>
             </div>
             <div class="step-error" data-step-error="2"></div>
@@ -477,60 +512,60 @@
           <section class="survey-step" data-step="3">
             <div class="step-title">
               <h4>Phần 3. Hoạt chất, sở thích và ngân sách</h4>
-              <p>AI sẽ dùng nhóm dữ liệu này để cá nhân hóa sản phẩm phù hợp.</p>
+              <p>Lựa chọn của bạn giúp SkinSyntax gợi ý sản phẩm phù hợp hơn.</p>
             </div>
 
             <div class="q-block">
               <label class="q-title">Câu 7. Bạn thích kết cấu sản phẩm như thế nào? (Có thể chọn nhiều)</label>
               <div class="choice-grid choice-grid-3">
-                <label class="choice-card"><input type="checkbox" name="q7[]" value="Gel"><span class="choice-body">Dạng Gel (Thấm nhanh, mỏng nhẹ) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q7[]" value="Kem"><span class="choice-body">Dạng Kem (Cream - Đặc, dưỡng ẩm sâu) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q7[]" value="Lỏng/Nước"><span class="choice-body">Dạng Lỏng/Nước (Toner/Essence) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q7[]" value="Gel" <?= in_array('Gel', $prefillTextures, true) ? 'checked' : '' ?>><span class="choice-body">Dạng Gel (Thấm nhanh, mỏng nhẹ) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q7[]" value="Kem" <?= in_array('Kem', $prefillTextures, true) ? 'checked' : '' ?>><span class="choice-body">Dạng Kem (Cream - Đặc, dưỡng ẩm sâu) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q7[]" value="Lỏng/Nước" <?= in_array('Lỏng/Nước', $prefillTextures, true) ? 'checked' : '' ?>><span class="choice-body">Dạng Lỏng/Nước (Toner/Essence) <span class="choice-check">✅</span></span></label>
               </div>
             </div>
 
             <div class="q-block">
               <label class="q-title">Câu 8. Hoạt chất bạn rất muốn có trong chu trình? (Có thể chọn nhiều)</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Niacinamide"><span class="choice-body">Niacinamide (Vitamin B3) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="BHA / Salicylic Acid"><span class="choice-body">BHA / Salicylic Acid <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Vitamin C"><span class="choice-body">Vitamin C <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Retinol / Tretinoin"><span class="choice-body">Retinol / Tretinoin <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="AHA / Glycolic Acid"><span class="choice-body">AHA / Glycolic Acid <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Hyaluronic Acid"><span class="choice-body">Hyaluronic Acid <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Ceramide"><span class="choice-body">Ceramide <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Tranexamic Acid"><span class="choice-body">Tranexamic Acid <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Azelaic Acid"><span class="choice-body">Azelaic Acid <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Peptide"><span class="choice-body">Peptide <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Centella / Cica"><span class="choice-body">Centella / Cica <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q8[]" value="Panthenol (B5)"><span class="choice-body">Panthenol (Vitamin B5) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Niacinamide" <?= in_array('Niacinamide', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Niacinamide (Vitamin B3) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="BHA / Salicylic Acid" <?= in_array('BHA / Salicylic Acid', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">BHA / Salicylic Acid <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Vitamin C" <?= in_array('Vitamin C', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Vitamin C <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Retinol / Tretinoin" <?= in_array('Retinol / Tretinoin', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Retinol / Tretinoin <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="AHA / Glycolic Acid" <?= in_array('AHA / Glycolic Acid', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">AHA / Glycolic Acid <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Hyaluronic Acid" <?= in_array('Hyaluronic Acid', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Hyaluronic Acid <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Ceramide" <?= in_array('Ceramide', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Ceramide <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Tranexamic Acid" <?= in_array('Tranexamic Acid', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Tranexamic Acid <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Azelaic Acid" <?= in_array('Azelaic Acid', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Azelaic Acid <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Peptide" <?= in_array('Peptide', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Peptide <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Centella / Cica" <?= in_array('Centella / Cica', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Centella / Cica <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q8[]" value="Panthenol (B5)" <?= in_array('Panthenol (B5)', $prefillIngredients, true) ? 'checked' : '' ?>><span class="choice-body">Panthenol (Vitamin B5) <span class="choice-check">✅</span></span></label>
               </div>
             </div>
 
             <div class="q-block">
               <label class="q-title">Câu 9. Thành phần bạn dị ứng hoặc muốn tránh xa? (Có thể chọn nhiều)</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Alcohol"><span class="choice-body">Cồn khô (Alcohol) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Fragrance/Parfum"><span class="choice-body">Hương liệu (Fragrance/Parfum) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Paraben"><span class="choice-body">Chất bảo quản Paraben <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Mineral Oil"><span class="choice-body">Dầu khoáng (Mineral Oil) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Sulfate (SLS/SLES)"><span class="choice-body">Sulfate (SLS/SLES) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Silicone"><span class="choice-body">Silicone <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Essential Oil"><span class="choice-body">Tinh dầu đậm đặc (Essential Oil) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="MIT/CMIT"><span class="choice-body">Chất bảo quản MIT/CMIT <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Colorant"><span class="choice-body">Phẩm màu tổng hợp <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="Lanolin"><span class="choice-body">Lanolin <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q9[]" value="KhongCo"><span class="choice-body">Không có / Không quan tâm <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Alcohol" <?= in_array('Alcohol', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Cồn khô (Alcohol) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Fragrance/Parfum" <?= in_array('Fragrance/Parfum', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Hương liệu (Fragrance/Parfum) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Paraben" <?= in_array('Paraben', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Chất bảo quản Paraben <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Mineral Oil" <?= in_array('Mineral Oil', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Dầu khoáng (Mineral Oil) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Sulfate (SLS/SLES)" <?= in_array('Sulfate (SLS/SLES)', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Sulfate (SLS/SLES) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Silicone" <?= in_array('Silicone', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Silicone <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Essential Oil" <?= in_array('Essential Oil', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Tinh dầu đậm đặc (Essential Oil) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="MIT/CMIT" <?= in_array('MIT/CMIT', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Chất bảo quản MIT/CMIT <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Colorant" <?= in_array('Colorant', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Phẩm màu tổng hợp <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="Lanolin" <?= in_array('Lanolin', $prefillAvoid, true) ? 'checked' : '' ?>><span class="choice-body">Lanolin <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q9[]" value="KhongCo" <?= $prefillAvoid === [] ? 'checked' : '' ?>><span class="choice-body">Không có / Không quan tâm <span class="choice-check">✅</span></span></label>
               </div>
             </div>
 
             <div class="q-block">
               <label class="q-title">Câu 10. Ngân sách tối đa cho 1 sản phẩm?</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="radio" name="q10" value="duoi_200k" required><span class="choice-body">Dưới 200.000đ (Bình dân/Học sinh) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q10" value="200_500k" required><span class="choice-body">200.000đ - 500.000đ (Tầm trung) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q10" value="500_1000k" required><span class="choice-body">500.000đ - 1.000.000đ (Cao cấp) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="radio" name="q10" value="tren_1000k" required><span class="choice-body">Trên 1.000.000đ (High-end) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q10" value="duoi_200k" required <?= $prefillBudgetKey === 'duoi_200k' ? 'checked' : '' ?>><span class="choice-body">Dưới 200.000đ (Bình dân/Học sinh) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q10" value="200_500k" required <?= $prefillBudgetKey === '200_500k' ? 'checked' : '' ?>><span class="choice-body">200.000đ - 500.000đ (Tầm trung) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q10" value="500_1000k" required <?= $prefillBudgetKey === '500_1000k' ? 'checked' : '' ?>><span class="choice-body">500.000đ - 1.000.000đ (Cao cấp) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="radio" name="q10" value="tren_1000k" required <?= $prefillBudgetKey === 'tren_1000k' ? 'checked' : '' ?>><span class="choice-body">Trên 1.000.000đ (High-end) <span class="choice-check">✅</span></span></label>
               </div>
             </div>
             <div class="step-error" data-step-error="3"></div>
@@ -539,40 +574,44 @@
           <section class="survey-step" data-step="4">
             <div class="step-title">
               <h4>Phần 4. Gu thương hiệu và xuất xứ</h4>
-              <p>Bước cuối cùng để hệ thống tinh chỉnh danh sách sản phẩm dành riêng cho bạn.</p>
+              <p>Bước cuối để nhận gợi ý phù hợp hơn.</p>
             </div>
 
             <div class="q-block">
               <label class="q-title">Câu 11. Xuất xứ mỹ phẩm bạn yêu thích? (Có thể chọn nhiều)</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Việt Nam"><span class="choice-body">Việt Nam (Local Brand) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Hàn Quốc"><span class="choice-body">Hàn Quốc (K-Beauty) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Pháp"><span class="choice-body">Pháp (Dược mỹ phẩm) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Mỹ"><span class="choice-body">Mỹ / Anh (Âu Mỹ) <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Nhật Bản"><span class="choice-body">Nhật Bản <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Anh"><span class="choice-body">Anh <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Úc"><span class="choice-body">Úc <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Đức"><span class="choice-body">Đức <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Thái Lan"><span class="choice-body">Thái Lan <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q11[]" value="Trung Quốc"><span class="choice-body">Trung Quốc <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Việt Nam" <?= in_array('Việt Nam', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Việt Nam (Local Brand) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Hàn Quốc" <?= in_array('Hàn Quốc', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Hàn Quốc (K-Beauty) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Pháp" <?= in_array('Pháp', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Pháp (Dược mỹ phẩm) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Mỹ" <?= in_array('Mỹ', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Mỹ / Anh (Âu Mỹ) <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Nhật Bản" <?= in_array('Nhật Bản', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Nhật Bản <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Anh" <?= in_array('Anh', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Anh <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Úc" <?= in_array('Úc', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Úc <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Đức" <?= in_array('Đức', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Đức <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Thái Lan" <?= in_array('Thái Lan', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Thái Lan <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q11[]" value="Trung Quốc" <?= in_array('Trung Quốc', $prefillCountries, true) ? 'checked' : '' ?>><span class="choice-body">Trung Quốc <span class="choice-check">✅</span></span></label>
               </div>
             </div>
 
             <div class="q-block mb-0">
               <label class="q-title">Câu 12. Thương hiệu ưu tiên của bạn? (Có thể chọn nhiều)</label>
               <div class="choice-grid">
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="Cocoon"><span class="choice-body">Cocoon <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="La Roche-Posay"><span class="choice-body">La Roche-Posay <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="L'Oreal"><span class="choice-body">L'Oreal <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="Paula's Choice"><span class="choice-body">Paula's Choice <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="Klairs"><span class="choice-body">Klairs <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="CeraVe"><span class="choice-body">CeraVe <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="Bioderma"><span class="choice-body">Bioderma <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="Vichy"><span class="choice-body">Vichy <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="Cetaphil"><span class="choice-body">Cetaphil <span class="choice-check">✅</span></span></label>
-                <label class="choice-card"><input type="checkbox" name="q12[]" value="COSRX"><span class="choice-body">COSRX <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="Cocoon" <?= in_array('Cocoon', $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">Cocoon <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="La Roche-Posay" <?= in_array('La Roche-Posay', $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">La Roche-Posay <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="L'Oreal" <?= in_array("L'Oreal", $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">L'Oreal <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="Paula's Choice" <?= in_array("Paula's Choice", $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">Paula's Choice <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="Klairs" <?= in_array('Klairs', $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">Klairs <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="CeraVe" <?= in_array('CeraVe', $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">CeraVe <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="Bioderma" <?= in_array('Bioderma', $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">Bioderma <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="Vichy" <?= in_array('Vichy', $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">Vichy <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="Cetaphil" <?= in_array('Cetaphil', $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">Cetaphil <span class="choice-check">✅</span></span></label>
+                <label class="choice-card"><input type="checkbox" name="q12[]" value="COSRX" <?= in_array('COSRX', $prefillBrands, true) ? 'checked' : '' ?>><span class="choice-body">COSRX <span class="choice-check">✅</span></span></label>
               </div>
             </div>
+            <label class="d-flex align-items-start gap-2 mt-3 p-3 rounded-3 border bg-light-subtle small">
+              <input type="checkbox" name="confirm_profile_save" value="1" required>
+              <span>Tôi đã xem lại các câu trả lời và đồng ý lưu chúng vào hồ sơ da lâu dài của hồ sơ này.</span>
+            </label>
             <div class="step-error" data-step-error="4"></div>
           </section>
         </form>

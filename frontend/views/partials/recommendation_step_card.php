@@ -28,8 +28,8 @@ $safetyLevel = in_array(($safety['level'] ?? ''), ['warning', 'unknown'], true) 
 $safetyText = trim((string)($safety['text'] ?? ''));
 if ($safetyText === '') {
     $safetyText = $safetyLevel === 'safe'
-        ? 'Đã kiểm tra: chưa ghi nhận cờ an toàn bất thường trong dữ liệu trả về.'
-        : 'Chưa đủ dữ liệu thành phần để kết luận an toàn.';
+        ? 'Chưa ghi nhận lưu ý bất thường trong thành phần.'
+        : 'Chưa đủ thông tin thành phần để đánh giá.';
 }
 $safetyPill = [
     'safe' => ['icon' => 'fa-shield-halved', 'label' => 'Đã kiểm tra thành phần'],
@@ -49,7 +49,7 @@ $reasonList = static function (array $item, string $fallback = ''): array {
     return array_slice($reasons, 0, 3);
 };
 $why = trim((string)($step['why_this_product'] ?? $product['why_this_product'] ?? $product['reason'] ?? ''));
-$whyItems = $reasonList($product, $why !== '' ? $why : 'Sản phẩm được chọn từ catalog theo hồ sơ và mục tiêu chăm da hiện có.');
+$whyItems = $reasonList($product, $why !== '' ? $why : 'Sản phẩm được chọn theo hồ sơ và mục tiêu chăm da của bạn.');
 $stepName = trim((string)($step['step_name'] ?? 'Sản phẩm phù hợp'));
 $stepOrder = (int)($step['step_order'] ?? 0);
 $category = trim((string)($step['category'] ?? ''));
@@ -61,8 +61,11 @@ $searchText = trim(implode(' ', array_filter([
     implode(' ', is_array($product['matched_concerns'] ?? null) ? $product['matched_concerns'] : []),
     implode(' ', $whyItems),
 ])));
-$isOutOfStock = in_array(strtolower(trim((string)($product['stock_status'] ?? ''))), ['out_of_stock', 'hidden', 'inactive'], true)
+$isOutOfStock = (array_key_exists('is_available', $product) && !$product['is_available'])
+    || in_array(strtolower(trim((string)($product['stock_status'] ?? ''))), ['out_of_stock', 'hidden', 'inactive'], true)
     || !empty($product['is_out_of_stock']);
+$alreadyOwned = !empty($product['already_owned']);
+$usageNote = trim((string)($product['usage_note'] ?? ''));
 $hasStrongActive = (bool)preg_match('/retinol|tretinoin|bha|aha|benzoyl|salicylic|glycolic/i', $searchText);
 $modalData = static function (array $item): string {
     return json_encode($item, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '{}';
@@ -130,6 +133,10 @@ $swapPayload = static function (array $item) use ($reasonList, $normalizeFit): a
         'why' => $reasonList($item, trim((string)($item['reason'] ?? ''))),
         'fit' => $normalizeFit($item['fit_explanation'] ?? null),
         'detail_url' => trim((string)($item['detail_url'] ?? '')),
+        'routine_step' => trim((string)($item['routine_step'] ?? '')),
+        'usage_note' => trim((string)($item['usage_note'] ?? '')),
+        'already_owned' => !empty($item['already_owned']),
+        'is_available' => !array_key_exists('is_available', $item) || (bool)$item['is_available'],
     ];
 };
 $formatScore = static fn($value): string => is_numeric($value) ? (string)(int)round((float)$value) . '%' : '';
@@ -153,6 +160,7 @@ $formatScore = static fn($value): string => is_numeric($value) ? (string)(int)ro
     <?php if ($isOutOfStock): ?>
       <span class="step-card__pill is-unknown">Tạm hết hàng</span>
     <?php endif; ?>
+    <?php if ($alreadyOwned): ?><span class="step-card__pill is-safe">Bạn đã có</span><?php endif; ?>
     <span class="step-card__pill is-<?= h($safetyLevel) ?>" title="<?= h($safetyText) ?>" data-safety-block>
       <i class="fa-solid <?= h($safetyPill['icon']) ?>" aria-hidden="true"></i> <?= h($safetyPill['label']) ?>
     </span>
@@ -255,17 +263,19 @@ $formatScore = static fn($value): string => is_numeric($value) ? (string)(int)ro
       <ul data-product-why <?= $fit !== null ? 'hidden' : '' ?>>
         <?php foreach ($whyItems as $item): ?><li><?= h($item) ?></li><?php endforeach; ?>
       </ul>
+      <?php if ($usageNote !== ''): ?><p class="step-card__usage" data-product-usage><i class="fa-solid fa-hand-sparkles" aria-hidden="true"></i> <strong>Cách dùng:</strong> <?= h($usageNote) ?></p><?php endif; ?>
       <?php if ($hasStrongActive): ?><small class="step-card__disclaimer">Gợi ý tự động, không thay thế tư vấn da liễu.</small><?php endif; ?>
       <div class="step-card__actions">
         <?php if ($detailUrl !== ''): ?><a href="<?= h($detailUrl) ?>" data-product-link>Xem chi tiết</a><?php endif; ?>
         <?php if ($productId !== ''): ?>
+          <button type="button" class="step-card__owned" data-consultation-preference="owned" data-product-id="<?= h($productId) ?>" <?= $alreadyOwned ? 'aria-pressed="true" disabled' : '' ?>><?= $alreadyOwned ? 'Đã ghi nhận' : 'Tôi đã có sản phẩm này' ?></button>
           <form method="post" action="<?= h(BASE_URL . '/index.php?r=them_gio_hang_ajax') ?>">
             <input type="hidden" name="action" value="add_to_cart">
             <input type="hidden" name="product_id" value="<?= h($productId) ?>" data-product-id-input>
             <input type="hidden" name="ma_san_pham" value="<?= h($productId) ?>" data-product-ma-id-input>
             <input type="hidden" name="quantity" value="1">
             <input type="hidden" name="qty" value="1">
-            <button class="step-card__add" type="submit" <?= $isOutOfStock ? 'disabled' : '' ?>>
+            <button class="step-card__add" type="submit" <?= ($isOutOfStock || $alreadyOwned) ? 'disabled' : '' ?>>
               <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Thêm vào giỏ
             </button>
           </form>

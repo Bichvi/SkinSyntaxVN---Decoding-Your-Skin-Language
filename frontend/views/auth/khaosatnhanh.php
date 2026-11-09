@@ -1,10 +1,10 @@
 <?php
 $khachHang = $khachHang ?? [];
 $skinProfile = $skinProfile ?? [];
+$quickDraft = is_array($quickDraft ?? null) ? $quickDraft : [];
 
 $sensitivityOptions = [
   'Rất dễ' => 'Rất dễ kích ứng, hay mẩn đỏ',
-  'Thỉnh thoảng' => 'Thỉnh thoảng mới kích ứng',
   'Khỏe mạnh, hiếm khi' => 'Khỏe mạnh, hiếm khi kích ứng',
 ];
 $issueOptions = [
@@ -28,18 +28,20 @@ $budgetOptions = [
   'tren_1000k' => 'Trên 1.000.000đ',
 ];
 
-$currentSensitivity = trim((string)($khachHang['muc_do_nhay_cam'] ?? ''));
-$currentIssuesText = trim((string)($khachHang['van_de_da'] ?? ''));
-$currentGoal = trim((string)($khachHang['muc_tieu_cham_soc'] ?? ''));
-$currentBudget = (int)($skinProfile['ngan_sach'] ?? $khachHang['ngan_sach'] ?? 0);
-$currentBudgetKey = '';
-if ($currentBudget > 0 && $currentBudget <= 200000) {
+$currentState = is_array($skinProfile['current_state'] ?? null) ? $skinProfile['current_state'] : [];
+$currentSensitivity = trim((string)(array_key_exists('q1', $quickDraft) ? $quickDraft['q1'] : ($currentState['muc_do_nhay_cam'] ?? ($skinProfile['muc_do_nhay_cam'] ?? ($khachHang['muc_do_nhay_cam'] ?? '')))));
+$draftIssues = is_array($quickDraft['q2'] ?? null) ? $quickDraft['q2'] : [];
+$currentIssuesText = trim((string)(array_key_exists('q2', $quickDraft) ? implode(', ', array_map('strval', $draftIssues)) : ($currentState['van_de_da'] ?? ($skinProfile['van_de_da'] ?? ($khachHang['van_de_da'] ?? '')))));
+$currentGoal = trim((string)(array_key_exists('q3', $quickDraft) ? $quickDraft['q3'] : ($currentState['muc_tieu_cham_soc'] ?? ($skinProfile['muc_tieu_cham_soc'] ?? ($khachHang['muc_tieu_cham_soc'] ?? '')))));
+$currentBudget = array_key_exists('q4', $quickDraft) ? 0 : (int)($currentState['ngan_sach'] ?? ($skinProfile['ngan_sach'] ?? ($khachHang['ngan_sach'] ?? 0)));
+$currentBudgetKey = array_key_exists('q4', $quickDraft) ? trim((string)$quickDraft['q4']) : '';
+if ($currentBudgetKey === '' && $currentBudget > 0 && $currentBudget <= 200000) {
   $currentBudgetKey = 'duoi_200k';
-} elseif ($currentBudget <= 500000 && $currentBudget > 0) {
+} elseif ($currentBudgetKey === '' && $currentBudget <= 500000 && $currentBudget > 0) {
   $currentBudgetKey = '200_500k';
-} elseif ($currentBudget <= 1000000 && $currentBudget > 0) {
+} elseif ($currentBudgetKey === '' && $currentBudget <= 1000000 && $currentBudget > 0) {
   $currentBudgetKey = '500_1000k';
-} elseif ($currentBudget > 1000000) {
+} elseif ($currentBudgetKey === '' && $currentBudget > 1000000) {
   $currentBudgetKey = 'tren_1000k';
 }
 ?>
@@ -103,12 +105,66 @@ if ($currentBudget > 0 && $currentBudget <= 200000) {
     font-weight: 700;
   }
 
+  .quick-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .quick-progress__track {
+    flex: 1;
+    height: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e5eee8;
+  }
+
+  .quick-progress__bar {
+    width: 25%;
+    height: 100%;
+    border-radius: inherit;
+    background: #16734b;
+    transition: width .2s ease;
+  }
+
+  .quick-progress__label {
+    min-width: 58px;
+    color: #4d6d5a;
+    font-size: .78rem;
+    font-weight: 800;
+    text-align: right;
+  }
+
   .quick-survey-body {
     padding: 28px 34px 14px;
   }
 
   .quick-question {
     margin-bottom: 28px;
+  }
+
+  .quick-question[hidden] {
+    display: none;
+  }
+
+  .quick-permanent-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid #d7e7dc;
+    border-radius: 14px;
+    color: #385344;
+    background: #f5fbf6;
+    font-size: .82rem;
+    line-height: 1.45;
+  }
+
+  .quick-permanent-choice input {
+    margin-top: 3px;
+    accent-color: #16734b;
   }
 
   .quick-question:last-child {
@@ -256,11 +312,17 @@ if ($currentBudget > 0 && $currentBudget <= 200000) {
         <?php if (!empty($skinProfile['loai_da'])): ?>
           <div class="quick-survey-current"><i class="fa-solid fa-droplet"></i> Loại da nền hiện tại: <?= h((string)$skinProfile['loai_da']) ?> · Không thay đổi trong khảo sát nhanh</div>
         <?php endif; ?>
+        <div class="quick-progress" aria-label="Tiến độ khảo sát">
+          <div class="quick-progress__track"><div class="quick-progress__bar" id="quickSurveyProgress"></div></div>
+          <span class="quick-progress__label" id="quickSurveyProgressLabel">Bước 1/4</span>
+        </div>
       </header>
 
       <form method="post" action="<?= BASE_URL ?>/index.php?r=xulykhaosatnhanh" id="quickSkinSurveyForm">
+        <input type="hidden" name="profile_id" value="<?= h((string)($skinProfile['profile_id'] ?? '')) ?>">
+        <input type="hidden" name="quick_request_id" value="<?= h((string)($quickRequestId ?? '')) ?>">
         <div class="quick-survey-body">
-          <fieldset class="quick-question border-0 p-0">
+          <fieldset class="quick-question border-0 p-0" data-quick-step="0">
             <legend class="quick-question-title">Câu 1. Da bạn hiện tại có dễ bị kích ứng, mẩn đỏ không?</legend>
             <div class="quick-choice-grid">
               <?php foreach ($sensitivityOptions as $value => $label): ?>
@@ -272,7 +334,7 @@ if ($currentBudget > 0 && $currentBudget <= 200000) {
             </div>
           </fieldset>
 
-          <fieldset class="quick-question border-0 p-0">
+          <fieldset class="quick-question border-0 p-0" data-quick-step="1" hidden>
             <legend class="quick-question-title">Câu 2. Vấn đề da bạn đang muốn cải thiện nhất? <span class="text-muted fw-normal">(Có thể chọn nhiều)</span></legend>
             <div class="quick-choice-grid">
               <?php foreach ($issueOptions as $issue): ?>
@@ -285,7 +347,7 @@ if ($currentBudget > 0 && $currentBudget <= 200000) {
             <p class="quick-survey-error" id="quickSurveyIssueError">Vui lòng chọn ít nhất 1 vấn đề da.</p>
           </fieldset>
 
-          <fieldset class="quick-question border-0 p-0">
+          <fieldset class="quick-question border-0 p-0" data-quick-step="2" hidden>
             <legend class="quick-question-title">Câu 3. Mục tiêu chăm sóc da ưu tiên nhất của bạn hiện tại?</legend>
             <div class="quick-choice-grid">
               <?php foreach ($goalOptions as $goal): ?>
@@ -297,7 +359,7 @@ if ($currentBudget > 0 && $currentBudget <= 200000) {
             </div>
           </fieldset>
 
-          <fieldset class="quick-question border-0 p-0">
+          <fieldset class="quick-question border-0 p-0" data-quick-step="3" hidden>
             <legend class="quick-question-title">Câu 4. Ngân sách tối đa cho 1 sản phẩm?</legend>
             <div class="quick-choice-grid">
               <?php foreach ($budgetOptions as $value => $label): ?>
@@ -308,11 +370,20 @@ if ($currentBudget > 0 && $currentBudget <= 200000) {
               <?php endforeach; ?>
             </div>
           </fieldset>
+          <label class="quick-permanent-choice">
+            <input type="checkbox" name="save_permanent" value="1" id="quickSavePermanent">
+            <span><strong>Lưu thay đổi lâu dài vào hồ sơ này</strong><br>Không chọn nếu bạn chỉ muốn thử routine cho hôm nay. Khi chọn, SkinSyntax sẽ hỏi xác nhận trước khi ghi vào hồ sơ.</span>
+          </label>
+          <input type="hidden" name="confirm_permanent" value="0" id="quickConfirmPermanent">
         </div>
 
         <footer class="quick-survey-foot">
           <a class="btn btn-outline-secondary px-4" href="<?= BASE_URL ?>/index.php?r=hoso">Để sau</a>
-          <button class="btn btn-brand px-4" type="submit"><i class="fa-solid fa-check me-1"></i> Lưu cập nhật hôm nay</button>
+          <div class="d-flex gap-2 flex-column flex-sm-row w-100 justify-content-end">
+            <button class="btn btn-outline-secondary px-4" type="button" id="quickSurveyBack" hidden>Quay lại</button>
+            <button class="btn btn-brand px-4" type="button" id="quickSurveyNext"><span>Tiếp tục</span> <i class="fa-solid fa-arrow-right ms-1"></i></button>
+            <button class="btn btn-brand px-4" type="submit" id="quickSurveySubmit" hidden><i class="fa-solid fa-check me-1"></i> <span data-submit-label>Xem gợi ý cho phiên này</span></button>
+          </div>
         </footer>
       </form>
     </div>
@@ -325,19 +396,93 @@ if ($currentBudget > 0 && $currentBudget <= 200000) {
     const issueError = document.getElementById('quickSurveyIssueError');
     if (!form || !issueError) return;
 
+    const steps = Array.from(form.querySelectorAll('[data-quick-step]'));
+    const back = document.getElementById('quickSurveyBack');
+    const next = document.getElementById('quickSurveyNext');
+    const submit = document.getElementById('quickSurveySubmit');
+    const progress = document.getElementById('quickSurveyProgress');
+    const progressLabel = document.getElementById('quickSurveyProgressLabel');
+    const savePermanent = document.getElementById('quickSavePermanent');
+    const confirmPermanent = document.getElementById('quickConfirmPermanent');
+    let stepIndex = 0;
+
     function hasIssue() {
       return form.querySelectorAll('input[name="q2[]"]:checked').length > 0;
     }
+
+    function isComplete(index) {
+      if (index === 0) return !!form.querySelector('input[name="q1"]:checked');
+      if (index === 1) return hasIssue();
+      if (index === 2) return !!form.querySelector('input[name="q3"]:checked');
+      if (index === 3) return !!form.querySelector('input[name="q4"]:checked');
+      return false;
+    }
+
+    function renderStep() {
+      steps.forEach(function (item, index) {
+        const active = index === stepIndex;
+        item.hidden = !active;
+        item.querySelectorAll('input').forEach(function (input) { input.disabled = !active; });
+      });
+      const percent = Math.round(((stepIndex + 1) / steps.length) * 100);
+      if (progress) progress.style.width = percent + '%';
+      if (progressLabel) progressLabel.textContent = 'Bước ' + (stepIndex + 1) + '/' + steps.length;
+      if (back) back.hidden = stepIndex === 0;
+      if (next) next.hidden = stepIndex === steps.length - 1;
+      if (submit) submit.hidden = stepIndex !== steps.length - 1;
+      issueError.classList.remove('is-visible');
+    }
+
+    if (next) next.addEventListener('click', function () {
+      if (!isComplete(stepIndex)) {
+        if (stepIndex === 1) issueError.classList.add('is-visible');
+        return;
+      }
+      if (stepIndex < steps.length - 1) { stepIndex += 1; renderStep(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    });
+    if (back) back.addEventListener('click', function () {
+      if (stepIndex > 0) { stepIndex -= 1; renderStep(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    });
 
     form.addEventListener('change', function () {
       if (hasIssue()) issueError.classList.remove('is-visible');
     });
 
     form.addEventListener('submit', function (event) {
-      if (hasIssue()) return;
-      event.preventDefault();
-      issueError.classList.add('is-visible');
-      issueError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (stepIndex !== steps.length - 1 || !steps.every(function (_, index) { return isComplete(index); })) {
+        event.preventDefault();
+        return;
+      }
+      steps.forEach(function (item) { item.querySelectorAll('input').forEach(function (input) { input.disabled = false; }); });
+      if (savePermanent && savePermanent.checked) {
+        const confirmed = window.confirm('Bạn có chắc muốn ghi check-in hôm nay vào hồ sơ da lâu dài không?');
+        if (!confirmed) {
+          event.preventDefault();
+          savePermanent.checked = false;
+          if (confirmPermanent) confirmPermanent.value = '0';
+          return;
+        }
+        if (confirmPermanent) confirmPermanent.value = '1';
+      }
+      if (!hasIssue()) {
+        event.preventDefault();
+        issueError.classList.add('is-visible');
+        issueError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     });
+
+    form.addEventListener('submit', function () {
+      const submit = document.getElementById('quickSurveySubmit');
+      if (!submit || submit.disabled) return;
+      submit.disabled = true;
+      submit.setAttribute('aria-busy', 'true');
+      const label = submit.querySelector('[data-submit-label]');
+      if (label) label.textContent = 'Đang lưu…';
+    });
+
+    if (savePermanent) savePermanent.addEventListener('change', function () {
+      if (!savePermanent.checked && confirmPermanent) confirmPermanent.value = '0';
+    });
+    renderStep();
   })();
 </script>

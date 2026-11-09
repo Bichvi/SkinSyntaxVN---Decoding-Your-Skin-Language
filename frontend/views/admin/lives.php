@@ -1,17 +1,17 @@
 <?php
 // backend/app/views/admin/lives.php
-$pageTitle = 'Quản lý Phiên LiveStream & Giá Ưu Đãi Khung Giờ';
+$pageTitle = 'Quản lý phiên phát trực tiếp & ưu đãi';
 require_once __DIR__ . '/layouts/header.php';
 ?>
 
 <div class="container-fluid px-4 py-4">
   <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
     <div>
-      <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-camera-video-fill text-danger me-2"></i>Quản lý Phiên LiveStream & Ưu Đãi Khung Giờ</h1>
-      <p class="text-muted mb-0 small">Quản lý lịch phát sóng LiveStream trực tiếp, đổi sản phẩm ghim ưu đãi, video bản ghi xem lại & kịch bản AI.</p>
+      <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-camera-video-fill text-danger me-2"></i>Quản lý phiên phát trực tiếp & ưu đãi</h1>
+      <p class="text-muted mb-0 small">Tạo phiên, mở phòng phát, chọn sản phẩm đang giới thiệu và xem lại video sau khi kết thúc.</p>
     </div>
     <button type="button" class="btn btn-primary btn-sm px-3 py-2 fw-semibold text-white" style="background: #183B2B; border: none; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#adminCreateLiveModal">
-      <i class="bi bi-plus-lg me-1"></i>Tạo Phiên Live Mới
+      <i class="bi bi-plus-lg me-1"></i>Tạo phiên phát mới
     </button>
   </div>
 
@@ -36,10 +36,10 @@ require_once __DIR__ . '/layouts/header.php';
         <i class="bi bi-pin-angle-fill"></i>
       </div>
       <div>
-        <strong class="d-block" style="font-size: 0.88rem; color: #183B2B;">Mẹo Quản Lý LiveStream & Ghim Sản Phẩm Linh Hoạt</strong>
+          <strong class="d-block" style="font-size: 0.88rem; color: #183B2B;">Cách sử dụng phiên phát</strong>
         <small class="text-muted" style="font-size: 0.78rem;">
-          • Bấm nút <strong>Ghim SP</strong> trên từng phiên Live để đổi sản phẩm nổi bật đang phát live.<br>
-          • Đính kèm <strong>Link Video Xem Lại (Recording)</strong> và <strong>Tóm Tắt Tư Vấn AI</strong> sau khi kết thúc live.
+          • Mỗi phiên có một sản phẩm đang giới thiệu; bấm <strong>Sản phẩm trong phiên</strong> để thêm nhiều sản phẩm ưu đãi.<br>
+          • Bấm <strong>Mở phòng phát</strong> để bật hình ảnh, âm thanh và bắt đầu phát.
         </small>
       </div>
     </div>
@@ -55,8 +55,8 @@ require_once __DIR__ . '/layouts/header.php';
     $totalUnitsAcc = 0;
 
     foreach ($sessions as $ls) {
-        $st = (string)($ls['trang_thai'] ?? $ls['status'] ?? '');
-        if (in_array($st, ['danglive', 'live'], true)) $activeRooms++;
+        $st = (string)($ls['status'] ?? $ls['trang_thai'] ?? '');
+        if ($st === 'live') $activeRooms++;
         $totalViewsAcc += (int)($ls['luot_xem'] ?? 0);
         $totalRevenueAcc += (float)($ls['tong_doanh_thu'] ?? 0);
         $totalOrdersAcc += (int)($ls['tong_don_hang'] ?? 0);
@@ -67,7 +67,7 @@ require_once __DIR__ . '/layouts/header.php';
   <!-- NAVIGATION TABS: DANH SÁCH LIVE VS BÁO CÁO DOANH THU -->
   <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-2">
     <button type="button" id="btnTabList" class="btn btn-sm px-3 py-1.5 fw-semibold text-white" style="background: #183B2B; border-radius: 6px;" onclick="switchAdminLiveTab('list')">
-      <i class="bi bi-camera-video-fill me-1.5"></i>Danh Sách Live (<?= $totalLiveRooms ?>)
+      <i class="bi bi-camera-video-fill me-1.5"></i>Danh sách phiên phát (<?= $totalLiveRooms ?>)
     </button>
     <button type="button" id="btnTabReport" class="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-semibold" style="border-radius: 6px;" onclick="switchAdminLiveTab('report')">
       <i class="bi bi-bar-chart-line-fill me-1.5"></i>Báo Cáo Doanh Thu
@@ -138,21 +138,23 @@ require_once __DIR__ . '/layouts/header.php';
 <div class="card border-0 rounded-4 shadow-sm mb-4" style="border: 1px solid var(--admin-border) !important;">
   <div class="card-header bg-white p-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
     <div class="d-flex align-items-center gap-2">
-      <strong class="text-dark me-2"><i class="bi bi-broadcast me-2 text-danger"></i>Danh Sách Phiên LiveStream</strong>
-      <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 fw-bold"><?= count($lives) ?> Phiên Live</span>
+      <strong class="text-dark me-2"><i class="bi bi-broadcast me-2 text-danger"></i>Danh sách phiên phát</strong>
+      <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 fw-bold"><?= count($lives) ?> phiên</span>
     </div>
 
     <!-- BỘ LỌC LOẠI LIVE & TÌM KIẾM TÍCH HỢP -->
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <div class="input-group input-group-sm" style="width: 220px;">
         <span class="input-group-text bg-light text-muted"><i class="bi bi-search"></i></span>
-        <input type="text" id="liveSearchInput" class="form-control" placeholder="Tìm tiêu đề, streamer..." onkeyup="filterLiveList()">
+        <input type="text" id="liveSearchInput" class="form-control" placeholder="Tìm tiêu đề, người dẫn..." onkeyup="filterLiveList()">
       </div>
       <select id="liveStatusFilter" class="form-select form-select-sm rounded-pill fw-bold" style="width: 175px;" onchange="filterLiveList()">
         <option value="all">🌐 Tất Cả Trạng Thái</option>
-        <option value="danglive">🔴 Đang Phát Live</option>
-        <option value="chuamoi"> Sắp Diễn Ra</option>
-        <option value="ketthuc">⏹️ Đã Kết Thúc</option>
+        <option value="live">🔴 Đang phát</option>
+        <option value="scheduled"> Sắp Diễn Ra</option>
+        <option value="ready">✅ Sẵn sàng phát</option>
+        <option value="replay_ready">🎬 Có bản ghi</option>
+        <option value="ended">⏹️ Đã Kết Thúc</option>
       </select>
     </div>
   </div>
@@ -161,10 +163,10 @@ require_once __DIR__ . '/layouts/header.php';
       <thead class="bg-light">
         <tr>
           <th style="width: 70px;">Mã</th>
-          <th>Tiêu Đề Phiên Live</th>
-          <th>Streamer & AI</th>
+          <th>Tiêu đề phiên phát</th>
+          <th>Người dẫn</th>
           <th>Khung Giờ Ưu Đãi</th>
-          <th>Sản Phẩm Ghim Hiện Tại</th>
+          <th>Sản phẩm đang giới thiệu</th>
           <th>Giá Ưu Đãi Live</th>
           <th>Trạng Thái</th>
           <th class="text-end" style="width: 220px;">Thao Tác</th>
@@ -176,15 +178,18 @@ require_once __DIR__ . '/layouts/header.php';
             $pinnedProduct = $live['pinned_product'] ?? null;
             $statusClass = 'bg-secondary';
             $statusLabel = '⏹ Kết thúc';
-            if ($live['trang_thai'] === 'danglive' || $live['trang_thai'] === 'live') {
+            $liveStatus = (string)($live['status'] ?? $live['trang_thai'] ?? 'scheduled');
+            $displayStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', '', (string)($live['streamer'] ?? '')));
+            $displayStreamer = $displayStreamer !== '' ? $displayStreamer : 'SkinSyntax';
+            if ($liveStatus === 'live') {
                 $statusClass = 'bg-danger';
-                $statusLabel = 'Đang Live';
-            } else if ($live['trang_thai'] === 'chuamoi' || $live['trang_thai'] === 'upcoming') {
+                $statusLabel = 'Đang phát';
+            } else if (in_array($liveStatus, ['scheduled', 'ready'], true)) {
                 $statusClass = 'bg-warning text-dark';
-                $statusLabel = 'Chuẩn bị';
+                $statusLabel = $liveStatus === 'ready' ? 'Sẵn sàng' : 'Đã lên lịch';
             }
           ?>
-          <tr class="live-table-row" data-status="<?= h($live['trang_thai']) ?>">
+          <tr class="live-table-row" data-status="<?= h($liveStatus) ?>">
             <td><code class="fw-bold">#<?= h($live['id']) ?></code></td>
             <td>
               <strong class="text-dark d-block" style="font-size: 0.9rem;"><?= h($live['tieu_de']) ?></strong>
@@ -196,10 +201,7 @@ require_once __DIR__ . '/layouts/header.php';
               <?php endif; ?>
             </td>
             <td>
-              <span class="fw-semibold text-dark small"><?= h($live['streamer']) ?></span>
-              <?php if (!empty($live['bat_ai_cohost'])): ?>
-                <span class="badge bg-success bg-opacity-10 text-success rounded-pill extra-small ms-1"><i class="bi bi-robot me-1"></i>AI Co-Host</span>
-              <?php endif; ?>
+              <span class="fw-semibold text-dark small"><?= h($displayStreamer) ?></span>
             </td>
             <td>
               <div class="small fw-semibold text-dark"><i class="bi bi-clock me-1 text-muted"></i><?= h($live['khung_gio_bat_dau']) ?></div>
@@ -226,35 +228,44 @@ require_once __DIR__ . '/layouts/header.php';
             </td>
             <td class="text-end">
               <div class="btn-group btn-group-sm">
-                <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-toggle="modal" data-bs-target="#editLiveModal_<?= h($live['id']) ?>" title="Chỉnh sửa thông tin tiêu đề, streamer phiên Live">
+                <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-toggle="modal" data-bs-target="#editLiveModal_<?= h($live['id']) ?>" title="Chỉnh sửa tiêu đề và người dẫn">
                   <i class="bi bi-pencil-square"></i> Sửa
                 </button>
                 <button type="button" class="btn btn-outline-primary fw-bold" data-bs-toggle="modal" data-bs-target="#reportModal_<?= h($live['id']) ?>" title="Xem báo cáo chi tiết doanh thu & chốt đơn">
                   <i class="bi bi-bar-chart-line-fill"></i> Báo Cáo
                 </button>
-                <button type="button" class="btn btn-outline-warning text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#dealsModal_<?= h($live['id']) ?>" title="Quản lý danh sách Deals & Khung giờ giảm giá từng SP">
-                  <i class="bi bi-cart-check-fill"></i> Deals (<?= count($live['danh_sach_deal'] ?? []) ?>)
+                <button type="button" class="btn btn-outline-warning text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#dealsModal_<?= h($live['id']) ?>" title="Thêm và sắp xếp nhiều sản phẩm trong phiên">
+                  <i class="bi bi-cart-check-fill"></i> Sản phẩm (<?= count($live['danh_sach_deal'] ?? []) ?>)
                 </button>
                 <button type="button" class="btn btn-outline-success fw-bold" data-bs-toggle="modal" data-bs-target="#pinProductModal_<?= h($live['id']) ?>" title="Đổi ghim sản phẩm nổi bật mới">
-                  <i class="bi bi-pin-angle-fill"></i> Ghim SP
+                  <i class="bi bi-pin-angle-fill"></i> Đổi sản phẩm
                 </button>
-                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#recordingModal_<?= h($live['id']) ?>" title="Xem bản ghi & transcript">
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#recordingModal_<?= h($live['id']) ?>" title="Xem video và ghi chú">
                   <i class="bi bi-film"></i> Bản Ghi
                 </button>
-                <?php if ($live['trang_thai'] === 'danglive' || $live['trang_thai'] === 'live'): ?>
-                  <a href="<?= BASE_URL ?>/index.php?r=admin_live_status&id=<?= urlencode($live['id']) ?>&status=ketthuc" class="btn btn-outline-danger" title="Dừng & Kết thúc vĩnh viễn phiên Live" onclick="return confirm('Dừng & kết thúc vĩnh viễn phiên LiveStream này? Phiên sẽ chuyển sang bản ghi và không thể phát lại.');">
-                    <i class="bi bi-stop-fill"></i> Dừng Live
+                <a href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= urlencode($live['id']) ?>" class="btn btn-outline-primary" title="Mở trang người xem">
+                  <i class="bi bi-broadcast-pin"></i> Xem như khách
+                </a>
+                <?php if ($liveStatus === 'live'): ?>
+                  <a href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= urlencode($live['id']) ?>&amp;studio=1" class="btn btn-success" title="Mở phòng phát để theo dõi và kết thúc phiên">
+                    <i class="bi bi-camera-video-fill"></i> Vào phòng phát
                   </a>
-                <?php elseif ($live['trang_thai'] === 'chuamoi' || $live['trang_thai'] === 'upcoming'): ?>
-                  <a href="<?= BASE_URL ?>/index.php?r=admin_live_status&id=<?= urlencode($live['id']) ?>&status=danglive" class="btn btn-outline-success" title="Bắt đầu phát Live">
-                    <i class="bi bi-play-fill"></i> Phát Live
+                <?php elseif (in_array($liveStatus, ['scheduled', 'ready'], true)): ?>
+                  <a href="<?= BASE_URL ?>/index.php?r=admin_live_status&amp;id=<?= urlencode($live['id']) ?>&amp;status=danglive&amp;next=live" class="btn btn-success" title="Mở phòng phát, bật hình ảnh và âm thanh">
+                    <i class="bi bi-play-fill"></i> Mở phòng phát
                   </a>
                 <?php else: ?>
-                  <button type="button" class="btn btn-outline-secondary disabled" title="Phiên đã kết thúc & lưu bản ghi (Không thể bắt đầu lại)" disabled>
-                    <i class="bi bi-lock-fill"></i> Đã Kết Thúc
-                  </button>
+                  <?php if (($live['recording_status'] ?? '') === 'replay_ready' && !empty($live['url_ban_ghi'])): ?>
+                    <a href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= urlencode($live['id']) ?>" class="btn btn-outline-success" title="Xem lại bản ghi thật">
+                      <i class="bi bi-film"></i> Xem lại
+                    </a>
+                  <?php else: ?>
+                    <span class="btn btn-outline-secondary disabled" title="Video chưa sẵn sàng">
+                      <i class="bi bi-hourglass-split"></i> <?= h($liveStatus === 'recording_failed' ? 'Lưu video lỗi' : 'Đang xử lý video') ?>
+                    </span>
+                  <?php endif; ?>
                 <?php endif; ?>
-                <a href="<?= BASE_URL ?>/index.php?r=admin_live_delete&id=<?= urlencode($live['id']) ?>" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa phiên LiveStream này?');" title="Xóa">
+                <a href="<?= BASE_URL ?>/index.php?r=admin_live_delete&id=<?= urlencode($live['id']) ?>" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa phiên phát này?');" title="Xóa">
                   <i class="bi bi-trash-fill"></i>
                 </a>
               </div>
@@ -272,7 +283,7 @@ require_once __DIR__ . '/layouts/header.php';
   <div class="card border-0 rounded-4 shadow-sm p-4 mb-4" style="border: 1px solid var(--admin-border) !important;">
     <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
       <div>
-        <h5 class="fw-bold text-dark mb-1"><i class="bi bi-bar-chart-line-fill text-success me-2"></i>Báo Cáo Tổng Hợp Doanh Thu & Hiệu Quả LiveStream</h5>
+        <h5 class="fw-bold text-dark mb-1"><i class="bi bi-bar-chart-line-fill text-success me-2"></i>Báo cáo tổng hợp doanh thu & hiệu quả phiên phát</h5>
         <p class="text-muted small mb-0">Theo dõi doanh thu chốt đơn theo Ngày, Tháng và phân tích hiệu suất từng phiên phát sóng.</p>
       </div>
       <div class="d-flex align-items-center gap-2">
@@ -316,7 +327,7 @@ require_once __DIR__ . '/layouts/header.php';
         <thead class="bg-light text-secondary">
           <tr>
             <th>Mã Phiên</th>
-            <th>Tiêu Đề & Streamer</th>
+            <th>Tiêu đề & người dẫn</th>
             <th>Khung Giờ Phát</th>
             <th class="text-center">Trạng Thái</th>
             <th class="text-center">Lượt Xem</th>
@@ -330,17 +341,21 @@ require_once __DIR__ . '/layouts/header.php';
             <?php 
               $lsSt = (string)($ls['trang_thai'] ?? $ls['status'] ?? '');
               $stBadge = ($lsSt === 'danglive' || $lsSt === 'live') ? 'bg-danger' : (($lsSt === 'chuamoi' || $lsSt === 'upcoming') ? 'bg-warning text-dark' : 'bg-secondary');
-              $stText = ($lsSt === 'danglive' || $lsSt === 'live') ? 'Đang Live' : (($lsSt === 'chuamoi' || $lsSt === 'upcoming') ? ' Sắp diễn ra' : '⏹️ Đã kết thúc');
-              $rowDate = date('Y-m-d', strtotime($ls['created_at'] ?? $ls['khung_gio_bat_dau'] ?? 'now'));
+              $stText = ($lsSt === 'danglive' || $lsSt === 'live') ? 'Đang phát' : (($lsSt === 'chuamoi' || $lsSt === 'upcoming') ? ' Sắp diễn ra' : '⏹️ Đã kết thúc');
+              $rowDateRaw = $ls['created_at'] ?? $ls['khung_gio_bat_dau'] ?? '';
+              $rowDateTs = $rowDateRaw !== '' ? strtotime((string)$rowDateRaw) : false;
+              $rowDate = $rowDateTs !== false ? date('Y-m-d', $rowDateTs) : '';
+              $lsStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', '', (string)($ls['streamer'] ?? '')));
+              $lsStreamer = $lsStreamer !== '' ? $lsStreamer : 'SkinSyntax';
             ?>
             <tr class="report-row-item" data-date="<?= $rowDate ?>" data-revenue="<?= (float)($ls['tong_doanh_thu'] ?? 0) ?>" data-orders="<?= (int)($ls['tong_don_hang'] ?? 0) ?>" data-units="<?= (int)($ls['tong_san_pham_ban'] ?? 0) ?>" data-views="<?= (int)($ls['luot_xem'] ?? 0) ?>">
               <td><span class="badge bg-light text-dark border">#<?= h($ls['id'] ?? $ls['ma_phong'] ?? '') ?></span></td>
               <td>
                 <strong class="text-dark d-block"><?= h($ls['title'] ?? $ls['tieu_de'] ?? '') ?></strong>
-                <small class="text-muted"><i class="bi bi-person me-1"></i><?= h($ls['streamer'] ?? '') ?></small>
+                <small class="text-muted"><i class="bi bi-person me-1"></i><?= h($lsStreamer) ?></small>
               </td>
               <td>
-                <span class="extra-small text-muted d-block"><i class="bi bi-calendar3 me-1"></i><?= h($ls['khung_gio_bat_dau'] ?? date('Y-m-d H:i')) ?></span>
+                <span class="extra-small text-muted d-block"><i class="bi bi-calendar3 me-1"></i><?= h($ls['khung_gio_bat_dau'] ?? 'Chưa có lịch phát') ?></span>
               </td>
               <td class="text-center">
                 <span class="badge <?= $stBadge ?> rounded-pill px-2.5 py-1"><?= $stText ?></span>
@@ -364,7 +379,7 @@ require_once __DIR__ . '/layouts/header.php';
           <tr id="reportEmptyRow" style="display: none;">
             <td colspan="8" class="text-center text-muted p-4">
               <i class="bi bi-inbox fs-3 d-block mb-1 text-secondary"></i>
-              <span>Chưa có phiên LiveStream nào trong khoảng thời gian này. Bấm <strong class="text-success" style="cursor: pointer;" onclick="filterReportTime('all', document.querySelector('.btn-report-all'))">'📅 Tất Cả'</strong> để xem toàn bộ lịch sử.</span>
+              <span>Chưa có phiên phát nào trong khoảng thời gian này. Bấm <strong class="text-success" style="cursor: pointer;" onclick="filterReportTime('all', document.querySelector('.btn-report-all'))">'📅 Tất Cả'</strong> để xem toàn bộ lịch sử.</span>
             </td>
           </tr>
         </tbody>
@@ -380,7 +395,7 @@ require_once __DIR__ . '/layouts/header.php';
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content rounded-4 border-0 shadow-lg">
         <div class="modal-header border-bottom p-3 bg-light">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square text-warning me-2"></i>Chỉnh Sửa Thông Tin Phiên LiveStream #<?= h($live['id']) ?></h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square text-warning me-2"></i>Chỉnh sửa phiên phát #<?= h($live['id']) ?></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_edit">
@@ -388,19 +403,19 @@ require_once __DIR__ . '/layouts/header.php';
           <div class="modal-body p-4">
             <div class="row g-3">
               <div class="col-12">
-                <label class="form-label fw-bold small">Tiêu Đề Phiên LiveStream <span class="text-danger">*</span></label>
+                <label class="form-label fw-bold small">Tiêu đề phiên phát <span class="text-danger">*</span></label>
                 <input type="text" name="tieu_de" class="form-control" value="<?= h($live['tieu_de'] ?? $live['title'] ?? '') ?>" required>
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold small">Tên Streamer & Bác Sĩ Đảm Nhận <span class="text-danger">*</span></label>
-                <input type="text" name="streamer" class="form-control" value="<?= h($live['streamer'] ?? '') ?>" required>
+                <label class="form-label fw-bold small">Người dẫn / chuyên gia <span class="text-danger">*</span></label>
+                <input type="text" name="streamer" class="form-control" value="<?= h($displayStreamer) ?>" required>
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-bold small">Trạng Thái Phát Sóng</label>
                 <select name="trang_thai" class="form-select">
-                  <option value="chuamoi" <?= (in_array($live['trang_thai'], ['chuamoi', 'upcoming'], true)) ? 'selected' : '' ?>> Sắp diễn ra (Chuẩn bị)</option>
-                  <option value="danglive" <?= (in_array($live['trang_thai'], ['danglive', 'live'], true)) ? 'selected' : '' ?>>🔴 Đang phát Live (Active)</option>
-                  <option value="ketthuc" <?= (in_array($live['trang_thai'], ['ketthuc', 'ended'], true)) ? 'selected' : '' ?>>⏹️ Đã kết thúc (Lưu bản ghi)</option>
+                  <option value="scheduled" <?= in_array(($live['status'] ?? ''), ['scheduled'], true) ? 'selected' : '' ?>> Sắp diễn ra (Chuẩn bị)</option>
+                  <option value="ready" <?= in_array(($live['status'] ?? ''), ['ready'], true) ? 'selected' : '' ?>>✅ Sẵn sàng phát</option>
+                  <option value="ended" <?= in_array(($live['status'] ?? ''), ['ended', 'replay_ready', 'recording_failed'], true) ? 'selected' : '' ?>>⏹️ Đã kết thúc</option>
                 </select>
               </div>
               <div class="col-md-6">
@@ -426,29 +441,19 @@ require_once __DIR__ . '/layouts/header.php';
                 <input type="number" name="gia_uu_dai_live" class="form-control" value="<?= (float)($live['gia_uu_dai_live'] ?? 0) ?>" min="1000" required>
               </div>
               <div class="col-12">
-                <label class="form-label fw-bold small">Máy Chủ LiveKit (Server URL)</label>
-                <input type="text" name="server_livekit_url" class="form-control" value="<?= h($live['server_livekit_url'] ?? 'wss://skinsyntax-live.livekit.cloud') ?>" required>
+                <label class="form-label fw-bold small">Đường dẫn video xem lại</label>
+                <input type="url" name="url_ban_ghi" class="form-control" value="<?= h($live['url_ban_ghi'] ?? '') ?>" placeholder="Để trống nếu video được lưu từ phòng phát">
               </div>
               <div class="col-12">
-                <label class="form-label fw-bold small">Link Video Bản Ghi Xem Lại (Replay URL)</label>
-                <input type="url" name="url_ban_ghi" class="form-control" value="<?= h($live['url_ban_ghi'] ?? '') ?>" placeholder="https://domain.com/recording.mp4">
-              </div>
-              <div class="col-12">
-                <label class="form-label fw-bold small">Tóm Tắt Kịch Bản & Lời Khuyên AI (Transcript Summary)</label>
+                <label class="form-label fw-bold small">Ghi chú nội dung buổi phát</label>
                 <textarea name="tom_tat_phien_live" class="form-control" rows="3"><?= h($live['tom_tat_phien_live'] ?? '') ?></textarea>
-              </div>
-              <div class="col-12">
-                <div class="form-check form-switch mt-1">
-                  <input class="form-check-input" type="checkbox" name="bat_ai_cohost" id="editAiSwitch_<?= h($live['id']) ?>" value="1" <?= !empty($live['bat_ai_cohost']) ? 'checked' : '' ?>>
-                  <label class="form-check-label fw-bold small" for="editAiSwitch_<?= h($live['id']) ?>">Bật Trợ Lý Tư Vấn Tự Động (Tự động tư vấn & Chốt đơn)</label>
-                </div>
               </div>
             </div>
           </div>
           <div class="modal-footer border-top p-3">
             <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
             <button type="submit" class="btn btn-warning text-dark rounded-pill px-4 fw-bold">
-              <i class="bi bi-floppy-fill me-1"></i>💾 Cập Nhật Phiên Live
+              <i class="bi bi-floppy-fill me-1"></i>💾 Cập nhật phiên phát
             </button>
           </div>
         </form>
@@ -461,16 +466,16 @@ require_once __DIR__ . '/layouts/header.php';
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content rounded-4 border-0 shadow-lg">
         <div class="modal-header border-bottom p-3 bg-light">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Báo Cáo Hiệu Quả & Doanh Thu Phiên LiveStream #<?= h($live['id']) ?></h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Báo cáo hiệu quả & doanh thu phiên phát #<?= h($live['id']) ?></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
           <!-- PHẦN ĐẦU THÔNG TIN PHIÊN -->
           <div class="card border-0 bg-light rounded-3 p-3 mb-4 border">
-            <h6 class="fw-bold text-dark mb-1"><?= h($live['tieu_de'] ?? $live['title'] ?? 'Phiên LiveStream AI') ?></h6>
+            <h6 class="fw-bold text-dark mb-1"><?= h($live['tieu_de'] ?? $live['title'] ?? 'Phiên phát trực tiếp') ?></h6>
             <div class="extra-small text-secondary">
-              <span><i class="bi bi-person-fill text-success me-1"></i>Streamer: <?= h($live['streamer'] ?? 'SkinSyntax Streamer') ?></span>
-              <span class="ms-3"><i class="bi bi-clock-history me-1"></i>Trạng thái: <strong class="text-uppercase"><?= h($live['trang_thai'] ?? 'danglive') ?></strong></span>
+              <span><i class="bi bi-person-fill text-success me-1"></i>Người dẫn: <?= h($displayStreamer) ?></span>
+              <span class="ms-3"><i class="bi bi-clock-history me-1"></i>Trạng thái: <strong class="text-uppercase"><?= h($live['status'] ?? '') ?></strong></span>
             </div>
           </div>
 
@@ -503,7 +508,7 @@ require_once __DIR__ . '/layouts/header.php';
           </div>
 
           <!-- BẢNG TOP SẢN PHẨM BÁN CHẠY NHẤT TRONG PHIÊN LIVE -->
-          <h6 class="fw-bold text-dark mb-3"><i class="bi bi-trophy-fill text-warning me-1"></i>Bảng Sản Phẩm Bán Chạy Nhất Trong LiveStream:</h6>
+          <h6 class="fw-bold text-dark mb-3"><i class="bi bi-trophy-fill text-warning me-1"></i>Sản phẩm bán chạy nhất trong phiên:</h6>
           <?php if (!empty($live['top_san_pham'])): ?>
             <div class="table-responsive">
               <table class="table table-striped align-middle small mb-0 border">
@@ -547,7 +552,7 @@ require_once __DIR__ . '/layouts/header.php';
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content rounded-4 border-0 shadow-lg">
         <div class="modal-header border-bottom p-3 bg-light">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Danh Sách Deal & Lịch Giảm Giá Nổi Bật Phiên Live #<?= h($live['id']) ?></h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Sản phẩm và ưu đãi trong phiên #<?= h($live['id']) ?></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
@@ -559,10 +564,10 @@ require_once __DIR__ . '/layouts/header.php';
                 <thead class="bg-light text-secondary">
                   <tr>
                     <th>Mã SP</th>
-                    <th>Khung Giờ Flash Deal</th>
+                    <th>Thời gian ưu đãi</th>
                     <th>Giá Kho</th>
                     <th>Giá Ưu Đãi Live</th>
-                    <th>Kho Deal</th>
+                    <th>Số lượng tối đa</th>
                     <th class="text-end">Thao Tác</th>
                   </tr>
                 </thead>
@@ -579,12 +584,13 @@ require_once __DIR__ . '/layouts/header.php';
                           <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
                           <input type="hidden" name="product_id" value="<?= h($dItem['ma_san_pham']) ?>">
                           <input type="hidden" name="gia_uu_dai_live" value="<?= (float)$dItem['gia_uu_dai_live'] ?>">
+                          <input type="hidden" name="so_luong_kho_deal" value="<?= (int)($dItem['so_luong_kho_deal'] ?? 0) ?>">
                           <input type="hidden" name="redirect" value="1">
                           <button type="submit" class="btn btn-sm btn-success rounded-pill px-2 py-0.5" style="font-size: 0.75rem;" title="Kích hoạt ghim deal ngay">
-                            📌 Ghim Deal Ngay
+                            📌 Giới thiệu ngay
                           </button>
                         </form>
-                        <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_delete_deal" class="d-inline" onsubmit="return confirm('Xóa deal này khỏi phiên live?');">
+                        <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_delete_deal" class="d-inline" onsubmit="return confirm('Xóa sản phẩm này khỏi phiên phát?');">
                           <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
                           <input type="hidden" name="deal_id" value="<?= h($dItem['deal_id']) ?>">
                           <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-1" style="width: 24px; height: 24px; line-height: 1;" title="Xóa deal">
@@ -606,7 +612,7 @@ require_once __DIR__ . '/layouts/header.php';
 
           <!-- FORM THÊM DEAL MỚI VÀO PHIÊN LIVE -->
           <div class="card border-0 bg-light rounded-3 p-3 border">
-            <strong class="text-dark d-block mb-2 small"><i class="bi bi-plus-circle-fill text-success me-1"></i>➕ Thêm Sản Phẩm Deal Mới Vào Phiên Live</strong>
+            <strong class="text-dark d-block mb-2 small"><i class="bi bi-plus-circle-fill text-success me-1"></i>Thêm sản phẩm vào phiên</strong>
             <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_add_deal">
               <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
               <div class="row g-2">
@@ -633,8 +639,8 @@ require_once __DIR__ . '/layouts/header.php';
                   <input type="time" name="khung_gio_ket_thuc" class="form-control form-control-sm" value="<?= date('H:i', strtotime('+30 minutes')) ?>">
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label extra-small fw-bold mb-1">Số Lượng Kho Deal</label>
-                  <input type="number" name="so_luong_kho_deal" class="form-control form-control-sm" value="20" min="1">
+                  <label class="form-label extra-small fw-bold mb-1">Số lượng bán tối đa</label>
+                  <input type="number" name="so_luong_kho_deal" class="form-control form-control-sm" value="" min="1" placeholder="Nhập số lượng thật">
                 </div>
               </div>
               <div class="text-end mt-3">
@@ -657,7 +663,7 @@ require_once __DIR__ . '/layouts/header.php';
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-4 border-0 shadow-lg">
         <div class="modal-header border-bottom p-3">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pin-angle-fill text-danger me-2"></i>📌 Ghim Sản Phẩm & Kích Hoạt Deal Trực Tiếp</h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pin-angle-fill text-danger me-2"></i>Chọn sản phẩm đang giới thiệu</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_pin_product">
@@ -665,7 +671,7 @@ require_once __DIR__ . '/layouts/header.php';
           <input type="hidden" name="redirect" value="1">
           <div class="modal-body p-4">
             <div class="mb-3">
-              <label class="form-label fw-bold small">Chọn Sản Phẩm Cần Ghim Trực Tiếp <span class="text-danger">*</span></label>
+              <label class="form-label fw-bold small">Sản phẩm <span class="text-danger">*</span></label>
               <select name="product_id" class="form-select" required>
                 <?php foreach ($allProducts as $p): ?>
                   <option value="<?= h($p['ma_san_pham'] ?? $p['id'] ?? '') ?>" <?= ($p['ma_san_pham'] == $live['ma_san_pham_ghim']) ? 'selected' : '' ?>>
@@ -673,20 +679,24 @@ require_once __DIR__ . '/layouts/header.php';
                   </option>
                 <?php endforeach; ?>
               </select>
-              <small class="text-muted d-block mt-1">Khi bấm Xác Nhận, sản phẩm này sẽ được ghim nổi bật kèm đếm ngược Flash Deal trên màn hình người xem.</small>
+              <small class="text-muted d-block mt-1">Sản phẩm này sẽ hiện ở khu vực mua hàng của người xem. Bạn có thể thêm sản phẩm khác trong mục Sản phẩm của phiên.</small>
             </div>
             <div class="mb-3">
               <label class="form-label fw-bold small">Giá Ưu Đãi Trực Tiếp Trong Live (VNĐ) <span class="text-danger">*</span></label>
               <input type="number" name="gia_uu_dai_live" class="form-control" value="<?= (float)$live['gia_uu_dai_live'] ?>" min="1000" required>
             </div>
             <div class="mb-3">
-              <label class="form-label fw-bold small">Thời Gian Giảm Giá Flash Deal Đếm Ngược <span class="text-danger">*</span></label>
+              <label class="form-label fw-bold small">Thời gian áp dụng ưu đãi <span class="text-danger">*</span></label>
               <select name="duration_minutes" class="form-select">
                 <option value="10"> 10 Phút (Flash Sale Siêu Ngắn)</option>
                 <option value="15" selected> 15 Phút (Khung Deal Chuẩn TikTok Shop)</option>
                 <option value="30"> 30 Phút (Flash Sale Khung Giờ Standard)</option>
                 <option value="60"> 60 Phút (Ưu Đãi Suốt Buổi Live)</option>
               </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold small">Số lượng bán tối đa trong phiên <span class="text-danger">*</span></label>
+              <input type="number" name="so_luong_kho_deal" class="form-control" value="<?= (int)($live['so_luong_kho_deal'] ?? 0) > 0 ? (int)$live['so_luong_kho_deal'] : '' ?>" min="1" placeholder="Nhập số lượng thật có thể bán" required>
             </div>
           </div>
           <div class="modal-footer border-top p-3">
@@ -700,45 +710,52 @@ require_once __DIR__ . '/layouts/header.php';
     </div>
   </div>
 
-  <!-- 5. MODAL BẢN GHI & AI TRANSCRIPT -->
+  <!-- 5. MODAL VIDEO XEM LẠI -->
   <div class="modal fade text-start" id="recordingModal_<?= h($live['id']) ?>" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content rounded-4 border-0 shadow-lg">
         <div class="modal-header border-bottom p-3 bg-light">
-          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-film text-info me-2"></i>Bản Ghi Video Xem Lại & Tóm Tắt Kịch Bản AI - Phiên #<?= h($live['id']) ?></h5>
+          <h5 class="modal-title fw-bold text-dark"><i class="bi bi-film text-info me-2"></i>Video xem lại và ghi chú - Phiên #<?= h($live['id']) ?></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_update_recording">
           <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
           <div class="modal-body p-4">
             <?php 
-              $recUrl = !empty($live['url_ban_ghi']) ? $live['url_ban_ghi'] : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+              $recUrl = (string)($live['url_ban_ghi'] ?? '');
               $thumbUrl = $live['thumbnail'] ?? '';
             ?>
             
             <!-- VIDEO REPLAY PREVIEW PLAYER INSIDE MODAL -->
             <div class="mb-4 text-center bg-black rounded-3 overflow-hidden position-relative shadow-sm" style="aspect-ratio: 16/9; max-height: 280px; margin: 0 auto;">
-              <video controls class="w-100 h-100" style="object-fit: cover;" src="<?= h($recUrl) ?>" poster="<?= h($thumbUrl) ?>"></video>
+              <?php if ($recUrl !== '' && ($live['recording_status'] ?? '') === 'replay_ready'): ?>
+                <video controls class="w-100 h-100" style="object-fit: cover;" src="<?= h($recUrl) ?>" poster="<?= h($thumbUrl) ?>"></video>
+              <?php else: ?>
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-white-50">
+                  <i class="bi bi-hourglass-split fs-2 mb-2"></i>
+                  <span>Bản ghi chưa sẵn sàng để xem.</span>
+                </div>
+              <?php endif; ?>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-bold small">Link Video Xem Lại (Recording Replay URL) <span class="text-danger">*</span></label>
+              <label class="form-label fw-bold small">Đường dẫn video xem lại <span class="text-danger">*</span></label>
               <div class="input-group">
                 <span class="input-group-text bg-light text-secondary"><i class="bi bi-link-45deg"></i></span>
-                <input type="text" name="url_ban_ghi" class="form-control" value="<?= h($recUrl) ?>" placeholder="Nhập link video MP4/HLS phát lại..." required>
+                <input type="text" name="url_ban_ghi" class="form-control" value="<?= h($recUrl) ?>" placeholder="Chỉ nhập khi có video thật ở nơi khác">
               </div>
-              <small class="text-muted d-block mt-1">Đã tự động gán video bản ghi mẫu. Bạn có thể sửa thành link video phát lại tùy chỉnh.</small>
+              <small class="text-muted d-block mt-1">Chỉ hiển thị nút xem lại khi file hoặc URL bản ghi thật đã tồn tại.</small>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-bold small">Mô tả</label>
-              <textarea name="tom_tat_phien_live" class="form-control" rows="4" placeholder="Nhập mô tả."><?= h($live['tom_tat_phien_live'] ?: "📌 Tóm tắt phiên Live:\n- Phiên tư vấn giải đáp routine da chuẩn y khoa từ Bác sĩ/Dược sĩ.\n- Đã hỗ trợ tự động giải đáp 100+ câu hỏi và hỗ trợ khách hàng chốt đơn ưu đãi.") ?></textarea>
+              <textarea name="tom_tat_phien_live" class="form-control" rows="4" placeholder="Nhập mô tả thực tế sau phiên."><?= h($live['tom_tat_phien_live'] ?? '') ?></textarea>
             </div>
           </div>
           <div class="modal-footer border-top p-3">
             <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
             <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">
-              <i class="bi bi-floppy-fill me-1"></i>💾 Lưu Link Bản Ghi & Transcript
+              <i class="bi bi-floppy-fill me-1"></i>💾 Lưu thông tin video
             </button>
           </div>
         </form>
@@ -752,23 +769,19 @@ require_once __DIR__ . '/layouts/header.php';
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header border-bottom p-3">
-        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-camera-video-fill text-success me-2"></i>Khởi Tạo Phiên LiveStream Mới</h5>
+        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-camera-video-fill text-success me-2"></i>Khởi tạo phiên phát mới</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_create">
         <div class="modal-body p-4">
           <div class="row g-3">
             <div class="col-12">
-              <label class="form-label fw-bold small">Tiêu Đề Phiên LiveStream <span class="text-danger">*</span></label>
+              <label class="form-label fw-bold small">Tiêu đề phiên phát <span class="text-danger">*</span></label>
               <input type="text" name="tieu_de" class="form-control" placeholder="VD: Săn Sale Khung Giờ Vàng 19h - Niacinamide & B5..." required>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-bold small">Tên Streamer & Bác Sĩ Đảm Nhận</label>
-              <input type="text" name="streamer" class="form-control"placeholder ="Nhập tên Streamer hoặc Bác sĩ" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small">Máy Chủ LiveStream</label>
-              <input type="text" name="server_livekit_url" class="form-control" value="wss://skinsyntax-live.livekit.cloud" required>
+              <label class="form-label fw-bold small">Người dẫn / chuyên gia</label>
+              <input type="text" name="streamer" class="form-control" placeholder="Nhập tên người dẫn hoặc chuyên gia" required>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-bold small">Thời Gian Bắt Đầu Khung Giờ Ưu Đãi</label>
@@ -779,7 +792,7 @@ require_once __DIR__ . '/layouts/header.php';
               <input type="datetime-local" name="khung_gio_ket_thuc" class="form-control" value="<?= date('Y-m-d\TH:i', strtotime('+2 hours')) ?>" required>
             </div>
             <div class="col-md-8">
-              <label class="form-label fw-bold small">Sản Phẩm Ghim Nổi Bật Ban Đầu <span class="text-danger">*</span></label>
+              <label class="form-label fw-bold small">Sản phẩm giới thiệu đầu tiên <span class="text-danger">*</span></label>
               <div class="input-group mb-1">
                 <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
                 <input type="text" id="adminProductFilterInput" class="form-control" placeholder="Gõ tên hoặc mã SP để lọc nhanh...">
@@ -791,14 +804,16 @@ require_once __DIR__ . '/layouts/header.php';
                     $pId = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                     $pName = (string)($p['ten_san_pham'] ?? '');
                     $pPrice = (float)($p['gia_ban'] ?? 0);
-                    $pStock = (int)($p['so_luong_kho'] ?? $p['so_luong'] ?? $p['ton_kho'] ?? 20);
+                    $pStock = $p['ton_kho_hien_thi'] ?? $p['so_luong_ton_kho'] ?? $p['so_luong_ton'] ?? $p['ton_kho'] ?? $p['stock'] ?? $p['quantity'] ?? null;
+                    $pStockKnown = $pStock !== null && $pStock !== '';
                     $searchKey = mb_strtolower($pId . ' ' . $pName, 'UTF-8');
                   ?>
-                  <option value="<?= h($pId) ?>" data-search="<?= h($searchKey) ?>" data-price="<?= $pPrice ?>" data-stock="<?= $pStock ?>" data-name="<?= h($pName) ?>">
-                    [#<?= h($pId) ?>] <?= h($pName) ?> (Gốc: <?= vnd($pPrice) ?> | Tồn kho: <?= number_format($pStock) ?> SP)
+                  <option value="<?= h($pId) ?>" data-search="<?= h($searchKey) ?>" data-price="<?= $pPrice ?>" data-stock="<?= $pStockKnown ? h((string)(int)$pStock) : '' ?>" data-name="<?= h($pName) ?>">
+                    [#<?= h($pId) ?>] <?= h($pName) ?> (Gốc: <?= vnd($pPrice) ?> | Tồn kho: <?= $pStockKnown ? number_format((int)$pStock) . ' SP' : 'Chưa cập nhật' ?>)
                   </option>
                 <?php endforeach; ?>
               </select>
+              <small class="text-muted d-block mt-1">Phiên chỉ có một sản phẩm đang giới thiệu tại một thời điểm. Sau khi tạo, bấm <strong>Sản phẩm</strong> để thêm nhiều sản phẩm ưu đãi khác.</small>
             </div>
 
             <div class="col-md-6">
@@ -806,8 +821,8 @@ require_once __DIR__ . '/layouts/header.php';
               <input type="number" name="gia_uu_dai_live" id="adminLivePriceInput" class="form-control" placeholder="VD: 78000" min="1000" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-bold small">Số Lượng Bán Ưu Đãi (Kho Deal) <span class="text-danger">*</span></label>
-              <input type="number" name="so_luong_kho_deal" id="adminLiveStockDealInput" class="form-control" placeholder="VD: 20" value="20" min="1" required>
+              <label class="form-label fw-bold small">Số lượng bán tối đa trong phiên <span class="text-danger">*</span></label>
+              <input type="number" name="so_luong_kho_deal" id="adminLiveStockDealInput" class="form-control" placeholder="Nhập số lượng thật có thể bán" value="" min="1" required>
             </div>
 
 
@@ -820,32 +835,26 @@ require_once __DIR__ . '/layouts/header.php';
                 </div>
                 <div class="d-flex align-items-center gap-2">
                   <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1 extra-small">Giá gốc: <strong id="adminSelectedProductPriceText">0 đ</strong></span>
-                  <span class="badge bg-success text-white rounded-pill px-2.5 py-1 extra-small" id="adminSelectedProductStockBadge">📦 Tồn kho: 0 SP</span>
+                  <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1 extra-small" id="adminSelectedProductStockBadge">Tồn kho: Chưa cập nhật</span>
                 </div>
               </div>
             </div>
 
             <div class="col-12">
-              <label class="form-label fw-bold small">Link Video Bản Ghi Xem Lại <small class="text-muted fw-normal">(Không bắt buộc - Để trống nếu chưa có. Hệ thống sẽ TỰ ĐỘNG LƯU BẢN GHI khi bạn bấm Kết thúc Live)</small></label>
-              <input type="url" name="url_ban_ghi" class="form-control" placeholder="Để trống nếu chưa có (Hệ thống tự động ghi lại khi phát Live xong)">
+              <label class="form-label fw-bold small">Đường dẫn video xem lại <small class="text-muted fw-normal">(Không bắt buộc; để trống nếu muốn lưu video từ phòng phát)</small></label>
+              <input type="url" name="url_ban_ghi" class="form-control" placeholder="Để trống nếu chưa có">
             </div>
 
             <div class="col-12">
-              <label class="form-label fw-bold small">Kịch Bản & Tóm Tắt Tư Vấn AI (Transcript Summary)</label>
+              <label class="form-label fw-bold small">Ghi chú nội dung buổi phát</label>
               <textarea name="tom_tat_phien_live" class="form-control" rows="3" placeholder="Tóm tắt lời khuyên skincare, giải đáp câu hỏi và ưu đãi trong phiên..."></textarea>
-            </div>
-            <div class="col-12">
-              <div class="form-check form-switch mt-2">
-                <input class="form-check-input" type="checkbox" name="bat_ai_cohost" id="adminAiSwitch" value="1" checked>
-                <label class="form-check-label fw-bold small" for="adminAiSwitch">Bật Trợ Lý Tư Vấn Tự Động (Tự động tư vấn & Chốt đơn khi khán giả gõ 'chốt đơn')</label>
-              </div>
             </div>
           </div>
         </div>
         <div class="modal-footer border-top p-3">
           <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
           <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" style="background: var(--admin-primary); border: none;">
-            Lưu & Khởi Tạo Phiên Live
+            Lưu & tạo phiên phát
           </button>
         </div>
       </form>
@@ -866,14 +875,22 @@ document.addEventListener('DOMContentLoaded', function() {
       if (opt && opt.value) {
         const pName = opt.getAttribute('data-name') || opt.text;
         const price = parseFloat(opt.getAttribute('data-price') || '0');
-        const stock = parseInt(opt.getAttribute('data-stock') || '0', 10);
+        const stockRaw = opt.getAttribute('data-stock');
+        const stockKnown = stockRaw !== null && stockRaw !== '';
+        const stock = stockKnown ? parseInt(stockRaw, 10) : null;
 
         if (adminInfoBox) adminInfoBox.style.display = 'block';
         if (adminNameText) adminNameText.textContent = pName;
         if (adminPriceText) adminPriceText.textContent = new Intl.NumberFormat('vi-VN').format(price) + ' đ';
         if (adminStockBadge) {
-          adminStockBadge.textContent = '📦 Tồn kho: ' + new Intl.NumberFormat('vi-VN').format(stock) + ' SP';
-          adminStockBadge.className = 'badge ' + (stock > 0 ? 'bg-success' : 'bg-danger') + ' text-white rounded-pill px-2.5 py-1 extra-small';
+          adminStockBadge.textContent = 'Tồn kho: ' + (stockKnown ? new Intl.NumberFormat('vi-VN').format(stock) + ' SP' : 'Chưa cập nhật');
+          adminStockBadge.className = 'badge ' + (!stockKnown ? 'bg-secondary' : (stock > 0 ? 'bg-success' : 'bg-danger')) + ' text-white rounded-pill px-2.5 py-1 extra-small';
+        }
+        const stockDealInput = document.getElementById('adminLiveStockDealInput');
+        if (stockDealInput) {
+          if (stockKnown && stock > 0) stockDealInput.max = String(stock);
+          else stockDealInput.removeAttribute('max');
+          if (stockKnown && stock > 0 && !stockDealInput.value) stockDealInput.value = String(stock);
         }
         if (adminLivePriceInput && (!adminLivePriceInput.value || adminLivePriceInput.value === '0')) {
           adminLivePriceInput.value = Math.round(price * 0.85);

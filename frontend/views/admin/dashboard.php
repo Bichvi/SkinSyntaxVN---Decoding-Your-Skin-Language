@@ -9,9 +9,36 @@ $summary = isset($summary) && is_array($summary) ? $summary : [];
 $chatPending = (int)($summary['chat_cho_tra_loi'] ?? 0);
 $reviewPending = (int)($summary['danh_gia_cho_phan_hoi'] ?? 0);
 $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
+$salesTrend = isset($salesTrend) && is_array($salesTrend) ? $salesTrend : [];
+$productStatusSummary = isset($productStatusSummary) && is_array($productStatusSummary) ? $productStatusSummary : [];
+$dashboardStartDate = trim((string)($dashboardStartDate ?? date('Y-m-d', strtotime('-6 days'))));
+$dashboardEndDate = trim((string)($dashboardEndDate ?? date('Y-m-d')));
+$dashboardError = trim((string)($dashboardError ?? ''));
+$dashboardPeriodText = 'Từ ' . date('d/m/Y', strtotime($dashboardStartDate)) . ' đến ' . date('d/m/Y', strtotime($dashboardEndDate));
+$periodRevenue = 0;
+$periodOrders = 0;
+$bestSalesDay = null;
+foreach ($salesTrend as $salesRow) {
+    $periodRevenue += (int)($salesRow['doanh_thu'] ?? 0);
+    $periodOrders += (int)($salesRow['so_don'] ?? 0);
+    if ((int)($salesRow['doanh_thu'] ?? 0) > 0 && ($bestSalesDay === null || (int)($salesRow['doanh_thu'] ?? 0) > (int)($bestSalesDay['doanh_thu'] ?? 0))) {
+        $bestSalesDay = $salesRow;
+    }
+}
+$periodAverageOrder = $periodOrders > 0 ? (int)round($periodRevenue / $periodOrders) : 0;
+$salesLabels = array_map(static fn(array $row): string => (string)($row['nhan'] ?? ''), $salesTrend);
+$salesLabelsFull = array_map(static fn(array $row): string => (string)($row['nhan_day_du'] ?? ''), $salesTrend);
+$salesRevenue = array_map(static fn(array $row): float => round(((float)($row['doanh_thu'] ?? 0)) / 1000000, 2), $salesTrend);
+$salesOrders = array_map(static fn(array $row): int => (int)($row['so_don'] ?? 0), $salesTrend);
+$productStatusLabels = ['Đang bán', 'Sắp hết hàng', 'Hết hàng', 'Đang ẩn'];
+$productStatusData = [
+    (int)($productStatusSummary['dang_ban'] ?? 0),
+    (int)($productStatusSummary['sap_het_hang'] ?? 0),
+    (int)($productStatusSummary['het_hang'] ?? 0),
+    (int)($productStatusSummary['dang_an'] ?? 0),
+];
 ?>
 
-<div class="container-fluid px-4 py-4">
 <div class="container-fluid px-4 py-4">
     <!-- GREETING HERO BANNER -->
     <div class="admin-card mb-4 p-3.5" style="border-radius: 8px !important;">
@@ -184,35 +211,95 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
         </div>
     </div>
 
-    <!-- DASHBOARD CHARTS ROW (CHART.JS VISUALIZATIONS) -->
+    <!-- DASHBOARD CHARTS ROW (REAL DATA + DATE RANGE) -->
     <div class="row g-4 mb-4">
-        <!-- Revenue Bar Chart -->
-        <div class="col-12 col-lg-8">
-            <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
-                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+        <div class="col-12 col-xl-8">
+            <div class="admin-card mb-0 p-3.5" style="border-radius: 8px !important;">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3 mb-3 pb-2 border-bottom">
                     <div>
-                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-bar-chart-line-fill text-success me-1.5"></i> Thống kê Doanh số & Đơn hàng 7 ngày gần nhất</h6>
-                        <div class="small text-muted" style="font-size: 0.78rem;">Tổng hợp xu hướng bán hàng tuần hiện tại</div>
+                        <h6 class="fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-bar-chart-line-fill text-success me-1.5"></i> Thống kê Doanh số & Đơn hàng theo ngày</h6>
+                        <div class="small text-muted" style="font-size: 0.78rem;"><?= h($dashboardPeriodText) ?> · chỉ tính đơn hoàn thành hợp lệ</div>
                     </div>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1" style="border-radius: 4px; font-size: 0.75rem;">Tuần này</span>
+                    <a href="index.php?r=admin_reports&start_date=<?= h($dashboardStartDate) ?>&end_date=<?= h($dashboardEndDate) ?>" class="btn btn-sm btn-outline-success px-3 fw-semibold text-nowrap" style="border-radius: 6px; font-size: 0.78rem;">
+                        <i class="bi bi-file-bar-graph me-1"></i> Báo cáo chi tiết
+                    </a>
                 </div>
-                <div style="height: 240px; position: relative;">
+
+                <form method="get" action="index.php" class="row g-2 align-items-end mb-3">
+                    <input type="hidden" name="r" value="admin_dashboard">
+                    <div class="col-12 col-md-4">
+                        <label for="dashboardStartDate" class="form-label small text-muted fw-semibold mb-1">Từ ngày</label>
+                        <input type="date" id="dashboardStartDate" name="start_date" value="<?= h($dashboardStartDate) ?>" class="form-control form-control-sm" style="border-color: var(--admin-border); border-radius: 6px;">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="dashboardEndDate" class="form-label small text-muted fw-semibold mb-1">Đến ngày</label>
+                        <input type="date" id="dashboardEndDate" name="end_date" value="<?= h($dashboardEndDate) ?>" class="form-control form-control-sm" style="border-color: var(--admin-border); border-radius: 6px;">
+                    </div>
+                    <div class="col-12 col-md-4 d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-sm text-white px-3 fw-semibold" style="background: #183B2B; border-radius: 6px;">Xem dữ liệu</button>
+                        <a href="index.php?r=admin_dashboard&start_date=<?= date('Y-m-d', strtotime('-6 days')) ?>&end_date=<?= date('Y-m-d') ?>" class="btn btn-sm btn-outline-secondary px-2" style="border-radius: 6px;">7 ngày</a>
+                        <a href="index.php?r=admin_dashboard&start_date=<?= date('Y-m-d', strtotime('-29 days')) ?>&end_date=<?= date('Y-m-d') ?>" class="btn btn-sm btn-outline-secondary px-2" style="border-radius: 6px;">30 ngày</a>
+                    </div>
+                </form>
+
+                <?php if ($dashboardError !== ''): ?>
+                    <div class="alert alert-warning py-2 px-3 small mb-3"><?= h($dashboardError) ?></div>
+                <?php endif; ?>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6 col-md-3"><div class="rounded-3 border p-2 h-100"><div class="small text-muted">Doanh thu kỳ</div><div class="fw-bold text-success tabular-nums"><?= vnd($periodRevenue) ?></div></div></div>
+                    <div class="col-6 col-md-3"><div class="rounded-3 border p-2 h-100"><div class="small text-muted">Đơn hoàn tất</div><div class="fw-bold text-warning tabular-nums"><?= number_format($periodOrders) ?></div></div></div>
+                    <div class="col-6 col-md-3"><div class="rounded-3 border p-2 h-100"><div class="small text-muted">Giá trị đơn TB</div><div class="fw-bold text-primary tabular-nums"><?= vnd($periodAverageOrder) ?></div></div></div>
+                    <div class="col-6 col-md-3"><div class="rounded-3 border p-2 h-100"><div class="small text-muted">Ngày cao nhất</div><div class="fw-bold text-danger"><?= h((string)($bestSalesDay['nhan_day_du'] ?? 'Chưa có')) ?></div></div></div>
+                </div>
+
+                <div style="height: 285px; position: relative;">
                     <canvas id="adminSalesChart"></canvas>
+                </div>
+
+                <div class="table-responsive mt-3" style="max-height: 310px; overflow-y: auto;">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                            <tr><th>Ngày</th><th class="text-end">Đơn hoàn tất</th><th class="text-end">Doanh thu</th><th class="text-end">Đơn TB</th></tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($salesTrend as $salesRow): ?>
+                            <tr>
+                                <td><?= h((string)($salesRow['nhan_day_du'] ?? '')) ?></td>
+                                <td class="text-end"><?= number_format((int)($salesRow['so_don'] ?? 0)) ?></td>
+                                <td class="text-end fw-semibold text-success"><?= vnd($salesRow['doanh_thu'] ?? 0) ?></td>
+                                <td class="text-end text-muted"><?= vnd($salesRow['gia_tri_trung_binh'] ?? 0) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- Inventory / Categories Doughnut Chart -->
-        <div class="col-12 col-lg-4">
+        <div class="col-12 col-xl-4">
             <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
-                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <div class="d-flex align-items-start justify-content-between mb-3 pb-2 border-bottom">
                     <div>
-                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-warning me-1.5"></i> Tỷ lệ trạng thái sản phẩm</h6>
-                        <div class="small text-muted" style="font-size: 0.78rem;">Tồn kho & hiển thị sản phẩm</div>
+                        <h6 class="fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-warning me-1.5"></i> Tỷ lệ trạng thái sản phẩm</h6>
+                        <div class="small text-muted" style="font-size: 0.78rem;">Phân loại theo hiển thị và tồn kho thực tế</div>
                     </div>
+                    <span class="badge bg-light text-dark border"><?= number_format((int)($productStatusSummary['tong'] ?? 0)) ?> SP</span>
                 </div>
                 <div style="height: 240px; position: relative;" class="d-flex align-items-center justify-content-center">
-                    <canvas id="adminCategoryChart"></canvas>
+                    <?php if (array_sum($productStatusData) > 0): ?>
+                        <canvas id="adminCategoryChart"></canvas>
+                    <?php else: ?>
+                        <div class="text-muted small text-center"><i class="bi bi-box-seam fs-2 d-block mb-2"></i>Chưa có dữ liệu sản phẩm</div>
+                    <?php endif; ?>
+                </div>
+                <div class="border-top pt-2 mt-2">
+                    <?php foreach ($productStatusLabels as $statusIndex => $statusLabel): ?>
+                        <div class="d-flex justify-content-between align-items-center small py-1">
+                            <span><span class="d-inline-block rounded-circle me-2" style="width: 9px; height: 9px; background: <?= ['#183B2B', '#D97706', '#E11D48', '#64748B'][$statusIndex] ?>;"></span><?= h($statusLabel) ?></span>
+                            <strong><?= number_format($productStatusData[$statusIndex]) ?></strong>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
@@ -220,53 +307,72 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Admin Sales Bar Chart
+        var formatMoney = function(value) {
+            return new Intl.NumberFormat('vi-VN').format(Math.round(Number(value || 0) * 1000000)) + ' đ';
+        };
         var ctxSales = document.getElementById('adminSalesChart');
         if (ctxSales && typeof Chart !== 'undefined') {
             new Chart(ctxSales, {
                 type: 'bar',
                 data: {
-                    labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+                    labels: <?= json_encode($salesLabels, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>,
                     datasets: [{
-                        label: 'Doanh thu (Triệu VNĐ)',
-                        data: [15.2, 22.4, 18.9, 29.5, 34.1, 41.8, 48.0],
-                        backgroundColor: 'rgba(24, 59, 43, 0.85)',
+                        label: 'Doanh thu (triệu VNĐ)',
+                        data: <?= json_encode($salesRevenue) ?>,
+                        yAxisID: 'revenue',
+                        backgroundColor: 'rgba(24, 59, 43, 0.82)',
                         borderColor: '#183B2B',
                         borderWidth: 1,
-                        borderRadius: 6
+                        borderRadius: 5,
+                        maxBarThickness: 34
                     }, {
-                        label: 'Số đơn hoàn tất',
-                        data: [12, 18, 15, 24, 28, 35, 42],
-                        backgroundColor: 'rgba(217, 119, 6, 0.35)',
+                        type: 'line',
+                        label: 'Đơn hoàn tất',
+                        data: <?= json_encode($salesOrders) ?>,
+                        yAxisID: 'orders',
                         borderColor: '#D97706',
-                        borderWidth: 1,
-                        borderRadius: 6
+                        backgroundColor: '#D97706',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        tension: 0.25
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { position: 'top', labels: { font: { family: 'Quicksand', size: 12 } } }
+                        legend: { position: 'top', labels: { font: { family: 'Quicksand', size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                title: function(items) { return <?= json_encode($salesLabelsFull, JSON_UNESCAPED_UNICODE) ?>[items[0].dataIndex] || ''; },
+                                label: function(context) {
+                                    return context.dataset.yAxisID === 'revenue'
+                                        ? ' Doanh thu: ' + formatMoney(context.raw)
+                                        : ' Đơn hoàn tất: ' + new Intl.NumberFormat('vi-VN').format(context.raw || 0) + ' đơn';
+                                }
+                            }
+                        }
                     },
                     scales: {
-                        y: { beginAtZero: true, grid: { color: '#F1F5F9' } },
+                        revenue: { beginAtZero: true, position: 'left', title: { display: true, text: 'Triệu VNĐ' }, grid: { color: '#F1F5F9' } },
+                        orders: { beginAtZero: true, position: 'right', title: { display: true, text: 'Đơn hàng' }, grid: { drawOnChartArea: false } },
                         x: { grid: { display: false } }
                     }
                 }
             });
         }
 
-        // Admin Category Doughnut Chart
         var ctxCat = document.getElementById('adminCategoryChart');
         if (ctxCat && typeof Chart !== 'undefined') {
             new Chart(ctxCat, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Đang bán', 'Chờ xử lý', 'Cảnh báo kho', 'Khách hàng mới'],
+                    labels: <?= json_encode($productStatusLabels, JSON_UNESCAPED_UNICODE) ?>,
                     datasets: [{
-                        data: [<?= max(1, $tongSP) ?>, <?= max(1, $donChoXuLy) ?>, <?= count($lowStockProducts ?? []) ?>, <?= max(1, $tongUser) ?>],
-                        backgroundColor: ['#183B2B', '#B45309', '#E11D48', '#0369A1'],
+                        data: <?= json_encode($productStatusData) ?>,
+                        backgroundColor: ['#183B2B', '#D97706', '#E11D48', '#64748B'],
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
@@ -274,10 +380,8 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['ho_ten'] ?? 'Admin';
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { family: 'Quicksand', size: 11 }, boxWidth: 12 } }
-                    },
-                    cutout: '68%'
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Quicksand', size: 11 }, boxWidth: 12 } } },
+                    cutout: '66%'
                 }
             });
         }

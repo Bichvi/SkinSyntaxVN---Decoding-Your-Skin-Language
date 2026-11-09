@@ -13,8 +13,15 @@ $statusNorm = preg_replace('/[\x{0300}-\x{036f}]/u', '', str_replace(['đ', 'Đ'
 
 $isPaid = in_array($statusNorm, ['da thanh toan', 'paid', 'thanh cong'], true);
 $isFailed = in_array($paymentStatusRaw, ['failed', 'cancelled'], true) || in_array($statusNorm, ['thanh toan that bai', 'thanh toan da huy', 'quá hạn thanh toán', 'qua han thanh toan'], true);
-$hinhThucRaw = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? $order['payment_method'] ?? '')));
+$hinhThucRaw = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? '')));
+if ($hinhThucRaw === '') {
+  $hinhThucRaw = strtolower(trim((string)($order['payment_method'] ?? '')));
+}
 $isVnpay = ($hinhThucRaw === 'vnpay');
+$isPendingVnpay = $isVnpay && !$isPaid && !$isFailed && (
+  in_array($paymentStatusRaw, ['', 'pending'], true)
+  || in_array($statusNorm, ['cho thanh toan vnpay', 'chua thanh toan', 'pending'], true)
+);
 ?>
 
 <div class="container py-5">
@@ -25,6 +32,9 @@ $isVnpay = ($hinhThucRaw === 'vnpay');
     <?php elseif ($isVnpay && $isFailed): ?>
       <div class="icon-wrap" style="background: #FEF2F2; color: #DC2626; border-color: #FCA5A5;"><i class="fa-solid fa-circle-xmark"></i></div>
       <h2 class="text-danger">Thanh toán VNPAY chưa hoàn tất</h2>
+    <?php elseif ($isPendingVnpay): ?>
+      <div class="icon-wrap" style="background: #FFF7ED; color: #C2410C; border-color: #FDBA74;"><i class="fa-solid fa-credit-card"></i></div>
+      <h2 class="text-warning-emphasis">Đơn hàng đang chờ thanh toán VNPAY</h2>
     <?php else: ?>
       <div class="icon-wrap"><i class="fa-solid fa-circle-check"></i></div>
       <h2>Đặt hàng thành công</h2>
@@ -73,6 +83,25 @@ $isVnpay = ($hinhThucRaw === 'vnpay');
           </a>
           <a class="btn btn-outline-dark fw-bold px-4 py-2 rounded-3" href="<?= BASE_URL ?>/index.php">
             <i class="fa-solid fa-house me-2"></i>Về trang chủ
+          </a>
+        </div>
+      </div>
+
+    <?php elseif ($isPendingVnpay): ?>
+      <!-- PENDING VNPAY PAYMENT BOX -->
+      <div class="transfer-card text-center mt-4 p-4" style="background: #FFF7ED; border: 1.5px solid #FDBA74; border-radius: 18px;">
+        <div class="mb-3" style="font-size: 48px; color: #C2410C;">
+          <i class="fa-solid fa-credit-card"></i>
+        </div>
+        <h4 class="fw-bold mb-2" style="color: #9A3412;">Đơn hàng đã tạo, chưa hoàn tất thanh toán</h4>
+        <p class="text-muted small mb-2">Bạn có thể mở lại cổng VNPAY để thanh toán đơn hàng <strong>#<?= h($maHoaDon) ?></strong>.</p>
+        <p class="mb-4"><span class="badge px-3 py-2 rounded-pill fs-6" style="background: #FED7AA; color: #9A3412;"><?= h($order['status_thanh_toan'] ?? 'Chờ thanh toán VNPAY') ?></span></p>
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+          <a class="btn btn-warning fw-bold px-4 py-2 rounded-3" href="<?= BASE_URL ?>/index.php?r=vnpay_repay&amp;order_id=<?= urlencode((string)$maHoaDon) ?>">
+            <i class="fa-solid fa-credit-card me-2"></i>Thanh toán qua VNPAY
+          </a>
+          <a class="btn btn-outline-secondary fw-bold px-4 py-2 rounded-3" href="<?= BASE_URL ?>/index.php?r=hoso">
+            <i class="fa-solid fa-receipt me-2"></i>Xem lịch sử đơn hàng
           </a>
         </div>
       </div>

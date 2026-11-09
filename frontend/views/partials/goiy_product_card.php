@@ -198,16 +198,16 @@ $isLcp = $isLcp ?? false;
             </div>
           <?php endif; ?>
 
-          <!-- SECTION 4: DỮ LIỆU ĐÁNH GIÁ -->
+          <!-- SECTION 4: THÔNG TIN SẢN PHẨM -->
           <?php
             $safetyStatus = trim((string)($product['safety_data_status'] ?? 'insufficient'));
             $coveragePercent = (int)($product['compatibility_coverage'] ?? $product['data_coverage'] ?? 0);
-            $safetyLabel = $safetyStatus === 'complete' ? 'Đầy đủ dữ liệu thành phần' : 'Chưa đủ dữ liệu thành phần kiểm tra safety';
+            $safetyLabel = $safetyStatus === 'complete' ? 'Đủ thông tin thành phần' : 'Chưa đủ thông tin thành phần';
           ?>
           <div class="mb-3 p-2.5 rounded text-secondary" style="background: #F8FAF8; border: 1px solid #E2E8F0; font-size: 0.78rem;">
-            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-chart-pie me-1"></i> 4. DỮ LIỆU ĐÁNH GIÁ:</strong>
-            <div>• Độ bao phủ tiêu chí da: <?= h((string)$coveragePercent) ?>% coverage (Baseline: Skin Type 35%, Concerns 40%, Goal 25%)</div>
-            <div>• Trạng thái thành phần an toàn: <?= h($safetyLabel) ?></div>
+            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-chart-pie me-1"></i> Thông tin sản phẩm</strong>
+            <div>• Mức độ phù hợp: <?= h((string)$coveragePercent) ?>%</div>
+            <div>• Thành phần: <?= h($safetyLabel) ?></div>
           </div>
 
           <div class="mb-2 small">

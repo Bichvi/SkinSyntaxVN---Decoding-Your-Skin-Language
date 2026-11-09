@@ -60,7 +60,7 @@ $lastPage = max(1, (int)ceil($total / max(1, $perPage)));
         <?php endforeach; ?>
         <li class="nav-item ms-lg-auto">
             <a class="nav-link <?= $onlyDiff ? 'active' : '' ?>" href="index.php?<?= h(http_build_query(['r' => 'admin_tag_review', 'status' => $status] + ($onlyDiff ? [] : ['diff' => '1']))) ?>">
-                Chỉ hiện đề xuất khác nhãn suy luận
+                Chỉ hiện đề xuất khác nhãn hiện tại
             </a>
         </li>
     </ul>
@@ -69,7 +69,7 @@ $lastPage = max(1, (int)ceil($total / max(1, $perPage)));
         <div class="admin-card p-5 text-center text-muted" style="border-radius: 8px !important;">
             Không có gợi ý nào ở trạng thái &ldquo;<?= h($tabs[$status] ?? $status) ?>&rdquo;.
             <?php if ($status === 'pending'): ?>
-                <div class="small mt-2">Tạo gợi ý bằng lệnh <code>python scripts/llm_tag_products.py --limit 30 --only-missing</code> (trong container <code>skinsyntax-ai</code>).</div>
+                <div class="small mt-2">Chưa có gợi ý chờ duyệt.</div>
             <?php endif; ?>
         </div>
     <?php else: ?>
@@ -121,7 +121,7 @@ $lastPage = max(1, (int)ceil($total / max(1, $perPage)));
                                 <?php if (!empty($product['tag_source'])): ?>
                                     <span class="badge text-bg-warning mt-1"><?= h($sourceLabels[$product['tag_source']] ?? $product['tag_source']) ?></span>
                                 <?php endif; ?>
-                                <?php if (!empty($diff['differs'])): ?><span class="badge text-bg-info mt-1">Khác suy luận</span><?php endif; ?>
+                                <?php if (!empty($diff['differs'])): ?><span class="badge text-bg-info mt-1">Khác gợi ý</span><?php endif; ?>
                             </td>
                             <td>
                                 <?php foreach ($groups as $group => $_items): ?>

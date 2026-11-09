@@ -2,6 +2,14 @@
 <script src="<?= BASE_URL ?>/assets/js/live-search.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/smart-search.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/live-filter.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/live-filter.js') ?: '1' ?>"></script>
+<script>
+  window.SkinSyntaxFavoriteConfig = {
+    loggedIn: <?= !empty($_SESSION['user']['email']) ? 'true' : 'false' ?>,
+    endpoint: <?= json_encode(BASE_URL . '/index.php?r=favorite_toggle', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>,
+    loginUrl: <?= json_encode(BASE_URL . '/index.php?r=dangnhap', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>
+  };
+</script>
+<script src="<?= BASE_URL ?>/assets/js/favorites.js?v=1"></script>
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/chat-purchase.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/chat-purchase.css') ?: '1' ?>">
 </main>
 
@@ -20,8 +28,8 @@
 
     <section class="site-footer__topline">
       <?php $footerPhone = class_exists('SupportKnowledge') ? (SupportKnowledge::contact()['phone'] ?? '') : ''; if ($footerPhone !== ''): ?><div class="site-footer__service-pill"><i class="fas fa-phone-volume"></i> Hotline hỗ trợ: <?= h($footerPhone) ?></div><?php endif; ?>
-      <div class="site-footer__service-pill"><i class="fas fa-truck-fast"></i> Luồng mua hàng gọn, rõ trạng thái đơn</div>
-      <div class="site-footer__service-pill"><i class="fas fa-shield-heart"></i> Tập trung vào routine và dữ liệu da</div>
+      <div class="site-footer__service-pill"><i class="fas fa-truck-fast"></i> Giao hàng nhanh, theo dõi đơn rõ ràng</div>
+      <div class="site-footer__service-pill"><i class="fas fa-shield-heart"></i> Sản phẩm rõ nguồn gốc, hỗ trợ tận tâm</div>
       <div class="site-footer__socials">
         <a href="https://www.facebook.com/conmeosuagaugauuu/" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-facebook-f"></i></a>
         <a href="https://www.youtube.com/@conmeosuagaugauuu" aria-label="YouTube" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-youtube"></i></a>
@@ -59,6 +67,7 @@
         <div>
           <h6>Tài khoản</h6>
           <a href="<?= BASE_URL ?>/index.php?r=hoso">Hồ sơ cá nhân</a>
+          <a href="<?= BASE_URL ?>/index.php?r=favorite_list">Sản phẩm yêu thích</a>
           <a href="<?= BASE_URL ?>/index.php?r=dangnhap">Đăng nhập</a>
           <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Đăng ký</a>
           <a href="<?= BASE_URL ?>/index.php?r=thanhtoan">Thanh toán</a>
@@ -74,7 +83,7 @@
 
     <section class="site-footer__bottom">
       <span>SkinSyntax © 2026</span>
-      <span>Nền Tảng Mỹ Phẩm & Tư Vấn Da Cá Nhân Hóa AI</span>
+      <span>Nền tảng mỹ phẩm &amp; chăm sóc da dễ hiểu</span>
       <span>Decoding Your Skin Language</span>
     </section>
   </div>
@@ -88,7 +97,8 @@ if ($pdo !== null) {
 ?>
 <script src="<?= BASE_URL ?>/assets/js/chat-purchase.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-purchase.js') ?: '1' ?>"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  (function () {
+    function initFooterInteractions() {
     // Chỉ cho phép một menu tiện ích trên header mở tại một thời điểm.
     const utilityDropdowns = Array.from(document.querySelectorAll('.utility-dropdown'));
     utilityDropdowns.forEach(function (dropdown) {
@@ -293,6 +303,16 @@ if ($pdo !== null) {
           });
         })
         .then(function (json) {
+          if (json.ok) {
+            if (typeof window.notifySynaCartAdded === 'function') {
+              window.notifySynaCartAdded({ cartCount: json.cart_count });
+            }
+            const synaHero = document.querySelector('[data-syna-hero]');
+            if (synaHero) synaHero.setAttribute('data-syna-cart-added', String(Date.now()));
+            document.dispatchEvent(new CustomEvent('skinsyntax:cart-added', {
+              detail: { cartCount: json.cart_count }
+            }));
+          }
           if (json.ok && (json.redirect_url || isBuyNow)) {
             window.location.href = json.redirect_url || ('<?= BASE_URL ?>/index.php?r=giohang');
             return;
@@ -320,7 +340,14 @@ if ($pdo !== null) {
         });
       });
     }
-  });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initFooterInteractions, { once: true });
+    } else {
+      initFooterInteractions();
+    }
+  })();
 </script>
 
 <?php
@@ -394,7 +421,7 @@ $topSaleProducts = function_exists('get_top_10_sale_products') ? get_top_10_sale
 <?php if (!empty($topSaleProducts)): ?>
 <div id="topSalesToast" class="top-sales-toast shadow-lg rounded-4 p-3 d-flex align-items-center gap-3" style="position: fixed; bottom: 24px; left: 24px; z-index: 1040; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(14px); border: 1.5px solid #C5DAC8; box-shadow: 0 16px 36px rgba(33, 84, 39, 0.2); width: 380px; max-width: calc(100vw - 48px); transform: translateY(160px); opacity: 0; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;">
   <a id="topSalesToastLink" href="#" class="d-block flex-shrink-0 position-relative" style="width: 64px; height: 64px; border-radius: 12px; overflow: hidden; background: #F8FAF8; border: 1px solid #E2EADF;">
-    <img id="topSalesToastImg" src="" alt="Top Sale Product" style="width: 100%; height: 100%; object-fit: cover;">
+    <img id="topSalesToastImg" src="" alt="Top Sale Product" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="this.onerror=null; this.src=this.dataset.imagePlaceholder;" style="width: 100%; height: 100%; object-fit: cover;">
     <span id="topSalesToastBadge" class="position-absolute" style="top: 2px; left: 2px; background: linear-gradient(135deg, #E11D48 0%, #F43F5E 100%); color: #FFF; font-weight: 800; font-size: 0.65rem; padding: 2px 6px; border-radius: 999px;">-0%</span>
   </a>
   <div class="flex-grow-1 overflow-hidden" style="line-height: 1.3;">
@@ -509,5 +536,13 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <?php endif; ?>
+<script>
+  if ('serviceWorker' in navigator && (window.isSecureContext || location.hostname === 'localhost')) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('<?= h(BASE_URL . '/index.php?r=pwa_sw') ?>', { scope: '<?= h(BASE_URL . '/') ?>' })
+        .catch(function (error) { console.debug('SkinSyntax PWA unavailable:', error); });
+    });
+  }
+</script>
 </body>
 </html>

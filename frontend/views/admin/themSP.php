@@ -48,7 +48,7 @@ foreach ($categoryOptions as $option) {
 				<div class="col-md-4">
 					<label class="form-label">Mã sản phẩm *</label>
 					<input type="text" class="form-control" name="ma_san_pham" value="<?= h($product['ma_san_pham'] ?? $nextProductCode) ?>" readonly>
-					<div class="form-text">Mã được tự động lấy theo mã sản phẩm cuối cùng trong hệ thống.</div>
+					<div class="form-text">Mã được tự động tạo theo sản phẩm gần nhất.</div>
 				</div>
 				<div class="col-md-8">
 					<label class="form-label">Tên sản phẩm *</label>
@@ -59,13 +59,13 @@ foreach ($categoryOptions as $option) {
 					<label class="form-label">Thương hiệu</label>
 					<input type="hidden" name="ma_thuong_hieu" value="<?= h($selectedBrandId) ?>">
 					<input type="text" class="form-control" name="ten_thuong_hieu_input" value="<?= h($selectedBrandLabel) ?>" placeholder="Nhập tên thương hiệu để tìm..." list="brand-options" data-lookup-input data-target-hidden="ma_thuong_hieu">
-					<div class="form-text">Nếu chưa có trong DB, hệ thống sẽ tự tạo thương hiệu mới.</div>
+					<div class="form-text">Nếu chưa có, thương hiệu mới sẽ được tạo.</div>
 				</div>
 				<div class="col-md-4">
 					<label class="form-label">Danh mục</label>
 					<input type="hidden" name="ma_danh_muc" value="<?= h($selectedCategoryId) ?>">
 					<input type="text" class="form-control" name="ten_danh_muc_input" value="<?= h($selectedCategoryLabel) ?>" placeholder="Nhập tên danh mục để tìm..." list="category-options" data-lookup-input data-target-hidden="ma_danh_muc">
-					<div class="form-text">Nếu chưa có trong DB, hệ thống sẽ tự tạo danh mục mới.</div>
+					<div class="form-text">Nếu chưa có, danh mục mới sẽ được tạo.</div>
 				</div>
 				<div class="col-md-4">
 					<label class="form-label">Dung tích</label>

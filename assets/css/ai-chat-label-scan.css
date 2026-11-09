@@ -1,0 +1,116 @@
+/* Chụp bảng thành phần: nút đính kèm + thẻ kết quả trong widget Syna. Mọi luật nằm dưới .ai-label-card / .ai-label-attach. */
+.ai-label-attach {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ai-label-attach__btn {
+  border: 1px solid #cfdeec;
+  background: #fbfdff;
+  color: #2f6a4f;
+  border-radius: 14px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-label-attach__btn:hover:not(:disabled) { background: #eef6f1; }
+.ai-label-attach__btn:disabled { opacity: 0.55; cursor: wait; }
+
+.ai-label-card__thumb {
+  display: block;
+  max-width: 160px;
+  max-height: 160px;
+  border-radius: 12px;
+  margin-bottom: 6px;
+  object-fit: cover;
+}
+
+.ai-label-card {
+  --ls-green: var(--ai-accent, #2f6a4f);
+  --ls-line: #e2ebf5;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--ls-line);
+  border-radius: 14px;
+  background: #fff;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-label-card.is-busy { opacity: 0.6; pointer-events: none; }
+.ai-label-card--note { background: #fbfdff; }
+
+.ai-label-card__head { margin-bottom: 8px; }
+.ai-label-card__name { font-weight: 800; font-size: 14px; }
+.ai-label-card__brand { color: #64748b; }
+.ai-label-card__shop { display: inline-block; margin-top: 2px; color: var(--ls-green); font-weight: 700; text-decoration: none; }
+
+.ai-label-card__block { padding-top: 8px; margin-top: 8px; border-top: 1px dashed var(--ls-line); }
+.ai-label-card > .ai-label-card__block:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+.ai-label-card__title { font-weight: 800; margin-bottom: 4px; }
+.ai-label-card__muted { color: #64748b; font-weight: 400; }
+
+.ai-label-card__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+.ai-label-card__chip { background: #eef6f1; color: var(--ls-green); border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700; }
+
+.ai-label-card__all summary { cursor: pointer; color: var(--ls-green); font-weight: 700; }
+.ai-label-card__all div { margin-top: 4px; word-break: break-word; }
+
+.ai-label-card__warn { background: #fff7e0; border: 1px solid #f3dd9a; border-radius: 10px; padding: 6px 10px; margin-bottom: 8px; }
+
+.ai-label-card__conflict { margin: 4px 0; }
+.ai-label-card__cartlink { font-weight: 700; color: var(--ls-green); }
+.ai-label-card__advice { color: #475569; padding-left: 22px; }
+.ai-label-card__schedule, .ai-label-card__sun, .ai-label-card__finding { margin-top: 4px; }
+
+.ai-label-card__quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+.ai-label-card__btn {
+  border: 1px solid #cfdeec;
+  background: #fff;
+  color: var(--ls-green);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-label-card__btn:hover { background: #eef6f1; }
+.ai-label-card__btn--primary { background: var(--ls-green); color: #fff; border-color: var(--ls-green); margin-top: 6px; }
+.ai-label-card__btn--primary:hover { background: #24543f; }
+.ai-label-card__btn[aria-pressed="true"] { background: var(--ls-green); color: #fff; border-color: var(--ls-green); }
+
+.ai-label-card__edit { margin-top: 6px; }
+.ai-label-card__edit[hidden] { display: none; }
+.ai-label-card__edit-title { font-weight: 700; margin-bottom: 4px; }
+.ai-label-card__textarea { width: 100%; box-sizing: border-box; border: 1px solid #cfdeec; border-radius: 10px; padding: 8px; font-size: 12px; resize: vertical; }
+
+.ai-label-card__tips { margin: 4px 0 0; padding-left: 18px; }
+
+.ai-label-card__followups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ai-label-card__chipbtn {
+  border: 1px solid var(--ls-green);
+  background: #fff;
+  color: var(--ls-green);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ai-label-card__disclaimer { margin-top: 10px; color: #94a3b8; font-size: 11px; }
+
+@media (max-width: 767.98px) {
+  .ai-label-card { padding: 8px 10px; }
+  .ai-label-card__chipbtn { white-space: normal; }
+}

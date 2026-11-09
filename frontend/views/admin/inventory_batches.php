@@ -27,43 +27,41 @@ $movementOptions = [
             <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Kho & Lô hàng</h1>
             <div class="text-muted small">Quản lý ngày sản xuất, hạn sử dụng và tồn kho theo từng lô.</div>
         </div>
-        <span class="badge rounded-pill text-bg-light border px-3 py-2">AI Idol đọc dữ liệu lô hiện có</span>
+        <span class="badge rounded-pill text-bg-light border px-3 py-2">Tạo lô tự động</span>
     </div>
 
     <div class="admin-card p-3 mb-3" style="border-radius: 8px !important; border-left:4px solid #d89b35;">
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div>
-                <h2 class="h6 fw-bold mb-1" style="color:var(--admin-text);">Tự bổ sung dữ liệu lô cho sản phẩm còn thiếu</h2>
+                <h2 class="h6 fw-bold mb-1" style="color:var(--admin-text);">Bổ sung thông tin lô còn thiếu</h2>
                 <div class="small text-muted mb-2">
-                    Tạo dữ liệu mẫu có thể chạy ngay cho bộ lọc AI: ngày sản xuất cách hiện tại 6 tháng, hạn 24 tháng, còn khoảng 18 tháng.
-                    Không ghi đè lô cũ và không sửa sản phẩm gốc.
+                    Tạo nhanh thông tin lô cho sản phẩm chưa có dữ liệu. Không ghi đè lô cũ và không sửa sản phẩm gốc.
                 </div>
                 <div class="d-flex flex-wrap gap-2 small">
                     <span class="badge text-bg-success">Sẵn sàng: <?= number_format((int)($autoSeedPreview['ready'] ?? 0), 0, ',', '.') ?></span>
                     <span class="badge text-bg-warning">Cần xác minh: <?= number_format((int)($autoSeedPreview['needs_verification'] ?? 0), 0, ',', '.') ?></span>
-                    <span class="badge text-bg-light border">Kho mặc định: AUTO-DEFAULT</span>
+                    <span class="badge text-bg-light border">Kho mặc định</span>
                 </div>
             </div>
-            <form method="POST" action="index.php?r=admin_inventory_auto_seed" class="d-flex flex-column flex-sm-row align-items-sm-end gap-2" onsubmit="return confirm('Tạo dữ liệu mẫu cho các sản phẩm chưa có lô? Dữ liệu sẽ được gắn nhãn cần xác minh và không ghi đè lô cũ.');">
+            <form method="POST" action="index.php?r=admin_inventory_auto_seed" class="d-flex flex-column flex-sm-row align-items-sm-end gap-2" onsubmit="return confirm('Tạo lô cho các sản phẩm chưa có? Các lô cũ sẽ được giữ nguyên.');">
                 <div>
-                    <label class="form-label small fw-semibold text-muted mb-1">Kho nhận dữ liệu mẫu</label>
+                    <label class="form-label small fw-semibold text-muted mb-1">Kho nhận lô</label>
                     <input name="warehouse_id" value="AUTO-DEFAULT" maxlength="80" class="form-control form-control-sm" style="min-width:170px;font-size:.8rem;">
                 </div>
                 <input type="hidden" name="shelf_life_months" value="24">
                 <input type="hidden" name="remaining_months" value="18">
-                <button type="submit" class="btn btn-sm text-white fw-semibold" style="background:#a66d19;border-radius:6px;">Tự tạo dữ liệu mẫu</button>
+                <button type="submit" class="btn btn-sm text-white fw-semibold" style="background:#a66d19;border-radius:6px;">Tạo lô tự động</button>
             </form>
         </div>
-        <div class="small text-muted mt-2">Lưu ý: ngày tháng tự sinh chỉ phục vụ demo/bộ lọc. Khi có phiếu nhập hoặc ảnh nhãn thật, hãy tạo lô chính thức để thay thế.</div>
+        <div class="small text-muted mt-2">Thông tin tạo tự động chỉ dùng tạm thời. Khi có phiếu nhập hoặc ảnh nhãn thật, hãy cập nhật lại.</div>
     </div>
 
     <div class="admin-card p-3 mb-3" style="border-radius: 8px !important; border-left:4px solid #4d8f72;">
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div class="flex-grow-1">
-                <h2 class="h6 fw-bold mb-1" style="color:var(--admin-text);">Tạo bộ dữ liệu đa dạng để test bộ lọc</h2>
+                <h2 class="h6 fw-bold mb-1" style="color:var(--admin-text);">Tạo dữ liệu kiểm tra tồn kho</h2>
                 <div class="small text-muted mb-2">
-                    Sinh tối đa 1.000 lô test. Lô bình thường nằm ở <code>AUTO-SCENARIOS</code>; lô đã hết hạn tự tách vào kho cách ly <code>AUTO-EXPIRED</code>.
-                    Không ghi đè dữ liệu thật; chạy lại cũng không tạo trùng.
+                    Tạo nhiều tình huống tồn kho để kiểm tra. Không ghi đè dữ liệu thật và không tạo trùng khi chạy lại.
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <?php foreach (($diverseSeedPreview['profiles'] ?? []) as $profile): ?>
@@ -75,9 +73,9 @@ $movementOptions = [
                     Chưa có trong bộ test: <?= number_format((int)($diverseSeedPreview['ready'] ?? 0), 0, ',', '.') ?>
                 </div>
             </div>
-            <form method="POST" action="index.php?r=admin_inventory_diverse_seed" class="d-flex flex-column flex-sm-row align-items-sm-end gap-2" onsubmit="return confirm('Tạo bộ dữ liệu đa dạng để test? Dữ liệu chỉ nằm trong kho AUTO-SCENARIOS và được gắn nhãn demo cần xác minh.');">
+            <form method="POST" action="index.php?r=admin_inventory_diverse_seed" class="d-flex flex-column flex-sm-row align-items-sm-end gap-2" onsubmit="return confirm('Tạo dữ liệu kiểm tra tồn kho? Dữ liệu thật sẽ không bị thay đổi.');">
                 <div>
-                    <label class="form-label small fw-semibold text-muted mb-1">Kho dữ liệu test</label>
+                    <label class="form-label small fw-semibold text-muted mb-1">Kho dữ liệu kiểm tra</label>
                     <input name="warehouse_id" value="AUTO-SCENARIOS" maxlength="80" class="form-control form-control-sm" style="min-width:170px;font-size:.8rem;">
                 </div>
                 <div>
@@ -89,10 +87,10 @@ $movementOptions = [
                         <option value="3000">3.000</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-sm text-white fw-semibold" style="background:#3d765c;border-radius:6px;">Sinh nhiều dạng để test</button>
+                <button type="submit" class="btn btn-sm text-white fw-semibold" style="background:#3d765c;border-radius:6px;">Tạo dữ liệu kiểm tra</button>
             </form>
         </div>
-        <div class="small text-muted mt-2">Sau khi tạo, lô hết hạn không xuất hiện trong danh sách bán hàng mặc định. Dùng nút bên dưới để mở riêng kho cách ly. Các lô đều có nhãn “Dữ liệu tự tạo · cần xác minh”.</div>
+        <div class="small text-muted mt-2">Lô hết hạn không xuất hiện trong danh sách bán hàng mặc định. Bạn có thể xem riêng các lô này bên dưới.</div>
         <div class="mt-2"><a class="btn btn-sm btn-outline-danger" href="index.php?r=admin_inventory_batches&amp;warehouse_id=AUTO-EXPIRED&amp;status=expired&amp;show_expired=1">Xem kho cách ly hết hạn</a></div>
     </div>
 

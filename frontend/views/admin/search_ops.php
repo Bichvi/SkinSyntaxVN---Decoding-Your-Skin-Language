@@ -20,30 +20,30 @@ $statusBadge = static function (?array $job): string {
     return '<span class="badge ' . $class . '">' . h($label) . '</span>';
 };
 $jobLabels = [
-    'catalog_sync' => 'Đồng bộ theo sự kiện',
-    'graph_sync_incremental' => 'Đồng bộ tăng dần (mỗi giờ :10)',
-    'graph_sync_full' => 'Đồng bộ đầy đủ + similarity (02:30)',
-    'graph_eval' => 'Đánh giá tool đồ thị (sau đồng bộ đêm)',
-    'co_purchase' => 'Co-purchase (03:00)',
-    'chroma_reindex' => 'Reindex Chroma (Chủ nhật 03:30)',
-    'dictionary_export' => 'Xuất từ điển (04:00)',
-    'popular_maintain' => 'Decay từ khóa phổ biến (04:10)',
-    'zero_result_report' => 'Báo cáo 0 kết quả (Thứ Hai 08:00)',
-    'config_watch' => 'Theo dõi YAML (5 phút)',
-    'health_check' => 'Kiểm tra sức khỏe (5 phút)',
+    'catalog_sync' => 'Đồng bộ sản phẩm',
+    'graph_sync_incremental' => 'Cập nhật liên kết sản phẩm',
+    'graph_sync_full' => 'Cập nhật toàn bộ liên kết',
+    'graph_eval' => 'Kiểm tra liên kết sản phẩm',
+    'co_purchase' => 'Cập nhật gợi ý mua cùng',
+    'chroma_reindex' => 'Cập nhật tìm kiếm',
+    'dictionary_export' => 'Cập nhật từ khóa',
+    'popular_maintain' => 'Cập nhật từ khóa phổ biến',
+    'zero_result_report' => 'Báo cáo tìm kiếm chưa có kết quả',
+    'config_watch' => 'Theo dõi cấu hình',
+    'health_check' => 'Kiểm tra dịch vụ',
 ];
 ?>
 <div class="container-fluid px-4 py-4" data-testid="search-ops">
     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
             <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Vận hành tìm kiếm</h1>
-            <p class="text-muted mb-0 small">Neo4j, Chroma, Redis, lệch số lượng và trạng thái các job đồng bộ. Trang chỉ đọc; số liệu cache ~10 giây.</p>
+            <p class="text-muted mb-0 small">Theo dõi trạng thái tìm kiếm và đồng bộ dữ liệu. Số liệu được cập nhật định kỳ.</p>
         </div>
         <a class="btn btn-outline-secondary btn-sm" href="index.php?r=admin_search_ops">Tải lại</a>
     </div>
 
 <?php if ($health === null): ?>
-    <div class="alert alert-danger" role="alert" data-testid="ops-unavailable">Không lấy được dữ liệu sức khỏe từ dịch vụ AI (Flask). Kiểm tra container <code>skinsyntax-ai</code>.</div>
+    <div class="alert alert-danger" role="alert" data-testid="ops-unavailable">Không thể tải trạng thái dịch vụ. Vui lòng thử lại sau.</div>
 <?php else: ?>
     <?php $alerts = is_array($health['alerts'] ?? null) ? $health['alerts'] : []; ?>
     <div class="alert <?= empty($alerts) ? 'alert-success' : (($health['ok'] ?? true) ? 'alert-warning' : 'alert-danger') ?>" role="status" data-testid="ops-status">
@@ -74,9 +74,9 @@ $jobLabels = [
             <div class="d-flex justify-content-between"><strong>Neo4j</strong><?= $okBadge($neo) ?></div>
             <div class="small mt-2">Sản phẩm active: <strong><?= h($num($neo['count'] ?? null)) ?></strong> (Mongo: <?= h($num($mongo['neo4j_expected'] ?? null)) ?>)</div>
             <div class="small">Lệch: <?= h($num($drift['neo4j_pct'] ?? null, 2)) ?>%</div>
-            <div class="small">SIMILAR_TO: <?= h($num($neo['similar_to'] ?? null)) ?></div>
-            <div class="small">RAM container: <strong><?= h($num($neo['mem_pct'] ?? null, 1)) ?>%</strong> (<?= h($num($neo['mem_used_mb'] ?? null)) ?> / <?= h($num($neo['mem_limit_mb'] ?? null)) ?> MiB)</div>
-            <div class="small">Heap JVM: <?= h($num($neo['heap_used_mb'] ?? null)) ?> / <?= h($num($neo['heap_max_mb'] ?? null)) ?> MiB</div>
+            <div class="small">Liên kết sản phẩm: <?= h($num($neo['similar_to'] ?? null)) ?></div>
+            <div class="small">Bộ nhớ: <strong><?= h($num($neo['mem_pct'] ?? null, 1)) ?>%</strong> (<?= h($num($neo['mem_used_mb'] ?? null)) ?> / <?= h($num($neo['mem_limit_mb'] ?? null)) ?> MiB)</div>
+            <div class="small">Bộ nhớ ứng dụng: <?= h($num($neo['heap_used_mb'] ?? null)) ?> / <?= h($num($neo['heap_max_mb'] ?? null)) ?> MiB</div>
         </div></div></div>
         <div class="col-12 col-md-6 col-xl-3"><div class="card h-100"><div class="card-body">
             <div class="d-flex justify-content-between"><strong>Chroma</strong><?= $okBadge($chroma) ?></div>
@@ -86,9 +86,9 @@ $jobLabels = [
         <div class="col-12 col-md-6 col-xl-3"><div class="card h-100"><div class="card-body">
             <div class="d-flex justify-content-between"><strong>Redis</strong><?= $okBadge($redis) ?></div>
             <div class="small mt-2">Bộ nhớ: <?= h($num($redis['used_memory_mb'] ?? null, 1)) ?> MiB</div>
-            <div class="small">Luồng catalog:changes:v1: <?= h($num($stream['length'] ?? null)) ?> mục</div>
-            <div class="small">Đang chờ (XPENDING): <strong><?= h($num($stream['pending'] ?? null)) ?></strong>, treo lâu nhất <?= h($num($stream['oldest_pending_idle_s'] ?? null)) ?>s</div>
-            <div class="small">Dead-letter: <?= h($num($stream['dead'] ?? null)) ?></div>
+            <div class="small">Mục chờ đồng bộ: <?= h($num($stream['length'] ?? null)) ?></div>
+            <div class="small">Đang chờ xử lý: <strong><?= h($num($stream['pending'] ?? null)) ?></strong>, lâu nhất <?= h($num($stream['oldest_pending_idle_s'] ?? null)) ?> giây</div>
+            <div class="small">Lỗi cần xử lý: <?= h($num($stream['dead'] ?? null)) ?></div>
         </div></div></div>
         <div class="col-12 col-md-6 col-xl-3"><div class="card h-100"><div class="card-body">
             <div class="d-flex justify-content-between"><strong>Mongo Atlas</strong><?= $okBadge($mongo) ?></div>
@@ -96,14 +96,14 @@ $jobLabels = [
         </div></div></div>
     </div>
 
-    <h2 class="h6 fw-bold">Job định kỳ</h2>
+    <h2 class="h6 fw-bold">Tác vụ định kỳ</h2>
     <div class="table-responsive">
         <table class="table table-sm align-middle" data-testid="ops-jobs">
-            <thead><tr><th>Job</th><th>Trạng thái</th><th>Lần cuối</th><th>Thời lượng</th><th>Lỗi liên tiếp</th><th>Chi tiết</th></tr></thead>
+            <thead><tr><th>Tác vụ</th><th>Trạng thái</th><th>Lần cuối</th><th>Thời lượng</th><th>Lỗi liên tiếp</th><th>Chi tiết</th></tr></thead>
             <tbody>
             <?php foreach ($jobLabels as $name => $label): $job = is_array($health['jobs'][$name] ?? null) ? $health['jobs'][$name] : null; ?>
                 <tr data-job="<?= h($name) ?>">
-                    <td><?= h($label) ?><div class="text-muted small"><code><?= h($name) ?></code></div></td>
+                    <td><?= h($label) ?></td>
                     <td><?= $statusBadge($job) ?></td>
                     <td><?= h($job ? $fmtTime($job['finished_at'] ?? null) : '—') ?></td>
                     <td><?= h($job ? $num($job['duration_s'] ?? null, 1) . 's' : '—') ?></td>
