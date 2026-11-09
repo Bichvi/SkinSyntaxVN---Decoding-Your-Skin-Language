@@ -84,6 +84,37 @@ final class SearchPopularity
     }
 
     /**
+     * Top từ khóa phổ biến (score >= 2), đã lọc lại qua normalize(). Redis lỗi/null -> [].
+     * @return array<int,array{q:string,score:int}>
+     */
+    public static function top(int $limit = 5, ?RedisLite $redis = null): array
+    {
+        $limit = max(1, $limit);
+        $redis = $redis ?? RedisLite::shared();
+        if ($redis === null) {
+            return [];
+        }
+        // Lấy dư để còn lọc PII/điểm thấp; reply WITHSCORES là mảng phẳng xen kẽ member, score.
+        $flat = $redis->command(['ZREVRANGE', self::POPULAR_KEY, '0', (string)($limit * 3 - 1), 'WITHSCORES']);
+        if (!is_array($flat) || $flat === []) {
+            return [];
+        }
+        $out = [];
+        for ($i = 0; $i + 1 < count($flat); $i += 2) {
+            $norm = is_string($flat[$i]) ? self::normalize($flat[$i]) : null;
+            $score = is_numeric($flat[$i + 1]) ? (int)round((float)$flat[$i + 1]) : 0;
+            if ($norm === null || $score < 2) {
+                continue;
+            }
+            $out[] = ['q' => $norm, 'score' => $score];
+            if (count($out) >= $limit) {
+                break;
+            }
+        }
+        return $out;
+    }
+
+    /**
      * Từ khóa phổ biến bắt đầu bằng $prefix (không dấu), nhiều lượt nhất trước.
      * @return array<int,array{q:string,score:int}>
      */

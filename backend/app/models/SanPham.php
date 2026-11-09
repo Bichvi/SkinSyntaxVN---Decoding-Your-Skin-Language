@@ -2476,4 +2476,57 @@ class SanPham {
     public function getCategories(): array {
         return $this->listCategoryOptions(true);
     }
+
+    /** Bước routine mẫu: key => [nhãn, các đuôi danh_muc_day_du]. */
+    private const ROUTINE_STEPS = [
+        'lam_sach' => ['Làm sạch', ['Làm Sạch Da -> Sữa Rửa Mặt']],
+        'dac_tri' => ['Đặc trị', ['Đặc Trị -> Serum / Tinh Chất']],
+        'duong_am' => ['Dưỡng ẩm', ['Dưỡng Ẩm -> Kem / Gel / Dầu Dưỡng', 'Dưỡng Ẩm -> Lotion / Sữa Dưỡng']],
+        'chong_nang' => ['Chống nắng', ['Chống Nắng Da Mặt']],
+    ];
+
+    /**
+     * Routine mẫu 4 bước cho trang chủ khách: mỗi bước 1 SP bán chạy hợp loại da (không có thì lấy "mọi loại da").
+     * Bước thiếu SP bị bỏ. Cache 30 phút / loại da.
+     * @return array<int,array{step:string,label:string,product:array}>
+     */
+    public function routineStarter(string $skinKey): array {
+        if (!in_array($skinKey, SearchSkinProfile::SKIN_TYPES, true)) {
+            return [];
+        }
+        return ProductQueryCache::remember('home:routine:v1:' . $skinKey, 1800, function () use ($skinKey): array {
+            $out = [];
+            foreach (self::ROUTINE_STEPS as $step => [$label, $suffixes]) {
+                $pattern = '(^|\s)(' . implode('|', array_map(static fn(string $x): string => preg_quote($x, '/'), $suffixes)) . ')$';
+                $product = null;
+                $tryKeys = $skinKey === 'moi_loai_da' ? ['moi_loai_da'] : [$skinKey, 'moi_loai_da'];
+                foreach ($tryKeys as $tk) {
+                    $filter = ['$and' => [
+                        $this->availableProductFilter(),
+                        ['loai_da_keys' => $tk],
+                        ['danh_muc_day_du' => new \MongoDB\BSON\Regex($pattern)],
+                    ]];
+                    $cursor = $this->db->san_pham->find($filter, [
+                        'sort' => ['so_luong_da_ban' => -1, 'diem_danh_gia' => -1, 'ma_san_pham' => -1],
+                        'limit' => 6,
+                        'projection' => self::LISTING_PROJECTION,
+                    ]);
+                    foreach ($cursor as $doc) {
+                        $p = $this->normalizeProductRecord($doc);
+                        if ($p && $this->isProductAvailable($p)) {
+                            $product = $p;
+                            break;
+                        }
+                    }
+                    if ($product !== null) {
+                        break;
+                    }
+                }
+                if ($product !== null) {
+                    $out[] = ['step' => $step, 'label' => $label, 'product' => $product];
+                }
+            }
+            return $out;
+        });
+    }
 }

@@ -81,66 +81,6 @@ foreach ($latest as $item) {
     }
 }
 
-// Skin concern categories for quick shortcuts (8 items total for 2 full rows of 4)
-$skinConcernCategories = [
-    [
-        'id' => 'oil_acne',
-        'title' => 'Da dầu & mụn',
-        'icon' => 'fa-droplet-slash',
-        'query' => 'mụn',
-        'why' => 'Chứa Niacinamide & BHA kiểm soát nhờn, ngừa mụn',
-    ],
-    [
-        'id' => 'sensitive',
-        'title' => 'Da nhạy cảm',
-        'icon' => 'fa-shield-heart',
-        'query' => 'nhạy cảm',
-        'why' => 'Công thức dịu nhẹ, củng cố hàng rào bảo vệ da',
-    ],
-    [
-        'id' => 'hydrate',
-        'title' => 'Cấp ẩm',
-        'icon' => 'fa-water',
-        'query' => 'dưỡng ẩm',
-        'why' => 'Cấp nước đa tầng, phục hồi làn da khô căng',
-    ],
-    [
-        'id' => 'repair',
-        'title' => 'Phục hồi',
-        'icon' => 'fa-hand-holding-medical',
-        'query' => 'phục hồi',
-        'why' => 'Tái tạo da tổn thương với Ceramides & B5',
-    ],
-    [
-        'id' => 'sunscreen',
-        'title' => 'Chống nắng',
-        'icon' => 'fa-sun',
-        'query' => 'chống nắng',
-        'why' => 'Bảo vệ màng lọc phổ rộng trước tia UVA/UVB',
-    ],
-    [
-        'id' => 'dark_spots',
-        'title' => 'Thâm / xỉn màu',
-        'icon' => 'fa-magic',
-        'query' => 'thâm',
-        'why' => 'Ức chế sắc tố Melanin, dưỡng da sáng mịn',
-    ],
-    [
-        'id' => 'anti_aging',
-        'title' => 'Chống lão hóa',
-        'icon' => 'fa-hourglass-half',
-        'query' => 'lão hóa',
-        'why' => 'Kích thích tổng hợp Collagen, giảm nếp nhăn',
-    ],
-    [
-        'id' => 'pores',
-        'title' => 'Se lỗ chân lông',
-        'icon' => 'fa-compress',
-        'query' => 'lỗ chân lông',
-        'why' => 'Thu nhỏ lỗ chân lông, thông thoáng bề mặt da',
-    ],
-];
-
 // Product card renderer
 $renderHomeProductCard = require __DIR__ . '/partials/home_product_card.php';
 
@@ -458,30 +398,8 @@ $renderFlashSaleProductCard = static function (array $p): void {
     });
   </script>
 
-  <!-- 2. SKIN CONCERN SECTION (DUY NHẤT 1 SECTION ON HOME PAGE) -->
-  <section class="mb-5 mt-4">
-    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1 mb-3">
-      <div>
-        <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.35rem;">
-          <i class="fas fa-sliders-h text-success me-2"></i> Bạn đang quan tâm điều gì cho làn da?
-        </h2>
-        <span class="text-muted small" style="font-size: 0.82rem;">Chọn nhu cầu để xem sản phẩm phù hợp</span>
-      </div>
-      <a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.82rem;">Xem tất cả nhu cầu &rarr;</a>
-    </div>
-
-    <div class="skin-concern-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 14px; width: 100%;">
-      <?php foreach ($skinConcernCategories as $item): ?>
-        <a href="<?= BASE_URL ?>/index.php?r=tatca&q=<?= urlencode($item['query']) ?>" class="skin-concern-card">
-          <div class="concern-icon-wrapper">
-            <i class="fas <?= h($item['icon']) ?>"></i>
-          </div>
-          <div class="concern-card-title"><?= h($item['title']) ?></div>
-          <div class="concern-card-action">Xem sản phẩm &rarr;</div>
-        </a>
-      <?php endforeach; ?>
-    </div>
-  </section>
+  <!-- 2. KHÁM PHÁ NHANH: từ khóa phổ biến + hoạt chất (thay khối 6 thẻ nhu cầu cũ) -->
+  <?php require __DIR__ . '/partials/home_discovery.php'; ?>
 
   <!-- 3. UNIVERSAL ADAPTIVE FOR-YOU SECTION (PHASE A) -->
   <?php if (!empty($forYouProducts)): ?>
@@ -581,7 +499,11 @@ $renderFlashSaleProductCard = static function (array $p): void {
                       $pBadge = 'Gợi ý cho bạn';
                   }
               }
-              $renderHomeProductCard($p, $pBadge); 
+              if ($pMode === 'SIMPLE' && $pSig === 'SIMPLE') {
+                  $renderHomeProductCard($p, $pBadge, HomeCardReason::for($p), 'Vì sao gợi ý');
+              } else {
+                  $renderHomeProductCard($p, $pBadge);
+              }
             ?>
           </div>
         <?php endforeach; ?>
@@ -781,7 +703,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
       <div class="row g-3">
         <?php foreach ($topRatedWeightedProducts as $p): ?>
           <div class="col-6 col-md-3">
-            <?php $renderHomeProductCard($p, 'Yêu thích nhất'); ?>
+            <?php $renderHomeProductCard($p, 'Yêu thích nhất', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -805,7 +727,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
       <div class="row g-3">
         <?php foreach ($newProducts as $p): ?>
           <div class="col-6 col-md-3">
-            <?php $renderHomeProductCard($p, 'Mới lên kệ'); ?>
+            <?php $renderHomeProductCard($p, 'Mới lên kệ', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -813,6 +735,9 @@ $renderFlashSaleProductCard = static function (array $p): void {
   <?php endif; ?>
 
   <!-- 7. PERSONAL ROUTINE (CONDITIONAL BASED ON SURVEY PROFILE) -->
+  <?php if (!$hasSurvey): ?>
+    <?php require __DIR__ . '/partials/home_routine.php'; ?>
+  <?php else: ?>
   <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
       <div>
@@ -880,6 +805,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
       </div>
     <?php endif; ?>
   </section>
+  <?php endif; ?>
 
   <!-- 8. TRUSTED BRANDS (THƯƠNG HIỆU NỔI BẬT DƯỢC YÊU THÍCH) -->
   <?php if (!empty($brandNames)): ?>
