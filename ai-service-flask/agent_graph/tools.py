@@ -45,6 +45,8 @@ class ToolContext:
     name_lookup: Callable[[str], list[str]] | None = None
     skin_profile: dict[str, Any] = field(default_factory=dict)
     scanned_product: dict[str, Any] = field(default_factory=dict)
+    # Product ids already shown as search cards in this turn (a ToolContext lives for one turn).
+    turn_shown_ids: set[str] = field(default_factory=set)
 
 
 class _Args(BaseModel):
@@ -493,10 +495,22 @@ def _search(ctx: ToolContext, args: SearchArgs) -> Any:
     merged = merged[:args.limit]
     result = {"tool": "find_products", "ok": True, "count": len(merged), "products": merged[:args.limit]}
     all_cards = {**graph_cards, **text_cards}
-    cards = [all_cards[str(item["id"])] for item in merged if str(item["id"]) in all_cards]
-    event_payload = {**result, "_cards": cards}
-    ctx.emit("ui", {"kind": "product_list", "payload": event_payload})
-    ctx.state.last_shown_products = [_shown_entry(i, p) for i, p in enumerate(merged, 1) if p.get("id")]
+    # A second search in the same turn (e.g. "kem" then "gel") often returns the same products again:
+    # show only the new ones, and number them after the cards already on screen.
+    earlier_in_turn = bool(ctx.turn_shown_ids)
+    fresh = [item for item in merged if item.get("id") and str(item["id"]) not in ctx.turn_shown_ids]
+    # The chat widget renders payload["products"]; it needs the full card (detail_url, summary) to show the
+    # cart/detail buttons, so send the cards there, the same shape compare_products emits.
+    cards = [
+        {key: value for key, value in all_cards[str(item["id"])].items() if not str(key).startswith("_")}
+        for item in fresh if str(item["id"]) in all_cards
+    ]
+    if cards:
+        ctx.emit("ui", {"kind": "product_list", "payload": {**result, "count": len(cards), "products": cards}})
+    shown = list(ctx.state.last_shown_products) if earlier_in_turn else []
+    shown += [_shown_entry(len(shown) + i, p) for i, p in enumerate(fresh, 1)]
+    ctx.state.last_shown_products = shown
+    ctx.turn_shown_ids.update(str(item["id"]) for item in fresh)
     return _graph_public(result)
 
 
