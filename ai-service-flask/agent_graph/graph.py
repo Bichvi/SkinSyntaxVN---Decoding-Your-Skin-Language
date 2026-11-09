@@ -21,7 +21,7 @@ from pydantic import ValidationError
 from .config import MAX_STEPS, TURN_TIMEOUT_S
 from .prompts import AGENT_PROMPT, render
 from .router import RouterOutput, classify, fold
-from .state import ConvState, StateStore
+from .state import ConvState, StateStore, product_price
 from .tools import ToolContext, _wrapped, build_tools
 
 
@@ -92,6 +92,166 @@ def claims_false_commitment(text: str, *, has_open_draft: bool) -> str | None:
     if not has_open_draft and _DRAFT_CLAIM_RE.search(folded):
         return "draft"
     return None
+
+_PRICE_RE = re.compile(
+    r"(?<![\w.,])(?:(\d{1,3}(?:[.,]\d{3})+|\d{4,9})\s?(?:đ|₫|vnđ|vnd|đồng)|(\d{1,4})\s?k)(?!\w)",
+    re.IGNORECASE,
+)
+_SEGMENT_BREAK_RE = re.compile(r"\n|[.!?;](?=\s)")
+_WORD_RE = re.compile(r"\w+")
+_MIN_NAME_RUN = 4
+_MAX_QTY_MULTIPLE = 20
+# Words that many product names share; a name match made only of these says nothing about which product it is.
+_GENERIC_NAME_WORDS = frozenset(
+    "cho da dau nhon kho thuong hon hop nhay cam mun va duong am kem gel sua rua mat chong nang serum toner "
+    "nuoc tay trang lam sach diu nhe tinh chat lotion mask mat na combo bo set chai hop tuyp ml g spf pa".split()
+)
+_PRICE_KEYS = frozenset({"price", "unit_price", "price_vnd", "gia"})
+_MAX_PRICE_GAP_WORDS = 4
+# Words between a name and an amount that make the amount something other than the product's price.
+_NOT_A_PRICE_WORDS = frozenset(
+    "tu khoang tam chenh lech hon tong giam con them duoi tren phi ship tiet kiem ngan sach".split()
+)
+_RANGE_AFTER_RE = re.compile(r"\s*(?:den|toi|-|–)\s*\d")
+
+
+def _price_amount(match: re.Match) -> int:
+    if match.group(1):
+        return int(re.sub(r"[.,]", "", match.group(1)))
+    return int(match.group(2)) * 1000
+
+
+def _format_vnd(amount: int) -> str:
+    return f"{amount:,}".replace(",", ".") + "đ"
+
+
+def _words(text: str) -> list[tuple[str, int, int]]:
+    return [(fold(m.group(0)), m.start(), m.end()) for m in _WORD_RE.finditer(text)]
+
+
+def _name_match(segment_words: list[tuple[str, int, int]], name_words: list[str]) -> tuple[int, int, int]:
+    """Longest run of consecutive name words found in the segment: (run length, start, end)."""
+
+    best, best_start, best_end = 0, -1, -1
+    for i in range(len(segment_words)):
+        for j in range(len(name_words)):
+            k = 0
+            while (i + k < len(segment_words) and j + k < len(name_words)
+                   and segment_words[i + k][0] == name_words[j + k]):
+                k += 1
+            if k <= best:
+                continue
+            run = name_words[j:j + k]
+            if any(word not in _GENERIC_NAME_WORDS and not word.isdigit() for word in run):
+                best, best_start, best_end = k, segment_words[i][1], segment_words[i + k - 1][2]
+    return best, best_start, best_end
+
+
+def _quotes_price_of(segment: str, name_end: int, match: re.Match, previous: re.Match | None) -> bool:
+    """True when ``match`` reads as the price of the product named just before it ("<name> giá 149.000đ").
+
+    Ranges ("từ X đến Y"), comparisons ("chênh nhau X") and budgets ("dưới X") are not a product's price.
+    """
+
+    if previous is not None and previous.start() >= name_end:
+        return False  # only the first price after a name belongs to it
+    gap = [word for word, _, _ in _words(segment[name_end:match.start()])]
+    if len(gap) > _MAX_PRICE_GAP_WORDS or any(word in _NOT_A_PRICE_WORDS for word in gap):
+        return False
+    return not _RANGE_AFTER_RE.match(fold(segment[match.end():match.end() + 12]))
+
+
+def _collect_prices(value: Any, book: list[dict], other: set[int]) -> None:
+    if isinstance(value, dict):
+        price = product_price(value)
+        name = value.get("name")
+        if price is not None and isinstance(name, str) and name.strip():
+            book.append({"name": name, "price": price})
+        for key, item in value.items():
+            if isinstance(item, (int, float)) and not isinstance(item, bool):
+                if key not in _PRICE_KEYS and item >= 1000:
+                    other.add(int(item))
+            else:
+                _collect_prices(item, book, other)
+    elif isinstance(value, list):
+        for item in value:
+            _collect_prices(item, book, other)
+
+
+def _tool_payload(content: str) -> Any:
+    match = re.search(r"<tool_data>(.*)</tool_data>", content or "", re.DOTALL)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group(1))
+    except (TypeError, ValueError):
+        return None
+
+
+def correct_product_prices(text: str, book: list[dict], keep_amounts: set[int] | frozenset = frozenset()) -> str:
+    """Rewrite a price quoted next to a known product name when it is not that product's real price.
+
+    ``book`` holds {"name", "price"} facts from the shop (shown products, tool results, cart). A price is
+    kept when it is the product's price or a quantity multiple of it, or an amount in ``keep_amounts``
+    (the customer's budget, voucher savings...). Ambiguous name matches are left alone.
+    """
+
+    if not text or not book:
+        return text
+    products = []
+    for fact in book:
+        name_words = [word for word, _, _ in _words(str(fact.get("name") or ""))]
+        price = fact.get("price")
+        if len(name_words) >= 2 and isinstance(price, int) and price > 0:
+            products.append((name_words, price))
+    if not products:
+        return text
+    # A price the shop really charges for some product is never "invented"; the same goes for the gap or the
+    # sum between two real prices (the model comparing products).
+    real_prices = sorted({price for _, price in products})
+    known_prices = set(real_prices)
+    for i, first in enumerate(real_prices):
+        for second in real_prices[i + 1:]:
+            known_prices.update((second - first, first + second))
+
+    replacements: list[tuple[int, int, str]] = []
+    bounds = [0, *(m.end() for m in _SEGMENT_BREAK_RE.finditer(text)), len(text)]
+    for start, end in zip(bounds, bounds[1:]):
+        segment = text[start:end]
+        prices = list(_PRICE_RE.finditer(segment))
+        if not prices:
+            continue
+        segment_words = _words(segment)
+        mentions: list[tuple[int, int, int, int]] = []  # (start, end, run, price)
+        for name_words, price in products:
+            run, name_start, name_end = _name_match(segment_words, name_words)
+            if run >= min(_MIN_NAME_RUN, len(name_words)):
+                mentions.append((name_start, name_end, run, price))
+        for index, match in enumerate(prices):
+            before = [m for m in mentions if m[1] <= match.start()]
+            if not before:
+                continue
+            # The closest name before the price, plus every name overlapping it, compete for the price.
+            nearest = max(before, key=lambda m: m[0])
+            if not _quotes_price_of(segment, nearest[1], match, prices[index - 1] if index else None):
+                continue
+            rivals = [m for m in before if m[0] < nearest[1] and nearest[0] < m[1]]
+            top_run = max(m[2] for m in rivals)
+            candidates = {m[3] for m in rivals if m[2] == top_run}
+            if len(candidates) != 1:
+                continue  # two products fit the name equally well: do not guess
+            real = next(iter(candidates))
+            amount = _price_amount(match)
+            if (amount in keep_amounts or amount in known_prices
+                    or (amount % real == 0 and amount // real <= _MAX_QTY_MULTIPLE)):
+                continue
+            replacements.append((start + match.start(), start + match.end(), _format_vnd(real)))
+
+    for begin, finish, value in reversed(replacements):
+        logger.warning("agent price corrected to the catalog price")
+        text = text[:begin] + value + text[finish:]
+    return text
+
 
 Event = tuple[str, dict]
 
@@ -203,7 +363,7 @@ def _safe_cart_snapshot(snapshot: list[dict]) -> list[dict]:
 
 
 def _safe_products(products: list[dict]) -> list[dict]:
-    allowed = {"idx", "id", "name"}
+    allowed = {"idx", "id", "name", "price"}
     return [_safe_mapping(item, allowed) for item in products if isinstance(item, dict)]
 
 
@@ -361,6 +521,32 @@ def _guard_text(ctx: ToolContext, text: str, batch: list[str]) -> str:
     return NO_DRAFT_FALLBACK_TEXT if not ctx.state.open_draft_id else ORDER_FALLBACK_TEXT
 
 
+def _checked_prices(state: GraphState, messages: list[BaseMessage], shown_at_start: list[dict], text: str) -> str:
+    """Fix prices the model quoted for shop products against the prices the shop actually returned."""
+
+    ctx = state["ctx"]
+    book: list[dict] = []
+    keep: set[int] = set()
+    for product in [*shown_at_start, *ctx.state.last_shown_products, *ctx.cart_snapshot]:
+        price = product_price(product) if isinstance(product, dict) else None
+        if price is not None and isinstance(product.get("name"), str):
+            book.append({"name": product["name"], "price": price})
+    for message in messages:
+        if isinstance(message, ToolMessage):
+            _collect_prices(_tool_payload(str(message.content)), book, keep)
+    keep.update(_price_amount(match) for match in _PRICE_RE.finditer(state.get("message") or ""))
+    keep.update(int(value) for value in re.findall(r"\b\d{4,9}\b", re.sub(r"[.,](?=\d{3}\b)", "", state.get("message") or "")))
+    for source in (getattr(ctx, "skin_profile", None) or {}, _safe_agent_entities(state.get("router_output"))):
+        budget = source.get("budget_max") if isinstance(source, dict) else None
+        if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
+            keep.add(int(budget))
+    try:
+        return correct_product_prices(text, book, keep)
+    except Exception as exc:  # the check must never cost the customer their answer
+        logger.warning("agent price check failed: %s", type(exc).__name__)
+        return text
+
+
 def _final_no_tools_summary(state: GraphState, messages: list[BaseMessage], last_text: str) -> str:
     if _timed_out(state):
         return last_text
@@ -403,6 +589,12 @@ def _run_agent(state: GraphState) -> None:
 
     tool_map = {tool.name: tool for tool in tools}
     messages = _agent_messages(state)
+    shown_at_start = copy.deepcopy(ctx.state.last_shown_products)
+
+    def finalize(text: str) -> str:
+        guarded = _guard_text(ctx, text, batch)
+        return guarded if guarded != text else _checked_prices(state, messages, shown_at_start, text)
+
     last_text = ""
     stopped = False
     hit_step_cap = False
@@ -436,7 +628,7 @@ def _run_agent(state: GraphState) -> None:
                 last_text = ""
                 continue
             if last_text:
-                _emit(state, "token", {"text": _guard_text(ctx, last_text, batch)})
+                _emit(state, "token", {"text": finalize(last_text)})
             break
 
         for call in tool_calls:
@@ -484,13 +676,13 @@ def _run_agent(state: GraphState) -> None:
 
     if hit_step_cap and not state.get("timeout_emitted") and not _cancelled(state):
         summary = _final_no_tools_summary(state, messages, last_text)
-        guarded = _guard_text(ctx, summary, batch) if summary else summary
+        guarded = finalize(summary) if summary else summary
         if guarded and (summary != last_text or guarded != summary):
             _emit(state, "token", {"text": guarded})
         _emit_timeout(state)
     elif stopped and not _cancelled(state):
         if last_text:
-            _emit(state, "token", {"text": _guard_text(ctx, last_text, batch)})
+            _emit(state, "token", {"text": finalize(last_text)})
         _emit_timeout(state)
 
     state["intent_queue"] = state["intent_queue"][batch_size:]
@@ -507,11 +699,15 @@ def _remember_legacy_products(ctx: ToolContext, products: Any) -> list[dict]:
         product_id = product.get("id") or product.get("product_id")
         if product_id is None:
             continue
-        remembered.append({
+        entry = {
             "idx": index,
             "id": str(product_id),
             "name": str(product.get("name") or product.get("title") or ""),
-        })
+        }
+        price = product_price(product)
+        if price is not None:
+            entry["price"] = price
+        remembered.append(entry)
     if remembered:
         ctx.state.last_shown_products = remembered
     return remembered

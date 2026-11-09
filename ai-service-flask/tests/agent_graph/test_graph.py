@@ -1188,3 +1188,106 @@ def test_base_exception_after_mutation_still_reraises_with_done():
         c.emit("cart_effect", {"effect": {}})
         while True:
             events.append(next(stream))
+
+
+# --- Wrong price for a product shown in an earlier turn (2026-11-09 repro) ---
+
+COMBO_NAME = "Combo 3 Gel Rửa Mặt La Roche-Posay Cho Da Dầu Nhạy Cảm 50ml"
+
+
+def _price_turn(reply: str, *, message: str = "thêm chai nivea vừa chụp vào giỏ giúp mình 1 chai",
+                shown: list[dict] | None = None, label: str = "BUY"):
+    state = ConvState(last_shown_products=shown if shown is not None else [
+        {"idx": 1, "id": "4401", "name": COMBO_NAME, "price": 149000},
+    ])
+    model = ScriptedChatModel(responses=[AIMessage(content=reply)])
+    graph = build_graph(ScriptedRouter(output(label)), lambda tools: model.bind_tools(tools), lambda *_a: {"answer": "x"})
+    events = list(run_turn(
+        graph, message=message, ctx=context(scopes=("cart:write",), state=state),
+        history=[], recent_turns=[], legacy_payload={},
+    ))
+    text = "".join(payload["text"] for kind, payload in events if kind == "token")
+    return model, text
+
+
+def test_price_of_product_shown_last_turn_reaches_the_agent_prompt():
+    model, _text = _price_turn("Shop chưa bán chai Nivea này nhé.")
+    system = model.calls[0][0].content
+    assert COMBO_NAME in system
+    assert "149000" in system
+
+
+def test_wrong_price_for_previously_shown_product_is_corrected():
+    reply = (
+        "Chai Nivea bạn vừa chụp hiện shop chưa bán nên mình chưa thêm vào giỏ được. "
+        f"Bạn có thể cân nhắc {COMBO_NAME} giá 299.000đ nhé."
+    )
+    _model, text = _price_turn(reply)
+    assert "299.000đ" not in text
+    assert "149.000đ" in text
+    assert "Chai Nivea bạn vừa chụp" in text
+
+
+def test_abbreviated_product_name_with_wrong_price_is_corrected():
+    _model, text = _price_turn("- Combo 3 Gel Rửa Mặt La Roche-Posay: 299k, hợp da dầu nhạy cảm.")
+    assert "299k" not in text
+    assert "149.000đ" in text
+
+
+def test_correct_price_quantity_total_and_customer_budget_are_kept():
+    reply = (
+        f"{COMBO_NAME} giá 149.000đ, 2 hộp là 298.000đ, vẫn dưới ngân sách 300.000đ của bạn."
+    )
+    _model, text = _price_turn(reply, message="mình có 300.000đ thì mua được mấy hộp", label="ADVISE")
+    assert text == reply
+
+
+def test_price_is_not_rewritten_when_product_match_is_ambiguous():
+    shown = [
+        {"idx": 1, "id": "4401", "name": COMBO_NAME, "price": 149000},
+        {"idx": 2, "id": "4402", "name": "Gel Rửa Mặt La Roche-Posay Effaclar 400ml", "price": 455000},
+    ]
+    reply = "Gel rửa mặt La Roche-Posay giá 299.000đ nhé."
+    _model, text = _price_turn(reply, shown=shown, label="ADVISE")
+    assert text == reply
+
+
+def test_shown_product_price_survives_state_store_roundtrip():
+    from agent_graph.state import StateStore
+
+    store = StateStore(_DictRedis())
+    store.save("conv-P", ConvState(last_shown_products=[{"idx": 1, "id": "4401", "name": COMBO_NAME, "price": 149000}]))
+    assert store.load("conv-P").last_shown_products == [
+        {"idx": 1, "id": "4401", "name": COMBO_NAME, "price": 149000},
+    ]
+
+
+_SUNSCREENS = [
+    {"name": "Kem Chống Nắng Caryophy Nâng Tone, Ngừa Mụn 50ml", "price": 250000},
+    {"name": "Kem Chống Nắng Beplain Nâng Tông, Kiềm Dầu Mịn Lì 50ml", "price": 278000},
+    {"name": "Kem Chống Nắng Beplain Vật Lý Hỗ Trợ Kiềm Dầu Mịn Lì 50ml", "price": 271000},
+    {"name": "Kem Chống Nắng Beplain Vật Lý, Nâng Tông, Giảm Đỏ 50ml", "price": 245000},
+]
+
+
+@pytest.mark.parametrize("text", [
+    # Live 2026-11-09: a price range and a price gap were rewritten into a product's price.
+    "các dòng chống nắng kiềm dầu Beplain (như bản nâng tông, kiềm dầu mịn lì 50ml) có giá từ 245.000đ đến 278.000đ.",
+    "Mức chênh lệch giữa kem chống nắng Caryophy và dòng Beplain kiềm dầu rơi vào khoảng 21.000đ đến 28.000đ.",
+    "Kem Chống Nắng Caryophy Nâng Tone rẻ hơn 28.000đ so với bản Beplain.",
+    "Kem Chống Nắng Caryophy Nâng Tone, Ngừa Mụn 50ml phù hợp nếu ngân sách dưới 300.000đ.",
+    "Kem Chống Nắng Caryophy Nâng Tone, Ngừa Mụn 50ml 250.000đ, Beplain Nâng Tông, Kiềm Dầu Mịn Lì 278.000đ.",
+])
+def test_price_check_leaves_ranges_gaps_and_budgets_alone(text):
+    from agent_graph.graph import correct_product_prices
+
+    assert correct_product_prices(text, _SUNSCREENS) == text
+
+
+def test_price_check_fixes_a_swapped_unknown_price_but_keeps_real_ones():
+    from agent_graph.graph import correct_product_prices
+
+    text = "Kem Chống Nắng Caryophy Nâng Tone, Ngừa Mụn 50ml giá 199.000đ."
+    assert correct_product_prices(text, _SUNSCREENS) == (
+        "Kem Chống Nắng Caryophy Nâng Tone, Ngừa Mụn 50ml giá 250.000đ."
+    )

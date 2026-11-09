@@ -15,7 +15,7 @@ from . import audit
 from .auth import AgentClaims
 from .php_client import PhpError, PhpClient
 from .prompts import TOOL_DOCS
-from .state import ConvState
+from .state import ConvState, product_price
 
 
 logger = logging.getLogger(__name__)
@@ -444,10 +444,12 @@ def _search(ctx: ToolContext, args: SearchArgs) -> Any:
     if args.price_max is not None:
         graph_args["price_max"] = args.price_max
 
+    # A budget filter drops candidates after the search, so fetch a wider pool first.
+    pool = args.limit if args.price_max is None else min(20, args.limit * 4)
     text_result: dict | None = None
     try:
         from search_service.schemas import RecommendRequest
-        request = RecommendRequest(q=" ".join([args.query, *extra_q]), limit_per_section=args.limit)
+        request = RecommendRequest(q=" ".join([args.query, *extra_q]), limit_per_section=pool)
         text_result = _run_text_search(ctx, request)
     except Exception:
         text_result = None
@@ -460,7 +462,7 @@ def _search(ctx: ToolContext, args: SearchArgs) -> Any:
             graph_result = None
 
     # Over-fetch before hydration: hydration drops hidden/unknown ids and name matching reorders the head.
-    text_products = _text_products(text_result or {})[:max(args.limit * 3, 9)]
+    text_products = _text_products(text_result or {})[:max(pool * 3, 9)]
     if graph is not None:
         known = {str(item.get("id")) for item in text_products}
         text_products = [
@@ -482,15 +484,28 @@ def _search(ctx: ToolContext, args: SearchArgs) -> Any:
         if pid and pid not in seen:
             seen.add(pid)
             merged.append(product)
+    if args.price_max is not None:
+        # The text search ignores the budget, so filter here (a product without a known price can't be shown).
+        merged = [item for item in merged if (price := product_price(item)) is not None and price <= args.price_max]
+        if not merged:
+            return {"tool": "find_products", "ok": True, "count": 0, "products": [],
+                    "note": "no_product_within_price_max", "price_max": args.price_max}
     merged = merged[:args.limit]
     result = {"tool": "find_products", "ok": True, "count": len(merged), "products": merged[:args.limit]}
     all_cards = {**graph_cards, **text_cards}
     cards = [all_cards[str(item["id"])] for item in merged if str(item["id"]) in all_cards]
     event_payload = {**result, "_cards": cards}
     ctx.emit("ui", {"kind": "product_list", "payload": event_payload})
-    ctx.state.last_shown_products = [{"idx": i, "id": str(p["id"]), "name": str(p.get("name") or "")}
-                                     for i, p in enumerate(merged, 1) if p.get("id")]
+    ctx.state.last_shown_products = [_shown_entry(i, p) for i, p in enumerate(merged, 1) if p.get("id")]
     return _graph_public(result)
+
+
+def _shown_entry(idx: int, product: dict) -> dict:
+    entry = {"idx": idx, "id": str(product["id"]), "name": str(product.get("name") or "")}
+    price = product_price(product)
+    if price is not None:
+        entry["price"] = price
+    return entry
 
 
 _MAX_CONFLICT_WARNINGS = 3

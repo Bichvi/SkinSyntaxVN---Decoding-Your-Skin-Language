@@ -139,7 +139,7 @@ def test_search_sets_last_shown_products():
     state = ConvState()
     graph = FakeGraph(vocab=SimpleNamespace(brands={}, skin_types={"oily": "Oily"}, concerns={}))
     result = tool_map(context(graph=graph, state=state))["search_products"].invoke({"query": "cleanser", "skin_type": "oily"})
-    assert state.last_shown_products == [{"idx": 1, "id": "p1", "name": "Cleanser"}]
+    assert state.last_shown_products == [{"idx": 1, "id": "p1", "name": "Cleanser", "price": 100}]
     assert "<tool_data>" in result
 
 
@@ -814,3 +814,45 @@ def test_stale_replaces_retry_sends_original_qty_not_carried(monkeypatch):
     tool_map(ctx)["prepare_order_draft"].invoke(DRAFT_ARGS | {"product_ids": ["1200"]})
     assert php.calls[0][1]["qty"] == {"1200": 3}
     assert not php.calls[1][1].get("qty")
+
+
+def _budget_text_hits():
+    return FakeText({"sections": [{"key": "text", "items": [
+        {"product_id": "c4", "score": 0.95, "reason_code": "text"},
+        {"product_id": "c3", "score": 0.9, "reason_code": "text"},
+        {"product_id": "p2", "score": 0.8, "reason_code": "text"},
+        {"product_id": "p1", "score": 0.7, "reason_code": "text"},
+    ]}]})
+
+
+def test_search_drops_products_above_price_max():
+    """Regression: "kem chống nắng dưới 300k" returned 441k and 394k cards (text search ignored the budget)."""
+    events = []
+    graph = FakeGraph(vocab=SimpleNamespace(brands={}, skin_types={}, concerns={}))
+    ctx = context(graph=graph, text_search=_budget_text_hits(), events=events)
+    result = tool_map(ctx)["search_products"].invoke({"query": "kem chống nắng", "price_max": 250})
+    payload = json.loads(result[len("<tool_data>"):-len("</tool_data>")])
+    assert [item["id"] for item in payload["products"]] == ["p2", "p1"]
+    assert all(item["price"] <= 250 for item in payload["products"])
+    shown = [event[1]["payload"] for event in events if event[0] == "ui"][0]
+    assert [card["id"] for card in shown["_cards"]] == ["p2", "p1"]
+    assert [item["price"] for item in ctx.state.last_shown_products] == [200, 100]
+
+
+def test_search_widens_the_text_pool_when_a_budget_is_set():
+    text = _budget_text_hits()
+    graph = FakeGraph(vocab=SimpleNamespace(brands={}, skin_types={}, concerns={}))
+    tool_map(context(graph=graph, text_search=text))["search_products"].invoke(
+        {"query": "kem chống nắng", "price_max": 250, "limit": 3})
+    assert text.calls[0].limit_per_section == 12
+
+
+def test_search_with_nothing_under_price_max_says_so_and_keeps_last_shown():
+    events = []
+    state = ConvState(last_shown_products=[{"idx": 1, "id": "old", "name": "Old"}])
+    graph = FakeGraph(vocab=SimpleNamespace(brands={}, skin_types={}, concerns={}))
+    ctx = context(graph=graph, text_search=_budget_text_hits(), events=events, state=state)
+    result = tool_map(ctx)["search_products"].invoke({"query": "kem chống nắng", "price_max": 50})
+    assert '"count": 0' in result and "no_product_within_price_max" in result
+    assert not [event for event in events if event[0] == "ui"]
+    assert state.last_shown_products == [{"idx": 1, "id": "old", "name": "Old"}]

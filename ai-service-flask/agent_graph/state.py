@@ -8,6 +8,21 @@ from dataclasses import dataclass, field
 logger = logging.getLogger(__name__)
 
 
+def product_price(product: dict) -> int | None:
+    """The product's price in VND as a positive int, or None when it is missing or not a number."""
+
+    for key in ("price", "unit_price"):
+        value = product.get(key) if isinstance(product, dict) else None
+        if isinstance(value, bool) or value is None:
+            continue
+        if isinstance(value, str):
+            digits = value.strip().replace(".", "").replace(",", "")
+            value = int(digits) if digits.isdigit() else None
+        if isinstance(value, (int, float)) and value > 0:
+            return int(value)
+    return None
+
+
 @dataclass
 class ConvState:
     last_shown_products: list[dict] = field(default_factory=list)
@@ -32,7 +47,12 @@ class StateStore:
 
     @staticmethod
     def _product_view(product: dict) -> dict:
-        return {key: product[key] for key in ("id", "name", "idx") if key in product}
+        view = {key: product[key] for key in ("id", "name", "idx") if key in product}
+        price = product_price(product)
+        if price is not None:
+            # Kept so the next turn quotes the shop's real price instead of guessing one.
+            view["price"] = price
+        return view
 
     @staticmethod
     def _valid_qty(value) -> dict[str, int] | None:
