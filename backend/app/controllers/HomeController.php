@@ -12,6 +12,8 @@ require_once __DIR__ . '/../services/RecommendationExplainer.php';
 require_once __DIR__ . '/../services/SupportKnowledge.php';
 require_once __DIR__ . '/ShopAssistantController.php';
 require_once __DIR__ . '/../services/HomeGraphRecommender.php';
+require_once __DIR__ . '/../services/HomeDiscovery.php';
+require_once __DIR__ . '/../services/HomeCardReason.php';
 require_once __DIR__ . '/../services/ChatAgentToken.php';
 
 class HomeController {
@@ -147,6 +149,8 @@ class HomeController {
         $userProfile = null;
         $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']['email']);
         $hasSurvey = false;
+        // Loại da khách đã chọn ở tab routine mẫu (chỉ dùng khi chưa đăng nhập).
+        $guestSkinType = $this->guestSkinTypeFromSession();
 
         if ($isLoggedIn) {
             try {
@@ -232,6 +236,9 @@ class HomeController {
                 ];
             }
 
+            // Bổ sung nhãn vấn đề/loại da cho thẻ đang hiển thị (SP từ cache gợi ý không có); lỗi -> bỏ qua.
+            $this->enrichCardTags($homepageSections, $latest);
+
             // Home graph (Neo4j qua Flask): mọi lỗi -> null, các khối cũ không bị ảnh hưởng.
             $homeGraph = null;
             try {
@@ -258,7 +265,9 @@ class HomeController {
                 $homeGraph = $this->homeGraphRecommender()->build([
                     'seen_ids' => $recentViewed,
                     'cart_ids' => array_keys($cartItems),
-                    'skin_profile' => $isLoggedIn ? $this->homeGraphSkinProfile((string)($_SESSION['user']['email'] ?? '')) : null,
+                    'skin_profile' => $isLoggedIn
+                        ? $this->homeGraphSkinProfile((string)($_SESSION['user']['email'] ?? ''))
+                        : ($guestSkinType !== null ? ['skin_type' => $guestSkinType, 'concerns' => []] : null),
                     'exclude_ids' => array_values(array_unique($homeGraphExclude)),
                     'sections' => ['seen', 'skin', 'concern'],
                 ]);
@@ -277,7 +286,27 @@ class HomeController {
             ];
         }
 
+        // Khối routine mẫu + khám phá nhanh cho khách chưa có khảo sát; lỗi -> ẩn khối.
+        $routineStarter = [];
+        $routineSkinType = $guestSkinType ?? 'da_dau';
+        if (!$hasSurvey) {
+            try {
+                $routineStarter = $this->model->routineStarter($routineSkinType);
+            } catch (Throwable $e) {
+                error_log('[HOME_ROUTINE] skipped: ' . get_class($e));
+                $routineStarter = [];
+            }
+        }
+        try {
+            $homeDiscovery = HomeDiscovery::data();
+        } catch (Throwable $e) {
+            $homeDiscovery = ['trending' => [], 'actives' => []];
+        }
+
         $this->render('home', [
+            'routineStarter' => $routineStarter,
+            'routineSkinType' => $routineSkinType,
+            'homeDiscovery' => $homeDiscovery,
             'latest' => $latest,
             'cats' => $cats,
             'homepageSections' => $homepageSections,
@@ -289,6 +318,128 @@ class HomeController {
             'hasSurvey' => $hasSurvey,
             'homeGraph' => $homeGraph ?? null,
         ]);
+    }
+
+    /** Loại da khách đã chọn (session) nếu hợp lệ, không thì null. */
+    private function guestSkinTypeFromSession(): ?string {
+        $k = $_SESSION['guest_skin_type'] ?? null;
+        return (is_string($k) && in_array($k, SearchSkinProfile::SKIN_TYPES, true)) ? $k : null;
+    }
+
+    /**
+     * Chép 3 trường nhãn (cong_dung/loai_da/van_de_da keys) vào SP đang hiển thị ở 3 khối còn thiếu nhãn.
+     * Không đổi thứ tự/thành phần danh sách; 1 truy vấn findVisibleByIds, cache 10 phút theo danh sách id.
+     */
+    private function enrichCardTags(array &$sections, array &$latest): void {
+        try {
+            $fields = ['cong_dung_keys', 'loai_da_keys', 'van_de_da_keys'];
+            $idOf = static fn($p): string => is_array($p) ? (string)($p['ma_san_pham'] ?? $p['id'] ?? '') : '';
+            $forYouKey = isset($sections['forYou']) ? 'forYou' : 'bestSellers';
+            // Chỉ lấy đúng các SP mà home.php sẽ hiển thị (4 đầu mỗi khối; "mới" = 4 đầu của $latest).
+            $shown = [
+                array_slice(array_values(array_filter((array)($sections[$forYouKey] ?? []))), 0, 4),
+                array_slice(array_values(array_filter((array)($sections['topRatedWeighted'] ?? []))), 0, 4),
+                array_slice($latest, 0, 4),
+                array_slice($latest, 3, 4),
+            ];
+            $ids = [];
+            foreach ($shown as $list) {
+                foreach ($list as $p) {
+                    $pid = $idOf($p);
+                    if ($pid !== '' && ctype_digit($pid) && !array_key_exists('van_de_da_keys', $p)) {
+                        $ids[$pid] = true;
+                    }
+                }
+            }
+            if (!$ids) {
+                return;
+            }
+            $idList = array_keys($ids);
+            sort($idList, SORT_STRING);
+            $cacheKey = 'home:card_tags:v1:' . md5(implode(',', $idList));
+            $map = null;
+            if (class_exists('CacheService')) {
+                $hit = CacheService::getInstance()->get($cacheKey);
+                $map = is_array($hit) ? $hit : null;
+            }
+            if ($map === null) {
+                $map = [];
+                foreach ($this->model->findVisibleByIds($idList) as $full) {
+                    $fid = $idOf($full);
+                    if ($fid === '') {
+                        continue;
+                    }
+                    foreach ($fields as $f) {
+                        $v = $full[$f] ?? [];
+                        $map[$fid][$f] = is_iterable($v) ? array_values(is_array($v) ? $v : iterator_to_array($v)) : [];
+                    }
+                }
+                if (class_exists('CacheService')) {
+                    CacheService::getInstance()->set($cacheKey, $map, 600);
+                }
+            }
+            $apply = static function (array &$list) use ($map, $idOf, $fields): void {
+                foreach ($list as &$p) {
+                    if (!is_array($p)) {
+                        continue;
+                    }
+                    $pid = $idOf($p);
+                    if ($pid === '' || !isset($map[$pid]) || array_key_exists('van_de_da_keys', $p)) {
+                        continue;
+                    }
+                    foreach ($fields as $f) {
+                        $p[$f] = $map[$pid][$f] ?? [];
+                    }
+                }
+                unset($p);
+            };
+            if (isset($sections[$forYouKey]) && is_array($sections[$forYouKey])) {
+                $apply($sections[$forYouKey]);
+            }
+            if (isset($sections['topRatedWeighted']) && is_array($sections['topRatedWeighted'])) {
+                $apply($sections['topRatedWeighted']);
+            }
+            $apply($latest);
+        } catch (Throwable $e) {
+            error_log('[HOME_TAGS] skipped: ' . get_class($e));
+        }
+    }
+
+    /** GET index.php?r=home_routine&skin=<key>: HTML lưới routine mẫu 4 bước (không layout). */
+    public function routine(): void {
+        $key = $_GET['skin'] ?? '';
+        if (!is_string($key) || !in_array($key, SearchSkinProfile::SKIN_TYPES, true)) {
+            http_response_code(400);
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Yêu cầu không hợp lệ';
+            return;
+        }
+        // Nhớ lựa chọn của khách (chỉ khi chưa đăng nhập hoặc chưa có khảo sát) để khối "Hợp với ..." dùng lại.
+        $loggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']['email']);
+        $noSurvey = !$loggedIn || empty($_SESSION['home_graph_skin_profile']['p']['skin_type']);
+        if ($noSurvey && session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION['guest_skin_type'] = $key;
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        $routineError = false;
+        $routineStarter = [];
+        try {
+            $routineStarter = $this->model->routineStarter($key);
+        } catch (Throwable $e) {
+            error_log('[HOME_ROUTINE] tab skipped: ' . get_class($e));
+            $routineError = true;
+        }
+        header('Content-Type: text/html; charset=UTF-8');
+        header('Cache-Control: private, no-store');
+        $routineSkinType = $key;
+        $partials = dirname(__DIR__, 3) . '/frontend/views/partials';
+        if (defined('VIEW_DIR') && is_dir(VIEW_DIR . '/partials')) {
+            $partials = VIEW_DIR . '/partials';
+        }
+        $renderHomeProductCard = require $partials . '/home_product_card.php';
+        require $partials . '/home_routine_grid.php';
     }
 
     private function homeGraphRecommender(): HomeGraphRecommender {

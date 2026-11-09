@@ -130,6 +130,10 @@ switch ($r) {
         (new HomeController($pdo))->concern();
         break;
 
+    case 'home_routine':
+        (new HomeController($pdo))->routine();
+        break;
+
     case 'flash_sale':
         (new HomeController($pdo))->flashSale();
         break;

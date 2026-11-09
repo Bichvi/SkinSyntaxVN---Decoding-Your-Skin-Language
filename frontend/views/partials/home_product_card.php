@@ -1,6 +1,6 @@
 <?php
 // Thẻ sản phẩm trang chủ (chuyển nguyên văn từ home.php); require trả về closure.
-return static function (array $p, string $tag = '', string $whyFitText = ''): void {
+return static function (array $p, string $tag = '', string $whyFitText = '', string $whyLabel = 'Vì sao phù hợp'): void {
     $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
     $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
     $giaBan = (string)($p['gia_ban'] ?? '');
@@ -60,7 +60,7 @@ return static function (array $p, string $tag = '', string $whyFitText = ''): vo
 
         <?php if ($whyFitText !== ''): ?>
           <div class="mb-2 p-1.5 rounded" style="background: #F1F8F4; border: 1px solid #D8EADE; font-size: 0.72rem; color: #1C4D36;">
-            <i class="bi bi-lightbulb-fill text-warning me-1"></i><strong>Vì sao phù hợp:</strong> <?= h($whyFitText) ?>
+            <i class="bi bi-lightbulb-fill text-warning me-1"></i><strong><?= h($whyLabel) ?>:</strong> <?= h($whyFitText) ?>
           </div>
         <?php endif; ?>
 
