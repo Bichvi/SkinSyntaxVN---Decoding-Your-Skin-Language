@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 GROQ_TIMEOUT_S = 12
 GEMINI_TIMEOUT_S = 20
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+# Last-resort agent model on separate capacity: Groq's free tier (8k TPM) fails most multi-tool turns and
+# gemini-2.5-flash sometimes answers 503 "high demand". Slower (~7 s/turn) but better than an error.
+DEFAULT_GEMINI_FALLBACK_MODEL = "gemini-3.5-flash-lite"
 
 
 class _FallbackLogger(BaseCallbackHandler):
@@ -80,11 +83,19 @@ def _gemini_model_name() -> str:
     return os.getenv("GEMINI_AGENT_MODEL", "").strip() or DEFAULT_GEMINI_MODEL
 
 
-def _build_gemini(api_key: str) -> BaseChatModel | None:
+def _gemini_fallback_model_name() -> str | None:
+    value = os.getenv("GEMINI_AGENT_FALLBACK_MODEL")
+    model = DEFAULT_GEMINI_FALLBACK_MODEL if value is None else value.strip()
+    if not model or model.lower() in {"off", "none", "0"} or model == _gemini_model_name():
+        return None
+    return model
+
+
+def _build_gemini(api_key: str, model: str | None = None) -> BaseChatModel | None:
     try:
         from langchain_google_genai import ChatGoogleGenerativeAI
 
-        model = _gemini_model_name()
+        model = model or _gemini_model_name()
         kwargs: dict[str, Any] = {}
         if model.startswith("gemini-2.5"):
             kwargs["thinking_budget"] = 0  # no hidden reasoning tokens: ~2 s per round instead of ~10+ s
@@ -142,6 +153,11 @@ def build_agent_llms() -> list[BaseChatModel]:
         built = _build_gemini(google_key)
         if built is not None:
             providers.append(built)
+        fallback_model = _gemini_fallback_model_name()
+        if fallback_model:
+            built = _build_gemini(google_key, fallback_model)
+            if built is not None:
+                providers.append(built)
 
     openai_key = _api_key("OPENAI_API_KEY")
     if openai_key:
