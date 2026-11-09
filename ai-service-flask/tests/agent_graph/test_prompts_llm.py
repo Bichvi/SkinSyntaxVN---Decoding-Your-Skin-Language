@@ -63,7 +63,8 @@ def test_provider_order_and_no_openrouter(monkeypatch):
     monkeypatch.setenv("GROQ_API_KEY", "gsk-test")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     monkeypatch.setenv("GOOGLE_API_KEY", "AIza-test")
-    for key in ("GOOGLE_API_KEYS", "GEMINI_CHAT_MODEL", "GEMINI_AGENT_MODEL", "OPENROUTER_API_KEY"):
+    for key in ("GOOGLE_API_KEYS", "GEMINI_CHAT_MODEL", "GEMINI_AGENT_MODEL", "GEMINI_AGENT_FALLBACK_MODEL",
+                "OPENROUTER_API_KEY"):
         monkeypatch.delenv(key, raising=False)
     from agent_graph import llm
 
@@ -77,6 +78,7 @@ def test_provider_order_and_no_openrouter(monkeypatch):
     assert [getattr(model, "model_name", getattr(model, "model", "")) for model in agent] == [
         "openai/gpt-oss-120b",
         "gemini-2.5-flash",
+        "gemini-3.5-flash-lite",
         "gpt-4o-mini",
     ]
     assert all("openrouter" not in repr(model).lower() for model in router + agent)
@@ -131,13 +133,26 @@ def test_agent_gemini_ignores_slow_legacy_chat_model_and_disables_thinking(monke
     monkeypatch.setenv("GOOGLE_API_KEY", "AIza-test")
     monkeypatch.setenv("GEMINI_CHAT_MODEL", "gemini-3.5-flash-lite")
     monkeypatch.delenv("GEMINI_AGENT_MODEL", raising=False)
+    monkeypatch.delenv("GEMINI_AGENT_FALLBACK_MODEL", raising=False)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     from agent_graph import llm
 
-    (model,) = llm.build_agent_llms()
+    model, fallback = llm.build_agent_llms()
     assert model.model == "gemini-2.5-flash"
     assert model.thinking_budget == 0
+    assert fallback.model == "gemini-3.5-flash-lite"  # last resort only, after the fast model
+
+
+@pytest.mark.parametrize("value", ["off", "", "gemini-2.5-flash"])
+def test_agent_gemini_fallback_can_be_disabled(monkeypatch, value):
+    monkeypatch.setenv("GOOGLE_API_KEY", "AIza-test")
+    monkeypatch.setenv("GEMINI_AGENT_FALLBACK_MODEL", value)
+    for key in ("GEMINI_AGENT_MODEL", "GROQ_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEYS"):
+        monkeypatch.delenv(key, raising=False)
+    from agent_graph import llm
+
+    assert [model.model for model in llm.build_agent_llms()] == ["gemini-2.5-flash"]
 
 
 def test_provider_failure_is_logged_by_exception_type_only(caplog):
