@@ -50,7 +50,8 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     margin: 0;
     color: #445468;
     font-size: 1rem;
-    line-height: 1.95;
+    line-height: 1.72;
+    overflow-wrap: anywhere;
   }
 
   .detail-rich-copy__list {
@@ -58,7 +59,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 12px;
+    gap: 9px;
   }
 
   .detail-rich-copy__list li {
@@ -66,7 +67,8 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     margin: 0;
     padding: 0 0 0 22px;
     color: #425466;
-    line-height: 1.9;
+    line-height: 1.68;
+    overflow-wrap: anywhere;
   }
 
   .detail-rich-copy__list li::before {
@@ -93,7 +95,8 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
   .detail-rich-copy__ordered li {
     position: relative;
     padding: 0 0 0 48px;
-    line-height: 1.9;
+    line-height: 1.68;
+    overflow-wrap: anywhere;
     color: #425466;
   }
 
@@ -456,71 +459,33 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     .review-form-shell {
       padding: 16px;
     }
-  .review-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
-  .review-filter-tabs a { border: 1px solid #d8e4ea; border-radius: 999px; padding: 8px 14px; color: #385268; background: #fff; text-decoration: none; font-weight: 700; font-size: 0.92rem; }
-  .review-filter-tabs a.is-active { background: #0f8d63; color: #fff; border-color: #0f8d63; }
-  .review-upload-box { border: 1px dashed #bdd6cc; background: #fbfffd; border-radius: 14px; padding: 12px; }
-  .qa-panel { border-radius: 20px; border: 1px solid #e5edf5; background: #fff; padding: 22px; }
-  .qa-form { display: grid; gap: 10px; margin-bottom: 18px; padding: 16px; border-radius: 16px; background: #f8fbff; border: 1px solid #dde9f4; }
-  .qa-item { border: 1px solid #e5ecef; border-radius: 16px; padding: 16px; background: #fff; }
-  .qa-item + .qa-item { margin-top: 12px; }
-  .qa-item__meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: #64748b; font-size: 0.86rem; margin-bottom: 8px; }
-  .qa-answer { margin-top: 12px; border-radius: 14px; background: #eef8f3; padding: 12px 14px; color: #26453a; line-height: 1.65; }
+  }
+
+  .review-form-top {
+    align-items: stretch;
+  }
+
+  .review-stars-input {
+    gap: 0.3rem;
+  }
+
+  .review-stars-input label {
+    width: 2.15rem;
+    height: 2.15rem;
+    font-size: 1rem;
+  }
 
   @media (max-width: 767.98px) {
-    #detailTabNav .nav-link {
-      font-size: 0.96rem;
-      padding: 12px 16px;
-    }
-
-    .detail-content-panel {
-      border-radius: 18px;
-    }
-
-    .detail-content-panel__head,
-    .detail-content-panel__body,
-    .detail-section-card {
-      padding: 16px;
-    }
-
-    .detail-content-panel__title {
-      font-size: 1.4rem;
-    }
-
-    .detail-rich-copy__lead {
-      padding: 14px 16px;
-      font-size: 0.98rem;
-    }
-
-    .review-panel {
-      padding: 16px;
-    }
-
-    .review-summary-card {
-      padding: 16px;
-    }
-
-    .review-summary-card__score-value {
-      font-size: 1.6rem;
-    }
-
-    .review-form-shell {
-      padding: 16px;
-    }
-
-    .review-form-top {
-      align-items: stretch;
-    }
-
-    .review-stars-input {
-      gap: 0.3rem;
-    }
-
-    .review-stars-input label {
-      width: 2.15rem;
-      height: 2.15rem;
-      font-size: 1rem;
-    }
+    .review-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+    .review-filter-tabs a { border: 1px solid #d8e4ea; border-radius: 999px; padding: 8px 14px; color: #385268; background: #fff; text-decoration: none; font-weight: 700; font-size: 0.92rem; }
+    .review-filter-tabs a.is-active { background: #0f8d63; color: #fff; border-color: #0f8d63; }
+    .review-upload-box { border: 1px dashed #bdd6cc; background: #fbfffd; border-radius: 14px; padding: 12px; }
+    .qa-panel { border-radius: 20px; border: 1px solid #e5edf5; background: #fff; padding: 22px; }
+    .qa-form { display: grid; gap: 10px; margin-bottom: 18px; padding: 16px; border-radius: 16px; background: #f8fbff; border: 1px solid #dde9f4; }
+    .qa-item { border: 1px solid #e5ecef; border-radius: 16px; padding: 16px; background: #fff; }
+    .qa-item + .qa-item { margin-top: 12px; }
+    .qa-item__meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: #64748b; font-size: 0.86rem; margin-bottom: 8px; }
+    .qa-answer { margin-top: 12px; border-radius: 14px; background: #eef8f3; padding: 12px 14px; color: #26453a; line-height: 1.65; }
   }
 
   /* Syna 3D Product Video Showcase */
@@ -614,6 +579,431 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     border-color: #185334;
     background: #edf6ee;
   }
+
+  /* Video reward: compact entry point under the AI CTA + Shopee-like viewer. */
+  .syna-video-offer-card {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.98fr) minmax(260px, 1fr);
+    gap: 18px;
+    align-items: stretch;
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid #cfe3d2;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f5fbf5 0%, #edf7f0 100%);
+    box-shadow: 0 12px 26px rgba(24, 83, 52, 0.08);
+  }
+  .syna-video-offer-card__poster {
+    position: relative;
+    min-height: 220px;
+    aspect-ratio: 16 / 9;
+    height: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #163e2b center / cover no-repeat;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.24);
+  }
+  .syna-video-offer-card__poster::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8, 26, 17, 0.05), rgba(8, 26, 17, 0.62));
+  }
+  .syna-video-offer-card__poster-label {
+    position: absolute;
+    z-index: 1;
+    left: 8px;
+    bottom: 7px;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+  .syna-video-offer-card__content {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .syna-video-offer-card__content > .d-flex {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .syna-video-offer-card__content > .d-flex > .min-w-0 {
+    flex: 1 1 150px;
+  }
+
+  .syna-video-offer-card__title {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+  .syna-video-offer-card__title {
+    color: #183b2b;
+    font-size: 1.02rem;
+    font-weight: 800;
+  }
+  .syna-video-offer-card__meta {
+    color: #597263;
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+  .syna-video-offer-card__button {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 7px;
+    padding: 9px 13px;
+    color: #fff;
+    background: #183b2b;
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .syna-video-offer-card__button:hover,
+  .syna-video-offer-card__button:focus-visible {
+    color: #fff;
+    background: #236f47;
+    transform: translateY(-1px);
+  }
+  .syna-video-offer-card__progress {
+    height: 5px;
+    overflow: hidden;
+    margin: 7px 0 4px;
+    border-radius: 99px;
+    background: #d7e6da;
+  }
+  .syna-video-offer-card__progress-bar {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #1b7a48, #47c778);
+    transition: width 0.4s ease;
+  }
+  .syna-video-modal {
+    position: fixed;
+    z-index: 1080;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(4, 15, 10, 0.72);
+    backdrop-filter: blur(5px);
+  }
+  .syna-video-modal.is-open {
+    display: flex;
+  }
+  .syna-video-modal__dialog {
+    position: relative;
+    width: min(100%, 460px);
+    max-height: min(92vh, 860px);
+    overflow-y: auto;
+    border-radius: 20px;
+    background: #f7faf8;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  }
+  .syna-video-modal__close {
+    position: absolute;
+    z-index: 10;
+    top: 10px;
+    right: 10px;
+    display: inline-grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+    color: #183b2b;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  }
+  .syna-video-modal__card {
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 20px !important;
+    box-shadow: none;
+  }
+  .syna-video-modal__card .syna-video-viewport {
+    max-width: 360px;
+    aspect-ratio: 9 / 16;
+    max-height: 55vh;
+    border-radius: 14px;
+  }
+  .syna-video-modal__card .syna-video-viewport video {
+    object-fit: cover;
+  }
+  .syna-video-modal__card .syna-video-cover-overlay {
+    text-align: center;
+  }
+  .syna-video-modal__countdown {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 10px 0 12px;
+    padding: 8px 10px;
+    border: 1px solid #cfe3d2;
+    border-radius: 9px;
+    color: #235538;
+    background: #edf7f0;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+  .syna-video-product-link {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+  }
+  .syna-video-product-link__image {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f1f5f9;
+  }
+  .syna-video-product-link__name {
+    display: -webkit-box;
+    overflow: hidden;
+    color: #0f172a;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .syna-video-product-link__price {
+    color: #b42318;
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+  .syna-video-product-link__button {
+    white-space: nowrap;
+    border: 0;
+    border-radius: 7px;
+    padding: 7px 10px;
+    color: #fff;
+    background: #183b2b;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .syna-video-product-link__button:hover,
+  .syna-video-product-link__button:focus-visible {
+    color: #fff;
+    background: #236f47;
+  }
+  .syna-video-modal__card .syna-video-showcase-header {
+    padding-right: 34px;
+  }
+  body.syna-video-modal-open {
+    overflow: hidden;
+  }
+  @media (max-width: 575.98px) {
+    .syna-video-offer-card {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      padding: 12px;
+    }
+    .syna-video-offer-card__poster {
+      min-height: 180px;
+    }
+    .syna-video-modal {
+      align-items: flex-end;
+      padding: 0;
+    }
+    .syna-video-modal__dialog {
+      width: 100%;
+      max-height: 94vh;
+      border-radius: 18px 18px 0 0;
+    }
+    .syna-video-modal__card .syna-video-viewport {
+      max-height: 48vh;
+    }
+    .syna-video-product-link {
+      grid-template-columns: 44px minmax(0, 1fr);
+    }
+    .syna-video-product-link__image {
+      width: 44px;
+      height: 44px;
+    }
+    .syna-video-product-link__button {
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 1199.98px) {
+    .syna-video-offer-card {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .syna-video-offer-card__poster {
+      min-height: 0;
+      height: auto;
+      aspect-ratio: 16 / 9;
+    }
+  }
+
+  @media (min-width: 576px) and (max-width: 991.98px) {
+    .syna-video-offer-card__poster {
+      min-height: 0;
+    }
+  }
+
+  .detail-gallery-stage {
+    position: relative;
+  }
+
+  .detail-gallery-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 3;
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(24, 59, 43, .18);
+    border-radius: 50%;
+    color: #183B2B;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .14);
+    cursor: pointer;
+    opacity: .92;
+    transform: translateY(-50%);
+    transition: transform .18s ease, background .18s ease, color .18s ease;
+  }
+
+  .detail-gallery-arrow:hover,
+  .detail-gallery-arrow:focus-visible {
+    color: #fff;
+    background: #183B2B;
+    outline: none;
+    transform: translateY(-50%) scale(1.06);
+  }
+
+  .detail-gallery-arrow--prev { left: 12px; }
+  .detail-gallery-arrow--next { right: 12px; }
+
+  .detail-thumbs-shell {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .detail-thumbs-shell .detail-thumbs {
+    margin-top: 0 !important;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+  }
+
+  .detail-thumbs-nav {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d9e7dd;
+    border-radius: 50%;
+    color: #183B2B;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .detail-thumbs-nav:hover,
+  .detail-thumbs-nav:focus-visible {
+    color: #fff;
+    background: #183B2B;
+    outline: none;
+  }
+
+  .detail-product-refresh {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid #c8dacF;
+    border-radius: 999px;
+    color: #183B2B;
+    background: #fff;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform .18s ease, color .18s ease, background .18s ease;
+  }
+
+  .detail-product-refresh:hover,
+  .detail-product-refresh:focus-visible {
+    color: #fff;
+    background: #183B2B;
+    outline: none;
+    transform: translateY(-1px);
+  }
+
+  .detail-product-refresh.is-loading i {
+    animation: detail-refresh-spin .75s linear infinite;
+  }
+
+  .detail-product-refresh:disabled {
+    cursor: wait;
+    opacity: .62;
+  }
+
+  .routine-recommend-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .routine-recommend-button {
+    min-height: 35px;
+    padding: 5px 4px;
+    border-radius: 8px;
+    font-size: .72rem;
+    font-weight: 700;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .routine-recommend-button--cart {
+    color: #183B2B;
+    border: 1px solid #cbd5e1;
+    background: #f1f5f9;
+  }
+
+  .routine-recommend-button--buy {
+    color: #fff;
+    border: 1px solid #183B2B;
+    background: #183B2B;
+  }
+
+  .routine-recommend-button:disabled {
+    cursor: not-allowed;
+    opacity: .58;
+  }
+
+  @keyframes detail-refresh-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 575.98px) {
+    .detail-gallery-arrow { width: 34px; height: 34px; }
+    .detail-gallery-arrow--prev { left: 8px; }
+    .detail-gallery-arrow--next { right: 8px; }
+  }
 </style>
 <div class="container my-4">
   <?php if ($detailUnavailableMessage !== ''): ?>
@@ -630,41 +1020,62 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     <!-- Left: Gallery & Purchase Benefits -->
     <div class="col-12 col-lg-5">
       <div class="detail-img border bg-white p-2" style="border-radius: 12px; border-color: var(--border) !important;">
-        <img id="mainImage"
-             class="detail-main-img w-100 h-auto"
-             src="<?= h($main) ?>"
-             fetchpriority="high"
-             decoding="async"
-             width="500"
-             height="500"
-             referrerpolicy="no-referrer"
-             data-image-fallbacks="<?= $detailImageFallbacks ?>"
-             data-image-placeholder="<?= h(default_placeholder_image()) ?>"
-             onerror="window.SkinSyntaxImageFallback(this)"
-             alt="<?= h($p['ten_san_pham'] ?? '') ?>"
-             style="border-radius: 8px; aspect-ratio: 1/1; object-fit: cover;">
+        <div class="detail-gallery-stage">
+          <img id="mainImage"
+               class="detail-main-img w-100"
+               src="<?= h($main) ?>"
+               fetchpriority="high"
+               decoding="async"
+               width="500"
+               height="500"
+               referrerpolicy="no-referrer"
+               data-image-fallbacks="<?= $detailImageFallbacks ?>"
+               data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+               onerror="window.SkinSyntaxImageFallback(this)"
+               alt="<?= h($p['ten_san_pham'] ?? '') ?>"
+               style="border-radius: 8px;">
+          <?php if (count($imgs) > 1): ?>
+            <button type="button" class="detail-gallery-arrow detail-gallery-arrow--prev" data-gallery-prev aria-label="Ảnh trước">
+              <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="detail-gallery-arrow detail-gallery-arrow--next" data-gallery-next aria-label="Ảnh tiếp theo">
+              <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+          <?php endif; ?>
+        </div>
       </div>
 
       <?php if (count($imgs) > 1): ?>
-        <div class="detail-thumbs mt-3 d-flex gap-2 overflow-x-auto pb-2">
-          <?php foreach ($imgs as $i => $url): ?>
-            <button type="button"
-                    class="thumb-btn border p-1 <?= $i===0?'active':'' ?>"
-                    data-src="<?= h($url) ?>"
-                    style="width: 64px; height: 64px; flex-shrink: 0; background: #FFF; border-color: var(--border); border-radius: 6px;">
-              <img src="<?= h($url) ?>"
-                   loading="lazy"
-                   decoding="async"
-                   width="64"
-                   height="64"
-                   referrerpolicy="no-referrer"
-                   data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $url) : '[]' ?>"
-                   data-image-placeholder="<?= h(default_placeholder_image()) ?>"
-                   onerror="window.SkinSyntaxImageFallback(this)"
-                   alt="thumb"
-                   style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
-            </button>
-          <?php endforeach; ?>
+        <div class="detail-thumbs-shell" aria-label="Thư viện hình ảnh sản phẩm">
+          <button type="button" class="detail-thumbs-nav" data-thumbs-prev aria-label="Lướt ảnh sản phẩm sang trái">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+          </button>
+          <div class="detail-thumbs d-flex gap-2 overflow-x-auto pb-2">
+            <?php foreach ($imgs as $i => $url): ?>
+              <button type="button"
+                      class="thumb-btn border p-1 <?= $i===0?'active':'' ?>"
+                      data-src="<?= h($url) ?>"
+                      data-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $url) : '[]' ?>"
+                      aria-label="Xem ảnh sản phẩm <?= (int)$i + 1 ?>"
+                      aria-current="<?= $i === 0 ? 'true' : 'false' ?>"
+                      style="width: 64px; height: 64px; flex-shrink: 0; background: #FFF; border-color: var(--border); border-radius: 6px;">
+                <img src="<?= h($url) ?>"
+                     loading="lazy"
+                     decoding="async"
+                     width="64"
+                     height="64"
+                     referrerpolicy="no-referrer"
+                     data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $url) : '[]' ?>"
+                     data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                     onerror="window.SkinSyntaxImageFallback(this)"
+                     alt="Ảnh sản phẩm <?= (int)$i + 1 ?>"
+                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+              </button>
+            <?php endforeach; ?>
+          </div>
+          <button type="button" class="detail-thumbs-nav" data-thumbs-next aria-label="Lướt ảnh sản phẩm sang phải">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+          </button>
         </div>
       <?php endif; ?>
 
@@ -798,6 +1209,48 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
           </div>
           <a href="<?= BASE_URL ?>/index.php?r=goiy" class="btn btn-sm btn-light px-3 fw-semibold" style="color: #183B2B; border-radius: 6px; font-size: 0.78rem;">Hỏi AI &rarr;</a>
         </div>
+
+        <?php if (!empty($productVideos)): ?>
+          <?php
+            $inlinePrimaryVideo = $productVideos[0];
+            $inlinePrimaryReward = $inlinePrimaryVideo['reward_campaign'] ?? null;
+            $inlineVideoDuration = (float)($inlinePrimaryVideo['duration'] ?? 0);
+          ?>
+          <!-- Optional video reward entry point: does not block purchase or product details. -->
+          <div class="syna-video-offer-card" id="synaVideoOffer">
+            <button type="button"
+                    class="syna-video-offer-card__poster border-0 p-0 text-start"
+                    data-syna-video-open
+                    aria-controls="synaVideoModal"
+                    aria-label="Mở video giới thiệu sản phẩm và xem tiến trình nhận voucher"
+                    style="background-image: url('<?= h($main) ?>');">
+              <span class="syna-video-offer-card__poster-label"><i class="fas fa-play-circle me-1"></i> Xem video</span>
+            </button>
+            <div class="syna-video-offer-card__content">
+              <div class="d-flex align-items-start justify-content-between gap-2">
+                <div class="min-w-0">
+                  <div class="syna-video-offer-card__title text-truncate">
+                    <i class="fas fa-video me-1"></i> Video sản phẩm
+                  </div>
+                  <div class="syna-video-offer-card__meta">
+                    <?= h($inlinePrimaryReward['campaign_name'] ?? 'Xem video nhận ưu đãi') ?>
+                    <?php if ($inlineVideoDuration > 0): ?> · <?= (int)round($inlineVideoDuration) ?> giây<?php endif; ?>
+                  </div>
+                </div>
+                <button type="button" class="syna-video-offer-card__button" data-syna-video-open aria-controls="synaVideoModal">
+                  <i class="fas fa-play me-1"></i> Xem ngay
+                </button>
+              </div>
+              <div class="syna-video-offer-card__progress" aria-hidden="true">
+                <div class="syna-video-offer-card__progress-bar" id="synaVideoOfferProgressBar"></div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between gap-2 syna-video-offer-card__meta">
+                <span id="synaVideoOfferStatus">Còn <?= gmdate($inlineVideoDuration >= 3600 ? 'H:i:s' : 'i:s', (int)round($inlineVideoDuration)) ?> để mở khóa voucher</span>
+                <span id="synaVideoOfferTime" class="fw-semibold text-nowrap">0:00 / <?= gmdate($inlineVideoDuration >= 3600 ? 'H:i:s' : 'i:s', (int)round($inlineVideoDuration)) ?> · còn <?= gmdate($inlineVideoDuration >= 3600 ? 'H:i:s' : 'i:s', (int)round($inlineVideoDuration)) ?></span>
+              </div>
+            </div>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   <script>
@@ -899,38 +1352,59 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
               continue;
             }
 
-            $isBulletList = count(array_filter($lines, static function ($line) {
-              return preg_match('/^(?:[-*•]|–)\s*/u', $line) === 1;
-            })) === count($lines);
+            // Dữ liệu crawl đôi khi xuống dòng ở giữa một câu. Chỉ giữ cấu trúc
+            // khi dòng thật sự là bullet/đánh số, còn câu thường sẽ được nối bằng khoảng trắng.
+            $groups = [];
+            $currentType = null;
+            $currentLines = [];
+            $flushGroup = static function () use (&$groups, &$currentType, &$currentLines): void {
+              if ($currentType !== null && $currentLines !== []) {
+                $groups[] = ['type' => $currentType, 'lines' => $currentLines];
+              }
+              $currentType = null;
+              $currentLines = [];
+            };
 
-            $isOrderedList = count(array_filter($lines, static function ($line) {
-              return preg_match('/^(?:\d+[\.)]|bước\s*\d+)\s*/iu', $line) === 1;
-            })) === count($lines);
-
-            if ($isOrderedList) {
-              $items = array_map(static function ($line) {
-                $clean = preg_replace('/^(?:\d+[\.)]|bước\s*\d+)\s*/iu', '', $line);
-                return '<li>' . nl2br_safe(trim((string)$clean)) . '</li>';
-              }, $lines);
-              $html[] = '<ol class="detail-rich-copy__ordered">' . implode('', $items) . '</ol>';
-              continue;
+            foreach ($lines as $line) {
+              $type = preg_match('/^(?:[-*•]|–)\s*/u', $line) === 1
+                ? 'bullet'
+                : (preg_match('/^(?:\d+[\.)]|bước\s*\d+)\s*/iu', $line) === 1 ? 'ordered' : 'text');
+              if ($currentType !== null && $type !== $currentType) {
+                $flushGroup();
+              }
+              $currentType = $type;
+              $currentLines[] = $line;
             }
+            $flushGroup();
 
-            if ($isBulletList) {
-              $items = array_map(static function ($line) {
-                $clean = preg_replace('/^(?:[-*•]|–)\s*/u', '', $line);
-                return '<li>' . nl2br_safe(trim((string)$clean)) . '</li>';
-              }, $lines);
-              $html[] = '<ul class="detail-rich-copy__list">' . implode('', $items) . '</ul>';
-              continue;
-            }
+            foreach ($groups as $group) {
+              $groupLines = (array)($group['lines'] ?? []);
+              if ($groupLines === []) {
+                continue;
+              }
+              $type = (string)($group['type'] ?? 'text');
+              if ($type === 'ordered' || $type === 'bullet') {
+                $items = array_map(static function ($line) use ($type): string {
+                  $pattern = $type === 'ordered'
+                    ? '/^(?:\d+[\.)]|bước\s*\d+)\s*/iu'
+                    : '/^(?:[-*•]|–)\s*/u';
+                  $clean = preg_replace($pattern, '', (string)$line);
+                  $clean = preg_replace('/\s+/u', ' ', trim((string)$clean));
+                  return '<li>' . nl2br_safe($clean) . '</li>';
+                }, $groupLines);
+                $class = $type === 'ordered' ? 'detail-rich-copy__ordered' : 'detail-rich-copy__list';
+                $html[] = '<' . ($type === 'ordered' ? 'ol' : 'ul') . ' class="' . $class . '">' . implode('', $items) . '</' . ($type === 'ordered' ? 'ol' : 'ul') . '>';
+                continue;
+              }
 
-            $content = nl2br_safe(implode("\n", $lines));
-            if (!$hasLead && $mode === 'lead-first') {
-              $html[] = '<p class="detail-rich-copy__lead">' . $content . '</p>';
-              $hasLead = true;
-            } else {
-              $html[] = '<p class="detail-rich-copy__paragraph">' . $content . '</p>';
+              $content = preg_replace('/\s+/u', ' ', trim(implode(' ', $groupLines)));
+              $content = nl2br_safe((string)$content);
+              if (!$hasLead && $mode === 'lead-first') {
+                $html[] = '<p class="detail-rich-copy__lead">' . $content . '</p>';
+                $hasLead = true;
+              } else {
+                $html[] = '<p class="detail-rich-copy__paragraph">' . $content . '</p>';
+              }
             }
           }
 
@@ -947,11 +1421,18 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
         <?php
           $primaryVid = $productVideos[0];
           $currentPid = (string)($p['ma_san_pham'] ?? $id);
-          $initialStreamUrl = BASE_URL . '/index.php?r=product_video_stream&id=' . urlencode($primaryVid['id']) . '&product_id=' . urlencode($currentPid);
+          $initialProxyUrl = BASE_URL . '/index.php?r=product_video_stream&id=' . urlencode($primaryVid['id']) . '&product_id=' . urlencode($currentPid);
+          $initialVideoUrl = trim((string)($primaryVid['video_url'] ?? ''));
+          $initialStreamUrl = $initialVideoUrl !== '' ? $initialVideoUrl : $initialProxyUrl;
         ?>
-        <!-- Syna 3D Product Video Showcase -->
-        <div class="syna-video-showcase-card mt-4 mb-3 p-4 rounded-4 bg-white border w-100" id="synaVideoShowcase">
-          <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <!-- Syna 3D Product Video Popup -->
+        <div class="syna-video-modal" id="synaVideoModal" aria-hidden="true">
+          <div class="syna-video-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="synaVideoTitle">
+            <button type="button" class="syna-video-modal__close" id="synaVideoModalClose" aria-label="Đóng video">
+              <i class="fas fa-times"></i>
+            </button>
+            <div class="syna-video-showcase-card syna-video-modal__card p-4 rounded-4 bg-white border w-100" id="synaVideoShowcase">
+          <div class="syna-video-showcase-header d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
             <div>
               <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge px-2.5 py-1 fw-bold text-uppercase" style="background: #eaf5ea; color: #185334; border: 1px solid #cce3cb; font-size: 0.74rem; letter-spacing: 0.04em; border-radius: 6px;">
@@ -970,6 +1451,11 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                 Độ phân giải: <?= h($primaryVid['resolution'] ?? '1280x720') ?> · <?= round((float)($primaryVid['duration'] ?? 0)) ?>s
               </span>
             </div>
+          </div>
+
+          <div class="syna-video-modal__countdown">
+            <span><i class="fas fa-gift me-1"></i> Xem đủ video để nhận voucher</span>
+            <span id="synaVideoModalCountdown">Còn <?= gmdate((float)($primaryVid['duration'] ?? 0) >= 3600 ? "H:i:s" : "i:s", (int)round((float)($primaryVid['duration'] ?? 0))) ?></span>
           </div>
 
           <div class="syna-video-viewport" id="synaVideoViewport">
@@ -1006,6 +1492,27 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                 <i class="fas fa-redo me-1"></i> Thử lại
               </button>
             </div>
+          </div>
+
+          <!-- Product link stays available inside the popup, like a short-video shop card. -->
+          <div class="syna-video-product-link">
+            <img class="syna-video-product-link__image"
+                 src="<?= h($main) ?>"
+                 alt="<?= h($p['ten_san_pham'] ?? '') ?>"
+                 loading="lazy"
+                 decoding="async"
+                 referrerpolicy="no-referrer"
+                 data-image-fallbacks="<?= $detailImageFallbacks ?>"
+                 data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                 onerror="window.SkinSyntaxImageFallback(this)">
+            <div class="min-w-0">
+              <div class="small text-muted mb-1"><?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
+              <div class="syna-video-product-link__name"><?= h($p['ten_san_pham'] ?? '') ?></div>
+              <div class="syna-video-product-link__price"><?= vnd((int)($displayPrice ?? ($p['gia_ban'] ?? 0))) ?></div>
+            </div>
+            <a class="syna-video-product-link__button" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= urlencode($currentPid) ?>">
+              Xem sản phẩm <i class="fas fa-arrow-up-right-from-square ms-1"></i>
+            </a>
           </div>
 
           <?php
@@ -1059,10 +1566,10 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
 
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 text-muted" style="font-size: 0.78rem;">
               <span id="synaRewardStatusText" class="fw-medium text-secondary">
-                Xem hết video để mở khóa ưu đãi
+                Còn <?= gmdate($inlineVideoDuration >= 3600 ? 'H:i:s' : 'i:s', (int)round($inlineVideoDuration)) ?> để mở khóa voucher
               </span>
               <span id="synaRewardProgressTime" class="fw-semibold text-dark">
-                0:00 / <?= gmdate((float)($primaryVid['duration'] ?? 0) >= 3600 ? "H:i:s" : "i:s", (int)round((float)($primaryVid['duration'] ?? 0))) ?> (0%)
+                0:00 / <?= gmdate((float)($primaryVid['duration'] ?? 0) >= 3600 ? "H:i:s" : "i:s", (int)round((float)($primaryVid['duration'] ?? 0))) ?> · còn <?= gmdate((float)($primaryVid['duration'] ?? 0) >= 3600 ? "H:i:s" : "i:s", (int)round((float)($primaryVid['duration'] ?? 0))) ?>
               </span>
             </div>
 
@@ -1121,7 +1628,9 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
               <div class="d-flex flex-wrap gap-2" id="synaVideoPlaylist">
                 <?php foreach ($productVideos as $idx => $vItem): ?>
                   <?php
-                    $vStreamUrl = BASE_URL . '/index.php?r=product_video_stream&id=' . urlencode($vItem['id']) . '&product_id=' . urlencode($currentPid);
+                    $vProxyUrl = BASE_URL . '/index.php?r=product_video_stream&id=' . urlencode($vItem['id']) . '&product_id=' . urlencode($currentPid);
+                    $vVideoUrl = trim((string)($vItem['video_url'] ?? ''));
+                    $vStreamUrl = $vVideoUrl !== '' ? $vVideoUrl : $vProxyUrl;
                     $vRewardJson = !empty($vItem['reward_campaign']) ? json_encode($vItem['reward_campaign'], JSON_UNESCAPED_UNICODE) : '';
                   ?>
                   <div class="syna-video-playlist-item <?= $idx === 0 ? 'is-active' : '' ?>"
@@ -1145,6 +1654,8 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
               </div>
             </div>
           <?php endif; ?>
+            </div>
+          </div>
         </div>
 
         <script>
@@ -1156,6 +1667,14 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
             const retryBtn = document.getElementById('synaVideoRetryBtn');
             const titleEl = document.getElementById('synaVideoTitle');
             const metaEl = document.getElementById('synaVideoMetaInfo');
+            const videoModal = document.getElementById('synaVideoModal');
+            const videoModalDialog = videoModal ? videoModal.querySelector('.syna-video-modal__dialog') : null;
+            const videoModalClose = document.getElementById('synaVideoModalClose');
+            const videoOpenButtons = document.querySelectorAll('[data-syna-video-open]');
+            const offerProgressBar = document.getElementById('synaVideoOfferProgressBar');
+            const offerStatus = document.getElementById('synaVideoOfferStatus');
+            const offerProgressTime = document.getElementById('synaVideoOfferTime');
+            const modalCountdown = document.getElementById('synaVideoModalCountdown');
 
             // Reward UI Elements
             const rewardCard = document.getElementById('synaRewardCard');
@@ -1192,6 +1711,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
             let isEligible = false;
             let isSessionStarting = false;
             let isClaiming = false;
+            let lastVideoOpenControl = null;
 
             function formatTime(seconds) {
               const sec = Math.max(0, Math.floor(seconds || 0));
@@ -1200,18 +1720,83 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
               return `${m}:${s < 10 ? '0' : ''}${s}`;
             }
 
+            function updateOfferProgress(percent, watchedSec, totalSec, eligible = false, rewarded = false) {
+              if (offerProgressBar) offerProgressBar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+              if (offerProgressTime) {
+                const remaining = Math.max(0, totalSec - watchedSec);
+                offerProgressTime.textContent = eligible
+                  ? 'Đã đủ thời lượng'
+                  : `${formatTime(watchedSec)} / ${formatTime(totalSec)} · còn ${formatTime(remaining)}`;
+                if (modalCountdown) {
+                  modalCountdown.textContent = eligible
+                    ? (rewarded ? 'Voucher đã vào ví' : 'Đã đủ thời lượng')
+                    : `Còn ${formatTime(remaining)}`;
+                }
+              }
+              if (offerStatus) {
+                offerStatus.textContent = rewarded
+                  ? 'Voucher đã được cấp vào ví tài khoản'
+                  : eligible
+                    ? (isUserLoggedIn ? 'Đã đủ điều kiện · đang cấp voucher' : 'Đã đủ điều kiện · đăng nhập để nhận voucher')
+                    : `Còn ${formatTime(Math.max(0, totalSec - watchedSec))} để mở khóa voucher`;
+              }
+            }
+
+            function openVideoModal(control) {
+              if (!videoModal) return;
+              lastVideoOpenControl = control || document.activeElement;
+              videoModal.classList.add('is-open');
+              videoModal.setAttribute('aria-hidden', 'false');
+              document.body.classList.add('syna-video-modal-open');
+              if (videoModalDialog) videoModalDialog.scrollTop = 0;
+              if (videoModalClose) videoModalClose.focus();
+            }
+
+            function closeVideoModal() {
+              if (!videoModal) return;
+              videoModal.classList.remove('is-open');
+              videoModal.setAttribute('aria-hidden', 'true');
+              document.body.classList.remove('syna-video-modal-open');
+              if (player && !player.paused) player.pause();
+              if (lastVideoOpenControl && typeof lastVideoOpenControl.focus === 'function') {
+                lastVideoOpenControl.focus();
+              }
+            }
+
+            videoOpenButtons.forEach((button) => {
+              button.addEventListener('click', () => openVideoModal(button));
+            });
+            if (videoModalClose) videoModalClose.addEventListener('click', closeVideoModal);
+            if (videoModal) {
+              videoModal.addEventListener('click', (event) => {
+                if (event.target === videoModal) closeVideoModal();
+              });
+            }
+            document.addEventListener('keydown', (event) => {
+              if (event.key === 'Escape' && videoModal && videoModal.classList.contains('is-open')) {
+                closeVideoModal();
+              }
+            });
+
             function updateRewardUI(data) {
               if (!rewardCard) return;
 
               const percent = Math.min(100, Math.max(0, parseFloat(data.watched_coverage_percent || 0)));
               const watchedSec = parseFloat(data.watched_seconds || 0);
               const totalSec = videoDuration > 0 ? videoDuration : parseFloat(data.video_duration || 0);
+              const rewarded = data.watch_state === 'REWARDED' || data.is_rewarded || data.reward_voucher_code;
+              const eligible = Boolean(data.is_eligible || data.watch_state === 'ELIGIBLE' || rewarded);
+
+              updateOfferProgress(percent, watchedSec, totalSec, eligible, rewarded);
 
               if (rewardProgressBar) {
                 rewardProgressBar.style.width = `${percent}%`;
               }
               if (rewardProgressTime) {
-                rewardProgressTime.textContent = `${formatTime(watchedSec)} / ${formatTime(totalSec)} (${Math.round(percent)}%)`;
+                const remaining = Math.max(0, totalSec - watchedSec);
+                rewardProgressTime.textContent = eligible
+                  ? `${formatTime(watchedSec)} / ${formatTime(totalSec)} · Đủ thời lượng`
+                  : `${formatTime(watchedSec)} / ${formatTime(totalSec)} · còn ${formatTime(remaining)} (${Math.round(percent)}%)`;
               }
 
               // Case 1: Already Claimed / Rewarded
@@ -1296,7 +1881,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                 }
                 if (rewardStatusText && !isEligible) {
                   rewardStatusText.className = 'fw-medium text-secondary';
-                  rewardStatusText.textContent = 'Xem hết video để mở khóa ưu đãi';
+                  rewardStatusText.textContent = `Còn ${formatTime(Math.max(0, totalSec - watchedSec))} để mở khóa voucher`;
                 }
               }
             }
@@ -1600,9 +2185,15 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
           }
           $sectionTitle = $hasRealRule ? 'Sản phẩm khách hàng thường mua cùng' : 'Gợi ý kết hợp cho routine';
           $sectionBadge = $hasRealRule ? 'Thường được mua cùng' : 'Gợi ý chu trình';
+          $routineRefreshPid = trim((string)($p['ma_san_pham'] ?? $id ?? ''));
+          $routineRefreshUrl = BASE_URL . '/index.php?r=routine_recommendations&id=' . rawurlencode($routineRefreshPid);
         ?>
         <!-- Frequently Bought Together / Gợi Ý Mua Kèm (Pairwise Co-occurrence & Routine Fallback) -->
-        <div class="frequently-bought-card mt-4 mb-2 p-4 rounded-4 bg-white border w-100" style="border-radius: 20px !important; border-color: #E2EADF !important; box-shadow: 0 4px 20px rgba(24, 59, 43, 0.04);">
+        <div class="frequently-bought-card mt-4 mb-2 p-4 rounded-4 bg-white border w-100"
+             data-routine-recommendation-block
+             data-routine-refresh-url="<?= h($routineRefreshUrl) ?>"
+             data-routine-offset="4"
+             style="border-radius: 20px !important; border-color: #E2EADF !important; box-shadow: 0 4px 20px rgba(24, 59, 43, 0.04);">
           <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
             <div>
               <div class="d-flex align-items-center gap-2">
@@ -1613,22 +2204,30 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
               </div>
               <h5 class="fw-bold mt-1 mb-0" style="color: #0F172A; font-size: 1.15rem;"><?= $sectionTitle ?></h5>
             </div>
-            <?php if ($hasRealRule): ?>
-              <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.78rem;">Phân tích giao dịch mua cùng</span>
-            <?php else: ?>
-              <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.78rem;">Gợi ý theo bước dưỡng</span>
-            <?php endif; ?>
+            <div class="d-flex align-items-center gap-2">
+              <?php if ($hasRealRule): ?>
+                <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.78rem;">Phân tích giao dịch mua cùng</span>
+              <?php else: ?>
+                <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.78rem;">Gợi ý theo bước dưỡng</span>
+              <?php endif; ?>
+              <button type="button" class="detail-product-refresh" data-product-block-refresh aria-label="Đổi sản phẩm gợi ý" title="Xem sản phẩm gợi ý khác">
+                <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
+                <span>Đổi sản phẩm</span>
+              </button>
+            </div>
           </div>
 
           <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
             <?php foreach ($frequentlyBought as $fbItem): ?>
               <?php 
                 $fbImg = resolve_image_url(function_exists('product_image_source') ? product_image_source($fbItem) : (string)($fbItem['hinh_anh'] ?? $fbItem['link_hinh_anh'] ?? ''));
-                $fbUrl = BASE_URL . '/index.php?r=chitiet&id=' . urlencode((string)$fbItem['ma_san_pham']);
+                $fbProductId = (string)($fbItem['ma_san_pham'] ?? $fbItem['id'] ?? '');
+                $fbUrl = BASE_URL . '/index.php?r=chitiet&id=' . urlencode($fbProductId);
                 $source = $fbItem['recommendation_source'] ?? '';
                 $isGenuineRule = ($source === 'ASSOCIATION_RULE');
                 $hasConfidence = $isGenuineRule && isset($fbItem['confidence']) && $fbItem['confidence'] !== null && $fbItem['confidence'] > 0;
                 $fbConf = $hasConfidence ? round($fbItem['confidence'] * 100) : null;
+                $fbIsOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($fbItem) : false;
               ?>
               <div class="col">
                 <div class="card h-100 border p-2.5 d-flex flex-column justify-content-between position-relative" style="border-radius: 14px; border-color: #EEF2F6 !important; background: #FAFCF9; transition: transform 0.2s, box-shadow 0.2s;">
@@ -1680,9 +2279,29 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                         </span>
                       <?php endif; ?>
                     </div>
-                    <a href="<?= $fbUrl ?>" class="btn btn-sm w-100 fw-semibold" style="background: #183B2B; color: #fff; border-radius: 8px; font-size: 0.78rem;">
-                      <i class="fa-solid fa-eye me-1"></i> Xem ngay
-                    </a>
+                    <div class="routine-recommend-actions">
+                      <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100">
+                        <input type="hidden" name="action" value="add_to_cart">
+                        <input type="hidden" name="product_id" value="<?= h($fbProductId) ?>">
+                        <input type="hidden" name="ma_san_pham" value="<?= h($fbProductId) ?>">
+                        <input type="hidden" name="quantity" value="1">
+                        <input type="hidden" name="qty" value="1">
+                        <button class="btn btn-sm w-100 routine-recommend-button routine-recommend-button--cart" type="submit" <?= $fbIsOutOfStock ? 'disabled' : '' ?> title="Thêm vào giỏ">
+                          <?= $fbIsOutOfStock ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus me-1" aria-hidden="true"></i> Thêm giỏ' ?>
+                        </button>
+                      </form>
+                      <form method="post" action="<?= BASE_URL ?>/index.php?r=them_gio_hang_ajax" class="m-0 w-100">
+                        <input type="hidden" name="action" value="add_to_cart">
+                        <input type="hidden" name="buy_now" value="1">
+                        <input type="hidden" name="product_id" value="<?= h($fbProductId) ?>">
+                        <input type="hidden" name="ma_san_pham" value="<?= h($fbProductId) ?>">
+                        <input type="hidden" name="quantity" value="1">
+                        <input type="hidden" name="qty" value="1">
+                        <button class="btn btn-sm w-100 routine-recommend-button routine-recommend-button--buy" type="submit" <?= $fbIsOutOfStock ? 'disabled' : '' ?> title="Mua ngay">
+                          <?= $fbIsOutOfStock ? 'Hết hàng' : 'Mua ngay' ?>
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1690,6 +2309,8 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
           </div>
         </div>
       <?php endif; ?>
+
+      <script src="<?= BASE_URL ?>/assets/js/detail-recommendation-refresh.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/detail-recommendation-refresh.js') ?: '1' ?>" defer></script>
 
       <?php
         // U08: "Sản phẩm tương tự" (SIMILAR_TO trong Neo4j) - tải lười bằng fetch, nằm cạnh khối mua kèm cũ (không thay thế).
@@ -1699,7 +2320,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
       <?php if ($similarEnabled && $similarPid !== '' && preg_match('/^[A-Za-z0-9_-]{1,32}$/', $similarPid)): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/search-fallback.css?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/css/search-fallback.css') ?: '1' ?>">
         <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/similar-products.css?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/css/similar-products.css') ?: '1' ?>">
-        <div class="ssim-wrap w-100" data-similar-products aria-live="polite" aria-busy="true"
+        <div class="ssim-wrap w-100" data-similar-products data-offset="0" aria-live="polite" aria-busy="true"
              data-url="<?= h(BASE_URL . '/index.php?r=similar_products&id=' . rawurlencode($similarPid)) ?>">
           <div class="ssim-skeleton" aria-hidden="true">
             <div class="ssim-skel-title"></div>
@@ -1991,19 +2612,79 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
 <script>
 (function(){
   const main = document.getElementById('mainImage');
-  const btns = document.querySelectorAll('.thumb-btn');
+  const btns = Array.from(document.querySelectorAll('.thumb-btn'));
+  const stage = document.querySelector('.detail-gallery-stage');
+  const thumbTrack = document.querySelector('.detail-thumbs-shell .detail-thumbs');
+  const prev = document.querySelector('[data-gallery-prev]');
+  const next = document.querySelector('[data-gallery-next]');
+  const thumbsPrev = document.querySelector('[data-thumbs-prev]');
+  const thumbsNext = document.querySelector('[data-thumbs-next]');
   if (!main || !btns.length) return;
 
-  btns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const src = btn.getAttribute('data-src');
-      if (!src) return;
-      main.src = src;
+  let currentIndex = Math.max(0, btns.findIndex(btn => btn.classList.contains('active')));
+  let autoRotateTimer = null;
 
-      btns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  const reducedMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const selectImage = (requestedIndex, shouldScrollThumb = true) => {
+    currentIndex = (requestedIndex + btns.length) % btns.length;
+    const btn = btns[currentIndex];
+    const src = btn.getAttribute('data-src');
+    if (!src) return;
+
+    main.src = src;
+    main.setAttribute('data-image-fallbacks', btn.getAttribute('data-fallbacks') || '[]');
+    btns.forEach((item, index) => {
+      const isActive = index === currentIndex;
+      item.classList.toggle('active', isActive);
+      item.setAttribute('aria-current', isActive ? 'true' : 'false');
     });
-  });
+    if (shouldScrollThumb && typeof btn.scrollIntoView === 'function') {
+      btn.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+    }
+  };
+
+  const stopAutoRotate = () => {
+    if (autoRotateTimer) {
+      window.clearInterval(autoRotateTimer);
+      autoRotateTimer = null;
+    }
+  };
+
+  const startAutoRotate = () => {
+    stopAutoRotate();
+    if (btns.length < 2 || reducedMotion()) return;
+    // Tự đổi ảnh không được kéo cả trang về khu vực thumbnail khi người dùng
+    // đang đọc phần nội dung bên dưới sản phẩm.
+    autoRotateTimer = window.setInterval(() => selectImage(currentIndex + 1, false), 4500);
+  };
+
+  const goTo = (direction) => {
+    selectImage(currentIndex + direction);
+    startAutoRotate();
+  };
+
+  btns.forEach((btn, index) => btn.addEventListener('click', () => {
+    selectImage(index);
+    startAutoRotate();
+  }));
+  if (prev) prev.addEventListener('click', () => goTo(-1));
+  if (next) next.addEventListener('click', () => goTo(1));
+  if (thumbsPrev && thumbTrack) thumbsPrev.addEventListener('click', () => thumbTrack.scrollBy({ left: -220, behavior: reducedMotion() ? 'auto' : 'smooth' }));
+  if (thumbsNext && thumbTrack) thumbsNext.addEventListener('click', () => thumbTrack.scrollBy({ left: 220, behavior: reducedMotion() ? 'auto' : 'smooth' }));
+
+  if (stage) {
+    stage.addEventListener('mouseenter', stopAutoRotate);
+    stage.addEventListener('mouseleave', startAutoRotate);
+    stage.addEventListener('focusin', stopAutoRotate);
+    stage.addEventListener('focusout', startAutoRotate);
+    stage.addEventListener('touchstart', stopAutoRotate, { passive: true });
+    stage.addEventListener('touchend', startAutoRotate, { passive: true });
+  }
+  document.addEventListener('visibilitychange', () => document.hidden ? stopAutoRotate() : startAutoRotate());
+
+  selectImage(currentIndex, false);
+  startAutoRotate();
 })();
 
 (function(){

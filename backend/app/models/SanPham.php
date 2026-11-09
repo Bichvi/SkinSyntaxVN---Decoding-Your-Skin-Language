@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../services/ProductQueryCache.php';
 require_once __DIR__ . '/../services/SearchSkinProfile.php';
 require_once __DIR__ . '/../services/CatalogEvents.php';
+require_once __DIR__ . '/../services/OrderTabs.php';
 
 class SanPham {
     // Trang danh sách không dùng 3 trường nặng này; chitiet/admin đọc đầy đủ qua findById.
@@ -50,6 +51,7 @@ class SanPham {
         'loai_da' => 1,
         'danh_muc_day_du' => 1,
         'loai_san_pham' => 1,
+        'thuong_hieu' => 1,
         'ma_thuong_hieu' => 1,
         'ma_danh_muc' => 1,
         'ma_xuat_xu' => 1,
@@ -59,6 +61,8 @@ class SanPham {
         'so_luong_danh_gia' => 1,
         'link_hinh_anh' => 1,
         'hinh_anh' => 1,
+        'image_url' => 1,
+        'image' => 1,
         'trang_thai' => 1,
         'trang_thai_kho' => 1,
         'so_luong_ton_kho' => 1,
@@ -104,7 +108,7 @@ class SanPham {
     }
 
     public function getProductStock(array $product): ?int {
-        foreach (['so_luong_ton_kho', 'so_luong_ton', 'ton_kho', 'stock', 'quantity'] as $field) {
+        foreach (['so_luong_ton_kho', 'so_luong_ton', 'so_luong_kho', 'so_luong', 'ton_kho', 'stock', 'quantity'] as $field) {
             if (array_key_exists($field, $product) && $product[$field] !== null && $product[$field] !== '') {
                 return max(0, (int)$product[$field]);
             }
@@ -271,7 +275,12 @@ class SanPham {
 
         // Ghép tên thương hiệu / danh mục từ các collection phụ (Lookup từ in-memory cache)
         if (isset($p['ma_thuong_hieu'])) {
-            $p['thuong_hieu'] = $this->getBrandName($p['ma_thuong_hieu']);
+            $brandName = $this->getBrandName($p['ma_thuong_hieu']);
+            // Một số bản ghi cũ chỉ lưu tên trực tiếp trong thuong_hieu.
+            // Không ghi đè tên đó bằng chuỗi rỗng nếu lookup theo mã không có kết quả.
+            if ($brandName !== '') {
+                $p['thuong_hieu'] = $brandName;
+            }
         }
 
         if (isset($p['ma_danh_muc'])) {
@@ -1130,6 +1139,253 @@ class SanPham {
         return $tree;
     }
 
+    /**
+     * Các danh mục dùng cho homepage phải đi từ cây danh_muc canonical và có
+     * ít nhất một sản phẩm đang bán. Ảnh đại diện lấy từ chính sản phẩm đó,
+     * không dùng artwork tĩnh hay ảnh sinh tự động.
+     */
+    public function homepageCategoryCards(int $limit = 12): array {
+        $limit = max(1, min(24, $limit));
+
+        return ProductQueryCache::remember('home:category_cards:v1', 1800, function () use ($limit): array {
+            $tree = $this->menuTree();
+            $hierarchy = $this->getCanonicalCategoryHierarchy();
+            $cards = [];
+
+            foreach ($tree as $rootItem) {
+                foreach ((array)($rootItem['groups'] ?? []) as $group) {
+                    $categoryId = (int)($group['id'] ?? 0);
+                    $name = trim((string)($group['name'] ?? ''));
+                    if ($categoryId <= 0 || $name === '') {
+                        continue;
+                    }
+
+                    $leafIds = array_values(array_unique(array_map(
+                        'intval',
+                        (array)($hierarchy['leaf_ids_by_node'][$categoryId] ?? [$categoryId])
+                    )));
+                    if ($leafIds === []) {
+                        continue;
+                    }
+
+                    $product = null;
+                    foreach ($this->db->san_pham->find(
+                        ['$and' => [
+                            $this->availableProductFilter(),
+                            ['ma_danh_muc' => ['$in' => $leafIds]],
+                        ]],
+                        [
+                            'sort' => ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1],
+                            'limit' => 12,
+                            'projection' => self::CARD_PROJECTION,
+                        ]
+                    ) as $doc) {
+                        $candidate = $this->normalizeProductRecord($doc);
+                        if ($this->isProductAvailable($candidate)) {
+                            $product = $candidate;
+                            break;
+                        }
+                    }
+
+                    if (!is_array($product)) {
+                        continue;
+                    }
+
+                    $cards[] = [
+                        'id' => $categoryId,
+                        'name' => $name,
+                        'count' => max(0, (int)($group['recursive_count'] ?? $group['direct_count'] ?? 0)),
+                        'product' => $product,
+                    ];
+                    if (count($cards) >= $limit) {
+                        return $cards;
+                    }
+                }
+            }
+
+            return $cards;
+        });
+    }
+
+    /**
+     * Thương hiệu homepage được gom từ các sản phẩm thật đang bán. Sản phẩm
+     * bán chạy nhất của mỗi thương hiệu làm ảnh đại diện; không gán ảnh theo
+     * tên thương hiệu và không tạo dữ liệu nếu catalog không có.
+     */
+    public function homepageBrandCards(int $limit = 12): array {
+        $limit = max(1, min(24, $limit));
+
+        return ProductQueryCache::remember('home:brand_cards:v2', 1800, function () use ($limit): array {
+            $brandNames = [];
+            foreach ($this->listBrandOptions() as $brand) {
+                $brandId = trim((string)($brand['ma_thuong_hieu'] ?? ''));
+                $brandName = trim((string)($brand['ten_thuong_hieu'] ?? ''));
+                if ($brandId !== '' && $brandName !== '') {
+                    $brandNames[$brandId] = $brandName;
+                }
+            }
+
+            $pipeline = [
+                ['$match' => [
+                    '$and' => [
+                        $this->availableProductFilter(),
+                        ['$or' => [
+                            ['thuong_hieu' => ['$exists' => true, '$ne' => '']],
+                            ['ma_thuong_hieu' => ['$exists' => true, '$ne' => '']],
+                        ]],
+                    ],
+                ]],
+                ['$sort' => ['so_luong_da_ban' => -1, 'so_luong_danh_gia' => -1, 'ma_san_pham' => -1]],
+                ['$group' => [
+                    '_id' => ['$cond' => [
+                        ['$ne' => [
+                            ['$ifNull' => ['$thuong_hieu', '']],
+                            '',
+                        ]],
+                        ['$ifNull' => ['$thuong_hieu', '']],
+                        '$ma_thuong_hieu',
+                    ]],
+                    'count' => ['$sum' => 1],
+                    'product' => ['$first' => [
+                        'ma_san_pham' => '$ma_san_pham',
+                        'ten_san_pham' => '$ten_san_pham',
+                        'thuong_hieu' => '$thuong_hieu',
+                        'ma_thuong_hieu' => '$ma_thuong_hieu',
+                        'link_hinh_anh' => '$link_hinh_anh',
+                        'hinh_anh' => '$hinh_anh',
+                        'image_url' => '$image_url',
+                        'image' => '$image',
+                    ]],
+                ]],
+                ['$sort' => ['count' => -1, '_id' => 1]],
+                ['$limit' => $limit * 2],
+            ];
+
+            $cards = [];
+            foreach ($this->db->san_pham->aggregate($pipeline) as $row) {
+                $rawKey = trim((string)($row['_id'] ?? ''));
+                $name = is_numeric($rawKey) ? ($brandNames[$rawKey] ?? '') : $rawKey;
+                if ($name === '') {
+                    continue;
+                }
+                $product = (array)($row['product'] ?? []);
+                $cards[] = [
+                    'id' => $rawKey,
+                    'name' => $name,
+                    'count' => max(0, (int)($row['count'] ?? 0)),
+                    'product' => $product,
+                ];
+                if (count($cards) >= $limit) {
+                    break;
+                }
+            }
+
+            return $cards;
+        });
+    }
+
+    /**
+     * Tổng hợp lượng mua trong các đơn hoàn thành của 30 ngày gần nhất.
+     * Không dùng so_luong_da_ban tích lũy làm nguồn cho nhãn "bán chạy".
+     * Kết quả được cache 6 giờ; sản phẩm vẫn phải còn hiển thị và còn bán được.
+     */
+    public function recentTopSellers(int $limit = 16, int $days = 30): array {
+        $limit = max(1, min(40, $limit));
+        $days = max(1, min(90, $days));
+        $cacheKey = 'home:recent_top_sellers:v1:' . $days . ':' . $limit;
+
+        return ProductQueryCache::remember($cacheKey, 21600, function () use ($limit, $days): array {
+            $cutoff = new \MongoDB\BSON\UTCDateTime((time() - ($days * 86400)) * 1000);
+            $completedStatuses = ['completed', 'Hoàn thành', 'Hoan thanh', 'Đã hoàn thành', 'Da hoan thanh'];
+            $orderFilter = [
+                '$and' => [
+                    ['$or' => [
+                        ['trang_thai_normalized' => 'completed'],
+                        ['trang_thai' => ['$in' => $completedStatuses]],
+                    ]],
+                    ['$or' => [
+                        ['ngay_dat' => ['$gte' => $cutoff]],
+                        ['created_at' => ['$gte' => $cutoff]],
+                    ]],
+                ],
+            ];
+
+            $orderIds = [];
+            foreach ($this->db->hoa_don->find($orderFilter, [
+                'projection' => [
+                    'ma_hoa_don' => 1,
+                    'trang_thai' => 1,
+                    'trang_thai_normalized' => 1,
+                    'return_status' => 1,
+                    'refund_status' => 1,
+                ],
+                'limit' => 10000,
+            ]) as $order) {
+                $orderState = OrderTabs::fold(implode(' ', array_filter([
+                    $order['return_status'] ?? '',
+                    $order['refund_status'] ?? '',
+                ], static fn($value): bool => trim((string)$value) !== '')));
+                if ($orderState !== '' && preg_match('/cancel|return|refund|huy|tra hang|hoan tra|hoan tien/', $orderState)) {
+                    continue;
+                }
+                $orderId = trim((string)($order['ma_hoa_don'] ?? ''));
+                if ($orderId !== '') {
+                    $orderIds[$orderId] = is_numeric($orderId) ? (int)$orderId : $orderId;
+                }
+            }
+            if ($orderIds === []) {
+                return [];
+            }
+
+            $quantities = [];
+            foreach ($this->db->chi_tiet_hoa_don->find([
+                'ma_hoa_don' => ['$in' => array_values($orderIds)],
+            ]) as $item) {
+                $lineStatus = OrderTabs::fold((string)(
+                    $item['trang_thai'] ?? $item['return_status'] ?? $item['refund_status'] ?? ''
+                ));
+                if ($lineStatus !== '' && preg_match('/cancel|return|refund|huy|tra|hoan tra|hoan tien/', $lineStatus)) {
+                    continue;
+                }
+                $productId = trim((string)(
+                    $item['ma_san_pham'] ?? $item['id_san_pham'] ?? $item['product_id'] ?? ''
+                ));
+                $quantity = (int)($item['so_luong'] ?? $item['quantity'] ?? 0);
+                if ($productId === '' || $quantity <= 0) {
+                    continue;
+                }
+                $quantities[$productId] = ($quantities[$productId] ?? 0) + $quantity;
+            }
+            if ($quantities === []) {
+                return [];
+            }
+
+            $products = $this->findManyByIds(array_keys($quantities));
+            $ranked = [];
+            foreach ($quantities as $productId => $quantity) {
+                $product = $products[$productId] ?? null;
+                if (!is_array($product) || !$this->isProductAvailable($product)) {
+                    continue;
+                }
+                $product['homepage_sales_30d'] = $quantity;
+                $ranked[] = $product;
+            }
+
+            usort($ranked, static function (array $left, array $right): int {
+                $qtyCompare = (int)($right['homepage_sales_30d'] ?? 0) <=> (int)($left['homepage_sales_30d'] ?? 0);
+                if ($qtyCompare !== 0) {
+                    return $qtyCompare;
+                }
+                return strnatcasecmp(
+                    (string)($left['ten_san_pham'] ?? ''),
+                    (string)($right['ten_san_pham'] ?? '')
+                );
+            });
+
+            return array_slice($ranked, 0, $limit);
+        });
+    }
+
     public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false, string $stockStatusFilter = '', string $sort = 'default'): array {
         // Trang public không render mo_ta/thanh_phan_full/hdsd -> bỏ khỏi projection; admin giữ full doc
         return $this->paginateWithProjection($page, $perPage, $q, $cap1Val, $cap2Val, $statusFilter, $onlyVisibleOnWebsite, $stockStatusFilter, $sort, $onlyVisibleOnWebsite ? self::LISTING_PROJECTION : null);
@@ -1501,23 +1757,31 @@ class SanPham {
         $forYouIds = array_map('strval', array_column($adaptiveRecs, 'ma_san_pham'));
         $simplePool = $this->getSimpleRecommenderProducts(max(16, $candidateLimit));
         $topRatedWeighted = $this->selectHomepageProductWindow($simplePool, $limitEach, $refreshSeed, $forYouIds);
-        if (empty($topRatedWeighted)) {
-            $topRatedWeighted = array_slice($simplePool, 0, $limitEach);
-        }
+
+        $topRatedIds = array_map('strval', array_column($topRatedWeighted, 'ma_san_pham'));
 
         // Fresh "today" suggestions use the unused part of the personalized pool
         // first, then fall back to strong global candidates. This keeps profile and
-        // behavior context useful without duplicating the main For-You row.
+        // behavior context useful without duplicating the main For-You or rating row.
         $todayPool = array_merge(
             $this->selectHomepageProductWindow($adaptiveCandidates, count($adaptiveCandidates), null, $forYouIds),
-            $simplePool
+            $simplePool,
+            $latestProducts
         );
-        $todayProducts = $this->selectHomepageProductWindow($todayPool, $limitEach, $refreshSeed, $forYouIds);
+        $todayProducts = $this->selectHomepageProductWindow(
+            $todayPool,
+            $limitEach,
+            $refreshSeed,
+            array_values(array_unique(array_merge($forYouIds, $topRatedIds)))
+        );
 
         // The latest pool is loaded by HomeController with a wider limit. Choose a
-        // refresh-aware subset and exclude products already shown above.
+        // refresh-aware subset and exclude products already shown above. The rating
+        // row is included here as well so the homepage keeps four distinct blocks
+        // when the latest-products pool overlaps with the global ranking pool.
         $shownIds = array_values(array_unique(array_merge(
             $forYouIds,
+            $topRatedIds,
             array_map('strval', array_column($todayProducts, 'ma_san_pham'))
         )));
         $newProducts = $this->selectHomepageProductWindow($latestProducts, $limitEach, $refreshSeed, $shownIds);

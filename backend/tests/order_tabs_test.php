@@ -32,6 +32,8 @@ $cases = [
     'hoàn thành QR dù còn ghi chờ chuyển khoản' => [$order('Hoan thanh', null, 'bank_transfer_qr', 'Cho chuyen khoan'), 'hoan_thanh'],
     'QR chờ xử lý + chờ chuyển khoản → Chờ thanh toán' => [$order('Chờ xử lý', 'pending', 'bank_transfer_qr', 'Chờ chuyển khoản'), 'cho_thanh_toan'],
     'QR đã xác nhận nhưng chưa trả → Chờ thanh toán' => [$order('Đã xác nhận', 'confirmed', 'bank_transfer_qr', 'Chờ chuyển khoản'), 'cho_thanh_toan'],
+    'VNPAY chờ xử lý + chờ thanh toán → Chờ thanh toán' => [$order('Chờ xử lý', 'pending', 'vnpay', 'Chờ thanh toán VNPAY', ['payment_status' => 'pending']), 'cho_thanh_toan'],
+    'VNPAY thất bại vẫn cho thanh toán lại' => [$order('Chờ xử lý', 'pending', 'vnpay', 'Thanh toán thất bại', ['payment_status' => 'failed']), 'cho_thanh_toan'],
     'QR chờ xử lý đã trả → Chờ xác nhận' => [$order('Chờ xử lý', 'pending', 'bank_transfer_qr', 'Đã thanh toán'), 'cho_xac_nhan'],
     'COD chờ xử lý không dấu → Chờ xác nhận' => [$order('Cho xu ly', null, 'cod', 'Chua thanh toan'), 'cho_xac_nhan'],
     'COD đã xác nhận → Chờ lấy hàng' => [$order('Đã xác nhận', 'confirmed', 'cod', 'Chưa thanh toán'), 'cho_lay_hang'],
@@ -51,6 +53,8 @@ foreach ([['Đã thanh toán', 'paid'], ['Da thanh toan', 'paid'], ['Chờ chuy�
           ['Quá hạn thanh toán', 'expired'], ['Chưa thanh toán', 'unpaid'], ['', 'unpaid']] as [$raw, $state]) {
     $check("payment: '{$raw}' → {$state}", OrderTabs::paymentState(['status_thanh_toan' => $raw]), $state);
 }
+$check('payment_status fallback khi status rỗng', OrderTabs::paymentState(['status_thanh_toan' => '', 'payment_status' => 'pending']), 'awaiting');
+$check('payment method fallback từ payment_method', OrderTabs::paymentMethodLabel(['hinh_thuc_thanh_toan' => '', 'payment_method' => 'VNPAY']), 'VNPAY');
 
 // Thao tác: lỗi cũ là đơn QR đã thanh toán vẫn hiện banner "đang chờ chuyển khoản" (#502228)
 $paidQrDone = $order('Hoàn thành', 'completed', 'bank_transfer_qr', 'Đã thanh toán');
@@ -59,6 +63,10 @@ $check('QR hoàn thành đã trả: được mua lại', OrderTabs::actions($pai
 $check('QR hoàn thành đã trả: không hủy', OrderTabs::actions($paidQrDone)['cancel'], false);
 $awaiting = $order('Chờ xử lý', 'pending', 'bank_transfer_qr', 'Chờ chuyển khoản');
 $check('chờ thanh toán: mở QR + hủy', [OrderTabs::actions($awaiting)['pay_qr'], OrderTabs::actions($awaiting)['cancel']], [true, true]);
+$awaitingVnpay = $order('Chờ xử lý', 'pending', 'vnpay', 'Chờ thanh toán VNPAY', ['payment_status' => 'pending']);
+$check('chờ thanh toán VNPAY: mở VNPAY, không mở QR', [OrderTabs::actions($awaitingVnpay)['pay_vnpay'], OrderTabs::actions($awaitingVnpay)['pay_qr']], [true, false]);
+$failedVnpay = $order('Chờ xử lý', 'pending', 'vnpay', 'Thanh toán thất bại', ['payment_status' => 'failed']);
+$check('VNPAY thất bại: vẫn cho thử lại', OrderTabs::actions($failedVnpay)['pay_vnpay'], true);
 $check('chờ lấy hàng: vẫn được hủy', OrderTabs::actions($order('Đã xác nhận', 'confirmed', 'cod', 'Chưa thanh toán'))['cancel'], true);
 $check('đang giao: không hủy, không mua lại', array_values(array_intersect_key(OrderTabs::actions($order('Đang giao', 'shipping', 'cod', 'Chưa thanh toán')), ['cancel' => 1, 'reorder' => 1])), [false, false]);
 $cancelled = $order('Đã hủy', 'cancelled', 'cod', 'Chưa thanh toán');

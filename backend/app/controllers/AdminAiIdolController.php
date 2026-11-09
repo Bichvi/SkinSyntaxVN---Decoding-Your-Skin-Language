@@ -584,11 +584,15 @@ class AdminAiIdolController {
         } catch (\Throwable $e) {}
 
         $stockHigh = 0; $stockLow = 0; $outOfStock = 0; $bestAll = 0;
+        $best30 = 0;
+        $best7 = 0;
         try {
             $stockHigh = $this->pdo->san_pham->countDocuments(['so_luong_ton_kho' => ['$gt' => 100]]);
             $stockLow = $this->pdo->san_pham->countDocuments(['so_luong_ton_kho' => ['$lte' => 10, '$gt' => 0]]);
             $outOfStock = $this->pdo->san_pham->countDocuments(['so_luong_ton_kho' => ['$lte' => 0]]);
             $bestAll = $this->pdo->san_pham->countDocuments(['so_luong_da_ban' => ['$gt' => 0]]);
+            $best30 = $this->countProductsSoldInRecentDays(30);
+            $best7 = $this->countProductsSoldInRecentDays(7);
         } catch (\Throwable $e) {}
 
         // Products whose ma_danh_muc is missing from danh_muc still count and are grouped by their danh_muc_day_du.
@@ -611,10 +615,91 @@ class AdminAiIdolController {
                 'stock_low' => $stockLow,
                 'out_of_stock' => $outOfStock,
                 'best_all' => $bestAll,
-                'best_30' => 45,
-                'best_7' => 20,
+                'best_30' => $best30,
+                'best_7' => $best7,
             ]
         ];
+    }
+
+    /** Return distinct product IDs in completed, paid orders during the recent period. */
+    private function productIdsSoldInRecentDays(int $days): array {
+        $days = max(1, min(366, $days));
+        $timezone = new \DateTimeZone('Asia/Ho_Chi_Minh');
+        $end = new \DateTimeImmutable('today', $timezone);
+        $start = $end->modify('-' . ($days - 1) . ' days');
+        $orderIds = [];
+        $normalize = static function ($value): string {
+            $value = trim((string)($value ?? ''));
+            return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+        };
+
+        foreach ($this->pdo->hoa_don->find([], ['projection' => [
+            'ma_hoa_don' => 1,
+            'trang_thai' => 1,
+            'hinh_thuc_thanh_toan' => 1,
+            'status_thanh_toan' => 1,
+            'payment_status' => 1,
+            'ngay_hoan_thanh' => 1,
+            'thoi_gian_hoan_thanh' => 1,
+            'ngay_dat' => 1,
+            'created_at' => 1,
+        ]]) as $doc) {
+            $order = (array)$doc;
+            $status = $normalize($order['trang_thai'] ?? '');
+            $status = str_replace(['_', '-'], ' ', $status);
+            if (!in_array($status, ['completed', 'hoàn thành', 'hoan thanh'], true)) {
+                continue;
+            }
+
+            $method = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod')));
+            if ($method === 'bank_transfer_qr' || str_contains($method, 'qr') || str_contains($method, 'transfer')) {
+                $paymentRaw = trim((string)($order['status_thanh_toan'] ?? ''));
+                if ($paymentRaw === '') {
+                    $paymentRaw = trim((string)($order['payment_status'] ?? ''));
+                }
+                $payment = $normalize($paymentRaw);
+                $payment = str_replace(['_', '-'], ' ', $payment);
+                if (!in_array($payment, ['paid', 'đã thanh toán', 'da thanh toan', 'thanh cong', 'completed'], true)) {
+                    continue;
+                }
+            }
+
+            $dateValue = $order['ngay_hoan_thanh'] ?? $order['thoi_gian_hoan_thanh'] ?? $order['ngay_dat'] ?? $order['created_at'] ?? null;
+            if ($dateValue instanceof \MongoDB\BSON\UTCDateTime) {
+                $dateValue = $dateValue->toDateTime()->setTimezone($timezone)->format('Y-m-d H:i:s');
+            }
+            $timestamp = strtotime((string)($dateValue ?? ''));
+            if ($timestamp === false) {
+                continue;
+            }
+            $date = (new \DateTimeImmutable('@' . $timestamp))->setTimezone($timezone);
+            if ($date < $start || $date >= $end->modify('+1 day')) {
+                continue;
+            }
+
+            $orderId = $order['ma_hoa_don'] ?? null;
+            if ($orderId !== null && $orderId !== '') {
+                $orderIds[] = $orderId;
+            }
+        }
+
+        if (empty($orderIds)) {
+            return [];
+        }
+
+        $productIds = [];
+        foreach ($this->pdo->chi_tiet_hoa_don->find(['ma_hoa_don' => ['$in' => array_values(array_unique($orderIds))]], ['projection' => ['ma_san_pham' => 1]]) as $detail) {
+            $productId = trim((string)(((array)$detail)['ma_san_pham'] ?? ''));
+            if ($productId !== '') {
+                $productIds[$productId] = true;
+            }
+        }
+
+        return array_keys($productIds);
+    }
+
+    private function countProductsSoldInRecentDays(int $days): int {
+        return count($this->productIdsSoldInRecentDays($days));
     }
 
     /**
@@ -910,8 +995,23 @@ class AdminAiIdolController {
         }
 
         if ($sales !== '') {
-            if ($sales === 'best_all' || $sales === 'best_30' || $sales === 'best_7') {
+            if ($sales === 'best_all') {
                 $filter['so_luong_da_ban'] = ['$gt' => 0];
+            } elseif ($sales === 'best_30' || $sales === 'best_7') {
+                try {
+                    $recentProductIds = $this->productIdsSoldInRecentDays($sales === 'best_7' ? 7 : 30);
+                } catch (\Throwable $e) {
+                    $recentProductIds = [];
+                }
+                $matchedPids = [];
+                foreach ($recentProductIds as $productId) {
+                    $matchedPids[] = $productId;
+                    if (is_numeric($productId)) {
+                        $matchedPids[] = (int)$productId;
+                    }
+                }
+                // An impossible sentinel keeps an empty period from falling back to an unfiltered catalog.
+                $filter['ma_san_pham'] = ['$in' => $matchedPids !== [] ? array_values(array_unique($matchedPids)) : ['__NO_RECENT_SALES__']];
             }
         }
 

@@ -117,7 +117,11 @@ class QuanTri {
 
         $method = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod')));
         if ($method === 'bank_transfer_qr' || str_contains($method, 'qr') || str_contains($method, 'transfer')) {
-            return $this->normalizePaymentStatus($order['status_thanh_toan'] ?? '') === 'paid';
+            $paymentStatus = trim((string)($order['status_thanh_toan'] ?? ''));
+            if ($paymentStatus === '') {
+                $paymentStatus = trim((string)($order['payment_status'] ?? ''));
+            }
+            return $this->normalizePaymentStatus($paymentStatus) === 'paid';
         }
 
         return true;
@@ -409,7 +413,13 @@ class QuanTri {
             'chat_cho_tra_loi' => 0,
             'danh_gia_cho_phan_hoi' => 0,
         ];
-        foreach ($this->db->hoa_don->find([], ['projection' => ['trang_thai' => 1, 'tong_tien' => 1]]) as $orderDoc) {
+        foreach ($this->db->hoa_don->find([], ['projection' => [
+            'trang_thai' => 1,
+            'tong_tien' => 1,
+            'hinh_thuc_thanh_toan' => 1,
+            'status_thanh_toan' => 1,
+            'payment_status' => 1,
+        ]]) as $orderDoc) {
             $order = (array)$orderDoc;
             if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') === 'pending') {
                 $summary['don_cho_xu_ly']++;
@@ -605,6 +615,254 @@ class QuanTri {
         }
 
         return true;
+    }
+
+    /**
+     * Trả về doanh thu theo từng ngày trong khoảng chọn, bao gồm cả ngày không có đơn.
+     * Dùng cùng isRevenueOrder() để dashboard, báo cáo và KPI không lệch nhau.
+     */
+    public function getDailySalesTrend(string $startDate = '', string $endDate = ''): array {
+        $timezone = new DateTimeZone('Asia/Ho_Chi_Minh');
+        $today = new DateTimeImmutable('today', $timezone);
+
+        $start = $startDate !== ''
+            ? DateTimeImmutable::createFromFormat('!Y-m-d', $startDate, $timezone)
+            : $today->modify('-6 days');
+        $end = $endDate !== ''
+            ? DateTimeImmutable::createFromFormat('!Y-m-d', $endDate, $timezone)
+            : $today;
+
+        if (!$start instanceof DateTimeImmutable || !$end instanceof DateTimeImmutable || $start > $end) {
+            return [];
+        }
+
+        $rows = [];
+        for ($cursor = $start; $cursor <= $end; $cursor = $cursor->modify('+1 day')) {
+            $key = $cursor->format('Y-m-d');
+            $rows[$key] = [
+                'ngay' => $key,
+                'nhan' => $cursor->format('d/m'),
+                'nhan_day_du' => $cursor->format('d/m/Y'),
+                'so_don' => 0,
+                'doanh_thu' => 0,
+                'gia_tri_trung_binh' => 0,
+            ];
+        }
+
+        foreach ($this->db->hoa_don->find([], ['projection' => [
+            'trang_thai' => 1,
+            'tong_tien' => 1,
+            'hinh_thuc_thanh_toan' => 1,
+            'status_thanh_toan' => 1,
+            'payment_status' => 1,
+            'ngay_hoan_thanh' => 1,
+            'thoi_gian_hoan_thanh' => 1,
+            'ngay_dat' => 1,
+            'created_at' => 1,
+        ]]) as $orderDoc) {
+            $order = (array)$orderDoc;
+            if (!$this->isRevenueOrder($order)) {
+                continue;
+            }
+
+            $dateText = $this->getRevenueOrderDate($order);
+            $orderDate = $dateText !== '' ? new DateTimeImmutable($dateText, $timezone) : null;
+            if (!$orderDate) {
+                continue;
+            }
+
+            $key = $orderDate->format('Y-m-d');
+            if (!isset($rows[$key])) {
+                continue;
+            }
+
+            $rows[$key]['so_don']++;
+            $rows[$key]['doanh_thu'] += (int)($order['tong_tien'] ?? 0);
+        }
+
+        foreach ($rows as &$row) {
+            $row['gia_tri_trung_binh'] = $row['so_don'] > 0
+                ? (int)round($row['doanh_thu'] / $row['so_don'])
+                : 0;
+        }
+        unset($row);
+
+        return array_values($rows);
+    }
+
+    /**
+     * Trả về hoạt động thực tế theo ngày cho dashboard nhân viên.
+     * Các chỉ số chỉ đếm sự kiện đã được lưu: đơn hoàn tất, phản hồi chat,
+     * trả lời hỏi đáp và phản hồi đánh giá. Không dùng dữ liệu minh họa.
+     */
+    public function getStaffWorkloadTrend(string $startDate = '', string $endDate = ''): array {
+        $timezone = new DateTimeZone('Asia/Ho_Chi_Minh');
+        $today = new DateTimeImmutable('today', $timezone);
+
+        $start = $startDate !== ''
+            ? DateTimeImmutable::createFromFormat('!Y-m-d', $startDate, $timezone)
+            : $today->modify('-6 days');
+        $end = $endDate !== ''
+            ? DateTimeImmutable::createFromFormat('!Y-m-d', $endDate, $timezone)
+            : $today;
+
+        if (!$start instanceof DateTimeImmutable || !$end instanceof DateTimeImmutable || $start > $end) {
+            return [];
+        }
+
+        $rows = [];
+        for ($cursor = $start; $cursor <= $end; $cursor = $cursor->modify('+1 day')) {
+            $key = $cursor->format('Y-m-d');
+            $rows[$key] = [
+                'ngay' => $key,
+                'nhan' => $cursor->format('d/m'),
+                'nhan_day_du' => $cursor->format('d/m/Y'),
+                'so_don_hoan_tat' => 0,
+                'so_phan_hoi_chat' => 0,
+                'so_tra_loi_hoi_dap' => 0,
+                'so_phan_hoi_danh_gia' => 0,
+                'tong_hoat_dong' => 0,
+            ];
+        }
+
+        $increment = static function (array &$rows, $value, string $field) use ($timezone): void {
+            $dateText = $value instanceof \MongoDB\BSON\UTCDateTime
+                ? $value->toDateTime()->setTimezone($timezone)->format('Y-m-d H:i:s')
+                : trim((string)($value ?? ''));
+            if ($dateText === '') {
+                return;
+            }
+
+            $timestamp = strtotime($dateText);
+            if ($timestamp === false || $timestamp <= 0) {
+                return;
+            }
+
+            $key = (new DateTimeImmutable('@' . $timestamp))->setTimezone($timezone)->format('Y-m-d');
+            if (!isset($rows[$key])) {
+                return;
+            }
+
+            $rows[$key][$field]++;
+            $rows[$key]['tong_hoat_dong']++;
+        };
+
+        foreach ($this->db->hoa_don->find([], ['projection' => [
+            'trang_thai' => 1,
+            'ngay_hoan_thanh' => 1,
+            'thoi_gian_hoan_thanh' => 1,
+            'ngay_dat' => 1,
+            'created_at' => 1,
+        ]]) as $orderDoc) {
+            $order = (array)$orderDoc;
+            if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') !== 'completed') {
+                continue;
+            }
+            $increment($rows, $order['ngay_hoan_thanh'] ?? $order['thoi_gian_hoan_thanh'] ?? $order['ngay_dat'] ?? $order['created_at'] ?? null, 'so_don_hoan_tat');
+        }
+
+        foreach ($this->db->lich_su_chat->find([], ['projection' => ['ma_nv' => 1, 'thoi_gian' => 1]]) as $chatDoc) {
+            $chat = (array)$chatDoc;
+            if (empty($chat['ma_nv'])) {
+                continue;
+            }
+            $increment($rows, $chat['thoi_gian'] ?? null, 'so_phan_hoi_chat');
+        }
+
+        foreach ($this->db->hoi_dap_san_pham->find([], ['projection' => ['tra_loi' => 1]]) as $questionDoc) {
+            $question = (array)$questionDoc;
+            $answer = $question['tra_loi'] ?? null;
+            if (is_object($answer)) {
+                $answer = (array)$answer;
+            }
+            if (!is_array($answer) || trim((string)($answer['noi_dung'] ?? '')) === '') {
+                continue;
+            }
+            $increment($rows, $answer['ngay_tra_loi'] ?? null, 'so_tra_loi_hoi_dap');
+        }
+
+        $linkedLegacyReviewIds = [];
+        foreach ($this->db->danh_gia_san_pham->find([], ['projection' => ['phan_hoi_shop' => 1, 'legacy_ma_danh_gia' => 1]]) as $reviewDoc) {
+            $review = (array)$reviewDoc;
+            if (isset($review['legacy_ma_danh_gia']) && $review['legacy_ma_danh_gia'] !== '') {
+                $linkedLegacyReviewIds[(string)$review['legacy_ma_danh_gia']] = true;
+            }
+            $reply = $review['phan_hoi_shop'] ?? null;
+            if (is_object($reply)) {
+                $reply = (array)$reply;
+            }
+            if (!is_array($reply) || trim((string)($reply['noi_dung'] ?? '')) === '') {
+                continue;
+            }
+            $increment($rows, $reply['ngay_phan_hoi'] ?? null, 'so_phan_hoi_danh_gia');
+        }
+
+        foreach ($this->db->danh_gia->find([], ['projection' => ['ma_danh_gia' => 1, 'phan_hoi' => 1, 'ngay_phan_hoi' => 1]]) as $legacyDoc) {
+            $review = (array)$legacyDoc;
+            if (isset($review['ma_danh_gia']) && isset($linkedLegacyReviewIds[(string)$review['ma_danh_gia']])) {
+                continue;
+            }
+            if (trim((string)($review['phan_hoi'] ?? '')) === '') {
+                continue;
+            }
+            $increment($rows, $review['ngay_phan_hoi'] ?? null, 'so_phan_hoi_danh_gia');
+        }
+
+        return array_values($rows);
+    }
+
+    /**
+     * Phân loại sản phẩm theo trạng thái hiển thị và tồn kho hiện tại.
+     * Mỗi sản phẩm chỉ thuộc một nhóm để biểu đồ luôn phản ánh đúng tổng kho.
+     */
+    public function getProductStatusSummary(): array {
+        $counts = [
+            'dang_ban' => 0,
+            'sap_het_hang' => 0,
+            'het_hang' => 0,
+            'dang_an' => 0,
+        ];
+        $stockFields = ['so_luong_ton_kho', 'so_luong_ton', 'so_luong_kho', 'so_luong', 'ton_kho', 'stock', 'quantity'];
+        $hiddenStatuses = ['inactive', 'hidden', 'tam_an', 'taman', 'disabled', 'off', '0'];
+
+        foreach ($this->db->san_pham->find([], ['projection' => [
+            'trang_thai' => 1,
+            'status' => 1,
+            'trang_thai_kho' => 1,
+            'so_luong_ton_kho' => 1,
+            'so_luong_ton' => 1,
+            'so_luong_kho' => 1,
+            'so_luong' => 1,
+            'ton_kho' => 1,
+            'stock' => 1,
+            'quantity' => 1,
+        ]]) as $productDoc) {
+            $product = (array)$productDoc;
+            $visibility = strtolower(trim((string)($product['trang_thai'] ?? $product['status'] ?? 'active')));
+            if (in_array($visibility, $hiddenStatuses, true)) {
+                $counts['dang_an']++;
+                continue;
+            }
+
+            $stock = null;
+            foreach ($stockFields as $field) {
+                if (array_key_exists($field, $product) && $product[$field] !== null && $product[$field] !== '') {
+                    $stock = max(0, (int)$product[$field]);
+                    break;
+                }
+            }
+
+            if (strtolower(trim((string)($product['trang_thai_kho'] ?? ''))) === 'het_hang' || ($stock !== null && $stock <= 0)) {
+                $counts['het_hang']++;
+            } elseif ($stock !== null && $stock <= 5) {
+                $counts['sap_het_hang']++;
+            } else {
+                $counts['dang_ban']++;
+            }
+        }
+
+        $counts['tong'] = array_sum($counts);
+        return $counts;
     }
 
     public function getRevenueByMonth(int $limit = 6, string $startDate = '', string $endDate = ''): array {

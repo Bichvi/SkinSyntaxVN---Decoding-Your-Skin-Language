@@ -72,6 +72,15 @@ $check(
         && str_contains($order, "'cancelled'")
         && str_contains($order, '$amount < $expectedAmount')
 );
+$check(
+    'PAY-VNPAY-GUARDS',
+    'VNPAY return/IPN and model update verify method, amount and transaction status',
+    str_contains($home, "'Invalid Payment Method'")
+        && str_contains($home, 'vnp_TransactionStatus')
+        && str_contains($home, 'intdiv($vnpAmount, 100)')
+        && str_contains($home, '$vnpayPreflight->isConfigured()')
+        && str_contains($order, "Đơn hàng không sử dụng phương thức VNPAY")
+);
 
 $total = $passed + $failed;
 echo "Payment security contract tests: {$passed}/{$total} passed, {$failed} failed.\n";

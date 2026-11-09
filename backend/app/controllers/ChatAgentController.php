@@ -396,9 +396,15 @@ final class ChatAgentController
             }
             require_once __DIR__ . '/../models/TaiKhoan.php';
             $model = new TaiKhoan($this->db);
-            $skin = $model->getSkinProfileByEmail($email);
-            $khachHang = $model->getKhachHangByEmail($email);
-            return self::buildAgentProfile(is_array($skin) ? $skin : null, is_array($khachHang) ? $khachHang : null);
+            $skin = $model->getSelectedSkinProfileByEmail($email);
+            $khachHang = $model->getCustomerForSelectedProfileByEmail($email);
+            $profile = self::buildAgentProfile(is_array($skin) ? $skin : null, is_array($khachHang) ? $khachHang : null);
+            if (is_array($skin) && trim((string)($skin['profile_id'] ?? '')) !== '') {
+                $profile['profile_id'] = (string)$skin['profile_id'];
+                $profile['profile_name'] = trim((string)($skin['display_name'] ?? 'Hồ sơ của tôi')) ?: 'Hồ sơ của tôi';
+                $profile['profile_type'] = (string)($skin['profile_type'] ?? 'self');
+            }
+            return $profile;
         } catch (Throwable $e) {
             return null;
         }

@@ -4,8 +4,9 @@
 .ssim-wrap .ssf { margin-top: 0; }
 .ssim-wrap .ssf-section { margin-top: 0; }
 .ssim-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.ssim-head-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 .ssim-title { margin: 0; font-size: 1.15rem; }
-.ssim-nav { display: none; gap: 8px; }
+.ssim-nav { display: inline-flex; gap: 8px; }
 .ssim-arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #C8DACF; background: #FFF; color: #183B2B; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .ssim-arrow:hover:not(:disabled) { background: #183B2B; color: #FFF; }
 .ssim-arrow:disabled { opacity: .35; cursor: default; }
@@ -15,7 +16,6 @@
 .ssim-card { flex: 0 0 calc((100% - var(--ssim-gap) * (var(--ssim-per-view) - 1)) / var(--ssim-per-view)); scroll-snap-align: start; }
 @media (min-width: 992px) {
   .ssim-track { --ssim-gap: 16px; --ssim-per-view: 4; }
-  .ssim-nav { display: inline-flex; }
 }
 
 /* khung chờ (skeleton) giữ chỗ trong lúc fetch */
@@ -31,4 +31,7 @@
 @media (max-width: 575.98px) {
   .ssim-wrap { padding: 14px; border-radius: 16px; }
   .ssim-skel-card { height: 300px; }
+  .ssim-head { align-items: flex-start; }
+  .ssim-head-actions { width: 100%; justify-content: space-between; }
+  .ssim-refresh span { display: none; }
 }

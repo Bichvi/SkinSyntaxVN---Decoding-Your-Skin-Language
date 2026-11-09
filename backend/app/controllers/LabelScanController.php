@@ -342,8 +342,8 @@ class LabelScanController
                 require_once __DIR__ . '/../models/TaiKhoan.php';
                 require_once __DIR__ . '/../services/SearchSkinProfile.php';
                 $tk = new TaiKhoan($this->pdo);
-                $profile = SearchSkinProfile::fromCustomer($tk->getKhachHangByEmail($email));
-                $sp = $tk->getSkinProfileByEmail($email);
+                $profile = SearchSkinProfile::fromCustomer($tk->getCustomerForSelectedProfileByEmail($email));
+                $sp = $tk->getSelectedSkinProfileByEmail($email);
                 $name = is_array($sp) ? ($sp['loai_da'] ?? null) : null;
                 if (is_string($name) && $name !== '') {
                     $profile = ($profile ?? ['skin_type' => null, 'concerns' => []]) + ['loai_da_name' => mb_substr($name, 0, 80, 'UTF-8')];

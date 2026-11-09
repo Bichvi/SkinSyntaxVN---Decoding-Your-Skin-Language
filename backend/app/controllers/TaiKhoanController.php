@@ -8,6 +8,7 @@ require_once __DIR__ . '/../models/HoaDon.php';
 require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/OrderTabs.php';
+require_once __DIR__ . '/../services/SkinConsultationSession.php';
 
 class TaiKhoanController {
     private  $pdo;
@@ -278,6 +279,7 @@ class TaiKhoanController {
     public function hoso(): void {
         $user = $this->requireLogin();
         $this->hoaDonModel->cancelExpiredQrOrders(24);
+        $this->hoaDonModel->cancelExpiredVnpayOrders(15);
         $nguoiDungId = (int)($user['id'] ?? 0);
         $email = trim((string)($user['email'] ?? ''));
 
@@ -376,8 +378,11 @@ class TaiKhoanController {
 
         // Live search chỉ cập nhật vùng đơn hàng; hồ sơ da/giỏ hàng không hiển thị lại nên không cần tải.
         $liveOnlyOrders = $this->isLiveFilterRequest();
-        $skinProfile = $liveOnlyOrders ? null : $this->model->getSkinProfileByEmail((string)$account['email']);
-        $latestQuickSkinUpdate = $liveOnlyOrders ? null : $this->model->getLatestQuickSkinProfileUpdate((string)$account['email']);
+        $skinProfiles = $liveOnlyOrders ? [] : $this->model->getSkinProfilesByEmail((string)$account['email']);
+        $skinProfile = $liveOnlyOrders ? null : $this->model->getSelectedSkinProfileByEmail((string)$account['email']);
+        $selectedSkinProfileId = trim((string)($skinProfile['profile_id'] ?? ''));
+        $latestQuickSkinUpdate = $liveOnlyOrders ? null : $this->model->getLatestQuickSkinProfileUpdate((string)$account['email'], $selectedSkinProfileId);
+        $quickSkinHistory = $liveOnlyOrders ? [] : $this->model->getQuickSkinProfileHistory((string)$account['email'], $selectedSkinProfileId);
         $loaiDaOptions = $liveOnlyOrders ? [] : $this->model->getLoaiDaOptions();
 
         require_once __DIR__ . '/../models/CustomerVoucher.php';
@@ -397,7 +402,10 @@ class TaiKhoanController {
             'cartItems' => $cartItems,
             'customerVouchers' => $customerVouchers,
             'skinProfile' => $skinProfile,
+            'skinProfiles' => $skinProfiles,
+            'selectedSkinProfileId' => $selectedSkinProfileId,
             'latestQuickSkinUpdate' => $latestQuickSkinUpdate,
+            'quickSkinHistory' => $quickSkinHistory,
             'loaiDaOptions' => $loaiDaOptions,
             'cancelReasonOptions' => $this->cancellationReasonOptions(),
         ]);
@@ -413,12 +421,24 @@ class TaiKhoanController {
 
         $account = $this->model->getAccountOverviewByEmail($email) ?: $user;
         $khachHang = $this->model->getKhachHangByEmail($email) ?? [];
-        $skinProfile = $this->model->getSkinProfileByEmail($email) ?? [];
+        $skinProfile = $this->model->getSelectedSkinProfileByEmail($email) ?? [];
+        if (trim((string)($skinProfile['loai_da'] ?? '')) === '' && empty($skinProfile['base_profile'])) {
+            set_flash('info', 'Bạn cần tạo hồ sơ nền bằng Khảo sát đầy đủ trước khi cập nhật nhanh.');
+            $profileId = trim((string)($skinProfile['profile_id'] ?? ''));
+            $target = $profileId !== '' && empty($skinProfile['is_primary']) ? '&profile_id=' . rawurlencode($profileId) : '';
+            redirect(BASE_URL . '/index.php?r=khaosat' . $target);
+        }
+
+        $quickRequestId = bin2hex(random_bytes(16));
+        $quickDraft = is_array($_SESSION['quick_survey_draft'] ?? null) ? $_SESSION['quick_survey_draft'] : [];
+        unset($_SESSION['quick_survey_draft']);
 
         $this->render('auth/khaosatnhanh', [
             'account' => $account,
             'khachHang' => $khachHang,
             'skinProfile' => $skinProfile,
+            'quickRequestId' => $quickRequestId,
+            'quickDraft' => $quickDraft,
         ]);
     }
 
@@ -428,9 +448,20 @@ class TaiKhoanController {
             redirect(BASE_URL . '/index.php?r=khaosatnhanh');
         }
 
+        $preserveDraft = static function (): void {
+            $_SESSION['quick_survey_draft'] = [
+                'q1' => $_POST['q1'] ?? '',
+                'q2' => is_array($_POST['q2'] ?? null) ? $_POST['q2'] : [$_POST['q2'] ?? ''],
+                'q3' => $_POST['q3'] ?? '',
+                'q4' => $_POST['q4'] ?? '',
+                'profile_id' => $_POST['profile_id'] ?? '',
+                'quick_request_id' => $_POST['quick_request_id'] ?? '',
+            ];
+        };
+
         $email = trim((string)($user['email'] ?? ''));
         $hoTen = trim((string)($user['ho_ten'] ?? ''));
-        $sensitivityOptions = ['Rất dễ', 'Thỉnh thoảng', 'Khỏe mạnh, hiếm khi'];
+        $sensitivityOptions = ['Rất dễ', 'Khỏe mạnh, hiếm khi'];
         $issueOptions = [
             'Mụn viêm, sưng đỏ',
             'Mụn ẩn, mụn đầu đen',
@@ -466,22 +497,134 @@ class TaiKhoanController {
         ));
 
         if ($email === '' || !in_array($sensitivity, $sensitivityOptions, true) || empty($issues) || !in_array($goal, $goalOptions, true) || !array_key_exists($budgetKey, $budgetMap)) {
+            $preserveDraft();
             set_flash('error', 'Vui lòng trả lời đủ 4 câu hỏi của khảo sát nhanh.');
             redirect(BASE_URL . '/index.php?r=khaosatnhanh');
         }
 
-        $ok = $this->model->saveQuickSkinProfileByEmail($hoTen, $email, [
+        $selectedProfile = $this->model->getSelectedSkinProfileByEmail($email) ?? [];
+        if (trim((string)($selectedProfile['loai_da'] ?? '')) === '' && empty($selectedProfile['base_profile'])) {
+            $preserveDraft();
+            set_flash('info', 'Hãy hoàn thành Khảo sát đầy đủ cho hồ sơ này trước khi cập nhật nhanh.');
+            $profileId = empty($selectedProfile['is_primary']) ? trim((string)($selectedProfile['profile_id'] ?? '')) : '';
+            redirect(BASE_URL . '/index.php?r=khaosat' . ($profileId !== '' ? '&profile_id=' . rawurlencode($profileId) : ''));
+        }
+
+        $checkIn = [
             'muc_do_nhay_cam' => $sensitivity,
             'van_de_da' => $issues,
             'muc_tieu_cham_soc' => $goal,
             'ngan_sach' => $budgetMap[$budgetKey],
-        ]);
-        if (!$ok) {
+        ];
+        $savePermanent = ($_POST['save_permanent'] ?? '') === '1';
+        $confirmedPermanent = ($_POST['confirm_permanent'] ?? '') === '1';
+
+        // Quick survey is a temporary check-in by default. Permanent profile data
+        // is changed only after an explicit confirmation from the customer.
+        if (!$savePermanent) {
+            $consultation = SkinConsultationSession::start(
+                $user,
+                (string)($selectedProfile['profile_id'] ?? ''),
+                $checkIn,
+                'quick'
+            );
+            if (!$consultation) {
+                $preserveDraft();
+                set_flash('error', 'Không thể tạo phiên tư vấn tạm thời. Vui lòng thử lại.');
+                redirect(BASE_URL . '/index.php?r=khaosatnhanh');
+            }
+            unset($_SESSION['quick_survey_draft']);
+            $_SESSION['syna_survey_success'] = 1;
+            set_flash('success', 'Đã lưu check-in cho phiên tư vấn này. Hồ sơ da lâu dài chưa bị thay đổi.');
+            redirect(BASE_URL . '/index.php?r=goiy&consultation=quick');
+        }
+
+        if (!$confirmedPermanent) {
+            $preserveDraft();
+            set_flash('info', 'Bạn cần xác nhận rõ nếu muốn lưu thay đổi vào hồ sơ da lâu dài.');
+            redirect(BASE_URL . '/index.php?r=khaosatnhanh');
+        }
+
+        $result = $this->model->saveQuickSkinProfileResultByEmail($hoTen, $email, $checkIn + [
+            'request_id' => trim((string)($_POST['quick_request_id'] ?? '')),
+        ], (string)($selectedProfile['profile_id'] ?? ''));
+        if (empty($result['ok'])) {
+            $preserveDraft();
             set_flash('error', 'Không thể lưu cập nhật tình trạng da. Vui lòng thử lại.');
             redirect(BASE_URL . '/index.php?r=khaosatnhanh');
         }
 
-        set_flash('success', 'Đã cập nhật tình trạng da hiện tại và lưu lại phiên bản hồ sơ mới.');
+        unset($_SESSION['quick_survey_draft']);
+        SkinConsultationSession::clear($user);
+        $_SESSION['syna_survey_success'] = 1;
+        set_flash('success', !empty($result['changed'])
+            ? 'Đã cập nhật tình trạng da hiện tại và lưu lại phiên bản hồ sơ mới.'
+            : 'Dữ liệu chưa thay đổi nên hệ thống không tạo lịch sử trùng.');
+        redirect(BASE_URL . '/index.php?r=hoso');
+    }
+
+    /** Explicitly promote the current temporary check-in into the selected permanent profile. */
+    public function saveConsultationToProfile(): void {
+        $user = $this->requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=goiy');
+        }
+        $consultation = SkinConsultationSession::get($user);
+        $email = trim((string)($user['email'] ?? ''));
+        $selectedProfile = $email !== '' ? ($this->model->getSelectedSkinProfileByEmail($email) ?? []) : [];
+        $checkIn = is_array($consultation['skin_checkin'] ?? null) ? $consultation['skin_checkin'] : [];
+        if (!$consultation || !$checkIn || !$selectedProfile) {
+            set_flash('error', 'Phiên tư vấn tạm thời không còn hợp lệ.');
+            redirect(BASE_URL . '/index.php?r=khaosatnhanh');
+        }
+
+        $result = $this->model->saveQuickSkinProfileResultByEmail(
+            trim((string)($user['ho_ten'] ?? '')),
+            $email,
+            $checkIn + ['request_id' => 'consultation-' . (string)($consultation['session_id'] ?? bin2hex(random_bytes(8)))],
+            (string)($selectedProfile['profile_id'] ?? '')
+        );
+        if (empty($result['ok'])) {
+            set_flash('error', 'Không thể lưu check-in vào hồ sơ da lâu dài.');
+            redirect(BASE_URL . '/index.php?r=goiy');
+        }
+        SkinConsultationSession::clear($user);
+        $_SESSION['syna_survey_success'] = 1;
+        set_flash('success', 'Đã xác nhận và cập nhật hồ sơ da lâu dài.');
+        redirect(BASE_URL . '/index.php?r=goiy');
+    }
+
+    public function chonHoSoDa(): void {
+        $user = $this->requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+        $email = trim((string)($user['email'] ?? ''));
+        $profileId = trim((string)($_POST['profile_id'] ?? ''));
+        if (!$this->model->selectSkinProfileByEmail($email, $profileId)) {
+            set_flash('error', 'Hồ sơ không tồn tại hoặc không thuộc tài khoản của bạn.');
+        } else {
+            set_flash('success', 'Đã chuyển hồ sơ đang sử dụng.');
+        }
+        redirect(BASE_URL . '/index.php?r=hoso');
+    }
+
+    public function taoHoSoDa(): void {
+        $user = $this->requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+        $email = trim((string)($user['email'] ?? ''));
+        $displayName = trim((string)($_POST['display_name'] ?? ''));
+        if ($displayName === '' || mb_strlen($displayName, 'UTF-8') > 80) {
+            set_flash('error', 'Tên hồ sơ phải có từ 1 đến 80 ký tự.');
+            redirect(BASE_URL . '/index.php?r=hoso');
+        }
+        if (!$this->model->createSkinProfileByEmail((string)($user['ho_ten'] ?? ''), $email, $displayName)) {
+            set_flash('error', 'Không thể tạo hồ sơ mới. Vui lòng thử lại.');
+        } else {
+            set_flash('success', 'Đã tạo hồ sơ mới. Hãy chọn hồ sơ này rồi làm Khảo sát đầy đủ để bắt đầu.');
+        }
         redirect(BASE_URL . '/index.php?r=hoso');
     }
 

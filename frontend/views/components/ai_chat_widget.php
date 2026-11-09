@@ -21,8 +21,8 @@ if ($aiChatEmail !== '' && $pdo !== null) {
   try {
     if (class_exists('TaiKhoan')) {
         $taiKhoanModel = new TaiKhoan($pdo);
-        $skinProfile = $taiKhoanModel->getSkinProfileByEmail($aiChatEmail);
-        $khachHang = $taiKhoanModel->getKhachHangByEmail($aiChatEmail);
+        $skinProfile = $taiKhoanModel->getSelectedSkinProfileByEmail($aiChatEmail);
+        $khachHang = $taiKhoanModel->getCustomerForSelectedProfileByEmail($aiChatEmail);
         
         // Kiểm tra loại da hợp lệ (không rỗng và không phải "Chưa xác định")
         $loaiDaRaw = trim((string)($skinProfile['loai_da'] ?? ''));
@@ -32,6 +32,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
                 'van_de_da' => trim((string)($skinProfile['van_de_da'] ?? '')),
                 'ngan_sach' => (int)($skinProfile['ngan_sach'] ?? 0),
                 'thanh_phan_tranh' => trim((string)($khachHang['thanh_phan_tranh'] ?? '')),
+                'profile_id' => (string)($skinProfile['profile_id'] ?? ''),
+                'profile_name' => trim((string)($skinProfile['display_name'] ?? 'Hồ sơ của tôi')),
+                'profile_type' => (string)($skinProfile['profile_type'] ?? 'self'),
             ];
         }
     }
@@ -1927,29 +1930,6 @@ $aiLabelScanOn = function_exists('ss_env')
               agentUiHtml = '<div data-ai-agent-ui></div>';
             }
 
-            if (window.SKIN_CHAT_DEBUG === true) {
-              // Render evaluation metrics badge only in local debug mode.
-              var evalScores = message.eval_scores || { ar: 1.0, gr: 1.0, cr: 1.0 };
-              var pipelineMode = message.pipeline_mode || (message.fallback ? 'Agent -> Fallback' : 'Pipeline');
-              var queryType = message.query_type || 'simple single-intent query';
-              var intentMode = message.intent_mode || 'PRODUCT_INQUIRY';
-              var fallbackReason = message.fallbackReason || '';
-
-              var dotColor = (pipelineMode === 'Pipeline') ? '#4caf50' : '#ff9800';
-              var subText = message.fallback ? ('-> ' + (fallbackReason || 'agent failed: APIStatusError')) : ('-> ' + queryType);
-              var intentPart = message.fallback ? '' : (' | intent: ' + intentMode);
-              var latencyPart = message.latency ? (' | ' + Number(message.latency).toFixed(2) + 's') : '';
-
-              meta += '<div class="ai-chat-widget__eval-badge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #757575; background: #f5f5f5; padding: 4px 8px; border-radius: 12px; margin-top: 8px; font-family: monospace; border: 1px solid #e0e0e0;">'
-                   + '<span style="width: 8px; height: 8px; border-radius: 50%; background-color: ' + dotColor + '; display: inline-block;"></span>'
-                   + '<strong>' + pipelineMode + '</strong> | ' + subText + ' | '
-                   + 'AR: ' + Number(evalScores.ar).toFixed(2) + ' | '
-                   + 'GR: ' + Number(evalScores.gr).toFixed(2) + ' | '
-                   + 'CR: ' + Number(evalScores.cr).toFixed(2)
-                   + latencyPart
-                   + intentPart
-                   + '</div>';
-            }
           }
 
           if (isUser && message.labelThumb && window.SkinSyntaxLabelScan) {
@@ -2107,6 +2087,7 @@ $aiLabelScanOn = function_exists('ss_env')
           syncLayout();
           trigger.setAttribute('aria-expanded', 'true');
           widget.classList.add('is-open');
+          document.dispatchEvent(new CustomEvent('skinsyntax:syna-chat-opened'));
           if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
             widget.classList.add('is-expanded');
           }
@@ -2623,6 +2604,14 @@ $aiLabelScanOn = function_exists('ss_env')
           .then(function(res) { return res.json(); })
           .then(function(result) {
             if (result && result.ok) {
+              if (typeof window.notifySynaCartAdded === 'function') {
+                window.notifySynaCartAdded({ cartCount: result.cart_count });
+              }
+              var synaHero = document.querySelector('[data-syna-hero]');
+              if (synaHero) synaHero.setAttribute('data-syna-cart-added', String(Date.now()));
+              document.dispatchEvent(new CustomEvent('skinsyntax:cart-added', {
+                detail: { cartCount: result.cart_count }
+              }));
               addCartBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
               
               if (typeof updateCartBadge === 'function' && result.cart_count !== undefined) {

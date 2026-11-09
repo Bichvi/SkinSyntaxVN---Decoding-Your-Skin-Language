@@ -59,6 +59,27 @@ ob_start(static function ($buffer) {
     return function_exists('fixMojibake') ? fixMojibake($buffer) : $buffer;
 });
 
+// MongoDB uses lazy server selection, so a transient Atlas DNS failure can
+// happen on the first query rather than while constructing the client. Keep
+// that infrastructure error user-facing and actionable instead of exposing a
+// PHP stack trace or logging the user out of a valid admin session.
+set_exception_handler(static function (Throwable $exception): void {
+    if (!is_a($exception, 'MongoDB\\Driver\\Exception\\ConnectionException')) {
+        throw $exception;
+    }
+
+    error_log('MongoDB connection unavailable: ' . $exception->getMessage());
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    http_response_code(503);
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-store');
+    header('Retry-After: 5');
+    echo '<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SkinSyntaxVN - Tạm thời gián đoạn</title><style>body{font-family:Arial,sans-serif;background:#f7faf8;color:#183b2b;margin:0;display:grid;place-items:center;min-height:100vh}.box{max-width:560px;margin:24px;padding:32px;border:1px solid #c8dacf;border-radius:14px;background:#fff;box-shadow:0 8px 30px rgba(24,59,43,.08)}h1{font-size:22px;margin:0 0 12px}p{line-height:1.6;color:#52645b}.btn{display:inline-block;margin-top:8px;padding:10px 16px;border-radius:8px;background:#183b2b;color:#fff;text-decoration:none;font-weight:700}</style></head><body><main class="box"><h1>Dữ liệu đang tạm thời chưa kết nối được</h1><p>Hệ thống không lấy được dữ liệu từ máy chủ MongoDB trong lúc này. Vui lòng đợi vài giây rồi thử tải lại trang.</p><a class="btn" href="javascript:location.reload()">Thử lại</a></main></body></html>';
+    exit;
+});
+
 // AI Idol is isolated from unrelated customer/chat controllers. Dispatch it
 // after shared helpers are available but before optional controllers load.
 $r = $_GET['r'] ?? 'home';
@@ -82,6 +103,7 @@ if (in_array($r, [
 }
 
 require_once $backendRoot . '/app/controllers/HomeController.php';
+require_once $backendRoot . '/app/controllers/FavoriteController.php';
 require_once $backendRoot . '/app/controllers/SanPhamController.php';
 require_once $backendRoot . '/app/controllers/AuthController.php';
 require_once $backendRoot . '/app/controllers/TaiKhoanController.php';
@@ -93,11 +115,43 @@ if (is_file($backendRoot . '/app/services/VnpayService.php')) {
 }
 
 $r = $_GET['r'] ?? 'home';
+if ($r === 'pwa_manifest' || $r === 'pwa_sw') {
+    $pwaRoot = '';
+    foreach ([__DIR__, dirname(__DIR__), dirname(__DIR__, 2)] as $candidate) {
+        if (is_file($candidate . '/manifest.webmanifest') && is_file($candidate . '/sw.js')) {
+            $pwaRoot = $candidate;
+            break;
+        }
+    }
+    if ($pwaRoot === '') {
+        http_response_code(404);
+        exit;
+    }
+    if ($r === 'pwa_manifest') {
+        header('Content-Type: application/manifest+json; charset=utf-8');
+        header('Cache-Control: public, max-age=3600');
+        readfile($pwaRoot . '/manifest.webmanifest');
+    } else {
+        header('Content-Type: application/javascript; charset=utf-8');
+        header('Cache-Control: no-cache');
+        readfile($pwaRoot . '/sw.js');
+    }
+    exit;
+}
 
 
 switch ($r) {
     case 'home':
         (new HomeController($pdo))->index();
+        break;
+
+    case 'favorite_toggle':
+        (new FavoriteController($pdo))->toggle();
+        break;
+
+    case 'favorite_list':
+    case 'yeu_thich':
+        (new FavoriteController($pdo))->index();
         break;
 
     case 'home_concern':
@@ -112,6 +166,20 @@ switch ($r) {
         (new SanPhamController($pdo))->tatca();
         break;
 
+    case 'search_event':
+        // Smart Search Bước 08: beacon sự kiện khối gợi ý -> search_events (204, không body).
+        require_once $backendRoot . '/app/services/SearchEventTracker.php';
+        $searchEventStatus = SearchEventTracker::handle(
+            $pdo,
+            (string)($_SERVER['REQUEST_METHOD'] ?? 'GET'),
+            (string)file_get_contents('php://input', false, null, 0, SearchEventTracker::MAX_BODY + 1)
+        );
+        if (!headers_sent()) {
+            header('Cache-Control: no-store');
+        }
+        http_response_code($searchEventStatus);
+        exit;
+
     case 'danhsach':
         (new SanPhamController($pdo))->danhsach();
         break;
@@ -122,6 +190,14 @@ switch ($r) {
 
     case 'chitiet':
         (new SanPhamController($pdo))->chitiet();
+        break;
+
+    case 'routine_recommendations':
+        (new SanPhamController($pdo))->routineRecommendations();
+        break;
+
+    case 'similar_products':
+        (new SanPhamController($pdo))->similarProducts();
         break;
 
     case 'product_video_stream':
@@ -194,6 +270,10 @@ switch ($r) {
         (new HomeController($pdo))->camon();
         break;
 
+    case 'payment_autocheck':
+        (new HomeController($pdo))->paymentAutoCheck();
+        break;
+
     case 'vnpay_return':
         (new HomeController($pdo))->vnpayReturn();
         break;
@@ -223,6 +303,18 @@ switch ($r) {
 
     case 'goiy':
         (new HomeController($pdo))->goiy();
+        break;
+
+    case 'consultation_preference':
+        (new HomeController($pdo))->saveConsultationPreference();
+        break;
+
+    case 'beauty_swipe':
+        (new HomeController($pdo))->beautySwipe();
+        break;
+
+    case 'beauty_swipe_action':
+        (new HomeController($pdo))->beautySwipeAction();
         break;
 
     case 'goiy_api':
@@ -288,6 +380,10 @@ switch ($r) {
 
     case 'xulykhaosatnhanh':
         (new TaiKhoanController($pdo))->xulyKhaoSatNhanh();
+        break;
+
+    case 'luu_checkin_vao_hoso':
+        (new TaiKhoanController($pdo))->saveConsultationToProfile();
         break;
 
     case 'luukhaosat':
@@ -440,6 +536,10 @@ switch ($r) {
         (new LiveController($pdo))->apiLivekitToken();
         break;
 
+    case 'api_live_stream_state':
+        (new LiveController($pdo))->apiLiveStreamState();
+        break;
+
     case 'api_live_products':
         (new LiveController($pdo))->apiLiveProducts();
         break;
@@ -484,6 +584,10 @@ switch ($r) {
 
     case 'api_live_active_viewers':
         (new LiveController($pdo))->apiLiveActiveViewers();
+        break;
+
+    case 'api_live_reaction':
+        (new LiveController($pdo))->apiLiveReaction();
         break;
 
     case 'admin':

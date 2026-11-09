@@ -132,4 +132,30 @@ final class SearchPopularity
         usort($out, static fn(array $a, array $b): int => [$b['score'], mb_strlen($a['q'], 'UTF-8'), $a['q']] <=> [$a['score'], mb_strlen($b['q'], 'UTF-8'), $b['q']]);
         return array_slice($out, 0, max(0, $limit));
     }
+
+    /** Từ khóa có lượt tìm cao nhất cho các khối khám phá công khai. */
+    public static function top(int $limit = 8, ?RedisLite $redis = null): array
+    {
+        $limit = max(1, min(24, $limit));
+        $redis = $redis ?? RedisLite::shared();
+        if ($redis === null) {
+            return [];
+        }
+
+        $raw = $redis->zrevrange(self::POPULAR_KEY, 0, $limit - 1, true);
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $out = [];
+        for ($i = 0; $i + 1 < count($raw); $i += 2) {
+            $query = trim((string)($raw[$i] ?? ''));
+            $score = $raw[$i + 1] ?? null;
+            if ($query === '' || !is_numeric($score)) {
+                continue;
+            }
+            $out[] = ['q' => $query, 'score' => (int)round((float)$score)];
+        }
+        return $out;
+    }
 }

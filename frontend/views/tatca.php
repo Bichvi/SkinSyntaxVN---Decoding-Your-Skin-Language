@@ -46,7 +46,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
   <div class="p-4 mb-4 bg-white border" style="border-radius: 12px; border-color: var(--border) !important;">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
       <div id="catalogSummary" aria-live="polite">
-        <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.75rem;">SKINSYNTAX CATALOG</span>
+        <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.75rem;">TẤT CẢ SẢN PHẨM</span>
         <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.8rem;"><?= h($pageTitle) ?></h2>
         <div class="text-muted small mt-1">Tổng cộng: <strong><?= (int)$total ?></strong> sản phẩm chuẩn skincare</div>
         <?php if (!empty($cap1) || !empty($cap2)): ?>

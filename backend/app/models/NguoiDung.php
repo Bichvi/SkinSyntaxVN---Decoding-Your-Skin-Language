@@ -241,6 +241,7 @@ class NguoiDung {
     public function luuKhaoSatKhachHang(string $hoTen, string $email, array $khaoSat): bool {
         $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
         $khachHang = $this->db->khach_hang->findOne(['email' => $regex]);
+        $targetProfileId = trim((string)($khaoSat['_profile_id'] ?? ''));
 
         $maLoaiDa = $this->layHoacTaoMaLoaiDa($khaoSat['loai_da'] ?? null);
         $tinhTrangDacBietRaw = trim((string)($khaoSat['tinh_trang_dac_biet'] ?? ''));
@@ -265,9 +266,62 @@ class NguoiDung {
             'updated_at' => new \MongoDB\BSON\UTCDateTime()
         ];
 
+        $baseProfile = [
+            'gioi_tinh' => $payload['gioi_tinh'],
+            'nam_sinh' => $payload['nam_sinh'],
+            'loai_da' => $khaoSat['loai_da'] ?? null,
+            'tieu_chi_uu_tien' => $payload['tieu_chi_uu_tien'],
+            'thanh_phan_tranh' => $payload['thanh_phan_tranh'],
+            'kinh_nghiem_skincare' => $payload['kinh_nghiem_skincare'],
+            'so_buoc_skincare' => $payload['so_buoc_skincare'],
+            'tinh_trang_dac_biet' => $payload['tinh_trang_dac_biet'],
+            'updated_at' => $payload['updated_at'],
+        ];
+        $currentState = [
+            'muc_do_nhay_cam' => $payload['muc_do_nhay_cam'],
+            'van_de_da' => $payload['van_de_da'],
+            'muc_tieu_cham_soc' => $payload['muc_tieu_cham_soc'],
+            'ngan_sach' => $payload['ngan_sach'],
+            'updated_at' => $payload['updated_at'],
+        ];
+
+        if ($targetProfileId !== '') {
+            // Full Quiz for an "other" profile is isolated by owner email. It never writes khach_hang.
+            $target = $this->db->skin_profiles->findOne([
+                'profile_id' => $targetProfileId,
+                'owner_email' => strtolower(trim($email)),
+            ]);
+            if (!$target) {
+                return false;
+            }
+
+            try {
+                $update = [
+                    'base_profile' => $baseProfile,
+                    'current_state' => $currentState,
+                    'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+                ];
+                if ($hoTen !== '') {
+                    $update['display_name'] = (string)($target['display_name'] ?? $hoTen);
+                }
+                $result = $this->db->skin_profiles->updateOne(
+                    ['profile_id' => $targetProfileId, 'owner_email' => strtolower(trim($email))],
+                    ['$set' => $update]
+                );
+                return $result->getMatchedCount() > 0;
+            } catch (Throwable $e) {
+                return false;
+            }
+        }
+
         if (!empty($hoTen)) {
             $payload['ho_ten'] = $hoTen;
         }
+
+        // Keep the legacy flat fields for existing consumers while recording explicit base/current layers.
+        $payload['skin_base_profile'] = $baseProfile;
+        $payload['skin_current_state'] = $currentState;
+        $payload['skin_profile_updated_at'] = $payload['updated_at'];
 
         if ($khachHang) {
             $result = $this->db->khach_hang->updateOne(

@@ -1,6 +1,7 @@
 <?php
 // backend/app/controllers/HomeController.php
 require_once __DIR__ . '/../models/SanPham.php';
+require_once __DIR__ . '/../models/ProductFavorite.php';
 require_once __DIR__ . '/../models/GoiYContentBased.php';
 require_once __DIR__ . '/../models/TaiKhoan.php';
 require_once __DIR__ . '/../models/HoaDon.php';
@@ -13,10 +14,12 @@ require_once __DIR__ . '/../services/SupportKnowledge.php';
 require_once __DIR__ . '/ShopAssistantController.php';
 require_once __DIR__ . '/../services/HomeGraphRecommender.php';
 require_once __DIR__ . '/../services/ChatAgentToken.php';
+require_once __DIR__ . '/../services/SkinConsultationSession.php';
 
 class HomeController {
     private $pdo;
     private SanPham $model;
+    private ProductFavorite $favoriteModel;
     private GoiYContentBased $goiYModel;
     private ?RecommendationExplainer $recommendationExplainer = null;
     private HoaDon $hoaDonModel;
@@ -33,6 +36,7 @@ class HomeController {
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->model = new SanPham($pdo);
+        $this->favoriteModel = new ProductFavorite($pdo);
         $this->goiYModel = new GoiYContentBased($pdo);
         $this->hoaDonModel = new HoaDon($pdo);
         $this->voucherModel = new Voucher($pdo);
@@ -147,6 +151,12 @@ class HomeController {
         $userProfile = null;
         $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']['email']);
         $hasSurvey = false;
+        $favoriteProductIds = [];
+        $homepageRefreshSeed = null;
+        $homeCategoryCards = [];
+        $homeBrandCards = [];
+        $synaSurveyCompleted = !empty($_SESSION['syna_survey_success']);
+        unset($_SESSION['syna_survey_success']);
 
         if ($isLoggedIn) {
             try {
@@ -157,6 +167,15 @@ class HomeController {
                 error_log('home skin profile error: ' . $e->getMessage());
                 $userProfile = null;
                 $hasSurvey = false;
+            }
+
+            try {
+                $favoriteProductIds = $this->favoriteModel->idsForAccount('email:' . strtolower(trim((string)($_SESSION['user']['email'] ?? ''))));
+            } catch (Throwable $e) {
+                // Favorites enhance the homepage only; a temporary Mongo issue
+                // must not remove the existing product sections.
+                error_log('home favorites lookup skipped: ' . $e->getMessage());
+                $favoriteProductIds = [];
             }
         }
 
@@ -196,6 +215,7 @@ class HomeController {
                 'view' => $recentViewed,
                 'cart' => $cartItems,
                 'purchases' => $purchaseItems,
+                'favorites' => $favoriteProductIds,
             ];
 
             // Phase P2.1 Optimization: Retrieve all public homepage lookups in 1 single Valkey roundtrip
@@ -214,9 +234,72 @@ class HomeController {
                 // Random là best-effort; không để lỗi nguồn random làm hỏng trang chủ.
                 $homepageRefreshSeed = (int)(microtime(true) * 1000000) & 2147483647;
             }
+            $homeCategoryCards = $this->selectHomepageCardWindow(
+                (array)($publicData['category_cards'] ?? []),
+                10,
+                $homepageRefreshSeed,
+                'id'
+            );
+            $homeBrandCards = $this->selectHomepageCardWindow(
+                (array)($publicData['brand_cards'] ?? []),
+                9,
+                $homepageRefreshSeed,
+                'name'
+            );
             $homepageSections = method_exists($this->model, 'getHomepageProductSections')
                 ? $this->model->getHomepageProductSections(8, $recentViewed, $userProfile, $behaviorSignals, $preloadedFlashDeals, $homepageRefreshSeed, $latest)
                 : [];
+            // Public trend data is kept separate from personalized ranking so
+            // the homepage can render a real best-seller rail without changing
+            // recommendation scores or user-specific signals.
+            $homepageSections['bestSellers'] = $publicData['recent_top_sellers'] ?? [];
+            $homepageSections['bestSellersMeta'] = [
+                'source' => 'completed_orders_30d',
+                'is_actual' => !empty($homepageSections['bestSellers']),
+            ];
+            $homepageSections['topSearches'] = $publicData['top_searches'] ?? [];
+
+            // Saved products are a first-party personalization signal. Use
+            // real, visible catalog items similar to the saved products and
+            // place them ahead of the generic fallback row. The saved SKUs
+            // themselves are excluded to avoid showing the same item again.
+            if ($favoriteProductIds !== []) {
+                try {
+                    $savedProducts = $this->model->findVisibleByIds($favoriteProductIds);
+                    $savedSimilarProducts = [];
+                    $savedSimilarIds = array_fill_keys(array_map('strval', $favoriteProductIds), true);
+                    foreach ($savedProducts as $savedProduct) {
+                        $similar = $this->model->findSimilarFallback($savedProduct, array_keys($savedSimilarIds), 4);
+                        foreach ($similar as $candidate) {
+                            $candidateId = trim((string)($candidate['ma_san_pham'] ?? $candidate['id'] ?? ''));
+                            if ($candidateId === '' || isset($savedSimilarIds[$candidateId])) {
+                                continue;
+                            }
+                            $candidate['recommender_meta'] = [
+                                'algorithm' => 'favorite_similarity',
+                                'algorithm_mode' => 'FAVORITE_SIMILAR',
+                                'source_mode' => 'favorite_similarity',
+                                'active_signals' => ['FAVORITES'],
+                                'dominant_signal' => 'FAVORITES',
+                                'reason_tags' => ['Dựa trên sản phẩm bạn đã lưu'],
+                                'reason' => 'Dựa trên sản phẩm bạn đã lưu',
+                                'source_favorite_ids' => $favoriteProductIds,
+                            ];
+                            $savedSimilarProducts[] = $candidate;
+                            $savedSimilarIds[$candidateId] = true;
+                            if (count($savedSimilarProducts) >= 8) {
+                                break 2;
+                            }
+                        }
+                    }
+                    if ($savedSimilarProducts !== []) {
+                        $homepageSections['forYou'] = array_merge($savedSimilarProducts, (array)($homepageSections['forYou'] ?? []));
+                        $homepageSections['adaptiveForYou'] = array_merge($savedSimilarProducts, (array)($homepageSections['adaptiveForYou'] ?? []));
+                    }
+                } catch (Throwable $e) {
+                    error_log('home favorite similarity skipped: ' . $e->getMessage());
+                }
+            }
 
             require_once __DIR__ . '/../models/FlashSaleCampaign.php';
             $flashSaleModel = new FlashSaleCampaign($this->pdo);
@@ -264,13 +347,48 @@ class HomeController {
                         }
                     }
                 }
+                $homeGraphSkinProfile = $isLoggedIn
+                    ? $this->homeGraphSkinProfile((string)($_SESSION['user']['email'] ?? ''))
+                    : null;
                 $homeGraph = $this->homeGraphRecommender()->build([
                     'seen_ids' => $recentViewed,
                     'cart_ids' => array_keys($cartItems),
-                    'skin_profile' => $isLoggedIn ? $this->homeGraphSkinProfile((string)($_SESSION['user']['email'] ?? '')) : null,
+                    'skin_profile' => $homeGraphSkinProfile,
                     'exclude_ids' => array_values(array_unique($homeGraphExclude)),
                     'sections' => ['seen', 'skin', 'concern'],
                 ]);
+
+                // The graph service is optional in local/dev. Preserve the
+                // Syna homepage sections with grounded catalog fallbacks so a
+                // temporary Flask/Neo4j outage does not make them disappear.
+                $homeGraph = is_array($homeGraph) ? $homeGraph : [];
+                $homeGraph['concern_keys'] = HomeGraphRecommender::CONCERN_NAMES;
+                if (empty($homeGraph['seen']['products'])) {
+                    $seenFallback = $this->buildHomeSeenFallback($recentViewed, $homeGraphExclude);
+                    if ($seenFallback !== null) {
+                        $homeGraph['seen'] = $seenFallback;
+                        foreach ($seenFallback['products'] as $seenProduct) {
+                            $seenProductId = $homeGraphIdOf($seenProduct);
+                            if ($seenProductId !== '') {
+                                $homeGraphExclude[] = $seenProductId;
+                            }
+                        }
+                    }
+                }
+                if (empty($homeGraph['concern']['products'])) {
+                    $preferredConcern = (string)($homeGraphSkinProfile['concerns'][0] ?? 'mun');
+                    if (!isset(HomeGraphRecommender::CONCERN_NAMES[$preferredConcern])) {
+                        $preferredConcern = 'mun';
+                    }
+                    $concernFallback = $this->buildHomeConcernFallback(
+                        $preferredConcern,
+                        array_values(array_unique($homeGraphExclude)),
+                        HomeGraphRecommender::LIMITS['concern']
+                    );
+                    if ($concernFallback !== null) {
+                        $homeGraph['concern'] = $concernFallback;
+                    }
+                }
             } catch (Throwable $e) {
                 error_log('[HOME_GRAPH] index skipped: ' . get_class($e));
                 $homeGraph = null;
@@ -296,7 +414,11 @@ class HomeController {
             'isLoggedIn' => $isLoggedIn,
             'userProfile' => $userProfile,
             'hasSurvey' => $hasSurvey,
+            'favoriteProductIds' => $favoriteProductIds,
             'homeGraph' => $homeGraph ?? null,
+            'homeCategoryCards' => $homeCategoryCards,
+            'homeBrandCards' => $homeBrandCards,
+            'synaSurveyCompleted' => $synaSurveyCompleted,
         ]);
     }
 
@@ -308,6 +430,125 @@ class HomeController {
         );
     }
 
+    /**
+     * Catalog-only fallback for "Vì bạn đã xem". It uses the real most-recent
+     * product as the seed and never invents product, price or stock data.
+     */
+    private function buildHomeSeenFallback(array $seenIds, array $excludeIds = []): ?array {
+        try {
+            $cleanSeenIds = [];
+            foreach ($seenIds as $seenId) {
+                $seenId = trim((string)$seenId);
+                if ($seenId !== '' && ctype_digit($seenId) && !in_array($seenId, $cleanSeenIds, true)) {
+                    $cleanSeenIds[] = $seenId;
+                }
+            }
+            if ($cleanSeenIds === []) {
+                return null;
+            }
+
+            $seedProducts = $this->model->findVisibleByIds($cleanSeenIds);
+            $seed = $seedProducts[0] ?? null;
+            if (!is_array($seed)) {
+                return null;
+            }
+
+            $excluded = array_values(array_unique(array_merge($cleanSeenIds, array_map('strval', $excludeIds))));
+            $products = $this->model->findSimilarFallback($seed, $excluded, HomeGraphRecommender::LIMITS['seen']);
+            if (count($products) < 4) {
+                return null;
+            }
+
+            $seedName = trim((string)($seed['ten_san_pham'] ?? 'sản phẩm vừa xem'));
+            $seedCategory = trim((string)($seed['loai_san_pham'] ?? $seed['danh_muc'] ?? ''));
+            $reason = $seedCategory !== ''
+                ? 'Cùng nhóm ' . mb_strtolower($seedCategory, 'UTF-8') . ' với sản phẩm bạn vừa xem'
+                : 'Có đặc điểm gần với sản phẩm bạn vừa xem';
+            foreach ($products as &$product) {
+                $product['reason_code'] = 'catalog_seen_similarity';
+                $product['reason_text'] = $reason;
+            }
+            unset($product);
+
+            return [
+                'title_data' => ['seed' => [
+                    'id' => (string)($seed['ma_san_pham'] ?? $seed['id'] ?? ''),
+                    'name' => $seedName,
+                ]],
+                'products' => array_slice($products, 0, HomeGraphRecommender::LIMITS['seen']),
+                'fallback' => true,
+            ];
+        } catch (Throwable $e) {
+            error_log('[HOME_GRAPH] seen catalog fallback skipped: ' . get_class($e));
+            return null;
+        }
+    }
+
+    /**
+     * Catalog search fallback for the concern tabs. Results still come from
+     * MongoDB and receive a conservative explanation tied to the search term.
+     */
+    private function buildHomeConcernFallback(string $key, array $excludeIds = [], int $limit = 8): ?array {
+        if (!isset(HomeGraphRecommender::CONCERN_NAMES[$key])) {
+            return null;
+        }
+
+        $queryMap = [
+            'mun' => ['mụn'],
+            'tham_mun' => ['thâm mụn', 'thâm'],
+            'nam_tan_nhang' => ['nám tàn nhang', 'nám'],
+            'lo_chan_long' => ['lỗ chân lông'],
+            'dau_thua' => ['da dầu', 'kiềm dầu'],
+            'kho_da' => ['da khô', 'dưỡng ẩm'],
+            'kich_ung' => ['da nhạy cảm', 'làm dịu'],
+            'lao_hoa' => ['lão hóa', 'nếp nhăn'],
+            'xin_mau' => ['xỉn màu', 'dưỡng sáng'],
+        ];
+        $concernName = HomeGraphRecommender::CONCERN_NAMES[$key];
+        $queries = $queryMap[$key] ?? [$concernName];
+        $excluded = array_fill_keys(array_values(array_filter(array_map('strval', $excludeIds))), true);
+        $selected = [];
+        $selectedIds = [];
+
+        try {
+            foreach ($queries as $query) {
+                $candidates = $this->model->publicRecommendationDiscovery(
+                    ['q' => $query, 'sort' => 'popular'],
+                    max(16, $limit * 2)
+                );
+                foreach ($candidates as $candidate) {
+                    if (!is_array($candidate)) {
+                        continue;
+                    }
+                    $productId = trim((string)($candidate['ma_san_pham'] ?? $candidate['id'] ?? ''));
+                    if ($productId === '' || isset($excluded[$productId]) || isset($selectedIds[$productId])) {
+                        continue;
+                    }
+                    $candidate['reason_code'] = 'catalog_concern_match';
+                    $candidate['reason_text'] = 'Liên quan đến nhu cầu ' . mb_strtolower($concernName, 'UTF-8');
+                    $selected[] = $candidate;
+                    $selectedIds[$productId] = true;
+                    if (count($selected) >= $limit) {
+                        break 2;
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('[HOME_GRAPH] concern catalog fallback skipped: ' . get_class($e));
+            return null;
+        }
+
+        if (count($selected) < 4) {
+            return null;
+        }
+
+        return [
+            'title_data' => ['concern' => ['key' => $key, 'name' => $concernName]],
+            'products' => array_slice($selected, 0, $limit),
+            'fallback' => true,
+        ];
+    }
+
     /** Hồ sơ da {skin_type, concerns} của khách đăng nhập (chỉ đọc khach_hang). Lỗi/không có -> null. */
     private function homeGraphSkinProfile(string $email, bool $allowLookup = true): ?array {
         if ($email === '') {
@@ -315,7 +556,13 @@ class HomeController {
         }
         // Cache trong session (chỉ {skin_type, concerns} đã làm sạch, khóa theo hash email, TTL 10 phút)
         // để không truy vấn Mongo lại ở mỗi lần tải trang chủ / bấm chip.
-        $emailKey = hash('sha256', mb_strtolower($email, 'UTF-8'));
+        $selectedProfile = null;
+        try {
+            $selectedProfile = (new TaiKhoan($this->pdo))->getSelectedSkinProfileByEmail($email);
+        } catch (Throwable $e) {
+            $selectedProfile = null;
+        }
+        $emailKey = hash('sha256', mb_strtolower($email, 'UTF-8') . '|' . (string)($selectedProfile['profile_id'] ?? 'self'));
         $cached = $_SESSION['home_graph_skin_profile'] ?? null;
         if (is_array($cached) && ($cached['k'] ?? '') === $emailKey && (time() - (int)($cached['t'] ?? 0)) < 600) {
             return is_array($cached['p'] ?? null) ? $cached['p'] : null;
@@ -324,7 +571,8 @@ class HomeController {
             return null;
         }
         try {
-            $kh = (new TaiKhoan($this->pdo))->getKhachHangByEmail($email);
+            $taiKhoanModel = new TaiKhoan($this->pdo);
+            $kh = $taiKhoanModel->getCustomerForSelectedProfileByEmail($email);
             $profile = SearchSkinProfile::fromCustomer($kh);
             $_SESSION['home_graph_skin_profile'] = [
                 'k' => $emailKey,
@@ -381,6 +629,14 @@ class HomeController {
             error_log('[HOME_GRAPH] concern skipped: ' . get_class($e));
             $block = null;
             $failed = true;
+        }
+
+        if (empty($block['products'])) {
+            $fallbackBlock = $this->buildHomeConcernFallback($key, [], HomeGraphRecommender::LIMITS['concern']);
+            if ($fallbackBlock !== null) {
+                $block = $fallbackBlock;
+                $failed = false;
+            }
         }
 
         header('Content-Type: text/html; charset=UTF-8');
@@ -539,7 +795,7 @@ class HomeController {
             ],
             'helpLinks' => [
                 ['label' => 'Khám phá toàn bộ sản phẩm', 'url' => BASE_URL . '/index.php?r=tatca'],
-                ['label' => 'Mở gợi ý routine AI', 'url' => BASE_URL . '/index.php?r=goiy'],
+                ['label' => 'Mở gợi ý routine', 'url' => BASE_URL . '/index.php?r=goiy'],
                 ['label' => 'Trung tâm hỗ trợ khách hàng', 'url' => BASE_URL . '/index.php?r=ho_tro_khach_hang'],
             ],
         ]);
@@ -548,15 +804,53 @@ class HomeController {
     private static ?array $highlightedCategoriesCache = null;
 
     /**
+     * Rotate only the server-selected homepage window. The DOM is not
+     * reshuffled after render, and pinned rows remain ahead when supported by
+     * an existing data source.
+     */
+    private function selectHomepageCardWindow(array $cards, int $limit, ?int $seed, string $keyField): array {
+        $limit = max(1, min(24, $limit));
+        $unique = [];
+        foreach ($cards as $card) {
+            if (!is_array($card)) {
+                continue;
+            }
+            $key = trim((string)($card[$keyField] ?? ''));
+            if ($key === '' || isset($unique[$key])) {
+                continue;
+            }
+            $unique[$key] = $card;
+        }
+        $items = array_values($unique);
+        if (count($items) <= 1) {
+            return array_slice($items, 0, $limit);
+        }
+
+        $seedText = (string)($seed ?? 0);
+        usort($items, static function (array $left, array $right) use ($seedText, $keyField): int {
+            $leftPinned = !empty($left['is_pinned']) ? 1 : 0;
+            $rightPinned = !empty($right['is_pinned']) ? 1 : 0;
+            if ($leftPinned !== $rightPinned) {
+                return $rightPinned <=> $leftPinned;
+            }
+            $leftHash = hash('sha256', $seedText . '|' . (string)($left[$keyField] ?? ''));
+            $rightHash = hash('sha256', $seedText . '|' . (string)($right[$keyField] ?? ''));
+            return strcmp($leftHash, $rightHash);
+        });
+        return array_slice($items, 0, $limit);
+    }
+
+    /**
      * Phase P2.1 Consolidated Public Homepage Lookups.
      * Bundles menu_tree, latest, cats, flash_deals, and primary_campaign into 1 Valkey key.
      */
     public function getHomepagePublicData(): array {
-        // v2 giữ pool sản phẩm rộng hơn cho cửa sổ khám phá khi F5.
-        $cacheKey = 'home:composite_public:v2';
+        // v5 làm mới dữ liệu sản phẩm sau khi bổ sung hydrate tên thương hiệu
+        // cho các card trang chủ đang dùng composite cache.
+        $cacheKey = 'home:composite_public:v5';
         if (class_exists('CacheService')) {
             $cached = CacheService::getInstance()->get($cacheKey);
-            if (is_array($cached) && isset($cached['latest'], $cached['cats'], $cached['flash_deals'])) {
+            if (is_array($cached) && isset($cached['latest'], $cached['cats'], $cached['flash_deals'], $cached['best_sellers'], $cached['recent_top_sellers'], $cached['category_cards'], $cached['brand_cards'], $cached['top_searches'])) {
                 // Không giữ cache Flash Sale qua mốc bắt đầu/kết thúc chiến dịch.
                 $now = time();
                 $isStale = false;
@@ -587,13 +881,36 @@ class HomeController {
 
         $menuTree = $this->model->menuTree();
         $latest = $this->model->latest(24, true, true);
+        $recentTopSellers = method_exists($this->model, 'recentTopSellers')
+            ? $this->model->recentTopSellers(16, 30)
+            : [];
+        $categoryCards = method_exists($this->model, 'homepageCategoryCards')
+            ? $this->model->homepageCategoryCards(12)
+            : [];
+        $brandCards = method_exists($this->model, 'homepageBrandCards')
+            ? $this->model->homepageBrandCards(12)
+            : [];
         $cats = $this->getHighlightedCategories();
         $flashDeals = $this->model->getFlashSaleProducts(8);
         $primaryCampaign = $flashSaleModel->getPrimaryActiveCampaign();
+        $topSearches = [];
+        try {
+            require_once __DIR__ . '/../services/SearchPopularity.php';
+            $topSearches = SearchPopularity::top(8);
+        } catch (Throwable $e) {
+            error_log('homepage popular search lookup skipped: ' . $e->getMessage());
+        }
 
         $composite = [
             'menu_tree' => $menuTree,
             'latest' => $latest,
+            // Backward-compatible key; its source is now the completed-order
+            // 30-day aggregate rather than the lifetime product counter.
+            'best_sellers' => $recentTopSellers,
+            'recent_top_sellers' => $recentTopSellers,
+            'category_cards' => $categoryCards,
+            'brand_cards' => $brandCards,
+            'top_searches' => $topSearches,
             'cats' => $cats,
             'flash_deals' => $flashDeals,
             'primary_campaign' => $primaryCampaign,
@@ -781,8 +1098,13 @@ class HomeController {
             return;
         }
 
+        $temporaryConsultation = null;
         try {
             $profile = $this->buildRecommendationProfile($email);
+            $temporaryConsultation = SkinConsultationSession::get($user);
+            if ($profile && $temporaryConsultation) {
+                $profile = $this->applyConsultationCheckIn($profile, $temporaryConsultation);
+            }
             $hasValidProfile = $this->hasValidSkinProfile($profile);
 
             // Case B: Logged in but incomplete / no skin profile
@@ -804,6 +1126,7 @@ class HomeController {
                     'brandOptions' => $publicData['brands'],
                     'categoryOptions' => $publicData['categories'],
                     'mongoUnavailableMessage' => $publicData['message'],
+                    'temporaryConsultation' => $temporaryConsultation,
                 ]);
                 return;
             }
@@ -848,7 +1171,203 @@ class HomeController {
             'brandOptions' => $publicData['brands'] ?? [],
             'categoryOptions' => $publicData['categories'] ?? [],
             'profileUnavailableMessage' => $profileMessage,
+            'temporaryConsultation' => $temporaryConsultation,
         ]);
+    }
+
+    private function applyConsultationCheckIn(array $profile, array $consultation): array {
+        $checkIn = is_array($consultation['skin_checkin'] ?? null) ? $consultation['skin_checkin'] : [];
+        if (array_key_exists('muc_do_nhay_cam', $checkIn)) {
+            $profile['sensitivity'] = trim((string)$checkIn['muc_do_nhay_cam']);
+        }
+        if (!empty($checkIn['van_de_da'])) {
+            $profile['concerns'] = array_values(array_filter(array_map('strval', (array)$checkIn['van_de_da'])));
+        }
+        if (trim((string)($checkIn['muc_tieu_cham_soc'] ?? '')) !== '') {
+            $profile['goal'] = trim((string)$checkIn['muc_tieu_cham_soc']);
+            $profile['muc_tieu_cham_soc'] = $profile['goal'];
+        }
+        if ((int)($checkIn['ngan_sach'] ?? 0) > 0) {
+            $profile['budget'] = (int)$checkIn['ngan_sach'];
+            $profile['budget_label'] = number_format($profile['budget'], 0, ',', '.') . ' VND';
+        }
+        $prefs = is_array($consultation['product_preferences'] ?? null) ? $consultation['product_preferences'] : [];
+        $profile['owned_product_ids'] = array_values(array_unique(array_map('strval', (array)($prefs['owned_product_ids'] ?? []))));
+        $profile['profile_source'] = 'temporary_checkin';
+        $profile['consultation_session_id'] = trim((string)($consultation['session_id'] ?? ''));
+        return $profile;
+    }
+
+    public function saveConsultationPreference(): void {
+        $user = current_user() ?? [];
+        if (empty($user['email'])) {
+            $this->jsonResponse(['ok' => false, 'message' => 'Vui lòng đăng nhập để lưu lựa chọn tư vấn.'], 401);
+        }
+        $productId = trim((string)($_POST['product_id'] ?? $_POST['ma_san_pham'] ?? ''));
+        $preference = trim((string)($_POST['preference'] ?? ''));
+        $product = $productId !== '' ? $this->model->findById($productId, true) : null;
+        if (!$product || !$this->model->isProductAvailable($product)) {
+            $this->jsonResponse(['ok' => false, 'message' => 'Sản phẩm không còn khả dụng trong catalog.'], 422);
+        }
+        $record = SkinConsultationSession::get($user);
+        if (!$record) {
+            try {
+                $email = trim((string)($user['email'] ?? ''));
+                $profile = $email !== '' ? $this->buildRecommendationProfile($email) : null;
+                if (!$profile || !$this->hasValidSkinProfile($profile)) {
+                    $this->jsonResponse(['ok' => false, 'message' => 'Hãy hoàn thành hồ sơ da trước khi lưu sản phẩm đã có.'], 422);
+                }
+                $record = SkinConsultationSession::start($user, (string)($profile['profile_id'] ?? ''), [
+                    'muc_do_nhay_cam' => (string)($profile['sensitivity'] ?? ''),
+                    'van_de_da' => (array)($profile['concerns'] ?? []),
+                    'muc_tieu_cham_soc' => (string)($profile['goal'] ?? ''),
+                    'ngan_sach' => (int)($profile['budget'] ?? 0),
+                ], 'quick');
+            } catch (Throwable $e) {
+                error_log('consultation preference session start failed: ' . $e->getMessage());
+                $record = null;
+            }
+        }
+        $record = $record ? SkinConsultationSession::updatePreference($user, $productId, $preference) : null;
+        if (!$record) {
+            $this->jsonResponse(['ok' => false, 'message' => 'Chưa có phiên tư vấn tạm thời để lưu lựa chọn.'], 422);
+        }
+        $this->jsonResponse([
+            'ok' => true,
+            'preference' => $preference,
+            'product_id' => $productId,
+            'message' => $preference === 'owned' ? 'Đã ghi nhận bạn đã có sản phẩm này.' : 'Đã lưu lựa chọn của bạn.',
+        ]);
+    }
+
+    private function beautySwipeState(): array {
+        $state = $_SESSION['skinsyntax_beauty_swipe_v1'] ?? [];
+        if (!is_array($state)) $state = [];
+        foreach (['pool_ids', 'seen_ids', 'liked_ids', 'skipped_ids', 'history', 'processed_request_ids'] as $key) {
+            if (!is_array($state[$key] ?? null)) $state[$key] = [];
+        }
+        $state['current_id'] = trim((string)($state['current_id'] ?? ''));
+        return $state;
+    }
+
+    private function beautySwipeProduct(string $id): ?array {
+        try {
+            $product = $this->model->findById($id, true);
+            if (!$product || !$this->model->isProductAvailable($product)) return null;
+            $product = (array)$product;
+            $productId = trim((string)($product['id'] ?? $product['ma_san_pham'] ?? $id));
+            $rawIngredients = $product['thanh_phan_chinh'] ?? $product['thanh_phan'] ?? [];
+            if (!is_array($rawIngredients)) $rawIngredients = [$rawIngredients];
+            $ingredients = [];
+            foreach ($rawIngredients as $ingredient) {
+                if (!is_scalar($ingredient)) continue;
+                $ingredient = trim((string)$ingredient);
+                if ($ingredient !== '') $ingredients[] = $ingredient;
+            }
+            $image = resolve_image_url(product_image_source($product)) ?: default_placeholder_image();
+            $imageFallbacks = function_exists('product_image_urls') ? product_image_urls($product, 8) : [];
+            $imageFallbacks = array_values(array_filter(array_map(
+                static fn($url): string => resolve_image_url((string)$url),
+                $imageFallbacks
+            ), static fn(string $url): bool => $url !== '' && $url !== $image));
+            return [
+                'id' => $productId,
+                'name' => trim((string)($product['ten_san_pham'] ?? $product['name'] ?? 'Sản phẩm SkinSyntax')),
+                'brand' => trim((string)($product['thuong_hieu'] ?? $product['brand'] ?? '')),
+                'price' => (int)($product['gia_ban'] ?? $product['price'] ?? 0),
+                'original_price' => (int)($product['gia_thi_truong'] ?? $product['original_price'] ?? 0),
+                'image' => $image,
+                'image_fallbacks' => $imageFallbacks,
+                'stock' => $this->model->getProductStock($product),
+                'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($productId),
+                'ingredients' => array_values(array_unique($ingredients)),
+            ];
+        } catch (Throwable $e) {
+            error_log('beauty swipe product lookup failed: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function beautySwipeNext(array &$state): ?array {
+        foreach ($state['pool_ids'] as $id) {
+            $id = trim((string)$id);
+            if ($id === '' || in_array($id, $state['seen_ids'], true)) continue;
+            $product = $this->beautySwipeProduct($id);
+            if ($product) {
+                $state['current_id'] = $id;
+                return $product;
+            }
+            $state['seen_ids'][] = $id;
+        }
+        $state['current_id'] = '';
+        return null;
+    }
+
+    public function beautySwipe(): void {
+        $state = $this->beautySwipeState();
+        if (!$state['pool_ids']) {
+            try {
+                foreach ($this->model->bestSellers(24) as $product) {
+                    $id = trim((string)($product['id'] ?? $product['ma_san_pham'] ?? ''));
+                    if ($id !== '' && $this->model->isProductAvailable($product)) $state['pool_ids'][] = $id;
+                }
+                $state['pool_ids'] = array_values(array_unique($state['pool_ids']));
+            } catch (Throwable $e) {
+                error_log('beauty swipe catalog error: ' . $e->getMessage());
+            }
+        }
+        $product = $state['current_id'] !== '' ? $this->beautySwipeProduct($state['current_id']) : null;
+        if (!$product) $product = $this->beautySwipeNext($state);
+        $_SESSION['skinsyntax_beauty_swipe_v1'] = $state;
+        $this->render('beauty_swipe', [
+            'swipeProduct' => $product,
+            'swipeRemaining' => max(0, count($state['pool_ids']) - count($state['seen_ids'])),
+            'swipeLikedIds' => $state['liked_ids'],
+        ]);
+    }
+
+    public function beautySwipeAction(): void {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            $this->jsonResponse(['ok' => false, 'message' => 'Method not allowed.'], 405);
+        }
+        $state = $this->beautySwipeState();
+        $action = trim((string)($_POST['action'] ?? ''));
+        $requestId = trim((string)($_POST['request_id'] ?? ''));
+        if ($requestId !== '' && in_array($requestId, $state['processed_request_ids'], true)) {
+            $current = $state['current_id'] !== '' ? $this->beautySwipeProduct($state['current_id']) : null;
+            $this->jsonResponse(['ok' => true, 'duplicate' => true, 'product' => $current, 'remaining' => count($state['pool_ids']) - count($state['seen_ids'])]);
+        }
+        if ($requestId !== '') $state['processed_request_ids'][] = $requestId;
+        $state['processed_request_ids'] = array_slice(array_values(array_unique($state['processed_request_ids'])), -40);
+
+        if ($action === 'undo') {
+            $last = array_pop($state['history']);
+            if (is_array($last) && !empty($last['id'])) {
+                $id = (string)$last['id'];
+                $state['seen_ids'] = array_values(array_diff($state['seen_ids'], [$id]));
+                $state['liked_ids'] = array_values(array_diff($state['liked_ids'], [$id]));
+                $state['skipped_ids'] = array_values(array_diff($state['skipped_ids'], [$id]));
+                $state['current_id'] = $id;
+            }
+        } elseif (in_array($action, ['like', 'skip', 'save'], true)) {
+            $id = trim((string)($_POST['product_id'] ?? ''));
+            if ($id === '' || $id !== $state['current_id'] || in_array($id, $state['seen_ids'], true)) {
+                $this->jsonResponse(['ok' => false, 'message' => 'Thao tác đã cũ hoặc không hợp lệ.'], 409);
+            }
+            if (!$this->beautySwipeProduct($id)) {
+                $this->jsonResponse(['ok' => false, 'message' => 'Sản phẩm không còn khả dụng.'], 422);
+            }
+            $state['seen_ids'][] = $id;
+            $state['history'][] = ['id' => $id, 'action' => $action];
+            if ($action === 'like' || $action === 'save') $state['liked_ids'][] = $id;
+            if ($action === 'skip') $state['skipped_ids'][] = $id;
+            $state['current_id'] = '';
+            $state['liked_ids'] = array_values(array_unique($state['liked_ids']));
+            $state['skipped_ids'] = array_values(array_unique($state['skipped_ids']));
+        }
+        $next = $state['current_id'] !== '' ? $this->beautySwipeProduct($state['current_id']) : $this->beautySwipeNext($state);
+        $_SESSION['skinsyntax_beauty_swipe_v1'] = $state;
+        $this->jsonResponse(['ok' => true, 'product' => $next, 'remaining' => max(0, count($state['pool_ids']) - count($state['seen_ids']))]);
     }
 
     private function loadPublicRecommendationData(array $filters, string $logContext = 'goiy'): array {
@@ -936,12 +1455,12 @@ class HomeController {
 
     private function buildRecommendationProfile(string $email, string $source = 'account'): ?array {
         $taiKhoanModel = new TaiKhoan($this->pdo);
-        $khachHang = $taiKhoanModel->getKhachHangByEmail($email);
+        $khachHang = $taiKhoanModel->getCustomerForSelectedProfileByEmail($email);
         if (!$khachHang) {
             return null;
         }
 
-        $skinProfile = $taiKhoanModel->getSkinProfileByEmail($email) ?? [];
+        $skinProfile = $taiKhoanModel->getSelectedSkinProfileByEmail($email) ?? [];
         $concerns = $this->parseConcernsFromRaw($khachHang['van_de_da'] ?? null);
         $avoidIngredients = $this->splitProfileValues($khachHang['thanh_phan_tranh'] ?? null);
         $avoidIngredients = array_values(array_filter($avoidIngredients, function (string $item): bool {
@@ -965,8 +1484,9 @@ class HomeController {
         // Phase 1.5: Q12 (so_buoc_skincare -> legacy source for preferred_brands)
         $preferredBrands = $this->splitProfileValues($khachHang['so_buoc_skincare'] ?? null);
 
-        $recentKeywords = $taiKhoanModel->getTuKhoaGanDay($email, 4);
-        $orderHistory = $taiKhoanModel->getOrderHistory((int)($khachHang['ma_kh'] ?? 0));
+        $isPrimaryProfile = !empty($skinProfile['is_primary']);
+        $recentKeywords = $isPrimaryProfile ? $taiKhoanModel->getTuKhoaGanDay($email, 4) : [];
+        $orderHistory = $isPrimaryProfile ? $taiKhoanModel->getOrderHistory((int)($khachHang['ma_kh'] ?? 0)) : [];
         $recentOrders = [];
         foreach (array_slice($orderHistory, 0, 3) as $order) {
             $productNames = [];
@@ -995,6 +1515,9 @@ class HomeController {
             'customer_id' => (int)($khachHang['ma_kh'] ?? 0),
             'email' => $email,
             'display_name' => trim((string)($khachHang['ho_ten'] ?? 'bạn')),
+            'profile_id' => (string)($skinProfile['profile_id'] ?? 'self-' . (string)($khachHang['ma_kh'] ?? '')),
+            'profile_name' => trim((string)($skinProfile['display_name'] ?? 'Hồ sơ của tôi')) ?: 'Hồ sơ của tôi',
+            'profile_type' => (string)($skinProfile['profile_type'] ?? 'self'),
             'gioi_tinh' => trim((string)($khachHang['gioi_tinh'] ?? '')),
             'nam_sinh' => trim((string)($khachHang['nam_sinh'] ?? '')),
             'skin_type' => trim((string)($skinProfile['loai_da'] ?? '')),
@@ -3721,6 +4244,9 @@ class HomeController {
             $profile['goal'] ?? '',
             $profile['avoid_ingredients'] ?? [],
             $profile['budget'] ?? null,
+            $profile['profile_source'] ?? 'account',
+            $profile['consultation_session_id'] ?? '',
+            $profile['owned_product_ids'] ?? [],
             $syncAi,
             'fit_explanation_v1',
         ], JSON_UNESCAPED_UNICODE));
@@ -3768,6 +4294,16 @@ class HomeController {
             'products' => $products,
             'candidate_count' => $this->goiYModel->lastScoredCount(),
         ];
+        if (($profile['profile_source'] ?? '') === 'temporary_checkin') {
+            SkinConsultationSession::setGeneratedRoutine($sessionUser, [
+                'source' => $result['source'],
+                'product_ids' => array_values(array_unique(array_filter(array_map(
+                    static fn(array $product): string => trim((string)($product['id'] ?? '')),
+                    $products
+                )))),
+                'generated_at' => time(),
+            ]);
+        }
         if (session_status() === PHP_SESSION_ACTIVE) {
             $_SESSION[$cacheKey] = ['created_at' => time(), 'result' => $result];
         }
@@ -3873,9 +4409,28 @@ class HomeController {
         // Lời giải thích Tình trạng -> Vấn đề -> Giải pháp cần evidence/mo_ta/thanh_phan_day_du nên dựng trước khi xoá.
         $row['fit_explanation'] = $this->getRecommendationExplainer()->explain($profile, $row);
 
+        $ownedIds = array_values(array_map('strval', (array)($profile['owned_product_ids'] ?? [])));
+        $row['already_owned'] = $row['id'] !== '' && in_array((string)$row['id'], $ownedIds, true);
+        $row['usage_note'] = trim((string)($row['hdsd'] ?? ''));
+        if ($row['usage_note'] === '') {
+            $row['usage_note'] = $this->routineUsageNote((string)$row['routine_step']);
+        }
+
         // Trường dài không dùng ở giao diện; bỏ để kết quả cache trong session gọn.
         unset($row['mo_ta'], $row['hdsd'], $row['thanh_phan_day_du'], $row['thanh_phan_full'], $row['evidence']);
         return $row;
+    }
+
+    private function routineUsageNote(string $step): string {
+        return match ($step) {
+            'remover' => 'Cách dùng gợi ý: dùng vào buổi tối khi cần làm sạch lớp chống nắng hoặc trang điểm, rồi rửa lại theo hướng dẫn trên nhãn.',
+            'cleanser' => 'Cách dùng gợi ý: làm ướt da, massage nhẹ lượng vừa đủ và rửa sạch; ưu tiên làm theo hướng dẫn trên nhãn sản phẩm.',
+            'toner' => 'Cách dùng gợi ý: dùng sau bước làm sạch theo cách ghi trên nhãn sản phẩm.',
+            'treatment', 'spot_treatment' => 'Cách dùng gợi ý: dùng theo hướng dẫn trên nhãn và theo dõi phản ứng của da; không tự tăng tần suất khi chưa có cơ sở.',
+            'moisturizer' => 'Cách dùng gợi ý: thoa lượng vừa đủ sau bước làm sạch hoặc treatment theo routine của bạn.',
+            'sunscreen' => 'Cách dùng gợi ý: dùng ở bước cuối buổi sáng theo hướng dẫn trên nhãn; chọn sản phẩm có thông tin chống nắng rõ ràng.',
+            default => 'Cách dùng gợi ý: xem hướng dẫn sử dụng trên nhãn sản phẩm trước khi dùng.',
+        };
     }
 
     private function getRecommendationExplainer(): RecommendationExplainer {
@@ -4392,7 +4947,7 @@ class HomeController {
     private function isValidWebhookRequest(): bool {
         $secret = $this->getWebhookSecret();
         if ($secret === '') {
-            return true;
+            return false;
         }
 
         $incoming = trim((string)($_GET['token'] ?? ''));
@@ -4535,6 +5090,9 @@ class HomeController {
 
     public function thanhtoan() {
         if (!is_logged_in()) {
+            if (!empty($_SESSION['checkout_items']) && is_array($_SESSION['checkout_items'])) {
+                $_SESSION['auth_return_route'] = 'thanhtoan';
+            }
             set_flash('error', 'Vui lòng đăng nhập để thanh toán.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
@@ -4750,6 +5308,9 @@ class HomeController {
         }
 
         if (!is_logged_in()) {
+            if (!empty($_SESSION['checkout_items']) && is_array($_SESSION['checkout_items'])) {
+                $_SESSION['auth_return_route'] = 'thanhtoan';
+            }
             set_flash('error', 'Vui lòng đăng nhập để đặt hàng.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
@@ -4812,6 +5373,15 @@ class HomeController {
         if (!in_array($hinhThucThanhToan, $allowedMethods, true)) {
             set_flash('error', 'Phương thức thanh toán không hợp lệ.');
             redirect(BASE_URL . '/index.php?r=thanhtoan');
+        }
+
+        if ($hinhThucThanhToan === 'vnpay') {
+            $vnpayPreflight = new VnpayService();
+            if (!$vnpayPreflight->isConfigured()) {
+                set_flash('error', 'Cổng thanh toán VNPAY chưa được cấu hình tham số VNPAY_TMN_CODE / VNPAY_HASH_SECRET trong file .env.');
+                redirect(BASE_URL . '/index.php?r=thanhtoan');
+                return;
+            }
         }
 
     $_SESSION['checkout_payment_method'] = $hinhThucThanhToan;
@@ -4921,12 +5491,38 @@ class HomeController {
             redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
         }
 
+        $order = $this->hoaDonModel->getOrderById($orderId);
+        if (!$order) {
+            set_flash('error', 'Không tìm thấy đơn hàng VNPAY tương ứng.');
+            redirect(BASE_URL . '/index.php?r=home');
+        }
+
+        $paymentMethod = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? '')));
+        if ($paymentMethod === '') {
+            $paymentMethod = strtolower(trim((string)($order['payment_method'] ?? '')));
+        }
+        if ($paymentMethod !== 'vnpay') {
+            error_log('VNPAY return rejected: order #' . $orderId . ' is not a VNPAY order.');
+            set_flash('error', 'Đơn hàng này không sử dụng phương thức VNPAY.');
+            redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
+        }
+
+        $vnpAmount = (int)($queryParams['vnp_Amount'] ?? 0);
+        $expectedAmount = (int)($order['tong_tien'] ?? 0);
+        if ($vnpAmount <= 0 || intdiv($vnpAmount, 100) !== $expectedAmount) {
+            error_log('VNPAY return amount mismatch for order #' . $orderId);
+            set_flash('error', 'Số tiền thanh toán VNPAY không khớp với đơn hàng.');
+            redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
+        }
+
         $responseCode = trim((string)($queryParams['vnp_ResponseCode'] ?? ''));
+        $transactionStatus = trim((string)($queryParams['vnp_TransactionStatus'] ?? ''));
         $transactionNo = trim((string)($queryParams['vnp_TransactionNo'] ?? ''));
         $payDate = trim((string)($queryParams['vnp_PayDate'] ?? ''));
         $message = $vnpayService->getResponseCodeMessage($responseCode);
+        $isSuccess = $responseCode === '00' && ($transactionStatus === '' || $transactionStatus === '00');
 
-        if ($responseCode === '00') {
+        if ($isSuccess) {
             $res = $this->hoaDonModel->updateVnpayPaymentStatus($orderId, 'paid', $transactionNo, $payDate, $message);
             if (!empty($res['ok'])) {
                 set_flash('success', 'Thanh toán qua VNPAY thành công. Đơn hàng của bạn đã được xác nhận.');
@@ -4934,7 +5530,7 @@ class HomeController {
                 set_flash('info', (string)($res['message'] ?? 'Thanh toán thành công.'));
             }
         } else {
-            $status = ($responseCode === '24') ? 'cancelled' : 'failed';
+            $status = ($responseCode === '24' || $transactionStatus === '24') ? 'cancelled' : 'failed';
             $this->hoaDonModel->updateVnpayPaymentStatus($orderId, $status, $transactionNo, $payDate, $message);
             set_flash('error', 'Thanh toán VNPAY thất bại: ' . $message);
         }
@@ -4951,8 +5547,9 @@ class HomeController {
         }
 
         $orderId = max(0, (int)($queryParams['vnp_TxnRef'] ?? 0));
-        $vnpAmount = max(0, (int)($queryParams['vnp_Amount'] ?? 0)) / 100;
+        $vnpAmount = max(0, (int)($queryParams['vnp_Amount'] ?? 0));
         $responseCode = trim((string)($queryParams['vnp_ResponseCode'] ?? ''));
+        $transactionStatus = trim((string)($queryParams['vnp_TransactionStatus'] ?? ''));
         $transactionNo = trim((string)($queryParams['vnp_TransactionNo'] ?? ''));
         $payDate = trim((string)($queryParams['vnp_PayDate'] ?? ''));
 
@@ -4961,8 +5558,16 @@ class HomeController {
             $this->jsonResponse(['RspCode' => '01', 'Message' => 'Order Not Found']);
         }
 
+        $paymentMethod = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? '')));
+        if ($paymentMethod === '') {
+            $paymentMethod = strtolower(trim((string)($order['payment_method'] ?? '')));
+        }
+        if ($paymentMethod !== 'vnpay') {
+            $this->jsonResponse(['RspCode' => '04', 'Message' => 'Invalid Payment Method']);
+        }
+
         $expectedAmount = (int)($order['tong_tien'] ?? 0);
-        if ((int)$vnpAmount !== $expectedAmount) {
+        if ($vnpAmount <= 0 || intdiv($vnpAmount, 100) !== $expectedAmount) {
             $this->jsonResponse(['RspCode' => '04', 'Message' => 'Invalid Amount']);
         }
 
@@ -4972,10 +5577,11 @@ class HomeController {
         }
 
         $message = $vnpayService->getResponseCodeMessage($responseCode);
-        if ($responseCode === '00') {
+        $isSuccess = $responseCode === '00' && ($transactionStatus === '' || $transactionStatus === '00');
+        if ($isSuccess) {
             $this->hoaDonModel->updateVnpayPaymentStatus($orderId, 'paid', $transactionNo, $payDate, $message);
         } else {
-            $status = ($responseCode === '24') ? 'cancelled' : 'failed';
+            $status = ($responseCode === '24' || $transactionStatus === '24') ? 'cancelled' : 'failed';
             $this->hoaDonModel->updateVnpayPaymentStatus($orderId, $status, $transactionNo, $payDate, $message);
         }
 
@@ -4996,11 +5602,21 @@ class HomeController {
 
         $currentUser = current_user() ?? [];
         $email = trim((string)($currentUser['email'] ?? ''));
+        $this->hoaDonModel->cancelExpiredVnpayOrders(15);
         $order = $this->hoaDonModel->getOrderById($orderId, $email !== '' ? $email : null);
 
         if (!$order) {
             set_flash('error', 'Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.');
             redirect(BASE_URL . '/index.php?r=home');
+        }
+
+        $paymentMethod = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? '')));
+        if ($paymentMethod === '') {
+            $paymentMethod = strtolower(trim((string)($order['payment_method'] ?? '')));
+        }
+        if ($paymentMethod !== 'vnpay') {
+            set_flash('error', 'Đơn hàng này không sử dụng phương thức VNPAY.');
+            redirect(BASE_URL . '/index.php?r=camon&ma_hoa_don=' . urlencode((string)$orderId));
         }
 
         $paymentStatus = strtolower(trim((string)($order['payment_status'] ?? ($order['status_thanh_toan'] ?? ''))));
@@ -5041,6 +5657,12 @@ class HomeController {
         $transferData = null;
         $autoCheckEnabled = false;
 
+        try {
+            $this->hoaDonModel->cancelExpiredVnpayOrders(15);
+        } catch (Throwable $e) {
+            error_log('VNPAY expiry cleanup skipped on camon page: ' . $e->getMessage());
+        }
+
         if ($maHoaDon !== '' && ctype_digit($maHoaDon)) {
             $currentUser = current_user() ?? [];
             $email = trim((string)($currentUser['email'] ?? ''));
@@ -5070,7 +5692,11 @@ class HomeController {
         $this->render('camon', [
             'maHoaDon' => $maHoaDon,
             'order' => $order,
-            'paymentMethodLabel' => $order ? $this->getPaymentMethodLabel((string)($order['hinh_thuc_thanh_toan'] ?? 'cod')) : $this->getPaymentMethodLabel('cod'),
+            'paymentMethodLabel' => $order
+                ? $this->getPaymentMethodLabel(trim((string)($order['hinh_thuc_thanh_toan'] ?? '')) !== ''
+                    ? (string)$order['hinh_thuc_thanh_toan']
+                    : (string)($order['payment_method'] ?? 'cod'))
+                : $this->getPaymentMethodLabel('cod'),
             'transferData' => $transferData,
             'autoCheckEnabled' => $autoCheckEnabled,
             'autoCheckUrl' => $order ? (BASE_URL . '/index.php?r=payment_autocheck&order_id=' . urlencode((string)($order['ma_hoa_don'] ?? ''))) : '',
@@ -5120,7 +5746,10 @@ class HomeController {
             ], 404);
         }
 
-        $paymentMethod = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod')));
+        $paymentMethod = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? '')));
+        if ($paymentMethod === '') {
+            $paymentMethod = strtolower(trim((string)($order['payment_method'] ?? 'cod')));
+        }
         $paymentStatus = trim((string)($order['status_thanh_toan'] ?? 'Chua thanh toan'));
         if ($paymentMethod !== 'bank_transfer_qr') {
             $this->jsonResponse([

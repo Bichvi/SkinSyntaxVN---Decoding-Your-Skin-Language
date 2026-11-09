@@ -1074,6 +1074,34 @@ class FlashSaleCampaign {
                 $catalogMap[$pidStr] = $spArr;
             }
 
+            // Campaign hydration reads raw san_pham documents (unlike SanPham's
+            // normalizeProductRecord), so resolve brand IDs in one batch before
+            // building the homepage cards.
+            $brandLookupValues = [];
+            foreach ($catalogMap as $spArr) {
+                $brandId = $spArr['ma_thuong_hieu'] ?? null;
+                if ($brandId === null || trim((string)$brandId) === '') {
+                    continue;
+                }
+                $brandLookupValues[(string)$brandId] = $brandId;
+                if (is_numeric($brandId)) {
+                    $brandLookupValues[(string)(int)$brandId] = (int)$brandId;
+                }
+            }
+            $brandNames = [];
+            if ($brandLookupValues !== []) {
+                foreach ($this->db->thuong_hieu->find(
+                    ['ma_thuong_hieu' => ['$in' => array_values($brandLookupValues)]],
+                    ['projection' => ['ma_thuong_hieu' => 1, 'ten_thuong_hieu' => 1]]
+                ) as $brandDoc) {
+                    $brandArr = (array)$brandDoc;
+                    $brandName = trim((string)($brandArr['ten_thuong_hieu'] ?? ''));
+                    if ($brandName !== '' && isset($brandArr['ma_thuong_hieu'])) {
+                        $brandNames[(string)$brandArr['ma_thuong_hieu']] = $brandName;
+                    }
+                }
+            }
+
             $hydrated = [];
             foreach ($items as $item) {
                 $pidStr = trim((string)($item['ma_san_pham'] ?? $item['product_id'] ?? ''));
@@ -1083,6 +1111,10 @@ class FlashSaleCampaign {
                 }
 
                 $sp = $catalogMap[$pidStr];
+                $brandName = trim((string)($sp['thuong_hieu'] ?? $sp['ten_thuong_hieu'] ?? ''));
+                if ($brandName === '') {
+                    $brandName = $brandNames[(string)($sp['ma_thuong_hieu'] ?? '')] ?? 'SkinSyntax';
+                }
                 $regularPrice = (int)($item['regular_price'] ?? $sp['gia_ban'] ?? 0);
                 if ($regularPrice <= 0) {
                     $regularPrice = (int)($sp['gia_ban'] ?? 0);
@@ -1118,7 +1150,7 @@ class FlashSaleCampaign {
                     'ma_san_pham' => $pidStr,
                     'product_id' => $pidStr,
                     'ten_san_pham' => (string)($sp['ten_san_pham'] ?? ''),
-                    'thuong_hieu' => (string)($sp['thuong_hieu'] ?? 'SkinSyntax'),
+                    'thuong_hieu' => $brandName,
                     'danh_muc' => (string)($sp['danh_muc_day_du'] ?? $sp['loai_san_pham'] ?? ''),
                     'gia_ban' => $regularPrice,
                     'regular_price' => $regularPrice,

@@ -11,6 +11,10 @@ foreach (($_SESSION['gio_hang'] ?? []) as $qty) {
 $siteLogoPath = dirname(__DIR__, 2) . '/public/assets/images/logo.png';
 $siteLogoVersion = is_file($siteLogoPath) ? (string)@filemtime($siteLogoPath) : '1';
 $siteLogoUrl = BASE_URL . '/assets/images/logo.png?v=' . rawurlencode($siteLogoVersion);
+$styleAssetPath = strpos((string)BASE_URL, '/frontend/public') !== false
+    ? dirname(__DIR__, 2) . '/public/assets/css/style.css'
+    : dirname(__DIR__, 3) . '/assets/css/style.css';
+$styleAssetVersion = @filemtime($styleAssetPath) ?: '20261109_ui';
 
 // Chuẩn hóa danh sách Level-2 groups từ cây phân cấp canonical danh_muc
 $menuGroups = [];
@@ -68,6 +72,10 @@ $socialLinks = [
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f3d2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="<?= h(BASE_URL . '/index.php?r=pwa_manifest') ?>">
   <title>SkinSyntax | DECODING YOUR SKIN LANGUAGE</title>
   <script>
     window.SkinSyntaxImageFallback = function (image) {
@@ -102,7 +110,7 @@ $socialLinks = [
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css"></noscript>
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/fontawesome.min.css">
-  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/style.css') ?: '20261007_prem' ?>">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= h((string)$styleAssetVersion) ?>">
 </head>
 <body class="site-body">
 
@@ -185,7 +193,7 @@ $socialLinks = [
       <!-- Actions: LIVE, Routine, Account, Cart -->
       <div class="header-actions-group">
         <!-- LIVE Commercial Hero Action -->
-        <a href="<?= BASE_URL ?>/index.php?r=live" class="header-action-btn--live d-none d-lg-inline-flex" title="Livestream Tư Vấn cùng Chuyên gia">
+        <a href="<?= BASE_URL ?>/index.php?r=live" class="header-action-btn--live d-none d-lg-inline-flex" title="Tư vấn trực tiếp cùng chuyên gia">
           <span class="live-pulse-dot"></span>
           <i class="fa-solid fa-video" style="font-size: 1.05rem;"></i>
           <div>
@@ -434,7 +442,7 @@ $socialLinks = [
       <ul class="list-unstyled mb-0 d-grid gap-2.5">
         <li><a href="<?= BASE_URL ?>/index.php?r=home" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-house text-success"></i> Trang chủ</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-layer-group text-success"></i> Tất cả sản phẩm</a></li>
-        <li><a href="<?= BASE_URL ?>/index.php?r=live" class="text-decoration-none text-danger fw-bold d-flex align-items-center gap-2"><i class="fa-solid fa-video"></i> LiveStream AI</a></li>
+        <li><a href="<?= BASE_URL ?>/index.php?r=live" class="text-decoration-none text-danger fw-bold d-flex align-items-center gap-2"><i class="fa-solid fa-video"></i> Tư vấn trực tiếp</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=giohang" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-bag-shopping text-success"></i> Giỏ hàng (<?= $cartCount ?>)</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang" class="text-decoration-none text-muted small d-flex align-items-center gap-2"><i class="fas fa-store"></i> Hệ thống cửa hàng</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=bao_hanh" class="text-decoration-none text-muted small d-flex align-items-center gap-2"><i class="fas fa-shield-check"></i> Chính sách bảo hành</a></li>
@@ -467,70 +475,72 @@ $socialLinks = [
           <div class="auth-row-container row g-0 align-items-stretch">
             
             <!-- Panel Visual Xanh (AsmrProg Toggle Overlay) -->
-            <div class="col-lg-5 d-none d-lg-flex flex-column justify-content-between p-4 text-white auth-visual-panel" style="background: #215427;">
+            <div class="col-12 col-md-5 d-none d-md-flex flex-column p-4 text-white auth-visual-panel">
               
               <!-- Toggle Content: Đang ở màn Đăng nhập -> Gợi ý Tạo Tài Khoản -->
-              <div class="toggle-panel-content toggle-panel--login flex-column justify-content-between h-100">
-                <div>
-                  <a class="brand-lockup mb-4" href="<?= BASE_URL ?>/index.php" style="display: inline-flex; align-items: center; gap: 10px;">
-                    <span class="brand-lockup__mark" style="background: #FFFFFF; color: #215427; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 20px;">S</span>
+              <div class="toggle-panel-content toggle-panel--login">
+                <div class="auth-visual-panel__header">
+                  <a class="brand-lockup auth-brand-lockup" href="<?= BASE_URL ?>/index.php">
+                    <span class="brand-lockup__mark auth-brand-lockup__mark">S</span>
                     <span class="brand-lockup__copy">
-                      <strong style="color: #FFFFFF; font-size: 20px; display: block; line-height: 1;">SkinSyntax<span style="font-size: 14px; opacity: 0.85;">VN</span></strong>
-                      <small style="color: #D2E5D5; display: block; font-size: 10px; letter-spacing: 0.08em; margin-top: 2px;">DECODING YOUR SKIN LANGUAGE</small>
+                      <strong>SkinSyntax<span>VN</span></strong>
+                      <small>DECODING YOUR SKIN LANGUAGE</small>
                     </span>
                   </a>
+                </div>
 
-                  <div class="mb-3" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); color: #EAF2EC; padding: 6px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;">
-                    <i class="fas fa-wand-magic-sparkles"></i> Trải Nghiệm Skincare Chuẩn Y Khoa
-                  </div>
-
-                  <h3 class="fw-bold mb-3" style="font-size: 1.8rem; line-height: 1.25; color: #FFFFFF;">Chào Mừng Đến Với SkinSyntax</h3>
-                  <p style="font-size: 0.88rem; color: #EAF2EC; opacity: 0.9; line-height: 1.6;">Tạo tài khoản SkinSyntax để lưu đơn hàng, nhận phân tích routine da chuẩn y khoa & ưu đãi dành riêng cho bạn.</p>
-
-                  <button class="btn btn-light w-100 py-3 fw-bold mt-4" data-auth-switch="register" style="border-radius: 999px; color: #215427; background: #FFFFFF; font-size: 0.95rem; border: none;">
-                    Tạo Tài Khoản Mới <i class="fas fa-arrow-right ms-2"></i>
+                <div class="auth-visual-panel__main">
+                  <div class="auth-visual-panel__eyebrow"><i class="fas fa-wand-magic-sparkles"></i> Trải nghiệm skincare chuẩn y khoa</div>
+                  <h3>Chào Mừng Đến Với SkinSyntax</h3>
+                  <p>Tạo tài khoản SkinSyntax để lưu đơn hàng, nhận phân tích routine da chuẩn y khoa và ưu đãi dành riêng cho bạn.</p>
+                  <button class="btn btn-light w-100 fw-bold auth-panel-switch" data-auth-switch="register">
+                    Tạo Tài Khoản Mới <i class="fas fa-arrow-right"></i>
                   </button>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
-                  <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
-                  <span><i class="fas fa-sparkles me-1"></i> SYNA | AI Skincare Advisor</span>
+                <div class="auth-visual-panel__footer">
+                  <div class="auth-benefits">
+                    <div class="auth-benefit"><span class="auth-benefit__icon"><i class="fas fa-leaf"></i></span><span>100% Thuần Chay</span></div>
+                    <div class="auth-benefit"><span class="auth-benefit__icon"><i class="fas fa-robot"></i></span><span>Tư vấn skincare cùng AI</span></div>
+                    <div class="auth-benefit"><span class="auth-benefit__icon"><i class="fas fa-sliders"></i></span><span>Cá nhân hóa theo làn da</span></div>
+                  </div>
                 </div>
               </div>
 
               <!-- Toggle Content: Đang ở màn Đăng ký -> Gợi ý Đăng Nhập -->
-              <div class="toggle-panel-content toggle-panel--register flex-column justify-content-between h-100">
-                <div>
-                  <a class="brand-lockup mb-4" href="<?= BASE_URL ?>/index.php" style="display: inline-flex; align-items: center; gap: 10px;">
-                    <span class="brand-lockup__mark" style="background: #FFFFFF; color: #215427; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 20px;">S</span>
+              <div class="toggle-panel-content toggle-panel--register">
+                <div class="auth-visual-panel__header">
+                  <a class="brand-lockup auth-brand-lockup" href="<?= BASE_URL ?>/index.php">
+                    <span class="brand-lockup__mark auth-brand-lockup__mark">S</span>
                     <span class="brand-lockup__copy">
-                      <strong style="color: #FFFFFF; font-size: 20px; display: block; line-height: 1;">SkinSyntax<span style="font-size: 14px; opacity: 0.85;">VN</span></strong>
-                      <small style="color: #D2E5D5; display: block; font-size: 10px; letter-spacing: 0.08em; margin-top: 2px;">DECODING YOUR SKIN LANGUAGE</small>
+                      <strong>SkinSyntax<span>VN</span></strong>
+                      <small>DECODING YOUR SKIN LANGUAGE</small>
                     </span>
                   </a>
+                </div>
 
-                  <div class="mb-3" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); color: #EAF2EC; padding: 6px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;">
-                    <i class="fas fa-wand-magic-sparkles"></i> Thành Viên Mới SkinSyntax
-                  </div>
-
-                  <h3 class="fw-bold mb-3" style="font-size: 1.8rem; line-height: 1.25; color: #FFFFFF;">Bạn Đã Có Tài Khoản?</h3>
-                  <p style="font-size: 0.88rem; color: #EAF2EC; opacity: 0.9; line-height: 1.6;">Đăng nhập ngay để theo dõi lịch sử đơn hàng, cập nhật Hồ Sơ Da và mở các gợi ý mỹ phẩm cá nhân hóa theo làn da.</p>
-
-                  <button class="btn btn-light w-100 py-3 fw-bold mt-4" data-auth-switch="login" style="border-radius: 999px; color: #215427; background: #FFFFFF; font-size: 0.95rem; border: none;">
-                    Đăng Nhập Ngay <i class="fas fa-arrow-right ms-2"></i>
+                <div class="auth-visual-panel__main">
+                  <div class="auth-visual-panel__eyebrow"><i class="fas fa-wand-magic-sparkles"></i> Thành viên mới SkinSyntax</div>
+                  <h3>Bạn Đã Có Tài Khoản?</h3>
+                  <p>Đăng nhập ngay để theo dõi lịch sử đơn hàng, cập nhật Hồ Sơ Da và mở các gợi ý mỹ phẩm cá nhân hóa theo làn da.</p>
+                  <button class="btn btn-light w-100 fw-bold auth-panel-switch" data-auth-switch="login">
+                    Đăng Nhập Ngay <i class="fas fa-arrow-right"></i>
                   </button>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.18); font-size: 0.78rem; color: #D2E5D5;">
-                  <span><i class="fas fa-shield-check me-1"></i> 100% Thuần Chay</span>
-                  <span><i class="fas fa-sparkles me-1"></i> SYNA | AI Skincare Advisor</span>
+                <div class="auth-visual-panel__footer">
+                  <div class="auth-benefits">
+                    <div class="auth-benefit"><span class="auth-benefit__icon"><i class="fas fa-leaf"></i></span><span>100% Thuần Chay</span></div>
+                    <div class="auth-benefit"><span class="auth-benefit__icon"><i class="fas fa-robot"></i></span><span>Tư vấn skincare cùng AI</span></div>
+                    <div class="auth-benefit"><span class="auth-benefit__icon"><i class="fas fa-sliders"></i></span><span>Cá nhân hóa theo làn da</span></div>
+                  </div>
                 </div>
               </div>
 
             </div>
 
             <!-- Panel Controls Trắng (Forms Input) -->
-            <div class="col-lg-7 bg-white p-4 p-md-5 auth-forms-panel">
+            <div class="col-12 col-md-7 bg-white p-4 p-md-5 auth-forms-panel">
               <div class="auth-modal-body p-0">
                 
                 <!-- LOGIN FORM -->
@@ -544,14 +554,14 @@ $socialLinks = [
                     </div>
                   <?php endif; ?>
 
-                  <div class="row g-2 mb-3">
-                    <div class="col-6">
+                  <div class="row g-2 mb-3 auth-social-row">
+                    <div class="col-12 col-sm-6">
                       <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-2.5 <?= $googleEnabled ? '' : 'disabled' ?>" href="<?= $googleEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=google') : '#' ?>" style="border-radius: 999px; font-weight: 700; border-color: #E2EADF; color: #1A2F1A; background: #FFF;">
                         <i class="fa-brands fa-google text-danger"></i>
                         <span>Google</span>
                       </a>
                     </div>
-                    <div class="col-6">
+                    <div class="col-12 col-sm-6">
                       <a class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2.5 <?= $facebookEnabled ? '' : 'disabled' ?>" href="<?= $facebookEnabled ? (BASE_URL . '/index.php?r=auth_social&provider=facebook') : '#' ?>" style="border-radius: 999px; font-weight: 700; background: #3b5998; border: none; color: #fff;">
                         <i class="fa-brands fa-facebook-f"></i>
                         <span>Facebook</span>
@@ -615,7 +625,7 @@ $socialLinks = [
 
                     <div class="alert alert-danger auth-modal-alert d-none mb-2" id="authRegisterFeedback" role="alert"></div>
 
-                    <div class="d-flex gap-2 mb-2">
+                    <div class="d-flex gap-2 mb-2 auth-register-control-row auth-register-control-row--captcha">
                       <label for="authRegisterCaptchaInput" class="visually-hidden">Nhập captcha</label>
                       <input class="form-control" type="text" id="authRegisterCaptchaInput" name="captcha" placeholder="Nhập captcha" autocomplete="off" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                       <div class="d-flex align-items-center justify-content-center text-white fw-bold px-3" id="authRegisterCaptchaCode" data-captcha="<?= h(strtolower($signupCaptchaSeed)) ?>" style="background: #215427; border-radius: 999px; font-family: monospace; letter-spacing: 2px; min-width: 90px;"><?= h(strtolower($signupCaptchaSeed)) ?></div>
@@ -624,7 +634,7 @@ $socialLinks = [
                       </button>
                     </div>
 
-                    <div class="d-flex gap-2 mb-2">
+                    <div class="d-flex gap-2 mb-2 auth-register-control-row auth-register-control-row--otp">
                       <label for="authRegisterOtpInput" class="visually-hidden">Nhập mã xác thực 6 số</label>
                       <input class="form-control" type="text" id="authRegisterOtpInput" name="otp" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                       <button class="btn fw-bold text-white px-4" id="authRegisterOtpButton" type="button" style="background: #215427; border-radius: 999px; white-space: nowrap;">Lấy mã</button>
@@ -632,11 +642,11 @@ $socialLinks = [
                     <div class="auth-register-note mb-2" id="authRegisterOtpHint" style="font-size: 0.78rem; color: #5C705E;">Nhập đúng email, captcha rồi bấm Lấy mã.</div>
 
                     <div class="row g-2 mb-2">
-                      <div class="col-6">
+                      <div class="col-12 col-sm-6">
                         <label for="authRegisterPassword" class="visually-hidden">Mật khẩu</label>
                         <input class="form-control" type="password" id="authRegisterPassword" name="mat_khau" placeholder="Mật khẩu 8 - 32 ký tự" minlength="8" maxlength="32" autocomplete="new-password" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                       </div>
-                      <div class="col-6">
+                      <div class="col-12 col-sm-6">
                         <label for="authRegisterPasswordConfirm" class="visually-hidden">Nhập lại mật khẩu</label>
                         <input class="form-control" type="password" id="authRegisterPasswordConfirm" name="mat_khau2" placeholder="Nhập lại mật khẩu" minlength="8" maxlength="32" autocomplete="new-password" style="border-radius: 999px; padding: 12px 18px; background: #F8FAF8; border-color: #E2EADF;" required>
                       </div>
@@ -746,9 +756,42 @@ $socialLinks = [
       position: relative;
       overflow: hidden;
       min-height: 560px;
+      background: #fff;
     }
 
-    @media (min-width: 992px) {
+    .auth-visual-panel {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      background: linear-gradient(145deg, #1d542c 0%, #215f31 55%, #174727 100%) !important;
+    }
+
+    .auth-visual-panel::before,
+    .auth-visual-panel::after {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .auth-visual-panel::before {
+      width: 230px;
+      height: 230px;
+      top: -108px;
+      right: -88px;
+      background: rgba(213, 241, 220, .11);
+    }
+
+    .auth-visual-panel::after {
+      width: 180px;
+      height: 180px;
+      bottom: 18px;
+      left: -88px;
+      border: 1px solid rgba(255, 255, 255, .12);
+    }
+
+    @media (min-width: 768px) {
       .auth-row-container {
         display: flex;
       }
@@ -760,6 +803,7 @@ $socialLinks = [
         width: 41.666667%;
         height: 100%;
         z-index: 10;
+        padding: 1.75rem !important;
         transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
         box-shadow: 0 0 35px rgba(0, 0, 0, 0.15);
       }
@@ -767,6 +811,7 @@ $socialLinks = [
       .auth-forms-panel {
         width: 58.333333%;
         margin-left: 41.666667%;
+        min-width: 0;
         transition: margin-left 0.6s cubic-bezier(0.65, 0, 0.35, 1), transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
         z-index: 1;
       }
@@ -783,22 +828,29 @@ $socialLinks = [
 
     /* Smooth Fade & Slide for Green Panel Text Contents */
     .toggle-panel-content {
+      display: flex;
+      flex: 1;
+      min-height: 100%;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
       transition: opacity 0.45s ease-in-out, transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
     }
 
     .toggle-panel--login {
       opacity: 1;
       transform: translateX(0);
+      position: absolute;
+      inset: 0;
+      padding: 1.75rem;
     }
 
     .toggle-panel--register {
       opacity: 0;
       transform: translateX(30px);
       position: absolute;
-      top: 1.5rem;
-      left: 1.5rem;
-      right: 1.5rem;
-      bottom: 1.5rem;
+      inset: 0;
+      padding: 1.75rem;
       pointer-events: none;
     }
 
@@ -829,14 +881,172 @@ $socialLinks = [
         transform: translateY(0) scale(1);
       }
     }
+
+    .auth-visual-panel__header {
+      flex: 0 0 auto;
+    }
+
+    .auth-brand-lockup {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .auth-brand-lockup__mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      border-radius: 50%;
+      background: #fff;
+      color: #215427;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .auth-brand-lockup .brand-lockup__copy strong {
+      display: block;
+      color: #fff;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .auth-brand-lockup .brand-lockup__copy strong span {
+      font-size: 14px;
+      opacity: .85;
+    }
+
+    .auth-brand-lockup .brand-lockup__copy small {
+      display: block;
+      margin-top: 3px;
+      color: #d2e5d5;
+      font-size: 9px;
+      letter-spacing: .08em;
+    }
+
+    .auth-visual-panel__main {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1rem 0;
+    }
+
+    .auth-visual-panel__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      gap: 7px;
+      max-width: 100%;
+      margin-bottom: 1rem;
+      padding: 7px 12px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .14);
+      color: #eef8f0;
+      font-size: .74rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .auth-visual-panel__main h3 {
+      max-width: 18rem;
+      margin: 0 0 .8rem;
+      color: #fff;
+      font-size: clamp(1.55rem, 2vw, 2rem);
+      font-weight: 800;
+      line-height: 1.18;
+    }
+
+    .auth-visual-panel__main p {
+      max-width: 19rem;
+      margin: 0;
+      color: #eaf2ec;
+      font-size: .86rem;
+      line-height: 1.65;
+    }
+
+    .auth-panel-switch {
+      min-height: 50px;
+      margin-top: 1.4rem;
+      border: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: #215427;
+      font-size: .92rem;
+    }
+
+    .auth-panel-switch i {
+      margin-left: .55rem;
+      transition: transform .2s ease;
+    }
+
+    .auth-panel-switch:hover i,
+    .auth-panel-switch:focus-visible i {
+      transform: translateX(3px);
+    }
+
+    .auth-visual-panel__footer {
+      flex: 0 0 auto;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, .18);
+    }
+
+    .auth-benefits {
+      display: grid;
+      gap: .62rem;
+    }
+
+    .auth-benefit {
+      display: flex;
+      align-items: center;
+      gap: .62rem;
+      min-width: 0;
+      color: #e2f0e5;
+      font-size: .74rem;
+      line-height: 1.35;
+    }
+
+    .auth-benefit__icon {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      flex: 0 0 26px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .1);
+      color: #fff;
+      font-size: .68rem;
+    }
   </style>
 
   <style>
     .auth-modal-shell {
-      max-width: 620px;
+      width: 100%;
+      max-width: 920px;
       margin: 0 auto;
       border-radius: 28px;
       box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
+    }
+
+    #authModal .modal-dialog {
+      width: calc(100% - 24px);
+      max-width: 920px;
+      margin: .75rem auto;
+    }
+
+    #authModal .modal-content {
+      max-height: calc(100vh - 24px);
+    }
+
+    #authModal .modal-body {
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     .auth-modal-close {
@@ -853,8 +1063,50 @@ $socialLinks = [
     }
 
     .auth-modal-body {
-      padding: 32px 28px 28px;
+      width: 100%;
+      padding: 0;
       background: #fff;
+    }
+
+    .auth-modal-panel {
+      width: 100%;
+    }
+
+    .auth-forms-panel {
+      background: #fff;
+    }
+
+    .auth-forms-panel .form-control,
+    .auth-forms-panel .form-select {
+      min-height: 46px;
+      transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+
+    .auth-forms-panel .form-control:focus,
+    .auth-forms-panel .form-select:focus {
+      background: #fff;
+    }
+
+    #authRegisterForm {
+      max-width: 560px;
+      margin-inline: auto;
+    }
+
+    [data-auth-panel="login"] {
+      max-width: 510px;
+      margin-inline: auto;
+    }
+
+    .auth-social-row {
+      margin-top: .25rem;
+    }
+
+    .auth-register-control-row {
+      min-width: 0;
+    }
+
+    .auth-register-control-row > * {
+      min-width: 0;
     }
 
     .auth-modal-title {
@@ -1124,9 +1376,59 @@ $socialLinks = [
       line-height: 1.6;
     }
 
-    @media (max-width: 991.98px) {
+    @media (min-width: 768px) and (max-width: 991.98px) {
+      .auth-forms-panel {
+        padding: 1.5rem !important;
+      }
+
+      .auth-visual-panel__main h3 {
+        font-size: 1.55rem;
+      }
+
+      .auth-visual-panel__main p {
+        font-size: .8rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .auth-row-container {
+        min-height: 0;
+        overflow: visible;
+      }
+
+      #authModal .modal-content {
+        border-radius: 20px;
+      }
+
+      .auth-forms-panel {
+        padding: 3.5rem 1.25rem 1.25rem !important;
+      }
+
       .auth-modal-body {
-        padding: 28px 22px 24px;
+        padding: 0 !important;
+      }
+
+      .auth-register-control-row {
+        display: grid !important;
+        gap: 8px !important;
+      }
+
+      .auth-register-control-row--captcha {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+      }
+
+      .auth-register-control-row--otp {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .auth-register-control-row .form-control,
+      .auth-register-control-row button,
+      .auth-register-control-row > div {
+        min-width: 0;
+      }
+
+      .auth-register-control-row--captcha .form-control {
+        width: auto;
       }
     }
 

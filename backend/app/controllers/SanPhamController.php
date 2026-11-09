@@ -568,7 +568,7 @@ class SanPhamController {
     private function searchSkinProfile(string $email): ?array {
         try {
             require_once dirname(__DIR__) . '/services/SearchSkinProfile.php';
-            $kh = (new TaiKhoan($this->pdo))->getKhachHangByEmail($email);
+            $kh = (new TaiKhoan($this->pdo))->getCustomerForSelectedProfileByEmail($email);
             return SearchSkinProfile::fromCustomer($kh);
         } catch (Throwable $e) {
             error_log('[SEARCH_RECOMMEND] skin profile skipped: ' . get_class($e));
@@ -807,6 +807,40 @@ class SanPhamController {
             }
         }
 
+        // Publication metadata and media storage are deliberately separate. The publication in
+        // MongoDB grants storefront eligibility/rewards, while this read-only client supplies the
+        // already-uploaded shared R2 rendition so a missing local AI Idol volume cannot collapse
+        // the player into a broken 404 box.
+        if (is_array($productVideos) && $productVideos !== []) {
+            try {
+                require_once __DIR__ . '/../services/ProductVideoClient.php';
+                $videoAssets = ProductVideoClient::fromEnv()->forProduct($prodKeySuffix)['videos'] ?? [];
+                $assetsByVideoId = [];
+                foreach ((array)$videoAssets as $asset) {
+                    if (is_array($asset) && (string)($asset['video_id'] ?? '') !== '') {
+                        $assetsByVideoId[(string)$asset['video_id']] = $asset;
+                    }
+                }
+                foreach ($productVideos as &$publishedVideo) {
+                    $sourceId = (string)($publishedVideo['video_id'] ?? '');
+                    $asset = $assetsByVideoId[$sourceId] ?? null;
+                    if (is_array($asset)) {
+                        foreach (['video_url', 'poster_url'] as $mediaField) {
+                            if (!empty($asset[$mediaField])) {
+                                $publishedVideo[$mediaField] = (string)$asset[$mediaField];
+                            }
+                        }
+                        if ((float)($publishedVideo['duration'] ?? 0) <= 0 && isset($asset['duration'])) {
+                            $publishedVideo['duration'] = (float)$asset['duration'];
+                        }
+                    }
+                }
+                unset($publishedVideo);
+            } catch (Throwable $e) {
+                error_log('chitiet product video asset hydration error: ' . get_class($e));
+            }
+        }
+
         $this->render('chitiet', [
             'p' => $p,
             'reviews' => $reviews,
@@ -824,6 +858,74 @@ class SanPhamController {
     }
 
     /**
+     * Đổi riêng khối mua kèm/routine trên trang chi tiết, không tải lại toàn bộ PDP.
+     * Chỉ đọc dữ liệu đề xuất hiện có; không thay đổi đơn hàng, giỏ hàng hay catalog.
+     */
+    public function routineRecommendations(): void {
+        header('Cache-Control: private, no-store');
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+            http_response_code(405);
+            return;
+        }
+
+        $id = trim((string)($_GET['id'] ?? ''));
+        if ($id === '' || !preg_match('/^[A-Za-z0-9_-]{1,32}$/', $id)) {
+            http_response_code(400);
+            return;
+        }
+
+        $offset = max(0, min(200, (int)($_GET['offset'] ?? 0)));
+        try {
+            require_once dirname(__DIR__) . '/services/AssociationRuleRecommender.php';
+            $recommender = new AssociationRuleRecommender($this->pdo);
+            $allItems = $recommender->getFrequentlyBoughtTogether($id, 24);
+            if (!is_array($allItems) || $allItems === []) {
+                http_response_code(204);
+                return;
+            }
+
+            $allItems = array_values(array_filter($allItems, static function ($item) use ($id): bool {
+                if (!is_array($item)) {
+                    return false;
+                }
+                $productId = (string)($item['ma_san_pham'] ?? $item['id'] ?? '');
+                return $productId !== '' && $productId !== $id;
+            }));
+            if ($allItems === []) {
+                http_response_code(204);
+                return;
+            }
+
+            $total = count($allItems);
+            $offset = $total > 0 ? ($offset % $total) : 0;
+            $frequentlyBought = [];
+            for ($i = 0; $i < min(4, $total); $i++) {
+                $frequentlyBought[] = $allItems[($offset + $i) % $total];
+            }
+            $frequentlyBoughtOffset = $offset;
+            $frequentlyBoughtNextOffset = ($offset + count($frequentlyBought)) % $total;
+
+            $hasRealRule = false;
+            foreach ($frequentlyBought as $item) {
+                if (($item['recommendation_source'] ?? '') === 'ASSOCIATION_RULE') {
+                    $hasRealRule = true;
+                    break;
+                }
+            }
+            $sectionTitle = $hasRealRule ? 'Sản phẩm khách hàng thường mua cùng' : 'Gợi ý kết hợp cho routine';
+            $sectionBadge = $hasRealRule ? 'Thường được mua cùng' : 'Gợi ý chu trình';
+            $frequentlyBoughtRefreshUrl = BASE_URL . '/index.php?r=routine_recommendations&id=' . rawurlencode($id);
+
+            header('Content-Type: text/html; charset=utf-8');
+            $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+            require $viewDir . '/partials/routine_recommendations.php';
+        } catch (Throwable $e) {
+            error_log('routine recommendations error: ' . get_class($e));
+            http_response_code(204);
+        }
+    }
+
+    /**
      * U08: khối "Sản phẩm tương tự" tải lười từ trang chi tiết. GET ?r=similar_products&id=<ma_san_pham>
      * -> 200 + HTML partial (partials/similar_products.php) khi có >= 2 sản phẩm hiển thị được; 204 (rỗng) khi tắt,
      * Flask lỗi/breaker mở hoặc không đủ sản phẩm; 400 id sai; 429 vượt giới hạn. Không bao giờ ném lỗi ra trang.
@@ -835,6 +937,7 @@ class SanPhamController {
             http_response_code(400);
             return;
         }
+        $similarOffset = max(0, min(200, (int)($_GET['offset'] ?? 0)));
         if (in_array(strtolower(ss_env('SIMILAR_PRODUCTS_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
             http_response_code(204);
             return;
@@ -864,7 +967,7 @@ class SanPhamController {
                 $skinType = is_array($profile) ? ($profile['skin_type'] ?? null) : null;
             }
             $response = $client
-                ? $client->similar($id, is_string($skinType) ? $skinType : null, array_merge([$id], $cartIds), 8)
+                ? $client->similar($id, is_string($skinType) ? $skinType : null, array_merge([$id], $cartIds), 20)
                 : null;
             $response = is_array($response) ? $response : [];
             $ids = [];
@@ -897,7 +1000,7 @@ class SanPhamController {
             if (count($similarItems) < 2) {
                 $sourceProduct = $this->model->find($id, true);
                 if (is_array($sourceProduct) && $sourceProduct !== []) {
-                    $fallbackProducts = $this->model->findSimilarFallback($sourceProduct, array_merge([$id], $cartIds), 8);
+                    $fallbackProducts = $this->model->findSimilarFallback($sourceProduct, array_merge([$id], $cartIds), 20);
                     foreach ($fallbackProducts as $product) {
                         $pid = (string)($product['ma_san_pham'] ?? $product['id'] ?? '');
                         if ($pid === '' || $pid === $id) {
@@ -908,15 +1011,21 @@ class SanPhamController {
                         $product['reason_code'] = $sameBrand ? 'same_brand' : 'same_category';
                         $product['reason_text'] = SearchReasonFormatter::format((string)$product['reason_code'], []);
                         $similarItems[] = $product;
-                        if (count($similarItems) >= 8) {
-                            break;
-                        }
                     }
                 }
             }
             if (count($similarItems) < 2) {
                 http_response_code(204);
                 return;
+            }
+            if (count($similarItems) > 8) {
+                $similarCount = count($similarItems);
+                $similarOffset = $similarOffset % $similarCount;
+                $similarItems = array_slice(
+                    array_merge($similarItems, $similarItems),
+                    $similarOffset,
+                    8
+                );
             }
             $similarProductId = $id;
             $similarDegraded = !empty($response['degraded']);
@@ -1201,6 +1310,16 @@ class SanPhamController {
         $endpoint = $flaskUrl . '/api/ai-idol/videos/' . rawurlencode($videoId) . '?rendition=product_page';
         $r2Base = function_exists('ss_env') ? ss_env('R2_PUBLIC_BASE_URL', '') : (string)(getenv('R2_PUBLIC_BASE_URL') ?: '');
 
+        // A published video may already have been uploaded to the shared R2 bucket while the
+        // local AI Idol container no longer has its temporary /app/storage copy. Prefer that
+        // catalog URL when it is available; the publication and product association checks above
+        // still gate access, and productVideoRedirectTarget() rejects every non-whitelisted host.
+        $catalogTarget = self::productVideoCatalogTarget($flaskUrl, $productId, $videoId, $r2Base);
+        if ($catalogTarget !== null) {
+            header('Location: ' . $catalogTarget, true, 302);
+            exit;
+        }
+
         $ch = curl_init($endpoint);
         $requestHeaders = [];
         if (!empty($_SERVER['HTTP_RANGE'])) {
@@ -1258,6 +1377,54 @@ class SanPhamController {
         }
         curl_close($ch);
         exit;
+    }
+
+    /**
+     * Resolve a published product video to its shared R2 rendition without requiring the AI Idol
+     * container to retain the original local render. This is intentionally read-only and bounded:
+     * on any timeout, malformed response, id mismatch, or untrusted URL the normal proxy path runs.
+     */
+    private static function productVideoCatalogTarget(string $flaskUrl, string $productId, string $videoId, string $r2Base): ?string {
+        $productId = trim($productId);
+        $videoId = trim($videoId);
+        if ($productId === '' || $videoId === '' || trim($r2Base) === '') {
+            return null;
+        }
+
+        $url = rtrim($flaskUrl, '/') . '/api/ai-idol/products/' . rawurlencode($productId) . '/videos?limit=30';
+        $ch = curl_init($url);
+        if ($ch === false) {
+            return null;
+        }
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_TIMEOUT => 5,
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        ]);
+        $body = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if (!is_string($body) || $status < 200 || $status >= 300) {
+            return null;
+        }
+
+        $payload = json_decode($body, true);
+        $videos = is_array($payload) ? ($payload['data']['videos'] ?? []) : [];
+        if (!is_array($videos)) {
+            return null;
+        }
+        foreach ($videos as $video) {
+            if (!is_array($video) || (string)($video['video_id'] ?? '') !== $videoId) {
+                continue;
+            }
+            $target = self::productVideoRedirectTarget((string)($video['video_url'] ?? ''), $r2Base);
+            if ($target !== null) {
+                return $target;
+            }
+        }
+        return null;
     }
 
     /**
