@@ -185,6 +185,42 @@ $check('guest_outbound_has_no_profile', !array_key_exists('profile', $out));
 $out = $streamWithProfile(true, ['id' => 7, 'email' => 'a@b.test'], static fn(string $e): ?array => [], '{"message":"x"}');
 $check('empty_resolved_profile_is_omitted', !array_key_exists('profile', $out));
 
+// ---------- scanned_product từ SESSION (chụp nhãn) ----------
+$snapOk = ['name' => 'NIVEA', 'ingredients' => ['Aqua', 'Glycerin'], 'scanned_at' => 10000];
+$sk = LabelScanController::SESSION_KEY;
+$check('scanned: còn hạn -> trả snapshot', ChatAgentController::scannedProductFromSession([$sk => $snapOk], 10100) === $snapOk);
+$check('scanned: hết hạn (> TTL) -> null', ChatAgentController::scannedProductFromSession([$sk => $snapOk], 10000 + LabelScanController::SESSION_TTL + 1) === null);
+$check('scanned: đúng biên TTL vẫn còn hạn', ChatAgentController::scannedProductFromSession([$sk => $snapOk], 10000 + LabelScanController::SESSION_TTL) === $snapOk);
+$check('scanned: thiếu khóa -> null', ChatAgentController::scannedProductFromSession([], 10100) === null);
+$check('scanned: không phải mảng -> null', ChatAgentController::scannedProductFromSession([$sk => 'x'], 10100) === null);
+$check('scanned: không tên không thành phần -> null', ChatAgentController::scannedProductFromSession([$sk => ['name' => ' ', 'ingredients' => [], 'scanned_at' => 10000]], 10100) === null);
+$check('scanned: scanned_at không phải int -> null', ChatAgentController::scannedProductFromSession([$sk => ['name' => 'N', 'scanned_at' => '10000']], 10100) === null);
+$check('scanned: scanned_at ở tương lai > 60s -> null; trong 60s thì nhận', ChatAgentController::scannedProductFromSession([$sk => ['name' => 'N', 'scanned_at' => 10200]], 10100) === null
+    && ChatAgentController::scannedProductFromSession([$sk => ['name' => 'N', 'scanned_at' => 10150]], 10100) !== null);
+
+$outbound = static function (array $session, callable $clock) use ($gate): array {
+    $_SESSION = $session;
+    $c = new ChatAgentController(
+        null, null, $gate, null, null,
+        static fn(): bool => false,
+        static fn(): array => [],
+        null,
+        static fn(): string => '{"message":"x"}',
+        null, $clock, 'internal-secret'
+    );
+    $m = new ReflectionMethod($c, 'buildOutboundBody');
+    $m->setAccessible(true);
+    $r = $m->invoke($c, ['message' => 'x'], false, [], 'x');
+    $_SESSION = [];
+    return $r;
+};
+$out = $outbound([$sk => $snapOk], static fn(): int => 10100);
+$check('outbound: có scanned_product khi session còn hạn', ($out['scanned_product'] ?? null) === $snapOk);
+$out = $outbound([$sk => $snapOk], static fn(): int => 10000 + LabelScanController::SESSION_TTL + 5);
+$check('outbound: hết hạn -> không có scanned_product', !array_key_exists('scanned_product', $out));
+$out = $outbound([], static fn(): int => 10100);
+$check('outbound: không có session -> không có scanned_product', !array_key_exists('scanned_product', $out));
+
 $sessionDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'chat-sse-' . bin2hex(random_bytes(8));
 mkdir($sessionDir, 0700, true);
 $sessionId = 'task16session';

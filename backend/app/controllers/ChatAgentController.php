@@ -11,6 +11,7 @@ require_once __DIR__ . '/../services/ChatCartEffect.php';
 require_once __DIR__ . '/../services/ChatSseRelay.php';
 require_once __DIR__ . '/../services/RateLimiter.php';
 require_once __DIR__ . '/ShopAssistantController.php';
+require_once __DIR__ . '/LabelScanController.php';
 
 final class ChatAgentController
 {
@@ -381,7 +382,35 @@ final class ChatAgentController
                 $outboundBody['profile'] = $profile;
             }
         }
+        $scanned = self::scannedProductFromSession(
+            isset($_SESSION) && is_array($_SESSION) ? $_SESSION : [],
+            (int)(is_callable($this->clock) ? ($this->clock)() : time())
+        );
+        if ($scanned !== null) {
+            $outboundBody['scanned_product'] = $scanned;
+        }
         return $outboundBody;
+    }
+
+    /**
+     * Bản tóm tắt lần chụp nhãn gần nhất (do LabelScanController ghi vào SESSION), còn hạn và đúng dạng; nếu không thì null.
+     */
+    public static function scannedProductFromSession(array $session, int $now): ?array
+    {
+        $snap = $session[LabelScanController::SESSION_KEY] ?? null;
+        if (!is_array($snap)) {
+            return null;
+        }
+        $hasName = is_string($snap['name'] ?? null) && trim($snap['name']) !== '';
+        $hasIng = is_array($snap['ingredients'] ?? null) && $snap['ingredients'] !== [];
+        if (!$hasName && !$hasIng) {
+            return null;
+        }
+        $at = $snap['scanned_at'] ?? null;
+        if (!is_int($at) || $at > $now + 60 || $now - $at > LabelScanController::SESSION_TTL) {
+            return null;
+        }
+        return $snap;
     }
 
     private function resolveProfile(string $email): ?array
