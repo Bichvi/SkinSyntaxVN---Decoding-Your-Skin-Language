@@ -63,6 +63,14 @@ class ValidationContractTests(unittest.TestCase):
         self.assertIn("PERSONAL_EXPERIENCE", codes(issues))
         self.assertTrue(next(i for i in issues if i.code == "PERSONAL_EXPERIENCE").auto_fixable)
 
+    def test_own_skin_phrase_is_personal_experience_only_as_result(self):
+        for text in ("Bạn sẽ thấy da mình không còn bóng dầu.", "Hãy chăm sóc da mình thật dịu dàng."):
+            with self.subTest(text=text):
+                self.assertNotIn("PERSONAL_EXPERIENCE", codes(run(f"[Hook]\n{text}\n[CTA]\nĐặt.")))
+        for text in ("Da mình giờ mịn hẳn.", "Da của mình đã đỡ mụn nhiều."):
+            with self.subTest(text=text):
+                self.assertIn("PERSONAL_EXPERIENCE", codes(run(f"[Hook]\n{text}\n[CTA]\nĐặt.")))
+
     def test_external_retailer_and_blacklist(self):
         self.assertIn("EXTERNAL_RETAILER", codes(run("[Hook]\nMua ở Shopee nhé.")))
         self.assertIn("BLACKLIST_CLAIM", codes(run("[Hook]\nTrị dứt điểm mụn.")))

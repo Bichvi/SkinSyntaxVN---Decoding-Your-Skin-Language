@@ -174,8 +174,8 @@ _MONEY_PATTERNS = (
 )
 # Urgency/scarcity wording: only allowed when a verified flash sale with a deadline exists.
 _SCARCITY = re.compile(
-    r"\b(?:chot don|chi con(?: vai)?|duy nhat|sap het|"
-    r"flash sale|so luong co han|con it|het hang)\b"
+    r"\b(?:chot don|chi con(?: vai)?|(?:co hoi|dip|lan|chi) duy nhat|duy nhat (?:hom nay|toi nay|trong)|sap het|"
+    r"flash sale|so luong co han|con it (?:hang|suat|san pham|chai|lo|tuyp|hop|phan)|het hang)\b"
 )
 # "hôm nay / tối nay / ngày mai" is a normal greeting ("livestream hôm nay", "hôm nay mình giới thiệu").
 # It is scarcity only as a deadline: "chỉ hôm nay", "hôm nay thôi", or in a buy/price sentence.
@@ -185,24 +185,27 @@ _TIME_DEADLINE = re.compile(
 )
 _BUY_CUE = re.compile(r"\b(?:mua|dat mua|dat hang|chot|gia|uu dai|nhanh tay)\b")
 _TIME_INTRO = re.compile(
-    r"\b(?:livestream|buoi|phien|phat song|song)\b(?:\s+\w+){0,3}\s+(?:hom nay|toi nay)\b"
-    r"|\b(?:hom nay|toi nay)\s+(?:minh|chung ta|chung minh|em|skinsyntax)\b"
+    r"\b(?:livestream|live|buoi|phien|phat song|song)\b(?:\s+\w+){0,3}\s+(?:hom nay|toi nay)\b"
+    r"|\b(?:hom nay|toi nay)\s+(?:minh|chung ta|chung minh|em|syna|skinsyntax)\b"
 )
 
 
 def _scarcity_words(folded: str) -> list[str]:
     found = [m.group(0) for m in _SCARCITY.finditer(folded)]
-    for sentence in re.split(r"[.!?;\n]+", folded):
+    for sentence_match in re.finditer(r"[^.!?;\n]+[.!?;\n]*", folded):
+        sentence = sentence_match.group(0)
+        # A question is a rhetorical hook, not a deadline: only the explicit deadline phrases apply to it.
+        is_question = sentence.rstrip().endswith("?")
         if not _TIME_WORD.search(sentence):
             continue
         deadline = _TIME_DEADLINE.search(sentence)
         if deadline:
             found.append(deadline.group(0))
             continue
-        if _BUY_CUE.search(sentence) and not _TIME_INTRO.search(sentence):
+        if not is_question and _BUY_CUE.search(sentence) and not _TIME_INTRO.search(sentence):
             found.append(_TIME_WORD.search(sentence).group(0))
     return found
-_PROMO = re.compile(r"\b(?:sale|khuyen mai|uu dai|giam gia|co han|ket thuc|voucher|freeship|ma giam)\b")
+_PROMO = re.compile(r"\b(?:sale|khuyen mai|uu dai|giam gia|co han|ket thuc (?:luc|vao|truoc)|voucher|freeship|ma giam)\b")
 _MAGNITUDE = r"(?:tram|nghin|trieu|ty|muoi|linh)"
 _PHRASE_MARK = "\x00"
 # A removed valid phrase glued to more number words is a different amount, not the valid one.

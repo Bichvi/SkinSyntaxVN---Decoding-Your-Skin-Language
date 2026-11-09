@@ -108,6 +108,29 @@ class ProductVideoPriceTests(unittest.TestCase):
         self.assertEqual(len(errors), 2)
 
 
+class ScarcityFalsePositiveTests(unittest.TestCase):
+    def test_normal_sentences_pass(self):
+        for sentence in (
+            "Kết thúc chu trình dưỡng da buổi tối bằng một lớp kem mỏng.",
+            "Điểm duy nhất cần nhớ là dùng buổi tối.",
+            "Da còn ít độ ẩm nên dễ bong tróc.",
+            "Hôm nay bạn mua kem chống nắng mà vẫn đổ dầu?",
+            "Hôm nay Syna giới thiệu một kem chống nắng giá rất dễ chịu.",
+        ):
+            with self.subTest(sentence=sentence):
+                self.assertEqual(check(script(sentence), PRICING_NO_FLASH), [])
+
+    def test_real_scarcity_still_fails(self):
+        for sentence in (
+            "Cơ hội duy nhất để sở hữu nhé.",
+            "Còn ít suất lắm.",
+            "Chương trình kết thúc vào nửa đêm.",
+            "Mua ngay hôm nay nhé?",
+        ):
+            with self.subTest(sentence=sentence):
+                self.assertTrue(check(script(sentence), PRICING_NO_FLASH))
+
+
 class LiveAndProductScopeTests(unittest.TestCase):
     def test_price_is_checked_in_every_section(self):
         live = "[Hook]\nDa dầu?\n[Price]\nGiá hai trăm chín mươi chín nghìn đồng.\n[CTA]\nĐặt ngay nhé."
