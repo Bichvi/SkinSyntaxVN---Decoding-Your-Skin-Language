@@ -22,7 +22,7 @@ from .config import MAX_STEPS, TURN_TIMEOUT_S
 from .prompts import AGENT_PROMPT, render
 from .router import RouterOutput, classify, fold
 from .state import ConvState, StateStore
-from .tools import ToolContext, build_tools
+from .tools import ToolContext, _wrapped, build_tools
 
 
 logger = logging.getLogger(__name__)
@@ -227,6 +227,7 @@ def _agent_messages(state: GraphState) -> list[BaseMessage]:
         {"skin_type", "concerns", "goal", "budget_max", "avoid_ingredients", "sensitivity"},
     )
     open_draft = {"draft_id": ctx.state.open_draft_id} if ctx.state.open_draft_id else "none"
+    scanned = getattr(ctx, "scanned_product", None)
     prompt = render(
         AGENT_PROMPT,
         customer_display_name="bạn",
@@ -239,6 +240,7 @@ def _agent_messages(state: GraphState) -> list[BaseMessage]:
         last_shown_products=json.dumps(
             _safe_products(ctx.state.last_shown_products), ensure_ascii=False, separators=(",", ":")
         ),
+        scanned_product=_wrapped(scanned) if scanned else "none",
         now_vn=datetime.now(VIETNAMESE_TIMEZONE).isoformat(),
     )
     return [SystemMessage(content=prompt), *state["history"], HumanMessage(content=state["message"])]
@@ -531,7 +533,10 @@ def build_graph(router_llm, agent_llm_factory, legacy: Callable[[str, dict], dic
             return {"halted": True, "intent_queue": []}
         completed, routed = _bounded(
             state,
-            lambda: classify(state["message"], ctx.state, state["recent_turns"], router_llm),
+            lambda: classify(
+                state["message"], ctx.state, state["recent_turns"], router_llm,
+                scanned_product_name=(getattr(ctx, "scanned_product", None) or {}).get("name") or None,
+            ),
         )
         if not completed:
             _emit_timeout(state)

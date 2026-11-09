@@ -26,7 +26,7 @@ TOOLS = {
 def test_prompt_version_set():
     from agent_graph.prompts import PROMPT_VERSION
 
-    assert PROMPT_VERSION == "2026-10-27.1"
+    assert PROMPT_VERSION == "2026-11-09.1"
 
 
 def test_agent_prompt_has_no_create_order_promise():
@@ -148,3 +148,34 @@ def test_provider_failure_is_logged_by_exception_type_only(caplog):
         handler.on_llm_error(RuntimeError("Rate limit gsk_secret-token org_123"))
     assert "cause=RuntimeError" in caplog.text
     assert "gsk_secret" not in caplog.text
+
+
+def _scan_ctx(scanned):
+    from agent_graph.state import ConvState
+    from agent_graph.tools import ToolContext
+
+    return ToolContext(
+        claims=None, php=None, cart_snapshot=[], emit=lambda *_a: None,
+        state=ConvState(), graph_tools=None, scanned_product=scanned,
+    )
+
+
+def test_agent_prompt_wraps_scanned_product_as_tool_data():
+    from agent_graph.graph import _agent_messages
+
+    scanned = {"name": "NIVEA <b>MICELLAIR", "ingredients": ["Aqua", "Glycerin"], "in_shop": False}
+    state = {"ctx": _scan_ctx(scanned), "history": [], "message": "hợp da không?", "intent_queue": []}
+    prompt = _agent_messages(state)[0].content
+    assert "<tool_data>" in prompt and "</tool_data>" in prompt
+    assert "Glycerin" in prompt
+    assert r"NIVEA \u003cb\u003eMICELLAIR" in prompt
+    assert "NIVEA <b>" not in prompt
+    assert "# Sản phẩm khách vừa chụp nhãn" in prompt
+
+
+def test_agent_prompt_scanned_product_none_when_absent():
+    from agent_graph.graph import _agent_messages
+
+    state = {"ctx": _scan_ctx({}), "history": [], "message": "xin chào", "intent_queue": []}
+    prompt = _agent_messages(state)[0].content
+    assert "có thể không bán tại shop): none" in prompt

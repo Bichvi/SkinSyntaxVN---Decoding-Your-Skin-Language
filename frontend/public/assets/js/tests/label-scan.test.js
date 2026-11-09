@@ -277,3 +277,18 @@ test('M4: widget renders labelScan content as escaped plain text', () => {
   assert.equal(/href="javascript:/.test(html), false);
   assert.equal(/<a [^>]*\[x\]/.test(html), false);
 });
+
+test('skin fit findings lead with the matched ingredient names, escaped', () => {
+  const r = fullResult();
+  r.skin_fit.good = [{ rule_id: 'g', reason_vi: 'Giữ ẩm tốt', ingredients: ['Glycerin'] }];
+  r.skin_fit.caution = [{ rule_id: 'c', reason_vi: 'Có thể kích ứng', ingredients: ['A', 'B', 'C', 'D', 'E', '<i>x</i>'] }];
+  r.skin_fit.avoid = [{ rule_id: 'a', reason_vi: 'Cồn khô', ingredients: [] }];
+  const html = LS.renderCard(r, 'mfit');
+  assert.match(html, /✅ <b>Glycerin<\/b>: Giữ ẩm tốt/);
+  assert.match(html, /⚠️ <b>A, B, C, D…<\/b>: Có thể kích ứng/);
+  assert.match(html, /⛔ Cồn khô/);
+  r.skin_fit.good = [{ rule_id: 'g', reason_vi: 'ok', ingredients: ['<script>alert(1)</script>'] }];
+  const evil = LS.renderCard(r, 'mfit2');
+  assert.equal(evil.includes('<script>'), false);
+  assert.match(evil, /<b>&lt;script&gt;/);
+});

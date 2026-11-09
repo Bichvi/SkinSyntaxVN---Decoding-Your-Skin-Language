@@ -145,7 +145,9 @@ def _resolve_ordinal(message: str, state: ConvState, result: RouterOutput) -> Ro
     return result.model_copy(update={"entities": entities})
 
 
-def _resolve_references(message: str, state: ConvState, result: RouterOutput) -> RouterOutput:
+def _resolve_references(
+    message: str, state: ConvState, result: RouterOutput, *, has_scanned: bool = False
+) -> RouterOutput:
     result = _resolve_ordinal(message, state, result)
     entities = result.entities
     shown_ids = {str(product["id"]) for product in state.last_shown_products if product.get("id") is not None}
@@ -166,7 +168,11 @@ def _resolve_references(message: str, state: ConvState, result: RouterOutput) ->
         return result.model_copy(update={"needs_clarification": result.needs_clarification or _CLARIFICATION})
     elif (
         _UNRESOLVED_REF_RE.search(fold(message))
-        or any(_DEICTIC_RE.search(fold(str(ref))) for ref in entities.product_refs)
+        or (
+            # "cái này / sản phẩm đó" right after a label scan means the scanned product
+            not (has_scanned and not state.last_shown_products)
+            and any(_DEICTIC_RE.search(fold(str(ref))) for ref in entities.product_refs)
+        )
     ) and not entities.resolved_product_ids:
         return result.model_copy(update={"needs_clarification": result.needs_clarification or _CLARIFICATION})
     if updates:
@@ -175,9 +181,11 @@ def _resolve_references(message: str, state: ConvState, result: RouterOutput) ->
     return result
 
 
-def _post_process(message: str, state: ConvState, result: RouterOutput) -> RouterOutput:
+def _post_process(
+    message: str, state: ConvState, result: RouterOutput, *, has_scanned: bool = False
+) -> RouterOutput:
     result = _extract_entities(message, result)
-    result = _resolve_references(message, state, result)
+    result = _resolve_references(message, state, result, has_scanned=has_scanned)
     if not result.intents:
         folded = fold(message)
         if (
@@ -196,11 +204,14 @@ def _post_process(message: str, state: ConvState, result: RouterOutput) -> Route
     return result
 
 
-def classify(message: str, state: ConvState, recent_turns: list[dict], llm) -> RouterOutput:
+def classify(
+    message: str, state: ConvState, recent_turns: list[dict], llm, *, scanned_product_name: str | None = None
+) -> RouterOutput:
     """Classify using the structured runnable passed as ``llm`` and its ``.invoke()`` method."""
+    has_scanned = bool(scanned_product_name)
     routed = fast_route(message, state)
     if routed is not None:
-        return _post_process(message, state, routed)
+        return _post_process(message, state, routed, has_scanned=has_scanned)
     system_prompt = render(
         ROUTER_PROMPT,
         pending_state=_json(state.pending),
@@ -209,6 +220,7 @@ def classify(message: str, state: ConvState, recent_turns: list[dict], llm) -> R
             for product in state.last_shown_products
         ]),
         recent_turns=_json(recent_turns[-4:]),
+        scanned_product=_json(scanned_product_name) if scanned_product_name else "none",
     )
     try:
         messages = [SystemMessage(content=system_prompt), HumanMessage(content=message)]
@@ -219,5 +231,5 @@ def classify(message: str, state: ConvState, recent_turns: list[dict], llm) -> R
         error_type = type(exc).__name__
         logger.warning("router LLM failed: %s", error_type)
         fallback = RouterOutput(fallback=True, error=error_type)
-        return _post_process(message, state, fallback)
-    return _post_process(message, state, result)
+        return _post_process(message, state, fallback, has_scanned=has_scanned)
+    return _post_process(message, state, result, has_scanned=has_scanned)

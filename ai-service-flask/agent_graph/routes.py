@@ -156,6 +156,83 @@ def _profile(value: Any) -> dict:
     return result
 
 
+def _scan_str(value: Any, limit: int) -> str:
+    return value.strip()[:limit] if isinstance(value, str) else ""
+
+
+def _scan_names(value: Any, max_items: int, max_len: int) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    names = [_scan_str(item, max_len) for item in value]
+    return [name for name in names if name][:max_items]
+
+
+_SCAN_PRODUCT_TYPES = {"cleanser", "toner", "serum", "moisturizer", "sunscreen", "mask", "other"}
+_SCAN_SKIN_TYPES = {"dau", "kho", "hon_hop", "thuong"}
+_SCAN_VERDICTS = {"good", "caution", "avoid", "neutral", "unknown"}
+_SCAN_PRODUCT_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
+
+
+def _scanned_product(value: Any) -> dict:
+    """Strict sanitizer for the ingredient-label scan summary forwarded by PHP; {} when invalid or empty."""
+    if not isinstance(value, dict):
+        return {}
+    ingredients = _scan_names(value.get("ingredients"), 60, 80)
+    name = _scan_str(value.get("name"), 200)
+    if not name and not ingredients:
+        return {}
+    product_type = value.get("product_type")
+    matched = value.get("matched_product_id")
+    matched = matched if isinstance(matched, str) and _SCAN_PRODUCT_ID_RE.match(matched) else ""
+    skin_fit_raw = value.get("skin_fit") if isinstance(value.get("skin_fit"), dict) else {}
+    profile_raw = skin_fit_raw.get("profile") if isinstance(skin_fit_raw.get("profile"), dict) else {}
+    skin_type = profile_raw.get("skin_type")
+    findings: list[dict] = []
+    raw_findings = skin_fit_raw.get("findings")
+    for item in raw_findings if isinstance(raw_findings, list) else []:
+        if len(findings) >= 8:
+            break
+        if not isinstance(item, dict) or item.get("verdict") not in {"good", "caution", "avoid"}:
+            continue
+        findings.append({
+            "verdict": item["verdict"],
+            "reason_vi": _scan_str(item.get("reason_vi"), 300),
+            "ingredients": _scan_names(item.get("ingredients"), 6, 80),
+        })
+    conflicts: list[dict] = []
+    raw_conflicts = value.get("conflicts")
+    for item in raw_conflicts if isinstance(raw_conflicts, list) else []:
+        if len(conflicts) >= 3:
+            break
+        if not isinstance(item, dict):
+            continue
+        conflicts.append({
+            "cart_product_name": _scan_str(item.get("cart_product_name"), 200),
+            "severity": _scan_str(item.get("severity"), 20),
+            "advice_vi": _scan_str(item.get("advice_vi"), 300),
+            "ingredients": _scan_names(item.get("ingredients"), 6, 80),
+        })
+    verdict = skin_fit_raw.get("verdict")
+    return {
+        "name": name,
+        "brand": _scan_str(value.get("brand"), 100),
+        "product_type": product_type if product_type in _SCAN_PRODUCT_TYPES else "other",
+        "in_shop": bool(matched) and value.get("in_shop") is True,
+        "matched_product_id": matched,
+        "ingredients": ingredients,
+        "highlights": _scan_names(value.get("highlights"), 8, 80),
+        "skin_fit": {
+            "verdict": verdict if verdict in _SCAN_VERDICTS else "unknown",
+            "profile": {
+                "skin_type": skin_type if skin_type in _SCAN_SKIN_TYPES else None,
+                "sensitive": profile_raw.get("sensitive") is True,
+            },
+            "findings": findings,
+        },
+        "conflicts": conflicts,
+    }
+
+
 def _conversation_messages(conversation: dict | None) -> tuple[list[Any], list[dict]]:
     if not isinstance(conversation, dict):
         return [], []
@@ -380,6 +457,7 @@ def chat_agent():
         emit=lambda *_args: None,
         state=ConvState(),
         graph_tools=None,
+        scanned_product=_scanned_product(data.get("scanned_product")),
     )
 
     def generate() -> Iterator[str]:

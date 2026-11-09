@@ -202,6 +202,51 @@ $check('fix: email > 254 -> không gửi email/conversation_id', !isset($p['emai
 [$st, $b] = $mk()->process(['csrf' => 'tok123', 'ingredients_text' => ['x']], [], $srv);
 $check('fix: ingredients_text là mảng -> 400, không warning', $st === 400);
 
+// ---------- ghi nhớ lần chụp cho agent chat (session snapshot) ----------
+$resOk = [
+    'status' => 'ok',
+    'product' => ['name' => '  NIVEA PEARL WHITE  ', 'brand' => 'NIVEA', 'product_type' => 'weird', 'matched_product_id' => '12', 'url' => '/x'],
+    'ingredients' => ['items' => array_merge(
+        [['name' => 'Aqua', 'highlight' => false], ['name' => '', 'name_vi' => 'Nước', 'highlight' => true], ['name' => '', 'name_vi' => ''], ['name' => 'Glycerin', 'highlight' => true]],
+        array_map(fn($n) => ['name' => 'I' . $n . str_repeat('z', 100), 'highlight' => true], range(1, 70))
+    )],
+    'skin_fit' => ['verdict' => 'caution', 'profile' => ['skin_type' => 'dau', 'sensitive' => true, 'concerns' => ['mun']],
+        'good' => [['rule_id' => 'g', 'reason_vi' => str_repeat('é', 400), 'ingredients' => ['Glycerin', 'a', 'b', 'c', 'd', 'e', 'f', '']]],
+        'caution' => [['rule_id' => 'c', 'reason_vi' => 'r', 'ingredients' => ['AHA']]], 'avoid' => []],
+    'conflicts' => array_fill(0, 5, ['cart_product_name' => 'Retinol', 'cart_product' => ['name' => 'ignored'], 'severity' => 'high', 'advice_vi' => str_repeat('a', 500), 'ingredients' => ['retinol']]),
+];
+$snap = LabelScanController::sessionSnapshot($resOk, 1000);
+$check('snapshot: tên trim, product_type sai -> other, in_shop theo matched id', $snap['name'] === 'NIVEA PEARL WHITE' && $snap['product_type'] === 'other' && $snap['in_shop'] === true && $snap['matched_product_id'] === '12' && $snap['scanned_at'] === 1000);
+$check('snapshot: thành phần giữ thứ tự, fallback name_vi, bỏ rỗng, tối đa 60 x 80 ký tự', $snap['ingredients'][0] === 'Aqua' && $snap['ingredients'][1] === 'Nước' && $snap['ingredients'][2] === 'Glycerin' && count($snap['ingredients']) === 60 && max(array_map('mb_strlen', $snap['ingredients'])) <= 80);
+$check('snapshot: highlights tối đa 8', count($snap['highlights']) === 8 && $snap['highlights'][0] === 'Nước');
+$check('snapshot: skin_fit findings có verdict, reason cắt 300, ingredients <= 6 không rỗng', $snap['skin_fit']['verdict'] === 'caution' && $snap['skin_fit']['profile'] === ['skin_type' => 'dau', 'sensitive' => true]
+    && count($snap['skin_fit']['findings']) === 2 && $snap['skin_fit']['findings'][0]['verdict'] === 'caution'
+    && $snap['skin_fit']['findings'][1]['verdict'] === 'good' && mb_strlen($snap['skin_fit']['findings'][1]['reason_vi']) === 300 && count($snap['skin_fit']['findings'][1]['ingredients']) === 6);
+$check('snapshot: conflicts tối đa 3, advice cắt 300', count($snap['conflicts']) === 3 && mb_strlen($snap['conflicts'][0]['advice_vi']) === 300 && $snap['conflicts'][0]['cart_product_name'] === 'Retinol');
+$noMatch = $resOk;
+$noMatch['product']['matched_product_id'] = null;
+$check('snapshot: không khớp shop -> in_shop false, id rỗng', ($s2 = LabelScanController::sessionSnapshot($noMatch, 1))['in_shop'] === false && $s2['matched_product_id'] === '');
+$badId = $resOk;
+$badId['product']['matched_product_id'] = 'bad id!';
+$check('snapshot: id sai pattern bị bỏ', LabelScanController::sessionSnapshot($badId, 1)['matched_product_id'] === '');
+$check('snapshot: status khác ok -> null', LabelScanController::sessionSnapshot(['status' => 'not_label'] + $resOk, 1) === null);
+$check('snapshot: không có thành phần -> null', LabelScanController::sessionSnapshot(['ingredients' => ['items' => [['name' => '']]]] + $resOk, 1) === null);
+
+$remembered = [];
+$mkR = function (array $over = []) use ($mk, &$remembered) { return $mk(['remember' => function (array $s) use (&$remembered) { $remembered[] = $s; }] + $over); };
+$mkR()->remember(['ok' => true, 'result' => $resOk], 5000);
+$check('remember: ok -> hook nhận snapshot', count($remembered) === 1 && $remembered[0]['scanned_at'] === 5000 && $remembered[0]['name'] === 'NIVEA PEARL WHITE');
+$remembered = [];
+$mkR()->remember(LabelScanController::error('unavailable'), 5000);
+$mkR()->remember(['ok' => true, 'result' => ['status' => 'not_label'] + $resOk], 5000);
+$check('remember: lỗi / not_label -> không ghi', $remembered === []);
+$thrower = new LabelScanController(null, ['remember' => function () { throw new RuntimeException('x'); }]);
+$check('remember: hook ném lỗi -> nuốt, trả false', $thrower->remember(['ok' => true, 'result' => $resOk], 1) === false);
+$remembered = [];
+[$st, $b] = $mkR()->process(['csrf' => 'tok123', 'ingredients_text' => $text], [], $srv);
+$mkR()->remember($b, 7);
+$check('remember: kết quả process() thật (sample) -> snapshot có thành phần Water', $st === 200 && count($remembered) === 1 && $remembered[0]['ingredients'] === ['Water']);
+
 // ---------- route / cấu hình ----------
 $rootDir = dirname(__DIR__, 3);
 foreach (['backend/public/index.php', 'frontend/public/index.php'] as $idx) {

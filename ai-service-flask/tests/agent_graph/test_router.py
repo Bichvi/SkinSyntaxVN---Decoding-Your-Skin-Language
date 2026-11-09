@@ -228,3 +228,24 @@ def test_state_save_swallows_redis_errors():
             raise RuntimeError("redis down")
 
     StateStore(DownRedis()).save("sid", ConvState())
+
+
+def test_classify_passes_scanned_product_name_into_prompt():
+    router = FakeRouter(output("PRODUCT_INFO"))
+    classify("nó có hợp da mình không?", ConvState(), [], router, scanned_product_name="NIVEA MICELLAIR")
+    assert "NIVEA MICELLAIR" in router.messages[0].content
+
+
+def test_classify_scanned_product_defaults_to_none():
+    router = FakeRouter(output("ADVISE"))
+    classify("tư vấn giúp mình với", ConvState(), [], router)
+    assert "Sản phẩm khách vừa chụp nhãn: none" in router.messages[0].content
+
+
+def test_deictic_ref_after_label_scan_means_scanned_product_not_clarification():
+    routed = output("PRODUCT_INFO", entities={"product_refs": ["sản phẩm này"]})
+    with_scan = classify("sản phẩm này có hợp da mình không?", ConvState(), [], FakeRouter(routed),
+                         scanned_product_name="NIVEA MICELLAIR")
+    assert with_scan.needs_clarification is None
+    without_scan = classify("sản phẩm này có hợp da mình không?", ConvState(), [], FakeRouter(routed))
+    assert without_scan.needs_clarification

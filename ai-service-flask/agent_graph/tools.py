@@ -44,6 +44,7 @@ class ToolContext:
     text_search_timeout: float = 6.0
     name_lookup: Callable[[str], list[str]] | None = None
     skin_profile: dict[str, Any] = field(default_factory=dict)
+    scanned_product: dict[str, Any] = field(default_factory=dict)
 
 
 class _Args(BaseModel):

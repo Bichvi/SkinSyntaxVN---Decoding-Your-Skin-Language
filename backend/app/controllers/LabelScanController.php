@@ -13,6 +13,9 @@ class LabelScanController
     public const SKIN_TYPES = ['dau', 'kho', 'hon_hop', 'thuong'];
     public const TEXT_MIN = 20;
     public const TEXT_MAX = 6000;
+    /** Khóa SESSION lưu bản tóm tắt lần chụp gần nhất để agent chat đọc (server-side, không tin client). */
+    public const SESSION_KEY = 'label_scan_last';
+    public const SESSION_TTL = 7200;
 
     private $pdo;
     /** @var array<string,callable> client|lookup|env|context|rate_limit|csrf — chỉ để test */
@@ -37,6 +40,7 @@ class LabelScanController
                 unset($files['image']); // chỉ nhận file do PHP upload thật
             }
             [$status, $body, $headers] = $this->process($_POST, $files, $_SERVER);
+            $this->remember($body, time()); // trước mọi header()/echo
         } catch (Throwable $e) {
             error_log('[LABEL_SCAN] controller error: ' . get_class($e));
             $body = self::error('unavailable');
@@ -51,6 +55,153 @@ class LabelScanController
             }
         }
         echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{"ok":false,"code":"unavailable"}';
+    }
+
+    /**
+     * Ghi bản tóm tắt lần chụp thành công vào SESSION (khách vãng lai cũng có). Lỗi nào cũng nuốt, không đụng response.
+     */
+    public function remember(array $body, int $now): bool
+    {
+        if (($body['ok'] ?? false) !== true || !is_array($body['result'] ?? null)) {
+            return false;
+        }
+        $snapshot = self::sessionSnapshot($body['result'], $now);
+        if ($snapshot === null) {
+            return false;
+        }
+        try {
+            if (isset($this->hooks['remember'])) {
+                ($this->hooks['remember'])($snapshot);
+                return true;
+            }
+            if (session_status() !== PHP_SESSION_ACTIVE && @session_start() === false) {
+                error_log('[LABEL_SCAN] remember: session_start_failed');
+                return false;
+            }
+            $_SESSION[self::SESSION_KEY] = $snapshot;
+            return true;
+        } catch (Throwable $e) {
+            error_log('[LABEL_SCAN] remember failed: ' . get_class($e));
+            return false;
+        } finally {
+            if (!isset($this->hooks['remember']) && session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+        }
+    }
+
+    /**
+     * Bản tóm tắt gọn của kết quả đã present() để agent đọc ở lượt chat sau. Thuần.
+     * @return array<string,mixed>|null null nếu không phải status ok hoặc không có thành phần nào
+     */
+    public static function sessionSnapshot(array $result, int $now): ?array
+    {
+        if (($result['status'] ?? null) !== 'ok') {
+            return null;
+        }
+        $cut = static function ($v, int $max): string {
+            return is_string($v) ? mb_substr(trim($v), 0, $max, 'UTF-8') : '';
+        };
+        $names = static function ($list, int $maxItems, int $maxLen) use ($cut): array {
+            $out = [];
+            foreach (is_array($list) ? $list : [] as $x) {
+                $t = $cut($x, $maxLen);
+                if ($t !== '') {
+                    $out[] = $t;
+                    if (count($out) >= $maxItems) {
+                        break;
+                    }
+                }
+            }
+            return $out;
+        };
+
+        $ingredients = [];
+        $highlights = [];
+        $items = is_array($result['ingredients']['items'] ?? null) ? $result['ingredients']['items'] : [];
+        foreach ($items as $it) {
+            if (!is_array($it)) {
+                continue;
+            }
+            $n = $cut($it['name'] ?? '', 80);
+            if ($n === '') {
+                $n = $cut($it['name_vi'] ?? '', 80);
+            }
+            if ($n === '') {
+                continue;
+            }
+            if (count($ingredients) < 60) {
+                $ingredients[] = $n;
+            }
+            if (($it['highlight'] ?? false) === true && count($highlights) < 8) {
+                $highlights[] = $n;
+            }
+        }
+        if (!$ingredients) {
+            return null;
+        }
+
+        $p = is_array($result['product'] ?? null) ? $result['product'] : [];
+        $ptype = $p['product_type'] ?? 'other';
+        $matched = $p['matched_product_id'] ?? null;
+        if (is_int($matched)) {
+            $matched = (string)$matched;
+        }
+        $matched = (is_string($matched) && preg_match(SearchRecommendClient::PRODUCT_ID_PATTERN, $matched)) ? $matched : '';
+
+        $sf = is_array($result['skin_fit'] ?? null) ? $result['skin_fit'] : [];
+        $prof = is_array($sf['profile'] ?? null) ? $sf['profile'] : [];
+        $findings = [];
+        foreach (['avoid', 'caution', 'good'] as $kind) {
+            foreach (is_array($sf[$kind] ?? null) ? $sf[$kind] : [] as $f) {
+                if (!is_array($f) || count($findings) >= 8) {
+                    continue;
+                }
+                $findings[] = [
+                    'verdict' => $kind,
+                    'reason_vi' => $cut($f['reason_vi'] ?? '', 300),
+                    'ingredients' => $names($f['ingredients'] ?? [], 6, 80),
+                ];
+            }
+        }
+        $sfVerdict = $sf['verdict'] ?? 'unknown';
+
+        $conflicts = [];
+        foreach (is_array($result['conflicts'] ?? null) ? $result['conflicts'] : [] as $c) {
+            if (!is_array($c) || count($conflicts) >= 3) {
+                continue;
+            }
+            $cname = $cut($c['cart_product_name'] ?? '', 200);
+            if ($cname === '' && is_array($c['cart_product'] ?? null)) {
+                $cname = $cut($c['cart_product']['name'] ?? '', 200);
+            }
+            $conflicts[] = [
+                'cart_product_name' => $cname,
+                'severity' => $cut($c['severity'] ?? '', 20),
+                'advice_vi' => $cut($c['advice_vi'] ?? '', 300),
+                'ingredients' => $names($c['ingredients'] ?? [], 6, 80),
+            ];
+        }
+
+        return [
+            'name' => $cut($p['name'] ?? '', 200),
+            'brand' => $cut($p['brand'] ?? '', 100),
+            'product_type' => (is_string($ptype) && in_array($ptype, self::PRODUCT_TYPES, true)) ? $ptype : 'other',
+            'in_shop' => $matched !== '',
+            'matched_product_id' => $matched,
+            'ingredients' => $ingredients,
+            'highlights' => $highlights,
+            'skin_fit' => [
+                'verdict' => (is_string($sfVerdict) && in_array($sfVerdict, ['good', 'caution', 'avoid', 'neutral', 'unknown'], true)) ? $sfVerdict : 'unknown',
+                'profile' => [
+                    'skin_type' => (is_string($prof['skin_type'] ?? null) && in_array($prof['skin_type'], self::SKIN_TYPES, true)) ? $prof['skin_type'] : null,
+                    'sensitive' => ($prof['sensitive'] ?? false) === true,
+                ],
+                'findings' => $findings,
+            ],
+            'conflicts' => $conflicts,
+            'scanned_at' => $now,
+        ];
     }
 
     /**

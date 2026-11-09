@@ -296,7 +296,9 @@
       + (parts.length ? ' <span class="ai-label-card__muted">· ' + esc(parts.join(', ')) + '</span>' : '') + '</div>';
     groups.forEach(function (g) {
       (Array.isArray(fit[g[0]]) ? fit[g[0]] : []).forEach(function (f) {
-        html += '<div class="ai-label-card__finding">' + g[1] + ' ' + esc((f && f.reason_vi) || '') + '</div>';
+        var names = (f && Array.isArray(f.ingredients) ? f.ingredients : []).filter(function (n) { return typeof n === 'string' && n.trim(); });
+        var lead = names.length ? '<b>' + names.slice(0, 4).map(esc).join(', ') + (names.length > 4 ? '…' : '') + '</b>: ' : '';
+        html += '<div class="ai-label-card__finding">' + g[1] + ' ' + lead + esc((f && f.reason_vi) || '') + '</div>';
       });
     });
     var st = states[currentId] || null;

@@ -321,3 +321,53 @@ def test_legacy_payload_mirrors_budget_max_without_mutating_profile(route_app, m
     assert legacy["updated_at"] == "2026-11-01T10:00:00+00:00"
     assert "budget" not in captured["skin_profile"]
     assert captured["skin_profile"]["budget_max"] == 500000
+
+
+def test_scanned_product_validator_drops_junk(route_app):
+    _app, routes = route_app
+    clean = routes._scanned_product({
+        "name": "  Toner A  ", "brand": "B" * 300, "product_type": "weird", "in_shop": True, "matched_product_id": "bad id!",
+        "ingredients": ["Aqua", "", 5, "x" * 200] + ["i%d" % n for n in range(80)],
+        "highlights": ["Niacinamide"] * 20, "evil": "drop me",
+        "skin_fit": {"verdict": "bogus", "profile": {"skin_type": "alien", "sensitive": "yes"}, "findings": [
+            {"verdict": "good", "reason_vi": "r" * 500, "ingredients": ["a"] * 9, "x": 1},
+            {"verdict": "nonsense", "reason_vi": "no"}, "junk",
+        ] + [{"verdict": "caution", "reason_vi": "c", "ingredients": []}] * 12},
+        "conflicts": [{"cart_product_name": "Retinol", "severity": "high", "advice_vi": "a" * 500, "ingredients": ["AHA"], "z": 1}] * 5,
+    })
+    assert clean["name"] == "Toner A" and len(clean["brand"]) == 100
+    assert clean["product_type"] == "other" and clean["in_shop"] is False and clean["matched_product_id"] == ""
+    assert len(clean["ingredients"]) == 60 and clean["ingredients"][0] == "Aqua" and len(clean["ingredients"][1]) == 80
+    assert len(clean["highlights"]) == 8 and "evil" not in clean
+    sf = clean["skin_fit"]
+    assert sf["verdict"] == "unknown" and sf["profile"] == {"skin_type": None, "sensitive": False}
+    assert len(sf["findings"]) == 8 and len(sf["findings"][0]["reason_vi"]) == 300 and len(sf["findings"][0]["ingredients"]) == 6
+    assert len(clean["conflicts"]) == 3 and len(clean["conflicts"][0]["advice_vi"]) == 300 and "z" not in clean["conflicts"][0]
+
+
+@pytest.mark.parametrize("value", [None, "str", 5, [], {}, {"name": "", "ingredients": []}, {"name": 5, "ingredients": "x"}])
+def test_scanned_product_validator_empty_or_bad_types(route_app, value):
+    _app, routes = route_app
+    assert routes._scanned_product(value) == {}
+
+
+def test_scanned_product_reaches_tool_context(route_app, monkeypatch):
+    app, routes = route_app
+    captured = {}
+
+    def fake_run_turn(_graph, **kwargs):
+        captured["ctx"] = kwargs["ctx"]
+        yield "done", {}
+
+    monkeypatch.setattr(routes, "run_turn", fake_run_turn)
+    body = {"message": "hi", "scanned_product": {"name": "Toner A", "ingredients": ["Aqua"], "in_shop": True, "matched_product_id": "12"}}
+    response = app.test_client().post("/api/agent/chat", headers=_headers(), json=body)
+    _ = response.data
+    assert captured["ctx"].scanned_product["name"] == "Toner A"
+    assert captured["ctx"].scanned_product["in_shop"] is True
+    assert captured["ctx"].scanned_product["matched_product_id"] == "12"
+
+    captured.clear()
+    response = app.test_client().post("/api/agent/chat", headers=_headers(), json={"message": "hi", "scanned_product": "junk"})
+    _ = response.data
+    assert captured["ctx"].scanned_product == {}
