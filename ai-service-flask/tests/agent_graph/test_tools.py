@@ -566,8 +566,77 @@ def test_product_cards_emitted_only_for_returned_products():
     ]}]})
     ctx = context(graph=_eucerin_graph(), text_search=text, events=events)
     tool_map(ctx)["search_products"].invoke({"query": "x", "limit": 2})
-    cards = events[0][1]["payload"]["_cards"]
+    cards = events[0][1]["payload"]["products"]
     assert [card["id"] for card in cards] == ["450", "1315"]
+
+
+def test_search_ui_payload_sends_full_cards_for_the_chat_buttons():
+    """Regression: chat cards had no cart/detail buttons because the UI products lacked detail_url and summary."""
+    events = []
+    graph = _eucerin_graph()
+    graph._facts["1000"]["summary"] = "Gel làm sạch dịu nhẹ"
+    text = FakeText({"sections": [{"key": "semantic", "items": [{"product_id": "1000", "score": 1.0}]}]})
+    tool_map(context(graph=graph, text_search=text, events=events))["search_products"].invoke({"query": "x", "limit": 1})
+    payload = [event[1]["payload"] for event in events if event[0] == "ui"][0]
+    assert "_cards" not in payload
+    card = payload["products"][0]
+    assert card["id"] == "1000" and card["price"] == 300
+    assert card["detail_url"] == "index.php?r=chitiet&id=1000"
+    assert card["summary"] == "Gel làm sạch dịu nhẹ"
+    assert "card" not in card
+
+
+class _SequenceText:
+    """Text search that returns the next scripted hit list on each call."""
+
+    def __init__(self, *id_lists):
+        self.results = [
+            {"sections": [{"key": "semantic", "items": [
+                {"product_id": pid, "score": 1 - i / 10} for i, pid in enumerate(ids)
+            ]}]}
+            for ids in id_lists
+        ]
+
+    def __call__(self, _request):
+        return self.results.pop(0)
+
+
+def _ui_ids(events):
+    return [[card["id"] for card in payload["payload"]["products"]] for name, payload in events if name == "ui"]
+
+
+def test_second_search_in_a_turn_shows_only_new_products():
+    """Regression: "kem / gel dưỡng" ran two searches in one turn and the chat showed Klairs 50g/60g twice."""
+    events = []
+    ctx = context(graph=_eucerin_graph(), text_search=_SequenceText(["450", "1315", "5819"], ["450", "1000", "1315"]),
+                  events=events)
+    tools = tool_map(ctx)
+    tools["search_products"].invoke({"query": "kem dưỡng", "limit": 3})
+    result = tools["search_products"].invoke({"query": "gel dưỡng", "limit": 3})
+    assert _ui_ids(events) == [["450", "1315", "5819"], ["1000"]]
+    assert [(item["idx"], item["id"]) for item in ctx.state.last_shown_products] == [
+        (1, "450"), (2, "1315"), (3, "5819"), (4, "1000")]
+    # The agent still sees its full result for the second query.
+    assert '"450"' in result and '"1315"' in result
+
+
+def test_repeat_search_with_nothing_new_adds_no_cards():
+    events = []
+    ctx = context(graph=_eucerin_graph(), text_search=_SequenceText(["450", "1315"], ["1315", "450"]), events=events)
+    tools = tool_map(ctx)
+    tools["search_products"].invoke({"query": "kem", "limit": 2})
+    tools["search_products"].invoke({"query": "kem dưỡng", "limit": 2})
+    assert _ui_ids(events) == [["450", "1315"]]
+    assert [item["id"] for item in ctx.state.last_shown_products] == ["450", "1315"]
+
+
+def test_new_turn_search_replaces_products_shown_in_an_earlier_turn():
+    state = ConvState(last_shown_products=[{"idx": 1, "id": "old", "name": "Old"}])
+    events = []
+    ctx = context(graph=_eucerin_graph(), text_search=_SequenceText(["450"]), events=events, state=state)
+    tool_map(ctx)["search_products"].invoke({"query": "kem", "limit": 1})
+    assert _ui_ids(events) == [["450"]]
+    assert [(item["idx"], item["id"]) for item in state.last_shown_products] == [(1, "450")]
 
 
 _ADDRESS_SHAPES = [
@@ -835,7 +904,7 @@ def test_search_drops_products_above_price_max():
     assert [item["id"] for item in payload["products"]] == ["p2", "p1"]
     assert all(item["price"] <= 250 for item in payload["products"])
     shown = [event[1]["payload"] for event in events if event[0] == "ui"][0]
-    assert [card["id"] for card in shown["_cards"]] == ["p2", "p1"]
+    assert [card["id"] for card in shown["products"]] == ["p2", "p1"]
     assert [item["price"] for item in ctx.state.last_shown_products] == [200, 100]
 
 
