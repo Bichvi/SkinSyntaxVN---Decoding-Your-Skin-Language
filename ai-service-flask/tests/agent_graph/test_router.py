@@ -199,18 +199,19 @@ def test_state_roundtrip_and_redis_down():
     redis = FakeRedis()
     store = StateStore(redis)
     state = ConvState(
-        last_shown_products=[{"id": "p1", "name": "One", "idx": 1, "price": 999}],
+        last_shown_products=[{"id": "p1", "name": "One", "idx": 1, "price": 999, "brand": "B", "address": "x"}],
         open_draft_id="DR1",
         pending="draft_open:DR1",
         intent_queue=["BUY"],
     )
     store.save("sid", state)
     raw = json.loads(redis.values["skinsyntax:agent:state:sid"])
-    assert raw["last_shown_products"] == [{"id": "p1", "name": "One", "idx": 1}]
+    # The catalog price is kept so the next turn quotes it; nothing else about the product is stored.
+    assert raw["last_shown_products"] == [{"id": "p1", "name": "One", "idx": 1, "price": 999}]
     assert "address" not in json.dumps(raw)
     assert redis.expiry == 7200
     loaded = store.load("sid")
-    assert loaded.last_shown_products == [{"id": "p1", "name": "One", "idx": 1}]
+    assert loaded.last_shown_products == [{"id": "p1", "name": "One", "idx": 1, "price": 999}]
     assert loaded.open_draft_id == state.open_draft_id
     assert loaded.pending == state.pending
     assert loaded.intent_queue == state.intent_queue
