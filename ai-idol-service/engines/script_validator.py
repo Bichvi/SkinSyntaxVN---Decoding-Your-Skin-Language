@@ -222,7 +222,7 @@ class ValidationIssue:
 
 
 _PERSONAL_EXPERIENCE = re.compile(
-    r"\bmình\s+(?:đã\s+)?(?:dùng|xài|thử)\b|\bda\s+mình\b|\bmình\s+thấy\b[^.!?\n]*\bsau\s+khi\s+dùng\b",
+    r"\bmình\s+(?:đã\s+)?(?:dùng|xài|thử)\b|\bda\s+(?:của\s+)?mình\s+(?:đã|giờ|bây\s+giờ|từ\s+khi|sau\s+khi)\b|\bmình\s+thấy\b[^.!?\n]*\bsau\s+khi\s+dùng\b",
     re.IGNORECASE,
 )
 
@@ -403,7 +403,7 @@ Bạn là một AI Idol/KOL bán hàng chuyên nghiệp. Bản thảo kịch b�
 
 QUY TẮC PHÁT ÂM TTS (RẤT QUAN TRỌNG):
 - Không dùng viết tắt, ký hiệu, hoặc số (ví dụ: viết "phần trăm" thay vì "%", "mililít" thay vì "ml", "năm trăm nghìn đồng" thay vì "500.000đ").
-- Hoạt chất tiếng Anh viết phiên âm dễ đọc tiếng Việt hoặc viết tách rời chữ cái bằng gạch nối (ví dụ: viết "A H A" hoặc "A-H-A" thay vì "AHA", "B H A" thay vì "BHA", "Re-ti-nol" thay vì "Retinol", "Ni-a-ci-na-mi" thay vì "Niacinamide").
+- Tên hoạt chất viết bình thường như trong dữ liệu (ví dụ: Niacinamide, Retinol, AHA, BHA), không viết tách từng chữ cái hay gạch nối.
 - Không viết các ký hiệu toán học như "+", "-", "x", viết bằng chữ: "cộng", "trừ", "nhân".
 
 """ + _revision_structure(purpose) + "\n"

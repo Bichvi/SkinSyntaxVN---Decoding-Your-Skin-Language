@@ -307,13 +307,13 @@ def generate_content_and_script(snapshot: dict, knowledge: str, content_mode: st
 
 
 def _live_only_prompts(snapshot: dict, knowledge: str, content_mode: str, config: dict) -> tuple[str, str]:
-    # Unchanged legacy livestream prompt (pinned by tests/test_script_purpose.py fingerprint).
+    # Legacy livestream prompt, pinned by the tests/test_script_purpose.py fingerprint; aligned with the validator's price/scarcity rules.
     system_prompt = """
 Bạn là một AI Idol/KOL bán hàng chuyên nghiệp, trẻ trung, ấm áp và cực kỳ thân thiện trong lĩnh vực chăm sóc da (skincare). Nhiệm vụ của bạn là viết một kịch bản bán hàng bằng tiếng Việt để đọc thu âm (Text-To-Speech).
 
 QUY TẮC PHÁT ÂM TTS (RẤT QUAN TRỌNG):
 - Không dùng viết tắt, ký hiệu, hoặc số (ví dụ: viết "phần trăm" thay vì "%", "mililít" thay vì "ml", "năm trăm nghìn đồng" thay vì "500.000đ").
-- Hoạt chất tiếng Anh viết phiên âm dễ đọc tiếng Việt hoặc viết tách rời chữ cái bằng gạch nối (ví dụ: viết "A H A" hoặc "A-H-A" thay vì "AHA", "B H A" thay vì "BHA", "Re-ti-nol" thay vì "Retinol", "Ni-a-ci-na-mi" thay vì "Niacinamide").
+- Tên hoạt chất viết bình thường như trong dữ liệu (ví dụ: Niacinamide, Retinol, AHA, BHA), không viết tách từng chữ cái hay gạch nối.
 - Không viết các ký hiệu toán học như "+", "-", "x", viết bằng chữ: "cộng", "trừ", "nhân".
 
 CẤU TRÚC KỊCH BẢN BẮT BUỘC (Gồm 8 phần liên tục, không ghi tiêu đề phần vào văn bản đọc):
@@ -322,9 +322,11 @@ CẤU TRÚC KỊCH BẢN BẮT BUỘC (Gồm 8 phần liên tục, không ghi ti
 3. Product Introduction: Giới thiệu sản phẩm, thương hiệu, xuất xứ.
 4. Key Benefits: Các công dụng tuyệt vời dựa TRỰC TIẾP trên dữ liệu sản phẩm.
 5. How to Use: Hướng dẫn thoa/dùng chuẩn khoa học.
-6. Price & Promotion: Công bố giá bán và ưu đãi từ dữ liệu cung cấp.
-7. CTA: Kêu gọi chốt đơn mua hàng nhanh chóng (ví dụ: nhấn vào giỏ hàng bên dưới).
+6. Price: Công bố giá bán từ dữ liệu cung cấp.
+7. CTA: Kêu gọi đặt hàng (ví dụ: nhấn vào giỏ hàng bên dưới). Không nói "chốt đơn", "hôm nay", "ngay bây giờ" trừ khi dữ liệu có Flash sale kèm hạn kết thúc.
 8. Closing: Chào tạm biệt hẹn gặp lại.
+
+QUY TẮC GIÁ: """ + _PRICE_RULES + """
 
 TUYỆT ĐỐI CẤM:
 - KHÔNG tự bịa ra công dụng chữa trị dứt điểm (ví dụ: "trị tận gốc", "hết mụn 100%", "trắng sáng sau 1 đêm").
@@ -342,8 +344,7 @@ THÔNG TIN SẢN PHẨM:
 - Thương hiệu: {sanitize_external_retailer_mentions(snapshot.get('brand'))}
 - Loại sản phẩm: {sanitize_external_retailer_mentions(snapshot.get('category'))}
 - Xuất xứ: {sanitize_external_retailer_mentions(snapshot.get('origin'))}
-- Giá bán: {snapshot.get('price')} đồng
-- Giá thị trường: {snapshot.get('market_price', snapshot.get('price'))} đồng
+{price_lines(snapshot.get('pricing'))}
 - Thành phần: {_safe_source(snapshot.get('ingredients'), 1200)}
 - Mô tả công dụng: {_safe_source(snapshot.get('description'), 1600)}
 - Cách dùng: {_safe_source(snapshot.get('usage'), 800)}

@@ -21,8 +21,8 @@ SNAP = {
     "market_price": 350000, "ingredients": "Niacinamide 10%, Zinc 1%", "description": "Giảm dầu",
     "usage": "Sáng tối", "skin_type": "Da dầu",
 }
-# sha256(system + "\0" + user) of the livestream prompt before purposes existed.
-LIVE_ONLY_FINGERPRINT = "4565298572e16efe4b7021a6d3cf95f92e1c67fcddd8eedef5c8c12d1b539993"
+# sha256(system + "\0" + user) of the livestream prompt, as aligned with the validator's price/scarcity rules.
+LIVE_ONLY_FINGERPRINT = "31476b96bacf7147ce865d8cc684bec32df1ce841d7e8495194e3741a97a7bce"
 PRICING = {"regular_price": 299000, "market_price": 350000,
            "flash": {"flash_price": 249000, "discount_percent": 17, "end_ts": 1792256340}}
 PRODUCT_VIDEO_HEADERS = ["[Hook]", "[Problem]", "[Product Intro]", "[Specs]", "[Ingredients]", "[How to Use]", "[Wrap-up]"]
@@ -36,6 +36,15 @@ class PromptTests(unittest.TestCase):
     def test_live_only_prompt_is_unchanged(self):
         system, user = self.prompts("live_only")
         self.assertEqual(hashlib.sha256((system + "\x00" + user).encode()).hexdigest(), LIVE_ONLY_FINGERPRINT)
+
+    def test_live_only_prompt_matches_validator_rules(self):
+        system, user = self.prompts("live_only")
+        self.assertNotIn("chốt đơn mua hàng", system)
+        self.assertNotIn("ưu đãi từ dữ liệu", system)
+        self.assertNotIn("A-H-A", system)
+        self.assertIn(script_validator._PRICE_RULES, system)
+        self.assertIn("Giá: không có dữ liệu", user)
+        self.assertNotIn("289000", user)
 
     def test_default_generation_uses_the_live_only_prompt(self):
         seen = {}
