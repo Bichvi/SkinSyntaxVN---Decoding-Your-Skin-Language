@@ -132,7 +132,10 @@ def broadcast_campaign(campaign_id: str) -> bool:
 
     media_path = str(campaign["master_video_path"])
     platforms = campaign.get("platforms") or ["internal"]
-    duration_seconds = max(60, min(int(campaign.get("duration_minutes", 60)) * 60, 43200))
+    if campaign.get("show_format") == "clip_library_v1" and campaign.get("duration_seconds"):
+        duration_seconds = max(60, min(round(campaign["duration_seconds"]), 43200))
+    else:
+        duration_seconds = max(60, min(int(campaign.get("duration_minutes", 60)) * 60, 43200))
     started = utcnow()
     db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id)}, {"$set": {
         "status": "LIVE", "started_at": started, "updated_at": started,
