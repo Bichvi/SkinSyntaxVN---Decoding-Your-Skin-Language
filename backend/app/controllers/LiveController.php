@@ -215,7 +215,7 @@ class LiveController {
             $cursor = $mongoDb->ai_idol_campaigns->find([
                 'platforms' => 'internal',
                 'status' => ['$in' => ['COMPLETED', 'PARTIAL_FAILURE']],
-                'replay.video_url' => ['$nin' => [null, '']],
+                'replay.video_url' => ['$exists' => true, '$nin' => [null, '']],
             ], [
                 'sort' => ['completed_at' => -1],
                 'limit' => $limit,
