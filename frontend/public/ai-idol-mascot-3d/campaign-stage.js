@@ -15,7 +15,7 @@ export function campaignPose(time, manifest, envelope) {
   const active = cue?.ingredient ?? -1;
   const look = active >= 0 ? span(time, cue.start - .25, Math.min(cue.end + .3, cue.start + 4.5), .65) : 0;
   // Greet through the music lead-in and lower the arm just after the first words.
-  const greet = span(time, .15, Math.min(Math.max(3.3, speech.start + .8), manifest.duration), .7);
+  const greet = manifest.greet === false ? 0 : span(time, .15, Math.min(Math.max(3.3, speech.start + .8), manifest.duration), .7);
   // After the last word, wave goodbye until the clip ends (span stays up past the end).
   const farewell = speech.end < manifest.duration - .5 ? span(time, speech.end + .15, manifest.duration + 1, .6) : 0;
   const wave = Math.max(greet, farewell);

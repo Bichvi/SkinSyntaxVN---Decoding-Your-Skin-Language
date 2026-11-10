@@ -592,5 +592,77 @@ class RetryHeartbeatTests(unittest.TestCase):
                                 ("sleep", 90), ("stage", "RENDERING"), "render"])
 
 
+# ---------------------------------------------------------------- Re-review R1: closing lines and "làn da"
+
+class ClosingLineTests(unittest.TestCase):
+    def blacklist(self, text, snapshot=None, kind="closing"):
+        return [o for c, o in live_codes(text, snapshot or combined(), kind) if c == "BLACKLIST_CLAIM"]
+
+    def test_natural_closing_lines_pass(self):
+        for text in ("Hôm nay mình kết thúc live tại đây, cảm ơn cả nhà đã tham gia nha!",
+                     "Hết live rồi, chúc cả gia đình mình ngủ ngon",
+                     "Tắt live rồi nhưng giá trị của routine thì ở lại với cả nhà."):
+            self.assertEqual(self.blacklist(text), [], text)
+
+    def test_end_of_live_price_still_caught(self):
+        self.assertTrue(self.blacklist("Tắt live là giá nhảy về liền"))
+        # With a flash sale "voucher" alone is allowed, so only the live pattern can catch this one.
+        found = self.blacklist(PRODUCT_BASE + "Hết live là hết voucher, bấm giỏ hàng chọn món số 2!",
+                               FLASH_SNAP, "product")
+        self.assertTrue(any("live" in o for o in found), found)
+
+    def test_lan_da_is_not_lan(self):
+        self.assertEqual(self.blacklist("Dùng vài ngày làn da sẽ quen dần.", kind="tip"), [])
+        self.assertTrue(self.blacklist("Bôi vài ngày là lặn mụn.", kind="tip"))
+
+
+# ---------------------------------------------------------------- Re-review R2: no greeting arm after the opening
+
+class GreetFlagTests(unittest.TestCase):
+    TIMINGS = [{"start": 0.0, "end": 5.0, "text": "Chào cả nhà.", "label": "opening"}]
+
+    def manifest(self, clip_kind):
+        extra = {"clip_kind": clip_kind} if clip_kind else {}
+        return syna_engine.build_manifest(dict(SNAPS["2"]), "Chào cả nhà.", 6.0, self.TIMINGS, {"format": "16:9"},
+                                          purpose="live_and_product", **extra)
+
+    def test_greet_flag_by_kind(self):
+        for kind in ("interlude", "product", "closing", "faq", "tip", "transition", "routine_recap"):
+            self.assertIs(self.manifest(kind)["greet"], False, kind)
+        self.assertNotIn("greet", self.manifest("opening"))
+        self.assertNotIn("greet", self.manifest(None))
+
+    def test_flag_changes_the_render_cache_signature(self):
+        checked = []
+        real_is_file = syna_engine.Path.is_file
+
+        def record(path):
+            checked.append(str(path))
+            raise StopRender()
+
+        padding = LibraryPaddingTests("test_lead_in_seconds_by_kind")
+        padding.setUp()
+        self.addCleanup(padding.doCleanups)
+        real_build = syna_engine.build_manifest
+
+        def without_flag(*args, **kwargs):
+            manifest = real_build(*args, **kwargs)
+            manifest.pop("greet", None)
+            return manifest
+
+        for builder in (real_build, without_flag):
+            with patch.object(syna_engine, "build_manifest", side_effect=builder), \
+                    patch.object(syna_engine.Path, "is_file", autospec=True, side_effect=record), \
+                    patch.object(syna_engine, "probe_duration", return_value=1.0), \
+                    patch.object(syna_engine, "OUTPUT_DIR", padding.folder):
+                with self.assertRaises(StopRender):
+                    syna_engine.render_syna_video(PAD_JOB, padding.audio, "Chào cả nhà.", {"name": "Serum"},
+                                                  {"format": "16:9"}, purpose="live_and_product",
+                                                  clip_kind="interlude")
+        self.assertIs(syna_engine.Path.is_file, real_is_file)
+        self.assertEqual(len(checked), 2)
+        self.assertNotEqual(checked[0], checked[1])
+
+
 if __name__ == "__main__":
     unittest.main()

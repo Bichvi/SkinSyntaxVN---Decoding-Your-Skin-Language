@@ -94,7 +94,7 @@ Một hằng `PERSONA_RULES_VI` được chèn vào system prompt của mọi l�
   - Cấm từ máy móc: "hệ thống", "thuật toán", "dữ liệu", "quét", "AI phân tích".
 - **Nhịp clip sản phẩm** (mục 5.3): bắt bệnh → ví von vì sao → giải pháp bằng thành phần thật → cảm giác khi dùng → cách dùng → giá → giục chốt đơn.
 - **Trung thực** (D7):
-  - Giá và ưu đãi chỉ lấy từ các dòng giá trong dữ liệu (`price_lines`). Không có dòng flash sale thì không nói giảm, sale, quà, suất, voucher hay "hết live là hết giá".
+  - Giá và ưu đãi chỉ lấy từ các dòng giá trong dữ liệu (`price_lines`). Không có dòng flash sale thì không nói giảm, sale, voucher hay "trợ giá". Không bao giờ bịa quà, suất hay nói "hết live là hết giá", kể cả khi có flash sale.
   - Cảm giác dùng (chất, độ thấm, mùi) chỉ được tả khi dữ liệu mô tả hoặc cách dùng có nhắc. Nếu không, nói về cách dùng thay vì tự tả.
   - Không hứa hẹn kết quả sau N ngày, không "chuẩn y khoa", "triệt để", "trị dứt".
 - **Tương tác:**
@@ -146,7 +146,7 @@ Cùng file có `SHOP_FACTS_VI`, danh sách điều có thật về SkinSyntax m�
   - Ưu tiên câu hỏi thật trong `hoi_dap_san_pham` của các SP trong buổi đã có `tra_loi`. Syna đọc câu hỏi theo kiểu "có bạn hỏi…" và diễn đạt lại câu trả lời, không thêm ý.
   - Thiếu thì sinh từ dữ liệu SP và `conflicts`. Mỗi clip gắn `product_id`.
 - `tip` ×2 (60–90 giây): kiến thức da theo chủ đề, giọng Syna. **Không bán hàng, không tên SP hay thương hiệu, không giá.**
-- `closing` ×1 (20–30 giây): cảm ơn, nhắc kiểm tra giỏ hàng đã bấm đặt chưa, tạm biệt, hẹn phiên sau. Không nêu số giá. Không "hết live là hết giá" trừ khi có flash sale với hạn kết thúc.
+- `closing` ×1 (20–30 giây): cảm ơn, nhắc kiểm tra giỏ hàng đã bấm đặt chưa, tạm biệt, hẹn phiên sau. Không nêu số giá. Không nói "hết live là hết giá", kể cả khi có flash sale.
 
 **Luật chung:** mỗi clip phải **tự hiểu được khi nghe riêng** (không "như Syna vừa nói"). Chỉ `closing` được tạm biệt. Chỉ `opening`/`transition` được chào.
 
