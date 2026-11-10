@@ -338,6 +338,8 @@ def prepare_campaign(campaign_id: str) -> list[str]:
         if segment.get("status") == "SKIPPED":
             skipped += 1  # dropped on purpose (rejected script): never generate it again
             continue
+        if library_ctx is not None and segment.get("status") == "CANCELLED":
+            continue  # stopped on purpose (e.g. an old recap): never queue its job
         if library_ctx is not None and segment.get("phase") == PHASE_B and not segment.get("job_id"):
             continue  # a recap that never got a job is redone by start_phase_b, not here
         if segment.get("job_id"):
@@ -414,6 +416,7 @@ def _skip_decision(job: dict) -> dict:
 # Segment statuses after which a clip is settled (a FAILED one still waits for staff).
 FINAL_SEGMENT_STATUSES = ("READY", "SKIPPED", "CANCELLED", "FAILED")
 RECAP_KIND = "routine_recap"
+RECAP_CLAIM_MINUTES = 15  # a recap writer older than this is presumed dead
 PHASE_B = "B"
 RECAP_WRITE_ERROR = "Không viết được clip tóm tắt routine"
 # Vietnamese names of the clip kinds a ready library needs.
@@ -460,6 +463,16 @@ def _enqueue_recap(campaign_id: str) -> None:
         logger.error("[CAMPAIGN] could not queue the routine recap (%s): %s", campaign_id, exc)
 
 
+def _phase_b_blocked(campaign: dict, segments: list[dict]) -> bool:
+    """Manual mode waits for staff to fix a FAILED product before the recap is written."""
+    autopilot = (campaign.get("configuration") or {}).get("agent_mode") == "autopilot"
+    return not autopilot and any(s.get("kind") == "product" and s.get("status") == "FAILED" for s in segments)
+
+
+def _release_recap_claim(db, campaign: dict) -> None:
+    db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {"$set": {"recap_claim": None}})
+
+
 def start_phase_b(campaign_id: str) -> str | None:
     """Write the routine recap for the products that survived phase A; returns the new job id."""
     db = get_db()
@@ -471,15 +484,45 @@ def start_phase_b(campaign_id: str) -> str | None:
     plan = campaign.get("show_plan") or {}
     segments = list(db.ai_idol_segments.find({"campaign_id": campaign_id}).sort("position", 1))
     remaining = remaining_products(plan, segments)
-    if not remaining or _recap_is_current(segments, remaining):
+    if not remaining or _recap_is_current(segments, remaining) or _phase_b_blocked(campaign, segments):
         return None
     ids = _recap_ids(remaining)
-    # One writer at a time per product set, even if several job callbacks queue this at once.
+    # A lease: one writer per product set, but a crashed worker's claim expires and can be taken over.
     key = ",".join(ids) + "#" + str(sum(1 for s in segments if s.get("phase") == PHASE_B))
+    now = utcnow()
     claimed = db.ai_idol_campaigns.find_one_and_update(
-        {"_id": campaign["_id"], "recap_claim": {"$ne": key}}, {"$set": {"recap_claim": key}})
+        {"_id": campaign["_id"], "$or": [
+            {"recap_claim.key": {"$ne": key}},
+            {"recap_claim.claimed_at": {"$lt": now - dt.timedelta(minutes=RECAP_CLAIM_MINUTES)}},
+        ]},
+        {"$set": {"recap_claim": {"key": key, "claimed_at": now}}})
     if not claimed:
         return None
+    try:
+        return _write_recap(db, campaign, plan, remaining, ids, segments)
+    finally:
+        _release_recap_claim(db, campaign)
+
+
+def _fail_recap(db, campaign: dict, ids: list[str], position: int, message: str) -> None:
+    now = utcnow()
+    db.ai_idol_segments.insert_one({
+        "campaign_id": str(campaign["_id"]), "kind": RECAP_KIND, "angle": None, "interlude_type": None,
+        "product_id": None, "variant": 0, "script_text": "", "phase": PHASE_B, "position": position,
+        "recap_for": ids, "status": "FAILED", "job_id": None, "error_message": message[:2000],
+        "created_at": now, "updated_at": now})
+    _park_campaign(db, campaign, message)
+
+
+def _park_campaign(db, campaign: dict, message: str) -> None:
+    db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {"$inc": {"progress.total": 1}})
+    db.ai_idol_campaigns.update_one(
+        {"_id": campaign["_id"], "status": {"$in": list(GENERATION_PHASE_STATUSES)}},
+        {"$set": {"status": "NEEDS_ATTENTION", "error_message": message[:2000], "updated_at": utcnow()}})
+
+
+def _write_recap(db, campaign: dict, plan: dict, remaining: list[dict], ids: list[str], segments: list[dict]):
+    campaign_id = str(campaign["_id"])
     dropped = [str(p["product_id"]) for p in plan.get("products", []) if str(p["product_id"]) not in ids]
     if dropped:
         logger.info("[CAMPAIGN] recap for %s leaves out dropped products %s", campaign_id, dropped)
@@ -493,34 +536,36 @@ def start_phase_b(campaign_id: str) -> str | None:
     except Exception as exc:
         message = f"{RECAP_WRITE_ERROR}: {exc}"
         logger.error("[CAMPAIGN] %s (%s)", message, campaign_id)
-        now = utcnow()
-        db.ai_idol_segments.insert_one({
-            "campaign_id": campaign_id, "kind": RECAP_KIND, "angle": None, "interlude_type": None,
-            "product_id": None, "variant": 0, "script_text": "", "phase": PHASE_B, "position": position,
-            "recap_for": ids, "status": "FAILED", "job_id": None, "error_message": message[:2000],
-            "created_at": now, "updated_at": now})
-        db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {
-            "$set": {"recap_claim": None}, "$inc": {"progress.total": 1}})
-        db.ai_idol_campaigns.update_one(
-            {"_id": campaign["_id"], "status": {"$in": list(GENERATION_PHASE_STATUSES)}},
-            {"$set": {"status": "NEEDS_ATTENTION", "error_message": message[:2000], "updated_at": now}})
+        _fail_recap(db, campaign, ids, position, message)
         return None
-    # The old recap (other product set) is replaced only once the new one is written.
-    db.ai_idol_segments.update_many(
-        {"campaign_id": campaign_id, "phase": PHASE_B, "status": {"$ne": "CANCELLED"}},
-        {"$set": {"status": "CANCELLED", "updated_at": utcnow()}})
+    # The campaign may have been cancelled while the LLM was writing: drop the draft.
+    current = db.ai_idol_campaigns.find_one({"_id": campaign["_id"]}, {"status": 1}) or {}
+    if current.get("status") not in GENERATION_PHASE_STATUSES:
+        return None
     now = utcnow()
     segment_id = db.ai_idol_segments.insert_one({
         "campaign_id": campaign_id, "kind": RECAP_KIND, "angle": draft.angle, "interlude_type": draft.interlude_type,
         "product_id": None, "variant": draft.variant, "script_text": draft.script, "phase": PHASE_B,
         "position": position, "recap_for": ids, "status": "QUEUED", "job_id": None, "error_message": None,
         "created_at": now, "updated_at": now}).inserted_id
-    job_id = create_job(
-        None, campaign.get("content_mode", "Product Intro"), dict(campaign.get("configuration") or {}),
-        campaign_id=campaign_id, segment_id=str(segment_id), product_snapshot=snapshot,
-        purpose=purpose_of(campaign), clip_kind=RECAP_KIND, prewritten_script=draft.script)
-    db.ai_idol_segments.update_one({"_id": segment_id}, {"$set": {
-        "job_id": job_id, "status": "GENERATING", "updated_at": utcnow()}})
+    try:
+        job_id = create_job(
+            None, campaign.get("content_mode", "Product Intro"), dict(campaign.get("configuration") or {}),
+            campaign_id=campaign_id, segment_id=str(segment_id), product_snapshot=snapshot,
+            purpose=purpose_of(campaign), clip_kind=RECAP_KIND, prewritten_script=draft.script)
+        db.ai_idol_segments.update_one({"_id": segment_id}, {"$set": {
+            "job_id": job_id, "status": "GENERATING", "updated_at": utcnow()}})
+    except Exception as exc:
+        message = f"{RECAP_WRITE_ERROR}: {exc}"
+        logger.error("[CAMPAIGN] %s (%s)", message, campaign_id)
+        db.ai_idol_segments.update_one({"_id": segment_id}, {"$set": {
+            "status": "FAILED", "error_message": message[:2000], "updated_at": utcnow()}})
+        _park_campaign(db, campaign, message)
+        return None
+    # The old recap (other product set) is replaced only once the new job exists.
+    db.ai_idol_segments.update_many(
+        {"campaign_id": campaign_id, "phase": PHASE_B, "status": {"$ne": "CANCELLED"}, "_id": {"$ne": segment_id}},
+        {"$set": {"status": "CANCELLED", "updated_at": utcnow()}})
     db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {"$inc": {"progress.total": 1}})
     db.ai_idol_campaigns.update_one({"_id": campaign["_id"], "status": "NEEDS_ATTENTION"}, {"$set": {
         "status": "GENERATING", "error_message": None, "updated_at": utcnow()}})
@@ -534,11 +579,13 @@ def _library_update(db, campaign_id: str, plan: dict, generating: int, awaiting_
     remaining = remaining_products(plan, segments)
     products = [s for s in segments if s.get("kind") == "product"]
     products_final = all(s.get("status") in FINAL_SEGMENT_STATUSES for s in products)
-    recap_pending = bool(products) and products_final and bool(remaining) and not _recap_is_current(segments, remaining)
+    blocked = _phase_b_blocked(db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)}) or {}, segments)
+    recap_pending = (bool(products) and products_final and bool(remaining) and not blocked
+                     and not _recap_is_current(segments, remaining))
     if recap_pending:
         _enqueue_recap(campaign_id)
     open_states = {"$in": list(GENERATION_PHASE_STATUSES)}
-    if generating:
+    if generating or any(s.get("status") in ("QUEUED", "GENERATING") for s in segments):
         return None
     if failed:
         db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id), "status": open_states}, {"$set": {
@@ -895,6 +942,7 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
             enqueue_prepare(campaign_id)
             result["prepare_queued"] = True
         if needs_recap:
+            _release_recap_claim(db, campaign)
             enqueue_recap(campaign_id)
             result["recap_queued"] = True
         return result
@@ -902,6 +950,7 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
     if campaign.get("show_format") == SHOW_FORMAT_LIBRARY:
         remaining = remaining_products(campaign.get("show_plan") or {}, segments)
         if remaining and not _recap_is_current(segments, remaining):
+            _release_recap_claim(db, campaign)  # a stale or blocked claim must not stop the retry
             enqueue_recap(campaign_id)  # the product set changed since the recap was written
             result["recap_queued"] = True
             return result

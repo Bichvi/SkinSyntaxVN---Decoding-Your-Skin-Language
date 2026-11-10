@@ -1,4 +1,5 @@
 """Phase B of a clip library: routine recap, readiness, retry (FakeDb, writer and HTTP patched)."""
+import datetime as dt
 import os
 import sys
 import unittest
@@ -211,6 +212,121 @@ class RetryTests(Harness):
             self.assertIsNone(campaigns.start_phase_b(self.campaign_id))
         self.assertEqual(self.segments(kind="routine_recap")[0]["status"], "FAILED")
         self.assertEqual(self.campaign()["status"], "NEEDS_ATTENTION")
+
+
+class ClaimLeaseTests(Harness):
+    def setup_one_product(self):
+        self.full_frame()
+        self.add("product", product_id="1", angle="A")
+
+    def test_redelivery_after_crash_takes_over_stale_claim(self):
+        self.setup_one_product()
+        old = campaigns.utcnow() - dt.timedelta(minutes=20)
+        self.campaign()["recap_claim"] = {"key": "1#0", "claimed_at": old}
+        job_id, _ = self.start_phase_b()
+        self.assertTrue(job_id)
+        self.assertEqual(len(self.segments(kind="routine_recap")), 1)
+        self.assertIsNone(self.campaign()["recap_claim"])
+
+    def test_fresh_claim_blocks_duplicate_writer(self):
+        self.setup_one_product()
+        self.campaign()["recap_claim"] = {"key": "1#0", "claimed_at": campaigns.utcnow()}
+        job_id, _ = self.start_phase_b()
+        self.assertIsNone(job_id)
+        self.assertEqual(self.segments(kind="routine_recap"), [])
+
+    def test_create_job_failure_leaves_no_queued_segment_and_retry_recovers(self):
+        self.setup_one_product()
+        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=snapshot_for),                 patch.object(campaigns.show_writer, "write_routine_recap",
+                             return_value=ClipDraft(kind="routine_recap", script="x")),                 patch.object(campaigns, "create_job", side_effect=RuntimeError("db down")):
+            self.assertIsNone(campaigns.start_phase_b(self.campaign_id))
+        recaps = self.segments(kind="routine_recap")
+        self.assertEqual([s["status"] for s in recaps], ["FAILED"])
+        self.assertIn("db down", recaps[0]["error_message"])
+        self.assertIsNone(self.campaign()["recap_claim"])
+        self.assertEqual(self.campaign()["status"], "NEEDS_ATTENTION")
+        queued = []
+        result = campaigns.retry_campaign(self.campaign_id, enqueue_job=lambda j: None,
+                                          enqueue_prepare=lambda c: None, enqueue_assemble=lambda c: None,
+                                          enqueue_recap=queued.append)
+        self.assertTrue(result["recap_queued"])
+        job_id, _ = self.start_phase_b()
+        self.assertTrue(job_id)
+
+    def test_retry_breaks_a_blocked_claim(self):
+        self.setup_one_product()
+        self.campaign()["recap_claim"] = {"key": "1#0", "claimed_at": campaigns.utcnow()}
+        self.db.ai_idol_campaigns.update_one({"_id": state_machine.object_id(self.campaign_id)},
+                                             {"$set": {"status": "NEEDS_ATTENTION"}})
+        queued = []
+        campaigns.retry_campaign(self.campaign_id, enqueue_job=lambda j: None, enqueue_prepare=lambda c: None,
+                                 enqueue_assemble=lambda c: None, enqueue_recap=queued.append)
+        self.assertEqual(queued, [self.campaign_id])
+        self.assertTrue(self.start_phase_b()[0])
+
+    def test_old_recap_stays_active_until_new_job_exists(self):
+        self.setup_one_product()
+        self.add("product", product_id="2", angle="A")
+        self.add("routine_recap", phase="B", recap_for=["1"])
+        seen = {}
+        real = campaigns.create_job
+
+        def spy(*args, **kwargs):
+            seen["old"] = [s["status"] for s in self.segments(kind="routine_recap") if s.get("recap_for") == ["1"]]
+            return real(*args, **kwargs)
+
+        with patch.object(campaigns, "create_job", side_effect=spy):
+            job_id, _ = self.start_phase_b()
+        self.assertTrue(job_id)
+        self.assertEqual(seen["old"], ["READY"])
+        self.assertEqual([s["status"] for s in self.segments(kind="routine_recap")], ["CANCELLED", "GENERATING"])
+
+
+class MinorFixTests(Harness):
+    def test_library_update_waits_while_any_segment_in_flight(self):
+        self.add("product", product_id="1", angle="A")
+        self.add("opening", "GENERATING")
+        self.add("routine_recap", phase="B", recap_for=["1"])
+        plan = self.campaign()["show_plan"]
+        self.assertIsNone(campaigns._library_update(self.db, self.campaign_id, plan, 0, 0, 0))
+        self.assertEqual(self.campaign()["status"], "GENERATING")
+        self.assertNotIn("error_message", self.campaign())
+
+    def test_manual_mode_waits_while_a_product_is_failed(self):
+        self.full_frame()
+        self.add("product", product_id="1", angle="A")
+        self.add("product", "FAILED", product_id="2", angle="A")
+        self.db.ai_idol_campaigns.update_one({"_id": state_machine.object_id(self.campaign_id)},
+                                             {"$set": {"status": "NEEDS_ATTENTION"}})
+        job_id, _ = self.start_phase_b()
+        self.assertIsNone(job_id)
+        self.assertEqual(self.segments(kind="routine_recap"), [])
+        self.assertEqual(self.campaign()["status"], "NEEDS_ATTENTION")
+        self.campaign()["configuration"] = {"agent_mode": "autopilot"}
+        self.assertTrue(self.start_phase_b()[0])
+
+    def test_discards_draft_when_campaign_cancelled_during_llm_call(self):
+        self.full_frame()
+        self.add("product", product_id="1", angle="A")
+
+        def cancelling(plan, snapshots, **kwargs):
+            self.campaign()["status"] = "CANCELLED"
+            return ClipDraft(kind="routine_recap", script="x")
+
+        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=snapshot_for),                 patch.object(campaigns.show_writer, "write_routine_recap", side_effect=cancelling):
+            self.assertIsNone(campaigns.start_phase_b(self.campaign_id))
+        self.assertEqual(self.segments(kind="routine_recap"), [])
+        self.assertEqual(self.db.ai_idol_jobs.count_documents({"clip_kind": "routine_recap"}), 0)
+        self.assertIsNone(self.campaign()["recap_claim"])
+
+    def test_prepare_skips_cancelled_segments(self):
+        self.add("opening", "CANCELLED")
+        self.db.ai_idol_segments.docs[0]["job_id"] = None
+        self.db.ai_idol_segments.docs[0]["script_text"] = "x"
+        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=snapshot_for),                 patch.object(campaigns.show_plan, "build_show_plan", return_value=self.campaign()["show_plan"]):
+            self.assertEqual(campaigns.prepare_campaign(self.campaign_id), [])
+        self.assertEqual(self.db.ai_idol_segments.docs[0]["status"], "CANCELLED")
+        self.assertIsNone(self.db.ai_idol_segments.docs[0]["job_id"])
 
 
 class LegacyTests(Harness):
