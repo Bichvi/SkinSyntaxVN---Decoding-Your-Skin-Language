@@ -298,5 +298,99 @@ class FalsePositiveTests(unittest.TestCase):
             self.assertTrue(find_price_issues(text, P2), text)
 
 
+# ---------------------------------------------------------------- I3: a failed phase-A writer can be retried
+
+import datetime as dt  # noqa: E402
+import functools  # noqa: E402
+
+import core.campaigns as campaigns  # noqa: E402
+from tests.test_live_library_campaign import (  # noqa: E402
+    Harness, fake_frame_clips, fake_plan, fake_product_clips, snapshot_for)
+
+
+class WriterFailureRetryTests(Harness):
+    def prepare(self, cid, frame):
+        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=snapshot_for), \
+                patch.object(campaigns.show_plan, "build_show_plan", side_effect=fake_plan), \
+                patch.object(campaigns.show_writer, "write_product_clips", side_effect=fake_product_clips), \
+                patch.object(campaigns.show_writer, "load_answered_faqs", return_value=[]), \
+                patch.object(campaigns.show_writer, "write_frame_clips", side_effect=frame):
+            return campaigns.prepare_campaign(cid)
+
+    def test_writer_429_then_retry_queues_prepare(self):
+        cid, _ = self.create()
+
+        def boom(*args, **kwargs):
+            raise RuntimeError("Groq is unavailable: 429")
+
+        self.assertEqual(self.prepare(cid, boom), [])
+        self.assertEqual(self.campaign()["status"], "NEEDS_ATTENTION")
+        queued = {"prepare": [], "job": [], "assemble": [], "recap": []}
+        result = campaigns.retry_campaign(
+            cid, enqueue_job=queued["job"].append, enqueue_prepare=queued["prepare"].append,
+            enqueue_assemble=queued["assemble"].append, enqueue_recap=queued["recap"].append)
+        self.assertTrue(result["prepare_queued"])
+        self.assertEqual(queued, {"prepare": [cid], "job": [], "assemble": [], "recap": []})
+        self.assertEqual(self.campaign()["status"], "GENERATING")
+        self.assertIsNone(self.campaign()["error_message"])
+        # The queued prepare now writes the library for real.
+        self.assertTrue(self.prepare(cid, fake_frame_clips))
+        self.assertTrue(self.db.ai_idol_segments.docs)
+
+    def test_written_library_without_failures_still_conflicts(self):
+        cid, _ = self.create()
+        self.prepare(cid, fake_frame_clips)
+        self.db.ai_idol_campaigns.update_one({}, {"$set": {"status": "NEEDS_ATTENTION"}})
+        with self.assertRaises(campaigns.CampaignConflict):
+            campaigns.retry_campaign(cid, enqueue_job=print, enqueue_prepare=print,
+                                     enqueue_assemble=print, enqueue_recap=print)
+
+
+# ---------------------------------------------------------------- I4: agent lead time for live libraries
+
+from agents.service import _earliest_start  # noqa: E402
+from tests.test_autopilot_service import OTHER, VICHY, AutopilotHarness, row  # noqa: E402
+from tests.test_agent import process_agent_run  # noqa: E402,F401
+
+LATE_MORNING = dt.datetime(2026, 10, 15, 10, 30, tzinfo=dt.timezone(dt.timedelta(hours=7)))
+
+
+class LateMorningHarness(AutopilotHarness):
+    def execute(self, catalog, **kwargs):
+        import agents.service as service
+        pinned = functools.partial(service.process_agent_run, now=LATE_MORNING, snapshots=None)
+        with patch("tests.test_agent.process_agent_run", new=pinned):
+            return super(AutopilotHarness, self).execute(catalog, **kwargs)
+
+
+class LiveLeadTimeTests(unittest.TestCase):
+    def test_earliest_start_for_live_uses_library_estimate(self):
+        for n in (1, 3, 6):
+            expected = show_plan.estimate_preparation_minutes(n) + 10
+            got = _earliest_start(n, LATE_MORNING, purpose="live_and_product") - LATE_MORNING
+            self.assertEqual(got, dt.timedelta(minutes=expected), n)
+        self.assertEqual(_earliest_start(3, LATE_MORNING, purpose="live_only") - LATE_MORNING,
+                         dt.timedelta(minutes=108))
+
+    def test_legacy_earliest_start_unchanged(self):
+        self.assertEqual(_earliest_start(1, LATE_MORNING) - LATE_MORNING, dt.timedelta(minutes=60))
+
+    def test_autopilot_three_products_schedule_passes_real_lead_check(self):
+        catalog = [VICHY, OTHER, row(935, "Kem Dưỡng Cerave", stock=4)]
+        harness = LateMorningHarness("Livestream giới thiệu sản phẩm mã 995, mã 934 và mã 935")
+        run = harness.execute(catalog)
+        self.assertEqual(run["status"], "CAMPAIGN_CREATED")
+        payload = harness.payload
+        self.assertEqual(len(payload["product_ids"]), 3)
+        scheduled = dt.datetime.fromisoformat(payload["scheduled_at"])
+        self.assertGreaterEqual(scheduled - LATE_MORNING, dt.timedelta(minutes=108))
+        # The real create_campaign lead-time check, at the same moment, accepts it.
+        db = FakeDb()
+        with patch.object(campaigns, "get_db", return_value=db), \
+                patch.object(campaigns, "utcnow", return_value=LATE_MORNING.astimezone(dt.timezone.utc)):
+            cid, created = campaigns.create_campaign(payload)
+        self.assertTrue(created)
+
+
 if __name__ == "__main__":
     unittest.main()

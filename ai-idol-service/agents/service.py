@@ -125,8 +125,12 @@ def _unresolved_warning(product_id: str, reason: str) -> str:
     return f"Không tìm thấy mã {product_id} trong catalog đang bán (đã đối chiếu mã sản phẩm, id và _id)."
 
 
-def _earliest_start(product_count: int, now: dt.datetime) -> dt.datetime:
-    """First moment a livestream of ``product_count`` products can start: preparation time plus a 15 minute margin."""
+def _earliest_start(product_count: int, now: dt.datetime, purpose: str | None = None) -> dt.datetime:
+    """First moment a livestream of ``product_count`` products can start: preparation time plus a 15 minute margin.
+
+    Live purposes are built as clip libraries: their own estimate plus a 10 minute margin."""
+    if has_broadcast(purpose):
+        return now + dt.timedelta(minutes=estimate_preparation_minutes(product_count) + 10)
     required_minutes = max(
         60,
         int(math.ceil(max(MIN_LEAD_MINUTES, product_count * ESTIMATED_MINUTES_PER_PRODUCT) + 15)),
@@ -134,9 +138,10 @@ def _earliest_start(product_count: int, now: dt.datetime) -> dt.datetime:
     return now + dt.timedelta(minutes=required_minutes)
 
 
-def _safe_schedule(value: str | None, product_count: int, *, now: dt.datetime | None = None) -> dt.datetime:
+def _safe_schedule(value: str | None, product_count: int, *, now: dt.datetime | None = None,
+                   purpose: str | None = None) -> dt.datetime:
     local_now = now or dt.datetime.now(ZoneInfo(TIMEZONE))
-    earliest = _earliest_start(product_count, local_now)
+    earliest = _earliest_start(product_count, local_now, purpose)
     if value:
         try:
             parsed = parse_schedule(value).astimezone(ZoneInfo(TIMEZONE))
@@ -570,6 +575,7 @@ def _schedule_on_day(
 
 def _autopilot_schedule(
     value: str | None, product_count: int, now: dt.datetime, unreadable: bool, day: dt.date | None = None,
+    purpose: str | None = None,
 ) -> tuple[dt.datetime, dict[str, Any]]:
     """The broadcast time: the requested one if it is still reachable, else the nearest golden slot / earliest start.
 
@@ -582,7 +588,7 @@ def _autopilot_schedule(
             requested = parse_schedule(value).astimezone(tz)
         except (TypeError, ValueError):
             unreadable = True
-    earliest = _earliest_start(product_count, now)
+    earliest = _earliest_start(product_count, now, purpose)
     if requested is None and day is not None:
         return _schedule_on_day(day, earliest, parse_slots(AUTOPILOT_SLOTS), tz, unreadable)
     return resolve_schedule(requested, earliest, parse_slots(AUTOPILOT_SLOTS), tz, unreadable=unreadable)
@@ -985,10 +991,10 @@ def process_agent_run(
             return get_agent_run(run_id) or {}
         if autopilot and live:
             scheduled_at, schedule_decision = _autopilot_schedule(
-                brief.scheduled_at, len(selected), schedule_now, unreadable_clock, requested_day)
+                brief.scheduled_at, len(selected), schedule_now, unreadable_clock, requested_day, purpose)
             decisions.append(schedule_decision)
         else:
-            scheduled_at = _safe_schedule(brief.scheduled_at, len(selected)) if live else None
+            scheduled_at = _safe_schedule(brief.scheduled_at, len(selected), purpose=purpose) if live else None
         # An explicit appointment is not permission to silently move it.
         if not autopilot and live and brief.scheduled_at and parse_schedule(brief.scheduled_at).astimezone(ZoneInfo(TIMEZONE)) != scheduled_at:
             update_agent_run(run_id, {
