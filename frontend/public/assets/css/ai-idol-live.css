@@ -1,0 +1,20 @@
+.ai-idol-live { margin-bottom: 2rem; }
+.ai-idol-live__stage { position: relative; aspect-ratio: 16 / 9; width: 100%; background: #000; border-radius: 16px; overflow: hidden; }
+.ai-idol-live__video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
+.ai-idol-live__badge { position: absolute; top: 12px; left: 12px; background: #dc2626; color: #fff; font-weight: 700; font-size: .8rem; padding: 4px 12px; border-radius: 999px; letter-spacing: .04em; z-index: 2; }
+.ai-idol-live__name { position: absolute; top: 12px; left: 76px; max-width: calc(100% - 100px); padding: 4px 12px; border-radius: 999px; background: rgba(15,23,42,.75); color: #fff; font-weight: 600; font-size: .85rem; z-index: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-idol-live__mute { position: absolute; right: 12px; bottom: 10px; z-index: 3; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: .85rem; background: rgba(255,255,255,.92); color: #162F18; cursor: pointer; }
+.ai-idol-live__overlay { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.6); color: #fff; font-weight: 700; font-size: 1.1rem; border: 0; width: 100%; cursor: pointer; }
+.ai-idol-live__overlay[hidden] { display: none; }
+.ai-idol-live__products { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+.ai-idol-live__card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ai-idol-live__img { display: block; aspect-ratio: 1 / 1; border-radius: 8px; overflow: hidden; background: #f3f4f6; }
+.ai-idol-live__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ai-idol-live__pname { color: #0F172A; font-size: .85rem; line-height: 1.35; font-weight: 600; text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.4em; }
+.ai-idol-live__price { color: #215427; font-weight: 700; }
+.ai-idol-live__add { margin-top: auto; border: 0; border-radius: 999px; padding: 6px 10px; background: #dc2626; color: #fff; font-weight: 700; font-size: .82rem; cursor: pointer; }
+.ai-idol-live__add:disabled { opacity: .7; cursor: default; }
+@media (max-width: 575.98px) {
+  .ai-idol-live__name { font-size: .78rem; max-width: calc(100% - 90px); }
+  .ai-idol-live__products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
