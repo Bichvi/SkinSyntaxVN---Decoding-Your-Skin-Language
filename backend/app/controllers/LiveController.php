@@ -164,12 +164,10 @@ class LiveController {
         $aiIdolProducts = [];
         if ($aiIdolLive && !empty($aiIdolLive['product_ids'])) {
             try {
-                $aiRows = $spModel->findManyByIds($aiIdolLive['product_ids']);
-                foreach ($aiIdolLive['product_ids'] as $aiPid) {
-                    if (isset($aiRows[$aiPid])) {
-                        $aiIdolProducts[] = $aiRows[$aiPid];
-                    }
-                }
+                $aiNumbers = (array)($aiIdolLive['numbers'] ?? []);
+                $aiWanted = $aiNumbers ? array_map('strval', array_keys($aiNumbers)) : $aiIdolLive['product_ids'];
+                $aiRows = $spModel->findManyByIds($aiWanted);
+                $aiIdolProducts = self::orderAiIdolProducts($aiIdolLive['product_ids'], $aiNumbers, $aiRows);
             } catch (Throwable $e) {
                 $aiIdolProducts = [];
             }
@@ -219,10 +217,77 @@ class LiveController {
                 'ends_at_ts' => $toTs($doc['ends_at'] ?? null),
                 'duration_seconds' => (float)($doc['duration_seconds'] ?? 0),
                 'product_ids' => $pids,
+                'numbers' => $this->aiIdolShowNumbers($doc),
             ];
         } catch (Throwable $e) {
             return null;
         }
+    }
+
+    /**
+     * Số thứ tự món theo show_plan, chỉ cho món đã lên sóng (có trong program, kind=product).
+     * Chiến dịch cũ (không phải clip_library_v1) hoặc thiếu program/show_plan -> mảng rỗng.
+     */
+    private function aiIdolShowNumbers($doc): array {
+        try {
+            if ((string)($doc['show_format'] ?? '') !== 'clip_library_v1') {
+                return [];
+            }
+            $toArr = static function ($v): array {
+                if (is_array($v)) {
+                    return $v;
+                }
+                return $v instanceof Traversable ? iterator_to_array($v) : [];
+            };
+            $program = $toArr($doc['program'] ?? null);
+            $plan = $toArr($doc['show_plan'] ?? null);
+            $planProducts = $toArr($plan['products'] ?? null);
+            if (!$program || !$planProducts) {
+                return [];
+            }
+            $aired = [];
+            foreach ($program as $item) {
+                $item = $toArr($item);
+                if ((string)($item['kind'] ?? '') === 'product') {
+                    $pid = trim((string)($item['product_id'] ?? ''));
+                    if ($pid !== '') {
+                        $aired[$pid] = true;
+                    }
+                }
+            }
+            $numbers = [];
+            foreach ($planProducts as $entry) {
+                $entry = $toArr($entry);
+                $pid = trim((string)($entry['product_id'] ?? ''));
+                $num = (int)($entry['number'] ?? 0);
+                if ($pid !== '' && $num > 0 && isset($aired[$pid])) {
+                    $numbers[$pid] = $num;
+                }
+            }
+            asort($numbers);
+            return $numbers;
+        } catch (Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Lọc + sắp xếp dòng sản phẩm AI Idol. Có $numbers: chỉ món có số, theo số tăng dần.
+     * Không có: giữ thứ tự $productIds như cũ.
+     */
+    private static function orderAiIdolProducts(array $productIds, array $numbers, array $rows): array {
+        $order = $productIds;
+        if ($numbers) {
+            asort($numbers);
+            $order = array_map('strval', array_keys($numbers));
+        }
+        $out = [];
+        foreach ($order as $pid) {
+            if (isset($rows[$pid])) {
+                $out[] = $rows[$pid];
+            }
+        }
+        return $out;
     }
 
     /** Proxy video master của chiến dịch AI Idol đang phát (chỉ khi chiến dịch đó đang LIVE). */

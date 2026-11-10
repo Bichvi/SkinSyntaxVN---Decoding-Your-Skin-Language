@@ -69,9 +69,11 @@ $isUpcoming = ($liveStatus === 'upcoming');
               $aiPid = (string)($aiP['ma_san_pham'] ?? '');
               $aiImg = !empty($aiP['link_hinh_anh']) ? resolve_image_url((string)$aiP['link_hinh_anh']) : '';
               $aiHref = BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($aiPid);
+              $aiNum = (int)(($aiIdolLive['numbers'] ?? [])[$aiPid] ?? 0);
             ?>
             <div class="ai-idol-live__card">
               <a class="ai-idol-live__img" href="<?= h($aiHref) ?>">
+                <?php if ($aiNum > 0): ?><span class="ai-idol-live__num">Số <?= h((string)$aiNum) ?></span><?php endif; ?>
                 <?php if ($aiImg !== ''): ?><img src="<?= h($aiImg) ?>" alt="<?= h((string)($aiP['ten_san_pham'] ?? '')) ?>" loading="lazy"><?php endif; ?>
               </a>
               <a class="ai-idol-live__pname" href="<?= h($aiHref) ?>"><?= h((string)($aiP['ten_san_pham'] ?? '')) ?></a>
