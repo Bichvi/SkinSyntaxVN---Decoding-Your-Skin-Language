@@ -701,9 +701,10 @@ $renderFlashSaleProductCard = static function (array $p): void {
       </div>
 
       <div class="row g-3">
-        <?php foreach ($topRatedWeightedProducts as $p): ?>
+        <?php // Danh sách đã sắp theo điểm đánh giá có trọng số -> thứ tự chính là hạng thật. ?>
+        <?php foreach ($topRatedWeightedProducts as $rankIdx => $p): ?>
           <div class="col-6 col-md-3">
-            <?php $renderHomeProductCard($p, 'Yêu thích nhất', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
+            <?php $renderHomeProductCard($p, '#' . ($rankIdx + 1) . ' Yêu thích', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -726,8 +727,18 @@ $renderFlashSaleProductCard = static function (array $p): void {
 
       <div class="row g-3">
         <?php foreach ($newProducts as $p): ?>
+          <?php
+            // Mọi SP có cùng ngày tạo (nhập một lượt) nên không có "mới" thật: nhãn góc hiện loại SP, thiếu thì giữ "Mới lên kệ".
+            $newTag = trim(explode('/', (string)($p['loai_san_pham'] ?? ''))[0]);
+            if (mb_strlen($newTag, 'UTF-8') > 18) {
+                $newTag = rtrim(mb_substr($newTag, 0, 17, 'UTF-8')) . '…';
+            }
+            if ($newTag === '') {
+                $newTag = 'Mới lên kệ';
+            }
+          ?>
           <div class="col-6 col-md-3">
-            <?php $renderHomeProductCard($p, 'Mới lên kệ', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
+            <?php $renderHomeProductCard($p, $newTag, HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -823,7 +834,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
   <section class="mb-4 p-4 text-center rounded-4 text-white" style="background: linear-gradient(135deg, #183B2B 0%, #2D6A4F 100%);">
     <h3 class="fw-bold mb-1 text-white" style="font-size: 1.3rem;">Hiểu da hơn, chọn mỹ phẩm dễ hơn.</h3>
     <p class="text-white-80 small mx-auto mb-3" style="max-width: 480px; font-size: 0.86rem; color: rgba(255,255,255,0.85);">
-      SkinSyntax — Nền tảng mỹ phẩm &amp; tư vấn da cá nhân hóa AI.
+      SkinSyntax — Mỹ phẩm &amp; tư vấn chăm sóc da dành riêng cho bạn.
     </p>
     <div class="d-flex flex-wrap justify-content-center gap-3">
       <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn btn-light fw-bold px-4 py-2" style="border-radius: 8px; font-size: 0.86rem; color: #183B2B;">
@@ -1137,3 +1148,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </style>
 
 <script src="<?= h(BASE_URL . '/assets/js/home-graph.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/home-graph.js')) ?>" defer></script>
+<script src="<?= h(BASE_URL . '/assets/js/home-carousel.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/home-carousel.js')) ?>" defer></script>
+<script src="<?= h(BASE_URL . '/assets/js/why-fit.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/why-fit.js')) ?>" defer></script>

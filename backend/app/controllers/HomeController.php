@@ -12,8 +12,10 @@ require_once __DIR__ . '/../services/RecommendationExplainer.php';
 require_once __DIR__ . '/../services/SupportKnowledge.php';
 require_once __DIR__ . '/ShopAssistantController.php';
 require_once __DIR__ . '/../services/HomeGraphRecommender.php';
+require_once __DIR__ . '/../services/HomeRotation.php';
 require_once __DIR__ . '/../services/HomeDiscovery.php';
 require_once __DIR__ . '/../services/HomeCardReason.php';
+require_once __DIR__ . '/../services/HomeBenefitChips.php';
 require_once __DIR__ . '/../services/ChatAgentToken.php';
 
 class HomeController {
@@ -271,6 +273,10 @@ class HomeController {
                     'exclude_ids' => array_values(array_unique($homeGraphExclude)),
                     'sections' => ['seen', 'skin', 'concern'],
                 ]);
+                // Mỗi lần tải trang xáo thứ tự khối "Vì bạn đã xem" (có trọng số theo độ liên quan) để không cố định.
+                if (!empty($homeGraph['seen']['products']) && is_array($homeGraph['seen']['products'])) {
+                    $homeGraph['seen']['products'] = HomeRotation::weightedShuffle($homeGraph['seen']['products']);
+                }
             } catch (Throwable $e) {
                 error_log('[HOME_GRAPH] index skipped: ' . get_class($e));
                 $homeGraph = null;
@@ -670,7 +676,7 @@ class HomeController {
                 ],
                 [
                     'title' => 'Theo dõi đơn hàng rõ trạng thái',
-                    'text' => 'Luồng mua hàng của SkinSyntax ưu tiên trạng thái rõ ràng từ lúc đặt đơn, áp voucher, thanh toán đến bước hoàn tất và hậu mãi.',
+                    'text' => 'Từ lúc đặt đơn, áp voucher, thanh toán đến khi nhận hàng và hậu mãi, bạn luôn biết đơn hàng của mình đang ở bước nào.',
                     'icon' => 'fa-solid fa-truck-fast',
                 ],
             ],

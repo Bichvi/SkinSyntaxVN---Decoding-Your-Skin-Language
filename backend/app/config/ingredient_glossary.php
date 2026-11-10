@@ -1,0 +1,32 @@
+<?php
+// Bảng tra ngắn để viết câu trên thẻ "Vì sao phù hợp" (khối "Vì bạn đã xem"),
+// rút gọn từ RecommendationExplainer::ACTIVES_KB. Mỗi mục: 'match' = thân regex (không phân biệt hoa thường,
+// so với tên INCI viết thường), 'short' = tên dùng giữa câu, 'benefit' = lợi ích ngắn (tối đa 2 mệnh đề).
+// Mục khớp đầu tiên thắng. Cố ý KHÔNG có các thành phần chung chung (glycerin, nước, hương liệu...).
+return [
+    ['match' => 'centella|madecassoside|asiaticoside|cica|rau má', 'short' => 'rau má', 'benefit' => 'làm dịu, giảm đỏ'],
+    ['match' => 'niacinamide|vitamin b3', 'short' => 'Niacinamide', 'benefit' => 'mờ thâm, kiềm dầu'],
+    ['match' => 'tranexamic|t\.x\.a|\btxa\b', 'short' => 'Tranexamic Acid', 'benefit' => 'mờ thâm nám'],
+    ['match' => 'arbutin', 'short' => 'Arbutin', 'benefit' => 'mờ thâm, đều màu'],
+    ['match' => 'ascorbic|ascorbyl|vitamin c', 'short' => 'Vitamin C', 'benefit' => 'sáng da, mờ thâm'],
+    ['match' => 'retinol|retinal|retinoid|retinyl', 'short' => 'Retinol', 'benefit' => 'chống lão hóa'],
+    ['match' => 'bakuchiol', 'short' => 'Bakuchiol', 'benefit' => 'chống lão hóa dịu nhẹ'],
+    ['match' => 'peptide', 'short' => 'Peptide', 'benefit' => 'săn chắc da'],
+    ['match' => 'hyaluronic|hyaluronate', 'short' => 'Hyaluronic Acid', 'benefit' => 'cấp nước, căng mịn'],
+    ['match' => 'ceramide', 'short' => 'Ceramide', 'benefit' => 'phục hồi hàng rào da'],
+    ['match' => 'panthenol|vitamin b5', 'short' => 'B5', 'benefit' => 'làm dịu, phục hồi'],
+    ['match' => 'salicylic|\bbha\b', 'short' => 'BHA', 'benefit' => 'thông thoáng lỗ chân lông'],
+    ['match' => 'glycolic|lactic acid|mandelic|\baha\b', 'short' => 'AHA', 'benefit' => 'tẩy da chết, sáng mịn'],
+    ['match' => 'azelaic', 'short' => 'Azelaic Acid', 'benefit' => 'giảm mụn, mờ thâm đỏ'],
+    ['match' => 'tea tree|melaleuca', 'short' => 'tràm trà', 'benefit' => 'giảm mụn viêm'],
+    ['match' => 'zinc(?! oxide)', 'short' => 'kẽm', 'benefit' => 'kiềm dầu, giảm mụn'],
+    ['match' => 'snail', 'short' => 'dịch ốc sên', 'benefit' => 'phục hồi, mờ thâm'],
+    ['match' => 'pdrn|polydeoxyribonucleotide|sodium dna', 'short' => 'PDRN', 'benefit' => 'phục hồi, tái tạo da'],
+    ['match' => 'squalane', 'short' => 'Squalane', 'benefit' => 'khóa ẩm nhẹ'],
+    ['match' => 'beta-glucan|beta glucan', 'short' => 'Beta-glucan', 'benefit' => 'làm dịu, cấp ẩm'],
+    ['match' => 'allantoin', 'short' => 'Allantoin', 'benefit' => 'làm dịu da'],
+    ['match' => 'witch hazel|hamamelis', 'short' => 'cây phỉ', 'benefit' => 'se khít lỗ chân lông'],
+    ['match' => 'green tea|camellia sinensis', 'short' => 'trà xanh', 'benefit' => 'chống oxy hóa'],
+    ['match' => 'collagen', 'short' => 'Collagen', 'benefit' => 'giữ ẩm, đàn hồi'],
+    ['match' => 'tocopherol|vitamin e', 'short' => 'Vitamin E', 'benefit' => 'chống oxy hóa'],
+];

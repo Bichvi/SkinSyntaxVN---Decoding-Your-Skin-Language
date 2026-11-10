@@ -7,6 +7,7 @@ if (!isset($searchFallback) || !is_array($searchFallback)) {
 }
 $ssfQ = trim((string)($qEffective ?? $q ?? '')); // U05: từ khóa thực sự đã tìm (đã tự sửa nếu có)
 $ssfHasExact = !empty($ssfHasExact);
+$ssfSkinCta = isset($ssfSkinCta) && in_array($ssfSkinCta, ['login', 'quiz'], true) ? $ssfSkinCta : null;
 $ssfChips = is_array($searchFallback['chips'] ?? null) ? $searchFallback['chips'] : [];
 $ssfSections = is_array($searchFallback['sections'] ?? null) ? $searchFallback['sections'] : [];
 $ssfE = static function ($v): string {
@@ -38,6 +39,24 @@ $ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
       <div>
         <h3 class="ssf-banner-title">Chưa có sản phẩm khớp chính xác với «<?= $ssfE($ssfQ) ?>»</h3>
         <p class="ssf-banner-desc">Đây là những lựa chọn gần nhất SkinSyntax gợi ý cho bạn.</p>
+      </div>
+    </div>
+  <?php endif; ?>
+
+  <?php if ($ssfSkinCta !== null): ?>
+    <div class="ssf-skincta" data-ssf-skin-cta="<?= $ssfE($ssfSkinCta) ?>">
+      <span class="ssf-skincta-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+      <div class="ssf-skincta-body">
+        <h4 class="ssf-skincta-title">Xem sản phẩm hợp với làn da của bạn</h4>
+        <p class="ssf-skincta-desc"><?= $ssfSkinCta === 'login'
+          ? 'Đăng nhập và làm khảo sát da, SkinSyntax sẽ gợi ý sản phẩm đúng với loại da và vấn đề da của bạn.'
+          : 'Làm khảo sát da để SkinSyntax gợi ý sản phẩm đúng với loại da và vấn đề da của bạn.' ?></p>
+      </div>
+      <div class="ssf-skincta-actions">
+        <a class="ssf-skincta-btn" href="<?= $ssfE(BASE_URL . '/index.php?r=goiy') ?>" data-ssf-skin-cta-click="quiz">Làm khảo sát da</a>
+        <?php if ($ssfSkinCta === 'login'): ?>
+          <a class="ssf-skincta-link" href="<?= $ssfE(BASE_URL . '/index.php?r=dangnhap') ?>" data-ssf-skin-cta-click="login">Đăng nhập</a>
+        <?php endif; ?>
       </div>
     </div>
   <?php endif; ?>

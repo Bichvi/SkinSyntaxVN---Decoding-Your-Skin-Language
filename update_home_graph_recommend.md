@@ -92,3 +92,26 @@ Sửa phát sinh khi chạy thật: route `home_concern` chỉ được thêm v�
 Các bộ gợi ý cũ giữ nguyên: Simple (IMDb WR) `getSimpleRecommenderProducts`, Adaptive/Hybrid `getHybridRecommendations`, `getHomepageProductSections`, `SearchRecommendClient`, `search_service/graph_repository.py`. Closure thẻ SP chỉ được chuyển nguyên văn sang `partials/home_product_card.php`.
 
 `update.md` chưa được sửa trong nhánh này (tránh xung đột với thay đổi chưa commit ở checkout chính); cần thêm 1 dòng trỏ tới file này sau khi merge.
+
+## 2026-11-09 — Khối "Vì bạn đã xem" thành băng chuyền, xáo mỗi lần tải
+
+- `HomeGraphRecommender::LIMITS['seen']` tăng 4 thành 12 (Flask kẹp 4..12 và tối đa 2 SP/thương hiệu nên thực tế có thể ra ít hơn, ví dụ 10).
+- `backend/app/services/HomeRotation.php` (`weightedShuffle`, Efraimidis–Spirakis, trọng số `0.8^hạng`): SP liên quan nhất vẫn hay đứng đầu nhưng mỗi lần F5 thứ tự khác nhau. `HomeController::index` gọi ngay sau `build()`.
+- Giao diện: `partials/home_graph_seen.php` render mọi SP trong `.hgc-track` (scroll-snap, 2/3/4 thẻ mỗi màn hình theo breakpoint) kèm nút trước/sau (`.hgc-nav`, `.hgc-arrow`); điện thoại vuốt ngang, ẩn nút. CSS ở cuối `style.css`.
+- JS: `frontend/public/assets/js/home-carousel.js` (bật/tắt nút theo vị trí cuộn, ẩn nav khi không tràn, phím mũi tên trái/phải), nạp trong `home.php` sau `home-graph.js`.
+- Test: `php backend/tests/unit/HomeRotationTest.php`, `php backend/tests/home_graph_recommender_test.php` (assert limits 12/4/8).
+
+## 2026-11-09 – Thẻ "Vì sao phù hợp": câu ngắn + nhãn nổi bật
+
+- Vấn đề: dòng hiển thị của khối "Vì bạn đã xem" khô ("Cùng loại Serum / Tinh Chất"), thông tin hay nằm trong popover.
+- Quy tắc mới (`HomeWhyFitCopy::build($reason, $detail, $cat)`, hàm thuần): 1 câu + tối đa 2 nhãn.
+  - Câu: thành phần chung qua bảng tra → "Cũng có {A} + {B} – {lợi ích}" (lợi ích = mệnh đề đầu của A có trong B) / "Cũng có {A} – {lợi ích}"; INCI lạ → "Cũng có {INCI}" (+ công dụng chung); không có thành phần → "Cũng {công dụng chung}"; còn lại → "Cùng loại {danh mục}"; rỗng → thẻ giữ câu cũ.
+  - Nhãn: giá trị trước ("Rẻ hơn 188K", "Rẻ hơn 1,2 triệu", "Giá tương đương", "Rẻ hơn 20%/ml", "Giảm 50%", "Đánh giá 4,8★"), sau đó "+ {công dụng thêm}" (bỏ nếu đã có trong câu).
+- Bảng tra: `backend/app/config/ingredient_glossary.php` (rút gọn từ `RecommendationExplainer::ACTIVES_KB`, mục đầu khớp thắng, không có thành phần chung chung).
+- File: `HomeGraphRecommender.php` (require + `$p['why_fit']`), `partials/home_product_card.php` (chỉ dùng `why_fit` khi `reason_text` trùng câu đang hiển thị; popover bỏ dòng giá trị/"Có thêm" nếu đã thành nhãn), cuối `style.css`.
+- Test: `php backend/tests/unit/HomeWhyFitCopyTest.php` (gồm ca tích hợp với `HomeReasonDetail` thật).
+
+- Thẻ ở khối "Hợp với da…" / "Hợp với vấn đề…" dùng `HomeWhyFitCopy::forProduct($sp, $reason, $section)` (gọi ở nhánh `else` của `HomeGraphRecommender::hydrate`): trước đây mọi thẻ cùng một câu "Phù hợp Da khô · Hỗ trợ Mụn".
+- Câu: hoạt chất đầu tiên trong `thanh_phan_sach` có trong bảng tra (kèm nồng độ, vd "4% Niacinamide"; mục "concern_ingredient" đẩy thành phần được gợi ý lên trước) → "Có {A} + {B} – {lợi ích}"; không có → "Giúp {công dụng 1}, {công dụng 2}" từ `cong_dung_keys`; không có gì → giữ câu cũ.
+- Nhãn (tối đa 2): Giảm N% (>= 20), "4,9★ (263)" (>= 4,5 và >= 20 đánh giá), "Đã bán 1,2K" (>= 100); riêng khối da thêm "Hỗ trợ {vấn đề}" CHỈ khi `van_de_da_keys` của SP có vấn đề đó (hết cảnh "Hỗ trợ Mụn" gắn bừa).
+- Bảng tra: mục Tranexamic khớp thêm "t.x.a"/"TXA". Test: `php backend/tests/unit/HomeWhyFitCopyTest.php`.

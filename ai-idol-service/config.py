@@ -122,6 +122,9 @@ RENDER_WAIT_CUTOFF_MINUTES = int(os.getenv("AI_IDOL_RENDER_WAIT_CUTOFF_MINUTES",
 MAX_SCRIPT_REPAIR_ATTEMPTS = int(os.getenv("AI_IDOL_MAX_SCRIPT_REPAIR_ATTEMPTS", "3"))
 # false = legacy behaviour (rewrite the whole script from one feedback string).
 SELF_HEALING_ENABLED = os.getenv("AI_IDOL_SELF_HEALING_ENABLED", "true").strip().lower() not in ("0", "false", "no", "off")
+# Demo mode: advertising-claim rules only warn and the LLM auditor is skipped; wrong prices and
+# other retailers' names still block. Keep off outside demos.
+RELAXED_AUDIT = os.getenv("AI_IDOL_RELAXED_AUDIT", "false").strip().lower() in ("1", "true", "yes", "on")
 STALE_JOB_MINUTES = int(os.getenv("AI_IDOL_STALE_JOB_MINUTES", "45"))
 STALE_STARTING_MINUTES = int(os.getenv("AI_IDOL_STALE_STARTING_MINUTES", "3"))
 STALE_ASSEMBLING_MINUTES = int(os.getenv("AI_IDOL_STALE_ASSEMBLING_MINUTES", "60"))

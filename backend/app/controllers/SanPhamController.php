@@ -897,6 +897,136 @@ class SanPhamController {
     }
 
     /**
+     * Khối "Gợi ý thêm cho bạn" ở trang tìm kiếm CÓ kết quả, tải lười. GET ?r=search_more&q=<từ khóa>&exclude=<id,id>
+     * -> 200 + HTML partial (partials/search_fallback.php); 204 khi tắt (SEARCH_MORE_ENABLED=0), lỗi hoặc không có gì để hiện;
+     * 400 q sai; 429 vượt giới hạn. Không bao giờ ném lỗi ra trang tìm kiếm.
+     */
+    public function searchMore() {
+        header('Cache-Control: private, no-store');
+        $q = trim((string)($_GET['q'] ?? ''));
+        if ($q === '' || mb_strlen($q, 'UTF-8') > 200) {
+            http_response_code(400);
+            return;
+        }
+        $exclude = [];
+        foreach (explode(',', (string)($_GET['exclude'] ?? '')) as $part) {
+            $part = trim($part);
+            if (preg_match('/^[A-Za-z0-9_-]{1,32}$/', $part) && !in_array($part, $exclude, true)) {
+                $exclude[] = $part;
+                if (count($exclude) >= 48) {
+                    break;
+                }
+            }
+        }
+        if (in_array(strtolower(ss_env('SEARCH_MORE_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
+            http_response_code(204);
+            return;
+        }
+        // Đọc trạng thái phiên rồi nhả khóa ngay: request này chỉ đọc, không nên chặn các request song song cùng phiên.
+        $cartIds = [];
+        if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+            $cartIds = array_slice(array_map('strval', array_keys($_SESSION['gio_hang'])), 0, 50);
+        }
+        $email = (string)($_SESSION['user']['email'] ?? '');
+        $userHash = null;
+        $salt = ss_env('SEARCH_USER_HASH_SALT', '');
+        if ($salt !== '' && $email !== '') {
+            $userHash = hash('sha256', mb_strtolower(trim($email)) . $salt);
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        try {
+            require_once dirname(__DIR__) . '/services/SearchRecommendClient.php';
+            require_once dirname(__DIR__) . '/services/SearchFallbackBuilder.php';
+            require_once dirname(__DIR__) . '/services/SearchEventTracker.php'; // csrf cho beacon trong partial
+            require_once dirname(__DIR__) . '/services/SearchReasonFormatter.php';
+            require_once dirname(__DIR__) . '/services/SearchMoreBuilder.php';
+            if (!$this->searchMoreAllowed()) {
+                http_response_code(429);
+                header('Retry-After: 30');
+                return;
+            }
+            $model = $this->model;
+            $find = static function (array $ids) use ($model): array { return $model->findVisibleByIds($ids); };
+
+            $skinState = 'guest';
+            $skinProfile = null;
+            if ($email !== '') {
+                $skinProfile = $this->searchSkinProfile($email);
+                $skinState = $skinProfile === null ? 'no_profile' : 'has_profile';
+            }
+
+            $skinProducts = null;
+            if ($skinState === 'has_profile') {
+                try {
+                    require_once dirname(__DIR__) . '/services/HomeGraphRecommender.php';
+                    $graph = (new HomeGraphRecommender(HomeRecommendClient::fromEnv(), $find))->build([
+                        'sections' => ['skin'],
+                        'skin_profile' => $skinProfile,
+                        'cart_ids' => $cartIds,
+                        'exclude_ids' => array_values(array_unique(array_merge($exclude, $cartIds))),
+                    ]);
+                    $skinProducts = is_array($graph['skin'] ?? null) ? ($graph['skin']['products'] ?? null) : null;
+                } catch (Throwable $e) {
+                    error_log('[SEARCH_MORE] skin section skipped: ' . get_class($e));
+                }
+            }
+
+            $fallback = null;
+            try {
+                $client = SearchRecommendClient::fromEnv();
+                $response = $client ? $client->recommend($q, $userHash, $skinProfile, $cartIds, $exclude, 6, SearchEventTracker::sessionHash()) : null;
+                $fallback = SearchFallbackBuilder::build(
+                    $response,
+                    $find,
+                    function (int $limit) use ($model): array { return $model->bestSellers($limit); },
+                    $q
+                );
+            } catch (Throwable $e) {
+                error_log('[SEARCH_MORE] recommend skipped: ' . get_class($e));
+            }
+
+            $more = SearchMoreBuilder::build($skinProducts, $fallback, $skinState, $exclude);
+            if ($more === null) {
+                http_response_code(204);
+                return;
+            }
+            $searchFallback = $more;
+            $qEffective = $q;
+            $ssfHasExact = true;
+            $ssfSkinCta = $more['skin_cta'];
+            header('Content-Type: text/html; charset=utf-8');
+            $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+            require $viewDir . '/partials/search_fallback.php';
+        } catch (Throwable $e) {
+            error_log('[SEARCH_MORE] block error: ' . get_class($e));
+            if (!headers_sent()) {
+                http_response_code(204);
+            }
+        }
+    }
+
+    /** Giới hạn khối "Gợi ý thêm": 60 lượt/phút theo phiên, 120/phút theo IP công khai. Redis lỗi -> cho qua. */
+    private function searchMoreAllowed(): bool {
+        try {
+            require_once dirname(__DIR__) . '/services/RateLimiter.php';
+            $limiter = RateLimiter::shared();
+            $sid = session_id();
+            if ($sid !== '' && !$limiter->hit('search_more', substr(hash('sha256', 'ssm-sid|' . $sid), 0, 32), 60, 60)['allowed']) {
+                return false;
+            }
+            $ip = RateLimiter::clientIdentity();
+            if ($ip !== null && !$limiter->hit('search_more_ip', $ip, 120, 60)['allowed']) {
+                return false;
+            }
+        } catch (Throwable $e) {
+            error_log('[SEARCH_MORE] rate limit skipped: ' . get_class($e));
+        }
+        return true;
+    }
+
+    /**
      * U09: GET index.php?r=cart_analyze -> khối "Lưu ý hoạt chất + Hoàn thiện routine" của giỏ hàng (HTML partial).
      * Đọc giỏ từ phiên, gọi Flask `cart/analyze` (timeout 1s, breaker riêng). 200 + HTML khi có cảnh báo hoặc gợi ý;
      * 204 khi tắt (CART_INSIGHTS_ENABLED=0), giỏ trống, Flask lỗi/breaker mở, hoặc không có gì để hiện; 429 vượt giới hạn.

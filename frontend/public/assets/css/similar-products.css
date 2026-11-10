@@ -17,6 +17,7 @@
   .ssim-track { --ssim-gap: 16px; --ssim-per-view: 4; }
   .ssim-nav { display: inline-flex; }
 }
+.ssim-nav[hidden] { display: none; }
 
 /* khung chờ (skeleton) giữ chỗ trong lúc fetch */
 .ssim-skeleton { display: block; }

@@ -3,6 +3,9 @@
 // Mọi lỗi -> khối null (trang chủ giữ nguyên các khối cũ). Không log hồ sơ da/giỏ hàng.
 require_once __DIR__ . '/HomeRecommendClient.php';
 require_once __DIR__ . '/HomeReasonText.php';
+require_once __DIR__ . '/HomeReasonDetail.php';
+require_once __DIR__ . '/HomeWhyFitCopy.php';
+require_once __DIR__ . '/HomeFitDetail.php';
 require_once __DIR__ . '/SearchSkinProfile.php';
 
 final class HomeGraphRecommender
@@ -18,7 +21,7 @@ final class HomeGraphRecommender
         'lao_hoa' => 'Lão hóa / nếp nhăn',
         'xin_mau' => 'Da xỉn màu',
     ];
-    public const LIMITS = ['seen' => 4, 'skin' => 4, 'concern' => 8];
+    public const LIMITS = ['seen' => 12, 'skin' => 4, 'concern' => 8];
     private const MIN_ITEMS = 4;
     private const ID_PATTERN = '/^[0-9]{1,12}$/';
 
@@ -72,6 +75,13 @@ final class HomeGraphRecommender
                 $wanted[] = $section;
                 foreach ($section['items'] as $item) {
                     $allIds[$item['product_id']] = true;
+                    // SP "đã xem" làm gốc so sánh: tải chung một lần truy vấn, không đưa vào danh sách hiển thị.
+                    if ($section['key'] === 'seen') {
+                        $sid = $item['reason']['seed_id'] ?? null;
+                        if ((is_string($sid) || is_int($sid)) && preg_match(self::ID_PATTERN, (string)$sid)) {
+                            $allIds[(string)$sid] = true;
+                        }
+                    }
                 }
             }
             // Một lần truy vấn Mongo cho mọi khối (giảm round trip tới Atlas).
@@ -96,6 +106,12 @@ final class HomeGraphRecommender
         }
         foreach (($this->findVisibleByIds)($ids) as $p) {
             if (is_array($p) && isset($p['ma_san_pham'])) {
+                // Mongo trả mảng dạng BSONArray (đối tượng): đổi về mảng PHP để các hàm dựng câu/chi tiết đọc được.
+                foreach (['cong_dung_keys', 'van_de_da_keys', 'loai_da_keys'] as $f) {
+                    if (isset($p[$f]) && is_object($p[$f])) {
+                        $p[$f] = $p[$f] instanceof Traversable ? iterator_to_array($p[$f], false) : array_values((array)$p[$f]);
+                    }
+                }
                 $byId[(string)$p['ma_san_pham']] = $p;
             }
         }
@@ -108,12 +124,32 @@ final class HomeGraphRecommender
             return null;
         }
         $products = [];
+        $titleSeedId = isset($section['seed']['id']) ? (string)$section['seed']['id'] : '';
+        $isSeen = $section['key'] === 'seen';
         foreach ($section['items'] as $item) {
             $p = $byId[$item['product_id']] ?? null;
             if ($p === null) {
                 continue;
             }
-            $p['reason_text'] = HomeReasonText::fromReason($item['reason']);
+            if ($isSeen) {
+                $cat = '';
+                if (is_string($p['danh_muc_day_du'] ?? null) && trim($p['danh_muc_day_du']) !== '') {
+                    $segs = explode('->', $p['danh_muc_day_du']);
+                    $cat = trim((string)end($segs));
+                }
+                $textOpts = ['omit_seed_id' => $titleSeedId, 'category' => $cat];
+                $p['reason_text'] = HomeReasonText::fromReason($item['reason'], $textOpts);
+                // Bản đầy đủ (không cắt tên SP gốc) cho popover trên thẻ.
+                $p['reason_text_full'] = HomeReasonText::fromReason($item['reason'], $textOpts + ['full_seed' => true]);
+                $sid = $item['reason']['seed_id'] ?? null;
+                $seedProduct = (is_string($sid) || is_int($sid)) ? ($byId[(string)$sid] ?? null) : null;
+                $p['reason_detail'] = HomeReasonDetail::build($item['reason'], $p, $seedProduct);
+                $p['why_fit'] = HomeWhyFitCopy::build($item['reason'], $p['reason_detail'], $cat);
+            } else {
+                $p['reason_text'] = HomeReasonText::fromReason($item['reason']);
+                $p['why_fit'] = HomeWhyFitCopy::forProduct($p, $item['reason'], (string)$section['key']);
+                $p['fit_detail'] = HomeFitDetail::build($p, $item['reason'], (string)$section['key']);
+            }
             $p['reason_code'] = $item['reason']['code'];
             $products[] = $p;
         }

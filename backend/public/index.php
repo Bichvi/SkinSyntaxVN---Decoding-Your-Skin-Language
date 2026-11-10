@@ -173,6 +173,11 @@ switch ($r) {
         (new SanPhamController($pdo))->similarProducts();
         break;
 
+    case 'search_more':
+        // Khối "Gợi ý thêm" ở trang tìm kiếm (HTML partial tải lười).
+        (new SanPhamController($pdo))->searchMore();
+        break;
+
     case 'cart_analyze':
         // U09: khối "Lưu ý hoạt chất + Hoàn thiện routine" của giỏ hàng (HTML partial, tải bằng fetch).
         (new SanPhamController($pdo))->cartInsights();
@@ -470,6 +475,10 @@ switch ($r) {
 
     case 'live':
         (new LiveController($pdo))->index();
+        break;
+
+    case 'ai_idol_live_video':
+        (new LiveController($pdo))->streamAiIdolLiveVideo();
         break;
 
     case 'api_live_token':

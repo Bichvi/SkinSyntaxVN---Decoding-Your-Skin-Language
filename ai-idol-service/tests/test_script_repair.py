@@ -158,6 +158,43 @@ class AuditPassResponseTests(unittest.TestCase):
     def test_empty_json_array_passes(self):
         self.assertEqual(self._issues("[]"), [])
 
+    def test_pass_verdict_inside_json_is_no_issue(self):
+        # Seen live: the auditor wraps its PASS verdict in an issue item.
+        replies = (
+            '[{"section": null, "original_text": "", "reason": "PASS", "auto_fixable": true}]',
+            '[{"section": null, "original_text": "", "reason": "Không có vi phạm"}]',
+            '{"result": "PASS"}',
+            "Kết quả: PASS",
+        )
+        for reply in replies:
+            self.assertEqual(self._issues(reply), [], reply)
+
+    def test_real_issue_next_to_pass_item_is_kept(self):
+        reply = ('[{"reason": "PASS"}, {"section": "hook", "original_text": "trắng sau 1 tuần", '
+                 '"reason": "Hứa hẹn thời gian", "auto_fixable": true}]')
+        self.assertEqual([i.reason for i in self._issues(reply)], ["Hứa hẹn thời gian"])
+
+
+class RelaxedAuditTests(unittest.TestCase):
+    """AI_IDOL_RELAXED_AUDIT: demo mode keeps only shop-fact checks (price, retailer)."""
+
+    def test_relaxed_mode_skips_claim_rules_and_llm(self):
+        script = "[Hook]\nDa mình đã dùng thấy mịn.\n[Specs]\nTrị dứt điểm mụn."
+        with patch.object(sv, "RELAXED_AUDIT", True), \
+                patch.object(sv, "_llm_audit_issues", side_effect=AssertionError("LLM called")):
+            issues = sv.validate_script(script, SNAP, "live_only")
+        self.assertFalse([i for i in issues if i.severity == "error"])
+
+    def test_relaxed_mode_keeps_retailer_check(self):
+        with patch.object(sv, "RELAXED_AUDIT", True):
+            issues = sv.validate_script("[Hook]\nMua ở Shopee nhé.", SNAP, "live_only")
+        self.assertIn("EXTERNAL_RETAILER", [i.code for i in issues if i.severity == "error"])
+
+    def test_strict_mode_unchanged(self):
+        with patch.object(sv, "RELAXED_AUDIT", False), patch.object(sv, "_llm_audit_issues", return_value=[]):
+            issues = sv.validate_script("[Specs]\nTrị dứt điểm mụn.", SNAP, "live_only")
+        self.assertIn("BLACKLIST_CLAIM", [i.code for i in issues if i.severity == "error"])
+
 
 class ResidualClaimScrubTests(unittest.TestCase):
     def test_repair_loop_scrubs_claim_the_llm_keeps_copying(self):

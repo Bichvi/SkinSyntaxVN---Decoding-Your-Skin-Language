@@ -17,7 +17,7 @@ if (!empty($hgSkin['products'])):
       <?php foreach (array_slice($hgSkin['products'], 0, 4) as $p): ?>
         <div class="col-6 col-md-3">
           <div data-rec-section="skin" data-rec-reason="<?= h((string)($p['reason_code'] ?? '')) ?>" class="h-100">
-            <?php $renderHomeProductCard($p, 'Hợp da bạn', (string)($p['reason_text'] ?? '')); ?>
+            <?php $renderHomeProductCard($p, '',(string)($p['reason_text'] ?? '')); ?>
           </div>
         </div>
       <?php endforeach; ?>

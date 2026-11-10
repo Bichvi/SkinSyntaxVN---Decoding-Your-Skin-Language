@@ -7,6 +7,8 @@ Ngôn ngữ tài liệu: tiếng Việt. Mọi khẳng định bên dưới đư
 
 Không có bí mật nào trong tài liệu này. Không đọc, không ghi giá trị `.env`. Tên biến môi trường được nêu, giá trị thì không.
 
+> **Deploy VPS + CI/CD (2026-11-09, chưa commit, chưa chạy trên VPS thật):** `docker-compose.prod.yml` (đóng cổng nội bộ, Caddy giữ HTTPS), `scripts/deploy.sh`, GitHub Actions `.github/workflows/deploy.yml` (kiểm tra mỗi push/PR, push `main` thì SSH vào VPS deploy); `nginx.conf` báo `HTTPS=on` cho PHP khi đi qua proxy. Tạm thời (2026-11-10) dùng link public miễn phí qua Cloudflare Quick Tunnel (`docker compose --profile tunnel up -d --no-deps tunnel`, link đổi mỗi lần khởi động lại) vì đăng ký Oracle Free bị từ chối. Hướng dẫn từng bước: [`update_deploy_cicd.md`](update_deploy_cicd.md).
+> **Gợi ý thêm ở trang tìm kiếm có kết quả (2026-11-09, chưa commit):** khối lười "Gợi ý thêm cho bạn" (hợp da, bán chạy, CTA đăng nhập/khảo sát da) qua `r=search_more`. Chi tiết: [`update_search_more.md`](update_search_more.md).
 > **Chụp bảng thành phần trong chatbot (2026-11-06, ĐÃ CODE, chưa commit; chạy thật: E2E 22/22, AC1–AC7 PASS, p95 3,9 s; model đọc ảnh đổi sang Groq qwen/qwen3.8-27b vì llama-4-scout bị gỡ; Groq miễn phí ≈ 1 ảnh/phút):** khách gửi ảnh mặt sau chai vào Syna → Groq qwen3.8-27b chỉ chép chữ (Gemini dự phòng) → tách INCI → xung đột với giỏ (cùng luật U09) + độ hợp hồ sơ da (luật YAML mới) + xếp lịch sáng/tối + món thay thế + nhận món shop bán. Có ma trận test 18 loại khách và 8 mốc giao Sonnet. Chi tiết: [`update_chup_thanh_phan.md`](update_chup_thanh_phan.md).
 > **Giới hạn thử đăng nhập/OTP (2026-11-05):** chặn dò mật khẩu, spam mail đặt lại và spam/đoán OTP đăng ký bằng `AuthThrottle` (Redis, fail-open; OTP sai 5 lần phải lấy mã mới). Chi tiết: [update_auth_rate_limit.md](update_auth_rate_limit.md).
 > **Bộ đếm lượt xem qua Redis (2026-11-05):** trang chi tiết sản phẩm không còn ghi `$inc luot_xem` thẳng lên Atlas mỗi lượt xem mà đệm vào Redis local (`ProductViewCounter`), job `product_views_flush` ghi dồn sang Mongo mỗi 5 phút; tắt bằng `PRODUCT_VIEWS_REDIS_ENABLED=0`. Chi tiết: [update_luot_xem.md](update_luot_xem.md).
@@ -662,3 +664,5 @@ Rollback nhanh khi nghi ngờ self-healing: đặt `AI_IDOL_MAX_SCRIPT_REPAIR_AT
 
 - Trang chủ gợi ý theo đồ thị Neo4j (giai đoạn 1: "Vì bạn đã xem", "Hợp với da bạn", "Theo vấn đề da" + nhãn lý do; không đổi các thuật toán gợi ý cũ). Xem `update_home_graph_recommend.md`.
 - Sửa nhãn "Hợp moi_loai_da" ở gợi ý giỏ hàng: thêm nhãn hiển thị, và graph_sync không cho tag LLM nới sản phẩm đã có loại da riêng thành "mọi loại da" (446 sản phẩm); sửa đọc INCI "Bảng thành phần:" và bỏ suy vấn đề da cho kem chống nắng/trang điểm/tẩy trang/sữa rửa mặt; Neo4j đã đồng bộ lại 2026-11-05. Xem `update_nhan_loai_da.md`.
+
+- Popover "Vì sao phù hợp" trên thẻ sản phẩm trang chủ: đọc đủ câu lý do, bỏ "với <SP>" thừa ở khối "Vì bạn đã xem", thêm chi tiết thành phần/công dụng/giá trị. Xem `update_why_fit_detail.md`.

@@ -5,19 +5,34 @@ final class HomeReasonText
 {
     private const FALLBACK = 'Gợi ý cho bạn';
 
-    public static function fromReason(array $reason): string
+    /**
+     * @param array{omit_seed_id?:string,category?:string,full_seed?:bool} $opts full_seed: không cắt tên SP gốc (dùng cho popover);
+     *                                                           omit_seed_id: bỏ "với <SP>" khi seed trùng SP ở tiêu đề khối;
+     *                                                           category: tên danh mục cuối của sản phẩm (cho "Cùng loại ...")
+     */
+    public static function fromReason(array $reason, array $opts = []): string
     {
+        $omit = isset($opts['omit_seed_id']) && (string)$opts['omit_seed_id'] !== ''
+            && isset($reason['seed_id']) && (is_string($reason['seed_id']) || is_int($reason['seed_id']))
+            && (string)$reason['seed_id'] === (string)$opts['omit_seed_id'];
         $code = is_string($reason['code'] ?? null) ? $reason['code'] : '';
         switch ($code) {
             case 'seen_shared_ingredient':
                 $ing = self::names($reason['ingredients'] ?? [], 2);
-                $seed = self::seed($reason);
+                $seed = self::seed($reason, !empty($opts['full_seed']));
+                if ($omit && $ing) {
+                    return 'Cùng chứa ' . implode(', ', $ing);
+                }
                 if (!$ing || $seed === '') {
                     return self::FALLBACK;
                 }
                 return 'Cùng chứa ' . implode(', ', $ing) . ' với ' . $seed;
             case 'seen_same_category':
-                $seed = self::seed($reason);
+                if ($omit) {
+                    $cat = self::str($opts['category'] ?? '');
+                    return $cat !== '' ? 'Cùng loại ' . $cat : 'Cùng loại sản phẩm';
+                }
+                $seed = self::seed($reason, !empty($opts['full_seed']));
                 return $seed === '' ? self::FALLBACK : 'Cùng loại với ' . $seed;
             case 'skin_fit':
                 $skin = self::str($reason['skin_type'] ?? '');
@@ -45,10 +60,13 @@ final class HomeReasonText
         return is_string($v) ? trim($v) : '';
     }
 
-    private static function seed(array $reason): string
+    private static function seed(array $reason, bool $full = false): string
     {
         $name = self::str($reason['seed_name'] ?? ($reason['seed'] ?? ''));
-        return $name === '' ? '' : mb_strimwidth($name, 0, 30, '…', 'UTF-8');
+        if ($name === '' || $full) {
+            return $name;
+        }
+        return mb_strimwidth($name, 0, 30, '…', 'UTF-8');
     }
 
     /** @return string[] */

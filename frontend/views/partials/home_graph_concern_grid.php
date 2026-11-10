@@ -20,7 +20,7 @@ $concernName = HomeGraphRecommender::CONCERN_NAMES[$concernKey] ?? '';
   <?php foreach (array_slice($concernProducts, 0, 8) as $p): ?>
     <div class="col-6 col-md-3">
       <div data-rec-section="concern" data-rec-reason="<?= h((string)($p['reason_code'] ?? '')) ?>" class="h-100">
-        <?php $renderHomeProductCard($p, $concernName, (string)($p['reason_text'] ?? '')); ?>
+        <?php $renderHomeProductCard($p, '',(string)($p['reason_text'] ?? '')); ?>
       </div>
     </div>
   <?php endforeach; ?>

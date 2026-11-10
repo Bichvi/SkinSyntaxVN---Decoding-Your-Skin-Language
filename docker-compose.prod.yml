@@ -1,0 +1,61 @@
+# Production override cho VPS. Dùng kèm file gốc:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# (scripts/deploy.sh đã gọi sẵn lệnh này). Cần Docker Compose >= 2.24.4 vì dùng `!reset`.
+#
+# Khác file gốc:
+#   - Đóng mọi cổng nội bộ (Mongo, Chroma, Redis, Flask, voice). Docker tự mở cổng qua iptables,
+#     BỎ QUA ufw, nên trên VPS cổng nào publish là cả Internet vào được.
+#   - Chỉ Caddy mở 80/443, tự xin và gia hạn chứng chỉ HTTPS (Let's Encrypt) cho DOMAIN trong .env.
+#   - nginx đứng sau Caddy, lấy IP thật của khách từ X-Forwarded-For (nginx/proxy.d/real-ip.conf).
+
+services:
+  mongodb:
+    # Dữ liệu thật ở MongoDB Atlas; container này chỉ còn để thỏa depends_on, không mở cổng.
+    ports: !reset []
+
+  chromadb:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  ai-service:
+    ports: !reset []
+
+  voice-service:
+    ports: !reset []
+
+  php-backend:
+    environment:
+      # File gốc ghi cứng "1" (chỉ ghi log, không gửi mail). Đặt MAIL_DEMO_MODE=0 trong .env để gửi mail thật.
+      MAIL_DEMO_MODE: "${MAIL_DEMO_MODE:-1}"
+
+  nginx:
+    ports: !reset []
+    volumes:
+      - ./nginx/proxy.d:/etc/nginx/proxy.d:ro
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: skinsyntax-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Đặt DOMAIN (vd. skinsyntax.vn) trong .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - nginx
+    networks:
+      - skinsyntax-net
+
+volumes:
+  caddy_data:
+    name: skinsyntax-caddy-data
+  caddy_config:
+    name: skinsyntax-caddy-config
