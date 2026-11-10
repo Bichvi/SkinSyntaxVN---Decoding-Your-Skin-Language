@@ -7,6 +7,7 @@ from config import DISPATCH_INTERVAL_SECONDS, REDIS_URL, TIMEZONE
 TASK_ROUTES = {
     "ai_idol.process_agent_run": {"queue": "control"},
     "ai_idol.prepare_campaign": {"queue": "control"},
+    "ai_idol.write_routine_recap": {"queue": "control"},
     "ai_idol.dispatch_due_campaigns": {"queue": "control"},
     "ai_idol.preflight_campaigns": {"queue": "control"},
     "ai_idol.reap_stale_work": {"queue": "control"},

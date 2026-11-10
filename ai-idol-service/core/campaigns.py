@@ -338,6 +338,8 @@ def prepare_campaign(campaign_id: str) -> list[str]:
         if segment.get("status") == "SKIPPED":
             skipped += 1  # dropped on purpose (rejected script): never generate it again
             continue
+        if library_ctx is not None and segment.get("phase") == PHASE_B and not segment.get("job_id"):
+            continue  # a recap that never got a job is redone by start_phase_b, not here
         if segment.get("job_id"):
             existing = db.ai_idol_jobs.find_one({"_id": object_id(str(segment["job_id"]))}, {"status": 1})
             if existing and existing.get("status") == "READY":
@@ -409,6 +411,153 @@ def _skip_decision(job: dict) -> dict:
     return make_decision("SCRIPT_SKIPPED", "adjusted", message)
 
 
+# Segment statuses after which a clip is settled (a FAILED one still waits for staff).
+FINAL_SEGMENT_STATUSES = ("READY", "SKIPPED", "CANCELLED", "FAILED")
+RECAP_KIND = "routine_recap"
+PHASE_B = "B"
+RECAP_WRITE_ERROR = "Không viết được clip tóm tắt routine"
+# Vietnamese names of the clip kinds a ready library needs.
+LIBRARY_KIND_LABELS = (("opening", "mở màn"), ("closing", "kết buổi"), (RECAP_KIND, "tóm tắt routine"))
+
+
+def library_ready(segments: list[dict]) -> tuple[bool, str]:
+    """Spec 7.3: can this library be assembled? Only READY segments count."""
+    ready = [s for s in segments if s.get("status") == "READY"]
+    kinds = {s.get("kind") for s in ready}
+    product_ids = {str(s.get("product_id")) for s in ready if s.get("kind") == "product"}
+    missing = []
+    if not product_ids:
+        missing.append("sản phẩm (chưa có sản phẩm nào dựng xong)")
+    missing += [f"{label} ({kind})" for kind, label in LIBRARY_KIND_LABELS if kind not in kinds]
+    if len(product_ids) >= 2 and "interlude" not in kinds:
+        missing.append("nghỉ giữa hiệp (interlude)")
+    if missing:
+        return False, "Chưa đủ clip để lên sóng, còn thiếu: " + ", ".join(missing)
+    return True, ""
+
+
+def remaining_products(plan: dict, segments: list[dict]) -> list[dict]:
+    """Plan items that still have at least one READY product angle (original numbers kept)."""
+    have = {str(s.get("product_id")) for s in segments if s.get("kind") == "product" and s.get("status") == "READY"}
+    return [item for item in plan.get("products", []) if str(item.get("product_id")) in have]
+
+
+def _recap_ids(remaining: list[dict]) -> list[str]:
+    return [str(item["product_id"]) for item in remaining]
+
+
+def _recap_is_current(segments: list[dict], remaining: list[dict]) -> bool:
+    ids = _recap_ids(remaining)
+    return any(s.get("phase") == PHASE_B and s.get("kind") == RECAP_KIND and s.get("status") != "CANCELLED"
+               and s.get("recap_for") == ids for s in segments)
+
+
+def _enqueue_recap(campaign_id: str) -> None:
+    try:
+        from tasks import write_routine_recap_task
+        write_routine_recap_task.delay(campaign_id)
+    except Exception as exc:
+        logger.error("[CAMPAIGN] could not queue the routine recap (%s): %s", campaign_id, exc)
+
+
+def start_phase_b(campaign_id: str) -> str | None:
+    """Write the routine recap for the products that survived phase A; returns the new job id."""
+    db = get_db()
+    campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
+    if not campaign or campaign.get("show_format") != SHOW_FORMAT_LIBRARY:
+        return None
+    if campaign.get("status") not in GENERATION_PHASE_STATUSES:
+        return None
+    plan = campaign.get("show_plan") or {}
+    segments = list(db.ai_idol_segments.find({"campaign_id": campaign_id}).sort("position", 1))
+    remaining = remaining_products(plan, segments)
+    if not remaining or _recap_is_current(segments, remaining):
+        return None
+    ids = _recap_ids(remaining)
+    # One writer at a time per product set, even if several job callbacks queue this at once.
+    key = ",".join(ids) + "#" + str(sum(1 for s in segments if s.get("phase") == PHASE_B))
+    claimed = db.ai_idol_campaigns.find_one_and_update(
+        {"_id": campaign["_id"], "recap_claim": {"$ne": key}}, {"$set": {"recap_claim": key}})
+    if not claimed:
+        return None
+    dropped = [str(p["product_id"]) for p in plan.get("products", []) if str(p["product_id"]) not in ids]
+    if dropped:
+        logger.info("[CAMPAIGN] recap for %s leaves out dropped products %s", campaign_id, dropped)
+    position = max([int(s.get("position") or 0) for s in segments] or [-1]) + 1
+    sub_plan = {**plan, "products": remaining}
+    try:
+        snapshots = _LibraryContext._collect(ids)
+        draft = show_writer.write_routine_recap(sub_plan, snapshots)
+        total = show_plan.bundle_total([(snapshots.get(i) or {}).get("pricing") for i in ids])
+        snapshot = show_plan.combined_snapshot(sub_plan, snapshots, total or None)
+    except Exception as exc:
+        message = f"{RECAP_WRITE_ERROR}: {exc}"
+        logger.error("[CAMPAIGN] %s (%s)", message, campaign_id)
+        now = utcnow()
+        db.ai_idol_segments.insert_one({
+            "campaign_id": campaign_id, "kind": RECAP_KIND, "angle": None, "interlude_type": None,
+            "product_id": None, "variant": 0, "script_text": "", "phase": PHASE_B, "position": position,
+            "recap_for": ids, "status": "FAILED", "job_id": None, "error_message": message[:2000],
+            "created_at": now, "updated_at": now})
+        db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {
+            "$set": {"recap_claim": None}, "$inc": {"progress.total": 1}})
+        db.ai_idol_campaigns.update_one(
+            {"_id": campaign["_id"], "status": {"$in": list(GENERATION_PHASE_STATUSES)}},
+            {"$set": {"status": "NEEDS_ATTENTION", "error_message": message[:2000], "updated_at": now}})
+        return None
+    # The old recap (other product set) is replaced only once the new one is written.
+    db.ai_idol_segments.update_many(
+        {"campaign_id": campaign_id, "phase": PHASE_B, "status": {"$ne": "CANCELLED"}},
+        {"$set": {"status": "CANCELLED", "updated_at": utcnow()}})
+    now = utcnow()
+    segment_id = db.ai_idol_segments.insert_one({
+        "campaign_id": campaign_id, "kind": RECAP_KIND, "angle": draft.angle, "interlude_type": draft.interlude_type,
+        "product_id": None, "variant": draft.variant, "script_text": draft.script, "phase": PHASE_B,
+        "position": position, "recap_for": ids, "status": "QUEUED", "job_id": None, "error_message": None,
+        "created_at": now, "updated_at": now}).inserted_id
+    job_id = create_job(
+        None, campaign.get("content_mode", "Product Intro"), dict(campaign.get("configuration") or {}),
+        campaign_id=campaign_id, segment_id=str(segment_id), product_snapshot=snapshot,
+        purpose=purpose_of(campaign), clip_kind=RECAP_KIND, prewritten_script=draft.script)
+    db.ai_idol_segments.update_one({"_id": segment_id}, {"$set": {
+        "job_id": job_id, "status": "GENERATING", "updated_at": utcnow()}})
+    db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {"$inc": {"progress.total": 1}})
+    db.ai_idol_campaigns.update_one({"_id": campaign["_id"], "status": "NEEDS_ATTENTION"}, {"$set": {
+        "status": "GENERATING", "error_message": None, "updated_at": utcnow()}})
+    return job_id
+
+
+def _library_update(db, campaign_id: str, plan: dict, generating: int, awaiting_approval: int,
+                    failed: int) -> str | None:
+    """update_campaign_from_job for a clip library: phase B trigger, then readiness."""
+    segments = list(db.ai_idol_segments.find({"campaign_id": campaign_id}))
+    remaining = remaining_products(plan, segments)
+    products = [s for s in segments if s.get("kind") == "product"]
+    products_final = all(s.get("status") in FINAL_SEGMENT_STATUSES for s in products)
+    recap_pending = bool(products) and products_final and bool(remaining) and not _recap_is_current(segments, remaining)
+    if recap_pending:
+        _enqueue_recap(campaign_id)
+    open_states = {"$in": list(GENERATION_PHASE_STATUSES)}
+    if generating:
+        return None
+    if failed:
+        db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id), "status": open_states}, {"$set": {
+            "status": "NEEDS_ATTENTION", "updated_at": utcnow()}})
+        return None
+    if awaiting_approval:
+        db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id), "status": open_states}, {"$set": {
+            "status": "AWAITING_APPROVAL", "updated_at": utcnow()}})
+        return None
+    if recap_pending:
+        return None  # the recap is being written; assembly waits for it
+    ok, reason = library_ready(segments)
+    if ok:
+        return campaign_id
+    db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id), "status": open_states}, {"$set": {
+        "status": "NEEDS_ATTENTION", "error_message": reason, "updated_at": utcnow()}})
+    return None
+
+
 def update_campaign_from_job(job_id: str) -> str | None:
     """Sync a segment and its campaign with a job; returns the campaign id once it may move on to assembly."""
     db = get_db()
@@ -468,6 +617,9 @@ def update_campaign_from_job(job_id: str) -> str | None:
     db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id)}, {"$set": {
         "progress.ready": ready, "progress.failed": failed, "progress.skipped": skipped, "updated_at": utcnow(),
     }})
+    owner = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)}, {"show_format": 1, "show_plan": 1})
+    if (owner or {}).get("show_format") == SHOW_FORMAT_LIBRARY:
+        return _library_update(db, campaign_id, owner.get("show_plan") or {}, generating, awaiting_approval, failed)
     # Conditional on a generation-phase status so a cancelled/scheduled/live
     # campaign is never pulled back by a late job callback.
     open_states = {"$in": list(GENERATION_PHASE_STATUSES)}
@@ -657,13 +809,25 @@ def approve_external_platform(campaign_id: str, platform: str, by: str) -> dict:
 def resume_ready_campaign(campaign_id: str) -> bool:
     """Claim for assembly when every segment is READY or skipped, with at least one READY (nothing left to render)."""
     db = get_db()
+    owner = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)}, {"show_format": 1, "show_plan": 1})
+    if (owner or {}).get("show_format") == SHOW_FORMAT_LIBRARY:
+        segments = list(db.ai_idol_segments.find({"campaign_id": campaign_id}))
+        remaining = remaining_products(owner.get("show_plan") or {}, segments)
+        return bool(
+            segments
+            and all(s.get("status") in DONE_SEGMENT_STATUSES for s in segments)
+            and library_ready(segments)[0]
+            and _recap_is_current(segments, remaining)
+            and claim_campaign_for_assembly(campaign_id)
+        )
     total = db.ai_idol_segments.count_documents({"campaign_id": campaign_id})
     ready = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "READY"})
     skipped = db.ai_idol_segments.count_documents({"campaign_id": campaign_id, "status": "SKIPPED"})
     return bool(ready and total == ready + skipped and claim_campaign_for_assembly(campaign_id))
 
 
-def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, enqueue_assemble=None) -> dict:
+def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, enqueue_assemble=None,
+                   enqueue_recap=None) -> dict:
     """Recover a campaign that needs attention. Returns what was queued.
 
     1. FAILED segment with a job      -> reset the job, queue it again.
@@ -677,6 +841,8 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
         enqueue_job = enqueue_job or generate_job_task.delay
         enqueue_prepare = enqueue_prepare or prepare_campaign_task.delay
         enqueue_assemble = enqueue_assemble or assemble_campaign_task.delay
+    if enqueue_recap is None:
+        enqueue_recap = _enqueue_recap
 
     db = get_db()
     campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
@@ -698,9 +864,15 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
         )
         if not claimed:
             raise CampaignConflict("Chương trình vừa đổi trạng thái, hãy tải lại rồi thử lại.")
-        needs_prepare, skipped = False, []
+        needs_prepare, skipped, needs_recap = False, [], False
         for segment in failed:
             job_id = segment.get("job_id")
+            if not job_id and campaign.get("show_format") == SHOW_FORMAT_LIBRARY and segment.get("phase") == PHASE_B:
+                # The recap never got written: drop the stub and write it again.
+                db.ai_idol_segments.update_one({"_id": segment["_id"], "status": "FAILED"}, {"$set": {
+                    "status": "CANCELLED", "updated_at": utcnow()}})
+                needs_recap = True
+                continue
             if not job_id:
                 needs_prepare = True
                 continue
@@ -722,13 +894,27 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
         if needs_prepare:
             enqueue_prepare(campaign_id)
             result["prepare_queued"] = True
+        if needs_recap:
+            enqueue_recap(campaign_id)
+            result["recap_queued"] = True
         return result
+
+    if campaign.get("show_format") == SHOW_FORMAT_LIBRARY:
+        remaining = remaining_products(campaign.get("show_plan") or {}, segments)
+        if remaining and not _recap_is_current(segments, remaining):
+            enqueue_recap(campaign_id)  # the product set changed since the recap was written
+            result["recap_queued"] = True
+            return result
 
     # Skipped products are finished-and-unused; they never block, but a campaign needs one real clip.
     all_ready = (
         any(segment.get("status") == "READY" for segment in segments)
         and all(segment.get("status") in ("READY", "SKIPPED") for segment in segments)
     )
+    library_reason = ""
+    if campaign.get("show_format") == SHOW_FORMAT_LIBRARY:
+        ready_ok, library_reason = library_ready(segments)
+        all_ready = ready_ok and all(segment.get("status") in DONE_SEGMENT_STATUSES for segment in segments)
     master = str(campaign.get("master_video_path") or "")
     master_ok = bool(master) and os.path.isfile(master)
     if all_ready and status == "NEEDS_ATTENTION" and not has_broadcast(purpose_of(campaign)):
@@ -754,6 +940,8 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
             + "; ".join(str(item) for item in problems)
             + ". Hãy cấu hình nơi phát hoặc chọn phát nội bộ rồi tạo lại lịch."
         )
+    if library_reason:
+        raise CampaignConflict(library_reason + ". Không có clip lỗi nào để tạo lại; hãy tạo chương trình mới.")
     if segments and all(segment.get("status") == "SKIPPED" for segment in segments):
         raise CampaignConflict(
             "Tất cả kịch bản đều trượt kiểm duyệt nên không có phần nào để tạo lại. "
