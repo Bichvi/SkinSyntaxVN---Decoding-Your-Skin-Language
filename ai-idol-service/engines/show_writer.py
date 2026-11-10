@@ -1,8 +1,14 @@
-"""LLM drafts for the live clip library: product clips, frame clips and the routine recap."""
+"""LLM drafts for the live clip library: product clips, frame clips and the routine recap.
+
+Every call is small: the provider keeps only ~8000 prompt chars and a short completion cap, so product clips
+make one call per angle and frame clips make four calls. Product facts shrink first; rules never do.
+"""
 import logging
 
+from config import GROQ_MAX_PROMPT_CHARS
 from core.show_plan import bundle_total, bundle_total_phrase
 from core.show_types import ClipDraft
+from core.text_budget import clean_prompt_text
 from engines.content_agent import _product_source_lines, price_lines
 from engines.syna_persona import PERSONA_RULES_VI, SHOP_FACTS_VI
 from providers.llm_provider import LLMProvider
@@ -28,8 +34,15 @@ _TEASER = "Rồi, món tiếp theo cũng đỉnh không kém nè!"
 
 _NO_TIME_WORDS = (
     "Cấm các cụm \"hôm nay\", \"tối nay\", \"ngay bây giờ\" và mọi từ khan hiếm hay hạn chót "
-    "(\"chỉ còn\", \"sắp hết\", \"nhanh tay\", \"duy nhất\") trừ khi dữ liệu giá có dòng flash sale."
+    "(\"chỉ còn\", \"sắp hết\", \"nhanh tay\", \"duy nhất\") trừ khi thông tin giá có dòng flash sale."
 )
+
+_HONESTY = (
+    "Không bịa số người xem, người mua hay đơn hàng (\"500 bà đã chốt\", \"vừa có người mua\"), không bịa suất, "
+    "quà tặng, voucher, \"trợ giá\", \"mở khóa\" hay \"hết live là hết giá\", trừ khi thông tin giá có dòng flash sale."
+)
+
+_NO_NUMBERS = "KHÔNG nói \"món số N\" hay bất kỳ số thứ tự sản phẩm nào."
 
 _SELF_CONTAINED = (
     "Mỗi clip phải tự hiểu được khi nghe riêng lẻ: không nói \"như Syna vừa nói\", \"như lúc nãy\", "
@@ -41,10 +54,10 @@ BẢNG CÁC PHẦN (đúng thứ tự, mỗi phần một khóa riêng):
 - lead_in [Lead-in]: dẫn vào bước routine bằng TÊN BƯỚC ("Sạch rồi thì tới bước cấp cứu nền da nè..."). Không nhắc tên sản phẩm khác, không nói số thứ tự.
 - pain_point [Pain Point]: bắt bệnh, thói quen sai hoặc nỗi khổ cụ thể, có câu hỏi tu từ kiểu "Có bà nào... không?".
 - why [Why]: ví von đời thường giải thích vì sao.
-- solution [Solution]: thành phần và công dụng lấy từ dữ liệu thật.
-- feel [Feel]: cảm giác khi dùng, CHỈ theo mô tả hoặc cách dùng trong dữ liệu; nếu dữ liệu không nhắc thì viết ngắn hoặc nói về cách dùng.
-- how_to_use [How to Use]: cách dùng lấy từ dữ liệu.
-- price [Price]: đọc đúng nguyên văn cụm giá chuẩn trong các dòng giá, ngay sau đó đệm "..., tức là <X> cành thôi quý dị!" với <X> là phần số trước chữ "nghìn" của chính cụm đó. Ưu đãi chỉ khi có dòng flash sale.
+- solution [Solution]: thành phần và công dụng lấy từ thông tin sản phẩm thật.
+- feel [Feel]: cảm giác khi dùng, CHỈ theo mô tả hoặc cách dùng trong thông tin sản phẩm; nếu không nhắc thì viết ngắn hoặc nói về cách dùng.
+- how_to_use [How to Use]: cách dùng lấy từ thông tin sản phẩm.
+- price [Price]: đọc đúng nguyên văn cụm giá chuẩn trong các dòng giá; nếu cụm giá có chữ "nghìn" thì ngay sau đó đệm "..., tức là <X> cành thôi quý dị!" với <X> là phần số trước chữ "nghìn" của chính cụm đó (không có chữ "nghìn" thì không đệm). Ưu đãi chỉ khi có dòng flash sale.
 - cta [CTA]: giục chốt đơn: "bấm giỏ hàng, chọn món số {number}...", mời comment hoặc thả tim."""
 
 
@@ -64,9 +77,10 @@ def _text_list(count: int) -> dict:
     return {"type": "array", "items": _TEXT, "minItems": count, "maxItems": count}
 
 
-def _call(llm, system: str, user: str, schema: dict, name: str) -> dict:
+def _call(llm, system: str, user: str, schema: dict, name: str, max_tokens: int | None = None) -> dict:
     llm = llm or LLMProvider()
-    result = llm.invoke_json_schema(system, user, schema=schema, schema_name=name)
+    result = llm.invoke_json_schema(system, user, schema=schema, schema_name=name,
+                                    max_completion_tokens=max_tokens)
     if not isinstance(result, dict) or not result:
         raise ValueError(f"LLM trả về JSON không hợp lệ cho {name}")
     return result
@@ -92,29 +106,65 @@ def _word_range(words: tuple[int, int]) -> str:
     return f"{words[0]}-{words[1]} chữ"
 
 
+def _tokens(*word_maxes: int) -> int:
+    """Completion budget: about 2 tokens per word, 25% headroom, plus JSON overhead."""
+    return int(sum(word_maxes) * 2.5) + 150
+
+
+PROMPT_BUDGET = GROQ_MAX_PROMPT_CHARS - 200
+
+_FACT_LADDER = ((1200, 1600, 800), (700, 900, 400), (300, 300, 200), (120, 120, 80), (0, 0, 0))
+_MULTI_FACT_LADDER = ((300, 300, 150), (150, 150, 80), (60, 60, 40), (0, 0, 0))
+_RECAP_LADDER = ((300,), (120,), (0,))
+
+
+def prompt_len(system: str, user: str) -> int:
+    return len(clean_prompt_text(system)) + len(clean_prompt_text(user))
+
+
+def _fit_user(system: str, ladder, make_user) -> str:
+    """First rung whose system+user fits the provider budget; only product facts shrink, never the rules."""
+    user = ""
+    for limits in ladder:
+        user = make_user(*limits)
+        if prompt_len(system, user) <= PROMPT_BUDGET:
+            break
+    return user
+
+
 # ---------------------------------------------------------------- product clips
 
-def build_product_prompts(snapshot: dict, item: dict, plan: dict) -> tuple[str, str]:
+def build_product_prompts(snapshot: dict, item: dict, plan: dict, angle: str = "A",
+                          other: dict | None = None) -> tuple[str, str]:
     system = _system(
-        "Bạn viết kịch bản đọc cho clip sản phẩm trong một buổi live bán mỹ phẩm. Chỉ dùng thông tin trong dữ liệu "
-        "sản phẩm được cung cấp, không bịa thành phần, công dụng, giá hay ưu đãi. Trả về JSON đúng schema."
+        "Bạn viết kịch bản đọc cho clip sản phẩm trong một buổi live bán mỹ phẩm. Chỉ dùng thông tin sản phẩm "
+        "được cung cấp, không bịa thành phần, công dụng, giá hay ưu đãi. Trả về JSON đúng schema."
     )
     conflicts = [c for c in (plan.get("conflicts") or [])
                  if str(item.get("product_id")) in {str(c.get("a")), str(c.get("b"))}]
     conflict_lines = "\n".join(f"- {c.get('message_vi')}" for c in conflicts) or "- Không có cảnh báo kết hợp."
     number = item.get("number")
-    user = f"""\
-DỮ LIỆU SẢN PHẨM:
-{_product_source_lines(snapshot, with_price=True, ingredients=1200, description=1600, usage=800)}
+    avoid = ""
+    if angle == "A":
+        focus = "Góc A: xoáy vào nỗi đau chính và thành phần."
+    else:
+        focus = "Góc B: xoáy vào hợp với ai, dùng ở bước nào, lưu ý kết hợp với sản phẩm khác (xem cảnh báo kết hợp)."
+        if other:
+            avoid = (f"\nGóc A đã dùng câu bắt bệnh \"{str(other.get('pain_point'))[:200]}\" và ví von "
+                     f"\"{str(other.get('why'))[:200]}\"; góc B phải khác rõ cả hai.")
+
+    def make_user(ing, desc, usage):
+        facts = _product_source_lines(snapshot, with_price=True, ingredients=ing, description=desc, usage=usage)
+        return f"""\
+THÔNG TIN SẢN PHẨM:
+{facts}
 - Bước routine: {item.get('step_label')}
 - Chủ đề buổi: {plan.get('theme_vi') or 'chăm da từng bước'}
 CẢNH BÁO KẾT HỢP (chỉ dùng cho góc B):
 {conflict_lines}
 
-NHIỆM VỤ: viết 2 góc A và B cho CÙNG sản phẩm này, mỗi góc đủ 8 phần, tổng mỗi góc {_word_range(PRODUCT_WORDS)} (đọc 100-140 giây).
-- Góc A xoáy vào nỗi đau chính và thành phần.
-- Góc B xoáy vào hợp với ai, dùng ở bước nào, lưu ý kết hợp với sản phẩm khác.
-- Hai góc phải khác nhau rõ: khác ví von, khác câu bắt bệnh.
+NHIỆM VỤ: viết góc {angle} cho sản phẩm này, đủ 8 phần, tổng {_word_range(PRODUCT_WORDS)} (đọc 100-140 giây).
+{focus}{avoid}
 
 {_PRODUCT_SECTION_TABLE.format(number=number)}
 
@@ -122,15 +172,16 @@ LUẬT:
 - Các phần từ lead_in đến how_to_use phải "dùng lâu dài được": KHÔNG giá, KHÔNG nhắc "live", "livestream", "hôm nay", "comment", "bình luận", "thả tim".
 - "món số {number}" CHỈ được nói trong cta, không nói ở phần khác.
 - {_NO_TIME_WORDS}
+- {_HONESTY}
 - {_SELF_CONTAINED}
 - Không chào hỏi ("xin chào", "chào cả nhà") và không tạm biệt: đây không phải mở màn hay kết thúc.
 - Câu ngắn, dễ đọc thành tiếng; không dùng ký hiệu, emoji hay gạch đầu dòng."""
-    return system, user
+
+    return system, _fit_user(system, _FACT_LADDER, make_user)
 
 
-def _product_schema() -> dict:
-    angle = _schema({key: _TEXT for key in SECTION_KEYS})
-    return _schema({"angle_a": angle, "angle_b": angle})
+def _angle_schema() -> dict:
+    return _schema({key: _TEXT for key in SECTION_KEYS})
 
 
 def _join_sections(angle, where: str) -> str:
@@ -142,13 +193,21 @@ def _join_sections(angle, where: str) -> str:
 
 
 def write_product_clips(snapshot: dict, item: dict, plan: dict, *, llm=None) -> list[ClipDraft]:
-    system, user = build_product_prompts(snapshot, item, plan)
-    data = _call(llm, system, user, _product_schema(), "product_clips")
-    product_id = str(item.get("product_id") or snapshot.get("id"))
-    return [
-        ClipDraft(kind="product", script=_join_sections(data.get(key), key), product_id=product_id, angle=angle)
-        for key, angle in (("angle_a", "A"), ("angle_b", "B"))
-    ]
+    raw_id = item.get("product_id") or snapshot.get("id")
+    if raw_id in (None, ""):
+        raise ValueError("Thiếu product_id cho clip sản phẩm")
+    product_id = str(raw_id)
+    llm = llm or LLMProvider()
+    drafts = []
+    other = None
+    for angle in ("A", "B"):
+        system, user = build_product_prompts(snapshot, item, plan, angle, other)
+        data = _call(llm, system, user, _angle_schema(), f"product_clip_{angle.lower()}",
+                     _tokens(PRODUCT_WORDS[1]))
+        script = _join_sections(data, f"angle_{angle}")
+        drafts.append(ClipDraft(kind="product", script=script, product_id=product_id, angle=angle))
+        other = data
+    return drafts
 
 
 # ---------------------------------------------------------------- frame clips
@@ -157,93 +216,150 @@ def _lineup_steps(plan: dict) -> str:
     return ", ".join(str(p.get("step_label")) for p in plan.get("products", [])) or "chăm da từng bước"
 
 
-def _faq_block(faqs: list[dict], snapshots: dict[str, dict]) -> str:
-    lines = []
-    for index, faq in enumerate(faqs[:FAQ_COUNT], 1):
-        name = (snapshots.get(str(faq.get("product_id"))) or {}).get("name", "")
-        lines.append(f"{index}. product_id={faq.get('product_id')} ({name})\n   Câu hỏi: {faq.get('question')}\n"
-                     f"   Trả lời gốc: {faq.get('answer')}")
-    return "\n".join(lines) or "(chưa có câu hỏi thật nào)"
-
-
-def _product_facts(plan: dict, snapshots: dict[str, dict]) -> str:
-    blocks = []
-    for item in plan.get("products", []):
-        snap = snapshots.get(str(item.get("product_id"))) or {}
-        blocks.append(f"[product_id={item.get('product_id')}] bước {item.get('step_label')}\n"
-                      f"{_product_source_lines(snap, with_price=False, ingredients=500, description=500, usage=300)}")
-    return "\n\n".join(blocks)
-
-
-def build_frame_prompts(plan: dict, snapshots: dict[str, dict], faqs: list[dict]) -> tuple[str, str]:
-    system = _system(
+def _frame_system() -> str:
+    return _system(
         "Bạn viết các clip khung (mở màn, chuyển cảnh, đoạn nghỉ, hỏi đáp, mẹo da, kết thúc) cho một buổi live bán "
         "mỹ phẩm của Syna. Chỉ dùng thông tin được cung cấp. Trả về JSON đúng schema."
     )
-    missing = FAQ_COUNT - len(faqs[:FAQ_COUNT])
+
+
+def _theme_hint(theme: str) -> str:
+    return theme or "(chưa có, hãy đặt một chủ đề ngắn gọn cho buổi, ghi vào theme_vi)"
+
+
+def _frame_context(plan: dict, theme: str) -> str:
     conflicts = "\n".join(f"- {c.get('message_vi')}" for c in plan.get("conflicts") or []) or "- Không có."
-    theme = plan.get("theme_vi") or "(chưa có, hãy đặt một chủ đề ngắn gọn cho buổi, ghi vào theme_vi)"
+    return (f"CHỦ ĐỀ BUỔI: {_theme_hint(theme)}\n"
+            f"CÁC BƯỚC ROUTINE CỦA BUỔI (theo thứ tự): {_lineup_steps(plan)}\n"
+            f"CẢNH BÁO KẾT HỢP:\n{conflicts}")
+
+
+def _frame_rules(*, greet: bool) -> str:
+    lines = [
+        "Không clip nào nêu số tiền hay cụm giá.",
+        "Được chào hỏi trong các clip của yêu cầu này." if greet else "KHÔNG chào hỏi.",
+        "KHÔNG tạm biệt (trừ closing nếu có yêu cầu viết closing).",
+        _NO_NUMBERS, _SELF_CONTAINED, _NO_TIME_WORDS, _HONESTY,
+        "Văn nói tự nhiên, câu ngắn; không ký hiệu, emoji hay gạch đầu dòng.",
+    ]
+    return "LUẬT CHUNG:\n" + "\n".join(f"- {line}" for line in lines)
+
+
+def build_opening_prompts(plan: dict, theme: str) -> tuple[str, str]:
+    theme_line = "" if theme else "\nĐiền thêm theme_vi: chủ đề buổi, một câu ngắn."
     user = f"""\
-CHỦ ĐỀ BUỔI: {theme}
-CÁC BƯỚC ROUTINE CỦA BUỔI (theo thứ tự): {_lineup_steps(plan)}
+{_frame_context(plan, theme)}
+
+NHIỆM VỤ: viết opening và 2 transitions.{theme_line}
+1. opening (1 clip, {_word_range(OPENING_WORDS)}, 60-120 giây): chào, kiểm tra tín hiệu ("nghe rõ giọng Syna chưa"), miếng hài "AI không có da mà đi bán mỹ phẩm", nêu chủ đề và các BƯỚC routine của buổi (chỉ tên bước, KHÔNG đọc tên sản phẩm), mời ở lại và thả tim.
+2. transitions (2 clip khác nhau, mỗi clip {_word_range(TRANSITION_WORDS)}, 20-30 giây): chào người mới vào phòng, nhắc chủ đề, "Syna điểm lại từ bước đầu nhé".
+
+{_frame_rules(greet=True)}"""
+    return _frame_system(), user
+
+
+def build_interlude_prompts(plan: dict, theme: str) -> tuple[str, str]:
+    user = f"""\
+{_frame_context(plan, theme)}
+
+NHIỆM VỤ: viết 6 interludes, mỗi clip {_word_range(INTERLUDE_WORDS)} (10-20 giây): 2 clip kiểu cta, 2 clip kiểu about_shop, 2 clip kiểu fun.
+- cta: nhắc bấm giỏ hàng, xem lại món vừa nói (không nêu tên món, không nêu số).
+- about_shop: nói MỘT điều trong danh sách này, không thêm cam kết nào khác: {'; '.join(SHOP_FACTS_VI)}.
+- fun: câu đùa hoặc câu hỏi vui về chăm da, không bịa sự thật.
+- MỖI đoạn kết bằng đúng một câu nhá chung: "{_TEASER}". KHÔNG nêu tên hay bước của món sau, vì đoạn nghỉ có thể đứng ở nhiều chỗ.
+
+{_frame_rules(greet=False)}"""
+    return _frame_system(), user
+
+
+def _faq_block(faqs: list[dict], snapshots: dict[str, dict]) -> str:
+    lines = []
+    for index, faq in enumerate(faqs[:FAQ_COUNT], 1):
+        name = str((snapshots.get(str(faq.get("product_id"))) or {}).get("name", ""))[:80]
+        lines.append(f"{index}. product_id={faq.get('product_id')} ({name})\n"
+                     f"   Câu hỏi: {str(faq.get('question'))[:300]}\n"
+                     f"   Trả lời gốc: {str(faq.get('answer'))[:400]}")
+    return "\n".join(lines) or "(chưa có câu hỏi thật nào)"
+
+
+def _product_facts(plan: dict, snapshots: dict[str, dict], ing: int, desc: int, usage: int) -> str:
+    blocks = []
+    for item in plan.get("products", []):
+        snap = snapshots.get(str(item.get("product_id"))) or {}
+        if desc <= 0:
+            body = f"- {str(snap.get('name'))[:80]} ({str(snap.get('brand'))[:40]})"
+        else:
+            body = _product_source_lines(snap, with_price=False, ingredients=ing, description=desc, usage=usage)
+        blocks.append(f"[product_id={item.get('product_id')}] bước {item.get('step_label')}\n{body}")
+    return "\n\n".join(blocks)
+
+
+def build_faq_prompts(plan: dict, snapshots: dict[str, dict], faqs: list[dict], theme: str) -> tuple[str, str]:
+    system = _frame_system()
+    missing = FAQ_COUNT - len(faqs[:FAQ_COUNT])
+
+    def make_user(ing, desc, usage):
+        return f"""\
+{_frame_context(plan, theme)}
 
 SẢN PHẨM TRONG BUỔI (không có giá, vì clip khung không nói giá):
-{_product_facts(plan, snapshots)}
-
-CẢNH BÁO KẾT HỢP:
-{conflicts}
+{_product_facts(plan, snapshots, ing, desc, usage)}
 
 CÂU HỎI THẬT TỪ KHÁCH (đã được shop trả lời):
 {_faq_block(faqs, snapshots)}
 
-NHIỆM VỤ: viết đủ các clip sau và điền theme_vi (chủ đề buổi, một câu ngắn).
-1. opening (1 clip, {_word_range(OPENING_WORDS)}, 60-120 giây): chào, kiểm tra tín hiệu ("nghe rõ giọng Syna chưa"), miếng hài "AI không có da mà đi bán mỹ phẩm", nêu chủ đề và các BƯỚC routine của buổi (chỉ tên bước, KHÔNG đọc tên sản phẩm), mời ở lại và thả tim.
-2. transitions (2 clip, mỗi clip {_word_range(TRANSITION_WORDS)}, 20-30 giây): chào người mới vào phòng, nhắc chủ đề, "Syna điểm lại từ bước đầu nhé". Hai clip khác nhau.
-3. interludes (6 clip, mỗi clip {_word_range(INTERLUDE_WORDS)}, 10-20 giây): 2 clip kiểu cta, 2 clip kiểu about_shop, 2 clip kiểu fun.
-   - cta: nhắc bấm giỏ hàng, xem lại món vừa nói (không nêu tên món).
-   - about_shop: nói MỘT điều trong danh sách này, không thêm cam kết nào khác: {'; '.join(SHOP_FACTS_VI)}.
-   - fun: câu đùa hoặc câu hỏi vui về chăm da, không bịa sự thật.
-   - MỖI đoạn kết bằng đúng một câu nhá chung: "{_TEASER}". KHÔNG nêu tên hay bước của món sau, vì đoạn nghỉ có thể đứng ở nhiều chỗ.
-4. faqs ({FAQ_COUNT} clip, mỗi clip {_word_range(FAQ_WORDS)}, 20-40 giây), mỗi clip gắn product_id lấy từ danh sách sản phẩm ở trên:
-   - Với mỗi câu hỏi thật ở trên: Syna đọc theo kiểu "có bạn hỏi..." và diễn đạt lại câu trả lời gốc, KHÔNG thêm ý.
-   - Còn thiếu {missing} clip: tự sinh câu hỏi và trả lời từ dữ liệu sản phẩm và cảnh báo kết hợp.
-5. tips (2 clip, mỗi clip {_word_range(TIP_WORDS)}, 60-90 giây): kiến thức da theo chủ đề, giọng Syna. KHÔNG bán hàng, KHÔNG tên sản phẩm hay thương hiệu, KHÔNG giá.
-6. closing (1 clip, {_word_range(CLOSING_WORDS)}, 20-30 giây): cảm ơn, nhắc kiểm tra giỏ hàng đã bấm đặt chưa, tạm biệt, hẹn phiên sau. Không nêu số giá. Không nói "hết live là hết giá".
+NHIỆM VỤ: viết {FAQ_COUNT} faqs, mỗi clip {_word_range(FAQ_WORDS)} (20-40 giây), mỗi clip gắn product_id lấy đúng từ danh sách sản phẩm ở trên.
+- Với mỗi câu hỏi thật ở trên: Syna đọc theo kiểu "có bạn hỏi..." và diễn đạt lại câu trả lời gốc, KHÔNG thêm ý.
+- Còn thiếu {missing} clip: tự sinh câu hỏi và trả lời từ thông tin sản phẩm và cảnh báo kết hợp.
 
-LUẬT CHUNG:
-- Không clip nào nêu số tiền hay cụm giá.
-- Chỉ opening và transitions được chào hỏi. Chỉ closing được tạm biệt. Các clip khác không chào, không tạm biệt.
-- {_SELF_CONTAINED}
-- {_NO_TIME_WORDS}
-- Văn nói tự nhiên, câu ngắn; không ký hiệu, emoji hay gạch đầu dòng."""
-    return system, user
+{_frame_rules(greet=False)}"""
+
+    return system, _fit_user(system, _MULTI_FACT_LADDER, make_user)
 
 
-def _frame_schema() -> dict:
-    interludes = _schema({kind: _text_list(2) for kind in INTERLUDE_TYPES})
-    faq = _schema({"product_id": _TEXT, "text": _TEXT})
-    return _schema({
-        "theme_vi": _TEXT,
-        "opening": _TEXT,
-        "transitions": _text_list(2),
-        "interludes": interludes,
-        "faqs": {"type": "array", "items": faq, "minItems": FAQ_COUNT, "maxItems": FAQ_COUNT},
-        "tips": _text_list(2),
-        "closing": _TEXT,
-    })
+def build_tips_closing_prompts(plan: dict, theme: str) -> tuple[str, str]:
+    user = f"""\
+{_frame_context(plan, theme)}
+
+NHIỆM VỤ: viết 2 tips và 1 closing.
+1. tips (2 clip, mỗi clip {_word_range(TIP_WORDS)}, 60-90 giây): kiến thức da theo chủ đề, giọng Syna. KHÔNG bán hàng, KHÔNG tên sản phẩm hay thương hiệu, KHÔNG giá, KHÔNG chào, KHÔNG tạm biệt.
+2. closing (1 clip, {_word_range(CLOSING_WORDS)}, 20-30 giây): cảm ơn, nhắc kiểm tra giỏ hàng đã bấm đặt chưa, tạm biệt, hẹn phiên sau. Không nêu số giá. Không nói "hết live là hết giá". Chỉ closing được tạm biệt.
+
+{_frame_rules(greet=False)}"""
+    return _frame_system(), user
+
+
+def build_frame_prompts(plan: dict, snapshots: dict[str, dict], faqs: list[dict]) -> list[tuple[str, str]]:
+    """All four frame prompts (for inspection and size tests)."""
+    theme = str(plan.get("theme_vi") or "").strip()
+    return [build_opening_prompts(plan, theme), build_interlude_prompts(plan, theme),
+            build_faq_prompts(plan, snapshots, faqs, theme), build_tips_closing_prompts(plan, theme)]
 
 
 def write_frame_clips(plan: dict, snapshots: dict[str, dict], faqs: list[dict], *,
                       llm=None) -> tuple[str, list[ClipDraft]]:
-    system, user = build_frame_prompts(plan, snapshots, faqs)
-    data = _call(llm, system, user, _frame_schema(), "frame_clips")
-    theme = str(data.get("theme_vi") or plan.get("theme_vi") or "").strip()
-    if not theme:
-        raise ValueError("Thiếu chủ đề buổi (theme_vi)")
+    llm = llm or LLMProvider()
+    theme = str(plan.get("theme_vi") or "").strip()
+    drafts: list[ClipDraft] = []
 
-    drafts = [ClipDraft(kind="opening", script=_need_text(data.get("opening"), "opening"))]
+    # Call 1: opening + transitions (and the theme only when the plan has none).
+    props = {"opening": _TEXT, "transitions": _text_list(2)}
+    if not theme:
+        props = {"theme_vi": _TEXT, **props}
+    system, user = build_opening_prompts(plan, theme)
+    data = _call(llm, system, user, _schema(props), "frame_opening",
+                 _tokens(OPENING_WORDS[1], 2 * TRANSITION_WORDS[1]))
+    if not theme:
+        theme = _need_text(data.get("theme_vi"), "theme_vi")
+    drafts.append(ClipDraft(kind="opening", script=_need_text(data.get("opening"), "opening")))
     for index, text in enumerate(_need_list(data.get("transitions"), 2, "transitions")):
         drafts.append(ClipDraft(kind="transition", script=text, variant=index))
+
+    # Call 2: interludes.
+    system, user = build_interlude_prompts(plan, theme)
+    interludes_schema = _schema({kind: _text_list(2) for kind in INTERLUDE_TYPES})
+    data = _call(llm, system, user, _schema({"interludes": interludes_schema}), "frame_interludes",
+                 _tokens(6 * INTERLUDE_WORDS[1]))
     interludes = data.get("interludes")
     if not isinstance(interludes, dict):
         raise ValueError("Thiếu đoạn nghỉ (interludes)")
@@ -251,19 +367,29 @@ def write_frame_clips(plan: dict, snapshots: dict[str, dict], faqs: list[dict], 
         for index, text in enumerate(_need_list(interludes.get(kind), 2, f"interludes/{kind}")):
             drafts.append(ClipDraft(kind="interlude", script=text, interlude_type=kind, variant=index))
 
+    # Call 3: FAQ clips, each tied to a real plan product (never re-tagged).
+    known = [str(p.get("product_id")) for p in plan.get("products", [])]
+    system, user = build_faq_prompts(plan, snapshots, faqs, theme)
+    faq_schema = _schema({"product_id": {"type": "string", "enum": known}, "text": _TEXT})
+    faqs_schema = {"type": "array", "items": faq_schema, "minItems": FAQ_COUNT, "maxItems": FAQ_COUNT}
+    data = _call(llm, system, user, _schema({"faqs": faqs_schema}), "frame_faqs",
+                 _tokens(FAQ_COUNT * FAQ_WORDS[1]))
     faq_items = data.get("faqs")
     if not isinstance(faq_items, list) or len(faq_items) != FAQ_COUNT:
         raise ValueError(f"Cần đúng {FAQ_COUNT} clip hỏi đáp")
-    known = [str(p.get("product_id")) for p in plan.get("products", [])]
     for index, entry in enumerate(faq_items):
         if not isinstance(entry, dict):
             raise ValueError("Clip hỏi đáp không hợp lệ")
         product_id = str(entry.get("product_id") or "")
         if product_id not in known:
-            product_id = known[0] if known else None
+            raise ValueError(f"Clip hỏi đáp có product_id không thuộc buổi: {product_id}")
         drafts.append(ClipDraft(kind="faq", script=_need_text(entry.get("text"), "faqs"),
                                 product_id=product_id, variant=index))
 
+    # Call 4: tips + closing.
+    system, user = build_tips_closing_prompts(plan, theme)
+    data = _call(llm, system, user, _schema({"tips": _text_list(2), "closing": _TEXT}), "frame_tips_closing",
+                 _tokens(2 * TIP_WORDS[1], CLOSING_WORDS[1]))
     for index, text in enumerate(_need_list(data.get("tips"), 2, "tips")):
         drafts.append(ClipDraft(kind="tip", script=text, variant=index))
     drafts.append(ClipDraft(kind="closing", script=_need_text(data.get("closing"), "closing")))
@@ -272,14 +398,14 @@ def write_frame_clips(plan: dict, snapshots: dict[str, dict], faqs: list[dict], 
 
 # ---------------------------------------------------------------- routine recap
 
-def _recap_lines(plan: dict, snapshots: dict[str, dict]) -> str:
+def _recap_lines(plan: dict, snapshots: dict[str, dict], desc: int) -> str:
     blocks = []
     for item in plan.get("products", []):
         snap = snapshots.get(str(item.get("product_id"))) or {}
+        use = f"\n  Công dụng: {str(snap.get('description') or '')[:desc]}" if desc > 0 else ""
         blocks.append(
-            f"- món số {item.get('number')}: {item.get('step_label')} | {snap.get('name')} ({snap.get('brand')})\n"
-            f"  Công dụng: {str(snap.get('description') or '')[:300]}\n"
-            f"{price_lines(snap.get('pricing'))}"
+            f"- món số {item.get('number')}: {item.get('step_label')} | {str(snap.get('name'))[:80]} "
+            f"({str(snap.get('brand'))[:40]}){use}\n{price_lines(snap.get('pricing'))}"
         )
     return "\n".join(blocks)
 
@@ -296,11 +422,13 @@ def build_recap_prompts(plan: dict, snapshots: dict[str, dict]) -> tuple[str, st
     )
     total = recap_total_phrase(plan, snapshots)
     conflicts = "\n".join(f"- {c.get('message_vi')}" for c in plan.get("conflicts") or []) or "- Không có."
-    user = f"""\
+
+    def make_user(desc):
+        return f"""\
 CHỦ ĐỀ BUỔI: {plan.get('theme_vi') or 'chăm da từng bước'}
 
 CÁC MÓN CÒN LẠI (giữ nguyên số thứ tự, theo thứ tự dùng):
-{_recap_lines(plan, snapshots)}
+{_recap_lines(plan, snapshots, desc)}
 
 CẢNH BÁO XUNG ĐỘT:
 {conflicts}
@@ -308,20 +436,22 @@ CẢNH BÁO XUNG ĐỘT:
 CỤM BẮT BUỘC ĐỌC NGUYÊN VĂN (không đổi chữ, không tự cộng lại): "{total}"
 
 NHIỆM VỤ: viết MỘT clip tóm tắt routine, {_word_range(RECAP_WORDS)} (60-90 giây).
-- Điểm lại từng món theo số ("món số N"), nêu bước và MỘT câu công dụng, kèm giá đọc đúng nguyên văn cụm giá chuẩn trong các dòng giá; sau cụm chuẩn có thể đệm "tức là <X> cành" với <X> là phần số trước chữ "nghìn".
+- Điểm lại từng món theo số ("món số N"), nêu bước và MỘT câu công dụng, kèm giá đọc đúng nguyên văn cụm giá chuẩn trong các dòng giá; nếu cụm có chữ "nghìn" thì sau cụm chuẩn có thể đệm "tức là <X> cành" với <X> là phần số trước chữ "nghìn".
 - Chỉ nhắc đúng các số đã liệt kê, không thêm món khác, không đánh số lại.
 - Đọc tổng cả bộ bằng cụm bắt buộc ở trên.
 - Nhắc thứ tự dùng sáng/tối và cảnh báo xung đột nếu có. Kết bằng giục bấm giỏ hàng.
 - Không chào hỏi, không tạm biệt.
 - {_NO_TIME_WORDS}
+- {_HONESTY}
 - {_SELF_CONTAINED}
 - Văn nói tự nhiên; không ký hiệu, emoji hay gạch đầu dòng."""
-    return system, user
+
+    return system, _fit_user(system, _RECAP_LADDER, make_user)
 
 
 def write_routine_recap(plan: dict, snapshots: dict[str, dict], *, llm=None) -> ClipDraft:
     system, user = build_recap_prompts(plan, snapshots)
-    data = _call(llm, system, user, _schema({"text": _TEXT}), "routine_recap")
+    data = _call(llm, system, user, _schema({"text": _TEXT}), "routine_recap", _tokens(RECAP_WORDS[1]))
     return ClipDraft(kind="routine_recap", script=_need_text(data.get("text"), "routine_recap"))
 
 

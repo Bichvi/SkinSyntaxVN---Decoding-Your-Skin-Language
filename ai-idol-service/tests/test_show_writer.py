@@ -10,19 +10,25 @@ from tests.fakes import Collection, FakeDb
 
 from core.show_plan import bundle_total_phrase
 from engines.show_writer import (
-    SECTION_KEYS, SECTION_LABELS, load_answered_faqs, write_frame_clips, write_product_clips, write_routine_recap,
+    PROMPT_BUDGET, SECTION_KEYS, SECTION_LABELS, build_frame_prompts, build_product_prompts, build_recap_prompts,
+    load_answered_faqs, prompt_len, write_frame_clips, write_product_clips, write_routine_recap,
 )
-from engines.syna_persona import PERSONA_RULES_VI
+from engines.syna_persona import PERSONA_RULES_VI, SHOP_FACTS_VI
 
 
 class FakeLLM:
-    def __init__(self, response):
-        self.response = response
+    """Returns canned JSON by schema_name; records every call."""
+
+    def __init__(self, responses):
+        self.responses = responses
         self.calls = []
 
-    def invoke_json_schema(self, system, user, *, schema, schema_name):
-        self.calls.append((system, user, schema_name))
-        return self.response
+    def invoke_json_schema(self, system, user, *, schema, schema_name, max_completion_tokens=None):
+        self.calls.append((system, user, schema_name, schema, max_completion_tokens))
+        response = self.responses
+        if isinstance(response, dict) and schema_name in response:
+            response = response[schema_name]
+        return response
 
 
 def pricing(price):
@@ -51,19 +57,32 @@ def angle(tag):
 
 
 FRAME = {
-    "theme_vi": "Da sạch da khỏe",
-    "opening": "chào cả nhà",
-    "transitions": ["t1", "t2"],
-    "interludes": {"cta": ["c1", "c2"], "about_shop": ["a1", "a2"], "fun": ["f1", "f2"]},
-    "faqs": [{"product_id": "p1", "text": f"faq{i}"} for i in range(4)],
-    "tips": ["tip1", "tip2"],
-    "closing": "tạm biệt",
+    "frame_opening": {"opening": "chào cả nhà", "transitions": ["t1", "t2"]},
+    "frame_interludes": {"interludes": {"cta": ["c1", "c2"], "about_shop": ["a1", "a2"], "fun": ["f1", "f2"]}},
+    "frame_faqs": {"faqs": [{"product_id": "p1", "text": f"faq{i}"} for i in range(4)]},
+    "frame_tips_closing": {"tips": ["tip1", "tip2"], "closing": "tạm biệt"},
 }
+PRODUCT = {"product_clip_a": angle("A"), "product_clip_b": angle("B")}
+
+
+def big_world(n=6):
+    long = "x" * 5000
+    snaps, items = {}, []
+    for i in range(1, n + 1):
+        pid = f"p{i}"
+        snaps[pid] = {"id": pid, "name": "Tên sản phẩm rất dài " * 10, "brand": "Thương hiệu " * 10,
+                      "category": "serum", "description": long, "ingredients": long, "usage": long,
+                      "origin": "Hàn Quốc", "skin_type": "mọi loại da", "pricing": pricing(100000 * i)}
+        items.append({"product_id": pid, "number": i, "step_key": "serum", "step_label": "Serum"})
+    plan = {"products": items,
+            "conflicts": [{"a": "p1", "b": "p2", "severity": "warn", "message_vi": "m" * 200}],
+            "theme_vi": "Chủ đề " * 8, "routine_source": "keywords"}
+    return plan, snaps
 
 
 class ShowWriterTests(unittest.TestCase):
     def test_product_clips_two_angles_with_labels(self):
-        llm = FakeLLM({"angle_a": angle("A"), "angle_b": angle("B")})
+        llm = FakeLLM(PRODUCT)
         drafts = write_product_clips(SNAPS["p1"], PLAN["products"][0], PLAN, llm=llm)
         self.assertEqual([d.angle for d in drafts], ["A", "B"])
         for draft in drafts:
@@ -71,22 +90,24 @@ class ShowWriterTests(unittest.TestCase):
             self.assertEqual(draft.product_id, "p1")
             positions = [draft.script.index(f"[{label}]") for label in SECTION_LABELS]
             self.assertEqual(positions, sorted(positions))
+        self.assertEqual(len(llm.calls), 2)
         self.assertIn("món số 1", llm.calls[0][1])
+        self.assertTrue(all(call[4] and call[4] > 700 for call in llm.calls))
 
     def test_persona_in_every_system_prompt(self):
-        llm = FakeLLM({"angle_a": angle("A"), "angle_b": angle("B")})
+        llm = FakeLLM({**PRODUCT, **FRAME, "routine_recap": {"text": "tóm tắt"}})
         write_product_clips(SNAPS["p1"], PLAN["products"][0], PLAN, llm=llm)
-        llm.response = FRAME
         write_frame_clips(PLAN, SNAPS, [], llm=llm)
-        llm.response = {"text": "tóm tắt"}
         write_routine_recap(PLAN, SNAPS, llm=llm)
-        self.assertEqual(len(llm.calls), 3)
-        for system, _user, _name in llm.calls:
+        self.assertEqual(len(llm.calls), 2 + 4 + 1)
+        for system, *_rest in llm.calls:
             self.assertIn(PERSONA_RULES_VI, system)
 
     def test_frame_clip_counts(self):
-        theme, drafts = write_frame_clips(PLAN, SNAPS, [], llm=FakeLLM(FRAME))
-        self.assertTrue(theme)
+        llm = FakeLLM(FRAME)
+        theme, drafts = write_frame_clips(PLAN, SNAPS, [], llm=llm)
+        self.assertEqual(theme, "Da sạch da khỏe")
+        self.assertEqual(len(llm.calls), 4)
         kinds = [d.kind for d in drafts]
         self.assertEqual({k: kinds.count(k) for k in set(kinds)},
                          {"opening": 1, "transition": 2, "interlude": 6, "faq": 4, "tip": 2, "closing": 1})
@@ -119,11 +140,58 @@ class ShowWriterTests(unittest.TestCase):
 
     def test_malformed_llm_json_raises_value_error(self):
         with self.assertRaises(ValueError):
-            write_product_clips(SNAPS["p1"], PLAN["products"][0], PLAN, llm=FakeLLM({"angle_a": angle("A")}))
+            write_product_clips(SNAPS["p1"], PLAN["products"][0], PLAN, llm=FakeLLM({"lead_in": "x"}))
         with self.assertRaises(ValueError):
             write_frame_clips(PLAN, SNAPS, [], llm=FakeLLM({}))
         with self.assertRaises(ValueError):
             write_routine_recap(PLAN, SNAPS, llm=FakeLLM({"text": " "}))
+
+    def test_prompts_fit_budget_and_keep_rules_with_six_max_products(self):
+        plan, snaps = big_world(6)
+        faqs = [{"product_id": "p1", "question": "q" * 900, "answer": "a" * 900}] * 4
+        frame = build_frame_prompts(plan, snaps, faqs)
+        recap = build_recap_prompts(plan, snaps)
+        product_a = build_product_prompts(snaps["p1"], plan["products"][0], plan, "A")
+        product_b = build_product_prompts(snaps["p1"], plan["products"][0], plan, "B", angle("A"))
+        for system, user in [*frame, recap, product_a, product_b]:
+            self.assertLessEqual(prompt_len(system, user), PROMPT_BUDGET)
+        self.assertIn("Rồi, món tiếp theo cũng đỉnh không kém nè!", frame[1][1])
+        for fact in SHOP_FACTS_VI:
+            self.assertIn(fact, frame[1][1])
+        self.assertIn("món số 6", recap[1])
+        self.assertIn("trợ giá", recap[1])
+        self.assertIn("món số 1", product_a[1])
+        self.assertIn("Góc A đã dùng", product_b[1])
+
+    def test_frame_prompts_forbid_numbers_and_have_honesty(self):
+        for _system, user in build_frame_prompts(PLAN, SNAPS, []):
+            self.assertIn('KHÔNG nói "món số N"', user)
+            self.assertIn("500 bà đã chốt", user)
+            self.assertIn("ngay bây giờ", user)
+
+    def test_unknown_faq_product_id_raises_and_schema_has_enum(self):
+        bad = dict(FRAME)
+        bad["frame_faqs"] = {"faqs": [{"product_id": "zz", "text": "x"}] * 4}
+        llm = FakeLLM(bad)
+        with self.assertRaises(ValueError):
+            write_frame_clips(PLAN, SNAPS, [], llm=llm)
+        faq_call = [c for c in llm.calls if c[2] == "frame_faqs"][0]
+        enum = faq_call[3]["properties"]["faqs"]["items"]["properties"]["product_id"]["enum"]
+        self.assertEqual(enum, ["p1", "p3"])
+
+    def test_theme_from_plan_wins_and_llm_theme_only_when_missing(self):
+        responses = dict(FRAME)
+        responses["frame_opening"] = {"theme_vi": "Chủ đề LLM", "opening": "o", "transitions": ["a", "b"]}
+        theme, _ = write_frame_clips({**PLAN, "theme_vi": ""}, SNAPS, [], llm=FakeLLM(responses))
+        self.assertEqual(theme, "Chủ đề LLM")
+        llm = FakeLLM(FRAME)
+        theme, _ = write_frame_clips(PLAN, SNAPS, [], llm=llm)
+        self.assertEqual(theme, "Da sạch da khỏe")
+        self.assertNotIn("theme_vi", llm.calls[0][3]["properties"])
+
+    def test_product_without_id_raises(self):
+        with self.assertRaises(ValueError):
+            write_product_clips({"name": "x"}, {"number": 1}, PLAN, llm=FakeLLM(PRODUCT))
 
 
 if __name__ == "__main__":
