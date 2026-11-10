@@ -150,7 +150,13 @@ class PrepareTests(Harness):
         self.assertEqual(sorted(second), sorted(first))
 
     def run_prepare(self, campaign_id, collect):
-        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=collect),                 patch.object(campaigns.show_plan, "build_show_plan", side_effect=fake_plan),                 patch.object(campaigns.show_writer, "write_product_clips", side_effect=fake_product_clips),                 patch.object(campaigns.show_writer, "write_frame_clips", side_effect=fake_frame_clips),                 patch.object(campaigns.show_writer, "load_answered_faqs", return_value=[]):
+        with (
+            patch.object(campaigns, "collect_product_and_snapshot", side_effect=collect),
+            patch.object(campaigns.show_plan, "build_show_plan", side_effect=fake_plan),
+            patch.object(campaigns.show_writer, "write_product_clips", side_effect=fake_product_clips),
+            patch.object(campaigns.show_writer, "write_frame_clips", side_effect=fake_frame_clips),
+            patch.object(campaigns.show_writer, "load_answered_faqs", return_value=[]),
+        ):
             return campaigns.prepare_campaign(campaign_id)
 
     def test_canonical_id_is_the_campaign_product_id(self):
@@ -180,10 +186,49 @@ class PrepareTests(Harness):
         self.db.ai_idol_jobs.docs.clear()
         self.db.ai_idol_segments.update_many({}, {"$set": {"job_id": None, "status": "QUEUED"}})
         self.db.ai_idol_campaigns.update_one({}, {"$set": {"show_plan.products": [], "progress.total": 0}})
-        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=snapshot_for):
+        with (
+            patch.object(campaigns, "collect_product_and_snapshot", side_effect=prefixed_snapshot),
+            patch.object(campaigns.show_plan, "build_show_plan", side_effect=fake_plan),
+        ):
             job_ids = campaigns.prepare_campaign(campaign_id)
         self.assertEqual(len(job_ids), 22)
-        self.assertEqual(self.campaign()["progress"]["total"], 22)
+        doc = self.campaign()
+        self.assertEqual(doc["progress"]["total"], 22)
+        self.assertEqual([(p["product_id"], p["number"]) for p in doc["show_plan"]["products"]],
+                         [("1", 1), ("2", 2), ("3", 3)])
+        self.assertEqual(doc["show_plan"]["theme_vi"], "Routine da dầu")  # kept, not overwritten
+
+    def test_prepare_works_with_a_plain_cursor(self):
+        """pymongo cursors have no len() and are always truthy."""
+        class StrictCursor:
+            def __init__(self, rows):
+                self.rows = list(rows)
+
+            def __iter__(self):
+                return iter(self.rows)
+
+            def __len__(self):
+                raise TypeError("cursor has no len()")
+
+            def __bool__(self):
+                raise TypeError("cursor truthiness")
+
+            def sort(self, key, direction=1):
+                return StrictCursor(sorted(self.rows, key=lambda d: d.get(key, 0), reverse=direction < 0))
+
+        segments = self.db.ai_idol_segments
+        plain_find, plain_count = segments.find, segments.count_documents
+        campaign_id, _ = self.create()
+        with (
+            patch.object(segments, "find", side_effect=lambda q=None, p=None: StrictCursor(plain_find(q))),
+            patch.object(segments, "count_documents", side_effect=lambda q: len(plain_find(q))),
+            patch.object(segments, "find_one", side_effect=lambda q=None, p=None, **k: (plain_find(q) or [None])[0]),
+        ):
+            first = self.run_prepare(campaign_id, snapshot_for)
+            second = self.run_prepare(campaign_id, snapshot_for)
+        self.assertEqual(len(first), 22)
+        self.assertEqual(sorted(second), sorted(first))
+        self.assertEqual(len(segments.docs), 22)
 
     def test_writer_error_needs_attention(self):
         campaign_id, _ = self.create()
