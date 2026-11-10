@@ -229,16 +229,30 @@ class _LibraryContext:
             self._snapshots = self._collect(ids)
         return self._snapshots
 
+    def _build_plan(self, snapshots: dict[str, dict]) -> dict:
+        # The plan sees the canonical id so its items match the campaign's product_ids.
+        return show_plan.build_show_plan([{**snap, "id": pid} for pid, snap in snapshots.items()])
+
+    def _rebuild_plan(self) -> dict:
+        """The stored plan lost its products: rebuild it, keeping the theme already written."""
+        theme = self._stored_plan().get("theme_vi") or ""
+        self._snapshots = self._collect(self.campaign.get("product_ids") or [])
+        plan = self._build_plan(self._snapshots)
+        plan["theme_vi"] = theme or plan.get("theme_vi") or ""
+        return plan
+
     def ensure_segments(self) -> None:
-        existing = self.db.ai_idol_segments.find({"campaign_id": self.campaign_id, "phase": {"$exists": True}})
-        if existing:
+        count = self.db.ai_idol_segments.count_documents(
+            {"campaign_id": self.campaign_id, "phase": {"$exists": True}})
+        if count:
             # Already written: a retry must not write (or pay for) the scripts again.
-            self.db.ai_idol_campaigns.update_one({"_id": self.campaign["_id"]}, {"$set": {
-                "progress.total": len(existing)}})
+            values = {"progress.total": count}
+            if not self._stored_plan().get("products"):
+                values["show_plan"] = self._rebuild_plan()
+            self.db.ai_idol_campaigns.update_one({"_id": self.campaign["_id"]}, {"$set": values})
             return
         snapshots = self._collect(self.campaign.get("product_ids") or [])
-        # The plan sees the canonical id so its items match the campaign's product_ids.
-        plan = show_plan.build_show_plan([{**snap, "id": pid} for pid, snap in snapshots.items()])
+        plan = self._build_plan(snapshots)
         drafts = []
         for item in plan["products"]:
             drafts.extend(show_writer.write_product_clips(snapshots[item["product_id"]], item, plan))
