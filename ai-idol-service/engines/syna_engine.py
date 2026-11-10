@@ -157,7 +157,7 @@ def render_syna_video(job_id: str, audio_path: str, script: str, snapshot: dict,
     speech_seconds = probe_duration(str(audio))
     with open(str(audio) + ".timings.json", encoding="utf-8") as handle:
         timings = json.load(handle)
-    intro, outro = lead_in_seconds(job_id, configuration)
+    intro, outro = lead_in_seconds(job_id, configuration, clip_kind)
     duration = round(speech_seconds + intro + outro, 3)
     manifest = build_manifest(snapshot, script, duration, shift_timings(timings, intro), configuration,
                               speech=(intro, intro + speech_seconds) if intro or outro else None,

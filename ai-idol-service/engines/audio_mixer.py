@@ -89,16 +89,22 @@ def plan_mix_timing(job_id: str, music_seconds: float = 0.0,
     return {"intro": intro, "outro": outro, "music_offset": offset}
 
 
-def lead_in_seconds(job_id: str, config: dict) -> tuple[float, float]:
+def lead_in_seconds(job_id: str, config: dict, clip_kind: str | None = None) -> tuple[float, float]:
     """Lead-in/tail for renderers that animate the pause themselves (Syna).
 
     Same values `mix_program_audio` plans for this job, so the rendered video and
     the music mix agree. Zero when the mix feature is switched off.
+    Library clips (`clip_kind` set) are joined into one show: only the opening keeps
+    the greeting lead-in and only the closing keeps the goodbye tail.
     """
     if not AUDIO_MIX_ENABLED or not _enabled(config.get("audio_mix_enabled", True)):
         return 0.0, 0.0
     timing = plan_mix_timing(job_id)
-    return timing["intro"], timing["outro"]
+    intro, outro = timing["intro"], timing["outro"]
+    if clip_kind is not None:
+        intro = intro if clip_kind == "opening" else 0.0
+        outro = outro if clip_kind == "closing" else 0.0
+    return intro, outro
 
 
 def voice_chain(target_lufs: float = AUDIO_TARGET_LUFS) -> str:
@@ -192,7 +198,7 @@ def build_mix_command(video_path: str, voice_path: str, music_path: str, output_
 
 def mix_program_audio(job_id: str, video_path: str, voice_path: str, config: dict,
                       snapshot: dict | None = None, video_padded: bool = False,
-                      applied: dict | None = None) -> str:
+                      applied: dict | None = None, clip_kind: str | None = None) -> str:
     """Return a new MP4 with mastered audio, or the original path if mixing is skipped/fails.
 
     `video_padded=True` for renders that already include the lead-in/tail from
@@ -215,7 +221,7 @@ def mix_program_audio(job_id: str, video_path: str, voice_path: str, config: dic
         main_seconds = _probe_duration(video_path)
         timing = plan_mix_timing(job_id, _probe_duration(music_path)) if music_path else {}
         if video_padded:
-            intro, outro = lead_in_seconds(job_id, config)
+            intro, outro = lead_in_seconds(job_id, config, clip_kind)
             if abs(main_seconds - (voice_seconds + intro + outro)) > 0.3:
                 # e.g. a render cached before lead-ins existed: mix it as-is.
                 intro = outro = 0.0

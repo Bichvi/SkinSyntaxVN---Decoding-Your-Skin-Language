@@ -1,4 +1,5 @@
 import os
+import time
 from bson import ObjectId
 from core.state_machine import checkpoint_job, update_job_stage, fail_job, update_job_snapshot, get_job, get_db, utcnow
 from config import AUDIO_PIPELINE_VERSION, logger
@@ -229,8 +230,15 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
             render_extra = {}
             if prewritten:
                 render_extra = {"clip_kind": job.get("clip_kind"), "theme": str(snapshot.get("name") or "")}
+
+            def wait_then_refresh(seconds):
+                time.sleep(seconds)
+                # Fresh updated_at before each retry, so the stuck-job watchdog never fails a retrying job.
+                update_job_stage(job_id, "RENDERING")
+
             final_video_path = render_with_retries(lambda: render_syna_video(
-                job_id, audio_path, script_text, snapshot, config, purpose=purpose, **render_extra))
+                job_id, audio_path, script_text, snapshot, config, purpose=purpose, **render_extra),
+                sleep=wait_then_refresh)
             checkpoint_job(job_id, {"artifacts.final_video_path": final_video_path,
                                     "artifacts.video_renderer": "syna-native-v4"})
         except RendererUnavailable as e:
@@ -267,16 +275,17 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
         # Evergreen product videos without a price claim get no price title card.
         mix_snapshot = {**snapshot, "price": None, "sale_price": None}
     applied: dict = {}
+    kind_extra = {"clip_kind": job.get("clip_kind")} if prewritten else {}
     final_video_path = mix_program_audio(
         job_id, final_video_path, audio_path, config, mix_snapshot,
         # Syna renders the lead-in/tail herself (greeting and goodbye wave).
-        video_padded=padded, applied=applied,
+        video_padded=padded, applied=applied, **kind_extra,
     )
     page_path, block_reason = product_page_clip(
         job_id, purpose, final_video_path, audio_path,
         intro=applied_intro(job_id, config, padded=padded, rendered=rendered_path,
-                            final=final_video_path, applied=applied),
-        **({"clip_kind": job.get("clip_kind")} if prewritten else {}),
+                            final=final_video_path, applied=applied, **kind_extra),
+        **kind_extra,
     )
 
     return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db,
@@ -331,12 +340,13 @@ def final_machine_check(db, job_id: str, product_id: str, snapshot: dict, script
     return problems
 
 
-def applied_intro(job_id: str, config: dict, *, padded: bool, rendered: str, final: str, applied: dict) -> float:
+def applied_intro(job_id: str, config: dict, *, padded: bool, rendered: str, final: str, applied: dict,
+                  clip_kind: str | None = None) -> float:
     """Seconds before the first word in `final`, so script sections can be located on its timeline."""
     if final != rendered:
         return float(applied.get("intro", 0.0))  # what the mixer actually placed
     # Mix skipped or failed: only a Syna render carries its own lead-in.
-    return lead_in_seconds(job_id, config)[0] if padded else 0.0
+    return lead_in_seconds(job_id, config, clip_kind)[0] if padded else 0.0
 
 
 def _render_legacy_media(job_id, audio_path, script_text, snapshot, config, artifacts, audio_refreshed):
