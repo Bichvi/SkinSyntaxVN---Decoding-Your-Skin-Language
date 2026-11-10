@@ -13,18 +13,16 @@ $studioScripts = ['ai-idol-approval.js', 'studio-logic.js', 'studio-core.js', 's
 $studioCsrf = (string)($csrfToken ?? (class_exists('AdminAiIdolController', false) ? AdminAiIdolController::getCsrfToken() : ''));
 $studioJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE;
 
-// Tab Thủ công (#manualFlow): the filter labels, values and counts of the product filters. $filterCounts and
-// $catalogTree come from AdminAiIdolController::index(); the fallbacks are the counts the old page showed.
+// Tab Thủ công (#manualFlow): the filter labels, values and counts come from MongoDB.
 $wzEsc = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 $wzNumber = static fn($value): string => number_format((int)$value, 0, ',', '.');
 $wzCounts = is_array($filterCounts ?? null) ? $filterCounts : [];
 $wzTree = is_array($catalogTree ?? null) ? $catalogTree : [];
-$wzTotal = $wzCounts['total'] ?? 2473;
-// Group select (Nhóm): a root category found in the tree is offered by its numeric id with the count the tree
-// holds; a group with no root in the database keeps the static option the page always had.
-// [tree key => [label, static value, static count text]]
+$wzTotal = (int)($wzCounts['total'] ?? 0);
+// A group absent from the catalog is shown as zero until MongoDB provides a real node for it.
+// [tree key => [label, value, count text]]
 $wzGroups = [
-    'face' => ['Chăm Sóc Da Mặt', 'face', 'Có ' . $wzNumber(2473)],
+    'face' => ['Chăm Sóc Da Mặt', 'face', 'Có 0'],
     'makeup' => ['Trang Điểm', 'makeup', '0'],
     'body' => ['Chăm Sóc Cơ Thể', 'body', '0'],
     'hair' => ['Chăm Sóc Tóc', 'hair', '0'],
@@ -59,9 +57,9 @@ $wzStock = [
 ];
 $wzSales = [
     ['', 'Không chọn', null],
-    ['best_30', 'Bán chạy · 30 ngày', $wzCounts['best_30'] ?? 45],
-    ['best_7', 'Bán tốt · 7 ngày', $wzCounts['best_7'] ?? 20],
-    ['best_all', 'Bán chạy · toàn kỳ', $wzCounts['best_all'] ?? 2108],
+    ['best_30', 'Bán chạy · 30 ngày', $wzCounts['best_30'] ?? 0],
+    ['best_7', 'Bán tốt · 7 ngày', $wzCounts['best_7'] ?? 0],
+    ['best_all', 'Bán chạy · toàn kỳ', $wzCounts['best_all'] ?? 0],
     ['revenue_low_conversion', 'Doanh thu cao, chuyển đổi thấp', null],
     ['views_no_orders', 'Xem nhiều, chưa mua', null],
     ['cart', 'Thêm giỏ nhiều', null],

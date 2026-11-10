@@ -13,7 +13,7 @@ if ($detailUrl === '') {
     $detailUrl = BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($productId);
 }
 
-$image = resolve_image_url((string)($product['link_hinh_anh'] ?? $product['image_url'] ?? ''));
+$image = resolve_image_url(product_image_source($product));
 if ($image === '') {
     $image = default_placeholder_image();
 }
@@ -58,12 +58,14 @@ if ($dataStatus === 'complete' && $compatScore !== null) {
 
 $uniqueModalId = 'explainModal_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $productId) . '_' . mt_rand(1000, 9999);
 $explanation = trim((string)($product['llm_explanation'] ?? $product['reason'] ?? ''));
+$isAboveFold = $isAboveFold ?? false;
+$isLcp = $isLcp ?? false;
 ?>
 
 <?php if ($cardVariant === 'rcm'): ?>
   <article class="rcm-product-card product-card h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
     <a class="rcm-product-image-wrap position-relative d-block p-2" href="<?= h($detailUrl) ?>" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 12px 12px 0 0;">
-      <img loading="lazy" decoding="async" src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+      <img src="<?= h($image) ?>" <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?> decoding="async" width="280" height="280" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($product, $image) : '[]' ?>" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
       <?php if ($discount !== null): ?>
         <span class="rcm-discount-badge position-absolute" style="top: 12px; left: 12px; background: #E11D48; color: #FFF; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; z-index: 3;">-<?= h((string)$discount) ?>%</span>
       <?php endif; ?>
@@ -144,7 +146,7 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['reason'] ?
         </div>
         <div class="modal-body p-4">
           <div class="d-flex align-items-center gap-3 mb-3">
-            <img loading="lazy" decoding="async" src="<?= h($image) ?>" alt="<?= h($productName) ?>" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border);">
+            <img src="<?= h($image) ?>" alt="<?= h($productName) ?>" loading="lazy" decoding="async" width="64" height="64" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border);">
             <div>
               <span class="badge mb-1" style="<?= $badgeStyle ?> font-size: 0.72rem; padding: 4px 8px; border-radius: 4px;"><?= h($badgeText) ?></span>
               <div class="fw-bold small text-uppercase" style="color: #183B2B; font-size: 0.7rem;"><?= h($productBrand) ?></div>
@@ -196,16 +198,16 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['reason'] ?
             </div>
           <?php endif; ?>
 
-          <!-- SECTION 4: DỮ LIỆU ĐÁNH GIÁ -->
+          <!-- SECTION 4: THÔNG TIN SẢN PHẨM -->
           <?php
             $safetyStatus = trim((string)($product['safety_data_status'] ?? 'insufficient'));
             $coveragePercent = (int)($product['compatibility_coverage'] ?? $product['data_coverage'] ?? 0);
-            $safetyLabel = $safetyStatus === 'complete' ? 'Đầy đủ dữ liệu thành phần' : 'Chưa đủ dữ liệu thành phần kiểm tra safety';
+            $safetyLabel = $safetyStatus === 'complete' ? 'Đủ thông tin thành phần' : 'Chưa đủ thông tin thành phần';
           ?>
           <div class="mb-3 p-2.5 rounded text-secondary" style="background: #F8FAF8; border: 1px solid #E2E8F0; font-size: 0.78rem;">
-            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-chart-pie me-1"></i> 4. DỮ LIỆU ĐÁNH GIÁ:</strong>
-            <div>• Độ bao phủ tiêu chí da: <?= h((string)$coveragePercent) ?>% coverage (Baseline: Skin Type 35%, Concerns 40%, Goal 25%)</div>
-            <div>• Trạng thái thành phần an toàn: <?= h($safetyLabel) ?></div>
+            <strong class="d-block mb-1" style="color: #183B2B;"><i class="fa-solid fa-chart-pie me-1"></i> Thông tin sản phẩm</strong>
+            <div>• Mức độ phù hợp: <?= h((string)$coveragePercent) ?>%</div>
+            <div>• Thành phần: <?= h($safetyLabel) ?></div>
           </div>
 
           <div class="mb-2 small">
@@ -236,7 +238,7 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['reason'] ?
 
 <article class="flash-product goiy-product-card product-card h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease;">
   <a class="flash-product__image position-relative d-block p-2" href="<?= h($detailUrl) ?>" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 12px 12px 0 0;">
-    <img loading="lazy" decoding="async" src="<?= h($image) ?>" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+    <img src="<?= h($image) ?>" <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?> decoding="async" width="280" height="280" alt="<?= h($productName !== '' ? $productName : 'Sản phẩm SkinSyntax') ?>" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($product, $image) : '[]' ?>" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
     <?php if ($discount !== null): ?>
       <span class="flash-product__badge position-absolute" style="top: 12px; left: 12px; background: #E11D48; color: #FFF; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; z-index: 3;">-<?= h((string)$discount) ?>%</span>
     <?php endif; ?>
@@ -309,7 +311,7 @@ $explanation = trim((string)($product['llm_explanation'] ?? $product['reason'] ?
       </div>
       <div class="modal-body p-4">
         <div class="d-flex align-items-center gap-3 mb-3">
-          <img loading="lazy" decoding="async" src="<?= h($image) ?>" alt="<?= h($productName) ?>" style="width: 75px; height: 75px; object-fit: cover; border-radius: 14px; border: 1px solid #E2EADF;">
+          <img src="<?= h($image) ?>" alt="<?= h($productName) ?>" loading="lazy" decoding="async" width="75" height="75" style="width: 75px; height: 75px; object-fit: cover; border-radius: 14px; border: 1px solid #E2EADF;">
           <div>
             <span class="badge bg-success mb-1"><?= h($matchLabel !== '' ? $matchLabel : 'PHÙ HỢP') ?><?= $matchPercent !== null ? ' - ' . h((string)$matchPercent) . '%' : '' ?></span>
             <div class="fw-bold text-success small text-uppercase"><?= h($productBrand) ?></div>

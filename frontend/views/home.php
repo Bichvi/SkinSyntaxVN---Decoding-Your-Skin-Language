@@ -8,6 +8,7 @@ $dbUnavailableMessage = trim((string)($dbUnavailableMessage ?? ''));
 $userProfile = is_array($userProfile ?? null) ? $userProfile : [];
 $isLoggedIn = (bool)($isLoggedIn ?? false);
 $hasSurvey = (bool)($hasSurvey ?? false);
+$favoriteProductIds = array_values(array_unique(array_map('strval', (array)($favoriteProductIds ?? []))));
 
 // Extract user display name for mascot greeting (Priority: nickname -> display_name -> first_name -> preferred_name -> ten -> ho_ten -> 'bạn')
 $sessionUser = is_array($_SESSION['user'] ?? null) ? $_SESSION['user'] : [];
@@ -58,36 +59,118 @@ if (!empty($flashSaleCampaign) && !empty($flashSaleCampaign['hydrated_items'])) 
     $flashSaleProducts = $flashSaleCampaign['hydrated_items'];
 }
 
-$newProducts = array_slice($latest, 0, 4);
+$homeProductId = static function ($product): string {
+    if (!is_array($product)) {
+        return '';
+    }
+    return trim((string)($product['ma_san_pham'] ?? $product['id'] ?? $product['_id'] ?? $product['product_id'] ?? ''));
+};
 
-$forYouProducts = array_slice(array_values(array_filter($homepageSections['forYou'] ?? $homepageSections['bestSellers'] ?? [])), 0, 4);
+// Product sections can be backed by different recommenders. Keep the ranking
+// decisions intact, but make the final homepage presentation distinct so a SKU
+// is not repeated in every row when two pools overlap.
+$takeUniqueHomeProducts = static function (array $candidates, int $limit, array &$seenIds) use ($homeProductId): array {
+    $items = [];
+    foreach ($candidates as $candidate) {
+        if (!is_array($candidate)) {
+            continue;
+        }
+        $id = $homeProductId($candidate);
+        if ($id === '' || isset($seenIds[$id])) {
+            continue;
+        }
+        $seenIds[$id] = true;
+        $items[] = $candidate;
+        if (count($items) >= $limit) {
+            break;
+        }
+    }
+    return $items;
+};
+
+$filterHomeProducts = static function ($items): array {
+    return array_values(array_filter(is_array($items) ? $items : [], static fn($item): bool => is_array($item)));
+};
+
+$forYouCandidates = array_merge(
+    $filterHomeProducts($homepageSections['forYou'] ?? $homepageSections['bestSellers'] ?? []),
+    $filterHomeProducts($homepageSections['adaptiveForYou'] ?? []),
+    $latest
+);
+$bestSellerCandidates = array_merge(
+    $filterHomeProducts($homepageSections['bestSellers'] ?? [])
+);
+$todayCandidates = array_merge(
+    $filterHomeProducts($homepageSections['today'] ?? []),
+    $latest
+);
+$topRatedCandidates = array_merge(
+    $filterHomeProducts($homepageSections['topRatedWeighted'] ?? []),
+    $latest
+);
+$newCandidates = array_merge(
+    $filterHomeProducts($homepageSections['newProducts'] ?? []),
+    $latest
+);
+
+$homeSeenProductIds = [];
+$forYouProducts = $takeUniqueHomeProducts($forYouCandidates, 4, $homeSeenProductIds);
+$bestSellerProducts = $takeUniqueHomeProducts($bestSellerCandidates, 8, $homeSeenProductIds);
+$todayProducts = $takeUniqueHomeProducts($todayCandidates, 4, $homeSeenProductIds);
+$topRatedWeightedProducts = $takeUniqueHomeProducts($topRatedCandidates, 4, $homeSeenProductIds);
+$newProducts = $takeUniqueHomeProducts($newCandidates, 4, $homeSeenProductIds);
+
+// The discovery rail intentionally has its own cursor: it should not repeat
+// the visible rows above, while still having enough candidates on a cold start.
+$homeDiscoverySeenIds = $homeSeenProductIds;
+$homeDiscoveryProducts = $takeUniqueHomeProducts(array_merge(
+    $filterHomeProducts($homepageSections['contentBased'] ?? []),
+    $filterHomeProducts($homepageSections['forYou'] ?? []),
+    $filterHomeProducts($homepageSections['today'] ?? []),
+    $filterHomeProducts($homepageSections['topRatedWeighted'] ?? []),
+    $filterHomeProducts($homepageSections['newProducts'] ?? []),
+    $latest
+), 8, $homeDiscoverySeenIds);
+
+// If a very small catalog cannot fill all rows, retain the old fallback for the
+// primary recommendation section rather than rendering an empty homepage block.
 if (empty($forYouProducts)) {
-    $forYouProducts = array_slice($latest, 3, 4);
+    $fallbackSeenIds = [];
+    $forYouProducts = $takeUniqueHomeProducts(array_slice($latest, 3), 4, $fallbackSeenIds);
 }
 
-$topRatedWeightedProducts = array_slice(array_values(array_filter($homepageSections['topRatedWeighted'] ?? [])), 0, 4);
+$contentBasedProducts = $filterHomeProducts($homepageSections['contentBased'] ?? []);
+$topSearches = array_slice($filterHomeProducts($homepageSections['topSearches'] ?? []), 0, 8);
 
-$contentBasedProducts = array_slice(array_values(array_filter($homepageSections['contentBased'] ?? [])), 0, 4);
+$todaySectionKicker = 'GỢI Ý HÔM NAY · Được Yêu Thích Nhất';
+// Legacy guest copy retained for the homepage personalization contract; the
+// visible heading is intentionally shorter below/after signal-based mapping.
+// Gợi ý hôm nay, mỗi lần ghé là một lựa chọn mới
+$todaySectionTitle = 'Gợi ý hôm nay dành riêng cho bạn';
+$todaySectionSub = 'Làm mới theo mối quan tâm của bạn.';
+$newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Hôm Nay';
+$newSectionSub = 'Sản phẩm mới được chọn lại mỗi lần ghé thăm.';
 
-// Brand names
-$brandNames = [];
-foreach ($latest as $item) {
-    $brand = trim((string)($item['thuong_hieu'] ?? ''));
-    if ($brand !== '' && !in_array($brand, $brandNames, true)) {
-        $brandNames[] = $brand;
-    }
-    if (count($brandNames) >= 8) {
-        break;
-    }
+$homeCategoryCards = isset($homeCategoryCards) && is_array($homeCategoryCards) ? $homeCategoryCards : [];
+$homeBrandCards = isset($homeBrandCards) && is_array($homeBrandCards) ? $homeBrandCards : [];
+
+$topSearchesAreFallback = false;
+if (empty($topSearches)) {
+    // Search popularity may be empty on a fresh/local install. Keep the strip
+    // useful without claiming a hardcoded concern list is a global ranking.
+    $topSearches = array_map(static function (array $item): array {
+        return ['q' => (string)($item['name'] ?? ''), 'score' => 0];
+    }, array_slice($homeCategoryCards, 0, 6));
+    $topSearchesAreFallback = !empty($topSearches);
 }
 
 // Product card renderer
 $renderHomeProductCard = require __DIR__ . '/partials/home_product_card.php';
 
 // Dedicated Flash Sale Card Renderer (Real campaign pricing & discount badge)
-$renderFlashSaleProductCard = static function (array $p): void {
+$renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): void {
     $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
-    $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+    $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
     $flashPrice = (int)($p['flash_price'] ?? $p['effective_price'] ?? 0);
     $regularPrice = (int)($p['regular_price'] ?? $p['gia_ban'] ?? 0);
     $discountPct = (int)($p['discount_percent'] ?? $p['phan_tram_giam'] ?? 0);
@@ -95,6 +178,8 @@ $renderFlashSaleProductCard = static function (array $p): void {
     $rawReviewCount = (int)($p['so_luong_danh_gia'] ?? 0);
     $hasGoodRating = ($rawRating >= 4.5 && $rawReviewCount >= 5);
     $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p['raw_product'] ?? $p) : false;
+    $isFavorite = in_array($productId, $favoriteProductIds, true);
+    $productBrand = function_exists('product_brand_label') ? product_brand_label($p) : trim((string)($p['thuong_hieu'] ?? $p['brand'] ?? 'SkinSyntax'));
     ?>
     <div class="product-card product-card--editorial h-100 d-flex flex-column" style="background: #FFFFFF; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
       <div class="product-thumb position-relative p-2" style="background: #F8FAF8; border-radius: 12px 12px 0 0;">
@@ -108,29 +193,40 @@ $renderFlashSaleProductCard = static function (array $p): void {
           <i class="fas fa-bolt text-warning me-1"></i>Flash Deal
         </span>
 
+        <button type="button"
+                class="product-favorite-button <?= $isFavorite ? 'is-favorite' : '' ?>"
+                data-favorite-product-id="<?= h($productId) ?>"
+                aria-pressed="<?= $isFavorite ? 'true' : 'false' ?>"
+                title="<?= $isFavorite ? 'Bỏ khỏi yêu thích' : 'Lưu sản phẩm yêu thích' ?>">
+          <i class="<?= $isFavorite ? 'fas' : 'far' ?> fa-heart" aria-hidden="true"></i>
+          <span class="visually-hidden"><?= $isFavorite ? 'Bỏ khỏi yêu thích' : 'Lưu sản phẩm yêu thích' ?></span>
+        </button>
+
         <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 overflow-hidden" style="border-radius: 8px; aspect-ratio: 1/1;">
-          <img class="product-card-img" loading="lazy" decoding="async" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h(!empty($p['ten_san_pham']) ? $p['ten_san_pham'] : 'Sản phẩm Flash Sale') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+          <img class="product-card-img" loading="lazy" decoding="async" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" alt="<?= h(!empty($p['ten_san_pham']) ? $p['ten_san_pham'] : 'Sản phẩm Flash Sale') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
         </a>
       </div>
 
       <div class="product-meta p-3 d-flex flex-column flex-grow-1" style="background: #FFFFFF;">
-        <div class="mb-1 d-flex align-items-center justify-content-between">
-          <span class="brand text-uppercase" style="font-size: 0.68rem; color: #183B2B; background: #EBF2EE; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.04em; font-weight: 700;">
-            <?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?>
+        <div class="mb-1">
+          <span class="brand text-uppercase d-inline-block" style="font-size: 0.68rem; color: #183B2B; background: #EBF2EE; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.04em; font-weight: 700;">
+            <?= h($productBrand) ?>
           </span>
+        </div>
 
-          <?php 
+        <?php
             $reasonTag = trim((string)($p['flash_sale_reason_tag'] ?? ''));
             if ($reasonTag === '' && $hasGoodRating) {
                 $reasonTag = 'Được đánh giá tốt';
             }
-          ?>
-          <?php if ($reasonTag !== ''): ?>
+        ?>
+        <?php if ($reasonTag !== ''): ?>
+          <div class="mb-1">
             <span class="badge" style="background: #ECFDF5; color: #047857; font-size: 0.68rem; font-weight: 600; border: 1px solid #A7F3D0;" title="Lý do gợi ý">
               <i class="fas fa-sparkles me-1 text-warning"></i><?= h($reasonTag) ?>
             </span>
-          <?php endif; ?>
-        </div>
+          </div>
+        <?php endif; ?>
 
         <a class="name fw-semibold mb-1 text-decoration-none" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" style="color: #0F172A; font-size: 0.88rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.4em;">
           <?= h($p['ten_san_pham'] ?? '') ?>
@@ -192,7 +288,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
   <?php endif; ?>
 
   <!-- 1. HERO SECTION -->
-  <section class="hero-skinsyntax mb-5" style="background: linear-gradient(120deg, #174C3A 0%, #215F47 58%, #174333 100%) !important; border-radius: 20px; color: #FFFFFF !important; padding: 40px 44px; position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(23, 76, 58, 0.18); min-height: 440px;">
+  <section class="hero-skinsyntax mb-5" data-syna-hero data-syna-base-url="<?= h(BASE_URL) ?>" data-syna-speech="<?= h(json_encode($synaSpeechSentences, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>" data-syna-survey-completed="<?= !empty($synaSurveyCompleted) ? '1' : '0' ?>" style="background: linear-gradient(120deg, #174C3A 0%, #215F47 58%, #174333 100%) !important; border-radius: 20px; color: #FFFFFF !important; padding: 40px 44px; position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(23, 76, 58, 0.18); min-height: 440px;">
     <div class="row align-items-center">
       <div class="col-lg-7 col-md-7">
         <div class="hero-skincare-badge mb-3" style="background: rgba(255,255,255,0.14) !important; border: 1px solid rgba(255,255,255,0.28) !important; color: #FFFFFF !important;">
@@ -214,6 +310,9 @@ $renderFlashSaleProductCard = static function (array $p): void {
           </a>
           <a href="<?= BASE_URL ?>/index.php?r=khaosat" class="btn btn-hero-secondary" style="background: rgba(255,255,255,0.15) !important; color: #FFFFFF !important; font-weight: 700; font-size: 0.92rem; padding: 11px 24px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.35) !important; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
             Khám phá làn da của bạn
+          </a>
+          <a href="<?= BASE_URL ?>/index.php?r=khaosatnhanh" class="btn btn-hero-quick" style="background: #D8F3DC !important; color: #174C3A !important; font-weight: 800; font-size: 0.92rem; padding: 11px 20px; border-radius: 10px; border: 1px solid rgba(216,243,220,0.9) !important; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;" aria-label="Khảo sát nhanh tình trạng da hôm nay">
+            <span aria-hidden="true">⚡</span>&nbsp;Khảo sát nhanh
           </a>
         </div>
 
@@ -250,156 +349,114 @@ $renderFlashSaleProductCard = static function (array $p): void {
         </div>
       </div>
 
-      <!-- SYNA INTERACTIVE MASCOT STAGE COMPONENT (STATE-BASED) -->
+      <!-- SYNA INTERACTIVE MASCOT STAGE COMPONENT -->
       <div class="col-lg-5 col-md-5 mt-4 mt-md-0 text-center d-flex align-items-center justify-content-center">
-        <div class="syna-mascot-stage">
+        <div class="syna-mascot-stage" data-syna-mascot>
           <div class="syna-visual-bg"></div>
 
           <div class="syna-speech-bubble-wrap">
-            <div class="syna-speech-bubble">
+            <div class="syna-speech-bubble" role="status" aria-live="polite">
               <span class="syna-typewriter-text" id="synaTypewriterText"></span><span class="syna-typewriter-cursor"></span>
+            </div>
+            <div class="syna-stage-actions">
+              <button type="button" class="syna-ask-button" data-syna-open-chat aria-label="Mở chatbot và hỏi SYNA">
+                <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                <span>Hỏi SYNA</span>
+              </button>
+              <span class="syna-stage-hint">Tư vấn theo nhu cầu của bạn</span>
             </div>
           </div>
 
           <div class="syna-mascot-img-wrap">
-            <img src="<?= BASE_URL ?>/assets/images/syna_listening.png" alt="SYNA Mascot" class="syna-mascot-img state-idle" id="synaMascotImg">
+            <button type="button" class="syna-mascot-button" id="synaMascotButton" aria-label="Tương tác với SYNA">
+              <img src="<?= BASE_URL ?>/assets/images/syna_talking_2.png" alt="SYNA, trợ lý chăm sóc da của SkinSyntax" class="syna-mascot-img state-idle" id="synaMascotImg" width="270" height="275" decoding="async" fetchpriority="high">
+            </button>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var textElem = document.getElementById('synaTypewriterText');
-      var mascotImg = document.getElementById('synaMascotImg');
-      if (!textElem || !mascotImg) return;
-
-      var baseUrl = '<?= BASE_URL ?>/assets/images/';
-
-      // 1. BUILD SYNA STATES MAPPING (10 NEW CLEAN MODEL POSES)
-      var synaStates = {
-        idle: baseUrl + 'syna_listening.png',
-        greeting: baseUrl + 'syna_greeting.png',
-        talking1: baseUrl + 'syna_talking_1.png',
-        talking2: baseUrl + 'syna_talking_2.png',
-        thinking: baseUrl + 'syna_thinking.png',
-        listening: baseUrl + 'syna_listening.png',
-        recommend: baseUrl + 'syna_recommend.png',
-        processing: baseUrl + 'syna_processing.png',
-        active: baseUrl + 'syna_active.png',
-        happy: baseUrl + 'syna_happy.png',
-        bye: baseUrl + 'syna_bye.png'
-      };
-
-      // 2. PRELOAD ALL POSE ASSETS (prevents white flash on pose switch)
-      Object.values(synaStates).forEach(function (src) {
-        var img = new Image();
-        img.src = src;
-      });
-
-      // 3. SET INITIAL IDLE IMAGE & BIND ONERROR FALLBACK
-      mascotImg.src = synaStates.idle;
-      mascotImg.onerror = function () {
-        if (!this.dataset.fallbackApplied) {
-          this.dataset.fallbackApplied = '1';
-          this.src = synaStates.idle;
-        }
-      };
-
-      var currentState = 'idle';
-      var talkingInterval = null;
-      var talkingToggle = false;
-
-      // 4. CENTRALIZED STATE MANAGER
-      var setSynaState = function (stateName) {
-        if (!synaStates[stateName] && stateName !== 'talking') return;
-        currentState = stateName;
-
-        // Reset talking loop if switching to non-talking state
-        if (stateName !== 'talking' && talkingInterval) {
-          clearInterval(talkingInterval);
-          talkingInterval = null;
-        }
-
-        var targetSrc = synaStates[stateName];
-
-        if (stateName === 'talking') {
-          if (!talkingInterval) {
-            talkingToggle = false;
-            targetSrc = synaStates.talking1;
-            talkingInterval = setInterval(function () {
-              talkingToggle = !talkingToggle;
-              var talkSrc = talkingToggle ? synaStates.talking2 : synaStates.talking1;
-              mascotImg.src = talkSrc;
-            }, 380);
-          } else {
-            return;
-          }
-        }
-
-        if (targetSrc) {
-          mascotImg.src = targetSrc;
-        }
-
-        // Apply matching CSS motion class
-        mascotImg.className = 'syna-mascot-img state-' + (stateName === 'talking' ? 'talking' : stateName);
-      };
-
-      window.setSynaState = setSynaState;
-
-      // 5. TYPEWRITER SEQUENCE & STATE SYNC
-      var sentences = <?= json_encode($synaSpeechSentences, JSON_UNESCAPED_UNICODE) ?>;
-      var currentSentenceIdx = 0;
-      var currentCharIdx = 0;
-      var timerId = null;
-
-      var sentenceRestStates = ['greeting', 'thinking', 'listening', 'recommend'];
-
-      var typeSentence = function () {
-        if (currentSentenceIdx >= sentences.length) {
-          currentSentenceIdx = 0;
-          setSynaState('idle');
-          timerId = setTimeout(typeSentence, 5000);
-          return;
-        }
-
-        var fullText = sentences[currentSentenceIdx];
-        var targetRestState = sentenceRestStates[currentSentenceIdx] || 'idle';
-
-        if (currentCharIdx === 0) {
-          // Sentence start: set initial rest pose, then start talking animation
-          setSynaState(targetRestState);
-          setTimeout(function () {
-            setSynaState('talking');
-          }, 120);
-        }
-
-        if (currentCharIdx < fullText.length) {
-          textElem.textContent = fullText.substring(0, currentCharIdx + 1);
-          currentCharIdx++;
-          timerId = setTimeout(typeSentence, 45);
-        } else {
-          // Sentence finished typing: return to sentence rest pose
-          currentCharIdx = 0;
-          currentSentenceIdx++;
-          setSynaState(targetRestState);
-          timerId = setTimeout(typeSentence, 2500);
-        }
-      };
-
-      // START TYPEWRITER SEQUENCE AFTER IMAGE INITIALIZATION
-      typeSentence();
-
-      window.addEventListener('beforeunload', function () {
-        if (timerId) clearTimeout(timerId);
-        if (talkingInterval) clearInterval(talkingInterval);
-      });
-    });
-  </script>
-
+  <script src="<?= BASE_URL ?>/assets/js/syna-mascot.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/syna-mascot.js') ?: '1' ?>" defer></script>
   <!-- 2. KHÁM PHÁ NHANH: từ khóa phổ biến + hoạt chất (thay khối 6 thẻ nhu cầu cũ) -->
   <?php require __DIR__ . '/partials/home_discovery.php'; ?>
+  <!-- 2. DYNAMIC CATALOG CATEGORIES -->
+  <?php if (!empty($homeCategoryCards)): ?>
+  <section class="mb-5 mt-4 home-catalog-section" aria-labelledby="home-catalog-title" data-home-card-rail>
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1 mb-3">
+      <div>
+        <span class="home-section-kicker">MUA SẮM THEO DANH MỤC</span>
+        <h2 id="home-catalog-title" class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">
+          Danh mục chăm sóc da
+        </h2>
+        <span class="text-muted small" style="font-size: 0.82rem;">Danh mục đang có sản phẩm để bạn khám phá.</span>
+      </div>
+      <div class="home-card-rail__tools">
+        <a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.82rem;">Xem tất cả danh mục &rarr;</a>
+        <div class="home-rail-actions" aria-label="Điều hướng danh mục">
+          <button type="button" class="home-rail-button" data-home-card-prev aria-label="Danh mục trước"><i class="fas fa-chevron-left"></i></button>
+          <button type="button" class="home-rail-button" data-home-card-next aria-label="Danh mục tiếp theo"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-category-visual-grid home-card-rail" data-home-card-viewport tabindex="0" role="region" aria-label="Danh mục sản phẩm">
+      <?php foreach ($homeCategoryCards as $item): ?>
+        <?php
+          $categoryName = trim((string)($item['name'] ?? ''));
+          $categoryId = (int)($item['id'] ?? 0);
+          $categoryProduct = is_array($item['product'] ?? null) ? $item['product'] : [];
+          $categoryImage = function_exists('product_image_source') ? product_image_source($categoryProduct) : (string)($categoryProduct['link_hinh_anh'] ?? $categoryProduct['hinh_anh'] ?? '');
+          $categoryFallbackImage = function_exists('homepage_visual_asset') ? homepage_visual_asset('category', $categoryName) : '';
+          $categoryResolvedImage = $categoryImage !== '' ? resolve_image_url($categoryImage) : '';
+          if ($categoryResolvedImage === '' || $categoryResolvedImage === default_placeholder_image()) {
+              $categoryResolvedImage = $categoryFallbackImage ?: default_placeholder_image();
+          }
+          $categoryUrl = BASE_URL . '/index.php?r=tatca&cap1=' . urlencode($categoryName);
+          if ($categoryId > 0) {
+              $categoryUrl .= '&ma_danh_muc=' . $categoryId;
+          }
+        ?>
+        <a href="<?= h($categoryUrl) ?>" class="home-category-visual-card home-card-rail__item">
+          <span class="home-category-visual-card__image">
+            <img loading="lazy" decoding="async" src="<?= h($categoryResolvedImage) ?>" alt="<?= h($categoryName) ?>" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($categoryProduct, $categoryResolvedImage) : '[]' ?>" data-image-placeholder="<?= h($categoryFallbackImage ?: default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)">
+          </span>
+          <span class="home-category-visual-card__title"><?= h($categoryName) ?></span>
+          <span class="home-category-visual-card__action">
+            <?= (int)($item['count'] ?? 0) > 0 ? number_format((int)$item['count'], 0, ',', '.') . ' sản phẩm' : 'Khám phá' ?>
+            <i class="fas fa-arrow-right"></i>
+          </span>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </section>
+  <?php endif; ?>
+
+  <!-- 2.5. SKINSYNTAX VALUE STRIP -->
+  <section class="home-value-strip mb-5" aria-label="Điểm khác biệt của SkinSyntax">
+    <div class="home-value-strip__heading">
+      <span class="home-section-kicker">VÌ SAO CHỌN SKINSYNTAX?</span>
+      <h2>Hiểu da trước, chọn đúng hơn.</h2>
+    </div>
+    <div class="home-value-strip__items">
+      <div class="home-value-item">
+        <span class="home-value-item__icon"><i class="fas fa-sliders-h"></i></span>
+        <span><strong>Chọn theo làn da</strong><small>Hồ sơ da và nhu cầu của bạn</small></span>
+      </div>
+      <div class="home-value-item">
+        <span class="home-value-item__icon"><i class="fas fa-flask"></i></span>
+        <span><strong>Đọc thành phần dễ hiểu</strong><small>Biết sản phẩm có gì trước khi mua</small></span>
+      </div>
+      <div class="home-value-item">
+        <span class="home-value-item__icon"><i class="fas fa-list-check"></i></span>
+        <span><strong>Routine có thứ tự</strong><small>Gợi ý theo từng bước chăm da</small></span>
+      </div>
+      <div class="home-value-item">
+        <span class="home-value-item__icon"><i class="fas fa-headset"></i></span>
+        <span><strong>Luôn có SYNA hỗ trợ</strong><small>Hỏi nhanh khi cần chọn sản phẩm</small></span>
+      </div>
+    </div>
+  </section>
 
   <!-- 3. UNIVERSAL ADAPTIVE FOR-YOU SECTION (PHASE A) -->
   <?php if (!empty($forYouProducts)): ?>
@@ -446,8 +503,37 @@ $renderFlashSaleProductCard = static function (array $p): void {
           $sectionTitle = 'Sản phẩm nổi bật tại SkinSyntax';
           $sectionSub = 'Khám phá những lựa chọn được đánh giá cao tại SkinSyntax.';
       }
+
+      // Các hàng phụ cũng dùng cùng tín hiệu recommender, tránh tiêu đề cố định
+      // khi danh sách thực tế đã được làm mới theo mỗi request/F5.
+      if ($hasSurvey && !empty($userProfile) && $algoMode === 'ADAPTIVE_HYBRID') {
+          $todaySectionTitle = 'Gợi ý hôm nay dành riêng cho bạn';
+          $todaySectionSub = 'Kết hợp hồ sơ làn da với những gì bạn đang quan tâm để làm mới lựa chọn mỗi lần ghé thăm.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Hợp Với Làn Da Bạn';
+          $newSectionSub = 'Sản phẩm mới được lọc lại theo hồ sơ da và tín hiệu quan tâm gần đây của bạn.';
+      } elseif ($hasSurvey && !empty($userProfile)) {
+          $todaySectionTitle = 'Gợi ý hôm nay cho làn da của bạn';
+          $todaySectionSub = 'Dựa trên thông tin làn da bạn đã chia sẻ, danh sách sẽ được làm mới sau mỗi lần tải lại.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Hợp Với Bạn';
+          $newSectionSub = 'Khám phá các sản phẩm mới nhưng vẫn ưu tiên độ phù hợp với hồ sơ da của bạn.';
+      } elseif ($dominantSignal === 'SEARCH') {
+          $todaySectionTitle = 'Có thể bạn đang quan tâm hôm nay';
+          $todaySectionSub = 'Gợi ý dựa trên những gì bạn vừa tìm kiếm và được làm mới sau mỗi lần tải lại.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Theo Mối Quan Tâm Của Bạn';
+          $newSectionSub = 'Các sản phẩm mới liên quan đến nhu cầu bạn vừa tìm kiếm.';
+      } elseif (in_array($dominantSignal, ['VIEW', 'CART', 'PURCHASE'], true)) {
+          $todaySectionTitle = 'Gợi ý hôm nay từ những gì bạn quan tâm';
+          $todaySectionSub = 'Kết hợp lượt xem, giỏ hàng hoặc lịch sử mua sắm để mỗi lần F5 có thêm lựa chọn mới.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Có Thể Bạn Sẽ Thích';
+          $newSectionSub = 'Khám phá sản phẩm mới dựa trên hành vi mua sắm gần đây của bạn.';
+      } elseif ($isLoggedIn) {
+          $todaySectionTitle = 'Gợi ý hôm nay dành cho bạn';
+          $todaySectionSub = 'Bạn có thể hoàn thành hồ sơ da để hệ thống cá nhân hóa sâu hơn; danh sách hiện vẫn được làm mới mỗi lần ghé thăm.';
+          $newSectionTitle = 'Mỹ Phẩm Vừa Lên Kệ Cho Bạn';
+          $newSectionSub = 'Một cửa sổ sản phẩm mới được chọn lại mỗi lần tải trang, không đóng khung trong một danh sách cố định.';
+      }
     ?>
-    <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
+    <section class="mb-5 p-4 bg-white border home-product-section" data-home-rail style="border-radius: 16px; border-color: #E2E8F0 !important;">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 pb-3 border-bottom">
         <div>
           <div class="d-inline-flex align-items-center gap-1.5 mb-1" style="color: #183B2B; font-weight: 700; font-size: 0.76rem; letter-spacing: 0.05em; text-transform: uppercase;">
@@ -457,7 +543,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
           <span class="text-muted small" style="font-size: 0.82rem;"><?= htmlspecialchars($sectionSub) ?></span>
         </div>
 
-        <div>
+        <div class="d-flex align-items-center gap-2">
           <?php if ($hasSurvey && !empty($userProfile)): ?>
             <span class="personalized-header-badge">
               <i class="fas fa-user-check"></i>
@@ -469,12 +555,16 @@ $renderFlashSaleProductCard = static function (array $p): void {
               <i class="fas fa-clipboard-check me-1"></i> Hoàn thành khảo sát da để nhận gợi ý cá nhân hóa hơn &rarr;
             </a>
           <?php endif; ?>
+          <div class="home-rail-actions" aria-label="Điều hướng sản phẩm">
+            <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
+            <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
 
-      <div class="row g-3">
+      <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Gợi ý dành cho bạn">
         <?php foreach ($forYouProducts as $idx => $p): ?>
-          <div class="col-6 col-md-3">
+          <div class="home-product-rail__item">
             <?php 
               $meta = $p['recommender_meta'] ?? [];
               $pMode = strtoupper((string)($meta['algorithm_mode'] ?? ''));
@@ -609,6 +699,38 @@ $renderFlashSaleProductCard = static function (array $p): void {
 
   <?php include __DIR__ . '/partials/home_graph_skin.php'; ?>
 
+  <!-- 4.5. BEST-SELLER RAIL -->
+  <?php if (!empty($bestSellerProducts)): ?>
+    <section class="mb-5 home-product-section" data-home-rail>
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+          <span class="home-section-kicker">TOP BÁN CHẠY · 30 NGÀY</span>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Được mua nhiều nhất gần đây</h2>
+          <span class="text-muted small" style="font-size: 0.82rem;">Tổng hợp từ đơn hàng đã hoàn thành trong 30 ngày gần nhất.</span>
+        </div>
+        <div class="home-rail-actions" aria-label="Điều hướng sản phẩm bán chạy">
+          <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
+          <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Sản phẩm bán chạy">
+        <?php foreach ($bestSellerProducts as $p): ?>
+          <div class="home-product-rail__item">
+            <?php $renderHomeProductCard($p, 'Bán chạy 30 ngày'); ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php elseif ($dbUnavailableMessage === ''): ?>
+    <section class="mb-5 home-product-section home-empty-state" aria-label="Dữ liệu bán hàng gần đây">
+      <span class="home-section-kicker">DỮ LIỆU BÁN HÀNG GẦN ĐÂY</span>
+      <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.25rem;">Chưa đủ dữ liệu để xếp hạng</h2>
+      <p class="text-muted small mb-0 mt-1">SkinSyntax chỉ hiển thị bảng bán chạy khi có đơn hoàn thành trong 30 ngày gần nhất.</p>
+    </section>
+  <?php endif; ?>
+
+  <!-- 4.6. Từ khóa phổ biến: đã hiển thị ở khối "Khám phá nhanh" (partials/home_discovery.php) phía trên. -->
+
   <!-- 5. SYNA AI LIVESTREAM SECTION (GỘP THÀNH 1 SECTION DUY NHẤT) -->
   <section class="mb-5 p-4 text-white" style="background: #183B2B; border-radius: 20px; border: 1px solid #2D6A4F; box-shadow: 0 12px 32px rgba(24, 59, 43, 0.15);">
     <div class="row align-items-center g-4">
@@ -664,7 +786,7 @@ $renderFlashSaleProductCard = static function (array $p): void {
           <?php if ($featLiveProd && $featProdId !== ''): ?>
             <div class="p-3 rounded-3 mb-3 d-flex align-items-center gap-3" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);">
               <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= rawurlencode($featProdId) ?>" class="d-block flex-shrink-0">
-                <img src="<?= h(resolve_image_url((string)($featLiveProd['link_hinh_anh'] ?? $featLiveProd['hinh_anh'] ?? ''))) ?>" alt="<?= h($featLiveProd['ten_san_pham'] ?? 'Live Product') ?>" style="width: 58px; height: 58px; object-fit: cover; border-radius: 8px; background: #FFF;">
+                <img src="<?= h(resolve_image_url(function_exists('product_image_source') ? product_image_source($featLiveProd) : (string)($featLiveProd['link_hinh_anh'] ?? $featLiveProd['hinh_anh'] ?? ''))) ?>" alt="<?= h($featLiveProd['ten_san_pham'] ?? 'Live Product') ?>" style="width: 58px; height: 58px; object-fit: cover; border-radius: 8px; background: #FFF;">
               </a>
               <div class="overflow-hidden flex-grow-1">
                 <span class="badge bg-success mb-1" style="font-size: 0.65rem; background: #2D6A4F !important;">Sản phẩm ghim trong live</span>
@@ -688,22 +810,56 @@ $renderFlashSaleProductCard = static function (array $p): void {
     </div>
   </section>
 
-  <!-- 5.5 SIMPLE RECOMMENDER (ĐƯỢC YÊU THÍCH NHẤT - IMDB WEIGHTED RATING) -->
+  <!-- 5.5 REFRESH-AWARE TODAY RECOMMENDATIONS -->
+  <?php if (!empty($todayProducts)): ?>
+    <section class="mb-5 home-product-section" data-home-rail>
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+          <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;"><?= h($todaySectionKicker) ?></span>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;"><?= h($todaySectionTitle) ?></h2>
+          <span class="text-muted small" style="font-size: 0.82rem;"><?= h($todaySectionSub) ?></span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <div class="home-rail-actions" aria-label="Điều hướng gợi ý hôm nay">
+            <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
+            <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Khám phá thêm <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
+      </div>
+
+      <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Gợi ý hôm nay">
+        <?php foreach ($todayProducts as $p): ?>
+          <div class="home-product-rail__item">
+            <?php $renderHomeProductCard($p, 'Gợi ý hôm nay'); ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
+
+  <!-- 5.6 SIMPLE RECOMMENDER (ĐƯỢC YÊU THÍCH NHẤT - IMDB WEIGHTED RATING) -->
   <?php if (!empty($topRatedWeightedProducts)): ?>
-    <section class="mb-5">
+    <section class="mb-5 home-product-section" data-home-rail>
       <div class="d-flex justify-content-between align-items-end mb-3">
         <div>
           <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">BẢNG XẾP HẠNG ĐÁNH GIÁ</span>
           <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Được Yêu Thích Nhất</h2>
           <span class="text-muted small" style="font-size: 0.82rem;">Những sản phẩm được cộng đồng đánh giá cao</span>
         </div>
-        <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+        <div class="d-flex align-items-center gap-2">
+          <div class="home-rail-actions" aria-label="Điều hướng bảng xếp hạng">
+            <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
+            <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
       </div>
 
-      <div class="row g-3">
+      <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Sản phẩm được yêu thích nhất">
         <?php // Danh sách đã sắp theo điểm đánh giá có trọng số -> thứ tự chính là hạng thật. ?>
         <?php foreach ($topRatedWeightedProducts as $rankIdx => $p): ?>
-          <div class="col-6 col-md-3">
+          <div class="home-product-rail__item">
             <?php $renderHomeProductCard($p, '#' . ($rankIdx + 1) . ' Yêu thích', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
@@ -716,16 +872,23 @@ $renderFlashSaleProductCard = static function (array $p): void {
 
   <!-- 6. NEW PRODUCTS (MỸ PHẨM VỪA LÊN KỆ - BEAUTY COSMETICS ONLY) -->
   <?php if (!empty($newProducts)): ?>
-    <section class="mb-5">
+    <section class="mb-5 home-product-section" data-home-rail>
       <div class="d-flex justify-content-between align-items-end mb-3">
         <div>
           <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.72rem;">SẢN PHẨM MỚI</span>
-          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Mỹ Phẩm Vừa Lên Kệ</h2>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;"><?= h($newSectionTitle) ?></h2>
+          <span class="text-muted small" style="font-size: 0.82rem;"><?= h($newSectionSub) ?></span>
         </div>
-        <a href="<?= BASE_URL ?>/index.php?r=tatca" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+        <div class="d-flex align-items-center gap-2">
+          <div class="home-rail-actions" aria-label="Điều hướng sản phẩm mới">
+            <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
+            <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          <a href="<?= BASE_URL ?>/index.php?r=tatca" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
       </div>
 
-      <div class="row g-3">
+      <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Sản phẩm mới">
         <?php foreach ($newProducts as $p): ?>
           <?php
             // Mọi SP có cùng ngày tạo (nhập một lượt) nên không có "mới" thật: nhãn góc hiện loại SP, thiếu thì giữ "Mới lên kệ".
@@ -737,8 +900,34 @@ $renderFlashSaleProductCard = static function (array $p): void {
                 $newTag = 'Mới lên kệ';
             }
           ?>
-          <div class="col-6 col-md-3">
+          <div class="home-product-rail__item">
             <?php $renderHomeProductCard($p, $newTag, HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
+  <?php endif; ?>
+
+  <!-- 6.5. DISCOVERY RAIL (FOR-YOU BROWSING) -->
+  <?php if (!empty($homeDiscoveryProducts)): ?>
+    <section class="mb-5 home-discovery-section home-product-section" data-home-rail>
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+          <span class="home-section-kicker">KHÁM PHÁ CHO BẠN</span>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Lướt thêm, gặp đúng món</h2>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <a href="<?= BASE_URL ?>/index.php?r=beauty_swipe" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.82rem;">Lướt dạng thẻ <i class="fas fa-arrow-right ms-1"></i></a>
+          <div class="home-rail-actions" aria-label="Điều hướng khám phá">
+          <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
+          <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Khám phá sản phẩm cho bạn">
+        <?php foreach ($homeDiscoveryProducts as $p): ?>
+          <div class="home-product-rail__item">
+            <?php $renderHomeProductCard($p, 'Khám phá cho bạn'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -818,13 +1007,38 @@ $renderFlashSaleProductCard = static function (array $p): void {
   </section>
   <?php endif; ?>
 
-  <!-- 8. TRUSTED BRANDS (THƯƠNG HIỆU NỔI BẬT DƯỢC YÊU THÍCH) -->
-  <?php if (!empty($brandNames)): ?>
-    <section class="p-4 mb-5 bg-white border text-center" style="border-radius: 12px; border-color: #E2E8F0 !important;">
-      <span class="text-uppercase fw-semibold small text-muted mb-2.5 d-block" style="letter-spacing: 0.05em; font-size: 0.72rem;">THƯƠNG HIỆU NỔI BẬT DƯỢC YÊU THÍCH</span>
-      <div class="d-flex flex-wrap justify-content-center gap-2">
-        <?php foreach ($brandNames as $brand): ?>
-          <a href="<?= BASE_URL ?>/index.php?r=tatca&q=<?= urlencode($brand) ?>" class="btn btn-sm btn-light px-3 py-1.5 fw-semibold" style="background: #F8FAF8; color: #0F172A; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 0.8rem;"><?= h($brand) ?></a>
+  <!-- 8. DYNAMIC BRANDS -->
+  <?php if (!empty($homeBrandCards)): ?>
+    <section class="home-brand-visual-section p-4 mb-5 bg-white border" aria-label="Thương hiệu nổi bật" data-home-card-rail>
+      <div class="d-flex justify-content-between align-items-end gap-3 mb-3">
+        <div>
+          <span class="home-section-kicker">THƯƠNG HIỆU CÓ SẢN PHẨM ĐANG BÁN</span>
+          <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Thương hiệu nổi bật</h2>
+        </div>
+        <div class="home-card-rail__tools">
+          <a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none fw-semibold text-success small">Xem tất cả &rarr;</a>
+          <div class="home-rail-actions" aria-label="Điều hướng thương hiệu">
+            <button type="button" class="home-rail-button" data-home-card-prev aria-label="Thương hiệu trước"><i class="fas fa-chevron-left"></i></button>
+            <button type="button" class="home-rail-button" data-home-card-next aria-label="Thương hiệu tiếp theo"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="home-brand-visual-grid home-card-rail" data-home-card-viewport tabindex="0" role="region" aria-label="Thương hiệu sản phẩm">
+        <?php foreach ($homeBrandCards as $brandCard): ?>
+          <?php
+            $brandName = trim((string)($brandCard['name'] ?? ''));
+            $brandProduct = is_array($brandCard['product'] ?? null) ? $brandCard['product'] : [];
+            $brandImage = function_exists('product_image_source') ? product_image_source($brandProduct) : (string)($brandProduct['link_hinh_anh'] ?? $brandProduct['hinh_anh'] ?? '');
+            $brandFallbackImage = function_exists('homepage_visual_asset') ? homepage_visual_asset('brand', $brandName) : '';
+            $brandResolvedImage = $brandImage !== '' ? resolve_image_url($brandImage) : '';
+            if ($brandResolvedImage === '' || $brandResolvedImage === default_placeholder_image()) {
+                $brandResolvedImage = $brandFallbackImage ?: default_placeholder_image();
+            }
+          ?>
+          <a href="<?= BASE_URL ?>/index.php?r=product_collection&type=best_seller&thuong_hieu=<?= urlencode($brandName) ?>" class="home-brand-visual-card home-card-rail__item">
+            <span class="home-brand-visual-card__image"><img loading="lazy" decoding="async" src="<?= h($brandResolvedImage) ?>" alt="<?= h($brandName) ?>" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($brandProduct, $brandResolvedImage) : '[]' ?>" data-image-placeholder="<?= h($brandFallbackImage ?: default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)"></span>
+            <span class="home-brand-visual-card__copy"><strong><?= h($brandName) ?></strong><small><?= (int)($brandCard['count'] ?? 0) ?> sản phẩm</small></span>
+          </a>
         <?php endforeach; ?>
       </div>
     </section>
@@ -1150,3 +1364,6 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="<?= h(BASE_URL . '/assets/js/home-graph.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/home-graph.js')) ?>" defer></script>
 <script src="<?= h(BASE_URL . '/assets/js/home-carousel.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/home-carousel.js')) ?>" defer></script>
 <script src="<?= h(BASE_URL . '/assets/js/why-fit.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/why-fit.js')) ?>" defer></script>
+<script src="<?= h(BASE_URL . '/assets/js/homepage-discovery.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/homepage-discovery.js')) ?>" defer></script>
+
+<?php require __DIR__ . '/components/welcome_popup.php'; ?>

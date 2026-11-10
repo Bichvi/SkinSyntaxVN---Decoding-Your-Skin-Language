@@ -1,0 +1,130 @@
+{
+  "home": {
+    "desktop": {
+      "score": 83,
+      "fcp_ms": 1113,
+      "lcp_ms": 1890,
+      "tbt_ms": 86,
+      "cls": 0.0286,
+      "speed_index_ms": 2710,
+      "ttfb_ms": 2402,
+      "total_bytes": 3516199,
+      "total_bytes_display": "Total size was 3,434 KiB",
+      "network_requests": 50,
+      "image_requests": 31,
+      "image_bytes": 2597689,
+      "lcp_element": "N/A"
+    },
+    "mobile": {
+      "score": 63,
+      "fcp_ms": 5131,
+      "lcp_ms": 6108,
+      "tbt_ms": 108,
+      "cls": 0.0001,
+      "speed_index_ms": 6018,
+      "ttfb_ms": 2075,
+      "total_bytes": 2065128,
+      "total_bytes_display": "Total size was 2,017 KiB",
+      "network_requests": 37,
+      "image_requests": 18,
+      "image_bytes": 1146617,
+      "lcp_element": "N/A"
+    }
+  },
+  "category": {
+    "desktop": {
+      "score": 88,
+      "fcp_ms": 1060,
+      "lcp_ms": 1483,
+      "tbt_ms": 0,
+      "cls": 0.0277,
+      "speed_index_ms": 2363,
+      "ttfb_ms": 2608,
+      "total_bytes": 2437760,
+      "total_bytes_display": "Total size was 2,381 KiB",
+      "network_requests": 47,
+      "image_requests": 29,
+      "image_bytes": 1570796,
+      "lcp_element": "N/A"
+    },
+    "mobile": {
+      "score": 62,
+      "fcp_ms": 4325,
+      "lcp_ms": 6879,
+      "tbt_ms": 101,
+      "cls": 0.0003,
+      "speed_index_ms": 6368,
+      "ttfb_ms": 2514,
+      "total_bytes": 1809507,
+      "total_bytes_display": "Total size was 1,767 KiB",
+      "network_requests": 37,
+      "image_requests": 19,
+      "image_bytes": 942543,
+      "lcp_element": "N/A"
+    }
+  },
+  "product_detail": {
+    "desktop": {
+      "score": 88,
+      "fcp_ms": 1059,
+      "lcp_ms": 1401,
+      "tbt_ms": 0,
+      "cls": 0.0363,
+      "speed_index_ms": 2640,
+      "ttfb_ms": 2889,
+      "total_bytes": 1271162,
+      "total_bytes_display": "Total size was 1,241 KiB",
+      "network_requests": 42,
+      "image_requests": 22,
+      "image_bytes": 434003,
+      "lcp_element": "N/A"
+    },
+    "mobile": {
+      "score": 42,
+      "fcp_ms": 3289,
+      "lcp_ms": 5609,
+      "tbt_ms": 1521,
+      "cls": 0.0001,
+      "speed_index_ms": 5840,
+      "ttfb_ms": 2107,
+      "total_bytes": 1271201,
+      "total_bytes_display": "Total size was 1,241 KiB",
+      "network_requests": 42,
+      "image_requests": 22,
+      "image_bytes": 434026,
+      "lcp_element": "N/A"
+    }
+  },
+  "recommendation": {
+    "desktop": {
+      "score": 87,
+      "fcp_ms": 1128,
+      "lcp_ms": 1679,
+      "tbt_ms": 0,
+      "cls": 0.0282,
+      "speed_index_ms": 2059,
+      "ttfb_ms": 1958,
+      "total_bytes": 2169787,
+      "total_bytes_display": "Total size was 2,119 KiB",
+      "network_requests": 39,
+      "image_requests": 19,
+      "image_bytes": 1203145,
+      "lcp_element": "N/A"
+    },
+    "mobile": {
+      "score": 60,
+      "fcp_ms": 3847,
+      "lcp_ms": 8612,
+      "tbt_ms": 226,
+      "cls": 0.0239,
+      "speed_index_ms": 5253,
+      "ttfb_ms": 1896,
+      "total_bytes": 1624755,
+      "total_bytes_display": "Total size was 1,587 KiB",
+      "network_requests": 28,
+      "image_requests": 8,
+      "image_bytes": 658110,
+      "lcp_element": "N/A"
+    }
+  }
+}

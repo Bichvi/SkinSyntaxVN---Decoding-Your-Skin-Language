@@ -46,7 +46,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
   <div class="p-4 mb-4 bg-white border" style="border-radius: 12px; border-color: var(--border) !important;">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
       <div id="catalogSummary" aria-live="polite">
-        <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.75rem;">SKINSYNTAX CATALOG</span>
+        <span class="text-uppercase fw-semibold small" style="color: #183B2B; letter-spacing: 0.05em; font-size: 0.75rem;">TẤT CẢ SẢN PHẨM</span>
         <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.8rem;"><?= h($pageTitle) ?></h2>
         <div class="text-muted small mt-1">Tổng cộng: <strong><?= (int)$total ?></strong> sản phẩm chuẩn skincare</div>
         <?php if (!empty($cap1) || !empty($cap2)): ?>
@@ -124,14 +124,16 @@ $startPage = max(1, $endPage - $maxVisible + 1);
     </div>
   <?php else: ?>
     <div class="row g-3">
-      <?php foreach ($items as $p):
+      <?php foreach ($items as $idx => $p):
         $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
-        $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+        $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
         $giaBan = (string)($p['gia_ban'] ?? '');
         $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
         $phanTramGiam = function_exists('product_discount_percent') ? product_discount_percent($p) : null;
         $rating = isset($p['diem_danh_gia']) && (float)$p['diem_danh_gia'] > 0 ? (float)$p['diem_danh_gia'] : 4.9;
         $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;
+        $isLcp = ($idx === 0);
+        $isAboveFold = ($idx < 4);
       ?>
         <div class="col-6 col-md-3">
           <div class="product-card product-card--catalog h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
@@ -143,7 +145,17 @@ $startPage = max(1, $endPage - $maxVisible + 1);
               <?php endif; ?>
 
               <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 h-100 overflow-hidden" style="border-radius: 8px;">
-                <img loading="lazy" decoding="async" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h($p['ten_san_pham'] ?? '') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+                <img src="<?= h($img ?: default_placeholder_image()) ?>"
+                     <?= $isLcp ? 'fetchpriority="high"' : ($isAboveFold ? '' : 'loading="lazy"') ?>
+                     decoding="async"
+                     width="280"
+                     height="280"
+                     referrerpolicy="no-referrer"
+                     data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>"
+                     data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                     onerror="window.SkinSyntaxImageFallback(this)"
+                     alt="<?= h($p['ten_san_pham'] ?? '') ?>"
+                     style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
               </a>
             </div>
 

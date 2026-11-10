@@ -73,7 +73,7 @@ $cinDetail = static function (string $id): string {
               if (!is_array($p)) continue;
               $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
               if ($productId === '') continue;
-              $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+              $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
               $giaBan = (string)($p['gia_ban'] ?? '');
               $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;
               $reasonText = trim((string)($p['reason_text'] ?? ''));
@@ -85,7 +85,7 @@ $cinDetail = static function (string $id): string {
                     <span class="ssf-reason" title="<?= $cinE($reasonText) ?>" aria-label="Lý do gợi ý: <?= $cinE($reasonText) ?>"><?= $cinE($reasonText) ?></span>
                   <?php endif; ?>
                   <a href="<?= $cinE($detailUrl) ?>" class="ssf-thumb-link">
-                    <img src="<?= $cinE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= $cinE(default_placeholder_image()) ?>';" alt="<?= $cinE($p['ten_san_pham'] ?? '') ?>">
+              <img src="<?= $cinE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>" data-image-placeholder="<?= $cinE(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" alt="<?= $cinE($p['ten_san_pham'] ?? '') ?>">
                   </a>
                 </div>
                 <div class="ssf-meta">

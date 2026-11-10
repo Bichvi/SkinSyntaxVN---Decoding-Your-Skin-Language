@@ -285,4 +285,3 @@ class SimilarProductsService:
             "source": body["source"], "count": len(items), "cache_hit": cache_hit, "took_ms": body["took_ms"],
         }, ensure_ascii=False))
         return body
-

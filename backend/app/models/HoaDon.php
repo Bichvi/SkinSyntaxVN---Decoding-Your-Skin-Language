@@ -452,6 +452,8 @@ class HoaDon {
         try {
             $updateHoaDon = [
                 'status_thanh_toan' => 'Đã thanh toán',
+                'payment_status' => 'paid',
+                'payment_time' => date('Y-m-d H:i:s'),
                 'updated_at' => new \MongoDB\BSON\UTCDateTime()
             ];
 
@@ -491,9 +493,22 @@ class HoaDon {
             return ['ok' => false, 'message' => 'Mã đơn hàng không hợp lệ.'];
         }
 
+        $status = strtolower(trim($status));
+        if (!in_array($status, ['paid', 'failed', 'cancelled'], true)) {
+            return ['ok' => false, 'message' => 'Trạng thái thanh toán VNPAY không hợp lệ.'];
+        }
+
         $order = $this->getOrderById($orderId);
         if (!$order) {
             return ['ok' => false, 'message' => 'Không tìm thấy đơn hàng.'];
+        }
+
+        $paymentMethod = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? '')));
+        if ($paymentMethod === '') {
+            $paymentMethod = strtolower(trim((string)($order['payment_method'] ?? '')));
+        }
+        if ($paymentMethod !== 'vnpay') {
+            return ['ok' => false, 'message' => 'Đơn hàng không sử dụng phương thức VNPAY.'];
         }
 
         $currentPaymentStatus = $this->normalizePaymentStatus($order['payment_status'] ?? ($order['status_thanh_toan'] ?? ''));
@@ -516,6 +531,10 @@ class HoaDon {
         }
 
         if ($status === 'paid') {
+            if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') === 'cancelled') {
+                return ['ok' => false, 'message' => 'Đơn hàng đã hủy, không thể ghi nhận thanh toán VNPAY.'];
+            }
+
             if ($currentPaymentStatus === 'paid') {
                 return [
                     'ok' => true,
@@ -723,6 +742,7 @@ class HoaDon {
             $this->db->hoa_don->updateOne(['ma_hoa_don' => $orderId], ['$set' => [
                 'trang_thai' => 'Đã hủy',
                 'trang_thai_normalized' => 'cancelled',
+                'payment_status' => 'cancelled',
                 'status_thanh_toan' => 'Quá hạn thanh toán',
                 'ly_do_huy' => 'Qua han thanh toan QR 24 gio',
                 'cancel_reason' => 'Qua han thanh toan QR 24 gio',
@@ -740,8 +760,8 @@ class HoaDon {
         $deadline = new \MongoDB\BSON\UTCDateTime((time() - max(5, $ttlMinutes) * 60) * 1000);
         $cursor = $this->db->hoa_don->find([
             'hinh_thuc_thanh_toan' => 'vnpay',
-            'status_thanh_toan' => ['$in' => ['Chờ thanh toán VNPAY', 'Chưa thanh toán', 'pending']],
-            'payment_status' => 'pending',
+            'status_thanh_toan' => ['$in' => ['Chờ thanh toán VNPAY', 'Chưa thanh toán', 'pending', 'Thanh toán thất bại', 'Thanh toán đã hủy']],
+            'payment_status' => ['$in' => ['pending', 'failed', 'cancelled']],
             'trang_thai' => ['$in' => ['Chờ xử lý', 'Chờ thanh toán', 'Cho thanh toan', 'Cho xu ly']],
             'ngay_dat' => ['$lt' => $deadline],
         ]);
