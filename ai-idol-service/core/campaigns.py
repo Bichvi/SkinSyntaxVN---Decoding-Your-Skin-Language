@@ -1077,7 +1077,8 @@ def get_campaign(campaign_id: str) -> dict | None:
             segment["current_stage"] = job.get("current_stage")
             segment["script_status"] = job.get("script_status")
             artifacts = job.get("artifacts") or {}
-            segment["script_text"] = artifacts.get("script_text", "")
+            # A library clip keeps the script stored on its own segment until the job has a final one.
+            segment["script_text"] = artifacts.get("script_text") or (segment.get("script_text", "") if segment.get("kind") else "")
             segment["rejected_script_text"] = artifacts.get("rejected_script_text", "")
             segment["validation_feedback"] = artifacts.get("validation_feedback", "")
             # The studio's recovery card shows "Đã tự sửa: n/3" and the last issues from these.

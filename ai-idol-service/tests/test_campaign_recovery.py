@@ -349,6 +349,29 @@ class RejectedScriptTests(unittest.TestCase):
         self.assertEqual(segment["script_text"], "")
         self.assertEqual(segment["repair_attempt"], 0)
 
+    def test_get_campaign_exposes_library_fields_only_when_present(self):
+        campaign_id = oid()
+        plan = {"products": [{"product_id": "1", "number": 1, "step_key": "serum", "step_label": "Serum"}]}
+        db = FakeDb(
+            ai_idol_campaigns=Collection([{"_id": campaign_id, "status": "SCRIPTS_READY", "show_format": "clip_library_v1",
+                                           "show_plan": plan, "program": [{"segment_id": "s1", "kind": "opening"}]}]),
+            ai_idol_segments=Collection([
+                {"_id": oid(), "campaign_id": str(campaign_id), "position": 0, "kind": "interlude",
+                 "interlude_type": "cta", "phase": "mid", "script_text": "Xin chào", "status": "READY"},
+                {"_id": oid(), "campaign_id": str(campaign_id), "position": 1, "status": "READY"},
+            ]),
+        )
+        with patch.object(campaigns, "get_db", return_value=db):
+            data = campaigns.get_campaign(str(campaign_id))
+        self.assertEqual(data["show_format"], "clip_library_v1")
+        self.assertEqual(data["show_plan"]["products"][0]["number"], 1)
+        self.assertEqual(data["program"][0]["kind"], "opening")
+        first, legacy = data["segments"]
+        self.assertEqual((first["kind"], first["interlude_type"], first["phase"], first["script_text"]),
+                         ("interlude", "cta", "mid", "Xin chào"))
+        for key in ("kind", "angle", "interlude_type", "phase", "script_text"):
+            self.assertNotIn(key, legacy)
+
     def test_get_campaign_exposes_repair_count_and_issues(self):
         # The recovery card reads "Đã tự sửa: n/3" from repair_attempt; it showed 0/3 when missing.
         campaign_id, job_id = oid(), oid()

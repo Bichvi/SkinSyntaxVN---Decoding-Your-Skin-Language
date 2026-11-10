@@ -409,3 +409,37 @@ test('progressSteps: a finished run without a campaign has nothing active', () =
   });
   assert.equal(L.progressSteps(runItem('INTERPRETING'))[0].state, 'active'); // still working
 });
+
+// ---------------------------------------------------------------- live clip library
+
+test('groupClipsByKind orders groups and uses Vietnamese labels', () => {
+  const segments = [
+    { kind: 'closing' }, { kind: 'product', angle: 'a' }, { kind: 'opening' }, { kind: 'faq' },
+    { kind: 'product', angle: 'b' }, { kind: 'interlude' }, { kind: 'routine_recap' }, { kind: 'transition' }, { kind: 'tip' },
+  ];
+  const groups = L.groupClipsByKind(segments);
+  assert.deepEqual(groups.map((g) => g.kind), ['opening', 'product', 'interlude', 'faq', 'tip', 'transition', 'routine_recap', 'closing']);
+  assert.deepEqual(groups.map((g) => g.label), ['Mở màn', 'Sản phẩm', 'Nghỉ giữa hiệp', 'Hỏi đáp', 'Kiến thức da', 'Chuyển vòng', 'Tóm tắt giá', 'Kết buổi']);
+  assert.equal(groups[1].items.length, 2);
+});
+
+test('groupClipsByKind skips empty groups and tolerates bad input', () => {
+  assert.deepEqual(L.groupClipsByKind(null), []);
+  assert.deepEqual(L.groupClipsByKind([{ kind: 'tip' }, null, {}]).map((g) => g.kind), ['tip']);
+});
+
+test('programTimeline percentages sum to 100 for a 3-item program', () => {
+  const program = [
+    { kind: 'opening', start: 0, end: 90 },
+    { kind: 'product', start: 90, end: 240 },
+    { kind: 'closing', start: 240, end: 300 },
+  ];
+  const bars = L.programTimeline(program, 300);
+  assert.equal(bars.length, 3);
+  assert.ok(Math.abs(bars.reduce((sum, b) => sum + b.widthPct, 0) - 100) < 0.01);
+  assert.equal(bars[0].leftPct, 0);
+  assert.ok(Math.abs(bars[2].leftPct + bars[2].widthPct - 100) < 0.01);
+  assert.equal(bars[1].kind, 'product');
+  assert.match(bars[0].title, /Mở màn/);
+  assert.deepEqual(L.programTimeline([], 0), []);
+});

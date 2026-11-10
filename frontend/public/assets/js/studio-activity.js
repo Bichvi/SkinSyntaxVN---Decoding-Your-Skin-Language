@@ -414,6 +414,37 @@
     return `<li class="segment"><div class="segment-heading"><span>${escapeHtml(title)}</span>${badge(segment.status)}</div>${errorMarkup}${pageMarkup}${scriptMarkup}</li>`;
   }
 
+  const INTERLUDE_LABELS = { cta: 'Chốt đơn', about_shop: 'Giới thiệu shop', fun: 'Vui vẻ' };
+
+  function clipRowMarkup(segment, names) {
+    const id = String(segment._id || segment.segment_id || '');
+    const detail = segment.kind === 'product'
+      ? [names.get(String(segment.product_id ?? '')) || `Sản phẩm ${segment.product_id ?? ''}`, segment.angle].filter(Boolean).join(' · ')
+      : segment.kind === 'interlude' ? (INTERLUDE_LABELS[segment.interlude_type] || segment.interlude_type || '') : '';
+    const script = String(segment.script_text || '');
+    const key = `clip:${id}`;
+    const open = toggled.get(key) === true;
+    const toggle = script
+      ? `<details class="clip-script" data-key="${escapeHtml(key)}"${open ? ' open' : ''}><summary>Xem kịch bản</summary><pre>${escapeHtml(script)}</pre></details>` : '';
+    return `<li class="clip-row"><div class="segment-heading"><span>${escapeHtml(detail || segment.kind || '')}</span>${badge(segment.status)}</div>${toggle}</li>`;
+  }
+
+  function clipGroupsMarkup(segments, names) {
+    return logic.groupClipsByKind(segments).map((group) =>
+      `<section class="clip-group"><h4>${escapeHtml(group.label)} <span class="clip-count">${group.items.length}</span></h4>`
+      + `<ul class="act-segments" role="list">${group.items.map((segment) => clipRowMarkup(segment, names)).join('')}</ul></section>`).join('');
+  }
+
+  function timelineMarkup(campaign) {
+    const bars = logic.programTimeline(asArray(campaign.program), campaign.duration_seconds);
+    if (!bars.length) return '';
+    const kinds = logic.CLIP_KIND_ORDER;
+    return `<section class="show-timeline"><h4>Dòng thời gian chương trình</h4>`
+      + `<div class="timeline-bar" role="img" aria-label="Dòng thời gian chương trình">${bars.map((bar) =>
+        `<span class="tl-seg tl-${escapeHtml(bar.kind)}" style="left:${bar.leftPct.toFixed(3)}%;width:${bar.widthPct.toFixed(3)}%" title="${escapeHtml(bar.title)}"></span>`).join('')}</div>`
+      + `<ul class="timeline-legend" role="list">${kinds.map((kind) => `<li><span class="tl-dot tl-${kind}"></span>${escapeHtml(logic.CLIP_KIND_LABELS[kind])}</li>`).join('')}</ul></section>`;
+  }
+
   function broadcastMarkup(campaign) {
     const broadcasts = asArray(campaign.broadcasts);
     const preflight = isObject(campaign.preflight) ? campaign.preflight : null;
@@ -503,7 +534,9 @@
         ? `<video id="actPreview" controls playsinline preload="metadata" aria-label="Video chương trình" src="index.php?r=admin_ai_idol_stream_campaign&campaign_id=${encodeURIComponent(campaign._id)}"></video>`
         : `<div class="empty compact"><i class="bi bi-${status === 'AWAITING_APPROVAL' ? 'pencil-square' : 'camera-reels'}" aria-hidden="true"></i><p>${waiting}</p></div>`)
       + `<div class="avatar-mode-note ${motion || configuration.avatar_mode === 'syna_3d' ? 'motion' : 'photo'}">${escapeHtml(character)}</div>`
-      + `${segments.length ? `<ul class="act-segments" role="list" aria-label="Các sản phẩm trong chương trình">${segments.map((segment) => segmentMarkup(segment, names)).join('')}</ul>` : ''}`
+      + (campaign.show_format === 'clip_library_v1'
+        ? `${timelineMarkup(campaign)}${clipGroupsMarkup(segments, names)}`
+        : `${segments.length ? `<ul class="act-segments" role="list" aria-label="Các sản phẩm trong chương trình">${segments.map((segment) => segmentMarkup(segment, names)).join('')}</ul>` : ''}`)
       + `${broadcastMarkup(campaign)}`
       + `${decisions ? `<section class="act-decisions"><h4>Syna đã quyết định</h4>${decisions}</section>` : ''}`
       + `${controlsMarkup(campaign)}`;
