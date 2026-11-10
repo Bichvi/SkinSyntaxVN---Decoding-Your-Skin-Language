@@ -255,7 +255,7 @@ class ClaimLeaseTests(Harness):
 
     def test_retry_breaks_a_blocked_claim(self):
         self.setup_one_product()
-        self.campaign()["recap_claim"] = {"key": "1#0", "claimed_at": campaigns.utcnow()}
+        self.campaign()["recap_claim"] = "1#0"  # a legacy string claim blocks the same key
         self.db.ai_idol_campaigns.update_one({"_id": state_machine.object_id(self.campaign_id)},
                                              {"$set": {"status": "NEEDS_ATTENTION"}})
         queued = []
@@ -327,6 +327,89 @@ class MinorFixTests(Harness):
             self.assertEqual(campaigns.prepare_campaign(self.campaign_id), [])
         self.assertEqual(self.db.ai_idol_segments.docs[0]["status"], "CANCELLED")
         self.assertIsNone(self.db.ai_idol_segments.docs[0]["job_id"])
+
+
+class Round2Tests(Harness):
+    def one_product(self):
+        self.full_frame()
+        self.add("product", product_id="1", angle="A")
+
+    def retry(self, **kwargs):
+        return campaigns.retry_campaign(
+            self.campaign_id, enqueue_job=lambda j: None, enqueue_prepare=kwargs.get("prepare", lambda c: None),
+            enqueue_assemble=lambda c: None, enqueue_recap=kwargs.get("recap", lambda c: None))
+
+    def test_retry_while_recap_in_flight_does_not_raise(self):
+        self.one_product()
+        self.add("routine_recap", "GENERATING", phase="B", recap_for=["1"])
+        result = self.retry()
+        self.assertTrue(result["recap_in_flight"])
+
+    def test_retry_after_recovery_with_recap_in_flight(self):
+        self.one_product()
+        self.campaign()["recap_claim"] = {"key": "1#0", "claimed_at": campaigns.utcnow() - dt.timedelta(minutes=20)}
+        self.db.ai_idol_campaigns.update_one({"_id": state_machine.object_id(self.campaign_id)},
+                                             {"$set": {"status": "NEEDS_ATTENTION"}})
+        self.assertTrue(self.start_phase_b()[0])
+        self.assertTrue(self.retry()["recap_in_flight"])
+
+    def test_release_only_removes_own_lease(self):
+        self.one_product()
+        self.campaign()["recap_claim"] = {"key": "1#0", "claimed_at": campaigns.utcnow() - dt.timedelta(minutes=20)}
+        newer = {"key": "1#0", "claimed_at": campaigns.utcnow()}
+
+        def slow_writer(plan, snapshots, **kwargs):
+            self.campaign()["recap_claim"] = dict(newer)  # worker B took over meanwhile
+            return ClipDraft(kind="routine_recap", script="x")
+
+        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=snapshot_for), \
+                patch.object(campaigns.show_writer, "write_routine_recap", side_effect=slow_writer):
+            campaigns.start_phase_b(self.campaign_id)
+        self.assertEqual(self.campaign()["recap_claim"], newer)
+
+    def test_prepare_creates_job_for_jobless_recap_segment(self):
+        self.one_product()
+        self.db.ai_idol_segments.insert_one({
+            "campaign_id": self.campaign_id, "kind": "routine_recap", "phase": "B", "status": "QUEUED",
+            "job_id": None, "recap_for": ["1"], "script_text": "Tóm tắt", "position": 50, "product_id": None})
+        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=snapshot_for), \
+                patch.object(campaigns.show_plan, "build_show_plan", return_value=self.campaign()["show_plan"]):
+            job_ids = campaigns.prepare_campaign(self.campaign_id)
+        recap = self.segments(kind="routine_recap")[0]
+        self.assertEqual(recap["status"], "GENERATING")
+        self.assertIn(recap["job_id"], job_ids)
+        job = self.db.ai_idol_jobs.find_one({"_id": state_machine.object_id(recap["job_id"])})
+        self.assertEqual(job["clip_kind"], "routine_recap")
+        self.assertEqual(job["product_snapshot"]["bundle_total"], 100000)
+        self.assertEqual(job["artifacts"]["prewritten_draft"], "Tóm tắt")
+
+    def test_retry_queues_prepare_for_jobless_recap_segment(self):
+        self.one_product()
+        self.db.ai_idol_segments.insert_one({
+            "campaign_id": self.campaign_id, "kind": "routine_recap", "phase": "B", "status": "QUEUED",
+            "job_id": None, "recap_for": ["1"], "script_text": "x", "position": 50})
+        queued = []
+        result = self.retry(prepare=queued.append)
+        self.assertEqual(queued, [self.campaign_id])
+        self.assertTrue(result["prepare_queued"])
+
+    def test_retry_leaves_fresh_lease_alone(self):
+        self.one_product()
+        fresh = {"key": "1#0", "claimed_at": campaigns.utcnow() - dt.timedelta(minutes=2)}
+        self.campaign()["recap_claim"] = dict(fresh)
+        queued = []
+        result = self.retry(recap=queued.append)
+        self.assertTrue(result["recap_in_flight"])
+        self.assertEqual(queued, [])
+        self.assertEqual(self.campaign()["recap_claim"], fresh)
+
+    def test_retry_clears_stale_lease(self):
+        self.one_product()
+        self.campaign()["recap_claim"] = {"key": "1#0", "claimed_at": campaigns.utcnow() - dt.timedelta(minutes=30)}
+        queued = []
+        self.retry(recap=queued.append)
+        self.assertEqual(queued, [self.campaign_id])
+        self.assertIsNone(self.campaign()["recap_claim"])
 
 
 class LegacyTests(Harness):

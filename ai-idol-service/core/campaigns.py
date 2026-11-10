@@ -284,6 +284,19 @@ class _LibraryContext:
         self.db.ai_idol_campaigns.update_one({"_id": self.campaign["_id"]}, {"$set": {
             "progress.total": len(drafts)}})
 
+    def create_recap_job(self, segment: dict) -> str:
+        """The job for a phase-B recap segment whose job was never made (worker died in between)."""
+        ids = [str(i) for i in segment.get("recap_for") or []]
+        plan = self._stored_plan()
+        snapshots = self._collect(ids)
+        sub_plan = {**plan, "products": [p for p in plan.get("products", []) if str(p["product_id"]) in ids]}
+        total = show_plan.bundle_total([(snapshots.get(i) or {}).get("pricing") for i in ids])
+        return create_job(
+            None, self.campaign.get("content_mode", "Product Intro"), dict(self.campaign.get("configuration") or {}),
+            campaign_id=self.campaign_id, segment_id=str(segment["_id"]),
+            product_snapshot=show_plan.combined_snapshot(sub_plan, snapshots, total or None),
+            purpose=purpose_of(self.campaign), clip_kind=RECAP_KIND, prewritten_script=segment.get("script_text"))
+
     def create_segment_job(self, segment: dict) -> str:
         plan = self._stored_plan()
         snapshots = self._snapshots_for(plan)
@@ -341,7 +354,17 @@ def prepare_campaign(campaign_id: str) -> list[str]:
         if library_ctx is not None and segment.get("status") == "CANCELLED":
             continue  # stopped on purpose (e.g. an old recap): never queue its job
         if library_ctx is not None and segment.get("phase") == PHASE_B and not segment.get("job_id"):
-            continue  # a recap that never got a job is redone by start_phase_b, not here
+            if segment.get("status") == "QUEUED" and segment.get("script_text"):
+                try:
+                    job_id = library_ctx.create_recap_job(segment)
+                    db.ai_idol_segments.update_one({"_id": segment["_id"]}, {"$set": {
+                        "job_id": job_id, "status": "GENERATING", "error_message": None, "updated_at": utcnow()}})
+                    job_ids.append(job_id)
+                except Exception as exc:
+                    errors.append(f"Clip tóm tắt: {exc}")
+                    db.ai_idol_segments.update_one({"_id": segment["_id"]}, {"$set": {
+                        "status": "FAILED", "error_message": str(exc), "updated_at": utcnow()}})
+            continue  # otherwise the recap is redone by start_phase_b, not here
         if segment.get("job_id"):
             existing = db.ai_idol_jobs.find_one({"_id": object_id(str(segment["job_id"]))}, {"status": 1})
             if existing and existing.get("status") == "READY":
@@ -469,8 +492,23 @@ def _phase_b_blocked(campaign: dict, segments: list[dict]) -> bool:
     return not autopilot and any(s.get("kind") == "product" and s.get("status") == "FAILED" for s in segments)
 
 
-def _release_recap_claim(db, campaign: dict) -> None:
-    db.ai_idol_campaigns.update_one({"_id": campaign["_id"]}, {"$set": {"recap_claim": None}})
+def _release_recap_claim(db, campaign: dict, key: str | None = None, claimed_at=None) -> None:
+    """Drop the lease. With key and claimed_at only that very lease goes (a taker-over keeps its own)."""
+    query = {"_id": campaign["_id"]}
+    if key is not None:
+        query.update({"recap_claim.key": key, "recap_claim.claimed_at": claimed_at})
+    db.ai_idol_campaigns.update_one(query, {"$set": {"recap_claim": None}})
+
+
+def _lease_fresh(campaign: dict) -> bool:
+    """A recap writer holds a lease younger than RECAP_CLAIM_MINUTES."""
+    claim = campaign.get("recap_claim")
+    claimed_at = claim.get("claimed_at") if isinstance(claim, dict) else None
+    if not claimed_at:
+        return False
+    if claimed_at.tzinfo is None:
+        claimed_at = claimed_at.replace(tzinfo=dt.timezone.utc)
+    return claimed_at > utcnow() - dt.timedelta(minutes=RECAP_CLAIM_MINUTES)
 
 
 def start_phase_b(campaign_id: str) -> str | None:
@@ -490,6 +528,7 @@ def start_phase_b(campaign_id: str) -> str | None:
     # A lease: one writer per product set, but a crashed worker's claim expires and can be taken over.
     key = ",".join(ids) + "#" + str(sum(1 for s in segments if s.get("phase") == PHASE_B))
     now = utcnow()
+    now = now.replace(microsecond=now.microsecond // 1000 * 1000)  # Mongo keeps milliseconds only
     claimed = db.ai_idol_campaigns.find_one_and_update(
         {"_id": campaign["_id"], "$or": [
             {"recap_claim.key": {"$ne": key}},
@@ -501,7 +540,7 @@ def start_phase_b(campaign_id: str) -> str | None:
     try:
         return _write_recap(db, campaign, plan, remaining, ids, segments)
     finally:
-        _release_recap_claim(db, campaign)
+        _release_recap_claim(db, campaign, key, now)
 
 
 def _fail_recap(db, campaign: dict, ids: list[str], position: int, message: str) -> None:
@@ -942,17 +981,31 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
             enqueue_prepare(campaign_id)
             result["prepare_queued"] = True
         if needs_recap:
-            _release_recap_claim(db, campaign)
-            enqueue_recap(campaign_id)
-            result["recap_queued"] = True
+            if _lease_fresh(campaign):
+                result["recap_in_flight"] = True
+            else:
+                _release_recap_claim(db, campaign)
+                enqueue_recap(campaign_id)
+                result["recap_queued"] = True
         return result
 
     if campaign.get("show_format") == SHOW_FORMAT_LIBRARY:
         remaining = remaining_products(campaign.get("show_plan") or {}, segments)
         if remaining and not _recap_is_current(segments, remaining):
-            _release_recap_claim(db, campaign)  # a stale or blocked claim must not stop the retry
+            if _lease_fresh(campaign):
+                result["recap_in_flight"] = True  # a live writer holds the lease: do not start a second one
+                return result
+            _release_recap_claim(db, campaign)  # a stale or legacy claim must not stop the retry
             enqueue_recap(campaign_id)  # the product set changed since the recap was written
             result["recap_queued"] = True
+            return result
+        recaps = [s for s in segments if s.get("phase") == PHASE_B and s.get("status") != "CANCELLED"]
+        if any(s.get("status") == "QUEUED" and not s.get("job_id") and s.get("script_text") for s in recaps):
+            enqueue_prepare(campaign_id)  # the recap was written but its job never made
+            result["prepare_queued"] = True
+            return result
+        if any(s.get("status") in ("QUEUED", "GENERATING") for s in recaps):
+            result["recap_in_flight"] = True
             return result
 
     # Skipped products are finished-and-unused; they never block, but a campaign needs one real clip.
