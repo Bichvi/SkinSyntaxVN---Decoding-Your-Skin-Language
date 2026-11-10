@@ -289,6 +289,11 @@ class DispatchTests(unittest.TestCase):
 
 
 class InternalBroadcastTests(unittest.TestCase):
+    def setUp(self):
+        patcher = patch.object(broadcast_engine, "_send_replay_task")
+        self.send_replay = patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_internal_target_goes_live_with_end_time_without_ffmpeg(self):
         db = FakeDb()
         with patch.object(broadcast_engine, "get_db", return_value=db), \
@@ -346,6 +351,29 @@ class InternalBroadcastTests(unittest.TestCase):
         with patch.object(broadcast_engine, "get_db", return_value=db):
             broadcast_engine.finalize_live_campaigns(NOW)
         self.assertEqual(db.ai_idol_campaigns.docs[0]["status"], "PARTIAL_FAILURE")
+
+
+class ReplayQueueTests(unittest.TestCase):
+    def test_finalize_queues_replay_for_internal_live_campaign(self):
+        cid = oid()
+        db = FakeDb(ai_idol_campaigns=Collection([{"_id": cid, "status": "LIVE", "purpose": "live_only",
+                                                   "platforms": ["internal"], "ends_at": NOW - dt.timedelta(seconds=1)}]))
+        with patch.object(broadcast_engine, "get_db", return_value=db),                 patch.object(broadcast_engine, "_send_replay_task") as send:
+            broadcast_engine.finalize_live_campaigns(NOW)
+        send.assert_called_once_with(str(cid))
+
+    def test_queue_replay_skips_non_internal(self):
+        with patch.object(broadcast_engine, "_send_replay_task") as send:
+            broadcast_engine._queue_replay_publish({"_id": oid(), "purpose": "live_only", "platforms": ["youtube"]})
+        send.assert_not_called()
+
+    def test_queue_replay_swallows_send_errors(self):
+        with patch.object(broadcast_engine, "_send_replay_task", side_effect=RuntimeError("broker down")):
+            broadcast_engine._queue_replay_publish({"_id": oid(), "purpose": "live_only", "platforms": ["internal"]})
+
+    def test_replay_task_routed_to_media(self):
+        import celery_app
+        self.assertEqual(celery_app.TASK_ROUTES["ai_idol.publish_campaign_replay"], {"queue": "media"})
 
 
 class RedactionTests(unittest.TestCase):
