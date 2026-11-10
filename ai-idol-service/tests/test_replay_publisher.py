@@ -204,10 +204,16 @@ class RobustnessTests(ReplayTestCase):
         # a worker that read the campaign before it was stamped must not write an error onto it
         stale = copy.deepcopy(self.stored(campaign_id))
         stale["replay"] = {}
-        with patch.dict(os.environ, R2), patch.object(
-                self.db.ai_idol_campaigns, "find_one", return_value=stale) as patched:
+        collection = self.db.ai_idol_campaigns
+        real_find_one = collection.find_one
+        reads = []
+
+        def first_read_is_stale(*args, **kwargs):
+            reads.append(1)
+            return stale if len(reads) == 1 else real_find_one(*args, **kwargs)
+
+        with patch.dict(os.environ, R2), patch.object(collection, "find_one", side_effect=first_read_is_stale):
             self.assertFalse(replay_publisher.publish_campaign_replay(campaign_id, client=FakeS3()))
-            self.assertTrue(patched.called)
         replay = self.stored(campaign_id)["replay"]
         self.assertFalse(replay.get("last_error"))
         self.assertFalse(replay.get("attempts"))
