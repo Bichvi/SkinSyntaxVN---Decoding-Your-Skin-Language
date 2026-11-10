@@ -21,3 +21,13 @@ class ProgramItem:
     angle: str | None
     start: float
     end: float
+
+
+@dataclass
+class ClipDraft:
+    kind: str
+    script: str
+    product_id: str | None = None
+    angle: str | None = None
+    interlude_type: str | None = None
+    variant: int = 0
