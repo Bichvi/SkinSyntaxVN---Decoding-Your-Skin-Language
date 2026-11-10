@@ -360,7 +360,8 @@ class AutopilotScheduleTests(unittest.TestCase):
         harness = AutopilotHarness("Livestream sản phẩm mã 995 lúc 20h ngày 14/10/2026")
         run = harness.execute([VICHY])
         self.assertEqual(run["status"], "CAMPAIGN_CREATED")
-        self.assertEqual(harness.payload["scheduled_at"], "2026-10-15T10:00:00+07:00")
+        # A live library of 1 product needs 66 + 10 minutes: 09:00 -> 10:16, rounded up to 10:30.
+        self.assertEqual(harness.payload["scheduled_at"], "2026-10-15T10:30:00+07:00")
         self.assertEqual(decision(run, "SLOT_MOVED")["level"], "adjusted")
 
     def test_a_date_without_an_hour_keeps_the_day_and_picks_the_slot(self):

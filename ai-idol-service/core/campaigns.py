@@ -440,6 +440,7 @@ def _skip_decision(job: dict) -> dict:
 FINAL_SEGMENT_STATUSES = ("READY", "SKIPPED", "CANCELLED", "FAILED")
 RECAP_KIND = "routine_recap"
 RECAP_CLAIM_MINUTES = 15  # a recap writer older than this is presumed dead
+PHASE_A = "A"
 PHASE_B = "B"
 RECAP_WRITE_ERROR = "Không viết được clip tóm tắt routine"
 # Vietnamese names of the clip kinds a ready library needs.
@@ -941,6 +942,20 @@ def retry_campaign(campaign_id: str, *, enqueue_job=None, enqueue_prepare=None, 
     segments = list(db.ai_idol_segments.find({"campaign_id": campaign_id}).sort("position", 1))
     failed = [segment for segment in segments if segment.get("status") == "FAILED"]
     result = {"queued_segments": 0, "assembly_queued": False, "prepare_queued": False}
+
+    if (campaign.get("show_format") == SHOW_FORMAT_LIBRARY and status == "NEEDS_ATTENTION"
+            and not any(segment.get("phase") == PHASE_A for segment in segments)):
+        # The phase-A writer failed (e.g. a rate limit) before any clip was stored: write the library again.
+        claimed = db.ai_idol_campaigns.find_one_and_update(
+            {"_id": campaign["_id"], "status": "NEEDS_ATTENTION"},
+            {"$set": {"status": "GENERATING", "error_message": None, "updated_at": utcnow()}},
+            return_document=ReturnDocument.AFTER,
+        )
+        if not claimed:
+            raise CampaignConflict("Chương trình vừa đổi trạng thái, hãy tải lại rồi thử lại.")
+        enqueue_prepare(campaign_id)
+        result["prepare_queued"] = True
+        return result
 
     if failed:
         claimed = db.ai_idol_campaigns.find_one_and_update(
