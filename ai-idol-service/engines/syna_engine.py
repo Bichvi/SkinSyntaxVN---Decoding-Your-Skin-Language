@@ -141,6 +141,9 @@ def build_manifest(snapshot: dict, script: str, duration: float, timings: list, 
     manifest = {"version": RENDER_VERSION, "format": "16:9", "duration": duration,
                 "product": product,
                 "ingredients": ingredients, "cues": cues}
+    if clip_kind is not None and clip_kind != "opening":
+        # Joined into one show: only the opening raises the greeting arm.
+        manifest["greet"] = False
     if speech:
         # Speech window inside the padded audio: Syna greets before it and waves goodbye after.
         manifest["speech"] = {"start": round(speech[0], 3), "end": round(min(duration, speech[1]), 3)}

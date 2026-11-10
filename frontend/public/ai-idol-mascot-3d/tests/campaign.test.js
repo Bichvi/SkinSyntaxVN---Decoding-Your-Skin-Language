@@ -48,3 +48,10 @@ test('manifests without a speech window keep the original timing', () => {
   assert.equal(campaignPose(19.5, legacy, null).sticker, null);
   assert.equal(campaignPose(17, legacy, null).leftArm, -.1);
 });
+
+test('library clips after the opening do not greet; manifests without the flag still do', () => {
+  const clip = { duration: 20, greet: false, cues: [] };
+  for (const time of [.5, 1.5, 3]) assert.equal(campaignPose(time, clip, null).leftArm, -.1);
+  assert.ok(campaignPose(1.5, { duration: 20, cues: [] }, null).leftArm < -1);
+  assert.ok(campaignPose(1.5, { duration: 20, greet: true, cues: [] }, null).leftArm < -1);
+});
