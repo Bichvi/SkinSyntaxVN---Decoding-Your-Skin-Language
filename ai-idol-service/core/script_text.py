@@ -35,7 +35,8 @@ def find_external_retailer_mentions(value: str) -> list[str]:
 
 SECTION_NAMES = (
     "opening|hook|problem|product intro(?:duction)?|key benefits?|specs?|ingredients?|how to use|"
-    "price(?: & promotion)?|cta|closing|wrap[- ]?up"
+    "price(?: & promotion)?|cta|closing|wrap[- ]?up|"
+    "lead[- ]?in|pain point|why|solution|feel"
 )
 # Sections after which a livestream script talks money; product-page clips stop before them.
 SALE_LABELS = frozenset({"price", "cta", "closing"})
@@ -89,6 +90,8 @@ def _canonical_label(name: str) -> str:
         return "ingredients"
     if joined.startswith("wrap"):
         return "wrap_up"
+    if joined.startswith("lead"):
+        return "lead_in"
     return "_".join(key)
 
 
