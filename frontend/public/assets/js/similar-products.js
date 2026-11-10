@@ -17,8 +17,11 @@
     var prev = root.querySelector('[data-ssim-prev]');
     var next = root.querySelector('[data-ssim-next]');
     if (!track || !prev || !next) return;
+    var nav = prev.parentNode;
     function update() {
       var max = track.scrollWidth - track.clientWidth - 2;
+      // Ít thẻ, vừa khít khung -> không có gì để cuộn: ẩn hẳn 2 nút thay vì để nút mờ bấm không được.
+      if (nav) nav.hidden = max <= 0;
       prev.disabled = track.scrollLeft <= 2;
       next.disabled = track.scrollLeft >= max;
     }

@@ -1,5 +1,5 @@
 <?php
-// Lý do ngắn trên thẻ sản phẩm trang chủ, ưu tiên: nhãn vấn đề/loại da -> điểm đánh giá -> lượt bán.
+// Lý do ngắn trên thẻ sản phẩm trang chủ, ưu tiên: nhãn vấn đề/loại da -> lượt bán (chỉ khi thẻ chưa hiện).
 // Không escape ở đây (view dùng h()).
 
 final class HomeCardReason
@@ -68,13 +68,10 @@ final class HomeCardReason
             return implode(' · ', $parts);
         }
 
-        $rating = is_numeric($p['diem_danh_gia'] ?? null) ? (float)$p['diem_danh_gia'] : 0.0;
-        $reviews = is_numeric($p['so_luong_danh_gia'] ?? null) ? (int)$p['so_luong_danh_gia'] : 0;
-        if ($rating >= 4.5 && $reviews >= 20) {
-            return number_format($rating, 1, ',', '') . '★ từ ' . number_format($reviews, 0, ',', '.') . ' đánh giá';
-        }
+        // Không dùng điểm sao làm lý do: thẻ đã hiện sao ở hàng thương hiệu.
+        // Lượt bán chỉ làm lý do khi < 100, vì từ 100 trở lên thẻ đã hiện "Đã bán" cạnh giá.
         $sold = is_numeric($p['so_luong_da_ban'] ?? null) ? (int)$p['so_luong_da_ban'] : 0;
-        if ($sold >= 10) {
+        if ($sold >= 10 && $sold < 100) {
             return 'Đã bán ' . number_format($sold, 0, ',', '.');
         }
         return '';

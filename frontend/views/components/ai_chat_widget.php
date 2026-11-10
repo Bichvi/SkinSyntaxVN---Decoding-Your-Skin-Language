@@ -1517,22 +1517,53 @@ $aiLabelScanOn = function_exists('ss_env')
       var newChatBtn = widget.querySelector('[data-ai-new-chat]');
       var userLoggedIn = <?= json_encode(!empty($_SESSION['user'])) ?>;
 
+      var conversationsRequestSeq = 0;
       var loadConversations = function () {
         if (!userLoggedIn || !historyList) return;
-        historyList.innerHTML = '<div class="ai-chat-widget__history-loading">Đang tải lịch sử...</div>';
-        
+        // Chỉ hiện "Đang tải" ở lần đầu; các lần sau làm mới ngầm, giữ nguyên danh sách cũ.
+        var hasItems = !!historyList.querySelector('.ai-chat-widget__history-item');
+        if (!hasItems) {
+          historyList.innerHTML = '<div class="ai-chat-widget__history-loading">Đang tải lịch sử...</div>';
+        }
+        var requestSeq = ++conversationsRequestSeq;
+
         fetch('index.php?r=ai_chat_get_conversations')
           .then(function(res) { return res.json(); })
           .then(function(data) {
+            if (requestSeq !== conversationsRequestSeq) return;
             if (data.ok && data.conversations) {
               renderConversationList(data.conversations);
-            } else {
+            } else if (!hasItems) {
               historyList.innerHTML = '<div class="ai-chat-widget__history-empty">Không thể tải lịch sử</div>';
             }
           })
           .catch(function() {
+            if (requestSeq !== conversationsRequestSeq || hasItems) return;
             historyList.innerHTML = '<div class="ai-chat-widget__history-empty">Không thể tải lịch sử</div>';
           });
+      };
+
+      // Hiện ngay hội thoại vừa tạo ở đầu danh sách, không chờ tải lại.
+      var addPendingConversation = function (convId, firstMessage) {
+        if (!userLoggedIn || !historyList || !convId) return;
+        if (historyList.querySelector('[data-conv-id="' + String(convId).replace(/"/g, '') + '"]')) return;
+        var title = String(firstMessage || '').trim();
+        if (title.length > 50) title = title.slice(0, 50) + '...';
+        if (!title) title = 'Cuộc trò chuyện mới';
+        var placeholder = historyList.querySelector('.ai-chat-widget__history-loading, .ai-chat-widget__history-empty');
+        if (placeholder) placeholder.remove();
+        historyList.querySelectorAll('.ai-chat-widget__history-item.is-active').forEach(function (item) {
+          item.classList.remove('is-active');
+        });
+        var item = document.createElement('div');
+        item.className = 'ai-chat-widget__history-item is-active';
+        item.setAttribute('data-conv-id', convId);
+        item.innerHTML = '<div class="ai-chat-widget__history-info">'
+          + '<span class="ai-chat-widget__history-title">' + escapeHtml(title) + '</span>'
+          + '<span class="ai-chat-widget__history-preview">Đang trả lời...</span>'
+          + '</div>';
+        item.addEventListener('click', function () { selectConversation(convId); });
+        historyList.insertBefore(item, historyList.firstChild);
       };
 
       var renderConversationList = function (conversations) {
@@ -2102,6 +2133,8 @@ $aiLabelScanOn = function_exists('ss_env')
           window.clearTimeout(closeTimer);
           closeTimer = null;
         }
+        // sendMessage cũng gọi openWidget; chỉ tải lịch sử khi thật sự mở panel.
+        var wasOpen = widget.classList.contains('is-open') && !panel.hidden;
         panel.hidden = false;
         window.requestAnimationFrame(function () {
           syncLayout();
@@ -2110,7 +2143,7 @@ $aiLabelScanOn = function_exists('ss_env')
           if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
             widget.classList.add('is-expanded');
           }
-          if (userLoggedIn) {
+          if (userLoggedIn && !wasOpen) {
             loadConversations();
           }
           if (input) {
@@ -2208,6 +2241,7 @@ $aiLabelScanOn = function_exists('ss_env')
               if (payload.conversation_id && activeConversationId !== payload.conversation_id) {
                 activeConversationId = payload.conversation_id;
                 try { window.sessionStorage.setItem('aiChatActiveConversationIdV4:' + storageScope, activeConversationId); } catch (e) {}
+                addPendingConversation(activeConversationId, content);
               }
             },
             onToken: function (payload) {
@@ -2258,6 +2292,10 @@ $aiLabelScanOn = function_exists('ss_env')
             if (!isCurrentAgentSend() || handedOffToLegacy) return;
             if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
             setLoading(false);
+            // Server lưu tin nhắn bất đồng bộ sau khi stream xong, nên chờ chút rồi làm mới ngầm.
+            if (userLoggedIn) {
+              window.setTimeout(loadConversations, 1200);
+            }
           });
           return;
         }

@@ -20,7 +20,7 @@
 
     <section class="site-footer__topline">
       <?php $footerPhone = class_exists('SupportKnowledge') ? (SupportKnowledge::contact()['phone'] ?? '') : ''; if ($footerPhone !== ''): ?><div class="site-footer__service-pill"><i class="fas fa-phone-volume"></i> Hotline hỗ trợ: <?= h($footerPhone) ?></div><?php endif; ?>
-      <div class="site-footer__service-pill"><i class="fas fa-truck-fast"></i> Luồng mua hàng gọn, rõ trạng thái đơn</div>
+      <div class="site-footer__service-pill"><i class="fas fa-truck-fast"></i> Đặt hàng nhanh, theo dõi đơn dễ dàng</div>
       <div class="site-footer__service-pill"><i class="fas fa-shield-heart"></i> Tập trung vào routine và dữ liệu da</div>
       <div class="site-footer__socials">
         <a href="https://www.facebook.com/conmeosuagaugauuu/" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-facebook-f"></i></a>
@@ -74,7 +74,7 @@
 
     <section class="site-footer__bottom">
       <span>SkinSyntax © 2026</span>
-      <span>Nền Tảng Mỹ Phẩm & Tư Vấn Da Cá Nhân Hóa AI</span>
+      <span>Mỹ Phẩm & Tư Vấn Chăm Sóc Da Dành Riêng Cho Bạn</span>
       <span>Decoding Your Skin Language</span>
     </section>
   </div>

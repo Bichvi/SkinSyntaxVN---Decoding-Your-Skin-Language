@@ -134,7 +134,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
         $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;
       ?>
         <div class="col-6 col-md-3">
-          <div class="product-card h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
+          <div class="product-card product-card--catalog h-100 d-flex flex-column" style="border-radius: 12px; border: 1px solid var(--border); background: #FFF; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
             <div class="product-thumb position-relative p-2" style="aspect-ratio: 1/1; overflow: hidden; background: #F8FAF8; border-radius: 12px 12px 0 0;">
               <?php if ($phanTramGiam !== null): ?>
                 <span class="badge-sale position-absolute" style="top: 12px; left: 12px; background: #E11D48; color: #FFF; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; z-index: 2;">
@@ -148,7 +148,7 @@ $startPage = max(1, $endPage - $maxVisible + 1);
             </div>
 
             <div class="product-meta p-3 d-flex flex-column flex-grow-1">
-              <div class="brand text-uppercase fw-bold mb-1.5" style="font-size: 0.68rem; color: #183B2B; background: #EBF2EE; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.04em; font-weight: 700; display: inline-block;"><?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
+              <div class="brand text-uppercase fw-bold mb-2 align-self-start" style="font-size: 0.68rem; color: #183B2B; background: #EBF2EE; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.04em; font-weight: 700; display: inline-block;"><?= h($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
               <a class="name fw-semibold mb-2 text-decoration-none" href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" style="color: #0F172A; font-size: 0.88rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.4em;">
                 <?= h($p['ten_san_pham'] ?? '') ?>
               </a>
@@ -229,7 +229,21 @@ $startPage = max(1, $endPage - $maxVisible + 1);
       </ul>
     </nav>
   <?php endif; ?>
+  <?php
+    // "Gợi ý thêm cho bạn": có kết quả và khối gợi ý phía máy chủ không hiện -> tải lười qua ?r=search_more.
+    $ssmQ = trim((string)($qEffective ?? $q ?? ''));
+    $ssmServerFallback = is_array($searchFallback ?? null) && !empty($searchFallback['sections']);
+    if ($ssmQ !== '' && $listRoute === 'tatca' && !empty($items) && $dbUnavailableMessage === '' && !$ssmServerFallback):
+      $ssmIds = [];
+      foreach ($items as $ssmIt) {
+        $ssmId = (string)($ssmIt['ma_san_pham'] ?? $ssmIt['id'] ?? '');
+        if ($ssmId !== '' && count($ssmIds) < 48) $ssmIds[] = $ssmId;
+      }
+  ?>
+    <div class="ssm-root" data-search-more data-url="<?= h(BASE_URL . '/index.php?r=search_more&q=' . rawurlencode($ssmQ) . '&exclude=' . rawurlencode(implode(',', $ssmIds))) ?>" aria-busy="true"></div>
+  <?php endif; ?>
   </div>
 </div>
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/search-fallback.css?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/css/search-fallback.css') ?: '1' ?>">
 <script src="<?= BASE_URL ?>/assets/js/search-fallback.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/search-fallback.js') ?: '1' ?>" defer></script>
+<script src="<?= BASE_URL ?>/assets/js/search-more.js?v=<?= @filemtime(dirname(__DIR__) . '/public/assets/js/search-more.js') ?: '1' ?>" defer></script>

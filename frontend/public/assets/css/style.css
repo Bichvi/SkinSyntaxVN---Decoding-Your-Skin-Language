@@ -5287,3 +5287,207 @@ img, video, iframe, svg {
 }
 
 
+
+/* ===== Thẻ sản phẩm: khung ảnh vuông + ô "Vì sao phù hợp" (2026-11) ===== */
+/* .product-thumb gốc cao cố định 240px: ảnh vuông bên trong tràn đè lên tên (thẻ trang chủ)
+   hoặc bị cắt ngang (thẻ trang tìm kiếm). Cho khung ảnh vuông theo chiều rộng thẻ. */
+.product-card--editorial .product-thumb,
+.product-card--catalog .product-thumb{
+  width:100%;
+  height:auto;
+  aspect-ratio:1 / 1;
+  overflow:hidden;
+}
+.product-card--editorial .product-meta .name,
+.product-card--catalog .product-meta .name{
+  margin-top:0;
+}
+
+.why-fit{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  margin-bottom:10px;
+  padding:8px 10px;
+  background:#F1F8F4;
+  border:1px solid #D8EADE;
+  border-radius:8px;
+  color:#1C4D36;
+  font-size:0.74rem;
+  line-height:1.4;
+}
+.why-fit__label{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:0.66rem;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#183B2B;
+}
+.why-fit__label i{
+  color:#F59E0B;
+  font-size:0.72rem;
+}
+.why-fit__text{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+/* Vì sao phù hợp: popover xem đầy đủ + chi tiết (hover/tap/focus). Neo đáy, mở lên trên vì thẻ có overflow:hidden. */
+.why-fit{
+  position:relative;
+}
+.why-fit--has-detail{
+  cursor:pointer;
+}
+.why-fit:focus-visible{
+  outline:2px solid #183B2B;
+  outline-offset:2px;
+}
+.why-fit__more{
+  margin-left:auto;
+  color:#183B2B;
+  font-size:0.66rem;
+}
+.why-fit__pop{
+  position:absolute;
+  left:-1px;
+  right:-1px;
+  bottom:-1px;
+  /* Luôn cao ít nhất bằng hộp gốc: hộp có thêm hàng nhãn nên popup ngắn hơn sẽ để lộ nhãn gốc phía trên. */
+  min-height:calc(100% + 2px);
+  z-index:20;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  padding:8px 10px;
+  background:#F1F8F4;
+  border:1px solid #D8EADE;
+  border-radius:8px;
+  color:#1C4D36;
+  font-size:0.74rem;
+  line-height:1.4;
+  box-shadow:0 10px 28px rgba(15,23,42,.16);
+  max-height:none;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(4px);
+}
+@media (prefers-reduced-motion: no-preference){
+  .why-fit__pop{
+    transition:opacity .15s ease, transform .15s ease, visibility .15s;
+  }
+}
+.why-fit.is-open .why-fit__pop,
+.why-fit:focus-visible .why-fit__pop{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:none;
+}
+@media (hover:hover){
+  .why-fit:hover .why-fit__pop{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:none;
+  }
+}
+.why-fit__full{
+  display:block;
+}
+.why-fit__detail{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  margin-top:4px;
+  padding-top:6px;
+  border-top:1px solid #D8EADE;
+}
+.why-fit__sec{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.why-fit__title{
+  font-size:0.64rem;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#183B2B;
+}
+.why-fit__chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+}
+.why-fit__chip{
+  padding:1px 7px;
+  background:#fff;
+  border:1px solid #D8EADE;
+  border-radius:999px;
+  color:#183B2B;
+  font-size:0.68rem;
+  line-height:1.5;
+}
+.why-fit__line{
+  font-size:0.72rem;
+  line-height:1.4;
+}
+.why-fit__value i{
+  margin-right:5px;
+  color:#F59E0B;
+}
+
+/* ===== Khối "Vì bạn đã xem": băng chuyền ngang (2026-11) ===== */
+.hgc-track { --hgc-gap: 12px; --hgc-per-view: 2; display: flex; gap: var(--hgc-gap); overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain; padding: 12px 4px 14px; margin: -12px -4px 0; scrollbar-width: thin; scrollbar-color: #C8DACF transparent; }
+.hgc-track::-webkit-scrollbar { height: 6px; }
+.hgc-track::-webkit-scrollbar-thumb { background: #C8DACF; border-radius: 999px; }
+.hgc-track:focus-visible { outline: 3px solid #84A98C; outline-offset: 2px; border-radius: 12px; }
+.hgc-item { flex: 0 0 calc((100% - var(--hgc-gap) * (var(--hgc-per-view) - 1)) / var(--hgc-per-view)); scroll-snap-align: start; min-width: 0; display: flex; }
+.hgc-item > * { width: 100%; }
+@media (min-width: 768px) { .hgc-track { --hgc-gap: 16px; --hgc-per-view: 3; } }
+@media (min-width: 992px) { .hgc-track { --hgc-per-view: 4; } }
+.hgc-nav { display: inline-flex; gap: 8px; flex-shrink: 0; }
+.hgc-nav[hidden] { display: none; }
+.hgc-arrow { width: 38px; height: 38px; border-radius: 50%; border: 1px solid #C8DACF; background: #FFF; color: #183B2B; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.hgc-arrow:hover:not(:disabled) { background: #183B2B; color: #FFF; }
+.hgc-arrow:disabled { opacity: .35; cursor: default; }
+.hgc-arrow:focus-visible { outline: 3px solid #84A98C; outline-offset: 2px; }
+@media (max-width: 575.98px) { .hgc-nav { display: none !important; } }
+
+/* ===== Thẻ "Vì sao phù hợp": nhãn nổi bật (2026-11) ===== */
+.why-fit__tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+.why-fit__tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:.66rem;font-weight:700;line-height:1.5;white-space:nowrap;}
+.why-fit__tag--value{background:#183B2B;color:#FFFFFF;}
+.why-fit__tag--value i{color:#FCD34D;font-size:.68rem;}
+.why-fit__tag--extra{background:#FFFFFF;color:#183B2B;border:1px solid #C8DACF;}
+.why-fit__tag{max-width:100%;}
+/* Thẻ hẹp trên điện thoại (~120px cho ô lý do): cho chữ trong nhãn xuống dòng thay vì tràn khung. */
+@media (max-width:575.98px){.why-fit__tag{white-space:normal;border-radius:8px;}}
+.why-fit__text{color:#0F172A;font-weight:500;}
+
+/* ===== Thẻ trang chủ gọn: lý do nhẹ + chip công dụng (2026-11) ===== */
+.why-fit{background:transparent;border:0;border-left:2px solid #84A98C;border-radius:0;padding:1px 18px 1px 9px;margin-bottom:10px;}
+.why-fit__text{color:#1C4D36;font-weight:500;font-size:.76rem;}
+.why-fit__icon{color:#2F7A55;margin-right:4px;font-size:.72rem;}
+.why-fit > .why-fit__more{position:absolute;top:2px;right:0;}
+.why-fit__pop{left:-2px;right:0;}
+.why-fit__tag--benefit{background:#E8F3EC;color:#183B2B;font-weight:600;border:0;}
+.why-fit__tag--more{background:transparent;color:#5B7A68;border:1px dashed #C8DACF;font-weight:600;}
+.pc-benefits{display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 10px;}
+.pc-rating{display:inline-flex;align-items:center;gap:3px;font-size:.74rem;color:#334155;font-weight:600;white-space:nowrap;}
+.pc-rating i{color:#F59E0B;font-size:.68rem;}
+.pc-rating__count{color:#94A3B8;font-weight:400;margin-left:2px;}
+.pc-rating--none{color:#94A3B8;font-weight:400;}
+.pc-sold{font-size:.7rem;color:#94A3B8;white-space:nowrap;}
+/* Hàng giá: giá bán | Đã bán, giá gốc gạch ngang nằm dòng dưới (không tràn ở thẻ hẹp). */
+.product-meta .price-wrap.pc-price{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px;row-gap:0;}
+.pc-price .pc-sold{margin-left:auto;}
+.pc-price .price-market{order:3;flex-basis:100%;font-size:.76rem;line-height:1.2;color:#94A3B8;font-variant-numeric:tabular-nums;}

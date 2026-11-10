@@ -43,9 +43,24 @@
 .ssf-all-link-wrap { text-align: center; margin-top: 16px; }
 .ssf-all-link { color: #183B2B; font-weight: 600; font-size: 0.88rem; }
 
-.ssf-chip:focus-visible, .ssf-cta-btn:focus-visible, .ssf-all-link:focus-visible, .ssf-name:focus-visible, .ssf-thumb-link:focus-visible, .ssf-btn-cart:focus-visible, .ssf-btn-buy:focus-visible { outline: 3px solid #84A98C; outline-offset: 2px; }
+.ssf-chip:focus-visible, .ssf-cta-btn:focus-visible, .ssf-all-link:focus-visible, .ssf-name:focus-visible, .ssf-thumb-link:focus-visible, .ssf-btn-cart:focus-visible, .ssf-btn-buy:focus-visible, .ssf-skincta-btn:focus-visible, .ssf-skincta-link:focus-visible { outline: 3px solid #84A98C; outline-offset: 2px; }
+
+.ssm-root { margin-top: 40px; }
+.ssf-skincta { display: flex; align-items: center; gap: 16px; padding: 16px 20px; margin: 0 0 20px; background: #F1F8F4; border: 1px solid #D8EADE; border-radius: 12px; }
+.ssf-skincta-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF; color: #183B2B; border: 1px solid #D8EADE; flex-shrink: 0; }
+.ssf-skincta-body { flex: 1; min-width: 0; }
+.ssf-skincta-title { font-size: 1rem; font-weight: 700; color: #0F172A; margin: 0 0 2px; }
+.ssf-skincta-desc { font-size: .85rem; color: #475569; margin: 0; }
+.ssf-skincta-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.ssf-skincta-btn, .ssf-skincta-link { display: inline-block; border-radius: 8px; padding: 9px 16px; font-weight: 600; font-size: .85rem; text-decoration: none; white-space: nowrap; }
+.ssf-skincta-btn { background: #183B2B; color: #fff; }
+.ssf-skincta-btn:hover { background: #215427; color: #fff; }
+.ssf-skincta-link { background: #fff; color: #183B2B; border: 1px solid #CBD5E1; }
 
 @media (max-width: 575.98px) {
+  .ssf-skincta { flex-direction: column; align-items: flex-start; }
+  .ssf-skincta-actions { width: 100%; }
+  .ssf-skincta-btn, .ssf-skincta-link { flex: 1; text-align: center; }
   .ssf-banner { padding: 14px; }
   .ssf-meta { padding: 10px; }
   .ssf-actions { grid-template-columns: 1fr; }
