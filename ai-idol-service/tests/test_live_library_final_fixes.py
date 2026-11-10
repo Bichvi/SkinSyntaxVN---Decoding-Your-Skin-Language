@@ -392,5 +392,205 @@ class LiveLeadTimeTests(unittest.TestCase):
         self.assertTrue(created)
 
 
+# ---------------------------------------------------------------- I6: greet/wave padding only on opening/closing
+
+import json  # noqa: E402
+import wave  # noqa: E402
+
+from engines import audio_mixer, syna_engine  # noqa: E402
+
+PAD_JOB = "64b64b64b64b64b64b64b64b"
+
+
+class StopRender(Exception):
+    pass
+
+
+class LibraryPaddingTests(unittest.TestCase):
+    def setUp(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.folder = folder.name
+        self.audio = os.path.join(self.folder, "voice.wav")
+        with wave.open(self.audio, "wb") as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(8000)
+            handle.writeframes(b"\x00\x00" * 8000)  # 1 s of speech
+        with open(self.audio + ".timings.json", "w", encoding="utf-8") as handle:
+            json.dump([{"start": 0.0, "end": 1.0, "text": "Chào cả nhà."}], handle)
+        self.legacy_intro, self.legacy_outro = audio_mixer.lead_in_seconds(PAD_JOB, {})
+        self.assertGreater(self.legacy_intro, 0)
+        self.assertGreater(self.legacy_outro, 0)
+
+    def test_lead_in_seconds_by_kind(self):
+        intro, outro = self.legacy_intro, self.legacy_outro
+        self.assertEqual(audio_mixer.lead_in_seconds(PAD_JOB, {}, None), (intro, outro))
+        self.assertEqual(audio_mixer.lead_in_seconds(PAD_JOB, {}, "opening"), (intro, 0.0))
+        self.assertEqual(audio_mixer.lead_in_seconds(PAD_JOB, {}, "closing"), (0.0, outro))
+        for kind in ("interlude", "product", "faq", "tip", "transition", "routine_recap"):
+            self.assertEqual(audio_mixer.lead_in_seconds(PAD_JOB, {}, kind), (0.0, 0.0), kind)
+
+    def render_payload(self, clip_kind):
+        sent = {}
+
+        class Health:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"renderer": syna_engine.RENDER_VERSION}
+
+        def post(url, json=None, **kwargs):
+            sent.update(json)
+            raise StopRender()
+
+        extra = {"clip_kind": clip_kind} if clip_kind else {}
+        with patch.object(syna_engine, "probe_duration", return_value=1.0), \
+                patch.object(syna_engine, "OUTPUT_DIR", self.folder), \
+                patch.object(syna_engine, "TEMP_DIR", self.folder), \
+                patch.object(syna_engine.requests, "get", return_value=Health()), \
+                patch.object(syna_engine.requests, "post", side_effect=post):
+            with self.assertRaises(StopRender):
+                syna_engine.render_syna_video(PAD_JOB, self.audio, "Chào cả nhà.", {"name": "Serum"},
+                                              {"format": "16:9"}, purpose="live_and_product", **extra)
+        return sent
+
+    def test_interlude_renders_without_padding(self):
+        manifest = self.render_payload("interlude")["manifest"]
+        self.assertEqual(manifest["duration"], 1.0)
+        self.assertNotIn("speech", manifest)
+
+    def test_opening_keeps_only_the_greeting(self):
+        manifest = self.render_payload("opening")["manifest"]
+        self.assertAlmostEqual(manifest["duration"], round(1.0 + self.legacy_intro, 3))
+        self.assertAlmostEqual(manifest["speech"]["start"], self.legacy_intro)
+        self.assertAlmostEqual(manifest["speech"]["end"], manifest["duration"])  # no wave-goodbye tail
+
+    def test_closing_keeps_only_the_goodbye(self):
+        manifest = self.render_payload("closing")["manifest"]
+        self.assertAlmostEqual(manifest["duration"], round(1.0 + self.legacy_outro, 3))
+        self.assertEqual(manifest["speech"]["start"], 0.0)
+        self.assertAlmostEqual(manifest["speech"]["end"], 1.0)
+
+    def test_legacy_render_keeps_both(self):
+        manifest = self.render_payload(None)["manifest"]
+        self.assertAlmostEqual(manifest["duration"], round(1.0 + self.legacy_intro + self.legacy_outro, 3))
+
+    def test_mix_uses_the_same_kind_padding(self):
+        video = os.path.join(self.folder, "clip.mp4")
+        with open(video, "wb") as handle:
+            handle.write(b"0" * 2048)
+        seen = []
+
+        def build(*args, **kwargs):
+            seen.append((kwargs.get("intro"), kwargs.get("outro")))
+            raise StopRender()
+
+        with patch.object(audio_mixer, "_probe_duration", return_value=1.0), \
+                patch.object(audio_mixer, "pick_music_track", return_value=""), \
+                patch.object(audio_mixer, "build_mix_command", side_effect=build):
+            self.assertEqual(audio_mixer.mix_program_audio(PAD_JOB, video, self.audio, {}, video_padded=True,
+                                                           clip_kind="interlude"), video)
+        self.assertEqual(seen, [(0.0, 0.0)])
+
+    def test_applied_intro_fallback_by_kind(self):
+        args = dict(padded=True, rendered="/a.mp4", final="/a.mp4", applied={})
+        self.assertEqual(pipeline.applied_intro(PAD_JOB, {}, clip_kind="product", **args), 0.0)
+        self.assertEqual(pipeline.applied_intro(PAD_JOB, {}, clip_kind="opening", **args), self.legacy_intro)
+        self.assertEqual(pipeline.applied_intro(PAD_JOB, {}, **args), self.legacy_intro)
+
+    def test_pipeline_threads_kind_to_render_mix_and_page_cut(self):
+        db = FakeDb()
+        video = os.path.join(self.folder, "clip.mp4")
+        with open(video, "wb") as handle:
+            handle.write(b"0" * 2048)
+        segment_id = str(db.ai_idol_segments.insert_one({"kind": "product", "angle": "A"}).inserted_id)
+        job_id = str(db.ai_idol_jobs.insert_one({
+            "product_id": "2", "content_mode": "Product Intro", "purpose": "live_and_product",
+            "configuration": {"avatar_mode": "syna_3d", "format": "16:9", "approval_mode": "AUTO"},
+            "status": "QUEUED", "current_stage": "QUEUED", "product_snapshot": SNAPS["2"],
+            "segment_id": segment_id, "prewritten_script": True, "clip_kind": "product",
+            "script_status": "APPROVED",
+            "artifacts": {"knowledge": "", "script_text": "[Lead-in]\nChào.", "audio_path": self.audio,
+                          "audio_pipeline_version": AUDIO_PIPELINE_VERSION},
+        }).inserted_id)
+        calls = {}
+
+        def mix(job, path, voice, config, snapshot=None, video_padded=False, applied=None, **kwargs):
+            calls["mix"] = kwargs
+            return path  # mix skipped: the intro comes from the render fallback
+
+        def page(job, purpose, final, voice, *, intro, **kwargs):
+            calls["page_intro"] = intro
+            return None, None
+
+        with ExitStack() as stack:
+            for module in ("core.state_machine", "core.pipeline"):
+                stack.enter_context(patch(f"{module}.get_db", return_value=db))
+            stack.enter_context(patch(NO_LLM, return_value=[]))
+            render = stack.enter_context(patch("engines.syna_engine.render_syna_video", return_value=video))
+            stack.enter_context(patch("engines.audio_mixer.mix_program_audio", side_effect=mix))
+            stack.enter_context(patch("engines.body_clip.product_page_clip", side_effect=page))
+            stack.enter_context(patch("engines.video_composer.get_audio_duration", return_value=110.0))
+            pipeline.run_ai_idol_pipeline(job_id)
+            render.assert_called_once()
+        self.assertEqual(render.call_args.kwargs["clip_kind"], "product")
+        self.assertEqual(calls["mix"].get("clip_kind"), "product")
+        self.assertEqual(calls["page_intro"], 0.0)  # angle A cut = 0 + label start
+
+
+# ---------------------------------------------------------------- Ruling 13b: retries keep the job alive
+
+class RetryHeartbeatTests(unittest.TestCase):
+    def test_render_retry_refreshes_job_before_each_retry(self):
+        db = FakeDb()
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        audio = os.path.join(folder.name, "voice.wav")
+        video = os.path.join(folder.name, "clip.mp4")
+        for path in (audio, video):
+            with open(path, "wb") as handle:
+                handle.write(b"0" * 2048)
+        job_id = str(db.ai_idol_jobs.insert_one({
+            "product_id": None, "content_mode": "Product Intro", "purpose": "live_only",
+            "configuration": {"avatar_mode": "syna_3d", "format": "16:9", "approval_mode": "AUTO"},
+            "status": "QUEUED", "current_stage": "QUEUED", "product_snapshot": combined(),
+            "prewritten_script": True, "clip_kind": "interlude", "script_status": "APPROVED",
+            "artifacts": {"knowledge": "", "script_text": "Bấm giỏ hàng nha cả nhà!", "audio_path": audio,
+                          "audio_pipeline_version": AUDIO_PIPELINE_VERSION},
+        }).inserted_id)
+        outcomes = [RuntimeError("ffprobe timed out"), RuntimeError("Syna render HTTP 503: busy"), video]
+        events = []
+
+        def render(*args, **kwargs):
+            events.append("render")
+            outcome = outcomes.pop(0)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return outcome
+
+        real_stage = pipeline.update_job_stage
+
+        def stage(jid, name, *args, **kwargs):
+            events.append(("stage", name))
+            return real_stage(jid, name, *args, **kwargs)
+
+        with ExitStack() as stack:
+            for module in ("core.state_machine", "core.pipeline"):
+                stack.enter_context(patch(f"{module}.get_db", return_value=db))
+            stack.enter_context(patch(NO_LLM, return_value=[]))
+            stack.enter_context(patch("engines.syna_engine.render_syna_video", side_effect=render))
+            stack.enter_context(patch("engines.syna_engine.time.sleep", side_effect=lambda s: events.append(("sleep", s))))
+            stack.enter_context(patch.object(pipeline, "update_job_stage", side_effect=stage))
+            stack.enter_context(patch("engines.audio_mixer.mix_program_audio",
+                                      side_effect=lambda job, path, *a, **k: path))
+            stack.enter_context(patch("engines.video_composer.get_audio_duration", return_value=15.0))
+            self.assertTrue(pipeline.run_ai_idol_pipeline(job_id))
+        tail = events[events.index(("stage", "RENDERING")):]
+        self.assertEqual(tail, [("stage", "RENDERING"), "render", ("sleep", 30), ("stage", "RENDERING"), "render",
+                                ("sleep", 90), ("stage", "RENDERING"), "render"])
+
+
 if __name__ == "__main__":
     unittest.main()
