@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../services/ProductEventTracker.php';
+require_once __DIR__ . '/../services/AiIdolReplaySessions.php';
 
 class LiveController {
     private $pdo;
@@ -96,6 +97,8 @@ class LiveController {
                 'description' => 'Khung giờ Live: ' . ($live['khung_gio_bat_dau'] ?? '') . ' - Giá sốc trong Live: ' . number_format($live['gia_uu_dai_live'] ?? 0) . 'đ'
             ];
         }
+
+        $liveSessions = array_merge($liveSessions, $this->findAiIdolReplays($mongoDb, $spModel));
 
         $currentLive = null;
 
@@ -197,6 +200,62 @@ class LiveController {
             ];
         } catch (Throwable $e) {
             return null;
+        }
+    }
+
+    /**
+     * Finished Syna AI Idol campaigns with a stored replay, mapped to live.php session entries.
+     * Never throws so the /live page cannot break.
+     */
+    private function findAiIdolReplays($mongoDb, SanPham $spModel, int $limit = 30): array {
+        try {
+            if (!($mongoDb instanceof MongoDB\Database)) {
+                return [];
+            }
+            $cursor = $mongoDb->ai_idol_campaigns->find([
+                'platforms' => 'internal',
+                'status' => ['$in' => ['COMPLETED', 'PARTIAL_FAILURE']],
+                'replay.video_url' => ['$nin' => [null, '']],
+            ], [
+                'sort' => ['completed_at' => -1],
+                'limit' => $limit,
+                'projection' => ['name' => 1, 'replay' => 1, 'product_ids' => 1, 'completed_at' => 1],
+                'typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array'],
+            ]);
+            $campaigns = [];
+            $firstIds = [];
+            foreach ($cursor as $doc) {
+                $doc['_id'] = (string)$doc['_id'];
+                $first = '';
+                foreach ((array)($doc['product_ids'] ?? []) as $pid) {
+                    $pid = trim((string)$pid);
+                    if ($pid !== '') {
+                        $first = $pid;
+                        break;
+                    }
+                }
+                $doc['_first_pid'] = $first;
+                if ($first !== '') {
+                    $firstIds[] = $first;
+                }
+                $campaigns[] = $doc;
+            }
+            if (!$campaigns) {
+                return [];
+            }
+            $products = $firstIds ? $spModel->findManyByIds(array_values(array_unique($firstIds))) : [];
+            $sessions = [];
+            foreach ($campaigns as $doc) {
+                $p = $doc['_first_pid'] !== '' ? ($products[$doc['_first_pid']] ?? null) : null;
+                $img = !empty($p['link_hinh_anh']) ? resolve_image_url((string)$p['link_hinh_anh']) : '';
+                $session = AiIdolReplaySessions::toSession($doc, is_array($p) ? $p : null, $img);
+                if ($session !== null) {
+                    $sessions[] = $session;
+                }
+            }
+            return $sessions;
+        } catch (Throwable $e) {
+            return [];
         }
     }
 
