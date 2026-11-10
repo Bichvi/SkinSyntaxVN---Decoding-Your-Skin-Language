@@ -74,6 +74,7 @@ class LLMProvider:
         *,
         schema: dict,
         schema_name: str,
+        max_completion_tokens: int | None = None,
     ) -> dict:
         """Request strict JSON while retaining the same free-tier fallback behavior."""
 
@@ -96,6 +97,7 @@ class LLMProvider:
                             compact_user,
                             schema,
                             schema_name,
+                            max_completion_tokens,
                         )
                         parsed = json.loads(raw)
                         if not isinstance(parsed, dict):
@@ -152,6 +154,7 @@ class LLMProvider:
         user_prompt: str,
         schema: dict,
         schema_name: str,
+        max_completion_tokens: int | None = None,
     ) -> str:
         request_options = {
             "model": model,
@@ -160,7 +163,9 @@ class LLMProvider:
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": 0.1,
-            "max_completion_tokens": min(GROQ_MAX_COMPLETION_TOKENS, 700),
+            "max_completion_tokens": (
+                max_completion_tokens if max_completion_tokens else min(GROQ_MAX_COMPLETION_TOKENS, 700)
+            ),
             "response_format": {
                 "type": "json_schema",
                 "json_schema": {
