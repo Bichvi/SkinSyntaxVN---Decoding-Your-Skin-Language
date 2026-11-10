@@ -108,7 +108,7 @@ Trả `null` (bỏ qua chiến dịch) khi `video_url` không bắt đầu bằn
 ### 5.2 `LiveController`
 
 - `findAiIdolReplays($mongoDb, int $limit = 30): array`:
-  - Lọc `{platforms: 'internal', status: {$in: ['COMPLETED','PARTIAL_FAILURE']}, 'replay.video_url': {$nin: [null, '']}}`, sắp theo `completed_at` giảm dần, chỉ lấy các trường cần dùng.
+  - Lọc `{platforms: 'internal', status: {$in: ['COMPLETED','PARTIAL_FAILURE']}, 'replay.video_url': {$exists: true, $nin: [null, '']}}`, sắp theo `completed_at` giảm dần, chỉ lấy các trường cần dùng.
   - Lấy sản phẩm đầu tiên của mọi chiến dịch bằng **một** lần gọi `findManyByIds`, rồi map qua `toSession`.
   - Bọc `try/catch Throwable` và trả `[]` khi lỗi, giống `findAiIdolLive`.
 - Trong `index()`: `$liveSessions = array_merge($liveSessions, $this->findAiIdolReplays($mongoDb));` **trước** đoạn chọn `$currentLive`. Nhờ vậy `?id=ai-<id>` chọn được phiên này qua vòng lặp có sẵn.
