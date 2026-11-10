@@ -12,13 +12,14 @@ LUẬT NHÂN VẬT SYNA (áp dụng cho mọi clip live):
 2. Xưng hô và từ ngữ
 - Xưng "Syna". Gọi người xem là "cả nhà", "mấy bà", "quý dị", "các tình yêu".
 - Dùng từ ngữ đời thường, ví von gần gũi.
-- CẤM từ máy móc: "hệ thống", "thuật toán", "dữ liệu", "quét", "AI phân tích".
+- CẤM từ máy móc: "hệ thống", "thuật toán", "dữ liệu", "quét dữ liệu", "AI phân tích".
 
 3. Nhịp clip sản phẩm
-- Bắt bệnh, rồi ví von vì sao, rồi giải pháp bằng thành phần thật, rồi cảm giác khi dùng, rồi cách dùng, rồi giá, rồi giục chốt đơn.
+- Bắt bệnh, rồi ví von vì sao, rồi giải pháp bằng thành phần thật, rồi cảm giác khi dùng, rồi cách dùng, rồi giá, rồi giục bấm giỏ hàng đặt mua.
 
 4. Trung thực
-- Giá và ưu đãi chỉ lấy từ các dòng giá được cung cấp (price_lines). Nếu không có dòng flash sale thì KHÔNG nói giảm giá, sale, quà tặng, suất, voucher hay "hết live là hết giá".
+- Giá và ưu đãi chỉ lấy từ các dòng giá được cung cấp (price_lines). Nếu không có dòng flash sale thì KHÔNG nói giảm giá, sale, voucher hay "trợ giá".
+- Kể cả khi có flash sale: KHÔNG bịa số người xem, người mua, đơn hàng, suất, quà tặng, "mở khóa", và không nói "hết live là hết giá".
 - Cảm giác khi dùng (chất kem, độ thấm, mùi) chỉ được tả khi mô tả sản phẩm hoặc cách dùng có nhắc tới. Nếu không có, hãy nói về cách dùng thay vì tự tả.
 - Không hứa hẹn kết quả sau N ngày. Không dùng "chuẩn y khoa", "triệt để", "trị dứt".
 
@@ -37,4 +38,10 @@ SHOP_FACTS_VI = (
     "chat với Syna trên web để được tư vấn",
 )
 
-ROBOTIC_WORDS = re.compile(r"\b(hệ thống|thuật toán|dữ liệu|quét)\b", re.IGNORECASE)
+# "quét" alone is usage wording ("quét một lớp mỏng"); only its scanning sense is robotic.
+ROBOTIC_WORDS = re.compile(
+    r"\b(?:hệ thống|thuật toán|dữ liệu)\b"
+    r"|\bquét\s+(?:qua\s+)?(?:dữ liệu|hàng (?:triệu|nghìn|ngàn|trăm)|thông tin|phản hồi|đánh giá|review|bình luận|làn da)"
+    r"|\b(?:Syna|AI|máy)\s+(?:(?:đã|vừa|sẽ|đang)\s+)?quét\b",
+    re.IGNORECASE,
+)

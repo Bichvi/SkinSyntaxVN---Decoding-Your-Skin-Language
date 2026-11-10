@@ -166,10 +166,11 @@ _SPELLED_NUMBER = (
     r"nghin|trieu|ty)"
 )
 _MONEY_PATTERNS = (
-    re.compile(r"\d[\d.,]*\s*(?:k|nghin|ngan|trieu|dong|vnd|d)\b"),
+    # "ba triệu chứng" is symptoms, not money.
+    re.compile(r"\d[\d.,]*\s*(?:k|nghin|ngan|trieu(?!\s+chung\b)|dong|vnd|d)\b"),
     re.compile(r"\b(?:nghin|ngan|trieu|tram|chuc|muoi)\s+dong\b"),
     # TTS rules make the model spell prices out: "ba trăm năm mươi nghìn".
-    re.compile(rf"\b{_SPELLED_NUMBER}\s+(?:nghin|ngan|trieu)\b"),
+    re.compile(rf"\b{_SPELLED_NUMBER}\s+(?:nghin|ngan|trieu(?!\s+chung\b))\b"),
     re.compile(r"\bvnd\s*\d"),
     re.compile(r"\bgiam\s+(?:gia\s+)?\d+\s*%"),
     # Only a percent in discount context is a price claim; "Niacinamide mười phần trăm" is not.

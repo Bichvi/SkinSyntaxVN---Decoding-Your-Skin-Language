@@ -156,5 +156,147 @@ class RecapFactsTests(unittest.TestCase):
             self.assertIn("một trăm chín mươi chín nghìn đồng", text)
 
 
+# ---------------------------------------------------------------- I1: no "chốt đơn" in the writer prompts
+
+import time  # noqa: E402
+
+from core.script_text import find_price_issues  # noqa: E402
+from engines import show_writer  # noqa: E402
+from engines.syna_persona import PERSONA_RULES_VI, ROBOTIC_WORDS  # noqa: E402
+
+FLASH = {"regular_price": 199000, "market_price": None,
+         "flash": {"campaign_id": "f1", "flash_price": 159000, "discount_percent": 20,
+                   "end_ts": int(time.time()) + 7200}}
+FLASH_SNAP = {"id": "2", "name": "Serum Klairs", "brand": "Klairs", "pricing": FLASH}
+PRODUCT_BASE = "[Lead-in]\nTới bước serum nè.\n\n[Price]\nGiá một trăm năm mươi chín nghìn đồng.\n\n[CTA]\n"
+
+
+def all_writer_prompts():
+    prompts = [
+        show_writer.build_product_prompts(SNAPS["2"], PLAN["products"][1], PLAN, "A"),
+        show_writer.build_product_prompts(SNAPS["2"], PLAN["products"][1], PLAN, "B",
+                                          {"pain_point": "p", "why": "w"}),
+        *show_writer.build_frame_prompts(PLAN, SNAPS, []),
+        show_writer.build_recap_prompts(PLAN, SNAPS),
+    ]
+    return [system + "\n" + user for system, user in prompts]
+
+
+def live_codes(text, snapshot, kind):
+    with patch(NO_LLM, return_value=[]):
+        return [(i.code, i.original_text) for i in sv.validate_script(text, snapshot, "live_and_product", kind)]
+
+
+class NoChotDonTests(unittest.TestCase):
+    def test_persona_never_asks_for_chot_don(self):
+        self.assertNotIn("chốt đơn", PERSONA_RULES_VI)
+
+    def test_chot_don_only_in_the_banned_list(self):
+        self.assertIn("chốt đơn", show_writer._NO_TIME_WORDS)
+        for prompt in all_writer_prompts():
+            self.assertNotIn("chốt đơn", prompt.replace(show_writer._NO_TIME_WORDS, ""))
+
+    def test_typical_cta_passes_real_validator(self):
+        cta = (PRODUCT_BASE.replace("một trăm năm mươi chín", "một trăm chín mươi chín")
+               + "Bấm giỏ hàng, chọn món số 2 nha, comment hoặc thả tim cho Syna!")
+        self.assertEqual(live_codes(cta, SNAPS["2"], "product"), [])
+
+
+# ---------------------------------------------------------------- I5: invented social proof
+
+class SocialProofTests(unittest.TestCase):
+    CAUGHT = (
+        "Năm trăm bà đã chốt rồi, bấm giỏ hàng chọn món số 2 nha!",
+        "Ba trăm người đang xem đó, bấm giỏ hàng chọn món số 2!",
+        "Mở khoá voucher cho mấy bà, bấm giỏ hàng chọn món số 2!",
+        "Mở khóa quà nè, bấm giỏ hàng chọn món số 2!",
+        "Mo khoa ưu đãi, bấm giỏ hàng chọn món số 2!",
+        "Hai trăm khách vừa mua xong, bấm giỏ hàng chọn món số 2!",
+        "Đã chốt năm trăm đơn rồi, bấm giỏ hàng chọn món số 2!",
+        "300 bạn đã mua, bấm giỏ hàng chọn món số 2!",
+    )
+
+    def test_social_proof_caught_even_with_flash_sale(self):
+        for cta in self.CAUGHT:
+            found = live_codes(PRODUCT_BASE + cta, FLASH_SNAP, "product")
+            self.assertIn("BLACKLIST_CLAIM", [code for code, _ in found], cta)
+
+    def test_efficacy_days_with_hai(self):
+        for text in ("Thoa hai hôm là hết mụn.", "Ba ngày là dịu liền."):
+            self.assertIn("BLACKLIST_CLAIM", [c for c, _ in live_codes(text, combined(), "tip")], text)
+
+    def test_near_misses_pass(self):
+        for cta in ("Cả nhà nhớ bấm giỏ hàng nha, chọn món số 2!", "Mấy bà bấm giỏ hàng chọn món số 2 nha!"):
+            self.assertEqual(live_codes(PRODUCT_BASE + cta, FLASH_SNAP, "product"), [], cta)
+        # Left word boundary: "carbon ngày là hết" is not "bốn ngày là hết".
+        self.assertNotIn("BLACKLIST_CLAIM",
+                         [c for c, _ in live_codes("Than carbon ngày là hết bụi.", combined(), "tip")])
+
+    def test_voucher_still_allowed_with_flash_sale(self):
+        found = live_codes(PRODUCT_BASE + "Có voucher, bấm giỏ hàng chọn món số 2!", FLASH_SNAP, "product")
+        self.assertNotIn("BLACKLIST_CLAIM", [c for c, _ in found])
+
+    def test_honesty_rule_is_split(self):
+        absolute, flash_only = show_writer._HONESTY_ABSOLUTE, show_writer._HONESTY_FLASH
+        self.assertNotIn("trừ khi", absolute)
+        for word in ("500 bà đã chốt", "vừa có người mua", "mở khóa", "5.000 tim", "quà tặng"):
+            self.assertIn(word, absolute)
+        for word in ("voucher", "trợ giá", "flash sale"):
+            self.assertIn(word, flash_only)
+        for prompt in all_writer_prompts():
+            self.assertIn(absolute, prompt)
+            self.assertIn(flash_only, prompt)
+
+
+# ---------------------------------------------------------------- Ruling 13a: conflicts capped
+
+LONG_CONFLICTS = [{"a": "1", "b": "2", "message_vi": f"Xung đột số {i}: " + "Retinol và AHA gây kích ứng. " * 20}
+                  for i in range(15)]
+
+
+class ConflictCapTests(unittest.TestCase):
+    def test_prompts_with_fifteen_long_conflicts_fit(self):
+        plan = {**PLAN, "conflicts": LONG_CONFLICTS}
+        prompts = [
+            show_writer.build_product_prompts(SNAPS["2"], plan["products"][1], plan, "B",
+                                              {"pain_point": "p", "why": "w"}),
+            *show_writer.build_frame_prompts(plan, SNAPS, []),
+            show_writer.build_recap_prompts(plan, SNAPS),
+        ]
+        for system, user in prompts:
+            self.assertLessEqual(show_writer.prompt_len(system, user), show_writer.PROMPT_BUDGET)
+            self.assertIn("Xung đột số 4", user)
+            self.assertNotIn("Xung đột số 5", user)
+            for line in user.splitlines():
+                if line.startswith("- Xung đột"):
+                    self.assertLessEqual(len(line), 162)
+
+    def test_fit_user_warns_when_budget_unreachable(self):
+        with self.assertLogs(show_writer.log, level="WARNING"):
+            show_writer._fit_user("s", ((1,), (0,)), lambda n: "x" * (show_writer.PROMPT_BUDGET + 10))
+
+
+# ---------------------------------------------------------------- Ruling 13c: deterministic false positives
+
+class FalsePositiveTests(unittest.TestCase):
+    def test_quet_usage_is_not_robotic(self):
+        for text in ("Quét một lớp mỏng lên mặt.", "Quét đều từ trong ra ngoài."):
+            self.assertIsNone(ROBOTIC_WORDS.search(text), text)
+            self.assertNotIn("ROBOTIC_WORDING", [c for c, _ in live_codes(text, combined(), "tip")])
+
+    def test_quet_robotic_senses_flagged(self):
+        for text in ("Syna quét làn da của bạn.", "Quét dữ liệu xong rồi.", "Đã quét hàng triệu phản hồi."):
+            self.assertIsNotNone(ROBOTIC_WORDS.search(text), text)
+            self.assertIn("ROBOTIC_WORDING", [c for c, _ in live_codes(text, combined(), "tip")], text)
+
+    def test_trieu_chung_is_not_money(self):
+        for text in ("Giảm ba triệu chứng khó chịu.", "Có 3 triệu chứng thường gặp."):
+            self.assertEqual(find_price_issues(text, P2), [], text)
+
+    def test_real_millions_still_money(self):
+        for text in ("Giá ba triệu đồng.", "Chỉ 3 triệu thôi.", "Ba triệu nha."):
+            self.assertTrue(find_price_issues(text, P2), text)
+
+
 if __name__ == "__main__":
     unittest.main()
