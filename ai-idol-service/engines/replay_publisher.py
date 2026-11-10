@@ -41,6 +41,14 @@ def replay_publishable(campaign: dict) -> bool:
 
 def publish_campaign_replay(campaign_id: str, *, client=None) -> bool:
     """Upload the master video and poster, then stamp replay.uploaded_at. Idempotent, never raises."""
+    try:
+        return _publish(campaign_id, client)
+    except Exception as exc:  # a bad id or a database blip: a stale claim expires and the retry beat tries again
+        logger.warning("[REPLAY-PUBLISH] Campaign %s replay not published: %s", campaign_id, _scrub(exc))
+        return False
+
+
+def _publish(campaign_id: str, client) -> bool:
     global _warned_unconfigured
     db = get_db()
     oid = object_id(campaign_id)
@@ -56,13 +64,13 @@ def publish_campaign_replay(campaign_id: str, *, client=None) -> bool:
             logger.warning("[REPLAY-PUBLISH] R2 is not configured; livestream replays are not stored")
             _warned_unconfigured = True
         # Visible in Studio, but not an attempt: configuring R2 later lets the retry beat publish it.
-        db.ai_idol_campaigns.update_one({"_id": oid}, {"$set": {
+        db.ai_idol_campaigns.update_one({"_id": oid, "replay.uploaded_at": {"$exists": False}}, {"$set": {
             "replay.last_error": _UNCONFIGURED, "updated_at": utcnow(),
         }})
         return False
     master = campaign.get("master_video_path")
     if not master or not os.path.isfile(str(master)):
-        db.ai_idol_campaigns.update_one({"_id": oid}, {"$set": {
+        db.ai_idol_campaigns.update_one({"_id": oid, "replay.uploaded_at": {"$exists": False}}, {"$set": {
             "replay.last_error": _MASTER_MISSING, "replay.attempts": MAX_ATTEMPTS, "updated_at": utcnow(),
         }})
         return False
@@ -135,8 +143,10 @@ def retry_pending_replays(limit: int = 5, *, client=None) -> int:
     for campaign in _candidates():
         if published >= limit:
             break
-        if publish_campaign_replay(str(campaign["_id"]), client=client):
-            published += 1
+        try:
+            published += int(publish_campaign_replay(str(campaign["_id"]), client=client))
+        except Exception as exc:  # defensive: one campaign never stops the others
+            logger.warning("[REPLAY-PUBLISH] Retry of %s failed: %s", campaign.get("_id"), _scrub(exc))
     return published
 
 
