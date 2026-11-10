@@ -48,10 +48,18 @@ def board_price(snapshot: dict, purpose: str) -> int:
     return int(pricing.get("regular_price") or 0)
 
 
-def cut_body_clip(src: str, dst: str, cut_seconds: float, fade: float = 0.6) -> str:
-    fade_start = max(0.0, cut_seconds - fade)
+def cut_body_clip(src: str, dst: str, cut_seconds: float, fade: float = 0.6,
+                  start_seconds: float = 0.0) -> str:
+    """Cut src from `start_seconds` (default: the beginning) to `cut_seconds` on its timeline."""
+    if start_seconds > 0:
+        length = max(0.0, cut_seconds - start_seconds)
+        fade_start = max(0.0, length - fade)
+        window = ["-ss", f"{start_seconds:.3f}", "-i", src, "-t", f"{length:.3f}"]
+    else:
+        fade_start = max(0.0, cut_seconds - fade)
+        window = ["-i", src, "-to", f"{cut_seconds:.3f}"]
     command = [
-        "ffmpeg", "-y", "-i", src, "-to", f"{cut_seconds:.3f}",
+        "ffmpeg", "-y", *window,
         "-vf", f"fade=t=out:st={fade_start:.3f}:d={fade:g}",
         "-af", f"afade=t=out:st={fade_start:.3f}:d={fade:g}",
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
@@ -64,13 +72,19 @@ def cut_body_clip(src: str, dst: str, cut_seconds: float, fade: float = 0.6) -> 
 
 
 def product_page_clip(job_id: str, purpose: str, video_path: str, audio_path: str,
-                      *, intro: float) -> tuple[str | None, str | None]:
+                      *, intro: float, clip_kind: str | None = None) -> tuple[str | None, str | None]:
     """(clip path for the product page, reason it was withheld). Never fails the job.
 
     `intro` is the lead-in actually present before the first word of `video_path`.
+    A library clip (`clip_kind` set) only yields a page clip for angle A of a product
+    in a both-mode show: pain_point start to price start.
     """
     if purpose == LIVE_ONLY:
         return None, None
+    if clip_kind is not None:
+        if purpose != LIVE_AND_PRODUCT or clip_kind != "product" or _segment_angle(job_id) != "A":
+            return None, None
+        return _angle_a_page_clip(job_id, video_path, audio_path, intro)
     if purpose == PRODUCT_VIDEO:
         return video_path, None
     try:
@@ -84,6 +98,39 @@ def product_page_clip(job_id: str, purpose: str, video_path: str, audio_path: st
     stem, _ = os.path.splitext(video_path)
     try:
         return cut_body_clip(video_path, stem + ".body.mp4", cut), None
+    except Exception as exc:
+        logger.warning("[BODY-CLIP] Unable to cut product-page clip for job %s: %s", job_id, exc)
+        return None, "body_cut_failed"
+
+
+def _segment_angle(job_id: str) -> str | None:
+    """Angle ("A"/"B") of the product segment this job renders."""
+    from core import state_machine
+    try:
+        job = state_machine.get_job(job_id) or {}
+        if not job.get("segment_id"):
+            return None
+        segment = state_machine.get_db().ai_idol_segments.find_one(
+            {"_id": state_machine.object_id(str(job["segment_id"]))}) or {}
+    except Exception as exc:
+        logger.warning("[BODY-CLIP] Cannot read the segment of job %s: %s", job_id, exc)
+        return None
+    return segment.get("angle")
+
+
+def _angle_a_page_clip(job_id: str, video_path: str, audio_path: str, intro: float) -> tuple[str | None, str | None]:
+    try:
+        with open(audio_path + ".timings.json", encoding="utf-8") as handle:
+            timings = json.load(handle)
+    except (OSError, ValueError):
+        return None, "missing_price_marker"
+    start = body_cut_seconds(timings, intro, labels=frozenset({"pain_point"}))
+    end = body_cut_seconds(timings, intro, labels=frozenset({"price"}))
+    if start is None or end is None or end <= start:
+        return None, "missing_price_marker"
+    stem, _ = os.path.splitext(video_path)
+    try:
+        return cut_body_clip(video_path, stem + ".body.mp4", end, start_seconds=start), None
     except Exception as exc:
         logger.warning("[BODY-CLIP] Unable to cut product-page clip for job %s: %s", job_id, exc)
         return None, "body_cut_failed"
