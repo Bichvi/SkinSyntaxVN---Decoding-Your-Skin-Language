@@ -7,9 +7,17 @@ from core.text_budget import clip_text
 from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO
 from core.script_text import (
     PAGE_CUT_LABELS, find_external_retailer_mentions, find_price_issues, find_price_violations, sanitize_external_retailer_mentions,
-    split_labeled_sections,
+    split_labeled_sections, _CANH_ANY, _MONEY_PATTERNS, _fold, _fold_speech, _remove_valid_phrases,
 )
-from core.vi_money import price_phrases
+from core.vi_money import money_words, price_phrases
+from engines.syna_persona import ROBOTIC_WORDS, SHOP_FACTS_VI
+
+LIVE_CLIP_KINDS = frozenset({"opening", "product", "interlude", "faq", "tip", "routine_recap", "transition", "closing"})
+# Clips that never speak a price (the others may: product, faq, routine_recap).
+_NO_PRICE_KINDS = frozenset({"tip", "interlude", "opening", "transition", "closing"})
+# Product-clip parts before [Price]: the part that must stay valid on a product page (evergreen).
+_EVERGREEN_LABELS = frozenset({"lead_in", "pain_point", "why", "solution", "feel", "how_to_use"})
+_EVERGREEN_BANNED = re.compile(r"livestream|hôm nay|comment|thả tim|bình luận", re.IGNORECASE)
 
 # Forbidden marketing claims for cosmetic products in Vietnam
 FORBIDDEN_PATTERNS = [
@@ -30,6 +38,25 @@ FORBIDDEN_PATTERNS = [
     r"\bdiệt (nấm|virus|vi khuẩn)\b",
     r"\bgiảm (ngay|liền|tức thì)\b",
 ]
+
+# Extra bans for live library clips only (spec 5.6, D7): invented crowds, quotas, gifts, deadlines, efficacy.
+LIVE_FORBIDDEN_PATTERNS = (
+    r"\d+\s*(người|bạn|bà)\s*(đang xem|đã mua|vừa mua|đầu tiên)",
+    r"vừa (đặt|mua) (hàng|đơn)",
+    r"\d+\s*suất",
+    r"tặng kèm",
+    r"quà tặng",
+    r"voucher",
+    r"mở khóa",
+    r"trợ giá",
+    r"(tắt|hết|kết thúc) live.*(giá|voucher)",
+    r"chuẩn y khoa",
+    r"triệt để",
+    r"(\d+|vài|ba|bốn)\s*(hôm|ngày)\s*(là|thôi|đã)?\s*(hết|dịu|lặn|khỏi)",
+)
+# Allowed when the data has a flash sale.
+_FLASH_ONLY_PATTERNS = frozenset({r"voucher", r"trợ giá"})
+_ROBOTIC_EXTRA = re.compile(r"\bAI phân tích\b", re.IGNORECASE)
 
 # Claim phrases that may be scrubbed from free text (product data / draft scripts).
 # `100%`, "điều trị", "chuyên trị", "chữa bệnh", "diệt ..." stay out of the default scrub: they can be
@@ -110,7 +137,25 @@ Tên nơi bán bắt buộc là SkinSyntax. Tên sàn hoặc nhà bán lẻ bên
 """
 
 
-def _audit_prompts(script: str, snapshot: dict, purpose: str, json_mode: bool = False) -> tuple[str, str]:
+def _snapshot_products(snapshot: dict) -> list[dict]:
+    return [p for p in (snapshot.get("products") or []) if isinstance(p, dict)]
+
+
+def live_facts_block(snapshot: dict, clip_kind: str) -> str:
+    """Source-of-truth lines for clips not tied to one product: every product with its price lines."""
+    lines = [f"- Chủ đề buổi: {snapshot.get('name')}", "- Các sản phẩm trong buổi:"]
+    for index, product in enumerate(_snapshot_products(snapshot), 1):
+        lines.append(f"  {index}. {product.get('name')} (thương hiệu {product.get('brand')})")
+        lines.extend("   " + line for line in price_data_lines({"pricing": product.get("pricing")}).split("\n"))
+    if clip_kind == "routine_recap" and snapshot.get("bundle_total"):
+        lines.append(f"- Tổng cả bộ: {money_words(int(snapshot['bundle_total']))}")
+    if clip_kind == "interlude":
+        lines.append("- Chỉ được nói về SkinSyntax những điều sau, điều khác là bịa: " + "; ".join(SHOP_FACTS_VI))
+    return "\n".join(lines)
+
+
+def _audit_prompts(script: str, snapshot: dict, purpose: str, json_mode: bool = False,
+                   clip_kind: str | None = None) -> tuple[str, str]:
     system_prompt = _AUDIT_SYSTEM
     if json_mode:
         system_prompt = _AUDIT_SYSTEM.split("Nếu có vi phạm, hãy trả về")[0] + """Trả về DUY NHẤT một mảng JSON (không giải thích thêm), mảng rỗng [] nếu không vi phạm. Mỗi phần tử có dạng:
@@ -123,14 +168,18 @@ Tên nơi bán bắt buộc là SkinSyntax. Tên sàn hoặc nhà bán lẻ bên
     final_line = ("Hãy kiểm tra kỹ và trả về DUY NHẤT mảng JSON các vi phạm (mảng rỗng [] nếu không có vi phạm), "
                   "không viết PASS hay FAIL." if json_mode
                   else "Hãy kiểm tra kỹ và đưa ra phán quyết PASS hoặc FAIL kèm lý do chi tiết.")
-    user_prompt = f"""
-THÔNG TIN SẢN PHẨM GỐC:
-- Tên sản phẩm: {snapshot.get('name')}
+    if clip_kind in LIVE_CLIP_KINDS and clip_kind != "product":
+        source_block = live_facts_block(snapshot, clip_kind)
+    else:
+        source_block = f"""- Tên sản phẩm: {snapshot.get('name')}
 - Thương hiệu: {snapshot.get('brand')}
 {price_line}
 - Thành phần: {scrub_forbidden_claims(clip_text(snapshot.get('ingredients'), 900))}
 - Công dụng thật: {scrub_forbidden_claims(clip_text(snapshot.get('description'), 1200))}
-- Cách dùng: {scrub_forbidden_claims(clip_text(snapshot.get('usage'), 650))}
+- Cách dùng: {scrub_forbidden_claims(clip_text(snapshot.get('usage'), 650))}"""
+    user_prompt = f"""
+THÔNG TIN SẢN PHẨM GỐC:
+{source_block}
 
 KỊCH BẢN CẦN KIỂM DUYỆT:
 \"\"\"
@@ -189,6 +238,12 @@ _PRICE_RULES = (
 
 
 def _revision_structure(purpose: str) -> str:
+    if purpose == "clip_product":
+        return ("CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 8 phần, mỗi phần mở đầu bằng một dòng tiêu đề riêng: "
+                "[Lead-in], [Pain Point], [Why], [Solution], [Feel], [How to Use], [Price], [CTA]. "
+                "Các phần trước [Price] không nhắc giá, không nhắc livestream, hôm nay, comment, thả tim, bình luận. "
+                "Phần [Price] dùng đúng các cụm giá. "
+                + _PRICE_RULES)
     if purpose == PRODUCT_VIDEO:
         return ("CẤU TRÚC KỊCH BẢN BẮT BUỘC: Gồm 7 phần, mỗi phần mở đầu bằng một dòng tiêu đề riêng: "
                 "[Hook], [Problem], [Product Intro], [Specs], [Ingredients], [How to Use], [Wrap-up]. "
@@ -227,10 +282,84 @@ _PERSONAL_EXPERIENCE = re.compile(
 )
 
 
-def _deterministic_issues(script: str, snapshot: dict, purpose: str) -> list[ValidationIssue]:
+def _live_price_context(snapshot: dict, clip_kind: str) -> tuple[dict | None, dict[str, str]]:
+    """(pricing used for flash rules, extra allowed phrases) of a live clip's snapshot."""
+    if clip_kind == "product":
+        return snapshot.get("pricing"), {}
+    extra: dict[str, str] = {}
+    flash_pricing = None
+    for index, product in enumerate(_snapshot_products(snapshot)):
+        pricing = product.get("pricing") or {}
+        for key, phrase in price_phrases(pricing).items():
+            extra[f"p{index}_{key}"] = phrase
+        flash = pricing.get("flash")
+        if flash and (flash_pricing is None or (flash.get("end_ts") and not flash_pricing["flash"].get("end_ts"))):
+            flash_pricing = {"flash": flash}
+    if clip_kind == "routine_recap" and snapshot.get("bundle_total"):
+        extra["bundle_total"] = money_words(int(snapshot["bundle_total"]))
+    return flash_pricing, extra
+
+
+def _mentions_price(text: str, phrases: dict[str, str]) -> bool:
+    folded = _fold_speech(text)
+    return (_remove_valid_phrases(folded, phrases) != folded
+            or any(p.search(folded) for p in _MONEY_PATTERNS) or bool(_CANH_ANY.search(folded)))
+
+
+def _live_clip_issues(sections, snapshot: dict, clip_kind: str, flash: bool, phrases: dict[str, str]) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+
+    def add(code, category, label, original, reason):
+        issues.append(ValidationIssue(code, category, "error", label or None, original, reason, True))
+
+    for pattern in LIVE_FORBIDDEN_PATTERNS:
+        if flash and pattern in _FLASH_ONLY_PATTERNS:
+            continue
+        for label, text in sections:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                add("BLACKLIST_CLAIM", HARD_FACT_ERROR, label, match.group(0),
+                    f"Vi phạm từ khóa cấm hoặc thổi phồng hiệu quả: '{pattern}'")
+                break
+    for label, text in sections:
+        match = ROBOTIC_WORDS.search(text) or _ROBOTIC_EXTRA.search(text)
+        if match:
+            add("ROBOTIC_WORDING", SOFT_QUALITY, label, match.group(0),
+                "Syna không dùng từ máy móc (hệ thống, thuật toán, dữ liệu, quét, AI phân tích); nói bằng lời đời thường")
+    if clip_kind in _NO_PRICE_KINDS:
+        for label, text in sections:
+            if _mentions_price(text, phrases):
+                add("PRICE_NOT_ALLOWED", HARD_FACT_ERROR, label, text[:80], "Clip này không được nhắc giá")
+    if clip_kind == "tip":
+        names = []
+        for product in _snapshot_products(snapshot):
+            names += [_fold(product.get("name") or ""), _fold(product.get("brand") or "")]
+        names = [n.strip() for n in names if len(n.strip()) >= 3]
+        for label, text in sections:
+            folded = _fold(text)
+            hit = next((n for n in names if re.search(rf"(?<!\w){re.escape(n)}(?!\w)", folded)), None)
+            if hit:
+                add("TIP_MENTIONS_PRODUCT", HARD_FACT_ERROR, label, hit,
+                    "Mẹo chung không được nhắc tên sản phẩm hay thương hiệu trong buổi")
+    if clip_kind == "product":
+        for label, text in sections:
+            if label not in _EVERGREEN_LABELS:
+                continue
+            match = _EVERGREEN_BANNED.search(text)
+            if match or _mentions_price(text, phrases):
+                add("EVERGREEN_VIOLATION", SOFT_QUALITY, label, match.group(0) if match else text[:80],
+                    "Phần này nằm trên trang sản phẩm: không nhắc giá, livestream, hôm nay, comment, thả tim, bình luận")
+    return issues
+
+
+def _deterministic_issues(script: str, snapshot: dict, purpose: str,
+                          clip_kind: str | None = None) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     sections = split_labeled_sections(script)
-    for raw in find_price_issues(script, snapshot.get("pricing")):
+    pricing, extra = snapshot.get("pricing"), None
+    if clip_kind:
+        pricing, extra = _live_price_context(snapshot, clip_kind)
+    for raw in find_price_issues(script, pricing, extra):
         issues.append(ValidationIssue(raw["code"], HARD_FACT_ERROR, "error", raw["section"],
                                       raw["original_text"], raw["reason"], True))
     for mention in find_external_retailer_mentions(script):
@@ -249,6 +378,9 @@ def _deterministic_issues(script: str, snapshot: dict, purpose: str) -> list[Val
     if _missing_ingredients(sections, snapshot, purpose):
         issues.append(ValidationIssue("MISSING_SECTION", SOFT_QUALITY, "error", "ingredients", "",
                                       "Thiếu phần [Ingredients] dù sản phẩm có dữ liệu thành phần", True))
+    if clip_kind:
+        phrases = {**price_phrases(pricing), **(extra or {})}
+        issues.extend(_live_clip_issues(sections, snapshot, clip_kind, bool((pricing or {}).get("flash")), phrases))
     return issues
 
 
@@ -265,8 +397,8 @@ def _parse_audit(response: str) -> list[dict]:
     return [item for item in data if isinstance(item, dict)]
 
 
-def _llm_audit_issues(script: str, snapshot: dict, purpose: str) -> list[ValidationIssue]:
-    system_prompt, user_prompt = _audit_prompts(script, snapshot, purpose, json_mode=True)
+def _llm_audit_issues(script: str, snapshot: dict, purpose: str, clip_kind: str | None = None) -> list[ValidationIssue]:
+    system_prompt, user_prompt = _audit_prompts(script, snapshot, purpose, json_mode=True, clip_kind=clip_kind)
     try:
         response = LLMProvider().invoke(system_prompt, user_prompt)
     except Exception as e:
@@ -285,11 +417,19 @@ def _llm_audit_issues(script: str, snapshot: dict, purpose: str) -> list[Validat
             for item in items]
 
 
-def validate_script(script: str, snapshot: dict, purpose: str = LEGACY_PURPOSE) -> list[ValidationIssue]:
-    """Structured validation. The script passes when no returned issue has severity == "error"."""
-    issues = _deterministic_issues(script, snapshot, purpose)
+def validate_script(script: str, snapshot: dict, purpose: str = LEGACY_PURPOSE,
+                    clip_kind: str | None = None) -> list[ValidationIssue]:
+    """Structured validation. The script passes when no returned issue has severity == "error".
+
+    `clip_kind` (a LIVE_CLIP_KINDS value) switches on the live library rules; None keeps the legacy rules."""
+    if clip_kind is not None and clip_kind not in LIVE_CLIP_KINDS:
+        raise ValueError(f"Unknown live clip kind: {clip_kind}")
+    issues = _deterministic_issues(script, snapshot, purpose, clip_kind)
     if not any(i.severity == "error" for i in issues):
-        issues.extend(_llm_audit_issues(script, snapshot, purpose))
+        if clip_kind is None:
+            issues.extend(_llm_audit_issues(script, snapshot, purpose))
+        else:
+            issues.extend(_llm_audit_issues(script, snapshot, purpose, clip_kind))
     return issues
 
 
@@ -310,18 +450,21 @@ class ScriptValidationResult:
         return "; ".join(i.reason for i in self.issues if i.severity == "error")
 
 
-def _validate_with_retries(script: str, snapshot: dict, purpose: str) -> list[ValidationIssue]:
+def _validate_with_retries(script: str, snapshot: dict, purpose: str,
+                           clip_kind: str | None = None) -> list[ValidationIssue]:
     """Technical (validator unavailable) failures are retried, never sent to repair."""
-    issues = validate_script(script, snapshot, purpose)
+    extra = (clip_kind,) if clip_kind else ()
+    issues = validate_script(script, snapshot, purpose, *extra)
     for _ in range(VALIDATOR_RETRIES - 1):
         if not any(i.code == "VALIDATOR_UNAVAILABLE" for i in issues):
             break
-        issues = validate_script(script, snapshot, purpose)
+        issues = validate_script(script, snapshot, purpose, *extra)
     return issues
 
 
 def validate_and_repair_script(script: str, snapshot: dict, purpose: str = LEGACY_PURPOSE,
-                               max_attempts: int | None = None, on_event=None) -> ScriptValidationResult:
+                               max_attempts: int | None = None, on_event=None,
+                               clip_kind: str | None = None) -> ScriptValidationResult:
     """validate -> repair failing sections -> revalidate, at most `max_attempts` repairs.
 
     `on_event(kind, version, script)` is called with kind "validating"/"repairing" for stage reporting.
@@ -334,7 +477,7 @@ def validate_and_repair_script(script: str, snapshot: dict, purpose: str = LEGAC
     while True:
         if on_event:
             on_event("validating", version, current)
-        issues = _validate_with_retries(current, snapshot, purpose)
+        issues = _validate_with_retries(current, snapshot, purpose, clip_kind)
         errors = [i for i in issues if i.severity == "error"]
         entry = {"version": version, "text": current, "passed": not errors, "issues": [i.to_dict() for i in issues]}
         result.history.append(entry)
@@ -351,7 +494,8 @@ def validate_and_repair_script(script: str, snapshot: dict, purpose: str = LEGAC
             on_event("repairing", version, current)
         result.repair_attempts += 1
         try:
-            repaired = repair_script(current, [i for i in errors if i.auto_fixable] or errors, snapshot, purpose)
+            repair_args = (current, [i for i in errors if i.auto_fixable] or errors, snapshot, purpose)
+            repaired = repair_script(*repair_args, clip_kind=clip_kind) if clip_kind else repair_script(*repair_args)
         except Exception as e:
             logger.error(f"[SCRIPT-VALIDATOR] repair failed: {e}")
             entry["repair"] = {"error": str(e)[:300]}

@@ -53,21 +53,43 @@ def _describe(issues) -> str:
                      for i in issues)
 
 
-def _product_facts(snapshot: dict) -> str:
-    from engines.script_validator import price_data_lines, scrub_forbidden_claims as scrub
+_LIVE_REPAIR_RULES = (
+    "\nClip live của Syna: giọng duyên dáng, đời thường; không dùng các từ hệ thống, thuật toán, dữ liệu, quét, "
+    "AI phân tích; không bịa số người xem, suất, quà tặng, mở khóa, hết live hết giá, hay hứa hiệu quả sau vài ngày."
+)
+
+
+def _live_rules(clip_kind: str | None) -> str:
+    if not clip_kind:
+        return ""
+    from engines.script_validator import _NO_PRICE_KINDS
+    rules = _LIVE_REPAIR_RULES
+    if clip_kind in _NO_PRICE_KINDS:
+        rules += "\nClip này không được nhắc giá hay số tiền nào; nếu có thì bỏ đi."
+    if clip_kind == "tip":
+        rules += "\nKhông nhắc tên sản phẩm hay thương hiệu nào."
+    return rules
+
+
+def _product_facts(snapshot: dict, clip_kind: str | None = None) -> str:
+    from engines.script_validator import live_facts_block, price_data_lines, scrub_forbidden_claims as scrub
+    if clip_kind and clip_kind != "product":
+        return live_facts_block(snapshot, clip_kind)
     return (f"- Tên sản phẩm: {snapshot.get('name')}\n- Thương hiệu: {snapshot.get('brand')}\n"
             f"{price_data_lines(snapshot)}\n- Thành phần: {scrub(clip_text(snapshot.get('ingredients'), 900))}\n"
             f"- Công dụng thật: {scrub(clip_text(snapshot.get('description'), 1200))}\n"
             f"- Cách dùng: {scrub(clip_text(snapshot.get('usage'), 650))}")
 
 
-def _ask(text: str, issues, snapshot: dict, scope: str, system: str = _REPAIR_SYSTEM) -> str:
-    user = (f"{scope}:\n\"\"\"\n{clip_text(text, 6000)}\n\"\"\"\n\nLỖI CẦN SỬA:\n{_describe(issues)}\n\n"
-            f"THÔNG TIN SẢN PHẨM GỐC:\n{_product_facts(snapshot)}\n\nTrả về duy nhất nội dung đã sửa.")
+def _ask(text: str, issues, snapshot: dict, scope: str, system: str = _REPAIR_SYSTEM,
+         clip_kind: str | None = None) -> str:
+    system += _live_rules(clip_kind)
+    user =(f"{scope}:\n\"\"\"\n{clip_text(text, 6000)}\n\"\"\"\n\nLỖI CẦN SỬA:\n{_describe(issues)}\n\n"
+            f"THÔNG TIN SẢN PHẨM GỐC:\n{_product_facts(snapshot, clip_kind)}\n\nTrả về duy nhất nội dung đã sửa.")
     return sanitize_external_retailer_mentions(LLMProvider().invoke(system, user)).strip()
 
 
-def repair_script(script: str, issues, snapshot: dict, purpose: str) -> str:
+def repair_script(script: str, issues, snapshot: dict, purpose: str, clip_kind: str | None = None) -> str:
     """Repair `script`. Issues with a known section only rewrite that section; section=None rewrites the whole script."""
     issues = [i for i in issues if _issue_attr(i, "severity", "error") == "error"]
     if not issues:
@@ -86,12 +108,13 @@ def repair_script(script: str, issues, snapshot: dict, purpose: str) -> str:
         # An issue without a locatable section: the whole script is the repair unit.
         logger.info("[SCRIPT-REPAIR] whole-script repair for %d issue(s)", len(whole))
         return _ask(script, issues, snapshot, "KỊCH BẢN CẦN SỬA (giữ nguyên các dòng tiêu đề trong ngoặc vuông nếu có)",
-                    _REPAIR_SYSTEM_WHOLE)
+                    _REPAIR_SYSTEM_WHOLE, clip_kind)
     for block in blocks:
         group = by_label.get(block["label"])
         if not group or not block["header"]:
             continue
         logger.info("[SCRIPT-REPAIR] repairing section %s (%d issue(s))", block["label"], len(group))
-        fixed = _ask("\n".join(block["body"]).strip(), group, snapshot, f"PHẦN [{block['label']}] CẦN SỬA")
+        fixed = _ask("\n".join(block["body"]).strip(), group, snapshot, f"PHẦN [{block['label']}] CẦN SỬA",
+                    clip_kind=clip_kind)
         block["body"] = fixed.split("\n")
     return _join(blocks)

@@ -242,12 +242,34 @@ def _remove_valid_phrases(folded: str, phrases: dict[str, str]) -> str:
     return folded
 
 
-def _scan_price_text(text: str, pricing: dict | None, section: str | None) -> list[dict]:
+_CANH_AMOUNT = rf"(?:\d[\d.,]*|(?:{_SPELLED_NUMBER}\s+)*{_SPELLED_NUMBER})"
+_CANH_ANY = re.compile(rf"(?<!\w){_CANH_AMOUNT}\s+canh\b")
+
+
+def _canh_amounts(phrases: dict[str, str]) -> list[str]:
+    """Folded `<X>` of every valid "<X> nghìn đồng" phrase: the amounts that "<X> cành" may repeat."""
+    amounts = []
+    for phrase in phrases.values():
+        core = re.sub(r"\s+dong$", "", _fold_speech(phrase).strip())
+        if core.endswith(" nghin"):
+            amounts.append(core[: -len(" nghin")].strip())
+    return sorted(set(a for a in amounts if a), key=len, reverse=True)
+
+
+def _remove_valid_canh(remaining: str, phrases: dict[str, str]) -> str:
+    for amount in _canh_amounts(phrases):
+        remaining = re.sub(rf"(?<!\w){re.escape(amount)}\s+canh\b", " ", remaining)
+    return remaining
+
+
+def _scan_price_text(text: str, pricing: dict | None, section: str | None,
+                     extra_phrases: dict[str, str] | None = None) -> list[dict]:
     from core.vi_money import price_phrases
 
     pricing = pricing or {}
-    phrases = price_phrases(pricing)
+    phrases = {**price_phrases(pricing), **{f"extra_{k}": v for k, v in (extra_phrases or {}).items()}}
     remaining = _remove_valid_phrases(_fold_speech(text), phrases)
+    remaining = _remove_valid_canh(remaining, phrases)
     flash = pricing.get("flash") or {}
     issues: list[dict] = []
 
@@ -256,6 +278,8 @@ def _scan_price_text(text: str, pricing: dict | None, section: str | None) -> li
 
     mentions = [m.group(0) for pattern in _MONEY_PATTERNS for m in pattern.finditer(remaining)]
     mentions += [m.group(0) for m in _EXTENDED_AMOUNT.finditer(remaining)]
+    # "<X> cành" left over means X is not a valid thousand-amount of the data.
+    mentions += [m.group(0) for m in _CANH_ANY.finditer(remaining)]
     if mentions:
         if phrases:
             reason = "Con số giá không khớp dữ liệu, chỉ dùng đúng các cụm: " + "; ".join(phrases.values())
@@ -277,13 +301,15 @@ def _scan_price_text(text: str, pricing: dict | None, section: str | None) -> li
     return issues
 
 
-def find_price_issues(text: str, pricing: dict | None) -> list[dict]:
+def find_price_issues(text: str, pricing: dict | None, extra_phrases: dict[str, str] | None = None) -> list[dict]:
     """Structured price/promo/scarcity issues over the WHOLE script (any section); [] when valid.
+
+    `extra_phrases` adds allowed price phrases (combined live snapshots, bundle total).
 
     Each item: {code, section, original_text, reason}."""
     issues: list[dict] = []
     for label, body in split_labeled_sections(text):
-        issues.extend(_scan_price_text(body, pricing, label or None))
+        issues.extend(_scan_price_text(body, pricing, label or None, extra_phrases))
     return issues
 
 
