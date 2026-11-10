@@ -15,6 +15,7 @@ if SERVICE_DIR not in sys.path:
 from tests.fakes import FakeDb
 
 import core.product_videos as product_videos
+from core.purpose import campaign_wants_replay
 from engines import broadcast_engine, media_publisher
 
 
@@ -150,11 +151,12 @@ class CampaignPublishTests(PublisherTestCase):
         self.assertFalse(media_publisher.campaign_publishable({"status": "PARTIAL_FAILURE"}, [{"status": "FAILED"}]))
         self.assertFalse(media_publisher.campaign_publishable({"status": "LIVE"}, []))
 
-    def test_completed_both_mode_campaign_publishes_bodies_then_drops_full_media(self):
+    def _both_mode_campaign(self, **extra):
         full, body, master = self.file("full.mp4"), self.file("full.body.mp4"), self.file("master.mp4")
         campaign = ObjectId()
         self.db.ai_idol_campaigns.insert_one({"_id": campaign, "status": "COMPLETED", "purpose": "live_and_product",
-                                              "name": "Live 15/10", "completed_at": NOW, "master_video_path": master})
+                                              "name": "Live 15/10", "completed_at": NOW, "master_video_path": master,
+                                              **extra})
         video_id = self.video(purpose="live_and_product", campaign_id=str(campaign), file_path=full,
                               product_page_file_path=body)
         with patch.dict(os.environ, R2):
@@ -162,8 +164,57 @@ class CampaignPublishTests(PublisherTestCase):
         stored = self.stored(video_id)
         self.assertEqual(stored["aired_at"], NOW)
         self.assertEqual(stored["campaign_name"], "Live 15/10")
+        return full, body, master
+
+    def test_completed_both_mode_campaign_keeps_master_until_replay(self):
+        full, body, master = self._both_mode_campaign()
+        for path in (full, body):
+            self.assertFalse(os.path.exists(path), path)
+        self.assertTrue(os.path.exists(master))
+
+    def test_completed_both_mode_campaign_with_replay_drops_master(self):
+        full, body, master = self._both_mode_campaign(replay={"uploaded_at": NOW})
         for path in (full, body, master):
             self.assertFalse(os.path.exists(path), path)
+
+    def test_campaign_wants_replay(self):
+        self.assertTrue(campaign_wants_replay({"purpose": "live_only"}))
+        self.assertTrue(campaign_wants_replay({"purpose": "live_and_product", "platforms": ["internal", "youtube"]}))
+        self.assertFalse(campaign_wants_replay({"purpose": "live_only", "platforms": ["youtube"]}))
+        self.assertFalse(campaign_wants_replay({"purpose": "product_video"}))
+        self.assertTrue(campaign_wants_replay({}))
+        self.assertTrue(campaign_wants_replay(None))
+
+    def _campaign_with_master(self, **fields):
+        master = self.file("master.mp4")
+        campaign = ObjectId()
+        self.db.ai_idol_campaigns.insert_one({"_id": campaign, "status": "COMPLETED", "master_video_path": master,
+                                              **fields})
+        return str(campaign), master
+
+    def test_release_keeps_master_until_replay_uploaded(self):
+        campaign, master = self._campaign_with_master(purpose="live_only")
+        self.assertFalse(media_publisher.release_master_video(campaign))
+        self.assertTrue(os.path.exists(master))
+        self.db.ai_idol_campaigns.update_one({"_id": ObjectId(campaign)}, {"$set": {"replay.uploaded_at": NOW}})
+        self.assertTrue(media_publisher.release_master_video(campaign))
+        self.assertFalse(os.path.exists(master))
+        self.assertEqual(self.db.ai_idol_campaigns.find_one({"_id": ObjectId(campaign)})["master_video_path"], master)
+
+    def test_release_keeps_master_while_clip_pending(self):
+        campaign, master = self._campaign_with_master(purpose="live_and_product", replay={"uploaded_at": NOW})
+        video_id = self.video(campaign_id=campaign, product_page_file_path=self.file("body.mp4"))
+        self.assertFalse(media_publisher.release_master_video(campaign))
+        self.assertTrue(os.path.exists(master))
+        self.db.ai_idol_videos.update_one({"_id": ObjectId(video_id)}, {"$set": {"product_page_ready_at": NOW}})
+        self.assertTrue(media_publisher.release_master_video(campaign))
+        self.assertFalse(os.path.exists(master))
+
+    def test_release_drops_master_when_no_replay_needed(self):
+        campaign, master = self._campaign_with_master(purpose="live_and_product", platforms=["youtube"])
+        self.video(campaign_id=campaign, product_page_file_path=self.file("body.mp4"), product_page_ready_at=NOW)
+        self.assertTrue(media_publisher.release_master_video(campaign))
+        self.assertFalse(os.path.exists(master))
 
     def test_live_only_campaign_publishes_nothing(self):
         campaign = ObjectId()
