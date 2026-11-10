@@ -183,6 +183,38 @@ class AgentPolicyTests(unittest.TestCase):
         self.assertTrue(payload["configuration"]["agent_managed"])
         self.assertEqual(payload["configuration"]["script_approval_mode"], "auto")
 
+    def _live_run(self, brief, ids):
+        return {
+            "_id": "64b64b64b64b64b64b64b64b", "brief": brief,
+            "overrides": {"autonomy_policy": "auto_preview", "explicit_product_ids": ids},
+            "status": "RECEIVED", "campaign_id": None, "created_by": "admin",
+        }
+
+    def _run_live(self, brief, count):
+        ids = [str(1000 + i) for i in range(count)]
+        run = self._live_run(brief, ids)
+        catalog = [{"ma_san_pham": int(i), "ten_san_pham": f"Serum {i}"} for i in ids]
+        with patch("agents.service.get_agent_run", return_value=run),                 patch("agents.service.update_agent_run") as update,                 patch("agents.service.create_campaign", return_value=("campaign-1", True)) as create:
+            process_agent_run(run["_id"], llm=object(), catalog=catalog)
+        return create, update
+
+    def test_live_agent_caps_products_at_six(self):
+        brief = "Livestream giới thiệu các sản phẩm mã " + " ".join(str(1000 + i) for i in range(8)) + " lên YouTube tối mai"
+        create, update = self._run_live(brief, 8)
+        payload = create.call_args.args[0]
+        self.assertEqual(len(payload["product_ids"]), 6)
+        plan = next(c.args[1]["plan"] for c in update.call_args_list if c.args[1].get("status") == "PLAN_READY")
+        warnings = " ".join(plan["warnings"])
+        self.assertIn("chỉ giữ 6", warnings)
+        self.assertIn("146 phút", warnings)
+
+    def test_live_agent_reply_mentions_preparation_minutes(self):
+        brief = "Livestream giới thiệu sản phẩm mã 1000 1001 lên YouTube tối mai"
+        _create, update = self._run_live(brief, 2)
+        plan = next(c.args[1]["plan"] for c in update.call_args_list if c.args[1].get("status") == "PLAN_READY")
+        self.assertIn("phút chuẩn bị", " ".join(plan["warnings"]))
+        self.assertNotIn("chỉ giữ", " ".join(plan["warnings"]))
+
     def test_non_campaign_intent_stops_before_llm_or_campaign_creation(self):
         run = {
             "_id": "64b64b64b64b64b64b64b64b",

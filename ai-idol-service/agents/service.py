@@ -41,6 +41,7 @@ from config import (
     AUTOPILOT_MAX_PRODUCTS,
     AUTOPILOT_SLOTS,
     ESTIMATED_MINUTES_PER_PRODUCT,
+    LIVE_MAX_PRODUCTS,
     MIN_LEAD_MINUTES,
     RTMP_TARGETS,
     TIMEZONE,
@@ -48,6 +49,7 @@ from config import (
 )
 from core.agent_runs import get_agent_run, mark_agent_failed, update_agent_run
 from core.campaigns import create_campaign, parse_schedule
+from core.show_plan import estimate_preparation_minutes
 from core.narration import LIVE_ONLY_STYLES, NARRATION_STYLES, normalize_styles, styles_from_text
 from core.purpose import PRODUCT_VIDEO_LENGTH_MODE, has_broadcast
 from core.redact import redact_secrets
@@ -940,6 +942,18 @@ def process_agent_run(
                     f"Cả {before} sản phẩm đã chọn đều hết hàng nên không thể livestream; "
                     "hãy chọn sản phẩm còn hàng hoặc làm video sản phẩm.",
                 ), {"intent_classification": classification_data, "brief": brief.to_dict(), "purpose": purpose})
+        live_notes: list[str] = []
+        if live:
+            # A live show holds at most LIVE_MAX_PRODUCTS products; extras are dropped, not rejected.
+            requested = len(selected)
+            if requested > LIVE_MAX_PRODUCTS:
+                selected = selected[:LIVE_MAX_PRODUCTS]
+                live_notes.append(f"Bạn chọn {requested} sản phẩm, chương trình live chỉ giữ {LIVE_MAX_PRODUCTS} sản phẩm đầu tiên.")
+                decisions.append(make_decision("LIVE_PRODUCT_CAP", "adjusted", live_notes[-1]))
+            live_notes.append(
+                f"Thư viện clip cho {len(selected)} sản phẩm cần khoảng "
+                f"{estimate_preparation_minutes(len(selected))} phút chuẩn bị trước giờ phát."
+            )
         # A product video is never broadcast: no platform, RTMP or schedule checks apply.
         platforms = brief.platforms if live else []
         if live and policy == "auto_preview":
@@ -997,7 +1011,7 @@ def process_agent_run(
             "platforms": platforms,
             "autonomy_policy": policy,
             "approval_mode": script_approval,
-            "warnings": _renderer_warnings(renderer_check),
+            "warnings": [*live_notes, *_renderer_warnings(renderer_check)],
             "query_result": query_result,
         }
         styles: list[str] = []

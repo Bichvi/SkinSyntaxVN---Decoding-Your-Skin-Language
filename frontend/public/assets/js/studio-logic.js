@@ -356,6 +356,41 @@
     };
   }
 
+  // ------------------------------------------------------------------ live clip library
+
+  const CLIP_KIND_ORDER = Object.freeze(['opening', 'product', 'interlude', 'faq', 'tip', 'transition', 'routine_recap', 'closing']);
+  const CLIP_KIND_LABELS = Object.freeze({
+    opening: 'Mở màn', product: 'Sản phẩm', interlude: 'Nghỉ giữa hiệp', faq: 'Hỏi đáp',
+    tip: 'Kiến thức da', transition: 'Chuyển vòng', routine_recap: 'Tóm tắt giá', closing: 'Kết buổi',
+  });
+
+  // Library clips grouped by kind in show order; empty groups are left out.
+  function groupClipsByKind(segments) {
+    const list = Array.isArray(segments) ? segments : [];
+    return CLIP_KIND_ORDER
+      .map((kind) => ({ kind, label: CLIP_KIND_LABELS[kind], items: list.filter((s) => s && typeof s === 'object' && s.kind === kind) }))
+      .filter((group) => group.items.length);
+  }
+
+  // Bars for the show timeline: position and width as a percentage of the whole show.
+  function programTimeline(program, totalSeconds) {
+    const items = (Array.isArray(program) ? program : []).filter((p) => p && typeof p === 'object');
+    const ends = items.map((p) => Number(p.end) || 0);
+    const total = Number(totalSeconds) > 0 ? Number(totalSeconds) : Math.max(0, ...ends);
+    if (!items.length || total <= 0) return [];
+    return items.map((p) => {
+      const start = Math.max(0, Number(p.start) || 0);
+      const end = Math.max(start, Number(p.end) || 0);
+      const kind = String(p.kind || '');
+      return {
+        kind,
+        leftPct: (start / total) * 100,
+        widthPct: ((end - start) / total) * 100,
+        title: `${CLIP_KIND_LABELS[kind] || kind} · ${Math.round(end - start)} giây`,
+      };
+    });
+  }
+
   return {
     NARRATION_STYLES,
     PURPOSE_LABELS,
@@ -369,5 +404,9 @@
     mergeActivity,
     filterActivity,
     createLatestGate,
+    CLIP_KIND_ORDER,
+    CLIP_KIND_LABELS,
+    groupClipsByKind,
+    programTimeline,
   };
 });
