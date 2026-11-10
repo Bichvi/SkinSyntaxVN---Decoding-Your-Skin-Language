@@ -208,10 +208,16 @@ class _LibraryContext:
 
     @staticmethod
     def _collect(product_ids) -> dict[str, dict]:
-        snapshots = {}
+        """Snapshots keyed by the campaign's own product id (the canonical id everywhere)."""
+        snapshots, seen = {}, {}
         for raw in product_ids:
+            canonical = str(raw)
             snap = collect_product_and_snapshot(raw)
-            snapshots[str(snap.get("id") or raw)] = snap
+            real = str(snap.get("id") or canonical)
+            if real in seen:
+                raise ValueError(f"Chương trình có sản phẩm trùng nhau: {seen[real]}, {canonical}")
+            seen[real] = canonical
+            snapshots[canonical] = snap
         return snapshots
 
     def _stored_plan(self) -> dict:
@@ -219,14 +225,20 @@ class _LibraryContext:
 
     def _snapshots_for(self, plan: dict) -> dict[str, dict]:
         if self._snapshots is None:
-            self._snapshots = self._collect([p["product_id"] for p in plan.get("products", [])])
+            ids = [p["product_id"] for p in plan.get("products", [])] or self.campaign.get("product_ids") or []
+            self._snapshots = self._collect(ids)
         return self._snapshots
 
     def ensure_segments(self) -> None:
-        if self.db.ai_idol_segments.find_one({"campaign_id": self.campaign_id, "phase": {"$exists": True}}):
-            return  # already written: a retry must not write (or pay for) the scripts again
+        existing = self.db.ai_idol_segments.find({"campaign_id": self.campaign_id, "phase": {"$exists": True}})
+        if existing:
+            # Already written: a retry must not write (or pay for) the scripts again.
+            self.db.ai_idol_campaigns.update_one({"_id": self.campaign["_id"]}, {"$set": {
+                "progress.total": len(existing)}})
+            return
         snapshots = self._collect(self.campaign.get("product_ids") or [])
-        plan = show_plan.build_show_plan(list(snapshots.values()))
+        # The plan sees the canonical id so its items match the campaign's product_ids.
+        plan = show_plan.build_show_plan([{**snap, "id": pid} for pid, snap in snapshots.items()])
         drafts = []
         for item in plan["products"]:
             drafts.extend(show_writer.write_product_clips(snapshots[item["product_id"]], item, plan))
@@ -235,6 +247,9 @@ class _LibraryContext:
         plan["theme_vi"] = plan.get("theme_vi") or theme
         drafts.extend(frame)
         now = utcnow()
+        # Plan first, then segments, then the count: a crash in between leaves a retryable state.
+        self.db.ai_idol_campaigns.update_one({"_id": self.campaign["_id"]}, {"$set": {
+            "show_plan": plan, "updated_at": now}})
         self.db.ai_idol_segments.insert_many([{
             "campaign_id": self.campaign_id,
             "kind": draft.kind,
@@ -253,12 +268,13 @@ class _LibraryContext:
         } for position, draft in enumerate(drafts)])
         self._snapshots = snapshots
         self.db.ai_idol_campaigns.update_one({"_id": self.campaign["_id"]}, {"$set": {
-            "show_plan": plan, "progress.total": len(drafts), "updated_at": now,
-        }})
+            "progress.total": len(drafts)}})
 
     def create_segment_job(self, segment: dict) -> str:
         plan = self._stored_plan()
         snapshots = self._snapshots_for(plan)
+        if not plan.get("products"):
+            plan = {**plan, "products": [{"product_id": pid} for pid in snapshots]}
         product_id = segment.get("product_id")
         if product_id is None:
             total = show_plan.bundle_total([(snapshots.get(str(p["product_id"])) or {}).get("pricing")

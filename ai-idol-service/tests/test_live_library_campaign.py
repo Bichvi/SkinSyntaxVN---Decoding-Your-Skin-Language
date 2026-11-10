@@ -46,6 +46,10 @@ def fake_frame_clips(plan, snapshots, faqs, **kwargs):
     return "Routine da dầu", drafts
 
 
+def prefixed_snapshot(product_id):
+    return {**snapshot_for(product_id), "id": f"SP00{product_id}"}
+
+
 class Harness(unittest.TestCase):
     def setUp(self):
         self.db = FakeDb()
@@ -144,6 +148,42 @@ class PrepareTests(Harness):
         self.assertEqual(len(self.db.ai_idol_segments.docs), 22)
         self.assertEqual(len(self.db.ai_idol_jobs.docs), 22)
         self.assertEqual(sorted(second), sorted(first))
+
+    def run_prepare(self, campaign_id, collect):
+        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=collect),                 patch.object(campaigns.show_plan, "build_show_plan", side_effect=fake_plan),                 patch.object(campaigns.show_writer, "write_product_clips", side_effect=fake_product_clips),                 patch.object(campaigns.show_writer, "write_frame_clips", side_effect=fake_frame_clips),                 patch.object(campaigns.show_writer, "load_answered_faqs", return_value=[]):
+            return campaigns.prepare_campaign(campaign_id)
+
+    def test_canonical_id_is_the_campaign_product_id(self):
+        campaign_id, _ = self.create()
+        self.run_prepare(campaign_id, prefixed_snapshot)
+        self.assertEqual([p["product_id"] for p in self.campaign()["show_plan"]["products"]], ["1", "2", "3"])
+        for seg in self.db.ai_idol_segments.docs:
+            self.assertIn(seg["product_id"], (None, "1", "2", "3"))
+        for job in self.db.ai_idol_jobs.docs:
+            if job["clip_kind"] in ("product", "faq"):
+                self.assertIn(job["product_id"], ("1", "2", "3"))
+                self.assertEqual(job["product_snapshot"]["name"], f"Sản phẩm {job['product_id']}")
+            else:
+                self.assertEqual(len(job["product_snapshot"]["products"]), 3)
+                self.assertEqual(job["product_snapshot"]["bundle_total"], 600000)
+
+    def test_duplicate_snapshot_ids_need_attention(self):
+        campaign_id, _ = self.create(n_products=2)
+        self.run_prepare(campaign_id, lambda pid: {**snapshot_for("X"), "id": "SAME"})
+        doc = self.campaign()
+        self.assertEqual(doc["status"], "NEEDS_ATTENTION")
+        self.assertIn("Chương trình có sản phẩm trùng nhau", doc["error_message"])
+        self.assertEqual(self.db.ai_idol_segments.docs, [])
+
+    def test_retry_with_empty_stored_plan_rebuilds_snapshots(self):
+        campaign_id, _ = self.prepare()
+        self.db.ai_idol_jobs.docs.clear()
+        self.db.ai_idol_segments.update_many({}, {"$set": {"job_id": None, "status": "QUEUED"}})
+        self.db.ai_idol_campaigns.update_one({}, {"$set": {"show_plan.products": [], "progress.total": 0}})
+        with patch.object(campaigns, "collect_product_and_snapshot", side_effect=snapshot_for):
+            job_ids = campaigns.prepare_campaign(campaign_id)
+        self.assertEqual(len(job_ids), 22)
+        self.assertEqual(self.campaign()["progress"]["total"], 22)
 
     def test_writer_error_needs_attention(self):
         campaign_id, _ = self.create()
