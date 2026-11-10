@@ -7,7 +7,7 @@ from core.text_budget import clip_text
 from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO
 from core.script_text import (
     PAGE_CUT_LABELS, find_external_retailer_mentions, find_price_issues, find_price_violations, sanitize_external_retailer_mentions,
-    split_labeled_sections, _CANH_ANY, _MONEY_PATTERNS, _fold, _fold_speech, _remove_valid_phrases,
+    split_labeled_sections, _CANH_ANY, _MONEY_PATTERNS, _SPELLED_NUMBER, _fold, _fold_speech, _remove_valid_phrases,
 )
 from core.vi_money import money_words, price_phrases
 from engines.syna_persona import ROBOTIC_WORDS, SHOP_FACTS_VI
@@ -40,22 +40,26 @@ FORBIDDEN_PATTERNS = [
 ]
 
 # Extra bans for live library clips only (spec 5.6, D7): invented crowds, quotas, gifts, deadlines, efficacy.
+# Matched on diacritic-folded text (core.script_text._fold), so "mở khoá", "mở khóa" and "mo khoa" all hit.
+_COUNT = rf"(?:\d[\d.,]*|{_SPELLED_NUMBER}(?:\s+{_SPELLED_NUMBER})*)"
 LIVE_FORBIDDEN_PATTERNS = (
-    r"\d+\s*(người|bạn|bà)\s*(đang xem|đã mua|vừa mua|đầu tiên)",
-    r"vừa (đặt|mua) (hàng|đơn)",
-    r"\d+\s*suất",
-    r"tặng kèm",
-    r"quà tặng",
-    r"voucher",
-    r"mở khóa",
-    r"trợ giá",
-    r"(tắt|hết|kết thúc) live.*(giá|voucher)",
-    r"chuẩn y khoa",
-    r"triệt để",
-    r"(\d+|vài|ba|bốn)\s*(hôm|ngày)\s*(là|thôi|đã)?\s*(hết|dịu|lặn|khỏi)",
+    rf"(?<!\w){_COUNT}\s*(?:nguoi|ban|ba|khach|don)\s+(?:dang xem|da mua|vua mua|da chot|vua chot|da dat|vua dat|dau tien)\b",
+    rf"\b(?:da|vua)\s+chot\s+(?:duoc\s+)?{_COUNT}\s*(?:don|nguoi|ban|ba|khach|suat)\b",
+    r"\bvua (?:dat|mua) (?:hang|don)\b",
+    r"\bvua co (?:nguoi|ban|ba|khach) (?:mua|dat|chot)\b",
+    rf"(?<!\w){_COUNT}\s*suat\b",
+    r"\btang kem\b",
+    r"\bqua tang\b",
+    r"\bvoucher\b",
+    r"\bmo khoa\b",
+    r"\btro gia\b",
+    r"\b(?:tat|het|ket thuc) live\b.*\b(?:gia|voucher)\b",
+    r"\bchuan y khoa\b",
+    r"\btriet de\b",
+    r"(?<!\w)(?:\d+|vai|mot|hai|ba|bon|nam|bay|tam|chin|muoi)\s*(?:hom|ngay|dem|tuan)\s*(?:la|thoi|da)?\s*(?:het|diu|lan|khoi)\b",
 )
-# Allowed when the data has a flash sale.
-_FLASH_ONLY_PATTERNS = frozenset({r"voucher", r"trợ giá"})
+# Allowed when the data has a flash sale. Invented crowds, quotas, gifts and "mở khóa" never are.
+_FLASH_ONLY_PATTERNS = frozenset({r"\bvoucher\b", r"\btro gia\b"})
 _ROBOTIC_EXTRA = re.compile(r"\bAI phân tích\b", re.IGNORECASE)
 
 # Claim phrases that may be scrubbed from free text (product data / draft scripts).
@@ -323,7 +327,7 @@ def _live_clip_issues(sections, snapshot: dict, clip_kind: str, flash: bool, phr
         if flash and pattern in _FLASH_ONLY_PATTERNS:
             continue
         for label, text in sections:
-            match = re.search(pattern, text, re.IGNORECASE)
+            match = re.search(pattern, _fold(text))
             if match:
                 add("BLACKLIST_CLAIM", HARD_FACT_ERROR, label, match.group(0),
                     f"Vi phạm từ khóa cấm hoặc thổi phồng hiệu quả: '{pattern}'")

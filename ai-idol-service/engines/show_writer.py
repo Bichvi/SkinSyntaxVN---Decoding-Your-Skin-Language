@@ -34,13 +34,21 @@ _TEASER = "Rồi, món tiếp theo cũng đỉnh không kém nè!"
 
 _NO_TIME_WORDS = (
     "Cấm các cụm \"hôm nay\", \"tối nay\", \"ngay bây giờ\" và mọi từ khan hiếm hay hạn chót "
-    "(\"chỉ còn\", \"sắp hết\", \"nhanh tay\", \"duy nhất\") trừ khi thông tin giá có dòng flash sale."
+    "(\"chỉ còn\", \"sắp hết\", \"nhanh tay\", \"duy nhất\", \"chốt đơn\") trừ khi thông tin giá có dòng flash sale."
 )
 
-_HONESTY = (
-    "Không bịa số người xem, người mua hay đơn hàng (\"500 bà đã chốt\", \"vừa có người mua\"), không bịa suất, "
-    "quà tặng, voucher, \"trợ giá\", \"mở khóa\" hay \"hết live là hết giá\", trừ khi thông tin giá có dòng flash sale."
+# Never allowed, flash sale or not.
+_HONESTY_ABSOLUTE = (
+    "Không bịa số người xem, người mua hay đơn hàng (\"500 bà đã chốt\", \"vừa có người mua\", "
+    "\"ba trăm người đang xem\"), không bịa suất, quà tặng, \"mở khóa\" hay điều kiện kiểu \"đủ 5.000 tim\", "
+    "không nói \"hết live là hết giá\"; luật này áp dụng cả khi có flash sale."
 )
+# Allowed only with a flash sale line.
+_HONESTY_FLASH = (
+    "Chỉ được nói \"voucher\", \"trợ giá\", giảm giá hay hạn chót của ưu đãi khi thông tin giá có dòng flash sale."
+)
+MAX_CONFLICTS = 5
+CONFLICT_CHARS = 160
 
 _NO_NUMBERS = "KHÔNG nói \"món số N\" hay bất kỳ số thứ tự sản phẩm nào."
 
@@ -58,7 +66,7 @@ BẢNG CÁC PHẦN (đúng thứ tự, mỗi phần một khóa riêng):
 - feel [Feel]: cảm giác khi dùng, CHỈ theo mô tả hoặc cách dùng trong thông tin sản phẩm; nếu không nhắc thì viết ngắn hoặc nói về cách dùng.
 - how_to_use [How to Use]: cách dùng lấy từ thông tin sản phẩm.
 - price [Price]: đọc đúng nguyên văn cụm giá chuẩn trong các dòng giá; nếu cụm giá có chữ "nghìn" thì ngay sau đó đệm "..., tức là <X> cành thôi quý dị!" với <X> là phần số trước chữ "nghìn" của chính cụm đó (không có chữ "nghìn" thì không đệm). Ưu đãi chỉ khi có dòng flash sale.
-- cta [CTA]: giục chốt đơn: "bấm giỏ hàng, chọn món số {number}...", mời comment hoặc thả tim."""
+- cta [CTA]: giục đặt mua: "bấm giỏ hàng, chọn món số {number}...", mời comment hoặc thả tim."""
 
 
 def _schema(properties: dict) -> dict:
@@ -128,8 +136,16 @@ def _fit_user(system: str, ladder, make_user) -> str:
     for limits in ladder:
         user = make_user(*limits)
         if prompt_len(system, user) <= PROMPT_BUDGET:
-            break
+            return user
+    log.warning("[SHOW-WRITER] Prompt is %d chars, over the %d budget even with no product facts",
+                prompt_len(system, user), PROMPT_BUDGET)
     return user
+
+
+def _conflict_lines(conflicts, empty: str) -> str:
+    """At most MAX_CONFLICTS warnings, each clipped, so a long list never pushes the rules out of the prompt."""
+    messages = [str(c.get("message_vi") or "")[:CONFLICT_CHARS] for c in list(conflicts or [])[:MAX_CONFLICTS]]
+    return "\n".join(f"- {m}" for m in messages) or empty
 
 
 # ---------------------------------------------------------------- product clips
@@ -142,7 +158,7 @@ def build_product_prompts(snapshot: dict, item: dict, plan: dict, angle: str = "
     )
     conflicts = [c for c in (plan.get("conflicts") or [])
                  if str(item.get("product_id")) in {str(c.get("a")), str(c.get("b"))}]
-    conflict_lines = "\n".join(f"- {c.get('message_vi')}" for c in conflicts) or "- Không có cảnh báo kết hợp."
+    conflict_lines = _conflict_lines(conflicts, "- Không có cảnh báo kết hợp.")
     number = item.get("number")
     avoid = ""
     if angle == "A":
@@ -172,7 +188,8 @@ LUẬT:
 - Các phần từ lead_in đến how_to_use phải "dùng lâu dài được": KHÔNG giá, KHÔNG nhắc "live", "livestream", "hôm nay", "comment", "bình luận", "thả tim".
 - "món số {number}" CHỈ được nói trong cta, không nói ở phần khác.
 - {_NO_TIME_WORDS}
-- {_HONESTY}
+- {_HONESTY_ABSOLUTE}
+- {_HONESTY_FLASH}
 - {_SELF_CONTAINED}
 - Không chào hỏi ("xin chào", "chào cả nhà") và không tạm biệt: đây không phải mở màn hay kết thúc.
 - Câu ngắn, dễ đọc thành tiếng; không dùng ký hiệu, emoji hay gạch đầu dòng."""
@@ -228,7 +245,7 @@ def _theme_hint(theme: str) -> str:
 
 
 def _frame_context(plan: dict, theme: str) -> str:
-    conflicts = "\n".join(f"- {c.get('message_vi')}" for c in plan.get("conflicts") or []) or "- Không có."
+    conflicts = _conflict_lines(plan.get("conflicts"), "- Không có.")
     return (f"CHỦ ĐỀ BUỔI: {_theme_hint(theme)}\n"
             f"CÁC BƯỚC ROUTINE CỦA BUỔI (theo thứ tự): {_lineup_steps(plan)}\n"
             f"CẢNH BÁO KẾT HỢP:\n{conflicts}")
@@ -239,7 +256,7 @@ def _frame_rules(*, greet: bool) -> str:
         "Không clip nào nêu số tiền hay cụm giá.",
         "Được chào hỏi trong các clip của yêu cầu này." if greet else "KHÔNG chào hỏi.",
         "KHÔNG tạm biệt (trừ closing nếu có yêu cầu viết closing).",
-        _NO_NUMBERS, _SELF_CONTAINED, _NO_TIME_WORDS, _HONESTY,
+        _NO_NUMBERS, _SELF_CONTAINED, _NO_TIME_WORDS, _HONESTY_ABSOLUTE, _HONESTY_FLASH,
         "Văn nói tự nhiên, câu ngắn; không ký hiệu, emoji hay gạch đầu dòng.",
     ]
     return "LUẬT CHUNG:\n" + "\n".join(f"- {line}" for line in lines)
@@ -421,7 +438,7 @@ def build_recap_prompts(plan: dict, snapshots: dict[str, dict]) -> tuple[str, st
         "cung cấp. Trả về JSON đúng schema."
     )
     total = recap_total_phrase(plan, snapshots)
-    conflicts = "\n".join(f"- {c.get('message_vi')}" for c in plan.get("conflicts") or []) or "- Không có."
+    conflicts = _conflict_lines(plan.get("conflicts"), "- Không có.")
 
     def make_user(desc):
         return f"""\
@@ -442,7 +459,8 @@ NHIỆM VỤ: viết MỘT clip tóm tắt routine, {_word_range(RECAP_WORDS)} (
 - Nhắc thứ tự dùng sáng/tối và cảnh báo xung đột nếu có. Kết bằng giục bấm giỏ hàng.
 - Không chào hỏi, không tạm biệt.
 - {_NO_TIME_WORDS}
-- {_HONESTY}
+- {_HONESTY_ABSOLUTE}
+- {_HONESTY_FLASH}
 - {_SELF_CONTAINED}
 - Văn nói tự nhiên; không ký hiệu, emoji hay gạch đầu dòng."""
 
