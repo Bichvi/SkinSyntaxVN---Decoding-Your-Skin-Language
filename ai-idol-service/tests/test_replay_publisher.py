@@ -1,3 +1,4 @@
+import copy
 import datetime as dt
 import os
 import re
@@ -160,6 +161,62 @@ class PublishCampaignReplayTests(ReplayTestCase):
         self.assertIsNone(replay.get("started_at"))  # FakeDb stores $unset as None
         self.assertTrue(os.path.isfile(master))
         self.assertFalse(os.path.exists(self.posters[0]))
+
+
+class RobustnessTests(ReplayTestCase):
+    def test_bad_id_returns_false(self):
+        self.assertFalse(replay_publisher.publish_campaign_replay("not-an-id", client=FakeS3()))
+
+    def test_success_update_failure_returns_false_without_raising(self):
+        campaign_id = self.campaign()
+        master = self.stored(campaign_id)["master_video_path"]
+        real = self.db.ai_idol_campaigns.update_one
+
+        def flaky(query, update, *args, **kwargs):
+            if "replay.uploaded_at" in update.get("$set", {}):
+                raise RuntimeError("mongo blip AKIDSECRETVALUE")
+            return real(query, update, *args, **kwargs)
+
+        client = FakeS3()
+        with patch.dict(os.environ, R2), patch.object(self.db.ai_idol_campaigns, "update_one", side_effect=flaky):
+            self.assertFalse(replay_publisher.publish_campaign_replay(campaign_id, client=client))
+        self.assertEqual(len(client.uploads), 2)
+        self.assertTrue(os.path.isfile(master))
+
+    def test_retry_continues_past_a_raising_campaign(self):
+        first, second = self.campaign(), self.campaign()
+        real = replay_publisher.publish_campaign_replay
+        calls = []
+
+        def picky(campaign_id, *, client=None):
+            calls.append(campaign_id)
+            if len(calls) == 1:
+                raise RuntimeError("boom")
+            return real(campaign_id, client=client)
+
+        with patch.dict(os.environ, R2), patch.object(replay_publisher, "publish_campaign_replay", side_effect=picky):
+            self.assertEqual(replay_publisher.retry_pending_replays(client=FakeS3()), 1)
+        self.assertEqual(len(calls), 2)
+
+    def test_published_campaign_with_missing_master_is_left_untouched(self):
+        campaign_id = self.campaign(replay={"uploaded_at": NOW, "video_url": "u"})
+        os.remove(self.stored(campaign_id)["master_video_path"])
+        # a worker that read the campaign before it was stamped must not write an error onto it
+        stale = copy.deepcopy(self.stored(campaign_id))
+        stale["replay"] = {}
+        with patch.dict(os.environ, R2), patch.object(
+                self.db.ai_idol_campaigns, "find_one", return_value=stale) as patched:
+            self.assertFalse(replay_publisher.publish_campaign_replay(campaign_id, client=FakeS3()))
+            self.assertTrue(patched.called)
+        replay = self.stored(campaign_id)["replay"]
+        self.assertFalse(replay.get("last_error"))
+        self.assertFalse(replay.get("attempts"))
+
+    def test_later_success_clears_previous_error(self):
+        campaign_id = self.campaign(replay={"last_error": "old", "attempts": 1})
+        with patch.dict(os.environ, R2):
+            self.assertTrue(replay_publisher.publish_campaign_replay(campaign_id, client=FakeS3()))
+        self.assertIsNone(self.stored(campaign_id)["replay"]["last_error"])
 
 
 class PublishableTests(ReplayTestCase):
