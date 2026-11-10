@@ -10,12 +10,13 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import time
 import unicodedata
 import wave
 
 import requests
 
-from config import BACKGROUNDS_DIR, OUTPUT_DIR, TEMP_DIR
+from config import BACKGROUNDS_DIR, OUTPUT_DIR, TEMP_DIR, logger
 from engines.audio_mixer import lead_in_seconds
 from engines.body_clip import board_price, price_from_for
 from engines.avatar_engine import _asset_path
@@ -23,6 +24,11 @@ from engines.program_composer import probe_duration
 from engines.video_composer import build_subtitle_cues, download_product_image
 
 RENDER_VERSION = "syna-native-v4"
+# Clips about one product keep its card; every other library clip shows the show card.
+PRODUCT_CARD_KINDS = frozenset({"product", "faq"})
+TRANSIENT_RENDER_MARKERS = ("Cannot read audio duration", "page.goto: Timeout", "ffprobe timed out",
+                            "Connection", "HTTP 5")
+RENDER_RETRY_SLEEPS = (30, 90)
 
 
 class RendererUnavailable(RuntimeError):
@@ -31,6 +37,28 @@ class RendererUnavailable(RuntimeError):
     Raised only for health/connection failures. The pipeline parks the job as
     WAITING_RENDERER instead of failing it; real render errors stay RuntimeError.
     """
+
+
+def is_transient_render_error(message: str) -> bool:
+    """Renderer hiccups worth another try (spec 7.2); real manifest/audio errors are not."""
+    return any(marker in str(message or "") for marker in TRANSIENT_RENDER_MARKERS)
+
+
+def render_with_retries(render, *, sleeps=RENDER_RETRY_SLEEPS, sleep=time.sleep):
+    """Call `render()`; retry transient failures once per entry in `sleeps`. RendererUnavailable is never retried."""
+    attempt = 0
+    while True:
+        try:
+            return render()
+        except RendererUnavailable:
+            raise
+        except Exception as exc:
+            if attempt >= len(sleeps) or not is_transient_render_error(str(exc)):
+                raise
+            logger.warning("[SYNA] Transient render error (retry %d/%d in %ss): %s",
+                           attempt + 1, len(sleeps), sleeps[attempt], exc)
+            sleep(sleeps[attempt])
+            attempt += 1
 
 
 def ingredient_titles(value) -> list[str]:
@@ -76,14 +104,16 @@ def shift_timings(timings: list, seconds: float) -> list:
 
 
 def build_manifest(snapshot: dict, script: str, duration: float, timings: list, configuration: dict,
-                   speech: tuple[float, float] | None = None, purpose: str = "live_only") -> dict:
+                   speech: tuple[float, float] | None = None, purpose: str = "live_only",
+                   clip_kind: str | None = None, theme: str = "") -> dict:
     if configuration.get("format", "16:9") != "16:9":
         raise ValueError("Syna hiện hỗ trợ khung ngang 16:9. Hãy chọn lại khung hình.")
     if not 0 < duration <= 180:
         raise ValueError("Syna hỗ trợ tối đa 180 giây mỗi sản phẩm. Hãy rút gọn kịch bản.")
     if not timings:
         raise ValueError("Thiếu mốc thời gian giọng đọc. Hãy tạo lại giọng nói trước khi render Syna.")
-    ingredients = ingredient_titles(snapshot.get("ingredients"))
+    show_card = clip_kind is not None and clip_kind not in PRODUCT_CARD_KINDS
+    ingredients = [] if show_card else ingredient_titles(snapshot.get("ingredients"))
     cues = []
     for start, end, text in build_subtitle_cues(script, duration, timings):
         normalized = _normalized(text)
@@ -97,11 +127,19 @@ def build_manifest(snapshot: dict, script: str, duration: float, timings: list, 
                 break
         cues.append({"start": start, "end": min(duration, end), "text": text, "ingredient": active})
     price = board_price(snapshot, purpose)
+    if show_card:
+        # No product behind this clip: the "SkinSyntax Live" card, never a price.
+        product = {"name": str(theme or "SkinSyntax Live")[:500], "price": 0, "price_from": None}
+    elif clip_kind == "faq":
+        # A Q&A has no [Price] section, so the product card shows no price.
+        product = {"name": str(snapshot.get("name") or "Sản phẩm")[:500], "price": 0, "price_from": None}
+    else:
+        product = {"name": str(snapshot.get("name") or "Sản phẩm")[:500], "price": max(0, int(price)),
+                   # Timings are already on the video timeline (lead-in included).
+                   "price_from": price_from_for(purpose, timings, 0.0,
+                                                has_claim=bool(snapshot.get("pricing")))}
     manifest = {"version": RENDER_VERSION, "format": "16:9", "duration": duration,
-                "product": {"name": str(snapshot.get("name") or "Sản phẩm")[:500], "price": max(0, int(price)),
-                            # Timings are already on the video timeline (lead-in included).
-                            "price_from": price_from_for(purpose, timings, 0.0,
-                                                           has_claim=bool(snapshot.get("pricing")))},
+                "product": product,
                 "ingredients": ingredients, "cues": cues}
     if speech:
         # Speech window inside the padded audio: Syna greets before it and waves goodbye after.
@@ -110,7 +148,7 @@ def build_manifest(snapshot: dict, script: str, duration: float, timings: list, 
 
 
 def render_syna_video(job_id: str, audio_path: str, script: str, snapshot: dict, configuration: dict,
-                      purpose: str = "live_only") -> str:
+                      purpose: str = "live_only", clip_kind: str | None = None, theme: str = "") -> str:
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", job_id):
         raise ValueError("Invalid render job identifier")
     audio = Path(audio_path)
@@ -123,7 +161,7 @@ def render_syna_video(job_id: str, audio_path: str, script: str, snapshot: dict,
     duration = round(speech_seconds + intro + outro, 3)
     manifest = build_manifest(snapshot, script, duration, shift_timings(timings, intro), configuration,
                               speech=(intro, intro + speech_seconds) if intro or outro else None,
-                              purpose=purpose)
+                              purpose=purpose, clip_kind=clip_kind, theme=theme)
     audio_bytes = audio.read_bytes()
     signature = hashlib.sha256(audio_bytes + json.dumps(
         [manifest, snapshot.get("image"), configuration.get("background_asset")],

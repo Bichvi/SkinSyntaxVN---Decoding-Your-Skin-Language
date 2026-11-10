@@ -41,6 +41,7 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     content_mode = job["content_mode"]
     config = job["configuration"]
     purpose = purpose_of(job)
+    prewritten = bool(job.get("prewritten_script"))
 
     # Import engines dynamically to prevent circular imports
     from engines.product_collector import collect_product_and_snapshot
@@ -62,11 +63,17 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
 
     # STAGE 2: Knowledge Retriever (RAG)
     try:
-        update_job_stage(job_id, "RETRIEVING_KNOWLEDGE")
         knowledge = artifacts.get("knowledge")
-        if knowledge is None:
-            knowledge = retrieve_knowledge(snapshot)
-            checkpoint_job(job_id, {"artifacts.knowledge": knowledge})
+        if prewritten:
+            # The library writer already had the facts; nothing to retrieve for this clip.
+            if knowledge is None:
+                knowledge = ""
+                checkpoint_job(job_id, {"artifacts.knowledge": knowledge})
+        else:
+            update_job_stage(job_id, "RETRIEVING_KNOWLEDGE")
+            if knowledge is None:
+                knowledge = retrieve_knowledge(snapshot)
+                checkpoint_job(job_id, {"artifacts.knowledge": knowledge})
     except Exception as e:
         fail_job(job_id, "RETRIEVING_KNOWLEDGE", f"Lỗi RAG truy xuất kiến thức: {e}")
         return False
@@ -92,12 +99,19 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
                 )
     try:
         if not script_text:
-            update_job_stage(job_id, "GENERATING_CONTENT")
-            draft = generate_content_and_script(snapshot, knowledge, content_mode, config, purpose)
+            validation_extra = {}
+            if prewritten:
+                # Written in phase A: straight to moderation, with the rules of this clip kind.
+                draft = artifacts.get("prewritten_draft") or ""
+                validation_extra["clip_kind"] = job.get("clip_kind")
+            else:
+                update_job_stage(job_id, "GENERATING_CONTENT")
+                draft = generate_content_and_script(snapshot, knowledge, content_mode, config, purpose)
             result = validate_and_repair_script(
                 draft, snapshot, purpose,
                 on_event=lambda kind, version, _text: update_job_stage(
                     job_id, "VALIDATING_SCRIPT" if kind == "validating" else "REPAIRING_SCRIPT"),
+                **validation_extra,
             )
             script_text = result.script
             versions, history, repairs = _version_records(draft, result)
@@ -210,9 +224,13 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     # the mascot or the full presentation scene to a human-face lip-sync model.
     if config.get("avatar_mode") == "syna_3d":
         try:
-            from engines.syna_engine import RendererUnavailable, render_syna_video
+            from engines.syna_engine import RendererUnavailable, render_syna_video, render_with_retries
             update_job_stage(job_id, "RENDERING")
-            final_video_path = render_syna_video(job_id, audio_path, script_text, snapshot, config, purpose=purpose)
+            render_extra = {}
+            if prewritten:
+                render_extra = {"clip_kind": job.get("clip_kind"), "theme": str(snapshot.get("name") or "")}
+            final_video_path = render_with_retries(lambda: render_syna_video(
+                job_id, audio_path, script_text, snapshot, config, purpose=purpose, **render_extra))
             checkpoint_job(job_id, {"artifacts.final_video_path": final_video_path,
                                     "artifacts.video_renderer": "syna-native-v4"})
         except RendererUnavailable as e:
@@ -258,6 +276,7 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
         job_id, purpose, final_video_path, audio_path,
         intro=applied_intro(job_id, config, padded=padded, rendered=rendered_path,
                             final=final_video_path, applied=applied),
+        **({"clip_kind": job.get("clip_kind")} if prewritten else {}),
     )
 
     return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db,

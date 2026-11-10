@@ -30,9 +30,11 @@ function decode(value, limit, name) {
 async function probe(file) {
   const child = spawn(ffprobe, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'json', file], { windowsHide: true });
   let stdout = ''; child.stdout.on('data', data => { stdout += data; });
-  const timer = setTimeout(() => child.kill(), 10000);
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; child.kill(); }, 30000);
   try {
     const [code] = await once(child, 'close');
+    if (timedOut) throw new Error('ffprobe timed out');
     if (code !== 0) throw new Error('Cannot read audio duration');
     return Number(JSON.parse(stdout).format.duration);
   } finally { clearTimeout(timer); }
