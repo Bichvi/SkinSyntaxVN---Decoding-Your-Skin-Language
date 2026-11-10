@@ -7,6 +7,7 @@ import unicodedata
 import requests
 
 import config
+from core.text_budget import clip_text
 from core.vi_money import money_words
 
 logger = logging.getLogger("ai_idol.show_plan")
@@ -177,12 +178,17 @@ def estimate_preparation_minutes(n_products: int) -> int:
     return max(config.MIN_LEAD_MINUTES, math.ceil(library_minutes * config.RENDER_FACTOR + 10))
 
 
+DESCRIPTION_CHARS = 200
+
+
 def combined_snapshot(plan: dict, snapshots: dict[str, dict], bundle_total: int | None = None) -> dict:
     """One snapshot for clips that are not about a single product (shape read by script_validator)."""
     products = []
     for item in plan.get("products", []):
         snap = snapshots.get(str(item.get("product_id"))) or {}
-        products.append({"name": snap.get("name"), "brand": snap.get("brand"), "pricing": snap.get("pricing")})
+        # A short description lets the recap's one-line uses be checked against real facts.
+        products.append({"name": snap.get("name"), "brand": snap.get("brand"), "pricing": snap.get("pricing"),
+                         "description": clip_text(snap.get("description"), DESCRIPTION_CHARS)})
     return {
         "name": plan.get("theme_vi") or "",
         "brand": "SkinSyntax",
