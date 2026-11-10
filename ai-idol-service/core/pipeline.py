@@ -282,7 +282,7 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
     return _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db,
                                purpose=purpose, campaign_id=job.get("campaign_id"),
                                page_path=page_path, block_reason=block_reason, snapshot=snapshot,
-                               script_text=script_text)
+                               script_text=script_text, clip_kind=job.get("clip_kind") if prewritten else None)
 
 
 def _version_records(draft: str, result) -> tuple[list, list, list]:
@@ -301,8 +301,10 @@ def _version_records(draft: str, result) -> tuple[list, list, list]:
 
 
 def final_machine_check(db, job_id: str, product_id: str, snapshot: dict, script_text, video_path: str,
-                        duration, purpose: str) -> list[str]:
-    """Last gate before READY. Returns problem strings (empty = pass)."""
+                        duration, purpose: str, clip_kind: str | None = None) -> list[str]:
+    """Last gate before READY. Returns problem strings (empty = pass).
+
+    `clip_kind` (library clips) re-checks with the rules the clip was moderated with."""
     from engines.script_validator import validate_script
     problems = []
     try:
@@ -320,7 +322,9 @@ def final_machine_check(db, job_id: str, product_id: str, snapshot: dict, script
         problems.append("Không đo được thời lượng video")
     if script_text is not None:
         try:
-            problems.extend(f"Kịch bản: {i.reason}" for i in validate_script(script_text, snapshot or {}, purpose)
+            extra = (clip_kind,) if clip_kind else ()
+            problems.extend(f"Kịch bản: {i.reason}"
+                            for i in validate_script(script_text, snapshot or {}, purpose, *extra)
                             if i.severity == "error")
         except Exception as e:
             problems.append(f"Không kiểm tra lại được kịch bản: {e}")
@@ -366,7 +370,7 @@ def _render_legacy_media(job_id, audio_path, script_text, snapshot, config, arti
 
 def _complete_video_job(job_id, product_id, config, final_video_path, audio_path, db, *,
                         purpose="live_only", campaign_id=None, page_path=None, block_reason=None, snapshot=None,
-                        script_text=None):
+                        script_text=None, clip_kind=None):
     from core.pricing import claim_from_pricing
     from engines.video_composer import get_audio_duration
     # STAGE 8: Complete and set status to READY
@@ -377,7 +381,8 @@ def _complete_video_job(job_id, product_id, config, final_video_path, audio_path
             claim = claim_from_pricing(str(snapshot.get("id") or product_id), snapshot.get("pricing"))
         # Probe the final file: the music intro/outro makes it longer than the voice.
         duration = get_audio_duration(final_video_path)
-        problems = final_machine_check(db, job_id, product_id, snapshot, script_text, final_video_path, duration, purpose)
+        problems = final_machine_check(db, job_id, product_id, snapshot, script_text, final_video_path, duration, purpose,
+                                       clip_kind=clip_kind)
         if problems:
             fail_job(job_id, "FINAL_CHECK", "Kiểm tra cuối thất bại: " + "; ".join(problems))
             return False

@@ -141,11 +141,18 @@ def _snapshot_products(snapshot: dict) -> list[dict]:
     return [p for p in (snapshot.get("products") or []) if isinstance(p, dict)]
 
 
+def single_product_clip(snapshot: dict, clip_kind: str | None) -> bool:
+    """Product clips, and FAQ clips (a FAQ job carries its own product's snapshot), check one product's facts."""
+    return clip_kind == "product" or (clip_kind == "faq" and "products" not in (snapshot or {}))
+
+
 def live_facts_block(snapshot: dict, clip_kind: str) -> str:
     """Source-of-truth lines for clips not tied to one product: every product with its price lines."""
     lines = [f"- Chủ đề buổi: {snapshot.get('name')}", "- Các sản phẩm trong buổi:"]
     for index, product in enumerate(_snapshot_products(snapshot), 1):
         lines.append(f"  {index}. {product.get('name')} (thương hiệu {product.get('brand')})")
+        if product.get("description"):
+            lines.append(f"   - Công dụng: {scrub_forbidden_claims(clip_text(product['description'], 200))}")
         lines.extend("   " + line for line in price_data_lines({"pricing": product.get("pricing")}).split("\n"))
     if clip_kind == "routine_recap" and snapshot.get("bundle_total"):
         lines.append(f"- Tổng cả bộ: {money_words(int(snapshot['bundle_total']))}")
@@ -163,12 +170,12 @@ def _audit_prompts(script: str, snapshot: dict, purpose: str, json_mode: bool = 
 
 Tên nơi bán bắt buộc là SkinSyntax. Tên sàn hoặc nhà bán lẻ bên ngoài không được xuất hiện trong lời thoại.
 """
-    price_line = (price_data_lines(snapshot) if _is_page_purpose(purpose)
+    price_line = (price_data_lines(snapshot) if _is_page_purpose(purpose) or clip_kind
                   else f"- Giá bán: {snapshot.get('price')} đồng")
     final_line = ("Hãy kiểm tra kỹ và trả về DUY NHẤT mảng JSON các vi phạm (mảng rỗng [] nếu không có vi phạm), "
                   "không viết PASS hay FAIL." if json_mode
                   else "Hãy kiểm tra kỹ và đưa ra phán quyết PASS hoặc FAIL kèm lý do chi tiết.")
-    if clip_kind in LIVE_CLIP_KINDS and clip_kind != "product":
+    if clip_kind in LIVE_CLIP_KINDS and not single_product_clip(snapshot, clip_kind):
         source_block = live_facts_block(snapshot, clip_kind)
     else:
         source_block = f"""- Tên sản phẩm: {snapshot.get('name')}
@@ -284,7 +291,7 @@ _PERSONAL_EXPERIENCE = re.compile(
 
 def _live_price_context(snapshot: dict, clip_kind: str) -> tuple[dict | None, dict[str, str]]:
     """(pricing used for flash rules, extra allowed phrases) of a live clip's snapshot."""
-    if clip_kind == "product":
+    if single_product_clip(snapshot, clip_kind):
         return snapshot.get("pricing"), {}
     extra: dict[str, str] = {}
     flash_pricing = None

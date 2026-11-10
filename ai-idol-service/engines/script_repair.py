@@ -72,8 +72,9 @@ def _live_rules(clip_kind: str | None) -> str:
 
 
 def _product_facts(snapshot: dict, clip_kind: str | None = None) -> str:
-    from engines.script_validator import live_facts_block, price_data_lines, scrub_forbidden_claims as scrub
-    if clip_kind and clip_kind != "product":
+    from engines.script_validator import (
+        live_facts_block, price_data_lines, scrub_forbidden_claims as scrub, single_product_clip)
+    if clip_kind and not single_product_clip(snapshot, clip_kind):
         return live_facts_block(snapshot, clip_kind)
     return (f"- Tên sản phẩm: {snapshot.get('name')}\n- Thương hiệu: {snapshot.get('brand')}\n"
             f"{price_data_lines(snapshot)}\n- Thành phần: {scrub(clip_text(snapshot.get('ingredients'), 900))}\n"
