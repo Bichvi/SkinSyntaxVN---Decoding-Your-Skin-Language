@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import logging
 import os
 import uuid
 from zoneinfo import ZoneInfo
@@ -11,11 +12,13 @@ from pymongo import ReturnDocument
 from agents.autopilot import make_decision
 from config import (
     CAMPAIGN_MAX_PRODUCTS,
+    LIVE_MAX_PRODUCTS,
     ESTIMATED_MINUTES_PER_PRODUCT,
     MIN_LEAD_MINUTES,
     RTMP_TARGETS,
     TIMEZONE,
 )
+from core import show_plan
 from core.agent_runs import append_decisions
 from core.narration import normalize_styles
 from core.product_videos import product_page_state
@@ -24,8 +27,12 @@ from core.purpose import (
     has_broadcast, normalize_purpose, purpose_of,
 )
 from core.state_machine import create_job, get_db, object_id, serialize, utcnow
+from engines import show_writer
 from engines.product_collector import collect_product_and_snapshot
 
+logger = logging.getLogger("ai_idol.campaigns")
+SHOW_FORMAT_LIBRARY = "clip_library_v1"
+LIBRARY_WRITE_ERROR = "Không viết được kịch bản buổi live"
 
 ALLOWED_PLATFORMS = {"internal", "youtube", "facebook", "preview"}
 # Channels that need an admin's go-ahead before a campaign may stream to them.
@@ -85,11 +92,22 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
     scheduled_at = None
     platforms = []
     pending_external_platforms: list[str] = []
+    library = has_broadcast(purpose)  # live campaigns are built from a clip library
+    if library and len(product_ids) > LIVE_MAX_PRODUCTS:
+        raise ValueError(f"Chương trình live tối đa {LIVE_MAX_PRODUCTS} sản phẩm")
     if has_broadcast(purpose):
         scheduled_at = parse_schedule(str(payload.get("scheduled_at", "")))
-        preparation_minutes = max(MIN_LEAD_MINUTES, len(product_ids) * ESTIMATED_MINUTES_PER_PRODUCT)
+        if library:
+            preparation_minutes = show_plan.estimate_preparation_minutes(len(product_ids))
+        else:
+            preparation_minutes = max(MIN_LEAD_MINUTES, len(product_ids) * ESTIMATED_MINUTES_PER_PRODUCT)
         minimum_schedule = utcnow() + dt.timedelta(minutes=preparation_minutes)
         if scheduled_at < minimum_schedule:
+            if library:
+                raise ValueError(
+                    f"Cần lên lịch cách ít nhất {preparation_minutes:g} phút để chuẩn bị "
+                    f"{len(product_ids)} sản phẩm"
+                )
             raise ValueError(
                 f"Schedule needs at least {preparation_minutes:g} minutes to prepare "
                 f"{len(product_ids)} product(s)"
@@ -159,7 +177,13 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
         "created_at": now,
         "updated_at": now,
     }
+    if library:
+        campaign["show_format"] = SHOW_FORMAT_LIBRARY
+        campaign["show_plan"] = {"products": [], "conflicts": [], "theme_vi": "", "routine_source": "fallback"}
+        campaign["progress"] = {"total": 0, "ready": 0, "failed": 0, "skipped": 0}
     campaign_id = str(db.ai_idol_campaigns.insert_one(campaign).inserted_id)
+    if library:
+        return campaign_id, True  # prepare_campaign writes the clips and creates the segments
     db.ai_idol_segments.insert_many([{
         "campaign_id": campaign_id,
         "product_id": product_id,
@@ -173,6 +197,88 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
     return campaign_id, True
 
 
+class _LibraryContext:
+    """Phase A of a clip-library campaign: write the scripts, store them as segments, make one job per clip."""
+
+    def __init__(self, db, campaign: dict):
+        self.db = db
+        self.campaign = campaign
+        self.campaign_id = str(campaign["_id"])
+        self._snapshots: dict[str, dict] | None = None
+
+    @staticmethod
+    def _collect(product_ids) -> dict[str, dict]:
+        snapshots = {}
+        for raw in product_ids:
+            snap = collect_product_and_snapshot(raw)
+            snapshots[str(snap.get("id") or raw)] = snap
+        return snapshots
+
+    def _stored_plan(self) -> dict:
+        return (self.db.ai_idol_campaigns.find_one({"_id": self.campaign["_id"]}) or {}).get("show_plan") or {}
+
+    def _snapshots_for(self, plan: dict) -> dict[str, dict]:
+        if self._snapshots is None:
+            self._snapshots = self._collect([p["product_id"] for p in plan.get("products", [])])
+        return self._snapshots
+
+    def ensure_segments(self) -> None:
+        if self.db.ai_idol_segments.find_one({"campaign_id": self.campaign_id, "phase": {"$exists": True}}):
+            return  # already written: a retry must not write (or pay for) the scripts again
+        snapshots = self._collect(self.campaign.get("product_ids") or [])
+        plan = show_plan.build_show_plan(list(snapshots.values()))
+        drafts = []
+        for item in plan["products"]:
+            drafts.extend(show_writer.write_product_clips(snapshots[item["product_id"]], item, plan))
+        faqs = show_writer.load_answered_faqs(self.db, [p["product_id"] for p in plan["products"]])
+        theme, frame = show_writer.write_frame_clips(plan, snapshots, faqs)
+        plan["theme_vi"] = plan.get("theme_vi") or theme
+        drafts.extend(frame)
+        now = utcnow()
+        self.db.ai_idol_segments.insert_many([{
+            "campaign_id": self.campaign_id,
+            "kind": draft.kind,
+            "angle": draft.angle,
+            "interlude_type": draft.interlude_type,
+            "product_id": draft.product_id,
+            "variant": draft.variant,
+            "script_text": draft.script,
+            "phase": "A",
+            "position": position,
+            "status": "QUEUED",
+            "job_id": None,
+            "error_message": None,
+            "created_at": now,
+            "updated_at": now,
+        } for position, draft in enumerate(drafts)])
+        self._snapshots = snapshots
+        self.db.ai_idol_campaigns.update_one({"_id": self.campaign["_id"]}, {"$set": {
+            "show_plan": plan, "progress.total": len(drafts), "updated_at": now,
+        }})
+
+    def create_segment_job(self, segment: dict) -> str:
+        plan = self._stored_plan()
+        snapshots = self._snapshots_for(plan)
+        product_id = segment.get("product_id")
+        if product_id is None:
+            total = show_plan.bundle_total([(snapshots.get(str(p["product_id"])) or {}).get("pricing")
+                                            for p in plan.get("products", [])])
+            snapshot = show_plan.combined_snapshot(plan, snapshots, total or None)
+        else:
+            snapshot = snapshots[str(product_id)]
+        return create_job(
+            product_id,
+            self.campaign.get("content_mode", "Product Intro"),
+            dict(self.campaign.get("configuration") or {}),
+            campaign_id=self.campaign_id,
+            segment_id=str(segment["_id"]),
+            product_snapshot=snapshot,
+            purpose=purpose_of(self.campaign),
+            clip_kind=segment["kind"],
+            prewritten_script=segment.get("script_text"),
+        )
+
+
 def prepare_campaign(campaign_id: str) -> list[str]:
     """Create missing jobs and return the job ids that still need generating.
 
@@ -183,6 +289,19 @@ def prepare_campaign(campaign_id: str) -> list[str]:
     campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
     if not campaign:
         raise ValueError("Campaign not found")
+
+    library_ctx = None
+    if campaign.get("show_format") == SHOW_FORMAT_LIBRARY:
+        try:
+            library_ctx = _LibraryContext(db, campaign)
+            library_ctx.ensure_segments()
+        except Exception as exc:
+            message = f"{LIBRARY_WRITE_ERROR}: {exc}"
+            logger.error("[CAMPAIGN] %s (%s)", message, campaign_id)
+            db.ai_idol_campaigns.update_one({"_id": object_id(campaign_id)}, {"$set": {
+                "status": "NEEDS_ATTENTION", "error_message": message[:2000], "updated_at": utcnow(),
+            }})
+            return []
 
     job_ids, ready_job_ids, errors, skipped = [], [], [], 0
     for segment in db.ai_idol_segments.find({"campaign_id": campaign_id}).sort("position", 1):
@@ -197,6 +316,13 @@ def prepare_campaign(campaign_id: str) -> list[str]:
                 job_ids.append(str(segment["job_id"]))
             continue
         try:
+            if library_ctx is not None and segment.get("phase"):
+                job_id = library_ctx.create_segment_job(segment)
+                db.ai_idol_segments.update_one({"_id": segment["_id"]}, {"$set": {
+                    "job_id": job_id, "status": "GENERATING", "error_message": None, "updated_at": utcnow(),
+                }})
+                job_ids.append(job_id)
+                continue
             snapshot = collect_product_and_snapshot(segment["product_id"])
             purpose = purpose_of(campaign)
             configuration = dict(campaign.get("configuration") or {})
