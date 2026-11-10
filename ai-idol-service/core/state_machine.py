@@ -59,16 +59,22 @@ def serialize(value: Any) -> Any:
 
 
 def create_job(product_id: str, content_mode: str, configuration: dict, *, campaign_id=None,
-               segment_id=None, product_snapshot=None, purpose: str = "live_only") -> str:
+               segment_id=None, product_snapshot=None, purpose: str = "live_only",
+               clip_kind: str | None = None, prewritten_script: str | None = None) -> str:
     now = utcnow()
     job = {
-        "product_id": str(product_id), "campaign_id": campaign_id, "segment_id": segment_id,
+        "product_id": None if product_id is None else str(product_id), "campaign_id": campaign_id, "segment_id": segment_id,
         "content_mode": content_mode, "purpose": purpose,
         "configuration": configuration or {}, "status": "CREATED",
         "current_stage": "CREATED", "retry_count": 0, "error_message": None,
         "failed_stage": None, "product_snapshot": product_snapshot, "artifacts": {},
         "created_at": now, "updated_at": now,
     }
+    if clip_kind:
+        job["clip_kind"] = clip_kind
+    if prewritten_script:
+        job["prewritten_script"] = True
+        job["artifacts"] = {"prewritten_draft": prewritten_script}
     job_id = str(get_db().ai_idol_jobs.insert_one(job).inserted_id)
     logger.info("[STATE] Created job %s for product %s", job_id, product_id)
     return job_id

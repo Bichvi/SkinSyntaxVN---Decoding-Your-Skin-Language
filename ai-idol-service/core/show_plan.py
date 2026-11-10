@@ -175,3 +175,18 @@ def bundle_total_phrase(total: int) -> str:
 def estimate_preparation_minutes(n_products: int) -> int:
     library_minutes = 4 * n_products + 10
     return max(config.MIN_LEAD_MINUTES, math.ceil(library_minutes * config.RENDER_FACTOR + 10))
+
+
+def combined_snapshot(plan: dict, snapshots: dict[str, dict], bundle_total: int | None = None) -> dict:
+    """One snapshot for clips that are not about a single product (shape read by script_validator)."""
+    products = []
+    for item in plan.get("products", []):
+        snap = snapshots.get(str(item.get("product_id"))) or {}
+        products.append({"name": snap.get("name"), "brand": snap.get("brand"), "pricing": snap.get("pricing")})
+    return {
+        "name": plan.get("theme_vi") or "",
+        "brand": "SkinSyntax",
+        "products": products,
+        "bundle_total": bundle_total,
+        "pricing": None,
+    }
