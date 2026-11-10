@@ -82,6 +82,7 @@ class Harness:
         self.stack.enter_context(patch.object(tasks.broadcast_campaign_task, "apply_async",
                                               side_effect=lambda args, queue: self.broadcast_calls.append(args[0])))
         self.stack.enter_context(patch.object(broadcast_engine, "probe_duration", return_value=12))
+        self.stack.enter_context(patch.object(broadcast_engine, "_send_replay_task"))
         service_app = self.app
         self.stack.enter_context(patch.object(service_app, "get_db", return_value=self.db))
         self.stack.enter_context(patch.object(service_app.generate_job_task, "delay", side_effect=self.generate_calls.append))

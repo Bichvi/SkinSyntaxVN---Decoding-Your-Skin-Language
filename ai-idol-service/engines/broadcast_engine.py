@@ -7,7 +7,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import BROADCAST_MAX_RETRIES, BROADCAST_RETRY_SECONDS, RTMP_TARGETS, logger
-from core.purpose import publishes_to_product_page, purpose_of
+from core.purpose import campaign_wants_replay, publishes_to_product_page, purpose_of
 from core.redact import redact_secrets
 from core.state_machine import get_db, object_id, utcnow
 from engines.program_composer import probe_duration
@@ -118,6 +118,22 @@ def _queue_product_publish(campaign: dict) -> None:
         logger.warning("[BROADCAST] Could not queue product-page publish for %s: %s", campaign.get("_id"), exc)
 
 
+def _send_replay_task(campaign_id: str) -> None:
+    # By task name: importing tasks here would be circular.
+    from celery_app import celery_app
+    celery_app.send_task("ai_idol.publish_campaign_replay", args=[campaign_id])
+
+
+def _queue_replay_publish(campaign: dict) -> None:
+    """After a show ends, its aired program is published as a replay (spec §4.4)."""
+    if not campaign_wants_replay(campaign):
+        return
+    try:
+        _send_replay_task(str(campaign["_id"]))
+    except Exception as exc:  # the beat retry picks it up later
+        logger.warning("[BROADCAST] Could not queue replay publish for %s: %s", campaign.get("_id"), exc)
+
+
 def broadcast_campaign(campaign_id: str) -> bool:
     db = get_db()
     campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
@@ -160,6 +176,7 @@ def broadcast_campaign(campaign_id: str) -> bool:
         "error_message": None if ok else "One or more platforms failed",
     }})
     _queue_product_publish(campaign)
+    _queue_replay_publish(campaign)
     return ok
 
 
@@ -194,4 +211,5 @@ def finalize_live_campaigns(now: dt.datetime | None = None) -> dict[str, int]:
             )
             closed["partial_failure" if status == "PARTIAL_FAILURE" else "completed"] += 1
             _queue_product_publish(campaign)
+            _queue_replay_publish(campaign)
     return closed

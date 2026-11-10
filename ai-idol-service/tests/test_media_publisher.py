@@ -296,7 +296,7 @@ class BroadcastHookTests(unittest.TestCase):
                                              "platforms": ["internal"], "ends_at": NOW - dt.timedelta(minutes=1)})
         sent = []
         with patch.object(broadcast_engine, "get_db", return_value=db), \
-                patch.object(broadcast_engine, "_send_publish_task", side_effect=sent.append):
+                patch.object(broadcast_engine, "_send_replay_task"),                 patch.object(broadcast_engine, "_send_publish_task", side_effect=sent.append):
             broadcast_engine.finalize_live_campaigns(now=NOW)
         self.assertEqual(sent, [str(both)])
 
