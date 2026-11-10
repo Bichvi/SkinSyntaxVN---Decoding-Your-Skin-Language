@@ -2,6 +2,7 @@
 // backend/app/controllers/AuthController.php
 
 require_once __DIR__ . "/../models/NguoiDung.php";
+require_once __DIR__ . "/../models/TaiKhoan.php";
 require_once __DIR__ . "/../services/AuthThrottle.php";
 
 class AuthController {
@@ -211,6 +212,24 @@ class AuthController {
         ];
     }
 
+    private function redirectCustomerAfterLogin(): void {
+        $returnRoute = trim((string)($_SESSION['auth_return_route'] ?? ''));
+        unset($_SESSION['auth_return_route']);
+
+        // Only resume the server-created checkout handoff. Never trust an
+        // arbitrary URL from the login request, which would create an open
+        // redirect after authentication.
+        if ($returnRoute === 'thanhtoan'
+            && !empty($_SESSION['checkout_items'])
+            && is_array($_SESSION['checkout_items'])) {
+            header('Location: ' . BASE_URL . '/index.php?r=thanhtoan');
+            exit;
+        }
+
+        header('Location: ' . BASE_URL . '/index.php?r=home');
+        exit;
+    }
+
     private function normalizeStaffRole(array $staff): string {
         $roleId = (int)($staff['ma_vai_tro'] ?? 0);
         if ($roleId === 1) {
@@ -281,8 +300,7 @@ class AuthController {
 
         $this->loginCustomerSession($account);
         set_flash('success', 'Dang nhap local bang ' . ucfirst($provider) . ' thanh cong.');
-        header('Location: ' . BASE_URL . '/index.php?r=home');
-        exit;
+        $this->redirectCustomerAfterLogin();
     }
 
     public function dangnhap() {
@@ -349,8 +367,7 @@ class AuthController {
             $this->loginCustomerSession($u);
 
             set_flash('success', 'Đăng nhập thành công.');
-            header("Location: " . BASE_URL . "/index.php?r=home");
-            exit;
+            $this->redirectCustomerAfterLogin();
         }
 
         set_flash('error', 'Email hoặc mật khẩu không đúng.');
@@ -620,8 +637,7 @@ class AuthController {
 
         $this->loginCustomerSession($account);
         set_flash('success', 'Đăng nhập bằng ' . ucfirst($provider) . ' thành công.');
-        header('Location: ' . BASE_URL . '/index.php?r=home');
-        exit;
+        $this->redirectCustomerAfterLogin();
     }
 
     public function dangky() {
@@ -880,9 +896,48 @@ class AuthController {
             }
         }
 
+        $khachHang = [];
+        $skinProfile = [];
+        $email = trim((string)($pending['email'] ?? ''));
+        $profileId = trim((string)($_GET['profile_id'] ?? ($pending['profile_id'] ?? '')));
+        if ($email !== '') {
+            try {
+                $taiKhoanModel = new TaiKhoan($this->pdo);
+                $khachHang = $taiKhoanModel->getKhachHangByEmail($email) ?? [];
+                $skinProfile = $profileId !== ''
+                    ? ($this->findOwnedSkinProfile($taiKhoanModel, $email, $profileId) ?? [])
+                    : ($taiKhoanModel->getSkinProfileByEmail($email) ?? []);
+                if ($profileId !== '' && empty($skinProfile)) {
+                    $profileId = '';
+                }
+            } catch (Throwable $e) {
+                $khachHang = [];
+                $skinProfile = [];
+                $profileId = '';
+            }
+        }
+        if ($profileId !== '') {
+            $pending['profile_id'] = $profileId;
+            $_SESSION['pending_survey'] = $pending;
+        } else {
+            unset($pending['profile_id']);
+            $_SESSION['pending_survey'] = $pending;
+        }
+
         $this->render('auth/khaosat', [
             'pending' => $pending,
+            'khachHang' => $khachHang,
+            'skinProfile' => $skinProfile,
         ]);
+    }
+
+    private function findOwnedSkinProfile(TaiKhoan $model, string $email, string $profileId): ?array {
+        foreach ($model->getSkinProfilesByEmail($email) as $profile) {
+            if ((string)($profile['profile_id'] ?? '') === $profileId && empty($profile['is_primary'])) {
+                return $profile;
+            }
+        }
+        return null;
     }
 
     public function xulykhaosat() {
@@ -943,9 +998,9 @@ class AuthController {
         $q6 = trim((string)($_POST['q6'] ?? '')); // muc tieu
         $q10 = trim((string)($_POST['q10'] ?? '')); // ngan_sach bucket
 
-        $requiredFailed = ($q1 === '' || $q2 === '' || $q3 === '' || $q4 === '' || empty($q5) || empty($q9) || $q10 === '');
+        $requiredFailed = ($q1 === '' || $q2 === '' || $q3 === '' || $q4 === '' || empty($q5) || empty($q9) || $q10 === '' || ($_POST['confirm_profile_save'] ?? '') !== '1');
         if ($requiredFailed) {
-            set_flash('error', 'Vui lòng trả lời đầy đủ các câu bắt buộc hoặc bấm Bỏ qua khảo sát.');
+            set_flash('error', 'Vui lòng trả lời đầy đủ, xác nhận lại dữ liệu và bấm Bỏ qua nếu chưa muốn lưu hồ sơ.');
             header("Location: " . BASE_URL . "/index.php?r=khaosat");
             exit;
         }
@@ -993,6 +1048,10 @@ class AuthController {
             'thanh_phan_tranh' => (!empty($thanhPhanTranh) ? implode(', ', $thanhPhanTranh) : null),
             'ngan_sach' => $budgetMap[$q10] ?? null,
         ];
+        $targetProfileId = trim((string)($pending['profile_id'] ?? ''));
+        if ($targetProfileId !== '') {
+            $payload['_profile_id'] = $targetProfileId;
+        }
 
         $ok = $this->model->luuKhaoSatKhachHang($hoTen, $email, $payload);
         if (!$ok) {
@@ -1003,6 +1062,7 @@ class AuthController {
 
         $source = (string)($pending['source'] ?? 'signup');
         unset($_SESSION['pending_survey']);
+        $_SESSION['syna_survey_success'] = 1;
         set_flash('success', 'Cảm ơn bạn đã hoàn thành khảo sát. Dữ liệu đã được lưu để cải thiện gợi ý.');
         if ($source === 'login') {
             header("Location: " . BASE_URL . "/index.php?r=goiy");

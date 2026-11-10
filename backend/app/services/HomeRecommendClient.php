@@ -106,7 +106,7 @@ final class HomeRecommendClient
     /** Validate tối thiểu theo contract. Item sai -> bỏ item; section key lạ -> bỏ; thiếu sections/degraded -> null. */
     public static function validateResponse(array $data): ?array
     {
-        if (!isset($data['sections']) || !is_array($data['sections']) || !array_is_list($data['sections']) || !array_key_exists('degraded', $data)) {
+        if (!isset($data['sections']) || !is_array($data['sections']) || !self::isList($data['sections']) || !array_key_exists('degraded', $data)) {
             return null;
         }
         $sections = [];
@@ -151,6 +151,15 @@ final class HomeRecommendClient
             'degraded' => (bool)$data['degraded'],
             'sections' => $sections,
         ];
+    }
+
+    /** Compatibility helper for PHP versions before array_is_list(). */
+    private static function isList(array $value): bool
+    {
+        if ($value === []) {
+            return true;
+        }
+        return array_keys($value) === range(0, count($value) - 1);
     }
 
     private static function requestId(): string

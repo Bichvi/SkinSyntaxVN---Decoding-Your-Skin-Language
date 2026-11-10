@@ -155,14 +155,14 @@ if ($selectedCategoryLabel === '' && !empty($product['loai_san_pham'])) {
 		<div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
 			<div>
 				<h2 class="h5 mb-0">Nhãn công dụng &amp; vấn đề da</h2>
-				<div class="text-muted small">Dữ liệu do người chịu trách nhiệm xác nhận, được ưu tiên hơn nhãn suy luận từ thành phần. Lưu riêng, không cần bấm &ldquo;Cập nhật&rdquo; phía trên.</div>
+				<div class="text-muted small">Thông tin đã xác nhận sẽ được ưu tiên. Bạn có thể lưu riêng mà không cần cập nhật sản phẩm.</div>
 			</div>
 			<div class="small text-muted text-end">
 				<?php if ($tagCtx['source'] !== ''): ?>
 					<span class="badge text-bg-success" data-testid="tag-source"><?= h($tagSourceLabels[$tagCtx['source']] ?? $tagCtx['source']) ?></span>
 					<?php if ($tagCtx['updated_at'] !== ''): ?><span class="ms-1">cập nhật <?= h($tagCtx['updated_at']) ?></span><?php endif; ?>
 				<?php else: ?>
-					<span class="badge text-bg-secondary">Chưa có nhãn nhập tay (đang dùng nhãn suy luận)</span>
+					<span class="badge text-bg-secondary">Chưa có nhãn xác nhận (đang dùng nhãn gợi ý)</span>
 				<?php endif; ?>
 			</div>
 		</div>

@@ -21,9 +21,15 @@ $ssimCsrf = class_exists('SearchEventTracker') ? SearchEventTracker::csrfToken()
   <section class="ssf-section ssim-section" aria-labelledby="ssim-heading" data-ssf-section-key="similar">
     <div class="ssim-head">
       <h4 class="ssf-section-title ssim-title" id="ssim-heading"><?= $ssimE($ssimTitle) ?></h4>
-      <div class="ssim-nav" aria-hidden="true">
-        <button type="button" class="ssim-arrow" data-ssim-prev tabindex="-1" aria-label="Cuộn sang trái"><i class="fa-solid fa-chevron-left"></i></button>
-        <button type="button" class="ssim-arrow" data-ssim-next tabindex="-1" aria-label="Cuộn sang phải"><i class="fa-solid fa-chevron-right"></i></button>
+      <div class="ssim-head-actions">
+        <button type="button" class="detail-product-refresh ssim-refresh" data-ssim-refresh aria-label="Đổi sản phẩm tương tự" title="Xem sản phẩm tương tự khác">
+          <i class="fas fa-arrows-rotate" aria-hidden="true"></i>
+          <span>Đổi sản phẩm</span>
+        </button>
+        <div class="ssim-nav" aria-label="Điều hướng sản phẩm tương tự">
+          <button type="button" class="ssim-arrow" data-ssim-prev aria-label="Cuộn sang trái"><i class="fa-solid fa-chevron-left"></i></button>
+          <button type="button" class="ssim-arrow" data-ssim-next aria-label="Cuộn sang phải"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
       </div>
     </div>
     <div class="ssim-track" data-ssim-track role="list" tabindex="0" aria-label="<?= $ssimE($ssimTitle) ?>">
@@ -31,7 +37,7 @@ $ssimCsrf = class_exists('SearchEventTracker') ? SearchEventTracker::csrfToken()
         if (!is_array($p)) continue;
         $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
         if ($productId === '') continue;
-        $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+        $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
         $giaBan = (string)($p['gia_ban'] ?? '');
         $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
         $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;
@@ -45,7 +51,7 @@ $ssimCsrf = class_exists('SearchEventTracker') ? SearchEventTracker::csrfToken()
               <span class="ssf-reason" title="<?= $ssimE($reasonText) ?>" aria-label="Lý do gợi ý: <?= $ssimE($reasonText) ?>"><?= $ssimE($reasonText) ?></span>
             <?php endif; ?>
             <a href="<?= $ssimE($detailUrl) ?>" class="ssf-thumb-link">
-              <img src="<?= $ssimE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= $ssimE(default_placeholder_image()) ?>';" alt="<?= $ssimE($p['ten_san_pham'] ?? '') ?>">
+              <img src="<?= $ssimE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>" data-image-placeholder="<?= $ssimE(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" alt="<?= $ssimE($p['ten_san_pham'] ?? '') ?>">
             </a>
           </div>
           <div class="ssf-meta">

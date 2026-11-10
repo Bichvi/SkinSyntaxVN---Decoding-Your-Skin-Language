@@ -227,7 +227,7 @@ foreach ($menuGroups as $group) {
 
 <aside class="admin-sidebar" id="adminSidebar">
     <div class="admin-sidebar-header">
-        <a href="index.php?r=admin_dashboard" class="admin-brand-logo">
+        <a href="index.php?r=admin_dashboard" class="admin-brand-logo" aria-label="SkinSyntaxVN Commerce Center" title="SkinSyntaxVN Commerce Center">
             <div class="admin-brand-icon">
                 <i class="bi bi-stars fs-5"></i>
             </div>
@@ -273,7 +273,7 @@ foreach ($menuGroups as $group) {
 <div class="admin-main">
     <header class="admin-top-header">
         <div class="d-flex align-items-center gap-3">
-            <button type="button" class="admin-toggle-sidebar-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar" title="Thu gọn/Mở rộng Sidebar">
+            <button type="button" class="admin-toggle-sidebar-btn" id="sidebarToggleBtn" aria-controls="adminSidebar" aria-expanded="true" aria-label="Thu gọn thanh bên" title="Thu gọn thanh bên">
                 <i class="bi bi-list fs-5"></i>
             </button>
             <div class="d-none d-sm-block">

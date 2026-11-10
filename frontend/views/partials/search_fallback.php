@@ -83,7 +83,7 @@ $ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
           if (!is_array($p)) continue;
           $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
           if ($productId === '') continue;
-          $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+          $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
           $giaBan = (string)($p['gia_ban'] ?? '');
           $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
           $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;
@@ -97,7 +97,7 @@ $ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
                 <span class="ssf-reason" aria-label="Lý do gợi ý: <?= $ssfE($reasonText) ?>"><?= $ssfE($reasonText) ?></span>
               <?php endif; ?>
               <a href="<?= $ssfE($detailUrl) ?>" class="ssf-thumb-link">
-                <img src="<?= $ssfE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= $ssfE(default_placeholder_image()) ?>';" alt="<?= $ssfE($p['ten_san_pham'] ?? '') ?>">
+                <img src="<?= $ssfE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>" data-image-placeholder="<?= $ssfE(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" alt="<?= $ssfE($p['ten_san_pham'] ?? '') ?>">
               </a>
             </div>
             <div class="ssf-meta">
