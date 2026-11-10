@@ -44,6 +44,47 @@ $isUpcoming = ($liveStatus === 'upcoming');
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.1.2/dist/livekit-client.umd.min.js" crossorigin="anonymous"></script>
 
 <div class="container py-4">
+  <?php if (!empty($aiIdolLive)): ?>
+    <?php
+      $aiAsset = static fn(string $rel): string => BASE_URL . '/assets/' . $rel . '?v=' . (@filemtime(dirname(__DIR__) . '/public/assets/' . $rel) ?: '1');
+    ?>
+    <link rel="stylesheet" href="<?= h($aiAsset('css/ai-idol-live.css')) ?>">
+    <section id="aiIdolLive" class="ai-idol-live"
+             data-started-at="<?= h((string)(int)$aiIdolLive['started_at_ts']) ?>"
+             data-ends-at="<?= h((string)(int)$aiIdolLive['ends_at_ts']) ?>"
+             data-duration="<?= h((string)(float)$aiIdolLive['duration_seconds']) ?>">
+      <div class="ai-idol-live__stage">
+        <video id="aiIdolLiveVideo" class="ai-idol-live__video" muted autoplay playsinline loop preload="auto"
+               src="<?= h(BASE_URL . '/index.php?r=ai_idol_live_video&id=' . rawurlencode((string)$aiIdolLive['id'])) ?>"></video>
+        <span class="ai-idol-live__badge">LIVE</span>
+        <span class="ai-idol-live__name"><?= h($aiIdolLive['name']) ?></span>
+        <button type="button" id="aiIdolMuteBtn" class="ai-idol-live__mute">Bật tiếng</button>
+        <button type="button" id="aiIdolPlayOverlay" class="ai-idol-live__overlay" hidden>Nhấn để xem</button>
+        <div id="aiIdolEndedOverlay" class="ai-idol-live__overlay" hidden>Buổi live đã kết thúc</div>
+      </div>
+      <?php if (!empty($aiIdolProducts)): ?>
+        <div class="ai-idol-live__products">
+          <?php foreach ($aiIdolProducts as $aiP): ?>
+            <?php
+              $aiPid = (string)($aiP['ma_san_pham'] ?? '');
+              $aiImg = !empty($aiP['link_hinh_anh']) ? resolve_image_url((string)$aiP['link_hinh_anh']) : '';
+              $aiHref = BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($aiPid);
+            ?>
+            <div class="ai-idol-live__card">
+              <a class="ai-idol-live__img" href="<?= h($aiHref) ?>">
+                <?php if ($aiImg !== ''): ?><img src="<?= h($aiImg) ?>" alt="<?= h((string)($aiP['ten_san_pham'] ?? '')) ?>" loading="lazy"><?php endif; ?>
+              </a>
+              <a class="ai-idol-live__pname" href="<?= h($aiHref) ?>"><?= h((string)($aiP['ten_san_pham'] ?? '')) ?></a>
+              <div class="ai-idol-live__price"><?= h(number_format((float)($aiP['gia_ban'] ?? 0), 0, ',', '.')) ?>đ</div>
+              <button type="button" class="ai-idol-live__add" data-product-id="<?= h($aiPid) ?>">Thêm vào giỏ</button>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </section>
+    <script src="<?= h($aiAsset('js/ai-idol-live.js')) ?>" defer></script>
+  <?php endif; ?>
+
   <!-- MAIN INTERACTIVE LIVESTREAM STUDIO -->
 
   <!-- MAIN INTERACTIVE LIVESTREAM STUDIO -->

@@ -159,8 +159,146 @@ class LiveController {
 
 
 
+        // AI Idol đang phát trên kênh nội bộ (null nếu không có) + sản phẩm theo thứ tự show.
+        $aiIdolLive = $this->findAiIdolLive($mongoDb);
+        $aiIdolProducts = [];
+        if ($aiIdolLive && !empty($aiIdolLive['product_ids'])) {
+            try {
+                $aiRows = $spModel->findManyByIds($aiIdolLive['product_ids']);
+                foreach ($aiIdolLive['product_ids'] as $aiPid) {
+                    if (isset($aiRows[$aiPid])) {
+                        $aiIdolProducts[] = $aiRows[$aiPid];
+                    }
+                }
+            } catch (Throwable $e) {
+                $aiIdolProducts = [];
+            }
+        }
+
         $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
         require_once $viewDir . '/live.php';
+    }
+
+    /**
+     * Chiến dịch AI Idol đang LIVE trên kênh nội bộ và còn trong khung giờ phát, hoặc null.
+     * Không bao giờ ném lỗi để trang /live không bị hỏng.
+     */
+    private function findAiIdolLive($mongoDb, string $campaignId = ''): ?array {
+        try {
+            // isset() on MongoDB\Database collection properties is always false, so check the type instead.
+            if (!($mongoDb instanceof MongoDB\Database)) {
+                return null;
+            }
+            $filter = [
+                'status' => 'LIVE',
+                'platforms' => 'internal',
+                'master_video_path' => ['$nin' => [null, '']],
+                'ends_at' => ['$gt' => new MongoDB\BSON\UTCDateTime(time() * 1000)],
+            ];
+            if ($campaignId !== '') {
+                $filter['_id'] = new MongoDB\BSON\ObjectId($campaignId);
+            }
+            $doc = $mongoDb->ai_idol_campaigns->findOne($filter, ['sort' => ['started_at' => -1]]);
+            if (!$doc) {
+                return null;
+            }
+            $toTs = static function ($v): int {
+                return $v instanceof MongoDB\BSON\UTCDateTime ? (int)floor(((int)(string)$v) / 1000) : 0;
+            };
+            $pids = [];
+            foreach ((array)($doc['product_ids'] ?? []) as $pid) {
+                $pid = trim((string)$pid);
+                if ($pid !== '') {
+                    $pids[] = $pid;
+                }
+            }
+            return [
+                'id' => (string)$doc['_id'],
+                'name' => (string)($doc['name'] ?? ''),
+                'started_at_ts' => $toTs($doc['started_at'] ?? null),
+                'ends_at_ts' => $toTs($doc['ends_at'] ?? null),
+                'duration_seconds' => (float)($doc['duration_seconds'] ?? 0),
+                'product_ids' => $pids,
+            ];
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
+    /** Proxy video master của chiến dịch AI Idol đang phát (chỉ khi chiến dịch đó đang LIVE). */
+    public function streamAiIdolLiveVideo(): void {
+        $id = trim((string)($_GET['id'] ?? ''));
+        $deny = static function (): void {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=utf-8');
+            header('Cache-Control: no-store');
+            echo 'Video not found or unavailable.';
+            exit;
+        };
+        if (!preg_match('/^[a-f0-9]{24}$/i', $id)) {
+            $deny();
+        }
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        if (!$this->findAiIdolLive($mongoDb, $id)) {
+            $deny();
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+
+        $flaskUrl = rtrim((string)(getenv('AI_IDOL_ENDPOINT') ?: 'http://ai-idol-service:5003'), '/');
+        $ch = curl_init($flaskUrl . '/api/ai-idol/campaigns/' . rawurlencode($id) . '/video');
+        $requestHeaders = [];
+        if (!empty($_SERVER['HTTP_RANGE'])) {
+            $requestHeaders[] = 'Range: ' . $_SERVER['HTTP_RANGE'];
+        }
+        $redirected = false;
+        curl_setopt_array($ch, [
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_HTTPHEADER => $requestHeaders,
+            CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$redirected): int {
+                $length = strlen($line);
+                if (preg_match('#^HTTP/\S+\s+(\d+)#i', trim($line), $m)) {
+                    $status = (int)$m[1];
+                    $redirected = $status >= 300 && $status < 400;
+                    if (!$redirected) {
+                        http_response_code($status);
+                        header('Cache-Control: no-store', true);
+                    }
+                } elseif (!$redirected && preg_match('/^(Content-Type|Content-Length|Content-Range|Accept-Ranges):/i', $line)) {
+                    header(trim($line), true);
+                }
+                return $length;
+            },
+            CURLOPT_WRITEFUNCTION => static function ($curl, string $chunk) use (&$redirected): int {
+                if (!$redirected) {
+                    echo $chunk;
+                    flush();
+                }
+                return strlen($chunk);
+            },
+        ]);
+        $ok = curl_exec($ch);
+        if (!headers_sent()) {
+            if ($ok === false) {
+                http_response_code(502);
+                header('Content-Type: text/plain; charset=utf-8');
+                echo 'Cannot stream video source.';
+            } elseif ($redirected) {
+                http_response_code(404);
+                header('Content-Type: text/plain; charset=utf-8');
+                header('Cache-Control: no-store');
+                echo 'Video not found or unavailable.';
+            }
+        }
+        curl_close($ch);
+        exit;
     }
 
     public function apiLivekitToken(): void {
