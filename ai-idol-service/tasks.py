@@ -5,7 +5,9 @@ import datetime as dt
 from celery_app import celery_app
 from agents.service import process_agent_run
 from core.agent_runs import mark_agent_failed
-from core.campaigns import claim_campaign_for_assembly, prepare_campaign, resume_ready_campaign, update_campaign_from_job
+from core.campaigns import (
+    claim_campaign_for_assembly, prepare_campaign, resume_ready_campaign, start_phase_b, update_campaign_from_job,
+)
 from core.pipeline import run_ai_idol_pipeline
 from core.purpose import PRODUCT_VIDEO, purpose_of
 from config import BROADCAST_LATE_GRACE_MINUTES
@@ -45,6 +47,15 @@ def prepare_campaign_task(campaign_id: str):
         # Every job was already READY (re-run after a crash): go straight to assembly.
         assemble_campaign_task.delay(campaign_id)
     return {"campaign_id": campaign_id, "jobs": len(job_ids)}
+
+
+@celery_app.task(name="ai_idol.write_routine_recap")
+def write_routine_recap_task(campaign_id: str):
+    """Phase B of a clip library: write the routine recap once the product clips are settled."""
+    job_id = start_phase_b(campaign_id)
+    if job_id:
+        generate_job_task.delay(job_id)
+    return {"campaign_id": campaign_id, "job": job_id}
 
 
 @celery_app.task(name="ai_idol.generate_job", bind=True, max_retries=2)
