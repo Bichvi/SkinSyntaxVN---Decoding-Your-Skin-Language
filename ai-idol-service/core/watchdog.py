@@ -14,6 +14,7 @@ from config import (
     STALE_ASSEMBLING_MINUTES,
     STALE_JOB_MINUTES,
     STALE_STARTING_MINUTES,
+    STUCK_CREATED_FAIL_MINUTES,
     STUCK_CREATED_MINUTES,
     logger,
 )
@@ -46,6 +47,7 @@ def reap_stale_work(now: dt.datetime | None = None) -> dict[str, int]:
             {"$set": {
                 "status": "FAILED",
                 "failed_stage": stage,
+                "run_lease_until": None,  # a crashed worker must not block the retry for the rest of its lease
                 "error_message": f"Quá {minutes:g} phút không có phản hồi ở bước {stage}. Hãy bấm tạo lại phần lỗi.",
                 "updated_at": now,
             }},
@@ -72,15 +74,17 @@ def reap_stale_work(now: dt.datetime | None = None) -> dict[str, int]:
     return reaped
 
 
-MAX_CREATED_REQUEUES = 3
+# Wait before the 1st, 2nd and later requeues: a long queue backlog is not a stuck job.
+CREATED_BACKOFF_MULTIPLIERS = (1, 3, 6)  # times STUCK_CREATED_MINUTES: 10, 30, 60
 CREATED_FAILED_MESSAGE = "Không khởi động được job sau 3 lần thử lại"
 
 
 def requeue_stuck_created_jobs(enqueue, now: dt.datetime | None = None) -> dict[str, int]:
     """Re-queue jobs a worker never started (still CREATED) in a GENERATING campaign.
 
-    ``updated_at`` is touched on every requeue so a job waits another STUCK_CREATED_MINUTES; after
-    MAX_CREATED_REQUEUES the job is failed and the campaign logic moves it to NEEDS_ATTENTION.
+    ``updated_at`` is touched on every requeue and the wait before the next one grows with ``requeue_count``
+    (10, 30, then 60 minutes). A job CREATED for over STUCK_CREATED_FAIL_MINUTES (from ``created_at``) is
+    failed and the campaign logic moves it to NEEDS_ATTENTION.
     """
     db, now = get_db(), now or utcnow()
     result = {"requeued": 0, "failed": 0}
@@ -95,14 +99,19 @@ def requeue_stuck_created_jobs(enqueue, now: dt.datetime | None = None) -> dict[
                 {"_id": object_id(campaign_id), "status": "GENERATING"}, {"_id": 1}) is not None
         if not generating[campaign_id]:
             continue
+        count = int(job.get("requeue_count") or 0)
+        multiplier = CREATED_BACKOFF_MULTIPLIERS[min(count, len(CREATED_BACKOFF_MULTIPLIERS) - 1)]
+        if job["updated_at"] >= now - dt.timedelta(minutes=STUCK_CREATED_MINUTES * multiplier):
+            continue  # still inside the backoff after its last requeue
         guard = {"_id": job["_id"], "status": "CREATED", "updated_at": job["updated_at"]}
-        if int(job.get("requeue_count") or 0) >= MAX_CREATED_REQUEUES:
+        created_at = job.get("created_at") or job["updated_at"]
+        if created_at < now - dt.timedelta(minutes=STUCK_CREATED_FAIL_MINUTES):
             changed = db.ai_idol_jobs.update_one(guard, {"$set": {
                 "status": "FAILED", "failed_stage": "CREATED", "error_message": CREATED_FAILED_MESSAGE,
-                "updated_at": now}})
+                "run_lease_until": None, "updated_at": now}})
             if changed.modified_count:
                 result["failed"] += 1
-                logger.warning("[WATCHDOG] Job %s never started after %s requeues", job["_id"], MAX_CREATED_REQUEUES)
+                logger.warning("[WATCHDOG] Job %s never started after %s minutes", job["_id"], STUCK_CREATED_FAIL_MINUTES)
                 update_campaign_from_job(str(job["_id"]))
             continue
         claimed = db.ai_idol_jobs.update_one(guard, {"$set": {"updated_at": now}, "$inc": {"requeue_count": 1}})
