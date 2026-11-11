@@ -90,6 +90,7 @@ class PublishCampaignReplayTests(ReplayTestCase):
         with patch.dict(os.environ, R2):
             self.assertTrue(replay_publisher.publish_campaign_replay(campaign_id, client=client))
         self.assertEqual(len(client.uploads), 2)
+        self.assertTrue(client.uploads[0][2].endswith(".jpg"))  # poster first, so a failure never orphans the video
         pattern = re.compile(rf"^live-replays/{campaign_id}-[0-9a-f]{{12}}\.(mp4|jpg)$")
         for item in client.uploads:
             self.assertRegex(item[2], pattern)
@@ -240,6 +241,29 @@ class PublishableTests(ReplayTestCase):
 
 
 class RetryAndBackfillTests(ReplayTestCase):
+    def test_retry_leaves_campaign_without_master_file_untouched(self):
+        campaign_id = self.campaign()
+        os.remove(self.stored(campaign_id)["master_video_path"])
+        with patch.dict(os.environ, R2):
+            self.assertEqual(replay_publisher.retry_pending_replays(client=FakeS3()), 0)
+        self.assertNotIn("replay", self.stored(campaign_id))
+
+    def test_retry_limit_counts_failed_attempts(self):
+        for _ in range(3):
+            self.campaign()
+        client = FakeS3(fail="r2 down")
+        with patch.dict(os.environ, R2), patch.object(
+                replay_publisher, "publish_campaign_replay", wraps=replay_publisher.publish_campaign_replay) as spy:
+            self.assertEqual(replay_publisher.retry_pending_replays(limit=2, client=client), 0)
+        self.assertEqual(spy.call_count, 2)
+
+    def test_already_uploaded_call_releases_a_lingering_master(self):
+        campaign_id = self.campaign(replay={"uploaded_at": NOW, "video_url": "u"})
+        master = self.stored(campaign_id)["master_video_path"]
+        with patch.dict(os.environ, R2):
+            self.assertTrue(replay_publisher.publish_campaign_replay(campaign_id, client=FakeS3()))
+        self.assertFalse(os.path.exists(master))
+
     def test_retry_skips_exhausted_and_done(self):
         self.campaign(replay={"attempts": 5})
         self.campaign(replay={"uploaded_at": NOW})
