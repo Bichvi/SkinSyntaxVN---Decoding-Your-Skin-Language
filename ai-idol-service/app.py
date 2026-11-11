@@ -4,7 +4,7 @@ from flask import Flask, redirect, request, jsonify, send_file
 from agents.service import ConflictError, cancel_agent_run, confirm_agent_run
 from agents.structured_query import FilterError, run_structured_query
 from config import AGENT_ENABLED, AVATARS_DIR, BACKGROUNDS_DIR, PORT, logger
-from core.campaigns import CampaignConflict, CampaignNotFound, approve_external_platform, cancel_campaign, create_campaign, get_campaign, list_campaigns, reschedule_campaign, retry_campaign
+from core.campaigns import CampaignConflict, CampaignNotFound, approve_external_platform, cancel_campaign, companion_campaign_id, create_campaign, get_campaign, list_campaigns, reschedule_campaign, retry_campaign
 from core.agent_runs import create_agent_run, get_agent_run, list_agent_runs, update_agent_run
 from core.state_machine import create_job, ensure_indexes, get_job, get_db, object_id, utcnow
 from core.pipeline import start_pipeline_thread
@@ -174,9 +174,13 @@ def api_upload_asset():
 def api_create_campaign():
     try:
         campaign_id, created = create_campaign(request.get_json(silent=True) or {})
+        companion_id = companion_campaign_id(campaign_id)
         if created:
             prepare_campaign_task.delay(campaign_id)
-        return jsonify({"ok": True, "campaign_id": campaign_id, "created": created}), 202 if created else 200
+            if companion_id:
+                prepare_campaign_task.delay(companion_id)
+        return jsonify({"ok": True, "campaign_id": campaign_id, "created": created,
+                        "companion_campaign_id": companion_id}), 202 if created else 200
     except ValueError as exc:
         return jsonify({"ok": False, "message": str(exc)}), 400
     except Exception as exc:

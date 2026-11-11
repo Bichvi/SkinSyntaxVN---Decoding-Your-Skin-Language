@@ -134,9 +134,30 @@ def _queue_replay_publish(campaign: dict) -> None:
         logger.warning("[BROADCAST] Could not queue replay publish for %s: %s", campaign.get("_id"), exc)
 
 
+START_DB_ATTEMPTS = 5
+
+
+def _load_campaign_with_retry(campaign_id: str):
+    """First DB read at airtime, retried on network errors (an Atlas DNS blip once killed a show).
+
+    Safe to retry: nothing has been streamed or written yet. Waits 5+10+15+20 s at most,
+    well inside the watchdog's STARTING timeout.
+    """
+    from pymongo.errors import PyMongoError
+    for attempt in range(1, START_DB_ATTEMPTS + 1):
+        try:
+            db = get_db()
+            return db, db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
+        except PyMongoError as exc:
+            if attempt == START_DB_ATTEMPTS:
+                raise
+            logger.warning("[BROADCAST] DB unreachable for campaign %s (attempt %s/%s): %s",
+                           campaign_id, attempt, START_DB_ATTEMPTS, exc)
+            time.sleep(BROADCAST_RETRY_SECONDS * attempt)
+
+
 def broadcast_campaign(campaign_id: str) -> bool:
-    db = get_db()
-    campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
+    db, campaign = _load_campaign_with_retry(campaign_id)
     if not campaign:
         raise ValueError("Campaign not found")
     check = preflight_campaign(campaign_id)

@@ -188,8 +188,7 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                             <p class="wz-lead">Chọn mục đích trước vì nó quyết định phong cách dẫn nào được dùng ở bước sau.</p>
                             <div class="wz-purposes" role="radiogroup" aria-label="Chế độ phát sóng">
                                 <label class="wz-purpose"><input type="radio" name="manualPurpose" value="product_video" checked><span><strong>Video sản phẩm <em>Mặc định</em></strong><small>Không phát sóng. Nói giá bán và ưu đãi đang chạy, lấy từ hệ thống. Video tự ẩn khỏi trang sản phẩm khi giá đổi hoặc ưu đãi hết hạn.</small></span></label>
-                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_and_product"><span><strong>Livestream + video sản phẩm</strong><small>Livestream được nói giá, khuyến mãi và kêu gọi chốt đơn. Phần giới thiệu kèm giá tự lên trang sản phẩm sau khi phát xong và tự ẩn khi giá không còn đúng.</small></span></label>
-                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_only"><span><strong>Chỉ livestream</strong><small>Được nói giá live, khuyến mãi có hạn, kêu gọi chốt đơn. Không lưu video lên trang sản phẩm.</small></span></label>
+                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_only"><span><strong>Livestream</strong><small>Phát trực tiếp: được nói giá live, khuyến mãi có hạn và kêu gọi chốt đơn. Buổi live không tự đăng lên trang sản phẩm.</small></span></label>
                             </div>
                             <div id="manualLiveFields" hidden>
                                 <div class="idol-row">
@@ -207,6 +206,7 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                                 </fieldset>
                                 <p class="idol-note">YouTube và Facebook cần được cấu hình khóa phát trước khi lên sóng.</p>
                                 <p class="wz-warn" id="manualRtmpWarn" role="status" hidden></p>
+                                <label class="wz-purpose wz-also-video"><input type="checkbox" id="manualAlsoProductVideo"><span><strong>Tạo thêm video sản phẩm cho các sản phẩm này</strong><small>Video riêng với kịch bản riêng, không phụ thuộc buổi live. Tự lên trang sản phẩm khi xong và tự ẩn khi giá đổi.</small></span></label>
                             </div>
                             <div class="approval-reminder" id="manualProductVideoNote"><i class="bi bi-magic" aria-hidden="true"></i><div><strong>Video sản phẩm tự duyệt và tự đăng.</strong><p>Kịch bản qua bộ kiểm tra sẽ được tạo video ngay, rồi tự lên trang sản phẩm.</p></div></div>
                             <div class="approval-reminder" id="manualApprovalNote" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i><div><strong>Bạn duyệt xong, video mới được tạo.</strong><p>Kịch bản sẽ xuất hiện trong chương trình để bạn chỉnh sửa và chấp nhận.</p></div></div>

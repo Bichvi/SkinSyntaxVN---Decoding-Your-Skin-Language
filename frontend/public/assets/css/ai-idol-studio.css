@@ -255,6 +255,7 @@
 .idol-studio .wz-purpose strong { font-size: 12px; }
 .idol-studio .wz-purpose em { margin-left: 4px; padding: 0 6px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); font-size: 9px; font-style: normal; font-weight: 700; white-space: nowrap; }
 .idol-studio .wz-purpose small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.idol-studio .wz-also-video { margin-top: 12px; }
 .idol-studio .wz-platform-group { min-width: 0; margin: 0 0 4px; padding: 0; border: 0; }
 .idol-studio .wz-platform-group legend { float: none; width: auto; margin: 0 0 8px; padding: 0; font-size: 13px; font-weight: 600; }
 .idol-studio .wz-warn { margin: 8px 0 0; padding: 9px 11px; border-radius: 7px; background: var(--warm); color: #86572f; font-size: 11px; line-height: 1.6; }
