@@ -130,6 +130,11 @@ SELF_HEALING_ENABLED = os.getenv("AI_IDOL_SELF_HEALING_ENABLED", "true").strip()
 # other retailers' names still block. Keep off outside demos.
 RELAXED_AUDIT = os.getenv("AI_IDOL_RELAXED_AUDIT", "false").strip().lower() in ("1", "true", "yes", "on")
 STALE_JOB_MINUTES = int(os.getenv("AI_IDOL_STALE_JOB_MINUTES", "45"))
+STUCK_CREATED_MINUTES = int(os.getenv("AI_IDOL_STUCK_CREATED_MINUTES", "10"))
+# A CREATED job older than this (since created_at) is failed instead of requeued again.
+STUCK_CREATED_FAIL_MINUTES = int(os.getenv("AI_IDOL_STUCK_CREATED_FAIL_MINUTES", "120"))
+# One delivery of generate_job_task holds this lease while it runs, so duplicates are skipped.
+RUN_LEASE_MINUTES = int(os.getenv("AI_IDOL_RUN_LEASE_MINUTES", "90"))
 STALE_STARTING_MINUTES = int(os.getenv("AI_IDOL_STALE_STARTING_MINUTES", "3"))
 STALE_ASSEMBLING_MINUTES = int(os.getenv("AI_IDOL_STALE_ASSEMBLING_MINUTES", "60"))
 TRACKING_STARTED_ON = os.getenv("AI_IDOL_TRACKING_STARTED_ON", "").strip() or None  # YYYY-MM-DD local, ngày đầu đủ tracking
