@@ -21,8 +21,8 @@ if ($aiChatEmail !== '' && $pdo !== null) {
   try {
     if (class_exists('TaiKhoan')) {
         $taiKhoanModel = new TaiKhoan($pdo);
-        $skinProfile = $taiKhoanModel->getSkinProfileByEmail($aiChatEmail);
-        $khachHang = $taiKhoanModel->getKhachHangByEmail($aiChatEmail);
+        $skinProfile = $taiKhoanModel->getSelectedSkinProfileByEmail($aiChatEmail);
+        $khachHang = $taiKhoanModel->getCustomerForSelectedProfileByEmail($aiChatEmail);
         
         // Kiểm tra loại da hợp lệ (không rỗng và không phải "Chưa xác định")
         $loaiDaRaw = trim((string)($skinProfile['loai_da'] ?? ''));
@@ -32,6 +32,9 @@ if ($aiChatEmail !== '' && $pdo !== null) {
                 'van_de_da' => trim((string)($skinProfile['van_de_da'] ?? '')),
                 'ngan_sach' => (int)($skinProfile['ngan_sach'] ?? 0),
                 'thanh_phan_tranh' => trim((string)($khachHang['thanh_phan_tranh'] ?? '')),
+                'profile_id' => (string)($skinProfile['profile_id'] ?? ''),
+                'profile_name' => trim((string)($skinProfile['display_name'] ?? 'Hồ sơ của tôi')),
+                'profile_type' => (string)($skinProfile['profile_type'] ?? 'self'),
             ];
         }
     }
@@ -1517,22 +1520,53 @@ $aiLabelScanOn = function_exists('ss_env')
       var newChatBtn = widget.querySelector('[data-ai-new-chat]');
       var userLoggedIn = <?= json_encode(!empty($_SESSION['user'])) ?>;
 
+      var conversationsRequestSeq = 0;
       var loadConversations = function () {
         if (!userLoggedIn || !historyList) return;
-        historyList.innerHTML = '<div class="ai-chat-widget__history-loading">Đang tải lịch sử...</div>';
-        
+        // Chỉ hiện "Đang tải" ở lần đầu; các lần sau làm mới ngầm, giữ nguyên danh sách cũ.
+        var hasItems = !!historyList.querySelector('.ai-chat-widget__history-item');
+        if (!hasItems) {
+          historyList.innerHTML = '<div class="ai-chat-widget__history-loading">Đang tải lịch sử...</div>';
+        }
+        var requestSeq = ++conversationsRequestSeq;
+
         fetch('index.php?r=ai_chat_get_conversations')
           .then(function(res) { return res.json(); })
           .then(function(data) {
+            if (requestSeq !== conversationsRequestSeq) return;
             if (data.ok && data.conversations) {
               renderConversationList(data.conversations);
-            } else {
+            } else if (!hasItems) {
               historyList.innerHTML = '<div class="ai-chat-widget__history-empty">Không thể tải lịch sử</div>';
             }
           })
           .catch(function() {
+            if (requestSeq !== conversationsRequestSeq || hasItems) return;
             historyList.innerHTML = '<div class="ai-chat-widget__history-empty">Không thể tải lịch sử</div>';
           });
+      };
+
+      // Hiện ngay hội thoại vừa tạo ở đầu danh sách, không chờ tải lại.
+      var addPendingConversation = function (convId, firstMessage) {
+        if (!userLoggedIn || !historyList || !convId) return;
+        if (historyList.querySelector('[data-conv-id="' + String(convId).replace(/"/g, '') + '"]')) return;
+        var title = String(firstMessage || '').trim();
+        if (title.length > 50) title = title.slice(0, 50) + '...';
+        if (!title) title = 'Cuộc trò chuyện mới';
+        var placeholder = historyList.querySelector('.ai-chat-widget__history-loading, .ai-chat-widget__history-empty');
+        if (placeholder) placeholder.remove();
+        historyList.querySelectorAll('.ai-chat-widget__history-item.is-active').forEach(function (item) {
+          item.classList.remove('is-active');
+        });
+        var item = document.createElement('div');
+        item.className = 'ai-chat-widget__history-item is-active';
+        item.setAttribute('data-conv-id', convId);
+        item.innerHTML = '<div class="ai-chat-widget__history-info">'
+          + '<span class="ai-chat-widget__history-title">' + escapeHtml(title) + '</span>'
+          + '<span class="ai-chat-widget__history-preview">Đang trả lời...</span>'
+          + '</div>';
+        item.addEventListener('click', function () { selectConversation(convId); });
+        historyList.insertBefore(item, historyList.firstChild);
       };
 
       var renderConversationList = function (conversations) {
@@ -1927,29 +1961,6 @@ $aiLabelScanOn = function_exists('ss_env')
               agentUiHtml = '<div data-ai-agent-ui></div>';
             }
 
-            if (window.SKIN_CHAT_DEBUG === true) {
-              // Render evaluation metrics badge only in local debug mode.
-              var evalScores = message.eval_scores || { ar: 1.0, gr: 1.0, cr: 1.0 };
-              var pipelineMode = message.pipeline_mode || (message.fallback ? 'Agent -> Fallback' : 'Pipeline');
-              var queryType = message.query_type || 'simple single-intent query';
-              var intentMode = message.intent_mode || 'PRODUCT_INQUIRY';
-              var fallbackReason = message.fallbackReason || '';
-
-              var dotColor = (pipelineMode === 'Pipeline') ? '#4caf50' : '#ff9800';
-              var subText = message.fallback ? ('-> ' + (fallbackReason || 'agent failed: APIStatusError')) : ('-> ' + queryType);
-              var intentPart = message.fallback ? '' : (' | intent: ' + intentMode);
-              var latencyPart = message.latency ? (' | ' + Number(message.latency).toFixed(2) + 's') : '';
-
-              meta += '<div class="ai-chat-widget__eval-badge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #757575; background: #f5f5f5; padding: 4px 8px; border-radius: 12px; margin-top: 8px; font-family: monospace; border: 1px solid #e0e0e0;">'
-                   + '<span style="width: 8px; height: 8px; border-radius: 50%; background-color: ' + dotColor + '; display: inline-block;"></span>'
-                   + '<strong>' + pipelineMode + '</strong> | ' + subText + ' | '
-                   + 'AR: ' + Number(evalScores.ar).toFixed(2) + ' | '
-                   + 'GR: ' + Number(evalScores.gr).toFixed(2) + ' | '
-                   + 'CR: ' + Number(evalScores.cr).toFixed(2)
-                   + latencyPart
-                   + intentPart
-                   + '</div>';
-            }
           }
 
           if (isUser && message.labelThumb && window.SkinSyntaxLabelScan) {
@@ -2102,15 +2113,18 @@ $aiLabelScanOn = function_exists('ss_env')
           window.clearTimeout(closeTimer);
           closeTimer = null;
         }
+        // sendMessage cũng gọi openWidget; chỉ tải lịch sử khi thật sự mở panel.
+        var wasOpen = widget.classList.contains('is-open') && !panel.hidden;
         panel.hidden = false;
         window.requestAnimationFrame(function () {
           syncLayout();
           trigger.setAttribute('aria-expanded', 'true');
           widget.classList.add('is-open');
+          document.dispatchEvent(new CustomEvent('skinsyntax:syna-chat-opened'));
           if (window.sessionStorage.getItem(expandedStorageKey) === '1') {
             widget.classList.add('is-expanded');
           }
-          if (userLoggedIn) {
+          if (userLoggedIn && !wasOpen) {
             loadConversations();
           }
           if (input) {
@@ -2208,6 +2222,7 @@ $aiLabelScanOn = function_exists('ss_env')
               if (payload.conversation_id && activeConversationId !== payload.conversation_id) {
                 activeConversationId = payload.conversation_id;
                 try { window.sessionStorage.setItem('aiChatActiveConversationIdV4:' + storageScope, activeConversationId); } catch (e) {}
+                addPendingConversation(activeConversationId, content);
               }
             },
             onToken: function (payload) {
@@ -2258,6 +2273,10 @@ $aiLabelScanOn = function_exists('ss_env')
             if (!isCurrentAgentSend() || handedOffToLegacy) return;
             if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
             setLoading(false);
+            // Server lưu tin nhắn bất đồng bộ sau khi stream xong, nên chờ chút rồi làm mới ngầm.
+            if (userLoggedIn) {
+              window.setTimeout(loadConversations, 1200);
+            }
           });
           return;
         }
@@ -2623,6 +2642,14 @@ $aiLabelScanOn = function_exists('ss_env')
           .then(function(res) { return res.json(); })
           .then(function(result) {
             if (result && result.ok) {
+              if (typeof window.notifySynaCartAdded === 'function') {
+                window.notifySynaCartAdded({ cartCount: result.cart_count });
+              }
+              var synaHero = document.querySelector('[data-syna-hero]');
+              if (synaHero) synaHero.setAttribute('data-syna-cart-added', String(Date.now()));
+              document.dispatchEvent(new CustomEvent('skinsyntax:cart-added', {
+                detail: { cartCount: result.cart_count }
+              }));
               addCartBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
               
               if (typeof updateCartBadge === 'function' && result.cart_count !== undefined) {

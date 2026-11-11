@@ -34,8 +34,8 @@ test('NARRATION_STYLES liveOnly flags', () => {
 test('PURPOSE_LABELS and CONTENT_MODE_LABELS are exact', () => {
   assert.deepEqual({ ...L.PURPOSE_LABELS }, {
     product_video: 'Video sản phẩm',
-    live_and_product: 'Livestream + video sản phẩm',
-    live_only: 'Chỉ livestream',
+    live_and_product: 'Livestream + video sản phẩm (kiểu cũ)',
+    live_only: 'Livestream',
   });
   assert.deepEqual({ ...L.CONTENT_MODE_LABELS }, {
     'Product Intro': 'giới thiệu sản phẩm',
@@ -128,7 +128,7 @@ test('describeIntent: live_only without styles, Facebook, three products listed 
   };
   assert.equal(
     L.describeIntent(sel),
-    'Syna livestream 30 phút lúc 03:04 02/01/2026 trên Facebook cho 3 sản phẩm: A, B, C, cách kể vấn đề và giải pháp, Syna 3D khung 16:9; không đăng lên trang sản phẩm.'
+    'Syna livestream 30 phút lúc 03:04 02/01/2026 trên Facebook cho 3 sản phẩm: A, B, C, cách kể vấn đề và giải pháp, Syna 3D khung 16:9; buổi live không đăng lên trang sản phẩm.'
   );
 });
 
@@ -172,9 +172,9 @@ test('summaryBar: with and without styles, both characters', () => {
   sel.purpose = 'live_and_product';
   sel.character = 'custom';
   sel.format = '9:16';
-  assert.equal(L.summaryBar(sel), '5 SP · Livestream + video sản phẩm · Nhân vật riêng 9:16');
+  assert.equal(L.summaryBar(sel), '5 SP · Livestream + video sản phẩm (kiểu cũ) · Nhân vật riêng 9:16');
   sel.purpose = 'live_only';
-  assert.equal(L.summaryBar(sel), '5 SP · Chỉ livestream · Nhân vật riêng 9:16');
+  assert.equal(L.summaryBar(sel), '5 SP · Livestream · Nhân vật riêng 9:16');
   assert.equal(typeof L.summaryBar(undefined), 'string');
 });
 
@@ -442,4 +442,15 @@ test('programTimeline percentages sum to 100 for a 3-item program', () => {
   assert.equal(bars[1].kind, 'product');
   assert.match(bars[0].title, /Mở màn/);
   assert.deepEqual(L.programTimeline([], 0), []);
+});
+
+test('describeIntent: a live selection that also wants a product video says so', () => {
+  const base = {
+    products: [{ id: '1', name: 'A' }], purpose: 'live_only',
+    schedule: { at: '2026-01-02T03:04', duration: 30, platforms: ['internal'] }, styles: [],
+  };
+  const tail = 'Một video sản phẩm riêng cũng sẽ được tạo và lên trang sản phẩm khi xong.';
+  assert.ok(!L.describeIntent(base).includes(tail));
+  assert.ok(L.describeIntent({ ...base, alsoProductVideo: true }).endsWith(tail));
+  assert.ok(!L.describeIntent({ ...base, purpose: 'product_video', alsoProductVideo: true }).includes(tail));
 });

@@ -15,10 +15,6 @@ class VnpayService {
         if ($tmn === '') {
             $tmn = trim((string)($_ENV['VNPAY_TMN_CODE'] ?? getenv('VNPAY_TMN_CODE') ?? ''));
         }
-        if ($tmn === '') {
-            $tmn = '6S051F2X';
-        }
-
         $secret = trim((string)($hashSecret ?? (defined('VNPAY_HASH_SECRET') && VNPAY_HASH_SECRET !== '' ? VNPAY_HASH_SECRET : '')));
         if ($secret === '' && function_exists('ss_env')) {
             $secret = ss_env('VNPAY_HASH_SECRET', '');
@@ -26,10 +22,6 @@ class VnpayService {
         if ($secret === '') {
             $secret = trim((string)($_ENV['VNPAY_HASH_SECRET'] ?? getenv('VNPAY_HASH_SECRET') ?? ''));
         }
-        if ($secret === '') {
-            $secret = 'JWBMZUNCSLRESUCKLMRWWPAORIQCTTSC';
-        }
-
         $url = trim((string)($vnpUrl ?? (defined('VNPAY_URL') && VNPAY_URL !== '' ? VNPAY_URL : '')));
         if ($url === '' && function_exists('ss_env')) {
             $url = ss_env('VNPAY_URL', '');
@@ -38,8 +30,8 @@ class VnpayService {
             $url = trim((string)($_ENV['VNPAY_URL'] ?? getenv('VNPAY_URL') ?? 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'));
         }
 
-        $this->tmnCode = $tmn !== '' ? $tmn : '6S051F2X';
-        $this->hashSecret = $secret !== '' ? $secret : 'JWBMZUNCSLRESUCKLMRWWPAORIQCTTSC';
+        $this->tmnCode = $tmn;
+        $this->hashSecret = $secret;
         $this->vnpUrl = $url !== '' ? $url : 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
 
         $configuredReturnUrl = trim((string)($returnUrl ?? (defined('VNPAY_RETURN_URL') && VNPAY_RETURN_URL !== '' ? VNPAY_RETURN_URL : '')));
@@ -183,6 +175,7 @@ class VnpayService {
             '65' => 'Tài khoản của quý khách đã vượt quá hạn mức giao dịch trong ngày.',
             '75' => 'Ngân hàng thanh toán đang bảo trì.',
             '79' => 'Quý khách nhập sai mật khẩu thanh toán quá số lần quy định.',
+            '71' => 'Website/merchant VNPAY chưa được phê duyệt. Vui lòng kiểm tra TMN Code, môi trường sandbox và domain callback với VNPAY.',
             '99' => 'Lỗi không xác định từ cổng VNPAY.',
         ];
 

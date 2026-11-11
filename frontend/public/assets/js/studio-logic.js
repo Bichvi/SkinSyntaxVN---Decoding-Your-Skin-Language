@@ -30,8 +30,8 @@
 
   const PURPOSE_LABELS = Object.freeze({
     product_video: 'Video sản phẩm',
-    live_and_product: 'Livestream + video sản phẩm',
-    live_only: 'Chỉ livestream',
+    live_and_product: 'Livestream + video sản phẩm (kiểu cũ)',
+    live_only: 'Livestream',
   });
 
   const CONTENT_MODE_LABELS = Object.freeze({
@@ -172,7 +172,7 @@
   const INTENT_TAILS = Object.freeze({
     product_video: 'video sẽ đăng lên trang sản phẩm (tự đăng hoặc sau khi bạn duyệt).',
     live_and_product: 'sau buổi phát, phần giới thiệu kèm giá đăng lên trang sản phẩm (tự đăng hoặc sau khi bạn duyệt).',
-    live_only: 'không đăng lên trang sản phẩm.',
+    live_only: 'buổi live không đăng lên trang sản phẩm.',
   });
 
   // Mid-sentence in describeIntent, capitalised in the summary bar.
@@ -194,7 +194,9 @@
     const labels = effectiveStyles(s.styles, purpose).map((key) => styleByKey(key).label.toLowerCase().replace(/&/g, 'và'));
     const styles = labels.length ? `phong cách ${labels.join(', ')}, ` : '';
     const character = `${characterName(s.character)} khung ${formatOf(s)}`;
-    return `${describeLead(purpose, s.schedule)} cho ${describeProducts(names)}, cách kể ${mode}, ${styles}${character}; ${INTENT_TAILS[purpose]}`;
+    const extra = purpose !== 'product_video' && s.alsoProductVideo === true
+      ? ' Một video sản phẩm riêng cũng sẽ được tạo và lên trang sản phẩm khi xong.' : '';
+    return `${describeLead(purpose, s.schedule)} cho ${describeProducts(names)}, cách kể ${mode}, ${styles}${character}; ${INTENT_TAILS[purpose]}${extra}`;
   }
 
   function summaryBar(sel) {

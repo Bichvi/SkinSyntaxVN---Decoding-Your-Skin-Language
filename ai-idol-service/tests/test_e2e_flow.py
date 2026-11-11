@@ -108,6 +108,9 @@ class Harness:
         self.publish_calls = []  # product-page publish queued when a both-mode show ends
         self.stack.enter_context(patch.object(broadcast_engine, "_send_publish_task",
                                               side_effect=self.publish_calls.append))
+        self.replay_calls = []  # storefront replay queued when a show on the internal channel ends
+        self.stack.enter_context(patch.object(broadcast_engine, "_send_replay_task",
+                                              side_effect=self.replay_calls.append))
         service_app = self.app
         self.stack.enter_context(patch.object(service_app, "get_db", return_value=self.db))
         self.stack.enter_context(patch.object(service_app.generate_job_task, "delay", side_effect=self.generate_calls.append))
@@ -222,7 +225,9 @@ class EndToEndFlowTests(unittest.TestCase):
         self.assertEqual(closed["completed"], 1)
         self.assertEqual(get_agent_run(h.run_id)["status_effective"], "COMPLETED")
         self.assertEqual(h.db.ai_idol_broadcasts.docs[0]["status"], "COMPLETED")
-        self.assertEqual(h.publish_calls, [str(h.campaign()["_id"])])  # evergreen clips go to product pages
+        self.assertEqual(h.campaign()["purpose"], "live_only")  # the agent's default live mode
+        self.assertEqual(h.publish_calls, [])  # live_only never publishes clips to product pages
+        self.assertEqual(h.replay_calls, [str(h.campaign()["_id"])])  # the aired show becomes a replay
 
     def test_library_clips_render_with_their_kind(self):
         h = Harness(self)

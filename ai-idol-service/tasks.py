@@ -10,7 +10,7 @@ from core.campaigns import (
 )
 from core.pipeline import run_ai_idol_pipeline
 from core.purpose import PRODUCT_VIDEO, purpose_of
-from config import BROADCAST_LATE_GRACE_MINUTES
+from config import BROADCAST_LATE_GRACE_MINUTES, logger
 from core.health import check_syna
 from core.product_metrics import run_due_snapshots
 from core.publications import auto_publish_video
@@ -18,6 +18,7 @@ from core.state_machine import fail_job, get_db, object_id, utcnow
 from core.watchdog import reap_stale_work, resume_waiting_renders
 from engines.broadcast_engine import broadcast_campaign, finalize_live_campaigns, preflight_campaign
 from engines.media_publisher import publish_campaign_videos, publish_video, retry_pending
+from engines.replay_publisher import publish_campaign_replay, retry_pending_replays
 from engines.program_composer import assemble_campaign_program
 
 
@@ -180,6 +181,20 @@ def publish_campaign_videos_task(campaign_id: str):
     return publish_campaign_videos(campaign_id)
 
 
+@celery_app.task(name="ai_idol.publish_campaign_replay")
+def publish_campaign_replay_task(campaign_id: str):
+    return publish_campaign_replay(campaign_id)
+
+
 @celery_app.task(name="ai_idol.retry_product_video_publish")
 def retry_product_video_publish_task():
-    return retry_pending()
+    result = {"clips": 0, "replays": 0}
+    try:
+        result["clips"] = retry_pending()
+    except Exception as exc:
+        logger.warning("[PUBLISH] Clip retry failed: %s", exc)
+    try:
+        result["replays"] = retry_pending_replays()
+    except Exception as exc:
+        logger.warning("[PUBLISH] Replay retry failed: %s", exc)
+    return result

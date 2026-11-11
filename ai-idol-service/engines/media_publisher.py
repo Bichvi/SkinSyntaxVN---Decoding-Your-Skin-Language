@@ -13,7 +13,9 @@ import subprocess
 
 from config import logger
 from core.publications import auto_publish_video
-from core.purpose import LIVE_AND_PRODUCT, PRODUCT_VIDEO, publishes_to_product_page, purpose_of
+from core.purpose import (
+    LIVE_AND_PRODUCT, PRODUCT_VIDEO, campaign_wants_replay, publishes_to_product_page, purpose_of,
+)
 from core.redact import redact_secrets
 from core.state_machine import get_db, object_id, utcnow
 from engines.program_composer import probe_duration
@@ -169,6 +171,27 @@ def campaign_publishable(campaign: dict, broadcasts: list[dict]) -> bool:
     return status == "PARTIAL_FAILURE" and any(item.get("status") == "COMPLETED" for item in broadcasts)
 
 
+def release_master_video(campaign_id: str) -> bool:
+    """Delete the master file once neither the storefront replay nor a product-page clip still needs it.
+
+    Whichever job finishes last releases it. The stored path is kept, as before. True when removed."""
+    db = get_db()
+    campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
+    path = (campaign or {}).get("master_video_path")
+    if not path or not os.path.isfile(str(path)):
+        return False
+    if campaign_wants_replay(campaign) and not (campaign.get("replay") or {}).get("uploaded_at"):
+        return False
+    if publishes_to_product_page(purpose_of(campaign)) and db.ai_idol_videos.find_one({
+        "campaign_id": campaign_id,
+        "product_page_file_path": {"$ne": None},
+        "product_page_ready_at": {"$exists": False},
+    }):
+        return False
+    _remove(path)
+    return True
+
+
 def publish_campaign_videos(campaign_id: str, *, client=None) -> int:
     db = get_db()
     campaign = db.ai_idol_campaigns.find_one({"_id": object_id(campaign_id)})
@@ -189,7 +212,8 @@ def publish_campaign_videos(campaign_id: str, *, client=None) -> int:
         for video in videos:
             if video.get("file_path") != video.get("product_page_file_path"):
                 _remove(video.get("file_path"))
-        _remove(campaign.get("master_video_path"))
+    # The gate re-checks every clip and the replay, so a clip left for the retry beat keeps the master.
+    release_master_video(campaign_id)
     return published
 
 
@@ -219,6 +243,11 @@ def retry_pending(limit: int = 20, *, client=None) -> int:
             published += 1
             # Listing it on its product page is best effort and idempotent (never raises).
             auto_publish_video(video_id)
+            if doc.get("campaign_id"):
+                try:
+                    release_master_video(str(doc["campaign_id"]))
+                except Exception as exc:  # best effort: the next clip or replay job releases it
+                    logger.warning("[MEDIA-PUBLISH] Master release for %s failed: %s", doc.get("campaign_id"), _scrub(exc))
     return published
 
 

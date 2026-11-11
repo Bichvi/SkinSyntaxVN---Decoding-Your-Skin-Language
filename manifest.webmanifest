@@ -1,0 +1,20 @@
+{
+  "name": "SkinSyntax - Chăm da có định hướng",
+  "short_name": "SkinSyntax",
+  "description": "Khám phá mỹ phẩm, hồ sơ da và routine cá nhân hóa.",
+  "lang": "vi-VN",
+  "dir": "ltr",
+  "start_url": "./index.php?r=home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5faf7",
+  "theme_color": "#0f3d2e",
+  "icons": [
+    {
+      "src": "./assets/images/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

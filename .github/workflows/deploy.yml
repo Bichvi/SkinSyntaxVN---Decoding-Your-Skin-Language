@@ -1,0 +1,84 @@
+# CI/CD: kiểm tra mỗi lần push/PR; push lên main (hoặc bấm Run workflow) thì deploy lên VPS qua SSH.
+# Secrets cần tạo ở GitHub -> Settings -> Secrets and variables -> Actions:
+#   VPS_HOST         IP hoặc tên miền của VPS
+#   VPS_USER         user SSH trên VPS (vd. deploy)
+#   VPS_SSH_KEY      private key dành riêng cho deploy (nội dung file deploy_key)
+#   VPS_KNOWN_HOSTS  kết quả `ssh-keyscan -H <IP VPS>` (để xác minh đúng máy, chống giả mạo)
+# Hướng dẫn đầy đủ: update_deploy_cicd.md
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Kiểm tra
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: none
+
+      - name: Cú pháp PHP (php -l)
+        run: |
+          status=0
+          while IFS= read -r -d '' f; do
+            out="$(php -l "$f" 2>&1)" || { echo "$out"; status=1; }
+          done < <(find backend frontend -name '*.php' -not -path '*/vendor/*' -print0)
+          exit $status
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cú pháp Python (compileall)
+        run: |
+          python -m compileall -q \
+            ai-service-flask ai-idol-service ai-idol-agent-service voice-service livekit-voice-agent
+
+      - name: Cấu hình Docker Compose production
+        env:
+          NEO4J_PASSWORD: ci-only
+          DOMAIN: example.com
+        run: |
+          touch .env
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
+
+  deploy:
+    name: Deploy lên VPS
+    needs: check
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Chuẩn bị SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Chạy scripts/deploy.sh trên VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ServerAliveInterval=30 \
+            "$VPS_USER@$VPS_HOST" 'bash ~/skinsyntax/scripts/deploy.sh'

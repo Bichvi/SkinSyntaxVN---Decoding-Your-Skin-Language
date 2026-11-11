@@ -1,0 +1,13 @@
+# Caddy: cổng vào HTTPS duy nhất trên VPS (chỉ dùng với docker-compose.prod.yml).
+# Chứng chỉ Let's Encrypt tự xin/gia hạn khi tên miền DOMAIN đã trỏ về IP của VPS.
+{$DOMAIN} {
+	reverse_proxy nginx:80 {
+		# Chat Syna trả lời dạng stream: đẩy từng phần ngay, không gom bộ đệm.
+		flush_interval -1
+	}
+}
+
+# www.<domain> chuyển về tên miền chính.
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}

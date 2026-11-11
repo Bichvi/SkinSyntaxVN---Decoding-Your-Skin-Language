@@ -94,5 +94,7 @@ try {
     $pdo = new MongoDatabaseCompat($db);
     $mongoClient = $client;
 } catch (Throwable $e) {
-    die('Loi ket noi MongoDB: ' . $e->getMessage());
+    error_log('MongoDB bootstrap unavailable: ' . $e->getMessage());
+    http_response_code(503);
+    die('Loi ket noi MongoDB. Vui long thu lai sau vai giay.');
 }

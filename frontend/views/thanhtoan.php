@@ -195,12 +195,16 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
                 <?php foreach ($items as $it): ?>
                   <?php
                     $p = $it['product'] ?? [];
-                    $img = resolve_image_url((string)($p['link_hinh_anh'] ?? ''));
+                    $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? ''));
+                    if ($img === '' && function_exists('product_image_urls')) {
+                      $thumbnailCandidates = product_image_urls($p, 1, true);
+                      $img = (string)($thumbnailCandidates[0] ?? '');
+                    }
                   ?>
                   <tr>
                     <td>
                       <div class="checkout-product">
-                        <img src="<?= h($img ?: default_placeholder_image()) ?>" alt="<?= h($p['ten_san_pham'] ?? '') ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';">
+                         <img src="<?= h($img ?: default_placeholder_image()) ?>" alt="<?= h($p['ten_san_pham'] ?? '') ?>" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_thumbnail_fallbacks_json') ? product_thumbnail_fallbacks_json($p, $img) : (function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]') ?>" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)">
                         <div>
                           <div class="name"><?= h($p['ten_san_pham'] ?? '') ?></div>
                           <div class="brand"><?= h($p['thuong_hieu'] ?? '') ?></div>

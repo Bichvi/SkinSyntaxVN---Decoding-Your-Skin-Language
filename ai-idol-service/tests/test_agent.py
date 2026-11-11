@@ -575,9 +575,9 @@ class AgentPurposeTests(unittest.TestCase):
     def test_infer_purpose_from_text_and_schedule(self):
         from agents.intent_parser import infer_purpose
         self.assertEqual(infer_purpose("loc 5 serum ban chay", None), "product_video")
-        self.assertEqual(infer_purpose("loc 5 serum ban chay", "2026-12-01T20:00:00+07:00"), "live_and_product")
-        self.assertEqual(infer_purpose("tao livestream gioi thieu serum", None), "live_and_product")
-        self.assertEqual(infer_purpose("gioi thieu san pham ma 995 len youtube toi mai", None), "live_and_product")
+        self.assertEqual(infer_purpose("loc 5 serum ban chay", "2026-12-01T20:00:00+07:00"), "live_only")
+        self.assertEqual(infer_purpose("tao livestream gioi thieu serum", None), "live_only")
+        self.assertEqual(infer_purpose("gioi thieu san pham ma 995 len youtube toi mai", None), "live_only")
 
     def test_llm_path_reads_the_time_slot_from_the_brief(self):
         from agents.intent_parser import parse_agent_brief
@@ -587,11 +587,11 @@ class AgentPurposeTests(unittest.TestCase):
                 return {"goal": "x", "explicit_product_ids": ["995"]}
 
         brief = parse_agent_brief("Giới thiệu sản phẩm mã 995 tối mai lúc 20 giờ", {}, llm=NoScheduleLlm())
-        self.assertEqual(brief.purpose, "live_and_product")
+        self.assertEqual(brief.purpose, "live_only")
 
     def test_fallback_parse_infers_purpose(self):
         self.assertEqual(fallback_parse("Lọc 5 serum bán chạy").purpose, "product_video")
-        self.assertEqual(fallback_parse("Lọc 5 serum, tạo livestream lúc 19h tối mai").purpose, "live_and_product")
+        self.assertEqual(fallback_parse("Lọc 5 serum, tạo livestream lúc 19h tối mai").purpose, "live_only")
 
     def test_brief_rejects_unknown_purpose(self):
         self.assertIsNone(AgentBrief.from_mapping({"goal": "x", "purpose": "zzz"}).purpose)
@@ -619,7 +619,7 @@ class AgentPurposeTests(unittest.TestCase):
                                   {"explicit_product_ids": ["995"]})
         harness.execute(self.CATALOG)
         payload = harness.create.call_args.args[0]
-        self.assertEqual(payload["purpose"], "live_and_product")
+        self.assertEqual(payload["purpose"], "live_only")
         self.assertTrue(payload["scheduled_at"])
 
     def test_create_agent_run_stores_purpose_override(self):

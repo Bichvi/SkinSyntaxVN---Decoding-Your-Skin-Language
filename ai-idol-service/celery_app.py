@@ -19,6 +19,7 @@ TASK_ROUTES = {
     # Publishing reads rendered files and runs ffmpeg, so it shares the media worker's storage.
     "ai_idol.publish_product_video": {"queue": "media"},
     "ai_idol.publish_campaign_videos": {"queue": "media"},
+    "ai_idol.publish_campaign_replay": {"queue": "media"},
     "ai_idol.retry_product_video_publish": {"queue": "media"},
     "ai_idol.broadcast_campaign": {"queue": "broadcast"},
 }

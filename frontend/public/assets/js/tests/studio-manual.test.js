@@ -356,6 +356,7 @@ test('a product video payload has no schedule, no channels and no live-only styl
     name: 'Video kem',
     product_ids: ['1', '2'],
     purpose: 'product_video',
+    also_product_video: false,
     scheduled_at: null,
     platforms: [],
     duration_minutes: 60,
@@ -373,10 +374,11 @@ test('a product video payload has no schedule, no channels and no live-only styl
 
 test('a livestream payload keeps the schedule, channels, duration and price styles', () => {
   const payload = M.buildCampaignPayload({
-    name: '', productIds: ['5'], purpose: 'live_and_product', scheduledAt: '2026-10-15T20:00', platforms: ['internal', 'youtube'],
+    name: '', productIds: ['5'], purpose: 'live_only', scheduledAt: '2026-10-15T20:00', platforms: ['internal', 'youtube'],
     duration: '45', contentMode: 'Product Intro', format: '16:9', character: 'syna_3d', styles: ['closing', 'pricing'],
   });
-  assert.equal(payload.purpose, 'live_and_product');
+  assert.equal(payload.purpose, 'live_only');
+  assert.equal(payload.also_product_video, false);
   assert.equal(payload.scheduled_at, '2026-10-15T20:00');
   assert.deepEqual(payload.platforms, ['internal', 'youtube']);
   assert.equal(payload.duration_minutes, 45);
@@ -442,12 +444,13 @@ test('reviewMarkup has one block per step with an edit button that names its ste
 
 test('reviewMarkup shows the broadcast time, channels and the approval step for a livestream', () => {
   const html = M.reviewMarkup(reviewView({
-    live: true, purposeLabel: 'Chỉ livestream', slot: '2026-10-15T20:00', duration: 60, channels: ['Nội bộ', 'YouTube'],
+    live: true, purposeLabel: 'Livestream', alsoProductVideo: true, slot: '2026-10-15T20:00', duration: 60, channels: ['Nội bộ', 'YouTube'],
     custom: true, avatarName: 'a<b>.mp4', backgroundName: 'bg.png', styleLabels: [], name: 'Live <i>tối</i>',
   }));
   assert.match(html, /20:00 15\/10\/2026/);
   assert.match(html, /60 phút/);
   assert.match(html, /Nội bộ, YouTube/);
+  assert.match(html, /Video sản phẩm<\/dt><dd>Tạo thêm một video riêng/);
   assert.match(html, /Tạo &amp; duyệt kịch bản/);
   assert.match(html, /Nhân vật riêng \(a&lt;b&gt;\.mp4\)/);
   assert.match(html, /bg\.png/);
@@ -463,4 +466,22 @@ test('buildCampaignPayload carries a valid approval_mode', () => {
 test('buildCampaignPayload drops an unknown approval_mode', () => {
   assert.ok(!('approval_mode' in M.buildCampaignPayload({ approvalMode: 'auto' }).configuration));
   assert.ok(!('approval_mode' in M.buildCampaignPayload({}).configuration));
+});
+
+test('also_product_video is true only for a livestream that asked for it', () => {
+  const live = { productIds: ['1'], purpose: 'live_only', scheduledAt: '2026-10-15T20:00', platforms: ['internal'], duration: '60' };
+  assert.equal(M.buildCampaignPayload({ ...live, alsoProductVideo: true }).also_product_video, true);
+  assert.equal(M.buildCampaignPayload(live).also_product_video, false);
+  assert.equal(M.buildCampaignPayload({ ...live, alsoProductVideo: 'true' }).also_product_video, false);
+  assert.equal(M.buildCampaignPayload({ productIds: ['1'], purpose: 'product_video', alsoProductVideo: true }).also_product_video, false);
+});
+
+test('the wizard never sends the legacy combined mode', () => {
+  const payload = M.buildCampaignPayload({ productIds: ['1'], purpose: 'live_and_product', scheduledAt: '2026-10-15T20:00' });
+  assert.equal(payload.purpose, 'product_video');
+});
+
+test('reviewMarkup says no extra product video when the box is unticked', () => {
+  const html = M.reviewMarkup(reviewView({ live: true, purposeLabel: 'Livestream', slot: '2026-10-15T20:00', duration: 60, channels: [] }));
+  assert.match(html, /Video sản phẩm<\/dt><dd>Không/);
 });

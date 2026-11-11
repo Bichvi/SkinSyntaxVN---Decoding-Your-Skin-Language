@@ -234,6 +234,9 @@
     var imageElement = card.querySelector('[data-product-image]');
     var priceElement = card.querySelector('[data-product-price]');
     var originalElement = card.querySelector('[data-product-original-price]');
+    var usageElement = card.querySelector('[data-product-usage]');
+    var ownedButton = card.querySelector('[data-consultation-preference]');
+    var addButton = card.querySelector('.step-card__add');
     if (nameElement) nameElement.textContent = name;
     if (brandElement) {
       brandElement.textContent = String(product.brand || product.thuong_hieu || '');
@@ -248,6 +251,22 @@
     if (originalElement) {
       originalElement.textContent = original > price ? formatMoney(original) : '';
       originalElement.hidden = original <= price;
+    }
+    if (usageElement) {
+      var usageNote = String(product.usage_note || '').trim();
+      usageElement.hidden = !usageNote;
+      if (usageNote) usageElement.replaceChildren(createIcon('fa-hand-sparkles'), document.createTextNode(' Cách dùng: ' + usageNote));
+    }
+    var alreadyOwned = product.already_owned === true;
+    if (ownedButton) {
+      ownedButton.dataset.productId = productId;
+      ownedButton.disabled = alreadyOwned;
+      ownedButton.setAttribute('aria-pressed', alreadyOwned ? 'true' : 'false');
+      ownedButton.textContent = alreadyOwned ? 'Đã ghi nhận' : 'Tôi đã có sản phẩm này';
+    }
+    if (addButton) {
+      var unavailable = product.is_available === false || product.is_out_of_stock === true;
+      addButton.disabled = alreadyOwned || unavailable;
     }
     var rawScore = product.match_score ?? product.match_percent ?? product.score;
     var scoreDisplay = setScore(card, rawScore);
@@ -273,6 +292,36 @@
     state.selected[card.dataset.stepKey] = product;
     state.comboDirty = true;
   };
+
+  root.querySelectorAll('[data-consultation-preference]').forEach(function (button) {
+    if (root.dataset.consultationEnabled !== '1') {
+      button.hidden = true;
+      return;
+    }
+    button.addEventListener('click', function () {
+      var productId = String(button.dataset.productId || '');
+      if (!productId || button.disabled) return;
+      button.disabled = true;
+      var body = new FormData();
+      body.append('product_id', productId);
+      body.append('preference', button.dataset.consultationPreference || 'owned');
+      fetch(root.dataset.preferenceUrl, { method: 'POST', body: body, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+        .then(function (response) { return response.json().then(function (json) { return { response: response, json: json }; }); })
+        .then(function (result) {
+          if (!result.response.ok || !result.json.ok) throw new Error(result.json.message || 'Không thể lưu lựa chọn.');
+          var card = button.closest('[data-step-card]');
+          if (card) {
+            var currentElement = card.querySelector('[data-current-product]');
+            var current = currentElement ? JSON.parse(currentElement.textContent || '{}') : {};
+            current.already_owned = true;
+            if (currentElement) currentElement.textContent = JSON.stringify(current);
+            applyProductToCard(card, current);
+          }
+          showFeedback('Đã ghi nhận sản phẩm bạn đang có; SkinSyntax sẽ không bắt mua lại.', false);
+        })
+        .catch(function (error) { button.disabled = false; showFeedback(error.message, true); });
+    });
+  });
 
   allCards().forEach(function (card) {
     var stepKey = card.dataset.stepKey || '';
@@ -456,6 +505,7 @@
     var products = {};
     Object.keys(state.selected).forEach(function (key) {
       var product = state.selected[key];
+      if (product && product.already_owned === true) return;
       var id = String(product && (product.id || product.product_id) || '');
       if (id) products[id] = product;
     });

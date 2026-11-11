@@ -36,6 +36,8 @@
   const MIN_DURATION = 1;
   const MAX_DURATION = 720;
   const PURPOSES = ['product_video', 'live_and_product', 'live_only'];
+  // What the wizard offers: the combined mode is legacy (stored campaigns only).
+  const WIZARD_PURPOSES = ['product_video', 'live_only'];
   const EXTERNAL_PLATFORMS = ['youtube', 'facebook'];
   const STEP_COUNT = 4;
   const STEP_NAMES = ['Sản phẩm', 'Mục đích & lịch phát', 'Nội dung & nhân vật', 'Xem lại & tạo'];
@@ -300,13 +302,14 @@
 
   function buildCampaignPayload(input) {
     const i = input && typeof input === 'object' ? input : {};
-    const purpose = PURPOSES.includes(i.purpose) ? i.purpose : 'product_video';
+    const purpose = WIZARD_PURPOSES.includes(i.purpose) ? i.purpose : 'product_video';
     const live = purpose !== 'product_video';
     const syna = i.character !== 'custom';
     return {
       name: text(i.name),
       product_ids: Array.isArray(i.productIds) ? i.productIds.slice() : [],
       purpose,
+      also_product_video: live && i.alsoProductVideo === true,
       scheduled_at: live ? i.scheduledAt : null,
       platforms: live ? (Array.isArray(i.platforms) ? i.platforms.slice() : []) : [],
       duration_minutes: live ? Number(i.duration) : 60,
@@ -353,6 +356,7 @@
       planRows.push(row('Giờ phát', escapeHtml(formatSlot(v.slot) || 'Chưa chọn')));
       planRows.push(row('Thời lượng', escapeHtml(`${v.duration} phút`)));
       planRows.push(row('Kênh phát', escapeHtml((v.channels || []).join(', ') || 'Chưa chọn')));
+      planRows.push(row('Video sản phẩm', escapeHtml(v.alsoProductVideo ? 'Tạo thêm một video riêng' : 'Không')));
     }
     planRows.push(row('Duyệt kịch bản', escapeHtml(
       'Chọn ở nút cuối: ⚡ Tạo & tự đăng (không cần duyệt) hoặc 👤 Tạo & duyệt kịch bản (dừng chờ bạn duyệt).')));
@@ -474,9 +478,11 @@
   };
   const purposeValue = () => {
     const value = checkedValue('manualPurpose');
-    return PURPOSES.includes(value) ? value : 'product_video';
+    return WIZARD_PURPOSES.includes(value) ? value : 'product_video';
   };
   const isLive = () => purposeValue() !== 'product_video';
+  const alsoProductVideoBox = form.querySelector('#manualAlsoProductVideo');
+  const wantsProductVideo = () => isLive() && Boolean(alsoProductVideoBox && alsoProductVideoBox.checked);
   const isSyna = () => characterSelect.value !== 'custom';
   const checkedPlatforms = () => [...form.querySelectorAll('input[name="manualPlatform"]:checked')].map((el) => el.value);
   const isVideoFile = (file) => Boolean(file && (String(file.type).startsWith('video/') || /\.(mp4|webm)$/i.test(file.name)));
@@ -663,6 +669,7 @@
       styles: pruneStyles(styles, purpose),
       character: isSyna() ? 'syna_3d' : 'custom',
       format: formatSelect.value,
+      alsoProductVideo: wantsProductVideo(),
     };
   }
 
@@ -688,6 +695,7 @@
       slot: live ? sel.schedule.at : '',
       duration: live ? sel.schedule.duration : 0,
       channels: live ? sel.schedule.platforms.map(platformName) : [],
+      alsoProductVideo: sel.alsoProductVideo,
       name: nameInput.value,
       contentModeLabel: optionLabel(contentModeSelect),
       styleLabels: sel.styles.map((key) => logic.NARRATION_STYLES.find((style) => style.key === key).label),
@@ -1039,6 +1047,7 @@
     applyPurpose();
     renderSummary();
   }));
+  if (alsoProductVideoBox) alsoProductVideoBox.addEventListener('change', renderSummary);
   form.querySelectorAll('input[name="manualPlatform"]').forEach((el) => el.addEventListener('change', () => {
     updateRtmpWarning();
     renderSummary();
@@ -1121,6 +1130,7 @@
     setBusy(true, button);
     notify(messageEl, '');
     let created = null;
+    const askedCompanion = wantsProductVideo();
     try {
       // Capture the whole form before the first await: the form stays editable while files upload.
       const sel = currentSel();
@@ -1139,6 +1149,7 @@
         avatarIsVideo: isVideoFile(avatarFile),
         styles: sel.styles,
         approvalMode,
+        alsoProductVideo: sel.alsoProductVideo,
       };
       // The required avatar goes first so a failure does not leave an orphan background behind.
       const avatarAsset = await uploadAsset('avatar', avatarFile);
@@ -1153,17 +1164,19 @@
     } finally {
       setBusy(false);
     }
-    if (created) afterCreated(created);
+    if (created) afterCreated(created, askedCompanion);
   }
 
   // The campaign exists from here on. Nothing below may report "Không thể tạo chương trình": a second click
   // would create a duplicate.
-  function afterCreated(result) {
+  function afterCreated(result, askedCompanion) {
     try {
       resetWizard();
-      notify(messageEl, result.created === false
-        ? 'Chương trình giống hệt đã được tạo trước đó. Theo dõi tiến độ ở bảng Hoạt động.'
-        : 'Đã tạo chương trình. Theo dõi tiến độ ở bảng Hoạt động.', true);
+      let message = 'Đã tạo chương trình. Theo dõi tiến độ ở bảng Hoạt động.';
+      if (result.created === false) message = 'Chương trình giống hệt đã được tạo trước đó. Theo dõi tiến độ ở bảng Hoạt động.';
+      else if (result.companion_campaign_id) message = 'Đã tạo livestream và video sản phẩm. Theo dõi tiến độ ở bảng Hoạt động.';
+      else if (askedCompanion) message = 'Đã tạo livestream nhưng chưa tạo được video sản phẩm. Hãy tạo video sản phẩm riêng cho các sản phẩm này.';
+      notify(messageEl, message, true);
     } catch (error) {
       notify(messageEl, 'Đã tạo chương trình nhưng biểu mẫu chưa làm mới được. Hãy tải lại trang trước khi tạo tiếp.');
     }
