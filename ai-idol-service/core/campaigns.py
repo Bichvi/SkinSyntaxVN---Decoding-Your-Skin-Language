@@ -15,12 +15,13 @@ from config import (
     MIN_LEAD_MINUTES,
     RTMP_TARGETS,
     TIMEZONE,
+    logger,
 )
 from core.agent_runs import append_decisions
 from core.narration import normalize_styles
 from core.product_videos import product_page_state
 from core.purpose import (
-    DEFAULT_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO, PRODUCT_VIDEO_LENGTH_MODE,
+    DEFAULT_PURPOSE, LIVE_ONLY, PRODUCT_VIDEO, PRODUCT_VIDEO_LENGTH_MODE,
     has_broadcast, normalize_purpose, purpose_of,
 )
 from core.state_machine import create_job, get_db, object_id, serialize, utcnow
@@ -80,8 +81,8 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
     if payload.get("purpose"):
         purpose = normalize_purpose(payload.get("purpose"))
     else:
-        # A caller that asked for a time slot but no mode still wants its livestream.
-        purpose = LIVE_AND_PRODUCT if payload.get("scheduled_at") else DEFAULT_PURPOSE
+        # A caller that asked for a time slot but no mode still wants a (plain) livestream.
+        purpose = LIVE_ONLY if payload.get("scheduled_at") else DEFAULT_PURPOSE
     scheduled_at = None
     platforms = []
     pending_external_platforms: list[str] = []
@@ -170,7 +171,36 @@ def create_campaign(payload: dict, created_by: str | None = None) -> tuple[str, 
         "created_at": now,
         "updated_at": now,
     } for position, product_id in enumerate(product_ids)])
+    if payload.get("also_product_video") is True and purpose == LIVE_ONLY:
+        _create_product_video_companion(db, campaign_id, name, product_ids, campaign, created_by)
     return campaign_id, True
+
+
+def _create_product_video_companion(db, live_id: str, live_name: str, product_ids: list[str],
+                                    live_campaign: dict, created_by: str | None) -> None:
+    """Make the independent product-video campaign that rides along a livestream; never fails the live."""
+    try:
+        configuration = {**live_campaign["configuration"], "length_mode": PRODUCT_VIDEO_LENGTH_MODE}
+        key = hashlib.sha256(f"{live_campaign['idempotency_key']}|product_video_companion".encode()).hexdigest()
+        companion_id, _ = create_campaign({
+            "name": f"{live_name} · Video sản phẩm"[:160],
+            "product_ids": product_ids,
+            "purpose": PRODUCT_VIDEO,
+            "content_mode": live_campaign["content_mode"],
+            "configuration": configuration,
+            "idempotency_key": key,
+        }, created_by=created_by)
+        db.ai_idol_campaigns.update_one({"_id": object_id(companion_id)}, {"$set": {"companion_of": live_id}})
+        db.ai_idol_campaigns.update_one({"_id": object_id(live_id)}, {"$set": {"companion_campaign_id": companion_id}})
+    except Exception:
+        logger.exception("[CAMPAIGN] Could not create the product-video companion of campaign %s", live_id)
+
+
+def companion_campaign_id(campaign_id: str) -> str | None:
+    """The product-video campaign created alongside this livestream, if any."""
+    doc = get_db().ai_idol_campaigns.find_one({"_id": object_id(campaign_id)}, {"companion_campaign_id": 1})
+    value = (doc or {}).get("companion_campaign_id")
+    return str(value) if value else None
 
 
 def prepare_campaign(campaign_id: str) -> list[str]:

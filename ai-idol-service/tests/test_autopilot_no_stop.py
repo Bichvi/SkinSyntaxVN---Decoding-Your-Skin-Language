@@ -260,7 +260,7 @@ class NoStopCountAndPurposeTests(unittest.TestCase):
     def test_d_livestream_wording_keeps_the_broadcast(self):
         harness = NoStopHarness("Livestream giới thiệu sản phẩm mã 995")
         run = harness.execute([item(995, "Kem Dưỡng Vichy")])
-        self.assertEqual(harness.payload["purpose"], "live_and_product")
+        self.assertEqual(harness.payload["purpose"], "live_only")
 
     def test_d_a_made_up_time_slot_is_not_an_appointment(self):
         def invents_a_slot(*args, **kwargs):

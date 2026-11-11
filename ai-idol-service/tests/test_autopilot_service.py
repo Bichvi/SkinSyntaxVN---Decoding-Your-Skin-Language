@@ -287,7 +287,7 @@ class AutopilotMetricsFallbackTests(unittest.TestCase):
 
     def test_livestream_prompt_without_snapshots_ranks_by_lifetime_sales(self):
         harness, _ = self.check_fallback("Livestream 5 kem chống nắng bán chạy")
-        self.assertEqual(harness.payload["purpose"], "live_and_product")
+        self.assertEqual(harness.payload["purpose"], "live_only")
 
     def test_filter_prompt_without_snapshots_ranks_by_lifetime_sales(self):
         self.check_fallback("Lọc 5 kem chống nắng bán chạy trong 30 ngày qua")
