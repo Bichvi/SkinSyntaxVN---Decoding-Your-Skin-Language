@@ -39,7 +39,7 @@ class StuckCreatedTests(unittest.TestCase):
             return watchdog.requeue_stuck_created_jobs(self.queued.append, NOW)
 
     def job(self, minutes, campaign=None, **extra):
-        return {"_id": ObjectId(), "status": "CREATED", "updated_at": ago(minutes),
+        return {"_id": ObjectId(), "status": "CREATED", "updated_at": ago(minutes), "created_at": ago(minutes),
                 "campaign_id": str(campaign or self.campaign_id), **extra}
 
     def test_default_is_ten_minutes(self):
@@ -88,8 +88,38 @@ class StuckCreatedTests(unittest.TestCase):
         self.run_sweep([job])
         self.assertEqual(self.queued, [])
 
-    def test_after_three_requeues_job_is_failed(self):
-        job = self.job(15, requeue_count=3)
+    def test_backoff_grows_with_requeue_count(self):
+        waiting = self.job(20, requeue_count=1)  # second requeue waits 30 min
+        due = self.job(35, requeue_count=1)
+        third = self.job(50, requeue_count=2)  # third requeue waits 60 min
+        later = self.job(65, requeue_count=2)
+        self.run_sweep([waiting, due, third, later])
+        self.assertEqual(self.queued, [str(due["_id"]), str(later["_id"])])
+
+    def test_three_requeues_but_under_120_minutes_is_not_failed(self):
+        job = self.job(70, requeue_count=3, created_at=ago(100))
+        result = self.run_sweep([job])
+        self.assertEqual(result["failed"], 0)
+        self.assertEqual(self.queued, [str(job["_id"])])
+        self.assertEqual(self.jobs.docs[0]["status"], "CREATED")
+
+    def test_real_campaign_sync_after_failed_job(self):
+        import core.campaigns as campaigns
+        job_id = ObjectId()
+        job = {"_id": job_id, "status": "CREATED", "updated_at": ago(70), "created_at": ago(130),
+               "campaign_id": str(self.campaign_id), "requeue_count": 3}
+        db = FakeDb(ai_idol_jobs=Collection([job]),
+                    ai_idol_campaigns=Collection([{"_id": self.campaign_id, "status": "GENERATING"}]),
+                    ai_idol_segments=Collection([{"_id": ObjectId(), "campaign_id": str(self.campaign_id),
+                                                  "job_id": str(job_id), "status": "GENERATING"}]))
+        with patch.object(watchdog, "get_db", return_value=db), patch.object(campaigns, "get_db", return_value=db):
+            result = watchdog.requeue_stuck_created_jobs(self.queued.append, NOW)
+        self.assertEqual(result["failed"], 1)
+        self.assertEqual(db.ai_idol_segments.docs[0]["status"], "FAILED")
+        self.assertEqual(db.ai_idol_campaigns.docs[0]["status"], "NEEDS_ATTENTION")
+
+    def test_after_120_minutes_job_is_failed(self):
+        job = self.job(70, requeue_count=3, created_at=ago(130))
         result = self.run_sweep([job])
         self.assertEqual(self.queued, [])
         self.assertEqual(result["failed"], 1)
