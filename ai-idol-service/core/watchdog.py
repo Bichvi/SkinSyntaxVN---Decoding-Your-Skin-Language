@@ -14,6 +14,7 @@ from config import (
     STALE_ASSEMBLING_MINUTES,
     STALE_JOB_MINUTES,
     STALE_STARTING_MINUTES,
+    STUCK_CREATED_MINUTES,
     logger,
 )
 from core.campaigns import update_campaign_from_job
@@ -69,6 +70,52 @@ def reap_stale_work(now: dt.datetime | None = None) -> dict[str, int]:
         if result.modified_count:
             logger.warning("[WATCHDOG] %s campaign(s) left %s for over %s minutes", result.modified_count, status, minutes)
     return reaped
+
+
+MAX_CREATED_REQUEUES = 3
+CREATED_FAILED_MESSAGE = "Không khởi động được job sau 3 lần thử lại"
+
+
+def requeue_stuck_created_jobs(enqueue, now: dt.datetime | None = None) -> dict[str, int]:
+    """Re-queue jobs a worker never started (still CREATED) in a GENERATING campaign.
+
+    ``updated_at`` is touched on every requeue so a job waits another STUCK_CREATED_MINUTES; after
+    MAX_CREATED_REQUEUES the job is failed and the campaign logic moves it to NEEDS_ATTENTION.
+    """
+    db, now = get_db(), now or utcnow()
+    result = {"requeued": 0, "failed": 0}
+    cutoff = now - dt.timedelta(minutes=STUCK_CREATED_MINUTES)
+    jobs = list(db.ai_idol_jobs.find(
+        {"status": "CREATED", "updated_at": {"$lt": cutoff}, "campaign_id": {"$exists": True, "$ne": None}}).limit(50))
+    generating: dict[str, bool] = {}
+    for job in jobs:
+        campaign_id = str(job.get("campaign_id") or "")
+        if campaign_id not in generating:
+            generating[campaign_id] = bool(campaign_id) and db.ai_idol_campaigns.find_one(
+                {"_id": object_id(campaign_id), "status": "GENERATING"}, {"_id": 1}) is not None
+        if not generating[campaign_id]:
+            continue
+        guard = {"_id": job["_id"], "status": "CREATED", "updated_at": job["updated_at"]}
+        if int(job.get("requeue_count") or 0) >= MAX_CREATED_REQUEUES:
+            changed = db.ai_idol_jobs.update_one(guard, {"$set": {
+                "status": "FAILED", "failed_stage": "CREATED", "error_message": CREATED_FAILED_MESSAGE,
+                "updated_at": now}})
+            if changed.modified_count:
+                result["failed"] += 1
+                logger.warning("[WATCHDOG] Job %s never started after %s requeues", job["_id"], MAX_CREATED_REQUEUES)
+                update_campaign_from_job(str(job["_id"]))
+            continue
+        claimed = db.ai_idol_jobs.update_one(guard, {"$set": {"updated_at": now}, "$inc": {"requeue_count": 1}})
+        if not claimed.modified_count:
+            continue
+        try:
+            enqueue(str(job["_id"]))
+        except Exception as exc:  # the next sweep tries again once the job is old enough
+            logger.warning("[WATCHDOG] Could not requeue job %s: %s", job["_id"], exc)
+            continue
+        result["requeued"] += 1
+        logger.warning("[WATCHDOG] Job %s was still CREATED after %s minutes; requeued", job["_id"], STUCK_CREATED_MINUTES)
+    return result
 
 
 def resume_waiting_renders(enqueue, now: dt.datetime | None = None, *, renderer_check=None) -> dict[str, int]:
