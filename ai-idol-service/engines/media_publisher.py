@@ -212,7 +212,8 @@ def publish_campaign_videos(campaign_id: str, *, client=None) -> int:
         for video in videos:
             if video.get("file_path") != video.get("product_page_file_path"):
                 _remove(video.get("file_path"))
-        release_master_video(campaign_id)
+    # The gate re-checks every clip and the replay, so a clip left for the retry beat keeps the master.
+    release_master_video(campaign_id)
     return published
 
 
@@ -242,6 +243,11 @@ def retry_pending(limit: int = 20, *, client=None) -> int:
             published += 1
             # Listing it on its product page is best effort and idempotent (never raises).
             auto_publish_video(video_id)
+            if doc.get("campaign_id"):
+                try:
+                    release_master_video(str(doc["campaign_id"]))
+                except Exception as exc:  # best effort: the next clip or replay job releases it
+                    logger.warning("[MEDIA-PUBLISH] Master release for %s failed: %s", doc.get("campaign_id"), _scrub(exc))
     return published
 
 

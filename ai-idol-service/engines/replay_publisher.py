@@ -56,6 +56,7 @@ def _publish(campaign_id: str, client) -> bool:
     if not campaign:
         return False
     if (campaign.get("replay") or {}).get("uploaded_at"):
+        release_master_video(campaign_id)  # a clip finished after the upload may have left the master behind
         return True
     if not replay_publishable(campaign):
         return False
@@ -91,10 +92,11 @@ def _publish(campaign_id: str, client) -> bool:
         settings = _r2()
         key = f"{KEY_PREFIX}/{campaign_id}-{secrets.token_hex(6)}"
         client = client or _default_client()
-        client.upload_file(master, settings["R2_BUCKET"], key + ".mp4",
-                           ExtraArgs={"ContentType": "video/mp4", "CacheControl": CACHE_CONTROL})
+        # Poster first: a poster failure then never leaves the large video orphaned in R2.
         client.upload_file(poster, settings["R2_BUCKET"], key + ".jpg",
                            ExtraArgs={"ContentType": "image/jpeg", "CacheControl": CACHE_CONTROL})
+        client.upload_file(master, settings["R2_BUCKET"], key + ".mp4",
+                           ExtraArgs={"ContentType": "video/mp4", "CacheControl": CACHE_CONTROL})
     except Exception as exc:
         _remove(poster)
         db.ai_idol_campaigns.update_one({"_id": oid}, {
@@ -129,6 +131,7 @@ def _candidates() -> list[dict]:
         "status": {"$in": ["COMPLETED", "PARTIAL_FAILURE"]},
         "master_video_path": {"$ne": None},
         "replay.uploaded_at": {"$exists": False},
+        "$or": [{"replay.attempts": {"$exists": False}}, {"replay.attempts": {"$lt": MAX_ATTEMPTS}}],
     })
     return [
         campaign for campaign in found
@@ -139,10 +142,14 @@ def _candidates() -> list[dict]:
 def retry_pending_replays(limit: int = 5, *, client=None) -> int:
     if not r2_configured():
         return 0
-    published = 0
+    published = attempted = 0
     for campaign in _candidates():
-        if published >= limit:
+        if attempted >= limit:
             break
+        master = campaign.get("master_video_path")
+        if not master or not os.path.isfile(str(master)):
+            continue  # nothing to upload: leave the campaign untouched
+        attempted += 1
         try:
             published += int(publish_campaign_replay(str(campaign["_id"]), client=client))
         except Exception as exc:  # defensive: one campaign never stops the others

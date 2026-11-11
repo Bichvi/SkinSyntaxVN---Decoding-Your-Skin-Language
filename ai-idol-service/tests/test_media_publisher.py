@@ -210,6 +210,24 @@ class CampaignPublishTests(PublisherTestCase):
         self.assertTrue(media_publisher.release_master_video(campaign))
         self.assertFalse(os.path.exists(master))
 
+    def test_clip_published_by_retry_releases_master_when_replay_uploaded(self):
+        campaign, master = self._campaign_with_master(purpose="live_and_product", replay={"uploaded_at": NOW})
+        self.video(campaign_id=campaign, purpose="live_and_product", file_path=self.file("full.mp4"),
+                   product_page_file_path=self.file("body.mp4"))
+        with patch.dict(os.environ, R2):
+            self.assertEqual(media_publisher.retry_pending(client=FakeS3()), 1)
+        self.assertFalse(os.path.exists(master))
+
+    def test_failed_clip_keeps_master_until_retry_publishes_it(self):
+        campaign, master = self._campaign_with_master(purpose="live_and_product", replay={"uploaded_at": NOW})
+        self.video(campaign_id=campaign, purpose="live_and_product", file_path=self.file("full.mp4"),
+                   product_page_file_path=self.file("body.mp4"))
+        with patch.dict(os.environ, R2):
+            self.assertEqual(media_publisher.publish_campaign_videos(campaign, client=FakeS3(fail="r2 down")), 0)
+            self.assertTrue(os.path.exists(master))
+            self.assertEqual(media_publisher.retry_pending(client=FakeS3()), 1)
+        self.assertFalse(os.path.exists(master))
+
     def test_release_drops_master_when_no_replay_needed(self):
         campaign, master = self._campaign_with_master(purpose="live_and_product", platforms=["youtube"])
         self.video(campaign_id=campaign, product_page_file_path=self.file("body.mp4"), product_page_ready_at=NOW)
