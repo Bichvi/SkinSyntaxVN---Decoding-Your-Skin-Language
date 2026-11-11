@@ -52,15 +52,19 @@ PLAN = {
 }
 
 
-def angle(tag):
-    return {key: f"{key} {tag}" for key in SECTION_KEYS}
+def words(count, tag="w"):
+    return " ".join([tag] * count)
+
+
+def angle(tag, per_section=60):
+    return {key: f"{key} {tag} " + words(per_section - 2) for key in SECTION_KEYS}
 
 
 FRAME = {
-    "frame_opening": {"opening": "chào cả nhà", "transitions": ["t1", "t2"]},
-    "frame_interludes": {"interludes": {"cta": ["c1", "c2"], "about_shop": ["a1", "a2"], "fun": ["f1", "f2"]}},
-    "frame_faqs": {"faqs": [{"product_id": "p1", "text": f"faq{i}"} for i in range(4)]},
-    "frame_tips_closing": {"tips": ["tip1", "tip2"], "closing": "tạm biệt"},
+    "frame_opening": {"opening": words(300), "transitions": [words(100), words(100)]},
+    "frame_interludes": {"interludes": {"cta": [words(50)] * 2, "about_shop": [words(50)] * 2, "fun": [words(50)] * 2}},
+    "frame_faqs": {"faqs": [{"product_id": "p1", "text": words(100)} for _ in range(4)]},
+    "frame_tips_closing": {"tips": [words(300), words(300)], "closing": words(100)},
 }
 PRODUCT = {"product_clip_a": angle("A"), "product_clip_b": angle("B")}
 
@@ -95,7 +99,7 @@ class ShowWriterTests(unittest.TestCase):
         self.assertTrue(all(call[4] and call[4] > 700 for call in llm.calls))
 
     def test_persona_in_every_system_prompt(self):
-        llm = FakeLLM({**PRODUCT, **FRAME, "routine_recap": {"text": "tóm tắt"}})
+        llm = FakeLLM({**PRODUCT, **FRAME, "routine_recap": {"text": words(300)}})
         write_product_clips(SNAPS["p1"], PLAN["products"][0], PLAN, llm=llm)
         write_frame_clips(PLAN, SNAPS, [], llm=llm)
         write_routine_recap(PLAN, SNAPS, llm=llm)
@@ -117,7 +121,7 @@ class ShowWriterTests(unittest.TestCase):
         self.assertTrue(all(d.product_id for d in drafts if d.kind == "faq"))
 
     def test_recap_prompt_contains_total_and_numbers(self):
-        llm = FakeLLM({"text": "tóm tắt"})
+        llm = FakeLLM({"text": words(300)})
         draft = write_routine_recap(PLAN, SNAPS, llm=llm)
         self.assertEqual(draft.kind, "routine_recap")
         user = llm.calls[0][1]
@@ -181,7 +185,7 @@ class ShowWriterTests(unittest.TestCase):
 
     def test_theme_from_plan_wins_and_llm_theme_only_when_missing(self):
         responses = dict(FRAME)
-        responses["frame_opening"] = {"theme_vi": "Chủ đề LLM", "opening": "o", "transitions": ["a", "b"]}
+        responses["frame_opening"] = {"theme_vi": "Chủ đề LLM", "opening": words(300), "transitions": [words(100), words(100)]}
         theme, _ = write_frame_clips({**PLAN, "theme_vi": ""}, SNAPS, [], llm=FakeLLM(responses))
         self.assertEqual(theme, "Chủ đề LLM")
         llm = FakeLLM(FRAME)
@@ -192,6 +196,97 @@ class ShowWriterTests(unittest.TestCase):
     def test_product_without_id_raises(self):
         with self.assertRaises(ValueError):
             write_product_clips({"name": "x"}, {"number": 1}, PLAN, llm=FakeLLM(PRODUCT))
+
+
+class SequenceLLM:
+    """Returns the queued answers one by one; records every call."""
+
+    def __init__(self, answers):
+        self.answers = list(answers)
+        self.calls = []
+
+    def invoke_json_schema(self, system, user, *, schema, schema_name, max_completion_tokens=None):
+        self.calls.append((system, user, schema_name))
+        return self.answers[min(len(self.calls), len(self.answers)) - 1]
+
+
+class LengthRetryTests(unittest.TestCase):
+    def write(self, llm):
+        return write_product_clips(SNAPS["p1"], PLAN["products"][0], PLAN, llm=llm)
+
+    def test_short_then_adequate_makes_two_calls_and_uses_adequate(self):
+        llm = SequenceLLM([angle("short", 20), angle("good"), angle("B")])
+        drafts = self.write(llm)
+        self.assertEqual(len(llm.calls), 3)  # angle A twice, angle B once
+        self.assertIn("lead_in good", drafts[0].script)
+        self.assertNotIn("short", drafts[0].script)
+
+    def test_feedback_names_draft_count_and_range_in_second_prompt(self):
+        llm = SequenceLLM([angle("short", 20), angle("good"), angle("B")])
+        self.write(llm)
+        self.assertNotIn("Bản trước quá ngắn", llm.calls[0][1])
+        self.assertIn("Bản trước quá ngắn: góc A có 160 chữ, cần 400-560 chữ. Viết lại đầy đủ, giữ nguyên mọi quy tắc.",
+                      llm.calls[1][1])
+        self.assertLessEqual(prompt_len(llm.calls[1][0], llm.calls[1][1]), PROMPT_BUDGET)
+
+    def test_adequate_first_makes_one_call_per_angle(self):
+        llm = SequenceLLM([angle("A"), angle("B")])
+        self.write(llm)
+        self.assertEqual(len(llm.calls), 2)
+
+    def test_short_twice_keeps_longer_and_warns(self):
+        llm = SequenceLLM([angle("first", 20), angle("second", 30), angle("B")])
+        with self.assertLogs("engines.show_writer", level="WARNING") as logs:
+            drafts = self.write(llm)
+        self.assertEqual(len(llm.calls), 3)
+        self.assertIn("lead_in second", drafts[0].script)
+        self.assertTrue(any("still short" in line for line in logs.output))
+
+    def test_short_twice_keeps_first_when_retry_is_shorter(self):
+        llm = SequenceLLM([angle("first", 30), angle("second", 20), angle("B")])
+        with self.assertLogs("engines.show_writer", level="WARNING"):
+            drafts = self.write(llm)
+        self.assertIn("lead_in first", drafts[0].script)
+
+    def test_label_header_lines_are_not_counted(self):
+        from engines.show_writer import _spoken_words
+        self.assertEqual(_spoken_words("[Lead-in]\nmột hai ba\n\n[CTA]\nbốn năm"), 5)
+
+    def test_frame_clip_short_opening_retries_once(self):
+        short = dict(FRAME, frame_opening={"opening": words(100), "transitions": [words(100), words(100)]})
+        responses = [short["frame_opening"], FRAME["frame_opening"], FRAME["frame_interludes"], FRAME["frame_faqs"],
+                     FRAME["frame_tips_closing"]]
+        llm = SequenceLLM(responses)
+        write_frame_clips(PLAN, SNAPS, [], llm=llm)
+        self.assertEqual(len(llm.calls), 5)
+        self.assertIn("opening có 100 chữ, cần 240-480 chữ", llm.calls[1][1])
+
+    def test_frame_short_interlude_and_recap_retry(self):
+        short_interludes = {"interludes": {"cta": [words(5)] * 2, "about_shop": [words(50)] * 2, "fun": [words(50)] * 2}}
+        llm = SequenceLLM([FRAME["frame_opening"], short_interludes, FRAME["frame_interludes"], FRAME["frame_faqs"],
+                           FRAME["frame_tips_closing"]])
+        write_frame_clips(PLAN, SNAPS, [], llm=llm)
+        self.assertEqual(len(llm.calls), 5)
+        self.assertIn("40-80 chữ", llm.calls[2][1])
+        recap = SequenceLLM([{"text": words(50)}, {"text": words(300)}])
+        draft = write_routine_recap(PLAN, SNAPS, llm=recap)
+        self.assertEqual(len(recap.calls), 2)
+        self.assertEqual(len(draft.script.split()), 300)
+
+    def test_feedback_prompts_still_fit_budget_with_six_products(self):
+        plan, snaps = big_world(6)
+        fb = "Bản trước quá ngắn: góc A có 100 chữ, cần 400-560 chữ. Viết lại đầy đủ, giữ nguyên mọi quy tắc."
+        faqs = [{"product_id": "p1", "question": "q" * 900, "answer": "a" * 900}] * 4
+        theme = plan["theme_vi"]
+        from engines.show_writer import (build_faq_prompts, build_interlude_prompts, build_opening_prompts,
+                                         build_tips_closing_prompts)
+        prompts = [build_product_prompts(snaps["p1"], plan["products"][0], plan, "B", angle("A"), fb),
+                   build_recap_prompts(plan, snaps, fb), build_faq_prompts(plan, snaps, faqs, theme, fb),
+                   build_opening_prompts(plan, theme, fb), build_interlude_prompts(plan, theme, fb),
+                   build_tips_closing_prompts(plan, theme, fb)]
+        for system, user in prompts:
+            self.assertLessEqual(prompt_len(system, user), PROMPT_BUDGET)
+            self.assertIn(fb, user)
 
 
 if __name__ == "__main__":
