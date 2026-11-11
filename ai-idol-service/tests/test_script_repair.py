@@ -190,6 +190,15 @@ class RelaxedAuditTests(unittest.TestCase):
             issues = sv.validate_script("[Hook]\nMua ở Shopee nhé.", SNAP, "live_only")
         self.assertIn("EXTERNAL_RETAILER", [i.code for i in issues if i.severity == "error"])
 
+    def test_relaxed_mode_keeps_live_library_honesty_rules(self):
+        with patch.object(sv, "RELAXED_AUDIT", True), \
+                patch.object(sv, "_llm_audit_issues", side_effect=AssertionError("LLM called")):
+            issues = sv.validate_script("Mua ngay để nhận quà tặng nha.", SNAP, "live_only", clip_kind="interlude")
+            legacy = sv.validate_script("Trị dứt điểm mụn.", SNAP, "live_only", clip_kind="interlude")
+        self.assertIn("BLACKLIST_CLAIM", [i.code for i in issues if i.severity == "error"])
+        self.assertIn("BLACKLIST_CLAIM", [i.code for i in legacy if i.severity == "warning"])  # ad-law claim relaxes
+        self.assertNotIn("live_rule", issues[0].to_dict())  # API shape unchanged
+
     def test_strict_mode_unchanged(self):
         with patch.object(sv, "RELAXED_AUDIT", False), patch.object(sv, "_llm_audit_issues", return_value=[]):
             issues = sv.validate_script("[Specs]\nTrị dứt điểm mụn.", SNAP, "live_only")

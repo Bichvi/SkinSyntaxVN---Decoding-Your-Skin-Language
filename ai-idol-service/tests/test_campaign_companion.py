@@ -62,6 +62,19 @@ class CompanionCampaignTests(unittest.TestCase):
         self.assertEqual(campaigns.companion_campaign_id(live_id), companion_id)
         self.assertNotIn("length_mode", live["configuration"])
 
+    def test_library_live_gets_a_plain_product_video_companion(self):
+        live_id, _ = campaigns.create_campaign(live_payload(also_product_video=True))
+        docs = {str(doc["_id"]): doc for doc in self.docs()}
+        live = docs[live_id]
+        companion = docs[live["companion_campaign_id"]]
+        self.assertEqual(live["show_format"], campaigns.SHOW_FORMAT_LIBRARY)
+        self.assertEqual(list(self.db.ai_idol_segments.find({"campaign_id": live_id})), [])  # written by prepare
+        self.assertNotIn("show_format", companion)
+        self.assertNotIn("show_plan", companion)
+        segments = list(self.db.ai_idol_segments.find({"campaign_id": str(companion["_id"])}))
+        self.assertEqual([seg["product_id"] for seg in segments], ["1", "2"])
+        self.assertTrue(all("phase" not in seg for seg in segments))
+
     def test_companion_name_is_truncated(self):
         live_id, _ = campaigns.create_campaign(live_payload(also_product_video=True, name="x" * 160))
         companion = next(d for d in self.docs() if d.get("companion_of") == live_id)
