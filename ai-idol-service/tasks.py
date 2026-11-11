@@ -10,12 +10,12 @@ from core.campaigns import (
 )
 from core.pipeline import run_ai_idol_pipeline
 from core.purpose import PRODUCT_VIDEO, purpose_of
-from config import BROADCAST_LATE_GRACE_MINUTES, logger
+from config import BROADCAST_LATE_GRACE_MINUTES, RUN_LEASE_MINUTES, logger
 from core.health import check_syna
 from core.product_metrics import run_due_snapshots
 from core.publications import auto_publish_video
 from core.state_machine import fail_job, get_db, object_id, utcnow
-from core.watchdog import reap_stale_work, resume_waiting_renders
+from core.watchdog import reap_stale_work, requeue_stuck_created_jobs, resume_waiting_renders
 from engines.broadcast_engine import broadcast_campaign, finalize_live_campaigns, preflight_campaign
 from engines.media_publisher import publish_campaign_videos, publish_video, retry_pending
 from engines.replay_publisher import publish_campaign_replay, retry_pending_replays
@@ -59,6 +59,13 @@ def write_routine_recap_task(campaign_id: str):
     return {"campaign_id": campaign_id, "job": job_id}
 
 
+def _release_run_lease(db, job_id: str) -> None:
+    try:
+        db.ai_idol_jobs.update_one({"_id": object_id(job_id)}, {"$unset": {"run_lease_until": ""}})
+    except Exception as exc:  # an unreleased lease only expires later; never mask the real result
+        logger.warning("[JOB] Could not release the run lease of %s: %s", job_id, exc)
+
+
 @celery_app.task(name="ai_idol.generate_job", bind=True, max_retries=2)
 def generate_job_task(self, job_id: str):
     db = get_db()
@@ -75,14 +82,26 @@ def generate_job_task(self, job_id: str):
     if job.get("status") == "READY":
         success = True  # idempotent: a duplicate delivery only re-syncs the campaign
     else:
+        now = utcnow()
+        claimed = db.ai_idol_jobs.find_one_and_update(
+            {"_id": object_id(job_id), "status": {"$ne": "READY"},
+             "$or": [{"run_lease_until": None}, {"run_lease_until": {"$lt": now}}]},
+            {"$set": {"run_lease_until": now + dt.timedelta(minutes=RUN_LEASE_MINUTES)}},
+        )
+        if not claimed:
+            logger.info("[JOB] %s is already running or finished; skipping this delivery", job_id)
+            return False
         try:
             success = run_ai_idol_pipeline(job_id)
         except Exception as exc:
             if self.request.retries < self.max_retries:
+                _release_run_lease(db, job_id)  # the retried delivery must be able to claim it
                 raise self.retry(exc=exc, countdown=min(60, 5 * (self.request.retries + 1)))
             # Out of retries: record the failure instead of leaving the job IN_PROGRESS.
             fail_job(job_id, job.get("current_stage") or "PIPELINE", f"Lỗi không xác định sau nhiều lần thử: {exc}")
             success = False
+        finally:
+            _release_run_lease(db, job_id)
     campaign_id = update_campaign_from_job(job_id)
     if campaign_id and claim_campaign_for_assembly(campaign_id):
         assemble_campaign_task.delay(campaign_id)
@@ -153,7 +172,9 @@ def broadcast_campaign_task(campaign_id: str):
 
 @celery_app.task(name="ai_idol.reap_stale_work")
 def reap_stale_work_task():
-    return reap_stale_work()
+    reaped = reap_stale_work()
+    reaped["created"] = requeue_stuck_created_jobs(lambda job_id: generate_job_task.delay(job_id))
+    return reaped
 
 
 @celery_app.task(name="ai_idol.resume_waiting_renders")
