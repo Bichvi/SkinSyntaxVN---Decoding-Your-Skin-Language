@@ -372,4 +372,16 @@ Thấy `started tunnel ... url=https://abc-xyz.ngrok-free.app` là xong.
 - Máy tắt hoặc ngủ thì web tắt (giống Phụ lục B).
 - Đăng nhập Google/Facebook cần thêm redirect URI `https://<NGROK_DOMAIN>/index.php?r=auth_social_callback...` ở Google/Facebook console và đổi `GOOGLE_OAUTH_REDIRECT_URI`/`FACEBOOK_OAUTH_REDIRECT_URI` trong `.env` (chưa làm, chưa thử).
 
-**Đã kiểm tra:** cấu hình compose hợp lệ (cả local và production), ngrok 3.39 dùng tham số `--url`. **Chưa chạy thật** vì cần authtoken của bạn.
+- Trang cảnh báo của ngrok hiện **IP mạng nhà bạn** cho người xem ("Website IP"). Đó là IP công cộng của nhà mạng; không lộ gì thêm, nhưng biết để cân nhắc khi chia sẻ link rộng rãi.
+
+**Đang chạy (2026-11-10):** `https://egomaniac-fiddling-unsubtle.ngrok-free.dev` (Cloudflare Tunnel ở Phụ lục B đã tắt).
+
+**Đã kiểm tra thật qua link này:**
+
+| Kiểm tra | Kết quả |
+| --- | --- |
+| Container `skinsyntax-ngrok` | `started tunnel ... url=https://egomaniac-fiddling-unsubtle.ngrok-free.dev`, 0 lần restart |
+| Trình duyệt mở link lần đầu | Trang cảnh báo ngrok (`ERR_NGROK_6024`), bấm **Visit Site** vào được SkinSyntax |
+| Trang chủ, `r=tatca`, `r=chitiet&id=1000` | 200 |
+| Chat Syna (`POST r=ai_chat_agent_stream`) | 200, trả lời có 10 thẻ sản phẩm kèm giá và nút thêm giỏ |
+| PHP nhận HTTPS | Có (cookie `ssv_sid` có cờ `secure`) |
