@@ -568,7 +568,7 @@ class SanPhamController {
     private function searchSkinProfile(string $email): ?array {
         try {
             require_once dirname(__DIR__) . '/services/SearchSkinProfile.php';
-            $kh = (new TaiKhoan($this->pdo))->getKhachHangByEmail($email);
+            $kh = (new TaiKhoan($this->pdo))->getCustomerForSelectedProfileByEmail($email);
             return SearchSkinProfile::fromCustomer($kh);
         } catch (Throwable $e) {
             error_log('[SEARCH_RECOMMEND] skin profile skipped: ' . get_class($e));
@@ -672,8 +672,21 @@ class SanPhamController {
         }
         $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + ($pending !== null ? $pending : 1);
 
-        // Lưu vào recent viewed products của session (tối đa 5 sản phẩm)
-        $this->trackRecentViewedProduct((string)($p['ma_san_pham'] ?? $id));
+        // Lưu vào recent viewed products của session (tối đa 5 sản phẩm).
+        // Giữ lại các sản phẩm trước đó để trang chi tiết có thể hiển thị khối "Đã xem gần đây".
+        $viewedProductId = (string)($p['ma_san_pham'] ?? $id);
+        $this->trackRecentViewedProduct($viewedProductId);
+        $recentViewedProducts = [];
+        try {
+            $recentViewedIds = is_array($_SESSION['recent_viewed_products'] ?? null)
+                ? array_values(array_filter(array_map('strval', $_SESSION['recent_viewed_products']), static fn(string $recentId): bool => $recentId !== '' && $recentId !== $viewedProductId))
+                : [];
+            if ($recentViewedIds !== []) {
+                $recentViewedProducts = $this->model->findVisibleByIds(array_slice($recentViewedIds, 0, 4));
+            }
+        } catch (Throwable $e) {
+            error_log('recent viewed products error: ' . get_class($e));
+        }
         ProductEventTracker::record($this->pdo, 'product_view', (string)($p['ma_san_pham'] ?? $p['id'] ?? $id));
 
         if ($q !== '') {
@@ -794,6 +807,40 @@ class SanPhamController {
             }
         }
 
+        // Publication metadata and media storage are deliberately separate. The publication in
+        // MongoDB grants storefront eligibility/rewards, while this read-only client supplies the
+        // already-uploaded shared R2 rendition so a missing local AI Idol volume cannot collapse
+        // the player into a broken 404 box.
+        if (is_array($productVideos) && $productVideos !== []) {
+            try {
+                require_once __DIR__ . '/../services/ProductVideoClient.php';
+                $videoAssets = ProductVideoClient::fromEnv()->forProduct($prodKeySuffix)['videos'] ?? [];
+                $assetsByVideoId = [];
+                foreach ((array)$videoAssets as $asset) {
+                    if (is_array($asset) && (string)($asset['video_id'] ?? '') !== '') {
+                        $assetsByVideoId[(string)$asset['video_id']] = $asset;
+                    }
+                }
+                foreach ($productVideos as &$publishedVideo) {
+                    $sourceId = (string)($publishedVideo['video_id'] ?? '');
+                    $asset = $assetsByVideoId[$sourceId] ?? null;
+                    if (is_array($asset)) {
+                        foreach (['video_url', 'poster_url'] as $mediaField) {
+                            if (!empty($asset[$mediaField])) {
+                                $publishedVideo[$mediaField] = (string)$asset[$mediaField];
+                            }
+                        }
+                        if ((float)($publishedVideo['duration'] ?? 0) <= 0 && isset($asset['duration'])) {
+                            $publishedVideo['duration'] = (float)$asset['duration'];
+                        }
+                    }
+                }
+                unset($publishedVideo);
+            } catch (Throwable $e) {
+                error_log('chitiet product video asset hydration error: ' . get_class($e));
+            }
+        }
+
         $this->render('chitiet', [
             'p' => $p,
             'reviews' => $reviews,
@@ -802,11 +849,80 @@ class SanPhamController {
             'questions' => $questions,
             'questionCount' => $questionCount,
             'frequentlyBought' => $frequentlyBought,
+            'recentViewedProducts' => $recentViewedProducts,
             'productVideos' => $productVideos,
             'activeTab' => trim((string)($_GET['tab'] ?? '')),
             'reviewErrorMessage' => $reviewErrorMessage,
             'questionErrorMessage' => $questionErrorMessage,
         ]);
+    }
+
+    /**
+     * Đổi riêng khối mua kèm/routine trên trang chi tiết, không tải lại toàn bộ PDP.
+     * Chỉ đọc dữ liệu đề xuất hiện có; không thay đổi đơn hàng, giỏ hàng hay catalog.
+     */
+    public function routineRecommendations(): void {
+        header('Cache-Control: private, no-store');
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+            http_response_code(405);
+            return;
+        }
+
+        $id = trim((string)($_GET['id'] ?? ''));
+        if ($id === '' || !preg_match('/^[A-Za-z0-9_-]{1,32}$/', $id)) {
+            http_response_code(400);
+            return;
+        }
+
+        $offset = max(0, min(200, (int)($_GET['offset'] ?? 0)));
+        try {
+            require_once dirname(__DIR__) . '/services/AssociationRuleRecommender.php';
+            $recommender = new AssociationRuleRecommender($this->pdo);
+            $allItems = $recommender->getFrequentlyBoughtTogether($id, 24);
+            if (!is_array($allItems) || $allItems === []) {
+                http_response_code(204);
+                return;
+            }
+
+            $allItems = array_values(array_filter($allItems, static function ($item) use ($id): bool {
+                if (!is_array($item)) {
+                    return false;
+                }
+                $productId = (string)($item['ma_san_pham'] ?? $item['id'] ?? '');
+                return $productId !== '' && $productId !== $id;
+            }));
+            if ($allItems === []) {
+                http_response_code(204);
+                return;
+            }
+
+            $total = count($allItems);
+            $offset = $total > 0 ? ($offset % $total) : 0;
+            $frequentlyBought = [];
+            for ($i = 0; $i < min(4, $total); $i++) {
+                $frequentlyBought[] = $allItems[($offset + $i) % $total];
+            }
+            $frequentlyBoughtOffset = $offset;
+            $frequentlyBoughtNextOffset = ($offset + count($frequentlyBought)) % $total;
+
+            $hasRealRule = false;
+            foreach ($frequentlyBought as $item) {
+                if (($item['recommendation_source'] ?? '') === 'ASSOCIATION_RULE') {
+                    $hasRealRule = true;
+                    break;
+                }
+            }
+            $sectionTitle = $hasRealRule ? 'Sản phẩm khách hàng thường mua cùng' : 'Gợi ý kết hợp cho routine';
+            $sectionBadge = $hasRealRule ? 'Thường được mua cùng' : 'Gợi ý chu trình';
+            $frequentlyBoughtRefreshUrl = BASE_URL . '/index.php?r=routine_recommendations&id=' . rawurlencode($id);
+
+            header('Content-Type: text/html; charset=utf-8');
+            $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+            require $viewDir . '/partials/routine_recommendations.php';
+        } catch (Throwable $e) {
+            error_log('routine recommendations error: ' . get_class($e));
+            http_response_code(204);
+        }
     }
 
     /**
@@ -821,6 +937,7 @@ class SanPhamController {
             http_response_code(400);
             return;
         }
+        $similarOffset = max(0, min(200, (int)($_GET['offset'] ?? 0)));
         if (in_array(strtolower(ss_env('SIMILAR_PRODUCTS_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
             http_response_code(204);
             return;
@@ -844,16 +961,15 @@ class SanPhamController {
                 return;
             }
             $client = SearchRecommendClient::fromEnv();
-            if (!$client) {
-                http_response_code(204);
-                return;
-            }
             $skinType = null;
             if ($email !== '') {
                 $profile = $this->searchSkinProfile($email);
                 $skinType = is_array($profile) ? ($profile['skin_type'] ?? null) : null;
             }
-            $response = $client->similar($id, is_string($skinType) ? $skinType : null, array_merge([$id], $cartIds), 8);
+            $response = $client
+                ? $client->similar($id, is_string($skinType) ? $skinType : null, array_merge([$id], $cartIds), 20)
+                : null;
+            $response = is_array($response) ? $response : [];
             $ids = [];
             foreach ((array)($response['items'] ?? []) as $item) {
                 $ids[] = (string)$item['product_id'];
@@ -878,9 +994,38 @@ class SanPhamController {
                 $product['reason_text'] = SearchReasonFormatter::format((string)$item['reason_code'], (array)$item['reason_params']);
                 $similarItems[] = $product;
             }
+
+            // Khi AI/Neo4j chưa đồng bộ hoặc breaker đang mở, vẫn hiển thị sản phẩm
+            // cùng thương hiệu/danh mục từ catalog để khối không biến mất khỏi PDP.
+            if (count($similarItems) < 2) {
+                $sourceProduct = $this->model->find($id, true);
+                if (is_array($sourceProduct) && $sourceProduct !== []) {
+                    $fallbackProducts = $this->model->findSimilarFallback($sourceProduct, array_merge([$id], $cartIds), 20);
+                    foreach ($fallbackProducts as $product) {
+                        $pid = (string)($product['ma_san_pham'] ?? $product['id'] ?? '');
+                        if ($pid === '' || $pid === $id) {
+                            continue;
+                        }
+                        $sameBrand = trim((string)($sourceProduct['thuong_hieu'] ?? '')) !== ''
+                            && strcasecmp(trim((string)($sourceProduct['thuong_hieu'] ?? '')), trim((string)($product['thuong_hieu'] ?? ''))) === 0;
+                        $product['reason_code'] = $sameBrand ? 'same_brand' : 'same_category';
+                        $product['reason_text'] = SearchReasonFormatter::format((string)$product['reason_code'], []);
+                        $similarItems[] = $product;
+                    }
+                }
+            }
             if (count($similarItems) < 2) {
                 http_response_code(204);
                 return;
+            }
+            if (count($similarItems) > 8) {
+                $similarCount = count($similarItems);
+                $similarOffset = $similarOffset % $similarCount;
+                $similarItems = array_slice(
+                    array_merge($similarItems, $similarItems),
+                    $similarOffset,
+                    8
+                );
             }
             $similarProductId = $id;
             $similarDegraded = !empty($response['degraded']);
@@ -894,6 +1039,136 @@ class SanPhamController {
                 http_response_code(204);
             }
         }
+    }
+
+    /**
+     * Khối "Gợi ý thêm cho bạn" ở trang tìm kiếm CÓ kết quả, tải lười. GET ?r=search_more&q=<từ khóa>&exclude=<id,id>
+     * -> 200 + HTML partial (partials/search_fallback.php); 204 khi tắt (SEARCH_MORE_ENABLED=0), lỗi hoặc không có gì để hiện;
+     * 400 q sai; 429 vượt giới hạn. Không bao giờ ném lỗi ra trang tìm kiếm.
+     */
+    public function searchMore() {
+        header('Cache-Control: private, no-store');
+        $q = trim((string)($_GET['q'] ?? ''));
+        if ($q === '' || mb_strlen($q, 'UTF-8') > 200) {
+            http_response_code(400);
+            return;
+        }
+        $exclude = [];
+        foreach (explode(',', (string)($_GET['exclude'] ?? '')) as $part) {
+            $part = trim($part);
+            if (preg_match('/^[A-Za-z0-9_-]{1,32}$/', $part) && !in_array($part, $exclude, true)) {
+                $exclude[] = $part;
+                if (count($exclude) >= 48) {
+                    break;
+                }
+            }
+        }
+        if (in_array(strtolower(ss_env('SEARCH_MORE_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
+            http_response_code(204);
+            return;
+        }
+        // Đọc trạng thái phiên rồi nhả khóa ngay: request này chỉ đọc, không nên chặn các request song song cùng phiên.
+        $cartIds = [];
+        if (!empty($_SESSION['gio_hang']) && is_array($_SESSION['gio_hang'])) {
+            $cartIds = array_slice(array_map('strval', array_keys($_SESSION['gio_hang'])), 0, 50);
+        }
+        $email = (string)($_SESSION['user']['email'] ?? '');
+        $userHash = null;
+        $salt = ss_env('SEARCH_USER_HASH_SALT', '');
+        if ($salt !== '' && $email !== '') {
+            $userHash = hash('sha256', mb_strtolower(trim($email)) . $salt);
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        try {
+            require_once dirname(__DIR__) . '/services/SearchRecommendClient.php';
+            require_once dirname(__DIR__) . '/services/SearchFallbackBuilder.php';
+            require_once dirname(__DIR__) . '/services/SearchEventTracker.php'; // csrf cho beacon trong partial
+            require_once dirname(__DIR__) . '/services/SearchReasonFormatter.php';
+            require_once dirname(__DIR__) . '/services/SearchMoreBuilder.php';
+            if (!$this->searchMoreAllowed()) {
+                http_response_code(429);
+                header('Retry-After: 30');
+                return;
+            }
+            $model = $this->model;
+            $find = static function (array $ids) use ($model): array { return $model->findVisibleByIds($ids); };
+
+            $skinState = 'guest';
+            $skinProfile = null;
+            if ($email !== '') {
+                $skinProfile = $this->searchSkinProfile($email);
+                $skinState = $skinProfile === null ? 'no_profile' : 'has_profile';
+            }
+
+            $skinProducts = null;
+            if ($skinState === 'has_profile') {
+                try {
+                    require_once dirname(__DIR__) . '/services/HomeGraphRecommender.php';
+                    $graph = (new HomeGraphRecommender(HomeRecommendClient::fromEnv(), $find))->build([
+                        'sections' => ['skin'],
+                        'skin_profile' => $skinProfile,
+                        'cart_ids' => $cartIds,
+                        'exclude_ids' => array_values(array_unique(array_merge($exclude, $cartIds))),
+                    ]);
+                    $skinProducts = is_array($graph['skin'] ?? null) ? ($graph['skin']['products'] ?? null) : null;
+                } catch (Throwable $e) {
+                    error_log('[SEARCH_MORE] skin section skipped: ' . get_class($e));
+                }
+            }
+
+            $fallback = null;
+            try {
+                $client = SearchRecommendClient::fromEnv();
+                $response = $client ? $client->recommend($q, $userHash, $skinProfile, $cartIds, $exclude, 6, SearchEventTracker::sessionHash()) : null;
+                $fallback = SearchFallbackBuilder::build(
+                    $response,
+                    $find,
+                    function (int $limit) use ($model): array { return $model->bestSellers($limit); },
+                    $q
+                );
+            } catch (Throwable $e) {
+                error_log('[SEARCH_MORE] recommend skipped: ' . get_class($e));
+            }
+
+            $more = SearchMoreBuilder::build($skinProducts, $fallback, $skinState, $exclude);
+            if ($more === null) {
+                http_response_code(204);
+                return;
+            }
+            $searchFallback = $more;
+            $qEffective = $q;
+            $ssfHasExact = true;
+            $ssfSkinCta = $more['skin_cta'];
+            header('Content-Type: text/html; charset=utf-8');
+            $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+            require $viewDir . '/partials/search_fallback.php';
+        } catch (Throwable $e) {
+            error_log('[SEARCH_MORE] block error: ' . get_class($e));
+            if (!headers_sent()) {
+                http_response_code(204);
+            }
+        }
+    }
+
+    /** Giới hạn khối "Gợi ý thêm": 60 lượt/phút theo phiên, 120/phút theo IP công khai. Redis lỗi -> cho qua. */
+    private function searchMoreAllowed(): bool {
+        try {
+            require_once dirname(__DIR__) . '/services/RateLimiter.php';
+            $limiter = RateLimiter::shared();
+            $sid = session_id();
+            if ($sid !== '' && !$limiter->hit('search_more', substr(hash('sha256', 'ssm-sid|' . $sid), 0, 32), 60, 60)['allowed']) {
+                return false;
+            }
+            $ip = RateLimiter::clientIdentity();
+            if ($ip !== null && !$limiter->hit('search_more_ip', $ip, 120, 60)['allowed']) {
+                return false;
+            }
+        } catch (Throwable $e) {
+            error_log('[SEARCH_MORE] rate limit skipped: ' . get_class($e));
+        }
+        return true;
     }
 
     /**
@@ -1165,6 +1440,16 @@ class SanPhamController {
         $endpoint = $flaskUrl . '/api/ai-idol/videos/' . rawurlencode($videoId) . '?rendition=product_page';
         $r2Base = function_exists('ss_env') ? ss_env('R2_PUBLIC_BASE_URL', '') : (string)(getenv('R2_PUBLIC_BASE_URL') ?: '');
 
+        // A published video may already have been uploaded to the shared R2 bucket while the
+        // local AI Idol container no longer has its temporary /app/storage copy. Prefer that
+        // catalog URL when it is available; the publication and product association checks above
+        // still gate access, and productVideoRedirectTarget() rejects every non-whitelisted host.
+        $catalogTarget = self::productVideoCatalogTarget($flaskUrl, $productId, $videoId, $r2Base);
+        if ($catalogTarget !== null) {
+            header('Location: ' . $catalogTarget, true, 302);
+            exit;
+        }
+
         $ch = curl_init($endpoint);
         $requestHeaders = [];
         if (!empty($_SERVER['HTTP_RANGE'])) {
@@ -1222,6 +1507,54 @@ class SanPhamController {
         }
         curl_close($ch);
         exit;
+    }
+
+    /**
+     * Resolve a published product video to its shared R2 rendition without requiring the AI Idol
+     * container to retain the original local render. This is intentionally read-only and bounded:
+     * on any timeout, malformed response, id mismatch, or untrusted URL the normal proxy path runs.
+     */
+    private static function productVideoCatalogTarget(string $flaskUrl, string $productId, string $videoId, string $r2Base): ?string {
+        $productId = trim($productId);
+        $videoId = trim($videoId);
+        if ($productId === '' || $videoId === '' || trim($r2Base) === '') {
+            return null;
+        }
+
+        $url = rtrim($flaskUrl, '/') . '/api/ai-idol/products/' . rawurlencode($productId) . '/videos?limit=30';
+        $ch = curl_init($url);
+        if ($ch === false) {
+            return null;
+        }
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_TIMEOUT => 5,
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        ]);
+        $body = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if (!is_string($body) || $status < 200 || $status >= 300) {
+            return null;
+        }
+
+        $payload = json_decode($body, true);
+        $videos = is_array($payload) ? ($payload['data']['videos'] ?? []) : [];
+        if (!is_array($videos)) {
+            return null;
+        }
+        foreach ($videos as $video) {
+            if (!is_array($video) || (string)($video['video_id'] ?? '') !== $videoId) {
+                continue;
+            }
+            $target = self::productVideoRedirectTarget((string)($video['video_url'] ?? ''), $r2Base);
+            if ($target !== null) {
+                return $target;
+            }
+        }
+        return null;
     }
 
     /**

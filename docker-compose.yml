@@ -437,6 +437,43 @@ services:
     networks:
       - skinsyntax-net
 
+  # Profile "tunnel": link HTTPS public tạm thời để demo (Cloudflare Quick Tunnel), không cần tài khoản
+  # hay tên miền. Link dạng https://<ngẫu-nhiên>.trycloudflare.com, ĐỔI mỗi lần container khởi động lại.
+  #   Bật:      docker compose --profile tunnel up -d tunnel
+  #   Xem link: docker logs skinsyntax-tunnel 2>&1 | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com'
+  #   Tắt:      docker compose stop tunnel
+  # Chỉ đọc trang qua nginx (cổng nội bộ 80); không mở cổng nào trên máy. Dùng `latest` vì Cloudflare ngừng
+  # hỗ trợ bản cloudflared quá cũ.
+  tunnel:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:latest
+    container_name: skinsyntax-tunnel
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "--url", "http://nginx:80"]
+    depends_on:
+      - nginx
+    networks:
+      - skinsyntax-net
+
+  # Profile "ngrok": link public CỐ ĐỊNH (tên miền tĩnh miễn phí của ngrok, vd. ten-gi-do.ngrok-free.app).
+  # Cần NGROK_AUTHTOKEN và NGROK_DOMAIN trong .env (xem .env.example, update_deploy_cicd.md phụ lục C).
+  #   Bật:  docker compose --profile ngrok up -d --no-deps ngrok
+  #   Tắt:  docker compose stop ngrok
+  # restart: unless-stopped -> Docker Desktop khởi động là ngrok tự chạy lại, link giữ nguyên.
+  # Mặc định rỗng (không dùng :?) để `docker compose up` thường không lỗi khi chưa đặt biến.
+  ngrok:
+    profiles: ["ngrok"]
+    image: ngrok/ngrok:latest
+    container_name: skinsyntax-ngrok
+    restart: unless-stopped
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    command: ["http", "--url", "${NGROK_DOMAIN:-}", "--log", "stdout", "nginx:80"]
+    depends_on:
+      - nginx
+    networks:
+      - skinsyntax-net
+
   # Profile "voice": agent chỉ là mô phỏng co-host và cần voice-service (TTS) chạy được,
   # nên KHÔNG tự khởi động cùng stack. Bật bằng:
   #   docker compose --profile voice up -d livekit-voice-agent

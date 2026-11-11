@@ -149,7 +149,20 @@ $orderPageUrl = static function (int $page) use ($orderListRoute, $q, $status, $
                                     <?php
                                     $stNorm = trim((string)($order['trang_thai_normalized'] ?? ''));
                                     $stLabel = trim((string)($order['trang_thai_hien_thi'] ?? ($order['trang_thai'] ?? 'Chờ xử lý')));
-                                    $isPendingOrder = ($stNorm === 'pending' || $stNorm === 'cho_xu_ly' || mb_strtolower($stLabel) === 'chờ xử lý');
+                                    $paymentMethod = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? '')));
+                                    if ($paymentMethod === '') {
+                                        $paymentMethod = strtolower(trim((string)($order['payment_method'] ?? 'cod')));
+                                    }
+                                    $paymentMethodLabel = $paymentMethod === 'bank_transfer_qr'
+                                        ? 'QR chuyển khoản'
+                                        : ($paymentMethod === 'vnpay' ? 'VNPAY' : 'COD');
+                                    $paymentText = trim((string)($order['status_thanh_toan'] ?? ''));
+                                    if ($paymentText === '') {
+                                        $paymentText = trim((string)($order['payment_status'] ?? ''));
+                                    }
+                                    $isPaidPayment = in_array(mb_strtolower($paymentText, 'UTF-8'), ['đã thanh toán', 'da thanh toan', 'paid'], true);
+                                    $isPendingOrder = ($stNorm === 'pending' || $stNorm === 'cho_xu_ly' || mb_strtolower($stLabel) === 'chờ xử lý')
+                                        && !($paymentMethod !== 'cod' && !$isPaidPayment);
 
                                     $pillClass = 'status-pill-processing';
                                     if ($isPendingOrder) {
@@ -175,7 +188,7 @@ $orderPageUrl = static function (int $page) use ($orderListRoute, $q, $status, $
                                         <td class="small fw-semibold"><?= h($formatAdminOrderDate($order['ngay_dat_hien_thi'] ?? ($order['ngay_dat'] ?? null))) ?></td>
                                         <td>
                                             <div class="fw-bold text-danger"><?= vnd($order['tong_tien'] ?? 0) ?></div>
-                                            <div class="small text-muted"><?= strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? 'cod'))) === 'bank_transfer_qr' ? 'QR chuyển khoản' : 'COD' ?></div>
+                                            <div class="small text-muted"><?= h($paymentMethodLabel) ?></div>
                                         </td>
                                         <td>
                                             <span class="status-pill <?= $pillClass ?>">

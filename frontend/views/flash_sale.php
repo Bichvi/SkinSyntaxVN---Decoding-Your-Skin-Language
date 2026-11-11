@@ -109,10 +109,10 @@ $hasActiveCampaign = !empty($campaign) && $totalDeals > 0;
 
     <!-- Deals Grid -->
     <div class="row g-3 g-md-4 mb-5">
-      <?php foreach ($deals as $deal): ?>
+      <?php foreach ($deals as $dealIdx => $deal): ?>
         <?php
           $productId = (string)($deal['id'] ?? $deal['ma_san_pham'] ?? '');
-          $img = resolve_image_url((string)($deal['link_hinh_anh'] ?? $deal['hinh_anh'] ?? ''));
+          $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($deal) : (string)($deal['link_hinh_anh'] ?? $deal['hinh_anh'] ?? ''));
           $flashPrice = (int)($deal['flash_price'] ?? $deal['effective_price'] ?? 0);
           $regularPrice = (int)($deal['regular_price'] ?? $deal['gia_ban'] ?? 0);
           $discountPct = (int)($deal['discount_percent'] ?? $deal['phan_tram_giam'] ?? 0);
@@ -139,7 +139,18 @@ $hasActiveCampaign = !empty($campaign) && $totalDeals > 0;
               </span>
 
               <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= h($productId) ?>" class="d-block w-100 overflow-hidden" style="border-radius: 8px; aspect-ratio: 1/1;">
-                <img class="product-card-img" src="<?= h($img ?: default_placeholder_image()) ?>" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= default_placeholder_image() ?>';" alt="<?= h(!empty($deal['ten_san_pham']) ? $deal['ten_san_pham'] : 'Sản phẩm Flash Sale') ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+                <img class="product-card-img"
+                     src="<?= h($img ?: default_placeholder_image()) ?>"
+                     <?= $dealIdx === 0 ? 'fetchpriority="high"' : ($dealIdx < 4 ? '' : 'loading="lazy"') ?>
+                     decoding="async"
+                     width="280"
+                     height="280"
+                     referrerpolicy="no-referrer"
+                     data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($deal, $img) : '[]' ?>"
+                     data-image-placeholder="<?= h(default_placeholder_image()) ?>"
+                     onerror="window.SkinSyntaxImageFallback(this)"
+                     alt="<?= h(!empty($deal['ten_san_pham']) ? $deal['ten_san_pham'] : 'Sản phẩm Flash Sale') ?>"
+                     style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
               </a>
             </div>
 

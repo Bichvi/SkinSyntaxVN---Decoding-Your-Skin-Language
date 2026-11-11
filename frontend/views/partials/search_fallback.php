@@ -7,6 +7,7 @@ if (!isset($searchFallback) || !is_array($searchFallback)) {
 }
 $ssfQ = trim((string)($qEffective ?? $q ?? '')); // U05: từ khóa thực sự đã tìm (đã tự sửa nếu có)
 $ssfHasExact = !empty($ssfHasExact);
+$ssfSkinCta = isset($ssfSkinCta) && in_array($ssfSkinCta, ['login', 'quiz'], true) ? $ssfSkinCta : null;
 $ssfChips = is_array($searchFallback['chips'] ?? null) ? $searchFallback['chips'] : [];
 $ssfSections = is_array($searchFallback['sections'] ?? null) ? $searchFallback['sections'] : [];
 $ssfE = static function ($v): string {
@@ -42,6 +43,24 @@ $ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
     </div>
   <?php endif; ?>
 
+  <?php if ($ssfSkinCta !== null): ?>
+    <div class="ssf-skincta" data-ssf-skin-cta="<?= $ssfE($ssfSkinCta) ?>">
+      <span class="ssf-skincta-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+      <div class="ssf-skincta-body">
+        <h4 class="ssf-skincta-title">Xem sản phẩm hợp với làn da của bạn</h4>
+        <p class="ssf-skincta-desc"><?= $ssfSkinCta === 'login'
+          ? 'Đăng nhập và làm khảo sát da, SkinSyntax sẽ gợi ý sản phẩm đúng với loại da và vấn đề da của bạn.'
+          : 'Làm khảo sát da để SkinSyntax gợi ý sản phẩm đúng với loại da và vấn đề da của bạn.' ?></p>
+      </div>
+      <div class="ssf-skincta-actions">
+        <a class="ssf-skincta-btn" href="<?= $ssfE(BASE_URL . '/index.php?r=goiy') ?>" data-ssf-skin-cta-click="quiz">Làm khảo sát da</a>
+        <?php if ($ssfSkinCta === 'login'): ?>
+          <a class="ssf-skincta-link" href="<?= $ssfE(BASE_URL . '/index.php?r=dangnhap') ?>" data-ssf-skin-cta-click="login">Đăng nhập</a>
+        <?php endif; ?>
+      </div>
+    </div>
+  <?php endif; ?>
+
   <?php if (!empty($ssfChips)): ?>
     <nav class="ssf-chips" aria-label="Lọc nhanh">
       <?php foreach ($ssfChips as $chip):
@@ -64,7 +83,7 @@ $ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
           if (!is_array($p)) continue;
           $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
           if ($productId === '') continue;
-          $img = resolve_image_url((string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
+          $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
           $giaBan = (string)($p['gia_ban'] ?? '');
           $giaThiTruong = trim((string)($p['gia_thi_truong'] ?? ''));
           $isOutOfStock = function_exists('product_is_out_of_stock') ? product_is_out_of_stock($p) : false;
@@ -78,7 +97,7 @@ $ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
                 <span class="ssf-reason" aria-label="Lý do gợi ý: <?= $ssfE($reasonText) ?>"><?= $ssfE($reasonText) ?></span>
               <?php endif; ?>
               <a href="<?= $ssfE($detailUrl) ?>" class="ssf-thumb-link">
-                <img src="<?= $ssfE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='<?= $ssfE(default_placeholder_image()) ?>';" alt="<?= $ssfE($p['ten_san_pham'] ?? '') ?>">
+                <img src="<?= $ssfE($img ?: default_placeholder_image()) ?>" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($p, $img) : '[]' ?>" data-image-placeholder="<?= $ssfE(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)" alt="<?= $ssfE($p['ten_san_pham'] ?? '') ?>">
               </a>
             </div>
             <div class="ssf-meta">

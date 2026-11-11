@@ -285,6 +285,33 @@ class VideoWatchSession {
             'sort' => ['updated_at' => -1]
         ]);
 
+        // A guest may complete the watch requirement before logging in. The
+        // PHP session id is retained across the login redirect, so resume the
+        // same eligible/in-progress session and bind it to the authenticated
+        // customer instead of creating a fresh session with lost progress.
+        if (!$existing && $customerId !== null && $guestSessionId !== null) {
+            $guestLookup = [
+                'video_id' => $resolvedVideoId,
+                'campaign_id' => $resolvedCampaignId,
+                'guest_session_id' => $guestSessionId,
+                'watch_state' => ['$in' => ['IN_PROGRESS', 'ELIGIBLE']],
+            ];
+            $guestExisting = $this->db->{self::COLLECTION}->findOne($guestLookup, [
+                'sort' => ['updated_at' => -1]
+            ]);
+            if ($guestExisting) {
+                $existingId = (string)$guestExisting['watch_session_id'];
+                $this->db->{self::COLLECTION}->updateOne(
+                    ['watch_session_id' => $existingId],
+                    ['$set' => [
+                        'customer_id' => $customerId,
+                        'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+                    ]]
+                );
+                $existing = $this->db->{self::COLLECTION}->findOne(['watch_session_id' => $existingId]);
+            }
+        }
+
         $nowUtc = new \MongoDB\BSON\UTCDateTime();
         $nowFloat = microtime(true);
 

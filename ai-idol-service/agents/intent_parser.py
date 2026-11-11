@@ -6,7 +6,7 @@ import unicodedata
 from zoneinfo import ZoneInfo
 
 from agents.schemas import AGENT_BRIEF_JSON_SCHEMA, AgentBrief
-from core.purpose import LIVE_AND_PRODUCT, PRODUCT_VIDEO
+from core.purpose import LIVE_ONLY, PRODUCT_VIDEO
 from config import TIMEZONE, logger
 
 
@@ -144,9 +144,9 @@ _LIVESTREAM_WORDS = re.compile(
 
 
 def infer_purpose(normalized_text: str, scheduled_at: str | None) -> str:
-    """Studio left the mode unset: a time slot or livestream wording keeps the livestream (spec D9)."""
+    """Studio left the mode unset: a time slot or livestream wording keeps the livestream (plain live-only; spec D9)."""
     if scheduled_at or _LIVESTREAM_WORDS.search(normalized_text or ""):
-        return LIVE_AND_PRODUCT
+        return LIVE_ONLY
     return PRODUCT_VIDEO
 
 

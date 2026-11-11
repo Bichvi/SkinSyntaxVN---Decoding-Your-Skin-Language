@@ -46,11 +46,14 @@ class VideoWatchController {
             }
         }
 
-        if (empty($customerId)) {
-            $guestSessionId = session_id();
-            if (empty($guestSessionId)) {
-                $guestSessionId = 'guest_' . bin2hex(random_bytes(12));
-            }
+        // Keep the active PHP session id even after login. This lets a guest
+        // watch session be resumed/migrated when login redirects away from
+        // the product page and the customer returns later.
+        $activeSessionId = session_id();
+        if (!empty($activeSessionId)) {
+            $guestSessionId = $activeSessionId;
+        } elseif (empty($customerId)) {
+            $guestSessionId = 'guest_' . bin2hex(random_bytes(12));
         }
 
         return [
@@ -58,6 +61,50 @@ class VideoWatchController {
             'customer_email' => $customerEmail,
             'guest_session_id' => $guestSessionId,
         ];
+    }
+
+    /**
+     * Issue the reward automatically for authenticated customers once the
+     * server-side watch session becomes eligible. Guests keep the eligible
+     * watch session and can claim it after logging in from the same session.
+     */
+    private function autoClaimEligibleReward(array $result, string $sessionId): array {
+        $sessionEligible = !empty($result['session']['is_eligible'])
+            || (($result['session']['watch_state'] ?? '') === 'ELIGIBLE');
+        if ((empty($result['is_eligible']) && !$sessionEligible) || trim($sessionId) === '') {
+            return $result;
+        }
+
+        $identity = $this->getCustomerIdentity();
+        if (empty($identity['customer_id'])) {
+            return $result;
+        }
+
+        $claim = $this->voucherModel->claimReward(
+            $sessionId,
+            $identity['customer_id'],
+            $identity['customer_email'],
+            $identity['guest_session_id']
+        );
+
+        if (!empty($claim['ok']) && !empty($claim['voucher'])) {
+            $voucher = $claim['voucher'];
+            $result['auto_claimed'] = true;
+            $result['is_rewarded'] = true;
+            $result['watch_state'] = 'REWARDED';
+            $result['voucher'] = $voucher;
+            $result['reward_voucher_code'] = $voucher['voucher_code'] ?? '';
+            $result['reward_claimed_at'] = $voucher['claimed_at'] ?? null;
+            $result['message'] = 'Voucher đã được tự động cấp vào ví tài khoản của bạn.';
+            if (isset($result['session']) && is_array($result['session'])) {
+                $result['session']['watch_state'] = 'REWARDED';
+                $result['session']['is_rewarded'] = true;
+                $result['session']['reward_voucher_code'] = $result['reward_voucher_code'];
+                $result['session']['reward_claimed_at'] = $result['reward_claimed_at'];
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -75,6 +122,10 @@ class VideoWatchController {
         $input['guest_session_id'] = $identity['guest_session_id'];
 
         $result = $this->sessionModel->startOrResumeSession($input);
+        $result = $this->autoClaimEligibleReward(
+            $result,
+            (string)($result['session']['watch_session_id'] ?? '')
+        );
         if (empty($result['ok'])) {
             http_response_code(400);
         }
@@ -101,6 +152,7 @@ class VideoWatchController {
         }
 
         $result = $this->sessionModel->recordHeartbeat($sessionId, $currentTime, $playbackRate, $isPaused);
+        $result = $this->autoClaimEligibleReward($result, $sessionId);
         if (empty($result['ok'])) {
             if (($result['code'] ?? '') === 'RATE_LIMITED') {
                 http_response_code(429);
@@ -151,6 +203,7 @@ class VideoWatchController {
         }
 
         $result = $this->sessionModel->validateCompletion($sessionId);
+        $result = $this->autoClaimEligibleReward($result, $sessionId);
         if (empty($result['ok'])) {
             http_response_code(400);
         }

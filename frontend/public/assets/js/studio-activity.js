@@ -230,9 +230,22 @@
       + `${preview}${editor}${note}${reviewButtons(jobId, ui, 'approval')}</section>`;
   }
 
+  // Once the master file is released the stream route 404s; the replay stored on R2 is then the preview.
+  function replayVideoUrl(campaign) {
+    const url = campaign && campaign.replay && typeof campaign.replay.video_url === 'string' ? campaign.replay.video_url.trim() : '';
+    return /^https?:\/\//i.test(url) ? url : '';
+  }
+
+  function previewSource(campaign, status) {
+    if (!PREVIEW_STATUSES.includes(status)) return '';
+    const replay = replayVideoUrl(campaign);
+    if (replay) return replay;
+    return campaign.master_video_path ? `index.php?r=admin_ai_idol_stream_campaign&campaign_id=${encodeURIComponent(campaign._id)}` : '';
+  }
+
   const helpers = {
     scriptReviewState, scriptReviewMarkup, rewritePayload, REWRITE_ENUM,
-    publishedCount, pollDelay, pendingPlatformsOf, canApprovePlatform, segmentPageState, publicationUrl, toDatetimeLocal, vnTime, stepsMarkup, cardMarkup, isInternalOnly,
+    publishedCount, pollDelay, pendingPlatformsOf, canApprovePlatform, segmentPageState, publicationUrl, previewSource, toDatetimeLocal, vnTime, stepsMarkup, cardMarkup, isInternalOnly,
   };
   if (inNode) module.exports = helpers;
 
@@ -508,7 +521,8 @@
     const configuration = isObject(campaign.configuration) ? campaign.configuration : {};
     const auto = Boolean(configuration.agent_managed);
     const warning = approvalWarning(campaign);
-    const canPreview = Boolean(campaign.master_video_path) && PREVIEW_STATUSES.includes(status);
+    const previewSrc = previewSource(campaign, status);
+    const canPreview = Boolean(previewSrc);
     const internalLive = status === 'LIVE' && isInternalOnly(campaign.platforms) && Boolean(campaign.started_at);
     const liveNote = internalLive ? ` · đang phát nội bộ${campaign.ends_at ? `, kết thúc ${formatDate(campaign.ends_at)}` : ''}` : '';
     const waiting = status === 'VIDEOS_READY' ? 'Video sản phẩm đã sẵn sàng. Trạng thái trên trang sản phẩm nằm ở từng sản phẩm bên dưới.'
@@ -531,7 +545,7 @@
       + `${campaign.error_message ? `<div class="studio-message" role="alert">${escapeHtml(campaign.error_message)}</div>` : ''}`
       + `${pendingMarkup(campaign)}`
       + (canPreview
-        ? `<video id="actPreview" controls playsinline preload="metadata" aria-label="Video chương trình" src="index.php?r=admin_ai_idol_stream_campaign&campaign_id=${encodeURIComponent(campaign._id)}"></video>`
+        ? `<video id="actPreview" controls playsinline preload="metadata" aria-label="Video chương trình" src="${escapeHtml(previewSrc)}"></video>`
         : `<div class="empty compact"><i class="bi bi-${status === 'AWAITING_APPROVAL' ? 'pencil-square' : 'camera-reels'}" aria-hidden="true"></i><p>${waiting}</p></div>`)
       + `<div class="avatar-mode-note ${motion || configuration.avatar_mode === 'syna_3d' ? 'motion' : 'photo'}">${escapeHtml(character)}</div>`
       + (campaign.show_format === 'clip_library_v1'

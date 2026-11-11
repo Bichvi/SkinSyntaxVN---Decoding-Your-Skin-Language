@@ -35,3 +35,9 @@ def publishes_to_product_page(purpose: str) -> bool:
 def video_publishes_to_product_page(video: dict | None) -> bool:
     """By purpose, or vetted by the one-time legacy backfill (its product-page clip is price-free)."""
     return bool((video or {}).get("product_page_backfill")) or publishes_to_product_page(purpose_of(video))
+
+
+def campaign_wants_replay(campaign: dict | None) -> bool:
+    """Shown on the storefront /live page: a broadcast purpose that aired on the internal channel."""
+    platforms = (campaign or {}).get("platforms") or ["internal"]
+    return has_broadcast(purpose_of(campaign)) and "internal" in platforms

@@ -9,16 +9,22 @@ if (!empty($hgSeen['products'])):
     $hgSeedName = substr($hgSeedName, 0, 39) . '…';
   }
 ?>
-  <section class="mb-5" id="home-graph-seen" aria-label="Gợi ý theo sản phẩm đã xem">
-    <div class="mb-3">
-      <h3 class="fw-bold mb-1" style="color: #0F172A; font-size: 1.35rem;">Vì bạn đã xem <?= h($hgSeedName) ?></h3>
-      <p class="text-muted mb-0" style="font-size: 0.86rem;">Những sản phẩm có thành phần và công dụng gần với sản phẩm bạn vừa quan tâm.</p>
+  <section class="mb-5" id="home-graph-seen" data-hgc aria-label="Gợi ý theo sản phẩm đã xem">
+    <div class="d-flex align-items-end justify-content-between gap-3 mb-3">
+      <div>
+        <h3 class="fw-bold mb-1" style="color: #0F172A; font-size: 1.35rem;">Vì bạn đã xem <?= h($hgSeedName) ?></h3>
+        <p class="text-muted mb-0" style="font-size: 0.86rem;">Những sản phẩm có thành phần và công dụng gần với sản phẩm bạn vừa quan tâm.</p>
+      </div>
+      <div class="hgc-nav" data-hgc-nav hidden>
+        <button type="button" class="hgc-arrow" data-hgc-prev aria-label="Xem sản phẩm trước"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+        <button type="button" class="hgc-arrow" data-hgc-next aria-label="Xem sản phẩm tiếp theo"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+      </div>
     </div>
-    <div class="row g-3">
-      <?php foreach (array_slice($hgSeen['products'], 0, 4) as $p): ?>
-        <div class="col-6 col-md-3">
+    <div class="hgc-track" data-hgc-track tabindex="0" role="region" aria-label="Danh sách sản phẩm gợi ý, cuộn ngang">
+      <?php foreach ($hgSeen['products'] as $p): ?>
+        <div class="hgc-item">
           <div data-rec-section="seen" data-rec-reason="<?= h((string)($p['reason_code'] ?? '')) ?>" class="h-100">
-            <?php $renderHomeProductCard($p, 'Vì bạn đã xem', (string)($p['reason_text'] ?? '')); ?>
+            <?php $renderHomeProductCard($p, '',(string)($p['reason_text'] ?? '')); ?>
           </div>
         </div>
       <?php endforeach; ?>

@@ -116,8 +116,8 @@ defined('BANK_TRANSFER_WEBHOOK_SECRET') || define('BANK_TRANSFER_WEBHOOK_SECRET'
 
 
 defined('SEPAY_API_TOKEN') || define('SEPAY_API_TOKEN', ss_env('SEPAY_API_TOKEN', ''));
-defined('SEPAY_ACCOUNT_NUMBER') || define('SEPAY_ACCOUNT_NUMBER', '0824719703');
-defined('SEPAY_POLLING_ENABLED') || define('SEPAY_POLLING_ENABLED', true);
+defined('SEPAY_ACCOUNT_NUMBER') || define('SEPAY_ACCOUNT_NUMBER', ss_env('SEPAY_ACCOUNT_NUMBER', ''));
+defined('SEPAY_POLLING_ENABLED') || define('SEPAY_POLLING_ENABLED', filter_var(ss_env('SEPAY_POLLING_ENABLED', '0'), FILTER_VALIDATE_BOOLEAN));
 
 defined('VNPAY_TMN_CODE') || define('VNPAY_TMN_CODE', ss_env('VNPAY_TMN_CODE', ''));
 defined('VNPAY_HASH_SECRET') || define('VNPAY_HASH_SECRET', ss_env('VNPAY_HASH_SECRET', ''));
@@ -139,9 +139,11 @@ defined('AI_CHAT_TIMEOUT') || define('AI_CHAT_TIMEOUT', 60);
 defined('CHAT_AGENT_TOKEN_SECRET') || define('CHAT_AGENT_TOKEN_SECRET', ss_env('CHAT_AGENT_TOKEN_SECRET', ''));
 defined('CHAT_AGENT_INTERNAL_SECRET') || define('CHAT_AGENT_INTERNAL_SECRET', ss_env('CHAT_AGENT_INTERNAL_SECRET', ''));
 
-defined('LIVEKIT_URL') || define('LIVEKIT_URL', ss_env('LIVEKIT_URL', 'wss://skinsyntax-live.livekit.cloud'));
-defined('LIVEKIT_API_KEY') || define('LIVEKIT_API_KEY', ss_env('LIVEKIT_API_KEY', 'devkey'));
-defined('LIVEKIT_API_SECRET') || define('LIVEKIT_API_SECRET', ss_env('LIVEKIT_API_SECRET', 'secret'));
+// LiveKit must be explicitly configured. Empty values keep the UI in a
+// truthful "not configured" state instead of issuing unusable fake tokens.
+defined('LIVEKIT_URL') || define('LIVEKIT_URL', ss_env('LIVEKIT_URL', ''));
+defined('LIVEKIT_API_KEY') || define('LIVEKIT_API_KEY', ss_env('LIVEKIT_API_KEY', ''));
+defined('LIVEKIT_API_SECRET') || define('LIVEKIT_API_SECRET', ss_env('LIVEKIT_API_SECRET', ''));
 
 
 if (!defined('VIEW_DIR')) {

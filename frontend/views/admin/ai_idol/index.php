@@ -13,18 +13,16 @@ $studioScripts = ['ai-idol-approval.js', 'studio-logic.js', 'studio-core.js', 's
 $studioCsrf = (string)($csrfToken ?? (class_exists('AdminAiIdolController', false) ? AdminAiIdolController::getCsrfToken() : ''));
 $studioJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE;
 
-// Tab Thủ công (#manualFlow): the filter labels, values and counts of the product filters. $filterCounts and
-// $catalogTree come from AdminAiIdolController::index(); the fallbacks are the counts the old page showed.
+// Tab Thủ công (#manualFlow): the filter labels, values and counts come from MongoDB.
 $wzEsc = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 $wzNumber = static fn($value): string => number_format((int)$value, 0, ',', '.');
 $wzCounts = is_array($filterCounts ?? null) ? $filterCounts : [];
 $wzTree = is_array($catalogTree ?? null) ? $catalogTree : [];
-$wzTotal = $wzCounts['total'] ?? 2473;
-// Group select (Nhóm): a root category found in the tree is offered by its numeric id with the count the tree
-// holds; a group with no root in the database keeps the static option the page always had.
-// [tree key => [label, static value, static count text]]
+$wzTotal = (int)($wzCounts['total'] ?? 0);
+// A group absent from the catalog is shown as zero until MongoDB provides a real node for it.
+// [tree key => [label, value, count text]]
 $wzGroups = [
-    'face' => ['Chăm Sóc Da Mặt', 'face', 'Có ' . $wzNumber(2473)],
+    'face' => ['Chăm Sóc Da Mặt', 'face', 'Có 0'],
     'makeup' => ['Trang Điểm', 'makeup', '0'],
     'body' => ['Chăm Sóc Cơ Thể', 'body', '0'],
     'hair' => ['Chăm Sóc Tóc', 'hair', '0'],
@@ -59,9 +57,9 @@ $wzStock = [
 ];
 $wzSales = [
     ['', 'Không chọn', null],
-    ['best_30', 'Bán chạy · 30 ngày', $wzCounts['best_30'] ?? 45],
-    ['best_7', 'Bán tốt · 7 ngày', $wzCounts['best_7'] ?? 20],
-    ['best_all', 'Bán chạy · toàn kỳ', $wzCounts['best_all'] ?? 2108],
+    ['best_30', 'Bán chạy · 30 ngày', $wzCounts['best_30'] ?? 0],
+    ['best_7', 'Bán tốt · 7 ngày', $wzCounts['best_7'] ?? 0],
+    ['best_all', 'Bán chạy · toàn kỳ', $wzCounts['best_all'] ?? 0],
     ['revenue_low_conversion', 'Doanh thu cao, chuyển đổi thấp', null],
     ['views_no_orders', 'Xem nhiều, chưa mua', null],
     ['cart', 'Thêm giỏ nhiều', null],
@@ -190,8 +188,7 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                             <p class="wz-lead">Chọn mục đích trước vì nó quyết định phong cách dẫn nào được dùng ở bước sau.</p>
                             <div class="wz-purposes" role="radiogroup" aria-label="Chế độ phát sóng">
                                 <label class="wz-purpose"><input type="radio" name="manualPurpose" value="product_video" checked><span><strong>Video sản phẩm <em>Mặc định</em></strong><small>Không phát sóng. Nói giá bán và ưu đãi đang chạy, lấy từ hệ thống. Video tự ẩn khỏi trang sản phẩm khi giá đổi hoặc ưu đãi hết hạn.</small></span></label>
-                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_and_product"><span><strong>Livestream + video sản phẩm</strong><small>Livestream được nói giá, khuyến mãi và kêu gọi chốt đơn. Phần giới thiệu kèm giá tự lên trang sản phẩm sau khi phát xong và tự ẩn khi giá không còn đúng.</small></span></label>
-                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_only"><span><strong>Chỉ livestream</strong><small>Được nói giá live, khuyến mãi có hạn, kêu gọi chốt đơn. Không lưu video lên trang sản phẩm.</small></span></label>
+                                <label class="wz-purpose"><input type="radio" name="manualPurpose" value="live_only"><span><strong>Livestream</strong><small>Phát trực tiếp: được nói giá live, khuyến mãi có hạn và kêu gọi chốt đơn. Buổi live không tự đăng lên trang sản phẩm.</small></span></label>
                             </div>
                             <div id="manualLiveFields" hidden>
                                 <div class="idol-row">
@@ -209,6 +206,7 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
                                 </fieldset>
                                 <p class="idol-note">YouTube và Facebook cần được cấu hình khóa phát trước khi lên sóng.</p>
                                 <p class="wz-warn" id="manualRtmpWarn" role="status" hidden></p>
+                                <label class="wz-purpose wz-also-video"><input type="checkbox" id="manualAlsoProductVideo"><span><strong>Tạo thêm video sản phẩm cho các sản phẩm này</strong><small>Video riêng với kịch bản riêng, không phụ thuộc buổi live. Tự lên trang sản phẩm khi xong và tự ẩn khi giá đổi.</small></span></label>
                             </div>
                             <div class="approval-reminder" id="manualProductVideoNote"><i class="bi bi-magic" aria-hidden="true"></i><div><strong>Video sản phẩm tự duyệt và tự đăng.</strong><p>Kịch bản qua bộ kiểm tra sẽ được tạo video ngay, rồi tự lên trang sản phẩm.</p></div></div>
                             <div class="approval-reminder" id="manualApprovalNote" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i><div><strong>Bạn duyệt xong, video mới được tạo.</strong><p>Kịch bản sẽ xuất hiện trong chương trình để bạn chỉnh sửa và chấp nhận.</p></div></div>

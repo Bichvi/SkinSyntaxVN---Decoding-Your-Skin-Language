@@ -1,77 +1,67 @@
 <?php
 
+/**
+ * Persistence boundary for live commerce sessions.
+ *
+ * Live sessions are intentionally data-driven. This model must not seed demo
+ * rooms or manufacture replay URLs when the database is empty or unavailable.
+ */
 class PhienLive {
     private $db;
+
+    private const ALLOWED_STATUSES = [
+        'scheduled', 'ready', 'live', 'interrupted', 'ended',
+        'processing', 'replay_ready', 'recording_failed'
+    ];
 
     public function __construct($db) {
         $this->db = $db;
     }
 
-    private function getNextNumericId(): int {
-        try {
-            $lastDoc = $this->db->phien_live->findOne([], ['sort' => ['ma_phong' => -1]]);
-            if ($lastDoc && isset($lastDoc['ma_phong']) && is_numeric($lastDoc['ma_phong'])) {
-                return (int)$lastDoc['ma_phong'] + 1;
-            }
-        } catch (Throwable $e) {
-            // Silence exception fallback
+    private function idFilter($id): array {
+        $value = trim((string)$id);
+        $or = [
+            ['ma_phong' => $value],
+            ['ma_phong' => is_numeric($value) ? (int)$value : $value],
+            ['id' => $value],
+        ];
+        if (class_exists('MongoDB\\BSON\\ObjectId') && preg_match('/^[a-f0-9]{24}$/i', $value)) {
+            $or[] = ['_id' => new MongoDB\BSON\ObjectId($value)];
         }
-        return 1;
+        return ['$or' => $or];
+    }
+
+    private function nextNumericId(): int {
+        try {
+            $last = $this->db->phien_live->findOne([], ['sort' => ['ma_phong' => -1], 'projection' => ['ma_phong' => 1]]);
+            return $last && is_numeric($last['ma_phong'] ?? null) ? ((int)$last['ma_phong'] + 1) : 1;
+        } catch (Throwable $e) {
+            return 1;
+        }
     }
 
     public function getAllLives(): array {
         try {
-            $cursor = $this->db->phien_live->find([], ['sort' => ['created_at' => -1]]);
-            $results = iterator_to_array($cursor);
-            if (empty($results)) {
-                $this->seedDefaultLives();
-                $cursor = $this->db->phien_live->find([], ['sort' => ['created_at' => -1]]);
-                $results = iterator_to_array($cursor);
-            }
-            return array_map([$this, 'normalizeDoc'], $results);
+            $cursor = $this->db->phien_live->find([], ['sort' => ['created_at' => -1, 'khung_gio_bat_dau' => -1]]);
+            return array_map([$this, 'normalizeDoc'], iterator_to_array($cursor));
         } catch (Throwable $e) {
-            return $this->getDefaultMockLives();
+            // Fail closed with an empty state; never replace a DB failure with
+            // fabricated rooms or video URLs.
+            return [];
         }
     }
 
     public function getActiveLives(): array {
-        try {
-            $cursor = $this->db->phien_live->find(
-                ['$or' => [['trang_thai' => 'danglive'], ['trang_thai' => 'live']]],
-                ['sort' => ['luot_xem' => -1]]
-            );
-            $results = array_map([$this, 'normalizeDoc'], iterator_to_array($cursor));
-            if (empty($results)) {
-                $all = $this->getAllLives();
-                $results = array_values(array_filter($all, fn($item) => $item['trang_thai'] === 'danglive' || $item['trang_thai'] === 'live'));
-            }
-            return $results;
-        } catch (Throwable $e) {
-            return array_values(array_filter($this->getDefaultMockLives(), fn($item) => $item['trang_thai'] === 'danglive' || $item['trang_thai'] === 'live'));
-        }
+        return array_values(array_filter($this->getAllLives(), fn(array $live): bool => ($live['status'] ?? '') === 'live'));
     }
 
     public function getUpcomingLives(): array {
-        try {
-            $cursor = $this->db->phien_live->find(
-                ['$or' => [['trang_thai' => 'chuamoi'], ['trang_thai' => 'upcoming']]],
-                ['sort' => ['khung_gio_bat_dau' => 1]]
-            );
-            return array_map([$this, 'normalizeDoc'], iterator_to_array($cursor));
-        } catch (Throwable $e) {
-            return array_values(array_filter($this->getDefaultMockLives(), fn($item) => $item['trang_thai'] === 'chuamoi' || $item['trang_thai'] === 'upcoming'));
-        }
+        return array_values(array_filter($this->getAllLives(), fn(array $live): bool => in_array(($live['status'] ?? ''), ['scheduled', 'ready'], true)));
     }
 
     public function findById($id): ?array {
         try {
-            $doc = $this->db->phien_live->findOne([
-                '$or' => [
-                    ['ma_phong' => (int)$id],
-                    ['ma_phong' => (string)$id],
-                    ['_id' => is_string($id) && strlen($id) === 24 ? new MongoDB\BSON\ObjectId($id) : $id]
-                ]
-            ]);
+            $doc = $this->db->phien_live->findOne($this->idFilter($id));
             return $doc ? $this->normalizeDoc($doc) : null;
         } catch (Throwable $e) {
             return null;
@@ -82,29 +72,39 @@ class PhienLive {
         return $this->findById($id);
     }
 
-
     public function taoPhienLive(array $data): bool {
-        try {
-            $maPhong = $this->getNextNumericId();
-            $payload = [
-                'ma_phong' => $maPhong,
-                'tieu_de' => trim((string)($data['tieu_de'] ?? 'Phiên LiveStream AI Mới')),
-                'streamer' => trim((string)($data['streamer'] ?? 'SkinSyntax Streamer & AI Co-Host')),
-                'khung_gio_bat_dau' => trim((string)($data['khung_gio_bat_dau'] ?? date('Y-m-d H:i'))),
-                'khung_gio_ket_thuc' => trim((string)($data['khung_gio_ket_thuc'] ?? date('Y-m-d H:i', strtotime('+2 hours')))),
-                'ma_san_pham_ghim' => trim((string)($data['ma_san_pham_ghim'] ?? '5876')),
-                'gia_uu_dai_live' => (float)($data['gia_uu_dai_live'] ?? 78000),
-                'so_luong_kho_deal' => (int)($data['so_luong_kho_deal'] ?? 20),
-                'bat_ai_cohost' => !empty($data['bat_ai_cohost']),
-                'server_livekit_url' => trim((string)($data['server_livekit_url'] ?? 'wss://skinsyntax-live.livekit.cloud')),
-                'url_ban_ghi' => trim((string)($data['url_ban_ghi'] ?? '')),
-                'tom_tat_phien_live' => trim((string)($data['tom_tat_phien_live'] ?? '')),
-                'trang_thai' => trim((string)($data['trang_thai'] ?? 'danglive')),
-                'luot_xem' => (int)($data['luot_xem'] ?? rand(15, 45)),
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
+        $title = trim((string)($data['tieu_de'] ?? ''));
+        $streamer = trim((string)($data['streamer'] ?? ''));
+        if ($title === '' || $streamer === '') return false;
 
+        try {
+            $now = date('Y-m-d H:i:s');
+            $status = $this->normalizeInputStatus((string)($data['trang_thai'] ?? 'scheduled'));
+            if ($status === 'live') $status = 'ready';
+            $payload = [
+                'ma_phong' => $this->nextNumericId(),
+                'tieu_de' => mb_substr($title, 0, 180),
+                'streamer' => mb_substr($streamer, 0, 120),
+                'khung_gio_bat_dau' => trim((string)($data['khung_gio_bat_dau'] ?? '')),
+                'khung_gio_ket_thuc' => trim((string)($data['khung_gio_ket_thuc'] ?? '')),
+                'ma_san_pham_ghim' => trim((string)($data['ma_san_pham_ghim'] ?? '')),
+                'gia_uu_dai_live' => max(0, (float)($data['gia_uu_dai_live'] ?? 0)),
+                'so_luong_kho_deal' => max(0, (int)($data['so_luong_kho_deal'] ?? 0)),
+                'bat_ai_cohost' => !empty($data['bat_ai_cohost']),
+                'server_livekit_url' => trim((string)($data['server_livekit_url'] ?? (defined('LIVEKIT_URL') ? LIVEKIT_URL : ''))),
+                'trang_thai' => $status,
+                'stream_state' => 'offline',
+                'stream_last_seen' => null,
+                'recording_status' => 'not_started',
+                'url_ban_ghi' => '',
+                'recording_mime' => '',
+                'recording_size' => 0,
+                'recording_error' => '',
+                'luot_xem' => 0,
+                'reaction_count' => 0,
+                'created_at' => $now,
+                'updated_at' => $now
+            ];
             $res = $this->db->phien_live->insertOne($payload);
             return $res->getInsertedCount() > 0;
         } catch (Throwable $e) {
@@ -113,28 +113,26 @@ class PhienLive {
     }
 
     public function capNhatPhienLive($id, array $data): bool {
+        $allowed = [
+            'tieu_de', 'streamer', 'khung_gio_bat_dau', 'khung_gio_ket_thuc',
+            'ma_san_pham_ghim', 'gia_uu_dai_live', 'so_luong_kho_deal',
+            'bat_ai_cohost', 'server_livekit_url', 'url_ban_ghi',
+            'tom_tat_phien_live', 'trang_thai', 'recording_status',
+            'recording_mime', 'recording_size', 'recording_error'
+        ];
+        $set = [];
+        foreach ($allowed as $key) {
+            if (!array_key_exists($key, $data)) continue;
+            if ($key === 'trang_thai') $set[$key] = $this->normalizeInputStatus((string)$data[$key]);
+            elseif ($key === 'gia_uu_dai_live') $set[$key] = max(0, (float)$data[$key]);
+            elseif ($key === 'so_luong_kho_deal' || $key === 'recording_size') $set[$key] = max(0, (int)$data[$key]);
+            elseif ($key === 'bat_ai_cohost') $set[$key] = !empty($data[$key]);
+            else $set[$key] = is_string($data[$key]) ? trim($data[$key]) : $data[$key];
+        }
+        if (!$set) return false;
+        $set['updated_at'] = date('Y-m-d H:i:s');
         try {
-            $payload = [
-                'tieu_de' => trim((string)($data['tieu_de'] ?? '')),
-                'streamer' => trim((string)($data['streamer'] ?? '')),
-                'khung_gio_bat_dau' => trim((string)($data['khung_gio_bat_dau'] ?? '')),
-                'khung_gio_ket_thuc' => trim((string)($data['khung_gio_ket_thuc'] ?? '')),
-                'ma_san_pham_ghim' => trim((string)($data['ma_san_pham_ghim'] ?? '')),
-                'gia_uu_dai_live' => (float)($data['gia_uu_dai_live'] ?? 0),
-                'so_luong_kho_deal' => isset($data['so_luong_kho_deal']) ? (int)$data['so_luong_kho_deal'] : null,
-                'bat_ai_cohost' => !empty($data['bat_ai_cohost']),
-
-                'server_livekit_url' => trim((string)($data['server_livekit_url'] ?? '')),
-                'url_ban_ghi' => trim((string)($data['url_ban_ghi'] ?? '')),
-                'tom_tat_phien_live' => trim((string)($data['tom_tat_phien_live'] ?? '')),
-                'trang_thai' => trim((string)($data['trang_thai'] ?? 'danglive')),
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
-
-            $res = $this->db->phien_live->updateOne(
-                ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]],
-                ['$set' => array_filter($payload, fn($v) => $v !== '')]
-            );
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => $set]);
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
@@ -143,9 +141,7 @@ class PhienLive {
 
     public function xoaPhienLive($id): bool {
         try {
-            $res = $this->db->phien_live->deleteOne([
-                '$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]
-            ]);
+            $res = $this->db->phien_live->deleteOne($this->idFilter($id));
             return $res->getDeletedCount() > 0;
         } catch (Throwable $e) {
             return false;
@@ -153,11 +149,50 @@ class PhienLive {
     }
 
     public function doiTrangThai($id, string $status): bool {
+        $status = $this->normalizeInputStatus($status);
+        if (!in_array($status, self::ALLOWED_STATUSES, true)) return false;
+        $set = ['trang_thai' => $status, 'updated_at' => date('Y-m-d H:i:s')];
+        if ($status === 'ended') {
+            $set['stream_state'] = 'offline';
+            $set['stream_last_seen'] = null;
+            $set['recording_status'] = 'processing';
+        }
         try {
-            $res = $this->db->phien_live->updateOne(
-                ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]],
-                ['$set' => ['trang_thai' => $status, 'updated_at' => date('Y-m-d H:i:s')]]
-            );
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => $set]);
+            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function updateStreamState($id, string $state): bool {
+        $state = strtolower(trim($state));
+        if (!in_array($state, ['offline', 'live', 'interrupted', 'ended'], true)) return false;
+        $set = ['stream_state' => $state, 'stream_last_seen' => $state === 'live' ? time() : null, 'updated_at' => date('Y-m-d H:i:s')];
+        if ($state === 'live') {
+            $set['trang_thai'] = 'live';
+            $set['stream_started_at'] = time();
+        } elseif ($state === 'interrupted') {
+            $set['trang_thai'] = 'interrupted';
+        } elseif ($state === 'ended') {
+            $set['trang_thai'] = 'ended';
+            $set['recording_status'] = 'processing';
+        } else {
+            $set['trang_thai'] = 'ready';
+        }
+        try {
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => $set]);
+            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function touchStream($id): bool {
+        try {
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => [
+                'stream_state' => 'live', 'stream_last_seen' => time(), 'trang_thai' => 'live', 'updated_at' => date('Y-m-d H:i:s')
+            ]]);
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
@@ -166,68 +201,27 @@ class PhienLive {
 
     public function tangLuotXem($id): bool {
         try {
-            $res = $this->db->phien_live->updateOne(
-                ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id], ['id' => (string)$id]]],
-                ['$inc' => ['luot_xem' => 1], '$set' => ['updated_at' => date('Y-m-d H:i:s')]]
-            );
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$inc' => ['luot_xem' => 1], '$set' => ['updated_at' => date('Y-m-d H:i:s')]]);
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
         }
     }
 
-    public function ghimSanPham($id, string $productId, ?float $livePrice = null, int $durationMinutes = 15, int $dealStock = 20): bool {
+    public function ghimSanPham($id, string $productId, ?float $livePrice = null, int $durationMinutes = 15, int $dealStock = 0): bool {
+        $productId = trim($productId);
+        if ($productId === '' || $dealStock < 1) return false;
         try {
-            $nowStr = date('Y-m-d H:i:s');
-            $endStr = date('Y-m-d H:i:s', strtotime("+{$durationMinutes} minutes"));
+            $now = date('Y-m-d H:i:s');
             $set = [
                 'ma_san_pham_ghim' => $productId,
-                'deal_bat_dau' => $nowStr,
-                'deal_ket_thuc' => $endStr,
-                'so_luong_kho_deal' => max(1, $dealStock),
-                'updated_at' => $nowStr
+                'deal_bat_dau' => $now,
+                'deal_ket_thuc' => date('Y-m-d H:i:s', strtotime('+' . max(1, $durationMinutes) . ' minutes')),
+                'so_luong_kho_deal' => $dealStock,
+                'updated_at' => $now
             ];
-            if ($livePrice !== null && $livePrice > 0) {
-                $set['gia_uu_dai_live'] = $livePrice;
-            }
-
-            $res = $this->db->phien_live->updateOne(
-                ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]],
-                ['$set' => $set]
-            );
-
-            // Auto sync with danh_sach_deal
-            $doc = $this->findById($id);
-            if ($doc) {
-                $existingDeals = $doc['danh_sach_deal'] ?? [];
-                $exists = false;
-                foreach ($existingDeals as &$d) {
-                    if ((string)($d['ma_san_pham'] ?? '') === (string)$productId) {
-                        $exists = true;
-                        if ($livePrice !== null && $livePrice > 0) {
-                            $d['gia_uu_dai_live'] = $livePrice;
-                        }
-                        $d['so_luong_kho_deal'] = max(1, $dealStock);
-                        break;
-                    }
-                }
-                if ($exists) {
-                    $this->db->phien_live->updateOne(
-                        ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]],
-                        ['$set' => ['danh_sach_deal' => $existingDeals]]
-                    );
-                } else {
-                    $this->themDealSanPham($id, [
-                        'ma_san_pham' => $productId,
-                        'gia_uu_dai_live' => $livePrice ?: (float)($doc['gia_uu_dai_live'] ?? 0),
-                        'so_luong_kho_deal' => max(1, $dealStock),
-                        'khung_gio_bat_dau' => date('H:i'),
-                        'khung_gio_ket_thuc' => date('H:i', strtotime("+{$durationMinutes} minutes")),
-                        'trang_thai' => 'dang_giam_gia'
-                    ]);
-                }
-            }
-
+            if ($livePrice !== null && $livePrice > 0) $set['gia_uu_dai_live'] = $livePrice;
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => $set]);
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
@@ -235,22 +229,20 @@ class PhienLive {
     }
 
     public function themDealSanPham($id, array $dealData): bool {
+        $productId = trim((string)($dealData['ma_san_pham'] ?? ''));
+        if ($productId === '') return false;
+        $deal = [
+            'deal_id' => 'deal_' . bin2hex(random_bytes(8)),
+            'ma_san_pham' => $productId,
+            'gia_uu_dai_live' => max(0, (float)($dealData['gia_uu_dai_live'] ?? 0)),
+            'so_luong_kho_deal' => max(0, (int)($dealData['so_luong_kho_deal'] ?? 0)),
+            'khung_gio_bat_dau' => trim((string)($dealData['khung_gio_bat_dau'] ?? '')),
+            'khung_gio_ket_thuc' => trim((string)($dealData['khung_gio_ket_thuc'] ?? '')),
+            'trang_thai' => trim((string)($dealData['trang_thai'] ?? 'scheduled')),
+        ];
+        if ($deal['so_luong_kho_deal'] < 1) return false;
         try {
-            $dealItem = [
-                'deal_id' => 'deal_' . uniqid(),
-                'ma_san_pham' => trim((string)($dealData['ma_san_pham'] ?? '')),
-                'gia_uu_dai_live' => (float)($dealData['gia_uu_dai_live'] ?? 0),
-                'so_luong_kho_deal' => max(1, (int)($dealData['so_luong_kho_deal'] ?? 20)),
-                'khung_gio_bat_dau' => trim((string)($dealData['khung_gio_bat_dau'] ?? date('H:i'))),
-                'khung_gio_ket_thuc' => trim((string)($dealData['khung_gio_ket_thuc'] ?? date('H:i', strtotime('+30 minutes')))),
-                'trang_thai' => trim((string)($dealData['trang_thai'] ?? 'sap_dien_ra'))
-            ];
-            if (empty($dealItem['ma_san_pham'])) return false;
-
-            $res = $this->db->phien_live->updateOne(
-                ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]],
-                ['$push' => ['danh_sach_deal' => $dealItem]]
-            );
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$push' => ['danh_sach_deal' => $deal], '$set' => ['updated_at' => date('Y-m-d H:i:s')]]);
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
@@ -259,312 +251,134 @@ class PhienLive {
 
     public function xoaDealSanPham($id, string $dealId): bool {
         try {
-            $res = $this->db->phien_live->updateOne(
-                ['$or' => [['ma_phong' => (int)$id], ['ma_phong' => (string)$id]]],
-                ['$pull' => ['danh_sach_deal' => ['deal_id' => $dealId]]]
-            );
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$pull' => ['danh_sach_deal' => ['deal_id' => $dealId]], '$set' => ['updated_at' => date('Y-m-d H:i:s')]]);
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
         }
     }
 
-    private function normalizeDoc($doc): array {
-        if (!$doc) return [];
-        $arr = (array)$doc;
-        $arr['id'] = (string)($arr['ma_phong'] ?? $arr['_id'] ?? '');
-        $arr['tieu_de'] = (string)($arr['tieu_de'] ?? '');
-        $arr['streamer'] = (string)($arr['streamer'] ?? '');
-        $arr['khung_gio_bat_dau'] = (string)($arr['khung_gio_bat_dau'] ?? '');
-        $arr['khung_gio_ket_thuc'] = (string)($arr['khung_gio_ket_thuc'] ?? '');
-        $arr['ma_san_pham_ghim'] = (string)($arr['ma_san_pham_ghim'] ?? '');
-        $arr['gia_uu_dai_live'] = (float)($arr['gia_uu_dai_live'] ?? 0);
-        $arr['deal_bat_dau'] = (string)($arr['deal_bat_dau'] ?? '');
-        $arr['deal_ket_thuc'] = (string)($arr['deal_ket_thuc'] ?? '');
-        $arr['danh_sach_deal'] = is_array($arr['danh_sach_deal'] ?? null) ? json_decode(json_encode($arr['danh_sach_deal']), true) : [];
-        $arr['bat_ai_cohost'] = !empty($arr['bat_ai_cohost']);
-        $arr['server_livekit_url'] = (string)($arr['server_livekit_url'] ?? 'wss://skinsyntax-live.livekit.cloud');
-        $arr['url_ban_ghi'] = (string)($arr['url_ban_ghi'] ?? '');
-        $st = (string)($arr['trang_thai'] ?? 'danglive');
-        if ($st === 'tamdung' || $st === 'paused') {
-            $st = 'ketthuc';
-        }
-        $arr['trang_thai'] = $st;
-        $arr['luot_xem'] = (int)($arr['luot_xem'] ?? 0);
-        return $arr;
-    }
-
-    private function seedDefaultLives(): void {
+    public function saveRecording($id, string $url, string $mime, int $size): bool {
         try {
-            $defaults = $this->getDefaultMockLives();
-            foreach ($defaults as $item) {
-                $this->db->phien_live->insertOne($item);
-            }
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => [
+                'url_ban_ghi' => trim($url), 'recording_status' => 'replay_ready', 'recording_mime' => trim($mime),
+                'recording_size' => max(0, $size), 'recording_error' => '', 'trang_thai' => 'replay_ready',
+                'stream_state' => 'offline', 'updated_at' => date('Y-m-d H:i:s')
+            ]]);
+            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
-            // Ignore duplicate insert
+            return false;
         }
     }
 
-    public function getThemedPresets(): array {
-        return [
-            'lancome' => [
-                'tieu_de' => '🔴 LANCÔME BRAND DAY: Săn Nước Thần Clarifique & Kem Nền Che Phủ Giảm 84%',
-                'streamer' => 'SkinSyntax Official & Lancôme Expert',
-                'ma_san_pham_ghim' => '5689',
-                'gia_uu_dai_live' => 55000,
-                'bat_ai_cohost' => true,
-                'chu_de_label' => 'Thương hiệu Lancôme'
-            ],
-            'serum' => [
-                'tieu_de' => '💧 ĐẠI CHIẾN SERUM PHỤC HỒI: Top 5 Hyaluronic Acid & Peptide Đáng Mua Nhất',
-                'streamer' => 'Chuyên Gia Da Liễu Khánh Linh',
-                'ma_san_pham_ghim' => '5933',
-                'gia_uu_dai_live' => 99000,
-                'bat_ai_cohost' => true,
-                'chu_de_label' => 'Dòng Serum & Tinh chất'
-            ],
-            'paulas_choice' => [
-                'tieu_de' => ' PAULA\'S CHOICE SPECIAL: BHA 2% & Niacinamide Thu Nhỏ Lỗ Chân Lông',
-                'streamer' => 'Beauty Editor Thu Thảo',
-                'ma_san_pham_ghim' => '5876',
-                'gia_uu_dai_live' => 120000,
-                'bat_ai_cohost' => true,
-                'chu_de_label' => 'Thương hiệu Paula\'s Choice'
-            ],
-            'la_roche_posay' => [
-                'tieu_de' => '🔴 LA ROCHE-POSAY WORKSHOP: Phục Hồi Màng Lipid B5 Chuẩn Y Khoa Cho Da Nhạy Cảm',
-                'streamer' => 'Bác Sĩ Hoàng Nam (SkinLab)',
-                'ma_san_pham_ghim' => '5689',
-                'gia_uu_dai_live' => 145000,
-                'bat_ai_cohost' => true,
-                'chu_de_label' => 'Thương hiệu La Roche-Posay'
-            ],
-            'sunscreen' => [
-                'tieu_de' => '☀️ SĂN DEAL KEM CHỐNG NẮNG: Bảo Vệ Da Toàn Diện Khỏi UV & Ánh Sáng Xanh',
-                'streamer' => 'KOL Thanh Hà & AI Assistant',
-                'ma_san_pham_ghim' => '5933',
-                'gia_uu_dai_live' => 89000,
-                'bat_ai_cohost' => true,
-                'chu_de_label' => 'Chuyên đề Kem Chống Nắng'
-            ],
-            'cleanser' => [
-                'tieu_de' => '🌿 LÀM SẠCH SÂU CHUẨN Y KHOA: Nước Tẩy Trang Micellar & Gel Rửa Mặt Cho Da Dầu Mụn',
-                'streamer' => 'Dược Sĩ Phương Anh',
-                'ma_san_pham_ghim' => '5876',
-                'gia_uu_dai_live' => 68000,
-                'bat_ai_cohost' => true,
-                'chu_de_label' => 'Chuyên đề Tẩy Trang & Sữa Rửa Mặt'
-            ],
-            'whitening' => [
-                'tieu_de' => '✨ RETINOL & VITAMIN C: Bí Quyết Dưỡng Trắng, Mờ Thâm & Trẻ Hóa Đón Tết',
-                'streamer' => 'Skincare Host Quỳnh Chi',
-                'ma_san_pham_ghim' => '5689',
-                'gia_uu_dai_live' => 159000,
-                'bat_ai_cohost' => true,
-                'chu_de_label' => 'Chuyên đề Dưỡng Trắng & Trẻ Hóa'
-            ],
-            'acne_care' => [
-                'tieu_de' => '🔴 GỠ RỐI ROUTINE DA DẦU MỤN: Tự Động Tư Vấn 24/7 Với AI Co-Host & Dược Sĩ',
-                'streamer' => 'DS. Minh Trang & AI Co-Host',
-                'ma_san_pham_ghim' => '5876',
-                'gia_uu_dai_live' => 78000,
-                'bat_ai_cohost' => true,
-                'chu_de_label' => 'Routine Da Dầu Mụn'
-            ]
-        ];
-    }
-
-    public function getDefaultMockLives(): array {
-        return [
-            [
-                'ma_phong' => 1,
-                'tieu_de' => '🔴 LIVE: Gỡ Rối Routine Phục Hồi Da Dầu Mụn Với AI Skin Agent & Dược Sĩ',
-                'streamer' => 'DS. Minh Trang & AI Co-Host',
-                'khung_gio_bat_dau' => date('Y-m-d 19:00'),
-                'khung_gio_ket_thuc' => date('Y-m-d 21:00'),
-                'ma_san_pham_ghim' => '5876',
-                'gia_uu_dai_live' => 78000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'trang_thai' => 'danglive',
-                'luot_xem' => 42,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 2,
-                'tieu_de' => '🔴 LANCÔME BRAND DAY: Săn Nước Thần Clarifique & Kem Nền Che Phủ Giảm 84%',
-                'streamer' => 'SkinSyntax Official & Lancôme Expert',
-                'khung_gio_bat_dau' => date('Y-m-d 14:00'),
-                'khung_gio_ket_thuc' => date('Y-m-d 16:00'),
-                'ma_san_pham_ghim' => '5689',
-                'gia_uu_dai_live' => 55000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'trang_thai' => 'danglive',
-                'luot_xem' => 28,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 3,
-                'tieu_de' => '💧 ĐẠI CHIẾN SERUM PHỤC HỒI: Top 5 Hyaluronic Acid & Peptide Đáng Mua Nhất',
-                'streamer' => 'Chuyên Gia Da Liễu Khánh Linh',
-                'khung_gio_bat_dau' => date('Y-m-d 18:30'),
-                'khung_gio_ket_thuc' => date('Y-m-d 20:30'),
-                'ma_san_pham_ghim' => '5933',
-                'gia_uu_dai_live' => 99000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'trang_thai' => 'danglive',
-                'luot_xem' => 35,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 4,
-                'tieu_de' => ' SẮP DIỄN RA (20:00): Paula\'s Choice Special - BHA 2% & Niacinamide Thu Nhỏ Lỗ Chân Lông',
-                'streamer' => 'Beauty Editor Thu Thảo',
-                'khung_gio_bat_dau' => date('Y-m-d 20:00'),
-                'khung_gio_ket_thuc' => date('Y-m-d 22:00'),
-                'ma_san_pham_ghim' => '5876',
-                'gia_uu_dai_live' => 120000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'trang_thai' => 'chuamoi',
-                'luot_xem' => 0,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 5,
-                'tieu_de' => ' SẮP DIỄN RA (21:30): La Roche-Posay Workshop - Phục Hồi B5 Chuẩn Y Khoa Cho Da Nhạy Cảm',
-                'streamer' => 'Bác Sĩ Hoàng Nam (SkinLab)',
-                'khung_gio_bat_dau' => date('Y-m-d 21:30'),
-                'khung_gio_ket_thuc' => date('Y-m-d 23:30'),
-                'ma_san_pham_ghim' => '5689',
-                'gia_uu_dai_live' => 145000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'trang_thai' => 'chuamoi',
-                'luot_xem' => 0,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 6,
-                'tieu_de' => '☀️ SĂN DEAL KEM CHỐNG NẮNG: Bảo Vệ Da Toàn Diện Khỏi UV & Ánh Sáng Xanh',
-                'streamer' => 'KOL Thanh Hà & AI Assistant',
-                'khung_gio_bat_dau' => date('Y-m-d 22:00'),
-                'khung_gio_ket_thuc' => date('Y-m-d 23:59'),
-                'ma_san_pham_ghim' => '5933',
-                'gia_uu_dai_live' => 89000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'trang_thai' => 'chuamoi',
-                'luot_xem' => 0,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 7,
-                'tieu_de' => '🌿 LÀM SẠCH SÂU CHUẨN Y KHOA: Nước Tẩy Trang Micellar & Gel Rửa Mặt Cho Da Dầu Mụn',
-                'streamer' => 'Dược Sĩ Phương Anh',
-                'khung_gio_bat_dau' => date('Y-m-d 10:00', strtotime('+1 day')),
-                'khung_gio_ket_thuc' => date('Y-m-d 12:00', strtotime('+1 day')),
-                'ma_san_pham_ghim' => '5876',
-                'gia_uu_dai_live' => 68000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'trang_thai' => 'chuamoi',
-                'luot_xem' => 0,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 8,
-                'tieu_de' => '✨ RETINOL & VITAMIN C: Bí Quyết Dưỡng Trắng, Mờ Thâm & Trẻ Hóa Đón Tết',
-                'streamer' => 'Skincare Host Quỳnh Chi',
-                'khung_gio_bat_dau' => date('Y-m-d 15:00', strtotime('+1 day')),
-                'khung_gio_ket_thuc' => date('Y-m-d 17:00', strtotime('+1 day')),
-                'ma_san_pham_ghim' => '5689',
-                'gia_uu_dai_live' => 159000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'trang_thai' => 'chuamoi',
-                'luot_xem' => 0,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 9,
-                'tieu_de' => '🎬 [XEM LẠI] BẢN GHI LIVE: Routine Phục Hồi Màng Lipid Da Nhạy Cảm & Dầu Mụn',
-                'streamer' => 'DS. Minh Trang & AI Co-Host',
-                'khung_gio_bat_dau' => date('Y-m-d 19:00', strtotime('-2 days')),
-                'khung_gio_ket_thuc' => date('Y-m-d 21:00', strtotime('-2 days')),
-                'ma_san_pham_ghim' => '5876',
-                'gia_uu_dai_live' => 78000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'url_ban_ghi' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'tom_tat_phien_live' => "• Phân tích nguyên nhân suy giảm màng lipid da do sử dụng AHA/BHA quá liều.\n• Hướng dẫn kết hợp B5 Hyaluronic Acid giúp làm dịu mẩn đỏ trong 48h.\n• Khung giờ vàng áp dụng deal giảm 84% cho sản phẩm Lancôme Clarifique Essence.",
-                'trang_thai' => 'ketthuc',
-                'luot_xem' => 18,
-                'created_at' => date('Y-m-d H:i:s')
-            ],
-            [
-                'ma_phong' => 10,
-                'tieu_de' => '🎬 [XEM LẠI] BẢN GHI LIVE: Paula\'s Choice Workshop BHA 2% & Niacinamide',
-                'streamer' => 'Beauty Editor Thu Thảo',
-                'khung_gio_bat_dau' => date('Y-m-d 14:00', strtotime('-3 days')),
-                'khung_gio_ket_thuc' => date('Y-m-d 16:00', strtotime('-3 days')),
-                'ma_san_pham_ghim' => '5689',
-                'gia_uu_dai_live' => 120000,
-                'bat_ai_cohost' => true,
-                'server_livekit_url' => 'wss://skinsyntax-live.livekit.cloud',
-                'url_ban_ghi' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-                'tom_tat_phien_live' => "• Giải đáp thắc mắc hiện tượng đẩy mụn (purging) khi dùng Salicylic Acid 2%.\n• Routine tối giản 3 bước hỗ trợ se khít lỗ chân lông và làm đều màu da.\n• Ưu đãi đặc quyền tặng kèm sample Niacinamide 10% khi đặt hàng trong phiên.",
-                'trang_thai' => 'ketthuc',
-                'luot_xem' => 25,
-                'created_at' => date('Y-m-d H:i:s')
-            ]
-        ];
-    }
-
-    public function luuTinNhanChat(string $roomId, string $senderName, string $message, bool $isAi = false, bool $isOrder = false): bool {
+    public function failRecording($id, string $message): bool {
         try {
-            $doc = [
-                'room_id' => (string)$roomId,
-                'sender_name' => (string)$senderName,
-                'message' => (string)$message,
-                'is_ai' => (bool)$isAi,
-                'is_order' => (bool)$isOrder,
-                'created_at' => date('Y-m-d H:i:s'),
-                'timestamp_ms' => (int)round(microtime(true) * 1000)
-            ];
-            $this->db->phien_live_chats->insertOne($doc);
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => [
+                'recording_status' => 'recording_failed', 'recording_error' => mb_substr(trim($message), 0, 500),
+                'trang_thai' => 'recording_failed', 'updated_at' => date('Y-m-d H:i:s')
+            ]]);
+            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function luuTinNhanChat(string $roomId, string $senderName, string $message, bool $isAi = false, bool $isOrder = false, string $senderType = 'customer', string $senderId = '', string $clientMessageId = '', bool $isQuestion = false): bool {
+        try {
+            $this->db->phien_live_chats->insertOne([
+                'room_id' => (string)$roomId, 'sender_id' => trim($senderId), 'sender_type' => trim($senderType) ?: ($isAi ? 'ai' : 'customer'),
+                'sender_name' => mb_substr(trim($senderName), 0, 80), 'message' => mb_substr(trim($message), 0, 1000),
+                'is_ai' => $isAi, 'is_order' => $isOrder, 'is_question' => $isQuestion, 'client_message_id' => trim($clientMessageId),
+                'created_at' => date('Y-m-d H:i:s'), 'timestamp_ms' => (int)round(microtime(true) * 1000)
+            ]);
             return true;
         } catch (Throwable $e) {
             return false;
         }
     }
 
-    public function getLichSuChat(string $roomId, int $limit = 100): array {
+    public function getLichSuChat(string $roomId, int $limit = 100, string $mode = 'all'): array {
         try {
-            $cursor = $this->db->phien_live_chats->find(
-                ['room_id' => (string)$roomId],
-                [
-                    'sort' => ['created_at' => 1],
-                    'limit' => max(1, $limit)
-                ]
-            );
-            $items = iterator_to_array($cursor);
+            $filter = ['room_id' => (string)$roomId];
+            if ($mode === 'featured') $filter['$or'] = [['is_pinned' => true], ['is_order' => true]];
+            if ($mode === 'qa') $filter['is_question'] = true;
+            $cursor = $this->db->phien_live_chats->find($filter, ['sort' => ['timestamp_ms' => 1], 'limit' => min(200, max(1, $limit))]);
             $results = [];
-            foreach ($items as $item) {
+            foreach ($cursor as $item) {
                 $results[] = [
-                    'id' => isset($item['_id']) ? (string)$item['_id'] : '',
-                    'sender_name' => (string)($item['sender_name'] ?? 'Khách hàng'),
-                    'message' => (string)($item['message'] ?? ''),
-                    'is_ai' => !empty($item['is_ai']),
-                    'is_order' => !empty($item['is_order']),
-                    'created_at' => (string)($item['created_at'] ?? date('H:i:s'))
+                    'id' => isset($item['_id']) ? (string)$item['_id'] : '', 'client_message_id' => (string)($item['client_message_id'] ?? ''),
+                    'sender_id' => (string)($item['sender_id'] ?? ''), 'sender_type' => (string)($item['sender_type'] ?? (!empty($item['is_ai']) ? 'ai' : 'customer')),
+                    'sender_name' => (string)($item['sender_name'] ?? 'Khách hàng'), 'message' => (string)($item['message'] ?? ''),
+                    'is_ai' => !empty($item['is_ai']), 'is_order' => !empty($item['is_order']), 'is_question' => !empty($item['is_question']),
+                    'is_pinned' => !empty($item['is_pinned']), 'created_at' => (string)($item['created_at'] ?? '')
                 ];
             }
             return $results;
         } catch (Throwable $e) {
             return [];
         }
+    }
+
+    public function recordReaction(string $roomId, string $identity): int {
+        try {
+            $now = time();
+            $this->db->phien_live_reactions->insertOne(['room_id' => $roomId, 'identity' => $identity, 'created_at' => $now]);
+            $this->db->phien_live->updateOne($this->idFilter($roomId), ['$inc' => ['reaction_count' => 1]]);
+            return (int)$this->db->phien_live_reactions->countDocuments(['room_id' => $roomId, 'created_at' => ['$gte' => $now - 3600]]);
+        } catch (Throwable $e) {
+            return 0;
+        }
+    }
+
+    private function normalizeInputStatus(string $status): string {
+        $status = strtolower(trim($status));
+        return match ($status) {
+            'chuamoi', 'upcoming' => 'scheduled',
+            'danglive' => 'ready',
+            'ketthuc', 'cancelled' => 'ended',
+            'tamdung', 'paused' => 'interrupted',
+            default => in_array($status, self::ALLOWED_STATUSES, true) ? $status : 'scheduled'
+        };
+    }
+
+    private function resolveStatus(array $arr): string {
+        $raw = strtolower(trim((string)($arr['trang_thai'] ?? 'scheduled')));
+        $streamState = strtolower(trim((string)($arr['stream_state'] ?? '')));
+        $lastSeen = (int)($arr['stream_last_seen'] ?? 0);
+        $recording = strtolower(trim((string)($arr['recording_status'] ?? '')));
+        if (in_array($raw, ['danglive', 'live'], true)) return $streamState === 'live' && $lastSeen >= (time() - 30) ? 'live' : 'ready';
+        if (in_array($raw, ['chuamoi', 'upcoming'], true)) return 'scheduled';
+        if (in_array($raw, ['ketthuc', 'cancelled'], true)) return $recording === 'replay_ready' || !empty($arr['url_ban_ghi']) ? 'replay_ready' : 'ended';
+        if (in_array($raw, self::ALLOWED_STATUSES, true)) return $raw === 'live' && !($streamState === 'live' && $lastSeen >= (time() - 30)) ? 'ready' : $raw;
+        return 'scheduled';
+    }
+
+    private function normalizeDoc($doc): array {
+        $arr = (array)$doc;
+        $arr['id'] = (string)($arr['ma_phong'] ?? $arr['id'] ?? '');
+        $arr['tieu_de'] = (string)($arr['tieu_de'] ?? '');
+        $arr['streamer'] = (string)($arr['streamer'] ?? '');
+        $arr['khung_gio_bat_dau'] = (string)($arr['khung_gio_bat_dau'] ?? '');
+        $arr['khung_gio_ket_thuc'] = (string)($arr['khung_gio_ket_thuc'] ?? '');
+        $arr['ma_san_pham_ghim'] = (string)($arr['ma_san_pham_ghim'] ?? '');
+        $arr['gia_uu_dai_live'] = (float)($arr['gia_uu_dai_live'] ?? 0);
+        $arr['danh_sach_deal'] = is_array($arr['danh_sach_deal'] ?? null) ? json_decode(json_encode($arr['danh_sach_deal']), true) : [];
+        $arr['bat_ai_cohost'] = !empty($arr['bat_ai_cohost']);
+        $arr['server_livekit_url'] = (string)($arr['server_livekit_url'] ?? (defined('LIVEKIT_URL') ? LIVEKIT_URL : ''));
+        $arr['url_ban_ghi'] = (string)($arr['url_ban_ghi'] ?? '');
+        // Older development records used Google's public sample videos. They
+        // are not SkinSyntax recordings and must never be presented as replay.
+        if (str_contains($arr['url_ban_ghi'], 'commondatastorage.googleapis.com/gtv-videos-bucket/sample/')) {
+            $arr['url_ban_ghi'] = '';
+            $arr['recording_status'] = 'recording_failed';
+        }
+        $arr['stream_state'] = (string)($arr['stream_state'] ?? 'offline');
+        $arr['stream_last_seen'] = (int)($arr['stream_last_seen'] ?? 0);
+        $arr['recording_status'] = (string)($arr['recording_status'] ?? ($arr['url_ban_ghi'] !== '' ? 'replay_ready' : 'not_started'));
+        $arr['recording_error'] = (string)($arr['recording_error'] ?? '');
+        $arr['luot_xem'] = (int)($arr['luot_xem'] ?? 0);
+        $arr['reaction_count'] = (int)($arr['reaction_count'] ?? 0);
+        $arr['status'] = $this->resolveStatus($arr);
+        return $arr;
     }
 }

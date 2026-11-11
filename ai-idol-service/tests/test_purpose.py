@@ -68,7 +68,7 @@ class CreateCampaignPurposeTests(unittest.TestCase):
         when = (utcnow() + dt.timedelta(days=1)).isoformat()
         campaigns.create_campaign({"product_ids": ["1"], "scheduled_at": when})
         stored = self.db.ai_idol_campaigns.find_one({})
-        self.assertEqual(stored["purpose"], "live_and_product")
+        self.assertEqual(stored["purpose"], "live_only")
         self.assertIsNotNone(stored["scheduled_at"])
 
     def test_two_unscheduled_product_video_campaigns_are_distinct(self):

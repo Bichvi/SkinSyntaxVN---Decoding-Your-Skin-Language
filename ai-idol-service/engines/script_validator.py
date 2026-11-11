@@ -3,7 +3,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, asdict, field
 from providers.llm_provider import LLMProvider
-from config import MAX_SCRIPT_REPAIR_ATTEMPTS, SELF_HEALING_ENABLED, logger
+from config import MAX_SCRIPT_REPAIR_ATTEMPTS, RELAXED_AUDIT, SELF_HEALING_ENABLED, logger
 from core.text_budget import clip_text
 from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO
 from core.script_text import (
@@ -325,7 +325,9 @@ def _live_clip_issues(sections, snapshot: dict, clip_kind: str, flash: bool, phr
     issues: list[ValidationIssue] = []
 
     def add(code, category, label, original, reason):
-        issues.append(ValidationIssue(code, category, "error", label or None, original, reason, True))
+        issue = ValidationIssue(code, category, "error", label or None, original, reason, True)
+        issue.live_rule = True  # plain attribute, not a field: to_dict() and the API shape are unchanged
+        issues.append(issue)
 
     for pattern in LIVE_FORBIDDEN_PATTERNS:
         if flash and pattern in _FLASH_ONLY_PATTERNS:
@@ -400,17 +402,27 @@ def _deterministic_issues(script: str, snapshot: dict, purpose: str,
     return issues
 
 
+# A "no violation" verdict the auditor sometimes writes where an issue reason belongs.
+_PASS_VERDICT = re.compile(
+    r"^\W*(?:pass|ok|đạt|hợp lệ|không (?:có )?vi phạm(?: nào)?|không phát hiện vi phạm)\W*$", re.IGNORECASE)
+
+
+def _is_pass_item(item: dict) -> bool:
+    return (not str(item.get("original_text") or "").strip()
+            and bool(_PASS_VERDICT.match(str(item.get("reason") or ""))))
+
+
 def _parse_audit(response: str) -> list[dict]:
     text = re.sub(r"^```(?:json)?|```$", "", str(response or "").strip(), flags=re.MULTILINE).strip()
     start, end = text.find("["), text.rfind("]")
-    if start < 0 and re.match(r"^\W*PASS\b", text, re.IGNORECASE):
-        return []
+    if start < 0 and re.search(r"\bPASS\b", text, re.IGNORECASE) and not re.search(r"\bFAIL\b", text, re.IGNORECASE):
+        return []  # plain or wrapped verdict: "PASS", "Kết quả: PASS", {"result": "PASS"}
     if start < 0 or end < start:
         raise ValueError("no JSON array")
     data = json.loads(text[start:end + 1])
     if not isinstance(data, list):
         raise ValueError("not a list")
-    return [item for item in data if isinstance(item, dict)]
+    return [item for item in data if isinstance(item, dict) and not _is_pass_item(item)]
 
 
 def _llm_audit_issues(script: str, snapshot: dict, purpose: str, clip_kind: str | None = None) -> list[ValidationIssue]:
@@ -433,6 +445,15 @@ def _llm_audit_issues(script: str, snapshot: dict, purpose: str, clip_kind: str 
             for item in items]
 
 
+# Codes RELAXED_AUDIT still blocks: wrong shop prices or another retailer's name are data bugs, not advertising law.
+_SHOP_FACT_CODES = {"EXTERNAL_RETAILER"}
+
+
+def _keeps_in_relaxed_mode(issue: ValidationIssue) -> bool:
+    # Live library rules (spec 5.6, D7: invented crowds, gifts, numbering) are shop facts too.
+    return issue.code in _SHOP_FACT_CODES or issue.code.startswith("PRICE") or getattr(issue, "live_rule", False)
+
+
 def validate_script(script: str, snapshot: dict, purpose: str = LEGACY_PURPOSE,
                     clip_kind: str | None = None) -> list[ValidationIssue]:
     """Structured validation. The script passes when no returned issue has severity == "error".
@@ -441,6 +462,12 @@ def validate_script(script: str, snapshot: dict, purpose: str = LEGACY_PURPOSE,
     if clip_kind is not None and clip_kind not in LIVE_CLIP_KINDS:
         raise ValueError(f"Unknown live clip kind: {clip_kind}")
     issues = _deterministic_issues(script, snapshot, purpose, clip_kind)
+    if RELAXED_AUDIT:
+        # Demo mode: claim/legal rules become warnings and the LLM auditor is skipped.
+        for issue in issues:
+            if not _keeps_in_relaxed_mode(issue):
+                issue.severity = "warning"
+        return issues
     if not any(i.severity == "error" for i in issues):
         if clip_kind is None:
             issues.extend(_llm_audit_issues(script, snapshot, purpose))

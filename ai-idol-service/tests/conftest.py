@@ -20,6 +20,7 @@ import pytest
 BLOCKED_MONGO_URI = "mongodb://real-mongo-blocked-by-tests.invalid:1/"
 os.environ["MONGO_URI"] = BLOCKED_MONGO_URI
 os.environ["AI_IDOL_CATALOG_CACHE_TTL"] = "0"  # no Redis catalog cache unless a test enables it
+os.environ["AI_IDOL_RELAXED_AUDIT"] = "false"  # a demo .env must not loosen the validator under test
 
 SERVICE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if SERVICE_DIR not in sys.path:
@@ -31,6 +32,7 @@ import core.state_machine as state_machine  # noqa: E402
 # Already imported by something else first? Pin the copies the code actually reads.
 config.MONGO_URI = state_machine.MONGO_URI = BLOCKED_MONGO_URI
 config.CATALOG_CACHE_TTL_SECONDS = 0
+config.RELAXED_AUDIT = False
 
 BLOCKED_MESSAGE = (
     "A test reached core.state_machine.get_db() and tried to open a real MongoDB connection. "

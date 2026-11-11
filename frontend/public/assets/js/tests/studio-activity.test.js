@@ -108,3 +108,13 @@ test('rewritePayload only emits enum instructions', () => {
   assert.deepEqual(A.rewritePayload('CUSTOM', ' ngắn '), { instruction: 'CUSTOM', custom_text: 'ngắn' });
   assert.deepEqual(A.rewritePayload('evil'), { instruction: 'NATURAL' });
 });
+
+test('previewSource prefers the stored replay once the master is gone, else streams the master', () => {
+  const stream = 'index.php?r=admin_ai_idol_stream_campaign&campaign_id=c1';
+  assert.equal(A.previewSource(campaign({ master_video_path: '/m.mp4' }), 'COMPLETED'), stream);
+  assert.equal(A.previewSource(campaign({ master_video_path: '/m.mp4', replay: { video_url: 'https://pub.r2.dev/a.mp4' } }), 'COMPLETED'), 'https://pub.r2.dev/a.mp4');
+  assert.equal(A.previewSource(campaign({ replay: { video_url: 'https://pub.r2.dev/a.mp4' } }), 'COMPLETED'), 'https://pub.r2.dev/a.mp4');
+  assert.equal(A.previewSource(campaign({ replay: { video_url: 'javascript:alert(1)' } }), 'COMPLETED'), '');
+  assert.equal(A.previewSource(campaign({ master_video_path: '/m.mp4' }), 'GENERATING'), '');
+  assert.equal(A.previewSource(campaign(), 'COMPLETED'), '');
+});
