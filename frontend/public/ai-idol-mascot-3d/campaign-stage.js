@@ -53,7 +53,7 @@ function box(ctx, x, y, w, h, fill, radius = 18) {
 function label(ctx, value, x, y, size = 18, color = '#284c3a', weight = 400) {
   ctx.fillStyle = color; ctx.font = `${weight} ${size}px "Segoe UI",sans-serif`; ctx.fillText(value, x, y);
 }
-function lines(ctx, value, x, y, width, size = 22, max = 3, weight = 500) {
+function wrapLines(ctx, value, width, size = 22, max = 3, weight = 500) {
   ctx.font = `${weight} ${size}px "Segoe UI",sans-serif`;
   const result = []; let line = '';
   for (const word of String(value).split(/\s+/)) {
@@ -61,10 +61,23 @@ function lines(ctx, value, x, y, width, size = 22, max = 3, weight = 500) {
     else line = line ? `${line} ${word}` : word;
   }
   if (line) result.push(line);
-  result.slice(0, max).forEach((item, i) => {
-    if (i === max - 1 && result.length > max) item = item.slice(0, -3) + '…';
+  return result.slice(0, max).map((item, i) => (i === max - 1 && result.length > max ? item.slice(0, -3) + '…' : item));
+}
+function lines(ctx, value, x, y, width, size = 22, max = 3, weight = 500) {
+  wrapLines(ctx, value, width, size, max, weight).forEach((item, i) => {
     label(ctx, item, x, y + i * (size + 7), size, '#284c3a', weight);
   });
+}
+export function captionBaselines(lineCount, centerY, size = 22, gap = 7) {
+  const block = lineCount * size + (lineCount - 1) * gap, top = centerY - block / 2;
+  return Array.from({ length: lineCount }, (_, i) => top + size * .8 + i * (size + gap));
+}
+export function drawCaption(ctx, text) {
+  box(ctx, 35, 625, 1210, 77, 'rgba(255,254,249,.97)', 14);
+  const rows = wrapLines(ctx, text, 1158, 22, 2, 500), ys = captionBaselines(rows.length, 663.5, 22);
+  ctx.save(); ctx.textAlign = 'center';
+  rows.forEach((item, i) => label(ctx, item, 640, ys[i], 22, '#284c3a', 500));
+  ctx.restore();
 }
 function fitted(ctx, image, x, y, w, h, cover = false) {
   const scale = (cover ? Math.max : Math.min)(w / image.width, h / image.height);
@@ -130,8 +143,5 @@ export function drawCampaign(ctx, scene, manifest, images, time, pose) {
   ctx.drawImage(scene.renderer.domElement, 0, 0);
   drawSticker(ctx, pose.sticker, time);
   const caption = cueAt(manifest.cues, time)?.text;
-  if (caption) {
-    box(ctx, 35, 625, 1210, 77, 'rgba(255,254,249,.97)', 14);
-    lines(ctx, caption, 60, 657, 1158, 22, 2);
-  }
+  if (caption) drawCaption(ctx, caption);
 }

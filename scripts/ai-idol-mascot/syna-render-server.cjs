@@ -114,7 +114,7 @@ async function render(payload, req, res) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://127.0.0.1:${port}`);
-    if (req.method === 'GET' && url.pathname === '/health') return send(res, 200, { ok: true, renderer: 'syna-native-v4', busy });
+    if (req.method === 'GET' && url.pathname === '/health') return send(res, 200, { ok: true, renderer: 'syna-native-v5', busy });
     if (req.method === 'POST' && url.pathname === '/render') {
       // No CORS and no browser-origin POSTs: only the internal worker calls this endpoint.
       if (req.headers.origin || req.headers['content-type'] !== 'application/json') return send(res, 403, { error: 'Internal JSON clients only' });
