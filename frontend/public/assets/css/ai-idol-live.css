@@ -3,7 +3,11 @@
 .ai-idol-live__video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
 .ai-idol-live__badge { position: absolute; top: 12px; left: 12px; background: #dc2626; color: #fff; font-weight: 700; font-size: .8rem; padding: 4px 12px; border-radius: 999px; letter-spacing: .04em; z-index: 2; }
 .ai-idol-live__name { position: absolute; top: 12px; left: 76px; max-width: calc(100% - 100px); padding: 4px 12px; border-radius: 999px; background: rgba(15,23,42,.75); color: #fff; font-weight: 600; font-size: .85rem; z-index: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ai-idol-live__mute { position: absolute; right: 12px; bottom: 10px; z-index: 3; border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: .85rem; background: rgba(255,255,255,.92); color: #162F18; cursor: pointer; }
+.ai-idol-live__controls { position: absolute; right: 12px; bottom: 10px; z-index: 3; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 24px); }
+.ai-idol-live__mute[hidden] { display: none; }
+.ai-idol-live__stage:fullscreen, .ai-idol-live__stage:-webkit-full-screen { width: 100vw; height: 100vh; aspect-ratio: auto; border-radius: 0; }
+.ai-idol-live__stage:fullscreen .ai-idol-live__video, .ai-idol-live__stage:-webkit-full-screen .ai-idol-live__video { object-fit: contain; }
+.ai-idol-live__mute { border: 0; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: .85rem; background: rgba(255,255,255,.92); color: #162F18; cursor: pointer; }
 .ai-idol-live__overlay { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.6); color: #fff; font-weight: 700; font-size: 1.1rem; border: 0; width: 100%; cursor: pointer; }
 .ai-idol-live__overlay[hidden] { display: none; }
 .ai-idol-live__products { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }

@@ -22,3 +22,9 @@ test('livePosition with zero or invalid duration is 0', () => {
   assert.equal(livePosition(1500, 1000, -5), 0);
   assert.equal(livePosition(1500, 1000, NaN), 0);
 });
+
+test('fullscreenLabel toggles between enter and exit labels', () => {
+  const { fullscreenLabel } = require('../ai-idol-live.js');
+  assert.equal(fullscreenLabel(false), 'Phóng to');
+  assert.equal(fullscreenLabel(true), 'Thu nhỏ');
+});
