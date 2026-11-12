@@ -6,6 +6,7 @@ x-ai-idol-common: &ai-idol-common
     dockerfile: Dockerfile.ai-idol
   image: skinsyntax-ai-idol:local
   restart: unless-stopped
+  dns: ["1.1.1.1", "8.8.8.8"]
   env_file:
     - .env
   environment: &ai-idol-environment
@@ -280,6 +281,7 @@ services:
     image: skinsyntax-ai-idol-agent:local
     container_name: skinsyntax-ai-idol-agent
     restart: unless-stopped
+    dns: ["1.1.1.1", "8.8.8.8"]
     env_file:
       - .env
     environment:

@@ -28,12 +28,13 @@ NOW = dt.datetime(2026, 10, 14, 8, 0, tzinfo=dt.timezone.utc)
 
 class FakeS3:
     def __init__(self, fail=None):
-        self.uploads, self.fail = [], fail
+        self.uploads, self.fail, self.configs = [], fail, []
 
-    def upload_file(self, path, bucket, key, ExtraArgs=None):
+    def upload_file(self, path, bucket, key, ExtraArgs=None, Config=None):
         if self.fail:
             raise RuntimeError(self.fail)
         self.uploads.append((path, bucket, key, ExtraArgs))
+        self.configs.append(Config)
 
 
 class ReplayTestCase(unittest.TestCase):
@@ -135,7 +136,7 @@ class PublishCampaignReplayTests(ReplayTestCase):
             self.assertFalse(replay_publisher.publish_campaign_replay(campaign_id, client=client))
         replay = self.stored(campaign_id)["replay"]
         self.assertEqual(replay["last_error"], "Không còn file video gốc để lưu bản xem lại.")
-        self.assertEqual(replay["attempts"], 5)
+        self.assertEqual(replay["attempts"], media_publisher.MAX_ATTEMPTS)
         self.assertEqual(client.uploads, [])
 
     def test_fresh_claim_blocks_second_worker(self):
@@ -264,8 +265,31 @@ class RetryAndBackfillTests(ReplayTestCase):
             self.assertTrue(replay_publisher.publish_campaign_replay(campaign_id, client=FakeS3()))
         self.assertFalse(os.path.exists(master))
 
+    def test_failure_records_last_attempt_at(self):
+        campaign_id = self.campaign()
+        with patch.dict(os.environ, R2):
+            replay_publisher.publish_campaign_replay(campaign_id, client=FakeS3(fail="boom"))
+        self.assertEqual(self.stored(campaign_id)["replay"]["last_attempt_at"], NOW)
+
+    def test_retry_waits_for_backoff(self):
+        recent = self.campaign(replay={"attempts": 1, "last_attempt_at": NOW - dt.timedelta(minutes=5)})
+        old = self.campaign(replay={"attempts": 1, "last_attempt_at": NOW - dt.timedelta(minutes=11)})
+        with patch.dict(os.environ, R2):
+            self.assertEqual(replay_publisher.retry_pending_replays(client=FakeS3()), 1)
+        self.assertNotIn("uploaded_at", self.stored(recent)["replay"])
+        self.assertIn("uploaded_at", self.stored(old)["replay"])
+
+    def test_upload_uses_shared_transfer_config(self):
+        campaign_id = self.campaign()
+        client = FakeS3()
+        with patch.dict(os.environ, R2):
+            self.assertTrue(replay_publisher.publish_campaign_replay(campaign_id, client=client))
+        self.assertEqual(len(client.configs), 2)
+        for config in client.configs:
+            self.assertEqual(config.max_concurrency, 4)
+
     def test_retry_skips_exhausted_and_done(self):
-        self.campaign(replay={"attempts": 5})
+        self.campaign(replay={"attempts": media_publisher.MAX_ATTEMPTS})
         self.campaign(replay={"uploaded_at": NOW})
         self.campaign()
         with patch.dict(os.environ, R2):
