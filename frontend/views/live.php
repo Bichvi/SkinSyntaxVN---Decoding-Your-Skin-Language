@@ -50,7 +50,8 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   .ss-player__waiting-inner{max-width:520px}.ss-player__waiting-icon{width:72px;height:72px;display:grid;place-items:center;border-radius:50%;background:#2e9561;color:#fff;font-size:28px;margin:0 auto 15px}
   .ss-player__top,.ss-player__bottom{position:absolute;z-index:5;left:0;right:0;padding:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#fff}
   .ss-player__top{top:0;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}.ss-player__bottom{bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding-top:42px;pointer-events:none}
-  .ss-player--replay .ss-player__bottom{bottom:48px;background:linear-gradient(0deg,rgba(0,0,0,.45),transparent);padding:20px 16px 8px}
+  .ss-player--replay .ss-player__top{background:none;padding:10px;pointer-events:none}.ss-player--replay .ss-player__top>*{pointer-events:auto}.ss-player--replay .ss-player__top .ss-badge{background:rgba(15,23,42,.55);color:#fff}
+  .ss-replay-meta{display:flex;align-items:center;gap:10px;margin-top:10px;color:#1f2a24}.ss-replay-meta__text{min-width:0}.ss-replay-meta strong{display:block;font-size:14px}.ss-replay-meta small{display:block;color:#5f6b64;font-size:12px;margin-top:2px;overflow-wrap:anywhere}
   .ss-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:750;line-height:1}.ss-badge--live{background:#e23b4e;color:#fff}.ss-badge--ready{background:#dff1e6;color:#0f6740}.ss-badge--scheduled{background:#fff0c2;color:#7b5a00}.ss-badge--warning{background:#fff0c2;color:#795700}.ss-badge--neutral,.ss-badge--ended,.ss-badge--processing{background:#e9eeea;color:#526057}.ss-badge--replay{background:#dff1e6;color:#0f6740}.ss-badge--danger{background:#ffe2e5;color:#ad293c}
   .ss-player__actions{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}.ss-player__actions button,.ss-player__actions a{border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.42);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;text-decoration:none}.ss-player__actions button:hover,.ss-player__actions a:hover{background:rgba(255,255,255,.15)}
   .ss-streamer{display:flex;align-items:center;gap:10px}.ss-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#d9efe2;color:#176b45;font-weight:800}.ss-streamer strong{display:block;font-size:14px}.ss-streamer small{display:block;color:#d2e1d7;font-size:12px;margin-top:2px}
@@ -140,7 +141,8 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
     <?php else: ?>
       <div class="ss-live-grid">
         <section>
-          <div class="ss-player<?= ($liveStatus === 'replay_ready' && $recordingUrl !== '') ? ' ss-player--replay' : '' ?>" id="ssPlayer">
+          <?php $isReplayView = ($liveStatus === 'replay_ready' && $recordingUrl !== ''); ?>
+          <div class="ss-player<?= $isReplayView ? ' ss-player--replay' : '' ?>" id="ssPlayer">
             <video id="livekitRemoteVideo" autoplay playsinline <?= $liveStatus === 'replay_ready' ? 'hidden' : '' ?>></video>
             <video id="livekitLocalVideo" autoplay playsinline muted hidden></video>
             <audio id="livekitRemoteAudio" autoplay></audio>
@@ -159,7 +161,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
             <div class="ss-player__top">
               <span class="ss-badge ss-badge--<?= h($statusTone) ?>" id="liveStatusBadge"><i class="fa-solid fa-circle"></i> <span id="liveStatusLabel"><?= h($statusLabel) ?></span></span>
               <?php if ($isLive): ?><span class="ss-badge ss-badge--neutral"><i class="fa-solid fa-eye"></i> <span id="liveViewerCount">0</span> đang xem</span><?php endif; ?>
-              <span class="ss-badge ss-badge--neutral" id="liveConnectionBadge"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang chuẩn bị phát</span>
+              <?php if (!$isReplayView): ?><span class="ss-badge ss-badge--neutral" id="liveConnectionBadge"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang chuẩn bị phát</span><?php endif; ?>
               <div class="ss-player__actions">
                 <?php if ($isLive): ?><button type="button" id="btnReaction"><i class="fa-solid fa-heart"></i> <span id="reactionCount"><?= (int)($live['reaction_count'] ?? 0) ?></span></button><?php endif; ?>
                 <button type="button" id="btnShareLive"><i class="fa-solid fa-share-nodes"></i> Chia sẻ</button>
@@ -170,10 +172,15 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
                 <?php endif; ?>
               </div>
             </div>
+            <?php if (!$isReplayView): ?>
             <div class="ss-player__bottom">
               <div class="ss-streamer"><div class="ss-avatar"><?= h(mb_strtoupper(mb_substr($displayStreamer, 0, 2))) ?></div><div><strong><?= h($displayStreamer) ?></strong><small><?= h($live['title'] ?? '') ?></small></div></div>
             </div>
+            <?php endif; ?>
           </div>
+          <?php if ($isReplayView): ?>
+          <div class="ss-replay-meta"><div class="ss-avatar"><?= h(mb_strtoupper(mb_substr($displayStreamer, 0, 2))) ?></div><div class="ss-replay-meta__text"><strong><?= h($displayStreamer) ?></strong><small><?= h($live['title'] ?? '') ?></small></div></div>
+          <?php endif; ?>
 
           <section class="ss-card ss-product" aria-label="Sản phẩm đang giới thiệu trong phiên phát">
             <div class="ss-product__head"><span class="ss-kicker"><i class="fa-solid fa-thumbtack"></i> Sản phẩm đang giới thiệu</span><span class="ss-badge ss-badge--neutral" id="flashDealTimer">Ưu đãi của phiên phát</span></div>
