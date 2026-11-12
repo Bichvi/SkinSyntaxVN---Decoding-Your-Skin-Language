@@ -16,7 +16,7 @@ from core.purpose import campaign_wants_replay
 from core.state_machine import get_db, object_id, utcnow
 from engines.media_publisher import (
     CACHE_CONTROL, MAX_ATTEMPTS, _default_client, _r2, _remove, _scrub, make_poster, r2_configured,
-    release_master_video,
+    release_master_video, retry_due, transfer_config,
 )
 from engines.program_composer import probe_duration
 
@@ -92,16 +92,18 @@ def _publish(campaign_id: str, client) -> bool:
         settings = _r2()
         key = f"{KEY_PREFIX}/{campaign_id}-{secrets.token_hex(6)}"
         client = client or _default_client()
+        transfer = transfer_config()
         # Poster first: a poster failure then never leaves the large video orphaned in R2.
         client.upload_file(poster, settings["R2_BUCKET"], key + ".jpg",
-                           ExtraArgs={"ContentType": "image/jpeg", "CacheControl": CACHE_CONTROL})
+                           ExtraArgs={"ContentType": "image/jpeg", "CacheControl": CACHE_CONTROL}, Config=transfer)
         client.upload_file(master, settings["R2_BUCKET"], key + ".mp4",
-                           ExtraArgs={"ContentType": "video/mp4", "CacheControl": CACHE_CONTROL})
+                           ExtraArgs={"ContentType": "video/mp4", "CacheControl": CACHE_CONTROL}, Config=transfer)
     except Exception as exc:
         _remove(poster)
+        failed_at = utcnow()
         db.ai_idol_campaigns.update_one({"_id": oid}, {
             "$inc": {"replay.attempts": 1},
-            "$set": {"replay.last_error": _scrub(exc), "updated_at": utcnow()},
+            "$set": {"replay.last_error": _scrub(exc), "replay.last_attempt_at": failed_at, "updated_at": failed_at},
             "$unset": {"replay.started_at": ""},
         })
         logger.warning("[REPLAY-PUBLISH] Campaign %s replay not published: %s", campaign_id, _scrub(exc))
@@ -133,9 +135,12 @@ def _candidates() -> list[dict]:
         "replay.uploaded_at": {"$exists": False},
         "$or": [{"replay.attempts": {"$exists": False}}, {"replay.attempts": {"$lt": MAX_ATTEMPTS}}],
     })
+    now = utcnow()
     return [
         campaign for campaign in found
-        if int((campaign.get("replay") or {}).get("attempts") or 0) < MAX_ATTEMPTS and replay_publishable(campaign)
+        if retry_due(int((campaign.get("replay") or {}).get("attempts") or 0),
+                     (campaign.get("replay") or {}).get("last_attempt_at"), now)
+        and replay_publishable(campaign)
     ]
 
 

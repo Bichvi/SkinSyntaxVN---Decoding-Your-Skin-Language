@@ -7,11 +7,12 @@ Run once to bring older videos onto product pages (spec D13):
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import os
 import secrets
 import subprocess
 
-from config import logger
+from config import PUBLISH_RETRY_BACKOFF_MINUTES, logger
 from core.publications import auto_publish_video
 from core.purpose import (
     LIVE_AND_PRODUCT, PRODUCT_VIDEO, campaign_wants_replay, publishes_to_product_page, purpose_of,
@@ -21,7 +22,8 @@ from core.state_machine import get_db, object_id, utcnow
 from engines.program_composer import probe_duration
 
 
-MAX_ATTEMPTS = 5
+MAX_ATTEMPTS = len(PUBLISH_RETRY_BACKOFF_MINUTES) + 1
+MiB = 1024 * 1024
 CACHE_CONTROL = "public, max-age=31536000, immutable"
 KEY_PREFIX = "product-videos"
 _warned_unconfigured = False
@@ -36,8 +38,26 @@ def r2_configured() -> bool:
     return all(_r2().values())
 
 
+def retry_due(attempts: int, last_attempt_at, now) -> bool:
+    """True when a failed upload may be tried again: attempts left and its backoff has passed."""
+    if attempts >= MAX_ATTEMPTS:
+        return False
+    if not last_attempt_at or attempts < 1:
+        return True
+    if last_attempt_at.tzinfo is None:
+        last_attempt_at = last_attempt_at.replace(tzinfo=dt.timezone.utc)
+    wait = dt.timedelta(minutes=PUBLISH_RETRY_BACKOFF_MINUTES[attempts - 1])
+    return now - last_attempt_at >= wait
+
+
+def transfer_config():
+    from boto3.s3.transfer import TransferConfig  # lazy, like boto3
+    return TransferConfig(multipart_threshold=16 * MiB, multipart_chunksize=16 * MiB, max_concurrency=4)
+
+
 def _default_client():
     import boto3  # lazy: only media workers that publish need it
+    from botocore.config import Config
     settings = _r2()
     return boto3.client(
         "s3",
@@ -45,6 +65,7 @@ def _default_client():
         aws_access_key_id=settings["R2_ACCESS_KEY_ID"],
         aws_secret_access_key=settings["R2_SECRET_ACCESS_KEY"],
         region_name="auto",
+        config=Config(retries={"max_attempts": 10, "mode": "standard"}, connect_timeout=30, read_timeout=120),
     )
 
 
@@ -117,14 +138,16 @@ def publish_video(video_id: str, *, client=None) -> bool:
         settings = _r2()
         key = f"{KEY_PREFIX}/{video_id}-{secrets.token_hex(6)}"
         client = client or _default_client()
+        transfer = transfer_config()
         client.upload_file(source, settings["R2_BUCKET"], key + ".mp4",
-                           ExtraArgs={"ContentType": "video/mp4", "CacheControl": CACHE_CONTROL})
+                           ExtraArgs={"ContentType": "video/mp4", "CacheControl": CACHE_CONTROL}, Config=transfer)
         client.upload_file(poster, settings["R2_BUCKET"], key + ".jpg",
-                           ExtraArgs={"ContentType": "image/jpeg", "CacheControl": CACHE_CONTROL})
+                           ExtraArgs={"ContentType": "image/jpeg", "CacheControl": CACHE_CONTROL}, Config=transfer)
     except Exception as exc:
         _remove(poster)
+        failed_at = utcnow()
         db.ai_idol_videos.update_one(query, {"$inc": {"media.attempts": 1}, "$set": {
-            "media.last_error": _scrub(exc), "updated_at": utcnow(),
+            "media.last_error": _scrub(exc), "media.last_attempt_at": failed_at, "updated_at": failed_at,
         }})
         logger.warning("[MEDIA-PUBLISH] Video %s not published: %s", video_id, _scrub(exc))
         return False
@@ -233,10 +256,12 @@ def retry_pending(limit: int = 20, *, client=None) -> int:
         "product_page_file_path": {"$ne": None},
     }).limit(200)
     published = 0
+    now = utcnow()
     for doc in candidates:
         if published >= limit:
             break
-        if int((doc.get("media") or {}).get("attempts") or 0) >= MAX_ATTEMPTS or not _retry_eligible(doc):
+        media = doc.get("media") or {}
+        if not retry_due(int(media.get("attempts") or 0), media.get("last_attempt_at"), now)                 or not _retry_eligible(doc):
             continue
         video_id = str(doc["_id"])
         if publish_video(video_id, client=client):

@@ -22,6 +22,9 @@ CHROMA_HOST = os.getenv("AI_IDOL_CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.getenv("AI_IDOL_CHROMA_PORT", "8000"))
 TIMEZONE = os.getenv("AI_IDOL_TIMEZONE", "Asia/Ho_Chi_Minh")
 
+# Minutes to wait after failed R2 publish attempt N before trying again (clips and live replays).
+PUBLISH_RETRY_BACKOFF_MINUTES = (10, 30, 60, 180, 360, 720)
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("AI_IDOL_GROQ_MODEL", "openai/gpt-oss-20b")
 GROQ_FALLBACK_MODELS = [

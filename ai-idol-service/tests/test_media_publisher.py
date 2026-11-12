@@ -28,12 +28,13 @@ NOW = dt.datetime(2026, 10, 14, 8, 0, tzinfo=dt.timezone.utc)
 
 class FakeS3:
     def __init__(self, fail=None):
-        self.uploads, self.fail = [], fail
+        self.uploads, self.fail, self.configs = [], fail, []
 
-    def upload_file(self, path, bucket, key, ExtraArgs=None):
+    def upload_file(self, path, bucket, key, ExtraArgs=None, Config=None):
         if self.fail:
             raise RuntimeError(self.fail)
         self.uploads.append((path, bucket, key, ExtraArgs))
+        self.configs.append(Config)
 
 
 class PublisherTestCase(unittest.TestCase):
@@ -225,7 +226,10 @@ class CampaignPublishTests(PublisherTestCase):
         with patch.dict(os.environ, R2):
             self.assertEqual(media_publisher.publish_campaign_videos(campaign, client=FakeS3(fail="r2 down")), 0)
             self.assertTrue(os.path.exists(master))
-            self.assertEqual(media_publisher.retry_pending(client=FakeS3()), 1)
+            self.assertEqual(media_publisher.retry_pending(client=FakeS3()), 0)  # still backing off
+            later = media_publisher.utcnow() + dt.timedelta(minutes=11)
+            with patch.object(media_publisher, "utcnow", return_value=later):
+                self.assertEqual(media_publisher.retry_pending(client=FakeS3()), 1)
         self.assertFalse(os.path.exists(master))
 
     def test_release_drops_master_when_no_replay_needed(self):
@@ -246,7 +250,7 @@ class CampaignPublishTests(PublisherTestCase):
         self.db.ai_idol_campaigns.insert_one({"_id": campaign, "status": "SCHEDULED", "purpose": "live_and_product"})
         ready = self.video(purpose="product_video", product_page_file_path=clip, file_path=clip)
         waiting = self.video(purpose="live_and_product", campaign_id=str(campaign), product_page_file_path=body)
-        exhausted = self.video(purpose="product_video", product_page_file_path=clip, media={"attempts": 5})
+        exhausted = self.video(purpose="product_video", product_page_file_path=clip, media={"attempts": media_publisher.MAX_ATTEMPTS})
         with patch.dict(os.environ, R2):
             self.assertEqual(media_publisher.retry_pending(client=FakeS3()), 1)
         self.assertIn("product_page_ready_at", self.stored(ready))
@@ -263,6 +267,58 @@ class CampaignPublishTests(PublisherTestCase):
         with patch.dict(os.environ, R2), patch.object(media_publisher, "auto_publish_video") as listed:
             self.assertEqual(media_publisher.retry_pending(client=FakeS3(fail="boom")), 0)
         listed.assert_not_called()
+
+
+class RetryBackoffTests(PublisherTestCase):
+    def test_retry_due_rules(self):
+        minutes = lambda n: NOW - dt.timedelta(minutes=n)
+        due = media_publisher.retry_due
+        self.assertEqual(media_publisher.MAX_ATTEMPTS, 7)
+        self.assertTrue(due(0, None, NOW))
+        self.assertTrue(due(2, None, NOW))
+        self.assertFalse(due(1, minutes(5), NOW))
+        self.assertTrue(due(1, minutes(11), NOW))
+        self.assertFalse(due(3, minutes(59), NOW))
+        self.assertTrue(due(3, minutes(61), NOW))
+        self.assertFalse(due(7, minutes(10000), NOW))
+        self.assertTrue(due(1, (NOW - dt.timedelta(minutes=11)).replace(tzinfo=None), NOW))
+
+    def test_failure_records_last_attempt_at(self):
+        clip = self.file("clip.mp4")
+        video_id = self.video(purpose="product_video", product_page_file_path=clip, file_path=clip)
+        with patch.dict(os.environ, R2), patch.object(media_publisher, "utcnow", return_value=NOW):
+            media_publisher.publish_video(video_id, client=FakeS3(fail="boom"))
+        self.assertEqual(self.stored(video_id)["media"]["last_attempt_at"], NOW)
+
+    def test_retry_pending_waits_for_backoff(self):
+        clip = self.file("clip.mp4")
+        recent = self.video(purpose="product_video", product_page_file_path=clip, file_path=clip,
+                            media={"attempts": 1, "last_attempt_at": NOW - dt.timedelta(minutes=5)})
+        old = self.video(purpose="product_video", product_page_file_path=clip, file_path=clip,
+                         media={"attempts": 1, "last_attempt_at": NOW - dt.timedelta(minutes=11)})
+        with patch.dict(os.environ, R2), patch.object(media_publisher, "utcnow", return_value=NOW):
+            self.assertEqual(media_publisher.retry_pending(client=FakeS3()), 1)
+        self.assertNotIn("product_page_ready_at", self.stored(recent))
+        self.assertIn("product_page_ready_at", self.stored(old))
+
+    def test_upload_uses_shared_transfer_config(self):
+        clip = self.file("clip.mp4")
+        video_id = self.video(purpose="product_video", product_page_file_path=clip, file_path=clip)
+        client = FakeS3()
+        with patch.dict(os.environ, R2):
+            self.assertTrue(media_publisher.publish_video(video_id, client=client))
+        self.assertEqual(len(client.configs), 2)
+        for config in client.configs:
+            self.assertEqual(config.max_concurrency, 4)
+            self.assertEqual(config.multipart_threshold, 16 * 1024 * 1024)
+
+    def test_default_client_retries_hard(self):
+        with patch.dict(os.environ, R2), patch("boto3.client") as make:
+            media_publisher._default_client()
+        config = make.call_args.kwargs["config"]
+        self.assertEqual(config.retries, {"max_attempts": 10, "mode": "standard"})
+        self.assertEqual(config.connect_timeout, 30)
+        self.assertEqual(config.read_timeout, 120)
 
 
 class BackfillTests(PublisherTestCase):
