@@ -23,7 +23,7 @@ from engines.avatar_engine import _asset_path
 from engines.program_composer import probe_duration
 from engines.video_composer import build_subtitle_cues, download_product_image
 
-RENDER_VERSION = "syna-native-v4"
+RENDER_VERSION = "syna-native-v5"
 # Clips about one product keep its card; every other library clip shows the show card.
 PRODUCT_CARD_KINDS = frozenset({"product", "faq"})
 TRANSIENT_RENDER_MARKERS = ("Cannot read audio duration", "page.goto: Timeout", "ffprobe timed out",

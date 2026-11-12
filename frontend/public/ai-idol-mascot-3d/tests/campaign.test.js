@@ -55,3 +55,35 @@ test('library clips after the opening do not greet; manifests without the flag s
   assert.ok(campaignPose(1.5, { duration: 20, cues: [] }, null).leftArm < -1);
   assert.ok(campaignPose(1.5, { duration: 20, greet: true, cues: [] }, null).leftArm < -1);
 });
+
+function fakeCtx() {
+  const calls = [];
+  const ctx = {
+    textAlign: 'left', font: '', fillStyle: '', calls,
+    measureText: (s) => ({ width: String(s).length * 10 }),
+    beginPath() {}, roundRect() {}, fill() {}, stack: [], save() { this.stack.push(this.textAlign); }, restore() { this.textAlign = this.stack.pop(); },
+    fillText(text, x, y) { calls.push(['fillText', text, x, y, this.textAlign]); },
+  };
+  return ctx;
+}
+test('captionBaselines centres one and two line blocks around the box centre', async () => {
+  const { captionBaselines } = await import('../campaign-stage.js');
+  const one = captionBaselines(1, 663.5, 22);
+  assert.equal(one.length, 1); assert.ok(Math.abs(one[0] - 670.1) < .01);
+  const two = captionBaselines(2, 663.5, 22);
+  assert.equal(two.length, 2); assert.ok(Math.abs(two[1] - two[0] - 29) < 1e-9);
+  assert.ok(Math.abs(two[0] - 655.6) < .01);
+  assert.ok(Math.abs((two[0] - 22 * .8 + two[1] - 22 * .8 + 22) / 2 - 663.5) < 1e-9);
+});
+test('drawCaption centres wrapped lines at x=640 and restores textAlign', async () => {
+  const { drawCaption } = await import('../campaign-stage.js');
+  const ctx = fakeCtx();
+  drawCaption(ctx, 'một hai ba bốn năm sáu bảy tám chín mười '.repeat(8).trim());
+  const texts = ctx.calls.filter((c) => c[0] === 'fillText');
+  assert.equal(texts.length, 2);
+  for (const t of texts) { assert.equal(t[2], 640); assert.equal(t[4], 'center'); }
+  assert.equal(ctx.textAlign, 'left');
+  const short = fakeCtx(); drawCaption(short, 'Xin chào');
+  const y = short.calls.find((c) => c[0] === 'fillText')[3];
+  assert.ok(Math.abs(y - 670.1) < .01);
+});

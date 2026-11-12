@@ -240,7 +240,7 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
                 job_id, audio_path, script_text, snapshot, config, purpose=purpose, **render_extra),
                 sleep=wait_then_refresh)
             checkpoint_job(job_id, {"artifacts.final_video_path": final_video_path,
-                                    "artifacts.video_renderer": "syna-native-v4"})
+                                    "artifacts.video_renderer": "syna-native-v5"})
         except RendererUnavailable as e:
             # Not a job failure: script and voice are checkpointed, so park the job
             # and let the resume beat requeue it when Syna answers again.
