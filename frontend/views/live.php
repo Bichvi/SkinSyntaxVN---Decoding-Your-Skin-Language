@@ -49,7 +49,8 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   .ss-player__waiting[hidden]{display:none}
   .ss-player__waiting-inner{max-width:520px}.ss-player__waiting-icon{width:72px;height:72px;display:grid;place-items:center;border-radius:50%;background:#2e9561;color:#fff;font-size:28px;margin:0 auto 15px}
   .ss-player__top,.ss-player__bottom{position:absolute;z-index:5;left:0;right:0;padding:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#fff}
-  .ss-player__top{top:0;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}.ss-player__bottom{bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding-top:42px}
+  .ss-player__top{top:0;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}.ss-player__bottom{bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding-top:42px;pointer-events:none}
+  .ss-player--replay .ss-player__bottom{bottom:48px;background:linear-gradient(0deg,rgba(0,0,0,.45),transparent);padding:20px 16px 8px}
   .ss-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:750;line-height:1}.ss-badge--live{background:#e23b4e;color:#fff}.ss-badge--ready{background:#dff1e6;color:#0f6740}.ss-badge--scheduled{background:#fff0c2;color:#7b5a00}.ss-badge--warning{background:#fff0c2;color:#795700}.ss-badge--neutral,.ss-badge--ended,.ss-badge--processing{background:#e9eeea;color:#526057}.ss-badge--replay{background:#dff1e6;color:#0f6740}.ss-badge--danger{background:#ffe2e5;color:#ad293c}
   .ss-player__actions{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}.ss-player__actions button,.ss-player__actions a{border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.42);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;text-decoration:none}.ss-player__actions button:hover,.ss-player__actions a:hover{background:rgba(255,255,255,.15)}
   .ss-streamer{display:flex;align-items:center;gap:10px}.ss-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#d9efe2;color:#176b45;font-weight:800}.ss-streamer strong{display:block;font-size:14px}.ss-streamer small{display:block;color:#d2e1d7;font-size:12px;margin-top:2px}
@@ -97,7 +98,10 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
                src="<?= h(BASE_URL . '/index.php?r=ai_idol_live_video&id=' . rawurlencode((string)$aiIdolLive['id'])) ?>"></video>
         <span class="ai-idol-live__badge">LIVE</span>
         <span class="ai-idol-live__name"><?= h($aiIdolLive['name']) ?></span>
-        <button type="button" id="aiIdolMuteBtn" class="ai-idol-live__mute">Bật tiếng</button>
+        <div class="ai-idol-live__controls">
+          <button type="button" id="aiIdolFullscreenBtn" class="ai-idol-live__mute" hidden>Phóng to</button>
+          <button type="button" id="aiIdolMuteBtn" class="ai-idol-live__mute">Bật tiếng</button>
+        </div>
         <button type="button" id="aiIdolPlayOverlay" class="ai-idol-live__overlay" hidden>Nhấn để xem</button>
         <div id="aiIdolEndedOverlay" class="ai-idol-live__overlay" hidden>Buổi live đã kết thúc</div>
       </div>
@@ -136,7 +140,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
     <?php else: ?>
       <div class="ss-live-grid">
         <section>
-          <div class="ss-player" id="ssPlayer">
+          <div class="ss-player<?= ($liveStatus === 'replay_ready' && $recordingUrl !== '') ? ' ss-player--replay' : '' ?>" id="ssPlayer">
             <video id="livekitRemoteVideo" autoplay playsinline <?= $liveStatus === 'replay_ready' ? 'hidden' : '' ?>></video>
             <video id="livekitLocalVideo" autoplay playsinline muted hidden></video>
             <audio id="livekitRemoteAudio" autoplay></audio>

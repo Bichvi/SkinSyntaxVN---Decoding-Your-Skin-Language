@@ -24,6 +24,10 @@
     return pos < 0 ? 0 : pos;
   }
 
+  function fullscreenLabel(isFullscreen) {
+    return isFullscreen ? 'Thu nhỏ' : 'Phóng to';
+  }
+
   function init() {
     const wrap = document.getElementById('aiIdolLive');
     const video = document.getElementById('aiIdolLiveVideo');
@@ -85,6 +89,32 @@
       });
     }
 
+    const fsBtn = document.getElementById('aiIdolFullscreenBtn');
+    if (fsBtn) {
+      const stage = wrap.querySelector('.ai-idol-live__stage') || wrap;
+      const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+      const canStage = !!(stage.requestFullscreen || stage.webkitRequestFullscreen);
+      const canIos = typeof video.webkitEnterFullscreen === 'function';
+      if (canStage || canIos) {
+        fsBtn.hidden = false;
+        const sync = () => { fsBtn.textContent = fullscreenLabel(!!fsEl()); };
+        fsBtn.addEventListener('click', () => {
+          if (fsEl()) {
+            (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          } else if (stage.requestFullscreen) {
+            stage.requestFullscreen().catch(() => {});
+          } else if (stage.webkitRequestFullscreen) {
+            stage.webkitRequestFullscreen();
+          } else if (canIos) {
+            video.webkitEnterFullscreen();
+          }
+        });
+        document.addEventListener('fullscreenchange', sync);
+        document.addEventListener('webkitfullscreenchange', sync);
+        sync();
+      }
+    }
+
     // Thêm vào giỏ: dùng api_live_add_to_cart có sẵn.
     wrap.querySelectorAll('.ai-idol-live__add').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -113,5 +143,5 @@
     if (video.readyState >= 1) { seekToLive(); tryPlay(); }
   }
 
-  return { livePosition, init };
+  return { livePosition, fullscreenLabel, init };
 });
