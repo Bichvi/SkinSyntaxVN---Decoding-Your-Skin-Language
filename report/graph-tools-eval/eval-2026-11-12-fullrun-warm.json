@@ -1,0 +1,342 @@
+{
+  "cases": 32,
+  "cases_passed": 12,
+  "case_pass_pct": 37.5,
+  "checks": 120,
+  "checks_passed": 100,
+  "constraint_pass_pct": 83.33,
+  "tool_ms_p50": 1,
+  "tool_ms_p95": 243,
+  "tool_ms_max": 289,
+  "target_pct": 95.0,
+  "rows": [
+    {
+      "id": "serum_oily_not_retinol_conflict",
+      "ok": true,
+      "checks": 21,
+      "passed": 21,
+      "count": 6,
+      "tool_ms": 243,
+      "failures": []
+    },
+    {
+      "id": "cleanser_no_alcohol_under_300k",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "cleanser_no_alcohol_under_300k: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "toner_no_alcohol_under_200k",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "toner_no_alcohol_under_200k: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "moisturizer_no_paraben_sensitive",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "moisturizer_no_paraben_sensitive: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "moisturizer_no_fragrance_no_paraben",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "moisturizer_no_fragrance_no_paraben: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "serum_vitamin_c_under_400k",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "serum_vitamin_c_under_400k: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "serum_niacinamide_200_500k",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "serum_niacinamide_200_500k: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "sunscreen_no_alcohol_under_350k",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "sunscreen_no_alcohol_under_350k: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "torriden_has_sunscreen",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "torriden_has_sunscreen: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "torriden_has_serum",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "torriden_has_serum: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "cerave_cleanser_no_alcohol",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "cerave_cleanser_no_alcohol: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "serum_acne_oil_control_oily",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "serum_acne_oil_control_oily: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "moisturizer_silicone_free_dry",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "moisturizer_silicone_free_dry: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "cleanser_acne_no_fragrance_250k",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "cleanser_acne_no_fragrance_250k: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "retinol_serum_not_bha_conflict",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "retinol_serum_not_bha_conflict: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "toner_dry_no_alcohol",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "toner_dry_no_alcohol: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "mask_no_paraben_150k",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "mask_no_paraben_150k: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "moisturizer_sensitive_no_alcohol_no_fragrance_400k",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 243,
+      "failures": [
+        "moisturizer_sensitive_no_alcohol_no_fragrance_400k: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "retinol_with_bha",
+      "ok": true,
+      "checks": 8,
+      "passed": 8,
+      "count": 1,
+      "tool_ms": 2,
+      "failures": []
+    },
+    {
+      "id": "vitamin_c_with_retinol",
+      "ok": true,
+      "checks": 4,
+      "passed": 4,
+      "count": 1,
+      "tool_ms": 1,
+      "failures": []
+    },
+    {
+      "id": "aha_with_bha",
+      "ok": true,
+      "checks": 4,
+      "passed": 4,
+      "count": 1,
+      "tool_ms": 1,
+      "failures": []
+    },
+    {
+      "id": "niacinamide_with_hyaluronic",
+      "ok": true,
+      "checks": 5,
+      "passed": 5,
+      "count": 0,
+      "tool_ms": 1,
+      "failures": []
+    },
+    {
+      "id": "benzoyl_peroxide_with_retinol",
+      "ok": true,
+      "checks": 5,
+      "passed": 5,
+      "count": 1,
+      "tool_ms": 1,
+      "failures": []
+    },
+    {
+      "id": "current_product_alcohol",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 1,
+      "failures": [
+        "current_product_alcohol: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "current_product_paraben",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 1,
+      "failures": [
+        "current_product_paraben: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "current_product_oily_skin",
+      "ok": false,
+      "checks": 3,
+      "passed": 2,
+      "count": 0,
+      "tool_ms": 1,
+      "failures": [
+        "current_product_oily_skin: tool error ToolError: graph_unavailable: RuntimeError"
+      ]
+    },
+    {
+      "id": "current_product_similar",
+      "ok": true,
+      "checks": 8,
+      "passed": 8,
+      "count": 5,
+      "tool_ms": 289,
+      "failures": []
+    },
+    {
+      "id": "plain_serum_oily",
+      "ok": true,
+      "checks": 1,
+      "passed": 1,
+      "count": 0,
+      "tool_ms": null,
+      "failures": []
+    },
+    {
+      "id": "plain_sunscreen_oily",
+      "ok": true,
+      "checks": 1,
+      "passed": 1,
+      "count": 0,
+      "tool_ms": null,
+      "failures": []
+    },
+    {
+      "id": "knowledge_retinol",
+      "ok": true,
+      "checks": 1,
+      "passed": 1,
+      "count": 0,
+      "tool_ms": null,
+      "failures": []
+    },
+    {
+      "id": "store_policy",
+      "ok": true,
+      "checks": 1,
+      "passed": 1,
+      "count": 0,
+      "tool_ms": null,
+      "failures": []
+    },
+    {
+      "id": "routine_request",
+      "ok": true,
+      "checks": 1,
+      "passed": 1,
+      "count": 0,
+      "tool_ms": null,
+      "failures": []
+    }
+  ]
+}

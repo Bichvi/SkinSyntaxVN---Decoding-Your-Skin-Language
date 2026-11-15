@@ -7,6 +7,8 @@ x-ai-idol-common: &ai-idol-common
   image: skinsyntax-ai-idol:local
   restart: unless-stopped
   dns: ["1.1.1.1", "8.8.8.8"]
+  # Public DNS bypasses Docker Desktop's resolver, so pin host.docker.internal (Syna renderer, avatar service).
+  extra_hosts: ["host.docker.internal:host-gateway"]
   env_file:
     - .env
   environment: &ai-idol-environment
