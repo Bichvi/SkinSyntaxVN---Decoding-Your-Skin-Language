@@ -18,6 +18,8 @@ declare(strict_types=1);
  * - Stacking with Flash Sale defaults to disabled (false)
  * - Strictly configuration template: does NOT issue vouchers or modify product prices
  */
+require_once __DIR__ . '/../services/RewardRules.php';
+
 class VideoRewardCampaign {
     private $db;
     public const COLLECTION = 'ai_video_reward_campaigns';
@@ -113,6 +115,7 @@ class VideoRewardCampaign {
         $row['total_quota'] = (int)($row['total_quota'] ?? 100);
         $row['issued_count'] = (int)($row['issued_count'] ?? 0);
         $row['user_limit'] = (int)($row['user_limit'] ?? 1);
+        $row['reward_xu'] = (int)($row['reward_xu'] ?? 0);
         $row['is_active'] = (bool)($row['is_active'] ?? true);
         $row['stack_with_flash_sale'] = (bool)($row['stack_with_flash_sale'] ?? false);
         $row['stack_with_other_vouchers'] = (bool)($row['stack_with_other_vouchers'] ?? false);
@@ -416,6 +419,8 @@ class VideoRewardCampaign {
         $stackFlashSale = isset($input['stack_with_flash_sale']) ? (bool)$input['stack_with_flash_sale'] : false;
         $stackOtherVouchers = isset($input['stack_with_other_vouchers']) ? (bool)$input['stack_with_other_vouchers'] : false;
 
+        $rewardXu = RewardRules::normalizeVideoXu($input['reward_xu'] ?? 0);
+
         $campaignName = trim((string)($input['campaign_name'] ?? ''));
         if ($campaignName === '') {
             $campaignName = 'Voucher xem video: ' . (string)($pubDoc['title'] ?? 'Syna 3D');
@@ -443,6 +448,7 @@ class VideoRewardCampaign {
                 'total_quota' => $totalQuota,
                 'issued_count' => 0,
                 'user_limit' => $userLimit,
+                'reward_xu' => $rewardXu,
                 'is_active' => $isActive,
                 'stack_with_flash_sale' => $stackFlashSale,
                 'stack_with_other_vouchers' => $stackOtherVouchers,
@@ -470,6 +476,7 @@ class VideoRewardCampaign {
                     'end_date' => $endUtc,
                     'total_quota' => $totalQuota,
                     'user_limit' => $userLimit,
+                    'reward_xu' => $rewardXu,
                     'is_active' => $isActive,
                     'stack_with_flash_sale' => $stackFlashSale,
                     'stack_with_other_vouchers' => $stackOtherVouchers,

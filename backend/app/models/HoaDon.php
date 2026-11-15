@@ -301,6 +301,27 @@ class HoaDon {
         return $kh ? max(0, (int)($kh['diemtl'] ?? 0)) : 0;
     }
 
+    private function videoBonusPoints(int $maKh): int {
+        try {
+            $rulesFile = __DIR__ . '/../services/RewardRules.php';
+            $ledgerFile = __DIR__ . '/RewardLedger.php';
+            if (!is_file($rulesFile) || !is_file($ledgerFile)) {
+                error_log('loyalty video xu files missing ma_kh=' . $maKh);
+                return 0;
+            }
+            require_once $rulesFile;
+            require_once $ledgerFile;
+            return RewardRules::pointsFromXu((new RewardLedger($this->db, false))->sumXu($maKh));
+        } catch (\Throwable $e) {
+            error_log('loyalty video xu error ma_kh=' . $maKh . ' ' . get_class($e));
+            return 0;
+        }
+    }
+
+    public function syncLoyaltyForCustomer(int $maKh): void {
+        $this->syncCustomerLoyaltyByMaKh($maKh);
+    }
+
     private function syncCustomerLoyaltyByMaKh(int $maKh): void {
         if ($maKh <= 0) return;
 
@@ -323,7 +344,7 @@ class HoaDon {
         }
 
         $reviewBonusPoints = $this->db->danh_gia->countDocuments(['ma_kh' => $maKh]);
-        $totalPoints = max(0, $totalPoints + $reviewBonusPoints);
+        $totalPoints = max(0, $totalPoints + $reviewBonusPoints + $this->videoBonusPoints($maKh));
 
         $tier = $this->normalizeCustomerTier($totalPoints);
         

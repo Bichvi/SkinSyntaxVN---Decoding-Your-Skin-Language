@@ -226,6 +226,11 @@ $apvJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                             <input type="number" id="apvRewardUserLimit" class="apv-input" min="1" max="10" value="1" required aria-describedby="apvRewardUserLimitHelp">
                             <small class="apv-help" id="apvRewardUserLimitHelp">Mặc định mỗi khách nhận 1 lần</small>
                         </div>
+                        <div class="apv-field">
+                            <label for="apvRewardXu">Thưởng xu (0–100)</label>
+                            <input type="number" id="apvRewardXu" class="apv-input" min="0" max="100" value="20">
+                            <small class="apv-help">100 xu = 1 điểm. Để 0 nếu chỉ tặng voucher.</small>
+                        </div>
                     </div>
 
                     <fieldset class="apv-field apv-policy">

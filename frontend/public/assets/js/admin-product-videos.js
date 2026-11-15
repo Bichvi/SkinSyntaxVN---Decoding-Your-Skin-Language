@@ -666,6 +666,7 @@
     if (c.end_date) $('apvRewardEnd').value = toLocalInput(c.end_date);
     $('apvRewardQuota').value = c.total_quota || 100;
     $('apvRewardUserLimit').value = c.user_limit || 1;
+    $('apvRewardXu').value = c.reward_xu ?? 0;
     $('apvRewardStackFlash').checked = Boolean(c.stack_with_flash_sale);
     $('apvRewardStackOther').checked = Boolean(c.stack_with_other_vouchers);
     $('apvRewardActive').checked = Boolean(c.is_active);
@@ -710,6 +711,7 @@
     $('apvRewardMin').value = 0;
     $('apvRewardQuota').value = 100;
     $('apvRewardUserLimit').value = 1;
+    $('apvRewardXu').value = 20;
     $('apvRewardStackFlash').checked = false;
     $('apvRewardStackOther').checked = false;
     $('apvRewardActive').checked = true;
@@ -778,6 +780,7 @@
         end_date: $('apvRewardEnd').value,
         total_quota: parseInt($('apvRewardQuota').value, 10) || 0,
         user_limit: parseInt($('apvRewardUserLimit').value, 10) || 1,
+        reward_xu: parseInt($('apvRewardXu').value, 10) || 0,
         applicable_product_ids: Array.from(rewardPicker.selected),
         stack_with_flash_sale: $('apvRewardStackFlash').checked,
         stack_with_other_vouchers: $('apvRewardStackOther').checked,

@@ -62,6 +62,7 @@ if (is_file($helpersFile)) {
 }
 
 require_once $backendRoot . '/app/services/ProductEventTracker.php';
+require_once $backendRoot . '/app/services/RewardRules.php';
 ProductEventTracker::ensureCookie();
 
 if (!headers_sent()) {
@@ -279,6 +280,31 @@ switch ($r) {
     case 'customer_vouchers':
         require_once $backendRoot . '/app/controllers/VideoWatchController.php';
         (new VideoWatchController($pdo))->customerVouchers();
+        break;
+
+    case 'phan_thuong':
+        require_once $backendRoot . '/app/controllers/RewardController.php';
+        (new RewardController($pdo))->page();
+        break;
+
+    case 'reward_summary':
+        require_once $backendRoot . '/app/controllers/RewardController.php';
+        (new RewardController($pdo))->summary();
+        break;
+
+    case 'reward_history':
+        require_once $backendRoot . '/app/controllers/RewardController.php';
+        (new RewardController($pdo))->history();
+        break;
+
+    case 'reward_checkin':
+        require_once $backendRoot . '/app/controllers/RewardController.php';
+        (new RewardController($pdo))->checkin();
+        break;
+
+    case 'reward_milestone_claim':
+        require_once $backendRoot . '/app/controllers/RewardController.php';
+        (new RewardController($pdo))->milestoneClaim();
         break;
 
     case 'them_gio_hang_ajax':
