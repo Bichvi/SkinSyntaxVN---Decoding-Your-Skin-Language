@@ -1,0 +1,605 @@
+{
+  "first_attempt": {
+    "cases_pass": 28,
+    "cases": 32,
+    "checks_pass": 352,
+    "checks": 356,
+    "tool_errors": 4
+  },
+  "final": {
+    "cases_pass": 31,
+    "cases": 32,
+    "checks_pass": 427,
+    "checks": 428,
+    "tool_errors": 1
+  },
+  "first_attempt_tool_ms": [
+    0,
+    1,
+    1,
+    1,
+    1,
+    49,
+    59,
+    81,
+    92,
+    112,
+    114,
+    142,
+    151,
+    190,
+    195,
+    210,
+    215,
+    239,
+    262,
+    293,
+    316,
+    761,
+    828
+  ],
+  "rows": [
+    {
+      "id": "serum_oily_not_retinol_conflict",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 21,
+          "passed": 21,
+          "count": 6,
+          "tool_ms": 215,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "cleanser_no_alcohol_under_300k",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 27,
+          "passed": 27,
+          "count": 6,
+          "tool_ms": 239,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "toner_no_alcohol_under_200k",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 27,
+          "passed": 27,
+          "count": 6,
+          "tool_ms": 92,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "moisturizer_no_paraben_sensitive",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 21,
+          "passed": 21,
+          "count": 6,
+          "tool_ms": 761,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "moisturizer_no_fragrance_no_paraben",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 21,
+          "passed": 21,
+          "count": 6,
+          "tool_ms": 828,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "serum_vitamin_c_under_400k",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 27,
+          "passed": 27,
+          "count": 6,
+          "tool_ms": 262,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "serum_niacinamide_200_500k",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 27,
+          "passed": 27,
+          "count": 6,
+          "tool_ms": 190,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "sunscreen_no_alcohol_under_350k",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 27,
+          "passed": 27,
+          "count": 6,
+          "tool_ms": 210,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "torriden_has_sunscreen",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 5,
+          "passed": 5,
+          "count": 1,
+          "tool_ms": 81,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "torriden_has_serum",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 15,
+          "passed": 15,
+          "count": 6,
+          "tool_ms": 114,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "cerave_cleanser_no_alcohol",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": false,
+          "checks": 3,
+          "passed": 2,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": true,
+          "failures": [
+            "cerave_cleanser_no_alcohol: tool error ToolError: graph_unavailable: RuntimeError"
+          ]
+        },
+        {
+          "attempt": 2,
+          "ok": true,
+          "checks": 21,
+          "passed": 21,
+          "count": 6,
+          "tool_ms": 274,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "serum_acne_oil_control_oily",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 15,
+          "passed": 15,
+          "count": 6,
+          "tool_ms": 195,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "moisturizer_silicone_free_dry",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": false,
+          "checks": 3,
+          "passed": 2,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": true,
+          "failures": [
+            "moisturizer_silicone_free_dry: tool error ToolError: graph_unavailable: RuntimeError"
+          ]
+        },
+        {
+          "attempt": 2,
+          "ok": false,
+          "checks": 3,
+          "passed": 2,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": true,
+          "failures": [
+            "moisturizer_silicone_free_dry: tool error ToolError: graph_unavailable: RuntimeError"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cleanser_acne_no_fragrance_250k",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 33,
+          "passed": 33,
+          "count": 6,
+          "tool_ms": 316,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "retinol_serum_not_bha_conflict",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 3,
+          "passed": 3,
+          "count": 0,
+          "tool_ms": 49,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "toner_dry_no_alcohol",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": false,
+          "checks": 3,
+          "passed": 2,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": true,
+          "failures": [
+            "toner_dry_no_alcohol: tool error ToolError: graph_unavailable: RuntimeError"
+          ]
+        },
+        {
+          "attempt": 2,
+          "ok": true,
+          "checks": 21,
+          "passed": 21,
+          "count": 6,
+          "tool_ms": 407,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "mask_no_paraben_150k",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 27,
+          "passed": 27,
+          "count": 6,
+          "tool_ms": 293,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "moisturizer_sensitive_no_alcohol_no_fragrance_400k",
+      "tool": "find_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": false,
+          "checks": 3,
+          "passed": 2,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": true,
+          "failures": [
+            "moisturizer_sensitive_no_alcohol_no_fragrance_400k: tool error ToolError: graph_unavailable: RuntimeError"
+          ]
+        },
+        {
+          "attempt": 2,
+          "ok": true,
+          "checks": 39,
+          "passed": 39,
+          "count": 6,
+          "tool_ms": 223,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "retinol_with_bha",
+      "tool": "check_conflicts",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 8,
+          "passed": 8,
+          "count": 1,
+          "tool_ms": 1,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "vitamin_c_with_retinol",
+      "tool": "check_conflicts",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 4,
+          "passed": 4,
+          "count": 1,
+          "tool_ms": 0,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "aha_with_bha",
+      "tool": "check_conflicts",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 4,
+          "passed": 4,
+          "count": 1,
+          "tool_ms": 1,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "niacinamide_with_hyaluronic",
+      "tool": "check_conflicts",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 5,
+          "passed": 5,
+          "count": 0,
+          "tool_ms": 1,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "benzoyl_peroxide_with_retinol",
+      "tool": "check_conflicts",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 5,
+          "passed": 5,
+          "count": 1,
+          "tool_ms": 1,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "current_product_alcohol",
+      "tool": "explain_product",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 3,
+          "passed": 3,
+          "count": 0,
+          "tool_ms": 151,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "current_product_paraben",
+      "tool": "explain_product",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 3,
+          "passed": 3,
+          "count": 0,
+          "tool_ms": 142,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "current_product_oily_skin",
+      "tool": "explain_product",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 3,
+          "passed": 3,
+          "count": 0,
+          "tool_ms": 59,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "current_product_similar",
+      "tool": "similar_products",
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 8,
+          "passed": 8,
+          "count": 5,
+          "tool_ms": 112,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "plain_serum_oily",
+      "tool": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 1,
+          "passed": 1,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "plain_sunscreen_oily",
+      "tool": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 1,
+          "passed": 1,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "knowledge_retinol",
+      "tool": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 1,
+          "passed": 1,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "store_policy",
+      "tool": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 1,
+          "passed": 1,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "id": "routine_request",
+      "tool": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "ok": true,
+          "checks": 1,
+          "passed": 1,
+          "count": 0,
+          "tool_ms": null,
+          "tool_error": false,
+          "failures": []
+        }
+      ]
+    }
+  ]
+}

@@ -434,12 +434,12 @@ Tổng khoảng **21 giờ công** (2,5–3 ngày).
 ### Chạy lại 2026-11-06 (kết quả mới nhất, thay cho các số 2026-11-05 bên dưới)
 - **Groq đã gỡ `meta-llama/llama-4-scout-17b-16e-instruct`** (HTTP 404 "model does not exist"). Model mặc định đổi sang **`qwen/qwen3.8-27b`** (Groq, đọc được ảnh, JSON mode) trong `label_service/config.py`, test và `.env.example`. Gemini dự phòng lúc đó trả 429 (hết hạn mức).
 - **Hạn mức Groq miễn phí: 8.000 token/phút; một ảnh tốn khoảng 6.800 token → toàn shop đọc được khoảng 1 ảnh/phút.** Quá mức thì service trả `vision_unavailable` và khung chat hiện ô dán thành phần (đúng thiết kế). Khi demo: các lần gửi ảnh cách nhau ≥ 1 phút, hoặc nâng gói Groq.
-- Smoke 8 ảnh (cách nhau 65 s, `report/label-scan-e2e/smoke-output-qwen-spaced.jsonl`): 5/5 ảnh có danh sách đọc đủ hoạt chất (COSRX nay 30/30 mục đầu, hết thiếu ceramide…); 3/3 ảnh không có INCI → `not_label`; ảnh 7 → `low_recognition`. took_ms: 1020, 1493, 1747, 2563, 3078, 3362, 3898, 3899 → **p50 ≈ 2,8 s, p95 = 3,9 s → AC1 PASS**.
+- Smoke 8 ảnh (cách nhau 65 s, `report/label-scan-e2e/smoke-output-qwen-spaced.jsonl`): 5/5 ảnh có danh sách trả về `ok` (COSRX 30/30 mục đầu, giống lần 2026-11-05; ceramide NP vẫn thiếu vì nằm sau vị trí 30). Đối chiếu tay ngày 2026-11-12 (`report/label-scan-e2e/ac2-qwen-2026-11-12.md`): qwen đọc đúng 42/50 hoạt chất = 84% (thiếu trehalose do chép thành "trihalose", bỏ sót hydrolyzed hyaluronic acid ở ảnh 5, cộng 6 hoạt chất COSRX sau vị trí 30); 42/44 = 95,5% nếu chỉ tính 30 thành phần đầu; không bịa thành phần; 3/3 ảnh không có INCI → `not_label`; ảnh 7 → `low_recognition`. took_ms: 1020, 1493, 1747, 2563, 3078, 3362, 3898, 3899 → **p50 ≈ 2,8 s, p95 = 3,9 s → AC1 PASS**.
 - Giỏ có Obagi Retinol + toner AHA/BHA (dán chữ) → xung đột 🔴 + "dùng xen kẽ ngày".
 - E2E `E2E_LIVE_GAP_MS=65000 node e2e/label-scan.e2e.cjs` → **22/22 PASS** (`report/label-scan-e2e/e2e-run4.txt`), gồm cả ảnh 4 (not_label) và ảnh 7 (low_recognition) trên luồng thật. Script có thêm biến `E2E_LIVE_GAP_MS` để giãn các lần gửi ảnh thật.
 - `pytest tests/label_service` sau khi đổi model: 204 passed.
 - Ảnh COSRX dừng ở 30 thành phần là do giới hạn có sẵn `MAX_INGREDIENTS = 30` của `graph_sync/ingredients.py` (không phải lỗi model); hoạt chất thường nằm trong 30 mục đầu.
-- AC1–AC7 hiện đều **PASS**.
+- AC1, AC3–AC7 **PASS**. AC2 với model hiện tại (qwen) **chưa đạt** trên tổng 50 hoạt chất: 84% < 85% (đạt 95,5% nếu chỉ tính 30 thành phần đầu). Con số 88% ở bảng bên dưới là của model cũ `llama-4-scout`.
 
 Ngày chạy: 2026-11-05. Cờ `LABEL_SCAN_ENABLED=1` đã bật trong `.env` local và để nguyên (tắt: xóa dòng đó hoặc đặt `=0`, rồi `docker compose up -d --force-recreate --no-deps ai-service php-backend`; khi tắt, không còn nút 📎 và không tải JS/CSS của tính năng, chat cũ chạy y nguyên). Chi tiết thô: `report/label-scan-e2e/results.md`, `smoke-output.jsonl`, ảnh chụp `live-*.png`, `mock-xss.png`, `ac7-flag-off.png`.
 

@@ -239,11 +239,14 @@ Widget: nút 📎 → kiểm loại file → nén ảnh bằng canvas (cạnh d�
 - *Kết quả có nhất quán với trang giỏ hàng không?* Có, cùng bộ luật và cùng hàm. Có test `test_parity_with_cart_analyze`.
 
 **Số liệu (đo 2026-11-05/06):**
-- Độ chính xác hoạt chất trên ảnh demo: 44/50 = **88%** (mục tiêu ≥85%), không bịa thành phần.
+- Độ chính xác hoạt chất trên 5 ảnh demo có bảng thành phần (mục tiêu ≥85%), không bịa thành phần ở cả hai model:
+  - Model hiện tại `qwen/qwen3.8-27b`: 42/50 = **84%** (đối chiếu tay 2026-11-12). Thiếu trehalose (chép thành "trihalose"), hydrolyzed hyaluronic acid, và 6 hoạt chất COSRX nằm sau vị trí 30. Chỉ tính 30 thành phần đầu: 42/44 = 95,5%.
+  - Model cũ `llama-4-scout` (Groq gỡ ngày 2026-11-06): 44/50 = 88%.
+  - Nếu bị hỏi: qwen nhanh hơn nhiều (p95 3,9 s so với 17,3 s) nhưng phủ thấp hơn một chút; chỗ thiếu lớn nhất ở cả hai là giới hạn 30 thành phần của bộ tách.
 - Thời gian: p50 ≈ 2,8 s, p95 = 3,9 s với model qwen (mục tiêu ≤10 s).
 - Ảnh không có bảng thành phần (selfie, mặt trước): 3/3 trả đúng "chưa thấy bảng thành phần".
 - E2E 22/22 PASS; pytest `label_service` 204 passed; PHP `LabelScanTest` 56 passed.
-- Bảy tiêu chí nghiệm thu AC1–AC7 đều PASS.
+- Tiêu chí nghiệm thu: AC1, AC3–AC7 PASS; AC2 với model hiện tại chưa đạt trên tổng (84% < 85%).
 
 **Giới hạn phải biết:**
 - Gói Groq miễn phí 8.000 token/phút, một ảnh tốn ~6.800 token → **khoảng 1 ảnh/phút cho cả shop**. Demo: các lần gửi ảnh cách nhau ≥1 phút; nếu hết quota thì dùng ô dán thành phần.
@@ -507,7 +510,7 @@ Giảng viên đánh giá cao khi nhóm tự biết giới hạn. Cách trả l�
 | 8 bước, 45 s | giới hạn mỗi lượt agent |
 | 5 phút / 10 phút | hạn token HMAC / hạn đơn nháp |
 | 600 ms | hạn mỗi lệnh Neo4j trước khi hạ cấp |
-| 88%, p95 3,9 s | độ chính xác hoạt chất và thời gian chụp nhãn |
+| 84%, p95 3,9 s | độ chính xác hoạt chất và thời gian chụp nhãn (model qwen hiện tại; model cũ 88%, p95 17,3 s) |
 | 0 số liệu lạ / 45 câu | eval chính sách |
 | 92,5% | độ đúng router agent |
 | 6 lần / 10 phút | giới hạn chụp nhãn mỗi phiên |
