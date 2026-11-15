@@ -159,6 +159,8 @@ class VideoWatchSession {
         $row['video_id'] = (string)($row['video_id'] ?? '');
         $row['publication_id'] = (string)($row['publication_id'] ?? '');
         $row['campaign_id'] = (string)($row['campaign_id'] ?? '');
+        $row['mode'] = (($row['mode'] ?? 'campaign') === 'time') ? 'time' : 'campaign';
+        $row['xu_settled'] = !empty($row['xu_settled']);
         $row['video_duration'] = (float)($row['video_duration'] ?? 0);
         $row['playback_progress'] = (float)($row['playback_progress'] ?? 0);
         $normIntervals = [];
@@ -188,6 +190,13 @@ class VideoWatchSession {
         }
 
         return $row;
+    }
+
+    /** Đánh dấu phiên đã xử lý xong xu theo video (để heartbeat sau bỏ qua). */
+    public function markXuSettled(string $sessionId): void {
+        $sid = trim($sessionId);
+        if ($sid === '') return;
+        $this->db->{self::COLLECTION}->updateOne(['watch_session_id' => $sid], ['$set' => ['xu_settled' => true]]);
     }
 
     /**
@@ -234,6 +243,16 @@ class VideoWatchSession {
             return ['ok' => false, 'code' => 'VIDEO_NOT_FOUND', 'message' => 'Video không tồn tại hoặc chưa được xuất bản.'];
         }
 
+        // Đường lạnh (mở viewer): tạo index cho bảng giây xem; heartbeat dùng cờ false.
+        if ($customerId !== null) {
+            try {
+                require_once __DIR__ . '/VideoWatchDaily.php';
+                new VideoWatchDaily($this->db);
+            } catch (\Throwable $e) {
+                error_log('VideoWatchSession daily indexes failed: ' . get_class($e));
+            }
+        }
+
         $resolvedPubId = (string)$pubDoc['_id'];
         $resolvedVideoId = (string)($pubDoc['video_id'] ?? $videoId);
         $videoDuration = max(1.0, (float)($pubDoc['duration'] ?? 0));
@@ -256,6 +275,10 @@ class VideoWatchSession {
         }
 
         if (!$campaign) {
+            if ($customerId !== null) {
+                // Không có chiến dịch: khách đã đăng nhập vẫn có phiên đếm giờ xem (mode time).
+                return $this->startOrResumeTimeSession($customerId, $guestSessionId, $resolvedVideoId, $resolvedPubId, $videoDuration);
+            }
             return [
                 'ok' => false,
                 'code' => 'NO_ACTIVE_CAMPAIGN',
@@ -395,6 +418,78 @@ class VideoWatchSession {
     }
 
     /**
+     * Phiên đếm giờ xem (mode 'time') cho video không có chiến dịch: mỗi khách / video / ngày VN một phiên.
+     */
+    private function startOrResumeTimeSession(string $customerId, ?string $guestSessionId, string $videoId, string $pubId, float $videoDuration): array {
+        require_once __DIR__ . '/../services/RewardRules.php';
+        $dateVn = RewardRules::dateVn(time());
+        $nowUtc = new \MongoDB\BSON\UTCDateTime();
+        $nowFloat = microtime(true);
+
+        $existing = $this->db->{self::COLLECTION}->findOne([
+            'video_id' => $videoId,
+            'mode' => 'time',
+            'customer_id' => $customerId,
+            'date_vn' => $dateVn,
+            'watch_state' => 'IN_PROGRESS',
+        ], ['sort' => ['updated_at' => -1]]);
+
+        if ($existing) {
+            $existingId = (string)$existing['watch_session_id'];
+            $this->db->{self::COLLECTION}->updateOne(
+                ['watch_session_id' => $existingId],
+                ['$set' => ['last_server_time' => $nowFloat, 'updated_at' => $nowUtc]]
+            );
+            return [
+                'ok' => true,
+                'resumed' => true,
+                'session' => $this->getSessionById($existingId),
+                'campaign' => null,
+                'message' => 'Khôi phục phiên xem video thành công.'
+            ];
+        }
+
+        $newSessionId = bin2hex(random_bytes(16));
+        $doc = [
+            'watch_session_id' => $newSessionId,
+            'customer_id' => $customerId,
+            'guest_session_id' => $guestSessionId,
+            'video_id' => $videoId,
+            'publication_id' => $pubId,
+            'campaign_id' => null,
+            'mode' => 'time',
+            'date_vn' => $dateVn,
+            'video_duration' => $videoDuration,
+            'playback_progress' => 0.0,
+            'valid_watched_intervals' => [],
+            'watched_seconds' => 0.0,
+            'watched_coverage_percent' => 0.0,
+            'watch_state' => 'IN_PROGRESS',
+            'is_eligible' => false,
+            'eligible_at' => null,
+            'heartbeat_count' => 0,
+            'last_heartbeat_at' => $nowUtc,
+            'last_server_time' => $nowFloat,
+            'last_playback_time' => 0.0,
+            'client_metadata' => [
+                'ip' => (string)($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+                'user_agent' => substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
+            ],
+            'created_at' => $nowUtc,
+            'updated_at' => $nowUtc,
+        ];
+        $this->db->{self::COLLECTION}->insertOne($doc);
+
+        return [
+            'ok' => true,
+            'resumed' => false,
+            'session' => $this->getSessionById($newSessionId),
+            'campaign' => null,
+            'message' => 'Khởi tạo phiên theo dõi video thành công.'
+        ];
+    }
+
+    /**
      * Reports playback heartbeat with strict anti-tampering validation.
      */
     public function recordHeartbeat(string $sessionId, float $currentTime, float $playbackRate = 1.0, bool $isPaused = false): array {
@@ -412,12 +507,13 @@ class VideoWatchSession {
         $nowFloat = microtime(true);
         $duration = (float)($sessionDoc['video_duration'] ?? 1.0);
         $campaignId = (string)($sessionDoc['campaign_id'] ?? '');
+        $isTimeMode = (($sessionDoc['mode'] ?? 'campaign') === 'time');
 
-        // 1. Verify campaign is still active
+        // 1. Verify campaign is still active (bỏ qua với phiên đếm giờ mode time)
         require_once __DIR__ . '/VideoRewardCampaign.php';
         $rewardCampaignModel = new VideoRewardCampaign($this->db);
-        $campaign = $rewardCampaignModel->getActiveCampaignForVideo((string)$sessionDoc['video_id'], (string)$sessionDoc['publication_id']);
-        if (!$campaign || (string)$campaign['campaign_id'] !== $campaignId) {
+        $campaign = $isTimeMode ? null : $rewardCampaignModel->getActiveCampaignForVideo((string)$sessionDoc['video_id'], (string)$sessionDoc['publication_id']);
+        if (!$isTimeMode && (!$campaign || (string)$campaign['campaign_id'] !== $campaignId)) {
             $this->db->{self::COLLECTION}->updateOne(
                 ['watch_session_id' => $sid],
                 ['$set' => ['watch_state' => 'EXPIRED', 'updated_at' => $nowUtc]]
@@ -497,7 +593,7 @@ class VideoWatchSession {
             $endLast = (float)($lastPair[1] ?? 0.0);
         }
 
-        if (!$isEligible) {
+        if (!$isEligible && !$isTimeMode) {
             $hasSufficientCoverage = ($coveragePercent >= self::COMPLETION_THRESHOLD_PERCENT);
             $hasReachedNearEnd = ($endLast >= ($duration - self::COMPLETION_BUFFER_SECONDS));
 
@@ -533,7 +629,7 @@ class VideoWatchSession {
             ['$set' => $updateFields]
         );
 
-        return [
+        $response = [
             'ok' => true,
             'watch_session_id' => $sid,
             'playback_progress' => $currentTime,
@@ -545,6 +641,26 @@ class VideoWatchSession {
             'heartbeat_count' => $heartbeatCount,
             'message' => $isEligible ? 'Đã đủ điều kiện nhận ưu đãi!' : 'Ghi nhận tiến độ xem video thành công.'
         ];
+
+        // 6. Cộng giây xem trong ngày (server-verified) cho mọi phiên của khách đã đăng nhập.
+        $customerId = isset($sessionDoc['customer_id']) && trim((string)$sessionDoc['customer_id']) !== '' ? trim((string)$sessionDoc['customer_id']) : null;
+        if ($customerId !== null) {
+            $todaySeconds = 0;
+            try {
+                require_once __DIR__ . '/../services/RewardRules.php';
+                require_once __DIR__ . '/VideoWatchDaily.php';
+                $daily = new VideoWatchDaily($this->db, false);
+                $dateVn = RewardRules::dateVn(time());
+                $delta = $watchedSeconds - (float)($sessionDoc['watched_seconds'] ?? 0);
+                $daily->credit($customerId, $dateVn, $delta, $nowFloat);
+                $todaySeconds = $daily->secondsToday($customerId, $dateVn);
+            } catch (\Throwable $e) {
+                error_log('VideoWatchSession daily credit failed: ' . get_class($e));
+            }
+            $response['today_seconds'] = (int)$todaySeconds;
+        }
+
+        return $response;
     }
 
     /**
@@ -565,6 +681,20 @@ class VideoWatchSession {
         $watchedSeconds = (float)($sessionDoc['watched_seconds'] ?? 0);
         $coveragePercent = (float)($sessionDoc['watched_coverage_percent'] ?? 0);
         $isEligible = (bool)($sessionDoc['is_eligible'] ?? false);
+
+        // Phiên đếm giờ (mode time) không có ưu đãi voucher: không ghi trạng thái, không đủ điều kiện.
+        if (($sessionDoc['mode'] ?? 'campaign') === 'time') {
+            return [
+                'ok' => true,
+                'code' => 'TIME_MODE',
+                'is_eligible' => false,
+                'mode' => 'time',
+                'watch_state' => (string)($sessionDoc['watch_state'] ?? 'IN_PROGRESS'),
+                'watched_seconds' => $watchedSeconds,
+                'watched_coverage_percent' => $coveragePercent,
+                'message' => 'Phiên xem không có ưu đãi voucher.'
+            ];
+        }
 
         $rawIntervals = $sessionDoc['valid_watched_intervals'] ?? [];
         $currentIntervals = [];

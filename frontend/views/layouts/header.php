@@ -15,6 +15,12 @@ $styleAssetPath = strpos((string)BASE_URL, '/frontend/public') !== false
     ? dirname(__DIR__, 2) . '/public/assets/css/style.css'
     : dirname(__DIR__, 3) . '/assets/css/style.css';
 $styleAssetVersion = @filemtime($styleAssetPath) ?: '20261109_ui';
+$rewardDot = false;
+if (is_logged_in() && $currentRole === 'khach_hang') {
+  if (class_exists('RewardRules')) {
+    $rewardDot = ($_SESSION['reward_checked_in_date'] ?? '') !== RewardRules::dateVn(time());
+  }
+}
 
 // Chuẩn hóa danh sách Level-2 groups từ cây phân cấp canonical danh_muc
 $menuGroups = [];
@@ -154,6 +160,7 @@ $socialLinks = [
         <span class="utility-sep mx-1">|</span>
         <?php if (is_logged_in()): ?>
           <span class="utility-greeting text-white-50">Xin chào, <strong class="text-white"><?= h($currentUser['ho_ten'] ?? 'Quản trị viên') ?></strong></span>
+          <?php if ($currentRole === 'khach_hang'): ?><a class="text-white-50 ms-2" href="<?= BASE_URL ?>/index.php?r=phan_thuong" title="Phần thưởng"><i class="fas fa-gift me-1"></i>Phần thưởng<?php if ($rewardDot): ?><span class="ms-1 d-inline-block rounded-circle align-middle" style="width:8px;height:8px;background:#C9A24A" aria-hidden="true"></span><span class="visually-hidden"> Điểm danh</span><?php endif; ?></a><?php endif; ?>
           <a class="text-white-50 ms-2" href="<?= BASE_URL ?>/index.php?r=dangxuat" title="Đăng xuất"><i class="fas fa-arrow-right-from-bracket me-1"></i>Đăng xuất</a>
         <?php else: ?>
           <a class="text-white-50" href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login"><i class="fas fa-arrow-right-to-bracket me-1"></i>Đăng nhập</a>
@@ -369,6 +376,7 @@ $socialLinks = [
           <span class="fw-bold text-dark"><i class="fas fa-user-circle me-1 text-success"></i> Xin chào, <?= h($currentUser['ho_ten'] ?? 'User') ?></span>
           <a href="<?= BASE_URL ?>/index.php?r=dangxuat" class="btn btn-sm btn-outline-danger py-1 px-2 text-decoration-none">Đăng xuất</a>
         </div>
+        <?php if ($currentRole === 'khach_hang'): ?><a href="<?= BASE_URL ?>/index.php?r=phan_thuong" class="d-flex align-items-center gap-2 text-decoration-none text-dark mb-2"><i class="fas fa-gift" style="color:#C9A24A"></i> Phần thưởng<?php if ($rewardDot): ?><span class="badge rounded-pill ms-1" style="background:#C9A24A;color:#1f1a0a">Điểm danh</span><?php endif; ?></a><?php endif; ?>
         <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="btn btn-sm btn-brand w-100 py-1.5 text-decoration-none">Vào trang quản lý / Hồ sơ</a>
       <?php else: ?>
         <div class="d-grid gap-2 grid-2-cols" style="grid-template-columns: 1fr 1fr;">

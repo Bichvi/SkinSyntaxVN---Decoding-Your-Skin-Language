@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../models/VideoWatchSession.php';
 require_once __DIR__ . '/../models/VideoRewardCampaign.php';
 require_once __DIR__ . '/../models/CustomerVoucher.php';
+require_once __DIR__ . '/../services/RewardService.php';
 
 class VideoWatchController {
     private $pdo;
@@ -30,6 +31,10 @@ class VideoWatchController {
     }
 
     private function getCustomerIdentity(): array {
+        return self::customerIdentity();
+    }
+
+    public static function customerIdentity(): array {
         $customerId = null;
         $customerEmail = null;
         $guestSessionId = null;
@@ -108,6 +113,74 @@ class VideoWatchController {
     }
 
     /**
+     * Quyết định có xét cộng xu theo video hay không (thuần, dễ kiểm thử).
+     * Cần: phiên đủ điều kiện, khách đã đăng nhập, phiên thuộc chính khách đó,
+     * không phải mode 'time', có chiến dịch và chưa xử lý xu xong.
+     */
+    public static function shouldAwardVideoXu(array $session, array $identity, array $result): bool {
+        $eligible = !empty($result['is_eligible'])
+            || !empty($result['session']['is_eligible'])
+            || (($result['session']['watch_state'] ?? '') === 'ELIGIBLE');
+        if (!$eligible) {
+            return false;
+        }
+        $customerId = (string)($identity['customer_id'] ?? '');
+        $owner = (string)($session['customer_id'] ?? '');
+        if ($customerId === '' || $owner === '' || !hash_equals($owner, $customerId)) {
+            return false;
+        }
+        if (($session['mode'] ?? 'campaign') === 'time' || empty($session['campaign_id'])) {
+            return false;
+        }
+        return empty($session['xu_settled']);
+    }
+
+    /**
+     * Cộng xu theo video (reward_xu của chiến dịch) khi phiên đủ điều kiện và khách đã đăng nhập.
+     * Không bao giờ làm hỏng response voucher.
+     */
+    private function awardVideoXuIfEligible(array $result, string $sessionId): array {
+        try {
+            if (trim($sessionId) === '') {
+                return $result;
+            }
+            $identity = self::customerIdentity();
+            if (empty($identity['customer_id'])) {
+                return $result;
+            }
+            $session = $this->sessionModel->getSessionById($sessionId);
+            if (!$session || !self::shouldAwardVideoXu($session, $identity, $result)) {
+                return $result;
+            }
+            $campaign = (new VideoRewardCampaign($this->pdo))->getCampaignById((string)$session['campaign_id']);
+            if (!$campaign || (int)($campaign['reward_xu'] ?? 0) <= 0) {
+                $this->sessionModel->markXuSettled($sessionId);
+                return $result;
+            }
+            $xu = (new RewardService($this->pdo))->awardVideoXu(
+                $identity,
+                $campaign,
+                (string)($session['video_id'] ?? '')
+            );
+            $result['xu_reward'] = [
+                'code' => $xu['code'],
+                'xu_awarded' => $xu['xu_awarded'],
+                'xu_balance' => $xu['xu_balance'],
+            ];
+            if (in_array($xu['code'], ['OK', 'ALREADY_CLAIMED', 'NO_XU'], true)) {
+                try {
+                    $this->sessionModel->markXuSettled($sessionId);
+                } catch (\Throwable $e) {
+                    error_log('VideoWatchController markXuSettled failed: ' . get_class($e));
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('VideoWatchController awardVideoXuIfEligible failed: ' . get_class($e));
+        }
+        return $result;
+    }
+
+    /**
      * POST / GET: index.php?r=video_watch_start
      */
     public function start(): void {
@@ -126,6 +199,7 @@ class VideoWatchController {
             $result,
             (string)($result['session']['watch_session_id'] ?? '')
         );
+        $result = $this->awardVideoXuIfEligible($result, (string)($result['session']['watch_session_id'] ?? ''));
         if (empty($result['ok'])) {
             http_response_code(400);
         }
@@ -153,6 +227,7 @@ class VideoWatchController {
 
         $result = $this->sessionModel->recordHeartbeat($sessionId, $currentTime, $playbackRate, $isPaused);
         $result = $this->autoClaimEligibleReward($result, $sessionId);
+        $result = $this->awardVideoXuIfEligible($result, $sessionId);
         if (empty($result['ok'])) {
             if (($result['code'] ?? '') === 'RATE_LIMITED') {
                 http_response_code(429);
@@ -204,6 +279,7 @@ class VideoWatchController {
 
         $result = $this->sessionModel->validateCompletion($sessionId);
         $result = $this->autoClaimEligibleReward($result, $sessionId);
+        $result = $this->awardVideoXuIfEligible($result, $sessionId);
         if (empty($result['ok'])) {
             http_response_code(400);
         }
@@ -242,6 +318,13 @@ class VideoWatchController {
             $identity['customer_email'],
             $identity['guest_session_id']
         );
+
+        if (!empty($result['ok'])) {
+            $withXu = $this->awardVideoXuIfEligible($result + ['is_eligible' => true], $sessionId);
+            if (isset($withXu['xu_reward'])) {
+                $result['xu_reward'] = $withXu['xu_reward'];
+            }
+        }
 
         if (empty($result['ok'])) {
             $code = $result['code'] ?? '';

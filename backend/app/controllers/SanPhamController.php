@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../models/HoiDap.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/SearchSuggestService.php';
+require_once __DIR__ . '/../services/RewardCsrf.php';
 
 class SanPhamController {
     private const SEARCH_KEYWORD_MAX_LEN = 250;
@@ -854,6 +855,8 @@ class SanPhamController {
             'activeTab' => trim((string)($_GET['tab'] ?? '')),
             'reviewErrorMessage' => $reviewErrorMessage,
             'questionErrorMessage' => $questionErrorMessage,
+            'rewardCsrf' => RewardCsrf::token(),
+            'isLoggedIn' => (function_exists('is_logged_in') && is_logged_in()),
         ]);
     }
 
