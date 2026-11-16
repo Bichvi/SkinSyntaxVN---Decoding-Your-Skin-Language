@@ -9,6 +9,8 @@
 class PhienLive {
     private $db;
 
+    public const STREAM_FRESH_SECONDS = 60;
+
     private const ALLOWED_STATUSES = [
         'scheduled', 'ready', 'live', 'interrupted', 'ended',
         'processing', 'replay_ready', 'recording_failed'
@@ -190,10 +192,14 @@ class PhienLive {
 
     public function touchStream($id): bool {
         try {
-            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => [
+            $filter = ['$and' => [
+                $this->idFilter($id),
+                ['trang_thai' => ['$in' => ['live', 'danglive']]],
+            ]];
+            $res = $this->db->phien_live->updateOne($filter, ['$set' => [
                 'stream_state' => 'live', 'stream_last_seen' => time(), 'trang_thai' => 'live', 'updated_at' => date('Y-m-d H:i:s')
             ]]);
-            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+            return $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
         }
@@ -297,12 +303,19 @@ class PhienLive {
         }
     }
 
-    public function getLichSuChat(string $roomId, int $limit = 100, string $mode = 'all'): array {
+    public function getLichSuChat(string $roomId, int $limit = 100, string $mode = 'all', int $afterMs = 0): array {
         try {
             $filter = ['room_id' => (string)$roomId];
             if ($mode === 'featured') $filter['$or'] = [['is_pinned' => true], ['is_order' => true]];
             if ($mode === 'qa') $filter['is_question'] = true;
-            $cursor = $this->db->phien_live_chats->find($filter, ['sort' => ['timestamp_ms' => 1], 'limit' => min(200, max(1, $limit))]);
+            $limit = min(200, max(1, $limit));
+            if ($afterMs > 0) {
+                $filter['timestamp_ms'] = ['$gt' => $afterMs];
+                $sortDir = 1;
+            } else {
+                $sortDir = -1;
+            }
+            $cursor = $this->db->phien_live_chats->find($filter, ['sort' => ['timestamp_ms' => $sortDir], 'limit' => $limit]);
             $results = [];
             foreach ($cursor as $item) {
                 $results[] = [
@@ -310,9 +323,11 @@ class PhienLive {
                     'sender_id' => (string)($item['sender_id'] ?? ''), 'sender_type' => (string)($item['sender_type'] ?? (!empty($item['is_ai']) ? 'ai' : 'customer')),
                     'sender_name' => (string)($item['sender_name'] ?? 'Khách hàng'), 'message' => (string)($item['message'] ?? ''),
                     'is_ai' => !empty($item['is_ai']), 'is_order' => !empty($item['is_order']), 'is_question' => !empty($item['is_question']),
-                    'is_pinned' => !empty($item['is_pinned']), 'created_at' => (string)($item['created_at'] ?? '')
+                    'is_pinned' => !empty($item['is_pinned']), 'created_at' => (string)($item['created_at'] ?? ''),
+                    'ts' => (int)($item['timestamp_ms'] ?? 0)
                 ];
             }
+            if ($sortDir === -1) $results = array_reverse($results);
             return $results;
         } catch (Throwable $e) {
             return [];
@@ -346,10 +361,10 @@ class PhienLive {
         $streamState = strtolower(trim((string)($arr['stream_state'] ?? '')));
         $lastSeen = (int)($arr['stream_last_seen'] ?? 0);
         $recording = strtolower(trim((string)($arr['recording_status'] ?? '')));
-        if (in_array($raw, ['danglive', 'live'], true)) return $streamState === 'live' && $lastSeen >= (time() - 30) ? 'live' : 'ready';
+        if (in_array($raw, ['danglive', 'live'], true)) return $streamState === 'live' && $lastSeen >= (time() - self::STREAM_FRESH_SECONDS) ? 'live' : 'ready';
         if (in_array($raw, ['chuamoi', 'upcoming'], true)) return 'scheduled';
         if (in_array($raw, ['ketthuc', 'cancelled'], true)) return $recording === 'replay_ready' || !empty($arr['url_ban_ghi']) ? 'replay_ready' : 'ended';
-        if (in_array($raw, self::ALLOWED_STATUSES, true)) return $raw === 'live' && !($streamState === 'live' && $lastSeen >= (time() - 30)) ? 'ready' : $raw;
+        if (in_array($raw, self::ALLOWED_STATUSES, true)) return $raw === 'live' && !($streamState === 'live' && $lastSeen >= (time() - self::STREAM_FRESH_SECONDS)) ? 'ready' : $raw;
         return 'scheduled';
     }
 
