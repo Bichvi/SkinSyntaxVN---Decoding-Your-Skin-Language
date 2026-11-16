@@ -13,7 +13,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 COPY backend/composer.json backend/composer.lock ./
-RUN composer update --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
+# install (not update): follow composer.lock. Composer >= 2.9 refuses to *resolve*
+# packages that have security advisories, which broke `update` on every build.
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 COPY backend/ .
 COPY frontend/ /var/www/frontend
