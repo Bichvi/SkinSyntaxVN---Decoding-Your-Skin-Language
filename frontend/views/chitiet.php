@@ -410,6 +410,14 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
   .detail-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
   .detail-chip { display: inline-flex; align-items: center; max-width: 100%; padding: 3px 10px; border: 1px solid #dfe8ef; border-radius: 999px; background: #f6faf8; color: #334155; font-size: 0.78rem; line-height: 1.5; }
   .detail-chip b { margin-right: 4px; color: #183B2B; font-weight: 700; }
+  .detail-summary { margin: 0 0 16px; padding: 14px 16px; border: 1px solid #e3eee9; border-radius: 10px; background: #f8fbf9; }
+  .detail-summary__label { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; color: #183B2B; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+  .detail-summary__label i { font-size: 0.78rem; opacity: 0.8; }
+  .detail-summary__text { margin: 0 0 12px; color: #334155; font-size: 0.88rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .detail-summary__ings { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+  .detail-summary__ings li { padding: 2px 10px; border-radius: 6px; background: #fff; border: 1px solid #dfe8ef; color: #0F172A; font-size: 0.78rem; line-height: 1.6; }
+  .detail-summary__more { color: #183B2B; font-size: 0.82rem; font-weight: 600; text-decoration: none; }
+  .detail-summary__more:hover, .detail-summary__more:focus-visible { text-decoration: underline; }
   .detail-stockline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font-size: 0.84rem; }
   .detail-ai-link { color: #183B2B; font-weight: 600; text-decoration: none; }
   .detail-ai-link:hover, .detail-ai-link:focus-visible { text-decoration: underline; }
@@ -928,6 +936,10 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     z-index: 1050;
     right: 0;
     bottom: 164px;
+    /* The pill sits inside a Bootstrap .row: undo `.row > *` full width so it stays a small edge tab. */
+    width: auto;
+    max-width: none;
+    margin: 0;
     padding: 8px 12px 8px 14px;
     border: 0;
     border-radius: 999px 0 0 999px;
@@ -2436,6 +2448,34 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
           <?php if (!$isLoaiDaNa): ?><li class="detail-chip"><b>Loại da</b> <?= h($rawLoaiDa) ?></li><?php endif; ?>
           <?php if ($chipDanhMuc !== ''): ?><li class="detail-chip" title="<?= h($chipDanhMucFull) ?>"><?= h($chipDanhMuc) ?></li><?php endif; ?>
         </ul>
+
+        <?php
+          // Tóm tắt nhanh lấp khoảng trống giữa chip thông tin và cụm nút mua.
+          $summaryText = trim(preg_replace('/\s+/u', ' ', strip_tags((string)($p['mo_ta'] ?? ''))) ?? '');
+          if (mb_strlen($summaryText, 'UTF-8') > 260) {
+            $summaryCut = mb_substr($summaryText, 0, 260, 'UTF-8');
+            $summaryText = rtrim(mb_substr($summaryCut, 0, (int)(mb_strrpos($summaryCut, ' ', 0, 'UTF-8') ?: 260), 'UTF-8'), " ,.;:-") . '…';
+          }
+          $summaryIngredients = array_slice(array_values(array_filter(array_map(
+            static fn($s) => trim((string)$s, " \t\n\r\0\x0B.;"),
+            preg_split('/[,;\n]+/u', strip_tags((string)($p['thanh_phan_chinh'] ?? ($p['thanh_phan'] ?? '')))) ?: []
+          ), static fn($s) => $s !== '' && mb_strlen($s, 'UTF-8') <= 40)), 0, 5);
+        ?>
+        <?php if ($summaryText !== '' || $summaryIngredients): ?>
+          <div class="detail-summary">
+            <?php if ($summaryText !== ''): ?>
+              <div class="detail-summary__label"><i class="fas fa-leaf" aria-hidden="true"></i> Điểm nổi bật</div>
+              <p class="detail-summary__text"><?= h($summaryText) ?></p>
+            <?php endif; ?>
+            <?php if ($summaryIngredients): ?>
+              <div class="detail-summary__label"><i class="fas fa-flask" aria-hidden="true"></i> Thành phần chính</div>
+              <ul class="detail-summary__ings">
+                <?php foreach ($summaryIngredients as $ing): ?><li><?= h($ing) ?></li><?php endforeach; ?>
+              </ul>
+            <?php endif; ?>
+            <a href="#detailTabNav" class="detail-summary__more" onclick="var t=document.getElementById('tab-mo-ta');if(t){t.click();}">Xem mô tả đầy đủ <i class="fas fa-arrow-down" aria-hidden="true"></i></a>
+          </div>
+        <?php endif; ?>
 
         <?php
           $detailStock = $p['so_luong_ton_kho'] ?? $p['ton_kho_hien_thi'] ?? null;
