@@ -94,5 +94,62 @@ class ProductVideoLifecycleTests(unittest.TestCase):
         self.assertTrue(result.get("videos_ready"))
 
 
+class JobStagesTests(unittest.TestCase):
+    """list_campaigns / get_campaign attach per-stage job counts (additive field)."""
+
+    def setUp(self):
+        from unittest.mock import patch
+        from tests.fakes import FakeDb
+        import core.campaigns as campaigns_module
+        self.patch, self.campaigns = patch, campaigns_module
+        self.db = FakeDb()
+        patcher = patch.object(campaigns_module, "get_db", return_value=self.db)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_list_attaches_job_stages_per_campaign(self):
+        from bson import ObjectId
+        a, b = ObjectId(), ObjectId()
+        self.db.ai_idol_campaigns.insert_one({"_id": a, "status": "NEEDS_ATTENTION", "created_at": 2})
+        self.db.ai_idol_campaigns.insert_one({"_id": b, "status": "GENERATING", "created_at": 1})
+        rows = {str(a): [{"status": "FAILED", "stage": "GENERATING_CONTENT", "count": 2}]}
+        with self.patch.object(self.campaigns, "_job_stage_counts", return_value=rows) as helper:
+            result = self.campaigns.list_campaigns()
+        helper.assert_called_once()
+        by_id = {item["_id"]: item for item in result}
+        self.assertEqual(by_id[str(a)]["job_stages"], rows[str(a)])
+        self.assertEqual(by_id[str(b)]["job_stages"], [])
+
+    def test_aggregate_failure_omits_job_stages_without_raising(self):
+        from bson import ObjectId
+        self.db.ai_idol_campaigns.insert_one({"_id": ObjectId(), "status": "FAILED", "created_at": 1})
+        broken = self.patch.object(type(self.db.ai_idol_jobs), "aggregate", create=True,
+                                   side_effect=RuntimeError("atlas down"))
+        with broken:
+            result = self.campaigns.list_campaigns()
+        self.assertEqual(len(result), 1)
+        self.assertNotIn("job_stages", result[0])
+
+    def test_helper_groups_aggregate_rows_by_campaign(self):
+        from unittest.mock import MagicMock
+        db = MagicMock()
+        db.ai_idol_jobs.aggregate.return_value = [
+            {"_id": {"campaign_id": "c1", "status": "FAILED", "stage": "RENDERING"}, "count": 3},
+            {"_id": {"campaign_id": "c1", "status": "READY", "stage": None}, "count": 1},
+        ]
+        counts = self.campaigns._job_stage_counts(db, ["c1", "c2"])
+        self.assertEqual(counts["c1"], [
+            {"status": "FAILED", "stage": "RENDERING", "count": 3},
+            {"status": "READY", "stage": None, "count": 1},
+        ])
+        self.assertNotIn("c2", counts)
+
+    def test_helper_returns_none_when_aggregate_raises(self):
+        from unittest.mock import MagicMock
+        db = MagicMock()
+        db.ai_idol_jobs.aggregate.side_effect = RuntimeError("boom")
+        self.assertIsNone(self.campaigns._job_stage_counts(db, ["c1"]))
+
+
 if __name__ == "__main__":
     unittest.main()

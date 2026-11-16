@@ -221,6 +221,36 @@
 
   // ---------------------------------------------------------------- progressSteps
 
+  // Which progress step a job's pipeline stage belongs to.
+  const STAGE_STEP = Object.freeze({
+    CREATED: 'script', QUEUED: 'script', COLLECTING_PRODUCT: 'script', RETRIEVING_KNOWLEDGE: 'script', GENERATING_CONTENT: 'script',
+    VALIDATING_SCRIPT: 'review', REPAIRING_SCRIPT: 'review', AUTO_REPAIR_EXHAUSTED: 'review', REJECTED_BY_VALIDATOR: 'review',
+    AWAITING_SCRIPT_APPROVAL: 'review', SCRIPT_APPROVED: 'review', SCRIPT_AUTO_APPROVED: 'review',
+    GENERATING_VOICE: 'render', GENERATING_AVATAR: 'render', RENDERING: 'render', WAITING_RENDERER: 'render', FINAL_CHECK: 'render',
+  });
+  const JOB_FAILED = Object.freeze(['FAILED', 'AUTO_REPAIR_EXHAUSTED']);
+  const JOB_NOT_IN_FLIGHT = Object.freeze(['READY', 'FAILED', 'AUTO_REPAIR_EXHAUSTED', 'CANCELLED', 'SKIPPED', 'AWAITING_APPROVAL']);
+
+  // Earliest step (in STEP_ORDER) reached by the job_stages entries that pass `keep`, or '' when none maps to a known step.
+  function earliestJobStep(jobStages, keep) {
+    let best = -1;
+    asArray(jobStages).forEach((entry) => {
+      if (!isObject(entry)) return;
+      const count = entry.count === undefined || entry.count === null ? 1 : entry.count;
+      if (typeof count !== 'number' || !(count > 0)) return;
+      const status = upper(entry.status);
+      const stage = upper(entry.stage);
+      if (!keep(status, stage)) return;
+      const step = STAGE_STEP[stage] || (status === 'AUTO_REPAIR_EXHAUSTED' ? 'review' : '');
+      const index = STEP_ORDER.indexOf(step);
+      if (index !== -1 && (best === -1 || index < best)) best = index;
+    });
+    return best === -1 ? '' : STEP_ORDER[best];
+  }
+
+  const failedJob = (status, stage) => JOB_FAILED.includes(status) && stage !== 'CANCELLED';
+  const inFlightJob = (status) => !JOB_NOT_IN_FLIGHT.includes(status);
+
   // Where the item stands, as an index into STEP_ORDER plus the state of that step.
   // Steps before the index are done, steps after it are todo.
   function stepTarget(campaign, status) {
@@ -235,9 +265,13 @@
       case 'VALIDATING': return at('script', 'active');
       case 'AWAITING_APPROVAL': return at('review', 'blocked');
       case 'GENERATING':
+        // Jobs may still be writing scripts: follow the earliest step a running job is at.
+        return at(earliestJobStep(campaign.job_stages, inFlightJob) || 'render', 'active');
       case 'ASSEMBLING': return at('render', 'active');
       case 'NEEDS_ATTENTION':
-      case 'FAILED': return campaign.master_video_path ? at('schedule', 'blocked') : at('render', 'blocked');
+      case 'FAILED':
+        if (campaign.master_video_path) return at('schedule', 'blocked');
+        return at(earliestJobStep(campaign.job_stages, failedJob) || 'render', 'blocked');
       case 'SCHEDULED': return at('schedule', 'done');
       case 'STARTING':
       case 'LIVE': return at('broadcast', 'active');
