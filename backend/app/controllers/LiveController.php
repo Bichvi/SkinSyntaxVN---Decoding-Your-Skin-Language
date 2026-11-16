@@ -2,8 +2,11 @@
 
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/AiIdolReplaySessions.php';
+require_once __DIR__ . '/../services/CacheService.php';
 
 class LiveController {
+    private const VIEWER_ACTIVE_SECONDS = 45;
+
     private $pdo;
 
     public function __construct($pdo) {
@@ -20,7 +23,7 @@ class LiveController {
         $phienLiveModel = new PhienLive($mongoDb);
         $rawLives = $phienLiveModel->getAllLives();
         $now = time();
-        $cutoff = $now - 20;
+        $cutoff = $now - self::VIEWER_ACTIVE_SECONDS;
         $activeViewerMap = [];
 
         try {
@@ -130,10 +133,13 @@ class LiveController {
             // verified LIVE, not by a page refresh or a fabricated fallback.
         }
 
-        $allProducts = $spModel->getAllProducts([], 1000);
-        if (empty($allProducts)) {
-            $allProducts = $spModel->getDiscountProducts([], 1000);
+        // live.php only resolves the current session's deal products, so load just those.
+        $dealProductIds = [];
+        foreach ((array)($currentLive['danh_sach_deal'] ?? []) as $deal) {
+            $pid = trim((string)(is_array($deal) ? ($deal['ma_san_pham'] ?? '') : ''));
+            if ($pid !== '') $dealProductIds[$pid] = $pid;
         }
+        $allProducts = $dealProductIds ? array_values($spModel->findManyByIds(array_values($dealProductIds))) : [];
 
 
 
@@ -570,7 +576,7 @@ class LiveController {
 
         $liveId = trim((string)($_POST['live_id'] ?? $_GET['live_id'] ?? $_POST['id'] ?? $_GET['id'] ?? ''));
         $state = strtolower(trim((string)($_POST['state'] ?? $_GET['state'] ?? '')));
-        if ($liveId === '' || !in_array($state, ['offline', 'live', 'interrupted', 'ended'], true)) {
+        if ($liveId === '' || !in_array($state, ['offline', 'live', 'interrupted', 'ended', 'heartbeat'], true)) {
             http_response_code(422);
             echo json_encode(['ok' => false, 'message' => 'Thiếu phiên live hoặc trạng thái không hợp lệ.'], JSON_UNESCAPED_UNICODE);
             exit;
@@ -586,9 +592,10 @@ class LiveController {
             echo json_encode(['ok' => false, 'message' => 'Phiên livestream không tồn tại.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
-        if ($state === 'live') {
+        $normalizedLiveId = (string)($live['id'] ?? $liveId);
+        if ($state === 'live' || $state === 'heartbeat') {
             $publisherToken = trim((string)($_POST['publisher_token'] ?? ''));
-            if (!$this->verifyLivekitPublisherToken($publisherToken, $liveId)) {
+            if (!$this->verifyLivekitPublisherToken($publisherToken, $normalizedLiveId)) {
                 http_response_code(403);
                 echo json_encode(['ok' => false, 'message' => 'Không xác minh được phiên publisher LiveKit.'], JSON_UNESCAPED_UNICODE);
                 exit;
@@ -600,7 +607,20 @@ class LiveController {
             exit;
         }
 
+        if ($state === 'heartbeat') {
+            if (!$model->touchStream($liveId)) {
+                http_response_code(409);
+                echo json_encode(['ok' => false, 'code' => 'not_live', 'message' => 'Phiên không còn ở trạng thái phát.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+            echo json_encode(['ok' => true, 'live_id' => $liveId, 'state' => 'live'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit;
+        }
+
         $ok = $model->updateStreamState($liveId, $state);
+        if ($ok && $state === 'ended' && (string)($_POST['no_recording'] ?? '') === '1') {
+            $model->failRecording($liveId, 'Phiên phát không có bản ghi video.');
+        }
         echo json_encode(['ok' => $ok, 'live_id' => $liveId, 'state' => $state], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -838,7 +858,8 @@ class LiveController {
 
         require_once __DIR__ . '/../models/PhienLive.php';
         $phienLiveModel = new PhienLive($mongoDb);
-        $history = $phienLiveModel->getLichSuChat($roomId, 100, $mode);
+        $afterMs = max(0, (int)($_GET['after'] ?? $_POST['after'] ?? 0));
+        $history = $phienLiveModel->getLichSuChat($roomId, 100, $mode, $afterMs);
 
         echo json_encode([
             'ok' => true,
@@ -1034,7 +1055,13 @@ class LiveController {
 
         $role = current_role();
         if (!in_array($role, ['admin', 'nhanvien'], true)) {
+            http_response_code(403);
             echo json_encode(['ok' => false, 'message' => 'Bạn không có quyền thực hiện thao tác này'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        if (isset($_POST['upload_id'])) {
+            $this->handleChunkedRecordingUpload();
             exit;
         }
 
@@ -1105,6 +1132,154 @@ class LiveController {
         exit;
     }
 
+
+    /**
+     * Chunked append upload for live recordings (called from apiUploadLiveRecording
+     * when POST upload_id is present). Chunks must arrive in order (seq 0,1,2...).
+     */
+    private function handleChunkedRecordingUpload(): void {
+        $reply = static function (int $code, array $body): void {
+            http_response_code($code);
+            echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit;
+        };
+
+        $liveId = trim((string)($_POST['live_id'] ?? $_GET['live_id'] ?? ''));
+        $uploadId = trim((string)($_POST['upload_id'] ?? ''));
+        $seqRaw = (string)($_POST['seq'] ?? '');
+        $finalRaw = (string)($_POST['final'] ?? '');
+        if ($liveId === '' || !preg_match('/^[A-Za-z0-9-]{8,64}$/', $uploadId)
+            || !preg_match('/^\d+$/', $seqRaw) || !in_array($finalRaw, ['0', '1'], true)) {
+            $reply(422, ['ok' => false, 'message' => 'Tham số upload bản ghi không hợp lệ.']);
+        }
+        $seq = (int)$seqRaw;
+        $final = $finalRaw === '1';
+
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        require_once __DIR__ . '/../models/PhienLive.php';
+        $model = new PhienLive($mongoDb);
+        $live = $model->findById($liveId);
+        if (!$live) {
+            $reply(404, ['ok' => false, 'message' => 'Phiên livestream không tồn tại.']);
+        }
+        // A retried final call after a successful finalize must stay idempotent.
+        if ($final && ($live['status'] ?? '') === 'replay_ready' && !empty($live['url_ban_ghi'])) {
+            $reply(200, ['ok' => true, 'url' => (string)$live['url_ban_ghi'], 'message' => 'Bản ghi đã được lưu trước đó.']);
+        }
+
+        $file = $_FILES['video_blob'] ?? null;
+        $fileError = $file ? (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) : UPLOAD_ERR_NO_FILE;
+        if ($file && !in_array($fileError, [UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE], true)) {
+            $reply(422, ['ok' => false, 'message' => 'Upload thất bại với mã lỗi ' . $fileError]);
+        }
+        $hasChunk = $file && $fileError === UPLOAD_ERR_OK && (int)($file['size'] ?? 0) > 0;
+        if (!$hasChunk && !$final) {
+            $reply(422, ['ok' => false, 'message' => 'Thiếu dữ liệu video của đoạn recording.']);
+        }
+
+        $baseDir = __DIR__ . '/../../../public/uploads/live_recordings';
+        $tmpDir = $baseDir . '/tmp';
+        if (!is_dir($tmpDir)) @mkdir($tmpDir, 0777, true);
+        $safeLiveId = preg_replace('/[^A-Za-z0-9_-]/', '', $liveId);
+        $stem = $tmpDir . '/live_' . $safeLiveId . '_' . $uploadId;
+        $partPath = $stem . '.part';
+        $metaPath = $stem . '.json';
+        $maxTotal = 2 * 1024 * 1024 * 1024;
+
+        $metaFh = @fopen($metaPath, 'c+');
+        if (!$metaFh || !flock($metaFh, LOCK_EX)) {
+            if ($metaFh) fclose($metaFh);
+            $model->failRecording($liveId, 'Không thể khóa file tạm của recording.');
+            $reply(500, ['ok' => false, 'message' => 'Không thể ghi file tạm recording.']);
+        }
+        $release = static function () use ($metaFh): void {
+            flock($metaFh, LOCK_UN);
+            fclose($metaFh);
+        };
+        $meta = json_decode((string)stream_get_contents($metaFh), true);
+        if (!is_array($meta)) $meta = ['next_seq' => 0, 'bytes' => 0, 'mime' => ''];
+        $nextSeq = (int)($meta['next_seq'] ?? 0);
+
+        if ($seq > $nextSeq) {
+            $release();
+            $reply(409, ['ok' => false, 'code' => 'out_of_order', 'expected' => $nextSeq, 'message' => 'Đoạn recording không đúng thứ tự.']);
+        }
+
+        if ($seq === $nextSeq && $hasChunk) {
+            if ($seq === 0) {
+                $mime = function_exists('mime_content_type') ? (string)(mime_content_type($file['tmp_name']) ?: $file['type']) : (string)$file['type'];
+                $mimeBase = strtolower(trim(explode(';', $mime)[0]));
+                if (!in_array($mimeBase, ['video/webm', 'video/mp4', 'video/ogg'], true)) {
+                    $release();
+                    @unlink($metaPath);
+                    @unlink($partPath);
+                    $model->failRecording($liveId, 'Định dạng recording không được hỗ trợ: ' . $mimeBase);
+                    $reply(415, ['ok' => false, 'message' => 'Chỉ chấp nhận recording WebM, MP4 hoặc OGG.']);
+                }
+                $meta['mime'] = $mimeBase;
+            }
+            $size = (int)$file['size'];
+            if ((int)($meta['bytes'] ?? 0) + $size > $maxTotal) {
+                $release();
+                @unlink($metaPath);
+                @unlink($partPath);
+                $model->failRecording($liveId, 'Bản ghi vượt quá giới hạn 2 GB.');
+                $reply(413, ['ok' => false, 'message' => 'Bản ghi vượt quá giới hạn 2 GB.']);
+            }
+            $in = @fopen($file['tmp_name'], 'rb');
+            $out = @fopen($partPath, 'ab');
+            $copied = ($in && $out) ? stream_copy_to_stream($in, $out) : false;
+            if ($in) fclose($in);
+            if ($out) fclose($out);
+            if ($copied === false || $copied !== $size) {
+                $release();
+                $model->failRecording($liveId, 'Không thể ghi đoạn recording vào vùng lưu trữ tạm.');
+                $reply(500, ['ok' => false, 'message' => 'Không thể ghi đoạn recording.']);
+            }
+            $meta['bytes'] = (int)($meta['bytes'] ?? 0) + $size;
+            $meta['next_seq'] = $nextSeq + 1;
+            ftruncate($metaFh, 0);
+            rewind($metaFh);
+            fwrite($metaFh, json_encode($meta));
+            fflush($metaFh);
+        }
+        // seq < next_seq: idempotent retry, nothing appended.
+
+        if (!$final) {
+            $release();
+            $reply(200, ['ok' => true, 'seq' => $seq, 'next_seq' => (int)($meta['next_seq'] ?? 0)]);
+        }
+
+        $totalBytes = (int)($meta['bytes'] ?? 0);
+        if ($totalBytes <= 0 || !is_file($partPath)) {
+            $release();
+            @unlink($metaPath);
+            @unlink($partPath);
+            $model->failRecording($liveId, 'Không có dữ liệu video được ghi.');
+            $reply(422, ['ok' => false, 'message' => 'Không có dữ liệu video được ghi.']);
+        }
+
+        $mimeBase = (string)($meta['mime'] ?? 'video/webm');
+        $ext = $mimeBase === 'video/mp4' ? 'mp4' : ($mimeBase === 'video/ogg' ? 'ogv' : 'webm');
+        $filename = 'live_rec_' . $safeLiveId . '_' . time() . '.' . $ext;
+        $targetPath = $baseDir . '/' . $filename;
+        if (!@rename($partPath, $targetPath)) {
+            $release();
+            $model->failRecording($liveId, 'Không thể lưu file recording vào vùng lưu trữ bền vững.');
+            $reply(500, ['ok' => false, 'message' => 'Không thể hoàn tất file video đã quay']);
+        }
+        $release();
+        @unlink($metaPath);
+
+        $publicUrl = BASE_URL . '/public/uploads/live_recordings/' . $filename;
+        $model->saveRecording($liveId, $publicUrl, $mimeBase, $totalBytes);
+        $reply(200, [
+            'ok' => true,
+            'url' => $publicUrl,
+            'message' => 'Đã tự động lưu bản ghi video Livestream thành công!'
+        ]);
+    }
 
     public function adminLiveAddDeal(): void {
         while (ob_get_level() > 0) {
@@ -1261,14 +1436,14 @@ class LiveController {
         $mongoDb = $db ?? $this->pdo;
 
         $now = time();
-        $cutoff = $now - 20;
+        $cutoff = $now - self::VIEWER_ACTIVE_SECONDS;
         $activeCount = 0;
 
         require_once __DIR__ . '/../models/PhienLive.php';
         $phienLiveModel = new PhienLive($mongoDb);
         $live = $phienLiveModel->findById($roomId);
         if (!$live || ($live['status'] ?? '') !== 'live') {
-            echo json_encode(['ok' => true, 'room_id' => $roomId, 'active_viewers' => 0, 'stream_status' => $live['status'] ?? 'missing'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            echo json_encode(['ok' => true, 'room_id' => $roomId, 'active_viewers' => 0, 'stream_status' => $live['status'] ?? 'missing', 'pinned_product_id' => (string)($live['ma_san_pham_ghim'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;
         }
 
@@ -1279,10 +1454,15 @@ class LiveController {
                     ['$set' => ['last_seen' => $now, 'room_id' => (string)$roomId, 'session_id' => (string)$sessionId]],
                     ['upsert' => true]
                 );
-                $activeCount = $mongoDb->phien_live_viewers->countDocuments([
+                $countViewers = static fn() => $mongoDb->phien_live_viewers->countDocuments([
                     'room_id' => (string)$roomId,
                     'last_seen' => ['$gte' => $cutoff]
                 ]);
+                try {
+                    $activeCount = (int)CacheService::getInstance()->remember('live:viewers:' . $roomId, 5, $countViewers);
+                } catch (Throwable $cacheError) {
+                    $activeCount = (int)$countViewers();
+                }
                 if (empty($_SESSION['counted_live_view_' . $roomId])) {
                     $_SESSION['counted_live_view_' . $roomId] = true;
                     $phienLiveModel->tangLuotXem($roomId);
@@ -1295,7 +1475,9 @@ class LiveController {
         echo json_encode([
             'ok' => true,
             'room_id' => $roomId,
-            'active_viewers' => max(0, (int)$activeCount)
+            'active_viewers' => max(0, (int)$activeCount),
+            'stream_status' => 'live',
+            'pinned_product_id' => (string)($live['ma_san_pham_ghim'] ?? '')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -1310,7 +1492,7 @@ class LiveController {
         $mongoDb = $db ?? $this->pdo;
 
         $now = time();
-        $cutoff = $now - 20;
+        $cutoff = $now - self::VIEWER_ACTIVE_SECONDS;
         $counts = [];
 
         try {
