@@ -571,6 +571,13 @@ class LiveController {
     public function apiLiveStreamState(): void {
         while (ob_get_level() > 0) @ob_end_clean();
         header('Content-Type: application/json; charset=utf-8');
+        if (!is_logged_in()) {
+            // Usually the PHP session was lost (expired, or the container restarted) while the
+            // studio page was open: say so instead of the misleading "staff only" message.
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'code' => 'login_required', 'message' => 'Phiên đăng nhập đã hết hạn. Hãy tải lại trang và đăng nhập lại để tiếp tục phát.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         if (!in_array(current_role(), ['admin', 'nhanvien'], true)) {
             http_response_code(403);
             echo json_encode(['ok' => false, 'message' => 'Chỉ streamer hoặc quản trị viên mới được điều khiển luồng phát.'], JSON_UNESCAPED_UNICODE);

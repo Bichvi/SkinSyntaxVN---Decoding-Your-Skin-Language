@@ -14,4 +14,10 @@ UPLOADS=/var/www/html/public/uploads
 mkdir -p "$UPLOADS/live_recordings/tmp" "$UPLOADS/products" "$UPLOADS/reviews"
 chown -R www-data:www-data "$UPLOADS" 2>/dev/null || echo "[php-backend] warning: could not chown $UPLOADS"
 
+# PHP login sessions live on the php_sessions named volume (docker/php/zz-skinsyntax-session.ini),
+# so restarting or rebuilding this container no longer logs everybody out.
+SESSIONS=/var/lib/php/sessions
+mkdir -p "$SESSIONS"
+chown www-data:www-data "$SESSIONS" && chmod 700 "$SESSIONS" || echo "[php-backend] warning: could not prepare $SESSIONS"
+
 exec php-fpm -F

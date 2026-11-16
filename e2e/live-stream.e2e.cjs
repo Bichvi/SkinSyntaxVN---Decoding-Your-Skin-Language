@@ -8,7 +8,8 @@
  *
  * Env: E2E_BASE_URL (default http://localhost:8080), E2E_LIVE_ID (default 8),
  *      E2E_LIVE_HOLD_MS (default 90000), E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD
- *      (read from the environment or the git-ignored .env; never printed).
+ *      (read from the environment or the git-ignored .env; never printed),
+ *      E2E_LIVE_ROLE=staff to host as the E2E_STAFF_EMAIL / E2E_STAFF_PASSWORD staff account.
  *
  * WARNING: this mutates the chosen live session for real: it goes LIVE on LiveKit,
  * writes one chat message, then ENDS the session (it becomes a replay and cannot go
@@ -30,8 +31,9 @@ const BASE = (process.env.E2E_BASE_URL || 'http://localhost:8080').replace(/\/$/
 const LIVE_ID = process.env.E2E_LIVE_ID || '8';
 const HOLD_MS = Number(process.env.E2E_LIVE_HOLD_MS || 90000);
 const OUT = process.argv[2] || path.join(ROOT, 'report', 'live-stream-e2e');
-const ADMIN_EMAIL = envFromDotenv('E2E_ADMIN_EMAIL');
-const ADMIN_PASSWORD = envFromDotenv('E2E_ADMIN_PASSWORD');
+const ROLE = (process.env.E2E_LIVE_ROLE || 'admin').toLowerCase() === 'staff' ? 'staff' : 'admin';
+const ADMIN_EMAIL = envFromDotenv(ROLE === 'staff' ? 'E2E_STAFF_EMAIL' : 'E2E_ADMIN_EMAIL');
+const ADMIN_PASSWORD = envFromDotenv(ROLE === 'staff' ? 'E2E_STAFF_PASSWORD' : 'E2E_ADMIN_PASSWORD');
 fs.mkdirSync(OUT, { recursive: true });
 
 const results = [];
@@ -64,7 +66,7 @@ async function waitUntil(page, fn, arg, timeoutMs) {
 
 (async () => {
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-    console.log('E2E NOT RUN: thiếu E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD');
+    console.log(`E2E NOT RUN: thiếu tài khoản ${ROLE} (E2E_${ROLE.toUpperCase()}_EMAIL/PASSWORD)`);
     process.exit(2);
   }
   const browser = await chromium.launch({
@@ -79,7 +81,9 @@ async function waitUntil(page, fn, arg, timeoutMs) {
     // ---- Host (admin) ----
     const hostCtx = await browser.newContext({ permissions: ['camera', 'microphone'], viewport: { width: 1366, height: 900 } });
     const login = await hostCtx.request.post(`${BASE}/index.php?r=xulydangnhap`, { form: { email: ADMIN_EMAIL, mat_khau: ADMIN_PASSWORD } });
-    rec('0. admin login request', login.ok(), `HTTP ${login.status()}`);
+    rec(`0. ${ROLE} login request`, login.ok(), `HTTP ${login.status()}`);
+    const roleCheck = await hostCtx.request.get(`${BASE}/index.php?r=admin_lives`, { maxRedirects: 0 });
+    rec(`0b. ${ROLE} can open live management`, roleCheck.status() === 200, `HTTP ${roleCheck.status()}`);
     const host = await hostCtx.newPage();
     errorsOf(host, hostErrors);
     host.on('dialog', async (d) => {
@@ -117,8 +121,21 @@ async function waitUntil(page, fn, arg, timeoutMs) {
       .then(() => rec('4. host connected to LiveKit', true), (e) => rec('4. host connected to LiveKit', false, e.message.split('\n')[0]));
     const liveResp = host.waitForResponse((r) => r.url().includes('r=api_live_stream_state') && r.request().postData()?.includes('live'), { timeout: 45000 });
     await host.click('#btnToggleCam');
-    await host.waitForTimeout(1500);
+    await host.waitForFunction(() => { const v = document.getElementById('livekitLocalVideo'); return v && !v.hidden && v.videoWidth > 0; }, null, { timeout: 20000 }).catch(() => null);
+    await host.waitForTimeout(500);
+    const preview = await host.evaluate(() => {
+      const v = document.getElementById('livekitLocalVideo');
+      if (!v) return { ok: false, why: 'no local video' };
+      const r = v.getBoundingClientRect();
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return { ok: !v.hidden && v.videoWidth > 0 && top === v, hidden: v.hidden, width: v.videoWidth, top: top ? (top.id || top.className || top.tagName) : null };
+    });
+    rec('5a. camera preview visible before going live', preview.ok, JSON.stringify(preview));
+    const goDisabledAfterCam = await host.evaluate(() => !!document.getElementById('btnGoLive')?.disabled);
+    rec('5b. go-live disabled until both devices on', goDisabledAfterCam);
     await host.click('#btnToggleMic');
+    await host.waitForFunction(() => { const b = document.getElementById('btnGoLive'); return b && !b.disabled; }, null, { timeout: 20000 }).catch(() => null);
+    await host.click('#btnGoLive');
     const lr = await liveResp.catch(() => null);
     const liveJson = lr ? await lr.json().catch(() => ({})) : {};
     rec('5. host state=live accepted by server', !!liveJson.ok && liveJson.state === 'live', JSON.stringify(liveJson));
