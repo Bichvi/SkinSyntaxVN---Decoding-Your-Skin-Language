@@ -379,7 +379,7 @@ services:
       VALKEY_URL: ${VALKEY_URL:-}
       CACHE_PREFIX: ${CACHE_PREFIX:-skinsyntax:}
       CACHE_DEFAULT_TTL: ${CACHE_DEFAULT_TTL:-300}
-      MAIL_DEMO_MODE: "1"
+      MAIL_DEMO_MODE: "${MAIL_DEMO_MODE:-1}"
     volumes:
       - ./backend:/var/www/html
       - ./frontend:/var/www/frontend:ro

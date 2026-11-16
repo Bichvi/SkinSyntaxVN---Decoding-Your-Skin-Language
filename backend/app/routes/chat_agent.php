@@ -7,6 +7,12 @@ if ($r === 'chat_order_confirm') {
     return true;
 }
 
+if ($r === 'chat_order_otp') {
+    require_once __DIR__ . '/../controllers/ChatAgentController.php';
+    (new ChatAgentController($pdo ?? null))->sendOtp();
+    return true;
+}
+
 if ($r === 'ai_chat_agent_stream') {
     require_once __DIR__ . '/../controllers/ChatAgentController.php';
     (new ChatAgentController($pdo ?? null))->stream();

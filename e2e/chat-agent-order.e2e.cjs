@@ -6,6 +6,8 @@
  *
  * Needs: the Docker stack with SYNA_AGENT_V2=1, a seeded test customer whose credentials are in .env as
  * E2E_CUSTOMER_EMAIL / E2E_CUSTOMER_PASSWORD (never printed). Creates ONE real COD order and cancels it at the end.
+ * The confirm step needs the email OTP (2026-11-16): the php container must run with MAIL_DEMO_MODE=1 so the code is
+ * read back from `docker logs skinsyntax-php` (see e2e/lib/chat-otp.cjs); no mail is sent.
  * Optional env: E2E_BASE_URL (default http://127.0.0.1:8080), E2E_KILL_SWITCH=1 (also checks the purchase kill switch
  * through `docker exec skinsyntax-php php /var/www/html/scripts/chat_agent_switch.php`).
  */
@@ -13,6 +15,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
+const { readDemoOtp, dismissWelcome, OTP_INPUT, CARD } = require('./lib/chat-otp.cjs');
+
+// "đã ghi nhận đơn", "đặt hàng thành công", "đơn hàng của bạn đã được tạo/ghi nhận/xác nhận/sẽ được xử lý"
+const FALSE_ORDER_CLAIM_RE = /đã ghi nhận đơn(?! nháp)|đặt hàng thành công|đơn hàng (của bạn )?(đã|vừa) (được )?(tạo|đặt|ghi nhận|xác nhận)|đơn hàng (của bạn )?sẽ được xử lý/i;
+// Draft ids seen in the agent SSE stream (draft_card events); the last one is the card on screen.
+let lastDraftId = null;
+const draftIdOf = async () => lastDraftId;
 
 const ROOT = path.resolve(__dirname, '..');
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:8080').replace(/\/$/, '');
@@ -41,6 +50,7 @@ async function shot(page, name) {
 async function openWidget(page) {
   await page.goto(`${BASE}/index.php`, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-ai-chat-widget]');
+  await dismissWelcome(page);
   const v2 = await page.getAttribute('[data-ai-chat-widget]', 'data-agent-v2');
   const expanded = await page.getAttribute('[data-ai-chat-toggle]', 'aria-expanded');
   if (expanded !== 'true') await page.click('[data-ai-chat-toggle]');
@@ -131,6 +141,13 @@ function killSwitch(state) {
         try { confirmResponses.push(await res.json()); } catch { confirmResponses.push({ ok: false, unreadable: true }); }
       }
     });
+    page.on('response', async (res) => {
+      if (!res.url().includes('r=ai_chat_agent_stream')) return;
+      try {
+        const ids = [...(await res.text()).matchAll(/"draft_id"\s*:\s*"([^"]+)"/g)].map((m) => m[1]);
+        if (ids.length) lastDraftId = ids[ids.length - 1];
+      } catch { /* stream body unavailable */ }
+    });
     let cartUpdated = 0;
     page.on('requestfinished', () => {});
 
@@ -154,17 +171,24 @@ function killSwitch(state) {
       'mình da dầu mụn, tư vấn và đặt giúp 1 sữa rửa mặt giao về nhà, COD',
       'lấy sản phẩm đầu tiên giúp mình, 1 chai, thanh toán COD',
       'giao tới địa chỉ mới: người nhận E2E Test, số điện thoại 0912345678, địa chỉ 12 Nguyễn Văn A, Phường Bến Nghé, Quận 1, TP.HCM. Thanh toán COD, lập đơn nháp giúp mình',
+      // Short "ok" while the bot asks to keep the receiver / payment: must stay in the order flow (2026-11-16 bug).
+      'ok',
       'đúng rồi, dùng thông tin người nhận vừa gửi và COD, lập đơn nháp nhé',
     ];
     const confirmBtn = page.locator('.ai-chat-agent-draft-card button:has-text("Xác nhận đặt hàng"):not([disabled])');
     let sawProducts = false;
+    const botTexts = [];
     for (const t of turns) {
       await sendTurn(page, t);
       sawProducts = sawProducts || (await page.locator('[data-ai-chat-widget] [data-ai-add-cart], [data-ai-chat-widget] .ai-chat-widget__meta-card-title').count()) > 0;
+      const botText = await lastBotText(page);
+      botTexts.push(botText);
       if (await confirmBtn.count()) break;
-      console.log('  bot:', (await lastBotText(page)).replace(/\s+/g, ' ').slice(0, 160));
+      console.log('  bot:', botText.replace(/\s+/g, ' ').slice(0, 160));
     }
     record('products shown during advice', sawProducts);
+    const falseClaim = botTexts.find((t) => FALSE_ORDER_CLAIM_RE.test(t.normalize('NFC')));
+    record('bot never claims an order before Confirm', !falseClaim, falseClaim ? falseClaim.slice(0, 120) : '');
     const hasDraft = (await confirmBtn.count()) > 0;
     record('draft card with Confirm button', hasDraft);
     await shot(page, '02-draft-card');
@@ -173,21 +197,79 @@ function killSwitch(state) {
     // 5. No order before the click.
     record('no order created before clicking Confirm', confirmResponses.length === 0);
 
-    // 6. Double click → exactly one created order.
+    // 6. Identity check: confirming without an OTP is refused by the server.
+    const noOtp = await page.evaluate(async (draftId) => {
+      const csrf = (document.querySelector('[data-ai-chat-widget]') || {}).dataset.chatCsrf;
+      const r = await fetch('index.php?r=chat_order_confirm', {
+        method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft_id: draftId, csrf }),
+      });
+      let j = null; try { j = await r.json(); } catch (e) { j = {}; }
+      return { http: r.status, code: j.code, status: j.status };
+    }, await draftIdOf(page));
+    record('confirm without OTP → 428 otp_required, no order', noOtp.http === 428 && noOtp.code === 'otp_required' && noOtp.status !== 'created',
+      `http=${noOtp.http} code=${noOtp.code}`);
+
+    // 7. Double click "Xác nhận đặt hàng" → exactly one OTP mail (demo log) and the OTP box.
+    const otpCalls = [];
+    page.on('response', async (res) => {
+      if (res.url().includes('r=chat_order_otp')) { try { otpCalls.push(await res.json()); } catch { otpCalls.push({ ok: false }); } }
+    });
+    const sentAt = Date.now();
     await confirmBtn.first().dblclick();
+    const otpInput = page.locator(OTP_INPUT).last();
+    await otpInput.waitFor({ state: 'visible', timeout: 30000 });
+    await page.waitForTimeout(1500);
+    const otpOk = otpCalls.filter((r) => r && r.ok);
+    record('confirm click → OTP box, one OTP sent to masked email', otpOk.length === 1 && /\*\*\*@/.test(otpOk[0].email_masked || ''),
+      `otp calls=${otpCalls.length} ok=${otpOk.length}`);
+    await shot(page, '03-otp-box');
+    const code = await readDemoOtp(sentAt);
+    record('OTP readable from PHP demo log', !!code);
+    if (!code) throw new Error('no OTP in docker logs — is MAIL_DEMO_MODE=1 on the php container?');
+
+    // 8. Wrong code → refused, nothing created.
+    const wrong = String((Number(code) + 1) % 1000000).padStart(6, '0');
+    const beforeWrong = confirmResponses.length;
+    await otpInput.fill(wrong);
+    await page.locator(`${CARD} .ai-chat-agent-draft-card__otp button:has-text("Xác nhận"):not([disabled])`).last().click();
+    await page.waitForSelector('.ai-chat-agent-draft-card__error', { timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(1000);
+    const wrongResp = confirmResponses.slice(beforeWrong);
+    record('wrong OTP → otp_invalid, no order', wrongResp.length === 1 && wrongResp[0].code === 'otp_invalid'
+      && !confirmResponses.some((r) => r && r.status === 'created'), `codes=${wrongResp.map((r) => r.code).join(',')}`);
+    await shot(page, '04-otp-wrong');
+
+    // 9. Right code, double click → exactly one created order.
+    const beforeRight = confirmResponses.length;
+    await page.locator(OTP_INPUT).last().fill(code);
+    await page.locator(`${CARD} .ai-chat-agent-draft-card__otp button:has-text("Xác nhận"):not([disabled])`).last().dblclick();
     await page.waitForSelector('text=/Đã tạo đơn #\\d+/', { timeout: 60000 });
     await page.waitForTimeout(1500);
+    const rightResp = confirmResponses.slice(beforeRight);
     const created = confirmResponses.filter((r) => r && r.ok && r.status === 'created');
     createdOrderId = created.length ? created[0].order_id : null;
-    record('double click → exactly one created order', created.length === 1 && confirmResponses.length <= 2,
-      `confirm calls=${confirmResponses.length} created=${created.length}`);
-    await shot(page, '03-order-created');
+    record('right OTP, double click → exactly one created order', created.length === 1 && rightResp.length <= 2,
+      `confirm calls=${rightResp.length} created=${created.length}`);
+    await shot(page, '05-order-created');
 
-    // 7. Order is visible in "Đơn hàng của tôi".
+    // 10. The used code cannot create a second order.
+    const replay = await page.evaluate(async ({ draftId, otp }) => {
+      const csrf = (document.querySelector('[data-ai-chat-widget]') || {}).dataset.chatCsrf;
+      const r = await fetch('index.php?r=chat_order_confirm', {
+        method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft_id: draftId, csrf, otp }),
+      });
+      let j = null; try { j = await r.json(); } catch (e) { j = {}; }
+      return { http: r.status, code: j.code, status: j.status };
+    }, { draftId: lastDraftId, otp: code });
+    record('replaying the used OTP creates nothing', replay.status !== 'created', `http=${replay.http} code=${replay.code}`);
+
+    // 11. Order is visible in "Đơn hàng của tôi".
     await page.goto(`${BASE}/index.php?r=hoso`, { waitUntil: 'domcontentloaded' });
     const listed = createdOrderId !== null && (await page.locator(`text=${createdOrderId}`).count()) > 0;
     record('order listed in customer orders', listed, `order_id=${createdOrderId}`);
-    await shot(page, '04-orders');
+    await shot(page, '06-orders');
   } catch (err) {
     record('scenario aborted', false, err && err.message ? err.message.slice(0, 200) : String(err));
   } finally {

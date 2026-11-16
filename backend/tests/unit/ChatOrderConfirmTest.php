@@ -19,6 +19,8 @@ require_once __DIR__ . '/../../app/controllers/ShopAssistantController.php';
 require_once __DIR__ . '/../../app/services/ChatAgentGate.php';
 require_once __DIR__ . '/../../app/services/ChatAgentAudit.php';
 require_once __DIR__ . '/../../app/services/ChatOrderConfirmService.php';
+require_once __DIR__ . '/../../app/services/ChatOrderOtp.php';
+require_once __DIR__ . '/../../app/services/Mailer.php';
 require_once __DIR__ . '/../../app/controllers/ChatAgentController.php';
 
 $pass = 0;
@@ -328,6 +330,7 @@ function controllerResponse(array $options): array
         'draft_id' => $options['draft_id'] ?? 'draft-1',
         'csrf' => $options['csrf'] ?? 'valid-csrf',
         'payment_method' => $options['payment_method'] ?? '',
+        'otp' => $options['otp'] ?? '',
     ]);
     $gate = new ChatAgentGate(null, []);
     $controller = new ChatAgentController(
@@ -343,10 +346,16 @@ function controllerResponse(array $options): array
         ],
         static fn(): string => 'valid-csrf',
         static fn(): string => (string)$body,
-        $options['purchase_enabled'] ?? null
+        $options['purchase_enabled'] ?? null,
+        null,
+        null,
+        null,
+        $options['otp_obj'] ?? null,
+        $options['mailer'] ?? null
     );
+    $action = $options['action'] ?? 'confirm';
     ob_start();
-    $controller->confirm();
+    $controller->$action();
     $json = json_decode((string)ob_get_clean(), true);
     return [$json, http_response_code()];
 }
@@ -379,10 +388,37 @@ $controllerService = new ChatOrderConfirmService(
 $controllerRedis = new ChatOrderConfirmRedisFake();
 $controllerRedis->reply = [1, 600];
 $auditDocuments = [];
+$otpClockNow = 1_800_000_000;
+$otpClock = static function () use (&$otpClockNow): int { return $otpClockNow; };
+$otpSession = [];
+$otpObj = new ChatOrderOtp($otpSession, $otpClock);
+$otpCode = $otpObj->issue('customer-1', 'draft-1');
+$wrongCode = $otpCode === '000000' ? '111111' : '000000';
+$noOtpDocs = [];
+[$noOtp, $noOtpStatus] = controllerResponse([
+    'confirm_service' => $controllerService,
+    'limiter' => new RateLimiter($controllerRedis),
+    'purchase_enabled' => static fn(): bool => true,
+    'otp_obj' => $otpObj,
+]);
+$check('controller_confirm_without_otp_428_no_order', $noOtpStatus === 428 && $noOtp['ok'] === false
+    && $noOtp['code'] === 'otp_required' && empty($controllerStore->docs['draft-1']['used_at']));
+[$badOtp, $badOtpStatus] = controllerResponse([
+    'confirm_service' => $controllerService,
+    'limiter' => new RateLimiter($controllerRedis),
+    'purchase_enabled' => static fn(): bool => true,
+    'otp_obj' => $otpObj,
+    'otp' => $wrongCode,
+]);
+$check('controller_wrong_otp_422_counts_attempt', $badOtpStatus === 422 && $badOtp['code'] === 'otp_invalid'
+    && $otpSession['chat_order_otp']['customer-1']['attempts'] === 1
+    && empty($controllerStore->docs['draft-1']['used_at']));
 [$positive, $positiveStatus] = controllerResponse([
     'confirm_service' => $controllerService,
     'limiter' => new RateLimiter($controllerRedis),
     'purchase_enabled' => static fn(): bool => true,
+    'otp_obj' => $otpObj,
+    'otp' => ' ' . substr($otpCode, 0, 3) . ' ' . substr($otpCode, 3),
     'audit' => new ChatAgentAudit(static function (array $document) use (&$auditDocuments): void {
         $auditDocuments[] = $document;
     }),
@@ -395,6 +431,101 @@ $check('controller_positive_reaches_service_and_creates', $positiveStatus === 20
     && ($auditDocuments[0]['params']['draft_id'] ?? '') === 'draft-1'
     && ($auditDocuments[0]['params']['payment_method'] ?? '') === 'cod'
     && ($auditDocuments[0]['params']['order_id'] ?? 0) === 906);
+
+$check('otp_consumed_after_order_created', !$otpObj->has('customer-1'));
+[$reuse, $reuseStatus] = controllerResponse([
+    'confirm_service' => $controllerService,
+    'limiter' => new RateLimiter($controllerRedis),
+    'purchase_enabled' => static fn(): bool => true,
+    'otp_obj' => $otpObj,
+    'otp' => $otpCode,
+]);
+$check('controller_reused_otp_428', $reuseStatus === 428 && $reuse['code'] === 'otp_required');
+
+// 'changed' keeps the code but moves it to the replacement draft.
+$chStore = new ChatOrderConfirmMemoryStore();
+$chCore = new ChatOrderConfirmCoreFake();
+chatOrderConfirmDraft($chStore);
+$chCore->prices['p1'] = 150;
+$chService = new ChatOrderConfirmService(
+    new ChatDraftService($chStore, $chCore, static fn(): int => 1_800_000_000),
+    $chStore,
+    $chCore,
+    static fn(array $payload): int => 909,
+    static fn(): int => 1_800_000_000
+);
+$chSession = [];
+$chOtp = new ChatOrderOtp($chSession, $otpClock);
+$chCode = $chOtp->issue('customer-1', 'draft-1');
+[$chResp, $chStatus] = controllerResponse([
+    'confirm_service' => $chService,
+    'limiter' => new RateLimiter($controllerRedis),
+    'purchase_enabled' => static fn(): bool => true,
+    'otp_obj' => $chOtp,
+    'otp' => $chCode,
+]);
+$chNewId = $chResp['card']['draft_id'] ?? '';
+$check('controller_changed_rebinds_otp_to_new_draft', $chStatus === 200 && ($chResp['status'] ?? '') === 'changed' && $chNewId !== ''
+    && ($chSession['chat_order_otp']['customer-1']['draft_id'] ?? '') === $chNewId);
+
+// sendOtp
+$sendRedis = new ChatOrderConfirmRedisFake();
+$sendRedis->reply = [1, 600];
+$sendStore = new ChatOrderConfirmMemoryStore();
+$sendCore = new ChatOrderConfirmCoreFake();
+chatOrderConfirmDraft($sendStore);
+chatOrderConfirmDraft($sendStore, 'foreign-draft', 'customer-2', 'other@example.test');
+$sendService = new ChatOrderConfirmService(
+    new ChatDraftService($sendStore, $sendCore, static fn(): int => 1_800_000_000),
+    $sendStore,
+    $sendCore,
+    static fn(array $payload): int => 910,
+    static fn(): int => 1_800_000_000
+);
+$sendSession = [];
+$sendOtpObj = new ChatOrderOtp($sendSession, $otpClock);
+$sent = [];
+$fakeMailer = static function (string $to, string $subject, string $html) use (&$sent): bool {
+    $sent[] = [$to, $subject, $html];
+    return true;
+};
+$sendOpts = static fn(array $extra = []): array => $extra + [
+    'action' => 'sendOtp',
+    'confirm_service' => $sendService,
+    'limiter' => new RateLimiter($sendRedis),
+    'purchase_enabled' => static fn(): bool => true,
+    'otp_obj' => $sendOtpObj,
+    'mailer' => $fakeMailer,
+];
+[$sNoCsrf, $sNoCsrfStatus] = controllerResponse($sendOpts(['csrf' => '']));
+$check('send_otp_missing_csrf_403', $sNoCsrfStatus === 403 && $sNoCsrf['ok'] === false && $sent === []);
+[$sForeign, $sForeignStatus] = controllerResponse($sendOpts(['draft_id' => 'foreign-draft']));
+$check('send_otp_foreign_draft_404', $sForeignStatus === 404 && $sForeign['code'] === 'not_found' && $sent === []);
+[$sNone, $sNoneStatus] = controllerResponse($sendOpts(['draft_id' => 'missing']));
+$check('send_otp_unknown_draft_404', $sNoneStatus === 404 && $sent === []);
+[$sOk, $sOkStatus] = controllerResponse($sendOpts());
+$check('send_otp_happy_path', $sOkStatus === 200 && $sOk['ok'] === true && $sOk['email_masked'] === 'u***@example.test'
+    && $sOk['expires_in'] === 300 && $sOk['resend_in'] === 60
+    && count($sent) === 1 && $sent[0][0] === 'user@example.test'
+    && str_contains($sent[0][1], 'Mã xác nhận đơn hàng')
+    && preg_match('/>(\d{6})</', $sent[0][2], $mm) === 1
+    && hash('sha256', $mm[1]) === ($sendSession['chat_order_otp']['customer-1']['hash'] ?? ''));
+$check('send_otp_response_never_contains_code', !str_contains(json_encode($sOk), $mm[1] ?? 'x-none'));
+[$sCool, $sCoolStatus] = controllerResponse($sendOpts());
+$check('send_otp_cooldown_429', $sCoolStatus === 429 && $sCool['code'] === 'otp_cooldown' && count($sent) === 1);
+
+$failSession = [];
+$failOtp = new ChatOrderOtp($failSession, $otpClock);
+[$sFail, $sFailStatus] = controllerResponse($sendOpts([
+    'otp_obj' => $failOtp,
+    'mailer' => static fn(string $to, string $subject, string $html): bool => false,
+]));
+$check('send_otp_mail_failure_502_and_clears_code', $sFailStatus === 502 && $sFail['code'] === 'mail_failed' && !$failOtp->has('customer-1'));
+
+$limRedis = new ChatOrderConfirmRedisFake();
+$limRedis->reply = [4, 600];
+[$sLim, $sLimStatus] = controllerResponse($sendOpts(['limiter' => new RateLimiter($limRedis), 'otp_obj' => new ChatOrderOtp($failSession, $otpClock)]));
+$check('send_otp_rate_limited_429', $sLimStatus === 429);
 
 $emStore = new ChatOrderConfirmMemoryStore();
 $emCore = new ChatOrderConfirmCoreFake();
@@ -409,11 +540,16 @@ $emService = new ChatOrderConfirmService(
 $emRedis = new ChatOrderConfirmRedisFake();
 $emRedis->reply = [1, 600];
 $emAudit = [];
+$emOtpSession = [];
+$emOtp = new ChatOrderOtp($emOtpSession, $otpClock);
+$emCode = $emOtp->issue($ownerSub, 'draft-1');
 [$emResp, $emStatus] = controllerResponse([
     'confirm_service' => $emService,
     'limiter' => new RateLimiter($emRedis),
     'purchase_enabled' => static fn(): bool => true,
     'user' => $noIdUser,
+    'otp_obj' => $emOtp,
+    'otp' => $emCode,
     'audit' => new ChatAgentAudit(static function (array $document) use (&$emAudit): void { $emAudit[] = $document; }),
 ]);
 $check('controller_id_zero_user_confirms_own_draft', $emStatus === 200 && $emResp['ok'] === true
@@ -428,11 +564,17 @@ $emService2 = new ChatOrderConfirmService(
     static fn(array $payload): int => 908,
     static fn(): int => 1_800_000_000
 );
+$otherSub = ChatAgentIdentity::subFor($otherNoIdUser);
+$otherOtpSession = [];
+$otherOtp = new ChatOrderOtp($otherOtpSession, $otpClock);
+$otherCode = $otherOtp->issue($otherSub, 'draft-1');
 [$emResp2, $emStatus2] = controllerResponse([
     'confirm_service' => $emService2,
     'limiter' => new RateLimiter($emRedis),
     'purchase_enabled' => static fn(): bool => true,
     'user' => $otherNoIdUser,
+    'otp_obj' => $otherOtp,
+    'otp' => $otherCode,
 ]);
 $check('controller_other_id_zero_user_cannot_confirm_draft', $emStatus2 === 404 && $emResp2['ok'] === false);
 

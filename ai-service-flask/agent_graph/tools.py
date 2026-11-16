@@ -676,7 +676,13 @@ def _build(ctx: ToolContext, name: str) -> StructuredTool:
                 return response
             return _guarded(ctx, name, remove, params)
         if name == "get_checkout_defaults":
-            return _guarded(ctx, name, lambda: _php(ctx, "internal_agent_checkout_defaults", {}), params)
+            def defaults() -> dict:
+                response = _php(ctx, "internal_agent_checkout_defaults", {})
+                if not ctx.state.open_draft_id:
+                    # The agent is now asking the customer to confirm address/payment: a short "ok" must come back here.
+                    ctx.state.pending = "checkout_collecting"
+                return response
+            return _guarded(ctx, name, defaults, params)
         if name == "prepare_order_draft":
             def draft() -> dict:
                 payload = dict(raw)

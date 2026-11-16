@@ -1291,3 +1291,81 @@ def test_price_check_fixes_a_swapped_unknown_price_but_keeps_real_ones():
     assert correct_product_prices(text, _SUNSCREENS) == (
         "Kem Chống Nắng Caryophy Nâng Tone, Ngừa Mụn 50ml giá 250.000đ."
     )
+
+
+@pytest.mark.parametrize("text", [
+    "Mình đã ghi nhận đơn hàng của bạn nhé!",
+    "Đã ghi nhận đơn của bạn.",
+    "Đơn hàng của bạn đã được ghi nhận.",
+    "Đơn hàng sẽ được xử lý ngay.",
+    "Đơn hàng của bạn sẽ được xử lý trong hôm nay.",
+    "Đơn của bạn đã được xác nhận.",
+    "Đơn hàng đã được xác nhận rồi nhé.",
+])
+def test_new_order_claim_phrases_are_detected(text):
+    assert claims_false_commitment(text, has_open_draft=False) == "order"
+    assert claims_false_commitment(text, has_open_draft=True) == "order"
+
+
+@pytest.mark.parametrize("text", [
+    "Shop sẽ gửi mã vận đơn khi giao hàng.",
+    "Đơn hàng sẽ được giao trong 2-3 ngày làm việc.",
+    "Bạn có thể đổi trả trong 7 ngày kể từ khi nhận đơn.",
+    "Shop xử lý đơn trong giờ hành chính.",
+])
+def test_store_policy_answers_are_not_order_claims(text):
+    assert claims_false_commitment(text, has_open_draft=False) is None
+
+
+def test_checkout_collecting_ok_goes_to_agent_not_legacy():
+    state = ConvState(pending="checkout_collecting")
+    php = FakePhp({"internal_agent_draft": {"ok": True, "card": {"draft_id": "D9"}}})
+    model = ScriptedChatModel(responses=[
+        scripted_tool_call("prepare_order_draft", {
+            "scope": "whole_cart", "address_choice": "default", "payment_method": "cod",
+        }, "draft-1"),
+        AIMessage(content="Bạn kiểm tra thẻ đơn nháp nhé."),
+    ])
+    legacy_calls = []
+    router = ScriptedRouter(output("SMALLTALK"))  # would be chosen by an LLM; fast_route must preempt it
+    graph = build_graph(router, lambda tools: model.bind_tools(tools), lambda *a: legacy_calls.append(a) or {"answer": "x"})
+    ctx = context(scopes=("draft:create",), php=php, state=state)
+
+    list(run_turn(graph, message="ok", ctx=ctx, history=[], recent_turns=[], legacy_payload={}))
+
+    assert not legacy_calls
+    assert not router.calls
+    assert any(route == "internal_agent_draft" for route, _ in php.calls)
+    assert ctx.state.open_draft_id == "D9"
+
+
+def test_checkout_collecting_resets_when_turn_is_unrelated():
+    ctx = context(state=ConvState(pending="checkout_collecting"))
+    graph = build_graph(
+        ScriptedRouter(output("SMALLTALK")),
+        lambda tools: ScriptedChatModel().bind_tools(tools),
+        lambda *_args: {"answer": "Chào bạn."},
+    )
+    list(run_turn(graph, message="bạn tên gì", ctx=ctx, history=[], recent_turns=[], legacy_payload={}))
+    assert ctx.state.pending == "none"
+
+
+def test_legacy_false_order_claim_is_replaced():
+    graph = build_graph(
+        ScriptedRouter(output("SMALLTALK")),
+        lambda tools: ScriptedChatModel().bind_tools(tools),
+        lambda *_args: {"answer": "Mình đã ghi nhận đơn hàng của bạn nhé! Đơn hàng sẽ được xử lý ngay"},
+    )
+    events = list(run_turn(
+        graph, message="cảm ơn", ctx=context(), history=[], recent_turns=[], legacy_payload={},
+    ))
+    tokens = [payload["text"] for kind, payload in events if kind == "token"]
+    assert tokens == [NO_DRAFT_FALLBACK_TEXT]
+
+
+def test_open_draft_wins_over_checkout_collecting_when_saving():
+    from agent_graph.graph import _state_to_save
+    snap = ConvState(pending="checkout_collecting", open_draft_id="D5")
+    assert _state_to_save({"snapshot_box": {"value": snap}, "ctx": None}).pending == "draft_open:D5"
+    keep = ConvState(pending="checkout_collecting")
+    assert _state_to_save({"snapshot_box": {"value": keep}, "ctx": None}).pending == "checkout_collecting"

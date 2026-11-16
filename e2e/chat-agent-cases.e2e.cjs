@@ -12,6 +12,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
+const { confirmWithOtp, dismissWelcome } = require('./lib/chat-otp.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
 const BASE = (process.env.E2E_BASE_URL || 'http://127.0.0.1:8080').replace(/\/$/, '');
@@ -133,6 +134,7 @@ async function launch() {
 async function openWidget(page) {
   await page.goto(`${BASE}/index.php`, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-ai-chat-widget]');
+  await dismissWelcome(page);
   const v2 = await page.getAttribute('[data-ai-chat-widget]', 'data-agent-v2');
   const expanded = await page.getAttribute('[data-ai-chat-toggle]', 'aria-expanded');
   if (expanded !== 'true') await page.click('[data-ai-chat-toggle]');
@@ -307,12 +309,13 @@ async function clickConfirm(page, c, { dbl = false } = {}) {
   await confirmBudget(dbl ? 2 : 1);
   currentCaseId = c.id;
   const from = confirmLog.length;
-  const btn = page.locator('.ai-chat-agent-draft-card button:has-text("Xác nhận đặt hàng"):not([disabled])').last();
-  if (dbl) await btn.dblclick({ timeout: 10000 }); else await btn.click({ timeout: 10000 });
+  // Since 2026-11-16 the confirm button first sends an email OTP; the code is read from the PHP demo log.
+  const otp = await confirmWithOtp(page, { dbl });
   await waitConfirmResponses(from, 1);
   await page.waitForTimeout(2500);
   const calls = confirmLog.slice(from);
   return {
+    otpSent: otp.otpSent, otpCodeFound: otp.codeFound,
     confirmCalls: calls.length,
     created: calls.filter((e) => e.resp && e.resp.ok && e.resp.status === 'created').length,
     responses: calls.map((e) => ({ httpStatus: e.status, body: e.body, resp: e.resp })),
