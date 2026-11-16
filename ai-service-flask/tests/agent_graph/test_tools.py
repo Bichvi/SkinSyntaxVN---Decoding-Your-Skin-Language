@@ -925,3 +925,27 @@ def test_search_with_nothing_under_price_max_says_so_and_keeps_last_shown():
     assert '"count": 0' in result and "no_product_within_price_max" in result
     assert not [event for event in events if event[0] == "ui"]
     assert state.last_shown_products == [{"idx": 1, "id": "old", "name": "Old"}]
+
+
+def test_checkout_defaults_success_sets_checkout_collecting():
+    body = {"receiver": {"name": "Owner"}, "last_payment_method": "cod", "methods": ["cod"]}
+    ctx = context(("draft:create",), php=FakePhp({"internal_agent_checkout_defaults": body}))
+    tool_map(ctx)["get_checkout_defaults"].invoke({})
+    assert ctx.state.pending == "checkout_collecting"
+
+
+def test_checkout_defaults_failure_keeps_pending():
+    from agent_graph.php_client import PhpError  # noqa: F401
+    ctx = context(("draft:create",), php=FakePhp(error=RuntimeError("x")))
+    try:
+        tool_map(ctx)["get_checkout_defaults"].invoke({})
+    except Exception:
+        pass
+    assert ctx.state.pending == "none"
+
+
+def test_checkout_defaults_with_open_draft_does_not_change_pending():
+    ctx = context(("draft:create",), php=FakePhp({"internal_agent_checkout_defaults": {}}),
+                  state=ConvState(open_draft_id="D1"))
+    tool_map(ctx)["get_checkout_defaults"].invoke({})
+    assert ctx.state.pending == "none"

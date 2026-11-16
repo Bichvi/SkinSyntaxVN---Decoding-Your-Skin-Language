@@ -38,6 +38,15 @@ class FakeNode {
     this.listeners[eventName] = callback;
   }
 
+  setAttribute(name, value) {
+    this.attributes = this.attributes || {};
+    this.attributes[name] = String(value);
+  }
+
+  focus() {
+    this.focused = true;
+  }
+
   click() {
     if (this.listeners.click) this.listeners.click({ target: this });
   }
@@ -174,40 +183,187 @@ test('draft card state survives re-render and never creates a second interval', 
   assert.equal(activeTimers.size, 1);
 });
 
-test('created draft cards remain disabled after re-render and unsafe next URLs do not redirect', async () => {
-  const { agent, document, window, fetchState } = loadAgent();
-  agent.configure({ vnpayHost: 'sandbox.vnpayment.vn' });
-  fetchState.impl = () => Promise.resolve({
-    json: () => Promise.resolve({
-      ok: true,
-      status: 'created',
-      order_id: 42,
-      next: { type: 'vnpay', url: 'javascript:alert(1)' }
-    })
+const flush = async () => {
+  for (let i = 0; i < 4; i += 1) await new Promise((resolve) => setImmediate(resolve));
+};
+const buttonByText = (node, text) => node.findAll('button').find((b) => b.textContent === text);
+const otpInputOf = (node) => node.findAll('input')[0];
+const typeOtp = (node, value) => {
+  const input = otpInputOf(node);
+  input.value = value;
+  input.listeners.input({ target: input });
+};
+const otpOk = { ok: true, email_masked: 'u***@example.test', expires_in: 300, resend_in: 60 };
+const jsonResponse = (body) => Promise.resolve({ json: () => Promise.resolve(body) });
+const newDraft = (id) => ({ draft_id: id, expires_at: Math.floor(Date.now() / 1000) + 600, items: [] });
+
+test('clicking confirm requests an OTP first and never calls confirm without a code', async () => {
+  const calls = [];
+  const { agent, document } = loadAgent((url, opts) => {
+    calls.push({ url, body: JSON.parse(opts.body) });
+    return jsonResponse(otpOk);
   });
-  const payload = { draft_id: 'draft-2', expires_at: Math.floor(Date.now() / 1000) + 60, items: [] };
+  agent.configure({ csrf: 'tok' });
   const node = document.createElement('div');
-  agent.renderDraftCard(payload, node, { messageId: 'message-2' });
-  node.findAll('button')[0].click();
-  await new Promise((resolve) => setImmediate(resolve));
-  agent.renderDraftCard(payload, node, { messageId: 'message-2' });
-  assert.equal(node.findAll('button')[0].disabled, true);
-  assert.match(node.textContent, /Đã tạo đơn #42/);
-  assert.match(node.textContent, /Bạn mở mục Đơn hàng của tôi để thanh toán nhé/);
+  agent.renderDraftCard(newDraft('draft-otp-1'), node, { messageId: 'm-otp-1' });
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  assert.equal(agent.getDraftCardState('draft-otp-1').status, 'otp_sending');
+  assert.match(node.textContent, /Đang gửi mã/);
+  await flush();
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'index.php?r=chat_order_otp');
+  assert.deepEqual(calls[0].body, { draft_id: 'draft-otp-1', csrf: 'tok' });
+  assert.equal(agent.getDraftCardState('draft-otp-1').status, 'otp');
+  assert.match(node.textContent, /Mã xác nhận đã gửi tới u\*\*\*@example\.test/);
+  const input = otpInputOf(node);
+  assert.equal(input.maxLength, 6);
+  assert.equal(input.inputMode, 'numeric');
+  assert.equal(input.autocomplete, 'one-time-code');
+  assert.equal(buttonByText(node, 'Xác nhận').disabled, true);
+  assert.match(buttonByText(node, 'Gửi lại mã (60s)').textContent, /Gửi lại mã/);
+  assert.equal(buttonByText(node, 'Gửi lại mã (60s)').disabled, true);
+});
+
+test('OTP submit stays disabled until six digits, then confirms with the code', async () => {
+  const calls = [];
+  const { agent, document, window } = loadAgent((url, opts) => {
+    const body = JSON.parse(opts.body);
+    calls.push({ url, body });
+    if (url.includes('chat_order_otp')) return jsonResponse(otpOk);
+    return jsonResponse({ ok: true, status: 'created', order_id: 77, next: { type: 'view_order', url: 'x' } });
+  });
+  const node = document.createElement('div');
+  agent.renderDraftCard(newDraft('draft-otp-2'), node, { messageId: 'm-otp-2' });
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  await flush();
+  typeOtp(node, '12ab34');
+  assert.equal(otpInputOf(node).value, '1234');
+  assert.equal(buttonByText(node, 'Xác nhận').disabled, true);
+  typeOtp(node, '123456');
+  assert.equal(buttonByText(node, 'Xác nhận').disabled, false);
+  buttonByText(node, 'Xác nhận').click();
+  assert.equal(agent.getDraftCardState('draft-otp-2').status, 'confirming');
+  await flush();
+  const confirmCall = calls.find((c) => c.url.includes('chat_order_confirm'));
+  assert.deepEqual(confirmCall.body, { draft_id: 'draft-otp-2', csrf: '', otp: '123456' });
+  assert.match(node.textContent, /Đã tạo đơn #77/);
   assert.equal(window.location.href, 'https://shop.test/index.php');
+});
+
+test('wrong OTP stays in the OTP state and shows the server message', async () => {
+  const { agent, document } = loadAgent((url) => url.includes('chat_order_otp')
+    ? jsonResponse(otpOk)
+    : jsonResponse({ ok: false, code: 'otp_invalid', message: 'Mã xác nhận không đúng. Bạn còn 4 lần thử.' }));
+  const node = document.createElement('div');
+  agent.renderDraftCard(newDraft('draft-otp-3'), node, { messageId: 'm-otp-3' });
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  await flush();
+  typeOtp(node, '000000');
+  buttonByText(node, 'Xác nhận').click();
+  await flush();
+  assert.equal(agent.getDraftCardState('draft-otp-3').status, 'otp');
+  assert.match(node.textContent, /Bạn còn 4 lần thử/);
+  assert.ok(otpInputOf(node));
+  assert.equal(buttonByText(node, 'Xác nhận').disabled, true);
+  // The message sits right under the code field (inside the OTP box), once, and the field gets focus again.
+  const otpBox = node.findAll('div').find((d) => d.className === 'ai-chat-agent-draft-card__otp');
+  const errors = node.findAll('p').filter((p) => p.className === 'ai-chat-agent-draft-card__error');
+  assert.equal(errors.length, 1);
+  assert.ok(otpBox.contains(errors[0]));
+  assert.equal(otpBox.children.indexOf(errors[0]), otpBox.children.indexOf(otpInputOf(node)) + 1);
+  assert.equal(errors[0].attributes.role, 'alert');
+  assert.equal(otpInputOf(node).focused, true);
+});
+
+test('a plain re-render of an open OTP box does not steal focus', async () => {
+  const { agent, document } = loadAgent(() => jsonResponse(otpOk));
+  const node = document.createElement('div');
+  agent.renderDraftCard(newDraft('draft-otp-9'), node, { messageId: 'm-otp-9' });
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  await flush();
+  assert.equal(otpInputOf(node).focused, true);
+  agent.renderDraftCard(newDraft('draft-otp-9'), node, { messageId: 'm-otp-9' });
+  assert.notEqual(otpInputOf(node).focused, true);
+});
+
+test('expired or locked OTP enables resend and resend requests a new code', async () => {
+  let otpCalls = 0;
+  const { agent, document } = loadAgent((url) => {
+    if (url.includes('chat_order_otp')) {
+      otpCalls += 1;
+      return jsonResponse(otpOk);
+    }
+    return jsonResponse({ ok: false, code: 'otp_expired', message: 'Mã xác nhận đã hết hạn. Vui lòng gửi lại mã.' });
+  });
+  const node = document.createElement('div');
+  agent.renderDraftCard(newDraft('draft-otp-4'), node, { messageId: 'm-otp-4' });
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  await flush();
+  typeOtp(node, '123456');
+  buttonByText(node, 'Xác nhận').click();
+  await flush();
+  assert.match(node.textContent, /đã hết hạn/);
+  const resend = buttonByText(node, 'Gửi lại mã');
+  assert.ok(resend);
+  assert.equal(resend.disabled, false);
+  resend.click();
+  await flush();
+  assert.equal(otpCalls, 2);
+  assert.equal(agent.getDraftCardState('draft-otp-4').status, 'otp');
+});
+
+test('OTP request failure returns to the confirm button with the server message', async () => {
+  const { agent, document } = loadAgent(() => jsonResponse({ ok: false, code: 'mail_failed', message: 'Không gửi được email xác nhận. Vui lòng thử lại sau.' }));
+  const node = document.createElement('div');
+  agent.renderDraftCard(newDraft('draft-otp-5'), node, { messageId: 'm-otp-5' });
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  await flush();
+  assert.equal(agent.getDraftCardState('draft-otp-5').status, 'pending');
+  assert.match(node.textContent, /Không gửi được email/);
+  assert.equal(buttonByText(node, 'Xác nhận đặt hàng').disabled, false);
+  assert.equal(node.findAll('input').length, 0);
+});
+
+test('changed draft reuses the live code: confirm goes straight back to the OTP input', async () => {
+  const calls = [];
+  const { agent, document } = loadAgent((url, opts) => {
+    calls.push(url);
+    if (url.includes('chat_order_otp')) return jsonResponse(otpOk);
+    return jsonResponse({ ok: true, status: 'changed', card: newDraft('draft-otp-6b') });
+  });
+  const node = document.createElement('div');
+  agent.renderDraftCard(newDraft('draft-otp-6'), node, { messageId: 'm-otp-6' });
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  await flush();
+  typeOtp(node, '123456');
+  buttonByText(node, 'Xác nhận').click();
+  await flush();
+  const state = agent.getDraftCardState('draft-otp-6');
+  assert.equal(state.status, 'changed');
+  assert.match(node.textContent, /Giá đã thay đổi/);
+  assert.equal(buttonByText(node, 'Xác nhận đặt hàng').disabled, false);
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  await flush();
+  assert.equal(state.status, 'otp');
+  assert.equal(calls.filter((u) => u.includes('chat_order_otp')).length, 1);
+  assert.ok(otpInputOf(node));
 });
 
 test('confirming draft cards stay disabled across re-render and result targets the current node', async () => {
   let resolveConfirm;
-  let fetchCount = 0;
-  const { agent, document, fetchState } = loadAgent(() => {
-    fetchCount += 1;
+  let confirmCount = 0;
+  const { agent, document } = loadAgent((url) => {
+    if (url.includes('chat_order_otp')) return jsonResponse(otpOk);
+    confirmCount += 1;
     return new Promise((resolve) => { resolveConfirm = resolve; });
   });
   const payload = { draft_id: 'draft-3', expires_at: Math.floor(Date.now() / 1000) + 60, items: [] };
   const firstNode = document.createElement('div');
   agent.renderDraftCard(payload, firstNode, { messageId: 'message-3' });
-  firstNode.findAll('button')[0].click();
+  buttonByText(firstNode, 'Xác nhận đặt hàng').click();
+  await flush();
+  typeOtp(firstNode, '123456');
+  buttonByText(firstNode, 'Xác nhận').click();
   assert.equal(agent.getDraftCardState('draft-3').status, 'confirming');
   assert.equal(agent.getDraftCardState('message-3').status, 'confirming');
 
@@ -216,13 +372,32 @@ test('confirming draft cards stay disabled across re-render and result targets t
   assert.equal(remountedNode.findAll('button')[0].disabled, true);
   assert.match(remountedNode.textContent, /Đang xác nhận/);
   remountedNode.findAll('button')[0].click();
-  assert.equal(fetchCount, 1);
+  assert.equal(confirmCount, 1);
 
   resolveConfirm({ json: () => Promise.resolve({ ok: true, status: 'created', order_id: 43 }) });
-  await new Promise((resolve) => setImmediate(resolve));
-  await new Promise((resolve) => setImmediate(resolve));
+  await flush();
   assert.match(remountedNode.textContent, /Đã tạo đơn #43/);
   assert.equal(remountedNode.findAll('button')[0].disabled, true);
+});
+
+test('created draft cards remain disabled after re-render and unsafe next URLs do not redirect', async () => {
+  const { agent, document, window } = loadAgent((url) => url.includes('chat_order_otp')
+    ? jsonResponse(otpOk)
+    : jsonResponse({ ok: true, status: 'created', order_id: 42, next: { type: 'vnpay', url: 'javascript:alert(1)' } }));
+  agent.configure({ vnpayHost: 'sandbox.vnpayment.vn' });
+  const payload = { draft_id: 'draft-2', expires_at: Math.floor(Date.now() / 1000) + 60, items: [] };
+  const node = document.createElement('div');
+  agent.renderDraftCard(payload, node, { messageId: 'message-2' });
+  buttonByText(node, 'Xác nhận đặt hàng').click();
+  await flush();
+  typeOtp(node, '654321');
+  buttonByText(node, 'Xác nhận').click();
+  await flush();
+  agent.renderDraftCard(payload, node, { messageId: 'message-2' });
+  assert.equal(node.findAll('button')[0].disabled, true);
+  assert.match(node.textContent, /Đã tạo đơn #42/);
+  assert.match(node.textContent, /Bạn mở mục Đơn hàng của tôi để thanh toán nhé/);
+  assert.equal(window.location.href, 'https://shop.test/index.php');
 });
 
 test('draft card state is keyed by draft_id before messageId', () => {

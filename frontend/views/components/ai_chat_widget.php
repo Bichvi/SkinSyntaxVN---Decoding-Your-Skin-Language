@@ -1456,6 +1456,46 @@ $aiLabelScanOn = function_exists('ss_env')
       height: 100% !important;
       max-height: calc(100vh - var(--site-header-height, 160px)) !important;
     }
+
+    .ai-chat-agent-draft-card__otp {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ai-chat-agent-draft-card__otp p {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .ai-chat-agent-draft-card__otp-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 18px;
+      letter-spacing: 6px;
+      text-align: center;
+    }
+
+    .ai-chat-agent-draft-card__error {
+      margin: 0;
+      color: #b42318;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .ai-chat-agent-draft-card__otp .ai-chat-agent-draft-card__actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ai-chat-agent-draft-card__otp button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   </style>
 
   <script src="<?= BASE_URL ?>/assets/js/chat-agent-stream.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-agent-stream.js') ?: '1' ?>"></script>
@@ -1509,6 +1549,7 @@ $aiLabelScanOn = function_exists('ss_env')
         window.SkinSyntaxAgent.configure({
           endpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=ai_chat_agent_stream' : 'index.php?r=ai_chat_agent_stream' ?>',
           confirmEndpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=chat_order_confirm' : 'index.php?r=chat_order_confirm' ?>',
+          otpEndpoint: '<?= (defined('BASE_URL') && trim(BASE_URL) !== '') ? rtrim(BASE_URL, '/') . '/index.php?r=chat_order_otp' : 'index.php?r=chat_order_otp' ?>',
           csrf: widget.dataset.chatCsrf || '',
           vnpayHost: widget.dataset.vnpayHost || ''
         });

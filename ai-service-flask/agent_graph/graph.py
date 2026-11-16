@@ -64,6 +64,9 @@ _ORDER_CLAIM_RE = re.compile(
     r"\bdat hang thanh cong\b"
     r"|\bdon hang (?:cua ban )?(?:da|vua) (?:duoc )?(?:tao|dat)\b"
     r"|\bda tao (?:xong )?don(?! nhap)\b"
+    r"|\bda ghi nhan don(?! nhap)(?: hang)?(?: cua ban)?\b"
+    r"|\bdon hang (?:cua ban )?(?:da duoc ghi nhan|se duoc xu ly)\b"
+    r"|\bdon(?: hang)? (?:cua ban )?da duoc xac nhan\b"
 )
 _DRAFT_CLAIM_RE = re.compile(
     r"\bdon nhap (?:cua ban )?(?:da|dang) (?:duoc )?(?:san sang|tao|lap)\b"
@@ -738,6 +741,8 @@ def build_graph(router_llm, agent_llm_factory, legacy: Callable[[str, dict], dic
             _emit_timeout(state)
             return {"halted": True, "intent_queue": []}
         queue = [intent.label for intent in routed.intents]
+        if ctx.state.pending == "checkout_collecting" and not any(label in ("BUY", "CART") for label in queue):
+            ctx.state.pending = "none"
         clarification = routed.needs_clarification
         payment_question = is_unsupported_payment_question(state["message"])
         if payment_question:
@@ -789,6 +794,7 @@ def build_graph(router_llm, agent_llm_factory, legacy: Callable[[str, dict], dic
             raise RuntimeError("legacy response invalid")
         answer = result.get("answer")
         if isinstance(answer, str) and answer.strip():
+            answer = _guard_text(state["ctx"], answer, list(state["intent_queue"][:1]))
             _emit(state, "token", {"text": answer})
         products = result.get("products")
         if products:

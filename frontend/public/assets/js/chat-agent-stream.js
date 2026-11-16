@@ -4,6 +4,7 @@
   var config = {
     endpoint: 'index.php?r=ai_chat_agent_stream',
     confirmEndpoint: 'index.php?r=chat_order_confirm',
+    otpEndpoint: 'index.php?r=chat_order_otp',
     csrf: '',
     vnpayHost: ''
   };
@@ -186,7 +187,12 @@
         next: null,
         redirectMessage: '',
         errorMessage: '',
-        changeMessage: ''
+        changeMessage: '',
+        otpEmail: '',
+        otpDraftId: '',
+        otpExpiresAt: 0,
+        resendAt: 0,
+        otpValue: ''
       };
     }
     return draftStates[key];
@@ -198,7 +204,7 @@
     var key = getDraftKey(payload, options);
     var state = getDraftState(key, payload);
     if (options.messageId || payload.message_id) state.messageId = String(options.messageId || payload.message_id);
-    if (state.status === 'pending' && draftExpired(state.payload || payload)) state.status = 'expired';
+    if ((state.status === 'pending' || state.status === 'otp') && draftExpired(state.payload || payload)) state.status = 'expired';
     if (state.status === 'pending' || state.status === 'changed') state.payload = state.payload || payload;
     state.node = container;
     if (state.status === 'cancelled') {
@@ -250,30 +256,88 @@
     actions.className = 'ai-chat-agent-draft-card__actions';
     var confirm = document.createElement('button');
     confirm.type = 'button';
-    confirm.textContent = state.status === 'confirming' ? 'Đang xác nhận...' : 'Xác nhận đặt hàng';
-    confirm.disabled = state.status !== 'pending';
+    confirm.textContent = state.status === 'otp_sending' ? 'Đang gửi mã...'
+      : (state.status === 'confirming' ? 'Đang xác nhận...' : 'Xác nhận đặt hàng');
+    confirm.disabled = state.status !== 'pending' && state.status !== 'changed';
     var cancel = document.createElement('button');
     cancel.type = 'button';
     cancel.textContent = 'Hủy';
     actions.appendChild(confirm);
     actions.appendChild(cancel);
     container.appendChild(actions);
+
+    var otpInput = null;
+    var otpSubmit = null;
+    var otpResend = null;
+    if (state.status === 'otp' || (state.status === 'confirming' && state.otpEmail)) {
+      var otpBox = document.createElement('div');
+      otpBox.className = 'ai-chat-agent-draft-card__otp';
+      addText(otpBox, 'p', 'Mã xác nhận đã gửi tới ' + state.otpEmail);
+      otpInput = document.createElement('input');
+      otpInput.type = 'text';
+      otpInput.inputMode = 'numeric';
+      otpInput.autocomplete = 'one-time-code';
+      otpInput.maxLength = 6;
+      otpInput.pattern = '\\d{6}';
+      otpInput.placeholder = 'Nhập mã 6 số';
+      otpInput.className = 'ai-chat-agent-draft-card__otp-input';
+      otpInput.value = state.otpValue || '';
+      otpInput.disabled = state.status !== 'otp';
+      otpBox.appendChild(otpInput);
+      if (state.errorMessage) {
+        // Right under the code field, where the customer is looking (the card bottom may be scrolled out of view).
+        var otpError = addText(otpBox, 'p', state.errorMessage, 'ai-chat-agent-draft-card__error');
+        if (otpError.setAttribute) otpError.setAttribute('role', 'alert');
+      }
+      var otpActions = document.createElement('div');
+      otpActions.className = 'ai-chat-agent-draft-card__actions';
+      otpSubmit = document.createElement('button');
+      otpSubmit.type = 'button';
+      otpSubmit.textContent = 'Xác nhận';
+      otpSubmit.disabled = state.status !== 'otp' || !/^\d{6}$/.test(state.otpValue || '');
+      otpResend = document.createElement('button');
+      otpResend.type = 'button';
+      otpResend.textContent = 'Gửi lại mã';
+      otpResend.disabled = state.status !== 'otp';
+      otpActions.appendChild(otpSubmit);
+      otpActions.appendChild(otpResend);
+      otpBox.appendChild(otpActions);
+      container.appendChild(otpBox);
+      if (state.focusOtp && state.status === 'otp') {
+        // Only right after the OTP box opens or a code is rejected, so a background re-render never steals focus.
+        state.focusOtp = false;
+        if (otpInput.focus) { try { otpInput.focus(); } catch (e) { /* detached node */ } }
+      }
+    }
+    var updateResend = function () {
+      if (!otpResend || state.status !== 'otp') return;
+      var left = Math.ceil((state.resendAt - Date.now()) / 1000);
+      otpResend.disabled = left > 0;
+      otpResend.textContent = left > 0 ? 'Gửi lại mã (' + left + 's)' : 'Gửi lại mã';
+    };
+    updateResend();
+
     var countdown = addText(container, 'small', '', 'ai-chat-agent-draft-card__countdown');
     var expired = function () {
       state.status = 'expired';
       state.errorMessage = '';
       clearDraftTimer(state);
       confirm.disabled = true;
+      if (otpInput) otpInput.disabled = true;
+      if (otpSubmit) otpSubmit.disabled = true;
+      if (otpResend) otpResend.disabled = true;
       countdown.textContent = 'Đơn nháp đã hết hạn';
     };
     var tick = function () {
       var remaining = Math.max(0, draftDeadline(currentPayload) - Date.now());
       if (!remaining) return expired();
       countdown.textContent = 'Còn ' + Math.ceil(remaining / 1000) + ' giây';
+      updateResend();
     };
-    if (state.status === 'pending') {
+    var ticking = state.status === 'pending' || state.status === 'otp' || state.status === 'otp_sending';
+    if (ticking) {
       tick();
-      if (state.status === 'pending') {
+      if (state.status !== 'expired') {
         clearDraftTimer(state);
         state.timerId = window.setInterval(tick, 1000);
       }
@@ -284,8 +348,112 @@
       clearDraftTimer(state);
       if (state.status === 'changed') countdown.textContent = state.changeMessage || 'Giá đã thay đổi, bạn kiểm tra lại nhé';
     }
-    if (state.errorMessage) addText(container, 'p', state.errorMessage, 'ai-chat-agent-draft-card__error');
+    if (state.errorMessage && !otpInput) addText(container, 'p', state.errorMessage, 'ai-chat-agent-draft-card__error');
     if (state.status === 'changed') addText(container, 'p', state.changeMessage || 'Giá đã thay đổi, bạn kiểm tra lại nhé', 'ai-chat-agent-draft-card__warning');
+
+    var rerender = function () {
+      if (state.node) renderDraftCard(state.payload || currentPayload, state.node, { stateKey: key });
+    };
+
+    // Resolves a confirm response (sent together with the OTP).
+    var handleConfirmResult = function (result) {
+      if (result && result.ok && result.status === 'created') {
+        state.status = 'created';
+        state.orderId = result.order_id;
+        state.next = result.next || null;
+        state.errorMessage = '';
+        state.otpValue = '';
+        state.otpDraftId = '';
+        clearDraftTimer(state);
+        if (state.node) renderDraftCard(currentPayload, state.node, { stateKey: key });
+        var next = result.next || {};
+        if ((next.type === 'vnpay' || next.type === 'qr') && next.url) {
+          if (isAllowedRedirect(next.url, window.location.origin || window.location.href, config.vnpayHost)) {
+            window.location.href = next.url;
+          } else {
+            state.redirectMessage = 'Đã tạo đơn #' + result.order_id + '. Bạn mở mục Đơn hàng của tôi để thanh toán nhé.';
+            if (state.node) addText(state.node, 'p', state.redirectMessage);
+          }
+        }
+        return;
+      }
+      if (result && result.ok && result.status === 'changed') {
+        state.status = 'changed';
+        state.payload = stampDeadline(result.card || {});
+        state.changeMessage = 'Giá đã thay đổi, bạn kiểm tra lại nhé';
+        state.errorMessage = '';
+        state.otpValue = '';
+        // The server rebinds a still-valid code to the replacement draft.
+        if (state.otpDraftId && state.payload.draft_id) state.otpDraftId = String(state.payload.draft_id);
+        clearDraftTimer(state);
+        if (state.node) renderDraftCard(state.payload, state.node, { stateKey: key });
+        return;
+      }
+      var code = result && result.code ? String(result.code) : '';
+      var message = (result && result.message) || 'Không thể xác nhận đơn hàng.';
+      if (draftExpired(currentPayload) || state.status === 'expired') {
+        state.status = 'expired';
+        state.errorMessage = '';
+      } else if (code === 'otp_invalid') {
+        state.status = 'otp';
+        state.errorMessage = message;
+        state.otpValue = '';
+      } else if (code === 'otp_expired' || code === 'otp_locked' || code === 'otp_required') {
+        state.status = 'otp';
+        state.errorMessage = message;
+        state.otpValue = '';
+        state.resendAt = 0;
+      } else {
+        state.status = state.otpDraftId ? 'otp' : 'pending';
+        state.errorMessage = message;
+      }
+      state.focusOtp = state.status === 'otp';
+      rerender();
+    };
+
+    var handleConfirmError = function (error) {
+      if (draftExpired(currentPayload) || state.status === 'expired') {
+        state.status = 'expired';
+        state.errorMessage = '';
+      } else {
+        state.status = state.otpDraftId ? 'otp' : 'pending';
+        state.errorMessage = (error && error.message) || 'Không thể xác nhận đơn hàng.';
+      }
+      rerender();
+    };
+
+    var requestCode = function (fallbackStatus) {
+      state.status = 'otp_sending';
+      state.errorMessage = '';
+      rerender();
+      requestOtp(currentPayload.draft_id).then(function (result) {
+        if (result && result.ok) {
+          var now = Date.now();
+          state.status = 'otp';
+          state.otpEmail = String(result.email_masked || '');
+          state.otpDraftId = String(currentPayload.draft_id);
+          state.otpExpiresAt = now + (Number(result.expires_in) || 300) * 1000;
+          state.resendAt = now + (Number(result.resend_in) || 60) * 1000;
+          state.otpValue = '';
+          state.errorMessage = '';
+          state.focusOtp = true;
+        } else if (draftExpired(currentPayload)) {
+          state.status = 'expired';
+          state.errorMessage = '';
+        } else if (result && result.code === 'otp_cooldown' && state.otpDraftId) {
+          state.status = 'otp';
+          state.errorMessage = result.message || '';
+        } else {
+          state.status = fallbackStatus;
+          state.errorMessage = (result && result.message) || 'Không thể gửi mã xác nhận.';
+        }
+        rerender();
+      }).catch(function (error) {
+        state.status = state.status === 'expired' ? 'expired' : fallbackStatus;
+        state.errorMessage = (error && error.message) || 'Không thể gửi mã xác nhận.';
+        rerender();
+      });
+    };
 
     cancel.addEventListener('click', function () {
       state.status = 'cancelled';
@@ -294,66 +462,57 @@
       container.hidden = true;
     });
     confirm.addEventListener('click', function () {
-      if (state.status !== 'pending' || confirm.disabled) return;
+      if ((state.status !== 'pending' && state.status !== 'changed') || confirm.disabled) return;
       if (draftExpired(currentPayload)) return expired();
-      state.status = 'confirming';
-      state.errorMessage = '';
-      renderDraftCard(currentPayload, state.node || container, { stateKey: key });
-      confirmDraft(currentPayload.draft_id).then(function (result) {
-        if (result && result.ok && result.status === 'created') {
-          state.status = 'created';
-          state.orderId = result.order_id;
-          state.next = result.next || null;
-          state.errorMessage = '';
-          clearDraftTimer(state);
-          if (state.node) renderDraftCard(currentPayload, state.node, { stateKey: key });
-          var next = result.next || {};
-          if ((next.type === 'vnpay' || next.type === 'qr') && next.url) {
-            if (isAllowedRedirect(next.url, window.location.origin || window.location.href, config.vnpayHost)) {
-              window.location.href = next.url;
-            } else {
-              state.redirectMessage = 'Đã tạo đơn #' + result.order_id + '. Bạn mở mục Đơn hàng của tôi để thanh toán nhé.';
-              if (state.node) addText(state.node, 'p', state.redirectMessage);
-            }
-          }
-          return;
-        }
-        if (result && result.ok && result.status === 'changed') {
-          state.status = 'changed';
-          state.payload = stampDeadline(result.card || {});
-          state.changeMessage = 'Giá đã thay đổi, bạn kiểm tra lại nhé';
-          state.errorMessage = '';
-          clearDraftTimer(state);
-          if (state.node) renderDraftCard(state.payload, state.node, { stateKey: key });
-          return;
-        }
-        if (draftExpired(currentPayload) || state.status === 'expired') {
-          state.status = 'expired';
-          state.errorMessage = '';
-        } else {
-          state.status = 'pending';
-          state.errorMessage = (result && result.message) || 'Không thể xác nhận đơn hàng.';
-        }
-        if (state.node) renderDraftCard(currentPayload, state.node, { stateKey: key });
-      }).catch(function (error) {
-        if (draftExpired(currentPayload) || state.status === 'expired') {
-          state.status = 'expired';
-          state.errorMessage = '';
-        } else {
-          state.status = 'pending';
-          state.errorMessage = error.message || 'Không thể xác nhận đơn hàng.';
-        }
-        if (state.node) renderDraftCard(currentPayload, state.node, { stateKey: key });
-      });
+      var fallbackStatus = state.status;
+      // A code that is still valid (e.g. after a price change) is reused instead of mailing a new one.
+      if (state.otpDraftId && state.otpDraftId === String(currentPayload.draft_id) && state.otpExpiresAt > Date.now()) {
+        state.status = 'otp';
+        state.errorMessage = '';
+        state.changeMessage = '';
+        return rerender();
+      }
+      requestCode(fallbackStatus);
     });
+    if (otpInput) {
+      otpInput.addEventListener('input', function () {
+        state.otpValue = String(otpInput.value || '').replace(/\D/g, '').slice(0, 6);
+        otpInput.value = state.otpValue;
+        otpSubmit.disabled = state.status !== 'otp' || !/^\d{6}$/.test(state.otpValue);
+      });
+      otpSubmit.addEventListener('click', function () {
+        if (state.status !== 'otp' || !/^\d{6}$/.test(state.otpValue || '')) return;
+        if (draftExpired(currentPayload)) return expired();
+        var code = state.otpValue;
+        state.status = 'confirming';
+        state.errorMessage = '';
+        rerender();
+        confirmDraft(currentPayload.draft_id, code).then(handleConfirmResult).catch(handleConfirmError);
+      });
+      otpResend.addEventListener('click', function () {
+        if (state.status !== 'otp' || otpResend.disabled) return;
+        if (draftExpired(currentPayload)) return expired();
+        requestCode('otp');
+      });
+    }
     return container;
   };
 
-  var confirmDraft = function (draftId) {
-    return fetch(config.confirmEndpoint, {
+  var requestOtp = function (draftId) {
+    return fetch(config.otpEndpoint, {
       method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ draft_id: draftId, csrf: config.csrf })
+    }).then(function (response) { return response.json(); });
+  };
+
+  var confirmDraft = function (draftId, otp) {
+    var body = { draft_id: draftId, csrf: config.csrf };
+    if (otp != null) body.otp = String(otp);
+    return fetch(config.confirmEndpoint, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     }).then(function (response) { return response.json(); });
   };
 
@@ -411,6 +570,7 @@
       return match.length ? draftStates[match[match.length - 1]] : null;
     },
     renderUi: renderUi,
-    confirmDraft: confirmDraft
+    confirmDraft: confirmDraft,
+    requestOtp: requestOtp
   };
 }(window, document));

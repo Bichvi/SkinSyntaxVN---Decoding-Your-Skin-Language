@@ -5,6 +5,8 @@ require_once __DIR__ . '/../services/ChatAgentGate.php';
 require_once __DIR__ . '/../services/ChatAgentAudit.php';
 require_once __DIR__ . '/../services/ChatDraftService.php';
 require_once __DIR__ . '/../services/ChatOrderConfirmService.php';
+require_once __DIR__ . '/../services/ChatOrderOtp.php';
+require_once __DIR__ . '/../services/Mailer.php';
 require_once __DIR__ . '/../services/ChatAgentToken.php';
 require_once __DIR__ . '/../services/ChatAgentIdentity.php';
 require_once __DIR__ . '/../services/ChatCartEffect.php';
@@ -28,7 +30,9 @@ final class ChatAgentController
         private $purchaseEnabledResolver = null,
         private $clock = null,
         private ?string $internalSecret = null,
-        private $profileResolver = null
+        private $profileResolver = null,
+        private ?ChatOrderOtp $otp = null,
+        private $mailer = null
     ) {
     }
 
@@ -293,10 +297,19 @@ final class ChatAgentController
             if (!$this->purchaseEnabled()) throw new DomainException('Tính năng đặt hàng từ trợ lý đang tạm tắt.', 403);
             $draftId = trim((string)($body['draft_id'] ?? ''));
             if ($draftId === '' || strlen($draftId) > 128) throw new DomainException('Bản nháp đơn hàng không hợp lệ.', 422);
+            $otp = $this->otp();
+            $otpInput = is_string($body['otp'] ?? null) ? (string)preg_replace('/\s+/', '', $body['otp']) : '';
+            $otp->verify($sub, $draftId, $otpInput);
             $result = $this->service()->confirm($draftId, $user, $_SESSION);
             $auditParams['payment_method'] = (string)($result['payment_method'] ?? ($result['card']['payment_method'] ?? $auditParams['payment_method']));
             $outcome = (string)($result['status'] ?? 'created');
-            if ($outcome === 'created') $auditParams['order_id'] = (int)($result['order_id'] ?? 0);
+            if ($outcome === 'created') {
+                $auditParams['order_id'] = (int)($result['order_id'] ?? 0);
+                $otp->consume($sub);
+            } elseif ($outcome === 'changed') {
+                $newDraftId = trim((string)($result['card']['draft_id'] ?? ''));
+                if ($newDraftId !== '') $otp->rebind($sub, $newDraftId);
+            }
             $this->audit($auditActor, $auditParams, $outcome);
             $this->respond(['ok' => true] + $result, 200);
         } catch (DomainException $e) {
@@ -315,6 +328,113 @@ final class ChatAgentController
             $this->audit($auditActor, $auditParams, 'error');
             $this->respond(['ok' => false, 'code' => 'server_error', 'message' => 'Không thể xác nhận đơn hàng lúc này.'], 500);
         }
+    }
+
+    public function sendOtp(): void
+    {
+        $this->jsonHeaders();
+        $auditActor = '';
+        $auditParams = ['draft_id' => ''];
+        $action = 'chat_order_otp_send';
+        try {
+            if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+                throw new DomainException('Chỉ nhận yêu cầu POST.', 405);
+            }
+            $raw = $this->readBody();
+            if (strlen($raw) > 4096) throw new DomainException('Yêu cầu quá dài.', 413);
+            $body = json_decode($raw, true);
+            if (!is_array($body)) throw new DomainException('Yêu cầu không hợp lệ.', 400);
+            $auditParams['draft_id'] = trim((string)($body['draft_id'] ?? ''));
+            if (!$this->loggedIn()) throw new DomainException('Vui lòng đăng nhập để xác nhận đơn hàng.', 403);
+
+            $user = $this->withIdentity($this->user());
+            $auditActor = (string)($user['sub'] ?? '');
+            if ($this->isStaff($user)) throw new DomainException('Tài khoản nhân viên không thể đặt hàng.', 403);
+
+            $csrf = $body['csrf'] ?? '';
+            $expectedCsrf = (string)($this->csrfResolver !== null ? ($this->csrfResolver)() : ShopAssistantController::csrfToken());
+            if (!is_string($csrf) || $csrf === '' || !hash_equals($expectedCsrf, $csrf)) {
+                throw new DomainException('Phiên xác nhận không hợp lệ. Vui lòng tải lại trang.', 403);
+            }
+            $this->checkOrigin();
+
+            $sub = trim((string)($user['sub'] ?? ''));
+            if ($sub === '') throw new DomainException('Phiên đăng nhập không hợp lệ.', 403);
+            $rate = ($this->limiter ?? RateLimiter::shared())->hit('chat_order_otp', $sub, 3, 600);
+            if (empty($rate['allowed'])) throw new DomainException('Bạn yêu cầu mã quá nhiều lần. Vui lòng thử lại sau.', 429);
+
+            if (!$this->purchaseEnabled()) throw new DomainException('Tính năng đặt hàng từ trợ lý đang tạm tắt.', 403);
+            $draftId = trim((string)($body['draft_id'] ?? ''));
+            if ($draftId === '' || strlen($draftId) > 128) throw new DomainException('Bản nháp đơn hàng không hợp lệ.', 422);
+            if (!$this->service()->isDraftOpenFor($draftId, $sub)) {
+                throw new DomainException('Không tìm thấy bản nháp đơn hàng.', 404);
+            }
+            $email = trim((string)($user['email'] ?? ''));
+            if ($email === '' || !Mailer::validAddress($email)) {
+                throw new DomainException('Tài khoản chưa có email hợp lệ để nhận mã xác nhận.', 422);
+            }
+
+            $otp = $this->otp();
+            $code = $otp->issue($sub, $draftId);
+            $mailer = $this->mailer();
+            $subject = 'SkinSyntax - Mã xác nhận đơn hàng';
+            $sent = false;
+            try {
+                $html = self::otpEmailHtml($code);
+                $sent = $mailer instanceof Mailer
+                    ? $mailer->send($email, $subject, $html)
+                    : (bool)$mailer($email, $subject, $html);
+            } catch (Throwable $e) {
+                $sent = false;
+            }
+            if (!$sent) {
+                $otp->consume($sub);
+                throw new ChatOrderOtpException('Không gửi được email xác nhận. Vui lòng thử lại sau.', 502, 'mail_failed');
+            }
+            if ($mailer instanceof Mailer && $mailer->isDemo()) {
+                error_log('[chat_order_otp demo] code=' . $code);
+            }
+            $this->audit($auditActor, $auditParams, 'sent', $action);
+            $this->respond([
+                'ok' => true,
+                'email_masked' => Mailer::maskEmail($email),
+                'expires_in' => ChatOrderOtp::TTL,
+                'resend_in' => ChatOrderOtp::COOLDOWN,
+            ], 200);
+        } catch (DomainException $e) {
+            $code = $this->errorCode($e);
+            $this->audit($auditActor, $auditParams, 'rejected:' . $code, $action);
+            $status = (int)$e->getCode();
+            if ($status < 400 || $status > 599) $status = 400;
+            $this->respond(['ok' => false, 'code' => $code, 'message' => $e->getMessage()], $status);
+        } catch (Throwable $e) {
+            $this->audit($auditActor, $auditParams, 'error', $action);
+            $this->respond(['ok' => false, 'code' => 'server_error', 'message' => 'Không thể gửi mã xác nhận lúc này.'], 500);
+        }
+    }
+
+    public static function otpEmailHtml(string $code): string
+    {
+        $safe = htmlspecialchars($code, ENT_QUOTES, 'UTF-8');
+        return '<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:16px">'
+            . '<h2 style="margin:0 0 12px">SkinSyntax</h2>'
+            . '<p>Mã xác nhận đơn hàng của bạn là:</p>'
+            . '<p style="font-size:32px;font-weight:bold;letter-spacing:6px;margin:12px 0">' . $safe . '</p>'
+            . '<p>Mã có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>'
+            . '<p style="color:#888;font-size:12px">Nếu bạn không yêu cầu, hãy bỏ qua email này.</p></div>';
+    }
+
+    private function otp(): ChatOrderOtp
+    {
+        if ($this->otp !== null) return $this->otp;
+        if (!isset($_SESSION) || !is_array($_SESSION)) $_SESSION = [];
+        return $this->otp = new ChatOrderOtp($_SESSION, is_callable($this->clock) ? $this->clock : null);
+    }
+
+    /** @return Mailer|callable */
+    private function mailer()
+    {
+        return $this->mailer ??= Mailer::fromEnv();
     }
 
     private function service(): ChatOrderConfirmService
@@ -643,14 +763,14 @@ final class ChatAgentController
         }
     }
 
-    private function audit(string $actor, array $params, string $outcome): void
+    private function audit(string $actor, array $params, string $outcome, string $action = 'chat_order_confirm'): void
     {
         if ($this->audit === null) {
             $this->audit = $this->db !== null
                 ? ChatAgentAudit::forDb($this->db)
                 : new ChatAgentAudit(static function (array $document): void {});
         }
-        $this->audit->record($actor, 'chat_order_confirm', $params, $outcome);
+        $this->audit->record($actor, $action, $params, $outcome);
     }
 
     private function fillAuditPaymentMethod(array &$params): void

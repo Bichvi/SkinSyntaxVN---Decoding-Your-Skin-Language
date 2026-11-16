@@ -121,6 +121,16 @@ final class ChatOrderConfirmService
         ];
     }
 
+    /** Read-only: true when the draft belongs to $sub, is unused and not expired. */
+    public function isDraftOpenFor(string $draftId, string $sub): bool
+    {
+        $draft = $this->store->find($draftId);
+        return is_array($draft)
+            && (string)($draft['sub'] ?? '') === $sub
+            && empty($draft['used_at'])
+            && (int)($draft['expires_at'] ?? 0) > (int)($this->clock)();
+    }
+
     public function paymentMethod(string $draftId): string
     {
         $draft = $this->store->find($draftId);
