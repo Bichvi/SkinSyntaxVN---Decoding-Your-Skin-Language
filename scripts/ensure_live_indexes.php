@@ -15,8 +15,12 @@
  * duplicate viewer rows already exist; clean those up first if it reports an error.
  */
 
-require_once __DIR__ . '/../backend/app/config/config.php';
-require_once __DIR__ . '/../backend/app/config/db.php';
+// Repo layout (php scripts/...) or inside the skinsyntax-php container, where
+// backend/ is mounted at /var/www/html (docker cp the script to /tmp and run it).
+$appRoot = is_dir(__DIR__ . '/../backend/app') ? __DIR__ . '/../backend' : '/var/www/html';
+if (is_file($appRoot . '/vendor/autoload.php')) require_once $appRoot . '/vendor/autoload.php';
+require_once $appRoot . '/app/config/config.php';
+require_once $appRoot . '/app/config/db.php';
 
 $dryRun = in_array('--dry-run', $argv ?? [], true);
 

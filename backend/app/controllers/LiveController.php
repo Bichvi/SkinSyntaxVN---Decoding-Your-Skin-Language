@@ -27,7 +27,7 @@ class LiveController {
         $activeViewerMap = [];
 
         try {
-            if ($mongoDb && isset($mongoDb->phien_live_viewers)) {
+            if (is_object($mongoDb)) { // MongoDB\Database has no __isset, so isset($db->coll) is always false
                 $cursor = $mongoDb->phien_live_viewers->aggregate([
                     ['$match' => ['last_seen' => ['$gte' => $cutoff]]],
                     ['$group' => ['_id' => '$room_id', 'total' => ['$sum' => 1]]]
@@ -455,7 +455,10 @@ class LiveController {
         $canPublish = $isHostOrAdmin;
 
         $configuredWsUrl = function_exists('ss_env') ? ss_env('LIVEKIT_URL', '') : (getenv('LIVEKIT_URL') ?: '');
-        $wsUrl = trim((string)($liveDoc['server_livekit_url'] ?? '')) ?: $configuredWsUrl;
+        // The API key/secret belong to ONE LiveKit project, so the configured URL must win.
+        // Sessions created under an older project still store that project's URL, and
+        // using it yields "invalid API key for domain" (401) for host and viewers alike.
+        $wsUrl = trim((string)$configuredWsUrl) ?: trim((string)($liveDoc['server_livekit_url'] ?? ''));
         $apiKey = function_exists('ss_env') ? ss_env('LIVEKIT_API_KEY', '') : (getenv('LIVEKIT_API_KEY') ?: '');
         $apiSecret = function_exists('ss_env') ? ss_env('LIVEKIT_API_SECRET', '') : (getenv('LIVEKIT_API_SECRET') ?: '');
 
@@ -1095,7 +1098,7 @@ class LiveController {
             exit;
         }
 
-        $uploadDir = __DIR__ . '/../../../public/uploads/live_recordings';
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/live_recordings';
         if (!is_dir($uploadDir)) {
             @mkdir($uploadDir, 0777, true);
         }
@@ -1115,7 +1118,7 @@ class LiveController {
         $targetPath = $uploadDir . '/' . $filename;
 
         if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-            $publicUrl = BASE_URL . '/public/uploads/live_recordings/' . $filename;
+            $publicUrl = BASE_URL . '/uploads/live_recordings/' . $filename;
 
             $phienLiveModel->saveRecording($liveId, $publicUrl, $mimeBase, (int)$file['size']);
 
@@ -1163,6 +1166,12 @@ class LiveController {
         if (!$live) {
             $reply(404, ['ok' => false, 'message' => 'Phiên livestream không tồn tại.']);
         }
+        // failRecording() sets trang_thai=recording_failed, which would end a stream that is
+        // still on air. Mid-stream chunk errors only fail this request; the client then
+        // finalizes with what the server already has once the host ends the session.
+        $failRec = static function (string $message) use ($final, $model, $liveId): void {
+            if ($final) $model->failRecording($liveId, $message);
+        };
         // A retried final call after a successful finalize must stay idempotent.
         if ($final && ($live['status'] ?? '') === 'replay_ready' && !empty($live['url_ban_ghi'])) {
             $reply(200, ['ok' => true, 'url' => (string)$live['url_ban_ghi'], 'message' => 'Bản ghi đã được lưu trước đó.']);
@@ -1178,7 +1187,7 @@ class LiveController {
             $reply(422, ['ok' => false, 'message' => 'Thiếu dữ liệu video của đoạn recording.']);
         }
 
-        $baseDir = __DIR__ . '/../../../public/uploads/live_recordings';
+        $baseDir = dirname(__DIR__, 2) . '/public/uploads/live_recordings';
         $tmpDir = $baseDir . '/tmp';
         if (!is_dir($tmpDir)) @mkdir($tmpDir, 0777, true);
         $safeLiveId = preg_replace('/[^A-Za-z0-9_-]/', '', $liveId);
@@ -1190,7 +1199,7 @@ class LiveController {
         $metaFh = @fopen($metaPath, 'c+');
         if (!$metaFh || !flock($metaFh, LOCK_EX)) {
             if ($metaFh) fclose($metaFh);
-            $model->failRecording($liveId, 'Không thể khóa file tạm của recording.');
+            $failRec('Không thể khóa file tạm của recording.');
             $reply(500, ['ok' => false, 'message' => 'Không thể ghi file tạm recording.']);
         }
         $release = static function () use ($metaFh): void {
@@ -1214,7 +1223,7 @@ class LiveController {
                     $release();
                     @unlink($metaPath);
                     @unlink($partPath);
-                    $model->failRecording($liveId, 'Định dạng recording không được hỗ trợ: ' . $mimeBase);
+                    $failRec('Định dạng recording không được hỗ trợ: ' . $mimeBase);
                     $reply(415, ['ok' => false, 'message' => 'Chỉ chấp nhận recording WebM, MP4 hoặc OGG.']);
                 }
                 $meta['mime'] = $mimeBase;
@@ -1224,7 +1233,7 @@ class LiveController {
                 $release();
                 @unlink($metaPath);
                 @unlink($partPath);
-                $model->failRecording($liveId, 'Bản ghi vượt quá giới hạn 2 GB.');
+                $failRec('Bản ghi vượt quá giới hạn 2 GB.');
                 $reply(413, ['ok' => false, 'message' => 'Bản ghi vượt quá giới hạn 2 GB.']);
             }
             $in = @fopen($file['tmp_name'], 'rb');
@@ -1234,7 +1243,7 @@ class LiveController {
             if ($out) fclose($out);
             if ($copied === false || $copied !== $size) {
                 $release();
-                $model->failRecording($liveId, 'Không thể ghi đoạn recording vào vùng lưu trữ tạm.');
+                $failRec('Không thể ghi đoạn recording vào vùng lưu trữ tạm.');
                 $reply(500, ['ok' => false, 'message' => 'Không thể ghi đoạn recording.']);
             }
             $meta['bytes'] = (int)($meta['bytes'] ?? 0) + $size;
@@ -1256,7 +1265,7 @@ class LiveController {
             $release();
             @unlink($metaPath);
             @unlink($partPath);
-            $model->failRecording($liveId, 'Không có dữ liệu video được ghi.');
+            $failRec('Không có dữ liệu video được ghi.');
             $reply(422, ['ok' => false, 'message' => 'Không có dữ liệu video được ghi.']);
         }
 
@@ -1266,13 +1275,13 @@ class LiveController {
         $targetPath = $baseDir . '/' . $filename;
         if (!@rename($partPath, $targetPath)) {
             $release();
-            $model->failRecording($liveId, 'Không thể lưu file recording vào vùng lưu trữ bền vững.');
+            $failRec('Không thể lưu file recording vào vùng lưu trữ bền vững.');
             $reply(500, ['ok' => false, 'message' => 'Không thể hoàn tất file video đã quay']);
         }
         $release();
         @unlink($metaPath);
 
-        $publicUrl = BASE_URL . '/public/uploads/live_recordings/' . $filename;
+        $publicUrl = BASE_URL . '/uploads/live_recordings/' . $filename;
         $model->saveRecording($liveId, $publicUrl, $mimeBase, $totalBytes);
         $reply(200, [
             'ok' => true,
@@ -1448,7 +1457,7 @@ class LiveController {
         }
 
         try {
-            if ($mongoDb && isset($mongoDb->phien_live_viewers)) {
+            if (is_object($mongoDb)) { // MongoDB\Database has no __isset, so isset($db->coll) is always false
                 $mongoDb->phien_live_viewers->updateOne(
                     ['room_id' => (string)$roomId, 'session_id' => (string)$sessionId],
                     ['$set' => ['last_seen' => $now, 'room_id' => (string)$roomId, 'session_id' => (string)$sessionId]],
@@ -1496,7 +1505,7 @@ class LiveController {
         $counts = [];
 
         try {
-            if ($mongoDb && isset($mongoDb->phien_live_viewers)) {
+            if (is_object($mongoDb)) { // MongoDB\Database has no __isset, so isset($db->coll) is always false
                 $cursor = $mongoDb->phien_live_viewers->aggregate([
                     ['$match' => ['last_seen' => ['$gte' => $cutoff]]],
                     ['$group' => ['_id' => '$room_id', 'total' => ['$sum' => 1]]]

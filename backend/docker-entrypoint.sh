@@ -8,4 +8,10 @@ if [ ! -f vendor/autoload.php ]; then
   composer update --no-dev --optimize-autoloader --no-interaction
 fi
 
+# The uploads named volume is created root-owned, but php-fpm runs as www-data:
+# make sure the upload folders exist and are writable (live recordings, products, reviews).
+UPLOADS=/var/www/html/public/uploads
+mkdir -p "$UPLOADS/live_recordings/tmp" "$UPLOADS/products" "$UPLOADS/reviews"
+chown -R www-data:www-data "$UPLOADS" 2>/dev/null || echo "[php-backend] warning: could not chown $UPLOADS"
+
 exec php-fpm -F
