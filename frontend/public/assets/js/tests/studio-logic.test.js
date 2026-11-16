@@ -210,6 +210,49 @@ test('progressSteps: NEEDS_ATTENTION / FAILED block on render, or on schedule on
   }
 });
 
+test('progressSteps: job_stages place a failure at the step the jobs really failed at', () => {
+  const pv = (status, jobStages, extra) => camp(status, Object.assign({ purpose: 'product_video', job_stages: jobStages }, extra));
+  const st = (status, stage, count) => ({ status, stage, count });
+  assert.equal(stateOf(L.progressSteps(pv('NEEDS_ATTENTION', [st('FAILED', 'GENERATING_CONTENT', 3), st('READY', null, 1)]))),
+    'select:done script:blocked review:todo render:todo page:todo');
+  assert.equal(stateOf(L.progressSteps(pv('NEEDS_ATTENTION', [st('AUTO_REPAIR_EXHAUSTED', null, 2)]))),
+    'select:done script:done review:blocked render:todo page:todo');
+  assert.equal(stateOf(L.progressSteps(pv('FAILED', [st('FAILED', 'RENDERING', 1)]))),
+    'select:done script:done review:done render:blocked page:todo');
+  assert.equal(stateOf(L.progressSteps(pv('NEEDS_ATTENTION', [st('FAILED', 'RENDERING', 1), st('FAILED', 'GENERATING_CONTENT', 4)]))),
+    'select:done script:blocked review:todo render:todo page:todo');
+  // Unknown stages and cancelled jobs fall back to the old render:blocked.
+  assert.equal(stateOf(L.progressSteps(pv('NEEDS_ATTENTION', [st('FAILED', 'SOMETHING_NEW', 1), st('FAILED', 'CANCELLED', 1)]))),
+    'select:done script:done review:done render:blocked page:todo');
+  // A master video still wins.
+  assert.equal(stateOf(L.progressSteps(pv('NEEDS_ATTENTION', [st('FAILED', 'GENERATING_CONTENT', 1)], { master_video_path: '/m.mp4' }))),
+    'select:done script:done review:done render:done page:blocked');
+});
+
+test('progressSteps: a GENERATING campaign follows its in-flight jobs', () => {
+  const pv = (jobStages) => camp('GENERATING', { purpose: 'product_video', job_stages: jobStages });
+  const st = (status, stage, count) => ({ status, stage, count });
+  assert.equal(stateOf(L.progressSteps(pv([st('GENERATING_CONTENT', 'GENERATING_CONTENT', 2), st('READY', null, 1)]))),
+    'select:done script:active review:todo render:todo page:todo');
+  assert.equal(stateOf(L.progressSteps(pv([st('RENDERING', 'RENDERING', 1), st('READY', null, 2)]))),
+    'select:done script:done review:done render:active page:todo');
+  assert.equal(stateOf(L.progressSteps(pv([st('READY', null, 3)]))),
+    'select:done script:done review:done render:active page:todo');
+  assert.equal(stateOf(L.progressSteps(pv(undefined))),
+    'select:done script:done review:done render:active page:todo');
+});
+
+test('progressSteps: junk job_stages never throw and fall back to the old behaviour', () => {
+  const junk = [null, 'x', 5, {}, [null, 7, 'a', { status: 5, stage: {} }, { status: 'FAILED', stage: 'RENDERING', count: 0 }, { status: 'FAILED', stage: 'GENERATING_CONTENT', count: -1 }]];
+  junk.forEach((jobStages) => {
+    assert.equal(stateOf(L.progressSteps(camp('NEEDS_ATTENTION', { job_stages: jobStages }))), 'select:done script:done review:done render:blocked schedule:todo broadcast:todo page:todo');
+    assert.equal(stateOf(L.progressSteps(camp('GENERATING', { job_stages: jobStages }))), 'select:done script:done review:done render:active schedule:todo broadcast:todo page:todo');
+  });
+  // A missing count counts as one job.
+  assert.equal(stateOf(L.progressSteps(camp('FAILED', { job_stages: [{ status: 'FAILED', stage: 'VALIDATING_SCRIPT' }] }))),
+    'select:done script:done review:blocked render:todo schedule:todo broadcast:todo page:todo');
+});
+
 test('progressSteps: SCHEDULED, STARTING, LIVE, COMPLETED, VIDEOS_READY, CANCELLED', () => {
   assert.equal(stateOf(L.progressSteps(camp('SCHEDULED'))), 'select:done script:done review:done render:done schedule:done broadcast:todo page:todo');
   for (const status of ['STARTING', 'LIVE']) {
