@@ -630,6 +630,14 @@ switch ($r) {
         (new LiveController($pdo))->apiLiveChat();
         break;
 
+    case 'api_live_syna':
+        (new LiveController($pdo))->apiLiveSyna();
+        break;
+
+    case 'api_live_manage':
+        (new LiveController($pdo))->apiLiveManage();
+        break;
+
     case 'api_live_chat_history':
         (new LiveController($pdo))->apiLiveChatHistory();
         break;

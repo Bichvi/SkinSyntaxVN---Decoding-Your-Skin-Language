@@ -1794,11 +1794,15 @@ class QuanTriController {
         ]);
     }
 
+    private function requireLiveAdminPost(): void {
+        $this->requireRole(['admin']);
+        $token = (string)($_SESSION['live_csrf'] ?? '');
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $token === '' ||
+            !hash_equals($token, (string)($_POST['csrf'] ?? ''))) $this->denyAccess();
+    }
+
     public function adminLiveCreate(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/../models/PhienLive.php';
@@ -1811,17 +1815,17 @@ class QuanTriController {
     }
 
     public function adminLiveEdit(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = trim((string)($_POST['live_id'] ?? $_POST['id'] ?? ''));
             if ($id !== '') {
                 require_once __DIR__ . '/../models/PhienLive.php';
                 $phienLiveModel = new PhienLive($this->pdo);
-                $ok = $phienLiveModel->capNhatPhienLive($id, $_POST);
+                $fields = array_intersect_key($_POST, array_flip(['tieu_de', 'streamer', 'khung_gio_bat_dau',
+                    'khung_gio_ket_thuc', 'ma_san_pham_ghim', 'gia_uu_dai_live', 'so_luong_kho_deal', 'server_livekit_url',
+                    'url_ban_ghi', 'tom_tat_phien_live']));
+                $ok = $phienLiveModel->capNhatPhienLive($id, $fields);
                 set_flash($ok ? 'success' : 'error', $ok ? "Đã cập nhật thông tin phiên LiveStream #{$id} thành công!" : "Không thể cập nhật phiên LiveStream #{$id}.");
             }
         }
@@ -1831,14 +1835,12 @@ class QuanTriController {
     }
 
     public function adminLiveStatus(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
-        $id = trim((string)($_GET['id'] ?? $_POST['id'] ?? ''));
-        $status = trim((string)($_GET['status'] ?? $_POST['status'] ?? 'danglive'));
-        $next = trim((string)($_GET['next'] ?? $_POST['next'] ?? ''));
+        $id = trim((string)($_POST['id'] ?? ''));
+        $status = trim((string)($_POST['status'] ?? 'danglive'));
+        $next = trim((string)($_POST['next'] ?? ''));
+        if ($status === 'live') $status = 'danglive';
 
         if ($id !== '') {
             require_once __DIR__ . '/../models/PhienLive.php';
@@ -1871,12 +1873,9 @@ class QuanTriController {
     }
 
     public function adminLiveDelete(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
-        $id = trim((string)($_GET['id'] ?? ''));
+        $id = trim((string)($_POST['id'] ?? ''));
         if ($id !== '') {
             require_once __DIR__ . '/../models/PhienLive.php';
             $phienLiveModel = new PhienLive($this->pdo);
@@ -1888,10 +1887,7 @@ class QuanTriController {
     }
 
     public function adminLiveUpdateRecording(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = trim((string)($_POST['live_id'] ?? ''));

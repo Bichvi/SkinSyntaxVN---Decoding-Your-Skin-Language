@@ -4,9 +4,14 @@ require_once __DIR__ . '/layouts/header.php';
 
 $role = current_role();
 $isStaff = in_array($role, ['admin', 'nhanvien'], true);
-$isStudio = $isStaff && (string)($_GET['studio'] ?? '') === '1';
 $hasLive = is_array($currentLive ?? null) && !empty($currentLive['id']);
 $live = $hasLive ? $currentLive : [];
+$permissions = $live['live_permissions'] ?? [];
+$isStudio = $isStaff && (string)($_GET['studio'] ?? '') === '1';
+$canPublish = $isStudio && !empty($permissions['publish']);
+$canModerate = !empty($permissions['moderate']);
+$canPin = !empty($permissions['pin']);
+if ($hasLive || !empty($aiIdolLive)) $_SESSION['live_csrf'] ??= bin2hex(random_bytes(24));
 $displayStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', '', (string)($live['streamer'] ?? '')));
 $displayStreamer = $displayStreamer !== '' ? $displayStreamer : 'SkinSyntax';
 $liveStatus = (string)($live['status'] ?? 'none');
@@ -37,6 +42,10 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
 
 <style>
   .ss-live-page{--ss-ink:#17231d;--ss-muted:#66736b;--ss-line:#dfe8e1;--ss-green:#176b45;--ss-green-dark:#0d3f2c;--ss-soft:#f5f8f5;background:#f7f9f7;color:var(--ss-ink);min-height:100vh;padding-bottom:48px}
+  .ss-live-page [hidden]{display:none!important}
+  .ss-message__text{white-space:pre-wrap;overflow-wrap:anywhere}
+  .ss-live-mention{color:#075d44;font-weight:700}
+  .ss-live-syna-avatar{width:1.45rem;height:1.45rem;border-radius:50%;display:inline-grid;place-items:center;background:#15704a;color:#fff;font-weight:700}
   .ss-live-hero{background:linear-gradient(135deg,#fbfdfb 0%,#edf5ef 100%);border-bottom:1px solid var(--ss-line);padding:28px 0}
   .ss-live-hero h1{font-size:clamp(1.65rem,3vw,2.6rem);letter-spacing:-.04em;margin:0 0 8px;font-weight:800}
   .ss-live-hero p{max-width:760px;color:var(--ss-muted);margin:0;line-height:1.6}
@@ -64,7 +73,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   @media (max-width:620px){.ss-live-wrap{padding:18px 12px 0}.ss-live-hero{padding:22px 0}.ss-live-hero .container{padding-left:16px;padding-right:16px}.ss-player{border-radius:12px}.ss-product__body{align-items:flex-start}.ss-product__cta{width:100%;margin-top:10px}.ss-product__body{flex-wrap:wrap}.ss-product__info{flex-basis:calc(100% - 94px)}.ss-product__cta{margin-left:92px}.ss-product__cta .ss-btn{flex:1}.ss-session-grid{grid-template-columns:1fr}.ss-session__thumb{height:170px}.ss-player__actions{width:100%;margin-left:0}.ss-player__top{align-items:flex-start}.ss-player__bottom{padding:12px;padding-top:38px}.ss-chat__body{height:310px}}
 </style>
 
-<main class="ss-live-page" id="ssLivePage" data-live-id="<?= h($live['id'] ?? '') ?>" data-live-status="<?= h($liveStatus) ?>" data-is-staff="<?= $isStaff ? '1' : '0' ?>" data-is-studio="<?= $isStudio ? '1' : '0' ?>" data-base-url="<?= h(BASE_URL) ?>">
+<main class="ss-live-page" id="ssLivePage" data-live-id="<?= h($live['id'] ?? '') ?>" data-live-status="<?= h($liveStatus) ?>" data-is-studio="<?= $canPublish ? '1' : '0' ?>" data-moderate="<?= $canModerate ? '1' : '0' ?>" data-ai-enabled="<?= !empty($live['bat_ai_cohost']) ? '1' : '0' ?>" data-csrf="<?= h($_SESSION['live_csrf'] ?? '') ?>" data-base-url="<?= h(BASE_URL) ?>">
   <section class="ss-live-hero">
     <div class="container">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -91,6 +100,8 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
     ?>
     <link rel="stylesheet" href="<?= h($aiAsset('css/ai-idol-live.css')) ?>">
     <section id="aiIdolLive" class="ai-idol-live"
+             data-campaign-id="<?= h($aiIdolLive['id']) ?>"
+             data-csrf="<?= h($_SESSION['live_csrf']) ?>"
              data-started-at="<?= h((string)(int)$aiIdolLive['started_at_ts']) ?>"
              data-ends-at="<?= h((string)(int)$aiIdolLive['ends_at_ts']) ?>"
              data-duration="<?= h((string)(float)$aiIdolLive['duration_seconds']) ?>">
@@ -143,7 +154,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
         <section>
           <?php $isReplayView = ($liveStatus === 'replay_ready' && $recordingUrl !== ''); ?>
           <div class="ss-player<?= $isReplayView ? ' ss-player--replay' : '' ?>" id="ssPlayer">
-            <video id="livekitRemoteVideo" autoplay playsinline <?= $liveStatus === 'replay_ready' ? 'hidden' : '' ?>></video>
+            <video id="livekitRemoteVideo" autoplay playsinline muted hidden></video>
             <video id="livekitLocalVideo" autoplay playsinline muted hidden></video>
             <audio id="livekitRemoteAudio" autoplay></audio>
             <?php if ($liveStatus === 'replay_ready' && $recordingUrl !== ''): ?>
@@ -160,16 +171,13 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
             </div>
             <div class="ss-player__top">
               <span class="ss-badge ss-badge--<?= h($statusTone) ?>" id="liveStatusBadge"><i class="fa-solid fa-circle"></i> <span id="liveStatusLabel"><?= h($statusLabel) ?></span></span>
-              <?php if ($isLive): ?><span class="ss-badge ss-badge--neutral"><i class="fa-solid fa-eye"></i> <span id="liveViewerCount">0</span> đang xem</span><?php endif; ?>
+              <span class="ss-badge ss-badge--neutral" id="liveViewers" <?= $isLive ? '' : 'hidden' ?>><i class="fa-solid fa-eye"></i> <span id="liveViewerCount">0</span> đang xem</span>
+              <span class="ss-badge ss-badge--neutral" id="liveSourceBadge" hidden></span>
               <?php if (!$isReplayView): ?><span class="ss-badge ss-badge--neutral" id="liveConnectionBadge"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang chuẩn bị phát</span><?php endif; ?>
               <div class="ss-player__actions">
                 <?php if ($isLive): ?><button type="button" id="btnReaction"><i class="fa-solid fa-heart"></i> <span id="reactionCount"><?= (int)($live['reaction_count'] ?? 0) ?></span></button><?php endif; ?>
                 <button type="button" id="btnShareLive"><i class="fa-solid fa-share-nodes"></i> Chia sẻ</button>
-                <?php if ($isStudio && in_array($liveStatus, ['ready', 'live', 'interrupted'], true)): ?>
-                  <button type="button" id="btnToggleCam"><i class="fa-solid fa-video"></i> Bật hình ảnh</button>
-                  <button type="button" id="btnToggleMic"><i class="fa-solid fa-microphone"></i> Bật âm thanh</button>
-                  <?php if ($isLive): ?><button type="button" id="btnEndLive" class="text-danger"><i class="fa-solid fa-stop"></i> Kết thúc</button><?php endif; ?>
-                <?php endif; ?>
+                <button type="button" id="btnEnableLiveSound" hidden>Bật tiếng</button>
               </div>
             </div>
             <?php if (!$isReplayView): ?>
@@ -178,45 +186,138 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
             </div>
             <?php endif; ?>
           </div>
+          <?php if ($isStudio && !$isReplayView): ?>
+          <section class="ss-card ss-products mt-3" aria-label="Live Studio">
+            <h2>Live Studio</h2>
+            <nav class="d-flex gap-2 flex-wrap mb-2" aria-label="Điều khiển Live Studio">
+              <?php if ($canPublish): ?><button type="button" class="btn btn-sm btn-light" data-studio-tab="liveSourcePanel">Nguồn phát</button><?php endif; ?>
+              <button type="button" class="btn btn-sm btn-light" data-studio-tab="liveChatBox">Trò chuyện</button>
+              <?php if ($canPin): ?><button type="button" class="btn btn-sm btn-light" data-studio-tab="liveProductPanel">Sản phẩm</button><?php endif; ?>
+              <?php if ($role === 'admin'): ?><button type="button" class="btn btn-sm btn-light" data-studio-tab="liveSynaPanel">SYNA AI</button><?php endif; ?>
+              <?php if ($canPublish): ?>
+                <button type="button" class="btn btn-sm btn-light" data-studio-tab="liveLibraryPanel">Thư viện video</button>
+                <button type="button" class="btn btn-sm btn-light" data-studio-tab="liveRecordingPanel">Bản ghi</button>
+              <?php endif; ?>
+            </nav>
+            <?php if ($canPublish && in_array($liveStatus, ['scheduled', 'ready', 'live', 'interrupted'], true)): ?>
+              <details id="liveSourcePanel" open><summary>Nguồn phát</summary>
+                <div class="d-flex gap-2 flex-wrap my-2">
+                  <label>Camera <select id="liveCameraDevice"><option value="">Mặc định</option></select></label>
+                  <label>Micrô <select id="liveMicDevice"><option value="">Mặc định</option></select></label>
+                </div>
+                <div class="d-flex gap-2 flex-wrap my-2">
+                  <button class="ss-btn ss-btn--ghost" type="button" id="livePreviewCamera">Xem trước camera</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" data-live-source="camera">Camera</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" data-live-source="screen">Chia sẻ màn hình</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" id="btnToggleMic" disabled>Bật micrô</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" id="btnMuteOutput" disabled>Tắt tiếng luồng</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" id="btnStopLive" disabled>Dừng nguồn</button>
+                  <button class="ss-btn ss-btn--ghost text-danger" type="button" id="btnEndLive" disabled>Kết thúc và lưu bản ghi</button>
+                </div>
+                <p id="liveMediaStatus" role="status"></p>
+              </details>
+              <details id="liveLibraryPanel" open><summary>Thư viện video</summary>
+                <label class="d-block my-2" for="liveVideoFiles">Chọn MP4 từ máy để phát</label>
+                <input id="liveVideoFiles" type="file" accept="video/mp4,.mp4" multiple>
+                <select id="liveVideoQueue" aria-label="Video trong phiên" class="form-select my-2"></select>
+                <div class="d-flex gap-2 flex-wrap align-items-center">
+                  <label><input type="checkbox" id="liveVideoLoop"> Lặp video</label>
+                  <button class="ss-btn ss-btn--ghost" type="button" id="livePreviewVideo">Xem trước MP4</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" data-live-source="video">Phát video</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" data-live-source="ai_video">Phát video AI dựng sẵn</button>
+                </div>
+                <form id="liveLibraryUpload" class="my-2">
+                  <label class="d-block">Lưu MP4 vào phiên (tối đa 18 MB)
+                    <input name="source_video" type="file" accept="video/mp4,.mp4" required>
+                  </label>
+                  <label><input name="ai_video" type="checkbox" value="1"> Video SYNA đã dựng</label>
+                  <button class="ss-btn ss-btn--ghost">Tải lên</button>
+                </form>
+                <label class="d-block" for="liveLibraryFiles">Video đã lưu và bản dựng SYNA</label>
+                <select id="liveLibraryFiles" class="form-select my-2">
+                  <?php foreach (($live['studio_videos'] ?? []) as $video): ?>
+                    <option value="<?= h($video['url'] ?? '') ?>" data-source="<?= h($video['source'] ?? 'video') ?>"><?= h($video['name'] ?? '') ?></option>
+                  <?php endforeach; ?>
+                  <?php foreach (($aiReplaySessions ?? []) as $video): ?>
+                    <option value="<?= h($video['url_ban_ghi']) ?>" data-source="ai_video"><?= h('SYNA · ' . $video['title']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+                <button class="ss-btn ss-btn--ghost" type="button" id="livePlayLibrary">Phát video đã chọn</button>
+                <button class="ss-btn ss-btn--ghost" type="button" id="livePreviewLibrary">Xem trước video đã chọn</button>
+              </details>
+              <details id="liveRecordingPanel" class="mt-2"><summary>Bản ghi</summary>
+                <p id="liveRecordingState" class="mb-2" role="status">Bản ghi bắt đầu khi phát thành công.</p>
+                <a id="liveRecordingLink" class="ss-btn ss-btn--ghost" hidden>Xem bản ghi</a>
+              </details>
+            <?php endif; ?>
+            <?php if ($canPin): ?>
+              <details id="liveProductPanel" class="mt-2"><summary>Sản phẩm</summary>
+                <form id="livePinForm" class="d-flex gap-2 flex-wrap my-2">
+                  <input name="product_id" placeholder="Mã SP để ghim" aria-label="Mã sản phẩm" required>
+                  <input name="so_luong_kho_deal" type="number" min="1" placeholder="Số lượng mở bán" aria-label="Số lượng mở bán" required>
+                  <input name="gia_uu_dai_live" type="number" min="0" placeholder="Giá ưu đãi" aria-label="Giá ưu đãi">
+                  <button class="ss-btn ss-btn--ghost" value="product_pin">Ghim sản phẩm</button>
+                  <button class="ss-btn ss-btn--ghost" value="deal_add">Thêm vào phiên</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" id="liveUnpinProduct">Bỏ ghim</button>
+                </form>
+                <div id="liveStudioDeals"></div>
+              </details>
+            <?php endif; ?>
+            <?php if ($role === 'admin'): ?>
+              <details id="liveSynaPanel" class="mt-2"><summary>SYNA AI</summary>
+                <label class="my-2"><input type="checkbox" id="liveToggleSyna" <?= !empty($live['bat_ai_cohost']) ? 'checked' : '' ?>> Bật trả lời khi được gọi bằng @syna</label>
+                <p id="liveSynaQueue" class="mb-2" role="status"></p>
+              </details>
+              <details class="mt-2"><summary>Phân công nhân viên</summary>
+                <form id="liveStaffForm" class="my-2">
+                  <label>Mã streamer <input name="publisher" value="<?= h($live['publisher_staff_id'] ?? '') ?>"></label>
+                  <label>Mã nhân viên <input name="staff"></label>
+                  <label><input type="checkbox" name="pin" value="1"> Quản lý sản phẩm</label>
+                  <label><input type="checkbox" name="moderate" value="1"> Quản lý chat</label>
+                  <button class="ss-btn ss-btn--ghost">Lưu phân công</button>
+                </form>
+              </details>
+            <?php endif; ?>
+            <p id="liveStudioStatus" class="mb-0" role="status"></p>
+          </section>
+          <?php endif; ?>
           <?php if ($isReplayView): ?>
           <div class="ss-replay-meta"><div class="ss-avatar"><?= h(mb_strtoupper(mb_substr($displayStreamer, 0, 2))) ?></div><div class="ss-replay-meta__text"><strong><?= h($displayStreamer) ?></strong><small><?= h($live['title'] ?? '') ?></small></div></div>
           <?php endif; ?>
 
           <section class="ss-card ss-product" aria-label="Sản phẩm đang giới thiệu trong phiên phát">
             <div class="ss-product__head"><span class="ss-kicker"><i class="fa-solid fa-thumbtack"></i> Sản phẩm đang giới thiệu</span><span class="ss-badge ss-badge--neutral" id="flashDealTimer">Ưu đãi của phiên phát</span></div>
-            <?php if ($pinned): ?>
-              <div class="ss-product__body">
-                <?php if ($pinnedImage !== ''): ?><img id="livePinnedImg" class="ss-product__image" src="<?= h($pinnedImage) ?>" alt="<?= h($pinnedName) ?>"><?php else: ?><div id="livePinnedImg" class="ss-product__image ss-product__image--empty"><i class="fa-regular fa-image"></i></div><?php endif; ?>
-                <div class="ss-product__info"><div id="livePinnedBrand" class="ss-product__brand"><?= h($pinnedBrand) ?></div><div id="livePinnedName" class="ss-product__name"><?= h($pinnedName) ?></div><div><span id="livePinnedPrice" class="ss-price"><?= vnd($pinnedPrice) ?></span><?php if ($marketPrice > $pinnedPrice): ?><span id="livePinnedMarketPrice" class="ss-old-price"><?= vnd($marketPrice) ?></span><span id="livePinnedDiscountBadge" class="ss-badge ss-badge--danger ms-2">-<?= $discount ?>%</span><?php endif; ?></div></div>
+              <div class="ss-product__body" id="livePinnedBody" <?= $pinned ? '' : 'hidden' ?>>
+                <img id="livePinnedImg" class="ss-product__image" <?= $pinnedImage !== '' ? 'src="' . h($pinnedImage) . '"' : 'hidden' ?> alt="<?= h($pinnedName) ?>">
+                <div class="ss-product__info"><div id="livePinnedBrand" class="ss-product__brand"><?= h($pinnedBrand) ?></div><div id="livePinnedName" class="ss-product__name"><?= h($pinnedName) ?></div><div><span id="livePinnedPrice" class="ss-price"><?= vnd($pinnedPrice) ?></span><span id="livePinnedMarketPrice" class="ss-old-price" <?= $discount ? '' : 'hidden' ?>><?= vnd($marketPrice) ?></span><span id="livePinnedDiscountBadge" class="ss-badge ss-badge--danger ms-2" <?= $discount ? '' : 'hidden' ?>>-<?= $discount ?>%</span></div></div>
                 <div class="ss-product__cta">
                   <form id="liveBuyNowForm" action="<?= BASE_URL ?>/index.php?r=api_live_add_to_cart" method="post"><input type="hidden" name="live_id" value="<?= h($live['id']) ?>"><input type="hidden" name="product_id" id="livePinnedProductId" value="<?= h($pinnedId) ?>"><button class="ss-btn ss-btn--primary" type="submit" <?= $isLive ? '' : 'disabled' ?>><i class="fa-solid fa-bag-shopping"></i> Thêm vào giỏ</button></form>
-                  <a class="ss-btn ss-btn--ghost" href="<?= BASE_URL ?>/index.php?r=chitiet&amp;id=<?= urlencode($pinnedId) ?>">Chi tiết</a>
+                  <a class="ss-btn ss-btn--ghost" id="livePinnedLink" href="<?= BASE_URL ?>/index.php?r=chitiet&amp;id=<?= urlencode($pinnedId) ?>">Chi tiết</a>
                 </div>
               </div>
-            <?php else: ?><div class="ss-empty-product">Phiên này chưa có sản phẩm đang giới thiệu. Khi người quản trị chọn sản phẩm, nội dung sẽ tự cập nhật.</div><?php endif; ?>
+            <div class="ss-empty-product" id="livePinnedEmpty" <?= $pinned ? 'hidden' : '' ?>>Phiên này chưa có sản phẩm đang giới thiệu.</div>
           </section>
 
-          <?php
-            $dealProducts = [];
-            foreach ((array)($live['danh_sach_deal'] ?? []) as $deal) {
-                $dealId = (string)($deal['ma_san_pham'] ?? '');
-                foreach ((array)($allProducts ?? []) as $product) {
-                    if ($dealId !== '' && (string)($product['ma_san_pham'] ?? $product['id'] ?? '') === $dealId) { $dealProducts[] = ['product' => $product, 'deal' => $deal]; break; }
-                }
-            }
-          ?>
-          <?php if ($dealProducts): ?><section class="ss-card ss-products"><h2>Danh sách ưu đãi trong phiên</h2><div class="ss-product-list"><?php foreach ($dealProducts as $deal): $product = $deal['product']; $dealInfo = $deal['deal']; $productId = (string)($product['ma_san_pham'] ?? $product['id'] ?? ''); $image = resolve_image_url(product_image_source($product)); ?><article class="ss-deal"><img src="<?= h($image) ?>" alt="<?= h($product['ten_san_pham'] ?? '') ?>"><div class="ss-deal__meta"><strong><?= h($product['ten_san_pham'] ?? '') ?></strong><small><?= vnd((float)($dealInfo['gia_uu_dai_live'] ?? $product['gia_ban'] ?? 0)) ?> · Còn lại <?= (int)($dealInfo['so_luong_kho_deal'] ?? 0) ?></small></div><form class="live-add-to-cart-form" action="<?= BASE_URL ?>/index.php?r=api_live_add_to_cart" method="post"><input type="hidden" name="live_id" value="<?= h($live['id']) ?>"><input type="hidden" name="product_id" value="<?= h($productId) ?>"><button class="ss-btn ss-btn--ghost" type="submit" <?= $isLive ? '' : 'disabled' ?>>+ Giỏ</button></form></article><?php endforeach; ?></div></section><?php endif; ?>
+          <section class="ss-card ss-products" id="liveDeals" hidden>
+            <h2>Danh sách ưu đãi trong phiên</h2><div class="ss-product-list" id="liveDealsList"></div>
+          </section>
         </section>
 
         <aside class="ss-card ss-chat" aria-label="Trò chuyện trực tiếp">
           <div class="ss-chat__head"><div class="ss-chat__title"><h2><i class="fa-solid fa-comments text-success me-2"></i>Trò chuyện trực tiếp</h2><span class="ss-badge ss-badge--<?= $isLive ? 'ready' : 'neutral' ?>" id="chatConnectionState"><?= $isLive ? 'Đang mở' : 'Chưa mở' ?></span></div><div class="ss-chat__tabs" role="tablist"><button type="button" class="is-active" data-chat-mode="all">Tất cả</button><button type="button" data-chat-mode="featured">Nổi bật</button><button type="button" data-chat-mode="qa">Hỏi đáp</button></div></div>
           <div class="ss-chat__body" id="liveChatBox"><div class="ss-chat__notice">Tin nhắn trong phiên sẽ được lưu đúng theo buổi phát.</div></div>
           <div class="ss-chat__footer">
-            <?php if ($canChat): ?>
+            <div id="liveChatCompose" <?= $canChat ? '' : 'hidden' ?>>
               <?php if (!$isStaff && !is_logged_in()): ?><input id="guestNickname" type="text" maxlength="40" placeholder="Tên hiển thị (không bắt buộc)" class="mb-2"><?php endif; ?>
-              <form id="liveChatForm" class="ss-chat__row"><input id="liveChatInput" type="text" maxlength="1000" placeholder="Đặt câu hỏi về sản phẩm..." required><button class="ss-btn ss-btn--primary" type="submit" aria-label="Gửi"><i class="fa-solid fa-paper-plane"></i></button></form>
+              <div id="liveChatReply" hidden><span></span> <button type="button" class="btn btn-link btn-sm">Bỏ trả lời</button></div>
+              <button type="button" id="liveSynaSuggestion" class="btn btn-link btn-sm" hidden>@syna — Hỏi trợ lý AI</button>
+              <form id="liveChatForm" class="ss-chat__row"><input id="liveChatInput" type="text" maxlength="1000" placeholder="Nhắn cho mọi người…" required><button class="ss-btn ss-btn--primary" type="submit" aria-label="Gửi"><i class="fa-solid fa-paper-plane"></i></button></form>
+              <button type="button" id="liveAskSyna" class="btn btn-link btn-sm">Hỏi SYNA</button>
+              <p id="liveChatNotice" class="mb-1" role="status"></p>
+              <p id="liveSynaNotice" class="mb-1" role="status"></p>
               <div class="ss-chat__helper">Tối đa 5 tin trong 20 giây. Không chia sẻ thông tin nhạy cảm.</div>
-            <?php else: ?><div class="ss-chat__locked"><i class="fa-solid fa-lock me-1"></i> Trò chuyện sẽ mở khi người dẫn bắt đầu.</div><?php endif; ?>
+            </div>
+            <div id="liveChatLocked" class="ss-chat__locked" <?= $canChat ? 'hidden' : '' ?>><i class="fa-solid fa-lock me-1"></i> Trò chuyện mở trong lúc phát trực tiếp.</div>
           </div>
         </aside>
       </div>
@@ -237,45 +338,9 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
 
 <?php if ($hasLive): ?>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.1.2/dist/livekit-client.umd.min.js" crossorigin="anonymous"></script>
-<script>
-(function(){
-  'use strict';
-  const page=document.getElementById('ssLivePage'); if(!page) return;
-  const base=page.dataset.baseUrl||'.', liveId=page.dataset.liveId||'', status=page.dataset.liveStatus||'none', isStaff=page.dataset.isStaff==='1', isStudio=page.dataset.isStudio==='1';
-  const isAiReplay=liveId.indexOf('ai-')===0;
-  const $=(id)=>document.getElementById(id);
-  const url=(route)=>base+'/index.php?r='+route;
-  const pageJson=async (endpoint, options)=>{const response=await fetch(endpoint, options||{}); let data={}; try{data=await response.json();}catch(e){} if(!response.ok && !data.message) data.message='Yêu cầu không thành công'; return {response,data};};
-  const esc=(value)=>String(value??'').replace(/[&<>"]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
-  let chatMode='all', rendered=new Set(), livekitRoom=null, localVideoTrack=null, localAudioTrack=null, recording=null, recordingChunks=[], recordingStream=null, streamState=status, publisherToken='';
-  const chatBox=$('liveChatBox'), statusBadge=$('liveConnectionBadge'), wait=$('liveWaitingOverlay'), waitMsg=$('liveWaitingMessage'), remote=$('livekitRemoteVideo'), local=$('livekitLocalVideo'), audio=$('livekitRemoteAudio');
-  function setConnection(text, tone){if(!statusBadge)return; statusBadge.className='ss-badge ss-badge--'+tone; statusBadge.innerHTML='<i class="fa-solid fa-circle"></i> '+esc(text);}
-  function renderMessage(msg){const id=msg.client_message_id||msg.id||[msg.sender_name,msg.message,msg.created_at].join('|'); if(rendered.has(id)||!chatBox)return; rendered.add(id); const el=document.createElement('div'); el.className='ss-message'+(msg.is_ai?' ss-message--ai':''); const meta=document.createElement('div'); meta.className='ss-message__meta'; const name=document.createElement('strong'); name.textContent=msg.sender_name||'Khách hàng'; meta.appendChild(name); if(msg.is_ai){const badge=document.createElement('span');badge.className='ss-message__pill';badge.textContent='Tư vấn tự động';meta.appendChild(badge)} if(msg.is_order){const badge=document.createElement('span');badge.className='ss-message__pill';badge.textContent='Đơn hàng';meta.appendChild(badge)} const body=document.createElement('div');body.textContent=msg.message||'';el.append(meta,body);chatBox.appendChild(el);chatBox.scrollTop=chatBox.scrollHeight;}
-  async function loadChat(){if(!liveId||!chatBox)return; const {data}=await pageJson(url('api_live_chat_history')+'&room_id='+encodeURIComponent(liveId)+'&mode='+encodeURIComponent(chatMode)); if(data.ok&&Array.isArray(data.data))data.data.forEach(renderMessage);}
-  document.querySelectorAll('[data-chat-mode]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-chat-mode]').forEach(b=>b.classList.remove('is-active'));btn.classList.add('is-active');chatMode=btn.dataset.chatMode||'all';rendered=new Set();chatBox.innerHTML='';loadChat();}));
-  const chatForm=$('liveChatForm'); if(chatForm){chatForm.addEventListener('submit',async e=>{e.preventDefault();const input=$('liveChatInput');const message=input.value.trim();if(!message)return;input.disabled=true;const clientId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'msg-'+String(Date.now())+'-'+String(performance.now()).replace(/\D/g,'');const fd=new FormData();fd.append('room_id',liveId);fd.append('message',message);fd.append('client_message_id',clientId);const guest=$('guestNickname');if(guest)fd.append('guest_nickname',guest.value.trim());const {data}=await pageJson(url('api_live_chat'),{method:'POST',body:fd});input.disabled=false;if(data.ok){input.value='';const packet={type:'chat',message:{client_message_id:clientId,sender_name:guest&&guest.value.trim()?guest.value.trim():'Bạn',message,created_at:new Date().toISOString()}};renderMessage(packet.message);if(livekitRoom&&livekitRoom.state===LivekitClient.ConnectionState.Connected){try{await livekitRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(packet)),{reliable:true});}catch(err){console.warn('LiveKit chat publish failed',err);}}}else{alert(data.message||'Không thể gửi tin nhắn');}});loadChat();setInterval(loadChat,3000);}
-  async function updateStream(state){const fd=new FormData();fd.append('live_id',liveId);fd.append('state',state);if(state==='live'&&publisherToken)fd.append('publisher_token',publisherToken);const {data}=await pageJson(url('api_live_stream_state'),{method:'POST',body:fd});if(!data.ok)throw new Error(data.message||'Không thể cập nhật trạng thái');streamState=state;return data;}
-  function addTrackToRecording(track){if(!track||!track.mediaStream)return;recordingStream=recordingStream||new MediaStream();track.mediaStream.getTracks().forEach(mediaTrack=>{if(!recordingStream.getTracks().some(existing=>existing.id===mediaTrack.id))recordingStream.addTrack(mediaTrack)});if(!recording&&window.MediaRecorder&&recordingStream.getVideoTracks().length){let mime='video/webm;codecs=vp8,opus';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';try{recordingChunks=[];recording=new MediaRecorder(recordingStream,{mimeType:mime});recording.ondataavailable=e=>{if(e.data&&e.data.size)recordingChunks.push(e.data)};recording.start(1000);}catch(err){console.warn('Recording unavailable',err);}}
-  }
-  async function uploadRecording(){if(!recording||recording.state==='inactive'||!recordingChunks.length)return null;return new Promise(resolve=>{recording.onstop=async()=>{const blob=new Blob(recordingChunks,{type:recording.mimeType||'video/webm'});const fd=new FormData();fd.append('live_id',liveId);fd.append('video_blob',blob,'live-'+liveId+'.webm');const {data}=await pageJson(url('api_upload_live_recording'),{method:'POST',body:fd});resolve(data)};recording.stop();});}
-  async function connectLiveKit(){const canConnect=status==='live'||(isStudio&&['ready','interrupted'].includes(status));if(!canConnect){setConnection('Chưa bắt đầu phát','neutral');return;}if(!window.LivekitClient){setConnection('Chưa mở được phần phát video','warning');if(waitMsg)waitMsg.textContent='Không tải được phần phát video. Vui lòng thử lại.';return;}try{const {response,data}=await pageJson(url('api_live_token')+'&id='+encodeURIComponent(liveId));if(!response.ok||!data.ok||!data.data||!data.data.token){setConnection(data.message||'Chưa có kết nối phát','warning');return;}const info=data.data;publisherToken=info.participant_token||'';livekitRoom=new LivekitClient.Room({adaptiveStream:true,dynacast:true});livekitRoom.on(LivekitClient.RoomEvent.ConnectionStateChanged,state=>{if(state===LivekitClient.ConnectionState.Connected)setConnection('Đã kết nối','ready');else if(state===LivekitClient.ConnectionState.Reconnecting)setConnection('Đang kết nối lại','warning');else if(state===LivekitClient.ConnectionState.Disconnected)setConnection('Đã ngắt kết nối','ended');});livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed,(track)=>{if(track.kind===LivekitClient.Track.Kind.Video){track.attach(remote);remote.hidden=false;if(wait)wait.hidden=true;}else if(track.kind===LivekitClient.Track.Kind.Audio)track.attach(audio);});livekitRoom.on(LivekitClient.RoomEvent.TrackUnsubscribed,(track)=>{track.detach();if(track.kind===LivekitClient.Track.Kind.Video){remote.hidden=true;if(wait)wait.hidden=false;}});livekitRoom.on(LivekitClient.RoomEvent.DataReceived,(payload)=>{try{const packet=JSON.parse(new TextDecoder().decode(payload));if(packet.type==='chat'&&packet.message)renderMessage(packet.message);}catch(e){}});await livekitRoom.connect(info.server_url,info.participant_token);if(isStudio&&info.can_publish)setConnection('Có thể bắt đầu phát','ready');}catch(err){console.error(err);setConnection('Không kết nối được','danger');if(waitMsg)waitMsg.textContent='Không thể kết nối máy chủ phát. Vui lòng thử lại hoặc liên hệ quản trị viên.';}}
-  async function markLiveIfReady(){if(localVideoTrack&&localAudioTrack&&streamState!=='live'){await updateStream('live');if(wait)wait.hidden=true;setConnection('Đang phát trực tiếp','ready');}else if(!localVideoTrack||!localAudioTrack){setConnection('Đã bật một phần, hãy bật cả hình ảnh và âm thanh','ready');}}
-  async function toggleCam(){const button=$('btnToggleCam');if(!button)return;try{if(!localVideoTrack){if(!livekitRoom)throw new Error('Chưa kết nối');localVideoTrack=await LivekitClient.createLocalVideoTrack();await livekitRoom.localParticipant.publishTrack(localVideoTrack);localVideoTrack.attach(local);local.hidden=false;addTrackToRecording(localVideoTrack);button.innerHTML='<i class="fa-solid fa-video-slash"></i> Tắt hình ảnh';await markLiveIfReady();}else{await livekitRoom.localParticipant.unpublishTrack(localVideoTrack);localVideoTrack.stop();localVideoTrack=null;local.hidden=true;button.innerHTML='<i class="fa-solid fa-video"></i> Bật hình ảnh';if(streamState==='live')await updateStream('interrupted');}}catch(err){alert(err.message||'Không thể bật hình ảnh. Hãy cho phép trình duyệt sử dụng thiết bị hình ảnh.');}}
-  async function toggleMic(){const button=$('btnToggleMic');if(!button)return;try{if(!localAudioTrack){if(!livekitRoom)throw new Error('Chưa kết nối');localAudioTrack=await LivekitClient.createLocalAudioTrack();await livekitRoom.localParticipant.publishTrack(localAudioTrack);addTrackToRecording(localAudioTrack);button.innerHTML='<i class="fa-solid fa-microphone-slash"></i> Tắt âm thanh';await markLiveIfReady();}else{await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);localAudioTrack.stop();localAudioTrack=null;button.innerHTML='<i class="fa-solid fa-microphone"></i> Bật âm thanh';if(streamState==='live')await updateStream('interrupted');}}catch(err){alert(err.message||'Không thể bật âm thanh. Hãy cho phép trình duyệt sử dụng thiết bị âm thanh.');}}
-  const cam=$('btnToggleCam'),mic=$('btnToggleMic');if(cam)cam.addEventListener('click',toggleCam);if(mic)mic.addEventListener('click',toggleMic);
-  const end=$('btnEndLive');if(end)end.addEventListener('click',async()=>{if(!confirm('Kết thúc phiên phát? Video đã quay sẽ được lưu nếu quá trình ghi hình đang hoạt động.'))return;end.disabled=true;try{const upload=await uploadRecording();if(upload&&!upload.ok)alert(upload.message||'Không lưu được video');await updateStream('ended');window.location.href=base+'/index.php?r=live&id='+encodeURIComponent(liveId);}catch(err){alert(err.message||'Không thể kết thúc phiên');end.disabled=false;}});
-  const reaction=$('btnReaction');if(reaction)reaction.addEventListener('click',async()=>{const fd=new FormData();fd.append('live_id',liveId);const {data}=await pageJson(url('api_live_reaction'),{method:'POST',body:fd});if(data.ok){$('reactionCount').textContent=data.reaction_count||0;reaction.classList.add('is-bumped');setTimeout(()=>reaction.classList.remove('is-bumped'),450);}});
-  const share=$('btnShareLive');if(share)share.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(window.location.href);share.innerHTML='<i class="fa-solid fa-check"></i> Đã sao chép';setTimeout(()=>share.innerHTML='<i class="fa-solid fa-share-nodes"></i> Chia sẻ',1600);}catch(e){window.prompt('Sao chép liên kết phiên phát:',window.location.href);}});
-  async function heartbeat(){if(!liveId||streamState!=='live')return;const {data}=await pageJson(url('api_live_ping')+'&room='+encodeURIComponent(liveId));if(data.ok&&$('liveViewerCount'))$('liveViewerCount').textContent=data.active_viewers||0;}
-  if(status==='live'){heartbeat();setInterval(heartbeat,5000);}connectLiveKit();
-  document.querySelectorAll('[data-session-filter]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-session-filter]').forEach(b=>b.classList.remove('is-active'));btn.classList.add('is-active');const filter=btn.dataset.sessionFilter;document.querySelectorAll('.ss-session').forEach(card=>{card.hidden=filter!=='all'&&card.dataset.status!==filter;});}));
-  document.querySelectorAll('.live-add-to-cart-form,#liveBuyNowForm').forEach(form=>form.addEventListener('submit',async e=>{e.preventDefault();const {data}=await pageJson(form.action,{method:'POST',body:new FormData(form)});if(!data.ok){alert(data.message||'Không thể thêm sản phẩm');return;}const button=form.querySelector('button');if(button){const old=button.innerHTML;button.innerHTML='<i class="fa-solid fa-check"></i> Đã thêm';setTimeout(()=>button.innerHTML=old,1400);}}));
-  let pinnedPresent=!!$('livePinnedProductId');
-  async function refreshPinned(){if(!liveId||isAiReplay)return;const {data}=await pageJson(url('api_live_products')+'&id='+encodeURIComponent(liveId));if(!data.ok||!data.data)return;const p=data.data.pinned_product||null;if(Boolean(p)!==pinnedPresent){window.location.reload();return;}if(!p)return;const name=$('livePinnedName'),brand=$('livePinnedBrand'),price=$('livePinnedPrice'),id=$('livePinnedProductId'),img=$('livePinnedImg');if(name)name.textContent=p.ten_san_pham||'';if(brand)brand.textContent=p.thuong_hieu||'';if(price)price.textContent=new Intl.NumberFormat('vi-VN').format(data.data.gia_uu_dai_live||0)+' đ';if(id)id.value=p.ma_san_pham||'';if(img&&img.tagName==='IMG'&&p.link_hinh_anh)img.src=p.link_hinh_anh;}
-  setInterval(refreshPinned,5000);
-  window.addEventListener('beforeunload',()=>{if(isStudio&&streamState==='live'){const fd=new FormData();fd.append('live_id',liveId);fd.append('state','interrupted');navigator.sendBeacon(url('api_live_stream_state'),fd);}});
-})();
-</script>
+<?php foreach (['live-studio-media.js', 'live-commerce.js'] as $file): ?>
+<script src="<?= h(BASE_URL . '/assets/js/' . $file . '?v=' . filemtime(dirname(__DIR__) . '/public/assets/js/' . $file)) ?>" defer></script>
+<?php endforeach; ?>
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

@@ -2375,10 +2375,11 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     if msg_data:
         profile_data = msg_data.get("customer_profile", {}) or {}
         user_email = msg_data.get("_verified_email") or ""
+    live_public = not user_email and (msg_data or {}).get("interaction_mode") == "live_public"
 
     # A. Kiểm tra xem có đang trong luồng khảo sát da không
     history_list = msg_data.get("conversation_history", []) if msg_data else []
-    if is_in_survey_flow(message, history_list):
+    if not live_public and is_in_survey_flow(message, history_list):
         survey_res = handle_survey_flow(message, history_list, user_email)
         if not survey_res.get("completed"):
             return {
@@ -2493,7 +2494,7 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
     # THỰC THI LUỒNG BẮT BUỘC TRỌNG YẾU (STATE MACHINE REQUIRED):
     # - Chỉ bắt buộc kiểm tra profile (Required) khi intent là PERSONALIZED hoặc PERSONALIZED_PRODUCT.
     # - Các ý định hỏi hoạt chất, sản phẩm cụ thể không cá nhân hóa, hoặc routine chung đều được BYPASS.
-    need_profile = intent in ("PERSONALIZED", "PERSONALIZED_PRODUCT")
+    need_profile = not live_public and intent in ("PERSONALIZED", "PERSONALIZED_PRODUCT")
     
     # Bỏ qua kiểm tra state nếu tin nhắn hiện tại là một quicksend bypass hoặc chitchat đơn giản
     is_bypass = is_keeping_old or "đồng ý cập nhật loại da mới" in message.lower()
@@ -3665,6 +3666,7 @@ def recommendation_profile():
         return jsonify({
             "ok": True,
             "source": "langchain_rag",
+            "degraded": bool(res.get("fallback")) or not products,
             "answer_text": answer_text,
             "products": products,
         })

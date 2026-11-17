@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import re
 import sys
 import time
 import requests
@@ -65,11 +66,15 @@ class AIBeautyAdvisorCoHost:
 
     def on_comment_received(self, user_id: str, user_name: str, text: str, is_vip: bool = False, is_buyer: bool = False):
         """Callback khi có comment mới từ LiveKit Room Chat."""
+        mention = r"(?<![\w@./])@syna(?![\w@]|[.-]\w)"
+        question, count = re.subn(mention, "", text, flags=re.IGNORECASE)
+        if not count or not any(char.isalpha() for char in question):
+            return
         comment = CommentItem(
             comment_id=f"cmt_{int(time.time()*1000)}",
             user_id=user_id,
             user_name=user_name,
-            text=text,
+            text=question.strip(),
             is_vip=is_vip,
             is_buyer=is_buyer
         )
@@ -149,6 +154,9 @@ class AIBeautyAdvisorCoHost:
         self.is_running = False
 
 if __name__ == "__main__":
+    if "--simulate" not in sys.argv[1:]:
+        logger.info("Voice agent is not connected to a room. Use --simulate for the standalone demo.")
+        sys.exit(0)
     # Không gửi chat RAG khi ai-service/voice-service chưa sẵn sàng; thoát mã 1 để
     # Docker (restart: on-failure) tự giãn khoảng cách thử lại thay vì spam.
     if not wait_for_dependencies(
@@ -163,8 +171,7 @@ if __name__ == "__main__":
     
     # Test simulation
     print("--- Simulating LiveKit Co-Host Agent Loop ---")
-    agent.on_comment_received("u1", "Minh Anh", "Da dầu mụn dùng serum Niacinamide này được không chị?", is_vip=True)
-    agent.on_comment_received("u2", "Hoàng Nam", "Hi shop", is_vip=False)
+    agent.on_comment_received("u1", "Minh Anh", "@syna Da dầu mụn dùng serum Niacinamide này được không chị?", is_vip=True)
     
     loop = asyncio.get_event_loop()
     try:
