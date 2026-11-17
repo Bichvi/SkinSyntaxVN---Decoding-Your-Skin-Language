@@ -275,11 +275,15 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
           <div class="ss-chat__head"><div class="ss-chat__title"><h2><i class="fa-solid fa-comments text-success me-2"></i>Trò chuyện trực tiếp</h2><span class="ss-badge ss-badge--<?= $isLive ? 'ready' : 'neutral' ?>" id="chatConnectionState"><?= $isLive ? 'Đang mở' : 'Chưa mở' ?></span></div><div class="ss-chat__tabs" role="tablist"><button type="button" class="is-active" data-chat-mode="all">Tất cả</button><button type="button" data-chat-mode="featured">Nổi bật</button><button type="button" data-chat-mode="qa">Hỏi đáp</button></div></div>
           <div class="ss-chat__body" id="liveChatBox"><div class="ss-chat__notice">Tin nhắn trong phiên sẽ được lưu đúng theo buổi phát.</div></div>
           <div class="ss-chat__footer">
-            <?php if ($canChat): ?>
+            <?php if ($canChat || $isStudio): ?>
+              <?php /* The studio renders the composer before going live (hidden) so the host can chat without reloading, which would drop the broadcast. */ ?>
+              <div id="liveChatComposer" <?= $canChat ? '' : 'hidden' ?>>
               <?php if (!$isStaff && !is_logged_in()): ?><input id="guestNickname" type="text" maxlength="40" placeholder="Tên hiển thị (không bắt buộc)" class="mb-2"><?php endif; ?>
               <form id="liveChatForm" class="ss-chat__row"><input id="liveChatInput" type="text" maxlength="1000" placeholder="Đặt câu hỏi về sản phẩm..." required><button class="ss-btn ss-btn--primary" type="submit" aria-label="Gửi"><i class="fa-solid fa-paper-plane"></i></button></form>
               <div class="ss-chat__helper">Tối đa 5 tin trong 20 giây. Không chia sẻ thông tin nhạy cảm.</div>
-            <?php else: ?><div class="ss-chat__locked"><i class="fa-solid fa-lock me-1"></i> Trò chuyện sẽ mở khi người dẫn bắt đầu.</div><?php endif; ?>
+              </div>
+            <?php endif; ?>
+            <?php if (!$canChat): ?><div class="ss-chat__locked" id="liveChatLocked"><i class="fa-solid fa-lock me-1"></i> Trò chuyện sẽ mở khi người dẫn bắt đầu.</div><?php endif; ?>
           </div>
         </aside>
       </div>
@@ -594,6 +598,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   async function goLive(){
     await updateStream('live');
     wentLive=true;
+    {const composer=$('liveChatComposer'),locked=$('liveChatLocked'),chatState=$('chatConnectionState');if(composer)composer.hidden=false;if(locked)locked.hidden=true;if(chatState){chatState.textContent='Đang mở';chatState.className='ss-badge ss-badge--ready';}}
     hostHeartbeat();
     setConnection('Đang phát trực tiếp','ready');
     renderStudio();
@@ -725,7 +730,9 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   }
   connectLiveKit();
   document.querySelectorAll('[data-session-filter]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-session-filter]').forEach(b=>b.classList.remove('is-active'));btn.classList.add('is-active');const filter=btn.dataset.sessionFilter;document.querySelectorAll('.ss-session').forEach(card=>{card.hidden=filter!=='all'&&card.dataset.status!==filter;});}));
-  document.querySelectorAll('.live-add-to-cart-form,#liveBuyNowForm').forEach(form=>form.addEventListener('submit',async e=>{e.preventDefault();const {data}=await pageJson(form.action,{method:'POST',body:new FormData(form)});if(!data.ok){alert(data.message||'Không thể thêm sản phẩm');return;}const button=form.querySelector('button');if(button){const old=button.innerHTML;button.innerHTML='<i class="fa-solid fa-check"></i> Đã thêm';setTimeout(()=>button.innerHTML=old,1400);}}));
+  // The global add-to-cart handler in layouts/footer.php posts these forms (toast, badge, errors);
+  // posting here too added every live item to the cart twice. Only show the button feedback.
+  let lastCartForm=null;document.querySelectorAll('.live-add-to-cart-form,#liveBuyNowForm').forEach(form=>form.addEventListener('submit',()=>{lastCartForm=form;}));document.addEventListener('skinsyntax:cart-added',()=>{const button=lastCartForm&&lastCartForm.querySelector('button');lastCartForm=null;if(button){const old=button.innerHTML;button.innerHTML='<i class="fa-solid fa-check"></i> Đã thêm';setTimeout(()=>button.innerHTML=old,1400);}});
   let pinnedPresent=!!$('livePinnedProductId');
   async function refreshPinned(){if(!liveId||isAiReplay)return;const {data}=await pageJson(url('api_live_products')+'&id='+encodeURIComponent(liveId));if(!data.ok||!data.data)return;const p=data.data.pinned_product||null;if(Boolean(p)!==pinnedPresent){await reloadPage();return;}if(!p)return;const name=$('livePinnedName'),brand=$('livePinnedBrand'),price=$('livePinnedPrice'),id=$('livePinnedProductId'),img=$('livePinnedImg');if(name)name.textContent=p.ten_san_pham||'';if(brand)brand.textContent=p.thuong_hieu||'';if(price)price.textContent=new Intl.NumberFormat('vi-VN').format(data.data.gia_uu_dai_live||0)+' đ';if(id)id.value=p.ma_san_pham||'';if(img&&img.tagName==='IMG'&&p.link_hinh_anh)img.src=p.link_hinh_anh;}
   window.addEventListener('beforeunload',()=>{if(isStudio&&streamState==='live'){const fd=new FormData();fd.append('live_id',liveId);fd.append('state','interrupted');navigator.sendBeacon(url('api_live_stream_state'),fd);}});
