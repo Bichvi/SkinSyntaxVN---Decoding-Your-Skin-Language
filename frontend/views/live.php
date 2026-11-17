@@ -76,7 +76,15 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   .ss-studio__live{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}.ss-studio__onair{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:#c3344d;font-size:16px}.ss-studio__onair i{font-size:10px}.ss-studio__onair span{font-variant-numeric:tabular-nums;color:var(--ss-ink)}
   .ss-studio__end{min-height:44px;border:1px solid #e23b4e;background:#fff;color:#c3344d;border-radius:12px;font-weight:700;padding:8px 18px;cursor:pointer}.ss-studio__end:hover:not(:disabled){background:#fdecef}.ss-studio__end:disabled{opacity:.6}
   .ss-device__btn:focus-visible,.ss-studio__golive:focus-visible,.ss-studio__end:focus-visible{outline:3px solid #7bd39a;outline-offset:2px}
-  @media (max-width:576px){.ss-studio__devices{grid-template-columns:1fr}.ss-studio__golive,.ss-studio__end{width:100%}.ss-studio__live{flex-direction:column;align-items:stretch}.ss-device{flex-wrap:wrap}.ss-device__btn{width:100%}.ss-preview-tag{left:12px;top:56px}}
+  @media (max-width:576px){.ss-studio__devices{grid-template-columns:1fr}.ss-studio__golive,.ss-studio__end{width:100%}.ss-studio__live{flex-direction:column;align-items:stretch}.ss-device{flex-wrap:wrap}.ss-device__btn{width:100%}.ss-preview-tag{left:12px;top:auto;bottom:70px}}
+  .ss-camoff{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0a1711;color:#cfe6d8;font-weight:700;font-size:15px;text-align:center;padding:16px}.ss-camoff[hidden]{display:none}.ss-camoff i{font-size:28px;opacity:.8}
+  .ss-player__chip{position:absolute;z-index:6;left:16px;bottom:72px;display:inline-flex;align-items:center;gap:7px;max-width:calc(100% - 32px);background:#fff4d6;color:#7a4a00;border:1px solid #b7791f;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:800;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.35)}.ss-player__chip[hidden]{display:none}
+  .ss-preview-tag.is-paused{background:#b7791f;border-color:#b7791f}.ss-preview-tag.is-paused i{color:#fff}
+  .ss-studio__status{display:flex;flex-direction:column;align-items:flex-start;gap:6px}.ss-studio__onair.is-paused{color:var(--ss-muted);font-size:13px}
+  .ss-studio__paused{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:#b7791f;background:#fff4d6;border:1px solid #e8c880;border-radius:999px;padding:4px 12px;font-size:15px}.ss-studio__paused[hidden]{display:none}.ss-studio__paused span{font-variant-numeric:tabular-nums}
+  .ss-studio__actions{display:flex;gap:10px;flex-wrap:wrap}
+  .ss-studio__pause{min-height:44px;border:1px solid #b7791f;background:#fff4d6;color:#7a4a00;border-radius:12px;font-weight:700;padding:8px 18px;cursor:pointer}.ss-studio__pause:hover:not(:disabled){background:#ffe9b0}.ss-studio__pause:disabled{opacity:.6;cursor:not-allowed}.ss-studio__pause.is-resume{background:#2D6A4F;border-color:#2D6A4F;color:#fff}.ss-studio__pause.is-resume:hover:not(:disabled){background:#183B2B}.ss-studio__pause:focus-visible{outline:3px solid #7bd39a;outline-offset:2px}
+  @media (max-width:576px){.ss-studio__actions{flex-direction:column}.ss-studio__pause,.ss-studio__end{width:100%}.ss-player__chip{left:12px;bottom:64px;font-size:12px}}
   @media (max-width:1050px){.ss-live-grid{grid-template-columns:minmax(0,1fr)}.ss-chat{position:static}.ss-chat__body{height:330px}.ss-session-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media (max-width:620px){.ss-live-wrap{padding:18px 12px 0}.ss-live-hero{padding:22px 0}.ss-live-hero .container{padding-left:16px;padding-right:16px}.ss-player{border-radius:12px}.ss-product__body{align-items:flex-start}.ss-product__cta{width:100%;margin-top:10px}.ss-product__body{flex-wrap:wrap}.ss-product__info{flex-basis:calc(100% - 94px)}.ss-product__cta{margin-left:92px}.ss-product__cta .ss-btn{flex:1}.ss-session-grid{grid-template-columns:1fr}.ss-session__thumb{height:170px}.ss-player__actions{width:100%;margin-left:0}.ss-player__top{align-items:flex-start}.ss-player__bottom{padding:12px;padding-top:38px}.ss-chat__body{height:310px}}
 </style>
@@ -175,6 +183,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
                 </p>
               </div>
             </div>
+            <?php if ($isStudio): ?><div class="ss-camoff" id="camOffOverlay" hidden><i class="fa-solid fa-video-slash" id="camOffIcon"></i><span id="camOffText">Camera đang tắt</span></div><span class="ss-player__chip" id="micOffChip" role="status" aria-live="polite" hidden><i class="fa-solid fa-microphone-slash"></i> Micro đang tắt — người xem không nghe thấy bạn</span><?php elseif (!$isReplayView): ?><span class="ss-player__chip" id="hostMicChip" role="status" aria-live="polite" hidden><i class="fa-solid fa-microphone-slash"></i> Người dẫn đang tắt micro</span><?php endif; ?>
             <?php if ($isStudio): ?><span class="ss-preview-tag" id="previewTag" hidden><i class="fa-solid fa-circle"></i> <span id="previewTagText">XEM TRƯỚC · Chưa phát</span></span><?php endif; ?>
             <div class="ss-player__top">
               <span class="ss-badge ss-badge--<?= h($statusTone) ?>" id="liveStatusBadge"><i class="fa-solid fa-circle"></i> <span id="liveStatusLabel"><?= h($statusLabel) ?></span></span>
@@ -223,8 +232,14 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
                 <p class="ss-studio__error" id="studioGoError" role="alert" hidden></p>
               </div>
               <div class="ss-studio__live" id="studioGoLive" <?= $isLive ? '' : 'hidden' ?>>
-                <span class="ss-studio__onair"><i class="fa-solid fa-circle"></i> Đang phát <span id="studioTimer" aria-live="off">00:00</span></span>
-                <button type="button" id="btnEndLive" class="ss-studio__end"><i class="fa-solid fa-stop"></i> Kết thúc phiên phát</button>
+                <div class="ss-studio__status">
+                  <span class="ss-studio__onair" id="studioOnAir"><i class="fa-solid fa-circle"></i> <b id="studioStateLabel" aria-live="polite">Đang phát</b> <span id="studioTimer" aria-live="off">00:00</span></span>
+                  <span class="ss-studio__paused" id="studioPausedInfo" aria-live="polite" hidden><i class="fa-solid fa-pause"></i> Tạm dừng <span id="studioPauseTimer" aria-live="off">00:00</span></span>
+                </div>
+                <div class="ss-studio__actions">
+                  <button type="button" id="btnPauseLive" class="ss-studio__pause" aria-pressed="false"><i class="fa-solid fa-pause"></i> Tạm dừng</button>
+                  <button type="button" id="btnEndLive" class="ss-studio__end"><i class="fa-solid fa-stop"></i> Kết thúc phiên phát</button>
+                </div>
               </div>
             </div>
           </section>
@@ -356,7 +371,8 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
       if(!data.ok&&response.status===409){
         // Server says the session is no longer live (ended or interrupted): stop heartbeats.
         streamState=data.state||'interrupted';
-        setConnection('Phiên phát đã bị gián đoạn, hãy bật lại camera và micro','warning');
+        setConnection('Phiên phát đã bị gián đoạn, hãy bấm Bắt đầu phát để phát tiếp','warning');
+        if(paused){paused=false;pausedAt=0;if(recording&&recording.state==='paused'){try{recording.resume();}catch(e){}}}
         renderStudio();
       }else if(!data.ok){
         // Transient error (5xx, network, expired token): keep streaming, retry on the next tick.
@@ -384,7 +400,8 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
         recording=new MediaRecorder(recordingStream,{mimeType:mime,videoBitsPerSecond:2500000});
         recording.ondataavailable=e=>{if(e.data&&e.data.size)recordingChunks.push(e.data)};
         recording.start(1000);
-        recTimer=setInterval(()=>{flushRecording(false);},10000);
+        // While paused the recorder emits nothing: skip the flush so no empty chunk is uploaded.
+        recTimer=setInterval(()=>{if(recording&&recording.state==='recording')flushRecording(false);},10000);
       }catch(err){console.warn('Recording unavailable',err);recording=null;}
     }
   }
@@ -454,10 +471,35 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
     }
     btn.hidden=false;
   }
-  async function connectLiveKit(){const canConnect=status==='live'||(isStudio&&['ready','interrupted'].includes(status));if(!canConnect){setConnection('Chưa bắt đầu phát','neutral');return;}if(!window.LivekitClient){setConnection('Chưa mở được phần phát video','warning');if(waitMsg)waitMsg.textContent='Không tải được phần phát video. Vui lòng thử lại.';return;}try{const {response,data}=await pageJson(url('api_live_token')+'&id='+encodeURIComponent(liveId));if(!response.ok||!data.ok||!data.data||!data.data.token){setConnection(data.message||'Chưa có kết nối phát','warning');return;}const info=data.data;publisherToken=info.participant_token||'';livekitRoom=new LivekitClient.Room({adaptiveStream:true,dynacast:true});livekitRoom.on(LivekitClient.RoomEvent.AudioPlaybackStatusChanged,ensureAudioButton);livekitRoom.on(LivekitClient.RoomEvent.ConnectionStateChanged,state=>{if(state===LivekitClient.ConnectionState.Connected)setConnection('Đã kết nối','ready');else if(state===LivekitClient.ConnectionState.Reconnecting)setConnection('Đang kết nối lại','warning');else if(state===LivekitClient.ConnectionState.Disconnected)setConnection('Đã ngắt kết nối','ended');});livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed,(track)=>{if(track.kind===LivekitClient.Track.Kind.Video){track.attach(remote);remote.hidden=false;if(wait)wait.hidden=true;}else if(track.kind===LivekitClient.Track.Kind.Audio)track.attach(audio);});livekitRoom.on(LivekitClient.RoomEvent.TrackUnsubscribed,(track)=>{track.detach();if(track.kind===LivekitClient.Track.Kind.Video){remote.hidden=true;if(wait)wait.hidden=false;}});livekitRoom.on(LivekitClient.RoomEvent.DataReceived,(payload)=>{try{const packet=JSON.parse(new TextDecoder().decode(payload));if(packet.type==='chat'&&packet.message)renderMessage(packet.message);}catch(e){}});await livekitRoom.connect(info.server_url,info.participant_token);ensureAudioButton();if(isStudio&&info.can_publish)setConnection('Có thể bắt đầu phát','ready');}catch(err){console.error(err);setConnection('Không kết nối được','danger');if(waitMsg)waitMsg.textContent='Không thể kết nối máy chủ phát. Vui lòng thử lại hoặc liên hệ quản trị viên.';}}
+  // ---- Viewer: host mute / pause state (derived from the host's muted tracks, plus the stream_paused data message) ----
+  const waitTitle=$('liveWaitingTitle'), hostMicChip=$('hostMicChip'), waitIcon=wait?wait.querySelector('.ss-player__waiting-icon i'):null;
+  const waitOrig={title:waitTitle?waitTitle.textContent:'',msg:waitMsg?waitMsg.textContent:'',icon:waitIcon?waitIcon.className:''};
+  let remoteVideoPub=null, remoteAudioPub=null, hostPausedFlag=false, hostOverlay=false;
+  function applyHostState(){
+    if(isStudio||!wait)return;
+    const vMuted=!!(remoteVideoPub&&remoteVideoPub.isMuted), aMuted=!!(remoteAudioPub&&remoteAudioPub.isMuted);
+    const mode=(hostPausedFlag||(vMuted&&aMuted))?'paused':(vMuted?'cam':'');
+    if(mode){
+      if(waitTitle)waitTitle.textContent=mode==='paused'?'Phiên phát đang tạm dừng':'Người dẫn đang tắt camera';
+      if(waitMsg)waitMsg.textContent=mode==='paused'?'Người dẫn sẽ quay lại ngay, bạn đừng rời đi nhé.':'Âm thanh vẫn đang phát bình thường.';
+      if(waitIcon)waitIcon.className='fa-solid '+(mode==='paused'?'fa-pause':'fa-video-slash');
+      wait.hidden=false;hostOverlay=true;
+    }else if(hostOverlay){
+      hostOverlay=false;
+      if(waitTitle)waitTitle.textContent=waitOrig.title;
+      if(waitMsg)waitMsg.textContent=waitOrig.msg;
+      if(waitIcon)waitIcon.className=waitOrig.icon;
+      wait.hidden=!!remoteVideoPub;
+    }
+    if(hostMicChip)hostMicChip.hidden=!(aMuted&&!mode);
+  }
+  async function connectLiveKit(){const canConnect=status==='live'||(isStudio&&['ready','interrupted'].includes(status));if(!canConnect){setConnection('Chưa bắt đầu phát','neutral');return;}if(!window.LivekitClient){setConnection('Chưa mở được phần phát video','warning');if(waitMsg)waitMsg.textContent='Không tải được phần phát video. Vui lòng thử lại.';return;}try{const {response,data}=await pageJson(url('api_live_token')+'&id='+encodeURIComponent(liveId));if(!response.ok||!data.ok||!data.data||!data.data.token){setConnection(data.message||'Chưa có kết nối phát','warning');return;}const info=data.data;publisherToken=info.participant_token||'';livekitRoom=new LivekitClient.Room({adaptiveStream:true,dynacast:true});livekitRoom.on(LivekitClient.RoomEvent.AudioPlaybackStatusChanged,ensureAudioButton);livekitRoom.on(LivekitClient.RoomEvent.ConnectionStateChanged,state=>{if(state===LivekitClient.ConnectionState.Connected)setConnection('Đã kết nối','ready');else if(state===LivekitClient.ConnectionState.Reconnecting)setConnection('Đang kết nối lại','warning');else if(state===LivekitClient.ConnectionState.Disconnected)setConnection('Đã ngắt kết nối','ended');});livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed,(track,publication)=>{if(track.kind===LivekitClient.Track.Kind.Video){track.attach(remote);remote.hidden=false;remoteVideoPub=publication||null;if(wait)wait.hidden=true;}else if(track.kind===LivekitClient.Track.Kind.Audio){track.attach(audio);remoteAudioPub=publication||null;}applyHostState();});livekitRoom.on(LivekitClient.RoomEvent.TrackUnsubscribed,(track)=>{track.detach();if(track.kind===LivekitClient.Track.Kind.Video){remoteVideoPub=null;remote.hidden=true;if(wait)wait.hidden=false;}else if(track.kind===LivekitClient.Track.Kind.Audio)remoteAudioPub=null;applyHostState();});livekitRoom.on(LivekitClient.RoomEvent.TrackMuted,()=>{applyHostState();});livekitRoom.on(LivekitClient.RoomEvent.TrackUnmuted,()=>{hostPausedFlag=false;applyHostState();});livekitRoom.on(LivekitClient.RoomEvent.DataReceived,(payload)=>{try{const packet=JSON.parse(new TextDecoder().decode(payload));if(packet.type==='chat'&&packet.message)renderMessage(packet.message);else if(packet.type==='stream_paused'){hostPausedFlag=true;applyHostState();}else if(packet.type==='stream_resumed'){hostPausedFlag=false;applyHostState();}}catch(e){}});await livekitRoom.connect(info.server_url,info.participant_token);ensureAudioButton();if(isStudio&&info.can_publish)setConnection('Có thể bắt đầu phát','ready');}catch(err){console.error(err);setConnection('Không kết nối được','danger');if(waitMsg)waitMsg.textContent='Không thể kết nối máy chủ phát. Vui lòng thử lại hoặc liên hệ quản trị viên.';}}
   // ---- Studio control panel ----
   const camState=$('camState'),micState=$('micState'),camBtn=$('btnToggleCam'),micBtn=$('btnToggleMic'),goBtn=$('btnGoLive'),goPre=$('studioGoPre'),goLiveBox=$('studioGoLive'),goErr=$('studioGoError'),goHelp=$('studioHelp'),liveTimer=$('studioTimer'),meterBar=$('micMeterBar'),previewTag=$('previewTag'),previewTagText=$('previewTagText');
+  const camOffOverlay=$('camOffOverlay'),micOffChip=$('micOffChip'),pauseBtn=$('btnPauseLive'),onAirEl=$('studioOnAir'),stateLabel=$('studioStateLabel'),pausedInfo=$('studioPausedInfo'),pauseTimerEl=$('studioPauseTimer');
   let wentLive=(status==='live'), busyCam=false, busyMic=false, goBusy=false, camErr='', micErr='', liveStartedAt=0, meter=null;
+  // Mute state of the published tracks (tracks stay published; mute never interrupts the session) and pause state.
+  let camMuted=false, micMuted=false, paused=false, pausedAt=0, pauseBusy=false, prevMute={cam:false,mic:false};
   function deviceError(err,noun){
     const name=(err&&err.name)||'';
     if(name==='NotAllowedError'||name==='SecurityError')return 'Trình duyệt đang chặn '+noun+'. Bấm biểu tượng ổ khóa cạnh thanh địa chỉ, cho phép Camera và Micro rồi thử lại.';
@@ -468,30 +510,58 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
     return (err&&err.message)||('Không thể bật '+noun+'.');
   }
   function fmtElapsed(ms){const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor((t%3600)/60),sec=t%60,p=n=>String(n).padStart(2,'0');return (h>0?p(h)+':':'')+p(m)+':'+p(sec);}
-  function renderTile(stateEl,btn,busy,hasTrack,err,onLabel,offLabel){
+  function renderTile(stateEl,btn,busy,hasTrack,muted,locked,err,onLabel,offLabel,mutedText){
+    const active=hasTrack&&!muted;
     if(stateEl){
-      if(busy){stateEl.className='ss-device__state';stateEl.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> '+(hasTrack?'Đang tắt…':'Đang bật…');}
+      if(busy){stateEl.className='ss-device__state';stateEl.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> '+(active?'Đang tắt…':'Đang bật…');}
       else if(err){stateEl.className='ss-device__state is-error';stateEl.textContent=err;}
-      else if(hasTrack){stateEl.className='ss-device__state is-on';stateEl.textContent='Đang hoạt động';}
+      else if(active){stateEl.className='ss-device__state is-on';stateEl.textContent='Đang hoạt động';}
+      else if(hasTrack){stateEl.className='ss-device__state';stateEl.textContent=mutedText;}
       else{stateEl.className='ss-device__state';stateEl.textContent='Đang tắt';}
     }
-    if(btn){btn.disabled=busy;btn.classList.toggle('is-on',hasTrack&&!busy);btn.textContent=hasTrack?offLabel:onLabel;btn.setAttribute('aria-pressed',hasTrack?'true':'false');}
+    if(btn){btn.disabled=busy||locked;btn.classList.toggle('is-on',active&&!busy);btn.textContent=active?offLabel:onLabel;btn.setAttribute('aria-pressed',active?'true':'false');}
   }
   function renderStudio(){
     if(!isStudio)return;
-    renderTile(camState,camBtn,busyCam,!!localVideoTrack,camErr,'Bật camera','Tắt camera');
-    renderTile(micState,micBtn,busyMic,!!localAudioTrack,micErr,'Bật micro','Tắt micro');
     const isLiveNow=streamState==='live';
-    if(goBtn){goBtn.disabled=goBusy||busyCam||busyMic||!(localVideoTrack&&localAudioTrack);goBtn.innerHTML=goBusy?'<i class="fa-solid fa-circle-notch fa-spin"></i> Đang bắt đầu…':'<i class="fa-solid fa-video"></i> Bắt đầu phát';}
+    if(!isLiveNow&&paused){paused=false;pausedAt=0;}
+    renderTile(camState,camBtn,busyCam,!!localVideoTrack,camMuted,paused||pauseBusy,camErr,'Bật camera','Tắt camera','Đã tắt (người xem không thấy hình)');
+    renderTile(micState,micBtn,busyMic,!!localAudioTrack,micMuted,paused||pauseBusy,micErr,'Bật micro','Tắt micro','Đã tắt (người xem không nghe thấy tiếng)');
+    const bothOn=!!(localVideoTrack&&localAudioTrack&&!camMuted&&!micMuted);
+    if(goBtn){goBtn.disabled=goBusy||busyCam||busyMic||!bothOn;goBtn.innerHTML=goBusy?'<i class="fa-solid fa-circle-notch fa-spin"></i> Đang bắt đầu…':'<i class="fa-solid fa-video"></i> Bắt đầu phát';}
     if(goPre)goPre.hidden=isLiveNow;
     if(goLiveBox)goLiveBox.hidden=!isLiveNow;
-    if(goHelp)goHelp.textContent=wentLive&&!isLiveNow?'Phiên bị gián đoạn. Bật lại cả camera và micro để phát tiếp.':'Bật camera và micro, kiểm tra khung xem trước rồi bấm Bắt đầu phát.';
-    if(previewTag){previewTag.hidden=!localVideoTrack;previewTag.classList.toggle('is-live',isLiveNow);if(previewTagText)previewTagText.textContent=isLiveNow?'TRỰC TIẾP':'XEM TRƯỚC · Chưa phát';}
-    if(localVideoTrack){local.hidden=false;if(wait)wait.hidden=true;}else{local.hidden=true;if(wait)wait.hidden=false;}
+    if(goHelp)goHelp.textContent=wentLive&&!isLiveNow?'Phiên bị gián đoạn. Bật camera và micro (nếu đang tắt) rồi bấm Bắt đầu phát để phát tiếp.':'Bật camera và micro, kiểm tra khung xem trước rồi bấm Bắt đầu phát.';
+    // Only before going live: once live, the status pill (ĐANG PHÁT / TẠM DỪNG) says it already.
+    if(previewTag){previewTag.hidden=!localVideoTrack||isLiveNow;previewTag.classList.toggle('is-live',isLiveNow&&!paused);previewTag.classList.toggle('is-paused',paused);if(previewTagText)previewTagText.textContent=paused?'TẠM DỪNG':(isLiveNow?'TRỰC TIẾP':'XEM TRƯỚC · Chưa phát');}
+    const hasTracks=!!(localVideoTrack||localAudioTrack);
+    if(localVideoTrack){local.hidden=false;}else{local.hidden=true;}
+    if(wait)wait.hidden=hasTracks;
+    if(camOffOverlay)camOffOverlay.hidden=!((localVideoTrack&&camMuted)||(!localVideoTrack&&localAudioTrack));
+    const camOffText=$('camOffText'),camOffIcon=$('camOffIcon');
+    if(camOffText)camOffText.textContent=paused?'Đang tạm dừng · người xem thấy màn hình chờ':'Camera đang tắt';
+    if(camOffIcon)camOffIcon.className='fa-solid '+(paused?'fa-pause':'fa-video-slash');
+    // The status pill on the player was rendered server-side ("Sẵn sàng phát") and never followed the studio.
+    const stBadge=$('liveStatusBadge'),stLabel=$('liveStatusLabel');
+    if(stBadge&&stLabel&&hasTracks){
+      const st=isLiveNow?(paused?['TẠM DỪNG','warning']:['ĐANG PHÁT','live']):['Sẵn sàng phát','ready'];
+      stLabel.textContent=st[0];stBadge.className='ss-badge ss-badge--'+st[1];
+    }
+    if(micOffChip)micOffChip.hidden=!(isLiveNow&&localAudioTrack&&micMuted&&!paused);
     if(isLiveNow&&!liveStartedAt)liveStartedAt=Date.now();
     if(liveTimer&&isLiveNow)liveTimer.textContent=fmtElapsed(Date.now()-liveStartedAt);
+    if(onAirEl)onAirEl.classList.toggle('is-paused',paused);
+    if(stateLabel)stateLabel.textContent=paused?'Tổng thời gian phát':'Đang phát';
+    if(pausedInfo)pausedInfo.hidden=!paused;
+    if(pauseTimerEl&&paused)pauseTimerEl.textContent=fmtElapsed(Date.now()-pausedAt);
+    if(pauseBtn){
+      pauseBtn.disabled=pauseBusy||goBusy||!isLiveNow||!hasTracks;
+      pauseBtn.classList.toggle('is-resume',paused);
+      pauseBtn.setAttribute('aria-pressed',paused?'true':'false');
+      pauseBtn.innerHTML=pauseBusy?'<i class="fa-solid fa-circle-notch fa-spin"></i> Đang xử lý…':(paused?'<i class="fa-solid fa-play"></i> Tiếp tục phát':'<i class="fa-solid fa-pause"></i> Tạm dừng');
+    }
   }
-  if(isStudio)setInterval(()=>{if(streamState==='live'&&liveTimer&&liveStartedAt)liveTimer.textContent=fmtElapsed(Date.now()-liveStartedAt);},1000);
+  if(isStudio)setInterval(()=>{if(streamState==='live'&&liveTimer&&liveStartedAt)liveTimer.textContent=fmtElapsed(Date.now()-liveStartedAt);if(paused&&pauseTimerEl&&pausedAt)pauseTimerEl.textContent=fmtElapsed(Date.now()-pausedAt);},1000);
   function setGoError(text){if(!goErr)return;goErr.textContent=text||'';goErr.hidden=!text;}
   function stopMeter(){
     if(!meter)return;
@@ -514,7 +584,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
       const tick=()=>{
         if(m.stopped)return;
         analyser.getByteTimeDomainData(data);
-        let peak=0;for(let i=0;i<data.length;i++){const v=Math.abs(data[i]-128)/128;if(v>peak)peak=v;}
+        let peak=0;if(!micMuted)for(let i=0;i<data.length;i++){const v=Math.abs(data[i]-128)/128;if(v>peak)peak=v;}
         meterBar.style.width=Math.min(100,Math.round(peak*150))+'%';
         m.raf=requestAnimationFrame(tick);
       };
@@ -528,70 +598,99 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
     setConnection('Đang phát trực tiếp','ready');
     renderStudio();
   }
-  async function afterDeviceChange(){
-    if(streamState==='live'){renderStudio();return;}
-    if(localVideoTrack&&localAudioTrack){
-      if(wentLive){
-        // Auto-resume: this page was already live and a device was switched off and on again.
-        try{setGoError('');await goLive();}catch(err){setGoError(err.message||'Không thể tiếp tục phát');setConnection('Sẵn sàng, hãy bấm Bắt đầu phát','ready');}
-      }else setConnection('Sẵn sàng, hãy bấm Bắt đầu phát','ready');
-    }else if(wentLive)setConnection('Phiên phát tạm gián đoạn, hãy bật lại camera và micro','warning');
-    else setConnection('Hãy bật cả camera và micro','ready');
+  function afterDeviceChange(){
+    // Muting never interrupts a live session; this only refreshes the pre-live hints.
+    if(streamState!=='live'){
+      if(localVideoTrack&&localAudioTrack&&!camMuted&&!micMuted)setConnection('Sẵn sàng, hãy bấm Bắt đầu phát','ready');
+      else if(localVideoTrack&&localAudioTrack)setConnection('Hãy bật cả camera và micro','ready');
+      else if(wentLive)setConnection('Phiên phát đang gián đoạn, hãy bật camera và micro rồi bấm Bắt đầu phát','warning');
+      else setConnection('Hãy bật cả camera và micro','ready');
+    }
     renderStudio();
   }
   async function toggleCam(){
-    if(!isStudio||busyCam||!camBtn)return;
+    if(!isStudio||busyCam||paused||pauseBusy||!camBtn)return;
     busyCam=true;camErr='';setGoError('');renderStudio();
     try{
       if(!localVideoTrack){
         if(!livekitRoom||livekitRoom.state!==LivekitClient.ConnectionState.Connected){const e=new Error('not connected');e.name='NotConnected';throw e;}
-        const track=await LivekitClient.createLocalVideoTrack();
-        try{await livekitRoom.localParticipant.publishTrack(track);}catch(e){track.stop();throw e;}
-        localVideoTrack=track;track.attach(local);addTrackToRecording(track);
+        // Acquire the camera ourselves and wrap it as a user-provided track: LiveKit then only
+        // disables it on mute instead of stopping it and re-acquiring a NEW MediaStreamTrack on
+        // unmute, which would leave the MediaRecorder holding a dead track (frozen replay).
+        const camStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}});
+        const track=new LivekitClient.LocalVideoTrack(camStream.getVideoTracks()[0],undefined,true);
+        try{await livekitRoom.localParticipant.publishTrack(track,{source:LivekitClient.Track.Source.Camera});}catch(e){track.stop();throw e;}
+        localVideoTrack=track;camMuted=false;track.attach(local);addTrackToRecording(track);
+      }else if(camMuted){
+        await localVideoTrack.unmute();camMuted=false;
       }else{
-        const track=localVideoTrack;
-        await livekitRoom.localParticipant.unpublishTrack(track);
-        track.stop();try{track.detach(local);}catch(e){}local.srcObject=null;localVideoTrack=null;
-        if(streamState==='live')await updateStream('interrupted');
+        await localVideoTrack.mute();camMuted=true;
       }
     }catch(err){camErr=deviceError(err,'camera');}
     finally{busyCam=false;}
-    renderStudio();
-    await afterDeviceChange();
+    afterDeviceChange();
   }
   async function toggleMic(){
-    if(!isStudio||busyMic||!micBtn)return;
+    if(!isStudio||busyMic||paused||pauseBusy||!micBtn)return;
     busyMic=true;micErr='';setGoError('');renderStudio();
     try{
       if(!localAudioTrack){
         if(!livekitRoom||livekitRoom.state!==LivekitClient.ConnectionState.Connected){const e=new Error('not connected');e.name='NotConnected';throw e;}
         const track=await LivekitClient.createLocalAudioTrack();
         try{await livekitRoom.localParticipant.publishTrack(track);}catch(e){track.stop();throw e;}
-        localAudioTrack=track;addTrackToRecording(track);startMeter(track);
+        localAudioTrack=track;micMuted=false;addTrackToRecording(track);startMeter(track);
+      }else if(micMuted){
+        await localAudioTrack.unmute();micMuted=false;
       }else{
-        const track=localAudioTrack;
-        stopMeter();
-        await livekitRoom.localParticipant.unpublishTrack(track);
-        track.stop();localAudioTrack=null;
-        if(streamState==='live')await updateStream('interrupted');
+        await localAudioTrack.mute();micMuted=true;
       }
     }catch(err){micErr=deviceError(err,'micro');}
     finally{busyMic=false;}
-    renderStudio();
-    await afterDeviceChange();
+    afterDeviceChange();
+  }
+  async function sendHostSignal(type){
+    // Tells viewers right away; viewers also derive the same state from the muted tracks (late joiners).
+    try{
+      if(livekitRoom&&livekitRoom.state===LivekitClient.ConnectionState.Connected)await livekitRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({type})),{reliable:true});
+    }catch(err){console.warn('LiveKit signal failed',err);}
+  }
+  async function togglePause(){
+    if(!isStudio||pauseBusy||streamState!=='live'||busyCam||busyMic)return;
+    pauseBusy=true;setGoError('');renderStudio();
+    try{
+      if(!paused){
+        prevMute={cam:camMuted,mic:micMuted};
+        if(localVideoTrack&&!camMuted){await localVideoTrack.mute();camMuted=true;}
+        if(localAudioTrack&&!micMuted){await localAudioTrack.mute();micMuted=true;}
+        if(recording&&recording.state==='recording'){try{recording.pause();}catch(e){console.warn('Recorder pause failed',e);}flushRecording(false);}
+        paused=true;pausedAt=Date.now();
+        setConnection('Đã tạm dừng phát','warning');
+        await sendHostSignal('stream_paused');
+      }else{
+        if(recording&&recording.state==='paused'){try{recording.resume();}catch(e){console.warn('Recorder resume failed',e);}}
+        // Restore exactly what was on before the pause.
+        if(localVideoTrack&&!prevMute.cam){await localVideoTrack.unmute();camMuted=false;}
+        if(localAudioTrack&&!prevMute.mic){await localAudioTrack.unmute();micMuted=false;}
+        paused=false;pausedAt=0;
+        setConnection('Đang phát trực tiếp','ready');
+        await sendHostSignal('stream_resumed');
+      }
+    }catch(err){setConnection(err.message||'Không thể đổi trạng thái tạm dừng, hãy thử lại.','warning');}
+    finally{pauseBusy=false;renderStudio();}
   }
   async function onGoLive(){
-    if(goBusy||!(localVideoTrack&&localAudioTrack)||streamState==='live')return;
+    if(goBusy||!(localVideoTrack&&localAudioTrack&&!camMuted&&!micMuted)||streamState==='live')return;
     goBusy=true;setGoError('');renderStudio();
     try{await goLive();}catch(err){setGoError(err.message||'Không thể bắt đầu phát, hãy thử lại.');}
     finally{goBusy=false;renderStudio();}
   }
   if(camBtn)camBtn.addEventListener('click',toggleCam);if(micBtn)micBtn.addEventListener('click',toggleMic);if(goBtn)goBtn.addEventListener('click',onGoLive);
+  if(pauseBtn)pauseBtn.addEventListener('click',togglePause);
   renderStudio();
   const end=$('btnEndLive');
   if(end)end.addEventListener('click',async()=>{
     if(!confirm('Kết thúc phiên phát? Video đã quay sẽ được lưu nếu quá trình ghi hình đang hoạt động.'))return;
-    end.disabled=true;
+    end.disabled=true;if(pauseBtn)pauseBtn.disabled=true;
     ending=true;
     try{
       const hadRecording=!!recording;
@@ -602,7 +701,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
       if(upload&&!upload.ok)alert(upload.message||'Không lưu được video');
       if(livekitRoom){try{await livekitRoom.disconnect();}catch(e){}}
       window.location.href=base+'/index.php?r=live&id='+encodeURIComponent(liveId);
-    }catch(err){alert(err.message||'Không thể kết thúc phiên');end.disabled=false;ending=false;}
+    }catch(err){alert(err.message||'Không thể kết thúc phiên');end.disabled=false;ending=false;renderStudio();}
   });
   const reaction=$('btnReaction');if(reaction)reaction.addEventListener('click',async()=>{const fd=new FormData();fd.append('live_id',liveId);const {data}=await pageJson(url('api_live_reaction'),{method:'POST',body:fd});if(data.ok){$('reactionCount').textContent=data.reaction_count||0;reaction.classList.add('is-bumped');setTimeout(()=>reaction.classList.remove('is-bumped'),450);}});
   const share=$('btnShareLive');if(share)share.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(window.location.href);share.innerHTML='<i class="fa-solid fa-check"></i> Đã sao chép';setTimeout(()=>share.innerHTML='<i class="fa-solid fa-share-nodes"></i> Chia sẻ',1600);}catch(e){window.prompt('Sao chép liên kết phiên phát:',window.location.href);}});
