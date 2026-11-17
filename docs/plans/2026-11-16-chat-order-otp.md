@@ -18,7 +18,7 @@ không bắt được "ghi nhận đơn". Kết quả: không có đơn nháp, k
    kiểm mã rồi mới tạo đơn. Thiếu mã hoặc sai mã thì không tạo đơn.
 4. OTP: hết hạn 5 phút, tối đa 5 lần nhập sai, gửi lại sau 60 giây, tối đa 3 lần gửi / 10 phút / khách, dùng một lần,
    gắn với đúng khách và đúng đơn nháp; lưu dạng SHA-256 trong session, không bao giờ ghi mã vào log (trừ `MAIL_DEMO_MODE=1`).
-5. Gửi mail qua SMTP (`SMTP_HOST/PORT/USER/PASS/ENCRYPTION` đã có trong `.env`), không có SMTP thì dùng `mail()`.
+5. Gửi mail qua SMTP (`SMTP_HOST/PORT/USER/PASS/ENCRYPTION`; đính chính: trong `.env` máy dev các biến host/user/pass đang rỗng), không có SMTP thì dùng `mail()`.
    `MAIL_DEMO_MODE=1` thì không gửi, ghi mã ra log PHP để demo.
 
 ## Phần A: Flask (`ai-service-flask/agent_graph/`)

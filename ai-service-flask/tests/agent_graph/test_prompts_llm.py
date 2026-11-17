@@ -26,7 +26,7 @@ TOOLS = {
 def test_prompt_version_set():
     from agent_graph.prompts import PROMPT_VERSION
 
-    assert PROMPT_VERSION == "2026-11-09.2"
+    assert PROMPT_VERSION == "2026-11-17.1"
 
 
 def test_agent_prompt_has_no_create_order_promise():

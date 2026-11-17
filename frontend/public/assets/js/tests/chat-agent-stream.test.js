@@ -377,7 +377,9 @@ test('confirming draft cards stay disabled across re-render and result targets t
   resolveConfirm({ json: () => Promise.resolve({ ok: true, status: 'created', order_id: 43 }) });
   await flush();
   assert.match(remountedNode.textContent, /Đã tạo đơn #43/);
-  assert.equal(remountedNode.findAll('button')[0].disabled, true);
+  // A created order shows a success panel: no confirm button is left that could be clicked again.
+  assert.equal(remountedNode.findAll('button').length, 0);
+  assert.equal(remountedNode.findAll('a')[0].href, 'index.php?r=hoso');
 });
 
 test('created draft cards remain disabled after re-render and unsafe next URLs do not redirect', async () => {
@@ -394,7 +396,8 @@ test('created draft cards remain disabled after re-render and unsafe next URLs d
   buttonByText(node, 'Xác nhận').click();
   await flush();
   agent.renderDraftCard(payload, node, { messageId: 'message-2' });
-  assert.equal(node.findAll('button')[0].disabled, true);
+  assert.equal(node.findAll('button').length, 0);
+  assert.match(node.textContent, /Đặt hàng thành công/);
   assert.match(node.textContent, /Đã tạo đơn #42/);
   assert.match(node.textContent, /Bạn mở mục Đơn hàng của tôi để thanh toán nhé/);
   assert.equal(window.location.href, 'https://shop.test/index.php');
@@ -453,7 +456,7 @@ test('draft countdown uses a local deadline when server clock is ahead of the br
   const remaining = Math.round((payload.deadline_ms - Date.now()) / 1000);
   assert.ok(remaining >= 599 && remaining <= 600, 'remaining ' + remaining);
   assert.equal(agent.getDraftCardState('skew-m').status, 'pending');
-  assert.match(node.textContent, /Còn (59\d|600) giây/);
+  assert.match(node.textContent, /Còn (9:5\d|10:00)/);
   clock.offsetMs = 601 * 1000;
   agent.renderDraftCard(payload, node, { messageId: 'skew-m' });
   assert.equal(agent.getDraftCardState('skew-m').status, 'expired');
@@ -481,4 +484,53 @@ test('draft without server_now keeps the expires_at behaviour', () => {
   clock.offsetMs = 120 * 1000;
   agent.renderDraftCard(payload, node, { messageId: 'legacy-m' });
   assert.equal(agent.getDraftCardState('legacy-m').status, 'expired');
+});
+
+test('draft card shows items, voucher, delivery details and the mm:ss countdown pill', () => {
+  const { agent, document, clock } = loadAgent();
+  const serverNow = Math.floor(Date.now() / 1000);
+  const payload = {
+    draft_id: 'layout-1', server_now: serverNow, expires_at: serverNow + 70,
+    items: [{ id: 'p1', name: 'Kem chống nắng', image_url: 'img/a.jpg', qty: 2, unit_price: 100000, line_total: 200000 }],
+    subtotal: 200000, voucher: { code: 'SALE10', discount: 20000 }, shipping: 30000, total: 210000,
+    receiver: { name: 'An', phone_masked: '09******12', address_short: '' }, payment_method: 'bank_transfer_qr', warnings: ['Lưu ý']
+  };
+  const node = document.createElement('div');
+  agent.renderDraftCard(payload, node, { messageId: 'layout-m' });
+  const text = node.textContent;
+  assert.match(text, /SL: 2 × 100\.000đ/);
+  assert.match(text, /Giảm giá \(SALE10\)−20\.000đ/);
+  assert.match(text, /Tổng thanh toán210\.000đ/);
+  assert.match(text, /An · 09\*\*\*\*\*\*12/);
+  assert.match(text, /Chưa có địa chỉ/);
+  assert.match(text, /Chuyển khoản QR/);
+  assert.match(text, /Còn 1:1\d/);
+  assert.equal(node.findAll('img')[0].src, 'img/a.jpg');
+  assert.equal(buttonByText(node, 'Xác nhận đặt hàng').textContent, 'Xác nhận đặt hàng');
+  clock.offsetMs = 30 * 1000;
+  agent.renderDraftCard(payload, node, { messageId: 'layout-m' });
+  const pill = node.findAll('span').find((s) => /countdown/.test(s.className));
+  assert.match(pill.className, /is-warn/);
+  assert.match(pill.textContent, /Còn 0:[34]\d/);
+});
+
+test('draft card shows the full receiver phone and address when the server sends them', () => {
+  const { agent, document } = loadAgent();
+  const serverNow = Math.floor(Date.now() / 1000);
+  const payload = {
+    draft_id: 'full-1', server_now: serverNow, expires_at: serverNow + 70,
+    items: [{ id: 'p1', name: 'Kem', image_url: '', qty: 1, unit_price: 100000, line_total: 100000 }],
+    subtotal: 100000, voucher: null, shipping: 30000, total: 130000,
+    receiver: {
+      name: 'An', phone_masked: '09xx xxx 678', address_short: 'TP.HCM',
+      phone: '0912 345 678', address: '5 Hai Bà Trưng, Quận 1, TP.HCM'
+    },
+    payment_method: 'cod', warnings: []
+  };
+  const node = document.createElement('div');
+  agent.renderDraftCard(payload, node, { messageId: 'full-m' });
+  const text = node.textContent;
+  assert.match(text, /An · 0912 345 678/);
+  assert.match(text, /5 Hai Bà Trưng, Quận 1, TP\.HCM/);
+  assert.doesNotMatch(text, /09xx xxx 678/);
 });
