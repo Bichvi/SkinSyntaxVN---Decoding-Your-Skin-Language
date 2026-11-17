@@ -48,7 +48,7 @@
     AWAITING_APPROVAL: 'Chờ duyệt', READY: 'Sẵn sàng', SCHEDULED: 'Đã lên lịch', STARTING: 'Sắp lên sóng',
     LIVE: 'Đang phát', COMPLETED: 'Hoàn tất', VIDEOS_READY: 'Video đã tạo xong', NEEDS_ATTENTION: 'Cần kiểm tra',
     PARTIAL_FAILURE: 'Lỗi một phần', FAILED: 'Bị lỗi', CANCELLED: 'Đã hủy', SKIPPED: 'Đã bỏ qua',
-    WAITING_RENDERER: 'Chờ Syna', ASSEMBLING: 'Đang ghép video', VALIDATING: 'Đang kiểm tra',
+    WAITING_RENDERER: 'Chờ Syna', WAITING_LLM: 'Chờ hạn mức AI', ASSEMBLING: 'Đang ghép video', VALIDATING: 'Đang kiểm tra',
     REJECTED_BY_VALIDATOR: 'Bị từ chối kiểm duyệt',
     VALIDATING_SCRIPT: 'Đang kiểm tra kịch bản', REPAIRING_SCRIPT: 'Crew AI đang tự sửa', AUTO_REPAIR_EXHAUSTED: 'Cần xử lý kịch bản', FINAL_CHECK: 'Kiểm tra video cuối',
     RESULTS_READY: 'Đã tìm xong', DATA_UNAVAILABLE: 'Thiếu dữ liệu', EMPTY_RESULTS: 'Không có kết quả',

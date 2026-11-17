@@ -242,6 +242,12 @@ test('progressSteps: a GENERATING campaign follows its in-flight jobs', () => {
     'select:done script:done review:done render:active page:todo');
 });
 
+test('progressSteps: jobs parked on the Groq quota keep the script step active', () => {
+  const pv = (jobStages) => camp('GENERATING', { purpose: 'product_video', job_stages: jobStages });
+  assert.equal(stateOf(L.progressSteps(pv([{ status: 'WAITING_LLM', stage: 'WAITING_LLM', count: 3 }]))),
+    'select:done script:active review:todo render:todo page:todo');
+});
+
 test('progressSteps: junk job_stages never throw and fall back to the old behaviour', () => {
   const junk = [null, 'x', 5, {}, [null, 7, 'a', { status: 5, stage: {} }, { status: 'FAILED', stage: 'RENDERING', count: 0 }, { status: 'FAILED', stage: 'GENERATING_CONTENT', count: -1 }]];
   junk.forEach((jobStages) => {

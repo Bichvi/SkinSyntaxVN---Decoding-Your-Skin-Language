@@ -818,7 +818,7 @@ def cancel_campaign(campaign_id: str) -> dict:
         if segment.get("job_id"):
             db.ai_idol_jobs.update_one(
                 {"_id": object_id(str(segment["job_id"])),
-                 "status": {"$in": ["CREATED", "QUEUED", "WAITING_RENDERER", "AWAITING_APPROVAL"]}},
+                 "status": {"$in": ["CREATED", "QUEUED", "WAITING_RENDERER", "WAITING_LLM", "AWAITING_APPROVAL"]}},
                 {"$set": {"status": "FAILED", "failed_stage": "CANCELLED",
                           "error_message": "Chương trình đã bị hủy.", "updated_at": now}},
             )

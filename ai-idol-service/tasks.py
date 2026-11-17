@@ -15,7 +15,7 @@ from core.health import check_syna
 from core.product_metrics import run_due_snapshots
 from core.publications import auto_publish_video
 from core.state_machine import fail_job, get_db, object_id, utcnow
-from core.watchdog import reap_stale_work, requeue_stuck_created_jobs, resume_waiting_renders
+from core.watchdog import reap_stale_work, requeue_stuck_created_jobs, resume_waiting_llm, resume_waiting_renders
 from engines.broadcast_engine import broadcast_campaign, finalize_live_campaigns, preflight_campaign
 from engines.media_publisher import publish_campaign_videos, publish_video, retry_pending
 from engines.replay_publisher import publish_campaign_replay, retry_pending_replays
@@ -179,7 +179,12 @@ def reap_stale_work_task():
 
 @celery_app.task(name="ai_idol.resume_waiting_renders")
 def resume_waiting_renders_task():
-    return resume_waiting_renders(lambda job_id: generate_job_task.delay(job_id))
+    def enqueue(job_id):
+        return generate_job_task.delay(job_id)
+
+    renders = resume_waiting_renders(enqueue)
+    llm_result = resume_waiting_llm(enqueue)
+    return {**renders, "llm": llm_result}
 
 
 @celery_app.task(name="ai_idol.finalize_live_campaigns")

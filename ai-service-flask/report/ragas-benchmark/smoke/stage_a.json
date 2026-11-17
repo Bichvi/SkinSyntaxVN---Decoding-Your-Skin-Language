@@ -1,0 +1,251 @@
+{
+ "created": "2026-11-16T16:34:27",
+ "n_cases": 2,
+ "samples": [
+  {
+   "case_id": "R01",
+   "query": "sữa rửa mặt cho da dầu mụn",
+   "config": "semantic",
+   "retrieved_ids": [
+    "product_6294",
+    "product_3553",
+    "product_6295",
+    "product_4930",
+    "product_2742",
+    "product_3725",
+    "product_4524",
+    "product_3200",
+    "product_4631",
+    "product_4926"
+   ],
+   "relevant_count": 201,
+   "contexts": [
+    "Tên sản phẩm: [Mini] Son Kem Bùn & Má Hồng Into You - EM01 Đỏ Nâu 1g \n Loại sản phẩm: Son Kem / Tint \n Thương hiệu: Into You \n Xuất xứ thương hiệu: Trung Quốc \n Nơi sản xuất: China \n Dung tích: 1g \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud (Mini) là sản phẩm son kem đến từ thương hiệu Into You\r\n- Trung Quốc có thể sử dụng cho môi và má cùng lúc. Công thức và kết cấu kem bùn độc đáo của sản phẩm mang lại lớp finish mịn lì giúp che phủ toàn diện vân môi, không lem, không trôi và lên màu chuẩn. Bảng màu phù hợp mới mọi phong cách trang điểm, cho bạn đa dạng lựa chọn khác nhau. [Mini] Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud 1g hiện đã có mặt tại Hasaki với 3 màu:\r\n• EM01\r\n- Đỏ Nâu\r\n• EM05\r\n- Cam Đất\r\n• EM08\r\n- Đỏ Gạch Ưu thế nổi bật của Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud:\r\n• Kết cấu độc đáo, không chỉ mềm mịn, nhẹ nhàng lướt trên môi, mà còn tạo hiệu ứng mịn lì tự nhiên, giúp che phủ các đường vân môi.\r\n• Chất son dễ thoa, dễ tán, lâu trôi, có thể giữ màu trong nhiều giờ mà không cần dặm lại, rất lý tưởng cho các sự kiện hoặc ngày dài.\r\n• Son được kiểm nghiệm t",
+    "Tên sản phẩm: [Mini] Son Kem Bùn & Má Hồng Into You - EM08 Đỏ Gạch 1g \n Loại sản phẩm: Son Kem / Tint \n Thương hiệu: Into You \n Xuất xứ thương hiệu: Trung Quốc \n Nơi sản xuất: China \n Dung tích: 1g \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud (Mini) là sản phẩm son kem đến từ thương hiệu Into You\r\n- Trung Quốc có thể sử dụng cho môi và má cùng lúc. Công thức và kết cấu kem bùn độc đáo của sản phẩm mang lại lớp finish mịn lì giúp che phủ toàn diện vân môi, không lem, không trôi và lên màu chuẩn. Bảng màu phù hợp mới mọi phong cách trang điểm, cho bạn đa dạng lựa chọn khác nhau. [Mini] Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud 1g hiện đã có mặt tại Hasaki với 3 màu:\r\n• EM01\r\n- Đỏ Nâu\r\n• EM05\r\n- Cam Đất\r\n• EM08\r\n- Đỏ Gạch Ưu thế nổi bật của Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud:\r\n• Kết cấu độc đáo, không chỉ mềm mịn, nhẹ nhàng lướt trên môi, mà còn tạo hiệu ứng mịn lì tự nhiên, giúp che phủ các đường vân môi.\r\n• Chất son dễ thoa, dễ tán, lâu trôi, có thể giữ màu trong nhiều giờ mà không cần dặm lại, rất lý tưởng cho các sự kiện hoặc ngày dài.\r\n• Son được kiểm nghiệm ",
+    "Tên sản phẩm: [Mini] Son Kem Bùn & Má Hồng Into You - EM05 Cam Đất 1g \n Loại sản phẩm: Son Kem / Tint \n Thương hiệu: Into You \n Xuất xứ thương hiệu: Trung Quốc \n Nơi sản xuất: China \n Dung tích: 1g \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud (Mini) là sản phẩm son kem đến từ thương hiệu Into You\r\n- Trung Quốc có thể sử dụng cho môi và má cùng lúc. Công thức và kết cấu kem bùn độc đáo của sản phẩm mang lại lớp finish mịn lì giúp che phủ toàn diện vân môi, không lem, không trôi và lên màu chuẩn. Bảng màu phù hợp mới mọi phong cách trang điểm, cho bạn đa dạng lựa chọn khác nhau. [Mini] Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud 1g hiện đã có mặt tại Hasaki với 3 màu:\r\n• EM01\r\n- Đỏ Nâu\r\n• EM05\r\n- Cam Đất\r\n• EM08\r\n- Đỏ Gạch Ưu thế nổi bật của Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud:\r\n• Kết cấu độc đáo, không chỉ mềm mịn, nhẹ nhàng lướt trên môi, mà còn tạo hiệu ứng mịn lì tự nhiên, giúp che phủ các đường vân môi.\r\n• Chất son dễ thoa, dễ tán, lâu trôi, có thể giữ màu trong nhiều giờ mà không cần dặm lại, rất lý tưởng cho các sự kiện hoặc ngày dài.\r\n• Son được kiểm nghiệm ",
+    "Tên sản phẩm: Son Thỏi Lì BYS Mịn Môi L345 Bitter Sweet - Cam Đất 3.5g \n Loại sản phẩm: Son Thỏi \n Thương hiệu: BYS \n Xuất xứ thương hiệu: Úc \n Nơi sản xuất: China \n Dung tích: 3.5g \n Loại da phù hợp: Unknown \n Mô tả: Son Thỏi Lì BYS Mịn Môi 3.5g là sản phẩm son thỏi đến từ thương hiệu mỹ phẩm thuần chay BYS của Úc. BYS Luxe Lips Ultra Matte Lipstick là dòng son thỏi mịn lì nổi bật với các thành phần thuần chay, chất son mỏng nhẹ mịn màng, tạo cảm giác lướt nhẹ trên môi một cách mượt mà, mà không gây bết dính. Hiện sản phẩm Son Thỏi Lì BYS Luxe Lips Ultra Matte Lipstick 3.5g đã có mặt tại Hasaki với 3 tông màu:\r\n• L341 Idolise\r\n- Màu Hồng Đất\r\n• L342 Queen Of The Night\r\n- Màu Đỏ Cherry\r\n• L345 Bitter Sweet\r\n- Màu Cam Đất Ưu thế nổi bật:\r\n• Chất son mềm, mượt, mịn không để lộ vân môi.\r\n• Chứa chiết xuất giàu Vitamin E chống oxy hóa, giúp cho đôi môi luôn mềm mịn, hạn chế tình trạng khô nứt môi.\r\n• Khả năng lên màu chuẩn chỉ sau 1 lần lướt nhẹ, độ bền màu cao, giữ màu tốt trong suốt nhiều giờ đồng hồ. Độ an toàn:\r\n• Không chứa paraben, không chứa dầu khoáng.\r\n• Đạt chuẩn thuần chay và an toàn Crueltyfree and Vegan. Bảo quản:\r\n• Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực ti",
+    "Tên sản phẩm: Son Thỏi Lì BYS Mịn Môi L342 Queen Of The Night - Đỏ Cherry 3.5g \n Loại sản phẩm: Son Thỏi \n Thương hiệu: BYS \n Xuất xứ thương hiệu: Úc \n Nơi sản xuất: China \n Dung tích: 3.5g \n Loại da phù hợp: Unknown \n Mô tả: Son Thỏi Lì BYS Mịn Môi 3.5g là sản phẩm son thỏi đến từ thương hiệu mỹ phẩm thuần chay BYS của Úc. BYS Luxe Lips Ultra Matte Lipstick là dòng son thỏi mịn lì nổi bật với các thành phần thuần chay, chất son mỏng nhẹ mịn màng, tạo cảm giác lướt nhẹ trên môi một cách mượt mà, mà không gây bết dính. Hiện sản phẩm Son Thỏi Lì BYS Luxe Lips Ultra Matte Lipstick 3.5g đã có mặt tại Hasaki với 3 tông màu:\r\n• L341 Idolise\r\n- Màu Hồng Đất\r\n• L342 Queen Of The Night\r\n- Màu Đỏ Cherry\r\n• L345 Bitter Sweet\r\n- Màu Cam Đất Ưu thế nổi bật:\r\n• Chất son mềm, mượt, mịn không để lộ vân môi.\r\n• Chứa chiết xuất giàu Vitamin E chống oxy hóa, giúp cho đôi môi luôn mềm mịn, hạn chế tình trạng khô nứt môi.\r\n• Khả năng lên màu chuẩn chỉ sau 1 lần lướt nhẹ, độ bền màu cao, giữ màu tốt trong suốt nhiều giờ đồng hồ. Độ an toàn:\r\n• Không chứa paraben, không chứa dầu khoáng.\r\n• Đạt chuẩn thuần chay và an toàn Crueltyfree and Vegan. Bảo quản:\r\n• Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng"
+   ],
+   "answer": "Xin lỗi anh/chị, trong danh mục sản phẩm hiện có của SkinSyntaxVN chỉ có các loại son kem và son thỏi như “Mini Son Kem Bùn & Má Hồng Into You” hay “Son Thỏi Lì BYS Mịn Môi”, chưa có sữa rửa mặt dành riêng cho da dầu mụn. Vì không có thông tin về sản phẩm rửa mặt trong ngữ cảnh, mình không thể gợi ý được sản phẩm phù hợp. Nếu anh/chị muốn, có thể tham khảo thêm các danh mục khác hoặc liên hệ trực tiếp để chúng tôi cập nhật sản phẩm rửa mặt phù hợp trong thời gian tới.",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "id_metrics": {
+    "hit@5": 0.0,
+    "mrr@10": 0.0,
+    "precision@5": 0.0,
+    "recall@10": 0.0,
+    "ndcg@10": 0.0
+   },
+   "latency_s": 0.1457
+  },
+  {
+   "case_id": "R01",
+   "query": "sữa rửa mặt cho da dầu mụn",
+   "config": "hybrid_rrf",
+   "retrieved_ids": [
+    "product_2659",
+    "product_1461",
+    "product_702",
+    "product_822",
+    "product_1703",
+    "product_1086",
+    "product_1816",
+    "product_905",
+    "product_5",
+    "product_14"
+   ],
+   "relevant_count": 201,
+   "contexts": [
+    "Tên sản phẩm: Serum SVR Ngăn Ngừa Lão Hóa & Giúp Da Mềm Mịn 30ml \n Loại sản phẩm: Serum / Tinh Chất \n Thương hiệu: SVR \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 30ml \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Serum SVR Ngăn Ngừa Lão Hóa & Giúp Da Mềm Mịn 30ml là serum cô đặc mới đến từ thương hiệu dược mỹ phẩm SVR của Pháp, chứa thành phần Vitamin A / Retinol ở nồng độ tối ưu 0,3% giúp làm mịn da, hỗ trợ tái cấu trúc da và cải thiện các dấu hiệu lão hoá, ngăn ngừa hình thành nếp nhăn hiệu quả. Serum SVR [A] Ampoule Lift 30ml chính hãng hiện đã có mặt tại Hasaki. Serum SVR [A] Ampoule Lift phù hợp với loại da nào?\r\n• Sản phẩm phù hợp cho mọi loại da, kể cả da nhạy cảm. Đối tượng sử dụng Serum SVR [A] Ampoule Lift:\r\n• Da lão hoá với các dấu hiệu như: nếp nhăn, da không đều màu, đốm sắc tố.\r\n• Da có nhiều khuyết điểm như mụn đầu đen, mụn trứng cá, vết thâm do mụn để lại.\r\n• Da dầu thừa\r\n- lỗ chân lông to. Ưu thế nổi bật của Serum SVR [A] Ampoule Lift:\r\n• Tinh Chất SVR [A] Ampoule Lift chứa nồng độ tối ưu 0,3% Vitamin A\r\n- vừa đủ để làm mới làn da của bạn, giúp tái cấu trúc da và khắc phục các nếp nhăn sâu.\r\n• Trong đó bao gồm Retinol tinh khiết đậm đặc 0,1",
+    "Tên sản phẩm: Nước Hoa Hồng L'Oreal Làm Giảm Nếp Nhăn 200ml \n Loại sản phẩm: Toner / Nước Cân Bằng Da \n Thương hiệu: L'Oreal \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: China \n Dung tích: 6 \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Nước hoa hồng giúp săn chắc da & giảm nếp nhăn L'Oréal Revitalift Aqua Milky\r\n- 200ml Với Nước hoa hồng giúp săn chắc da & giảm nếp nhăn L'Oréal Revitalift Aqua Milky, làn da bạn sẽ được hồi sinh đầy tươi tắn và trẻ trung chỉ sau 4 tuần. Công nghệ Demalift độc đáo kết hợp với hoạt chất pro\r\n-retinol A giúp cải thiện độ đàn hồi và làm đầy các lớp da bề mặt, giảm việc hình thành các nếp nhăn. Đồng thời, sản phẩm cung cấp độ ẩm tối ưu cho da và làm mờ các đốm nâu trên hiệu quả, mang đến cho bạn làn da mềm mại và sáng mịn hơn. L'Oréal ra đời vào năm 1909 và là một trong những công ty mỹ phẩm lớn nhất thế giới, có trụ sở chính tại Clichy, Hauts\r\n-de\r\n-Seine, Pháp. Không chỉ là một thương hiệu luôn cho ra đời những dòng sản phẩm trang điểm, chăm sóc da, chăm sóc tóc...được yêu thích, L'Oréal còn đi sâu vào lĩnh vực da liễu, kỹ thuật mô, dược phẩm và sở hữu những bằng sáng chế công nghệ Nano hàng đầu tại Mỹ. Chính vì thế, mọi sản phẩm của L'Oréal đều đư",
+    "Tên sản phẩm: Combo 2 Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: Combo 1000ml \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid củ",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 100ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 100ml \n Loại da phù hợp: Da nhạy cảm \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách tự nhiên. N",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 100ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 100ml \n Loại da phù hợp: Da dầu/Hỗn hợp dầu \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách"
+   ],
+   "answer": "Bạn có thể thử **Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 100 ml** – sản phẩm micellar của Bioderma được thiết kế riêng cho da dầu, giúp làm sạch sâu lớp bã nhờn và bã trang điểm mà không gây khô căng hay kích ứng. Nếu muốn dự trữ lâu dài, **Combo 2 Nước Tẩy Trang Bioderma (2 × 500 ml)** cũng bao gồm loại dành cho da dầu, giúp bạn luôn có đủ lượng dùng cho việc rửa mặt và tẩy trang hàng ngày. Cả hai đều có công thức dịu nhẹ, không gây kích ứng, rất phù hợp cho làn da dầu mụn cần làm sạch kỹ nhưng vẫn duy trì độ ẩm tự nhiên.",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "id_metrics": {
+    "hit@5": 0.0,
+    "mrr@10": 0.0,
+    "precision@5": 0.0,
+    "recall@10": 0.0,
+    "ndcg@10": 0.0
+   },
+   "latency_s": 0.1561
+  },
+  {
+   "case_id": "R01",
+   "query": "sữa rửa mặt cho da dầu mụn",
+   "config": "hybrid_rerank",
+   "retrieved_ids": [
+    "product_1703",
+    "product_905",
+    "product_14",
+    "product_1816",
+    "product_1086",
+    "product_822",
+    "product_5",
+    "product_702",
+    "product_2659",
+    "product_4926"
+   ],
+   "relevant_count": 201,
+   "contexts": [
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 100ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 100ml \n Loại da phù hợp: Da dầu/Hỗn hợp dầu \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách",
+    "Tên sản phẩm: Combo 2 Nước Tẩy Trang Bioderma Cho Da Dầu & Hỗn Hợp 500ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: Combo 1000ml \n Loại da phù hợp: Da dầu/Hỗn hợp dầu \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của d",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 500ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 500ml \n Loại da phù hợp: Da dầu/Hỗn hợp dầu \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 250ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: Unknown \n Dung tích: 250ml \n Loại da phù hợp: Da dầu/Hỗn hợp dầu \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một các",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 250ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 250ml \n Loại da phù hợp: Da nhạy cảm \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách tự nhiên. N"
+   ],
+   "answer": "Xin lỗi anh/chị, trong danh sách sản phẩm hiện tại của SkinSyntaxVN chỉ có các loại **Nước Tẩy Trang Bioderma** dành cho da dầu & hỗn hợp, không có sữa rửa mặt chuyên dụng cho da dầu mụn. Vì nước tẩy trang chủ yếu dùng để loại bỏ lớp trang điểm và bã nhờn, không thay thế được công dụng làm sạch sâu và kiểm soát bã nhờn của sữa rửa mặt. Nếu anh/chị cần sản phẩm rửa mặt, chúng tôi sẽ cập nhật thêm khi có sữa rửa mặt phù hợp. Cảm ơn anh/chị đã quan tâm!",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "id_metrics": {
+    "hit@5": 0.0,
+    "mrr@10": 0.0,
+    "precision@5": 0.0,
+    "recall@10": 0.0,
+    "ndcg@10": 0.0
+   },
+   "latency_s": 9.202
+  },
+  {
+   "case_id": "R02",
+   "query": "Mình muốn mua sữa rửa mặt dịu nhẹ cho da nhạy cảm",
+   "config": "semantic",
+   "retrieved_ids": [
+    "product_6294",
+    "product_3553",
+    "product_6295",
+    "product_4930",
+    "product_2742",
+    "product_3725",
+    "product_3200",
+    "product_4524",
+    "product_4631",
+    "product_4926"
+   ],
+   "relevant_count": 126,
+   "contexts": [
+    "Tên sản phẩm: [Mini] Son Kem Bùn & Má Hồng Into You - EM01 Đỏ Nâu 1g \n Loại sản phẩm: Son Kem / Tint \n Thương hiệu: Into You \n Xuất xứ thương hiệu: Trung Quốc \n Nơi sản xuất: China \n Dung tích: 1g \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud (Mini) là sản phẩm son kem đến từ thương hiệu Into You\r\n- Trung Quốc có thể sử dụng cho môi và má cùng lúc. Công thức và kết cấu kem bùn độc đáo của sản phẩm mang lại lớp finish mịn lì giúp che phủ toàn diện vân môi, không lem, không trôi và lên màu chuẩn. Bảng màu phù hợp mới mọi phong cách trang điểm, cho bạn đa dạng lựa chọn khác nhau. [Mini] Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud 1g hiện đã có mặt tại Hasaki với 3 màu:\r\n• EM01\r\n- Đỏ Nâu\r\n• EM05\r\n- Cam Đất\r\n• EM08\r\n- Đỏ Gạch Ưu thế nổi bật của Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud:\r\n• Kết cấu độc đáo, không chỉ mềm mịn, nhẹ nhàng lướt trên môi, mà còn tạo hiệu ứng mịn lì tự nhiên, giúp che phủ các đường vân môi.\r\n• Chất son dễ thoa, dễ tán, lâu trôi, có thể giữ màu trong nhiều giờ mà không cần dặm lại, rất lý tưởng cho các sự kiện hoặc ngày dài.\r\n• Son được kiểm nghiệm t",
+    "Tên sản phẩm: [Mini] Son Kem Bùn & Má Hồng Into You - EM08 Đỏ Gạch 1g \n Loại sản phẩm: Son Kem / Tint \n Thương hiệu: Into You \n Xuất xứ thương hiệu: Trung Quốc \n Nơi sản xuất: China \n Dung tích: 1g \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud (Mini) là sản phẩm son kem đến từ thương hiệu Into You\r\n- Trung Quốc có thể sử dụng cho môi và má cùng lúc. Công thức và kết cấu kem bùn độc đáo của sản phẩm mang lại lớp finish mịn lì giúp che phủ toàn diện vân môi, không lem, không trôi và lên màu chuẩn. Bảng màu phù hợp mới mọi phong cách trang điểm, cho bạn đa dạng lựa chọn khác nhau. [Mini] Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud 1g hiện đã có mặt tại Hasaki với 3 màu:\r\n• EM01\r\n- Đỏ Nâu\r\n• EM05\r\n- Cam Đất\r\n• EM08\r\n- Đỏ Gạch Ưu thế nổi bật của Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud:\r\n• Kết cấu độc đáo, không chỉ mềm mịn, nhẹ nhàng lướt trên môi, mà còn tạo hiệu ứng mịn lì tự nhiên, giúp che phủ các đường vân môi.\r\n• Chất son dễ thoa, dễ tán, lâu trôi, có thể giữ màu trong nhiều giờ mà không cần dặm lại, rất lý tưởng cho các sự kiện hoặc ngày dài.\r\n• Son được kiểm nghiệm ",
+    "Tên sản phẩm: [Mini] Son Kem Bùn & Má Hồng Into You - EM05 Cam Đất 1g \n Loại sản phẩm: Son Kem / Tint \n Thương hiệu: Into You \n Xuất xứ thương hiệu: Trung Quốc \n Nơi sản xuất: China \n Dung tích: 1g \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud (Mini) là sản phẩm son kem đến từ thương hiệu Into You\r\n- Trung Quốc có thể sử dụng cho môi và má cùng lúc. Công thức và kết cấu kem bùn độc đáo của sản phẩm mang lại lớp finish mịn lì giúp che phủ toàn diện vân môi, không lem, không trôi và lên màu chuẩn. Bảng màu phù hợp mới mọi phong cách trang điểm, cho bạn đa dạng lựa chọn khác nhau. [Mini] Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud 1g hiện đã có mặt tại Hasaki với 3 màu:\r\n• EM01\r\n- Đỏ Nâu\r\n• EM05\r\n- Cam Đất\r\n• EM08\r\n- Đỏ Gạch Ưu thế nổi bật của Son Kem Bùn & Má Hồng Into You Shero Super Matte Lip & Cheek Mud:\r\n• Kết cấu độc đáo, không chỉ mềm mịn, nhẹ nhàng lướt trên môi, mà còn tạo hiệu ứng mịn lì tự nhiên, giúp che phủ các đường vân môi.\r\n• Chất son dễ thoa, dễ tán, lâu trôi, có thể giữ màu trong nhiều giờ mà không cần dặm lại, rất lý tưởng cho các sự kiện hoặc ngày dài.\r\n• Son được kiểm nghiệm ",
+    "Tên sản phẩm: Son Thỏi Lì BYS Mịn Môi L345 Bitter Sweet - Cam Đất 3.5g \n Loại sản phẩm: Son Thỏi \n Thương hiệu: BYS \n Xuất xứ thương hiệu: Úc \n Nơi sản xuất: China \n Dung tích: 3.5g \n Loại da phù hợp: Unknown \n Mô tả: Son Thỏi Lì BYS Mịn Môi 3.5g là sản phẩm son thỏi đến từ thương hiệu mỹ phẩm thuần chay BYS của Úc. BYS Luxe Lips Ultra Matte Lipstick là dòng son thỏi mịn lì nổi bật với các thành phần thuần chay, chất son mỏng nhẹ mịn màng, tạo cảm giác lướt nhẹ trên môi một cách mượt mà, mà không gây bết dính. Hiện sản phẩm Son Thỏi Lì BYS Luxe Lips Ultra Matte Lipstick 3.5g đã có mặt tại Hasaki với 3 tông màu:\r\n• L341 Idolise\r\n- Màu Hồng Đất\r\n• L342 Queen Of The Night\r\n- Màu Đỏ Cherry\r\n• L345 Bitter Sweet\r\n- Màu Cam Đất Ưu thế nổi bật:\r\n• Chất son mềm, mượt, mịn không để lộ vân môi.\r\n• Chứa chiết xuất giàu Vitamin E chống oxy hóa, giúp cho đôi môi luôn mềm mịn, hạn chế tình trạng khô nứt môi.\r\n• Khả năng lên màu chuẩn chỉ sau 1 lần lướt nhẹ, độ bền màu cao, giữ màu tốt trong suốt nhiều giờ đồng hồ. Độ an toàn:\r\n• Không chứa paraben, không chứa dầu khoáng.\r\n• Đạt chuẩn thuần chay và an toàn Crueltyfree and Vegan. Bảo quản:\r\n• Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực ti",
+    "Tên sản phẩm: Son Thỏi Lì BYS Mịn Môi L342 Queen Of The Night - Đỏ Cherry 3.5g \n Loại sản phẩm: Son Thỏi \n Thương hiệu: BYS \n Xuất xứ thương hiệu: Úc \n Nơi sản xuất: China \n Dung tích: 3.5g \n Loại da phù hợp: Unknown \n Mô tả: Son Thỏi Lì BYS Mịn Môi 3.5g là sản phẩm son thỏi đến từ thương hiệu mỹ phẩm thuần chay BYS của Úc. BYS Luxe Lips Ultra Matte Lipstick là dòng son thỏi mịn lì nổi bật với các thành phần thuần chay, chất son mỏng nhẹ mịn màng, tạo cảm giác lướt nhẹ trên môi một cách mượt mà, mà không gây bết dính. Hiện sản phẩm Son Thỏi Lì BYS Luxe Lips Ultra Matte Lipstick 3.5g đã có mặt tại Hasaki với 3 tông màu:\r\n• L341 Idolise\r\n- Màu Hồng Đất\r\n• L342 Queen Of The Night\r\n- Màu Đỏ Cherry\r\n• L345 Bitter Sweet\r\n- Màu Cam Đất Ưu thế nổi bật:\r\n• Chất son mềm, mượt, mịn không để lộ vân môi.\r\n• Chứa chiết xuất giàu Vitamin E chống oxy hóa, giúp cho đôi môi luôn mềm mịn, hạn chế tình trạng khô nứt môi.\r\n• Khả năng lên màu chuẩn chỉ sau 1 lần lướt nhẹ, độ bền màu cao, giữ màu tốt trong suốt nhiều giờ đồng hồ. Độ an toàn:\r\n• Không chứa paraben, không chứa dầu khoáng.\r\n• Đạt chuẩn thuần chay và an toàn Crueltyfree and Vegan. Bảo quản:\r\n• Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng"
+   ],
+   "answer": "Xin lỗi anh/chị, trong danh sách sản phẩm hiện tại của SkinSyntaxVN chỉ có các loại son môi và son má, không có sữa rửa mặt dành cho da nhạy cảm. Vì vậy mình không thể gợi ý sản phẩm phù hợp cho nhu cầu này dựa trên ngữ cảnh đã cung cấp. Nếu anh/chị quan tâm, có thể xem thêm các danh mục khác trên website hoặc liên hệ trực tiếp để được tư vấn các sản phẩm làm sạch nhẹ nhàng. Chúc anh/chị sớm tìm được sản phẩm ưng ý!",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "id_metrics": {
+    "hit@5": 0.0,
+    "mrr@10": 0.0,
+    "precision@5": 0.0,
+    "recall@10": 0.0,
+    "ndcg@10": 0.0
+   },
+   "latency_s": 0.0539
+  },
+  {
+   "case_id": "R02",
+   "query": "Mình muốn mua sữa rửa mặt dịu nhẹ cho da nhạy cảm",
+   "config": "hybrid_rrf",
+   "retrieved_ids": [
+    "product_2659",
+    "product_702",
+    "product_822",
+    "product_1703",
+    "product_1086",
+    "product_5",
+    "product_1816",
+    "product_1461",
+    "product_905",
+    "product_14"
+   ],
+   "relevant_count": 126,
+   "contexts": [
+    "Tên sản phẩm: Serum SVR Ngăn Ngừa Lão Hóa & Giúp Da Mềm Mịn 30ml \n Loại sản phẩm: Serum / Tinh Chất \n Thương hiệu: SVR \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 30ml \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Serum SVR Ngăn Ngừa Lão Hóa & Giúp Da Mềm Mịn 30ml là serum cô đặc mới đến từ thương hiệu dược mỹ phẩm SVR của Pháp, chứa thành phần Vitamin A / Retinol ở nồng độ tối ưu 0,3% giúp làm mịn da, hỗ trợ tái cấu trúc da và cải thiện các dấu hiệu lão hoá, ngăn ngừa hình thành nếp nhăn hiệu quả. Serum SVR [A] Ampoule Lift 30ml chính hãng hiện đã có mặt tại Hasaki. Serum SVR [A] Ampoule Lift phù hợp với loại da nào?\r\n• Sản phẩm phù hợp cho mọi loại da, kể cả da nhạy cảm. Đối tượng sử dụng Serum SVR [A] Ampoule Lift:\r\n• Da lão hoá với các dấu hiệu như: nếp nhăn, da không đều màu, đốm sắc tố.\r\n• Da có nhiều khuyết điểm như mụn đầu đen, mụn trứng cá, vết thâm do mụn để lại.\r\n• Da dầu thừa\r\n- lỗ chân lông to. Ưu thế nổi bật của Serum SVR [A] Ampoule Lift:\r\n• Tinh Chất SVR [A] Ampoule Lift chứa nồng độ tối ưu 0,3% Vitamin A\r\n- vừa đủ để làm mới làn da của bạn, giúp tái cấu trúc da và khắc phục các nếp nhăn sâu.\r\n• Trong đó bao gồm Retinol tinh khiết đậm đặc 0,1",
+    "Tên sản phẩm: Combo 2 Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: Combo 1000ml \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid củ",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 100ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 100ml \n Loại da phù hợp: Da nhạy cảm \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách tự nhiên. N",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 100ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 100ml \n Loại da phù hợp: Da dầu/Hỗn hợp dầu \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 250ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 250ml \n Loại da phù hợp: Da nhạy cảm \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách tự nhiên. N"
+   ],
+   "answer": "Bạn có thể lựa chọn các sản phẩm tẩy trang của Bioderma dành riêng cho da nhạy cảm, vì chúng được thiết kế với công nghệ Micellar “thần kỳ” giúp làm sạch sâu mà không gây kích ứng hay khô căng. Nước Tẩy Trang Bioderma Sensibio H2O 100 ml là lựa chọn tiện lợi cho việc mang đi hoặc dùng thử lần đầu, với công thức dịu nhẹ, không gây kích ứng. Nếu bạn muốn dung lượng lớn hơn để dùng lâu dài, Nước Tẩy Trang Bioderma Sensibio H2O 250 ml cung cấp cùng công dụng nhưng với giá trị sử dụng cao hơn. Ngoài ra, Combo 2 x 500 ml (tổng 1000 ml) là gói tiết kiệm cho những ai muốn luôn có sẵn sản phẩm trong nhà mà vẫn duy trì độ dịu nhẹ cho làn da nhạy cảm.",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "id_metrics": {
+    "hit@5": 0.0,
+    "mrr@10": 0.0,
+    "precision@5": 0.0,
+    "recall@10": 0.0,
+    "ndcg@10": 0.0
+   },
+   "latency_s": 0.151
+  },
+  {
+   "case_id": "R02",
+   "query": "Mình muốn mua sữa rửa mặt dịu nhẹ cho da nhạy cảm",
+   "config": "hybrid_rerank",
+   "retrieved_ids": [
+    "product_5",
+    "product_1086",
+    "product_822",
+    "product_702",
+    "product_1816",
+    "product_905",
+    "product_14",
+    "product_1703",
+    "product_2659",
+    "product_4926"
+   ],
+   "relevant_count": 126,
+   "contexts": [
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: Unknown \n Dung tích: 500ml \n Loại da phù hợp: Da nhạy cảm \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách tự nhiên. ",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 250ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 250ml \n Loại da phù hợp: Da nhạy cảm \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách tự nhiên. N",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 100ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: 100ml \n Loại da phù hợp: Da nhạy cảm \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một cách tự nhiên. N",
+    "Tên sản phẩm: Combo 2 Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm 500ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: France \n Dung tích: Combo 1000ml \n Loại da phù hợp: Da thường/Mọi loại da \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid củ",
+    "Tên sản phẩm: Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp 250ml \n Loại sản phẩm: Tẩy Trang Mặt \n Thương hiệu: Bioderma \n Xuất xứ thương hiệu: Pháp \n Nơi sản xuất: Unknown \n Dung tích: 250ml \n Loại da phù hợp: Da dầu/Hỗn hợp dầu \n Mô tả: Nước Tẩy Trang Bioderma chính hãng đã có tại Hasaki bao gồm 2 phân loại:\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml)\r\n• Nước Tẩy Trang Bioderma Dành Cho Da Dầu & Hỗn Hợp: 100ml; 250ml; 500ml; Combo 1000ml (2x500ml) 1. Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm Bioderma Sensibio H2O Dành Cho Da Nhạy Cảm là sản phẩm nước tẩy trang công nghệ Micellar đầu tiên trên thế giới, do thương hiệu dược mỹ phẩm Bioderma nổi tiếng của Pháp phát minh. Dung dịch giúp làm sạch sâu da và loại bỏ lớp trang điểm nhanh chóng mà không cần rửa lại bằng nước. Công thức dịu nhẹ, không kích ứng, không gây khô căng da, đặc biệt phù hợp với làn da nhạy cảm. Công nghệ micellar sử dụng các hạt micelles \"thần kì\" tương thích hoàn hảo với lớp lipid tự nhiên của da. Yếu tố cấu thành nên hạt micelle là các ester acid béo, tương tự như cấu trúc lớp phospholipid của màng tế bào da, giúp tái tạo lớp màng hydrolipid của da một các"
+   ],
+   "answer": "Hi bạn, trong danh mục hiện tại của SkinSyntaxVN chưa có sữa rửa mặt dành riêng cho da nhạy cảm. Thay vào đó, chúng tôi có **Nước Tẩy Trang Bioderma Dành Cho Da Nhạy Cảm** – một sản phẩm micellar nhẹ nhàng, không gây kích ứng và không làm da khô căng, rất phù hợp để thay thế sữa rửa mặt cho làn da nhạy cảm. Bạn có thể lựa chọn các dung tích 100 ml, 250 ml hoặc 500 ml tùy vào nhu cầu sử dụng. Nếu muốn dùng lâu dài và tiết kiệm, combo 2 chai 500 ml (tổng 1000 ml) cũng là một lựa chọn tiện lợi. Nếu bạn cần sản phẩm khác cụ thể hơn, vui lòng cho chúng tôi biết để hỗ trợ thêm nhé!",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "id_metrics": {
+    "hit@5": 0.0,
+    "mrr@10": 0.0,
+    "precision@5": 0.0,
+    "recall@10": 0.0,
+    "ndcg@10": 0.0
+   },
+   "latency_s": 4.8386
+  }
+ ],
+ "aggregate": {
+  "semantic": {
+   "n": 2,
+   "hit@5": 0.0,
+   "mrr@10": 0.0,
+   "precision@5": 0.0,
+   "recall@10": 0.0,
+   "ndcg@10": 0.0,
+   "latency_s_mean": 0.0998
+  },
+  "hybrid_rrf": {
+   "n": 2,
+   "hit@5": 0.0,
+   "mrr@10": 0.0,
+   "precision@5": 0.0,
+   "recall@10": 0.0,
+   "ndcg@10": 0.0,
+   "latency_s_mean": 0.15355
+  },
+  "hybrid_rerank": {
+   "n": 2,
+   "hit@5": 0.0,
+   "mrr@10": 0.0,
+   "precision@5": 0.0,
+   "recall@10": 0.0,
+   "ndcg@10": 0.0,
+   "latency_s_mean": 7.0203
+  }
+ }
+}
