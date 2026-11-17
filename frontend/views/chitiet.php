@@ -414,8 +414,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
   .detail-summary__label { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; color: #183B2B; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
   .detail-summary__label i { font-size: 0.78rem; opacity: 0.8; }
   .detail-summary__text { margin: 0 0 12px; color: #334155; font-size: 0.88rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-  .detail-summary__ings { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
-  .detail-summary__ings li { padding: 2px 10px; border-radius: 6px; background: #fff; border: 1px solid #dfe8ef; color: #0F172A; font-size: 0.78rem; line-height: 1.6; }
+  .detail-summary__text--short { -webkit-line-clamp: 2; }
   .detail-summary__more { color: #183B2B; font-size: 0.82rem; font-weight: 600; text-decoration: none; }
   .detail-summary__more:hover, .detail-summary__more:focus-visible { text-decoration: underline; }
   .detail-stockline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font-size: 0.84rem; }
@@ -2451,27 +2450,38 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
 
         <?php
           // Tóm tắt nhanh lấp khoảng trống giữa chip thông tin và cụm nút mua.
-          $summaryText = trim(preg_replace('/\s+/u', ' ', strip_tags((string)($p['mo_ta'] ?? ''))) ?? '');
-          if (mb_strlen($summaryText, 'UTF-8') > 260) {
-            $summaryCut = mb_substr($summaryText, 0, 260, 'UTF-8');
-            $summaryText = rtrim(mb_substr($summaryCut, 0, (int)(mb_strrpos($summaryCut, ' ', 0, 'UTF-8') ?: 260), 'UTF-8'), " ,.;:-") . '…';
+          $summaryClip = static function (string $raw, int $max): string {
+            $text = trim((string)(preg_replace('/\s+/u', ' ', strip_tags($raw)) ?? ''));
+            $text = trim((string)(preg_replace('/^[•\-*–]\s*/u', '', $text) ?? $text));
+            if (mb_strlen($text, 'UTF-8') <= $max) {
+              return $text;
+            }
+            $cut = mb_substr($text, 0, $max, 'UTF-8');
+            $space = mb_strrpos($cut, ' ', 0, 'UTF-8');
+            return rtrim(mb_substr($cut, 0, $space ?: $max, 'UTF-8'), " ,.;:-•") . '…';
+          };
+          $summaryText = trim((string)(preg_replace('/\s+/u', ' ', strip_tags((string)($p['mo_ta'] ?? ''))) ?? ''));
+          // Mô tả crawl hay mở đầu bằng đoạn giới thiệu chung cả dòng sản phẩm;
+          // ưu tiên câu giới thiệu đúng sản phẩm này ("<tên> là ...").
+          $summaryName = trim((string)($p['ten_san_pham'] ?? ''));
+          if ($summaryName !== '') {
+            $namePos = mb_stripos($summaryText, $summaryName . ' là ', 0, 'UTF-8');
+            if ($namePos !== false) {
+              $summaryText = mb_substr($summaryText, $namePos, null, 'UTF-8');
+            }
           }
-          $summaryIngredients = array_slice(array_values(array_filter(array_map(
-            static fn($s) => trim((string)$s, " \t\n\r\0\x0B.;"),
-            preg_split('/[,;\n]+/u', strip_tags((string)($p['thanh_phan_chinh'] ?? ($p['thanh_phan'] ?? '')))) ?: []
-          ), static fn($s) => $s !== '' && mb_strlen($s, 'UTF-8') <= 40)), 0, 5);
+          $summaryText = $summaryClip($summaryText, 240);
+          $summaryIngredients = $summaryClip((string)($p['thanh_phan_chinh'] ?? ($p['thanh_phan'] ?? '')), 150);
         ?>
-        <?php if ($summaryText !== '' || $summaryIngredients): ?>
+        <?php if ($summaryText !== '' || $summaryIngredients !== ''): ?>
           <div class="detail-summary">
             <?php if ($summaryText !== ''): ?>
               <div class="detail-summary__label"><i class="fas fa-leaf" aria-hidden="true"></i> Điểm nổi bật</div>
               <p class="detail-summary__text"><?= h($summaryText) ?></p>
             <?php endif; ?>
-            <?php if ($summaryIngredients): ?>
+            <?php if ($summaryIngredients !== ''): ?>
               <div class="detail-summary__label"><i class="fas fa-flask" aria-hidden="true"></i> Thành phần chính</div>
-              <ul class="detail-summary__ings">
-                <?php foreach ($summaryIngredients as $ing): ?><li><?= h($ing) ?></li><?php endforeach; ?>
-              </ul>
+              <p class="detail-summary__text detail-summary__text--short"><?= h($summaryIngredients) ?></p>
             <?php endif; ?>
             <a href="#detailTabNav" class="detail-summary__more" onclick="var t=document.getElementById('tab-mo-ta');if(t){t.click();}">Xem mô tả đầy đủ <i class="fas fa-arrow-down" aria-hidden="true"></i></a>
           </div>

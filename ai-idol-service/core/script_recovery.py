@@ -11,6 +11,7 @@ from config import logger
 from core.purpose import PRODUCT_VIDEO, purpose_of
 from core.script_text import sanitize_external_retailer_mentions
 from core.state_machine import object_id, utcnow
+from providers.llm_provider import LLMRateLimited
 
 EXHAUSTED = "AUTO_REPAIR_EXHAUSTED"
 LEGACY_REJECTED = "REJECTED_BY_VALIDATOR"
@@ -194,6 +195,11 @@ def _run(db, job: dict, text: str, source: str, finish) -> Outcome:
         if not result.passed:
             return _park_exhausted(db, job, result, tracking)
         return finish(result, tracking)
+    except LLMRateLimited as exc:
+        # Groq daily token quota: nothing is wrong with the script, the staff just has to wait.
+        _release(db, job)
+        minutes = max(1, round(exc.retry_after_seconds / 60))
+        raise RecoveryError(f"AI đang hết hạn mức token (Groq). Hãy thử lại sau khoảng {minutes} phút.", 503) from exc
     except Exception:
         logger.exception("[SCRIPT-RECOVERY] job %s: unexpected error, restoring state", job["_id"])
         _release(db, job)

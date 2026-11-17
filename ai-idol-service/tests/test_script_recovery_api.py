@@ -126,6 +126,23 @@ class RecoveryApiTests(unittest.TestCase):
         self.assertEqual((response.status_code, response.get_json()["status"]), (202, "QUEUED"))
         delay.assert_called_once()
 
+    def test_approve_while_groq_quota_is_out_answers_503_and_keeps_the_job(self):
+        from providers.llm_provider import LLMRateLimited
+
+        def limited(*_a, **_k):
+            raise LLMRateLimited("Groq is unavailable: 429 rate limit", 420)
+
+        from core import script_recovery
+        db = self.db("AWAITING_APPROVAL")
+        # The fake DB hands back the stored dict itself, so check the release call rather than the restored status.
+        with patch.object(script_recovery, "_release") as release:
+            response, delay = self.post(db, "script/approve", {"script_text": GOOD}, validator=limited)
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("7 phút", response.get_json()["message"])
+        release.assert_called_once()
+        self.assertNotIn(self.job(db)["status"], ("FAILED", "AUTO_REPAIR_EXHAUSTED"))  # nothing parked or failed
+        delay.assert_not_called()
+
     def test_retry_repair_wrong_state_conflicts(self):
         response, _ = self.post(self.db("READY"), "script/retry-repair")
         self.assertEqual(response.status_code, 409)

@@ -1,8 +1,10 @@
 import os
 import time
+import datetime as dt
 from bson import ObjectId
 from core.state_machine import checkpoint_job, update_job_stage, fail_job, update_job_snapshot, get_job, get_db, utcnow
 from config import AUDIO_PIPELINE_VERSION, logger
+from providers.llm_provider import LLMRateLimited
 from core.purpose import LIVE_ONLY, PRODUCT_VIDEO, purpose_of
 from core.script_text import sanitize_external_retailer_mentions
 from engines.audio_mixer import lead_in_seconds
@@ -107,7 +109,13 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
                 validation_extra["clip_kind"] = job.get("clip_kind")
             else:
                 update_job_stage(job_id, "GENERATING_CONTENT")
-                draft = generate_content_and_script(snapshot, knowledge, content_mode, config, purpose)
+                draft = str(artifacts.get("pending_draft") or "").strip()
+                if draft:
+                    logger.info("[PIPELINE] Job %s reuses its checkpointed draft", job_id)
+                else:
+                    draft = generate_content_and_script(snapshot, knowledge, content_mode, config, purpose)
+                    # A quota stop during moderation must not cost the draft's tokens twice.
+                    checkpoint_job(job_id, {"artifacts.pending_draft": draft})
             result = validate_and_repair_script(
                 draft, snapshot, purpose,
                 on_event=lambda kind, version, _text: update_job_stage(
@@ -131,7 +139,7 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
                     "artifacts.validation_feedback": str(feedback or "")[:4000],
                     "status": "AUTO_REPAIR_EXHAUSTED", "current_stage": "AUTO_REPAIR_EXHAUSTED",
                     "error_message": f"Kịch bản chưa đạt sau {result.repair_attempts} lần tự sửa: {feedback}"[:4000],
-                    "failed_stage": None,
+                    "failed_stage": None, "artifacts.pending_draft": None,
                 })
                 logger.warning("[PIPELINE] Job %s: auto repair exhausted: %s", job_id, feedback)
                 return False
@@ -143,7 +151,20 @@ def run_ai_idol_pipeline(job_id: str) -> bool:
                  "$setOnInsert": {"created_at": utcnow()}},
                 upsert=True,
             )
-            checkpoint_job(job_id, {**tracking, "artifacts.script_text": script_text})
+            checkpoint_job(job_id, {**tracking, "artifacts.script_text": script_text,
+                                    "artifacts.pending_draft": None})
+    except LLMRateLimited as e:
+        # Groq daily token quota: transient. Park the job; resume_waiting_llm requeues it.
+        logger.warning("[PIPELINE] Job %s waits for the Groq token quota: %s", job_id, e)
+        update_job_stage(job_id, "WAITING_LLM", status="WAITING_LLM")
+        wait = min(max(float(e.retry_after_seconds), 60.0), 3600.0)
+        checkpoint_job(job_id, {
+            "error_message": f"Đang chờ hạn mức AI (Groq): {e}"[:1000],
+            "failed_stage": None,
+            "llm_retry_at": utcnow() + dt.timedelta(seconds=wait),
+            "waiting_llm_since": job.get("waiting_llm_since") or utcnow(),
+        })
+        return False
     except Exception as e:
         fail_job(job_id, "GENERATING_CONTENT", f"Lỗi lập kịch bản/kiểm duyệt: {e}")
         return False

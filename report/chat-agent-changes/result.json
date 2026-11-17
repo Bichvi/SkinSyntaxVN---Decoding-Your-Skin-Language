@@ -1,0 +1,142 @@
+{
+  "base": "http://127.0.0.1:8080",
+  "at": "2026-11-16T22:18:04.165Z",
+  "createdOrderId": 502323,
+  "results": [
+    {
+      "step": "draft card created",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "qty 2 as asked",
+      "ok": true,
+      "note": "qty=2"
+    },
+    {
+      "step": "payment COD",
+      "ok": true,
+      "note": "cod"
+    },
+    {
+      "step": "full phone + address reach the browser card",
+      "ok": true,
+      "note": "phone=0912 345 678"
+    },
+    {
+      "step": "card shows full phone and street",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "draft 1: line = unit × qty, subtotal = Σ lines, total = subtotal − discount + ship",
+      "ok": true,
+      "note": "items=2×186000 sub=372000 disc=0 ship=30000 total=402000"
+    },
+    {
+      "step": "phone change → new card",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "phone changed, address/name/qty/payment kept",
+      "ok": true,
+      "note": "phone=0987 654 321 name=E2E Test qty=2 pay=cod"
+    },
+    {
+      "step": "after phone change: line = unit × qty, subtotal = Σ lines, total = subtotal − discount + ship",
+      "ok": true,
+      "note": "items=2×186000 sub=372000 disc=0 ship=30000 total=402000"
+    },
+    {
+      "step": "card shows the new phone",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "payment change → new card",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "payment VNPay, qty/receiver kept",
+      "ok": true,
+      "note": "pay=vnpay qty=2"
+    },
+    {
+      "step": "after payment change: line = unit × qty, subtotal = Σ lines, total = subtotal − discount + ship",
+      "ok": true,
+      "note": "items=2×186000 sub=372000 disc=0 ship=30000 total=402000"
+    },
+    {
+      "step": "card shows VNPay",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "qty change → new card",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "qty 1, payment/receiver kept, same product",
+      "ok": true,
+      "note": "qty=1 pay=vnpay"
+    },
+    {
+      "step": "after qty change: line = unit × qty, subtotal = Σ lines, total = subtotal − discount + ship",
+      "ok": true,
+      "note": "items=1×186000 sub=186000 disc=0 ship=30000 total=216000"
+    },
+    {
+      "step": "back to COD → new card",
+      "ok": true,
+      "note": "pay=cod qty=1"
+    },
+    {
+      "step": "final card: line = unit × qty, subtotal = Σ lines, total = subtotal − discount + ship",
+      "ok": true,
+      "note": "items=1×186000 sub=186000 disc=0 ship=30000 total=216000"
+    },
+    {
+      "step": "OTP readable (MAIL_DEMO_MODE=1)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "order created",
+      "ok": true,
+      "note": "order_id=502323"
+    },
+    {
+      "step": "order readable from DB",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "stored line = card line (product, qty, unit price)",
+      "ok": true,
+      "note": "[{\"id\":\"3531\",\"qty\":1,\"unit\":186000}]"
+    },
+    {
+      "step": "stored amounts = card (subtotal, discount, shipping, total)",
+      "ok": true,
+      "note": "db=186000/0/30000/216000 card=186000/0/30000/216000"
+    },
+    {
+      "step": "stored payment = COD",
+      "ok": true,
+      "note": "cod"
+    },
+    {
+      "step": "stored receiver = last change (name, phone, address)",
+      "ok": true,
+      "note": "sdt_ok=true"
+    },
+    {
+      "step": "test order cancelled",
+      "ok": true,
+      "note": "order_id=502323"
+    }
+  ]
+}

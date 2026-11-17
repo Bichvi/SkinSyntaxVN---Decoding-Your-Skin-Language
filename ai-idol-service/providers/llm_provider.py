@@ -1,4 +1,5 @@
 import json
+import re
 
 try:
     from groq import Groq
@@ -17,6 +18,32 @@ from config import (
 from core.text_budget import fit_message_pair
 
 
+DEFAULT_RATE_LIMIT_WAIT_SECONDS = 300.0
+
+_WAIT_RE = re.compile(r"try again in\s+((?:\d+(?:\.\d+)?\s*(?:ms|h|m|s)\s*)+)", re.IGNORECASE)
+_WAIT_PART_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(ms|h|m|s)", re.IGNORECASE)
+_UNIT_SECONDS = {"h": 3600.0, "m": 60.0, "s": 1.0, "ms": 0.001}
+
+
+class LLMRateLimited(RuntimeError):
+    """Every Groq model answered 429: transient quota exhaustion, not a failure."""
+
+    def __init__(self, message: str, retry_after_seconds: float = DEFAULT_RATE_LIMIT_WAIT_SECONDS):
+        super().__init__(message)
+        self.retry_after_seconds = float(retry_after_seconds)
+
+
+def parse_retry_after(text) -> float | None:
+    """Seconds from 'try again in 7m5.08s' / '1h2m3s' / '45.5s' / '900ms'; None when absent."""
+    match = _WAIT_RE.search(str(text or ""))
+    if not match:
+        return None
+    parts = _WAIT_PART_RE.findall(match.group(1))
+    if not parts:
+        return None
+    return sum(float(value) * _UNIT_SECONDS[unit.lower()] for value, unit in parts)
+
+
 class LLMProvider:
     """Minimal Groq provider with no paid fallback or LangChain runtime overhead."""
 
@@ -32,6 +59,8 @@ class LLMProvider:
 
     def invoke(self, system_prompt: str, user_prompt: str) -> str:
         errors = []
+        limited = []  # one bool per recorded error: was it a rate limit?
+        waits = []
         for client in self.pool:
             for model in self.models:
                 limits = [GROQ_MAX_PROMPT_CHARS]
@@ -42,6 +71,7 @@ class LLMProvider:
                     return self._create(client, model, compact_system, compact_user)
                 except Exception as exc:
                     errors.append(f"{model}: {exc}")
+                    self._note_rate_limit(exc, limited, waits)
                     logger.warning("[LLM-PROVIDER] Groq model %s failed: %s", model, exc)
 
                     # Groq returns HTTP 413 when a free-tier TPM request is too large.
@@ -59,13 +89,14 @@ class LLMProvider:
                             return self._create(client, model, retry_system, retry_user)
                         except Exception as retry_exc:
                             errors.append(f"{model} compact: {retry_exc}")
+                            self._note_rate_limit(retry_exc, limited, waits)
                             logger.warning(
                                 "[LLM-PROVIDER] Compact retry for %s failed: %s",
                                 model,
                                 retry_exc,
                             )
         detail = "; ".join(errors[-2:]) if errors else "GROQ_API_KEY is missing"
-        raise RuntimeError("Groq is unavailable: " + detail)
+        self._raise_unavailable("Groq is unavailable: " + detail, errors, limited, waits)
 
     def invoke_json_schema(
         self,
@@ -79,6 +110,8 @@ class LLMProvider:
         """Request strict JSON while retaining the same free-tier fallback behavior."""
 
         errors = []
+        limited = []
+        waits = []
         for client in self.pool:
             for model in self.models:
                 compact_system, compact_user = fit_message_pair(
@@ -105,12 +138,35 @@ class LLMProvider:
                         return parsed
                     except Exception as exc:
                         errors.append(f"{model}: {exc}")
+                        self._note_rate_limit(exc, limited, waits)
                         logger.warning("[LLM-PROVIDER] Structured call on %s failed: %s", model, exc)
                         if prompt_limit == GROQ_MAX_PROMPT_CHARS and self._is_prompt_too_large(exc):
                             continue
                         break
         detail = "; ".join(errors[-2:]) if errors else "GROQ_API_KEY is missing"
-        raise RuntimeError("Groq structured output is unavailable: " + detail)
+        self._raise_unavailable("Groq structured output is unavailable: " + detail, errors, limited, waits)
+
+    @staticmethod
+    def _is_rate_limited(exc: Exception) -> bool:
+        if type(exc).__name__ == "RateLimitError" or getattr(exc, "status_code", None) == 429:
+            return True
+        detail = str(exc).lower()
+        return "429" in detail and ("rate limit" in detail or "rate_limit_exceeded" in detail)
+
+    @staticmethod
+    def _note_rate_limit(exc: Exception, limited: list, waits: list) -> None:
+        is_limited = LLMProvider._is_rate_limited(exc)
+        limited.append(is_limited)
+        if is_limited:
+            wait = parse_retry_after(exc)
+            if wait is not None:
+                waits.append(wait)
+
+    @staticmethod
+    def _raise_unavailable(message: str, errors: list, limited: list, waits: list):
+        if errors and limited and all(limited):
+            raise LLMRateLimited(message, min(waits) if waits else DEFAULT_RATE_LIMIT_WAIT_SECONDS)
+        raise RuntimeError(message)
 
     @staticmethod
     def _is_prompt_too_large(exc: Exception) -> bool:
