@@ -140,6 +140,7 @@ async function waitUntil(page, fn, arg, timeoutMs) {
     const liveJson = lr ? await lr.json().catch(() => ({})) : {};
     rec('5. host state=live accepted by server', !!liveJson.ok && liveJson.state === 'live', JSON.stringify(liveJson));
     const startedAt = Date.now();
+    let pausedMs = 0; // time the recorder was paused (not part of the saved video)
 
     // ---- Viewer auto-reloads into the live stream ----
     await waitUntil(viewer, () => document.getElementById('ssLivePage')?.dataset.liveStatus === 'live', null, 30000)
@@ -165,6 +166,49 @@ async function waitUntil(page, fn, arg, timeoutMs) {
       rec('8. viewer chat appears on host page', false, 'chat input missing on viewer page');
     }
 
+    // ---- 8b. Muting the mic is a mute, not an interruption: the session stays LIVE ----
+    const chipVisible = (sel) => viewer.waitForFunction((q) => {
+      const el = document.querySelector(q);
+      return !!el && !el.hidden && getComputedStyle(el).display !== 'none' && /Người dẫn đang tắt micro/.test(el.textContent || '');
+    }, sel, { timeout: 15000 });
+    await host.click('#btnToggleMic');
+    await host.waitForTimeout(3000);
+    const pingMuted = await ping(viewerCtx.request);
+    rec('8b. muting the mic keeps the session live (server)', pingMuted.stream_status === 'live', `stream_status=${pingMuted.stream_status}`);
+    const hostMicState = await host.evaluate(() => ({ state: document.getElementById('micState')?.textContent || '', chip: !document.getElementById('micOffChip')?.hidden }));
+    rec('8b. host shows mic muted + warning chip', /Đã tắt/.test(hostMicState.state) && hostMicState.chip, JSON.stringify(hostMicState));
+    await chipVisible('#hostMicChip')
+      .then(() => rec('8b. viewer sees "Người dẫn đang tắt micro" chip', true), (e) => rec('8b. viewer sees "Người dẫn đang tắt micro" chip', false, e.message.split('\n')[0]));
+    await host.click('#btnToggleMic');
+    await viewer.waitForFunction(() => { const el = document.getElementById('hostMicChip'); return !el || el.hidden || getComputedStyle(el).display === 'none'; }, null, { timeout: 15000 })
+      .then(() => rec('8b. chip disappears after unmuting the mic', true), () => rec('8b. chip disappears after unmuting the mic', false));
+
+    // ---- 8c. Pause: viewers see the paused screen, session stays LIVE, resume restores the video ----
+    await host.click('#btnPauseLive');
+    const pauseStartedAt = Date.now();
+    await viewer.waitForFunction(() => {
+      const w = document.getElementById('liveWaitingOverlay');
+      return !!w && !w.hidden && /Phiên phát đang tạm dừng/.test(document.getElementById('liveWaitingTitle')?.textContent || '');
+    }, null, { timeout: 10000 })
+      .then(() => rec('8c. viewer sees "Phiên phát đang tạm dừng"', true), () => rec('8c. viewer sees "Phiên phát đang tạm dừng"', false));
+    await host.waitForTimeout(5000);
+    const pingPaused = await ping(viewerCtx.request);
+    rec('8c. paused session is still live (server)', pingPaused.stream_status === 'live', `stream_status=${pingPaused.stream_status}`);
+    const hostPaused = await host.evaluate(() => ({ btn: document.getElementById('btnPauseLive')?.textContent.trim(), tag: document.getElementById('liveStatusLabel')?.textContent.trim(), camDisabled: !!document.getElementById('btnToggleCam')?.disabled }));
+    rec('8c. host shows paused state', /Tiếp tục phát/.test(hostPaused.btn) && hostPaused.tag === 'TẠM DỪNG' && hostPaused.camDisabled, JSON.stringify(hostPaused));
+    await host.click('#btnPauseLive');
+    pausedMs += Date.now() - pauseStartedAt;
+    const tResume = (await videoState(viewer, '#livekitRemoteVideo'))?.t ?? 0;
+    await viewer.waitForFunction(() => {
+      const w = document.getElementById('liveWaitingOverlay');
+      return !w || w.hidden;
+    }, null, { timeout: 10000 })
+      .then(() => rec('8c. paused overlay disappears after resume', true), () => rec('8c. paused overlay disappears after resume', false));
+    await viewer.waitForFunction((t0) => { const v = document.getElementById('livekitRemoteVideo'); return !!v && !v.hidden && v.videoWidth > 0 && v.currentTime > t0 + 1; }, tResume, { timeout: 10000 })
+      .then(() => rec('8c. viewer video plays again after resume', true), () => rec('8c. viewer video plays again after resume', false));
+    const pingResumed = await ping(viewerCtx.request);
+    rec('8c. session still live after resume', pingResumed.stream_status === 'live', `stream_status=${pingResumed.stream_status}`);
+
     // ---- Hold past the freshness window (the original bug dropped the stream after 30s) ----
     const v1 = await videoState(viewer, '#livekitRemoteVideo');
     const remaining = HOLD_MS - (Date.now() - startedAt);
@@ -181,13 +225,14 @@ async function waitUntil(page, fn, arg, timeoutMs) {
 
     // ---- Host ends the stream; recording is saved ----
     const heldSeconds = (Date.now() - startedAt) / 1000;
+    const recordedSeconds = heldSeconds - pausedMs / 1000;
     await Promise.all([
       host.waitForURL((u) => !u.toString().includes('studio=1'), { timeout: 120000 }).catch(() => null),
       host.click('#btnEndLive'),
     ]);
     await host.waitForLoadState('load');
     rec('13. no error dialog while ending', !dialogs.some((d) => d.startsWith('alert')), dialogs.join(' | '));
-    rec('14. every recording upload accepted', uploads.length >= Math.floor(heldSeconds / 10) && uploads.every((u) => u.status === 200),
+    rec('14. every recording upload accepted', uploads.length >= Math.floor(recordedSeconds / 10) && uploads.every((u) => u.status === 200),
       `${uploads.length} uploads (${uploads.map((u) => u.status).join(',')}) for ${Math.round(heldSeconds)}s on air`);
     const after = await ping(hostCtx.request);
     rec('15. session is replay_ready after ending', after.stream_status === 'replay_ready', `stream_status=${after.stream_status}`);
@@ -210,7 +255,7 @@ async function waitUntil(page, fn, arg, timeoutMs) {
         v.load();
         setTimeout(done, 20000);
       }));
-      rec('16b. recording covers the stream', duration >= heldSeconds * 0.8, `duration ${duration.toFixed(1)}s vs on air ${Math.round(heldSeconds)}s`);
+      rec('16b. recording covers the stream', duration >= recordedSeconds * 0.8, `duration ${duration.toFixed(1)}s vs on air ${Math.round(heldSeconds)}s minus ${Math.round(pausedMs / 1000)}s paused`);
     } else {
       rec('16. recording file is served', false, 'no replay src');
     }
