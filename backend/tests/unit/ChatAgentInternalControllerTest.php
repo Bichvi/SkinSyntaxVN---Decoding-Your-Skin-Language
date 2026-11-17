@@ -210,5 +210,56 @@ $check('receiver_domain_error_returns_error_code', $status === 422
     ]
     && $auditRecords !== [] && $auditRecords[array_key_last($auditRecords)]['outcome'] === 'error');
 
+
+// Partial receiver change: address_choice "new" with only a phone gets the server default for the rest.
+[$status, $body] = $invoke($controller, $claims, [
+    'scope' => 'mentioned_items',
+    'product_ids' => ['p1'],
+    'address_choice' => 'new',
+    'new_address' => ['sdt_nguoi_nhan' => '0987654321'],
+    'payment_method' => 'cod',
+    'cart_snapshot' => [],
+], 'internal_agent_draft');
+$check('draft_new_address_phone_only_filled_from_server_default', $status === 200
+    && ($body['card']['receiver']['name'] ?? '') === 'Owner'
+    && ($body['card']['receiver']['phone_masked'] ?? '') === '09xx xxx 321'
+    && ($body['card']['receiver']['address_short'] ?? '') === 'TP.HCM'
+    && !isset($body['card']['receiver']['phone']) && !isset($body['card']['receiver']['address']));
+$storedReceiver = $store->docs[(string)($body['card']['draft_id'] ?? '')]['receiver'] ?? [];
+$check('draft_new_address_phone_only_stores_full_receiver', ($storedReceiver['sdt_nguoi_nhan'] ?? '') === '0987654321'
+    && ($storedReceiver['dia_chi_giao_hang'] ?? '') === '12 Nguyen Hue, TP.HCM');
+
+foreach (array_keys($store->docs) as $openId) $store->docs[$openId]['used_at'] = 1_800_000_000; // stay under the 3-open-drafts cap
+[$status, $body] = $invoke($controller, $claims, [
+    'scope' => 'mentioned_items',
+    'product_ids' => ['p1'],
+    'address_choice' => 'new',
+    'new_address' => ['sdt_nguoi_nhan' => '12345'],
+    'payment_method' => 'cod',
+], 'internal_agent_draft');
+$check('draft_invalid_phone_returns_code_and_message', $status === 422
+    && ($body['code'] ?? '') === 'receiver_phone_invalid'
+    && ($body['message'] ?? '') === 'Số điện thoại không hợp lệ (cần 10 số, bắt đầu bằng 0).');
+
+// Incomplete default receiver is not shown to the customer as an empty address.
+$incompleteController = new ChatAgentInternalController(
+    'internal-secret',
+    'token-secret',
+    null,
+    $core,
+    $audit,
+    $service,
+    static fn(string $email): array => ['ma_kh' => '42', 'ho_ten' => 'Owner', 'so_dien_thoai' => '', 'dia_chi' => '   '],
+    $orderResolver
+);
+[$status, $body] = $invoke($incompleteController, $claims, [], 'internal_agent_checkout_defaults');
+$check('checkout_defaults_incomplete_receiver_is_null_with_missing', $status === 200
+    && array_key_exists('receiver', $body) && $body['receiver'] === null
+    && ($body['missing'] ?? null) === ['sdt_nguoi_nhan', 'dia_chi_giao_hang']
+    && in_array('cod', (array)($body['methods'] ?? []), true));
+[$status, $body] = $invoke($controller, $claims, [], 'internal_agent_checkout_defaults');
+$check('checkout_defaults_complete_receiver_has_empty_missing', $status === 200
+    && is_array($body['receiver'] ?? null) && ($body['missing'] ?? null) === []);
+
 echo PHP_EOL . "{$pass} passed, {$fail} failed" . PHP_EOL;
 exit($fail ? 1 : 0);

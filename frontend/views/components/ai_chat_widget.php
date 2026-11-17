@@ -1457,27 +1457,218 @@ $aiLabelScanOn = function_exists('ss_env')
       max-height: calc(100vh - var(--site-header-height, 160px)) !important;
     }
 
-    .ai-chat-agent-draft-card__otp {
-      margin-top: 10px;
+    /* Chat order draft / invoice card */
+    .ai-chat-agent-draft-card {
+      --dc-green: #2f6a4f;
+      --dc-green-dark: #25573f;
+      --dc-tint: #f4f8f5;
+      --dc-line: #e3ebe6;
+      --dc-muted: #5d6f66;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      margin: 8px 0;
+      padding: 14px;
+      background: #fff;
+      border: 1px solid var(--dc-line);
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(31, 45, 39, 0.07);
+      color: #1f2d27;
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    .ai-chat-agent-draft-card[hidden] { display: none; }
+
+    .ai-chat-agent-draft-card * { box-sizing: border-box; }
+
+    .ai-chat-agent-draft-card p,
+    .ai-chat-agent-draft-card h4,
+    .ai-chat-agent-draft-card h5,
+    .ai-chat-agent-draft-card ul {
+      margin: 0;
+      padding: 0;
+    }
+
+    .ai-chat-agent-draft-card__head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ai-chat-agent-draft-card__head-text { min-width: 0; }
+
+    .ai-chat-agent-draft-card__title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #1f2d27;
+    }
+
+    .ai-chat-agent-draft-card__sub {
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--dc-muted);
+    }
+
+    .ai-chat-agent-draft-card__countdown {
+      flex: none;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #e6f1ea;
+      color: #1f5a3f;
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .ai-chat-agent-draft-card__countdown:empty { display: none; }
+    .ai-chat-agent-draft-card__countdown.is-warn { background: #fff1d6; color: #8a5a00; }
+    .ai-chat-agent-draft-card__countdown.is-urgent { background: #fde4e1; color: #b42318; }
+    .ai-chat-agent-draft-card__countdown.is-expired { background: #eceff0; color: #4b5a54; }
+
+    .ai-chat-agent-draft-card .ai-chat-agent-draft-card__notice {
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #eceff0;
+      color: #3d4b45;
+      font-weight: 600;
+    }
+
+    .ai-chat-agent-draft-card__notice[hidden] { display: none; }
+
+    .ai-chat-agent-draft-card__items { list-style: none; }
+
+    .ai-chat-agent-draft-card__item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-top: 1px solid var(--dc-line);
+    }
+
+    .ai-chat-agent-draft-card__item:first-child { border-top: 0; padding-top: 0; }
+    .ai-chat-agent-draft-card__item:last-child { padding-bottom: 0; }
+
+    .ai-chat-agent-draft-card__thumb {
+      flex: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #edf4ef;
+      border: 1px solid var(--dc-line);
+    }
+
+    .ai-chat-agent-draft-card__item-info {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .ai-chat-agent-draft-card__item-name {
+      font-weight: 600;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+    }
+
+    .ai-chat-agent-draft-card__item-meta {
+      font-size: 12px;
+      color: var(--dc-muted);
+    }
+
+    .ai-chat-agent-draft-card__item-total {
+      flex: none;
+      margin-left: auto;
+      font-weight: 700;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ai-chat-agent-draft-card__summary {
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--dc-tint);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ai-chat-agent-draft-card__row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .ai-chat-agent-draft-card__row > span:first-child { color: var(--dc-muted); }
+    .ai-chat-agent-draft-card__row > :last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ai-chat-agent-draft-card__row--discount > * { color: #1f6b3f !important; font-weight: 600; }
+    .ai-chat-agent-draft-card__row--discount > span:first-child { white-space: normal; overflow-wrap: anywhere; }
+
+    .ai-chat-agent-draft-card__divider {
+      height: 1px;
+      margin: 2px 0;
+      background: #d4e2d9;
+    }
+
+    .ai-chat-agent-draft-card__row--total { align-items: center; }
+    .ai-chat-agent-draft-card__row--total > span:first-child { color: #1f2d27; font-weight: 700; }
+    .ai-chat-agent-draft-card__row--total > strong {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--dc-green);
+    }
+
+    .ai-chat-agent-draft-card__delivery {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
-    .ai-chat-agent-draft-card__otp p {
-      margin: 0;
-      font-size: 13px;
+    .ai-chat-agent-draft-card__info {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
     }
 
-    .ai-chat-agent-draft-card__otp-input {
-      width: 100%;
-      box-sizing: border-box;
+    .ai-chat-agent-draft-card__icon {
+      flex: none;
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+      color: var(--dc-green);
+    }
+
+    .ai-chat-agent-draft-card__info-body {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ai-chat-agent-draft-card__info-label { font-size: 11px; color: var(--dc-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+    .ai-chat-agent-draft-card__info-value { font-weight: 600; overflow-wrap: anywhere; }
+    .ai-chat-agent-draft-card__info-value.is-muted { color: var(--dc-muted); font-weight: 400; }
+
+    .ai-chat-agent-draft-card .ai-chat-agent-draft-card__warning {
       padding: 8px 10px;
-      border: 1px solid #cbd5e1;
       border-radius: 8px;
-      font-size: 18px;
-      letter-spacing: 6px;
-      text-align: center;
+      border-left: 4px solid #e0a100;
+      background: #fff7e6;
+      color: #8a5a00;
+      font-size: 12.5px;
     }
 
     .ai-chat-agent-draft-card__error {
@@ -1487,14 +1678,172 @@ $aiLabelScanOn = function_exists('ss_env')
       font-weight: 600;
     }
 
-    .ai-chat-agent-draft-card__otp .ai-chat-agent-draft-card__actions {
+    /* Layout order: errors/warnings above, OTP panel, then the action buttons. */
+    .ai-chat-agent-draft-card__otp { order: 1; }
+    .ai-chat-agent-draft-card__actions { order: 2; }
+
+    .ai-chat-agent-draft-card__actions {
       display: flex;
+      flex-direction: column;
+      align-items: stretch;
       gap: 8px;
     }
 
-    .ai-chat-agent-draft-card__otp button:disabled {
-      opacity: 0.6;
+    .ai-chat-agent-draft-card__btn {
+      font: inherit;
+      cursor: pointer;
+      border: 0;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .ai-chat-agent-draft-card__btn--primary {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--dc-green);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+      box-shadow: 0 2px 6px rgba(47, 106, 79, 0.28);
+    }
+
+    .ai-chat-agent-draft-card__btn--primary:hover:not(:disabled) { background: var(--dc-green-dark); }
+
+    .ai-chat-agent-draft-card__btn--primary:disabled {
+      background: #d5ddd8;
+      color: #5b6862;
+      box-shadow: none;
       cursor: not-allowed;
+    }
+
+    .ai-chat-agent-draft-card__btn--text {
+      align-self: center;
+      padding: 8px 14px;
+      min-height: 36px;
+      background: transparent;
+      color: #4b5a54;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .ai-chat-agent-draft-card__btn--text:hover:not(:disabled) { background: #f0f4f2; color: #1f2d27; }
+    .ai-chat-agent-draft-card__btn--text:disabled { color: #7a8781; cursor: not-allowed; text-decoration: none; }
+
+    .ai-chat-agent-draft-card__btn:focus-visible,
+    .ai-chat-agent-draft-card__otp-input:focus-visible,
+    .ai-chat-agent-draft-card__link:focus-visible {
+      outline: 3px solid rgba(47, 106, 79, 0.45);
+      outline-offset: 2px;
+    }
+
+    .ai-chat-agent-draft-card .ai-chat-agent-draft-card__hint {
+      margin-top: -2px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--dc-muted);
+    }
+
+    .ai-chat-agent-draft-card__otp {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 10px;
+      background: var(--dc-tint);
+      border: 1px solid var(--dc-line);
+    }
+
+    .ai-chat-agent-draft-card__otp-title { font-size: 15px; font-weight: 700; text-align: center; }
+    .ai-chat-agent-draft-card__otp-hint { text-align: center; color: var(--dc-muted); overflow-wrap: anywhere; }
+    .ai-chat-agent-draft-card__otp-status { text-align: center; color: var(--dc-green); font-weight: 600; }
+    .ai-chat-agent-draft-card__otp .ai-chat-agent-draft-card__error { text-align: center; }
+
+    .ai-chat-agent-draft-card__otp-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #b9cbc0;
+      border-radius: 10px;
+      background: #fff;
+      color: #1f2d27;
+      font: inherit;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 8px;
+      text-align: center;
+    }
+
+    .ai-chat-agent-draft-card__otp-input::placeholder {
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0;
+      color: #6b7a73;
+    }
+
+    .ai-chat-agent-draft-card__otp-input:disabled { background: #eef2f0; color: #5b6862; }
+
+    /* OTP step: the main confirm button and its hint step aside for the code panel. */
+    .ai-chat-agent-draft-card.is-otp > .ai-chat-agent-draft-card__actions > .ai-chat-agent-draft-card__confirm,
+    .ai-chat-agent-draft-card.is-otp > .ai-chat-agent-draft-card__actions > .ai-chat-agent-draft-card__hint {
+      display: none;
+    }
+
+    .ai-chat-agent-draft-card.is-otp > .ai-chat-agent-draft-card__otp { order: 1; }
+    .ai-chat-agent-draft-card.is-otp > .ai-chat-agent-draft-card__actions { order: 2; }
+
+    .ai-chat-agent-draft-card.is-expired {
+      opacity: 0.72;
+    }
+
+    .ai-chat-agent-draft-card.is-expired .ai-chat-agent-draft-card__otp { display: none; }
+
+    .ai-chat-agent-draft-card__success {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
+    }
+
+    .ai-chat-agent-draft-card__success-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #e1f1e8;
+      color: var(--dc-green);
+    }
+
+    .ai-chat-agent-draft-card__success-icon svg { width: 26px; height: 26px; stroke-width: 3; }
+    .ai-chat-agent-draft-card__success-title { font-size: 16px; font-weight: 800; color: var(--dc-green); }
+    .ai-chat-agent-draft-card__order-id { font-weight: 600; }
+    .ai-chat-agent-draft-card__success .ai-chat-agent-draft-card__row { width: 100%; padding: 8px 10px; border-radius: 10px; background: var(--dc-tint); }
+
+    .ai-chat-agent-draft-card__link {
+      margin-top: 4px;
+      color: var(--dc-green);
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .ai-chat-agent-draft-card__link:hover { color: var(--dc-green-dark); }
+
+    .ai-chat-agent-draft-card__note { text-align: center; color: var(--dc-muted); }
+
+    @media (max-width: 360px) {
+      .ai-chat-agent-draft-card { padding: 12px; }
+      .ai-chat-agent-draft-card__otp-input { letter-spacing: 5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ai-chat-agent-draft-card__btn { transition: none; }
     }
   </style>
 

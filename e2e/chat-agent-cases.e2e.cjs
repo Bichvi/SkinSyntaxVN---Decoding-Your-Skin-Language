@@ -332,7 +332,7 @@ async function draftFlow(ctx, caseId, pay) {
   const snap = await snapshot(page);
   return { page, cartStart: cart, ready: !!(snap && snap.confirmEnabled), draftText: snap && snap.draftText, drawnAt: Date.now(), turns: [t1, t2, last] };
 }
-const cardTotalDigits = (txt) => { const m = /Tổng:\s*([\d.,]+)/.exec(txt || ''); return m ? m[1].replace(/\D/g, '') : null; };
+const cardTotalDigits = (txt) => { const m = /Tổng thanh toán\s*([\d.,]+)/.exec(txt || ''); return m ? m[1].replace(/\D/g, '') : null; };
 
 // ---------- cancellation ----------
 async function cancelOrder(ctx, id) {

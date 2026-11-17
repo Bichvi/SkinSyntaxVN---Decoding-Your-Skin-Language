@@ -578,5 +578,50 @@ $otherCode = $otherOtp->issue($otherSub, 'draft-1');
 ]);
 $check('controller_other_id_zero_user_cannot_confirm_draft', $emStatus2 === 404 && $emResp2['ok'] === false);
 
+
+// Cart lines are decremented by the ordered quantity, not wiped.
+[$service, $store, $core] = chatOrderConfirmServiceFixture();
+chatOrderConfirmDraft($store);
+$session = ['gio_hang' => ['p1' => 5, 'p2' => 1]];
+$service->confirm('draft-1', $user, $session);
+$check('cart_line_decremented_by_ordered_qty', ($session['gio_hang']['p1'] ?? null) === 3 && ($session['gio_hang']['p2'] ?? null) === 1);
+
+[$service, $store, $core] = chatOrderConfirmServiceFixture();
+chatOrderConfirmDraft($store);
+$session = ['gio_hang' => ['p1' => 1]];
+$service->confirm('draft-1', $user, $session);
+$check('cart_line_removed_when_ordered_qty_covers_it', !isset($session['gio_hang']['p1']) && $session['gio_hang'] === []);
+
+[$service, $store, $core] = chatOrderConfirmServiceFixture();
+chatOrderConfirmDraft($store);
+$session = ['gio_hang' => ['p2' => 4]];
+$service->confirm('draft-1', $user, $session);
+$check('cart_without_ordered_line_is_untouched', $session['gio_hang'] === ['p2' => 4]);
+
+[$service, $store, $core] = chatOrderConfirmServiceFixture();
+chatOrderConfirmDraft($store);
+$session = [];
+$service->confirm('draft-1', $user, $session);
+$check('missing_cart_is_not_created_by_confirm', !isset($session['gio_hang']) || $session['gio_hang'] === []);
+
+// The "changed" card shows the customer their full receiver again.
+[$service, $store, $core] = chatOrderConfirmServiceFixture();
+chatOrderConfirmDraft($store);
+$core->prices['p1'] = 150;
+$session = ['gio_hang' => ['p1' => 2]];
+$changedFull = $service->confirm('draft-1', $user, $session);
+$check('changed_card_carries_full_receiver', $changedFull['status'] === 'changed'
+    && ($changedFull['card']['receiver']['phone'] ?? '') === '0901 234 123'
+    && ($changedFull['card']['receiver']['address'] ?? '') === '12 Nguyen Hue, TP.HCM'
+    && ($changedFull['card']['receiver']['phone_masked'] ?? '') === '09xx xxx 123'
+    && ($changedFull['card']['receiver']['address_short'] ?? '') === 'TP.HCM'
+    && ($changedFull['card']['items'][0]['qty'] ?? 0) === 2);
+
+// enrichCard is the browser-only view used by the SSE relay; other users get the card unchanged.
+$newCard = $changedFull['card'];
+unset($newCard['receiver']['phone'], $newCard['receiver']['address']);
+$check('enrich_card_adds_full_receiver_for_owner', ($service->enrichCard($newCard, 'customer-1')['receiver']['phone'] ?? '') === '0901 234 123');
+$check('enrich_card_ignores_other_sub', $service->enrichCard($newCard, 'customer-2') === $newCard);
+
 echo PHP_EOL . "{$pass} passed, {$fail} failed" . PHP_EOL;
 exit($fail ? 1 : 0);

@@ -1,7 +1,7 @@
 {
   "base": "http://127.0.0.1:8080",
-  "at": "2026-11-16T12:09:46.362Z",
-  "createdOrderId": 502322,
+  "at": "2026-11-16T22:22:53.588Z",
+  "createdOrderId": 502324,
   "results": [
     {
       "step": "widget flag data-agent-v2=1",
@@ -71,12 +71,12 @@
     {
       "step": "order listed in customer orders",
       "ok": true,
-      "note": "order_id=502322"
+      "note": "order_id=502324"
     },
     {
       "step": "test order cancelled",
       "ok": true,
-      "note": "order_id=502322 http=302"
+      "note": "order_id=502324 http=302"
     }
   ]
 }

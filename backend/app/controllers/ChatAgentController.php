@@ -161,7 +161,16 @@ final class ChatAgentController
             return self::applyCartEffectAfterStream($effect, $secret, $sub, $sessionId);
         };
 
-        $relay = new ChatSseRelay($out, $applyEffect);
+        // The LLM only ever sees the masked receiver; the customer's own card gets the full phone/address.
+        $transformUi = function (array $event) use ($loggedIn, $sub): array {
+            $card = $event['payload'] ?? null;
+            if (!$loggedIn || $sub === '' || !is_array($card) || trim((string)($card['draft_id'] ?? '')) === '') {
+                return $event;
+            }
+            $event['payload'] = $this->service()->enrichCard($card, $sub);
+            return $event;
+        };
+        $relay = new ChatSseRelay($out, $applyEffect, $transformUi);
         $curlError = '';
         $status = 0;
         $contentType = '';

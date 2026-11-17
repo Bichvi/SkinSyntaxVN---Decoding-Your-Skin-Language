@@ -223,17 +223,25 @@ final class ChatAgentInternalController
         $email = trim((string)($claims['em'] ?? ''));
         $customer = $this->customerForEmail($email);
         $receiver = null;
+        $missing = ['ten_nguoi_nhan', 'sdt_nguoi_nhan', 'dia_chi_giao_hang'];
         if ($customer !== null) {
-            $receiver = ChatDraftService::maskReceiver($this->checkoutCore()->defaultReceiver(
+            $default = $this->checkoutCore()->defaultReceiver(
                 $customer,
                 ['ho_ten' => (string)($claims['ho_ten'] ?? $claims['name'] ?? '')]
-            ));
+            );
+            $missing = [];
+            foreach (['ten_nguoi_nhan', 'sdt_nguoi_nhan', 'dia_chi_giao_hang'] as $field) {
+                if (trim((string)($default[$field] ?? '')) === '') $missing[] = $field;
+            }
+            // Never hand the agent a half-empty receiver it would read out as "địa chỉ gần nhất là: .".
+            if ($missing === []) $receiver = ChatDraftService::maskReceiver($default);
         }
         $methods = ['cod', 'vnpay'];
         if ($this->qrTransferEnabled()) $methods[] = 'bank_transfer_qr';
         $this->audit($sub, 'internal_agent_checkout_defaults', [], 'ok');
         $this->respond([
             'receiver' => $receiver,
+            'missing' => $missing,
             'last_payment_method' => $this->lastPaymentMethod($customer),
             'methods' => $methods,
         ], 200);
@@ -252,12 +260,11 @@ final class ChatAgentInternalController
         $customer = $this->customerForEmail(trim((string)($claims['em'] ?? '')));
         $claims = $this->claimsWithCustomerId($claims, $customer);
         unset($body['receiver'], $body['default_receiver'], $body['_server_default_receiver']);
-        if ((string)($body['address_choice'] ?? 'default') === 'default') {
-            $body['_server_default_receiver'] = $this->checkoutCore()->defaultReceiver(
-                $customer,
-                ['ho_ten' => (string)($claims['ho_ten'] ?? $claims['name'] ?? '')]
-            );
-        }
+        // Always supplied: "new" with only the changed field(s) is completed from the customer's default.
+        $body['_server_default_receiver'] = $this->checkoutCore()->defaultReceiver(
+            $customer,
+            ['ho_ten' => (string)($claims['ho_ten'] ?? $claims['name'] ?? '')]
+        );
         $snapshot = $body['cart_snapshot'] ?? $body['cartSnapshot'] ?? [];
         try {
             $card = $this->draftService()->upsert($claims, $body, is_array($snapshot) ? $snapshot : []);
@@ -305,12 +312,10 @@ final class ChatAgentInternalController
         $req['product_ids'] = array_keys($lines);
         $req['qty'] = $lines;
         $req['address_choice'] = $req['address_choice'] ?? 'default';
-        if ($req['address_choice'] === 'default') {
-            $req['_server_default_receiver'] = $this->checkoutCore()->defaultReceiver(
-                $customer,
-                ['ho_ten' => (string)($claims['ho_ten'] ?? $claims['name'] ?? '')]
-            );
-        }
+        $req['_server_default_receiver'] = $this->checkoutCore()->defaultReceiver(
+            $customer,
+            ['ho_ten' => (string)($claims['ho_ten'] ?? $claims['name'] ?? '')]
+        );
         $snapshot = $body['cart_snapshot'] ?? $body['cartSnapshot'] ?? array_fill_keys(array_keys($lines), []);
         $card = $this->draftService()->upsert($claims, $req, is_array($snapshot) ? $snapshot : []);
         $this->audit($sub, 'internal_agent_reorder', ['order_id' => $orderId], 'ok');
