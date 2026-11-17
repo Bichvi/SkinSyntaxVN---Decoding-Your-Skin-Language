@@ -1,6 +1,8 @@
 <?php
 // backend/app/views/admin/lives.php
 $pageTitle = 'Quản lý phiên phát trực tiếp & ưu đãi';
+$_SESSION['live_csrf'] ??= bin2hex(random_bytes(24));
+$canAdministerLive = current_role() === 'admin';
 require_once __DIR__ . '/layouts/header.php';
 ?>
 
@@ -10,9 +12,9 @@ require_once __DIR__ . '/layouts/header.php';
       <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-camera-video-fill text-danger me-2"></i>Quản lý phiên phát trực tiếp & ưu đãi</h1>
       <p class="text-muted mb-0 small">Tạo phiên, mở phòng phát, chọn sản phẩm đang giới thiệu và xem lại video sau khi kết thúc.</p>
     </div>
-    <button type="button" class="btn btn-primary btn-sm px-3 py-2 fw-semibold text-white" style="background: #183B2B; border: none; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#adminCreateLiveModal">
+    <?php if ($canAdministerLive): ?><button type="button" class="btn btn-primary btn-sm px-3 py-2 fw-semibold text-white" style="background: #183B2B; border: none; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#adminCreateLiveModal">
       <i class="bi bi-plus-lg me-1"></i>Tạo phiên phát mới
-    </button>
+    </button><?php endif; ?>
   </div>
 
   <?php if ($msg = get_flash('success')): ?>
@@ -250,8 +252,8 @@ require_once __DIR__ . '/layouts/header.php';
                   <a href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= urlencode($live['id']) ?>&amp;studio=1" class="btn btn-success" title="Mở phòng phát để theo dõi và kết thúc phiên">
                     <i class="bi bi-camera-video-fill"></i> Vào phòng phát
                   </a>
-                <?php elseif (in_array($liveStatus, ['scheduled', 'ready'], true)): ?>
-                  <a href="<?= BASE_URL ?>/index.php?r=admin_live_status&amp;id=<?= urlencode($live['id']) ?>&amp;status=danglive&amp;next=live" class="btn btn-success" title="Mở phòng phát, bật hình ảnh và âm thanh">
+                <?php elseif (in_array($liveStatus, ['scheduled', 'ready', 'interrupted'], true)): ?>
+                  <a href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= urlencode($live['id']) ?>&amp;studio=1" class="btn btn-success" title="Mở Live Studio">
                     <i class="bi bi-play-fill"></i> Mở phòng phát
                   </a>
                 <?php else: ?>
@@ -265,9 +267,11 @@ require_once __DIR__ . '/layouts/header.php';
                     </span>
                   <?php endif; ?>
                 <?php endif; ?>
-                <a href="<?= BASE_URL ?>/index.php?r=admin_live_delete&id=<?= urlencode($live['id']) ?>" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa phiên phát này?');" title="Xóa">
-                  <i class="bi bi-trash-fill"></i>
-                </a>
+                <?php if ($canAdministerLive): ?><form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_delete" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phiên phát này?');">
+                  <input type="hidden" name="id" value="<?= h($live['id']) ?>">
+                  <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
+                  <button class="btn btn-outline-danger" title="Xóa"><i class="bi bi-trash-fill"></i></button>
+                </form><?php endif; ?>
               </div>
             </td>
           </tr>
@@ -399,6 +403,7 @@ require_once __DIR__ . '/layouts/header.php';
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_edit">
+          <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
           <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
           <div class="modal-body p-4">
             <div class="row g-3">
@@ -581,6 +586,7 @@ require_once __DIR__ . '/layouts/header.php';
                       <td><span class="badge bg-light text-dark border"><?= (int)($dItem['so_luong_kho_deal'] ?? 0) ?> SP</span></td>
                       <td class="text-end">
                         <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_pin_product" class="d-inline">
+                          <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
                           <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
                           <input type="hidden" name="product_id" value="<?= h($dItem['ma_san_pham']) ?>">
                           <input type="hidden" name="gia_uu_dai_live" value="<?= (float)$dItem['gia_uu_dai_live'] ?>">
@@ -591,6 +597,7 @@ require_once __DIR__ . '/layouts/header.php';
                           </button>
                         </form>
                         <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_delete_deal" class="d-inline" onsubmit="return confirm('Xóa sản phẩm này khỏi phiên phát?');">
+                          <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
                           <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
                           <input type="hidden" name="deal_id" value="<?= h($dItem['deal_id']) ?>">
                           <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-1" style="width: 24px; height: 24px; line-height: 1;" title="Xóa deal">
@@ -614,6 +621,7 @@ require_once __DIR__ . '/layouts/header.php';
           <div class="card border-0 bg-light rounded-3 p-3 border">
             <strong class="text-dark d-block mb-2 small"><i class="bi bi-plus-circle-fill text-success me-1"></i>Thêm sản phẩm vào phiên</strong>
             <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_add_deal">
+              <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
               <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
               <div class="row g-2">
                 <div class="col-md-6">
@@ -667,6 +675,7 @@ require_once __DIR__ . '/layouts/header.php';
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_pin_product">
+          <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
           <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
           <input type="hidden" name="redirect" value="1">
           <div class="modal-body p-4">
@@ -719,6 +728,7 @@ require_once __DIR__ . '/layouts/header.php';
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_update_recording">
+          <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
           <input type="hidden" name="live_id" value="<?= h($live['id']) ?>">
           <div class="modal-body p-4">
             <?php 
@@ -773,6 +783,7 @@ require_once __DIR__ . '/layouts/header.php';
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_create">
+        <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
         <div class="modal-body p-4">
           <div class="row g-3">
             <div class="col-12">

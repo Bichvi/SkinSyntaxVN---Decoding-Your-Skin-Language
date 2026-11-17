@@ -1060,6 +1060,35 @@ class SanPham {
                 }
             }
 
+            if (!$children) {
+                $groups = [];
+                arsort($directCounts);
+                foreach ($directCounts as $id => $count) {
+                    $category = $byId[$id] ?? null;
+                    if (!($category['ten_danh_muc'] ?? '')) {
+                        continue;
+                    }
+                    $groups[] = [
+                        'id' => $id,
+                        'name' => $category['ten_danh_muc'],
+                        'slug' => (string)($category['slug'] ?? ''),
+                        'is_leaf' => true,
+                        'direct_count' => $count,
+                        'recursive_count' => $count,
+                        'children' => [],
+                    ];
+                    if (count($groups) >= $cap2LimitEach) {
+                        break;
+                    }
+                }
+                return $groups ? ['Danh mục' => [
+                    'root_id' => null,
+                    'root_name' => 'Danh mục',
+                    'total_count' => array_sum(array_column($groups, 'direct_count')),
+                    'groups' => $groups,
+                ]] : [];
+            }
+
             $tree = [];
             foreach ($roots as $rootId) {
                 $rootCat = $byId[$rootId] ?? null;

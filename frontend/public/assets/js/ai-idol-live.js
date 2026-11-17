@@ -122,7 +122,7 @@
         if (!pid || btn.disabled) return;
         const original = btn.textContent;
         btn.disabled = true;
-        const body = new URLSearchParams({ product_id: pid, quantity: '1' });
+        const body = new URLSearchParams({ product_id: pid, quantity: '1', campaign_id: wrap.dataset.campaignId, csrf: wrap.dataset.csrf });
         fetch('index.php?r=api_live_add_to_cart', { method: 'POST', body, credentials: 'same-origin' })
           .then((r) => r.json())
           .then((data) => {

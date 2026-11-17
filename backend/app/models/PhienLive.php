@@ -118,7 +118,7 @@ class PhienLive {
             'ma_san_pham_ghim', 'gia_uu_dai_live', 'so_luong_kho_deal',
             'bat_ai_cohost', 'server_livekit_url', 'url_ban_ghi',
             'tom_tat_phien_live', 'trang_thai', 'recording_status',
-            'recording_mime', 'recording_size', 'recording_error'
+            'recording_mime', 'recording_size', 'recording_error', 'publisher_staff_id', 'live_staff', 'syna_revision'
         ];
         $set = [];
         foreach ($allowed as $key) {
@@ -165,13 +165,13 @@ class PhienLive {
         }
     }
 
-    public function updateStreamState($id, string $state): bool {
+    public function updateStreamState($id, string $state, string $source = ''): bool {
         $state = strtolower(trim($state));
         if (!in_array($state, ['offline', 'live', 'interrupted', 'ended'], true)) return false;
         $set = ['stream_state' => $state, 'stream_last_seen' => $state === 'live' ? time() : null, 'updated_at' => date('Y-m-d H:i:s')];
         if ($state === 'live') {
             $set['trang_thai'] = 'live';
-            $set['stream_started_at'] = time();
+            $set['stream_source'] = $source;
         } elseif ($state === 'interrupted') {
             $set['trang_thai'] = 'interrupted';
         } elseif ($state === 'ended') {
@@ -260,7 +260,8 @@ class PhienLive {
 
     public function saveRecording($id, string $url, string $mime, int $size): bool {
         try {
-            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => [
+            $filter = $this->idFilter($id) + ['recording_status' => ['$ne' => 'replay_ready']];
+            $res = $this->db->phien_live->updateOne($filter, ['$set' => [
                 'url_ban_ghi' => trim($url), 'recording_status' => 'replay_ready', 'recording_mime' => trim($mime),
                 'recording_size' => max(0, $size), 'recording_error' => '', 'trang_thai' => 'replay_ready',
                 'stream_state' => 'offline', 'updated_at' => date('Y-m-d H:i:s')
@@ -283,37 +284,81 @@ class PhienLive {
         }
     }
 
-    public function luuTinNhanChat(string $roomId, string $senderName, string $message, bool $isAi = false, bool $isOrder = false, string $senderType = 'customer', string $senderId = '', string $clientMessageId = '', bool $isQuestion = false): bool {
+    public function saveChat(array $message): ?array {
         try {
-            $this->db->phien_live_chats->insertOne([
-                'room_id' => (string)$roomId, 'sender_id' => trim($senderId), 'sender_type' => trim($senderType) ?: ($isAi ? 'ai' : 'customer'),
-                'sender_name' => mb_substr(trim($senderName), 0, 80), 'message' => mb_substr(trim($message), 0, 1000),
-                'is_ai' => $isAi, 'is_order' => $isOrder, 'is_question' => $isQuestion, 'client_message_id' => trim($clientMessageId),
-                'created_at' => date('Y-m-d H:i:s'), 'timestamp_ms' => (int)round(microtime(true) * 1000)
-            ]);
-            return true;
+            $message['created_at'] = date(DATE_ATOM);
+            $message['timestamp_ms'] = (int)round(microtime(true) * 1000);
+            $id = $message['_id'];
+            unset($message['_id']);
+            $this->db->phien_live_chats->updateOne(['_id' => $id], ['$setOnInsert' => $message], ['upsert' => true]);
+            return $this->getChat($message['room_id'], $id);
         } catch (Throwable $e) {
-            return false;
+            return null;
         }
+    }
+
+    public function addStudioVideo(string $room, array $video): bool {
+        $result = $this->db->phien_live->updateOne($this->idFilter($room), ['$push' => ['studio_videos' => $video]]);
+        return $result->getModifiedCount() > 0;
+    }
+
+    private function chatFilter(string $room, string $id): array {
+        if (preg_match('/^[a-f0-9]{24}$/iD', $id)) $id = new MongoDB\BSON\ObjectId($id);
+        return ['room_id' => $room, '_id' => $id, 'hidden' => ['$ne' => true]];
+    }
+
+    public function getChat(string $room, string $id): ?array {
+        $data = $this->db->phien_live_chats->findOne($this->chatFilter($room, $id));
+        return $data ? (array)$data : null;
+    }
+
+    public function claimSyna(string $room, string $id, string $owner): ?array {
+        $filter = $this->chatFilter($room, $id) + [
+            'ai_owner' => $owner, 'ai_pending' => true, 'timestamp_ms' => ['$gte' => (time() - 60) * 1000],
+        ];
+        $data = $this->db->phien_live_chats->findOneAndUpdate($filter, ['$unset' => ['ai_pending' => '']]);
+        return $data ? (array)$data : null;
+    }
+
+    public function moderateChat(string $room, string $id, string $action): bool {
+        $filter = $this->chatFilter($room, $id);
+        if ($action === 'mute') {
+            $message = $this->db->phien_live_chats->findOne($filter);
+            if (!$message || !empty($message['is_ai']) || empty($message['sender_id'])) return false;
+            $this->db->phien_live_chat_mutes->updateOne(
+                ['_id' => hash('sha256', $room . ':' . $message['sender_id'])],
+                ['$set' => ['expires_at' => time() + 300]], ['upsert' => true]
+            );
+            return true;
+        }
+        $field = $action === 'hide' ? 'hidden' : 'is_pinned';
+        return $this->db->phien_live_chats->updateOne($filter, ['$set' => [$field => $action !== 'unpin']])->getMatchedCount() > 0;
+    }
+
+    public function isChatMuted(string $room, string $sender): bool {
+        return (bool)$this->db->phien_live_chat_mutes->findOne([
+            '_id' => hash('sha256', $room . ':' . $sender), 'expires_at' => ['$gt' => time()],
+        ]);
     }
 
     public function getLichSuChat(string $roomId, int $limit = 100, string $mode = 'all'): array {
         try {
-            $filter = ['room_id' => (string)$roomId];
+            $filter = ['room_id' => (string)$roomId, 'hidden' => ['$ne' => true]];
             if ($mode === 'featured') $filter['$or'] = [['is_pinned' => true], ['is_order' => true]];
             if ($mode === 'qa') $filter['is_question'] = true;
-            $cursor = $this->db->phien_live_chats->find($filter, ['sort' => ['timestamp_ms' => 1], 'limit' => min(200, max(1, $limit))]);
+            $cursor = $this->db->phien_live_chats->find($filter, ['sort' => ['timestamp_ms' => -1, '_id' => -1], 'limit' => min(200, max(1, $limit))]);
             $results = [];
             foreach ($cursor as $item) {
                 $results[] = [
                     'id' => isset($item['_id']) ? (string)$item['_id'] : '', 'client_message_id' => (string)($item['client_message_id'] ?? ''),
-                    'sender_id' => (string)($item['sender_id'] ?? ''), 'sender_type' => (string)($item['sender_type'] ?? (!empty($item['is_ai']) ? 'ai' : 'customer')),
+                    'sender_type' => (string)($item['sender_type'] ?? (!empty($item['is_ai']) ? 'ai' : 'customer')),
                     'sender_name' => (string)($item['sender_name'] ?? 'Khách hàng'), 'message' => (string)($item['message'] ?? ''),
                     'is_ai' => !empty($item['is_ai']), 'is_order' => !empty($item['is_order']), 'is_question' => !empty($item['is_question']),
-                    'is_pinned' => !empty($item['is_pinned']), 'created_at' => (string)($item['created_at'] ?? '')
+                    'is_pinned' => !empty($item['is_pinned']), 'created_at' => (string)($item['created_at'] ?? ''),
+                    'reply_to' => (string)($item['reply_to'] ?? '')
                 ];
             }
-            return $results;
+            return array_reverse($results);
         } catch (Throwable $e) {
             return [];
         }
@@ -348,7 +393,7 @@ class PhienLive {
         $recording = strtolower(trim((string)($arr['recording_status'] ?? '')));
         if (in_array($raw, ['danglive', 'live'], true)) return $streamState === 'live' && $lastSeen >= (time() - 30) ? 'live' : 'ready';
         if (in_array($raw, ['chuamoi', 'upcoming'], true)) return 'scheduled';
-        if (in_array($raw, ['ketthuc', 'cancelled'], true)) return $recording === 'replay_ready' || !empty($arr['url_ban_ghi']) ? 'replay_ready' : 'ended';
+        if (in_array($raw, ['ketthuc', 'cancelled', 'ended'], true)) return $recording === 'replay_ready' || !empty($arr['url_ban_ghi']) ? 'replay_ready' : 'ended';
         if (in_array($raw, self::ALLOWED_STATUSES, true)) return $raw === 'live' && !($streamState === 'live' && $lastSeen >= (time() - 30)) ? 'ready' : $raw;
         return 'scheduled';
     }
@@ -362,7 +407,7 @@ class PhienLive {
         $arr['khung_gio_ket_thuc'] = (string)($arr['khung_gio_ket_thuc'] ?? '');
         $arr['ma_san_pham_ghim'] = (string)($arr['ma_san_pham_ghim'] ?? '');
         $arr['gia_uu_dai_live'] = (float)($arr['gia_uu_dai_live'] ?? 0);
-        $arr['danh_sach_deal'] = is_array($arr['danh_sach_deal'] ?? null) ? json_decode(json_encode($arr['danh_sach_deal']), true) : [];
+        $arr['danh_sach_deal'] = array_map(static fn($deal) => (array)$deal, (array)($arr['danh_sach_deal'] ?? []));
         $arr['bat_ai_cohost'] = !empty($arr['bat_ai_cohost']);
         $arr['server_livekit_url'] = (string)($arr['server_livekit_url'] ?? (defined('LIVEKIT_URL') ? LIVEKIT_URL : ''));
         $arr['url_ban_ghi'] = (string)($arr['url_ban_ghi'] ?? '');

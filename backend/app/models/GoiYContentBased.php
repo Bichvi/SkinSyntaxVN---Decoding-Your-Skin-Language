@@ -438,6 +438,27 @@ class GoiYContentBased {
                 }
             }
 
+            foreach ($byId as $id => $cat) {
+                $pid = $cat['parent_id'];
+                if ($pid !== null && isset($byId[$pid]) && $pid !== $id) {
+                    $children[$pid][] = $id;
+                }
+            }
+
+            if ($byId && !$children) {
+                // Legacy catalogs store leaf IDs and full paths on the products.
+                // Only accept categories evidenced by a facial-skincare path.
+                $legacyIds = $this->db->san_pham->distinct('ma_danh_muc', [
+                    'danh_muc_day_du' => new \MongoDB\BSON\Regex('(^|->)\s*Chăm Sóc Da Mặt\s*(->|$)', 'i'),
+                ]);
+                $cachedLeaves = array_values(array_unique(array_intersect(
+                    array_map('intval', $legacyIds),
+                    array_keys($byId)
+                )));
+                sort($cachedLeaves);
+                return $cachedLeaves;
+            }
+
             if ($skincareRootId === null) {
                 foreach ($byId as $id => $cat) {
                     if ($cat['parent_id'] === null && mb_strpos($cat['name'], 'da mat') !== false) {
@@ -450,13 +471,6 @@ class GoiYContentBased {
             if ($skincareRootId === null) {
                 $cachedLeaves = [];
                 return $cachedLeaves;
-            }
-
-            foreach ($byId as $id => $cat) {
-                $pid = $cat['parent_id'];
-                if ($pid !== null && isset($byId[$pid]) && $pid !== $id) {
-                    $children[$pid][] = $id;
-                }
             }
 
             $leaves = [];
