@@ -377,7 +377,10 @@ class PhienLive {
         $arr['khung_gio_ket_thuc'] = (string)($arr['khung_gio_ket_thuc'] ?? '');
         $arr['ma_san_pham_ghim'] = (string)($arr['ma_san_pham_ghim'] ?? '');
         $arr['gia_uu_dai_live'] = (float)($arr['gia_uu_dai_live'] ?? 0);
-        $arr['danh_sach_deal'] = is_array($arr['danh_sach_deal'] ?? null) ? json_decode(json_encode($arr['danh_sach_deal']), true) : [];
+        // The Mongo driver returns nested arrays as BSONArray (Traversable), not PHP arrays.
+        $deals = $arr['danh_sach_deal'] ?? null;
+        if ($deals instanceof Traversable) $deals = iterator_to_array($deals, false);
+        $arr['danh_sach_deal'] = is_array($deals) ? array_values((array)json_decode(json_encode($deals), true)) : [];
         $arr['bat_ai_cohost'] = !empty($arr['bat_ai_cohost']);
         $arr['server_livekit_url'] = (string)($arr['server_livekit_url'] ?? (defined('LIVEKIT_URL') ? LIVEKIT_URL : ''));
         $arr['url_ban_ghi'] = (string)($arr['url_ban_ghi'] ?? '');

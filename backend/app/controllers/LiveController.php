@@ -1396,10 +1396,19 @@ class LiveController {
                 exit;
             }
 
-            if ($liveDoc && !empty($liveDoc['ma_san_pham_ghim'])) {
-                // The browser cannot choose an arbitrary price or product for
-                // a live deal; resolve the pinned SKU from server state.
-                $productId = (string)$liveDoc['ma_san_pham_ghim'];
+            if ($liveDoc) {
+                // The browser cannot choose an arbitrary product for a live deal:
+                // only the pinned SKU or a SKU queued in this session is allowed.
+                $pinnedId = (string)($liveDoc['ma_san_pham_ghim'] ?? '');
+                $allowed = $pinnedId !== '' ? [$pinnedId] : [];
+                foreach ((array)($liveDoc['danh_sach_deal'] ?? []) as $deal) {
+                    $dealPid = (string)($deal['ma_san_pham'] ?? '');
+                    if ($dealPid !== '') $allowed[] = $dealPid;
+                }
+                if ($productId === '' || ($allowed && !in_array($productId, $allowed, true))) {
+                    // Missing or unknown SKU falls back to the pinned product (previous behavior).
+                    $productId = $pinnedId !== '' ? $pinnedId : ($allowed ? '' : $productId);
+                }
             }
         }
 
