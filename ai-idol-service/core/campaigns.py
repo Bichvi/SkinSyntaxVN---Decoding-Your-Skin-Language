@@ -818,7 +818,7 @@ def cancel_campaign(campaign_id: str) -> dict:
         if segment.get("job_id"):
             db.ai_idol_jobs.update_one(
                 {"_id": object_id(str(segment["job_id"])),
-                 "status": {"$in": ["CREATED", "QUEUED", "WAITING_RENDERER", "AWAITING_APPROVAL"]}},
+                 "status": {"$in": ["CREATED", "QUEUED", "WAITING_RENDERER", "WAITING_LLM", "AWAITING_APPROVAL"]}},
                 {"$set": {"status": "FAILED", "failed_stage": "CANCELLED",
                           "error_message": "Chương trình đã bị hủy.", "updated_at": now}},
             )
@@ -1155,9 +1155,51 @@ def get_campaign(campaign_id: str) -> dict | None:
         segment["publication"] = publications.get(str(video_id)) if video_id else None
     campaign["segments"] = segments
     campaign["broadcasts"] = list(db.ai_idol_broadcasts.find({"campaign_id": campaign_id}))
+    counts = _job_stage_counts(db, [campaign_id])
+    if counts is not None:
+        campaign["job_stages"] = counts.get(campaign_id, [])
     return serialize(campaign)
 
 
+def _job_stage_counts(db, campaign_ids: list[str]) -> dict[str, list[dict]] | None:
+    """Job counts per campaign as [{status, stage, count}], one aggregate for all campaigns.
+
+    The studio uses it to show which step of the pipeline the jobs are really at. It is an
+    additive hint: on any failure it returns None and the caller simply omits the field.
+    """
+    if not campaign_ids:
+        return {}
+    try:
+        rows = db.ai_idol_jobs.aggregate([
+            {"$match": {"campaign_id": {"$in": campaign_ids}}},
+            {"$group": {
+                "_id": {
+                    "campaign_id": "$campaign_id",
+                    "status": "$status",
+                    "stage": {"$ifNull": ["$failed_stage", "$current_stage"]},
+                },
+                "count": {"$sum": 1},
+            }},
+        ])
+        result: dict[str, list[dict]] = {}
+        for row in rows:
+            key = row.get("_id") or {}
+            result.setdefault(str(key.get("campaign_id")), []).append({
+                "status": key.get("status"),
+                "stage": key.get("stage"),
+                "count": row.get("count", 0),
+            })
+        return result
+    except Exception as exc:
+        logger.warning("[CAMPAIGN] could not read job stages for the studio: %s", exc)
+        return None
+
+
 def list_campaigns(limit: int = 30) -> list[dict]:
-    cursor = get_db().ai_idol_campaigns.find().sort("created_at", -1).limit(max(1, min(limit, 100)))
-    return [serialize(doc) for doc in cursor]
+    db = get_db()
+    docs = list(db.ai_idol_campaigns.find().sort("created_at", -1).limit(max(1, min(limit, 100))))
+    counts = _job_stage_counts(db, [str(doc["_id"]) for doc in docs])
+    if counts is not None:
+        for doc in docs:
+            doc["job_stages"] = counts.get(str(doc["_id"]), [])
+    return [serialize(doc) for doc in docs]

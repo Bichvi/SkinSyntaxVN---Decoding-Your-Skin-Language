@@ -9,6 +9,8 @@
 class PhienLive {
     private $db;
 
+    public const STREAM_FRESH_SECONDS = 60;
+
     private const ALLOWED_STATUSES = [
         'scheduled', 'ready', 'live', 'interrupted', 'ended',
         'processing', 'replay_ready', 'recording_failed'
@@ -190,10 +192,14 @@ class PhienLive {
 
     public function touchStream($id): bool {
         try {
-            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => [
+            $filter = ['$and' => [
+                $this->idFilter($id),
+                ['trang_thai' => ['$in' => ['live', 'danglive']]],
+            ]];
+            $res = $this->db->phien_live->updateOne($filter, ['$set' => [
                 'stream_state' => 'live', 'stream_last_seen' => time(), 'trang_thai' => 'live', 'updated_at' => date('Y-m-d H:i:s')
             ]]);
-            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+            return $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
         }
@@ -297,6 +303,23 @@ class PhienLive {
         }
     }
 
+    // Compatibility for callers that do not need the threaded/idempotent saveChat contract.
+    public function luuTinNhanChat(string $roomId, string $senderName, string $message, bool $isAi = false, bool $isOrder = false, string $senderType = 'customer', string $senderId = '', string $clientMessageId = '', bool $isQuestion = false): bool {
+        try {
+            $this->db->phien_live_chats->insertOne([
+                'room_id' => $roomId, 'sender_id' => trim($senderId),
+                'sender_type' => trim($senderType) ?: ($isAi ? 'ai' : 'customer'),
+                'sender_name' => mb_substr(trim($senderName), 0, 80), 'message' => mb_substr(trim($message), 0, 1000),
+                'is_ai' => $isAi, 'is_order' => $isOrder, 'is_question' => $isQuestion,
+                'client_message_id' => trim($clientMessageId), 'created_at' => date(DATE_ATOM),
+                'timestamp_ms' => (int)round(microtime(true) * 1000),
+            ]);
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
     public function addStudioVideo(string $room, array $video): bool {
         $result = $this->db->phien_live->updateOne($this->idFilter($room), ['$push' => ['studio_videos' => $video]]);
         return $result->getModifiedCount() > 0;
@@ -341,24 +364,34 @@ class PhienLive {
         ]);
     }
 
-    public function getLichSuChat(string $roomId, int $limit = 100, string $mode = 'all'): array {
+    public function getLichSuChat(string $roomId, int $limit = 100, string $mode = 'all', int $afterMs = 0): array {
         try {
             $filter = ['room_id' => (string)$roomId, 'hidden' => ['$ne' => true]];
             if ($mode === 'featured') $filter['$or'] = [['is_pinned' => true], ['is_order' => true]];
             if ($mode === 'qa') $filter['is_question'] = true;
-            $cursor = $this->db->phien_live_chats->find($filter, ['sort' => ['timestamp_ms' => -1, '_id' => -1], 'limit' => min(200, max(1, $limit))]);
+            $limit = min(200, max(1, $limit));
+            if ($afterMs > 0) {
+                $filter['timestamp_ms'] = ['$gt' => $afterMs];
+                $sortDir = 1;
+            } else {
+                $sortDir = -1;
+            }
+            $cursor = $this->db->phien_live_chats->find($filter, ['sort' => ['timestamp_ms' => $sortDir, '_id' => $sortDir], 'limit' => $limit]);
             $results = [];
             foreach ($cursor as $item) {
                 $results[] = [
                     'id' => isset($item['_id']) ? (string)$item['_id'] : '', 'client_message_id' => (string)($item['client_message_id'] ?? ''),
+                    'sender_id' => (string)($item['sender_id'] ?? ''),
                     'sender_type' => (string)($item['sender_type'] ?? (!empty($item['is_ai']) ? 'ai' : 'customer')),
                     'sender_name' => (string)($item['sender_name'] ?? 'Khách hàng'), 'message' => (string)($item['message'] ?? ''),
                     'is_ai' => !empty($item['is_ai']), 'is_order' => !empty($item['is_order']), 'is_question' => !empty($item['is_question']),
                     'is_pinned' => !empty($item['is_pinned']), 'created_at' => (string)($item['created_at'] ?? ''),
-                    'reply_to' => (string)($item['reply_to'] ?? '')
+                    'reply_to' => (string)($item['reply_to'] ?? ''),
+                    'ts' => (int)($item['timestamp_ms'] ?? 0)
                 ];
             }
-            return array_reverse($results);
+            if ($sortDir === -1) $results = array_reverse($results);
+            return $results;
         } catch (Throwable $e) {
             return [];
         }
@@ -391,10 +424,10 @@ class PhienLive {
         $streamState = strtolower(trim((string)($arr['stream_state'] ?? '')));
         $lastSeen = (int)($arr['stream_last_seen'] ?? 0);
         $recording = strtolower(trim((string)($arr['recording_status'] ?? '')));
-        if (in_array($raw, ['danglive', 'live'], true)) return $streamState === 'live' && $lastSeen >= (time() - 30) ? 'live' : 'ready';
+        if (in_array($raw, ['danglive', 'live'], true)) return $streamState === 'live' && $lastSeen >= (time() - self::STREAM_FRESH_SECONDS) ? 'live' : 'ready';
         if (in_array($raw, ['chuamoi', 'upcoming'], true)) return 'scheduled';
         if (in_array($raw, ['ketthuc', 'cancelled', 'ended'], true)) return $recording === 'replay_ready' || !empty($arr['url_ban_ghi']) ? 'replay_ready' : 'ended';
-        if (in_array($raw, self::ALLOWED_STATUSES, true)) return $raw === 'live' && !($streamState === 'live' && $lastSeen >= (time() - 30)) ? 'ready' : $raw;
+        if (in_array($raw, self::ALLOWED_STATUSES, true)) return $raw === 'live' && !($streamState === 'live' && $lastSeen >= (time() - self::STREAM_FRESH_SECONDS)) ? 'ready' : $raw;
         return 'scheduled';
     }
 
@@ -407,7 +440,10 @@ class PhienLive {
         $arr['khung_gio_ket_thuc'] = (string)($arr['khung_gio_ket_thuc'] ?? '');
         $arr['ma_san_pham_ghim'] = (string)($arr['ma_san_pham_ghim'] ?? '');
         $arr['gia_uu_dai_live'] = (float)($arr['gia_uu_dai_live'] ?? 0);
-        $arr['danh_sach_deal'] = array_map(static fn($deal) => (array)$deal, (array)($arr['danh_sach_deal'] ?? []));
+        // The Mongo driver returns nested arrays as BSONArray (Traversable), not PHP arrays.
+        $deals = $arr['danh_sach_deal'] ?? null;
+        if ($deals instanceof Traversable) $deals = iterator_to_array($deals, false);
+        $arr['danh_sach_deal'] = is_array($deals) ? array_values((array)json_decode(json_encode($deals), true)) : [];
         $arr['bat_ai_cohost'] = !empty($arr['bat_ai_cohost']);
         $arr['server_livekit_url'] = (string)($arr['server_livekit_url'] ?? (defined('LIVEKIT_URL') ? LIVEKIT_URL : ''));
         $arr['url_ban_ghi'] = (string)($arr['url_ban_ghi'] ?? '');

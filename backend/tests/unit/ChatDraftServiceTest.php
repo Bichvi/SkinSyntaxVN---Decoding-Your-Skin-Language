@@ -296,5 +296,232 @@ $badTypeRequest = $baseRequest;
 $badTypeRequest['conflict_warnings'] = 'not-an-array';
 $check('non_array_conflict_warnings_ignored', $voucherWarnService->upsert($claims, $badTypeRequest, $snapshot)['warnings'] === []);
 
+
+// ---- Chat-order correctness: partial receiver change, validation, quantities, payment, totals ----
+$errCode = static fn(?DomainException $e): string => $e instanceof ChatDraftException ? $e->getErrorCode() : '';
+$fullDefault = ['ten_nguoi_nhan' => 'Tran Thi C', 'sdt_nguoi_nhan' => '0912345678', 'dia_chi_giao_hang' => '5 Hai Ba Trung, Quan 1, TP.HCM'];
+
+// Partial change relative to the replaced open draft.
+$pStore = new ChatDraftMemoryStore();
+$pService = new ChatDraftService($pStore, $core, $clock);
+$pOld = $pService->upsert($claims, $baseRequest, $snapshot);
+$phoneOnly = ['scope' => 'mentioned_items', 'product_ids' => ['p1'], 'address_choice' => 'new',
+    'new_address' => ['sdt_nguoi_nhan' => '0987654321'], 'payment_method' => 'cod', 'replaces' => $pOld['draft_id']];
+$pNew = $pService->upsert($claims, $phoneOnly, $snapshot);
+$check('partial_phone_change_keeps_name_and_address_of_replaced_draft',
+    $pStore->docs[$pNew['draft_id']]['receiver'] === ['ten_nguoi_nhan' => 'Nguyen Van A', 'sdt_nguoi_nhan' => '0987654321', 'dia_chi_giao_hang' => '12 Nguyen Hue, TP.HCM']
+    && $pNew['receiver']['phone_masked'] === '09xx xxx 321');
+$addrOnly = $phoneOnly;
+$addrOnly['new_address'] = ['dia_chi_giao_hang' => '99 Le Loi, Quan 3, TP.HCM'];
+$addrOnly['replaces'] = $pNew['draft_id'];
+$pNew2 = $pService->upsert($claims, $addrOnly, $snapshot);
+$check('partial_address_change_keeps_phone_from_previous_change',
+    $pStore->docs[$pNew2['draft_id']]['receiver'] === ['ten_nguoi_nhan' => 'Nguyen Van A', 'sdt_nguoi_nhan' => '0987654321', 'dia_chi_giao_hang' => '99 Le Loi, Quan 3, TP.HCM']);
+$nameOnly = $phoneOnly;
+$nameOnly['new_address'] = ['ten_nguoi_nhan' => 'Le Van D', 'sdt_nguoi_nhan' => '  ', 'dia_chi_giao_hang' => ''];
+$nameOnly['replaces'] = $pNew2['draft_id'];
+$pNew3 = $pService->upsert($claims, $nameOnly, $snapshot);
+$check('partial_name_change_ignores_blank_fields',
+    $pStore->docs[$pNew3['draft_id']]['receiver'] === ['ten_nguoi_nhan' => 'Le Van D', 'sdt_nguoi_nhan' => '0987654321', 'dia_chi_giao_hang' => '99 Le Loi, Quan 3, TP.HCM']);
+
+// "keep": a payment-only change keeps the receiver of the replaced draft, even when the account has a default.
+$keepReq = ['scope' => 'mentioned_items', 'product_ids' => [], 'address_choice' => 'keep', 'payment_method' => 'vnpay',
+    'replaces' => $pNew3['draft_id'], '_server_default_receiver' => $fullDefault];
+$pKeep = $pService->upsert($claims, $keepReq, $snapshot);
+$check('keep_reuses_replaced_receiver_not_account_default',
+    $pStore->docs[$pKeep['draft_id']]['receiver'] === $pStore->docs[$pNew3['draft_id']]['receiver']
+    && $pKeep['payment_method'] === 'vnpay');
+// "keep" without an open draft falls back to the account default.
+$keepFresh = $freshService()->upsert($claims, ['scope' => 'mentioned_items', 'product_ids' => ['p1'], 'address_choice' => 'keep',
+    'payment_method' => 'cod', '_server_default_receiver' => $fullDefault], $snapshot);
+$check('keep_without_open_draft_uses_default', $keepFresh['receiver']['name'] === 'Tran Thi C');
+// "default" while the account default is incomplete cannot be what the customer meant: keep the draft's receiver.
+$emptyDefault = ['ten_nguoi_nhan' => 'E2E', 'sdt_nguoi_nhan' => '', 'dia_chi_giao_hang' => ''];
+$pDef = $pService->upsert($claims, ['scope' => 'mentioned_items', 'product_ids' => [], 'address_choice' => 'default',
+    'payment_method' => 'cod', 'replaces' => $pKeep['draft_id'], '_server_default_receiver' => $emptyDefault], $snapshot);
+$check('default_with_incomplete_account_default_keeps_draft_receiver',
+    $pStore->docs[$pDef['draft_id']]['receiver'] === $pStore->docs[$pNew3['draft_id']]['receiver']);
+// An explicit "default" with a complete account default switches to it.
+$pDef2 = $pService->upsert($claims, ['scope' => 'mentioned_items', 'product_ids' => [], 'address_choice' => 'default',
+    'payment_method' => 'cod', 'replaces' => $pDef['draft_id'], '_server_default_receiver' => $fullDefault], $snapshot);
+$check('explicit_default_switches_to_complete_account_default', $pStore->docs[$pDef2['draft_id']]['receiver']['ten_nguoi_nhan'] === 'Tran Thi C');
+
+// Partial change relative to the server default when nothing is being replaced.
+$dReq = $phoneOnly;
+unset($dReq['replaces']);
+$dReq['_server_default_receiver'] = $fullDefault;
+$dStore = new ChatDraftMemoryStore();
+$dCard = (new ChatDraftService($dStore, $core, $clock))->upsert($claims, $dReq, $snapshot);
+$check('partial_change_from_default_when_no_replaced_draft',
+    $dStore->docs[$dCard['draft_id']]['receiver'] === ['ten_nguoi_nhan' => 'Tran Thi C', 'sdt_nguoi_nhan' => '0987654321', 'dia_chi_giao_hang' => '5 Hai Ba Trung, Quan 1, TP.HCM']);
+$staleReq = $dReq;
+$staleReq['replaces'] = 'no-such-draft';
+$staleCard = (new ChatDraftService(new ChatDraftMemoryStore(), $core, $clock))->upsert($claims, $staleReq, $snapshot);
+$check('stale_replaces_falls_back_to_default_receiver', $staleCard['receiver']['name'] === 'Tran Thi C');
+
+// Missing field messages.
+$noBase = $phoneOnly;
+unset($noBase['replaces']);
+$e = $throws(static fn() => $freshService()->upsert($claims, $noBase, $snapshot));
+$check('missing_name_and_address_named', $errCode($e) === 'receiver_missing' && $e->getCode() === 422
+    && str_contains($e->getMessage(), 'tên người nhận') && str_contains($e->getMessage(), 'địa chỉ giao hàng')
+    && !str_contains($e->getMessage(), 'số điện thoại'));
+$noPhone = $dReq;
+$noPhone['new_address'] = ['ten_nguoi_nhan' => 'A B', 'dia_chi_giao_hang' => '12 Nguyen Hue, TP.HCM'];
+unset($noPhone['_server_default_receiver']);
+$e = $throws(static fn() => $freshService()->upsert($claims, $noPhone, $snapshot));
+$check('missing_phone_message_exact', $errCode($e) === 'receiver_missing' && $e->getMessage() === 'Thiếu số điện thoại người nhận.');
+
+// Phone formats.
+$phoneCase = static function (string $phone) use ($claims, $baseRequest, $snapshot, $freshService, $throws): array {
+    $req = $baseRequest;
+    $req['new_address']['sdt_nguoi_nhan'] = $phone;
+    $got = null;
+    $e = $throws(function () use (&$got, $freshService, $claims, $req, $snapshot): void {
+        $svc = $freshService();
+        $card = $svc->upsert($claims, $req, $snapshot);
+        $got = $card['receiver']['phone_masked'];
+    });
+    return [$got, $e instanceof ChatDraftException ? $e->getErrorCode() : ($e === null ? '' : 'other')];
+};
+$check('phone_plus84_accepted', $phoneCase('+84 912 345 678')[0] === '09xx xxx 678');
+$check('phone_dots_accepted', $phoneCase('0912.345.678')[0] === '09xx xxx 678');
+$check('phone_dashes_parens_accepted', $phoneCase('(0912) 345-678')[0] === '09xx xxx 678');
+$check('phone_84_prefix_accepted', $phoneCase('84912345678')[0] === '09xx xxx 678');
+$check('phone_landline_accepted', $phoneCase('02838221234')[0] === '02xx xxx 234');
+$check('phone_9_digits_rejected', $phoneCase('091234567')[1] === 'receiver_phone_invalid');
+$check('phone_bad_prefix_rejected', $phoneCase('0123456789')[1] === 'receiver_phone_invalid');
+$check('phone_letters_rejected', $phoneCase('09123abc78')[1] === 'receiver_phone_invalid');
+$check('phone_11_digit_mobile_rejected', $phoneCase('09123456789')[1] === 'receiver_phone_invalid');
+$e = $throws(static function () use ($freshService, $claims, $baseRequest, $snapshot): void {
+    $r = $baseRequest; $r['new_address']['sdt_nguoi_nhan'] = '123';
+    $freshService()->upsert($claims, $r, $snapshot);
+});
+$check('phone_invalid_message', $e?->getCode() === 422 && $e->getMessage() === 'Số điện thoại không hợp lệ (cần 10 số, bắt đầu bằng 0).');
+
+// Address and name validation.
+$e = $throws(static function () use ($freshService, $claims, $baseRequest, $snapshot): void {
+    $r = $baseRequest; $r['new_address']['dia_chi_giao_hang'] = '  12   Q1 ';
+    $freshService()->upsert($claims, $r, $snapshot);
+});
+$check('address_too_short_rejected', $errCode($e) === 'receiver_address_invalid' && $e->getCode() === 422
+    && $e->getMessage() === 'Địa chỉ cần ghi rõ số nhà/đường, phường/xã, quận/huyện, tỉnh/thành.');
+$e = $throws(static function () use ($freshService, $claims, $baseRequest, $snapshot): void {
+    $r = $baseRequest; $r['new_address']['dia_chi_giao_hang'] = str_repeat('a', 256);
+    $freshService()->upsert($claims, $r, $snapshot);
+});
+$check('address_too_long_rejected', $errCode($e) === 'receiver_address_invalid');
+$wsStore = new ChatDraftMemoryStore();
+$wsReq = $baseRequest;
+$wsReq['new_address']['dia_chi_giao_hang'] = "  12  Nguyen\tHue,   TP.HCM  ";
+$wsCard = (new ChatDraftService($wsStore, $core, $clock))->upsert($claims, $wsReq, $snapshot);
+$check('address_whitespace_collapsed', $wsStore->docs[$wsCard['draft_id']]['receiver']['dia_chi_giao_hang'] === '12 Nguyen Hue, TP.HCM');
+foreach (['1', '12345', 'A'] as $badName) {
+    $e = $throws(static function () use ($freshService, $claims, $baseRequest, $snapshot, $badName): void {
+        $r = $baseRequest; $r['new_address']['ten_nguoi_nhan'] = $badName;
+        $freshService()->upsert($claims, $r, $snapshot);
+    });
+    $check('name_invalid_' . $badName, $errCode($e) === 'receiver_name_invalid' && $e->getCode() === 422);
+}
+
+// Quantities.
+$qtyRequest = static function (mixed $qty) use ($baseRequest): array {
+    $r = $baseRequest;
+    $r['qty'] = ['p1' => $qty];
+    return $r;
+};
+foreach ([0, 21, -1, 1.5, 'abc', '2.5', '0'] as $badQty) {
+    $e = $throws(static fn() => $freshService()->upsert($claims, $qtyRequest($badQty), $snapshot));
+    $check('qty_invalid_' . var_export($badQty, true), $errCode($e) === 'qty_invalid' && $e->getCode() === 422
+        && $e->getMessage() === 'Số lượng mỗi sản phẩm phải từ 1 đến 20.');
+}
+$check('qty_string_two_accepted', $freshService()->upsert($claims, $qtyRequest('2'), $snapshot)['items'][0]['qty'] === 2);
+$check('qty_twenty_accepted', $freshService()->upsert($claims, $qtyRequest(20), $snapshot)['items'][0]['qty'] === 20);
+
+// Quantity fallback: replaced draft beats cart snapshot, even for an item that is not in the cart.
+$qStore = new ChatDraftMemoryStore();
+$qService = new ChatDraftService($qStore, $core, $clock);
+$qOldReq = $baseRequest;
+$qOldReq['qty'] = ['p1' => 3];
+$qOld = $qService->upsert($claims, $qOldReq, ['p2' => ['id' => 'p2']]);
+$qNewReq = $baseRequest;
+unset($qNewReq['qty']);
+$qNewReq['replaces'] = $qOld['draft_id'];
+$qNew = $qService->upsert($claims, $qNewReq, ['p2' => ['id' => 'p2']]);
+$check('qty_falls_back_to_replaced_draft_for_item_not_in_cart', $qNew['items'][0]['qty'] === 3 && $qNew['subtotal'] === 300);
+$qSnapReq = $baseRequest;
+unset($qSnapReq['qty']);
+$qSnap = $freshService()->upsert($claims, $qSnapReq, ['p1' => ['id' => 'p1', 'qty' => 4]]);
+$check('qty_falls_back_to_cart_snapshot', $qSnap['items'][0]['qty'] === 4);
+$qOne = $freshService()->upsert($claims, $qSnapReq, ['p2' => ['id' => 'p2']]);
+$check('qty_falls_back_to_one', $qOne['items'][0]['qty'] === 1);
+$qExplicitReq = $baseRequest;
+$qExplicitReq['qty'] = ['p1' => 5];
+$qExplicitReq['replaces'] = $qNew['draft_id'];
+$check('explicit_qty_beats_replaced_draft', $qService->upsert($claims, $qExplicitReq, [])['items'][0]['qty'] === 5);
+
+// Empty product_ids with a replaced draft reuses its items and quantities (e.g. "đổi sang VNPay").
+$rStore = new ChatDraftMemoryStore();
+$rService = new ChatDraftService($rStore, $core, $clock);
+$rOldReq = $baseRequest;
+$rOldReq['product_ids'] = ['p1', 'p2'];
+$rOldReq['qty'] = ['p1' => 2, 'p2' => 3];
+$rOld = $rService->upsert($claims, $rOldReq, []);
+$rNew = $rService->upsert($claims, [
+    'scope' => 'mentioned_items', 'product_ids' => [], 'address_choice' => 'new', 'new_address' => [],
+    'payment_method' => 'vnpay', 'replaces' => $rOld['draft_id'],
+], []);
+$check('empty_product_ids_reuse_replaced_draft_items', array_column($rNew['items'], 'qty', 'id') === ['p1' => 2, 'p2' => 3]
+    && $rNew['payment_method'] === 'vnpay' && $rNew['total'] === $rOld['total']
+    && $rNew['receiver'] === $rOld['receiver']);
+$e = $throws(static fn() => $freshService()->upsert($claims, ['scope' => 'mentioned_items', 'product_ids' => [], 'address_choice' => 'new',
+    'new_address' => $baseRequest['new_address'], 'payment_method' => 'cod'], $snapshot));
+$check('empty_product_ids_without_replaced_draft_rejected', $e?->getCode() === 422);
+
+// Payment codes.
+$e = $throws(static function () use ($freshService, $claims, $baseRequest, $snapshot): void {
+    $r = $baseRequest; $r['payment_method'] = 'bank_transfer_qr';
+    $freshService()->upsert($claims, $r, $snapshot);
+});
+$check('qr_disabled_has_own_code_and_message', $errCode($e) === 'payment_unsupported' && $e->getCode() === 422
+    && $e->getMessage() === 'Cửa hàng chưa hỗ trợ chuyển khoản QR, bạn chọn COD hoặc VNPay nhé.');
+$e = $throws(static function () use ($freshService, $claims, $baseRequest, $snapshot): void {
+    $r = $baseRequest; $r['payment_method'] = 'momo';
+    $freshService()->upsert($claims, $r, $snapshot);
+});
+$check('unknown_payment_is_payment_invalid', $errCode($e) === 'payment_invalid' && $e->getCode() === 422);
+
+// Totals stay subtotal - discount + 30000 across a change of quantity, voucher and payment.
+$core->voucher = null;
+$tStore = new ChatDraftMemoryStore();
+$tService = new ChatDraftService($tStore, $core, $clock);
+$t1 = $tService->upsert($claims, $baseRequest, $snapshot);
+$check('total_with_two_items', $t1['subtotal'] === 200 && $t1['total'] === 30200 && $t1['shipping'] === 30000);
+$core->validatedVoucher = ['ok' => true, 'voucher' => ['ma_code' => 'V50'], 'discount' => 50];
+$t2Req = $baseRequest;
+$t2Req['qty'] = ['p1' => 7];
+$t2Req['voucher_code'] = 'V50';
+$t2Req['payment_method'] = 'vnpay';
+$t2Req['replaces'] = $t1['draft_id'];
+$t2 = $tService->upsert($claims, $t2Req, $snapshot);
+$check('total_after_qty_voucher_payment_change', $t2['subtotal'] === 700 && $t2['voucher']['discount'] === 50
+    && $t2['total'] === 700 - 50 + 30000 && $tStore->docs[$t2['draft_id']]['total'] === $t2['total']);
+$core->validatedVoucher = null;
+
+// Full receiver for the customer-facing card; the masked form stays for the LLM.
+$disp = ChatDraftService::displayReceiver(['ten_nguoi_nhan' => 'Tran Thi C', 'sdt_nguoi_nhan' => '0912345678', 'dia_chi_giao_hang' => '5 Hai Ba Trung, Quan 1, TP.HCM']);
+$check('display_receiver_full_values', $disp === ['name' => 'Tran Thi C', 'phone' => '0912 345 678', 'address' => '5 Hai Ba Trung, Quan 1, TP.HCM']);
+$check('display_receiver_landline_format', ChatDraftService::displayReceiver(['sdt_nguoi_nhan' => '02838221234'])['phone'] === '028 3822 1234');
+$check('display_receiver_empty_is_safe', ChatDraftService::displayReceiver([]) === ['name' => '', 'phone' => '', 'address' => '']);
+$check('masked_receiver_still_masks', ChatDraftService::maskReceiver($fullDefault) === ['name' => 'Tran Thi C', 'phone_masked' => '09xx xxx 678', 'address_short' => 'TP.HCM']);
+$check('card_from_upsert_stays_masked', !isset($t1['receiver']['phone']) && !isset($t1['receiver']['address']));
+$full = $tService->withFullReceiver($t2, 'customer-1');
+$check('with_full_receiver_adds_full_fields_and_keeps_masked',
+    $full['receiver']['phone'] === '0901 234 123' && $full['receiver']['address'] === '12 Nguyen Hue, TP.HCM'
+    && $full['receiver']['phone_masked'] === '09xx xxx 123' && $full['receiver']['address_short'] === 'TP.HCM'
+    && $full['draft_id'] === $t2['draft_id'] && $full['total'] === $t2['total']);
+$check('with_full_receiver_other_sub_unchanged', $tService->withFullReceiver($t2, 'someone-else') === $t2);
+$check('with_full_receiver_unknown_draft_unchanged', $tService->withFullReceiver(['draft_id' => 'nope', 'receiver' => ['name' => 'x']], 'customer-1') === ['draft_id' => 'nope', 'receiver' => ['name' => 'x']]);
+
 echo PHP_EOL . "{$pass} passed, {$fail} failed" . PHP_EOL;
 exit($fail ? 1 : 0);

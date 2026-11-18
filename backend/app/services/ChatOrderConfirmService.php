@@ -109,8 +109,16 @@ final class ChatOrderConfirmService
             throw $e;
         }
 
-        foreach ($checkoutItems as $productId => $_qty) {
-            unset($session['gio_hang'][$productId]);
+        // Take only what was ordered out of the cart; the customer may have more of it than the order took.
+        foreach ($checkoutItems as $productId => $orderedQty) {
+            if (!isset($session['gio_hang'][$productId])) continue;
+            $inCart = $session['gio_hang'][$productId];
+            $left = is_numeric($inCart) ? (int)$inCart - (int)$orderedQty : 0;
+            if ($left > 0) {
+                $session['gio_hang'][$productId] = $left;
+            } else {
+                unset($session['gio_hang'][$productId]);
+            }
         }
 
         return [
@@ -119,6 +127,22 @@ final class ChatOrderConfirmService
             'payment_method' => (string)($draft['payment_method'] ?? 'cod'),
             'next' => $this->nextStep((string)($draft['payment_method'] ?? 'cod'), $orderId, $payload),
         ];
+    }
+
+    /** Read-only: true when the draft belongs to $sub, is unused and not expired. */
+    public function isDraftOpenFor(string $draftId, string $sub): bool
+    {
+        $draft = $this->store->find($draftId);
+        return is_array($draft)
+            && (string)($draft['sub'] ?? '') === $sub
+            && empty($draft['used_at'])
+            && (int)($draft['expires_at'] ?? 0) > (int)($this->clock)();
+    }
+
+    /** Browser-only view of a card: adds the owner's full phone/address (see ChatDraftService::withFullReceiver). */
+    public function enrichCard(array $card, string $sub): array
+    {
+        return $this->drafts->withFullReceiver($card, $sub);
     }
 
     public function paymentMethod(string $draftId): string
@@ -155,7 +179,7 @@ final class ChatOrderConfirmService
         $snapshot = array_fill_keys(array_keys($checkoutItems), []);
         try {
             $card = $this->drafts->upsert($claims, $request, ['items' => $snapshot]);
-            return ['status' => 'changed', 'card' => $card];
+            return ['status' => 'changed', 'card' => $this->drafts->withFullReceiver($card, (string)$claims['sub'])];
         } catch (Throwable $e) {
             $this->store->release($oldDraftId);
             throw $this->mapChangedDraftError($e);

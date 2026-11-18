@@ -8,7 +8,7 @@ from core.purpose import LIVE_AND_PRODUCT, PRODUCT_VIDEO
 from core.script_text import sanitize_external_retailer_mentions, split_labeled_sections
 from core.text_budget import clip_prompt_text, clip_text
 from engines.script_validator import _deterministic_issues, price_data_lines
-from providers.llm_provider import LLMProvider
+from providers.llm_provider import LLMProvider, LLMRateLimited
 
 CLICHES = ("bạn có biết", "hãy gặp", "tóm lại", "sản phẩm tuyệt vời", "chân ái", "thần thánh",
            "trải nghiệm sự khác biệt", "đừng bỏ lỡ", "đã được chứng minh")
@@ -56,6 +56,7 @@ def _generate(system: str, user: str, n: int) -> tuple[list[str], list[int]]:
     drafts: list[str] = []
     indexes: list[int] = []
     last_error: Exception | None = None
+    failures: list[Exception] = []
     for i in range(n):
         try:
             llm = LLMProvider()
@@ -64,8 +65,12 @@ def _generate(system: str, user: str, n: int) -> tuple[list[str], list[int]]:
             indexes.append(i)
         except Exception as exc:
             last_error = exc
+            failures.append(exc)
             logger.warning("[SCRIPT-SELECTOR] candidate %s failed: %s", i, exc)
     if not drafts:
+        if failures and all(isinstance(f, LLMRateLimited) for f in failures):
+            raise LLMRateLimited(f"All script candidates failed: {last_error}",
+                                 min(f.retry_after_seconds for f in failures))
         raise RuntimeError(f"All script candidates failed: {last_error}")
     return drafts, indexes
 

@@ -2,7 +2,7 @@ import json
 import re
 import unicodedata
 from dataclasses import dataclass, asdict, field
-from providers.llm_provider import LLMProvider
+from providers.llm_provider import LLMProvider, LLMRateLimited
 from config import MAX_SCRIPT_REPAIR_ATTEMPTS, RELAXED_AUDIT, SELF_HEALING_ENABLED, logger
 from core.text_budget import clip_text
 from core.purpose import LEGACY_PURPOSE, LIVE_AND_PRODUCT, PRODUCT_VIDEO
@@ -429,6 +429,8 @@ def _llm_audit_issues(script: str, snapshot: dict, purpose: str, clip_kind: str 
     system_prompt, user_prompt = _audit_prompts(script, snapshot, purpose, json_mode=True, clip_kind=clip_kind)
     try:
         response = LLMProvider().invoke(system_prompt, user_prompt)
+    except LLMRateLimited:
+        raise  # transient quota: the pipeline parks the job; never approve without an audit
     except Exception as e:
         # Advertising safety must fail closed. An unavailable auditor is not approval.
         logger.error(f"[SCRIPT-VALIDATOR] LLM validation unavailable: {e}")
@@ -539,6 +541,8 @@ def validate_and_repair_script(script: str, snapshot: dict, purpose: str = LEGAC
         try:
             repair_args = (current, [i for i in errors if i.auto_fixable] or errors, snapshot, purpose)
             repaired = repair_script(*repair_args, clip_kind=clip_kind) if clip_kind else repair_script(*repair_args)
+        except LLMRateLimited:
+            raise
         except Exception as e:
             logger.error(f"[SCRIPT-VALIDATOR] repair failed: {e}")
             entry["repair"] = {"error": str(e)[:300]}

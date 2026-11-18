@@ -10,14 +10,18 @@ final class ChatSseRelay
     private bool $pendingCarriageReturn = false;
     private $out;
     private $applyEffect;
+    /** @var (callable(array): array)|null browser-only rewrite of ui draft_card payloads */
+    private $transformUi;
     private bool $terminal = false;
 
     public function __construct(
         callable $out,
-        callable $applyEffect
+        callable $applyEffect,
+        ?callable $transformUi = null
     ) {
         $this->out = $out;
         $this->applyEffect = $applyEffect;
+        $this->transformUi = $transformUi;
     }
 
     public function feed(string $chunk): int
@@ -91,6 +95,27 @@ final class ChatSseRelay
         return $this->terminal;
     }
 
+    /** Re-emits a draft_card ui event with the transformed payload; anything unexpected keeps the original block. */
+    private function transformedUiBlock(string $original, string $json): string
+    {
+        try {
+            $decoded = json_decode($json, true);
+            if (!is_array($decoded) || ($decoded['kind'] ?? null) !== 'draft_card') {
+                return $original;
+            }
+            $result = ($this->transformUi)($decoded);
+            if (!is_array($result) || $result === [] || ($result['kind'] ?? null) !== 'draft_card') {
+                return $original;
+            }
+            return "event: ui\ndata: " . json_encode(
+                $result,
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+            ) . "\n\n";
+        } catch (Throwable $e) {
+            return $original;
+        }
+    }
+
     private function appendNormalisedChunk(string $chunk): void
     {
         if ($this->pendingCarriageReturn) {
@@ -159,7 +184,11 @@ final class ChatSseRelay
             return;
         }
 
-        ($this->out)(rtrim($raw, "\n") . "\n\n");
+        $block = rtrim($raw, "\n") . "\n\n";
+        if ($event === 'ui' && $this->transformUi !== null && $events === ['ui']) {
+            $block = $this->transformedUiBlock($block, implode("\n", $data));
+        }
+        ($this->out)($block);
         if ($event === 'done' || $event === 'error') {
             $this->terminal = true;
         }

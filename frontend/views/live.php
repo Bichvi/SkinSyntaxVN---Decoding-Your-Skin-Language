@@ -30,7 +30,7 @@ $statusLabels = [
     'scheduled' => ['Đã lên lịch', 'scheduled'],
     'ready' => ['Sẵn sàng phát', 'ready'],
     'live' => ['ĐANG PHÁT', 'live'],
-    'interrupted' => ['Đang kết nối lại', 'warning'],
+    'interrupted' => ['Tạm dừng phát', 'warning'],
     'ended' => ['Đã kết thúc', 'ended'],
     'processing' => ['Đang xử lý bản ghi', 'processing'],
     'replay_ready' => ['Xem lại', 'replay'],
@@ -69,7 +69,32 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   .ss-chat{position:sticky;top:86px;overflow:hidden}.ss-chat__head{padding:16px;border-bottom:1px solid var(--ss-line)}.ss-chat__title{display:flex;align-items:center;justify-content:space-between;gap:8px}.ss-chat__title h2{font-size:16px;margin:0;font-weight:800}.ss-chat__tabs{display:flex;gap:6px;margin-top:13px}.ss-chat__tabs button{border:1px solid var(--ss-line);background:#fff;border-radius:999px;padding:6px 10px;font-size:11px;color:var(--ss-muted);cursor:pointer}.ss-chat__tabs button.is-active{background:#e8f3eb;border-color:#b9dbc4;color:var(--ss-green);font-weight:800}.ss-chat__body{height:430px;overflow:auto;padding:14px;background:#f9fbf9}.ss-chat__notice{font-size:12px;line-height:1.45;color:var(--ss-muted);background:#eef6ef;border-radius:10px;padding:10px;margin-bottom:10px}.ss-message{padding:9px 10px;border-radius:11px;background:#fff;border:1px solid var(--ss-line);margin-bottom:8px;font-size:13px;line-height:1.45}.ss-message--ai{background:#eaf5ed;border-color:#c8e2cf}.ss-message__meta{font-size:11px;color:var(--ss-muted);margin-bottom:3px}.ss-message__meta strong{color:var(--ss-green)}.ss-message__pill{font-size:10px;background:#fbe5a7;color:#6f5100;border-radius:999px;padding:2px 5px;margin-left:5px}.ss-chat__footer{padding:14px;border-top:1px solid var(--ss-line)}.ss-chat__footer input{border:1px solid var(--ss-line);border-radius:999px;padding:10px 13px;width:100%;font-size:13px;outline:none}.ss-chat__footer input:focus{border-color:#8cc09d;box-shadow:0 0 0 3px #e8f3eb}.ss-chat__row{display:flex;gap:7px}.ss-chat__row .ss-btn{width:42px;padding:0}.ss-chat__helper{font-size:11px;color:var(--ss-muted);margin:8px 2px 0}.ss-chat__locked{padding:12px;border-radius:10px;background:#f0f3f0;color:#6e7b72;font-size:12px;text-align:center}
   .ss-sessions{margin-top:36px}.ss-session-toolbar{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap;margin-bottom:14px}.ss-session-toolbar p{color:var(--ss-muted);font-size:12px;margin:5px 0 0}.ss-filters{display:flex;gap:6px;flex-wrap:wrap}.ss-filters button{border:1px solid var(--ss-line);background:#fff;color:var(--ss-muted);border-radius:999px;padding:7px 11px;font-size:11px;cursor:pointer}.ss-filters button.is-active{background:var(--ss-green);color:#fff;border-color:var(--ss-green)}.ss-session-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.ss-session{overflow:hidden;min-width:0}.ss-session__thumb{height:150px;background:linear-gradient(135deg,#e8f1eb,#b8d6c1);position:relative}.ss-session__thumb img{width:100%;height:100%;object-fit:cover}.ss-session__thumb--empty{display:grid;place-items:center;color:#6f8c78;font-size:25px}.ss-session__thumb .ss-badge{position:absolute;top:10px;left:10px}.ss-session__body{padding:13px}.ss-session__body strong{display:block;font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}.ss-session__body small{display:block;color:var(--ss-muted);margin:7px 0 12px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ss-session__body .ss-btn{width:100%;padding:8px 10px;font-size:11px}
   .ss-empty{padding:68px 24px;text-align:center}.ss-empty i{font-size:42px;color:#7b9984}.ss-empty h2{font-size:22px;margin:15px 0 8px}.ss-empty p{max-width:520px;margin:0 auto;color:var(--ss-muted);line-height:1.6}
-  @media (max-width:1050px){.ss-live-grid{grid-template-columns:1fr}.ss-chat{position:static}.ss-chat__body{height:330px}.ss-session-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .ss-preview-tag{position:absolute;z-index:6;left:16px;top:62px;display:inline-flex;align-items:center;gap:6px;background:rgba(10,23,17,.78);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;letter-spacing:.04em}.ss-preview-tag[hidden]{display:none}.ss-preview-tag i{font-size:8px;color:#f5c542}.ss-preview-tag.is-live{background:#e23b4e;border-color:#e23b4e}.ss-preview-tag.is-live i{color:#fff}
+  .ss-studio{margin-top:14px;padding:16px;border-color:#1c3c2a}.ss-studio__head{font-size:15px;font-weight:800;color:#183B2B;margin-bottom:12px}.ss-studio__head i{color:#2D6A4F;margin-right:6px}
+  .ss-studio__devices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ss-device{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--ss-line);border-radius:14px;background:var(--ss-soft);min-width:0}
+  .ss-device__icon{flex:0 0 auto;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#d9efe2;color:#183B2B;font-size:17px}
+  .ss-device__info{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}.ss-device__info strong{font-size:14px}
+  .ss-device__state{font-size:12px;color:var(--ss-muted);line-height:1.4;overflow-wrap:anywhere}.ss-device__state.is-on{color:#2D6A4F;font-weight:700}.ss-device__state.is-error{color:#c3344d;font-weight:600}
+  .ss-device__btn{flex:0 0 auto;min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid #2D6A4F;background:#fff;color:#183B2B;font-size:13px;font-weight:700;cursor:pointer}.ss-device__btn:hover:not(:disabled){background:#e8f4ec}.ss-device__btn.is-on{background:#183B2B;color:#fff}.ss-device__btn.is-on:hover:not(:disabled){background:#2D6A4F;color:#fff}.ss-studio__autherr{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:#fdecec;color:#9b1c1c;font-size:13px;font-weight:600}.ss-studio__autherr a{color:#9b1c1c;text-decoration:underline;margin-left:4px}.ss-device__btn:disabled{opacity:.6;cursor:not-allowed}
+  .ss-meter{height:6px;border-radius:999px;background:#dfe8e1;overflow:hidden;margin-top:4px}.ss-meter__bar{height:100%;width:0;background:linear-gradient(90deg,#2D6A4F,#7bd39a);transition:width .08s linear}
+  .ss-studio__go{margin-top:14px;padding-top:14px;border-top:1px solid var(--ss-line)}
+  .ss-studio__pre,.ss-studio__live{display:flex;flex-direction:column;gap:8px}.ss-studio__pre[hidden],.ss-studio__live[hidden]{display:none}
+  .ss-studio__golive{min-height:48px;border:0;border-radius:12px;background:#2D6A4F;color:#fff;font-size:16px;font-weight:800;padding:10px 20px;cursor:pointer}.ss-studio__golive:hover:not(:disabled){background:#183B2B}.ss-studio__golive:disabled{background:#b9c8bf;cursor:not-allowed}
+  .ss-studio__help{margin:0;font-size:12px;color:var(--ss-muted);line-height:1.5}.ss-studio__error{margin:0;font-size:13px;color:#c3344d;font-weight:600}.ss-studio__error[hidden]{display:none}
+  .ss-studio__live{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}.ss-studio__onair{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:#c3344d;font-size:16px}.ss-studio__onair i{font-size:10px}.ss-studio__onair span{font-variant-numeric:tabular-nums;color:var(--ss-ink)}
+  .ss-studio__end{min-height:44px;border:1px solid #e23b4e;background:#fff;color:#c3344d;border-radius:12px;font-weight:700;padding:8px 18px;cursor:pointer}.ss-studio__end:hover:not(:disabled){background:#fdecef}.ss-studio__end:disabled{opacity:.6}
+  .ss-device__btn:focus-visible,.ss-studio__golive:focus-visible,.ss-studio__end:focus-visible{outline:3px solid #7bd39a;outline-offset:2px}
+  @media (max-width:576px){.ss-studio__devices{grid-template-columns:1fr}.ss-studio__golive,.ss-studio__end{width:100%}.ss-studio__live{flex-direction:column;align-items:stretch}.ss-device{flex-wrap:wrap}.ss-device__btn{width:100%}.ss-preview-tag{left:12px;top:auto;bottom:70px}}
+  .ss-camoff{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0a1711;color:#cfe6d8;font-weight:700;font-size:15px;text-align:center;padding:16px}.ss-camoff[hidden]{display:none}.ss-camoff i{font-size:28px;opacity:.8}
+  .ss-player__chip{position:absolute;z-index:6;left:16px;bottom:72px;display:inline-flex;align-items:center;gap:7px;max-width:calc(100% - 32px);background:#fff4d6;color:#7a4a00;border:1px solid #b7791f;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:800;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.35)}.ss-player__chip[hidden]{display:none}
+  .ss-preview-tag.is-paused{background:#b7791f;border-color:#b7791f}.ss-preview-tag.is-paused i{color:#fff}
+  .ss-studio__status{display:flex;flex-direction:column;align-items:flex-start;gap:6px}.ss-studio__onair.is-paused{color:var(--ss-muted);font-size:13px}
+  .ss-studio__paused{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:#b7791f;background:#fff4d6;border:1px solid #e8c880;border-radius:999px;padding:4px 12px;font-size:15px}.ss-studio__paused[hidden]{display:none}.ss-studio__paused span{font-variant-numeric:tabular-nums}
+  .ss-studio__actions{display:flex;gap:10px;flex-wrap:wrap}
+  .ss-studio__pause{min-height:44px;border:1px solid #b7791f;background:#fff4d6;color:#7a4a00;border-radius:12px;font-weight:700;padding:8px 18px;cursor:pointer}.ss-studio__pause:hover:not(:disabled){background:#ffe9b0}.ss-studio__pause:disabled{opacity:.6;cursor:not-allowed}.ss-studio__pause.is-resume{background:#2D6A4F;border-color:#2D6A4F;color:#fff}.ss-studio__pause.is-resume:hover:not(:disabled){background:#183B2B}.ss-studio__pause:focus-visible{outline:3px solid #7bd39a;outline-offset:2px}
+  @media (max-width:576px){.ss-studio__actions{flex-direction:column}.ss-studio__pause,.ss-studio__end{width:100%}.ss-player__chip{left:12px;bottom:64px;font-size:12px}}
+  @media (max-width:1050px){.ss-live-grid{grid-template-columns:minmax(0,1fr)}.ss-chat{position:static}.ss-chat__body{height:330px}.ss-session-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media (max-width:620px){.ss-live-wrap{padding:18px 12px 0}.ss-live-hero{padding:22px 0}.ss-live-hero .container{padding-left:16px;padding-right:16px}.ss-player{border-radius:12px}.ss-product__body{align-items:flex-start}.ss-product__cta{width:100%;margin-top:10px}.ss-product__body{flex-wrap:wrap}.ss-product__info{flex-basis:calc(100% - 94px)}.ss-product__cta{margin-left:92px}.ss-product__cta .ss-btn{flex:1}.ss-session-grid{grid-template-columns:1fr}.ss-session__thumb{height:170px}.ss-player__actions{width:100%;margin-left:0}.ss-player__top{align-items:flex-start}.ss-player__bottom{padding:12px;padding-top:38px}.ss-chat__body{height:310px}}
 </style>
 
@@ -82,9 +107,9 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
             <span class="ss-badge ss-badge--live"><i class="fa-solid fa-circle"></i> SKINSYNTAX LIVE</span>
             <span class="ss-badge ss-badge--ready"><i class="fa-solid fa-shield-heart"></i> Hàng chính hãng</span>
           </div>
-          <h1>Bán hàng trực tiếp, tư vấn đúng sản phẩm</h1>
-          <p>Hình ảnh thật, trò chuyện thật và ưu đãi lấy từ sản phẩm trong cửa hàng. Trạng thái ĐANG PHÁT chỉ hiện khi hình ảnh và âm thanh đã hoạt động.</p>
-          <?php if ($isStudio): ?><div class="mt-3 small text-success fw-semibold"><i class="fa-solid fa-circle-info me-1"></i>Bật hình ảnh và âm thanh ở góc trên video. Khi cả hai hoạt động, người xem mới nhìn thấy phiên phát.</div><?php endif; ?>
+          <h1><?= $isStudio ? 'Phòng phát SkinSyntax' : 'Cùng bạn chọn điều làn da cần' ?></h1>
+          <p><?= $isStudio ? 'Chuẩn bị nguồn phát, giới thiệu sản phẩm và trò chuyện cùng người xem.' : 'Gặp gỡ người tư vấn, hỏi về sản phẩm và khám phá ưu đãi ngay trong buổi live.' ?></p>
+          <?php if ($canPublish): ?><div class="mt-3 small text-success fw-semibold"><i class="fa-solid fa-circle-info me-1"></i>Xem trước camera, bật micrô nếu cần, rồi chọn Bắt đầu phát camera. Bạn cũng có thể phát video hoặc chia sẻ màn hình.</div><?php endif; ?>
         </div>
         <?php if ($isStaff): ?>
           <a class="ss-btn ss-btn--primary" href="<?= BASE_URL ?>/index.php?r=admin_lives"><i class="fa-solid fa-sliders"></i> Quản lý phiên phát</a>
@@ -162,13 +187,15 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
             <?php endif; ?>
             <div class="ss-player__waiting" id="liveWaitingOverlay" <?= ($isLive && $liveStatus !== 'replay_ready') ? '' : ($liveStatus === 'replay_ready' && $recordingUrl !== '' ? 'hidden' : '') ?>>
               <div class="ss-player__waiting-inner">
-                <div class="ss-player__waiting-icon"><i class="fa-solid <?= $liveStatus === 'ready' ? 'fa-video' : ($liveStatus === 'scheduled' ? 'fa-calendar-days' : 'fa-tower-broadcast') ?>"></i></div>
+                <div class="ss-player__waiting-icon"><i class="fa-solid <?= $liveStatus === 'ready' ? 'fa-video' : ($liveStatus === 'scheduled' ? 'fa-calendar-days' : 'fa-video') ?>"></i></div>
                 <h2 class="h5 fw-bold" id="liveWaitingTitle"><?= h($statusLabel) ?></h2>
                 <p class="mb-0 opacity-75" id="liveWaitingMessage">
-                  <?php if ($liveStatus === 'live'): ?>Đang chờ hình ảnh từ người phát.<?php elseif ($liveStatus === 'ready'): ?>Bạn có thể bắt đầu sau khi cho phép sử dụng hình ảnh và âm thanh.<?php elseif ($liveStatus === 'scheduled'): ?>Phiên chưa đến thời gian phát sóng.<?php elseif ($liveStatus === 'replay_ready'): ?>Chưa có video xem lại.<?php else: ?>Phiên này chưa có video để xem.<?php endif; ?>
+                  <?php if ($liveStatus === 'live'): ?>Đang tải hình ảnh từ buổi live…<?php elseif ($liveStatus === 'ready'): ?><?= $isStudio ? 'Xem trước nguồn phát rồi chọn Bắt đầu phát.' : 'Buổi live sắp bắt đầu. Bạn có thể giữ trang này để theo dõi.' ?><?php elseif ($liveStatus === 'interrupted'): ?>Buổi live đang tạm dừng. Trang sẽ tự cập nhật khi tiếp tục.<?php elseif ($liveStatus === 'scheduled'): ?>Buổi live sẽ bắt đầu theo lịch hẹn.<?php elseif ($liveStatus === 'replay_ready'): ?>Chưa có video xem lại.<?php else: ?>Buổi live đã kết thúc. Hiện chưa có video xem lại.<?php endif; ?>
                 </p>
               </div>
             </div>
+            <?php if ($isStudio): ?><div class="ss-camoff" id="camOffOverlay" hidden><i class="fa-solid fa-video-slash" id="camOffIcon"></i><span id="camOffText">Camera đang tắt</span></div><span class="ss-player__chip" id="micOffChip" role="status" aria-live="polite" hidden><i class="fa-solid fa-microphone-slash"></i> Micro đang tắt — người xem không nghe thấy bạn</span><?php elseif (!$isReplayView): ?><span class="ss-player__chip" id="hostMicChip" role="status" aria-live="polite" hidden><i class="fa-solid fa-microphone-slash"></i> Người dẫn đang tắt micro</span><?php endif; ?>
+            <?php if ($isStudio): ?><span class="ss-preview-tag" id="previewTag" hidden><i class="fa-solid fa-circle"></i> <span id="previewTagText">XEM TRƯỚC · Chưa phát</span></span><?php endif; ?>
             <div class="ss-player__top">
               <span class="ss-badge ss-badge--<?= h($statusTone) ?>" id="liveStatusBadge"><i class="fa-solid fa-circle"></i> <span id="liveStatusLabel"><?= h($statusLabel) ?></span></span>
               <span class="ss-badge ss-badge--neutral" id="liveViewers" <?= $isLive ? '' : 'hidden' ?>><i class="fa-solid fa-eye"></i> <span id="liveViewerCount">0</span> đang xem</span>
@@ -178,6 +205,9 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
                 <?php if ($isLive): ?><button type="button" id="btnReaction"><i class="fa-solid fa-heart"></i> <span id="reactionCount"><?= (int)($live['reaction_count'] ?? 0) ?></span></button><?php endif; ?>
                 <button type="button" id="btnShareLive"><i class="fa-solid fa-share-nodes"></i> Chia sẻ</button>
                 <button type="button" id="btnEnableLiveSound" hidden>Bật tiếng</button>
+                <?php if (!empty($permissions['publish']) && !$isStudio && in_array($liveStatus, ['ready', 'live', 'interrupted'], true)): ?>
+                  <a href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= h(urlencode((string)($live['id'] ?? ''))) ?>&amp;studio=1"><i class="fa-solid fa-video"></i> Vào phòng phát</a>
+                <?php endif; ?>
               </div>
             </div>
             <?php if (!$isReplayView): ?>
@@ -207,8 +237,8 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
                 </div>
                 <div class="d-flex gap-2 flex-wrap my-2">
                   <button class="ss-btn ss-btn--ghost" type="button" id="livePreviewCamera">Xem trước camera</button>
-                  <button class="ss-btn ss-btn--ghost" type="button" data-live-source="camera">Camera</button>
-                  <button class="ss-btn ss-btn--ghost" type="button" data-live-source="screen">Chia sẻ màn hình</button>
+                  <button class="ss-btn ss-btn--primary" type="button" data-live-source="camera">Bắt đầu phát camera</button>
+                  <button class="ss-btn ss-btn--ghost" type="button" data-live-source="screen">Phát màn hình</button>
                   <button class="ss-btn ss-btn--ghost" type="button" id="btnToggleMic" disabled>Bật micrô</button>
                   <button class="ss-btn ss-btn--ghost" type="button" id="btnMuteOutput" disabled>Tắt tiếng luồng</button>
                   <button class="ss-btn ss-btn--ghost" type="button" id="btnStopLive" disabled>Dừng nguồn</button>
@@ -283,6 +313,44 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
           <?php endif; ?>
           <?php if ($isReplayView): ?>
           <div class="ss-replay-meta"><div class="ss-avatar"><?= h(mb_strtoupper(mb_substr($displayStreamer, 0, 2))) ?></div><div class="ss-replay-meta__text"><strong><?= h($displayStreamer) ?></strong><small><?= h($live['title'] ?? '') ?></small></div></div>
+          <?php endif; ?>
+
+          <?php if ($isStudio && in_array($liveStatus, ['ready', 'live', 'interrupted'], true)): ?>
+          <style>/* The host does not need the site-wide "top sale" toast; on phones it covers the preview. */#topSalesToast{display:none!important}</style>
+          <section class="ss-card ss-studio" id="studioPanel" aria-label="Bảng điều khiển phát sóng">
+            <div class="ss-studio__head"><i class="fa-solid fa-sliders"></i> Bảng điều khiển phát sóng</div>
+            <p class="ss-studio__autherr" id="studioAuthError" role="alert" hidden></p>
+            <div class="ss-studio__devices">
+              <div class="ss-device" id="tileCam">
+                <div class="ss-device__icon"><i class="fa-solid fa-video"></i></div>
+                <div class="ss-device__info"><strong>Camera</strong><span class="ss-device__state" id="camState" aria-live="polite">Đang tắt</span></div>
+                <button type="button" class="ss-device__btn" id="btnToggleCam">Bật camera</button>
+              </div>
+              <div class="ss-device" id="tileMic">
+                <div class="ss-device__icon"><i class="fa-solid fa-microphone"></i></div>
+                <div class="ss-device__info"><strong>Micro</strong><span class="ss-device__state" id="micState" aria-live="polite">Đang tắt</span>
+                  <div class="ss-meter" aria-hidden="true"><div class="ss-meter__bar" id="micMeterBar"></div></div></div>
+                <button type="button" class="ss-device__btn" id="btnToggleMic">Bật micro</button>
+              </div>
+            </div>
+            <div class="ss-studio__go">
+              <div class="ss-studio__pre" id="studioGoPre" <?= $isLive ? 'hidden' : '' ?>>
+                <button type="button" class="ss-studio__golive" id="btnGoLive" disabled><i class="fa-solid fa-video"></i> Bắt đầu phát</button>
+                <p class="ss-studio__help" id="studioHelp">Bật camera và micro, kiểm tra khung xem trước rồi bấm Bắt đầu phát.</p>
+                <p class="ss-studio__error" id="studioGoError" role="alert" hidden></p>
+              </div>
+              <div class="ss-studio__live" id="studioGoLive" <?= $isLive ? '' : 'hidden' ?>>
+                <div class="ss-studio__status">
+                  <span class="ss-studio__onair" id="studioOnAir"><i class="fa-solid fa-circle"></i> <b id="studioStateLabel" aria-live="polite">Đang phát</b> <span id="studioTimer" aria-live="off">00:00</span></span>
+                  <span class="ss-studio__paused" id="studioPausedInfo" aria-live="polite" hidden><i class="fa-solid fa-pause"></i> Tạm dừng <span id="studioPauseTimer" aria-live="off">00:00</span></span>
+                </div>
+                <div class="ss-studio__actions">
+                  <button type="button" id="btnPauseLive" class="ss-studio__pause" aria-pressed="false"><i class="fa-solid fa-pause"></i> Tạm dừng</button>
+                  <button type="button" id="btnEndLive" class="ss-studio__end"><i class="fa-solid fa-stop"></i> Kết thúc phiên phát</button>
+                </div>
+              </div>
+            </div>
+          </section>
           <?php endif; ?>
 
           <section class="ss-card ss-product" aria-label="Sản phẩm đang giới thiệu trong phiên phát">

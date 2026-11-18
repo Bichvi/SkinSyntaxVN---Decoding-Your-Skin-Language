@@ -186,5 +186,83 @@ $check('guest_path_builds_no_agent_token_header', !array_filter($request['header
     && in_array('X-Internal-Token: internal-secret', $request['headers'], true)
     && $request['body']['message'] === 'xin chào');
 
+
+// ---- ui transformer (draft_card only) ----
+$uiEvent = static fn(array $data): string => "event: ui\ndata: " . json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+$decodeUi = static fn(string $raw): array => json_decode(substr($raw, strlen("event: ui\ndata: ")), true) ?? [];
+
+$forwarded = [];
+$seen = [];
+$transform = static function (array $payload) use (&$seen): array {
+    $seen[] = $payload;
+    $payload['payload']['receiver']['phone'] = '0912 345 678';
+    $payload['payload']['receiver']['address'] = 'Số 1, Quận 1, TP.HCM';
+    return $payload;
+};
+$relay = new ChatSseRelay(
+    static function (string $raw) use (&$forwarded): void { $forwarded[] = $raw; },
+    static function (array $effect): ?int { return 1; },
+    $transform
+);
+$card = ['kind' => 'draft_card', 'payload' => ['draft_id' => 'd1', 'receiver' => ['name' => 'A', 'phone_masked' => '09xx xxx 678', 'address_short' => 'TP.HCM']]];
+$relay->feed($uiEvent($card));
+$out = $decodeUi($forwarded[0] ?? '');
+$check('transformer_enriches_draft_card', count($forwarded) === 1 && str_starts_with($forwarded[0], "event: ui\ndata: ")
+    && str_ends_with($forwarded[0], "\n\n")
+    && ($out['payload']['receiver']['phone'] ?? '') === '0912 345 678'
+    && ($out['payload']['receiver']['address'] ?? '') === 'Số 1, Quận 1, TP.HCM'
+    && ($out['payload']['receiver']['phone_masked'] ?? '') === '09xx xxx 678'
+    && str_contains($forwarded[0], 'Số 1, Quận 1') && count($seen) === 1 && ($seen[0]['payload']['draft_id'] ?? '') === 'd1');
+
+$forwarded = [];
+$seen = [];
+$relay = new ChatSseRelay(
+    static function (string $raw) use (&$forwarded): void { $forwarded[] = $raw; },
+    static function (array $effect): ?int { return 1; },
+    $transform
+);
+$other = $uiEvent(['kind' => 'product_list', 'payload' => ['products' => []]]);
+$relay->feed($other);
+$relay->feed("event: token\ndata: {\"text\":\"xin\"}\n\n");
+$check('transformer_ignores_other_ui_kinds_and_events', $forwarded === [$other, "event: token\ndata: {\"text\":\"xin\"}\n\n"] && $seen === []);
+
+$forwarded = [];
+$relay = new ChatSseRelay(
+    static function (string $raw) use (&$forwarded): void { $forwarded[] = $raw; },
+    static function (array $effect): ?int { return 1; },
+    static function (array $payload): array { throw new RuntimeException('store down'); }
+);
+$relay->feed($uiEvent($card));
+$check('transformer_exception_passes_original_through', $forwarded === [$uiEvent($card)]);
+
+foreach (['null' => static fn(array $p) => null, 'string' => static fn(array $p) => 'oops', 'empty' => static fn(array $p) => []] as $label => $bad) {
+    $forwarded = [];
+    $relay = new ChatSseRelay(
+        static function (string $raw) use (&$forwarded): void { $forwarded[] = $raw; },
+        static function (array $effect): ?int { return 1; },
+        $bad
+    );
+    $relay->feed($uiEvent($card));
+    $check('transformer_invalid_result_' . $label . '_passes_original_through', $forwarded === [$uiEvent($card)]);
+}
+
+$forwarded = [];
+$relay = new ChatSseRelay(
+    static function (string $raw) use (&$forwarded): void { $forwarded[] = $raw; },
+    static function (array $effect): ?int { return 5; },
+    $transform
+);
+$relay->feed("event: cart_effect\ndata: {$effectJson}\n\n");
+$check('transformer_leaves_cart_effect_alone', count($forwarded) === 1
+    && str_starts_with($forwarded[0], "event: cart_updated\n") && str_contains($forwarded[0], '"count":5'));
+
+$forwarded = [];
+$relay = new ChatSseRelay(
+    static function (string $raw) use (&$forwarded): void { $forwarded[] = $raw; },
+    static function (array $effect): ?int { return 5; }
+);
+$relay->feed($uiEvent($card));
+$check('no_transformer_forwards_draft_card_verbatim', $forwarded === [$uiEvent($card)]);
+
 echo PHP_EOL . "{$pass} passed, {$fail} failed" . PHP_EOL;
 exit($fail ? 1 : 0);

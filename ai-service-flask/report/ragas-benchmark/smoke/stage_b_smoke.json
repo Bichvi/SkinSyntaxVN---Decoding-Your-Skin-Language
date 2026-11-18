@@ -1,0 +1,234 @@
+{
+ "meta": {
+  "date": "2026-11-17",
+  "judge_model": "gemini-3.5-flash-lite",
+  "embedding_model": "models/gemini-embedding-001",
+  "generator_models": {
+   "openai/gpt-oss-120b": 6
+  },
+  "n_cases": 2,
+  "ragas": "0.4.4",
+  "langchain_google_genai": "4.5.0",
+  "langchain_core": "1.8.1"
+ },
+ "aggregate": {
+  "semantic": {
+   "n": 2,
+   "context_precision": {
+    "mean": 0.9999999999775,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "answer_relevancy": {
+    "mean": 0.7902413094803579,
+    "n_valid": 1,
+    "n_nan": 1
+   },
+   "faithfulness": {
+    "mean": 0.07142857142857142,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_precision@5": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_recall@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_hit@5": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_mrr@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_ndcg@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "latency_s_mean": 0.0998
+  },
+  "hybrid_rrf": {
+   "n": 2,
+   "context_precision": {
+    "mean": 0.162499999991875,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "answer_relevancy": {
+    "mean": 0.7143285067024511,
+    "n_valid": 1,
+    "n_nan": 1
+   },
+   "faithfulness": {
+    "mean": 0.375,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_precision@5": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_recall@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_hit@5": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_mrr@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_ndcg@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "latency_s_mean": 0.15355
+  },
+  "hybrid_rerank": {
+   "n": 2,
+   "context_precision": {
+    "mean": 0.8770833333077952,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "answer_relevancy": {
+    "mean": 0.7928390916384015,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "faithfulness": {
+    "mean": 0.2222222222222222,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_precision@5": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_recall@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_hit@5": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_mrr@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "id_ndcg@10": {
+    "mean": 0.0,
+    "n_valid": 2,
+    "n_nan": 0
+   },
+   "latency_s_mean": 7.0203
+  }
+ },
+ "samples": [
+  {
+   "case_id": "R01",
+   "config": "semantic",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "context_precision": 0.999999999975,
+   "answer_relevancy": 0.7902413094803579,
+   "faithfulness": 0.14285714285714285,
+   "id_hit@5": 0.0,
+   "id_mrr@10": 0.0,
+   "id_precision@5": 0.0,
+   "id_recall@10": 0.0,
+   "id_ndcg@10": 0.0
+  },
+  {
+   "case_id": "R01",
+   "config": "hybrid_rrf",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "context_precision": 0.32499999998375,
+   "answer_relevancy": 0.7143285067024511,
+   "faithfulness": 0.375,
+   "id_hit@5": 0.0,
+   "id_mrr@10": 0.0,
+   "id_precision@5": 0.0,
+   "id_recall@10": 0.0,
+   "id_ndcg@10": 0.0
+  },
+  {
+   "case_id": "R01",
+   "config": "hybrid_rerank",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "context_precision": 0.8666666666377778,
+   "answer_relevancy": 0.7824088893028015,
+   "faithfulness": 0.0,
+   "id_hit@5": 0.0,
+   "id_mrr@10": 0.0,
+   "id_precision@5": 0.0,
+   "id_recall@10": 0.0,
+   "id_ndcg@10": 0.0
+  },
+  {
+   "case_id": "R02",
+   "config": "semantic",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "context_precision": 0.99999999998,
+   "answer_relevancy": null,
+   "faithfulness": 0.0,
+   "id_hit@5": 0.0,
+   "id_mrr@10": 0.0,
+   "id_precision@5": 0.0,
+   "id_recall@10": 0.0,
+   "id_ndcg@10": 0.0
+  },
+  {
+   "case_id": "R02",
+   "config": "hybrid_rrf",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "context_precision": 0.0,
+   "answer_relevancy": null,
+   "faithfulness": 0.375,
+   "id_hit@5": 0.0,
+   "id_mrr@10": 0.0,
+   "id_precision@5": 0.0,
+   "id_recall@10": 0.0,
+   "id_ndcg@10": 0.0
+  },
+  {
+   "case_id": "R02",
+   "config": "hybrid_rerank",
+   "generator_model": "openai/gpt-oss-120b",
+   "generation_error": null,
+   "context_precision": 0.8874999999778125,
+   "answer_relevancy": 0.8032692939740015,
+   "faithfulness": 0.4444444444444444,
+   "id_hit@5": 0.0,
+   "id_mrr@10": 0.0,
+   "id_precision@5": 0.0,
+   "id_recall@10": 0.0,
+   "id_ndcg@10": 0.0
+  }
+ ]
+}

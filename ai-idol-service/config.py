@@ -125,6 +125,9 @@ BROADCAST_MAX_RETRIES = int(os.getenv("AI_IDOL_BROADCAST_MAX_RETRIES", "3"))
 BROADCAST_RETRY_SECONDS = int(os.getenv("AI_IDOL_BROADCAST_RETRY_SECONDS", "5"))
 BROADCAST_LATE_GRACE_MINUTES = int(os.getenv("AI_IDOL_BROADCAST_LATE_GRACE_MINUTES", "30"))
 RENDER_WAIT_CUTOFF_MINUTES = int(os.getenv("AI_IDOL_RENDER_WAIT_CUTOFF_MINUTES", "10"))
+# Jobs parked as WAITING_LLM (Groq daily token quota) resume in small batches and give up after this long.
+LLM_WAIT_MAX_HOURS = int(os.getenv("AI_IDOL_LLM_WAIT_MAX_HOURS", "48"))
+LLM_RESUME_BATCH = int(os.getenv("AI_IDOL_LLM_RESUME_BATCH", "2"))
 # Self-healing script validation: repair only failing sections, at most this many rounds.
 MAX_SCRIPT_REPAIR_ATTEMPTS = int(os.getenv("AI_IDOL_MAX_SCRIPT_REPAIR_ATTEMPTS", "3"))
 # false = legacy behaviour (rewrite the whole script from one feedback string).

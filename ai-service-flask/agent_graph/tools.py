@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
@@ -47,6 +48,8 @@ class ToolContext:
     scanned_product: dict[str, Any] = field(default_factory=dict)
     # Product ids already shown as search cards in this turn (a ToolContext lives for one turn).
     turn_shown_ids: set[str] = field(default_factory=set)
+    # The customer's message of this turn (used to keep the open draft's receiver when it is not mentioned).
+    message: str = ""
 
 
 class _Args(BaseModel):
@@ -135,7 +138,9 @@ class DraftArgs(_Args):
     scope: Literal["mentioned_items", "whole_cart"]
     product_ids: list[str] = Field(default_factory=list)
     qty: dict[str, int] | None = None
-    address_choice: Literal["default", "new"]
+    # keep = receiver of the open draft (falls back to the default when there is none); default = the account's
+    # default address, only when the customer asks for it; new = new_address with only the fields that change.
+    address_choice: Literal["keep", "default", "new"] = "keep"
     new_address: NewAddress | None = None
     payment_method: Literal["cod", "vnpay", "bank_transfer_qr"]
     voucher_code: str | None = None
@@ -228,7 +233,12 @@ def _call(ctx: ToolContext, name: str, fn: Callable[[], Any], params: dict) -> s
         outcome = _error_code(exc)
         if outcome == "login_required":
             ctx.emit("ui", {"kind": "login_required", "payload": {}})
-        return _wrapped({"error": outcome, "message": exc.message})
+        failure = {"error": outcome, "message": exc.message}
+        php_code = str(getattr(exc, "code", "") or "")
+        if php_code and outcome != "login_required":
+            # Keep the PHP error code next to its Vietnamese message so the agent can ask for the exact field.
+            failure["code"] = php_code
+        return _wrapped(failure)
     finally:
         audit.record(_actor(ctx), name, _safe_params(params), outcome)
 
@@ -245,6 +255,16 @@ def _guarded(ctx: ToolContext, name: str, fn: Callable[[], Any], params: dict) -
         audit.record(_actor(ctx), name, _safe_params(params), "login_required")
         return result
     return _call(ctx, name, fn, params)
+
+
+_RECEIVER_WORDS_RE = re.compile(
+    r"\bdia chi\b|\bgiao (?:ve|toi|den|cho|o)\b|\bnguoi nhan\b|\bso dien thoai\b|\bsdt\b|\bmac dinh\b|\bnha\b"
+)
+
+
+def _mentions_receiver(message: str) -> bool:
+    """True when the customer's message talks about where/who to deliver to."""
+    return bool(_RECEIVER_WORDS_RE.search(_fold(message or "")))
 
 
 def _fold(value: str) -> str:
@@ -676,13 +696,26 @@ def _build(ctx: ToolContext, name: str) -> StructuredTool:
                 return response
             return _guarded(ctx, name, remove, params)
         if name == "get_checkout_defaults":
-            return _guarded(ctx, name, lambda: _php(ctx, "internal_agent_checkout_defaults", {}), params)
+            def defaults() -> dict:
+                response = _php(ctx, "internal_agent_checkout_defaults", {})
+                if not ctx.state.open_draft_id:
+                    # The agent is now asking the customer to confirm address/payment: a short "ok" must come back here.
+                    ctx.state.pending = "checkout_collecting"
+                return response
+            return _guarded(ctx, name, defaults, params)
         if name == "prepare_order_draft":
             def draft() -> dict:
                 payload = dict(raw)
                 if isinstance(payload.get("new_address"), BaseModel):
                     payload["new_address"] = payload["new_address"].model_dump(exclude_none=True)
                 payload["replaces"] = ctx.state.open_draft_id
+                if (
+                    ctx.state.open_draft_id and payload.get("address_choice") == "default"
+                    and not payload.get("new_address") and not _mentions_receiver(ctx.message)
+                ):
+                    # "đổi sang VNPay" / "còn 1 chai": the model sometimes re-sends "default", which would silently
+                    # swap the receiver the customer gave for the account default. Keep the open draft's receiver.
+                    payload["address_choice"] = "keep"
                 stored_qty = ctx.state.open_draft_qty
                 deadline = ctx.state.open_draft_deadline
                 original_qty = raw.get("qty")
