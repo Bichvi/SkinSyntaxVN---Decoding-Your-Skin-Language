@@ -458,6 +458,7 @@ def chat_agent():
         state=ConvState(),
         graph_tools=None,
         scanned_product=_scanned_product(data.get("scanned_product")),
+        message=message,
     )
 
     def generate() -> Iterator[str]:

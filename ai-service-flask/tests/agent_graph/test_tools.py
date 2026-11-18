@@ -925,3 +925,117 @@ def test_search_with_nothing_under_price_max_says_so_and_keeps_last_shown():
     assert '"count": 0' in result and "no_product_within_price_max" in result
     assert not [event for event in events if event[0] == "ui"]
     assert state.last_shown_products == [{"idx": 1, "id": "old", "name": "Old"}]
+
+
+def test_checkout_defaults_success_sets_checkout_collecting():
+    body = {"receiver": {"name": "Owner"}, "last_payment_method": "cod", "methods": ["cod"]}
+    ctx = context(("draft:create",), php=FakePhp({"internal_agent_checkout_defaults": body}))
+    tool_map(ctx)["get_checkout_defaults"].invoke({})
+    assert ctx.state.pending == "checkout_collecting"
+
+
+def test_checkout_defaults_failure_keeps_pending():
+    from agent_graph.php_client import PhpError  # noqa: F401
+    ctx = context(("draft:create",), php=FakePhp(error=RuntimeError("x")))
+    try:
+        tool_map(ctx)["get_checkout_defaults"].invoke({})
+    except Exception:
+        pass
+    assert ctx.state.pending == "none"
+
+
+def test_checkout_defaults_with_open_draft_does_not_change_pending():
+    ctx = context(("draft:create",), php=FakePhp({"internal_agent_checkout_defaults": {}}),
+                  state=ConvState(open_draft_id="D1"))
+    tool_map(ctx)["get_checkout_defaults"].invoke({})
+    assert ctx.state.pending == "none"
+
+
+def test_draft_validation_error_gives_llm_code_and_vietnamese_message():
+    from agent_graph.php_client import PhpError
+
+    state = ConvState()
+    state.open_draft_id = "D-open"
+    php = FakePhp(error=PhpError(422, "Thiếu số điện thoại người nhận.", code="receiver_missing"))
+    tool = tool_map(context(("draft:create",), php=php, state=state))["prepare_order_draft"]
+    result = tool.invoke({
+        "scope": "mentioned_items", "product_ids": ["p1"], "address_choice": "new",
+        "new_address": {"dia_chi_giao_hang": "12 Nguyen Hue, Quan 1, TP.HCM"}, "payment_method": "cod",
+    })
+    payload = json.loads(result.removeprefix("<tool_data>").removesuffix("</tool_data>"))
+    assert payload["error"] == "receiver_missing"
+    assert payload["code"] == "receiver_missing"
+    assert payload["message"] == "Thiếu số điện thoại người nhận."
+    assert len(php.calls) == 1  # a 422 is not a stale draft: no silent retry
+    assert state.open_draft_id == "D-open"
+
+
+@pytest.mark.parametrize("code,message", [
+    ("receiver_phone_invalid", "Số điện thoại không hợp lệ (cần 10 số, bắt đầu bằng 0)."),
+    ("qty_invalid", "Số lượng mỗi sản phẩm phải từ 1 đến 20."),
+    ("payment_unsupported", "Cửa hàng chưa hỗ trợ chuyển khoản QR, bạn chọn COD hoặc VNPay nhé."),
+])
+def test_draft_error_codes_reach_the_llm_with_message(code, message):
+    from agent_graph.php_client import PhpError
+
+    php = FakePhp(error=PhpError(422, message, code=code))
+    tool = tool_map(context(("draft:create",), php=php))["prepare_order_draft"]
+    result = tool.invoke({"scope": "whole_cart", "product_ids": [], "address_choice": "default", "payment_method": "cod"})
+    payload = json.loads(result.removeprefix("<tool_data>").removesuffix("</tool_data>"))
+    assert payload["code"] == code and payload["message"] == message
+
+
+def test_error_without_php_code_has_no_code_key_but_keeps_message():
+    from agent_graph.php_client import PhpError
+
+    php = FakePhp(error=PhpError(500, "boom"))
+    tool = tool_map(context(("draft:create",), php=php))["prepare_order_draft"]
+    result = tool.invoke({"scope": "whole_cart", "product_ids": [], "address_choice": "default", "payment_method": "cod"})
+    payload = json.loads(result.removeprefix("<tool_data>").removesuffix("</tool_data>"))
+    assert payload["error"] == "php_error" and payload["message"] == "boom" and "code" not in payload
+
+
+def test_prompt_tells_agent_to_change_only_one_thing_and_not_invent_numbers():
+    from agent_graph.prompts import AGENT_PROMPT, PROMPT_VERSION, TOOL_DOCS
+
+    assert PROMPT_VERSION == "2026-11-17.1"
+    section = AGENT_PROMPT.split("# Chuẩn bị đơn", 1)[1].split("# Tra đơn", 1)[0]
+    assert "chỉ thay đổi" in section and 'address_choice "new"' in section
+    assert "1–20" in section and "không tự bịa" in section
+    doc = TOOL_DOCS["prepare_order_draft"]
+    assert 'address_choice "new"' in doc and "chỉ" in doc and "1–20" in doc and "qty" in doc
+
+
+def _draft_call_with_open_draft(message, args):
+    state = ConvState(open_draft_id="d-open")
+    php = FakePhp({"internal_agent_draft": {"ok": True, "card": PHP_CARD}})
+    ctx = context(("draft:create",), php=php, state=state)
+    ctx.message = message
+    tool_map(ctx)["prepare_order_draft"].invoke(args)
+    return [payload for route, payload in php.calls if route == "internal_agent_draft"][-1]
+
+
+def test_redraft_keeps_receiver_when_model_sends_default_for_a_payment_change():
+    # 2026-11-17 E2E: "thôi thanh toán COD nhé" re-sent address_choice "default" and lost the receiver.
+    sent = _draft_call_with_open_draft("thôi thanh toán COD nhé", {**DRAFT_ARGS, "address_choice": "default"})
+    assert sent["address_choice"] == "keep"
+    assert sent["replaces"] == "d-open"
+
+
+def test_redraft_honours_default_when_customer_asks_for_the_default_address():
+    sent = _draft_call_with_open_draft("giao về địa chỉ mặc định của mình nhé", {**DRAFT_ARGS, "address_choice": "default"})
+    assert sent["address_choice"] == "default"
+
+
+def test_first_draft_default_is_not_rewritten():
+    php = FakePhp({"internal_agent_draft": {"ok": True, "card": PHP_CARD}})
+    ctx = context(("draft:create",), php=php, state=ConvState())
+    ctx.message = "đặt luôn COD"
+    tool_map(ctx)["prepare_order_draft"].invoke(DRAFT_ARGS)
+    assert php.calls[-1][1]["address_choice"] == "default"
+
+
+def test_address_choice_defaults_to_keep():
+    args = {k: v for k, v in DRAFT_ARGS.items() if k != "address_choice"}
+    sent = _draft_call_with_open_draft("còn 1 chai thôi", args)
+    assert sent["address_choice"] == "keep"

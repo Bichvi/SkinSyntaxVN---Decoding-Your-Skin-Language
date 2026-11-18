@@ -27,7 +27,7 @@
     let mode = 'all', replyTo = '', previousHistory = '', chatRequest = 0;
     let room, connecting, connectedAt = 0, publisherToken, publisherRefreshAt = 0, publishing = false, media, activeSource = '', recorder, recordingParts = [], recordedFile, switching = false, ending = false, nextAtEnd = false;
     let files = [], playlistActive = false, playingIndex = -1, outputMuted = false, visibleDeals = '', closed = false;
-    let recordingId, nextRecordingPart = 0;
+    let recordingId, nextRecordingPart = 0, heartbeatPending = false;
 
     const url = (route, params = {}) => baseUrl + '/index.php?' + new URLSearchParams({r: route, ...params});
     async function json(route, params = {}, fields) {
@@ -289,7 +289,7 @@
     }
 
     async function updateStream(state, source = activeSource) {
-        if (state === 'live' && Date.now() >= publisherRefreshAt) {
+        if (['live', 'heartbeat'].includes(state) && Date.now() >= publisherRefreshAt) {
             const latest = await json('api_live_token', {id: liveId, studio: '1'});
             if (!latest.ok || !latest.data?.can_publish) throw new Error('Không gia hạn được quyền phát.');
             publisherToken = latest.data.participant_token;
@@ -297,11 +297,21 @@
         }
         const result = await json('api_live_stream_state', {}, {live_id: liveId, state, source, publisher_token: publisherToken});
         if (!result.ok) throw new Error(result.message || 'Không cập nhật được trạng thái phát.');
-        updateStatus(state);
+        if (state !== 'heartbeat') updateStatus(state);
     }
 
     function updateStatus(next) {
         status = next;
+        if ($('liveWaitingTitle')) $('liveWaitingTitle').textContent = statuses[status] ?? 'Sắp bắt đầu';
+        if ($('liveWaitingMessage')) $('liveWaitingMessage').textContent = {
+            scheduled: 'Buổi live sẽ bắt đầu theo lịch hẹn.',
+            ready: studio ? 'Xem trước nguồn phát rồi chọn Bắt đầu phát.' : 'Buổi live sắp bắt đầu. Bạn có thể giữ trang này để theo dõi.',
+            live: 'Đang tải hình ảnh từ buổi live…',
+            interrupted: 'Buổi live đang tạm dừng. Trang sẽ tự cập nhật khi tiếp tục.',
+            ended: 'Buổi live đã kết thúc.',
+            replay_ready: 'Video xem lại đã sẵn sàng.',
+            recording_failed: 'Buổi live đã kết thúc. Hiện chưa có video xem lại.',
+        }[status] ?? '';
         $('liveStatusLabel').textContent = statuses[status] ?? statuses.ready;
         $('liveStatusBadge').className = 'ss-badge ss-badge--' + (status === 'live' ? 'live' : 'neutral');
         $('liveViewers').hidden = status !== 'live';
@@ -376,8 +386,9 @@
         if (!$('btnEndLive')) return;
         $('btnEndLive').disabled = ending || closed || (!activeSource && !recorder);
         $('btnStopLive').disabled = !activeSource || switching || ending;
-        $('btnToggleMic').disabled = activeSource !== 'camera' || switching || ending;
+        $('btnToggleMic').disabled = media?.source?.kind !== 'camera' || switching || ending;
         $('btnToggleMic').textContent = media?.source?.mic ? 'Tắt micrô' : 'Bật micrô';
+        if ($('micOffChip')) $('micOffChip').hidden = media?.source?.kind !== 'camera' || Boolean(media.source.mic);
         $('btnMuteOutput').disabled = !activeSource || switching || ending;
         for (const id of ['livePreviewCamera', 'livePreviewVideo', 'livePreviewLibrary']) {
             $(id).disabled = Boolean(activeSource) || switching || ending || closed;
@@ -411,11 +422,11 @@
                 mediaNotice.textContent = 'Xem trước · ' + sourceLabels[source];
                 return;
             }
+            await publish();
+            await updateStream('live', source);
             activeSource = source;
             playlistActive = source.endsWith('video') && !savedVideo;
             playingIndex = playlistActive ? selection.selectedIndex : -1;
-            await publish();
-            await updateStream('live');
             waiting.hidden = true;
             const badge = $('liveSourceBadge');
             badge.textContent = sourceLabels[source];
@@ -426,6 +437,7 @@
         } catch (error) {
             mediaNotice.textContent = error.message || 'Không thể chuyển nguồn.';
             if (!activeSource && media) {
+                await hangUp().catch(() => {});
                 media.close();
                 media = null;
             }
@@ -769,6 +781,19 @@
     setInterval(loadChat, 1500);
     refreshRoom();
     setInterval(refreshRoom, 3000);
+    // A publisher renews freshness without changing the session or interrupting recording.
+    // Keep this active in background tabs; viewers never write publisher state.
+    setInterval(async () => {
+        if (!studio || !publishing || !activeSource || ending || closed || heartbeatPending || room?.state !== 'connected') return;
+        heartbeatPending = true;
+        try {
+            await updateStream('heartbeat');
+        } catch (error) {
+            mediaNotice.textContent = error.message || 'Không cập nhật được kết nối phát.';
+        } finally {
+            heartbeatPending = false;
+        }
+    }, 15000);
     setInterval(async () => {
         if (status !== 'live' || document.hidden) return;
         const result = await json('api_live_ping', {room: liveId});

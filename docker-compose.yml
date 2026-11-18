@@ -379,7 +379,7 @@ services:
       VALKEY_URL: ${VALKEY_URL:-}
       CACHE_PREFIX: ${CACHE_PREFIX:-skinsyntax:}
       CACHE_DEFAULT_TTL: ${CACHE_DEFAULT_TTL:-300}
-      MAIL_DEMO_MODE: "1"
+      MAIL_DEMO_MODE: "${MAIL_DEMO_MODE:-1}"
     volumes:
       - ./backend:/var/www/html
       - ./frontend:/var/www/frontend:ro
@@ -390,6 +390,9 @@ services:
       # Opcache ít kiểm tra timestamp hơn (xem docker/php/zz-skinsyntax-opcache.ini)
       - ./docker/php/zz-skinsyntax-opcache.ini:/usr/local/etc/php/conf.d/zz-skinsyntax-opcache.ini:ro
       - uploads_data:/var/www/html/public/uploads
+      # Phiên đăng nhập PHP nằm trên volume riêng: restart/rebuild container không còn đăng xuất mọi người
+      - ./docker/php/zz-skinsyntax-session.ini:/usr/local/etc/php/conf.d/zz-skinsyntax-session.ini:ro
+      - php_sessions:/var/lib/php/sessions
     depends_on:
       mongodb:
         condition: service_healthy
@@ -516,6 +519,8 @@ volumes:
     name: skinsyntax-chroma-data
   uploads_data:
     name: skinsyntax-uploads
+  php_sessions:
+    name: skinsyntax-php-sessions
   redis_data:
     name: skinsyntax-redis-data
   vieneu_model_cache:

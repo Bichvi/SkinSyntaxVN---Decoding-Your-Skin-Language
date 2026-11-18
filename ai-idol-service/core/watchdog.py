@@ -10,6 +10,8 @@ import datetime as dt
 
 from config import (
     AVATAR_SERVICE_TIMEOUT,
+    LLM_RESUME_BATCH,
+    LLM_WAIT_MAX_HOURS,
     RENDER_WAIT_CUTOFF_MINUTES,
     STALE_ASSEMBLING_MINUTES,
     STALE_JOB_MINUTES,
@@ -169,4 +171,53 @@ def resume_waiting_renders(enqueue, now: dt.datetime | None = None, *, renderer_
         if claimed.modified_count:
             enqueue(str(job["_id"]))
             result["resumed"] += 1
+    return result
+
+
+def resume_waiting_llm(enqueue, now: dt.datetime | None = None) -> dict[str, int]:
+    """Requeue jobs parked as WAITING_LLM (Groq token quota) once their retry time is due.
+
+    At most LLM_RESUME_BATCH jobs go back per sweep so a freshly refilled quota is
+    not burned by dozens of jobs at once. A job is failed instead when its campaign
+    airs too soon or when it has waited longer than LLM_WAIT_MAX_HOURS.
+    """
+    db, now = get_db(), now or utcnow()
+    result = {"resumed": 0, "failed": 0, "waiting": 0}
+    jobs = list(db.ai_idol_jobs.find({"status": "WAITING_LLM"}).limit(50))
+    due = []
+    for job in jobs:
+        campaign = None
+        if job.get("campaign_id"):
+            campaign = db.ai_idol_campaigns.find_one({"_id": object_id(str(job["campaign_id"]))}, {"scheduled_at": 1, "status": 1})
+        scheduled_at = (campaign or {}).get("scheduled_at")
+        since = job.get("waiting_llm_since")
+        error = None
+        if scheduled_at is not None and scheduled_at - now < dt.timedelta(minutes=RENDER_WAIT_CUTOFF_MINUTES):
+            error = f"Groq hết hạn mức token đến sát giờ phát (còn dưới {RENDER_WAIT_CUTOFF_MINUTES} phút). Hãy đổi lịch rồi tạo lại phần lỗi."
+        elif since is not None and now - since > dt.timedelta(hours=LLM_WAIT_MAX_HOURS):
+            error = f"Groq hết hạn mức token quá {LLM_WAIT_MAX_HOURS} giờ. Hãy nâng hạn mức Groq hoặc giảm số video rồi tạo lại phần lỗi."
+        if error:
+            changed = db.ai_idol_jobs.update_one(
+                {"_id": job["_id"], "status": "WAITING_LLM"},
+                {"$set": {"status": "FAILED", "failed_stage": "WAITING_LLM", "updated_at": now, "error_message": error}},
+            )
+            if changed.modified_count:
+                result["failed"] += 1
+                update_campaign_from_job(str(job["_id"]))
+            continue
+        retry_at = job.get("llm_retry_at")
+        if retry_at is None or retry_at <= now:
+            due.append(job)
+        else:
+            result["waiting"] += 1
+    due.sort(key=lambda j: j.get("llm_retry_at") or dt.datetime.min)
+    for job in due[:max(LLM_RESUME_BATCH, 0)]:
+        claimed = db.ai_idol_jobs.update_one(
+            {"_id": job["_id"], "status": "WAITING_LLM"},
+            {"$set": {"status": "QUEUED", "current_stage": "QUEUED", "error_message": None, "updated_at": now}},
+        )
+        if claimed.modified_count:
+            enqueue(str(job["_id"]))
+            result["resumed"] += 1
+    result["waiting"] += max(len(due) - max(LLM_RESUME_BATCH, 0), 0)
     return result

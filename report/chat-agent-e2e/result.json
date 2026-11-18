@@ -1,7 +1,7 @@
 {
   "base": "http://127.0.0.1:8080",
-  "at": "2026-11-03T16:28:52.820Z",
-  "createdOrderId": 502308,
+  "at": "2026-11-16T22:22:53.588Z",
+  "createdOrderId": 502324,
   "results": [
     {
       "step": "widget flag data-agent-v2=1",
@@ -24,6 +24,11 @@
       "note": ""
     },
     {
+      "step": "bot never claims an order before Confirm",
+      "ok": true,
+      "note": ""
+    },
+    {
       "step": "draft card with Confirm button",
       "ok": true,
       "note": ""
@@ -34,19 +39,44 @@
       "note": ""
     },
     {
-      "step": "double click → exactly one created order",
+      "step": "confirm without OTP → 428 otp_required, no order",
+      "ok": true,
+      "note": "http=428 code=otp_required"
+    },
+    {
+      "step": "confirm click → OTP box, one OTP sent to masked email",
+      "ok": true,
+      "note": "otp calls=1 ok=1"
+    },
+    {
+      "step": "OTP readable from PHP demo log",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "step": "wrong OTP → otp_invalid, no order",
+      "ok": true,
+      "note": "codes=otp_invalid"
+    },
+    {
+      "step": "right OTP, double click → exactly one created order",
       "ok": true,
       "note": "confirm calls=1 created=1"
     },
     {
+      "step": "replaying the used OTP creates nothing",
+      "ok": true,
+      "note": "http=428 code=otp_required"
+    },
+    {
       "step": "order listed in customer orders",
       "ok": true,
-      "note": "order_id=502308"
+      "note": "order_id=502324"
     },
     {
       "step": "test order cancelled",
       "ok": true,
-      "note": "order_id=502308 http=302"
+      "note": "order_id=502324 http=302"
     }
   ]
 }

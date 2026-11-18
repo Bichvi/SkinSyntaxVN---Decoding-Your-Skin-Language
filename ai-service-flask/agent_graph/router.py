@@ -59,8 +59,32 @@ def _result(label: IntentLabel, confidence: float = 1.0) -> RouterOutput:
     return RouterOutput(intents=[Intent(label=label, confidence=confidence)])
 
 
+_CHECKOUT_REPLY_RE = re.compile(
+    r"^(?:ok(?:e|ay)?(?: luon| nhe| nha| ne)?(?: cod)?|u|uh|um|vang|da|dung(?: roi| vay)?|duoc|dong y"
+    r"|giu nguyen|giu|co|yes|chot|dat di|dat luon|cod)$"
+)
+_CHECKOUT_WHOLE_CART_RE = re.compile(r"^(?:tat ca|ca gio|toan bo|het|lay het)$")
+
+
+def _checkout_reply(text: str) -> RouterOutput | None:
+    """Short answer to "keep this address / use COD?": continue the checkout instead of re-classifying."""
+    cleaned = re.sub(r"[^\w\s]", " ", text)
+    cleaned = " ".join(cleaned.split())
+    if not cleaned or len(cleaned.split()) > 6:
+        return None
+    if _CHECKOUT_WHOLE_CART_RE.match(cleaned):
+        return _result("BUY").model_copy(update={"entities": RouterEntities(scope="whole_cart")})
+    if _CHECKOUT_REPLY_RE.match(cleaned):
+        return _result("BUY")
+    return None
+
+
 def fast_route(message: str, state: ConvState) -> RouterOutput | None:
     text = fold(message)
+    if state.pending == "checkout_collecting":
+        reply = _checkout_reply(text)
+        if reply is not None:
+            return reply
     has_order_word = bool(re.search(r"\b(?:đơn|don)\b", message, re.IGNORECASE))
     if re.search(r"(?<!\w)#?dh\d+(?!\w)", text) or (
         has_order_word and re.search(r"\b(?:don(?: hang)?|cua toi|toi dau|dau roi)\b", text)

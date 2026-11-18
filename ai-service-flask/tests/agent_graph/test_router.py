@@ -250,3 +250,38 @@ def test_deictic_ref_after_label_scan_means_scanned_product_not_clarification():
     assert with_scan.needs_clarification is None
     without_scan = classify("sản phẩm này có hợp da mình không?", ConvState(), [], FakeRouter(routed))
     assert without_scan.needs_clarification
+
+
+class _NoLlm:
+    def invoke(self, _messages):
+        raise AssertionError("LLM must not be called for a checkout reply")
+
+
+@pytest.mark.parametrize("message", ["ok", "Ok luôn", "đúng rồi", "giữ nguyên", "ừ", "vâng", "đồng ý", "chốt"])
+def test_checkout_collecting_short_affirmation_is_buy_without_llm(message):
+    result = classify(message, ConvState(pending="checkout_collecting"), [], _NoLlm())
+    assert [item.label for item in result.intents] == ["BUY"]
+
+
+@pytest.mark.parametrize("message", ["tất cả", "cả giỏ", "toàn bộ", "lấy hết"])
+def test_checkout_collecting_scope_reply_is_whole_cart(message):
+    state = ConvState(pending="checkout_collecting", last_shown_products=[{"idx": 1, "id": "p1", "name": "A"}])
+    result = classify(message, state, [], _NoLlm())
+    assert [item.label for item in result.intents] == ["BUY"]
+    assert result.entities.scope == "whole_cart"
+
+
+def test_checkout_collecting_ok_cod_sets_payment():
+    result = classify("ok cod", ConvState(pending="checkout_collecting"), [], _NoLlm())
+    assert [item.label for item in result.intents] == ["BUY"]
+    assert result.entities.payment_method == "cod"
+
+
+def test_ok_without_checkout_pending_is_not_fast_routed():
+    assert fast_route("ok", ConvState()) is None
+    assert fast_route("ok", ConvState(pending="draft_open:D1")) is None
+
+
+@pytest.mark.parametrize("message", ["không, đổi địa chỉ", "không", "đổi địa chỉ giúp mình", "ok nhưng đổi sang vnpay nhé mình muốn"])
+def test_checkout_collecting_negation_or_change_is_not_fast_routed(message):
+    assert fast_route(message, ConvState(pending="checkout_collecting")) is None

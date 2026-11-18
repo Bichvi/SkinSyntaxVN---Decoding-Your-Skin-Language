@@ -1,0 +1,407 @@
+{
+ "_meta": {
+  "description": "Silver-label relevance for RAGAS benchmark over Chroma collection 'products' (6,377 docs).",
+  "relevance_rule": "doc relevant iff metadata loai_san_pham == constraints.category AND (skin_type_any null OR folded loai_da contains any folded keyword OR loai_da is 'Da thường/Mọi loại da' [treated as suitable for any skin type]) AND (text_any null OR folded document text contains any keyword) AND (max_price null OR 0 < gia_ban <= max_price). Folded = lowercase, strip Vietnamese diacritics, đ->d. loai_da 'Unknown' (3184 docs) never matches a skin-type constraint.",
+  "relevant_count": "informational snapshot computed at authoring time; stage A recomputes from live collection"
+ },
+ "cases": [
+  {
+   "id": "R01",
+   "query": "sữa rửa mặt cho da dầu mụn",
+   "constraints": {
+    "category": "Sữa Rửa Mặt",
+    "skin_type_any": [
+     "dầu",
+     "mụn"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 201
+  },
+  {
+   "id": "R02",
+   "query": "Mình muốn mua sữa rửa mặt dịu nhẹ cho da nhạy cảm",
+   "constraints": {
+    "category": "Sữa Rửa Mặt",
+    "skin_type_any": [
+     "nhạy cảm"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 126
+  },
+  {
+   "id": "R03",
+   "query": "sua rua mat co salicylic acid cho da dau",
+   "constraints": {
+    "category": "Sữa Rửa Mặt",
+    "skin_type_any": [
+     "dầu"
+    ],
+    "text_any": [
+     "salicylic",
+     "bha"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 52
+  },
+  {
+   "id": "R04",
+   "query": "sữa rửa mặt giá dưới 200k",
+   "constraints": {
+    "category": "Sữa Rửa Mặt",
+    "skin_type_any": null,
+    "text_any": null,
+    "max_price": 200000
+   },
+   "relevant_count": 169
+  },
+  {
+   "id": "R05",
+   "query": "nước tẩy trang cho da dầu mụn nào tốt vậy",
+   "constraints": {
+    "category": "Tẩy Trang Mặt",
+    "skin_type_any": [
+     "dầu",
+     "mụn"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 137
+  },
+  {
+   "id": "R06",
+   "query": "tẩy trang dưới 300k",
+   "constraints": {
+    "category": "Tẩy Trang Mặt",
+    "skin_type_any": null,
+    "text_any": null,
+    "max_price": 300000
+   },
+   "relevant_count": 159
+  },
+  {
+   "id": "R07",
+   "query": "tay trang cho da nhay cam",
+   "constraints": {
+    "category": "Tẩy Trang Mặt",
+    "skin_type_any": [
+     "nhạy cảm"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 114
+  },
+  {
+   "id": "R08",
+   "query": "serum niacinamide giúp sáng da mờ thâm",
+   "constraints": {
+    "category": "Serum / Tinh Chất",
+    "skin_type_any": null,
+    "text_any": [
+     "niacinamide"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 114
+  },
+  {
+   "id": "R09",
+   "query": "serum vitamin C chống oxy hóa dưới 500k",
+   "constraints": {
+    "category": "Serum / Tinh Chất",
+    "skin_type_any": null,
+    "text_any": [
+     "vitamin c"
+    ],
+    "max_price": 500000
+   },
+   "relevant_count": 44
+  },
+  {
+   "id": "R10",
+   "query": "serum cấp ẩm hyaluronic acid cho da khô",
+   "constraints": {
+    "category": "Serum / Tinh Chất",
+    "skin_type_any": [
+     "khô"
+    ],
+    "text_any": [
+     "hyaluronic"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 65
+  },
+  {
+   "id": "R11",
+   "query": "serum retinol chống lão hóa",
+   "constraints": {
+    "category": "Serum / Tinh Chất",
+    "skin_type_any": null,
+    "text_any": [
+     "retinol"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 22
+  },
+  {
+   "id": "R12",
+   "query": "serum BHA cho da mụn",
+   "constraints": {
+    "category": "Serum / Tinh Chất",
+    "skin_type_any": [
+     "mụn"
+    ],
+    "text_any": [
+     "bha",
+     "salicylic"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 27
+  },
+  {
+   "id": "R13",
+   "query": "kem dưỡng ẩm ceramide phục hồi hàng rào da",
+   "constraints": {
+    "category": "Kem / Gel / Dầu Dưỡng",
+    "skin_type_any": null,
+    "text_any": [
+     "ceramide"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 49
+  },
+  {
+   "id": "R14",
+   "query": "kem dưỡng cho da khô",
+   "constraints": {
+    "category": "Kem / Gel / Dầu Dưỡng",
+    "skin_type_any": [
+     "khô"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 155
+  },
+  {
+   "id": "R15",
+   "query": "kem duong da dau khong gay bit tac",
+   "constraints": {
+    "category": "Kem / Gel / Dầu Dưỡng",
+    "skin_type_any": [
+     "dầu"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 132
+  },
+  {
+   "id": "R16",
+   "query": "kem dưỡng có niacinamide dưới 400k",
+   "constraints": {
+    "category": "Kem / Gel / Dầu Dưỡng",
+    "skin_type_any": null,
+    "text_any": [
+     "niacinamide"
+    ],
+    "max_price": 400000
+   },
+   "relevant_count": 72
+  },
+  {
+   "id": "R17",
+   "query": "kem chống nắng cho da dầu không bết dính",
+   "constraints": {
+    "category": "Chống Nắng Da Mặt",
+    "skin_type_any": [
+     "dầu"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 172
+  },
+  {
+   "id": "R18",
+   "query": "kem chong nang cho da nhay cam",
+   "constraints": {
+    "category": "Chống Nắng Da Mặt",
+    "skin_type_any": [
+     "nhạy cảm"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 142
+  },
+  {
+   "id": "R19",
+   "query": "kem chống nắng giá dưới 300k",
+   "constraints": {
+    "category": "Chống Nắng Da Mặt",
+    "skin_type_any": null,
+    "text_any": null,
+    "max_price": 300000
+   },
+   "relevant_count": 114
+  },
+  {
+   "id": "R20",
+   "query": "kem chống nắng nâng tone có niacinamide",
+   "constraints": {
+    "category": "Chống Nắng Da Mặt",
+    "skin_type_any": null,
+    "text_any": [
+     "niacinamide"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 85
+  },
+  {
+   "id": "R21",
+   "query": "toner cho da dầu mụn",
+   "constraints": {
+    "category": "Toner / Nước Cân Bằng Da",
+    "skin_type_any": [
+     "dầu",
+     "mụn"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 61
+  },
+  {
+   "id": "R22",
+   "query": "toner cấp ẩm hyaluronic cho da khô",
+   "constraints": {
+    "category": "Toner / Nước Cân Bằng Da",
+    "skin_type_any": [
+     "khô"
+    ],
+    "text_any": [
+     "hyaluronic"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 24
+  },
+  {
+   "id": "R23",
+   "query": "nuoc can bang da duoi 250k",
+   "constraints": {
+    "category": "Toner / Nước Cân Bằng Da",
+    "skin_type_any": null,
+    "text_any": null,
+    "max_price": 250000
+   },
+   "relevant_count": 43
+  },
+  {
+   "id": "R24",
+   "query": "mặt nạ giấy cấp ẩm cho da khô",
+   "constraints": {
+    "category": "Mặt Nạ Giấy",
+    "skin_type_any": [
+     "khô"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 436
+  },
+  {
+   "id": "R25",
+   "query": "mặt nạ giấy dưỡng sáng da vitamin C",
+   "constraints": {
+    "category": "Mặt Nạ Giấy",
+    "skin_type_any": null,
+    "text_any": [
+     "vitamin c"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 294
+  },
+  {
+   "id": "R26",
+   "query": "sản phẩm trị mụn chứa salicylic acid",
+   "constraints": {
+    "category": "Hỗ Trợ Trị Mụn",
+    "skin_type_any": null,
+    "text_any": [
+     "salicylic",
+     "bha"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 39
+  },
+  {
+   "id": "R27",
+   "query": "trị mụn cho da dầu dưới 300k",
+   "constraints": {
+    "category": "Hỗ Trợ Trị Mụn",
+    "skin_type_any": [
+     "dầu"
+    ],
+    "text_any": null,
+    "max_price": 300000
+   },
+   "relevant_count": 3
+  },
+  {
+   "id": "R28",
+   "query": "sữa dưỡng ceramide cho da nhạy cảm",
+   "constraints": {
+    "category": "Lotion / Sữa Dưỡng",
+    "skin_type_any": [
+     "nhạy cảm"
+    ],
+    "text_any": [
+     "ceramide"
+    ],
+    "max_price": null
+   },
+   "relevant_count": 4
+  },
+  {
+   "id": "R29",
+   "query": "tẩy tế bào chết mặt cho da dầu",
+   "constraints": {
+    "category": "Tẩy Tế Bào Chết Da Mặt",
+    "skin_type_any": [
+     "dầu"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 34
+  },
+  {
+   "id": "R30",
+   "query": "tay te bao chet mat cho da nhay cam",
+   "constraints": {
+    "category": "Tẩy Tế Bào Chết Da Mặt",
+    "skin_type_any": [
+     "nhạy cảm"
+    ],
+    "text_any": null,
+    "max_price": null
+   },
+   "relevant_count": 26
+  }
+ ]
+}

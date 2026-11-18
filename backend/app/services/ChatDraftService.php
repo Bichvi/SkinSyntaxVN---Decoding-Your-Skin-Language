@@ -146,13 +146,15 @@ final class ChatDraftService
         }
 
         $paymentMethod = strtolower(trim((string)($req['payment_method'] ?? 'cod')));
-        $allowed = ['cod', 'vnpay'];
-        if (self::isQrTransferEnabled()) $allowed[] = 'bank_transfer_qr';
-        if (!in_array($paymentMethod, $allowed, true)) {
-            throw new ChatDraftException('Phương thức thanh toán không hợp lệ.', 422, 'invalid_request');
+        if ($paymentMethod === 'bank_transfer_qr' && !self::isQrTransferEnabled()) {
+            throw new ChatDraftException('Cửa hàng chưa hỗ trợ chuyển khoản QR, bạn chọn COD hoặc VNPay nhé.', 422, 'payment_unsupported');
+        }
+        if (!in_array($paymentMethod, ['cod', 'vnpay', 'bank_transfer_qr'], true)) {
+            throw new ChatDraftException('Phương thức thanh toán không hợp lệ, bạn chọn COD hoặc VNPay nhé.', 422, 'payment_invalid');
         }
 
-        $checkoutItems = $this->checkoutItems($req, $cartSnapshot);
+        $replacedDraft = $replacingOpen ? $replacement : null;
+        $checkoutItems = $this->checkoutItems($req, $cartSnapshot, $replacedDraft);
         if ($checkoutItems === []) throw new ChatDraftException('Không có sản phẩm để tạo bản nháp.', 422, 'invalid_request');
         $preview = $this->core->preview($checkoutItems);
         if (!empty($preview['stock_errors'])) {
@@ -166,7 +168,7 @@ final class ChatDraftService
             throw new ChatDraftException('Không có sản phẩm để tạo bản nháp.', 422, 'invalid_request');
         }
 
-        $receiver = $this->resolveReceiver($req);
+        $receiver = $this->resolveReceiver($req, $replacedDraft);
 
         $subtotal = (int)($preview['subtotal'] ?? 0);
         $voucher = null;
@@ -197,6 +199,9 @@ final class ChatDraftService
                 'id' => $id,
                 'name' => (string)($item['product']['ten_san_pham'] ?? ($item['product']['name'] ?? '')),
                 'image' => (string)($item['product']['hinh_anh'] ?? ($item['product']['image'] ?? '')),
+                'image_url' => function_exists('resolve_image_url') && function_exists('product_image_source') && is_array($item['product'] ?? null)
+                    ? resolve_image_url(product_image_source($item['product']))
+                    : (string)($item['product']['hinh_anh'] ?? ($item['product']['image'] ?? '')),
                 'qty' => $qty,
                 'unit_price' => (int)($item['unit_price'] ?? 0),
                 'line_total' => (int)($item['line_total'] ?? 0),
@@ -314,7 +319,7 @@ final class ChatDraftService
         return $clean;
     }
 
-    private function checkoutItems(array $req, array $snapshot): array
+    private function checkoutItems(array $req, array $snapshot, ?array $replacedDraft = null): array
     {
         $snapshotItems = is_array($snapshot['items'] ?? null) ? $snapshot['items'] : $snapshot;
         $available = [];
@@ -328,60 +333,132 @@ final class ChatDraftService
         }
         $scope = (string)($req['scope'] ?? 'mentioned_items');
         $ids = $scope === 'whole_cart' ? array_keys($available) : (array)($req['product_ids'] ?? []);
+        $draftQty = [];
+        foreach ((array)($replacedDraft['items'] ?? []) as $draftItem) {
+            if (!is_array($draftItem)) continue;
+            $draftId = trim((string)($draftItem['id'] ?? ''));
+            $draftItemQty = (int)($draftItem['qty'] ?? 0);
+            if ($draftId !== '' && $draftItemQty >= 1) $draftQty[$draftId] = min(20, $draftItemQty);
+        }
+        $hasIds = false;
+        foreach ($ids as $id) {
+            if (is_scalar($id) && trim((string)$id) !== '') { $hasIds = true; break; }
+        }
+        if (!$hasIds && $scope !== 'whole_cart') {
+            // "Change only the payment" etc.: keep the items and quantities of the draft being replaced.
+            $ids = array_keys($draftQty);
+        }
         $qtyMap = is_array($req['qty'] ?? null) ? $req['qty'] : [];
         $items = [];
         foreach ($ids as $id) {
             $id = trim((string)$id);
             if ($id === '') continue;
-            $snapshotQty = isset($available[$id]) ? ($available[$id]['qty'] ?? 1) : 1;
-            $qty = (int)($qtyMap[$id] ?? $snapshotQty);
-            $items[$id] = max(1, min(20, $qty));
+            if (array_key_exists($id, $qtyMap) && $qtyMap[$id] !== null && $qtyMap[$id] !== '') {
+                $qty = $this->explicitQty($qtyMap[$id]);
+            } elseif (isset($draftQty[$id])) {
+                $qty = $draftQty[$id];
+            } else {
+                $snapshotQty = isset($available[$id]) ? (int)($available[$id]['qty'] ?? 1) : 1;
+                $qty = max(1, min(20, $snapshotQty));
+            }
+            $items[$id] = $qty;
         }
         return $items;
     }
 
-    private function resolveReceiver(array $req): array
+    private function explicitQty(mixed $value): int
+    {
+        $qty = null;
+        if (is_int($value)) {
+            $qty = $value;
+        } elseif (is_float($value) && is_finite($value) && floor($value) === $value) {
+            $qty = (int)$value;
+        } elseif (is_string($value) && preg_match('/\A\s*\d{1,6}\s*\z/', $value) === 1) {
+            $qty = (int)trim($value);
+        }
+        if ($qty === null || $qty < 1 || $qty > 20) {
+            throw new ChatDraftException('Số lượng mỗi sản phẩm phải từ 1 đến 20.', 422, 'qty_invalid');
+        }
+        return $qty;
+    }
+
+    private function resolveReceiver(array $req, ?array $replacedDraft = null): array
     {
         $choice = $req['address_choice'] ?? null;
         if ($choice === null || (is_string($choice) && trim($choice) === '')) {
             throw new ChatDraftException('Thiếu thông tin người nhận.', 422, 'receiver_missing');
         }
-        if (!is_string($choice) || !in_array($choice, ['default', 'new'], true)) {
+        if (!is_string($choice) || !in_array($choice, ['keep', 'default', 'new'], true)) {
             throw new ChatDraftException('Loại địa chỉ người nhận không hợp lệ.', 422, 'receiver_invalid');
         }
 
+        $replacedReceiver = is_array($replacedDraft['receiver'] ?? null) ? $replacedDraft['receiver'] : null;
+        if ($choice === 'keep') {
+            // "đổi sang VNPay" / "còn 1 chai": the receiver of the draft being replaced stays exactly as it was.
+            if ($replacedReceiver !== null) return $this->validateReceiver($replacedReceiver);
+            $choice = 'default';
+        }
+
         if ($choice === 'default') {
+            $default = is_array($req['_server_default_receiver'] ?? null) ? $req['_server_default_receiver'] : [];
+            $defaultComplete = trim((string)($default['ten_nguoi_nhan'] ?? '')) !== ''
+                && trim((string)($default['sdt_nguoi_nhan'] ?? '')) !== ''
+                && trim((string)($default['dia_chi_giao_hang'] ?? '')) !== '';
+            if (!$defaultComplete && $replacedReceiver !== null) {
+                // There is no usable default to switch to, so the customer cannot have meant it: keep the draft's.
+                return $this->validateReceiver($replacedReceiver);
+            }
             if (!is_array($req['_server_default_receiver'] ?? null)) {
                 throw new ChatDraftException('Thiếu thông tin người nhận.', 422, 'receiver_missing');
             }
             return $this->validateReceiver($req['_server_default_receiver']);
         }
 
-        if (!is_array($req['new_address'] ?? null)) {
-            throw new ChatDraftException('Thiếu thông tin người nhận.', 422, 'receiver_missing');
+        // A change of one field ("đổi số điện thoại thành ...") starts from the draft being replaced
+        // (or the customer's default) and overlays only the fields the agent actually sent.
+        $base = is_array($replacedDraft['receiver'] ?? null)
+            ? $replacedDraft['receiver']
+            : (is_array($req['_server_default_receiver'] ?? null) ? $req['_server_default_receiver'] : []);
+        $given = is_array($req['new_address'] ?? null) ? $req['new_address'] : [];
+        $merged = [];
+        foreach (['ten_nguoi_nhan', 'sdt_nguoi_nhan', 'dia_chi_giao_hang'] as $field) {
+            $value = $given[$field] ?? null;
+            $value = is_scalar($value) ? trim((string)$value) : '';
+            if ($value === '') {
+                $value = is_scalar($base[$field] ?? null) ? trim((string)$base[$field]) : '';
+            }
+            $merged[$field] = $value;
         }
-        return $this->validateReceiver($req['new_address']);
+        return $this->validateReceiver($merged);
     }
 
     private function validateReceiver(array $receiver): array
     {
         $name = trim((string)($receiver['ten_nguoi_nhan'] ?? ''));
         $phone = trim((string)($receiver['sdt_nguoi_nhan'] ?? ''));
-        $address = trim((string)($receiver['dia_chi_giao_hang'] ?? ''));
-        if ($name === '' || $phone === '' || $address === '') {
-            throw new ChatDraftException('Thiếu thông tin người nhận.', 422, 'receiver_missing');
-        }
-        if ($this->stringLength($name) < 1 || $this->stringLength($name) > 100
-            || $this->stringLength($address) < 5 || $this->stringLength($address) > 255) {
-            throw new ChatDraftException('Thông tin người nhận không hợp lệ.', 422, 'receiver_invalid');
+        $address = trim((string)preg_replace('/\s+/u', ' ', (string)($receiver['dia_chi_giao_hang'] ?? '')));
+        $missing = [];
+        if ($name === '') $missing[] = 'tên người nhận';
+        if ($phone === '') $missing[] = 'số điện thoại người nhận';
+        if ($address === '') $missing[] = 'địa chỉ giao hàng';
+        if ($missing !== []) {
+            throw new ChatDraftException('Thiếu ' . implode(', ', $missing) . '.', 422, 'receiver_missing');
         }
 
-        if (str_starts_with($phone, '+84')) {
-            $phone = '0' . substr($phone, 3);
+        $name = trim((string)preg_replace('/\s+/u', ' ', $name));
+        $nameLength = $this->stringLength($name);
+        if ($nameLength < 2 || $nameLength > 100 || preg_match('/\A[\d\s]+\z/u', $name) === 1) {
+            throw new ChatDraftException('Tên người nhận cần từ 2 đến 100 ký tự và không chỉ gồm chữ số.', 422, 'receiver_name_invalid');
         }
-        $phone = str_replace([' ', '.'], '', $phone);
-        if (preg_match('/\A\d{9,11}\z/', $phone) !== 1) {
-            throw new ChatDraftException('Thông tin người nhận không hợp lệ.', 422, 'receiver_invalid');
+
+        $phone = self::normalizePhone($phone);
+        if (preg_match('/\A(?:0[35789]\d{8}|02\d{9})\z/', $phone) !== 1) {
+            throw new ChatDraftException('Số điện thoại không hợp lệ (cần 10 số, bắt đầu bằng 0).', 422, 'receiver_phone_invalid');
+        }
+
+        $addressLength = $this->stringLength($address);
+        if ($addressLength < 10 || $addressLength > 255) {
+            throw new ChatDraftException('Địa chỉ cần ghi rõ số nhà/đường, phường/xã, quận/huyện, tỉnh/thành.', 422, 'receiver_address_invalid');
         }
 
         return [
@@ -400,6 +477,51 @@ final class ChatDraftService
     private function stringLength(string $value): int
     {
         return function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
+    }
+
+    /** Strip separators and turn a +84/84 prefix into the leading 0. */
+    private static function normalizePhone(string $phone): string
+    {
+        $phone = (string)preg_replace('/[\s.\-()]+/u', '', $phone);
+        if (str_starts_with($phone, '+')) $phone = substr($phone, 1);
+        if (preg_match('/\A84\d{9,10}\z/', $phone) === 1) $phone = '0' . substr($phone, 2);
+        return $phone;
+    }
+
+    /** Full receiver values for the customer's own browser (never sent to the LLM; see maskReceiver). */
+    public static function displayReceiver(array $receiver): array
+    {
+        $digits = (string)preg_replace('/\D+/', '', (string)($receiver['sdt_nguoi_nhan'] ?? ''));
+        if (strlen($digits) === 10) {
+            $phone = substr($digits, 0, 4) . ' ' . substr($digits, 4, 3) . ' ' . substr($digits, 7);
+        } elseif (strlen($digits) === 11) {
+            $phone = substr($digits, 0, 3) . ' ' . substr($digits, 3, 4) . ' ' . substr($digits, 7);
+        } else {
+            $phone = $digits;
+        }
+        return [
+            'name' => trim((string)($receiver['ten_nguoi_nhan'] ?? '')),
+            'phone' => $phone,
+            'address' => trim((string)($receiver['dia_chi_giao_hang'] ?? '')),
+        ];
+    }
+
+    /**
+     * Adds the full phone/address to a card for the draft's owner, keeping phone_masked/address_short.
+     * Returns the card unchanged when the draft is unknown or belongs to someone else.
+     */
+    public function withFullReceiver(array $card, string $sub): array
+    {
+        $id = trim((string)($card['draft_id'] ?? ''));
+        if ($id === '' || $sub === '') return $card;
+        $doc = $this->store->find($id);
+        if ($doc === null || (string)($doc['sub'] ?? '') !== $sub || !is_array($doc['receiver'] ?? null)) return $card;
+        $full = self::displayReceiver($doc['receiver']);
+        $card['receiver'] = array_merge(
+            is_array($card['receiver'] ?? null) ? $card['receiver'] : [],
+            ['phone' => $full['phone'], 'address' => $full['address']]
+        );
+        return $card;
     }
 
     public static function maskReceiver(array $receiver): array
