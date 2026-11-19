@@ -37,7 +37,8 @@ $statusLabels = [
     'recording_failed' => ['Lưu video lỗi', 'danger'],
 ];
 [$statusLabel, $statusTone] = $statusLabels[$liveStatus] ?? $statusLabels['none'];
-$recordingUrl = (string)($live['url_ban_ghi'] ?? '');
+$recordingAvailable = !empty($live['recording_available']);
+$recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
 ?>
 
 <style>
@@ -96,6 +97,57 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   @media (max-width:576px){.ss-studio__actions{flex-direction:column}.ss-studio__pause,.ss-studio__end{width:100%}.ss-player__chip{left:12px;bottom:64px;font-size:12px}}
   @media (max-width:1050px){.ss-live-grid{grid-template-columns:minmax(0,1fr)}.ss-chat{position:static}.ss-chat__body{height:330px}.ss-session-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media (max-width:620px){.ss-live-wrap{padding:18px 12px 0}.ss-live-hero{padding:22px 0}.ss-live-hero .container{padding-left:16px;padding-right:16px}.ss-player{border-radius:12px}.ss-product__body{align-items:flex-start}.ss-product__cta{width:100%;margin-top:10px}.ss-product__body{flex-wrap:wrap}.ss-product__info{flex-basis:calc(100% - 94px)}.ss-product__cta{margin-left:92px}.ss-product__cta .ss-btn{flex:1}.ss-session-grid{grid-template-columns:1fr}.ss-session__thumb{height:170px}.ss-player__actions{width:100%;margin-left:0}.ss-player__top{align-items:flex-start}.ss-player__bottom{padding:12px;padding-top:38px}.ss-chat__body{height:310px}}
+
+  /* Floating Reaction Hearts */
+  @keyframes floatUpAndFade {
+    0% { transform: translateY(0) scale(0.8); opacity: 1; }
+    50% { transform: translateY(-100px) scale(1.2) translateX(12px); opacity: 0.9; }
+    100% { transform: translateY(-240px) scale(1.5) translateX(-15px); opacity: 0; }
+  }
+  .floating-heart {
+    position: absolute;
+    bottom: 20px;
+    right: 25px;
+    font-size: 28px;
+    pointer-events: none;
+    animation: floatUpAndFade 2s ease-out forwards;
+    z-index: 20;
+    user-select: none;
+  }
+
+  /* Live Voucher Banner Overlay */
+  .live-voucher-popup {
+    position: absolute;
+    top: 58px;
+    right: 16px;
+    background: rgba(13, 22, 18, 0.94);
+    border: 1px solid #52b788;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #fff;
+    z-index: 15;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    min-width: 280px;
+    animation: slideInDown 0.3s ease;
+  }
+  @keyframes slideInDown {
+    from { transform: translateY(-15px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* Pinned Comment Banner */
+  .ss-chat-pinned-comment {
+    background: #183b2b;
+    border-left: 3px solid #52b788;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    margin: 8px 12px 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    color: #e8f5ee;
+  }
 </style>
 
 <main class="ss-live-page" id="ssLivePage" data-live-id="<?= h($live['id'] ?? '') ?>" data-live-status="<?= h($liveStatus) ?>" data-is-studio="<?= $canPublish ? '1' : '0' ?>" data-moderate="<?= $canModerate ? '1' : '0' ?>" data-ai-enabled="<?= !empty($live['bat_ai_cohost']) ? '1' : '0' ?>" data-csrf="<?= h($_SESSION['live_csrf'] ?? '') ?>" data-base-url="<?= h(BASE_URL) ?>">
@@ -177,7 +229,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
     <?php else: ?>
       <div class="ss-live-grid">
         <section>
-          <?php $isReplayView = ($liveStatus === 'replay_ready' && $recordingUrl !== ''); ?>
+          <?php $isReplayView = ($liveStatus === 'replay_ready' && $recordingAvailable && $recordingUrl !== ''); ?>
           <div class="ss-player<?= $isReplayView ? ' ss-player--replay' : '' ?>" id="ssPlayer">
             <video id="livekitRemoteVideo" autoplay playsinline muted hidden></video>
             <video id="livekitLocalVideo" autoplay playsinline muted hidden></video>
@@ -190,7 +242,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
                 <div class="ss-player__waiting-icon"><i class="fa-solid <?= $liveStatus === 'ready' ? 'fa-video' : ($liveStatus === 'scheduled' ? 'fa-calendar-days' : 'fa-video') ?>"></i></div>
                 <h2 class="h5 fw-bold" id="liveWaitingTitle"><?= h($statusLabel) ?></h2>
                 <p class="mb-0 opacity-75" id="liveWaitingMessage">
-                  <?php if ($liveStatus === 'live'): ?>Đang tải hình ảnh từ buổi live…<?php elseif ($liveStatus === 'ready'): ?><?= $isStudio ? 'Xem trước nguồn phát rồi chọn Bắt đầu phát.' : 'Buổi live sắp bắt đầu. Bạn có thể giữ trang này để theo dõi.' ?><?php elseif ($liveStatus === 'interrupted'): ?>Buổi live đang tạm dừng. Trang sẽ tự cập nhật khi tiếp tục.<?php elseif ($liveStatus === 'scheduled'): ?>Buổi live sẽ bắt đầu theo lịch hẹn.<?php elseif ($liveStatus === 'replay_ready'): ?>Chưa có video xem lại.<?php else: ?>Buổi live đã kết thúc. Hiện chưa có video xem lại.<?php endif; ?>
+                  <?php if ($liveStatus === 'live'): ?>Đang tải hình ảnh từ buổi live…<?php elseif ($liveStatus === 'ready'): ?><?= $isStudio ? 'Xem trước nguồn phát rồi chọn Bắt đầu phát.' : 'Buổi live sắp bắt đầu. Bạn có thể giữ trang này để theo dõi.' ?><?php elseif ($liveStatus === 'interrupted'): ?>Buổi live đang tạm dừng. Trang sẽ tự cập nhật khi tiếp tục.<?php elseif ($liveStatus === 'scheduled'): ?>Buổi live sẽ bắt đầu theo lịch hẹn.<?php elseif ($liveStatus === 'replay_ready'): ?>Bản ghi không khả dụng.<?php else: ?>Buổi live đã kết thúc. Hiện chưa có video xem lại.<?php endif; ?>
                 </p>
               </div>
             </div>
@@ -215,6 +267,27 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
               <div class="ss-streamer"><div class="ss-avatar"><?= h(mb_strtoupper(mb_substr($displayStreamer, 0, 2))) ?></div><div><strong><?= h($displayStreamer) ?></strong><small><?= h($live['title'] ?? '') ?></small></div></div>
             </div>
             <?php endif; ?>
+
+            <!-- FLOATING HEARTS CONTAINER -->
+            <div id="liveHeartsContainer" style="position: absolute; right: 0; bottom: 0; width: 100px; height: 320px; pointer-events: none; overflow: hidden; z-index: 18;"></div>
+
+            <!-- FLOATING VOUCHER POPUP CARD -->
+            <div id="liveVoucherPopup" class="live-voucher-popup" hidden>
+              <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                <span class="badge bg-warning text-dark fw-bold extra-small"><i class="fa-solid fa-bolt me-1"></i>VOUCHER ĐỘC QUYỀN LIVE</span>
+                <span class="badge bg-dark text-warning border border-warning extra-small"><i class="fa-solid fa-clock me-1"></i><span id="liveVoucherTimer">10:00</span></span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between gap-3 mt-1">
+                <div>
+                  <strong class="d-block text-white" id="liveVoucherTitle" style="font-size: 0.88rem;">Flash Deal Live</strong>
+                  <span class="text-success fw-bold" id="liveVoucherValue" style="font-size: 1.05rem;">50.000 đ</span>
+                  <small class="text-white-50 d-block extra-small">Mã: <code id="liveVoucherCode" class="text-warning">LIVE50K</code></small>
+                </div>
+                <button type="button" id="btnClaimVoucher" class="btn btn-sm btn-success fw-bold rounded-pill px-3 py-1.5 shadow">
+                  Nhận voucher
+                </button>
+              </div>
+            </div>
           </div>
           <?php if ($isStudio && !$isReplayView): ?>
           <section class="ss-card ss-products mt-3" aria-label="Live Studio">
@@ -357,7 +430,7 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
             <div class="ss-product__head"><span class="ss-kicker"><i class="fa-solid fa-thumbtack"></i> Sản phẩm đang giới thiệu</span><span class="ss-badge ss-badge--neutral" id="flashDealTimer">Ưu đãi của phiên phát</span></div>
               <div class="ss-product__body" id="livePinnedBody" <?= $pinned ? '' : 'hidden' ?>>
                 <img id="livePinnedImg" class="ss-product__image" <?= $pinnedImage !== '' ? 'src="' . h($pinnedImage) . '"' : 'hidden' ?> alt="<?= h($pinnedName) ?>">
-                <div class="ss-product__info"><div id="livePinnedBrand" class="ss-product__brand"><?= h($pinnedBrand) ?></div><div id="livePinnedName" class="ss-product__name"><?= h($pinnedName) ?></div><div><span id="livePinnedPrice" class="ss-price"><?= vnd($pinnedPrice) ?></span><span id="livePinnedMarketPrice" class="ss-old-price" <?= $discount ? '' : 'hidden' ?>><?= vnd($marketPrice) ?></span><span id="livePinnedDiscountBadge" class="ss-badge ss-badge--danger ms-2" <?= $discount ? '' : 'hidden' ?>>-<?= $discount ?>%</span></div></div>
+                <div class="ss-product__info"><div id="livePinnedBrand" class="ss-product__brand"><?= h($pinnedBrand) ?></div><div id="livePinnedName" class="ss-product__name"><?= h($pinnedName) ?></div><div><span id="livePinnedPrice" class="ss-price"><?= vnd($pinnedPrice) ?></span><span id="livePinnedMarketPrice" class="ss-old-price" <?= $discount ? '' : 'hidden' ?>><?= vnd($marketPrice) ?></span><span id="livePinnedDiscountBadge" class="ss-badge ss-badge--danger ms-2" <?= $discount ? '' : 'hidden' ?>>-<?= $discount ?>%</span></div><small id="livePinCountdown" class="d-block mt-1 text-muted" hidden></small></div>
                 <div class="ss-product__cta">
                   <form id="liveBuyNowForm" action="<?= BASE_URL ?>/index.php?r=api_live_add_to_cart" method="post"><input type="hidden" name="live_id" value="<?= h($live['id']) ?>"><input type="hidden" name="product_id" id="livePinnedProductId" value="<?= h($pinnedId) ?>"><button class="ss-btn ss-btn--primary" type="submit" <?= $isLive ? '' : 'disabled' ?>><i class="fa-solid fa-bag-shopping"></i> Thêm vào giỏ</button></form>
                   <a class="ss-btn ss-btn--ghost" id="livePinnedLink" href="<?= BASE_URL ?>/index.php?r=chitiet&amp;id=<?= urlencode($pinnedId) ?>">Chi tiết</a>
@@ -373,6 +446,11 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
 
         <aside class="ss-card ss-chat" aria-label="Trò chuyện trực tiếp">
           <div class="ss-chat__head"><div class="ss-chat__title"><h2><i class="fa-solid fa-comments text-success me-2"></i>Trò chuyện trực tiếp</h2><span class="ss-badge ss-badge--<?= $isLive ? 'ready' : 'neutral' ?>" id="chatConnectionState"><?= $isLive ? 'Đang mở' : 'Chưa mở' ?></span></div><div class="ss-chat__tabs" role="tablist"><button type="button" class="is-active" data-chat-mode="all">Tất cả</button><button type="button" data-chat-mode="featured">Nổi bật</button><button type="button" data-chat-mode="qa">Hỏi đáp</button></div></div>
+          <!-- PINNED COMMENT BANNER -->
+          <div id="livePinnedCommentBanner" class="ss-chat-pinned-comment" hidden>
+            <i class="fa-solid fa-thumbtack text-warning me-1.5"></i>
+            <span id="livePinnedCommentText"></span>
+          </div>
           <div class="ss-chat__body" id="liveChatBox"><div class="ss-chat__notice">Tin nhắn trong phiên sẽ được lưu đúng theo buổi phát.</div></div>
           <div class="ss-chat__footer">
             <div id="liveChatCompose" <?= $canChat ? '' : 'hidden' ?>>
@@ -395,8 +473,8 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
       <section class="ss-sessions">
         <div class="ss-session-toolbar"><div><h2 class="ss-session-title">Các phiên phát khác</h2><p>Chỉ hiển thị phiên và video đã có trong hệ thống.</p></div><div class="ss-filters"><button type="button" class="is-active" data-session-filter="all">Tất cả (<?= count($liveSessions) ?>)</button><button type="button" data-session-filter="live">Đang phát</button><button type="button" data-session-filter="scheduled">Sắp phát</button><button type="button" data-session-filter="replay_ready">Xem lại</button></div></div>
         <div class="ss-session-grid" id="liveSessionGrid">
-          <?php foreach ($liveSessions as $session): $sessionStatus = (string)($session['status'] ?? 'scheduled'); $sessionImage = (string)($session['thumbnail'] ?? ''); $sessionStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', '', (string)($session['streamer'] ?? ''))); $sessionStreamer = $sessionStreamer !== '' ? $sessionStreamer : 'SkinSyntax'; [$sessionLabel, $sessionTone] = $statusLabels[$sessionStatus] ?? $statusLabels['none']; ?>
-            <article class="ss-card ss-session" data-status="<?= h($sessionStatus) ?>"><div class="ss-session__thumb <?= $sessionImage === '' ? 'ss-session__thumb--empty' : '' ?>"><?php if ($sessionImage !== ''): ?><img src="<?= h($sessionImage) ?>" alt="<?= h($session['title'] ?? '') ?>" loading="lazy"><?php else: ?><i class="fa-solid fa-video"></i><?php endif; ?><span class="ss-badge ss-badge--<?= h($sessionTone) ?>"><?= h($sessionLabel) ?></span></div><div class="ss-session__body"><strong><?= h($session['title'] ?? '') ?></strong><small><i class="fa-solid fa-user-headset me-1"></i><?= h($sessionStreamer) ?><?php if ($sessionStatus === 'live'): ?> · <span class="card-viewer-count"><?= (int)($session['viewers'] ?? 0) ?></span> đang xem<?php endif; ?></small><a class="ss-btn <?= $sessionStatus === 'live' ? 'ss-btn--primary' : 'ss-btn--ghost' ?>" href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= urlencode((string)$session['id']) ?>"><?= $sessionStatus === 'replay_ready' ? 'Xem lại bản ghi' : ($sessionStatus === 'live' ? 'Xem ngay' : 'Xem chi tiết') ?></a></div></article>
+          <?php foreach ($liveSessions as $session): $sessionStatus = (string)($session['status'] ?? 'scheduled'); $sessionImage = (string)($session['thumbnail'] ?? ''); $sessionStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', '', (string)($session['streamer'] ?? ''))); $sessionStreamer = $sessionStreamer !== '' ? $sessionStreamer : 'SkinSyntax'; $sessionReplayAvailable = !empty($session['recording_available']); [$sessionLabel, $sessionTone] = $statusLabels[$sessionStatus] ?? $statusLabels['none']; ?>
+            <article class="ss-card ss-session" data-status="<?= h($sessionStatus) ?>"><div class="ss-session__thumb <?= $sessionImage === '' ? 'ss-session__thumb--empty' : '' ?>"><?php if ($sessionImage !== ''): ?><img src="<?= h($sessionImage) ?>" alt="<?= h($session['title'] ?? '') ?>" loading="lazy"><?php else: ?><i class="fa-solid fa-video"></i><?php endif; ?><span class="ss-badge ss-badge--<?= h($sessionTone) ?>"><?= h($sessionLabel) ?></span></div><div class="ss-session__body"><strong><?= h($session['title'] ?? '') ?></strong><small><i class="fa-solid fa-user-headset me-1"></i><?= h($sessionStreamer) ?><?php if ($sessionStatus === 'live'): ?> · <span class="card-viewer-count"><?= (int)($session['viewers'] ?? 0) ?></span> đang xem<?php endif; ?></small><a class="ss-btn <?= $sessionStatus === 'live' ? 'ss-btn--primary' : 'ss-btn--ghost' ?>" href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= urlencode((string)$session['id']) ?>"><?= $sessionStatus === 'replay_ready' ? ($sessionReplayAvailable ? 'Xem lại bản ghi' : 'Bản ghi không khả dụng') : ($sessionStatus === 'live' ? 'Xem ngay' : 'Xem chi tiết') ?></a></div></article>
           <?php endforeach; ?>
         </div>
       </section>

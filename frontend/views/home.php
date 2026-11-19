@@ -731,82 +731,106 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
 
   <!-- 4.6. Từ khóa phổ biến: đã hiển thị ở khối "Khám phá nhanh" (partials/home_discovery.php) phía trên. -->
 
-  <!-- 5. SYNA AI LIVESTREAM SECTION (GỘP THÀNH 1 SECTION DUY NHẤT) -->
-  <section class="mb-5 p-4 text-white" style="background: #183B2B; border-radius: 20px; border: 1px solid #2D6A4F; box-shadow: 0 12px 32px rgba(24, 59, 43, 0.15);">
-    <div class="row align-items-center g-4">
-      <div class="col-lg-6">
-        <div class="position-relative rounded-4 overflow-hidden border border-white border-opacity-20" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #11281D 0%, #183B2B 100%);">
-          <!-- Live Indicator Badge -->
-          <div class="position-absolute top-0 start-0 m-3 z-3 d-flex align-items-center gap-2">
-            <span class="badge bg-danger text-white fw-bold px-3 py-1.5" style="border-radius: 999px; font-size: 0.72rem; letter-spacing: 0.05em;">
-              <span class="live-indicator-pulse me-1"></span> LIVE SESSION
-            </span>
-          </div>
-
-          <!-- Video Stream Placeholder Frame -->
-          <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-center p-3">
-            <div class="mb-3 position-relative">
-              <div class="p-3 rounded-circle" style="background: rgba(132, 169, 140, 0.25); border: 2px solid #84A98C;">
-                <i class="fas fa-play text-white fs-3 ms-1"></i>
-              </div>
-            </div>
-            <h4 class="fw-bold text-white mb-1" style="font-size: 1.25rem;">Livestream tư vấn cùng SYNA</h4>
-            <p class="text-white-80 small mb-3" style="max-width: 360px; font-size: 0.84rem; color: rgba(255,255,255,0.85);">
-              Tư vấn routine, giải đáp sản phẩm và khám phá ưu đãi trực tiếp trong phiên live.
-            </p>
-            <a href="<?= BASE_URL ?>/index.php?r=live" class="btn text-white px-4 py-2 fw-bold" style="border-radius: 999px; font-size: 0.85rem; background: #2D6A4F; border: 1px solid #84A98C;">
-              <i class="fas fa-video me-1.5"></i> Vào phòng livestream
-            </a>
-          </div>
-        </div>
+  <?php
+    $homeLiveSession = is_array($homeLiveSession ?? null) ? $homeLiveSession : null;
+    $homeLiveProducts = array_values(array_filter((array)($homeLiveProducts ?? []), 'is_array'));
+    $homeLiveStatus = (string)($homeLiveSession['status'] ?? 'none');
+    $homeLiveIsActive = $homeLiveStatus === 'live';
+    $homeLiveId = trim((string)($homeLiveSession['id'] ?? ''));
+    $homeLiveHref = BASE_URL . '/index.php?r=live' . ($homeLiveId !== '' ? '&id=' . rawurlencode($homeLiveId) : '');
+    $homeLiveTitle = trim((string)($homeLiveSession['tieu_de'] ?? '')) ?: 'Tư vấn chăm sóc da trực tiếp';
+    $homeLiveDescription = trim((string)($homeLiveSession['tom_tat_phien_live'] ?? '')) ?: 'Xem tư vấn sản phẩm, hỏi đáp về routine và nhận ưu đãi đang áp dụng trong từng phiên phát.';
+    $homeLiveStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', '', (string)($homeLiveSession['streamer'] ?? '')));
+    $homeLiveStart = trim((string)($homeLiveSession['khung_gio_bat_dau'] ?? ''));
+    $homeLiveStartTs = $homeLiveStart !== '' ? strtotime($homeLiveStart) : false;
+  ?>
+  <section class="home-live-showcase mb-5" aria-labelledby="homeLiveTitle">
+    <div class="home-live-showcase__content">
+      <div class="home-live-status <?= $homeLiveIsActive ? 'is-live' : '' ?>">
+        <span class="home-live-status__dot" aria-hidden="true"></span>
+        <?= $homeLiveIsActive ? 'Đang phát trực tiếp' : ($homeLiveSession ? 'Phiên sắp diễn ra' : 'SkinSyntax Live') ?>
       </div>
+      <h2 id="homeLiveTitle" class="home-live-showcase__title"><?= h($homeLiveTitle) ?></h2>
+      <p class="home-live-showcase__description"><?= h($homeLiveDescription) ?></p>
 
-      <div class="col-lg-6">
-        <div class="p-2">
-          <div class="d-inline-flex align-items-center gap-1.5 mb-2 text-warning fw-bold small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.72rem;">
-            <i class="fas fa-broadcast-tower"></i> Phiên Live Trực Tiếp
-          </div>
-          <h3 class="fw-bold text-white mb-2" style="font-size: 1.5rem;">Livestream tư vấn cùng SYNA</h3>
-          <p class="text-white-80 small mb-3" style="font-size: 0.88rem; line-height: 1.6; color: rgba(255,255,255,0.88);">
-            Tư vấn quy trình chăm sóc da cá nhân hóa, giải đáp thắc mắc thành phần mỹ phẩm và nhận voucher ưu đãi thực tế theo nhu cầu da của bạn.
-          </p>
-
-          <!-- Featured Product in Live -->
-          <?php 
-            $featLiveProd = null;
-            foreach ($latest as $itemCandidate) {
-                $cId = trim((string)($itemCandidate['ma_san_pham'] ?? $itemCandidate['id'] ?? $itemCandidate['_id'] ?? ''));
-                if ($cId !== '') {
-                    $featLiveProd = $itemCandidate;
-                    break;
-                }
-            }
-            $featProdId = $featLiveProd ? trim((string)($featLiveProd['ma_san_pham'] ?? $featLiveProd['id'] ?? $featLiveProd['_id'] ?? '')) : '';
-          ?>
-          <?php if ($featLiveProd && $featProdId !== ''): ?>
-            <div class="p-3 rounded-3 mb-3 d-flex align-items-center gap-3" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);">
-              <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= rawurlencode($featProdId) ?>" class="d-block flex-shrink-0">
-                <img src="<?= h(resolve_image_url(function_exists('product_image_source') ? product_image_source($featLiveProd) : (string)($featLiveProd['link_hinh_anh'] ?? $featLiveProd['hinh_anh'] ?? ''))) ?>" alt="<?= h($featLiveProd['ten_san_pham'] ?? 'Live Product') ?>" style="width: 58px; height: 58px; object-fit: cover; border-radius: 8px; background: #FFF;">
-              </a>
-              <div class="overflow-hidden flex-grow-1">
-                <span class="badge bg-success mb-1" style="font-size: 0.65rem; background: #2D6A4F !important;">Sản phẩm ghim trong live</span>
-                <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= rawurlencode($featProdId) ?>" class="text-white fw-semibold text-truncate small d-block text-decoration-none">
-                  <?= h($featLiveProd['ten_san_pham'] ?? '') ?>
-                </a>
-                <div class="text-warning fw-bold small"><?= vnd($featLiveProd['gia_ban'] ?? 0) ?></div>
-              </div>
-              <a href="<?= BASE_URL ?>/index.php?r=chitiet&id=<?= rawurlencode($featProdId) ?>" class="btn btn-sm btn-light text-nowrap fw-semibold" style="font-size: 0.78rem; border-radius: 6px; color: #183B2B;">Xem sản phẩm</a>
-            </div>
+      <?php if ($homeLiveStreamer !== '' || $homeLiveStartTs): ?>
+        <div class="home-live-meta" aria-label="Thông tin phiên phát">
+          <?php if ($homeLiveStreamer !== ''): ?>
+            <span><i class="fas fa-user" aria-hidden="true"></i><?= h($homeLiveStreamer) ?></span>
           <?php endif; ?>
+          <?php if (!$homeLiveIsActive && $homeLiveStartTs): ?>
+            <span><i class="far fa-calendar" aria-hidden="true"></i><?= h(date('H:i · d/m/Y', $homeLiveStartTs)) ?></span>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
 
-          <div class="d-flex align-items-center gap-3 mt-3">
-            <a href="<?= BASE_URL ?>/index.php?r=live" class="btn btn-light fw-bold text-nowrap px-4 py-2" style="color: #183B2B; border-radius: 8px; font-size: 0.86rem; background: #FFFFFF; border: none;">
-              Vào phòng livestream &rarr;
-            </a>
-            <span class="text-white-50 small" style="font-size: 0.78rem;"><i class="fas fa-shield-alt text-success me-1"></i> Tư vấn AI thời gian thực</span>
+      <div class="home-live-actions">
+        <a href="<?= h($homeLiveHref) ?>" class="home-live-primary-action">
+          <i class="fas <?= $homeLiveIsActive ? 'fa-play' : 'fa-video' ?>" aria-hidden="true"></i>
+          <?= $homeLiveIsActive ? 'Xem phiên đang phát' : 'Khám phá phòng livestream' ?>
+        </a>
+        <span class="home-live-assurance"><i class="fas fa-comments" aria-hidden="true"></i>Chat và hỏi đáp trong phiên</span>
+      </div>
+    </div>
+
+    <div class="home-live-stage" aria-label="Xem trước phòng livestream">
+      <div class="home-live-stage__header">
+        <div>
+          <span class="home-live-stage__title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> Phòng livestream</span>
+          <small><?= count($homeLiveProducts) > 1 ? count($homeLiveProducts) . ' sản phẩm mới nổi bật' : 'Sản phẩm mới nổi bật' ?></small>
+        </div>
+        <span class="home-live-stage__signal"><?= $homeLiveIsActive ? 'Đang phát' : 'Sẵn sàng' ?></span>
+      </div>
+
+      <?php if ($homeLiveProducts): ?>
+        <div class="home-live-product-viewport" data-home-live-products tabindex="0" role="region" aria-label="Sản phẩm mới nổi bật">
+          <div class="home-live-product-track">
+            <?php foreach ($homeLiveProducts as $index => $homeLiveProduct): ?>
+              <?php
+                $homeLiveProductId = trim((string)($homeLiveProduct['ma_san_pham'] ?? $homeLiveProduct['id'] ?? ''));
+                if ($homeLiveProductId === '') continue;
+                $homeLiveProductName = trim((string)($homeLiveProduct['ten_san_pham'] ?? 'Sản phẩm trong phiên'));
+                $homeLiveProductBrand = trim((string)($homeLiveProduct['thuong_hieu'] ?? 'SkinSyntax')) ?: 'SkinSyntax';
+                $homeLiveProductImage = resolve_image_url(function_exists('product_image_source') ? product_image_source($homeLiveProduct) : (string)($homeLiveProduct['link_hinh_anh'] ?? $homeLiveProduct['hinh_anh'] ?? ''));
+              ?>
+              <article class="home-live-product-card <?= $index === 0 ? 'is-featured' : '' ?>">
+                <a href="<?= BASE_URL ?>/index.php?r=chitiet&amp;id=<?= rawurlencode($homeLiveProductId) ?>" class="home-live-product-card__image-link" aria-label="Xem <?= h($homeLiveProductName) ?>">
+                  <img class="home-live-product-card__image" src="<?= h($homeLiveProductImage ?: default_placeholder_image()) ?>" alt="<?= h($homeLiveProductName) ?>" loading="lazy" decoding="async" data-image-fallbacks="<?= function_exists('product_image_fallbacks_json') ? product_image_fallbacks_json($homeLiveProduct, $homeLiveProductImage) : '[]' ?>" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="window.SkinSyntaxImageFallback(this)">
+                  <span class="home-live-product-card__number" aria-hidden="true"><?= str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT) ?></span>
+                </a>
+                <div class="home-live-product-card__details">
+                  <div class="home-live-product-card__meta">
+                    <span><?= h($homeLiveProductBrand) ?></span>
+                    <?php if (!empty($homeLiveProduct['home_live_is_pinned'])): ?>
+                      <span class="home-live-product-card__pin">Đang giới thiệu</span>
+                    <?php endif; ?>
+                  </div>
+                  <a href="<?= BASE_URL ?>/index.php?r=chitiet&amp;id=<?= rawurlencode($homeLiveProductId) ?>" class="home-live-product-card__name"><?= h($homeLiveProductName) ?></a>
+                  <div class="home-live-product-card__footer">
+                    <strong><?= vnd($homeLiveProduct['home_live_price'] ?? $homeLiveProduct['gia_ban'] ?? 0) ?></strong>
+                    <a href="<?= BASE_URL ?>/index.php?r=chitiet&amp;id=<?= rawurlencode($homeLiveProductId) ?>">Xem sản phẩm <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                  </div>
+                </div>
+              </article>
+            <?php endforeach; ?>
           </div>
         </div>
-      </div>
+        <?php if (count($homeLiveProducts) > 1): ?>
+          <div class="home-live-product-controls">
+            <span><strong data-home-live-current>1</strong> / <?= count($homeLiveProducts) ?></span>
+            <div>
+              <button type="button" data-home-live-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+              <button type="button" data-home-live-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        <?php endif; ?>
+      <?php else: ?>
+        <div class="home-live-stage__empty">
+          <span class="home-live-stage__play" aria-hidden="true"><i class="fas fa-play"></i></span>
+          <strong>Video thật, tư vấn trực tiếp</strong>
+          <span>Sản phẩm và ưu đãi sẽ xuất hiện khi phiên phát bắt đầu.</span>
+        </div>
+      <?php endif; ?>
     </div>
   </section>
 
@@ -1365,5 +1389,6 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="<?= h(BASE_URL . '/assets/js/home-carousel.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/home-carousel.js')) ?>" defer></script>
 <script src="<?= h(BASE_URL . '/assets/js/why-fit.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/why-fit.js')) ?>" defer></script>
 <script src="<?= h(BASE_URL . '/assets/js/homepage-discovery.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/homepage-discovery.js')) ?>" defer></script>
+<script src="<?= h(BASE_URL . '/assets/js/home-live-showcase.js?v=' . (int)@filemtime(dirname(__DIR__) . '/public/assets/js/home-live-showcase.js')) ?>" defer></script>
 
 <?php require __DIR__ . '/components/welcome_popup.php'; ?>

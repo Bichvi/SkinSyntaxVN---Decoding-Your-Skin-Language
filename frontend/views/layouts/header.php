@@ -4,6 +4,8 @@ $menuCats = $menuCats ?? [];
 $supportPhone = class_exists('SupportKnowledge') ? (SupportKnowledge::contact()['phone'] ?? '') : '';
 $currentUser = current_user();
 $currentRole = strtolower(trim((string)($currentUser['role'] ?? $currentUser['vai_tro'] ?? 'khach_hang')));
+$accountDisplayName = trim((string)($currentUser['ho_ten'] ?? $currentUser['email'] ?? 'Bạn'));
+$accountDisplayName = $accountDisplayName !== '' ? $accountDisplayName : 'Bạn';
 $cartCount = 0;
 foreach (($_SESSION['gio_hang'] ?? []) as $qty) {
   $cartCount += (int)$qty;
@@ -117,6 +119,7 @@ $socialLinks = [
   <noscript><link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css"></noscript>
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/fontawesome.min.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= h((string)$styleAssetVersion) ?>">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/account-menu.css?v=<?= h((string)(@filemtime(dirname(__DIR__, 2) . '/public/assets/css/account-menu.css') ?: '1')) ?>">
 </head>
 <body class="site-body">
 
@@ -218,18 +221,97 @@ $socialLinks = [
           </div>
         </a>
 
-        <!-- Account -->
-        <?php if (is_logged_in()): ?>
-          <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="header-action-btn--neutral" title="Quản trị / Hồ sơ tài khoản">
-            <i class="fas fa-circle-user" style="font-size: 1.2rem; color: #64748B;"></i>
-            <strong style="font-size: 0.85rem; color: #334155;"><?= h($currentRole === 'admin' ? 'Quản trị' : ($currentRole === 'nhanvien' ? 'Nhân viên' : 'Tài khoản')) ?></strong>
-          </a>
-        <?php else: ?>
-          <a href="#" class="header-action-btn--neutral" title="Đăng nhập tài khoản" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">
-            <i class="fas fa-circle-user" style="font-size: 1.2rem; color: #64748B;"></i>
-            <strong style="font-size: 0.85rem; color: #334155;">Đăng nhập</strong>
-          </a>
-        <?php endif; ?>
+        <!-- Account dropdown -->
+        <div class="dropdown header-account-dropdown">
+          <button
+            class="header-action-btn--neutral header-account-toggle"
+            type="button"
+            id="headerAccountDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-label="<?= is_logged_in() ? 'Mở menu tài khoản' : 'Mở menu đăng nhập và đăng ký' ?>"
+          >
+            <i class="fas fa-circle-user header-account-toggle__icon" aria-hidden="true"></i>
+            <span class="header-account-toggle__copy">
+              <?php if (is_logged_in()): ?>
+                <small>Chào, <?= h($accountDisplayName) ?></small>
+                <strong><?= h($currentRole === 'admin' ? 'Quản trị' : ($currentRole === 'nhanvien' ? 'Nhân viên' : 'Tài khoản')) ?></strong>
+              <?php else: ?>
+                <strong>Đăng nhập</strong>
+                <small>Tài khoản</small>
+              <?php endif; ?>
+            </span>
+            <i class="fas fa-chevron-down header-account-toggle__chevron" aria-hidden="true"></i>
+          </button>
+
+          <div class="dropdown-menu dropdown-menu-end header-account-menu" aria-labelledby="headerAccountDropdown">
+            <?php if (is_logged_in()): ?>
+              <div class="header-account-menu__identity">
+                <span class="header-account-menu__avatar" aria-hidden="true"><i class="fas fa-user"></i></span>
+                <span>
+                  <small>Xin chào</small>
+                  <strong><?= h($accountDisplayName) ?></strong>
+                </span>
+              </div>
+
+              <?php if ($currentRole === 'khach_hang'): ?>
+                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=hoso#tab-overview">
+                  <i class="far fa-id-card" aria-hidden="true"></i><span>Tài khoản của bạn</span>
+                </a>
+                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=hoso&amp;tab=orders#tab-orders">
+                  <i class="fas fa-list-check" aria-hidden="true"></i><span>Quản lý đơn hàng</span>
+                </a>
+                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=favorite_list">
+                  <i class="far fa-heart" aria-hidden="true"></i><span>Sản phẩm yêu thích</span>
+                </a>
+                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=hoso#tab-overview">
+                  <i class="fas fa-location-dot" aria-hidden="true"></i><span>Địa chỉ giao hàng</span>
+                </a>
+                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=phan_thuong">
+                  <i class="fas fa-gift" aria-hidden="true"></i><span>Phần thưởng</span>
+                  <?php if ($rewardDot): ?><span class="header-account-menu__badge">Điểm danh</span><?php endif; ?>
+                </a>
+              <?php else: ?>
+                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : 'staff_dashboard') ?>">
+                  <i class="fas fa-gauge-high" aria-hidden="true"></i><span>Trang quản lý</span>
+                </a>
+              <?php endif; ?>
+
+              <div class="header-account-menu__divider" role="separator"></div>
+              <a class="header-account-menu__item header-account-menu__item--logout" href="<?= BASE_URL ?>/index.php?r=dangxuat">
+                <i class="fas fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Thoát</span>
+              </a>
+            <?php else: ?>
+              <div class="header-account-menu__guest-title">Đăng nhập với</div>
+              <div class="header-account-menu__socials">
+                <a
+                  class="header-account-social header-account-social--google<?= $googleEnabled ? '' : ' is-disabled' ?>"
+                  href="<?= $googleEnabled ? h(BASE_URL . '/index.php?r=auth_social&provider=google') : '#' ?>"
+                  <?= $googleEnabled ? '' : 'aria-disabled="true" tabindex="-1"' ?>
+                >
+                  <i class="fa-brands fa-google" aria-hidden="true"></i><span>Đăng nhập bằng Google</span>
+                </a>
+                <a
+                  class="header-account-social header-account-social--facebook<?= $facebookEnabled ? '' : ' is-disabled' ?>"
+                  href="<?= $facebookEnabled ? h(BASE_URL . '/index.php?r=auth_social&provider=facebook') : '#' ?>"
+                  <?= $facebookEnabled ? '' : 'aria-disabled="true" tabindex="-1"' ?>
+                >
+                  <i class="fa-brands fa-facebook-f" aria-hidden="true"></i><span>Facebook</span>
+                </a>
+              </div>
+
+              <div class="header-account-menu__divider" role="separator"></div>
+              <p class="header-account-menu__guest-copy">Hoặc đăng nhập với tài khoản SkinSyntax</p>
+              <button class="header-account-menu__primary" type="button" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">
+                Đăng nhập
+              </button>
+              <p class="header-account-menu__register-copy">
+                Bạn chưa có tài khoản?
+                <button type="button" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Đăng ký ngay</button>
+              </p>
+            <?php endif; ?>
+          </div>
+        </div>
 
         <!-- Cart -->
         <a href="<?= BASE_URL ?>/index.php?r=giohang" class="header-action-btn--neutral" id="headerCartLink" title="Xem giỏ hàng">
@@ -376,8 +458,17 @@ $socialLinks = [
           <span class="fw-bold text-dark"><i class="fas fa-user-circle me-1 text-success"></i> Xin chào, <?= h($currentUser['ho_ten'] ?? 'User') ?></span>
           <a href="<?= BASE_URL ?>/index.php?r=dangxuat" class="btn btn-sm btn-outline-danger py-1 px-2 text-decoration-none">Đăng xuất</a>
         </div>
-        <?php if ($currentRole === 'khach_hang'): ?><a href="<?= BASE_URL ?>/index.php?r=phan_thuong" class="d-flex align-items-center gap-2 text-decoration-none text-dark mb-2"><i class="fas fa-gift" style="color:#C9A24A"></i> Phần thưởng<?php if ($rewardDot): ?><span class="badge rounded-pill ms-1" style="background:#C9A24A;color:#1f1a0a">Điểm danh</span><?php endif; ?></a><?php endif; ?>
-        <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso')) ?>" class="btn btn-sm btn-brand w-100 py-1.5 text-decoration-none">Vào trang quản lý / Hồ sơ</a>
+        <?php if ($currentRole === 'khach_hang'): ?>
+          <div class="mobile-account-links">
+            <a href="<?= BASE_URL ?>/index.php?r=hoso#tab-overview"><i class="far fa-id-card" aria-hidden="true"></i> Tài khoản của bạn</a>
+            <a href="<?= BASE_URL ?>/index.php?r=hoso&amp;tab=orders#tab-orders"><i class="fas fa-list-check" aria-hidden="true"></i> Quản lý đơn hàng</a>
+            <a href="<?= BASE_URL ?>/index.php?r=favorite_list"><i class="far fa-heart" aria-hidden="true"></i> Sản phẩm yêu thích</a>
+            <a href="<?= BASE_URL ?>/index.php?r=hoso#tab-overview"><i class="fas fa-location-dot" aria-hidden="true"></i> Địa chỉ giao hàng</a>
+            <a href="<?= BASE_URL ?>/index.php?r=phan_thuong"><i class="fas fa-gift" aria-hidden="true"></i> Phần thưởng<?php if ($rewardDot): ?><span class="badge rounded-pill ms-auto" style="background:#C9A24A;color:#1f1a0a">Điểm danh</span><?php endif; ?></a>
+          </div>
+        <?php else: ?>
+          <a href="<?= BASE_URL ?>/index.php?r=<?= h($currentRole === 'admin' ? 'admin_dashboard' : 'staff_dashboard') ?>" class="btn btn-sm btn-brand w-100 py-1.5 text-decoration-none">Vào trang quản lý</a>
+        <?php endif; ?>
       <?php else: ?>
         <div class="d-grid gap-2 grid-2-cols" style="grid-template-columns: 1fr 1fr;">
           <a href="#" class="btn btn-brand btn-sm py-2 text-decoration-none" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login" data-bs-dismiss="offcanvas">Đăng nhập</a>

@@ -35,8 +35,8 @@ function harness(studio = true, failStart = false) {
     async connect() {}
   }
   class Media {
-    videoOutput = 'video'; audioOutput = 'audio'; output = {};
-    async select(kind) { this.source = {kind}; }
+    videoOutput = {readyState: 'live'}; audioOutput = {readyState: 'live'}; output = {};
+    async select(kind) { this.source = {kind, audio_fallback: false}; }
     setMuted() {}
     close() { this.closed = true; }
   }

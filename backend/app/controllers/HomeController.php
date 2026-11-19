@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/TaiKhoan.php';
 require_once __DIR__ . '/../models/HoaDon.php';
 require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/Voucher.php';
+require_once __DIR__ . '/../models/PhienLive.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/SkincareProductClassifier.php';
 require_once __DIR__ . '/../services/RecommendationExplainer.php';
@@ -161,6 +162,9 @@ class HomeController {
         $homepageRefreshSeed = null;
         $homeCategoryCards = [];
         $homeBrandCards = [];
+        $homeLiveSession = null;
+        $homeLiveProduct = null;
+        $homeLiveProducts = [];
         $synaSurveyCompleted = !empty($_SESSION['syna_survey_success']);
         unset($_SESSION['syna_survey_success']);
 
@@ -434,6 +438,91 @@ class HomeController {
             $homeDiscovery = ['trending' => [], 'actives' => []];
         }
 
+        // The homepage live banner must reflect a real session. Prefer a
+        // currently active room, then the next scheduled/ready room. Never
+        // label an arbitrary product or an empty room as "live".
+        try {
+            $liveModel = new PhienLive($this->pdo);
+            $allLives = $liveModel->getAllLives();
+            foreach ($allLives as $candidateLive) {
+                if (($candidateLive['status'] ?? '') === 'live') {
+                    $homeLiveSession = $candidateLive;
+                    break;
+                }
+            }
+            if ($homeLiveSession === null) {
+                foreach ($allLives as $candidateLive) {
+                    if (in_array(($candidateLive['status'] ?? ''), ['scheduled', 'ready'], true)) {
+                        $homeLiveSession = $candidateLive;
+                        break;
+                    }
+                }
+            }
+            if ($homeLiveSession !== null) {
+                $pinnedProductId = trim((string)($homeLiveSession['ma_san_pham_ghim'] ?? ''));
+                $recentDeals = array_reverse((array)($homeLiveSession['danh_sach_deal'] ?? []));
+                $recentByProduct = [];
+
+                foreach ($recentDeals as $deal) {
+                    $productId = trim((string)($deal['ma_san_pham'] ?? ''));
+                    if ($productId === '' || isset($recentByProduct[$productId])) {
+                        continue;
+                    }
+                    $recentByProduct[$productId] = (array)$deal;
+                    if (count($recentByProduct) >= 4) {
+                        break;
+                    }
+                }
+
+                // Legacy sessions may only have a pinned product and no deal queue.
+                if (!$recentByProduct && $pinnedProductId !== '') {
+                    $recentByProduct[$pinnedProductId] = [
+                        'ma_san_pham' => $pinnedProductId,
+                        'gia_uu_dai_live' => (float)($homeLiveSession['gia_uu_dai_live'] ?? 0),
+                    ];
+                }
+
+                $catalogProducts = $this->model->findManyByIds(array_keys($recentByProduct));
+                foreach ($recentByProduct as $productId => $deal) {
+                    $product = $catalogProducts[$productId] ?? null;
+                    if (!$product || !$this->model->isProductAvailable($product)) {
+                        continue;
+                    }
+                    $catalogPrice = (float)($product['gia_ban'] ?? 0);
+                    $livePrice = (float)($deal['gia_uu_dai_live'] ?? 0);
+                    $product['home_live_price'] = $livePrice > 0 ? $livePrice : $catalogPrice;
+                    $product['home_live_is_pinned'] = $pinnedProductId !== '' && $pinnedProductId === $productId;
+                    $homeLiveProducts[] = $product;
+                }
+            }
+
+            // Keep real products from the selected room first, then complete
+            // the showcase with the newest visible catalog items. This keeps
+            // the homepage lively even when an upcoming room has one deal.
+            $showcaseIds = [];
+            foreach ($homeLiveProducts as $product) {
+                $id = trim((string)($product['ma_san_pham'] ?? $product['id'] ?? ''));
+                if ($id !== '') $showcaseIds[$id] = true;
+            }
+            foreach ((array)$latest as $product) {
+                if (count($homeLiveProducts) >= 4 || !is_array($product)) break;
+                $productId = trim((string)($product['ma_san_pham'] ?? $product['id'] ?? ''));
+                if ($productId === '' || isset($showcaseIds[$productId]) || !$this->model->isProductAvailable($product)) {
+                    continue;
+                }
+                $product['home_live_price'] = (float)($product['gia_ban'] ?? 0);
+                $product['home_live_is_pinned'] = false;
+                $homeLiveProducts[] = $product;
+                $showcaseIds[$productId] = true;
+            }
+            $homeLiveProduct = $homeLiveProducts[0] ?? null;
+        } catch (Throwable $e) {
+            error_log('[HOME_LIVE] skipped: ' . get_class($e));
+            $homeLiveSession = null;
+            $homeLiveProduct = null;
+            $homeLiveProducts = [];
+        }
+
         $this->render('home', [
             'routineStarter' => $routineStarter,
             'routineSkinType' => $routineSkinType,
@@ -451,6 +540,9 @@ class HomeController {
             'homeGraph' => $homeGraph ?? null,
             'homeCategoryCards' => $homeCategoryCards,
             'homeBrandCards' => $homeBrandCards,
+            'homeLiveSession' => $homeLiveSession,
+            'homeLiveProduct' => $homeLiveProduct,
+            'homeLiveProducts' => $homeLiveProducts,
             'synaSurveyCompleted' => $synaSurveyCompleted,
         ]);
     }

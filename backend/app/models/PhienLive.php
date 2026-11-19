@@ -70,21 +70,34 @@ class PhienLive {
         }
     }
 
+    public function findByEgressId(string $egressId): ?array {
+        $egressId = trim($egressId);
+        if ($egressId === '') return null;
+        try {
+            $doc = $this->db->phien_live->findOne(['egress_id' => $egressId]);
+            return $doc ? $this->normalizeDoc($doc) : null;
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
     public function getLiveById($id): ?array {
         return $this->findById($id);
     }
 
-    public function taoPhienLive(array $data): bool {
+    public function taoPhienLive(array $data) {
         $title = trim((string)($data['tieu_de'] ?? ''));
         $streamer = trim((string)($data['streamer'] ?? ''));
-        if ($title === '' || $streamer === '') return false;
+        if ($title === '') return false;
+        if ($streamer === '') $streamer = 'SkinSyntax Host';
 
         try {
             $now = date('Y-m-d H:i:s');
             $status = $this->normalizeInputStatus((string)($data['trang_thai'] ?? 'scheduled'));
             if ($status === 'live') $status = 'ready';
+            $nextId = $this->nextNumericId();
             $payload = [
-                'ma_phong' => $this->nextNumericId(),
+                'ma_phong' => $nextId,
                 'tieu_de' => mb_substr($title, 0, 180),
                 'streamer' => mb_substr($streamer, 0, 120),
                 'khung_gio_bat_dau' => trim((string)($data['khung_gio_bat_dau'] ?? '')),
@@ -92,23 +105,40 @@ class PhienLive {
                 'ma_san_pham_ghim' => trim((string)($data['ma_san_pham_ghim'] ?? '')),
                 'gia_uu_dai_live' => max(0, (float)($data['gia_uu_dai_live'] ?? 0)),
                 'so_luong_kho_deal' => max(0, (int)($data['so_luong_kho_deal'] ?? 0)),
+                'danh_sach_deal' => is_array($data['danh_sach_deal'] ?? null) ? $data['danh_sach_deal'] : [],
                 'bat_ai_cohost' => !empty($data['bat_ai_cohost']),
                 'server_livekit_url' => trim((string)($data['server_livekit_url'] ?? (defined('LIVEKIT_URL') ? LIVEKIT_URL : ''))),
                 'trang_thai' => $status,
                 'stream_state' => 'offline',
                 'stream_last_seen' => null,
+                'stream_source' => trim((string)($data['stream_source'] ?? 'camera')),
+                'thumbnail' => trim((string)($data['thumbnail'] ?? $data['hinh_anh'] ?? '')),
+                'tom_tat_phien_live' => trim((string)($data['tom_tat_phien_live'] ?? $data['mo_ta'] ?? '')),
+                'publisher_staff_id' => trim((string)($data['publisher_staff_id'] ?? '')),
+                'live_staff' => (array)($data['live_staff'] ?? []),
+                'cho_phep_guest_chat' => !isset($data['cho_phep_guest_chat']) || !empty($data['cho_phep_guest_chat']),
+                'cho_phep_tha_tim' => !isset($data['cho_phep_tha_tim']) || !empty($data['cho_phep_tha_tim']),
+                'cho_phep_voucher' => !isset($data['cho_phep_voucher']) || !empty($data['cho_phep_voucher']),
+                'tu_dong_recording' => !empty($data['tu_dong_recording']),
+                'active_voucher' => null,
                 'recording_status' => 'not_started',
                 'url_ban_ghi' => '',
                 'recording_mime' => '',
                 'recording_size' => 0,
                 'recording_error' => '',
+                'recording_file_path' => '',
+                'recording_storage' => '',
+                'recording_duration' => 0,
+                'recording_started_at' => 0,
+                'recording_ended_at' => 0,
+                'recording_etag' => '',
                 'luot_xem' => 0,
                 'reaction_count' => 0,
                 'created_at' => $now,
                 'updated_at' => $now
             ];
             $res = $this->db->phien_live->insertOne($payload);
-            return $res->getInsertedCount() > 0;
+            return $res->getInsertedCount() > 0 ? (string)$nextId : false;
         } catch (Throwable $e) {
             return false;
         }
@@ -120,21 +150,55 @@ class PhienLive {
             'ma_san_pham_ghim', 'gia_uu_dai_live', 'so_luong_kho_deal',
             'bat_ai_cohost', 'server_livekit_url', 'url_ban_ghi',
             'tom_tat_phien_live', 'trang_thai', 'recording_status',
-            'recording_mime', 'recording_size', 'recording_error', 'publisher_staff_id', 'live_staff', 'syna_revision'
+            'recording_mime', 'recording_size', 'recording_error', 'recording_file_path', 'recording_storage',
+            'recording_duration', 'recording_started_at', 'recording_ended_at', 'recording_etag',
+            'publisher_staff_id', 'live_staff', 'syna_revision',
+            'thumbnail', 'stream_source', 'cho_phep_guest_chat', 'cho_phep_tha_tim', 'cho_phep_voucher', 'tu_dong_recording',
+            'active_voucher', 'egress_id',
+            'deal_bat_dau', 'deal_ket_thuc', 'pin_duration_minutes'
         ];
         $set = [];
         foreach ($allowed as $key) {
             if (!array_key_exists($key, $data)) continue;
             if ($key === 'trang_thai') $set[$key] = $this->normalizeInputStatus((string)$data[$key]);
             elseif ($key === 'gia_uu_dai_live') $set[$key] = max(0, (float)$data[$key]);
-            elseif ($key === 'so_luong_kho_deal' || $key === 'recording_size') $set[$key] = max(0, (int)$data[$key]);
-            elseif ($key === 'bat_ai_cohost') $set[$key] = !empty($data[$key]);
+            elseif (in_array($key, ['so_luong_kho_deal', 'recording_size', 'recording_duration', 'recording_started_at', 'recording_ended_at', 'pin_duration_minutes'], true)) $set[$key] = max(0, (int)$data[$key]);
+            elseif (in_array($key, ['bat_ai_cohost', 'cho_phep_guest_chat', 'cho_phep_tha_tim', 'cho_phep_voucher', 'tu_dong_recording'], true)) $set[$key] = !empty($data[$key]);
+            elseif (in_array($key, ['active_voucher', 'live_staff'], true)) $set[$key] = $data[$key];
             else $set[$key] = is_string($data[$key]) ? trim($data[$key]) : $data[$key];
         }
         if (!$set) return false;
         $set['updated_at'] = date('Y-m-d H:i:s');
         try {
             $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => $set]);
+            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function setActiveVoucher($id, array $voucherData): bool {
+        try {
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), [
+                '$set' => [
+                    'active_voucher' => $voucherData,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]
+            ]);
+            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function clearActiveVoucher($id): bool {
+        try {
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), [
+                '$set' => [
+                    'active_voucher' => null,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]
+            ]);
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
             return false;
@@ -219,10 +283,12 @@ class PhienLive {
         if ($productId === '' || $dealStock < 1) return false;
         try {
             $now = date('Y-m-d H:i:s');
+            $durationMinutes = max(0, $durationMinutes);
             $set = [
                 'ma_san_pham_ghim' => $productId,
                 'deal_bat_dau' => $now,
-                'deal_ket_thuc' => date('Y-m-d H:i:s', strtotime('+' . max(1, $durationMinutes) . ' minutes')),
+                'deal_ket_thuc' => $durationMinutes > 0 ? date('Y-m-d H:i:s', strtotime('+' . $durationMinutes . ' minutes')) : '',
+                'pin_duration_minutes' => $durationMinutes,
                 'so_luong_kho_deal' => $dealStock,
                 'updated_at' => $now
             ];
@@ -264,13 +330,59 @@ class PhienLive {
         }
     }
 
-    public function saveRecording($id, string $url, string $mime, int $size): bool {
+    public function markRecordingStarted($id, string $egressId, string $filePath, string $storage = 'r2'): bool {
+        $egressId = trim($egressId);
+        $filePath = trim($filePath);
+        if ($egressId === '' || $filePath === '') return false;
+        try {
+            $res = $this->db->phien_live->updateOne($this->idFilter($id) + ['recording_status' => ['$ne' => 'replay_ready']], ['$set' => [
+                'egress_id' => $egressId,
+                'recording_status' => 'recording',
+                'recording_file_path' => $filePath,
+                'recording_storage' => trim($storage),
+                'recording_started_at' => time(),
+                'recording_ended_at' => 0,
+                'recording_duration' => 0,
+                'recording_size' => 0,
+                'recording_mime' => '',
+                'recording_etag' => '',
+                'recording_error' => '',
+                'url_ban_ghi' => '',
+                'updated_at' => date('Y-m-d H:i:s')
+            ]]);
+            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function saveRecording($id, string $url, string $mime, int $size, array $metadata = []): bool {
+        if (($metadata['verified'] ?? false) !== true) return false;
         try {
             $filter = $this->idFilter($id) + ['recording_status' => ['$ne' => 'replay_ready']];
-            $res = $this->db->phien_live->updateOne($filter, ['$set' => [
+            $set = [
                 'url_ban_ghi' => trim($url), 'recording_status' => 'replay_ready', 'recording_mime' => trim($mime),
                 'recording_size' => max(0, $size), 'recording_error' => '', 'trang_thai' => 'replay_ready',
                 'stream_state' => 'offline', 'updated_at' => date('Y-m-d H:i:s')
+            ];
+            foreach (['egress_id', 'recording_file_path', 'recording_storage', 'recording_etag'] as $key) {
+                if (array_key_exists($key, $metadata)) $set[$key] = is_string($metadata[$key]) ? trim($metadata[$key]) : $metadata[$key];
+            }
+            foreach (['recording_duration', 'recording_started_at', 'recording_ended_at'] as $key) {
+                if (array_key_exists($key, $metadata)) $set[$key] = max(0, (int)$metadata[$key]);
+            }
+            $res = $this->db->phien_live->updateOne($filter, ['$set' => $set]);
+            return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function setRecordingError($id, string $message): bool {
+        try {
+            $res = $this->db->phien_live->updateOne($this->idFilter($id), ['$set' => [
+                'recording_error' => mb_substr(trim($message), 0, 500),
+                'updated_at' => date('Y-m-d H:i:s')
             ]]);
             return $res->getModifiedCount() > 0 || $res->getMatchedCount() > 0;
         } catch (Throwable $e) {
@@ -384,6 +496,7 @@ class PhienLive {
                     'sender_id' => (string)($item['sender_id'] ?? ''),
                     'sender_type' => (string)($item['sender_type'] ?? (!empty($item['is_ai']) ? 'ai' : 'customer')),
                     'sender_name' => (string)($item['sender_name'] ?? 'Khách hàng'), 'message' => (string)($item['message'] ?? ''),
+                    'sender_avatar' => (string)($item['sender_avatar'] ?? ''),
                     'is_ai' => !empty($item['is_ai']), 'is_order' => !empty($item['is_order']), 'is_question' => !empty($item['is_question']),
                     'is_pinned' => !empty($item['is_pinned']), 'created_at' => (string)($item['created_at'] ?? ''),
                     'reply_to' => (string)($item['reply_to'] ?? ''),
@@ -426,7 +539,7 @@ class PhienLive {
         $recording = strtolower(trim((string)($arr['recording_status'] ?? '')));
         if (in_array($raw, ['danglive', 'live'], true)) return $streamState === 'live' && $lastSeen >= (time() - self::STREAM_FRESH_SECONDS) ? 'live' : 'ready';
         if (in_array($raw, ['chuamoi', 'upcoming'], true)) return 'scheduled';
-        if (in_array($raw, ['ketthuc', 'cancelled', 'ended'], true)) return $recording === 'replay_ready' || !empty($arr['url_ban_ghi']) ? 'replay_ready' : 'ended';
+        if (in_array($raw, ['ketthuc', 'cancelled', 'ended'], true)) return $recording === 'replay_ready' ? 'replay_ready' : 'ended';
         if (in_array($raw, self::ALLOWED_STATUSES, true)) return $raw === 'live' && !($streamState === 'live' && $lastSeen >= (time() - self::STREAM_FRESH_SECONDS)) ? 'ready' : $raw;
         return 'scheduled';
     }
@@ -455,7 +568,26 @@ class PhienLive {
         }
         $arr['stream_state'] = (string)($arr['stream_state'] ?? 'offline');
         $arr['stream_last_seen'] = (int)($arr['stream_last_seen'] ?? 0);
-        $arr['recording_status'] = (string)($arr['recording_status'] ?? ($arr['url_ban_ghi'] !== '' ? 'replay_ready' : 'not_started'));
+        $arr['stream_source'] = (string)($arr['stream_source'] ?? 'camera');
+        $arr['thumbnail'] = (string)($arr['thumbnail'] ?? '');
+        $arr['tom_tat_phien_live'] = (string)($arr['tom_tat_phien_live'] ?? $arr['mo_ta'] ?? '');
+        $arr['cho_phep_guest_chat'] = !isset($arr['cho_phep_guest_chat']) || !empty($arr['cho_phep_guest_chat']);
+        $arr['cho_phep_tha_tim'] = !isset($arr['cho_phep_tha_tim']) || !empty($arr['cho_phep_tha_tim']);
+        $arr['cho_phep_voucher'] = !isset($arr['cho_phep_voucher']) || !empty($arr['cho_phep_voucher']);
+        $arr['tu_dong_recording'] = !empty($arr['tu_dong_recording']);
+        $activeVoucher = $arr['active_voucher'] ?? null;
+        if ($activeVoucher instanceof Traversable) $activeVoucher = iterator_to_array($activeVoucher, false);
+        $arr['active_voucher'] = is_array($activeVoucher) ? (array)json_decode(json_encode($activeVoucher), true) : null;
+        $arr['egress_id'] = (string)($arr['egress_id'] ?? '');
+        $arr['recording_file_path'] = (string)($arr['recording_file_path'] ?? '');
+        $arr['recording_storage'] = (string)($arr['recording_storage'] ?? '');
+        $arr['recording_duration'] = (int)($arr['recording_duration'] ?? 0);
+        $arr['recording_started_at'] = (int)($arr['recording_started_at'] ?? 0);
+        $arr['recording_ended_at'] = (int)($arr['recording_ended_at'] ?? 0);
+        $arr['recording_etag'] = (string)($arr['recording_etag'] ?? '');
+        // A legacy URL is only metadata. It must not promote a session to
+        // replay_ready until the controller has verified the actual object.
+        $arr['recording_status'] = (string)($arr['recording_status'] ?? 'not_started');
         $arr['recording_error'] = (string)($arr['recording_error'] ?? '');
         $arr['luot_xem'] = (int)($arr['luot_xem'] ?? 0);
         $arr['reaction_count'] = (int)($arr['reaction_count'] ?? 0);
