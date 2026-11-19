@@ -98,7 +98,7 @@ async function exportVideo(){
 }
 async function initialize(){
   try{
-    const [{PilotScene},speech,metadata]=await Promise.all([import('./scene.js?v=7'),fetch('./assets/syna-pilot.wav'),fetch('./assets/syna-pilot.json')]);
+    const [{PilotScene},speech,metadata]=await Promise.all([import('./scene.js?v=15'),fetch('./assets/syna-pilot.wav'),fetch('./assets/syna-pilot.json')]);
     if(!speech.ok||!metadata.ok)throw new Error('Thiếu lời thoại 3D mẫu. Bản 2D vẫn sử dụng được.');
     const data=await metadata.json();
     if(data.duration!==DURATION||!Array.isArray(data.cues)||data.cues.length!==3||!data.cues.every((c,i)=>Number.isFinite(c.start)&&Number.isFinite(c.end)&&c.start>=0&&c.end>c.start&&c.end<=DURATION&&(i===0||c.start>=data.cues[i-1].end)&&typeof c.text==='string'))throw new Error('Mốc lời thoại mẫu không hợp lệ.');

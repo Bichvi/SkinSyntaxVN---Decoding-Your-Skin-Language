@@ -1,10 +1,10 @@
 import * as THREE from './vendor/three.module.min.js';
 import { armWeights } from './timeline.js?v=6';
 import { HEAD, FACE, ARM_LENGTH, BODY_DEPTH, BODY_PROFILE, faceSurface, bodySurface, createSkullGeometry, createFacePatch, fitFacePatch } from './anatomy.js?v=5';
-import { createEyePaint, createBlushPaint, createHeadphoneBadge } from './face-paint.js?v=5';
+import { createEyePaint, createBlushPaint, createHeadphoneBadge, createChestLogo } from './face-paint.js?v=9';
 
 const C = { cream: '#ffece5', muzzle: '#fff1e9', forest: '#164b37', trim: '#28674a',
-  pink: '#efa6a3', iris: '#267653', pupil: '#082c25', leaf: '#8dbd61' };
+  pink: '#efa6a3', iris: '#267653', pupil: '#082c25', leaf: '#2f8f34' };
 function material(color, roughness = 0.88) { return new THREE.MeshStandardMaterial({ color, roughness }); }
 function mesh(parent, geometry, mat, position = [0, 0, 0], scale = [1, 1, 1]) {
   const item = new THREE.Mesh(geometry, mat); item.position.set(...position); item.scale.set(...scale);
@@ -21,10 +21,12 @@ function extrude(shape, depth, bevel = 0.012) {
 }
 
 function earShape() {
-  const s = new THREE.Shape(); s.moveTo(-0.27, 0);
-  s.bezierCurveTo(-0.29, 0.16, -0.29, 0.52, -0.22, 0.66);
-  s.bezierCurveTo(-0.18, 0.74, 0.18, 0.19, 0.26, 0.04);
-  s.bezierCurveTo(0.20, -0.08, -0.10, -0.13, -0.27, 0); return s;
+  // Big, upright, softly pointed triangle (reference style), symmetric so both sides match.
+  const s = new THREE.Shape(); s.moveTo(-0.30, 0);
+  s.bezierCurveTo(-0.29, 0.26, -0.12, 0.60, -0.03, 0.73);
+  s.bezierCurveTo(-0.01, 0.765, 0.01, 0.765, 0.03, 0.73);
+  s.bezierCurveTo(0.12, 0.60, 0.29, 0.26, 0.30, 0);
+  s.bezierCurveTo(0.18, -0.07, -0.18, -0.07, -0.30, 0); return s;
 }
 
 function plushEar(depth, bevel, offset = [0,0,0], scale = [1,1,1]) {
@@ -33,7 +35,7 @@ function plushEar(depth, bevel, offset = [0,0,0], scale = [1,1,1]) {
     const x=position.getX(i)*scale[0]+offset[0], y=position.getY(i)*scale[1]+offset[1];
     const z=position.getZ(i)*scale[2]+offset[2], t=THREE.MathUtils.clamp((y+.1)/.85,0,1);
     // A rounded base tapers toward a backward-swept tip, including its inner lining.
-    position.setXYZ(i,x,y,.11+(z-.11)*(1-.74*t)-.075*t*t);
+    position.setXYZ(i,x,y,.11+(z-.11)*(1-.6*t)-.025*t*t);
   }
   geometry.computeVertexNormals();return geometry;
 }
@@ -63,24 +65,6 @@ function centella(parent, position, scale, rotation, leafMat, veinMat) {
   return leaf;
 }
 
-function fitChestEmblem(emblem) {
-  emblem.updateMatrix();
-  const vertex = new THREE.Vector3();
-  for (const part of emblem.children) {
-    if (!part.geometry) continue;
-    part.updateMatrix();
-    const transform = new THREE.Matrix4().multiplyMatrices(emblem.matrix, part.matrix);
-    const inverse = transform.clone().invert(), position = part.geometry.attributes.position;
-    for (let i = 0; i < position.count; i += 1) {
-      vertex.fromBufferAttribute(position, i).applyMatrix4(transform);
-      vertex.z = bodySurface(vertex.x, vertex.y) + .007 + vertex.z - emblem.position.z;
-      vertex.applyMatrix4(inverse); position.setXYZ(i, vertex.x, vertex.y, vertex.z);
-    }
-    position.needsUpdate = true; part.geometry.computeVertexNormals();
-    part.geometry.computeBoundingSphere();
-  }
-}
-
 /** One continuous skinned surface, including upper sleeve, elbow and paw. */
 function makeArm(parent, side, mats) {
   const vertices = [], normals = [], indices = [], colors = [], skins = [], weights = [];
@@ -88,10 +72,13 @@ function makeArm(parent, side, mats) {
   const green = new THREE.Color(C.forest), cream = new THREE.Color(C.cream);
   for (let row = 0; row <= rows; row += 1) {
     const t = row / rows, distance = t * length;
+    // Short sleeve, then a round chubby paw that is a little wider than the wrist.
+    const paw = .153 + .02 * Math.sin(THREE.MathUtils.clamp((t - .45) / .27, 0, 1) * Math.PI / 2);
     const radius = t < .43 ? .17 - t * .04
-      : t < .78 ? .153
-        : Math.max(.006, .153 * Math.sqrt(Math.max(0, 1 - ((t - .78) / .22) ** 2)));
-    const blend = THREE.MathUtils.clamp((t - .36) / .15, 0, 1);
+      : t < .72 ? paw
+        : Math.max(.006, .173 * Math.sqrt(Math.max(0, 1 - ((t - .72) / .28) ** 2)));
+    // A crisp sleeve cuff instead of a long green-to-cream smear.
+    const blend = THREE.MathUtils.clamp((t - .44) / .035, 0, 1);
     const color = green.clone().lerp(cream, blend);
     for (let j = 0; j <= radial; j += 1) {
       const angle = j / radial * Math.PI * 2;
@@ -124,17 +111,29 @@ function makeArm(parent, side, mats) {
   geometry.computeVertexNormals();
   const arm = new THREE.SkinnedMesh(geometry, mats.arm);
   arm.name = side < 0 ? 'left-continuous-arm' : 'right-continuous-arm';
-  arm.position.set(side * .345, 1.035, .07); parent.add(arm);
+  arm.position.set(side * .345, 1.035, .07); arm.scale.set(1.1, .8, 1.1); parent.add(arm); // short, chubby arms
   const upper = new THREE.Bone(), elbow = new THREE.Bone(), wrist = new THREE.Bone();
   upper.name = `${arm.name}-shoulder`; elbow.name = `${arm.name}-elbow`; wrist.name = `${arm.name}-wrist`;
   upper.add(elbow); elbow.position.y = -.33 * length / .74;
   elbow.add(wrist); wrist.position.y = -.31 * length / .74;
   arm.add(upper); arm.bind(new THREE.Skeleton([upper, elbow, wrist]));
   arm.castShadow = true; arm.receiveShadow = true;
-  // A soft sleeve cap overlaps both the hoodie and the continuous arm root.
-  const bridge = oval(parent, mats.forest, [side * .315, 1.045, .16], [.16, .135, .21]);
+  // A rounded shoulder centred on the arm pivot, matching the sleeve radius, so the
+  // sleeve reads as one capsule with the hoodie at every arm angle.
+  const bridge = oval(parent, mats.forest, [side * .345, 1.035, .07], [.19, .19, .19]);
   bridge.name = side < 0 ? 'left-sleeve-shoulder-bridge' : 'right-sleeve-shoulder-bridge';
   return { arm, upper, elbow, wrist };
+}
+
+function bodyDecal(parent, texture, width, height, centerY) {
+  const mat = new THREE.MeshStandardMaterial({ map: texture, transparent: true, roughness: .85, depthWrite: false });
+  const geometry = new THREE.PlaneGeometry(width, height, 16, 8), position = geometry.attributes.position;
+  for (let i = 0; i < position.count; i += 1) {
+    const x = position.getX(i), y = position.getY(i) + centerY;
+    position.setXYZ(i, x, y, bodySurface(x, y) + .009);
+  }
+  geometry.computeVertexNormals();
+  const decal = mesh(parent, geometry, mat); decal.castShadow = false; return decal;
 }
 
 function chestLabel(parent) {
@@ -142,13 +141,7 @@ function chestLabel(parent) {
   const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e9f4db'; ctx.font = '500 78px "Segoe UI",sans-serif';
   ctx.textAlign = 'center'; ctx.fillText('SkinSyntax', 256, 90);
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-  const mat = new THREE.MeshStandardMaterial({ map: texture, transparent: true, roughness: .85, depthWrite: false });
-  const geometry = new THREE.PlaneGeometry(.54, .135, 16, 4), position = geometry.attributes.position;
-  for (let i = 0; i < position.count; i += 1) {
-    const x = position.getX(i), y = position.getY(i) + .665;
-    position.setXYZ(i, x, y, bodySurface(x, y) + .009);
-  }
-  geometry.computeVertexNormals(); mesh(parent, geometry, mat);
+  return bodyDecal(parent, texture, .54, .135, .665);
 }
 
 export class Syna3D {
@@ -157,7 +150,7 @@ export class Syna3D {
     this.root.scale.setScalar(1.06);
     this.body = new THREE.Group(); this.root.add(this.body);
     this.mats = { cream: material(C.cream), muzzle: material(C.muzzle), forest: material(C.forest),
-      trim: material(C.trim), pink: material(C.pink), leaf: material(C.leaf), vein: material('#588b40'),
+      trim: material(C.trim), pink: material(C.pink), leaf: material(C.leaf), vein: material('#25702b'),
       pupil: material(C.pupil, .75), white: new THREE.MeshBasicMaterial({ color: '#ffffff' }),
       iris: material(C.iris, .75), gold: material('#d7b664', .65),
       arm: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9 }) };
@@ -169,7 +162,7 @@ export class Syna3D {
     const m = this.mats;
     const torso = mesh(this.body, new THREE.LatheGeometry(BODY_PROFILE, 48), m.forest, [0,0,0], [1,1,BODY_DEPTH]);
     torso.name = 'syna-rounded-torso';
-    oval(this.body, m.forest, [0,.415,0], [.47,.035,.452]);
+    oval(this.body, m.forest, [0,.40,0], [.49,.05,.47]);
     oval(this.body, m.forest, [0,1.085,-.085], [.35,.14,.32]);
     mesh(this.body, new THREE.CapsuleGeometry(.165,.18,8,24), m.cream, [0,1.225,0]);
     tube(this.body, [[-.245,1.145,.15],[-.15,1.12,.25],[0,1.055,.33],[.15,1.12,.25],[.245,1.145,.15]], .042, m.forest);
@@ -179,18 +172,17 @@ export class Syna3D {
       oval(this.drawstrings, m.cream, [side * .073, .978, .425], [.021, .026, .015]);
     }
     tube(this.body, [[-.22,.555],[-.18,.515],[0,.49],[.18,.515],[.22,.555]].map(([x,y])=>[x,y,bodySurface(x,y)+.008]), .005, m.trim);
-    const emblem = centella(this.body, [0,.835,bodySurface(0,.835)+.015], .175, [0,0,-.12], material('#a5d391'), material('#cee7b9'));
-    emblem.name = 'syna-chest-centella';
-    tube(emblem, [[0,0,.03],[.02,-.08,.03],[.07,-.15,.03]], .012, material('#a5d391'), 10);
-    fitChestEmblem(emblem);
+    const logo = bodyDecal(this.body, createChestLogo(), .2, .2, .84);
+    logo.name = 'syna-chest-sprout-logo';
     chestLabel(this.body);
     this.feet = [];
     for (const side of [-1,1]) {
       // Feet belong to the same torso hierarchy so breathing, a tiny body roll,
       // and head/shoulder gestures never make the paws look detached.
-      const foot = new THREE.Group(); foot.position.set(side*.215,.25,0); this.body.add(foot);
-      mesh(foot, new THREE.CapsuleGeometry(.173,.11,8,24), m.cream);
-      oval(foot, m.forest, [0,-.15,.045], [.175,.11,.185]);
+      const foot = new THREE.Group(); foot.position.set(side*.19,.24,0); this.body.add(foot);
+      // Short, close-set legs tucked under the hem, with chunky boots that meet them.
+      mesh(foot, new THREE.CapsuleGeometry(.17,.06,8,24), m.cream);
+      oval(foot, m.forest, [0,-.11,.04], [.19,.14,.21]);
       this.feet.push({ node: foot, side });
     }
     this.tail = new THREE.Group(); this.tail.position.set(.30,.59,-.31); this.body.add(this.tail);
@@ -202,18 +194,19 @@ export class Syna3D {
     const m = this.mats;
     this.neck = new THREE.Group(); this.neck.position.y = 1.22; this.body.add(this.neck);
     this.head = new THREE.Group(); this.head.position.y = .635; this.neck.add(this.head);
+    this.head.scale.set(1.07, 1.0, 1.04); // a touch wider and chubbier, like the reference art
     const skull = mesh(this.head, createSkullGeometry(), m.cream); skull.name = 'syna-solid-skull';
     this.ears = [];
     for (const side of [-1,1]) {
-      const ear = new THREE.Group(); ear.position.set(side*.50,.40,-.19);
-      ear.scale.set(-side*1.06,.72,1); ear.rotation.z = -side*.12; this.head.add(ear);
-      this.ears.push({ node: ear, side, baseZ: -side * .12 });
+      const ear = new THREE.Group(); ear.position.set(side*.47,.40,-.10);
+      ear.scale.set(.92,.78,.9); ear.rotation.z = -side*.30; ear.rotation.y = side*.12; this.head.add(ear);
+      this.ears.push({ node: ear, side, baseZ: -side * .30 });
       mesh(ear, plushEar(.22,.060), m.cream);
-      mesh(ear, plushEar(.012,.025,[0,.06,.257],[.74,.75,1]), m.pink);
-      mesh(ear, plushEar(.008,.018,[0,.095,.286],[.54,.56,1]), material('#7f9f8c', .92));
+      mesh(ear, plushEar(.010,.022,[0,.075,.262],[.68,.72,1]), material('#a3b8ad', .92));
     }
     this.buildFace(); this.buildHeadset();
-    this.plant = new THREE.Group(); this.plant.position.set(0,.57,-.005); this.head.add(this.plant);
+    this.plant = new THREE.Group(); this.plant.position.set(0,.55,-.005); this.head.add(this.plant);
+    this.plant.scale.set(.95,.82,.95); // sprout hugs the crown instead of towering over it
     tube(this.plant, [[0,0,0],[-.03,.17,.018],[-.13,.38,.03]], .014, m.vein, 16);
     tube(this.plant, [[.02,0,0],[.08,.13,.04],[.22,.24,.05]], .012, m.vein, 16);
     centella(this.plant, [-.13,.38,.03], .47, [.04,-.23,-.10], m.leaf, m.vein);
@@ -225,22 +218,25 @@ export class Syna3D {
     const patch = (parent, mat, x, y, rx, ry, lift, bulge=0) => mesh(parent, createFacePatch(x,y,rx,ry,lift,bulge), mat);
     const curve = (points, lift=.008) => points.map(([x,y])=>[x,y,faceSurface(x,y)+lift]);
     const blushMat = new THREE.MeshBasicMaterial({ map: createBlushPaint(), transparent: true, depthWrite: false, toneMapped: false });
+    // "Baby face" layout: eyes sit low and wide, features cluster in the lower half.
+    const eyeX = .375, eyeY = -.16, eyeW = .27, eyeH = .285;
     for (const side of [-1,1]) {
       const paint = createEyePaint(side);
       const eyeMat = new THREE.MeshBasicMaterial({ map: paint.texture, transparent: true, depthWrite: false, toneMapped: false });
-      const eye = patch(this.head, eyeMat, side * FACE.eyeX, FACE.eyeY, FACE.eyeWidth, FACE.eyeHeight, .009);
+      const eye = patch(this.head, eyeMat, side * eyeX, eyeY, eyeW, eyeH, .009);
       eye.name = side < 0 ? 'syna-left-painted-eye' : 'syna-right-painted-eye';
-      eye.castShadow = false; eye.receiveShadow = false; this.eyes.push(paint);
-      const blush = patch(this.head,blushMat,side*.51,-.315,.145,.075,.007);
-      blush.castShadow = false; blush.receiveShadow = false;
+      eye.castShadow = false; eye.receiveShadow = false; eye.renderOrder = 2; this.eyes.push(paint);
+      const blush = patch(this.head,blushMat,side*.53,-.385,.17,.10,.007);
+      blush.castShadow = false; blush.receiveShadow = false; blush.renderOrder = 1;
       for (const offset of [-.025,.025]) {
-        tube(this.head, curve([[side*.60,-.285+offset],[side*.65,-.28+offset],[side*.70,-.26+offset]]), .004, material('#76564e'), 14);
+        tube(this.head, curve([[side*.63,-.335+offset],[side*.68,-.33+offset],[side*.73,-.31+offset]]), .004, material('#76564e'), 14);
       }
     }
-    oval(this.head,m.pink,[0,-.242,faceSurface(0,-.242)+.007],[.044,.026,.022]);
-    this.openMouth = patch(this.head,material('#713c3d'),0,-.357,.080,.079,.012);
-    this.tongue = patch(this.head,m.pink,0,-.387,.047,.023,.020);
-    this.smile = tube(this.head, curve([[-.086,-.302],[-.045,-.324],[0,-.294],[.045,-.324],[.086,-.302]],.012), .008, material('#654139'), 24);
+    oval(this.head,m.pink,[0,-.30,faceSurface(0,-.30)+.007],[.042,.025,.022]);
+    this.openMouth = patch(this.head,material('#713c3d'),0,-.40,.05,.06,.012);
+    this.tongue = patch(this.head,m.pink,0,-.432,.031,.022,.020);
+    this.smile = tube(this.head, curve([[-.064,-.343],[-.047,-.364],[-.024,-.368],[0,-.350],[.024,-.368],[.047,-.364],[.064,-.343]],.014), .0065, material('#654139'), 32);
+    tube(this.head, curve([[0,-.318],[0,-.334],[0,-.350]], .012), .0055, material('#654139'), 8);
   }
 
   buildHeadset() {
@@ -250,16 +246,15 @@ export class Syna3D {
     const band = tube(this.head, arc, .031, m.forest, 48);
     band.scale.z = 2.1; band.position.z = .21;
     const badgeMat = new THREE.MeshBasicMaterial({ map: createHeadphoneBadge(), transparent: true, depthWrite: false, toneMapped: false });
+    const ringMat = new THREE.MeshBasicMaterial({ color: '#5ff0b4', toneMapped: false });
     for (const side of [-1,1]) {
       tube(this.head, [[side*.758,0,.21],[side*.775,-.025,.17],[side*.792,-.055,.11]], .028, m.forest, 12);
-      oval(this.head, m.pupil, [side*.743,-.075,-.005], [.123,.252,.223]);
-      oval(this.head, m.forest, [side*.806,-.075,.005], [.106,.217,.194]);
-      const ring = mesh(this.head, new THREE.TorusGeometry(.158,.010,8,32), m.trim, [side*.899,-.075,.005]); ring.rotation.y = Math.PI/2;
-      const badge = mesh(this.head, new THREE.PlaneGeometry(.19,.27), badgeMat, [side*.919,-.075,.005]);
-      badge.rotation.y = side * Math.PI / 2; badge.castShadow = false;
+      const cup = new THREE.Group(); cup.position.set(side*.79, -.085, .03); cup.rotation.y = -side*.42; this.head.add(cup);
+      oval(cup, m.pupil, [-side*.04,0,0], [.12,.255,.23]);          // soft cushion against the head
+      oval(cup, m.forest, [side*.03,0,0], [.115,.235,.215]);        // outer shell
+      const ring = mesh(cup, new THREE.TorusGeometry(.165,.011,10,40), ringMat, [side*.115,0,0]); ring.rotation.y = Math.PI/2; ring.castShadow = false;
+      const badge = mesh(cup, new THREE.PlaneGeometry(.2,.28), badgeMat, [side*.15,0,0]); badge.rotation.y = side*Math.PI/2; badge.castShadow = false;
     }
-    tube(this.head, [[.78,-.20,.13],[.74,-.34,.33],[.64,-.405,.47],[.52,-.415,.565]], .012, m.forest, 24);
-    oval(this.head, m.forest, [.52,-.415,.565], [.049,.026,.034]);
   }
 
   update(pose, viewAngle = 0) {
@@ -276,10 +271,16 @@ export class Syna3D {
     this.right.upper.rotation.z = pose.rightArm; this.right.elbow.rotation.z = pose.rightElbow;
     this.right.wrist.rotation.z = pose.rightWrist;
     for (const eye of this.eyes) eye.update(pose.blink, pose.gaze);
-    this.openMouth.visible = pose.mouth > .06; this.tongue.visible = pose.mouth > .24;
+    // At rest Syna keeps a small open ":3" smile with a peek of tongue; speech opens it further.
+    const mouth = Math.max(pose.mouth, .2);
+    this.openMouth.visible = true; this.tongue.visible = true;
     this.smile.visible = true;
     // Keep the mouth on the centre line; speech changes openness only.
-    fitFacePatch(this.openMouth.geometry,.15+pose.mouth*.85,0,0,-.357);
-    fitFacePatch(this.tongue.geometry,.3+pose.mouth*.7,0,.016-.018*pose.mouth,-.387);
+    // The opening hangs from the ω upper lip (same width), so it never looks like a moustache.
+    const open = .15 + mouth * .75, tongueOpen = .3 + mouth * .7;
+    fitFacePatch(this.openMouth.geometry, open, 0, 0, -.36);
+    // The tongue rests on the inner lower lip, whatever the opening.
+    const lowerLip = -.36 - .10 * open, tongueY = lowerLip + .022 * tongueOpen * .75;
+    fitFacePatch(this.tongue.geometry, tongueOpen, 0, tongueY + .432, -.432);
   }
 }

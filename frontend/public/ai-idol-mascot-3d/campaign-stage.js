@@ -1,4 +1,4 @@
-import { pilotPose, span, cueAt, mouthAt, talkingMotion, actionPose } from './timeline.js';
+import { pilotPose, span, smooth, cueAt, mouthAt, talkingMotion, actionPose } from './timeline.js';
 
 // Speech window inside the audio. Older manifests have none: speech fills the clip.
 export function speechWindow(manifest) {
@@ -6,6 +6,58 @@ export function speechWindow(manifest) {
   return Number.isFinite(start) && Number.isFinite(end) && end > start
     ? { start, end } : { start: 0, end: manifest.duration };
 }
+
+// Cute talking gestures (all in the frontal plane so paws never pass through the
+// hoodie). Arm signs: leftArm < 0 / rightArm > 0 lift outward; leftElbow < 0 /
+// rightElbow > 0 fold the forearm up. Values are added on top of the rest pose.
+const REST = { leftArm: 0, leftElbow: 0, rightArm: 0, rightElbow: 0, headTilt: 0, both: false };
+const TALK_GESTURES = [
+  REST,
+  { leftArm: -1.35, leftElbow: -1.2, rightArm: 1.35, rightElbow: 1.2, headTilt: 0, both: true },   // paws up by the cheeks
+  { leftArm: 0, leftElbow: 0, rightArm: .95, rightElbow: .70, headTilt: -.06, both: false },         // right paw presents
+  { leftArm: -.95, leftElbow: -.70, rightArm: 0, rightElbow: 0, headTilt: .06, both: false },        // left paw presents
+  { leftArm: 0, leftElbow: 0, rightArm: 1.70, rightElbow: 1.0, headTilt: -.05, both: false },       // right paw up, "nè!"
+  { leftArm: -.80, leftElbow: -.40, rightArm: .80, rightElbow: .40, headTilt: 0, both: true },       // little "ta-da"
+  { leftArm: -1.70, leftElbow: -1.0, rightArm: 0, rightElbow: 0, headTilt: .05, both: false },      // left paw up
+];
+const BEAT = 2.1;
+function hashBeat(n) { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// Deterministic gesture per beat; never the same gesture twice in a row.
+function gestureFor(beat, leftOnly) {
+  const pool = leftOnly ? [0, 3, 6] : TALK_GESTURES.map((_, i) => i);
+  let index = pool[Math.floor(hashBeat(beat) * pool.length)];
+  if (beat > 0 && index !== 0 && index === gestureFor(beat - 1, leftOnly).index) index = pool[(pool.indexOf(index) + 1) % pool.length];
+  return { index, pose: TALK_GESTURES[index] };
+}
+
+/** Flowing, varied paw gestures while Syna talks; blends beat-to-beat without snapping. */
+export function talkGesture(time, cue, weight = 1) {
+  const none = { leftArm: 0, leftElbow: 0, leftWrist: 0, rightArm: 0, rightElbow: 0, rightWrist: 0, headTilt: 0, bounce: 0 };
+  if (!cue || weight <= 0) return none;
+  const action = cue.action || inferTalkAction(cue.text);
+  if (action !== 'talk' && action !== 'explain') return none;
+  // While Syna points at the ingredient board, the right paw is busy: gesture with the left only.
+  const leftOnly = (cue.ingredient ?? -1) >= 0 || action === 'explain';
+  const beat = Math.floor(time / BEAT), local = time - beat * BEAT;
+  const from = gestureFor(beat - 1, leftOnly).pose, to = gestureFor(beat, leftOnly).pose;
+  const blend = smooth(local / .7);
+  const fade = smooth((time - cue.start) / .75) * smooth((cue.end - time) / .75) * weight;
+  const mix = (key) => (from[key] + (to[key] - from[key]) * blend) * fade;
+  // Lively secondary motion: paws wiggle and forearms bob a little, never perfectly in sync.
+  // Each paw only wiggles while it is actually lifted.
+  const wl = Math.min(1, Math.abs(mix('leftArm')) / .5), wr = Math.min(1, Math.abs(mix('rightArm')) / .5);
+  return {
+    leftArm: mix('leftArm') + Math.sin(time * 4.1 + .3) * .05 * wl,
+    leftElbow: mix('leftElbow') + Math.sin(time * 5.3 + 1.1) * .08 * wl,
+    leftWrist: Math.sin(time * 6.2) * .22 * wl,
+    rightArm: mix('rightArm') + Math.sin(time * 3.7 + 2.0) * .05 * wr,
+    rightElbow: mix('rightElbow') + Math.sin(time * 4.9 + .4) * .08 * wr,
+    rightWrist: Math.sin(time * 5.8 + 1.7) * .22 * wr,
+    headTilt: mix('headTilt'),
+    bounce: Math.abs(Math.sin(time * Math.PI / BEAT * 2)) * .012 * fade,
+  };
+}
+function inferTalkAction(text) { return actionPose(0, { start: 0, end: 1, text }).action; }
 
 export function campaignPose(time, manifest, envelope) {
   const mouth = mouthAt(envelope, time, time < manifest.duration);
@@ -15,12 +67,15 @@ export function campaignPose(time, manifest, envelope) {
   const active = cue?.ingredient ?? -1;
   const look = active >= 0 ? span(time, cue.start - .25, Math.min(cue.end + .3, cue.start + 4.5), .65) : 0;
   // Greet through the music lead-in and lower the arm just after the first words.
-  const greet = manifest.greet === false ? 0 : span(time, .15, Math.min(Math.max(3.3, speech.start + .8), manifest.duration), .7);
+  const greetEnd = manifest.greet === false ? 0 : Math.min(Math.max(3.3, speech.start + .8), manifest.duration);
+  const greet = manifest.greet === false ? 0 : span(time, .15, greetEnd, .7);
   // After the last word, wave goodbye until the clip ends (span stays up past the end).
   const farewell = speech.end < manifest.duration - .5 ? span(time, speech.end + .15, manifest.duration + 1, .6) : 0;
   const wave = Math.max(greet, farewell);
   const talking = talkingMotion(time, mouth);
   const action = actionPose(time, cue, mouth);
+  // Talking gestures start after the greeting arm has settled, and yield to waves.
+  const gesture = talkGesture(time, cue, smooth((time - greetEnd - 1.2) / .6) * (1 - wave));
   // Absolute audio time, not a looping 15-second greeting. Arms share the existing skin rig.
   let blink = 1;
   for (let n = 0, start = 1.7; start < manifest.duration; n++, start += 2.8 + ((n * 17) % 13) / 10) {
@@ -28,18 +83,18 @@ export function campaignPose(time, manifest, envelope) {
   }
   return { ...pose, time, blink, active, board: true, highlight: active >= 0,
     headYaw: look * .55 + action.headYaw, torsoYaw: look * .14, gaze: look * .03 + action.gaze,
-    headTilt: Math.sin(time * 1.1) * .025 + action.headTilt, headNod: talking.headNod,
-    torsoRoll: talking.torsoRoll, breath: Math.sin(time * 1.6) * .014,
+    headTilt: Math.sin(time * 1.1) * .025 + action.headTilt + gesture.headTilt, headNod: talking.headNod,
+    torsoRoll: talking.torsoRoll, breath: Math.sin(time * 1.6) * .014 + gesture.bounce,
     leaf: Math.sin(time * 1.4 - .3) * .055, tail: Math.sin(time * 1.2 - .5) * .13,
     earSway: talking.earSway,
-    leftArm: -.1 - wave * (2.05 + Math.sin(time * 5.2) * .1) + talking.leftArm + action.leftArm,
-    leftElbow: wave * .24 + talking.leftElbow + action.leftElbow,
-    leftWrist: wave * Math.sin(time * 5.2 - .4) * .19 + talking.leftWrist + action.leftWrist,
+    leftArm: -.1 - wave * (2.05 + Math.sin(time * 5.2) * .1) + talking.leftArm + action.leftArm + gesture.leftArm,
+    leftElbow: wave * .24 + talking.leftElbow + action.leftElbow + gesture.leftElbow,
+    leftWrist: wave * Math.sin(time * 5.2 - .4) * .19 + talking.leftWrist + action.leftWrist + gesture.leftWrist,
     // No product-specific lift/point animation. The product card is a
     // reusable canvas layer; only the ingredient-board cue changes the pose.
-    rightArm: .1 + look * 1.22 + talking.rightArm + action.rightArm,
-    rightElbow: -look * .17 + talking.rightElbow + action.rightElbow,
-    rightWrist: -look * .13 + talking.rightWrist + action.rightWrist,
+    rightArm: .1 + look * 1.22 + talking.rightArm + action.rightArm + gesture.rightArm,
+    rightElbow: -look * .17 + talking.rightElbow + action.rightElbow + gesture.rightElbow,
+    rightWrist: -look * .13 + talking.rightWrist + action.rightWrist + gesture.rightWrist,
     leftFoot: talking.leftFoot, rightFoot: talking.rightFoot,
     point: action.point,
     pointTarget: action.pointTarget, action: action.action,
