@@ -199,8 +199,9 @@ check('A15 negative price keeps the previous gia_uu_dai_live', ($db->phien_live-
 $m->ghimSanPham(1, 'P1', 1500.0, 15, 7);
 check('A16 positive price overwrites', ($db->phien_live->docs[0]['gia_uu_dai_live'] ?? null) === 1500.0);
 $m->ghimSanPham(1, 'P1', 1500.0, 0, 7);
-$dur0 = strtotime($db->phien_live->docs[0]['deal_ket_thuc']) - strtotime($db->phien_live->docs[0]['deal_bat_dau']);
-check('A17 duration 0 is clamped to at least 1 minute', abs($dur0 - 60) <= 2, (string)$dur0);
+check('A17 duration 0 creates an unlimited pin window',
+    $db->phien_live->docs[0]['deal_ket_thuc'] === ''
+    && (int)$db->phien_live->docs[0]['pin_duration_minutes'] === 0);
 
 // Replace semantic: exactly one pinned product.
 [$m, $db] = freshModel([liveDoc(), liveDoc(['ma_phong' => 2])]);
@@ -385,13 +386,14 @@ check('F11 touchStream cannot revive a replay_ready session', $m->findById('c')[
 check('F11b completed recording cannot be overwritten', !$m->saveRecording('c', '/u/replacement.webm', 'video/webm', 10));
 $db->phien_live->docs[2]['recording_status'] = 'processing';
 $db->phien_live->docs[2]['trang_thai'] = 'ended';
-check('F12 saveRecording moves ended -> replay_ready', $m->saveRecording('c', '/u/x.webm', 'video/webm', 10) && $m->findById('c')['status'] === 'replay_ready');
-check('F13 legacy ketthuc without a recording resolves to ended', (new PhienLive((function () { $d = new FakeDb(); $d->phien_live->docs = [liveDoc(['ma_phong' => 'k', 'trang_thai' => 'ketthuc'])]; return $d; })()))->findById('k')['status'] === 'ended');
+check('F12 unverified recording cannot be promoted', !$m->saveRecording('c', '/u/x.webm', 'video/webm', 10));
+check('F13 verified recording moves ended -> replay_ready', $m->saveRecording('c', '/u/x.webm', 'video/webm', 10, ['verified' => true]) && $m->findById('c')['status'] === 'replay_ready');
+check('F14 legacy ketthuc without a recording resolves to ended', (new PhienLive((function () { $d = new FakeDb(); $d->phien_live->docs = [liveDoc(['ma_phong' => 'k', 'trang_thai' => 'ketthuc'])]; return $d; })()))->findById('k')['status'] === 'ended');
 $m->updateStreamState('a', 'live');
-check('F14 updateStreamState(live) makes the session live', $m->findById('a')['status'] === 'live');
+check('F15 updateStreamState(live) makes the session live', $m->findById('a')['status'] === 'live');
 $m->updateStreamState('a', 'ended');
-check('F15 updateStreamState(ended) -> ended', $m->findById('a')['status'] === 'ended');
-check('F16 updateStreamState with a bogus state is rejected', $m->updateStreamState('a', 'bogus') === false);
+check('F16 updateStreamState(ended) -> ended', $m->findById('a')['status'] === 'ended');
+check('F17 updateStreamState with a bogus state is rejected', $m->updateStreamState('a', 'bogus') === false);
 // Model-level defense in depth (the controller returns HTTP 409 and the e2e covers it).
 $m->updateStreamState('a', 'live');
 if ($m->findById('a')['status'] === 'live') {
@@ -401,8 +403,9 @@ if ($m->findById('a')['status'] === 'live') {
 // ------------------------------------------------------------------ G. CRUD basics
 [$m, $db] = freshModel();
 check('G1 taoPhienLive rejects empty title', $m->taoPhienLive(['tieu_de' => '', 'streamer' => 'S']) === false);
-check('G2 taoPhienLive rejects empty streamer', $m->taoPhienLive(['tieu_de' => 'T', 'streamer' => '  ']) === false);
-check('G3 taoPhienLive creates a session', $m->taoPhienLive(['tieu_de' => 'E2E', 'streamer' => 'Host', 'ma_san_pham_ghim' => 'A', 'gia_uu_dai_live' => 5000, 'so_luong_kho_deal' => 3]) === true);
+check('G2 taoPhienLive supplies the default streamer for blank input', ($defaultId = $m->taoPhienLive(['tieu_de' => 'T', 'streamer' => '  '])) !== false && $m->findById($defaultId)['streamer'] === 'SkinSyntax Host');
+[$m, $db] = freshModel();
+check('G3 taoPhienLive creates a session and returns its id', ($createdId = $m->taoPhienLive(['tieu_de' => 'E2E', 'streamer' => 'Host', 'ma_san_pham_ghim' => 'A', 'gia_uu_dai_live' => 5000, 'so_luong_kho_deal' => 3])) !== false && is_string($createdId) && $createdId !== '');
 $m->taoPhienLive(['tieu_de' => 'E2E 2', 'streamer' => 'Host', 'trang_thai' => 'live']);
 check('G4 ma_phong auto-increments', array_column($db->phien_live->docs, 'ma_phong') === [1, 2], json_encode(array_column($db->phien_live->docs, 'ma_phong')));
 check('G5 new session starts scheduled; requesting live is downgraded to ready', $m->findById(1)['status'] === 'scheduled' && $m->findById(2)['status'] === 'ready');

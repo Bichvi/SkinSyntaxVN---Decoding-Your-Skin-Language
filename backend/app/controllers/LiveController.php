@@ -6,6 +6,7 @@ require_once __DIR__ . '/../services/LiveSyna.php';
 require_once __DIR__ . '/../services/SupportKnowledge.php';
 require_once __DIR__ . '/../models/PhienLive.php';
 require_once __DIR__ . '/../services/CacheService.php';
+require_once __DIR__ . '/../services/LiveKitEgressService.php';
 
 class LiveController {
     private const VIEWER_ACTIVE_SECONDS = 45;
@@ -16,7 +17,158 @@ class LiveController {
         $this->pdo = $pdo;
     }
 
+    private function recordingPlaybackSecret(): string {
+        $secret = function_exists('ss_env') ? ss_env('LIVE_RECORDING_PLAYBACK_SECRET', '') : (getenv('LIVE_RECORDING_PLAYBACK_SECRET') ?: '');
+        if (trim((string)$secret) === '') {
+            $secret = function_exists('ss_env') ? ss_env('LIVEKIT_API_SECRET', '') : (getenv('LIVEKIT_API_SECRET') ?: '');
+        }
+        return trim((string)$secret);
+    }
+
+    private function recordingPlaybackUrl(string $liveId): string {
+        $expires = time() + 3600;
+        $signature = hash_hmac('sha256', $liveId . '|' . $expires, $this->recordingPlaybackSecret());
+        return rtrim((string)BASE_URL, '/') . '/index.php?r=api_live_recording&id=' . rawurlencode($liveId)
+            . '&exp=' . $expires . '&sig=' . rawurlencode($signature);
+    }
+
+    private function validRecordingPlaybackSignature(string $liveId): bool {
+        $expires = (int)($_GET['exp'] ?? 0);
+        $signature = trim((string)($_GET['sig'] ?? ''));
+        $secret = $this->recordingPlaybackSecret();
+        if ($liveId === '' || $expires < time() || $signature === '' || $secret === '') return false;
+        return hash_equals(hash_hmac('sha256', $liveId . '|' . $expires, $secret), $signature);
+    }
+
+    private function localRecordingPath(array $live): ?string {
+        $relative = trim((string)($live['recording_file_path'] ?? ''));
+        if ($relative === '') {
+            $raw = trim((string)($live['url_ban_ghi'] ?? ''));
+            $path = parse_url($raw, PHP_URL_PATH);
+            if (is_string($path) && preg_match('~^/uploads/live_recordings/([A-Za-z0-9_-]+\.(?:webm|mp4|ogv))$~i', $path, $m)) {
+                $relative = 'uploads/live_recordings/' . $m[1];
+            }
+        }
+        if (!preg_match('~^uploads/live_recordings/([A-Za-z0-9_-]+\.(?:webm|mp4|ogv))$~i', str_replace('\\', '/', $relative), $m)) return null;
+        $root = rtrim((string)($_SERVER['DOCUMENT_ROOT'] ?? ''), '/\\');
+        if ($root === '') return null;
+        $path = $root . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'live_recordings' . DIRECTORY_SEPARATOR . $m[1];
+        $realRoot = realpath($root . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'live_recordings');
+        $realPath = is_file($path) ? realpath($path) : false;
+        if ($realRoot === false || $realPath === false || !str_starts_with(strtolower($realPath), strtolower($realRoot . DIRECTORY_SEPARATOR))) return null;
+        return $realPath;
+    }
+
+    private function localRecordingMetadata(array $live): array {
+        $path = $this->localRecordingPath($live);
+        if ($path === null || !is_file($path)) return ['ok' => false, 'status' => 'missing', 'path' => $path];
+        $size = (int)@filesize($path);
+        $mime = function_exists('mime_content_type') ? strtolower((string)@mime_content_type($path)) : '';
+        if ($size < 1 || !in_array($mime, ['video/mp4', 'video/webm', 'video/ogg'], true)) {
+            return ['ok' => false, 'status' => 'invalid', 'path' => $path, 'size' => $size, 'mime' => $mime];
+        }
+        return ['ok' => true, 'status' => 'complete', 'path' => $path, 'size' => $size, 'mime' => $mime];
+    }
+
+    private function recordingObjectKey(array $live): ?string {
+        $key = trim((string)($live['recording_file_path'] ?? ''));
+        $id = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string)($live['id'] ?? $live['ma_phong'] ?? ''));
+        // Older Antigravity records stored only a public R2 URL. Treat its
+        // path as a candidate key, never as proof of availability; the
+        // authenticated HEAD check below remains mandatory.
+        if ($key === '') {
+            $legacyPath = parse_url(trim((string)($live['url_ban_ghi'] ?? '')), PHP_URL_PATH);
+            $key = is_string($legacyPath) ? ltrim($legacyPath, '/') : '';
+        }
+        if ($key === '' || $id === '' || !preg_match('~^live-recordings/live_' . preg_quote(trim((string)$id, '_'), '~') . '_[A-Za-z0-9_-]+\.mp4$~', $key)) return null;
+        return $key;
+    }
+
+    private function recordingAvailability(PhienLive $model, array $live): array {
+        if (($live['recording_status'] ?? '') !== 'replay_ready') return ['available' => false, 'live' => $live];
+        if (($live['recording_storage'] ?? '') === 'local' || $this->localRecordingPath($live) !== null) {
+            $meta = $this->localRecordingMetadata($live);
+            return ['available' => !empty($meta['ok']), 'live' => $live, 'meta' => $meta];
+        }
+        $key = $this->recordingObjectKey($live);
+        if ($key === null) return ['available' => false, 'live' => $live];
+        $service = new LiveKitEgressService();
+        $meta = $service->verifyObject($key);
+        return ['available' => !empty($meta['ok']), 'live' => $live, 'meta' => $meta];
+    }
+
+    /**
+     * Reconcile a recording without trusting StopEgress or a guessed URL.
+     * A replay URL is written only after local file checks or an authenticated
+     * R2 HEAD confirms a non-empty video object.
+     */
+    private function syncLiveRecording(PhienLive $model, array $live, ?array $eventInfo = null): array {
+        if (($live['recording_status'] ?? '') === 'replay_ready') return $this->recordingAvailability($model, $live);
+        $service = new LiveKitEgressService();
+        $status = $eventInfo ? $service->normalizeEgressStatus($eventInfo) : '';
+        if (in_array($status, ['EGRESS_FAILED', 'EGRESS_ABORTED', 'EGRESS_LIMIT_REACHED'], true)) {
+            $message = trim((string)($eventInfo['error'] ?? 'Egress không hoàn tất bản ghi.'));
+            $model->failRecording($live['id'], $message !== '' ? $message : 'Egress không hoàn tất bản ghi.');
+            return ['available' => false, 'status' => 'failed', 'live' => $model->findById($live['id']) ?? $live];
+        }
+        if ($eventInfo !== null && $status !== 'EGRESS_COMPLETE') {
+            return ['available' => false, 'status' => 'pending', 'live' => $live, 'message' => 'Egress chưa báo hoàn tất.'];
+        }
+        // A bare object HEAD is the localhost fallback, not proof that an
+        // active recording has ended. Wait until the live session is ended;
+        // a signed egress_ended event may bypass this guard because it is the
+        // authoritative completion signal.
+        $liveStatus = strtolower((string)($live['status'] ?? $live['trang_thai'] ?? ''));
+        if ($eventInfo === null && in_array($liveStatus, ['live', 'ready', 'scheduled'], true)) {
+            return ['available' => false, 'status' => 'pending', 'live' => $live, 'message' => 'Phiên vẫn đang phát; chờ Egress hoàn tất.'];
+        }
+
+        $storage = strtolower(trim((string)($live['recording_storage'] ?? '')));
+        if ($storage === 'local' || $this->localRecordingPath($live) !== null) {
+            $meta = $this->localRecordingMetadata($live);
+            if (!empty($meta['ok'])) {
+                $saved = $model->saveRecording($live['id'], $this->recordingPlaybackUrl((string)$live['id']), (string)$meta['mime'], (int)$meta['size'], [
+                    'verified' => true,
+                    'recording_file_path' => (string)($live['recording_file_path'] ?? ''),
+                    'recording_storage' => 'local',
+                    'recording_ended_at' => time()
+                ]);
+                $fresh = $model->findById($live['id']) ?? $live;
+                return ['available' => $saved || ($fresh['recording_status'] ?? '') === 'replay_ready', 'status' => 'complete', 'live' => $fresh, 'meta' => $meta];
+            }
+            return ['available' => false, 'status' => $meta['status'] ?? 'pending', 'live' => $live, 'meta' => $meta];
+        }
+
+        $key = $this->recordingObjectKey($live);
+        if ($key === null || !$service->isStorageConfigured()) {
+            return ['available' => false, 'status' => 'pending', 'live' => $live, 'message' => 'Chưa có đường dẫn R2 hoặc cấu hình R2 chưa đầy đủ.'];
+        }
+        $meta = $service->verifyObject($key);
+        if (!empty($meta['ok'])) {
+            $fileMeta = $eventInfo ? $service->egressFileMetadata($eventInfo) : [];
+            $saved = $model->saveRecording($live['id'], $this->recordingPlaybackUrl((string)$live['id']), (string)$meta['mime'], (int)$meta['size'], [
+                'verified' => true,
+                'recording_file_path' => $key,
+                'recording_storage' => 'r2',
+                'recording_duration' => (int)($fileMeta['duration'] ?? 0),
+                'recording_started_at' => (int)($fileMeta['started_at'] ?? 0),
+                'recording_ended_at' => (int)($fileMeta['ended_at'] ?? 0),
+                'recording_etag' => (string)($meta['etag'] ?? ''),
+                'egress_id' => (string)($live['egress_id'] ?? ($eventInfo['egress_id'] ?? $eventInfo['egressId'] ?? ''))
+            ]);
+            $fresh = $model->findById($live['id']) ?? $live;
+            return ['available' => $saved || ($fresh['recording_status'] ?? '') === 'replay_ready', 'status' => 'complete', 'live' => $fresh, 'meta' => $meta];
+        }
+        if (!empty($meta['message'])) $model->setRecordingError($live['id'], (string)$meta['message']);
+        return ['available' => false, 'status' => $meta['status'] ?? 'pending', 'live' => $model->findById($live['id']) ?? $live, 'meta' => $meta];
+    }
+
     public function index(): void {
+        if (!empty($_GET['studio']) && in_array(current_role(), ['admin', 'nhanvien'], true)) {
+            $this->studio();
+            return;
+        }
+
         global $db;
         $mongoDb = $db ?? $this->pdo;
         
@@ -61,9 +213,20 @@ class LiveController {
                 $p = $productsById[(string)$live['ma_san_pham_ghim']] ?? null;
             }
             $thumbImg = !empty($p['link_hinh_anh']) ? resolve_image_url((string)$p['link_hinh_anh']) : '';
-            
+
             $roomId = (string)($live['ma_phong'] ?? $live['id'] ?? ($idx + 1));
             $st = (string)($live['status'] ?? 'scheduled');
+
+            $recordingAvailable = false;
+            if ($roomId === $selectedId) {
+                if (in_array(($live['recording_status'] ?? ''), ['recording', 'processing'], true)) {
+                    $reconciled = $this->syncLiveRecording($phienLiveModel, $live);
+                    $live = $reconciled['live'] ?? $live;
+                }
+                $recordingCheck = $this->recordingAvailability($phienLiveModel, $live);
+                $recordingAvailable = !empty($recordingCheck['available']);
+                $st = (string)($live['status'] ?? $st);
+            }
             
             // EXACT REAL-TIME VIEWER COUNT (0 or 1+ from active session heartbeat)
             $realViewers = 0;
@@ -71,7 +234,7 @@ class LiveController {
                 $realViewers = (int)($activeViewerMap[$roomId] ?? 0);
             }
 
-            $urlBanGhi = (string)($live['url_ban_ghi'] ?? '');
+            $urlBanGhi = $recordingAvailable ? $this->recordingPlaybackUrl($roomId) : '';
 
             $totalViews = (int)($live['luot_xem'] ?? 0);
             $peakViewers = (int)($live['mat_do_nguoi_xem_dinh'] ?? 0);
@@ -96,6 +259,8 @@ class LiveController {
                 'gia_uu_dai_live' => (float)($live['gia_uu_dai_live'] ?? ($p['gia_ban'] ?? 0)),
                 'server_livekit_url' => (string)($live['server_livekit_url'] ?? (defined('LIVEKIT_URL') ? LIVEKIT_URL : '')),
                 'url_ban_ghi' => $urlBanGhi,
+                'recording_available' => $recordingAvailable,
+                'recording_status' => (string)($live['recording_status'] ?? 'not_started'),
                 'tom_tat_phien_live' => (string)($live['tom_tat_phien_live'] ?? ''),
                 'luot_xem' => $totalViews,
                 'mat_do_nguoi_xem_dinh' => $peakViewers,
@@ -437,7 +602,10 @@ class LiveController {
             exit;
         }
 
-        $roomName = 'skinsyntax_room_' . ($liveDoc['ma_phong'] ?? $liveDoc['id'] ?? $liveId);
+        // Every browser, server-side track probe and Egress call must address
+        // the same canonical room. `ma_phong` is an admin display number and
+        // can differ from the document id after imports.
+        $roomName = 'skinsyntax_room_' . (string)($liveDoc['id'] ?? $liveId);
         $status = (string)($liveDoc['status'] ?? 'scheduled');
         $audience = $this->liveAudience($liveDoc);
         $isHostOrAdmin = $audience['publish'] && ($_GET['studio'] ?? '') === '1';
@@ -473,6 +641,7 @@ class LiveController {
         $ttlSeconds = 3600; // TTL ngắn: 1 giờ
         $metadata = $canPublish ? hash_hmac('sha256', session_id(), $apiSecret) : '';
         $token = $this->buildLivekitJwtToken($apiKey, $apiSecret, $roomName, $identity, $displayName, $canPublish, $ttlSeconds, false, $metadata);
+        error_log('[SkinSyntax Live] token_issued live_id=' . (string)$liveDoc['id'] . ' role=' . ($canPublish ? 'publisher' : 'viewer') . ' status=' . $status);
 
         echo json_encode([
             'ok' => true,
@@ -499,14 +668,29 @@ class LiveController {
         header('Content-Type: application/json; charset=utf-8');
 
         $q = trim((string)($_GET['q'] ?? $_POST['q'] ?? ''));
+        $liveId = trim((string)($_GET['live_id'] ?? $_POST['live_id'] ?? ''));
+        if (!in_array(current_role(), ['admin', 'nhanvien'], true) || $liveId === '') {
+            $this->liveJson(['ok' => false, 'message' => 'Bạn không có quyền tìm sản phẩm cho phiên này.'], 403);
+            return;
+        }
 
         global $db;
         $mongoDb = $db ?? $this->pdo;
         require_once __DIR__ . '/../models/SanPham.php';
+        require_once __DIR__ . '/../models/PhienLive.php';
+        $live = (new PhienLive($mongoDb))->findById($liveId);
+        if (!$live || !$this->liveAudience($live)['pin']) {
+            $this->liveJson(['ok' => false, 'message' => 'Bạn chưa được phân công quản lý sản phẩm của phiên này.'], 403);
+            return;
+        }
+        if (mb_strlen($q) < 2) {
+            $this->liveJson(['ok' => true, 'query' => $q, 'products' => [], 'items' => []]);
+            return;
+        }
         $spModel = new SanPham($mongoDb);
 
-        $results = $spModel->paginate(1, 30, $q);
-        $items = $results['items'] ?? [];
+        $results = $spModel->paginate(1, 20, $q);
+        $items = array_slice((array)($results['items'] ?? []), 0, 20);
 
         $out = [];
         foreach ($items as $p) {
@@ -559,9 +743,11 @@ class LiveController {
                 'roomJoin' => !$roomAdmin,
                 'canPublish' => $canPublish,
                 'canSubscribe' => true,
-                'canPublishData' => false,
+                'canPublishData' => true,
                 'canUpdateOwnMetadata' => false,
                 'roomAdmin' => $roomAdmin,
+                'roomRecord' => $roomAdmin,
+                'roomList' => $roomAdmin,
             ]
         ]);
 
@@ -613,9 +799,14 @@ class LiveController {
                 echo json_encode(['ok' => false, 'message' => 'Không xác minh được phiên publisher LiveKit.'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
-            if ($state === 'live' && (!in_array($source, ['camera', 'video', 'ai_video', 'screen'], true) || !$this->hasLiveVideoTrack($live))) {
+            if ($state === 'live') {
+                $sourceValid = in_array($source, ['camera', 'video', 'ai_video', 'screen'], true);
+                $videoConfirmed = $sourceValid && $this->hasLiveVideoTrack($live);
+                error_log('[SkinSyntax Live] publish_confirm live_id=' . (string)$live['id'] . ' source=' . ($source !== '' ? $source : 'missing') . ' video_track=' . ($videoConfirmed ? '1' : '0'));
+                if (!$videoConfirmed) {
                 $this->liveJson(['ok' => false, 'message' => 'LiveKit chưa xác nhận luồng hình ảnh đang phát.'], 409);
                 return;
+                }
             }
         }
         if (in_array(($live['status'] ?? ''), ['ended', 'replay_ready', 'recording_failed'], true) && $state !== 'offline') {
@@ -635,8 +826,47 @@ class LiveController {
         }
 
         $ok = $model->updateStreamState($live['id'], $state, $source);
-        if ($ok && $state === 'ended' && (string)($_POST['no_recording'] ?? '') === '1') {
-            $model->failRecording($live['id'], 'Phiên phát không có bản ghi video.');
+        if ($ok && $state === 'live') {
+            // Trigger LiveKit Egress if configured and requested
+            try {
+                require_once __DIR__ . '/../services/LiveKitEgressService.php';
+                $egress = new LiveKitEgressService();
+                if ($egress->isStorageConfigured() && !empty($live['tu_dong_recording']) && empty($live['egress_id'])) {
+                    $room = 'skinsyntax_room_' . $live['id'];
+                    $egressRes = $egress->startRoomRecording($room, (string)$live['id']);
+                    if (!empty($egressRes['ok']) && !empty($egressRes['egress_id'])) {
+                        $marked = $model->markRecordingStarted($live['id'], (string)$egressRes['egress_id'], (string)$egressRes['file_path'], 'r2');
+                        if ($marked) {
+                            error_log('[SkinSyntax Live] egress_started live_id=' . (string)$live['id'] . ' storage=r2');
+                        } else {
+                            $model->setRecordingError($live['id'], 'Không lưu được thông tin Egress vào phiên live.');
+                            $cleanup = $egress->stopRecording((string)$egressRes['egress_id']);
+                            error_log('[SkinSyntax Live] egress_metadata_save_failed live_id=' . (string)$live['id'] . ' cleanup=' . (!empty($cleanup['ok']) ? '1' : '0'));
+                        }
+                    } elseif (!empty($egressRes['message'])) {
+                        $model->setRecordingError($live['id'], (string)$egressRes['message']);
+                    }
+                }
+            } catch (Throwable $e) {
+                $model->setRecordingError($live['id'], 'Không khởi động được ghi hình LiveKit.');
+                error_log('Auto LiveKit Egress failed: ' . $e->getMessage());
+            }
+        } elseif ($ok && $state === 'ended') {
+            // Stop LiveKit Egress if active
+            if (!empty($live['egress_id'])) {
+                try {
+                    require_once __DIR__ . '/../services/LiveKitEgressService.php';
+                    $egress = new LiveKitEgressService();
+                    $stop = $egress->stopRecording((string)$live['egress_id']);
+                    error_log('[SkinSyntax Live] egress_stop_requested live_id=' . (string)$live['id'] . ' ok=' . (!empty($stop['ok']) ? '1' : '0'));
+                    if (empty($stop['ok']) && !empty($stop['message'])) $model->setRecordingError($live['id'], (string)$stop['message']);
+                } catch (Throwable $e) {
+                    $model->setRecordingError($live['id'], 'Không thể gửi lệnh dừng ghi hình LiveKit.');
+                }
+            }
+            if ((string)($_POST['no_recording'] ?? '') === '1' && empty($live['egress_id'])) {
+                $model->failRecording($live['id'], 'Phiên phát không có bản ghi video.');
+            }
         }
         echo json_encode(['ok' => $ok, 'live_id' => $liveId, 'state' => $state], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
@@ -678,20 +908,32 @@ class LiveController {
         $room = 'skinsyntax_room_' . $live['id'];
         $identity = 'publisher_' . substr(hash('sha256', $room), 0, 24);
         $token = $this->buildLivekitJwtToken($apiKey, $secret, $room, 'live-room-check', '', false, 30, true);
-        $ch = curl_init(rtrim($url, '/') . '/twirp/livekit.RoomService/GetParticipant');
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 4, CURLOPT_CONNECTTIMEOUT => 2,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer ' . $token],
-            CURLOPT_POSTFIELDS => json_encode(['room' => $room, 'identity' => $identity]),
-        ]);
-        $body = curl_exec($ch);
-        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        if ($status !== 200 || !is_string($body)) return false;
-        $participant = json_decode($body, true);
-        if (!hash_equals(hash_hmac('sha256', session_id(), $secret), (string)($participant['metadata'] ?? ''))) return false;
-        foreach (($participant['tracks'] ?? []) as $track) {
-            if (in_array(($track['type'] ?? null), ['VIDEO', 1], true) && empty($track['muted'])) return true;
+
+        // Retry loop: up to 3 attempts with 400ms delay to accommodate WebRTC track publication negotiation
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            $ch = curl_init(rtrim($url, '/') . '/twirp/livekit.RoomService/GetParticipant');
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 4, CURLOPT_CONNECTTIMEOUT => 2,
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer ' . $token],
+                CURLOPT_POSTFIELDS => json_encode(['room' => $room, 'identity' => $identity]),
+            ]);
+            $body = curl_exec($ch);
+            $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            error_log('[SkinSyntax Live] track_probe live_id=' . (string)$live['id'] . ' attempt=' . $attempt . ' http=' . $status);
+            if ($status === 200 && is_string($body)) {
+                $participant = json_decode($body, true);
+                if (hash_equals(hash_hmac('sha256', session_id(), $secret), (string)($participant['metadata'] ?? ''))) {
+                    $trackCount = is_array($participant['tracks'] ?? null) ? count($participant['tracks']) : 0;
+                    error_log('[SkinSyntax Live] track_probe_result live_id=' . (string)$live['id'] . ' tracks=' . $trackCount);
+                    foreach (($participant['tracks'] ?? []) as $track) {
+                        if (in_array(($track['type'] ?? null), ['VIDEO', 1], true) && empty($track['muted'])) return true;
+                    }
+                }
+            }
+            if ($attempt < 3) {
+                usleep(400000);
+            }
         }
         return false;
     }
@@ -727,6 +969,24 @@ class LiveController {
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: private, no-store');
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    private function publicLiveChat(array $message): array {
+        return [
+            'id' => (string)($message['id'] ?? $message['_id'] ?? ''),
+            'client_message_id' => (string)($message['client_message_id'] ?? ''),
+            'sender_id' => (string)($message['sender_id'] ?? ''),
+            'sender_type' => (string)($message['sender_type'] ?? (!empty($message['is_ai']) ? 'ai' : 'customer')),
+            'sender_name' => (string)($message['sender_name'] ?? 'Khách hàng'),
+            'sender_avatar' => (string)($message['sender_avatar'] ?? ''),
+            'message' => (string)($message['message'] ?? ''),
+            'is_ai' => !empty($message['is_ai']),
+            'is_question' => !empty($message['is_question']),
+            'is_pinned' => !empty($message['is_pinned']),
+            'reply_to' => (string)($message['reply_to'] ?? ''),
+            'created_at' => (string)($message['created_at'] ?? ''),
+            'ts' => (int)($message['ts'] ?? $message['timestamp_ms'] ?? 0),
+        ];
     }
 
     private function livePost(): bool {
@@ -765,7 +1025,7 @@ class LiveController {
         $live = $model->findById(trim((string)($_POST['room_id'] ?? '')));
         $message = trim((string)($_POST['message'] ?? ''));
         $nonce = (string)($_POST['client_message_id'] ?? '');
-        if (!$live || $live['status'] !== 'live') {
+        if (!$live || (!in_array($live['status'], ['live', 'ready'], true) && !in_array(current_role(), ['admin', 'nhanvien'], true))) {
             $this->liveJson(['ok' => false, 'message' => 'Phiên này chưa phát hoặc đã kết thúc.'], 409);
             return;
         }
@@ -775,10 +1035,54 @@ class LiveController {
         }
         $room = $live['id'];
         $sender = $this->liveAudience($live);
+        if ($sender['type'] === 'guest' && empty($live['cho_phep_guest_chat'])) {
+            $this->liveJson(['ok' => false, 'message' => 'Phiên này chưa mở trò chuyện cho khách.'], 403);
+            return;
+        }
         $question = LiveSyna::question($message);
         $aiStatus = $question === null ? 'none' : (!$live['bat_ai_cohost'] ? 'disabled' : 'pending');
+
+        $user = current_user() ?? [];
+        if ($sender['type'] === 'guest') {
+            $rawNick = trim((string)($_POST['guest_nickname'] ?? ''));
+            if ($rawNick !== '' && !preg_match('/(admin|staff|quản trị|nhân viên|streamer|syna)/iu', $rawNick)) {
+                $name = mb_substr(htmlspecialchars($rawNick, ENT_QUOTES, 'UTF-8'), 0, 30);
+            } else {
+                $name = 'Khách vãng lai';
+            }
+        } else {
+            $name = (string)($user['ho_ten'] ?? $user['ten'] ?? 'Thành viên SkinSyntax');
+        }
+        $avatar = $sender['type'] === 'guest' ? '' : trim((string)($user['avatar'] ?? $user['hinh_anh'] ?? $user['link_hinh_anh'] ?? ''));
+
+        $id = 'chat-' . hash('sha256', $room . ':' . $sender['id'] . ':' . $nonce);
+
+        // Requirement IX.B: When user only types @syna, answer immediately with preset greeting (zero AI token cost)
         if ($question === '') {
-            $this->liveJson(['ok' => false, 'ai_status' => 'empty', 'message' => 'Hãy viết câu hỏi sau @syna.'], 422);
+            $userDoc = [
+                '_id' => $id, 'room_id' => $room, 'sender_id' => $sender['id'], 'sender_type' => $sender['type'],
+                'sender_name' => mb_substr($name, 0, 40), 'message' => $message, 'client_message_id' => $nonce,
+                'sender_avatar' => $avatar, 'is_question' => true, 'reply_to' => (string)($_POST['reply_to'] ?? ''),
+            ];
+            $saved = $model->saveChat($userDoc);
+
+            $synaGreeting = 'Tui đây, tui đã sẵn sàng để trả lời câu hỏi của bạn! Bạn muốn hỏi gì nào? 💚';
+            $synaDoc = [
+                '_id' => 'syna-' . substr($id, 5), 'room_id' => $room, 'sender_id' => 'syna',
+                'sender_type' => 'ai', 'sender_name' => 'SYNA',
+                'message' => $synaGreeting,
+                'is_ai' => true, 'reply_to' => $id,
+            ];
+            $savedSyna = $model->saveChat($synaDoc);
+
+            $this->liveJson([
+                'ok' => true,
+                'id' => (string)($saved['_id'] ?? $id),
+                'ai_status' => 'canned_greeting',
+                'syna_reply' => $synaGreeting,
+                'chat' => $saved ? $this->publicLiveChat($saved) : null,
+                'syna_chat' => $savedSyna ? $this->publicLiveChat($savedSyna) : null,
+            ]);
             return;
         }
         try {
@@ -806,7 +1110,7 @@ class LiveController {
                 $document = [
                     '_id' => $id, 'room_id' => $room, 'sender_id' => $sender['id'], 'sender_type' => $sender['type'],
                     'sender_name' => mb_substr($name, 0, 40), 'message' => $message, 'client_message_id' => $nonce,
-                    'is_question' => $question !== null || str_contains($message, '?'), 'reply_to' => $replyTo,
+                    'sender_avatar' => $avatar, 'is_question' => $question !== null || str_contains($message, '?'), 'reply_to' => $replyTo,
                 ];
                 if ($aiStatus === 'pending') {
                     $document += [
@@ -820,6 +1124,7 @@ class LiveController {
                 $_SESSION[$rateKey] = [...$recent, time()];
             }
             $this->liveJson(['ok' => true, 'id' => (string)$saved['_id'],
+                'chat' => $this->publicLiveChat($saved),
                 'ai_status' => empty($saved['ai_pending']) && $aiStatus === 'pending' ? 'none' : $aiStatus]);
         } catch (Throwable $e) {
             error_log('Live chat persistence failed: ' . get_class($e));
@@ -1036,7 +1341,9 @@ class LiveController {
                     return;
                 }
                 $price = $price ?: (float)($product['gia_ban'] ?? 0);
-                $ok = $action === 'product_pin' ? $model->ghimSanPham($live['id'], $id, $price, 15, $limit)
+                $durationRaw = trim((string)($_POST['duration_minutes'] ?? '15'));
+                $duration = $durationRaw === '0' ? 0 : min(240, max(5, (int)$durationRaw));
+                $ok = $action === 'product_pin' ? $model->ghimSanPham($live['id'], $id, $price, $duration, $limit)
                     : $model->themDealSanPham($live['id'], [
                         'ma_san_pham' => $id, 'so_luong_kho_deal' => $limit, 'gia_uu_dai_live' => $price,
                         'trang_thai' => 'active',
@@ -1044,7 +1351,13 @@ class LiveController {
             } elseif ($access['pin'] && $action === 'deal_delete') {
                 $ok = $model->xoaDealSanPham($live['id'], (string)($_POST['deal_id'] ?? ''));
             } elseif ($access['pin'] && $action === 'product_unpin') {
-                $ok = $model->capNhatPhienLive($live['id'], ['ma_san_pham_ghim' => '', 'gia_uu_dai_live' => 0]);
+                $ok = $model->capNhatPhienLive($live['id'], [
+                    'ma_san_pham_ghim' => '',
+                    'gia_uu_dai_live' => 0,
+                    'deal_bat_dau' => '',
+                    'deal_ket_thuc' => '',
+                    'pin_duration_minutes' => 0,
+                ]);
             } elseif ($access['moderate'] && in_array($action, ['pin', 'unpin', 'hide', 'mute'], true)) {
                 $ok = $model->moderateChat($live['id'], (string)($_POST['message_id'] ?? ''), $action);
             } else {
@@ -1115,7 +1428,11 @@ class LiveController {
 
         echo json_encode([
             'ok' => true,
-            'data' => $history
+            'data' => $history,
+            // Compatibility alias for the dedicated Studio while older
+            // customer clients continue to read `data`.
+            'chats' => $history,
+            'server_time_ms' => (int)round(microtime(true) * 1000),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
@@ -1156,6 +1473,140 @@ class LiveController {
         return ['ok' => false];
     }
 
+    public function apiLiveEgressWebhook(): void {
+        while (ob_get_level() > 0) @ob_end_clean();
+        $raw = (string)file_get_contents('php://input');
+        $authorization = (string)($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+        if ($authorization === '' && function_exists('getallheaders')) {
+            foreach ((array)getallheaders() as $name => $value) {
+                if (strcasecmp((string)$name, 'Authorization') === 0) { $authorization = (string)$value; break; }
+            }
+        }
+        $service = new LiveKitEgressService();
+        $claims = $service->verifyWebhook($raw, $authorization);
+        if ($claims === null) {
+            $this->liveJson(['ok' => false, 'message' => 'Webhook LiveKit không hợp lệ.'], 401);
+            return;
+        }
+        $event = json_decode($raw, true);
+        if (!is_array($event)) {
+            $this->liveJson(['ok' => false, 'message' => 'Payload webhook không hợp lệ.'], 400);
+            return;
+        }
+        $info = $service->extractWebhookEgressInfo($event);
+        $egressId = trim((string)($info['egress_id'] ?? $info['egressId'] ?? ''));
+        $roomName = trim((string)($info['room_name'] ?? $info['roomName'] ?? ''));
+        global $db;
+        $model = new PhienLive($db ?? $this->pdo);
+        $live = $egressId !== '' ? $model->findByEgressId($egressId) : null;
+        if (!$live && preg_match('/^skinsyntax_room_(.+)$/', $roomName, $m)) $live = $model->findById($m[1]);
+        if (!$live) {
+            $this->liveJson(['ok' => true, 'ignored' => true, 'message' => 'Webhook không thuộc phiên SkinSyntax nào.'], 202);
+            return;
+        }
+        $eventName = strtolower(trim((string)($event['event'] ?? '')));
+        if ($eventName !== 'egress_ended') {
+            $this->liveJson(['ok' => true, 'event' => $eventName, 'live_id' => (string)$live['id']], 200);
+            return;
+        }
+        $result = $this->syncLiveRecording($model, $live, $info);
+        $this->liveJson([
+            'ok' => true,
+            'live_id' => (string)$live['id'],
+            'recording_status' => (string)($result['live']['recording_status'] ?? ($result['status'] ?? 'processing')),
+            'recording_available' => !empty($result['available'])
+        ], !empty($result['available']) || ($result['status'] ?? '') === 'failed' ? 200 : 202);
+    }
+
+    public function apiLiveRecordingStatus(): void {
+        while (ob_get_level() > 0) @ob_end_clean();
+        $liveId = trim((string)($_GET['id'] ?? $_GET['live_id'] ?? ''));
+        if ($liveId === '') { $this->liveJson(['ok' => false, 'message' => 'Thiếu mã phiên livestream.'], 422); return; }
+        global $db;
+        $model = new PhienLive($db ?? $this->pdo);
+        $live = $model->findById($liveId);
+        if (!$live) { $this->liveJson(['ok' => false, 'message' => 'Phiên livestream không tồn tại.'], 404); return; }
+        if (in_array(($live['recording_status'] ?? ''), ['recording', 'processing'], true)) {
+            $live = $this->syncLiveRecording($model, $live)['live'] ?? $live;
+        }
+        $check = $this->recordingAvailability($model, $live);
+        $available = !empty($check['available']);
+        $this->liveJson([
+            'ok' => true,
+            'live_id' => (string)$live['id'],
+            'recording_status' => $available ? 'replay_ready' : (string)($live['recording_status'] ?? 'not_started'),
+            'recording_available' => $available,
+            'recording_url' => $available ? $this->recordingPlaybackUrl((string)$live['id']) : '',
+            'recording_mime' => $available ? (string)($check['meta']['mime'] ?? $live['recording_mime'] ?? '') : '',
+            'recording_size' => $available ? (int)($check['meta']['size'] ?? $live['recording_size'] ?? 0) : 0,
+            'recording_duration' => (int)($live['recording_duration'] ?? 0),
+            'recording_error' => (string)($live['recording_error'] ?? '')
+        ]);
+    }
+
+    public function apiLiveRecording(): void {
+        $liveId = trim((string)($_GET['id'] ?? $_GET['live_id'] ?? ''));
+        if ($liveId === '') { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo 'Bản ghi không khả dụng'; return; }
+        if (!$this->validRecordingPlaybackSignature($liveId)) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=utf-8');
+            header('Cache-Control: no-store');
+            echo 'Bản ghi không khả dụng';
+            return;
+        }
+        global $db;
+        $model = new PhienLive($db ?? $this->pdo);
+        $live = $model->findById($liveId);
+        if (!$live) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo 'Bản ghi không khả dụng'; return; }
+        if (in_array(($live['recording_status'] ?? ''), ['recording', 'processing'], true)) $live = $this->syncLiveRecording($model, $live)['live'] ?? $live;
+        $check = $this->recordingAvailability($model, $live);
+        if (empty($check['available'])) {
+            http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: no-store'); echo 'Bản ghi không khả dụng'; return;
+        }
+        while (ob_get_level() > 0) @ob_end_clean();
+        $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+        $range = trim((string)($_SERVER['HTTP_RANGE'] ?? ''));
+        if (($live['recording_storage'] ?? '') !== 'local' && $this->localRecordingPath($live) === null) {
+            $key = $this->recordingObjectKey($live);
+            if ($key === null) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo 'Bản ghi không khả dụng'; return; }
+            $service = new LiveKitEgressService();
+            $result = $service->streamObject($key, $method === 'HEAD' ? 'HEAD' : 'GET', $range !== '' ? $range : null,
+                static function (int $status, array $headers): void {
+                    http_response_code($status);
+                    foreach (['content-type', 'content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified', 'content-disposition'] as $key) {
+                        if (isset($headers[$key])) header(ucwords(str_replace('-', '-', $key), '-') . ': ' . $headers[$key], true);
+                    }
+                    if (!isset($headers['content-type'])) header('Content-Type: video/mp4');
+                    if (!isset($headers['accept-ranges'])) header('Accept-Ranges: bytes');
+                    header('Cache-Control: private, no-store');
+                }, static function (string $chunk): int { echo $chunk; flush(); return strlen($chunk); });
+            if (empty($result['ok']) && !headers_sent()) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo 'Bản ghi không khả dụng'; }
+            return;
+        }
+        $path = $this->localRecordingPath($live);
+        $size = (int)@filesize((string)$path);
+        $mime = (string)($check['meta']['mime'] ?? $live['recording_mime'] ?? 'video/mp4');
+        $start = 0; $end = max(0, $size - 1); $partial = false;
+        if ($range !== '' && preg_match('/^bytes=(\d*)-(\d*)$/', $range, $m)) {
+            if ($m[1] === '' && $m[2] !== '') $start = max(0, $size - (int)$m[2]);
+            else { $start = (int)$m[1]; if ($m[2] !== '') $end = min($end, (int)$m[2]); }
+            if ($start > $end || $start >= $size) { http_response_code(416); header('Content-Range: bytes */' . $size); return; }
+            $partial = true;
+        }
+        http_response_code($partial ? 206 : 200);
+        header('Content-Type: ' . $mime);
+        header('Accept-Ranges: bytes');
+        header('Content-Length: ' . (string)($end - $start + 1));
+        if ($partial) header('Content-Range: bytes ' . $start . '-' . $end . '/' . $size);
+        header('Cache-Control: private, no-store');
+        if ($method === 'HEAD') return;
+        $fh = @fopen((string)$path, 'rb');
+        if (!$fh) { http_response_code(404); return; }
+        fseek($fh, $start); $remaining = $end - $start + 1;
+        while ($remaining > 0 && !feof($fh)) { $chunk = fread($fh, min(1024 * 1024, $remaining)); if ($chunk === false || $chunk === '') break; echo $chunk; $remaining -= strlen($chunk); flush(); }
+        fclose($fh);
+    }
+
     public function apiLiveProducts(): void {
         while (ob_get_level() > 0) {
             @ob_end_clean();
@@ -1180,6 +1631,12 @@ class LiveController {
             exit;
         }
 
+        if (in_array(($live['recording_status'] ?? ''), ['recording', 'processing'], true)) {
+            $live = $this->syncLiveRecording($phienLiveModel, $live)['live'] ?? $live;
+        }
+        $recordingCheck = $this->recordingAvailability($phienLiveModel, $live);
+        $recordingAvailable = !empty($recordingCheck['available']);
+
         $spModel = new SanPham($mongoDb);
         $pinnedProduct = null;
         if (!empty($live['ma_san_pham_ghim'])) {
@@ -1194,14 +1651,21 @@ class LiveController {
             $publicDeals[] = [
                 'id' => (string)($deal['deal_id'] ?? ''), 'product_id' => $id,
                 'name' => (string)($dealProducts[$id]['ten_san_pham'] ?? ''),
+                'brand' => (string)($dealProducts[$id]['thuong_hieu'] ?? ''),
                 'image' => resolve_image_url(product_image_source($dealProducts[$id])),
-                'price' => (float)($deal['gia_uu_dai_live'] ?? 0), 'limit' => (int)($deal['so_luong_kho_deal'] ?? 0),
+                'original_price' => (float)($dealProducts[$id]['gia_ban'] ?? 0),
+                'price' => (float)($deal['gia_uu_dai_live'] ?? 0),
+                'limit' => (int)($deal['so_luong_kho_deal'] ?? 0),
+                'stock' => $spModel->getProductStock($dealProducts[$id]),
             ];
         }
 
-        $endTime = strtotime($live['khung_gio_ket_thuc'] ?? '');
         $now = time();
-        $countdownSeconds = ($endTime && $endTime > $now) ? ($endTime - $now) : 0;
+        $pinStartedAt = strtotime((string)($live['deal_bat_dau'] ?? '')) ?: 0;
+        $pinEndsAt = strtotime((string)($live['deal_ket_thuc'] ?? '')) ?: 0;
+        $pinUnlimited = !empty($live['ma_san_pham_ghim']) && $pinEndsAt === 0;
+        $pinActive = !empty($live['ma_san_pham_ghim']) && ($pinUnlimited || $pinEndsAt > $now);
+        $countdownSeconds = $pinActive && $pinEndsAt > 0 ? max(0, $pinEndsAt - $now) : 0;
 
         $livePrice = (float)($live['gia_uu_dai_live'] ?? ($pinnedProduct['gia_ban'] ?? 0));
         $originalPrice = (float)($pinnedProduct['gia_ban'] ?? $livePrice);
@@ -1222,15 +1686,29 @@ class LiveController {
                 'stream_source' => (string)($live['stream_source'] ?? ''),
                 'syna_queue' => current_role() === 'admin' && ($_GET['queue'] ?? '') === '1' ? LiveSyna::queued($live['id']) : null,
                 'syna_limit' => current_role() === 'admin' && ($_GET['queue'] ?? '') === '1' ? LiveSyna::roomLimit() : null,
-                'recording_url' => $live['status'] === 'replay_ready' ? $live['url_ban_ghi'] : '',
+                'recording_url' => $recordingAvailable ? $this->recordingPlaybackUrl((string)$live['id']) : '',
+                'recording_available' => $recordingAvailable,
+                'recording_status' => (string)($live['recording_status'] ?? 'not_started'),
+                'recording_mime' => $recordingAvailable ? (string)($recordingCheck['meta']['mime'] ?? $live['recording_mime'] ?? '') : '',
+                'recording_size' => $recordingAvailable ? (int)($recordingCheck['meta']['size'] ?? $live['recording_size'] ?? 0) : 0,
+                'recording_duration' => (int)($live['recording_duration'] ?? 0),
+                'recording_error' => (string)($live['recording_error'] ?? ''),
+                'active_voucher' => $live['active_voucher'] ?? null,
                 'deals' => $publicDeals,
-                'pinned_product_id' => (string)$live['ma_san_pham_ghim'],
+                'server_time' => $now,
+                'pinned_product_id' => $pinActive ? (string)$live['ma_san_pham_ghim'] : '',
+                'expired_pinned_product_id' => !$pinActive ? (string)($live['ma_san_pham_ghim'] ?? '') : '',
+                'pin_started_at' => $pinStartedAt,
+                'pin_ends_at' => $pinEndsAt,
+                'pin_duration_minutes' => (int)($live['pin_duration_minutes'] ?? 0),
+                'pin_unlimited' => $pinUnlimited,
+                'pin_active' => $pinActive,
                 'gia_uu_dai_live' => $livePrice,
                 'gia_ban_goc' => $originalPrice,
                 'gia_thi_truong' => $marketPrice,
                 'discount_percent' => $discountPercent,
                 'countdown_seconds' => $countdownSeconds,
-                'pinned_product' => $pinnedProduct ? [
+                'pinned_product' => $pinnedProduct && $pinActive ? [
                     'ma_san_pham' => (string)($pinnedProduct['ma_san_pham'] ?? ''),
                     'ten_san_pham' => (string)($pinnedProduct['ten_san_pham'] ?? ''),
                     'thuong_hieu' => (string)($pinnedProduct['thuong_hieu'] ?? 'SkinSyntax'),
@@ -1253,7 +1731,8 @@ class LiveController {
         $liveId = trim((string)($_POST['live_id'] ?? $_GET['live_id'] ?? $_POST['id'] ?? $_GET['id'] ?? ''));
         $productId = trim((string)($_POST['product_id'] ?? $_GET['product_id'] ?? $_POST['ma_san_pham'] ?? $_GET['ma_san_pham'] ?? ''));
         $livePrice = isset($_POST['gia_uu_dai_live']) ? (float)$_POST['gia_uu_dai_live'] : (isset($_GET['gia_uu_dai_live']) ? (float)$_GET['gia_uu_dai_live'] : null);
-        $durationMinutes = max(5, (int)($_POST['duration_minutes'] ?? $_GET['duration_minutes'] ?? 15));
+        $durationRaw = trim((string)($_POST['duration_minutes'] ?? $_GET['duration_minutes'] ?? '15'));
+        $durationMinutes = $durationRaw === '0' ? 0 : min(240, max(5, (int)$durationRaw));
         $dealStock = (int)($_POST['so_luong_kho_deal'] ?? $_GET['so_luong_kho_deal'] ?? 0);
 
         $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
@@ -1312,15 +1791,18 @@ class LiveController {
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode([
                 'ok' => $ok,
-                'message' => $ok ? "Đã chọn sản phẩm #{$productId} trong {$durationMinutes} phút!" : 'Không thể chọn sản phẩm',
+                'message' => $ok ? ($durationMinutes > 0 ? "Đã ghim sản phẩm #{$productId} trong {$durationMinutes} phút." : "Đã ghim sản phẩm #{$productId} không giới hạn thời gian.") : 'Không thể chọn sản phẩm',
                 'live_id' => $liveId,
                 'pinned_product_id' => $productId,
-                'gia_uu_dai_live' => $livePrice
+                'gia_uu_dai_live' => $livePrice,
+                'pin_duration_minutes' => $durationMinutes,
+                'pin_started_at' => time(),
+                'pin_ends_at' => $durationMinutes > 0 ? time() + ($durationMinutes * 60) : 0,
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;
         }
 
-        set_flash($ok ? 'success' : 'error', $ok ? "Đã chọn sản phẩm #{$productId} trong {$durationMinutes} phút!" : 'Không thể chọn sản phẩm');
+        set_flash($ok ? 'success' : 'error', $ok ? ($durationMinutes > 0 ? "Đã ghim sản phẩm #{$productId} trong {$durationMinutes} phút." : "Đã ghim sản phẩm #{$productId} không giới hạn thời gian.") : 'Không thể chọn sản phẩm');
         header('Location: ' . $targetUrl);
         exit;
     }
@@ -1334,8 +1816,13 @@ class LiveController {
             $this->liveJson(['ok' => false, 'message' => 'Bạn chưa được phân công lưu bản ghi phiên này.'], 403);
             return;
         }
-        if ($room['status'] === 'replay_ready' && $room['url_ban_ghi'] !== '') {
-            $this->liveJson(['ok' => true, 'url' => $room['url_ban_ghi']]);
+        if ($room['status'] === 'replay_ready') {
+            $available = $this->recordingAvailability($model, $room);
+            if (!empty($available['available'])) {
+                $this->liveJson(['ok' => true, 'url' => $this->recordingPlaybackUrl((string)$room['id'])]);
+            } else {
+                $this->liveJson(['ok' => false, 'message' => 'Bản ghi không khả dụng.'], 404);
+            }
             return;
         }
         // Keep the upstream incremental-upload contract behind ownership and CSRF guards.
@@ -1452,8 +1939,14 @@ class LiveController {
             $this->liveJson(['ok' => false, 'message' => 'Không thể lưu tệp bản ghi.'], 503);
             return false;
         }
-        $url = BASE_URL . '/uploads/live_recordings/' . $filename;
-        if (!$model->saveRecording($room, $url, $mime, $size)) {
+        $relativePath = 'uploads/live_recordings/' . $filename;
+        $url = $this->recordingPlaybackUrl($room);
+        if (!$model->saveRecording($room, $url, $mime, $size, [
+            'verified' => true,
+            'recording_file_path' => $relativePath,
+            'recording_storage' => 'local',
+            'recording_ended_at' => time()
+        ])) {
             unlink($target);
             $this->liveJson(['ok' => false, 'message' => 'Không lưu được thông tin bản ghi.'], 503);
             return false;
@@ -1500,8 +1993,12 @@ class LiveController {
             if ($final) $model->failRecording($liveId, $message);
         };
         // A retried final call after a successful finalize must stay idempotent.
-        if ($final && ($live['status'] ?? '') === 'replay_ready' && !empty($live['url_ban_ghi'])) {
-            $reply(200, ['ok' => true, 'url' => (string)$live['url_ban_ghi'], 'message' => 'Bản ghi đã được lưu trước đó.']);
+        if ($final && ($live['status'] ?? '') === 'replay_ready') {
+            $available = $this->recordingAvailability($model, $live);
+            if (!empty($available['available'])) {
+                $reply(200, ['ok' => true, 'url' => $this->recordingPlaybackUrl((string)$live['id']), 'message' => 'Bản ghi đã được lưu trước đó.']);
+            }
+            $reply(404, ['ok' => false, 'message' => 'Bản ghi không khả dụng.']);
         }
 
         $file = $_FILES['video_blob'] ?? null;
@@ -1609,8 +2106,18 @@ class LiveController {
         $release();
         @unlink($metaPath);
 
-        $publicUrl = BASE_URL . '/uploads/live_recordings/' . $filename;
-        $model->saveRecording($liveId, $publicUrl, $mimeBase, $totalBytes);
+        $relativePath = 'uploads/live_recordings/' . $filename;
+        $publicUrl = $this->recordingPlaybackUrl($liveId);
+        $saved = $model->saveRecording($liveId, $publicUrl, $mimeBase, $totalBytes, [
+            'verified' => true,
+            'recording_file_path' => $relativePath,
+            'recording_storage' => 'local',
+            'recording_ended_at' => time()
+        ]);
+        if (!$saved) {
+            @unlink($targetPath);
+            $reply(503, ['ok' => false, 'message' => 'Không lưu được thông tin bản ghi.']);
+        }
         $reply(200, [
             'ok' => true,
             'url' => $publicUrl,
@@ -1637,8 +2144,14 @@ class LiveController {
         $qty = (int)($_POST['so_luong_kho_deal'] ?? 0);
         $start = trim((string)($_POST['khung_gio_bat_dau'] ?? date('H:i')));
         $end = trim((string)($_POST['khung_gio_ket_thuc'] ?? date('H:i', strtotime('+30 minutes'))));
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || !empty($_POST['ajax']);
 
-        if ($liveId === '' || $productId === '' || $qty < 1) {
+        if ($liveId === '' || $productId === '' || $qty < 1 || $price <= 0) {
+            if ($isAjax) {
+                $this->liveJson(['ok' => false, 'message' => 'Hãy chọn sản phẩm, nhập giá Live và số lượng bán hợp lệ.'], 422);
+                return;
+            }
             set_flash('error', 'Vui lòng chọn phiên, sản phẩm và nhập số lượng bán tối đa.');
             header('Location: ' . BASE_URL . '/index.php?r=admin_lives');
             exit;
@@ -1654,6 +2167,14 @@ class LiveController {
             $this->liveJson(['ok' => false, 'message' => 'Bạn chưa được phân công quản lý sản phẩm của phiên này.'], 403);
             return;
         }
+        require_once __DIR__ . '/../models/SanPham.php';
+        $catalog = new SanPham($mongoDb);
+        $product = $catalog->findById($productId, true);
+        $stock = $product ? $catalog->getProductStock($product) : null;
+        if (!$product || !$catalog->isProductAvailable($product) || ($stock !== null && $qty > $stock)) {
+            $this->liveJson(['ok' => false, 'message' => 'Sản phẩm không còn bán hoặc số lượng Live vượt tồn kho hiện tại.'], 422);
+            return;
+        }
         $ok = $phienLiveModel->themDealSanPham($liveId, [
             'ma_san_pham' => $productId,
             'gia_uu_dai_live' => $price,
@@ -1662,6 +2183,24 @@ class LiveController {
             'khung_gio_ket_thuc' => $end,
             'trang_thai' => 'sap_dien_ra'
         ]);
+
+        if ($isAjax) {
+            $this->liveJson([
+                'ok' => $ok,
+                'message' => $ok ? 'Đã thêm sản phẩm vào phiên phát.' : 'Không thể thêm sản phẩm.',
+                'product' => $ok ? [
+                    'id' => $productId,
+                    'name' => (string)($product['ten_san_pham'] ?? ''),
+                    'brand' => (string)($product['thuong_hieu'] ?? ''),
+                    'image' => resolve_image_url(product_image_source($product)),
+                    'original_price' => (float)($product['gia_ban'] ?? 0),
+                    'live_price' => $price,
+                    'stock' => $stock,
+                    'deal_limit' => $qty,
+                ] : null,
+            ], $ok ? 200 : 422);
+            return;
+        }
 
         $redirectUrl = !empty($_POST['redirect_live']) ? (BASE_URL . '/index.php?r=live&id=' . urlencode($liveId)) : (BASE_URL . '/index.php?r=admin_lives');
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã thêm sản phẩm ưu đãi mới vào phiên phát!' : 'Không thể thêm sản phẩm');
@@ -1685,6 +2224,8 @@ class LiveController {
 
         $liveId = trim((string)($_POST['live_id'] ?? $_GET['live_id'] ?? ''));
         $dealId = trim((string)($_POST['deal_id'] ?? $_GET['deal_id'] ?? ''));
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || !empty($_POST['ajax']);
 
         global $db;
         $mongoDb = $db ?? $this->pdo;
@@ -1697,6 +2238,11 @@ class LiveController {
             return;
         }
         $ok = $phienLiveModel->xoaDealSanPham($liveId, $dealId);
+
+        if ($isAjax) {
+            $this->liveJson(['ok' => $ok, 'message' => $ok ? 'Đã xóa sản phẩm khỏi phiên phát.' : 'Không thể xóa deal.'], $ok ? 200 : 422);
+            return;
+        }
 
         set_flash($ok ? 'success' : 'error', $ok ? 'Đã xóa sản phẩm khỏi danh sách deal Live!' : 'Không thể xóa deal');
         header('Location: ' . BASE_URL . '/index.php?r=admin_lives');
@@ -1866,5 +2412,392 @@ class LiveController {
             'counts' => $counts
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
+    }
+
+    public function studio(): void {
+        $user = current_user();
+        $role = current_role();
+        if (!in_array($role, ['admin', 'nhanvien'], true)) {
+            redirect(BASE_URL . '/index.php?r=admin_login');
+            return;
+        }
+
+        $liveId = trim((string)($_GET['id'] ?? $_GET['room_id'] ?? ''));
+        if ($liveId === '') {
+            redirect(BASE_URL . '/index.php?r=admin_lives');
+            return;
+        }
+
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        require_once __DIR__ . '/../models/PhienLive.php';
+        require_once __DIR__ . '/../models/SanPham.php';
+        require_once __DIR__ . '/../models/Voucher.php';
+
+        $phienLiveModel = new PhienLive($mongoDb);
+        $live = $phienLiveModel->findById($liveId);
+        if (!$live) {
+            set_flash('error', 'Phiên livestream không tồn tại.');
+            redirect(BASE_URL . '/index.php?r=admin_lives');
+            return;
+        }
+
+        $spModel = new SanPham($mongoDb);
+        $dealProductIds = array_values(array_filter(array_map(
+            static fn(array $deal): string => trim((string)($deal['ma_san_pham'] ?? '')),
+            (array)($live['danh_sach_deal'] ?? [])
+        )));
+        $dealProducts = $dealProductIds ? $spModel->findManyByIds($dealProductIds) : [];
+        $enrichedDeals = [];
+        foreach ((array)($live['danh_sach_deal'] ?? []) as $deal) {
+            $productId = trim((string)($deal['ma_san_pham'] ?? ''));
+            $product = $dealProducts[$productId] ?? null;
+            $deal['ten_san_pham'] = (string)($product['ten_san_pham'] ?? $productId);
+            $deal['thuong_hieu'] = (string)($product['thuong_hieu'] ?? '');
+            $deal['gia_kho'] = (float)($product['gia_ban'] ?? 0);
+            $deal['hinh_anh'] = $product ? resolve_image_url(product_image_source($product)) : '';
+            $deal['ton_kho'] = $product ? $spModel->getProductStock($product) : null;
+            $enrichedDeals[] = $deal;
+        }
+        $live['danh_sach_deal'] = $enrichedDeals;
+
+        $pinnedProduct = null;
+        if (!empty($live['ma_san_pham_ghim'])) {
+            $pinnedProduct = $spModel->findById($live['ma_san_pham_ghim'], true);
+        }
+
+        $voucherModel = new Voucher($mongoDb);
+        $availableVouchers = $voucherModel->listVouchers();
+
+        // The studio must never render the legacy URL field as a playable
+        // recording. Reuse the same local/R2 verification gate as playback
+        // and the admin list so stale historical metadata cannot create a
+        // broken replay button.
+        $recordingCheck = $this->recordingAvailability($phienLiveModel, $live);
+        $live['recording_available'] = !empty($recordingCheck['available']);
+        $live['recording_url'] = $live['recording_available'] ? $this->recordingPlaybackUrl((string)$live['id']) : '';
+
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION['live_csrf'] ??= bin2hex(random_bytes(24));
+
+        $pageTitle = 'Live Studio - ' . ($live['tieu_de'] ?? 'SkinSyntax Live');
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        $studioFile = $viewDir . '/live_studio.php';
+        if (is_file($studioFile)) {
+            require_once $studioFile;
+        } else {
+            $_GET['studio'] = '1';
+            $this->index();
+        }
+    }
+
+    public function apiLiveClaimVoucher(): void {
+        while (ob_get_level() > 0) @ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $liveId = trim((string)($_POST['room_id'] ?? $_POST['live_id'] ?? $_GET['id'] ?? ''));
+        if ($liveId === '') {
+            $this->liveJson(['ok' => false, 'message' => 'Thiếu mã phiên live.'], 422);
+            return;
+        }
+
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        require_once __DIR__ . '/../models/PhienLive.php';
+        require_once __DIR__ . '/../models/Voucher.php';
+        require_once __DIR__ . '/../models/CustomerVoucher.php';
+
+        $phienLiveModel = new PhienLive($mongoDb);
+        $live = $phienLiveModel->findById($liveId);
+        if (!$live || empty($live['active_voucher'])) {
+            $this->liveJson(['ok' => false, 'message' => 'Hiện tại không có voucher nào đang phát trong phiên.'], 404);
+            return;
+        }
+
+        $activeVoucher = (array)$live['active_voucher'];
+        $code = trim((string)($activeVoucher['ma_code'] ?? ''));
+        if ($code === '') {
+            $this->liveJson(['ok' => false, 'message' => 'Voucher không hợp lệ.'], 422);
+            return;
+        }
+
+        $voucherModel = new Voucher($mongoDb);
+        $voucherDoc = $voucherModel->getVoucherByCode($code);
+        if (!$voucherDoc) {
+            $this->liveJson(['ok' => false, 'message' => 'Voucher không tồn tại trên hệ thống.'], 404);
+            return;
+        }
+
+        if (($voucherDoc['trang_thai'] ?? '') !== 'active') {
+            $this->liveJson(['ok' => false, 'message' => 'Voucher đã tạm ngưng hoặc kết thúc.'], 400);
+            return;
+        }
+        $now = time();
+        if (!empty($voucherDoc['ngay_ket_thuc']) && strtotime($voucherDoc['ngay_ket_thuc']) < $now) {
+            $this->liveJson(['ok' => false, 'message' => 'Voucher đã hết hạn sử dụng.'], 400);
+            return;
+        }
+
+        $totalQty = $voucherDoc['so_luong'] ?? null;
+        $usedQty = (int)($voucherDoc['so_luong_da_dung'] ?? 0);
+        if ($totalQty !== null && $usedQty >= $totalQty) {
+            $this->liveJson(['ok' => false, 'message' => 'Voucher đã được nhận hết số lượng giới hạn.'], 400);
+            return;
+        }
+
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $isLoggedIn = is_logged_in();
+        $user = current_user() ?? [];
+        $userId = $user['ma_nd'] ?? $user['id'] ?? null;
+
+        $_SESSION['claimed_live_vouchers'] ??= [];
+        if (!$isLoggedIn && isset($_SESSION['claimed_live_vouchers'][$code])) {
+            $this->liveJson(['ok' => true, 'already_claimed' => true, 'code' => $code, 'message' => 'Bạn đã nhận voucher này rồi.']);
+            return;
+        }
+
+        if ($isLoggedIn && $userId) {
+            $existing = $mongoDb->customer_vouchers->findOne([
+                'customer_id' => (string)$userId,
+                'voucher_id' => (int)$voucherDoc['ma_voucher']
+            ]);
+            if ($existing) {
+                $this->liveJson(['ok' => true, 'already_claimed' => true, 'code' => $code, 'message' => 'Bạn đã lưu voucher này vào ví rồi! Hãy dùng khi thanh toán.']);
+                return;
+            }
+
+            try {
+                $mongoDb->customer_vouchers->insertOne([
+                    'customer_id' => (string)$userId,
+                    'voucher_id' => (int)$voucherDoc['ma_voucher'],
+                    'code' => $code,
+                    'status' => 'ACTIVE',
+                    'claimed_at' => date('Y-m-d H:i:s'),
+                    'source' => 'livestream',
+                    'live_room_id' => $liveId
+                ]);
+            } catch (Throwable $e) {}
+        }
+
+        $_SESSION['claimed_live_vouchers'][$code] = [
+            'code' => $code,
+            'name' => $voucherDoc['ten_voucher'] ?? $code,
+            'discount' => $voucherDoc['gia_tri_giam'] ?? 0,
+            'type' => $voucherDoc['loai_giam'] ?? 'fixed',
+            'min_order' => $voucherDoc['gia_tri_don_toi_thieu'] ?? 0,
+            'claimed_at' => time()
+        ];
+
+        $mongoDb->voucher->updateOne(
+            ['ma_code' => $code],
+            ['$inc' => ['so_luong_da_dung' => 1]]
+        );
+
+        $this->liveJson([
+            'ok' => true,
+            'code' => $code,
+            'name' => $voucherDoc['ten_voucher'] ?? $code,
+            'discount' => $voucherDoc['gia_tri_giam'] ?? 0,
+            'type' => $voucherDoc['loai_giam'] ?? 'fixed',
+            'min_order' => $voucherDoc['gia_tri_don_toi_thieu'] ?? 0,
+            'message' => 'Chúc mừng! Đã nhận voucher ' . $code . ' thành công! Mã đã lưu vào phiên mua sắm.'
+        ]);
+    }
+
+    public function apiLiveQuickVoucher(): void {
+        while (ob_get_level() > 0) @ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        if (!is_logged_in() || current_role() !== 'admin') {
+            $this->liveJson(['ok' => false, 'message' => 'Bạn không có quyền quản lý voucher.'], 403);
+            return;
+        }
+        if (!$this->livePost()) return;
+
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        require_once __DIR__ . '/../models/PhienLive.php';
+        require_once __DIR__ . '/../models/Voucher.php';
+
+        $phienLiveModel = new PhienLive($mongoDb);
+        $liveId = trim((string)($_POST['room_id'] ?? $_POST['live_id'] ?? ''));
+        $live = $phienLiveModel->findById($liveId);
+        if (!$live) {
+            $this->liveJson(['ok' => false, 'message' => 'Phiên live không tồn tại.'], 404);
+            return;
+        }
+
+        $code = strtoupper(trim(preg_replace('/\s+/u', '', (string)($_POST['ma_code'] ?? ''))));
+        $name = trim((string)($_POST['ten_voucher'] ?? ''));
+        $type = strtolower(trim((string)($_POST['loai_giam'] ?? 'fixed')));
+        $value = (float)($_POST['gia_tri_giam'] ?? 0);
+        $minOrder = (float)($_POST['gia_tri_don_toi_thieu'] ?? 0);
+        $maxDiscount = !empty($_POST['giam_toi_da']) ? (float)$_POST['giam_toi_da'] : null;
+        $quantity = !empty($_POST['so_luong']) ? (int)$_POST['so_luong'] : 100;
+        $durationMinutes = max(5, (int)($_POST['thoi_luong_phut'] ?? 30));
+
+        if ($code === '' || $name === '' || $value <= 0) {
+            $this->liveJson(['ok' => false, 'message' => 'Vui lòng nhập đầy đủ mã, tên và giá trị giảm.'], 422);
+            return;
+        }
+
+        $startAt = date('Y-m-d H:i:s');
+        $endAt = date('Y-m-d H:i:s', strtotime("+{$durationMinutes} minutes"));
+
+        $voucherModel = new Voucher($mongoDb);
+        $existing = $voucherModel->getVoucherByCode($code);
+        if (!$existing) {
+            $saveOk = $voucherModel->saveVoucher([
+                'ma_code' => $code,
+                'ten_voucher' => $name,
+                'mo_ta' => "Voucher độc quyền phiên livestream #{$liveId}",
+                'loai_giam' => $type,
+                'gia_tri_giam' => $value,
+                'gia_tri_don_toi_thieu' => $minOrder,
+                'giam_toi_da' => $maxDiscount,
+                'so_luong' => $quantity,
+                'trang_thai' => 'active',
+                'ngay_bat_dau' => $startAt,
+                'ngay_ket_thuc' => $endAt,
+            ]);
+            if (!$saveOk) {
+                $this->liveJson(['ok' => false, 'message' => $voucherModel->getLastErrorMessage() ?: 'Không thể tạo voucher.'], 422);
+                return;
+            }
+        }
+
+        $voucherData = [
+            'ma_code' => $code,
+            'ten_voucher' => $name,
+            'loai_giam' => $type,
+            'gia_tri_giam' => $value,
+            'giam_toi_da' => $maxDiscount,
+            'gia_tri_don_toi_thieu' => $minOrder,
+            'so_luong' => $quantity,
+            'bat_dau' => $startAt,
+            'ket_thuc' => $endAt,
+            'duration_minutes' => $durationMinutes,
+            'created_at' => time()
+        ];
+        $phienLiveModel->setActiveVoucher($liveId, $voucherData);
+
+        $phienLiveModel->saveChat([
+            '_id' => 'voucher-' . bin2hex(random_bytes(12)),
+            'room_id' => (string)$live['id'],
+            'sender_id' => 'system',
+            'sender_type' => 'admin',
+            'sender_name' => 'Quản lý Live',
+            'message' => "🎉 ƯU ĐÃI NÓNG: Voucher [{$code}] giảm " . ($type === 'percent' ? "{$value}%" : number_format($value) . "đ") . " vừa được phát lên màn hình! Bấm 'Nhận voucher' ngay!",
+            'is_pinned' => true
+        ]);
+
+        $this->liveJson([
+            'ok' => true,
+            'message' => "Đã tạo và phát voucher [{$code}] thành công lên màn hình live!",
+            'voucher' => $voucherData
+        ]);
+    }
+
+    public function apiLiveDropVoucher(): void {
+        while (ob_get_level() > 0) @ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        if (!is_logged_in() || current_role() !== 'admin') {
+            $this->liveJson(['ok' => false, 'message' => 'Bạn không có quyền quản lý voucher.'], 403);
+            return;
+        }
+        if (!$this->livePost()) return;
+
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        require_once __DIR__ . '/../models/PhienLive.php';
+        require_once __DIR__ . '/../models/Voucher.php';
+
+        $phienLiveModel = new PhienLive($mongoDb);
+        $liveId = trim((string)($_POST['room_id'] ?? $_POST['live_id'] ?? ''));
+        $live = $phienLiveModel->findById($liveId);
+        if (!$live) {
+            $this->liveJson(['ok' => false, 'message' => 'Phiên live không tồn tại.'], 404);
+            return;
+        }
+
+        $code = strtoupper(trim(preg_replace('/\s+/u', '', (string)($_POST['ma_code'] ?? ''))));
+        if ($code === '') {
+            $this->liveJson(['ok' => false, 'message' => 'Thiếu mã voucher.'], 422);
+            return;
+        }
+
+        $voucherModel = new Voucher($mongoDb);
+        $voucherDoc = $voucherModel->getVoucherByCode($code);
+        if (!$voucherDoc) {
+            $this->liveJson(['ok' => false, 'message' => 'Voucher không tồn tại trên hệ thống.'], 404);
+            return;
+        }
+
+        $durationMinutes = max(5, (int)($_POST['thoi_luong_phut'] ?? 30));
+        $voucherData = [
+            'ma_code' => $code,
+            'ten_voucher' => $voucherDoc['ten_voucher'] ?? $code,
+            'loai_giam' => $voucherDoc['loai_giam'] ?? 'fixed',
+            'gia_tri_giam' => $voucherDoc['gia_tri_giam'] ?? 0,
+            'giam_toi_da' => $voucherDoc['giam_toi_da'] ?? null,
+            'gia_tri_don_toi_thieu' => $voucherDoc['gia_tri_don_toi_thieu'] ?? 0,
+            'so_luong' => $voucherDoc['so_luong'] ?? null,
+            'bat_dau' => date('Y-m-d H:i:s'),
+            'ket_thuc' => date('Y-m-d H:i:s', strtotime("+{$durationMinutes} minutes")),
+            'duration_minutes' => $durationMinutes,
+            'created_at' => time()
+        ];
+        $phienLiveModel->setActiveVoucher($liveId, $voucherData);
+
+        $this->liveJson([
+            'ok' => true,
+            'message' => "Đã phát voucher [{$code}] lên màn hình live!",
+            'voucher' => $voucherData
+        ]);
+    }
+
+    public function apiLiveEndVoucher(): void {
+        while (ob_get_level() > 0) @ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        if (!is_logged_in() || current_role() !== 'admin') {
+            $this->liveJson(['ok' => false, 'message' => 'Bạn không có quyền quản lý voucher.'], 403);
+            return;
+        }
+        if (!$this->livePost()) return;
+        global $db;
+        $phienLiveModel = new PhienLive($db ?? $this->pdo);
+        $liveId = trim((string)($_POST['room_id'] ?? $_POST['live_id'] ?? ''));
+        $phienLiveModel->clearActiveVoucher($liveId);
+        $this->liveJson(['ok' => true, 'message' => 'Đã kết thúc phát voucher trên màn hình.']);
+    }
+
+    public function apiLiveSynaReminder(): void {
+        while (ob_get_level() > 0) @ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        if (!$this->livePost()) return;
+        $liveId = trim((string)($_POST['room_id'] ?? $_POST['live_id'] ?? ''));
+        global $db;
+        $phienLiveModel = new PhienLive($db ?? $this->pdo);
+        $live = $phienLiveModel->findById($liveId);
+        if (!$live || ($live['status'] ?? '') !== 'live') {
+            $this->liveJson(['ok' => false, 'message' => 'Phiên chưa phát sóng thật.'], 400);
+            return;
+        }
+        if (!$this->liveAudience($live)['moderate']) {
+            $this->liveJson(['ok' => false, 'message' => 'Bạn không có quyền gửi lời nhắc trong phiên này.'], 403);
+            return;
+        }
+
+        $reminderText = "Bạn có câu hỏi về sản phẩm hoặc skincare? Hãy nhập @syna kèm câu hỏi để tui hỗ trợ nhé! 💚";
+        $phienLiveModel->saveChat([
+            '_id' => 'reminder-' . bin2hex(random_bytes(12)),
+            'room_id' => (string)$live['id'],
+            'sender_id' => 'syna_reminder',
+            'sender_type' => 'ai',
+            'sender_name' => 'SYNA',
+            'message' => $reminderText,
+            'is_ai' => true
+        ]);
+
+        $this->liveJson(['ok' => true, 'message' => 'Đã gửi lời nhắc SYNA vào chat.']);
     }
 }

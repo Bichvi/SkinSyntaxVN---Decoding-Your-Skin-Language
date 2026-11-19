@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/Voucher.php';
 require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../models/HoiDap.php';
 require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+require_once __DIR__ . '/../services/LiveKitEgressService.php';
 
 class QuanTriController {
     private  $pdo;
@@ -45,6 +46,39 @@ class QuanTriController {
         echo '<div class="container py-5"><div class="alert alert-danger">Bạn không có quyền truy cập chức năng này.</div></div>';
         require $viewDir . '/layouts/footer.php';
         exit;
+    }
+
+    private function recordingPlaybackUrl(string $liveId): string {
+        $secret = function_exists('ss_env') ? ss_env('LIVE_RECORDING_PLAYBACK_SECRET', '') : (getenv('LIVE_RECORDING_PLAYBACK_SECRET') ?: '');
+        if (trim((string)$secret) === '') $secret = function_exists('ss_env') ? ss_env('LIVEKIT_API_SECRET', '') : (getenv('LIVEKIT_API_SECRET') ?: '');
+        $expires = time() + 3600;
+        $signature = hash_hmac('sha256', $liveId . '|' . $expires, trim((string)$secret));
+        return rtrim(BASE_URL, '/') . '/index.php?r=api_live_recording&id=' . rawurlencode($liveId)
+            . '&exp=' . $expires . '&sig=' . rawurlencode($signature);
+    }
+
+    private function verifiedRecordingForAdmin(array $live): array {
+        if (($live['recording_status'] ?? '') !== 'replay_ready') return ['available' => false, 'url' => ''];
+        $root = rtrim((string)($_SERVER['DOCUMENT_ROOT'] ?? ''), '/\\');
+        $relative = trim((string)($live['recording_file_path'] ?? ''));
+        if (($live['recording_storage'] ?? '') === 'local' && preg_match('~^uploads/live_recordings/([A-Za-z0-9_-]+\.(?:webm|mp4|ogv))$~i', $relative, $m)) {
+            $path = $root . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'live_recordings' . DIRECTORY_SEPARATOR . $m[1];
+            $mime = function_exists('mime_content_type') ? strtolower((string)@mime_content_type($path)) : '';
+            if (is_file($path) && (int)@filesize($path) > 0 && in_array($mime, ['video/mp4', 'video/webm', 'video/ogg'], true)) {
+                return ['available' => true, 'url' => $this->recordingPlaybackUrl((string)$live['id'])];
+            }
+            return ['available' => false, 'url' => ''];
+        }
+        if ($relative === '') {
+            $legacyPath = parse_url(trim((string)($live['url_ban_ghi'] ?? '')), PHP_URL_PATH);
+            $relative = is_string($legacyPath) ? ltrim($legacyPath, '/') : '';
+        }
+        $id = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string)($live['id'] ?? ''));
+        if ($id === '' || !preg_match('~^live-recordings/live_' . preg_quote(trim($id, '_'), '~') . '_[A-Za-z0-9_-]+\.mp4$~', $relative)) return ['available' => false, 'url' => ''];
+        $check = (new LiveKitEgressService())->verifyObject($relative);
+        return !empty($check['ok'])
+            ? ['available' => true, 'url' => $this->recordingPlaybackUrl((string)$live['id'])]
+            : ['available' => false, 'url' => ''];
     }
 
     private function requireRole(array $roles): array {
@@ -1778,6 +1812,9 @@ class QuanTriController {
             $live['tong_doanh_thu'] = (float)($live['tong_doanh_thu'] ?? 0);
             $live['tong_don_hang'] = (int)($live['tong_don_hang'] ?? 0);
             $live['tong_san_pham_ban'] = (int)($live['tong_san_pham_ban'] ?? 0);
+            $recordingCheck = $this->verifiedRecordingForAdmin($live);
+            $live['recording_available'] = $recordingCheck['available'];
+            $live['recording_url'] = $recordingCheck['url'];
             if (isset($live['created_at']) && $live['created_at'] instanceof \MongoDB\BSON\UTCDateTime) {
                 $live['created_at'] = $live['created_at']->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('Y-m-d H:i:s');
             } elseif (isset($live['created_at'])) {
@@ -1807,8 +1844,16 @@ class QuanTriController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/../models/PhienLive.php';
             $phienLiveModel = new PhienLive($this->pdo);
-            $ok = $phienLiveModel->taoPhienLive($_POST);
-            set_flash($ok ? 'success' : 'error', $ok ? 'Đã tạo phiên LiveStream mới thành công!' : 'Không thể tạo phiên LiveStream.');
+            $newId = $phienLiveModel->taoPhienLive($_POST);
+            if ($newId) {
+                set_flash('success', 'Đã tạo phiên LiveStream mới thành công!');
+                if (($_POST['action'] ?? '') === 'create_and_studio') {
+                    redirect(BASE_URL . '/index.php?r=live_studio&id=' . urlencode((string)$newId));
+                    return;
+                }
+            } else {
+                set_flash('error', 'Không thể tạo phiên LiveStream.');
+            }
         }
 
         redirect(BASE_URL . '/index.php?r=admin_lives');

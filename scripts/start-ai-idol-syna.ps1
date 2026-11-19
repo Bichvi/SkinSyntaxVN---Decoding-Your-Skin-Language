@@ -9,6 +9,10 @@ try {
 } catch { }
 if (-not (Test-Path -LiteralPath (Join-Path $PlaywrightModules 'playwright'))) { throw 'Playwright not found. Pass -PlaywrightModules with the existing node_modules directory.' }
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot '.runtime\bin\ffmpeg.exe'))) { throw 'Existing FFmpeg runtime not found.' }
+$bundledProbe = Join-Path $projectRoot '.runtime\bin\ffprobe.exe'
+if (-not $env:SYNA_FFPROBE -and (Test-Path -LiteralPath $bundledProbe)) {
+    $env:SYNA_FFPROBE = $bundledProbe
+}
 $env:NODE_PATH = $PlaywrightModules
 $entry = Join-Path $PSScriptRoot 'ai-idol-mascot\syna-render-server.cjs'
 $process = Start-Process -FilePath (Get-Command node.exe).Source -ArgumentList @('"' + $entry + '"') -WorkingDirectory $projectRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $logRoot 'syna-renderer.log') -RedirectStandardError (Join-Path $logRoot 'syna-renderer-error.log')

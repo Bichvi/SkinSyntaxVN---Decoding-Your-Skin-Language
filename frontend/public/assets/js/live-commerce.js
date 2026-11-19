@@ -28,6 +28,7 @@
     let room, connecting, connectedAt = 0, publisherToken, publisherRefreshAt = 0, publishing = false, media, activeSource = '', recorder, recordingParts = [], recordedFile, switching = false, ending = false, nextAtEnd = false;
     let files = [], playlistActive = false, playingIndex = -1, outputMuted = false, visibleDeals = '', closed = false;
     let recordingId, nextRecordingPart = 0, heartbeatPending = false;
+    let pinnedEndsAt = 0, liveServerOffsetMs = 0, pinnedUnlimited = false;
 
     const url = (route, params = {}) => baseUrl + '/index.php?' + new URLSearchParams({r: route, ...params});
     async function json(route, params = {}, fields) {
@@ -213,6 +214,18 @@
             input.value = '';
             suggestion.hidden = true;
             setReply(null);
+            if (room?.state === 'connected' && result.chat) {
+                try {
+                    const sendChatEvent = chatMessage => room.localParticipant.publishData(
+                        new TextEncoder().encode(JSON.stringify({type: 'chat_message', chat: chatMessage})),
+                        {reliable: true}
+                    );
+                    await sendChatEvent(result.chat);
+                    if (result.syna_chat) await sendChatEvent(result.syna_chat);
+                } catch (error) {
+                    console.warn('[SkinSyntax Live] chat_data_publish_failed', {name: error?.name || 'Error'});
+                }
+            }
             loadChat();
             if (result.ai_status === 'pending') void askSyna(result.id);
             if (result.ai_status === 'disabled') aiNotice.textContent = 'SYNA đang tắt trong phiên này.';
@@ -236,10 +249,15 @@
             const next = new sdk.Room({adaptiveStream: false});
             const events = sdk.RoomEvent;
             next.on(events.ConnectionStateChanged, state => {
+                console.info('[SkinSyntax Live] room_state', state);
                 if (state === 'reconnecting') setConnection('Đang kết nối lại', 'warning');
                 if (state === 'connected') setConnection(studio ? 'Máy phát đã kết nối' : 'Đã kết nối', 'ready');
             });
-            next.on(events.TrackSubscribed, track => {
+            next.on(events.LocalTrackPublished, publication => {
+                console.info('[SkinSyntax Live] local_track_published', {kind: publication?.kind || 'unknown', source: publication?.source || 'unknown'});
+            });
+            next.on(events.TrackSubscribed, (track, publication, participant) => {
+                console.info('[SkinSyntax Live] track_subscribed', {kind: track?.kind || publication?.kind || 'unknown', participant: participant?.identity || 'unknown'});
                 if (studio && publishing) return;
                 if (track.kind === 'video') {
                     track.attach(remote);
@@ -257,6 +275,13 @@
             });
             next.on(events.AudioPlaybackStatusChanged, () => {
                 $('btnEnableLiveSound').hidden = next.canPlaybackAudio;
+            });
+            next.on(events.DataReceived, (payload) => {
+                try {
+                    const str = new TextDecoder().decode(payload);
+                    const msg = JSON.parse(str);
+                    handleDataChannelEvent(msg);
+                } catch (e) {}
             });
             next.on(events.Disconnected, reason => {
                 if (room !== next) return;
@@ -325,9 +350,12 @@
         const current = await connect();
         if (!current || !publisherToken) throw new Error('Chưa có kết nối phát của streamer.');
         const participant = current.localParticipant;
+        if (!media?.videoOutput || media.videoOutput.readyState !== 'live') throw new Error('Camera chưa có luồng hình ảnh thật.');
+        console.info('[SkinSyntax Live] publish_check', {video: media.videoOutput.readyState, audioFallback: Boolean(media.source?.audio_fallback), audioTracks: media.audioOutput?.readyState === 'live' ? 1 : 0});
         await participant.publishTrack(media.videoOutput, {name: 'skinsyntax-video', source: 'camera', simulcast: false});
         try {
             await participant.publishTrack(media.audioOutput, {name: 'skinsyntax-audio', source: 'microphone'});
+            if (media.source?.audio_fallback) console.warn('[SkinSyntax Live] microphone_fallback_silent_track');
         } catch (error) {
             await participant.unpublishTrack(media.videoOutput, false);
             throw error;
@@ -623,9 +651,111 @@
         }
     });
     $('btnReaction')?.addEventListener('click', async () => {
+        spawnFloatingHeart();
+        if (room?.localParticipant) {
+            try {
+                const bytes = new TextEncoder().encode(JSON.stringify({ type: 'reaction' }));
+                room.localParticipant.publishData(bytes, { reliable: false });
+            } catch (e) {}
+        }
         const result = await json('api_live_reaction', {}, {live_id: liveId});
         if (result.ok) $('reactionCount').textContent = result.reaction_count ?? 0;
     });
+
+    let voucherCountdownTimer = null;
+    function showVoucherPopup(v) {
+        const popup = $('liveVoucherPopup');
+        if (!popup || !v) return;
+        if ($('liveVoucherCode')) $('liveVoucherCode').textContent = v.ma_code || '';
+        if ($('liveVoucherTitle')) $('liveVoucherTitle').textContent = v.ten_voucher || v.ma_code;
+        if ($('liveVoucherValue')) $('liveVoucherValue').textContent = v.loai_giam === 'percent' ? v.gia_tri_giam + '%' : (Number(v.gia_tri_giam || 0).toLocaleString('vi-VN') + ' đ');
+        popup.hidden = false;
+
+        const btnClaim = $('btnClaimVoucher');
+        if (btnClaim) {
+            btnClaim.disabled = false;
+            btnClaim.textContent = 'Nhận voucher';
+            btnClaim.onclick = async () => {
+                btnClaim.disabled = true;
+                btnClaim.textContent = 'Đang nhận...';
+                try {
+                    const res = await json('api_live_claim_voucher', {}, { room_id: liveId, ma_code: v.ma_code });
+                    if (res.ok) {
+                        btnClaim.textContent = '✓ Đã nhận';
+                    } else {
+                        btnClaim.textContent = res.message || 'Lỗi nhận voucher';
+                    }
+                } catch (e) {
+                    btnClaim.textContent = 'Nhận voucher';
+                    btnClaim.disabled = false;
+                }
+            };
+        }
+
+        if (voucherCountdownTimer) clearInterval(voucherCountdownTimer);
+        const endTs = v.ket_thuc ? new Date(v.ket_thuc.replace(' ', 'T')).getTime() : Date.now() + (v.duration_minutes || 10) * 60000;
+        voucherCountdownTimer = setInterval(() => {
+            const remain = Math.max(0, Math.floor((endTs - Date.now()) / 1000));
+            const m = String(Math.floor(remain / 60)).padStart(2, '0');
+            const s = String(remain % 60).padStart(2, '0');
+            if ($('liveVoucherTimer')) $('liveVoucherTimer').textContent = `${m}:${s}`;
+            if (remain <= 0) {
+                clearInterval(voucherCountdownTimer);
+                popup.hidden = true;
+            }
+        }, 1000);
+    }
+
+    function hideVoucherPopup() {
+        const popup = $('liveVoucherPopup');
+        if (popup) popup.hidden = true;
+        if (voucherCountdownTimer) clearInterval(voucherCountdownTimer);
+    }
+
+    function showPinnedComment(text) {
+        const banner = $('livePinnedCommentBanner');
+        const txt = $('livePinnedCommentText');
+        if (banner && txt) {
+            txt.textContent = text;
+            banner.hidden = false;
+        }
+    }
+
+    function hidePinnedComment() {
+        const banner = $('livePinnedCommentBanner');
+        if (banner) banner.hidden = true;
+    }
+
+    function spawnFloatingHeart() {
+        const container = $('liveHeartsContainer') || $('ssPlayer');
+        if (!container) return;
+        const hearts = ['💚', '❤️', '💖', '✨', '🔥'];
+        const heart = document.createElement('span');
+        heart.className = 'floating-heart';
+        heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+        heart.style.right = (15 + Math.random() * 30) + 'px';
+        container.appendChild(heart);
+        setTimeout(() => heart.remove(), 2000);
+    }
+
+    function handleDataChannelEvent(msg) {
+        if (!msg || !msg.type) return;
+        if (msg.type === 'pin_product' || msg.type === 'products_changed') {
+            void refreshProducts();
+        } else if (msg.type === 'voucher_dropped') {
+            showVoucherPopup(msg.voucher);
+        } else if (msg.type === 'voucher_ended') {
+            hideVoucherPopup();
+        } else if (msg.type === 'pin_comment') {
+            showPinnedComment(msg.text);
+        } else if (msg.type === 'unpin_comment') {
+            hidePinnedComment();
+        } else if (msg.type === 'reaction') {
+            spawnFloatingHeart();
+        } else if (msg.type === 'chat_message') {
+            void loadChat();
+        }
+    }
 
     $('liveToggleSyna')?.addEventListener('change', async event => {
         const toggle = event.target;
@@ -675,6 +805,25 @@
     });
 
     const vnd = price => new Intl.NumberFormat('vi-VN').format(price) + ' đ';
+    function updatePinnedCountdown() {
+        const countdown = $('livePinCountdown');
+        if (!countdown || $('livePinnedBody')?.hidden) return;
+        if (pinnedUnlimited) {
+            countdown.hidden = false;
+            countdown.textContent = 'Đang giới thiệu · Không giới hạn thời gian';
+            return;
+        }
+        if (!pinnedEndsAt) {
+            countdown.hidden = true;
+            return;
+        }
+        const now = Math.floor((Date.now() + liveServerOffsetMs) / 1000);
+        const remaining = Math.max(0, pinnedEndsAt - now);
+        const minutes = String(Math.floor(remaining / 60)).padStart(2, '0');
+        const seconds = String(remaining % 60).padStart(2, '0');
+        countdown.hidden = false;
+        countdown.textContent = remaining > 0 ? `Đang giới thiệu · Còn ${minutes}:${seconds}` : 'Đã hết thời gian giới thiệu';
+    }
     function renderDeals(deals) {
         const signature = JSON.stringify(deals);
         if (visibleDeals === signature) return;
@@ -725,7 +874,11 @@
         const result = await json('api_live_products', {id: liveId, queue: $('liveSynaQueue') ? '1' : '0'});
         if (!result.ok || !result.data) return;
         const data = result.data;
+        liveServerOffsetMs = Number(data.server_time || 0) * 1000 - Date.now();
+        pinnedEndsAt = Number(data.pin_ends_at || 0);
+        pinnedUnlimited = Boolean(data.pin_unlimited);
         if (!switching && !ending) updateStatus(data.status);
+        if (data.status === 'replay_ready' && !data.recording_available && $('liveWaitingMessage')) $('liveWaitingMessage').textContent = 'Bản ghi không khả dụng.';
         setSynaEnabled(Boolean(data.bat_ai_cohost));
         renderDeals(data.deals || []);
         if ($('liveSynaQueue')) $('liveSynaQueue').textContent = data.syna_queue === null
@@ -746,6 +899,12 @@
             $('livePinnedMarketPrice').textContent = vnd(data.gia_thi_truong);
             $('livePinnedDiscountBadge').hidden = !data.discount_percent;
             $('livePinnedDiscountBadge').textContent = '-' + data.discount_percent + '%';
+        }
+        updatePinnedCountdown();
+        if (data.active_voucher) {
+            showVoucherPopup(data.active_voucher);
+        } else {
+            hideVoucherPopup();
         }
         if (!studio) {
             const source = $('liveSourceBadge');
@@ -781,6 +940,7 @@
     setInterval(loadChat, 1500);
     refreshRoom();
     setInterval(refreshRoom, 3000);
+    setInterval(updatePinnedCountdown, 1000);
     // A publisher renews freshness without changing the session or interrupting recording.
     // Keep this active in background tabs; viewers never write publisher state.
     setInterval(async () => {

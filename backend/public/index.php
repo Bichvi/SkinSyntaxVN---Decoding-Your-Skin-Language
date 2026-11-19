@@ -589,6 +589,10 @@ switch ($r) {
         (new LiveController($pdo))->index();
         break;
 
+    case 'live_studio':
+        (new LiveController($pdo))->studio();
+        break;
+
     case 'ai_idol_live_video':
         (new LiveController($pdo))->streamAiIdolLiveVideo();
         break;
@@ -603,6 +607,18 @@ switch ($r) {
 
     case 'api_live_products':
         (new LiveController($pdo))->apiLiveProducts();
+        break;
+
+    case 'api_live_egress_webhook':
+        (new LiveController($pdo))->apiLiveEgressWebhook();
+        break;
+
+    case 'api_live_recording_status':
+        (new LiveController($pdo))->apiLiveRecordingStatus();
+        break;
+
+    case 'api_live_recording':
+        (new LiveController($pdo))->apiLiveRecording();
         break;
 
     case 'admin_live_pin_product':
@@ -652,6 +668,26 @@ switch ($r) {
 
     case 'api_live_reaction':
         (new LiveController($pdo))->apiLiveReaction();
+        break;
+
+    case 'api_live_claim_voucher':
+        (new LiveController($pdo))->apiLiveClaimVoucher();
+        break;
+
+    case 'api_live_quick_voucher':
+        (new LiveController($pdo))->apiLiveQuickVoucher();
+        break;
+
+    case 'api_live_drop_voucher':
+        (new LiveController($pdo))->apiLiveDropVoucher();
+        break;
+
+    case 'api_live_end_voucher':
+        (new LiveController($pdo))->apiLiveEndVoucher();
+        break;
+
+    case 'api_live_syna_reminder':
+        (new LiveController($pdo))->apiLiveSynaReminder();
         break;
 
     case 'admin':
