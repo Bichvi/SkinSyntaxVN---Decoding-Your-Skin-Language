@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.min.js';
-import { Syna3D } from './model.js?v=6';
+import { Syna3D } from './model.js?v=14';
 
 export class PilotScene {
   constructor() {
