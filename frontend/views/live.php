@@ -11,7 +11,7 @@ $displayStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', 
 $displayStreamer = $displayStreamer !== '' ? $displayStreamer : 'SkinSyntax';
 $liveStatus = (string)($live['status'] ?? 'none');
 $isLive = $liveStatus === 'live';
-$canChat = $isLive;
+$canChat = $isLive && is_logged_in();
 $pinned = $live['pinned_product'] ?? null;
 $pinnedId = (string)($pinned['ma_san_pham'] ?? $pinned['id'] ?? $live['ma_san_pham_ghim'] ?? '');
 $pinnedName = (string)($pinned['ten_san_pham'] ?? 'Chưa có sản phẩm ghim');
@@ -278,12 +278,11 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
             <?php if ($canChat || $isStudio): ?>
               <?php /* The studio renders the composer before going live (hidden) so the host can chat without reloading, which would drop the broadcast. */ ?>
               <div id="liveChatComposer" <?= $canChat ? '' : 'hidden' ?>>
-              <?php if (!$isStaff && !is_logged_in()): ?><input id="guestNickname" type="text" maxlength="40" placeholder="Tên hiển thị (không bắt buộc)" class="mb-2"><?php endif; ?>
               <form id="liveChatForm" class="ss-chat__row"><input id="liveChatInput" type="text" maxlength="1000" placeholder="Đặt câu hỏi về sản phẩm..." required><button class="ss-btn ss-btn--primary" type="submit" aria-label="Gửi"><i class="fa-solid fa-paper-plane"></i></button></form>
               <div class="ss-chat__helper">Tối đa 5 tin trong 20 giây. Không chia sẻ thông tin nhạy cảm.</div>
               </div>
             <?php endif; ?>
-            <?php if (!$canChat): ?><div class="ss-chat__locked" id="liveChatLocked"><i class="fa-solid fa-lock me-1"></i> Trò chuyện sẽ mở khi người dẫn bắt đầu.</div><?php endif; ?>
+            <?php if (!$canChat): ?><div class="ss-chat__locked" id="liveChatLocked"><i class="fa-solid fa-lock me-1"></i> <?= $isLive ? 'Vui lòng đăng nhập để bình luận.' : 'Trò chuyện sẽ mở khi người dẫn bắt đầu.' ?><?php if ($isLive): ?> <a href="<?= h(BASE_URL) ?>/index.php?r=dangnhap">Đăng nhập</a><?php endif; ?></div><?php endif; ?>
           </div>
         </aside>
       </div>
@@ -314,25 +313,50 @@ $recordingUrl = (string)($live['url_ban_ghi'] ?? '');
   const url=(route)=>base+'/index.php?r='+route;
   const pageJson=async (endpoint, options)=>{const response=await fetch(endpoint, options||{}); let data={}; try{data=await response.json();}catch(e){} if(!response.ok && !data.message) data.message='Yêu cầu không thành công'; return {response,data};};
   const esc=(value)=>String(value??'').replace(/[&<>"]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
-  let chatMode='all', rendered=new Set(), livekitRoom=null, localVideoTrack=null, localAudioTrack=null, recording=null, recordingChunks=[], recordingStream=null, streamState=status, publisherToken='';
+  let chatMode='all', rendered=new Set(), chatLoadInFlight=false, livekitRoom=null, localVideoTrack=null, localAudioTrack=null, recording=null, recordingChunks=[], recordingStream=null, streamState=status, publisherToken='';
   let lastChatTs=0, lastPinnedId=(($('livePinnedProductId')||{}).value||''), ending=false;
   let recUploadId='', recSeq=0, recServerNext=0, recFailed=false, recQueue=Promise.resolve(), recTimer=null;
   const chatBox=$('liveChatBox'), statusBadge=$('liveConnectionBadge'), wait=$('liveWaitingOverlay'), waitMsg=$('liveWaitingMessage'), remote=$('livekitRemoteVideo'), local=$('livekitLocalVideo'), audio=$('livekitRemoteAudio');
   function setConnection(text, tone){if(!statusBadge)return; statusBadge.className='ss-badge ss-badge--'+tone; statusBadge.innerHTML='<i class="fa-solid fa-circle"></i> '+esc(text);}
-  function renderMessage(msg){const id=msg.client_message_id||msg.id||[msg.sender_name,msg.message,msg.created_at].join('|'); if(rendered.has(id)||!chatBox)return; rendered.add(id); const el=document.createElement('div'); el.className='ss-message'+(msg.is_ai?' ss-message--ai':''); const meta=document.createElement('div'); meta.className='ss-message__meta'; const name=document.createElement('strong'); name.textContent=msg.sender_name||'Khách hàng'; meta.appendChild(name); if(msg.is_ai){const badge=document.createElement('span');badge.className='ss-message__pill';badge.textContent='Tư vấn tự động';meta.appendChild(badge)} if(msg.is_order){const badge=document.createElement('span');badge.className='ss-message__pill';badge.textContent='Đơn hàng';meta.appendChild(badge)} const body=document.createElement('div');body.textContent=msg.message||'';el.append(meta,body);chatBox.appendChild(el);chatBox.scrollTop=chatBox.scrollHeight;}
+  function renderMessage(msg){const id=msg.client_message_id||msg.id||[msg.sender_name,msg.message,msg.created_at].join('|'); if(rendered.has(id)||!chatBox)return; rendered.add(id); const el=document.createElement('div'); el.className='ss-message'+(msg.is_ai?' ss-message--ai':''); if(msg.client_message_id)el.dataset.clientMessageId=msg.client_message_id; const meta=document.createElement('div'); meta.className='ss-message__meta'; const name=document.createElement('strong'); name.textContent=msg.sender_name||'Khách hàng'; meta.appendChild(name); if(msg.is_ai){const badge=document.createElement('span');badge.className='ss-message__pill';badge.textContent='Syna';meta.appendChild(badge)} if(msg.is_order){const badge=document.createElement('span');badge.className='ss-message__pill';badge.textContent='Đơn hàng';meta.appendChild(badge)} if(msg.reply_to_message){const quote=document.createElement('div');quote.className='ss-message__reply';const quoteName=document.createElement('strong');quoteName.textContent='Trả lời '+(msg.reply_to_sender_name||'người dùng');const quoteText=document.createElement('span');quoteText.textContent=msg.reply_to_message;quote.append(quoteName,quoteText);el.appendChild(quote);} const body=document.createElement('div');body.textContent=msg.message||'';el.append(meta,body);chatBox.appendChild(el);chatBox.scrollTop=chatBox.scrollHeight;}
+  function removeRenderedMessage(clientId){if(!clientId||!chatBox)return; rendered.delete(clientId);chatBox.querySelectorAll('[data-client-message-id="'+CSS.escape(clientId)+'"]').forEach(el=>el.remove());}
   async function loadChat(){
-    if(!liveId||!chatBox)return;
-    const mode=chatMode;
-    let endpoint=url('api_live_chat_history')+'&room_id='+encodeURIComponent(liveId)+'&mode='+encodeURIComponent(mode);
-    if(lastChatTs>0)endpoint+='&after='+lastChatTs;
-    const {data}=await pageJson(endpoint);
-    if(mode!==chatMode)return;
-    if(data.ok&&Array.isArray(data.data))data.data.forEach(msg=>{if((msg.ts||0)>lastChatTs)lastChatTs=msg.ts;renderMessage(msg);});
+    if(!liveId||!chatBox||chatLoadInFlight)return;
+    chatLoadInFlight=true;
+    try{
+      const mode=chatMode;
+      let endpoint=url('api_live_chat_history')+'&room_id='+encodeURIComponent(liveId)+'&mode='+encodeURIComponent(mode);
+      if(lastChatTs>0)endpoint+='&after='+lastChatTs;
+      const {data}=await pageJson(endpoint);
+      if(mode!==chatMode)return;
+      if(data.ok&&Array.isArray(data.data))data.data.forEach(msg=>{if((msg.ts||0)>lastChatTs)lastChatTs=msg.ts;renderMessage(msg);});
+    }finally{chatLoadInFlight=false;}
   }
   document.querySelectorAll('[data-chat-mode]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-chat-mode]').forEach(b=>b.classList.remove('is-active'));btn.classList.add('is-active');chatMode=btn.dataset.chatMode||'all';rendered=new Set();lastChatTs=0;chatBox.innerHTML='';loadChat();}));
-  const chatForm=$('liveChatForm'); if(chatForm){chatForm.addEventListener('submit',async e=>{e.preventDefault();const input=$('liveChatInput');const message=input.value.trim();if(!message)return;input.disabled=true;const clientId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'msg-'+String(Date.now())+'-'+String(performance.now()).replace(/\D/g,'');const fd=new FormData();fd.append('room_id',liveId);fd.append('message',message);fd.append('client_message_id',clientId);const guest=$('guestNickname');if(guest)fd.append('guest_nickname',guest.value.trim());const {data}=await pageJson(url('api_live_chat'),{method:'POST',body:fd});input.disabled=false;if(data.ok){input.value='';const packet={type:'chat',message:{client_message_id:clientId,sender_name:guest&&guest.value.trim()?guest.value.trim():'Bạn',message,created_at:new Date().toISOString()}};renderMessage(packet.message);if(livekitRoom&&livekitRoom.state===LivekitClient.ConnectionState.Connected){try{await livekitRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(packet)),{reliable:true});}catch(err){console.warn('LiveKit chat publish failed',err);}}}else{alert(data.message||'Không thể gửi tin nhắn');}});}
+  async function persistSynaReply(parentId, replyText){
+    const fd=new FormData();fd.append('room_id',liveId);fd.append('reply_to_client_message_id',parentId);fd.append('message',replyText);
+    return pageJson(url('api_live_syna_reply'),{method:'POST',body:fd});
+  }
+  function runSyna(message, parentId){
+    if(!window.SkinSyntaxAgent||typeof window.SkinSyntaxAgent.send!=='function'){
+      alert('Syna hiện chưa sẵn sàng, bạn thử lại sau nhé.'); return;
+    }
+    const replyId='syna-'+parentId;
+    let replyText='';
+    const pinnedName=($('livePinnedName')||{}).textContent||'';
+    const pinnedPrice=($('livePinnedPrice')||{}).textContent||'';
+    const pinnedId=(($('livePinnedProductId')||{}).value||'');
+    const agentMessage=message+'\n\n[Bối cảnh livestream: sản phẩm đang ghim: '+pinnedName.trim()+'; mã sản phẩm: '+pinnedId+'; giá live hiện tại: '+pinnedPrice.trim()+'. Hãy ưu tiên trả lời đúng sản phẩm này và chỉ tạo bản nháp khi khách thật sự muốn mua.]';
+    renderMessage({client_message_id:replyId,sender_name:'Syna',message:'',is_ai:true,reply_to_message:message,reply_to_sender_name:'Bạn',created_at:new Date().toISOString()});
+    const replyEl=()=>chatBox&&chatBox.querySelector('[data-client-message-id="'+CSS.escape(replyId)+'"]');
+    const bodyEl=()=>{const el=replyEl();return el?el.lastElementChild:null;};
+    window.SkinSyntaxAgent.send({message:agentMessage,onToken:(payload)=>{replyText+=String(payload.text||'');const body=bodyEl();if(body)body.textContent=replyText;chatBox.scrollTop=chatBox.scrollHeight;},onUi:(payload)=>{const el=replyEl();if(!el)return;const ui=document.createElement('div');ui.className='ss-message__agent-ui';el.appendChild(ui);window.SkinSyntaxAgent.renderUi(payload,ui,{onSend:(next)=>runSyna(next,parentId)});},onDone:async()=>{const finalText=replyText.trim()||'Mình đã chuẩn bị thông tin cho bạn trong khung chat.';const result=await persistSynaReply(parentId,finalText);if(!result.data.ok)console.warn('Syna reply persistence failed',result.data.message);},onError:(error)=>{const body=bodyEl();if(body)body.textContent=error.message||'Syna chưa trả lời được, bạn thử lại nhé.';}}).catch((error)=>console.warn('Syna stream failed',error));
+  }
+  const chatForm=$('liveChatForm'); if(chatForm){chatForm.addEventListener('submit',async e=>{e.preventDefault();const input=$('liveChatInput');const message=input.value.trim();if(!message)return;input.disabled=true;const clientId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'msg-'+String(Date.now())+'-'+String(performance.now()).replace(/\D/g,'');const localMessage={client_message_id:clientId,sender_name:'Đang gửi',message,created_at:new Date().toISOString()};renderMessage(localMessage);const fd=new FormData();fd.append('room_id',liveId);fd.append('message',message);fd.append('client_message_id',clientId);const {data}=await pageJson(url('api_live_chat'),{method:'POST',body:fd});input.disabled=false;if(data.ok){input.value='';const localEl=chatBox&&chatBox.querySelector('[data-client-message-id="'+CSS.escape(clientId)+'"] strong');if(localEl)localEl.textContent=data.sender_name||'Bạn';const packet={type:'chat',message:{client_message_id:clientId,sender_name:data.sender_name||'Bạn',message,created_at:new Date().toISOString()}};if(livekitRoom&&livekitRoom.state===LivekitClient.ConnectionState.Connected){try{await livekitRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(packet)),{reliable:true});}catch(err){console.warn('LiveKit chat publish failed',err);}}if(data.agent_required)runSyna(data.agent_message||message,clientId);}else{removeRenderedMessage(clientId);alert(data.message||'Không thể gửi tin nhắn');}});}
   // The host's studio page may load before going live (no chat form yet) but must still see questions.
-  if(chatForm||isStudio){loadChat();setInterval(loadChat,6000);}
+  // Keep the database as the source of truth while making other viewers see
+  // messages quickly. The in-flight guard prevents overlapping polls.
+  if(chatForm||isStudio){loadChat();setInterval(loadChat,1500);}
   async function updateStream(state,extra){
     const fd=new FormData();
     fd.append('live_id',liveId);

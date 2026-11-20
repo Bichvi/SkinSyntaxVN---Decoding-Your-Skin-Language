@@ -166,6 +166,10 @@ switch ($r) {
         (new FavoriteController($pdo))->index();
         break;
 
+    case 'home_quick_profile':
+        (new HomeController($pdo))->quickProfile();
+        break;
+
     case 'flash_sale':
         (new HomeController($pdo))->flashSale();
         break;
@@ -564,6 +568,9 @@ switch ($r) {
 
     case 'api_live_chat':
         (new LiveController($pdo))->apiLiveChat();
+        break;
+    case 'api_live_syna_reply':
+        (new LiveController($pdo))->apiLiveSynaReply();
         break;
 
     case 'api_live_chat_history':

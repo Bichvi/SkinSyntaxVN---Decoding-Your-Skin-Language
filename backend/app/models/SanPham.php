@@ -2880,6 +2880,33 @@ class SanPham {
         'chong_nang' => ['Chống nắng', ['Chống Nắng Da Mặt']],
     ];
 
+    /** Nhãn 4 bước routine: key => nhãn hiển thị. */
+    public static function routineStepLabels(): array {
+        $out = [];
+        foreach (self::ROUTINE_STEPS as $step => [$label]) {
+            $out[$step] = $label;
+        }
+        return $out;
+    }
+
+    /**
+     * Bước routine của một sản phẩm: suffix danh mục ở cuối `danh_muc_day_du`
+     * (đứng đầu chuỗi hoặc sau khoảng trắng), cùng quy tắc với routineStarter. Không khớp -> null.
+     */
+    public static function routineStepOf(array $product): ?string {
+        $path = trim((string)($product['danh_muc_day_du'] ?? ''));
+        if ($path === '') {
+            return null;
+        }
+        foreach (self::ROUTINE_STEPS as $step => [, $suffixes]) {
+            $pattern = '/(^|\s)(' . implode('|', array_map(static fn(string $x): string => preg_quote($x, '/'), $suffixes)) . ')$/u';
+            if (preg_match($pattern, $path) === 1) {
+                return $step;
+            }
+        }
+        return null;
+    }
+
     /**
      * Routine mẫu 4 bước cho trang chủ khách: mỗi bước 1 SP bán chạy hợp loại da (không có thì lấy "mọi loại da").
      * Bước thiếu SP bị bỏ. Cache 30 phút / loại da.

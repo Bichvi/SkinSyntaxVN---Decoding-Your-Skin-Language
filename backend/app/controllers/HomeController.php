@@ -158,6 +158,10 @@ class HomeController {
         // Loại da khách đã chọn ở tab routine mẫu (chỉ dùng khi chưa đăng nhập).
         $guestSkinType = $this->guestSkinTypeFromSession();
         $favoriteProductIds = [];
+        $cartItems = [];
+        $purchaseItems = [];
+        $homeSkinProfileForRoutine = null;
+        $homeSkinFromQuiz = false;
         $homepageRefreshSeed = null;
         $homeCategoryCards = [];
         $homeBrandCards = [];
@@ -356,9 +360,18 @@ class HomeController {
                         }
                     }
                 }
+                // Hồ sơ từ khảo sát nhanh (session): khách, hoặc thành viên chưa có khảo sát đầy đủ.
+                $guestProfile = $guestSkinType !== null
+                    ? ['skin_type' => $guestSkinType, 'concerns' => $this->guestConcernsFromSession()]
+                    : null;
                 $homeGraphSkinProfile = $isLoggedIn
                     ? $this->homeGraphSkinProfile((string)($_SESSION['user']['email'] ?? ''))
-                    : ($guestSkinType !== null ? ['skin_type' => $guestSkinType, 'concerns' => []] : null);
+                    : null;
+                if ($homeGraphSkinProfile === null && $guestProfile !== null) {
+                    $homeGraphSkinProfile = $guestProfile;
+                    $homeSkinFromQuiz = true;
+                }
+                $homeSkinProfileForRoutine = $homeGraphSkinProfile;
                 $homeGraph = $this->homeGraphRecommender()->build([
                     'seen_ids' => $recentViewed,
                     'cart_ids' => array_keys($cartItems),
@@ -428,6 +441,18 @@ class HomeController {
                 $routineStarter = [];
             }
         }
+        $routineProgress = [];
+        if ($hasSurvey) {
+            $progressSkin = (string)($homeSkinProfileForRoutine['skin_type'] ?? '');
+            if (!in_array($progressSkin, SearchSkinProfile::SKIN_TYPES, true)) {
+                $progressSkin = 'moi_loai_da';
+            }
+            $routineProgress = $this->buildRoutineProgress(
+                array_map('strval', array_keys($cartItems)),
+                array_map('strval', array_column($purchaseItems, 'ma_san_pham')),
+                $progressSkin
+            );
+        }
         try {
             $homeDiscovery = HomeDiscovery::data();
         } catch (Throwable $e) {
@@ -452,7 +477,93 @@ class HomeController {
             'homeCategoryCards' => $homeCategoryCards,
             'homeBrandCards' => $homeBrandCards,
             'synaSurveyCompleted' => $synaSurveyCompleted,
+            'routineProgress' => $routineProgress,
+            'homeSkinFromQuiz' => $homeSkinFromQuiz,
+            'homeGuestSkinType' => $guestSkinType,
+            'homeGuestConcern' => $this->guestConcernsFromSession()[0] ?? '',
         ]);
+    }
+
+    /** Concern đã chọn ở khảo sát nhanh (session) nếu hợp lệ, trả về mảng 0-1 phần tử. */
+    private function guestConcernsFromSession(): array {
+        $c = $_SESSION['guest_concern'] ?? null;
+        return (is_string($c) && in_array($c, SearchSkinProfile::CONCERNS, true)) ? [$c] : [];
+    }
+
+    /**
+     * Tiến độ routine 4 bước cho thành viên đã khảo sát: bước nào đã có (giỏ hàng / đã mua) và gợi ý SP cho bước còn thiếu.
+     * Lỗi bất kỳ -> [] để view quay về giao diện tĩnh.
+     * @return array<int,array{step:string,label:string,status:string,source:?string,product:?array}>
+     */
+    private function buildRoutineProgress(array $cartIds, array $purchasedIds, string $skinKey): array {
+        try {
+            $cartIds = array_values(array_unique(array_filter(array_map('strval', $cartIds), 'strlen')));
+            $purchasedIds = array_values(array_unique(array_filter(array_map('strval', $purchasedIds), 'strlen')));
+            $allIds = array_values(array_unique(array_merge($cartIds, $purchasedIds)));
+            $owned = [];
+            if ($allIds !== []) {
+                $byId = [];
+                foreach ($this->model->findVisibleByIds($allIds) as $p) {
+                    if (is_array($p)) {
+                        $byId[(string)($p['ma_san_pham'] ?? $p['id'] ?? '')] = $p;
+                    }
+                }
+                // Giỏ hàng trước (hiện tại), rồi đến đã mua.
+                foreach ([['cart', $cartIds], ['purchased', $purchasedIds]] as [$source, $ids]) {
+                    foreach ($ids as $id) {
+                        $p = $byId[$id] ?? null;
+                        $step = is_array($p) ? SanPham::routineStepOf($p) : null;
+                        if ($step !== null && !isset($owned[$step])) {
+                            $owned[$step] = ['source' => $source, 'product' => $p];
+                        }
+                    }
+                }
+            }
+            $starter = [];
+            foreach ($this->model->routineStarter($skinKey) as $item) {
+                $starter[(string)($item['step'] ?? '')] = $item['product'] ?? null;
+            }
+            $out = [];
+            foreach (SanPham::routineStepLabels() as $step => $label) {
+                if (isset($owned[$step])) {
+                    $out[] = ['step' => $step, 'label' => $label, 'status' => 'owned', 'source' => $owned[$step]['source'], 'product' => $owned[$step]['product']];
+                } else {
+                    $sp = $starter[$step] ?? null;
+                    $out[] = ['step' => $step, 'label' => $label, 'status' => 'missing', 'source' => null, 'product' => is_array($sp) ? $sp : null];
+                }
+            }
+            return $out;
+        } catch (Throwable $e) {
+            error_log('[HOME_ROUTINE_PROGRESS] skipped: ' . get_class($e));
+            return [];
+        }
+    }
+
+    /** POST index.php?r=home_quick_profile: lưu loại da (+ vấn đề) từ khảo sát nhanh vào session rồi quay lại trang chủ. */
+    public function quickProfile(): void {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            http_response_code(405);
+            header('Allow: POST');
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Phương thức không được hỗ trợ';
+            return;
+        }
+        $skin = $_POST['skin'] ?? '';
+        $concern = $_POST['concern'] ?? '';
+        $concern = is_string($concern) ? $concern : '';
+        if (!is_string($skin) || !in_array($skin, SearchSkinProfile::SKIN_TYPES, true)
+            || ($concern !== '' && !in_array($concern, SearchSkinProfile::CONCERNS, true))) {
+            http_response_code(400);
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Yêu cầu không hợp lệ';
+            return;
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION['guest_skin_type'] = $skin;
+            $_SESSION['guest_concern'] = $concern;
+            session_write_close();
+        }
+        header('Location: ' . BASE_URL . '/index.php#home-graph-skin', true, 303);
     }
 
     /** Loại da khách đã chọn (session) nếu hợp lệ, không thì null. */

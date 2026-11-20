@@ -506,31 +506,23 @@ async function adminSnapshot(util, ctx) {
       await section('F comments', async () => {
         if (!S.liveOk) { skip('F1', 'comments', 'session is not live (see section D)'); return; }
         const chatPost = (page) => page.waitForResponse((r) => r.url().includes('r=api_live_chat') && !r.url().includes('history') && r.request().method() === 'POST', { timeout: 30000 }).catch(() => null);
-        // guest sends a question
+        // guest can watch but must not comment
         await viewer.reload({ waitUntil: 'load' });
         const guestMsg = `E2E guest question ${STAMP}?`;
-        let p = chatPost(viewer);
-        await viewer.fill('#guestNickname', 'E2EGuest');
-        await viewer.fill('#liveChatInput', guestMsg);
-        await viewer.press('#liveChatInput', 'Enter');
-        let resp = await p; let j = resp ? await resp.json().catch(() => ({})) : {};
-        rec('F1', 'guest (with nickname) sends a message -> api_live_chat ok', !!j.ok, resp ? `HTTP ${resp.status()}` : 'no request');
-        await waitUntil(hostPage, (t) => (document.getElementById('liveChatBox')?.textContent || '').includes(t), guestMsg, 25000)
-          .then(() => rec('F2', 'guest message appears on the host chat box', true), () => rec('F2', 'guest message appears on the host chat box', false));
+        const guestChat = await call(probeCtx, 'post', 'api_live_chat', { form: { room_id: S.id, message: guestMsg, guest_nickname: 'E2EGuest' } });
+        rec('F1', 'guest can watch but api_live_chat refuses the comment', guestChat.status === 403 && guestChat.json?.code === 'login_required', `HTTP ${guestChat.status}`);
+        rec('F2', 'guest chat composer is hidden and guest message is not stored', (await viewer.locator('#liveChatForm').count()) === 0 && !(await history(probeCtx)).data?.some((m) => m.message === guestMsg));
         let h = await history(probeCtx);
-        const gItem = (h.data || []).find((m) => m.message === guestMsg);
-        rec('F3', 'guest message is in api_live_chat_history with the nickname', !!gItem && gItem.sender_name === 'E2EGuest' && gItem.sender_type === 'guest', gItem ? `${gItem.sender_name}/${gItem.sender_type}` : 'missing');
+        rec('F3', 'guest messages do not enter live chat history', !(h.data || []).some((m) => m.message === guestMsg));
 
         // empty message
         let sent = 0;
         const counter = (r) => { if (r.url().includes('r=api_live_chat') && !r.url().includes('history') && r.method() === 'POST') sent++; };
         viewer.on('request', counter);
-        await viewer.fill('#liveChatInput', '');
-        await viewer.click('#liveChatForm button[type=submit]');
         await sleep(1500);
         viewer.off('request', counter);
         const emptyApi = await call(probeCtx, 'post', 'api_live_chat', { form: { room_id: S.id, message: '   ' } });
-        rec('F4', 'empty message is not sent (UI sends no request; API says ok:false)', sent === 0 && emptyApi.json?.ok === false, `requests=${sent} api=${JSON.stringify(emptyApi.json)}`);
+        rec('F4', 'guest has no composer and empty API message is rejected', sent === 0 && emptyApi.json?.ok === false, `requests=${sent} api=${JSON.stringify(emptyApi.json)}`);
 
         // customer (separate context) -> appears on guest viewer
         custPage = await custCtx.newPage();
@@ -538,8 +530,10 @@ async function adminSnapshot(util, ctx) {
         errorsOf(custPage, errs.customer);
         acceptDialogs(custPage, 'customer');
         await custPage.goto(u('live', `id=${encodeURIComponent(S.id)}`), { waitUntil: 'load', timeout: 90000 });
-        const custMsg = `E2E customer hello ${STAMP}`;
-        p = chatPost(custPage);
+        const custMsg = `E2E customer question ${STAMP}?`;
+        let p = chatPost(custPage);
+        let resp;
+        let j;
         await custPage.fill('#liveChatInput', custMsg);
         await custPage.press('#liveChatInput', 'Enter');
         resp = await p; j = resp ? await resp.json().catch(() => ({})) : {};
@@ -548,7 +542,7 @@ async function adminSnapshot(util, ctx) {
           .then(() => rec('F6', 'customer message appears on the guest viewer page', true), () => rec('F6', 'customer message appears on the guest viewer page', false));
         h = await history(probeCtx);
         const cItem = (h.data || []).find((m) => m.message === custMsg);
-        rec('F7', 'customer message has sender_type customer (login is effective)', !!cItem && cItem.sender_type === 'customer', cItem ? cItem.sender_type : 'missing');
+        rec('F7', 'customer message has sender_type customer and account name', !!cItem && cItem.sender_type === 'customer' && cItem.sender_name && cItem.sender_name !== 'E2EGuest', cItem ? `${cItem.sender_name}/${cItem.sender_type}` : 'missing');
 
         // host sends a message (from a second admin tab: the studio tab has no chat form)
         const hostChat = await adminCtx.newPage();
@@ -585,15 +579,16 @@ async function adminSnapshot(util, ctx) {
         }
         rec('F11', 'chat tabs Tất cả / Nổi bật / Hỏi đáp are clickable and load history', tabResults.every((t) => t.endsWith('ok')), tabResults.join(' '));
         const qaTab = await viewer.evaluate(() => document.getElementById('liveChatBox')?.textContent || '');
-        rec('F12', 'Hỏi đáp tab shows the guest question and hides non-questions', qaTab.includes(guestMsg) && !qaTab.includes(custMsg), '');
+        rec('F12', 'Hỏi đáp tab shows the customer question and hides non-questions', qaTab.includes(custMsg) && !qaTab.includes(hostMsg), '');
         h = await history(probeCtx, 'qa');
         const qaMsgs = (h.data || []).map((m) => m.message);
-        rec('F13', 'history mode=qa returns ok and only questions (contains guest "?" message)', h.ok === true && qaMsgs.includes(guestMsg) && !qaMsgs.includes(custMsg), `${qaMsgs.length} items`);
+        rec('F13', 'history mode=qa returns ok and only questions (contains customer "?" message)', h.ok === true && qaMsgs.includes(custMsg) && !qaMsgs.includes(hostMsg), `${qaMsgs.length} items`);
         const feat0 = await history(probeCtx, 'featured');
         rec('F14', 'history mode=featured returns ok', feat0.ok === true && Array.isArray(feat0.data), `${(feat0.data || []).length} items`);
 
         // rate limit: fresh guest session, 6 quick messages
         const rateCtx = await browser.newContext();
+        await login(rateCtx, CUST);
         const codes = [];
         for (let i = 1; i <= 6; i++) {
           const r = await call(rateCtx, 'post', 'api_live_chat', { form: { room_id: S.id, message: i === 1 ? `chốt đơn E2E ${STAMP}` : `E2E rate ${i} ${STAMP}` } });

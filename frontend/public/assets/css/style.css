@@ -6424,6 +6424,162 @@ img, video, iframe, svg {
 .pc-price .pc-sold{margin-left:auto;}
 .pc-price .price-market{order:3;flex-basis:100%;font-size:.76rem;line-height:1.2;color:#94A3B8;font-variant-numeric:tabular-nums;}
 
+/* ===== Header compact (992-1199px): tránh tràn ngang, không ẩn nút ===== */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .header-main__inner {
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  .header-search-wrap {
+    flex: 1 1 160px;
+    min-width: 140px;
+  }
+  .header-search__submit span {
+    display: none;
+  }
+  .header-actions-group {
+    gap: 6px;
+  }
+  .header-actions-group .header-action-btn--routine small,
+  .header-actions-group .header-action-btn--live small {
+    display: none;
+  }
+  .header-actions-group .header-action-btn--routine,
+  .header-actions-group .header-action-btn--live {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .header-action-btn--neutral {
+    padding: 0 10px;
+    gap: 6px;
+  }
+}
+
+/* ===== Khảo sát da 30 giây (home_quick_quiz.php) ===== */
+.home-quick-quiz {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 24px;
+}
+.home-quick-quiz__group {
+  border: 0;
+  margin: 0 0 14px;
+  padding: 0;
+  min-width: 0;
+}
+.home-quick-quiz__legend {
+  float: none;
+  width: auto;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 8px;
+  padding: 0;
+}
+.home-quick-quiz__req,
+.home-quick-quiz__opt {
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: #64748B;
+}
+.home-quick-quiz__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.home-quick-quiz__chip {
+  position: relative;
+  display: inline-block;
+}
+.home-quick-quiz__chip input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  opacity: 0;
+}
+.home-quick-quiz__chip label {
+  display: inline-block;
+  padding: 7px 14px;
+  border: 1px solid #CBD5E1;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.home-quick-quiz__chip label:hover {
+  border-color: #183B2B;
+  background: #F8FAF8;
+}
+.home-quick-quiz__chip input:checked + label {
+  background: #183B2B;
+  border-color: #183B2B;
+  color: #FFFFFF;
+}
+.home-quick-quiz__chip input:focus-visible + label {
+  outline: 3px solid #2D6A4F;
+  outline-offset: 2px;
+}
+
+/* ===== Hoàn thiện routine (home_routine_progress.php) ===== */
+.home-routine-progress__bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #E2E8F0;
+  overflow: hidden;
+}
+.home-routine-progress__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #183B2B, #2D6A4F);
+}
+.home-routine-progress__done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #EBF2EE;
+  color: #183B2B;
+  font-size: 0.9rem;
+}
+.home-routine-progress__owned {
+  height: 100%;
+  padding: 12px;
+  border: 1px solid #D5E3DB;
+  border-radius: 12px;
+  background: #F8FAF8;
+}
+.home-routine-progress__pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #EBF2EE;
+  color: #183B2B;
+}
+.home-routine-progress__name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #0F172A;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* ===== "Vì sao phù hợp": thẻ nổi hiện khi rê chuột vào cả thẻ sản phẩm (2026-11-19) ===== */
 @media (hover:hover){
   .product-card:hover .why-fit__pop{

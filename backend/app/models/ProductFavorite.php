@@ -20,6 +20,11 @@ class ProductFavorite {
 
     private function collection() {
         $collection = $this->db->{self::COLLECTION};
+        // Static flag resets every PHP-FPM request, so persist "ensured" with a temp-dir marker file.
+        $marker = rtrim(sys_get_temp_dir(), '/\\') . '/skinsyntax_product_favorites_indexes_v1';
+        if (!self::$indexesEnsured && is_file($marker)) {
+            self::$indexesEnsured = true;
+        }
         if (!self::$indexesEnsured) {
             try {
                 $collection->createIndex(
@@ -31,6 +36,7 @@ class ProductFavorite {
                     ['name' => 'product_favorites_account_saved_at']
                 );
                 self::$indexesEnsured = true;
+                @touch($marker);
             } catch (Throwable $e) {
                 // A missing index must not make the storefront unavailable.
                 error_log('ProductFavorite index setup skipped: ' . $e->getMessage());

@@ -592,7 +592,7 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
               if ($pMode === 'SIMPLE' && $pSig === 'SIMPLE') {
                   $renderHomeProductCard($p, $pBadge, HomeCardReason::for($p), 'Vì sao gợi ý');
               } else {
-                  $renderHomeProductCard($p, $pBadge);
+                  $renderHomeProductCard($p, $pBadge, HomeCardReason::for($p), 'Vì sao gợi ý');
               }
             ?>
           </div>
@@ -716,16 +716,10 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
       <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Sản phẩm bán chạy">
         <?php foreach ($bestSellerProducts as $p): ?>
           <div class="home-product-rail__item">
-            <?php $renderHomeProductCard($p, 'Bán chạy 30 ngày'); ?>
+            <?php $renderHomeProductCard($p, 'Bán chạy 30 ngày', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
-    </section>
-  <?php elseif ($dbUnavailableMessage === ''): ?>
-    <section class="mb-5 home-product-section home-empty-state" aria-label="Dữ liệu bán hàng gần đây">
-      <span class="home-section-kicker">DỮ LIỆU BÁN HÀNG GẦN ĐÂY</span>
-      <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.25rem;">Chưa đủ dữ liệu để xếp hạng</h2>
-      <p class="text-muted small mb-0 mt-1">SkinSyntax chỉ hiển thị bảng bán chạy khi có đơn hoàn thành trong 30 ngày gần nhất.</p>
     </section>
   <?php endif; ?>
 
@@ -831,7 +825,7 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
       <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Gợi ý hôm nay">
         <?php foreach ($todayProducts as $p): ?>
           <div class="home-product-rail__item">
-            <?php $renderHomeProductCard($p, 'Gợi ý hôm nay'); ?>
+            <?php $renderHomeProductCard($p, 'Gợi ý hôm nay', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -927,7 +921,7 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
       <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Khám phá sản phẩm cho bạn">
         <?php foreach ($homeDiscoveryProducts as $p): ?>
           <div class="home-product-rail__item">
-            <?php $renderHomeProductCard($p, 'Khám phá cho bạn'); ?>
+            <?php $renderHomeProductCard($p, 'Khám phá cho bạn', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -937,6 +931,8 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
   <!-- 7. PERSONAL ROUTINE (CONDITIONAL BASED ON SURVEY PROFILE) -->
   <?php if (!$hasSurvey): ?>
     <?php require __DIR__ . '/partials/home_routine.php'; ?>
+  <?php elseif (!empty($routineProgress)): ?>
+    <?php require __DIR__ . '/partials/home_routine_progress.php'; ?>
   <?php else: ?>
   <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">

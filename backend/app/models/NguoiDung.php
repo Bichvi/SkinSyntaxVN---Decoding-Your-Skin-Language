@@ -11,8 +11,17 @@ class NguoiDung {
 
     public function timTheoEmail(string $email): ?array {
         $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i'); // So sánh email không phân biệt hoa thường
-        $user = $this->db->nguoidung->findOne(['email' => $regex]);
+        $user = $this->db->nguoidung->findOne(['email' => $regex], ['sort' => ['created_at' => -1, '_id' => -1]]);
         return $user ? (array) $user : null;
+    }
+
+    public function timTatCaTheoEmail(string $email): array {
+        $regex = new \MongoDB\BSON\Regex('^' . preg_quote(trim($email)) . '$', 'i');
+        $users = [];
+        foreach ($this->db->nguoidung->find(['email' => $regex], ['sort' => ['created_at' => -1, '_id' => -1]]) as $user) {
+            $users[] = (array) $user;
+        }
+        return $users;
     }
 
     public function timNhanVienTheoEmail(string $email): ?array {
@@ -58,6 +67,7 @@ class NguoiDung {
             }
         }
         $this->db->khach_hang->deleteMany(['email' => $regex]);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
 
         $result = $this->db->nguoidung->insertOne([
             'ho_ten' => $hoTen,
@@ -81,6 +91,7 @@ class NguoiDung {
                     'updated_at' => new \MongoDB\BSON\UTCDateTime(),
                 ]]
             );
+            if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
         }
 
         return $ok;
@@ -197,6 +208,7 @@ class NguoiDung {
                 ['_id' => $khachHang['_id']],
                 ['$set' => $updateData]
             );
+            if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
             return $result->getMatchedCount() > 0;
         }
 
@@ -211,6 +223,7 @@ class NguoiDung {
             'created_at' => new \MongoDB\BSON\UTCDateTime(),
             'updated_at' => new \MongoDB\BSON\UTCDateTime()
         ]);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
 
         return $result->getInsertedCount() > 0;
     }
@@ -234,6 +247,7 @@ class NguoiDung {
             'ma_loai_da' => $newMa,
             'ten_loai_da' => $ten
         ]);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
 
         return $newMa;
     }
@@ -308,6 +322,7 @@ class NguoiDung {
                     ['profile_id' => $targetProfileId, 'owner_email' => strtolower(trim($email))],
                     ['$set' => $update]
                 );
+                if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
                 return $result->getMatchedCount() > 0;
             } catch (Throwable $e) {
                 return false;
@@ -328,6 +343,7 @@ class NguoiDung {
                 ['_id' => $khachHang['_id']],
                 ['$set' => $payload]
             );
+            if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
             return true; // Trả về true luôn để tránh lỗi nếu dữ liệu y hệt không update
         }
 
@@ -340,6 +356,7 @@ class NguoiDung {
         $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
 
         $result = $this->db->khach_hang->insertOne($payload);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
         return $result->getInsertedCount() > 0;
     }
 }
