@@ -1,6 +1,3 @@
-    <footer class="mt-auto py-3 px-4 text-center small text-muted border-top bg-white" style="border-color: var(--admin-border) !important; color: var(--admin-text-muted) !important;">
-        © 2026 <strong>SkinSyntaxVN Commerce Intelligence Center</strong>. All rights reserved.
-    </footer>
 </div>
 
 <script src="<?= BASE_URL ?>/assets/js/bootstrap.bundle.min.js"></script>

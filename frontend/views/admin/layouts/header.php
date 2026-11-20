@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SkinSyntaxVN Admin Center</title>
+    <title>Quản trị SkinSyntaxVN</title>
     <link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>/assets/images/favicon.svg">
     <link rel="alternate icon" href="<?= BASE_URL ?>/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -64,7 +64,7 @@ $menuGroups = [
             [
                 'route' => 'admin_dashboard',
                 'icon' => 'bi bi-grid-1x2-fill',
-                'label' => 'Dashboard System',
+                'label' => 'Tổng quan',
                 'meta' => 'Tổng quan hệ thống',
                 'active' => $currentRoute === 'admin_dashboard',
             ]
@@ -83,14 +83,14 @@ $menuGroups = [
             [
                 'route' => 'admin_tag_review',
                 'icon' => 'bi bi-tags-fill',
-                'label' => 'Duyệt nhãn công dụng',
+                'label' => 'Duyệt nhãn',
                 'meta' => 'Gợi ý AI chờ xác nhận',
                 'active' => strpos($currentRoute, 'admin_tag_review') === 0,
             ],
             [
                 'route' => 'admin_search_ops',
                 'icon' => 'bi bi-activity',
-                'label' => 'Vận hành tìm kiếm',
+                'label' => 'Tìm kiếm',
                 'meta' => 'Đồng bộ & giám sát',
                 'active' => strpos($currentRoute, 'admin_search_ops') === 0,
             ],
@@ -132,19 +132,19 @@ $menuGroups = [
             [
                 'route' => 'admin_lives',
                 'icon' => 'bi bi-camera-reels-fill',
-                'label' => 'Quản lý phiên Live',
+                'label' => 'Livestream',
                 'meta' => 'Quản lý Live & Ghim SP',
                 'active' => strpos($currentRoute, 'admin_live') === 0,
             ]
         ]
     ],
     [
-        'title' => 'AI STUDIO',
+        'title' => 'Nội dung AI',
         'items' => [
             [
                 'route' => 'admin_ai_idol',
                 'icon' => 'bi bi-stars',
-                'label' => 'AI Idol Studio',
+                'label' => 'Syna Studio',
                 'meta' => 'Syna · Kịch bản · Video',
                 'active' => strpos($currentRoute, 'admin_ai_idol') === 0,
             ],
@@ -163,7 +163,7 @@ $menuGroups = [
             [
                 'route' => 'admin_users',
                 'icon' => 'bi bi-people-fill',
-                'label' => 'Khách hàng & User',
+                'label' => 'Khách hàng & nhân viên',
                 'meta' => 'Tài khoản & Phân quyền',
                 'active' => strpos($currentRoute, 'admin_users') === 0,
             ],
@@ -196,14 +196,14 @@ $menuGroups = [
             [
                 'route' => 'staff_dashboard',
                 'icon' => 'bi bi-headset',
-                'label' => 'Dashboard nhân viên',
+                'label' => 'Công việc',
                 'meta' => 'Hỗ trợ công việc',
                 'active' => $currentRoute === 'staff_dashboard',
             ],
             [
                 'route' => 'admin_reports',
                 'icon' => 'bi bi-pie-chart-fill',
-                'label' => 'Báo cáo thống kê',
+                'label' => 'Báo cáo',
                 'meta' => 'Doanh thu & hiệu suất',
                 'active' => strpos($currentRoute, 'admin_reports') === 0,
             ]
@@ -227,13 +227,13 @@ foreach ($menuGroups as $group) {
 
 <aside class="admin-sidebar" id="adminSidebar">
     <div class="admin-sidebar-header">
-        <a href="index.php?r=admin_dashboard" class="admin-brand-logo" aria-label="SkinSyntaxVN Commerce Center" title="SkinSyntaxVN Commerce Center">
+        <a href="index.php?r=admin_dashboard" class="admin-brand-logo" aria-label="Quản trị SkinSyntaxVN" title="Quản trị SkinSyntaxVN">
             <div class="admin-brand-icon">
                 <i class="bi bi-stars fs-5"></i>
             </div>
             <div class="admin-brand-text">
                 <span class="admin-brand-title">SkinSyntaxVN</span>
-                <span class="admin-brand-subtitle">Commerce Center</span>
+                <span class="admin-brand-subtitle">Quản trị</span>
             </div>
         </a>
     </div>
@@ -252,7 +252,6 @@ foreach ($menuGroups as $group) {
                     <i class="<?= h($item['icon']) ?>"></i>
                     <span class="menu-link-text">
                         <span><?= h($item['label']) ?></span>
-                        <span class="menu-link-meta"><?= h($item['meta']) ?></span>
                     </span>
                 </a>
             <?php endforeach; ?>
@@ -264,7 +263,6 @@ foreach ($menuGroups as $group) {
             <i class="bi bi-box-arrow-right fs-5"></i>
             <span class="menu-link-text">
                 <span class="fw-bold">Đăng xuất</span>
-                <span class="menu-link-meta">Kết thúc phiên</span>
             </span>
         </a>
     </div>
@@ -276,16 +274,12 @@ foreach ($menuGroups as $group) {
             <button type="button" class="admin-toggle-sidebar-btn" id="sidebarToggleBtn" aria-controls="adminSidebar" aria-expanded="true" aria-label="Thu gọn thanh bên" title="Thu gọn thanh bên">
                 <i class="bi bi-list fs-5"></i>
             </button>
-            <div class="d-none d-sm-block">
-                <div class="small text-muted fw-bold" style="font-size: 0.72rem;">Admin / <?= h($pageTitleDisplay) ?></div>
-                <h1 class="admin-page-title"><?= h($pageTitleDisplay) ?></h1>
-            </div>
             <!-- Header Quick Search Bar -->
             <form class="d-none d-lg-flex align-items-center ms-3" method="get" action="index.php" style="width: 240px;">
                 <input type="hidden" name="r" value="admin_orders">
                 <div class="input-group input-group-sm overflow-hidden" style="border: 1px solid var(--admin-border); border-radius: 6px; background: var(--admin-surface);">
                     <span class="input-group-text bg-transparent border-0 pe-1 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-0 bg-transparent ps-1 small" name="q" placeholder="Tìm nhanh đơn..." aria-label="Quick Search" style="font-size: 0.82rem;">
+                    <input type="text" class="form-control border-0 bg-transparent ps-1 small" name="q" placeholder="Tìm đơn hàng" aria-label="Tìm đơn hàng" style="font-size: 0.82rem;">
                 </div>
             </form>
         </div>

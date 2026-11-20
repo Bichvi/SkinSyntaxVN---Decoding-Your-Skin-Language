@@ -69,8 +69,7 @@
     } else {
       cap.hidden = true;
     }
-    var pts = Number(s.points_available || 0);
-    $('ptAvail').textContent = 'Điểm khả dụng: ' + fmt(pts) + ' (≈ ' + fmt(pts * 1000) + 'đ)';
+    $('ptAvail').textContent = 'Số dư có thể dùng: ' + fmt(s.xu_balance) + ' xu';
   }
 
   function renderDays(s) {
@@ -166,7 +165,7 @@
     return getJson(urls.history).then(function (r) {
       var items = Array.isArray((r.body || {}).items) ? r.body.items : [];
       ul.textContent = '';
-      if (!items.length) { ul.appendChild(el('li', 'pt-empty', 'Bắt đầu xem video để nhận xu đầu tiên')); return; }
+      if (!items.length) { ul.appendChild(el('li', 'pt-empty', 'Đánh giá sản phẩm đã mua hoặc xem video để nhận xu đầu tiên')); return; }
       items.forEach(function (it) {
         var li = el('li');
         var amt = Number(it.amount_xu || 0);

@@ -94,6 +94,13 @@ class PhienLive {
         try {
             $now = date('Y-m-d H:i:s');
             $status = $this->normalizeInputStatus((string)($data['trang_thai'] ?? 'scheduled'));
+            // "Phát ngay" means open the Studio ready to publish after the
+            // operator grants camera/microphone permission; it must not mark
+            // the room LIVE before a real LiveKit video track exists.
+            if (($data['hinh_thuc_phat'] ?? '') === 'now') {
+                $status = 'ready';
+                $data['khung_gio_bat_dau'] = $now;
+            }
             if ($status === 'live') $status = 'ready';
             $nextId = $this->nextNumericId();
             $payload = [

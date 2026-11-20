@@ -399,7 +399,7 @@ foreach ($sessions as $ls) {
           </button>
         </div>
 
-        <form method="post" action="<?= BASE_URL ?>/index.php?r=admin_live_create">
+        <form method="post" enctype="multipart/form-data" action="<?= BASE_URL ?>/index.php?r=admin_live_create">
           <input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf']) ?>">
           <div class="card-body p-4">
             <div class="row g-4">
@@ -421,12 +421,21 @@ foreach ($sessions as $ls) {
                       <textarea name="tom_tat_phien_live" class="form-control" rows="2" placeholder="Tóm tắt nội dung tư vấn skincare, giải đáp câu hỏi và các deal độc quyền trong buổi live..."></textarea>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label fw-bold small">Ảnh bìa (Thumbnail) phiên live <small class="text-muted">(URL hình ảnh)</small></label>
-                      <input type="url" name="thumbnail" class="form-control" placeholder="https://... hoặc để trống để dùng ảnh mặc định">
+                      <label class="form-label fw-bold small">Ảnh bìa phiên live</label>
+                      <input type="file" name="thumbnail_file" class="form-control" accept="image/jpeg,image/png,image/webp">
+                      <input type="url" name="thumbnail" class="form-control mt-2" placeholder="Hoặc dán URL ảnh công khai">
+                      <small class="text-muted extra-small">Có thể tải ảnh từ máy lên (JPG, PNG, WebP, tối đa 5 MB), không bắt buộc URL công khai.</small>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label fw-bold small">Nhân viên hỗ trợ / Streamer Account</label>
-                      <input type="text" name="publisher_staff_id" class="form-control" placeholder="Mã nhân viên tham gia (tùy chọn)">
+                      <label class="form-label fw-bold small">Người phụ trách phát</label>
+                      <select name="publisher_staff_id" class="form-select">
+                        <option value="">-- Chọn sau trong Studio --</option>
+                        <?php foreach ((array)($staffMembers ?? []) as $staff): ?>
+                          <?php $staffId = (string)($staff['ma_nv'] ?? $staff['id'] ?? $staff['username'] ?? ''); ?>
+                          <option value="<?= h($staffId) ?>"><?= h($staff['ho_ten'] ?? $staff['ten_nv'] ?? $staff['username'] ?? $staffId) ?> · <?= h($staffId) ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <small class="text-muted extra-small">Có thể mời thêm nhân viên trong Studio để cùng quản lý sản phẩm, chat và voucher.</small>
                     </div>
                     <div class="col-md-4">
                       <label class="form-label fw-bold small">Hình thức phát</label>

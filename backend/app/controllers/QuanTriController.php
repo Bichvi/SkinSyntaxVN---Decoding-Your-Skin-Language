@@ -557,7 +557,10 @@ class QuanTriController {
 
         $id = max(0, (int)($_POST['ma_kh'] ?? 0));
         $ok = $this->model->saveCustomer($_POST, $id > 0 ? $id : null);
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu thông tin khách hàng.' : 'Không thể lưu khách hàng.');
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể lưu khách hàng.')
+            : 'Không thể lưu khách hàng.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu khách hàng.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_users');
     }
 
@@ -1827,8 +1830,27 @@ class QuanTriController {
             'pageTitle' => 'Quản lý phiên phát trực tiếp & ưu đãi',
             'user' => $user,
             'lives' => $lives,
-            'allProducts' => $allProducts
+            'allProducts' => $allProducts,
+            'staffMembers' => method_exists($this->model, 'listStaff') ? $this->model->listStaff('') : []
         ]);
+    }
+
+    private function uploadLiveThumbnail(): ?string {
+        $file = $_FILES['thumbnail_file'] ?? null;
+        if (!is_array($file) || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return null;
+        if ((int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK ||
+            (int)($file['size'] ?? 0) < 1 || (int)($file['size'] ?? 0) > 5 * 1024 * 1024 ||
+            !is_uploaded_file((string)($file['tmp_name'] ?? ''))) {
+            throw new RuntimeException('Ảnh bìa không hợp lệ hoặc vượt quá 5 MB.');
+        }
+        $mime = strtolower((string)@mime_content_type((string)$file['tmp_name']));
+        $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!isset($extensions[$mime])) throw new RuntimeException('Ảnh bìa chỉ hỗ trợ JPG, PNG hoặc WebP.');
+        $dir = dirname(__DIR__, 2) . '/public/uploads/live_thumbnails';
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) throw new RuntimeException('Không tạo được thư mục ảnh bìa.');
+        $name = bin2hex(random_bytes(16)) . '.' . $extensions[$mime];
+        if (!move_uploaded_file((string)$file['tmp_name'], $dir . '/' . $name)) throw new RuntimeException('Không lưu được ảnh bìa.');
+        return BASE_URL . '/uploads/live_thumbnails/' . $name;
     }
 
     private function requireLiveAdminPost(): void {
@@ -1844,7 +1866,15 @@ class QuanTriController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/../models/PhienLive.php';
             $phienLiveModel = new PhienLive($this->pdo);
-            $newId = $phienLiveModel->taoPhienLive($_POST);
+            $payload = $_POST;
+            try {
+                $uploadedThumbnail = $this->uploadLiveThumbnail();
+                if ($uploadedThumbnail !== null) $payload['thumbnail'] = $uploadedThumbnail;
+                $newId = $phienLiveModel->taoPhienLive($payload);
+            } catch (Throwable $e) {
+                $newId = false;
+                set_flash('error', $e->getMessage());
+            }
             if ($newId) {
                 set_flash('success', 'Đã tạo phiên LiveStream mới thành công!');
                 if (($_POST['action'] ?? '') === 'create_and_studio') {

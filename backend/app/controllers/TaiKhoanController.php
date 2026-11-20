@@ -9,6 +9,7 @@ require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/OrderTabs.php';
 require_once __DIR__ . '/../services/SkinConsultationSession.php';
+require_once __DIR__ . '/../models/RewardLedger.php';
 
 class TaiKhoanController {
     private  $pdo;
@@ -313,6 +314,9 @@ class TaiKhoanController {
         $orderCounts = OrderTabs::counts([]);
         $orderPage = ['page' => 1, 'pages' => 1, 'matched' => 0];
         $reviewSentCount = 0;
+        $completedOrderCount = 0;
+        $completedOrderSpend = 0;
+        $xuBalance = 0;
 
         if ($khachHang && !empty($khachHang['ma_kh'])) {
             $maKh = (int)$khachHang['ma_kh'];
@@ -320,6 +324,11 @@ class TaiKhoanController {
                 $this->handleReorder($maKh, (string)$account['email'], max(0, (int)$_GET['reorder']));
             }
             $orders = $this->model->getOrderHistory($maKh);
+            foreach ($orders as $order) {
+                if (OrderTabs::tabOf($order) !== 'hoan_thanh') continue;
+                $completedOrderCount++;
+                $completedOrderSpend += max(0, (int)($order['tong_tien'] ?? 0));
+            }
             // Đếm theo tab trên toàn bộ đơn, rồi chỉ làm giàu dữ liệu (ảnh, quyền đánh giá) cho 10 đơn của trang đang xem.
             $orderCounts = OrderTabs::counts($orders);
             $matchedOrders = OrderTabs::filter($orders, $orderTab, $orderQuery);
@@ -329,6 +338,11 @@ class TaiKhoanController {
             if (!$this->isLiveFilterRequest()) {  // tổng quan/giỏ hàng không nằm trong vùng live search cập nhật
                 // Tổng quan cần số đánh giá của mọi đơn, không chỉ trang đang xem.
                 $reviewSentCount = (int)$this->pdo->danh_gia_san_pham->countDocuments(['ma_khach_hang' => $maKh]);
+                try {
+                    $xuBalance = (new RewardLedger($this->pdo, false))->sumXu($maKh);
+                } catch (Throwable $error) {
+                    error_log('Account xu balance failed: ' . get_class($error));
+                }
                 $cartItems = $this->buildSessionCartItems();
                 if (empty($cartItems)) {
                     $cartItems = $this->model->getCartItems($maKh);
@@ -378,8 +392,9 @@ class TaiKhoanController {
 
         // Live search chỉ cập nhật vùng đơn hàng; hồ sơ da/giỏ hàng không hiển thị lại nên không cần tải.
         $liveOnlyOrders = $this->isLiveFilterRequest();
-        $skinProfiles = $liveOnlyOrders ? [] : $this->model->getSkinProfilesByEmail((string)$account['email']);
-        $skinProfile = $liveOnlyOrders ? null : $this->model->getSelectedSkinProfileByEmail((string)$account['email']);
+        // Khu vực tài khoản chỉ quản lý hồ sơ chính của chính khách hàng.
+        $skinProfiles = [];
+        $skinProfile = $liveOnlyOrders ? null : $this->model->getSkinProfileByEmail((string)$account['email']);
         $selectedSkinProfileId = trim((string)($skinProfile['profile_id'] ?? ''));
         $latestQuickSkinUpdate = $liveOnlyOrders ? null : $this->model->getLatestQuickSkinProfileUpdate((string)$account['email'], $selectedSkinProfileId);
         $quickSkinHistory = $liveOnlyOrders ? [] : $this->model->getQuickSkinProfileHistory((string)$account['email'], $selectedSkinProfileId);
@@ -399,6 +414,9 @@ class TaiKhoanController {
             'orderCounts' => $orderCounts,
             'orderPage' => $orderPage,
             'reviewSentCount' => $reviewSentCount,
+            'completedOrderCount' => $completedOrderCount,
+            'completedOrderSpend' => $completedOrderSpend,
+            'xuBalance' => $xuBalance,
             'cartItems' => $cartItems,
             'customerVouchers' => $customerVouchers,
             'skinProfile' => $skinProfile,
@@ -772,6 +790,38 @@ class TaiKhoanController {
         $email = trim((string)($user['email'] ?? ''));
         if ($email === '') {
             $this->json(['ok' => false, 'message' => 'Không xác định được email tài khoản.'], 422);
+        }
+
+        if (trim((string)($_POST['mode'] ?? '')) === 'shipping_address') {
+            $receiverName = trim((string)($_POST['receiver_name'] ?? ''));
+            $phone = preg_replace('/\s+/u', '', trim((string)($_POST['phone'] ?? ''))) ?? '';
+            $province = trim((string)($_POST['province'] ?? ''));
+            $ward = trim((string)($_POST['ward'] ?? ''));
+            $street = trim((string)($_POST['street'] ?? ''));
+            $addressType = trim((string)($_POST['address_type'] ?? 'home'));
+            $isDefault = (string)($_POST['is_default'] ?? '') === '1';
+
+            if ($receiverName === '' || $phone === '' || $province === '' || $ward === '' || $street === '') {
+                $this->json(['ok' => false, 'message' => 'Vui lòng nhập đầy đủ người nhận, số điện thoại và địa chỉ.'], 422);
+            }
+            if (!preg_match('/^(?:0\d{9}|\+84\d{9})$/D', $phone)) {
+                $this->json(['ok' => false, 'message' => 'Số điện thoại phải gồm 10 số hoặc dùng đầu số +84.'], 422);
+            }
+            if (!in_array($addressType, ['home', 'company'], true)) $addressType = 'home';
+
+            $address = $this->model->addShippingAddressByEmail($email, [
+                'receiver_name' => $receiverName,
+                'phone' => $phone,
+                'province' => $province,
+                'ward' => $ward,
+                'street' => $street,
+                'address_type' => $addressType,
+                'is_default' => $isDefault,
+            ]);
+            if ($address === null) {
+                $this->json(['ok' => false, 'message' => 'Chưa thể lưu địa chỉ. Bạn có thể lưu tối đa 10 địa chỉ.'], 422);
+            }
+            $this->json(['ok' => true, 'message' => 'Đã thêm địa chỉ giao hàng.', 'address' => $address]);
         }
 
         $hoTen = trim((string)($_POST['ho_ten'] ?? ''));
