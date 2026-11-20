@@ -6423,3 +6423,25 @@ img, video, iframe, svg {
 .product-meta .price-wrap.pc-price{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px;row-gap:0;}
 .pc-price .pc-sold{margin-left:auto;}
 .pc-price .price-market{order:3;flex-basis:100%;font-size:.76rem;line-height:1.2;color:#94A3B8;font-variant-numeric:tabular-nums;}
+
+/* ===== "Vì sao phù hợp": thẻ nổi hiện khi rê chuột vào cả thẻ sản phẩm (2026-11-19) ===== */
+@media (hover:hover){
+  .product-card:hover .why-fit__pop{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:none;
+  }
+}
+
+/* ===== Popup "Vì sao phù hợp" bản đầy đủ (2026-11-20) ===== */
+.why-fit__proof{font-size:.68rem;color:#475569;margin-bottom:2px;}
+.why-fit__proof .bi-star-fill{color:#F59E0B;}
+.why-fit__note{font-size:.7rem;color:#1C4D36;}
+.why-fit__note b{font-weight:700;}
+.why-fit__match{color:#15803D;font-weight:700;font-size:.68rem;margin-left:4px;white-space:nowrap;}
+.why-fit__cta{display:block;margin-top:6px;padding-top:6px;border-top:1px dashed #C8DACF;color:#183B2B;font-weight:700;font-size:.72rem;text-decoration:none;}
+.why-fit__cta:hover{text-decoration:underline;}
+@media (hover:hover) and (prefers-reduced-motion: no-preference){
+  .product-card:hover .why-fit__pop{transition-delay:.25s;}
+}
