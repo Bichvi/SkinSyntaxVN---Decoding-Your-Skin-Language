@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/AiIdolReplaySessions.php';
 require_once __DIR__ . '/../services/CacheService.php';
+require_once __DIR__ . '/../services/RateLimiter.php';
 
 class LiveController {
     private const VIEWER_ACTIVE_SECONDS = 45;
@@ -703,15 +704,32 @@ class LiveController {
             exit;
         }
         if (session_status() === PHP_SESSION_NONE) @session_start();
+        if (!is_logged_in()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'code' => 'login_required', 'message' => 'Bạn cần đăng nhập để bình luận trong livestream.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $user = current_user() ?? [];
+        $senderId = (string)($user['ma_nd'] ?? $user['id'] ?? '');
+        $rateIdentity = $senderId !== '' ? $senderId : RateLimiter::clientIdentity();
+        $distributedRate = $rateIdentity === null
+            ? ['degraded' => true, 'allowed' => true]
+            : RateLimiter::shared()->hit('live_chat:' . $roomId, $rateIdentity, 5, 20);
         $rateKey = 'live_chat_rate_' . $roomId;
-        $rate = array_values(array_filter((array)($_SESSION[$rateKey] ?? []), fn($time) => (int)$time > time() - 20));
-        if (count($rate) >= 5) {
+        if (!empty($distributedRate['degraded'])) {
+            $rate = array_values(array_filter((array)($_SESSION[$rateKey] ?? []), fn($time) => (int)$time > time() - 20));
+            if (count($rate) >= 5) {
+                http_response_code(429);
+                echo json_encode(['ok' => false, 'message' => 'Bạn gửi hơi nhanh. Vui lòng thử lại sau ít giây.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+            $rate[] = time();
+            $_SESSION[$rateKey] = $rate;
+        } elseif (empty($distributedRate['allowed'])) {
             http_response_code(429);
             echo json_encode(['ok' => false, 'message' => 'Bạn gửi hơi nhanh. Vui lòng thử lại sau ít giây.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
-        $rate[] = time();
-        $_SESSION[$rateKey] = $rate;
 
         if ($roomId !== '') {
             require_once __DIR__ . '/../models/PhienLive.php';
@@ -737,22 +755,29 @@ class LiveController {
 
         $lowerMsg = mb_strtolower($message);
         $isOrderCommand = (strpos($lowerMsg, 'chốt đơn') !== false || strpos($lowerMsg, 'mua ngay') !== false || strpos($lowerMsg, 'đặt hàng') !== false);
+        $isSynaRequest = preg_match('/(^|\s)@syna\b/iu', $message) === 1;
+        $agentMessage = trim((string)preg_replace('/(^|\s)@syna\b/iu', ' ', $message));
+        $clientMessageId = trim((string)($_POST['client_message_id'] ?? ''));
+
+        $senderName = (string)($user['ho_ten'] ?? $user['email'] ?? 'Khách hàng');
+        $senderType = in_array(current_role(), ['admin', 'nhanvien'], true) ? 'streamer' : 'customer';
+        $isQuestion = str_contains($message, '?') || preg_match('/\b(da|loai da|thanh phan|cach dung|dung sao|phu hop|co duoc|bao nhieu)\b/ui', $message);
+        if (!empty($phienLiveModel) && $roomId !== '') {
+            // Persist the user's message before the optional AI call. The AI service
+            // may take up to four seconds and must never delay chat visibility.
+            $saved = $phienLiveModel->luuTinNhanChat($roomId, $senderName, $message, false, $isOrderCommand, $senderType, $senderId, $clientMessageId, (bool)$isQuestion);
+            if (!$saved) {
+                http_response_code(503);
+                echo json_encode(['ok' => false, 'message' => 'Không thể lưu tin nhắn vào phiên live.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+            // Do not keep the PHP session lock while the optional AI request runs.
+            // This prevents a slow agent call from blocking the customer's next request.
+            if (session_status() === PHP_SESSION_ACTIVE) @session_write_close();
+        }
 
         $aiReply = '';
-        if ($isOrderCommand && $pinnedProduct && $productPrice > 0) {
-            if (!isset($_SESSION['gio_hang']) || !is_array($_SESSION['gio_hang'])) {
-                $_SESSION['gio_hang'] = [];
-            }
-            $pIdStr = (string)($pinnedProduct['ma_san_pham'] ?? $pinnedProduct['id'] ?? $productId);
-            if ($pIdStr !== '') {
-                $currentQty = (int)($_SESSION['gio_hang'][$pIdStr] ?? 0);
-                $_SESSION['gio_hang'][$pIdStr] = $currentQty + 1;
-                ProductEventTracker::record($mongoDb, 'add_to_cart', $pIdStr);
-            }
-
-            $userDisplayName = is_logged_in() ? (current_user()['ho_ten'] ?? 'bạn') : 'khách hàng';
-            $aiReply = 'Tư vấn SkinSyntax: Đã nhận lệnh chốt đơn 1x "' . $productName . '" với giá ưu đãi ' . number_format($productPrice) . 'đ cho ' . $userDisplayName . '! Sản phẩm đã được thêm vào giỏ hàng. Bạn có thể bấm vào giỏ hàng ở góc phải để xem đơn nhé!';
-        } else {
+        if (!$isSynaRequest && !$isOrderCommand) {
             $ingredients = !empty($pinnedProduct['thanh_phan_chinh']) ? $pinnedProduct['thanh_phan_chinh'] : (!empty($pinnedProduct['thanh_phan_day_du']) ? $pinnedProduct['thanh_phan_day_du'] : '');
             $origin = !empty($pinnedProduct['xuat_xu']) ? $pinnedProduct['xuat_xu'] : 'chính hãng';
             $description = !empty($pinnedProduct['mo_ta']) ? mb_substr(strip_tags($pinnedProduct['mo_ta']), 0, 200) : '';
@@ -805,30 +830,8 @@ class LiveController {
             if (empty($response['ok'])) $aiReply = '';
         }
 
-        $guestNickname = trim((string)($_POST['guest_nickname'] ?? $_GET['guest_nickname'] ?? ''));
-        $senderId = '';
-        $senderType = 'guest';
-        if (is_logged_in()) {
-            $user = current_user() ?? [];
-            $senderId = (string)($user['ma_nd'] ?? $user['id'] ?? '');
-            $senderName = (string)($user['ho_ten'] ?? $user['email'] ?? 'Khách hàng');
-            $senderType = in_array(current_role(), ['admin', 'nhanvien'], true) ? 'streamer' : 'customer';
-        } else {
-            $senderId = 'guest_' . substr(hash('sha256', session_id()), 0, 20);
-            $senderName = $guestNickname !== '' ? mb_substr($guestNickname, 0, 40) : 'Khách vãng lai';
-        }
-        $clientMessageId = trim((string)($_POST['client_message_id'] ?? ''));
-        $isQuestion = str_contains($message, '?') || preg_match('/\b(da|loai da|thanh phan|cach dung|dung sao|phu hop|co duoc|bao nhieu)\b/ui', $message);
-        if (!empty($phienLiveModel) && $roomId !== '') {
-            $saved = $phienLiveModel->luuTinNhanChat($roomId, $senderName, $message, false, $isOrderCommand, $senderType, $senderId, $clientMessageId, (bool)$isQuestion);
-            if (!$saved) {
-                http_response_code(503);
-                echo json_encode(['ok' => false, 'message' => 'Không thể lưu tin nhắn vào phiên live.'], JSON_UNESCAPED_UNICODE);
-                exit;
-            }
-            if ($aiReply !== '') {
-                $phienLiveModel->luuTinNhanChat($roomId, 'Tư vấn SkinSyntax', $aiReply, true, $isOrderCommand, 'ai', 'ai_cohost', '', false);
-            }
+        if (!empty($phienLiveModel) && $roomId !== '' && $aiReply !== '') {
+            $phienLiveModel->luuTinNhanChat($roomId, 'Syna', $aiReply, true, $isOrderCommand, 'ai', 'ai_cohost', '', false, $clientMessageId, $message, $senderName);
         }
 
         $cartCount = 0;
@@ -839,12 +842,57 @@ class LiveController {
         echo json_encode([
             'ok' => true,
             'user_message' => $message,
+            'sender_name' => $senderName,
             'ai_response' => $aiReply,
+            'agent_required' => $isSynaRequest || $isOrderCommand,
+            'agent_message' => $agentMessage !== '' ? $agentMessage : $message,
             'is_order' => $isOrderCommand,
             'client_message_id' => $clientMessageId,
             'cart_count' => $cartCount,
             'timestamp' => date('H:i:s')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    public function apiLiveSynaReply(): void {
+        header('Content-Type: application/json; charset=utf-8');
+        if (session_status() === PHP_SESSION_NONE) @session_start();
+        if (!is_logged_in()) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'code' => 'login_required', 'message' => 'Bạn cần đăng nhập để gọi Syna trong livestream.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $roomId = trim((string)($_POST['room_id'] ?? $_GET['room_id'] ?? ''));
+        $parentId = trim((string)($_POST['reply_to_client_message_id'] ?? ''));
+        $reply = trim((string)($_POST['message'] ?? ''));
+        if ($roomId === '' || $parentId === '' || $reply === '' || mb_strlen($reply) > 2000) {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'message' => 'Dữ liệu trả lời Syna không hợp lệ.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        global $db;
+        $mongoDb = $db ?? $this->pdo;
+        require_once __DIR__ . '/../models/PhienLive.php';
+        $model = new PhienLive($mongoDb);
+        $live = $model->findById($roomId);
+        if (!$live || ($live['status'] ?? '') !== 'live') {
+            http_response_code(409);
+            echo json_encode(['ok' => false, 'message' => 'Phiên livestream đã kết thúc.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $user = current_user() ?? [];
+        $senderId = (string)($user['ma_nd'] ?? $user['id'] ?? '');
+        $parent = $model->findChatMessage($roomId, $parentId, $senderId, false);
+        if (!$parent) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'message' => 'Không tìm thấy tin nhắn gốc của bạn.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $replyId = 'syna-' . $parentId;
+        if (!$model->findChatMessage($roomId, $replyId, '', true)) {
+            $model->luuTinNhanChat($roomId, 'Syna', $reply, true, !empty($parent['is_order']), 'ai', 'ai_cohost', $replyId, false, $parentId, (string)($parent['message'] ?? ''), (string)($parent['sender_name'] ?? 'Khách hàng'));
+        }
+        echo json_encode(['ok' => true, 'client_message_id' => $replyId], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
 
@@ -927,6 +975,12 @@ class LiveController {
             echo json_encode(['ok' => false, 'message' => 'Thiếu mã phiên livestream.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
+        $liveProductsCacheKey = 'live:products:' . $roomId;
+        $cachedProducts = CacheService::getInstance()->get($liveProductsCacheKey);
+        if (is_array($cachedProducts) && !empty($cachedProducts['ok']) && is_array($cachedProducts['data'] ?? null)) {
+            echo json_encode($cachedProducts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit;
+        }
         require_once __DIR__ . '/../models/PhienLive.php';
         $phienLiveModel = new PhienLive($mongoDb);
         $live = $phienLiveModel->findById($roomId);
@@ -955,7 +1009,7 @@ class LiveController {
             $discountPercent = round((($marketPrice - $livePrice) / $marketPrice) * 100);
         }
 
-        echo json_encode([
+        $productsPayload = [
             'ok' => true,
             'data' => [
                 'live_id' => (string)$live['id'],
@@ -976,7 +1030,9 @@ class LiveController {
                     'trang_thai_kho' => (string)($pinnedProduct['trang_thai_kho'] ?? 'con_hang')
                 ] : null
             ]
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        ];
+        CacheService::getInstance()->set($liveProductsCacheKey, $productsPayload, 2);
+        echo json_encode($productsPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
 
@@ -1039,6 +1095,9 @@ class LiveController {
         }
 
         $ok = $phienLiveModel->ghimSanPham($liveId, $productId, $livePrice, $durationMinutes, $dealStock);
+        if ($ok) {
+            CacheService::getInstance()->delete('live:products:' . $liveId);
+        }
 
         if ($isAjax) {
             header('Content-Type: application/json; charset=utf-8');

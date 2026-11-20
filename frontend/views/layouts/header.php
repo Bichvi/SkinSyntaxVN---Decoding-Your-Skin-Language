@@ -14,7 +14,9 @@ $siteLogoUrl = BASE_URL . '/assets/images/logo.png?v=' . rawurlencode($siteLogoV
 $styleAssetPath = strpos((string)BASE_URL, '/frontend/public') !== false
     ? dirname(__DIR__, 2) . '/public/assets/css/style.css'
     : dirname(__DIR__, 3) . '/assets/css/style.css';
-$styleAssetVersion = @filemtime($styleAssetPath) ?: '20261109_ui';
+// Docker/Nginx phục vụ /assets từ frontend/public: thử cả đường dẫn đó để version đổi theo file thật (tránh cache CSS cũ).
+$styleAssetVersion = @filemtime($styleAssetPath)
+    ?: (@filemtime(dirname(__DIR__, 2) . '/public/assets/css/style.css') ?: '20261109_ui');
 $rewardDot = false;
 if (is_logged_in() && $currentRole === 'khach_hang') {
   if (class_exists('RewardRules')) {
@@ -1466,13 +1468,13 @@ $socialLinks = [
   </style>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    var initializeAuth = function () {
       var authModalElement = document.getElementById('authModal');
-      if (!authModalElement || typeof bootstrap === 'undefined') {
+      if (!authModalElement) {
         return;
       }
 
-      var authModal = new bootstrap.Modal(authModalElement);
+      var authModal = typeof bootstrap !== 'undefined' ? new bootstrap.Modal(authModalElement) : null;
       var panels = authModalElement.querySelectorAll('[data-auth-panel]');
       var switchers = authModalElement.querySelectorAll('[data-auth-switch]');
       var triggers = document.querySelectorAll('[data-auth-tab]');
@@ -1878,9 +1880,17 @@ $socialLinks = [
 
       if (initialMode === 'login' || initialMode === 'forgot' || initialMode === 'register') {
         setPanel(initialMode);
-        authModal.show();
+        if (authModal) {
+          authModal.show();
+        }
       }
-    });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeAuth);
+    } else {
+      initializeAuth();
+    }
   </script>
 <?php endif; ?>
 

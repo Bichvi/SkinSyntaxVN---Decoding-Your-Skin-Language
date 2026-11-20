@@ -25,6 +25,14 @@ class AuthController {
     private function appBaseUrl(): string {
         $configuredAppUrl = defined('APP_URL') ? trim((string)APP_URL) : '';
         if ($configuredAppUrl !== '') {
+            $configuredHost = strtolower((string)(parse_url($configuredAppUrl, PHP_URL_HOST) ?? ''));
+            $requestHost = trim((string)($_SERVER['HTTP_HOST'] ?? ''));
+            // Local Docker/XAMPP access can use localhost or 127.0.0.1. Keep
+            // the OAuth callback on the same host/port as the current session.
+            if ($requestHost !== '' && in_array($configuredHost, ['localhost', '127.0.0.1'], true)) {
+                $isHttps = !empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off';
+                return ($isHttps ? 'https' : 'http') . '://' . $requestHost . rtrim((string)BASE_URL, '/');
+            }
             return rtrim($configuredAppUrl, '/');
         }
 
@@ -41,14 +49,22 @@ class AuthController {
 
     private function resolveOAuthRedirectUri(string $provider): string {
         $constantName = strtoupper(trim($provider)) . '_OAUTH_REDIRECT_URI';
+        $dynamicRedirect = $this->buildRouteUrl('auth_social_callback', ['provider' => $provider]);
         if (defined($constantName)) {
             $configured = trim((string)constant($constantName));
             if ($configured !== '') {
-                return $configured;
+                $configuredHost = strtolower((string)(parse_url($configured, PHP_URL_HOST) ?? ''));
+                $requestHost = strtolower(trim((string)($_SERVER['HTTP_HOST'] ?? '')));
+                // Ignore stale local redirect values (for example an old
+                // /fe/... path or a missing :8080 port) that cannot preserve
+                // the current PHP session through the provider callback.
+                if ($requestHost === '' || $configuredHost === '' || $configuredHost === $requestHost) {
+                    return $configured;
+                }
             }
         }
 
-        return $this->buildRouteUrl('auth_social_callback', ['provider' => $provider]);
+        return $dynamicRedirect;
     }
 
     private function issueSignupCaptcha(): string {
@@ -322,7 +338,8 @@ class AuthController {
 
         try {
             $staff = $this->model->timNhanVienTheoEmail($email);
-            $u = $staff ? null : $this->model->timTheoEmail($email);
+            $customerAccounts = $staff ? [] : $this->model->timTatCaTheoEmail($email);
+            $u = $customerAccounts[0] ?? null;
         } catch (\MongoDB\Driver\Exception\ConnectionException $e) {
             // Mất kết nối CSDL (thường là Atlas chập chờn): báo gọn thay vì trang Fatal error.
             error_log('[auth] MongoDB connection error on login: ' . get_class($e));
@@ -363,8 +380,12 @@ class AuthController {
             exit;
         }
 
-        if ($u && password_verify($matkhau, (string)$u['mat_khau'])) {
-            $this->loginCustomerSession($u);
+        foreach ($customerAccounts as $customerAccount) {
+            if (!password_verify($matkhau, (string)($customerAccount['mat_khau'] ?? ''))) {
+                continue;
+            }
+
+            $this->loginCustomerSession($customerAccount);
 
             set_flash('success', 'Đăng nhập thành công.');
             $this->redirectCustomerAfterLogin();
@@ -858,10 +879,20 @@ class AuthController {
             exit;
         }
 
-        $this->model->taoMoi($hoTen, $email, $matkhau, [
-            'terms_agree' => isset($_POST['terms_agree']),
-            'privacy_consent' => isset($_POST['privacy_consent']),
-        ]);
+        try {
+            $created = $this->model->taoMoi($hoTen, $email, $matkhau, [
+                'terms_agree' => isset($_POST['terms_agree']),
+                'privacy_consent' => isset($_POST['privacy_consent']),
+            ]);
+        } catch (Throwable $e) {
+            error_log('[auth] customer registration failed: ' . get_class($e));
+            $created = false;
+        }
+        if (!$created) {
+            set_flash('error', 'Không thể tạo tài khoản lúc này. Vui lòng thử lại sau.');
+            header('Location: ' . BASE_URL . '/index.php?auth=register');
+            exit;
+        }
         unset($_SESSION['signup_old']);
         unset($_SESSION['signup_captcha']);
         $this->clearSignupOtp();
