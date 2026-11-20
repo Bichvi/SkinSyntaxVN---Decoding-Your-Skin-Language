@@ -6,6 +6,7 @@ $currentUser = current_user();
 $currentRole = strtolower(trim((string)($currentUser['role'] ?? $currentUser['vai_tro'] ?? 'khach_hang')));
 $accountDisplayName = trim((string)($currentUser['ho_ten'] ?? $currentUser['email'] ?? 'Bạn'));
 $accountDisplayName = $accountDisplayName !== '' ? $accountDisplayName : 'Bạn';
+$headerAvatar = account_avatar_url($currentUser ?? []);
 $cartCount = 0;
 foreach (($_SESSION['gio_hang'] ?? []) as $qty) {
   $cartCount += (int)$qty;
@@ -231,7 +232,10 @@ $socialLinks = [
             aria-expanded="false"
             aria-label="<?= is_logged_in() ? 'Mở menu tài khoản' : 'Mở menu đăng nhập và đăng ký' ?>"
           >
-            <i class="fas fa-circle-user header-account-toggle__icon" aria-hidden="true"></i>
+            <span class="profile-photo profile-photo--header" aria-hidden="true">
+              <i class="fas fa-user"></i>
+              <img data-account-avatar <?= $headerAvatar !== '' ? 'src="' . h($headerAvatar) . '"' : 'hidden' ?> alt="">
+            </span>
             <span class="header-account-toggle__copy">
               <?php if (is_logged_in()): ?>
                 <small>Chào, <?= h($accountDisplayName) ?></small>
@@ -246,16 +250,16 @@ $socialLinks = [
 
           <div class="dropdown-menu dropdown-menu-end header-account-menu" aria-labelledby="headerAccountDropdown">
             <?php if (is_logged_in()): ?>
-              <div class="header-account-menu__identity">
-                <span class="header-account-menu__avatar" aria-hidden="true"><i class="fas fa-user"></i></span>
+              <a class="header-account-menu__identity" href="<?= h(BASE_URL . '/index.php?r=' . ($currentRole === 'admin' ? 'admin_dashboard' : ($currentRole === 'nhanvien' ? 'staff_dashboard' : 'hoso#tab-overview'))) ?>">
+                <span class="profile-photo" aria-hidden="true"><i class="fas fa-user"></i><img data-account-avatar <?= $headerAvatar !== '' ? 'src="' . h($headerAvatar) . '"' : 'hidden' ?> alt=""></span>
                 <span>
                   <small>Xin chào</small>
                   <strong><?= h($accountDisplayName) ?></strong>
                 </span>
-              </div>
+              </a>
 
               <?php if ($currentRole === 'khach_hang'): ?>
-                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=hoso#tab-overview">
+                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=hoso#tab-settings">
                   <i class="far fa-id-card" aria-hidden="true"></i><span>Tài khoản của bạn</span>
                 </a>
                 <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=hoso&amp;tab=orders#tab-orders">
@@ -264,7 +268,7 @@ $socialLinks = [
                 <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=favorite_list">
                   <i class="far fa-heart" aria-hidden="true"></i><span>Sản phẩm yêu thích</span>
                 </a>
-                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=hoso#tab-overview">
+                <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=hoso#tab-address">
                   <i class="fas fa-location-dot" aria-hidden="true"></i><span>Địa chỉ giao hàng</span>
                 </a>
                 <a class="header-account-menu__item" href="<?= BASE_URL ?>/index.php?r=phan_thuong">
@@ -542,7 +546,7 @@ $socialLinks = [
         <li><a href="<?= BASE_URL ?>/index.php?r=home" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-house text-success"></i> Trang chủ</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-layer-group text-success"></i> Tất cả sản phẩm</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=live" class="text-decoration-none text-danger fw-bold d-flex align-items-center gap-2"><i class="fa-solid fa-video"></i> Tư vấn trực tiếp</a></li>
-        <li><a href="<?= BASE_URL ?>/index.php?r=giohang" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-bag-shopping text-success"></i> Giỏ hàng (<?= $cartCount ?>)</a></li>
+        <li><a href="<?= BASE_URL ?>/index.php?r=giohang" class="text-decoration-none text-dark fw-semibold d-flex align-items-center gap-2"><i class="fas fa-bag-shopping text-success"></i> Giỏ hàng (<span id="mobileCartCount"><?= $cartCount ?></span>)</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang" class="text-decoration-none text-muted small d-flex align-items-center gap-2"><i class="fas fa-store"></i> Hệ thống cửa hàng</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=bao_hanh" class="text-decoration-none text-muted small d-flex align-items-center gap-2"><i class="fas fa-shield-check"></i> Chính sách bảo hành</a></li>
         <li><a href="<?= BASE_URL ?>/index.php?r=ho_tro_khach_hang" class="text-decoration-none text-muted small d-flex align-items-center gap-2"><i class="fas fa-headset"></i> Hỗ trợ khách hàng</a></li>

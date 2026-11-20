@@ -870,10 +870,25 @@ window.openSupportChat = function (evt) {
     <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=tatca">Tiếp tục mua sắm</a>
   </div>
 
-  <div class="auth-card">
-    <ul class="nav nav-tabs" id="accountTabs" role="tablist" style="border-bottom: 2px solid #E2E8F0; position: relative; z-index: 20;">
+  <div class="auth-card profile-hub">
+    <nav class="profile-hub__nav" aria-label="Tài khoản">
+    <a class="profile-hub__greeting" href="#tab-overview" onclick="return switchHosoTab('#tab-overview', event)">
+      <span class="profile-photo" aria-hidden="true">
+        <i class="fa-solid fa-user"></i>
+        <?php $hubAvatar = account_avatar_url(current_user() ?? []); ?>
+        <img data-account-avatar <?= $hubAvatar !== '' ? 'src="' . h($hubAvatar) . '"' : 'hidden' ?> alt="">
+      </span>
+      <span><small>Xin chào</small><strong><?= h($khachHang['ho_ten'] ?? $account['ho_ten'] ?? 'Bạn') ?></strong></span>
+    </a>
+    <ul class="nav nav-tabs" id="accountTabs" role="tablist" aria-label="Các mục tài khoản">
       <li class="nav-item" role="presentation">
         <a class="nav-link active" id="btn-tab-overview" href="#tab-overview" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-overview', event)">Tổng quan</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="btn-tab-settings" href="#tab-settings" role="tab" onclick="return switchHosoTab('#tab-settings', event)">Thông tin tài khoản</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="btn-tab-address" href="#tab-address" role="tab" onclick="return switchHosoTab('#tab-address', event)">Địa chỉ giao hàng</a>
       </li>
       <li class="nav-item" role="presentation">
         <a class="nav-link" id="btn-tab-orders" href="#tab-orders" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-orders', event)">Lịch sử đơn hàng</a>
@@ -893,8 +908,11 @@ window.openSupportChat = function (evt) {
         <button class="nav-link" type="button" data-support-chat-toggle style="cursor: pointer; pointer-events: auto;" onclick="return openSupportChat(event)">Chat hỗ trợ</button>
       </li>
     </ul>
+    <a class="profile-hub__shortcut" href="<?= h(BASE_URL . '/index.php?r=favorite_list') ?>"><i class="fa-regular fa-heart" aria-hidden="true"></i> Sản phẩm yêu thích</a>
+    <a class="profile-hub__shortcut" href="<?= h(BASE_URL . '/index.php?r=phan_thuong') ?>"><i class="fa-solid fa-gift" aria-hidden="true"></i> Phần thưởng</a>
+    </nav>
 
-    <div class="tab-content pt-3">
+    <div class="tab-content profile-hub__content">
       <div class="tab-pane fade show active" id="tab-overview" role="tabpanel" style="display: block;">
         <div class="profile-overview-grid">
           <div class="profile-overview-grid__wide">
@@ -955,6 +973,18 @@ window.openSupportChat = function (evt) {
           </div>
         </div>
 
+        <?php if (current_role() === 'khach_hang'): ?>
+          <?php
+          $feedbackFeature = 'customer_account';
+          $feedbackPrompt = 'Góp ý về khu vực tài khoản';
+          require __DIR__ . '/partials/feature_feedback.php';
+          ?>
+        <?php endif; ?>
+      </div>
+
+      <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="btn-tab-settings">
+        <h2 class="h5">Thông tin tài khoản</h2>
+        <?php require __DIR__ . '/partials/account_avatar.php'; ?>
         <div class="mt-3">
           <div class="row g-3">
             <div class="col-12 col-lg-7">
@@ -1024,6 +1054,12 @@ window.openSupportChat = function (evt) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="btn-tab-address">
+        <h2 class="h5">Địa chỉ giao hàng</h2>
+        <p id="profileSavedAddress"><?= h(trim((string)($khachHang['dia_chi'] ?? '')) ?: 'Bạn chưa lưu địa chỉ giao hàng.') ?></p>
+        <a class="btn btn-outline-brand" href="#tab-settings" onclick="switchHosoTab('#tab-settings', event); document.getElementById('profileAddress').focus(); return false">Sửa địa chỉ</a>
       </div>
 
       <div class="tab-pane fade" id="tab-orders" role="tabpanel">
@@ -1650,6 +1686,8 @@ window.openSupportChat = function (evt) {
 
       msgEl.textContent = data.message || 'Đã cập nhật thông tin.';
       msgEl.className = 'small text-success';
+      const address = document.getElementById('profileSavedAddress');
+      if (address) address.textContent = form.elements.dia_chi.value.trim() || 'Bạn chưa lưu địa chỉ giao hàng.';
     } catch (err) {
       msgEl.textContent = 'Kết nối thất bại. Vui lòng thử lại.';
       msgEl.className = 'small text-danger';
@@ -1745,6 +1783,7 @@ window.switchHosoTab = function (targetId, evt) {
   if (!targetId) return false;
   var cleanId = targetId.indexOf('#') === 0 ? targetId : '#' + targetId;
   var cleanPaneId = cleanId.replace('#', '');
+  if (!document.getElementById(cleanPaneId)?.classList.contains('tab-pane')) return false;
 
   var buttons = document.querySelectorAll('#accountTabs .nav-link');
   buttons.forEach(function (btn) {
@@ -1758,7 +1797,7 @@ window.switchHosoTab = function (targetId, evt) {
     }
   });
 
-  var panes = document.querySelectorAll('.tab-content > .tab-pane');
+  var panes = document.querySelectorAll('.profile-hub__content > .tab-pane');
   panes.forEach(function (pane) {
     if (pane.id === cleanPaneId) {
       pane.classList.add('show', 'active');
@@ -1768,6 +1807,10 @@ window.switchHosoTab = function (targetId, evt) {
       pane.style.display = 'none';
     }
   });
+
+  if (evt) {
+    history.replaceState(null, '', cleanId);
+  }
 
   return false;
 };

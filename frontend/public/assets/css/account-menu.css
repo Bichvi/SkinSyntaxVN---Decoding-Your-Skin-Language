@@ -129,3 +129,71 @@
   .header-account-menu__item,
   .header-account-social { transition: none; }
 }
+.profile-photo {
+  position: relative;
+  inline-size: 42px;
+  block-size: 42px;
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e0eee5;
+  color: #19533a;
+}
+.profile-photo img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.profile-photo--header { inline-size: 32px; block-size: 32px; }
+.header-account-menu__identity { text-decoration: none; }
+.header-account-menu__identity:hover { background-color: #e2efe6; }
+.profile-hub {
+  display: grid;
+  grid-template-columns: minmax(170px, 215px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.profile-hub__nav {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #f4f8f5;
+}
+.profile-hub__greeting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  color: #183b2b;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.profile-hub__greeting small,
+.profile-hub__greeting strong { display: block; }
+.profile-hub__nav #accountTabs { display: grid; gap: 3px; border: 0; }
+.profile-hub__nav #accountTabs .nav-link,
+.profile-hub__shortcut {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px;
+  text-align: start;
+  color: #264538;
+  text-decoration: none;
+}
+.profile-hub__nav #accountTabs .nav-link.active,
+.profile-hub__nav #accountTabs .nav-link:hover,
+.profile-hub__shortcut:hover { background-color: #e1eee5; color: #163c2b; }
+.profile-hub__content { min-width: 0; }
+@media (max-width: 767px) {
+  .profile-hub { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .profile-hub__nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profile-hub__greeting, .profile-hub__nav #accountTabs { grid-column: 1 / -1; }
+  .profile-hub__nav #accountTabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profile-hub__nav #accountTabs .nav-link, .profile-hub__shortcut { padding: 7px; }
+}

@@ -497,11 +497,7 @@ foreach ($sessions as $ls) {
                   <h6 class="fw-bold text-dark mb-3"><i class="bi bi-chat-dots-fill text-warning me-2"></i>3. Cấu hình tương tác & Tính năng</h6>
                   <div class="row g-3">
                     <div class="col-md-6 col-lg-4">
-                      <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="cho_phep_guest_chat" id="cfgGuestChat" value="1" checked>
-                        <label class="form-check-label fw-bold small text-dark" for="cfgGuestChat">Cho phép khách vãng lai bình luận</label>
-                        <small class="text-muted d-block extra-small">Khách chưa đăng nhập chỉ cần nhập tên để tham gia chat realtime.</small>
-                      </div>
+                      <p class="small mb-0">Khách có thể xem ngay. Người xem đăng nhập để bình luận.</p>
                     </div>
                     <div class="col-md-6 col-lg-4">
                       <div class="form-check form-switch">

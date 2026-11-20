@@ -38,7 +38,11 @@ foreach ($routers as $index => $router) {
 }
 
 checkContract(str_contains($studio, "client_message_id: clientMessageId"), 'Studio sends the required chat idempotency key');
-checkContract(str_contains($studio, "&after=' + encodeURIComponent(lastChatTimestamp)"), 'Studio chat polling uses the API after cursor');
+checkContract(
+    str_contains($studio, 'Math.max(0, lastChatTimestamp - 1)') &&
+    str_contains($studio, "&after=' + encodeURIComponent(after)"),
+    'Studio chat polling overlaps its API cursor to keep messages with the same timestamp'
+);
 checkContract(str_contains($studio, "Array.isArray(data.chats) ? data.chats : (Array.isArray(data.data) ? data.data : [])"), 'Studio reads both chat history response keys');
 checkContract(!str_contains($studio, 'window.location.reload()'), 'Studio product actions do not reload and reactivate media');
 checkContract(str_contains($studio, 'id="catalogSearchInput"') && str_contains($studio, 'role="combobox"'), 'product picker is a searchable combobox');

@@ -504,6 +504,15 @@ function current_user() {
     return $_SESSION['user'] ?? null;
 }
 
+function account_avatar_url(array $user, bool $relative = false): string {
+    $key = (string)($user['avatar_key'] ?? '');
+    if (preg_match('/^[a-f0-9]{40}$/D', $key)) {
+        return ($relative ? '' : BASE_URL . '/') . 'index.php?r=account_avatar_image&key=' . $key .
+            '&v=' . rawurlencode((string)($user['avatar_version'] ?? ''));
+    }
+    return '';
+}
+
 function current_role(): string {
     $user = current_user() ?? [];
     if (empty($user)) {
@@ -571,6 +580,7 @@ function route_access_map(): array {
         'admin_ai_idol' => ['admin'],
         'admin_ai_product_videos' => ['admin'],
         'admin_reports' => ['admin'],
+        'admin_feature_feedback' => ['admin'],
         'admin_questions' => ['admin', 'nhanvien'],
         'admin_question_reply' => ['admin', 'nhanvien'],
         'admin_question_hide' => ['admin', 'nhanvien'],

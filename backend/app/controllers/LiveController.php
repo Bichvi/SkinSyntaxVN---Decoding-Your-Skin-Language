@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../services/LiveOffer.php';
 
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/AiIdolReplaySessions.php';
@@ -247,6 +248,10 @@ class LiveController {
                 'id' => $roomId,
                 'title' => (string)($live['tieu_de'] ?? ''),
                 'streamer' => (string)($live['streamer'] ?? ''),
+                'streamer_avatar' => account_avatar_url([
+                    'avatar_key' => $live['publisher_avatar_key'] ?? '',
+                    'avatar_version' => $live['publisher_avatar_version'] ?? '',
+                ]),
                 'viewers' => $realViewers,
                 'status' => $st,
                 'live_permissions' => array_intersect_key($this->liveAudience($live), array_flip(['publish', 'moderate', 'pin'])),
@@ -640,7 +645,7 @@ class LiveController {
 
         $ttlSeconds = 3600; // TTL ngắn: 1 giờ
         $metadata = $canPublish ? hash_hmac('sha256', session_id(), $apiSecret) : '';
-        $token = $this->buildLivekitJwtToken($apiKey, $apiSecret, $roomName, $identity, $displayName, $canPublish, $ttlSeconds, false, $metadata);
+        $token = $this->buildLivekitJwtToken($apiKey, $apiSecret, $roomName, $identity, $displayName, $canPublish, $ttlSeconds, false, $metadata, $audience['type'] !== 'guest');
         error_log('[SkinSyntax Live] token_issued live_id=' . (string)$liveDoc['id'] . ' role=' . ($canPublish ? 'publisher' : 'viewer') . ' status=' . $status);
 
         echo json_encode([
@@ -728,7 +733,7 @@ class LiveController {
     }
 
 
-    private function buildLivekitJwtToken(string $apiKey, string $apiSecret, string $room, string $identity, string $name, bool $canPublish = false, int $ttlSeconds = 3600, bool $roomAdmin = false, string $metadata = ''): string {
+    private function buildLivekitJwtToken(string $apiKey, string $apiSecret, string $room, string $identity, string $name, bool $canPublish = false, int $ttlSeconds = 3600, bool $roomAdmin = false, string $metadata = '', bool $canPublishData = true): string {
         $header = json_encode(['alg' => 'HS256', 'typ' => 'JWT']);
         $now = time();
         $payload = json_encode([
@@ -743,7 +748,7 @@ class LiveController {
                 'roomJoin' => !$roomAdmin,
                 'canPublish' => $canPublish,
                 'canSubscribe' => true,
-                'canPublishData' => true,
+                'canPublishData' => $canPublishData,
                 'canUpdateOwnMetadata' => false,
                 'roomAdmin' => $roomAdmin,
                 'roomRecord' => $roomAdmin,
@@ -827,6 +832,11 @@ class LiveController {
 
         $ok = $model->updateStreamState($live['id'], $state, $source);
         if ($ok && $state === 'live') {
+            $publisher = current_user() ?? [];
+            $model->capNhatPhienLive($live['id'], [
+                'publisher_avatar_key' => (string)($publisher['avatar_key'] ?? ''),
+                'publisher_avatar_version' => (string)($publisher['avatar_version'] ?? ''),
+            ]);
             // Trigger LiveKit Egress if configured and requested
             try {
                 require_once __DIR__ . '/../services/LiveKitEgressService.php';
@@ -1020,12 +1030,16 @@ class LiveController {
 
     public function apiLiveChat(): void {
         if (!$this->livePost()) return;
+        if (!is_logged_in()) {
+            $this->liveJson(['ok' => false, 'message' => 'Vui lòng đăng nhập để bình luận trong livestream.'], 401);
+            return;
+        }
         global $db;
         $model = new PhienLive($db ?? $this->pdo);
         $live = $model->findById(trim((string)($_POST['room_id'] ?? '')));
         $message = trim((string)($_POST['message'] ?? ''));
         $nonce = (string)($_POST['client_message_id'] ?? '');
-        if (!$live || (!in_array($live['status'], ['live', 'ready'], true) && !in_array(current_role(), ['admin', 'nhanvien'], true))) {
+        if (!$live || ($live['status'] !== 'live' && !in_array(current_role(), ['admin', 'nhanvien'], true))) {
             $this->liveJson(['ok' => false, 'message' => 'Phiên này chưa phát hoặc đã kết thúc.'], 409);
             return;
         }
@@ -1035,58 +1049,14 @@ class LiveController {
         }
         $room = $live['id'];
         $sender = $this->liveAudience($live);
-        if ($sender['type'] === 'guest' && empty($live['cho_phep_guest_chat'])) {
-            $this->liveJson(['ok' => false, 'message' => 'Phiên này chưa mở trò chuyện cho khách.'], 403);
-            return;
-        }
         $question = LiveSyna::question($message);
-        $aiStatus = $question === null ? 'none' : (!$live['bat_ai_cohost'] ? 'disabled' : 'pending');
-
+        $aiStatus = $question === null ? 'none' : (empty($live['bat_ai_cohost']) || $live['status'] !== 'live' ? 'disabled' : 'pending');
+        if ($question === '' && $aiStatus === 'pending') $aiStatus = 'canned_greeting';
         $user = current_user() ?? [];
-        if ($sender['type'] === 'guest') {
-            $rawNick = trim((string)($_POST['guest_nickname'] ?? ''));
-            if ($rawNick !== '' && !preg_match('/(admin|staff|quản trị|nhân viên|streamer|syna)/iu', $rawNick)) {
-                $name = mb_substr(htmlspecialchars($rawNick, ENT_QUOTES, 'UTF-8'), 0, 30);
-            } else {
-                $name = 'Khách vãng lai';
-            }
-        } else {
-            $name = (string)($user['ho_ten'] ?? $user['ten'] ?? 'Thành viên SkinSyntax');
-        }
-        $avatar = $sender['type'] === 'guest' ? '' : trim((string)($user['avatar'] ?? $user['hinh_anh'] ?? $user['link_hinh_anh'] ?? ''));
-
+        $name = (string)($user['ho_ten'] ?? $user['ten'] ?? 'Thành viên SkinSyntax');
+        $avatar = account_avatar_url($user, true);
         $id = 'chat-' . hash('sha256', $room . ':' . $sender['id'] . ':' . $nonce);
-
-        // Requirement IX.B: When user only types @syna, answer immediately with preset greeting (zero AI token cost)
-        if ($question === '') {
-            $userDoc = [
-                '_id' => $id, 'room_id' => $room, 'sender_id' => $sender['id'], 'sender_type' => $sender['type'],
-                'sender_name' => mb_substr($name, 0, 40), 'message' => $message, 'client_message_id' => $nonce,
-                'sender_avatar' => $avatar, 'is_question' => true, 'reply_to' => (string)($_POST['reply_to'] ?? ''),
-            ];
-            $saved = $model->saveChat($userDoc);
-
-            $synaGreeting = 'Tui đây, tui đã sẵn sàng để trả lời câu hỏi của bạn! Bạn muốn hỏi gì nào? 💚';
-            $synaDoc = [
-                '_id' => 'syna-' . substr($id, 5), 'room_id' => $room, 'sender_id' => 'syna',
-                'sender_type' => 'ai', 'sender_name' => 'SYNA',
-                'message' => $synaGreeting,
-                'is_ai' => true, 'reply_to' => $id,
-            ];
-            $savedSyna = $model->saveChat($synaDoc);
-
-            $this->liveJson([
-                'ok' => true,
-                'id' => (string)($saved['_id'] ?? $id),
-                'ai_status' => 'canned_greeting',
-                'syna_reply' => $synaGreeting,
-                'chat' => $saved ? $this->publicLiveChat($saved) : null,
-                'syna_chat' => $savedSyna ? $this->publicLiveChat($savedSyna) : null,
-            ]);
-            return;
-        }
         try {
-            $id = 'chat-' . hash('sha256', $room . ':' . $sender['id'] . ':' . $nonce);
             $saved = $model->getChat($room, $id);
             if (!$saved) {
                 if ($model->isChatMuted($room, $sender['id'])) {
@@ -1104,9 +1074,6 @@ class LiveController {
                     $this->liveJson(['ok' => false, 'message' => 'Tin nhắn được trả lời đã bị ẩn hoặc không còn tồn tại.'], 422);
                     return;
                 }
-                $user = current_user() ?? [];
-                $name = $sender['type'] === 'guest' ? (trim((string)($_POST['guest_nickname'] ?? '')) ?: 'Khách vãng lai')
-                    : (string)($user['ho_ten'] ?? $user['ten'] ?? 'Thành viên SkinSyntax');
                 $document = [
                     '_id' => $id, 'room_id' => $room, 'sender_id' => $sender['id'], 'sender_type' => $sender['type'],
                     'sender_name' => mb_substr($name, 0, 40), 'message' => $message, 'client_message_id' => $nonce,
@@ -1123,8 +1090,19 @@ class LiveController {
                 if (!$saved) throw new RuntimeException('Chat was not saved');
                 $_SESSION[$rateKey] = [...$recent, time()];
             }
+            $reply = null;
+            if ($aiStatus === 'canned_greeting' && LiveSyna::question((string)$saved['message']) === '') {
+                $reply = $model->saveChat([
+                    '_id' => 'syna-' . substr($id, 5), 'room_id' => $room, 'sender_id' => 'syna',
+                    'sender_type' => 'ai', 'sender_name' => 'SYNA',
+                    'message' => 'Syna đây! Bạn muốn hỏi về sản phẩm nào trong phiên live?',
+                    'is_ai' => true, 'reply_to' => $id,
+                ]);
+            }
             $this->liveJson(['ok' => true, 'id' => (string)$saved['_id'],
                 'chat' => $this->publicLiveChat($saved),
+                'syna_reply' => $reply['message'] ?? null,
+                'syna_chat' => $reply ? $this->publicLiveChat($reply) : null,
                 'ai_status' => empty($saved['ai_pending']) && $aiStatus === 'pending' ? 'none' : $aiStatus]);
         } catch (Throwable $e) {
             error_log('Live chat persistence failed: ' . get_class($e));
@@ -1134,6 +1112,10 @@ class LiveController {
 
     public function apiLiveSyna(): void {
         if (!$this->livePost()) return;
+        if (!is_logged_in()) {
+            $this->liveJson(['ok' => false, 'ai_status' => 'disabled'], 401);
+            return;
+        }
         global $db;
         $mongo = $db ?? $this->pdo;
         $model = new PhienLive($mongo);
@@ -1161,6 +1143,7 @@ class LiveController {
                 if (!$current || $current['status'] !== 'live' || !$current['bat_ai_cohost'] ||
                     ($current['syna_revision'] ?? '') !== $job['syna_revision'] ||
                     !$model->getChat($room, $id) || $model->isChatMuted($room, $job['sender_id'])) return '';
+                $job['live_offers'] = LiveOffer::openDeals($current, time());
                 return $this->liveSynaAnswer(new SanPham($mongo), $job);
             });
             if ($result['status'] === 'answered') {
@@ -1168,15 +1151,16 @@ class LiveController {
                 if (!$current || $current['status'] !== 'live' || !$current['bat_ai_cohost'] ||
                     ($current['syna_revision'] ?? '') !== $job['syna_revision']) {
                     $result['status'] = 'disabled';
-                } elseif (!$model->getChat($room, $id) || !$model->saveChat([
+                } elseif (!$model->getChat($room, $id) || !($savedReply = $model->saveChat([
                     '_id' => 'syna-' . substr($id, 5), 'room_id' => $room, 'sender_id' => 'syna',
                     'sender_type' => 'ai', 'sender_name' => 'SYNA', 'message' => mb_substr($result['answer'], 0, 1800),
                     'is_ai' => true, 'reply_to' => $id,
-                ])) {
+                ]))) {
                     $result['status'] = 'unavailable';
                 }
             }
-            $this->liveJson(['ok' => $result['status'] === 'answered', 'ai_status' => $result['status']]);
+            $this->liveJson(['ok' => $result['status'] === 'answered', 'ai_status' => $result['status'],
+                'syna_chat' => isset($savedReply) ? $this->publicLiveChat($savedReply) : null]);
         } catch (Throwable $e) {
             error_log('Live SYNA request failed: ' . get_class($e));
             $this->liveJson(['ok' => false, 'ai_status' => 'unavailable'], 503);
@@ -1191,6 +1175,26 @@ class LiveController {
 
         $matches = [];
         preg_match_all('/["“]([^"”]{3,160})["”]/u', $question, $quoted);
+        if (!$quoted[1] && preg_match('/\b(serum|kem duong|sua rua mat|kem chong nang|nuoc tay trang)\b/', $folded, $category) &&
+            preg_match('/\b(co|nao|goi y|tu van)\b/', $folded)) {
+            $offers = $job['live_offers'] ?? [];
+            $products = $catalog->findManyByIds(array_values(array_unique(array_column($offers, 'ma_san_pham'))));
+            $recommendations = [];
+            foreach ($offers as $offer) {
+                $id = (string)($offer['ma_san_pham'] ?? '');
+                if (isset($recommendations[$id]) || empty($products[$id]) || !$catalog->isProductAvailable($products[$id])) continue;
+                $name = (string)$products[$id]['ten_san_pham'];
+                $text = SupportKnowledge::fold($name . ' ' . ($products[$id]['loai_san_pham'] ?? ''));
+                if (!str_contains(' ' . $text . ' ', ' ' . $category[1] . ' ')) continue;
+                $price = (float)($offer['gia_uu_dai_live'] ?? 0);
+                $recommendations[$id] = '• ' . $name . ($price > 0 ? ' · ' . number_format($price, 0, ',', '.') . ' đ' : '');
+                if (count($recommendations) === 3) break;
+            }
+            if ($recommendations) {
+                return "Syna tìm thấy các sản phẩm đang mở bán trong phiên:\n" . implode("\n", $recommendations) .
+                    "\nBạn có thể mở mục Sản phẩm để xem ưu đãi đang áp dụng.";
+            }
+        }
         $catalogQuestion = preg_match('/\b(gia|sale|ton kho|con hang|co hang|het hang|thanh phan|so sanh|san pham|hang nao|xuat xu|dang ghim|cach dung|cong dung)\b/', $folded);
         if ($catalogQuestion || $quoted[1]) {
             $terms = $quoted[1];
@@ -1346,6 +1350,7 @@ class LiveController {
                 $ok = $action === 'product_pin' ? $model->ghimSanPham($live['id'], $id, $price, $duration, $limit)
                     : $model->themDealSanPham($live['id'], [
                         'ma_san_pham' => $id, 'so_luong_kho_deal' => $limit, 'gia_uu_dai_live' => $price,
+                        'starts_at' => time(), 'ends_at' => $duration > 0 ? time() + $duration * 60 : 0,
                         'trang_thai' => 'active',
                     ]);
             } elseif ($access['pin'] && $action === 'deal_delete') {
@@ -1407,6 +1412,7 @@ class LiveController {
             @ob_end_clean();
         }
         header('Content-Type: application/json; charset=utf-8');
+        if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
         global $db;
         $mongoDb = $db ?? $this->pdo;
@@ -1425,6 +1431,7 @@ class LiveController {
         $afterMs = max(0, (int)($_GET['after'] ?? $_POST['after'] ?? 0));
         $live = $phienLiveModel->findById($roomId);
         $history = $live ? $phienLiveModel->getLichSuChat($live['id'], 100, $mode, $afterMs) : [];
+        header('Cache-Control: no-store');
 
         echo json_encode([
             'ok' => true,
@@ -1612,6 +1619,7 @@ class LiveController {
             @ob_end_clean();
         }
         header('Content-Type: application/json; charset=utf-8');
+        if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
         global $db;
         $mongoDb = $db ?? $this->pdo;
@@ -1642,7 +1650,10 @@ class LiveController {
         if (!empty($live['ma_san_pham_ghim'])) {
             $pinnedProduct = $spModel->findById($live['ma_san_pham_ghim'], true);
         }
+        $now = time();
         $deals = $live['danh_sach_deal'];
+        $activeOffers = LiveOffer::openDeals($live, $now);
+        $activeIds = array_fill_keys(array_column($activeOffers, 'deal_id'), true);
         $dealProducts = $spModel->findManyByIds(array_column($deals, 'ma_san_pham'));
         $publicDeals = [];
         foreach ($deals as $deal) {
@@ -1657,10 +1668,11 @@ class LiveController {
                 'price' => (float)($deal['gia_uu_dai_live'] ?? 0),
                 'limit' => (int)($deal['so_luong_kho_deal'] ?? 0),
                 'stock' => $spModel->getProductStock($dealProducts[$id]),
+                'ends_at' => (int)($deal['ends_at'] ?? 0),
+                'available_now' => $live['status'] === 'live' && isset($activeIds[(string)($deal['deal_id'] ?? '')]),
             ];
         }
 
-        $now = time();
         $pinStartedAt = strtotime((string)($live['deal_bat_dau'] ?? '')) ?: 0;
         $pinEndsAt = strtotime((string)($live['deal_ket_thuc'] ?? '')) ?: 0;
         $pinUnlimited = !empty($live['ma_san_pham_ghim']) && $pinEndsAt === 0;
@@ -1684,6 +1696,10 @@ class LiveController {
                 'status' => (string)($live['status'] ?? 'scheduled'),
                 'bat_ai_cohost' => $live['bat_ai_cohost'],
                 'stream_source' => (string)($live['stream_source'] ?? ''),
+                'streamer_avatar' => account_avatar_url([
+                    'avatar_key' => $live['publisher_avatar_key'] ?? '',
+                    'avatar_version' => $live['publisher_avatar_version'] ?? '',
+                ]),
                 'syna_queue' => current_role() === 'admin' && ($_GET['queue'] ?? '') === '1' ? LiveSyna::queued($live['id']) : null,
                 'syna_limit' => current_role() === 'admin' && ($_GET['queue'] ?? '') === '1' ? LiveSyna::roomLimit() : null,
                 'recording_url' => $recordingAvailable ? $this->recordingPlaybackUrl((string)$live['id']) : '',
@@ -1712,6 +1728,7 @@ class LiveController {
                     'ma_san_pham' => (string)($pinnedProduct['ma_san_pham'] ?? ''),
                     'ten_san_pham' => (string)($pinnedProduct['ten_san_pham'] ?? ''),
                     'thuong_hieu' => (string)($pinnedProduct['thuong_hieu'] ?? 'SkinSyntax'),
+                    'deal_limit' => (int)($live['so_luong_kho_deal'] ?? 0),
                     'link_hinh_anh' => resolve_image_url((string)($pinnedProduct['link_hinh_anh'] ?? '')),
                     'so_luong_ton_kho' => isset($pinnedProduct['so_luong_ton_kho']) && $pinnedProduct['so_luong_ton_kho'] !== '' ? (int)$pinnedProduct['so_luong_ton_kho'] : null,
                     'trang_thai_kho' => (string)($pinnedProduct['trang_thai_kho'] ?? 'con_hang')
@@ -2181,6 +2198,10 @@ class LiveController {
             'so_luong_kho_deal' => $qty,
             'khung_gio_bat_dau' => $start,
             'khung_gio_ket_thuc' => $end,
+            'starts_at' => isset($_POST['duration_minutes']) ? time() : ($start !== '' ? (strtotime($start) ?: 0) : 0),
+            'ends_at' => isset($_POST['duration_minutes'])
+                ? ((int)$_POST['duration_minutes'] === 0 ? 0 : time() + min(240, max(5, (int)$_POST['duration_minutes'])) * 60)
+                : ($end !== '' ? (strtotime($end . ((strcmp($end, $start) < 0) ? ' +1 day' : '')) ?: 0) : 0),
             'trang_thai' => 'sap_dien_ra'
         ]);
 
@@ -2270,22 +2291,18 @@ class LiveController {
             $this->liveJson(['ok' => false, 'message' => 'Phiên livestream hiện chưa phát hoặc đã kết thúc.'], 409);
             return;
         }
-        $limits = [];
-        foreach (($liveDoc['danh_sach_deal'] ?? []) as $deal) {
-            $limits[(string)($deal['ma_san_pham'] ?? '')] = (int)($deal['so_luong_kho_deal'] ?? 0);
-        }
-        foreach (($aiLive['product_ids'] ?? []) as $id) $limits[$id] = 0;
-        $pinnedId = $liveDoc['ma_san_pham_ghim'] ?? '';
-        if ($pinnedId !== '') $limits[$pinnedId] = (int)($liveDoc['so_luong_kho_deal'] ?? 0);
+        $deal = $liveDoc ? LiveOffer::find($liveDoc, $productId, time(), (string)($_POST['deal_id'] ?? '')) : null;
+        $limit = (int)($deal['so_luong_kho_deal'] ?? 0);
+        $offered = $deal !== null || in_array($productId, $aiLive['product_ids'] ?? [], true);
         $catalog = new SanPham($mongoDb);
-        $product = $productId !== '' && isset($limits[$productId]) ? $catalog->findById($productId, true) : null;
+        $product = $productId !== '' && $offered ? $catalog->findById($productId, true) : null;
         if (!$product || !$catalog->isProductAvailable($product)) {
             $this->liveJson(['ok' => false, 'message' => 'Sản phẩm đã hết hàng hoặc không còn trong phiên.'], 422);
             return;
         }
         $stock = $catalog->getProductStock($product);
         $total = (int)($_SESSION['gio_hang'][$productId] ?? 0) + $qty;
-        if (($stock !== null && $total > $stock) || ($limits[$productId] > 0 && $total > $limits[$productId])) {
+        if (($stock !== null && $total > $stock) || ($limit > 0 && $total > $limit)) {
             $this->liveJson(['ok' => false, 'message' => 'Số lượng vượt tồn kho hoặc giới hạn mua của phiên.'], 422);
             return;
         }
@@ -2299,6 +2316,11 @@ class LiveController {
         }
 
         $_SESSION['gio_hang'][$productId] = $total;
+        if ($deal !== null) {
+            $_SESSION['live_cart_offers'][$productId] = [
+                'room' => (string)$liveDoc['id'], 'deal' => (string)($deal['deal_id'] ?? ''), 'quantity' => $total,
+            ];
+        }
         ProductEventTracker::record($mongoDb, 'add_to_cart', $productId);
 
         $cartCount = 0;

@@ -209,6 +209,8 @@ class AuthController {
             'email' => $user['email'],
             'role' => 'khach_hang',
             'vai_tro' => 'khach_hang',
+            'avatar_key' => $user['avatar_key'] ?? '',
+            'avatar_version' => $user['avatar_version'] ?? '',
         ];
     }
 
@@ -349,6 +351,8 @@ class AuthController {
                 'email' => $staff['email'],
                 'role' => $roleName,
                 'vai_tro' => $roleName,
+                'avatar_key' => $staff['avatar_key'] ?? '',
+                'avatar_version' => $staff['avatar_version'] ?? '',
             ];
 
             set_flash('success', 'Đăng nhập thành công.');

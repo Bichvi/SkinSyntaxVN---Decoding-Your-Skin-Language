@@ -113,7 +113,7 @@ class HoaDon {
         return $maKhMoi;
     }
 
-    private function fetchProductPrice(string $productId): int {
+    private function fetchProductPrice(string $productId, int $liveOfferQuantity = 0): int {
         $product = $this->findProductForStock($productId);
 
         if (!$product) {
@@ -123,6 +123,10 @@ class HoaDon {
         require_once __DIR__ . '/FlashSaleCampaign.php';
         $campaignModel = new FlashSaleCampaign($this->db);
         $pricing = $campaignModel->resolveEffectivePrice($productId, null, $product);
+        if ($liveOfferQuantity > 0) {
+            require_once __DIR__ . '/../services/LiveOffer.php';
+            $pricing = LiveOffer::cartPricing($this->db, $productId, $liveOfferQuantity, $pricing);
+        }
         return (int)$pricing['effective_price'];
     }
 
@@ -624,13 +628,14 @@ class HoaDon {
         $maKh = $this->getOrCreateKhachHangId($email, $hoTenMacDinh);
         $lineItems = [];
         $subtotal = 0;
+        $applyLiveOffers = !empty($payload['apply_live_offers']);
 
         foreach ($checkoutItems as $maSanPham => $soLuongRaw) {
             $maSanPham = trim((string)$maSanPham);
             if ($maSanPham === '') continue;
 
             $soLuong = max(1, (int)$soLuongRaw);
-            $donGia = $this->fetchProductPrice($maSanPham);
+            $donGia = $this->fetchProductPrice($maSanPham, $applyLiveOffers ? $soLuong : 0);
             $lineTotal = $donGia * $soLuong;
             $subtotal += $lineTotal;
 
@@ -643,6 +648,9 @@ class HoaDon {
 
         if (empty($lineItems)) {
             throw new RuntimeException('Khong co san pham hop le de tao hoa don.');
+        }
+        if ($applyLiveOffers && $subtotal !== $tamTinhInput) {
+            throw new RuntimeException('Giá sản phẩm trong phiên live vừa thay đổi. Vui lòng kiểm tra lại giỏ hàng.');
         }
 
         $tamTinh = $tamTinhInput > 0 ? $tamTinhInput : $subtotal;
