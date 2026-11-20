@@ -50,6 +50,10 @@ $eq('concerns skin: reason có mà SP không có -> bỏ', $build(['van_de_da_ke
 $eq('concerns concern: dùng reason.concern', $build($p, ['concern' => 'Dầu thừa'], 'concern')['concerns'] ?? null, ['Dầu thừa']);
 $eq('concerns concern: SP không có -> []', $build(['van_de_da_keys' => ['mun']], ['concern' => 'Dầu thừa'], 'concern'), []);
 
+// generic: lấy vấn đề của chính SP, không cần reason
+$eq('concerns generic: không cần reason, tối đa 2', $build($p, [], 'generic')['concerns'] ?? null, ['Mụn', 'Dầu thừa']);
+$eq('concerns generic: SP không có vấn đề -> []', $build(['van_de_da_keys' => [], 'cong_dung_keys' => ['cap_am']], [], 'generic')['concerns'] ?? null, []);
+
 // rỗng / rác
 $eq('rỗng -> []', $build([]), []);
 $eq('giá trị không phải chuỗi bị bỏ', $build(['loai_da_keys' => [1, null, '', ' '], 'cong_dung_keys' => 'x', 'van_de_da_keys' => [[]]], ['concerns' => [5, '']]), []);

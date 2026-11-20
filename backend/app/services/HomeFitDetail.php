@@ -118,9 +118,10 @@ final class HomeFitDetail
             $wanted[self::lower($c)] = true;
         }
         $out = [];
+        $generic = $section === 'generic';
         foreach (self::strings($product['van_de_da_keys'] ?? []) as $k) {
             $name = $names[$k] ?? null;
-            if ($name !== null && isset($wanted[self::lower($name)]) && !in_array($name, $out, true)) {
+            if ($name !== null && ($generic || isset($wanted[self::lower($name)])) && !in_array($name, $out, true)) {
                 $out[] = $name;
             }
         }
