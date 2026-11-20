@@ -16,7 +16,7 @@ $displayStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', 
 $displayStreamer = $displayStreamer !== '' ? $displayStreamer : 'SkinSyntax';
 $liveStatus = (string)($live['status'] ?? 'none');
 $isLive = $liveStatus === 'live';
-$canChat = $isLive;
+$canChat = $isLive && is_logged_in();
 $pinned = $live['pinned_product'] ?? null;
 $pinnedId = (string)($pinned['ma_san_pham'] ?? $pinned['id'] ?? $live['ma_san_pham_ghim'] ?? '');
 $pinnedName = (string)($pinned['ten_san_pham'] ?? 'Chưa có sản phẩm ghim');
@@ -44,6 +44,16 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
 <style>
   .ss-live-page{--ss-ink:#17231d;--ss-muted:#66736b;--ss-line:#dfe8e1;--ss-green:#176b45;--ss-green-dark:#0d3f2c;--ss-soft:#f5f8f5;background:#f7f9f7;color:var(--ss-ink);min-height:100vh;padding-bottom:48px}
   .ss-live-page [hidden]{display:none!important}
+  .ss-live-page .ss-message:not(.ss-message--new){animation:none}
+  .ss-player:fullscreen{width:100%;height:100%;aspect-ratio:auto;border:0;border-radius:0}
+  .ss-player:fullscreen video{object-fit:contain}
+  .ss-live-page .ss-player--fit video{object-fit:contain}
+  .ss-chat-avatar{width:24px;height:24px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:6px}
+  .ss-avatar{position:relative;overflow:hidden}
+  .ss-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .ss-live-settings label{display:block;font-size:.82rem}
+  .ss-live-settings input[type=range]{width:100%;accent-color:#9be5b7}
+  .ss-live-page .live-voucher-popup{position:static;margin-top:10px;background:#123d2c;min-width:0;box-shadow:none;backdrop-filter:none}
   .ss-message__text{white-space:pre-wrap;overflow-wrap:anywhere}
   .ss-live-mention{color:#075d44;font-weight:700}
   .ss-live-syna-avatar{width:1.45rem;height:1.45rem;border-radius:50%;display:inline-grid;place-items:center;background:#15704a;color:#fff;font-weight:700}
@@ -59,12 +69,13 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
   .ss-player__waiting[hidden]{display:none}
   .ss-player__waiting-inner{max-width:520px}.ss-player__waiting-icon{width:72px;height:72px;display:grid;place-items:center;border-radius:50%;background:#2e9561;color:#fff;font-size:28px;margin:0 auto 15px}
   .ss-player__top,.ss-player__bottom{position:absolute;z-index:5;left:0;right:0;padding:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#fff}
-  .ss-player__top{top:0;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}.ss-player__bottom{bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding-top:42px;pointer-events:none}
+  .ss-player__top{top:0;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}.ss-player__bottom{bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding-top:42px;pointer-events:none;justify-content:space-between}
   .ss-player--replay .ss-player__top{background:none;padding:10px;pointer-events:none}.ss-player--replay .ss-player__top>*{pointer-events:auto}.ss-player--replay .ss-player__top .ss-badge{background:rgba(15,23,42,.55);color:#fff}.ss-player--replay .ss-player__top{flex-wrap:nowrap}.ss-player--replay .ss-player__actions{width:auto;margin-left:auto}
   .ss-replay-meta{display:flex;align-items:center;gap:10px;margin-top:10px;color:#1f2a24}.ss-replay-meta__text{min-width:0}.ss-replay-meta strong{display:block;font-size:14px}.ss-replay-meta small{display:block;color:#5f6b64;font-size:12px;margin-top:2px;overflow-wrap:anywhere}
   .ss-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:750;line-height:1}.ss-badge--live{background:#e23b4e;color:#fff}.ss-badge--ready{background:#dff1e6;color:#0f6740}.ss-badge--scheduled{background:#fff0c2;color:#7b5a00}.ss-badge--warning{background:#fff0c2;color:#795700}.ss-badge--neutral,.ss-badge--ended,.ss-badge--processing{background:#e9eeea;color:#526057}.ss-badge--replay{background:#dff1e6;color:#0f6740}.ss-badge--danger{background:#ffe2e5;color:#ad293c}
   .ss-player__actions{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}.ss-player__actions button,.ss-player__actions a{border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.42);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;text-decoration:none}.ss-player__actions button:hover,.ss-player__actions a:hover{background:rgba(255,255,255,.15)}
   .ss-streamer{display:flex;align-items:center;gap:10px}.ss-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#d9efe2;color:#176b45;font-weight:800}.ss-streamer strong{display:block;font-size:14px}.ss-streamer small{display:block;color:#d2e1d7;font-size:12px;margin-top:2px}
+  .ss-live-controls{display:flex;align-items:center;gap:7px;pointer-events:auto;margin-left:auto}.ss-live-control{width:38px;height:38px;border:1px solid rgba(255,255,255,.28);border-radius:50%;display:grid;place-items:center;background:rgba(7,18,12,.72);color:#fff;cursor:pointer;transition:background .18s ease,transform .18s ease}.ss-live-control:hover{background:rgba(23,107,69,.92);transform:translateY(-1px)}.ss-live-control:focus-visible{outline:3px solid #9be5b7;outline-offset:2px}.ss-live-control--deals{width:auto;border-radius:999px;padding:0 12px;grid-auto-flow:column;gap:7px;font-weight:800}.ss-live-control__count{min-width:19px;height:19px;border-radius:999px;display:grid;place-items:center;background:#f5c542;color:#17231d;font-size:11px}.ss-live-settings{position:absolute;right:16px;bottom:72px;z-index:20;width:min(260px,calc(100% - 32px));padding:12px;border-radius:12px;background:rgba(7,18,12,.96);border:1px solid rgba(255,255,255,.18);color:#fff;box-shadow:0 14px 36px rgba(0,0,0,.38)}.ss-live-settings strong{display:block;font-size:13px;margin-bottom:5px}.ss-live-settings small{display:block;color:#cfe0d5;line-height:1.45}.ss-live-deals-drawer{position:absolute;z-index:19;right:12px;top:70px;bottom:70px;width:min(380px,calc(100% - 24px));display:flex;flex-direction:column;background:#fff;color:var(--ss-ink);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.4);overflow:hidden}.ss-live-deals-drawer__head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--ss-line)}.ss-live-deals-drawer__head h2{font-size:15px;margin:0}.ss-live-deals-drawer__close{width:34px;height:34px;border:0;border-radius:50%;background:#edf3ef;color:var(--ss-ink);cursor:pointer}.ss-live-deals-drawer .ss-product-list{display:flex;flex-direction:column;overflow:auto;margin:0;padding:12px}.ss-cart-toast{position:fixed;z-index:1080;right:22px;bottom:22px;max-width:min(360px,calc(100vw - 24px));display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:13px;background:#123d2c;color:#fff;box-shadow:0 14px 38px rgba(13,63,44,.28);font-size:13px;font-weight:700}.ss-cart-toast i{color:#9be5b7}.header-cart-badge.is-updated{animation:ss-cart-pop .45s ease-out}.ss-message{animation:ss-chat-in .22s cubic-bezier(.2,.8,.2,1) both}@keyframes ss-chat-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes ss-cart-pop{50%{transform:scale(1.35)}}
   .ss-product{padding:18px;margin-top:14px}.ss-product__head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.ss-kicker{color:#c3344d;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.ss-product__body{display:flex;gap:14px;align-items:center}.ss-product__image{width:78px;height:78px;object-fit:cover;border:1px solid var(--ss-line);border-radius:12px;background:#f5f7f5}.ss-product__image--empty{display:grid;place-items:center;color:#8a988e;font-size:24px}.ss-product__info{min-width:0;flex:1}.ss-product__brand{color:var(--ss-green);font-size:12px;font-weight:750}.ss-product__name{font-weight:750;margin:3px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ss-price{color:var(--ss-green);font-size:20px;font-weight:850}.ss-old-price{color:#8c968e;text-decoration:line-through;font-size:12px;margin-left:8px}.ss-product__cta{display:flex;gap:8px;align-items:center}.ss-btn{border:0;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}.ss-btn--primary{background:var(--ss-green-dark);color:#fff}.ss-btn--primary:hover{background:#176b45;color:#fff}.ss-btn--ghost{background:#edf5ef;color:var(--ss-green)}.ss-btn[disabled]{opacity:.55;cursor:not-allowed}.ss-empty-product{padding:20px;text-align:center;color:var(--ss-muted);border:1px dashed var(--ss-line);border-radius:12px}
   .ss-products{padding:18px;margin-top:14px}.ss-products h2,.ss-session-title{font-size:16px;margin:0;font-weight:800}.ss-product-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:14px}.ss-deal{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--ss-line);border-radius:13px;background:#fbfdfb}.ss-deal img{width:54px;height:54px;object-fit:cover;border-radius:9px}.ss-deal__meta{min-width:0;flex:1}.ss-deal__meta strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ss-deal__meta small{display:block;color:var(--ss-muted);font-size:11px;margin-top:3px}.ss-deal .ss-btn{padding:7px 10px;font-size:11px}
   .ss-chat{position:sticky;top:86px;overflow:hidden}.ss-chat__head{padding:16px;border-bottom:1px solid var(--ss-line)}.ss-chat__title{display:flex;align-items:center;justify-content:space-between;gap:8px}.ss-chat__title h2{font-size:16px;margin:0;font-weight:800}.ss-chat__tabs{display:flex;gap:6px;margin-top:13px}.ss-chat__tabs button{border:1px solid var(--ss-line);background:#fff;border-radius:999px;padding:6px 10px;font-size:11px;color:var(--ss-muted);cursor:pointer}.ss-chat__tabs button.is-active{background:#e8f3eb;border-color:#b9dbc4;color:var(--ss-green);font-weight:800}.ss-chat__body{height:430px;overflow:auto;padding:14px;background:#f9fbf9}.ss-chat__notice{font-size:12px;line-height:1.45;color:var(--ss-muted);background:#eef6ef;border-radius:10px;padding:10px;margin-bottom:10px}.ss-message{padding:9px 10px;border-radius:11px;background:#fff;border:1px solid var(--ss-line);margin-bottom:8px;font-size:13px;line-height:1.45}.ss-message--ai{background:#eaf5ed;border-color:#c8e2cf}.ss-message__meta{font-size:11px;color:var(--ss-muted);margin-bottom:3px}.ss-message__meta strong{color:var(--ss-green)}.ss-message__pill{font-size:10px;background:#fbe5a7;color:#6f5100;border-radius:999px;padding:2px 5px;margin-left:5px}.ss-chat__footer{padding:14px;border-top:1px solid var(--ss-line)}.ss-chat__footer input{border:1px solid var(--ss-line);border-radius:999px;padding:10px 13px;width:100%;font-size:13px;outline:none}.ss-chat__footer input:focus{border-color:#8cc09d;box-shadow:0 0 0 3px #e8f3eb}.ss-chat__row{display:flex;gap:7px}.ss-chat__row .ss-btn{width:42px;padding:0}.ss-chat__helper{font-size:11px;color:var(--ss-muted);margin:8px 2px 0}.ss-chat__locked{padding:12px;border-radius:10px;background:#f0f3f0;color:#6e7b72;font-size:12px;text-align:center}
@@ -96,7 +107,33 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
   .ss-studio__pause{min-height:44px;border:1px solid #b7791f;background:#fff4d6;color:#7a4a00;border-radius:12px;font-weight:700;padding:8px 18px;cursor:pointer}.ss-studio__pause:hover:not(:disabled){background:#ffe9b0}.ss-studio__pause:disabled{opacity:.6;cursor:not-allowed}.ss-studio__pause.is-resume{background:#2D6A4F;border-color:#2D6A4F;color:#fff}.ss-studio__pause.is-resume:hover:not(:disabled){background:#183B2B}.ss-studio__pause:focus-visible{outline:3px solid #7bd39a;outline-offset:2px}
   @media (max-width:576px){.ss-studio__actions{flex-direction:column}.ss-studio__pause,.ss-studio__end{width:100%}.ss-player__chip{left:12px;bottom:64px;font-size:12px}}
   @media (max-width:1050px){.ss-live-grid{grid-template-columns:minmax(0,1fr)}.ss-chat{position:static}.ss-chat__body{height:330px}.ss-session-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media (max-width:620px){.ss-live-wrap{padding:18px 12px 0}.ss-live-hero{padding:22px 0}.ss-live-hero .container{padding-left:16px;padding-right:16px}.ss-player{border-radius:12px}.ss-product__body{align-items:flex-start}.ss-product__cta{width:100%;margin-top:10px}.ss-product__body{flex-wrap:wrap}.ss-product__info{flex-basis:calc(100% - 94px)}.ss-product__cta{margin-left:92px}.ss-product__cta .ss-btn{flex:1}.ss-session-grid{grid-template-columns:1fr}.ss-session__thumb{height:170px}.ss-player__actions{width:100%;margin-left:0}.ss-player__top{align-items:flex-start}.ss-player__bottom{padding:12px;padding-top:38px}.ss-chat__body{height:310px}}
+  @media (max-width:620px){.ss-live-wrap{padding:18px 12px 0}.ss-live-hero{padding:22px 0}.ss-live-hero .container{padding-left:16px;padding-right:16px}.ss-player{border-radius:12px}.ss-product__body{align-items:flex-start}.ss-product__cta{width:100%;margin-top:10px}.ss-product__body{flex-wrap:wrap}.ss-product__info{flex-basis:calc(100% - 94px)}.ss-product__cta{margin-left:92px}.ss-product__cta .ss-btn{flex:1}.ss-session-grid{grid-template-columns:1fr}.ss-session__thumb{height:170px}.ss-player__actions{width:100%;margin-left:0}.ss-player__top{align-items:flex-start}.ss-player__bottom{padding:12px;padding-top:38px}.ss-streamer{max-width:calc(100% - 176px)}.ss-streamer small,.ss-streamer strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ss-live-control{width:36px;height:36px}.ss-live-control--deals{width:36px;padding:0}.ss-live-control--deals>span:not(.ss-live-control__count){display:none}.ss-live-control__count{position:absolute;transform:translate(12px,-12px)}.ss-live-deals-drawer{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:72%;border-radius:16px}.ss-chat__body{height:310px}.ss-cart-toast{right:12px;bottom:12px}}
+  @media (prefers-reduced-motion:reduce){.ss-message,.header-cart-badge.is-updated,.ss-live-control{animation:none!important;transition:none!important}}
+  .ss-live-hero--room { padding: 14px 0; }
+  .ss-live-hero--room h1 { font-size: 1.25rem; line-height: 1.4; margin: 0; }
+  .ss-live-hero--room + .ss-live-wrap { padding-top: 14px; }
+  .ss-deal__meta del { font-size: .72rem; color: var(--ss-muted); }
+  .ss-deal__meta strong { white-space: normal; }
+  .ss-live-rewards { margin-top: 10px; }
+  @media (max-width: 620px) {
+    .ss-player:not(:fullscreen) .ss-live-deals-drawer {
+      position: fixed;
+      inset: auto 8px max(8px, env(safe-area-inset-bottom));
+      width: auto;
+      max-height: min(55dvh, 420px);
+    }
+    .ss-player:not(:fullscreen) .ss-live-deals-drawer .ss-product-list { min-height: 92px; }
+    .ss-player__top { gap: 5px; padding: 9px; }
+    .ss-player__top .ss-badge { font-size: 10px; }
+    .ss-player__waiting { padding: 66px 18px 54px; }
+    .ss-player__waiting-icon { display: none; }
+    .ss-player__waiting h2 { font-size: 1rem; margin-bottom: 5px; }
+    .ss-player__waiting p { font-size: .79rem; }
+    .ss-player__bottom { flex-wrap: nowrap; }
+    .ss-streamer { min-width: 0; }
+    .ss-streamer > div:last-child { min-width: 0; }
+    .ss-streamer .ss-avatar { flex: 0 0 30px; width: 30px; height: 30px; }
+  }
 
   /* Floating Reaction Hearts */
   @keyframes floatUpAndFade {
@@ -150,17 +187,21 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
   }
 </style>
 
-<main class="ss-live-page" id="ssLivePage" data-live-id="<?= h($live['id'] ?? '') ?>" data-live-status="<?= h($liveStatus) ?>" data-is-studio="<?= $canPublish ? '1' : '0' ?>" data-moderate="<?= $canModerate ? '1' : '0' ?>" data-ai-enabled="<?= !empty($live['bat_ai_cohost']) ? '1' : '0' ?>" data-csrf="<?= h($_SESSION['live_csrf'] ?? '') ?>" data-base-url="<?= h(BASE_URL) ?>">
-  <section class="ss-live-hero">
+<main class="ss-live-page" id="ssLivePage" data-live-id="<?= h($live['id'] ?? '') ?>" data-live-status="<?= h($liveStatus) ?>" data-signed-in="<?= is_logged_in() ? '1' : '0' ?>" data-is-studio="<?= $canPublish ? '1' : '0' ?>" data-moderate="<?= $canModerate ? '1' : '0' ?>" data-ai-enabled="<?= !empty($live['bat_ai_cohost']) ? '1' : '0' ?>" data-csrf="<?= h($_SESSION['live_csrf'] ?? '') ?>" data-base-url="<?= h(BASE_URL) ?>">
+  <section class="ss-live-hero<?= $hasLive && !$isStudio ? ' ss-live-hero--room' : '' ?>">
     <div class="container">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
+          <?php if (!$hasLive || $isStudio): ?>
           <div class="d-flex gap-2 flex-wrap mb-2">
             <span class="ss-badge ss-badge--live"><i class="fa-solid fa-circle"></i> SKINSYNTAX LIVE</span>
             <span class="ss-badge ss-badge--ready"><i class="fa-solid fa-shield-heart"></i> Hàng chính hãng</span>
           </div>
           <h1><?= $isStudio ? 'Phòng phát SkinSyntax' : 'Cùng bạn chọn điều làn da cần' ?></h1>
           <p><?= $isStudio ? 'Chuẩn bị nguồn phát, giới thiệu sản phẩm và trò chuyện cùng người xem.' : 'Gặp gỡ người tư vấn, hỏi về sản phẩm và khám phá ưu đãi ngay trong buổi live.' ?></p>
+          <?php else: ?>
+            <h1><?= h($live['title'] ?? 'SkinSyntax Live') ?></h1>
+          <?php endif; ?>
           <?php if ($canPublish): ?><div class="mt-3 small text-success fw-semibold"><i class="fa-solid fa-circle-info me-1"></i>Xem trước camera, bật micrô nếu cần, rồi chọn Bắt đầu phát camera. Bạn cũng có thể phát video hoặc chia sẻ màn hình.</div><?php endif; ?>
         </div>
         <?php if ($isStaff): ?>
@@ -233,7 +274,7 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
           <div class="ss-player<?= $isReplayView ? ' ss-player--replay' : '' ?>" id="ssPlayer">
             <video id="livekitRemoteVideo" autoplay playsinline muted hidden></video>
             <video id="livekitLocalVideo" autoplay playsinline muted hidden></video>
-            <audio id="livekitRemoteAudio" autoplay></audio>
+            <audio id="livekitRemoteAudio" autoplay muted></audio>
             <?php if ($liveStatus === 'replay_ready' && $recordingUrl !== ''): ?>
               <video id="replayVideoPlayer" controls playsinline preload="metadata" src="<?= h($recordingUrl) ?>"></video>
             <?php endif; ?>
@@ -264,14 +305,37 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
             </div>
             <?php if (!$isReplayView): ?>
             <div class="ss-player__bottom">
-              <div class="ss-streamer"><div class="ss-avatar"><?= h(mb_strtoupper(mb_substr($displayStreamer, 0, 2))) ?></div><div><strong><?= h($displayStreamer) ?></strong><small><?= h($live['title'] ?? '') ?></small></div></div>
+              <div class="ss-streamer">
+                <div class="ss-avatar" aria-hidden="true">
+                  <?= h(mb_strtoupper(mb_substr($displayStreamer, 0, 2))) ?>
+                  <img id="liveStreamerAvatar" alt="" <?= !empty($live['streamer_avatar']) ? 'src="' . h($live['streamer_avatar']) . '"' : 'hidden' ?>>
+                </div>
+                <div><strong><?= h($displayStreamer) ?></strong><small><?= h($live['title'] ?? '') ?></small></div>
+              </div>
+              <div class="ss-live-controls" aria-label="Điều khiển trình phát">
+                <button type="button" class="ss-live-control" id="btnLiveMute" aria-label="Bật âm thanh" aria-pressed="false"><i class="fa-solid fa-volume-xmark" aria-hidden="true"></i></button>
+                <button type="button" class="ss-live-control ss-live-control--deals" id="btnLiveDeals" aria-label="Mở sản phẩm ưu đãi" aria-controls="liveDeals" aria-expanded="false" hidden><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span>Sản phẩm</span><span class="ss-live-control__count" id="liveDealCount">0</span></button>
+                <button type="button" class="ss-live-control" id="btnLiveSettings" aria-label="Cài đặt trình phát" aria-controls="liveSettingsPanel" aria-expanded="false"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
+                <button type="button" class="ss-live-control" id="btnLiveFullscreen" aria-label="Phóng to màn hình"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
+              </div>
             </div>
             <?php endif; ?>
 
+            <div class="ss-live-settings" id="liveSettingsPanel" hidden>
+              <label for="liveVolume">Âm lượng</label>
+              <input type="range" id="liveVolume" min="0" max="1" step="0.05" value="1">
+              <label><input type="checkbox" id="liveFitVideo"> Hiện trọn khung hình</label>
+            </div>
+
+            <aside class="ss-live-deals-drawer" id="liveDeals" aria-labelledby="liveDealsTitle" hidden>
+              <div class="ss-live-deals-drawer__head"><div><h2 id="liveDealsTitle">Ưu đãi đang mở bán</h2><small>Giá và thời gian do quản trị viên thiết lập</small></div><button type="button" class="ss-live-deals-drawer__close" id="btnCloseLiveDeals" aria-label="Đóng danh sách sản phẩm"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+              <div class="ss-product-list" id="liveDealsList"></div>
+            </aside>
+
             <!-- FLOATING HEARTS CONTAINER -->
             <div id="liveHeartsContainer" style="position: absolute; right: 0; bottom: 0; width: 100px; height: 320px; pointer-events: none; overflow: hidden; z-index: 18;"></div>
+          </div>
 
-            <!-- FLOATING VOUCHER POPUP CARD -->
             <div id="liveVoucherPopup" class="live-voucher-popup" hidden>
               <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
                 <span class="badge bg-warning text-dark fw-bold extra-small"><i class="fa-solid fa-bolt me-1"></i>VOUCHER ĐỘC QUYỀN LIVE</span>
@@ -288,7 +352,11 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
                 </button>
               </div>
             </div>
-          </div>
+          <?php if ($role === 'khach_hang' && !$isStudio): ?>
+            <a class="ss-btn ss-btn--ghost ss-live-rewards" href="<?= h(BASE_URL . '/index.php?r=phan_thuong') ?>">
+              <i class="fa-solid fa-gift" aria-hidden="true"></i> Phần thưởng của tôi
+            </a>
+          <?php endif; ?>
           <?php if ($isStudio && !$isReplayView): ?>
           <section class="ss-card ss-products mt-3" aria-label="Live Studio">
             <h2>Live Studio</h2>
@@ -432,16 +500,13 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
                 <img id="livePinnedImg" class="ss-product__image" <?= $pinnedImage !== '' ? 'src="' . h($pinnedImage) . '"' : 'hidden' ?> alt="<?= h($pinnedName) ?>">
                 <div class="ss-product__info"><div id="livePinnedBrand" class="ss-product__brand"><?= h($pinnedBrand) ?></div><div id="livePinnedName" class="ss-product__name"><?= h($pinnedName) ?></div><div><span id="livePinnedPrice" class="ss-price"><?= vnd($pinnedPrice) ?></span><span id="livePinnedMarketPrice" class="ss-old-price" <?= $discount ? '' : 'hidden' ?>><?= vnd($marketPrice) ?></span><span id="livePinnedDiscountBadge" class="ss-badge ss-badge--danger ms-2" <?= $discount ? '' : 'hidden' ?>>-<?= $discount ?>%</span></div><small id="livePinCountdown" class="d-block mt-1 text-muted" hidden></small></div>
                 <div class="ss-product__cta">
-                  <form id="liveBuyNowForm" action="<?= BASE_URL ?>/index.php?r=api_live_add_to_cart" method="post"><input type="hidden" name="live_id" value="<?= h($live['id']) ?>"><input type="hidden" name="product_id" id="livePinnedProductId" value="<?= h($pinnedId) ?>"><button class="ss-btn ss-btn--primary" type="submit" <?= $isLive ? '' : 'disabled' ?>><i class="fa-solid fa-bag-shopping"></i> Thêm vào giỏ</button></form>
+                  <form id="liveBuyNowForm" action="<?= BASE_URL ?>/index.php?r=api_live_add_to_cart" method="post"><input type="hidden" name="live_id" value="<?= h($live['id']) ?>"><input type="hidden" name="csrf" value="<?= h($_SESSION['live_csrf'] ?? '') ?>"><input type="hidden" name="deal_id" value="pinned"><input type="hidden" name="product_id" id="livePinnedProductId" value="<?= h($pinnedId) ?>"><button class="ss-btn ss-btn--primary" type="submit" <?= $isLive ? '' : 'disabled' ?>><i class="fa-solid fa-bag-shopping"></i> Thêm vào giỏ</button></form>
                   <a class="ss-btn ss-btn--ghost" id="livePinnedLink" href="<?= BASE_URL ?>/index.php?r=chitiet&amp;id=<?= urlencode($pinnedId) ?>">Chi tiết</a>
                 </div>
               </div>
             <div class="ss-empty-product" id="livePinnedEmpty" <?= $pinned ? 'hidden' : '' ?>>Phiên này chưa có sản phẩm đang giới thiệu.</div>
           </section>
 
-          <section class="ss-card ss-products" id="liveDeals" hidden>
-            <h2>Danh sách ưu đãi trong phiên</h2><div class="ss-product-list" id="liveDealsList"></div>
-          </section>
         </section>
 
         <aside class="ss-card ss-chat" aria-label="Trò chuyện trực tiếp">
@@ -454,7 +519,6 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
           <div class="ss-chat__body" id="liveChatBox"><div class="ss-chat__notice">Tin nhắn trong phiên sẽ được lưu đúng theo buổi phát.</div></div>
           <div class="ss-chat__footer">
             <div id="liveChatCompose" <?= $canChat ? '' : 'hidden' ?>>
-              <?php if (!$isStaff && !is_logged_in()): ?><input id="guestNickname" type="text" maxlength="40" placeholder="Tên hiển thị (không bắt buộc)" class="mb-2"><?php endif; ?>
               <div id="liveChatReply" hidden><span></span> <button type="button" class="btn btn-link btn-sm">Bỏ trả lời</button></div>
               <button type="button" id="liveSynaSuggestion" class="btn btn-link btn-sm" hidden>@syna — Hỏi trợ lý AI</button>
               <form id="liveChatForm" class="ss-chat__row"><input id="liveChatInput" type="text" maxlength="1000" placeholder="Nhắn cho mọi người…" required><button class="ss-btn ss-btn--primary" type="submit" aria-label="Gửi"><i class="fa-solid fa-paper-plane"></i></button></form>
@@ -463,7 +527,11 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
               <p id="liveSynaNotice" class="mb-1" role="status"></p>
               <div class="ss-chat__helper">Tối đa 5 tin trong 20 giây. Không chia sẻ thông tin nhạy cảm.</div>
             </div>
-            <div id="liveChatLocked" class="ss-chat__locked" <?= $canChat ? 'hidden' : '' ?>><i class="fa-solid fa-lock me-1"></i> Trò chuyện mở trong lúc phát trực tiếp.</div>
+            <div id="liveChatLocked" class="ss-chat__locked" <?= $canChat ? 'hidden' : '' ?>>
+              <i class="fa-solid fa-lock me-1"></i>
+              <span id="liveChatOfflineHint" <?= $isLive ? 'hidden' : '' ?>>Trò chuyện mở khi phiên phát trực tiếp bắt đầu.</span>
+              <span id="liveChatGuestHint" <?= $isLive && !is_logged_in() ? '' : 'hidden' ?>><button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">Đăng nhập để bình luận</button></span>
+            </div>
           </div>
         </aside>
       </div>

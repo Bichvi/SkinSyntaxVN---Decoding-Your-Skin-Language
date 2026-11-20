@@ -134,6 +134,7 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
                     </td>
                     <td class="text-end">
                       <span class="cart-price"><?= format_vnd($unitPrice) ?></span>
+                      <small class="text-success" data-live-price-label <?= empty($item['pricing']['is_live_offer']) ? 'hidden' : '' ?>>Giá live · áp dụng khi ưu đãi còn hiệu lực</small>
                     </td>
                     <td class="text-end">
                       <strong class="line-total"><?= format_vnd($lineTotal) ?></strong>
@@ -705,6 +706,7 @@ document.addEventListener('DOMContentLoaded', function () {
     params.set('product_id', productId);
     if (typeof qty !== 'undefined') {
       params.set('qty', String(qty));
+      params.set('include_price', '1');
     }
 
     return fetch(baseUrl + '/index.php?r=giohang', {
@@ -756,9 +758,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     setRowBusy(row, true);
     postCartAction('update_qty', productId, qty)
-      .then((response) => {
+      .then(async (response) => {
         if (!response.ok) {
           throw new Error('Update failed');
+        }
+        if (response.headers.get('content-type')?.includes('application/json')) {
+          const pricing = await response.json();
+          row.dataset.unitPrice = String(pricing.unit_price);
+          row.querySelector('.cart-price').textContent = formatVnd(pricing.unit_price);
+          row.querySelector('[data-live-price-label]').hidden = !pricing.is_live_offer;
         }
         input.value = String(qty);
         row.dataset.qty = String(qty);

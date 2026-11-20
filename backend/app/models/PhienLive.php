@@ -152,7 +152,7 @@ class PhienLive {
             'tom_tat_phien_live', 'trang_thai', 'recording_status',
             'recording_mime', 'recording_size', 'recording_error', 'recording_file_path', 'recording_storage',
             'recording_duration', 'recording_started_at', 'recording_ended_at', 'recording_etag',
-            'publisher_staff_id', 'live_staff', 'syna_revision',
+            'publisher_staff_id', 'publisher_avatar_key', 'publisher_avatar_version', 'live_staff', 'syna_revision',
             'thumbnail', 'stream_source', 'cho_phep_guest_chat', 'cho_phep_tha_tim', 'cho_phep_voucher', 'tu_dong_recording',
             'active_voucher', 'egress_id',
             'deal_bat_dau', 'deal_ket_thuc', 'pin_duration_minutes'
@@ -310,6 +310,8 @@ class PhienLive {
             'so_luong_kho_deal' => max(0, (int)($dealData['so_luong_kho_deal'] ?? 0)),
             'khung_gio_bat_dau' => trim((string)($dealData['khung_gio_bat_dau'] ?? '')),
             'khung_gio_ket_thuc' => trim((string)($dealData['khung_gio_ket_thuc'] ?? '')),
+            'starts_at' => max(0, (int)($dealData['starts_at'] ?? 0)),
+            'ends_at' => max(0, (int)($dealData['ends_at'] ?? 0)),
             'trang_thai' => trim((string)($dealData['trang_thai'] ?? 'scheduled')),
         ];
         if ($deal['so_luong_kho_deal'] < 1) return false;

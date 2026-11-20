@@ -1257,10 +1257,22 @@ class HomeController {
             if ($action === 'update_qty' && $product_id) {
                 $qty = max(1, (int)($_POST['qty'] ?? 1));
                 $_SESSION['gio_hang'][$product_id] = $qty;
+                if (isset($_SESSION['live_cart_offers'][$product_id]) && ($_POST['include_price'] ?? '') === '1') {
+                    $product = $this->model->findById((string)$product_id, true);
+                    if ($product) {
+                        require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+                        require_once __DIR__ . '/../services/LiveOffer.php';
+                        $pricing = (new FlashSaleCampaign($this->pdo))->resolveEffectivePrice((string)$product_id, null, $product);
+                        $pricing = LiveOffer::cartPricing($this->pdo, (string)$product_id, $qty, $pricing);
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode(['unit_price' => (int)$pricing['effective_price'], 'is_live_offer' => !empty($pricing['is_live_offer'])]);
+                        exit;
+                    }
+                }
                 http_response_code(200);
                 exit;
             } elseif ($action === 'delete' && $product_id) {
-                unset($_SESSION['gio_hang'][$product_id]);
+                unset($_SESSION['gio_hang'][$product_id], $_SESSION['live_cart_offers'][$product_id]);
                 require_once __DIR__ . '/../services/InteractionLogger.php';
                 InteractionLogger::logCartRemove($product_id);
                 http_response_code(200);
@@ -1283,6 +1295,8 @@ class HomeController {
                         $qty = $stock;
                     }
                     $pricing = $campaignModel->resolveEffectivePrice((string)$product_id, null, $product);
+                    require_once __DIR__ . '/../services/LiveOffer.php';
+                    $pricing = LiveOffer::cartPricing($this->pdo, (string)$product_id, (int)$qty, $pricing);
                     $items[$product_id] = [
                         'product' => $product,
                         'qty' => $qty,
@@ -1290,7 +1304,7 @@ class HomeController {
                         'unit_price' => (int)$pricing['effective_price'],
                     ];
                 } else {
-                    unset($_SESSION['gio_hang'][$product_id]);
+                    unset($_SESSION['gio_hang'][$product_id], $_SESSION['live_cart_offers'][$product_id]);
                 }
             }
         }
@@ -1300,7 +1314,7 @@ class HomeController {
     public function xoaGioHang() {
         $product_id = $_POST['product_id'] ?? $_GET['id'] ?? null;
         if ($product_id && isset($_SESSION['gio_hang'][$product_id])) {
-            unset($_SESSION['gio_hang'][$product_id]);
+            unset($_SESSION['gio_hang'][$product_id], $_SESSION['live_cart_offers'][$product_id]);
             require_once __DIR__ . '/../services/InteractionLogger.php';
             InteractionLogger::logCartRemove($product_id);
         }
@@ -1962,6 +1976,8 @@ class HomeController {
             require_once __DIR__ . '/../models/FlashSaleCampaign.php';
             $campaignModel = new FlashSaleCampaign($this->pdo);
             $pricing = $campaignModel->resolveEffectivePrice((string)$productId, null, $product);
+            require_once __DIR__ . '/../services/LiveOffer.php';
+            $pricing = LiveOffer::cartPricing($this->pdo, (string)$productId, $qty, $pricing);
             $unitPrice = (int)$pricing['effective_price'];
 
             $lineTotal = $unitPrice * $qty;
@@ -5674,10 +5690,11 @@ class HomeController {
                 'ma_voucher' => $appliedVoucher['voucher']['ma_voucher'] ?? null,
                 'ma_giam_gia' => $appliedVoucher['voucher']['ma_code'] ?? '',
                 'checkout_items' => $checkoutItems,
+                'apply_live_offers' => (bool)array_intersect_key((array)($_SESSION['live_cart_offers'] ?? []), $checkoutItems),
             ]);
 
             foreach ($checkoutItems as $idSp => $_qty) {
-                unset($_SESSION['gio_hang'][$idSp]);
+                unset($_SESSION['gio_hang'][$idSp], $_SESSION['live_cart_offers'][$idSp]);
             }
             unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher'], $_SESSION['checkout_points'], $_SESSION['checkout_payment_method'], $_SESSION['checkout_address_choice'], $_SESSION['checkout_new_receiver'], $_SESSION['checkout_preview_subtotal']);
 

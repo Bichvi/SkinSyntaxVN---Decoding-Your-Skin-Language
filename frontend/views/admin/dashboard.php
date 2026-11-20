@@ -594,3 +594,13 @@ $productStatusData = [
     </div>
 </div>
 
+<?php if (current_role() === 'admin'): ?>
+  <?php
+  $feedbackFeature = 'admin_workspace';
+  $feedbackPrompt = 'Góp ý về công cụ quản trị';
+  require dirname(__DIR__) . '/partials/feature_feedback.php';
+  ?>
+  <a class="btn btn-outline-success mb-3" href="<?= h(BASE_URL . '/index.php?r=admin_feature_feedback') ?>">Xem phân bố kết quả khảo sát</a>
+  <link rel="stylesheet" href="<?= h(BASE_URL . '/assets/css/account-menu.css') ?>">
+  <?php require dirname(__DIR__) . '/partials/account_avatar.php'; ?>
+<?php endif; ?>

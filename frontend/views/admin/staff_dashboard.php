@@ -604,4 +604,13 @@ $initialChar = mb_strtoupper(mb_substr(trim($staffName), 0, 1));
             </div>
         </div>
     </div>
+    <?php if (current_role() === 'nhanvien'): ?>
+      <?php
+      $feedbackFeature = 'staff_workspace';
+      $feedbackPrompt = 'Góp ý về công cụ làm việc';
+      require dirname(__DIR__) . '/partials/feature_feedback.php';
+      ?>
+      <link rel="stylesheet" href="<?= h(BASE_URL . '/assets/css/account-menu.css') ?>">
+      <?php require dirname(__DIR__) . '/partials/account_avatar.php'; ?>
+    <?php endif; ?>
 </div>

@@ -546,6 +546,15 @@ $_SESSION['live_csrf'] = $csrfToken;
                     <div class="col-md-2">
                       <button type="submit" id="btnAddDeal" class="btn btn-success w-100 fw-bold" disabled>Thêm vào Live</button>
                     </div>
+                    <div class="col-md-6">
+                      <label for="studioDealDuration" class="studio-field-label">Thời gian mở bán kể từ lúc thêm</label>
+                      <select class="form-select" id="studioDealDuration" name="duration_minutes">
+                        <option value="15">15 phút</option>
+                        <option value="30" selected>30 phút</option>
+                        <option value="60">60 phút</option>
+                        <option value="0">Đến khi kết thúc live</option>
+                      </select>
+                    </div>
                   </div>
                 </form>
               </div>
@@ -1245,12 +1254,25 @@ $_SESSION['live_csrf'] = $csrfToken;
     }
 
     // ==================== REALTIME CHAT (YOUTUBE LIVE STYLE) ====================
-    async function loadChatHistory() {
+    async function loadChatHistory(reset = false) {
       try {
-        const data = await fetchStudioJson(BASE_URL + '/index.php?r=api_live_chat_history&room_id=' + encodeURIComponent(LIVE_ID) + (lastChatTimestamp ? '&after=' + encodeURIComponent(lastChatTimestamp) : ''), {cache: 'no-store'});
+        const after = !reset && lastChatTimestamp ? Math.max(0, lastChatTimestamp - 1) : 0;
+        const data = await fetchStudioJson(BASE_URL + '/index.php?r=api_live_chat_history&room_id=' + encodeURIComponent(LIVE_ID) + (after ? '&after=' + encodeURIComponent(after) : ''), {cache: 'no-store'});
         const messages = Array.isArray(data.chats) ? data.chats : (Array.isArray(data.data) ? data.data : []);
         if (data.ok) {
+          if (reset) {
+            chatMessages.length = 0;
+            lastChatTimestamp = 0;
+            document.getElementById('studioChatBody').querySelectorAll('.chat-msg-row').forEach(row => row.remove());
+            document.getElementById('chatCountBadge').textContent = '0';
+          }
           messages.forEach(c => appendChatMessage(c));
+          if (reset || !studioPinnedMessageId) {
+            const pinned = messages.filter(message => message.is_pinned).pop();
+            studioPinnedMessageId = pinned?.id || '';
+            document.getElementById('studioPinnedCommentText').textContent = pinned?.message || '';
+            document.getElementById('studioPinnedCommentBanner').style.display = pinned ? 'flex' : 'none';
+          }
         }
       } catch (error) {
         console.warn('[SkinSyntax Live] chat_history_failed', {name: error?.name || 'Error'});
@@ -1317,7 +1339,7 @@ $_SESSION['live_csrf'] = $csrfToken;
         row.querySelector('[data-chat-avatar]').prepend(image);
         row.querySelector('[data-chat-avatar] > div').hidden = true;
       }
-      row.querySelector('[data-chat-pin]')?.addEventListener('click', () => pinComment(c.message || ''));
+      row.querySelector('[data-chat-pin]')?.addEventListener('click', () => pinComment(c));
       row.querySelector('[data-chat-delete]')?.addEventListener('click', () => deleteComment(c.id));
 
       if (activeChatFilter === 'syna' && !isSyna) {
@@ -1351,15 +1373,25 @@ $_SESSION['live_csrf'] = $csrfToken;
         });
         if (data.ok && data.chat) {
           appendChatMessage(data.chat);
-          broadcastDataChannel({ type: 'chat_message', chat: data.chat });
+          broadcastDataChannel({ type: 'chat_message' });
           if (data.syna_chat) {
             appendChatMessage(data.syna_chat);
-            broadcastDataChannel({ type: 'chat_message', chat: data.syna_chat });
+          } else if (data.ai_status === 'pending') {
+            const reply = await fetchStudioJson(BASE_URL + '/index.php?r=api_live_syna', {
+              method: 'POST',
+              body: new URLSearchParams({ csrf: CSRF_TOKEN, room_id: LIVE_ID, message_id: data.id }),
+            });
+            if (reply.ok && reply.syna_chat) {
+              appendChatMessage(reply.syna_chat);
+              broadcastDataChannel({ type: 'chat_message' });
+            }
           }
         } else {
+          input.value = text;
           showStudioAlert(data.message || 'Không gửi được tin nhắn.');
         }
       } catch (err) {
+        if (!input.value) input.value = text;
         console.warn('sendStudioChat error:', err);
       }
     }
@@ -1378,29 +1410,40 @@ $_SESSION['live_csrf'] = $csrfToken;
       });
     }
 
-    function pinComment(text) {
-      const banner = document.getElementById('studioPinnedCommentBanner');
-      const txtEl = document.getElementById('studioPinnedCommentText');
-      txtEl.textContent = text;
-      banner.style.display = 'flex';
-      broadcastDataChannel({ type: 'pin_comment', text: text });
+    let studioPinnedMessageId = '';
+
+    async function saveChatAction(action, id) {
+      const result = await fetchStudioJson(BASE_URL + '/index.php?r=api_live_manage', {
+        method: 'POST',
+        body: new URLSearchParams({ csrf: CSRF_TOKEN, action, message_id: id, room_id: LIVE_ID }),
+      });
+      if (!result.ok) showStudioAlert('Chưa cập nhật được bình luận. Hãy thử lại.');
+      return result.ok;
     }
 
-    function unpinComment() {
+    async function pinComment(message) {
+      if (!await saveChatAction('pin', message.id)) return;
+      studioPinnedMessageId = message.id;
+      const banner = document.getElementById('studioPinnedCommentBanner');
+      const txtEl = document.getElementById('studioPinnedCommentText');
+      txtEl.textContent = message.message;
+      banner.style.display = 'flex';
+      broadcastDataChannel({ type: 'chat_moderated' });
+    }
+
+    async function unpinComment() {
+      if (!studioPinnedMessageId || !await saveChatAction('unpin', studioPinnedMessageId)) return;
+      studioPinnedMessageId = '';
       document.getElementById('studioPinnedCommentBanner').style.display = 'none';
-      broadcastDataChannel({ type: 'unpin_comment' });
+      broadcastDataChannel({ type: 'chat_moderated' });
     }
 
     async function deleteComment(msgId) {
       try {
-        await fetch(BASE_URL + '/index.php?r=api_live_manage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ csrf: CSRF_TOKEN, action: 'hide', message_id: msgId, room_id: LIVE_ID })
-        });
+        if (!await saveChatAction('hide', msgId)) return;
         const el = document.querySelector(`[data-msg-id="${msgId}"]`);
         if (el) el.remove();
-        broadcastDataChannel({ type: 'delete_comment', message_id: msgId });
+        broadcastDataChannel({ type: 'chat_moderated' });
       } catch (e) {}
     }
 
@@ -1793,17 +1836,12 @@ $_SESSION['live_csrf'] = $csrfToken;
     }
 
     function handleDataChannelMessage(msg) {
-      if (msg.type === 'chat_message' && msg.chat) {
-        appendChatMessage(msg.chat);
+      if (msg.type === 'chat_message') {
+        void loadChatHistory();
+      } else if (msg.type === 'chat_moderated') {
+        void loadChatHistory(true);
       } else if (msg.type === 'pin_product' || msg.type === 'products_changed') {
         refreshStudioProducts();
-      } else if (msg.type === 'pin_comment') {
-        const banner = document.getElementById('studioPinnedCommentBanner');
-        const txtEl = document.getElementById('studioPinnedCommentText');
-        txtEl.textContent = msg.text || '';
-        banner.style.display = 'flex';
-      } else if (msg.type === 'unpin_comment') {
-        document.getElementById('studioPinnedCommentBanner').style.display = 'none';
       }
     }
 

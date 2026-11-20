@@ -628,6 +628,140 @@ class TaiKhoanController {
         redirect(BASE_URL . '/index.php?r=hoso');
     }
 
+    public function uploadAvatar(): void {
+        $user = $this->requireLogin();
+        $token = (string)($_SESSION['account_avatar_csrf'] ?? '');
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $token === '' ||
+            !hash_equals($token, (string)($_POST['csrf'] ?? ''))) {
+            $this->json(['ok' => false, 'message' => 'Hãy mở lại trang tài khoản rồi thử lại.'], 403);
+        }
+
+        $file = $_FILES['avatar'] ?? [];
+        $tmp = $file['tmp_name'] ?? '';
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK ||
+            !is_string($tmp) || !is_uploaded_file($tmp) || filesize($tmp) > 524288) {
+            $this->json(['ok' => false, 'message' => 'Chọn ảnh JPG, PNG hoặc WebP tối đa 512 KB.'], 422);
+        }
+        $dimensions = @getimagesize($tmp);
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
+        if (!is_array($dimensions) || ($dimensions['mime'] ?? '') !== $mime ||
+            !in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true) ||
+            $dimensions[0] > 2048 || $dimensions[1] > 2048) {
+            $this->json(['ok' => false, 'message' => 'Ảnh phải là JPG, PNG hoặc WebP và không quá 2048 × 2048.'], 422);
+        }
+
+        $staff = in_array(current_role(), ['admin', 'nhanvien'], true);
+        $filter = $staff ? ['ma_nv' => (int)($user['ma_nv'] ?? 0)]
+            : ['email' => new \MongoDB\BSON\Regex('^' . preg_quote((string)($user['email'] ?? '')) . '$', 'i')];
+        $accounts = $staff ? $this->pdo->nhan_vien : $this->pdo->nguoidung;
+        $content = file_get_contents($tmp);
+        if ($content === false) $this->json(['ok' => false, 'message' => 'Không đọc được ảnh.'], 422);
+        $key = (string)($user['avatar_key'] ?? '');
+        if (!preg_match('/^[a-f0-9]{40}$/D', $key)) $key = bin2hex(random_bytes(20));
+        $version = bin2hex(random_bytes(6));
+        try {
+            if (!$accounts->findOne($filter, ['projection' => ['_id' => 1]])) {
+                $this->json(['ok' => false, 'message' => 'Không tìm thấy tài khoản.'], 404);
+            }
+            $this->pdo->account_avatars->updateOne(['_id' => $key], ['$set' => [
+                'mime' => $mime, 'image' => new \MongoDB\BSON\Binary($content),
+                'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+            ]], ['upsert' => true]);
+            $result = $accounts->updateOne($filter, ['$set' => ['avatar_key' => $key, 'avatar_version' => $version]]);
+            if (!$result->getMatchedCount()) {
+                $this->pdo->account_avatars->deleteOne(['_id' => $key]);
+                $this->json(['ok' => false, 'message' => 'Không tìm thấy tài khoản.'], 404);
+            }
+            $_SESSION['user']['avatar_key'] = $key;
+            $_SESSION['user']['avatar_version'] = $version;
+            $this->json(['ok' => true, 'avatar_url' => account_avatar_url($_SESSION['user'])]);
+        } catch (Throwable $error) {
+            error_log('Avatar upload failed: ' . get_class($error));
+            $this->json(['ok' => false, 'message' => 'Chưa lưu được ảnh đại diện.'], 503);
+        }
+    }
+
+    public function avatarImage(): void {
+        $key = (string)($_GET['key'] ?? '');
+        $avatar = preg_match('/^[a-f0-9]{40}$/D', $key)
+            ? $this->pdo->account_avatars->findOne(['_id' => $key]) : null;
+        $mime = $avatar['mime'] ?? '';
+        $image = $avatar['image'] ?? null;
+        if (!$image instanceof \MongoDB\BSON\Binary || !in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            http_response_code(404);
+            return;
+        }
+        header('Content-Type: ' . $mime);
+        header('X-Content-Type-Options: nosniff');
+        header("Content-Security-Policy: default-src 'none'; sandbox");
+        header('Cache-Control: public, max-age=3600');
+        echo $image->getData();
+    }
+
+    public function featureFeedback(): void {
+        $user = $this->requireLogin();
+        $token = (string)($_SESSION['feature_feedback_csrf'] ?? '');
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $token === '' ||
+            !hash_equals($token, (string)($_POST['csrf'] ?? ''))) {
+            $this->json(['ok' => false, 'message' => 'Hãy mở lại trang rồi thử lại.'], 403);
+        }
+        $role = current_role();
+        $feature = (string)($_POST['feature'] ?? '');
+        $score = (string)($_POST['rating'] ?? '');
+        $comment = trim((string)($_POST['comment'] ?? ''));
+        $features = [
+            'recommendation' => ['khach_hang'],
+            'customer_account' => ['khach_hang'],
+            'admin_workspace' => ['admin'],
+            'staff_workspace' => ['nhanvien'],
+        ];
+        $accountId = trim((string)($user['ma_nv'] ?? $user['id'] ?? ''));
+        if (!in_array($role, $features[$feature] ?? [], true) ||
+            !preg_match('/^[1-5]$/D', $score) || mb_strlen($comment) > 500 || $accountId === '') {
+            $this->json(['ok' => false, 'message' => 'Chọn mức từ 1 đến 5 và viết góp ý tối đa 500 ký tự.'], 422);
+        }
+        try {
+            $participant = hash('sha256', $role . ':' . $accountId);
+            $day = (new DateTimeImmutable('now', new DateTimeZone('Asia/Ho_Chi_Minh')))->format('Y-m-d');
+            $this->pdo->feature_feedback->updateOne(
+                ['_id' => hash('sha256', $participant . ':' . $feature . ':' . $day)],
+                ['$set' => [
+                    'participant' => $participant, 'role' => $role, 'feature' => $feature,
+                    'rating' => (int)$score, 'comment' => $comment,
+                    'submitted_at' => new \MongoDB\BSON\UTCDateTime(), 'question_version' => 1,
+                ]],
+                ['upsert' => true]
+            );
+            $this->json(['ok' => true]);
+        } catch (Throwable $error) {
+            error_log('Feature feedback save failed: ' . get_class($error));
+            $this->json(['ok' => false, 'message' => 'Chưa lưu được đánh giá. Bạn có thể thử lại.'], 503);
+        }
+    }
+
+    public function featureFeedbackSummary(): void {
+        if (current_role() !== 'admin') {
+            $this->json(['ok' => false], 403);
+        }
+        try {
+            $groups = $this->pdo->feature_feedback->aggregate([
+                ['$group' => ['_id' => [
+                    'feature' => '$feature', 'role' => '$role', 'rating' => '$rating', 'version' => '$question_version',
+                ], 'count' => ['$sum' => 1]]],
+                ['$sort' => ['_id.feature' => 1, '_id.role' => 1, '_id.rating' => 1]],
+            ]);
+            header('Cache-Control: no-store');
+            $distribution = iterator_to_array($groups, false);
+            if (($_GET['format'] ?? '') === 'json') {
+                $this->json(['ok' => true, 'rating_distribution' => $distribution]);
+            }
+            $this->render('admin/feature_feedback', ['distribution' => $distribution]);
+        } catch (Throwable $error) {
+            error_log('Feature feedback summary failed: ' . get_class($error));
+            $this->json(['ok' => false, 'message' => 'Chưa tải được số liệu.'], 503);
+        }
+    }
+
     public function capNhatThongTin(): void {
         $user = $this->requireLogin();
 

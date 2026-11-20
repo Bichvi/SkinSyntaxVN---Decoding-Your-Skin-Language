@@ -535,6 +535,18 @@ switch ($r) {
     case 'hoso':
         (new TaiKhoanController($pdo))->hoso();
         break;
+    case 'account_avatar':
+        (new TaiKhoanController($pdo))->uploadAvatar();
+        break;
+    case 'account_avatar_image':
+        (new TaiKhoanController($pdo))->avatarImage();
+        break;
+    case 'feature_feedback':
+        (new TaiKhoanController($pdo))->featureFeedback();
+        break;
+    case 'admin_feature_feedback':
+        (new TaiKhoanController($pdo))->featureFeedbackSummary();
+        break;
 
     case 'capnhatthongtin':
     case 'capnhathoso':

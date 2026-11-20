@@ -7,6 +7,7 @@
 
     const studio = page.dataset.isStudio === '1';
     const moderator = page.dataset.moderate === '1';
+    const signedIn = page.dataset.signedIn === '1' || studio;
     const chat = $('liveChatBox');
     const form = $('liveChatForm');
     const input = $('liveChatInput');
@@ -24,11 +25,17 @@
     const statuses = {scheduled: 'Đã lên lịch', ready: 'Sẵn sàng phát', live: 'ĐANG PHÁT', interrupted: 'Tạm dừng phát', ended: 'Đã kết thúc', replay_ready: 'Xem lại', recording_failed: 'Lưu bản ghi lỗi'};
     let status = page.dataset.liveStatus;
     let aiEnabled = page.dataset.aiEnabled === '1';
-    let mode = 'all', replyTo = '', previousHistory = '', chatRequest = 0;
+    let mode = 'all', replyTo = '', previousHistory = '';
     let room, connecting, connectedAt = 0, publisherToken, publisherRefreshAt = 0, publishing = false, media, activeSource = '', recorder, recordingParts = [], recordedFile, switching = false, ending = false, nextAtEnd = false;
     let files = [], playlistActive = false, playingIndex = -1, outputMuted = false, visibleDeals = '', closed = false;
     let recordingId, nextRecordingPart = 0, heartbeatPending = false;
     let pinnedEndsAt = 0, liveServerOffsetMs = 0, pinnedUnlimited = false;
+    let dealsOpen = false;
+    let chatIds = new Set();
+    let chatLoaded = false;
+    let chatPending = false;
+    let voucherKey = '';
+    const cartRequests = new WeakSet();
 
     const url = (route, params = {}) => baseUrl + '/index.php?' + new URLSearchParams({r: route, ...params});
     async function json(route, params = {}, fields) {
@@ -41,11 +48,64 @@
                 body.set('room_id', liveId);
                 options = {method: 'POST', body};
             }
-            const response = await fetch(url(route, params), options);
+            const response = await fetch(url(route, params), options ?? {cache: 'no-store'});
             return await response.json();
         } catch {
             return {ok: false};
         }
+    }
+
+    function updateHeaderCartCount(count) {
+        const badge = $('headerCartCount');
+        if (!badge) return;
+        badge.textContent = String(Math.max(0, Number(count) || 0));
+        badge.style.removeProperty('display');
+        badge.classList?.remove('is-updated');
+        void badge.offsetWidth;
+        badge.classList?.add('is-updated');
+        if ($('mobileCartCount')) $('mobileCartCount').textContent = badge.textContent;
+        document.dispatchEvent?.(new CustomEvent('cart:changed'));
+    }
+
+    function showCartToast(message) {
+        document.querySelector?.('.ss-cart-toast')?.remove();
+        const toast = document.createElement('div');
+        toast.className = 'ss-cart-toast';
+        toast.setAttribute('role', 'status');
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid fa-circle-check';
+        icon.setAttribute('aria-hidden', 'true');
+        const text = document.createElement('span');
+        text.textContent = message;
+        toast.append(icon, text);
+        (document.fullscreenElement || document.body).appendChild(toast);
+        setTimeout(() => toast.remove(), 2400);
+    }
+
+    function setDealsOpen(open) {
+        const drawer = $('liveDeals');
+        const trigger = $('btnLiveDeals');
+        if (!drawer || !trigger || trigger.hidden) return;
+        dealsOpen = Boolean(open);
+        drawer.hidden = !dealsOpen;
+        trigger.setAttribute('aria-expanded', dealsOpen ? 'true' : 'false');
+        if (dealsOpen) drawer.querySelector('button')?.focus();
+        else trigger.focus();
+    }
+
+    function activePlaybackElement() {
+        if (replay && !replay.hidden) return replay;
+        if (remote && !remote.hidden) return remote;
+        return $('livekitLocalVideo');
+    }
+
+    function syncSoundControl(muted) {
+        const control = $('btnLiveMute');
+        if (!control) return;
+        control.setAttribute('aria-pressed', muted ? 'false' : 'true');
+        control.setAttribute('aria-label', muted ? 'Bật âm thanh' : 'Tắt âm thanh');
+        const icon = control.querySelector('i');
+        if (icon) icon.className = 'fa-solid ' + (muted ? 'fa-volume-xmark' : 'fa-volume-high');
     }
 
     function setConnection(text, tone) {
@@ -86,6 +146,18 @@
             avatar.textContent = 'S';
             avatar.setAttribute('aria-hidden', 'true');
             meta.prepend(avatar);
+        } else if (message.sender_avatar) {
+            try {
+                const source = new URL(message.sender_avatar, window.location.href);
+                if (source.origin === window.location.origin && source.searchParams.get('r') === 'account_avatar_image') {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'ss-chat-avatar';
+                    avatar.alt = '';
+                    avatar.src = source.href;
+                    avatar.addEventListener('error', () => avatar.remove(), {once: true});
+                    meta.prepend(avatar);
+                }
+            } catch { /* Keep the sender's name visible without an avatar. */ }
         }
         for (const label of [roles[message.sender_type], message.is_pinned ? 'Đã ghim' : ''].filter(Boolean)) {
             const badge = document.createElement('span');
@@ -122,7 +194,7 @@
             body.append(document.createElement('br'), link);
         }
         element.appendChild(body);
-        if (status === 'live') element.appendChild(button('Trả lời', () => setReply(message)));
+        if (status === 'live' && signedIn) element.appendChild(button('Trả lời', () => setReply(message)));
         if (moderator) {
             const actions = [['Ghim', 'pin'], ['Bỏ ghim', 'unpin'], ['Ẩn', 'hide']];
             if (!message.is_ai) actions.push(['Tắt chat 5 phút', 'mute']);
@@ -139,18 +211,31 @@
     }
 
     async function loadChat() {
-        if (!chat || document.hidden) return;
-        const request = ++chatRequest;
+        if (!chat || document.hidden || chatPending) return;
+        chatPending = true;
+        const requestedMode = mode;
         const result = await json('api_live_chat_history', {room_id: liveId, mode});
-        if (request !== chatRequest || !result.ok || !Array.isArray(result.data)) return;
+        chatPending = false;
+        if (requestedMode !== mode) return void loadChat();
+        if (!result.ok || !Array.isArray(result.data)) return;
         const signature = status + JSON.stringify(result.data);
         if (previousHistory === signature) return;
         previousHistory = signature;
         const distance = chat.scrollHeight - chat.clientHeight - chat.scrollTop;
         const messages = new Map(result.data.map(message => [message.id, message]));
         const sorted = [...result.data.filter(message => message.is_pinned), ...result.data.filter(message => !message.is_pinned)];
-        chat.replaceChildren(...sorted.map(message => renderMessage(message, messages)));
-        if (distance < 50) chat.scrollTop = chat.scrollHeight;
+        const pinnedMessage = sorted.find(message => message.is_pinned);
+        if (pinnedMessage) showPinnedComment(pinnedMessage.message);
+        else hidePinnedComment();
+        const oldPosition = chat.scrollTop;
+        chat.replaceChildren(...sorted.map(message => {
+            const element = renderMessage(message, messages);
+            if (chatLoaded && !chatIds.has(message.id)) element.classList.add('ss-message--new');
+            return element;
+        }));
+        chat.scrollTop = !chatLoaded || distance < 50 ? chat.scrollHeight : oldPosition;
+        chatIds = new Set(messages.keys());
+        chatLoaded = true;
     }
 
     function insertMention() {
@@ -184,7 +269,22 @@
             unavailable: 'SYNA chưa trả lời được. Bạn có thể hỏi nhân viên.',
         };
         aiNotice.textContent = result.ok ? '' : (messages[result.ai_status] ?? messages.unavailable);
-        if (result.ok) loadChat();
+        if (result.ok) {
+            void loadChat();
+            if (result.syna_chat) void broadcastChatUpdate();
+        }
+    }
+
+    async function broadcastChatUpdate() {
+        if (room?.state !== 'connected') return;
+        try {
+            await room.localParticipant.publishData(
+                new TextEncoder().encode(JSON.stringify({type: 'chat_message'})),
+                {reliable: true}
+            );
+        } catch {
+            // Viewers also synchronize with the persisted chat history.
+        }
     }
 
     if (form) {
@@ -198,12 +298,12 @@
         form.addEventListener('submit', async event => {
             event.preventDefault();
             const message = input.value.trim();
-            if (!message || input.disabled) return;
+            if (!signedIn || status !== 'live' || !message || input.disabled) return;
             const clientId = window.crypto?.randomUUID?.() ?? 'msg-' + Date.now() + '-' + Math.random().toString(36).slice(2);
             input.disabled = true;
             notice.textContent = '';
             const result = await json('api_live_chat', {}, {
-                message, client_message_id: clientId, reply_to: replyTo, guest_nickname: $('guestNickname')?.value ?? '',
+                message, client_message_id: clientId, reply_to: replyTo,
             });
             input.disabled = false;
             input.focus();
@@ -214,18 +314,8 @@
             input.value = '';
             suggestion.hidden = true;
             setReply(null);
-            if (room?.state === 'connected' && result.chat) {
-                try {
-                    const sendChatEvent = chatMessage => room.localParticipant.publishData(
-                        new TextEncoder().encode(JSON.stringify({type: 'chat_message', chat: chatMessage})),
-                        {reliable: true}
-                    );
-                    await sendChatEvent(result.chat);
-                    if (result.syna_chat) await sendChatEvent(result.syna_chat);
-                } catch (error) {
-                    console.warn('[SkinSyntax Live] chat_data_publish_failed', {name: error?.name || 'Error'});
-                }
-            }
+            void loadChat();
+            if (result.chat) void broadcastChatUpdate();
             loadChat();
             if (result.ai_status === 'pending') void askSyna(result.id);
             if (result.ai_status === 'disabled') aiNotice.textContent = 'SYNA đang tắt trong phiên này.';
@@ -246,7 +336,7 @@
             if (!sdk) throw new Error('Không tải được trình phát LiveKit.');
             const result = await json('api_live_token', {id: liveId, studio: studio ? '1' : '0'});
             if (!result.ok || !result.data?.token) throw new Error(result.message || 'Chưa kết nối được LiveKit.');
-            const next = new sdk.Room({adaptiveStream: false});
+            const next = new sdk.Room({adaptiveStream: true});
             const events = sdk.RoomEvent;
             next.on(events.ConnectionStateChanged, state => {
                 console.info('[SkinSyntax Live] room_state', state);
@@ -340,9 +430,15 @@
         $('liveStatusLabel').textContent = statuses[status] ?? statuses.ready;
         $('liveStatusBadge').className = 'ss-badge ss-badge--' + (status === 'live' ? 'live' : 'neutral');
         $('liveViewers').hidden = status !== 'live';
-        $('liveChatCompose').hidden = status !== 'live';
-        $('liveChatLocked').hidden = status === 'live';
-        document.querySelectorAll('#liveBuyNowForm button, .live-add-to-cart-form button').forEach(control => { control.disabled = status !== 'live'; });
+        const chatOpen = signedIn && status === 'live';
+        $('liveChatCompose').hidden = !chatOpen;
+        $('liveChatLocked').hidden = chatOpen;
+        if ($('liveChatGuestHint')) $('liveChatGuestHint').hidden = signedIn || status !== 'live';
+        if ($('liveChatOfflineHint')) $('liveChatOfflineHint').hidden = status === 'live';
+        if ($('chatConnectionState')) $('chatConnectionState').textContent = status === 'live' ? 'Đang mở' : 'Chưa mở';
+        document.querySelectorAll('#liveBuyNowForm button, .live-add-to-cart-form button').forEach(control => {
+            control.disabled = status !== 'live' || cartRequests.has(control);
+        });
     }
 
     async function publish() {
@@ -637,8 +733,70 @@
         try {
             await room?.startAudio();
             await remoteAudio.play();
+            remoteAudio.muted = false;
+            syncSoundControl(false);
         } catch {
             setConnection('Không bật được âm thanh', 'warning');
+        }
+    });
+    $('btnLiveMute')?.addEventListener('click', async () => {
+        const player = activePlaybackElement();
+        const nextMuted = !(remoteAudio?.muted ?? true);
+        if (!nextMuted) {
+            try {
+                await room?.startAudio();
+                if (remoteAudio) remoteAudio.muted = false;
+                if (remoteAudio?.srcObject) await remoteAudio.play();
+            } catch {
+                if (remoteAudio) remoteAudio.muted = true;
+                return;
+            }
+        }
+        if (remoteAudio) remoteAudio.muted = nextMuted;
+        if (player && player !== remote && !studio) player.muted = nextMuted;
+        syncSoundControl(nextMuted);
+    });
+    $('btnLiveSettings')?.addEventListener('click', () => {
+        const panel = $('liveSettingsPanel');
+        const control = $('btnLiveSettings');
+        if (!panel || !control) return;
+        panel.hidden = !panel.hidden;
+        control.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+    });
+    $('liveVolume')?.addEventListener('input', event => {
+        if (remoteAudio) remoteAudio.volume = Number(event.target.value);
+    });
+    $('liveFitVideo')?.addEventListener('change', event => {
+        $('ssPlayer')?.classList.toggle('ss-player--fit', event.target.checked);
+    });
+    $('btnLiveFullscreen')?.addEventListener('click', async () => {
+        const player = $('ssPlayer');
+        if (!player) return;
+        try {
+            if (document.fullscreenElement) await document.exitFullscreen();
+            else if (player.requestFullscreen) await player.requestFullscreen();
+            else if (activePlaybackElement()?.webkitEnterFullscreen) activePlaybackElement().webkitEnterFullscreen();
+            else throw new Error('Fullscreen unavailable');
+        } catch (error) {
+            setConnection('Trình duyệt không cho phép phóng to', 'warning');
+        }
+    });
+    document.addEventListener?.('fullscreenchange', () => {
+        const control = $('btnLiveFullscreen');
+        if (!control) return;
+        const expanded = document.fullscreenElement === $('ssPlayer');
+        control.setAttribute('aria-label', expanded ? 'Thu nhỏ màn hình' : 'Phóng to màn hình');
+        const icon = control.querySelector('i');
+        if (icon) icon.className = 'fa-solid ' + (expanded ? 'fa-compress' : 'fa-expand');
+    });
+    $('btnLiveDeals')?.addEventListener('click', () => setDealsOpen(!dealsOpen));
+    $('btnCloseLiveDeals')?.addEventListener('click', () => setDealsOpen(false));
+    page.addEventListener('keydown', event => {
+        if (event.key !== 'Escape') return;
+        if (dealsOpen) setDealsOpen(false);
+        else if ($('liveSettingsPanel') && !$('liveSettingsPanel').hidden) {
+            $('btnLiveSettings').click();
+            $('btnLiveSettings').focus();
         }
     });
     $('btnShareLive')?.addEventListener('click', async () => {
@@ -666,6 +824,9 @@
     function showVoucherPopup(v) {
         const popup = $('liveVoucherPopup');
         if (!popup || !v) return;
+        const nextKey = String(v.ma_code || '') + ':' + String(v.ket_thuc || '');
+        if (!v.ma_code || nextKey === voucherKey) return;
+        voucherKey = nextKey;
         if ($('liveVoucherCode')) $('liveVoucherCode').textContent = v.ma_code || '';
         if ($('liveVoucherTitle')) $('liveVoucherTitle').textContent = v.ten_voucher || v.ma_code;
         if ($('liveVoucherValue')) $('liveVoucherValue').textContent = v.loai_giam === 'percent' ? v.gia_tri_giam + '%' : (Number(v.gia_tri_giam || 0).toLocaleString('vi-VN') + ' đ');
@@ -707,6 +868,7 @@
     }
 
     function hideVoucherPopup() {
+        voucherKey = '';
         const popup = $('liveVoucherPopup');
         if (popup) popup.hidden = true;
         if (voucherCountdownTimer) clearInterval(voucherCountdownTimer);
@@ -740,19 +902,13 @@
 
     function handleDataChannelEvent(msg) {
         if (!msg || !msg.type) return;
-        if (msg.type === 'pin_product' || msg.type === 'products_changed') {
-            void refreshProducts();
-        } else if (msg.type === 'voucher_dropped') {
-            showVoucherPopup(msg.voucher);
-        } else if (msg.type === 'voucher_ended') {
-            hideVoucherPopup();
-        } else if (msg.type === 'pin_comment') {
-            showPinnedComment(msg.text);
-        } else if (msg.type === 'unpin_comment') {
-            hidePinnedComment();
+        if (['pin_product', 'products_changed', 'voucher_dropped', 'voucher_ended'].includes(msg.type)) {
+            void refreshRoom();
+        } else if (msg.type === 'pin_comment' || msg.type === 'unpin_comment') {
+            void loadChat();
         } else if (msg.type === 'reaction') {
             spawnFloatingHeart();
-        } else if (msg.type === 'chat_message') {
+        } else if (msg.type === 'chat_message' || msg.type === 'chat_moderated') {
             void loadChat();
         }
     }
@@ -792,14 +948,20 @@
         const cart = event.target;
         if (!cart.matches('.live-add-to-cart-form,#liveBuyNowForm')) return;
         event.preventDefault();
-        const result = await json('api_live_add_to_cart', {}, new FormData(cart));
         const control = cart.querySelector('button');
+        if (!control || control.disabled) return;
+        cartRequests.add(control);
         control.disabled = true;
-        const original = control.textContent;
+        const original = Array.from(control.childNodes);
+        const result = await json('api_live_add_to_cart', {}, new FormData(cart));
         control.textContent = result.ok ? 'Đã thêm' : (result.message || 'Không thêm được');
-        if (result.ok && $('cartCountBadge')) $('cartCountBadge').textContent = result.cart_count;
+        if (result.ok) {
+            updateHeaderCartCount(result.cart_count);
+            showCartToast('Đã thêm vào giỏ hàng · ' + result.cart_count + ' sản phẩm');
+        }
         setTimeout(() => {
-            control.textContent = original;
+            cartRequests.delete(control);
+            control.replaceChildren(...original);
             control.disabled = status !== 'live';
         }, 1800);
     });
@@ -824,27 +986,47 @@
         countdown.hidden = false;
         countdown.textContent = remaining > 0 ? `Đang giới thiệu · Còn ${minutes}:${seconds}` : 'Đã hết thời gian giới thiệu';
     }
-    function renderDeals(deals) {
-        const signature = JSON.stringify(deals);
+    function renderDeals(deals, studioDeals) {
+        const signature = JSON.stringify([deals, studioDeals]);
         if (visibleDeals === signature) return;
         visibleDeals = signature;
-        $('liveDeals').hidden = !deals.length;
-        $('liveDealsList').replaceChildren(...deals.map(deal => {
+        const trigger = $('btnLiveDeals');
+        if (trigger) trigger.hidden = !deals.length;
+        if ($('liveDealCount')) $('liveDealCount').textContent = String(deals.length);
+        if (!deals.length) {
+            dealsOpen = false;
+            $('liveDeals').hidden = true;
+            trigger?.setAttribute('aria-expanded', 'false');
+        }
+        $('liveDealsList')?.replaceChildren(...deals.map(deal => {
             const row = document.createElement('article');
             row.className = 'ss-deal';
             const image = document.createElement('img');
-            image.src = deal.image;
+            if (deal.image) image.src = deal.image;
+            else image.hidden = true;
             image.alt = '';
             const text = document.createElement('div');
             text.className = 'ss-deal__meta';
             const name = document.createElement('strong');
             name.textContent = deal.name;
             const details = document.createElement('small');
-            details.textContent = vnd(deal.price) + ' · Giới hạn ' + deal.limit;
+            details.textContent = vnd(deal.price) + (deal.limit > 0 ? ' · Tối đa ' + deal.limit : '');
             text.append(name, details);
+            if (deal.original_price > deal.price && deal.price > 0) {
+                const regular = document.createElement('del');
+                regular.textContent = vnd(deal.original_price);
+                text.append(regular);
+            }
+            if (deal.ends_at) {
+                const end = document.createElement('small');
+                end.textContent = 'Đến ' + new Intl.DateTimeFormat('vi-VN', {
+                    hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh',
+                }).format(new Date(deal.ends_at * 1000));
+                text.append(end);
+            }
             const cart = document.createElement('form');
             cart.className = 'live-add-to-cart-form';
-            for (const [key, value] of [['product_id', deal.product_id], ['live_id', liveId]]) {
+            for (const [key, value] of [['product_id', deal.product_id], ['live_id', liveId], ['deal_id', deal.id]]) {
                 const field = document.createElement('input');
                 field.type = 'hidden';
                 field.name = key;
@@ -859,7 +1041,7 @@
             row.append(image, text, cart);
             return row;
         }));
-        $('liveStudioDeals')?.replaceChildren(...deals.map(deal => {
+        $('liveStudioDeals')?.replaceChildren(...studioDeals.map(deal => {
             const row = document.createElement('p');
             row.textContent = deal.name + ' ';
             row.appendChild(button('Gỡ', async () => {
@@ -874,13 +1056,29 @@
         const result = await json('api_live_products', {id: liveId, queue: $('liveSynaQueue') ? '1' : '0'});
         if (!result.ok || !result.data) return;
         const data = result.data;
+        const streamerAvatar = $('liveStreamerAvatar');
+        if (streamerAvatar && streamerAvatar.getAttribute('src') !== (data.streamer_avatar || null)) {
+            if (data.streamer_avatar) streamerAvatar.src = data.streamer_avatar;
+            else streamerAvatar.removeAttribute('src');
+            streamerAvatar.hidden = !data.streamer_avatar;
+        }
         liveServerOffsetMs = Number(data.server_time || 0) * 1000 - Date.now();
         pinnedEndsAt = Number(data.pin_ends_at || 0);
         pinnedUnlimited = Boolean(data.pin_unlimited);
         if (!switching && !ending) updateStatus(data.status);
         if (data.status === 'replay_ready' && !data.recording_available && $('liveWaitingMessage')) $('liveWaitingMessage').textContent = 'Bản ghi không khả dụng.';
         setSynaEnabled(Boolean(data.bat_ai_cohost));
-        renderDeals(data.deals || []);
+        const queue = data.deals || [];
+        const offers = data.status === 'live' ? queue.filter(deal => deal.available_now !== false) : [];
+        if (data.status === 'live' && data.pinned_product) {
+            const pinned = data.pinned_product;
+            offers.unshift({
+                id: 'pinned', product_id: pinned.ma_san_pham, name: pinned.ten_san_pham,
+                image: pinned.link_hinh_anh, price: data.gia_uu_dai_live || data.gia_ban_goc,
+                original_price: data.gia_ban_goc, limit: pinned.deal_limit, ends_at: data.pin_ends_at,
+            });
+        }
+        renderDeals(offers, queue);
         if ($('liveSynaQueue')) $('liveSynaQueue').textContent = data.syna_queue === null
             ? 'Hàng đợi SYNA chưa kết nối.' : 'Đang chờ hoặc xử lý: ' + data.syna_queue + ' · Giới hạn: ' + data.syna_limit + ' lượt/phút';
         const pinned = data.pinned_product;

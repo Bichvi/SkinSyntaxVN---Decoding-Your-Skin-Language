@@ -129,6 +129,13 @@
             if (data && data.ok) {
               btn.textContent = 'Đã thêm';
               document.querySelectorAll('.cart-count, #cartCount, .cart-badge').forEach((el) => { el.textContent = data.cart_count; });
+              const badge = document.getElementById('headerCartCount');
+              if (badge) {
+                badge.textContent = String(data.cart_count);
+                badge.style.removeProperty('display');
+              }
+              const mobileBadge = document.getElementById('mobileCartCount');
+              if (mobileBadge) mobileBadge.textContent = String(data.cart_count);
             } else {
               alert((data && data.message) || 'Không thể thêm sản phẩm');
             }
