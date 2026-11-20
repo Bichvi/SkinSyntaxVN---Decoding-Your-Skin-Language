@@ -8,21 +8,23 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../live-commerce.js'), 'utf8');
 
-function harness(studio = true, failStart = false) {
+function harness(studio = true, failStart = false, recording = null) {
   const nodes = new Map();
   const timers = new Map();
   const requests = [];
   const tracks = [];
+  const classes = new Set();
   const node = id => {
     if (!nodes.has(id)) nodes.set(id, {
       dataset: {}, hidden: false, disabled: false, value: '', selectedIndex: 0, textContent: '',
-      classList: {toggle() {}}, listeners: {},
+      classList: {toggle() {}, add(value) { classes.add(value); }}, listeners: {},
       addEventListener(event, fn) { this.listeners[event] = fn; },
-      replaceChildren() {}, querySelector() { return node('child'); },
+      setAttribute() {}, replaceChildren() {}, querySelector() { return node('child'); },
     });
     return nodes.get(id);
   };
   node('ssLivePage').dataset = {liveId: 'fixture-room', isStudio: studio ? '1' : '0', liveStatus: 'ready', baseUrl: '', csrf: 'fixture-csrf'};
+  node('livekitRemoteVideo').parentNode = {appendChild(element) { nodes.set(element.id, element); }};
   const camera = node('camera');
   camera.dataset.liveSource = 'camera';
   class Room {
@@ -43,7 +45,9 @@ function harness(studio = true, failStart = false) {
   const context = {
     document: {
       hidden: false,
-      getElementById: id => ['liveChatForm', 'replayVideoPlayer'].includes(id) ? null : node(id),
+      getElementById: id => ['liveChatForm', 'replayVideoPlayer', 'liveStreamerAvatar'].includes(id) ? null
+        : id === 'liveInPageReplay' ? (nodes.get(id) ?? null) : node(id),
+      createElement: tag => ({tagName: tag}),
       querySelectorAll: selector => selector === '[data-live-source]' ? [camera] : [],
     },
     navigator: {mediaDevices: {enumerateDevices: async () => []}},
@@ -58,13 +62,15 @@ function harness(studio = true, failStart = false) {
         ? {ok: true, data: {token: 'fixture-token', participant_token: 'fixture-token', can_publish: studio, server_url: 'ws://fixture.test'}}
         : route === 'api_live_stream_state'
           ? {ok: !(failStart && fields.state === 'live'), message: 'fixture rejection'}
+          : route === 'api_live_products' && recording
+            ? {ok: true, data: {status: 'replay_ready', recording_available: true, recording_url: recording, server_time: 100}}
           : {ok: false};
       return {json: async () => response};
     },
   };
   context.window = context;
   vm.runInNewContext(source, context);
-  return {node, timers, requests, tracks, start: () => camera.listeners.click()};
+  return {node, timers, requests, tracks, classes, start: () => camera.listeners.click()};
 }
 
 test('publisher sends heartbeat without replacing the live label or recording state', async () => {
@@ -93,4 +99,14 @@ test('rejected go-live releases tracks and allows retry', async () => {
   await h.start();
   assert.equal(h.requests.filter(r => r.route === 'api_live_stream_state').length, 2);
   assert.equal(h.tracks.length, 0);
+});
+
+test('when a replay becomes available on the same page, use native controls in replay mode', async () => {
+  const h = harness(false, false, '/recording.mp4');
+  await h.timers.get(3000)();
+  assert.equal(h.node('liveInPageReplay').controls, true);
+  assert.equal(h.node('liveInPageReplay').src, '/recording.mp4');
+  assert.ok(h.classes.has('ss-player--replay'));
+  assert.equal(h.node('liveWaitingOverlay').hidden, true);
+  assert.equal(h.node('livekitRemoteVideo').hidden, true);
 });

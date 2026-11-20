@@ -151,23 +151,9 @@ if ($pdo !== null) {
       }, 2600);
     };
 
-    const updateCartBadge = function (count) {
-      const cartLink = document.querySelector('.header-icon-link--cart');
-      if (!cartLink) return;
-      let badge = cartLink.querySelector('.header-cart-badge');
-      if (count > 0 && !badge) {
-        badge = document.createElement('em');
-        badge.className = 'header-cart-badge';
-        cartLink.appendChild(badge);
-      }
-      if (badge) {
-        badge.textContent = String(count);
-        badge.style.display = count > 0 ? '' : 'none';
-      }
-    };
-
     function bounceCartHeader() {
-      const cartIcon = document.querySelector('.header-icon-link--cart');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const cartIcon = document.getElementById('headerCartLink');
       if (cartIcon) {
         cartIcon.classList.remove('cart-bounce-anim');
         void cartIcon.offsetWidth;
@@ -176,8 +162,8 @@ if ($pdo !== null) {
     }
 
     function animateFlyToCart(form, button) {
-      const cartIcon = document.querySelector('.header-icon-link--cart');
-      if (!cartIcon) return;
+      const cartIcon = document.getElementById('headerCartLink');
+      if (!cartIcon || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       const card = form.closest('.product-card, .goiy-product-card, .rcm-product-card, .flash-product, article') || form.parentElement;
       let sourceImg = card ? card.querySelector('img') : null;
@@ -248,7 +234,7 @@ if ($pdo !== null) {
 
     document.addEventListener('submit', function (event) {
       const form = event.target;
-      if (!(form instanceof HTMLFormElement)) return;
+      if (event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
       
       let rawAction = form.getAttribute('action') || form.action || 'index.php?r=them_gio_hang_ajax';
       if (rawAction.startsWith('/index.php') && window.location.pathname.includes('/index.php')) {
@@ -259,7 +245,7 @@ if ($pdo !== null) {
 
       const hasAddCartAction = form.querySelector('input[name="action"][value="add_to_cart"]') || targetUrl.includes('them_gio_hang');
       const hasProductId = form.querySelector('input[name="product_id"]') || form.querySelector('input[name="ma_san_pham"]');
-      if (!hasAddCartAction && !hasProductId) return;
+      if (!hasAddCartAction || !hasProductId) return;
 
       event.preventDefault();
       const button = (event.submitter && event.submitter.matches('button, input[type="submit"]')) ? event.submitter : form.querySelector('button[type="submit"]');
@@ -304,6 +290,7 @@ if ($pdo !== null) {
         })
         .then(function (json) {
           if (json.ok) {
+            window.updateSkinSyntaxCartCount(json.cart_count);
             if (typeof window.notifySynaCartAdded === 'function') {
               window.notifySynaCartAdded({ cartCount: json.cart_count });
             }
@@ -319,7 +306,6 @@ if ($pdo !== null) {
           }
           showCartToast(json.message || (json.ok ? 'Đã thêm sản phẩm vào giỏ hàng' : 'Không thể thêm sản phẩm'), !!json.ok);
           if (json.ok && typeof json.cart_count !== 'undefined') {
-            updateCartBadge(parseInt(json.cart_count, 10) || 0);
             bounceCartHeader();
           }
         })

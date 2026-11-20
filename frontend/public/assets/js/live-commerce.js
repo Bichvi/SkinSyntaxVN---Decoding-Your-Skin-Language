@@ -56,15 +56,12 @@
     }
 
     function updateHeaderCartCount(count) {
+        window.updateSkinSyntaxCartCount?.(count);
         const badge = $('headerCartCount');
         if (!badge) return;
-        badge.textContent = String(Math.max(0, Number(count) || 0));
-        badge.style.removeProperty('display');
         badge.classList?.remove('is-updated');
         void badge.offsetWidth;
         badge.classList?.add('is-updated');
-        if ($('mobileCartCount')) $('mobileCartCount').textContent = badge.textContent;
-        document.dispatchEvent?.(new CustomEvent('cart:changed'));
     }
 
     function showCartToast(message) {
@@ -360,7 +357,7 @@
                 track.detach(track.kind === 'video' ? remote : remoteAudio);
                 if (track.kind === 'video') {
                     remote.hidden = true;
-                    if (!activeSource && !replay) waiting.hidden = false;
+                    if (!activeSource && !replay && !$('liveInPageReplay')) waiting.hidden = false;
                 }
             });
             next.on(events.AudioPlaybackStatusChanged, () => {
@@ -1120,20 +1117,18 @@
                     player.id = 'liveInPageReplay';
                     player.controls = true;
                     player.playsInline = true;
+                    player.preload = 'metadata';
                     player.src = data.recording_url;
                     remote.parentNode.appendChild(player);
+                    $('ssPlayer').classList.add('ss-player--replay');
+                    remote.hidden = true;
+                    if (remoteAudio) remoteAudio.muted = true;
                     waiting.hidden = true;
                 }
             }
         }
     }
 
-    document.querySelectorAll('[data-session-filter]').forEach(control => control.addEventListener('click', () => {
-        document.querySelectorAll('[data-session-filter]').forEach(item => item.classList.toggle('is-active', item === control));
-        document.querySelectorAll('.ss-session').forEach(item => {
-            item.hidden = control.dataset.sessionFilter !== 'all' && item.dataset.status !== control.dataset.sessionFilter;
-        });
-    }));
     loadChat();
     setInterval(loadChat, 1500);
     refreshRoom();

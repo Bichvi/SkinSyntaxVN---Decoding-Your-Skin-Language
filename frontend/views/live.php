@@ -16,6 +16,8 @@ $displayStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', 
 $displayStreamer = $displayStreamer !== '' ? $displayStreamer : 'SkinSyntax';
 $liveStatus = (string)($live['status'] ?? 'none');
 $isLive = $liveStatus === 'live';
+$showAiIdolLive = $showAiIdolLive ?? !empty($aiIdolLive);
+$liveDirectoryOnly = !empty($liveDirectoryOnly);
 $canChat = $isLive && is_logged_in();
 $pinned = $live['pinned_product'] ?? null;
 $pinnedId = (string)($pinned['ma_san_pham'] ?? $pinned['id'] ?? $live['ma_san_pham_ghim'] ?? '');
@@ -71,6 +73,14 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
   .ss-player__top,.ss-player__bottom{position:absolute;z-index:5;left:0;right:0;padding:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#fff}
   .ss-player__top{top:0;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}.ss-player__bottom{bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding-top:42px;pointer-events:none;justify-content:space-between}
   .ss-player--replay .ss-player__top{background:none;padding:10px;pointer-events:none}.ss-player--replay .ss-player__top>*{pointer-events:auto}.ss-player--replay .ss-player__top .ss-badge{background:rgba(15,23,42,.55);color:#fff}.ss-player--replay .ss-player__top{flex-wrap:nowrap}.ss-player--replay .ss-player__actions{width:auto;margin-left:auto}
+  .ss-player--replay .ss-player__bottom,
+  .ss-player--replay .ss-live-settings,
+  .ss-player--replay .ss-live-deals-drawer,
+  .ss-player--replay #liveConnectionBadge,
+  .ss-player--replay #btnEnableLiveSound,
+  .ss-player--replay #hostMicChip,
+  .ss-player--replay #liveHeartsContainer { display: none !important; }
+  .ss-player--replay video { object-fit: contain; }
   .ss-replay-meta{display:flex;align-items:center;gap:10px;margin-top:10px;color:#1f2a24}.ss-replay-meta__text{min-width:0}.ss-replay-meta strong{display:block;font-size:14px}.ss-replay-meta small{display:block;color:#5f6b64;font-size:12px;margin-top:2px;overflow-wrap:anywhere}
   .ss-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:750;line-height:1}.ss-badge--live{background:#e23b4e;color:#fff}.ss-badge--ready{background:#dff1e6;color:#0f6740}.ss-badge--scheduled{background:#fff0c2;color:#7b5a00}.ss-badge--warning{background:#fff0c2;color:#795700}.ss-badge--neutral,.ss-badge--ended,.ss-badge--processing{background:#e9eeea;color:#526057}.ss-badge--replay{background:#dff1e6;color:#0f6740}.ss-badge--danger{background:#ffe2e5;color:#ad293c}
   .ss-player__actions{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}.ss-player__actions button,.ss-player__actions a{border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.42);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;text-decoration:none}.ss-player__actions button:hover,.ss-player__actions a:hover{background:rgba(255,255,255,.15)}
@@ -109,12 +119,41 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
   @media (max-width:1050px){.ss-live-grid{grid-template-columns:minmax(0,1fr)}.ss-chat{position:static}.ss-chat__body{height:330px}.ss-session-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media (max-width:620px){.ss-live-wrap{padding:18px 12px 0}.ss-live-hero{padding:22px 0}.ss-live-hero .container{padding-left:16px;padding-right:16px}.ss-player{border-radius:12px}.ss-product__body{align-items:flex-start}.ss-product__cta{width:100%;margin-top:10px}.ss-product__body{flex-wrap:wrap}.ss-product__info{flex-basis:calc(100% - 94px)}.ss-product__cta{margin-left:92px}.ss-product__cta .ss-btn{flex:1}.ss-session-grid{grid-template-columns:1fr}.ss-session__thumb{height:170px}.ss-player__actions{width:100%;margin-left:0}.ss-player__top{align-items:flex-start}.ss-player__bottom{padding:12px;padding-top:38px}.ss-streamer{max-width:calc(100% - 176px)}.ss-streamer small,.ss-streamer strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ss-live-control{width:36px;height:36px}.ss-live-control--deals{width:36px;padding:0}.ss-live-control--deals>span:not(.ss-live-control__count){display:none}.ss-live-control__count{position:absolute;transform:translate(12px,-12px)}.ss-live-deals-drawer{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:72%;border-radius:16px}.ss-chat__body{height:310px}.ss-cart-toast{right:12px;bottom:12px}}
   @media (prefers-reduced-motion:reduce){.ss-message,.header-cart-badge.is-updated,.ss-live-control{animation:none!important;transition:none!important}}
-  .ss-live-hero--room { padding: 14px 0; }
-  .ss-live-hero--room h1 { font-size: 1.25rem; line-height: 1.4; margin: 0; }
-  .ss-live-hero--room + .ss-live-wrap { padding-top: 14px; }
+  .ss-live-hero--discovery + .ss-live-wrap { padding-top: 14px; }
   .ss-deal__meta del { font-size: .72rem; color: var(--ss-muted); }
   .ss-deal__meta strong { white-space: normal; }
   .ss-live-rewards { margin-top: 10px; }
+  .ss-live-hero.ss-live-hero--discovery {
+    padding: 10px 0;
+    background: #133b2d;
+    border-bottom: 1px solid #245542;
+    color: #fff;
+  }
+  .ss-discovery { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .ss-discovery__syna { flex: 0 0 auto; width: 78px; height: 90px; object-fit: contain; }
+  .ss-discovery h1 { margin: 0 0 4px; font-size: 1.38rem; line-height: 1.35; }
+  .ss-discovery p { color: #d5e9dd; font-size: .85rem; }
+  .ss-discovery__nav { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .ss-discovery__nav .ss-btn { background: #e3f1e7; color: #174832; }
+  .ss-discovery__nav .ss-btn:hover { background: #fff; }
+  .ss-session__match {
+    display: block;
+    margin: 8px 0;
+    color: #145639;
+    font-size: .75rem;
+    font-weight: 700;
+  }
+  .ss-session__body a:focus-visible, .ss-discovery__nav :focus-visible, .ss-filters button:focus-visible {
+    outline: 3px solid #e3ab58;
+    outline-offset: 2px;
+  }
+  @media (max-width: 620px) {
+    .ss-discovery { gap: 8px; }
+    .ss-discovery h1 { font-size: 1.15rem; }
+    .ss-discovery__syna { width: 56px; height: 67px; }
+    .ss-discovery__nav { width: 100%; padding-left: 64px; }
+    .ss-discovery__nav .ss-btn { padding: 8px 10px; }
+  }
   @media (max-width: 620px) {
     .ss-player:not(:fullscreen) .ss-live-deals-drawer {
       position: fixed;
@@ -188,20 +227,43 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
 </style>
 
 <main class="ss-live-page" id="ssLivePage" data-live-id="<?= h($live['id'] ?? '') ?>" data-live-status="<?= h($liveStatus) ?>" data-signed-in="<?= is_logged_in() ? '1' : '0' ?>" data-is-studio="<?= $canPublish ? '1' : '0' ?>" data-moderate="<?= $canModerate ? '1' : '0' ?>" data-ai-enabled="<?= !empty($live['bat_ai_cohost']) ? '1' : '0' ?>" data-csrf="<?= h($_SESSION['live_csrf'] ?? '') ?>" data-base-url="<?= h(BASE_URL) ?>">
-  <section class="ss-live-hero<?= $hasLive && !$isStudio ? ' ss-live-hero--room' : '' ?>">
+  <?php if (!$isStudio): ?>
+  <section class="ss-live-hero ss-live-hero--discovery">
+    <div class="container d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div class="ss-discovery">
+        <img class="ss-discovery__syna" src="<?= h(BASE_URL . '/assets/images/syna_greeting.png') ?>" alt="" width="78" height="90">
+        <div>
+          <h1><?= h($hasLive ? (($live['title'] ?? '') ?: 'SkinSyntax Live') : 'Phòng Live cùng Syna') ?></h1>
+          <?php if (!empty($live['discovery_topic'])): ?>
+            <p>Chủ đề khớp hồ sơ da của bạn · <?= h($live['discovery_topic']) ?></p>
+          <?php elseif (!$hasLive): ?>
+            <p>Chọn buổi tư vấn, xem lịch phát hoặc mở lại phiên bạn đã bỏ lỡ.</p>
+          <?php elseif ($isLive): ?>
+            <p>Đang phát cùng <?= h($displayStreamer) ?></p>
+          <?php endif; ?>
+        </div>
+      </div>
+      <nav class="ss-discovery__nav" aria-label="Khám phá Live">
+        <?php if ($liveDirectoryOnly): ?>
+          <a class="ss-btn" href="<?= h(BASE_URL . '/index.php?r=live') ?>">Phiên nổi bật</a>
+        <?php else: ?>
+          <a class="ss-btn" href="<?= h(BASE_URL . '/index.php?r=live&view=all') ?>"><i class="fa-solid fa-list" aria-hidden="true"></i> Tất cả phiên</a>
+        <?php endif; ?>
+        <?php if ($isLive && $canChat && !empty($live['bat_ai_cohost'])): ?>
+          <button type="button" class="ss-btn" id="liveDiscoveryAsk"><i class="fa-solid fa-comments" aria-hidden="true"></i> Hỏi Syna</button>
+        <?php elseif (!empty($aiIdolLive) && !$showAiIdolLive): ?>
+          <a class="ss-btn" href="<?= h(BASE_URL . '/index.php?r=live&view=syna#aiIdolLive') ?>"><i class="fa-solid fa-video" aria-hidden="true"></i> Xem Syna đang phát</a>
+        <?php endif; ?>
+      </nav>
+    </div>
+  </section>
+  <?php else: ?>
+  <section class="ss-live-hero">
     <div class="container">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
-          <?php if (!$hasLive || $isStudio): ?>
-          <div class="d-flex gap-2 flex-wrap mb-2">
-            <span class="ss-badge ss-badge--live"><i class="fa-solid fa-circle"></i> SKINSYNTAX LIVE</span>
-            <span class="ss-badge ss-badge--ready"><i class="fa-solid fa-shield-heart"></i> Hàng chính hãng</span>
-          </div>
-          <h1><?= $isStudio ? 'Phòng phát SkinSyntax' : 'Cùng bạn chọn điều làn da cần' ?></h1>
-          <p><?= $isStudio ? 'Chuẩn bị nguồn phát, giới thiệu sản phẩm và trò chuyện cùng người xem.' : 'Gặp gỡ người tư vấn, hỏi về sản phẩm và khám phá ưu đãi ngay trong buổi live.' ?></p>
-          <?php else: ?>
-            <h1><?= h($live['title'] ?? 'SkinSyntax Live') ?></h1>
-          <?php endif; ?>
+          <h1>Phòng phát SkinSyntax</h1>
+          <p>Chuẩn bị nguồn phát, giới thiệu sản phẩm và trò chuyện cùng người xem.</p>
           <?php if ($canPublish): ?><div class="mt-3 small text-success fw-semibold"><i class="fa-solid fa-circle-info me-1"></i>Xem trước camera, bật micrô nếu cần, rồi chọn Bắt đầu phát camera. Bạn cũng có thể phát video hoặc chia sẻ màn hình.</div><?php endif; ?>
         </div>
         <?php if ($isStaff): ?>
@@ -210,9 +272,10 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
       </div>
     </div>
   </section>
+  <?php endif; ?>
 
   <div class="ss-live-wrap">
-  <?php if (!empty($aiIdolLive)): ?>
+  <?php if ($showAiIdolLive && !empty($aiIdolLive)): ?>
     <?php
       $aiAsset = static fn(string $rel): string => BASE_URL . '/assets/' . $rel . '?v=' . (@filemtime(dirname(__DIR__) . '/public/assets/' . $rel) ?: '1');
     ?>
@@ -260,14 +323,14 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
     <script src="<?= h($aiAsset('js/ai-idol-live.js')) ?>" defer></script>
   <?php endif; ?>
 
-    <?php if (!$hasLive): ?>
+    <?php if (!$hasLive && !$showAiIdolLive && !$liveDirectoryOnly): ?>
       <section class="ss-card ss-empty">
         <i class="fa-solid fa-video-slash"></i>
         <h2>Chưa có phiên phát khả dụng</h2>
         <p>Không có dữ liệu phiên live thật để hiển thị. Quản trị viên có thể tạo phiên mới trong khu vực quản lý.</p>
         <?php if ($isStaff): ?><a class="ss-btn ss-btn--primary mt-3" href="<?= BASE_URL ?>/index.php?r=admin_lives">Mở quản lý phiên phát</a><?php endif; ?>
       </section>
-    <?php else: ?>
+    <?php elseif ($hasLive): ?>
       <div class="ss-live-grid">
         <section>
           <?php $isReplayView = ($liveStatus === 'replay_ready' && $recordingAvailable && $recordingUrl !== ''); ?>
@@ -537,18 +600,92 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
       </div>
     <?php endif; ?>
 
-    <?php if (!empty($liveSessions)): ?>
-      <section class="ss-sessions">
-        <div class="ss-session-toolbar"><div><h2 class="ss-session-title">Các phiên phát khác</h2><p>Chỉ hiển thị phiên và video đã có trong hệ thống.</p></div><div class="ss-filters"><button type="button" class="is-active" data-session-filter="all">Tất cả (<?= count($liveSessions) ?>)</button><button type="button" data-session-filter="live">Đang phát</button><button type="button" data-session-filter="scheduled">Sắp phát</button><button type="button" data-session-filter="replay_ready">Xem lại</button></div></div>
+    <?php if (!empty($liveSessions) || $liveDirectoryOnly || !empty($aiIdolLive)): ?>
+      <section class="ss-sessions" id="live-sessions" aria-labelledby="live-sessions-title">
+        <div class="ss-session-toolbar">
+          <h2 class="ss-session-title" id="live-sessions-title">Tất cả phiên Live</h2>
+          <div class="ss-filters" role="group" aria-label="Lọc phiên Live" hidden>
+            <button type="button" class="is-active" data-session-filter="all" aria-pressed="true">Tất cả</button>
+            <button type="button" data-session-filter="live" aria-pressed="false">Đang phát</button>
+            <button type="button" data-session-filter="scheduled,ready" aria-pressed="false">Sắp phát</button>
+            <button type="button" data-session-filter="replay_ready" aria-pressed="false">Xem lại</button>
+            <?php if (array_filter($liveSessions, static fn($session) => !empty($session['discovery_topic']))): ?>
+              <button type="button" data-session-filter="profile" aria-pressed="false">Theo hồ sơ da</button>
+            <?php endif; ?>
+          </div>
+        </div>
         <div class="ss-session-grid" id="liveSessionGrid">
-          <?php foreach ($liveSessions as $session): $sessionStatus = (string)($session['status'] ?? 'scheduled'); $sessionImage = (string)($session['thumbnail'] ?? ''); $sessionStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', '', (string)($session['streamer'] ?? ''))); $sessionStreamer = $sessionStreamer !== '' ? $sessionStreamer : 'SkinSyntax'; $sessionReplayAvailable = !empty($session['recording_available']); [$sessionLabel, $sessionTone] = $statusLabels[$sessionStatus] ?? $statusLabels['none']; ?>
-            <article class="ss-card ss-session" data-status="<?= h($sessionStatus) ?>"><div class="ss-session__thumb <?= $sessionImage === '' ? 'ss-session__thumb--empty' : '' ?>"><?php if ($sessionImage !== ''): ?><img src="<?= h($sessionImage) ?>" alt="<?= h($session['title'] ?? '') ?>" loading="lazy"><?php else: ?><i class="fa-solid fa-video"></i><?php endif; ?><span class="ss-badge ss-badge--<?= h($sessionTone) ?>"><?= h($sessionLabel) ?></span></div><div class="ss-session__body"><strong><?= h($session['title'] ?? '') ?></strong><small><i class="fa-solid fa-user-headset me-1"></i><?= h($sessionStreamer) ?><?php if ($sessionStatus === 'live'): ?> · <span class="card-viewer-count"><?= (int)($session['viewers'] ?? 0) ?></span> đang xem<?php endif; ?></small><a class="ss-btn <?= $sessionStatus === 'live' ? 'ss-btn--primary' : 'ss-btn--ghost' ?>" href="<?= BASE_URL ?>/index.php?r=live&amp;id=<?= urlencode((string)$session['id']) ?>"><?= $sessionStatus === 'replay_ready' ? ($sessionReplayAvailable ? 'Xem lại bản ghi' : 'Bản ghi không khả dụng') : ($sessionStatus === 'live' ? 'Xem ngay' : 'Xem chi tiết') ?></a></div></article>
+          <?php if (!empty($aiIdolLive)): ?>
+            <article class="ss-card ss-session" data-status="live">
+              <div class="ss-session__thumb ss-session__thumb--empty"><i class="fa-solid fa-video" aria-hidden="true"></i><span class="ss-badge ss-badge--live">ĐANG PHÁT</span></div>
+              <div class="ss-session__body">
+                <strong><?= h($aiIdolLive['name'] ?? 'Live cùng Syna') ?></strong>
+                <small>Syna · AI Idol</small>
+                <a class="ss-btn ss-btn--primary" href="<?= h(BASE_URL . '/index.php?r=live&view=syna#aiIdolLive') ?>">Xem Syna</a>
+              </div>
+            </article>
+          <?php endif; ?>
+          <?php foreach ($liveSessions as $session):
+            $sessionStatus = (string)($session['status'] ?? 'scheduled');
+            $sessionImage = (string)($session['thumbnail'] ?? '');
+            $sessionStreamer = trim((string)preg_replace('/\s*&?\s*AI\s*Co[-\s]?Host\b/iu', '', (string)($session['streamer'] ?? '')));
+            [$sessionLabel, $sessionTone] = $statusLabels[$sessionStatus] ?? $statusLabels['none'];
+            $topic = (string)($session['discovery_topic'] ?? '');
+            $action = match ($sessionStatus) {
+                'live' => 'Xem ngay', 'replay_ready' => 'Mở bản ghi', default => 'Xem chi tiết',
+            };
+          ?>
+            <article class="ss-card ss-session" data-status="<?= h($sessionStatus) ?>" data-skin-match="<?= $topic !== '' ? '1' : '0' ?>">
+              <div class="ss-session__thumb <?= $sessionImage === '' ? 'ss-session__thumb--empty' : '' ?>">
+                <?php if ($sessionImage !== ''): ?><img src="<?= h($sessionImage) ?>" alt="" loading="lazy"><?php else: ?><i class="fa-solid fa-video" aria-hidden="true"></i><?php endif; ?>
+                <span class="ss-badge ss-badge--<?= h($sessionTone) ?>"><?= h($sessionLabel) ?></span>
+              </div>
+              <div class="ss-session__body">
+                <strong><?= h($session['title'] ?? '') ?></strong>
+                <small><?= h($sessionStreamer ?: 'SkinSyntax') ?><?php if ($sessionStatus === 'live'): ?> · <?= (int)($session['viewers'] ?? 0) ?> đang xem<?php endif; ?></small>
+                <?php if ($topic !== ''): ?><span class="ss-session__match">Theo hồ sơ · <?= h($topic) ?></span><?php endif; ?>
+                <a class="ss-btn <?= $sessionStatus === 'live' ? 'ss-btn--primary' : 'ss-btn--ghost' ?>" href="<?= h(BASE_URL . '/index.php?r=live&id=' . rawurlencode((string)$session['id'])) ?>"><?= h($action) ?></a>
+              </div>
+            </article>
           <?php endforeach; ?>
         </div>
+        <p id="liveSessionEmpty" class="mt-3" role="status" <?= empty($liveSessions) && empty($aiIdolLive) ? '' : 'hidden' ?>>Chưa có phiên nào trong mục này.</p>
       </section>
     <?php endif; ?>
   </div>
 </main>
+
+<script>
+(() => {
+  const directory = document.getElementById('live-sessions');
+  if (directory) {
+    const controls = directory.querySelectorAll('[data-session-filter]');
+    const sessions = directory.querySelectorAll('.ss-session');
+    const emptyState = document.getElementById('liveSessionEmpty');
+    if (sessions.length) directory.querySelector('.ss-filters').hidden = false;
+    controls.forEach(control => control.addEventListener('click', () => {
+      const filter = control.dataset.sessionFilter;
+      let shown = 0;
+      sessions.forEach(session => {
+        const visible = filter === 'all' || (filter === 'profile'
+          ? session.dataset.skinMatch === '1'
+          : filter.split(',').includes(session.dataset.status));
+        session.hidden = !visible;
+        if (visible) shown++;
+      });
+      controls.forEach(item => {
+        item.classList.toggle('is-active', item === control);
+        item.setAttribute('aria-pressed', String(item === control));
+      });
+      emptyState.hidden = shown > 0;
+    }));
+  }
+  document.getElementById('liveDiscoveryAsk')?.addEventListener('click', () => {
+    const ask = document.getElementById('liveAskSyna');
+    if (ask && !ask.hidden && !ask.closest('[hidden]')) ask.click();
+  });
+})();
+</script>
 
 <?php if ($hasLive): ?>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.1.2/dist/livekit-client.umd.min.js" crossorigin="anonymous"></script>

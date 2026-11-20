@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../services/LiveOffer.php';
+require_once __DIR__ . '/../services/LiveDiscovery.php';
 
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/AiIdolReplaySessions.php';
@@ -197,6 +198,8 @@ class LiveController {
         }
 
         $selectedId = trim((string)($_GET['id'] ?? $_GET['room_id'] ?? $_GET['room'] ?? ''));
+        $liveDirectoryOnly = $selectedId === '' && ($_GET['view'] ?? '') === 'all';
+        $preferAiLive = $selectedId === '' && ($_GET['view'] ?? '') === 'syna';
 
         // Gom id sản phẩm ghim -> 1 query thay vì N query tuần tự
         $pinnedIds = [];
@@ -247,6 +250,9 @@ class LiveController {
             $liveSessions[] = [
                 'id' => $roomId,
                 'title' => (string)($live['tieu_de'] ?? ''),
+                'discovery_time' => LiveDiscovery::timestamp($st === 'replay_ready'
+                    ? ($live['recording_ended_at'] ?: ($live['updated_at'] ?? $live['created_at'] ?? ''))
+                    : ($live['created_at'] ?? '')),
                 'streamer' => (string)($live['streamer'] ?? ''),
                 'streamer_avatar' => account_avatar_url([
                     'avatar_key' => $live['publisher_avatar_key'] ?? '',
@@ -280,7 +286,21 @@ class LiveController {
         }
 
         $aiReplaySessions = $this->findAiIdolReplays($mongoDb, $spModel);
-        $liveSessions = array_merge($liveSessions, $aiReplaySessions);
+        $skinKey = null;
+        $email = trim((string)((current_user() ?? [])['email'] ?? ''));
+        if ($email !== '' && current_role() === 'khach_hang') {
+            try {
+                require_once __DIR__ . '/../models/TaiKhoan.php';
+                $account = new TaiKhoan($mongoDb);
+                $customer = $account->getKhachHangByEmail($email);
+                if (!empty($customer['recommendation_consent'] ?? $customer['privacy_consent'] ?? false)) {
+                    $skinKey = LiveDiscovery::skinKey($account->getCustomerForSelectedProfileByEmail($email));
+                }
+            } catch (Throwable $error) {
+                error_log('Live discovery profile unavailable: ' . get_class($error));
+            }
+        }
+        $liveSessions = LiveDiscovery::rank(array_merge($liveSessions, $aiReplaySessions), $skinKey);
 
         $currentLive = null;
 
@@ -293,13 +313,20 @@ class LiveController {
             }
         }
 
-        if (!$currentLive && !empty($liveSessions)) {
-            $currentLive = $liveSessions[0];
+        if (!$currentLive && !$liveDirectoryOnly && !$preferAiLive) {
+            $uncheckedReplay = true;
             foreach ($liveSessions as $session) {
-                if ($session['status'] === 'live') {
-                    $currentLive = $session;
-                    break;
+                if (!in_array($session['status'], ['live', 'replay_ready', 'ready', 'interrupted', 'scheduled'], true)) continue;
+                if ($session['status'] === 'replay_ready' && empty($session['recording_available'])) {
+                    if (!$uncheckedReplay) continue;
+                    $uncheckedReplay = false;
+                    $doc = $phienLiveModel->findById($session['id']);
+                    if (!$doc || empty($this->recordingAvailability($phienLiveModel, $doc)['available'])) continue;
+                    $session['recording_available'] = true;
+                    $session['url_ban_ghi'] = $this->recordingPlaybackUrl($session['id']);
                 }
+                $currentLive = $session;
+                break;
             }
         }
 
@@ -321,8 +348,11 @@ class LiveController {
         $allProducts = $dealProductIds ? array_values($spModel->findManyByIds(array_values($dealProductIds))) : [];
         // AI Idol đang phát trên kênh nội bộ (null nếu không có) + sản phẩm theo thứ tự show.
         $aiIdolLive = $this->findAiIdolLive($mongoDb);
+        $showAiIdolLive = !empty($aiIdolLive) && !$liveDirectoryOnly && $selectedId === '' &&
+            ($preferAiLive || ($currentLive['status'] ?? '') !== 'live');
+        if ($showAiIdolLive) $currentLive = null;
         $aiIdolProducts = [];
-        if ($aiIdolLive && !empty($aiIdolLive['product_ids'])) {
+        if ($showAiIdolLive && !empty($aiIdolLive['product_ids'])) {
             try {
                 $aiNumbers = (array)($aiIdolLive['numbers'] ?? []);
                 $aiWanted = $aiNumbers ? array_map('strval', array_keys($aiNumbers)) : $aiIdolLive['product_ids'];
@@ -497,6 +527,8 @@ class LiveController {
                 $img = !empty($p['link_hinh_anh']) ? resolve_image_url((string)$p['link_hinh_anh']) : '';
                 $session = AiIdolReplaySessions::toSession($doc, is_array($p) ? $p : null, $img);
                 if ($session !== null) {
+                    $session['discovery_time'] = LiveDiscovery::timestamp($doc['completed_at'] ?? null);
+                    $session['recording_available'] = true;
                     $sessions[] = $session;
                 }
             }

@@ -2636,7 +2636,7 @@ $aiLabelScanOn = function_exists('ss_env')
             },
             onCartUpdated: function (payload) {
               if (!isCurrentAgentSend()) return;
-              if (typeof updateCartBadge === 'function') updateCartBadge(parseInt(payload.count, 10) || 0);
+              window.updateSkinSyntaxCartCount?.(payload.count);
             },
             onDone: finishAgent,
             onError: function (payload) {
@@ -3042,9 +3042,7 @@ $aiLabelScanOn = function_exists('ss_env')
               }));
               addCartBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
               
-              if (typeof updateCartBadge === 'function' && result.cart_count !== undefined) {
-                updateCartBadge(parseInt(result.cart_count, 10) || 0);
-              }
+              window.updateSkinSyntaxCartCount?.(result.cart_count);
               if (typeof bounceCartHeader === 'function') {
                 bounceCartHeader();
               }

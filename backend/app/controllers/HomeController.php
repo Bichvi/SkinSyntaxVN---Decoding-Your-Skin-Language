@@ -1253,8 +1253,28 @@ class HomeController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action = $_POST['action'] ?? null;
             $product_id = $_POST['product_id'] ?? null;
+
+            if ($action === 'clear_cart') {
+                $expected = $_SESSION['clear_cart_csrf'] ?? '';
+                $token = $_POST['csrf'] ?? null;
+                if (!is_string($token) || $expected === '' || !hash_equals($expected, $token)) {
+                    http_response_code(403);
+                    echo 'Vui lòng tải lại trang giỏ hàng rồi thử lại.';
+                    return;
+                }
+                unset($_SESSION['gio_hang'], $_SESSION['live_cart_offers'], $_SESSION['checkout_items'],
+                    $_SESSION['checkout_voucher'], $_SESSION['checkout_points'], $_SESSION['checkout_payment_method'],
+                    $_SESSION['checkout_address_choice'], $_SESSION['checkout_new_receiver'],
+                    $_SESSION['checkout_preview_subtotal']);
+                header('Location: ' . BASE_URL . '/index.php?r=giohang', true, 303);
+                return;
+            }
             
             if ($action === 'update_qty' && $product_id) {
+                if (!isset($_SESSION['gio_hang'][$product_id])) {
+                    http_response_code(409);
+                    return;
+                }
                 $qty = max(1, (int)($_POST['qty'] ?? 1));
                 $_SESSION['gio_hang'][$product_id] = $qty;
                 if (isset($_SESSION['live_cart_offers'][$product_id]) && ($_POST['include_price'] ?? '') === '1') {
