@@ -1047,4 +1047,4 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
   </div>
 <?php endif; ?>
 <script type="application/json" id="recommendation-page-data"><?= $routineJson ?></script>
-<script src="<?= h(BASE_URL . '/assets/js/goiy-recommendation.js?v=8') ?>" defer></script>
+<script src="<?= h(BASE_URL . '/assets/js/goiy-recommendation.js?v=9') ?>" defer></script>

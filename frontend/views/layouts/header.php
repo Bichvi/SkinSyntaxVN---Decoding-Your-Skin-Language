@@ -116,6 +116,22 @@ $socialLinks = [
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300;400;500;600;700;800&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" crossorigin="anonymous">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap.min.css">
+  <style>.header-cart-badge[hidden] { display: none !important; }</style>
+  <script>
+    window.updateSkinSyntaxCartCount = function (count) {
+      if (count == null || count === '' || !Number.isFinite(Number(count))) return;
+      const quantity = Math.max(0, Math.trunc(Number(count)));
+      const badge = document.getElementById('headerCartCount');
+      if (badge) {
+        badge.textContent = String(quantity);
+        badge.hidden = quantity === 0;
+        badge.style.removeProperty('display');
+      }
+      const mobileBadge = document.getElementById('mobileCartCount');
+      if (mobileBadge) mobileBadge.textContent = String(quantity);
+      document.dispatchEvent(new CustomEvent('cart:changed', {detail: {count: quantity}}));
+    };
+  </script>
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/bootstrap-icons.min.css"></noscript>
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/fontawesome.min.css">
@@ -321,7 +337,7 @@ $socialLinks = [
         <a href="<?= BASE_URL ?>/index.php?r=giohang" class="header-action-btn--neutral" id="headerCartLink" title="Xem giỏ hàng">
           <i class="fas fa-bag-shopping" style="font-size: 1.15rem; color: #183B2B;"></i>
           <strong style="font-size: 0.86rem; color: #183B2B;">Giỏ hàng</strong>
-          <em class="header-cart-badge" id="headerCartCount" style="<?= $cartCount > 0 ? '' : 'display: none !important;' ?>"><?= $cartCount ?></em>
+          <em class="header-cart-badge" id="headerCartCount" role="status" aria-label="Số lượng trong giỏ hàng" <?= $cartCount > 0 ? '' : 'hidden' ?>><?= $cartCount ?></em>
         </a>
 
         <!-- Mobile Menu Toggle -->
