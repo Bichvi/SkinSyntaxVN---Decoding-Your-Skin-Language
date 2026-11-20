@@ -30,6 +30,7 @@
     let files = [], playlistActive = false, playingIndex = -1, outputMuted = false, visibleDeals = '', closed = false;
     let recordingId, nextRecordingPart = 0, heartbeatPending = false;
     let pinnedEndsAt = 0, liveServerOffsetMs = 0, pinnedUnlimited = false;
+    let currentPinnedProduct = null;
     let dealsOpen = false;
     let chatIds = new Set();
     let chatLoaded = false;
@@ -934,6 +935,26 @@
         studioNotice.textContent = result.ok ? 'Đã bỏ ghim sản phẩm.' : 'Không thể bỏ ghim.';
         if (result.ok) refreshRoom();
     });
+    const productModal = $('liveProductModal');
+    const closeProductModal = () => { if (productModal) productModal.hidden = true; };
+    $('btnCloseLiveProductModal')?.addEventListener('click', closeProductModal);
+    $('btnCloseLiveProductModal2')?.addEventListener('click', closeProductModal);
+    productModal?.addEventListener('click', event => { if (event.target === productModal) closeProductModal(); });
+    $('livePinnedLink')?.addEventListener('click', () => {
+        if (!currentPinnedProduct || !productModal) return;
+        $('liveProductModalName').textContent = currentPinnedProduct.ten_san_pham || 'Sản phẩm đang giới thiệu';
+        $('liveProductModalBrand').textContent = currentPinnedProduct.thuong_hieu || '';
+        $('liveProductModalPrice').textContent = vnd(currentPinnedProduct.price || 0);
+        $('liveProductModalMeta').textContent = 'Mã sản phẩm: ' + (currentPinnedProduct.ma_san_pham || '');
+        const image = $('liveProductModalImage');
+        image.src = currentPinnedProduct.link_hinh_anh || '';
+        image.alt = currentPinnedProduct.ten_san_pham || '';
+        productModal.hidden = false;
+    });
+    $('btnModalAddToCart')?.addEventListener('click', () => {
+        closeProductModal();
+        $('liveBuyNowForm')?.requestSubmit();
+    });
     document.querySelectorAll('[data-studio-tab]').forEach(control => control.addEventListener('click', () => {
         const panel = $(control.dataset.studioTab);
         if (!panel) return;
@@ -1079,6 +1100,10 @@
         if ($('liveSynaQueue')) $('liveSynaQueue').textContent = data.syna_queue === null
             ? 'Hàng đợi SYNA chưa kết nối.' : 'Đang chờ hoặc xử lý: ' + data.syna_queue + ' · Giới hạn: ' + data.syna_limit + ' lượt/phút';
         const pinned = data.pinned_product;
+        currentPinnedProduct = pinned ? {
+            ...pinned,
+            price: data.gia_uu_dai_live || data.gia_ban_goc,
+        } : null;
         $('livePinnedBody').hidden = !pinned;
         $('livePinnedEmpty').hidden = Boolean(pinned);
         if (pinned) {
@@ -1086,7 +1111,6 @@
             $('livePinnedBrand').textContent = pinned.thuong_hieu;
             $('livePinnedPrice').textContent = vnd(data.gia_uu_dai_live || data.gia_ban_goc);
             $('livePinnedProductId').value = pinned.ma_san_pham;
-            $('livePinnedLink').href = url('chitiet', {id: pinned.ma_san_pham});
             $('livePinnedImg').hidden = !pinned.link_hinh_anh;
             if (pinned.link_hinh_anh) $('livePinnedImg').src = pinned.link_hinh_anh;
             $('livePinnedImg').alt = pinned.ten_san_pham;

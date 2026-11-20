@@ -2316,6 +2316,22 @@ class HomeController {
     private function getDefaultCheckoutReceiver(?array $customer = null, array $user = []): array {
         $customer = $customer ?? $this->getCurrentCheckoutCustomer() ?? [];
 
+        foreach ((array)($customer['shipping_addresses'] ?? []) as $rawAddress) {
+            $address = is_array($rawAddress) ? $rawAddress : (array)$rawAddress;
+            if (empty($address['is_default'])) continue;
+            $parts = array_values(array_filter([
+                trim((string)($address['street'] ?? '')),
+                trim((string)($address['ward'] ?? '')),
+                trim((string)($address['province'] ?? '')),
+            ], static fn(string $part): bool => $part !== ''));
+            $receiver = [
+                'ten_nguoi_nhan' => trim((string)($address['receiver_name'] ?? '')),
+                'sdt_nguoi_nhan' => trim((string)($address['phone'] ?? '')),
+                'dia_chi_giao_hang' => implode(', ', $parts),
+            ];
+            if ($this->hasCompleteCheckoutReceiver($receiver)) return $receiver;
+        }
+
         return [
             'ten_nguoi_nhan' => trim((string)($customer['ho_ten'] ?? ($user['ho_ten'] ?? ''))),
             'sdt_nguoi_nhan' => trim((string)($customer['so_dien_thoai'] ?? '')),

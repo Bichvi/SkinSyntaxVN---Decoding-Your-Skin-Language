@@ -280,6 +280,16 @@ $_SESSION['live_csrf'] = $csrfToken;
     .deal-product-image { width: 48px; height: 48px; object-fit: contain; background: #fff; border: 1px solid #e0e7e2; border-radius: 9px; }
     .catalog-result__name { display: block; font-weight: 700; line-height: 1.3; }
     .catalog-result__meta { display: block; margin-top: 3px; color: var(--studio-muted); font-size: 0.78rem; }
+    .catalog-result { padding: 10px; border-bottom: 1px solid #e4ebe6; }
+    .catalog-result:last-of-type { border-bottom: 0; }
+    .catalog-result__top { display: grid; grid-template-columns: 20px 42px minmax(0,1fr) auto; gap: 9px; align-items: center; }
+    .catalog-result__top img { width: 42px; height: 42px; }
+    .catalog-result__fields { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 9px 0 0 29px; }
+    .catalog-result__fields label { font-size: .68rem; color: var(--studio-muted); }
+    .catalog-result__fields input,.catalog-result__fields select { min-width: 0; width: 100%; min-height: 34px; padding: 4px 7px; font-size: .8rem; }
+    .catalog-result__fields button { grid-column: 1 / -1; }
+    .catalog-batch-bar { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; background: #eef7f1; border-top: 1px solid var(--studio-border); }
+    @media (max-width: 600px) { .catalog-result__fields { grid-template-columns: repeat(2,minmax(0,1fr)); margin-left: 0; } }
     .selected-product {
       display: grid;
       grid-template-columns: 56px minmax(0, 1fr) auto;
@@ -419,11 +429,11 @@ $_SESSION['live_csrf'] = $csrfToken;
           <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-2 border-top border-secondary">
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <button type="button" id="btnToggleCam" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-semibold" onclick="toggleCamera()">
-                <i class="bi bi-camera-video-fill me-1 text-success"></i><span id="lblToggleCam">Tắt Camera</span>
+                <i id="iconToggleCam" class="bi bi-camera-video-fill me-1 text-success"></i><span id="lblToggleCam">Tắt Camera</span>
               </button>
 
               <button type="button" id="btnToggleMic" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-semibold" onclick="toggleMicrophone()">
-                <i class="bi bi-mic-fill me-1 text-success"></i><span id="lblToggleMic">Tắt Mic</span>
+                <i id="iconToggleMic" class="bi bi-mic-fill me-1 text-success"></i><span id="lblToggleMic">Tắt Mic</span>
               </button>
 
               <button type="button" id="btnScreenShare" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-semibold" onclick="toggleScreenShare()">
@@ -518,7 +528,7 @@ $_SESSION['live_csrf'] = $csrfToken;
                       <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
                       <input type="search" id="catalogSearchInput" class="form-control" placeholder="Ví dụ: serum, L'Oréal hoặc 6376" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="catalogSearchResults" aria-expanded="false">
                     </div>
-                    <div id="catalogSearchResults" class="catalog-results" role="listbox" hidden></div>
+                    <div id="catalogSearchResults" class="catalog-results" role="list" hidden></div>
                   </div>
 
                   <div id="selectedProductCard" class="selected-product mb-3" hidden aria-live="polite">
@@ -758,6 +768,12 @@ $_SESSION['live_csrf'] = $csrfToken;
                 </div>
                 <div class="col-md-3">
                   <div class="p-3 bg-dark rounded-3 border border-secondary text-center">
+                    <span class="text-muted extra-small d-block">Bình luận trong phiên</span>
+                    <strong class="fs-4 text-info" id="metricChatMessages">0</strong>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="p-3 bg-dark rounded-3 border border-secondary text-center">
                     <span class="text-muted extra-small d-block">Tổng lượt xem</span>
                     <strong class="fs-4 text-light"><?= number_format((int)($live['luot_xem'] ?? 0)) ?></strong>
                   </div>
@@ -861,6 +877,7 @@ $_SESSION['live_csrf'] = $csrfToken;
     const LIVE_ID = '<?= addslashes($liveId) ?>';
     const CSRF_TOKEN = '<?= addslashes($csrfToken) ?>';
     const BASE_URL = '<?= addslashes(BASE_URL) ?>';
+    const INITIAL_LIVE_STATUS = '<?= addslashes($liveStatus) ?>';
     let room = null;
     let studioMedia = null;
     let publisherToken = '';
@@ -874,6 +891,7 @@ $_SESSION['live_csrf'] = $csrfToken;
     let chatMessages = [];
     let activeChatFilter = 'all';
     let selectedCatalogProduct = null;
+    const selectedCatalogProducts = new Map();
     let catalogSearchTimer = null;
     let catalogSearchController = null;
     let pinEndsAt = <?= (int)(strtotime((string)($live['deal_ket_thuc'] ?? '')) ?: 0) ?>;
@@ -906,8 +924,15 @@ $_SESSION['live_csrf'] = $csrfToken;
       loadChatHistory();
       bindCatalogSearch();
       refreshStudioProducts();
+      // Keep the deal/pin panel in sync when another admin or staff member
+      // changes the same session. DataChannel remains the fast path; polling
+      // is the recovery path after a reconnect or a page refresh.
+      setInterval(refreshStudioProducts, 3000);
       updatePinCountdown();
       setInterval(updatePinCountdown, 1000);
+      if (INITIAL_LIVE_STATUS === 'live') {
+        showStudioNotice('Phiên đang diễn ra. Kiểm tra nguồn phát rồi bấm Bắt đầu phát trực tiếp để phát từ tab này.');
+      }
     });
 
     // 2. KHỞI TẠO MEDIA PREVIEW
@@ -989,9 +1014,11 @@ $_SESSION['live_csrf'] = $csrfToken;
       if (isMuted) {
         btn.classList.replace('btn-outline-light', 'btn-danger');
         lbl.textContent = 'Bật Camera';
+        document.getElementById('iconToggleCam')?.classList.replace('bi-camera-video-fill', 'bi-camera-video-off-fill');
       } else {
         btn.classList.replace('btn-danger', 'btn-outline-light');
         lbl.textContent = 'Tắt Camera';
+        document.getElementById('iconToggleCam')?.classList.replace('bi-camera-video-off-fill', 'bi-camera-video-fill');
       }
     }
 
@@ -1004,9 +1031,11 @@ $_SESSION['live_csrf'] = $csrfToken;
       if (isMuted) {
         btn.classList.replace('btn-outline-light', 'btn-danger');
         lbl.textContent = 'Bật Mic';
+        document.getElementById('iconToggleMic')?.classList.replace('bi-mic-fill', 'bi-mic-mute-fill');
       } else {
         btn.classList.replace('btn-danger', 'btn-outline-light');
         lbl.textContent = 'Tắt Mic';
+        document.getElementById('iconToggleMic')?.classList.replace('bi-mic-mute-fill', 'bi-mic-fill');
       }
     }
 
@@ -1265,6 +1294,7 @@ $_SESSION['live_csrf'] = $csrfToken;
             lastChatTimestamp = 0;
             document.getElementById('studioChatBody').querySelectorAll('.chat-msg-row').forEach(row => row.remove());
             document.getElementById('chatCountBadge').textContent = '0';
+            document.getElementById('metricChatMessages').textContent = '0';
           }
           messages.forEach(c => appendChatMessage(c));
           if (reset || !studioPinnedMessageId) {
@@ -1350,6 +1380,8 @@ $_SESSION['live_csrf'] = $csrfToken;
       body.scrollTop = body.scrollHeight;
 
       document.getElementById('chatCountBadge').textContent = chatMessages.length;
+      const metric = document.getElementById('metricChatMessages');
+      if (metric) metric.textContent = chatMessages.length.toLocaleString('vi-VN');
     }
 
     async function sendStudioChat(e) {
@@ -1505,10 +1537,11 @@ $_SESSION['live_csrf'] = $csrfToken;
           return;
         }
         results.replaceChildren(...products.map(product => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'catalog-result';
-          button.setAttribute('role', 'option');
+          const productId = String(product.id || product.ma_san_pham || '');
+          const saved = selectedCatalogProducts.get(productId) || {};
+          const row = document.createElement('div');
+          row.className = 'catalog-result';
+          row.dataset.productId = productId;
           const image = document.createElement('img');
           image.src = product.img || product.hinh_anh || '';
           image.alt = '';
@@ -1521,15 +1554,108 @@ $_SESSION['live_csrf'] = $csrfToken;
           meta.textContent = `${product.thuong_hieu || 'Chưa có thương hiệu'} · Mã ${product.id} · Tồn ${product.stock_known ? Number(product.stock).toLocaleString('vi-VN') : 'chưa rõ'}`;
           copy.append(name, meta);
           const price = document.createElement('strong');
-          price.textContent = product.formatted_price || formatVnd(product.price);
-          button.append(image, copy, price);
-          button.addEventListener('click', () => selectCatalogProduct(product));
-          return button;
+          price.textContent = product.stock_known && Number(product.stock) < 1 ? 'Tạm hết hàng' : (product.formatted_price || formatVnd(product.price));
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'catalog-product-check';
+          checkbox.checked = selectedCatalogProducts.has(productId);
+          checkbox.disabled = product.stock_known && Number(product.stock) < 1;
+          checkbox.setAttribute('aria-label', 'Chọn ' + (product.name || product.ten_san_pham || ('sản phẩm ' + productId)));
+          const top = document.createElement('div');
+          top.className = 'catalog-result__top';
+          top.append(checkbox, image, copy, price);
+          const fields = document.createElement('div');
+          fields.className = 'catalog-result__fields';
+          const stockMax = product.stock_known && Number(product.stock) > 0 ? String(Number(product.stock)) : '';
+          const livePrice = makeCatalogField('Giá Live (đ)', 'number', saved.price ?? (Number(product.price || product.gia_ban || 0) || ''), {min: '1', step: '1', required: true});
+          const quantity = makeCatalogField('Số lượng', 'number', saved.qty ?? '1', {min: '1', max: stockMax, required: true});
+          const duration = document.createElement('label');
+          duration.append(document.createTextNode('Thời gian mở bán'));
+          const durationSelect = document.createElement('select');
+          durationSelect.className = 'form-select form-select-sm catalog-deal-duration';
+          [['15','15 phút'],['30','30 phút'],['60','60 phút'],['0','Đến khi kết thúc live']].forEach(([value,label]) => {
+            const option = document.createElement('option'); option.value = value; option.textContent = label;
+            if (String(saved.duration ?? '30') === value) option.selected = true;
+            durationSelect.append(option);
+          });
+          duration.append(durationSelect);
+          fields.append(livePrice, quantity, duration);
+          const updateSelection = () => {
+            if (checkbox.checked) selectedCatalogProducts.set(productId, {product, price: livePrice.querySelector('input').value, qty: quantity.querySelector('input').value, duration: durationSelect.value});
+            else selectedCatalogProducts.delete(productId);
+            updateCatalogBatchBar();
+          };
+          checkbox.addEventListener('change', updateSelection);
+          [livePrice.querySelector('input'), quantity.querySelector('input'), durationSelect].forEach(control => control.addEventListener('input', updateSelection));
+          row.append(top, fields);
+          return row;
         }));
+        const batch = document.createElement('div');
+        batch.className = 'catalog-batch-bar';
+        batch.innerHTML = '<span data-catalog-selected-count>Chọn sản phẩm cần thêm</span><button type="button" class="btn btn-success btn-sm fw-bold" data-add-catalog-batch disabled>Thêm sản phẩm đã chọn</button>';
+        batch.querySelector('[data-add-catalog-batch]').addEventListener('click', addSelectedCatalogDeals);
+        results.append(batch);
+        updateCatalogBatchBar();
       } catch (error) {
         if (error.name === 'AbortError') return;
         results.innerHTML = '<div class="p-3 text-danger small">Không tải được kết quả. Hãy thử lại.</div>';
       }
+    }
+
+    function makeCatalogField(title, type, value, attributes = {}) {
+      const label = document.createElement('label');
+      label.append(document.createTextNode(title));
+      const input = document.createElement('input');
+      input.type = type; input.className = 'form-control form-control-sm'; input.value = value;
+      Object.entries(attributes).forEach(([key, val]) => { if (val !== '') input.setAttribute(key, val); });
+      label.append(input);
+      return label;
+    }
+
+    function updateCatalogBatchBar() {
+      const count = selectedCatalogProducts.size;
+      const label = document.querySelector('[data-catalog-selected-count]');
+      const button = document.querySelector('[data-add-catalog-batch]');
+      if (label) label.textContent = count ? `Đã chọn ${count} sản phẩm` : 'Chọn sản phẩm cần thêm';
+      if (button) { button.disabled = count === 0; button.textContent = count ? `Thêm ${count} sản phẩm vào phiên` : 'Thêm sản phẩm đã chọn'; }
+    }
+
+    async function addSelectedCatalogDeals() {
+      const button = document.querySelector('[data-add-catalog-batch]');
+      if (!button || !selectedCatalogProducts.size) return;
+      const entries = Array.from(selectedCatalogProducts.entries());
+      button.disabled = true;
+      let added = 0;
+      const failures = [];
+      for (const [productId, item] of entries) {
+        const price = Number(item.price);
+        const quantity = Number(item.qty);
+        const maxStock = item.product.stock_known ? Number(item.product.stock) : null;
+        if (!Number.isFinite(price) || price <= 0 || !Number.isInteger(quantity) || quantity < 1 || (maxStock !== null && quantity > maxStock)) {
+          failures.push(`${item.product.name || 'Mã ' + productId}: kiểm tra lại giá ưu đãi và số lượng (tồn hiện tại ${maxStock === null ? 'chưa rõ' : maxStock}).`);
+          continue;
+        }
+        const params = new URLSearchParams({
+          ajax: '1', csrf: CSRF_TOKEN, live_id: LIVE_ID, product_id: productId,
+          gia_uu_dai_live: String(price), so_luong_kho_deal: String(quantity), duration_minutes: String(item.duration)
+        });
+        try {
+          const data = await fetchStudioJson(BASE_URL + '/index.php?r=admin_live_add_deal', {
+            method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: params
+          });
+          if (!data.ok) throw new Error(data.message || 'Không thể thêm sản phẩm');
+          selectedCatalogProducts.delete(productId);
+          added++;
+        } catch (error) {
+          failures.push(`${item.product.name || 'Mã ' + productId}: ${error.message}`);
+        }
+      }
+      await refreshStudioProducts();
+      if (added) broadcastDataChannel({type: 'products_changed'});
+      updateCatalogBatchBar();
+      if (failures.length) showStudioAlert(`${added} sản phẩm đã thêm. ${failures.join(' · ')}`);
+      else if (added) showStudioNotice(`Đã thêm ${added} sản phẩm vào phiên. Nguồn video hiện tại được giữ nguyên.`);
+      button.disabled = selectedCatalogProducts.size === 0;
     }
 
     function selectCatalogProduct(product) {

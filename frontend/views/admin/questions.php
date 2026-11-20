@@ -19,8 +19,7 @@ $formatQuestionDate = static function ($value): string {
 <div class="container-fluid px-4 py-4">
     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
-            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Quản lý Hỏi đáp sản phẩm</h1>
-            <p class="text-muted mb-0 small">Giải đáp thắc mắc của khách hàng trên trang chi tiết sản phẩm và quản lý hiển thị.</p>
+            <h1 class="h4 fw-bold mb-0" style="color: var(--admin-text);">Hỏi đáp sản phẩm</h1>
         </div>
     </div>
 
@@ -31,8 +30,8 @@ $formatQuestionDate = static function ($value): string {
     <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
         <form class="row g-2" method="get" action="index.php" data-live-filter="true" data-live-target="#questionResults">
             <input type="hidden" name="r" value="admin_questions">
-            <div class="col-md-5">
-                <input class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Mã hỏi đáp, mã SP, tên SP, khách hàng, nội dung..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+            <div class="col-md-6">
+                <input class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Tìm câu hỏi, sản phẩm hoặc khách hàng" aria-label="Tìm câu hỏi" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-md-3">
                 <select class="form-select" name="status" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
@@ -42,11 +41,9 @@ $formatQuestionDate = static function ($value): string {
                     <option value="hidden" <?= $status === 'hidden' ? 'selected' : '' ?>>Đã ẩn</option>
                 </select>
             </div>
-            <div class="col-md-2 d-grid">
-                <button class="btn text-white fw-semibold" type="submit" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">Lọc câu hỏi</button>
-            </div>
-            <div class="col-md-2 d-grid">
-                <a class="btn btn-outline-secondary fw-semibold" href="index.php?r=admin_questions" style="border-radius: 6px; font-size: 0.85rem;">Xóa lọc</a>
+            <div class="col-md-3 d-flex gap-2">
+                <button class="btn text-white fw-semibold flex-grow-1" type="submit" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">Lọc</button>
+                <a class="btn btn-outline-secondary" href="index.php?r=admin_questions" style="border-radius: 6px; font-size: 0.85rem;">Đặt lại</a>
             </div>
         </form>
     </div>
@@ -62,9 +59,9 @@ $formatQuestionDate = static function ($value): string {
                             <tr>
                                 <th style="width: 80px;">Mã</th>
                                 <th>Sản phẩm</th>
-                                <th>Khách hàng & Câu hỏi</th>
+                                <th>Câu hỏi</th>
                                 <th>Trạng thái</th>
-                                <th style="width: 320px;">Gửi phản hồi</th>
+                                <th style="width: 320px;">Trả lời</th>
                                 <th class="text-end">Thao tác</th>
                             </tr>
                         </thead>
@@ -116,7 +113,7 @@ $formatQuestionDate = static function ($value): string {
                                             <form method="post" action="index.php?r=admin_question_reply" class="d-grid gap-1.5 gap-1">
                                                 <input type="hidden" name="ma_hoi_dap" value="<?= h((string)($question['ma_hoi_dap'] ?? '')) ?>">
                                                 <textarea class="form-control" name="tra_loi" rows="2" placeholder="Nhập nội dung phản hồi..." required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.82rem;"><?= h((string)($answer['noi_dung'] ?? '')) ?></textarea>
-                                                <button class="btn btn-sm text-white fw-semibold" type="submit" style="background: #183B2B; border-radius: 4px; font-size: 0.78rem;"><i class="bi bi-send me-1"></i><?= $answered ? 'Cập nhật trả lời' : 'Gửi trả lời' ?></button>
+                                                <button class="btn btn-sm text-white fw-semibold" type="submit" style="background: #183B2B; border-radius: 4px; font-size: 0.78rem;"><i class="bi bi-send me-1"></i><?= $answered ? 'Lưu thay đổi' : 'Gửi trả lời' ?></button>
                                             </form>
                                         <?php endif; ?>
                                     </td>

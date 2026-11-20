@@ -2,9 +2,10 @@
 if (!is_logged_in()) return;
 $_SESSION['feature_feedback_csrf'] ??= bin2hex(random_bytes(24));
 $feedbackLabels = [
-    1 => 'Rất không hài lòng', 2 => 'Không hài lòng', 3 => 'Bình thường',
-    4 => 'Hài lòng', 5 => 'Rất hài lòng',
+    1 => 'Hoàn toàn không đồng ý', 2 => 'Không đồng ý', 3 => 'Trung lập',
+    4 => 'Đồng ý', 5 => 'Hoàn toàn đồng ý',
 ];
+$feedbackStatement = trim((string)($feedbackStatement ?? 'Tính năng này dễ sử dụng và đáp ứng nhu cầu của tôi.'));
 ?>
 <details class="border rounded-3 bg-white p-3 my-3" data-feature-feedback>
   <summary class="fw-semibold"><?= h($feedbackPrompt) ?></summary>
@@ -12,7 +13,7 @@ $feedbackLabels = [
     <input type="hidden" name="feature" value="<?= h($feedbackFeature) ?>">
     <input type="hidden" name="csrf" value="<?= h($_SESSION['feature_feedback_csrf']) ?>">
     <fieldset>
-      <legend class="fs-6">Bạn hài lòng ở mức nào?</legend>
+      <legend class="fs-6"><?= h($feedbackStatement) ?></legend>
       <div class="d-flex flex-wrap gap-3">
         <?php foreach ($feedbackLabels as $value => $label): ?>
           <label class="d-inline-flex align-items-center gap-2">

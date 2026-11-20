@@ -277,12 +277,11 @@ $productStatusData = [
             </div>
         </div>
 
-        <div class="col-12 col-xl-4">
-            <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
+        <div class="col-12 col-xl-4 d-flex flex-column gap-4">
+            <div class="admin-card mb-0 p-3.5" style="border-radius: 8px !important;">
                 <div class="d-flex align-items-start justify-content-between mb-3 pb-2 border-bottom">
                     <div>
-                        <h6 class="fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-warning me-1.5"></i> Tỷ lệ trạng thái sản phẩm</h6>
-                        <div class="small text-muted" style="font-size: 0.78rem;">Phân loại theo hiển thị và tồn kho thực tế</div>
+                        <h6 class="fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-warning me-1.5"></i> Trạng thái sản phẩm</h6>
                     </div>
                     <span class="badge bg-light text-dark border"><?= number_format((int)($productStatusSummary['tong'] ?? 0)) ?> SP</span>
                 </div>
@@ -301,6 +300,33 @@ $productStatusData = [
                         </div>
                     <?php endforeach; ?>
                 </div>
+            </div>
+
+            <div class="admin-card mb-0 p-3.5" style="border-radius: 8px !important;">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-1 <?= !empty($lowStockProducts) ? 'text-danger' : 'text-success' ?>">
+                            <i class="bi <?= !empty($lowStockProducts) ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill' ?> me-1"></i>
+                            Tồn kho
+                        </h6>
+                        <div class="small text-muted">
+                            <?= !empty($lowStockProducts) ? count($lowStockProducts) . ' sản phẩm còn dưới 5' : 'Không có sản phẩm sắp hết' ?>
+                        </div>
+                    </div>
+                    <a href="index.php?r=admin_sp" class="btn btn-sm btn-outline-secondary text-nowrap">Xem kho</a>
+                </div>
+                <?php if (!empty($lowStockProducts)): ?>
+                    <div class="d-grid gap-2">
+                        <?php foreach (array_slice($lowStockProducts, 0, 4) as $pLow): ?>
+                            <div class="d-flex align-items-center justify-content-between gap-3 py-2 border-top">
+                                <span class="small text-truncate"><?= h($pLow['ten_san_pham'] ?? 'Sản phẩm') ?></span>
+                                <strong class="small text-danger text-nowrap">Còn <?= (int)($pLow['ton_kho'] ?? 0) ?></strong>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="small text-muted border-top pt-3">Kho đang ổn định.</div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -387,71 +413,6 @@ $productStatusData = [
         }
     });
     </script>
-
-    <!-- LOW STOCK ALERT WIDGET -->
-    <div class="admin-card mb-4 p-3 <?= !empty($lowStockProducts) ? 'border-danger border-opacity-25' : 'border-success border-opacity-25' ?>" style="background: <?= !empty($lowStockProducts) ? '#FEF2F2' : '#F0FDF4' ?>;">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-                <div class="rounded-3 d-inline-flex align-items-center justify-content-center <?= !empty($lowStockProducts) ? 'text-danger bg-white border border-danger-subtle' : 'text-success bg-white border border-success-subtle' ?>" style="width: 38px; height: 38px;">
-                    <i class="bi <?= !empty($lowStockProducts) ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill' ?> fs-5"></i>
-                </div>
-                <div>
-                    <h6 class="fw-semibold mb-0 <?= !empty($lowStockProducts) ? 'text-danger' : 'text-success' ?>" style="font-size: 0.92rem;">
-                        <?= !empty($lowStockProducts) ? 'Cảnh Báo Tồn Kho Sắp Hết (Dưới 5 sản phẩm)' : 'Trạng Thái Kho Hàng An Toàn' ?>
-                    </h6>
-                    <div class="small text-muted" style="font-size: 0.8rem;">
-                        <?= !empty($lowStockProducts) ? 'Có ' . count($lowStockProducts) . ' sản phẩm cần nhập thêm hàng ngay.' : 'Tất cả sản phẩm trong hệ thống hiện tại đều có số lượng tồn kho đầy đủ (> 5 sản phẩm).' ?>
-                    </div>
-                </div>
-            </div>
-            <a href="index.php?r=admin_sp" class="btn btn-sm <?= !empty($lowStockProducts) ? 'btn-outline-danger' : 'btn-outline-success' ?> px-3 fw-semibold" style="border-radius: 6px; font-size: 0.8rem;">
-                Quản lý kho hàng
-            </a>
-        </div>
-        <?php if (!empty($lowStockProducts)): ?>
-            <div class="row g-2 mt-2 pt-2 border-top">
-                <?php foreach ($lowStockProducts as $pLow): ?>
-                    <?php
-                    $pLowImg = '';
-                    $rawP = trim((string)($pLow['link_hinh_anh'] ?? $pLow['hinh_anh'] ?? ''));
-                    if ($rawP !== '') {
-                        $partsP = preg_split('/\s*\|\s*/', $rawP) ?: [];
-                        foreach ($partsP as $partP) {
-                            $partP = trim((string)$partP);
-                            if ($partP === '') continue;
-                            if (filter_var($partP, FILTER_VALIDATE_URL)) {
-                                $pLowImg = $partP;
-                                break;
-                            }
-                            if (strpos($partP, 'uploads/') === 0 || strpos($partP, '/uploads/') === 0) {
-                                $pLowImg = BASE_URL . '/' . ltrim($partP, '/');
-                                break;
-                            }
-                            $pLowImg = BASE_URL . '/uploads/products/' . rawurlencode($partP);
-                            break;
-                        }
-                    }
-                    ?>
-                    <div class="col-12 col-md-6 col-xl-4">
-                        <div class="d-flex align-items-center justify-content-between p-2 rounded-3 border bg-white shadow-xs">
-                            <div class="d-flex align-items-center gap-2 text-truncate me-2">
-                                <?php if ($pLowImg !== ''): ?>
-                                    <img src="<?= h($pLowImg) ?>" alt="" width="36" height="36" class="rounded border flex-shrink-0" style="object-fit: cover;">
-                                <?php else: ?>
-                                    <div class="rounded bg-light border d-inline-flex align-items-center justify-content-center text-muted flex-shrink-0" style="width: 36px; height: 36px;"><i class="bi bi-box-seam"></i></div>
-                                <?php endif; ?>
-                                <div class="text-truncate">
-                                    <div class="fw-bold small text-truncate" style="color: var(--admin-text);"><?= h($pLow['ten_san_pham'] ?? '') ?></div>
-                                    <div class="small text-muted">Mã: #<?= h($pLow['id'] ?? '') ?></div>
-                                </div>
-                            </div>
-                            <span class="badge bg-danger rounded-pill px-2.5 py-1 text-nowrap">Còn <?= (int)($pLow['ton_kho'] ?? 0) ?> sp</span>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
 
     <!-- RECENT ACTIVITY TABLES -->
     <div class="row g-4">

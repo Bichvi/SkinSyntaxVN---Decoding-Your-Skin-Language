@@ -279,6 +279,8 @@ class RewardService
                     $label = 'Điểm danh ngày ' . (int) ($meta['streak_day'] ?? 1);
                 } elseif ($source === 'watch_milestone') {
                     $label = 'Xem đủ ' . (int) ($meta['milestone_min'] ?? 0) . ' phút';
+                } elseif ($source === 'review') {
+                    $label = 'Đánh giá sản phẩm';
                 } else {
                     $label = 'Xem video';
                 }
