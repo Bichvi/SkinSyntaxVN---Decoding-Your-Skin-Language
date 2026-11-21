@@ -27,6 +27,12 @@ $check('opsHealth: chỉ giữ khóa đã biết', is_array($h) && $h['neo4j']['
 $check('opsHealth: HTTP 401/503 => null', $make(401, '{"error":"unauthorized"}')->opsHealth() === null && $make(503, '{}')->opsHealth() === null);
 $check('opsHealth: JSON hỏng hoặc thiếu alerts => null', $make(200, 'not json')->opsHealth() === null && $make(200, '{"ok":true}')->opsHealth() === null);
 
+putenv('SEARCH_FALLBACK_ENABLED=0');
+putenv('SEARCH_RECOMMEND_ENDPOINT=http://search.test/api/search/recommend');
+$check('factory vận hành không phụ thuộc cờ tìm kiếm', SearchRecommendClient::forOpsFromEnv() instanceof SearchRecommendClient);
+putenv('SEARCH_FALLBACK_ENABLED');
+putenv('SEARCH_RECOMMEND_ENDPOINT');
+
 // View: escape mọi chuỗi từ health (XSS qua message cảnh báo / lỗi job)
 function h($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 $health = [

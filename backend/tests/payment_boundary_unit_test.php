@@ -109,6 +109,9 @@ $underpaidOrder = new HoaDon(new PaymentBoundaryFakeDb([
 $underpaidResult = $underpaidOrder->markPaidByTransfer(42, 999, 'tx-under', 'SKIN HD 42');
 $check('PAY-UNIT-UNDERPAY', 'underpayment is rejected', ($underpaidResult['ok'] ?? true) === false);
 
+$overpaidResult = $underpaidOrder->markPaidByTransfer(42, 1001, 'tx-over', 'SKIN HD 42');
+$check('PAY-UNIT-OVERPAY', 'overpayment stays pending for manual reconciliation', ($overpaidResult['ok'] ?? true) === false);
+
 $replayedOrder = new HoaDon(new PaymentBoundaryFakeDb([
     'ma_hoa_don' => 42,
     'ma_kh' => 7,

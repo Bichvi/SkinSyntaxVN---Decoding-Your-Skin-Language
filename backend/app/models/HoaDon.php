@@ -465,13 +465,29 @@ class HoaDon {
         }
 
         $expectedAmount = (int)($order['tong_tien'] ?? 0);
-        if ($amount < $expectedAmount || $expectedAmount <= 0) {
+        if ($amount !== $expectedAmount || $expectedAmount <= 0) {
             return [
                 'ok' => false,
-                'message' => 'So tien chuyen khoan chua khop voi don hang.',
+                'message' => $amount < $expectedAmount
+                    ? 'Số tiền chuyển khoản còn thiếu; đơn hàng vẫn chờ đối soát.'
+                    : 'Số tiền chuyển khoản lớn hơn số tiền đơn hàng; cần quản trị viên đối soát.',
                 'expected_amount' => $expectedAmount,
                 'received_amount' => $amount,
             ];
+        }
+
+        $transactionReference = trim((string)($transactionReference ?? ''));
+        if ($transactionReference !== '') {
+            $usedTransaction = $this->db->hoa_don->findOne([
+                'ma_hoa_don' => ['$ne' => $orderId],
+                '$or' => [
+                    ['transaction_id' => $transactionReference],
+                    ['ghi_chu_thanh_toan' => $transactionReference],
+                ],
+            ]);
+            if ($usedTransaction) {
+                return ['ok' => false, 'message' => 'Giao dịch này đã được dùng để đối soát một đơn hàng khác.'];
+            }
         }
 
         try {
@@ -487,7 +503,8 @@ class HoaDon {
                 $updateHoaDon['trang_thai_normalized'] = 'confirmed';
             }
 
-            if ($transactionReference !== null && $transactionReference !== '') {
+            if ($transactionReference !== '') {
+                $updateHoaDon['transaction_id'] = $transactionReference;
                 $updateHoaDon['ghi_chu_thanh_toan'] = $transactionReference;
             } elseif ($transferContent !== null && $transferContent !== '') {
                 $updateHoaDon['ghi_chu_thanh_toan'] = $transferContent;

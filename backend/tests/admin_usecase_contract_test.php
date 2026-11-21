@@ -301,11 +301,18 @@ $quanTriAdminMethods = [
 ];
 foreach ($quanTriAdminMethods as $method) {
     $body = methodBody($controllerSources['QuanTriController'], $method);
+    $liveGuardDelegated = in_array($method, [
+        'adminLiveCreate', 'adminLiveEdit', 'adminLiveStatus', 'adminLiveDelete', 'adminLiveUpdateRecording'
+    ], true)
+        && str_contains($body, 'requireLiveAdminPost()')
+        && str_contains(methodBody($controllerSources['QuanTriController'], 'requireLiveAdminPost'), "requireRole(['admin'])")
+        && str_contains(methodBody($controllerSources['QuanTriController'], 'requireLiveAdminPost'), 'REQUEST_METHOD')
+        && str_contains(methodBody($controllerSources['QuanTriController'], 'requireLiveAdminPost'), 'hash_equals(');
     $runner->check(
         'ADM-GUARD-QT-' . strtoupper($method),
         "QuanTriController::{$method} keeps requireRole guard",
-        $body !== '' && str_contains($body, 'requireRole('),
-        'Guard not found in method body'
+        ($body !== '' && str_contains($body, 'requireRole(')) || $liveGuardDelegated,
+        $liveGuardDelegated ? 'Guard is delegated to requireLiveAdminPost()' : 'Guard not found in method body'
     );
 }
 

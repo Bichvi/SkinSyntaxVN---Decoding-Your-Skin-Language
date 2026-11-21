@@ -1012,7 +1012,6 @@ class HomeController {
     public function storeNetwork(): void {
         $this->render('info/store-network', [
             'title' => 'Hệ thống cửa hàng SkinSyntax',
-            'eyebrow' => 'Hệ thống phục vụ',
             'summary' => 'SkinSyntax đang vận hành theo mô hình online-first: ưu tiên tra cứu sản phẩm, tư vấn routine, hỗ trợ đơn hàng và xử lý sau mua ngay trên website. Thông tin điểm hỗ trợ trực tiếp sẽ được cập nhật theo từng giai đoạn mở rộng.',
             'stats' => [
                 ['value' => 'Toàn quốc', 'label' => 'Phạm vi phục vụ qua kênh online'],
@@ -1044,6 +1043,7 @@ class HomeController {
                 ['label' => 'Khám phá toàn bộ sản phẩm', 'url' => BASE_URL . '/index.php?r=tatca'],
                 ['label' => 'Mở gợi ý routine', 'url' => BASE_URL . '/index.php?r=goiy'],
                 ['label' => 'Trung tâm hỗ trợ khách hàng', 'url' => BASE_URL . '/index.php?r=ho_tro_khach_hang'],
+                ['label' => 'Chính sách bảo hành', 'url' => BASE_URL . '/index.php?r=bao_hanh'],
             ],
         ]);
     }
