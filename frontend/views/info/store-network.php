@@ -1,6 +1,5 @@
 <?php
 $title = $title ?? 'Hệ thống cửa hàng';
-$eyebrow = $eyebrow ?? 'SkinSyntax';
 $summary = $summary ?? '';
 $stats = isset($stats) && is_array($stats) ? $stats : [];
 $channels = isset($channels) && is_array($channels) ? $channels : [];
@@ -16,20 +15,10 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
 
   .store-network__hero {
     padding: 36px;
-    border-radius: 32px;
-    background: linear-gradient(135deg, #0e2238 0%, #184b67 55%, #1f7d78 100%);
-    color: #f8fbff;
-    box-shadow: 0 26px 60px rgba(15, 23, 42, 0.18);
-  }
-
-  .store-network__eyebrow {
-    display: inline-block;
-    margin-bottom: 12px;
-    font-size: .78rem;
-    font-weight: 800;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: rgba(248, 251, 255, .76);
+    border-radius: 24px;
+    background: #173f2d;
+    color: #f5faf6;
+    box-shadow: 0 22px 52px rgba(18, 62, 43, 0.16);
   }
 
   .store-network__hero h1 {
@@ -42,7 +31,7 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
   .store-network__hero p {
     max-width: 780px;
     margin: 0;
-    color: rgba(248, 251, 255, .88);
+    color: #d8e9dc;
     line-height: 1.75;
   }
 
@@ -55,10 +44,8 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
 
   .store-network__stat {
     padding: 18px 20px;
-    border-radius: 22px;
-    background: rgba(255, 255, 255, .1);
-    border: 1px solid rgba(255, 255, 255, .16);
-    backdrop-filter: blur(8px);
+    border-radius: 14px;
+    background: #24513d;
   }
 
   .store-network__stat strong {
@@ -69,7 +56,7 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
   }
 
   .store-network__stat span {
-    color: rgba(248, 251, 255, .8);
+    color: #d8e9dc;
     line-height: 1.6;
   }
 
@@ -89,7 +76,7 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
   .store-network__card {
     background: #fff;
     border: 1px solid #e4ecf2;
-    border-radius: 26px;
+    border-radius: 16px;
     padding: 24px;
     box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
   }
@@ -97,7 +84,7 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
   .store-network__card h2,
   .store-network__card h3 {
     margin: 0 0 16px;
-    color: #12263f;
+    color: #173f2d;
     font-weight: 800;
   }
 
@@ -112,24 +99,24 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
     gap: 14px;
     align-items: start;
     padding: 16px 18px;
-    border-radius: 20px;
-    background: #f8fbff;
+    border-radius: 14px;
+    background: #f3f8f4;
   }
 
   .store-network__channel-icon {
     width: 48px;
     height: 48px;
-    border-radius: 16px;
+    border-radius: 12px;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, #d9eef4 0%, #e9f6f0 100%);
-    color: #185067;
+    background: #dcecdf;
+    color: #245f43;
     font-size: 18px;
   }
 
   .store-network__channel-title {
     font-weight: 800;
-    color: #16324d;
+    color: #173f2d;
     margin-bottom: 4px;
   }
 
@@ -163,16 +150,16 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
     justify-content: space-between;
     gap: 12px;
     padding: 14px 16px;
-    border-radius: 18px;
-    background: #f6fafc;
-    border: 1px solid #e3edf3;
-    color: #16324d;
+    border-radius: 12px;
+    background: #f3f8f4;
+    border: 1px solid #dce8de;
+    color: #173f2d;
     text-decoration: none;
     font-weight: 700;
   }
 
   .store-network__links a:hover {
-    background: #eef6fb;
+    background: #e7f2e9;
   }
 
   @media (max-width: 991px) {
@@ -186,7 +173,6 @@ $helpLinks = isset($helpLinks) && is_array($helpLinks) ? $helpLinks : [];
 <div class="container py-4 py-lg-5">
   <div class="store-network">
     <section class="store-network__hero">
-      <span class="store-network__eyebrow"><?= h($eyebrow) ?></span>
       <h1><?= h($title) ?></h1>
       <p><?= h($summary) ?></p>
 
