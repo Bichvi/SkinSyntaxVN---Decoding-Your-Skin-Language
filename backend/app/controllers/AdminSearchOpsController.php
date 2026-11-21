@@ -45,7 +45,7 @@ class AdminSearchOpsController
     public function index(): void
     {
         $this->requireAdmin();
-        $client = SearchRecommendClient::fromEnv();
+        $client = SearchRecommendClient::forOpsFromEnv();
         $health = $client ? $client->opsHealth() : null;
         $this->render('search_ops', ['pageTitle' => 'Vận hành tìm kiếm', 'health' => $health]);
     }

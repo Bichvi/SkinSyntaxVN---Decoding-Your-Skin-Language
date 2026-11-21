@@ -412,6 +412,7 @@ class QuanTri {
             'tong_doanh_thu' => 0,
             'chat_cho_tra_loi' => 0,
             'danh_gia_cho_phan_hoi' => 0,
+            'hoi_dap_cho_tra_loi' => 0,
         ];
         foreach ($this->db->hoa_don->find([], ['projection' => [
             'trang_thai' => 1,
@@ -450,7 +451,83 @@ class QuanTri {
             ]
         ]);
 
+        $summary['hoi_dap_cho_tra_loi'] = $this->db->hoi_dap_san_pham->countDocuments([
+            '$or' => [
+                ['tra_loi' => null],
+                ['tra_loi.noi_dung' => ''],
+                ['tra_loi.noi_dung' => ['$exists' => false]],
+            ],
+        ]);
+
         return $summary;
+    }
+
+    /**
+     * Các số vận hành cần xử lý ngay trên dashboard.
+     * Trạng thái thanh toán và trạng thái xử lý đơn được đếm độc lập để tránh
+     * coi một đơn QR chưa nhận tiền là đơn đã sẵn sàng xác nhận.
+     */
+    public function getDashboardOperations(int $overdueHours = 24): array {
+        $overdueHours = max(1, min(168, $overdueHours));
+        $cutoff = time() - ($overdueHours * 3600);
+        $result = [
+            'waiting_payment' => 0,
+            'pending_confirmation' => 0,
+            'shipping' => 0,
+            'overdue_confirmation' => 0,
+            'payment_reconciliation' => 0,
+            'overdue_hours' => $overdueHours,
+        ];
+
+        foreach ($this->db->hoa_don->find([], ['projection' => [
+            'trang_thai' => 1,
+            'hinh_thuc_thanh_toan' => 1,
+            'payment_method' => 1,
+            'status_thanh_toan' => 1,
+            'payment_status' => 1,
+            'transaction_id' => 1,
+            'ghi_chu_thanh_toan' => 1,
+            'ngay_dat' => 1,
+            'created_at' => 1,
+        ]]) as $orderDoc) {
+            $order = (array)$orderDoc;
+            $status = $this->normalizeOrderStatus($order['trang_thai'] ?? '');
+            if ($status === 'cancelled') {
+                continue;
+            }
+
+            $method = strtolower(trim((string)($order['hinh_thuc_thanh_toan'] ?? $order['payment_method'] ?? 'cod')));
+            $isOnline = $method === 'bank_transfer_qr' || str_contains($method, 'qr') || str_contains($method, 'transfer') || str_contains($method, 'vnpay');
+            $paymentRaw = trim((string)($order['status_thanh_toan'] ?? $order['payment_status'] ?? ''));
+            $isPaid = $this->normalizePaymentStatus($paymentRaw) === 'paid';
+
+            if ($isOnline && !$isPaid) {
+                $result['waiting_payment']++;
+                $paymentKey = function_exists('mb_strtolower') ? mb_strtolower($paymentRaw, 'UTF-8') : strtolower($paymentRaw);
+                $hasEvidence = trim((string)($order['transaction_id'] ?? $order['ghi_chu_thanh_toan'] ?? '')) !== '';
+                if ($hasEvidence || str_contains($paymentKey, 'xác minh') || str_contains($paymentKey, 'xac minh') || str_contains($paymentKey, 'processing')) {
+                    $result['payment_reconciliation']++;
+                }
+            }
+
+            if ($status === 'shipping') {
+                $result['shipping']++;
+            }
+
+            $readyForConfirmation = $status === 'pending' && (!$isOnline || $isPaid);
+            if (!$readyForConfirmation) {
+                continue;
+            }
+            $result['pending_confirmation']++;
+
+            $dateText = $this->formatMongoDateForStorage($order['ngay_dat'] ?? $order['created_at'] ?? null);
+            $timestamp = $dateText !== '' ? strtotime($dateText) : false;
+            if ($timestamp !== false && $timestamp <= $cutoff) {
+                $result['overdue_confirmation']++;
+            }
+        }
+
+        return $result;
     }
 
     public function getNotificationCenterData(int $orderLimit = 5, int $chatLimit = 5): array {
@@ -1762,6 +1839,20 @@ class QuanTri {
         $currentCanonical = $this->normalizeOrderStatus($orderArray['trang_thai'] ?? '');
         $isCancelled = $canonicalStatus === 'cancelled';
         $currentIsCancelled = $currentCanonical === 'cancelled';
+
+        $paymentMethod = strtolower(trim((string)($orderArray['hinh_thuc_thanh_toan'] ?? $orderArray['payment_method'] ?? 'cod')));
+        $isOnlinePayment = $paymentMethod === 'vnpay'
+            || $paymentMethod === 'bank_transfer_qr'
+            || str_contains($paymentMethod, 'qr')
+            || str_contains($paymentMethod, 'transfer');
+        $paymentStatus = trim((string)($orderArray['status_thanh_toan'] ?? ''));
+        if ($paymentStatus === '') {
+            $paymentStatus = trim((string)($orderArray['payment_status'] ?? ''));
+        }
+        if ($isOnlinePayment && $this->normalizePaymentStatus($paymentStatus) !== 'paid' && in_array($canonicalStatus, ['confirmed', 'shipping', 'completed'], true)) {
+            $this->lastErrorMessage = 'Đơn thanh toán online chưa được đối soát. Chỉ có thể xử lý sau khi hệ thống ghi nhận đã thanh toán.';
+            return false;
+        }
 
         if (!$allowCancelledOverride && $currentIsCancelled && !$isCancelled) {
             $this->lastErrorMessage = 'Đơn hàng đã hủy không thể chuyển sang trạng thái khác.';

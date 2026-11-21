@@ -8,7 +8,6 @@ $renderHomeProductCard = require __DIR__ . '/partials/home_product_card.php';
 <div class="container py-4 favorite-page">
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-2 mb-4">
     <div>
-      <span class="home-section-kicker">DANH MỤC CỦA BẠN</span>
       <h1 class="fw-bold mb-1" style="color:#0F172A; font-size:1.65rem;">Sản phẩm yêu thích</h1>
       <p class="text-muted mb-0">Lưu lại những sản phẩm bạn muốn xem hoặc cân nhắc sau.</p>
     </div>

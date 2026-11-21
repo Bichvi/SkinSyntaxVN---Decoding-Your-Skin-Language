@@ -17,7 +17,6 @@
   <div class="container">
     <section class="site-footer__cta">
       <div>
-        <span class="site-footer__eyebrow">SkinSyntax beauty commerce</span>
         <h2 class="site-footer__title">Mua mỹ phẩm có định hướng hơn: tìm nhanh, hiểu da rõ và giữ mọi dữ liệu chăm da trong cùng một tài khoản.</h2>
       </div>
       <div class="site-footer__cta-actions">
@@ -73,10 +72,14 @@
           <a href="<?= BASE_URL ?>/index.php?r=thanhtoan">Thanh toán</a>
         </div>
         <div>
-          <h6>Hỗ trợ</h6>
-          <span>Tra cứu thương hiệu và sản phẩm nhanh</span>
-          <span>Khảo sát da để cá nhân hóa đề xuất</span>
-          <span>Lưu lịch sử hồ sơ, điểm thưởng và đơn hàng</span>
+          <h6>Hỗ trợ &amp; chính sách</h6>
+          <a href="<?= BASE_URL ?>/index.php?r=tro_giup">Trung tâm trợ giúp</a>
+          <a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang">Hệ thống cửa hàng</a>
+          <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_van_chuyen">Giao hàng</a>
+          <a href="<?= BASE_URL ?>/index.php?r=doi_tra_hoan_tien">Đổi trả &amp; hoàn tiền</a>
+          <a href="<?= BASE_URL ?>/index.php?r=bao_hanh">Bảo hành sản phẩm</a>
+          <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_bao_mat">Chính sách bảo mật</a>
+          <a href="<?= BASE_URL ?>/index.php?r=dieu_kien_giao_dich">Điều khoản sử dụng</a>
         </div>
       </div>
     </section>
@@ -88,6 +91,9 @@
     </section>
   </div>
 </footer>
+<button type="button" class="back-to-top" data-back-to-top aria-label="Lên đầu trang" title="Lên đầu trang">
+  <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+</button>
 <?php
 global $pdo;
 if ($pdo !== null) {
@@ -99,6 +105,27 @@ if ($pdo !== null) {
 <script>
   (function () {
     function initFooterInteractions() {
+    const backToTop = document.querySelector('[data-back-to-top]');
+    if (backToTop) {
+      let ticking = false;
+      const updateBackToTop = function () {
+        backToTop.classList.toggle('is-visible', window.scrollY > 520);
+        ticking = false;
+      };
+      window.addEventListener('scroll', function () {
+        if (!ticking) {
+          window.requestAnimationFrame(updateBackToTop);
+          ticking = true;
+        }
+      }, { passive: true });
+      backToTop.addEventListener('click', function () {
+        window.scrollTo({
+          top: 0,
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        });
+      });
+      updateBackToTop();
+    }
     // Chỉ cho phép một menu tiện ích trên header mở tại một thời điểm.
     const utilityDropdowns = Array.from(document.querySelectorAll('.utility-dropdown'));
     utilityDropdowns.forEach(function (dropdown) {
