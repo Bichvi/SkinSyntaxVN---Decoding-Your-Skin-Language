@@ -288,6 +288,9 @@ class QuanTriController {
 
         $summary = $this->model->getDashboardSummary();
         $dashboardFilters = $this->parseDashboardDateFilters();
+        $dashboardOperations = $this->model->getDashboardOperations(24);
+        $dashboardOperations['support_pending'] = (int)($summary['chat_cho_tra_loi'] ?? 0)
+            + (int)($summary['hoi_dap_cho_tra_loi'] ?? 0);
         $this->renderAdmin('dashboard', [
             'tongSP' => (int)($summary['tong_san_pham'] ?? 0),
             'tongUser' => (int)($summary['tong_khach_hang'] ?? 0),
@@ -299,6 +302,8 @@ class QuanTriController {
             'summary' => $summary,
             'salesTrend' => $this->model->getDailySalesTrend($dashboardFilters['start_date'], $dashboardFilters['end_date']),
             'productStatusSummary' => $this->model->getProductStatusSummary(),
+            'dashboardOperations' => $dashboardOperations,
+            'topProducts' => $this->model->getTopProductsByRevenue(5, $dashboardFilters['start_date'], $dashboardFilters['end_date']),
             'dashboardStartDate' => $dashboardFilters['start_date'],
             'dashboardEndDate' => $dashboardFilters['end_date'],
             'dashboardError' => $dashboardFilters['error'],

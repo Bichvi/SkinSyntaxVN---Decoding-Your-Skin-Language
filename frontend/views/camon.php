@@ -18,6 +18,7 @@ if ($hinhThucRaw === '') {
   $hinhThucRaw = strtolower(trim((string)($order['payment_method'] ?? '')));
 }
 $isVnpay = ($hinhThucRaw === 'vnpay');
+$isQrTransfer = ($hinhThucRaw === 'bank_transfer_qr');
 $isPendingVnpay = $isVnpay && !$isPaid && !$isFailed && (
   in_array($paymentStatusRaw, ['', 'pending'], true)
   || in_array($statusNorm, ['cho thanh toan vnpay', 'chua thanh toan', 'pending'], true)
@@ -35,11 +36,14 @@ $isPendingVnpay = $isVnpay && !$isPaid && !$isFailed && (
     <?php elseif ($isPendingVnpay): ?>
       <div class="icon-wrap" style="background: #FFF7ED; color: #C2410C; border-color: #FDBA74;"><i class="fa-solid fa-credit-card"></i></div>
       <h2 class="text-warning-emphasis">Đơn hàng đang chờ thanh toán VNPAY</h2>
+    <?php elseif ($isQrTransfer): ?>
+      <div class="icon-wrap" style="background:#fff7ed;color:#c2410c;border-color:#fdba74"><i class="fa-solid fa-hourglass-half"></i></div>
+      <h2>Đơn hàng đã tạo, chờ chuyển khoản</h2>
     <?php else: ?>
       <div class="icon-wrap"><i class="fa-solid fa-circle-check"></i></div>
       <h2>Đặt hàng thành công</h2>
     <?php endif; ?>
-    <p class="text-muted mb-2">Cảm ơn bạn đã mua sắm tại SkinSyntax.</p>
+    <p class="text-muted mb-2"><?= $isQrTransfer && !$isPaid ? 'Đơn chỉ được xác nhận sau khi hệ thống đối soát đủ tiền.' : 'Cảm ơn bạn đã mua sắm tại SkinSyntax.' ?></p>
     <?php if ($maHoaDon !== ''): ?>
       <p class="order-code">Mã đơn hàng: <strong>#<?= h($maHoaDon) ?></strong></p>
     <?php endif; ?>
