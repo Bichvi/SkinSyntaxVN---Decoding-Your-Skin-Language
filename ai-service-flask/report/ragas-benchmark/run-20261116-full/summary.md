@@ -3,20 +3,20 @@
 - Date: 2026-11-17
 - n = 30 queries x 3 configs (90 samples)
 - Judge LLM: gemini-3.5-flash-lite (temperature 0); embeddings for Answer Relevancy: models/gemini-embedding-001
-- Judge-scored samples: 43/90 (the rest got no judge score, e.g. API quota; rerun resumes them)
+- Judge-scored samples: 90/90 (the rest got no judge score, e.g. API quota; rerun resumes them)
 - Generator: gemini-3.5-flash-lite (10 answers), openai/gpt-oss-120b (80 answers)
 - ragas 0.4.4, langchain-google-genai 4.5.0, langchain-core 1.8.1
 
 | Metric | semantic | hybrid_rrf | hybrid_rerank |
 |---|---|---|---|
-| Context Precision (RAGAS, LLM) | 0.810 (n=14/30) | 0.532 (n=13/30) | 0.546 (n=13/30) |
+| Context Precision (RAGAS, LLM) | 0.674 (n=29/30) | 0.422 (n=29/30) | 0.565 (n=28/30) |
 | Precision@5 (labels) | 0.000 | 0.067 | 0.093 |
 | Recall@10 (labels) | 0.000 | 0.050 | 0.050 |
 | Hit@5 | 0.000 | 0.200 | 0.233 |
 | MRR@10 | 0.000 | 0.156 | 0.239 |
 | nDCG@10 | 0.000 | 0.063 | 0.080 |
-| Answer Relevancy | 0.799 (n=14/30) | 0.780 (n=14/30) | 0.739 (n=15/30) |
-| Faithfulness | 0.192 (n=14/30) | 0.324 (n=14/30) | 0.323 (n=13/30) |
+| Answer Relevancy | 0.796 (n=29/30) | 0.735 | 0.713 |
+| Faithfulness | 0.148 | 0.335 | 0.328 (n=28/30) |
 | Retrieval latency, mean s/query | 0.07 | 0.15 | 8.55 |
 
 NaN / failed judge scores are excluded from the mean; where any exist the cell shows n_valid/n.
