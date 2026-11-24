@@ -152,7 +152,7 @@ def test_k06_dry_skin_alcohol_avoid_with_alternatives():
     assert out["skin_fit"]["verdict"] == "avoid"
     assert [a["product_id"] for a in out["alternatives"]] == ["m1", "m3"]      # m2 holds the offending key
     assert out["alternatives"][0] == {"product_id": "m1", "reason_code": "gentler_fits_skin",
-                                      "reason_params": ["da khô"]}
+                                      "reason_params": ["da khô"], "overlaps": []}
     assert out["alternatives"][1]["reason_code"] == "no_cart_conflict"
     step, ids, skin, extra, limit = cs.cand_calls[0]
     assert step == "kem_duong" and skin == "da_kho" and "alcohol_denat" in extra
@@ -437,3 +437,89 @@ def test_get_label_service_builds_once(monkeypatch):
     monkeypatch.setattr(svc_mod, "_service", None)
     first = svc_mod.get_label_service()
     assert svc_mod.get_label_service() is first and built == [1]
+
+
+# ---- usage (token accounting)
+_USAGE = ({"provider": "groq", "model": "m", "ok": True, "prompt_tokens": 10, "completion_tokens": 5},)
+
+
+def test_usage_on_photo_path():
+    lt = LabelText(True, "AHA BHA Toner", "Some By Mi", "toner", T1, "en", "groq", _USAGE)
+    s, _ = make(lt=lt)
+    assert s.analyze(req())["usage"] == list(_USAGE)
+
+
+def test_usage_on_not_label():
+    lt = LabelText(False, "", "", "other", "", "en", "groq", _USAGE)
+    s, _ = make(lt=lt)
+    out = s.analyze(req())
+    assert out["status"] == "not_label" and out["usage"] == list(_USAGE)
+
+
+def test_usage_on_vision_unavailable():
+    exc = VisionUnavailable("all failed", attempts=list(_USAGE))
+    s, _ = make(lt=exc)
+    out = s.analyze(req())
+    assert out["status"] == "vision_unavailable" and out["usage"] == list(_USAGE)
+
+
+def test_usage_empty_for_user_edit_and_generic_exception():
+    s, _ = make()
+    assert s.analyze(req(image=None, image_mime=None, ingredients_text=T1))["usage"] == []
+    s, _ = make(lt=RuntimeError("boom"))
+    out = s.analyze(req())
+    assert out["status"] == "vision_unavailable" and out["usage"] == []
+
+
+def _overlap_service(cart_key, cand_keys):
+    catalog = FakeCatalog([{"id": "c1", "ten_san_pham": "Obagi Retinol Serum", "category_keys": ["serum"]}])
+    return make(cart={"c1": [(cart_key, 3)]}, catalog=catalog, lt=label(K1, "moisturizer", "Kem Duong"),
+                candidates=[alt("m1", "fits_skin_type", cand_keys), alt("m3", "completes_routine")])
+
+
+def test_alternative_overlap_retinoid_is_flagged_not_filtered():
+    s, _ = _overlap_service("retinol", ["tretinoin"])
+    out = s.analyze(req(product_ids=("c1",), skin_profile={"skin_type": "da khô"}))
+    assert [a["product_id"] for a in out["alternatives"]] == ["m1", "m3"]
+    assert out["alternatives"][0]["overlaps"] == [{"group": "retinoids", "label_vi": "retinoid",
+                                                   "cart_product_id": "c1", "cart_product_name": "Obagi Retinol Serum",
+                                                   "level": "warn"}]
+    assert out["alternatives"][1]["overlaps"] == []
+
+
+def test_alternative_overlap_acids_and_no_overlap():
+    s, _ = _overlap_service("glycolic_acid", ["salicylic_acid"])
+    out = s.analyze(req(product_ids=("c1",), skin_profile={"skin_type": "da khô"}))
+    assert [o["group"] for o in out["alternatives"][0]["overlaps"]] == ["exfoliating_acids"]
+    s, _ = _overlap_service("retinol", ["ceramide_np"])
+    out = s.analyze(req(product_ids=("c1",), skin_profile={"skin_type": "da khô"}))
+    assert out["alternatives"][0]["overlaps"] == []
+
+
+def _overlap_level_service(cart, cats, ptype="moisturizer"):
+    catalog = FakeCatalog([{"id": pid, "ten_san_pham": f"P {pid}", "category_keys": cats[pid]} for pid in cart])
+    return make(cart=cart, catalog=catalog, lt=label(K1, ptype, "Kem Duong"), cats=cats,
+                candidates=[alt("m1", "fits_skin_type", ["tretinoin"])])
+
+
+def test_alternative_overlap_level_info_when_cart_product_is_wash_off():
+    s, _ = _overlap_level_service({"c1": [("retinol", 3)]}, {"c1": ["sua_rua_mat"]})
+    out = s.analyze(req(product_ids=("c1",), skin_profile={"skin_type": "da khô"}))
+    assert [o["level"] for o in out["alternatives"][0]["overlaps"]] == ["info"]
+
+
+def test_alternative_overlap_level_info_when_candidate_step_is_wash_off():
+    s, _ = _overlap_level_service({"c1": [("retinol", 3)]}, {"c1": ["serum"]}, ptype="cleanser")
+    out = s.analyze(req(product_ids=("c1",), skin_profile={"skin_type": "da khô"}))
+    assert out["alternatives"] and [o["level"] for o in out["alternatives"][0]["overlaps"]] == ["info"]
+
+
+def test_alternative_overlap_level_warn_leave_on_and_mixed_cart_prefers_leave_on():
+    s, _ = _overlap_level_service({"c1": [("retinol", 3)]}, {"c1": ["serum"]})
+    out = s.analyze(req(product_ids=("c1",), skin_profile={"skin_type": "da khô"}))
+    assert [o["level"] for o in out["alternatives"][0]["overlaps"]] == ["warn"]
+    s, _ = _overlap_level_service({"c0": [("retinol", 3)], "c1": [("retinol", 3)]},
+                                  {"c0": ["sua_rua_mat"], "c1": ["serum"]})
+    out = s.analyze(req(product_ids=("c0", "c1"), skin_profile={"skin_type": "da khô"}))
+    ov = out["alternatives"][0]["overlaps"]
+    assert [(o["level"], o["cart_product_id"]) for o in ov] == [("warn", "c1")]

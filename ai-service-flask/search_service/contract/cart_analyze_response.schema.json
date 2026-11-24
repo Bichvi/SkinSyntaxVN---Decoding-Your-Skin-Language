@@ -58,7 +58,24 @@
                 "product_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$"},
                 "score": {"type": "number"},
                 "reason_code": {"type": "string", "enum": ["completes_routine", "fits_skin_type"]},
-                "reason_params": {"type": "array", "maxItems": 3, "items": {"type": "string"}}
+                "reason_params": {"type": "array", "maxItems": 3, "items": {"type": "string"}},
+                "overlaps": {
+                  "type": "array",
+                  "maxItems": 4,
+                  "description": "Strong active groups shared with a product already in the cart (warning only, the item is kept).",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["group", "label_vi", "cart_product_id", "cart_product_name"],
+                    "properties": {
+                      "group": {"type": "string", "enum": ["retinoids", "exfoliating_acids", "benzoyl_peroxide", "vitamin_c"]},
+                      "label_vi": {"type": "string", "maxLength": 80},
+                      "cart_product_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$"},
+                      "cart_product_name": {"type": "string", "maxLength": 200},
+                      "level": {"type": "string", "enum": ["warn", "info"]}
+                    }
+                  }
+                }
               }
             }
           }

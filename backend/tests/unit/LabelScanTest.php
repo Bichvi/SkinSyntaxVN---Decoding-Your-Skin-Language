@@ -27,7 +27,12 @@ $sample = [
     'schedule' => [], 'skin_fit' => ['verdict' => 'caution', 'profile' => ['skin_type' => 'dau', 'sensitive' => true, 'concerns' => ['mun']],
         'good' => [], 'caution' => [['rule_id' => 'c1', 'reason_vi' => 'r', 'ingredients' => ['AHA']]], 'avoid' => []],
     'alternatives' => [
-        ['product_id' => '20', 'reason_code' => 'gentler_fits_skin', 'reason_params' => ['x']],
+        ['product_id' => '20', 'reason_code' => 'gentler_fits_skin', 'reason_params' => ['x'], 'overlaps' => [
+            ['group' => 'retinoids', 'label_vi' => 'retinoid', 'cart_product_id' => '5', 'cart_product_name' => ''],
+            ['group' => 'bogus', 'label_vi' => 'x', 'cart_product_id' => '5', 'cart_product_name' => 'n'],
+            ['group' => 'vitamin_c', 'label_vi' => 'vitamin C', 'cart_product_id' => 'bad id!', 'cart_product_name' => 'n'],
+            ['group' => 'exfoliating_acids', 'label_vi' => str_repeat('l', 100), 'cart_product_id' => '5', 'cart_product_name' => str_repeat('n', 300)],
+        ]],
         ['product_id' => '21', 'reason_code' => 'no_cart_conflict', 'reason_params' => []],
         ['product_id' => '22', 'reason_code' => 'no_cart_conflict', 'reason_params' => []],
         ['product_id' => '23', 'reason_code' => 'no_cart_conflict', 'reason_params' => []],
@@ -55,6 +60,19 @@ $many['conflicts'] = array_fill(0, 40, $sample['conflicts'][0]);
 $many['warnings'] = array_fill(0, 30, 'cart_empty');
 $vm = SearchRecommendClient::validateLabelResponse($many);
 $check('validate: items ≤ 120, conflicts ≤ 20', count($vm['ingredients']['items']) === 120 && count($vm['conflicts']) === 20);
+
+$ov = $v['alternatives'][0]['overlaps'];
+$check('validate: overlaps bỏ group lạ / id sai, kẹp độ dài', count($ov) === 2 && $ov[0]['group'] === 'retinoids' && mb_strlen($ov[1]['label_vi']) === 80 && mb_strlen($ov[1]['cart_product_name']) === 200);
+$check('validate: thiếu overlaps -> []', $v['alternatives'][1]['overlaps'] === []);
+$lvRaw = $sample;
+$lvRaw['alternatives'][0]['overlaps'] = [
+    ['group' => 'retinoids', 'label_vi' => 'retinoid', 'cart_product_id' => '5', 'cart_product_name' => 'n', 'level' => 'info'],
+    ['group' => 'vitamin_c', 'label_vi' => 'vitamin C', 'cart_product_id' => '5', 'cart_product_name' => 'n', 'level' => 'zzz'],
+    ['group' => 'exfoliating_acids', 'label_vi' => 'axit', 'cart_product_id' => '5', 'cart_product_name' => 'n'],
+];
+$lvOv = SearchRecommendClient::validateLabelResponse($lvRaw)['alternatives'][0]['overlaps'];
+$check('validate: overlap level giữ warn/info, lạ hoặc thiếu -> warn', array_column($lvOv, 'level') === ['info', 'warn', 'warn']);
+$check('validate: overlaps mặc định level warn', $ov[0]['level'] === 'warn');
 
 // ---------- labelAnalyze với transport giả ----------
 $store = [];
@@ -104,6 +122,7 @@ $lookup = function (array $ids) use ($rows, &$asked) { $asked = $ids; return arr
 $pr = LabelScanPresenter::present($v, $lookup);
 $check('presenter: gắn cart_product, bỏ xung đột thiếu sản phẩm', count($pr['conflicts']) === 1 && $pr['conflicts'][0]['cart_product']['id'] === '5' && $pr['conflicts'][0]['cart_product']['name'] === 'Retinol' && $pr['conflicts'][0]['cart_product']['price'] == 250000);
 $check('presenter: alternatives hydrate, bỏ thiếu', count($pr['alternatives']) === 1 && $pr['alternatives'][0]['id'] === '20' && $pr['alternatives'][0]['reason_code'] === 'gentler_fits_skin' && $pr['alternatives'][0]['reason_params'] === ['x'] && strpos($pr['alternatives'][0]['url'], 'r=chitiet&id=20') !== false);
+$check('presenter: overlaps đi qua, tên rỗng lấy từ lookup', count($pr['alternatives'][0]['overlaps']) === 2 && $pr['alternatives'][0]['overlaps'][0]['cart_product_name'] === 'Retinol' && in_array('5', $asked, true));
 $check('presenter: product.url khi khớp, chuỗi giữ nguyên (không escape)', strpos($pr['product']['url'] ?? '', 'r=chitiet&id=12') !== false);
 $check('presenter: lookup gọi một lần với id duy nhất', is_array($asked) && count($asked) === count(array_unique($asked)) && in_array('12', $asked, true));
 $pr2 = LabelScanPresenter::present($v, fn(array $ids) => []);
