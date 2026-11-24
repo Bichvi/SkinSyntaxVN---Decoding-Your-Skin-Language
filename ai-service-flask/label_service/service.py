@@ -17,6 +17,7 @@ from functools import lru_cache
 from typing import Any, Callable, Mapping, Sequence
 
 from graph_sync.ingredients import load_aliases, parse_ingredients
+from search_service.active_overlaps import MAX_OVERLAPS, OVERLAP_GROUP_LABELS, active_overlaps, rinse_off_of  # noqa: F401
 from search_service.cart_analyze import _ID_RE, conflicts_from_ingredients
 
 from . import catalog_match, config, schedule, summary
@@ -206,6 +207,15 @@ def _rank_filtered(pairs: Sequence[tuple[str, int | None]], rule_set: Any) -> li
     return [(k, r) for k, r in pairs if r is None or r <= rule_set.rank_limit(k)]
 
 
+def _overlaps(cand_keys: set[str], cart_pairs: Mapping[str, Sequence[tuple[str, int | None]]],
+              name_of: Callable[[str], str], cand_rinse_off: bool = False,
+              cart_rinse_off: Mapping[str, bool] | None = None) -> list[dict]:
+    """Watched active groups that the candidate shares with a product already in the cart (warning only)."""
+
+    return active_overlaps(cand_keys, {pid: [k for k, _ in pairs] for pid, pairs in cart_pairs.items()}, name_of,
+                           cand_rinse_off, cart_rinse_off)
+
+
 # ---------------------------------------------------------------- service
 
 
@@ -226,11 +236,13 @@ class LabelAnalyzeService:
     # -- public
     def analyze(self, req: LabelRequest, correlation_id: str = "") -> dict:
         started = self.clock()
+        usage: list = []   # filled by _analyze with the vision attempts (tokens only, no content)
         try:
-            body = self._analyze(req, correlation_id)
+            body = self._analyze(req, correlation_id, usage)
         except Exception as exc:       # never raise: the route turns this into a normal 200
             logger.error("label_analyze internal_error type=%s correlation_id=%s", type(exc).__name__, correlation_id)
             body = _blank("vision_unavailable", warnings=["internal_error"])
+        body["usage"] = list(usage)
         body["took_ms"] = max(0, int((self.clock() - started) * 1000))
         logger.info("label_analyze status=%s conflicts=%d warnings=%s took_ms=%d correlation_id=%s",
                     body["status"], len(body["conflicts"]), ",".join(body["warnings"]), body["took_ms"], correlation_id)
@@ -254,7 +266,7 @@ class LabelAnalyzeService:
             product = None
         return str((product or {}).get("ten_san_pham") or (product or {}).get("name") or "")
 
-    def _analyze(self, req: LabelRequest, cid: str) -> dict:
+    def _analyze(self, req: LabelRequest, cid: str, usage: list) -> dict:
         warnings: list[str] = []
         # 1. text source
         name, brand, ptype = req.product_name, req.brand, req.product_type or "other"
@@ -263,11 +275,13 @@ class LabelAnalyzeService:
         else:
             try:
                 label = self.vision(req.image, req.image_mime, correlation_id=cid)
-            except VisionUnavailable:
+            except VisionUnavailable as exc:
+                usage.extend(getattr(exc, "attempts", None) or [])
                 return _blank("vision_unavailable", name, brand)
             except Exception as exc:
                 logger.warning("label vision failed: %s correlation_id=%s", type(exc).__name__, cid)
                 return _blank("vision_unavailable", name, brand)
+            usage.extend(getattr(label, "usage", None) or ())
             name, brand, ptype = (req.product_name or label.product_name, req.brand or label.brand,
                                   label.product_type or "other")
             if not looks_like_label(label):
@@ -379,7 +393,7 @@ class LabelAnalyzeService:
         alternatives: list[dict] = []
         if step_key and (fit.verdict in ("caution", "avoid") or any(c["severity"] == "high" for c in conflicts)):
             try:
-                alternatives = self._alternatives(step_key, cart_all, matched_id, profile, rules)
+                alternatives = self._alternatives(step_key, cart_all, matched_id, profile, rules, cart_pairs, cart_cats)
             except Exception as exc:
                 logger.warning("label alternatives failed: %s correlation_id=%s", type(exc).__name__, cid)
                 warnings.append("graph_degraded")
@@ -433,11 +447,16 @@ class LabelAnalyzeService:
         return sorted(keys)
 
     def _alternatives(self, step_key: str, cart_ids: Sequence[str], matched_id: str | None, profile: Profile,
-                      rules: Any) -> list[dict]:
+                      rules: Any, cart_pairs: Mapping[str, Sequence[tuple[str, int | None]]] | None = None,
+                      cart_cats: Mapping[str, Sequence[str]] | None = None) -> list[dict]:
         graph_skin = "da_nhay_cam" if profile.sensitive else GRAPH_SKIN.get(profile.skin_type or "")
         candidates = self.cart_service.step_candidates(step_key, list(cart_ids), graph_skin,
                                                        extra_keys=self._risky_keys(rules, profile), limit=6)
         label = "da nhạy cảm" if profile.sensitive else SKIN_LABEL.get(profile.skin_type or "", "")
+        rule_set = self.cart_service.rule_set
+        step = self.cart_service.routine.step(step_key)
+        cand_rinse = bool(step is not None and set(step.categories) & rule_set.rinse_off_categories)
+        cart_rinse = rinse_off_of(cart_cats or {}, rule_set.rinse_off_categories)
         out: list[dict] = []
         for cand in candidates:
             pid = str(cand.get("product_id"))
@@ -447,8 +466,10 @@ class LabelAnalyzeService:
             if rules is not None and evaluate(ings, profile, rules, 1.0).verdict in ("caution", "avoid"):
                 continue
             fits = cand.get("reason_code") == "fits_skin_type"
+            cand_keys = {k for k, _ in _rank_filtered(ings, self.cart_service.rule_set)}
+            overlaps = _overlaps(cand_keys, cart_pairs or {}, self._cart_name, cand_rinse, cart_rinse)
             out.append({"product_id": pid, "reason_code": "gentler_fits_skin" if fits else "no_cart_conflict",
-                        "reason_params": [label] if label else []})
+                        "reason_params": [label] if label else [], "overlaps": overlaps})
             if len(out) >= MAX_ALTERNATIVES:
                 break
         return out

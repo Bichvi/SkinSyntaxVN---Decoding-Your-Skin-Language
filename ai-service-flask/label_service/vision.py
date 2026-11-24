@@ -7,7 +7,7 @@ import json
 import logging
 import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, Sequence
 
 from . import config
@@ -43,10 +43,15 @@ class LabelText:
     ingredients_text: str
     language: str
     provider: str
+    usage: tuple = ()   # one dict per provider attempt: provider, model, ok, prompt_tokens, completion_tokens
 
 
 class VisionUnavailable(Exception):
     """Every provider failed. The message carries no secrets and no label text."""
+
+    def __init__(self, *args: object, attempts: "Sequence[dict] | None" = None) -> None:
+        super().__init__(*args)
+        self.attempts: list = list(attempts or [])
 
 
 def _default_transport(url: str, headers: dict, body: dict, timeout_s: float) -> "tuple[int, str]":
@@ -132,10 +137,26 @@ def looks_like_label(lt: LabelText) -> bool:
     return bool(lt.is_label) and len(lt.ingredients_text) >= config.MIN_INGREDIENTS_TEXT
 
 
-def _log(provider: str, status: object, kind: str, started: float, image_bytes: bytes, cid: str) -> None:
+def _tokens(text: str) -> "tuple[int, int]":
+    """(prompt, completion) tokens from an OpenAI-compatible body; (0, 0) when absent or unparsable."""
+    try:
+        usage = json.loads(text).get("usage")
+        if not isinstance(usage, dict):
+            return 0, 0
+        p, c = usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0)
+        p = p if isinstance(p, int) and not isinstance(p, bool) and p > 0 else 0
+        c = c if isinstance(c, int) and not isinstance(c, bool) and c > 0 else 0
+        return p, c
+    except (ValueError, TypeError, AttributeError):
+        return 0, 0
+
+
+def _log(provider: str, status: object, kind: str, started: float, image_bytes: bytes, cid: str,
+         ptok: int = 0, ctok: int = 0) -> None:
     logger.info(
-        "label_vision provider=%s status=%s result=%s took_ms=%d bytes=%d correlation_id=%s",
-        provider, status, kind, int((time.monotonic() - started) * 1000), len(image_bytes), cid,
+        "label_vision provider=%s status=%s result=%s took_ms=%d bytes=%d prompt_tokens=%d completion_tokens=%d "
+        "correlation_id=%s",
+        provider, status, kind, int((time.monotonic() - started) * 1000), len(image_bytes), ptok, ctok, cid,
     )
 
 
@@ -149,6 +170,7 @@ def read_label(
 ) -> LabelText:
     send = transport or _default_transport
     order = list(providers) if providers is not None else list(config.LABEL_VISION_PROVIDERS)
+    attempts: list = []
     for provider in order:
         url = _ENDPOINTS.get(provider)
         key = _key_for(provider)
@@ -159,19 +181,24 @@ def read_label(
         started = time.monotonic()
         status: object = "error"
         kind = ""
+        ptok = ctok = 0
+        result: LabelText | None = None
         try:
             status, text = send(url, headers, body, config.LABEL_VISION_TIMEOUT_S)
             if status != 200:
                 kind = f"http_{status}"
             else:
+                ptok, ctok = _tokens(text)   # a bad_response still cost tokens
                 try:
                     result = _parse(text, provider)
                 except (ValueError, KeyError, IndexError, TypeError):
                     kind = "bad_response"
-                else:
-                    _log(provider, status, "ok", started, image_bytes, correlation_id)
-                    return result
         except Exception as exc:  # network/timeout from any transport
             kind = type(exc).__name__
-        _log(provider, status, kind, started, image_bytes, correlation_id)
-    raise VisionUnavailable("all vision providers failed")
+        attempts.append({"provider": provider, "model": _model_for(provider), "ok": result is not None,
+                         "prompt_tokens": ptok, "completion_tokens": ctok})
+        if result is not None:
+            _log(provider, status, "ok", started, image_bytes, correlation_id, ptok, ctok)
+            return replace(result, usage=tuple(attempts))
+        _log(provider, status, kind, started, image_bytes, correlation_id, ptok, ctok)
+    raise VisionUnavailable("all vision providers failed", attempts=attempts)

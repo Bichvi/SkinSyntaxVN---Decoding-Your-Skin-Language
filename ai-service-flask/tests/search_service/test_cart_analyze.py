@@ -275,3 +275,68 @@ def test_cache_digest_ignores_order_but_not_skin():
     a = cart_analyze.cache_digest(CartRequest(("1", "2"), None))
     assert a == cart_analyze.cache_digest(CartRequest(("2", "1"), None))
     assert a != cart_analyze.cache_digest(CartRequest(("1", "2"), "da_dau"))
+
+
+# -- active group overlaps (warning only)
+def _overlap_body(cart_ings, cands):
+    graph = FakeGraph([], candidates={"kem_duong": cands, "kem_chong_nang": []},
+                      profile={"1": {"benefits": ["cap_am"], "conflict_ings": [{"key": k, "rank": r} for k, r in cart_ings]}})
+    svc = CartAnalyzeService(graph, FakeCatalog({"1": CATS["1"]}), None)
+    body = svc.analyze(CartRequest(("1",), "da_dau"))
+    jsonschema.validate(body, SCHEMA)
+    return [i for s in body["suggestions"] for i in s["items"]]
+
+
+def test_suggestion_overlap_warns_but_keeps_candidate_and_order():
+    items = _overlap_body([("retinol", 6)], [cand("90", 50, ings=[("retinol", 5)], brand="a"), cand("91", 40, brand="b")])
+    by_id = {i["product_id"]: i for i in items}
+    assert set(by_id) == {"90", "91"}
+    assert by_id["90"]["overlaps"] == [{"group": "retinoids", "label_vi": "retinoid", "cart_product_id": "1",
+                                        "cart_product_name": "", "level": "warn"}]
+    assert by_id["91"]["overlaps"] == []
+    assert [i["product_id"] for i in items] == sorted(by_id, key=lambda p: [x["product_id"] for x in items].index(p))
+
+
+def test_suggestion_overlap_respects_rank_limit():
+    limit = RULES.rank_limit("glycolic_acid")
+    far = limit + 5
+    items = _overlap_body([("retinol", 6)], [cand("90", 50, ings=[("glycolic_acid", far)])])
+    assert items and all(i["overlaps"] == [] for i in items)
+    items = _overlap_body([("glycolic_acid", far)], [cand("90", 50, ings=[("glycolic_acid", 1)])])
+    assert items and all(i["overlaps"] == [] for i in items)
+
+
+def _overlap_multi(cart, cands_by_step):
+    """cart: {pid: (categories, [(key, rank)])}."""
+    graph = FakeGraph([], candidates={"kem_chong_nang": [], **cands_by_step},
+                      profile={pid: {"benefits": ["cap_am"], "conflict_ings": [{"key": k, "rank": r} for k, r in ings]}
+                               for pid, (_, ings) in cart.items()})
+    svc = CartAnalyzeService(graph, FakeCatalog({pid: cats for pid, (cats, _) in cart.items()}), None)
+    body = svc.analyze(CartRequest(tuple(cart), "da_dau"))
+    jsonschema.validate(body, SCHEMA)
+    return {s["step"]: {i["product_id"]: i for i in s["items"]} for s in body["suggestions"]}
+
+
+def test_suggestion_overlap_level_info_when_candidate_is_wash_off():
+    steps = _overlap_multi({"1": (CATS["1"], [("retinol", 6)])},
+                           {"sua_rua_mat": [cand("90", 50, ings=[("retinol", 5)])]})
+    assert [o["level"] for o in steps["sua_rua_mat"]["90"]["overlaps"]] == ["info"]
+
+
+def test_suggestion_overlap_level_info_when_cart_product_is_wash_off():
+    steps = _overlap_multi({"4": (CATS["4"], [("retinol", 3)])},
+                           {"kem_duong": [cand("90", 50, ings=[("retinol", 5)])]})
+    ov = steps["kem_duong"]["90"]["overlaps"]
+    assert [(o["group"], o["level"], o["cart_product_id"]) for o in ov] == [("retinoids", "info", "4")]
+
+
+def test_suggestion_overlap_level_warn_when_both_leave_on():
+    steps = _overlap_multi({"1": (CATS["1"], [("retinol", 6)])}, {"kem_duong": [cand("90", 50, ings=[("retinol", 5)])]})
+    assert [o["level"] for o in steps["kem_duong"]["90"]["overlaps"]] == ["warn"]
+
+
+def test_suggestion_overlap_mixed_cart_prefers_the_leave_on_product():
+    steps = _overlap_multi({"4": (CATS["4"], [("retinol", 3)]), "1": (CATS["1"], [("retinol", 4)])},
+                           {"kem_duong": [cand("90", 50, ings=[("retinol", 5)])]})
+    ov = steps["kem_duong"]["90"]["overlaps"]
+    assert [(o["level"], o["cart_product_id"]) for o in ov] == [("warn", "1")]

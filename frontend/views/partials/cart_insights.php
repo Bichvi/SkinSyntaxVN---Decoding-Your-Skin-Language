@@ -89,6 +89,24 @@ $cinDetail = static function (string $id): string {
                   </a>
                 </div>
                 <div class="ssf-meta">
+                  <?php if (!empty($p['overlaps']) && is_array($p['overlaps'])):
+                    $ovLabels = [];
+                    $ovNames = [];
+                    $ovInfo = true;
+                    foreach ($p['overlaps'] as $ov) {
+                      $ovLabels[$ov['label']] = true;
+                      $ovNames[$ov['cart_name']] = true;
+                      if (($ov['level'] ?? 'warn') !== 'info') {
+                        $ovInfo = false;
+                      }
+                    }
+                  ?>
+                    <?php if ($ovInfo): ?>
+                    <div class="cin-overlap cin-overlap--info" role="note">ℹ️ Cũng có <b><?= $cinE(implode(', ', array_keys($ovLabels))) ?></b> như <b><?= $cinE(implode(', ', array_keys($ovNames))) ?></b> trong giỏ. Sản phẩm rửa trôi nên ít kích ứng hơn; nếu da khô rát, hãy dùng xen kẽ.</div>
+                    <?php else: ?>
+                    <div class="cin-overlap" role="note">⚠️ Trùng hoạt chất <b><?= $cinE(implode(', ', array_keys($ovLabels))) ?></b> với <b><?= $cinE(implode(', ', array_keys($ovNames))) ?></b> trong giỏ. Dùng cả hai dễ khô, kích ứng: nếu mua, đừng dùng chung một buổi.</div>
+                    <?php endif; ?>
+                  <?php endif; ?>
                   <div class="ssf-brand"><?= $cinE($p['thuong_hieu'] ?? 'SkinSyntax') ?></div>
                   <a class="ssf-name" href="<?= $cinE($detailUrl) ?>"><?= $cinE($p['ten_san_pham'] ?? '') ?></a>
                   <div class="ssf-price-wrap"><span class="ssf-price"><?= vnd($giaBan) ?></span></div>

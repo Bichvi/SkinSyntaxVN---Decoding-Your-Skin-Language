@@ -315,6 +315,29 @@
     return html + '</div>';
   }
 
+  function overlapBanner(a) {
+    var list = Array.isArray(a && a.overlaps) ? a.overlaps.filter(function (o) { return o && typeof o === 'object'; }) : [];
+    if (!list.length) { return ''; }
+    var groups = [];
+    var names = [];
+    var info = true;
+    list.forEach(function (o) {
+      if (o.level !== 'info') { info = false; }
+      var g = String(o.label_vi || '');
+      if (g && groups.indexOf(g) === -1) { groups.push(g); }
+      var n = String(o.cart_product_name || '') || 'sản phẩm trong giỏ';
+      if (names.indexOf(n) === -1) { names.push(n); }
+    });
+    if (info) {
+      return '<div class="ai-label-card__overlap ai-label-card__overlap--info" role="note">ℹ️ Cũng có <b>'
+        + groups.map(esc).join('</b>, <b>') + '</b> như <b>' + names.map(esc).join('</b>, <b>')
+        + '</b> trong giỏ. Sản phẩm rửa trôi nên ít kích ứng hơn; nếu da khô rát, hãy dùng xen kẽ.</div>';
+    }
+    return '<div class="ai-label-card__overlap" role="note">⚠️ Trùng hoạt chất <b>'
+      + groups.map(esc).join('</b>, <b>') + '</b> với <b>' + names.map(esc).join('</b>, <b>')
+      + '</b> trong giỏ. Dùng cả hai dễ khô, kích ứng: nếu mua, đừng dùng chung một buổi.</div>';
+  }
+
   function renderAlternatives(result) {
     var alts = Array.isArray(result.alternatives) ? result.alternatives : [];
     var warnings = Array.isArray(result.warnings) ? result.warnings : [];
@@ -327,10 +350,15 @@
     });
     var cards = '';
     if (typeof deps.renderProductCards === 'function') {
-      cards = '<div class="ai-chat-widget__product-group">' + (deps.renderProductCards(mapped) || []).join('') + '</div>';
+      var rendered = deps.renderProductCards(mapped) || [];
+      cards = '<div class="ai-chat-widget__product-group">' + rendered.map(function (html, i) {
+        var banner = overlapBanner(alts[i]);
+        // bọc chung một khối để dải cảnh báo dính liền thẻ của nó (lưới cha có gap 10px)
+        return banner ? '<div class="ai-label-card__altwrap">' + banner + html + '</div>' : html;
+      }).join('') + '</div>';
     } else {
-      cards = mapped.map(function (p) {
-        return '<div class="ai-label-card__alt">' + link(p.detail_url, p.name || 'Sản phẩm', 'ai-label-card__cartlink')
+      cards = mapped.map(function (p, i) {
+        return '<div class="ai-label-card__alt">' + overlapBanner(alts[i]) + link(p.detail_url, p.name || 'Sản phẩm', 'ai-label-card__cartlink')
           + (p.summary ? '<div class="ai-label-card__muted">' + esc(p.summary) + '</div>' : '') + '</div>';
       }).join('');
     }

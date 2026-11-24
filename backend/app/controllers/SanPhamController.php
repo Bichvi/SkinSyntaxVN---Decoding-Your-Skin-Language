@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../models/HoiDap.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
+require_once __DIR__ . '/../services/LabelScanMetrics.php';
 require_once __DIR__ . '/../services/SearchSuggestService.php';
 require_once __DIR__ . '/../services/RewardCsrf.php';
 
@@ -192,6 +193,7 @@ class SanPhamController {
             $_SESSION['gio_hang'] = $_SESSION['gio_hang'] ?? [];
             $_SESSION['gio_hang'][$cartProductId] = $currentQty + $qty;
             ProductEventTracker::record($this->pdo, 'add_to_cart', $cartProductId);
+            LabelScanMetrics::attributeAddToCart($this->pdo, (string)$cartProductId); // không bao giờ ném, không đổi response
 
             // Phase B: Unified Interaction Logging
             require_once dirname(__DIR__) . '/services/InteractionLogger.php';

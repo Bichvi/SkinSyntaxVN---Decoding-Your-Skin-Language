@@ -59,6 +59,15 @@ final class CartInsights
                 }
                 $p['reason_code'] = (string)$item['reason_code'];
                 $p['reason_text'] = SearchReasonFormatter::format((string)$item['reason_code'], (array)$item['reason_params']);
+                $p['overlaps'] = [];
+                foreach ((array)($item['overlaps'] ?? []) as $o) {
+                    $cartName = trim((string)(($products[(string)($o['cart_product_id'] ?? '')]['ten_san_pham'] ?? '')));
+                    $p['overlaps'][] = [
+                        'label' => (string)($o['label_vi'] ?? ''),
+                        'cart_name' => $cartName !== '' ? $cartName : 'sản phẩm trong giỏ',
+                        'level' => in_array($o['level'] ?? null, ['warn', 'info'], true) ? $o['level'] : 'warn',
+                    ];
+                }
                 $items[] = $p;
             }
             if ($items) {
@@ -102,6 +111,11 @@ final class CartInsights
         foreach ((array)($analysis['suggestions'] ?? []) as $s) {
             foreach ((array)$s['items'] as $item) {
                 $ids[(string)$item['product_id']] = true;
+                foreach ((array)($item['overlaps'] ?? []) as $o) {
+                    if (isset($o['cart_product_id'])) {
+                        $ids[(string)$o['cart_product_id']] = true;
+                    }
+                }
             }
         }
         return array_map('strval', array_keys($ids));

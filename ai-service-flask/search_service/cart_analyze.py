@@ -25,6 +25,7 @@ from graph_sync.conflicts import (SEVERITIES, RuleSet, evaluate_pair, expand_pai
 from shared.redis_kit import keys, pubsub
 
 from . import config, ranker
+from .active_overlaps import active_overlaps, rinse_off_of
 from .routine import RoutineDef, analyze as analyze_routine, load_routine
 
 logger = logging.getLogger("search_service")
@@ -461,6 +462,11 @@ class CartAnalyzeService:
         cart_benefits: set[str] = set()
         for data in cart_data.values():
             cart_benefits.update(data["benefits"])
+        limit_of = self.rule_set.rank_limit
+        cart_keys = {pid: [str(i["key"]) for i in data.get("conflict_ings", [])
+                           if i.get("rank") is None or i["rank"] <= limit_of(str(i["key"]))]
+                     for pid, data in cart_data.items()}
+        cart_rinse = rinse_off_of(categories, self.rule_set.rinse_off_categories)
         out: list[dict[str, Any]] = []
         for step_key in routine["suggest_order"][: config.CART_MAX_STEPS]:
             step = self.routine.step(step_key)
@@ -477,6 +483,12 @@ class CartAnalyzeService:
             items = rank_step_candidates(rows, cart_benefits, cart_data, categories, step.categories,
                                          step.label_vi, req.skin_type, self.rule_set, cop)
             if items:
+                cand_rinse = bool(set(step.categories) & self.rule_set.rinse_off_categories)
+                ings_by_id = {str(r["id"]): r.get("conflict_ings") or [] for r in rows}
+                for item in items:
+                    cand_keys = {str(i["key"]) for i in ings_by_id.get(str(item["product_id"]), [])
+                                 if i.get("rank") is None or i["rank"] <= limit_of(str(i["key"]))}
+                    item["overlaps"] = active_overlaps(cand_keys, cart_keys, None, cand_rinse, cart_rinse)
                 out.append({"step": step.key, "items": items})
         return out
 
