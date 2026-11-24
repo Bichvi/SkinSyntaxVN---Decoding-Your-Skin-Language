@@ -201,6 +201,23 @@ html.sidebar-is-collapsed .admin-main {
   margin-left: var(--sidebar-collapsed-width) !important;
 }
 
+html.sidebar-is-collapsed .admin-sidebar-header {
+  padding-inline: 0;
+  justify-content: center;
+}
+
+html.sidebar-is-collapsed .admin-brand-logo {
+  width: 32px;
+  min-width: 32px;
+  overflow: visible;
+  justify-content: center;
+}
+
+html.sidebar-is-collapsed .admin-brand-icon {
+  width: 32px;
+  min-width: 32px;
+}
+
 html.sidebar-is-collapsed .admin-brand-text,
 html.sidebar-is-collapsed .sidebar-section-label,
 html.sidebar-is-collapsed .menu-link-text,

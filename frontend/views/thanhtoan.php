@@ -16,6 +16,7 @@ $pointsToUse = max(0, (int)($pointRedemption['points'] ?? 0));
 $pointsDiscountAmount = max(0, (int)($pointRedemption['discount'] ?? 0));
 $availablePoints = max(0, (int)($pointRedemption['available_points'] ?? 0));
 $pointValueVnd = max(1, (int)($pointRedemption['point_value_vnd'] ?? 1000));
+$xuPerMemberPoint = class_exists('RewardRules') ? max(1, (int)RewardRules::XU_PER_POINT) : 100;
 $maxPointsByOrder = (int)floor(max(0, $subtotal - $voucherDiscountAmount) / $pointValueVnd);
 $maxUsablePoints = min($availablePoints, $maxPointsByOrder);
 $defaultReceiver = $defaultReceiver ?? [];
@@ -319,23 +320,26 @@ $hasDefaultReceiver = !empty($hasDefaultReceiver);
           </div>
 
           <div class="voucher-card mb-3" id="points-card-box">
-            <div class="voucher-card__title">Dùng điểm tích lũy</div>
-            <div class="voucher-note mb-2">Bạn hiện có <strong><?= number_format($availablePoints, 0, ',', '.') ?> điểm</strong>. Quy đổi: 1 điểm = <?= number_format($pointValueVnd, 0, ',', '.') ?>đ.</div>
+            <div class="voucher-card__title">Dùng điểm thành viên</div>
+            <div class="voucher-note mb-2">
+              Bạn có <strong><?= number_format($availablePoints, 0, ',', '.') ?> điểm thành viên</strong>.
+              Xu thưởng được tự động quy đổi theo tỷ lệ <?= number_format($xuPerMemberPoint, 0, ',', '.') ?> xu = 1 điểm; mỗi điểm giảm <?= number_format($pointValueVnd, 0, ',', '.') ?>đ.
+            </div>
             <div class="input-group mb-2">
-              <label for="checkoutPointsToUse" class="visually-hidden">Số điểm muốn dùng</label>
-              <input class="form-control" type="number" id="checkoutPointsToUse" min="0" max="<?= $maxUsablePoints ?>" step="1" name="points_to_use" value="<?= $pointsToUse > 0 ? $pointsToUse : '' ?>" placeholder="Nhập số điểm muốn dùng" autocomplete="off">
-              <button class="btn btn-outline-brand" type="submit" formaction="<?= BASE_URL ?>/index.php?r=apdung_diem#points-card-box" formmethod="post" formnovalidate>Đổi điểm</button>
+              <label for="checkoutPointsToUse" class="visually-hidden">Số điểm thành viên muốn dùng</label>
+              <input class="form-control" type="number" id="checkoutPointsToUse" min="0" max="<?= $maxUsablePoints ?>" step="1" name="points_to_use" value="<?= $pointsToUse > 0 ? $pointsToUse : '' ?>" placeholder="Nhập số điểm thành viên" autocomplete="off">
+              <button class="btn btn-outline-brand" type="submit" formaction="<?= BASE_URL ?>/index.php?r=apdung_diem#points-card-box" formmethod="post" formnovalidate>Áp dụng</button>
             </div>
             <?php if ($pointsToUse > 0): ?>
               <div class="voucher-pill-row">
                 <div>
-                  <div class="voucher-pill-code"><?= number_format($pointsToUse, 0, ',', '.') ?> điểm</div>
+                  <div class="voucher-pill-code"><?= number_format($pointsToUse, 0, ',', '.') ?> điểm thành viên</div>
                   <div class="voucher-pill-meta">Giảm trực tiếp <?= vnd($pointsDiscountAmount) ?> trên giá trị sản phẩm.</div>
                 </div>
                 <button class="btn btn-sm btn-light border" type="submit" formaction="<?= BASE_URL ?>/index.php?r=bo_diem#points-card-box" formmethod="post" formnovalidate>Gỡ điểm</button>
               </div>
             <?php else: ?>
-              <div class="voucher-note">Tối đa có thể dùng cho đơn này: <?= number_format($maxUsablePoints, 0, ',', '.') ?> điểm.</div>
+              <div class="voucher-note">Tối đa có thể dùng cho đơn này: <?= number_format($maxUsablePoints, 0, ',', '.') ?> điểm thành viên.</div>
             <?php endif; ?>
           </div>
 

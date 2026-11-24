@@ -5535,7 +5535,7 @@ class HomeController {
         }
 
         if (!is_logged_in()) {
-            set_flash('error', 'Vui lòng đăng nhập để dùng điểm tích lũy.');
+            set_flash('error', 'Vui lòng đăng nhập để dùng điểm thành viên.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
 
@@ -5567,7 +5567,7 @@ class HomeController {
 
         if ($availablePoints <= 0) {
             unset($_SESSION['checkout_points']);
-            set_flash('error', 'Tài khoản của bạn hiện chưa có điểm tích lũy để sử dụng.');
+            set_flash('error', 'Tài khoản của bạn hiện chưa có điểm thành viên để sử dụng.');
             redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
         }
 
@@ -5585,7 +5585,7 @@ class HomeController {
         }
 
         $_SESSION['checkout_points'] = ['points' => $usablePoints];
-        set_flash('success', 'Đã áp dụng ' . number_format($usablePoints, 0, ',', '.') . ' điểm cho đơn hàng.');
+        set_flash('success', 'Đã áp dụng ' . number_format($usablePoints, 0, ',', '.') . ' điểm thành viên cho đơn hàng.');
         redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
     }
 
@@ -5597,7 +5597,7 @@ class HomeController {
         $this->storeCheckoutPaymentMethodFromRequest();
         $this->storeCheckoutReceiverFromRequest($this->getDefaultCheckoutReceiver($this->getCurrentCheckoutCustomer(), current_user() ?? []));
         unset($_SESSION['checkout_points']);
-        set_flash('success', 'Đã gỡ điểm tích lũy khỏi đơn hàng.');
+        set_flash('success', 'Đã gỡ điểm thành viên khỏi đơn hàng.');
         redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
     }
 

@@ -56,7 +56,7 @@ $ptWatchUrl = $featuredProductId !== null
         <div class="pt-balance__sub" id="ptBalanceSub"></div>
         <div class="pt-balance__cap" id="ptCap" hidden></div>
         <div class="pt-balance__avail" id="ptAvail"></div>
-        <a class="pt-btn pt-btn--green" href="<?= h(BASE_URL . '/index.php?r=giohang') ?>">Dùng khi thanh toán</a>
+        <a class="pt-btn pt-btn--green" href="<?= h(BASE_URL . '/index.php?r=giohang') ?>">Dùng điểm khi thanh toán</a>
       </section>
 
       <section class="pt-card" aria-labelledby="ptCheckinTitle">
