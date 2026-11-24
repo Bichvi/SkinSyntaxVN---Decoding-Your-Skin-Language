@@ -189,6 +189,7 @@ class DanhGia {
             'updated_at' => new \MongoDB\BSON\UTCDateTime(),
         ];
         $this->db->khach_hang->insertOne($payload);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
         return $payload;
     }
 

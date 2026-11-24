@@ -1,4 +1,4 @@
-import { PilotScene } from './scene.js?v=7';
+import { PilotScene } from './scene.js?v=15';
 import { audioEnvelope } from './timeline.js';
 import { campaignPose, drawCampaign } from './campaign-stage.js';
 

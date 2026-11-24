@@ -135,6 +135,56 @@ ob_start();
 require __DIR__ . '/../../../frontend/views/partials/cart_insights.php';
 $check('partial: visible=false -> không in gì', trim((string)ob_get_clean()) === '');
 
+// ---------- overlaps hoạt chất (cảnh báo đỏ, không lọc sản phẩm) ----------
+$ovRaw = $sample;
+$ovRaw['suggestions'][0]['items'][0]['overlaps'] = [
+    ['group' => 'retinoids', 'label_vi' => 'retinoid', 'cart_product_id' => '236', 'cart_product_name' => 'x'],
+    ['group' => 'bogus', 'label_vi' => 'x', 'cart_product_id' => '236', 'cart_product_name' => ''],          // nhóm lạ -> bỏ
+    ['group' => 'vitamin_c', 'label_vi' => 'vitamin C', 'cart_product_id' => 'bad id!', 'cart_product_name' => ''], // id sai -> bỏ
+    ['group' => 'vitamin_c', 'label_vi' => str_repeat('a', 100), 'cart_product_id' => 112, 'cart_product_name' => str_repeat('b', 300)],
+];
+$ovV = SearchRecommendClient::validateCartResponse($ovRaw);
+$ovItem = $ovV['suggestions'][0]['items'][0];
+$check('validate: overlaps giữ mục hợp lệ, bỏ nhóm lạ/id sai, kẹp độ dài', count($ovItem['overlaps']) === 2 && $ovItem['overlaps'][0]['group'] === 'retinoids' && $ovItem['overlaps'][1]['cart_product_id'] === '112' && mb_strlen($ovItem['overlaps'][1]['label_vi']) === 80 && mb_strlen($ovItem['overlaps'][1]['cart_product_name']) === 200);
+$check('validate: thiếu overlaps -> []', $ovV['suggestions'][0]['items'][1]['overlaps'] === []);
+$check('productIds: gồm cả id sản phẩm trong giỏ của overlaps (không trùng)', CartInsights::productIds($ovV) === ['112', '236', '1', '11', '3014']);
+$ovProducts = $products;
+$ovProducts['236']['ten_san_pham'] = 'Kem <script>alert(9)</script> Retinol';
+$ovVm = CartInsights::build($ovV, $ovProducts, ['112']);
+$ovFirst = $ovVm['suggestions'][0]['items'][0];
+$check('build: overlaps có label + tên sản phẩm trong giỏ; mục không overlap = []', $ovFirst['overlaps'][0] === ['label' => 'retinoid', 'cart_name' => 'Kem <script>alert(9)</script> Retinol', 'level' => 'warn'] && $ovFirst['overlaps'][1]['cart_name'] === 'Gel Megaduo <b>Plus</b>' && $ovVm['suggestions'][0]['items'][1]['overlaps'] === []);
+$ovMissing = CartInsights::build($ovV, array_diff_key($ovProducts, ['236' => 1]), ['112']);
+$check('build: thiếu tên -> "sản phẩm trong giỏ"', ($ovMissing['suggestions'][0]['items'][0]['overlaps'][0]['cart_name'] ?? '') === 'sản phẩm trong giỏ');
+$cartInsights = $ovVm;
+ob_start();
+require __DIR__ . '/../../../frontend/views/partials/cart_insights.php';
+$ovHtml = (string)ob_get_clean();
+$check('partial: banner đỏ cin-overlap, tên escape (XSS), chỉ 1 banner khi các thẻ khác không overlap', substr_count($ovHtml, 'class="cin-overlap"') === 1 && strpos($ovHtml, '<script>alert(9)') === false && strpos($ovHtml, 'Kem &lt;script&gt;alert(9)&lt;/script&gt; Retinol') !== false && strpos($ovHtml, 'Trùng hoạt chất <b>retinoid, aaaa') !== false);
+$cartInsights = CartInsights::build($v, $products, ['112', '236']);
+ob_start();
+require __DIR__ . '/../../../frontend/views/partials/cart_insights.php';
+$check('partial: không overlap -> không có banner', strpos((string)ob_get_clean(), 'cin-overlap') === false);
+
+// ---------- overlaps: level warn/info (rửa trôi = banner vàng) ----------
+$lvRaw = $sample;
+$lvRaw['suggestions'][0]['items'][0]['overlaps'] = [
+    ['group' => 'retinoids', 'label_vi' => 'retinoid', 'cart_product_id' => '236', 'cart_product_name' => 'x', 'level' => 'info'],
+    ['group' => 'vitamin_c', 'label_vi' => 'vitamin C', 'cart_product_id' => '236', 'cart_product_name' => 'x', 'level' => 'danger'],
+    ['group' => 'exfoliating_acids', 'label_vi' => 'axit', 'cart_product_id' => '236', 'cart_product_name' => 'x'],
+];
+$lvV = SearchRecommendClient::validateCartResponse($lvRaw);
+$lvO = $lvV['suggestions'][0]['items'][0]['overlaps'];
+$check('validate: level giữ warn/info, lạ hoặc thiếu -> warn', array_column($lvO, 'level') === ['info', 'warn', 'warn']);
+$lvVm = CartInsights::build($lvV, $products, ['112']);
+$check('build: level đi vào overlaps', array_column($lvVm['suggestions'][0]['items'][0]['overlaps'], 'level') === ['info', 'warn', 'warn']);
+$render = function (array $vm) { $cartInsights = $vm; ob_start(); require __DIR__ . '/../../../frontend/views/partials/cart_insights.php'; return (string)ob_get_clean(); };
+$lvHtml = $render($lvVm);
+$check('partial: có warn trong nhóm -> banner đỏ, không vàng', strpos($lvHtml, 'class="cin-overlap"') !== false && strpos($lvHtml, 'cin-overlap--info') === false);
+$allInfo = $lvV;
+foreach ($allInfo['suggestions'][0]['items'][0]['overlaps'] as $i => $_) { $allInfo['suggestions'][0]['items'][0]['overlaps'][$i]['level'] = 'info'; }
+$infoHtml = $render(CartInsights::build($allInfo, $products, ['112']));
+$check('partial: toàn info -> banner vàng cin-overlap--info + câu rửa trôi', strpos($infoHtml, 'class="cin-overlap cin-overlap--info"') !== false && strpos($infoHtml, 'Sản phẩm rửa trôi nên ít kích ứng hơn') !== false && strpos($infoHtml, 'Trùng hoạt chất') === false);
+
 // ---------- route / tracking / cấu hình ----------
 $rootDir = dirname(__DIR__, 3);
 foreach (['backend/public/index.php', 'frontend/public/index.php'] as $idx) {

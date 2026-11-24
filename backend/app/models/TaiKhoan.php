@@ -5,6 +5,18 @@ class TaiKhoan {
     private $db;
     private array $columnCache = [];
 
+    // GET-only per-request memo (shared across instances) to avoid duplicate Atlas
+    // round-trips; cleared on any TaiKhoan write (and by other models writing khach_hang/skin_profiles/loai_da).
+    private static array $requestCache = [];
+
+    private static function requestCacheEnabled(): bool {
+        return strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? '')) === 'GET';
+    }
+
+    public static function forgetRequestCache(): void {
+        self::$requestCache = [];
+    }
+
     public function __construct($db) {
         $this->db = $db;
         // MongoDB không cần đảm bảo cột loyalty hay order
@@ -84,9 +96,18 @@ class TaiKhoan {
     }
 
     public function getKhachHangByEmail(string $email): ?array {
+        $cacheKey = 'kh:' . strtolower(trim($email));
+        $cacheOn = self::requestCacheEnabled();
+        if ($cacheOn && array_key_exists($cacheKey, self::$requestCache)) {
+            return self::$requestCache[$cacheKey];
+        }
         $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
         $row = $this->db->khach_hang->findOne(['email' => $regex]);
-        return $row ? (array)$row : null;
+        $result = $row ? (array)$row : null;
+        if ($cacheOn) {
+            self::$requestCache[$cacheKey] = $result;
+        }
+        return $result;
     }
 
     private function ensureKhachHangByEmail(string $hoTen, string $email): ?array {
@@ -105,6 +126,7 @@ class TaiKhoan {
         ];
         
         $this->db->khach_hang->insertOne($payload);
+        self::forgetRequestCache();
         return $payload;
     }
 
@@ -261,6 +283,7 @@ class TaiKhoan {
             'ma_loai_da' => $newId,
             'ten_loai_da' => $ten
         ]);
+        self::forgetRequestCache();
         return $newId;
     }
 
@@ -393,8 +416,16 @@ class TaiKhoan {
 
     public function getSkinProfilesByEmail(string $email): array {
         $email = trim($email);
+        $cacheKey = 'profiles:' . strtolower($email);
+        $cacheOn = self::requestCacheEnabled();
+        if ($cacheOn && array_key_exists($cacheKey, self::$requestCache)) {
+            return self::$requestCache[$cacheKey];
+        }
         $primary = $this->getSkinProfileByEmail($email);
-        if (!$primary) return [];
+        if (!$primary) {
+            if ($cacheOn) self::$requestCache[$cacheKey] = [];
+            return [];
+        }
 
         $profiles = [$primary];
         try {
@@ -420,6 +451,9 @@ class TaiKhoan {
             }
         } catch (Throwable $e) {
             // The legacy primary profile remains usable when the optional collection is unavailable.
+        }
+        if ($cacheOn) {
+            self::$requestCache[$cacheKey] = $profiles;
         }
         return $profiles;
     }
@@ -472,6 +506,7 @@ class TaiKhoan {
                 'updated_at' => new \MongoDB\BSON\UTCDateTime(),
             ];
             $this->db->skin_profiles->insertOne($profile);
+            self::forgetRequestCache();
             return $profile;
         } catch (Throwable $e) {
             return null;
@@ -528,6 +563,7 @@ class TaiKhoan {
 
         try {
             $this->db->khach_hang->updateOne(['ma_kh' => $kh['ma_kh']], ['$set' => $updateData]);
+            self::forgetRequestCache();
             return true;
         } catch (Throwable $e) {
             return false;
@@ -610,6 +646,7 @@ class TaiKhoan {
                 ];
                 if ($hoTen !== '') $updateData['ho_ten'] = $hoTen;
                 $result = $this->db->khach_hang->updateOne(['ma_kh' => $kh['ma_kh']], ['$set' => $updateData]);
+                self::forgetRequestCache();
                 if ($result->getMatchedCount() < 1) {
                     return ['ok' => false, 'changed' => false, 'message' => 'update_failed'];
                 }
@@ -618,6 +655,7 @@ class TaiKhoan {
                     ['profile_id' => $profileId, 'owner_email' => strtolower($email)],
                     ['$set' => ['current_state' => $storedState, 'updated_at' => $now]]
                 );
+                self::forgetRequestCache();
                 if ($result->getMatchedCount() < 1) {
                     return ['ok' => false, 'changed' => false, 'message' => 'profile_update_failed'];
                 }
@@ -652,6 +690,7 @@ class TaiKhoan {
                 $history['_id'] = hash('sha256', 'skinsyntax.quick|' . strtolower($email) . '|' . $profileId . '|' . $requestId);
             }
             $this->db->skin_profile_history->insertOne($history);
+            self::forgetRequestCache();
 
             return ['ok' => true, 'changed' => true, 'duplicate' => false];
         } catch (Throwable $e) {
@@ -684,6 +723,7 @@ class TaiKhoan {
 
         try {
             $this->db->khach_hang->updateOne(['ma_kh' => $kh['ma_kh']], ['$set' => $updateData]);
+            self::forgetRequestCache();
             return true;
         } catch (Throwable $e) {
             return false;
@@ -762,10 +802,12 @@ class TaiKhoan {
 
         try {
             $this->db->khach_hang->updateOne(['ma_kh' => $kh['ma_kh']], ['$set' => $updateData]);
+            self::forgetRequestCache();
 
             if ($hoTen !== '') {
                 $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
                 $this->db->nguoidung->updateOne(['email' => $regex], ['$set' => ['ho_ten' => $hoTen]]);
+                self::forgetRequestCache();
             }
             return true;
         } catch (Throwable $e) {
@@ -837,6 +879,7 @@ class TaiKhoan {
 
         $hashMoi = password_hash($matKhauMoi, PASSWORD_BCRYPT);
         $this->db->nguoidung->updateOne(['_id' => $nd['_id']], ['$set' => ['mat_khau' => $hashMoi]]);
+        self::forgetRequestCache();
 
         return ['ok' => true, 'message' => 'Đổi mật khẩu thành công.'];
     }
@@ -855,6 +898,7 @@ class TaiKhoan {
 
         $hashMoi = password_hash($matKhauMoi, PASSWORD_BCRYPT);
         $this->db->nguoidung->updateOne(['_id' => $nd['_id']], ['$set' => ['mat_khau' => $hashMoi]]);
+        self::forgetRequestCache();
 
         return ['ok' => true, 'message' => 'Đổi mật khẩu thành công.'];
     }
@@ -868,6 +912,7 @@ class TaiKhoan {
         $hashMoi = password_hash($matKhauMoi, PASSWORD_BCRYPT);
         $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i');
         $result = $this->db->nguoidung->updateOne(['email' => $regex], ['$set' => ['mat_khau' => $hashMoi]]);
+        self::forgetRequestCache();
 
         return $result->getModifiedCount() > 0
             ? ['ok' => true, 'message' => 'Đổi mật khẩu thành công.']
@@ -895,6 +940,7 @@ class TaiKhoan {
                 'tu_khoa' => $tuKhoa,
                 'ngay_tim' => new \MongoDB\BSON\UTCDateTime()
             ]);
+            self::forgetRequestCache();
             return true;
         } catch (Throwable $e) {
             return false;

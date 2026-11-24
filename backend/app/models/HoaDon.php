@@ -109,6 +109,7 @@ class HoaDon {
             'created_at' => new \MongoDB\BSON\UTCDateTime(),
             'updated_at' => new \MongoDB\BSON\UTCDateTime()
         ]);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
 
         return $maKhMoi;
     }
@@ -360,6 +361,7 @@ class HoaDon {
                 'updated_at' => new \MongoDB\BSON\UTCDateTime()
             ]]
         );
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
     }
 
     public function syncLoyaltyForOrder(int $orderId): void {

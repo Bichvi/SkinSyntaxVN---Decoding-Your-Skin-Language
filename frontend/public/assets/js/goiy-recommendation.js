@@ -897,6 +897,50 @@
     updateRotationUi();
   };
 
+  // Tải lại trang (F5) => đổi mới gợi ý: mỗi bước chọn ngẫu nhiên trong các sản phẩm có độ phù hợp tương đương
+  // (cùng ngưỡng với luân phiên), tránh sản phẩm vừa hiện ở lần xem trước. Tắt khi người dùng đã tạm dừng tự đổi.
+  var LAST_SHOWN_KEY = 'skinsyntax.goiy.lastShown';
+  var currentProductOf = function (card) {
+    var el = card.querySelector('[data-current-product]');
+    try { return el ? JSON.parse(el.textContent || '{}') : null; } catch (error) { return null; }
+  };
+  var refreshOnReload = function () {
+    var previous = [];
+    try { previous = JSON.parse(window.sessionStorage.getItem(LAST_SHOWN_KEY) || '[]'); } catch (error) { previous = []; }
+    var seen = new Set(Array.isArray(previous) ? previous.map(String) : []);
+    var shuffled = false;
+    if (readRotatePref() !== 'off' && seen.size) {
+      allCards().forEach(function (card) {
+        var current = currentProductOf(card);
+        var scores = [scoreOf(current)];
+        var alternatives = Array.prototype.slice.call(card.querySelectorAll('[data-alternative]'));
+        alternatives.forEach(function (button) { scores.push(scoreOf(parseButtonProduct(button))); });
+        var valid = scores.filter(function (s) { return s !== null; });
+        var threshold = Math.max(ROTATE_MIN_SCORE, (valid.length ? Math.max.apply(null, valid) : 0) - ROTATE_SCORE_GAP);
+        // Ứng viên: sản phẩm chính (null = giữ nguyên) + lựa chọn thay thế đủ ngưỡng, bỏ những gì vừa xem lần trước
+        var pool = [];
+        if (current && current.id && !seen.has(String(current.id))) pool.push(null);
+        alternatives.forEach(function (button) {
+          var product = parseButtonProduct(button);
+          var score = scoreOf(product);
+          if (product && product.id && score !== null && score >= threshold && !seen.has(String(product.id))) pool.push(button);
+        });
+        if (!pool.length) return;
+        var pick = pool[Math.floor(Math.random() * pool.length)];
+        if (pick && swapWithAlternative(card, pick)) shuffled = true;
+      });
+    }
+    var shownNow = allCards().map(function (card) {
+      var product = currentProductOf(card);
+      return product && product.id ? String(product.id) : '';
+    }).filter(Boolean);
+    try { window.sessionStorage.setItem(LAST_SHOWN_KEY, JSON.stringify(shownNow)); } catch (error) { /* chế độ riêng tư: bỏ qua */ }
+    // swapWithAlternative kích hoạt bước vừa đổi; đưa trạng thái về bước đầu như lúc mới tải
+    var first = currentCards()[0];
+    if (shuffled && first) activateStep(first.dataset.stepKey, false);
+  };
+  refreshOnReload();
+
   allCards().forEach(initRotationPool);
   var hasRotatableCard = allCards().some(function (card) { return nextRotationButton(card) !== null; });
   if (hasRotatableCard && rotationControl) {

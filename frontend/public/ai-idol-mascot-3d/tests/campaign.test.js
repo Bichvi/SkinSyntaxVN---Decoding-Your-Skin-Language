@@ -87,3 +87,21 @@ test('drawCaption centres wrapped lines at x=640 and restores textAlign', async 
   const y = short.calls.find((c) => c[0] === 'fillText')[3];
   assert.ok(Math.abs(y - 670.1) < .01);
 });
+
+test('talking gestures are varied, continuous, and silent without speech', async () => {
+  const { talkGesture } = await import('../campaign-stage.js');
+  const cue = { start: 0, end: 40, text: 'Hôm nay mình kể bạn nghe nè', ingredient: -1 };
+  let previous = talkGesture(0, cue), poses = new Set();
+  for (let t = 1 / 25; t < 40; t += 1 / 25) {
+    const g = talkGesture(t, cue);
+    for (const key of ['leftArm', 'leftElbow', 'rightArm', 'rightElbow', 'headTilt']) {
+      assert.ok(Number.isFinite(g[key]));
+      assert.ok(Math.abs(g[key] - previous[key]) < .2, `${key} jumps at ${t.toFixed(2)}s`);
+    }
+    poses.add(`${Math.round(g.leftArm * 2)}/${Math.round(g.rightArm * 2)}`); previous = g;
+  }
+  assert.ok(poses.size >= 4, `only ${poses.size} distinct gestures`);
+  assert.equal(talkGesture(5, null).rightArm, 0);
+  const board = { start: 0, end: 40, text: 'Ý đầu tiên', ingredient: 0 };
+  for (let t = 0; t < 40; t += .5) assert.equal(talkGesture(t, board).rightArm, 0, 'right paw stays free for the board');
+});

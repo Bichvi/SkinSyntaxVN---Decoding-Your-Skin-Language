@@ -234,7 +234,7 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
           </div>
 
           <div class="d-flex gap-2 mb-2.5">
-            <input class="form-control" type="text" id="captchaInput" placeholder="Nhập captcha" autocomplete="off" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
+            <input class="form-control" type="text" id="captchaInput" name="captcha" placeholder="Nhập captcha" autocomplete="off" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
             <div class="d-flex align-items-center justify-content-center text-white fw-semibold px-3" id="captchaCode" data-captcha="<?= h(strtolower($captchaSeed)) ?>" style="background: #183B2B; border-radius: 6px; font-family: monospace; letter-spacing: 2px; min-width: 90px; font-size: 0.9rem;"><?= h(strtolower($captchaSeed)) ?></div>
             <button class="btn btn-outline-secondary px-3" type="button" onclick="location.reload();" style="border-radius: 6px; width: 42px; height: 42px; display: grid; place-items: center; border-color: var(--border);">
               <i class="fa-solid fa-rotate-right"></i>
@@ -242,7 +242,7 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
           </div>
 
           <div class="d-flex gap-2 mb-2.5">
-            <input class="form-control" type="text" id="otpInput" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
+            <input class="form-control" type="text" id="otpInput" name="otp" inputmode="numeric" maxlength="6" placeholder="Nhập mã xác thực 6 số" autocomplete="one-time-code" style="border-radius: 6px; padding: 10px 14px; background: #FAFAFA; border-color: var(--border); font-size: 0.88rem;" required>
             <button class="btn fw-semibold text-white px-4" id="otpButton" type="button" style="background: #183B2B; border-radius: 6px; white-space: nowrap; font-size: 0.86rem;">Lấy mã</button>
           </div>
           <div class="auth-register-note mb-2.5" id="otpHint" style="font-size: 0.76rem; color: #64748B;">Nhập đúng email, captcha rồi bấm Lấy mã.</div>
@@ -365,13 +365,72 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
   const otpInput = document.getElementById('otpInput');
   const otpButton = document.getElementById('otpButton');
   const otpHint = document.getElementById('otpHint');
-  let generatedOtp = '';
+  const signupOtpUrl = <?= json_encode(BASE_URL . '/index.php?r=gui_otp_dang_ky') ?>;
+  let otpCooldown = 0;
+  let otpTimer = null;
 
-  const buildOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+  const setOtpButtonState = () => {
+    otpButton.disabled = otpCooldown > 0;
+    otpButton.textContent = otpCooldown > 0 ? `${otpCooldown}s` : 'Lấy mã';
+  };
 
-  otpButton.addEventListener('click', () => {
-    generatedOtp = buildOtp();
-    otpHint.textContent = 'Mã OTP xác thực của bạn là: ' + generatedOtp;
+  const startOtpCooldown = (seconds) => {
+    otpCooldown = Math.max(0, Number.parseInt(seconds, 10) || 0);
+    setOtpButtonState();
+    if (otpTimer) window.clearInterval(otpTimer);
+    if (otpCooldown <= 0) return;
+    otpTimer = window.setInterval(() => {
+      otpCooldown -= 1;
+      if (otpCooldown <= 0) {
+        otpCooldown = 0;
+        window.clearInterval(otpTimer);
+        otpTimer = null;
+      }
+      setOtpButtonState();
+    }, 1000);
+  };
+
+  otpButton.addEventListener('click', async () => {
+    const email = (form.elements.email.value || '').trim();
+    const captcha = (captchaInput.value || '').trim();
+    if (email === '') {
+      otpHint.textContent = 'Vui lòng nhập email trước khi lấy OTP.';
+      form.elements.email.focus();
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      otpHint.textContent = 'Email chưa hợp lệ. Vui lòng kiểm tra lại.';
+      form.elements.email.focus();
+      return;
+    }
+    if (captcha === '') {
+      otpHint.textContent = 'Vui lòng nhập captcha trước khi lấy OTP.';
+      captchaInput.focus();
+      return;
+    }
+
+    otpButton.disabled = true;
+    otpButton.textContent = 'Đang gửi...';
+    try {
+      const response = await fetch(signupOtpUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: JSON.stringify({email, captcha})
+      });
+      const payload = await response.json();
+      if (payload.ok) {
+        otpHint.textContent = payload.message || 'OTP đã được gửi tới email của bạn.';
+        startOtpCooldown(60);
+        otpInput.focus();
+        return;
+      }
+      otpHint.textContent = payload.message || 'Không gửi được OTP. Vui lòng thử lại.';
+      startOtpCooldown(response.status === 429 ? payload.retry_after : 0);
+    } catch (error) {
+      otpHint.textContent = 'Không thể kết nối tới máy chủ để gửi OTP. Vui lòng thử lại.';
+      startOtpCooldown(0);
+    }
   });
 
   form.addEventListener('submit', (event) => {
@@ -386,9 +445,9 @@ $captchaSeed = strtoupper(substr(bin2hex(random_bytes(4)), 0, 4));
       return;
     }
 
-    if (generatedOtp === '' || otpValue !== generatedOtp) {
+    if (otpValue === '') {
       event.preventDefault();
-      otpHint.textContent = 'Mã OTP chưa đúng hoặc chưa tạo. Vui lòng bấm Lấy mã.';
+      otpHint.textContent = 'Vui lòng nhập mã OTP đã được gửi tới email.';
       otpInput.focus();
     }
   });

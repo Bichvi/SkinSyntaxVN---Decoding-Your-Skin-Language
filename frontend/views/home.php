@@ -392,7 +392,7 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
         <span class="text-muted small" style="font-size: 0.82rem;">Danh mục đang có sản phẩm để bạn khám phá.</span>
       </div>
       <div class="home-card-rail__tools">
-        <a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.82rem;">Xem tất cả danh mục &rarr;</a>
+        <a href="<?= BASE_URL ?>/index.php?r=danhmuc" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.82rem;">Xem tất cả danh mục &rarr;</a>
         <div class="home-rail-actions" aria-label="Điều hướng danh mục">
           <button type="button" class="home-rail-button" data-home-card-prev aria-label="Danh mục trước"><i class="fas fa-chevron-left"></i></button>
           <button type="button" class="home-rail-button" data-home-card-next aria-label="Danh mục tiếp theo"><i class="fas fa-chevron-right"></i></button>
@@ -589,11 +589,7 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
                       $pBadge = 'Gợi ý cho bạn';
                   }
               }
-              if ($pMode === 'SIMPLE' && $pSig === 'SIMPLE') {
-                  $renderHomeProductCard($p, $pBadge, HomeCardReason::for($p), 'Vì sao gợi ý');
-              } else {
-                  $renderHomeProductCard($p, $pBadge);
-              }
+              $renderHomeProductCard($p, $pBadge, HomeCardReason::for($p), 'Vì sao gợi ý');
             ?>
           </div>
         <?php endforeach; ?>
@@ -716,16 +712,10 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
       <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Sản phẩm bán chạy">
         <?php foreach ($bestSellerProducts as $p): ?>
           <div class="home-product-rail__item">
-            <?php $renderHomeProductCard($p, 'Bán chạy 30 ngày'); ?>
+            <?php $renderHomeProductCard($p, 'Bán chạy 30 ngày', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
-    </section>
-  <?php elseif ($dbUnavailableMessage === ''): ?>
-    <section class="mb-5 home-product-section home-empty-state" aria-label="Dữ liệu bán hàng gần đây">
-      <span class="home-section-kicker">DỮ LIỆU BÁN HÀNG GẦN ĐÂY</span>
-      <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.25rem;">Chưa đủ dữ liệu để xếp hạng</h2>
-      <p class="text-muted small mb-0 mt-1">SkinSyntax chỉ hiển thị bảng bán chạy khi có đơn hoàn thành trong 30 ngày gần nhất.</p>
     </section>
   <?php endif; ?>
 
@@ -848,14 +838,14 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
             <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
             <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
           </div>
-          <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Khám phá thêm <i class="fas fa-arrow-right ms-1"></i></a>
+          <a href="<?= BASE_URL ?>/index.php?r=goiy" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;" title="Xem toàn bộ gợi ý cá nhân hóa">Xem tất cả gợi ý cho bạn <i class="fas fa-arrow-right ms-1"></i></a>
         </div>
       </div>
 
       <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Gợi ý hôm nay">
         <?php foreach ($todayProducts as $p): ?>
           <div class="home-product-rail__item">
-            <?php $renderHomeProductCard($p, 'Gợi ý hôm nay'); ?>
+            <?php $renderHomeProductCard($p, 'Gợi ý hôm nay', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -939,9 +929,10 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
         <div>
           <span class="home-section-kicker">KHÁM PHÁ CHO BẠN</span>
           <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Lướt thêm, gặp đúng món</h2>
+          <span class="text-muted small d-block" style="font-size: 0.82rem;">Sản phẩm mới mỗi lần bạn ghé, dựa trên những gì bạn đang quan tâm.</span>
         </div>
         <div class="d-flex align-items-center gap-2">
-          <a href="<?= BASE_URL ?>/index.php?r=beauty_swipe" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.82rem;">Lướt dạng thẻ <i class="fas fa-arrow-right ms-1"></i></a>
+          <a href="<?= BASE_URL ?>/index.php?r=beauty_swipe" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.82rem;" title="Vuốt thích/bỏ qua để Syna hiểu gu của bạn"><i class="fas fa-heart me-1"></i>Vuốt chọn nhanh <i class="fas fa-arrow-right ms-1"></i></a>
           <div class="home-rail-actions" aria-label="Điều hướng khám phá">
           <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
           <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
@@ -951,7 +942,7 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
       <div class="home-product-rail" data-home-product-rail tabindex="0" role="region" aria-label="Khám phá sản phẩm cho bạn">
         <?php foreach ($homeDiscoveryProducts as $p): ?>
           <div class="home-product-rail__item">
-            <?php $renderHomeProductCard($p, 'Khám phá cho bạn'); ?>
+            <?php $renderHomeProductCard($p, 'Khám phá cho bạn', HomeCardReason::for($p), 'Vì sao gợi ý'); ?>
           </div>
         <?php endforeach; ?>
       </div>
@@ -961,6 +952,8 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
   <!-- 7. PERSONAL ROUTINE (CONDITIONAL BASED ON SURVEY PROFILE) -->
   <?php if (!$hasSurvey): ?>
     <?php require __DIR__ . '/partials/home_routine.php'; ?>
+  <?php elseif (!empty($routineProgress)): ?>
+    <?php require __DIR__ . '/partials/home_routine_progress.php'; ?>
   <?php else: ?>
   <section class="mb-5 p-4 bg-white border" style="border-radius: 16px; border-color: #E2E8F0 !important;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">

@@ -135,6 +135,14 @@ class HomeController {
 
     private function render($view, $data = []) {
         extract($data);
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        if (($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'live-filter') {
+            // live-filter.js chỉ lấy các vùng có id từ response; bỏ header/footer/menu để trả lời nhanh.
+            header('Vary: X-Requested-With');
+            header('Cache-Control: no-store');
+            require $viewDir . '/' . $view . '.php';
+            return;
+        }
         // menuCats dùng chung layout. Nếu MongoDB tạm mất kết nối thì không để layout làm sập trang.
         try {
             $menuCats = $this->model->menuTree();
@@ -142,7 +150,6 @@ class HomeController {
             error_log('layout menu MongoDB error: ' . $e->getMessage());
             $menuCats = [];
         }
-        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
         require $viewDir . '/layouts/header.php';
         require $viewDir . '/' . $view . '.php';
         require $viewDir . '/layouts/footer.php';
@@ -159,6 +166,10 @@ class HomeController {
         // Loại da khách đã chọn ở tab routine mẫu (chỉ dùng khi chưa đăng nhập).
         $guestSkinType = $this->guestSkinTypeFromSession();
         $favoriteProductIds = [];
+        $cartItems = [];
+        $purchaseItems = [];
+        $homeSkinProfileForRoutine = null;
+        $homeSkinFromQuiz = false;
         $homepageRefreshSeed = null;
         $homeCategoryCards = [];
         $homeBrandCards = [];
@@ -246,7 +257,7 @@ class HomeController {
             }
             $homeCategoryCards = $this->selectHomepageCardWindow(
                 (array)($publicData['category_cards'] ?? []),
-                10,
+                24, // hiện đủ mọi danh mục cha để rail cuộn được
                 $homepageRefreshSeed,
                 'id'
             );
@@ -360,9 +371,18 @@ class HomeController {
                         }
                     }
                 }
+                // Hồ sơ từ khảo sát nhanh (session): khách, hoặc thành viên chưa có khảo sát đầy đủ.
+                $guestProfile = $guestSkinType !== null
+                    ? ['skin_type' => $guestSkinType, 'concerns' => $this->guestConcernsFromSession()]
+                    : null;
                 $homeGraphSkinProfile = $isLoggedIn
                     ? $this->homeGraphSkinProfile((string)($_SESSION['user']['email'] ?? ''))
-                    : ($guestSkinType !== null ? ['skin_type' => $guestSkinType, 'concerns' => []] : null);
+                    : null;
+                if ($homeGraphSkinProfile === null && $guestProfile !== null) {
+                    $homeGraphSkinProfile = $guestProfile;
+                    $homeSkinFromQuiz = true;
+                }
+                $homeSkinProfileForRoutine = $homeGraphSkinProfile;
                 $homeGraph = $this->homeGraphRecommender()->build([
                     'seen_ids' => $recentViewed,
                     'cart_ids' => array_keys($cartItems),
@@ -431,6 +451,18 @@ class HomeController {
                 error_log('[HOME_ROUTINE] skipped: ' . get_class($e));
                 $routineStarter = [];
             }
+        }
+        $routineProgress = [];
+        if ($hasSurvey) {
+            $progressSkin = (string)($homeSkinProfileForRoutine['skin_type'] ?? '');
+            if (!in_array($progressSkin, SearchSkinProfile::SKIN_TYPES, true)) {
+                $progressSkin = 'moi_loai_da';
+            }
+            $routineProgress = $this->buildRoutineProgress(
+                array_map('strval', array_keys($cartItems)),
+                array_map('strval', array_column($purchaseItems, 'ma_san_pham')),
+                $progressSkin
+            );
         }
         try {
             $homeDiscovery = HomeDiscovery::data();
@@ -544,7 +576,99 @@ class HomeController {
             'homeLiveProduct' => $homeLiveProduct,
             'homeLiveProducts' => $homeLiveProducts,
             'synaSurveyCompleted' => $synaSurveyCompleted,
+            'routineProgress' => $routineProgress,
+            'homeSkinFromQuiz' => $homeSkinFromQuiz,
+            'homeGuestSkinType' => $guestSkinType,
+            'homeGuestConcern' => $this->guestConcernsFromSession()[0] ?? '',
         ]);
+    }
+
+    /** Concern đã chọn ở khảo sát nhanh (session) nếu hợp lệ, trả về mảng 0-1 phần tử. */
+    private function guestConcernsFromSession(): array {
+        $c = $_SESSION['guest_concern'] ?? null;
+        return (is_string($c) && in_array($c, SearchSkinProfile::CONCERNS, true)) ? [$c] : [];
+    }
+
+    /**
+     * Tiến độ routine 4 bước cho thành viên đã khảo sát: bước nào đã có (giỏ hàng / đã mua) và gợi ý SP cho bước còn thiếu.
+     * Lỗi bất kỳ -> [] để view quay về giao diện tĩnh.
+     * @return array<int,array{step:string,label:string,status:string,source:?string,product:?array}>
+     */
+    private function buildRoutineProgress(array $cartIds, array $purchasedIds, string $skinKey): array {
+        try {
+            $cartIds = array_values(array_unique(array_filter(array_map('strval', $cartIds), 'strlen')));
+            $purchasedIds = array_values(array_unique(array_filter(array_map('strval', $purchasedIds), 'strlen')));
+            $allIds = array_values(array_unique(array_merge($cartIds, $purchasedIds)));
+            $owned = [];
+            if ($allIds !== []) {
+                $byId = [];
+                foreach ($this->model->findVisibleByIds($allIds) as $p) {
+                    if (is_array($p)) {
+                        $byId[(string)($p['ma_san_pham'] ?? $p['id'] ?? '')] = $p;
+                    }
+                }
+                // Giỏ hàng trước (hiện tại), rồi đến đã mua.
+                foreach ([['cart', $cartIds], ['purchased', $purchasedIds]] as [$source, $ids]) {
+                    foreach ($ids as $id) {
+                        $p = $byId[$id] ?? null;
+                        $step = is_array($p) ? SanPham::routineStepOf($p) : null;
+                        if ($step !== null && !isset($owned[$step])) {
+                            $owned[$step] = ['source' => $source, 'product' => $p];
+                        }
+                    }
+                }
+            }
+            $starter = [];
+            foreach ($this->model->routineStarter($skinKey) as $item) {
+                $starter[(string)($item['step'] ?? '')] = $item['product'] ?? null;
+            }
+            $out = [];
+            foreach (SanPham::routineStepLabels() as $step => $label) {
+                if (isset($owned[$step])) {
+                    $out[] = ['step' => $step, 'label' => $label, 'status' => 'owned', 'source' => $owned[$step]['source'], 'product' => $owned[$step]['product']];
+                } else {
+                    $sp = $starter[$step] ?? null;
+                    $out[] = ['step' => $step, 'label' => $label, 'status' => 'missing', 'source' => null, 'product' => is_array($sp) ? $sp : null];
+                }
+            }
+            return $out;
+        } catch (Throwable $e) {
+            error_log('[HOME_ROUTINE_PROGRESS] skipped: ' . get_class($e));
+            return [];
+        }
+    }
+
+    /** POST index.php?r=home_quick_profile: lưu loại da (+ vấn đề) từ khảo sát nhanh vào session rồi quay lại trang chủ. */
+    public function quickProfile(): void {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            http_response_code(405);
+            header('Allow: POST');
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Phương thức không được hỗ trợ';
+            return;
+        }
+        $token = $_POST['csrf'] ?? null;
+        $expected = $_SESSION['home_quick_profile_csrf'] ?? '';
+        if (!is_string($token) || $expected === '' || !hash_equals($expected, $token)) {
+            http_response_code(403);
+            return;
+        }
+        $skin = $_POST['skin'] ?? '';
+        $concern = $_POST['concern'] ?? '';
+        $concern = is_string($concern) ? $concern : '';
+        if (!is_string($skin) || !in_array($skin, SearchSkinProfile::SKIN_TYPES, true)
+            || ($concern !== '' && !in_array($concern, SearchSkinProfile::CONCERNS, true))) {
+            http_response_code(400);
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Yêu cầu không hợp lệ';
+            return;
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION['guest_skin_type'] = $skin;
+            $_SESSION['guest_concern'] = $concern;
+            session_write_close();
+        }
+        header('Location: ' . BASE_URL . '/index.php#home-graph-skin', true, 303);
     }
 
     /** Loại da khách đã chọn (session) nếu hợp lệ, không thì null. */
@@ -1357,6 +1481,10 @@ class HomeController {
             'gia_tu' => trim((string)($_GET['gia_tu'] ?? $_GET['price_min'] ?? '')),
             'gia_den' => trim((string)($_GET['gia_den'] ?? $_GET['price_max'] ?? '')),
             'sort' => trim((string)($_GET['sort'] ?? 'default')),
+            'loai_da' => trim((string)($_GET['loai_da'] ?? '')),
+            'danh_gia' => trim((string)($_GET['danh_gia'] ?? '')),
+            'giam_gia' => trim((string)($_GET['giam_gia'] ?? '')),
+            'con_hang' => trim((string)($_GET['con_hang'] ?? '')),
         ];
 
         // Case A: Guest user (Not logged in)
@@ -1374,6 +1502,7 @@ class HomeController {
                 'publicSections' => $publicData['sections'],
                 'brandOptions' => $publicData['brands'],
                 'categoryOptions' => $publicData['categories'],
+                'facets' => $publicData['facets'] ?? null,
                 'mongoUnavailableMessage' => $publicData['message'],
             ]);
             return;
@@ -1406,6 +1535,7 @@ class HomeController {
                     'publicSections' => $publicData['sections'],
                     'brandOptions' => $publicData['brands'],
                     'categoryOptions' => $publicData['categories'],
+                    'facets' => $publicData['facets'] ?? null,
                     'mongoUnavailableMessage' => $publicData['message'],
                     'temporaryConsultation' => $temporaryConsultation,
                 ]);
@@ -1451,6 +1581,7 @@ class HomeController {
             'totalFiltered' => $publicData['totalFiltered'] ?? 0,
             'brandOptions' => $publicData['brands'] ?? [],
             'categoryOptions' => $publicData['categories'] ?? [],
+            'facets' => $publicData['facets'] ?? null,
             'profileUnavailableMessage' => $profileMessage,
             'temporaryConsultation' => $temporaryConsultation,
         ]);
@@ -1658,26 +1789,45 @@ class HomeController {
             'sections' => [],
             'brands' => [],
             'categories' => [],
+            'facets' => null,
             'message' => '',
         ];
 
         try {
             $sortKey = trim((string)($filters['sort'] ?? 'default'));
-            $hasActiveFilter = ($filters['keyword'] !== '') || ($filters['gia_tu'] !== '') || ($filters['gia_den'] !== '') || ($filters['danh_muc'] !== '') || ($filters['thuong_hieu'] !== '') || ($sortKey !== '' && $sortKey !== 'default');
+            $hasActiveFilter = ($filters['keyword'] !== '') || ($filters['gia_tu'] !== '') || ($filters['gia_den'] !== '') || ($filters['danh_muc'] !== '') || ($filters['thuong_hieu'] !== '')
+                || (($filters['loai_da'] ?? '') !== '') || (($filters['danh_gia'] ?? '') !== '') || (($filters['giam_gia'] ?? '') !== '') || (($filters['con_hang'] ?? '') !== '')
+                || ($sortKey !== '' && $sortKey !== 'default');
+            $extra = [
+                'brand' => $filters['thuong_hieu'],
+                'price_min' => $filters['gia_tu'],
+                'price_max' => $filters['gia_den'],
+                'skin' => in_array(($filters['loai_da'] ?? ''), ['dau', 'kho', 'nhay_cam', 'mun'], true) ? $filters['loai_da'] : '',
+                'min_rating' => ($filters['danh_gia'] ?? '') === '4' ? 4 : 0,
+                'on_sale' => ($filters['giam_gia'] ?? '') === '1',
+                'in_stock' => ($filters['con_hang'] ?? '') === '1',
+            ];
             if ($hasActiveFilter) {
-                $searchParams = [
-                    'keyword' => $filters['keyword'],
-                    'price_min' => $filters['gia_tu'],
-                    'price_max' => $filters['gia_den'],
-                    'category' => $filters['danh_muc'],
-                    'brand' => $filters['thuong_hieu'],
-                    'sort' => $sortKey,
-                ];
-                $searchResult = $this->model->searchProducts($searchParams, $sortKey !== '' ? $sortKey : 'popular', 1, 24);
+                // Dùng cùng bộ tìm của trang tất cả (tách từ khóa, không phân biệt dấu, xếp hạng) thay vì regex nguyên cụm
+                // Cache 120 s như trang tất cả: đổi qua lại bộ lọc trả về tức thì
+                $goiySort = $sortKey !== '' ? $sortKey : 'default';
+                $searchResult = ProductQueryCache::remember(
+                    'goiyFilter:' . md5(json_encode([$filters['keyword'], $filters['danh_muc'], $goiySort, $extra, 'v' => 1], JSON_UNESCAPED_UNICODE)),
+                    120,
+                    fn() => $this->model->paginate(1, 24, $filters['keyword'], '', $filters['danh_muc'], '', true, '', $goiySort, $extra)
+                );
                 $data['products'] = $searchResult['items'] ?? [];
                 $data['totalFiltered'] = (int)($searchResult['total'] ?? 0);
+            } else {
+                // Các khối gợi ý chỉ hiện khi chưa lọc
+                $data['sections'] = $this->model->publicRecommendationSections(6, $filters, $sortKey);
             }
-            $data['sections'] = $this->model->publicRecommendationSections(6, $filters, $sortKey);
+            try {
+                $data['facets'] = $this->model->catalogFacets($filters['keyword'], '', $filters['danh_muc'], $extra);
+            } catch (Throwable $e) {
+                error_log($logContext . ' facets error: ' . $e->getMessage());
+                $data['facets'] = null;
+            }
             $data['brands'] = method_exists($this->model, 'listBrandOptions') ? ProductQueryCache::remember('filterOptions:brands', 600, fn() => $this->model->listBrandOptions()) : [];
             $data['categories'] = method_exists($this->model, 'listCategoryOptions') ? ProductQueryCache::remember('filterOptions:categories', 600, fn() => $this->model->listCategoryOptions()) : [];
         } catch (Throwable $e) {
@@ -1686,6 +1836,55 @@ class HomeController {
         }
 
         return $data;
+    }
+
+    /**
+     * Trang "Tất cả danh mục": danh mục cha + các danh mục lá (kèm số sản phẩm),
+     * mỗi liên kết dẫn tới tatca lọc theo loai[].
+     */
+    public function danhmuc(): void {
+        $groups = [];
+        $message = '';
+        try {
+            $cards = method_exists($this->model, 'homepageCategoryCards') ? $this->model->homepageCategoryCards(24) : [];
+            $facets = $this->model->catalogFacets('', '', '', []);
+            $countById = [];
+            foreach ((array)($facets['categories'] ?? []) as $c) {
+                $countById[(int)($c['id'] ?? 0)] = (int)($c['count'] ?? 0);
+            }
+            $hierarchy = $this->model->getCanonicalCategoryHierarchy();
+            $byId = (array)($hierarchy['by_id'] ?? []);
+            foreach ($cards as $card) {
+                $pid = (int)($card['id'] ?? 0);
+                $leafIds = array_values(array_unique(array_map('intval', (array)($hierarchy['leaf_ids_by_node'][$pid] ?? [$pid]))));
+                $leaves = [];
+                $total = 0;
+                foreach ($leafIds as $lid) {
+                    $cnt = (int)($countById[$lid] ?? 0);
+                    if ($cnt <= 0) {
+                        continue;
+                    }
+                    $total += $cnt;
+                    $leaves[] = ['id' => $lid, 'name' => (string)($byId[$lid]['ten_danh_muc'] ?? ('#' . $lid)), 'count' => $cnt];
+                }
+                if (!$leaves) {
+                    continue;
+                }
+                usort($leaves, static fn($a, $b) => [$b['count'], $a['name']] <=> [$a['count'], $b['name']]);
+                $groups[] = [
+                    'id' => $pid,
+                    'name' => (string)($card['name'] ?? ''),
+                    'product' => is_array($card['product'] ?? null) ? $card['product'] : [],
+                    'count' => $total,
+                    'leaf_ids' => array_column($leaves, 'id'),
+                    'leaves' => $leaves,
+                ];
+            }
+        } catch (Throwable $e) {
+            error_log('danhmuc MongoDB error: ' . $e->getMessage());
+            $message = 'Hiện chưa thể tải danh mục sản phẩm. Vui lòng thử lại sau.';
+        }
+        $this->render('danhmuc', ['categoryGroups' => $groups, 'categoryMessage' => $message]);
     }
 
     public function productCollection(): void {

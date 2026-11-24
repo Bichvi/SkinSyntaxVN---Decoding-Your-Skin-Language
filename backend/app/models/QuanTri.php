@@ -56,6 +56,7 @@ class QuanTri {
                 'updated_at' => new \MongoDB\BSON\UTCDateTime()
             ]]
         );
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
     }
 
     public function normalizeOrderStatus($status): string {
@@ -333,6 +334,7 @@ class QuanTri {
         ];
         
         $this->db->khach_hang->insertOne($payload);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
         return $payload;
     }
 
@@ -1411,6 +1413,7 @@ class QuanTri {
         try {
             if ($id !== null && $id > 0) {
                 $this->db->khach_hang->updateOne(['ma_kh' => $id], ['$set' => $payload]);
+                if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
                 $data['__old_email'] = $oldEmail;
                 $this->syncNguoiDungByCustomer($id, $data);
                 return true;
@@ -1428,6 +1431,7 @@ class QuanTri {
             $payload['ma_kh'] = $this->getNextNumericId('khach_hang', 'ma_kh');
             $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
             $this->db->khach_hang->insertOne($payload);
+            if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
 
             // Tạo tài khoản đăng nhập nguoidung tương ứng nếu có email
             if ($email !== '') {
@@ -1462,6 +1466,7 @@ class QuanTri {
 
             // Chỉ xóa đúng hồ sơ được chọn. Các hồ sơ trùng email cũ có thể đang giữ đơn hàng khác.
             $this->db->khach_hang->deleteOne(['ma_kh' => $id]);
+            if (class_exists('TaiKhoan', false)) TaiKhoan::forgetRequestCache();
 
             // Chỉ xóa tài khoản đăng nhập khi không còn khách hàng hoặc nhân viên dùng email này.
             if ($regex) {
@@ -2399,6 +2404,7 @@ class QuanTri {
                 ['ma_kh' => $maKh],
                 ['$set' => ['last_chat_read' => new \MongoDB\BSON\UTCDateTime()]]
             );
+            if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
             return true;
         } catch (Throwable $e) {
             return false;

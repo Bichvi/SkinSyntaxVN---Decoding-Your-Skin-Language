@@ -98,16 +98,26 @@
         var gap = parseFloat(styles.columnGap || styles.gap || '14') || 14;
         return current.getBoundingClientRect().width + gap;
       };
+      // Cập nhật trạng thái nút: khóa khi không cuộn được / đang ở đầu / ở cuối.
+      var updateButtons = function () {
+        var maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        var canScroll = maxLeft > 4;
+        if (previous) previous.disabled = !canScroll || viewport.scrollLeft <= 4;
+        if (next) next.disabled = !canScroll || viewport.scrollLeft >= maxLeft - 4;
+      };
+      // Kẹp trong [0, maxLeft], không quay vòng để khớp trạng thái nút.
       var move = function (direction) {
         var maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-        var target = viewport.scrollLeft + direction * stepSize();
-        if (target > maxLeft - 4) target = 0;
-        if (target < 4) target = maxLeft;
+        var target = Math.min(maxLeft, Math.max(0, viewport.scrollLeft + direction * stepSize()));
         viewport.scrollTo({ left: target, behavior: reducedMotion ? 'auto' : 'smooth' });
       };
 
       if (previous) previous.addEventListener('click', function () { move(-1); });
       if (next) next.addEventListener('click', function () { move(1); });
+      viewport.addEventListener('scroll', updateButtons, { passive: true });
+      window.addEventListener('resize', updateButtons, { passive: true });
+      window.addEventListener('load', updateButtons);
+      updateButtons();
 
       var touchStartX = 0;
       var touchStartY = 0;

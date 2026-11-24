@@ -35,6 +35,9 @@
 .cin-card .ssf-actions form { width: 100%; }
 .cin-status { margin: 8px 0 0; font-size: .82rem; color: #3C5A4A; }
 
+.cin-overlap { background: #fdecec; border-left: 4px solid #d93025; color: #a50e0e; border-radius: 6px; padding: 6px 8px; font-size: 12px; line-height: 1.4; margin-bottom: 6px; overflow-wrap: anywhere; }
+.cin-overlap--info { background: #fff6db; border-left-color: #f2a900; color: #7a5300; }
+
 @media (max-width: 575.98px) {
   .cin-section { padding: 14px; border-radius: 12px; }
 }

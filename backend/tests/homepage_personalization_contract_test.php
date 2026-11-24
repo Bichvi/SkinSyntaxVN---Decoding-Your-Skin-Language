@@ -22,7 +22,7 @@ $windowBIds = array_column($windowB, 'ma_san_pham');
 $checks = [
     'request seed is generated for homepage refreshes' => strpos($homeController, 'random_int(1, 2147483647)') !== false,
     'homepage receives the refresh seed and latest candidate pool' => strpos($homeController, '$homepageRefreshSeed, $latest') !== false,
-    'homepage public cache key is versioned for the wider pool' => strpos($homeController, "home:composite_public:v2") !== false,
+    'homepage public cache key is versioned for the wider pool' => preg_match('/home:composite_public:v(?:[2-9]|[1-9][0-9]+)\b/', $homeController) === 1,
     'latest candidate pool is wider than the visible four-card window' => strpos($homeController, 'latest(24, true, true)') !== false,
     'model accepts an optional refresh seed' => strpos($sanPham, '?int $refreshSeed = null') !== false,
     'model returns the refresh-aware today section' => strpos($sanPham, "'today' => \$todayProducts") !== false,

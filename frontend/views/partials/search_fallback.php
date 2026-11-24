@@ -77,8 +77,15 @@ $ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
     $headingId = 'ssf-h-' . $sKey . '-' . (int)$sIdx;
   ?>
     <section class="ssf-section" aria-labelledby="<?= $ssfE($headingId) ?>" data-ssf-section-key="<?= $ssfE($sKey) ?>">
-      <h4 class="ssf-section-title" id="<?= $ssfE($headingId) ?>"><?= $ssfE($section['title'] ?? '') ?></h4>
-      <div class="ssf-grid">
+      <div class="ssf-section-head">
+        <h4 class="ssf-section-title" id="<?= $ssfE($headingId) ?>"><?= $ssfE($section['title'] ?? '') ?></h4>
+        <span class="ssf-section-count"><?= count($ssfItems) ?> sản phẩm</span>
+      </div>
+      <!-- Thanh trượt ngang: kéo/vuốt hoặc bấm mũi tên để xem thêm -->
+      <div class="ssf-rail">
+      <button type="button" class="ssf-rail-btn ssf-rail-prev" data-ssf-rail="-1" aria-label="Xem sản phẩm trước" disabled><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+      <button type="button" class="ssf-rail-btn ssf-rail-next" data-ssf-rail="1" aria-label="Xem thêm sản phẩm"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+      <div class="ssf-grid ssf-grid--rail" tabindex="0" role="group" aria-labelledby="<?= $ssfE($headingId) ?>">
         <?php foreach ($ssfItems as $p):
           if (!is_array($p)) continue;
           $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
@@ -135,6 +142,7 @@ $ssfExpAttr = (!empty($ssfExp['id']) && !empty($ssfExp['variant']))
             </div>
           </div>
         <?php endforeach; ?>
+      </div>
       </div>
     </section>
   <?php endforeach; ?>

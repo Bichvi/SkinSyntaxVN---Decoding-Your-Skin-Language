@@ -789,6 +789,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setLineTotal(row);
         renderSummary();
         syncHeaderCart();
+        document.dispatchEvent(new CustomEvent('cart:changed'));
       })
       .catch(() => {
         input.value = String(prevQty);
@@ -817,6 +818,7 @@ document.addEventListener('DOMContentLoaded', function () {
           row.remove();
           renderSummary();
           syncHeaderCart();
+          document.dispatchEvent(new CustomEvent('cart:changed'));
 
           if (!document.querySelector('.cart-item')) {
             document.getElementById('clearCartPanel')?.remove();

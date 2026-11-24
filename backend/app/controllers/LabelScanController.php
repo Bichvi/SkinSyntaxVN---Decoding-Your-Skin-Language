@@ -20,6 +20,10 @@ class LabelScanController
     private $pdo;
     /** @var array<string,callable> client|lookup|env|context|rate_limit|csrf — chỉ để test */
     private array $hooks;
+    /** Trạng thái lần gọi Flask gần nhất (chỉ để đo lường): đã gọi chưa, đầu vào ảnh/chữ, kết quả đã validate (hoặc null). */
+    private bool $flaskCalled = false;
+    private string $lastInput = 'photo';
+    private ?array $lastFlask = null;
 
     public function __construct($pdo = null, array $hooks = [])
     {
@@ -41,6 +45,7 @@ class LabelScanController
             }
             [$status, $body, $headers] = $this->process($_POST, $files, $_SERVER);
             $this->remember($body, time()); // trước mọi header()/echo
+            $this->track(time());
         } catch (Throwable $e) {
             error_log('[LABEL_SCAN] controller error: ' . get_class($e));
             $body = self::error('unavailable');
@@ -87,6 +92,47 @@ class LabelScanController
             if (!isset($this->hooks['remember']) && session_status() === PHP_SESSION_ACTIVE) {
                 session_write_close();
             }
+        }
+    }
+
+    /**
+     * Đo lường (ẩn danh): ghi một sự kiện `scan` và nhớ sản phẩm đã hiển thị để gán add_to_cart về sau.
+     * Chỉ chạy khi Flask thực sự được gọi. Mọi lỗi đều nuốt, không đụng response.
+     */
+    public function track(int $now): ?array
+    {
+        if (!$this->flaskCalled) {
+            return null;
+        }
+        $this->flaskCalled = false; // mỗi lần gọi Flask chỉ ghi một lần
+        try {
+            require_once __DIR__ . '/../services/LabelScanMetrics.php';
+            $doc = LabelScanMetrics::buildScanDoc($this->lastFlask, $this->lastInput, LabelScanMetrics::sessionHash(), LabelScanMetrics::userHash(), LabelScanMetrics::ts($now));
+            if (isset($this->hooks['metrics'])) {
+                ($this->hooks['metrics'])($doc);
+                return $doc;
+            }
+            LabelScanMetrics::recordScan($this->pdo, $doc);
+            $shown = LabelScanMetrics::shownMap($doc);
+            if ($doc['outcome'] === 'ok' && $shown) {
+                $reopened = false;
+                try {
+                    if (session_status() !== PHP_SESSION_ACTIVE) {
+                        $reopened = @session_start() !== false;
+                    }
+                    if (session_status() === PHP_SESSION_ACTIVE) {
+                        LabelScanMetrics::rememberShown($_SESSION, $shown, $now);
+                    }
+                } finally {
+                    if ($reopened && session_status() === PHP_SESSION_ACTIVE) {
+                        session_write_close();
+                    }
+                }
+            }
+            return $doc;
+        } catch (Throwable $e) {
+            error_log('[LABEL_SCAN] track failed: ' . get_class($e));
+            return null;
         }
     }
 
@@ -242,6 +288,7 @@ class LabelScanController
         $hasUpload = is_array($upload) && (int)($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
         $rawText = is_string($post['ingredients_text'] ?? null) ? $post['ingredients_text'] : null;
         $hasText = is_string($rawText) && trim($rawText) !== '';
+        $this->lastInput = $hasUpload ? 'photo' : 'text';
         if ($hasUpload === $hasText) {
             return [400, self::error('bad_request'), []];
         }
@@ -321,6 +368,12 @@ class LabelScanController
         $client = $this->client();
         $res = $client ? $client->labelAnalyze($payload) : null;
         unset($payload);
+        if ($client) {
+            // Đo lường: chỉ khi Flask thực sự được gọi; Flask từ chối (too_large/rate_limited/disabled) thì không tốn gì
+            $rejected = is_array($res) && isset($res['__error']);
+            $this->flaskCalled = !$rejected;
+            $this->lastFlask = ($res !== null && !$rejected) ? $res : null;
+        }
         if ($res === null) {
             return [200, self::error('unavailable'), []];
         }

@@ -162,6 +162,10 @@ switch ($r) {
         (new HomeController($pdo))->routine();
         break;
 
+    case 'home_quick_profile':
+        (new HomeController($pdo))->quickProfile();
+        break;
+
     case 'flash_sale':
         (new HomeController($pdo))->flashSale();
         break;
@@ -186,6 +190,10 @@ switch ($r) {
 
     case 'danhsach':
         (new SanPhamController($pdo))->danhsach();
+        break;
+
+    case 'danhmuc':
+        (new HomeController($pdo))->danhmuc();
         break;
 
     case 'product_collection':

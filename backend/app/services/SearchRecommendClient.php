@@ -362,6 +362,7 @@ final class SearchRecommendClient
     public const LABEL_STATUSES = ['ok', 'not_label', 'unreadable', 'vision_unavailable'];
     public const LABEL_PRODUCT_TYPES = ['cleanser', 'toner', 'serum', 'moisturizer', 'sunscreen', 'mask', 'other'];
     public const LABEL_WARNINGS = ['low_recognition', 'graph_degraded', 'profile_missing', 'cart_empty', 'internal_error'];
+    public const LABEL_OVERLAP_GROUPS = ['retinoids', 'exfoliating_acids', 'benzoyl_peroxide', 'vitamin_c'];
     public const LABEL_ALT_REASONS = ['gentler_fits_skin', 'no_cart_conflict'];
 
     /** Validate theo contract label_analyze_response.schema.json: chỉ giữ khóa đã biết, kẹp độ dài; sai kiểu -> null. */
@@ -515,10 +516,29 @@ final class SearchRecommendClient
             if ($pid === null || !in_array($a['reason_code'] ?? null, self::LABEL_ALT_REASONS, true)) {
                 continue;
             }
+            $overlaps = [];
+            foreach (is_array($a['overlaps'] ?? null) ? array_slice($a['overlaps'], 0, 4) : [] as $o) {
+                $cartPid = is_array($o) ? $idOk($o['cart_product_id'] ?? null) : null;
+                $group = is_array($o) ? ($o['group'] ?? null) : null;
+                $labelVi = is_array($o) ? ($o['label_vi'] ?? null) : null;
+                if ($cartPid === null || !is_string($group) || !in_array($group, self::LABEL_OVERLAP_GROUPS, true)
+                    || !is_string($labelVi) || $labelVi === '') {
+                    continue;
+                }
+                $cartName = $o['cart_product_name'] ?? '';
+                $overlaps[] = [
+                    'group' => $group,
+                    'label_vi' => mb_substr($labelVi, 0, 80, 'UTF-8'),
+                    'cart_product_id' => $cartPid,
+                    'cart_product_name' => is_string($cartName) ? mb_substr($cartName, 0, 200, 'UTF-8') : '',
+                    'level' => in_array($o['level'] ?? null, ['warn', 'info'], true) ? $o['level'] : 'warn',
+                ];
+            }
             $alternatives[] = [
                 'product_id' => $pid,
                 'reason_code' => $a['reason_code'],
                 'reason_params' => $strList($a['reason_params'] ?? [], 4, 80),
+                'overlaps' => $overlaps,
             ];
         }
 
@@ -527,6 +547,24 @@ final class SearchRecommendClient
             if (is_string($w) && in_array($w, self::LABEL_WARNINGS, true) && !in_array($w, $warnings, true)) {
                 $warnings[] = $w;
             }
+        }
+
+        // usage: chỉ số token từng lần gọi vision (không có nội dung) -> dùng đo chi phí, KHÔNG gửi ra trình duyệt.
+        $usage = [];
+        foreach (is_array($data['usage'] ?? null) ? array_slice(array_values($data['usage']), 0, 4) : [] as $u) {
+            if (!is_array($u) || !in_array($u['provider'] ?? null, ['groq', 'gemini'], true) || !is_string($u['model'] ?? null) || !is_bool($u['ok'] ?? null)) {
+                continue;
+            }
+            $tok = static function ($v): int {
+                return is_int($v) ? max(0, min(1000000, $v)) : 0;
+            };
+            $usage[] = [
+                'provider' => $u['provider'],
+                'model' => mb_substr($u['model'], 0, 100, 'UTF-8'),
+                'ok' => $u['ok'],
+                'prompt_tokens' => $tok($u['prompt_tokens'] ?? 0),
+                'completion_tokens' => $tok($u['completion_tokens'] ?? 0),
+            ];
         }
 
         return [
@@ -541,6 +579,7 @@ final class SearchRecommendClient
             'summary_vi' => $str($data['summary_vi'] ?? '', 600) ?? '',
             'sunscreen_note' => ($data['sunscreen_note'] ?? false) === true,
             'took_ms' => is_int($data['took_ms'] ?? null) ? max(0, $data['took_ms']) : 0,
+            'usage' => $usage,
         ];
     }
 
@@ -627,11 +666,34 @@ final class SearchRecommendClient
                         $params[] = $param;
                     }
                 }
+                $overlaps = [];
+                foreach (is_array($item['overlaps'] ?? null) ? array_slice(array_values($item['overlaps']), 0, 4) : [] as $o) {
+                    $cartPid = is_array($o) ? ($o['cart_product_id'] ?? null) : null;
+                    if (is_int($cartPid)) {
+                        $cartPid = (string)$cartPid;
+                    }
+                    $group = is_array($o) ? ($o['group'] ?? null) : null;
+                    $labelVi = is_array($o) ? ($o['label_vi'] ?? null) : null;
+                    if (!is_string($cartPid) || !preg_match(self::PRODUCT_ID_PATTERN, $cartPid)
+                        || !is_string($group) || !in_array($group, self::LABEL_OVERLAP_GROUPS, true)
+                        || !is_string($labelVi) || $labelVi === '') {
+                        continue;
+                    }
+                    $cartName = $o['cart_product_name'] ?? '';
+                    $overlaps[] = [
+                        'group' => $group,
+                        'label_vi' => mb_substr($labelVi, 0, 80, 'UTF-8'),
+                        'cart_product_id' => $cartPid,
+                        'cart_product_name' => is_string($cartName) ? mb_substr($cartName, 0, 200, 'UTF-8') : '',
+                        'level' => in_array($o['level'] ?? null, ['warn', 'info'], true) ? $o['level'] : 'warn',
+                    ];
+                }
                 $items[] = [
                     'product_id' => $pid,
                     'score' => is_numeric($item['score'] ?? null) ? (float)$item['score'] : 0.0,
                     'reason_code' => $code,
                     'reason_params' => $params,
+                    'overlaps' => $overlaps,
                 ];
             }
             if ($items) {
