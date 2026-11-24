@@ -15,7 +15,7 @@ T("Bảng KL.1 Đối chiếu mục tiêu và kết quả",
    ["Đồ thị tri thức sản phẩm trên Neo4j", "Mô hình hóa sản phẩm, thành phần, loại da, vấn đề da và 55 cặp xung đột hoạt chất", "Hoàn thành"],
    ["Chatbot RAG, tìm kiếm lai, điều phối bằng LangGraph", "Chatbot bốn nút, mười ý định, mười một công cụ, đặt hàng có OTP; bộ định tuyến đạt 92,5%", "Hoàn thành"],
    ["AI Idol Syna sinh kịch bản, giọng nói và video", "Quy trình chín bước có kiểm tra kịch bản, duyệt tự động hoặc thủ công, livestream trên website", "Hoàn thành"],
-   ["Đánh giá bằng độ đo định lượng và khảo sát Likert", "Đã đo định tuyến, công cụ đồ thị, RAGAS và gợi ý cộng tác; khảo sát nhu cầu 20 người; khảo sát hài lòng sau thử nghiệm chưa có kết quả", "Hoàn thành một phần"],
+   ["Đánh giá bằng độ đo định lượng và khảo sát Likert", "Đã đo định tuyến, công cụ đồ thị, RAGAS và gợi ý cộng tác; khảo sát nhu cầu 56 người; khảo sát hài lòng sau thử nghiệm chưa có kết quả", "Hoàn thành một phần"],
    ["Triển khai lên máy chủ thật bằng Docker Compose", "Đã có cấu hình triển khai và CI/CD, chưa đưa lên máy chủ thật", "Hoàn thành một phần"]],
   [5.2, 7.8, 2.5], size=10.5)
 P("Bên cạnh các chức năng, nhóm rút ra ba điểm khác biệt chính của SkinSyntaxVN so với các nền tảng hiện có. "
