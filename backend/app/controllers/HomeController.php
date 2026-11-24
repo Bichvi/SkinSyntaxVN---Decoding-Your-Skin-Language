@@ -134,6 +134,14 @@ class HomeController {
 
     private function render($view, $data = []) {
         extract($data);
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        if (($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'live-filter') {
+            // live-filter.js chỉ lấy các vùng có id từ response; bỏ header/footer/menu để trả lời nhanh.
+            header('Vary: X-Requested-With');
+            header('Cache-Control: no-store');
+            require $viewDir . '/' . $view . '.php';
+            return;
+        }
         // menuCats dùng chung layout. Nếu MongoDB tạm mất kết nối thì không để layout làm sập trang.
         try {
             $menuCats = $this->model->menuTree();
@@ -141,7 +149,6 @@ class HomeController {
             error_log('layout menu MongoDB error: ' . $e->getMessage());
             $menuCats = [];
         }
-        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
         require $viewDir . '/layouts/header.php';
         require $viewDir . '/' . $view . '.php';
         require $viewDir . '/layouts/footer.php';
@@ -246,7 +253,7 @@ class HomeController {
             }
             $homeCategoryCards = $this->selectHomepageCardWindow(
                 (array)($publicData['category_cards'] ?? []),
-                10,
+                24, // hiện đủ mọi danh mục cha để rail cuộn được
                 $homepageRefreshSeed,
                 'id'
             );
@@ -1342,6 +1349,10 @@ class HomeController {
             'gia_tu' => trim((string)($_GET['gia_tu'] ?? $_GET['price_min'] ?? '')),
             'gia_den' => trim((string)($_GET['gia_den'] ?? $_GET['price_max'] ?? '')),
             'sort' => trim((string)($_GET['sort'] ?? 'default')),
+            'loai_da' => trim((string)($_GET['loai_da'] ?? '')),
+            'danh_gia' => trim((string)($_GET['danh_gia'] ?? '')),
+            'giam_gia' => trim((string)($_GET['giam_gia'] ?? '')),
+            'con_hang' => trim((string)($_GET['con_hang'] ?? '')),
         ];
 
         // Case A: Guest user (Not logged in)
@@ -1359,6 +1370,7 @@ class HomeController {
                 'publicSections' => $publicData['sections'],
                 'brandOptions' => $publicData['brands'],
                 'categoryOptions' => $publicData['categories'],
+                'facets' => $publicData['facets'] ?? null,
                 'mongoUnavailableMessage' => $publicData['message'],
             ]);
             return;
@@ -1391,6 +1403,7 @@ class HomeController {
                     'publicSections' => $publicData['sections'],
                     'brandOptions' => $publicData['brands'],
                     'categoryOptions' => $publicData['categories'],
+                    'facets' => $publicData['facets'] ?? null,
                     'mongoUnavailableMessage' => $publicData['message'],
                     'temporaryConsultation' => $temporaryConsultation,
                 ]);
@@ -1436,6 +1449,7 @@ class HomeController {
             'totalFiltered' => $publicData['totalFiltered'] ?? 0,
             'brandOptions' => $publicData['brands'] ?? [],
             'categoryOptions' => $publicData['categories'] ?? [],
+            'facets' => $publicData['facets'] ?? null,
             'profileUnavailableMessage' => $profileMessage,
             'temporaryConsultation' => $temporaryConsultation,
         ]);
@@ -1643,26 +1657,45 @@ class HomeController {
             'sections' => [],
             'brands' => [],
             'categories' => [],
+            'facets' => null,
             'message' => '',
         ];
 
         try {
             $sortKey = trim((string)($filters['sort'] ?? 'default'));
-            $hasActiveFilter = ($filters['keyword'] !== '') || ($filters['gia_tu'] !== '') || ($filters['gia_den'] !== '') || ($filters['danh_muc'] !== '') || ($filters['thuong_hieu'] !== '') || ($sortKey !== '' && $sortKey !== 'default');
+            $hasActiveFilter = ($filters['keyword'] !== '') || ($filters['gia_tu'] !== '') || ($filters['gia_den'] !== '') || ($filters['danh_muc'] !== '') || ($filters['thuong_hieu'] !== '')
+                || (($filters['loai_da'] ?? '') !== '') || (($filters['danh_gia'] ?? '') !== '') || (($filters['giam_gia'] ?? '') !== '') || (($filters['con_hang'] ?? '') !== '')
+                || ($sortKey !== '' && $sortKey !== 'default');
+            $extra = [
+                'brand' => $filters['thuong_hieu'],
+                'price_min' => $filters['gia_tu'],
+                'price_max' => $filters['gia_den'],
+                'skin' => in_array(($filters['loai_da'] ?? ''), ['dau', 'kho', 'nhay_cam', 'mun'], true) ? $filters['loai_da'] : '',
+                'min_rating' => ($filters['danh_gia'] ?? '') === '4' ? 4 : 0,
+                'on_sale' => ($filters['giam_gia'] ?? '') === '1',
+                'in_stock' => ($filters['con_hang'] ?? '') === '1',
+            ];
             if ($hasActiveFilter) {
-                $searchParams = [
-                    'keyword' => $filters['keyword'],
-                    'price_min' => $filters['gia_tu'],
-                    'price_max' => $filters['gia_den'],
-                    'category' => $filters['danh_muc'],
-                    'brand' => $filters['thuong_hieu'],
-                    'sort' => $sortKey,
-                ];
-                $searchResult = $this->model->searchProducts($searchParams, $sortKey !== '' ? $sortKey : 'popular', 1, 24);
+                // Dùng cùng bộ tìm của trang tất cả (tách từ khóa, không phân biệt dấu, xếp hạng) thay vì regex nguyên cụm
+                // Cache 120 s như trang tất cả: đổi qua lại bộ lọc trả về tức thì
+                $goiySort = $sortKey !== '' ? $sortKey : 'default';
+                $searchResult = ProductQueryCache::remember(
+                    'goiyFilter:' . md5(json_encode([$filters['keyword'], $filters['danh_muc'], $goiySort, $extra, 'v' => 1], JSON_UNESCAPED_UNICODE)),
+                    120,
+                    fn() => $this->model->paginate(1, 24, $filters['keyword'], '', $filters['danh_muc'], '', true, '', $goiySort, $extra)
+                );
                 $data['products'] = $searchResult['items'] ?? [];
                 $data['totalFiltered'] = (int)($searchResult['total'] ?? 0);
+            } else {
+                // Các khối gợi ý chỉ hiện khi chưa lọc
+                $data['sections'] = $this->model->publicRecommendationSections(6, $filters, $sortKey);
             }
-            $data['sections'] = $this->model->publicRecommendationSections(6, $filters, $sortKey);
+            try {
+                $data['facets'] = $this->model->catalogFacets($filters['keyword'], '', $filters['danh_muc'], $extra);
+            } catch (Throwable $e) {
+                error_log($logContext . ' facets error: ' . $e->getMessage());
+                $data['facets'] = null;
+            }
             $data['brands'] = method_exists($this->model, 'listBrandOptions') ? ProductQueryCache::remember('filterOptions:brands', 600, fn() => $this->model->listBrandOptions()) : [];
             $data['categories'] = method_exists($this->model, 'listCategoryOptions') ? ProductQueryCache::remember('filterOptions:categories', 600, fn() => $this->model->listCategoryOptions()) : [];
         } catch (Throwable $e) {
@@ -1671,6 +1704,55 @@ class HomeController {
         }
 
         return $data;
+    }
+
+    /**
+     * Trang "Tất cả danh mục": danh mục cha + các danh mục lá (kèm số sản phẩm),
+     * mỗi liên kết dẫn tới tatca lọc theo loai[].
+     */
+    public function danhmuc(): void {
+        $groups = [];
+        $message = '';
+        try {
+            $cards = method_exists($this->model, 'homepageCategoryCards') ? $this->model->homepageCategoryCards(24) : [];
+            $facets = $this->model->catalogFacets('', '', '', []);
+            $countById = [];
+            foreach ((array)($facets['categories'] ?? []) as $c) {
+                $countById[(int)($c['id'] ?? 0)] = (int)($c['count'] ?? 0);
+            }
+            $hierarchy = $this->model->getCanonicalCategoryHierarchy();
+            $byId = (array)($hierarchy['by_id'] ?? []);
+            foreach ($cards as $card) {
+                $pid = (int)($card['id'] ?? 0);
+                $leafIds = array_values(array_unique(array_map('intval', (array)($hierarchy['leaf_ids_by_node'][$pid] ?? [$pid]))));
+                $leaves = [];
+                $total = 0;
+                foreach ($leafIds as $lid) {
+                    $cnt = (int)($countById[$lid] ?? 0);
+                    if ($cnt <= 0) {
+                        continue;
+                    }
+                    $total += $cnt;
+                    $leaves[] = ['id' => $lid, 'name' => (string)($byId[$lid]['ten_danh_muc'] ?? ('#' . $lid)), 'count' => $cnt];
+                }
+                if (!$leaves) {
+                    continue;
+                }
+                usort($leaves, static fn($a, $b) => [$b['count'], $a['name']] <=> [$a['count'], $b['name']]);
+                $groups[] = [
+                    'id' => $pid,
+                    'name' => (string)($card['name'] ?? ''),
+                    'product' => is_array($card['product'] ?? null) ? $card['product'] : [],
+                    'count' => $total,
+                    'leaf_ids' => array_column($leaves, 'id'),
+                    'leaves' => $leaves,
+                ];
+            }
+        } catch (Throwable $e) {
+            error_log('danhmuc MongoDB error: ' . $e->getMessage());
+            $message = 'Hiện chưa thể tải danh mục sản phẩm. Vui lòng thử lại sau.';
+        }
+        $this->render('danhmuc', ['categoryGroups' => $groups, 'categoryMessage' => $message]);
     }
 
     public function productCollection(): void {

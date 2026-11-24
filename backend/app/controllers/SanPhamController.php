@@ -25,13 +25,20 @@ class SanPhamController {
 
     private function render($view, $data = []) {
         extract($data);
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        if (($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'live-filter') {
+            // live-filter.js chỉ lấy các vùng có id từ response; bỏ header/footer/menu để trả lời nhanh.
+            header('Vary: X-Requested-With');
+            header('Cache-Control: no-store');
+            require $viewDir . '/' . $view . '.php';
+            return;
+        }
         try {
             $menuCats = $this->model->menuTree();
         } catch (Throwable $e) {
             error_log('layout menu MongoDB error: ' . $e->getMessage());
             $menuCats = [];
         }
-        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
         require $viewDir . '/layouts/header.php';
         require $viewDir . '/' . $view . '.php';
         require $viewDir . '/layouts/footer.php';
@@ -349,6 +356,73 @@ class SanPhamController {
             $cap2 = $maDm;
         }
 
+        // Bộ lọc phụ chỉ có ở trang tatca (danhsach giữ nguyên): danh mục lá, loại da, hãng (đa chọn), giá, đánh giá, giảm giá, còn hàng
+        $filters = ['loai' => [], 'thuong_hieu' => [], 'loai_da' => [], 'gia_tu' => '', 'gia_den' => '', 'danh_gia' => '', 'giam_gia' => '', 'con_hang' => ''];
+        $asList = static function ($v): array {
+            if (is_array($v)) {
+                return array_values(array_filter($v, 'is_scalar'));
+            }
+            return is_scalar($v) && trim((string)$v) !== '' ? [$v] : [];
+        };
+        // Hãng: nhận cả thuong_hieu[]=A và thuong_hieu=A (link cũ); tối đa 30, mỗi tên <= 100 ký tự
+        $brands = [];
+        foreach ($asList($_GET['thuong_hieu'] ?? []) as $b) {
+            $b = mb_substr(trim((string)$b), 0, 100, 'UTF-8');
+            if ($b !== '' && !in_array($b, $brands, true)) {
+                $brands[] = $b;
+            }
+        }
+        $filters['thuong_hieu'] = array_slice($brands, 0, 30);
+        // Loại da: chỉ 4 khóa đã biết
+        $skins = [];
+        foreach ($asList($_GET['loai_da'] ?? []) as $k) {
+            $k = trim((string)$k);
+            if (in_array($k, ['dau', 'kho', 'nhay_cam', 'mun'], true) && !in_array($k, $skins, true)) {
+                $skins[] = $k;
+            }
+        }
+        $filters['loai_da'] = $skins;
+        // Danh mục lá: id nguyên dương, tối đa 50
+        $leafIds = [];
+        foreach ($asList($_GET['loai'] ?? []) as $id) {
+            if (ctype_digit((string)$id) && (int)$id > 0 && !in_array((int)$id, $leafIds, true)) {
+                $leafIds[] = (int)$id;
+            }
+        }
+        // Link cũ cap1/cap2/ma_danh_muc (menu, bookmark, chip gợi ý): đổi sang id lá để UI hiện đã chọn.
+        // Không map được (danh mục lạ) thì giữ nguyên chuỗi cho đường lọc cũ.
+        if (($cap1 !== '' || $cap2 !== '') && empty($leafIds)) {
+            $resolved = $this->model->resolveCategoryLeafIds($cap1, $cap2);
+            if (!empty($resolved)) {
+                $leafIds = array_map('intval', $resolved);
+                $cap1 = '';
+                $cap2 = '';
+            }
+        } elseif (!empty($leafIds)) {
+            $cap1 = '';
+            $cap2 = '';
+        }
+        $filters['loai'] = array_slice($leafIds, 0, 50);
+        $filters['gia_tu'] = substr(preg_replace('/\D+/', '', (string)($_GET['gia_tu'] ?? '')), 0, 10);
+        $filters['gia_den'] = substr(preg_replace('/\D+/', '', (string)($_GET['gia_den'] ?? '')), 0, 10);
+        // Giá từ > đến: đảo lại để không ra 0 kết quả vô lý (view hiển thị đúng giá trị đã đảo)
+        if ($filters['gia_tu'] !== '' && $filters['gia_den'] !== '' && (int)$filters['gia_tu'] > (int)$filters['gia_den']) {
+            [$filters['gia_tu'], $filters['gia_den']] = [$filters['gia_den'], $filters['gia_tu']];
+        }
+        $filters['danh_gia'] = (string)($_GET['danh_gia'] ?? '') === '4' ? '4' : '';
+        $filters['giam_gia'] = (string)($_GET['giam_gia'] ?? '') === '1' ? '1' : '';
+        $filters['con_hang'] = (string)($_GET['con_hang'] ?? '') === '1' ? '1' : '';
+        $extra = [
+            'categories' => $filters['loai'],
+            'brands' => $filters['thuong_hieu'],
+            'skins' => $filters['loai_da'],
+            'price_min' => $filters['gia_tu'],
+            'price_max' => $filters['gia_den'],
+            'min_rating' => $filters['danh_gia'] === '4' ? 4 : 0,
+            'on_sale' => $filters['giam_gia'] === '1',
+            'in_stock' => $filters['con_hang'] === '1',
+        ];
+
         // Live-filter (gõ tới đâu lọc tới đó) gọi lại trang này ở mỗi lần dừng gõ:
         // không ghi lịch sử tìm kiếm cho các request đó để tránh lưu từ khóa dở dang ("ser", "seru"...).
         // Khi người dùng bấm Enter/nút Tìm, live-filter.js gửi thêm "X-Live-Commit: 1" => ghi lịch sử như submit thường.
@@ -361,7 +435,7 @@ class SanPhamController {
         }
 
         $perPage = 24;
-        $res = $this->fetchCatalogPage($page, $perPage, $q, $cap1, $cap2, $sort);
+        $res = $this->fetchCatalogPage($page, $perPage, $q, $cap1, $cap2, $sort, $extra);
 
         // Bước 08: log tìm kiếm ghi sau khi có kết quả để có result_count (zero-result rate);
         // live = request live-filter chưa commit (từ khóa đang gõ dở) -> báo cáo chỉ số bỏ qua.
@@ -395,7 +469,7 @@ class SanPhamController {
         if ($q !== '' && $page === 1 && !$exact) {
             $corrected = $this->fuzzyCorrectedQuery($q);
             if ($corrected !== null) {
-                $correctedRes = $this->fetchCatalogPage(1, $perPage, $corrected, $cap1, $cap2, $sort);
+                $correctedRes = $this->fetchCatalogPage(1, $perPage, $corrected, $cap1, $cap2, $sort, $extra);
                 if ((int)($correctedRes['total'] ?? 0) > 0) {
                     if ((int)($res['total'] ?? 0) === 0) {
                         $res = $correctedRes;
@@ -414,7 +488,17 @@ class SanPhamController {
             $searchFallback = $this->buildSearchFallback($searchQ, $res['items'] ?? []);
         }
 
+        // Facet đếm theo bộ lọc (chỉ trang tatca); lỗi thì view quay về danh sách đầy đủ
+        $facets = null;
+        try {
+            $facets = $this->model->catalogFacets($searchQ, $cap1, $cap2, $extra);
+        } catch (Throwable $e) {
+            error_log('[CATALOG_FACETS] ' . get_class($e) . ': ' . $e->getMessage());
+        }
+
         $this->render('tatca', [
+            'filters' => $filters,
+            'facets' => $facets,
             'items' => $res['items'] ?? [],
             'total' => $res['total'] ?? 0,
             'page' => $page,
@@ -431,7 +515,7 @@ class SanPhamController {
     }
 
     /** Một trang danh mục/tìm kiếm công khai, có cache CacheService (nếu bật). Cache v3: thêm xếp hạng độ phù hợp (U05). */
-    private function fetchCatalogPage(int $page, int $perPage, string $q, string $cap1, string $cap2, string $sort): array {
+    private function fetchCatalogPage(int $page, int $perPage, string $q, string $cap1, string $cap2, string $sort, array $extra = []): array {
         $filterKey = 'catalog:tatca:' . md5(json_encode([
             'p' => $page,
             'per' => $perPage,
@@ -439,7 +523,8 @@ class SanPhamController {
             'c1' => $cap1,
             'c2' => $cap2,
             'sort' => $sort,
-            'v' => 3
+            'x' => $extra,
+            'v' => 5
         ]));
 
         $res = null;
@@ -448,7 +533,7 @@ class SanPhamController {
         }
 
         if (!is_array($res) || !isset($res['items'])) {
-            $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true, '', $sort);
+            $res = $this->model->paginate($page, $perPage, $q, $cap1, $cap2, '', true, '', $sort, $extra);
             if (class_exists('CacheService') && is_array($res) && isset($res['items'])) {
                 CacheService::getInstance()->set($filterKey, $res, 300);
             }
@@ -1126,7 +1211,7 @@ class SanPhamController {
             $fallback = null;
             try {
                 $client = SearchRecommendClient::fromEnv();
-                $response = $client ? $client->recommend($q, $userHash, $skinProfile, $cartIds, $exclude, 6, SearchEventTracker::sessionHash()) : null;
+                $response = $client ? $client->recommend($q, $userHash, $skinProfile, $cartIds, $exclude, 12, SearchEventTracker::sessionHash()) : null; // 12/khối cho thanh trượt ngang
                 $fallback = SearchFallbackBuilder::build(
                     $response,
                     $find,

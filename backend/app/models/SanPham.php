@@ -1386,12 +1386,12 @@ class SanPham {
         });
     }
 
-    public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false, string $stockStatusFilter = '', string $sort = 'default'): array {
+    public function paginate(int $page, int $perPage, string $q = '', string $cap1Val = '', string $cap2Val = '', string $statusFilter = '', bool $onlyVisibleOnWebsite = false, string $stockStatusFilter = '', string $sort = 'default', array $extra = []): array {
         // Trang public không render mo_ta/thanh_phan_full/hdsd -> bỏ khỏi projection; admin giữ full doc
-        return $this->paginateWithProjection($page, $perPage, $q, $cap1Val, $cap2Val, $statusFilter, $onlyVisibleOnWebsite, $stockStatusFilter, $sort, $onlyVisibleOnWebsite ? self::LISTING_PROJECTION : null);
+        return $this->paginateWithProjection($page, $perPage, $q, $cap1Val, $cap2Val, $statusFilter, $onlyVisibleOnWebsite, $stockStatusFilter, $sort, $onlyVisibleOnWebsite ? self::LISTING_PROJECTION : null, $extra);
     }
 
-    private function paginateWithProjection(int $page, int $perPage, string $q, string $cap1Val, string $cap2Val, string $statusFilter, bool $onlyVisibleOnWebsite, string $stockStatusFilter, string $sort, ?array $projection): array {
+    private function paginateWithProjection(int $page, int $perPage, string $q, string $cap1Val, string $cap2Val, string $statusFilter, bool $onlyVisibleOnWebsite, string $stockStatusFilter, string $sort, ?array $projection, array $extra = []): array {
         $page = max(1, $page);
         $perPage = max(1, $perPage);
         $skip = ($page - 1) * $perPage;
@@ -1417,7 +1417,8 @@ class SanPham {
             }
         }
 
-        if ($cap1Val !== '' || $cap2Val !== '') {
+        // Nếu $extra['categories'] đã mang danh mục (nhiều lá) thì không áp cap1/cap2 lần nữa
+        if (($cap1Val !== '' || $cap2Val !== '') && empty($extra['categories'])) {
             $leafIds = $this->resolveCategoryLeafIds($cap1Val, $cap2Val);
             if (!empty($leafIds)) {
                 $filter['ma_danh_muc'] = ['$in' => $leafIds];
@@ -1425,6 +1426,14 @@ class SanPham {
                 // Backward compatibility fallback if unmapped category string is queried
                 $searchCat = trim($cap1Val . ' -> ' . $cap2Val, ' -> ');
                 $filter['danh_muc_day_du'] = $this->buildSearchRegex($searchCat);
+            }
+        }
+
+        // Bộ lọc phụ (hãng/giá/loại da/...): AND thêm vào, không ghi đè khóa sẵn có
+        if (!empty($extra)) {
+            $extraParts = $this->buildCatalogExtraFilter($extra);
+            if (!empty($extraParts)) {
+                $filter = empty($filter) ? ['$and' => $extraParts] : ['$and' => array_merge([$filter], $extraParts)];
             }
         }
 
@@ -1473,6 +1482,303 @@ class SanPham {
         }
 
         return ['items' => $items, 'total' => $total];
+    }
+
+    /** Hãng (tên, không phân biệt hoa thường) -> ma_thuong_hieu; không có -> null. Tách riêng để phần còn lại test không cần DB. */
+    public function resolveBrandId(string $name): ?int {
+        $needle = mb_strtolower(trim($name), 'UTF-8');
+        if ($needle === '') {
+            return null;
+        }
+        foreach ($this->cachedLookupMap('thuong_hieu') as $id => $brandName) {
+            if (mb_strtolower(trim((string)$brandName), 'UTF-8') === $needle && is_numeric($id)) {
+                return (int)$id;
+            }
+        }
+        return null;
+    }
+
+    private const SKIN_FILTER_KEYWORDS = ['dau' => 'dầu', 'kho' => 'khô', 'nhay_cam' => 'nhạy cảm', 'mun' => 'mụn'];
+
+    /** Điều kiện loại da: khớp từ khóa HOẶC "Mọi loại da" (hợp với mọi người). */
+    private function skinFilterCondition(string $skin): ?array {
+        $kw = self::SKIN_FILTER_KEYWORDS[$skin] ?? null;
+        if ($kw === null) {
+            return null;
+        }
+        return ['$or' => [
+            ['loai_da' => new \MongoDB\BSON\Regex(preg_quote($kw, '/'), 'i')],
+            ['loai_da' => new \MongoDB\BSON\Regex('Mọi loại da', 'i')],
+        ]];
+    }
+
+    /** Điều kiện "còn hàng": tồn kho > 0 và chưa đánh dấu hết hàng. */
+    private function inStockCondition(): array {
+        return ['$and' => [['so_luong_ton_kho' => ['$gt' => 0]], ['trang_thai_kho' => ['$ne' => 'het_hang']]]];
+    }
+
+    /**
+     * Các điều kiện bộ lọc phụ theo từng chiều: brand, price, skin, rating, sale, stock => điều kiện Mongo.
+     * Khóa $extra: brand, price_min, price_max, skin, min_rating, on_sale, in_stock. Giá trị rỗng/không hợp lệ bị bỏ qua.
+     */
+    public function buildCatalogExtraParts(array $extra): array {
+        $parts = [];
+
+        // Danh mục lá (nhiều id, OR trong chiều): chỉ nhận số nguyên dương, tối đa 50
+        $catIds = [];
+        foreach ((array)($extra['categories'] ?? []) as $cid) {
+            if (is_scalar($cid) && ctype_digit((string)$cid) && (int)$cid > 0) {
+                $catIds[(int)$cid] = true;
+            }
+        }
+        $catIds = array_slice(array_keys($catIds), 0, 50);
+        if (!empty($catIds)) {
+            $parts['category'] = ['ma_danh_muc' => ['$in' => $catIds]];
+        }
+
+        // Hãng: gộp 'brand' (đơn, goiy) và 'brands' (mảng); hãng không tồn tại bị bỏ, hết sạch -> không khớp gì
+        $brandNames = [];
+        $single = trim((string)($extra['brand'] ?? ''));
+        if ($single !== '') {
+            $brandNames[] = $single;
+        }
+        foreach ((array)($extra['brands'] ?? []) as $bn) {
+            if (is_scalar($bn) && trim((string)$bn) !== '') {
+                $brandNames[] = trim((string)$bn);
+            }
+        }
+        if (!empty($brandNames)) {
+            $brandIds = [];
+            foreach (array_slice(array_unique($brandNames), 0, 30) as $bn) {
+                $bid = $this->resolveBrandId($bn);
+                if ($bid !== null) {
+                    $brandIds[$bid] = true;
+                }
+            }
+            $parts['brand'] = !empty($brandIds)
+                ? ['ma_thuong_hieu' => ['$in' => array_keys($brandIds)]]
+                : ['ma_thuong_hieu' => '__none__'];
+        }
+
+        $min = preg_replace('/\D+/', '', (string)($extra['price_min'] ?? ''));
+        $max = preg_replace('/\D+/', '', (string)($extra['price_max'] ?? ''));
+        $range = [];
+        if ($min !== '') {
+            $range['$gte'] = (int)$min;
+        }
+        if ($max !== '') {
+            $range['$lte'] = (int)$max;
+        }
+        if (!empty($range)) {
+            $parts['price'] = ['gia_ban' => $range];
+        }
+
+        // Loại da: gộp 'skin' (đơn) và 'skins' (mảng) -> OR các điều kiện
+        $skinKeys = [];
+        if (trim((string)($extra['skin'] ?? '')) !== '') {
+            $skinKeys[] = trim((string)$extra['skin']);
+        }
+        foreach ((array)($extra['skins'] ?? []) as $sk) {
+            if (is_scalar($sk)) {
+                $skinKeys[] = trim((string)$sk);
+            }
+        }
+        $skinConds = [];
+        foreach (array_unique($skinKeys) as $sk) {
+            $c = $this->skinFilterCondition($sk);
+            if ($c !== null) {
+                $skinConds[] = $c;
+            }
+        }
+        if (count($skinConds) === 1) {
+            $parts['skin'] = $skinConds[0];
+        } elseif (count($skinConds) > 1) {
+            $parts['skin'] = ['$or' => $skinConds];
+        }
+
+        $rating = $extra['min_rating'] ?? null;
+        if (is_numeric($rating) && (float)$rating > 0) {
+            $parts['rating'] = ['diem_danh_gia' => ['$gte' => (float)$rating]];
+        }
+
+        if (!empty($extra['on_sale'])) {
+            $parts['sale'] = ['phan_tram_giam' => ['$gt' => 0]];
+        }
+        if (!empty($extra['in_stock'])) {
+            $parts['stock'] = $this->inStockCondition();
+        }
+
+        return $parts;
+    }
+
+    /** Danh sách điều kiện (AND với nhau) của bộ lọc phụ; $extra rỗng -> []. */
+    public function buildCatalogExtraFilter(array $extra): array {
+        return array_values($this->buildCatalogExtraParts($extra));
+    }
+
+    /**
+     * Facet cho bộ lọc: số sản phẩm theo hãng/danh mục/giá/loại da/cờ. Mỗi facet áp mọi bộ lọc KHÁC chiều của nó.
+     * Một aggregate ($facet), cache 120 giây. Lỗi Mongo ném ra (controller bắt).
+     */
+    public function catalogFacets(string $q, string $cap1, string $cap2, array $extra): array {
+        $key = 'catalogFacets:' . md5(json_encode([$q, $cap1, $cap2, $extra, 'v' => 4], JSON_UNESCAPED_UNICODE));
+        return ProductQueryCache::remember($key, 120, fn() => $this->computeCatalogFacets($q, $cap1, $cap2, $extra));
+    }
+
+    private function computeCatalogFacets(string $q, string $cap1, string $cap2, array $extra): array {
+        // Phần nền: sản phẩm hiển thị + từ khóa (giống paginateWithProjection)
+        $base = [$this->availableProductFilter()];
+        $tokens = is_numeric(trim($q)) ? [] : self::tokenizeSearchQuery($q);
+        if (!empty($tokens)) {
+            $base[] = $this->buildTokenSearchFilter($tokens);
+        } elseif (trim($q) !== '') {
+            $regex = $this->buildSearchRegex($q);
+            $or = [
+                ['ten_san_pham' => $regex], ['ma_san_pham' => $regex], ['thuong_hieu' => $regex],
+                ['danh_muc_day_du' => $regex], ['loai_san_pham' => $regex], ['barcode' => $regex],
+            ];
+            if (is_numeric(trim($q))) {
+                $or[] = ['ma_san_pham' => (int)trim($q)];
+            }
+            $base[] = ['$or' => $or];
+        }
+
+        // Các chiều lọc đang bật
+        $dims = $this->buildCatalogExtraParts($extra);
+        if (($cap1 !== '' || $cap2 !== '') && !isset($dims['category'])) {
+            $leafIds = $this->resolveCategoryLeafIds($cap1, $cap2);
+            $dims['category'] = !empty($leafIds)
+                ? ['ma_danh_muc' => ['$in' => $leafIds]]
+                : ['danh_muc_day_du' => $this->buildSearchRegex(trim($cap1 . ' -> ' . $cap2, ' -> '))];
+        }
+
+        // Pipeline con: áp mọi chiều trừ $skip, cộng thêm $own (điều kiện của chính facet)
+        $sub = function (array $skip, array $own = []) use ($base, $dims): array {
+            $conds = $base;
+            foreach ($dims as $dim => $cond) {
+                if (!in_array($dim, $skip, true)) {
+                    $conds[] = $cond;
+                }
+            }
+            foreach ($own as $cond) {
+                $conds[] = $cond;
+            }
+            return [['$match' => ['$and' => $conds]]];
+        };
+        $count = ['$count' => 'n'];
+
+        $facet = [
+            'brands' => array_merge($sub(['brand']), [['$group' => ['_id' => '$ma_thuong_hieu', 'n' => ['$sum' => 1]]]]),
+            'categories' => array_merge($sub(['category']), [['$group' => ['_id' => '$ma_danh_muc', 'n' => ['$sum' => 1]]]]),
+            'price' => array_merge($sub(['price']), [['$bucket' => [
+                'groupBy' => '$gia_ban',
+                'boundaries' => [0, 200000, 500000, 1000000, 1000000000000],
+                'default' => 'other',
+                'output' => ['n' => ['$sum' => 1]],
+            ]]]),
+            'on_sale' => array_merge($sub(['sale'], [['phan_tram_giam' => ['$gt' => 0]]]), [$count]),
+            'in_stock' => array_merge($sub(['stock'], [$this->inStockCondition()]), [$count]),
+            'rating4' => array_merge($sub(['rating'], [['diem_danh_gia' => ['$gte' => 4.0]]]), [$count]),
+        ];
+        foreach (array_keys(self::SKIN_FILTER_KEYWORDS) as $skinKey) {
+            $facet['skin_' . $skinKey] = array_merge($sub(['skin'], [$this->skinFilterCondition($skinKey)]), [$count]);
+        }
+
+        $rows = iterator_to_array($this->db->san_pham->aggregate([['$facet' => $facet]], ['allowDiskUse' => true]), false);
+        $row = (array)($rows[0] ?? []);
+        $list = static fn($k): array => array_map(static fn($d) => (array)$d, (array)($row[$k] ?? []));
+        $single = static function ($k) use ($row): int {
+            $first = (array)(((array)($row[$k] ?? []))[0] ?? []);
+            return (int)($first['n'] ?? 0);
+        };
+
+        $brandNames = $this->cachedLookupMap('thuong_hieu');
+        $brands = [];
+        $seenBrand = [];
+        foreach ($list('brands') as $b) {
+            $name = trim((string)($brandNames[(string)($b['_id'] ?? '')] ?? ''));
+            if ($name !== '') {
+                $brands[] = ['name' => $name, 'count' => (int)$b['n']];
+                $seenBrand[mb_strtolower($name, 'UTF-8')] = true;
+            }
+        }
+        // Hãng 0 sản phẩm không liệt kê (hàng trăm dòng mờ gây rối); view tự giữ hãng đang chọn
+        usort($brands, static fn($a, $b) => [$b['count'], $a['name']] <=> [$a['count'], $b['name']]);
+
+        $hier = $this->getCanonicalCategoryHierarchy();
+        $byId = $hier['by_id'];
+        $childMap = $hier['children'] ?? [];
+        $countById = [];
+        foreach ($list('categories') as $c) {
+            if (is_numeric($c['_id'] ?? null)) {
+                $countById[(int)$c['_id']] = (int)$c['n'];
+            }
+        }
+        // Chuỗi tổ tiên (tên) của một nút, gần nhất trước; dùng cho cap1 (cap1 khớp mọi cấp tổ tiên)
+        $ancestorsOf = static function (int $id) use ($byId): array {
+            $names = [];
+            $cur = $byId[$id]['parent_id'] ?? null;
+            $guard = 0;
+            while ($cur !== null && isset($byId[$cur]) && $guard++ < 10) {
+                $names[] = (string)$byId[$cur]['ten_danh_muc'];
+                $cur = $byId[$cur]['parent_id'] ?? null;
+            }
+            return $names;
+        };
+        // Danh mục lá (kể cả số 0 để UI mờ đi) + nhóm cha trực tiếp; số của nhóm = tổng lá con cháu
+        $categories = [];
+        $parents = [];
+        foreach ($byId as $cid => $cat) {
+            $isLeaf = empty($childMap[$cid]);
+            if (!$isLeaf && !isset($countById[$cid])) {
+                continue;
+            }
+            $anc = $ancestorsOf((int)$cid);
+            $cnt = $countById[$cid] ?? 0;
+            $categories[] = [
+                'id' => (int)$cid,
+                'name' => (string)$cat['ten_danh_muc'],
+                'parent' => $anc[0] ?? '',
+                'ancestors' => $anc,
+                'count' => $cnt,
+            ];
+            foreach ($anc as $i => $an) {
+                if (!isset($parents[$an])) {
+                    $parents[$an] = ['name' => $an, 'count' => 0, 'direct' => false];
+                }
+                $parents[$an]['count'] += $cnt;
+                if ($i === 0) {
+                    $parents[$an]['direct'] = true; // là cha trực tiếp của ít nhất một mục
+                }
+            }
+        }
+        usort($categories, static fn($a, $b) => [$b['count'], $a['name']] <=> [$a['count'], $b['name']]);
+        $parents = array_values(array_filter($parents, static fn($p) => $p['direct']));
+        usort($parents, static fn($a, $b) => strcmp($a['name'], $b['name']));
+
+        $price = ['lt200' => 0, '200_500' => 0, '500_1000' => 0, 'gt1000' => 0];
+        $priceKeys = [0 => 'lt200', 200000 => '200_500', 500000 => '500_1000', 1000000 => 'gt1000'];
+        foreach ($list('price') as $b) {
+            if (isset($b['_id']) && is_numeric($b['_id']) && isset($priceKeys[(int)$b['_id']])) {
+                $price[$priceKeys[(int)$b['_id']]] = (int)$b['n'];
+            }
+        }
+
+        $skin = [];
+        foreach (array_keys(self::SKIN_FILTER_KEYWORDS) as $skinKey) {
+            $skin[$skinKey] = $single('skin_' . $skinKey);
+        }
+
+        return [
+            'brands' => $brands,
+            'categories' => $categories,
+            'parents' => $parents,
+            'price' => $price,
+            'skin' => $skin,
+            'on_sale' => $single('on_sale'),
+            'in_stock' => $single('in_stock'),
+            'rating4' => $single('rating4'),
+        ];
     }
 
     private static function rankingEnabled(): bool {

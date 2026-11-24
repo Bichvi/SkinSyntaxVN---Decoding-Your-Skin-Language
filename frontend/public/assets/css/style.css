@@ -5444,8 +5444,15 @@ img, video, iframe, svg {
   transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.home-rail-button:hover,
-.home-rail-button:focus-visible {
+.home-rail-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #F4F7F5;
+  transform: none;
+}
+
+.home-rail-button:not(:disabled):hover,
+.home-rail-button:not(:disabled):focus-visible {
   background: #183B2B;
   border-color: #183B2B;
   color: #FFFFFF;
@@ -5975,9 +5982,17 @@ img, video, iframe, svg {
   min-height: 176px;
 }
 
+/* Rail danh mục: ~6,5 thẻ hiển thị để thẻ kế tiếp lấp ló, báo hiệu có thể cuộn. */
+.home-category-visual-grid.home-card-rail .home-card-rail__item {
+  flex: 0 0 calc((100% - 84px) / 6.5);
+}
+
 @media (max-width: 1199.98px) {
   .home-card-rail__item {
     flex-basis: calc((100% - 42px) / 4);
+  }
+  .home-category-visual-grid.home-card-rail .home-card-rail__item {
+    flex-basis: calc((100% - 56px) / 4.5);
   }
 }
 
@@ -5992,6 +6007,11 @@ img, video, iframe, svg {
     min-width: 118px;
   }
 
+  .home-category-visual-grid.home-card-rail .home-card-rail__item {
+    flex-basis: calc((100% - 28px) / 2.5);
+    min-width: 110px;
+  }
+
   .home-brand-visual-card.home-card-rail__item {
     flex-basis: 42%;
     min-width: 148px;
@@ -6002,6 +6022,9 @@ img, video, iframe, svg {
 @media (max-width: 430px) {
   .home-card-rail__item {
     flex-basis: 34%;
+  }
+  .home-category-visual-grid.home-card-rail .home-card-rail__item {
+    flex-basis: calc((100% - 28px) / 2.5);
   }
 }
 
