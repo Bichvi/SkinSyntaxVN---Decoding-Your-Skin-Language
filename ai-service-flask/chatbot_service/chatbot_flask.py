@@ -31,10 +31,10 @@ from dotenv import load_dotenv
 
 _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 if _ENV_PATH.exists():
-    load_dotenv(_ENV_PATH, override=True)
+    load_dotenv(_ENV_PATH, override=False)
     print(f"[OK] Loaded .env from {_ENV_PATH}")
 else:
-    load_dotenv(override=True)
+    load_dotenv(override=False)
     print(f"[WARN] .env not found at {_ENV_PATH}, using default search")
 
 from pydantic import BaseModel, Field
@@ -117,9 +117,10 @@ def _build_vectorstore():
 
             client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
             vs = Chroma(
-                collection_name="products",
+                collection_name=os.getenv("CHATBOT_CHROMA_COLLECTION", "products").strip() or "products",
                 client=client,
                 embedding_function=emb,
+                create_collection_if_not_exists=False,
             )
         else:
             vs = Chroma(
