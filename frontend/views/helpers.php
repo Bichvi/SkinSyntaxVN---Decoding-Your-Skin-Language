@@ -571,6 +571,8 @@ function route_access_map(): array {
         'admin_ai_idol' => ['admin'],
         'admin_ai_product_videos' => ['admin'],
         'admin_reports' => ['admin'],
+        'admin_feature_ratings_export' => ['admin'],
+        'admin_feature_ratings_summary' => ['admin'],
         'admin_questions' => ['admin', 'nhanvien'],
         'admin_question_reply' => ['admin', 'nhanvien'],
         'admin_question_hide' => ['admin', 'nhanvien'],

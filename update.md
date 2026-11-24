@@ -671,3 +671,5 @@ Rollback nhanh khi nghi ngờ self-healing: đặt `AI_IDOL_MAX_SCRIPT_REPAIR_AT
 - Sửa nhãn "Hợp moi_loai_da" ở gợi ý giỏ hàng: thêm nhãn hiển thị, và graph_sync không cho tag LLM nới sản phẩm đã có loại da riêng thành "mọi loại da" (446 sản phẩm); sửa đọc INCI "Bảng thành phần:" và bỏ suy vấn đề da cho kem chống nắng/trang điểm/tẩy trang/sữa rửa mặt; Neo4j đã đồng bộ lại 2026-11-05. Xem `update_nhan_loai_da.md`.
 
 - Popover "Vì sao phù hợp" trên thẻ sản phẩm trang chủ: đọc đủ câu lý do, bỏ "với <SP>" thừa ở khối "Vì bạn đã xem", thêm chi tiết thành phần/công dụng/giá trị. Xem `update_why_fit_detail.md`.
+
+- Popup "Đánh giá nhanh" 1-5 sao sau khi dùng gợi ý sản phẩm, chatbot AI và cảnh báo xung đột thành phần (lưu `feature_ratings`, xuất CSV/thống kê cho admin, phục vụ chương đánh giá luận văn). Xem `update_danh_gia_chuc_nang.md`.

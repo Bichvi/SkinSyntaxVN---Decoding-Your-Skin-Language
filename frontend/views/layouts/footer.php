@@ -10,6 +10,37 @@
   };
 </script>
 <script src="<?= BASE_URL ?>/assets/js/favorites.js?v=1"></script>
+<?php
+// Đánh giá nhanh tính năng AI: chỉ khách hàng đã đăng nhập (không phải admin/nhân viên); tắt bằng FEATURE_RATING_ENABLED=0.
+$featureRatingConfig = null;
+try {
+    if (!class_exists('FeatureRatingController')) {
+        foreach ([dirname(__DIR__, 3) . '/backend/app/controllers/FeatureRatingController.php', dirname(__DIR__, 2) . '/app/controllers/FeatureRatingController.php', '/var/www/html/app/controllers/FeatureRatingController.php'] as $frFile) {
+            if (is_file($frFile)) { require_once $frFile; break; }
+        }
+    }
+    if (class_exists('FeatureRatingController') && FeatureRatingController::enabled()
+        && function_exists('is_logged_in') && is_logged_in()
+        && function_exists('current_role') && current_role() === 'khach_hang') {
+        $frAccountKey = FeatureRatingController::accountKey();
+        if ($frAccountKey !== '') {
+            $featureRatingConfig = [
+                'endpoint' => BASE_URL . '/index.php?r=feature_rating_submit',
+                'csrf' => FeatureRatingController::csrfToken(),
+                'userHash' => FeatureRatingController::userHash($frAccountKey),
+            ];
+        }
+    }
+} catch (Throwable $frError) {
+    $featureRatingConfig = null;
+}
+if ($featureRatingConfig !== null): ?>
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/feature-rating.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/feature-rating.css') ?: '1' ?>">
+<script>
+  window.SkinSyntaxFeatureRatingConfig = <?= json_encode($featureRatingConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+</script>
+<script src="<?= BASE_URL ?>/assets/js/feature-rating.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/feature-rating.js') ?: '1' ?>"></script>
+<?php endif; ?>
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/chat-purchase.css?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/chat-purchase.css') ?: '1' ?>">
 </main>
 

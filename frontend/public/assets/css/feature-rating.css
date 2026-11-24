@@ -1,0 +1,133 @@
+/* Đánh giá nhanh tính năng AI (feature-rating.js). Thẻ nhỏ góc dưới bên trái, không chặn thao tác. */
+.ssfr-card {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1990;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  padding: 16px 18px 14px;
+  background: var(--surface, #fff);
+  color: var(--text, #1a2f1a);
+  border: 1px solid var(--border, #e2eadf);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(33, 67, 29, 0.18);
+  font-family: 'Quicksand', system-ui, -apple-system, sans-serif;
+  animation: ssfr-in 0.28s ease-out;
+}
+.ssfr-card *, .ssfr-card *::before, .ssfr-card *::after { box-sizing: border-box; }
+@keyframes ssfr-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.ssfr-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--muted, #5c705e);
+  font-size: 22px;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.ssfr-close:hover { background: var(--surface-tint, #f0f4f1); }
+.ssfr-title {
+  margin: 0 28px 4px 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--secondary, #4a7c59);
+}
+.ssfr-question {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.ssfr-stars { display: flex; justify-content: space-between; gap: 4px; }
+.ssfr-star {
+  flex: 1 1 0;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  font-size: 30px;
+  line-height: 1;
+  color: #cfd9cc;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: color 0.15s, transform 0.15s;
+}
+.ssfr-star.is-on { color: #f2b01e; }
+.ssfr-star:hover { transform: scale(1.08); }
+.ssfr-star:focus-visible,
+.ssfr-close:focus-visible,
+.ssfr-btn:focus-visible,
+.ssfr-comment:focus-visible {
+  outline: 2px solid var(--brand, #2d5a27);
+  outline-offset: 2px;
+}
+.ssfr-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--muted, #5c705e);
+}
+.ssfr-extra { margin-top: 10px; }
+.ssfr-extra[hidden] { display: none; }
+.ssfr-comment-label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: var(--muted, #5c705e); }
+.ssfr-comment {
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  padding: 8px 10px;
+  border: 1px solid var(--border, #e2eadf);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: inherit;
+  background: var(--bg, #f9fbf8);
+}
+.ssfr-message { min-height: 0; margin: 6px 0 0; font-size: 0.8rem; }
+.ssfr-message:empty { display: none; }
+.ssfr-message.is-error { color: #b42318; }
+.ssfr-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.ssfr-btn {
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ssfr-btn--ghost { background: transparent; color: var(--muted, #5c705e); border-color: var(--border, #e2eadf); }
+.ssfr-btn--ghost:hover { background: var(--surface-tint, #f0f4f1); }
+.ssfr-btn--primary { background: var(--brand, #2d5a27); color: #fff; }
+.ssfr-btn--primary:hover:not(:disabled) { background: var(--brand-2, #21431d); }
+.ssfr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ssfr-thanks { margin: 8px 0; text-align: center; font-weight: 700; color: var(--brand, #2d5a27); }
+
+/* Điện thoại: rộng gần hết màn hình, nằm trên nút chat nổi / thanh điều hướng dưới. */
+@media (max-width: 575.98px) {
+  .ssfr-card {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ssfr-card { animation: none; }
+  .ssfr-star { transition: none; }
+  .ssfr-star:hover { transform: none; }
+}

@@ -104,6 +104,7 @@ if (in_array($r, [
 
 require_once $backendRoot . '/app/controllers/HomeController.php';
 require_once $backendRoot . '/app/controllers/FavoriteController.php';
+require_once $backendRoot . '/app/controllers/FeatureRatingController.php';
 require_once $backendRoot . '/app/controllers/SanPhamController.php';
 require_once $backendRoot . '/app/controllers/AuthController.php';
 require_once $backendRoot . '/app/controllers/TaiKhoanController.php';
@@ -143,6 +144,18 @@ if ($r === 'pwa_manifest' || $r === 'pwa_sw') {
 switch ($r) {
     case 'home':
         (new HomeController($pdo))->index();
+        break;
+
+    case 'feature_rating_submit':
+        (new FeatureRatingController($pdo))->submit();
+        break;
+
+    case 'admin_feature_ratings_export':
+        (new FeatureRatingController($pdo))->exportCsv();
+        break;
+
+    case 'admin_feature_ratings_summary':
+        (new FeatureRatingController($pdo))->summary();
         break;
 
     case 'favorite_toggle':
