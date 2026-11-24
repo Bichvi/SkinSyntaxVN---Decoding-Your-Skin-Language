@@ -11,7 +11,7 @@ final class SearchMoreBuilder
      * @param string     $skinState    'guest' | 'no_profile' | 'has_profile'
      * @param array      $excludeIds   id đã hiện ở kết quả chính
      */
-    public static function build(?array $skinProducts, ?array $fallback, string $skinState, array $excludeIds, int $perSection = 4): ?array
+    public static function build(?array $skinProducts, ?array $fallback, string $skinState, array $excludeIds, int $perSection = 12): ?array
     {
         $perSection = max(1, $perSection);
         $used = [];
@@ -20,13 +20,7 @@ final class SearchMoreBuilder
         }
         $sections = [];
 
-        if ($skinState === 'has_profile' && is_array($skinProducts)) {
-            $items = self::take($skinProducts, $used, $perSection);
-            if (count($items) >= 2) {
-                $sections[] = ['key' => 'personalized', 'title' => SearchReasonFormatter::sectionTitle('personalized'), 'items' => $items];
-            }
-        }
-
+        // Khối bám theo từ khóa (cùng công dụng, hợp da trong nhóm đang tìm...) đứng trước và được ưu tiên giữ sản phẩm
         foreach ((array)($fallback['sections'] ?? []) as $section) {
             if (!is_array($section) || ($section['key'] ?? '') === 'semantic') {
                 continue;
@@ -34,6 +28,14 @@ final class SearchMoreBuilder
             $items = self::take((array)($section['items'] ?? []), $used, $perSection);
             if ($items) {
                 $sections[] = ['key' => (string)($section['key'] ?? ''), 'title' => (string)($section['title'] ?? ''), 'items' => $items];
+            }
+        }
+
+        // Gợi ý hợp da chung (không theo từ khóa) xuống cuối, tên riêng để không trùng khối "Hợp với làn da của bạn" của Flask
+        if ($skinState === 'has_profile' && is_array($skinProducts)) {
+            $items = self::take($skinProducts, $used, $perSection);
+            if (count($items) >= 2) {
+                $sections[] = ['key' => 'skin_more', 'title' => SearchReasonFormatter::sectionTitle('skin_more'), 'items' => $items];
             }
         }
 

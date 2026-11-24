@@ -196,6 +196,10 @@ switch ($r) {
         (new SanPhamController($pdo))->danhsach();
         break;
 
+    case 'danhmuc':
+        (new HomeController($pdo))->danhmuc();
+        break;
+
     case 'product_collection':
         (new HomeController($pdo))->productCollection();
         break;

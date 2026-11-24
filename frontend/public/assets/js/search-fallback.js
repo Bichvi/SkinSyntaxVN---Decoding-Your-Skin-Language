@@ -123,10 +123,40 @@
     return event;
   }
 
+  // Thanh trượt ngang: bật/tắt mũi tên theo vị trí cuộn
+  function updateRail(rail) {
+    var track = rail.querySelector('.ssf-grid--rail');
+    if (!track) return;
+    var max = track.scrollWidth - track.clientWidth;
+    rail.classList.toggle('is-scrollable', max > 4);
+    var prev = rail.querySelector('.ssf-rail-prev'), next = rail.querySelector('.ssf-rail-next');
+    if (prev) prev.disabled = track.scrollLeft <= 4;
+    if (next) next.disabled = track.scrollLeft >= max - 4;
+  }
+
+  function setupRail(section) {
+    var rail = section.querySelector('.ssf-rail');
+    var track = rail && rail.querySelector('.ssf-grid--rail');
+    if (!track) return;
+    var ticking = false;
+    track.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { ticking = false; updateRail(rail); });
+    }, { passive: true });
+    updateRail(rail);
+  }
+
+  window.addEventListener('resize', function () {
+    var rails = document.querySelectorAll('.ssf-rail');
+    for (var i = 0; i < rails.length; i++) updateRail(rails[i]);
+  });
+
   function scanSections() {
     var sections = document.querySelectorAll('.ssf[data-ssf] .ssf-section[data-ssf-section-key]');
     for (var i = 0; i < sections.length; i++) {
       var s = sections[i];
+      if (!s.dataset.ssfRailReady) { s.dataset.ssfRailReady = '1'; setupRail(s); }
       if (seenSections) {
         if (seenSections.has(s)) continue;
         seenSections.add(s);
@@ -142,6 +172,12 @@
   document.addEventListener('click', function (event) {
     var target = event.target;
     if (!target || !target.closest) return;
+    var railBtn = target.closest('[data-ssf-rail]');
+    if (railBtn) {
+      var track = railBtn.parentNode.querySelector('.ssf-grid--rail');
+      if (track) track.scrollBy({ left: Number(railBtn.dataset.ssfRail) * track.clientWidth * 0.9, behavior: 'smooth' });
+      return;
+    }
     var chip = target.closest('.ssf-chip');
     if (chip) {
       var kind = chip.dataset.ssfChipKind;

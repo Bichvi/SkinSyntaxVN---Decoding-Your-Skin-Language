@@ -392,7 +392,7 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
         <span class="text-muted small" style="font-size: 0.82rem;">Danh mục đang có sản phẩm để bạn khám phá.</span>
       </div>
       <div class="home-card-rail__tools">
-        <a href="<?= BASE_URL ?>/index.php?r=tatca" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.82rem;">Xem tất cả danh mục &rarr;</a>
+        <a href="<?= BASE_URL ?>/index.php?r=danhmuc" class="text-decoration-none fw-semibold text-success small" style="font-size: 0.82rem;">Xem tất cả danh mục &rarr;</a>
         <div class="home-rail-actions" aria-label="Điều hướng danh mục">
           <button type="button" class="home-rail-button" data-home-card-prev aria-label="Danh mục trước"><i class="fas fa-chevron-left"></i></button>
           <button type="button" class="home-rail-button" data-home-card-next aria-label="Danh mục tiếp theo"><i class="fas fa-chevron-right"></i></button>
@@ -818,7 +818,7 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
             <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
             <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>
           </div>
-          <a href="<?= BASE_URL ?>/index.php?r=tatca&sort=diem_danh_gia" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;">Khám phá thêm <i class="fas fa-arrow-right ms-1"></i></a>
+          <a href="<?= BASE_URL ?>/index.php?r=goiy" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.85rem;" title="Xem toàn bộ gợi ý cá nhân hóa">Xem tất cả gợi ý cho bạn <i class="fas fa-arrow-right ms-1"></i></a>
         </div>
       </div>
 
@@ -909,9 +909,10 @@ $renderFlashSaleProductCard = function (array $p) use ($favoriteProductIds): voi
         <div>
           <span class="home-section-kicker">KHÁM PHÁ CHO BẠN</span>
           <h2 class="fw-bold m-0" style="color: #0F172A; font-size: 1.45rem;">Lướt thêm, gặp đúng món</h2>
+          <span class="text-muted small d-block" style="font-size: 0.82rem;">Sản phẩm mới mỗi lần bạn ghé, dựa trên những gì bạn đang quan tâm.</span>
         </div>
         <div class="d-flex align-items-center gap-2">
-          <a href="<?= BASE_URL ?>/index.php?r=beauty_swipe" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.82rem;">Lướt dạng thẻ <i class="fas fa-arrow-right ms-1"></i></a>
+          <a href="<?= BASE_URL ?>/index.php?r=beauty_swipe" class="fw-semibold text-decoration-none" style="color: #183B2B; font-size: 0.82rem;" title="Vuốt thích/bỏ qua để Syna hiểu gu của bạn"><i class="fas fa-heart me-1"></i>Vuốt chọn nhanh <i class="fas fa-arrow-right ms-1"></i></a>
           <div class="home-rail-actions" aria-label="Điều hướng khám phá">
           <button type="button" class="home-rail-button" data-home-rail-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left"></i></button>
           <button type="button" class="home-rail-button" data-home-rail-next aria-label="Sản phẩm tiếp theo"><i class="fas fa-chevron-right"></i></button>

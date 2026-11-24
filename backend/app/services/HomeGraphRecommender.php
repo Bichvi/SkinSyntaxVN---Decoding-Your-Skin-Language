@@ -21,7 +21,7 @@ final class HomeGraphRecommender
         'lao_hoa' => 'Lão hóa / nếp nhăn',
         'xin_mau' => 'Da xỉn màu',
     ];
-    public const LIMITS = ['seen' => 12, 'skin' => 4, 'concern' => 8];
+    public const LIMITS = ['seen' => 12, 'skin' => 12, 'concern' => 8];
     private const MIN_ITEMS = 4;
     private const ID_PATTERN = '/^[0-9]{1,12}$/';
 

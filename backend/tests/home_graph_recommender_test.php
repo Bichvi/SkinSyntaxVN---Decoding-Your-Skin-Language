@@ -64,7 +64,7 @@ check(count($r['concern_keys']) === 9 && $r['concern_keys']['tham_mun'] === 'ThÃ
 // payload shape
 (new HomeGraphRecommender($mkClient(flaskBody([1, 2, 3, 4])), $mongo([1, 2, 3, 4])))->build($ctx);
 check($sentBody['seen_ids'] === ['12'], 'drops non-digit seen ids');
-check($sentBody['sections'] === ['seen', 'concern'] && $sentBody['limits'] === ['seen' => 12, 'skin' => 4, 'concern' => 8], 'sections and limits sent');
+check($sentBody['sections'] === ['seen', 'concern'] && $sentBody['limits'] === ['seen' => 12, 'skin' => 12, 'concern' => 8], 'sections and limits sent');
 check($sentBody['skin_profile'] === null && !array_key_exists('concern', $sentBody), 'null skin_profile sent, concern omitted when null');
 
 // hydrate, order preserved

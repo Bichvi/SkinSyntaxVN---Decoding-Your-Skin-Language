@@ -28,10 +28,10 @@ $sortOptions = [
     'most_viewed' => 'Nhiều lượt xem',
 ];
 $pricePresets = [
-    ['label' => 'Dưới 200k', 'min' => '0', 'max' => '200000'],
-    ['label' => '200k - 500k', 'min' => '200000', 'max' => '500000'],
-    ['label' => '500k - 1tr', 'min' => '500000', 'max' => '1000000'],
-    ['label' => 'Trên 1tr', 'min' => '1000000', 'max' => ''],
+    ['key' => 'lt200', 'label' => 'Dưới 200k', 'min' => '0', 'max' => '199999'],
+    ['key' => '200_500', 'label' => '200k - 500k', 'min' => '200000', 'max' => '499999'],
+    ['key' => '500_1000', 'label' => '500k - 1tr', 'min' => '500000', 'max' => '999999'],
+    ['key' => 'gt1000', 'label' => 'Trên 1tr', 'min' => '1000000', 'max' => ''],
 ];
 $sections = [
     'best_seller' => ['title' => 'Sản phẩm bán chạy nhất', 'badge' => 'Bán chạy'],
@@ -41,7 +41,7 @@ $sections = [
     'new' => ['title' => 'Sản phẩm mới', 'badge' => 'Mới lên kệ'],
 ];
 $currentSort = trim((string)($publicFilters['sort'] ?? 'default'));
-$hasActiveFilter = (!empty($publicFilters['keyword'])) || (!empty($publicFilters['gia_tu'])) || (!empty($publicFilters['gia_den'])) || (!empty($publicFilters['danh_muc'])) || (!empty($publicFilters['thuong_hieu'])) || ($currentSort !== '' && $currentSort !== 'default');
+$hasActiveFilter = (!empty($publicFilters['keyword'])) || (!empty($publicFilters['gia_tu'])) || (!empty($publicFilters['gia_den'])) || (!empty($publicFilters['danh_muc'])) || (!empty($publicFilters['thuong_hieu'])) || (!empty($publicFilters['loai_da'])) || (!empty($publicFilters['danh_gia'])) || (!empty($publicFilters['giam_gia'])) || (!empty($publicFilters['con_hang'])) || ($currentSort !== '' && $currentSort !== 'default');
 $queryWith = static function (array $extra) use ($publicFilters): string {
     $query = array_filter([
         'keyword' => trim((string)($publicFilters['keyword'] ?? '')),
@@ -49,10 +49,64 @@ $queryWith = static function (array $extra) use ($publicFilters): string {
         'thuong_hieu' => trim((string)($publicFilters['thuong_hieu'] ?? '')),
         'gia_tu' => trim((string)($publicFilters['gia_tu'] ?? '')),
         'gia_den' => trim((string)($publicFilters['gia_den'] ?? '')),
+        'loai_da' => trim((string)($publicFilters['loai_da'] ?? '')),
+        'danh_gia' => trim((string)($publicFilters['danh_gia'] ?? '')),
+        'giam_gia' => trim((string)($publicFilters['giam_gia'] ?? '')),
+        'con_hang' => trim((string)($publicFilters['con_hang'] ?? '')),
         'sort' => trim((string)($publicFilters['sort'] ?? 'default')),
     ], static fn($value) => $value !== '');
     return http_build_query(array_merge($query, $extra));
 };
+$skinOptions = ['dau' => 'Da dầu', 'kho' => 'Da khô', 'nhay_cam' => 'Da nhạy cảm', 'mun' => 'Da mụn'];
+$facets = is_array($facets ?? null) ? $facets : null; // null = chưa có facet (lỗi/chưa tính) -> dùng danh sách đầy đủ
+$fCat = trim((string)($publicFilters['danh_muc'] ?? ''));
+$fBrand = trim((string)($publicFilters['thuong_hieu'] ?? ''));
+$fSkin = trim((string)($publicFilters['loai_da'] ?? ''));
+$fPriceMin = trim((string)($publicFilters['gia_tu'] ?? ''));
+$fPriceMax = trim((string)($publicFilters['gia_den'] ?? ''));
+$fRating = trim((string)($publicFilters['danh_gia'] ?? '')) === '4' ? '4' : '';
+$fSale = trim((string)($publicFilters['giam_gia'] ?? '')) === '1' ? '1' : '';
+$fStock = trim((string)($publicFilters['con_hang'] ?? '')) === '1' ? '1' : '';
+$catCounts = [];
+$brandCounts = [];
+if ($facets !== null) {
+    foreach ((array)($facets['categories'] ?? []) as $fc) {
+        $catCounts[(string)$fc['name']] = ($catCounts[(string)$fc['name']] ?? 0) + (int)$fc['count'];
+    }
+    foreach ((array)($facets['brands'] ?? []) as $fb) {
+        $brandCounts[(string)$fb['name']] = (int)$fb['count'];
+    }
+}
+$toggleOptions = [
+    ['name' => 'giam_gia', 'value' => '1', 'label' => 'Đang giảm giá', 'facet' => 'on_sale', 'on' => $fSale === '1'],
+    ['name' => 'con_hang', 'value' => '1', 'label' => 'Còn hàng', 'facet' => 'in_stock', 'on' => $fStock === '1'],
+    ['name' => 'danh_gia', 'value' => '4', 'label' => 'Từ 4★', 'facet' => 'rating4', 'on' => $fRating === '4'],
+];
+// Link bỏ/đặt một số bộ lọc (không JS vẫn dùng được): giữ mọi tham số khác, bỏ tham số rỗng
+$filterUrl = static function (array $override) use ($publicFilters): string {
+    $query = ['r' => 'goiy'];
+    foreach (['keyword', 'danh_muc', 'thuong_hieu', 'gia_tu', 'gia_den', 'loai_da', 'danh_gia', 'giam_gia', 'con_hang', 'sort'] as $key) {
+        $query[$key] = trim((string)($publicFilters[$key] ?? ''));
+    }
+    $query = array_merge($query, $override);
+    $query = array_filter($query, static fn($value) => $value !== '' && $value !== null && $value !== 'default');
+    return BASE_URL . '/index.php?' . http_build_query($query);
+};
+$activeChips = [];
+if ($fCat !== '') $activeChips[] = ['label' => 'Danh mục: ' . $fCat, 'set' => ['danh_muc' => '']];
+if ($fBrand !== '') $activeChips[] = ['label' => 'Hãng: ' . $fBrand, 'set' => ['thuong_hieu' => '']];
+if (isset($skinOptions[$fSkin])) $activeChips[] = ['label' => $skinOptions[$fSkin], 'set' => ['loai_da' => '']];
+if ($fPriceMin !== '' || $fPriceMax !== '') {
+    $priceLabel = 'Giá: ' . number_format((int)$fPriceMin, 0, ',', '.') . ($fPriceMax !== '' ? ' - ' . number_format((int)$fPriceMax, 0, ',', '.') : '+') . 'đ';
+    foreach ($pricePresets as $preset) {
+        if ($fPriceMin === (string)$preset['min'] && $fPriceMax === (string)$preset['max']) $priceLabel = $preset['label'];
+    }
+    $activeChips[] = ['label' => $priceLabel, 'set' => ['gia_tu' => '', 'gia_den' => '']];
+}
+if ($fSale === '1') $activeChips[] = ['label' => 'Đang giảm giá', 'set' => ['giam_gia' => '']];
+if ($fStock === '1') $activeChips[] = ['label' => 'Còn hàng', 'set' => ['con_hang' => '']];
+if ($fRating === '4') $activeChips[] = ['label' => 'Từ 4★', 'set' => ['danh_gia' => '']];
+$clearAllSet = ['danh_muc' => '', 'thuong_hieu' => '', 'loai_da' => '', 'gia_tu' => '', 'gia_den' => '', 'giam_gia' => '', 'con_hang' => '', 'danh_gia' => ''];
 $renderCard = static function (array $product, string $badgeLabel = '', string $cardVariant = 'default', bool $isAboveFold = false, bool $isLcp = false): void {
     include __DIR__ . '/partials/goiy_product_card.php';
 };
@@ -561,7 +615,7 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
   }
   .goiy-filter-grid {
     display: grid;
-    grid-template-columns: minmax(180px, 1.2fr) repeat(5, minmax(120px, 1fr)) auto auto;
+    grid-template-columns: minmax(180px, 1.2fr) repeat(6, minmax(120px, 1fr)) auto auto;
     gap: 12px;
     align-items: end;
   }
@@ -644,6 +698,18 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
     color: #FFFFFF;
     border-color: #183B2B;
   }
+  .price-pill.is-empty { opacity: .45; }
+  .price-pill--toggle { cursor: pointer; margin: 0; display: inline-flex; align-items: center; }
+  .price-pill--toggle:focus-within { outline: 2px solid #183B2B; outline-offset: 2px; }
+  .goiy-pill-sep { width: 1px; height: 22px; background: #E2EADF; margin: 0 4px; }
+  .goiy-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .goiy-chips:not(:empty) { margin-top: 12px; }
+  .goiy-chip {
+    font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;
+    background: #EBF2EE; color: #183B2B; border: 1px solid #C8DACF; text-decoration: none;
+  }
+  .goiy-chip:hover { background: #DCEAE2; color: #183B2B; }
+  .goiy-chip--clear { background: #FFFFFF; color: #475569; border-color: #D1D5DB; }
   .goiy-survey-alert {
     background: #F8FAF8;
     border: 1px solid #C8DACF;
@@ -833,35 +899,63 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
         </div>
       <?php endif; ?>
 
-      <form class="goiy-filter mb-4" method="get" action="<?= h(BASE_URL . '/index.php') ?>"
-            data-live-filter data-live-target="#goiyResults" data-live-also="#goiyPricePills">
+      <form class="goiy-filter mb-4" id="goiyFilterForm" method="get" action="<?= h(BASE_URL . '/index.php') ?>"
+            data-live-filter data-live-target="#goiyResults" data-live-also="#goiyCatField,#goiyBrandField,#goiySkinField,#goiyPricePills,#goiyChips">
         <input type="hidden" name="r" value="goiy">
         <div class="goiy-filter-grid">
           <div>
             <label class="form-label" for="goiy-keyword"><i class="fa-solid fa-magnifying-glass me-1"></i> Từ khóa</label>
             <input class="form-control" id="goiy-keyword" type="search" name="keyword" autocomplete="off" value="<?= h((string)($publicFilters['keyword'] ?? '')) ?>" placeholder="Serum B5, kem chống nắng...">
           </div>
-          <div>
+          <div id="goiyCatField">
             <label class="form-label" for="goiy-category">Danh mục</label>
             <select class="form-select" id="goiy-category" name="danh_muc">
               <option value="">Tất cả danh mục</option>
+              <?php $catSelFound = false; ?>
               <?php foreach ($categoryOptions as $cat): ?>
-                <?php $catName = (string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? ''); ?>
-                <?php if ($catName !== ''): ?>
-                  <option value="<?= h($catName) ?>" <?= (($publicFilters['danh_muc'] ?? '') === $catName ? 'selected' : '') ?>><?= h($catName) ?></option>
-                <?php endif; ?>
+                <?php
+                  $catName = (string)($cat['ten_danh_muc'] ?? $cat['danh_muc_day_du'] ?? '');
+                  if ($catName === '') continue;
+                  $catSel = $fCat === $catName;
+                  $catSelFound = $catSelFound || $catSel;
+                  $catCnt = (int)($catCounts[$catName] ?? 0);
+                ?>
+                <option value="<?= h($catName) ?>" <?= $catSel ? 'selected' : '' ?> <?= ($facets !== null && $catCnt === 0 && !$catSel) ? 'disabled' : '' ?>><?= h($catName . ($facets !== null ? ' (' . $catCnt . ')' : '')) ?></option>
               <?php endforeach; ?>
+              <?php if ($fCat !== '' && !$catSelFound): ?>
+                <option value="<?= h($fCat) ?>" selected><?= h($fCat) ?></option>
+              <?php endif; ?>
             </select>
           </div>
-          <div>
+          <div id="goiyBrandField">
             <label class="form-label" for="goiy-brand">Thương hiệu</label>
             <select class="form-select" id="goiy-brand" name="thuong_hieu">
               <option value="">Tất cả thương hiệu</option>
+              <?php $brandSelFound = false; ?>
               <?php foreach ($brandOptions as $brand): ?>
-                <?php $brandName = (string)($brand['ten_thuong_hieu'] ?? $brand['thuong_hieu'] ?? ''); ?>
-                <?php if ($brandName !== ''): ?>
-                  <option value="<?= h($brandName) ?>" <?= (($publicFilters['thuong_hieu'] ?? '') === $brandName ? 'selected' : '') ?>><?= h($brandName) ?></option>
-                <?php endif; ?>
+                <?php
+                  $brandName = (string)($brand['ten_thuong_hieu'] ?? $brand['thuong_hieu'] ?? '');
+                  if ($brandName === '') continue;
+                  $brandSel = $fBrand === $brandName;
+                  $brandSelFound = $brandSelFound || $brandSel;
+                  $brandCnt = (int)($brandCounts[$brandName] ?? 0);
+                  // Có facet: chỉ hiện hãng còn sản phẩm (và hãng đang chọn)
+                  if ($facets !== null && $brandCnt === 0 && !$brandSel) continue;
+                ?>
+                <option value="<?= h($brandName) ?>" <?= $brandSel ? 'selected' : '' ?>><?= h($brandName . ($facets !== null ? ' (' . $brandCnt . ')' : '')) ?></option>
+              <?php endforeach; ?>
+              <?php if ($fBrand !== '' && !$brandSelFound): ?>
+                <option value="<?= h($fBrand) ?>" selected><?= h($fBrand) ?></option>
+              <?php endif; ?>
+            </select>
+          </div>
+          <div id="goiySkinField">
+            <label class="form-label" for="goiy-skin">Loại da</label>
+            <select class="form-select" id="goiy-skin" name="loai_da">
+              <option value="">Tất cả loại da</option>
+              <?php foreach ($skinOptions as $skinKey => $skinLabel): ?>
+                <?php $skinCnt = (int)($facets['skin'][$skinKey] ?? 0); ?>
+                <option value="<?= h($skinKey) ?>" <?= $fSkin === $skinKey ? 'selected' : '' ?> <?= ($facets !== null && $skinCnt === 0 && $fSkin !== $skinKey) ? 'disabled' : '' ?>><?= h($skinLabel . ($facets !== null ? ' (' . $skinCnt . ')' : '')) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -889,11 +983,30 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
           <span class="small text-muted me-1 align-self-center fw-bold">Chọn nhanh mức giá:</span>
           <?php foreach ($pricePresets as $preset): ?>
             <?php
-              $isActive = ((string)($publicFilters['gia_tu'] ?? '') === (string)$preset['min']) && ((string)($publicFilters['gia_den'] ?? '') === (string)$preset['max']);
-              $presetUrl = BASE_URL . '/index.php?' . $queryWith(['gia_tu' => $preset['min'], 'gia_den' => $preset['max']]);
+              $isActive = $fPriceMin === (string)$preset['min'] && $fPriceMax === (string)$preset['max'];
+              $presetCnt = $facets !== null ? (int)($facets['price'][$preset['key']] ?? 0) : null;
+              // Pill đang bật: bấm lại để bỏ lọc giá
+              $presetSet = $isActive ? ['gia_tu' => '', 'gia_den' => ''] : ['gia_tu' => $preset['min'], 'gia_den' => $preset['max']];
             ?>
-            <a class="price-pill <?= $isActive ? 'active' : '' ?>" href="<?= h($presetUrl) ?>"><?= h($preset['label']) ?></a>
+            <a class="price-pill <?= $isActive ? 'active' : '' ?> <?= ($presetCnt === 0 && !$isActive) ? 'is-empty' : '' ?>" href="<?= h($filterUrl($presetSet)) ?>" data-live-set="<?= h(json_encode($presetSet)) ?>" aria-pressed="<?= $isActive ? 'true' : 'false' ?>"><?= h($preset['label'] . ($presetCnt !== null ? ' (' . $presetCnt . ')' : '')) ?></a>
           <?php endforeach; ?>
+          <span class="goiy-pill-sep" aria-hidden="true"></span>
+          <?php foreach ($toggleOptions as $tg): ?>
+            <?php $tgOn = $tg['on']; $tgCnt = $facets !== null ? (int)($facets[$tg['facet']] ?? 0) : null; ?>
+            <label class="price-pill price-pill--toggle <?= $tgOn ? 'active' : '' ?> <?= ($tgCnt === 0 && !$tgOn) ? 'is-empty' : '' ?>" for="goiy-tg-<?= h($tg['name']) ?>">
+              <input class="visually-hidden" type="checkbox" id="goiy-tg-<?= h($tg['name']) ?>" name="<?= h($tg['name']) ?>" value="<?= h($tg['value']) ?>" <?= $tgOn ? 'checked' : '' ?>>
+              <?= h($tg['label'] . ($tgCnt !== null ? ' (' . $tgCnt . ')' : '')) ?>
+            </label>
+          <?php endforeach; ?>
+        </div>
+
+        <div class="goiy-chips" id="goiyChips">
+          <?php if (!empty($activeChips)): ?>
+            <?php foreach ($activeChips as $chip): ?>
+              <a class="goiy-chip" href="<?= h($filterUrl($chip['set'])) ?>" data-live-set="<?= h(json_encode($chip['set'], JSON_UNESCAPED_UNICODE)) ?>" title="Bỏ lọc này"><?= h($chip['label']) ?> <i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="visually-hidden">Bỏ lọc</span></a>
+            <?php endforeach; ?>
+            <a class="goiy-chip goiy-chip--clear" href="<?= h($filterUrl($clearAllSet)) ?>" data-live-set="<?= h(json_encode($clearAllSet)) ?>">Xóa tất cả</a>
+          <?php endif; ?>
         </div>
       </form>
 
