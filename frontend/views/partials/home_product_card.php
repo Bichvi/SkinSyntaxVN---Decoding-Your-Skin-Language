@@ -5,7 +5,10 @@
 $favoriteProductIds = is_array($favoriteProductIds ?? null)
     ? array_values(array_unique(array_map('strval', $favoriteProductIds)))
     : [];
-return function (array $p, string $tag = '', string $whyFitText = '', string $whyLabel = 'Vì sao phù hợp') use ($favoriteProductIds): void {
+// Ngữ cảnh người xem (home.php có $isLoggedIn / $userProfile; nơi khác không có thì mặc định khách).
+$wfIsLoggedIn = (bool)($isLoggedIn ?? false);
+$wfProfileSkin = is_array($userProfile ?? null) ? trim((string)($userProfile['skin_type'] ?? '')) : '';
+return function (array $p, string $tag = '', string $whyFitText = '', string $whyLabel = 'Vì sao phù hợp') use ($favoriteProductIds, $wfIsLoggedIn, $wfProfileSkin): void {
     $productId = (string)($p['id'] ?? $p['ma_san_pham'] ?? '');
     $img = resolve_image_url(function_exists('product_image_source') ? product_image_source($p) : (string)($p['link_hinh_anh'] ?? $p['hinh_anh'] ?? ''));
     $giaBan = (string)($p['gia_ban'] ?? '');
@@ -95,6 +98,15 @@ return function (array $p, string $tag = '', string $whyFitText = '', string $wh
             $wfHasDetail = $wfShared || $wfSame || $wfExtra || $wfValue !== null;
             // Khối "Hợp với da…" / "Hợp với vấn đề…": chi tiết từ dữ liệu SP thật (fit_detail), cùng điều kiện khớp với câu đang hiện.
             $wfFit = (is_array($p['fit_detail'] ?? null) && ($p['reason_text'] ?? null) === $whyFitText) ? $p['fit_detail'] : [];
+            // Không có chi tiết riêng: dựng bản "generic" từ dữ liệu thật của SP (Mongo có thể trả BSONArray).
+            if (!$wfFit && empty($p['reason_detail']) && class_exists('HomeFitDetail')) {
+                $wfNorm = $p;
+                foreach (['cong_dung_keys', 'van_de_da_keys', 'loai_da_keys'] as $wfK) {
+                    $wfV = $p[$wfK] ?? [];
+                    $wfNorm[$wfK] = $wfV instanceof Traversable ? iterator_to_array($wfV, false) : (is_array($wfV) ? $wfV : []);
+                }
+                $wfFit = HomeFitDetail::build($wfNorm, [], 'generic');
+            }
             $wfFitList = static fn(string $k): array => array_values(array_filter((array)($wfFit[$k] ?? []), static fn($x) => is_string($x) && trim($x) !== ''));
             $wfFitActives = $wfFitList('actives');
             $wfFitSkin = $wfFitList('skin_types');
@@ -130,26 +142,78 @@ return function (array $p, string $tag = '', string $whyFitText = '', string $wh
                 $bc['more'] = 0;
             }
           ?>
-          <?php // Chỉ có popup khi có chi tiết thật để xem; không thì hộp chỉ để đọc (tránh popup lặp lại đúng câu đang hiện). ?>
-          <div class="why-fit<?= $wfHasDetail ? ' why-fit--has-detail' : '' ?>"<?php if ($wfHasDetail): ?> tabindex="0" role="button" aria-expanded="false" aria-label="Xem chi tiết lý do gợi ý"<?php endif; ?>>
-            <span class="why-fit__label visually-hidden"><i class="bi bi-lightbulb-fill" aria-hidden="true"></i><?= h($whyLabel) ?></span>
-            <?php if ($wfHasDetail): ?><i class="bi bi-chevron-up why-fit__more" aria-hidden="true"></i><?php endif; ?>
-            <span class="why-fit__text"<?= $wfHasDetail ? ' aria-hidden="true"' : '' ?> title="<?= h($wfShownText) ?>"><i class="bi bi-stars why-fit__icon" aria-hidden="true"></i><?= h($wfShownText) ?></span>
+          <?php
+            // Thẻ nào có lý do cũng có popup "Vì sao phù hợp" (hiện khi rê chuột vào thẻ); phần chi tiết chỉ có khi có dữ liệu.
+            $wfHasPop = true;
+            $wfPopBenefits = (!$wfHasDetail && class_exists('HomeBenefitChips')) ? HomeBenefitChips::for($p, '', 6)['shown'] : [];
+            $wfPopLabel = $wfIsLoggedIn ? $whyLabel : 'Dành cho ai';
+            $wfPopIcon = $wfIsLoggedIn ? 'bi-lightbulb-fill' : 'bi-person-check-fill';
+            // Dòng bằng chứng xã hội: nhãn thẻ, điểm đánh giá thật, số đã bán.
+            $wfProof = [];
+            if ($tag !== '') {
+                $wfProof[] = h($tag);
+            }
+            if ($hasRealReview) {
+                $wfProof[] = '<i class="bi bi-star-fill" aria-hidden="true"></i> ' . h(number_format($rawRating, 1)) . ' · ' . h((string)$rawReviewCount) . ' đánh giá';
+            }
+            $wfSoldN = (int)($p['so_luong_da_ban'] ?? 0);
+            if ($wfSoldN >= 10) {
+                $wfProof[] = 'Đã bán ' . h(number_format($wfSoldN, 0, ',', '.'));
+            }
+            // Ghi chú ngắn cho tối đa 2 thành phần nổi bật đầu tiên.
+            $wfNotes = [];
+            if (class_exists('HomeWhyFitCopy')) {
+                foreach (array_slice($wfFitActives, 0, 2) as $wfAct) {
+                    $wfName = trim((string)preg_replace('/^\d+(?:[.,]\d+)?%\s*/u', '', $wfAct));
+                    $wfG = $wfName !== '' ? HomeWhyFitCopy::lookup($wfName) : null;
+                    $wfBen = is_array($wfG) ? trim((string)($wfG['benefit'] ?? '')) : '';
+                    $wfShort = is_array($wfG) ? trim((string)($wfG['short'] ?? $wfName)) : $wfName;
+                    if ($wfBen !== '' && !isset($wfNotes[$wfShort])) {
+                        $wfNotes[$wfShort] = $wfBen;
+                    }
+                }
+            }
+            // Khớp da của người dùng đã đăng nhập.
+            $wfSkinMatch = false;
+            if ($wfIsLoggedIn && $wfProfileSkin !== '') {
+                foreach ($wfFitSkin as $wfSk) {
+                    if (mb_stripos($wfProfileSkin, $wfSk, 0, 'UTF-8') !== false) {
+                        $wfSkinMatch = true;
+                        break;
+                    }
+                }
+            }
+          ?>
+          <div class="why-fit<?= $wfHasPop ? ' why-fit--has-detail' : '' ?>"<?php if ($wfHasPop): ?> tabindex="0" role="button" aria-expanded="false" aria-label="Xem chi tiết lý do gợi ý"<?php endif; ?>>
+            <span class="why-fit__label visually-hidden"><i class="bi bi-lightbulb-fill" aria-hidden="true"></i><?= h($wfPopLabel) ?></span>
+            <?php if ($wfHasPop): ?><i class="bi bi-chevron-up why-fit__more" aria-hidden="true"></i><?php endif; ?>
+            <span class="why-fit__text"<?= $wfHasPop ? ' aria-hidden="true"' : '' ?> title="<?= h($wfShownText) ?>"><i class="bi bi-stars why-fit__icon" aria-hidden="true"></i><?= h($wfShownText) ?></span>
             <?php if ($wfTags || $bc['shown'] || $bc['more'] > 0): ?>
-              <span class="why-fit__tags"<?= $wfHasDetail ? ' aria-hidden="true"' : '' ?>>
+              <span class="why-fit__tags"<?= $wfHasPop ? ' aria-hidden="true"' : '' ?>>
                 <?php foreach ($wfTags as $t): ?><span class="why-fit__tag why-fit__tag--<?= h((string)($t['kind'] ?? 'extra')) ?>"><?php if (trim((string)($t['icon'] ?? '')) !== ''): ?><i class="bi <?= h((string)$t['icon']) ?>" aria-hidden="true"></i><?php endif; ?><?= h((string)$t['text']) ?></span><?php endforeach; ?>
                 <?php foreach ($bc['shown'] as $bn): ?><span class="why-fit__tag why-fit__tag--benefit"><?= h($bn) ?></span><?php endforeach; ?>
                 <?php if ($bc['more'] > 0): ?><span class="why-fit__tag why-fit__tag--more">+<?= (int)$bc['more'] ?></span><?php endif; ?>
               </span>
             <?php endif; ?>
-            <?php if ($wfHasDetail): ?>
+            <?php if ($wfHasPop): ?>
             <div class="why-fit__pop">
-              <span class="why-fit__label"><i class="bi bi-lightbulb-fill" aria-hidden="true"></i><?= h($whyLabel) ?></span>
+              <span class="why-fit__label"><i class="bi <?= h($wfPopIcon) ?>" aria-hidden="true"></i><?= h($wfPopLabel) ?></span>
+              <?php if ($wfProof): ?><div class="why-fit__proof"><?= implode(' · ', $wfProof) ?></div><?php endif; ?>
               <span class="why-fit__full"><?= h($wfCopy !== null ? $wfShownText : $wfFullText) ?></span>
               <?php if ($wfTags): // popup che kín hộp gốc nên lặp lại hàng nhãn, không để mất thông tin khi mở ?>
                 <span class="why-fit__tags">
                   <?php foreach ($wfTags as $t): ?><span class="why-fit__tag why-fit__tag--<?= h((string)($t['kind'] ?? 'extra')) ?>"><?php if (trim((string)($t['icon'] ?? '')) !== ''): ?><i class="bi <?= h((string)$t['icon']) ?>" aria-hidden="true"></i><?php endif; ?><?= h((string)$t['text']) ?></span><?php endforeach; ?>
                 </span>
+              <?php endif; ?>
+              <?php if ($wfPopBenefits): ?>
+                <div class="why-fit__detail">
+                  <div class="why-fit__sec">
+                    <span class="why-fit__title">Công dụng chính</span>
+                    <span class="why-fit__chips">
+                      <?php foreach ($wfPopBenefits as $bn): ?><span class="why-fit__chip"><?= h($bn) ?></span><?php endforeach; ?>
+                    </span>
+                  </div>
+                </div>
               <?php endif; ?>
               <?php if ($wfHasDetail): ?>
                 <div class="why-fit__detail">
@@ -159,10 +223,11 @@ return function (array $p, string $tag = '', string $whyFitText = '', string $wh
                       <span class="why-fit__chips">
                         <?php foreach ($wfFitActives as $act): ?><span class="why-fit__chip"><?= h($act) ?></span><?php endforeach; ?>
                       </span>
+                      <?php foreach ($wfNotes as $wfNs => $wfNb): ?><div class="why-fit__note"><b><?= h($wfNs) ?></b>: <?= h($wfNb) ?></div><?php endforeach; ?>
                     </div>
                   <?php endif; ?>
                   <?php if ($wfFitSkin): ?>
-                    <div class="why-fit__line">Hợp loại da: <?= h(implode(', ', $wfFitSkin)) ?></div>
+                    <div class="why-fit__line">Hợp loại da: <?= h(implode(', ', $wfFitSkin)) ?><?php if ($wfSkinMatch): ?><span class="why-fit__match"><i class="bi bi-check2-circle" aria-hidden="true"></i> Khớp da của bạn</span><?php endif; ?></div>
                   <?php endif; ?>
                   <?php if ($wfFitBenefits): ?>
                     <div class="why-fit__line">Công dụng: <?= h(implode(', ', $wfFitBenefits)) ?></div>
@@ -188,6 +253,11 @@ return function (array $p, string $tag = '', string $whyFitText = '', string $wh
                     <div class="why-fit__line why-fit__value"><i class="bi <?= h($wfValueIcon) ?>" aria-hidden="true"></i><?= h((string)$wfValue['text']) ?></div>
                   <?php endif; ?>
                 </div>
+              <?php endif; ?>
+              <?php if (!$wfIsLoggedIn): ?>
+                <a class="why-fit__cta" href="<?= BASE_URL ?>/index.php?r=khaosatnhanh">Chưa chắc hợp da bạn? Khảo sát da 30 giây <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+              <?php elseif ($wfProfileSkin === ''): ?>
+                <a class="why-fit__cta" href="<?= BASE_URL ?>/index.php?r=khaosat">Làm khảo sát để xem có khớp da bạn không <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
               <?php endif; ?>
             </div>
             <?php endif; ?>

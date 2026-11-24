@@ -8,6 +8,7 @@
  */
 class PhienLive {
     private $db;
+    private bool $chatIndexEnsured = false;
 
     public const STREAM_FRESH_SECONDS = 60;
 
@@ -425,14 +426,19 @@ class PhienLive {
     }
 
     // Compatibility for callers that do not need the threaded/idempotent saveChat contract.
-    public function luuTinNhanChat(string $roomId, string $senderName, string $message, bool $isAi = false, bool $isOrder = false, string $senderType = 'customer', string $senderId = '', string $clientMessageId = '', bool $isQuestion = false): bool {
+    public function luuTinNhanChat(string $roomId, string $senderName, string $message, bool $isAi = false, bool $isOrder = false, string $senderType = 'customer', string $senderId = '', string $clientMessageId = '', bool $isQuestion = false, string $replyToClientMessageId = '', string $replyToMessage = '', string $replyToSenderName = ''): bool {
         try {
+            $this->ensureChatIndex();
             $this->db->phien_live_chats->insertOne([
                 'room_id' => $roomId, 'sender_id' => trim($senderId),
                 'sender_type' => trim($senderType) ?: ($isAi ? 'ai' : 'customer'),
                 'sender_name' => mb_substr(trim($senderName), 0, 80), 'message' => mb_substr(trim($message), 0, 1000),
                 'is_ai' => $isAi, 'is_order' => $isOrder, 'is_question' => $isQuestion,
-                'client_message_id' => trim($clientMessageId), 'created_at' => date(DATE_ATOM),
+                'client_message_id' => trim($clientMessageId),
+                'reply_to_client_message_id' => trim($replyToClientMessageId),
+                'reply_to_message' => mb_substr(trim($replyToMessage), 0, 1000),
+                'reply_to_sender_name' => mb_substr(trim($replyToSenderName), 0, 80),
+                'created_at' => date(DATE_ATOM),
                 'timestamp_ms' => (int)round(microtime(true) * 1000),
             ]);
             return true;
@@ -485,8 +491,26 @@ class PhienLive {
         ]);
     }
 
+    public function findChatMessage(string $roomId, string $clientMessageId, string $senderId, bool $isAi): ?array {
+        if ($roomId === '' || trim($clientMessageId) === '' || trim($senderId) === '') return null;
+        try {
+            $this->ensureChatIndex();
+            $item = $this->db->phien_live_chats->findOne([
+                'room_id' => $roomId,
+                'client_message_id' => trim($clientMessageId),
+                'sender_id' => trim($senderId),
+                'is_ai' => $isAi ? true : ['$ne' => true],
+                'hidden' => ['$ne' => true],
+            ], ['sort' => ['timestamp_ms' => -1]]);
+            return $item ? (array)$item : null;
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
     public function getLichSuChat(string $roomId, int $limit = 100, string $mode = 'all', int $afterMs = 0): array {
         try {
+            $this->ensureChatIndex();
             $filter = ['room_id' => (string)$roomId, 'hidden' => ['$ne' => true]];
             if ($mode === 'featured') $filter['$or'] = [['is_pinned' => true], ['is_order' => true]];
             if ($mode === 'qa') $filter['is_question'] = true;
@@ -506,6 +530,9 @@ class PhienLive {
                     'sender_type' => (string)($item['sender_type'] ?? (!empty($item['is_ai']) ? 'ai' : 'customer')),
                     'sender_name' => (string)($item['sender_name'] ?? 'Khách hàng'), 'message' => (string)($item['message'] ?? ''),
                     'sender_avatar' => (string)($item['sender_avatar'] ?? ''),
+                    'reply_to_client_message_id' => (string)($item['reply_to_client_message_id'] ?? ''),
+                    'reply_to_message' => (string)($item['reply_to_message'] ?? ''),
+                    'reply_to_sender_name' => (string)($item['reply_to_sender_name'] ?? ''),
                     'is_ai' => !empty($item['is_ai']), 'is_order' => !empty($item['is_order']), 'is_question' => !empty($item['is_question']),
                     'is_pinned' => !empty($item['is_pinned']), 'created_at' => (string)($item['created_at'] ?? ''),
                     'reply_to' => (string)($item['reply_to'] ?? ''),
@@ -516,6 +543,17 @@ class PhienLive {
             return $results;
         } catch (Throwable $e) {
             return [];
+        }
+    }
+
+    private function ensureChatIndex(): void {
+        if ($this->chatIndexEnsured) return;
+        $this->chatIndexEnsured = true;
+        try {
+            $this->db->phien_live_chats->createIndex(['room_id' => 1, 'timestamp_ms' => 1]);
+            $this->db->phien_live_chats->createIndex(['room_id' => 1, 'client_message_id' => 1, 'is_ai' => 1]);
+        } catch (Throwable $e) {
+            // Index creation is best-effort; filtering and ownership checks remain active.
         }
     }
 

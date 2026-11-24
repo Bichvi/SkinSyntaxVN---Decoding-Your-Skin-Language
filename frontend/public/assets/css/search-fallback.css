@@ -17,6 +17,38 @@
 @media (min-width: 992px) { .ssf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
 @media (min-width: 1200px) { .ssf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
+/* Thanh trượt ngang cho từng khối gợi ý: lộ một phần thẻ kế tiếp để báo còn sản phẩm */
+.ssf-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.ssf-section-head .ssf-section-title { margin: 0; }
+.ssf-section-count { font-size: 0.78rem; color: #64748B; white-space: nowrap; }
+.ssf-rail { position: relative; }
+.ssf-grid--rail {
+  display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 46%;
+  gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
+  scroll-behavior: smooth; padding: 4px 2px 12px; scrollbar-width: thin; scrollbar-color: #C8DACF transparent;
+}
+.ssf-grid--rail > .ssf-card { scroll-snap-align: start; }
+.ssf-grid--rail::-webkit-scrollbar { height: 6px; }
+.ssf-grid--rail::-webkit-scrollbar-thumb { background: #C8DACF; border-radius: 999px; }
+.ssf-grid--rail:focus-visible { outline: 3px solid #84A98C; outline-offset: 2px; border-radius: 12px; }
+@media (min-width: 768px) { .ssf-grid--rail { grid-auto-columns: 31%; } }
+@media (min-width: 992px) { .ssf-grid--rail { grid-auto-columns: calc((100% - 3 * 16px) / 3.4); gap: 16px; } }
+@media (min-width: 1200px) { .ssf-grid--rail { grid-auto-columns: calc((100% - 4 * 16px) / 4.35); } }
+.ssf-rail-btn {
+  position: absolute; top: 38%; z-index: 3; width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid #C8DACF; background: rgba(255, 255, 255, .96); color: #183B2B;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .14); display: none; align-items: center; justify-content: center;
+  transition: opacity .2s ease, transform .2s ease, background .2s ease;
+}
+.ssf-rail-btn:hover:not(:disabled) { background: #183B2B; color: #FFF; transform: scale(1.06); }
+.ssf-rail-btn:disabled { opacity: 0; pointer-events: none; }
+.ssf-rail-btn:focus-visible { outline: 3px solid #84A98C; outline-offset: 2px; }
+.ssf-rail-prev { left: -14px; }
+.ssf-rail-next { right: -14px; }
+/* Chỉ hiện mũi tên trên thiết bị có chuột và khi khối thật sự cuộn được (JS gắn .is-scrollable) */
+@media (hover: hover) and (min-width: 768px) { .ssf-rail.is-scrollable .ssf-rail-btn { display: inline-flex; } }
+@media (prefers-reduced-motion: reduce) { .ssf-grid--rail { scroll-behavior: auto; } .ssf-rail-btn { transition: none; } }
+
 .ssf-card { display: flex; flex-direction: column; min-width: 0; border-radius: 12px; border: 1px solid var(--border, #E2EADF); background: #FFF; transition: border-color .2s ease, box-shadow .2s ease; }
 .ssf-card:hover { border-color: #C8DACF; box-shadow: 0 6px 18px rgba(24, 59, 43, .08); }
 .ssf-thumb { position: relative; aspect-ratio: 1 / 1; padding: 8px; background: #F8FAF8; border-radius: 12px 12px 0 0; overflow: hidden; }

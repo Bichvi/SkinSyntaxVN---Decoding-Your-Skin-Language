@@ -58,6 +58,7 @@ class NguoiDung {
             }
         }
         $this->db->khach_hang->deleteMany(['email' => $regex]);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
 
         $result = $this->db->nguoidung->insertOne([
             'ho_ten' => $hoTen,
@@ -81,6 +82,7 @@ class NguoiDung {
                     'updated_at' => new \MongoDB\BSON\UTCDateTime(),
                 ]]
             );
+            if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
         }
 
         return $ok;
@@ -197,6 +199,7 @@ class NguoiDung {
                 ['_id' => $khachHang['_id']],
                 ['$set' => $updateData]
             );
+            if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
             return $result->getMatchedCount() > 0;
         }
 
@@ -211,6 +214,7 @@ class NguoiDung {
             'created_at' => new \MongoDB\BSON\UTCDateTime(),
             'updated_at' => new \MongoDB\BSON\UTCDateTime()
         ]);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
 
         return $result->getInsertedCount() > 0;
     }
@@ -234,6 +238,7 @@ class NguoiDung {
             'ma_loai_da' => $newMa,
             'ten_loai_da' => $ten
         ]);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
 
         return $newMa;
     }
@@ -308,6 +313,7 @@ class NguoiDung {
                     ['profile_id' => $targetProfileId, 'owner_email' => strtolower(trim($email))],
                     ['$set' => $update]
                 );
+                if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
                 return $result->getMatchedCount() > 0;
             } catch (Throwable $e) {
                 return false;
@@ -328,6 +334,7 @@ class NguoiDung {
                 ['_id' => $khachHang['_id']],
                 ['$set' => $payload]
             );
+            if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
             return true; // Trả về true luôn để tránh lỗi nếu dữ liệu y hệt không update
         }
 
@@ -340,6 +347,7 @@ class NguoiDung {
         $payload['created_at'] = new \MongoDB\BSON\UTCDateTime();
 
         $result = $this->db->khach_hang->insertOne($payload);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
         return $result->getInsertedCount() > 0;
     }
 }

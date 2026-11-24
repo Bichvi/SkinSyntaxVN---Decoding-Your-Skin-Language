@@ -323,12 +323,16 @@ $m->luuTinNhanChat('r9', 'Bob', 'giá bao nhiêu?', false, false, 'customer', 'u
 usleep(3000);
 $m->luuTinNhanChat('r9', 'Carol', 'chốt đơn', false, true, 'customer', 'u3', 'cm-3', false);
 usleep(3000);
-$m->luuTinNhanChat('r9', 'AI', 'reply', true, false, '', 'ai_cohost', '', false);
+$m->luuTinNhanChat('r9', 'Syna', 'reply', true, false, 'ai', 'ai_cohost', '', false, 'cm-2', 'giá bao nhiêu?', 'Bob');
 $hist = $m->getLichSuChat('r9');
 check('D16 round trip keeps 4 messages in order', array_column($hist, 'message') === ['hi there', 'giá bao nhiêu?', 'chốt đơn', 'reply']);
 check('D17 sender name and message are trimmed', $hist[0]['sender_name'] === 'Alice' && $hist[0]['message'] === 'hi there');
 check('D18 client_message_id/sender fields stored', $hist[0]['client_message_id'] === 'cm-1' && $hist[0]['sender_id'] === 'guest_1' && $hist[0]['sender_type'] === 'guest');
 check('D19 empty sender_type falls back to ai for AI messages', $hist[3]['sender_type'] === 'ai' && $hist[3]['is_ai'] === true);
+check('D19b AI reply keeps the original message and sender snapshot', $hist[3]['reply_to_client_message_id'] === 'cm-2' && $hist[3]['reply_to_message'] === 'giá bao nhiêu?' && $hist[3]['reply_to_sender_name'] === 'Bob');
+check('D19c chat parent lookup enforces room, owner, and AI flag', $m->findChatMessage('r9', 'cm-2', 'u2', false)['message'] === 'giá bao nhiêu?'
+    && $m->findChatMessage('r9', 'cm-2', 'u3', false) === null
+    && $m->findChatMessage('r9', 'cm-2', 'u2', true) === null);
 check('D20 qa mode via model finds the question', array_column($m->getLichSuChat('r9', 100, 'qa'), 'message') === ['giá bao nhiêu?']);
 check('D21 featured mode via model finds the order message', array_column($m->getLichSuChat('r9', 100, 'featured'), 'message') === ['chốt đơn']);
 usleep(3000);

@@ -862,10 +862,20 @@ class AuthController {
             exit;
         }
 
-        $this->model->taoMoi($hoTen, $email, $matkhau, [
-            'terms_agree' => isset($_POST['terms_agree']),
-            'privacy_consent' => isset($_POST['privacy_consent']),
-        ]);
+        try {
+            $created = $this->model->taoMoi($hoTen, $email, $matkhau, [
+                'terms_agree' => isset($_POST['terms_agree']),
+                'privacy_consent' => isset($_POST['privacy_consent']),
+            ]);
+        } catch (Throwable $e) {
+            error_log('[auth] customer registration failed: ' . get_class($e));
+            $created = false;
+        }
+        if (!$created) {
+            set_flash('error', 'Không thể tạo tài khoản lúc này. Vui lòng thử lại sau.');
+            header('Location: ' . BASE_URL . '/index.php?auth=register');
+            exit;
+        }
         unset($_SESSION['signup_old']);
         unset($_SESSION['signup_captcha']);
         $this->clearSignupOtp();

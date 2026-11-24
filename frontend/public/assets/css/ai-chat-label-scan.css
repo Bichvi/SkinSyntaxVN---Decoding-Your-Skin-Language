@@ -114,3 +114,18 @@
   .ai-label-card { padding: 8px 10px; }
   .ai-label-card__chipbtn { white-space: normal; }
 }
+
+.ai-label-card__overlap {
+  background: #fdecec;
+  border-left: 4px solid #d93025;
+  color: #a50e0e;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.ai-label-card__overlap--info { background: #fff6db; border-left-color: #f2a900; color: #7a5300; }
+.ai-label-card__overlap b { font-weight: 700; }
+.ai-label-card__altwrap .ai-label-card__overlap { margin-bottom: 4px; }

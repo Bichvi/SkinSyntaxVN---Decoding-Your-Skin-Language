@@ -88,6 +88,7 @@ class HoiDap {
             'updated_at' => new UTCDateTime((int)(microtime(true) * 1000)),
         ];
         $this->db->khach_hang->insertOne($payload);
+        if (class_exists('TaiKhoan', false)) { TaiKhoan::forgetRequestCache(); }
         return $payload;
     }
 

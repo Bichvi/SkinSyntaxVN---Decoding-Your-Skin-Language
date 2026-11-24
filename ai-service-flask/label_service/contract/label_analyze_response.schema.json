@@ -103,7 +103,23 @@
         "properties": {
           "product_id": {"type": "string"},
           "reason_code": {"enum": ["gentler_fits_skin", "no_cart_conflict"]},
-          "reason_params": {"type": "array", "items": {"type": "string"}}
+          "reason_params": {"type": "array", "items": {"type": "string"}},
+          "overlaps": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["group", "label_vi", "cart_product_id", "cart_product_name"],
+              "properties": {
+                "group": {"enum": ["retinoids", "exfoliating_acids", "benzoyl_peroxide", "vitamin_c"]},
+                "label_vi": {"type": "string", "maxLength": 80},
+                "cart_product_id": {"type": "string"},
+                "cart_product_name": {"type": "string", "maxLength": 200},
+                "level": {"enum": ["warn", "info"]}
+              }
+            }
+          }
         }
       }
     },
@@ -114,7 +130,23 @@
     },
     "summary_vi": {"type": "string"},
     "sunscreen_note": {"type": "boolean"},
-    "took_ms": {"type": "integer", "minimum": 0}
+    "took_ms": {"type": "integer", "minimum": 0},
+    "usage": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["provider", "model", "ok", "prompt_tokens", "completion_tokens"],
+        "properties": {
+          "provider": {"enum": ["groq", "gemini"]},
+          "model": {"type": "string", "maxLength": 100},
+          "ok": {"type": "boolean"},
+          "prompt_tokens": {"type": "integer", "minimum": 0},
+          "completion_tokens": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
   },
   "$defs": {
     "findings": {

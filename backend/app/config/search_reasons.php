@@ -6,6 +6,7 @@ return [
         'category_alt' => 'Lựa chọn tương đương cùng công dụng',
         'same_brand'   => 'Cùng dòng sản phẩm bạn đang quan tâm',
         'personalized' => 'Hợp với làn da của bạn',
+        'skin_more'    => 'Khám phá thêm cho làn da của bạn', // gợi ý hợp da chung, không theo từ khóa
         'semantic'     => 'Có thể bạn đang tìm',
         'trending'     => 'Được mua nhiều tuần này',
         'best_sellers' => 'Sản phẩm bán chạy', // fallback PHP

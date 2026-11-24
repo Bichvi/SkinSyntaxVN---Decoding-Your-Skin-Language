@@ -52,3 +52,14 @@ Các thẻ ở khối `skin` và `concern` cũng có popup "Vì sao phù hợp",
 - Sửa lỗi kèm theo: Mongo (không đặt `typeMap`) trả `cong_dung_keys`/`van_de_da_keys`/`loai_da_keys` dạng `BSONArray` (đối tượng) nên các hàm kiểm `is_array` coi là rỗng. `HomeGraphRecommender::loadProducts` đổi 3 trường này về mảng PHP. Hệ quả: câu dự phòng "Giúp {công dụng}" và nhãn "Hỗ trợ {vấn đề}" của `HomeWhyFitCopy::forProduct` giờ mới thật sự hoạt động.
 - Test: `php backend/tests/unit/HomeFitDetailTest.php`, `php backend/tests/home_graph_recommender_test.php` (thêm ca mảng dạng đối tượng).
 - Trình duyệt (localhost:8080, đã đăng nhập, da khô): thẻ khối da/vấn đề mở popup bằng bấm và hover, hiện đủ "Thành phần nổi bật", "Hợp loại da", "Công dụng", "Hỗ trợ vấn đề"; thẻ không có dữ liệu thẻ (vd nước tẩy trang L'Oreal) không có popup. Chưa chạy Playwright E2E.
+
+## Popup cho mọi thẻ + nội dung theo người xem (2026-11-19 → 2026-11-20)
+- Thẻ nào có lý do (`$whyFitText`) cũng có popup; mở khi rê chuột vào **cả thẻ** (`.product-card:hover`, chỉ thiết bị có chuột, trễ 0,25s để không nhấp nháy khi lướt). Điện thoại vẫn bấm vào dòng lý do.
+- Thẻ không có `fit_detail`/`reason_detail` (khối Gợi ý hôm nay, Bán chạy, Nổi bật, Yêu thích, Routine): view dựng `HomeFitDetail::build($p, [], 'generic')` (đổi BSONArray sang mảng trước). Section `generic` trả vấn đề da của chính SP (tối đa 2), không cần reason khớp. Vẫn không đủ dữ liệu thì popup hiện "Công dụng chính" (`HomeBenefitChips`, tối đa 6).
+- Người xem: partial lấy `$isLoggedIn`, `$userProfile['skin_type']` từ phạm vi `home.php` (nơi khác mặc định khách).
+  - Khách: tiêu đề "Dành cho ai" (không ngụ ý cá nhân hóa) + link "Khảo sát da 30 giây" (`r=khaosatnhanh`).
+  - Đã đăng nhập: giữ `$whyLabel`; loại da SP nằm trong hồ sơ thì thêm "✓ Khớp da của bạn"; chưa có loại da thì link `r=khaosat`.
+- Dòng bằng chứng `.why-fit__proof`: nhãn khối + điểm đánh giá thật + "Đã bán N" (N ≥ 10).
+- `.why-fit__note`: tối đa 2 thành phần đầu kèm lợi ích từ `ingredient_glossary.php` (`HomeWhyFitCopy::lookup`).
+- File: `frontend/views/partials/home_product_card.php`, `backend/app/services/HomeFitDetail.php`, `backend/tests/unit/HomeFitDetailTest.php`, `frontend/public/assets/css/style.css` (2 khối cuối file).
+- Kiểm thử: `php -l`; `php backend/tests/unit/HomeFitDetailTest.php` (23 PASS); `php backend/tests/home_graph_recommender_test.php`; `git diff --check`; curl trang chủ khách: 37 popup, 28 có chi tiết, 0 lỗi PHP; người dùng xác nhận giao diện trên trình duyệt. Chưa thử trạng thái đã đăng nhập, chưa chạy bộ Playwright E2E.

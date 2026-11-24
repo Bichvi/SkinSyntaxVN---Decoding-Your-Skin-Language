@@ -137,3 +137,57 @@ def test_logs_have_no_secrets(caplog):
     assert "cid-1" in text and "provider=groq" in text
     for secret in (KEY_G, KEY_M, ING, base64.b64encode(IMG).decode()):
         assert secret not in text
+
+
+# ---- usage (token accounting, no content)
+def _resp_usage(payload, usage):
+    status, body = _resp(payload)
+    data = json.loads(body)
+    if usage is not None:
+        data["usage"] = usage
+    return status, json.dumps(data)
+
+
+def test_usage_parsed_from_response():
+    t = Fake(lambda u: _resp_usage(_good(), {"prompt_tokens": 1200, "completion_tokens": 340}))
+    lt = read_label(IMG, "image/png", transport=t)
+    assert lt.usage == ({"provider": "groq", "model": vision._model_for("groq"), "ok": True,
+                         "prompt_tokens": 1200, "completion_tokens": 340},)
+
+
+def test_usage_missing_is_zero():
+    lt = read_label(IMG, "image/png", transport=Fake(lambda u: _resp(_good())))
+    assert lt.usage[0]["prompt_tokens"] == 0 and lt.usage[0]["completion_tokens"] == 0 and lt.usage[0]["ok"] is True
+
+
+def test_usage_failed_then_success_has_two_entries():
+    def h(u):
+        if u == GROQ_URL:
+            return _resp_usage("not json at all", {"prompt_tokens": 900, "completion_tokens": 5})
+        return _resp_usage(_good(), {"prompt_tokens": 1000, "completion_tokens": 200})
+    lt = read_label(IMG, "image/png", transport=Fake(h))
+    assert [(a["provider"], a["ok"]) for a in lt.usage] == [("groq", False), ("gemini", True)]
+    assert lt.usage[0]["prompt_tokens"] == 900 and lt.usage[1]["completion_tokens"] == 200
+
+
+def test_usage_http_error_counts_zero_tokens():
+    def h(u):
+        return (429, '{"usage": {"prompt_tokens": 5}}') if u == GROQ_URL else _resp(_good())
+    lt = read_label(IMG, "image/png", transport=Fake(h))
+    assert lt.usage[0]["ok"] is False and lt.usage[0]["prompt_tokens"] == 0
+
+
+def test_visionunavailable_carries_attempts():
+    def h(u):
+        if u == GROQ_URL:
+            raise requests.Timeout("slow")
+        return _resp_usage("garbage", {"prompt_tokens": 700, "completion_tokens": 9})
+    with pytest.raises(VisionUnavailable) as e:
+        read_label(IMG, "image/png", transport=Fake(h))
+    assert [(a["provider"], a["ok"]) for a in e.value.attempts] == [("groq", False), ("gemini", False)]
+    assert e.value.attempts[1]["prompt_tokens"] == 700
+    assert VisionUnavailable("x").attempts == []
+
+
+def test_labeltext_positional_construction_still_works():
+    assert LabelText(True, "n", "b", "serum", ING, "en", "groq").usage == ()

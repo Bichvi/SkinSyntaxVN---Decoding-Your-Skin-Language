@@ -69,11 +69,18 @@
         });
         if (!response.ok) throw new Error("HTTP " + response.status);
         const doc = new DOMParser().parseFromString(await response.text(), "text/html");
+        // Nhớ phần tử đang focus (có id) để trả focus nếu vùng bị thay mới
+        const active = document.activeElement;
+        const activeId = active && active.id ? active.id : "";
         regionsOf(form).forEach((selector) => {
           const current = document.querySelector(selector);
           const fresh = doc.querySelector(selector);
           if (current && fresh) current.innerHTML = fresh.innerHTML;
         });
+        if (activeId && !active.isConnected) {
+          const again = document.getElementById(activeId);
+          if (again && typeof again.focus === "function") again.focus();
+        }
         window.history.replaceState(null, "", url.toString());
         form.dispatchEvent(new CustomEvent("live-filter:updated", { bubbles: true }));
       } catch (error) {
@@ -97,6 +104,70 @@
         clearTimeout(timer);
         run();
       }
+    });
+    // Nút/chip data-live-set='{"gia_tu":"0"}': gán giá trị cho các trường rồi lọc ngay (ủy quyền sự kiện vì vùng bị thay mới)
+    // Chip data-live-uncheck='{"name":"thuong_hieu[]","value":"Cocoon"}': bỏ tick đúng một ô rồi lọc
+    form.addEventListener("click", (event) => {
+      const un = event.target.closest ? event.target.closest("[data-live-uncheck]") : null;
+      if (!un || !form.contains(un)) return;
+      let spec;
+      try {
+        spec = JSON.parse(un.getAttribute("data-live-uncheck") || "{}");
+      } catch (error) {
+        return;
+      }
+      if (!spec || !spec.name) return;
+      event.preventDefault();
+      form.querySelectorAll('[name="' + String(spec.name).replace(/"/g, "") + '"]').forEach((el) => {
+        if ((el.type === "checkbox" || el.type === "radio") && el.value === String(spec.value)) el.checked = false;
+      });
+      clearTimeout(timer);
+      run();
+    });
+    form.addEventListener("click", (event) => {
+      const trigger = event.target.closest ? event.target.closest("[data-live-set]") : null;
+      if (!trigger || !form.contains(trigger)) return;
+      let values;
+      try {
+        values = JSON.parse(trigger.getAttribute("data-live-set") || "{}");
+      } catch (error) {
+        return;
+      }
+      if (!values || typeof values !== "object") return;
+      event.preventDefault();
+      Object.keys(values).forEach((name) => {
+        // Giá trị mảng: nhóm checkbox cùng tên, chỉ giữ tick các value nằm trong mảng ([] = bỏ hết)
+        if (Array.isArray(values[name])) {
+          const keep = values[name].map(String);
+          form.querySelectorAll('[name="' + name.replace(/"/g, "") + '"]').forEach((el) => {
+            if (el.type === "checkbox" || el.type === "radio") el.checked = keep.includes(el.value) && !el.disabled;
+          });
+          return;
+        }
+        const value = String(values[name]);
+        const selector = '[name="' + name.replace(/"/g, "") + '"]';
+        let field = form.querySelector(selector);
+        // Nhóm radio: chọn đúng radio có value khớp; không có radio khớp thì bỏ chọn hết
+        if (field && field.type === "radio") {
+          form.querySelectorAll(selector).forEach((radio) => {
+            radio.checked = radio.type === "radio" && radio.value === value && !radio.disabled;
+          });
+          return;
+        }
+        if (!field) {
+          field = document.createElement("input");
+          field.type = "hidden";
+          field.name = name;
+          form.appendChild(field);
+        }
+        if (field.type === "checkbox" || field.type === "radio") {
+          field.checked = value !== "";
+        } else {
+          field.value = value;
+        }
+      });
+      clearTimeout(timer);
+      run();
     });
     form.addEventListener("submit", (event) => {
       event.preventDefault();

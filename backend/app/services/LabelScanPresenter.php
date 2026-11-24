@@ -11,6 +11,7 @@ final class LabelScanPresenter
      */
     public static function present(array $result, callable $lookup): array
     {
+        unset($result['usage']); // token/chi phí chỉ dành cho đo lường phía server, không ra trình duyệt
         $ids = [];
         $matched = $result['product']['matched_product_id'] ?? null;
         if (is_string($matched) && $matched !== '') {
@@ -24,6 +25,11 @@ final class LabelScanPresenter
         foreach ((array)($result['alternatives'] ?? []) as $a) {
             if (is_array($a) && is_string($a['product_id'] ?? null)) {
                 $ids[] = $a['product_id'];
+            }
+            foreach (is_array($a['overlaps'] ?? null) ? $a['overlaps'] : [] as $o) {
+                if (is_array($o) && is_string($o['cart_product_id'] ?? null) && $o['cart_product_id'] !== '') {
+                    $ids[] = $o['cart_product_id'];
+                }
             }
         }
         $ids = array_values(array_unique($ids));
@@ -63,9 +69,24 @@ final class LabelScanPresenter
             if ($id === '' || !isset($rows[$id])) {
                 continue;
             }
+            $overlaps = [];
+            foreach (is_array($a['overlaps'] ?? null) ? $a['overlaps'] : [] as $o) {
+                if (!is_array($o)) {
+                    continue;
+                }
+                $cartId = (string)($o['cart_product_id'] ?? '');
+                $name = (string)($o['cart_product_name'] ?? '');
+                if ($name === '' && $cartId !== '' && isset($rows[$cartId])) {
+                    $name = mb_substr((string)($rows[$cartId]['ten_san_pham'] ?? ''), 0, 200, 'UTF-8');
+                }
+                $o['cart_product_name'] = $name;
+                $o['level'] = in_array($o['level'] ?? null, ['warn', 'info'], true) ? $o['level'] : 'warn';
+                $overlaps[] = $o;
+            }
             $alts[] = self::card($id, $rows[$id]) + [
                 'reason_code' => (string)($a['reason_code'] ?? ''),
                 'reason_params' => array_values((array)($a['reason_params'] ?? [])),
+                'overlaps' => array_slice($overlaps, 0, 4),
             ];
         }
         $result['alternatives'] = array_slice($alts, 0, 3);

@@ -292,3 +292,57 @@ test('skin fit findings lead with the matched ingredient names, escaped', () => 
   assert.equal(evil.includes('<script>'), false);
   assert.match(evil, /<b>&lt;script&gt;/);
 });
+
+function renderWithAlts(alts, withCards) {
+  const sandbox = {};
+  sandbox.window = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(source, sandbox);
+  const deps = { widget: { querySelector() { return null; }, addEventListener() {} }, endpoint: 'x', addMessage() {} };
+  if (withCards) { deps.renderProductCards = (items) => items.map((p) => '<div class="card">' + p.name + '</div>'); }
+  sandbox.SkinSyntaxLabelScan.init(deps);
+  return sandbox.SkinSyntaxLabelScan.renderCard(fullResult({ alternatives: alts }), 'm40');
+}
+
+const altBase = { id: 'SP3', name: 'Serum dịu', price: 1, image_url: '', url: '/index.php?r=chitiet&id=SP3', reason_code: 'no_cart_conflict', reason_params: [] };
+
+for (const withCards of [true, false]) {
+  test('overlap banner rendered with group label and cart name (cards=' + withCards + ')', () => {
+    const html = renderWithAlts([{ ...altBase, overlaps: [{ group: 'retinoids', label_vi: 'retinoid', cart_product_id: '5', cart_product_name: 'Obagi Retinol' }] }], withCards);
+    assert.match(html, /class="ai-label-card__overlap" role="note"/);
+    assert.match(html, /Trùng hoạt chất <b>retinoid<\/b> với <b>Obagi Retinol<\/b> trong giỏ/);
+    assert.ok(html.indexOf('ai-label-card__overlap') < html.indexOf('Serum dịu'));
+  });
+
+  test('info-level overlaps render the yellow wash-off notice (cards=' + withCards + ')', () => {
+    const html = renderWithAlts([{ ...altBase, overlaps: [{ group: 'retinoids', label_vi: 'retinoid', cart_product_id: '5', cart_product_name: 'Sữa rửa mặt <b>x</b>', level: 'info' }] }], withCards);
+    assert.match(html, /class="ai-label-card__overlap ai-label-card__overlap--info" role="note"/);
+    assert.match(html, /Cũng có <b>retinoid<\/b> như <b>Sữa rửa mặt &lt;b&gt;x&lt;\/b&gt;<\/b> trong giỏ\. Sản phẩm rửa trôi nên ít kích ứng hơn/);
+    assert.equal(html.includes('Trùng hoạt chất'), false);
+  });
+
+  test('a single warn overlap keeps the red banner (cards=' + withCards + ')', () => {
+    const html = renderWithAlts([{ ...altBase, overlaps: [
+      { group: 'retinoids', label_vi: 'retinoid', cart_product_id: '5', cart_product_name: 'A', level: 'info' },
+      { group: 'vitamin_c', label_vi: 'vitamin C', cart_product_id: '6', cart_product_name: 'B', level: 'warn' }] }], withCards);
+    assert.match(html, /class="ai-label-card__overlap" role="note"/);
+    assert.equal(html.includes('overlap--info'), false);
+    assert.match(html, /Trùng hoạt chất/);
+  });
+
+  test('no overlap banner when overlaps empty or missing (cards=' + withCards + ')', () => {
+    assert.equal(renderWithAlts([{ ...altBase, overlaps: [] }], withCards).includes('ai-label-card__overlap'), false);
+    assert.equal(renderWithAlts([{ ...altBase }], withCards).includes('ai-label-card__overlap'), false);
+  });
+
+  test('overlap banner escapes XSS and falls back for empty name (cards=' + withCards + ')', () => {
+    const html = renderWithAlts([{ ...altBase, overlaps: [
+      { group: 'retinoids', label_vi: '<img src=x>', cart_product_id: '5', cart_product_name: '<script>alert(1)</script>' },
+      { group: 'vitamin_c', label_vi: 'vitamin C', cart_product_id: '6', cart_product_name: '' }] }], withCards);
+    assert.equal(html.includes('<script>alert(1)'), false);
+    assert.equal(html.includes('<img src=x>'), false);
+    assert.match(html, /&lt;script&gt;/);
+    assert.match(html, /sản phẩm trong giỏ/);
+    assert.match(html, /<\/b>, <b>vitamin C/);
+  });
+}

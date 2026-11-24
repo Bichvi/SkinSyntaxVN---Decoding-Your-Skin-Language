@@ -65,3 +65,12 @@ def test_schema_rejects_unknown_top_level_key_and_bad_status():
     out = s.analyze(req())
     assert list(VALIDATOR.iter_errors({**out, "extra": 1}))
     assert list(VALIDATOR.iter_errors({**out, "status": "weird"}))
+
+
+def test_alternative_with_overlaps_validates():
+    s, _ = make(cart={"456": R1_KEYS}, catalog=FakeCatalog([{"id": "456", "ten_san_pham": "Retinol Serum"}]),
+                candidates=[alt("t9", "fits_skin_type", ["tretinoin"])],
+                lt=label(K1, "moisturizer"))
+    out = s.analyze(req(product_ids=("456",), skin_profile={"skin_type": "da khô"}))
+    assert out["alternatives"][0]["overlaps"]
+    check(out)
