@@ -598,6 +598,35 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
           return trim($value);
         };
 
+        $mergeIngredientLinesInsideParentheses = function ($text) {
+          $value = trim((string)$text);
+          if ($value === '') {
+            return '';
+          }
+
+          $lines = preg_split('/\n/u', $value) ?: [];
+          $merged = [];
+          $depth = 0;
+          foreach ($lines as $line) {
+            $line = trim((string)$line);
+            if ($line === '') {
+              continue;
+            }
+
+            if ($depth > 0 && $merged !== []) {
+              $line = preg_replace('/^(?:[-*•]|–)\s*/u', '', $line);
+              $merged[count($merged) - 1] .= ' ' . trim((string)$line);
+            } else {
+              $merged[] = $line;
+            }
+
+            $depth += substr_count($line, '(') - substr_count($line, ')');
+            $depth = max(0, $depth);
+          }
+
+          return implode("\n", $merged);
+        };
+
         $keepFirstProductBlockOnly = function ($text) {
           $value = trim((string)$text);
           if ($value === '') {
@@ -639,8 +668,8 @@ $phanTramGiam = function_exists('product_discount_percent') ? product_discount_p
         $thanhPhanDayDuRaw = $p['thanh_phan_day_du'] ?? ( ($p['thanh_phan_full'] ?? ''));
         $moTaRaw = $p['mo_ta'] ?? '';
 
-        $thanhPhanChinh = $sanitizeIngredientText($thanhPhanChinhRaw);
-        $thanhPhanDayDu = $sanitizeIngredientText($keepFirstFullIngredientOnly($thanhPhanDayDuRaw));
+        $thanhPhanChinh = $mergeIngredientLinesInsideParentheses($sanitizeIngredientText($thanhPhanChinhRaw));
+        $thanhPhanDayDu = $mergeIngredientLinesInsideParentheses($sanitizeIngredientText($keepFirstFullIngredientOnly($thanhPhanDayDuRaw)));
         $moTa = $sanitizeIngredientText($keepFirstProductBlockOnly($moTaRaw));
         $hdsd = $sanitizeIngredientText($p['hdsd'] ?? '');
 

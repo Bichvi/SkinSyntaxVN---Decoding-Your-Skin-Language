@@ -68,12 +68,32 @@ def ingredient_titles(value) -> list[str]:
     else:
         text = html.unescape(re.sub(r"<[^>]+>", "\n", str(value or "")))
         text = text.replace("\\r\\n", "\n").replace("\\n", "\n")
-        values = re.split(r"[\n•;]+", text)
-        if len(values) == 1 and ":" not in text:
-            values = text.split(",")
+        # Commas inside a parenthesized label are part of that label, e.g.
+        # ``3 loại Ceramides (1, 3, 6 II)``.  Splitting those commas creates
+        # fake rows and makes the board appear to reorder the source data.
+        separators = {"\n", "•", ";"}
+        if ":" not in text:
+            separators.add(",")
+        values = []
+        current = []
+        depth = 0
+        for char in text:
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth = max(0, depth - 1)
+            if char == "•" and depth > 0:
+                current.append(" ")
+            elif char in separators and depth == 0:
+                values.append("".join(current))
+                current = []
+            else:
+                current.append(char)
+        values.append("".join(current))
     titles = []
     for item in values:
         title = re.sub(r"^[-*\s]+", "", item).split(":", 1)[0].strip()
+        title = re.sub(r"\s+", " ", title)
         if title and title.upper() not in {"UNKNOWN", "N/A", "NONE"} and title not in titles:
             titles.append(title[:160])
     return titles[:3]

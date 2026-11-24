@@ -17,6 +17,10 @@ class SynaTests(unittest.TestCase):
     def test_ingredients_are_source_labels_not_invented_benefits(self):
         raw = '• 4% Niacinamide: giúp làm sáng da.\\r\\n• 0.15% Retinol nguyên chất: giúp tái tạo.'
         self.assertEqual(ingredient_titles(raw), ['4% Niacinamide', '0.15% Retinol nguyên chất'])
+        self.assertEqual(ingredient_titles('3 loại Ceramides (1, 3, 6 II), Hyaluronic Acid'),
+                         ['3 loại Ceramides (1, 3, 6 II)', 'Hyaluronic Acid'])
+        self.assertEqual(ingredient_titles('• 3 loại Ceramides (1, 3, 6\n• II): thiết yếu.\n• Hyaluronic Acid: cấp ẩm.'),
+                         ['3 loại Ceramides (1, 3, 6 II)', 'Hyaluronic Acid'])
         self.assertEqual(ingredient_titles('UNKNOWN'), [])
         self.assertEqual(ingredient_titles(None), [])
         self.assertEqual(ingredient_titles(['A', 'B', 'C', 'D']), ['A', 'B', 'C'])
