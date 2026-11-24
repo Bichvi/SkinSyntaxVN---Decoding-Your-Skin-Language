@@ -69,7 +69,8 @@
     } else {
       cap.hidden = true;
     }
-    $('ptAvail').textContent = 'Số dư có thể dùng: ' + fmt(s.xu_balance) + ' xu';
+    $('ptAvail').textContent = 'Tự đổi thành ' + fmt(s.points_from_xu) + ' điểm thành viên từ xu'
+      + ' · Tổng khả dụng ' + fmt(s.points_available) + ' điểm';
   }
 
   function renderDays(s) {
