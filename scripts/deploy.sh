@@ -1,100 +1,93 @@
 #!/usr/bin/env bash
-# Deploy SkinSyntaxVN trên VPS. GitHub Actions gọi script này qua SSH sau mỗi lần push lên main;
-# cũng chạy tay được:  bash ~/skinsyntax/scripts/deploy.sh
-#
-# Biến môi trường (tùy chọn):
-#   APP_DIR        thư mục repo trên VPS (mặc định: thư mục cha của scripts/)
-#   DEPLOY_BRANCH  nhánh deploy (mặc định: main)
-#
-# Toàn bộ thân script nằm trong main() để bash đọc hết trước khi chạy: `git pull` bên dưới có thể
-# sửa chính file này, đọc dở dang sẽ chạy nhầm lệnh.
+# Deploy the approved Recommendation file to an existing production bind mount.
+set -euo pipefail
 
-main() {
-  set -euo pipefail
+release_dir=${1:?Pass the staged release directory}
+expected=${2:?Pass the SHA-256 of the current production file}
+[[ $# == 2 && $release_dir =~ ^/tmp/skinsyntax-release\.[A-Za-z0-9]+$ && $expected =~ ^[a-f0-9]{64}$ ]]
+[[ -d $release_dir && ! -L $release_dir && -O $release_dir ]]
+[[ $(stat -c %a "$release_dir") == 700 ]]
 
-  local app_dir="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-  local branch="${DEPLOY_BRANCH:-main}"
-  cd "$app_dir"
+app_dir="$HOME/SkinSyntaxVN---Decoding-Your-Skin-Language"
+web_dir="$HOME/.skinsyntax-web-release-490e7c7"
+rag_dir="$HOME/.skinsyntax-rag-release-39a548a"
+target=ai-service-flask/structured_recommendation.py
+candidate="$release_dir/structured_recommendation.py"
+backup="$release_dir/previous.py"
+[[ -f $candidate && ! -L $candidate && ! -e $backup ]]
 
-  local compose=(docker compose -f docker-compose.yml -f docker-compose.prod.yml)
+cd "$app_dir"
+exec 9>"$HOME/.skinsyntax-production-release.lock"
+flock -n 9
+dc=(docker compose -f docker-compose.yml -f docker-compose.prod.yml -f "$web_dir/web.override.yml")
+sha256sum -c "$rag_dir/manual-deployment.sha256"
+awk '/^[a-f0-9]+  .*\/(web.override.yml|php-fpm.web.conf|php-session.web.ini)$/ {print}' \
+    "$web_dir/deployment-manifest.txt" | sha256sum -c -
+(cd "$release_dir" && sha256sum -c candidate.sha256)
+printf '%s  %s\n' "$expected" "$target" | sha256sum -c -
+cid=$("${dc[@]}" ps -q ai-service)
+[[ -n $cid && $(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/app"}}{{.Source}}{{end}}{{end}}' "$cid") == "$app_dir/ai-service-flask" ]]
+image=$(docker inspect -f '{{.Image}}' "$cid")
 
-  if [ ! -f .env ]; then
-    echo "[deploy] Thiếu $app_dir/.env — copy .env production lên VPS trước." >&2
-    exit 1
-  fi
-
-  # Chỉ một lần deploy chạy cùng lúc.
-  exec 9>"/tmp/skinsyntax-deploy.lock"
-  flock -n 9 || { echo "[deploy] Đang có lần deploy khác chạy, thoát." >&2; exit 1; }
-
-  echo "[deploy] Kéo code mới từ origin/$branch ..."
-  local old new
-  old="$(git rev-parse HEAD)"
-  git fetch --quiet origin "$branch"
-  git checkout --quiet "$branch"
-  git merge --ff-only "origin/$branch"
-  new="$(git rev-parse HEAD)"
-  echo "[deploy] $old -> $new"
-
-  # Build lần lượt mỗi image MỘT lần (Docker cache: chỉ đổi code thì vài giây; đổi requirements mới lâu).
-  # Không dùng `up --build`: nó build song song cùng một image cho mọi service dùng chung
-  # (ai-service x3, ai-idol x5), dễ hết RAM trên VPS. Các service còn lại dùng lại tag vừa build:
-  #   ai-service      -> skinsyntax-ai-service:latest (search-worker, catalog-worker)
-  #   ai-idol-service -> skinsyntax-ai-idol:local     (ai-idol-worker, -control-, -broadcast-, -beat)
-  local svc
-  for svc in php-backend ai-service ai-idol-service ai-idol-agent-service voice-service; do
-    echo "[deploy] Build $svc ..."
-    "${compose[@]}" build "$svc"
-  done
-
-  # Tạo lại container có image hoặc cấu hình mới.
-  echo "[deploy] Khởi động stack ..."
-  "${compose[@]}" up -d --remove-orphans
-
-  # Code PHP và Flask được mount thẳng từ repo (không nằm trong image), nên container cũ vẫn chạy
-  # code cũ (gunicorn không tự nạp lại, opcache cache file). Khởi động lại đúng phần bị đổi.
-  if [ "$old" != "$new" ]; then
-    local changed
-    changed="$(git diff --name-only "$old" "$new")"
-    local restart=()
-    if grep -qE '^(backend/|frontend/|docker/php/)' <<<"$changed"; then
-      restart+=(php-backend)
-    fi
-    if grep -qE '^ai-service-flask/' <<<"$changed"; then
-      restart+=(ai-service search-worker catalog-worker)
-    fi
-    if grep -qE '^nginx/' <<<"$changed"; then
-      restart+=(nginx)
-    fi
-    if grep -qE '^Caddyfile$' <<<"$changed"; then
-      restart+=(caddy)
-    fi
-    if [ "${#restart[@]}" -gt 0 ]; then
-      echo "[deploy] Khởi động lại: ${restart[*]}"
-      "${compose[@]}" restart "${restart[@]}"
-    fi
-  fi
-
-  echo "[deploy] Chờ trang chủ phản hồi ..."
-  local ok=0
-  for _ in $(seq 1 30); do
-    if "${compose[@]}" exec -T nginx wget -q -O /dev/null http://127.0.0.1/; then
-      ok=1
-      break
-    fi
-    sleep 5
-  done
-
-  # Dọn image cũ không còn dùng sau mỗi lần build để VPS khỏi đầy ổ.
-  docker image prune -f >/dev/null
-
-  "${compose[@]}" ps --format 'table {{.Name}}\t{{.Status}}'
-
-  if [ "$ok" -ne 1 ]; then
-    echo "[deploy] LỖI: trang chủ không phản hồi sau 150 giây. Xem log: ${compose[*]} logs --tail 100 php-backend nginx" >&2
-    exit 1
-  fi
-  echo "[deploy] Xong: $new"
+wait_health() {
+    for _ in $(seq 1 45); do
+        if [[ $(docker inspect -f '{{.State.Health.Status}}' "$cid") == healthy ]]; then
+            "${dc[@]}" exec -T ai-service python -c 'import json,urllib.request; h=json.load(urllib.request.urlopen("http://127.0.0.1:5001/api/health",timeout=10)); assert h.get("ok") and h["documents"]>0'
+            return
+        fi
+        sleep 4
+    done
+    return 1
 }
 
-main "$@"
+replace_target() {
+    local tmp
+    tmp=$(mktemp "$(dirname "$target")/.recommendation.XXXXXXXX")
+    cp -p -- "$1" "$tmp"
+    mv -fT -- "$tmp" "$target"
+}
+
+rollback() {
+    local code=$?
+    trap - EXIT
+    if ((code)); then
+        echo "Release failed. Restoring $backup." >&2
+        set +e
+        replace_target "$backup" && "${dc[@]}" restart ai-service && wait_health
+        if (($?)); then
+            echo "Automatic rollback did not reach healthy status." >&2
+        fi
+    fi
+    exit "$code"
+}
+
+wait_health
+cp -p -- "$target" "$backup"
+trap rollback EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+replace_target "$candidate"
+"${dc[@]}" restart ai-service
+wait_health
+[[ $(docker inspect -f '{{.Image}}' "$cid") == "$image" ]]
+"${dc[@]}" exec -T ai-service python - <<'PY'
+import json
+import urllib.request
+request = urllib.request.Request(
+    "http://127.0.0.1:5001/api/recommend",
+    json.dumps({"user_profile": {"skin_type": "da dầu"}}).encode(),
+    {"Content-Type": "application/json"},
+)
+with urllib.request.urlopen(request, timeout=90) as response:
+    data = json.load(response)
+    assert response.status == 200 and data["ok"] and data["products"]
+    labels = [item["loai_da"].casefold() for item in data["products"]]
+    exact = ("dầu", "dau", "nhờn", "nhon", "oily")
+    universal = ("mọi loại da", "moi loai da", "tất cả loại da", "tat ca loai da", "all skin types")
+    assert any(any(word in label for word in exact) for label in labels)
+    assert all(any(word in label for word in (*exact, *universal)) for label in labels)
+    print(f"Recommendation smoke: {len(labels)} compatible products")
+PY
+curl --fail --silent --show-error --max-time 20 --output /dev/null https://skinsyntaxvn.app/
+trap - EXIT INT TERM
+printf 'Release passed. Rollback file: %s\n' "$backup"
