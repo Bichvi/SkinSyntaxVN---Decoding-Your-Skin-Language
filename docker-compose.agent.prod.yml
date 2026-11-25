@@ -1,0 +1,17 @@
+# Optional Agent V2 overlay for the existing production web/AI project.
+# Both secrets must be provisioned separately in the production environment.
+x-agent-environment: &agent-environment
+  SYNA_AGENT_V2: "1"
+  CHAT_AGENT_INTERNAL_SECRET: ${CHAT_AGENT_INTERNAL_SECRET:?Set CHAT_AGENT_INTERNAL_SECRET}
+  CHAT_AGENT_TOKEN_SECRET: ${CHAT_AGENT_TOKEN_SECRET:?Set CHAT_AGENT_TOKEN_SECRET}
+
+services:
+  php-backend:
+    environment:
+      <<: *agent-environment
+      CHAT_AGENT_REQUIRE_LISTENER: "1"
+      SYNA_AGENT_PURCHASE_DISABLED: "1"
+  ai-service:
+    environment:
+      <<: *agent-environment
+      CHAT_AGENT_PHP_URL: http://nginx:8081/index.php
