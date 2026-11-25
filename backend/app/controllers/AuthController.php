@@ -4,6 +4,7 @@
 require_once __DIR__ . "/../models/NguoiDung.php";
 require_once __DIR__ . "/../models/TaiKhoan.php";
 require_once __DIR__ . "/../services/AuthThrottle.php";
+require_once __DIR__ . "/../services/Mailer.php";
 
 class AuthController {
     private $pdo;
@@ -64,6 +65,10 @@ class AuthController {
     }
 
     private function sendHtmlEmail(string $to, string $subject, string $html): bool {
+        // Docker has no XAMPP sendmail transport. Share the SMTP settings used by order OTP.
+        if (DIRECTORY_SEPARATOR !== "\\" || ss_env('SMTP_HOST', '') !== '') {
+            return Mailer::fromEnv()->send($to, $subject, $html);
+        }
         $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'SkinSyntax';
         $fromAddress = defined('MAIL_FROM_ADDRESS') ? MAIL_FROM_ADDRESS : 'no-reply@skinsyntax.local';
         $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
@@ -134,17 +139,6 @@ class AuthController {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
             }
             $responseBody = curl_exec($ch);
-            $curlErr = curl_errno($ch);
-            // Retry without SSL verify for trusted OAuth domains on local dev
-            if ($curlErr === 60 || $curlErr === 77) {
-                $trustedHosts = ['accounts.google.com', 'oauth2.googleapis.com', 'www.googleapis.com', 'graph.facebook.com', 'www.facebook.com'];
-                $urlHost = strtolower((string)parse_url($url, PHP_URL_HOST));
-                if (in_array($urlHost, $trustedHosts, true)) {
-                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                    $responseBody = curl_exec($ch);
-                }
-            }
             $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
             return ['status' => $status, 'body' => (string)$responseBody];
@@ -203,6 +197,9 @@ class AuthController {
     }
 
     private function loginCustomerSession(array $user): void {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
         $_SESSION['user'] = [
             'id' => $user['id'] ?? (isset($user['_id']) ? (string)$user['_id'] : null),
             'ho_ten' => $user['ho_ten'],
@@ -260,20 +257,13 @@ class AuthController {
     }
 
     private function shouldUseLocalSocialFallback(string $provider): bool {
-        $mode = strtolower(trim((string)($_GET['oauth_mode'] ?? '')));
-        if (in_array($mode, ['real', 'oauth'], true)) {
+        $configuredHost = strtolower((string)parse_url(defined('APP_URL') ? APP_URL : '', PHP_URL_HOST));
+        if (!in_array($configuredHost, ['localhost', '127.0.0.1', '[::1]'], true)
+            || !defined('SOCIAL_LOCAL_FALLBACK') || (string)SOCIAL_LOCAL_FALLBACK !== '1') {
             return false;
         }
-
-        if (in_array($mode, ['local', 'dev'], true)) {
-            return true;
-        }
-
-        if (defined('SOCIAL_LOCAL_FALLBACK')
-            && in_array(strtolower(trim((string)SOCIAL_LOCAL_FALLBACK)), ['1', 'true', 'yes', 'on'], true)) {
-            return true;
-        }
-        return false;
+        $mode = strtolower(trim((string)($_GET['oauth_mode'] ?? '')));
+        return !in_array($mode, ['real', 'oauth'], true);
     }
 
     private function getLocalSocialIdentity(string $provider): array {
