@@ -30,6 +30,7 @@ from retrieval import (
 from schemas import PhanTichYeuCau, dict_to_yc
 from hybrid_search import RankedDocument
 from session_cache import get_history, get_last_products, get_session_state, save_turn, update_session_state
+from chatbot_service.profile_context import cart_conflicts_text, normalize_profile
 
 _WEB_CACHE: dict[str, tuple[dict, float]] = {}
 _WEB_CACHE_TTL = 900
@@ -938,10 +939,10 @@ def _prepare_pipeline(message: str, msg_data: dict | None) -> dict:
     current_product_id : str | None = None
 
     if msg_data:
-        profile           = msg_data.get("customer_profile", {}) or {}
-        skin_type         = profile.get("skin_type") or profile.get("loai_da")
-        avoid_ingredients = profile.get("avoid_ingredients") or profile.get("thanh_phan_can_tranh") or []
-        skin_issues       = profile.get("skin_issues")        or profile.get("tinh_trang_da")       or []
+        profile           = normalize_profile(msg_data.get("customer_profile"))
+        skin_type         = profile["skin_type"]
+        avoid_ingredients = profile["avoid_ingredients"]
+        skin_issues       = profile["skin_issues"]
         cart_items        = msg_data.get("cart_items",        []) or []
         cart_conflicts    = msg_data.get("cart_conflicts",    []) or []
         retrieved_sql     = msg_data.get("retrieved_products",[]) or []
@@ -991,10 +992,11 @@ def _prepare_pipeline(message: str, msg_data: dict | None) -> dict:
                 f"  Khi khách hỏi 'sản phẩm này', 'em này' → hiểu là {p_name}."
             )
     if cart_items:
-        names = [i.get("name", str(i)) if isinstance(i, dict) else str(i) for i in cart_items]
+        names = [str(i.get("name") or "") if isinstance(i, dict) else str(i) for i in cart_items]
         ctx_parts.append(f"- Giỏ hàng: {', '.join(names)}")
-    if cart_conflicts:
-        ctx_parts.append(f"- XUNG ĐỘT HOẠT CHẤT: {', '.join(cart_conflicts)}")
+    conflict_text = cart_conflicts_text(cart_conflicts)
+    if conflict_text:
+        ctx_parts.append(f"- XUNG ĐỘT HOẠT CHẤT: {conflict_text}")
 
     if _is_contextual_followup(message, chat_history_str):
         prior = get_last_products(msg_data)
