@@ -75,3 +75,16 @@ def test_general_prompt_build_replaces_rich_context():
                 assert '.replace("{rich_context}", rich_context)' in seg
                 found = True
     assert found
+def test_cart_conflict_text_accepts_php_objects_and_legacy_strings():
+    from chatbot_service.profile_context import cart_conflicts_text
+
+    conflicts = [
+        {"product_a": "Serum A", "product_b": "Serum B", "warning": "Dùng cách ngày",
+         "recommendation": {"unexpected": True}, "private_note": "excluded"},
+        "Cảnh báo cũ",
+        None,
+    ]
+    assert cart_conflicts_text(conflicts) == "Serum A / Serum B / Dùng cách ngày; Cảnh báo cũ"
+    assert cart_conflicts_text("Cảnh báo cũ") == "Cảnh báo cũ"
+    assert cart_conflicts_text({"warning": "bad root shape"}) == ""
+    assert conflicts[0]["recommendation"] == {"unexpected": True}
