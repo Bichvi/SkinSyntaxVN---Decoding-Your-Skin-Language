@@ -15,10 +15,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-from retrieval import get_hybrid_pipeline, build_filter
+from retrieval import get_hybrid_pipeline
 from recommendation.mongo_source import get_database, normalize_product, visible_filter
 from pipeline import _rule_based_parse
-from schemas import PhanTichYeuCau, SYNONYMS_SP, ALLOWED_LOAI_SP
 
 # Category Keyword Synonym Dictionary for Hard Constraint Verification
 CATEGORY_KEYWORDS: Dict[str, List[str]] = {
@@ -66,6 +65,44 @@ def _norm(text: Any) -> str:
     text = unicodedata.normalize("NFKD", str(text or "").lower())
     text = "".join(ch for ch in text if not unicodedata.combining(ch))
     return re.sub(r"\s+", " ", text).strip()
+
+
+_SKIN_LABELS = {
+    "oily": ("dầu", "dau", "nhờn", "nhon", "oily"),
+    "dry": ("khô", "kho", "dry"),
+    "sensitive": ("nhạy cảm", "nhay cam", "sensitive"),
+    "acne": ("mụn", "mun", "acne"),
+    "normal": ("thường", "thuong", "normal"),
+    "combination": ("hỗn hợp", "hon hop", "combination"),
+    "universal": ("mọi loại da", "moi loai da", "tất cả loại da", "tat ca loai da", "all skin types"),
+}
+
+
+def _skin_pattern(labels: tuple[str, ...]) -> str:
+    return "(?:" + "|".join(re.escape(label) for label in labels) + ")"
+
+
+def _skin_labels(text: str) -> set[str]:
+    normalized = _norm(text).replace("_", " ")
+    keys = {key for key, labels in _SKIN_LABELS.items() if re.search(rf"\b{_skin_pattern(labels)}\b", normalized)}
+    if keys & {"oily", "dry"}:
+        keys.discard("combination")
+    return keys
+
+
+def _skin_match(product: dict, requested: set[str]) -> int:
+    labels = _skin_labels(product.get("loai_da") or product.get("skin_type") or "")
+    if not requested or requested <= labels:
+        return 2
+    return int("universal" in labels)
+
+
+def _profile_terms(value: Any) -> list[str]:
+    if isinstance(value, str):
+        value = value.split(",")
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
 
 
 def _is_non_skincare_product(product: dict) -> bool:
@@ -156,6 +193,11 @@ def validate_recommendation(product: dict, constraints: dict) -> Tuple[bool, Opt
     Deterministically validate if product satisfies all extracted hard constraints.
     Returns (is_valid: bool, rejection_reason: Optional[str]).
     """
+    if product.get("stock_status") == "hidden":
+        return False, "hidden product"
+    requested_skin = _skin_labels(constraints.get("skin_type") or "") - {"universal"}
+    if not _skin_match(product, requested_skin):
+        return False, "skin type mismatch or unverified"
     prod_name = str(product.get("ten_san_pham") or "").strip()
     prod_cat = str(product.get("loai_san_pham") or product.get("danh_muc_day_du") or "").strip()
     price = int(product.get("gia_ban") or 0)
@@ -231,12 +273,8 @@ def parse_query_constraints(query: str, profile: dict) -> dict:
     yc = _rule_based_parse(query) if query else None
 
     user_skin = str(profile.get("skin_type") or "").strip()
-    user_concerns = profile.get("concerns") or []
-    if isinstance(user_concerns, str):
-        user_concerns = [c.strip() for c in user_concerns.split(",") if c.strip()]
-    user_avoid = profile.get("avoid_ingredients") or []
-    if isinstance(user_avoid, str):
-        user_avoid = [a.strip() for a in user_avoid.split(",") if a.strip()]
+    user_concerns = _profile_terms(profile.get("concerns"))
+    user_avoid = _profile_terms(profile.get("avoid_ingredients"))
 
     profile_budget = profile.get("budget")
     try:
@@ -283,13 +321,9 @@ def evaluate_product_fit(product: dict, profile: dict) -> dict:
     matched_ingredients: List[str] = []
 
     user_skin_type = str(profile.get("skin_type") or "").strip()
-    user_concerns = profile.get("concerns") or []
-    if isinstance(user_concerns, str):
-        user_concerns = [c.strip() for c in user_concerns.split(",") if c.strip()]
+    user_concerns = _profile_terms(profile.get("concerns"))
 
-    avoid_ingredients = profile.get("avoid_ingredients") or []
-    if isinstance(avoid_ingredients, str):
-        avoid_ingredients = [a.strip() for a in avoid_ingredients.split(",") if a.strip()]
+    avoid_ingredients = _profile_terms(profile.get("avoid_ingredients"))
     avoid_ingredients = [a for a in avoid_ingredients if _norm(a) not in ("khong co", "khong co / khong quan tam", "none", "")]
 
     budget = profile.get("budget")
@@ -444,8 +478,7 @@ def generate_structured_recommendation(payload: dict, limit: int = 6) -> dict:
         search_query_parts.append(f"cải thiện {concerns_str}")
     search_text = ". ".join(search_query_parts) + "."
 
-    # Build Chroma DB Metadata Filter
-    chroma_filter = build_filter(constraints["yc"]) if constraints.get("yc") else None
+    requested_skin = _skin_labels(constraints.get("skin_type") or "") - {"universal"}
 
     # Step 2: Retrieve Candidates via Hybrid Search (filters=None to let Hard Constraint Layer filter deterministically)
     t_retrieval_start = time.perf_counter()
@@ -466,20 +499,22 @@ def generate_structured_recommendation(payload: dict, limit: int = 6) -> dict:
         try:
             db = get_database(timeout_ms=500)
             db.command("ping")
-            doc_ids = [r.doc_id for r in ranked_docs if r.doc_id]
+            doc_ids = [str(r.doc_id).removeprefix("product_") for r in ranked_docs if r.doc_id]
             if doc_ids:
-                cursor = db.san_pham.find({"$or": [{"ma_san_pham": {"$in": doc_ids}}, {"id": {"$in": doc_ids}}]})
+                ids = [*doc_ids, *(int(pid) for pid in doc_ids if pid.isascii() and pid.isdecimal())]
+                query = visible_filter({"$or": [{"ma_san_pham": {"$in": ids}}, {"id": {"$in": ids}}]})
+                cursor = db.san_pham.find(query)
                 by_id = {str(doc.get("ma_san_pham") or doc.get("id") or ""): normalize_product(doc, db) for doc in cursor}
-                for r in ranked_docs:
-                    p = by_id.get(r.doc_id)
-                    if p and visible_filter({}).get("stock_status") != "hidden":
+                for pid in doc_ids:
+                    p = by_id.get(pid)
+                    if p:
                         raw_candidates.append(p)
         except Exception as mongo_err:
             logger.warning(f"[RECOMMEND] Mongo hydration unavailable: {mongo_err}. Hydrating from ChromaDB metadata.")
             for r in ranked_docs:
                 meta = dict(getattr(r, "metadata", {}) or {})
                 if meta:
-                    p_id = str(meta.get("ma_san_pham") or getattr(r, "doc_id", "") or getattr(r, "id", "") or "")
+                    p_id = str(meta.get("ma_san_pham") or getattr(r, "doc_id", "") or getattr(r, "id", "") or "").removeprefix("product_")
                     meta["ma_san_pham"] = p_id
                     meta["id"] = p_id
                     meta["gia_ban"] = int(meta.get("gia_ban") or meta.get("gia") or 0)
@@ -518,8 +553,9 @@ def generate_structured_recommendation(payload: dict, limit: int = 6) -> dict:
                 "reason": reason,
             })
 
-    # MongoDB Fallback Query if Chroma search with filter returned 0 candidates
-    if len(valid_candidates) < limit:
+    # Give explicitly compatible catalog rows a chance even when the hybrid pool has enough universal rows.
+    exact_count = sum(_skin_match(p, requested_skin) == 2 for p in valid_candidates)
+    if exact_count < limit:
         try:
             db = get_database(timeout_ms=500)
             db.command("ping")
@@ -540,7 +576,24 @@ def generate_structured_recommendation(payload: dict, limit: int = 6) -> dict:
                     {"ten_san_pham": {"$regex": regex_pattern, "$options": "i"}},
                 ]
 
-            fallback_rows = db.san_pham.find(mongo_query, limit=limit * 2)
+            if requested_skin:
+                skin_patterns = [
+                    {"$or": [{field: {"$regex": _skin_pattern(_SKIN_LABELS[key]), "$options": "i"}}
+                             for field in ("loai_da", "skin_type")]}
+                    for key in sorted(requested_skin)
+                ]
+                exact_query = {"$and": [mongo_query, *skin_patterns]}
+                universal = {"$or": [
+                    {field: {"$regex": _skin_pattern(_SKIN_LABELS["universal"]), "$options": "i"}}
+                    for field in ("loai_da", "skin_type")
+                ]}
+                fallback_rows = (
+                    row
+                    for query in (exact_query, {"$and": [mongo_query, universal]})
+                    for row in db.san_pham.find(query, limit=limit * 8)
+                )
+            else:
+                fallback_rows = db.san_pham.find(mongo_query, limit=limit * 2)
             for r in fallback_rows:
                 norm_p = normalize_product(r, db)
                 p_id = str(norm_p.get("ma_san_pham") or norm_p.get("id") or "")
@@ -563,7 +616,7 @@ def generate_structured_recommendation(payload: dict, limit: int = 6) -> dict:
     candidate_trace["passed_candidates_count"] = len(valid_candidates)
 
     # Step 4: Step Selection / Routine Budget Trim
-    selected_candidates = valid_candidates[:limit]
+    selected_candidates = sorted(valid_candidates, key=lambda p: _skin_match(p, requested_skin), reverse=True)[:limit]
 
     # Routine Total Budget Validation
     if constraints.get("is_routine") and max_price and max_price > 0:
