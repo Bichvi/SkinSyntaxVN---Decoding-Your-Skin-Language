@@ -29,7 +29,12 @@ class _FallbackLogger(BaseCallbackHandler):
         self.model = model
 
     def on_llm_error(self, error: BaseException, **kwargs: Any) -> None:
-        logger.warning("agent llm provider failed model=%s cause=%s", self.model, type(error).__name__)
+        status = getattr(error, "status_code", None)
+        if type(status) is int and 100 <= status <= 599:
+            logger.warning("agent llm provider failed model=%s cause=%s status=%d",
+                           self.model, type(error).__name__, status)
+        else:
+            logger.warning("agent llm provider failed model=%s cause=%s", self.model, type(error).__name__)
 
 
 def _api_key(name: str) -> str:
