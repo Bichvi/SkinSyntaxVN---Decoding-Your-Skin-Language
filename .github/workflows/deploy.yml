@@ -1,10 +1,9 @@
-# CI/CD: kiểm tra mỗi lần push/PR; push lên main (hoặc bấm Run workflow) thì deploy lên VPS qua SSH.
+# CI kiểm tra push/PR. Production Recommendation chỉ chạy khi dispatch thủ công.
 # Secrets cần tạo ở GitHub -> Settings -> Secrets and variables -> Actions:
 #   VPS_HOST         IP hoặc tên miền của VPS
 #   VPS_USER         user SSH trên VPS (vd. deploy)
 #   VPS_SSH_KEY      private key dành riêng cho deploy (nội dung file deploy_key)
-#   VPS_KNOWN_HOSTS  kết quả `ssh-keyscan -H <IP VPS>` (để xác minh đúng máy, chống giả mạo)
-# Hướng dẫn đầy đủ: update_deploy_cicd.md
+#   VPS_KNOWN_HOSTS  host key đã đối chiếu qua nguồn tin cậy
 
 name: CI/CD
 
@@ -13,6 +12,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      recommendation_base_sha256:
+        description: "SHA-256 hiện tại của structured_recommendation.py trên VPS"
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -55,16 +59,32 @@ jobs:
           touch .env
           docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
 
+      - name: Cấu hình Agent và cú pháp script release
+        env:
+          NEO4J_PASSWORD: ci-only
+          DOMAIN: example.invalid
+          CHAT_AGENT_INTERNAL_SECRET: ci-only-internal
+          CHAT_AGENT_TOKEN_SECRET: ci-only-token
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.web.prod.yml -f docker-compose.agent.prod.yml config --quiet
+          bash -n scripts/deploy.sh
+
   deploy:
-    name: Deploy lên VPS
+    name: Deploy Recommendation lên VPS
     needs: check
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    environment: production
     timeout-minutes: 60
     concurrency:
       group: deploy-production
       cancel-in-progress: false
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
       - name: Chuẩn bị SSH
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -75,10 +95,21 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
-      - name: Chạy scripts/deploy.sh trên VPS
+      - name: Chuyển gói Recommendation đã duyệt và kiểm thử
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          EXPECTED_SHA: ${{ inputs.recommendation_base_sha256 }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ServerAliveInterval=30 \
-            "$VPS_USER@$VPS_HOST" 'bash ~/skinsyntax/scripts/deploy.sh'
+          set -euo pipefail
+          [[ $EXPECTED_SHA =~ ^[a-f0-9]{64}$ ]]
+          opts=(-i "$HOME/.ssh/deploy_key" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30)
+          remote="$VPS_USER@$VPS_HOST"
+          local_dir=$(mktemp -d)
+          path=ai-service-flask/structured_recommendation.py
+          git archive "$GITHUB_SHA" -- "$path" | tar -xO "$path" > "$local_dir/structured_recommendation.py"
+          (cd "$local_dir" && sha256sum structured_recommendation.py > candidate.sha256)
+          stage=$(ssh "${opts[@]}" "$remote" 'mktemp -d /tmp/skinsyntax-release.XXXXXXXX')
+          [[ $stage =~ ^/tmp/skinsyntax-release\.[A-Za-z0-9]+$ ]]
+          scp "${opts[@]}" "$local_dir/structured_recommendation.py" "$local_dir/candidate.sha256" "$remote:$stage/"
+          ssh "${opts[@]}" "$remote" "bash -s -- '$stage' '$EXPECTED_SHA'" < scripts/deploy.sh
