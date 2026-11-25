@@ -754,7 +754,13 @@ final class ChatAgentController
     {
         // Same source as ai_chat_widget.php so the widget flag and the stream gate always agree.
         $flag = function_exists('ss_env') ? ss_env('SYNA_AGENT_V2', '') : trim((string)($_ENV['SYNA_AGENT_V2'] ?? ''));
-        return new ChatAgentGate(RedisLite::shared(), ['SYNA_AGENT_V2' => $flag]);
+        $purchaseDisabled = function_exists('ss_env')
+            ? ss_env('SYNA_AGENT_PURCHASE_DISABLED', '')
+            : trim((string)($_ENV['SYNA_AGENT_PURCHASE_DISABLED'] ?? ''));
+        return new ChatAgentGate(RedisLite::shared(), [
+            'SYNA_AGENT_V2' => $flag,
+            'SYNA_AGENT_PURCHASE_DISABLED' => $purchaseDisabled,
+        ]);
     }
 
     private function checkOrigin(): void

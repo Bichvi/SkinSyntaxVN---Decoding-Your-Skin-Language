@@ -72,6 +72,10 @@ $check('kill_switch_removes_write_scopes', $gate->purchaseEnabled() === false
     && $gate->scopesFor(true, false) === ['chat', 'order:read']);
 
 $check('set_returns_false_when_redis_null', (new ChatAgentGate(null, []))->setPurchaseEnabled(false) === false);
+$consultationGate = new ChatAgentGate(null, ['SYNA_AGENT_V2' => '1', 'SYNA_AGENT_PURCHASE_DISABLED' => '1']);
+$check('deployment_can_enable_advice_without_purchase', $consultationGate->agentEnabled()
+    && !$consultationGate->purchaseEnabled()
+    && $consultationGate->scopesFor(true, false) === ['chat', 'order:read']);
 $redis->setResult = false;
 $check('set_returns_false_when_write_fails', $gate->setPurchaseEnabled(false) === false);
 $redis->setResult = true;
