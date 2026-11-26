@@ -42,8 +42,8 @@ F("Hình 4.6 Chatbot Syna tư vấn sản phẩm và thêm vào giỏ hàng",
   "Chèn ảnh chụp hội thoại: thẻ sản phẩm, thẻ xác nhận đơn, ô nhập OTP.")
 F("Hình 4.7 Thẻ phân tích ảnh nhãn thành phần",
   "Chèn ảnh chụp thẻ phân tích: hoạt chất chính, mức phù hợp, gợi ý tách buổi và sản phẩm thay thế.")
-H3("4.2.3  Phân hệ AI Idol")
-F("Hình 4.8 Studio AI Idol giao việc tạo video cho Syna",
+H3("4.2.3  Phân hệ Syna AutoStudio")
+F("Hình 4.8 Syna AutoStudio giao việc tạo video cho Syna",
   "Chèn ảnh chụp Studio: danh sách công việc, tiến độ từng bước, xem trước kịch bản.")
 F("Hình 4.9 Phòng livestream của Syna",
   "Chèn ảnh chụp video trên trang chi tiết và phòng livestream có bình luận, sản phẩm ghim.")
@@ -69,7 +69,7 @@ P("Mỗi dịch vụ có bộ kiểm thử đơn vị và kiểm thử tích h�
 T("Bảng 4.2 Kết quả kiểm thử tự động",
   ["Phạm vi", "Ngày chạy", "Kết quả"],
   [["Dịch vụ AI: tìm kiếm, đồng bộ đồ thị, gợi ý, gắn nhãn, vận hành", "27/10/2026", "633 đạt, 0 lỗi"],
-   ["Dịch vụ AI Idol", "03/11/2026", "890 đạt, 0 lỗi, 181 kiểm thử con đạt"],
+   ["Dịch vụ Syna AutoStudio", "03/11/2026", "890 đạt, 0 lỗi, 181 kiểm thử con đạt"],
    ["Công cụ đồ thị của chatbot", "12/11/2026", "78 kiểm thử; 32 câu đánh giá đúng định tuyến"],
    ["Phân tích giỏ hàng (Python và PHP)", "23/10/2026", "26 + 12 + 7 test Python, 37 test PHP đạt"],
    ["Kiểm thử đầu cuối bằng Playwright: giỏ hàng trong khung chat", "24/11/2026", "8/8 bước kiểm tra đạt"]],

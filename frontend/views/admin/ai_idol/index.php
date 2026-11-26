@@ -77,9 +77,9 @@ $wzRadios = static function (string $name, array $options) use ($wzEsc, $wzNumbe
 <main class="idol-studio" id="idolStudio">
     <header class="studio-heading">
         <div>
-            <div class="studio-eyebrow"><span class="studio-mark" aria-hidden="true"><i class="bi bi-camera-reels"></i></span> SKINSYNTAX / STUDIO</div>
-            <h1>Chăm chút từng buổi live.</h1>
-            <p>Từ sản phẩm của bạn đến một chương trình sẵn sàng lên sóng.</p>
+            <div class="studio-eyebrow"><span class="studio-mark" aria-hidden="true"><i class="bi bi-camera-reels"></i></span> SYNA · TẠO VIDEO</div>
+            <h1>Tự động tạo video với Multi-Agent LLM + RAG</h1>
+            <p>Các agent AI viết và phản biện kịch bản từ kiến thức skincare (RAG), rồi tự lồng giọng và dựng video với người dẫn ảo.</p>
         </div>
         <a class="studio-link" href="index.php?r=admin_lives">Quản lý phiên live <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
     </header>

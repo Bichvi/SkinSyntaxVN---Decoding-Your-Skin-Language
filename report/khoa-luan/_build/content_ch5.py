@@ -6,7 +6,7 @@ P("Phần này tổng kết những gì nhóm đã đạt được so với mụ
 
 H2("1.  Kết quả đạt được")
 P("Về tổng thể, nhóm đã xây dựng được nền tảng thương mại điện tử mỹ phẩm có khả năng tư vấn theo làn da, đáp ứng mục tiêu tổng quát của đề tài. "
-  "Hệ thống gồm ba phân hệ thương mại điện tử, AI tư vấn và AI Idol, phục vụ bốn nhóm tác nhân với đầy đủ nghiệp vụ từ mua hàng tới quản trị. "
+  "Hệ thống gồm ba phân hệ thương mại điện tử, AI tư vấn và Syna AutoStudio, phục vụ bốn nhóm tác nhân với đầy đủ nghiệp vụ từ mua hàng tới quản trị. "
   "Bảng KL.1 đối chiếu từng mục tiêu cụ thể với kết quả đạt được.")
 T("Bảng KL.1 Đối chiếu mục tiêu và kết quả",
   ["Mục tiêu cụ thể", "Kết quả", "Mức độ"],
@@ -14,8 +14,8 @@ T("Bảng KL.1 Đối chiếu mục tiêu và kết quả",
    ["Hệ thống gợi ý lai theo hồ sơ da, nội dung, hành vi và đồ thị tri thức", "Có xếp hạng Bayes, mô hình lai, sản phẩm tương tự, tìm kiếm thông minh năm nhánh, kèm lý do phù hợp", "Hoàn thành"],
    ["Đồ thị tri thức sản phẩm trên Neo4j", "Mô hình hóa sản phẩm, thành phần, loại da, vấn đề da và 55 cặp xung đột hoạt chất", "Hoàn thành"],
    ["Chatbot RAG, tìm kiếm lai, điều phối bằng LangGraph", "Chatbot bốn nút, mười ý định, mười một công cụ, đặt hàng có OTP; bộ định tuyến đạt 92,5%", "Hoàn thành"],
-   ["AI Idol Syna sinh kịch bản, giọng nói và video", "Quy trình chín bước có kiểm tra kịch bản, duyệt tự động hoặc thủ công, livestream trên website", "Hoàn thành"],
-   ["Đánh giá bằng độ đo định lượng và khảo sát Likert", "Đã đo định tuyến, công cụ đồ thị, RAGAS và gợi ý cộng tác; khảo sát nhu cầu 56 người; khảo sát hài lòng sau thử nghiệm chưa có kết quả", "Hoàn thành một phần"],
+   ["Syna AutoStudio sinh kịch bản, giọng nói và video", "Quy trình chín bước có kiểm tra kịch bản, duyệt tự động hoặc thủ công, livestream trên website", "Hoàn thành"],
+   ["Đánh giá bằng độ đo định lượng và khảo sát Likert", "Đã đo định tuyến, công cụ đồ thị, RAGAS và gợi ý cộng tác; khảo sát nhu cầu 141 người; khảo sát hài lòng sau thử nghiệm chưa có kết quả", "Hoàn thành một phần"],
    ["Triển khai lên máy chủ thật bằng Docker Compose", "Đã có cấu hình triển khai và CI/CD, chưa đưa lên máy chủ thật", "Hoàn thành một phần"]],
   [5.2, 7.8, 2.5], size=10.5)
 P("Bên cạnh các chức năng, nhóm rút ra ba điểm khác biệt chính của SkinSyntaxVN so với các nền tảng hiện có. "
@@ -33,7 +33,7 @@ B("**Chất lượng truy xuất RAG còn thấp:** với 30 câu thử nghiệm
   "**Thiếu dữ liệu hành vi thật:** các thuật toán lọc cộng tác mới được đánh giá trên dữ liệu mô phỏng và chưa vượt trội rõ ràng so với gợi ý theo độ phổ biến, nên chưa được đưa vào vận hành.",
   "**Bộ dữ liệu đánh giá còn nhỏ:** bộ định tuyến được đo trên 40 câu, nhãn đúng của bộ RAG được sinh tự động và chưa có người gán.",
   "**Bộ luật xung đột cần chuyên gia duyệt:** các ngưỡng như thứ hạng thành phần và việc hạ mức cho sản phẩm rửa trôi do nhóm tự đặt. Chatbot và trang giỏ hàng còn dùng hai bộ luật khác nhau.",
-  "**Phụ thuộc dịch vụ bên ngoài:** chatbot, đọc ảnh nhãn và AI Idol dùng hạn mức miễn phí của các nhà cung cấp mô hình ngôn ngữ, nên có thể chậm hoặc tạm ngưng khi hết hạn mức.",
+  "**Phụ thuộc dịch vụ bên ngoài:** chatbot, đọc ảnh nhãn và Syna AutoStudio dùng hạn mức miễn phí của các nhà cung cấp mô hình ngôn ngữ, nên có thể chậm hoặc tạm ngưng khi hết hạn mức.",
   "**Hạ tầng vận hành còn đơn giản:** phí vận chuyển cố định, chưa tích hợp đơn vị vận chuyển và cổng thanh toán trực tuyến, việc phát livestream lên nền tảng bên ngoài chưa được thử nghiệm.")
 
 H2("3.  Hướng phát triển")
@@ -51,7 +51,7 @@ B("Thu thập dữ liệu hành vi thật trong thời gian vận hành, sau đ�
   "Thử nghiệm phát livestream của Syna lên YouTube và Facebook bằng phần đẩy luồng đã có sẵn trong hệ thống.")
 H3("3.3  Dài hạn")
 B("Phát triển ứng dụng di động để gửi thông báo nhắc quy trình chăm sóc da và theo dõi tiến triển của làn da.",
-  "Mở rộng thành nền tảng cho nhiều cửa hàng, mỗi cửa hàng có dữ liệu và nhân vật AI Idol riêng.",
+  "Mở rộng thành nền tảng cho nhiều cửa hàng, mỗi cửa hàng có dữ liệu và nhân vật ảo riêng trên Syna AutoStudio.",
   "Nghiên cứu phân tích ảnh da mặt để hỗ trợ xác định loại da, với điều kiện có sự đồng ý của người dùng và không thay thế chẩn đoán của bác sĩ.")
 P("Với các hướng phát triển trên, nhóm kỳ vọng SkinSyntaxVN có thể trở thành một công cụ thực tế giúp người mua chọn mỹ phẩm an toàn hơn. "
   "Đồng thời, hệ thống giúp các cửa hàng nhỏ giảm chi phí tư vấn và làm nội dung, đúng với vấn đề đã đặt ra từ đầu đề tài.")

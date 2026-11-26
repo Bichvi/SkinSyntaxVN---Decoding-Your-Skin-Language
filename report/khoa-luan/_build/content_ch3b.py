@@ -10,7 +10,7 @@ P("SkinSyntaxVN được thiết kế theo kiến trúc nhiều dịch vụ, tá
   "Cách tách này giúp mỗi phần được phát triển, mở rộng và khởi động lại độc lập.")
 F("Hình 3.13 Sơ đồ kiến trúc tổng thể",
   "Vẽ 4 tầng từ trái sang phải. Tầng người dùng: Trình duyệt (khách, nhân viên, quản trị). Tầng cổng: Nginx. "
-  "Tầng ứng dụng: PHP Backend (MVC) ↔ AI Service (chatbot LangGraph, Search Service, Home Service), AI Idol Service + Celery worker, Agent kịch bản CrewAI, Search worker, Catalog worker. "
+  "Tầng ứng dụng: PHP Backend (MVC) ↔ AI Service (chatbot LangGraph, Search Service, Home Service), Syna AutoStudio Service + Celery worker, Agent kịch bản CrewAI, Search worker, Catalog worker. "
   "Tầng dữ liệu: MongoDB Atlas, Neo4j, ChromaDB, Redis. Bên ngoài: nhà cung cấp LLM, dịch vụ email, cổng đối soát, kho lưu trữ R2. Ghi chú mũi tên: HTTP nội bộ + X-Internal-Token.")
 P("Hình 3.13 cho thấy MongoDB Atlas là nguồn dữ liệu gốc duy nhất của hệ thống. "
   "Neo4j và ChromaDB chỉ là bản sao dẫn xuất phục vụ suy luận quan hệ và tìm kiếm ngữ nghĩa, có thể dựng lại từ MongoDB bất kỳ lúc nào. "
@@ -24,7 +24,7 @@ T("Bảng 3.11 Các thành phần của hệ thống",
    ["PHP Backend", "PHP 8.2, MVC", "Giao diện, phiên đăng nhập, phân quyền, giỏ hàng, đơn hàng, khuyến mãi, quản trị; gọi các dịch vụ AI."],
    ["AI Service", "Python, Flask, LangGraph", "Chatbot tư vấn, tìm kiếm thông minh, gợi ý, sản phẩm tương tự, phân tích giỏ hàng, đọc thành phần từ ảnh."],
    ["Search worker, Catalog worker", "Python, Redis Streams", "Ghi nhật ký tìm kiếm theo lô; đồng bộ Neo4j, ChromaDB và chạy tác vụ định kỳ khi danh mục thay đổi."],
-   ["AI Idol Service", "Python, Flask, Celery", "Quản lý công việc tạo video, chiến dịch livestream và lịch phát."],
+   ["Syna AutoStudio Service", "Python, Flask, Celery", "Quản lý công việc tạo video, chiến dịch livestream và lịch phát."],
    ["Agent kịch bản", "CrewAI", "Hai vai biên kịch và biên tập phối hợp viết kịch bản cho Syna."],
    ["MongoDB Atlas", "MongoDB", "Lưu toàn bộ dữ liệu nghiệp vụ."],
    ["Neo4j", "Neo4j 5.26", "Đồ thị tri thức sản phẩm, thành phần, loại da, xung đột."],
@@ -61,7 +61,7 @@ T("Bảng 3.12 Các collection chính trong MongoDB",
    ["lich_su_chat, thong_bao", "Tin nhắn và thông báo", "người gửi, nội dung, đã đọc, thời gian"],
    ["tuong_tac_nguoi_dung, search_events", "Hành vi", "xem, thêm giỏ, mua, từ khóa tìm kiếm, lượt nhấp"],
    ["phien_live, phien_live_chats", "Livestream", "phiên, sản phẩm ghim, ưu đãi, bình luận, cảm xúc, người xem"],
-   ["ai_idol_jobs, ai_idol_campaigns, ai_product_videos", "AI Idol", "trạng thái từng bước, kịch bản, đường dẫn video, lịch phát, trạng thái hiển thị"]],
+   ["ai_idol_jobs, ai_idol_campaigns, ai_product_videos", "Syna AutoStudio", "trạng thái từng bước, kịch bản, đường dẫn video, lịch phát, trạng thái hiển thị"]],
   [4.2, 3.2, 8.1], size=10)
 F("Hình 3.15 Lược đồ quan hệ giữa các collection chính",
   "Vẽ dạng sơ đồ thực thể: san_pham n–1 danh_muc, thuong_hieu, xuat_xu, loai_da; khach_hang 1–n hoa_don; hoa_don 1–n chi_tiet_hoa_don n–1 san_pham; "
@@ -85,7 +85,7 @@ F("Hình 3.16 Lược đồ đồ thị tri thức sản phẩm",
   "Ingredient (CONTAINS{rank}); Ingredient–HELPS→Concern; Ingredient–CONFLICTS_WITH–Ingredient; Product–SIMILAR_TO/CO_PURCHASED→Product.")
 H3("3.5.3  Cơ sở dữ liệu vector và bộ nhớ đệm")
 P("ChromaDB lưu vector của từng sản phẩm, được tạo từ tên, thành phần, công dụng và loại da bằng mô hình nhúng đa ngôn ngữ. "
-  "Hệ thống dùng hai collection: products phục vụ chatbot và AI Idol, catalog_products_v1 phục vụ tìm kiếm thông minh. "
+  "Hệ thống dùng hai collection: products phục vụ chatbot và Syna AutoStudio, catalog_products_v1 phục vụ tìm kiếm thông minh. "
   "Redis vừa lưu đệm kết quả gợi ý và phân tích giỏ hàng, vừa làm hàng đợi cho Celery và Redis Streams, đếm giới hạn tần suất và lưu trạng thái ngắt mạch. "
   "Bộ đệm được đánh số theo thế hệ dữ liệu, nên khi danh mục thay đổi, chỉ cần tăng số thế hệ là toàn bộ kết quả cũ hết hiệu lực.")
 
@@ -136,11 +136,11 @@ P("Bộ luật xung đột được lưu trong một tệp cấu hình gồm mư
 P("Để giảm cảnh báo sai, một hoạt chất chỉ được tính khi nằm trong nhóm thành phần đầu của bảng thành phần. "
   "Sản phẩm rửa trôi như sữa rửa mặt được hạ một mức độ vì thời gian tiếp xúc với da ngắn. "
   "Việc phán đoán xung đột hoàn toàn dựa trên luật, không dùng mô hình ngôn ngữ, để kết quả nhất quán và kiểm thử được.")
-H3("3.6.5  Quy trình sinh nội dung AI Idol")
-P("Quy trình AI Idol được thiết kế thành chuỗi bước có lưu trạng thái, mỗi bước ghi kết quả trung gian vào công việc trong MongoDB. "
+H3("3.6.5  Quy trình sinh nội dung Syna AutoStudio")
+P("Quy trình Syna AutoStudio được thiết kế thành chuỗi bước có lưu trạng thái, mỗi bước ghi kết quả trung gian vào công việc trong MongoDB. "
   "Kịch bản được sinh từ dữ liệu sản phẩm và kiến thức truy xuất, theo khung bảy phần cho video và tám phần cho livestream. "
   "Sau bước kiểm tra, kịch bản được chuyển thành giọng đọc, dựng hình Syna, trộn nhạc nền và chuẩn hóa âm lượng bằng FFmpeg.")
-T("Bảng 3.15 Các bước của quy trình tạo video AI Idol",
+T("Bảng 3.15 Các bước của quy trình tạo video Syna AutoStudio",
   ["Bước", "Xử lý", "Kết quả"],
   [["1", "Thu thập dữ liệu sản phẩm và giá", "Ảnh chụp dữ liệu sản phẩm trong công việc"],
    ["2", "Truy xuất kiến thức bổ trợ từ ChromaDB", "Đoạn kiến thức về hoạt chất"],
@@ -172,7 +172,7 @@ T("Bảng 3.16 Các màn hình chính",
    ["Hồ sơ và thưởng", "Khách hàng", "Hồ sơ da, đơn hàng, điểm danh, voucher"],
    ["Bảng điều khiển quản trị", "Quản trị viên", "Doanh thu, đơn hàng, sản phẩm bán chạy"],
    ["Quản lý đơn hàng", "Nhân viên", "Lọc theo trạng thái, cập nhật nhanh, in đơn"],
-   ["Studio AI Idol", "Quản trị viên", "Tạo video, theo dõi tiến độ, duyệt kịch bản, lên lịch chiến dịch"]],
+   ["Syna AutoStudio", "Quản trị viên", "Tạo video, theo dõi tiến độ, duyệt kịch bản, lên lịch chiến dịch"]],
   [4, 3, 8.5], size=10.5)
 F("Hình 3.18 Thiết kế giao diện trang chi tiết sản phẩm",
   "Chèn wireframe: ảnh sản phẩm, giá, nút mua, ô Vì sao phù hợp, khối thành phần, video Syna, sản phẩm tương tự.")
@@ -180,7 +180,7 @@ F("Hình 3.19 Thiết kế giao diện giỏ hàng có cảnh báo xung đột",
   "Chèn wireframe: danh sách sản phẩm, khối cảnh báo (mức độ, lời khuyên), gợi ý bước còn thiếu, tổng tiền.")
 F("Hình 3.20 Thiết kế giao diện khung chat Syna",
   "Chèn wireframe: hội thoại, thẻ sản phẩm, thẻ xác nhận đơn và ô nhập OTP, thẻ phân tích ảnh nhãn.")
-F("Hình 3.21 Thiết kế giao diện Studio AI Idol",
+F("Hình 3.21 Thiết kế giao diện Syna AutoStudio",
   "Chèn wireframe: chọn sản phẩm, chế độ duyệt, tiến độ các bước, xem trước kịch bản và video.")
 
 # ================= 3.8 =================

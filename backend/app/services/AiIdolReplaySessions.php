@@ -29,7 +29,7 @@ final class AiIdolReplaySessions
         return [
             'id' => 'ai-' . $id,
             'title' => (string)($campaign['name'] ?? ''),
-            'streamer' => 'Syna · AI Idol',
+            'streamer' => 'Syna · Video AI',
             'viewers' => 0,
             'status' => 'replay_ready',
             'thumbnail' => $poster !== '' ? $poster : $fallbackImage,

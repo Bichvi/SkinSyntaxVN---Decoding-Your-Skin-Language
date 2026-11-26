@@ -37,7 +37,7 @@
     }
     function renderGroup() {
         group.hidden = !alerts.length;
-        group.innerHTML = alerts.length ? '<div class="admin-notification-section"><div class="small fw-semibold text-uppercase text-muted">AI Idol · Kịch bản sắp tới giờ phát</div></div>' + alerts.map(alert => `
+        group.innerHTML = alerts.length ? '<div class="admin-notification-section"><div class="small fw-semibold text-uppercase text-muted">Syna – Tạo video · Kịch bản sắp tới giờ phát</div></div>' + alerts.map(alert => `
             <a class="admin-notification-item ai-idol-alert is-${escapeHtml(alert.warning.level)}" href="index.php?r=admin_ai_idol&campaign_id=${encodeURIComponent(alert.id)}">
                 <div class="d-flex justify-content-between gap-3">
                     <div class="fw-semibold">${escapeHtml(alert.name)}</div>
@@ -58,7 +58,7 @@
             const body = await response.json();
             const now = Date.now();
             alerts = (body.campaigns || [])
-                .map(item => ({id: String(item._id), name: item.name || 'Chương trình AI Idol', scheduledAt: item.scheduled_at, warning: approvalWarning(item, now)}))
+                .map(item => ({id: String(item._id), name: item.name || 'Chương trình Syna', scheduledAt: item.scheduled_at, warning: approvalWarning(item, now)}))
                 .filter(alert => alert.warning && !(alert.warning.level === 'missed' && now - new Date(alert.scheduledAt).getTime() > MISSED_WINDOW_MS))
                 .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
             renderGroup();

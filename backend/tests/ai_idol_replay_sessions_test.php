@@ -30,7 +30,7 @@ check(is_array($s), 'valid campaign maps to a session');
 check(($s['id'] ?? null) === 'ai-6ace67e735f427f1bf0c492c', 'id is ai- prefixed');
 check(($s['title'] ?? null) === 'Livestream 15/10', 'title is campaign name');
 check(($s['status'] ?? null) === 'replay_ready', 'status replay_ready');
-check(($s['streamer'] ?? null) === 'Syna · AI Idol', 'streamer label');
+check(($s['streamer'] ?? null) === 'Syna · Video AI', 'streamer label');
 check(($s['url_ban_ghi'] ?? null) === $video, 'url_ban_ghi is video url');
 check(($s['thumbnail'] ?? null) === $poster, 'thumbnail is poster url');
 check(($s['pinned_product'] ?? null) === $product, 'pinned_product is first product');

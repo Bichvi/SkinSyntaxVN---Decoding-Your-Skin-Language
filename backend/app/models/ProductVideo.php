@@ -528,7 +528,7 @@ class ProductVideo {
         $campaignsMap = [];
         try {
             foreach ($this->db->ai_idol_campaigns->find([]) as $c) {
-                $campaignsMap[(string)$c['_id']] = (string)($c['name'] ?? 'Chương trình AI Idol');
+                $campaignsMap[(string)$c['_id']] = (string)($c['name'] ?? 'Chương trình Syna');
             }
         } catch (Throwable $e) {}
 
@@ -579,7 +579,7 @@ class ProductVideo {
                     'video_id' => $vid,
                     'job_id' => (string)($v['job_id'] ?? ''),
                     'campaign_id' => $cid,
-                    'campaign_name' => $campaignsMap[$cid] ?? 'Chương trình AI Idol',
+                    'campaign_name' => $campaignsMap[$cid] ?? 'Chương trình Syna',
                     'default_product_id' => $defaultPid,
                     'duration' => (float)($v['duration'] ?? 0),
                     'format' => (string)($v['format'] ?? '16:9'),

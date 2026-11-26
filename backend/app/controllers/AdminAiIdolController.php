@@ -133,7 +133,7 @@ class AdminAiIdolController {
             'catalogTree' => $catalogData['tree'],
             'filterCounts' => $catalogData['filterCounts'],
             'csrfToken' => self::getCsrfToken(),
-            'title' => 'AI Idol Studio & Video Generator'
+            'title' => 'Syna – Tạo video'
         ]);
     }
 
@@ -187,7 +187,7 @@ class AdminAiIdolController {
             http_response_code(502);
             return json_encode([
                 'ok' => false,
-                'message' => 'Không thể kết nối đến AI Idol Service: ' . ($curlError ?: 'service chưa sẵn sàng.')
+                'message' => 'Không thể kết nối đến dịch vụ Syna – Tạo video: ' . ($curlError ?: 'service chưa sẵn sàng.')
             ]);
         }
 
@@ -354,7 +354,7 @@ class AdminAiIdolController {
         curl_close($ch);
         if ($response === false) {
             http_response_code(502);
-            echo json_encode(['ok' => false, 'message' => 'Không thể tải tệp lên AI Idol: ' . $error]);
+            echo json_encode(['ok' => false, 'message' => 'Không thể tải tệp lên Syna – Tạo video: ' . $error]);
             exit;
         }
         http_response_code($httpCode ?: 200);
@@ -536,7 +536,7 @@ class AdminAiIdolController {
         if ($ok === false && !headers_sent()) {
             http_response_code(502);
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'message' => 'Không thể tải video AI Idol.']);
+            echo json_encode(['ok' => false, 'message' => 'Không thể tải video Syna.']);
         }
         curl_close($ch);
         exit;

@@ -170,7 +170,7 @@
     var who = el('span', 'pv-who');
     var title = el('b');
     who.appendChild(title);
-    who.appendChild(el('small', '', 'Syna · AI Idol'));
+    who.appendChild(el('small', '', 'Syna · Video AI'));
     var count = el('span', 'pv-count');
     var sound = el('button', 'pv-round', '🔊');
     sound.type = 'button';

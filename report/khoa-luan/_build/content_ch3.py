@@ -16,7 +16,7 @@ T("Bảng 3.1 Danh sách tác nhân",
   [["Khách vãng lai", "Người dùng", "Người truy cập chưa đăng nhập; xem, tìm kiếm sản phẩm, làm khảo sát loại da, hỏi chatbot và xem nội dung của Syna."],
    ["Khách hàng", "Người dùng", "Người đã đăng nhập; kế thừa chức năng của khách vãng lai và có thêm hồ sơ da, giỏ hàng, đặt hàng, đánh giá, nhận thưởng."],
    ["Nhân viên", "Người dùng", "Người vận hành hằng ngày; xử lý đơn hàng, quản lý sản phẩm và trả lời khách hàng."],
-   ["Quản trị viên", "Người dùng", "Chủ cửa hàng; quản lý toàn bộ dữ liệu, khuyến mãi, báo cáo và nội dung AI Idol."],
+   ["Quản trị viên", "Người dùng", "Chủ cửa hàng; quản lý toàn bộ dữ liệu, khuyến mãi, báo cáo và nội dung Syna AutoStudio."],
    ["Dịch vụ email", "Hệ thống", "Gửi mã OTP khi đăng ký, khi đặt lại mật khẩu và khi xác nhận đặt hàng qua chatbot."],
    ["Ngân hàng / cổng đối soát", "Hệ thống", "Gửi thông báo giao dịch chuyển khoản để hệ thống cập nhật trạng thái thanh toán."],
    ["Nhà cung cấp mô hình ngôn ngữ lớn", "Hệ thống", "Sinh câu trả lời cho chatbot, đọc chữ trên ảnh nhãn và viết kịch bản cho Syna."]],
@@ -28,7 +28,7 @@ P("Sơ đồ use case tổng quát thể hiện các nhóm chức năng chính v
   "Các use case được nhóm theo ba phân hệ đã nêu ở mục 1.4.2.")
 F("Hình 3.1 Sơ đồ use case tổng quát",
   "Vẽ 4 tác nhân bên trái (Khách vãng lai, Khách hàng kế thừa Khách vãng lai, Nhân viên, Quản trị viên), 3 tác nhân hệ thống bên phải "
-  "(Dịch vụ email, Cổng đối soát, Nhà cung cấp LLM). Trong khung hệ thống chia 3 gói: Thương mại điện tử, AI tư vấn, AI Idol, "
+  "(Dịch vụ email, Cổng đối soát, Nhà cung cấp LLM). Trong khung hệ thống chia 3 gói: Thương mại điện tử, AI tư vấn, Syna AutoStudio, "
   "mỗi gói đặt các use case cấp cao theo Bảng 3.2.")
 P("Bảng 3.2 liệt kê các use case của hệ thống kèm mã để tiện tham chiếu ở các phần sau.")
 T("Bảng 3.2 Danh sách use case",
@@ -37,7 +37,7 @@ T("Bảng 3.2 Danh sách use case",
    ["UC02", "Xem chi tiết và sản phẩm tương tự", "Khách vãng lai", "TMĐT, AI tư vấn"],
    ["UC03", "Làm khảo sát loại da", "Khách vãng lai", "TMĐT"],
    ["UC04", "Trò chuyện với chatbot", "Khách vãng lai", "AI tư vấn"],
-   ["UC05", "Xem video và livestream của Syna", "Khách vãng lai", "AI Idol"],
+   ["UC05", "Xem video và livestream của Syna", "Khách vãng lai", "Syna AutoStudio"],
    ["UC06", "Đăng ký tài khoản", "Khách vãng lai", "TMĐT"],
    ["UC07", "Đăng nhập, khôi phục mật khẩu", "Khách hàng", "TMĐT"],
    ["UC08", "Quản lý hồ sơ da", "Khách hàng", "TMĐT"],
@@ -48,8 +48,8 @@ T("Bảng 3.2 Danh sách use case",
    ["UC13", "Đọc thành phần từ ảnh nhãn", "Khách hàng", "AI tư vấn"],
    ["UC14", "Đánh giá, hỏi đáp, nhắn tin", "Khách hàng", "TMĐT"],
    ["UC15", "Theo dõi và hủy đơn hàng", "Khách hàng", "TMĐT"],
-   ["UC16", "Nhận thưởng (điểm danh, xem video)", "Khách hàng", "TMĐT, AI Idol"],
-   ["UC17", "Mua hàng trong livestream", "Khách hàng", "AI Idol"],
+   ["UC16", "Nhận thưởng (điểm danh, xem video)", "Khách hàng", "TMĐT, Syna AutoStudio"],
+   ["UC17", "Mua hàng trong livestream", "Khách hàng", "Syna AutoStudio"],
    ["UC18", "Xử lý đơn hàng", "Nhân viên", "TMĐT"],
    ["UC19", "Quản lý sản phẩm", "Nhân viên", "TMĐT"],
    ["UC20", "Trả lời đánh giá, hỏi đáp, tin nhắn", "Nhân viên", "TMĐT"],
@@ -58,8 +58,8 @@ T("Bảng 3.2 Danh sách use case",
    ["UC23", "Quản lý khuyến mãi", "Quản trị viên", "TMĐT"],
    ["UC24", "Kiểm duyệt đánh giá và hỏi đáp", "Quản trị viên", "TMĐT"],
    ["UC25", "Xem báo cáo", "Quản trị viên", "TMĐT, AI tư vấn"],
-   ["UC26", "Tạo video sản phẩm bằng AI Idol", "Quản trị viên", "AI Idol"],
-   ["UC27", "Quản lý livestream và chiến dịch", "Quản trị viên", "AI Idol"]],
+   ["UC26", "Tạo video sản phẩm bằng Syna AutoStudio", "Quản trị viên", "Syna AutoStudio"],
+   ["UC27", "Quản lý livestream và chiến dịch", "Quản trị viên", "Syna AutoStudio"]],
   [1.6, 6.4, 3.5, 4], size=10.5)
 
 H3("3.1.3  Sơ đồ use case phân rã")
@@ -72,7 +72,7 @@ F("Hình 3.2 Sơ đồ use case phân rã của khách hàng",
 F("Hình 3.3 Sơ đồ use case phân rã của nhân viên và quản trị viên",
   "Quản trị viên kế thừa Nhân viên. Nhân viên: UC18–UC20 (UC18 <<extend>> In đơn hàng). Quản trị viên thêm UC21–UC27 "
   "(UC21 <<include>> Quản lý lô hàng và hạn dùng; UC23 gồm Voucher, Flash sale, Chiến dịch thưởng xem video).")
-F("Hình 3.4 Sơ đồ use case phân rã của phân hệ AI Idol",
+F("Hình 3.4 Sơ đồ use case phân rã của phân hệ Syna AutoStudio",
   "Quản trị viên: UC26 <<include>> Sinh kịch bản, Kiểm tra kịch bản, Tạo giọng đọc, Dựng video; UC26 <<extend>> Duyệt kịch bản thủ công; "
   "UC27 <<include>> Lên lịch chiến dịch, Ghim sản phẩm. Khách hàng: UC05, UC16 (Nhận voucher khi xem hết video), UC17.")
 
@@ -159,7 +159,7 @@ UC("Bảng 3.9 Đặc tả use case UC18 – Xử lý đơn hàng",
    ["Luồng thay thế", "2a. Hết hàng hoặc khách yêu cầu: nhân viên hủy đơn; hệ thống hoàn tồn kho và hoàn điểm đã dùng.\n"
     "1a. Nhân viên in phiếu đơn để đóng gói."]])
 
-UC("Bảng 3.10 Đặc tả use case UC26 – Tạo video sản phẩm bằng AI Idol",
+UC("Bảng 3.10 Đặc tả use case UC26 – Tạo video sản phẩm bằng Syna AutoStudio",
   [["Tác nhân", "Quản trị viên, Nhà cung cấp LLM"],
    ["Mô tả", "Quản trị viên chọn sản phẩm; hệ thống tự sinh kịch bản, giọng đọc và video Syna giới thiệu sản phẩm."],
    ["Điều kiện trước", "Sản phẩm có đủ tên, thành phần, công dụng và cách dùng."],
@@ -173,7 +173,7 @@ UC("Bảng 3.10 Đặc tả use case UC26 – Tạo video sản phẩm bằng AI
 # ================= 3.2 =================
 H2("3.2  Sơ đồ hoạt động")
 P("Sơ đồ hoạt động mô tả trình tự các bước nghiệp vụ và điểm rẽ nhánh của từng quy trình. "
-  "Nhóm chọn bốn quy trình tiêu biểu, đại diện cho phân hệ thương mại điện tử, AI tư vấn và AI Idol. "
+  "Nhóm chọn bốn quy trình tiêu biểu, đại diện cho phân hệ thương mại điện tử, AI tư vấn và Syna AutoStudio. "
   "Các sơ đồ dùng làn bơi (swimlane) để thấy rõ phần việc của người dùng và của hệ thống.")
 H3("3.2.1  Quy trình đặt hàng và thanh toán")
 P("Quy trình bắt đầu khi khách bấm thanh toán từ giỏ hàng và kết thúc khi đơn được tạo. "
@@ -199,12 +199,12 @@ F("Hình 3.7 Sơ đồ hoạt động phân tích giỏ hàng",
   "Mở giỏ → [Giỏ rỗng] Kết thúc → Tạo khóa đệm từ danh sách sản phẩm → [Có trong bộ đệm] Trả kết quả → Truy vấn cặp xung đột trong Neo4j "
   "→ [Neo4j lỗi] Tính bằng luật YAML dự phòng → Lọc theo thứ hạng thành phần → Gộp mức cao nhất mỗi cặp → Xác định bước routine còn thiếu "
   "→ Chọn sản phẩm bổ sung không xung đột → Lưu đệm → Hiển thị.")
-H3("3.2.4  Quy trình tạo video AI Idol")
+H3("3.2.4  Quy trình tạo video Syna AutoStudio")
 P("Tạo video là quy trình dài, gồm nhiều bước tốn thời gian như sinh kịch bản, tạo giọng đọc và dựng hình. "
   "Vì vậy, mỗi bước lưu lại kết quả trung gian để có thể chạy tiếp từ bước đang dở khi gặp lỗi. "
   "Bước duyệt kịch bản có hai nhánh tùy chế độ do quản trị viên chọn.")
-F("Hình 3.8 Sơ đồ hoạt động tạo video AI Idol",
-  "Làn Quản trị viên | Dịch vụ AI Idol | Hàng đợi xử lý nền. Chọn sản phẩm → Tạo công việc → Đưa vào hàng đợi → Lấy dữ liệu và giá → Truy xuất kiến thức (RAG) "
+F("Hình 3.8 Sơ đồ hoạt động tạo video Syna AutoStudio",
+  "Làn Quản trị viên | Dịch vụ Syna AutoStudio | Hàng đợi xử lý nền. Chọn sản phẩm → Tạo công việc → Đưa vào hàng đợi → Lấy dữ liệu và giá → Truy xuất kiến thức (RAG) "
   "→ Sinh kịch bản (biên kịch → biên tập) → Kiểm tra và tự sửa → [Duyệt tự động] tiếp tục; [Duyệt thủ công] Chờ → Quản trị viên duyệt/viết lại/hủy "
   "→ Tạo giọng đọc → Dựng video Syna → Trộn âm thanh → Kiểm tra cuối → Tải lên kho lưu trữ → Gắn vào trang sản phẩm.")
 
@@ -236,9 +236,9 @@ F("Hình 3.11 Sơ đồ tuần tự phân tích giỏ hàng",
 P("Hình 3.11 cho thấy máy chủ PHP không nhận danh sách sản phẩm từ trình duyệt mà tự đọc từ phiên làm việc. "
   "Cách làm này ngăn người dùng gửi dữ liệu giả để dò hệ thống. "
   "Mỗi yêu cầu có giới hạn thời gian ngắn, nên trang giỏ không bị chậm khi dịch vụ phân tích gặp sự cố.")
-H3("3.3.4  Tạo video AI Idol")
-F("Hình 3.12 Sơ đồ tuần tự tạo video AI Idol",
-  "Đối tượng: Quản trị viên, PHP Backend, AI Idol Service, Redis/Celery, Worker, LLM, Dịch vụ TTS, Bộ dựng Syna, Kho lưu trữ R2, MongoDB. "
+H3("3.3.4  Tạo video Syna AutoStudio")
+F("Hình 3.12 Sơ đồ tuần tự tạo video Syna AutoStudio",
+  "Đối tượng: Quản trị viên, PHP Backend, Syna AutoStudio Service, Redis/Celery, Worker, LLM, Dịch vụ TTS, Bộ dựng Syna, Kho lưu trữ R2, MongoDB. "
   "Thông điệp: tạo công việc → POST job → lưu ai_idol_jobs → đưa task vào Celery → worker: lấy sản phẩm → RAG → LLM sinh kịch bản → kiểm tra → [thủ công] chờ duyệt "
   "→ TTS → render → FFmpeg trộn âm → upload R2 → ghi ai_product_videos → PHP hiển thị trên trang sản phẩm.")
 P("Việc tạo video được tách khỏi luồng yêu cầu web và giao cho hàng đợi xử lý nền Celery. "

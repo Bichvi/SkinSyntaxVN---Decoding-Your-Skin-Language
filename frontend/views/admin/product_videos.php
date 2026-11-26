@@ -31,10 +31,10 @@ $apvJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
         <div>
             <div class="apv-eyebrow"><i class="bi bi-shop" aria-hidden="true"></i> XUẤT BẢN THƯƠNG MẠI</div>
             <h1>Video trang sản phẩm &amp; voucher</h1>
-            <p>Chọn video AI Idol sẽ hiện trên trang chi tiết sản phẩm, đặt độ ưu tiên và gắn voucher cho khách xem video.</p>
+            <p>Chọn video Syna sẽ hiện trên trang chi tiết sản phẩm, đặt độ ưu tiên và gắn voucher cho khách xem video.</p>
         </div>
         <div class="apv-heading-actions">
-            <a class="apv-btn secondary" href="index.php?r=admin_ai_idol"><i class="bi bi-stars" aria-hidden="true"></i> Về AI Idol Studio</a>
+            <a class="apv-btn secondary" href="index.php?r=admin_ai_idol"><i class="bi bi-stars" aria-hidden="true"></i> Về Syna – Tạo video</a>
             <button type="button" class="apv-icon-btn" id="apvRefresh" aria-label="Làm mới danh sách video" title="Làm mới danh sách"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
         </div>
     </header>
@@ -77,7 +77,7 @@ $apvJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                     </div>
                     <div class="apv-summary-meta">
                         <div class="apv-summary-top">
-                            <span class="apv-campaign" id="apvPubCampaign">Chương trình AI Idol</span>
+                            <span class="apv-campaign" id="apvPubCampaign">Chương trình Syna</span>
                             <span id="apvPubStatus" class="apv-badge unpublished">Chưa xuất bản</span>
                             <span id="apvPubAuto" class="apv-badge auto" hidden><i class="bi bi-robot" aria-hidden="true"></i> Tự động</span>
                         </div>
@@ -144,7 +144,7 @@ $apvJsonFlags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                     </div>
                     <div class="apv-summary-meta">
                         <div class="apv-summary-top">
-                            <span class="apv-campaign" id="apvRewardCampaign">Chương trình AI Idol</span>
+                            <span class="apv-campaign" id="apvRewardCampaign">Chương trình Syna</span>
                             <span class="apv-badge published"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Đã xuất bản</span>
                         </div>
                         <h3 class="apv-summary-title" id="apvRewardVideoTitle">Tiêu đề video</h3>

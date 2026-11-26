@@ -144,7 +144,7 @@ $menuGroups = [
             [
                 'route' => 'admin_ai_idol',
                 'icon' => 'bi bi-stars',
-                'label' => 'AI Idol Studio',
+                'label' => 'Syna – Tạo video',
                 'meta' => 'Syna · Kịch bản · Video',
                 'active' => strpos($currentRoute, 'admin_ai_idol') === 0,
             ],

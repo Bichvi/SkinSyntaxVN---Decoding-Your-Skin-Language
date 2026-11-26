@@ -446,7 +446,7 @@
       <div class="apv-card-body">
         <div class="apv-card-tags">${publishedBadge}${renderBadge}${ineligibleBadge}${autoBadge}${rewardBadge}</div>
         <h3 class="apv-card-title" title="${escapeHtml(title)}">${escapeHtml(title)}</h3>
-        <div class="apv-card-campaign"><i class="bi bi-collection-play" aria-hidden="true"></i> <span>${escapeHtml(v.campaign_name || 'Chương trình AI Idol')}</span></div>
+        <div class="apv-card-campaign"><i class="bi bi-collection-play" aria-hidden="true"></i> <span>${escapeHtml(v.campaign_name || 'Chương trình Syna')}</span></div>
         <div class="apv-card-meta">
           <span class="apv-pill"><i class="bi bi-link-45deg" aria-hidden="true"></i> <strong>${linked.length}</strong> sản phẩm liên kết</span>
           <span class="apv-help">Ưu tiên: <strong>${escapeHtml(Number(v.display_priority) || 10)}</strong></span>
@@ -473,7 +473,7 @@
         ? 'Chưa tải được danh sách video. Hãy thử làm mới.'
         : (state.query.trim() ? 'Không tìm thấy video phù hợp từ khóa.'
           : (state.filter === 'published' ? 'Chưa có video nào được xuất bản lên sản phẩm.'
-            : (state.filter === 'unpublished' ? 'Mọi video đều đã được xuất bản.' : 'Chưa có video nào được tạo trong AI Idol Studio.')));
+            : (state.filter === 'unpublished' ? 'Mọi video đều đã được xuất bản.' : 'Chưa có video nào được tạo trong Syna – Tạo video.')));
       grid.innerHTML = `<div class="apv-empty"><i class="bi bi-film" aria-hidden="true"></i><p>${escapeHtml(text)}</p></div>`;
       return;
     }
@@ -530,9 +530,9 @@
     if (!video) return;
     pubVideo = video;
     showBox($('apvPubAlert'), '');
-    $('apvPubTitle').textContent = `Quản lý xuất bản: ${video.title || 'Video AI Idol'}`;
+    $('apvPubTitle').textContent = `Quản lý xuất bản: ${video.title || 'Video Syna'}`;
     $('apvPubVideoTitle').value = video.title || 'Syna 3D - Giới thiệu sản phẩm';
-    $('apvPubCampaign').textContent = video.campaign_name || 'Chương trình AI Idol';
+    $('apvPubCampaign').textContent = video.campaign_name || 'Chương trình Syna';
     $('apvPubDuration').textContent = formatDuration(video.duration);
     $('apvPubPriority').value = Number(video.display_priority) || 10;
     const poster = $('apvPubPoster');
@@ -697,7 +697,7 @@
     poster.dataset.fallback = '';
     poster.src = video.thumbnail_url || PLACEHOLDER;
     $('apvRewardDuration').textContent = formatDuration(video.duration);
-    $('apvRewardCampaign').textContent = video.campaign_name || 'Chương trình AI Idol';
+    $('apvRewardCampaign').textContent = video.campaign_name || 'Chương trình Syna';
     $('apvRewardVideoTitle').textContent = video.title || 'Syna 3D - Giới thiệu sản phẩm';
     $('apvRewardVideoId').textContent = video.video_id || '—';
     $('apvRewardVideoIdField').value = video.video_id || '';

@@ -201,11 +201,11 @@ $productStatusData = [
                             <i class="bi bi-stars"></i>
                         </div>
                         <div>
-                            <div class="fw-semibold small" style="color: var(--admin-text);">AI Idol Studio</div>
+                            <div class="fw-semibold small" style="color: var(--admin-text);">Syna – Tạo video</div>
                             <div class="small text-muted">Tạo Syna, kịch bản & video</div>
                         </div>
                     </div>
-                    <span class="badge px-2 py-1 fw-semibold" style="background: #DDF4E5; color: #17633D; border: 1px solid #B9DCC8; border-radius: 4px; font-size: 0.76rem;">Mở Studio</span>
+                    <span class="badge px-2 py-1 fw-semibold" style="background: #DDF4E5; color: #17633D; border: 1px solid #B9DCC8; border-radius: 4px; font-size: 0.76rem;">Mở</span>
                 </div>
             </a>
         </div>

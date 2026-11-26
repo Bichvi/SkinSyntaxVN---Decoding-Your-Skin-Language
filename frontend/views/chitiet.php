@@ -2801,7 +2801,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
                 <span class="sv-avatar" aria-hidden="true">S</span>
                 <div class="sv-head__text">
                   <h2 class="sv-title" id="synaVideoTitle"><?= h($primaryVid['title'] ?? 'Video giới thiệu & tư vấn sản phẩm') ?></h2>
-                  <span class="sv-sub" id="synaVideoMetaInfo">Syna · AI Idol · 1/<?= (int)$svCount ?></span>
+                  <span class="sv-sub" id="synaVideoMetaInfo">Syna · Video AI · 1/<?= (int)$svCount ?></span>
                 </div>
                 <button type="button" class="sv-iconbtn sv-mobile-only" id="synaVideoMute" aria-label="Tắt tiếng"><i class="fas fa-volume-high" aria-hidden="true"></i></button>
                 <button type="button" class="sv-iconbtn" id="synaVideoShare" aria-label="Chia sẻ video"><i class="fas fa-share-nodes" aria-hidden="true"></i></button>
@@ -4107,7 +4107,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
               const item = videoList[idx];
               if (!item) return;
               if (titleEl && item.title) titleEl.textContent = item.title;
-              if (metaEl) metaEl.textContent = `Syna · AI Idol · ${idx + 1}/${videoList.length}`;
+              if (metaEl) metaEl.textContent = `Syna · Video AI · ${idx + 1}/${videoList.length}`;
               nextItems.forEach((el) => {
                 const on = parseInt(el.getAttribute('data-sv-index'), 10) === idx;
                 el.classList.toggle('is-active', on);
