@@ -31,7 +31,7 @@ if (is_logged_in() && current_role() === 'khach_hang') {
 ?>
 <?php if ($supportChatEnabled): ?>
   <div class="support-chat-widget" data-support-chat-widget>
-    <button class="support-chat-widget__trigger" type="button" data-support-chat-toggle aria-expanded="false" aria-controls="supportChatPanel" title="Mở chat hỗ trợ">
+    <button class="support-chat-widget__trigger" type="button" data-support-chat-toggle aria-expanded="false" aria-controls="supportChatPanel" aria-label="Mở chat hỗ trợ" title="Mở chat hỗ trợ">
       <span class="support-chat-widget__trigger-icon"><i class="fa-regular fa-comments"></i></span>
       <span class="support-chat-widget__trigger-text">
         <strong>Chat hỗ trợ</strong>
@@ -104,20 +104,13 @@ if (is_logged_in() && current_role() === 'khach_hang') {
   <style>
     .support-chat-widget {
       position: fixed;
-      right: 24px !important;
-      bottom: 88px !important;
+      right: 24px;
+      bottom: 88px;
       z-index: 1080;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       gap: 14px;
-    }
-
-    @media (max-width: 767.98px) {
-      .support-chat-widget {
-        right: 16px !important;
-        bottom: 74px !important;
-      }
     }
 
     .support-chat-widget__trigger {
@@ -196,9 +189,11 @@ if (is_logged_in() && current_role() === 'khach_hang') {
       will-change: transform, opacity;
     }
 
+    @media (min-width: 768px) {
     .support-chat-widget.is-expanded .support-chat-widget__panel {
       width: min(860px, calc(100vw - 32px));
       max-height: min(90vh, 940px) !important;
+    }
     }
 
     .support-chat-widget__panel[hidden] {
@@ -439,36 +434,32 @@ if (is_logged_in() && current_role() === 'khach_hang') {
     }
 
     @media (max-width: 767.98px) {
-      .support-chat-widget {
-        right: 16px;
-        bottom: 74px;
-        align-items: flex-end;
-      }
-
       .support-chat-widget__trigger {
         justify-content: center;
       }
 
-      .support-chat-widget.is-open .support-chat-widget__trigger {
-        display: none;
+      .support-chat-widget__panel-head,
+      .support-chat-widget__form {
+        flex-shrink: 0;
+        padding: 8px 10px;
       }
 
-      .support-chat-widget__panel {
-        width: 100%;
-        max-height: min(78vh, 680px);
+      .support-chat-widget__expand,
+      .support-chat-widget__close {
+        min-width: 44px;
+        min-height: 44px;
       }
 
-      .support-chat-widget.is-expanded .support-chat-widget__panel {
-        width: 100%;
-        max-height: 92vh !important;
-      }
-
-      .support-chat-widget__stream {
-        max-height: 360px;
-      }
-
+      .support-chat-widget__stream,
       .support-chat-widget.is-expanded .support-chat-widget__stream {
-        max-height: 64vh;
+        min-height: 0;
+        max-height: none;
+        overscroll-behavior: contain;
+      }
+
+      .support-chat-widget__textarea {
+        min-width: 0;
+        font-size: 16px;
       }
 
       .support-chat-widget__form-row {

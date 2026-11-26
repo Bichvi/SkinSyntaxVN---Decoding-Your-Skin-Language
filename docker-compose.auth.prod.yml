@@ -1,0 +1,11 @@
+services:
+  php-backend:
+    environment:
+      MAIL_DEMO_MODE: "0"
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: "587"
+      SMTP_ENCRYPTION: tls
+      SMTP_USER: ${SMTP_USER:?Set the production SMTP username}
+      SMTP_PASS: ${SMTP_PASS:?Set the production SMTP app password}
+      MAIL_FROM_ADDRESS: ${SMTP_USER:?Set the production SMTP username}
+      MAIL_FROM_NAME: SkinSyntaxVN

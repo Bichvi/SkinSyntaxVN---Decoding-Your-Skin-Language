@@ -421,10 +421,33 @@ foreach ($sessions as $ls) {
                       <textarea name="tom_tat_phien_live" class="form-control" rows="2" placeholder="Tóm tắt nội dung tư vấn skincare, giải đáp câu hỏi và các deal độc quyền trong buổi live..."></textarea>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label fw-bold small">Ảnh bìa phiên live</label>
-                      <input type="file" name="thumbnail_file" class="form-control" accept="image/jpeg,image/png,image/webp">
-                      <input type="url" name="thumbnail" class="form-control mt-2" placeholder="Hoặc dán URL ảnh công khai">
-                      <small class="text-muted extra-small">Có thể tải ảnh từ máy lên (JPG, PNG, WebP, tối đa 5 MB), không bắt buộc URL công khai.</small>
+                      <label class="form-label fw-bold small" for="liveThumbnailFile">Ảnh bìa và nền banner phiên live</label>
+                      <input type="file" id="liveThumbnailFile" name="thumbnail_file" class="form-control" accept="image/jpeg,image/png,image/webp">
+                      <input type="url" id="liveThumbnailUrl" name="thumbnail" class="form-control mt-2" placeholder="Hoặc dán URL ảnh công khai">
+                      <small class="text-muted extra-small">Tải ảnh JPG, PNG hoặc WebP tối đa 5 MB. Ảnh này làm ảnh bìa phiên và nền banner, không bắt buộc phải có URL công khai.</small>
+                      <div class="live-cover-preview mt-3" id="liveThumbnailPreview" hidden style="position:relative;height:145px;overflow:hidden;border-radius:12px;background:#173f30;color:#fff">
+                        <img id="liveThumbnailPreviewImage" alt="Xem trước ảnh bìa và nền banner" style="width:100%;height:100%;object-fit:cover;opacity:.72">
+                        <span style="position:absolute;inset:auto 0 0;padding:12px 16px;background:linear-gradient(transparent,rgba(8,37,26,.88));font-weight:700">Ảnh bìa và nền banner phiên live</span>
+                      </div>
+                      <script>
+                        (() => {
+                          const file = document.getElementById('liveThumbnailFile');
+                          const url = document.getElementById('liveThumbnailUrl');
+                          const preview = document.getElementById('liveThumbnailPreview');
+                          const image = document.getElementById('liveThumbnailPreviewImage');
+                          let objectUrl = '';
+                          const update = () => {
+                            if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = ''; }
+                            if (file?.files?.[0]) objectUrl = URL.createObjectURL(file.files[0]);
+                            const source = objectUrl || url?.value.trim() || '';
+                            preview.hidden = !source;
+                            if (source) image.src = source;
+                            else image.removeAttribute('src');
+                          };
+                          file?.addEventListener('change', update);
+                          url?.addEventListener('input', update);
+                        })();
+                      </script>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label fw-bold small">Người phụ trách phát</label>

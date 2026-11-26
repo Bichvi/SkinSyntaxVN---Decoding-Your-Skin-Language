@@ -31,10 +31,10 @@ from dotenv import load_dotenv
 
 _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 if _ENV_PATH.exists():
-    load_dotenv(_ENV_PATH, override=True)
+    load_dotenv(_ENV_PATH, override=False)
     print(f"[OK] Loaded .env from {_ENV_PATH}")
 else:
-    load_dotenv(override=True)
+    load_dotenv(override=False)
     print(f"[WARN] .env not found at {_ENV_PATH}, using default search")
 
 from pydantic import BaseModel, Field
@@ -51,7 +51,7 @@ from profile_service import save_user_profile
 from agent_graph.auth import identity_from_request
 from agent_graph import config as agent_config
 from chatbot_service import store_support  # nhánh STORE_SUPPORT (logic thuần)
-from chatbot_service.profile_context import normalize_profile, profile_context_lines
+from chatbot_service.profile_context import cart_conflicts_text, normalize_profile, profile_context_lines
 from chatbot_service import graph_router  # U10: tool đồ thị Neo4j cho câu hỏi có điều kiện
 # ─── Config ─────────────────────────────────────────────────────────────────
 # Tự động tính đường dẫn tương đối từ vị trí file script này
@@ -117,9 +117,10 @@ def _build_vectorstore():
 
             client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
             vs = Chroma(
-                collection_name="products",
+                collection_name=os.getenv("CHATBOT_CHROMA_COLLECTION", "products").strip() or "products",
                 client=client,
                 embedding_function=emb,
+                create_collection_if_not_exists=False,
             )
         else:
             vs = Chroma(
@@ -2287,8 +2288,9 @@ def xu_ly_cau_hoi(message: str, msg_data: dict = None) -> dict:
             else:
                 cart_desc.append(str(item))
         rich_context_parts.append(f"- Sản phẩm trong giỏ hàng hiện tại: {', '.join(cart_desc)}")
-    if cart_conflicts:
-        rich_context_parts.append(f"- PHÁT HIỆN XUNG ĐỘT HOẠT CHẤT: {', '.join(cart_conflicts)}")
+    conflict_text = cart_conflicts_text(cart_conflicts)
+    if conflict_text:
+        rich_context_parts.append(f"- PHÁT HIỆN XUNG ĐỘT HOẠT CHẤT: {conflict_text}")
         
     rich_context = "\n".join(rich_context_parts) if rich_context_parts else "Không có thông tin hồ sơ bổ sung."
 

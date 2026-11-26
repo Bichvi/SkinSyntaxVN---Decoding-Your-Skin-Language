@@ -206,6 +206,13 @@ $menuGroups = [
                 'label' => 'Báo cáo',
                 'meta' => 'Doanh thu & hiệu suất',
                 'active' => strpos($currentRoute, 'admin_reports') === 0,
+            ],
+            [
+                'route' => 'admin_feature_feedback',
+                'icon' => 'bi bi-ui-checks-grid',
+                'label' => 'Khảo sát & đánh giá',
+                'meta' => 'Likert & góp ý người dùng',
+                'active' => $currentRoute === 'admin_feature_feedback',
             ]
         ]
     ]

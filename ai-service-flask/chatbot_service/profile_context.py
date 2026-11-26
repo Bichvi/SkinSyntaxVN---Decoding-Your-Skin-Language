@@ -4,6 +4,24 @@ from typing import Any, Dict, List, Optional
 _PLACEHOLDERS = {"không có / không quan tâm", "không có", "chưa xác định"}
 
 
+def cart_conflicts_text(value: Any) -> str:
+    """Render known conflict fields for prompts while preserving the structured response."""
+    if isinstance(value, str):
+        return value.strip()
+    if not isinstance(value, (list, tuple)):
+        return ""
+    entries = []
+    for item in value:
+        if isinstance(item, str) and item.strip():
+            entries.append(item.strip())
+        elif isinstance(item, dict):
+            parts = [item[key].strip() for key in ("product_a", "product_b", "warning", "recommendation")
+                     if isinstance(item.get(key), str) and item[key].strip()]
+            if parts:
+                entries.append(" / ".join(parts))
+    return "; ".join(entries)
+
+
 def _as_list(value: Any) -> List[str]:
     if value is None:
         return []

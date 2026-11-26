@@ -74,6 +74,7 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
   .ss-player__top{top:0;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}.ss-player__bottom{bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding-top:42px;pointer-events:none;justify-content:space-between}
   .ss-player--replay .ss-player__top{background:none;padding:10px;pointer-events:none}.ss-player--replay .ss-player__top>*{pointer-events:auto}.ss-player--replay .ss-player__top .ss-badge{background:rgba(15,23,42,.55);color:#fff}.ss-player--replay .ss-player__top{flex-wrap:nowrap}.ss-player--replay .ss-player__actions{width:auto;margin-left:auto}
   .ss-player--replay .ss-player__bottom,
+  .ss-player--replay .ss-live-pin-overlay,
   .ss-player--replay .ss-live-settings,
   .ss-player--replay .ss-live-deals-drawer,
   .ss-player--replay #liveConnectionBadge,
@@ -123,20 +124,34 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
   .ss-live-hero--discovery + .ss-live-wrap { padding-top: 14px; }
   .ss-deal__meta del { font-size: .72rem; color: var(--ss-muted); }
   .ss-deal__meta strong { white-space: normal; }
+  .ss-deal__actions{display:flex;align-items:center;gap:6px}.ss-deal__actions .ss-btn{white-space:nowrap;min-height:34px;padding:6px 10px;font-size:12px}
+  .ss-live-syna-target{display:inline-flex;width:max-content;max-width:100%;margin:4px 0;padding:4px 8px;border-radius:999px;background:#e8f5ec;color:#155c3b;font-size:11px;font-weight:800}
+  .ss-live-pin-overlay{position:absolute;z-index:7;left:16px;bottom:76px;display:flex;align-items:center;gap:10px;width:min(390px,calc(100% - 32px));padding:9px 11px;border:1px solid rgba(255,255,255,.45);border-radius:14px;background:rgba(10,34,23,.9);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.28);text-align:left;cursor:pointer}
+  .ss-live-pin-overlay[hidden]{display:none}.ss-live-pin-overlay img{width:48px;height:48px;flex:none;object-fit:cover;border-radius:9px;background:#fff}.ss-live-pin-overlay__copy{min-width:0;display:grid;gap:3px}.ss-live-pin-overlay__label{color:#9be5b7;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.ss-live-pin-overlay__name{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:12px;font-weight:750;line-height:1.3}.ss-live-pin-overlay__price{color:#ffd166;font-size:13px;font-weight:850}
   .ss-live-rewards { margin-top: 10px; }
   .ss-live-hero.ss-live-hero--discovery {
-    padding: 10px 0;
-    background: #133b2d;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 184px;
+    padding: 22px 0;
+    background: linear-gradient(110deg,#123d2c 0%,#1d5a3f 58%,#246447 100%);
     border-bottom: 1px solid #245542;
     color: #fff;
   }
+  .ss-live-hero--discovery::before { content:""; position:absolute; inset:0; z-index:0; background:linear-gradient(90deg,rgba(8,37,26,.94) 0%,rgba(12,51,36,.84) 48%,rgba(16,59,41,.55) 100%); }
+  .ss-live-hero__backdrop { position:absolute; inset:0; z-index:-1; overflow:hidden; }
+  .ss-live-hero__backdrop img { width:100%; height:100%; object-fit:cover; object-position:center 38%; opacity:.46; }
+  .ss-live-hero--discovery .container { position:relative; z-index:1; min-height:140px; }
+  .ss-live-hero--discovery h1 { color:#fff; font-size:clamp(1.7rem,3vw,2.45rem); letter-spacing:-.025em; }
+  .ss-live-hero--discovery p { color:#e0eee5; }
   .ss-discovery { display: flex; align-items: center; gap: 16px; min-width: 0; }
   .ss-discovery__syna { flex: 0 0 auto; width: 78px; height: 90px; object-fit: contain; }
   .ss-discovery h1 { margin: 0 0 4px; font-size: 1.38rem; line-height: 1.35; }
   .ss-discovery p { color: #d5e9dd; font-size: .85rem; }
   .ss-discovery__nav { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-  .ss-discovery__nav .ss-btn { background: #e3f1e7; color: #174832; }
-  .ss-discovery__nav .ss-btn:hover { background: #fff; }
+  .ss-discovery__nav .ss-btn { background: #f5faf6; color: #174832; border:1px solid rgba(255,255,255,.55); box-shadow:0 8px 22px rgba(4,28,18,.18); }
+  .ss-discovery__nav .ss-btn:hover { background: #fff; transform:translateY(-1px); }
   .ss-session__match {
     display: block;
     margin: 8px 0;
@@ -148,12 +163,27 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
     outline: 3px solid #e3ab58;
     outline-offset: 2px;
   }
+  .ss-live-wrap,.ss-live-grid,.ss-live-grid>section,.ss-session-grid,.ss-session { min-width:0; max-width:100%; }
+  .ss-player { width:100%; max-width:100%; }
+  .ss-session { overflow:hidden; transition:transform .18s ease,box-shadow .18s ease; }
+  .ss-session:hover { transform:translateY(-2px); box-shadow:0 14px 30px rgba(28,63,43,.13); }
+  .ss-session__thumb { overflow:hidden; }
+  .ss-session__thumb img { transition:transform .28s ease; }
+  .ss-session:hover .ss-session__thumb img { transform:scale(1.035); }
+  .ss-session__body strong { color:#17231d; }
+  .ss-session__body .ss-btn { min-height:40px; }
+  .ss-player--replay { background:#07110c; }
+  .ss-player--replay video { width:100%; max-width:100%; }
+  @media (prefers-reduced-motion:reduce) { .ss-session,.ss-session__thumb img { transition:none!important; } .ss-session:hover,.ss-session:hover .ss-session__thumb img { transform:none; } }
   @media (max-width: 620px) {
     .ss-discovery { gap: 8px; }
     .ss-discovery h1 { font-size: 1.15rem; }
     .ss-discovery__syna { width: 56px; height: 67px; }
     .ss-discovery__nav { width: 100%; padding-left: 64px; }
     .ss-discovery__nav .ss-btn { padding: 8px 10px; }
+    .ss-live-hero.ss-live-hero--discovery { min-height: 160px; padding: 16px 0; }
+    .ss-live-hero--discovery .container { min-height: 126px; }
+    .ss-live-hero--discovery::before { background:linear-gradient(90deg,rgba(8,37,26,.94),rgba(12,51,36,.72)); }
   }
   @media (max-width: 620px) {
     .ss-player:not(:fullscreen) .ss-live-deals-drawer {
@@ -229,7 +259,9 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
 
 <main class="ss-live-page" id="ssLivePage" data-live-id="<?= h($live['id'] ?? '') ?>" data-live-status="<?= h($liveStatus) ?>" data-signed-in="<?= is_logged_in() ? '1' : '0' ?>" data-is-studio="<?= $canPublish ? '1' : '0' ?>" data-moderate="<?= $canModerate ? '1' : '0' ?>" data-ai-enabled="<?= !empty($live['bat_ai_cohost']) ? '1' : '0' ?>" data-csrf="<?= h($_SESSION['live_csrf'] ?? '') ?>" data-base-url="<?= h(BASE_URL) ?>">
   <?php if (!$isStudio): ?>
+  <?php $liveHeroImage = !empty($live['thumbnail']) ? resolve_image_url((string)$live['thumbnail']) : ''; ?>
   <section class="ss-live-hero ss-live-hero--discovery">
+    <?php if ($liveHeroImage !== ''): ?><div class="ss-live-hero__backdrop" aria-hidden="true"><img src="<?= h($liveHeroImage) ?>" alt=""></div><?php endif; ?>
     <div class="container d-flex flex-wrap align-items-center justify-content-between gap-2">
       <div class="ss-discovery">
         <img class="ss-discovery__syna" src="<?= h(BASE_URL . '/assets/images/syna_greeting.png') ?>" alt="" width="78" height="90">
@@ -367,6 +399,10 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
                 <?php endif; ?>
               </div>
             </div>
+            <button type="button" class="ss-live-pin-overlay" id="livePinnedOverlay" aria-label="Xem nhanh sản phẩm đang giới thiệu" hidden>
+              <img id="livePinnedOverlayImage" alt="">
+              <span class="ss-live-pin-overlay__copy"><span class="ss-live-pin-overlay__label">Đang giới thiệu · Xem nhanh</span><strong class="ss-live-pin-overlay__name" id="livePinnedOverlayName"></strong><span class="ss-live-pin-overlay__price" id="livePinnedOverlayPrice"></span></span>
+            </button>
             <?php if (!$isReplayView): ?>
             <div class="ss-player__bottom">
               <div class="ss-streamer">
@@ -392,7 +428,7 @@ $recordingUrl = $recordingAvailable ? (string)($live['url_ban_ghi'] ?? '') : '';
             </div>
 
             <aside class="ss-live-deals-drawer" id="liveDeals" aria-labelledby="liveDealsTitle" hidden>
-              <div class="ss-live-deals-drawer__head"><div><h2 id="liveDealsTitle">Ưu đãi đang mở bán</h2><small>Giá và thời gian do quản trị viên thiết lập</small></div><button type="button" class="ss-live-deals-drawer__close" id="btnCloseLiveDeals" aria-label="Đóng danh sách sản phẩm"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+              <div class="ss-live-deals-drawer__head"><div><h2 id="liveDealsTitle">Ưu đãi đang mở bán</h2><small>Chọn sản phẩm để xem chi tiết hoặc thêm vào giỏ</small></div><button type="button" class="ss-live-deals-drawer__close" id="btnCloseLiveDeals" aria-label="Đóng danh sách sản phẩm"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
               <div class="ss-product-list" id="liveDealsList"></div>
             </aside>
 

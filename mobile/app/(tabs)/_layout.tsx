@@ -1,14 +1,8 @@
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-function TabIcon({ name, color }: { name: SymbolViewProps['name']; color: ColorValue }) {
-  return <SymbolView name={name} tintColor={color} size={25} />;
-}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -20,24 +14,20 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
         tabBarStyle: {
           borderTopColor: '#D9E7DE',
+          backgroundColor: colorScheme === 'dark' ? '#202D26' : '#FFFFFF',
+          height: 62,
+          paddingBottom: 5,
+          paddingTop: 5,
         },
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '700' },
+        headerShown: false,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Trang chủ',
           tabBarIcon: ({ color }) => (
-            <TabIcon
-              name={{
-                ios: 'house.fill',
-                android: 'home',
-                web: 'home',
-              }}
-              color={color}
-            />
+            <Ionicons name="home-outline" color={color} size={24} />
           ),
         }}
       />
@@ -46,14 +36,7 @@ export default function TabLayout() {
         options={{
           title: 'Khám phá',
           tabBarIcon: ({ color }) => (
-            <TabIcon
-              name={{
-                ios: 'magnifyingglass',
-                android: 'search',
-                web: 'search',
-              }}
-              color={color}
-            />
+            <Ionicons name="search-outline" color={color} size={24} />
           ),
         }}
       />
@@ -62,14 +45,7 @@ export default function TabLayout() {
         options={{
           title: 'Routine',
           tabBarIcon: ({ color }) => (
-            <TabIcon
-              name={{
-                ios: 'sparkles',
-                android: 'routine',
-                web: 'auto_awesome',
-              }}
-              color={color}
-            />
+            <Ionicons name="sparkles-outline" color={color} size={24} />
           ),
         }}
       />
@@ -78,14 +54,7 @@ export default function TabLayout() {
         options={{
           title: 'Giỏ hàng',
           tabBarIcon: ({ color }) => (
-            <TabIcon
-              name={{
-                ios: 'bag.fill',
-                android: 'shopping_bag',
-                web: 'shopping_bag',
-              }}
-              color={color}
-            />
+            <Ionicons name="bag-outline" color={color} size={24} />
           ),
         }}
       />
@@ -94,14 +63,7 @@ export default function TabLayout() {
         options={{
           title: 'Tài khoản',
           tabBarIcon: ({ color }) => (
-            <TabIcon
-              name={{
-                ios: 'person.crop.circle.fill',
-                android: 'account_circle',
-                web: 'account_circle',
-              }}
-              color={color}
-            />
+            <Ionicons name="person-circle-outline" color={color} size={24} />
           ),
         }}
       />

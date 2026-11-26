@@ -82,7 +82,7 @@ $socialLinks = [
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f3d2e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -213,6 +213,7 @@ $socialLinks = [
           <label for="search-input" class="visually-hidden">Tìm kiếm sản phẩm</label>
           <input class="form-control" name="q" id="search-input" placeholder="Tìm sản phẩm, thương hiệu, vấn đề da..." value="<?= h($_GET['q'] ?? '') ?>" autocomplete="off" aria-label="Tìm kiếm sản phẩm" aria-autocomplete="list" aria-expanded="false" aria-controls="smartSearchDropdown">
           <button class="btn header-search__submit" type="submit" aria-label="Tìm kiếm">
+            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
             <span>Tìm kiếm</span>
           </button>
           <div class="smart-search-dropdown" id="smartSearchDropdown" role="listbox" aria-label="Gợi ý sản phẩm" hidden></div>
@@ -1512,6 +1513,10 @@ $socialLinks = [
     }
 
     @media (max-width: 767.98px) {
+      #authModal .modal-content {
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      }
+
       .auth-row-container {
         min-height: 0;
         overflow: visible;

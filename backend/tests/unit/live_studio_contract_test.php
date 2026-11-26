@@ -7,6 +7,9 @@ $model = file_get_contents($root . '/backend/app/models/PhienLive.php');
 $studio = file_get_contents($root . '/frontend/views/live_studio.php');
 $viewer = file_get_contents($root . '/frontend/public/assets/js/live-commerce.js');
 $viewerView = file_get_contents($root . '/frontend/views/live.php');
+$admin = file_get_contents($root . '/backend/app/controllers/QuanTriController.php');
+$adminView = file_get_contents($root . '/frontend/views/admin/lives.php');
+$studioView = file_get_contents($root . '/frontend/views/live_studio.php');
 $routers = [
     file_get_contents($root . '/index.php'),
     file_get_contents($root . '/frontend/public/index.php'),
@@ -57,6 +60,18 @@ checkContract(str_contains($model, "'deal_bat_dau', 'deal_ket_thuc', 'pin_durati
 checkContract(str_contains($controller, "'pin_ends_at' => \$pinEndsAt") && str_contains($controller, "'server_time' => \$now"), 'product API exposes server-based pin timing');
 checkContract(str_contains($viewerView, 'id="livePinCountdown"'), 'viewer contains a pin countdown target');
 checkContract(str_contains($viewer, "function updatePinnedCountdown()") && str_contains($viewer, "products_changed"), 'viewer refreshes products and countdown after realtime changes');
+checkContract(str_contains($admin, 'UPLOAD_ERR_INI_SIZE') && str_contains($admin, 'UPLOAD_ERR_CANT_WRITE'), 'thumbnail upload reports server size and write failures specifically');
+checkContract(str_contains($admin, '$failureMessage = $e->getMessage();') && str_contains($admin, "set_flash('error', \$failureMessage)"), 'live create preserves the actionable upload error instead of replacing it with a generic message');
+checkContract(str_contains($adminView, 'liveThumbnailPreviewImage') && str_contains($adminView, 'URL.createObjectURL'), 'admin can preview a local cover image before creating the session');
+checkContract(str_contains($viewerView, 'ss-live-hero__backdrop') && str_contains($studioView, 'studio-topbar__cover'), 'the selected cover is reused as a contained background in viewer and studio banners');
+checkContract(str_contains($studio, '.catalog-result { display: block; min-width: 0;') && str_contains($studio, 'catalog-result__name { display: block; min-width: 0; overflow-wrap: anywhere;'), 'long catalog names wrap fully within the product result row');
+checkContract(str_contains($controller, "\$job['live_offers'] = LiveOffer::openDeals(") && str_contains($controller, "\$job['live_offer_prices']"), 'SYNA receives every active offer and its matching live price');
+checkContract(str_contains($controller, 'bao nhieu san pham') && str_contains($controller, 'dang gioi thieu') && str_contains($controller, 'findManyByIds'), 'SYNA can list products currently introduced in the live session');
+checkContract(str_contains($viewer, "deal.id !== 'pinned'") && str_contains($viewer, "view.textContent = 'Xem'") && str_contains($viewer, 'openProductModal(deal, deal.id)'), 'live product drawer avoids a duplicate pin and opens a quick-view modal for each offer');
+checkContract(str_contains($viewerView, 'id="livePinnedOverlay"') && str_contains($viewer, 'livePinnedOverlayName') && str_contains($viewer, 'const featuredOffer = pinned ?') && str_contains($viewer, ': offers[0] ?'), 'a pinned or currently open deal appears as a compact overlay on the live video');
+checkContract(!str_contains($viewerView, 'Giá và thời gian do quản trị viên thiết lập'), 'customer-facing deal drawer avoids admin-only wording');
+checkContract(str_contains($viewer, "message.reply_to_sender_name || original?.sender_name") && str_contains($controller, "'reply_to_sender_name'"), 'SYNA replies visibly identify the viewer being addressed');
+checkContract(str_contains($viewer, "document.addEventListener('visibilitychange'") && str_contains($viewer, 'refreshPublisherHeartbeat'), 'publisher sends a heartbeat immediately after returning to the tab');
 
 if ($failed > 0) {
     echo "\n{$failed} CONTRACT CHECK(S) FAILED\n";

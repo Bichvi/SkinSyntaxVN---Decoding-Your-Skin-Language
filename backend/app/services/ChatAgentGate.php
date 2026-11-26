@@ -18,6 +18,9 @@ final class ChatAgentGate
 
     public function purchaseEnabled(): bool
     {
+        if (($this->env['SYNA_AGENT_PURCHASE_DISABLED'] ?? null) === '1') {
+            return false;
+        }
         if ($this->redis === null) {
             return true;
         }
