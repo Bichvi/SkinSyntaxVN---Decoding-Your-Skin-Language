@@ -27,9 +27,9 @@ Cả hai giai đoạn đều chạy tiếp được nếu bị ngắt: mẫu đ�
 | MRR@10 (30 câu) | 0,000 | 0,156 | 0,239 |
 | nDCG@10 (30 câu) | 0,000 | 0,063 | 0,080 |
 | Precision@5 / Recall@10 | 0 / 0 | 0,067 / 0,050 | 0,093 / 0,050 |
-| Context Precision* (30 câu) | 0,674 | 0,422 | 0,565 |
-| Answer Relevancy* (30 câu) | 0,796 | 0,735 | 0,713 |
-| Faithfulness* (30 câu) | 0,148 | 0,335 | 0,328 |
+| Context Precision* (14 câu) | 0,810 | 0,532 | 0,546 |
+| Answer Relevancy* (14 câu) | 0,799 | 0,780 | 0,736 |
+| Faithfulness* (14 câu) | 0,192 | 0,324 | 0,323 |
 | Độ trễ truy xuất, trung bình | 0,07 s | 0,15 s | 8,55 s |
 
 \* Các chỉ số RAGAS do LLM chấm: giám khảo là `gemini-3.5-flash-lite` (temperature 0), embedding là `gemini-embedding-001`.
@@ -40,10 +40,11 @@ Cả hai giai đoạn đều chạy tiếp được nếu bị ngắt: mẫu đ�
   - Nguyên nhân nằm ở chất lượng của mô hình static embedding.
 - **Hybrid và rerank cải thiện có thật nhưng còn thấp**: Hit@5 chỉ đạt 0,23. Rerank tốn khoảng 8,5 s mỗi câu trên CPU.
 - **Context Precision cao của semantic không đáng tin.** Đây là biến thể không dùng đáp án chuẩn, nên ngữ cảnh sai vẫn được điểm cao nếu câu trả lời dựa vào chính ngữ cảnh đó.
-- **Faithfulness thấp (0,15–0,34)**: câu trả lời còn đưa thông tin nằm ngoài ngữ cảnh.
+- **Faithfulness thấp (0,19–0,32)**: câu trả lời còn đưa thông tin nằm ngoài ngữ cảnh.
 
 ## Hạn chế của lượt đo
-- **Phần LLM chấm đã đủ 90/90 mẫu** sau khi chạy tiếp qua hai ngày hạn mức (Gemini miễn phí giới hạn 500 request/ngày). Mỗi cấu hình có 1–2 điểm giám khảo trả lỗi (NaN), các điểm này bị loại khỏi trung bình.
+- **Phần LLM chấm mới phủ 14/30 câu** (R01–R14, tức 42/90 mẫu), vì gói miễn phí của Gemini giới hạn 500 request/ngày.
+  - Để chấm nốt, chạy lại lệnh giai đoạn B sau khi hạn mức được làm mới. Cần khoảng 400 request.
 - **Giám khảo không phải Gemini 2.5 Flash như dự định**: model này chỉ có 20 request/ngày. Answer Relevancy dùng `strictness=1`.
 - **Bộ sinh câu trả lời trộn hai model**: 80 câu từ Groq `gpt-oss-120b`, 10 câu còn lại từ `gemini-3.5-flash-lite`, vì Groq hết hạn mức trong ngày.
 - **Nhãn là nhãn bạc** sinh từ metadata (danh mục, loại da, từ khóa thành phần, giá), chưa có người gán. Mỗi cấu hình chỉ chạy một lần và không áp bộ lọc metadata.
@@ -55,5 +56,6 @@ Cả hai giai đoạn đều chạy tiếp được nếu bị ngắt: mẫu đ�
 - Không in ra secret.
 
 ## Bước tiếp theo đề xuất
-1. Thử embedding đa ngôn ngữ mạnh hơn, ví dụ `bge-m3` hoặc `multilingual-e5`, rồi so lại bằng chính bộ 30 câu này.
-2. Gán nhãn tay một phần bộ câu hỏi.
+1. Chạy nốt giai đoạn B.
+2. Thử embedding đa ngôn ngữ mạnh hơn, ví dụ `bge-m3` hoặc `multilingual-e5`, rồi so lại bằng chính bộ 30 câu này.
+3. Gán nhãn tay một phần bộ câu hỏi.

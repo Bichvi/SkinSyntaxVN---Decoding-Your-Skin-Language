@@ -1371,7 +1371,7 @@
       "group": "guide",
       "title": "Dùng voucher và điểm khi đặt hàng",
       "summary": "Nhập mã giảm giá và đổi điểm ở bước cuối trước khi bấm đặt hàng.",
-      "answer": "Ở trang Thanh toán (cần đăng nhập), nhập mã vào ô «Nhập mã voucher» rồi bấm Áp dụng; muốn bỏ mã thì bấm Gỡ mã. Để dùng điểm tích lũy, nhập số điểm vào ô «Nhập số điểm muốn dùng» rồi bấm Đổi điểm; muốn bỏ thì bấm Gỡ điểm. Mã giảm giá được tính trên giá trị hàng trước phí vận chuyển. Nếu báo lỗi, đọc thông báo trên trang để biết mã không tồn tại, hết hạn hay chưa đạt giá trị tối thiểu.",
+      "answer": "Ở trang Thanh toán (cần đăng nhập), nhập mã vào ô «Nhập mã voucher» rồi bấm Áp dụng; muốn bỏ mã thì bấm Gỡ mã. Để dùng điểm thành viên, nhập số điểm vào ô tương ứng rồi bấm Áp dụng; muốn bỏ thì bấm Gỡ điểm. Xu thưởng được tự động quy đổi thành điểm thành viên theo tỷ lệ hiển thị trên trang. Mã giảm giá được tính trên giá trị hàng trước phí vận chuyển. Nếu báo lỗi, đọc thông báo trên trang để biết mã không tồn tại, hết hạn hay chưa đạt giá trị tối thiểu.",
       "triggers": [
         "dung voucher",
         "su dung voucher",
@@ -1407,10 +1407,10 @@
           ]
         },
         {
-          "title": "Dùng điểm tích lũy",
+          "title": "Dùng điểm thành viên",
           "items": [
-            "Ở khung Dùng điểm tích lũy, trang hiện số điểm bạn có và mức quy đổi (1 điểm = 1.000đ) cùng số điểm tối đa dùng được cho đơn này.",
-            "Nhập số điểm vào ô «Nhập số điểm muốn dùng» rồi bấm Đổi điểm. Nếu nhập nhiều hơn số điểm bạn có hoặc hơn mức đơn hàng cho phép, hệ thống chỉ áp dụng phần tối đa dùng được.",
+            "Ở khung Dùng điểm thành viên, trang hiện số điểm bạn có, tỷ lệ đổi xu sang điểm, giá trị giảm của mỗi điểm và số điểm tối đa dùng được cho đơn này.",
+            "Nhập số điểm vào ô «Nhập số điểm thành viên» rồi bấm Áp dụng. Nếu nhập nhiều hơn số điểm bạn có hoặc hơn mức đơn hàng cho phép, hệ thống chỉ áp dụng phần tối đa dùng được.",
             "Khi xong, trang báo «Đã áp dụng ... điểm cho đơn hàng.» và dòng Giảm bằng điểm xuất hiện trong phần tổng tiền. Muốn bỏ, bấm Gỡ điểm."
           ]
         },

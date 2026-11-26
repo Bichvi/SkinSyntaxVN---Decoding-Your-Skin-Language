@@ -556,6 +556,7 @@
           .then(function (response) { return response.json().then(function (json) { return { response: response, json: json }; }); })
           .then(function (result) {
             if (!result.response.ok || !result.json || result.json.ok === false) throw new Error(result.json && result.json.message ? result.json.message : 'Không thể thêm sản phẩm.');
+            window.updateSkinSyntaxCartCount?.(result.json.cart_count);
             added += 1;
           });
       });

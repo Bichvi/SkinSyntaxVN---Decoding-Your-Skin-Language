@@ -1,0 +1,6 @@
+services:
+  voice-service:
+    cpus: 0.75
+    mem_limit: 1400m
+    environment:
+      NUM_THREADS: "1"

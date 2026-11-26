@@ -1150,5 +1150,14 @@ $hasRoutine = $recommendationOk && !empty($allSelected);
   <?php endif; ?>
 </div>
 
+<?php if ($hasRoutine && current_role() === 'khach_hang'): ?>
+  <div class="container">
+    <?php
+    $feedbackFeature = 'recommendation';
+    $feedbackPrompt = 'Bạn thấy gợi ý routine vừa rồi thế nào?';
+    require __DIR__ . '/partials/feature_feedback.php';
+    ?>
+  </div>
+<?php endif; ?>
 <script type="application/json" id="recommendation-page-data"><?= $routineJson ?></script>
-<script src="<?= h(BASE_URL . '/assets/js/goiy-recommendation.js?v=8') ?>" defer></script>
+<script src="<?= h(BASE_URL . '/assets/js/goiy-recommendation.js?v=9') ?>" defer></script>

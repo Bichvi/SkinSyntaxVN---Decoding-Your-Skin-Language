@@ -1,0 +1,6 @@
+# Repository-managed equivalent of the approved production PHP runtime override.
+services:
+  php-backend:
+    volumes:
+      - ./docker/php/production/php-fpm.web.conf:/usr/local/etc/php-fpm.d/zz-skinsyntax-fpm.conf:ro
+      - ./docker/php/production/php-session.web.ini:/usr/local/etc/php/conf.d/zz-skinsyntax-session.ini:ro

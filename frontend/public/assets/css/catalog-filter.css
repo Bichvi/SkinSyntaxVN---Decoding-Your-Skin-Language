@@ -215,23 +215,24 @@
 /* ---------- Mobile / tablet: bottom sheet ---------- */
 .catf-fab { display: none; }
 @media (max-width: 991.98px) {
-  .catf-side.offcanvas-bottom { --bs-offcanvas-height: 85vh; height: 85vh; max-height: 85vh; border-radius: 20px 20px 0 0; background: #fff; display: flex; flex-direction: column; z-index: 1060; }
+  .catf-side.offcanvas-bottom { --bs-offcanvas-height: 85dvh; border-radius: 20px 20px 0 0; background: #fff; display: flex; flex-direction: column; z-index: 1060; }
   .catf-side .catf-card { flex: 1 1 auto; overflow-y: auto; border: 0; border-radius: 0; box-shadow: none; padding: 0 18px 8px; }
   .catf-sheet-head { flex: 0 0 auto; padding: 8px 18px 0; border-bottom: 1px solid var(--catf-line); }
   .catf-grab { display: block; width: 44px; height: 5px; border-radius: 999px; background: #CBD5CF; margin: 4px auto 6px; }
   .catf-sheet-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 12px; }
   .catf-sheet-row h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--catf-text); }
-  .catf-sheet-close { width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--catf-mint); color: var(--catf-green); }
+  .catf-sheet-close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--catf-mint); color: var(--catf-green); }
   .catf-sheet-foot { flex: 0 0 auto; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--catf-line); background: #fff; }
   .catf-apply { width: 100%; height: 50px; border: 0; border-radius: 999px; background: var(--catf-green); color: #fff; font-weight: 700; font-size: 1rem; }
   .catf-fab {
-    display: inline-flex; align-items: center; gap: 8px; position: fixed; right: 16px; bottom: 18px; z-index: 1085; /* góc phải; z trên thanh chat Syna (1084) vì thanh đó phủ hết chiều ngang đáy màn hình */ height: 48px; padding: 0 22px;
+    display: inline-flex; align-items: center; justify-self: start; gap: 8px; min-height: 44px; padding: 0 18px;
     border: 0; border-radius: 999px; background: var(--catf-green); color: #fff; font-weight: 700; font-size: .92rem; box-shadow: 0 10px 26px rgba(24, 59, 43, .38);
   }
   .catf-fab-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px; margin-left: 2px; border-radius: 999px; background: #fff; color: var(--catf-green); font-size: .76rem; }
   .catf-fab:focus-visible, .catf-apply:focus-visible, .catf-sheet-close:focus-visible { outline: 3px solid rgba(24, 59, 43, .55); outline-offset: 3px; }
-  .catf-page { padding-bottom: 72px; }
 }
+
+body.catf-sheet-open :is(.ai-chat-widget, .support-chat-widget) { visibility: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   .catf-page *, #catalogResults::after { transition: none !important; animation: none !important; }
@@ -277,9 +278,6 @@
 .catf-price-note { font-size: .78rem; color: var(--catf-muted); }
 .catf-pn-text { display: block; margin-top: 8px; }
 .catf-price-note strong { color: var(--catf-green); }
-
-/* Mobile: ẩn chat AI khi sheet lọc đang mở */
-body.catf-sheet-open #ai-chat-widget, body.catf-sheet-open .ai-chat-widget, body.catf-sheet-open [data-ai-chat-widget] { display: none !important; }
 
 @media (max-width: 991.98px) {
   .catf-side-head { border-bottom: 0; padding-top: 10px; }

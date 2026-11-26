@@ -12,9 +12,11 @@ $qqSkinOptions = [
 $qqConcernOptions = class_exists('HomeGraphRecommender') ? HomeGraphRecommender::CONCERN_NAMES : [];
 $qqSkinCurrent = isset($homeGuestSkinType) && is_string($homeGuestSkinType) ? $homeGuestSkinType : '';
 $qqConcernCurrent = isset($homeGuestConcern) && is_string($homeGuestConcern) ? $homeGuestConcern : '';
+$_SESSION['home_quick_profile_csrf'] ??= bin2hex(random_bytes(32));
 ?>
 <section class="mb-5 home-quick-quiz" id="home-quick-quiz" aria-labelledby="home-quick-quiz-title">
   <form method="post" action="<?= h(BASE_URL . '/index.php?r=home_quick_profile') ?>">
+    <input type="hidden" name="csrf" value="<?= h($_SESSION['home_quick_profile_csrf']) ?>">
     <div class="mb-3">
       <span class="home-section-kicker">KHẢO SÁT NHANH</span>
       <h2 class="fw-bold m-0" id="home-quick-quiz-title" style="color: #0F172A; font-size: 1.45rem;">Khảo sát da 30 giây</h2>

@@ -152,6 +152,28 @@ if (is_file($backendRoot . '/app/services/VnpayService.php')) {
 
 $r = $_GET['r'] ?? 'home';
 
+if ($r === 'mobile_api') {
+    require_once $backendRoot . '/app/controllers/MobileApiController.php';
+    (new MobileApiController($pdo))->dispatch();
+    exit;
+}
+
+if ($r === 'xulydangnhap' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    require_once $backendRoot . '/app/services/AccountCartBridge.php';
+    AccountCartBridge::attachLoginMerge($pdo);
+}
+
+$accountCartSyncRoutes = [
+    'home', 'giohang', 'them_gio_hang_ajax', 'themgiohang', 'them_gio_hang',
+    'capnhat_sl_giohang', 'xoa_gio_hang', 'chuandaithanhtoan', 'thanhtoan',
+    'dathang', 'xulydathang', 'payment_autocheck', 'vnpay_return', 'hoso',
+    'live', 'api_live_add_to_cart',
+];
+if (in_array($r, $accountCartSyncRoutes, true)) {
+    require_once $backendRoot . '/app/services/AccountCartBridge.php';
+    AccountCartBridge::begin($pdo);
+}
+
 
 switch ($r) {
     case 'home':
@@ -492,6 +514,18 @@ switch ($r) {
     case 'hoso':
         (new TaiKhoanController($pdo))->hoso();
         break;
+    case 'account_avatar':
+        (new TaiKhoanController($pdo))->uploadAvatar();
+        break;
+    case 'account_avatar_image':
+        (new TaiKhoanController($pdo))->avatarImage();
+        break;
+    case 'feature_feedback':
+        (new TaiKhoanController($pdo))->featureFeedback();
+        break;
+    case 'admin_feature_feedback':
+        (new TaiKhoanController($pdo))->featureFeedbackSummary();
+        break;
 
     case 'capnhatthongtin':
     case 'capnhathoso':
@@ -546,6 +580,10 @@ switch ($r) {
         (new LiveController($pdo))->index();
         break;
 
+    case 'live_studio':
+        (new LiveController($pdo))->studio();
+        break;
+
     case 'ai_idol_live_video':
         (new LiveController($pdo))->streamAiIdolLiveVideo();
         break;
@@ -560,6 +598,18 @@ switch ($r) {
 
     case 'api_live_products':
         (new LiveController($pdo))->apiLiveProducts();
+        break;
+
+    case 'api_live_egress_webhook':
+        (new LiveController($pdo))->apiLiveEgressWebhook();
+        break;
+
+    case 'api_live_recording_status':
+        (new LiveController($pdo))->apiLiveRecordingStatus();
+        break;
+
+    case 'api_live_recording':
+        (new LiveController($pdo))->apiLiveRecording();
         break;
 
     case 'admin_live_pin_product':
@@ -586,8 +636,13 @@ switch ($r) {
     case 'api_live_chat':
         (new LiveController($pdo))->apiLiveChat();
         break;
-    case 'api_live_syna_reply':
-        (new LiveController($pdo))->apiLiveSynaReply();
+
+    case 'api_live_syna':
+        (new LiveController($pdo))->apiLiveSyna();
+        break;
+
+    case 'api_live_manage':
+        (new LiveController($pdo))->apiLiveManage();
         break;
 
     case 'api_live_chat_history':
@@ -604,6 +659,26 @@ switch ($r) {
 
     case 'api_live_reaction':
         (new LiveController($pdo))->apiLiveReaction();
+        break;
+
+    case 'api_live_claim_voucher':
+        (new LiveController($pdo))->apiLiveClaimVoucher();
+        break;
+
+    case 'api_live_quick_voucher':
+        (new LiveController($pdo))->apiLiveQuickVoucher();
+        break;
+
+    case 'api_live_drop_voucher':
+        (new LiveController($pdo))->apiLiveDropVoucher();
+        break;
+
+    case 'api_live_end_voucher':
+        (new LiveController($pdo))->apiLiveEndVoucher();
+        break;
+
+    case 'api_live_syna_reminder':
+        (new LiveController($pdo))->apiLiveSynaReminder();
         break;
 
     case 'admin':

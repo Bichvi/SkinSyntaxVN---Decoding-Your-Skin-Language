@@ -36,7 +36,7 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
 <div class="container py-4 py-lg-5 cart-page" id="cartPage"
      data-base-url="<?= BASE_URL ?>"
      data-shipping-threshold="<?= (int)$shippingThreshold ?>">
-  <div class="d-flex align-items-center justify-content-between gap-2 mb-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
     <h1 class="cart-title mb-0">Giỏ hàng của bạn</h1>
     <span class="cart-count-pill" id="cartCountPill"><?= count($items) ?> sản phẩm</span>
   </div>
@@ -49,6 +49,16 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
       <a href="<?= BASE_URL ?>/index.php?r=tatca" class="btn btn-continue-outline">Tiếp tục mua sắm</a>
     </section>
   <?php else: ?>
+    <?php $_SESSION['clear_cart_csrf'] ??= bin2hex(random_bytes(32)); ?>
+    <details class="mb-3" id="clearCartPanel">
+      <summary class="btn btn-outline-danger btn-sm">Xóa tất cả</summary>
+      <form method="post" action="<?= h(BASE_URL . '/index.php?r=giohang') ?>" class="border rounded-3 p-3 mt-2 bg-white">
+        <input type="hidden" name="action" value="clear_cart">
+        <input type="hidden" name="csrf" value="<?= h($_SESSION['clear_cart_csrf']) ?>">
+        <p class="mb-2">Xóa toàn bộ sản phẩm và ưu đãi live đã lưu trong giỏ?</p>
+        <button type="submit" class="btn btn-danger btn-sm">Xác nhận xóa tất cả</button>
+      </form>
+    </details>
     <div class="row g-4 align-items-start" id="cartLayout">
       <div class="col-lg-8">
         <section class="cart-shell">
@@ -134,6 +144,7 @@ $freeShipPercent = $shippingThreshold > 0 ? min(100, (int)round(($total / $shipp
                     </td>
                     <td class="text-end">
                       <span class="cart-price"><?= format_vnd($unitPrice) ?></span>
+                      <small class="text-success" data-live-price-label <?= empty($item['pricing']['is_live_offer']) ? 'hidden' : '' ?>>Giá live · áp dụng khi ưu đãi còn hiệu lực</small>
                     </td>
                     <td class="text-end">
                       <strong class="line-total"><?= format_vnd($lineTotal) ?></strong>
@@ -705,6 +716,7 @@ document.addEventListener('DOMContentLoaded', function () {
     params.set('product_id', productId);
     if (typeof qty !== 'undefined') {
       params.set('qty', String(qty));
+      params.set('include_price', '1');
     }
 
     return fetch(baseUrl + '/index.php?r=giohang', {
@@ -714,6 +726,12 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       body: params.toString(),
     });
+  }
+
+  function syncHeaderCart() {
+    const quantity = Array.from(cartItemsEl.querySelectorAll('.cart-item'))
+      .reduce((total, row) => total + getRowQty(row), 0);
+    window.updateSkinSyntaxCartCount?.(quantity);
   }
 
   function getSelectedProductIds() {
@@ -756,14 +774,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     setRowBusy(row, true);
     postCartAction('update_qty', productId, qty)
-      .then((response) => {
+      .then(async (response) => {
         if (!response.ok) {
           throw new Error('Update failed');
+        }
+        if (response.headers.get('content-type')?.includes('application/json')) {
+          const pricing = await response.json();
+          row.dataset.unitPrice = String(pricing.unit_price);
+          row.querySelector('.cart-price').textContent = formatVnd(pricing.unit_price);
+          row.querySelector('[data-live-price-label]').hidden = !pricing.is_live_offer;
         }
         input.value = String(qty);
         row.dataset.qty = String(qty);
         setLineTotal(row);
         renderSummary();
+        syncHeaderCart();
         document.dispatchEvent(new CustomEvent('cart:changed'));
       })
       .catch(() => {
@@ -792,9 +817,11 @@ document.addEventListener('DOMContentLoaded', function () {
         window.setTimeout(() => {
           row.remove();
           renderSummary();
+          syncHeaderCart();
           document.dispatchEvent(new CustomEvent('cart:changed'));
 
           if (!document.querySelector('.cart-item')) {
+            document.getElementById('clearCartPanel')?.remove();
             if (cartLayout) {
               cartLayout.innerHTML = '<div class="col-12"><section class="cart-empty"><div class="cart-empty-icon"><i class="fa-solid fa-bag-shopping"></i></div><h2>Giỏ hàng đang trống</h2><p>Khám phá thêm sản phẩm skincare phù hợp cho routine của bạn.</p><a href="' + baseUrl + '/index.php?r=tatca" class="btn btn-continue-outline">Tiếp tục mua sắm</a></section></div>';
             }

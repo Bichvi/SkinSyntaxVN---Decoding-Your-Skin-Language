@@ -48,7 +48,6 @@ if ($featureRatingConfig !== null): ?>
   <div class="container">
     <section class="site-footer__cta">
       <div>
-        <span class="site-footer__eyebrow">SkinSyntax beauty commerce</span>
         <h2 class="site-footer__title">Mua mỹ phẩm có định hướng hơn: tìm nhanh, hiểu da rõ và giữ mọi dữ liệu chăm da trong cùng một tài khoản.</h2>
       </div>
       <div class="site-footer__cta-actions">
@@ -104,10 +103,14 @@ if ($featureRatingConfig !== null): ?>
           <a href="<?= BASE_URL ?>/index.php?r=thanhtoan">Thanh toán</a>
         </div>
         <div>
-          <h6>Hỗ trợ</h6>
-          <span>Tra cứu thương hiệu và sản phẩm nhanh</span>
-          <span>Khảo sát da để cá nhân hóa đề xuất</span>
-          <span>Lưu lịch sử hồ sơ, điểm thưởng và đơn hàng</span>
+          <h6>Hỗ trợ &amp; chính sách</h6>
+          <a href="<?= BASE_URL ?>/index.php?r=tro_giup">Trung tâm trợ giúp</a>
+          <a href="<?= BASE_URL ?>/index.php?r=he_thong_cua_hang">Hệ thống cửa hàng</a>
+          <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_van_chuyen">Giao hàng</a>
+          <a href="<?= BASE_URL ?>/index.php?r=doi_tra_hoan_tien">Đổi trả &amp; hoàn tiền</a>
+          <a href="<?= BASE_URL ?>/index.php?r=bao_hanh">Bảo hành sản phẩm</a>
+          <a href="<?= BASE_URL ?>/index.php?r=chinh_sach_bao_mat">Chính sách bảo mật</a>
+          <a href="<?= BASE_URL ?>/index.php?r=dieu_kien_giao_dich">Điều khoản sử dụng</a>
         </div>
       </div>
     </section>
@@ -119,6 +122,9 @@ if ($featureRatingConfig !== null): ?>
     </section>
   </div>
 </footer>
+<button type="button" class="back-to-top" data-back-to-top aria-label="Lên đầu trang" title="Lên đầu trang">
+  <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+</button>
 <?php
 global $pdo;
 if ($pdo !== null) {
@@ -127,9 +133,32 @@ if ($pdo !== null) {
 }
 ?>
 <script src="<?= BASE_URL ?>/assets/js/chat-purchase.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-purchase.js') ?: '1' ?>"></script>
+<script defer src="<?= BASE_URL ?>/assets/js/chat-viewport.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-viewport.js') ?: '1' ?>"></script>
 <script>
   (function () {
     function initFooterInteractions() {
+    const backToTop = document.querySelector('[data-back-to-top]');
+    if (backToTop) {
+      let ticking = false;
+      const updateBackToTop = function () {
+        backToTop.classList.toggle('is-visible', window.scrollY > 520);
+        ticking = false;
+      };
+      window.addEventListener('scroll', function () {
+        if (!ticking) {
+          window.requestAnimationFrame(updateBackToTop);
+          ticking = true;
+        }
+      }, { passive: true });
+      updateBackToTop();
+      backToTop.addEventListener('click', function () {
+        window.scrollTo({
+          top: 0,
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        });
+      });
+      updateBackToTop();
+    }
     // Chỉ cho phép một menu tiện ích trên header mở tại một thời điểm.
     const utilityDropdowns = Array.from(document.querySelectorAll('.utility-dropdown'));
     utilityDropdowns.forEach(function (dropdown) {
@@ -182,23 +211,9 @@ if ($pdo !== null) {
       }, 2600);
     };
 
-    const updateCartBadge = function (count) {
-      const cartLink = document.querySelector('.header-icon-link--cart');
-      if (!cartLink) return;
-      let badge = cartLink.querySelector('.header-cart-badge');
-      if (count > 0 && !badge) {
-        badge = document.createElement('em');
-        badge.className = 'header-cart-badge';
-        cartLink.appendChild(badge);
-      }
-      if (badge) {
-        badge.textContent = String(count);
-        badge.style.display = count > 0 ? '' : 'none';
-      }
-    };
-
     function bounceCartHeader() {
-      const cartIcon = document.querySelector('.header-icon-link--cart');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const cartIcon = document.getElementById('headerCartLink');
       if (cartIcon) {
         cartIcon.classList.remove('cart-bounce-anim');
         void cartIcon.offsetWidth;
@@ -207,8 +222,8 @@ if ($pdo !== null) {
     }
 
     function animateFlyToCart(form, button) {
-      const cartIcon = document.querySelector('.header-icon-link--cart');
-      if (!cartIcon) return;
+      const cartIcon = document.getElementById('headerCartLink');
+      if (!cartIcon || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       const card = form.closest('.product-card, .goiy-product-card, .rcm-product-card, .flash-product, article') || form.parentElement;
       let sourceImg = card ? card.querySelector('img') : null;
@@ -279,7 +294,7 @@ if ($pdo !== null) {
 
     document.addEventListener('submit', function (event) {
       const form = event.target;
-      if (!(form instanceof HTMLFormElement)) return;
+      if (event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
       
       let rawAction = form.getAttribute('action') || form.action || 'index.php?r=them_gio_hang_ajax';
       if (rawAction.startsWith('/index.php') && window.location.pathname.includes('/index.php')) {
@@ -290,7 +305,7 @@ if ($pdo !== null) {
 
       const hasAddCartAction = form.querySelector('input[name="action"][value="add_to_cart"]') || targetUrl.includes('them_gio_hang');
       const hasProductId = form.querySelector('input[name="product_id"]') || form.querySelector('input[name="ma_san_pham"]');
-      if (!hasAddCartAction && !hasProductId) return;
+      if (!hasAddCartAction || !hasProductId) return;
 
       event.preventDefault();
       const button = (event.submitter && event.submitter.matches('button, input[type="submit"]')) ? event.submitter : form.querySelector('button[type="submit"]');
@@ -335,6 +350,7 @@ if ($pdo !== null) {
         })
         .then(function (json) {
           if (json.ok) {
+            window.updateSkinSyntaxCartCount(json.cart_count);
             if (typeof window.notifySynaCartAdded === 'function') {
               window.notifySynaCartAdded({ cartCount: json.cart_count });
             }
@@ -350,7 +366,6 @@ if ($pdo !== null) {
           }
           showCartToast(json.message || (json.ok ? 'Đã thêm sản phẩm vào giỏ hàng' : 'Không thể thêm sản phẩm'), !!json.ok);
           if (json.ok && typeof json.cart_count !== 'undefined') {
-            updateCartBadge(parseInt(json.cart_count, 10) || 0);
             bounceCartHeader();
           }
         })
@@ -382,10 +397,10 @@ if ($pdo !== null) {
 </script>
 
 <?php
-$topSaleProducts = function_exists('get_top_10_sale_products') ? get_top_10_sale_products() : [];
+$salePopupProducts = function_exists('get_top_10_sale_products') ? get_top_10_sale_products() : [];
 ?>
 
-<!-- DYNAMIC TOP 10 HOT SALE PRODUCTS FLOATING TOAST -->
+<!-- Context-aware discounted product suggestion -->
 <style>
 @keyframes cartBounceAnim {
   0% { transform: scale(1); }
@@ -449,16 +464,16 @@ $topSaleProducts = function_exists('get_top_10_sale_products') ? get_top_10_sale
 }
 </style>
 
-<?php if (!empty($topSaleProducts)): ?>
+<?php if (!empty($salePopupProducts)): ?>
 <div id="topSalesToast" class="top-sales-toast shadow-lg rounded-4 p-3 d-flex align-items-center gap-3" style="position: fixed; bottom: 24px; left: 24px; z-index: 1040; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(14px); border: 1.5px solid #C5DAC8; box-shadow: 0 16px 36px rgba(33, 84, 39, 0.2); width: 380px; max-width: calc(100vw - 48px); transform: translateY(160px); opacity: 0; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;">
   <a id="topSalesToastLink" href="#" class="d-block flex-shrink-0 position-relative" style="width: 64px; height: 64px; border-radius: 12px; overflow: hidden; background: #F8FAF8; border: 1px solid #E2EADF;">
-    <img id="topSalesToastImg" src="" alt="Top Sale Product" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="this.onerror=null; this.src=this.dataset.imagePlaceholder;" style="width: 100%; height: 100%; object-fit: cover;">
+    <img id="topSalesToastImg" src="<?= h(default_placeholder_image()) ?>" alt="Sản phẩm ưu đãi" data-image-placeholder="<?= h(default_placeholder_image()) ?>" onerror="this.onerror=null; this.src=this.dataset.imagePlaceholder;" style="width: 100%; height: 100%; object-fit: cover;">
     <span id="topSalesToastBadge" class="position-absolute" style="top: 2px; left: 2px; background: linear-gradient(135deg, #E11D48 0%, #F43F5E 100%); color: #FFF; font-weight: 800; font-size: 0.65rem; padding: 2px 6px; border-radius: 999px;">-0%</span>
   </a>
   <div class="flex-grow-1 overflow-hidden" style="line-height: 1.3;">
     <div class="d-flex align-items-center justify-content-between mb-1">
-      <span class="badge rounded-pill" style="background: #EAF0EB; color: #215427; font-size: 0.68rem; font-weight: 800;"><i class="fa-solid fa-fire text-danger me-1"></i>TOP SALE SỐC</span>
-      <span class="text-muted extra-small" style="font-size: 0.7rem;" id="topSalesToastRank">#1 SẢN PHẨM</span>
+      <span class="badge rounded-pill" style="background: #EAF0EB; color: #215427; font-size: 0.68rem; font-weight: 800;" id="topSalesToastLabel"><i class="fa-solid fa-wand-magic-sparkles me-1" aria-hidden="true"></i>GỢI Ý CHO BẠN</span>
+      <span class="text-muted extra-small text-truncate" style="font-size: 0.7rem; max-width: 132px;" id="topSalesToastRank">Ưu đãi đang có</span>
     </div>
     <h6 class="fw-bold text-dark text-truncate mb-1" id="topSalesToastName" style="font-size: 0.85rem;">Tên sản phẩm</h6>
     <div class="d-flex align-items-baseline gap-2">
@@ -511,7 +526,7 @@ window.unmuteSalesToast = function() {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-  const topSalesData = <?= json_encode($topSaleProducts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+  const topSalesData = <?= json_encode($salePopupProducts, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_INVALID_UTF8_SUBSTITUTE) ?: '[]' ?>;
   const toast = document.getElementById('topSalesToast');
   const imgEl = document.getElementById('topSalesToastImg');
   const badgeEl = document.getElementById('topSalesToastBadge');
@@ -519,6 +534,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const priceEl = document.getElementById('topSalesToastPrice');
   const marketEl = document.getElementById('topSalesToastMarket');
   const rankEl = document.getElementById('topSalesToastRank');
+  const labelEl = document.getElementById('topSalesToastLabel');
   const linkEl = document.getElementById('topSalesToastLink');
   const inputId = document.getElementById('topSalesToastInputId');
 
@@ -536,7 +552,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (nameEl) nameEl.textContent = item.name || '';
     if (priceEl) priceEl.textContent = formatVnd(item.price || 0);
     if (marketEl) marketEl.textContent = item.market_price > item.price ? formatVnd(item.market_price) : '';
-    if (rankEl) rankEl.textContent = '#' + (rankIndex + 1) + ' DEAL';
+    const personalized = item.personalized === true;
+    if (labelEl) {
+      labelEl.lastChild.textContent = personalized ? 'GỢI Ý CHO BẠN' : 'ƯU ĐÃI ĐANG CÓ';
+    }
+    if (rankEl) rankEl.textContent = item.reason || ('Ưu đãi ' + (rankIndex + 1));
     if (linkEl) linkEl.href = item.detail_url || '#';
     if (inputId) inputId.value = item.id || '';
   }

@@ -277,12 +277,11 @@ $productStatusData = [
             </div>
         </div>
 
-        <div class="col-12 col-xl-4">
-            <div class="admin-card mb-0 p-3.5 h-100" style="border-radius: 8px !important;">
+        <div class="col-12 col-xl-4 d-flex flex-column gap-4">
+            <div class="admin-card mb-0 p-3.5" style="border-radius: 8px !important;">
                 <div class="d-flex align-items-start justify-content-between mb-3 pb-2 border-bottom">
                     <div>
-                        <h6 class="fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-warning me-1.5"></i> Tỷ lệ trạng thái sản phẩm</h6>
-                        <div class="small text-muted" style="font-size: 0.78rem;">Phân loại theo hiển thị và tồn kho thực tế</div>
+                        <h6 class="fw-bold mb-1" style="color: var(--admin-text);"><i class="bi bi-pie-chart-fill text-warning me-1.5"></i> Trạng thái sản phẩm</h6>
                     </div>
                     <span class="badge bg-light text-dark border"><?= number_format((int)($productStatusSummary['tong'] ?? 0)) ?> SP</span>
                 </div>
@@ -302,6 +301,96 @@ $productStatusData = [
                     <?php endforeach; ?>
                 </div>
             </div>
+
+            <div class="admin-card mb-0 p-3.5" style="border-radius: 8px !important;">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-1 <?= !empty($lowStockProducts) ? 'text-danger' : 'text-success' ?>">
+                            <i class="bi <?= !empty($lowStockProducts) ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill' ?> me-1"></i>
+                            Tồn kho
+                        </h6>
+                        <div class="small text-muted">
+                            <?= !empty($lowStockProducts) ? count($lowStockProducts) . ' sản phẩm còn dưới 5' : 'Không có sản phẩm sắp hết' ?>
+                        </div>
+                    </div>
+                    <a href="index.php?r=admin_sp" class="btn btn-sm btn-outline-secondary text-nowrap">Xem kho</a>
+                </div>
+                <?php if (!empty($lowStockProducts)): ?>
+                    <div class="d-grid gap-2">
+                        <?php foreach (array_slice($lowStockProducts, 0, 4) as $pLow): ?>
+                            <div class="d-flex align-items-center justify-content-between gap-3 py-2 border-top">
+                                <span class="small text-truncate"><?= h($pLow['ten_san_pham'] ?? 'Sản phẩm') ?></span>
+                                <strong class="small text-danger text-nowrap">Còn <?= (int)($pLow['ton_kho'] ?? 0) ?></strong>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="small text-muted border-top pt-3">Kho đang ổn định.</div>
+                <?php endif; ?>
+            </div>
+
+            <?php
+            $ops = is_array($dashboardOperations ?? null) ? $dashboardOperations : [];
+            $opsItems = [
+                ['label' => 'Chờ thanh toán', 'value' => (int)($ops['waiting_payment'] ?? 0), 'icon' => 'bi-credit-card', 'tone' => 'text-warning', 'url' => 'index.php?r=admin_orders&q=' . urlencode('Chờ chuyển khoản')],
+                ['label' => 'Chờ xác nhận', 'value' => (int)($ops['pending_confirmation'] ?? 0), 'icon' => 'bi-hourglass-split', 'tone' => 'text-primary', 'url' => 'index.php?r=admin_orders&status=pending'],
+                ['label' => 'Đang giao', 'value' => (int)($ops['shipping'] ?? 0), 'icon' => 'bi-truck', 'tone' => 'text-success', 'url' => 'index.php?r=admin_orders&status=shipping'],
+                ['label' => 'Hỗ trợ chưa xử lý', 'value' => (int)($ops['support_pending'] ?? 0), 'icon' => 'bi-chat-dots', 'tone' => 'text-danger', 'url' => 'index.php?r=staff_chat'],
+            ];
+            ?>
+            <section class="admin-card mb-0 p-3.5" style="border-radius: 8px !important;" aria-labelledby="operations-heading">
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                    <div>
+                        <h6 class="fw-bold mb-1" id="operations-heading" style="color: var(--admin-text);">Tổng quan vận hành</h6>
+                        <p class="small text-muted mb-0">Các việc đang cần theo dõi</p>
+                    </div>
+                    <?php if ((int)($ops['overdue_confirmation'] ?? 0) > 0): ?>
+                        <span class="badge text-bg-warning"><?= number_format((int)$ops['overdue_confirmation']) ?> quá <?= (int)($ops['overdue_hours'] ?? 24) ?>h</span>
+                    <?php endif; ?>
+                </div>
+                <div class="row g-2 mt-1">
+                    <?php foreach ($opsItems as $opsItem): ?>
+                        <div class="col-6">
+                            <a class="d-flex align-items-center justify-content-between gap-2 border rounded-3 p-2 text-decoration-none h-100" href="<?= h($opsItem['url']) ?>">
+                                <span class="small text-dark"><i class="bi <?= h($opsItem['icon']) ?> <?= h($opsItem['tone']) ?> me-1" aria-hidden="true"></i><?= h($opsItem['label']) ?></span>
+                                <strong class="tabular-nums text-dark"><?= number_format($opsItem['value']) ?></strong>
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php if ((int)($ops['payment_reconciliation'] ?? 0) > 0): ?>
+                    <a class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small text-decoration-none" href="index.php?r=admin_orders&q=<?= urlencode('Chờ xác minh') ?>">
+                        <span class="text-danger"><i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>Cần đối soát thanh toán</span>
+                        <strong class="text-danger"><?= number_format((int)$ops['payment_reconciliation']) ?></strong>
+                    </a>
+                <?php endif; ?>
+            </section>
+
+            <section class="admin-card mb-0 p-3.5" style="border-radius: 8px !important;" aria-labelledby="top-products-heading">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-2">
+                    <div>
+                        <h6 class="fw-bold mb-1" id="top-products-heading" style="color: var(--admin-text);">Sản phẩm bán chạy</h6>
+                        <p class="small text-muted mb-0">Theo khoảng ngày đang chọn</p>
+                    </div>
+                    <a href="index.php?r=admin_reports&start_date=<?= h($dashboardStartDate ?? '') ?>&end_date=<?= h($dashboardEndDate ?? '') ?>" class="small text-success text-nowrap">Chi tiết</a>
+                </div>
+                <?php if (!empty($topProducts)): ?>
+                    <ol class="list-unstyled mb-0">
+                        <?php foreach ($topProducts as $index => $topProduct): ?>
+                            <li class="d-flex align-items-center gap-2 py-2 <?= $index > 0 ? 'border-top' : '' ?>">
+                                <span class="small text-muted tabular-nums" style="width: 18px;"><?= $index + 1 ?></span>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <a class="small fw-semibold text-dark text-decoration-none d-block text-truncate" href="index.php?r=admin_sp&q=<?= urlencode((string)($topProduct['ma_san_pham'] ?? '')) ?>"><?= h((string)($topProduct['ten_san_pham'] ?? 'Sản phẩm')) ?></a>
+                                    <span class="small text-muted"><?= number_format((int)($topProduct['so_don_vi'] ?? 0)) ?> sản phẩm</span>
+                                </div>
+                                <strong class="small text-success text-nowrap tabular-nums"><?= vnd($topProduct['doanh_thu'] ?? 0) ?></strong>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                <?php else: ?>
+                    <div class="small text-muted border-top pt-3 mt-2">Chưa có đơn đủ điều kiện ghi nhận doanh thu trong khoảng này.</div>
+                <?php endif; ?>
+            </section>
         </div>
     </div>
 
@@ -387,71 +476,6 @@ $productStatusData = [
         }
     });
     </script>
-
-    <!-- LOW STOCK ALERT WIDGET -->
-    <div class="admin-card mb-4 p-3 <?= !empty($lowStockProducts) ? 'border-danger border-opacity-25' : 'border-success border-opacity-25' ?>" style="background: <?= !empty($lowStockProducts) ? '#FEF2F2' : '#F0FDF4' ?>;">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-                <div class="rounded-3 d-inline-flex align-items-center justify-content-center <?= !empty($lowStockProducts) ? 'text-danger bg-white border border-danger-subtle' : 'text-success bg-white border border-success-subtle' ?>" style="width: 38px; height: 38px;">
-                    <i class="bi <?= !empty($lowStockProducts) ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill' ?> fs-5"></i>
-                </div>
-                <div>
-                    <h6 class="fw-semibold mb-0 <?= !empty($lowStockProducts) ? 'text-danger' : 'text-success' ?>" style="font-size: 0.92rem;">
-                        <?= !empty($lowStockProducts) ? 'Cảnh Báo Tồn Kho Sắp Hết (Dưới 5 sản phẩm)' : 'Trạng Thái Kho Hàng An Toàn' ?>
-                    </h6>
-                    <div class="small text-muted" style="font-size: 0.8rem;">
-                        <?= !empty($lowStockProducts) ? 'Có ' . count($lowStockProducts) . ' sản phẩm cần nhập thêm hàng ngay.' : 'Tất cả sản phẩm trong hệ thống hiện tại đều có số lượng tồn kho đầy đủ (> 5 sản phẩm).' ?>
-                    </div>
-                </div>
-            </div>
-            <a href="index.php?r=admin_sp" class="btn btn-sm <?= !empty($lowStockProducts) ? 'btn-outline-danger' : 'btn-outline-success' ?> px-3 fw-semibold" style="border-radius: 6px; font-size: 0.8rem;">
-                Quản lý kho hàng
-            </a>
-        </div>
-        <?php if (!empty($lowStockProducts)): ?>
-            <div class="row g-2 mt-2 pt-2 border-top">
-                <?php foreach ($lowStockProducts as $pLow): ?>
-                    <?php
-                    $pLowImg = '';
-                    $rawP = trim((string)($pLow['link_hinh_anh'] ?? $pLow['hinh_anh'] ?? ''));
-                    if ($rawP !== '') {
-                        $partsP = preg_split('/\s*\|\s*/', $rawP) ?: [];
-                        foreach ($partsP as $partP) {
-                            $partP = trim((string)$partP);
-                            if ($partP === '') continue;
-                            if (filter_var($partP, FILTER_VALIDATE_URL)) {
-                                $pLowImg = $partP;
-                                break;
-                            }
-                            if (strpos($partP, 'uploads/') === 0 || strpos($partP, '/uploads/') === 0) {
-                                $pLowImg = BASE_URL . '/' . ltrim($partP, '/');
-                                break;
-                            }
-                            $pLowImg = BASE_URL . '/uploads/products/' . rawurlencode($partP);
-                            break;
-                        }
-                    }
-                    ?>
-                    <div class="col-12 col-md-6 col-xl-4">
-                        <div class="d-flex align-items-center justify-content-between p-2 rounded-3 border bg-white shadow-xs">
-                            <div class="d-flex align-items-center gap-2 text-truncate me-2">
-                                <?php if ($pLowImg !== ''): ?>
-                                    <img src="<?= h($pLowImg) ?>" alt="" width="36" height="36" class="rounded border flex-shrink-0" style="object-fit: cover;">
-                                <?php else: ?>
-                                    <div class="rounded bg-light border d-inline-flex align-items-center justify-content-center text-muted flex-shrink-0" style="width: 36px; height: 36px;"><i class="bi bi-box-seam"></i></div>
-                                <?php endif; ?>
-                                <div class="text-truncate">
-                                    <div class="fw-bold small text-truncate" style="color: var(--admin-text);"><?= h($pLow['ten_san_pham'] ?? '') ?></div>
-                                    <div class="small text-muted">Mã: #<?= h($pLow['id'] ?? '') ?></div>
-                                </div>
-                            </div>
-                            <span class="badge bg-danger rounded-pill px-2.5 py-1 text-nowrap">Còn <?= (int)($pLow['ton_kho'] ?? 0) ?> sp</span>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
 
     <!-- RECENT ACTIVITY TABLES -->
     <div class="row g-4">
@@ -594,3 +618,13 @@ $productStatusData = [
     </div>
 </div>
 
+<?php if (current_role() === 'admin'): ?>
+  <?php
+  $feedbackFeature = 'admin_workspace';
+  $feedbackPrompt = 'Góp ý về công cụ quản trị';
+  require dirname(__DIR__) . '/partials/feature_feedback.php';
+  ?>
+  <a class="btn btn-outline-success mb-3" href="<?= h(BASE_URL . '/index.php?r=admin_feature_feedback') ?>">Xem phân bố kết quả khảo sát</a>
+  <link rel="stylesheet" href="<?= h(BASE_URL . '/assets/css/account-menu.css') ?>">
+  <?php require dirname(__DIR__) . '/partials/account_avatar.php'; ?>
+<?php endif; ?>

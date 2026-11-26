@@ -6,6 +6,13 @@ $customerEditing = $customerEditing ?? null;
 $staffEditing = $staffEditing ?? null;
 $q = trim((string)($q ?? ''));
 $loaiKh = trim((string)($loaiKh ?? ''));
+$customerEmailCounts = [];
+foreach ($customers as $customerItem) {
+    $customerEmail = strtolower(trim((string)($customerItem['email'] ?? '')));
+    if ($customerEmail !== '') {
+        $customerEmailCounts[$customerEmail] = ($customerEmailCounts[$customerEmail] ?? 0) + 1;
+    }
+}
 ?>
 
 <style>
@@ -140,13 +147,33 @@ $loaiKh = trim((string)($loaiKh ?? ''));
         font-size: 0.8rem;
         border: 1px solid #C8DACF;
     }
+
+    .user-form-disclosure {
+        border: 1px solid var(--admin-border);
+        border-radius: 8px;
+        background: var(--admin-surface);
+    }
+
+    .user-form-disclosure > summary {
+        align-items: center;
+        cursor: pointer;
+        display: flex;
+        font-weight: 700;
+        justify-content: space-between;
+        list-style: none;
+        min-height: 52px;
+        padding: 0.9rem 1rem;
+    }
+
+    .user-form-disclosure > summary::-webkit-details-marker { display: none; }
+    .user-form-disclosure > summary::after { content: '+'; font-size: 1.25rem; font-weight: 500; }
+    .user-form-disclosure[open] > summary::after { content: '−'; }
 </style>
 
 <div class="container-fluid px-4 py-4">
     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
-            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Khách hàng & Phân quyền hệ thống</h1>
-            <p class="text-muted mb-0 small">Quản lý thông tin khách hàng, tài khoản nhân viên và vai trò truy cập.</p>
+            <h1 class="h4 fw-bold mb-0" style="color: var(--admin-text);">Khách hàng & nhân viên</h1>
         </div>
     </div>
 
@@ -158,7 +185,7 @@ $loaiKh = trim((string)($loaiKh ?? ''));
             </div>
             <div class="col-md-3">
                 <select class="form-select" name="loai_kh" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
-                    <option value="">Tất cả loại KH</option>
+                    <option value="">Tất cả hạng</option>
                     <option value="Thuong" <?= $loaiKh === 'Thuong' ? 'selected' : '' ?>>Thường</option>
                     <option value="VIP" <?= $loaiKh === 'VIP' ? 'selected' : '' ?>>VIP</option>
                     <option value="Kim Cuong" <?= $loaiKh === 'Kim Cuong' ? 'selected' : '' ?>>Kim Cương</option>
@@ -170,11 +197,12 @@ $loaiKh = trim((string)($loaiKh ?? ''));
         </form>
     </div>
 
-    <div class="row g-4 mb-4">
+    <div class="row g-3 mb-4">
         <!-- Customer Edit Form -->
         <div class="col-lg-6">
-            <div class="admin-card mb-0 p-3.5 h-100" id="customer-form-card" style="border-radius: 8px !important;">
-                <h6 class="fw-bold mb-3" style="color: var(--admin-text);"><?= $customerEditing ? 'Cập nhật thông tin khách hàng' : 'Thêm khách hàng mới' ?></h6>
+            <details class="user-form-disclosure h-100" id="customer-form-card" <?= $customerEditing ? 'open' : '' ?>>
+                <summary><?= $customerEditing ? 'Sửa khách hàng' : 'Thêm khách hàng' ?></summary>
+                <div class="p-3 border-top">
                 <form method="post" action="index.php?r=admin_customer_save" class="row g-2.5 g-2">
                     <input type="hidden" name="ma_kh" value="<?= h($customerEditing['ma_kh'] ?? '') ?>">
                     <div class="col-md-6">
@@ -202,32 +230,28 @@ $loaiKh = trim((string)($loaiKh ?? ''));
                         <input type="text" class="form-control" name="dia_chi" value="<?= h($customerEditing['dia_chi'] ?? '') ?>" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
                     </div>
                     <div class="col-12">
-                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Mật khẩu <?= $customerEditing ? '(để trống nếu giữ nguyên)' : '<span class="text-danger">* (bắt buộc nếu nhập Email)</span>' ?></label>
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Mật khẩu <?= $customerEditing ? '(không đổi nếu để trống)' : '(cần khi có email)' ?></label>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="customer_mat_khau" name="mat_khau" placeholder="<?= $customerEditing ? 'Nhập mật khẩu mới hoặc tạo ngẫu nhiên' : 'Nhập mật khẩu hoặc tạo ngẫu nhiên' ?>" style="border-radius: 6px 0 0 6px; border-color: var(--admin-border); font-size: 0.84rem;">
-                            <button class="btn btn-outline-secondary" type="button" id="btn-generate-customer-pw" style="border-radius: 0 6px 6px 0; font-size: 0.84rem; background: var(--admin-surface); border-color: var(--admin-border); color: var(--admin-text);">Tạo ngẫu nhiên</button>
+                            <input type="password" minlength="8" class="form-control" id="customer_mat_khau" name="mat_khau" placeholder="Tối thiểu 8 ký tự" style="border-radius: 6px 0 0 6px; border-color: var(--admin-border); font-size: 0.84rem;">
+                            <button class="btn btn-outline-secondary" type="button" id="btn-generate-customer-pw" style="border-radius: 0 6px 6px 0; font-size: 0.84rem; background: var(--admin-surface); border-color: var(--admin-border); color: var(--admin-text);">Tạo mật khẩu</button>
                         </div>
                     </div>
                     <div class="col-12 d-flex gap-2 mt-3">
-                        <button type="submit" class="btn btn-sm text-white fw-semibold px-3" style="background: #183B2B; border-radius: 6px;">Lưu thông tin KH</button>
+                        <button type="submit" class="btn btn-sm text-white fw-semibold px-3" style="background: #183B2B; border-radius: 6px;">Lưu khách hàng</button>
                         <?php if ($customerEditing): ?>
                             <a href="index.php?r=admin_users" class="btn btn-sm btn-outline-secondary px-3" style="border-radius: 6px;">Hủy bỏ</a>
                         <?php endif; ?>
                     </div>
                 </form>
-            </div>
+                </div>
+            </details>
         </div>
 
         <!-- Staff Form -->
         <div class="col-lg-6">
-            <div class="admin-card mb-0 p-3.5 h-100 staff-panel" id="staff-form-card" style="border-radius: 8px !important;">
-                <div class="staff-heading">
-                    <span class="staff-heading-badge">NV</span>
-                    <div>
-                        <h6 class="fw-bold mb-0" style="color: var(--admin-text);"><?= $staffEditing ? 'Cập nhật tài khoản nhân viên' : 'Thêm nhân viên / Phân quyền' ?></h6>
-                        <div class="text-muted small" style="font-size: 0.78rem;">Tạo tài khoản quản trị và cấp quyền truy cập hệ thống.</div>
-                    </div>
-                </div>
+            <details class="user-form-disclosure h-100" id="staff-form-card" <?= $staffEditing ? 'open' : '' ?>>
+                <summary><?= $staffEditing ? 'Sửa nhân viên' : 'Thêm nhân viên' ?></summary>
+                <div class="p-3 border-top">
                 <form method="post" action="index.php?r=admin_staff_save" class="row g-2.5 g-2">
                     <input type="hidden" name="ma_nv" value="<?= h($staffEditing['ma_nv'] ?? '') ?>">
                     <div class="col-md-6">
@@ -247,10 +271,10 @@ $loaiKh = trim((string)($loaiKh ?? ''));
                         <input type="password" class="form-control" name="mat_khau" <?= $staffEditing ? '' : 'required' ?> style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Vai trò hệ thống *</label>
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Vai trò *</label>
                         <?php $selectedRole = (string)($staffEditing['ma_vai_tro'] ?? ''); ?>
                         <select class="form-select" name="ma_vai_tro" required style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
-                            <option value="">-- Chọn vai trò --</option>
+                            <option value="">Chọn vai trò</option>
                             <?php foreach ($roles as $role): ?>
                                 <option value="<?= h($role['ma_vai_tro'] ?? '') ?>" <?= $selectedRole === (string)($role['ma_vai_tro'] ?? '') ? 'selected' : '' ?>>
                                     <?= h($role['ten_vai_tro'] ?? '') ?>
@@ -259,10 +283,10 @@ $loaiKh = trim((string)($loaiKh ?? ''));
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Trạng thái hoạt động</label>
+                        <label class="form-label small fw-semibold text-muted mb-1" style="font-size: 0.78rem;">Trạng thái</label>
                         <?php $staffStatus = (string)($staffEditing['trang_thai'] ?? 'active'); ?>
                         <select class="form-select" name="trang_thai" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.84rem;">
-                            <option value="active" <?= $staffStatus === 'active' ? 'selected' : '' ?>>Kích hoạt (Hoạt động)</option>
+                            <option value="active" <?= $staffStatus === 'active' ? 'selected' : '' ?>>Hoạt động</option>
                             <option value="inactive" <?= $staffStatus === 'inactive' ? 'selected' : '' ?>>Tạm khóa</option>
                         </select>
                     </div>
@@ -273,17 +297,15 @@ $loaiKh = trim((string)($loaiKh ?? ''));
                         <?php endif; ?>
                     </div>
                 </form>
-                <div class="staff-form-note">
-                    <strong>Gợi ý:</strong> Dùng <strong>Tạm khóa</strong> để dừng tạm thời quyền truy cập. Dùng <strong>Xóa</strong> khi loại bỏ hẳn khỏi công ty.
                 </div>
-            </div>
+            </details>
         </div>
     </div>
 
     <!-- Data Tables Row -->
     <div class="row g-4 live-region" id="userResults" aria-live="polite">
         <!-- Customers List Table -->
-        <div class="col-lg-6">
+        <div class="col-12">
             <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
                 <div class="p-3 border-bottom background-subtle">
                     <h6 class="fw-bold mb-0" style="color: var(--admin-text);">Danh sách khách hàng</h6>
@@ -319,7 +341,13 @@ $loaiKh = trim((string)($loaiKh ?? ''));
                                             <div class="small text-muted" style="font-size: 0.76rem;">#<?= h($item['ma_kh'] ?? '') ?></div>
                                         </td>
                                         <td>
-                                            <div style="font-size: 0.82rem;"><?= h($item['email'] ?? 'Chưa có email') ?></div>
+                                            <?php $normalizedItemEmail = strtolower(trim((string)($item['email'] ?? ''))); ?>
+                                            <div style="font-size: 0.82rem;">
+                                                <?= h($item['email'] ?? 'Chưa có email') ?>
+                                                <?php if ($normalizedItemEmail !== '' && ($customerEmailCounts[$normalizedItemEmail] ?? 0) > 1): ?>
+                                                    <span class="badge text-bg-warning ms-1">Email trùng</span>
+                                                <?php endif; ?>
+                                            </div>
                                             <div class="small text-muted" style="font-size: 0.76rem;"><?= h($item['so_dien_thoai'] ?? 'Chưa có SĐT') ?></div>
                                         </td>
                                         <td>
@@ -349,10 +377,10 @@ $loaiKh = trim((string)($loaiKh ?? ''));
         </div>
 
         <!-- Staff List Table -->
-        <div class="col-lg-6">
+        <div class="col-12">
             <div class="admin-card p-0 overflow-hidden mb-0 staff-panel" style="border-radius: 8px !important;">
                 <div class="p-3 border-bottom background-subtle">
-                    <h6 class="fw-bold mb-0" style="color: var(--admin-text);">Danh sách nhân viên & Vai trò</h6>
+                    <h6 class="fw-bold mb-0" style="color: var(--admin-text);">Nhân viên</h6>
                 </div>
                 <div class="table-responsive">
                     <table class="table admin-table align-middle mb-0 staff-table">

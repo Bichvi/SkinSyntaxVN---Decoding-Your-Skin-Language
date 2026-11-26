@@ -114,7 +114,7 @@ class HoaDon {
         return $maKhMoi;
     }
 
-    private function fetchProductPrice(string $productId): int {
+    private function fetchProductPrice(string $productId, int $liveOfferQuantity = 0): int {
         $product = $this->findProductForStock($productId);
 
         if (!$product) {
@@ -124,6 +124,10 @@ class HoaDon {
         require_once __DIR__ . '/FlashSaleCampaign.php';
         $campaignModel = new FlashSaleCampaign($this->db);
         $pricing = $campaignModel->resolveEffectivePrice($productId, null, $product);
+        if ($liveOfferQuantity > 0) {
+            require_once __DIR__ . '/../services/LiveOffer.php';
+            $pricing = LiveOffer::cartPricing($this->db, $productId, $liveOfferQuantity, $pricing);
+        }
         return (int)$pricing['effective_price'];
     }
 
@@ -463,13 +467,29 @@ class HoaDon {
         }
 
         $expectedAmount = (int)($order['tong_tien'] ?? 0);
-        if ($amount < $expectedAmount || $expectedAmount <= 0) {
+        if ($amount !== $expectedAmount || $expectedAmount <= 0) {
             return [
                 'ok' => false,
-                'message' => 'So tien chuyen khoan chua khop voi don hang.',
+                'message' => $amount < $expectedAmount
+                    ? 'Số tiền chuyển khoản còn thiếu; đơn hàng vẫn chờ đối soát.'
+                    : 'Số tiền chuyển khoản lớn hơn số tiền đơn hàng; cần quản trị viên đối soát.',
                 'expected_amount' => $expectedAmount,
                 'received_amount' => $amount,
             ];
+        }
+
+        $transactionReference = trim((string)($transactionReference ?? ''));
+        if ($transactionReference !== '') {
+            $usedTransaction = $this->db->hoa_don->findOne([
+                'ma_hoa_don' => ['$ne' => $orderId],
+                '$or' => [
+                    ['transaction_id' => $transactionReference],
+                    ['ghi_chu_thanh_toan' => $transactionReference],
+                ],
+            ]);
+            if ($usedTransaction) {
+                return ['ok' => false, 'message' => 'Giao dịch này đã được dùng để đối soát một đơn hàng khác.'];
+            }
         }
 
         try {
@@ -485,7 +505,8 @@ class HoaDon {
                 $updateHoaDon['trang_thai_normalized'] = 'confirmed';
             }
 
-            if ($transactionReference !== null && $transactionReference !== '') {
+            if ($transactionReference !== '') {
+                $updateHoaDon['transaction_id'] = $transactionReference;
                 $updateHoaDon['ghi_chu_thanh_toan'] = $transactionReference;
             } elseif ($transferContent !== null && $transferContent !== '') {
                 $updateHoaDon['ghi_chu_thanh_toan'] = $transferContent;
@@ -626,13 +647,14 @@ class HoaDon {
         $maKh = $this->getOrCreateKhachHangId($email, $hoTenMacDinh);
         $lineItems = [];
         $subtotal = 0;
+        $applyLiveOffers = !empty($payload['apply_live_offers']);
 
         foreach ($checkoutItems as $maSanPham => $soLuongRaw) {
             $maSanPham = trim((string)$maSanPham);
             if ($maSanPham === '') continue;
 
             $soLuong = max(1, (int)$soLuongRaw);
-            $donGia = $this->fetchProductPrice($maSanPham);
+            $donGia = $this->fetchProductPrice($maSanPham, $applyLiveOffers ? $soLuong : 0);
             $lineTotal = $donGia * $soLuong;
             $subtotal += $lineTotal;
 
@@ -645,6 +667,9 @@ class HoaDon {
 
         if (empty($lineItems)) {
             throw new RuntimeException('Khong co san pham hop le de tao hoa don.');
+        }
+        if ($applyLiveOffers && $subtotal !== $tamTinhInput) {
+            throw new RuntimeException('Giá sản phẩm trong phiên live vừa thay đổi. Vui lòng kiểm tra lại giỏ hàng.');
         }
 
         $tamTinh = $tamTinhInput > 0 ? $tamTinhInput : $subtotal;

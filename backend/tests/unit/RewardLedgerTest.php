@@ -30,6 +30,8 @@ $db->reward_xu_ledger->duplicateExceptionCode = 0;
 $check('E11000 chỉ trong message (code 0) -> DUPLICATE', $ledger->award($e('checkin:u1:2026-11-16', 10, 'checkin'))['code'] === 'DUPLICATE');
 $db->reward_xu_ledger->forceDuplicateOnInsert = false;
 $db->reward_xu_ledger->duplicateExceptionCode = 11000;
+$reviewReward = $ledger->award(['customer_id' => 'u2', 'ma_kh' => 8, 'source' => 'review', 'source_key' => 'review:501', 'amount_xu' => 100, 'date_vn' => '2026-11-15', 'meta' => ['review_id' => 501]]);
+$check('đánh giá là nguồn xu hợp lệ và cộng đúng 100 xu', $reviewReward['code'] === 'OK' && $ledger->sumXu(8) === 100);
 $ledger->award($e('milestone:u1:2026-11-15:30', 270, 'watch_milestone'));
 $check('đã 290 -> award 20 chỉ cộng 10', $ledger->award($e('video:u1:c2', 20))['xu_awarded'] === 10 && $ledger->sumXu(7, '2026-11-15') === 300);
 $check('chạm 300 -> DAILY_CAP_REACHED, không ghi bản ghi 0 xu', $ledger->award($e('video:u1:c3', 20))['code'] === 'DAILY_CAP_REACHED' && !$ledger->hasKey('video:u1:c3'));

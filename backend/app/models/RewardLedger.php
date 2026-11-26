@@ -8,7 +8,7 @@
 class RewardLedger
 {
     public const COLLECTION = 'reward_xu_ledger';
-    private const SOURCES = ['video', 'checkin', 'watch_milestone'];
+    private const SOURCES = ['video', 'checkin', 'watch_milestone', 'review'];
 
     private $col;
 

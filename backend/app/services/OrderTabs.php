@@ -121,7 +121,7 @@ final class OrderTabs
     public static function tabOf(array $order): string
     {
         $status = self::orderStatus($order);
-        if (in_array($status, ['pending', 'confirmed'], true) && self::isOnlinePayment($order) && self::paymentState($order) !== 'paid') {
+        if ($status !== 'cancelled' && self::isOnlinePayment($order) && self::paymentState($order) !== 'paid') {
             return 'cho_thanh_toan';
         }
         return self::TAB_BY_STATUS[$status] ?? 'khac';

@@ -439,35 +439,174 @@ function get_flash($key) {
 }
 
 function get_top_10_sale_products(): array {
-    static $memoryCache = null;
-    if ($memoryCache !== null) {
-        return $memoryCache;
-    }
+    static $memoryCache = [];
 
-    $cacheFile = dirname(__DIR__, 2) . '/backend/storage/cache/top_10_sale_cache.json';
-    if (file_exists($cacheFile)) {
-        $mtime = filemtime($cacheFile);
-        if ($mtime !== false && (time() - $mtime) < 3600) {
-            $cached = json_decode((string)@file_get_contents($cacheFile), true);
-            if (is_array($cached) && !empty($cached)) {
-                $memoryCache = $cached;
-                return $memoryCache;
-            }
+    $recentViewed = is_array($_SESSION['recent_viewed_products'] ?? null)
+        ? array_values($_SESSION['recent_viewed_products'])
+        : [];
+    $cartIds = [];
+    foreach ((array)($_SESSION['gio_hang'] ?? []) as $key => $value) {
+        $id = is_array($value) ? ($value['ma_san_pham'] ?? $key) : $key;
+        $id = trim((string)$id);
+        if ($id !== '' && ctype_digit($id)) {
+            $cartIds[] = $id;
         }
     }
+    $searchHistory = is_array($_SESSION['search_history'] ?? null)
+        ? array_slice(array_values($_SESSION['search_history']), -6)
+        : [];
 
     global $db, $pdo;
     $mongoDb = $db ?? $pdo;
     if (!$mongoDb) return [];
+
+    $profile = null;
+    $email = trim((string)($_SESSION['user']['email'] ?? ''));
+    if ($email !== '' && current_role() === 'khach_hang' && class_exists('TaiKhoan')) {
+        try {
+            $account = new TaiKhoan($mongoDb);
+            $customer = $account->getKhachHangByEmail($email);
+            if (!empty($customer['recommendation_consent'] ?? $customer['privacy_consent'] ?? false)) {
+                $profile = $account->getSelectedSkinProfileByEmail($email);
+            }
+        } catch (Throwable $e) {
+            $profile = null;
+        }
+    }
+
+    $hasPersonalContext = $recentViewed !== [] || $cartIds !== [] || $searchHistory !== [] || is_array($profile);
+    $cacheKey = $hasPersonalContext ? 'personalized' : 'guest';
+    if (isset($memoryCache[$cacheKey])) {
+        return $memoryCache[$cacheKey];
+    }
+
+    $cacheFile = dirname(__DIR__, 2) . '/backend/storage/cache/top_10_sale_cache.json';
+    if (!$hasPersonalContext && file_exists($cacheFile)) {
+        $mtime = filemtime($cacheFile);
+        if ($mtime !== false && (time() - $mtime) < 3600) {
+            $cached = json_decode((string)@file_get_contents($cacheFile), true);
+            if (is_array($cached) && !empty($cached)) {
+                $memoryCache[$cacheKey] = $cached;
+                return $memoryCache[$cacheKey];
+            }
+        }
+    }
+
     try {
         if (!class_exists('SanPham')) {
-            require_once __DIR__ . '/models/SanPham.php';
+            require_once dirname(__DIR__, 2) . '/backend/app/models/SanPham.php';
         }
         $spModel = new SanPham($mongoDb);
-        $build = function () use ($spModel): array {
-            $top10 = $spModel->getDiscountProducts([], 10);
+        $build = function () use ($spModel, $hasPersonalContext, $recentViewed, $cartIds, $searchHistory, $profile): array {
+            // Lấy một tập sale rộng rồi xếp hạng theo ngữ cảnh phiên hiện tại. Khách chưa có
+            // tín hiệu vẫn nhận thứ tự giảm giá cũ, không ghi hồ sơ cá nhân vào cache dùng chung.
+            $candidates = $spModel->getDiscountProducts([], $hasPersonalContext ? 48 : 10);
+
+            $normalize = static function ($value): string {
+                if ($value instanceof Traversable) {
+                    $value = iterator_to_array($value);
+                }
+                if (is_array($value)) {
+                    $value = implode(' ', array_map('strval', $value));
+                }
+                $text = mb_strtolower(trim((string)$value), 'UTF-8');
+                $text = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $text) ?? $text;
+                return trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+            };
+            $tokens = static function ($value) use ($normalize): array {
+                $parts = preg_split('/\s+/u', $normalize($value), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                return array_values(array_unique(array_filter($parts, static fn($part) => mb_strlen($part, 'UTF-8') >= 3)));
+            };
+
+            $signalIds = array_values(array_unique(array_filter(array_merge($recentViewed, $cartIds), static function ($id) {
+                if (!is_string($id) && !is_int($id)) return false;
+                $id = trim((string)$id);
+                return $id !== '' && ctype_digit($id);
+            })));
+            $signalProducts = $signalIds ? $spModel->findVisibleByIds($signalIds) : [];
+            $signalBrands = [];
+            $signalCategories = [];
+            foreach ($signalProducts as $signalProduct) {
+                $brand = $normalize($signalProduct['thuong_hieu'] ?? '');
+                $category = $normalize($signalProduct['loai_san_pham'] ?? $signalProduct['danh_muc_day_du'] ?? '');
+                if ($brand !== '') $signalBrands[$brand] = true;
+                if ($category !== '') $signalCategories[$category] = true;
+            }
+
+            $profileText = '';
+            $budget = 0;
+            if (is_array($profile)) {
+                $profileText = implode(' ', [
+                    (string)($profile['loai_da'] ?? ''),
+                    is_array($profile['van_de_da'] ?? null) ? implode(' ', $profile['van_de_da']) : (string)($profile['van_de_da'] ?? ''),
+                    (string)($profile['muc_tieu_cham_soc'] ?? ''),
+                ]);
+                $budget = max(0, (int)($profile['ngan_sach'] ?? 0));
+            }
+            $profileTokens = $tokens($profileText);
+            $searchTokens = $tokens(implode(' ', array_map(static function ($value): string {
+                return is_string($value) || is_numeric($value) ? (string)$value : '';
+            }, $searchHistory)));
+            $cartSet = array_fill_keys(array_map('strval', $cartIds), true);
+
+            foreach ($candidates as &$candidate) {
+                $id = (string)($candidate['ma_san_pham'] ?? $candidate['id'] ?? '');
+                $salePrice = (float)($candidate['gia_ban'] ?? 0);
+                $marketPrice = (float)($candidate['gia_thi_truong'] ?? 0);
+                $discount = $marketPrice > $salePrice ? (int)round((($marketPrice - $salePrice) / $marketPrice) * 100) : 0;
+                $brand = $normalize($candidate['thuong_hieu'] ?? '');
+                $category = $normalize($candidate['loai_san_pham'] ?? $candidate['danh_muc_day_du'] ?? '');
+                $haystack = $normalize(implode(' ', [
+                    (string)($candidate['ten_san_pham'] ?? ''),
+                    (string)($candidate['thuong_hieu'] ?? ''),
+                    (string)($candidate['loai_san_pham'] ?? ''),
+                    (string)($candidate['danh_muc_day_du'] ?? ''),
+                    (string)($candidate['loai_da'] ?? ''),
+                    (string)($candidate['cong_dung'] ?? ''),
+                ]));
+
+                $score = $discount / 10;
+                $reason = '';
+                $profileMatches = array_values(array_filter($profileTokens, static fn($token) => str_contains($haystack, $token)));
+                $searchMatches = array_values(array_filter($searchTokens, static fn($token) => str_contains($haystack, $token)));
+                if ($profileMatches !== []) {
+                    $score += min(8, count($profileMatches) * 2.5);
+                    $reason = 'Hợp hồ sơ da';
+                }
+                if ($brand !== '' && isset($signalBrands[$brand])) {
+                    $score += 5;
+                    if ($reason === '') $reason = 'Theo thương hiệu bạn quan tâm';
+                }
+                if ($category !== '' && isset($signalCategories[$category])) {
+                    $score += 4;
+                    if ($reason === '') $reason = 'Cùng nhóm sản phẩm bạn quan tâm';
+                }
+                if ($searchMatches !== []) {
+                    $score += min(6, count($searchMatches) * 2);
+                    if ($reason === '') $reason = 'Theo tìm kiếm gần đây';
+                }
+                if ($budget > 0 && $salePrice > 0 && $salePrice <= $budget) {
+                    $score += 2;
+                    if ($reason === '') $reason = 'Trong ngân sách của bạn';
+                }
+                if (isset($cartSet[$id])) {
+                    $score -= 20; // Không lặp lại món đã nằm trong giỏ.
+                }
+                $candidate['_sale_popup_score'] = $score;
+                $candidate['_sale_popup_reason'] = $reason;
+                $candidate['_sale_popup_discount'] = $discount;
+            }
+            unset($candidate);
+
+            if ($hasPersonalContext) {
+                usort($candidates, static function (array $a, array $b): int {
+                    $byScore = ($b['_sale_popup_score'] ?? 0) <=> ($a['_sale_popup_score'] ?? 0);
+                    return $byScore !== 0 ? $byScore : (($b['_sale_popup_discount'] ?? 0) <=> ($a['_sale_popup_discount'] ?? 0));
+                });
+            }
+
             $result = [];
-            foreach ($top10 as $item) {
+            foreach (array_slice($candidates, 0, 10) as $item) {
                 $id = (string)($item['ma_san_pham'] ?? $item['id'] ?? (isset($item['_id']) ? (string)$item['_id'] : ''));
                 $salePrice = (float)($item['gia_ban'] ?? 0);
                 $marketPrice = (float)($item['gia_thi_truong'] ?? 0);
@@ -481,16 +620,21 @@ function get_top_10_sale_products(): array {
                     'market_price' => (int)$marketPrice,
                     'discount' => $discount,
                     'image' => $img !== '' ? $img : default_placeholder_image(),
-                    'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id)
+                    'detail_url' => BASE_URL . '/index.php?r=chitiet&id=' . rawurlencode($id),
+                    'personalized' => $hasPersonalContext && (string)($item['_sale_popup_reason'] ?? '') !== '',
+                    'reason' => (string)($item['_sale_popup_reason'] ?? ''),
                 ];
             }
             return $result;
         };
-        // Chạy ở footer mọi trang nên cache 2 phút; thiếu ProductQueryCache thì tính trực tiếp như cũ
-        if (class_exists('ProductQueryCache')) {
-            return ProductQueryCache::remember('top10Sale:' . (defined('BASE_URL') ? BASE_URL : ''), 120, $build);
+
+        // Chỉ cache chung cho khách chưa có tín hiệu. Danh sách cá nhân hóa sống trong đúng request.
+        if (!$hasPersonalContext && class_exists('ProductQueryCache')) {
+            $memoryCache[$cacheKey] = ProductQueryCache::remember('top10Sale:' . (defined('BASE_URL') ? BASE_URL : ''), 120, $build);
+            return $memoryCache[$cacheKey];
         }
-        return $build();
+        $memoryCache[$cacheKey] = $build();
+        return $memoryCache[$cacheKey];
     } catch (Throwable $e) {
         return [];
     }
@@ -502,6 +646,15 @@ function is_logged_in(): bool {
 
 function current_user() {
     return $_SESSION['user'] ?? null;
+}
+
+function account_avatar_url(array $user, bool $relative = false): string {
+    $key = (string)($user['avatar_key'] ?? '');
+    if (preg_match('/^[a-f0-9]{40}$/D', $key)) {
+        return ($relative ? '' : BASE_URL . '/') . 'index.php?r=account_avatar_image&key=' . $key .
+            '&v=' . rawurlencode((string)($user['avatar_version'] ?? ''));
+    }
+    return '';
 }
 
 function current_role(): string {
@@ -573,6 +726,7 @@ function route_access_map(): array {
         'admin_reports' => ['admin'],
         'admin_feature_ratings_export' => ['admin'],
         'admin_feature_ratings_summary' => ['admin'],
+        'admin_feature_feedback' => ['admin'],
         'admin_questions' => ['admin', 'nhanvien'],
         'admin_question_reply' => ['admin', 'nhanvien'],
         'admin_question_hide' => ['admin', 'nhanvien'],

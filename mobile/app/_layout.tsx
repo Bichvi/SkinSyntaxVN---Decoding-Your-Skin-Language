@@ -1,10 +1,12 @@
 import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { MobileAuthProvider } from '@/src/auth/MobileAuthProvider';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -46,11 +48,22 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <MobileAuthProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="assistant" options={{ headerShown: false, presentation: 'card' }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="sign-in" options={{ title: 'Đăng nhập' }} />
+          <Stack.Screen name="profile" options={{ title: 'Hồ sơ cá nhân' }} />
+          <Stack.Screen name="skin-profile" options={{ title: 'Hồ sơ da' }} />
+          <Stack.Screen name="addresses" options={{ title: 'Địa chỉ giao hàng' }} />
+          <Stack.Screen name="orders" options={{ title: 'Đơn hàng' }} />
+          <Stack.Screen name="favorites" options={{ title: 'Yêu thích' }} />
+          <Stack.Screen name="vouchers" options={{ title: 'Ví voucher' }} />
+          <Stack.Screen name="loyalty" options={{ title: 'Điểm thành viên' }} />
+        </Stack>
+      </ThemeProvider>
+    </MobileAuthProvider>
   );
 }

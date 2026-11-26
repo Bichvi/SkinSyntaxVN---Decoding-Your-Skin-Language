@@ -505,6 +505,18 @@ switch ($r) {
     case 'hoso':
         (new TaiKhoanController($pdo))->hoso();
         break;
+    case 'account_avatar':
+        (new TaiKhoanController($pdo))->uploadAvatar();
+        break;
+    case 'account_avatar_image':
+        (new TaiKhoanController($pdo))->avatarImage();
+        break;
+    case 'feature_feedback':
+        (new TaiKhoanController($pdo))->featureFeedback();
+        break;
+    case 'admin_feature_feedback':
+        (new TaiKhoanController($pdo))->featureFeedbackSummary();
+        break;
 
     case 'capnhatthongtin':
     case 'capnhathoso':
@@ -557,6 +569,10 @@ switch ($r) {
         (new LiveController($pdo))->index();
         break;
 
+    case 'live_studio':
+        (new LiveController($pdo))->studio();
+        break;
+
     case 'api_live_token':
         (new LiveController($pdo))->apiLivekitToken();
         break;
@@ -569,10 +585,21 @@ switch ($r) {
         (new LiveController($pdo))->apiLiveProducts();
         break;
 
+    case 'api_live_egress_webhook':
+        (new LiveController($pdo))->apiLiveEgressWebhook();
+        break;
+
+    case 'api_live_recording_status':
+        (new LiveController($pdo))->apiLiveRecordingStatus();
+        break;
+
+    case 'api_live_recording':
+        (new LiveController($pdo))->apiLiveRecording();
+        break;
+
     case 'api_search_catalog_products':
         (new LiveController($pdo))->apiSearchCatalogProducts();
         break;
-
 
     case 'admin_live_pin_product':
         (new LiveController($pdo))->adminLivePinProduct();
@@ -581,7 +608,6 @@ switch ($r) {
     case 'api_upload_live_recording':
         (new LiveController($pdo))->apiUploadLiveRecording();
         break;
-
 
     case 'admin_live_add_deal':
         (new LiveController($pdo))->adminLiveAddDeal();
@@ -598,8 +624,13 @@ switch ($r) {
     case 'api_live_chat':
         (new LiveController($pdo))->apiLiveChat();
         break;
-    case 'api_live_syna_reply':
-        (new LiveController($pdo))->apiLiveSynaReply();
+
+    case 'api_live_syna':
+        (new LiveController($pdo))->apiLiveSyna();
+        break;
+
+    case 'api_live_manage':
+        (new LiveController($pdo))->apiLiveManage();
         break;
 
     case 'api_live_chat_history':
@@ -616,6 +647,26 @@ switch ($r) {
 
     case 'api_live_reaction':
         (new LiveController($pdo))->apiLiveReaction();
+        break;
+
+    case 'api_live_claim_voucher':
+        (new LiveController($pdo))->apiLiveClaimVoucher();
+        break;
+
+    case 'api_live_quick_voucher':
+        (new LiveController($pdo))->apiLiveQuickVoucher();
+        break;
+
+    case 'api_live_drop_voucher':
+        (new LiveController($pdo))->apiLiveDropVoucher();
+        break;
+
+    case 'api_live_end_voucher':
+        (new LiveController($pdo))->apiLiveEndVoucher();
+        break;
+
+    case 'api_live_syna_reminder':
+        (new LiveController($pdo))->apiLiveSynaReminder();
         break;
 
     case 'admin':

@@ -165,6 +165,17 @@ def test_provider_failure_is_logged_by_exception_type_only(caplog):
     assert "gsk_secret" not in caplog.text
 
 
+def test_provider_failure_logs_numeric_status_without_provider_body(caplog):
+    from agent_graph import llm
+
+    class ProviderError(Exception):
+        status_code = 429
+
+    llm._FallbackLogger("fixture-model").on_llm_error(ProviderError("fixture private payload"))
+    assert "model=fixture-model cause=ProviderError status=429" in caplog.text
+    assert "fixture private payload" not in caplog.text
+
+
 def _scan_ctx(scanned):
     from agent_graph.state import ConvState
     from agent_graph.tools import ToolContext

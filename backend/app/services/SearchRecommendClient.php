@@ -43,6 +43,17 @@ final class SearchRecommendClient
     /** Tạo client từ env. null nếu tính năng tắt (SEARCH_FALLBACK_ENABLED=0) hoặc không xác định được URL. */
     public static function fromEnv(): ?self
     {
+        return self::buildFromEnv(true);
+    }
+
+    /** Trang vận hành vẫn phải kiểm tra được dịch vụ khi tính năng tìm kiếm đang tạm tắt. */
+    public static function forOpsFromEnv(): ?self
+    {
+        return self::buildFromEnv(false);
+    }
+
+    private static function buildFromEnv(bool $respectFeatureFlag): ?self
+    {
         $env = function (string $k, string $d = ''): string {
             if (function_exists('ss_env')) {
                 return ss_env($k, $d);
@@ -50,7 +61,7 @@ final class SearchRecommendClient
             $v = getenv($k);
             return ($v === false || trim((string)$v) === '') ? $d : trim((string)$v);
         };
-        if (in_array(strtolower($env('SEARCH_FALLBACK_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
+        if ($respectFeatureFlag && in_array(strtolower($env('SEARCH_FALLBACK_ENABLED', '1')), ['0', 'false', 'off', 'no'], true)) {
             return null;
         }
         $url = $env('SEARCH_RECOMMEND_ENDPOINT');

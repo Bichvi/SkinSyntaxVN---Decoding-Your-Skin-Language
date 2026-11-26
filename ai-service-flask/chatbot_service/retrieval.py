@@ -59,9 +59,10 @@ def _build_vectorstore() -> Chroma:
         import chromadb
 
         vs = Chroma(
-            collection_name="products",
+            collection_name=os.getenv("CHATBOT_CHROMA_COLLECTION", "products").strip() or "products",
             client=chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT),
             embedding_function=emb,
+            create_collection_if_not_exists=False,
         )
     else:
         vs = Chroma(

@@ -815,6 +815,54 @@ class TaiKhoan {
         }
     }
 
+    public function addShippingAddressByEmail(string $email, array $data): ?array {
+        $receiverName = trim((string)($data['receiver_name'] ?? ''));
+        $kh = $this->ensureKhachHangByEmail($receiverName, trim($email));
+        if (!$kh) return null;
+
+        $addresses = [];
+        foreach ((array)($kh['shipping_addresses'] ?? []) as $row) {
+            $addresses[] = is_array($row) ? $row : (array)$row;
+        }
+        if (count($addresses) >= 10) return null;
+
+        $makeDefault = !empty($data['is_default']) || empty($addresses);
+        if ($makeDefault) {
+            foreach ($addresses as &$existing) $existing['is_default'] = false;
+            unset($existing);
+        }
+
+        $address = [
+            'id' => bin2hex(random_bytes(8)),
+            'receiver_name' => $receiverName,
+            'phone' => trim((string)($data['phone'] ?? '')),
+            'province' => trim((string)($data['province'] ?? '')),
+            'ward' => trim((string)($data['ward'] ?? '')),
+            'street' => trim((string)($data['street'] ?? '')),
+            'address_type' => ($data['address_type'] ?? 'home') === 'company' ? 'company' : 'home',
+            'is_default' => $makeDefault,
+            'created_at' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+        $addresses[] = $address;
+
+        $update = [
+            'shipping_addresses' => $addresses,
+            'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+        if ($makeDefault) {
+            $update['so_dien_thoai'] = $address['phone'];
+            $update['dia_chi'] = implode(', ', [$address['street'], $address['ward'], $address['province']]);
+        }
+
+        try {
+            $this->db->khach_hang->updateOne(['ma_kh' => $kh['ma_kh']], ['$set' => $update]);
+            unset($address['created_at']);
+            return $address;
+        } catch (Throwable $error) {
+            return null;
+        }
+    }
+
     public function doiMatKhau(int $nguoiDungId, string $matKhauHienTai, string $matKhauMoi): array {
         $nd = $this->db->nguoidung->findOne(['_id' => $nguoiDungId]);
         if (!$nd && is_numeric($nguoiDungId)) {

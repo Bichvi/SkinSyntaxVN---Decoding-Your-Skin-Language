@@ -4,6 +4,7 @@
 require_once __DIR__ . "/../models/NguoiDung.php";
 require_once __DIR__ . "/../models/TaiKhoan.php";
 require_once __DIR__ . "/../services/AuthThrottle.php";
+require_once __DIR__ . "/../services/Mailer.php";
 
 class AuthController {
     private $pdo;
@@ -25,14 +26,6 @@ class AuthController {
     private function appBaseUrl(): string {
         $configuredAppUrl = defined('APP_URL') ? trim((string)APP_URL) : '';
         if ($configuredAppUrl !== '') {
-            $configuredHost = strtolower((string)(parse_url($configuredAppUrl, PHP_URL_HOST) ?? ''));
-            $requestHost = trim((string)($_SERVER['HTTP_HOST'] ?? ''));
-            // Local Docker/XAMPP access can use localhost or 127.0.0.1. Keep
-            // the OAuth callback on the same host/port as the current session.
-            if ($requestHost !== '' && in_array($configuredHost, ['localhost', '127.0.0.1'], true)) {
-                $isHttps = !empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off';
-                return ($isHttps ? 'https' : 'http') . '://' . $requestHost . rtrim((string)BASE_URL, '/');
-            }
             return rtrim($configuredAppUrl, '/');
         }
 
@@ -49,22 +42,14 @@ class AuthController {
 
     private function resolveOAuthRedirectUri(string $provider): string {
         $constantName = strtoupper(trim($provider)) . '_OAUTH_REDIRECT_URI';
-        $dynamicRedirect = $this->buildRouteUrl('auth_social_callback', ['provider' => $provider]);
         if (defined($constantName)) {
             $configured = trim((string)constant($constantName));
             if ($configured !== '') {
-                $configuredHost = strtolower((string)(parse_url($configured, PHP_URL_HOST) ?? ''));
-                $requestHost = strtolower(trim((string)($_SERVER['HTTP_HOST'] ?? '')));
-                // Ignore stale local redirect values (for example an old
-                // /fe/... path or a missing :8080 port) that cannot preserve
-                // the current PHP session through the provider callback.
-                if ($requestHost === '' || $configuredHost === '' || $configuredHost === $requestHost) {
-                    return $configured;
-                }
+                return $configured;
             }
         }
 
-        return $dynamicRedirect;
+        return $this->buildRouteUrl('auth_social_callback', ['provider' => $provider]);
     }
 
     private function issueSignupCaptcha(): string {
@@ -80,6 +65,10 @@ class AuthController {
     }
 
     private function sendHtmlEmail(string $to, string $subject, string $html): bool {
+        // Docker has no XAMPP sendmail transport. Share the SMTP settings used by order OTP.
+        if (DIRECTORY_SEPARATOR !== "\\" || ss_env('SMTP_HOST', '') !== '') {
+            return Mailer::fromEnv()->send($to, $subject, $html);
+        }
         $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'SkinSyntax';
         $fromAddress = defined('MAIL_FROM_ADDRESS') ? MAIL_FROM_ADDRESS : 'no-reply@skinsyntax.local';
         $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
@@ -150,17 +139,6 @@ class AuthController {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
             }
             $responseBody = curl_exec($ch);
-            $curlErr = curl_errno($ch);
-            // Retry without SSL verify for trusted OAuth domains on local dev
-            if ($curlErr === 60 || $curlErr === 77) {
-                $trustedHosts = ['accounts.google.com', 'oauth2.googleapis.com', 'www.googleapis.com', 'graph.facebook.com', 'www.facebook.com'];
-                $urlHost = strtolower((string)parse_url($url, PHP_URL_HOST));
-                if (in_array($urlHost, $trustedHosts, true)) {
-                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                    $responseBody = curl_exec($ch);
-                }
-            }
             $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
             return ['status' => $status, 'body' => (string)$responseBody];
@@ -219,12 +197,17 @@ class AuthController {
     }
 
     private function loginCustomerSession(array $user): void {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
         $_SESSION['user'] = [
             'id' => $user['id'] ?? (isset($user['_id']) ? (string)$user['_id'] : null),
             'ho_ten' => $user['ho_ten'],
             'email' => $user['email'],
             'role' => 'khach_hang',
             'vai_tro' => 'khach_hang',
+            'avatar_key' => $user['avatar_key'] ?? '',
+            'avatar_version' => $user['avatar_version'] ?? '',
         ];
     }
 
@@ -274,20 +257,13 @@ class AuthController {
     }
 
     private function shouldUseLocalSocialFallback(string $provider): bool {
-        $mode = strtolower(trim((string)($_GET['oauth_mode'] ?? '')));
-        if (in_array($mode, ['real', 'oauth'], true)) {
+        $configuredHost = strtolower((string)parse_url(defined('APP_URL') ? APP_URL : '', PHP_URL_HOST));
+        if (!in_array($configuredHost, ['localhost', '127.0.0.1', '[::1]'], true)
+            || !defined('SOCIAL_LOCAL_FALLBACK') || (string)SOCIAL_LOCAL_FALLBACK !== '1') {
             return false;
         }
-
-        if (in_array($mode, ['local', 'dev'], true)) {
-            return true;
-        }
-
-        if (defined('SOCIAL_LOCAL_FALLBACK')
-            && in_array(strtolower(trim((string)SOCIAL_LOCAL_FALLBACK)), ['1', 'true', 'yes', 'on'], true)) {
-            return true;
-        }
-        return false;
+        $mode = strtolower(trim((string)($_GET['oauth_mode'] ?? '')));
+        return !in_array($mode, ['real', 'oauth'], true);
     }
 
     private function getLocalSocialIdentity(string $provider): array {
@@ -338,8 +314,7 @@ class AuthController {
 
         try {
             $staff = $this->model->timNhanVienTheoEmail($email);
-            $customerAccounts = $staff ? [] : $this->model->timTatCaTheoEmail($email);
-            $u = $customerAccounts[0] ?? null;
+            $u = $staff ? null : $this->model->timTheoEmail($email);
         } catch (\MongoDB\Driver\Exception\ConnectionException $e) {
             // Mất kết nối CSDL (thường là Atlas chập chờn): báo gọn thay vì trang Fatal error.
             error_log('[auth] MongoDB connection error on login: ' . get_class($e));
@@ -366,6 +341,8 @@ class AuthController {
                 'email' => $staff['email'],
                 'role' => $roleName,
                 'vai_tro' => $roleName,
+                'avatar_key' => $staff['avatar_key'] ?? '',
+                'avatar_version' => $staff['avatar_version'] ?? '',
             ];
 
             set_flash('success', 'Đăng nhập thành công.');
@@ -380,12 +357,8 @@ class AuthController {
             exit;
         }
 
-        foreach ($customerAccounts as $customerAccount) {
-            if (!password_verify($matkhau, (string)($customerAccount['mat_khau'] ?? ''))) {
-                continue;
-            }
-
-            $this->loginCustomerSession($customerAccount);
+        if ($u && password_verify($matkhau, (string)$u['mat_khau'])) {
+            $this->loginCustomerSession($u);
 
             set_flash('success', 'Đăng nhập thành công.');
             $this->redirectCustomerAfterLogin();

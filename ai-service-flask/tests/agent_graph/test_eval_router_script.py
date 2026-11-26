@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 
-def test_dry_run_evaluates_cases_and_writes_report(monkeypatch):
+def test_dry_run_evaluates_cases_and_writes_report(monkeypatch, tmp_path):
     from scripts import eval_agent_router
 
-    cases = Path("report/chat-agent/_test-router-cases.yaml")
-    report = Path("report/chat-agent/_test-router-eval.json")
+    cases = tmp_path / "router-cases.yaml"
+    report = tmp_path / "router-eval.json"
+    environment = tmp_path / "test.env"
+    environment.write_text("", encoding="utf-8")
+    # main() edits os.environ directly. Restore the prior test environment on teardown.
+    for key in eval_agent_router.SERVICE_ENV_KEYS + tuple(eval_agent_router.ALLOWED_ENV_KEYS):
+        monkeypatch.setenv(key, "")
     cases.parent.mkdir(parents=True, exist_ok=True)
     try:
         cases.write_text(
@@ -24,6 +28,8 @@ def test_dry_run_evaluates_cases_and_writes_report(monkeypatch):
                 "--cases",
                 str(cases),
                 "--dry-run",
+                "--env-file",
+                str(environment),
                 "--min-acc",
                 "1.0",
                 "--output",

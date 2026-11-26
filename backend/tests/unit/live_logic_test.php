@@ -30,6 +30,7 @@ final class FakeMatcher {
             if (is_array($cond) && self::isOperatorArray($cond)) {
                 foreach ($cond as $op => $arg) {
                     switch ($op) {
+                        case '$ne': if ($has && $value === $arg) return false; break;
                         case '$in': if (!in_array($value, $arg, true)) return false; break;
                         case '$gt': if (!$has || !($value > $arg)) return false; break;
                         case '$gte': if (!$has || !($value >= $arg)) return false; break;
@@ -66,9 +67,13 @@ final class FakeCollection {
 
     public function find(array $filter = [], array $options = []) {
         $rows = array_values(array_filter($this->docs, fn($d) => FakeMatcher::matches($d, $filter)));
-        foreach (($options['sort'] ?? []) as $field => $dir) {
-            usort($rows, fn($a, $b) => $dir * (($a[$field] ?? 0) <=> ($b[$field] ?? 0)));
-        }
+        usort($rows, static function ($a, $b) use ($options) {
+            foreach (($options['sort'] ?? []) as $field => $dir) {
+                $order = $dir * (($a[$field] ?? 0) <=> ($b[$field] ?? 0));
+                if ($order !== 0) return $order;
+            }
+            return 0;
+        });
         if (isset($options['limit'])) $rows = array_slice($rows, 0, (int)$options['limit']);
         return new ArrayIterator($rows);
     }
@@ -103,13 +108,13 @@ function check(string $name, bool $ok, string $detail = ''): void {
 // a) resolveStatus freshness window
 $db = new FakeDb();
 $db->phien_live->docs = [
-    ['ma_phong' => 'r50', 'trang_thai' => 'live', 'stream_state' => 'live', 'stream_last_seen' => time() - 50],
-    ['ma_phong' => 'r70', 'trang_thai' => 'live', 'stream_state' => 'live', 'stream_last_seen' => time() - 70],
+    ['ma_phong' => 'r250', 'trang_thai' => 'live', 'stream_state' => 'live', 'stream_last_seen' => time() - 250],
+    ['ma_phong' => 'r310', 'trang_thai' => 'live', 'stream_state' => 'live', 'stream_last_seen' => time() - 310],
 ];
 $model = new PhienLive($db);
-check('a1 live, last_seen 50s ago -> live', ($model->findById('r50')['status'] ?? '') === 'live');
-check('a2 live, last_seen 70s ago -> ready', ($model->findById('r70')['status'] ?? '') === 'ready');
-check('a3 freshness constant is 60', PhienLive::STREAM_FRESH_SECONDS === 60);
+check('a1 live, last_seen 250s ago -> live during background-tab grace', ($model->findById('r250')['status'] ?? '') === 'live');
+check('a2 live, last_seen 310s ago -> ready after stale grace expires', ($model->findById('r310')['status'] ?? '') === 'ready');
+check('a3 publisher freshness grace is 300s', PhienLive::STREAM_FRESH_SECONDS === 300);
 
 // b) touchStream
 $db = new FakeDb();

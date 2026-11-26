@@ -3,6 +3,7 @@ project-root/backend/app/config/db.php
 
 # Environment files
 .env
+.envexp
 .env.local
 .env.*.local
 

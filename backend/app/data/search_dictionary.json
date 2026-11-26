@@ -19,9 +19,19 @@
    "fold": "50 megumi"
   },
   {
+   "key": "82x",
+   "name": "82X",
+   "fold": "82x"
+  },
+  {
    "key": "9wishes",
    "name": "9Wishes",
    "fold": "9wishes"
+  },
+  {
+   "key": "a_bonne",
+   "name": "A Bonne",
+   "fold": "a bonne"
   },
   {
    "key": "a_derma",
@@ -39,14 +49,34 @@
    "fold": "acnes"
   },
   {
+   "key": "adiva",
+   "name": "Adiva",
+   "fold": "adiva"
+  },
+  {
    "key": "age_20_s",
    "name": "AGE 20's",
    "fold": "age 20's"
   },
   {
+   "key": "aishitoto",
+   "name": "Aishitoto",
+   "fold": "aishitoto"
+  },
+  {
+   "key": "alcofree",
+   "name": "Alcofree",
+   "fold": "alcofree"
+  },
+  {
    "key": "altruist",
    "name": "Altruist",
    "fold": "altruist"
+  },
+  {
+   "key": "amortals",
+   "name": "Amortals",
+   "fold": "amortals"
   },
   {
    "key": "anessa",
@@ -67,6 +97,21 @@
    "key": "aprilskin",
    "name": "Aprilskin",
    "fold": "aprilskin"
+  },
+  {
+   "key": "aquafresh",
+   "name": "Aquafresh",
+   "fold": "aquafresh"
+  },
+  {
+   "key": "ariul",
+   "name": "Ariul",
+   "fold": "ariul"
+  },
+  {
+   "key": "armaf",
+   "name": "Armaf",
+   "fold": "armaf"
   },
   {
    "key": "aromatica",
@@ -94,9 +139,24 @@
    "fold": "avander"
   },
   {
+   "key": "avatar",
+   "name": "Avatar",
+   "fold": "avatar"
+  },
+  {
+   "key": "aveeno",
+   "name": "Aveeno",
+   "fold": "aveeno"
+  },
+  {
    "key": "avene",
    "name": "Avène",
    "fold": "avene"
+  },
+  {
+   "key": "axe",
+   "name": "AXE",
+   "fold": "axe"
   },
   {
    "key": "axis_y",
@@ -124,6 +184,11 @@
    "fold": "balance active formula"
   },
   {
+   "key": "bamboo_salt",
+   "name": "Bamboo Salt",
+   "fold": "bamboo salt"
+  },
+  {
    "key": "banana_boat",
    "name": "Banana Boat",
    "fold": "banana boat"
@@ -149,9 +214,19 @@
    "fold": "batiste"
   },
   {
+   "key": "beauty_buffet",
+   "name": "Beauty Buffet",
+   "fold": "beauty buffet"
+  },
+  {
    "key": "beplain",
    "name": "Beplain",
    "fold": "beplain"
+  },
+  {
+   "key": "besilki",
+   "name": "Besilki",
+   "fold": "besilki"
   },
   {
    "key": "bielenda",
@@ -189,9 +264,44 @@
    "fold": "black rouge"
   },
   {
+   "key": "blackmores",
+   "name": "Blackmores",
+   "fold": "blackmores"
+  },
+  {
+   "key": "blossomy",
+   "name": "Blossomy",
+   "fold": "blossomy"
+  },
+  {
    "key": "bnbg",
    "name": "BNBG",
    "fold": "bnbg"
+  },
+  {
+   "key": "bobby",
+   "name": "Bobby",
+   "fold": "bobby"
+  },
+  {
+   "key": "bodymiss",
+   "name": "Bodymiss",
+   "fold": "bodymiss"
+  },
+  {
+   "key": "bong_bach_tuyet",
+   "name": "Bông Bạch Tuyết",
+   "fold": "bong bach tuyet"
+  },
+  {
+   "key": "browit",
+   "name": "Browit",
+   "fold": "browit"
+  },
+  {
+   "key": "burberry",
+   "name": "Burberry",
+   "fold": "burberry"
   },
   {
    "key": "by_wishtrend",
@@ -214,9 +324,19 @@
    "fold": "bys"
   },
   {
+   "key": "calvin_klein",
+   "name": "Calvin Klein",
+   "fold": "calvin klein"
+  },
+  {
    "key": "care_nel",
    "name": "Care:Nel",
    "fold": "care:nel"
+  },
+  {
+   "key": "carolina_herrera",
+   "name": "Carolina Herrera",
+   "fold": "carolina herrera"
   },
   {
    "key": "carslan",
@@ -234,6 +354,16 @@
    "fold": "cathy doll"
   },
   {
+   "key": "cavailles",
+   "name": "Cavailles",
+   "fold": "cavailles"
+  },
+  {
+   "key": "ceiba",
+   "name": "Ceiba",
+   "fold": "ceiba"
+  },
+  {
    "key": "celefit",
    "name": "Celefit",
    "fold": "celefit"
@@ -242,6 +372,11 @@
    "key": "celimax",
    "name": "Celimax",
    "fold": "celimax"
+  },
+  {
+   "key": "celio",
+   "name": "Celio",
+   "fold": "celio"
   },
   {
    "key": "cell_fusion_c",
@@ -274,9 +409,19 @@
    "fold": "chando"
   },
   {
+   "key": "chilly",
+   "name": "Chilly",
+   "fold": "chilly"
+  },
+  {
    "key": "chinoshio",
    "name": "Chinoshio",
    "fold": "chinoshio"
+  },
+  {
+   "key": "chloe",
+   "name": "Chloé",
+   "fold": "chloe"
   },
   {
    "key": "ciracle",
@@ -284,14 +429,44 @@
    "fold": "ciracle"
   },
   {
+   "key": "city_color",
+   "name": "City Color",
+   "fold": "city color"
+  },
+  {
    "key": "clean_clear",
    "name": "Clean & Clear",
    "fold": "clean & clear"
   },
   {
+   "key": "cleanic",
+   "name": "Cleanic",
+   "fold": "cleanic"
+  },
+  {
+   "key": "clear",
+   "name": "Clear",
+   "fold": "clear"
+  },
+  {
+   "key": "cleo",
+   "name": "Cléo",
+   "fold": "cleo"
+  },
+  {
    "key": "clinicos",
    "name": "Clinicos",
    "fold": "clinicos"
+  },
+  {
+   "key": "closeup",
+   "name": "Closeup",
+   "fold": "closeup"
+  },
+  {
+   "key": "coach",
+   "name": "Coach",
+   "fold": "coach"
   },
   {
    "key": "coast",
@@ -304,6 +479,11 @@
    "fold": "cocoon"
   },
   {
+   "key": "colgate",
+   "name": "Colgate",
+   "fold": "colgate"
+  },
+  {
    "key": "colorkey",
    "name": "Colorkey",
    "fold": "colorkey"
@@ -312,6 +492,11 @@
    "key": "compliment",
    "name": "Compliment",
    "fold": "compliment"
+  },
+  {
+   "key": "corine_de_farme",
+   "name": "Corine de Farme",
+   "fold": "corine de farme"
   },
   {
    "key": "cosmedica",
@@ -324,6 +509,16 @@
    "fold": "cosrx"
   },
   {
+   "key": "costar",
+   "name": "Costar",
+   "fold": "costar"
+  },
+  {
+   "key": "crest",
+   "name": "Crest",
+   "fold": "crest"
+  },
+  {
    "key": "curel",
    "name": "Curél",
    "fold": "curel"
@@ -334,9 +529,29 @@
    "fold": "d'alba"
   },
   {
+   "key": "da_huong",
+   "name": "Dạ Hương",
+   "fold": "da huong"
+  },
+  {
+   "key": "daiichi_sekken",
+   "name": "Daiichi Sekken",
+   "fold": "daiichi sekken"
+  },
+  {
    "key": "decumar",
    "name": "Decumar",
    "fold": "decumar"
+  },
+  {
+   "key": "dental_clinic_2080",
+   "name": "Dental Clinic 2080",
+   "fold": "dental clinic 2080"
+  },
+  {
+   "key": "deonatulle",
+   "name": "Deonatulle",
+   "fold": "deonatulle"
   },
   {
    "key": "derladie",
@@ -367,6 +582,21 @@
    "key": "dhc",
    "name": "DHC",
    "fold": "dhc"
+  },
+  {
+   "key": "diana",
+   "name": "Diana",
+   "fold": "diana"
+  },
+  {
+   "key": "diane",
+   "name": "Diane",
+   "fold": "diane"
+  },
+  {
+   "key": "dolce_gabbana",
+   "name": "Dolce & Gabbana",
+   "fold": "dolce & gabbana"
   },
   {
    "key": "double_rich",
@@ -409,6 +639,11 @@
    "fold": "ducray"
   },
   {
+   "key": "durex",
+   "name": "Durex",
+   "fold": "durex"
+  },
+  {
    "key": "eau_thermale_jonzac",
    "name": "Eau Thermale Jonzac",
    "fold": "eau thermale jonzac"
@@ -417,6 +652,16 @@
    "key": "ecowipes",
    "name": "EcoWipes",
    "fold": "ecowipes"
+  },
+  {
+   "key": "elasten",
+   "name": "Elasten",
+   "fold": "elasten"
+  },
+  {
+   "key": "elastine",
+   "name": "Elastine",
+   "fold": "elastine"
   },
   {
    "key": "elixir",
@@ -439,14 +684,29 @@
    "fold": "emmie by happy skin"
   },
   {
+   "key": "enchanteur",
+   "name": "Enchanteur",
+   "fold": "enchanteur"
+  },
+  {
    "key": "espoir",
    "name": "Espoir",
    "fold": "espoir"
   },
   {
+   "key": "etiaxil",
+   "name": "EtiaXil",
+   "fold": "etiaxil"
+  },
+  {
    "key": "eucerin",
    "name": "Eucerin",
    "fold": "eucerin"
+  },
+  {
+   "key": "eucryl",
+   "name": "Eucryl",
+   "fold": "eucryl"
   },
   {
    "key": "eveline",
@@ -464,9 +724,19 @@
    "fold": "evoluderm"
   },
   {
+   "key": "exclusive_cosmetic",
+   "name": "Exclusive Cosmetic",
+   "fold": "exclusive cosmetic"
+  },
+  {
    "key": "felina",
    "name": "Felina",
    "fold": "felina"
+  },
+  {
+   "key": "femfresh",
+   "name": "Femfresh",
+   "fold": "femfresh"
   },
   {
    "key": "fino",
@@ -489,6 +759,11 @@
    "fold": "flawsome"
   },
   {
+   "key": "foellie",
+   "name": "Foellie",
+   "fold": "foellie"
+  },
+  {
    "key": "foodaholic",
    "name": "Foodaholic",
    "fold": "foodaholic"
@@ -509,9 +784,24 @@
    "fold": "freeplus"
   },
   {
+   "key": "fressi_care",
+   "name": "Fressi Care",
+   "fold": "fressi care"
+  },
+  {
+   "key": "frudia",
+   "name": "Frudia",
+   "fold": "frudia"
+  },
+  {
    "key": "gamma_chemicals",
    "name": "Gamma Chemicals",
    "fold": "gamma chemicals"
+  },
+  {
+   "key": "garglin",
+   "name": "Garglin",
+   "fold": "garglin"
   },
   {
    "key": "garnier",
@@ -524,9 +814,34 @@
    "fold": "gennie"
   },
   {
+   "key": "gillette",
+   "name": "Gillette",
+   "fold": "gillette"
+  },
+  {
    "key": "girlz_only",
    "name": "Girlz Only",
    "fold": "girlz only"
+  },
+  {
+   "key": "glamrr_q",
+   "name": "Glamrr Q",
+   "fold": "glamrr q"
+  },
+  {
+   "key": "glowcode",
+   "name": "GlowCode",
+   "fold": "glowcode"
+  },
+  {
+   "key": "gogo_tales",
+   "name": "Gogo Tales",
+   "fold": "gogo tales"
+  },
+  {
+   "key": "goodlife",
+   "name": "Goodlife",
+   "fold": "goodlife"
   },
   {
    "key": "goodndoc",
@@ -539,6 +854,11 @@
    "fold": "gookin"
   },
   {
+   "key": "gota",
+   "name": "Gota",
+   "fold": "gota"
+  },
+  {
    "key": "grace_and_glow",
    "name": "Grace And Glow",
    "fold": "grace and glow"
@@ -549,9 +869,19 @@
    "fold": "hada labo"
   },
   {
+   "key": "halio",
+   "name": "Halio",
+   "fold": "halio"
+  },
+  {
    "key": "happy_event",
    "name": "Happy Event",
    "fold": "happy event"
+  },
+  {
+   "key": "hasaki",
+   "name": "Hasaki",
+   "fold": "hasaki"
   },
   {
    "key": "hasi",
@@ -564,9 +894,19 @@
    "fold": "hatomugi"
   },
   {
+   "key": "havatek",
+   "name": "Havatek",
+   "fold": "havatek"
+  },
+  {
    "key": "hazeline",
    "name": "Hazeline",
    "fold": "hazeline"
+  },
+  {
+   "key": "head_shoulders",
+   "name": "Head & Shoulders",
+   "fold": "head & shoulders"
   },
   {
    "key": "heliocare",
@@ -577,6 +917,16 @@
    "key": "hexze",
    "name": "Hexze",
    "fold": "hexze"
+  },
+  {
+   "key": "himalaya_pink_salt",
+   "name": "Himalaya Pink Salt",
+   "fold": "himalaya pink salt"
+  },
+  {
+   "key": "horus",
+   "name": "Horus",
+   "fold": "horus"
   },
   {
    "key": "hotosu",
@@ -599,9 +949,29 @@
    "fold": "i'm from"
   },
   {
+   "key": "inci",
+   "name": "Inci",
+   "fold": "inci"
+  },
+  {
+   "key": "inci_mask",
+   "name": "Inci Mask",
+   "fold": "inci mask"
+  },
+  {
    "key": "innisfree",
    "name": "innisfree",
    "fold": "innisfree"
+  },
+  {
+   "key": "into_you",
+   "name": "Into You",
+   "fold": "into you"
+  },
+  {
+   "key": "ipek_klasik",
+   "name": "Ipek Klasik",
+   "fold": "ipek klasik"
   },
   {
    "key": "isis_pharma",
@@ -609,9 +979,44 @@
    "fold": "isis pharma"
   },
   {
+   "key": "issey_miyake",
+   "name": "Issey Miyake",
+   "fold": "issey miyake"
+  },
+  {
+   "key": "itoh_kanpo",
+   "name": "Itoh Kanpo",
+   "fold": "itoh kanpo"
+  },
+  {
+   "key": "jean_paul_gaultier",
+   "name": "Jean Paul Gaultier",
+   "fold": "jean paul gaultier"
+  },
+  {
+   "key": "jimmy_choo",
+   "name": "Jimmy Choo",
+   "fold": "jimmy choo"
+  },
+  {
    "key": "jmsolution",
    "name": "JMsolution",
    "fold": "jmsolution"
+  },
+  {
+   "key": "johnson_s",
+   "name": "Johnson's",
+   "fold": "johnson's"
+  },
+  {
+   "key": "johnson_s_baby",
+   "name": "Johnson's Baby",
+   "fold": "johnson's baby"
+  },
+  {
+   "key": "jomi",
+   "name": "Jomi",
+   "fold": "jomi"
   },
   {
    "key": "joocyee",
@@ -629,6 +1034,21 @@
    "fold": "jumiso"
   },
   {
+   "key": "kai",
+   "name": "KAI",
+   "fold": "kai"
+  },
+  {
+   "key": "kem_nghia",
+   "name": "Kềm Nghĩa",
+   "fold": "kem nghia"
+  },
+  {
+   "key": "kerasys",
+   "name": "KeraSys",
+   "fold": "kerasys"
+  },
+  {
    "key": "keyshu",
    "name": "Keyshu",
    "fold": "keyshu"
@@ -639,9 +1059,19 @@
    "fold": "kiss my body"
   },
   {
+   "key": "kissme",
+   "name": "Kissme",
+   "fold": "kissme"
+  },
+  {
    "key": "klairs",
    "name": "Klairs",
    "fold": "klairs"
+  },
+  {
+   "key": "kleannara",
+   "name": "Kleannara",
+   "fold": "kleannara"
   },
   {
    "key": "kose",
@@ -649,9 +1079,19 @@
    "fold": "kose"
   },
   {
+   "key": "kotex",
+   "name": "Kotex",
+   "fold": "kotex"
+  },
+  {
    "key": "kumargic",
    "name": "Kumargic",
    "fold": "kumargic"
+  },
+  {
+   "key": "kutieskin",
+   "name": "Kutieskin",
+   "fold": "kutieskin"
   },
   {
    "key": "l_oreal",
@@ -684,9 +1124,19 @@
    "fold": "laboratorios babe"
   },
   {
+   "key": "lacoste",
+   "name": "Lacoste",
+   "fold": "lacoste"
+  },
+  {
    "key": "lactacyd",
    "name": "Lactacyd",
    "fold": "lactacyd"
+  },
+  {
+   "key": "lactobact_intima",
+   "name": "Lactobact Intima",
+   "fold": "lactobact intima"
   },
   {
    "key": "lanbena",
@@ -709,6 +1159,21 @@
    "fold": "lanybeau"
   },
   {
+   "key": "laura_anne",
+   "name": "Laura Anne",
+   "fold": "laura anne"
+  },
+  {
+   "key": "laurier",
+   "name": "Laurier",
+   "fold": "laurier"
+  },
+  {
+   "key": "lavima",
+   "name": "Lavima",
+   "fold": "lavima"
+  },
+  {
    "key": "lebelage",
    "name": "Lebelage",
    "fold": "lebelage"
@@ -724,6 +1189,16 @@
    "fold": "lifebuoy"
   },
   {
+   "key": "lifestyles",
+   "name": "Lifestyles",
+   "fold": "lifestyles"
+  },
+  {
+   "key": "lilybell",
+   "name": "LilyBell",
+   "fold": "lilybell"
+  },
+  {
    "key": "lilybyred",
    "name": "Lilybyred",
    "fold": "lilybyred"
@@ -732,6 +1207,11 @@
    "key": "lime",
    "name": "Lime",
    "fold": "lime"
+  },
+  {
+   "key": "lip_on_lip",
+   "name": "Lip On Lip",
+   "fold": "lip on lip"
   },
   {
    "key": "lipice",
@@ -744,9 +1224,24 @@
    "fold": "lipstician"
   },
   {
+   "key": "listerine",
+   "name": "Listerine",
+   "fold": "listerine"
+  },
+  {
+   "key": "luna",
+   "name": "LUNA",
+   "fold": "luna"
+  },
+  {
    "key": "luvum",
    "name": "Luvum",
    "fold": "luvum"
+  },
+  {
+   "key": "lux",
+   "name": "LUX",
+   "fold": "lux"
   },
   {
    "key": "ma_nyo",
@@ -754,9 +1249,24 @@
    "fold": "ma:nyo"
   },
   {
+   "key": "mamonde",
+   "name": "Mamonde",
+   "fold": "mamonde"
+  },
+  {
+   "key": "marc_jacobs",
+   "name": "Marc Jacobs",
+   "fold": "marc jacobs"
+  },
+  {
    "key": "martiderm",
    "name": "Martiderm",
    "fold": "martiderm"
+  },
+  {
+   "key": "marvis",
+   "name": "Marvis",
+   "fold": "marvis"
   },
   {
    "key": "mastige",
@@ -774,6 +1284,11 @@
    "fold": "maybelline"
   },
   {
+   "key": "median",
+   "name": "Median",
+   "fold": "median"
+  },
+  {
    "key": "medianswer",
    "name": "Medianswer",
    "fold": "medianswer"
@@ -787,6 +1302,11 @@
    "key": "mediheal",
    "name": "Mediheal",
    "fold": "mediheal"
+  },
+  {
+   "key": "megrhythm",
+   "name": "MegRhythm",
+   "fold": "megrhythm"
   },
   {
    "key": "meishoku",
@@ -804,9 +1324,39 @@
    "fold": "menard"
   },
   {
+   "key": "menitems",
+   "name": "Menitems",
+   "fold": "menitems"
+  },
+  {
+   "key": "menow",
+   "name": "Menow",
+   "fold": "menow"
+  },
+  {
+   "key": "mihoo",
+   "name": "Mihoo",
+   "fold": "mihoo"
+  },
+  {
    "key": "milaganics",
    "name": "Milaganics",
    "fold": "milaganics"
+  },
+  {
+   "key": "mine",
+   "name": "mine",
+   "fold": "mine"
+  },
+  {
+   "key": "mira",
+   "name": "Mira",
+   "fold": "mira"
+  },
+  {
+   "key": "miraculous",
+   "name": "Miraculous",
+   "fold": "miraculous"
   },
   {
    "key": "mise_en_scene",
@@ -814,9 +1364,34 @@
    "fold": "mise en scene"
   },
   {
+   "key": "mlen_diary",
+   "name": "Mlen Diary",
+   "fold": "mlen diary"
+  },
+  {
+   "key": "moaw_moaws",
+   "name": "Moaw Moaws",
+   "fold": "moaw moaws"
+  },
+  {
    "key": "momopuri",
    "name": "Momopuri",
    "fold": "momopuri"
+  },
+  {
+   "key": "monsavon",
+   "name": "Monsavon",
+   "fold": "monsavon"
+  },
+  {
+   "key": "moschino",
+   "name": "Moschino",
+   "fold": "moschino"
+  },
+  {
+   "key": "narciso_rodriguez",
+   "name": "Narciso Rodriguez",
+   "fold": "narciso rodriguez"
   },
   {
    "key": "naris_cosmetics",
@@ -834,6 +1409,11 @@
    "fold": "nature republic"
   },
   {
+   "key": "nature_s_bounty",
+   "name": "Nature's Bounty",
+   "fold": "nature's bounty"
+  },
+  {
    "key": "naturie",
    "name": "Naturie",
    "fold": "naturie"
@@ -842,6 +1422,16 @@
    "key": "neogen_dermalogy",
    "name": "Neogen Dermalogy",
    "fold": "neogen dermalogy"
+  },
+  {
+   "key": "neoskin",
+   "name": "Neoskin",
+   "fold": "neoskin"
+  },
+  {
+   "key": "neothera",
+   "name": "Neothera",
+   "fold": "neothera"
   },
   {
    "key": "nerman",
@@ -854,6 +1444,21 @@
    "fold": "neutrogena"
   },
   {
+   "key": "nexcare",
+   "name": "Nexcare",
+   "fold": "nexcare"
+  },
+  {
+   "key": "ngoc_chau",
+   "name": "Ngọc Châu",
+   "fold": "ngoc chau"
+  },
+  {
+   "key": "ngoc_thao",
+   "name": "Ngọc Thảo",
+   "fold": "ngoc thao"
+  },
+  {
    "key": "nguyen_xuan",
    "name": "Nguyên Xuân",
    "fold": "nguyen xuan"
@@ -862,6 +1467,16 @@
    "key": "nivea",
    "name": "Nivea",
    "fold": "nivea"
+  },
+  {
+   "key": "nookoi",
+   "name": "Nookoi",
+   "fold": "nookoi"
+  },
+  {
+   "key": "nucos",
+   "name": "Nucos",
+   "fold": "nucos"
   },
   {
    "key": "nuxe",
@@ -884,9 +1499,24 @@
    "fold": "oh!oh!"
   },
   {
+   "key": "okamura",
+   "name": "Okamura",
+   "fold": "okamura"
+  },
+  {
+   "key": "ola",
+   "name": "ola",
+   "fold": "ola"
+  },
+  {
    "key": "olay",
    "name": "Olay",
    "fold": "olay"
+  },
+  {
+   "key": "old_spice",
+   "name": "Old Spice",
+   "fold": "old spice"
   },
   {
    "key": "on_the_body",
@@ -894,14 +1524,29 @@
    "fold": "on: the body"
   },
   {
+   "key": "oral_b",
+   "name": "Oral-B",
+   "fold": "oral-b"
+  },
+  {
    "key": "organist",
    "name": "Organist",
    "fold": "organist"
   },
   {
+   "key": "orihiro",
+   "name": "Orihiro",
+   "fold": "orihiro"
+  },
+  {
    "key": "oxy",
    "name": "OXY",
    "fold": "oxy"
+  },
+  {
+   "key": "p_s",
+   "name": "P/S",
+   "fold": "p/s"
   },
   {
    "key": "palmolive",
@@ -912,6 +1557,11 @@
    "key": "pantene",
    "name": "Pantene",
    "fold": "pantene"
+  },
+  {
+   "key": "pasta_del_capitano",
+   "name": "Pasta Del Capitano",
+   "fold": "pasta del capitano"
   },
   {
    "key": "paula_s_choice",
@@ -929,9 +1579,44 @@
    "fold": "pelican"
   },
   {
+   "key": "perfect_diary",
+   "name": "Perfect Diary",
+   "fold": "perfect diary"
+  },
+  {
+   "key": "perioe",
+   "name": "Perioe",
+   "fold": "perioe"
+  },
+  {
+   "key": "perspi_guard",
+   "name": "Perspi-Guard",
+   "fold": "perspi-guard"
+  },
+  {
+   "key": "perspirex",
+   "name": "Perspirex",
+   "fold": "perspirex"
+  },
+  {
    "key": "petit_cochon",
    "name": "Petit Cochon",
    "fold": "petit cochon"
+  },
+  {
+   "key": "pharmekal",
+   "name": "Pharmekal",
+   "fold": "pharmekal"
+  },
+  {
+   "key": "pigeon",
+   "name": "Pigeon",
+   "fold": "pigeon"
+  },
+  {
+   "key": "playah",
+   "name": "PlayAh",
+   "fold": "playah"
   },
   {
    "key": "pond_s",
@@ -939,9 +1624,34 @@
    "fold": "pond's"
   },
   {
+   "key": "pop_puf",
+   "name": "Pop Puf",
+   "fold": "pop puf"
+  },
+  {
+   "key": "pororo",
+   "name": "Pororo",
+   "fold": "pororo"
+  },
+  {
+   "key": "pramy",
+   "name": "Pramy",
+   "fold": "pramy"
+  },
+  {
+   "key": "precinox",
+   "name": "Precinox",
+   "fold": "precinox"
+  },
+  {
    "key": "prettyskin",
    "name": "Prettyskin",
    "fold": "prettyskin"
+  },
+  {
+   "key": "propolinse",
+   "name": "Propolinse",
+   "fold": "propolinse"
   },
   {
    "key": "pure_paw_paw",
@@ -979,6 +1689,46 @@
    "fold": "raip"
   },
   {
+   "key": "real_techniques",
+   "name": "Real Techniques",
+   "fold": "real techniques"
+  },
+  {
+   "key": "reen",
+   "name": "Reen",
+   "fold": "reen"
+  },
+  {
+   "key": "refre",
+   "name": "Refre",
+   "fold": "refre"
+  },
+  {
+   "key": "rejoice",
+   "name": "Rejoice",
+   "fold": "rejoice"
+  },
+  {
+   "key": "remos",
+   "name": "Remos",
+   "fold": "remos"
+  },
+  {
+   "key": "rexona",
+   "name": "Rexona",
+   "fold": "rexona"
+  },
+  {
+   "key": "rohto",
+   "name": "Rohto",
+   "fold": "rohto"
+  },
+  {
+   "key": "romano",
+   "name": "Romano",
+   "fold": "romano"
+  },
+  {
    "key": "rosette",
    "name": "Rosette",
    "fold": "rosette"
@@ -1004,9 +1754,44 @@
    "fold": "s:kin heritage"
   },
   {
+   "key": "sachi",
+   "name": "Sachi",
+   "fold": "sachi"
+  },
+  {
+   "key": "sagami",
+   "name": "Sagami",
+   "fold": "sagami"
+  },
+  {
+   "key": "salon_link",
+   "name": "Salon Link",
+   "fold": "salon link"
+  },
+  {
+   "key": "salvatore_ferragamo",
+   "name": "Salvatore Ferragamo",
+   "fold": "salvatore ferragamo"
+  },
+  {
+   "key": "sbeauty",
+   "name": "SBeauty",
+   "fold": "sbeauty"
+  },
+  {
    "key": "scarz",
    "name": "Scarz",
    "fold": "scarz"
+  },
+  {
+   "key": "secret",
+   "name": "Secret",
+   "fold": "secret"
+  },
+  {
+   "key": "secret_key",
+   "name": "Secret Key",
+   "fold": "secret key"
   },
   {
    "key": "selsun",
@@ -1019,6 +1804,11 @@
    "fold": "senka"
   },
   {
+   "key": "sensodyne",
+   "name": "Sensodyne",
+   "fold": "sensodyne"
+  },
+  {
    "key": "sexylook",
    "name": "Sexylook",
    "fold": "sexylook"
@@ -1027,6 +1817,16 @@
    "key": "shimbi",
    "name": "Shimbi",
    "fold": "shimbi"
+  },
+  {
+   "key": "shower_mate",
+   "name": "Shower Mate",
+   "fold": "shower mate"
+  },
+  {
+   "key": "silcot",
+   "name": "Silcot",
+   "fold": "silcot"
   },
   {
    "key": "silkygirl",
@@ -1064,9 +1864,19 @@
    "fold": "skintific"
   },
   {
+   "key": "skyn",
+   "name": "Skyn",
+   "fold": "skyn"
+  },
+  {
    "key": "so_natural",
    "name": "So'Natural",
    "fold": "so'natural"
+  },
+  {
+   "key": "sofy",
+   "name": "Sofy",
+   "fold": "sofy"
   },
   {
    "key": "some_by_mi",
@@ -1099,6 +1909,11 @@
    "fold": "sur.medic+"
   },
   {
+   "key": "suri",
+   "name": "Suri",
+   "fold": "suri"
+  },
+  {
    "key": "svr",
    "name": "SVR",
    "fold": "svr"
@@ -1112,6 +1927,11 @@
    "key": "teenilicious",
    "name": "Teenilicious",
    "fold": "teenilicious"
+  },
+  {
+   "key": "tempo",
+   "name": "Tempo",
+   "fold": "tempo"
   },
   {
    "key": "tenamyd",
@@ -1149,6 +1969,21 @@
    "fold": "timeless"
   },
   {
+   "key": "tippys",
+   "name": "Tippys",
+   "fold": "tippys"
+  },
+  {
+   "key": "tommy_hilfiger",
+   "name": "Tommy Hilfiger",
+   "fold": "tommy hilfiger"
+  },
+  {
+   "key": "too_cool_for_school",
+   "name": "Too cool for school",
+   "fold": "too cool for school"
+  },
+  {
    "key": "topicrem",
    "name": "Topicrem",
    "fold": "topicrem"
@@ -1159,14 +1994,39 @@
    "fold": "torriden"
   },
   {
+   "key": "treaclemoon",
+   "name": "Treaclemoon",
+   "fold": "treaclemoon"
+  },
+  {
+   "key": "tree_hut",
+   "name": "Tree Hut",
+   "fold": "tree hut"
+  },
+  {
    "key": "tresemme",
    "name": "TRESemmé",
    "fold": "tresemme"
   },
   {
+   "key": "trim",
+   "name": "Trim",
+   "fold": "trim"
+  },
+  {
    "key": "tsubaki",
    "name": "Tsubaki",
    "fold": "tsubaki"
+  },
+  {
+   "key": "unicharm",
+   "name": "Unicharm",
+   "fold": "unicharm"
+  },
+  {
+   "key": "unicharm_3d_mask",
+   "name": "Unicharm 3D Mask",
+   "fold": "unicharm 3d mask"
   },
   {
    "key": "unknown",
@@ -1184,14 +2044,34 @@
    "fold": "uriage"
   },
   {
+   "key": "v_rohto",
+   "name": "V.Rohto",
+   "fold": "v.rohto"
+  },
+  {
+   "key": "vacosi",
+   "name": "Vacosi",
+   "fold": "vacosi"
+  },
+  {
    "key": "vaseline",
    "name": "Vaseline",
    "fold": "vaseline"
   },
   {
+   "key": "veet",
+   "name": "Veet",
+   "fold": "veet"
+  },
+  {
    "key": "vegick",
    "name": "Vegick",
    "fold": "vegick"
+  },
+  {
+   "key": "versace",
+   "name": "Versace",
+   "fold": "versace"
   },
   {
    "key": "vichy",
@@ -1204,9 +2084,29 @@
    "fold": "vt cosmetics"
   },
   {
+   "key": "weilaiya",
+   "name": "Weilaiya",
+   "fold": "weilaiya"
+  },
+  {
+   "key": "welcos",
+   "name": "Welcos",
+   "fold": "welcos"
+  },
+  {
+   "key": "whisper",
+   "name": "Whisper",
+   "fold": "whisper"
+  },
+  {
    "key": "white_conc",
    "name": "White Conc",
    "fold": "white conc"
+  },
+  {
+   "key": "wolf_on",
+   "name": "Wolf On",
+   "fold": "wolf on"
   },
   {
    "key": "wonjin",
@@ -1214,12 +2114,87 @@
    "fold": "wonjin"
   },
   {
+   "key": "x_men",
+   "name": "X-Men",
+   "fold": "x-men"
+  },
+  {
+   "key": "x_men_for_boss",
+   "name": "X-Men For Boss",
+   "fold": "x-men for boss"
+  },
+  {
    "key": "ya_samaya",
    "name": "Ya Samaya",
    "fold": "ya samaya"
+  },
+  {
+   "key": "yc",
+   "name": "YC",
+   "fold": "yc"
+  },
+  {
+   "key": "yoko",
+   "name": "YOKO",
+   "fold": "yoko"
+  },
+  {
+   "key": "yosuaa",
+   "name": "Yosuaa",
+   "fold": "yosuaa"
+  },
+  {
+   "key": "yusachi",
+   "name": "Yusachi",
+   "fold": "yusachi"
+  },
+  {
+   "key": "yves_saint_laurent",
+   "name": "Yves Saint Laurent",
+   "fold": "yves saint laurent"
+  },
+  {
+   "key": "za",
+   "name": "Za",
+   "fold": "za"
+  },
+  {
+   "key": "ziaja",
+   "name": "Ziaja",
+   "fold": "ziaja"
   }
  ],
  "categories": [
+  {
+   "key": "bam_mi",
+   "name": "Bấm Mi",
+   "fold": "bam mi",
+   "aliases": []
+  },
+  {
+   "key": "ban_chai_danh_rang",
+   "name": "Bàn Chải Đánh Răng",
+   "fold": "ban chai danh rang",
+   "aliases": []
+  },
+  {
+   "key": "ban_chai_dien",
+   "name": "Bàn Chải Điện",
+   "fold": "ban chai dien",
+   "aliases": []
+  },
+  {
+   "key": "bang_ve_sinh",
+   "name": "Băng Vệ Sinh",
+   "fold": "bang ve sinh",
+   "aliases": []
+  },
+  {
+   "key": "bao_cao_su",
+   "name": "Bao Cao Su",
+   "fold": "bao cao su",
+   "aliases": []
+  },
   {
    "key": "bb_cc_cream",
    "name": "BB / CC Cream",
@@ -1227,6 +2202,12 @@
    "aliases": [
     "bb cc cream"
    ]
+  },
+  {
+   "key": "bo_cham_soc_co_the",
+   "name": "Bộ Chăm Sóc Cơ Thể",
+   "fold": "bo cham soc co the",
+   "aliases": []
   },
   {
    "key": "bo_cham_soc_da_mat",
@@ -1239,9 +2220,57 @@
    ]
   },
   {
-   "key": "cham_soc_co_the",
-   "name": "Chăm Sóc Cơ Thể",
-   "fold": "cham soc co the",
+   "key": "bo_cham_soc_toc",
+   "name": "Bộ Chăm Sóc Tóc",
+   "fold": "bo cham soc toc",
+   "aliases": []
+  },
+  {
+   "key": "bo_gan_giai_ruou",
+   "name": "Bổ Gan / Giải Rượu",
+   "fold": "bo gan / giai ruou",
+   "aliases": [
+    "bo gan giai ruou"
+   ]
+  },
+  {
+   "key": "bo_goi_xa",
+   "name": "Bộ Gội Xả",
+   "fold": "bo goi xa",
+   "aliases": []
+  },
+  {
+   "key": "bo_trang_diem",
+   "name": "Bộ Trang Điểm",
+   "fold": "bo trang diem",
+   "aliases": []
+  },
+  {
+   "key": "bong_mut_trang_diem",
+   "name": "Bông / Mút Trang Điểm",
+   "fold": "bong / mut trang diem",
+   "aliases": [
+    "bong mut trang diem"
+   ]
+  },
+  {
+   "key": "bong_tam_phu_kien_tam",
+   "name": "Bông Tắm / Phụ Kiện Tắm",
+   "fold": "bong tam / phu kien tam",
+   "aliases": [
+    "bong tam phu kien tam"
+   ]
+  },
+  {
+   "key": "bong_tay_trang",
+   "name": "Bông Tẩy Trang",
+   "fold": "bong tay trang",
+   "aliases": []
+  },
+  {
+   "key": "bot_cao_rau",
+   "name": "Bọt Cạo Râu",
+   "fold": "bot cao rau",
    "aliases": []
   },
   {
@@ -1254,9 +2283,9 @@
    ]
   },
   {
-   "key": "cham_soc_toc_va_da_dau",
-   "name": "Chăm Sóc Tóc Và Da Đầu",
-   "fold": "cham soc toc va da dau",
+   "key": "cham_soc_suc_khoe",
+   "name": "Chăm Sóc Sức Khỏe",
+   "fold": "cham soc suc khoe",
    "aliases": []
   },
   {
@@ -1266,6 +2295,12 @@
    "aliases": [
     "concealer"
    ]
+  },
+  {
+   "key": "chong_muoi",
+   "name": "Chống Muỗi",
+   "fold": "chong muoi",
+   "aliases": []
   },
   {
    "key": "chong_nang_co_the",
@@ -1290,10 +2325,36 @@
    ]
   },
   {
+   "key": "clearance_sale",
+   "name": "Clearance Sale",
+   "fold": "clearance sale",
+   "aliases": []
+  },
+  {
+   "key": "co_trang_diem",
+   "name": "Cọ Trang Điểm",
+   "fold": "co trang diem",
+   "aliases": []
+  },
+  {
    "key": "dac_tri",
    "name": "Đặc Trị",
    "fold": "dac tri",
    "aliases": []
+  },
+  {
+   "key": "dao_cao_rau",
+   "name": "Dao Cạo Râu",
+   "fold": "dao cao rau",
+   "aliases": []
+  },
+  {
+   "key": "dau_ca_bo_mat",
+   "name": "Dầu Cá / Bổ Mắt",
+   "fold": "dau ca / bo mat",
+   "aliases": [
+    "dau ca bo mat"
+   ]
   },
   {
    "key": "dau_goi",
@@ -1307,12 +2368,6 @@
    "key": "dau_goi_kho",
    "name": "Dầu Gội Khô",
    "fold": "dau goi kho",
-   "aliases": []
-  },
-  {
-   "key": "dau_goi_va_dau_xa",
-   "name": "Dầu Gội Và Dầu Xả",
-   "fold": "dau goi va dau xa",
    "aliases": []
   },
   {
@@ -1330,10 +2385,58 @@
    ]
   },
   {
+   "key": "dung_cu_may_rua_mat",
+   "name": "Dụng Cụ / Máy Rửa Mặt",
+   "fold": "dung cu / may rua mat",
+   "aliases": [
+    "dung cu may rua mat"
+   ]
+  },
+  {
+   "key": "dung_cu_phu_kien_lam_mong",
+   "name": "Dụng Cụ / Phụ Kiện Làm Móng",
+   "fold": "dung cu / phu kien lam mong",
+   "aliases": [
+    "dung cu phu kien lam mong"
+   ]
+  },
+  {
+   "key": "dung_cu_cham_soc_khac",
+   "name": "Dụng Cụ Chăm Sóc Khác",
+   "fold": "dung cu cham soc khac",
+   "aliases": []
+  },
+  {
+   "key": "dung_cu_tay_long",
+   "name": "Dụng Cụ Tẩy Lông",
+   "fold": "dung cu tay long",
+   "aliases": []
+  },
+  {
+   "key": "dung_cu_trang_diem_khac",
+   "name": "Dụng Cụ Trang Điểm Khác",
+   "fold": "dung cu trang diem khac",
+   "aliases": []
+  },
+  {
+   "key": "dung_dich_ve_sinh",
+   "name": "Dung Dịch Vệ Sinh",
+   "fold": "dung dich ve sinh",
+   "aliases": []
+  },
+  {
    "key": "duong_am",
    "name": "Dưỡng Ẩm",
    "fold": "duong am",
    "aliases": []
+  },
+  {
+   "key": "duong_da_tay_chan",
+   "name": "Dưỡng Da Tay / Chân",
+   "fold": "duong da tay / chan",
+   "aliases": [
+    "duong da tay chan"
+   ]
   },
   {
    "key": "duong_mat",
@@ -1358,9 +2461,57 @@
    ]
   },
   {
-   "key": "duong_toc",
-   "name": "Dưỡng Tóc",
-   "fold": "duong toc",
+   "key": "duong_vung_kin",
+   "name": "Dưỡng Vùng Kín",
+   "fold": "duong vung kin",
+   "aliases": []
+  },
+  {
+   "key": "gel_boi_tron",
+   "name": "Gel Bôi Trơn",
+   "fold": "gel boi tron",
+   "aliases": []
+  },
+  {
+   "key": "giay_tham_dau",
+   "name": "Giấy Thấm Dầu",
+   "fold": "giay tham dau",
+   "aliases": []
+  },
+  {
+   "key": "ho_tro_giam_can",
+   "name": "Hỗ Trợ Giảm Cân",
+   "fold": "ho tro giam can",
+   "aliases": []
+  },
+  {
+   "key": "ho_tro_sinh_ly_noi_tiet_to",
+   "name": "Hỗ Trợ Sinh Lý / Nội Tiết Tố",
+   "fold": "ho tro sinh ly / noi tiet to",
+   "aliases": []
+  },
+  {
+   "key": "ho_tro_suc_khoe",
+   "name": "Hỗ Trợ Sức Khỏe",
+   "fold": "ho tro suc khoe",
+   "aliases": []
+  },
+  {
+   "key": "ho_tro_tieu_hoa",
+   "name": "Hỗ Trợ Tiêu Hoá",
+   "fold": "ho tro tieu hoa",
+   "aliases": []
+  },
+  {
+   "key": "ho_tro_tim_mach",
+   "name": "Hỗ Trợ Tim Mạch",
+   "fold": "ho tro tim mach",
+   "aliases": []
+  },
+  {
+   "key": "ho_tro_trang_rang",
+   "name": "Hỗ Trợ Trắng Răng",
+   "fold": "ho tro trang rang",
    "aliases": []
   },
   {
@@ -1373,6 +2524,24 @@
     "gel cham mun",
     "mieng dan mun"
    ]
+  },
+  {
+   "key": "ho_tro_xuong_khop",
+   "name": "Hỗ Trợ Xương Khớp",
+   "fold": "ho tro xuong khop",
+   "aliases": []
+  },
+  {
+   "key": "ke_mat",
+   "name": "Kẻ Mắt",
+   "fold": "ke mat",
+   "aliases": []
+  },
+  {
+   "key": "ke_may",
+   "name": "Kẻ Mày",
+   "fold": "ke may",
+   "aliases": []
   },
   {
    "key": "kem_duong",
@@ -1395,6 +2564,12 @@
    ]
   },
   {
+   "key": "kem_danh_rang",
+   "name": "Kem Đánh Răng",
+   "fold": "kem danh rang",
+   "aliases": []
+  },
+  {
    "key": "kem_lot",
    "name": "Kem Lót",
    "fold": "kem lot",
@@ -1411,6 +2586,44 @@
    "aliases": [
     "foundation"
    ]
+  },
+  {
+   "key": "kem_tay_long",
+   "name": "Kem Tẩy Lông",
+   "fold": "kem tay long",
+   "aliases": []
+  },
+  {
+   "key": "khan_giay_khan_uot",
+   "name": "Khăn Giấy / Khăn Ướt",
+   "fold": "khan giay / khan uot",
+   "aliases": [
+    "khan giay khan uot"
+   ]
+  },
+  {
+   "key": "khau_trang",
+   "name": "Khẩu Trang",
+   "fold": "khau trang",
+   "aliases": []
+  },
+  {
+   "key": "khu_mui",
+   "name": "Khử Mùi",
+   "fold": "khu mui",
+   "aliases": []
+  },
+  {
+   "key": "lam_dep_da",
+   "name": "Làm Đẹp Da",
+   "fold": "lam dep da",
+   "aliases": []
+  },
+  {
+   "key": "lam_dep_toc",
+   "name": "Làm Đẹp Tóc",
+   "fold": "lam dep toc",
+   "aliases": []
   },
   {
    "key": "lam_sach_da",
@@ -1430,6 +2643,24 @@
     "lotion sua duong",
     "sua duong"
    ]
+  },
+  {
+   "key": "luoc",
+   "name": "Lược",
+   "fold": "luoc",
+   "aliases": []
+  },
+  {
+   "key": "ma_hong",
+   "name": "Má Hồng",
+   "fold": "ma hong",
+   "aliases": []
+  },
+  {
+   "key": "mascara",
+   "name": "Mascara",
+   "fold": "mascara",
+   "aliases": []
   },
   {
    "key": "mat_na",
@@ -1501,6 +2732,130 @@
    ]
   },
   {
+   "key": "mat_na_xong_hoi",
+   "name": "Mặt Nạ Xông Hơi",
+   "fold": "mat na xong hoi",
+   "aliases": []
+  },
+  {
+   "key": "may_cao_rau",
+   "name": "Máy Cạo Râu",
+   "fold": "may cao rau",
+   "aliases": []
+  },
+  {
+   "key": "may_tao_kieu_toc",
+   "name": "Máy Tạo Kiểu Tóc",
+   "fold": "may tao kieu toc",
+   "aliases": []
+  },
+  {
+   "key": "may_xong_mat_day_tinh_chat",
+   "name": "Máy Xông Mặt / Đẩy Tinh Chất",
+   "fold": "may xong mat / day tinh chat",
+   "aliases": [
+    "may xong mat day tinh chat"
+   ]
+  },
+  {
+   "key": "mi_gia",
+   "name": "Mi Giả",
+   "fold": "mi gia",
+   "aliases": []
+  },
+  {
+   "key": "mieng_dan_kich_mi",
+   "name": "Miếng Dán Kích Mí",
+   "fold": "mieng dan kich mi",
+   "aliases": []
+  },
+  {
+   "key": "mieng_dan_nguc",
+   "name": "Miếng Dán Ngực",
+   "fold": "mieng dan nguc",
+   "aliases": []
+  },
+  {
+   "key": "mini_sample",
+   "name": "Mini / Sample",
+   "fold": "mini / sample",
+   "aliases": [
+    "mini sample"
+   ]
+  },
+  {
+   "key": "my_pham_high_end",
+   "name": "Mỹ Phẩm High-End",
+   "fold": "my pham high-end",
+   "aliases": [
+    "my pham high end"
+   ]
+  },
+  {
+   "key": "nhip_dao_cao",
+   "name": "Nhíp / Dao Cạo",
+   "fold": "nhip / dao cao",
+   "aliases": [
+    "nhip dao cao"
+   ]
+  },
+  {
+   "key": "nuoc_giat_do_lot",
+   "name": "Nước Giặt Đồ Lót",
+   "fold": "nuoc giat do lot",
+   "aliases": []
+  },
+  {
+   "key": "nuoc_hoa_cao_cap",
+   "name": "Nước Hoa Cao Cấp",
+   "fold": "nuoc hoa cao cap",
+   "aliases": []
+  },
+  {
+   "key": "nuoc_hoa_nam",
+   "name": "Nước Hoa Nam",
+   "fold": "nuoc hoa nam",
+   "aliases": []
+  },
+  {
+   "key": "nuoc_hoa_nu",
+   "name": "Nước Hoa Nữ",
+   "fold": "nuoc hoa nu",
+   "aliases": []
+  },
+  {
+   "key": "nuoc_hoa_vung_kin",
+   "name": "Nước Hoa Vùng Kín",
+   "fold": "nuoc hoa vung kin",
+   "aliases": []
+  },
+  {
+   "key": "nuoc_rua_mong",
+   "name": "Nước Rửa Móng",
+   "fold": "nuoc rua mong",
+   "aliases": []
+  },
+  {
+   "key": "nuoc_rua_tay_diet_khuan",
+   "name": "Nước Rửa Tay / Diệt Khuẩn",
+   "fold": "nuoc rua tay / diet khuan",
+   "aliases": [
+    "nuoc rua tay diet khuan"
+   ]
+  },
+  {
+   "key": "nuoc_suc_mieng",
+   "name": "Nước Súc Miệng",
+   "fold": "nuoc suc mieng",
+   "aliases": []
+  },
+  {
+   "key": "phan_mat",
+   "name": "Phấn Mắt",
+   "fold": "phan mat",
+   "aliases": []
+  },
+  {
    "key": "phan_nen",
    "name": "Phấn Nền",
    "fold": "phan nen",
@@ -1516,9 +2871,33 @@
    ]
   },
   {
+   "key": "phan_phu",
+   "name": "Phấn Phủ",
+   "fold": "phan phu",
+   "aliases": []
+  },
+  {
+   "key": "phu_kien_toc",
+   "name": "Phụ Kiện Tóc",
+   "fold": "phu kien toc",
+   "aliases": []
+  },
+  {
+   "key": "san_pham_cham_soc_khac",
+   "name": "Sản Phẩm Chăm Sóc Khác",
+   "fold": "san pham cham soc khac",
+   "aliases": []
+  },
+  {
    "key": "san_pham_dac_tri_khac",
    "name": "Sản Phẩm Đặc Trị Khác",
    "fold": "san pham dac tri khac",
+   "aliases": []
+  },
+  {
+   "key": "san_pham_tao_kieu_toc",
+   "name": "Sản Phẩm Tạo Kiểu Tóc",
+   "fold": "san pham tao kieu toc",
    "aliases": []
   },
   {
@@ -1580,6 +2959,12 @@
    ]
   },
   {
+   "key": "son_mong",
+   "name": "Sơn Móng",
+   "fold": "son mong",
+   "aliases": []
+  },
+  {
    "key": "son_thoi",
    "name": "Son Thỏi",
    "fold": "son thoi",
@@ -1610,6 +2995,40 @@
     "body wash",
     "shower gel"
    ]
+  },
+  {
+   "key": "tam_nuoc_chi_nha_khoa",
+   "name": "Tăm Nước / Chỉ Nha Khoa",
+   "fold": "tam nuoc / chi nha khoa",
+   "aliases": [
+    "tam nuoc chi nha khoa"
+   ]
+  },
+  {
+   "key": "tang_suc_de_khang",
+   "name": "Tăng Sức Đề Kháng",
+   "fold": "tang suc de khang",
+   "aliases": []
+  },
+  {
+   "key": "tao_khoi_highlight",
+   "name": "Tạo Khối / Highlight",
+   "fold": "tao khoi / highlight",
+   "aliases": [
+    "tao khoi highlight"
+   ]
+  },
+  {
+   "key": "tay_te_bao_chet_body",
+   "name": "Tẩy Tế Bào Chết Body",
+   "fold": "tay te bao chet body",
+   "aliases": []
+  },
+  {
+   "key": "tay_te_bao_chet_da_dau",
+   "name": "Tẩy Tế Bào Chết Da Đầu",
+   "fold": "tay te bao chet da dau",
+   "aliases": []
   },
   {
    "key": "tay_te_bao_chet",
@@ -1646,6 +3065,20 @@
    ]
   },
   {
+   "key": "tay_trang_mat_moi",
+   "name": "Tẩy Trang Mắt / Môi",
+   "fold": "tay trang mat / moi",
+   "aliases": [
+    "tay trang mat moi"
+   ]
+  },
+  {
+   "key": "thuoc_nhuom_toc",
+   "name": "Thuốc Nhuộm Tóc",
+   "fold": "thuoc nhuom toc",
+   "aliases": []
+  },
+  {
    "key": "toner",
    "name": "Toner / Nước Cân Bằng Da",
    "fold": "toner / nuoc can bang da",
@@ -1659,22 +3092,12 @@
    ]
   },
   {
-   "key": "trang_diem",
-   "name": "Trang Điểm",
-   "fold": "trang diem",
-   "aliases": []
-  },
-  {
-   "key": "trang_diem_mat",
-   "name": "Trang Điểm Mặt",
-   "fold": "trang diem mat",
-   "aliases": []
-  },
-  {
-   "key": "trang_diem_moi",
-   "name": "Trang Điểm Môi",
-   "fold": "trang diem moi",
-   "aliases": []
+   "key": "vitamin_khoang_chat",
+   "name": "Vitamin / Khoáng Chất",
+   "fold": "vitamin / khoang chat",
+   "aliases": [
+    "vitamin khoang chat"
+   ]
   },
   {
    "key": "xa_phong",
@@ -1689,6 +3112,12 @@
    "aliases": []
   },
   {
+   "key": "xit_khoa_makeup",
+   "name": "Xịt Khoá Makeup",
+   "fold": "xit khoa makeup",
+   "aliases": []
+  },
+  {
    "key": "xit_khoang",
    "name": "Xịt Khoáng",
    "fold": "xit khoang",
@@ -1697,6 +3126,18 @@
     "mineral spray",
     "xit duong da"
    ]
+  },
+  {
+   "key": "xit_thom_mieng",
+   "name": "Xịt Thơm Miệng",
+   "fold": "xit thom mieng",
+   "aliases": []
+  },
+  {
+   "key": "xit_thom_toan_than",
+   "name": "Xịt Thơm Toàn Thân",
+   "fold": "xit thom toan than",
+   "aliases": []
   }
  ]
 }

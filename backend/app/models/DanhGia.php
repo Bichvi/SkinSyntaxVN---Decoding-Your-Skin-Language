@@ -1,6 +1,9 @@
 <?php
+require_once __DIR__ . '/RewardLedger.php';
+require_once __DIR__ . '/../services/RewardRules.php';
 
 class DanhGia {
+    private const REVIEW_REWARD_XU = 100;
     private $db;
 
     public function __construct($db) {
@@ -684,7 +687,24 @@ class DanhGia {
         // Chi tiet review nam trong danh_gia_san_pham; san_pham giu rating crawl goc.
         $this->db->danh_gia_san_pham->insertOne($payload);
         $this->createReviewNotification($payload);
-        return ['ok' => true, 'message' => 'Đã gửi đánh giá sản phẩm.'];
+        $rewardXu = 0;
+        try {
+            $reward = (new RewardLedger($this->db))->award([
+                'customer_id' => (string)$customerId,
+                'ma_kh' => $customerId,
+                'source' => 'review',
+                'source_key' => 'review:' . (string)$payload['ma_danh_gia'],
+                'amount_xu' => self::REVIEW_REWARD_XU,
+                'date_vn' => RewardRules::dateVn(time()),
+                'meta' => ['review_id' => $payload['ma_danh_gia'], 'product_id' => $productId],
+            ]);
+            if (($reward['code'] ?? '') === 'OK') $rewardXu = (int)($reward['xu_awarded'] ?? 0);
+        } catch (Throwable $error) {
+            error_log('review xu reward failed: ' . get_class($error));
+        }
+        $message = 'Đã gửi đánh giá sản phẩm.';
+        if ($rewardXu > 0) $message .= ' Bạn nhận được +' . $rewardXu . ' xu.';
+        return ['ok' => true, 'message' => $message, 'xu_awarded' => $rewardXu];
     }
 
     private function createReviewNotification(array $review): void {

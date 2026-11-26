@@ -11,17 +11,8 @@ class NguoiDung {
 
     public function timTheoEmail(string $email): ?array {
         $regex = new \MongoDB\BSON\Regex('^' . preg_quote($email) . '$', 'i'); // So sánh email không phân biệt hoa thường
-        $user = $this->db->nguoidung->findOne(['email' => $regex], ['sort' => ['created_at' => -1, '_id' => -1]]);
+        $user = $this->db->nguoidung->findOne(['email' => $regex]);
         return $user ? (array) $user : null;
-    }
-
-    public function timTatCaTheoEmail(string $email): array {
-        $regex = new \MongoDB\BSON\Regex('^' . preg_quote(trim($email)) . '$', 'i');
-        $users = [];
-        foreach ($this->db->nguoidung->find(['email' => $regex], ['sort' => ['created_at' => -1, '_id' => -1]]) as $user) {
-            $users[] = (array) $user;
-        }
-        return $users;
     }
 
     public function timNhanVienTheoEmail(string $email): ?array {

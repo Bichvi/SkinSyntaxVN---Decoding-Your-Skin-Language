@@ -98,7 +98,7 @@ $aiLabelScanOn = function_exists('ss_env')
 ?>
 <?php if ($pdo !== null): ?>
   <div class="ai-chat-widget" data-ai-chat-widget data-agent-v2="<?= $aiChatAgentV2 ?>" data-chat-csrf="<?= htmlspecialchars($aiChatPurchaseCsrf, ENT_QUOTES, 'UTF-8') ?>" data-vnpay-host="<?= htmlspecialchars($aiChatVnpayHost, ENT_QUOTES, 'UTF-8') ?>">
-    <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" title="Chat với Syna (AI Advisor)">
+    <button class="ai-chat-widget__trigger" type="button" data-ai-chat-toggle aria-expanded="false" aria-controls="aiChatPanel" aria-label="Chat với Syna" title="Chat với Syna (AI Advisor)">
       <span class="ai-chat-widget__trigger-avatar" aria-hidden="true">
         <img src="<?= BASE_URL ?>/assets/images/syna_mascot.png?v=<?= time() ?>" alt="SYNA Mascot">
       </span>
@@ -149,6 +149,7 @@ $aiLabelScanOn = function_exists('ss_env')
         </div>
       </header>
 
+      <div class="ai-chat-widget__body">
       <div class="ai-chat-widget__quick-actions">
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Phân tích nhanh giỏ hàng hiện tại và cảnh báo các cặp chất có thể xung đột.">Phân tích giỏ hàng</button>
         <button type="button" class="ai-chat-widget__quick-chip" data-ai-chat-prompt="Tìm giúp tôi vài sản phẩm phù hợp với da dầu mụn và giải thích ngắn gọn.">Da dầu mụn</button>
@@ -237,6 +238,14 @@ $aiLabelScanOn = function_exists('ss_env')
         </div>
       </div>
 
+      </div>
+      <?php if (class_exists('SurveyService') && current_role() === 'khach_hang'): ?>
+        <?php
+        $feedbackFeature = 'syna_chat';
+        $feedbackPrompt = 'Bạn thấy phần tư vấn của SYNA thế nào?';
+        require dirname(__DIR__) . '/partials/feature_feedback.php';
+        ?>
+      <?php endif; ?>
       <form class="ai-chat-widget__form" data-ai-chat-form>
         <div class="ai-chat-widget__composer">
           <textarea class="form-control ai-chat-widget__textarea" rows="2" data-ai-chat-input placeholder="Hỏi Syna về thành phần, sản phẩm, routine hoặc phân tích giỏ hàng... hoặc hỏi về đổi trả, vận chuyển, voucher" required></textarea>
@@ -503,6 +512,10 @@ $aiLabelScanOn = function_exists('ss_env')
       overflow: hidden;
     }
 
+    .ai-chat-widget__body {
+      display: contents;
+    }
+
     .ai-chat-widget__panel[hidden] {
       display: none !important;
     }
@@ -513,7 +526,7 @@ $aiLabelScanOn = function_exists('ss_env')
       pointer-events: auto;
     }
 
-    /* Phóng to toàn màn hình (CHỈ khi khung chat đang MỞ) */
+    @media (min-width: 768px) {
     .ai-chat-widget.is-open.is-expanded {
       position: fixed !important;
       top: 0 !important;
@@ -542,6 +555,7 @@ $aiLabelScanOn = function_exists('ss_env')
       flex-direction: row !important;
       opacity: 1 !important;
       pointer-events: auto !important;
+    }
     }
 
     .ai-chat-widget.is-expanded .ai-chat-widget__sidebar {
@@ -1366,63 +1380,83 @@ $aiLabelScanOn = function_exists('ss_env')
     }
 
     @media (max-width: 767.98px) {
-      .ai-chat-widget {
-        right: 12px;
-        left: 12px;
-        bottom: 76px;
-        align-items: stretch;
-      }
-
       .ai-chat-widget__trigger {
-        justify-content: flex-start;
-        min-width: 0;
+        justify-content: center;
         max-width: none;
-        width: 100%;
       }
 
-      .ai-chat-widget.is-open .ai-chat-widget__trigger {
+      .ai-chat-widget__trigger-avatar {
+        width: 36px;
+        height: 36px;
+      }
+
+      .ai-chat-widget.is-expanded .ai-chat-widget__sidebar {
+        width: 100%;
+        max-height: min(30%, 180px);
+        border-right: 0;
+      }
+
+      .ai-chat-widget__sidebar-head {
+        padding: 6px 10px;
+      }
+
+      .ai-chat-widget__main-content {
+        height: auto;
+        min-height: 0;
+      }
+
+      .ai-chat-widget__body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .ai-chat-widget__panel-head,
+      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel-head {
+        padding: 8px 10px;
+        gap: 6px;
+      }
+
+      .ai-chat-widget__form,
+      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__form {
+        flex-shrink: 0;
+        padding: 8px 10px;
+      }
+
+      .ai-chat-widget__action-btn {
+        min-width: 44px;
+        height: 44px;
+      }
+
+      .ai-chat-widget__action-btn--expand span {
         display: none;
       }
 
-      .ai-chat-widget__panel {
-        width: 100%;
-        max-height: min(66vh, 480px);
+      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel-title {
+        font-size: 15px;
       }
 
-      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel {
-        width: 100vw;
-        height: 100vh;
-        max-height: 100vh !important;
-      }
-
+      .ai-chat-widget__stream,
       .ai-chat-widget.is-open.is-expanded .ai-chat-widget__stream {
-        max-height: none;
-        flex: 1;
+        min-height: 64px;
+        padding: 10px;
+        overscroll-behavior: contain;
       }
 
-      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__panel-head {
-        padding: 16px;
-      }
-
-      .ai-chat-widget.is-open.is-expanded .ai-chat-widget__form {
-        padding: 16px;
-      }
-
-      .ai-chat-widget.is-open.is-expanded .ai-chat-profile-banner {
-        margin: 12px;
-        padding: 16px;
-      }
-
-      .ai-chat-widget__stream {
-        max-height: 232px;
-      }
-
-      .ai-chat-widget__composer {
-        grid-template-columns: 1fr;
+      .ai-chat-widget__textarea {
+        font-size: 16px;
+        height: 54px;
       }
 
       .ai-chat-widget__submit {
-        width: 100%;
+        min-width: 0;
+        max-width: 112px;
+        height: auto;
+        min-height: 46px;
+        white-space: normal;
       }
 
       .ai-chat-widget__bubble-wrap {
@@ -1430,11 +1464,11 @@ $aiLabelScanOn = function_exists('ss_env')
       }
     }
 
-    /* Style integration for global header display above expanded chatbot widget */
     body.has-expanded-ai-chat {
       overflow: hidden !important;
     }
 
+    @media (min-width: 768px) {
     body.has-expanded-ai-chat .site-header {
       position: fixed !important;
       top: 0 !important;
@@ -1455,6 +1489,7 @@ $aiLabelScanOn = function_exists('ss_env')
     body.has-expanded-ai-chat .ai-chat-widget.is-expanded .ai-chat-widget__panel {
       height: 100% !important;
       max-height: calc(100vh - var(--site-header-height, 160px)) !important;
+    }
     }
 
     /* Chat order draft / invoice card */
@@ -1869,6 +1904,10 @@ $aiLabelScanOn = function_exists('ss_env')
       var form = widget.querySelector('[data-ai-chat-form]');
       var input = widget.querySelector('[data-ai-chat-input]');
       var submit = widget.querySelector('[data-ai-chat-submit]');
+      var showSynaSurvey = function () {
+        var invitation = widget.querySelector('[data-syna-survey]');
+        if (invitation) invitation.hidden = false;
+      };
       var status = widget.querySelector('[data-ai-chat-status]');
       var quickPrompts = widget.querySelectorAll('[data-ai-chat-prompt]');
 
@@ -2153,15 +2192,14 @@ $aiLabelScanOn = function_exists('ss_env')
 
       var syncLayout = function () {
         var isMobile = window.matchMedia('(max-width: 767.98px)').matches;
-        var nextBottom = isMobile ? 16 : 24;
-        widget.style.bottom = nextBottom + 'px';
-        widget.style.right = isMobile ? '16px' : '24px';
-
         if (panel) {
+          if (isMobile) {
+            panel.style.removeProperty('max-height');
+            return;
+          }
           var isExpanded = widget.classList.contains('is-expanded');
-          var viewportPadding = isMobile ? 16 : 24;
-          var availableHeight = Math.max(300, window.innerHeight - nextBottom - viewportPadding);
-          var maxHeightLimit = isMobile ? (isExpanded ? 800 : 580) : (isExpanded ? 1200 : 620);
+          var availableHeight = Math.max(300, window.innerHeight - 48);
+          var maxHeightLimit = isExpanded ? 1200 : 620;
           panel.style.maxHeight = Math.min(maxHeightLimit, availableHeight) + 'px';
         }
       };
@@ -2517,7 +2555,7 @@ $aiLabelScanOn = function_exists('ss_env')
           if (userLoggedIn && !wasOpen) {
             loadConversations();
           }
-          if (input) {
+          if (input && window.matchMedia('(min-width: 768px)').matches) {
             input.focus();
           }
           scrollToBottom();
@@ -2596,6 +2634,9 @@ $aiLabelScanOn = function_exists('ss_env')
           var isCurrentAgentSend = function () { return agentSendId === agentSendGeneration; };
           var agentMessage = messages[messages.length - 1];
           var agentText = '';
+          var agentCompleted = false;
+          var agentFailed = false;
+          var agentNonAdviceUi = false;
           var finishAgent = function () {
             if (!isCurrentAgentSend()) return;
             if (agentMessage) {
@@ -2631,21 +2672,29 @@ $aiLabelScanOn = function_exists('ss_env')
                   addMessage({ role: 'assistant', content: '', products: productPayload.products });
                 }
               } else {
+                agentNonAdviceUi = true;
                 addMessage({ role: 'assistant', content: '', agentUi: Object.assign({}, payload || {}, { messageId: typingId }) });
               }
             },
             onCartUpdated: function (payload) {
               if (!isCurrentAgentSend()) return;
-              if (typeof updateCartBadge === 'function') updateCartBadge(parseInt(payload.count, 10) || 0);
+              window.updateSkinSyntaxCartCount?.(payload.count);
             },
-            onDone: finishAgent,
+            onDone: function () {
+              agentCompleted = true;
+              finishAgent();
+            },
             onError: function (payload) {
               if (!isCurrentAgentSend()) return;
+              agentFailed = true;
               finishAgent();
               addMessage({ role: 'assistant', content: String(payload.message || 'AI hiện chưa phản hồi được. Vui lòng thử lại sau.'), conflicts: [], products: [] });
             }
           }).then(function (result) {
             if (!isCurrentAgentSend()) return;
+            if (result && !result.aborted && !result.fallback && agentCompleted && !agentFailed && !agentNonAdviceUi && agentText.trim()) {
+              showSynaSurvey();
+            }
             if (result && result.fallback === true) {
               handedOffToLegacy = true;
               messages = messages.filter(function (item) { return item.id !== typingId; });
@@ -2744,6 +2793,11 @@ $aiLabelScanOn = function_exists('ss_env')
               commerce: payload.commerce || null,
               latency: payload.latency
             });
+
+            if (String(payload.answer || '').trim() && payload.fallback !== true &&
+                !payload.support_topic && !payload.commerce) {
+              showSynaSurvey();
+            }
 
             if (userLoggedIn) {
               loadConversations();
@@ -3042,9 +3096,7 @@ $aiLabelScanOn = function_exists('ss_env')
               }));
               addCartBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
               
-              if (typeof updateCartBadge === 'function' && result.cart_count !== undefined) {
-                updateCartBadge(parseInt(result.cart_count, 10) || 0);
-              }
+              window.updateSkinSyntaxCartCount?.(result.cart_count);
               if (typeof bounceCartHeader === 'function') {
                 bounceCartHeader();
               }

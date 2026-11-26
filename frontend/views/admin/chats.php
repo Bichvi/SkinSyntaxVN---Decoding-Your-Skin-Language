@@ -3,13 +3,17 @@ $pendingConversations = $pendingConversations ?? [];
 $allConversations = $allConversations ?? [];
 $activeConversationId = (int)($activeConversationId ?? 0);
 $messages = $messages ?? [];
+$conversationList = $allConversations;
+usort($conversationList, static function (array $left, array $right): int {
+    return ((int)!empty($right['dang_cho_phan_hoi'])) <=> ((int)!empty($left['dang_cho_phan_hoi']));
+});
 ?>
 
 <?php
 $initialChatState = [
     'activeConversationId' => $activeConversationId,
     'pendingConversations' => $pendingConversations,
-    'allConversations' => $allConversations,
+    'allConversations' => $conversationList,
     'messages' => $messages,
 ];
 ?>
@@ -17,8 +21,7 @@ $initialChatState = [
 <div class="container-fluid px-4 py-4">
     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
-            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Hỗ trợ Khách hàng Trực tiếp (Live Chat)</h1>
-            <p class="text-muted mb-0 small">Tư vấn, giải đáp thắc mắc và chăm sóc khách hàng theo thời gian thực.</p>
+            <h1 class="h4 fw-bold mb-0" style="color: var(--admin-text);">Chat hỗ trợ</h1>
         </div>
     </div>
 
@@ -27,34 +30,14 @@ $initialChatState = [
             <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
                 <div class="card-body p-0">
                     <div class="p-3 border-bottom background-subtle d-flex align-items-center justify-content-between">
-                        <div class="small fw-bold text-uppercase" style="color: var(--admin-text); font-size: 0.76rem; letter-spacing: 0.04em;"><i class="bi bi-clock-history text-warning me-1.5"></i>Chat chờ phản hồi</div>
+                        <div class="fw-bold" style="color: var(--admin-text);">Hội thoại</div>
                         <span class="badge bg-warning text-dark px-2 py-0.5" style="border-radius: 4px; font-size: 0.72rem;"><?= count($pendingConversations) ?></span>
                     </div>
-                    <div class="list-group list-group-flush border-bottom" id="pending-conversations-list">
-                        <?php if (empty($pendingConversations)): ?>
-                            <div class="p-3 text-center text-muted small">Không có cuộc trò chuyện nào chờ trả lời.</div>
-                        <?php else: ?>
-                            <?php foreach ($pendingConversations as $conversation): ?>
-                                <?php $maKh = (int)($conversation['ma_kh'] ?? 0); ?>
-                                <a href="index.php?r=staff_chats&ma_kh=<?= $maKh ?>" class="list-group-item list-group-item-action p-3 border-bottom <?= $maKh === $activeConversationId ? 'bg-light border-start border-3 border-dark' : '' ?>">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <div class="fw-semibold small" style="color: var(--admin-text);"><?= h($conversation['ho_ten'] ?? 'Khách hàng') ?></div>
-                                        <span class="status-pill status-pill-pending"><?= h((string)($conversation['tin_chua_phan_hoi'] ?? 1)) ?> Mới</span>
-                                    </div>
-                                    <div class="small text-muted text-truncate" style="font-size: 0.76rem;"><?= h($conversation['tin_nhan_moi'] ?? 'Nội dung tin nhắn...') ?></div>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="p-3 border-bottom background-subtle">
-                        <div class="small fw-bold text-uppercase" style="color: var(--admin-text); font-size: 0.76rem; letter-spacing: 0.04em;"><i class="bi bi-chat-text text-primary me-1.5"></i>Tất cả cuộc hội thoại</div>
-                    </div>
                     <div class="list-group list-group-flush" id="all-conversations-list">
-                        <?php if (empty($allConversations)): ?>
+                        <?php if (empty($conversationList)): ?>
                             <div class="p-4 text-center text-muted small">Chưa có cuộc hội thoại nào.</div>
                         <?php else: ?>
-                            <?php foreach ($allConversations as $conversation): ?>
+                            <?php foreach ($conversationList as $conversation): ?>
                                 <?php $maKh = (int)($conversation['ma_kh'] ?? 0); ?>
                                 <a href="index.php?r=staff_chats&ma_kh=<?= $maKh ?>" class="list-group-item list-group-item-action p-3 border-bottom <?= $maKh === $activeConversationId ? 'bg-light border-start border-3 border-dark' : '' ?>">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
@@ -191,6 +174,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        conversations = conversations.slice().sort(function (left, right) {
+            return Number(!!right.dang_cho_phan_hoi) - Number(!!left.dang_cho_phan_hoi);
+        });
         container.innerHTML = conversations.map(function (conversation) {
             return renderConversationItem(conversation, isPending);
         }).join('');

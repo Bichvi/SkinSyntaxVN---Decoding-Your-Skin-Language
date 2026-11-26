@@ -73,6 +73,18 @@ $db = new AdminAnalyticsFakeDb([
             'tong_tien' => 200000,
             'ngay_hoan_thanh' => '2026-11-08 12:00:00',
         ],
+        [
+            'trang_thai' => 'pending',
+            'hinh_thuc_thanh_toan' => 'cod',
+            'tong_tien' => 150000,
+            'ngay_dat' => '2000-01-01 08:00:00',
+        ],
+        [
+            'trang_thai' => 'shipping',
+            'hinh_thuc_thanh_toan' => 'cod',
+            'tong_tien' => 180000,
+            'ngay_dat' => '2026-11-10 08:00:00',
+        ],
     ],
     'san_pham' => [
         ['trang_thai' => 'active', 'so_luong_ton_kho' => 20],
@@ -101,6 +113,16 @@ $trend = $model->getDailySalesTrend('2026-11-08', '2026-11-09');
 $check('trend includes every selected day', count($trend) === 2);
 $check('paid QR order is included on its completion date', ($trend[0]['so_don'] ?? 0) === 1 && ($trend[0]['doanh_thu'] ?? 0) === 200000);
 $check('unpaid QR order is excluded from revenue', ($trend[1]['so_don'] ?? 0) === 1 && ($trend[1]['doanh_thu'] ?? 0) === 100000);
+
+$operations = $model->getDashboardOperations(24);
+$check('operations keeps unpaid QR separate from confirmation queue',
+    ($operations['waiting_payment'] ?? 0) === 1
+    && ($operations['pending_confirmation'] ?? 0) === 1
+);
+$check('operations counts shipping and overdue confirmation from real order state',
+    ($operations['shipping'] ?? 0) === 1
+    && ($operations['overdue_confirmation'] ?? 0) === 1
+);
 
 $status = $model->getProductStatusSummary();
 $check('product status groups are mutually exclusive', $status === [

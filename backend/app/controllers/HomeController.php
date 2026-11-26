@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/TaiKhoan.php';
 require_once __DIR__ . '/../models/HoaDon.php';
 require_once __DIR__ . '/../models/QuanTri.php';
 require_once __DIR__ . '/../models/Voucher.php';
+require_once __DIR__ . '/../models/PhienLive.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/SkincareProductClassifier.php';
 require_once __DIR__ . '/../services/RecommendationExplainer.php';
@@ -172,6 +173,9 @@ class HomeController {
         $homepageRefreshSeed = null;
         $homeCategoryCards = [];
         $homeBrandCards = [];
+        $homeLiveSession = null;
+        $homeLiveProduct = null;
+        $homeLiveProducts = [];
         $synaSurveyCompleted = !empty($_SESSION['syna_survey_success']);
         unset($_SESSION['syna_survey_success']);
 
@@ -466,6 +470,91 @@ class HomeController {
             $homeDiscovery = ['trending' => [], 'actives' => []];
         }
 
+        // The homepage live banner must reflect a real session. Prefer a
+        // currently active room, then the next scheduled/ready room. Never
+        // label an arbitrary product or an empty room as "live".
+        try {
+            $liveModel = new PhienLive($this->pdo);
+            $allLives = $liveModel->getAllLives();
+            foreach ($allLives as $candidateLive) {
+                if (($candidateLive['status'] ?? '') === 'live') {
+                    $homeLiveSession = $candidateLive;
+                    break;
+                }
+            }
+            if ($homeLiveSession === null) {
+                foreach ($allLives as $candidateLive) {
+                    if (in_array(($candidateLive['status'] ?? ''), ['scheduled', 'ready'], true)) {
+                        $homeLiveSession = $candidateLive;
+                        break;
+                    }
+                }
+            }
+            if ($homeLiveSession !== null) {
+                $pinnedProductId = trim((string)($homeLiveSession['ma_san_pham_ghim'] ?? ''));
+                $recentDeals = array_reverse((array)($homeLiveSession['danh_sach_deal'] ?? []));
+                $recentByProduct = [];
+
+                foreach ($recentDeals as $deal) {
+                    $productId = trim((string)($deal['ma_san_pham'] ?? ''));
+                    if ($productId === '' || isset($recentByProduct[$productId])) {
+                        continue;
+                    }
+                    $recentByProduct[$productId] = (array)$deal;
+                    if (count($recentByProduct) >= 4) {
+                        break;
+                    }
+                }
+
+                // Legacy sessions may only have a pinned product and no deal queue.
+                if (!$recentByProduct && $pinnedProductId !== '') {
+                    $recentByProduct[$pinnedProductId] = [
+                        'ma_san_pham' => $pinnedProductId,
+                        'gia_uu_dai_live' => (float)($homeLiveSession['gia_uu_dai_live'] ?? 0),
+                    ];
+                }
+
+                $catalogProducts = $this->model->findManyByIds(array_keys($recentByProduct));
+                foreach ($recentByProduct as $productId => $deal) {
+                    $product = $catalogProducts[$productId] ?? null;
+                    if (!$product || !$this->model->isProductAvailable($product)) {
+                        continue;
+                    }
+                    $catalogPrice = (float)($product['gia_ban'] ?? 0);
+                    $livePrice = (float)($deal['gia_uu_dai_live'] ?? 0);
+                    $product['home_live_price'] = $livePrice > 0 ? $livePrice : $catalogPrice;
+                    $product['home_live_is_pinned'] = $pinnedProductId !== '' && $pinnedProductId === $productId;
+                    $homeLiveProducts[] = $product;
+                }
+            }
+
+            // Keep real products from the selected room first, then complete
+            // the showcase with the newest visible catalog items. This keeps
+            // the homepage lively even when an upcoming room has one deal.
+            $showcaseIds = [];
+            foreach ($homeLiveProducts as $product) {
+                $id = trim((string)($product['ma_san_pham'] ?? $product['id'] ?? ''));
+                if ($id !== '') $showcaseIds[$id] = true;
+            }
+            foreach ((array)$latest as $product) {
+                if (count($homeLiveProducts) >= 4 || !is_array($product)) break;
+                $productId = trim((string)($product['ma_san_pham'] ?? $product['id'] ?? ''));
+                if ($productId === '' || isset($showcaseIds[$productId]) || !$this->model->isProductAvailable($product)) {
+                    continue;
+                }
+                $product['home_live_price'] = (float)($product['gia_ban'] ?? 0);
+                $product['home_live_is_pinned'] = false;
+                $homeLiveProducts[] = $product;
+                $showcaseIds[$productId] = true;
+            }
+            $homeLiveProduct = $homeLiveProducts[0] ?? null;
+        } catch (Throwable $e) {
+            error_log('[HOME_LIVE] skipped: ' . get_class($e));
+            $homeLiveSession = null;
+            $homeLiveProduct = null;
+            $homeLiveProducts = [];
+        }
+
         $this->render('home', [
             'routineStarter' => $routineStarter,
             'routineSkinType' => $routineSkinType,
@@ -483,6 +572,9 @@ class HomeController {
             'homeGraph' => $homeGraph ?? null,
             'homeCategoryCards' => $homeCategoryCards,
             'homeBrandCards' => $homeBrandCards,
+            'homeLiveSession' => $homeLiveSession,
+            'homeLiveProduct' => $homeLiveProduct,
+            'homeLiveProducts' => $homeLiveProducts,
             'synaSurveyCompleted' => $synaSurveyCompleted,
             'routineProgress' => $routineProgress,
             'homeSkinFromQuiz' => $homeSkinFromQuiz,
@@ -553,6 +645,12 @@ class HomeController {
             header('Allow: POST');
             header('Content-Type: text/plain; charset=UTF-8');
             echo 'Phương thức không được hỗ trợ';
+            return;
+        }
+        $token = $_POST['csrf'] ?? null;
+        $expected = $_SESSION['home_quick_profile_csrf'] ?? '';
+        if (!is_string($token) || $expected === '' || !hash_equals($expected, $token)) {
+            http_response_code(403);
             return;
         }
         $skin = $_POST['skin'] ?? '';
@@ -1038,7 +1136,6 @@ class HomeController {
     public function storeNetwork(): void {
         $this->render('info/store-network', [
             'title' => 'Hệ thống cửa hàng SkinSyntax',
-            'eyebrow' => 'Hệ thống phục vụ',
             'summary' => 'SkinSyntax đang vận hành theo mô hình online-first: ưu tiên tra cứu sản phẩm, tư vấn routine, hỗ trợ đơn hàng và xử lý sau mua ngay trên website. Thông tin điểm hỗ trợ trực tiếp sẽ được cập nhật theo từng giai đoạn mở rộng.',
             'stats' => [
                 ['value' => 'Toàn quốc', 'label' => 'Phạm vi phục vụ qua kênh online'],
@@ -1070,6 +1167,7 @@ class HomeController {
                 ['label' => 'Khám phá toàn bộ sản phẩm', 'url' => BASE_URL . '/index.php?r=tatca'],
                 ['label' => 'Mở gợi ý routine', 'url' => BASE_URL . '/index.php?r=goiy'],
                 ['label' => 'Trung tâm hỗ trợ khách hàng', 'url' => BASE_URL . '/index.php?r=ho_tro_khach_hang'],
+                ['label' => 'Chính sách bảo hành', 'url' => BASE_URL . '/index.php?r=bao_hanh'],
             ],
         ]);
     }
@@ -1279,14 +1377,46 @@ class HomeController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $action = $_POST['action'] ?? null;
             $product_id = $_POST['product_id'] ?? null;
+
+            if ($action === 'clear_cart') {
+                $expected = $_SESSION['clear_cart_csrf'] ?? '';
+                $token = $_POST['csrf'] ?? null;
+                if (!is_string($token) || $expected === '' || !hash_equals($expected, $token)) {
+                    http_response_code(403);
+                    echo 'Vui lòng tải lại trang giỏ hàng rồi thử lại.';
+                    return;
+                }
+                unset($_SESSION['gio_hang'], $_SESSION['live_cart_offers'], $_SESSION['checkout_items'],
+                    $_SESSION['checkout_voucher'], $_SESSION['checkout_points'], $_SESSION['checkout_payment_method'],
+                    $_SESSION['checkout_address_choice'], $_SESSION['checkout_new_receiver'],
+                    $_SESSION['checkout_preview_subtotal']);
+                header('Location: ' . BASE_URL . '/index.php?r=giohang', true, 303);
+                return;
+            }
             
             if ($action === 'update_qty' && $product_id) {
+                if (!isset($_SESSION['gio_hang'][$product_id])) {
+                    http_response_code(409);
+                    return;
+                }
                 $qty = max(1, (int)($_POST['qty'] ?? 1));
                 $_SESSION['gio_hang'][$product_id] = $qty;
+                if (isset($_SESSION['live_cart_offers'][$product_id]) && ($_POST['include_price'] ?? '') === '1') {
+                    $product = $this->model->findById((string)$product_id, true);
+                    if ($product) {
+                        require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+                        require_once __DIR__ . '/../services/LiveOffer.php';
+                        $pricing = (new FlashSaleCampaign($this->pdo))->resolveEffectivePrice((string)$product_id, null, $product);
+                        $pricing = LiveOffer::cartPricing($this->pdo, (string)$product_id, $qty, $pricing);
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode(['unit_price' => (int)$pricing['effective_price'], 'is_live_offer' => !empty($pricing['is_live_offer'])]);
+                        exit;
+                    }
+                }
                 http_response_code(200);
                 exit;
             } elseif ($action === 'delete' && $product_id) {
-                unset($_SESSION['gio_hang'][$product_id]);
+                unset($_SESSION['gio_hang'][$product_id], $_SESSION['live_cart_offers'][$product_id]);
                 require_once __DIR__ . '/../services/InteractionLogger.php';
                 InteractionLogger::logCartRemove($product_id);
                 http_response_code(200);
@@ -1309,6 +1439,8 @@ class HomeController {
                         $qty = $stock;
                     }
                     $pricing = $campaignModel->resolveEffectivePrice((string)$product_id, null, $product);
+                    require_once __DIR__ . '/../services/LiveOffer.php';
+                    $pricing = LiveOffer::cartPricing($this->pdo, (string)$product_id, (int)$qty, $pricing);
                     $items[$product_id] = [
                         'product' => $product,
                         'qty' => $qty,
@@ -1316,7 +1448,7 @@ class HomeController {
                         'unit_price' => (int)$pricing['effective_price'],
                     ];
                 } else {
-                    unset($_SESSION['gio_hang'][$product_id]);
+                    unset($_SESSION['gio_hang'][$product_id], $_SESSION['live_cart_offers'][$product_id]);
                 }
             }
         }
@@ -1326,7 +1458,7 @@ class HomeController {
     public function xoaGioHang() {
         $product_id = $_POST['product_id'] ?? $_GET['id'] ?? null;
         if ($product_id && isset($_SESSION['gio_hang'][$product_id])) {
-            unset($_SESSION['gio_hang'][$product_id]);
+            unset($_SESSION['gio_hang'][$product_id], $_SESSION['live_cart_offers'][$product_id]);
             require_once __DIR__ . '/../services/InteractionLogger.php';
             InteractionLogger::logCartRemove($product_id);
         }
@@ -2063,6 +2195,8 @@ class HomeController {
             require_once __DIR__ . '/../models/FlashSaleCampaign.php';
             $campaignModel = new FlashSaleCampaign($this->pdo);
             $pricing = $campaignModel->resolveEffectivePrice((string)$productId, null, $product);
+            require_once __DIR__ . '/../services/LiveOffer.php';
+            $pricing = LiveOffer::cartPricing($this->pdo, (string)$productId, $qty, $pricing);
             $unitPrice = (int)$pricing['effective_price'];
 
             $lineTotal = $unitPrice * $qty;
@@ -2380,6 +2514,22 @@ class HomeController {
 
     private function getDefaultCheckoutReceiver(?array $customer = null, array $user = []): array {
         $customer = $customer ?? $this->getCurrentCheckoutCustomer() ?? [];
+
+        foreach ((array)($customer['shipping_addresses'] ?? []) as $rawAddress) {
+            $address = is_array($rawAddress) ? $rawAddress : (array)$rawAddress;
+            if (empty($address['is_default'])) continue;
+            $parts = array_values(array_filter([
+                trim((string)($address['street'] ?? '')),
+                trim((string)($address['ward'] ?? '')),
+                trim((string)($address['province'] ?? '')),
+            ], static fn(string $part): bool => $part !== ''));
+            $receiver = [
+                'ten_nguoi_nhan' => trim((string)($address['receiver_name'] ?? '')),
+                'sdt_nguoi_nhan' => trim((string)($address['phone'] ?? '')),
+                'dia_chi_giao_hang' => implode(', ', $parts),
+            ];
+            if ($this->hasCompleteCheckoutReceiver($receiver)) return $receiver;
+        }
 
         return [
             'ten_nguoi_nhan' => trim((string)($customer['ho_ten'] ?? ($user['ho_ten'] ?? ''))),
@@ -5584,7 +5734,7 @@ class HomeController {
         }
 
         if (!is_logged_in()) {
-            set_flash('error', 'Vui lòng đăng nhập để dùng điểm tích lũy.');
+            set_flash('error', 'Vui lòng đăng nhập để dùng điểm thành viên.');
             redirect(BASE_URL . '/index.php?r=dangnhap');
         }
 
@@ -5616,7 +5766,7 @@ class HomeController {
 
         if ($availablePoints <= 0) {
             unset($_SESSION['checkout_points']);
-            set_flash('error', 'Tài khoản của bạn hiện chưa có điểm tích lũy để sử dụng.');
+            set_flash('error', 'Tài khoản của bạn hiện chưa có điểm thành viên để sử dụng.');
             redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
         }
 
@@ -5634,7 +5784,7 @@ class HomeController {
         }
 
         $_SESSION['checkout_points'] = ['points' => $usablePoints];
-        set_flash('success', 'Đã áp dụng ' . number_format($usablePoints, 0, ',', '.') . ' điểm cho đơn hàng.');
+        set_flash('success', 'Đã áp dụng ' . number_format($usablePoints, 0, ',', '.') . ' điểm thành viên cho đơn hàng.');
         redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
     }
 
@@ -5646,7 +5796,7 @@ class HomeController {
         $this->storeCheckoutPaymentMethodFromRequest();
         $this->storeCheckoutReceiverFromRequest($this->getDefaultCheckoutReceiver($this->getCurrentCheckoutCustomer(), current_user() ?? []));
         unset($_SESSION['checkout_points']);
-        set_flash('success', 'Đã gỡ điểm tích lũy khỏi đơn hàng.');
+        set_flash('success', 'Đã gỡ điểm thành viên khỏi đơn hàng.');
         redirect(BASE_URL . '/index.php?r=thanhtoan#points-card-box');
     }
 
@@ -5775,10 +5925,11 @@ class HomeController {
                 'ma_voucher' => $appliedVoucher['voucher']['ma_voucher'] ?? null,
                 'ma_giam_gia' => $appliedVoucher['voucher']['ma_code'] ?? '',
                 'checkout_items' => $checkoutItems,
+                'apply_live_offers' => (bool)array_intersect_key((array)($_SESSION['live_cart_offers'] ?? []), $checkoutItems),
             ]);
 
             foreach ($checkoutItems as $idSp => $_qty) {
-                unset($_SESSION['gio_hang'][$idSp]);
+                unset($_SESSION['gio_hang'][$idSp], $_SESSION['live_cart_offers'][$idSp]);
             }
             unset($_SESSION['checkout_items'], $_SESSION['checkout_voucher'], $_SESSION['checkout_points'], $_SESSION['checkout_payment_method'], $_SESSION['checkout_address_choice'], $_SESSION['checkout_new_receiver'], $_SESSION['checkout_preview_subtotal']);
 

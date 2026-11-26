@@ -1,0 +1,1065 @@
+# Standalone Docker Desktop stack for the skinsyntax project.
+# Default entry point on this machine via COMPOSE_FILE in .env.
+# PHP uses Atlas. AI services and workers use the isolated local data stores.
+name: skinsyntax
+networks: !override
+  skinsyntax-ai-egress:
+    driver: bridge
+  skinsyntax-atlas:
+    driver: bridge
+  skinsyntax-net:
+    driver: bridge
+    internal: true
+    name: skinsyntax-network
+  skinsyntax-web:
+    driver: bridge
+services: !override
+  ai-idol-agent-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-idol-agent
+    container_name: skinsyntax-ai-idol-agent
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - AI_IDOL_CREW_MAX_RPM=${AI_IDOL_CREW_MAX_RPM:-4}
+      - AI_IDOL_CREW_MAX_TOKENS=${AI_IDOL_CREW_MAX_TOKENS:-650}
+      - AI_IDOL_CREW_PORT=5013
+      - AI_IDOL_CREW_REVIEW_MODEL=${AI_IDOL_CREW_REVIEW_MODEL:-openai/gpt-oss-20b}
+      - AI_IDOL_GROQ_MODEL=${AI_IDOL_GROQ_MODEL:-openai/gpt-oss-20b}
+      - AI_IDOL_INTERNAL_TOKEN=${AI_IDOL_INTERNAL_TOKEN:-}
+      - CREWAI_DISABLE_TELEMETRY=true
+      - OTEL_SDK_DISABLED=true
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - MONGO_URI=mongodb://mongodb:27017
+      - VALKEY_URL=redis://redis:6379/0
+    healthcheck:
+      interval: 20s
+      retries: 5
+      start_period: 45s
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:5013/api/health', timeout=3)
+      timeout: 5s
+    image: skinsyntax-ai-idol-agent:local
+    networks:
+      skinsyntax-net: null
+      skinsyntax-ai-egress:
+        gw_priority: 1
+    profiles:
+      - idol
+    restart: unless-stopped
+  ai-idol-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-idol
+    command:
+      - celery
+      - -A
+      - celery_app:celery_app
+      - beat
+      - --loglevel=INFO
+      - --schedule=/tmp/ai-idol-celerybeat-schedule
+    container_name: skinsyntax-ai-idol-beat
+    depends_on:
+      chromadb:
+        condition: service_healthy
+        required: true
+      mongodb:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - AI_IDOL_AGENT_ALLOW_AUTO_PUBLISH=false
+      - AI_IDOL_AGENT_ENABLED=true
+      - AI_IDOL_AVATAR_SERVICE_URL=http://host.docker.internal:7861
+      - AI_IDOL_CATALOG_EVENTS_REDIS_URL=redis://redis:6379/0
+      - AI_IDOL_CHROMA_HOST=chromadb
+      - AI_IDOL_CHROMA_PORT=8000
+      - AI_IDOL_INTERNAL_TOKEN=${AI_IDOL_INTERNAL_TOKEN:-}
+      - AI_IDOL_REDIS_URL=redis://redis:6379/2
+      - AI_IDOL_SCRIPT_COUNCIL_ENABLED=true
+      - AI_IDOL_SCRIPT_COUNCIL_URL=http://ai-idol-agent-service:5013
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=mongodb://mongodb:27017
+      - SYNA_RENDER_URL=http://host.docker.internal:7862
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - VALKEY_URL=redis://redis:6379/0
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    image: skinsyntax-ai-idol:local
+    networks:
+      skinsyntax-net: null
+    profiles:
+      - idol
+    restart: unless-stopped
+    volumes:
+      - source: ai_idol_storage
+        target: /app/storage
+        type: volume
+        volume: {}
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./ai-idol-service/assets/music
+        target: /app/assets/music
+        type: bind
+  ai-idol-broadcast-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-idol
+    command:
+      - celery
+      - -A
+      - celery_app:celery_app
+      - worker
+      - --loglevel=INFO
+      - --concurrency=2
+      - --queues=broadcast
+    container_name: skinsyntax-ai-idol-broadcast
+    depends_on:
+      chromadb:
+        condition: service_healthy
+        required: true
+      mongodb:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - AI_IDOL_AGENT_ALLOW_AUTO_PUBLISH=false
+      - AI_IDOL_AGENT_ENABLED=true
+      - AI_IDOL_AVATAR_SERVICE_URL=http://host.docker.internal:7861
+      - AI_IDOL_CATALOG_EVENTS_REDIS_URL=redis://redis:6379/0
+      - AI_IDOL_CHROMA_HOST=chromadb
+      - AI_IDOL_CHROMA_PORT=8000
+      - AI_IDOL_INTERNAL_TOKEN=${AI_IDOL_INTERNAL_TOKEN:-}
+      - AI_IDOL_REDIS_URL=redis://redis:6379/2
+      - AI_IDOL_SCRIPT_COUNCIL_ENABLED=true
+      - AI_IDOL_SCRIPT_COUNCIL_URL=http://ai-idol-agent-service:5013
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=mongodb://mongodb:27017
+      - SYNA_RENDER_URL=http://host.docker.internal:7862
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - VALKEY_URL=redis://redis:6379/0
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    image: skinsyntax-ai-idol:local
+    networks:
+      skinsyntax-net: null
+      skinsyntax-ai-egress:
+        gw_priority: 1
+    profiles:
+      - idol
+    restart: unless-stopped
+    volumes:
+      - source: ai_idol_storage
+        target: /app/storage
+        type: volume
+        volume: {}
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./ai-idol-service/assets/music
+        target: /app/assets/music
+        type: bind
+      - type: bind
+        source: ./ai-idol-service
+        target: /app
+        read_only: true
+  ai-idol-control-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-idol
+    command:
+      - celery
+      - -A
+      - celery_app:celery_app
+      - worker
+      - --loglevel=INFO
+      - --concurrency=2
+      - --queues=control,agent
+    container_name: skinsyntax-ai-idol-control
+    depends_on:
+      chromadb:
+        condition: service_healthy
+        required: true
+      mongodb:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - AI_IDOL_AGENT_ALLOW_AUTO_PUBLISH=false
+      - AI_IDOL_AGENT_ENABLED=true
+      - AI_IDOL_AVATAR_SERVICE_URL=http://host.docker.internal:7861
+      - AI_IDOL_CATALOG_EVENTS_REDIS_URL=redis://redis:6379/0
+      - AI_IDOL_CHROMA_HOST=chromadb
+      - AI_IDOL_CHROMA_PORT=8000
+      - AI_IDOL_INTERNAL_TOKEN=${AI_IDOL_INTERNAL_TOKEN:-}
+      - AI_IDOL_REDIS_URL=redis://redis:6379/2
+      - AI_IDOL_SCRIPT_COUNCIL_ENABLED=true
+      - AI_IDOL_SCRIPT_COUNCIL_URL=http://ai-idol-agent-service:5013
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=mongodb://mongodb:27017
+      - SYNA_RENDER_URL=http://host.docker.internal:7862
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - VALKEY_URL=redis://redis:6379/0
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    image: skinsyntax-ai-idol:local
+    networks:
+      skinsyntax-net: null
+      skinsyntax-ai-egress:
+        gw_priority: 1
+    profiles:
+      - idol
+    restart: unless-stopped
+    volumes:
+      - source: ai_idol_storage
+        target: /app/storage
+        type: volume
+        volume: {}
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./ai-idol-service/assets/music
+        target: /app/assets/music
+        type: bind
+      - type: bind
+        source: ./ai-idol-service
+        target: /app
+        read_only: true
+  ai-idol-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-idol
+    command:
+      - gunicorn
+      - --bind
+      - 0.0.0.0:5003
+      - --workers
+      - "1"
+      - --threads
+      - "4"
+      - --timeout
+      - "120"
+      - app:app
+    container_name: skinsyntax-ai-idol
+    depends_on:
+      chromadb:
+        condition: service_healthy
+        required: true
+      mongodb:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - AI_IDOL_AGENT_ALLOW_AUTO_PUBLISH=false
+      - AI_IDOL_AGENT_ENABLED=true
+      - AI_IDOL_AVATAR_SERVICE_URL=http://host.docker.internal:7861
+      - AI_IDOL_CATALOG_EVENTS_REDIS_URL=redis://redis:6379/0
+      - AI_IDOL_CHROMA_HOST=chromadb
+      - AI_IDOL_CHROMA_PORT=8000
+      - AI_IDOL_INTERNAL_TOKEN=${AI_IDOL_INTERNAL_TOKEN:-}
+      - AI_IDOL_REDIS_URL=redis://redis:6379/2
+      - AI_IDOL_SCRIPT_COUNCIL_ENABLED=true
+      - AI_IDOL_SCRIPT_COUNCIL_URL=http://ai-idol-agent-service:5013
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=mongodb://mongodb:27017
+      - SYNA_RENDER_URL=http://host.docker.internal:7862
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - VALKEY_URL=redis://redis:6379/0
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    healthcheck:
+      interval: 20s
+      retries: 5
+      start_period: 45s
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:5003/api/health
+      timeout: 8s
+    image: skinsyntax-ai-idol:local
+    networks:
+      skinsyntax-net: null
+      skinsyntax-ai-egress:
+        gw_priority: 1
+    restart: unless-stopped
+    volumes:
+      - source: ai_idol_storage
+        target: /app/storage
+        type: volume
+        volume: {}
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./ai-idol-service/assets/music
+        target: /app/assets/music
+        type: bind
+      - type: bind
+        source: ./ai-idol-service
+        target: /app
+        read_only: true
+  ai-idol-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-idol
+    command:
+      - celery
+      - -A
+      - celery_app:celery_app
+      - worker
+      - --loglevel=INFO
+      - --concurrency=1
+      - --queues=media,celery
+    container_name: skinsyntax-ai-idol-worker
+    depends_on:
+      chromadb:
+        condition: service_healthy
+        required: true
+      mongodb:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - AI_IDOL_AGENT_ALLOW_AUTO_PUBLISH=false
+      - AI_IDOL_AGENT_ENABLED=true
+      - AI_IDOL_AVATAR_SERVICE_URL=http://host.docker.internal:7861
+      - AI_IDOL_CATALOG_EVENTS_REDIS_URL=redis://redis:6379/0
+      - AI_IDOL_CHROMA_HOST=chromadb
+      - AI_IDOL_CHROMA_PORT=8000
+      - AI_IDOL_INTERNAL_TOKEN=${AI_IDOL_INTERNAL_TOKEN:-}
+      - AI_IDOL_REDIS_URL=redis://redis:6379/2
+      - AI_IDOL_SCRIPT_COUNCIL_ENABLED=true
+      - AI_IDOL_SCRIPT_COUNCIL_URL=http://ai-idol-agent-service:5013
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=mongodb://mongodb:27017
+      - SYNA_RENDER_URL=http://host.docker.internal:7862
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - VALKEY_URL=redis://redis:6379/0
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    image: skinsyntax-ai-idol:local
+    networks:
+      skinsyntax-net: null
+      skinsyntax-ai-egress:
+        gw_priority: 1
+    profiles:
+      - idol
+    restart: unless-stopped
+    volumes:
+      - source: ai_idol_storage
+        target: /app/storage
+        type: volume
+        volume: {}
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./ai-idol-service/assets/music
+        target: /app/assets/music
+        type: bind
+      - type: bind
+        source: ./ai-idol-service
+        target: /app
+        read_only: true
+  ai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai
+    container_name: skinsyntax-ai
+    depends_on:
+      chromadb:
+        condition: service_healthy
+        required: true
+      mongodb:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - CHATBOT_PORT=5001
+      - CHROMA_DB_PATH=/app/database/chroma_db
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - CSV_FILE_PATH=/app/database/data_clean_final.csv
+      - GUNICORN_THREADS=${GUNICORN_THREADS:-8}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
+      - GUNICORN_WORKER_CLASS=gthread
+      - HOME_GRAPH_CACHE_TTL=${HOME_GRAPH_CACHE_TTL:-600}
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=mongodb://mongodb:27017
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-}
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=${NEO4J_USER:-neo4j}
+      - PYTHONPATH=/app:/app/chatbot_service
+      - REDIS_CACHE_TTL=604800
+      - REDIS_URL=redis://redis:6379/0
+      - SEARCH_CO_PURCHASE_ENABLED=${SEARCH_CO_PURCHASE_ENABLED:-false}
+      - SEARCH_CTR_BOOST_ENABLED=${SEARCH_CTR_BOOST_ENABLED:-false}
+      - SEARCH_GRAPH_ENABLED=${SEARCH_GRAPH_ENABLED:-true}
+      - SEARCH_RERANK_ENABLED=${SEARCH_RERANK_ENABLED:-false}
+      - SESSION_CACHE_TTL=3600
+      - SYNA_GRAPH_TOOLS_ENABLED=${SYNA_GRAPH_TOOLS_ENABLED:-true}
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+      - VALKEY_URL=redis://redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      start_period: 60s
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:5001/api/health
+      timeout: 10s
+    networks:
+      skinsyntax-net: null
+      skinsyntax-ai-egress:
+        gw_priority: 1
+    restart: unless-stopped
+    volumes:
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./database
+        target: /app/database
+        type: bind
+      - bind:
+          create_host_path: true
+        source: ./ai-service-flask
+        target: /app
+        type: bind
+  catalog-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai
+    command:
+      - python
+      - -m
+      - workers.catalog_worker
+    container_name: skinsyntax-catalog-worker
+    depends_on:
+      chromadb:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - CATALOG_WORKER_HEARTBEAT=/tmp/catalog_worker.heartbeat
+      - CHROMA_DB_PATH=/app/database/chroma_db
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=mongodb://mongodb:27017
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-}
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=${NEO4J_USER:-neo4j}
+      - OPS_DICTIONARY_OUT=/export/search_dictionary.json
+      - OPS_REPORT_DIR=/reports/search-metrics
+      - PHP_INTERNAL_URL=http://nginx
+      - PYTHONPATH=/app:/app/chatbot_service
+      - REDIS_URL=redis://redis:6379/0
+      - SEARCH_CTR_BOOST_ENABLED=${SEARCH_CTR_BOOST_ENABLED:-false}
+      - SEARCH_GRAPH_ENABLED=${SEARCH_GRAPH_ENABLED:-true}
+      - SYNA_GRAPH_TOOLS_ENABLED=${SYNA_GRAPH_TOOLS_ENABLED:-true}
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+      - VALKEY_URL=redis://redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      start_period: 60s
+      test:
+        - CMD
+        - python
+        - -c
+        - import os,sys,time; sys.exit(0 if time.time()-os.path.getmtime('/tmp/catalog_worker.heartbeat')<90 else 1)
+      timeout: 10s
+    image: skinsyntax-ai-service:latest
+    mem_limit: 1536m
+    networks:
+      skinsyntax-net: null
+    profiles:
+      - catalog
+    restart: unless-stopped
+    volumes:
+      - bind:
+          create_host_path: true
+        source: ./ai-service-flask
+        target: /app
+        type: bind
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./database
+        target: /app/database
+        type: bind
+      - bind:
+          create_host_path: true
+        source: ./backend/app/data
+        target: /export
+        type: bind
+      - bind:
+          create_host_path: true
+        source: ./report/search-metrics
+        target: /reports/search-metrics
+        type: bind
+  chromadb:
+    container_name: skinsyntax-chromadb
+    environment:
+      ANONYMIZED_TELEMETRY: "FALSE"
+      IS_PERSISTENT: "TRUE"
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8000/api/v1/heartbeat
+      timeout: 5s
+    image: chromadb/chroma:0.5.20
+    networks:
+      skinsyntax-net: null
+    restart: unless-stopped
+    volumes:
+      - source: chroma_data
+        target: /chroma/chroma
+        type: volume
+        volume: {}
+  livekit-voice-agent:
+    build:
+      context: ./livekit-voice-agent
+      dockerfile: Dockerfile
+    container_name: skinsyntax-livekit-agent
+    depends_on:
+      ai-service:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_started
+        required: true
+      voice-service:
+        condition: service_healthy
+        required: true
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - AI_SERVICE_URL=http://ai-service:5001/api/chat/auto
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
+      - LIVEKIT_URL=${LIVEKIT_URL:-ws://localhost:7880}
+      - REDIS_URL=redis://redis:6379/0
+      - TTS_SERVICE_URL=http://voice-service:5002/api/tts/stream
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - MONGO_URI=mongodb://mongodb:27017
+      - VALKEY_URL=redis://redis:6379/0
+    networks:
+      skinsyntax-net: null
+    profiles:
+      - voice
+    restart: on-failure:5
+  mongodb:
+    container_name: skinsyntax-mongo
+    environment:
+      MONGO_INITDB_DATABASE: skinsyntax
+    healthcheck:
+      interval: 10s
+      retries: 5
+      start_period: 40s
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - localhost:27017/test
+        - --eval
+        - db.runCommand('ping').ok
+      timeout: 15s
+    image: mongo:7
+    networks:
+      skinsyntax-net: null
+    restart: unless-stopped
+    volumes:
+      - source: mongo_data
+        target: /data/db
+        type: volume
+        volume: {}
+  neo4j:
+    container_name: skinsyntax-neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 128m
+    healthcheck:
+      interval: 15s
+      retries: 10
+      start_period: 40s
+      test:
+        - CMD-SHELL
+        - cypher-shell -u "$${NEO4J_AUTH%%/*}" -p "$${NEO4J_AUTH#*/}" 'RETURN 1' >/dev/null 2>&1 || exit 1
+      timeout: 10s
+    image: neo4j:5.26-community
+    mem_limit: 1536m
+    networks:
+      skinsyntax-net: null
+    restart: unless-stopped
+    volumes:
+      - source: neo4j_data
+        target: /data
+        type: volume
+        volume: {}
+      - source: neo4j_logs
+        target: /logs
+        type: volume
+        volume: {}
+  nginx:
+    container_name: skinsyntax-nginx
+    depends_on:
+      php-backend:
+        condition: service_started
+        required: true
+    image: nginx:1.27-alpine
+    networks:
+      skinsyntax-net: null
+      skinsyntax-web: null
+    ports:
+      - 127.0.0.1:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}:80
+    restart: unless-stopped
+    volumes:
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./nginx/nginx.conf
+        target: /etc/nginx/nginx.conf
+        type: bind
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./frontend/public
+        target: /var/www/html/public
+        type: bind
+      - read_only: true
+        source: uploads_data
+        target: /var/www/html/public/uploads
+        type: volume
+        volume: {}
+  ngrok:
+    command:
+      - http
+      - --url
+      - ${NGROK_DOMAIN:-}
+      - --log
+      - stdout
+      - nginx:80
+    container_name: skinsyntax-ngrok
+    depends_on:
+      nginx:
+        condition: service_started
+        required: true
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    image: ngrok/ngrok:latest
+    networks:
+      skinsyntax-net: null
+    profiles:
+      - ngrok
+    restart: unless-stopped
+  php-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    container_name: skinsyntax-php
+    depends_on:
+      ai-idol-service:
+        condition: service_healthy
+        required: true
+      ai-service:
+        condition: service_started
+        required: true
+      mongodb:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - AI_AGENT_ENDPOINT=http://ai-service:5001/api/agent/chat
+      - AI_CHAT_ENDPOINT=http://ai-service:5001/api/chat/auto
+      - AI_CHAT_STREAM_ENDPOINT=http://ai-service:5001/api/chat/stream
+      - AI_CHAT_TIMEOUT=60
+      - AI_GOIY_SYNC_AI=${AI_GOIY_SYNC_AI:-0}
+      - AI_HYBRID_RECOMMENDATION_ENDPOINT=http://ai-service:5001/api/recommend/langchain-rag
+      - AI_HYBRID_RECOMMENDATION_TIMEOUT=30
+      - AI_IDOL_ENDPOINT=http://ai-idol-service:5003
+      - AI_LLAMA_INDEX_RECOMMENDATION_ENDPOINT=http://ai-service:5001/api/recommend/profile
+      - AI_RECOMMENDATION_ENDPOINT=http://ai-service:5001/api/recommend/explain
+      - AI_RECOMMENDATION_TIMEOUT=20
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - GOOGLE_OAUTH_REDIRECT_URI=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}/index.php?r=auth_social_callback&provider=google
+      - CACHE_DEFAULT_TTL=${CACHE_DEFAULT_TTL:-300}
+      - CACHE_DRIVER=redis
+      - 'CACHE_PREFIX=skinsyntax:atlas:'
+      - DB_MODE=atlas
+      - DOCKER_USE_ATLAS=1
+      - FRONTEND_ROOT=/var/www/frontend
+      - HOME_GRAPH_ENABLED=0
+      - HOME_RECOMMEND_ENDPOINT=http://ai-service:5001/api/home/recommend
+      - MAIL_DEMO_MODE=${MAIL_DEMO_MODE:-1}
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=${MONGO_URI:?Set MONGO_URI for Atlas in .env}
+      - REDIS_CACHE_TTL=604800
+      - REDIS_URL=redis://redis:6379/0
+      - SEARCH_BREAKER_REDIS_URL=redis://redis:6379/0
+      - SEARCH_RECOMMEND_ENDPOINT=http://ai-service:5001/api/search/recommend
+      - VALKEY_URL=redis://redis:6379/0
+      - SEARCH_EVENTS_ENABLED=0
+      - SEARCH_FALLBACK_ENABLED=0
+    networks:
+      skinsyntax-atlas: null
+      skinsyntax-net: null
+    restart: unless-stopped
+    volumes:
+      - bind:
+          create_host_path: true
+        source: ./backend
+        target: /var/www/html
+        type: bind
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./frontend
+        target: /var/www/frontend
+        type: bind
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./database
+        target: /var/www/database
+        type: bind
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./.env
+        target: /var/www/.env
+        type: bind
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./docker/php/zz-skinsyntax-fpm.conf
+        target: /usr/local/etc/php-fpm.d/zz-skinsyntax-fpm.conf
+        type: bind
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./docker/php/zz-skinsyntax-opcache.ini
+        target: /usr/local/etc/php/conf.d/zz-skinsyntax-opcache.ini
+        type: bind
+      - source: uploads_data
+        target: /var/www/html/public/uploads
+        type: volume
+        volume: {}
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./docker/php/local-mail.ini
+        target: /usr/local/etc/php/conf.d/zz-skinsyntax-local-mail.ini
+        type: bind
+      - bind:
+          create_host_path: true
+        read_only: true
+        source: ./docker/php/local-sendmail.php
+        target: /usr/local/lib/skinsyntax/local-sendmail.php
+        type: bind
+  redis:
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+    container_name: skinsyntax-redis
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      timeout: 5s
+    image: redis:7-alpine
+    networks:
+      skinsyntax-net: null
+    restart: unless-stopped
+    volumes:
+      - source: redis_data
+        target: /data
+        type: volume
+        volume: {}
+  search-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai
+    command:
+      - python
+      - -m
+      - workers.search_events_flusher
+    container_name: skinsyntax-search-worker
+    depends_on:
+      redis:
+        condition: service_healthy
+        required: true
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      - MONGO_DB=${MONGO_DB:-skinsyntax}
+      - MONGO_DB_NAME=${MONGO_DB_NAME:-skinsyntax}
+      - MONGO_URI=mongodb://mongodb:27017
+      - PYTHONPATH=/app:/app/chatbot_service
+      - REDIS_URL=redis://redis:6379/0
+      - SEARCH_WORKER_HEARTBEAT=/tmp/search_worker.heartbeat
+      - APP_URL=http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+      - CACHE_DRIVER=redis
+      - DB_MODE=local
+      - DOCKER_USE_ATLAS=0
+      - VALKEY_URL=redis://redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      test:
+        - CMD
+        - python
+        - -c
+        - import os,sys,time; sys.exit(0 if time.time()-os.path.getmtime('/tmp/search_worker.heartbeat')<60 else 1)
+      timeout: 10s
+    image: skinsyntax-ai-service:latest
+    mem_limit: 256m
+    networks:
+      skinsyntax-net: null
+    restart: unless-stopped
+    volumes:
+      - bind:
+          create_host_path: true
+        source: ./ai-service-flask
+        target: /app
+        type: bind
+  tunnel:
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://nginx:80
+    container_name: skinsyntax-tunnel
+    depends_on:
+      nginx:
+        condition: service_started
+        required: true
+    image: cloudflare/cloudflared:latest
+    networks:
+      skinsyntax-net: null
+    profiles:
+      - tunnel
+    restart: unless-stopped
+  voice-service:
+    build:
+      context: ./voice-service
+      dockerfile: Dockerfile
+    container_name: skinsyntax-voice
+    environment:
+      NUM_THREADS: "4"
+      PRECISION: int8
+      TTS_PORT: "5002"
+    healthcheck:
+      interval: 30s
+      retries: 3
+      start_period: 300s
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - http://localhost:5002/api/health
+      timeout: 10s
+    networks:
+      skinsyntax-net: null
+    profiles:
+      - voice
+    restart: unless-stopped
+    volumes:
+      - source: vieneu_model_cache
+        target: /root/.cache/huggingface
+        type: volume
+        volume: {}
+volumes: !override
+  ai_idol_storage:
+    name: skinsyntax-ai-idol-storage
+  chroma_data:
+    name: skinsyntax-chroma-data
+  mongo_data:
+    name: skinsyntax-mongo-data
+  neo4j_data:
+    name: skinsyntax-neo4j-data
+  neo4j_logs:
+    name: skinsyntax-neo4j-logs
+  redis_data:
+    name: skinsyntax-redis-data
+  uploads_data:
+    name: skinsyntax-uploads
+  vieneu_model_cache:
+    name: skinsyntax-vieneu-model-cache
+x-ai-idol-common:
+  build:
+    context: .
+    dockerfile: Dockerfile.ai-idol
+  depends_on:
+    chromadb:
+      condition: service_healthy
+    mongodb:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  dns:
+    - 1.1.1.1
+    - 8.8.8.8
+  env_file:
+    - .env
+  environment:
+    AI_IDOL_AGENT_ALLOW_AUTO_PUBLISH: "false"
+    AI_IDOL_AGENT_ENABLED: "true"
+    AI_IDOL_AVATAR_SERVICE_URL: http://host.docker.internal:7861
+    AI_IDOL_CATALOG_EVENTS_REDIS_URL: redis://redis:6379/0
+    AI_IDOL_CHROMA_HOST: chromadb
+    AI_IDOL_CHROMA_PORT: "8000"
+    AI_IDOL_INTERNAL_TOKEN: ${AI_IDOL_INTERNAL_TOKEN:-}
+    AI_IDOL_REDIS_URL: redis://redis:6379/2
+    AI_IDOL_SCRIPT_COUNCIL_ENABLED: "true"
+    AI_IDOL_SCRIPT_COUNCIL_URL: http://ai-idol-agent-service:5013
+    MONGO_DB: ${MONGO_DB:-skinsyntax}
+    MONGO_DB_NAME: ${MONGO_DB_NAME:-skinsyntax}
+    MONGO_URI: ${MONGO_URI}
+    SYNA_RENDER_URL: http://host.docker.internal:7862
+  extra_hosts:
+    - host.docker.internal:host-gateway
+  image: skinsyntax-ai-idol:local
+  networks:
+    - skinsyntax-net
+  restart: unless-stopped
+  volumes:
+    - ai_idol_storage:/app/storage
+    - ./ai-idol-service/assets/music:/app/assets/music:ro
+x-local-data:
+  APP_URL: http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+  CACHE_DRIVER: redis
+  DB_MODE: local
+  DOCKER_USE_ATLAS: "0"
+  MONGO_URI: mongodb://mongodb:27017
+  VALKEY_URL: redis://redis:6379/0
+x-offline-ai:
+  APP_URL: http://localhost:${SKINSYNTAX_LOCAL_WEB_PORT:-8080}
+  CACHE_DRIVER: redis
+  DB_MODE: local
+  DOCKER_USE_ATLAS: "0"
+  HF_HUB_OFFLINE: "1"
+  MONGO_URI: mongodb://mongodb:27017
+  TRANSFORMERS_OFFLINE: "1"
+  VALKEY_URL: redis://redis:6379/0

@@ -47,16 +47,15 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
 <div class="container-fluid px-4 py-4">
     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
-            <h1 class="h4 fw-bold mb-1" style="color: var(--admin-text);">Xử lý phản hồi Đánh giá sản phẩm</h1>
-            <p class="text-muted mb-0 small">Ưu tiên phản hồi các đánh giá sao thấp, thắc mắc khách hàng và nhận xét mới nhất.</p>
+            <h1 class="h4 fw-bold mb-0" style="color: var(--admin-text);">Đánh giá sản phẩm</h1>
         </div>
     </div>
 
     <div class="admin-card mb-3 p-3" style="border-radius: 8px !important;">
         <form class="row g-2" method="get" action="index.php" data-live-filter="true" data-live-target="#reviewList" data-live-also="#reviewDetail">
             <input type="hidden" name="r" value="staff_reviews">
-            <div class="col-lg-3 col-md-6">
-                <input type="text" class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Mã đánh giá, mã SP, tên SP..." style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+            <div class="col-lg-4 col-md-6">
+                <input type="text" class="form-control" name="q" autocomplete="off" value="<?= h($q) ?>" placeholder="Tìm đánh giá hoặc sản phẩm" aria-label="Tìm đánh giá" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
             </div>
             <div class="col-lg-2 col-md-3">
                 <select class="form-select" name="so_sao" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
@@ -68,17 +67,15 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
             </div>
             <div class="col-lg-2 col-md-3">
                 <select class="form-select" name="trang_thai_phan_hoi" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
-                    <option value="">Trạng thái phản hồi</option>
+                    <option value="">Tất cả phản hồi</option>
                     <option value="chua_phan_hoi" <?= $trangThaiPhanHoi === 'chua_phan_hoi' ? 'selected' : '' ?>>Chưa phản hồi</option>
                     <option value="da_phan_hoi" <?= $trangThaiPhanHoi === 'da_phan_hoi' ? 'selected' : '' ?>>Đã phản hồi</option>
                 </select>
             </div>
-            <div class="col-lg-2 col-md-4">
-                <input type="text" class="form-control" name="ma_van_don" autocomplete="off" value="<?= h($maVanDon) ?>" placeholder="Mã đơn hàng" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
-            </div>
-            <div class="col-lg-3 col-md-8 d-flex gap-2">
-                <button type="submit" class="btn text-white fw-semibold w-100" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">Lọc đánh giá</button>
-                <a href="index.php?r=staff_reviews" class="btn btn-outline-secondary fw-semibold text-nowrap" style="border-radius: 6px; font-size: 0.85rem;">Xóa lọc</a>
+            <div class="col-lg-4 col-md-4 d-flex gap-2">
+                <input type="text" class="form-control" name="ma_van_don" autocomplete="off" value="<?= h($maVanDon) ?>" placeholder="Mã đơn" aria-label="Mã đơn hàng" style="border-radius: 6px; border-color: var(--admin-border); font-size: 0.85rem;">
+                <button type="submit" class="btn text-white fw-semibold px-3" style="background: #183B2B; border-radius: 6px; font-size: 0.85rem;">Lọc</button>
+                <a href="index.php?r=staff_reviews" class="btn btn-outline-secondary text-nowrap px-3" style="border-radius: 6px; font-size: 0.85rem;">Đặt lại</a>
             </div>
         </form>
     </div>
@@ -88,8 +85,8 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
         <div class="col-xl-5 live-region" id="reviewList" aria-live="polite">
             <div class="admin-card p-0 overflow-hidden mb-0" style="border-radius: 8px !important;">
                 <div class="p-3 border-bottom background-subtle d-flex align-items-center justify-content-between">
-                    <h6 class="fw-bold mb-0" style="color: var(--admin-text);">Danh sách đánh giá</h6>
-                    <span class="badge bg-secondary-subtle text-secondary px-2 py-0.5" style="border-radius: 4px; font-size: 0.75rem;"><?= count($reviews) ?> đánh giá</span>
+                    <h6 class="fw-bold mb-0" style="color: var(--admin-text);">Đánh giá</h6>
+                    <span class="badge bg-secondary-subtle text-secondary px-2 py-0.5" style="border-radius: 4px; font-size: 0.75rem;"><?= count($reviews) ?></span>
                 </div>
                 <div class="card-body p-0">
                     <?php if (empty($reviews)): ?>
@@ -133,7 +130,7 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
                     <div class="text-center text-muted py-5 d-flex flex-column align-items-center justify-content-center">
                         <i class="bi bi-star-half fs-1 text-muted mb-2 opacity-50"></i>
                         <h6 class="fw-bold mb-1">Chưa chọn đánh giá nào</h6>
-                        <p class="small text-muted mb-0">Bấm một đánh giá từ danh sách bên trái để xem nội dung và viết phản hồi.</p>
+                        <p class="small text-muted mb-0">Chọn một đánh giá ở bên trái để xem và trả lời.</p>
                     </div>
                 <?php else: ?>
                     <?php $selectedProductId = (string)($selectedReview['ma_san_pham'] ?? ''); $productUrl = $selectedProductId !== '' ? 'index.php?r=chitiet&id=' . rawurlencode($selectedProductId) : '#'; ?>
@@ -166,13 +163,13 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
                         </div>
 
                         <div class="mb-3 p-3 bg-light rounded-3 border">
-                            <div class="fw-semibold mb-1">Nội dung đánh giá</div>
+                            <div class="fw-semibold mb-1">Nội dung</div>
                             <div><?= nl2br_safe((string)($selectedReview['noi_dung'] ?? '')) ?></div>
                         </div>
 
                         <?php if (!empty($selectedReview['phan_hoi'])): ?>
                             <div class="mb-3 p-3 border rounded-3 bg-white">
-                                <div class="fw-semibold mb-1">Phản hồi đã gửi</div>
+                                <div class="fw-semibold mb-1">Phản hồi</div>
                                 <div><?= nl2br_safe((string)($selectedReview['phan_hoi'] ?? '')) ?></div>
                                 <div class="small text-muted mt-2">Nhân viên: <?= h((string)($selectedReview['ten_nhan_vien_phan_hoi'] ?? 'N/A')) ?></div>
                             </div>
@@ -183,12 +180,12 @@ $returnQueryString = http_build_query(array_filter($returnQuery, static fn($v) =
                             <input type="hidden" name="row_ref" value="<?= h((string)($selectedReview['_source'] ?? 'danh_gia_san_pham')) ?>">
                             <input type="hidden" name="return_query" value="<?= h($returnQueryString) ?>">
                             <div class="col-12">
-                                <label class="form-label fw-semibold"><?= !empty($selectedReview['phan_hoi']) ? 'Cập nhật phản hồi' : 'Phản hồi đánh giá' ?></label>
-                                <textarea class="form-control" name="phan_hoi" rows="4" placeholder="Nhập nội dung phản hồi..." required data-word-limit="1000"></textarea>
+                                <label class="form-label fw-semibold" for="reviewReply"><?= !empty($selectedReview['phan_hoi']) ? 'Sửa phản hồi' : 'Viết phản hồi' ?></label>
+                                <textarea class="form-control" id="reviewReply" name="phan_hoi" rows="4" placeholder="Nhập phản hồi" required data-word-limit="1000"></textarea>
                                 <div class="form-text" data-word-counter>Số từ: 0/1000</div>
                             </div>
                             <div class="col-md-4 d-grid">
-                                <button type="submit" class="btn btn-primary" data-reply-submit>Gửi phản hồi</button>
+                                <button type="submit" class="btn btn-primary" data-reply-submit><?= !empty($selectedReview['phan_hoi']) ? 'Lưu thay đổi' : 'Gửi phản hồi' ?></button>
                             </div>
                         </form>
                     <?php endif; ?>

@@ -26,7 +26,7 @@ $ptWatchUrl = $featuredProductId !== null
   <section class="pt-hero">
     <div class="pt-wrap">
       <h1>Phần thưởng</h1>
-      <p>Xem video Syna, nhận xu đổi ưu đãi</p>
+      <p>Đánh giá sản phẩm, xem video Syna và nhận xu</p>
     </div>
   </section>
 
@@ -40,9 +40,10 @@ $ptWatchUrl = $featuredProductId !== null
         <h2>Thể lệ nhận xu</h2>
         <ul class="pt-rules">
           <li>Xem video sản phẩm để nhận xu cho từng video.</li>
+          <li>Đánh giá sản phẩm từ đơn đã hoàn thành để nhận 100 xu.</li>
           <li>Xem ít nhất 1 phút mỗi ngày để điểm danh, chuỗi 7 ngày có quà lớn.</li>
           <li>Xem đủ 5, 15 và 30 phút trong ngày để mở hộp quà.</li>
-          <li>Tối đa 300 xu mỗi ngày. 100 xu = 1 điểm = 1.000đ khi thanh toán.</li>
+          <li>Tổng xu thưởng trong ngày tối đa 300 xu.</li>
         </ul>
         <a href="#" class="pt-btn pt-btn--gold" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">Đăng nhập để nhận xu</a>
       </section>
@@ -55,7 +56,7 @@ $ptWatchUrl = $featuredProductId !== null
         <div class="pt-balance__sub" id="ptBalanceSub"></div>
         <div class="pt-balance__cap" id="ptCap" hidden></div>
         <div class="pt-balance__avail" id="ptAvail"></div>
-        <a class="pt-btn pt-btn--green" href="<?= h(BASE_URL . '/index.php?r=giohang') ?>">Dùng khi thanh toán</a>
+        <a class="pt-btn pt-btn--green" href="<?= h(BASE_URL . '/index.php?r=giohang') ?>">Dùng điểm khi thanh toán</a>
       </section>
 
       <section class="pt-card" aria-labelledby="ptCheckinTitle">

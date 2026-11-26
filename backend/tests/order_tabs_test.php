@@ -29,7 +29,7 @@ $order = static fn(string $status, ?string $normalized, string $method, string $
 // Phân loại tab
 $cases = [
     'không dấu, thiếu normalized → Hoàn thành' => [$order('Hoan thanh', null, 'cod', 'Chua thanh toan'), 'hoan_thanh'],
-    'hoàn thành QR dù còn ghi chờ chuyển khoản' => [$order('Hoan thanh', null, 'bank_transfer_qr', 'Cho chuyen khoan'), 'hoan_thanh'],
+    'QR chưa trả không được coi là hoàn thành' => [$order('Hoan thanh', null, 'bank_transfer_qr', 'Cho chuyen khoan'), 'cho_thanh_toan'],
     'QR chờ xử lý + chờ chuyển khoản → Chờ thanh toán' => [$order('Chờ xử lý', 'pending', 'bank_transfer_qr', 'Chờ chuyển khoản'), 'cho_thanh_toan'],
     'QR đã xác nhận nhưng chưa trả → Chờ thanh toán' => [$order('Đã xác nhận', 'confirmed', 'bank_transfer_qr', 'Chờ chuyển khoản'), 'cho_thanh_toan'],
     'VNPAY chờ xử lý + chờ thanh toán → Chờ thanh toán' => [$order('Chờ xử lý', 'pending', 'vnpay', 'Chờ thanh toán VNPAY', ['payment_status' => 'pending']), 'cho_thanh_toan'],

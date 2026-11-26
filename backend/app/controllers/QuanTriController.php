@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/Voucher.php';
 require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../models/HoiDap.php';
 require_once __DIR__ . '/../models/FlashSaleCampaign.php';
+require_once __DIR__ . '/../services/LiveKitEgressService.php';
 
 class QuanTriController {
     private  $pdo;
@@ -45,6 +46,39 @@ class QuanTriController {
         echo '<div class="container py-5"><div class="alert alert-danger">Bạn không có quyền truy cập chức năng này.</div></div>';
         require $viewDir . '/layouts/footer.php';
         exit;
+    }
+
+    private function recordingPlaybackUrl(string $liveId): string {
+        $secret = function_exists('ss_env') ? ss_env('LIVE_RECORDING_PLAYBACK_SECRET', '') : (getenv('LIVE_RECORDING_PLAYBACK_SECRET') ?: '');
+        if (trim((string)$secret) === '') $secret = function_exists('ss_env') ? ss_env('LIVEKIT_API_SECRET', '') : (getenv('LIVEKIT_API_SECRET') ?: '');
+        $expires = time() + 3600;
+        $signature = hash_hmac('sha256', $liveId . '|' . $expires, trim((string)$secret));
+        return rtrim(BASE_URL, '/') . '/index.php?r=api_live_recording&id=' . rawurlencode($liveId)
+            . '&exp=' . $expires . '&sig=' . rawurlencode($signature);
+    }
+
+    private function verifiedRecordingForAdmin(array $live): array {
+        if (($live['recording_status'] ?? '') !== 'replay_ready') return ['available' => false, 'url' => ''];
+        $root = rtrim((string)($_SERVER['DOCUMENT_ROOT'] ?? ''), '/\\');
+        $relative = trim((string)($live['recording_file_path'] ?? ''));
+        if (($live['recording_storage'] ?? '') === 'local' && preg_match('~^uploads/live_recordings/([A-Za-z0-9_-]+\.(?:webm|mp4|ogv))$~i', $relative, $m)) {
+            $path = $root . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'live_recordings' . DIRECTORY_SEPARATOR . $m[1];
+            $mime = function_exists('mime_content_type') ? strtolower((string)@mime_content_type($path)) : '';
+            if (is_file($path) && (int)@filesize($path) > 0 && in_array($mime, ['video/mp4', 'video/webm', 'video/ogg'], true)) {
+                return ['available' => true, 'url' => $this->recordingPlaybackUrl((string)$live['id'])];
+            }
+            return ['available' => false, 'url' => ''];
+        }
+        if ($relative === '') {
+            $legacyPath = parse_url(trim((string)($live['url_ban_ghi'] ?? '')), PHP_URL_PATH);
+            $relative = is_string($legacyPath) ? ltrim($legacyPath, '/') : '';
+        }
+        $id = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string)($live['id'] ?? ''));
+        if ($id === '' || !preg_match('~^live-recordings/live_' . preg_quote(trim($id, '_'), '~') . '_[A-Za-z0-9_-]+\.mp4$~', $relative)) return ['available' => false, 'url' => ''];
+        $check = (new LiveKitEgressService())->verifyObject($relative);
+        return !empty($check['ok'])
+            ? ['available' => true, 'url' => $this->recordingPlaybackUrl((string)$live['id'])]
+            : ['available' => false, 'url' => ''];
     }
 
     private function requireRole(array $roles): array {
@@ -254,6 +288,9 @@ class QuanTriController {
 
         $summary = $this->model->getDashboardSummary();
         $dashboardFilters = $this->parseDashboardDateFilters();
+        $dashboardOperations = $this->model->getDashboardOperations(24);
+        $dashboardOperations['support_pending'] = (int)($summary['chat_cho_tra_loi'] ?? 0)
+            + (int)($summary['hoi_dap_cho_tra_loi'] ?? 0);
         $this->renderAdmin('dashboard', [
             'tongSP' => (int)($summary['tong_san_pham'] ?? 0),
             'tongUser' => (int)($summary['tong_khach_hang'] ?? 0),
@@ -265,6 +302,8 @@ class QuanTriController {
             'summary' => $summary,
             'salesTrend' => $this->model->getDailySalesTrend($dashboardFilters['start_date'], $dashboardFilters['end_date']),
             'productStatusSummary' => $this->model->getProductStatusSummary(),
+            'dashboardOperations' => $dashboardOperations,
+            'topProducts' => $this->model->getTopProductsByRevenue(5, $dashboardFilters['start_date'], $dashboardFilters['end_date']),
             'dashboardStartDate' => $dashboardFilters['start_date'],
             'dashboardEndDate' => $dashboardFilters['end_date'],
             'dashboardError' => $dashboardFilters['error'],
@@ -523,7 +562,10 @@ class QuanTriController {
 
         $id = max(0, (int)($_POST['ma_kh'] ?? 0));
         $ok = $this->model->saveCustomer($_POST, $id > 0 ? $id : null);
-        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu thông tin khách hàng.' : 'Không thể lưu khách hàng.');
+        $errorMessage = method_exists($this->model, 'getLastErrorMessage')
+            ? ((string)($this->model->getLastErrorMessage() ?? '') ?: 'Không thể lưu khách hàng.')
+            : 'Không thể lưu khách hàng.';
+        set_flash($ok ? 'success' : 'error', $ok ? 'Đã lưu khách hàng.' : $errorMessage);
         redirect(BASE_URL . '/index.php?r=admin_users');
     }
 
@@ -1778,6 +1820,9 @@ class QuanTriController {
             $live['tong_doanh_thu'] = (float)($live['tong_doanh_thu'] ?? 0);
             $live['tong_don_hang'] = (int)($live['tong_don_hang'] ?? 0);
             $live['tong_san_pham_ban'] = (int)($live['tong_san_pham_ban'] ?? 0);
+            $recordingCheck = $this->verifiedRecordingForAdmin($live);
+            $live['recording_available'] = $recordingCheck['available'];
+            $live['recording_url'] = $recordingCheck['url'];
             if (isset($live['created_at']) && $live['created_at'] instanceof \MongoDB\BSON\UTCDateTime) {
                 $live['created_at'] = $live['created_at']->toDateTime()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('Y-m-d H:i:s');
             } elseif (isset($live['created_at'])) {
@@ -1790,38 +1835,95 @@ class QuanTriController {
             'pageTitle' => 'Quản lý phiên phát trực tiếp & ưu đãi',
             'user' => $user,
             'lives' => $lives,
-            'allProducts' => $allProducts
+            'allProducts' => $allProducts,
+            'staffMembers' => method_exists($this->model, 'listStaff') ? $this->model->listStaff('') : []
         ]);
     }
 
-    public function adminLiveCreate(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
+    private function uploadLiveThumbnail(): ?string {
+        $file = $_FILES['thumbnail_file'] ?? null;
+        if (!is_array($file) || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return null;
+        $uploadError = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            $message = match ($uploadError) {
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ảnh bìa vượt quá giới hạn tải lên của máy chủ. Hãy chọn ảnh nhỏ hơn 5 MB.',
+                UPLOAD_ERR_PARTIAL => 'Ảnh bìa tải lên chưa hoàn tất. Hãy thử lại.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Máy chủ chưa cấu hình thư mục nhận ảnh tải lên.',
+                UPLOAD_ERR_CANT_WRITE => 'Máy chủ không lưu được ảnh bìa. Hãy kiểm tra quyền ghi thư mục uploads.',
+                UPLOAD_ERR_EXTENSION => 'Máy chủ đã chặn ảnh bìa tải lên.',
+                default => 'Không nhận được ảnh bìa. Hãy chọn lại tệp ảnh.',
+            };
+            throw new RuntimeException($message);
         }
+        if ((int)($file['size'] ?? 0) < 1 || (int)($file['size'] ?? 0) > 5 * 1024 * 1024 ||
+            !is_uploaded_file((string)($file['tmp_name'] ?? ''))) {
+            throw new RuntimeException('Ảnh bìa không hợp lệ hoặc vượt quá 5 MB. Hãy chọn JPG, PNG hoặc WebP.');
+        }
+        $mime = strtolower((string)@mime_content_type((string)$file['tmp_name']));
+        $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!isset($extensions[$mime])) throw new RuntimeException('Ảnh bìa chỉ hỗ trợ JPG, PNG hoặc WebP.');
+        $dir = dirname(__DIR__, 2) . '/public/uploads/live_thumbnails';
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) throw new RuntimeException('Không tạo được thư mục ảnh bìa.');
+        $name = bin2hex(random_bytes(16)) . '.' . $extensions[$mime];
+        if (!move_uploaded_file((string)$file['tmp_name'], $dir . '/' . $name)) throw new RuntimeException('Không lưu được ảnh bìa.');
+        return BASE_URL . '/uploads/live_thumbnails/' . $name;
+    }
+
+    private function requireLiveAdminPost(): void {
+        $this->requireRole(['admin']);
+        $token = (string)($_SESSION['live_csrf'] ?? '');
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $token === '' ||
+            !hash_equals($token, (string)($_POST['csrf'] ?? ''))) $this->denyAccess();
+    }
+
+    public function adminLiveCreate(): void {
+        $this->requireLiveAdminPost();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/../models/PhienLive.php';
             $phienLiveModel = new PhienLive($this->pdo);
-            $ok = $phienLiveModel->taoPhienLive($_POST);
-            set_flash($ok ? 'success' : 'error', $ok ? 'Đã tạo phiên LiveStream mới thành công!' : 'Không thể tạo phiên LiveStream.');
+            $payload = $_POST;
+            $failureMessage = 'Không thể lưu phiên live. Hãy kiểm tra tiêu đề và kết nối dữ liệu rồi thử lại.';
+            try {
+                if (trim((string)($payload['tieu_de'] ?? '')) === '') {
+                    throw new RuntimeException('Vui lòng nhập tiêu đề cho phiên live.');
+                }
+                $uploadedThumbnail = $this->uploadLiveThumbnail();
+                if ($uploadedThumbnail !== null) $payload['thumbnail'] = $uploadedThumbnail;
+                $newId = $phienLiveModel->taoPhienLive($payload);
+                if (!$newId && $uploadedThumbnail !== null && !empty($payload['thumbnail'])) {
+                    $failureMessage = 'Ảnh bìa đã tải lên nhưng phiên chưa được lưu. Hãy kiểm tra kết nối dữ liệu rồi thử lại.';
+                }
+            } catch (Throwable $e) {
+                $newId = false;
+                $failureMessage = $e->getMessage();
+            }
+            if ($newId) {
+                set_flash('success', 'Đã tạo phiên LiveStream mới thành công!');
+                if (($_POST['action'] ?? '') === 'create_and_studio') {
+                    redirect(BASE_URL . '/index.php?r=live_studio&id=' . urlencode((string)$newId));
+                    return;
+                }
+            } else {
+                set_flash('error', $failureMessage);
+            }
         }
 
         redirect(BASE_URL . '/index.php?r=admin_lives');
     }
 
     public function adminLiveEdit(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = trim((string)($_POST['live_id'] ?? $_POST['id'] ?? ''));
             if ($id !== '') {
                 require_once __DIR__ . '/../models/PhienLive.php';
                 $phienLiveModel = new PhienLive($this->pdo);
-                $ok = $phienLiveModel->capNhatPhienLive($id, $_POST);
+                $fields = array_intersect_key($_POST, array_flip(['tieu_de', 'streamer', 'khung_gio_bat_dau',
+                    'khung_gio_ket_thuc', 'ma_san_pham_ghim', 'gia_uu_dai_live', 'so_luong_kho_deal', 'server_livekit_url',
+                    'url_ban_ghi', 'tom_tat_phien_live']));
+                $ok = $phienLiveModel->capNhatPhienLive($id, $fields);
                 set_flash($ok ? 'success' : 'error', $ok ? "Đã cập nhật thông tin phiên LiveStream #{$id} thành công!" : "Không thể cập nhật phiên LiveStream #{$id}.");
             }
         }
@@ -1831,14 +1933,12 @@ class QuanTriController {
     }
 
     public function adminLiveStatus(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
-        $id = trim((string)($_GET['id'] ?? $_POST['id'] ?? ''));
-        $status = trim((string)($_GET['status'] ?? $_POST['status'] ?? 'danglive'));
-        $next = trim((string)($_GET['next'] ?? $_POST['next'] ?? ''));
+        $id = trim((string)($_POST['id'] ?? ''));
+        $status = trim((string)($_POST['status'] ?? 'danglive'));
+        $next = trim((string)($_POST['next'] ?? ''));
+        if ($status === 'live') $status = 'danglive';
 
         if ($id !== '') {
             require_once __DIR__ . '/../models/PhienLive.php';
@@ -1871,12 +1971,9 @@ class QuanTriController {
     }
 
     public function adminLiveDelete(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
-        $id = trim((string)($_GET['id'] ?? ''));
+        $id = trim((string)($_POST['id'] ?? ''));
         if ($id !== '') {
             require_once __DIR__ . '/../models/PhienLive.php';
             $phienLiveModel = new PhienLive($this->pdo);
@@ -1888,10 +1985,7 @@ class QuanTriController {
     }
 
     public function adminLiveUpdateRecording(): void {
-        $user = $this->requireRole(['admin', 'nhanvien']);
-        if (!user_can_access_route('admin_lives')) {
-            $this->denyAccess();
-        }
+        $this->requireLiveAdminPost();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = trim((string)($_POST['live_id'] ?? ''));

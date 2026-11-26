@@ -182,46 +182,67 @@ $formattedBudget = $currentBudgetValue > 0
   ? number_format($currentBudgetValue, 0, ',', '.') . 'đ'
   : 'Chưa có dữ liệu';
 
-$vipThreshold = 500;
-$diamondThreshold = 1500;
-$currentPoints = max(0, (int)($khachHang['diemtl'] ?? 0));
-$currentTier = trim((string)($khachHang['loaikh'] ?? 'Thuong')) ?: 'Thuong';
-$tierLabelMap = [
-  'thuong' => 'Thường',
-  'vip' => 'VIP',
-  'kim cuong' => 'Kim Cương',
-  'kim cương' => 'Kim Cương',
-];
-$normalizedTierKey = function_exists('mb_strtolower') ? mb_strtolower($currentTier, 'UTF-8') : strtolower($currentTier);
-$displayTier = $tierLabelMap[$normalizedTierKey] ?? $currentTier;
-$pointsToVip = max(0, $vipThreshold - $currentPoints);
-$pointsToDiamond = max(0, $diamondThreshold - $currentPoints);
-$loyaltyHint = 'Bạn đã ở hạng Thường.';
-$loyaltyProgressPercent = 0;
-$loyaltyProgressLabel = '';
-$loyaltyProgressHint = '';
-$nextTierLabel = '';
+$completedOrderSpend = max(0, (int)($completedOrderSpend ?? 0));
+$completedOrderCount = max(0, (int)($completedOrderCount ?? 0));
+$xuBalance = max(0, (int)($xuBalance ?? 0));
+$vipSpendThreshold = 2000000;
+$vipOrderThreshold = 3;
+$diamondSpendThreshold = 10000000;
+$diamondOrderThreshold = 10;
+$displayTier = 'Thường';
+$nextTierLabel = 'VIP';
+$targetSpend = $vipSpendThreshold;
+$targetOrders = $vipOrderThreshold;
+$tierBenefit = 'Tích lũy chi tiêu và đơn hoàn thành để mở ưu đãi thành viên.';
+$tierBenefitPolicy = 'Ưu đãi được mở khi bạn đạt đồng thời cả hai điều kiện.';
 
-if ($currentPoints >= $diamondThreshold) {
-  $loyaltyHint = 'Bạn đang ở hạng Kim Cương, đây là hạng thành viên cao nhất hiện tại.';
-  $loyaltyProgressPercent = 100;
-  $loyaltyProgressLabel = number_format($diamondThreshold, 0, ',', '.') . ' / ' . number_format($diamondThreshold, 0, ',', '.') . ' điểm';
-  $loyaltyProgressHint = 'Đã mở khóa toàn bộ quyền lợi hạng thành viên hiện tại.';
-} elseif ($currentPoints >= $vipThreshold) {
-  $loyaltyHint = 'Bạn đang ở hạng VIP. Cần thêm ' . number_format($pointsToDiamond, 0, ',', '.') . ' điểm để lên Kim Cương.';
-  $loyaltyProgressPercent = (($currentPoints - $vipThreshold) / max(1, $diamondThreshold - $vipThreshold)) * 100;
-  $loyaltyProgressLabel = number_format($currentPoints, 0, ',', '.') . ' / ' . number_format($diamondThreshold, 0, ',', '.') . ' điểm';
-  $loyaltyProgressHint = 'Còn ' . number_format($pointsToDiamond, 0, ',', '.') . ' điểm để lên Kim Cương.';
+if ($completedOrderSpend >= $diamondSpendThreshold && $completedOrderCount >= $diamondOrderThreshold) {
+  $displayTier = 'Kim Cương';
+  $nextTierLabel = '';
+  $targetSpend = $diamondSpendThreshold;
+  $targetOrders = $diamondOrderThreshold;
+  $tierBenefit = 'Giảm 100.000đ cho đơn từ 500.000đ';
+  $tierBenefitPolicy = 'Hạn lưu 30 ngày từ khi lên hạng · Hạn dùng 7 ngày sau khi lưu.';
+} elseif ($completedOrderSpend >= $vipSpendThreshold && $completedOrderCount >= $vipOrderThreshold) {
+  $displayTier = 'VIP';
   $nextTierLabel = 'Kim Cương';
-} else {
-  $loyaltyHint = 'Cần thêm ' . number_format($pointsToVip, 0, ',', '.') . ' điểm để lên VIP và ' . number_format($pointsToDiamond, 0, ',', '.') . ' điểm để lên Kim Cương.';
-  $loyaltyProgressPercent = ($currentPoints / max(1, $vipThreshold)) * 100;
-  $loyaltyProgressLabel = number_format($currentPoints, 0, ',', '.') . ' / ' . number_format($vipThreshold, 0, ',', '.') . ' điểm';
-  $loyaltyProgressHint = 'Còn ' . number_format($pointsToVip, 0, ',', '.') . ' điểm để lên VIP.';
-  $nextTierLabel = 'VIP';
+  $targetSpend = $diamondSpendThreshold;
+  $targetOrders = $diamondOrderThreshold;
+  $tierBenefit = 'Giảm 50.000đ cho đơn từ 200.000đ';
+  $tierBenefitPolicy = 'Hạn lưu 30 ngày từ khi lên hạng · Hạn dùng 7 ngày sau khi lưu.';
 }
 
+$spendRemaining = max(0, $targetSpend - $completedOrderSpend);
+$ordersRemaining = max(0, $targetOrders - $completedOrderCount);
+$loyaltyProgressPercent = min(
+  ($completedOrderSpend / max(1, $targetSpend)) * 100,
+  ($completedOrderCount / max(1, $targetOrders)) * 100
+);
+$loyaltyProgressLabel = number_format($completedOrderSpend, 0, ',', '.') . 'đ / ' . number_format($targetSpend, 0, ',', '.') . 'đ';
+$loyaltyProgressHint = $nextTierLabel === ''
+  ? 'Bạn đã đạt hạng thành viên cao nhất hiện tại.'
+  : 'Cần thêm ' . number_format($spendRemaining, 0, ',', '.') . 'đ và ' . number_format($ordersRemaining, 0, ',', '.') . ' đơn hoàn thành để lên ' . $nextTierLabel . '.';
+$loyaltyHint = 'Hạng được xét bằng chi tiêu và số đơn hoàn thành, không dùng điểm.';
+
 $loyaltyProgressPercent = max(0, min(100, (float)$loyaltyProgressPercent));
+
+$shippingAddresses = [];
+foreach ((array)($khachHang['shipping_addresses'] ?? []) as $shippingAddress) {
+  $shippingAddresses[] = is_array($shippingAddress) ? $shippingAddress : (array)$shippingAddress;
+}
+$legacyAddress = trim((string)($khachHang['dia_chi'] ?? ''));
+if (empty($shippingAddresses) && $legacyAddress !== '') {
+  $shippingAddresses[] = [
+    'id' => 'legacy-default',
+    'receiver_name' => (string)($khachHang['ho_ten'] ?? $account['ho_ten'] ?? ''),
+    'phone' => (string)($khachHang['so_dien_thoai'] ?? ''),
+    'street' => $legacyAddress,
+    'ward' => '',
+    'province' => '',
+    'address_type' => 'home',
+    'is_default' => true,
+  ];
+}
 
 $ngayThamGia = $account['ngay_tao'] ?? null;
 $membershipDurationHint = 'Mốc thời gian hệ thống bắt đầu ghi nhận tài khoản của bạn.';
@@ -260,6 +281,153 @@ $accountVerificationHint = !empty($account['email'])
     border-radius: 12px;
     background: #FFFFFF;
     border: 1px solid var(--border);
+  }
+
+  .loyalty-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .loyalty-metric {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #F3F7F4;
+  }
+
+  .loyalty-metric span,
+  .loyalty-benefit span {
+    display: block;
+    color: #52675D;
+    font-size: 0.76rem;
+  }
+
+  .loyalty-metric strong {
+    display: block;
+    margin-top: 2px;
+    color: #183B2B;
+    font-size: 0.98rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .loyalty-benefit {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .loyalty-benefit strong {
+    display: block;
+    margin: 3px 0;
+    color: #183B2B;
+  }
+
+  .address-book-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .address-book-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .address-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #FFFFFF;
+  }
+
+  .address-card__person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 7px;
+    color: #183B2B;
+  }
+
+  .address-card__person span {
+    color: #64748B;
+    font-weight: 400;
+  }
+
+  .address-card__text {
+    margin: 0;
+    color: #475569;
+    line-height: 1.55;
+  }
+
+  .address-card__meta {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .address-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 9px;
+    border: 1px solid #BCD3C4;
+    border-radius: 999px;
+    color: #24633F;
+    background: #F3F8F5;
+    font-size: 0.74rem;
+    font-weight: 600;
+  }
+
+  .address-empty {
+    padding: 34px 22px;
+    border: 1px dashed #B9C9BF;
+    border-radius: 14px;
+    text-align: center;
+    color: #52675D;
+    background: #F8FAF9;
+  }
+
+  .address-type-options {
+    display: flex;
+    gap: 10px;
+  }
+
+  .address-type-options input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .address-type-options label {
+    min-width: 112px;
+    padding: 9px 16px;
+    border: 1px solid #D7DFDA;
+    border-radius: 999px;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .address-type-options input:checked + label {
+    border-color: #2E7651;
+    color: #FFFFFF;
+    background: #2E7651;
+  }
+
+  .address-type-options input:focus-visible + label {
+    outline: 3px solid rgba(46, 118, 81, 0.24);
+    outline-offset: 2px;
+  }
+
+  .address-modal-note {
+    color: #B54708;
+    font-size: 0.82rem;
   }
 
   .loyalty-progress-head {
@@ -304,7 +472,11 @@ $accountVerificationHint = !empty($account['email'])
   }
 
   .profile-overview-grid__wide {
-    grid-column: span 2;
+    grid-column: span 1;
+  }
+
+  .profile-overview-grid__membership {
+    grid-column: span 3;
   }
 
   .profile-overview-grid__compact {
@@ -357,6 +529,18 @@ $accountVerificationHint = !empty($account['email'])
     color: #64748B;
     font-size: 0.82rem;
     line-height: 1.5;
+  }
+
+  #accountTabs .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  #accountTabs .nav-link > i {
+    width: 18px;
+    text-align: center;
+    color: currentColor;
   }
 
   .loyalty-tier-name {
@@ -774,6 +958,7 @@ $accountVerificationHint = !empty($account['email'])
     }
 
     .profile-overview-grid__wide,
+    .profile-overview-grid__membership,
     .profile-overview-grid__compact {
       grid-column: span 1;
     }
@@ -799,6 +984,20 @@ $accountVerificationHint = !empty($account['email'])
 
     .order-product-actions {
       justify-content: flex-start;
+    }
+
+    .address-book-head,
+    .address-card {
+      grid-template-columns: 1fr;
+    }
+
+    .address-book-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .address-book-head .btn {
+      width: 100%;
     }
   }
 </style>
@@ -870,19 +1069,34 @@ window.openSupportChat = function (evt) {
     <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=tatca">Tiếp tục mua sắm</a>
   </div>
 
-  <div class="auth-card">
-    <ul class="nav nav-tabs" id="accountTabs" role="tablist" style="border-bottom: 2px solid #E2E8F0; position: relative; z-index: 20;">
+  <div class="auth-card profile-hub">
+    <nav class="profile-hub__nav" aria-label="Tài khoản">
+    <a class="profile-hub__greeting" href="#tab-overview" onclick="return switchHosoTab('#tab-overview', event)">
+      <span class="profile-photo" aria-hidden="true">
+        <i class="fa-solid fa-user"></i>
+        <?php $hubAvatar = account_avatar_url(current_user() ?? []); ?>
+        <img data-account-avatar <?= $hubAvatar !== '' ? 'src="' . h($hubAvatar) . '"' : 'hidden' ?> alt="">
+      </span>
+      <span><small>Xin chào</small><strong><?= h($khachHang['ho_ten'] ?? $account['ho_ten'] ?? 'Bạn') ?></strong></span>
+    </a>
+    <ul class="nav nav-tabs" id="accountTabs" role="tablist" aria-label="Các mục tài khoản">
       <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="btn-tab-overview" href="#tab-overview" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-overview', event)">Tổng quan</a>
+        <a class="nav-link active" id="btn-tab-overview" href="#tab-overview" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-overview', event)"><i class="fa-solid fa-house" aria-hidden="true"></i> Tổng quan</a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link" id="btn-tab-orders" href="#tab-orders" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-orders', event)">Lịch sử đơn hàng</a>
+        <a class="nav-link" id="btn-tab-settings" href="#tab-settings" role="tab" onclick="return switchHosoTab('#tab-settings', event)"><i class="fa-solid fa-user-gear" aria-hidden="true"></i> Thông tin tài khoản</a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link" id="btn-tab-cart" href="#tab-cart" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-cart', event)">Giỏ hàng của tôi</a>
+        <a class="nav-link" id="btn-tab-address" href="#tab-address" role="tab" onclick="return switchHosoTab('#tab-address', event)"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Địa chỉ giao hàng</a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link" id="btn-tab-skin" href="#tab-skin" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-skin', event)">Hồ sơ Làn da</a>
+        <a class="nav-link" id="btn-tab-orders" href="#tab-orders" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-orders', event)"><i class="fa-solid fa-box" aria-hidden="true"></i> Lịch sử đơn hàng</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="btn-tab-cart" href="#tab-cart" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-cart', event)"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Giỏ hàng của tôi</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="btn-tab-skin" href="#tab-skin" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-skin', event)"><i class="fa-solid fa-droplet" aria-hidden="true"></i> Hồ sơ Làn da</a>
       </li>
       <li class="nav-item" role="presentation">
         <a class="nav-link" id="btn-tab-vouchers" href="#tab-vouchers" role="tab" style="cursor: pointer; pointer-events: auto;" onclick="return switchHosoTab('#tab-vouchers', event)">
@@ -890,20 +1104,27 @@ window.openSupportChat = function (evt) {
         </a>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" type="button" data-support-chat-toggle style="cursor: pointer; pointer-events: auto;" onclick="return openSupportChat(event)">Chat hỗ trợ</button>
+        <button class="nav-link" type="button" data-support-chat-toggle style="cursor: pointer; pointer-events: auto;" onclick="return openSupportChat(event)"><i class="fa-solid fa-headset" aria-hidden="true"></i> Chat hỗ trợ</button>
       </li>
     </ul>
+    <a class="profile-hub__shortcut" href="<?= h(BASE_URL . '/index.php?r=favorite_list') ?>"><i class="fa-regular fa-heart" aria-hidden="true"></i> Sản phẩm yêu thích</a>
+    <a class="profile-hub__shortcut" href="<?= h(BASE_URL . '/index.php?r=phan_thuong') ?>"><i class="fa-solid fa-gift" aria-hidden="true"></i> Phần thưởng</a>
+    </nav>
 
-    <div class="tab-content pt-3">
+    <div class="tab-content profile-hub__content">
       <div class="tab-pane fade show active" id="tab-overview" role="tabpanel" style="display: block;">
         <div class="profile-overview-grid">
-          <div class="profile-overview-grid__wide">
+          <div class="profile-overview-grid__membership">
             <div class="profile-stat">
-              <div class="label">Loại KH</div>
+              <div class="label">Hạng tài khoản</div>
               <div class="loyalty-tier-row">
                 <div class="loyalty-tier-name"><?= h($displayTier) ?></div>
               </div>
               <div class="small text-muted mt-2"><?= h($loyaltyHint) ?></div>
+              <div class="loyalty-metrics" aria-label="Kết quả tích lũy hạng thành viên">
+                <div class="loyalty-metric"><span>Chi tiêu hoàn thành</span><strong><?= h(number_format($completedOrderSpend, 0, ',', '.') . 'đ') ?></strong></div>
+                <div class="loyalty-metric"><span>Đơn hoàn thành</span><strong><?= h(number_format($completedOrderCount, 0, ',', '.')) ?> đơn</strong></div>
+              </div>
               <div class="loyalty-progress-card">
                 <div class="loyalty-progress-head">
                   <div class="loyalty-progress-title">Tiến độ hạng thành viên</div>
@@ -918,13 +1139,18 @@ window.openSupportChat = function (evt) {
                 </div>
                 <div class="loyalty-progress-scale">
                   <span>0</span>
-                  <span><?= number_format($vipThreshold, 0, ',', '.') ?></span>
-                  <span><?= number_format($diamondThreshold, 0, ',', '.') ?></span>
+                  <span>VIP</span>
+                  <span>Kim Cương</span>
                 </div>
                 <div class="loyalty-progress-meta">
                   <div class="loyalty-progress-points"><?= h($loyaltyProgressLabel) ?></div>
                   <div class="loyalty-progress-note"><?= h($loyaltyProgressHint) ?></div>
                 </div>
+              </div>
+              <div class="loyalty-benefit">
+                <span>Quyền lợi hạng <?= h($displayTier) ?></span>
+                <strong><?= h($tierBenefit) ?></strong>
+                <span><?= h($tierBenefitPolicy) ?></span>
               </div>
             </div>
           </div>
@@ -941,9 +1167,9 @@ window.openSupportChat = function (evt) {
           </div>
           <div class="profile-overview-grid__compact">
             <div class="profile-stat">
-              <div class="label">Số đơn hàng</div>
-              <div class="value"><?= number_format($orderCount, 0, ',', '.') ?></div>
-              <div class="profile-stat-note mt-2">Tổng số đơn hàng đã được ghi nhận trên tài khoản của bạn.</div>
+              <div class="label">Xu của tôi</div>
+              <div class="value"><?= number_format($xuBalance, 0, ',', '.') ?></div>
+              <div class="profile-stat-note mt-2">Đánh giá sản phẩm đã mua nhận 100 xu; xem video nhận xu theo từng chương trình.</div>
             </div>
           </div>
           <div class="profile-overview-grid__compact">
@@ -955,6 +1181,19 @@ window.openSupportChat = function (evt) {
           </div>
         </div>
 
+        <?php if (current_role() === 'khach_hang'): ?>
+          <?php
+          $feedbackFeature = 'customer_account';
+          $feedbackPrompt = 'Góp ý về khu vực tài khoản';
+          $feedbackStatement = 'Khu vực tài khoản giúp tôi dễ dàng tìm và quản lý thông tin cần thiết.';
+          require __DIR__ . '/partials/feature_feedback.php';
+          ?>
+        <?php endif; ?>
+      </div>
+
+      <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="btn-tab-settings">
+        <h2 class="h5">Thông tin tài khoản</h2>
+        <?php require __DIR__ . '/partials/account_avatar.php'; ?>
         <div class="mt-3">
           <div class="row g-3">
             <div class="col-12 col-lg-7">
@@ -1023,6 +1262,42 @@ window.openSupportChat = function (evt) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="btn-tab-address">
+        <div class="address-book-head">
+          <div>
+            <h2 class="h5 mb-1">Sổ địa chỉ</h2>
+            <p class="text-muted mb-0">Quản lý địa chỉ nhận hàng riêng, không cần chuyển sang thông tin tài khoản.</p>
+          </div>
+          <button class="btn btn-brand" type="button" data-bs-toggle="modal" data-bs-target="#shippingAddressModal"><i class="fa-solid fa-plus me-1" aria-hidden="true"></i> Thêm địa chỉ mới</button>
+        </div>
+        <div class="address-book-list" id="shippingAddressList">
+          <?php if (empty($shippingAddresses)): ?>
+            <div class="address-empty"><i class="fa-solid fa-location-dot mb-2" aria-hidden="true"></i><div>Bạn chưa có địa chỉ giao hàng.</div></div>
+          <?php else: ?>
+            <?php foreach ($shippingAddresses as $shippingAddress): ?>
+              <?php
+                $addressParts = array_values(array_filter([
+                  trim((string)($shippingAddress['street'] ?? '')),
+                  trim((string)($shippingAddress['ward'] ?? '')),
+                  trim((string)($shippingAddress['province'] ?? '')),
+                ], static fn(string $part): bool => $part !== ''));
+                $addressTypeLabel = ($shippingAddress['address_type'] ?? 'home') === 'company' ? 'Công ty' : 'Nhà riêng';
+              ?>
+              <article class="address-card">
+                <div>
+                  <div class="address-card__person"><strong><?= h((string)($shippingAddress['receiver_name'] ?? 'Người nhận')) ?></strong><?php if (!empty($shippingAddress['phone'])): ?><span><?= h((string)$shippingAddress['phone']) ?></span><?php endif; ?></div>
+                  <p class="address-card__text"><?= h(implode(', ', $addressParts)) ?></p>
+                </div>
+                <div class="address-card__meta">
+                  <span class="address-badge"><?= h($addressTypeLabel) ?></span>
+                  <?php if (!empty($shippingAddress['is_default'])): ?><span class="address-badge">Mặc định</span><?php endif; ?>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -1285,26 +1560,8 @@ window.openSupportChat = function (evt) {
 
       <div class="tab-pane fade" id="tab-skin" role="tabpanel">
         <div class="border rounded-3 p-3 mb-3 bg-white shadow-sm">
-          <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
-            <div>
-              <div class="small text-uppercase text-muted fw-bold">Hồ sơ đang xem</div>
-              <div class="fw-bold text-success fs-5"><?= h((string)($skinProfile['display_name'] ?? 'Hồ sơ của tôi')) ?></div>
-              <div class="small text-muted">Hồ sơ khác được tách riêng, không ghi đè hồ sơ chính.</div>
-            </div>
-            <form method="post" action="<?= BASE_URL ?>/index.php?r=chon_hoso_da" class="d-flex flex-wrap gap-2 align-items-end">
-              <label class="visually-hidden" for="skinProfileChooser">Chọn hồ sơ da</label>
-              <select class="form-select" id="skinProfileChooser" name="profile_id" aria-label="Chọn hồ sơ da">
-                <?php foreach ($skinProfiles as $profileOption): ?>
-                  <option value="<?= h((string)($profileOption['profile_id'] ?? '')) ?>" <?= ((string)($profileOption['profile_id'] ?? '') === $selectedSkinProfileId) ? 'selected' : '' ?>><?= h((string)($profileOption['display_name'] ?? 'Hồ sơ da')) ?><?= empty($profileOption['is_primary']) ? ' · Người khác' : ' · Chính' ?></option>
-                <?php endforeach; ?>
-              </select>
-              <button class="btn btn-outline-brand" type="submit">Chọn hồ sơ</button>
-            </form>
-          </div>
-          <form method="post" action="<?= BASE_URL ?>/index.php?r=tao_hoso_da" class="row g-2 mt-3" aria-label="Tạo hồ sơ da khác">
-            <div class="col-sm-8 col-md-9"><label class="visually-hidden" for="newSkinProfileName">Tên hồ sơ mới</label><input class="form-control" id="newSkinProfileName" name="display_name" maxlength="80" placeholder="Ví dụ: Hồ sơ của mẹ" required></div>
-            <div class="col-sm-4 col-md-3"><button class="btn btn-brand w-100" type="submit"><i class="fa-solid fa-user-plus me-1"></i>Tạo hồ sơ khác</button></div>
-          </form>
+          <h2 class="h5 text-success mb-1">Hồ sơ Làn da của tôi</h2>
+          <p class="small text-muted mb-0">Thông tin cá nhân hóa bên dưới chỉ thuộc tài khoản của bạn.</p>
         </div>
         <div class="alert alert-light border mb-3">
           Hồ sơ làn da được cập nhật từ thông tin bạn đã chia sẻ.
@@ -1398,7 +1655,7 @@ window.openSupportChat = function (evt) {
           </div>
           <div class="d-flex flex-wrap gap-2">
             <a class="btn btn-brand" href="<?= BASE_URL ?>/index.php?r=khaosatnhanh"><i class="fa-solid fa-bolt me-1"></i> Cập nhật nhanh</a>
-            <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=khaosat<?= empty($skinProfile['is_primary']) && $selectedSkinProfileId !== '' ? '&profile_id=' . rawurlencode($selectedSkinProfileId) : '' ?>">Khảo sát đầy đủ</a>
+            <a class="btn btn-outline-brand" href="<?= BASE_URL ?>/index.php?r=khaosat">Khảo sát đầy đủ</a>
           </div>
         </div>
 
@@ -1592,6 +1849,63 @@ window.openSupportChat = function (evt) {
   </div>
 </div>
 
+<div class="modal fade" id="shippingAddressModal" tabindex="-1" aria-labelledby="shippingAddressModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-1">
+        <h2 class="modal-title h5" id="shippingAddressModalLabel">Thêm địa chỉ mới</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <form id="shippingAddressForm" novalidate>
+        <input type="hidden" name="mode" value="shipping_address">
+        <div class="modal-body pt-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="shippingPhone">Số điện thoại</label>
+              <input class="form-control" id="shippingPhone" name="phone" type="tel" autocomplete="tel" placeholder="0901234567" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="shippingReceiverName">Họ và tên người nhận</label>
+              <input class="form-control" id="shippingReceiverName" name="receiver_name" type="text" autocomplete="name" value="<?= h((string)($khachHang['ho_ten'] ?? $account['ho_ten'] ?? '')) ?>" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="shippingProvince">Tỉnh / Thành phố</label>
+              <input class="form-control" id="shippingProvince" name="province" type="text" autocomplete="address-level1" placeholder="Ví dụ: TP. Hồ Chí Minh" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="shippingWard">Phường / Xã</label>
+              <input class="form-control" id="shippingWard" name="ward" type="text" autocomplete="address-level3" placeholder="Ví dụ: Phường Bảy Hiền" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="shippingStreet">Số nhà + Tên đường</label>
+              <input class="form-control" id="shippingStreet" name="street" type="text" autocomplete="street-address" placeholder="Ví dụ: 45B Đồng Đen" required>
+              <p class="address-modal-note mt-2 mb-0">Nhập đủ Tỉnh/TP và Phường/Xã trước khi lưu địa chỉ chi tiết.</p>
+            </div>
+            <div class="col-12">
+              <span class="form-label d-block">Loại địa chỉ</span>
+              <div class="address-type-options">
+                <input id="addressTypeHome" type="radio" name="address_type" value="home" checked><label for="addressTypeHome">Nhà riêng</label>
+                <input id="addressTypeCompany" type="radio" name="address_type" value="company"><label for="addressTypeCompany">Công ty</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" id="shippingDefault" name="is_default" type="checkbox" value="1" <?= empty($shippingAddresses) ? 'checked' : '' ?>>
+                <label class="form-check-label" for="shippingDefault">Đặt làm địa chỉ mặc định</label>
+              </div>
+            </div>
+          </div>
+          <p id="shippingAddressMsg" class="small mt-3 mb-0" role="status" aria-live="polite"></p>
+        </div>
+        <div class="modal-footer border-0 pt-1">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-brand">Lưu địa chỉ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="quickUpdateSkinTypeModal" tabindex="-1" aria-labelledby="quickUpdateSkinTypeModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
@@ -1625,6 +1939,50 @@ window.openSupportChat = function (evt) {
 
 <script>
 (function () {
+  const form = document.getElementById('shippingAddressForm');
+  const msgEl = document.getElementById('shippingAddressMsg');
+  if (!form || !msgEl) return;
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    if (!form.checkValidity()) {
+      form.classList.add('was-validated');
+      msgEl.textContent = 'Vui lòng điền đầy đủ các trường bắt buộc.';
+      msgEl.className = 'small mt-3 mb-0 text-danger';
+      return;
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    msgEl.textContent = 'Đang lưu địa chỉ...';
+    msgEl.className = 'small mt-3 mb-0 text-muted';
+
+    try {
+      const response = await fetch('<?= BASE_URL ?>/index.php?r=capnhatthongtin', {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        msgEl.textContent = data.message || 'Chưa thể lưu địa chỉ.';
+        msgEl.className = 'small mt-3 mb-0 text-danger';
+        submitButton.disabled = false;
+        return;
+      }
+      msgEl.textContent = data.message || 'Đã thêm địa chỉ giao hàng.';
+      msgEl.className = 'small mt-3 mb-0 text-success';
+      history.replaceState(null, '', '#tab-address');
+      setTimeout(function () { window.location.reload(); }, 450);
+    } catch (error) {
+      msgEl.textContent = 'Kết nối thất bại. Vui lòng thử lại.';
+      msgEl.className = 'small mt-3 mb-0 text-danger';
+      submitButton.disabled = false;
+    }
+  });
+})();
+
+(function () {
   const form = document.getElementById('accountInfoForm');
   const msgEl = document.getElementById('accountInfoMsg');
   if (!form || !msgEl) return;
@@ -1650,6 +2008,8 @@ window.openSupportChat = function (evt) {
 
       msgEl.textContent = data.message || 'Đã cập nhật thông tin.';
       msgEl.className = 'small text-success';
+      const address = document.getElementById('profileSavedAddress');
+      if (address) address.textContent = form.elements.dia_chi.value.trim() || 'Bạn chưa lưu địa chỉ giao hàng.';
     } catch (err) {
       msgEl.textContent = 'Kết nối thất bại. Vui lòng thử lại.';
       msgEl.className = 'small text-danger';
@@ -1745,6 +2105,7 @@ window.switchHosoTab = function (targetId, evt) {
   if (!targetId) return false;
   var cleanId = targetId.indexOf('#') === 0 ? targetId : '#' + targetId;
   var cleanPaneId = cleanId.replace('#', '');
+  if (!document.getElementById(cleanPaneId)?.classList.contains('tab-pane')) return false;
 
   var buttons = document.querySelectorAll('#accountTabs .nav-link');
   buttons.forEach(function (btn) {
@@ -1758,7 +2119,7 @@ window.switchHosoTab = function (targetId, evt) {
     }
   });
 
-  var panes = document.querySelectorAll('.tab-content > .tab-pane');
+  var panes = document.querySelectorAll('.profile-hub__content > .tab-pane');
   panes.forEach(function (pane) {
     if (pane.id === cleanPaneId) {
       pane.classList.add('show', 'active');
@@ -1768,6 +2129,10 @@ window.switchHosoTab = function (targetId, evt) {
       pane.style.display = 'none';
     }
   });
+
+  if (evt) {
+    history.replaceState(null, '', cleanId);
+  }
 
   return false;
 };
