@@ -446,6 +446,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
     #detailTabNav .nav-link {
       font-size: 0.96rem;
       padding: 12px 16px;
+      min-height: 44px;
     }
 
     .detail-content-panel {
@@ -4526,7 +4527,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
 
       <div class="detail-tabs-card mt-4 p-4 p-md-5 rounded-4 bg-white border w-100"style="border-radius: 28px !important; border-color: #E2EADF !important; box-shadow: 0 10px 30px rgba(33, 84, 39, 0.04);">
         <div class="detail-tabs-header mb-4 pb-2 border-bottom">
-          <ul class="nav nav-pills flex-nowrap overflow-x-auto gap-2" id="detailTabNav" role="tablist">
+          <ul class="nav nav-pills flex-wrap flex-md-nowrap overflow-x-auto gap-2" id="detailTabNav" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active px-3.5 py-2 fw-bold" id="tab-mo-ta" type="button" data-bs-toggle="tab" data-bs-target="#pane-mo-ta" data-tab="mo-ta" aria-controls="pane-mo-ta">Mô tả</button>
             </li>

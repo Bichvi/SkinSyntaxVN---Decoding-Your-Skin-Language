@@ -1843,10 +1843,21 @@ class QuanTriController {
     private function uploadLiveThumbnail(): ?string {
         $file = $_FILES['thumbnail_file'] ?? null;
         if (!is_array($file) || (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return null;
-        if ((int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK ||
-            (int)($file['size'] ?? 0) < 1 || (int)($file['size'] ?? 0) > 5 * 1024 * 1024 ||
+        $uploadError = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            $message = match ($uploadError) {
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ảnh bìa vượt quá giới hạn tải lên của máy chủ. Hãy chọn ảnh nhỏ hơn 5 MB.',
+                UPLOAD_ERR_PARTIAL => 'Ảnh bìa tải lên chưa hoàn tất. Hãy thử lại.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Máy chủ chưa cấu hình thư mục nhận ảnh tải lên.',
+                UPLOAD_ERR_CANT_WRITE => 'Máy chủ không lưu được ảnh bìa. Hãy kiểm tra quyền ghi thư mục uploads.',
+                UPLOAD_ERR_EXTENSION => 'Máy chủ đã chặn ảnh bìa tải lên.',
+                default => 'Không nhận được ảnh bìa. Hãy chọn lại tệp ảnh.',
+            };
+            throw new RuntimeException($message);
+        }
+        if ((int)($file['size'] ?? 0) < 1 || (int)($file['size'] ?? 0) > 5 * 1024 * 1024 ||
             !is_uploaded_file((string)($file['tmp_name'] ?? ''))) {
-            throw new RuntimeException('Ảnh bìa không hợp lệ hoặc vượt quá 5 MB.');
+            throw new RuntimeException('Ảnh bìa không hợp lệ hoặc vượt quá 5 MB. Hãy chọn JPG, PNG hoặc WebP.');
         }
         $mime = strtolower((string)@mime_content_type((string)$file['tmp_name']));
         $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
@@ -1872,13 +1883,20 @@ class QuanTriController {
             require_once __DIR__ . '/../models/PhienLive.php';
             $phienLiveModel = new PhienLive($this->pdo);
             $payload = $_POST;
+            $failureMessage = 'Không thể lưu phiên live. Hãy kiểm tra tiêu đề và kết nối dữ liệu rồi thử lại.';
             try {
+                if (trim((string)($payload['tieu_de'] ?? '')) === '') {
+                    throw new RuntimeException('Vui lòng nhập tiêu đề cho phiên live.');
+                }
                 $uploadedThumbnail = $this->uploadLiveThumbnail();
                 if ($uploadedThumbnail !== null) $payload['thumbnail'] = $uploadedThumbnail;
                 $newId = $phienLiveModel->taoPhienLive($payload);
+                if (!$newId && $uploadedThumbnail !== null && !empty($payload['thumbnail'])) {
+                    $failureMessage = 'Ảnh bìa đã tải lên nhưng phiên chưa được lưu. Hãy kiểm tra kết nối dữ liệu rồi thử lại.';
+                }
             } catch (Throwable $e) {
                 $newId = false;
-                set_flash('error', $e->getMessage());
+                $failureMessage = $e->getMessage();
             }
             if ($newId) {
                 set_flash('success', 'Đã tạo phiên LiveStream mới thành công!');
@@ -1887,7 +1905,7 @@ class QuanTriController {
                     return;
                 }
             } else {
-                set_flash('error', 'Không thể tạo phiên LiveStream.');
+                set_flash('error', $failureMessage);
             }
         }
 

@@ -102,6 +102,7 @@ if ($pdo !== null) {
 }
 ?>
 <script src="<?= BASE_URL ?>/assets/js/chat-purchase.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-purchase.js') ?: '1' ?>"></script>
+<script defer src="<?= BASE_URL ?>/assets/js/chat-viewport.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/chat-viewport.js') ?: '1' ?>"></script>
 <script>
   (function () {
     function initFooterInteractions() {

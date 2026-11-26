@@ -9,6 +9,7 @@ require_once __DIR__ . '/../models/DanhGia.php';
 require_once __DIR__ . '/../services/ProductEventTracker.php';
 require_once __DIR__ . '/../services/OrderTabs.php';
 require_once __DIR__ . '/../services/SkinConsultationSession.php';
+require_once __DIR__ . '/../services/SurveyService.php';
 require_once __DIR__ . '/../models/RewardLedger.php';
 
 class TaiKhoanController {
@@ -57,6 +58,19 @@ class TaiKhoanController {
         require $viewDir . '/layouts/header.php';
         require $viewDir . '/' . $view . '.php';
         require $viewDir . '/layouts/footer.php';
+    }
+
+    private function renderAdmin(string $view, array $data = []): void {
+        try {
+            $data['notificationCenter'] = $data['notificationCenter'] ?? $this->reviewModel->getNotificationCenterData();
+        } catch (Throwable $error) {
+            $data['notificationCenter'] = [];
+        }
+        extract($data);
+        $viewDir = defined('VIEW_DIR') ? VIEW_DIR : __DIR__ . '/../views';
+        require $viewDir . '/admin/layouts/header.php';
+        require $viewDir . '/admin/' . $view . '.php';
+        require $viewDir . '/admin/layouts/footer.php';
     }
 
     private function json(array $payload, int $status = 200): void {
@@ -649,8 +663,9 @@ class TaiKhoanController {
     public function uploadAvatar(): void {
         $user = $this->requireLogin();
         $token = (string)($_SESSION['account_avatar_csrf'] ?? '');
+        $submittedToken = $_POST['csrf'] ?? null;
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $token === '' ||
-            !hash_equals($token, (string)($_POST['csrf'] ?? ''))) {
+            !is_string($submittedToken) || !hash_equals($token, $submittedToken)) {
             $this->json(['ok' => false, 'message' => 'Hãy mở lại trang tài khoản rồi thử lại.'], 403);
         }
 
@@ -719,65 +734,165 @@ class TaiKhoanController {
     public function featureFeedback(): void {
         $user = $this->requireLogin();
         $token = (string)($_SESSION['feature_feedback_csrf'] ?? '');
+        $providedToken = $_POST['csrf'] ?? null;
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $token === '' ||
-            !hash_equals($token, (string)($_POST['csrf'] ?? ''))) {
+            !is_string($providedToken) || !hash_equals($token, $providedToken)) {
             $this->json(['ok' => false, 'message' => 'Hãy mở lại trang rồi thử lại.'], 403);
         }
-        $role = current_role();
-        $feature = (string)($_POST['feature'] ?? '');
-        $score = (string)($_POST['rating'] ?? '');
-        $comment = trim((string)($_POST['comment'] ?? ''));
-        $features = [
-            'recommendation' => ['khach_hang'],
-            'customer_account' => ['khach_hang'],
-            'admin_workspace' => ['admin'],
-            'staff_workspace' => ['nhanvien'],
-        ];
-        $accountId = trim((string)($user['ma_nv'] ?? $user['id'] ?? ''));
-        if (!in_array($role, $features[$feature] ?? [], true) ||
-            !preg_match('/^[1-5]$/D', $score) || mb_strlen($comment) > 500 || $accountId === '') {
-            $this->json(['ok' => false, 'message' => 'Chọn mức từ 1 đến 5 và viết góp ý tối đa 500 ký tự.'], 422);
-        }
         try {
-            $participant = hash('sha256', $role . ':' . $accountId);
-            $day = (new DateTimeImmutable('now', new DateTimeZone('Asia/Ho_Chi_Minh')))->format('Y-m-d');
-            $this->pdo->feature_feedback->updateOne(
-                ['_id' => hash('sha256', $participant . ':' . $feature . ':' . $day)],
-                ['$set' => [
-                    'participant' => $participant, 'role' => $role, 'feature' => $feature,
-                    'rating' => (int)$score, 'comment' => $comment,
-                    'submitted_at' => new \MongoDB\BSON\UTCDateTime(), 'question_version' => 1,
-                ]],
-                ['upsert' => true]
+            $role = current_role();
+            $interactionId = $_POST['interaction_id'] ?? '';
+            $comment = $_POST['comment'] ?? '';
+            if (!is_string($interactionId) || !is_string($comment)) {
+                throw new InvalidArgumentException('Dữ liệu khảo sát không hợp lệ.');
+            }
+            $accountId = SurveyService::accountId($user);
+            $resolved = SurveyService::resolveInteraction($_SESSION, $interactionId, $role, $accountId);
+            $template = $resolved['template'];
+            $answers = SurveyService::validateAnswers($template, $_POST['answers'] ?? null);
+            $comment = trim($comment);
+            $secret = function_exists('ss_env') ? ss_env('SURVEY_PARTICIPANT_SECRET', '') : (getenv('SURVEY_PARTICIPANT_SECRET') ?: '');
+            $participant = SurveyService::participantHash($role, $accountId, (string)$secret);
+            $document = SurveyService::buildResponseDocument(
+                $template,
+                $role,
+                $participant,
+                $interactionId,
+                $answers,
+                $comment
             );
-            $this->json(['ok' => true]);
+            if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+            $collection = $this->pdo->feature_feedback;
+            $duplicate = false;
+            try {
+                $collection->insertOne($document);
+            } catch (\MongoDB\Driver\Exception\BulkWriteException $error) {
+                if ((int)$error->getCode() !== 11000 ||
+                    !$collection->findOne(['_id' => $document['_id']], ['projection' => ['_id' => 1]])) {
+                    throw $error;
+                }
+                $duplicate = true;
+            }
+            $this->json(['ok' => true, 'duplicate' => $duplicate]);
+        } catch (InvalidArgumentException $error) {
+            $this->json(['ok' => false, 'message' => $error->getMessage()], 422);
         } catch (Throwable $error) {
             error_log('Feature feedback save failed: ' . get_class($error));
-            $this->json(['ok' => false, 'message' => 'Chưa lưu được đánh giá. Bạn có thể thử lại.'], 503);
+            $message = str_contains($error->getMessage(), 'SURVEY_PARTICIPANT_SECRET')
+                ? 'Khảo sát chưa được cấu hình khóa bảo vệ danh tính.'
+                : 'Chưa lưu được đánh giá. Dữ liệu của bạn vẫn còn trên biểu mẫu để thử lại.';
+            $this->json(['ok' => false, 'message' => $message], 503);
         }
     }
 
     public function featureFeedbackSummary(): void {
         if (current_role() !== 'admin') {
-            $this->json(['ok' => false], 403);
+            $this->json(['ok' => false, 'message' => 'Bạn không có quyền xem dữ liệu khảo sát.'], 403);
         }
         try {
-            $groups = $this->pdo->feature_feedback->aggregate([
-                ['$group' => ['_id' => [
-                    'feature' => '$feature', 'role' => '$role', 'rating' => '$rating', 'version' => '$question_version',
-                ], 'count' => ['$sum' => 1]]],
-                ['$sort' => ['_id.feature' => 1, '_id.role' => 1, '_id.rating' => 1]],
-            ]);
             header('Cache-Control: no-store');
-            $distribution = iterator_to_array($groups, false);
-            if (($_GET['format'] ?? '') === 'json') {
-                $this->json(['ok' => true, 'rating_distribution' => $distribution]);
+            $filters = $this->surveyFilters($_GET);
+            $cursor = $this->pdo->feature_feedback->find($filters['query'], [
+                'projection' => [
+                    '_id' => 1, 'schema_version' => 1, 'template_id' => 1, 'template_version' => 1,
+                    'question_version' => 1, 'participant' => 1, 'role' => 1, 'feature' => 1,
+                    'answers' => 1, 'rating' => 1, 'comment' => 1, 'submitted_at' => 1,
+                ],
+                'sort' => ['submitted_at' => -1],
+            ]);
+            $documents = iterator_to_array($cursor, false);
+            $summary = SurveyService::summarize($documents);
+            $format = strtolower(trim((string)($_GET['format'] ?? '')));
+            if ($format === 'json') {
+                $this->json(['ok' => true, 'filters' => $filters['values'], 'summary' => $summary]);
             }
-            $this->render('admin/feature_feedback', ['distribution' => $distribution]);
+            if ($format === 'csv') {
+                $this->exportSurveyCsv($documents, $summary, (string)($_GET['scope'] ?? 'responses'));
+            }
+            $this->renderAdmin('feature_feedback', [
+                'summary' => $summary,
+                'surveyFilters' => $filters['values'],
+                'surveyTemplates' => SurveyService::templates(),
+            ]);
         } catch (Throwable $error) {
             error_log('Feature feedback summary failed: ' . get_class($error));
             $this->json(['ok' => false, 'message' => 'Chưa tải được số liệu.'], 503);
         }
+    }
+
+    private function surveyFilters(array $input): array {
+        $query = [];
+        $values = [
+            'from' => trim((string)($input['from'] ?? '')),
+            'to' => trim((string)($input['to'] ?? '')),
+            'feature' => trim((string)($input['feature'] ?? '')),
+            'role' => trim((string)($input['role'] ?? '')),
+            'version' => is_string($input['version'] ?? null) ? trim($input['version']) : '2',
+        ];
+        if (!in_array($values['version'], ['1', '2', 'all'], true)) $values['version'] = '2';
+        $allowedFeatures = array_values(array_unique(array_column(SurveyService::templates(), 'feature')));
+        if (in_array($values['feature'], $allowedFeatures, true)) {
+            $query['feature'] = $values['feature'];
+        } else {
+            $values['feature'] = '';
+        }
+        if (in_array($values['role'], ['khach_hang', 'nhanvien', 'admin'], true)) {
+            $query['role'] = $values['role'];
+        } else {
+            $values['role'] = '';
+        }
+        if ($values['version'] !== 'all') {
+            $version = (int)$values['version'];
+            $query['$or'] = [['template_version' => $version], ['question_version' => $version]];
+        }
+        $dateRange = [];
+        $timezone = new DateTimeZone('Asia/Ho_Chi_Minh');
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $values['from'])) {
+            $dateRange['$gte'] = new \MongoDB\BSON\UTCDateTime((new DateTimeImmutable($values['from'] . ' 00:00:00', $timezone))->getTimestamp() * 1000);
+        } else {
+            $values['from'] = '';
+        }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $values['to'])) {
+            $dateRange['$lt'] = new \MongoDB\BSON\UTCDateTime((new DateTimeImmutable($values['to'] . ' 00:00:00', $timezone))->modify('+1 day')->getTimestamp() * 1000);
+        } else {
+            $values['to'] = '';
+        }
+        if ($dateRange !== []) {
+            $query['submitted_at'] = $dateRange;
+        }
+        return ['query' => $query, 'values' => $values];
+    }
+
+    private function exportSurveyCsv(array $documents, array $summary, string $scope): void {
+        $scope = $scope === 'summary' ? 'summary' : 'responses';
+        $filename = 'skinsyntax-survey-' . $scope . '-' . date('Ymd-His') . '.csv';
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        echo "\xEF\xBB\xBF";
+        $output = fopen('php://output', 'wb');
+        if ($scope === 'summary') {
+            fputcsv($output, ['template_id', 'version', 'feature', 'role', 'question_id', 'criterion', 'question_text', 'answer_count', 'average', 'satisfaction_rate', 'rating_1', 'rating_2', 'rating_3', 'rating_4', 'rating_5', 'median', 'positive_count']);
+            foreach ($summary['criteria'] as $row) {
+                fputcsv($output, array_map([$this, 'surveyCsvValue'], [
+                    $row['template_id'], $row['version'], $row['feature'], $row['role'], $row['question_id'],
+                    $row['criterion_label'], $row['question_text'], $row['count'], $row['average'], $row['satisfaction_rate'],
+                    ...array_values($row['distribution']),
+                    $row['median'], $row['positive_count'],
+                ]));
+            }
+        } else {
+            fputcsv($output, ['participant_code', 'feature', 'role', 'template_id', 'template_version', 'question_id', 'criterion', 'question_text', 'rating', 'submitted_at', 'legacy']);
+            foreach (SurveyService::exportRows($documents) as $row) {
+                fputcsv($output, array_map([$this, 'surveyCsvValue'], array_values($row)));
+            }
+        }
+        fclose($output);
+        exit;
+    }
+
+    private function surveyCsvValue($value): string {
+        $text = (string)($value ?? '');
+        return preg_match('/^[=+\-@]/', $text) ? "'" . $text : $text;
     }
 
     public function capNhatThongTin(): void {

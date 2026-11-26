@@ -133,6 +133,7 @@
 
   function showPopup() {
     if (mode === 'production' && (readStorage(storageKeys.shown) === '1' || readStorage(storageKeys.closed) === '1')) return;
+    if (document.querySelector('.modal.show, .offcanvas.show, .offcanvas.showing, .ai-chat-widget.is-open, .support-chat-widget.is-open')) return;
     selectedBanner = chooseBanner();
     if (!selectedBanner) return;
 

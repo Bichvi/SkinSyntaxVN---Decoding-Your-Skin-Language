@@ -1026,6 +1026,7 @@ class LiveController {
             'is_question' => !empty($message['is_question']),
             'is_pinned' => !empty($message['is_pinned']),
             'reply_to' => (string)($message['reply_to'] ?? ''),
+            'reply_to_sender_name' => (string)($message['reply_to_sender_name'] ?? ''),
             'created_at' => (string)($message['created_at'] ?? ''),
             'ts' => (int)($message['ts'] ?? $message['timestamp_ms'] ?? 0),
         ];
@@ -1128,7 +1129,7 @@ class LiveController {
                     '_id' => 'syna-' . substr($id, 5), 'room_id' => $room, 'sender_id' => 'syna',
                     'sender_type' => 'ai', 'sender_name' => 'SYNA',
                     'message' => 'Syna đây! Bạn muốn hỏi về sản phẩm nào trong phiên live?',
-                    'is_ai' => true, 'reply_to' => $id,
+                    'is_ai' => true, 'reply_to' => $id, 'reply_to_sender_name' => (string)($saved['sender_name'] ?? ''),
                 ]);
             }
             $this->liveJson(['ok' => true, 'id' => (string)$saved['_id'],
@@ -1176,6 +1177,13 @@ class LiveController {
                     ($current['syna_revision'] ?? '') !== $job['syna_revision'] ||
                     !$model->getChat($room, $id) || $model->isChatMuted($room, $job['sender_id'])) return '';
                 $job['live_offers'] = LiveOffer::openDeals($current, time());
+                $job['live_offer_prices'] = [];
+                foreach ($job['live_offers'] as $offer) {
+                    $productId = (string)($offer['ma_san_pham'] ?? '');
+                    if ($productId !== '' && !array_key_exists($productId, $job['live_offer_prices'])) {
+                        $job['live_offer_prices'][$productId] = (float)($offer['gia_uu_dai_live'] ?? 0);
+                    }
+                }
                 return $this->liveSynaAnswer(new SanPham($mongo), $job);
             });
             if ($result['status'] === 'answered') {
@@ -1187,6 +1195,7 @@ class LiveController {
                     '_id' => 'syna-' . substr($id, 5), 'room_id' => $room, 'sender_id' => 'syna',
                     'sender_type' => 'ai', 'sender_name' => 'SYNA', 'message' => mb_substr($result['answer'], 0, 1800),
                     'is_ai' => true, 'reply_to' => $id,
+                    'reply_to_sender_name' => (string)($job['sender_name'] ?? ''),
                 ]))) {
                     $result['status'] = 'unavailable';
                 }
@@ -1204,6 +1213,26 @@ class LiveController {
         $folded = SupportKnowledge::fold($question);
         $support = (new SupportKnowledge())->match($question);
         if ($support) return strip_tags((string)($support['answer'] ?? ''));
+
+        $offers = $job['live_offers'] ?? [];
+        if ($offers && preg_match('/\b(dang ghim|duoc ghim|dang gioi thieu|trong phien|tren live|dang mo ban|dang sale|bao nhieu san pham)\b/', $folded)) {
+            $products = $catalog->findManyByIds(array_values(array_unique(array_column($offers, 'ma_san_pham'))));
+            $lines = [];
+            $seen = [];
+            foreach ($offers as $offer) {
+                $productId = (string)($offer['ma_san_pham'] ?? '');
+                if ($productId === '' || isset($seen[$productId]) || empty($products[$productId]) || !$catalog->isProductAvailable($products[$productId])) continue;
+                $seen[$productId] = true;
+                $product = $products[$productId];
+                $price = (float)($offer['gia_uu_dai_live'] ?? 0);
+                if (count($lines) < 8) {
+                    $lines[] = '• ' . (string)($product['ten_san_pham'] ?? 'Sản phẩm') . ' (mã ' . $productId . ')' .
+                        ($price > 0 ? ' · ' . number_format($price, 0, ',', '.') . ' đ' : '');
+                }
+            }
+            if ($lines) return 'Hiện có ' . count($seen) . ' sản phẩm đang mở bán trong phiên:\n' . implode("\n", $lines) .
+                "\nBạn mở mục Sản phẩm trên màn hình live để xem từng ưu đãi và đặt hàng nhé.";
+        }
 
         $matches = [];
         preg_match_all('/["“]([^"”]{3,160})["”]/u', $question, $quoted);
@@ -1266,8 +1295,9 @@ class LiveController {
                 foreach ($matches as $item) {
                     $name = (string)($item['ten_san_pham'] ?? '');
                     $price = (float)($item['gia_ban'] ?? 0);
-                    $isPinned = (string)($item['ma_san_pham'] ?? '') === $job['ai_pinned_id'];
-                    $livePrice = (float)$job['ai_pinned_price'];
+                    $productId = (string)($item['ma_san_pham'] ?? '');
+                    $isPinned = isset(($job['live_offer_prices'] ?? [])[$productId]);
+                    $livePrice = (float)(($job['live_offer_prices'] ?? [])[$productId] ?? 0);
                     $stock = $catalog->getProductStock($item);
                     $ingredients = $item['thanh_phan_day_du'] ?? $item['thanh_phan_full'] ?? $item['thanh_phan_chinh'] ?? '';
                     if (is_iterable($ingredients)) {
@@ -1277,7 +1307,7 @@ class LiveController {
                         )));
                     } else $ingredients = SupportKnowledge::itemText($ingredients);
                     $line = $name . ' · ' . ($price > 0 ? number_format($price, 0, ',', '.') . ' đ' : 'chưa có giá niêm yết');
-                    if ($isPinned && $livePrice > 0) $line .= ' · giá ghim lúc bạn hỏi ' . number_format($livePrice, 0, ',', '.') . ' đ';
+                    if ($isPinned && $livePrice > 0) $line .= ' · giá ưu đãi trong phiên ' . number_format($livePrice, 0, ',', '.') . ' đ';
                     $line .= ' · ' . ($stock === null ? 'chưa xác nhận tồn kho' : ($stock > 0 ? 'còn ' . $stock : 'hết hàng'));
                     if (count($matches) > 1 || str_contains($folded, 'thanh phan')) {
                         $line .= "\nThành phần: " . ($ingredients !== '' ? mb_substr(strip_tags($ingredients), 0, 450) : 'chưa có dữ liệu');

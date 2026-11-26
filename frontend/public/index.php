@@ -151,6 +151,28 @@ if (is_file($backendRoot . '/app/services/VnpayService.php')) {
 
 $r = $_GET['r'] ?? 'home';
 
+if ($r === 'mobile_api') {
+    require_once $backendRoot . '/app/controllers/MobileApiController.php';
+    (new MobileApiController($pdo))->dispatch();
+    exit;
+}
+
+if ($r === 'xulydangnhap' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    require_once $backendRoot . '/app/services/AccountCartBridge.php';
+    AccountCartBridge::attachLoginMerge($pdo);
+}
+
+$accountCartSyncRoutes = [
+    'home', 'giohang', 'them_gio_hang_ajax', 'themgiohang', 'them_gio_hang',
+    'capnhat_sl_giohang', 'xoa_gio_hang', 'chuandaithanhtoan', 'thanhtoan',
+    'dathang', 'xulydathang', 'payment_autocheck', 'vnpay_return', 'hoso',
+    'live', 'api_live_add_to_cart',
+];
+if (in_array($r, $accountCartSyncRoutes, true)) {
+    require_once $backendRoot . '/app/services/AccountCartBridge.php';
+    AccountCartBridge::begin($pdo);
+}
+
 
 switch ($r) {
     case 'home':
