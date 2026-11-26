@@ -10,7 +10,8 @@ class PhienLive {
     private $db;
     private bool $chatIndexEnsured = false;
 
-    public const STREAM_FRESH_SECONDS = 60;
+    // Background tabs throttle timers; allow a grace window for healthy publishers.
+    public const STREAM_FRESH_SECONDS = 300;
 
     private const ALLOWED_STATUSES = [
         'scheduled', 'ready', 'live', 'interrupted', 'ended',
@@ -148,6 +149,7 @@ class PhienLive {
             $res = $this->db->phien_live->insertOne($payload);
             return $res->getInsertedCount() > 0 ? (string)$nextId : false;
         } catch (Throwable $e) {
+            error_log('[SkinSyntax Live] session_create_failed exception=' . get_class($e) . ' code=' . (int)$e->getCode());
             return false;
         }
     }

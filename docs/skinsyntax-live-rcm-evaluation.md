@@ -28,6 +28,4 @@ Nguồn phương pháp [Introduction to Information Retrieval, đánh giá xếp
 
 ## Phản hồi 5 mức
 
-Câu hỏi một mục kiểu Likert, với hai đầu là “Rất không hài lòng” và “Rất hài lòng”. Người dùng có thể bỏ qua hoặc viết góp ý. Hệ thống lưu mã tài khoản đã băm, vai trò, chức năng, thời điểm, phiên bản câu hỏi và điểm. Một câu trả lời được lưu cho mỗi tài khoản, chức năng và ngày. Lần gửi tiếp theo trong cùng ngày cập nhật câu trả lời đó.
-
-Trang quản trị hiển thị số lượt theo từng mức, chức năng và vai trò. Báo cáo nên kèm cỡ mẫu và bối cảnh huy động người tham gia. Nếu một người gửi ở nhiều ngày, số lượt lớn hơn số người. Khi diễn giải kết quả, nêu nguy cơ thiên lệch tự chọn. Nguồn [Likert, 1932](https://onlinebooks.library.upenn.edu/webbin/book/lookupid?key=olbp106730).
+Module hiện dùng bộ câu hỏi theo vai trò và chức năng. Xem [phương pháp khảo sát, câu hỏi và quy trình thu thập](thesis/evaluation/README.md).

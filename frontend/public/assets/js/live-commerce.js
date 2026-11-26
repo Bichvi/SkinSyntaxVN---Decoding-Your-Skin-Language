@@ -169,6 +169,12 @@
             const quote = document.createElement('small');
             quote.textContent = original ? 'Trả lời ' + original.sender_name + ' · ' + original.message.slice(0, 64) : 'Trả lời một tin nhắn';
             element.appendChild(quote);
+            if (message.is_ai && (message.reply_to_sender_name || original?.sender_name)) {
+                const target = document.createElement('div');
+                target.className = 'ss-live-syna-target';
+                target.textContent = 'SYNA đang trả lời @' + (message.reply_to_sender_name || original.sender_name);
+                element.appendChild(target);
+            }
         }
         const body = document.createElement('div');
         body.className = 'ss-message__text';
@@ -936,23 +942,33 @@
         if (result.ok) refreshRoom();
     });
     const productModal = $('liveProductModal');
+    let activeModalProduct = null;
     const closeProductModal = () => { if (productModal) productModal.hidden = true; };
+    function openProductModal(product, dealId = product?.deal_id || 'pinned') {
+        if (!productModal || !product) return;
+        activeModalProduct = {...product, deal_id: dealId};
+        $('liveProductModalName').textContent = product.ten_san_pham || product.name || 'Sản phẩm đang giới thiệu';
+        $('liveProductModalBrand').textContent = product.thuong_hieu || product.brand || '';
+        $('liveProductModalPrice').textContent = vnd(product.price || product.gia_uu_dai_live || 0);
+        $('liveProductModalMeta').textContent = 'Mã sản phẩm: ' + (product.ma_san_pham || product.product_id || '');
+        const image = $('liveProductModalImage');
+        image.src = product.link_hinh_anh || product.image || '';
+        image.alt = product.ten_san_pham || product.name || '';
+        productModal.hidden = false;
+    }
     $('btnCloseLiveProductModal')?.addEventListener('click', closeProductModal);
     $('btnCloseLiveProductModal2')?.addEventListener('click', closeProductModal);
     productModal?.addEventListener('click', event => { if (event.target === productModal) closeProductModal(); });
     $('livePinnedLink')?.addEventListener('click', () => {
-        if (!currentPinnedProduct || !productModal) return;
-        $('liveProductModalName').textContent = currentPinnedProduct.ten_san_pham || 'Sản phẩm đang giới thiệu';
-        $('liveProductModalBrand').textContent = currentPinnedProduct.thuong_hieu || '';
-        $('liveProductModalPrice').textContent = vnd(currentPinnedProduct.price || 0);
-        $('liveProductModalMeta').textContent = 'Mã sản phẩm: ' + (currentPinnedProduct.ma_san_pham || '');
-        const image = $('liveProductModalImage');
-        image.src = currentPinnedProduct.link_hinh_anh || '';
-        image.alt = currentPinnedProduct.ten_san_pham || '';
-        productModal.hidden = false;
+        openProductModal(currentPinnedProduct);
     });
+    $('livePinnedOverlay')?.addEventListener('click', () => openProductModal(currentPinnedProduct));
     $('btnModalAddToCart')?.addEventListener('click', () => {
         closeProductModal();
+        if (activeModalProduct) {
+            $('livePinnedProductId').value = activeModalProduct.ma_san_pham || activeModalProduct.product_id || '';
+            $('liveBuyNowForm').querySelector('[name="deal_id"]').value = activeModalProduct.deal_id || 'pinned';
+        }
         $('liveBuyNowForm')?.requestSubmit();
     });
     document.querySelectorAll('[data-studio-tab]').forEach(control => control.addEventListener('click', () => {
@@ -1042,6 +1058,14 @@
                 }).format(new Date(deal.ends_at * 1000));
                 text.append(end);
             }
+            const actions = document.createElement('div');
+            actions.className = 'ss-deal__actions';
+            const view = document.createElement('button');
+            view.type = 'button';
+            view.className = 'ss-btn ss-btn--ghost';
+            view.textContent = 'Xem';
+            view.setAttribute('aria-label', 'Xem nhanh ' + deal.name);
+            view.addEventListener('click', () => openProductModal(deal, deal.id));
             const cart = document.createElement('form');
             cart.className = 'live-add-to-cart-form';
             for (const [key, value] of [['product_id', deal.product_id], ['live_id', liveId], ['deal_id', deal.id]]) {
@@ -1056,7 +1080,8 @@
             add.textContent = '+ Giỏ';
             add.disabled = status !== 'live';
             cart.appendChild(add);
-            row.append(image, text, cart);
+            actions.append(view, cart);
+            row.append(image, text, actions);
             return row;
         }));
         $('liveStudioDeals')?.replaceChildren(...studioDeals.map(deal => {
@@ -1087,7 +1112,7 @@
         if (data.status === 'replay_ready' && !data.recording_available && $('liveWaitingMessage')) $('liveWaitingMessage').textContent = 'Bản ghi không khả dụng.';
         setSynaEnabled(Boolean(data.bat_ai_cohost));
         const queue = data.deals || [];
-        const offers = data.status === 'live' ? queue.filter(deal => deal.available_now !== false) : [];
+        const offers = data.status === 'live' ? queue.filter(deal => deal.available_now !== false && deal.id !== 'pinned') : [];
         if (data.status === 'live' && data.pinned_product) {
             const pinned = data.pinned_product;
             offers.unshift({
@@ -1100,10 +1125,31 @@
         if ($('liveSynaQueue')) $('liveSynaQueue').textContent = data.syna_queue === null
             ? 'Hàng đợi SYNA chưa kết nối.' : 'Đang chờ hoặc xử lý: ' + data.syna_queue + ' · Giới hạn: ' + data.syna_limit + ' lượt/phút';
         const pinned = data.pinned_product;
-        currentPinnedProduct = pinned ? {
+        const featuredOffer = pinned ? {
             ...pinned,
             price: data.gia_uu_dai_live || data.gia_ban_goc,
+            deal_id: 'pinned',
+        } : offers[0] ? {
+            ma_san_pham: offers[0].product_id,
+            ten_san_pham: offers[0].name,
+            thuong_hieu: offers[0].brand,
+            link_hinh_anh: offers[0].image,
+            price: offers[0].price,
+            deal_id: offers[0].id,
         } : null;
+        currentPinnedProduct = featuredOffer;
+        const pinOverlay = $('livePinnedOverlay');
+        if (pinOverlay) {
+            pinOverlay.hidden = !featuredOffer || data.status !== 'live';
+            if (featuredOffer) {
+                $('livePinnedOverlayName').textContent = featuredOffer.ten_san_pham;
+                $('livePinnedOverlayPrice').textContent = vnd(featuredOffer.price);
+                const pinImage = $('livePinnedOverlayImage');
+                pinImage.hidden = !featuredOffer.link_hinh_anh;
+                pinImage.src = featuredOffer.link_hinh_anh || '';
+                pinImage.alt = featuredOffer.ten_san_pham || '';
+            }
+        }
         $('livePinnedBody').hidden = !pinned;
         $('livePinnedEmpty').hidden = Boolean(pinned);
         if (pinned) {
@@ -1171,6 +1217,15 @@
             heartbeatPending = false;
         }
     }, 15000);
+    async function refreshPublisherHeartbeat() {
+        if (!studio || !publishing || !activeSource || ending || closed || heartbeatPending || room?.state !== 'connected') return;
+        heartbeatPending = true;
+        try { await updateStream('heartbeat'); }
+        catch (error) { console.warn('[SkinSyntax Live] publisher_heartbeat_failed', {name: error?.name || 'Error'}); }
+        finally { heartbeatPending = false; }
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) void refreshPublisherHeartbeat(); });
+    window.addEventListener('focus', () => { void refreshPublisherHeartbeat(); });
     setInterval(async () => {
         if (status !== 'live' || document.hidden) return;
         const result = await json('api_live_ping', {room: liveId});

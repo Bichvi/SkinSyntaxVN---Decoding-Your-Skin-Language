@@ -62,7 +62,13 @@ $_SESSION['live_csrf'] = $csrfToken;
       position: sticky;
       top: 0;
       z-index: 100;
+      overflow: hidden;
+      isolation: isolate;
+      min-height: 76px;
     }
+    .studio-topbar__cover { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+    .studio-topbar__cover img { width:100%; height:100%; object-fit:cover; object-position:center 42%; opacity:.14; }
+    .studio-topbar > :not(.studio-topbar__cover) { position:relative; z-index:1; }
     .studio-video-container {
       position: relative;
       background: #000;
@@ -280,10 +286,14 @@ $_SESSION['live_csrf'] = $csrfToken;
     .deal-product-image { width: 48px; height: 48px; object-fit: contain; background: #fff; border: 1px solid #e0e7e2; border-radius: 9px; }
     .catalog-result__name { display: block; font-weight: 700; line-height: 1.3; }
     .catalog-result__meta { display: block; margin-top: 3px; color: var(--studio-muted); font-size: 0.78rem; }
-    .catalog-result { padding: 10px; border-bottom: 1px solid #e4ebe6; }
+    .catalog-result { display: block; min-width: 0; padding: 10px; border-bottom: 1px solid #e4ebe6; }
     .catalog-result:last-of-type { border-bottom: 0; }
-    .catalog-result__top { display: grid; grid-template-columns: 20px 42px minmax(0,1fr) auto; gap: 9px; align-items: center; }
+    .catalog-result__top { display: grid; grid-template-columns: 20px 42px minmax(0,1fr) auto; gap: 9px; align-items: center; min-width: 0; }
     .catalog-result__top img { width: 42px; height: 42px; }
+    .catalog-result__copy { min-width: 0; }
+    .catalog-result__name { display: block; min-width: 0; overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
+    .catalog-result__meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .catalog-result__top > strong { max-width: 150px; white-space: nowrap; }
     .catalog-result__fields { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 9px 0 0 29px; }
     .catalog-result__fields label { font-size: .68rem; color: var(--studio-muted); }
     .catalog-result__fields input,.catalog-result__fields select { min-width: 0; width: 100%; min-height: 34px; padding: 4px 7px; font-size: .8rem; }
@@ -327,6 +337,7 @@ $_SESSION['live_csrf'] = $csrfToken;
 
   <!-- ==================== TOP NAVIGATION ==================== -->
   <header class="studio-topbar d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <?php if (!empty($live['thumbnail'])): ?><div class="studio-topbar__cover" aria-hidden="true"><img src="<?= h(resolve_image_url((string)$live['thumbnail'])) ?>" alt=""></div><?php endif; ?>
     <div class="d-flex align-items-center gap-3">
       <a href="<?= BASE_URL ?>/index.php?r=admin_lives" class="btn btn-sm btn-outline-light rounded-pill px-3">
         <i class="bi bi-chevron-left me-1"></i>Về Admin Live
@@ -1552,6 +1563,7 @@ $_SESSION['live_csrf'] = $csrfToken;
           const meta = document.createElement('span');
           meta.className = 'catalog-result__meta';
           meta.textContent = `${product.thuong_hieu || 'Chưa có thương hiệu'} · Mã ${product.id} · Tồn ${product.stock_known ? Number(product.stock).toLocaleString('vi-VN') : 'chưa rõ'}`;
+          copy.className = 'catalog-result__copy';
           copy.append(name, meta);
           const price = document.createElement('strong');
           price.textContent = product.stock_known && Number(product.stock) < 1 ? 'Tạm hết hàng' : (product.formatted_price || formatVnd(product.price));

@@ -1,5 +1,5 @@
-import { PhasePlaceholder } from '@/src/components/PhasePlaceholder';
+import { CatalogScreen } from '@/src/components/CatalogScreen';
 
 export default function ExploreScreen() {
-  return <PhasePlaceholder title="Khám phá" />;
+  return <CatalogScreen />;
 }

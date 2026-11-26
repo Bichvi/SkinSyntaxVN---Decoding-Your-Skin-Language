@@ -4,7 +4,7 @@
     "slug": "skinsyntaxvn-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/syna.png",
     "scheme": "skinsyntaxvn",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -12,24 +12,23 @@
     },
     "android": {
       "adaptiveIcon": {
-          "backgroundColor": "#E9F4EC",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#E9F4EC",
+        "foregroundImage": "./assets/images/syna.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "output": "server",
+      "favicon": "./assets/images/syna.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/syna.png",
+          "imageWidth": 160,
           "resizeMode": "contain",
           "backgroundColor": "#F7FAF8"
         }

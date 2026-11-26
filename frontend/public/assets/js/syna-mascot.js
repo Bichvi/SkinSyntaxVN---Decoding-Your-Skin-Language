@@ -64,10 +64,6 @@
     var rafId = null;
     var cartObserver = null;
     var cartMarkerTimer = null;
-    var chatVisibilityObserver = null;
-    var chatClassObserver = null;
-    var chatVisibilityRaf = null;
-    var chatWidget = document.querySelector('[data-ai-chat-widget]');
     var lastCartMarker = root.getAttribute('data-syna-cart-added') || '';
     var destroyed = false;
     var imageSwitchToken = 0;
@@ -292,41 +288,6 @@
       if (fallback) window.location.href = fallback;
     }
 
-    function updateChatVisibility() {
-      if (!chatWidget) return;
-      var mobile = !!(window.matchMedia && window.matchMedia('(max-width: 767.98px)').matches);
-      var heroRect = root.getBoundingClientRect();
-      var heroVisible = heroRect.bottom > 0 && heroRect.top < window.innerHeight;
-      var hideTrigger = mobile && heroVisible && !chatWidget.classList.contains('is-open');
-      chatWidget.classList.toggle('is-syna-hero-visible', hideTrigger);
-    }
-
-    function scheduleChatVisibility() {
-      if (chatVisibilityRaf !== null) return;
-      if (!window.requestAnimationFrame) {
-        updateChatVisibility();
-        return;
-      }
-      chatVisibilityRaf = window.requestAnimationFrame(function () {
-        chatVisibilityRaf = null;
-        updateChatVisibility();
-      });
-    }
-
-    if (chatWidget) {
-      updateChatVisibility();
-      window.addEventListener('scroll', scheduleChatVisibility, { passive: true });
-      window.addEventListener('resize', scheduleChatVisibility, { passive: true });
-      if (window.IntersectionObserver) {
-        chatVisibilityObserver = new IntersectionObserver(scheduleChatVisibility, { threshold: [0, 0.01, 1] });
-        chatVisibilityObserver.observe(root);
-      }
-      if (window.MutationObserver) {
-        chatClassObserver = new MutationObserver(scheduleChatVisibility);
-        chatClassObserver.observe(chatWidget, { attributes: true, attributeFilter: ['class'] });
-      }
-    }
-
     stage.addEventListener('pointermove', onPointerMove, { passive: true });
     stage.addEventListener('pointerleave', resetLook, { passive: true });
     mascotButton.addEventListener('click', function () {
@@ -341,7 +302,6 @@
     });
 
     document.addEventListener('skinsyntax:syna-chat-opened', function () {
-      scheduleChatVisibility();
       showEventMessage('chat', 'greeting', 4200);
     });
 
@@ -393,13 +353,8 @@
       clearTimer(transitionTimer);
       stopTalking();
       if (rafId !== null && window.cancelAnimationFrame) window.cancelAnimationFrame(rafId);
-      if (chatVisibilityRaf !== null && window.cancelAnimationFrame) window.cancelAnimationFrame(chatVisibilityRaf);
       if (cartObserver) cartObserver.disconnect();
-      if (chatVisibilityObserver) chatVisibilityObserver.disconnect();
-      if (chatClassObserver) chatClassObserver.disconnect();
       if (cartMarkerTimer) window.clearInterval(cartMarkerTimer);
-      window.removeEventListener('scroll', scheduleChatVisibility);
-      window.removeEventListener('resize', scheduleChatVisibility);
       stage.removeEventListener('pointermove', onPointerMove);
       stage.removeEventListener('pointerleave', resetLook);
     }, { once: true });
