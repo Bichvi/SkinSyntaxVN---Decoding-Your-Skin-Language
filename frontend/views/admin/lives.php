@@ -813,6 +813,21 @@ foreach ($sessions as $ls) {
   </div>
 </div>
 
+<?php
+// Danh sách sản phẩm chỉ render MỘT lần trong <template>; mỗi select trong modal được nạp lazily khi modal mở
+// (tránh lặp ~2000 <option> x số phiên x 2 select). Giữ nguyên name/value/nhãn/option được chọn.
+$liveGhimOptionsHtml = '<option value="">-- Không ghim sản phẩm --</option>';
+$liveDealOptionsHtml = '';
+foreach ($allProducts as $p) {
+    $liveGhimOptionsHtml .= "
+" . '<option value="' . h($p['ma_san_pham'] ?? $p['id'] ?? '') . '">[' . h($p['ma_san_pham'] ?? '') . '] ' . h($p['ten_san_pham'] ?? '') . ' - Giá kho: ' . vnd($p['gia_ban'] ?? 0) . '</option>';
+    $liveDealOptionsHtml .= "
+" . '<option value="' . h($p['ma_san_pham'] ?? $p['id'] ?? '') . '">[' . h($p['ma_san_pham'] ?? '') . '] ' . h($p['ten_san_pham'] ?? '') . ' - Gốc: ' . vnd($p['gia_ban'] ?? 0) . '</option>';
+}
+?>
+<template id="liveGhimOptionsTpl"><?= $liveGhimOptionsHtml ?></template>
+<template id="liveDealOptionsTpl"><?= $liveDealOptionsHtml ?></template>
+
 <!-- ==================== CÁC MODALS CHO TỪNG PHIÊN ==================== -->
 <?php foreach ($lives as $live): ?>
   <?php
@@ -859,13 +874,22 @@ foreach ($sessions as $ls) {
               </div>
               <div class="col-md-8">
                 <label class="form-label fw-bold small">Sản Phẩm Ghim Nổi Bật</label>
-                <select name="ma_san_pham_ghim" class="form-select">
+                <?php
+                  // Option được chọn = option khớp CUỐI CÙNG (đúng hành vi trình duyệt khi nhiều option có `selected`).
+                  $ghimSelIdx = 0;
+                  $ghimSelProduct = null;
+                  foreach ($allProducts as $pi => $p) {
+                      if (($p['ma_san_pham'] ?? '') == $live['ma_san_pham_ghim']) {
+                          $ghimSelIdx = $pi + 1;
+                          $ghimSelProduct = $p;
+                      }
+                  }
+                ?>
+                <select name="ma_san_pham_ghim" class="form-select" data-lazy-opts="liveGhimOptionsTpl" data-selected-index="<?= (int)$ghimSelIdx ?>">
                   <option value="">-- Không ghim sản phẩm --</option>
-                  <?php foreach ($allProducts as $p): ?>
-                    <option value="<?= h($p['ma_san_pham'] ?? $p['id'] ?? '') ?>" <?= (($p['ma_san_pham'] ?? '') == $live['ma_san_pham_ghim']) ? 'selected' : '' ?>>
-                      [<?= h($p['ma_san_pham'] ?? '') ?>] <?= h($p['ten_san_pham'] ?? '') ?> - Giá kho: <?= vnd($p['gia_ban'] ?? 0) ?>
-                    </option>
-                  <?php endforeach; ?>
+                  <?php if ($ghimSelProduct !== null): $p = $ghimSelProduct; ?>
+                    <option value="<?= h($p['ma_san_pham'] ?? $p['id'] ?? '') ?>" selected>[<?= h($p['ma_san_pham'] ?? '') ?>] <?= h($p['ten_san_pham'] ?? '') ?> - Giá kho: <?= vnd($p['gia_ban'] ?? 0) ?></option>
+                  <?php endif; ?>
                 </select>
               </div>
               <div class="col-md-4">
@@ -1051,11 +1075,9 @@ foreach ($sessions as $ls) {
               <div class="row g-2">
                 <div class="col-md-6">
                   <label class="form-label extra-small fw-bold mb-1">Chọn Sản Phẩm <span class="text-danger">*</span></label>
-                  <select name="product_id" class="form-select form-select-sm" required>
-                    <?php foreach ($allProducts as $p): ?>
-                      <option value="<?= h($p['ma_san_pham'] ?? $p['id'] ?? '') ?>">
-                        [<?= h($p['ma_san_pham'] ?? '') ?>] <?= h($p['ten_san_pham'] ?? '') ?> - Gốc: <?= vnd($p['gia_ban'] ?? 0) ?>
-                      </option>
+                  <select name="product_id" class="form-select form-select-sm" required data-lazy-opts="liveDealOptionsTpl" data-selected-index="0">
+                    <?php foreach (array_slice((array)$allProducts, 0, 1) as $p): ?>
+                      <option value="<?= h($p['ma_san_pham'] ?? $p['id'] ?? '') ?>">[<?= h($p['ma_san_pham'] ?? '') ?>] <?= h($p['ten_san_pham'] ?? '') ?> - Gốc: <?= vnd($p['gia_ban'] ?? 0) ?></option>
                     <?php endforeach; ?>
                   </select>
                 </div>
@@ -1169,6 +1191,31 @@ function switchAdminLiveTab(tabId) {
     history.replaceState(null, '', '#' + tabId);
   } catch (e) {}
 }
+
+// NẠP DANH SÁCH SẢN PHẨM CHO SELECT TRONG MODAL KHI MỞ (danh sách chỉ render một lần trong <template>)
+(function() {
+  const cache = {};
+  function fillLazySelects(root) {
+    root.querySelectorAll('select[data-lazy-opts]').forEach(function(sel) {
+      const id = sel.getAttribute('data-lazy-opts');
+      if (!id) return;
+      if (!(id in cache)) {
+        const tpl = document.getElementById(id);
+        cache[id] = tpl ? tpl.innerHTML : null;
+      }
+      if (cache[id] === null) return;
+      const idx = parseInt(sel.getAttribute('data-selected-index') || '0', 10) || 0;
+      sel.innerHTML = cache[id];
+      sel.selectedIndex = idx;
+      sel.removeAttribute('data-lazy-opts');
+    });
+  }
+  document.addEventListener('show.bs.modal', function(e) { fillLazySelects(e.target); });
+  document.addEventListener('focusin', function(e) {
+    const sel = e.target && e.target.closest ? e.target.closest('select[data-lazy-opts]') : null;
+    if (sel) fillLazySelects(sel.parentNode);
+  });
+})();
 
 // KHỞI TẠO TAB TỪ URL HASH
 document.addEventListener('DOMContentLoaded', function() {

@@ -6,6 +6,23 @@ require_once __DIR__ . '/SanPham.php';
 class QuanTri {
     private $db;
     private ?string $lastErrorMessage = null;
+    /** @var array<int,array>|null Bộ nhớ đệm theo request cho toàn bộ hoa_don (chỉ đọc, không dùng Redis). */
+    private ?array $allOrdersMemo = null;
+
+    /**
+     * Nạp toàn bộ hoa_don một lần mỗi request và trả về dạng mảng. Chỉ dùng cho đường đọc/báo cáo;
+     * người gọi nhận bản sao theo giá trị nên không làm thay đổi bộ nhớ đệm.
+     */
+    private function allOrders(): array {
+        if ($this->allOrdersMemo === null) {
+            $orders = [];
+            foreach ($this->db->hoa_don->find([]) as $doc) {
+                $orders[] = (array)$doc;
+            }
+            $this->allOrdersMemo = $orders;
+        }
+        return $this->allOrdersMemo;
+    }
     private const VIP_THRESHOLD = 500;
     private const DIAMOND_THRESHOLD = 1500;
 
@@ -416,13 +433,7 @@ class QuanTri {
             'danh_gia_cho_phan_hoi' => 0,
             'hoi_dap_cho_tra_loi' => 0,
         ];
-        foreach ($this->db->hoa_don->find([], ['projection' => [
-            'trang_thai' => 1,
-            'tong_tien' => 1,
-            'hinh_thuc_thanh_toan' => 1,
-            'status_thanh_toan' => 1,
-            'payment_status' => 1,
-        ]]) as $orderDoc) {
+        foreach ($this->allOrders() as $orderDoc) {
             $order = (array)$orderDoc;
             if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') === 'pending') {
                 $summary['don_cho_xu_ly']++;
@@ -481,17 +492,7 @@ class QuanTri {
             'overdue_hours' => $overdueHours,
         ];
 
-        foreach ($this->db->hoa_don->find([], ['projection' => [
-            'trang_thai' => 1,
-            'hinh_thuc_thanh_toan' => 1,
-            'payment_method' => 1,
-            'status_thanh_toan' => 1,
-            'payment_status' => 1,
-            'transaction_id' => 1,
-            'ghi_chu_thanh_toan' => 1,
-            'ngay_dat' => 1,
-            'created_at' => 1,
-        ]]) as $orderDoc) {
+        foreach ($this->allOrders() as $orderDoc) {
             $order = (array)$orderDoc;
             $status = $this->normalizeOrderStatus($order['trang_thai'] ?? '');
             if ($status === 'cancelled') {
@@ -728,17 +729,7 @@ class QuanTri {
             ];
         }
 
-        foreach ($this->db->hoa_don->find([], ['projection' => [
-            'trang_thai' => 1,
-            'tong_tien' => 1,
-            'hinh_thuc_thanh_toan' => 1,
-            'status_thanh_toan' => 1,
-            'payment_status' => 1,
-            'ngay_hoan_thanh' => 1,
-            'thoi_gian_hoan_thanh' => 1,
-            'ngay_dat' => 1,
-            'created_at' => 1,
-        ]]) as $orderDoc) {
+        foreach ($this->allOrders() as $orderDoc) {
             $order = (array)$orderDoc;
             if (!$this->isRevenueOrder($order)) {
                 continue;
@@ -826,13 +817,7 @@ class QuanTri {
             $rows[$key]['tong_hoat_dong']++;
         };
 
-        foreach ($this->db->hoa_don->find([], ['projection' => [
-            'trang_thai' => 1,
-            'ngay_hoan_thanh' => 1,
-            'thoi_gian_hoan_thanh' => 1,
-            'ngay_dat' => 1,
-            'created_at' => 1,
-        ]]) as $orderDoc) {
+        foreach ($this->allOrders() as $orderDoc) {
             $order = (array)$orderDoc;
             if ($this->normalizeOrderStatus($order['trang_thai'] ?? '') !== 'completed') {
                 continue;
@@ -948,7 +933,7 @@ class QuanTri {
         $limit = max(1, min(120, $limit));
         $months = [];
 
-        foreach ($this->db->hoa_don->find([]) as $doc) {
+        foreach ($this->allOrders() as $doc) {
             $order = (array)$doc;
             if (!$this->isRevenueOrder($order) || !$this->isOrderInReportRange($order, $startDate, $endDate)) {
                 continue;
@@ -978,7 +963,7 @@ class QuanTri {
     public function getTopProductsByRevenue(int $limit = 8, string $startDate = '', string $endDate = ''): array {
         $limit = max(1, min(30, $limit));
         $completedOrderIds = [];
-        foreach ($this->db->hoa_don->find([]) as $doc) {
+        foreach ($this->allOrders() as $doc) {
             $order = (array)$doc;
             if ($this->isRevenueOrder($order) && $this->isOrderInReportRange($order, $startDate, $endDate)) {
                 $completedOrderIds[] = $order['ma_hoa_don'];
@@ -990,6 +975,8 @@ class QuanTri {
         }
 
         $items = [];
+        $lineRows = [];
+        $productIds = [];
         $cursor = $this->db->chi_tiet_hoa_don->find(['ma_hoa_don' => ['$in' => $completedOrderIds]]);
         foreach ($cursor as $doc) {
             $row = (array)$doc;
@@ -997,18 +984,19 @@ class QuanTri {
             if ($productId === '') {
                 continue;
             }
+            $lineRows[] = [$productId, $row];
+            $productIds[$productId] = true;
+        }
+
+        // Tra cứu tên sản phẩm bằng một truy vấn $or thay vì findOne cho từng dòng; giữ nguyên các dạng
+        // string/int của ma_san_pham và id như truy vấn cũ.
+        $productNames = $this->lookupProductNamesByIds(array_keys($productIds));
+
+        foreach ($lineRows as [$productId, $row]) {
             if (!isset($items[$productId])) {
-                $product = (array)($this->db->san_pham->findOne([
-                    '$or' => [
-                        ['ma_san_pham' => $productId],
-                        ['ma_san_pham' => is_numeric($productId) ? (int)$productId : $productId],
-                        ['id' => $productId],
-                        ['id' => is_numeric($productId) ? (int)$productId : $productId],
-                    ],
-                ]) ?? []);
                 $items[$productId] = [
                     'ma_san_pham' => $productId,
-                    'ten_san_pham' => $product['ten_san_pham'] ?? $productId,
+                    'ten_san_pham' => $productNames[$productId] ?? $productId,
                     'so_don_vi' => 0,
                     'doanh_thu' => 0,
                 ];
@@ -1020,6 +1008,77 @@ class QuanTri {
 
         usort($items, static fn($a, $b) => (int)$b['doanh_thu'] <=> (int)$a['doanh_thu']);
         return array_slice(array_values($items), 0, $limit);
+    }
+
+    /**
+     * Trả về map [id dạng chuỗi => ten_san_pham] bằng truy vấn $in theo lô, tương đương findOne với
+     * $or {ma_san_pham|id} x {chuỗi|số nguyên} cho từng id. Id không tìm thấy (hoặc không có tên) sẽ vắng mặt
+     * trong map để người gọi giữ nguyên cách dự phòng cũ (hiển thị chính id).
+     */
+    private function lookupProductNamesByIds(array $productIds): array {
+        $requested = [];
+        $byInt = [];
+        foreach ($productIds as $id) {
+            $id = (string)$id;
+            $requested[$id] = true;
+            if (is_numeric($id)) {
+                $byInt[(int)$id][$id] = true;
+            }
+        }
+        if (!$requested) {
+            return [];
+        }
+
+        $resolve = static function ($value) use ($requested, $byInt): array {
+            if (is_string($value)) {
+                return isset($requested[$value]) ? [$value] : [];
+            }
+            if ($value instanceof \MongoDB\BSON\Int64) {
+                $value = (int)(string)$value;
+            }
+            if (is_float($value)) {
+                if ($value != floor($value)) {
+                    return [];
+                }
+                $value = (int)$value;
+            }
+            if (is_int($value) && isset($byInt[$value])) {
+                return array_map('strval', array_keys($byInt[$value]));
+            }
+            return [];
+        };
+
+        $names = [];
+        $found = [];
+        foreach (array_chunk(array_keys($requested), 400) as $chunk) {
+            $values = [];
+            foreach ($chunk as $id) {
+                $id = (string)$id;
+                $values[] = $id;
+                if (is_numeric($id)) {
+                    $values[] = (int)$id;
+                }
+            }
+            $cursor = $this->db->san_pham->find(
+                ['$or' => [['ma_san_pham' => ['$in' => $values]], ['id' => ['$in' => $values]]]],
+                ['projection' => ['ma_san_pham' => 1, 'id' => 1, 'ten_san_pham' => 1]]
+            );
+            foreach ($cursor as $doc) {
+                $product = (array)$doc;
+                $matched = array_merge($resolve($product['ma_san_pham'] ?? null), $resolve($product['id'] ?? null));
+                foreach ($matched as $key) {
+                    $key = (string)$key;
+                    if (isset($found[$key])) {
+                        continue;
+                    }
+                    $found[$key] = true;
+                    if (isset($product['ten_san_pham'])) {
+                        $names[$key] = $product['ten_san_pham'];
+                    }
+                }
+            }
+        }
+        return $names;
     }
 
     public function listCategories(string $keyword = ''): array {
@@ -1332,15 +1391,35 @@ class QuanTri {
         $cursor = $this->db->khach_hang->find($filter, $options);
         $items = [];
 
+        $customers = [];
+        $customerIds = [];
         foreach ($cursor as $doc) {
-            $kh = (array) $doc;
-            // Tính tổng đơn và chi tiêu
-            $orders = $this->db->hoa_don->find(['ma_kh' => $kh['ma_kh']])->toArray();
-            $kh['tong_don'] = count($orders);
-            $kh['tong_chi_tieu'] = 0;
-            foreach ($orders as $order) {
-                $kh['tong_chi_tieu'] += (int)($order['tong_tien'] ?? 0);
+            $customers[] = (array) $doc;
+        }
+        foreach ($customers as $kh) {
+            $customerIds[$this->mongoLookupKey($kh['ma_kh'] ?? null)] ??= $kh['ma_kh'] ?? null;
+        }
+
+        // Một truy vấn $in theo lô thay cho find theo từng khách; gom đếm/tổng ở PHP, khóa theo kiểu giá trị lưu trữ.
+        $orderCounts = [];
+        $orderTotals = [];
+        foreach (array_chunk(array_values($customerIds), 1000) as $chunk) {
+            $orderCursor = $this->db->hoa_don->find(
+                ['ma_kh' => ['$in' => $chunk]],
+                ['projection' => ['ma_kh' => 1, 'tong_tien' => 1]]
+            );
+            foreach ($orderCursor as $order) {
+                $order = (array) $order;
+                $key = $this->mongoLookupKey($order['ma_kh'] ?? null);
+                $orderCounts[$key] = ($orderCounts[$key] ?? 0) + 1;
+                $orderTotals[$key] = ($orderTotals[$key] ?? 0) + (int)($order['tong_tien'] ?? 0);
             }
+        }
+
+        foreach ($customers as $kh) {
+            $key = $this->mongoLookupKey($kh['ma_kh'] ?? null);
+            $kh['tong_don'] = $orderCounts[$key] ?? 0;
+            $kh['tong_chi_tieu'] = $orderTotals[$key] ?? 0;
             $items[] = $kh;
         }
         return $items;
