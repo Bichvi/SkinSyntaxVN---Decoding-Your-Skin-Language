@@ -435,7 +435,43 @@ function get_flash($key) {
     if (!array_key_exists($key, $_SESSION['flash'])) return null;
     $msg = $_SESSION['flash'][$key];
     unset($_SESSION['flash'][$key]);
+    // Trang đang hiển thị thông báo một lần thì Service Worker không được lưu (phòng khi middleware đầu request chưa thấy).
+    if ($msg !== null && $msg !== '' && !headers_sent()) {
+        header('X-SS-No-Store-Page: 1');
+    }
     return $msg;
+}
+
+/** Nhãn ngắn của phiên/tài khoản hiện tại: 'guest' hoặc hash 12 ký tự; dùng cho cookie + meta ss-auth-tag. */
+function ss_auth_tag(): string {
+    $user = $_SESSION['user'] ?? null;
+    if (!is_array($user)) return 'guest';
+    $who = (string)($user['id'] ?? $user['ma_kh'] ?? $user['email'] ?? '');
+    if ($who === '') return 'guest';
+    return substr(hash('sha256', $who . '|' . session_name()), 0, 12);
+}
+
+/**
+ * Header cho cache trang của Service Worker: cookie ss_auth_tag (không HttpOnly để JS so sánh với meta)
+ * và X-SS-No-Store-Page khi trang sẽ hiển thị thông báo flash một lần. Gọi sớm trong front controller (trước mọi output).
+ */
+function ss_emit_page_headers(): void {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET' || headers_sent()) return;
+    $tag = ss_auth_tag();
+    if (($_COOKIE['ss_auth_tag'] ?? null) !== $tag) {
+        setcookie('ss_auth_tag', $tag, [
+            'expires' => 0,
+            'path' => '/',
+            'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'httponly' => false,
+            'samesite' => 'Lax',
+        ]);
+    }
+    $flash = $_SESSION['flash'] ?? null;
+    $hasFlash = is_array($flash) ? count(array_filter($flash, static fn($v) => $v !== null && $v !== '')) > 0 : ($flash !== null && $flash !== '');
+    if ($hasFlash) {
+        header('X-SS-No-Store-Page: 1');
+    }
 }
 
 function get_top_10_sale_products(): array {

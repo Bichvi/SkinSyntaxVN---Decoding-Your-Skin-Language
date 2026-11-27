@@ -17,6 +17,7 @@ class CacheService
     private mixed $client = null;
     private bool $isAvailable = false;
     private bool $connectionAttempted = false;
+    private bool $usingRedisFallback = false;
     private ?string $lastError = null;
 
     /**
@@ -42,6 +43,18 @@ class CacheService
             $this->driver = 'none';
         }
         $this->valkeyUrl = $valkeyUrl ?? (defined('VALKEY_URL') ? VALKEY_URL : (function_exists('ss_env') ? ss_env('VALKEY_URL', '') : ''));
+        // VALKEY_URL trống (cấu hình docker chỉ có REDIS_URL) -> dùng REDIS_URL để lớp cache liên request thực sự hoạt động.
+        $this->usingRedisFallback = false;
+        if ($this->valkeyUrl === '') {
+            $redisUrl = defined('REDIS_URL') ? (string)REDIS_URL : (function_exists('ss_env') ? (string)ss_env('REDIS_URL', '') : (string)getenv('REDIS_URL'));
+            if ($redisUrl === '') {
+                $redisUrl = (string)getenv('REDIS_URL');
+            }
+            if ($redisUrl !== '') {
+                $this->valkeyUrl = $redisUrl;
+                $this->usingRedisFallback = true;
+            }
+        }
         if (isset($_GET['valkey_down']) && $_GET['valkey_down'] === '1') {
             $this->valkeyUrl = 'rediss://default:invalid@127.0.0.1:29999';
         }
@@ -98,7 +111,7 @@ class CacheService
 
             $options = [
                 'parameters' => [
-                    'timeout' => 2.0,
+                    'timeout' => $this->usingRedisFallback ? 0.5 : 2.0,
                     'read_write_timeout' => 2.0,
                     'persistent' => true,
                 ],

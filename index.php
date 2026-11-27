@@ -6,6 +6,14 @@ ini_set('memory_limit', '256M');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+// Trình duyệt tải trước (Speculation Rules, header Sec-Purpose: prefetch): chỉ đọc session rồi nhả khóa ngay,
+// để request tải trước không chặn trang người dùng thực sự bấm; mọi thay đổi $_SESSION của nó bị bỏ qua.
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET'
+    && (stripos((string)($_SERVER['HTTP_SEC_PURPOSE'] ?? ''), 'prefetch') !== false
+        || ($_SERVER['HTTP_X_SS_REVALIDATE'] ?? '') === '1')
+    && session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
 
 $backendRoot = is_dir(__DIR__ . '/backend/app')
     ? realpath(__DIR__ . '/backend')
@@ -48,6 +56,9 @@ $helpersFile = defined('VIEW_DIR') && is_file(VIEW_DIR . '/helpers.php')
 if (is_file($helpersFile)) {
     require_once $helpersFile;
 }
+if (function_exists('ss_emit_page_headers')) {
+    ss_emit_page_headers();
+}
 
 require_once $backendRoot . '/app/services/ProductEventTracker.php';
 ProductEventTracker::ensureCookie();
@@ -63,12 +74,8 @@ ob_start(static function ($buffer) {
 // happen on the first query rather than while constructing the client. Keep
 // that infrastructure error user-facing and actionable instead of exposing a
 // PHP stack trace or logging the user out of a valid admin session.
-set_exception_handler(static function (Throwable $exception): void {
-    if (!is_a($exception, 'MongoDB\\Driver\\Exception\\ConnectionException')) {
-        throw $exception;
-    }
-
-    error_log('MongoDB connection unavailable: ' . $exception->getMessage());
+function ss_render_db_unavailable(): void
+{
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
@@ -76,7 +83,33 @@ set_exception_handler(static function (Throwable $exception): void {
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
     header('Retry-After: 5');
+    header('X-SS-No-Store-Page: 1');
     echo '<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SkinSyntaxVN - Tạm thời gián đoạn</title><style>body{font-family:Arial,sans-serif;background:#f7faf8;color:#183b2b;margin:0;display:grid;place-items:center;min-height:100vh}.box{max-width:560px;margin:24px;padding:32px;border:1px solid #c8dacf;border-radius:14px;background:#fff;box-shadow:0 8px 30px rgba(24,59,43,.08)}h1{font-size:22px;margin:0 0 12px}p{line-height:1.6;color:#52645b}.btn{display:inline-block;margin-top:8px;padding:10px 16px;border-radius:8px;background:#183b2b;color:#fff;text-decoration:none;font-weight:700}</style></head><body><main class="box"><h1>Dữ liệu đang tạm thời chưa kết nối được</h1><p>Hệ thống không lấy được dữ liệu từ máy chủ MongoDB trong lúc này. Vui lòng đợi vài giây rồi thử tải lại trang.</p><a class="btn" href="javascript:location.reload()">Thử lại</a></main></body></html>';
+}
+
+function ss_is_html_navigation(): bool
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
+        return false;
+    }
+    $dest = (string)($_SERVER['HTTP_SEC_FETCH_DEST'] ?? '');
+    if ($dest !== '') {
+        return $dest === 'document';
+    }
+    if (isset($_SERVER['HTTP_SEC_FETCH_MODE']) || isset($_SERVER['HTTP_SEC_FETCH_SITE'])) {
+        return false;
+    }
+    return stripos((string)($_SERVER['HTTP_ACCEPT'] ?? ''), 'text/html') !== false
+        && !isset($_SERVER['HTTP_X_REQUESTED_WITH']);
+}
+
+set_exception_handler(static function (Throwable $exception): void {
+    if (!is_a($exception, 'MongoDB\\Driver\\Exception\\ConnectionException')) {
+        throw $exception;
+    }
+
+    error_log('MongoDB connection unavailable: ' . $exception->getMessage());
+    ss_render_db_unavailable();
     exit;
 });
 
@@ -138,6 +171,19 @@ if ($r === 'pwa_manifest' || $r === 'pwa_sw') {
         readfile($pwaRoot . '/sw.js');
     }
     exit;
+}
+
+// Atlas circuit breaker: serve the 503 page right away for page navigations instead of waiting on a dead database.
+if (ss_is_html_navigation() && class_exists('AtlasBreaker')) {
+    if (AtlasBreaker::isOpen()) {
+        ss_render_db_unavailable();
+        exit;
+    }
+    register_shutdown_function(static function (): void {
+        if (AtlasBreaker::trippedThisRequest() && !headers_sent()) {
+            ss_render_db_unavailable();
+        }
+    });
 }
 
 
@@ -215,6 +261,10 @@ switch ($r) {
 
     case 'chitiet':
         (new SanPhamController($pdo))->chitiet();
+        break;
+
+    case 'product_view_activate':
+        (new SanPhamController($pdo))->productViewActivate();
         break;
 
     case 'routine_recommendations':

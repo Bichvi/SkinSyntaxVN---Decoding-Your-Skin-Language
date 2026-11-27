@@ -2,6 +2,7 @@
 // backend/app/models/GoiYContentBased.php
 
 require_once __DIR__ . '/../services/SkincareProductClassifier.php';
+require_once __DIR__ . '/../services/ProductQueryCache.php';
 
 class GoiYContentBased {
     // Kết nối MongoDB dùng để đọc các collection san_pham, thuong_hieu, xuat_xu, danh_muc.
@@ -294,6 +295,14 @@ class GoiYContentBased {
                 'limit' => max(30, $limit),
             ];
 
+        // Chỉ cache dữ liệu catalog thô (hàng sản phẩm + tên thương hiệu/xuất xứ/danh mục), KHÔNG cache điểm chấm.
+        // ProductQueryCache (file, serialize) giữ nguyên kiểu dữ liệu BSON; bị flush khi admin sửa catalog.
+        try {
+            $rawCacheKey = 'goiy:candidates:v1:' . md5(serialize([$filter, $options, $exactLimit]));
+        } catch (\Throwable $e) {
+            $rawCacheKey = null;
+        }
+        $loadCandidates = function () use ($filter, $options, $exactLimit): array {
         $brands = $this->lookupMap('thuong_hieu', 'ma_thuong_hieu', 'ten_thuong_hieu');
         $origins = $this->lookupMap('xuat_xu', 'ma_xuat_xu', 'ten_xuat_xu');
         $categoryNames = $this->lookupMap('danh_muc', 'ma_danh_muc', 'ten_danh_muc');
@@ -351,19 +360,27 @@ class GoiYContentBased {
         }
 
         return $items;
+        };
+
+        if ($rawCacheKey === null) {
+            return $loadCandidates();
+        }
+        return ProductQueryCache::remember($rawCacheKey, 600, $loadCandidates);
     }
 
-    /** Nạp một collection tra cứu nhỏ thành map [mã => tên], cache theo request. */
+    /** Nạp một collection tra cứu nhỏ thành map [mã => tên], cache theo request (và file cache 10 phút). */
     private function lookupMap(string $collection, string $keyField, string $valueField): array {
         $cacheKey = $collection . ':' . $keyField . ':' . $valueField;
         if (!isset($this->lookupCache[$cacheKey])) {
-            $map = [];
-            foreach ($this->db->{$collection}->find([], ['projection' => [$keyField => 1, $valueField => 1]]) as $doc) {
-                if (isset($doc[$keyField])) {
-                    $map[(string)$doc[$keyField]] = (string)($doc[$valueField] ?? '');
+            $this->lookupCache[$cacheKey] = ProductQueryCache::remember('goiy:lookup:v1:' . $cacheKey, 600, function () use ($collection, $keyField, $valueField): array {
+                $map = [];
+                foreach ($this->db->{$collection}->find([], ['projection' => [$keyField => 1, $valueField => 1]]) as $doc) {
+                    if (isset($doc[$keyField])) {
+                        $map[(string)$doc[$keyField]] = (string)($doc[$valueField] ?? '');
+                    }
                 }
-            }
-            $this->lookupCache[$cacheKey] = $map;
+                return $map;
+            });
         }
         return $this->lookupCache[$cacheKey];
     }

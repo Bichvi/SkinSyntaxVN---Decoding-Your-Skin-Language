@@ -84,6 +84,7 @@ $socialLinks = [
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f3d2e">
+  <meta name="ss-auth-tag" content="<?= h(function_exists('ss_auth_tag') ? ss_auth_tag() : 'guest') ?>">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="<?= h(BASE_URL . '/index.php?r=pwa_manifest') ?>">
@@ -242,7 +243,7 @@ $socialLinks = [
         </a>
 
         <!-- Account dropdown -->
-        <div class="dropdown header-account-dropdown">
+        <div class="dropdown header-account-dropdown" data-live-region="header-account">
           <button
             class="header-action-btn--neutral header-account-toggle"
             type="button"
@@ -337,7 +338,7 @@ $socialLinks = [
         </div>
 
         <!-- Cart -->
-        <a href="<?= BASE_URL ?>/index.php?r=giohang" class="header-action-btn--neutral" id="headerCartLink" title="Xem giỏ hàng">
+        <a href="<?= BASE_URL ?>/index.php?r=giohang" class="header-action-btn--neutral" id="headerCartLink" data-live-region="header-cart" title="Xem giỏ hàng">
           <i class="fas fa-bag-shopping" style="font-size: 1.15rem; color: #183B2B;"></i>
           <strong style="font-size: 0.86rem; color: #183B2B;">Giỏ hàng</strong>
           <em class="header-cart-badge" id="headerCartCount" role="status" aria-label="Số lượng trong giỏ hàng" <?= $cartCount > 0 ? '' : 'hidden' ?>><?= $cartCount ?></em>

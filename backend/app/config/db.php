@@ -17,6 +17,44 @@ if (!function_exists('ss_env') && is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/config.php';
 }
 
+if (!class_exists('AtlasBreaker') && is_file(__DIR__ . '/../services/AtlasBreaker.php')) {
+    require_once __DIR__ . '/../services/AtlasBreaker.php';
+}
+if (!class_exists('CacheService') && is_file(__DIR__ . '/../services/CacheService.php')) {
+    require_once __DIR__ . '/../services/CacheService.php';
+}
+
+if (!class_exists('MongoCollectionGuard')) {
+    // Thin proxy over MongoDB\Collection: fails fast while the Atlas breaker is open and
+    // trips it on the first server-selection failure. Results are returned untouched.
+    class MongoCollectionGuard {
+        private \MongoDB\Collection $collection;
+
+        public function __construct(\MongoDB\Collection $collection) {
+            $this->collection = $collection;
+        }
+
+        public function __call(string $method, array $args) {
+            if (class_exists('AtlasBreaker') && AtlasBreaker::isOpen()) {
+                throw new \MongoDB\Driver\Exception\ConnectionTimeoutException('No suitable servers found: Atlas circuit breaker is open');
+            }
+            try {
+                $result = $this->collection->{$method}(...$args);
+            } catch (Throwable $e) {
+                if (class_exists('AtlasBreaker') && AtlasBreaker::isSelectionFailure($e)) {
+                    AtlasBreaker::trip($e);
+                }
+                throw $e;
+            }
+            return $result instanceof \MongoDB\Collection ? new self($result) : $result;
+        }
+
+        public function __get(string $name) {
+            return $this->collection->{$name};
+        }
+    }
+}
+
 if (!class_exists('MongoDatabaseCompat')) {
     class MongoDatabaseCompat {
         private \MongoDB\Database $database;
@@ -26,11 +64,14 @@ if (!class_exists('MongoDatabaseCompat')) {
         }
 
         public function __get(string $name) {
-            return $this->database->selectCollection($name);
+            return new MongoCollectionGuard($this->database->selectCollection($name));
         }
 
         public function __call(string $method, array $args) {
-            return $this->database->{$method}(...$args);
+            $result = $this->database->{$method}(...$args);
+            return ($method === 'selectCollection' && $result instanceof \MongoDB\Collection)
+                ? new MongoCollectionGuard($result)
+                : $result;
         }
 
         public function raw(): \MongoDB\Database {
@@ -78,8 +119,8 @@ try {
     // trong khoảng serverSelectionTimeoutMS thay vì ném lỗi ngay ở lần hỏng đầu tiên.
     $uriOptions = [
         'serverSelectionTryOnce' => false,
-        'serverSelectionTimeoutMS' => 8000,
-        'connectTimeoutMS' => 5000,
+        'serverSelectionTimeoutMS' => 3000,
+        'connectTimeoutMS' => 3000,
     ];
 
     try {

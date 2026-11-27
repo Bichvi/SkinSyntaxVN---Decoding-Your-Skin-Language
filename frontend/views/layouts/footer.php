@@ -588,6 +588,47 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 <?php endif; ?>
 <script>
+  // Tải trước (prefetch) khi rê chuột ~200 ms / chạm vào link xem: chỉ các route đọc, không tác dụng phụ.
+  // Trình duyệt không hỗ trợ Speculation Rules: không làm gì.
+  (function () {
+    try {
+      if (!(window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules'))) return;
+      var base = <?= json_encode(rtrim((string)(parse_url(BASE_URL, PHP_URL_PATH) ?? ''), '/')) ?>;
+      var esc = function (s) { return s.replace(/[\\{}()*+?:]/g, '\\$&'); };
+      var idx = esc(base) + '/index.php';
+      var viewRoutes = 'home|tatca|danhmuc|danhsach|product_collection|flash_sale|goiy|yeu_thich';
+      var rules = {
+        prefetch: [{
+          source: 'document',
+          eagerness: 'moderate',
+          where: {
+            and: [
+              { or: [
+                // Trang chủ không query.
+                { href_matches: { pathname: esc(base) + '/', search: '' } },
+                { href_matches: { pathname: idx, search: '' } },
+                // Route xem (không có q= vì tìm kiếm ghi lịch sử/log).
+                { and: [
+                  { href_matches: { pathname: idx, search: 'r=(' + viewRoutes + ')(&.*)?' } },
+                  { not: { href_matches: { search: '*q=*' } } }
+                ] },
+                // Chi tiết sản phẩm (server bỏ qua tác dụng phụ khi tải trước; beacon ghi lượt xem khi mở thật).
+                { href_matches: { pathname: idx, search: 'r=chitiet(&.*)?' } }
+              ] },
+              { not: { selector_matches: '[data-no-prefetch], [target=_blank], [download]' } }
+            ]
+          }
+        }]
+      };
+      var s = document.createElement('script');
+      s.type = 'speculationrules';
+      s.textContent = JSON.stringify(rules);
+      document.head.appendChild(s);
+    } catch (e) {}
+  })();
+</script>
+<script defer src="<?= BASE_URL ?>/assets/js/page-refresh.js?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/js/page-refresh.js') ?: '1' ?>"></script>
+<script>
   if ('serviceWorker' in navigator && (window.isSecureContext || location.hostname === 'localhost')) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('<?= h(BASE_URL . '/index.php?r=pwa_sw') ?>', { scope: '<?= h(BASE_URL . '/') ?>' })

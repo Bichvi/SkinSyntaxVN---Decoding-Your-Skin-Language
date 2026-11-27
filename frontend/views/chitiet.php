@@ -2410,7 +2410,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
               ? (int)$effectivePricing['discount_percent']
               : $phanTramGiam;
         ?>
-        <div class="px-3 py-2 mb-3 border" style="background: <?= $isFlashSaleActive ? '#FFF5F5' : '#FAFAFA' ?>; border-radius: 8px; border-color: <?= $isFlashSaleActive ? '#FECACA' : 'var(--border)' ?> !important;">
+        <div class="px-3 py-2 mb-3 border" data-live-region="pd-price" style="background: <?= $isFlashSaleActive ? '#FFF5F5' : '#FAFAFA' ?>; border-radius: 8px; border-color: <?= $isFlashSaleActive ? '#FECACA' : 'var(--border)' ?> !important;">
           <?php if ($isFlashSaleActive): ?>
             <div class="d-flex align-items-center gap-2 mb-1">
               <span class="badge" style="background: #DC2626; color: #FFF; font-size: 0.76rem; font-weight: 700; padding: 4px 8px; border-radius: 4px;">
@@ -2494,7 +2494,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
           $isOutOfStock = $detailStock !== null && $detailStock <= 0;
         ?>
         <div class="detail-buy mt-auto">
-        <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+        <div class="d-flex gap-2 mb-3 flex-wrap align-items-center" data-live-region="pd-buy">
           <div style="width: 80px;">
             <input type="number" class="form-control text-center fw-semibold" value="<?= $isOutOfStock ? 0 : 1 ?>" min="1" max="<?= h((string)($detailStock ?? 999)) ?>" <?= $isOutOfStock ? 'disabled' : '' ?> style="border-radius: 6px; height: 44px; background: #FAFAFA; border-color: var(--border);">
           </div>
@@ -2522,7 +2522,7 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
         </div>
 
         <div class="detail-stockline mb-3">
-          <span class="fw-semibold <?= $isOutOfStock ? 'text-danger' : 'text-success' ?>"><?= $isOutOfStock ? '● Tạm hết hàng' : ('● Còn hàng' . ($detailStock !== null ? ' · Còn ' . h((string)$detailStock) . ' sản phẩm' : '')) ?></span>
+          <span class="fw-semibold <?= $isOutOfStock ? 'text-danger' : 'text-success' ?>" data-live-region="pd-stock"><?= $isOutOfStock ? '● Tạm hết hàng' : ('● Còn hàng' . ($detailStock !== null ? ' · Còn ' . h((string)$detailStock) . ' sản phẩm' : '')) ?></span>
           <a href="<?= BASE_URL ?>/index.php?r=goiy" class="detail-ai-link">✦ Hỏi AI độ phù hợp →</a>
         </div>
 
@@ -4930,3 +4930,30 @@ $productIdForForms = (string)($p['ma_san_pham'] ?? $p['id'] ?? '');
 
 
 
+
+<?php
+  $pvaId = trim((string)($_GET['id'] ?? ''));
+  $pvaQ = trim((string)($_GET['q'] ?? ''));
+?>
+<div id="productViewMeta" hidden data-product-view-id="<?= h($pvaId) ?>" data-product-view-q="<?= h($pvaQ) ?>"></div>
+<script>
+// Trang này có thể được trình duyệt tải trước (server bỏ qua tác dụng phụ). Khi người dùng thực sự mở bản tải trước,
+// ghi đúng một lượt xem bằng beacon. Không bắn khi khôi phục từ bfcache (pageshow.persisted).
+(function () {
+  try {
+    var nav = performance.getEntriesByType('navigation')[0];
+    if (!nav || nav.deliveryType !== 'navigational-prefetch') return;
+    var meta = document.getElementById('productViewMeta');
+    if (!meta || !meta.dataset.productViewId) return;
+    var key = 'pva:' + Math.round(nav.startTime + (performance.timeOrigin || 0)) + ':' + location.href;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch (e) {}
+    var fd = new FormData();
+    fd.append('id', meta.dataset.productViewId);
+    if (meta.dataset.productViewQ) fd.append('q', meta.dataset.productViewQ);
+    navigator.sendBeacon('<?= BASE_URL ?>/index.php?r=product_view_activate', fd);
+  } catch (e) {}
+})();
+</script>

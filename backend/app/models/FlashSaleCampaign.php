@@ -634,6 +634,9 @@ class FlashSaleCampaign {
             'end_at'    => ['$gt' => $nowUtc],
         ];
 
+        if (class_exists('AtlasBreaker') && AtlasBreaker::isOpen()) {
+            return [];
+        }
         try {
             $cursor = $this->db->{self::COLLECTION_NAME}->find($filter, ['sort' => ['start_at' => -1]]);
             $campaigns = [];
@@ -646,6 +649,9 @@ class FlashSaleCampaign {
             }
             return $campaigns;
         } catch (\Throwable $e) {
+            if (class_exists('AtlasBreaker') && AtlasBreaker::isSelectionFailure($e)) {
+                AtlasBreaker::trip($e);
+            }
             error_log('FlashSaleCampaign loadActiveCampaigns error: ' . $e->getMessage());
             return [];
         }

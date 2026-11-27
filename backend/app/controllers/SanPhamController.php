@@ -751,19 +751,16 @@ class SanPhamController {
             return;
         }
 
-        // Mỗi lần truy cập trang chi tiết sẽ tăng 1 lượt xem.
-        $pending = null;
-        try {
-            $pending = $this->model->tangLuotXem($id);
-        } catch (Throwable $e) {
-            error_log('product view counter MongoDB error: ' . $e->getMessage());
-        }
-        $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + ($pending !== null ? $pending : 1);
-
-        // Lưu vào recent viewed products của session (tối đa 5 sản phẩm).
-        // Giữ lại các sản phẩm trước đó để trang chi tiết có thể hiển thị khối "Đã xem gần đây".
+        // Request tải trước (Sec-Purpose: prefetch) không được tạo tác dụng phụ; khi người dùng thực sự mở trang,
+        // beacon product_view_activate sẽ ghi đúng một lần.
+        header('Vary: Sec-Purpose', false);
+        $isPrefetch = self::isPrefetchRequest();
         $viewedProductId = (string)($p['ma_san_pham'] ?? $id);
-        $this->trackRecentViewedProduct($viewedProductId);
+        if (!$isPrefetch) {
+            $pending = $this->recordProductView($id, $p, $q);
+            $p['luot_xem'] = (int)($p['luot_xem'] ?? 0) + ($pending !== null ? $pending : 1);
+        }
+
         $recentViewedProducts = [];
         try {
             $recentViewedIds = is_array($_SESSION['recent_viewed_products'] ?? null)
@@ -774,13 +771,6 @@ class SanPhamController {
             }
         } catch (Throwable $e) {
             error_log('recent viewed products error: ' . get_class($e));
-        }
-        ProductEventTracker::record($this->pdo, 'product_view', (string)($p['ma_san_pham'] ?? $p['id'] ?? $id));
-
-        if ($q !== '') {
-            $this->saveSearchHistory($q);
-            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
-            InteractionLogger::logSearchClick((string)($p['ma_san_pham'] ?? $id), $q);
         }
 
         $reviewModel = new DanhGia($this->pdo);
@@ -964,6 +954,10 @@ class SanPhamController {
             return;
         }
 
+        // Chỉ đọc $_SESSION (không ghi): nhả khóa session để request song song cùng phiên không xếp hàng.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         $offset = max(0, min(200, (int)($_GET['offset'] ?? 0)));
         try {
             require_once dirname(__DIR__) . '/services/AssociationRuleRecommender.php';
@@ -1372,6 +1366,10 @@ class SanPhamController {
 
     public function liveSearch() {
         header('Content-Type: application/json; charset=utf-8');
+        // Chỉ đọc $_SESSION (không ghi): nhả khóa session để request song song cùng phiên không xếp hàng.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
 
         $q = $this->normalizeKeyword($_GET['q'] ?? '');
         $limit = (int)($_GET['limit'] ?? 8);
@@ -1403,6 +1401,10 @@ class SanPhamController {
 
     public function apiSmartSearch() {
         header('Content-Type: application/json; charset=utf-8');
+        // Chỉ đọc $_SESSION (không ghi): nhả khóa session để request song song cùng phiên không xếp hàng.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
 
         $q = $this->normalizeKeyword($_GET['q'] ?? '');
 
@@ -1441,6 +1443,85 @@ class SanPhamController {
                 'message' => 'Không thể tải dữ liệu tìm kiếm lúc này.'
             ], JSON_UNESCAPED_UNICODE);
         }
+    }
+
+    /** True khi trình duyệt đang tải trước trang (Speculation Rules / link prefetch). */
+    private static function isPrefetchRequest(): bool {
+        // Tải mới ngầm của page-refresh.js (Service Worker page cache) cũng không được tạo tác dụng phụ.
+        if (($_SERVER['HTTP_X_SS_REVALIDATE'] ?? '') === '1') {
+            return true;
+        }
+        if (stripos((string)($_SERVER['HTTP_SEC_PURPOSE'] ?? ''), 'prefetch') !== false) {
+            return true;
+        }
+        foreach (['HTTP_PURPOSE', 'HTTP_X_MOZ'] as $key) {
+            if (strtolower(trim((string)($_SERVER[$key] ?? ''))) === 'prefetch') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Tác dụng phụ của một lượt xem chi tiết sản phẩm (chạy đúng một lần mỗi lượt mở thật).
+     * Trả về số lượt xem đang chờ ghi từ tangLuotXem (null nếu lỗi).
+     */
+    private function recordProductView(string $id, array $p, string $q): ?int {
+        // Mỗi lần truy cập trang chi tiết sẽ tăng 1 lượt xem.
+        $pending = null;
+        try {
+            $pending = $this->model->tangLuotXem($id);
+        } catch (Throwable $e) {
+            error_log('product view counter MongoDB error: ' . $e->getMessage());
+        }
+
+        // Lưu vào recent viewed products của session (tối đa 5 sản phẩm).
+        // Giữ lại các sản phẩm trước đó để trang chi tiết có thể hiển thị khối "Đã xem gần đây".
+        $viewedProductId = (string)($p['ma_san_pham'] ?? $id);
+        $this->trackRecentViewedProduct($viewedProductId);
+
+        ProductEventTracker::record($this->pdo, 'product_view', (string)($p['ma_san_pham'] ?? $p['id'] ?? $id));
+
+        if ($q !== '') {
+            $this->saveSearchHistory($q);
+            require_once dirname(__DIR__) . '/services/InteractionLogger.php';
+            InteractionLogger::logSearchClick((string)($p['ma_san_pham'] ?? $id), $q);
+        }
+        return $pending;
+    }
+
+    /** POST r=product_view_activate: ghi lượt xem cho trang chi tiết được mở từ bản tải trước. */
+    public function productViewActivate(): void {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            http_response_code(405);
+            header('Allow: POST');
+            return;
+        }
+        $id = trim((string)($_POST['id'] ?? ''));
+        if ($id === '' || preg_match('/^[0-9]{1,20}$/', $id) !== 1) {
+            http_response_code(400);
+            return;
+        }
+        $q = $this->normalizeKeyword($_POST['q'] ?? '');
+        $p = null;
+        try {
+            $p = $this->model->find($id, true);
+        } catch (Throwable $e) {
+            error_log('product_view_activate lookup error: ' . get_class($e));
+            http_response_code(503);
+            return;
+        }
+        if (!$p) {
+            http_response_code(404);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => 'not_found']);
+            return;
+        }
+        $this->recordProductView($id, $p, $q);
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        http_response_code(204);
     }
 
     private function trackRecentViewedProduct(string $productId): void {

@@ -208,7 +208,46 @@ class SanPham {
         return $this->getSimpleRecommenderProducts(24);
     }
 
+    /**
+     * Cache liên request (CacheService/Redis) cho dữ liệu catalog dùng chung mọi người dùng; khóa phải bắt đầu bằng
+     * 'catalog:' để lệnh purge của admin (deleteByPattern('catalog:*')) làm mới. Chỉ lưu mảng không rỗng;
+     * mọi lỗi cache đều rơi về truy vấn MongoDB gốc.
+     */
+    private static function catalogCacheRemember(string $key, int $ttl, callable $producer): array {
+        $cache = null;
+        try {
+            if (!class_exists('CacheService') && is_file(dirname(__DIR__) . '/services/CacheService.php')) {
+                require_once dirname(__DIR__) . '/services/CacheService.php';
+            }
+            if (class_exists('CacheService')) {
+                $cache = CacheService::getInstance();
+                $hit = $cache->get($key);
+                if (is_array($hit) && $hit !== []) {
+                    return $hit;
+                }
+            }
+        } catch (\Throwable $e) {
+            $cache = null;
+        }
+
+        $value = $producer();
+        if ($cache !== null && is_array($value) && $value !== []) {
+            try {
+                $cache->set($key, $value, $ttl);
+            } catch (\Throwable $e) {
+                // Cache chỉ là tối ưu.
+            }
+        }
+        return $value;
+    }
+
     private function loadLookupMap(string $collection, string $idField, string $nameField): array {
+        return self::catalogCacheRemember('catalog:lookup:v1:' . $collection . ':' . $idField . ':' . $nameField, 3600, function () use ($collection, $idField, $nameField): array {
+            return $this->loadLookupMapFromDb($collection, $idField, $nameField);
+        });
+    }
+
+    private function loadLookupMapFromDb(string $collection, string $idField, string $nameField): array {
         $map = [];
         $cursor = $this->db->{$collection}->find([], [
             'projection' => [$idField => 1, $nameField => 1]
@@ -2601,13 +2640,24 @@ class SanPham {
             'limit' => max(1, min(60, $fetchLimit)),
             'projection' => self::LISTING_PROJECTION,
         ];
-        $cursor = $this->db->san_pham->find($filter, $options);
-        foreach ($cursor as $doc) {
-            $rawItems[] = $this->normalizeProductRecord($doc);
-        }
+        $fetch = function () use ($filter, $options, $limit): array {
+            $rawItems = [];
+            $cursor = $this->db->san_pham->find($filter, $options);
+            foreach ($cursor as $doc) {
+                $rawItems[] = $this->normalizeProductRecord($doc);
+            }
 
-        $deduped = $this->deduplicateProductVariants($rawItems, 1);
-        return array_slice($deduped, 0, $limit);
+            $deduped = $this->deduplicateProductVariants($rawItems, 1);
+            return array_slice($deduped, 0, $limit);
+        };
+
+        // Dữ liệu catalog thuần (không có trường theo người dùng): cache chung 5 phút theo (filter, options, limit).
+        try {
+            $cacheKey = 'catalog:discovery:v1:' . md5(serialize([$filter, $options, $limit]));
+        } catch (\Throwable $e) {
+            return $fetch();
+        }
+        return self::catalogCacheRemember($cacheKey, 300, $fetch);
     }
 
     private function discountDiscoveryFilter(): array {

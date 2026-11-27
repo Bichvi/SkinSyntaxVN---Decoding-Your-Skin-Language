@@ -21,8 +21,20 @@ if (is_logged_in() && current_role() === 'khach_hang') {
 
   $supportChatModel = new QuanTri($pdo);
   $supportChatUser = current_user() ?? [];
-  $supportChatCustomer = $supportChatModel->getCustomerByEmail((string)($supportChatUser['email'] ?? ''), (string)($supportChatUser['ho_ten'] ?? ''));
-  $supportChatCustomerId = (int)($supportChatCustomer['ma_kh'] ?? 0);
+  // Nhớ ma_kh theo email trong session để các trang sau khỏi quét regex khach_hang.email (không dùng được index).
+  $supportChatEmail = strtolower(trim((string)($supportChatUser['email'] ?? '')));
+  $supportChatMemo = $_SESSION['support_chat_ma_kh'] ?? null;
+  if (is_array($supportChatMemo) && $supportChatEmail !== '' && ($supportChatMemo['email'] ?? null) === $supportChatEmail && (int)($supportChatMemo['ma_kh'] ?? 0) > 0) {
+    $supportChatCustomerId = (int)$supportChatMemo['ma_kh'];
+  } else {
+    $supportChatCustomer = $supportChatModel->getCustomerByEmail((string)($supportChatUser['email'] ?? ''), (string)($supportChatUser['ho_ten'] ?? ''));
+    $supportChatCustomerId = (int)($supportChatCustomer['ma_kh'] ?? 0);
+    if ($supportChatCustomerId > 0 && $supportChatEmail !== '' && session_status() === PHP_SESSION_ACTIVE) {
+      $_SESSION['support_chat_ma_kh'] = ['email' => $supportChatEmail, 'ma_kh' => $supportChatCustomerId];
+    } elseif (isset($_SESSION['support_chat_ma_kh'])) {
+      unset($_SESSION['support_chat_ma_kh']);
+    }
+  }
   if ($supportChatCustomerId > 0) {
     $supportChatMessages = $supportChatModel->getChatMessages($supportChatCustomerId);
     $supportChatEnabled = true;

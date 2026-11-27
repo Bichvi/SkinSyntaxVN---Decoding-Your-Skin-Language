@@ -34,7 +34,28 @@ class VideoWatchController {
         return self::customerIdentity();
     }
 
+    /** Identity đã chốt cho request chỉ-đọc (sau khi nhả khóa session). */
+    private static ?array $frozenIdentity = null;
+
+    /**
+     * Endpoint chỉ-đọc session (start/heartbeat/status/complete): đọc identity một lần rồi nhả khóa session
+     * để các request video song song cùng phiên không xếp hàng. Không có đường nào ở đây ghi $_SESSION.
+     */
+    private function releaseSessionLock(): void {
+        try {
+            self::$frozenIdentity = self::customerIdentity();
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+        } catch (\Throwable $e) {
+            self::$frozenIdentity = null;
+        }
+    }
+
     public static function customerIdentity(): array {
+        if (self::$frozenIdentity !== null) {
+            return self::$frozenIdentity;
+        }
         $customerId = null;
         $customerEmail = null;
         $guestSessionId = null;
@@ -185,6 +206,7 @@ class VideoWatchController {
      */
     public function start(): void {
         header('Content-Type: application/json; charset=utf-8');
+        $this->releaseSessionLock();
         $input = $this->readJsonInput();
         if (empty($input)) {
             $input = $_GET;
@@ -212,6 +234,7 @@ class VideoWatchController {
      */
     public function heartbeat(): void {
         header('Content-Type: application/json; charset=utf-8');
+        $this->releaseSessionLock();
         $input = $this->readJsonInput();
 
         $sessionId = trim((string)($input['watch_session_id'] ?? $_GET['watch_session_id'] ?? ''));
@@ -244,6 +267,7 @@ class VideoWatchController {
      */
     public function status(): void {
         header('Content-Type: application/json; charset=utf-8');
+        $this->releaseSessionLock();
         $sessionId = trim((string)($_GET['watch_session_id'] ?? ''));
 
         if ($sessionId === '') {
@@ -268,6 +292,7 @@ class VideoWatchController {
      */
     public function complete(): void {
         header('Content-Type: application/json; charset=utf-8');
+        $this->releaseSessionLock();
         $input = $this->readJsonInput();
         $sessionId = trim((string)($input['watch_session_id'] ?? $_GET['watch_session_id'] ?? ''));
 
